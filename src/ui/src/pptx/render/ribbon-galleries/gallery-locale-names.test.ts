@@ -82,7 +82,7 @@ function translatorFor(dictionary: Record<string, string>) {
 
 /** Names that are spelled the same in English and the locale (shared loanwords and brand names). */
 const SAME_SPELLING =
-	/^(Office|Venn|Matrix|Chevron|Monochrome|Pastel|Perspective|Corrections|Color|Sepia|Horizontal|Parallel|Oblique|Angle|Layouts?|Orange|Median|Marquee|Slipstream|Violet|Violet II|Aspect)(?![A-Za-z])/u;
+	/^(Office|Venn|Matrix|Chevron|Monochrome|Pastel|Perspective|Corrections|Color|Sepia|Horizontal|Parallel|Oblique|Angle|Layouts?|Orange|Median|Marquee|Slipstream|Violet|Violet II|Aspect|Style)(?![A-Za-z])/u;
 
 async function build(id: RibbonGalleryId): Promise<RibbonGalleryDescriptor> {
 	const context = {
