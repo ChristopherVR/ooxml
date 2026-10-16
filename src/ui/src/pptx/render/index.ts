@@ -84,6 +84,7 @@ export * from './unicode-script-detection';
 // descriptor now.
 export * from './text-script-fonts';
 export * from './visual-effects';
+export * from './frame-effect-style';
 export * from './reflection';
 export * from './image-effects';
 export * from './image-background-removal';

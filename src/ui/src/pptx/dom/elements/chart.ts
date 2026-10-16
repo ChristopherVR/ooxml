@@ -3,6 +3,7 @@ import {
 	buildChartViewModel,
 	chartPlaceholderLabel,
 	getContainerStyle,
+	getFrameEffectStyle,
 	resolveChartPalette as resolveSharedChartPalette,
 	resolveChartKind,
 	resolveChartThreeViewSpec,
@@ -78,7 +79,8 @@ export const renderChartSvgElement: ElementRenderer = (element, zIndex, context)
 		doc,
 		'div',
 		'pptxv-element pptxv-chart',
-		getContainerStyle(element, zIndex),
+		// The chart area's outer shadow and glow sit on the frame, outside the chart.
+		{ ...getContainerStyle(element, zIndex), ...getFrameEffectStyle(element) },
 	);
 	container.dataset.elementId = element.id;
 

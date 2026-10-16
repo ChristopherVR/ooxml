@@ -17,6 +17,8 @@ import type {
 } from 'ooxml-core/pptx';
 
 import { CHART_PX_PER_PT } from '../chart-font';
+import type { PaintBox } from './chart-format-paint-svg';
+import { gradientPaint, patternPaint, picturePaint, resetPaintIds } from './chart-format-paint-svg';
 
 /** One shape an effect follows. */
 export type EffectShape =
@@ -75,6 +77,7 @@ const uid = (prefix: string) => `${prefix}${++serial}`;
 /** Restart the in-image ids, so the same chart always yields the same markup. */
 export function resetEffectIds(): void {
 	serial = 0;
+	resetPaintIds();
 }
 
 /** Outer shadow: the shapes in the shadow colour, offset along `angle` and blurred. */
@@ -166,6 +169,86 @@ export function paintedShapes(
 	return softEdge && softEdge > 0 ? softEdgeMarkup(shapes, softEdge, inner) : inner;
 }
 
+/** The paint server and opacity of a fill in `box`, or `undefined` when it paints nothing. */
+export function fillPaintOf(
+	fill: PptxChartElementFill | undefined,
+	box: PaintBox,
+	fallbackFill?: string,
+): { defs: string; paint: string; opacity: number } | undefined {
+	switch (fill?.kind) {
+		case 'solid':
+			return {
+				defs: '',
+				paint: safeColor(fill.color, fallbackFill ?? '#FFFFFF'),
+				opacity: opacityOf(fill.transparency),
+			};
+		case 'gradient': {
+			if (!fill.gradient || fill.gradient.stops.length < 2) return undefined;
+			const server = gradientPaint(fill.gradient, box);
+			return { ...server, opacity: 1 };
+		}
+		case 'pattern': {
+			const server = fill.pattern ? patternPaint(fill.pattern) : undefined;
+			return server ? { ...server, opacity: 1 } : undefined;
+		}
+		case 'picture': {
+			const src = fill.picture?.src;
+			if (!src) return undefined;
+			const server = picturePaint(src, box, Boolean(fill.picture?.tile));
+			return { ...server, opacity: opacityOf(fill.picture?.transparency) };
+		}
+		case 'none':
+			return undefined;
+		default:
+			return fallbackFill ? { defs: '', paint: fallbackFill, opacity: 1 } : undefined;
+	}
+}
+
+/** The stroke paint of a line over `box` (solid or gradient), or `undefined`. */
+export function linePaintOf(
+	line: PptxChartElementLine | undefined,
+	box: PaintBox,
+): { defs: string; paint: string; opacity: number } | undefined {
+	if (line?.kind === 'solid') {
+		return { defs: '', paint: safeColor(line.color), opacity: opacityOf(line.transparency) };
+	}
+	if (line?.kind === 'gradient' && line.gradient && line.gradient.stops.length >= 2) {
+		return { ...gradientPaint(line.gradient, box), opacity: opacityOf(line.transparency) };
+	}
+	return undefined;
+}
+
+/** Stroke widths and offsets (fractions of the width, from the centre line) of a compound line. */
+export function compoundStrokes(
+	compound: PptxChartElementLine['compound'],
+): Array<[number, number]> {
+	switch (compound) {
+		case 'dbl':
+			return [
+				[1 / 3, -1 / 3],
+				[1 / 3, 1 / 3],
+			];
+		case 'thickThin':
+			return [
+				[0.6, -0.2],
+				[0.2, 0.4],
+			];
+		case 'thinThick':
+			return [
+				[0.2, -0.4],
+				[0.6, 0.2],
+			];
+		case 'tri':
+			return [
+				[0.2, -0.4],
+				[0.2, 0],
+				[0.2, 0.4],
+			];
+		default:
+			return [[1, 0]];
+	}
+}
+
 /**
  * A box (plot area, legend, title, axis label area) with its fill, border
  * and effects. `fallbackFill` is the box's flat-field fill when the format
@@ -179,29 +262,40 @@ export function boxMarkup(
 	fallbackFill?: string,
 ): string {
 	const shape: EffectShape = { kind: 'rect', ...box };
-	const fillColor =
-		fill?.kind === 'solid'
-			? safeColor(fill.color, fallbackFill ?? '#FFFFFF')
-			: fill
-				? undefined
-				: fallbackFill;
-	const fillOpacity = fill?.kind === 'solid' ? opacityOf(fill.transparency) : 1;
-	const body = fillColor
-		? paintedShapes(
+	const paint = fillPaintOf(fill, box, fallbackFill);
+	const body = paint
+		? paint.defs +
+			paintedShapes(
 				[shape],
 				(s) =>
-					shapeMarkup(s, { fill: fillColor }).replace('/>', ` fill-opacity="${r2(fillOpacity)}"/>`),
+					shapeMarkup(s, { fill: paint.paint }).replace(
+						'/>',
+						` fill-opacity="${r2(paint.opacity)}"/>`,
+					),
 				effects?.softEdge,
 			)
 		: '';
-	const border =
-		line?.kind === 'solid'
-			? shapeMarkup(shape, {
-					stroke: safeColor(line.color),
-					strokeWidth: ptToPx(line.width ?? 0.75),
-				}).replace('/>', ` stroke-opacity="${r2(opacityOf(line.transparency))}"/>`)
-			: '';
-	const casting = fillColor || border ? effectsBehind([shape], effects) : '';
+	const stroke = linePaintOf(line, box);
+	const width = ptToPx(line?.width ?? 0.75);
+	const border = stroke
+		? stroke.defs +
+			compoundStrokes(line?.compound)
+				.map(([share, offset]) =>
+					shapeMarkup(
+						{
+							kind: 'rect',
+							x: box.x - offset * width,
+							y: box.y - offset * width,
+							w: box.w + 2 * offset * width,
+							h: box.h + 2 * offset * width,
+							...(box.rx ? { rx: box.rx } : {}),
+						},
+						{ stroke: stroke.paint, strokeWidth: width * share },
+					).replace('/>', ` stroke-opacity="${r2(stroke.opacity)}"/>`),
+				)
+				.join('')
+		: '';
+	const casting = paint || border ? effectsBehind([shape], effects) : '';
 	return casting + body + border;
 }
 

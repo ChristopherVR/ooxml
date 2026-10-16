@@ -54,9 +54,14 @@ import { buildRegionMapViewModel, buildWaterfallViewModel } from './chart-waterf
 export function buildChartViewModel(element: PptxElement): ChartViewModel {
 	const inner = buildChartViewModelInner(element);
 	// Transparency, effects and element boxes from the Format panes / each element's c:spPr.
+	// Also strips the build-time axis-line tags, so it runs for every chart.
 	const vm =
-		element.type === 'chart' && element.chartData
-			? applyChartElementFormats(inner, element.chartData, element.id)
+		element.type === 'chart'
+			? applyChartElementFormats(
+					inner,
+					element.chartData ?? { chartType: 'bar', categories: [], series: [] },
+					element.id,
+				)
 			: inner;
 	// A label with a line break (a "\n" `c:separator`) paints as one `<text>` per
 	// line in every binding; single-line labels pass through untouched.

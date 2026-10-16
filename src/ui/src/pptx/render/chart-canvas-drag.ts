@@ -45,6 +45,10 @@ const INTERACTION_CSS = `
    Bindings whose chart <svg> is blanket pointer-events:none (React) never saw
    this; the other three did, which is exactly why the rule belongs here. */
 .pptx-chart-interactive svg text:not([data-chart-part]) { pointer-events: none; }
+/* The full-chart effect images of the chart Format pane (shadow, glow, bevel, decorated
+   axis lines, text effects: rects painted with a "-fmt-" pattern) sit over the marks
+   and must let their clicks through, like the labels above. */
+.pptx-chart-interactive svg rect[fill*="-fmt-"]:not([data-chart-part]) { pointer-events: none; }
 .pptx-chart-interactive svg .pptx-chart-part-selected { filter: drop-shadow(0 0 2.5px #3b82f6); }
 .pptx-chart-interactive svg .pptx-chart-part-selected:hover { filter: drop-shadow(0 0 2.5px #3b82f6) brightness(1.12); }
 `;

@@ -13,240 +13,44 @@
  *
  * @module render/chart-format/chart-format-render
  */
-import type {
-	PptxChartData,
-	PptxChartDataLabelOptions,
-	PptxChartElementFormat,
-	PptxChartShapeProps,
-} from 'ooxml-core/pptx';
+import type { PptxChartData, PptxChartElementFill, PptxChartElementFormat } from 'ooxml-core/pptx';
 
 import { computeChartLegendLayout } from '../chart-legend-layout';
-import type { ChartSvgPatternDef } from '../chart-svg-def-types';
-import type { ChartViewModel, SvgPrimitive, SvgRect, SvgText } from '../chart-view-model-types';
-import type { EffectShape } from './chart-format-effects-svg';
-import {
-	boxMarkup,
-	effectsBehind,
-	opacityOf,
-	paintedShapes,
-	resetEffectIds,
-	safeColor,
-	shapeMarkup,
-	svgDataUrl,
-} from './chart-format-effects-svg';
+import type { ChartViewModel, SvgText } from '../chart-view-model-types';
+import { bevelMarkup, resetBevelIds } from './chart-format-3d-svg';
+import { boxMarkup, resetEffectIds } from './chart-format-effects-svg';
 import { chartAxisIndex, chartPlotBounds, chartTextBox } from './chart-format-geometry';
+import { decorateAxisLines } from './chart-format-render-lines';
+import type { Images } from './chart-format-render-series';
+import { applySeriesFormats, imageRect } from './chart-format-render-series';
+import {
+	dataLabelEffectsMarkup,
+	paints,
+	withElementFormatLabelBoxes,
+	withLabelTextEffects,
+} from './chart-format-render-labels';
+import { applyTextFormats } from './chart-format-render-text';
+
+export { withElementFormatLabelBoxes };
 
 const HEX = /^#[0-9a-f]{6}$/iu;
 
-/** `#RRGGBB` at `opacity`, as an `rgba()` the SVG `fill` attribute accepts. */
-function withOpacity(color: string, opacity: number): string {
-	if (opacity >= 1 || !HEX.test(color)) {
-		return color;
-	}
-	const n = Number.parseInt(color.slice(1), 16);
-	return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.round(opacity * 1000) / 1000})`;
-}
-
-/** The label box a data-label format paints, over the parsed one. */
-function labelShapeFrom(
-	format: PptxChartElementFormat | undefined,
-	current: PptxChartShapeProps | undefined,
-): PptxChartShapeProps | undefined {
-	const fill = format?.fill;
-	const line = format?.line;
-	if (fill?.kind !== 'solid' && line?.kind !== 'solid') {
-		return current;
-	}
-	const next: PptxChartShapeProps = { ...current };
-	if (fill?.kind === 'solid' && fill.color) {
-		next.fillColor = withOpacity(safeColor(fill.color), opacityOf(fill.transparency));
-	} else if (fill?.kind === 'none') {
-		next.fillColor = 'none';
-	}
-	if (line?.kind === 'solid' && line.color) {
-		next.strokeColor = withOpacity(safeColor(line.color), opacityOf(line.transparency));
-		if (line.width !== undefined) next.strokeWidth = line.width;
-	} else if (line?.kind === 'none') {
-		next.strokeColor = 'none';
-	}
-	return next;
-}
-
-/**
- * Render-only copy of `data` whose data-label boxes follow the data-label
- * formats (colour, transparency, border), for the label decorations.
- */
-export function withElementFormatLabelBoxes(data: PptxChartData): PptxChartData {
-	const formats = data.elementFormats;
-	if (!formats) {
-		return data;
-	}
-	const chartWide = formats.dataLabels;
-	const withShape = (
-		opts: PptxChartDataLabelOptions | undefined,
-		format: PptxChartElementFormat | undefined,
-	) => {
-		const shape = labelShapeFrom(format, opts?.labelShape);
-		return shape === opts?.labelShape ? opts : { ...opts, labelShape: shape };
-	};
-	const style = data.style?.dataLabels
-		? { ...data.style, dataLabels: withShape(data.style.dataLabels, chartWide) }
-		: data.style;
-	let changed = style !== data.style;
-	const series = data.series.map((s, i) => {
-		const format = formats[`dataLabels:${i}`] ?? chartWide;
-		if (!s.dataLabelOptions || !format) return s;
-		const opts = withShape(s.dataLabelOptions, format);
-		if (opts === s.dataLabelOptions) return s;
-		changed = true;
-		return { ...s, dataLabelOptions: opts };
-	});
-	return changed ? { ...data, ...(style ? { style } : {}), series } : data;
-}
-
-function shapeOf(prim: SvgPrimitive): EffectShape | undefined {
-	switch (prim.kind) {
-		case 'rect':
-			return {
-				kind: 'rect',
-				x: prim.x,
-				y: prim.y,
-				w: prim.w,
-				h: prim.h,
-				...(prim.rx ? { rx: prim.rx } : {}),
-			};
-		case 'circle':
-			return { kind: 'circle', cx: prim.cx, cy: prim.cy, r: prim.r };
-		case 'path':
-			return {
-				kind: 'path',
-				d: prim.d,
-				filled: prim.fill !== 'none',
-				strokeWidth: prim.strokeWidth ?? 1,
-			};
-		case 'polyline':
-			return {
-				kind: 'poly',
-				points: prim.points,
-				closed: false,
-				filled: false,
-				strokeWidth: prim.strokeWidth,
-			};
-		case 'polygon':
-			return {
-				kind: 'poly',
-				points: prim.points,
-				closed: true,
-				filled: prim.fill !== 'none',
-				strokeWidth: prim.strokeWidth,
-			};
-		default:
-			return undefined;
-	}
-}
-
-const isFilled = (prim: SvgPrimitive) =>
-	(prim.kind === 'rect' ||
-		prim.kind === 'circle' ||
-		prim.kind === 'path' ||
-		prim.kind === 'polygon') &&
-	prim.fill !== 'none';
-const isStroked = (prim: SvgPrimitive) =>
-	prim.kind === 'polyline' || (prim.kind === 'path' && prim.fill === 'none');
-
-interface Images {
-	defs: ChartSvgPatternDef[];
-	idFor: (suffix: string) => string;
-	width: number;
-	height: number;
-}
-
-/** A full-chart rectangle painted with an SVG image of `body`. */
-function imageRect(images: Images, suffix: string, body: string): SvgRect {
-	const id = images.idFor(suffix);
-	images.defs.push({
-		kind: 'pattern',
-		id,
-		href: svgDataUrl(images.width, images.height, body),
-		patternUnits: 'userSpaceOnUse',
-		x: 0,
-		y: 0,
-		width: images.width,
-		height: images.height,
-	});
-	return { kind: 'rect', x: 0, y: 0, w: images.width, h: images.height, fill: `url(#${id})` };
-}
-
-/** Series transparency and effects, applied to the series' own marks. */
-function applySeriesFormats(
-	vm: ChartViewModel,
-	data: PptxChartData,
-	images: Images,
-): SvgPrimitive[] {
-	let primitives = vm.primitives;
-	data.series.forEach((_, si) => {
-		const format = data.elementFormats?.[`series:${si}`];
-		if (!format || format.reset) return;
-		const fillOpacity = format.fill?.kind === 'solid' ? opacityOf(format.fill.transparency) : 1;
-		const lineOpacity = format.line?.kind === 'solid' ? opacityOf(format.line.transparency) : 1;
-		const mine = (prim: SvgPrimitive) => 'part' in prim && prim.part?.seriesIndex === si;
-		if (fillOpacity < 1 || lineOpacity < 1) {
-			primitives = primitives.map((prim) => {
-				if (!mine(prim)) return prim;
-				const factor = isFilled(prim) ? fillOpacity : isStroked(prim) ? lineOpacity : 1;
-				return factor < 1
-					? ({
-							...prim,
-							opacity: ((prim as { opacity?: number }).opacity ?? 1) * factor,
-						} as SvgPrimitive)
-					: prim;
-			});
-		}
-		const effects = format.effects;
-		const soft = effects?.softEdge && effects.softEdge > 0 ? effects.softEdge : 0;
-		if (!effects || (!effects.shadow && !(effects.glow && effects.glow.radius > 0) && !soft))
-			return;
-		const marks = primitives.filter(mine);
-		const shapes = marks.map(shapeOf).filter((s): s is EffectShape => Boolean(s));
-		if (shapes.length === 0) return;
-		resetEffectIds();
-		// Soft edges repaint the solid marks faded at their edges; the originals stay for hit-testing.
-		const softMarks = soft
-			? marks.filter((m) => isFilled(m) && HEX.test((m as { fill: string }).fill))
-			: [];
-		const softBody = softMarks.length
-			? paintedShapes(
-					softMarks.map((m) => shapeOf(m)!),
-					(shape, index) =>
-						shapeMarkup(shape, { fill: (softMarks[index] as { fill: string }).fill }),
-					soft,
-				)
-			: '';
-		const body = effectsBehind(shapes, effects) + softBody;
-		if (!body) return;
-		const first = primitives.findIndex(mine);
-		const image = imageRect(images, `s${si}`, body);
-		const hidden = new Set(softMarks);
-		primitives = [
-			...primitives.slice(0, first),
-			image,
-			...primitives
-				.slice(first)
-				.map((prim) => (hidden.has(prim) ? ({ ...prim, opacity: 0 } as SvgPrimitive) : prim)),
-		];
-	});
-	return primitives;
-}
-
-const hasBox = (format: PptxChartElementFormat | undefined) =>
+const hasBox = (format: PptxChartElementFormat | undefined, ownGradient = true) =>
 	Boolean(
 		format &&
 		!format.reset &&
-		(format.fill?.kind === 'solid' ||
+		(paints(format.fill, ownGradient) ||
 			format.line?.kind === 'solid' ||
+			format.line?.kind === 'gradient' ||
 			format.effects?.shadow ||
-			(format.effects?.glow && format.effects.glow.radius > 0)),
+			(format.effects?.glow && format.effects.glow.radius > 0) ||
+			format.threeD?.bevelTop ||
+			format.threeD?.contour),
 	);
+
+/** A box's fill as drawn here: a gradient the model paints itself is left to it. */
+const boxFill = (fill: PptxChartElementFill | undefined, ownGradient: boolean) =>
+	fill?.kind === 'gradient' && !ownGradient ? undefined : fill;
 
 function union(
 	boxes: Array<{ left: number; top: number; right: number; bottom: number }>,
@@ -263,25 +67,37 @@ function union(
 const textBoxes = (texts: readonly SvgText[] | undefined) =>
 	(texts ?? []).filter((t) => !t.transform).map((t) => chartTextBox(t, 2));
 
+/** A box with its fill, border, effects and 3-D bevel. */
+function boxLayer(
+	box: { x: number; y: number; w: number; h: number; rx?: number },
+	format: PptxChartElementFormat,
+	ownGradient = true,
+): string {
+	resetBevelIds();
+	return (
+		boxMarkup(box, boxFill(format.fill, ownGradient), format.line, format.effects) +
+		bevelMarkup([box], format.threeD)
+	);
+}
+
 /** The chart-area background with the element boxes, or `undefined` when plain. */
 function backgroundMarkup(vm: ChartViewModel, data: PptxChartData): string | undefined {
 	const f = data.elementFormats ?? {};
 	const layers: string[] = [];
 	const plot = f.plotArea;
 	const plotBox =
-		hasBox(plot) || (plot?.effects?.softEdge ?? 0) > 0 ? chartPlotBounds(vm) : undefined;
+		hasBox(plot, false) || (plot?.effects?.softEdge ?? 0) > 0 ? chartPlotBounds(vm) : undefined;
 	if (plot && plotBox) {
 		layers.push(
-			boxMarkup(
+			boxLayer(
 				{
 					x: plotBox.left,
 					y: plotBox.top,
 					w: plotBox.right - plotBox.left,
 					h: plotBox.bottom - plotBox.top,
 				},
-				plot.fill,
-				plot.line,
-				plot.effects,
+				plot,
+				false,
 			),
 		);
 	}
@@ -293,7 +109,7 @@ function backgroundMarkup(vm: ChartViewModel, data: PptxChartData): string | und
 	for (const [index, texts] of axisSources) {
 		const format = index >= 0 ? f[`axis:${index}`] : undefined;
 		// An axis' line is the axis line itself (drawn with the axis); its fill paints the label area.
-		if (format?.fill?.kind === 'solid' && !format.reset) {
+		if (format && !format.reset && paints(format.fill, true)) {
 			const box = union(textBoxes(texts), 2);
 			if (box) layers.push(boxMarkup(box, format.fill, undefined, format.effects));
 		}
@@ -307,7 +123,7 @@ function backgroundMarkup(vm: ChartViewModel, data: PptxChartData): string | und
 			bottom: item.y + 5,
 		}));
 		const box = union(items, 4);
-		if (box) layers.push(boxMarkup(box, legend!.fill, legend!.line, legend!.effects));
+		if (box) layers.push(boxLayer(box, legend!));
 	}
 	const title = f.title;
 	if (hasBox(title) && vm.title) {
@@ -329,47 +145,59 @@ function backgroundMarkup(vm: ChartViewModel, data: PptxChartData): string | und
 			],
 			3,
 		);
-		if (box) layers.push(boxMarkup(box, title!.fill, title!.line, title!.effects));
+		if (box) layers.push(boxLayer(box, title!));
 	}
-	const area = f.chartArea;
+	const area = f.chartArea && !f.chartArea.reset ? f.chartArea : undefined;
+	const areaPaints = area?.fill?.kind === 'pattern' || area?.fill?.kind === 'picture';
 	const areaSpecial =
 		area &&
-		!area.reset &&
 		((area.fill?.kind === 'solid' && (area.fill.transparency ?? 0) > 0) ||
-			(area.effects?.softEdge ?? 0) > 0);
+			areaPaints ||
+			(area.effects?.softEdge ?? 0) > 0 ||
+			area.threeD?.bevelTop ||
+			area.threeD?.contour);
 	if (layers.length === 0 && !areaSpecial) {
 		return undefined;
 	}
+	const frame = {
+		x: 0,
+		y: 0,
+		w: vm.svgWidth,
+		h: vm.svgHeight,
+		...(vm.areaRadius ? { rx: vm.areaRadius } : {}),
+	};
 	const base = vm.areaFill && HEX.test(vm.areaFill) ? vm.areaFill : undefined;
-	const areaLayer = base
-		? boxMarkup(
-				{
-					x: 0,
-					y: 0,
-					w: vm.svgWidth,
-					h: vm.svgHeight,
-					...(vm.areaRadius ? { rx: vm.areaRadius } : {}),
-				},
-				area?.fill?.kind === 'solid' ? { ...area.fill, color: base } : undefined,
-				undefined,
-				area?.effects?.softEdge ? { softEdge: area.effects.softEdge } : undefined,
-				base,
-			)
-		: '';
+	resetBevelIds();
+	const areaLayer =
+		base || areaPaints
+			? boxMarkup(
+					frame,
+					areaPaints
+						? area!.fill
+						: area?.fill?.kind === 'solid'
+							? { ...area.fill, color: base! }
+							: undefined,
+					undefined,
+					area?.effects?.softEdge ? { softEdge: area.effects.softEdge } : undefined,
+					base,
+				) + bevelMarkup([frame], area?.threeD)
+			: '';
 	return areaLayer + layers.join('');
 }
 
 /**
- * Apply the element formats of `data` to a finished view model. A chart
- * without formats beyond what the flat fields draw comes back unchanged.
+ * Apply the element formats of `data` to a finished view model, and strip
+ * the build-time axis-line tags. A chart without formats beyond what the
+ * flat fields draw comes back unchanged.
  */
 export function applyChartElementFormats(
 	vm: ChartViewModel,
 	data: PptxChartData,
 	elementId: string,
 ): ChartViewModel {
+	const lines = decorateAxisLines(vm, data);
 	if (!data.elementFormats) {
-		return vm;
+		return lines.vm;
 	}
 	const images: Images = {
 		defs: [],
@@ -377,8 +205,34 @@ export function applyChartElementFormats(
 		width: vm.svgWidth,
 		height: vm.svgHeight,
 	};
-	const primitives = applySeriesFormats(vm, data, images);
-	let next: ChartViewModel = primitives === vm.primitives ? vm : { ...vm, primitives };
+	const series = applySeriesFormats(lines.vm, data, images);
+	let next: ChartViewModel =
+		series.primitives === lines.vm.primitives
+			? lines.vm
+			: { ...lines.vm, primitives: series.primitives };
+	if (series.legendFills.size > 0) {
+		next = {
+			...next,
+			legend: next.legend.map((entry, i) => {
+				const fill = series.legendFills.get(i);
+				return fill ? { ...entry, color: fill } : entry;
+			}),
+		};
+	}
+	// Decorated axis lines paint above the gridlines and below the marks.
+	resetEffectIds();
+	if (lines.markup) {
+		next = { ...next, primitives: [imageRect(images, 'ax', lines.markup), ...next.primitives] };
+	}
+	// Text effects and label boxes' shadows paint above the marks, under the text nodes.
+	resetEffectIds();
+	const text = applyTextFormats(next, withLabelTextEffects(data));
+	next = text.vm;
+	resetEffectIds();
+	const overlay = dataLabelEffectsMarkup(next, data) + text.markup;
+	if (overlay) {
+		next = { ...next, primitives: [...next.primitives, imageRect(images, 'tx', overlay)] };
+	}
 	// A gradient chart area keeps its own def; the boxes then paint as the first primitive.
 	resetEffectIds();
 	const background = backgroundMarkup(next, data);

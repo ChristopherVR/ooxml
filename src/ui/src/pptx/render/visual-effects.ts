@@ -30,6 +30,7 @@
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { getShapeType, isImageLikeElement } from 'ooxml-core/pptx';
 
+import { chartAreaEffectStyle } from './chart-format/chart-area-outer-effects';
 import { hexToRgbUnit } from './color-units';
 import type { ReflectionWrapperStyle } from './reflection';
 import { getReflectionWrapperStyle } from './reflection';
@@ -1014,6 +1015,10 @@ export interface ComputedEffectStyle {
 export function getEffectStyleSource(element: PptxElement): ShapeStyle | undefined {
 	if ('shapeStyle' in element) {
 		return element.shapeStyle;
+	}
+	if (element.type === 'chart') {
+		// The chart area's shadow and glow, drawn outside the frame like PowerPoint.
+		return chartAreaEffectStyle(element.chartData);
 	}
 	return element.type === 'group' ? element.groupEffectStyle : undefined;
 }

@@ -101,20 +101,36 @@ export function buildBars(
 		varyColorsSingle = chartData.varyColors === true && series.length === 1;
 
 	if (grouping === 'clustered') {
-		const seriesCount = Math.max(series.length, 1),
-			barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-			{ singleBarWidth, step, clusterWidth } = clusteredBarGeometry(
-				barGroupWidth,
-				seriesCount,
-				chartData,
-			),
-			groupOffset = (barGroupWidth - clusterWidth) / 2;
+		const barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
+			// A series on the secondary axis is a chart group of its own: PowerPoint clusters
+			// each group across the whole category slot and draws the secondary one on top.
+			split =
+				secondaryRange !== undefined && secondaryIdx.size > 0 && secondaryIdx.size < series.length,
+			groups = split
+				? [
+						series.map((_, i) => i).filter((i) => !secondaryIdx.has(i)),
+						series.map((_, i) => i).filter((i) => secondaryIdx.has(i)),
+					]
+				: [series.map((_, i) => i)],
+			slots = new Map<number, number>();
+		const geometry = groups.map((members) => {
+			members.forEach((si, slot) => slots.set(si, slot));
+			const g = clusteredBarGeometry(barGroupWidth, Math.max(members.length, 1), chartData);
+			return { ...g, groupOffset: (barGroupWidth - g.clusterWidth) / 2 };
+		});
+		const order = groups.flat();
+		const geometryOf = (si: number) => geometry[split && secondaryIdx.has(si) ? 1 : 0]!;
 
 		for (let displayIndex = 0; displayIndex < catCount; displayIndex++) {
 			const sourceIndex = sourceIndices[displayIndex] ?? displayIndex;
-			for (let si = 0; si < series.length; si++) {
+			for (const si of order) {
+				const { singleBarWidth, step, groupOffset } = geometryOf(si);
 				const val = series[si].values[sourceIndex] ?? 0,
-					x = layout.plotLeft + barGroupWidth * displayIndex + groupOffset + step * si,
+					x =
+						layout.plotLeft +
+						barGroupWidth * displayIndex +
+						groupOffset +
+						step * (slots.get(si) ?? si),
 					activeRange = secondaryIdx.has(si) && secondaryRange ? secondaryRange : primaryRange,
 					zeroY = valueToY(0, activeRange, layout.plotTop, layout.plotBottom),
 					valY = valueToY(val, activeRange, layout.plotTop, layout.plotBottom),
