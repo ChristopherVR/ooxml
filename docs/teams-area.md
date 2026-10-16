@@ -177,6 +177,28 @@ sign-in strings are English, grouped in `sign-in-strings.ts` for a later transla
 behind symmetric NAT: run your own TURN (for example coturn with `use-auth-secret`) and give the
 clients credentials. TURN entries without credentials are rejected by `parseServerConfig`.
 
+## Languages
+
+`<teams-app>` and every element in `src/ui/src/teams` take a `locale` (a BCP 47 tag such as `de`
+or `zh-CN`; the bindings pass it as the `locale` prop or input, the demos read `?locale=de`).
+English, German, Spanish, French and Simplified Chinese ship; an empty or unknown tag means
+English. A Teams element without its own `locale` takes the nearest enclosing Teams element's, and
+a change on `<teams-app>` reaches everything it rendered.
+
+- Wording lives in `src/ui/src/teams/i18n/locales/<locale>/*.ts`, one flat dictionary per locale
+  keyed by dotted ids, looked up through the shared `ooxml-core/i18n` translator. English is the
+  contract: the other dictionaries are typed against its keys and a test checks keys,
+  `{placeholders}` and plural forms. Plurals use `name.one` and `name.other`, chosen by
+  `Intl.PluralRules`. Never put a user-visible string in a template; add a key to every locale.
+- Dates, times, weekdays, months and sizes go through `Intl` in the display locale. While no locale
+  is set the browser's own date and time conventions apply, as before.
+- The core words some notices and errors in English. `i18n/core-text.ts` matches the known ones and
+  shows the dictionary's wording; an unknown message (a server's own error text) is shown as
+  written.
+- Text that people wrote or that is stored in the shared document is data and is never translated:
+  chat messages, channel and meeting titles, and the system lines the core writes into a chat
+  ("Ada joined the chat") stay in the language they were written in.
+
 ## Honest limits
 
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read
