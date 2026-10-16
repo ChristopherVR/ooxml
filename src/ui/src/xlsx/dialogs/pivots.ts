@@ -183,7 +183,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		if (axis.disabled) axis.value = 'columns';
 		more.enable(!!second.value);
 		moreColumns.enable(!!column.value);
-		page.update(axis.value === 'rows', [
+		page.update([
 			row.value,
 			second.value,
 			...more.read(),
@@ -194,7 +194,6 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		]);
 		for (const option of second.options)
 			option.disabled = !!page.source.value && option.value === page.source.value;
-		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled = !!page.source.value;
 		const rowsAxis = axis.value === 'rows';
 		const rowNames = [row.value, second.value, ...(second.value ? more.read() : [])].filter(
 			Boolean,

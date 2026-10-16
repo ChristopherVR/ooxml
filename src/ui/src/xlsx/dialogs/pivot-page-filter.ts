@@ -50,7 +50,7 @@ export function pivotPageControls(
 		source,
 		item,
 		body: [field(ctx, 'Report Filter Field:', source), field(ctx, 'Report Filter Item:', item)],
-		update: (disabled: boolean, excluded: string[]) => {
+		update: (excluded: string[]) => {
 			const old = loaded ? source.value : (initial?.field ?? '');
 			const fields = data().fields;
 			source.replaceChildren();
@@ -60,9 +60,8 @@ export function pivotPageControls(
 				option.textContent = name || ctx.t('(None)');
 				source.append(option);
 			}
-			source.value = disabled ? '' : old;
+			source.value = old;
 			if (source.selectedIndex < 0) source.value = '';
-			source.disabled = disabled;
 			const chosen = !loaded
 				? initial?.item
 				: source.value === old && item.value !== ''
@@ -70,7 +69,7 @@ export function pivotPageControls(
 					: undefined;
 			loadItems(chosen);
 			loaded = true;
-			item.disabled = disabled || !source.value;
+			item.disabled = !source.value;
 		},
 		read: (): PivotPageFilter | null =>
 			source.value
