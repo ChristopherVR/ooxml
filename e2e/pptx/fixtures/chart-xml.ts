@@ -315,18 +315,19 @@ function cxNumDim(values: number[], type = 'val'): string {
 
 /**
  * Build a cx: extended-chart part. `layoutId` is the token the core
- * `detectChartType` matches (`funnel`, `sunburst`, `boxWhisker`, `clustered`
- * Column for histogram is matched via `histogram`). Each series carries its own
- * `cat` + `val` dimensions so multi-series box-whisker data parses correctly.
+ * `detectChartType` matches (`funnel`, `sunburst`, `boxWhisker`, ...). A histogram is
+ * written the way PowerPoint writes one: a `clusteredColumn` series with a `binning` layout
+ * (a `histogram` layout id is not valid and PowerPoint refuses the file). Each series
+ * carries its own `cat` + `val` dimensions so multi-series box-whisker data parses correctly.
  */
 export function buildCxChartXml(input: ChartXmlInput, layoutId: string): string {
 	const series = input.series
 		.map(
 			(s, i) =>
-				`<cx:series layoutId="${layoutId}" uniqueId="{0000000${i}-0000-0000-0000-000000000000}">` +
+				`<cx:series layoutId="${layoutId === 'histogram' ? 'clusteredColumn' : layoutId}" uniqueId="{0000000${i}-0000-0000-0000-000000000000}">` +
 				`<cx:tx><cx:txData><cx:f>Sheet1!$B$1</cx:f><cx:v>${escapeXml(s.name)}</cx:v></cx:txData></cx:tx>` +
 				`<cx:spPr><a:solidFill><a:srgbClr val="${s.colorHex}"/></a:solidFill></cx:spPr>` +
-				`<cx:dataId val="${i}"/></cx:series>`,
+				`<cx:dataId val="${i}"/>${layoutId === 'histogram' ? `<cx:layoutPr><cx:binning intervalClosed="r"><cx:binCount val="${input.categories.length}"/></cx:binning></cx:layoutPr>` : ''}</cx:series>`,
 		)
 		.join('');
 
@@ -339,7 +340,7 @@ export function buildCxChartXml(input: ChartXmlInput, layoutId: string): string 
 	return (
 		`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
 		`<cx:chartSpace ${CX_NS}><cx:chartData>${data}</cx:chartData>` +
-		`<cx:chart><cx:title><cx:tx><cx:rich><a:p><a:r><a:t>${escapeXml(input.title)}</a:t></a:r></a:p></cx:rich></cx:tx></cx:title>` +
+		`<cx:chart><cx:title><cx:tx><cx:rich><a:bodyPr/><a:p><a:r><a:t>${escapeXml(input.title)}</a:t></a:r></a:p></cx:rich></cx:tx></cx:title>` +
 		`<cx:plotArea><cx:plotAreaRegion>${series}</cx:plotAreaRegion></cx:plotArea>` +
 		`<cx:legend pos="b"/></cx:chart></cx:chartSpace>`
 	);

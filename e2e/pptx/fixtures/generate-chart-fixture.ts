@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 /**
  * Generates `chart-gallery.pptx` - a multi-slide deck with exactly one chart
  * per slide, covering the breadth of chart kinds the viewers render. Used by
@@ -63,6 +63,13 @@ const JSZip = coreRequire('jszip') as {
 } & (new () => JSZipType);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The default chart style and colour style PowerPoint writes next to every chartex part, saved
+ * from a funnel chart PowerPoint itself made (`chartex-style.xml`, `chartex-colors.xml`).
+ */
+const CHARTEX_STYLE_XML = readFileSync(resolve(__dirname, 'chartex-style.xml'), 'utf8');
+const CHARTEX_COLORS_XML = readFileSync(resolve(__dirname, 'chartex-colors.xml'), 'utf8');
 
 /** Deterministic, high-contrast palette (hex without '#') applied per series. */
 const PALETTE = ['4472C4', 'ED7D31', '70AD47', 'FFC000'] as const;
@@ -433,6 +440,32 @@ export async function generateChartFixture(): Promise<string> {
 
 		// Content-type override.
 		contentTypes = addContentTypeOverride(contentTypes, chartPartName, binding.contentType);
+
+		// A chartex part also needs its style and colour-style parts: PowerPoint refuses the whole
+		// file ("corrupted and unreadable") when one is missing, and a chart without them is a
+		// shape PowerPoint never writes.
+		if (binding === CHART_BINDINGS.chartex) {
+			zip.file(`ppt/charts/style${n}.xml`, CHARTEX_STYLE_XML);
+			zip.file(`ppt/charts/colors${n}.xml`, CHARTEX_COLORS_XML);
+			zip.file(
+				`ppt/charts/_rels/chart${n}.xml.rels`,
+				`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+					`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+					`<Relationship Id="rId2" Type="http://schemas.microsoft.com/office/2011/relationships/chartStyle" Target="style${n}.xml"/>` +
+					`<Relationship Id="rId3" Type="http://schemas.microsoft.com/office/2011/relationships/chartColorStyle" Target="colors${n}.xml"/>` +
+					`</Relationships>`,
+			);
+			contentTypes = addContentTypeOverride(
+				contentTypes,
+				`ppt/charts/style${n}.xml`,
+				'application/vnd.ms-office.chartstyle+xml',
+			);
+			contentTypes = addContentTypeOverride(
+				contentTypes,
+				`ppt/charts/colors${n}.xml`,
+				'application/vnd.ms-office.chartcolorstyle+xml',
+			);
+		}
 	}
 
 	zip.file('[Content_Types].xml', contentTypes);
