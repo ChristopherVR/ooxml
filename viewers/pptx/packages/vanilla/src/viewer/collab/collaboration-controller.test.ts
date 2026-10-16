@@ -273,4 +273,23 @@ describe('createCollaborationController', () => {
 		expect(statuses).toStrictEqual(['error']);
 		expect(collab.isActive()).toBeFalsy();
 	});
+
+	it('never publishes a Design gallery hover preview to the room', async () => {
+		const collab = build();
+		await collab.start({ ...webrtcConfig, role: 'collaborator' });
+		capturedSynced?.();
+		reconcileSlidesInYDoc.mockClear();
+
+		// Preview shows (held), then the original comes back (still held, then released).
+		store.set({ deckStyleHeld: true });
+		store.set({ slides: [slide('preview')] });
+		store.set({ slides: [] });
+		store.set({ deckStyleHeld: false });
+		expect(reconcileSlidesInYDoc).not.toHaveBeenCalled();
+
+		// A real edit afterwards still goes out.
+		store.set({ slides: [slide('a')] });
+		expect(reconcileSlidesInYDoc).toHaveBeenCalledOnce();
+		collab.stop();
+	});
 });

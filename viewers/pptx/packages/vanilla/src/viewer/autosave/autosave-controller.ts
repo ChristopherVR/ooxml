@@ -137,6 +137,11 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		if (disposed || !isActive() || saving || !handler || !store.get().dirty) {
 			return;
 		}
+		// A Design gallery hover preview is never part of a recovery snapshot: try again after it.
+		if (store.get().deckStyleHeld) {
+			schedule();
+			return;
+		}
 		saving = true;
 		setStatus('saving');
 		try {
