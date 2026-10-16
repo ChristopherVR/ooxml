@@ -64,7 +64,7 @@
  {#each DESIGN_RIBBON_GROUPS as group (group.id)}
   <pptx-ui-ribbon-group data-ribbon-group={group.id} label={t(group.labelKey)}>
    {#each FIXED_TAB_GALLERIES.filter((placement) => placement.control.startsWith(`${group.id}.`)) as placement (placement.control)}
-    <RibbonGallery {placement} />
+    <RibbonGallery {placement} oncommand={() => (backgroundOpen = true)} />
    {/each}
    {#each DESIGN_RIBBON_COMMANDS.filter((item) => item.id.startsWith(`${group.id}.`)) as command (command.id)}
     {@const view = designCommandState(command.id, { editable: editor.editable, galleryOpen, editorOpen, backgroundOpen, hasSlideSize: Boolean(onslidesize) })}

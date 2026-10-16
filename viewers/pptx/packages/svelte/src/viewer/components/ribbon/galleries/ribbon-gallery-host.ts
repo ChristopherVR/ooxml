@@ -1,5 +1,6 @@
-import { applyRibbonGalleryItem, buildRibbonGallery } from 'ooxml-ui/pptx';
+import { applyRibbonGalleryItem, buildRibbonGallery, galleryDeckView } from 'ooxml-ui/pptx';
 import type {
+	DeckStyleHost,
 	RibbonGalleryApplyResult,
 	RibbonGalleryContext,
 	RibbonGalleryDescriptor,
@@ -22,6 +23,7 @@ import type { PptxTheme, PptxThemePreset, XmlObject } from 'pptx-viewer-core';
 import { THEME_PRESETS } from 'pptx-viewer-core';
 import { getContext, setContext } from 'svelte';
 
+import { createEditorDeckStyleHost } from '../../../editor/editor-deck-style';
 import type { EditorState } from '../../../editor/editor-state.svelte';
 import {
 	applyThemeColorScheme,
@@ -33,8 +35,18 @@ export interface RibbonGalleryHost {
 	/** The context shared galleries read; reading it inside `$derived` tracks the editor. */
 	context(): RibbonGalleryContext;
 	build(id: RibbonGalleryId): RibbonGalleryDescriptor;
-	/** Apply tile `itemId` of gallery `id` to the selection / deck. */
-	apply(id: RibbonGalleryId, itemId: string): Promise<void>;
+	/**
+	 * Apply tile `itemId` of gallery `id` to the selection / deck; `action` is the tile's context
+	 * menu entry. Resolves the result when it is a command for the caller to run.
+	 */
+	apply(
+		id: RibbonGalleryId,
+		itemId: string,
+		action?: string,
+	): Promise<RibbonGalleryApplyResult | undefined>;
+	/** Show what tile `itemId` would do while it is hovered; `endPreview` puts the slides back. */
+	preview(id: RibbonGalleryId, itemId: string): void;
+	endPreview(): void;
 	/** Design > Browse Themes: re-theme the presentation with `preset` (undoable). */
 	applyThemePreset(preset: PptxThemePreset): Promise<void>;
 	/** Publish a new presentation theme (Design > Edit Theme's editor calls this). */
@@ -46,15 +58,29 @@ export function createRibbonGalleryHost(
 	editor: EditorState,
 	onthemechange?: (theme: PptxTheme) => void,
 ): RibbonGalleryHost {
+	const deckStyle: DeckStyleHost = createEditorDeckStyleHost(editor, (theme) => {
+		if (theme) {
+			onthemechange?.(theme);
+		}
+	});
 	const context = (): RibbonGalleryContext => {
 		const handler = editor.getHandler();
+		// While a hover preview shows, galleries are built from the original deck (stable tiles).
+		const deck = galleryDeckView(deckStyle.held(), {
+			theme: editor.theme,
+			themeColorMap: editor.themeColorMap,
+			activeSlide: editor.slides[editor.currentSlideIndex] ?? null,
+		});
 		return {
 			element: editor.selectedElement ?? null,
-			themeColorMap: editor.themeColorMap,
-			theme: editor.theme,
+			themeColorMap: deck.themeColorMap,
+			theme: deck.theme,
 			resolveStyleMatrix: handler
-				? (xml: XmlObject) => handler.resolveStyleMatrixReferences(xml)
+				? (xml: XmlObject, effectSchemeId?: string) =>
+						handler.resolveStyleMatrixReferences(xml, effectSchemeId)
 				: undefined,
+			activeSlide: deck.activeSlide ?? null,
+			...(handler?.getThemeVariants().length ? { themeVariants: handler.getThemeVariants() } : {}),
 			// The marquee'd range (a plain click is a one-cell range); Table Layout acts on it.
 			selectedTableCells: editor.tableCells
 				.cellsFor(editor.selectedElement?.id)
@@ -63,6 +89,19 @@ export function createRibbonGalleryHost(
 	};
 
 	async function dispatch(result: RibbonGalleryApplyResult): Promise<void> {
+		if (
+			result.kind === 'themeEffects' ||
+			result.kind === 'backgroundStyle' ||
+			result.kind === 'sequence'
+		) {
+			// Settles the hover preview itself, so the commit starts from the real slides.
+			await deckStyle.commit(result);
+			return;
+		}
+		deckStyle.endPreview();
+		if (result.kind === 'command') {
+			return;
+		}
 		if (result.kind === 'element') {
 			editor.applyElementPatch(result.elementId, result.patch);
 			return;
@@ -101,15 +140,23 @@ export function createRibbonGalleryHost(
 			const descriptor = buildRibbonGallery(id, context());
 			return { ...descriptor, disabled: descriptor.disabled || !editor.editable };
 		},
-		apply: async (id, itemId) => {
+		apply: async (id, itemId, action) => {
 			if (!editor.editable) {
-				return;
+				return undefined;
 			}
-			const result = applyRibbonGalleryItem(id, itemId, context());
-			if (result) {
-				await dispatch(result);
+			const result = applyRibbonGalleryItem(id, itemId, context(), action);
+			if (!result) {
+				return undefined;
+			}
+			await dispatch(result);
+			return result.kind === 'command' ? result : undefined;
+		},
+		preview: (id, itemId) => {
+			if (editor.editable) {
+				deckStyle.preview(applyRibbonGalleryItem(id, itemId, context()));
 			}
 		},
+		endPreview: () => deckStyle.endPreview(),
 		applyThemePreset: async (preset) => {
 			const handler = editor.getHandler();
 			if (!handler || !editor.editable) {

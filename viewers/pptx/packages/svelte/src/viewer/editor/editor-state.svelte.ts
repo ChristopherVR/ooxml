@@ -151,6 +151,13 @@ export class EditorState {
 	 */
 	theme = $state.raw<PptxTheme | undefined>(undefined);
 	/**
+	 * True while a Design gallery hover preview shows over the slides. Autosave and collaboration
+	 * read {@link committedRenderedSlides} instead of the live slides for that time.
+	 */
+	deckStyleHeld = $state(false);
+	/** `renderedSlides` as they were when the preview began (see {@link deckStyleHeld}). */
+	heldRenderedSlides: PptxSlide[] | null = null;
+	/**
 	 * `ppt/viewProps.xml`, seeded from the load and kept in sync with the View >
 	 * Grid/Guides/Snap toggles (wave 4 #5: `viewPropertiesPatchFromPreferences`
 	 * writes the toggle state back in here). Deliberately outside
@@ -346,6 +353,13 @@ export class EditorState {
 
 	get renderedSlides(): PptxSlide[] {
 		return this.templateOps.renderedSlides();
+	}
+
+	/** The slides the document really holds: not what a Design gallery hover preview shows. */
+	get committedRenderedSlides(): PptxSlide[] {
+		return this.deckStyleHeld && this.heldRenderedSlides
+			? this.heldRenderedSlides
+			: this.renderedSlides;
 	}
 
 	get hasClipboard(): boolean {
