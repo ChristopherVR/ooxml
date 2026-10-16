@@ -11,6 +11,7 @@ import type {
 	PptxChartData,
 	PptxChartElementFill,
 	PptxChartElementLine,
+	PptxChartElementText,
 	PptxChartFormatTarget,
 	PptxChartGradientFill,
 	PptxChartSeries,
@@ -46,6 +47,9 @@ function shapeFromFormat(
 		delete next.lineNoFill;
 		if (line.kind === 'solid' && line.color) {
 			next.strokeColor = line.color;
+		} else if (line.kind === 'gradient' && line.gradient?.stops.length) {
+			// A plain line where the gradient is not drawn: its last stop.
+			next.strokeColor = line.gradient.stops[line.gradient.stops.length - 1]!.color;
 		} else if (line.kind === 'none') {
 			next.lineNoFill = true;
 		}
@@ -192,4 +196,68 @@ export function applyGradient(
 		}));
 	}
 	return data;
+}
+
+/**
+ * Mirror a Text Options fill onto the flat text colour the renderer already
+ * reads for `target` (the chart-wide text style, the title colour and runs,
+ * the legend text style, an axis' label colour, the data labels' text
+ * style). A solid fill sets it; Automatic clears it; other kinds leave it.
+ */
+export function mirrorTextColor(
+	data: PptxChartData,
+	target: PptxChartFormatTarget,
+	text: PptxChartElementText | undefined,
+): PptxChartData {
+	const fill = text?.fill;
+	if (!fill || (fill.kind !== 'solid' && fill.kind !== 'automatic')) {
+		return data;
+	}
+	const color = fill.kind === 'solid' ? fill.color : undefined;
+	const withColor = <T extends { color?: string }>(style: T | undefined): T => {
+		const next = { ...style } as T;
+		if (color) next.color = color;
+		else delete next.color;
+		return next;
+	};
+	const style = { ...data.style };
+	switch (target.kind) {
+		case 'chartArea':
+			style.textStyle = withColor(style.textStyle);
+			return { ...data, style };
+		case 'title': {
+			if (color) style.titleFontColor = color;
+			else delete style.titleFontColor;
+			const titleRuns = data.titleRuns?.map((run) => withColor(run));
+			return { ...data, style, ...(titleRuns ? { titleRuns } : {}) };
+		}
+		case 'legend':
+			style.legendTextStyle = withColor(style.legendTextStyle);
+			return { ...data, style };
+		case 'axis':
+			return {
+				...data,
+				axes: (data.axes ?? []).map((axis, i) => {
+					if (i !== target.axisIndex) return axis;
+					const next = { ...axis };
+					if (color) next.fontColor = color;
+					else delete next.fontColor;
+					return next;
+				}),
+			};
+		case 'dataLabels':
+			if (target.seriesIndex === undefined) {
+				style.dataLabels = { ...style.dataLabels, txPr: withColor(style.dataLabels?.txPr) };
+				return { ...data, style };
+			}
+			return withSeries(data, target.seriesIndex, (series) => ({
+				...series,
+				dataLabelOptions: {
+					...series.dataLabelOptions,
+					txPr: withColor(series.dataLabelOptions?.txPr),
+				},
+			}));
+		default:
+			return data;
+	}
 }

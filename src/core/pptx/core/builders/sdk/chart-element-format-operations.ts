@@ -30,6 +30,7 @@ import {
 	applyGradient,
 	hasGradientField,
 	mirrorFlatFields,
+	mirrorTextColor,
 	withSeries,
 } from './chart-element-format-mirror';
 import { readChartElementFormat } from './chart-element-format-read';
@@ -156,6 +157,9 @@ export function withChartElementFormat(
 		entry.text = text;
 	}
 	next = mirrorFlatFields(next, target, fill, line);
+	if (patch.text?.fill && entry.text) {
+		next = mirrorTextColor(next, target, entry.text);
+	}
 	return { ...next, elementFormats: { ...next.elementFormats, [key]: entry } };
 }
 

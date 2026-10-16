@@ -228,7 +228,8 @@ export function readChartTextFormat(
 	const out: PptxChartElementText = {};
 	const bodyPr = asObject(body[keyOf(body, 'bodyPr', localName) ?? '']) ?? {};
 	const rot = Number(bodyPr['@_rot']);
-	if (bodyPr['@_rot'] !== undefined && Number.isFinite(rot))
+	// PowerPoint writes `rot="-60000000"` for "automatic"; only a real angle (-90..90) is custom.
+	if (bodyPr['@_rot'] !== undefined && Number.isFinite(rot) && Math.abs(rot) <= 5400000)
 		out.rotation = Math.round(rot / 600) / 100;
 	const vert = bodyPr['@_vert'];
 	if (vert === 'horz' || vert === 'vert' || vert === 'vert270' || vert === 'wordArtVert')
