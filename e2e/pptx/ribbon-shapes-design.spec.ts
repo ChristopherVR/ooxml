@@ -176,11 +176,10 @@ test.describe('Design', () => {
 		for (const id of ['colors', 'fonts']) {
 			await expect(page.locator(`[data-ribbon-control="design.variants.${id}"]`)).toBeVisible();
 		}
-		// Effects and Background Styles have no engine: listed, disabled, with the reason.
+		// Effects and Background Styles are galleries too (design-effects-backgrounds.spec.ts).
 		for (const id of ['effects', 'backgroundStyles']) {
 			const control = page.locator(`[data-ribbon-control="design.variants.${id}"] button`).first();
-			await expect(control).toBeDisabled();
-			await expect(control).toHaveAttribute('title', /(not available|cannot be changed)/iu);
+			await expect(control).toBeEnabled();
 		}
 	});
 
