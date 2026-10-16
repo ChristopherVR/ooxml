@@ -263,6 +263,8 @@ export interface GalleryPreviewController {
 	settle(): DeckStyleState | undefined;
 	/** The state a preview is computed from: the original while one shows, else the live state. */
 	base(): DeckStyleState;
+	/** The original while a preview shows (what collaboration and autosave must keep seeing). */
+	held(): DeckStyleState | undefined;
 	readonly active: boolean;
 }
 
@@ -300,8 +302,132 @@ export function createGalleryPreviewController(
 		base() {
 			return original ?? adapter.read();
 		},
+		held() {
+			return original;
+		},
 		get active() {
 			return original !== undefined;
+		},
+	};
+}
+
+/**
+ * The theme, colour map and active slide a gallery is built from. While a hover preview shows
+ * these are the original deck's, not the previewed one, so the tiles stay put under the pointer
+ * and a pick means what its tile showed.
+ */
+export function galleryDeckView(
+	held: DeckStyleState | undefined,
+	live: {
+		theme: PptxTheme | undefined;
+		themeColorMap: Record<string, string> | undefined;
+		activeSlide: PptxSlide | null | undefined;
+	},
+): {
+	theme: PptxTheme | undefined;
+	themeColorMap: Record<string, string> | undefined;
+	activeSlide: PptxSlide | null | undefined;
+} {
+	if (!held) {
+		return live;
+	}
+	return {
+		theme: held.theme,
+		themeColorMap: held.themeColorMap,
+		activeSlide: held.slides.find((slide) => slide.id === live.activeSlide?.id) ?? live.activeSlide,
+	};
+}
+
+/**
+ * For a watcher that runs after the fact (a Svelte or Angular effect) and cannot be paused
+ * across a hover preview: tells an edit from the preview showing and from the original coming
+ * back. `key` identifies the document (the identities of the slide and template stores).
+ */
+export function createPreviewEditGuard(): {
+	isEdit(key: readonly unknown[], held: boolean): boolean;
+} {
+	let committed: readonly unknown[] | undefined;
+	let base: readonly unknown[] | undefined;
+	let sawHeld = false;
+	const same = (a: readonly unknown[] | undefined, b: readonly unknown[] | undefined): boolean =>
+		a !== undefined && b !== undefined && a.length === b.length && a.every((v, i) => v === b[i]);
+	return {
+		isEdit(key, held) {
+			if (held) {
+				if (!sawHeld) {
+					sawHeld = true;
+					base = committed;
+				}
+				return false;
+			}
+			if (sawHeld) {
+				sawHeld = false;
+				const restored = same(key, base);
+				base = undefined;
+				if (restored) {
+					return false;
+				}
+			}
+			committed = key;
+			return true;
+		},
+	};
+}
+
+/** What a binding gives {@link createDeckStyleHost}; read afresh on every call. */
+export interface DeckStyleHostOptions extends GalleryPreviewAdapter {
+	handler(): DeckStyleHandler | null | undefined;
+	selectedSlideIds(): readonly string[];
+	/** Take a committed state into the binding: its state, an undo step and the dirty flag. */
+	apply(state: DeckStyleState): void;
+}
+
+export interface DeckStyleHost {
+	/** Show what `result` would do (hover); `null` or an unpreviewable result ends the preview. */
+	preview(result: RibbonGalleryApplyResult | null): void;
+	/** Put the live state back (the pointer left the tiles or the gallery closed). */
+	endPreview(): void;
+	/**
+	 * Stop previewing before the binding commits by its own path; the state is back to what it was.
+	 * Returns the state a preview started from, when one was showing.
+	 */
+	settle(): DeckStyleState | undefined;
+	/** Commit `result`; resolves `false` when nothing could take it. */
+	commit(result: RibbonGalleryApplyResult): Promise<boolean>;
+	/** The original while a preview shows. */
+	held(): DeckStyleState | undefined;
+}
+
+/**
+ * The preview and commit halves of the Design galleries over a binding's state. `options` is
+ * called on every use, so a framework that rebuilds its closures per render passes a getter.
+ */
+export function createDeckStyleHost(options: () => DeckStyleHostOptions): DeckStyleHost {
+	const controller = createGalleryPreviewController({
+		read: () => options().read(),
+		show: (state) => options().show(state),
+		hold: (on) => options().hold?.(on),
+	});
+	const target = (): DeckStyleTarget => ({ selectedSlideIds: options().selectedSlideIds() });
+	return {
+		preview(result) {
+			controller.preview(
+				result
+					? previewGalleryResult(result, controller.base(), options().handler(), target())
+					: undefined,
+			);
+		},
+		endPreview: () => controller.end(),
+		settle: () => controller.settle(),
+		held: () => controller.held(),
+		async commit(result) {
+			const base = controller.settle() ?? options().read();
+			const next = await commitGalleryResult(result, base, options().handler(), target());
+			if (!next) {
+				return false;
+			}
+			options().apply(next);
+			return true;
 		},
 	};
 }

@@ -104,7 +104,12 @@ export type { PptxUiRibbonInsertElement, RibbonInsertRequestEvent } from './ribb
 export type { PptxUiRibbonViewElement, RibbonViewRequestEvent } from './ribbon-view';
 export type { PptxUiRibbonSectionElement } from './ribbon-section';
 export type { PptxUiRibbonAddInElement } from './ribbon-add-in';
-export type { PptxUiRibbonGalleryElement, RibbonGalleryPickEvent } from './ribbon-gallery';
+export type {
+	PptxUiRibbonGalleryElement,
+	RibbonGalleryPickEvent,
+	RibbonGalleryPreviewEndEvent,
+	RibbonGalleryPreviewEvent,
+} from './ribbon-gallery';
 export type { GalleryTranslate } from './ribbon-gallery';
 export type { RibbonToggleRequestEvent } from './office-alias-types';
 export type {
