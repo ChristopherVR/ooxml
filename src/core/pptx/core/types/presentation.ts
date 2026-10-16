@@ -38,7 +38,7 @@ import type {
 import type { PptxPresentationPrintProperties } from './presentation-print-properties';
 import type { ParsedTableStyleMap } from './table';
 import type { TextSegment } from './text';
-import type { PptxTheme } from './theme';
+import type { PptxTheme, PptxThemeVariant } from './theme';
 import type { PptxSlideTransition } from './transition';
 import type { PptxViewProperties } from './view-properties';
 
@@ -194,6 +194,13 @@ export interface PptxSlide {
 	/** Crop, tiling and image effects authored on the background blip fill. */
 	backgroundImageProperties?: PptxImageProperties;
 	backgroundGradient?: string; // CSS gradient string for background
+	/**
+	 * The theme background style (Design > Background Styles) this slide uses: a
+	 * `<p:bgRef idx="1001..1003">` on `bg1`/`bg2`, or `kind: 'inherit'` for "follow master".
+	 * Read at load; set by the Background Styles gallery and written back on save. The flat
+	 * `backgroundColor`/`backgroundGradient` stay the painted values.
+	 */
+	backgroundStyleRef?: import('./background-style').PptxSlideBackgroundStyleRef;
 	/**
 	 * Pattern fill on the slide background (`<a:pattFill>` inside `<p:bgPr>`).
 	 *
@@ -661,6 +668,8 @@ export interface PptxData {
 	theme?: PptxTheme;
 	/** Available theme parts discovered in `ppt/theme/`. */
 	themeOptions?: PptxThemeOption[];
+	/** Real theme variants from the package's `themeVariants/` parts, when it has any. */
+	themeVariants?: PptxThemeVariant[];
 	/** Parsed table style definitions from `ppt/tableStyles.xml`. */
 	tableStyleMap?: ParsedTableStyleMap;
 	/**

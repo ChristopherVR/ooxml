@@ -227,6 +227,14 @@ export class PptxHandlerRuntime {
 	protected masterClrMaps: Map<string, Record<string, string>> = new Map();
 
 	/**
+	 * Background style (Design > Background Styles) applied to a master since load: its `p:bg` and
+	 * `p:clrMap`. The save writer applies them last, so a stale `PptxSlideMaster` model handed back
+	 * by the editor cannot undo them.
+	 */
+	protected masterStyleOverrides: Map<string, { bg: XmlObject; clrMap: Record<string, string> }> =
+		new Map();
+
+	/**
 	 * Per-master theme color maps. Each master may reference its own theme
 	 * file via `_rels/slideMasterN.xml.rels`. For multi-master decks, slides
 	 * must resolve scheme colours against their *own* master's theme.

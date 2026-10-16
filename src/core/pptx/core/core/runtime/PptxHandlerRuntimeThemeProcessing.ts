@@ -29,7 +29,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * back to the primary theme part so the legacy single-theme behaviour is
 	 * preserved.
 	 */
-	private async resolveThemeEditTargets(themePaths?: readonly string[]): Promise<string[]> {
+	protected async resolveThemeEditTargets(themePaths?: readonly string[]): Promise<string[]> {
 		const existing = (path: string): boolean => this.zip.file(path) !== null;
 		if (themePaths) {
 			return [...new Set(themePaths)].filter(existing);
@@ -68,7 +68,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 *
 	 * @returns the paths that were rewritten
 	 */
-	private async rewriteThemeParts(
+	protected async rewriteThemeParts(
 		themePaths: readonly string[] | undefined,
 		edit: (data: XmlObject) => boolean,
 	): Promise<string[]> {
@@ -85,7 +85,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/** Masters whose theme part is among the rewritten paths. */
-	private mastersUsingThemes(themePaths: readonly string[]): string[] {
+	protected mastersUsingThemes(themePaths: readonly string[]): string[] {
 		const targets = new Set(themePaths);
 		const masters: string[] = [];
 		for (const [masterPath, themePath] of this.masterThemePaths.entries()) {

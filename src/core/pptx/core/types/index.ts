@@ -46,6 +46,7 @@ export * from './model3d-scene';
 export * from './type-guards';
 export * from './theme';
 export * from './theme-presets';
+export * from './background-style';
 export * from './masters';
 export * from './presentation';
 export * from './presentation-print-properties';

@@ -14,6 +14,7 @@ import { parseEmbeddedFontList } from '../../utils/embedded-font-list';
 import { parsePresentationDrawingGuides } from '../../utils/guide-utils';
 import { resolveLayoutDisplayName } from '../../utils/layout-display-name';
 import { partRelsPath } from '../../utils/part-rels-path';
+import { loadThemeVariants } from '../../utils/theme-variants';
 import { parsePresentationSmartTags } from '../../utils/smart-tags-parser';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { PptxLoadDataBuilder } from '../builders';
@@ -67,6 +68,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// `PptxSlideLayout.elements` directly, and until these were populated
 		// the Slides tab was a bare background in all five bindings.
 		await this.enrichSlideMasterElements(slideMasters);
+		const themeVariants = await loadThemeVariants(
+			this.zip,
+			(xml) => this.parser.parse(xml) as XmlObject,
+			this.rawSlideWidthEmu,
+		);
 		const tags = await this.parseTags();
 		const customProperties = await this.parseCustomProperties();
 		const coreProperties = await this.parseCoreProperties();
@@ -110,6 +116,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			.withThemeColorMap({ ...this.themeColorMap })
 			.withTheme(this.buildThemeObject())
 			.withThemeOptions(themeOptions.length > 0 ? themeOptions : undefined)
+			.withThemeVariants(themeVariants.length > 0 ? themeVariants : undefined)
 			.withTableStyleMap(tableStyleMap)
 			.withTableStylesDefaultId(tableStylesDefaultId)
 			.withEmbeddedFonts(embeddedFonts.length > 0 ? embeddedFonts : undefined)

@@ -544,9 +544,24 @@ export {
 	reResolveElementColors,
 	applyThemeToData,
 	buildThemeColorMap,
+	buildColorMapForBackgroundPair,
+	reResolveElementsForColorMapChange,
 } from './theme-switching';
+export { loadThemeVariants } from './theme-variants';
+export {
+	backgroundRefNode,
+	backgroundRefNodeForPreset,
+	backgroundStyleRefIsCurrent,
+	slideBackgroundStyleRefFromNode,
+} from './background-style-ref';
 export { reResolveSlideFonts, reResolveElementFonts } from './theme-font-switching';
 export { applyThemeOverrideToSlide } from './slide-theme-override';
+export {
+	THEME_EFFECT_SCHEMES,
+	findThemeEffectScheme,
+	findThemeEffectSchemeByName,
+	type PptxThemeEffectScheme,
+} from './theme-effect-schemes';
 
 export {
 	applySmartArtLayoutDefinition,

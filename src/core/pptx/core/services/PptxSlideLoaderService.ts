@@ -10,6 +10,7 @@
 import { applyBackgroundFillToShapes } from '../core/builders/background-fill-shapes';
 import { applyHiddenFlagFromRawXml } from '../core/builders/element-hidden-flag';
 import type { PptxSlide, XmlObject } from '../types';
+import { slideBackgroundStyleRefFromNode } from '../utils/background-style-ref';
 import { flattenElementsDeep } from '../utils/flatten-elements';
 import { parseSlideDrawingGuides } from '../utils/guide-utils';
 import { loadSlideSynchronization } from '../utils/slide-synchronization';
@@ -413,6 +414,11 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 				backgroundGradient: backgroundGradient || undefined,
 				backgroundImage,
 				backgroundImageProperties,
+				backgroundStyleRef: slideBackgroundStyleRefFromNode(
+					params.extractOwnBackgroundRefNode(slideXmlObj),
+					backgroundColor,
+					backgroundGradient || undefined,
+				),
 				transition,
 				animations,
 				animationTimelineAnchors,

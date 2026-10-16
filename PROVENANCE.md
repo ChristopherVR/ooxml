@@ -2379,3 +2379,11 @@ Source: ChristopherVR/ooxml, `origin/main` at `260a953ea` before these commits.
 - The trendline type and error-bar enumerations of `src/core/pptx/core/utils/chart-advanced-parser.ts` and `chart-trendline-serializer.ts` are replaced by `src/core/chart/model-analysis.ts` (`chartTrendlineKind`, `chartTrendlineType`, the `CHART_ERROR_*` lists); the pptx types alias the core ones.
 
 New code (not moved): the neutral `c:trendline` and `c:errBars` model, parser and writer (`model-analysis.ts`, `parse-analysis.ts`, `write-analysis.ts`), the pptx adapter `chart-from-neutral-analysis.ts`, and the shared painter's trendlines and error bars (`render/summary-analysis.ts`, `render/chart-view-analysis.ts`, `render/chart-svg-analysis.ts`).
+
+## PowerPoint theme effect schemes and background styles (2026-10-16)
+
+Source: ChristopherVR/ooxml, `origin/main` at `906baa809` before these commits. No code moved.
+
+- `src/core/pptx/core/utils/theme-effect-schemes-data.ts` is generated from real PowerPoint output: `viewers/pptx/scripts/extract-theme-effect-schemes.ps1` loads each `Document Themes 16/Theme Effects/*.eftx` into a blank deck with `Theme.ThemeEffectScheme.Load`, saves it and cuts the `a:fmtScheme` out of `ppt/theme/theme1.xml` (the fragments are PowerPoint's, picture-free). "Grunge Texture" is left out because its fill styles are pictures.
+- The twelve Background Styles in `src/core/pptx/core/types/background-style.ts` (`bgRef` idx, `bg1`/`bg2`, and the swapped colour map of the dark columns) and the slide-level form (`bgRef` plus an explicit `overrideClrMapping`) were read from `SlideMaster.BackgroundStyle` and `Slide.BackgroundStyle` output of PowerPoint 16.
+- `src/core/pptx/__tests__/fixtures/theme-styles.pptx` was generated with PowerPoint COM (a default-styled rectangle, a hand-filled shape and two preset-styled shapes).

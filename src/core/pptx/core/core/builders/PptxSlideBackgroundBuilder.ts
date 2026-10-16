@@ -1,6 +1,7 @@
 import type JSZip from 'jszip';
 
 import type { PptxSlide, XmlObject } from '../../types';
+import { backgroundRefNode, backgroundStyleRefIsCurrent } from '../../utils/background-style-ref';
 import { BLIP_FILL_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import type { AuthoredSlideBackground } from '../runtime/authored-slide-background';
 import {
@@ -54,6 +55,23 @@ export class PptxSlideBackgroundBuilder implements IPptxSlideBackgroundBuilder {
 			typeof init.slide.backgroundGradient === 'string' && init.slide.backgroundGradient.length > 0;
 
 		const cSld = (init.slideNode['p:cSld'] || {}) as XmlObject;
+
+		// A theme background style (Design > Background Styles) the slide still shows: write the
+		// reference itself, or no `p:bg` for "follow master", never a literal copy of its colour.
+		const styleRef = init.slide.backgroundStyleRef;
+		if (styleRef && backgroundStyleRefIsCurrent(styleRef, init.slide)) {
+			if (styleRef.kind === 'inherit') {
+				delete cSld['p:bg'];
+				init.slideNode['p:cSld'] = cSld;
+				return;
+			}
+			if (styleRef.idx !== undefined && styleRef.scheme) {
+				cSld['p:bg'] = backgroundRefNode(styleRef.idx, styleRef.scheme);
+				this.reorderCSldBgFirst(cSld, cSld['p:bg'] as XmlObject);
+				init.slideNode['p:cSld'] = cSld;
+				return;
+			}
+		}
 
 		// A slide that authored no `<p:bg>` is SHOWING its layout's or master's,
 		// and the loader put that resolved value on the model so something could

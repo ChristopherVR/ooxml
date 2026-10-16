@@ -21,6 +21,11 @@ export type {
 	PptxHandlerSaveOptions,
 	PptxSaveFormat,
 } from './types';
+export type {
+	BackgroundStyleApplication,
+	BackgroundStyleScope,
+} from './runtime/PptxHandlerRuntimeBackgroundStyles';
+export type { StyleReferenceReResolution } from './runtime/PptxHandlerRuntimeThemeEffects';
 export { DEFAULT_MAX_UNCOMPRESSED_BYTES, MAX_ZIP_ENTRY_COUNT, ZipBombError } from './types';
 
 // Framework-agnostic table XML builders and raw-XML mutation operations,
