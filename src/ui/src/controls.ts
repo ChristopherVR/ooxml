@@ -160,8 +160,11 @@ export type { OfficeRibbonActionsMode, OfficeRibbonModeEvent } from './ribbon/ri
 export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon/ribbon-section';
 export {
 	parseSvgPreview,
+	type OfficeGalleryAction,
 	type OfficeGalleryItem,
 	type OfficeGalleryPickEvent,
+	type OfficeGalleryPreviewEndEvent,
+	type OfficeGalleryPreviewEvent,
 	type OfficeGallerySection,
 	type OfficeGalleryState,
 } from './ribbon/gallery';

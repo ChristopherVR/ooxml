@@ -106,6 +106,7 @@ export const THEME_FONTS_GALLERY: RibbonGalleryModule = {
 			labelKey: 'pptx.gallery.themeFonts.title',
 			label: 'Fonts',
 			disabled: false,
+			previewable: true,
 			sections: [
 				{
 					id: 'office',

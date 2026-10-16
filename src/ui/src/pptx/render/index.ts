@@ -1593,6 +1593,7 @@ export * from './options';
 // per-viewer controller whose helpers every binding exposes imperatively.
 export * from './customization';
 export * from './ribbon-galleries';
+export * from './deck-style';
 // Host ribbon tabs (`ribbonAddIns`): which show, which is active and how a command runs.
 export * from './ribbon-add-ins';
 

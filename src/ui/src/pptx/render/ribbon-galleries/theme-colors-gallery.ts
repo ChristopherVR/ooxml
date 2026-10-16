@@ -108,6 +108,7 @@ export const THEME_COLORS_GALLERY: RibbonGalleryModule = {
 			labelKey: 'pptx.gallery.themeColors.title',
 			label: 'Colors',
 			disabled: false,
+			previewable: true,
 			sections: [
 				{
 					id: 'office',

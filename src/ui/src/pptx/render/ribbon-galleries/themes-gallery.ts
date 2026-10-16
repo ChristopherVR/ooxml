@@ -79,6 +79,7 @@ export const THEMES_GALLERY: RibbonGalleryModule = {
 			labelKey: 'pptx.gallery.themes.title',
 			label: 'Themes',
 			disabled: false,
+			previewable: true,
 			inlineCount: 3,
 			sections: [
 				{

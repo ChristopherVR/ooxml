@@ -14,8 +14,14 @@ export const designGalleryTranslationsEn: Record<string, string> = {
 	'pptx.gallery.themeVariants.shiftTwo': 'Variant 3: Accent colors shifted by two',
 	'pptx.gallery.themeVariants.shiftFour': 'Variant 4: Accent colors shifted by four',
 	'pptx.gallery.themeEffects.title': 'Effects',
-	'pptx.gallery.themeEffects.unavailable': 'Theme effects cannot be changed in this viewer yet.',
 	'pptx.gallery.themeBackgrounds.title': 'Background Styles',
-	'pptx.gallery.themeBackgrounds.unavailable':
-		'Background styles are not available in this viewer yet. Use Format Background to set the slide background.',
+	'pptx.gallery.themeVariants.section.computed': 'Computed from the theme colors',
+	'pptx.gallery.themeVariants.section.theme': 'Variants of this theme',
+	'pptx.gallery.themeVariants.real': 'Variant {{number}}: {{name}}',
+	'pptx.gallery.themeEffects.scheme': 'Effects: {{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': 'Built-in',
+	'pptx.gallery.themeBackgrounds.style': 'Style {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': 'Apply to All Slides',
+	'pptx.gallery.themeBackgrounds.applySelected': 'Apply to Selected Slides',
+	'pptx.gallery.themeBackgrounds.formatBackground': 'Format Background...',
 };

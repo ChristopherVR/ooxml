@@ -1,3 +1,4 @@
+import type { PptxThemeVariant } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../i18n';
@@ -94,14 +95,47 @@ describe('Design > Variants gallery', () => {
 		expect(items.map((item) => item.applied)).toEqual([false, true, false, false]);
 	});
 
-	it('lists Effects and Background Styles disabled, with the reason', () => {
-		for (const id of ['themeEffects', 'themeBackgrounds'] as const) {
-			const descriptor = buildRibbonGallery(id, ctx());
-			expect(descriptor.disabled).toBe(true);
-			expect(descriptor.command?.hintKey).toMatch(/unavailable$/u);
-			expect(translationsEn[descriptor.command!.hintKey!]).toBe(descriptor.command!.hint);
-			expect(applyRibbonGalleryItem(id, 'run', ctx())).toBeNull();
-		}
+	it('labels the computed variants honestly and previews them on hover', () => {
+		const descriptor = buildRibbonGallery('themeVariants', ctx());
+		expect(descriptor.previewable).toBe(true);
+		expect(descriptor.sections[0]?.titleKey).toBe('pptx.gallery.themeVariants.section.computed');
+		expect(translationsEn[descriptor.sections[0]!.titleKey!]).toBe(descriptor.sections[0]!.title);
+	});
+
+	it('offers the real variants a package carries instead of computed ones', () => {
+		const variants: PptxThemeVariant[] = [
+			{ id: '{A}', name: 'Facet', colorScheme: facet.colorScheme, fontScheme: facet.fontScheme },
+			{
+				id: '{B}',
+				name: 'Facet',
+				colorScheme: { ...facet.colorScheme, accent1: '#CC0000' },
+				fontScheme: facet.fontScheme,
+				formatSchemeXml: '<a:fmtScheme name="Glossy"></a:fmtScheme>',
+				backgroundStyleIndex: 8,
+			},
+		];
+		const real = { ...ctx(facet), themeVariants: variants };
+		const descriptor = buildRibbonGallery('themeVariants', real);
+		expect(descriptor.sections[0]?.titleKey).toBe('pptx.gallery.themeVariants.section.theme');
+		expect(descriptor.sections[0]?.items.map((item) => [item.id, item.applied])).toEqual([
+			['real-0', true],
+			['real-1', false],
+		]);
+		expect(descriptor.sections[0]?.items[1]?.label).toBe('Variant 2: Facet');
+		expect(applyRibbonGalleryItem('themeVariants', 'real-0', real)).toMatchObject({
+			kind: 'sequence',
+			steps: [{ kind: 'theme', name: 'Facet' }],
+		});
+		const second = applyRibbonGalleryItem('themeVariants', 'real-1', real);
+		expect(second).toMatchObject({
+			kind: 'sequence',
+			steps: [
+				{ kind: 'theme', colorScheme: { accent1: '#CC0000' } },
+				{ kind: 'themeEffects', fmtSchemeXml: '<a:fmtScheme name="Glossy"></a:fmtScheme>' },
+				{ kind: 'backgroundStyle', styleIndex: 8, scope: 'all' },
+			],
+		});
+		expect(applyRibbonGalleryItem('themeVariants', 'real-9', real)).toBeNull();
 	});
 
 	it('is placed in the Design tab next to Colors and Fonts', () => {

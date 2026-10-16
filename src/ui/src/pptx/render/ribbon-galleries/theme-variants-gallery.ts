@@ -1,24 +1,23 @@
 /**
- * Design > Variants: four colour variants of the current theme, plus the Effects and Background
- * Styles entries.
+ * Design > Variants: the theme's variants.
  *
- * A variant is the theme's own colour scheme read four ways: as it is, with light and dark
- * inverted (a dark background), and with the six accents shifted by two and by four places. They
- * are computed from the scheme, so they follow any theme, and a pick writes a colour scheme only
- * (fonts and the theme name stay), through the same path the Colors gallery uses.
- *
- * Theme effects and background styles have no editing engine behind them yet, so those two
- * entries are present, disabled, and say why in their tooltip.
+ * When the package carries real variants (`themeVariants/` parts, read at load into
+ * `PptxData.themeVariants`) those are offered: a pick applies the variant's colours and fonts, its
+ * effect scheme and its background style. Otherwise four colour variants are computed from the
+ * theme's own colour scheme, and the gallery says so: the scheme as it is, with light and dark
+ * inverted (a dark background), and with the six accents shifted by two and by four places. A
+ * computed pick writes a colour scheme only (fonts and the theme name stay), through the same
+ * path the Colors gallery uses.
  *
  * @module render/ribbon-galleries/theme-variants-gallery
  */
-import type { PptxThemeColorScheme } from 'ooxml-core/pptx';
+import type { PptxThemeColorScheme, PptxThemeVariant } from 'ooxml-core/pptx';
+import { backgroundStylePreset } from 'ooxml-core/pptx';
 
 import { GALLERY_THEME_PRESETS } from '../../theme/theme-gallery-presets';
 import type { RibbonGalleryModule } from './gallery-module';
-import { svgTile } from './gallery-preview-svg';
 import { colorSchemesEqual, galleryColorScheme } from './gallery-theme';
-import type { RibbonGalleryContext, RibbonGalleryId } from './gallery-types';
+import type { RibbonGalleryContext, RibbonGalleryItem } from './gallery-types';
 import { themeTileSvg } from './themes-gallery';
 
 const ACCENTS = ['accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6'] as const;
@@ -39,7 +38,7 @@ function shiftAccents(scheme: PptxThemeColorScheme, by: number): PptxThemeColorS
 	return next;
 }
 
-/** The four variants of `base`, in gallery order. */
+/** The four computed variants of `base`, in gallery order. */
 export function themeVariants(base: PptxThemeColorScheme): ThemeVariant[] {
 	return [
 		{
@@ -70,9 +69,9 @@ export function themeVariants(base: PptxThemeColorScheme): ThemeVariant[] {
 }
 
 /**
- * The scheme the variants derive from. When the deck's colours are one of a built-in theme's four
- * variants, that theme's own scheme is the base, so the four tiles stay put after a pick (whatever
- * the theme is called); any other colours are their own base.
+ * The scheme the computed variants derive from. When the deck's colours are one of a built-in
+ * theme's four variants, that theme's own scheme is the base, so the four tiles stay put after a
+ * pick (whatever the theme is called); any other colours are their own base.
  */
 export function variantBase(ctx: RibbonGalleryContext): PptxThemeColorScheme {
 	const current = galleryColorScheme(ctx);
@@ -84,8 +83,62 @@ export function variantBase(ctx: RibbonGalleryContext): PptxThemeColorScheme {
 	return preset?.colorScheme ?? current;
 }
 
+/** The real variants the package carries, or none. */
+function realVariants(ctx: RibbonGalleryContext): readonly PptxThemeVariant[] {
+	return ctx.themeVariants ?? [];
+}
+
+/** A real variant's tile scheme: its colours, light and dark swapped when its master is dark. */
+function tileScheme(variant: PptxThemeVariant): PptxThemeColorScheme {
+	const preset = variant.backgroundStyleIndex
+		? backgroundStylePreset(variant.backgroundStyleIndex)
+		: undefined;
+	const scheme = variant.colorScheme;
+	return preset?.dark
+		? { ...scheme, dk1: scheme.lt1, lt1: scheme.dk1, dk2: scheme.lt2, lt2: scheme.dk2 }
+		: scheme;
+}
+
+function buildReal(ctx: RibbonGalleryContext, variants: readonly PptxThemeVariant[]) {
+	const current = galleryColorScheme(ctx);
+	return {
+		id: 'themeVariants' as const,
+		labelKey: 'pptx.gallery.themeVariants.title',
+		label: 'Variants',
+		disabled: false,
+		previewable: true,
+		inlineCount: 4,
+		sections: [
+			{
+				id: 'variants',
+				titleKey: 'pptx.gallery.themeVariants.section.theme',
+				title: 'Variants of this theme',
+				columns: 4,
+				tileWidth: TILE.width,
+				tileHeight: TILE.height,
+				items: variants.map((variant, index): RibbonGalleryItem => ({
+					id: `real-${index}`,
+					labelKey: 'pptx.gallery.themeVariants.real',
+					labelParams: { number: index + 1, name: variant.name },
+					label: `Variant ${index + 1}: ${variant.name}`,
+					previewSvg: themeTileSvg(
+						tileScheme(variant),
+						variant.fontScheme.majorFont?.latin ?? ctx.theme?.fontScheme?.majorFont?.latin,
+						TILE,
+					),
+					applied: colorSchemesEqual(variant.colorScheme, current),
+				})),
+			},
+		],
+	};
+}
+
 export const THEME_VARIANTS_GALLERY: RibbonGalleryModule = {
 	build(ctx) {
+		const real = realVariants(ctx);
+		if (real.length > 0) {
+			return buildReal(ctx, real);
+		}
 		const current = galleryColorScheme(ctx);
 		const heading = ctx.theme?.fontScheme?.majorFont?.latin;
 		return {
@@ -93,10 +146,14 @@ export const THEME_VARIANTS_GALLERY: RibbonGalleryModule = {
 			labelKey: 'pptx.gallery.themeVariants.title',
 			label: 'Variants',
 			disabled: false,
+			previewable: true,
 			inlineCount: 4,
 			sections: [
 				{
 					id: 'variants',
+					// This theme has no variants of its own: say these four are worked out from its colours.
+					titleKey: 'pptx.gallery.themeVariants.section.computed',
+					title: 'Computed from the theme colors',
 					columns: 4,
 					tileWidth: TILE.width,
 					tileHeight: TILE.height,
@@ -112,6 +169,11 @@ export const THEME_VARIANTS_GALLERY: RibbonGalleryModule = {
 		};
 	},
 	apply(itemId, ctx) {
+		const real = /^real-(\d+)$/u.exec(itemId);
+		if (real) {
+			const variant = realVariants(ctx)[Number(real[1])];
+			return variant ? realVariantResult(variant, ctx) : null;
+		}
 		const variant = themeVariants(variantBase(ctx)).find((candidate) => candidate.id === itemId);
 		return variant
 			? {
@@ -123,55 +185,30 @@ export const THEME_VARIANTS_GALLERY: RibbonGalleryModule = {
 	},
 };
 
-/** A dropdown that is listed but has no engine behind it: disabled, with its reason. */
-function unavailableModule(
-	id: RibbonGalleryId,
-	labelKey: string,
-	label: string,
-	iconPath: string,
-	hint: { key: string; text: string },
-): RibbonGalleryModule {
+/** A real variant's colours and fonts, its effect scheme and its background style, in order. */
+function realVariantResult(variant: PptxThemeVariant, ctx: RibbonGalleryContext) {
+	const name = ctx.theme?.name ?? variant.name;
 	return {
-		build: () => ({
-			id,
-			labelKey,
-			label,
-			disabled: true,
-			command: { iconPath, hintKey: hint.key, hint: hint.text },
-			sections: [
-				{
-					id: 'unavailable',
-					columns: 1,
-					tileWidth: 0,
-					tileHeight: 0,
-					items: [
-						{ id: 'run', labelKey, label, previewSvg: svgTile(0, 0, '', ''), applied: false },
-					],
-				},
-			],
-		}),
-		apply: () => null,
+		kind: 'sequence' as const,
+		steps: [
+			{
+				kind: 'theme' as const,
+				colorScheme: { ...variant.colorScheme },
+				fontScheme: structuredClone(variant.fontScheme),
+				name,
+			},
+			...(variant.formatSchemeXml
+				? [{ kind: 'themeEffects' as const, fmtSchemeXml: variant.formatSchemeXml, name }]
+				: []),
+			...(variant.backgroundStyleIndex
+				? [
+						{
+							kind: 'backgroundStyle' as const,
+							styleIndex: variant.backgroundStyleIndex,
+							scope: 'all' as const,
+						},
+					]
+				: []),
+		],
 	};
 }
-
-export const THEME_EFFECTS_GALLERY = unavailableModule(
-	'themeEffects',
-	'pptx.gallery.themeEffects.title',
-	'Effects',
-	'M10 2l2.4 5 5.4.6-4 3.7 1.1 5.4L10 14l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z',
-	{
-		key: 'pptx.gallery.themeEffects.unavailable',
-		text: 'Theme effects cannot be changed in this viewer yet.',
-	},
-);
-
-export const THEME_BACKGROUNDS_GALLERY = unavailableModule(
-	'themeBackgrounds',
-	'pptx.gallery.themeBackgrounds.title',
-	'Background Styles',
-	'M3 4h14v12H3zM3 13l4-4 3 3 3-3 4 4',
-	{
-		key: 'pptx.gallery.themeBackgrounds.unavailable',
-		text: 'Background styles are not available in this viewer yet. Use Format Background to set the slide background.',
-	},
-);
