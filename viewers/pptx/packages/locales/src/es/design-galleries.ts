@@ -16,9 +16,14 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.themeVariants.shiftFour':
 		'Variante 4: colores de énfasis desplazados cuatro posiciones',
 	'pptx.gallery.themeEffects.title': 'Efectos',
-	'pptx.gallery.themeEffects.unavailable':
-		'Los efectos del tema aún no se pueden cambiar en este visor.',
 	'pptx.gallery.themeBackgrounds.title': 'Estilos de fondo',
-	'pptx.gallery.themeBackgrounds.unavailable':
-		'Los estilos de fondo aún no están disponibles en este visor. Use Formato del fondo para establecer el fondo de la diapositiva.',
+	'pptx.gallery.themeVariants.section.computed': 'Calculadas a partir de los colores del tema',
+	'pptx.gallery.themeVariants.section.theme': 'Variantes de este tema',
+	'pptx.gallery.themeVariants.real': 'Variante {{number}}: {{name}}',
+	'pptx.gallery.themeEffects.scheme': 'Efectos: {{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': 'Integrados',
+	'pptx.gallery.themeBackgrounds.style': 'Estilo {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': 'Aplicar a todas las diapositivas',
+	'pptx.gallery.themeBackgrounds.applySelected': 'Aplicar a las diapositivas seleccionadas',
+	'pptx.gallery.themeBackgrounds.formatBackground': 'Formato del fondo...',
 };

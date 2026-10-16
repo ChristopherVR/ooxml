@@ -14,9 +14,14 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.themeVariants.shiftTwo': 'Variante 3: Akzentfarben um zwei verschoben',
 	'pptx.gallery.themeVariants.shiftFour': 'Variante 4: Akzentfarben um vier verschoben',
 	'pptx.gallery.themeEffects.title': 'Effekte',
-	'pptx.gallery.themeEffects.unavailable':
-		'Designeffekte lassen sich in diesem Viewer noch nicht ändern.',
 	'pptx.gallery.themeBackgrounds.title': 'Hintergrundformate',
-	'pptx.gallery.themeBackgrounds.unavailable':
-		'Hintergrundformate sind in diesem Viewer noch nicht verfügbar. Legen Sie den Folienhintergrund über „Hintergrund formatieren“ fest.',
+	'pptx.gallery.themeVariants.section.computed': 'Aus den Designfarben berechnet',
+	'pptx.gallery.themeVariants.section.theme': 'Varianten dieses Designs',
+	'pptx.gallery.themeVariants.real': 'Variante {{number}}: {{name}}',
+	'pptx.gallery.themeEffects.scheme': 'Effekte: {{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': 'Integriert',
+	'pptx.gallery.themeBackgrounds.style': 'Format {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': 'Auf alle Folien anwenden',
+	'pptx.gallery.themeBackgrounds.applySelected': 'Auf ausgewählte Folien anwenden',
+	'pptx.gallery.themeBackgrounds.formatBackground': 'Hintergrund formatieren...',
 };

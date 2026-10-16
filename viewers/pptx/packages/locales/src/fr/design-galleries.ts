@@ -14,9 +14,14 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.themeVariants.shiftTwo': 'Variante 3 : couleurs d’accentuation décalées de deux',
 	'pptx.gallery.themeVariants.shiftFour': 'Variante 4 : couleurs d’accentuation décalées de quatre',
 	'pptx.gallery.themeEffects.title': 'Effets',
-	'pptx.gallery.themeEffects.unavailable':
-		'Les effets du thème ne peuvent pas encore être modifiés dans cette visionneuse.',
 	'pptx.gallery.themeBackgrounds.title': 'Styles d’arrière-plan',
-	'pptx.gallery.themeBackgrounds.unavailable':
-		'Les styles d’arrière-plan ne sont pas encore disponibles dans cette visionneuse. Utilisez Format de l’arrière-plan pour définir l’arrière-plan de la diapositive.',
+	'pptx.gallery.themeVariants.section.computed': 'Calculées à partir des couleurs du thème',
+	'pptx.gallery.themeVariants.section.theme': 'Variantes de ce thème',
+	'pptx.gallery.themeVariants.real': 'Variante {{number}} : {{name}}',
+	'pptx.gallery.themeEffects.scheme': 'Effets : {{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': 'Intégrés',
+	'pptx.gallery.themeBackgrounds.style': 'Style {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': 'Appliquer à toutes les diapositives',
+	'pptx.gallery.themeBackgrounds.applySelected': 'Appliquer aux diapositives sélectionnées',
+	'pptx.gallery.themeBackgrounds.formatBackground': 'Format de l’arrière-plan...',
 };

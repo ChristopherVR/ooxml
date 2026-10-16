@@ -13,8 +13,14 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.themeVariants.shiftTwo': '变体 3：着色位移两位',
 	'pptx.gallery.themeVariants.shiftFour': '变体 4：着色位移四位',
 	'pptx.gallery.themeEffects.title': '效果',
-	'pptx.gallery.themeEffects.unavailable': '此查看器暂不支持更改主题效果。',
 	'pptx.gallery.themeBackgrounds.title': '背景样式',
-	'pptx.gallery.themeBackgrounds.unavailable':
-		'此查看器暂不提供背景样式。请使用“设置背景格式”设置幻灯片背景。',
+	'pptx.gallery.themeVariants.section.computed': '根据主题颜色计算得出',
+	'pptx.gallery.themeVariants.section.theme': '此主题的变体',
+	'pptx.gallery.themeVariants.real': '变体 {{number}}：{{name}}',
+	'pptx.gallery.themeEffects.scheme': '效果：{{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': '内置',
+	'pptx.gallery.themeBackgrounds.style': '样式 {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': '应用到所有幻灯片',
+	'pptx.gallery.themeBackgrounds.applySelected': '应用到所选幻灯片',
+	'pptx.gallery.themeBackgrounds.formatBackground': '设置背景格式...',
 };
