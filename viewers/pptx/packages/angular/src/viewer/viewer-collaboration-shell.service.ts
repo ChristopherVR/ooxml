@@ -120,7 +120,11 @@ export class ViewerCollaborationShellService {
 		});
 		effect(() => {
 			const slides = this.editor.slides();
-			if (this.collaboration.active() && this.collaboration.activeRole() !== 'viewer') {
+			if (
+				this.collaboration.active() &&
+				this.collaboration.activeRole() !== 'viewer' &&
+				!this.editor.deckStyleHeld()
+			) {
 				untracked(() => this.collaboration.broadcastSlides(slides));
 			}
 		});

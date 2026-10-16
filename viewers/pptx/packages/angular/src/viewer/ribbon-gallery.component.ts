@@ -25,6 +25,8 @@ import {
 	ElementRef,
 	inject,
 	Input,
+	Output,
+	EventEmitter,
 	signal,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
@@ -34,6 +36,7 @@ import type {
 	RibbonGalleryId,
 	RibbonGalleryItem,
 	RibbonGalleryPickEvent,
+	RibbonGalleryPreviewEvent,
 	PptxUiRibbonGalleryElement,
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
@@ -42,6 +45,7 @@ import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { dispatchGalleryResult, galleryContextFor } from './ribbon-gallery-helpers';
 import { TableSelectionService } from './table-selection.service';
+import { ViewerDeckStyleService } from './viewer-deck-style.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 
 interface GalleryInputs {
@@ -80,6 +84,8 @@ type Translate = (key: string, params?: Readonly<Record<string, string | number>
 		[translateLabel]="translate"
 		[disabled]="isDisabled()"
 		(gallery-pick)="pickId($event)"
+		(gallery-preview)="previewId($event)"
+		(gallery-preview-end)="endPreview()"
 	/>`,
 })
 export class RibbonGalleryComponent {
@@ -87,6 +93,7 @@ export class RibbonGalleryComponent {
 	private readonly loader = inject(LoadContentService, { optional: true });
 	private readonly themes = inject(ViewerThemeGalleryService, { optional: true });
 	private readonly tableSelection = inject(TableSelectionService, { optional: true });
+	private readonly deckStyle = inject(ViewerDeckStyleService, { optional: true });
 	private readonly translateService = inject(TranslateService, { optional: true });
 	protected readonly hostEl: HTMLElement = inject(ElementRef<HTMLElement>).nativeElement;
 
@@ -150,11 +157,21 @@ export class RibbonGalleryComponent {
 		this.inputs.update((s) => ({ ...s, chevronOnly }));
 	}
 
+	/** A command a gallery lists under its tiles ("Format Background...") was picked. */
+	@Output() readonly command = new EventEmitter<'formatBackground'>();
+
+	private context() {
+		return galleryContextFor(
+			this.element,
+			this.loader,
+			this.tableSelection?.selection(),
+			this.editor.slides()[this.slideIndex] ?? null,
+			this.deckStyle?.host ?? null,
+		);
+	}
+
 	readonly descriptor = computed<RibbonGalleryDescriptor>(() =>
-		buildRibbonGallery(
-			this.gallery,
-			galleryContextFor(this.element, this.loader, this.tableSelection?.selection()),
-		),
+		buildRibbonGallery(this.gallery, this.context()),
 	);
 	readonly isDisabled = computed(
 		() => !this.canEdit || this.descriptor().disabled || !galleryHasItems(this.descriptor()),
@@ -165,7 +182,26 @@ export class RibbonGalleryComponent {
 	protected pickId(event: Event): void {
 		// By id, not through `descriptor()`: the element may show items this memoized copy lacks
 		// (the named layouts that finish loading after it was built).
-		this.applyId((event as RibbonGalleryPickEvent).detail.itemId);
+		const { itemId, action } = (event as RibbonGalleryPickEvent).detail;
+		this.applyId(itemId, action);
+	}
+
+	protected previewId(event: Event): void {
+		if (this.isDisabled()) {
+			return;
+		}
+		this.deckStyle?.activeSlideIndex.set(this.slideIndex);
+		this.deckStyle?.host.preview(
+			applyRibbonGalleryItem(
+				this.gallery,
+				(event as RibbonGalleryPreviewEvent).detail.itemId,
+				this.context(),
+			),
+		);
+	}
+
+	protected endPreview(): void {
+		this.deckStyle?.host.endPreview();
 	}
 
 	/** Apply `item` to the selection (or theme) and close the popup. */
@@ -173,16 +209,23 @@ export class RibbonGalleryComponent {
 		this.applyId(item.id);
 	}
 
-	private applyId(itemId: string): void {
+	private applyId(itemId: string, action?: string): void {
 		this.hostEl.querySelector<PptxUiRibbonGalleryElement>('pptx-ui-ribbon-gallery')?.close();
 		if (this.isDisabled()) {
 			return;
 		}
-		const ctx = galleryContextFor(this.element, this.loader, this.tableSelection?.selection());
-		dispatchGalleryResult(applyRibbonGalleryItem(this.gallery, itemId, ctx), {
+		this.deckStyle?.activeSlideIndex.set(this.slideIndex);
+		const result = applyRibbonGalleryItem(this.gallery, itemId, this.context(), action);
+		if (result?.kind === 'command') {
+			this.deckStyle?.host.endPreview();
+			this.command.emit(result.command);
+			return;
+		}
+		dispatchGalleryResult(result, {
 			editor: this.editor,
 			slideIndex: this.slideIndex,
 			themes: this.themes,
+			deckStyle: this.deckStyle?.host ?? null,
 		});
 	}
 }

@@ -140,6 +140,8 @@ export class EditorStateService {
 	readonly selectedIds = signal<readonly string[]>([]);
 	/** Whether the deck has unsaved edits. */
 	readonly dirty = signal(false);
+	/** True while a Design gallery hover preview shows over the slides; collaboration waits. */
+	readonly deckStyleHeld = signal(false);
 	/**
 	 * When true, inherited master/layout (template) elements become interactive:
 	 * selectable, draggable, deletable, and editable. When false (default) they

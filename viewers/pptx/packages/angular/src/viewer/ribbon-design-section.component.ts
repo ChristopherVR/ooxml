@@ -38,6 +38,7 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 						[element]="selectedElement()"
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
+						(command)="toggleInspector.emit()"
 					/>
 				}
 				@for (command of commands; track command.id) {

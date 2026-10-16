@@ -51,6 +51,7 @@ import { ViewerCollaborationSessionService } from './viewer-collaboration-sessio
 import { ViewerCompareService } from './viewer-compare.service';
 import { ViewerCustomShowsService } from './viewer-custom-shows.service';
 import { ViewerCustomizationService } from './viewer-customization.service';
+import { ViewerDeckStyleService } from './viewer-deck-style.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { ViewerDocumentPropertiesService } from './viewer-document-properties.service';
 import { ViewerExportService } from './viewer-export.service';
@@ -117,6 +118,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ViewerRegionService,
 	ViewerPresentationModeService,
 	ViewerThemeGalleryService,
+	ViewerDeckStyleService,
 	ViewerTouchGesturesService,
 	ViewerZoomService,
 	OutlineAuthoringService,

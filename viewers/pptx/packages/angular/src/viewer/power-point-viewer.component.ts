@@ -2721,7 +2721,11 @@ export class PowerPointViewerComponent
 		// follow-along joiner cannot overwrite the presenter's deck.
 		effect(() => {
 			const slides = this.editor.slides();
-			if (this.collab.active() && this.collab.activeRole() !== 'viewer') {
+			if (
+				this.collab.active() &&
+				this.collab.activeRole() !== 'viewer' &&
+				!this.editor.deckStyleHeld()
+			) {
 				this.collab.broadcastSlides(slides);
 			}
 		});
