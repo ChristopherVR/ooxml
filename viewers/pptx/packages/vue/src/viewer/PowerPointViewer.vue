@@ -65,10 +65,20 @@ import type {
 	PptxElement,
 	PptxLayoutOption,
 	PptxLayoutPreview,
+	PptxSlide,
 	PptxTheme,
 	ShapeStyle,
 } from 'pptx-viewer-core';
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue';
+import {
+	computed,
+	onBeforeUnmount,
+	onMounted,
+	provide,
+	ref,
+	shallowRef,
+	watch,
+	watchEffect,
+} from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { provideViewerTheme, useThemeStyle } from '../theme';
@@ -263,7 +273,12 @@ const { panelVisible, dialogAvailable, effectiveHiddenActions, aiEnabled, aiConf
 // Ribbon group/control hiding: a scoped stylesheet from the shared rules.
 const ribbonScope = useRibbonCustomizationStyle(customization.resolved);
 
+// The real deck while a Design gallery hover preview shows over the slides (see `deckStyle`).
+const deckStyleHeldDeck = shallowRef<
+	{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+>(undefined);
 const deck = useLoadContent(() => activeContent.value, {
+	getHeldDeck: () => deckStyleHeldDeck.value,
 	getPendingInlineEdit: () => {
 		if (!canEditEffective.value) {
 			return undefined;
@@ -1614,6 +1629,7 @@ function applyAiTheme(updates: Partial<PptxTheme>): void {
 // history-tracked element update / theme paths the inspector uses.
 const deckStyle = useDeckStyleHost({
 	held: deckStyleHeld,
+	heldDeck: deckStyleHeldDeck,
 	slides,
 	templateElementsBySlideId,
 	pptxTheme,

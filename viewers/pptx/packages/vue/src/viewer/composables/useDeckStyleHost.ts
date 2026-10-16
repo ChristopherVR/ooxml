@@ -24,6 +24,10 @@ export interface UseDeckStyleHostInput {
 	 * and collaboration, whose synchronous watchers must see it before the preview's first write.
 	 */
 	held: Ref<boolean>;
+	/** Receives the real deck while a preview shows (for save and recovery), cleared after. */
+	heldDeck?: Ref<
+		{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+	>;
 }
 
 export function useDeckStyleHost(input: UseDeckStyleHostInput): DeckStyleHost {
@@ -42,6 +46,14 @@ export function useDeckStyleHost(input: UseDeckStyleHostInput): DeckStyleHost {
 		}),
 		show: write,
 		hold: (on) => {
+			if (input.heldDeck) {
+				input.heldDeck.value = on
+					? {
+							slides: input.slides.value,
+							templateElementsBySlideId: input.templateElementsBySlideId.value,
+						}
+					: undefined;
+			}
 			input.held.value = on;
 		},
 		handler: () => input.handler.value as unknown as DeckStyleHandler | null | undefined,
