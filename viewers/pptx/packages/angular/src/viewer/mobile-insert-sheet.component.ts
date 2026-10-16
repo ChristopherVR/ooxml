@@ -4,17 +4,23 @@
  * {@link RibbonInsertSectionComponent} handling as the ribbon, so a pick runs the identical
  * command (React: `MobileInsertSheet.tsx`).
  */
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { MobileSheetComponent } from './mobile-sheet.component';
+import { RibbonInsertFieldsComponent } from './ribbon-insert-fields.component';
 import { RibbonInsertSectionComponent } from './ribbon-insert-section.component';
 
 @Component({
 	selector: 'pptx-mobile-insert-sheet',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [MobileSheetComponent, RibbonInsertSectionComponent, TranslatePipe],
+	imports: [
+		MobileSheetComponent,
+		RibbonInsertFieldsComponent,
+		RibbonInsertSectionComponent,
+		TranslatePipe,
+	],
 	template: `
 		<pptx-mobile-sheet
 			[open]="open()"
@@ -32,9 +38,13 @@ import { RibbonInsertSectionComponent } from './ribbon-insert-section.component'
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openHyperlink)="openHyperlink.emit()"
 					(toggleComments)="toggleComments.emit()"
+					(openTemplateGallery)="openTemplateGallery.emit()"
+					(openDateTime)="fields()?.openDatePicker()"
 				/>
 			</div>
 		</pptx-mobile-sheet>
+		<!-- The Date & Time picker lives outside the sheet so it stays open after the sheet closes. -->
+		<pptx-ribbon-insert-fields [slideIndex]="slideIndex()" />
 	`,
 })
 export class MobileInsertSheetComponent {
@@ -48,4 +58,7 @@ export class MobileInsertSheetComponent {
 	readonly openEquationDialog = output<void>();
 	readonly openHyperlink = output<void>();
 	readonly toggleComments = output<void>();
+	readonly openTemplateGallery = output<void>();
+
+	protected readonly fields = viewChild(RibbonInsertFieldsComponent);
 }

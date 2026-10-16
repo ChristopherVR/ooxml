@@ -227,4 +227,16 @@ describe('insert section phone variant', () => {
 		expect(onRequestHandled).toHaveBeenCalledOnce();
 		wrapper.unmount();
 	});
+
+	it('hands Date & Time to a dialog host that outlives the sheet', () => {
+		const dialogHost = { openDateTime: vi.fn(), openSlideTemplates: vi.fn() };
+		const { wrapper } = mountInsert({ phone: true, dialogHost });
+		const sheet = wrapper.element.parentElement!.querySelector('pptx-ui-mobile-insert')!;
+		sheet
+			.shadowRoot!.querySelector<HTMLButtonElement>('[data-insert-control="insert.text.dateTime"]')!
+			.click();
+		expect(dialogHost.openDateTime).toHaveBeenCalledOnce();
+		expect(document.body.querySelector('.fixed.inset-0')).toBeNull();
+		wrapper.unmount();
+	});
 });

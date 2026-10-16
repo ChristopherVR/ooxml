@@ -59,6 +59,16 @@ export interface InsertSectionProps {
 	phone?: boolean;
 	/** Phone only: called after a request is handled, so the sheet can close. */
 	onRequestHandled?: () => void;
+	/**
+	 * Phone only: the Date & Time and Slide Templates dialogs are owned by a host that outlives
+	 * the sheet (closing the sheet unmounts this section and would take them with it).
+	 */
+	dialogHost?: InsertDialogHost;
+}
+
+export interface InsertDialogHost {
+	openDateTime: () => void;
+	openSlideTemplates: () => void;
 }
 
 /**
@@ -71,6 +81,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 	const ref = useRef<PptxUiRibbonInsertElement | PptxUiMobileInsertElement>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
 	const [templatesOpen, setTemplatesOpen] = useState(false);
+	const hosted = p.dialogHost;
 	const templatesAvailable =
 		Boolean(p.onInsertSlideFromTemplate) && isDialogAvailable(customization, 'slideTemplates');
 	const [chartKind, setChartKind] = useState<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
@@ -138,7 +149,11 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					break;
 				}
 				case 'slideTemplates':
-					setTemplatesOpen(true);
+					if (hosted) {
+						hosted.openSlideTemplates();
+					} else {
+						setTemplatesOpen(true);
+					}
 					break;
 				case 'shapeType':
 					p.onSetNewShapeType(intent.value as SupportedShapeType);
@@ -160,7 +175,11 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					break;
 				case 'field':
 					if (intent.value === 'datetime') {
-						setDatePickerOpen(true);
+						if (hosted) {
+							hosted.openDateTime();
+						} else {
+							setDatePickerOpen(true);
+						}
 					} else {
 						p.onInsertField?.(intent.value);
 					}
@@ -169,7 +188,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 		};
 		host.addEventListener('insert-request', request);
 		return () => host.removeEventListener('insert-request', request);
-	}, [p]);
+	}, [p, hosted]);
 	return (
 		<>
 			{p.phone ? (
@@ -177,7 +196,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			) : (
 				<pptx-ui-ribbon-insert ref={ref as React.Ref<PptxUiRibbonInsertElement>} />
 			)}
-			{templatesAvailable && (
+			{templatesAvailable && !hosted && (
 				<SlideTemplateGalleryDialog
 					isOpen={templatesOpen}
 					onClose={() => setTemplatesOpen(false)}
@@ -185,7 +204,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					scheme={p.templateScheme}
 				/>
 			)}
-			{datePickerOpen && p.onInsertField && (
+			{datePickerOpen && !hosted && p.onInsertField && (
 				<DateTimeFieldDialog
 					onClose={() => setDatePickerOpen(false)}
 					onInsert={(formatted) => {

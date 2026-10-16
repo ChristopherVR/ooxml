@@ -4,9 +4,14 @@
  * grid, routed through the same `InsertSection` handling as the ribbon, so a pick runs the
  * identical command (React: `MobileInsertSheet.tsx`).
  */
+import { isDialogAvailable } from 'ooxml-ui/pptx';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useResolvedCustomization } from '../composables/useViewerCustomization';
 import MobileSheet from './MobileSheet.vue';
+import SlideTemplateGalleryDialog from './SlideTemplateGalleryDialog.vue';
+import DateTimeFieldDialog from './ribbon/DateTimeFieldDialog.vue';
 import InsertSection from './ribbon/InsertSection.vue';
 import type { RibbonProps } from './ribbon/ribbon-types';
 
@@ -17,6 +22,28 @@ interface Props extends RibbonProps {
 const props = defineProps<Props>();
 const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
+const customization = useResolvedCustomization();
+// These dialogs are opened from the sheet but must outlive it: the sheet unmounts its body the
+// moment a pick closes it, which would take a dialog owned by the section along.
+const dateOpen = ref(false);
+const templatesOpen = ref(false);
+const templatesAvailable = computed(
+	() =>
+		Boolean(props.onInsertSlideFromTemplate) &&
+		isDialogAvailable(customization.value, 'slideTemplates'),
+);
+const dialogHost = {
+	openDateTime: () => {
+		dateOpen.value = true;
+	},
+	openSlideTemplates: () => {
+		templatesOpen.value = true;
+	},
+};
+function insertDate(formatted: string): void {
+	props.onInsertField?.('datetime', formatted);
+	dateOpen.value = false;
+}
 </script>
 
 <template>
@@ -44,9 +71,24 @@ const { t } = useI18n();
 				:layout-options="props.layoutOptions"
 				:current-layout-path="props.currentLayoutPath"
 				:on-insert-slide-from-layout="props.onInsertSlideFromLayout"
+				:on-insert-slide-from-template="props.onInsertSlideFromTemplate"
+				:template-scheme="props.templateScheme"
 				:on-toggle-comments="props.onToggleComments"
 				:is-comments-panel-open="props.isCommentsPanelOpen"
+				:dialog-host="dialogHost"
 			/>
 		</div>
 	</MobileSheet>
+	<SlideTemplateGalleryDialog
+		v-if="templatesAvailable"
+		:open="templatesOpen"
+		:scheme="props.templateScheme"
+		@insert="props.onInsertSlideFromTemplate?.($event)"
+		@close="templatesOpen = false"
+	/>
+	<DateTimeFieldDialog
+		v-if="dateOpen && props.onInsertField"
+		@close="dateOpen = false"
+		@insert="insertDate"
+	/>
 </template>

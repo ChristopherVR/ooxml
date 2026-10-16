@@ -296,4 +296,24 @@ describe('InsertSection phone variant', () => {
 		);
 		expect(onAddTable).toHaveBeenCalledWith(2, 3);
 	});
+
+	it('hands Date & Time and Slide Templates to a dialog host that outlives the sheet', () => {
+		const dialogHost = { openDateTime: vi.fn(), openSlideTemplates: vi.fn() };
+		const onInsertSlideFromTemplate = vi.fn();
+		render({ phone: true, dialogHost, onInsertSlideFromTemplate, layoutOptions: [] });
+		act(() => tile('insert.text.dateTime').click());
+		expect(dialogHost.openDateTime).toHaveBeenCalledOnce();
+		// The section draws no dialog of its own once a host owns it.
+		expect(document.querySelector('[role="dialog"]')).toBeNull();
+		act(() => tile('insert.slides.newSlide').click());
+		const sheet = container.querySelector('pptx-ui-mobile-insert')!;
+		act(() =>
+			sheet
+				.shadowRoot!.querySelector<HTMLButtonElement>(
+					'[data-insert-control="insert.slides.slideTemplates"]',
+				)!
+				.click(),
+		);
+		expect(dialogHost.openSlideTemplates).toHaveBeenCalledOnce();
+	});
 });

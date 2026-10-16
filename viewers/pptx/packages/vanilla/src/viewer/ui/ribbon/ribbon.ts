@@ -105,6 +105,17 @@ export function createRibbon(
 		id ? handlers.edit.updateEquation(id, omml) : handlers.insert.insertEquation(omml),
 	);
 	el.appendChild(equationPanel.el);
+	/**
+	 * The ribbon is hidden on phones, so a panel left inside it would open invisibly (the phone
+	 * Insert sheet's Equation tile, or editing an equation). Move it to the viewer root first, as
+	 * the SmartArt and Slide Templates dialogs do.
+	 */
+	const attachEquationPanel = (): void => {
+		const root = el.closest<HTMLElement>('.pptxv');
+		if (root && equationPanel.el.parentElement !== root) {
+			root.appendChild(equationPanel.el);
+		}
+	};
 	const equationAvailable = (): boolean => isDialogAvailable(resolved(), 'equation');
 
 	const formatBackgroundPanel = createFormatBackgroundPanel(doc, t, handlers.edit);
@@ -136,7 +147,12 @@ export function createRibbon(
 				doc,
 				t,
 				handlers.insert,
-				() => equationAvailable() && equationPanel.toggle(),
+				() => {
+					if (equationAvailable()) {
+						attachEquationPanel();
+						equationPanel.toggle();
+					}
+				},
 				() => handlers.nav.openHeaderFooter(),
 				() => handlers.nav.openHyperlink(),
 				() => handlers.nav.openComments(),
@@ -409,8 +425,18 @@ export function createRibbon(
 			syncAnimations();
 		},
 		toggleFindReplace,
-		openEquationEditor: (id, omml) => equationAvailable() && equationPanel.openEdit(id, omml),
-		toggleEquationPanel: () => equationAvailable() && equationPanel.toggle(),
+		openEquationEditor: (id, omml) => {
+			if (equationAvailable()) {
+				attachEquationPanel();
+				equationPanel.openEdit(id, omml);
+			}
+		},
+		toggleEquationPanel: () => {
+			if (equationAvailable()) {
+				attachEquationPanel();
+				equationPanel.toggle();
+			}
+		},
 		openSmartArtDialog: () => insertTab?.openSmartArt(),
 		openSlideSize,
 		toggleThemeGallery: () => {

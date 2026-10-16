@@ -41,6 +41,8 @@ const TILES = [
 	'insert.symbols.equation',
 	'insert.media.media',
 	'insert.slides.newSlide',
+	'insert.links.link',
+	'insert.text.dateTime',
 	'insert.comments.comment',
 ] as const;
 
@@ -57,7 +59,7 @@ const MORE = 'm5 8 5 5 5-5';
 
 /**
  * The phone Insert sheet body: PowerPoint mobile's tile grid (Text Box, Shapes, Pictures, Table,
- * Chart, SmartArt, Equation, Video, New Slide, Comment). It draws the same shared Insert
+ * Chart, SmartArt, Equation, Video, New Slide, Link, Date & Time, Comment). It draws the same shared Insert
  * definitions as `pptx-ui-ribbon-insert` (labels, icons, availability, the shape, chart and
  * layout catalogues and the Table grid) and emits the same `insert-request` intents, so a host
  * routes it exactly like the ribbon tab and adds no command logic of its own.
@@ -131,7 +133,9 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 						? 'chart'
 						: spec.picker === 'table'
 							? 'table'
-							: spec.special === 'layouts' && (this.model.layouts ?? []).length > 0
+							: spec.special === 'layouts' &&
+								  ((this.model.layouts ?? []).length > 0 ||
+										this.model.slideTemplatesAvailable === true)
 								? 'layouts'
 								: null;
 			const caption = doc.createElement('span');
@@ -226,6 +230,13 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 					const row = this.button('row', item.name, doc.createTextNode(item.name));
 					row.toggleAttribute('aria-current', item.path === this.model.currentLayoutPath);
 					row.addEventListener('click', () => this.request({ kind: 'newSlide', value: item.path }));
+					rows.append(row);
+				}
+				if (this.model.slideTemplatesAvailable) {
+					const label = this.text(['pptx.home.slideTemplatesMenu', 'Slide Templates...']);
+					const row = this.button('row', label, doc.createTextNode(label));
+					row.dataset.insertControl = 'insert.slides.slideTemplates';
+					row.addEventListener('click', () => this.request({ kind: 'slideTemplates' }));
 					rows.append(row);
 				}
 				children.push(rows);

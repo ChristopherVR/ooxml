@@ -148,3 +148,58 @@ test('the comment box fills the sheet width', async ({ page }) => {
 	);
 	expect(widest).toBeGreaterThan(412 * 0.8);
 });
+
+/**
+ * Picks on the phone Insert sheet that open a dialog, by tile (and sub-row for New Slide). The
+ * dialog must stay up after the sheet closes: it used to live inside the sheet's body, which
+ * unmounts with it. `instant` marks a pick a binding may also answer by inserting at once
+ * (Date & Time in the bindings without a format picker).
+ */
+const DIALOG_PICKS: {
+	tile: string;
+	row?: string;
+	dialog: RegExp;
+	select?: boolean;
+	instant?: boolean;
+}[] = [
+	{ tile: 'Date & Time', dialog: /date\/time|date & time/i, instant: true },
+	{ tile: 'SmartArt', dialog: /smartart/i },
+	{ tile: 'Equation', dialog: /equation/i },
+	{ tile: 'Link', dialog: /hyperlink/i, select: true },
+	{ tile: 'New Slide', row: 'Slide Templates...', dialog: /template/i },
+];
+
+for (const pick of DIALOG_PICKS) {
+	test(`the phone Insert sheet's ${pick.tile}${pick.row ? ` > ${pick.row}` : ''} opens its dialog after the sheet closes`, async ({
+		page,
+	}) => {
+		await load(page);
+		const elements = page.locator('[data-pptx-element="true"]');
+		if (pick.select) {
+			// A link needs a target to attach to.
+			await elements.last().tap();
+		}
+		const before = await elements.count();
+		await bar(page).getByRole('button', { name: 'Insert' }).tap();
+		await page.getByRole('button', { name: pick.tile, exact: true }).tap();
+		if (pick.row) {
+			await page.getByRole('button', { name: pick.row, exact: true }).tap();
+		}
+		// The sheet closes (its tiles are gone) and the dialog it asked for stays open. Some
+		// bindings draw these as plain panels, so a dialog role is not required, but the text must
+		// be visible: the desktop ribbon's hidden copy of the same label does not count.
+		await expect(page.getByRole('button', { name: 'Text Box', exact: true })).toHaveCount(0);
+		const shown = page
+			.getByRole('dialog')
+			.filter({ hasText: pick.dialog })
+			.or(page.getByText(pick.dialog))
+			.filter({ visible: true });
+		if (pick.instant) {
+			await expect
+				.poll(async () => (await shown.count()) > 0 || (await elements.count()) > before)
+				.toBe(true);
+		} else {
+			await expect(shown.first()).toBeVisible();
+		}
+	});
+}

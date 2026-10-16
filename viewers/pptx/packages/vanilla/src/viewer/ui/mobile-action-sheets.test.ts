@@ -81,6 +81,8 @@ describe('mobile action sheets bottom bar adapter', () => {
 			'insert.symbols.equation',
 			'insert.media.media',
 			'insert.slides.newSlide',
+			'insert.links.link',
+			'insert.text.dateTime',
 			'insert.comments.comment',
 		]);
 		tile('insert.text.textBox').click();

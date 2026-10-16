@@ -1351,6 +1351,7 @@ const noopClose = (): void => undefined;
 					(openEquationDialog)="dialogs.openEquationInsert()"
 					(openHyperlink)="docProperties.showHyperlink.set(true)"
 					(toggleComments)="applyMobileSheetTap('comments')"
+					(openTemplateGallery)="showTemplateGallery.set(true)"
 				/>
 
 				<pptx-mobile-menu-sheet

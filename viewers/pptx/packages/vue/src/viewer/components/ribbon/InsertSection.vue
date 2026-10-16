@@ -62,6 +62,16 @@ interface Props {
 	phone?: boolean;
 	/** Phone only: called after a request is handled, so the sheet can close. */
 	onRequestHandled?: () => void;
+	/**
+	 * Phone only: the Date & Time and Slide Templates dialogs are owned by a host that outlives
+	 * the sheet (closing the sheet unmounts this section and would take them with it).
+	 */
+	dialogHost?: InsertDialogHost;
+}
+
+export interface InsertDialogHost {
+	openDateTime: () => void;
+	openSlideTemplates: () => void;
 }
 
 const props = defineProps<Props>();
@@ -132,7 +142,11 @@ function request(event: RibbonInsertRequestEvent): void {
 			break;
 		}
 		case 'slideTemplates':
-			templatesOpen.value = true;
+			if (props.dialogHost) {
+				props.dialogHost.openSlideTemplates();
+			} else {
+				templatesOpen.value = true;
+			}
 			break;
 		case 'shapeType':
 			props.onSetNewShapeType(intent.value as SupportedShapeType);
@@ -154,7 +168,11 @@ function request(event: RibbonInsertRequestEvent): void {
 			break;
 		case 'field':
 			if (intent.value === 'datetime') {
-				datePickerOpen.value = true;
+				if (props.dialogHost) {
+					props.dialogHost.openDateTime();
+				} else {
+					datePickerOpen.value = true;
+				}
 			} else {
 				props.onInsertField?.(intent.value);
 			}
@@ -172,14 +190,14 @@ function insertDate(formatted: string): void {
 	<pptx-ui-mobile-insert v-if="props.phone" :state.prop="state" @insert-request="request" />
 	<pptx-ui-ribbon-insert v-else :state.prop="state" @insert-request="request" />
 	<SlideTemplateGalleryDialog
-		v-if="templatesAvailable"
+		v-if="templatesAvailable && !props.dialogHost"
 		:open="templatesOpen"
 		:scheme="props.templateScheme"
 		@insert="props.onInsertSlideFromTemplate?.($event)"
 		@close="templatesOpen = false"
 	/>
 	<DateTimeFieldDialog
-		v-if="datePickerOpen && props.onInsertField"
+		v-if="datePickerOpen && !props.dialogHost && props.onInsertField"
 		@close="datePickerOpen = false"
 		@insert="insertDate"
 	/>

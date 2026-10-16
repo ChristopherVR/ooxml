@@ -104,6 +104,11 @@ export class RibbonInsertSectionComponent {
 	readonly toggleComments = output<void>();
 	/** Slide Templates... at the end of New Slide's menu; the host opens the gallery dialog. */
 	readonly openTemplateGallery = output<void>();
+	/**
+	 * Phone only: Date & Time; the sheet's host owns the picker so it outlives the sheet (the
+	 * section is torn down with the sheet's body the moment a pick closes it).
+	 */
+	readonly openDateTime = output<void>();
 	readonly chartTypeChange = output<InsertChartKind>();
 	readonly shapeTypeChange = output<ShapePresetType>();
 
@@ -188,7 +193,11 @@ export class RibbonInsertSectionComponent {
 				break;
 			case 'field':
 				if (intent.value === 'datetime') {
-					this.fields()?.openDatePicker();
+					if (this.phone()) {
+						this.openDateTime.emit();
+					} else {
+						this.fields()?.openDatePicker();
+					}
 				} else {
 					this.fields()?.insertField(intent.value);
 				}
