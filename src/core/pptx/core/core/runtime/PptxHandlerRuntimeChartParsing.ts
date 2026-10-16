@@ -1,4 +1,5 @@
 import { readChartElementFormatsFromXml } from '../../utils/chart-element-format-read-xml';
+import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
 import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 /**
  * @fileoverview Chart parsing orchestrator for OOXML chart graphic frames.
@@ -47,6 +48,7 @@ import { readChartPartModel } from '../../utils/chart-part-repair';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 import { parseChartUpDownBars } from '../../utils/chart-up-down-bars';
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
+import { resolveChartElementPictures } from './chart-element-pictures';
 import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
@@ -357,7 +359,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			{ chartSpace, seriesNodes: built.seriesNodes },
 			{ axes },
 			reader.localName,
-			(node) => reader.parseColor(node),
+			{
+				resolve: (node) => reader.parseColor(node),
+				...(this.colorStyleCodec
+					? {
+							parseGradient: (parent: XmlObject) =>
+								parseChartGradientFill(parent, reader.xml, this.colorStyleCodec),
+						}
+					: {}),
+			},
+		);
+
+		// A picture fill names its image by relationship; resolve it for the renderer.
+		await resolveChartElementPictures(
+			elementFormats,
+			chartPartPath,
+			this.readChartRels.bind(this),
+			this.resolveImagePath.bind(this),
+			this.getImageDataAsDataUrl.bind(this),
 		);
 
 		return {

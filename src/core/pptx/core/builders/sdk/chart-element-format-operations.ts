@@ -18,13 +18,20 @@ import type {
 	PptxChartElementFill,
 	PptxChartElementFormat,
 	PptxChartElementLine,
+	PptxChartElementText,
+	PptxChartElementThreeD,
 	PptxChartFormatTarget,
 	PptxChartGradientFill,
-	PptxChartSeries,
-	PptxChartShapeProps,
+	PptxChartPatternFill,
+	PptxChartPictureFill,
 } from '../../types';
-import { isLineDrawnChartType } from '../../utils/chart-container-type-map';
 import { chartFormatTargetKey } from '../../utils/chart-element-format-keys';
+import {
+	applyGradient,
+	hasGradientField,
+	mirrorFlatFields,
+	withSeries,
+} from './chart-element-format-mirror';
 import { readChartElementFormat } from './chart-element-format-read';
 import type { ChartFormatFillKind } from './chart-element-format-read';
 
@@ -37,165 +44,21 @@ export type {
 
 /** What a pane edit changes; omitted sections and fields stay as they are. */
 export interface ChartElementFormatPatch {
-	fill?: Partial<Omit<PptxChartElementFill, 'kind'>> & {
+	fill?: Partial<Omit<PptxChartElementFill, 'kind' | 'pattern' | 'picture'>> & {
 		kind?: ChartFormatFillKind;
 		gradient?: PptxChartGradientFill;
+		pattern?: Partial<PptxChartPatternFill>;
+		/** A new `src` replaces the picture (and drops a loaded picture's relationship). */
+		picture?: Partial<PptxChartPictureFill>;
 	};
 	line?: Partial<PptxChartElementLine>;
 	effects?: PptxChartElementEffects;
-}
-
-function withSeries(
-	data: PptxChartData,
-	index: number,
-	update: (series: PptxChartSeries) => PptxChartSeries,
-): PptxChartData {
-	if (!data.series[index]) {
-		return data;
-	}
-	return { ...data, series: data.series.map((s, i) => (i === index ? update(s) : s)) };
-}
-
-function shapeFromFormat(
-	base: PptxChartShapeProps | undefined,
-	fill: PptxChartElementFill | undefined,
-	line: PptxChartElementLine | undefined,
-): PptxChartShapeProps | undefined {
-	const next: PptxChartShapeProps = { ...base };
-	if (fill) {
-		delete next.fillColor;
-		if (fill.kind === 'solid' && fill.color) {
-			next.fillColor = fill.color;
-		}
-	}
-	if (line) {
-		delete next.strokeColor;
-		delete next.lineNoFill;
-		if (line.kind === 'solid' && line.color) {
-			next.strokeColor = line.color;
-		} else if (line.kind === 'none') {
-			next.lineNoFill = true;
-		}
-		if (line.width !== undefined) {
-			next.strokeWidth = line.width;
-		}
-		if (line.dash !== undefined) {
-			next.strokeDashStyle = line.dash;
-		}
-	}
-	return Object.keys(next).length > 0 ? next : undefined;
-}
-
-/** Mirror a recorded format onto the flat fields the renderer reads. */
-function mirrorFlatFields(
-	data: PptxChartData,
-	target: PptxChartFormatTarget,
-	fill: PptxChartElementFill | undefined,
-	line: PptxChartElementLine | undefined,
-): PptxChartData {
-	const paint = (p: PptxChartElementFill | PptxChartElementLine | undefined) =>
-		!p || p.kind === 'automatic' ? undefined : p.kind === 'none' ? 'none' : p.color;
-	switch (target.kind) {
-		case 'chartArea':
-		case 'plotArea': {
-			const style = { ...data.style };
-			const prefix = target.kind === 'chartArea' ? 'chartArea' : 'plotArea';
-			if (fill) {
-				delete style[`${prefix}Gradient`];
-				const value = paint(fill);
-				if (value === undefined) {
-					delete style[`${prefix}Fill`];
-				} else {
-					style[`${prefix}Fill`] = value;
-				}
-			}
-			if (line) {
-				const value = paint(line);
-				if (value === undefined) {
-					delete style[`${prefix}Border`];
-				} else {
-					style[`${prefix}Border`] = value;
-				}
-			}
-			return { ...data, style };
-		}
-		case 'title':
-			return {
-				...data,
-				style: {
-					...data.style,
-					titleSpPr: shapeFromFormat(data.style?.titleSpPr ?? undefined, fill, line) ?? null,
-				},
-			};
-		case 'axis':
-		case 'majorGridlines':
-		case 'minorGridlines': {
-			const field =
-				target.kind === 'axis'
-					? 'spPr'
-					: target.kind === 'majorGridlines'
-						? 'majorGridlinesSpPr'
-						: 'minorGridlinesSpPr';
-			const axes = (data.axes ?? []).map((axis, i) =>
-				i === target.axisIndex
-					? { ...axis, [field]: shapeFromFormat(axis[field], undefined, line) }
-					: axis,
-			);
-			return { ...data, axes };
-		}
-		case 'series':
-			return withSeries(data, target.seriesIndex, (series) => {
-				const next = { ...series };
-				const lineDrawn = isLineDrawnChartType(series.seriesChartType ?? data.chartType);
-				if (fill && !lineDrawn) {
-					delete next.gradientFill;
-					delete next.color;
-					if (fill.kind === 'solid' && fill.color) {
-						next.color = fill.color;
-					}
-				}
-				if (line) {
-					if (lineDrawn) {
-						delete next.lineNoFill;
-						if (line.kind === 'solid' && line.color) {
-							next.color = line.color;
-						} else if (line.kind === 'none') {
-							next.lineNoFill = true;
-						}
-					}
-					if (line.width !== undefined) {
-						next.lineWidth = line.width;
-					}
-					if (line.dash !== undefined) {
-						next.lineDashStyle = line.dash;
-					}
-				}
-				return next;
-			});
-		default:
-			return data;
-	}
-}
-
-/** Apply a gradient fill through the existing gradient fields (chart area, plot area, series). */
-function applyGradient(
-	data: PptxChartData,
-	target: PptxChartFormatTarget,
-	gradient: PptxChartGradientFill,
-): PptxChartData {
-	if (target.kind === 'chartArea' || target.kind === 'plotArea') {
-		const style = { ...data.style };
-		style[`${target.kind}Gradient`] = gradient;
-		delete style[`${target.kind}Fill`];
-		return { ...data, style };
-	}
-	if (target.kind === 'series') {
-		return withSeries(data, target.seriesIndex, (series) => ({
-			...series,
-			gradientFill: gradient,
-		}));
-	}
-	return data;
+	threeD?: PptxChartElementThreeD;
+	/** Text Options; `fill` and `outline` merge field by field. */
+	text?: Omit<PptxChartElementText, 'fill' | 'outline'> & {
+		fill?: Partial<NonNullable<PptxChartElementText['fill']>>;
+		outline?: Partial<NonNullable<PptxChartElementText['outline']>>;
+	};
 }
 
 /**
@@ -223,13 +86,34 @@ export function withChartElementFormat(
 	if (patch.fill && view.support.fill) {
 		const kind = patch.fill.kind ?? view.fill.kind;
 		if (kind === 'gradient') {
-			if (view.support.gradient) {
-				const gradient = patch.fill.gradient ?? view.fill.gradient;
-				if (gradient) {
-					next = applyGradient(next, target, gradient);
-					delete entry.fill;
-				}
+			const gradient = patch.fill.gradient ?? view.fill.gradient;
+			if (gradient && hasGradientField(target)) {
+				// Chart area, plot area and series keep their gradient in the model's own field.
+				next = applyGradient(next, target, gradient);
+				delete entry.fill;
+			} else if (gradient) {
+				fill = { kind: 'gradient', gradient };
+				entry.fill = fill;
 			}
+		} else if (kind === 'pattern') {
+			const base = view.fill.pattern ?? {
+				preset: 'pct5',
+				foreground: '#4472C4',
+				background: '#FFFFFF',
+			};
+			fill = { kind: 'pattern', pattern: { ...base, ...patch.fill.pattern } };
+			entry.fill = fill;
+		} else if (kind === 'picture') {
+			const previous = view.fill.kind === 'picture' ? view.fill.picture : undefined;
+			const picture: PptxChartPictureFill = { ...previous, ...patch.fill.picture };
+			if (patch.fill.picture?.src && patch.fill.picture.src !== previous?.src) {
+				delete picture.relId;
+			}
+			if (!picture.src && !picture.relId) {
+				return data;
+			}
+			fill = { kind: 'picture', picture };
+			entry.fill = fill;
 		} else {
 			fill = {
 				kind,
@@ -246,10 +130,30 @@ export function withChartElementFormat(
 	let line: PptxChartElementLine | undefined;
 	if (patch.line) {
 		line = { ...view.line, ...patch.line };
+		if (line.kind !== 'gradient') {
+			delete line.gradient;
+		}
 		entry.line = line;
 	}
 	if (patch.effects) {
 		entry.effects = { ...view.effects, ...patch.effects };
+	}
+	if (patch.threeD && view.support.threeD) {
+		entry.threeD = { ...view.threeD, ...patch.threeD };
+	}
+	if (patch.text && view.support.text) {
+		const text: PptxChartElementText = { ...view.text, ...patch.text } as PptxChartElementText;
+		if (patch.text.fill) {
+			text.fill = { kind: 'automatic', ...view.text.fill, ...patch.text.fill };
+			if (text.fill.kind !== 'gradient') delete text.fill.gradient;
+		}
+		if (patch.text.outline) {
+			text.outline = { kind: 'automatic', ...view.text.outline, ...patch.text.outline };
+		}
+		if (patch.text.effects) {
+			text.effects = { ...view.text.effects, ...patch.text.effects };
+		}
+		entry.text = text;
 	}
 	next = mirrorFlatFields(next, target, fill, line);
 	return { ...next, elementFormats: { ...next.elementFormats, [key]: entry } };

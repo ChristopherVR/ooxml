@@ -12,6 +12,7 @@ import type {
 	XmlObject,
 } from '../types';
 import { parseChartFormatTargetKey } from './chart-element-format-keys';
+import { applyChartTextFormat } from './chart-element-format-text-xml';
 import { applyChartElementFormatToSpPr } from './chart-element-format-xml';
 
 export { chartFormatTargetKey, parseChartFormatTargetKey } from './chart-element-format-keys';
@@ -106,6 +107,22 @@ export function applyFormatToOwner(
 	after: readonly string[],
 	getLocalName: GetLocalName,
 ): void {
+	applySpPrFormat(owner, format, after, getLocalName);
+	const txPrAt = after.indexOf('txPr');
+	if (format.text && txPrAt >= 0) {
+		applyChartTextFormat(owner, format.text, after.slice(txPrAt + 1), getLocalName);
+	}
+}
+
+function applySpPrFormat(
+	owner: XmlObject,
+	format: PptxChartElementFormat,
+	after: readonly string[],
+	getLocalName: GetLocalName,
+): void {
+	if (!format.fill && !format.line && !format.effects && !format.threeD && !format.reset) {
+		return;
+	}
 	const spPrKey = keyOf(owner, 'spPr', getLocalName);
 	const existing = spPrKey ? (owner[spPrKey] as XmlObject | undefined) : undefined;
 	const next = applyChartElementFormatToSpPr(
@@ -179,6 +196,16 @@ function canonical(value: unknown): string {
 	return JSON.stringify(value);
 }
 
+/** A section as compared: a loaded picture is identified by its relationship, not its bytes. */
+function comparable(section: unknown): unknown {
+	const fill = section as { picture?: { relId?: string; src?: string } } | undefined;
+	if (fill?.picture?.relId) {
+		const { src: _src, ...picture } = fill.picture;
+		return { ...fill, picture };
+	}
+	return section;
+}
+
 /**
  * The part of `record` that differs from what the chart part authored for the
  * same element (`authored`, read off the original XML): only edited sections
@@ -192,10 +219,10 @@ function changedSections(
 		return record;
 	}
 	const out: PptxChartElementFormat = {};
-	for (const section of ['fill', 'line', 'effects'] as const) {
+	for (const section of ['fill', 'line', 'effects', 'threeD', 'text'] as const) {
 		if (
 			record[section] !== undefined &&
-			canonical(record[section]) !== canonical(authored?.[section])
+			canonical(comparable(record[section])) !== canonical(comparable(authored?.[section]))
 		) {
 			Object.assign(out, { [section]: record[section] });
 		}
@@ -251,18 +278,13 @@ function allDataLabelNodes(plotArea: XmlObject, getLocalName: GetLocalName): Xml
 		if (!getLocalName(key).endsWith('Chart')) {
 			continue;
 		}
-		const container = plotArea[key];
-		if (!container || typeof container !== 'object' || Array.isArray(container)) {
-			continue;
-		}
-		const owners = [
-			container as XmlObject,
-			...children(container as XmlObject, 'ser', getLocalName),
-		];
-		for (const owner of owners) {
-			const dLbls = child(owner, 'dLbls', getLocalName);
-			if (dLbls) {
-				out.push(dLbls);
+		for (const container of children(plotArea, getLocalName(key), getLocalName)) {
+			const owners = [container, ...children(container, 'ser', getLocalName)];
+			for (const owner of owners) {
+				const dLbls = child(owner, 'dLbls', getLocalName);
+				if (dLbls) {
+					out.push(dLbls);
+				}
 			}
 		}
 	}

@@ -9,6 +9,10 @@ import type {
 	PptxChartData,
 	PptxChartElementEffects,
 	PptxChartElementLine,
+	PptxChartElementText,
+	PptxChartElementThreeD,
+	PptxChartPatternFill,
+	PptxChartPictureFill,
 	PptxChartFormatTarget,
 	PptxChartGradientFill,
 	PptxChartShapeProps,
@@ -16,15 +20,28 @@ import type {
 import { isLineDrawnChartType } from '../../utils/chart-container-type-map';
 import { chartFormatTargetKey } from '../../utils/chart-element-format-keys';
 
-/** Fill kinds a pane offers. `gradient` exists only where the model has a gradient field. */
-export type ChartFormatFillKind = 'none' | 'solid' | 'gradient' | 'automatic';
+/** Fill kinds a pane offers. */
+export type ChartFormatFillKind =
+	| 'none'
+	| 'solid'
+	| 'gradient'
+	| 'pattern'
+	| 'picture'
+	| 'automatic';
 
 /** Which sections apply to a target. */
 export interface ChartFormatTargetSupport {
 	/** False for lines (axis, gridlines, a line series), which have a Line section only. */
 	fill: boolean;
-	/** Gradient fill is available (chart area, plot area, a filled series). */
+	/** Gradient fill is available (every filled element). */
 	gradient: boolean;
+	/** Pattern and picture fills are available (every filled element). */
+	pattern: boolean;
+	picture: boolean;
+	/** The Effects tab has a 3-D Format section. */
+	threeD: boolean;
+	/** The element has text, so the pane offers Text Options. */
+	text: boolean;
 }
 
 /** The element's current formatting as a pane shows it. */
@@ -35,9 +52,13 @@ export interface ChartElementFormatView {
 		color?: string;
 		transparency?: number;
 		gradient?: PptxChartGradientFill;
+		pattern?: PptxChartPatternFill;
+		picture?: PptxChartPictureFill;
 	};
 	line: PptxChartElementLine;
 	effects: PptxChartElementEffects;
+	threeD: PptxChartElementThreeD;
+	text: PptxChartElementText;
 	/** Reset to Match Style was used and nothing has been set since. */
 	reset: boolean;
 }
@@ -47,21 +68,30 @@ export function chartFormatTargetSupports(
 	data: PptxChartData,
 	target: PptxChartFormatTarget,
 ): ChartFormatTargetSupport {
+	const filled = (fill: boolean, threeD: boolean, text: boolean): ChartFormatTargetSupport => ({
+		fill,
+		gradient: fill,
+		pattern: fill,
+		picture: fill,
+		threeD,
+		text,
+	});
 	switch (target.kind) {
 		case 'axis':
+			return filled(false, false, true);
 		case 'majorGridlines':
 		case 'minorGridlines':
-			return { fill: false, gradient: false };
+			return filled(false, false, false);
 		case 'series': {
 			const series = data.series[target.seriesIndex];
 			const lineDrawn = isLineDrawnChartType(series?.seriesChartType ?? data.chartType);
-			return { fill: !lineDrawn, gradient: !lineDrawn };
+			return filled(!lineDrawn, true, false);
 		}
-		case 'chartArea':
 		case 'plotArea':
-			return { fill: true, gradient: true };
+			return filled(true, true, false);
 		default:
-			return { fill: true, gradient: false };
+			// Chart area (its text options cover every chart text), title, legend, data labels.
+			return filled(true, true, true);
 	}
 }
 
@@ -76,6 +106,12 @@ function defaultGradient(color: string | undefined): PptxChartGradientFill {
 			{ color: base.toUpperCase(), position: 100 },
 		],
 	};
+}
+
+/** PowerPoint's first pattern (5%) in the element's colour on white. */
+function defaultPattern(color: string | undefined): PptxChartPatternFill {
+	const base = color && /^#?[0-9a-f]{6}$/iu.test(color) ? color.replace(/^#?/u, '#') : '#4472C4';
+	return { preset: 'pct5', foreground: base.toUpperCase(), background: '#FFFFFF' };
 }
 
 function paintKind(paint: string | undefined): { kind: ChartFormatFillKind; color?: string } {
@@ -190,11 +226,28 @@ export function readChartElementFormat(
 	}
 	const gradient =
 		'gradient' in fill && fill.gradient ? fill.gradient : defaultGradient(fill.color);
+	const pattern = 'pattern' in fill && fill.pattern ? fill.pattern : defaultPattern(fill.color);
+	if (line.kind === 'gradient' && !line.gradient) {
+		line.gradient = defaultGradient(line.color);
+	}
 	return {
 		support,
-		fill: { ...fill, ...(support.gradient ? { gradient } : {}) },
+		fill: {
+			...fill,
+			...(support.gradient ? { gradient } : {}),
+			...(support.pattern ? { pattern } : {}),
+		},
 		line,
 		effects: { ...recorded?.effects },
-		reset: Boolean(recorded?.reset && !recorded.fill && !recorded.line && !recorded.effects),
+		threeD: { ...recorded?.threeD },
+		text: { ...recorded?.text },
+		reset: Boolean(
+			recorded?.reset &&
+			!recorded.fill &&
+			!recorded.line &&
+			!recorded.effects &&
+			!recorded.threeD &&
+			!recorded.text,
+		),
 	};
 }

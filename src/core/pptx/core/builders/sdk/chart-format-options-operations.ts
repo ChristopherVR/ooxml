@@ -170,7 +170,11 @@ export interface ChartDataLabelOptionsEdit {
 export function withChartDataLabelOptions(
 	data: PptxChartData,
 	edit: ChartDataLabelOptionsEdit,
+	seriesIndex?: number,
 ): PptxChartData {
+	if (seriesIndex !== undefined) {
+		return withSeriesDataLabelOptions(data, edit, seriesIndex);
+	}
 	const style = { ...data.style };
 	const labels: PptxChartDataLabelOptions = { ...style.dataLabels };
 	if (edit.show !== undefined) {
@@ -197,4 +201,59 @@ export function withChartDataLabelOptions(
 	}
 	style.dataLabels = labels;
 	return { ...data, style };
+}
+
+const LABEL_FLAGS = [
+	'showValue',
+	'showCategory',
+	'showSeriesName',
+	'showPercent',
+	'showLegendKey',
+] as const;
+
+/**
+ * One series' own label options (`c:ser/c:dLbls`), which override the
+ * chart-level group for that series. A series without options of its own
+ * starts from the chart-level ones. Labels are switched on chart-wide with
+ * every chart-level flag declared off when they were off, so only this
+ * series shows them.
+ */
+function withSeriesDataLabelOptions(
+	data: PptxChartData,
+	edit: ChartDataLabelOptionsEdit,
+	seriesIndex: number,
+): PptxChartData {
+	const series = data.series[seriesIndex];
+	if (!series) {
+		return data;
+	}
+	const chartLevel = data.style?.dataLabels ?? {};
+	const labels: PptxChartDataLabelOptions = { ...series.dataLabelOptions };
+	for (const key of LABEL_FLAGS) {
+		labels[key] ??= chartLevel[key] ?? false;
+		if (edit[key] !== undefined) {
+			labels[key] = edit[key];
+		}
+	}
+	if (edit.position !== undefined) {
+		if (edit.position === null) {
+			delete labels.position;
+		} else {
+			labels.position = edit.position;
+		}
+	}
+	const style = { ...data.style };
+	if (style.hasDataLabels !== true && LABEL_FLAGS.some((key) => labels[key])) {
+		style.hasDataLabels = true;
+		const off: PptxChartDataLabelOptions = { ...style.dataLabels };
+		for (const key of LABEL_FLAGS) {
+			off[key] ??= false;
+		}
+		style.dataLabels = off;
+	}
+	return {
+		...data,
+		style,
+		series: data.series.map((s, i) => (i === seriesIndex ? { ...s, dataLabelOptions: labels } : s)),
+	};
 }

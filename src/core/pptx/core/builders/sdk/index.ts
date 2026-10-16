@@ -104,6 +104,11 @@ export {
 	chartFormatTargetKey,
 	parseChartFormatTargetKey,
 } from '../../utils/chart-element-format-keys';
+export {
+	chartSupportsSecondaryAxis,
+	isChartSeriesOnSecondaryAxis,
+	withChartSeriesOnSecondaryAxis,
+} from './chart-series-axis-operations';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {
