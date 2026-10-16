@@ -402,6 +402,28 @@ describe('parseCxChartSeries', () => {
 		});
 	});
 
+	it('reads binSize and binCount from the val attribute PowerPoint writes', () => {
+		const series = (binning: XmlObject): XmlObject => ({
+			'cx:plotAreaRegion': {
+				'cx:series': {
+					'@_layoutId': 'clusteredColumn',
+					'cx:data': { 'cx:numDim': { 'cx:lvl': { 'cx:pt': [{ '#text': '7' }] } } },
+					'cx:layoutPr': { 'cx:binning': binning },
+				},
+			},
+		});
+		expect(
+			parseCxChartSeries(
+				series({ '@_intervalClosed': 'r', 'cx:binCount': { '@_val': '4' } }),
+				xmlLookup,
+			)?.series[0].histogramOptions,
+		).toStrictEqual({ layout: 'histogram', binCount: 4, intervalClosed: 'r' });
+		expect(
+			parseCxChartSeries(series({ 'cx:binSize': { '@_val': '2.5' } }), xmlLookup)?.series[0]
+				.histogramOptions,
+		).toStrictEqual({ layout: 'histogram', binSize: 2.5 });
+	});
+
 	it('parses histogram binning and Pareto series layouts', () => {
 		const plotArea: XmlObject = {
 			'cx:plotAreaRegion': {

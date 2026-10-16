@@ -9,6 +9,24 @@ function parseDoubleOrAutomatic(value: unknown): number | 'auto' | undefined {
 	return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+/**
+ * A `cx:binSize` / `cx:binCount` value. PowerPoint writes `<cx:binCount val="4"/>` and refuses
+ * the text form `<cx:binCount>4</cx:binCount>`; the text form is still read, for decks written
+ * before that was known.
+ */
+function binningValue(
+	binning: XmlObject | undefined,
+	localName: string,
+	xmlLookup: XmlLookupLike,
+): string | number | boolean | undefined {
+	const child = xmlLookup.getChildByLocalName(binning, localName);
+	const attribute = child?.['@_val'];
+	if (typeof attribute === 'string' || typeof attribute === 'number') {
+		return attribute;
+	}
+	return xmlLookup.getScalarChildByLocalName(binning, localName);
+}
+
 /** Parse schema-defined ChartEx histogram and Pareto series properties. */
 export function parseCxHistogramOptions(
 	series: XmlObject,
@@ -21,8 +39,8 @@ export function parseCxHistogramOptions(
 	const layoutPr = xmlLookup.getChildByLocalName(series, 'layoutPr');
 	const binning = xmlLookup.getChildByLocalName(layoutPr, 'binning');
 	const aggregation = xmlLookup.getChildByLocalName(layoutPr, 'aggregation');
-	const rawBinSize = xmlLookup.getScalarChildByLocalName(binning, 'binSize');
-	const rawBinCount = xmlLookup.getScalarChildByLocalName(binning, 'binCount');
+	const rawBinSize = binningValue(binning, 'binSize', xmlLookup);
+	const rawBinCount = binningValue(binning, 'binCount', xmlLookup);
 	const binSize = Number.parseFloat(String(rawBinSize ?? ''));
 	const binCount = Number.parseInt(String(rawBinCount ?? ''), 10);
 	const intervalClosed = binning?.['@_intervalClosed'];
