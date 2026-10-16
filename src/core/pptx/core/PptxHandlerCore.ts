@@ -24,6 +24,7 @@ import type {
 	PptxThemeFontScheme,
 	PptxThemeFormatScheme,
 	PptxThemePreset,
+	PptxThemeVariant,
 	ResolvedStyleMatrix,
 	XmlObject,
 } from './types';
@@ -313,6 +314,11 @@ export class PptxHandlerCore {
 		fmtSchemeXml: string,
 	): Promise<PptxThemeFormatScheme | undefined> {
 		return this.runtime.applyThemeFormatSchemeXml(fmtSchemeXml);
+	}
+
+	/** The real theme variants the loaded package carries (`themeVariants/` parts), or none. */
+	public getThemeVariants(): PptxThemeVariant[] {
+		return this.runtime.getThemeVariants();
 	}
 
 	/** The format scheme the deck's primary theme carries now. */

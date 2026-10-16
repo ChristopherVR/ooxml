@@ -73,6 +73,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			(xml) => this.parser.parse(xml) as XmlObject,
 			this.rawSlideWidthEmu,
 		);
+		this.loadedThemeVariants = themeVariants;
 		const tags = await this.parseTags();
 		const customProperties = await this.parseCustomProperties();
 		const coreProperties = await this.parseCoreProperties();

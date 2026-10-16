@@ -2,6 +2,7 @@ import type {
 	PptxElement,
 	PptxSlide,
 	PptxThemeFormatScheme,
+	PptxThemeVariant,
 	ResolvedStyleMatrix,
 	ShapeStyle,
 	XmlObject,
@@ -150,6 +151,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.globalThemeFormatSchemeSnapshot = parsed.scheme;
 		this.themeFormatScheme = parsed.scheme;
 		return parsed.scheme;
+	}
+
+	/** The real theme variants the loaded package carries, or none. */
+	public getThemeVariants(): PptxThemeVariant[] {
+		return this.loadedThemeVariants;
 	}
 
 	/** The format scheme the deck's primary theme carries now. */

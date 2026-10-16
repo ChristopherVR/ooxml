@@ -107,6 +107,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.layoutXmlMap.clear();
 		this.masterXmlMap.clear();
 		this.masterStyleOverrides.clear();
+		this.loadedThemeVariants = [];
 		this.masterTxStylesCache.clear();
 		// Revoke any Blob URLs from a previous load before clearing cache
 		if (typeof globalThis.URL?.revokeObjectURL === 'function' && this.blobUrlCache.size > 0) {

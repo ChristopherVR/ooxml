@@ -32,6 +32,7 @@ import type {
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 	PptxThemeFormatScheme,
+	PptxThemeVariant,
 	PptxViewProperties,
 	ParsedTableStyleMap,
 	XmlObject,
@@ -271,6 +272,7 @@ export interface IPptxHandlerRuntime {
 	applyThemeEffectScheme(id: string): Promise<PptxThemeFormatScheme | undefined>;
 	applyThemeFormatSchemeXml(fmtSchemeXml: string): Promise<PptxThemeFormatScheme | undefined>;
 	getThemeFormatScheme(): PptxThemeFormatScheme | undefined;
+	getThemeVariants(): PptxThemeVariant[];
 	reResolveThemeStyleReferences(
 		slides: readonly PptxSlide[],
 		templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
