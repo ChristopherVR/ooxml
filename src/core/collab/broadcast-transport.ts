@@ -3,6 +3,7 @@
 // local-first viewers (documents stay local) and demos. New code written for the collab area,
 // following the mesh contract of memory-transport.ts.
 import type { Transport, TransportHandlers } from './provider';
+import { randomToken } from './identity';
 import { validateRoomId } from './validation';
 
 /** Structural BroadcastChannel, so the area needs no DOM types. */
@@ -46,7 +47,7 @@ export function createBroadcastTransport(options: BroadcastTransportOptions): Tr
 	const Channel =
 		options.BroadcastChannel ??
 		(globalThis as { BroadcastChannel?: BroadcastChannelConstructor }).BroadcastChannel;
-	const self = Math.random().toString(36).slice(2) + Date.now().toString(36);
+	const self = randomToken() + Date.now().toString(36);
 	let channel: BroadcastChannelLike | null = null;
 	let handlers: TransportHandlers | null = null;
 

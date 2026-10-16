@@ -44,8 +44,15 @@ for (const guest of ['vue', 'solid']) {
 		const b = page.locator('#peer-b docx-editor');
 		await expect(b.locator('.ProseMirror')).toContainText('Shared document');
 		await b.locator('.ProseMirror').click();
-		await page.keyboard.press('Control+Home');
-		for (let i = 0; i < 5; i++) await page.keyboard.press('Shift+ArrowRight');
+		// Select "Share" through the view: a dropped key press on a loaded runner left "Shar".
+		await b.evaluate((element) => {
+			const view = (element as unknown as { view: import('prosemirror-view').EditorView }).view;
+			const selection = view.state.selection.constructor as unknown as {
+				create(doc: unknown, anchor: number, head: number): never;
+			};
+			view.focus();
+			view.dispatch(view.state.tr.setSelection(selection.create(view.state.doc, 1, 6)));
+		});
 		await expect(a.getByRole('img', { name: "Grace's cursor" })).toBeVisible();
 		await expect(a.locator('.dve-peer-selection')).toHaveText('Share');
 		await a.evaluate((element) => {

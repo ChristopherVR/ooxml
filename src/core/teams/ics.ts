@@ -182,6 +182,6 @@ export const icsFileName = (meeting: Pick<Meeting, 'title'>): string =>
 	`${
 		meeting.title
 			.replace(/[^\w.-]+/gu, '-')
-			.replace(/^-+|-+$/gu, '')
+			.replace(/^-|-$/gu, '')
 			.slice(0, 60) || 'meeting'
 	}.ics`;

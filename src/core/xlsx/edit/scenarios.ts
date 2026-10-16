@@ -168,7 +168,7 @@ export function editScenario(
 	draft: ScenarioDraft,
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
-	const existing = scenariosOf(sheet)[index];
+	const existing = Number.isInteger(index) ? scenariosOf(sheet)[index] : undefined;
 	if (!existing) throw new ScenarioError('missing');
 	if (existing.locked && sheet.protection) throw new ScenarioError('locked');
 	const name = checkName(sheet, draft.name, index);
@@ -180,7 +180,7 @@ export function editScenario(
 
 export function deleteScenario(ctx: EditContext, s: number, index: number): void {
 	const sheet = sheetAt(ctx.workbook, s);
-	const existing = scenariosOf(sheet)[index];
+	const existing = Number.isInteger(index) ? scenariosOf(sheet)[index] : undefined;
 	if (!existing) throw new ScenarioError('missing');
 	if (existing.locked && sheet.protection) throw new ScenarioError('locked');
 	ctx.run('Delete scenario', 'view', PARTS(s), () => {

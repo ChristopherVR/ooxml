@@ -32,7 +32,7 @@ const TWO_SERIES_XML = BAR_CHART_XML.replace(
 		<c:val><c:numRef><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="2"/><c:pt idx="0"><c:v>300</c:v></c:pt><c:pt idx="1"><c:v>400</c:v></c:pt></c:numCache></c:numRef></c:val>
 	</c:ser>
 	<c:gapWidth val="150"/>`,
-).replace('<c:barChart>', '<c:barChart>');
+);
 
 describe('chart Format pane fills, lines, 3-D and text save and reload', () => {
 	it('writes pattern, gradient and picture fills and reads them back', async () => {
@@ -85,7 +85,7 @@ describe('chart Format pane fills, lines, 3-D and text save and reload', () => {
 			`Id="${embed}"[^>]*Target="([^"]+)"|Target="([^"]+)"[^>]*Id="${embed}"`,
 			'u',
 		).exec(rels);
-		const media = (target?.[1] ?? target?.[2] ?? '').replace('../', 'ppt/');
+		const media = (target?.[1] ?? target?.[2] ?? '').replace(/\.\.\//gu, 'ppt/');
 		expect(media).toMatch(/^ppt\/media\/image\d+\.png$/u);
 		expect(zip.file(media)).not.toBeNull();
 		expect(await zip.file('[Content_Types].xml')!.async('string')).toMatch(/Extension="png"/u);

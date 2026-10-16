@@ -161,7 +161,10 @@ export function insertTimeline(
 			1,
 			...sheet.drawings.flatMap((d) =>
 				'sourceXml' in d && d.sourceXml
-					? [...d.sourceXml.matchAll(/cNvPr[^>]*\sid="(\d+)"/g)].map((m) => Number(m[1]))
+					? [...d.sourceXml.matchAll(/<[\w:]*cNvPr\b[^>]*>/g)].flatMap((m) => {
+							const id = /\sid="(\d+)"/.exec(m[0])?.[1];
+							return id ? [Number(id)] : [];
+						})
 					: [],
 			),
 		) + 1;

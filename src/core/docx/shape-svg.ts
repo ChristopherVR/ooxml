@@ -146,6 +146,6 @@ export function shapeSvg(
 	const label = escapeXml(lookupPresetShape(spec.preset) ? spec.preset : 'Shape');
 	return (
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${round(w)}" height="${round(h)}" viewBox="0 0 ${round(w)} ${round(h)}" style="overflow:visible" role="img" aria-label="${label}">` +
-		`<g${transform ? ` transform="${transform}"` : ''}>${paths}${text}</g></svg>`
+		`<g${transform ? ` transform="${escapeXml(transform)}"` : ''}>${paths}${text}</g></svg>`
 	);
 }

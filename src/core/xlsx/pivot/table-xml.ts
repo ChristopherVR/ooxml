@@ -240,7 +240,9 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 function dateFilterXml(pivot: PivotTable, filter: NonNullable<PivotTable['dateFilter']>): string {
 	const x15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
 	// Excel numbers filters across the workbook's pivot work; a loaded table keeps its number.
-	const id = Number(/<filter [^>]*\bid="(\d+)"/.exec(pivot.sourceXml ?? '')?.[1] ?? 1);
+	const id = Number(
+		/\bid="(\d+)"/.exec(/<filter\s[^>]*>/.exec(pivot.sourceXml ?? '')?.[0] ?? '')?.[1] ?? 1,
+	);
 	return (
 		`<filters count="1"><filter${attrs({ fld: pivot.fields.indexOf(filter.field), type: 'dateBetween', evalOrder: -1, id, name: filter.field })}>` +
 		`<autoFilter ref="A1"><filterColumn colId="0"><customFilters and="1">` +

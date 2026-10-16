@@ -66,11 +66,26 @@ export function getUserInitials(name: string): string {
 	return trimmed.slice(0, 2).toUpperCase();
 }
 
+/** Eight random base-36 characters from the platform CSPRNG, or a counter when it is missing. */
+export function randomToken(): string {
+	const cryptoApi = (
+		globalThis as { crypto?: { getRandomValues?: (a: Uint32Array) => Uint32Array } }
+	).crypto;
+	if (cryptoApi?.getRandomValues) {
+		return cryptoApi
+			.getRandomValues(new Uint32Array(2))
+			.reduce((s, n) => s + n.toString(36), '')
+			.slice(0, 8);
+	}
+	return (fallbackCounter++).toString(36).padStart(8, '0');
+}
+let fallbackCounter = 0;
+
 /** A random-enough client id for a session; `crypto.randomUUID` when present. */
 export function createClientId(): string {
 	const cryptoApi = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
 	if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
-	return `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+	return `c${Date.now().toString(36)}${randomToken()}`;
 }
 
 function clientKey(clientId: string): string {

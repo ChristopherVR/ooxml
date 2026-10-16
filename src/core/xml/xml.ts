@@ -26,11 +26,15 @@ export const DEFAULT_XML_LIMITS: Readonly<Required<XmlParseLimits>> = {
 	maxNodes: 5_000_000,
 };
 
-// Comments, CDATA and processing instructions are consumed whole so their text never counts as
-// markup. Tags (with quoted attribute values) give: group 1 `/` for end tags, group 2 the name,
-// group 3 `/` for empty-element tags.
-const MARKUP_RE =
-	/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s\/>]+)(?:\s+[^\s=\/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*\s*(\/?)>/g;
+// Tags (with quoted attribute values) give: group 1 `/` for end tags, group 2 the name, group 3
+// `/` for empty-element tags. Comments, CDATA and processing instructions are skipped whole with
+// `indexOf` (see MARKUP_SKIPS), so their text never counts as markup and no scan is quadratic.
+const TAG_RE = /<(\/?)([^\s\/>]+)(?:\s+[^\s=\/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*\s*(\/?)>/y;
+const MARKUP_SKIPS: readonly (readonly [open: string, close: string])[] = [
+	['<!--', '-->'],
+	['<![CDATA[', ']]>'],
+	['<?', '?>'],
+];
 
 /**
  * Linear pre-scan of the markup: throws when nesting depth or the element count exceeds `limits`.
@@ -41,9 +45,23 @@ export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimit
 	const maxNodes = limits.maxNodes ?? DEFAULT_XML_LIMITS.maxNodes;
 	let depth = 0;
 	let nodes = 0;
-	for (const match of xml.matchAll(MARKUP_RE)) {
-		const [, closing, name, selfClosing] = match;
-		if (name === undefined) continue; // comment, CDATA or processing instruction
+	let at = xml.indexOf('<');
+	while (at !== -1) {
+		const skip = MARKUP_SKIPS.find(([open]) => xml.startsWith(open, at));
+		if (skip) {
+			const end = xml.indexOf(skip[1], at + skip[0].length);
+			if (end === -1) return; // unterminated: the DOM parser rejects it
+			at = xml.indexOf('<', end + skip[1].length);
+			continue;
+		}
+		TAG_RE.lastIndex = at;
+		const match = TAG_RE.exec(xml);
+		if (!match) {
+			at = xml.indexOf('<', at + 1);
+			continue;
+		}
+		const [, closing, , selfClosing] = match;
+		at = xml.indexOf('<', at + match[0].length);
 		if (closing) {
 			depth--;
 			continue;
