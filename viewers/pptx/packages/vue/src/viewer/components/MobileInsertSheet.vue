@@ -10,10 +10,10 @@ import { useI18n } from 'vue-i18n';
 
 import { useResolvedCustomization } from '../composables/useViewerCustomization';
 import MobileSheet from './MobileSheet.vue';
-import SlideTemplateGalleryDialog from './SlideTemplateGalleryDialog.vue';
 import DateTimeFieldDialog from './ribbon/DateTimeFieldDialog.vue';
 import InsertSection from './ribbon/InsertSection.vue';
 import type { RibbonProps } from './ribbon/ribbon-types';
+import SlideTemplateGalleryDialog from './SlideTemplateGalleryDialog.vue';
 
 interface Props extends RibbonProps {
 	open: boolean;
