@@ -9,6 +9,8 @@ export const userName = params.get('name') ?? 'Ada';
 export const userId =
 	params.get('id') ?? `demo-${userName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 export const workspaceId = params.get('room') ?? 'demo';
+/** ?locale=de shows the whole app in German; en, de, es, fr and zh-CN ship, empty keeps English. */
+export const locale = params.get('locale') ?? '';
 const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
 // The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it: local mode, where tabs and
 // frames of this browser share chat, presence and calls over BroadcastChannel.

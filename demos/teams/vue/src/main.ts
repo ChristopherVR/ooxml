@@ -1,6 +1,6 @@
 import { createApp, h, ref } from 'vue';
 import { Teams } from 'openteams-vue-viewer';
-import { config, showStaticNotice, userId, userName, workspaceId } from '../../shared';
+import { config, locale, showStaticNotice, userId, userName, workspaceId } from '../../shared';
 import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks';
 
 // `class` falls through to <teams-app>; the browser tests swap it (../../test-hooks).
@@ -15,6 +15,7 @@ createApp({
 			workspaceId,
 			userName,
 			userId,
+			locale,
 			config,
 			onOpenFile: recordOpenFile,
 		}),

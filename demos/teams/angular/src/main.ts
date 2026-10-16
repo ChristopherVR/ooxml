@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { Component, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { TeamsWorkspaceComponent } from 'openteams-angular-viewer';
-import { config, showStaticNotice, userId, userName, workspaceId } from '../../shared';
+import { config, locale, showStaticNotice, userId, userName, workspaceId } from '../../shared';
 import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks';
 
 // JIT-compiled in the demo: legacy decorators, no AOT.
@@ -15,6 +15,7 @@ import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks'
 		[workspaceId]="workspaceId"
 		[userName]="userName"
 		[userId]="userId"
+		[locale]="locale"
 		[config]="config"
 		(openFile)="openFile($event)"
 	/>`,
@@ -24,6 +25,7 @@ class DemoRoot {
 	workspaceId = workspaceId;
 	userName = userName;
 	userId = userId;
+	locale = locale;
 	config = config;
 	// The host class of <teams-app>; the browser tests swap it (../../test-hooks).
 	hostClass = signal(currentHostClass());
