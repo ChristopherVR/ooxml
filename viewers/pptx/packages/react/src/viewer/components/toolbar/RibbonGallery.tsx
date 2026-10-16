@@ -3,6 +3,7 @@ import type {
 	PptxUiRibbonGalleryElement,
 	RibbonGalleryPickEvent,
 	RibbonGalleryPlacement,
+	RibbonGalleryPreviewEvent,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { useRibbonGalleryCommands } from '../ribbon-gallery-context';
 
 export interface RibbonGalleryProps {
+	/** Runs a command a gallery lists under its tiles ("Format Background..."). */
+	onCommand?: (command: 'formatBackground') => void;
 	placement: RibbonGalleryPlacement;
 	icon?: React.ReactNode;
 	chevronOnly?: boolean;
@@ -20,6 +23,7 @@ export function RibbonGallery({
 	placement,
 	chevronOnly = false,
 	tagControl = true,
+	onCommand,
 }: RibbonGalleryProps): React.ReactElement {
 	const { t } = useTranslation();
 	const ref = useRef<PptxUiRibbonGalleryElement>(null);
@@ -39,25 +43,36 @@ export function RibbonGallery({
 	}, [descriptor, t, commands?.editable]);
 	useEffect(() => {
 		const host = ref.current;
-		if (!host) {
+		if (!host || !commands) {
 			return;
 		}
 		const pick = (event: Event) => {
-			if (!commands?.editable) {
+			if (!commands.editable) {
 				return;
 			}
-			const result = applyRibbonGalleryItem(
-				placement.gallery,
-				(event as RibbonGalleryPickEvent).detail.itemId,
-				commands.context,
-			);
-			if (result) {
+			const { itemId, action } = (event as RibbonGalleryPickEvent).detail;
+			const result = applyRibbonGalleryItem(placement.gallery, itemId, commands.context, action);
+			if (result?.kind === 'command') {
+				commands.endPreview?.();
+				onCommand?.(result.command);
+			} else if (result) {
 				commands.dispatch(result);
 			}
 		};
+		const preview = (event: Event) => {
+			const { itemId } = (event as RibbonGalleryPreviewEvent).detail;
+			commands.preview?.(applyRibbonGalleryItem(placement.gallery, itemId, commands.context));
+		};
+		const endPreview = () => commands.endPreview?.();
 		host.addEventListener('gallery-pick', pick);
-		return () => host.removeEventListener('gallery-pick', pick);
-	}, [commands, placement.gallery]);
+		host.addEventListener('gallery-preview', preview);
+		host.addEventListener('gallery-preview-end', endPreview);
+		return () => {
+			host.removeEventListener('gallery-pick', pick);
+			host.removeEventListener('gallery-preview', preview);
+			host.removeEventListener('gallery-preview-end', endPreview);
+		};
+	}, [commands, placement.gallery, onCommand]);
 	return (
 		<pptx-ui-ribbon-gallery
 			ref={ref}

@@ -49,6 +49,11 @@ export function DesignSection(p: DesignSectionProps): React.ReactElement {
 						<RibbonGallery
 							key={placement.control}
 							placement={placement}
+							onCommand={() => {
+								if (!p.isInspectorPaneOpen) {
+									p.onToggleInspector?.();
+								}
+							}}
 							icon={placement.gallery === 'themeFonts' ? <LuType /> : <LuPalette />}
 						/>
 					))}

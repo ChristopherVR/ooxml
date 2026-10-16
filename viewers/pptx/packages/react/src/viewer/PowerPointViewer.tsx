@@ -124,6 +124,7 @@ import { useCollaborationDocumentSync } from './hooks/collaboration/useCollabora
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
+import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
 import { useEditorOperations } from './hooks/useEditorOperations';
@@ -1038,7 +1039,25 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		}
 		slidePackageClipboardRef.current.updateHost(slidePackageHost);
 		useEffect(() => () => slidePackageClipboardRef.current?.dispose(), []);
+		// Design galleries: hover preview over the live slides (no undo step, not dirty) and the
+		// effect/background commits. The slide a "selected slides" pick lands on is the active one.
+		const galleryDeckStyle = useDeckStyleHost({
+			slides,
+			templateElementsBySlideId,
+			theme: state.theme,
+			themeColorMap: themeColorMapValue,
+			handlerRef,
+			selectedSlideIds: slides[activeSlideIndex] ? [slides[activeSlideIndex].id] : [],
+			setSlides: state.setSlides,
+			setTemplateElementsBySlideId: state.setTemplateElementsBySlideId,
+			setTheme: state.setTheme,
+			holdTracking: history.holdTracking,
+			bumpHistory: () => state.setPointerCommitNonce((n) => n + 1),
+			markDirty: history.markDirty,
+		});
 		const ribbonGalleries = useRibbonGalleryCommands({
+			deckStyle: galleryDeckStyle,
+			activeSlide: slides[activeSlideIndex] ?? null,
 			selectedElement,
 			theme: state.theme,
 			themeColorMap: themeColorMapValue,
@@ -1715,8 +1734,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 											canvasHeight={canvasSize.height}
 										>
 											<CollaborationDocumentSync
-												slides={slides}
-												templateElementsBySlideId={templateElementsBySlideId}
+												slides={galleryDeckStyle.held()?.slides ?? slides}
+												templateElementsBySlideId={
+													galleryDeckStyle.held()?.templateElementsBySlideId ??
+													templateElementsBySlideId
+												}
 												setSlides={state.setSlides}
 												content={content}
 												loadVersion={loadVersion}
