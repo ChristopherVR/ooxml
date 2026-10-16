@@ -152,12 +152,12 @@ it('includes the two report rows in the output budget before allocating headers'
 	expect(name).toBe(pivot.name);
 });
 
-it('refuses report filters with Values on rows before history', async () => {
+it('refuses Values on rows with a single measure behind a report filter before history', async () => {
 	const wb = await loadXlsx(native()),
 		edit = createEditSession(wb),
 		pivot = wb.sheets[0]!.pivotTables![0]!;
 	expect(() => edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' })).toThrow(
-		'Report filters require',
+		'Values on rows require multiple measures',
 	);
 	expect(edit.canUndo()).toBe(false);
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);

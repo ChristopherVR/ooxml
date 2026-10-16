@@ -5,6 +5,7 @@ import { pivotPageProjection } from './page-filter';
 import { expandDateGroups } from './date-groups';
 import { groupLabelsOf } from './groups';
 import { pivotGrid, type PivotRowEntry } from './aggregate';
+import { pivotValuesIndex } from './axes';
 import { PIVOT_SUBTOTALS } from './subtotals';
 import { remapPivotRowEntries } from './values-axis';
 import { booleanAttribute } from '../../drawingml/dom';
@@ -128,8 +129,12 @@ export function assertPageAxisItems(
 	const rowAxes = pivotRowFields(pivot).map((name) => axisValues(name, 'axisRow')),
 		rowItems = read('rowItems');
 	const grid = pivotGrid(pivot);
+	// Values on rows add a level (holding measure indexes, which need no remapping).
+	const valuesAt = pivotValuesIndex(pivot);
+	const levelAxes: (number[] | null)[] = [...rowAxes];
+	if (valuesAt >= 0) levelAxes.splice(valuesAt, 0, null);
 	const entries: PivotRowEntry[] = grid.rowEntries
-		? remapPivotRowEntries(grid.rowEntries, rowAxes)
+		? remapPivotRowEntries(grid.rowEntries, levelAxes)
 		: [
 				...rowAxes[0]!.map((index) => ({ indices: [index] })),
 				{ indices: [0], type: 'grand' as const },
@@ -151,13 +156,13 @@ export function assertPageAxisItems(
 			prefix > previousRow.length ||
 			prefix >= expected.indices.length ||
 			(expected.type === 'grand' && prefix !== 0) ||
-			integer(item.getAttribute('i'), 0) !== 0 ||
+			integer(item.getAttribute('i'), 0) !== (expected.measure ?? 0) ||
 			JSON.stringify([...previousRow.slice(0, prefix), ...xs]) !== JSON.stringify(expected.indices)
 		)
 			throw new Error('Unmodeled page row item');
 		previousRow = expected.type === 'grand' ? [] : expected.indices;
 	});
-	const measures = 1 + (pivot.additionalValues?.length ?? 0),
+	const measures = valuesAt >= 0 ? 1 : 1 + (pivot.additionalValues?.length ?? 0),
 		columns = pivot.columnField ? axisValues(pivot.columnField, 'axisCol') : undefined,
 		expected: number[][] = [];
 	if (columns)

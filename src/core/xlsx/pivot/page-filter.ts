@@ -22,7 +22,6 @@ export function validatePivotPageFilter(
 		| 'columnField'
 		| 'valueField'
 		| 'additionalValues'
-		| 'valuesAxis'
 	>,
 ): void {
 	const filter = pivot.pageFilter;
@@ -41,10 +40,9 @@ export function validatePivotPageFilter(
 			pivot.columnField,
 			pivot.valueField,
 			...extras.map((v) => v?.field),
-		].includes(filter.field) ||
-		pivot.valuesAxis === 'rows'
+		].includes(filter.field)
 	)
-		throw new Error('Report filters require Values on columns and a separate source field.');
+		throw new Error('Report filters require a separate source field.');
 	if (
 		filter.item !== undefined &&
 		!(

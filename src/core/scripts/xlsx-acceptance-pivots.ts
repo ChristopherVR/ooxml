@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createEditSession } from '../xlsx/edit/index';
 import { ymdToSerial } from '../xlsx/formula/date-serial';
-import type { Workbook } from '../xlsx/model';
+import type { PivotTableOptions, Workbook } from '../xlsx/model';
 import { loadXlsx } from '../xlsx/read/index';
 import { createWorkbook } from '../xlsx/workbook';
 
@@ -80,6 +80,13 @@ const REFRESHED = [
 	'rvs-first-tabular-cols',
 	'rvs-none-last',
 	'rvs-none-first',
+	// Values on rows under a report filter.
+	'rvp-last-compact',
+	'rvp-first-tabular',
+	'rvp-second-outline',
+	'rvp-cols-compact',
+	'rvp-tabular-repeat',
+	'rvp-first-compact-bottom',
 	// Date groups with report filters, hidden items, a slicer and a timeline.
 	'group-page-all',
 	'group-page-west',
@@ -268,6 +275,47 @@ function created(): Workbook {
 			pageFilter: { field: 'Region', item: 'East' },
 			valueField: 'Amount',
 		},
+	);
+	// Values on rows under a report filter, with the Values among, last and before the row fields.
+	const rowValuesBase: PivotTableOptions = {
+		source,
+		rowField: 'Product',
+		valuesAxis: 'rows',
+		valueField: 'Amount',
+		additionalValues: [{ field: 'Amount', aggregate: 'count' }],
+	};
+	const underFilter: [string, PivotTableOptions][] = [
+		[
+			'compact',
+			{
+				...rowValuesBase,
+				layout: 'compact',
+				secondRowField: 'Size',
+				valuesPosition: 'between',
+				pageFilter: { field: 'Region', item: 'East' },
+			},
+		],
+		[
+			'outline',
+			{ ...rowValuesBase, layout: 'outline', columnField: 'Size', pageFilter: { field: 'Region' } },
+		],
+		[
+			'tabular',
+			{
+				...rowValuesBase,
+				layout: 'tabular',
+				secondRowField: 'Size',
+				valuesPosition: 'first',
+				pageFilter: { field: 'Region', item: 'West' },
+			},
+		],
+	];
+	underFilter.forEach(([layout, options], i) =>
+		s.createPivotTable(
+			1,
+			{ row: 210 + i * 30, col: 0 },
+			{ ...options, name: `RowValuesPage${layout}` },
+		),
 	);
 	return wb;
 }

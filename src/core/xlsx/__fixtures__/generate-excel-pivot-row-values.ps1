@@ -45,7 +45,14 @@ $cases = @(
 	@{ name = 'rvs-first-compact-bottom'; layout = 0; loc = 2; rows = 'Values,Category,Region,Product'; rowSubs = @('010100000000', '000000000000') },
 	@{ name = 'rvs-second-tabular'; layout = 1; loc = 2; rows = 'Category,Values,Region,Product'; rowSubs = @('011000000000', '000000000000') },
 	@{ name = 'rvs-cols-compact'; layout = 0; loc = 1; rows = 'Region,Values'; cols = 'Category,Year'; colSubs = @('010100000000') },
-	@{ name = 'rvs-rows-cols-tabular'; layout = 1; loc = 2; rows = 'Category,Region,Values'; cols = 'Year,Product'; rowSubs = @('010100000000'); colSubs = @('011000000000') }
+	@{ name = 'rvs-rows-cols-tabular'; layout = 1; loc = 2; rows = 'Category,Region,Values'; cols = 'Year,Product'; rowSubs = @('010100000000'); colSubs = @('011000000000') },
+	# A report filter (page) above Values on rows; pageItem selects one item instead of (All).
+	@{ name = 'rvp-last-compact'; layout = 0; loc = 1; rows = 'Category,Region,Values'; page = 'Year' },
+	@{ name = 'rvp-first-tabular'; layout = 1; loc = 2; rows = 'Values,Category,Region'; page = 'Year'; pageItem = '2025' },
+	@{ name = 'rvp-second-outline'; layout = 2; loc = 1; rows = 'Category,Values,Region'; page = 'Year'; pageItem = '2026' },
+	@{ name = 'rvp-cols-compact'; layout = 0; loc = 1; rows = 'Region,Values'; cols = 'Category'; page = 'Year' },
+	@{ name = 'rvp-tabular-repeat'; layout = 1; loc = 2; rows = 'Category,Region,Values'; page = 'Product'; pageItem = 'Apple'; repeat = $true },
+	@{ name = 'rvp-first-compact-bottom'; layout = 0; loc = 2; rows = 'Values,Category,Region'; page = 'Year'; pageItem = '2025' }
 )
 if ($Only.Count) { $Only = @($Only | ForEach-Object { $_.Split(',') }); $cases = @($cases | Where-Object { $Only -contains $_.name }) }
 $excel = New-Object -ComObject Excel.Application
@@ -85,6 +92,7 @@ try {
 		$cols = if ($case.cols) { $case.cols.Split(',') } else { @() }
 		foreach ($name in $names) { $pivot.PivotFields($name).Orientation = 1 }
 		foreach ($name in $cols) { $pivot.PivotFields($name).Orientation = 2 }
+		if ($case.page) { $pivot.PivotFields($case.page).Orientation = 3 }
 		$pivot.RowAxisLayout($case.layout)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Data', -4157)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Count of Amount', -4112)
@@ -92,6 +100,7 @@ try {
 		$pivot.DataPivotField.Position = [array]::IndexOf($all, 'Values') + 1
 		foreach ($name in $names) { $pivot.PivotFields($name).LayoutSubtotalLocation = $case.loc }
 		if ($case.repeat) { $pivot.RepeatAllLabels(2) }
+		if ($case.pageItem) { $pivot.PivotFields($case.page).CurrentPage = $case.pageItem }
 		foreach ($set in @(@($names, $case.rowSubs), @($cols, $case.colSubs))) {
 			for ($i = 0; $i -lt $set[1].Count; $i++) {
 				$flags = @(); foreach ($ch in $set[1][$i].ToCharArray()) { $flags += ($ch -eq '1') }
@@ -102,6 +111,7 @@ try {
 			Write-Host "== $($case.name) $($pivot.TableRange1.Address())"
 			foreach ($row in $pivot.TableRange1.Rows) {
 				$line = @(); foreach ($cell in $row.Cells) { $line += [string]$cell.Value2 }
+				$line += '[indent ' + $row.Cells.Item(1).IndentLevel + ']'
 				Write-Host ($line -join ' | ')
 			}
 		}

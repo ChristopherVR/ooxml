@@ -22,13 +22,12 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Diseños de tablas dinámicas no modelados, agrupación, segmentaciones y fuentes externas (conservados)',
 		'未建模的数据透视表布局、分组、切片器和外部数据源（保留）',
 	],
-	'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)':
-		[
-			'Filtres de rapport avec valeurs en lignes, filtres multiples ou dynamiques et libellés de colonnes répétés (conservés)',
-			'Berichtsfilter mit Werten in Zeilen, mehrere/dynamische Filter und wiederholte Spaltenbeschriftungen (erhalten)',
-			'Filtros de informe con valores en filas, filtros múltiples o dinámicos y títulos de columna repetidos (conservados)',
-			'值位于行上的报表筛选器、多重或动态筛选器和重复列标题（保留）',
-		],
+	'Multiple/dynamic report filters and repeated column captions (preserved)': [
+		'Filtres de rapport multiples ou dynamiques et libellés de colonnes répétés (conservés)',
+		'Mehrere/dynamische Berichtsfilter und wiederholte Spaltenbeschriftungen (erhalten)',
+		'Filtros de informe múltiples o dinámicos y títulos de columna repetidos (conservados)',
+		'多重或动态报表筛选器和重复列标题（保留）',
+	],
 	OK: ['OK', 'OK', 'Aceptar', '确定'],
 	Cancel: ['Annuler', 'Abbrechen', 'Cancelar', '取消'],
 	Close: ['Fermer', 'Schließen', 'Cerrar', '关闭'],
