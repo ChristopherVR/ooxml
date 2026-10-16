@@ -1,5 +1,6 @@
 import {
 	getComputedEffectStyle,
+	getFrameEffectStyle,
 	getComputedFillStyle,
 	getComputedStrokeStyle,
 	getAnimationColorBaseStyle,
@@ -99,23 +100,12 @@ export function getShapeVisualStyle(
 	animatesStroke?: boolean,
 	parentGroupFill?: ShapeStyle,
 ): React.CSSProperties {
-	if (element.type === 'group') {
-		// A group has no fill/stroke/geometry of its own (the branches below all
-		// read `element.shapeStyle`, which a group never has), but PowerPoint
-		// still lets `p:grpSpPr/a:effectLst` carry a shadow/glow/soft-edge for
-		// the group's own COMPOSITE raster (see shared `getComputedEffectStyle`).
-		// Reflection rides a separate mirrored sibling node (`ShapeEffectOverlay`),
-		// same as a shape, so only the container-level `filter` / `overflow`
-		// belong here.
-		const fx = getComputedEffectStyle(element);
-		const groupStyle: React.CSSProperties = {};
-		if (fx.filter) {
-			groupStyle.filter = fx.filter;
-		}
-		if (fx.overflowVisible) {
-			groupStyle.overflow = 'visible';
-		}
-		return groupStyle;
+	// A group or a chart has no shape paint of its own, only container effects: a
+	// group's composite shadow / glow / soft edge, a chart area's outer shadow and glow
+	// (outside the frame). Decided once in shared for every binding.
+	const frame = getFrameEffectStyle(element);
+	if (frame) {
+		return { ...frame };
 	}
 	if (!hasShapeProperties(element)) {
 		return {};
