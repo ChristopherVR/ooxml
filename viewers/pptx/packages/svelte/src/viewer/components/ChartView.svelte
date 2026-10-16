@@ -18,6 +18,7 @@
 		applyChart3DSelect,
 		canDrillDown,
 		formatAxisValue,
+		getFrameEffectStyle,
 		resolveChartThreeViewSpec,
 		resolveRevealedChartData,
 		shouldRenderHitTarget,
@@ -129,7 +130,10 @@
 		return revealedElement.type === 'chart' ? buildChartView(revealedElement, t) : undefined;
 	});
 	const legendItems = $derived(view?.kind === 'chart' ? buildLegendItems(view.vm, (key) => t(key)) : []);
-	const containerStyle = $derived(styleToString(getContainerStyle(element, zIndex)));
+	// The chart area's outer shadow and glow sit on the frame, outside the chart (shared).
+	const containerStyle = $derived(
+		styleToString({ ...getContainerStyle(element, zIndex), ...getFrameEffectStyle(element) }),
+	);
 
 	// The projector re-creates every SVG mark whenever the chart changes, which
 	// drops DOM-only classes, so the selected-mark highlight is re-applied after
