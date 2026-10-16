@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.3.0) - 2026-10-16
+
+### Features
+
+- **teams:** Pass a locale through every binding and demo ([bcea500](https://github.com/ChristopherVR/ooxml/commit/bcea500df4863fc296ff5020a6b6af0f8631d072))
+
+### Testing
+
+- **teams:** Cover chats, the calendar and reminders in the browser ([544d1f0](https://github.com/ChristopherVR/ooxml/commit/544d1f0adb31802033102e009a66c338bb0c3df6))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 7 updates ([#57](https://github.com/ChristopherVR/ooxml/issues/57)) ([7d7881b](https://github.com/ChristopherVR/ooxml/commit/7d7881bfd9615f32b32fbd5c856402926498a492))
+
 ## [0.2.4](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.2.4) - 2026-10-11
 
 ### Styling

@@ -7,6 +7,32 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.16.0) - 2026-10-16
+
+### Features
+
+- **xlsx:** Values on rows under a PivotTable report filter ([cd095b0](https://github.com/ChristopherVR/ooxml/commit/cd095b0dd28a46e9e16c8f8a3bf46d47c7a8b9b8))
+- **xlsx:** Reproduce PivotTable captions in the language of the file ([be4c874](https://github.com/ChristopherVR/ooxml/commit/be4c874a79b30be170a69ef0b68efa356b74a79a))
+- **pptx:** Apply theme effect schemes and background styles ([998bb4b](https://github.com/ChristopherVR/ooxml/commit/998bb4b52c0d3606d0d4c26a0f26c970b4684b69))
+- **pptx:** Resolve a style against another effect scheme ([6db6a07](https://github.com/ChristopherVR/ooxml/commit/6db6a0777b8a82a787f8a78015b34513df4c2f0a))
+- **pptx:** Expose a package's real theme variants on the handler ([f176c1b](https://github.com/ChristopherVR/ooxml/commit/f176c1bcd2974005606fcc3588a5d3620de414b8))
+- **pptx:** Save chart picture, pattern, gradient, 3-D and text formats ([979e444](https://github.com/ChristopherVR/ooxml/commit/979e444af1cab982a8e1ea2360325646efeec6d4))
+
+### Bug Fixes
+
+- **pptx:** Write ChartEx bin size and count as val attributes ([457df13](https://github.com/ChristopherVR/ooxml/commit/457df13ae1c4bafbb61d53b41a3078e7a74556b4))
+- **pptx:** Write animation graphicEl children in the DrawingML namespace ([9b7604d](https://github.com/ChristopherVR/ooxml/commit/9b7604d417495e0c89342207ffb2ed4afc5906ab))
+- **pptx:** Mirror chart text colour edits and keep automatic label angles ([c8f12c3](https://github.com/ChristopherVR/ooxml/commit/c8f12c3b17c0fc778fc5905a4d8ba8c0f2fd0e2a))
+- **pptx:** Keep a chart title's size when its text format is edited ([67b433c](https://github.com/ChristopherVR/ooxml/commit/67b433c3dd77863e37201441c851dc9b1e9b60ec))
+- **pptx:** See data labels of a second chart group of the same type ([06e7685](https://github.com/ChristopherVR/ooxml/commit/06e7685fd29fc9c5239c8161aa0963e09378adbc))
+- **pptx:** Sync a slide background style over collaboration ([32bc400](https://github.com/ChristopherVR/ooxml/commit/32bc400deccd8a4c53df15aec8e4c1245b392654))
+- **pptx:** Center resized slide content in pixel coordinates ([#86](https://github.com/ChristopherVR/ooxml/issues/86)) ([fbbdfee](https://github.com/ChristopherVR/ooxml/commit/fbbdfee9dfe9b718ed02f0847e2a1197661f2f33))
+- **pptx:** Preserve picture source crops in svg exports ([#88](https://github.com/ChristopherVR/ooxml/issues/88)) ([97c254c](https://github.com/ChristopherVR/ooxml/commit/97c254c159e7486e77b425be95bbe17aca0955ea))
+
+### Testing
+
+- **pptx:** Make the generated e2e decks open in PowerPoint ([036e0eb](https://github.com/ChristopherVR/ooxml/commit/036e0eb438d8664230afe7fe2de44a1e9365fb9b))
+
 ## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.15.0) - 2026-10-16
 
 ### Features

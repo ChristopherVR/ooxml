@@ -7,6 +7,34 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.16.0) - 2026-10-16
+
+### Features
+
+- **ui:** Choose a report filter with Values on rows ([b985bfb](https://github.com/ChristopherVR/ooxml/commit/b985bfb1b339fa254402b575d1b56fc3d9d94a13))
+- **ui:** Caption a new PivotTable in the editor language ([7e7eb30](https://github.com/ChristopherVR/ooxml/commit/7e7eb30ece4ac17db7019089140a1decef3bce5b))
+- **ui:** Translate the Teams elements in en, de, es, fr and zh-CN ([4bfb846](https://github.com/ChristopherVR/ooxml/commit/4bfb846c566bb24cd44fe789a64707df17adda51))
+- **ui:** Add Effects and Background Styles galleries and hover preview ([fe19278](https://github.com/ChristopherVR/ooxml/commit/fe1927855182eae37051160f645ca6eff42c6b84))
+- **ui:** Host the Design gallery preview and commit over deck state ([f3afeec](https://github.com/ChristopherVR/ooxml/commit/f3afeec39cbed7183e6b98606fcc6d6371dfc659))
+- **ui:** Add Link and Date & Time to the phone Insert sheet ([f9962a5](https://github.com/ChristopherVR/ooxml/commit/f9962a5ddc0aebbaba8568f2203627c6989bc4c6))
+- **ui:** Finish the chart Format pane's fills, 3-D and Text Options ([5bbd3db](https://github.com/ChristopherVR/ooxml/commit/5bbd3dbdab0c2177acfb3ba5afcbd682445359c4))
+- **ui:** Draw chart picture, pattern, 3-D, text and line formats ([69b336b](https://github.com/ChristopherVR/ooxml/commit/69b336b7df631278a65ffb7ccefa67630430f847))
+
+### Bug Fixes
+
+- **ui:** Name the chart display units in words as office does ([206425d](https://github.com/ChristopherVR/ooxml/commit/206425d72c08a5ca01d8ef3986dc4aa6f2bdcf76))
+- **ui:** Translate built-in SmartArt layout names in the Layouts gallery ([a48c035](https://github.com/ChristopherVR/ooxml/commit/a48c035a309cfadb46eb91e651839efaf559cf33))
+- **ui:** Translate Compare change sentences and the waterfall legend ([f6f8e77](https://github.com/ChristopherVR/ooxml/commit/f6f8e77a0db1e2b418c5a326abae9b8a6a51124f))
+
+### Testing
+
+- **ui:** Refresh chart parity, manifest and locale checks after merge ([9bc34ea](https://github.com/ChristopherVR/ooxml/commit/9bc34eaafa0853af9e326c7ba5d0fea67aae80ef))
+- **ui:** Keep the em-dash out of the teams locale test source ([bff7218](https://github.com/ChristopherVR/ooxml/commit/bff72183793478c22849c4201aa04770d8d028ba))
+
+### Chores
+
+- **ui:** Regenerate the element manifest for the gallery preview events ([916db87](https://github.com/ChristopherVR/ooxml/commit/916db8777efc2f2130a2c06d448b1d09022080f1))
+
 ## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.15.0) - 2026-10-16
 
 ### Features

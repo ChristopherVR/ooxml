@@ -7,6 +7,43 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.40.0) - 2026-10-16
+
+### Features
+
+- **pptx:** Apply theme effect schemes and background styles ([998bb4b](https://github.com/ChristopherVR/ooxml/commit/998bb4b52c0d3606d0d4c26a0f26c970b4684b69))
+- **pptx:** Resolve a style against another effect scheme ([6db6a07](https://github.com/ChristopherVR/ooxml/commit/6db6a0777b8a82a787f8a78015b34513df4c2f0a))
+- **locales:** Translate the Effects, Background Styles and Variants copy ([89b8b02](https://github.com/ChristopherVR/ooxml/commit/89b8b02486600fa46087023293b87867d3e3b0d6))
+- **pptx:** Expose a package's real theme variants on the handler ([f176c1b](https://github.com/ChristopherVR/ooxml/commit/f176c1bcd2974005606fcc3588a5d3620de414b8))
+- **vue:** Preview and apply Design effects and background styles ([2ee51ef](https://github.com/ChristopherVR/ooxml/commit/2ee51efba1783361baeb8b00691e9592102830df))
+- **ui:** Add Link and Date & Time to the phone Insert sheet ([f9962a5](https://github.com/ChristopherVR/ooxml/commit/f9962a5ddc0aebbaba8568f2203627c6989bc4c6))
+- **pptx:** Save chart picture, pattern, gradient, 3-D and text formats ([979e444](https://github.com/ChristopherVR/ooxml/commit/979e444af1cab982a8e1ea2360325646efeec6d4))
+- **locales:** Translate the chart Format pane's fills, 3-D and text ([2714041](https://github.com/ChristopherVR/ooxml/commit/2714041813ab5899ff519bb8386269ff07ffc0c8))
+
+### Bug Fixes
+
+- **locales:** Align new powerpoint strings with office terms ([5de0ce8](https://github.com/ChristopherVR/ooxml/commit/5de0ce84918554207043198369a2dd3021e3abda))
+- **ui:** Translate built-in SmartArt layout names in the Layouts gallery ([a48c035](https://github.com/ChristopherVR/ooxml/commit/a48c035a309cfadb46eb91e651839efaf559cf33))
+- **ui:** Translate Compare change sentences and the waterfall legend ([f6f8e77](https://github.com/ChristopherVR/ooxml/commit/f6f8e77a0db1e2b418c5a326abae9b8a6a51124f))
+- **pptx:** Write ChartEx bin size and count as val attributes ([457df13](https://github.com/ChristopherVR/ooxml/commit/457df13ae1c4bafbb61d53b41a3078e7a74556b4))
+- **pptx:** Write animation graphicEl children in the DrawingML namespace ([9b7604d](https://github.com/ChristopherVR/ooxml/commit/9b7604d417495e0c89342207ffb2ed4afc5906ab))
+- **pptx:** Mirror chart text colour edits and keep automatic label angles ([c8f12c3](https://github.com/ChristopherVR/ooxml/commit/c8f12c3b17c0fc778fc5905a4d8ba8c0f2fd0e2a))
+- **pptx:** Keep a chart title's size when its text format is edited ([67b433c](https://github.com/ChristopherVR/ooxml/commit/67b433c3dd77863e37201441c851dc9b1e9b60ec))
+- **pptx:** See data labels of a second chart group of the same type ([06e7685](https://github.com/ChristopherVR/ooxml/commit/06e7685fd29fc9c5239c8161aa0963e09378adbc))
+- **vue:** Cast the chart area shadow and glow outside the chart frame ([216a7d3](https://github.com/ChristopherVR/ooxml/commit/216a7d3bfb5e37c9ec775e1cf08acea27f240de3))
+- **vue:** Keep a gallery hover preview out of recovery snapshots ([ec3d384](https://github.com/ChristopherVR/ooxml/commit/ec3d384b32b2d5ca3dafc06bb024741a665c3869))
+- **pptx:** Sync a slide background style over collaboration ([32bc400](https://github.com/ChristopherVR/ooxml/commit/32bc400deccd8a4c53df15aec8e4c1245b392654))
+- **pptx:** Center resized slide content in pixel coordinates ([#86](https://github.com/ChristopherVR/ooxml/issues/86)) ([fbbdfee](https://github.com/ChristopherVR/ooxml/commit/fbbdfee9dfe9b718ed02f0847e2a1197661f2f33))
+- **pptx:** Preserve picture source crops in svg exports ([#88](https://github.com/ChristopherVR/ooxml/issues/88)) ([97c254c](https://github.com/ChristopherVR/ooxml/commit/97c254c159e7486e77b425be95bbe17aca0955ea))
+
+### Testing
+
+- **pptx:** Make the generated e2e decks open in PowerPoint ([036e0eb](https://github.com/ChristopherVR/ooxml/commit/036e0eb438d8664230afe7fe2de44a1e9365fb9b))
+
+### Styling
+
+- **vue:** Format the phone insert sheet ([6dd11ec](https://github.com/ChristopherVR/ooxml/commit/6dd11ecb6720ac07be7d9cb63ac3b4ec54290656))
+
 ## [4.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.39.0) - 2026-10-16
 
 ### Features
