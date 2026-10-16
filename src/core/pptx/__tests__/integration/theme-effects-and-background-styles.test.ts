@@ -89,6 +89,24 @@ describe('theme effect schemes', () => {
 		expect(same.strokeWidth).toBe(styleOf(hand).strokeWidth);
 	});
 
+	it('resolves a style against another scheme for a gallery tile, leaving the deck alone', () => {
+		const style = (idx: string): Record<string, unknown> => ({
+			'a:fillRef': { '@_idx': idx, 'a:schemeClr': { '@_val': 'accent1' } },
+			'a:lnRef': { '@_idx': '2', 'a:schemeClr': { '@_val': 'accent1' } },
+			'a:effectRef': { '@_idx': '0', 'a:schemeClr': { '@_val': 'accent1' } },
+		});
+		const own = handler.resolveStyleMatrixReferences(style('3')).shapeStyle;
+		const glossy = handler.resolveStyleMatrixReferences(style('3'), 'glossy').shapeStyle;
+		expect(glossy.fillGradient).toBeTruthy();
+		expect(glossy.fillGradient).not.toBe(own.fillGradient);
+		expect(handler.resolveStyleMatrixReferences(style('3')).shapeStyle.fillGradient).toBe(
+			own.fillGradient,
+		);
+		expect(handler.resolveStyleMatrixReferences(style('3'), 'nope').shapeStyle.fillGradient).toBe(
+			own.fillGradient,
+		);
+	});
+
 	it('previews a scheme without changing the theme', async () => {
 		const original = styleOf(withFillRef(data.slides[0]!, 3));
 		const preview = handler.reResolveThemeStyleReferences(data.slides, {}, 'glossy');

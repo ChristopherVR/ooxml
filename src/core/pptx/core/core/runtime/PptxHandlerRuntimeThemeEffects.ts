@@ -2,6 +2,7 @@ import type {
 	PptxElement,
 	PptxSlide,
 	PptxThemeFormatScheme,
+	ResolvedStyleMatrix,
 	ShapeStyle,
 	XmlObject,
 } from '../../types';
@@ -57,6 +58,38 @@ function refNode(idx: number, colorXml: XmlObject | undefined): XmlObject {
  * so a fill, outline or shadow the author set by hand survives a scheme change, as in PowerPoint.
  */
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
+	private readonly effectSchemeCache = new Map<string, PptxThemeFormatScheme>();
+
+	/**
+	 * Resolve a `<p:style>` node as the base class does, against built-in effect scheme
+	 * `effectSchemeId` instead of the deck's own (the Effects gallery draws each tile this way).
+	 */
+	public override resolveStyleMatrixReferences(
+		styleXml: XmlObject,
+		effectSchemeId?: string,
+	): ResolvedStyleMatrix {
+		const preset = effectSchemeId ? findThemeEffectScheme(effectSchemeId) : undefined;
+		if (!preset) {
+			return super.resolveStyleMatrixReferences(styleXml);
+		}
+		let scheme = this.effectSchemeCache.get(preset.id);
+		if (!scheme) {
+			scheme = this.parseEffectScheme(preset)?.scheme;
+			if (scheme) {
+				this.effectSchemeCache.set(preset.id, scheme);
+			}
+		}
+		const saved = this.themeFormatScheme;
+		if (scheme) {
+			this.themeFormatScheme = scheme;
+		}
+		try {
+			return super.resolveStyleMatrixReferences(styleXml);
+		} finally {
+			this.themeFormatScheme = saved;
+		}
+	}
+
 	private parseEffectScheme(
 		preset: Pick<PptxThemeEffectScheme, 'fmtSchemeXml'>,
 	): { node: XmlObject; scheme: PptxThemeFormatScheme } | undefined {

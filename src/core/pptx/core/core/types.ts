@@ -266,7 +266,7 @@ export interface IPptxHandlerRuntime {
 	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;
 	updateThemeName(name: string): Promise<void>;
 	/** Resolve a `<p:style>` node against the loaded theme (see PptxHandlerRuntimeStyleMatrixResolve). */
-	resolveStyleMatrixReferences(styleXml: XmlObject): ResolvedStyleMatrix;
+	resolveStyleMatrixReferences(styleXml: XmlObject, effectSchemeId?: string): ResolvedStyleMatrix;
 	/** Write a built-in effect scheme (`a:fmtScheme`) into the theme parts. */
 	applyThemeEffectScheme(id: string): Promise<PptxThemeFormatScheme | undefined>;
 	applyThemeFormatSchemeXml(fmtSchemeXml: string): Promise<PptxThemeFormatScheme | undefined>;

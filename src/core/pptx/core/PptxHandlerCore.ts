@@ -293,8 +293,11 @@ export class PptxHandlerCore {
 	 * shape and it renders like PowerPoint's Shape Styles entry and saves as a
 	 * bare `<p:style>` with an empty `spPr`, which is what PowerPoint writes.
 	 */
-	public resolveStyleMatrixReferences(styleXml: XmlObject): ResolvedStyleMatrix {
-		return this.runtime.resolveStyleMatrixReferences(styleXml);
+	public resolveStyleMatrixReferences(
+		styleXml: XmlObject,
+		effectSchemeId?: string,
+	): ResolvedStyleMatrix {
+		return this.runtime.resolveStyleMatrixReferences(styleXml, effectSchemeId);
 	}
 
 	/**
