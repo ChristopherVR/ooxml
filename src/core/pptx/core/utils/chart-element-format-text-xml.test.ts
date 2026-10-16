@@ -36,6 +36,16 @@ describe('chart Text Options XML', () => {
 		expect(read(owner)).toMatchObject({ rotation: 30, fill: { kind: 'solid' } });
 	});
 
+	it('leaves a rich title paragraph without defaults without them, so its size is kept', () => {
+		const title: XmlObject = {
+			'c:tx': { 'c:rich': { 'a:bodyPr': {}, 'a:p': { 'a:r': { 'a:t': 'Sales' } } } },
+		};
+		applyChartTextFormat(title, { fill: { kind: 'solid', color: '#C00000' } }, ['txPr'], local);
+		const p = ((title['c:tx'] as XmlObject)['c:rich'] as XmlObject)['a:p'] as XmlObject;
+		expect(p['a:pPr']).toBeUndefined();
+		expect(Object.keys(p['a:r'] as XmlObject)).toEqual(['a:rPr', 'a:t']);
+	});
+
 	it('mirrors a solid text fill onto the flat text colours', () => {
 		const data: PptxChartData = {
 			chartType: 'bar',

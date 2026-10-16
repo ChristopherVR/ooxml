@@ -126,13 +126,18 @@ function applyToBody(body: XmlObject, text: PptxChartElementText, localName: Loc
 	if (paragraphs.length === 0) paragraphs.push({});
 	const next = paragraphs.map((paragraph) => {
 		const p: XmlObject = { ...paragraph };
-		const pPrKey = keyOf(p, 'pPr', localName) ?? 'a:pPr';
+		const existingPPr = keyOf(p, 'pPr', localName);
+		const pPrKey = existingPPr ?? 'a:pPr';
 		const pPr: XmlObject = { ...(asObject(p[pPrKey]) ?? {}) };
 		const defKey = keyOf(pPr, 'defRPr', localName);
-		const defRPr: XmlObject = { ...(asObject(defKey ? pPr[defKey] : undefined) ?? {}) };
-		applyRunProps(defRPr, text, localName);
-		setOrdered(pPr, 'defRPr', defRPr, PPR_ORDER, localName);
 		const rKey = keyOf(p, 'r', localName);
+		// A rich title paragraph without its own defaults keeps none: an added `a:defRPr`
+		// (even one without a size) replaces the chart style's title size and weight.
+		if (defKey || !rKey) {
+			const defRPr: XmlObject = { ...(asObject(defKey ? pPr[defKey] : undefined) ?? {}) };
+			applyRunProps(defRPr, text, localName);
+			setOrdered(pPr, 'defRPr', defRPr, PPR_ORDER, localName);
+		}
 		if (rKey) {
 			const runs = list(p[rKey]).map((run) => {
 				const r: XmlObject = { ...run };
@@ -149,7 +154,9 @@ function applyToBody(body: XmlObject, text: PptxChartElementText, localName: Loc
 			p[rKey] = runs.length === 1 ? runs[0]! : runs;
 		}
 		// `a:pPr` is the paragraph's first child.
-		replaceEntries(p, [[pPrKey, pPr], ...Object.entries(p).filter(([k]) => k !== pPrKey)]);
+		if (existingPPr || Object.keys(pPr).length > 0) {
+			replaceEntries(p, [[pPrKey, pPr], ...Object.entries(p).filter(([k]) => k !== pPrKey)]);
+		}
 		return p;
 	});
 	body[pKey] = next.length === 1 ? next[0]! : next;
