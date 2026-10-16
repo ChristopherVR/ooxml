@@ -36,7 +36,8 @@ test('on a phone File is accent text and the groups chevron fades in instead of 
 	const viewer = page.locator('visio-viewer');
 	const file = viewer.locator('office-ui-ribbon').locator('.file');
 	await expect(file).toBeVisible();
-	// The File button fades its fill out when the phone layout applies; wait the fade out.
+	// A pointer resting on File paints its hover tint, so park it away from the ribbon first.
+	await page.mouse.move(200, 600);
 	await expect
 		.poll(() => file.evaluate((node) => getComputedStyle(node).backgroundColor))
 		.toBe('rgba(0, 0, 0, 0)');
