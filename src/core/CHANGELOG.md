@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.15.0) - 2026-10-16
+
+### Features
+
+- **teams:** Probe, check and end sessions from the client ([dab7217](https://github.com/ChristopherVR/ooxml/commit/dab7217734937ba5851796ad89e3a9c25d640d37))
+- **teams:** Repeat meetings monthly and yearly ([3eb2406](https://github.com/ChristopherVR/ooxml/commit/3eb2406733a4a19791af8b0196357288d0e7b04e))
+- **xlsx:** Custom subtotals on PivotTable column fields ([0b86fd5](https://github.com/ChristopherVR/ooxml/commit/0b86fd53c1743829a003cad9ea1a22d1d9f1eb0e))
+- **xlsx:** Values on rows with any number of PivotTable fields ([c227437](https://github.com/ChristopherVR/ooxml/commit/c2274377b777b4ca98bc95a1b7d2d5c6ab97f634))
+- **xlsx:** Date groups with report filters, hidden items and timelines ([a072ec6](https://github.com/ChristopherVR/ooxml/commit/a072ec6c8b1e8983686abe15f064eee8ed0741e9))
+- **xlsx:** Read date group labels written in another language ([eccf72b](https://github.com/ChristopherVR/ooxml/commit/eccf72bb7ce10e827b0b9a360dbdf60c7489cfb3))
+- **geometry:** Add the PowerPoint shape gallery catalogue ([2fb79e2](https://github.com/ChristopherVR/ooxml/commit/2fb79e2717cf9094a2692d04503e95cc09453467))
+- **pptx:** Add chart element format and options edit operations ([d99f83e](https://github.com/ChristopherVR/ooxml/commit/d99f83ec63e6251c4aaa39a31ad5d2f4d2659b54))
+- **pptx:** Read chart element formats from each element's spPr on load ([46620d0](https://github.com/ChristopherVR/ooxml/commit/46620d08e61513234ba61964e4f751d679fcb28b))
+
+### Testing
+
+- **xlsx:** Accept column subtotals, row values and filtered date groups in Excel ([c8c0f05](https://github.com/ChristopherVR/ooxml/commit/c8c0f053fcaf956a2b2df2d52f2eac17558e53a0))
+
 ## [1.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.14.0) - 2026-10-15
 
 ### Features

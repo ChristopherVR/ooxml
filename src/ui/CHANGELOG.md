@@ -7,6 +7,35 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.15.0) - 2026-10-16
+
+### Features
+
+- **ui:** Add a sign-in screen to the teams app ([e6ccc71](https://github.com/ChristopherVR/ooxml/commit/e6ccc71008003355b99554441b1dc4a84d01e2fc))
+- **ui:** Pick monthly and yearly repeats for a meeting ([bfc816a](https://github.com/ChristopherVR/ooxml/commit/bfc816a82c2c2670ae7f3dad7060bf37d86275b1))
+- **ui:** Add the phone Insert sheet and a phone slide fit ([00d8320](https://github.com/ChristopherVR/ooxml/commit/00d83205847b26a985e72456f25e4ea78356ac2b))
+- **ui:** Set Field Settings subtotals on PivotTable column fields ([71ae55a](https://github.com/ChristopherVR/ooxml/commit/71ae55a6314eae2ab2e32ebd4fa5e42886e8a70b))
+- **ui:** Place PivotTable Values among any number of row fields ([9d3b3df](https://github.com/ChristopherVR/ooxml/commit/9d3b3df483d1276b913e42c9800c4a1668bfb65b))
+- **ui:** Categorise the Shapes gallery and move Slide Templates ([e043c1a](https://github.com/ChristopherVR/ooxml/commit/e043c1a11c707277879617f9ae37d8901535c5a3))
+- **ui:** Add the Themes and Variants galleries and Designer to Design ([75ec95b](https://github.com/ChristopherVR/ooxml/commit/75ec95b682e017657310bf5dbfc8b6a8a0de5585))
+- **pptx:** Keep Slide Templates reachable from every New Slide menu ([be03af6](https://github.com/ChristopherVR/ooxml/commit/be03af63a0ed6c23a79800b500d3d425ea22773f))
+- **ui:** Add the shared pptx chart Format task pane ([7cc8761](https://github.com/ChristopherVR/ooxml/commit/7cc8761e3c8f7ea3c55ab54a9760a19a2650960a))
+- **ui:** Draw chart element transparency, effects and boxes ([d406438](https://github.com/ChristopherVR/ooxml/commit/d4064386a4e1d802de68fc0d829f887624ebc9cc))
+
+### Bug Fixes
+
+- **svelte:** Translate media and picture inspector labels ([d0bde63](https://github.com/ChristopherVR/ooxml/commit/d0bde63ea46502a316e94f4b795901db20644c17))
+- **visio:** End presentation when the editor stops rendering ([e16d93e](https://github.com/ChristopherVR/ooxml/commit/e16d93ee5bb21c655ff30102b1d4d54bced9e12d))
+- **visio:** Tidy the phone ribbon and narrow status bar ([32098eb](https://github.com/ChristopherVR/ooxml/commit/32098ebff2992dd305f60caa96d1154336f44226))
+- **svelte:** Translate table, text effects and SmartArt inspector labels ([ca38b70](https://github.com/ChristopherVR/ooxml/commit/ca38b708db0399fec7db9f72046296c82587116d))
+- **ui:** Translate shared preset catalogue labels ([46661a1](https://github.com/ChristopherVR/ooxml/commit/46661a125e90b91b00f3fa66f584f232bc21a871))
+- **ui:** Keep chart Format pane clicks and target marks under capture ([8c47310](https://github.com/ChristopherVR/ooxml/commit/8c473101245fbc5635dc278826064cb8f52b138e))
+- **ui:** End the phone chart Format sheet above the bottom bar ([16ea32a](https://github.com/ChristopherVR/ooxml/commit/16ea32a25a3f48537b3445ddab5e943b37a7a804))
+
+### Testing
+
+- **ui:** Group the dates of a PivotTable that has a report filter ([96efdb6](https://github.com/ChristopherVR/ooxml/commit/96efdb67138d46df04cf99c03d8dacdbdc53143e))
+
 ## [1.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.14.0) - 2026-10-15
 
 ### Features

@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.3.0) - 2026-10-16
+
+### Features
+
+- **teams:** Rate limit, hash and revoke sessions on the server ([32f9921](https://github.com/ChristopherVR/ooxml/commit/32f9921325769c74493517f89a6f0ce8a9b37583))
+
 ## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.2.0) - 2026-10-15
 
 ### Features

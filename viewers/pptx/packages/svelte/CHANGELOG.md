@@ -7,6 +7,28 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.39.0) - 2026-10-16
+
+### Features
+
+- **pptx:** Open the shared Insert sheet from the phone bottom bar ([53526bd](https://github.com/ChristopherVR/ooxml/commit/53526bdaecc293fdd1be168362010921df6c112e))
+- **geometry:** Add the PowerPoint shape gallery catalogue ([2fb79e2](https://github.com/ChristopherVR/ooxml/commit/2fb79e2717cf9094a2692d04503e95cc09453467))
+- **locales:** Translate the Shapes gallery and the Design galleries ([c4aaeb3](https://github.com/ChristopherVR/ooxml/commit/c4aaeb31f9119e0bc825b922b964dfc37d62f7d3))
+- **svelte:** Apply a whole theme from the Design > Themes gallery ([ba1710a](https://github.com/ChristopherVR/ooxml/commit/ba1710a0a31e250d9a3400f3e6e61bb93285264d))
+- **pptx:** Keep Slide Templates reachable from every New Slide menu ([be03af6](https://github.com/ChristopherVR/ooxml/commit/be03af63a0ed6c23a79800b500d3d425ea22773f))
+- **pptx:** Add chart element format and options edit operations ([d99f83e](https://github.com/ChristopherVR/ooxml/commit/d99f83ec63e6251c4aaa39a31ad5d2f4d2659b54))
+- **locales:** Translate the chart Format pane and Chart Format tab ([3b0b7d2](https://github.com/ChristopherVR/ooxml/commit/3b0b7d2aebac14bcbc0df22f5ceef695b4443cc9))
+- **svelte:** Add the chart Format pane and Chart Format tab ([012d5a2](https://github.com/ChristopherVR/ooxml/commit/012d5a23ce1cae7476c892cff9ce79d799d2a7b0))
+- **pptx:** Read chart element formats from each element's spPr on load ([46620d0](https://github.com/ChristopherVR/ooxml/commit/46620d08e61513234ba61964e4f751d679fcb28b))
+
+### Bug Fixes
+
+- **svelte:** Translate media and picture inspector labels ([d0bde63](https://github.com/ChristopherVR/ooxml/commit/d0bde63ea46502a316e94f4b795901db20644c17))
+- **svelte:** Translate table, text effects and SmartArt inspector labels ([ca38b70](https://github.com/ChristopherVR/ooxml/commit/ca38b708db0399fec7db9f72046296c82587116d))
+- **ui:** Translate shared preset catalogue labels ([46661a1](https://github.com/ChristopherVR/ooxml/commit/46661a125e90b91b00f3fa66f584f232bc21a871))
+- **vanilla:** Lay out the phone sheets and stack them above the canvas ([1479b46](https://github.com/ChristopherVR/ooxml/commit/1479b46f3d0d928e03d9c5b232960a88ee1d5cae))
+- **pptx:** Stack the phone sheets above the canvas and end them above the bar ([5d38927](https://github.com/ChristopherVR/ooxml/commit/5d3892723a31b10109cc14e2211c616d5fb376bc))
+
 ## [4.38.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.38.0) - 2026-10-15
 
 ### Features
