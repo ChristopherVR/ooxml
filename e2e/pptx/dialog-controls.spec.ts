@@ -65,7 +65,7 @@ const SURFACES: Surface[] = [
 		open: async (page) => {
 			await selectElement(page, slideElements(page).first());
 			await tab(page, 'Insert');
-			await ribbon(page).getByRole('button', { name: 'Hyperlink', exact: true }).first().click();
+			await ribbon(page).getByRole('button', { name: 'Link', exact: true }).first().click();
 		},
 		close: escape,
 	},

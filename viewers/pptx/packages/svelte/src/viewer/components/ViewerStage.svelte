@@ -31,6 +31,7 @@
 	import SlideOverlays from './SlideOverlays.svelte';
 	import { createEditCommits } from './viewer-body-commits';
 	import type { ViewerStageProps } from './viewer-body-props';
+	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 
 	const {
 		t,
@@ -77,6 +78,7 @@
 		onaskai,
 		onfixai,
 	}: ViewerStageProps = $props();
+	const customization = useViewerCustomization();
 
 	const commits = $derived(createEditCommits(editor));
 
@@ -326,10 +328,10 @@
 			/>
 		</div>
 	{/if}
-	{#if controller.hyperlinkOpen}
+	{#if controller.hyperlinkOpen && customization.isDialogAvailable('hyperlink')}
 		<HyperlinkDialog {editor} onclose={() => (controller.hyperlinkOpen = false)} />
 	{/if}
-	{#if editor.pasteSpecialDialogOpen}
+	{#if editor.pasteSpecialDialogOpen && customization.isDialogAvailable('pasteSpecial')}
 		<PasteSpecialDialog
 			oncancel={() => (editor.pasteSpecialDialogOpen = false)}
 			onconfirm={onPasteSpecialConfirm}

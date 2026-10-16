@@ -19,7 +19,7 @@
 		resolveViewerRootOptions,
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
-	import type { ViewerMode } from 'ooxml-ui/pptx';
+	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { provideNotesBarHeight } from './state/notes-bar-height.svelte';
@@ -41,6 +41,7 @@
 	import { ThemeLocaleState } from './state/theme-locale.svelte';
 	import { toViewerStateOptions } from './state/viewer-state-options';
 	import { provideRibbonAddIns } from './state/ribbon-add-ins';
+	import { provideRegionBase } from './state/viewer-regions';
 	import { effectiveHiddenActions, nextRibbonScopeToken, useCustomizationConstraints, useViewerCustomizationRoot } from './state/viewer-customization.svelte';
 	import EditorChromeStyle from './components/EditorChromeStyle.svelte';
 	import RibbonCustomizationStyle from './components/RibbonCustomizationStyle.svelte';
@@ -218,7 +219,111 @@
 	export const moveSlide = vm.deck.moveSlide;
 	export const toggleHideSlides = vm.deck.toggleHideSlides;
 	// oxfmt-ignore
-	export const { getCustomization, setCustomization, updateCustomization, resetCustomization, hideRibbonTab, showRibbonTab, hideRibbonGroup, showRibbonGroup, hideRibbonControl, showRibbonControl, hideToolbarButton, showToolbarButton, hideOptionsPage, showOptionsPage, hideOptionsSection, showOptionsSection, hideSetting, showSetting, lockSetting, unlockSetting, setSettingDefault, hideBackstagePage, showBackstagePage, hideBackstageCard, showBackstageCard, hideContextMenuCommand, showContextMenuCommand, hideCanvasContextMenuCommand, showCanvasContextMenuCommand, disableShortcut, enableShortcut, remapShortcut, setPanelVisible, setFeatureEnabled, setDialogAvailable } = customization.api;
+	export const { getCustomization, setCustomization, updateCustomization, resetCustomization, hideRibbonTab, showRibbonTab, hideRibbonGroup, showRibbonGroup, hideRibbonControl, showRibbonControl, hideToolbarButton, showToolbarButton, hideOptionsPage, showOptionsPage, hideOptionsSection, showOptionsSection, hideSetting, showSetting, lockSetting, unlockSetting, setSettingDefault, hideBackstagePage, showBackstagePage, hideBackstageCard, showBackstageCard, hideContextMenuCommand, showContextMenuCommand, hideCanvasContextMenuCommand, showCanvasContextMenuCommand, disableShortcut, enableShortcut, remapShortcut, setPanelVisible, setFeatureEnabled, setDialogAvailable, setCapability, setRegion, addBackstagePage, removeBackstagePage } = customization.api;
+	// ONE object holds the full public instance API (everything exported above plus the
+	// customization helpers). Every member is a stable function reading live state, so the object
+	// is live; it backs `context.viewer` for host regions.
+	const publicApi = {
+		undo,
+		redo,
+		canUndo,
+		canRedo,
+		deleteSelected,
+		getSelectedElementId,
+		save,
+		downloadAs,
+		downloadPptx,
+		getContent,
+		exportSlidePng,
+		copySlideAsImage,
+		exportPdf,
+		exportGif,
+		exportVideo,
+		print,
+		goTo,
+		goPrev,
+		goNext,
+		getZoom,
+		setZoom,
+		zoomIn,
+		zoomOut,
+		zoomReset,
+		getMode,
+		setMode,
+		getActiveSlideIndex,
+		setActiveSlideIndex,
+		getSlideCount,
+		isDirty,
+		getSlides,
+		getSlide,
+		getActiveSlide,
+		getElements,
+		getElementById,
+		addElement,
+		updateElement,
+		updateElements,
+		deleteElements,
+		duplicateElement,
+		getSelectedElementIds,
+		selectElements,
+		clearSelection,
+		addSlide,
+		deleteSlides,
+		duplicateSlides,
+		moveSlide,
+		toggleHideSlides,
+		getCustomization,
+		setCustomization,
+		updateCustomization,
+		resetCustomization,
+		hideRibbonTab,
+		showRibbonTab,
+		hideRibbonGroup,
+		showRibbonGroup,
+		hideRibbonControl,
+		showRibbonControl,
+		hideToolbarButton,
+		showToolbarButton,
+		hideOptionsPage,
+		showOptionsPage,
+		hideOptionsSection,
+		showOptionsSection,
+		hideSetting,
+		showSetting,
+		lockSetting,
+		unlockSetting,
+		setSettingDefault,
+		hideBackstagePage,
+		showBackstagePage,
+		hideBackstageCard,
+		showBackstageCard,
+		hideContextMenuCommand,
+		showContextMenuCommand,
+		hideCanvasContextMenuCommand,
+		showCanvasContextMenuCommand,
+		disableShortcut,
+		enableShortcut,
+		remapShortcut,
+		setPanelVisible,
+		setFeatureEnabled,
+		setDialogAvailable,
+		setCapability,
+		setRegion,
+		addBackstagePage,
+		removeBackstagePage,
+	} as unknown as PowerPointViewerAPI & ViewerCustomizationApi;
+	customization.regionContextReady = true;
+	provideRegionBase(() => ({
+		viewer: publicApi,
+		mode: vm.viewerMode,
+		// The exact value the built-in edit gate uses (edit prop, capabilities.edit, Protected View,
+		// collaboration read-only, fullscreen).
+		canEdit: vm.editingActive,
+		activeSlideIndex: viewer.current,
+		slideCount: vm.deck.getSlideCount(),
+		selectedElementIds: [...vm.editor.selection.ids],
+		locale: themeLocale.effectiveLocale,
+	}));
 </script>
 
 <svelte:document onfullscreenchange={vm.onFullscreenChange} />
@@ -327,6 +432,8 @@
 			mediaDataUrls={loader.mediaDataUrls}
 			current={viewer.current}
 			onselect={(index) => viewer.goTo(index)}
+			chromeUi={vm.chromeUi}
+			onheaderfooter={() => (vm.parityUi.headerFooterOpen = true)}
 		/>
 	{/if}
 	{#if showToolbar && vm.chromeVisible && customization.isPanelVisible('statusBar')}
@@ -365,6 +472,9 @@
 		color: var(--pptx-foreground, #e2e8f0);
 		outline: none;
 		overflow: hidden;
+		/* Own stacking context: the slide's selection handles and overlays (z-index 57 to 61)
+		 * stay below the phone sheets and whatever the host page stacks above the viewer. */
+		isolation: isolate;
 	}
 
 	.pptx-svelte-fullscreen {

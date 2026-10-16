@@ -78,6 +78,7 @@ export * from './shape-boolean-union';
 export * from './shape-boolean';
 export * from './shape-definitions-extended';
 export * from './shape-definitions-primary';
+export * from './shape-gallery-catalog';
 export { at } from './indexed';
 export * from './svg-path-flatten';
 export * from './snap-guides';

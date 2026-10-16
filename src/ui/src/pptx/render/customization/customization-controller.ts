@@ -23,10 +23,16 @@ import { mergeCustomization, toggleInList, withRecordEntry } from './customizati
 import { resolveCustomization } from './customization-resolve';
 import type { ResolvedCustomization } from './customization-resolve';
 import type {
+	HostBackstagePage,
+	ViewerRegionId,
+	ViewerRegionRenderer,
+} from './customization-regions';
+import type {
 	OptionsPageId,
 	OptionsSectionId,
 	OptionsSettingId,
 	ShortcutChord,
+	ViewerCapabilityId,
 	ViewerCustomization,
 	ViewerDialogId,
 	ViewerFeatureId,
@@ -85,6 +91,13 @@ export interface ViewerCustomizationApi {
 	setPanelVisible(panel: ViewerPanelId, visible: boolean): void;
 	setFeatureEnabled(feature: ViewerFeatureId, enabled: boolean): void;
 	setDialogAvailable(dialog: ViewerDialogId, available: boolean): void;
+	/** Turn one capability on or off (`undefined` returns it to the default). */
+	setCapability(capability: ViewerCapabilityId, allowed: boolean | undefined): void;
+	/** Replace a region with host UI, or with `undefined` restore the built-in. */
+	setRegion(region: ViewerRegionId, renderer: ViewerRegionRenderer | undefined): void;
+	/** Add a File tab page, or replace the host page with the same id. */
+	addBackstagePage(page: HostBackstagePage): void;
+	removeBackstagePage(id: string): void;
 }
 
 export interface ViewerCustomizationController {
@@ -203,6 +216,23 @@ export function createCustomizationController(
 			update({ disabledFeatures: toggleInList(current().disabledFeatures, feature, !enabled) }),
 		setDialogAvailable: (dialog, available) =>
 			update({ hiddenDialogs: toggleInList(current().hiddenDialogs, dialog, !available) }),
+		// `update` merges records key by key, so a cleared key would survive it;
+		// these two write the whole record instead.
+		setCapability: (capability, allowed) =>
+			set({
+				...current(),
+				capabilities: withRecordEntry(current().capabilities, capability, allowed),
+			}),
+		setRegion: (region, renderer) =>
+			set({ ...current(), regions: withRecordEntry(current().regions, region, renderer) }),
+		addBackstagePage: (page) =>
+			backstage((b) => {
+				b.extraPages = [...(b.extraPages ?? []).filter((p) => p.id !== page.id), page];
+			}),
+		removeBackstagePage: (id) =>
+			backstage((b) => {
+				b.extraPages = (b.extraPages ?? []).filter((p) => p.id !== id);
+			}),
 	};
 
 	return {

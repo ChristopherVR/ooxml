@@ -1,4 +1,5 @@
 import type { SlidePasteRequest } from 'ooxml-ui/pptx';
+import { isPanelVisible } from 'ooxml-ui/pptx';
 /**
  * ViewerOverlays: Shortcut, Accessibility, and Slide Sorter overlay panels.
  *
@@ -13,6 +14,7 @@ import { OutlineViewOverlay } from './OutlineViewOverlay';
 import { ReadingViewOverlay } from './ReadingViewOverlay';
 import { ShortcutPanel } from './ShortcutPanel';
 import { SlideSorterOverlay } from './SlideSorterOverlay';
+import { useViewerCustomizationContext } from './viewer-customization-context';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -96,6 +98,7 @@ export function ViewerOverlays({
 	reducedMotion,
 	onToggleReducedMotion,
 }: ViewerOverlaysProps): React.ReactElement | null {
+	const customization = useViewerCustomizationContext();
 	const hasOverlay =
 		isShortcutHelpOpen ||
 		isAccessibilityPanelOpen ||
@@ -111,7 +114,7 @@ export function ViewerOverlays({
 			{isShortcutHelpOpen && (
 				<ShortcutPanel isOpen={isShortcutHelpOpen} onClose={onCloseShortcuts} />
 			)}
-			{isAccessibilityPanelOpen && (
+			{isAccessibilityPanelOpen && isPanelVisible(customization, 'accessibilityPane') && (
 				<AccessibilityPanel
 					isOpen={isAccessibilityPanelOpen}
 					issues={accessibilityIssues}

@@ -27,7 +27,7 @@ const currentPreset = computed<PptxTextWarpPreset>(() => props.ts?.textWarpPrese
 
 const currentLabel = computed<string>(() => {
 	const match = TEXT_WARP_PRESETS.find((p) => p.value === currentPreset.value);
-	return match?.label ?? currentPreset.value;
+	return match ? t(match.labelKey) : currentPreset.value;
 });
 
 function pick(value: PptxTextWarpPreset): void {
@@ -55,7 +55,7 @@ function pick(value: PptxTextWarpPreset): void {
 				v-for="opt in TEXT_WARP_PRESETS"
 				:key="opt.value"
 				type="button"
-				:title="opt.label"
+				:title="t(opt.labelKey)"
 				class="pptx-vue-textwarp-swatch flex items-center justify-center rounded p-1"
 				:class="
 					currentPreset === opt.value

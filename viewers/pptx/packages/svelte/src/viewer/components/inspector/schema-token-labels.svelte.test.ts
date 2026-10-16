@@ -159,7 +159,7 @@ describe('textEffectsSection preset selects', () => {
 		const element = textElement();
 		const target = mountAt(TextEffectsSection, { editor: editorWith(element), el: element });
 
-		const warp = selectFor(target, 'Warp');
+		const warp = selectFor(target, 'Transform');
 		// The 'none' sentinel stays first; only the ten preset rows are relabelled.
 		expect(values(warp)).toStrictEqual(['none', ...warps]);
 		expect(texts(warp)).toStrictEqual([
@@ -176,7 +176,7 @@ describe('textEffectsSection preset selects', () => {
 		expect(values(material)).toStrictEqual(materials);
 		expect(texts(material)).toStrictEqual(presetLabels(MATERIAL_PRESETS, materials));
 
-		const bevel = selectFor(target, 'Bevel');
+		const bevel = selectFor(target, 'Bevel Type');
 		expect(values(bevel)).toStrictEqual(bevels);
 		expect(texts(bevel)).toStrictEqual(presetLabels(BEVEL_PRESETS, bevels));
 	});
@@ -185,7 +185,7 @@ describe('textEffectsSection preset selects', () => {
 		const element = textElement();
 		const editor = editorWith(element);
 		const target = mountAt(TextEffectsSection, { editor, el: element });
-		const warp = selectFor(target, 'Warp');
+		const warp = selectFor(target, 'Transform');
 		warp.value = 'slantUp';
 		warp.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
@@ -234,11 +234,11 @@ describe('tableCellSection pattern and alignment selects', () => {
 			onpatch: () => undefined,
 		});
 
-		const horizontal = selectFor(target, 'Horizontal');
+		const horizontal = selectFor(target, 'Alignment');
 		expect(values(horizontal)).toStrictEqual(['left', 'center', 'right', 'justify']);
 		expect(texts(horizontal)).toStrictEqual(['Left', 'Center', 'Right', 'Justify']);
 
-		const vertical = selectFor(target, 'Vertical');
+		const vertical = selectFor(target, 'Vertical Alignment');
 		expect(values(vertical)).toStrictEqual(['top', 'middle', 'bottom']);
 		expect(texts(vertical)).toStrictEqual(['Top', 'Middle', 'Bottom']);
 	});
@@ -252,7 +252,7 @@ describe('tableCellSection pattern and alignment selects', () => {
 				patched = patch;
 			},
 		});
-		const vertical = selectFor(target, 'Vertical');
+		const vertical = selectFor(target, 'Vertical Alignment');
 		vertical.value = 'middle';
 		vertical.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();

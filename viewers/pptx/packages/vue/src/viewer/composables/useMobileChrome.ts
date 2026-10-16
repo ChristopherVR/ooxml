@@ -3,7 +3,7 @@ import { toggleSheet } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
-export type MobileSheetKind = 'slides' | 'format' | 'comments' | 'notes';
+export type MobileSheetKind = 'slides' | 'insert' | 'format' | 'comments' | 'notes';
 
 /**
  * `MobileSheetKind` values by the shared `MobileSheetKey` vocabulary they map
@@ -12,6 +12,7 @@ export type MobileSheetKind = 'slides' | 'format' | 'comments' | 'notes';
  */
 const SHARED_KEY: Record<MobileSheetKind, Exclude<MobileSheetKey, null>> = {
 	slides: 'slides',
+	insert: 'insert',
 	format: 'inspector',
 	comments: 'comments',
 	notes: 'notes',
@@ -22,13 +23,13 @@ export type MobileActiveSheet = MobileSheetKind | null;
 
 export interface UseMobileChromeInput {
 	presenting: Ref<boolean>;
-	/** Quick-insert action fired from the mobile bottom bar (a text box). */
-	addText: () => void;
 }
 
 export interface UseMobileChromeResult {
 	/** Mobile-only slide-rail sheet (the slides panel is a left rail on desktop). */
 	mobileSlidesOpen: Ref<boolean>;
+	/** The phone Insert sheet (bottom bar > Insert). */
+	mobileInsertOpen: Ref<boolean>;
 	/** Mobile-only bottom sheets for panels that are right-rail sidebars on desktop. */
 	mobileInspectorOpen: Ref<boolean>;
 	mobileCommentsOpen: Ref<boolean>;
@@ -44,18 +45,17 @@ export interface UseMobileChromeResult {
 	toggleMobileSheet: (which: MobileSheetKind) => void;
 	/** The currently-open sheet, for highlighting its bottom-bar tab. */
 	activeSheet: ComputedRef<MobileActiveSheet>;
-	mobileQuickInsert: () => void;
 	present: () => void;
 }
 
 /**
  * useMobileChrome: the mobile bottom-bar's sheet toggles (slides / format /
- * comments / notes, mutually exclusive), its quick-insert shortcut, and the
- * mobile Present action. Extracted verbatim from `PowerPointViewer.vue`.
+ * comments / notes, mutually exclusive), and the mobile Present action. Extracted verbatim from `PowerPointViewer.vue`.
  */
 export function useMobileChrome(input: UseMobileChromeInput): UseMobileChromeResult {
-	const { presenting, addText } = input,
+	const { presenting } = input,
 		mobileSlidesOpen = ref(false),
+		mobileInsertOpen = ref(false),
 		mobileInspectorOpen = ref(false),
 		mobileCommentsOpen = ref(false),
 		mobileNotesOpen = ref(false);
@@ -63,19 +63,12 @@ export function useMobileChrome(input: UseMobileChromeInput): UseMobileChromeRes
 	/** Open one mobile sheet at a time so they don't stack over each other. */
 	function openMobileSheet(which: MobileSheetKind): void {
 		mobileSlidesOpen.value = which === 'slides';
+		mobileInsertOpen.value = which === 'insert';
 		mobileInspectorOpen.value = which === 'format';
 		mobileCommentsOpen.value = which === 'comments';
 		mobileNotesOpen.value = which === 'notes';
 	}
 
-	/**
-	 * Quick-insert from the mobile bottom bar: a text box is the most common
-	 * starter element on a phone; the full Insert section lives in the top-bar
-	 * Menu sheet. Mirrors React's MobileBottomBar `onOpenInsert`.
-	 */
-	function mobileQuickInsert(): void {
-		addText();
-	}
 	function present(): void {
 		presenting.value = true;
 	}
@@ -87,6 +80,9 @@ export function useMobileChrome(input: UseMobileChromeInput): UseMobileChromeRes
 	const activeSheet = computed<MobileActiveSheet>(() => {
 		if (mobileSlidesOpen.value) {
 			return 'slides';
+		}
+		if (mobileInsertOpen.value) {
+			return 'insert';
 		}
 		if (mobileInspectorOpen.value) {
 			return 'format';
@@ -111,6 +107,7 @@ export function useMobileChrome(input: UseMobileChromeInput): UseMobileChromeRes
 			next = toggleSheet(current, SHARED_KEY[which]);
 		if (next === null) {
 			mobileSlidesOpen.value = false;
+			mobileInsertOpen.value = false;
 			mobileInspectorOpen.value = false;
 			mobileCommentsOpen.value = false;
 			mobileNotesOpen.value = false;
@@ -121,13 +118,13 @@ export function useMobileChrome(input: UseMobileChromeInput): UseMobileChromeRes
 
 	return {
 		mobileSlidesOpen,
+		mobileInsertOpen,
 		mobileInspectorOpen,
 		mobileCommentsOpen,
 		mobileNotesOpen,
 		openMobileSheet,
 		toggleMobileSheet,
 		activeSheet,
-		mobileQuickInsert,
 		present,
 	};
 }

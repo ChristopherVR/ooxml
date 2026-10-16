@@ -3,7 +3,7 @@
 // (item totals, subtotals and the grand total) without reading the output range back.
 import type { CellValue, PivotTable } from '../../model';
 import { pivotTableAt } from '../../pivot/aggregate';
-import { pivotItemLabel } from '../../pivot/data';
+import { pivotColumnFields, pivotItemLabel, pivotRowFields } from '../../pivot/data';
 import { pivotMeasureNumber, pivotMeasures } from '../../pivot/measures';
 import { pivotPageProjection } from '../../pivot/page-filter';
 import { ERR, fail, isError, RefValue, type Scalar } from '../values';
@@ -41,7 +41,7 @@ export const GETPIVOTDATA = spec(
 			(m) => m.caption.toLowerCase() === wanted || m.field.toLowerCase() === wanted,
 		);
 		if (!measure) fail(ERR.REF);
-		const axes = [pivot.rowField, pivot.secondRowField, pivot.columnField, pivot.pageFilter?.field];
+		const axes = [...pivotRowFields(pivot), ...pivotColumnFields(pivot), pivot.pageFilter?.field];
 		let records = pivot.records;
 		for (let i = 2; i < args.length; i += 2) {
 			const name = str(args[i]);

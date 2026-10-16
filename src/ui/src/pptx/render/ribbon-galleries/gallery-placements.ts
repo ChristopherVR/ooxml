@@ -30,7 +30,7 @@ export interface RibbonGalleryGroupPlacement {
 	label: string;
 	galleries: readonly RibbonGalleryPlacement[];
 	/** The `pptx-ui-ribbon-home-<strip>` drawn after the galleries (Picture Format > Size). */
-	strip?: 'picture-size';
+	strip?: 'picture-size' | 'chart-selection';
 }
 
 /** The groups each contextual tab renders, in order. */
@@ -275,6 +275,15 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			],
 		},
 	],
+	chartFormat: [
+		{
+			group: 'chartFormat.currentSelection',
+			labelKey: 'pptx.ribbon.groupCurrentSelection',
+			label: 'Current Selection',
+			galleries: [],
+			strip: 'chart-selection',
+		},
+	],
 	smartArtDesign: [
 		{
 			group: 'smartArtDesign.createGraphic',
@@ -376,8 +385,16 @@ export const FIXED_TAB_GALLERIES: readonly RibbonGalleryPlacement[] = [
 	{ gallery: 'shapeEffects', control: 'home.drawing.shapeEffects', mode: 'dropdown' },
 	{ gallery: 'bullets', control: 'home.paragraph.bullets', mode: 'dropdown' },
 	{ gallery: 'numbering', control: 'home.paragraph.numbering', mode: 'dropdown' },
+	{ gallery: 'themes', control: 'design.themes.gallery', mode: 'inline' },
+	{ gallery: 'themeVariants', control: 'design.variants.gallery', mode: 'inline' },
 	{ gallery: 'themeColors', control: 'design.variants.colors', mode: 'dropdown' },
 	{ gallery: 'themeFonts', control: 'design.variants.fonts', mode: 'dropdown' },
+	{ gallery: 'themeEffects', control: 'design.variants.effects', mode: 'dropdown' },
+	{
+		gallery: 'themeBackgrounds',
+		control: 'design.variants.backgroundStyles',
+		mode: 'dropdown',
+	},
 ];
 
 /** The contextual tabs a selection of `element` brings up, in PowerPoint's order. */
@@ -392,7 +409,7 @@ export function contextualTabsForElement(element: PptxElement | null): RibbonCon
 		case 'table':
 			return ['tableDesign', 'tableLayout'];
 		case 'chart':
-			return ['chartDesign'];
+			return ['chartDesign', 'chartFormat'];
 		case 'smartArt':
 			return ['smartArtDesign'];
 		default:

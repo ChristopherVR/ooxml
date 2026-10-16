@@ -16,7 +16,7 @@ export function readDateFields(fields: XmlElement[], names: string[]): string[] 
 			att(items, 'containsNonDate') !== '0' ||
 			att(items, 'containsString') !== '0' ||
 			att(items, 'containsBlank') === '1' ||
-			att(field, 'numFmtId') !== '14'
+			!/^\d+$/.test(att(field, 'numFmtId') ?? '')
 		)
 			throw new Error('Unsupported pivot date field');
 		dates.push(names[index] ?? '');

@@ -19,7 +19,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { RibbonHomePopupEvent, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
-import { resetSlideLayoutPath, slidesHomeControls } from 'ooxml-ui/pptx';
+import { isDialogAvailable, resetSlideLayoutPath, slidesHomeControls } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxLayoutPreview } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
@@ -30,6 +30,7 @@ import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 import { createLayoutArtwork } from './ribbon-layout-artwork';
 import { layoutOptionsFrom } from './ribbon-layout-options';
 import { RibbonParagraphControlsComponent } from './ribbon-paragraph-controls.component';
+import { injectResolvedCustomization } from './viewer-customization.service';
 
 /**
  * Home > Reset: re-apply the active slide's own layout, restoring inherited
@@ -67,6 +68,7 @@ export function performResetSlide(
 })
 export class RibbonHomeSectionComponent {
 	protected readonly editor = inject(EditorStateService);
+	private readonly customization = injectResolvedCustomization();
 	private readonly loader = inject(LoadContentService);
 
 	/** Layouts offered by the New Slide split button and the Layout menu. */
@@ -104,7 +106,7 @@ export class RibbonHomeSectionComponent {
 				editable: this.canEdit(),
 				hasLayouts: this.layoutOptions().length > 0,
 				hasSlides: this.editor.slides().length > 0,
-				showTemplates: true,
+				showTemplates: isDialogAvailable(this.customization(), 'slideTemplates'),
 				newSlideNeedsLayout: false,
 				resetNeedsSlide: false,
 				layouts: {

@@ -153,9 +153,9 @@ export function buildWaterfallViewModel(
 	// "Increase / Decrease / Total" in that order and colour.
 	const legendPos = chartData.style?.legendPosition ?? 'b';
 	const legend: LegendEntry[] = [
-		{ color: roles.increase, label: 'Increase' },
-		{ color: roles.decrease, label: 'Decrease' },
-		{ color: roles.total, label: 'Total' },
+		{ color: roles.increase, label: 'Increase', labelKey: 'pptx.chart.waterfall.increase' },
+		{ color: roles.decrease, label: 'Decrease', labelKey: 'pptx.chart.waterfall.decrease' },
+		{ color: roles.total, label: 'Total', labelKey: 'pptx.chart.waterfall.total' },
 	];
 	const { legendX, legendY, legendAnchor } = resolveLegendAnchorPosition(
 		layout.svgWidth,

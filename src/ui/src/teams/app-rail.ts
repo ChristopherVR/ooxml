@@ -48,7 +48,10 @@ export class OfficeUiAppRail extends TeamsElement {
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this.setAttribute('role', 'navigation');
-		this.setAttribute('aria-label', 'App bar');
+	}
+
+	protected override hostLabel(): string {
+		return this.t('rail.appBar');
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
@@ -88,7 +91,7 @@ export class OfficeUiAppRail extends TeamsElement {
 								<button
 									type="button"
 									class="more"
-									aria-label=${badge ? `More, ${badge} unread` : 'More'}
+									aria-label=${badge ? this.t('rail.moreUnread', { count: badge }) : this.t('rail.more')}
 									aria-haspopup="dialog"
 									aria-expanded=${String(this.moreOpen)}
 									aria-current=${inMore ? 'page' : 'false'}
@@ -98,7 +101,7 @@ export class OfficeUiAppRail extends TeamsElement {
 										${icon('more')}
 										${badge ? html`<span class="badge">${total(badge)}</span>` : nothing}
 									</span>
-									<span class="short" aria-hidden="true">More</span>
+									<span class="short" aria-hidden="true">${this.t('rail.more')}</span>
 								</button>
 							</li>`
 						: nothing
@@ -108,7 +111,7 @@ export class OfficeUiAppRail extends TeamsElement {
 				secondary.length
 					? html`<dialog
 							class="sheet"
-							aria-label="More apps"
+							aria-label=${this.t('rail.moreApps')}
 							@cancel=${(e: Event) => {
 								e.preventDefault();
 								this.closeMore();
@@ -120,7 +123,9 @@ export class OfficeUiAppRail extends TeamsElement {
 							<ul>
 								${secondary.map((item) => html`<li>${this.button(item, true)}</li>`)}
 							</ul>
-							<button type="button" class="close" @click=${() => this.closeMore()}>Close</button>
+							<button type="button" class="close" @click=${() => this.closeMore()}>
+								${this.t('common.close')}
+							</button>
 						</dialog>`
 					: nothing
 			}

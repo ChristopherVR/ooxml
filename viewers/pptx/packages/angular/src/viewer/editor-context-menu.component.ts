@@ -28,6 +28,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement, TablePptxElement } from 'pptx-viewer-core';
 
+import { ChartFormatPaneService } from './chart-format-pane.service';
 import type { MenuTranslate } from './context-menu-translate';
 import { injectMenuTranslate } from './context-menu-translate';
 import { tableMenuContext } from './editor-context-menu-context';
@@ -93,6 +94,7 @@ export class EditorContextMenuComponent {
 	private readonly outline = inject(OutlineAuthoringService, { optional: true });
 	private readonly crop = inject(PictureCropService, { optional: true });
 	private readonly translate = inject(TranslateService, { optional: true });
+	private readonly chartFormat = inject(ChartFormatPaneService, { optional: true });
 
 	/** The single table + selected cell the table commands act on, or null. */
 	protected readonly tableCtx = computed<{
@@ -142,6 +144,10 @@ export class EditorContextMenuComponent {
 			editPoints: this.outline ? resolveEditPointsAvailability(this.selectedElement()) : undefined,
 			canMergeShapes: canMergeSelection(this.editor, this.slideIndex()),
 			canCrop: canCropElement(this.selectedElement()),
+			chartFormatTarget:
+				this.selectedElement()?.type === 'chart'
+					? (this.chartFormat?.targetFor(this.selectedElement()?.id) ?? null)
+					: null,
 		});
 		return customizeContextMenuEntries(built, this.customization(), {
 			slideIndex: this.slideIndex(),
@@ -176,6 +182,12 @@ export class EditorContextMenuComponent {
 		editAltText: () => this.focusInspectorSection('edit-alt-text'),
 		sizeAndPosition: () => this.focusInspectorSection('size-and-position'),
 		formatShape: () => this.focusInspectorSection('format-shape'),
+		formatChartElement: () => {
+			const chart = this.selectedElement();
+			if (chart?.type === 'chart') {
+				this.chartFormat?.openOn(chart.id, this.chartFormat.targetFor(chart.id));
+			}
+		},
 		applyTable: (op) => this.applyTable(op),
 		mergeShapes: (op) =>
 			runMergeShapes(

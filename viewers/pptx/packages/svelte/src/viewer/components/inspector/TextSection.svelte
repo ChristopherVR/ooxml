@@ -105,13 +105,13 @@
 <TextEffectsSection {editor} {el} />
 
 <div class="pptx-svelte-grid">
-	<label class="pptx-svelte-field"><span>Line spacing</span><input type="number" min="0.5" max="5" step="0.05" value={textStyle.lineSpacing ?? 1} onchange={(event) => patchText({ lineSpacing: Number(event.currentTarget.value), lineSpacingExactPt: undefined })} /></label>
-	<label class="pptx-svelte-field"><span>Before (pt)</span><input type="number" min="0" value={textStyle.paragraphSpacingBefore ?? 0} onchange={(event) => patchText({ paragraphSpacingBefore: Number(event.currentTarget.value) })} /></label>
-	<label class="pptx-svelte-field"><span>After (pt)</span><input type="number" min="0" value={textStyle.paragraphSpacingAfter ?? 0} onchange={(event) => patchText({ paragraphSpacingAfter: Number(event.currentTarget.value) })} /></label>
-	<label class="pptx-svelte-field"><span>Columns</span><input type="number" min="1" max="16" value={textStyle.columnCount ?? 1} onchange={(event) => patchText({ columnCount: Math.max(1, Number(event.currentTarget.value)) })} /></label>
+	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.lineSpacing')}</span><input type="number" min="0.5" max="5" step="0.05" value={textStyle.lineSpacing ?? 1} onchange={(event) => patchText({ lineSpacing: Number(event.currentTarget.value), lineSpacingExactPt: undefined })} /></label>
+	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceBefore')}</span><input type="number" min="0" value={textStyle.paragraphSpacingBefore ?? 0} onchange={(event) => patchText({ paragraphSpacingBefore: Number(event.currentTarget.value) })} /></label>
+	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceAfter')}</span><input type="number" min="0" value={textStyle.paragraphSpacingAfter ?? 0} onchange={(event) => patchText({ paragraphSpacingAfter: Number(event.currentTarget.value) })} /></label>
+	<label class="pptx-svelte-field"><span>{t('pptx.textFormatting.columns')}</span><input type="number" min="1" max="16" value={textStyle.columnCount ?? 1} onchange={(event) => patchText({ columnCount: Math.max(1, Number(event.currentTarget.value)) })} /></label>
 </div>
-<label class="pptx-svelte-field"><span>Text direction</span><pptx-ui-select aria-label="Text direction" value={textStyle.textDirection ?? 'horizontal'} onchange={(event) => patchText({ textDirection: event.currentTarget.value as TextStyle['textDirection'] })}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option><option value="vertical270">Vertical 270</option><option value="eaVert">East Asian vertical</option><option value="wordArtVert">Stacked</option><option value="wordArtVertRtl">Stacked RTL</option><option value="mongolianVert">Mongolian vertical</option></pptx-ui-select></label>
-<label class="pptx-svelte-field-checkbox"><pptx-ui-checkbox checked={textStyle.rtl ?? false} onchange={(event) => patchText({ rtl: event.currentTarget.checked })} ></pptx-ui-checkbox><span>Right-to-left</span></label>
+<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.direction')}</span><pptx-ui-select aria-label={t('pptx.textAdvanced.direction')} value={textStyle.textDirection ?? 'horizontal'} onchange={(event) => patchText({ textDirection: event.currentTarget.value as TextStyle['textDirection'] })}>{#each ['horizontal', 'vertical', 'vertical270', 'eaVert', 'wordArtVert', 'wordArtVertRtl', 'mongolianVert'] as direction (direction)}<option value={direction}>{t(`pptx.textAdvanced.direction.${direction}`)}</option>{/each}</pptx-ui-select></label>
+<label class="pptx-svelte-field-checkbox"><pptx-ui-checkbox checked={textStyle.rtl ?? false} onchange={(event) => patchText({ rtl: event.currentTarget.checked })} ></pptx-ui-checkbox><span>{t('pptx.textAdvanced.rtl')}</span></label>
 
 <style>
 	.pptx-svelte-field {
@@ -138,7 +138,8 @@
 		font: inherit;
 	}
 	.pptx-svelte-field input { height: 26px; box-sizing: border-box; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-background, #11111b); color: inherit; font: inherit; }
-	.pptx-svelte-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; }
+	.pptx-svelte-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 6px; }
+	.pptx-svelte-grid input { min-width: 0; width: 100%; }
 
 	.pptx-svelte-text-color-field {
 		align-items: flex-start;

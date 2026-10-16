@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'ooxml-ui/pptx';
+import {
+	DESIGN_RIBBON_COMMANDS,
+	DESIGN_RIBBON_GROUPS,
+	FIXED_TAB_GALLERIES,
+	designCommandState,
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -27,6 +32,9 @@ const actions = computed(() => ({
 const groups = computed(() =>
 	DESIGN_RIBBON_GROUPS.map((group) => ({
 		...group,
+		galleries: FIXED_TAB_GALLERIES.filter((placement) =>
+			placement.control.startsWith(`${group.id}.`),
+		),
 		commands: DESIGN_RIBBON_COMMANDS.filter((command) => command.id.startsWith(`${group.id}.`))
 			.map((command) => ({
 				...command,
@@ -50,6 +58,14 @@ const groups = computed(() =>
 		:label="t(group.labelKey)"
 		:data-ribbon-group="group.id"
 	>
+		<RibbonGallery
+			v-for="placement in group.galleries"
+			:key="placement.control"
+			:gallery="placement.gallery"
+			:control="placement.control"
+			:mode="placement.mode"
+			@command="props.isInspectorPaneOpen ? undefined : props.onToggleInspector?.()"
+		/>
 		<pptx-ui-ribbon-command
 			v-for="command in group.commands"
 			:key="command.id"
@@ -62,9 +78,5 @@ const groups = computed(() =>
 			:expanded="command.expanded === undefined ? undefined : String(command.expanded)"
 			@command-request="actions[command.id as keyof typeof actions]?.()"
 		></pptx-ui-ribbon-command>
-		<template v-if="group.id === 'design.variants'">
-			<RibbonGallery gallery="themeColors" control="design.variants.colors" mode="dropdown" />
-			<RibbonGallery gallery="themeFonts" control="design.variants.fonts" mode="dropdown" />
-		</template>
 	</pptx-ui-ribbon-group>
 </template>

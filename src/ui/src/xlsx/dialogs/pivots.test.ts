@@ -482,3 +482,34 @@ it.each(['compact', 'outline', 'tabular'])(
 		expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
 	},
 );
+
+it.each([
+	['de', 'Zeilenbeschriftungen', 'Gesamtergebnis', 'Summe von Amount'],
+	['es-MX', 'Etiquetas de fila', 'Total general', 'Suma de Amount'],
+	['fr', 'Étiquettes de lignes', 'Total général', 'Somme de Amount'],
+	['zh-CN', '行标签', '总计', '求和项:Amount'],
+	['en-GB', 'Row Labels', 'Grand Total', 'Sum of Amount'],
+])('captions a new report in the editor language %s', async (locale, rowLabels, total, sum) => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	ctx.locale = () => locale;
+	const edit = ctx.session()!;
+	[
+		['Category', 'Amount'],
+		['Fruit', 10],
+		['Veg', 5],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:B3');
+	registerToolDialogs(ctx);
+	const done = ctx.dialogs.open('create-pivot-table');
+	const dialog = dialogEl(ctx, 'create-pivot-table');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	clickButton(dialog, 'OK');
+	await done;
+	const pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(pivot.valueCaption).toBe(sum);
+	// The default layout is compact: the row header, the value name and the grand total.
+	expect(getCell(wb.sheets[0]!, 0, 3)?.value).toBe(rowLabels);
+	expect(getCell(wb.sheets[0]!, 0, 4)?.value).toBe(sum);
+	expect(getCell(wb.sheets[0]!, 3, 3)?.value).toBe(total);
+});

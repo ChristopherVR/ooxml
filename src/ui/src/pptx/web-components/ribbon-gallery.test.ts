@@ -143,6 +143,38 @@ describe('shared ribbon gallery command mode', () => {
 		expect(pick).not.toHaveBeenCalled();
 	});
 
+	it('previews a Design gallery tile on hover and offers Apply to Selected Slides on the tile', () => {
+		vi.useFakeTimers();
+		try {
+			const gallery = document.createElement('pptx-ui-ribbon-gallery');
+			gallery.descriptor = buildRibbonGallery('themeBackgrounds', { element });
+			document.body.append(gallery);
+			gallery.trigger.click();
+			const events: unknown[] = [];
+			gallery.addEventListener('gallery-preview', (e) => events.push((e as CustomEvent).detail));
+			gallery.addEventListener('gallery-preview-end', (e) =>
+				events.push(['end', (e as CustomEvent).detail]),
+			);
+			const picks: unknown[] = [];
+			gallery.addEventListener('gallery-pick', (e) => picks.push((e as CustomEvent).detail));
+			const tile = gallery.popup.querySelector<HTMLElement>('[data-gallery-item="6"]')!;
+			tile.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+			vi.advanceTimersByTime(150);
+			expect(events).toEqual([{ gallery: 'themeBackgrounds', itemId: '6' }]);
+			tile.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+			const menu = [...gallery.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')];
+			expect(menu.map((entry) => entry.textContent)).toEqual([
+				'Apply to All Slides',
+				'Apply to Selected Slides',
+			]);
+			menu[1]!.click();
+			expect(picks).toEqual([{ gallery: 'themeBackgrounds', itemId: '6', action: 'selected' }]);
+			expect(events.at(-1)).toEqual(['end', { gallery: 'themeBackgrounds' }]);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('marks large commands so the group keeps them out of the small-command stack', () => {
 		const gallery = document.createElement('pptx-ui-ribbon-gallery');
 		gallery.descriptor = buildRibbonGallery('smartArtResetGraphic', { element });

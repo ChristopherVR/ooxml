@@ -25,7 +25,8 @@ export type RibbonHomeFamily =
 	| 'font-picker'
 	| 'arrange-painter'
 	| 'arrange-shape'
-	| 'picture-size';
+	| 'picture-size'
+	| 'chart-selection';
 
 /** How a control behaves beyond a plain command button. */
 export type RibbonHomeKind =
@@ -60,6 +61,8 @@ export interface RibbonHomeItem {
 	readonly fontFamily?: string;
 	/** Shared artwork key shown before the label (a shape glyph or ribbon icon). */
 	readonly icon?: string;
+	/** Outline path on the shape-thumbnail grid: the row is then drawn as a gallery cell. */
+	readonly thumb?: string;
 	/** Preserved test or automation hooks (`data-pptx-merge-op`, ...). */
 	readonly attrs?: Readonly<Record<string, string>>;
 	/** Draws a divider above the row. */
@@ -101,6 +104,8 @@ export interface RibbonHomeControlSpec {
 	readonly kind?: RibbonHomeKind;
 	/** Static menu rows; state `items` replace them when present. */
 	readonly items?: readonly RibbonHomeItem[];
+	/** Lay the menu rows out as a grid of thumbnails (rows with `thumb`), headings spanning it. */
+	readonly grid?: boolean;
 	readonly colour?: RibbonHomeColourSpec;
 	/** `pptx-ui-select` options: the picker role keeps `data-font-picker` hooks. */
 	readonly select?: {
@@ -279,12 +284,22 @@ function validPick(
 	}
 }
 
+/** Control id Slide Templates keeps although it is a menu entry now, not a Home button. */
+export const SLIDE_TEMPLATES_ENTRY_ID = 'home.slides.slideTemplates';
+/** Dictionary key of that entry's label. */
+export const SLIDE_TEMPLATES_ENTRY_KEY = 'pptx.home.slideTemplatesMenu';
+
 /** Reject unknown ids, bad values and disabled or hidden controls, however the intent arrived. */
 export function canRequestHome(
 	family: RibbonHomeFamily,
 	state: RibbonHomeViewState,
 	intent: RibbonHomeIntent,
 ): boolean {
+	if (family === 'slides' && intent.id === SLIDE_TEMPLATES_ENTRY_ID) {
+		// Not a ribbon control: the entry at the end of New Slide's gallery.
+		const entry = state.controls[SLIDE_TEMPLATES_ENTRY_ID];
+		return intent.value === undefined && !entry?.disabled && !entry?.hidden;
+	}
 	const spec = homeFamilyControls(family).find(
 		(entry) =>
 			entry.id === intent.id &&
@@ -325,6 +340,10 @@ export function homeFamilyKeys(family: RibbonHomeFamily): string[] {
 		}
 		if (control.kind === 'layout') {
 			keys.push('pptx.layoutGallery.empty', 'pptx.layoutGallery.current');
+		}
+		if (control.id === 'home.slides.newSlide') {
+			// The Slide Templates entry at the end of New Slide's gallery.
+			keys.push(SLIDE_TEMPLATES_ENTRY_KEY);
 		}
 		if (control.colour) {
 			keys.push(...HOME_COLOUR_KEYS);

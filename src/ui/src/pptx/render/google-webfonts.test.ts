@@ -33,6 +33,9 @@ beforeEach(() => {
 
 afterEach(() => {
 	vi.restoreAllMocks();
+	// The stubbed fetch must not outlive this file: the next file in the worker would load decks
+	// with it, and a failed blob fetch leaves random blob URLs in their view models.
+	vi.unstubAllGlobals();
 });
 
 describe('collectReferencedFontFamilies', () => {

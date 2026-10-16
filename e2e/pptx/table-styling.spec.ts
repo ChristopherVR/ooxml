@@ -367,6 +367,8 @@ async function openRibbonTab(page: Page, name: string): Promise<void> {
 async function insertTable(page: Page): Promise<void> {
 	await openRibbonTab(page, 'Insert');
 	await page.getByRole('button', { name: 'Table', exact: true }).first().click();
+	// Table is a dropdown, as in PowerPoint: choose Insert Table.
+	await page.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click();
 	await page.waitForTimeout(900);
 }
 

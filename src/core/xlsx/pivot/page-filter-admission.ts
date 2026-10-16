@@ -1,8 +1,12 @@
 import { children, elements, first, NS, type XmlElement } from '../../xml/index';
 import type { CellValue, PivotTable } from '../model';
-import { pivotItems, pivotValueKey } from './data';
+import { pivotItems, pivotRowFields, pivotValueKey } from './data';
 import { pivotPageProjection } from './page-filter';
-import { pivotGrid } from './aggregate';
+import { expandDateGroups } from './date-groups';
+import { groupLabelsOf } from './groups';
+import { pivotGrid, type PivotRowEntry } from './aggregate';
+import { pivotValuesIndex } from './axes';
+import { PIVOT_SUBTOTALS } from './subtotals';
 import { remapPivotRowEntries } from './values-axis';
 import { booleanAttribute } from '../../drawingml/dom';
 const integer = (value: string | null, fallback?: number) =>
@@ -34,6 +38,12 @@ export function assertPageAxisItems(
 	literals(cache);
 	literals(recordRoot);
 	const cacheFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
+	// Date groups add derived fields after the database ones; their items are the group labels.
+	const all = expandDateGroups(pivot).fields;
+	const derived = all
+		.slice(pivot.fields.length)
+		.map((name): CellValue[] => groupLabelsOf(pivot, name) ?? []);
+	const sharedAll = [...shared, ...derived];
 	if (pivot.columnField) {
 		const column = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x)[
 			pivot.fields.indexOf(pivot.columnField)
@@ -57,22 +67,19 @@ export function assertPageAxisItems(
 			throw new Error('Repeated report column labels are preserved');
 	}
 	if (
-		integer(first(cache, 'cacheFields', NS.x)?.getAttribute('count') ?? null) !==
-			pivot.fields.length ||
+		integer(first(cache, 'cacheFields', NS.x)?.getAttribute('count') ?? null) !== all.length ||
 		integer(cache.getAttribute('recordCount')) !== pivot.records.length ||
 		integer(recordRoot.getAttribute('count')) !== pivot.records.length
 	)
 		throw new Error('Inconsistent report cache counts');
-	for (const name of [
-		pivot.rowField,
-		pivot.secondRowField,
-		pivot.columnField,
-		pivot.pageFilter.field,
-	].filter(Boolean)) {
-		const field = pivot.fields.indexOf(name!);
+	for (const name of [...pivotRowFields(pivot), pivot.columnField, pivot.pageFilter.field].filter(
+		Boolean,
+	)) {
+		const field = all.indexOf(name!);
 		if (
+			field < pivot.fields.length &&
 			integer(first(cacheFields[field], 'sharedItems', NS.x)?.getAttribute('count') ?? null) !==
-			shared[field]!.length
+				shared[field]!.length
 		)
 			throw new Error('Inconsistent report shared-item counts');
 	}
@@ -84,11 +91,11 @@ export function assertPageAxisItems(
 	const projected = pivotPageProjection(pivot),
 		fields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const axisValues = (name: string, axis: string) => {
-		const f = pivot.fields.indexOf(name),
+		const f = all.indexOf(name),
 			node = fields[f]!,
 			list = first(node, 'items', NS.x),
 			items = children(list!, 'item', NS.x),
-			count = shared[f]!.length;
+			count = sharedAll[f]!.length;
 		if (node.getAttribute('axis') !== axis) throw new Error('Inconsistent report axis field');
 		const defaults = node.getAttribute('defaultSubtotal') !== '0';
 		if (
@@ -101,7 +108,7 @@ export function assertPageAxisItems(
 			const i = integer(item.getAttribute('x'));
 			if (item.hasAttribute('t') || !Number.isInteger(i) || i >= count)
 				throw new Error('Invalid page-axis cache item');
-			return shared[f]![i]!;
+			return sharedAll[f]![i]!;
 		});
 		if (
 			new Set(data.map(pivotValueKey)).size !== count ||
@@ -119,17 +126,18 @@ export function assertPageAxisItems(
 			throw new Error('Invalid page-axis item count');
 		return items;
 	};
-	const rows = axisValues(pivot.rowField, 'axisRow'),
+	const rowAxes = pivotRowFields(pivot).map((name) => axisValues(name, 'axisRow')),
 		rowItems = read('rowItems');
 	const grid = pivotGrid(pivot);
-	const entries = grid.rowEntries
-		? remapPivotRowEntries(grid.rowEntries, [
-				rows,
-				pivot.secondRowField ? axisValues(pivot.secondRowField, 'axisRow') : [],
-			])
+	// Values on rows add a level (holding measure indexes, which need no remapping).
+	const valuesAt = pivotValuesIndex(pivot);
+	const levelAxes: (number[] | null)[] = [...rowAxes];
+	if (valuesAt >= 0) levelAxes.splice(valuesAt, 0, null);
+	const entries: PivotRowEntry[] = grid.rowEntries
+		? remapPivotRowEntries(grid.rowEntries, levelAxes)
 		: [
-				...rows.map((index) => ({ indices: [index], type: undefined })),
-				{ indices: [0], type: 'grand' },
+				...rowAxes[0]!.map((index) => ({ indices: [index] })),
+				{ indices: [0], type: 'grand' as const },
 			];
 	if (rowItems.length !== entries.length) throw new Error('Invalid page row items');
 	let previousRow: number[] = [];
@@ -137,20 +145,24 @@ export function assertPageAxisItems(
 		const expected = entries[i]!;
 		const xs = children(item, 'x', NS.x).map((x) => integer(x.getAttribute('v'), 0)),
 			prefix = integer(item.getAttribute('r'), 0);
+		const type =
+			expected.type === undefined || expected.type === 'default' || expected.type === 'grand'
+				? expected.type
+				: PIVOT_SUBTOTALS[expected.type].item;
 		if (
-			item.getAttribute('t') !== (expected.type ?? null) ||
+			item.getAttribute('t') !== (type ?? null) ||
 			!Number.isInteger(prefix) ||
 			prefix < 0 ||
 			prefix > previousRow.length ||
 			prefix >= expected.indices.length ||
-			(expected.type && prefix !== 0) ||
-			integer(item.getAttribute('i'), 0) !== 0 ||
+			(expected.type === 'grand' && prefix !== 0) ||
+			integer(item.getAttribute('i'), 0) !== (expected.measure ?? 0) ||
 			JSON.stringify([...previousRow.slice(0, prefix), ...xs]) !== JSON.stringify(expected.indices)
 		)
 			throw new Error('Unmodeled page row item');
-		previousRow = expected.type ? [] : expected.indices;
+		previousRow = expected.type === 'grand' ? [] : expected.indices;
 	});
-	const measures = 1 + (pivot.additionalValues?.length ?? 0),
+	const measures = valuesAt >= 0 ? 1 : 1 + (pivot.additionalValues?.length ?? 0),
 		columns = pivot.columnField ? axisValues(pivot.columnField, 'axisCol') : undefined,
 		expected: number[][] = [];
 	if (columns)

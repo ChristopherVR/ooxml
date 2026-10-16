@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { ImagePptxElement } from 'ooxml-core/pptx';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ElementRenderContext } from '../types';
 import { renderImageElement } from './image';
@@ -285,6 +285,10 @@ describe('renderImageElement tiled-picture native size', () => {
 
 	beforeEach(() => {
 		vi.stubGlobal('Image', FakeImage);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	function tiledElement(): ImagePptxElement {

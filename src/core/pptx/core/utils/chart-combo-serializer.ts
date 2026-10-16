@@ -44,6 +44,24 @@ export interface ComboConsolidation {
 	 * can restore each container's own settings instead of the first one's.
 	 */
 	containerChildren: ComboContainerChildren;
+	/**
+	 * The same children keyed by container and axis pair (`barChart|111,222`),
+	 * so two containers of one type on different axes (a series plotted on the
+	 * secondary axis) each get their own back.
+	 */
+	axisChildren: ComboContainerChildren;
+}
+
+/** `local|id,id` for a container's `c:axId` values, sorted. */
+export function comboAxisKey(local: string, axisIds: ReadonlyArray<string | number>): string {
+	return `${local}|${[...axisIds].map(String).sort().join(',')}`;
+}
+
+function containerAxisIds(container: XmlObject, getLocalName: GetLocalName): string[] {
+	const key = findKey(container, 'axId', getLocalName);
+	return ensureArray(key ? (container[key] as XmlObject | XmlObject[]) : undefined).map((node) =>
+		String((node as XmlObject)?.['@_val'] ?? ''),
+	);
 }
 
 function findKey(obj: XmlObject, local: string, getLocalName: GetLocalName): string | undefined {
@@ -91,40 +109,43 @@ export function consolidateComboContainersInXml(
 		return undefined;
 	}
 	const primaryKey = containerKeys[0];
+	// Two groups of one type (a series on the secondary axis) parse as one key holding an array.
+	const containers = containerKeys.flatMap((key) =>
+		ensureArray(plotArea[key] as XmlObject | XmlObject[] | undefined)
+			.filter((container): container is XmlObject => Boolean(container))
+			.map((container) => ({ key, container })),
+	);
 	const containerChildren: ComboContainerChildren = new Map();
-	for (const key of containerKeys) {
-		const container = plotArea[key] as XmlObject | undefined;
-		if (container) {
-			containerChildren.set(getLocalName(key), nonSeriesEntries(container, getLocalName));
-		}
+	const axisChildren: ComboContainerChildren = new Map();
+	for (const { key, container } of containers) {
+		const local = getLocalName(key);
+		const entries = nonSeriesEntries(container, getLocalName);
+		if (!containerChildren.has(local)) containerChildren.set(local, entries);
+		axisChildren.set(comboAxisKey(local, containerAxisIds(container, getLocalName)), entries);
 	}
-	if (containerKeys.length === 1) {
-		return { primaryKey, containerChildren };
+	if (containers.length <= 1) {
+		return { primaryKey, containerChildren, axisChildren };
 	}
 
-	const primary = plotArea[primaryKey] as XmlObject | undefined;
-	if (!primary) {
-		return { primaryKey, containerChildren };
-	}
+	const primary = containers[0]!.container;
 	const serKey = findKey(primary, 'ser', getLocalName) ?? 'c:ser';
 
 	const allSeries: XmlObject[] = [];
-	for (const key of containerKeys) {
-		const container = plotArea[key] as XmlObject | undefined;
-		if (!container) {
-			continue;
-		}
+	for (const { container } of containers) {
 		const containerSerKey = findKey(container, 'ser', getLocalName);
 		if (containerSerKey) {
 			allSeries.push(...(ensureArray(container[containerSerKey]) as XmlObject[]));
 		}
+	}
+	for (const key of containerKeys) {
 		if (key !== primaryKey) {
 			delete plotArea[key];
 		}
 	}
+	plotArea[primaryKey] = primary;
 
 	primary[serKey] = allSeries.length === 1 ? allSeries[0] : allSeries;
-	return { primaryKey, containerChildren };
+	return { primaryKey, containerChildren, axisChildren };
 }
 
 /**
@@ -169,6 +190,7 @@ export function applyComboSeriesTypesToXml(
 	getLocalName: GetLocalName,
 	axes?: PptxChartAxisFormatting[],
 	originalChildren?: ComboContainerChildren,
+	axisChildren?: ComboContainerChildren,
 ): boolean {
 	const containers = effectiveContainers(series, chartLevelType);
 	if (containers.some((local) => local === undefined)) {
@@ -177,7 +199,11 @@ export function applyComboSeriesTypesToXml(
 		// schema-valid) single container alone instead.
 		return false;
 	}
-	const resolved = containers as string[];
+	// One container per chart type AND value axis: a series on the secondary
+	// axis needs a container of its own even when it shares the type.
+	const resolved = (containers as string[]).map((local, i) =>
+		series[i]?.axisId === undefined ? local : `${local}@${series[i]!.axisId}`,
+	);
 	const distinct = new Set(resolved);
 	if (distinct.size <= 1) {
 		return false;
@@ -217,20 +243,22 @@ export function applyComboSeriesTypesToXml(
 	const entries = keys.map((k) => [k, plotArea[k]] as const);
 	const at = keys.indexOf(originalKey);
 	const newEntries: Array<readonly [string, XmlValue]> = [];
-	for (const local of groupOrder) {
+	for (const groupKey of groupOrder) {
+		const local = groupKey.split('@')[0]!;
+		const members = series.filter((_item, index) => resolved[index] === groupKey);
+		const pair = groupAxisPair(members, axes);
+		const children =
+			(pair ? axisChildren?.get(comboAxisKey(local, pair)) : undefined) ??
+			originalChildren?.get(local) ??
+			fallbackEntries;
 		const container: XmlObject = {};
-		for (const [k, v] of originalChildren?.get(local) ?? fallbackEntries) {
+		for (const [k, v] of children) {
 			// Deep-clone so containers never alias the same node.
 			container[k] = JSON.parse(JSON.stringify(v)) as XmlValue;
 		}
-		const grouped = groups.get(local)!;
+		const grouped = groups.get(groupKey)!;
 		container[serKey] = grouped.length === 1 ? grouped[0] : grouped;
-		applyGroupAxisReferences(
-			container,
-			series.filter((_item, index) => resolved[index] === local),
-			axes,
-			getLocalName,
-		);
+		applyGroupAxisReferences(container, members, axes, getLocalName);
 		// Drop children this container type does not permit (a cloned `c:barDir`
 		// inside `<c:lineChart>` is fatal), add any required child, then emit in
 		// the CT_* sequence order.
@@ -238,7 +266,17 @@ export function applyComboSeriesTypesToXml(
 		orderChartContainerChildren(container, local, getLocalName);
 		newEntries.push([`c:${local}`, container] as const);
 	}
-	entries.splice(at, 1, ...newEntries);
+	// Groups of one type share an element name: they become one key holding an array.
+	const merged: Array<[string, XmlValue]> = [];
+	for (const [k, v] of newEntries) {
+		const same = merged.find(([key]) => key === k);
+		if (same) {
+			same[1] = [...ensureArray(same[1] as XmlObject | XmlObject[]), v as XmlObject] as XmlValue;
+		} else {
+			merged.push([k, v]);
+		}
+	}
+	entries.splice(at, 1, ...merged);
 
 	for (const k of keys) {
 		delete plotArea[k];
@@ -249,23 +287,36 @@ export function applyComboSeriesTypesToXml(
 	return true;
 }
 
-function applyGroupAxisReferences(
-	container: XmlObject,
+/** The `[category, value]` axis ids a group of series plots against, when they agree on one. */
+function groupAxisPair(
 	series: PptxChartSeries[],
 	axes: PptxChartAxisFormatting[] | undefined,
-	getLocalName: GetLocalName,
-): void {
+): [number, number] | undefined {
 	const axisIds = new Set(series.map((item) => item.axisId).filter((id) => id !== undefined));
 	if (axisIds.size !== 1) {
-		return;
+		return undefined;
 	}
 	const valueAxisId = [...axisIds][0];
 	const valueAxis = axes?.find((axis) => axis.axisId === valueAxisId);
 	const categoryAxisId =
 		valueAxis?.crossAxisId ?? axes?.find((axis) => axis.crossAxisId === valueAxisId)?.axisId;
 	if (valueAxisId === undefined || categoryAxisId === undefined) {
+		return undefined;
+	}
+	return [categoryAxisId, valueAxisId];
+}
+
+function applyGroupAxisReferences(
+	container: XmlObject,
+	series: PptxChartSeries[],
+	axes: PptxChartAxisFormatting[] | undefined,
+	getLocalName: GetLocalName,
+): void {
+	const pair = groupAxisPair(series, axes);
+	if (!pair) {
 		return;
 	}
+	const [categoryAxisId, valueAxisId] = pair;
 	const key = findKey(container, 'axId', getLocalName) ?? 'c:axId';
 	container[key] = [{ '@_val': String(categoryAxisId) }, { '@_val': String(valueAxisId) }];
 }

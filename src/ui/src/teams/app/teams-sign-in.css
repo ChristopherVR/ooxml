@@ -1,0 +1,77 @@
+:host {
+	display: grid;
+	place-items: center;
+	height: 100%;
+	background: var(--office-teams-panel);
+	color: var(--office-foreground);
+	font: inherit;
+}
+.card {
+	display: grid;
+	justify-items: center;
+	gap: var(--office-space-3);
+	width: min(24em, 90%);
+	padding: var(--office-space-6);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-background);
+	box-shadow: var(--office-shadow-teams);
+}
+.logo {
+	display: inline-grid;
+	place-items: center;
+	width: 2.4em;
+	height: 2.4em;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+}
+h1 {
+	margin: 0;
+	font-size: var(--office-font-size-xl);
+}
+p {
+	margin: 0;
+	text-align: center;
+	overflow-wrap: anywhere;
+}
+.muted {
+	color: var(--office-teams-text-subtle);
+}
+label {
+	display: grid;
+	gap: var(--office-space-2);
+	width: 100%;
+}
+input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-radius);
+	background: var(--office-field-background);
+	color: inherit;
+	font: inherit;
+}
+input:focus-visible,
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+.error {
+	color: var(--office-danger);
+}
+button {
+	width: 100%;
+	padding: var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font: inherit;
+	font-weight: var(--office-font-weight-bold);
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

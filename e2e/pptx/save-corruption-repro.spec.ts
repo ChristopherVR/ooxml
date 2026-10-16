@@ -84,9 +84,10 @@ async function addGifImage(page: Page): Promise<void> {
 	// Scoped to the ribbon: the inspector can also expose a file input named "Choose Image".
 	await page
 		.getByRole('toolbar', { name: 'Presentation toolbar' })
-		.getByRole('button', { name: /image/iu })
+		.getByRole('button', { name: 'Pictures', exact: true })
 		.first()
 		.click();
+	await page.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	const chooser = await chooserPromise;
 	await chooser.setFiles(gifFixturePath);
 	await page.waitForTimeout(500);
@@ -96,6 +97,7 @@ async function addGifImage(page: Page): Promise<void> {
 async function addTable(page: Page): Promise<void> {
 	await switchToInsertTab(page);
 	await page.getByRole('button', { name: /Table/iu }).first().click();
+	await page.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click();
 	await page.waitForTimeout(500);
 }
 

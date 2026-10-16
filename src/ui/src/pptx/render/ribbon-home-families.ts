@@ -1,3 +1,4 @@
+import { CHART_SELECTION_FAMILY } from './chart-format/chart-selection-strip';
 import { RIBBON_HOME_OBJECT_FAMILIES } from './ribbon-home-families-objects';
 import { column, control, pills, strip, text } from './ribbon-home-family-helpers';
 import {
@@ -153,4 +154,5 @@ export const RIBBON_HOME_FAMILIES: Readonly<Record<RibbonHomeFamily, RibbonHomeF
 		],
 	},
 	...RIBBON_HOME_OBJECT_FAMILIES,
+	'chart-selection': CHART_SELECTION_FAMILY,
 };

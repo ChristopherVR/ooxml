@@ -301,3 +301,40 @@ describe('getShapeVisualStyle group-level effects (p:grpSpPr/a:effectLst)', () =
 		expect(style.overflow).toBe('visible');
 	});
 });
+
+describe('chart area outer shadow and glow on the chart container', () => {
+	const SHADOW = {
+		shadow: { color: '#000000', transparency: 60, blur: 4, distance: 3, angle: 45 },
+		glow: { color: '#FFC000', radius: 5 },
+	};
+	function chart(effects: typeof SHADOW | undefined): PptxElement {
+		return {
+			id: 'c1',
+			type: 'chart',
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+			chartData: {
+				chartType: 'bar',
+				categories: ['A'],
+				series: [{ name: 'S', values: [1] }],
+				style: { chartAreaFill: '#FFFFFF' },
+				...(effects ? { elementFormats: { chartArea: { effects } } } : {}),
+			},
+		} as unknown as PptxElement;
+	}
+
+	it('casts the shadow as a box-shadow and the glow as a drop-shadow, outside the frame', () => {
+		const style = getShapeVisualStyle(chart(SHADOW), true, '#fff', 0, '#000') as Record<
+			string,
+			unknown
+		>;
+		expect(String(style['boxShadow'])).toContain('rgba(0, 0, 0, 0.4)');
+		expect(String(style['filter'])).toContain('drop-shadow');
+	});
+
+	it('leaves a chart without chart-area effects plain', () => {
+		expect(getShapeVisualStyle(chart(undefined), true, '#fff', 0, '#000')).toStrictEqual({});
+	});
+});

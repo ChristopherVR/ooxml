@@ -29,6 +29,8 @@
 		CHART_TYPE_LABEL_KEYS,
 		CHART_TYPE_OPTIONS,
 		collapseChartTitleRunsForEdit,
+		GROUPING_OPTIONS,
+		GROUPING_SUPPORTED_TYPES,
 		hideChartSeries,
 		patchChartData as sharedPatchChartData,
 		radarStylePatch,
@@ -196,9 +198,10 @@
 </script>
 
 {#if data}<div class="section">
-	<label>Chart type<pptx-ui-select aria-label="Chart type" value={displayedType} onchange={(event) => onTypeChange(event.currentTarget.value as ChartTypeSelectValue)}>{#each chartTypes as type}<option value={type}>{schemaLabel(CHART_TYPE_LABEL_KEYS, type, t)}</option>{/each}</pptx-ui-select></label>
-	<label>Title<input value={data.title ?? ''} oninput={(event) => patch({ ...collapseChartTitleRunsForEdit(data, event.currentTarget.value), style: { ...data.style, hasTitle: Boolean(event.currentTarget.value) } })} /></label>
-	<div class="checks"><label><pptx-ui-checkbox checked={data.style?.hasLegend ?? false} onchange={(event) => patch({ style: { ...data.style, hasLegend: event.currentTarget.checked } })} ></pptx-ui-checkbox>Legend</label><label><pptx-ui-checkbox checked={data.style?.hasDataLabels ?? false} onchange={(event) => patch({ style: { ...data.style, ...chartDataLabelsTogglePatch(data.style, event.currentTarget.checked) } })} ></pptx-ui-checkbox>Data labels</label><label><pptx-ui-checkbox checked={data.style?.hasGridlines ?? false} onchange={(event) => patch({ style: { ...data.style, hasGridlines: event.currentTarget.checked } })} ></pptx-ui-checkbox>Gridlines</label>
+	<label>{t('pptx.chart.title')}<input aria-label={t('pptx.chart.title')} value={data.title ?? ''} oninput={(event) => patch({ ...collapseChartTitleRunsForEdit(data, event.currentTarget.value), style: { ...data.style, hasTitle: Boolean(event.currentTarget.value) } })} /></label>
+	<label>{t('pptx.chart.type')}<pptx-ui-select aria-label={t('pptx.chart.type')} value={displayedType} onchange={(event) => onTypeChange(event.currentTarget.value as ChartTypeSelectValue)}>{#each chartTypes as type}<option value={type}>{schemaLabel(CHART_TYPE_LABEL_KEYS, type, t)}</option>{/each}</pptx-ui-select></label>
+	{#if GROUPING_SUPPORTED_TYPES.has(data.chartType)}<label>{t('pptx.chart.grouping')}<pptx-ui-select aria-label={t('pptx.chart.grouping')} value={data.grouping ?? 'clustered'} onchange={(event) => patch({ grouping: event.currentTarget.value as PptxChartData['grouping'] })}>{#each GROUPING_OPTIONS as option (option.value)}<option value={option.value}>{t(option.labelKey)}</option>{/each}</pptx-ui-select></label>{/if}
+	<div class="checks"><label><pptx-ui-checkbox checked={data.style?.hasLegend ?? false} onchange={(event) => patch({ style: { ...data.style, hasLegend: event.currentTarget.checked } })} ></pptx-ui-checkbox>{t('pptx.chart.showLegend')}</label><label><pptx-ui-checkbox checked={data.style?.hasDataLabels ?? false} onchange={(event) => patch({ style: { ...data.style, ...chartDataLabelsTogglePatch(data.style, event.currentTarget.checked) } })} ></pptx-ui-checkbox>{t('pptx.chart.showDataLabels')}</label><label><pptx-ui-checkbox checked={data.style?.hasGridlines ?? false} onchange={(event) => patch({ style: { ...data.style, hasGridlines: event.currentTarget.checked } })} ></pptx-ui-checkbox>{t('pptx.chart.showGridlines')}</label>
 		{#if data.chartType === 'bar3D'}
 			<label>{t('pptx.chart.bar3DShapeLabel')}<pptx-ui-select aria-label={t('pptx.chart.bar3DShapeLabel')} data-testid="pptx-chart-bar3d-shape" value={data.barShape ?? 'box'} onchange={(event) => onBar3DShapeChange(event.currentTarget.value)}>{#each BAR3D_SHAPE_OPTIONS as option (option.value)}<option value={option.value}>{t(option.labelKey)}</option>{/each}</pptx-ui-select></label>
 		{/if}
@@ -215,7 +218,7 @@
 		onreplace={replace}
 		onrenameseries={(index, name) => seriesPatch(index, { name })}
 	/>
-	<h5>Series</h5>{#each data.series as series, index}<fieldset><input aria-label="Series name" value={series.name} oninput={(event) => seriesPatch(index, { name: event.currentTarget.value })} /><input aria-label="Series values" value={series.values.join(', ')} onchange={(event) => seriesPatch(index, { values: event.currentTarget.value.split(',').map(Number).filter(Number.isFinite) })} /><input type="color" aria-label="Series color" value={series.color ?? '#4472c4'} onchange={(event) => seriesColorPatch(index, event.currentTarget.value)} />{#if seriesColorClearState(series, canEdit).visible}<button type="button" class="clear-series-color" title={t('pptx.chart.clearSeriesColor')} aria-label={t('pptx.chart.clearSeriesColor')} onclick={() => seriesPatch(index, { color: undefined })}>×</button>{/if}</fieldset>{/each}
+	<h5>{t('pptx.chart.series')}</h5>{#each data.series as series, index}<fieldset><input aria-label={t('pptx.chart.seriesName')} value={series.name} oninput={(event) => seriesPatch(index, { name: event.currentTarget.value })} /><input aria-label={t('pptx.chart.seriesValues')} value={series.values.join(', ')} onchange={(event) => seriesPatch(index, { values: event.currentTarget.value.split(',').map(Number).filter(Number.isFinite) })} /><input type="color" aria-label={t('pptx.chart.seriesColor', { name: series.name })} value={series.color ?? '#4472c4'} onchange={(event) => seriesColorPatch(index, event.currentTarget.value)} />{#if seriesColorClearState(series, canEdit).visible}<button type="button" class="clear-series-color" title={t('pptx.chart.clearSeriesColor')} aria-label={t('pptx.chart.clearSeriesColor')} onclick={() => seriesPatch(index, { color: undefined })}>×</button>{/if}</fieldset>{/each}
 	<ChartFilteredSeriesOptions
 		chartData={data}
 		{canEdit}
@@ -225,7 +228,7 @@
 	/>
 	<ChartTrendlineSection {data} {canEdit} onsettrendline={setTrendline} />
 	{#if chart}<ChartPointMarkerSection {editor} element={chart} {canEdit} onsetpointmarker={setPointMarker} />{/if}
-	<h5>Axes</h5>{#each data.axes ?? [] as axis, index}<fieldset><input aria-label="Axis title" value={axis.titleText ?? ''} oninput={(event) => axisPatch(index, { titleText: event.currentTarget.value })} /><input type="number" aria-label="Axis minimum" placeholder="Min" value={axis.min ?? ''} onchange={(event) => axisPatch(index, { min: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) })} /><input type="number" aria-label="Axis maximum" placeholder="Max" value={axis.max ?? ''} onchange={(event) => axisPatch(index, { max: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) })} /></fieldset>{/each}
+	<h5>{t('pptx.chart.axes')}</h5>{#each data.axes ?? [] as axis, index}<fieldset><input aria-label={t('pptx.chart.axisTitlePlaceholder')} placeholder={t('pptx.chart.axisTitlePlaceholder')} value={axis.titleText ?? ''} oninput={(event) => axisPatch(index, { titleText: event.currentTarget.value })} /><input type="number" aria-label={t('pptx.chart.min')} placeholder={t('pptx.chart.min')} value={axis.min ?? ''} onchange={(event) => axisPatch(index, { min: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) })} /><input type="number" aria-label={t('pptx.chart.max')} placeholder={t('pptx.chart.max')} value={axis.max ?? ''} onchange={(event) => axisPatch(index, { max: event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value) })} /></fieldset>{/each}
 	<ChartErrorBarSection {data} {canEdit} onseterrorbars={setErrorBars} />
 	<ChartAxisFormatSection {data} {canEdit} onpatch={patch} />
 	<ChartLabelsAxesSection {editor} {data} onpatch={patch} />

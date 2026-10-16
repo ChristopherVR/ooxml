@@ -39,7 +39,7 @@ export interface InsertElementHandlers {
 	addElement: (element: PptxElement) => void;
 	handleAddTextBox: () => void;
 	handleAddShape: () => void;
-	handleAddTable: () => void;
+	handleAddTable: (rows?: number, columns?: number) => void;
 	handleAddChart: (chartKind: InsertChartKind) => void;
 	handleInsertSmartArt: (layout: SmartArtLayout, defaultItems: string[]) => void;
 	handleInsertEquation: (omml: Record<string, unknown>) => void;
@@ -111,14 +111,17 @@ export function useInsertElements(input: UseInsertElementsInput): InsertElementH
 		} as ShapePptxElement);
 	};
 
-	const handleAddTable = () => {
+	const handleAddTable = (
+		rows: number = DEFAULT_TABLE_ROWS,
+		columns: number = DEFAULT_TABLE_COLUMNS,
+	) => {
 		if (!activeSlide) {
 			return;
 		}
 		// Shared factory: header row + banded rows + visible borders, matching
 		// the Angular insert defaults (a bare unstyled grid is invisible).
 		addElement({
-			...newTableElement(DEFAULT_TABLE_ROWS, DEFAULT_TABLE_COLUMNS, 100, 200),
+			...newTableElement(rows, columns, 100, 200),
 			id: generateElementId(),
 		});
 	};

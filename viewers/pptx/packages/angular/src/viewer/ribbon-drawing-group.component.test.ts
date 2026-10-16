@@ -108,6 +108,22 @@ describe('ribbonDrawingGroupComponent shape insertion', () => {
 		expect(kinds).toStrictEqual(SHAPE_PRESET_DEFS.slice(0, 12).map((preset) => preset.type));
 	});
 
+	it('inserts any preset of the categorised gallery, not only the legacy catalogue', () => {
+		const editor = new EditorStateService();
+		editor.setSlides([slide('s1')]);
+		const group = createGroup(editor);
+
+		handlers(group).onShapeSelect('wedgeRectCallout');
+		handlers(group).onShapeSelect('mathPlus');
+		// A freeform tool or an unknown value is not a preset to insert.
+		handlers(group).onShapeSelect('freeform:curve');
+		handlers(group).onShapeSelect('nope');
+
+		const elements = editor.slides()[0].elements as Array<{ shapeType?: string; name?: string }>;
+		expect(elements.map((el) => el.shapeType)).toStrictEqual(['wedgeRectCallout', 'mathPlus']);
+		expect(elements[0].name).toBe('Speech Bubble: Rectangle');
+	});
+
 	it('newPresetShapeElement carries the preset geometry and default styling', () => {
 		const element = newPresetShapeElement('roundRect', 'Rounded');
 		expect(element).toMatchObject({

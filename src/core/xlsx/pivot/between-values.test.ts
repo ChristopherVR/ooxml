@@ -5,7 +5,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 
 const file = (profile: string) =>
 	profile === 'tabular'
@@ -74,7 +74,7 @@ it.each([
 	expect(wb.sheets[0]!.pivotTables![0]?.valuesPosition).toBe('between');
 });
 
-it.each(['unsupported', '', null, 1, false])(
+it.each(['unsupported', '', null, -1, 1.5, false])(
 	'refuses malformed public Values position %s atomically',
 	async (position) => {
 		const wb = await loadXlsx(native()),
@@ -116,7 +116,7 @@ it.each(['tabular', 'compact', 'outline'] as const)(
 			caption: `Measure ${i}`,
 		}));
 		pivot.records = Array.from({ length: 35_000 }, (_, i) => [i, 'East', 1, 2, 2025]);
-		const headers = vi.spyOn(measures, 'pivotHeaders');
+		const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 		try {
 			expect(() => pivotGrid(pivot)).toThrow('too large');
 			expect(headers).not.toHaveBeenCalled();

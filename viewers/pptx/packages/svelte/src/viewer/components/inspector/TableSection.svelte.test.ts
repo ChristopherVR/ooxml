@@ -277,7 +277,7 @@ describe('tableSection', () => {
 		const editor = makeEditor(el);
 		const { target } = mountSection(editor, currentEl(editor));
 		const select = target.querySelector<HTMLSelectElement>(
-			'pptx-ui-select[aria-label="Horizontal"]',
+			'pptx-ui-select[aria-label="Alignment"]',
 		);
 		if (!select) {
 			throw new Error('cell alignment select not found');

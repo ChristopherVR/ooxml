@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.10](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@0.1.10) - 2026-10-15
+
+### Bug Fixes
+
+- **automation:** Add --root and untrusted-content notes to MCP servers ([0da2c7d](https://github.com/ChristopherVR/ooxml/commit/0da2c7d1ec6655f649a608ded1f36dea41f34962))
+
 ## [0.1.9](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@0.1.9) - 2026-10-10
 
 ### Styling

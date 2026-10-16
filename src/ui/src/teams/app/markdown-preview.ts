@@ -1,5 +1,6 @@
 import { html, nothing } from 'lit';
 import { markdownBlocks, markdownInline } from 'ooxml-core/teams';
+import { teamsI18n, type TeamsI18n } from '../i18n/translator';
 
 function inline(text: string, base: string) {
 	return markdownInline(text, base).map((token) => {
@@ -15,7 +16,7 @@ function inline(text: string, base: string) {
 }
 
 /** Render core tokens as Lit text bindings. Never insert peer-provided HTML. */
-export function markdownPreview(source: string, base: string) {
+export function markdownPreview(source: string, base: string, i18n: TeamsI18n = teamsI18n()) {
 	return markdownBlocks(source).map((block) => {
 		if (block.kind === 'code') return html`<pre><code>${block.text}</code></pre>`;
 		if (block.kind === 'table' && block.table) {
@@ -24,7 +25,7 @@ export function markdownPreview(source: string, base: string) {
 				class="markdown-table"
 				tabindex="0"
 				role="region"
-				aria-label="Markdown table"
+				aria-label=${i18n.t('preview.markdownTable')}
 			>
 				<table>
 					<thead>

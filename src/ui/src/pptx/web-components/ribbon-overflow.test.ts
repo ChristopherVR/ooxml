@@ -143,6 +143,62 @@ describe('ribbon overflow', () => {
 		vi.useRealTimers();
 	});
 
+	it('steps scalable groups large, small, icons before collapsing, lowest priority first', () => {
+		const SIZE = { large: 200, small: 120, icons: 80 } as const;
+		const row = content(0, []);
+		const scaleOf = (group: Element) =>
+			((group as HTMLElement).dataset.scale ?? 'large') as keyof typeof SIZE;
+		const width = (group: Element) =>
+			group.hasAttribute('data-collapsed') ? COLLAPSED : SIZE[scaleOf(group)];
+		const specs = [
+			['insert.camera', 1, true],
+			['insert.links', 3, false],
+			['insert.text', 8, false],
+		] as const;
+		for (const [id, priority, first] of specs) {
+			const group = document.createElement('div');
+			group.dataset.ribbonGroup = id;
+			group.dataset.ribbonScalable = '';
+			group.dataset.ribbonPriority = String(priority);
+			if (first) {
+				group.dataset.ribbonCollapseFirst = '';
+			}
+			group.getBoundingClientRect = () => ({ width: width(group), height: 90 }) as DOMRect;
+			row.append(group);
+		}
+		let available = 0;
+		Object.defineProperty(row, 'clientWidth', { configurable: true, get: () => available });
+		Object.defineProperty(row, 'scrollWidth', {
+			configurable: true,
+			get: () => [...row.querySelectorAll('[data-ribbon-group]')].reduce((s, g) => s + width(g), 0),
+		});
+		const state = () =>
+			[...row.querySelectorAll('[data-ribbon-group]')].map((g) =>
+				g.hasAttribute('data-collapsed') ? 'popup' : scaleOf(g),
+			);
+		available = 600;
+		expect(reflowRibbon(row)).toStrictEqual([]);
+		expect(state()).toStrictEqual(['large', 'large', 'large']);
+		// The group with nothing runnable collapses before any working group shrinks.
+		available = 520;
+		expect(reflowRibbon(row)).toStrictEqual(['insert.camera']);
+		expect(state()).toStrictEqual(['popup', 'large', 'large']);
+		// Then the lowest priority group shrinks first, and the highest keeps its large buttons.
+		available = 60 + 120 + 200;
+		reflowRibbon(row);
+		expect(state()).toStrictEqual(['popup', 'small', 'large']);
+		available = 60 + 80 + 120;
+		reflowRibbon(row);
+		expect(state()).toStrictEqual(['popup', 'icons', 'small']);
+		// Only when nothing smaller is left does a group become a popup.
+		available = 60 + 80 + 80;
+		reflowRibbon(row);
+		expect(state()).toStrictEqual(['popup', 'icons', 'icons']);
+		available = 60 + 60 + 80;
+		expect(reflowRibbon(row)).toStrictEqual(['insert.camera', 'insert.links']);
+		expect(state()).toStrictEqual(['popup', 'popup', 'icons']);
+	});
+
 	it('gives the shared group an icon and leaves its face to the shadow root', () => {
 		const row = document.createElement('div');
 		const group = document.createElement('pptx-ui-ribbon-group');

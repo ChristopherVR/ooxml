@@ -23,15 +23,28 @@ export interface RibbonGalleryHub {
 	register(view: RibbonGalleryView): void;
 	/** Rebuild every registered gallery when the selection, theme or editability changed. */
 	sync(ctx: RibbonGalleryContext | undefined, editable: boolean): void;
-	/** Resolve a tile pick through the shared registry and dispatch the result. */
-	pick(gallery: RibbonGalleryId, itemId: string): void;
+	/**
+	 * Resolve a tile pick (with the context menu `action` chosen on the tile, if any) through the
+	 * shared registry and dispatch the result. Returns it when it is a command the caller runs.
+	 */
+	pick(gallery: RibbonGalleryId, itemId: string, action?: string): RibbonGalleryApplyResult | null;
+	/** Show what a previewable tile would do while hovered; `endPreview` puts the slides back. */
+	preview(gallery: RibbonGalleryId, itemId: string): void;
+	endPreview(): void;
 	closeAll(): void;
 }
 
 const EMPTY_CONTEXT: RibbonGalleryContext = { element: null };
 
+/** Hover preview hooks of the Design galleries. */
+export interface RibbonGalleryPreviewHooks {
+	preview(result: RibbonGalleryApplyResult | null): void;
+	end(): void;
+}
+
 export function createRibbonGalleryHub(
 	dispatch: (result: RibbonGalleryApplyResult) => void,
+	previewHooks?: RibbonGalleryPreviewHooks,
 ): RibbonGalleryHub {
 	const views: RibbonGalleryView[] = [];
 	let ctx: RibbonGalleryContext = EMPTY_CONTEXT;
@@ -60,6 +73,10 @@ export function createRibbonGalleryHub(
 				resolved.theme?.colorScheme,
 				resolved.theme?.fontScheme,
 				resolved.theme?.name,
+				resolved.theme?.formatScheme?.name,
+				resolved.activeSlide?.backgroundStyleRef,
+				resolved.activeSlide?.clrMapOverride,
+				resolved.themeVariants,
 				resolved.resolveStyleMatrix !== undefined,
 				// By value: the context builds a fresh array on every sync (Table Layout reads it).
 				resolved.selectedTableCells?.map((cell) => `${cell.row}:${cell.column}`).join(','),
@@ -73,11 +90,22 @@ export function createRibbonGalleryHub(
 			key = nextKey;
 			refreshAll();
 		},
-		pick(gallery, itemId) {
-			const result = applyRibbonGalleryItem(gallery, itemId, ctx);
+		pick(gallery, itemId, action) {
+			const result = applyRibbonGalleryItem(gallery, itemId, ctx, action);
+			if (result?.kind === 'command') {
+				previewHooks?.end();
+				return result;
+			}
 			if (result) {
 				dispatch(result);
 			}
+			return null;
+		},
+		preview(gallery, itemId) {
+			previewHooks?.preview(applyRibbonGalleryItem(gallery, itemId, ctx));
+		},
+		endPreview() {
+			previewHooks?.end();
 		},
 		closeAll() {
 			for (const view of views) {

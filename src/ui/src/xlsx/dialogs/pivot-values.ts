@@ -9,6 +9,12 @@ export const PIVOT_AGGREGATE_OPTIONS = [
 	['average', 'Average'],
 	['min', 'Min'],
 	['max', 'Max'],
+	['product', 'Product'],
+	['countNums', 'Count Numbers'],
+	['stdDev', 'StdDev'],
+	['stdDevp', 'StdDevp'],
+	['var', 'Var'],
+	['varp', 'Varp'],
 ] as const;
 
 /** Extra value controls share source fields, preserve imported captions, and keep a stable order. */

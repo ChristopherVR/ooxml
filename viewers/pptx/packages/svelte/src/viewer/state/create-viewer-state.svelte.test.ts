@@ -38,6 +38,7 @@ interface HarnessProps {
 	/** The host `autosave` POLICY prop; omitted means "the host said nothing". */
 	autosave?: boolean;
 	filePath?: string;
+	authorName?: string;
 	editable?: boolean;
 	onautosavetoggle?: (enabled: boolean) => void;
 	viewport?: { width: number; height: number };
@@ -187,6 +188,22 @@ describe('createViewerState', () => {
 		props = { fitPadding: { horizontal: 4, vertical: 8 }, maxFitScale: 1.25 };
 		expect(options.getFitPadding?.()).toStrictEqual({ horizontal: 4, vertical: 8 });
 		expect(options.getMaxFitScale?.()).toBe(1.25);
+	});
+
+	it('hands the host authorName to the editor and maps it live from the props', () => {
+		expect(renderHarness({ authorName: 'Dana Host' }).editor.hostAuthorName).toBe('Dana Host');
+		let props: { authorName?: string } = { authorName: 'First' };
+		const options = toViewerStateOptions(() => props as never, {
+			t: (key) => key,
+			getRootEl: () => undefined,
+			getStageHolderEl: () => undefined,
+			getViewportWidth: () => 960,
+			getViewportHeight: () => 540,
+			getMasterScale: () => 1,
+		});
+		expect(options.getAuthorName?.()).toBe('First');
+		props = { authorName: 'Second' };
+		expect(options.getAuthorName?.()).toBe('Second');
 	});
 
 	it('updates host fit policy without changing manual zoom or fullscreen fit', () => {

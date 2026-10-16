@@ -159,8 +159,8 @@ export function TablePropertiesPanel({
 							key={preset.id}
 							type='button'
 							disabled={!canEdit}
-							title={preset.label}
-							aria-label={preset.label}
+							title={t(preset.labelKey)}
+							aria-label={t(preset.labelKey)}
 							className='rounded border border-border hover:border-primary overflow-hidden h-10 max-md:h-11 transition-colors'
 							onClick={() => {
 								updateTableData({ rows: applyTableStylePreset(td, preset) });

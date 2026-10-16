@@ -4,13 +4,22 @@
 // DOM-free. New code.
 import { type ChatMember, sanitizeMembers } from './chats';
 import { meetingToIcs, icsFileName } from './ics';
-import { type Meeting, type MeetingInput, type MeetingStore } from './meetings';
+import {
+	type Meeting,
+	type MeetingInput,
+	type MeetingStore,
+	type OccurrencePatch,
+} from './meetings';
 import type { TeamsWorkspace } from './workspace';
 
 export interface MeetingActions {
 	createMeeting: (input: MeetingFormInput) => Meeting | null;
 	updateMeeting: (id: string, patch: Partial<MeetingFormInput>) => Meeting | null;
 	cancelMeeting: (id: string) => boolean;
+	/** Cancel one occurrence of a repeating meeting (`recurrenceId` is its original start). */
+	cancelOccurrence: (id: string, recurrenceId: number) => boolean;
+	/** Change one occurrence of a repeating meeting; the series stays as it is. */
+	editOccurrence: (id: string, recurrenceId: number, patch: OccurrencePatch) => Meeting | null;
 	/** The `.ics` file for a meeting, or null when it does not exist. */
 	meetingIcs: (id: string) => { name: string; text: string } | null;
 }
@@ -115,6 +124,21 @@ export function createMeetingActions(deps: MeetingActionDeps): MeetingActions {
 			else notice('Only the organizer can cancel a meeting');
 			refresh();
 			return ok;
+		},
+		cancelOccurrence(id, recurrenceId) {
+			const meeting = meetings.get(id);
+			const ok = meetings.cancelOccurrence(id, recurrenceId);
+			if (ok && meeting)
+				announce(meeting, `${ws.user.name} canceled one occurrence of "${meeting.title}"`);
+			else notice('Only the organizer can cancel an occurrence of a meeting');
+			refresh();
+			return ok;
+		},
+		editOccurrence(id, recurrenceId, patch) {
+			const updated = meetings.editOccurrence(id, recurrenceId, patch);
+			if (!updated) notice('Only the organizer can change an occurrence of a meeting');
+			refresh();
+			return updated;
 		},
 		meetingIcs(id) {
 			const meeting = meetings.get(id);

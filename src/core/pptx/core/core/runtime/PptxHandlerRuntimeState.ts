@@ -40,6 +40,7 @@ import type {
 	PptxEmbeddedFont,
 	PptxMasterTextStyles,
 	PptxThemeFormatScheme,
+	PptxThemeVariant,
 	PptxThemeObjectDefaults,
 	PptxViewProperties,
 } from '../../types';
@@ -225,6 +226,17 @@ export class PptxHandlerRuntime {
 	 * Phase 2 Stream B / C-H4.
 	 */
 	protected masterClrMaps: Map<string, Record<string, string>> = new Map();
+
+	/**
+	 * Background style (Design > Background Styles) applied to a master since load: its `p:bg` and
+	 * `p:clrMap`. The save writer applies them last, so a stale `PptxSlideMaster` model handed back
+	 * by the editor cannot undo them.
+	 */
+	/** Real theme variants the loaded package carries (see `loadThemeVariants`). */
+	protected loadedThemeVariants: PptxThemeVariant[] = [];
+
+	protected masterStyleOverrides: Map<string, { bg: XmlObject; clrMap: Record<string, string> }> =
+		new Map();
 
 	/**
 	 * Per-master theme color maps. Each master may reference its own theme

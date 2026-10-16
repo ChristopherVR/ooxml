@@ -18,6 +18,7 @@ import {
 	Component,
 	computed,
 	effect,
+	inject,
 	input,
 	output,
 	signal,
@@ -34,15 +35,21 @@ import type { BroadcastConfig, BroadcastDefaults } from './broadcast-helpers';
 import type { DialogFooterActionSpec } from './dialog-footer.component';
 import { DialogFooterComponent } from './dialog-footer.component';
 import { ModalDialogComponent } from './modal-dialog.component';
+import { ViewerRegionHostComponent } from './viewer-region-host.component';
+import { ViewerRegionService } from './viewer-region.service';
 
 @Component({
 	selector: 'pptx-broadcast-dialog',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [DialogFooterComponent, ModalDialogComponent, TranslatePipe],
+	imports: [DialogFooterComponent, ModalDialogComponent, TranslatePipe, ViewerRegionHostComponent],
 	template: `
 		<pptx-modal-dialog [open]="open()" [title]="dialogTitle()" (close)="onClose()">
-			@if (active()) {
+			@if (regionRenderer(); as renderer) {
+				@if (regionContext(); as ctx) {
+					<pptx-region-host [renderer]="renderer" [context]="ctx" />
+				}
+			} @else if (active()) {
 				<!-- Active: share the follow link + stop control -->
 				<div class="pptx-ng-broadcast">
 					<div class="pptx-ng-broadcast-status-row">
@@ -137,9 +144,11 @@ import { ModalDialogComponent } from './modal-dialog.component';
 				</div>
 			}
 
-			<div footer>
-				<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
-			</div>
+			@if (!regionRenderer()) {
+				<div footer>
+					<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
+				</div>
+			}
 		</pptx-modal-dialog>
 	`,
 	styles: [
@@ -295,6 +304,13 @@ export class BroadcastDialogComponent {
 
 	/** Fired when the dialog is dismissed. */
 	readonly close = output<void>();
+
+	private readonly regions = inject(ViewerRegionService, { optional: true });
+	/** The host renderer replacing the dialog body, if any. */
+	protected readonly regionRenderer = computed(() => this.regions?.renderer('dialog.broadcast'));
+	protected readonly regionContext = computed(
+		() => this.regions?.context('dialog.broadcast', () => this.close.emit()) ?? null,
+	);
 
 	readonly roomId = signal('');
 	readonly serverUrl = signal('');

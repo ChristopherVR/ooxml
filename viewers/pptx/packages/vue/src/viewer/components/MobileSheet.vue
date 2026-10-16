@@ -47,7 +47,10 @@ onBeforeUnmount(() => releaseFocus?.());
 </script>
 
 <template>
-	<div v-if="open" class="pptx-vue-msheet fixed inset-0 z-[60] flex flex-col justify-end">
+	<div
+		v-if="open"
+		class="pptx-vue-msheet fixed inset-x-0 top-0 bottom-14 z-[69] flex flex-col justify-end"
+	>
 		<!-- Backdrop -->
 		<button
 			type="button"

@@ -43,6 +43,7 @@ import type {
 import type { AnimationTimingPatch } from '../../editor/editor-animation-actions';
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
 import type { TableCellPosition, TableStructureAction } from '../../editor/table-editor-mutations';
+import type { RegionSet } from '../region-set';
 
 /**
  * The inspector edit actions: universal geometry + flat fill/stroke, plus the
@@ -202,6 +203,8 @@ export interface InspectorHandlers {
 	 * already scopes the patch to the fields a content edit can touch.
 	 */
 	setOleContent(patch: Partial<OlePptxElement>): void;
+	/** The viewer's region set: the OLE editor dialog closes with the viewer. */
+	getDialogRegions?(): RegionSet | undefined;
 	setChartData(data: PptxChartData): void;
 	setMediaProperties(patch: Partial<MediaPptxElement>): void;
 

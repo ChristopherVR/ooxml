@@ -1,4 +1,5 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	contentUrl,
 	detectContentKind,
@@ -11,14 +12,14 @@ import {
 import css from './add-tab-dialog.css?raw';
 
 const APPS = [
-	{ id: 'docx', label: 'Word', kind: 'docx', letter: 'W' },
-	{ id: 'xlsx', label: 'Excel', kind: 'xlsx', letter: 'X' },
-	{ id: 'pptx', label: 'PowerPoint', kind: 'pptx', letter: 'P' },
-	{ id: 'vsdx', label: 'Visio', kind: 'vsdx', letter: 'V' },
-	{ id: 'markdown', label: 'Markdown', kind: 'markdown', letter: 'M' },
-	{ id: 'site', label: 'Static site', kind: 'website', letter: 'H' },
-	{ id: 'text', label: 'Text', kind: 'text', letter: 'T' },
-	{ id: 'website', label: 'Website', kind: null, letter: '↗' },
+	{ id: 'docx', label: 'app.word', kind: 'docx', letter: 'W' },
+	{ id: 'xlsx', label: 'app.excel', kind: 'xlsx', letter: 'X' },
+	{ id: 'pptx', label: 'app.powerpoint', kind: 'pptx', letter: 'P' },
+	{ id: 'vsdx', label: 'app.visio', kind: 'vsdx', letter: 'V' },
+	{ id: 'markdown', label: 'app.markdown', kind: 'markdown', letter: 'M' },
+	{ id: 'site', label: 'app.site', kind: 'website', letter: 'H' },
+	{ id: 'text', label: 'app.text', kind: 'text', letter: 'T' },
+	{ id: 'website', label: 'app.website', kind: null, letter: '↗' },
 ] as const;
 type AppId = (typeof APPS)[number]['id'];
 type AddTab = (
@@ -31,7 +32,7 @@ type AddTab = (
 const fileKey = (file: FileEntry): string => JSON.stringify([file.messageId, file.name, file.url]);
 
 /** Supported apps configure existing channel content. Creation stays with the owning host/core. */
-export class TeamsAddTabDialog extends LitElement {
+export class TeamsAddTabDialog extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		open: { type: Boolean },
@@ -129,8 +130,7 @@ export class TeamsAddTabDialog extends LitElement {
 			: undefined;
 	}
 	private availableLabel(kind: string): string {
-		const count = this.eligible(kind).length;
-		return `${count} shared ${count === 1 ? 'file' : 'files'}`;
+		return this.tn('addTab.sharedFiles', this.eligible(kind).length);
 	}
 	private choose(app: AppId): void {
 		this.app = app;
@@ -144,11 +144,11 @@ export class TeamsAddTabDialog extends LitElement {
 		event.preventDefault();
 		this.error = '';
 		if (!this.current || !this.owner || !this.add) {
-			this.error = 'The channel changed. Close this dialog and try again.';
+			this.error = this.t('addTab.channelChanged');
 			return;
 		}
 		if (this.app === 'website' && !contentUrl(this.url, this.ownerDocument.baseURI)) {
-			this.error = 'Enter a valid http or https website URL.';
+			this.error = this.t('addTab.invalidUrl');
 			return;
 		}
 		const content: TabContent | null =
@@ -158,50 +158,54 @@ export class TeamsAddTabDialog extends LitElement {
 					? { type: 'file', attachment: this.selected }
 					: null;
 		if (!content) {
-			this.error = 'Choose a file shared in this channel.';
+			this.error = this.t('addTab.chooseShared');
 			return;
 		}
 		const result = this.add(this.name, content, this.context, this.owner, this.postToChannel);
-		if (!result) this.error = 'Enter a tab name and valid content.';
+		if (!result) this.error = this.t('addTab.invalid');
 	}
 	protected override render() {
 		const app = APPS.find((entry) => entry.id === this.app);
 		const files = app?.kind ? filterFiles(this.eligible(app.kind), this.query) : [];
-		return html`<dialog aria-label="Add a tab" @cancel=${this.close} @close=${this.close}>
+		return html`<dialog
+			aria-label=${this.t('addTab.title')}
+			@cancel=${this.close}
+			@close=${this.close}
+		>
 			<header>
-				<h1>Add a tab</h1>
-				<button type="button" aria-label="Close add tab" @click=${this.close}>×</button>
+				<h1>${this.t('addTab.title')}</h1>
+				<button type="button" aria-label=${this.t('addTab.close')} @click=${this.close}>×</button>
 			</header>
 			${
 				!app
 					? html`<section>
-							<h2>Choose an app</h2>
-							<p>Pin content to # ${this.contextName} so everyone in the channel can find it.</p>
+							<h2>${this.t('addTab.chooseApp')}</h2>
+							<p>${this.t('addTab.pinTo', { channel: this.contextName })}</p>
 							<div class="apps">
 								${APPS.map(
 									(entry, index) =>
 										html`<button
 											type="button"
 											class="app"
-											aria-label=${`Choose ${entry.label}`}
+											aria-label=${this.t('addTab.choose', { app: this.t(entry.label) })}
 											?data-first-app=${index === 0}
 											?autofocus=${index === 0}
 											@click=${() => this.choose(entry.id)}
 										>
 											<span class="badge" data-kind=${entry.kind ?? 'other'}>${entry.letter}</span
-											><strong>${entry.label}</strong>
+											><strong>${this.t(entry.label)}</strong>
 											<small
-												>${entry.kind ? this.availableLabel(entry.kind) : 'Add a web address'}</small
+												>${entry.kind ? this.availableLabel(entry.kind) : this.t('addTab.addAddress')}</small
 											>
 										</button>`,
 								)}
 							</div>
-							<p class="hint">File tabs use files already shared in this channel.</p>
+							<p class="hint">${this.t('addTab.fileHint')}</p>
 						</section>`
 					: html`<form @submit=${this.submit}>
 							<div class="app-heading">
 								<span class="badge" data-kind=${app.kind ?? 'other'}>${app.letter}</span>
-								<h2>${app.label}</h2>
+								<h2>${this.t(app.label)}</h2>
 								<button
 									type="button"
 									@click=${() => {
@@ -209,11 +213,11 @@ export class TeamsAddTabDialog extends LitElement {
 										this.error = '';
 									}}
 								>
-									Back
+									${this.t('common.back')}
 								</button>
 							</div>
 							<label
-								>Tab name<input
+								>${this.t('addTab.name')}<input
 									data-configure
 									name="name"
 									maxlength="80"
@@ -227,7 +231,7 @@ export class TeamsAddTabDialog extends LitElement {
 							${
 								!app.kind
 									? html`<label
-												>Tab website URL<input
+												>${this.t('addTab.websiteUrl')}<input
 													type="url"
 													required
 													maxlength="2048"
@@ -238,18 +242,15 @@ export class TeamsAddTabDialog extends LitElement {
 														this.error = '';
 													}}
 											/></label>
-											<p class="hint">
-												Some websites block embedding. Their link remains available from the
-												preview.
-											</p>`
+											<p class="hint">${this.t('addTab.embedHint')}</p>`
 									: html`<label
-												>Search shared files<input
+												>${this.t('addTab.searchFiles')}<input
 													type="search"
 													.value=${this.query}
 													@input=${(event: Event) => (this.query = (event.target as HTMLInputElement).value)}
 											/></label>
 											<fieldset class="files">
-												<legend>Choose a file</legend>
+												<legend>${this.t('addTab.chooseFile')}</legend>
 												${files.map(
 													(file) =>
 														html`<label class="file"
@@ -265,31 +266,33 @@ export class TeamsAddTabDialog extends LitElement {
 																}}
 															/><span
 																><strong>${file.name}</strong
-																><small>Shared by ${file.author}</small></span
+																><small
+																	>${this.t('addTab.sharedBy', { author: file.author })}</small
+																></span
 															></label
 														>`,
 												)}
-												${files.length ? nothing : html`<p class="hint">${this.query ? 'No matching files.' : `No ${app.label} files are shared in this channel. Upload a file from Shared first.`}</p>`}
+												${files.length ? nothing : html`<p class="hint">${this.query ? this.t('files.noMatch') : this.t('addTab.noFiles', { app: this.t(app.label) })}</p>`}
 											</fieldset>
-											${this.selected ? html`<p class="hint">Selected: ${this.selected.name}</p>` : this.selectedKey ? html`<p role="alert">This file is no longer shared in this channel.</p>` : nothing}`
+											${this.selected ? html`<p class="hint">${this.t('addTab.selected', { name: this.selected.name })}</p>` : this.selectedKey ? html`<p role="alert">${this.t('addTab.noLongerShared')}</p>` : nothing}`
 							}
-							${!this.current ? html`<p role="alert">The channel changed. Close this dialog and try again.</p>` : nothing}
+							${!this.current ? html`<p role="alert">${this.t('addTab.channelChanged')}</p>` : nothing}
 							${this.error ? html`<p role="alert">${this.error}</p>` : nothing}
 							<label class="post-choice"
 								><input
 									type="checkbox"
 									.checked=${this.postToChannel}
 									@change=${(event: Event) => (this.postToChannel = (event.target as HTMLInputElement).checked)}
-								/>Post to the channel about this tab</label
+								/>${this.t('addTab.postToChannel')}</label
 							>
 							<footer>
-								<button type="button" @click=${this.close}>Cancel</button
+								<button type="button" @click=${this.close}>${this.t('common.cancel')}</button
 								><button
 									type="submit"
 									class="primary"
 									?disabled=${!this.current || !this.name.trim() || (app.kind ? !this.selected : !this.url.trim())}
 								>
-									Save
+									${this.t('common.save')}
 								</button>
 							</footer>
 						</form>`

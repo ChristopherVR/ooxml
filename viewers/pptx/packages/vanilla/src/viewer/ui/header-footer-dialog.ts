@@ -5,10 +5,13 @@ import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { appendCheckRow, createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 export interface HeaderFooterDialogOptions {
 	value: PptxHeaderFooter;
 	onApply(value: PptxHeaderFooter, target: 'all' | 'current'): void;
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet;
 }
 
 export function openHeaderFooterDialog(
@@ -16,7 +19,12 @@ export function openHeaderFooterDialog(
 	t: Translator,
 	options: HeaderFooterDialogOptions,
 ): void {
-	const shell = createParityDialogShell(doc, t, t('pptx.headerFooter.title'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.headerFooter.title'),
+		options.regions && { regions: options.regions },
+	);
 	const draft = cloneHeaderFooterDraft(options.value);
 	const date = appendCheckRow(
 		doc,

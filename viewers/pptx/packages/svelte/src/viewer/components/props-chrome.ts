@@ -73,6 +73,8 @@ export interface ThumbnailRailProps {
 	onselect: (index: number) => void;
 	/** Enables native thumbnail drag-and-drop slide reordering. */
 	editable?: boolean;
+	/** Fill the container instead of the rail width (the phone Slides sheet). */
+	fullWidth?: boolean;
 	onmove?: (fromIndex: number, toIndex: number) => void;
 	/**
 	 * Inserts a new blank slide (React's sidebar "+ Add Slide" button). The

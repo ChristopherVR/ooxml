@@ -80,6 +80,37 @@ const MODELED = new Set([
 	'showLeaderLines',
 ]);
 
+const SHOW_FLAGS = [
+	'showValue',
+	'showCategory',
+	'showSeriesName',
+	'showPercent',
+	'showLegendKey',
+	'showBubbleSize',
+] as const;
+const SHOW_TAGS: Record<(typeof SHOW_FLAGS)[number], string> = {
+	showValue: 'showVal',
+	showCategory: 'showCatName',
+	showSeriesName: 'showSerName',
+	showPercent: 'showPercent',
+	showLegendKey: 'showLegendKey',
+	showBubbleSize: 'showBubbleSize',
+};
+/** `c:ser` children that follow `c:dLbls` (CT_BarSer / CT_LineSer / CT_PieSer / ...). */
+const SERIES_AFTER_DLBLS = [
+	'trendline',
+	'errBars',
+	'cat',
+	'val',
+	'xVal',
+	'yVal',
+	'smooth',
+	'shape',
+	'bubbleSize',
+	'bubble3D',
+	'extLst',
+];
+
 function findKey(obj: XmlObject, local: string, getLocalName: GetLocalName): string | undefined {
 	return Object.keys(obj).find((k) => getLocalName(k) === local);
 }
@@ -198,8 +229,13 @@ export function applyChartDataLabelsToXml(
 	}
 
 	const chartTypeKeys = Object.keys(plotArea).filter((k) => getLocalName(k).endsWith('Chart'));
-	for (const ctKey of chartTypeKeys) {
-		const container = plotArea[ctKey] as XmlObject | undefined;
+	// Two groups of one type (primary and secondary axis) are one key holding an array.
+	const containers = chartTypeKeys.flatMap((key) =>
+		([] as Array<XmlObject | undefined>).concat(
+			plotArea[key] as XmlObject | XmlObject[] | undefined,
+		),
+	);
+	for (const container of containers) {
 		if (!container || typeof container !== 'object') {
 			continue;
 		}
@@ -217,14 +253,11 @@ export function applyChartDataLabelsToXml(
 		}
 
 		const opts = style.dataLabels ?? {};
-		const anyFlag =
-			opts.showValue ||
-			opts.showCategory ||
-			opts.showSeriesName ||
-			opts.showPercent ||
-			opts.showLegendKey ||
-			opts.showBubbleSize;
-		const effective = anyFlag ? opts : { ...opts, showValue: true };
+		// Fall back to the value only when no content flag is declared at all: an
+		// explicit all-off group (PowerPoint writes one on every chart, and the
+		// pane writes one when only some series show labels) stays off.
+		const anyDeclared = SHOW_FLAGS.some((flag) => opts[flag] !== undefined);
+		const effective = anyDeclared ? opts : { ...opts, showValue: true };
 
 		const existing = existingKey ? (container[existingKey] as XmlObject) : undefined;
 		const built = buildDLbls(existing, effective, getLocalName);
@@ -240,5 +273,65 @@ export function applyChartDataLabelsToXml(
 		} else {
 			insertAfterLastSeries(container, built, getLocalName);
 		}
+	}
+}
+
+function flagOf(node: XmlObject | undefined, tag: string, getLocalName: GetLocalName) {
+	const key = node ? findKey(node, tag, getLocalName) : undefined;
+	const value = key ? (node![key] as XmlObject | undefined)?.['@_val'] : undefined;
+	return value === undefined ? undefined : value === '1' || value === 'true';
+}
+
+/**
+ * Write one series' own data labels (`c:ser/c:dLbls`) from its
+ * `dataLabelOptions`, which override the chart-level group for that series
+ * (Format Data Labels on one series). Only written when a declared show flag
+ * or the position differs from what the series node authors, so an unedited
+ * series keeps its labels exactly as written. Mutates `seriesNode`.
+ */
+export function applySeriesDataLabelOptionsToXml(
+	seriesNode: XmlObject,
+	opts: NonNullable<ChartDataLabelStyle['dataLabels']> | undefined,
+	getLocalName: GetLocalName,
+): void {
+	if (!opts) {
+		return;
+	}
+	const existingKey = findKey(seriesNode, 'dLbls', getLocalName);
+	const existing = existingKey ? (seriesNode[existingKey] as XmlObject) : undefined;
+	const deleted = flagOf(existing, 'delete', getLocalName) === true;
+	const changed =
+		SHOW_FLAGS.some(
+			(flag) =>
+				opts[flag] !== undefined &&
+				(deleted
+					? opts[flag]
+					: opts[flag] !== Boolean(flagOf(existing, SHOW_TAGS[flag], getLocalName))),
+		) ||
+		(opts.position !== undefined &&
+			opts.position !==
+				(existing
+					? (existing[findKey(existing, 'dLblPos', getLocalName) ?? ''] as XmlObject | undefined)?.[
+							'@_val'
+						]
+					: undefined));
+	if (!changed) {
+		return;
+	}
+	const built = buildDLbls(existing, opts, getLocalName);
+	if (existingKey) {
+		seriesNode[existingKey] = built;
+		return;
+	}
+	const entries = Object.entries(seriesNode);
+	const at = entries.findIndex(
+		([key]) => !key.startsWith('@_') && SERIES_AFTER_DLBLS.includes(getLocalName(key)),
+	);
+	entries.splice(at < 0 ? entries.length : at, 0, ['c:dLbls', built]);
+	for (const key of Object.keys(seriesNode)) {
+		delete seriesNode[key];
+	}
+	for (const [key, value] of entries) {
+		seriesNode[key] = value;
 	}
 }

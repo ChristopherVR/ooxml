@@ -184,8 +184,8 @@ line/marker swatches and position-authoring controls remain incomplete.
    `sheetView/@view`); still missing there are Custom Views, copy and paste
    inside Page Layout view,
    separate per-view zoom attributes, and native-printer metrics.
-6. Pivot refresh/rendering beyond the bounded profiles (date grouping, more than two
-   row fields, custom subtotals, label and value filters, shared caches), sparklines
+6. Pivot refresh/rendering beyond the bounded profiles (label and value filters, shared
+   caches, report captions in other languages), sparklines
    beyond the supported slice, data connections
    and spreadsheet collaboration integration.
 7. Wider formula and clipboard differential coverage. VBA execution, add-ins,

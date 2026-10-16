@@ -58,7 +58,7 @@ export function MobileSheet({
 			: { height: `${Math.round(heightFraction * 100)}dvh` };
 
 	return (
-		<div className='fixed inset-0 z-50 flex flex-col justify-end'>
+		<div className='fixed inset-x-0 top-0 bottom-14 z-[69] flex flex-col justify-end'>
 			{/* Backdrop */}
 			<button
 				type='button'

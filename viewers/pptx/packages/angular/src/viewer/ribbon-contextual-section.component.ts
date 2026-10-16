@@ -5,8 +5,8 @@
  * groups (caption under the controls, `data-ribbon-group` on the wrapper),
  * each holding its galleries in the mode the shared placement names. No
  * placement is decided here, so a gallery shared adds to a tab appears in
- * all five bindings at once. A command group (Picture Format > Size) draws
- * its shared strip after the galleries.
+ * all five bindings at once. A command group (Picture Format > Size, Chart
+ * Format > Current Selection) draws its shared strip after the galleries.
  */
 import {
 	ChangeDetectionStrategy,
@@ -20,6 +20,7 @@ import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
+import { RibbonChartSelectionComponent } from './ribbon-chart-selection.component';
 import { RibbonGalleryComponent } from './ribbon-gallery.component';
 import { RibbonPictureSizeComponent } from './ribbon-picture-size.component';
 
@@ -28,7 +29,12 @@ import { RibbonPictureSizeComponent } from './ribbon-picture-size.component';
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: { class: 'contents' },
-	imports: [TranslatePipe, RibbonGalleryComponent, RibbonPictureSizeComponent],
+	imports: [
+		TranslatePipe,
+		RibbonGalleryComponent,
+		RibbonPictureSizeComponent,
+		RibbonChartSelectionComponent,
+	],
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
 		@for (group of groups(); track group.group) {
@@ -52,6 +58,13 @@ import { RibbonPictureSizeComponent } from './ribbon-picture-size.component';
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
 						[hiddenActions]="hiddenActions()"
+					/>
+				}
+				@if (group.strip === 'chart-selection') {
+					<pptx-ribbon-chart-selection
+						[selectedElement]="selectedElement()"
+						[slideIndex]="slideIndex()"
+						[canEdit]="canEdit()"
 					/>
 				}
 			</pptx-ui-ribbon-group>

@@ -146,9 +146,9 @@ export function Text3DProperties({
 						}}
 						className={INPUT_CLS}
 					>
-						{MATERIAL_PRESETS.map(({ value, label }) => (
+						{MATERIAL_PRESETS.map(({ value, labelKey }) => (
 							<option key={value} value={value}>
-								{label}
+								{t(labelKey)}
 							</option>
 						))}
 					</WebSelect>
@@ -193,9 +193,9 @@ function BevelSection({
 						onChange={(e) => onTypeChange(e.target.value as BevelPresetType)}
 						className={INPUT_CLS}
 					>
-						{BEVEL_PRESETS.map(({ value, label: l }) => (
+						{BEVEL_PRESETS.map(({ value, labelKey }) => (
 							<option key={value} value={value}>
-								{l}
+								{t(labelKey)}
 							</option>
 						))}
 					</WebSelect>

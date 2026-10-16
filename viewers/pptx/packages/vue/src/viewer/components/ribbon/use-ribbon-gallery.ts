@@ -13,6 +13,7 @@ import {
 	inlineGalleryItems,
 } from 'ooxml-ui/pptx';
 import type {
+	RibbonGalleryApplyResult,
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
 	RibbonGalleryItem,
@@ -35,8 +36,14 @@ export interface UseRibbonGalleryResult {
 	title: ComputedRef<string>;
 	itemLabel: (item: RibbonGalleryItem) => string;
 	sectionTitle: (section: RibbonGallerySection) => string | undefined;
-	/** Apply `itemId` and dispatch the result; returns true when something was dispatched. */
-	pick: (itemId: string) => boolean;
+	/**
+	 * Apply `itemId` (with the context menu `action` chosen on the tile, if any) and dispatch the
+	 * result; returns the result when something was picked, so a caller can run a command.
+	 */
+	pick: (itemId: string, action?: string) => RibbonGalleryApplyResult | null;
+	/** Hover preview of `itemId`; `endPreview` puts the slides back. */
+	preview: (itemId: string) => void;
+	endPreview: () => void;
 	translate: Translate;
 }
 
@@ -66,17 +73,25 @@ export function useRibbonGallery(gallery: () => RibbonGalleryId): UseRibbonGalle
 		itemLabel: (item) => galleryItemLabel(item, translate),
 		sectionTitle: (section) =>
 			section.titleKey ? orFallback(section.titleKey, section.title) : section.title,
-		pick: (itemId) => {
+		pick: (itemId, action) => {
 			if (disabled.value) {
-				return false;
+				return null;
 			}
-			const result = applyRibbonGalleryItem(gallery(), itemId, host.context.value);
+			const result = applyRibbonGalleryItem(gallery(), itemId, host.context.value, action);
 			if (!result) {
-				return false;
+				return null;
 			}
-			host.dispatch(result);
-			return true;
+			if (result.kind === 'command') {
+				host.endPreview?.();
+			} else {
+				host.dispatch(result);
+			}
+			return result;
 		},
+		preview: (itemId) => {
+			host.preview?.(applyRibbonGalleryItem(gallery(), itemId, host.context.value));
+		},
+		endPreview: () => host.endPreview?.(),
 		translate,
 	};
 }

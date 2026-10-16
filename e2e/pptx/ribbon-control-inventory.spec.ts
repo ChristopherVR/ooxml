@@ -66,7 +66,7 @@ test.beforeAll(async ({ browser }, testInfo) => {
 		},
 		// Wide enough that no binding drops to its mobile ribbon, which would
 		// compare a phone's control set against a desktop's.
-		{ viewport: { width: 1440, height: 900 } },
+		{ viewport: { width: 1920, height: 1080 } },
 	);
 });
 

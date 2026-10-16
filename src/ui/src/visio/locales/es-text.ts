@@ -36,7 +36,7 @@ export const esText: Readonly<Record<string, string>> = {
 	'Select one shape to change.': 'Seleccione una forma para cambiarla.',
 	'Open a .vsdx file to insert diagram parts.':
 		'Abra un archivo .vsdx para insertar partes de diagrama.',
-	'Apply a theme to the current page.': 'Aplica un tema a la página actual.',
+	'Apply a theme to the current page.': 'Aplique un tema a la página actual.',
 	'Quick-styled shapes take its colours; text keeps its own font.':
 		'Las formas con estilo rápido toman sus colores; el texto conserva su fuente.',
 	"Pick one of the current theme's four colour variants.":
@@ -60,7 +60,7 @@ export const esText: Readonly<Record<string, string>> = {
 	'Embellishment needs theme-driven shape geometry.':
 		'El adorno requiere geometría de forma controlada por el tema.',
 	'Feedback is not collected by this viewer.': 'Este visor no recopila comentarios.',
-	'Ink strokes are not supported.': 'No se admiten los trazos de lápiz.',
+	'Ink strokes are not supported.': 'No se admiten los trazos de tinta.',
 	'Macros and add-ons never run in this viewer.':
 		'Las macros y los complementos nunca se ejecutan en este visor.',
 	'No SharePoint server is connected.': 'No hay ningún servidor de SharePoint conectado.',
@@ -95,7 +95,7 @@ export const esText: Readonly<Record<string, string>> = {
 	File: 'Archivo',
 	'Collapse the ribbon': 'Contraer la cinta de opciones',
 	'{label}: not available yet. {reason}': '{label}: aún no disponible. {reason}',
-	'Pattern {n}': 'Trama {n}',
+	'Pattern {n}': 'Patrón {n}',
 	'{n} pt glow': '{n} pt de resplandor',
 	'Glow: {n} pt; Accent color {m}': 'Resplandor: {n} pt; Color de énfasis {m}',
 	'{n} Point': '{n} pt',

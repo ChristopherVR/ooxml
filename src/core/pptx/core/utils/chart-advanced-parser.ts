@@ -1,6 +1,18 @@
+/**
+ * Object-tree readers of chart line styles (`parseLineStyle`), and the earlier object-tree readers
+ * of series trendlines and error bars. The chart loader reads trendlines and error bars through
+ * the neutral model (`chart-from-neutral-analysis.ts`); `parseSeriesTrendlines` and
+ * `parseSeriesErrBars` stay exported for callers of the package's utility surface.
+ *
+ * @module chart-advanced-parser
+ */
+import {
+	CHART_ERROR_BAR_TYPES,
+	CHART_ERROR_VALUE_TYPES,
+	chartTrendlineKind,
+} from '../../../chart/model-analysis';
 import type {
 	PptxChartTrendline,
-	PptxChartTrendlineType,
 	PptxChartErrBars,
 	PptxChartErrBarDir,
 	PptxChartErrBarType,
@@ -19,28 +31,10 @@ interface ColorParserLike {
 	parseColor(fillNode: XmlObject | undefined, placeholderColor?: string): string | undefined;
 }
 
-const TRENDLINE_TYPE_MAP: Record<string, PptxChartTrendlineType> = {
-	linear: 'linear',
-	exp: 'exponential',
-	log: 'logarithmic',
-	poly: 'polynomial',
-	power: 'power',
-	movingAvg: 'movingAvg',
-};
-
-const ERR_BAR_TYPE_MAP: Record<string, PptxChartErrBarType> = {
-	both: 'both',
-	minus: 'minus',
-	plus: 'plus',
-};
-
-const ERR_VAL_TYPE_MAP: Record<string, PptxChartErrValType> = {
-	cust: 'cust',
-	fixedVal: 'fixedVal',
-	percentage: 'percentage',
-	stdDev: 'stdDev',
-	stdErr: 'stdErr',
-};
+const isErrBarType = (value: string): value is PptxChartErrBarType =>
+	(CHART_ERROR_BAR_TYPES as readonly string[]).includes(value);
+const isErrValType = (value: string): value is PptxChartErrValType =>
+	(CHART_ERROR_VALUE_TYPES as readonly string[]).includes(value);
 
 function safeInt(val: unknown): number | undefined {
 	const n = parseInt(String(val), 10);
@@ -60,6 +54,12 @@ function booleanValue(node: XmlObject | undefined): boolean | undefined {
 	return value === undefined || value === '1' ? true : value === '0' ? false : undefined;
 }
 
+/**
+ * The trendlines of a `c:ser` object-tree node.
+ *
+ * @deprecated The chart loader builds trendlines from the neutral chart model
+ * (`parseChartSpace` in `ooxml-core/chart`); this reader is kept for existing callers only.
+ */
 export function parseSeriesTrendlines(
 	seriesNode: XmlObject,
 	xmlLookup: XmlLookupLike,
@@ -74,7 +74,7 @@ export function parseSeriesTrendlines(
 		.map((node): PptxChartTrendline | undefined => {
 			const typeNode = xmlLookup.getChildByLocalName(node, 'trendlineType');
 			const rawType = String(typeNode?.['@_val'] || '').trim();
-			const trendlineType = TRENDLINE_TYPE_MAP[rawType];
+			const trendlineType = chartTrendlineKind(rawType);
 			if (!trendlineType) {
 				return undefined;
 			}
@@ -144,6 +144,12 @@ export function parseSeriesTrendlines(
 		.filter((t): t is PptxChartTrendline => t !== undefined);
 }
 
+/**
+ * The error bars of a `c:ser` object-tree node.
+ *
+ * @deprecated The chart loader builds error bars from the neutral chart model
+ * (`parseChartSpace` in `ooxml-core/chart`); this reader is kept for existing callers only.
+ */
 export function parseSeriesErrBars(
 	seriesNode: XmlObject,
 	xmlLookup: XmlLookupLike,
@@ -163,14 +169,14 @@ export function parseSeriesErrBars(
 
 			const errBarTypeNode = xmlLookup.getChildByLocalName(node, 'errBarType');
 			const rawBarType = String(errBarTypeNode?.['@_val'] || 'both').trim();
-			const barType = ERR_BAR_TYPE_MAP[rawBarType] ?? 'both';
+			const barType: PptxChartErrBarType = isErrBarType(rawBarType) ? rawBarType : 'both';
 
 			const errValTypeNode = xmlLookup.getChildByLocalName(node, 'errValType');
 			const rawValType = String(errValTypeNode?.['@_val'] || '').trim();
-			const valType = ERR_VAL_TYPE_MAP[rawValType];
-			if (!valType) {
+			if (!isErrValType(rawValType)) {
 				return undefined;
 			}
+			const valType = rawValType;
 
 			const result: PptxChartErrBars = { direction, barType, valType };
 			const noEndCap = booleanValue(xmlLookup.getChildByLocalName(node, 'noEndCap'));

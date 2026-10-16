@@ -41,3 +41,23 @@ test('a changed workspace dependency range is drift', () => {
 		'bun.lock.workspaces.src/core.dependencies.yjs',
 	]);
 });
+
+/** The lock with a viewer workspace whose dependencies are `deps`. */
+const withViewer = (deps) =>
+	lock('1.0.1').replace(
+		'"workspaces": {',
+		`"workspaces": {
+    "viewer": { "name": "pptx-react-viewer", "dependencies": ${JSON.stringify(deps)} },`,
+	);
+
+test('a raised range on another workspace package is not drift', () => {
+	const viewer = (range) => withViewer({ 'ooxml-core': range });
+	assert.deepEqual(lockDrift(viewer('^1.0.0'), viewer('^1.0.1')), []);
+});
+
+test('a raised third-party range next to a workspace one is still drift', () => {
+	const viewer = (range) => withViewer({ 'ooxml-core': range, yjs: range });
+	assert.deepEqual(lockDrift(viewer('^1.0.0'), viewer('^1.0.1')), [
+		'bun.lock.workspaces.viewer.dependencies.yjs',
+	]);
+});

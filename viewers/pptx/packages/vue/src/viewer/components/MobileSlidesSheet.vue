@@ -13,13 +13,20 @@
  * it already wires for the desktop rail.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useRegion } from '../composables/useViewerRegions';
 import type { CanvasSize } from '../types';
 import MobileSheet from './MobileSheet.vue';
 import SlidesPaneSidebar from './SlidesPaneSidebar.vue';
+import ViewerRegion from './ViewerRegion.vue';
 
 const { t } = useI18n();
+
+// A host `regions.slidesPane` replaces the thumbnails here too; the sheet frame stays.
+const region = useRegion('slidesPane');
+const regionContext = computed(() => region.context(() => undefined));
 
 const props = defineProps<{
 	open: boolean;
@@ -51,7 +58,15 @@ function onSelect(index: number): void {
 
 <template>
 	<MobileSheet :open="props.open" :title="t('pptx.sections.slides')" @close="emit('close')">
+		<ViewerRegion
+			v-if="region.renderer.value && regionContext"
+			style="min-height: 50vh"
+			:renderer="region.renderer.value"
+			:context="regionContext"
+		/>
 		<SlidesPaneSidebar
+			v-else
+			full-width
 			:slides="props.slides"
 			:active-index="props.activeIndex"
 			:canvas-size="props.canvasSize"

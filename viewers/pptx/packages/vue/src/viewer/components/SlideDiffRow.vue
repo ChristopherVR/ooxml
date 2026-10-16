@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Check, ChevronDown, ChevronRight, Minus, Move, Plus, Type, X } from 'lucide-vue-next';
+import { describeElementChange } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -227,7 +228,9 @@ function toggle(): void {
 						:class="[`pptx-vue-diff-change-kind--${change.kind}`, changeKindColor(change.kind)]"
 						aria-hidden="true"
 					/>
-					<span class="pptx-vue-diff-change-desc text-foreground">{{ change.description }}</span>
+					<span class="pptx-vue-diff-change-desc text-foreground">{{
+						describeElementChange(change, t)
+					}}</span>
 				</li>
 			</ul>
 

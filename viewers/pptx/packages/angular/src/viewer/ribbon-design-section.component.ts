@@ -2,15 +2,22 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
 	input,
 	output,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'ooxml-ui/pptx';
+import {
+	DESIGN_RIBBON_COMMANDS,
+	DESIGN_RIBBON_GROUPS,
+	FIXED_TAB_GALLERIES,
+	designCommandState,
+} from 'ooxml-ui/pptx';
 import type { RibbonControlId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { RibbonGalleryComponent } from './ribbon-gallery.component';
+import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 
 @Component({
 	selector: 'pptx-ribbon-design-section',
@@ -25,6 +32,17 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 				[attr.label]="group.labelKey | translate"
 				[attr.data-ribbon-group]="group.id"
 			>
+				@for (placement of galleriesFor(group.id); track placement.control) {
+					<pptx-ribbon-gallery
+						[gallery]="placement.gallery"
+						[control]="placement.control"
+						[mode]="placement.mode"
+						[element]="selectedElement()"
+						[slideIndex]="slideIndex()"
+						[canEdit]="canEdit()"
+						(command)="openInspector()"
+					/>
+				}
 				@for (command of commands; track command.id) {
 					@if (command.id.startsWith(group.id + '.')) {
 						<pptx-ui-ribbon-command
@@ -39,27 +57,12 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 						/>
 					}
 				}
-				@if (group.id === 'design.variants') {
-					<pptx-ribbon-gallery
-						gallery="themeColors"
-						control="design.variants.colors"
-						[element]="selectedElement()"
-						[slideIndex]="slideIndex()"
-						[canEdit]="canEdit()"
-					/>
-					<pptx-ribbon-gallery
-						gallery="themeFonts"
-						control="design.variants.fonts"
-						[element]="selectedElement()"
-						[slideIndex]="slideIndex()"
-						[canEdit]="canEdit()"
-					/>
-				}
 			</pptx-ui-ribbon-group>
 		}
 	`,
 })
 export class RibbonDesignSectionComponent {
+	private readonly inspectorPanel = inject(ViewerInspectorPanelService, { optional: true });
 	readonly groups = DESIGN_RIBBON_GROUPS;
 	readonly commands = DESIGN_RIBBON_COMMANDS;
 	readonly themeGalleryOpen = input(false);
@@ -70,6 +73,17 @@ export class RibbonDesignSectionComponent {
 	readonly editTheme = output<void>();
 	readonly openSlideSize = output<void>();
 	readonly toggleInspector = output<void>();
+	protected galleriesFor(groupId: string) {
+		return FIXED_TAB_GALLERIES.filter((placement) => placement.control.startsWith(`${groupId}.`));
+	}
+	/** "Format Background..." in a gallery footer opens the pane; it never closes an open one. */
+	protected openInspector(): void {
+		if (this.inspectorPanel) {
+			this.inspectorPanel.openFormatPanel();
+		} else {
+			this.toggleInspector.emit();
+		}
+	}
 	protected view(id: RibbonControlId) {
 		return designCommandState(id, {
 			editable: this.canEdit(),

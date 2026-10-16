@@ -1,4 +1,10 @@
-import { createRibbonControlIcon, homeControlKey, homeLabel } from '../render';
+import {
+	createRibbonControlIcon,
+	homeControlKey,
+	homeLabel,
+	homeShapeValue,
+	pushRecentShape,
+} from '../render';
 import type {
 	RibbonHomeControlSpec,
 	RibbonHomeIntent,
@@ -7,7 +13,7 @@ import type {
 } from '../render';
 import { addButtonContent, makeHomeButton, syncHomeButton } from './ribbon-home-button';
 import { paintHomeColour } from './ribbon-home-colour';
-import { paintHomeLayouts } from './ribbon-home-layout';
+import { paintHomeLayouts, paintSlideTemplatesEntry } from './ribbon-home-layout';
 import type { HomeLayoutArtwork } from './ribbon-home-layout';
 import { paintHomeMenu } from './ribbon-home-menu';
 import { createHomePopup } from './ribbon-home-popup';
@@ -82,8 +88,14 @@ export function buildPopupControl(
 			ctx.popupChange(control.id, open);
 		},
 	);
-	const choose = (value: string | number, ref?: RibbonHomeIntent['ref']) => {
+	const choose = (picked: string | number, ref?: RibbonHomeIntent['ref']) => {
 		popup.close(popup.viaKeyboard);
+		// The Shapes gallery repeats items in Recently Used Shapes; the host gets the plain preset.
+		const shapes = control.id === 'home.drawing.shapes';
+		const value = shapes ? homeShapeValue(String(picked)) : picked;
+		if (shapes) {
+			pushRecentShape(String(value));
+		}
 		ctx.request(ref ? { id: control.id, value, ref } : { id: control.id, value });
 	};
 	function paint(): void {
@@ -110,6 +122,12 @@ export function buildPopupControl(
 				ctx.artwork(),
 				(path) => choose(path),
 			);
+			if (control.id === 'home.slides.newSlide') {
+				paintSlideTemplatesEntry(doc, popup.el, latest, () => {
+					popup.close(popup.viaKeyboard);
+					ctx.request({ id: 'home.slides.slideTemplates' });
+				});
+			}
 		} else {
 			paintHomeMenu(
 				doc,
@@ -118,6 +136,7 @@ export function buildPopupControl(
 				latest,
 				current?.value,
 				(value) => choose(value),
+				Boolean(control.grid),
 			);
 		}
 		popup.reposition();

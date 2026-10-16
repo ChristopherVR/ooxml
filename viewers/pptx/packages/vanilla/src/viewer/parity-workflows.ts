@@ -3,6 +3,7 @@ import type {
 	ResolvedCustomization,
 	ThemeCatalogEntry,
 	ViewerAddinStatus,
+	ViewerDialogId,
 	ViewerOptionsStore,
 	ViewerOptionsTabId,
 	ViewerTheme,
@@ -13,6 +14,8 @@ import {
 	applyAcceptSlide,
 	applyRehearsalTimings,
 	compareSlides,
+	isDialogAvailable,
+	isPanelVisible,
 	openPptxFile,
 	resolveAuthoredCustomShowId,
 	resolveDefaultPrintSettings,
@@ -36,6 +39,7 @@ import { openHyperlinkEditDialog } from './ui/hyperlink-edit-dialog';
 import { openPrintSettingsDialog } from './ui/print-settings-dialog';
 import type { ReadingViewHandle } from './ui/reading-view';
 import { openReadingViewOverlay } from './ui/reading-view';
+import type { RegionSet } from './ui/region-set';
 import { openRehearseTimings } from './ui/rehearse-timings';
 import { openSettingsDialog } from './ui/settings-dialog';
 import { openSlideShowDialog } from './ui/slide-show-dialog';
@@ -60,6 +64,8 @@ export interface ParityWorkflowHost {
 	aiEnabled: boolean;
 	/** The host's resolved UI customisation (hidden Options pages/settings, locks). */
 	getCustomization?(): ResolvedCustomization;
+	/** The viewer's dialog regions (host-replaced Options and Print bodies). */
+	regions?: RegionSet;
 	root(): HTMLElement;
 	setAutosaveEnabled(enabled: boolean): void;
 	print(options: PrintOptions): Promise<boolean>;
@@ -124,6 +130,8 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 	// down on destroy, and so a second open never leaves an orphan behind.
 	let readingView: ReadingViewHandle | null = null;
 	const outline = createOutlineWorkflow(host);
+	const isAvailable = (dialog: ViewerDialogId): boolean =>
+		!host.getCustomization || isDialogAvailable(host.getCustomization(), dialog);
 	// Like Outline view, the Selection Pane owns a live store subscription, so it
 	// lives in its own module and is released before a second open.
 	const selection = createSelectionPaneWorkflow(host);
@@ -141,6 +149,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 				initialTab,
 				aiEnabled: host.aiEnabled,
 				customization: host.getCustomization?.(),
+				regions: host.regions,
 				addinStatus: host.getAddinStatus(),
 				onClearCache: () => host.clearOptionsCache(),
 				themeOptions: {
@@ -177,15 +186,20 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					});
 				},
 				current.customShows,
+				host.regions,
 			);
 		},
 		openHeaderFooter() {
 			openHeaderFooterDialog(host.doc, host.t, {
 				value: state().headerFooter,
 				onApply: (value) => host.editor.updateHeaderFooter(value),
+				regions: host.regions,
 			});
 		},
 		openCompare() {
+			if (host.getCustomization && !isPanelVisible(host.getCustomization(), 'comparePane')) {
+				return;
+			}
 			void comparePresentation(host);
 		},
 		openPrintDialog() {
@@ -197,6 +211,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					void host.print(options);
 				},
 				resolveDefaultPrintSettings(host.optionsStore.getOptions()),
+				host.regions,
 			);
 		},
 		startRehearsal() {
@@ -209,6 +224,9 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 			});
 		},
 		openSelectionPane() {
+			if (host.getCustomization && !isPanelVisible(host.getCustomization(), 'selectionPane')) {
+				return;
+			}
 			selection.open();
 		},
 		openSlideSorter() {
@@ -262,13 +280,20 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 			);
 		},
 		openHyperlink() {
+			if (!isAvailable('hyperlink')) {
+				return;
+			}
 			const current = state();
 			const element = current.slides[current.currentSlide]?.elements.find(
 				({ id }) => id === current.selectedElementId,
 			);
 			if (element) {
-				openHyperlinkEditDialog(host.doc, host.t, element, (patch) =>
-					host.editor.applyElementPatch(element.id, patch),
+				openHyperlinkEditDialog(
+					host.doc,
+					host.t,
+					element,
+					(patch) => host.editor.applyElementPatch(element.id, patch),
+					host.regions,
 				);
 			}
 		},
@@ -290,6 +315,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					}
 					void host.enterPresentation();
 				},
+				regions: host.regions,
 			});
 		},
 	};

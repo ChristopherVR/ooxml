@@ -31,11 +31,19 @@ import type {
 	PptxTextStyleLevels,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
+	PptxThemeVariant,
 	PptxViewProperties,
 	ParsedTableStyleMap,
 	XmlObject,
 	ResolvedStyleMatrix,
 } from '../types';
+
+import type {
+	BackgroundStyleApplication,
+	BackgroundStyleScope,
+} from './runtime/PptxHandlerRuntimeBackgroundStyles';
+import type { StyleReferenceReResolution } from './runtime/PptxHandlerRuntimeThemeEffects';
 
 export interface PptxHandlerLoadOptions {
 	eagerDecodeImages?: boolean;
@@ -259,7 +267,24 @@ export interface IPptxHandlerRuntime {
 	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;
 	updateThemeName(name: string): Promise<void>;
 	/** Resolve a `<p:style>` node against the loaded theme (see PptxHandlerRuntimeStyleMatrixResolve). */
-	resolveStyleMatrixReferences(styleXml: XmlObject): ResolvedStyleMatrix;
+	resolveStyleMatrixReferences(styleXml: XmlObject, effectSchemeId?: string): ResolvedStyleMatrix;
+	/** Write a built-in effect scheme (`a:fmtScheme`) into the theme parts. */
+	applyThemeEffectScheme(id: string): Promise<PptxThemeFormatScheme | undefined>;
+	applyThemeFormatSchemeXml(fmtSchemeXml: string): Promise<PptxThemeFormatScheme | undefined>;
+	getThemeFormatScheme(): PptxThemeFormatScheme | undefined;
+	getThemeVariants(): PptxThemeVariant[];
+	reResolveThemeStyleReferences(
+		slides: readonly PptxSlide[],
+		templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		effectSchemeId?: string,
+	): StyleReferenceReResolution;
+	applyBackgroundStyleToSlides(
+		slides: readonly PptxSlide[],
+		templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		index: number,
+		scope: BackgroundStyleScope,
+	): BackgroundStyleApplication | undefined;
+	commitMasterBackgroundStyle(index: number): Promise<boolean>;
 	applyTheme(
 		colorScheme: PptxThemeColorScheme,
 		fontScheme: PptxThemeFontScheme,

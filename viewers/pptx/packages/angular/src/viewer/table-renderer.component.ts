@@ -18,10 +18,12 @@ import {
 	canDrillDown,
 	DEFAULT_FONT_FAMILY,
 	screenStrokeWidth,
+	tableCellPointerIntent,
 	tableContainerCss,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTableData, PptxTableRow, TablePptxElement } from 'pptx-viewer-core';
 
+import { EditorStateService } from './editor-state.service';
 import type { StyleMap } from './element-style';
 import { LoadContentService } from './load-content.service';
 import {
@@ -62,6 +64,33 @@ export function canDrillDownIntoTable(editable: boolean, element: PptxElement): 
 }
 
 /**
+ * Must a pointer-down on a cell stop before it reaches the slide canvas?
+ *
+ * The canvas selects on `pointerdown`, and a Shift press there TOGGLES the table
+ * out of the element selection, which hides the Table Layout tab before the
+ * cell's `click` can stretch the range (so Merge Cells was unreachable). The rule
+ * is shared `tableCellPointerIntent`; an `extend` verdict consumes the press, as
+ * Svelte's `applyTableCellPointer` and Vue's `onCellPointerDown` do.
+ */
+export function cellPressConsumesShift(input: {
+	canDrillDown: boolean;
+	shiftKey: boolean;
+	elementSelected: boolean;
+	rangeElementId: string | undefined;
+	elementId: string;
+}): boolean {
+	return (
+		input.canDrillDown &&
+		tableCellPointerIntent({
+			isTableCell: true,
+			shiftKey: input.shiftKey,
+			elementSelected: input.elementSelected,
+			rangeOnSameElement: input.rangeElementId === input.elementId,
+		}) === 'extend'
+	);
+}
+
+/**
  * TableRendererComponent: Angular port of the React `renderTableFromTableData`
  * (packages/react/src/viewer/utils/table-render-data.tsx) plus the editor
  * overlays (`table-render.tsx` selection, `table-render-resize.tsx` handles).
@@ -97,6 +126,8 @@ export class TableRendererComponent {
 	private readonly injector = inject(Injector);
 	/** Shared cell-selection state (present only inside the editor subtree). */
 	private readonly selectionSvc = inject(TableSelectionService, { optional: true });
+	/** The slide's element selection (present only inside the editor subtree). */
+	private readonly editorState = inject(EditorStateService, { optional: true });
 	/**
 	 * Deck load state (present in the viewer subtree). Supplies the parsed
 	 * table-style map + theme colour/font scheme so table-style-inherited banding,
@@ -207,6 +238,23 @@ export class TableRendererComponent {
 			return false;
 		}
 		return sel.selectedCells.some((c) => c.row === rowIndex && c.col === colIndex);
+	}
+
+	/** A Shift press that extends the range never reaches the canvas's element toggle. */
+	onCellPointerDown(event: PointerEvent): void {
+		const id = this.element().id;
+		if (
+			cellPressConsumesShift({
+				canDrillDown:
+					Boolean(this.selectionSvc) && canDrillDownIntoTable(this.editable(), this.element()),
+				shiftKey: event.shiftKey,
+				elementSelected: this.editorState?.isSelected(id) ?? false,
+				rangeElementId: this.selectionSvc?.selection()?.elementId,
+				elementId: id,
+			})
+		) {
+			event.stopPropagation();
+		}
 	}
 
 	/** Single click selects the cell; Shift+Click extends a rectangular range. */

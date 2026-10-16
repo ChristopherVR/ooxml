@@ -95,7 +95,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 		this.replyingTo = null;
 		this.editing = false;
 		this.disabled = false;
-		this.placeholder = 'Type a message';
+		this.placeholder = '';
 		this.value = '';
 		this.files = [];
 		this.missingFiles = [];
@@ -246,7 +246,9 @@ export class OfficeUiChatComposer extends TeamsElement {
 	private typingLine(): string {
 		const n = this.typing.slice(0, 3);
 		if (n.length === 0) return '';
-		return n.length === 1 ? `${n[0]} is typing…` : `${n.join(', ')} are typing…`;
+		return n.length === 1
+			? this.t('composer.typingOne', { name: n[0]! })
+			: this.t('composer.typingMany', { names: n.join(', ') });
 	}
 
 	private mentionList() {
@@ -256,7 +258,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 			id="mention-list"
 			class="mentions"
 			role="listbox"
-			aria-label="People to mention"
+			aria-label=${this.t('composer.mentionPeople')}
 			@mousedown=${(event: Event) => event.preventDefault()}
 		>
 			${options.map(
@@ -277,7 +279,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 								: html`<span class="everyone" aria-hidden="true">@</span>`
 						}
 						<span class="name">${target.name}</span>
-						${target.kind === 'user' ? nothing : html`<span class="hint">${target.kind === 'channel' ? 'Notify everyone in this channel' : 'Notify the whole team'}</span>`}
+						${target.kind === 'user' ? nothing : html`<span class="hint">${this.t(target.kind === 'channel' ? 'composer.notifyChannel' : 'composer.notifyTeam')}</span>`}
 					</li>`,
 			)}
 		</ul>`;
@@ -285,9 +287,9 @@ export class OfficeUiChatComposer extends TeamsElement {
 
 	protected override render() {
 		const banner = this.editing
-			? 'Editing message'
+			? this.t('composer.editing')
 			: this.replyingTo !== null
-				? `Replying to ${this.replyingTo}`
+				? this.t('composer.replyingTo', { name: this.replyingTo })
 				: '';
 		return html`
 			<div class="typing" aria-live="polite">${this.typingLine()}</div>
@@ -310,20 +312,20 @@ export class OfficeUiChatComposer extends TeamsElement {
 				${
 					this.missingFiles.length
 						? html`<div role="status">
-								Reattach or discard these draft attachments before sending:
+								${this.t('composer.reattach')}
 								<ul>
 									${this.missingFiles.map(
 										(name) =>
 											html`<li>
 												${name}<button
 													type="button"
-													aria-label=${`Discard missing ${name}`}
+													aria-label=${this.t('composer.discardMissing', { name })}
 													@click=${() => {
 														this.missingFiles = this.missingFiles.filter((item) => item !== name);
 														this.saveDraft();
 													}}
 												>
-													Discard
+													${this.t('composer.discard')}
 												</button>
 											</li>`,
 									)}
@@ -337,7 +339,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 								<span>${banner}</span>
 								<button
 									type="button"
-									aria-label="Cancel"
+									aria-label=${this.t('common.cancel')}
 									@click=${() => this.fire('office-chat-cancel', {})}
 								>
 									${icon('close')}
@@ -348,12 +350,12 @@ export class OfficeUiChatComposer extends TeamsElement {
 				${this.mentionList()}
 				<textarea
 					rows="1"
-					aria-label="Message"
+					aria-label=${this.t('composer.message')}
 					aria-haspopup="listbox"
 					aria-controls=${this.pickerOptions().length ? 'mention-list' : nothing}
 					aria-activedescendant=${this.pickerOptions().length ? `mention-option-${this.pickerIndex}` : nothing}
 					.value=${live(this.value)}
-					placeholder=${this.placeholder}
+					placeholder=${this.placeholder || this.t('composer.placeholder')}
 					?disabled=${this.disabled}
 					@input=${this.onInput}
 					@paste=${(event: ClipboardEvent) => {
@@ -377,7 +379,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 										html`<li>
 											<button
 												type="button"
-												aria-label=${`Remove ${f.name}`}
+												aria-label=${this.t('people.remove', { name: f.name })}
 												@click=${() => {
 													this.files = this.files.filter((_, j) => j !== i);
 													this.focusMessage();
@@ -394,8 +396,8 @@ export class OfficeUiChatComposer extends TeamsElement {
 				<div class="bar">
 					<button
 						type="button"
-						title="Attach files"
-						aria-label="Attach files"
+						title=${this.t('composer.attach')}
+						aria-label=${this.t('composer.attach')}
 						?disabled=${this.disabled}
 						@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type=file]')?.click()}
 					>
@@ -404,8 +406,8 @@ export class OfficeUiChatComposer extends TeamsElement {
 					<div class="emoji">
 						<button
 							type="button"
-							title="Emoji"
-							aria-label="Emoji"
+							title=${this.t('composer.emoji')}
+							aria-label=${this.t('composer.emoji')}
 							aria-expanded=${String(this.emojiOpen)}
 							?disabled=${this.disabled}
 							@click=${() => (this.emojiOpen = !this.emojiOpen)}
@@ -445,8 +447,8 @@ export class OfficeUiChatComposer extends TeamsElement {
 					<button
 						type="button"
 						class="send"
-						title="Send"
-						aria-label="Send message"
+						title=${this.t('composer.send')}
+						aria-label=${this.t('composer.sendMessage')}
 						?disabled=${!this.canSend}
 						@click=${this.submit}
 					>

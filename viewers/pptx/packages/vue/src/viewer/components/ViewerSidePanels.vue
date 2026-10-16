@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isPanelVisible } from 'ooxml-ui/pptx';
+import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 /**
  * ViewerSidePanels: the desktop right rail, which is a stack of mutually
@@ -83,6 +83,12 @@ const props = defineProps<{
 const customization = useResolvedCustomization();
 // oxlint-disable-next-line eslint/one-var -- distinct concern from `customization` above, forcing one statement hurts readability
 const inspectorVisible = computed(() => isPanelVisible(customization.value, 'inspector'));
+// The removable panels the ribbon, menus and shortcuts open; hiding one removes it for good.
+const selectionPaneVisible = computed(() => isPanelVisible(customization.value, 'selectionPane'));
+const accessibilityPaneVisible = computed(() =>
+	isPanelVisible(customization.value, 'accessibilityPane'),
+);
+const signaturesAvailable = computed(() => isDialogAvailable(customization.value, 'signatures'));
 
 /** Commit a comments mutation through the history-aware wiring. */
 function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]): void {
@@ -130,7 +136,7 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 
 	<!-- Accessibility checker -->
 	<AccessibilityPanel
-		v-if="canEdit && showA11y"
+		v-if="canEdit && showA11y && accessibilityPaneVisible"
 		:issues="accessibility.issues.value"
 		@select-slide="goTo"
 	/>
@@ -161,14 +167,14 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 
 	<!-- Digital signatures -->
 	<SignaturesPanel
-		v-if="signatureWorkflow.showSignatures.value"
+		v-if="signatureWorkflow.showSignatures.value && signaturesAvailable"
 		:signatures="deck.signatures.value"
 	/>
 
 	<!-- Selection pane (View > Selection Pane): object list + z-order +
 	     visibility over the active slide's elements. -->
 	<SelectionPane
-		v-if="canEdit && !isMobile && selectionPane.showSelectionPane.value"
+		v-if="canEdit && !isMobile && selectionPane.showSelectionPane.value && selectionPaneVisible"
 		:elements="activeSlide?.elements ?? []"
 		:selected-ids="selectedElementIds"
 		:can-edit="canEdit"

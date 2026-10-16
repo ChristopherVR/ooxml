@@ -26,6 +26,8 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
+| `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
@@ -51,6 +53,82 @@ Put it behind TLS (browsers refuse `ws://` from an `https://` page), and add a T
 across NATs. The full deployment guide is
 [docs/deploy.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md).
 
+## Accounts and sessions
+
+By default there are **no accounts**: user ids are claims and the server says so at startup. To bind
+ids to real people, give the server a way to check a credential:
+
+```js
+import { createTeamsServer } from 'openteams-server';
+
+// A closed team: user id -> credential (or TEAMS_USERS_FILE=users.json, a JSON object)
+createTeamsServer({
+	users: { alice: 'long-random-secret' },
+	sessionSecret: process.env.TEAMS_SESSION_SECRET,
+});
+
+// Or plug in your identity provider. Return { id }, a string id, or null to refuse.
+createTeamsServer({
+	authenticate: async ({ user, credential, headers }) =>
+		(await myIdp.check(headers, credential)) ? { id: user } : null,
+});
+```
+
+Clients call `POST /auth/session` with `{ user, credential }` (core: `requestTeamsSession`) and get
+a signed session (HMAC-SHA-256, 12 hours by default, `sessionTtlMs`). Sockets then pass
+`?session=`; the server takes the user id from it and ignores the claimed `?user=`. With accounts
+configured, sockets without a valid session get 401. Set `TEAMS_SESSION_SECRET` (or
+`sessionSecret`) to keep sessions across restarts and across processes; without it a random secret
+is used per process. The server never logs credentials, sessions or the secret.
+
+### Hardening
+
+- **Hashed credentials.** A `users` value is either plain text or an scrypt hash
+  (`scrypt$N$r$p$salt$hash`, node:crypto, random salt, constant-time check). Make one with the
+  bundled command, which reads the password from a hidden prompt or from standard input (never from
+  the command line):
+
+  ```bash
+  npx openteams-hash-password            # prompts, prints the hash
+  printf '%s' "$PASSWORD" | npx openteams-hash-password
+  ```
+
+  Plain text is still accepted so existing files keep working, but the server logs a startup
+  warning with the number (not the names or values) of plain text credentials. An unknown user id
+  costs one hash check, so timing does not reveal which ids exist. Hashing protects the file at
+  rest; the credential still travels to the server in the request body, so use TLS.
+
+- **Rate limiting `/auth/session`.** A sliding window counts every attempt per remote address and
+  per user id; over the limit the server answers `429` with `Retry-After` (seconds). Defaults: 60 s
+  window, 30 attempts per address, 10 per user. Configure with `sessionRate: { windowMs, perIp,
+  perUser }` or `TEAMS_AUTH_RATE_WINDOW_MS`, `TEAMS_AUTH_RATE_PER_IP`, `TEAMS_AUTH_RATE_PER_USER`.
+  The address is the socket peer: behind a reverse proxy every client shares the proxy's address, so
+  also rate limit at the proxy. The per-user limit stops guessing but also lets someone who hammers a
+  known id keep that person from signing in for the rest of the window (a lockout, not a bypass).
+  State is in memory and per process.
+
+- **Checking a session.** `POST /auth/check` with `{ session }` answers `204` while the session is
+  valid and `401` when it expired, was revoked or is forged; the Teams UI uses it to tell a rejected
+  session (sign in again) from a server that is merely unreachable.
+
+- **Revoking sessions.** Each user has a session generation that tokens carry. `POST /auth/signout`
+  with `{ session }` (and the workspace token as `Authorization: Bearer`, if set) bumps it, which
+  invalidates every session of that user, on all devices, and closes their open sockets. An
+  operator can do the same with `server.revokeSessions(user)` or, when `TEAMS_ADMIN_TOKEN`
+  (`adminToken`) is set, `POST /auth/revoke` with `{ user }` and `Authorization: Bearer <admin
+  token>`; without an admin token that route is a 404. Generations are saved to
+  `session-revocations.json` in the data directory, so a revocation survives a restart as long as
+  `TEAMS_SESSION_SECRET` is fixed (with a random per-process secret, restarting already ends every
+  session).
+
+Remaining limits: the `users` table is a file you must protect, there is no password reset or
+account management, a revocation applies to the whole user rather than one device, and sessions
+travel in the socket query string. Plug an identity provider into `authenticate` for anything
+larger than a small closed team.
+
+**The dev default is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
+claimed id, so it adds nothing over the old behaviour.
+
 ## Security model
 
 - **One shared token opens every room and every file.** There are no per-user or per-room
@@ -61,8 +139,9 @@ across NATs. The full deployment guide is
   only when its `?user=<id>` is listed in the room's `teams:chat-members` map; the first socket of a
   new room lists the members in `?members=<id>,<id>` (a 1:1 `dm-` room must list exactly the two
   people its id was derived from), and sockets of people removed from the map are closed. This keeps
-  workspace members who are not on the list out of the room. It is not authentication: the `user` is
-  a claim, so anyone holding the token can claim another person's id.
+  workspace members who are not on the list out of the room. Without accounts the `user` is a claim,
+  so anyone holding the token can claim another person's id; with accounts (above) it comes from
+  the signed session.
 - **The token travels in the WebSocket query string** (`?token=`), which proxies and access logs can
   record and browsers can keep in history. Run the server behind TLS and do not log query strings.
   Files never take the token in a URL: they use the `Authorization` header or a signed link.
@@ -80,7 +159,7 @@ across NATs. The full deployment guide is
 
 This is not Microsoft Teams and is not affiliated with Microsoft. There is **no end-to-end
 encryption**: this server stores and can read every chat message and file. The token is a shared
-secret that keeps strangers out of a small team's server, not per-user authentication; put your own
-auth in front for real accounts.
+secret that keeps strangers out of a small team's server. Per-user authentication exists only when
+you enable accounts; it is a small session layer, not a full identity system.
 
 Licence: Apache-2.0.

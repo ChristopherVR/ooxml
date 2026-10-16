@@ -5,14 +5,22 @@ import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 export function openHyperlinkEditDialog(
 	doc: Document,
 	t: Translator,
 	element: PptxElement,
 	onApply: (patch: Partial<PptxElement>) => void,
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet,
 ): void {
-	const shell = createParityDialogShell(doc, t, t('pptx.hyperlink.editTitle'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.hyperlink.editTitle'),
+		regions && { regions },
+	);
 	const draft = seedHyperlinkDraft(element);
 	const field = (label: string, value: string): HTMLInputElement => {
 		const row = createEl(doc, 'label', 'pptxv-parity-select');

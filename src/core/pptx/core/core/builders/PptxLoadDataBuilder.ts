@@ -27,6 +27,7 @@ import type {
 	PptxTextStyleLevels,
 	PptxTheme,
 	PptxThemeOption,
+	PptxThemeVariant,
 	PptxViewProperties,
 } from '../../types';
 
@@ -86,6 +87,7 @@ export class PptxLoadDataBuilder {
 	private appProperties: PptxAppProperties | undefined;
 
 	private themeOptions: PptxThemeOption[] | undefined;
+	private themeVariants: PptxThemeVariant[] | undefined;
 
 	private hasMacros: boolean | undefined;
 
@@ -247,6 +249,11 @@ export class PptxLoadDataBuilder {
 		return this;
 	}
 
+	public withThemeVariants(themeVariants: PptxThemeVariant[] | undefined): this {
+		this.themeVariants = themeVariants;
+		return this;
+	}
+
 	public withThemeOptions(themeOptions: PptxThemeOption[] | undefined): this {
 		this.themeOptions = themeOptions;
 		return this;
@@ -374,6 +381,7 @@ export class PptxLoadDataBuilder {
 			coreProperties: this.coreProperties,
 			appProperties: this.appProperties,
 			themeOptions: this.themeOptions,
+			themeVariants: this.themeVariants,
 			hasMacros: this.hasMacros,
 			hasDigitalSignatures: this.hasDigitalSignatures,
 			digitalSignatureCount: this.digitalSignatureCount,

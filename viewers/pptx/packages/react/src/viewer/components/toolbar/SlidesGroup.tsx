@@ -1,4 +1,4 @@
-import { slidesHomeControls } from 'ooxml-ui/pptx';
+import { isDialogAvailable, slidesHomeControls } from 'ooxml-ui/pptx';
 import type { HomeLayoutArtwork, RibbonHomeIntent, SlideTemplateId } from 'ooxml-ui/pptx';
 import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { useLayoutPreviews } from '../../hooks/useLayoutPreviews';
 import { SlideTemplateGalleryDialog } from '../SlideTemplateGalleryDialog';
+import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { LayoutArtwork } from './LayoutGalleryMenu';
 import { sep } from './toolbar-constants';
 import { WebHomeControls } from './WebHomeControls';
@@ -44,6 +45,7 @@ let nextTile = 0;
  * the template dialog stays native.
  */
 export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
+	const customization = useViewerCustomizationContext();
 	const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [tiles, setTiles] = useState<readonly ArtworkTile[]>([]);
@@ -56,7 +58,9 @@ export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
 				editable: p.canEdit,
 				hasLayouts: layoutOptions.length > 0,
 				hasSlides: true,
-				showTemplates: Boolean(p.onInsertSlideFromTemplate),
+				showTemplates:
+					Boolean(p.onInsertSlideFromTemplate) &&
+					isDialogAvailable(customization, 'slideTemplates'),
 				newSlideNeedsLayout: true,
 				resetNeedsSlide: false,
 				layouts: {
@@ -65,7 +69,14 @@ export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
 					previews,
 				},
 			}),
-		[p.canEdit, layoutOptions, p.onInsertSlideFromTemplate, p.currentLayoutPath, previews],
+		[
+			p.canEdit,
+			layoutOptions,
+			p.onInsertSlideFromTemplate,
+			customization,
+			p.currentLayoutPath,
+			previews,
+		],
 	);
 	const request = useCallback(
 		(id: string, _part?: string, intent?: RibbonHomeIntent) => {
@@ -132,7 +143,7 @@ export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
 
 			{sep}
 
-			{p.onInsertSlideFromTemplate && (
+			{p.onInsertSlideFromTemplate && isDialogAvailable(customization, 'slideTemplates') && (
 				<SlideTemplateGalleryDialog
 					isOpen={templateGalleryOpen}
 					onClose={() => setTemplateGalleryOpen(false)}

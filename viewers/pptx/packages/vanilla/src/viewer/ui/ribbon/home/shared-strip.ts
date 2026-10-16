@@ -21,7 +21,8 @@ export type HomeTag =
 	| 'arrange-shape'
 	| 'arrange-order'
 	| 'arrange-edit'
-	| 'picture-size';
+	| 'picture-size'
+	| 'chart-selection';
 
 export interface SharedHomeStrip {
 	el: PptxUiRibbonHomeElement;

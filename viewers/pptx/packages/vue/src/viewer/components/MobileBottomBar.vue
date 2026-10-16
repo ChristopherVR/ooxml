@@ -110,7 +110,7 @@ const barStyle = computed(() => {
 
 <template>
 	<pptx-ui-mobile-bar
-		class="pptx-vue-mobile-bar fixed bottom-0 left-0 right-0 z-40"
+		class="pptx-vue-mobile-bar fixed bottom-0 left-0 right-0 z-[70]"
 		:style="barStyle"
 		:state.prop="state"
 		@mobile-bar-request="request"

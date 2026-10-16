@@ -61,7 +61,8 @@ label {
 	gap: var(--office-space-2);
 	margin-bottom: var(--office-space-3);
 }
-.actions button {
+.actions button,
+.account button {
 	padding: var(--office-space-2) var(--office-space-3);
 	border: var(--office-border-width) solid var(--office-teams-divider);
 	border-radius: var(--office-radius-md);
@@ -70,7 +71,8 @@ label {
 	font: inherit;
 	cursor: pointer;
 }
-.actions button:hover:not(:disabled) {
+.actions button:hover:not(:disabled),
+.account button:hover {
 	background: var(--office-selected);
 }
 .actions button:disabled {
@@ -79,10 +81,22 @@ label {
 }
 @media (pointer: coarse) {
 	.actions button,
+	.account button,
 	select,
 	input {
 		min-height: var(--office-touch-target, 44px);
 	}
+}
+.account {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2);
+	margin-bottom: var(--office-space-3);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+	overflow-wrap: anywhere;
 }
 input,
 select {

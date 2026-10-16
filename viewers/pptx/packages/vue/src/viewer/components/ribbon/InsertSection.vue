@@ -6,13 +6,26 @@
  * Document mutation, the file/SmartArt/equation/hyperlink dialogs and the Date/Time
  * picker stay native to the Vue binding.
  */
-import { DEFAULT_INSERT_CHART_KIND, FREEFORM_TOOL_IDS, isDrawingToolVisible } from 'ooxml-ui/pptx';
-import type { FreeformToolKind, InsertChartKind, RibbonInsertRequestEvent } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_INSERT_CHART_KIND,
+	FREEFORM_TOOL_IDS,
+	isDialogAvailable,
+	isDrawingToolVisible,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
+import type {
+	FreeformToolKind,
+	InsertChartKind,
+	InsertSlideLayout,
+	RibbonInsertRequestEvent,
+	SlideTemplateId,
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useOutlineAuthoring } from '../../composables/useOutlineAuthoring';
 import { useResolvedCustomization } from '../../composables/useViewerCustomization';
+import SlideTemplateGalleryDialog from '../SlideTemplateGalleryDialog.vue';
 import DateTimeFieldDialog from './DateTimeFieldDialog.vue';
 import type { SupportedShapeType } from './ribbon-types';
 
@@ -25,7 +38,7 @@ interface Props {
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddTextBox: () => void;
 	onAddShape: () => void;
-	onAddTable: () => void;
+	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
@@ -34,6 +47,31 @@ interface Props {
 	onOpenHeaderFooter?: () => void;
 	onOpenImagePicker: () => void;
 	onOpenMediaPicker: () => void;
+	/** The layouts New Slide offers, and the active slide's layout. */
+	layoutOptions?: readonly InsertSlideLayout[];
+	currentLayoutPath?: string;
+	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Slide Templates... ends New Slide's menu; without a handler the entry is left out. */
+	onInsertSlideFromTemplate?: (templateId: SlideTemplateId) => void;
+	/** Deck scheme map so template previews show the deck's theme colours. */
+	templateScheme?: Record<string, string>;
+	/** Comment opens the comments pane, as Review > New Comment does. */
+	onToggleComments?: () => void;
+	isCommentsPanelOpen?: boolean;
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	phone?: boolean;
+	/** Phone only: called after a request is handled, so the sheet can close. */
+	onRequestHandled?: () => void;
+	/**
+	 * Phone only: the Date & Time and Slide Templates dialogs are owned by a host that outlives
+	 * the sheet (closing the sheet unmounts this section and would take them with it).
+	 */
+	dialogHost?: InsertDialogHost;
+}
+
+export interface InsertDialogHost {
+	openDateTime: () => void;
+	openSlideTemplates: () => void;
 }
 
 const props = defineProps<Props>();
@@ -42,6 +80,12 @@ const outline = useOutlineAuthoring();
 const customization = useResolvedCustomization();
 const chartKind = ref<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 const datePickerOpen = ref(false);
+const templatesOpen = ref(false);
+const templatesAvailable = computed(
+	() =>
+		Boolean(props.onInsertSlideFromTemplate) &&
+		isDialogAvailable(customization.value, 'slideTemplates'),
+);
 
 const state = computed(() => ({
 	editable: props.canEdit,
@@ -56,6 +100,11 @@ const state = computed(() => ({
 	chartAvailable: Boolean(props.onAddChart),
 	fieldAvailable: Boolean(props.onInsertField),
 	headerFooterAvailable: Boolean(props.onOpenHeaderFooter),
+	newSlideAvailable: Boolean(props.onInsertSlideFromLayout && props.layoutOptions?.length),
+	commentAvailable: Boolean(props.onToggleComments),
+	slideTemplatesAvailable: templatesAvailable.value,
+	layouts: props.layoutOptions ?? [],
+	...(props.currentLayoutPath ? { currentLayoutPath: props.currentLayoutPath } : {}),
 	translate: t,
 }));
 
@@ -72,10 +121,33 @@ function request(event: RibbonInsertRequestEvent): void {
 				equation: props.onAddEquation,
 				link: props.onOpenHyperlinkDialog,
 				headerFooter: props.onOpenHeaderFooter,
+				// Opening an already open pane would toggle it shut.
+				comment: props.isCommentsPanelOpen ? undefined : props.onToggleComments,
 			};
 			commands[intent.value]?.();
 			break;
 		}
+		case 'table':
+			props.onAddTable(intent.rows, intent.columns);
+			break;
+		case 'newSlide': {
+			const layout = resolveInsertSlideLayout(
+				props.layoutOptions ?? [],
+				intent.value,
+				props.currentLayoutPath,
+			);
+			if (layout) {
+				props.onInsertSlideFromLayout?.(layout.path, layout.name);
+			}
+			break;
+		}
+		case 'slideTemplates':
+			if (props.dialogHost) {
+				props.dialogHost.openSlideTemplates();
+			} else {
+				templatesOpen.value = true;
+			}
+			break;
 		case 'shapeType':
 			props.onSetNewShapeType(intent.value as SupportedShapeType);
 			break;
@@ -96,11 +168,16 @@ function request(event: RibbonInsertRequestEvent): void {
 			break;
 		case 'field':
 			if (intent.value === 'datetime') {
-				datePickerOpen.value = true;
+				if (props.dialogHost) {
+					props.dialogHost.openDateTime();
+				} else {
+					datePickerOpen.value = true;
+				}
 			} else {
 				props.onInsertField?.(intent.value);
 			}
 	}
+	props.onRequestHandled?.();
 }
 
 function insertDate(formatted: string): void {
@@ -110,9 +187,17 @@ function insertDate(formatted: string): void {
 </script>
 
 <template>
-	<pptx-ui-ribbon-insert :state.prop="state" @insert-request="request" />
+	<pptx-ui-mobile-insert v-if="props.phone" :state.prop="state" @insert-request="request" />
+	<pptx-ui-ribbon-insert v-else :state.prop="state" @insert-request="request" />
+	<SlideTemplateGalleryDialog
+		v-if="templatesAvailable && !props.dialogHost"
+		:open="templatesOpen"
+		:scheme="props.templateScheme"
+		@insert="props.onInsertSlideFromTemplate?.($event)"
+		@close="templatesOpen = false"
+	/>
 	<DateTimeFieldDialog
-		v-if="datePickerOpen && props.onInsertField"
+		v-if="datePickerOpen && !props.dialogHost && props.onInsertField"
 		@close="datePickerOpen = false"
 		@insert="insertDate"
 	/>

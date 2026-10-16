@@ -27,3 +27,25 @@ describe('suite presentation text operations', () => {
 		await expect(setPresentationRunText(bytes, -1, element.id, 0, 'Bad')).rejects.toThrow();
 	});
 });
+
+describe('presentation outlines', () => {
+	it('builds a cover slide and bulleted content slides', async () => {
+		const { createPresentationFromOutline } = await import('./suite-text');
+		const bytes = await createPresentationFromOutline([
+			{ title: 'Quarterly review' },
+			{ title: 'Highlights', bullets: ['Revenue up', 'Two launches'], notes: 'Keep it short' },
+		]);
+		const text = await inspectPresentationText(bytes);
+		expect(text.slides).toHaveLength(2);
+		const body = text.slides[1]!.elements.find((e) => e.text.includes('Revenue up'))!;
+		expect(body.runs?.map((r) => r.text).filter((t) => !/^•?\s*$/.test(t))).toEqual([
+			'Revenue up',
+			'Two launches',
+		]);
+		const JSZip = (await import('jszip')).default;
+		const zip = await JSZip.loadAsync(bytes);
+		const slide = await zip.file('ppt/slides/slide2.xml')!.async('string');
+		expect(slide.match(/<a:buChar/g)).toHaveLength(2);
+		await expect(createPresentationFromOutline([])).rejects.toThrow();
+	});
+});

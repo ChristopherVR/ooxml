@@ -10,6 +10,8 @@ const params = new URLSearchParams(location.search);
 const name = params.get('name') ?? 'Ada';
 const userId = params.get('id') ?? `demo-${name.toLowerCase()}`;
 const workspaceId = params.get('room') ?? 'react-demo';
+// ?locale=de shows the whole app in German; en, de, es, fr and zh-CN ship.
+const locale = params.get('locale') ?? '';
 const panelDemo = params.get('panel') === '1';
 const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
 // The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it: it runs in local mode, where
@@ -35,6 +37,7 @@ export function App() {
 			workspaceId={workspaceId}
 			userName={name}
 			userId={userId}
+			locale={locale}
 			config={config}
 			onOpenFile={recordOpenFile}
 		/>

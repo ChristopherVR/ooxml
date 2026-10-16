@@ -13,7 +13,12 @@ import type {
 
 export interface RibbonGalleryModule {
 	build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor;
-	apply(itemId: string, ctx: RibbonGalleryContext): RibbonGalleryApplyResult | null;
+	/** `action` is the context menu entry chosen on the tile, when one was. */
+	apply(
+		itemId: string,
+		ctx: RibbonGalleryContext,
+		action?: string,
+	): RibbonGalleryApplyResult | null;
 }
 
 /** A gallery with no entries (disabled trigger). */

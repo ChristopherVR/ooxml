@@ -1,4 +1,5 @@
 import { INSPECTOR_PANEL_DEFAULT_WIDTH } from 'ooxml-ui/pptx';
+import type { ViewerMode } from 'ooxml-ui/pptx';
 
 import { getActiveElements } from './editor/editor-active-elements';
 import type { RenderController } from './render-controller';
@@ -6,6 +7,17 @@ import { selectionChangeNeedsStageRender } from './selection-render-trigger';
 import type { StoreListener, ViewerState } from './state';
 import type { PptxViewerCallbacks } from './types';
 import type { ViewerChrome } from './ui';
+
+/** The shared `ViewerMode` the other bindings report, derived from the store. */
+export function viewerModeOf(state: ViewerState): ViewerMode {
+	return state.masterViewTarget
+		? 'master'
+		: state.presenting
+			? 'present'
+			: state.editable
+				? 'edit'
+				: 'preview';
+}
 
 export interface StateSyncDeps {
 	getChrome(): ViewerChrome;
@@ -97,6 +109,13 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			)
 		) {
 			renderer.renderStage();
+		}
+		if (state.slides.length !== previous.slides.length) {
+			callbacks.onSlideCountChange?.(state.slides.length);
+		}
+		const mode = viewerModeOf(state);
+		if (mode !== viewerModeOf(previous)) {
+			callbacks.onModeChange?.(mode);
 		}
 		if (state.currentSlide !== previous.currentSlide) {
 			chrome.thumbnails?.setActive(state.currentSlide);

@@ -3,11 +3,21 @@ import type {
 	OfficeOptionValues,
 	OfficeOptionsLabels,
 } from '../../../dialog/options-dialog';
-import type { ResolvedCustomization } from '../customization/customization-resolve';
+import {
+	ViewerRegionHost,
+	type ViewerRegionContext,
+	type ViewerSettingsRegionContext,
+} from '../customization/customization-regions';
+import {
+	getRegionRenderer,
+	type ResolvedCustomization,
+} from '../customization/customization-resolve';
 import {
 	customizeOptionsTabs,
 	isOptionsPageVisible,
+	isSettingLocked,
 } from '../customization/customization-surfaces';
+import type { OptionsSettingId } from '../customization/customization-types';
 import {
 	AI_OPTIONS_CATEGORY,
 	buildPptxOptionCategories,
@@ -31,6 +41,8 @@ export interface PptxOptionsDialogElement extends HTMLElement {
 	heading: string | null;
 	category: string;
 	live: boolean;
+	/** The host's `dialog.options` region replaces the rail, panes and footer. */
+	customBody: boolean;
 	show(): void;
 }
 
@@ -57,6 +69,12 @@ export interface PptxOptionsDialogInput {
 	customization: ResolvedCustomization;
 	/** An "AI" category is offered for the chat-log export. */
 	aiEnabled: boolean;
+	/**
+	 * The binding's region context (any `region`; `close` is ignored). When the host replaced
+	 * `dialog.options`, its renderer fills the dialog body with this context plus the options
+	 * model; without a context the built-in body stays.
+	 */
+	regionContext?: ViewerRegionContext | null;
 }
 
 export interface PptxOptionsDialogBinding {
@@ -92,6 +110,8 @@ export function bindPptxOptionsDialog(
 	let opened = false;
 	let lockedKeys: ReadonlySet<string> = new Set();
 	let shown: OfficeOptionValues = {};
+	let customization: ResolvedCustomization | null = null;
+	let region: { host: ViewerRegionHost; container: HTMLElement } | null = null;
 	// Whatever had focus when File > Options opened gets it back when the dialog goes away.
 	const active = dialog.ownerDocument.activeElement;
 	const opener =
@@ -125,9 +145,47 @@ export function bindPptxOptionsDialog(
 	dialog.live = true;
 	dialog.defaults = DEFAULT_VALUES;
 
+	const setOption = (setting: OptionsSettingId, value: ViewerOptionPrimitive): void => {
+		const parsed = parseOptionValueKey(setting);
+		if (parsed && customization && !isSettingLocked(customization, setting))
+			host.setOption(parsed.group, parsed.key, value);
+	};
+	const dropRegion = (): void => {
+		region?.host.destroy();
+		region?.container.remove();
+		region = null;
+		dialog.customBody = false;
+	};
+	const syncRegion = (input: PptxOptionsDialogInput): void => {
+		const renderer = getRegionRenderer(input.customization, 'dialog.options');
+		if (!renderer || !input.regionContext) {
+			dropRegion();
+			return;
+		}
+		if (!region) {
+			const container = dialog.ownerDocument.createElement('div');
+			container.slot = 'body';
+			dialog.append(container);
+			region = { host: new ViewerRegionHost(container), container };
+		}
+		dialog.customBody = true;
+		const context: ViewerSettingsRegionContext = {
+			...input.regionContext,
+			region: 'dialog.options',
+			options: input.options,
+			setOption,
+			resetOptions: () => host.resetOptions(),
+			// The close button keeps the host's edits, as the built-in dialog's does.
+			close: () => host.close(),
+		};
+		region.host.render(renderer, context);
+	};
+
 	return {
 		sync(input) {
 			snapshot ??= cloneViewerOptions(input.options);
+			customization = input.customization;
+			syncRegion(input);
 			const tabs = customizeOptionsTabs(VIEWER_OPTIONS_TABS, input.customization);
 			const ai = input.aiEnabled && isOptionsPageVisible(input.customization, AI_OPTIONS_CATEGORY);
 			if (
@@ -158,6 +216,7 @@ export function bindPptxOptionsDialog(
 		},
 		dispose() {
 			controller.abort();
+			dropRegion();
 			// The element is removed on close, so the dialog cannot hand focus back itself.
 			if (opener?.isConnected) opener.focus();
 		},

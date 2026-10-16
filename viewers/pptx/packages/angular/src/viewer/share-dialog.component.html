@@ -3,7 +3,11 @@
 	[title]="(active() ? 'pptx.share.activeTitle' : 'pptx.toolbar.share') | translate"
 	(close)="close.emit()"
 >
-	@if (active()) {
+	@if (regionRenderer(); as renderer) {
+		@if (regionContext(); as ctx) {
+			<pptx-region-host [renderer]="renderer" [context]="ctx" />
+		}
+	} @else if (active()) {
 		<div class="pptx-ng-share-active">
 			<div class="pptx-ng-share-status-row">
 				<span class="pptx-ng-share-status-dot" [class.is-on]="connected()"></span>
@@ -187,7 +191,9 @@
 		</div>
 	}
 
-	<div footer>
-		<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
-	</div>
+	@if (!regionRenderer()) {
+		<div footer>
+			<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
+		</div>
+	}
 </pptx-modal-dialog>

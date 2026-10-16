@@ -1,14 +1,24 @@
-import { DEFAULT_INSERT_CHART_KIND, FREEFORM_TOOL_IDS, isDrawingToolVisible } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_INSERT_CHART_KIND,
+	FREEFORM_TOOL_IDS,
+	isDialogAvailable,
+	isDrawingToolVisible,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
+	InsertSlideLayout,
+	PptxUiMobileInsertElement,
 	PptxUiRibbonInsertElement,
+	SlideTemplateId,
 	RibbonInsertRequestEvent,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SupportedShapeType } from '../../types';
+import { SlideTemplateGalleryDialog } from '../SlideTemplateGalleryDialog';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { DateTimeFieldDialog } from './DateTimeFieldDialog';
 
@@ -22,7 +32,7 @@ export interface InsertSectionProps {
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
 	onAddShape: () => void;
-	onAddTable: () => void;
+	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
@@ -34,6 +44,31 @@ export interface InsertSectionProps {
 	/** True when something is selected, so a link has a target to attach to. */
 	hasSelection: boolean;
 	onOpenHyperlinkDialog: () => void;
+	/** The layouts New Slide offers, and the active slide's layout. */
+	layoutOptions?: readonly InsertSlideLayout[];
+	currentLayoutPath?: string;
+	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Slide Templates... ends New Slide's menu; without a handler the entry is left out. */
+	onInsertSlideFromTemplate?: (templateId: SlideTemplateId) => void;
+	/** Deck scheme map so template previews show the deck's theme colours. */
+	templateScheme?: Record<string, string>;
+	/** Comment opens the comments pane, as Review > New Comment does. */
+	onToggleComments?: () => void;
+	isCommentsPanelOpen?: boolean;
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	phone?: boolean;
+	/** Phone only: called after a request is handled, so the sheet can close. */
+	onRequestHandled?: () => void;
+	/**
+	 * Phone only: the Date & Time and Slide Templates dialogs are owned by a host that outlives
+	 * the sheet (closing the sheet unmounts this section and would take them with it).
+	 */
+	dialogHost?: InsertDialogHost;
+}
+
+export interface InsertDialogHost {
+	openDateTime: () => void;
+	openSlideTemplates: () => void;
 }
 
 /**
@@ -43,8 +78,12 @@ export interface InsertSectionProps {
 export function InsertSection(p: InsertSectionProps): React.ReactElement {
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
-	const ref = useRef<PptxUiRibbonInsertElement>(null);
+	const ref = useRef<PptxUiRibbonInsertElement | PptxUiMobileInsertElement>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
+	const [templatesOpen, setTemplatesOpen] = useState(false);
+	const hosted = p.dialogHost;
+	const templatesAvailable =
+		Boolean(p.onInsertSlideFromTemplate) && isDialogAvailable(customization, 'slideTemplates');
 	const [chartKind, setChartKind] = useState<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 	useEffect(() => {
 		const host = ref.current;
@@ -63,9 +102,14 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			chartAvailable: Boolean(p.onAddChart),
 			fieldAvailable: Boolean(p.onInsertField),
 			headerFooterAvailable: Boolean(p.onOpenHeaderFooter),
+			newSlideAvailable: Boolean(p.onInsertSlideFromLayout && p.layoutOptions?.length),
+			commentAvailable: Boolean(p.onToggleComments),
+			slideTemplatesAvailable: templatesAvailable,
+			layouts: p.layoutOptions ?? [],
+			...(p.currentLayoutPath ? { currentLayoutPath: p.currentLayoutPath } : {}),
 			translate: t,
 		};
-	}, [p, chartKind, customization, t]);
+	}, [p, chartKind, customization, t, templatesAvailable]);
 	useEffect(() => {
 		const host = ref.current;
 		if (!host) {
@@ -84,10 +128,33 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 						equation: p.onAddEquation,
 						link: p.onOpenHyperlinkDialog,
 						headerFooter: p.onOpenHeaderFooter,
+						// Opening an already open pane would toggle it shut.
+						comment: p.isCommentsPanelOpen ? undefined : p.onToggleComments,
 					};
 					commands[intent.value]?.();
 					break;
 				}
+				case 'table':
+					p.onAddTable(intent.rows, intent.columns);
+					break;
+				case 'newSlide': {
+					const layout = resolveInsertSlideLayout(
+						p.layoutOptions ?? [],
+						intent.value,
+						p.currentLayoutPath,
+					);
+					if (layout) {
+						p.onInsertSlideFromLayout?.(layout.path, layout.name);
+					}
+					break;
+				}
+				case 'slideTemplates':
+					if (hosted) {
+						hosted.openSlideTemplates();
+					} else {
+						setTemplatesOpen(true);
+					}
+					break;
 				case 'shapeType':
 					p.onSetNewShapeType(intent.value as SupportedShapeType);
 					break;
@@ -108,19 +175,36 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					break;
 				case 'field':
 					if (intent.value === 'datetime') {
-						setDatePickerOpen(true);
+						if (hosted) {
+							hosted.openDateTime();
+						} else {
+							setDatePickerOpen(true);
+						}
 					} else {
 						p.onInsertField?.(intent.value);
 					}
 			}
+			p.onRequestHandled?.();
 		};
 		host.addEventListener('insert-request', request);
 		return () => host.removeEventListener('insert-request', request);
-	}, [p]);
+	}, [p, hosted]);
 	return (
 		<>
-			<pptx-ui-ribbon-insert ref={ref} />
-			{datePickerOpen && p.onInsertField && (
+			{p.phone ? (
+				<pptx-ui-mobile-insert ref={ref as React.Ref<PptxUiMobileInsertElement>} />
+			) : (
+				<pptx-ui-ribbon-insert ref={ref as React.Ref<PptxUiRibbonInsertElement>} />
+			)}
+			{templatesAvailable && !hosted && (
+				<SlideTemplateGalleryDialog
+					isOpen={templatesOpen}
+					onClose={() => setTemplatesOpen(false)}
+					onInsert={(templateId) => p.onInsertSlideFromTemplate?.(templateId)}
+					scheme={p.templateScheme}
+				/>
+			)}
+			{datePickerOpen && !hosted && p.onInsertField && (
 				<DateTimeFieldDialog
 					onClose={() => setDatePickerOpen(false)}
 					onInsert={(formatted) => {

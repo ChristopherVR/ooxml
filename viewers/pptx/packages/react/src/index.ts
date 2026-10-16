@@ -2,6 +2,7 @@ export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 // ── React-based PowerPoint viewer/editor ──
 export { PowerPointViewer, getAnimationInitialStyle } from './viewer/PowerPointViewer';
 export type { PowerPointViewerProps, PowerPointViewerHandle } from './viewer/PowerPointViewer';
+export type { ViewerLoadDetail } from './viewer/hooks/useLoadNotifications';
 
 // ── Building blocks: compose a custom viewer shell from standalone pieces ──
 // `Toolbar` and `SlideCanvas` are the same flat, self-contained components

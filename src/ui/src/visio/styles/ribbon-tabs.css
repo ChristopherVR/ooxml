@@ -41,3 +41,14 @@ office-ui-ribbon[data-tabs-start][data-tabs-end]::part(tabs) {
 		height: 36px;
 	}
 }
+/* On a phone File is text in the accent colour, as in Word and Excel, not a filled block. */
+@media (max-width: 760px), (pointer: coarse) {
+	office-ui-ribbon::part(file) {
+		background: none;
+		color: var(--_vv-accent);
+		font-weight: 600;
+	}
+	office-ui-ribbon::part(file):hover {
+		background: var(--_vv-accent-soft);
+	}
+}

@@ -82,7 +82,7 @@ function clickButton(target: HTMLElement, label: string): void {
 describe('smartArtSection structural reflow', () => {
 	it('rebuilds the cached drawing shapes an Add cleared', () => {
 		const { editor, target } = render();
-		clickButton(target, 'Add');
+		clickButton(target, 'Add item');
 		const data = currentData(editor);
 		expect(data?.nodes).toHaveLength(3);
 		// Without the reflow this is the empty array the core op left behind.

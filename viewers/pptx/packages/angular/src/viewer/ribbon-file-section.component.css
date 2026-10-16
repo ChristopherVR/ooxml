@@ -335,3 +335,7 @@ footer {
 		display: none;
 	}
 }
+
+.host-page {
+	min-height: 16rem;
+}

@@ -7,6 +7,27 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.3.0) - 2026-10-16
+
+### Features
+
+- **teams:** Rate limit, hash and revoke sessions on the server ([32f9921](https://github.com/ChristopherVR/ooxml/commit/32f9921325769c74493517f89a6f0ce8a9b37583))
+
+## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.2.0) - 2026-10-15
+
+### Features
+
+- **server:** Admit only the members of a private chat to its room ([e616ed3](https://github.com/ChristopherVR/ooxml/commit/e616ed3287fc3ced6833d139125d85c47c6b5557))
+- **teams:** Authenticate users with signed sessions on the server ([8450cb0](https://github.com/ChristopherVR/ooxml/commit/8450cb0cff962c9a1b625fbab980dc6290eb33ef))
+
+### Bug Fixes
+
+- **teams:** Harden the reference server against abuse ([45ea3f7](https://github.com/ChristopherVR/ooxml/commit/45ea3f782957e85e323d0844c179393a5f4080f7))
+
+### Documentation
+
+- **teams:** Document private chats, the calendar and their limits ([02aa753](https://github.com/ChristopherVR/ooxml/commit/02aa75378403f2a8e537276c37f7a539091bfd8a))
+
 ## [0.1.3](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.1.3) - 2026-10-11
 
 ### Styling

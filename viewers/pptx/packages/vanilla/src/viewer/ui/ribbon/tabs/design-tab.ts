@@ -154,15 +154,27 @@ export function createDesignTab(
 	const slideSize = command('design.customize.slideSize', onOpenSlideSize);
 	const formatBackground = command('design.customize.formatBackground', onToggleFormatBackground);
 	const themes = group('design.themes');
+	// Design > Themes: the inline Themes gallery leads the group, as in PowerPoint.
+	if (galleryHub) {
+		for (const placement of FIXED_TAB_GALLERIES) {
+			if (placement.control.startsWith('design.themes.')) {
+				themes.appendChild(createRibbonGallery(doc, t, placement, galleryHub).el);
+			}
+		}
+	}
 	themes.append(browse.el, editTheme.el);
 	el.append(themes);
-	// Design > Variants: the deck theme's Colors / Fonts libraries, straight
-	// from the shared gallery placements.
+	// Design > Variants: the Variants gallery and the Colors / Fonts / Effects /
+	// Background Styles dropdowns, straight from the shared gallery placements.
 	if (galleryHub) {
 		const variants = group('design.variants');
 		for (const placement of FIXED_TAB_GALLERIES) {
 			if (placement.control.startsWith('design.variants.')) {
-				variants.appendChild(createRibbonGallery(doc, t, placement, galleryHub).el);
+				variants.appendChild(
+					createRibbonGallery(doc, t, placement, galleryHub, {
+						onCommand: () => onToggleFormatBackground(),
+					}).el,
+				);
 			}
 		}
 		el.appendChild(variants);
@@ -190,6 +202,12 @@ export function createDesignTab(
 	const customize = group('design.customize');
 	customize.append(slideSize.el, formatBackground.el);
 	el.append(customize);
+	// Designer needs an online service: listed, disabled, with the reason as its tooltip.
+	const designerIdeas = command('design.designer.designIdeas', () => {});
+	designerIdeas.setDisabled(true);
+	const designer = group('design.designer');
+	designer.append(designerIdeas.el);
+	el.append(designer);
 
 	return {
 		el,

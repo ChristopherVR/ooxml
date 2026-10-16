@@ -31,6 +31,7 @@ function stubActions() {
 		mutateTableStructure: vi.fn(),
 		mergeTableCells: vi.fn(),
 		splitTableCell: vi.fn(),
+		openChartFormatPane: vi.fn(),
 	};
 }
 
@@ -468,5 +469,44 @@ describe('mountElementContextMenu', () => {
 		expect(labels()).not.toContain('Crop');
 		expect(labels().some((label) => label.endsWith('Shapes'))).toBeFalsy();
 		shapes.destroy();
+	});
+
+	it('names the chart format entry after the clicked chart element and opens the pane on it', () => {
+		const slide = {
+			id: 's1',
+			slideNumber: 1,
+			elements: [
+				{
+					id: 'chart-1',
+					type: 'chart',
+					x: 0,
+					y: 0,
+					width: 40,
+					height: 30,
+					chartData: {
+						chartType: 'bar',
+						categories: ['A'],
+						series: [{ name: 'East', values: [1] }],
+					},
+				},
+			],
+		} as unknown as PptxSlide;
+		const context = harness(slide, {
+			decorate: (element) => {
+				element.innerHTML =
+					'<svg viewBox="0 0 40 30"><rect data-chart-part="dataPoint" data-chart-series="0"></rect></svg>';
+				return element.querySelector('rect') as unknown as HTMLElement;
+			},
+		});
+		rightClick(context.target);
+		expect(labels()).toContain('Format Data Series...');
+		expect(labels()).not.toContain('Format Shape...');
+		clickCommand('Format Data Series...');
+		expect(context.actions.openChartFormatPane).toHaveBeenCalledOnce();
+		expect(context.store.get().chartFormat).toStrictEqual({
+			elementId: 'chart-1',
+			target: 'series:0',
+		});
+		context.destroy();
 	});
 });

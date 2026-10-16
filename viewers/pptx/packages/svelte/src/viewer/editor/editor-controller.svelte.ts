@@ -30,7 +30,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { readTableCellTarget } from './context-menu-dispatch';
+import { readTableCellTarget, recordChartContextTarget } from './context-menu-dispatch';
 import type { AdjustGestureController } from './editor-adjust-gesture';
 import type { EditorControllerDeps } from './editor-controller-deps';
 import { selectionOverlayBox } from './editor-controller-geometry';
@@ -414,6 +414,9 @@ export class EditorController {
 		if (!this.#editor.selection.has(id)) {
 			this.#editor.select(id);
 		}
+		// A chart names its format entry after the element under the pointer
+		// ("Format Data Series..."), so the shared hit-test runs before the menu opens.
+		recordChartContextTarget(this.#editor, id, event);
 		// The right-clicked table cell (if any) rides along: the menu's row /
 		// column / merge commands act on the cell under the pointer.
 		this.#deps.onContextMenu?.(event.clientX, event.clientY, readTableCellTarget(event.target));

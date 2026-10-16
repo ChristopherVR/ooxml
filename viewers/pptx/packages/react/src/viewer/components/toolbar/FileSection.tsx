@@ -2,16 +2,22 @@ import {
 	BACKSTAGE_BACK_CLASSES,
 	BACKSTAGE_NAV,
 	BACKSTAGE_NAV_CLASSES,
-	customizeBackstageNav,
+	backstageNavEntries,
 	listBackstageRecentFiles,
 } from 'ooxml-ui/pptx';
-import type { BackstagePage, BackstageRecentFile } from 'ooxml-ui/pptx';
+import type {
+	BackstagePage,
+	BackstageRecentFile,
+	HostBackstageRegionId,
+	ViewerRegionId,
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
+import { ViewerRegion, useRegionRenderer } from '../ViewerRegion';
 import { WebSearch } from '../WebControls';
 import { AccountPage } from './AccountPage';
 import { BackstageCards } from './file-backstage-cards';
@@ -21,12 +27,13 @@ import type { FileSectionProps } from './file-backstage-parts';
 
 export function FileSection(p: FileSectionProps): React.ReactElement {
 	const { t } = useTranslation();
-	const [requestedPage, setRequestedPage] = useState<BackstagePage>('home');
+	const [requestedPage, setRequestedPage] = useState<string>('home');
 	// Host customisation hides nav pages; a hidden current page falls back to
 	// Home (or, when Home is hidden too, the first page still offered).
-	const nav = customizeBackstageNav(BACKSTAGE_NAV, useViewerCustomizationContext());
-	const offered = (id: BackstagePage): boolean => nav.some((item) => item.id === id);
-	const page: BackstagePage = offered(requestedPage)
+	const customization = useViewerCustomizationContext();
+	const nav = backstageNavEntries(BACKSTAGE_NAV, customization);
+	const offered = (id: string): boolean => nav.some((item) => item.id === id);
+	const page: string = offered(requestedPage)
 		? requestedPage
 		: offered('home')
 			? 'home'
@@ -52,9 +59,19 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 		}
 	};
 	const current = nav.find((item) => item.id === page);
+	// Host pages (`backstage.extraPages`) carry their own, already localised label.
+	const hostPage = current?.host;
+	const builtInPage = (hostPage ? undefined : page) as BackstagePage | undefined;
 	const title = current
-		? t(current.labelKey, { defaultValue: current.label })
+		? current.labelKey
+			? t(current.labelKey, { defaultValue: current.label })
+			: current.label
 		: t('pptx.backstage.nav.home');
+	const regionId = (hostPage ? `backstage.host.${hostPage.id}` : `backstage.${page}`) as
+		| ViewerRegionId
+		| HostBackstageRegionId;
+	const builtInRegionRenderer = useRegionRenderer(regionId as ViewerRegionId);
+	const regionRenderer = hostPage ? hostPage.render : builtInRegionRenderer;
 	return (
 		<div
 			className='fixed inset-0 z-[200] flex bg-background font-[Aptos,Segoe_UI,sans-serif] text-foreground max-md:flex-col'
@@ -75,7 +92,7 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 				</div>
 				<nav className='flex min-h-0 flex-1 flex-col overflow-y-auto pb-2 max-md:flex-row max-md:items-center max-md:overflow-y-visible max-md:pb-0'>
 					{nav
-						.filter((item) => !item.group && !(item.id === 'export' && exportHidden))
+						.filter((item) => item.group !== 'footer' && !(item.id === 'export' && exportHidden))
 						.map((item) => (
 							<button
 								key={item.id}
@@ -91,13 +108,13 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 								}
 								className={`${BACKSTAGE_NAV_CLASSES.row} ${page === item.id ? BACKSTAGE_NAV_CLASSES.active : BACKSTAGE_NAV_CLASSES.inactive}`}
 							>
-								<BackstageNavIcon page={item.id} />
-								{t(item.labelKey, { defaultValue: item.label })}
+								{!item.host && <BackstageNavIcon page={item.id as BackstagePage} />}
+								{item.labelKey ? t(item.labelKey, { defaultValue: item.label }) : item.label}
 							</button>
 						))}
 					<div className='flex-1 max-md:hidden' />
 					{nav
-						.filter((item) => item.group)
+						.filter((item) => item.group === 'footer')
 						.map((item) => (
 							<button
 								key={item.id}
@@ -111,8 +128,8 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 								}
 								className={`${BACKSTAGE_NAV_CLASSES.row} ${page === item.id ? BACKSTAGE_NAV_CLASSES.active : BACKSTAGE_NAV_CLASSES.inactive}`}
 							>
-								<BackstageNavIcon page={item.id} />
-								{t(item.labelKey, { defaultValue: item.label })}
+								{!item.host && <BackstageNavIcon page={item.id as BackstagePage} />}
+								{item.labelKey ? t(item.labelKey, { defaultValue: item.label }) : item.label}
 							</button>
 						))}
 				</nav>
@@ -121,56 +138,76 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 				<h1 className='text-[24px] font-semibold'>
 					{page === 'home' ? t('pptx.backstage.greeting') : title}
 				</h1>
-				{(page === 'home' || page === 'new') && (
-					<BackstageNewGallery
-						onCreate={(templateId) => run(() => p.onCreatePresentation(templateId))}
-					/>
-				)}
-				{(page === 'home' || page === 'open') && (
-					<>
-						<WebSearch
-							data-pptx-search-surface
-							data-pptx-search-input
-							className='mt-8 w-full max-w-[540px]'
-							value={query}
-							onInput={(event) =>
-								setQuery((event.currentTarget as HTMLElement & { value: string }).value)
-							}
-							placeholder={t('pptx.backstage.searchPlaceholder')}
-							aria-label={t('pptx.backstage.searchPlaceholder')}
+				{regionRenderer ? (
+					// The nav, title and back button stay the viewer's; the host fills the page body.
+					<div className='mt-6'>
+						<ViewerRegion
+							region={regionId}
+							renderer={regionRenderer}
+							close={p.onClose}
+							style={{ width: '100%', minHeight: '12rem' }}
 						/>
-						{page === 'open' && (
-							<button
-								type='button'
-								className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
-								onClick={() => run(p.onOpenFile)}
-							>
-								<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
-							</button>
-						)}
-						<h2 className='mt-6 text-[16px] font-semibold'>{t('pptx.backstage.recentHeading')}</h2>
-						<BackstageRecentList
-							files={visibleRecent}
-							onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
-						/>
-					</>
-				)}
-				{!(page === 'export' && exportHidden) && <BackstageCards page={page} props={p} run={run} />}
-				{page === 'account' && <AccountPage />}
-				{page === 'options' && (
-					<div className='mt-8 max-w-[760px] border border-border bg-card p-7 text-card-foreground'>
-						<LuSettings className='text-3xl text-primary' />
-						<h2 className='mt-4 text-lg font-semibold'>{t('pptx.backstage.optionsTitle')}</h2>
-						<p className='mt-2 text-sm text-muted-foreground'>{t('pptx.backstage.optionsBody')}</p>
-						<button
-							type='button'
-							className='mt-6 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
-							onClick={() => run(p.onOpenSettings)}
-						>
-							{t('pptx.backstage.openOptions')}
-						</button>
 					</div>
-				)}
+				) : builtInPage ? (
+					<>
+						{(page === 'home' || page === 'new') && (
+							<BackstageNewGallery
+								onCreate={(templateId) => run(() => p.onCreatePresentation(templateId))}
+							/>
+						)}
+						{(page === 'home' || page === 'open') && (
+							<>
+								<WebSearch
+									data-pptx-search-surface
+									data-pptx-search-input
+									className='mt-8 w-full max-w-[540px]'
+									value={query}
+									onInput={(event) =>
+										setQuery((event.currentTarget as HTMLElement & { value: string }).value)
+									}
+									placeholder={t('pptx.backstage.searchPlaceholder')}
+									aria-label={t('pptx.backstage.searchPlaceholder')}
+								/>
+								{page === 'open' && (
+									<button
+										type='button'
+										className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
+										onClick={() => run(p.onOpenFile)}
+									>
+										<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
+									</button>
+								)}
+								<h2 className='mt-6 text-[16px] font-semibold'>
+									{t('pptx.backstage.recentHeading')}
+								</h2>
+								<BackstageRecentList
+									files={visibleRecent}
+									onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
+								/>
+							</>
+						)}
+						{!(page === 'export' && exportHidden) && (
+							<BackstageCards page={page as BackstagePage} props={p} run={run} />
+						)}
+						{page === 'account' && <AccountPage />}
+						{page === 'options' && (
+							<div className='mt-8 max-w-[760px] border border-border bg-card p-7 text-card-foreground'>
+								<LuSettings className='text-3xl text-primary' />
+								<h2 className='mt-4 text-lg font-semibold'>{t('pptx.backstage.optionsTitle')}</h2>
+								<p className='mt-2 text-sm text-muted-foreground'>
+									{t('pptx.backstage.optionsBody')}
+								</p>
+								<button
+									type='button'
+									className='mt-6 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
+									onClick={() => run(p.onOpenSettings)}
+								>
+									{t('pptx.backstage.openOptions')}
+								</button>
+							</div>
+						)}
+					</>
+				) : null}
 				<p className='mt-12 text-[11px] text-muted-foreground'>
 					{p.fileName || t('pptx.backstage.untitled')} · {t('pptx.backstage.savedToBrowser')}
 				</p>

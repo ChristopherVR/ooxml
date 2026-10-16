@@ -51,9 +51,14 @@ function control(target: HTMLElement, id: string): HTMLButtonElement {
 }
 
 function headerFooter(target: HTMLElement): HTMLElement {
-	return [...target.querySelectorAll<HTMLElement>('pptx-ui-ribbon-command')].find(
-		(el) => !el.dataset.ribbonControl && !el.dataset.pptxDrawingTool,
-	)!;
+	return target.querySelector<HTMLElement>('[data-ribbon-control="insert.text.headerFooter"]')!;
+}
+
+function pickItem(target: HTMLElement, id: string, item: string): void {
+	target.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!.click();
+	target
+		.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] [data-insert-item="${item}"]`)!
+		.click();
 }
 
 function fireChange(input: HTMLInputElement, file: File): void {
@@ -61,12 +66,27 @@ function fireChange(input: HTMLInputElement, file: File): void {
 	input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+describe('insertTab slide templates', () => {
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', async () => {
+		const target = mountTab(makeEditor());
+		const menu = target.querySelector<HTMLElement>(
+			'[data-ribbon-control="insert.slides.newSlide"]',
+		)!;
+		menu.querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...menu.querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.at(-1)?.textContent).toBe('Slide Templates...');
+		items.at(-1)!.click();
+		await tick();
+		expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+	});
+});
+
 describe('insertTab', () => {
 	it('inserts a text box and a 3x3 table from the shared commands', () => {
 		const editor = makeEditor();
 		const target = mountTab(editor);
 		control(target, 'insert.text.textBox').click();
-		control(target, 'insert.tables.table').click();
+		pickItem(target, 'insert.tables.table', 'insertTable');
 		flushSync();
 		expect(editor.slides[0]?.elements.map((el) => el.type)).toStrictEqual(['text', 'table']);
 	});
@@ -96,10 +116,10 @@ describe('insertTab', () => {
 	it('inserts action buttons and fields from the shared menus', () => {
 		const editor = makeEditor();
 		const target = mountTab(editor);
-		for (const id of ['insert.links.action', 'insert.text.field']) {
-			target.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!.click();
-		}
-		target.querySelector<HTMLButtonElement>('[data-insert-item="slidenum"]')!.click();
+		control(target, 'insert.text.slideNumber').click();
+		target
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.links.action"] .trigger')!
+			.click();
 		target
 			.querySelector<HTMLButtonElement>(
 				'[data-ribbon-control="insert.links.action"] [data-insert-item]',
@@ -140,8 +160,8 @@ describe('insertTab', () => {
 				clicks.push(input.accept);
 			});
 		}
-		control(target, 'insert.images.pictures').click();
-		control(target, 'insert.media.media').click();
+		pickItem(target, 'insert.images.pictures', 'thisDevice');
+		pickItem(target, 'insert.media.media', 'videoThisDevice');
 		expect(clicks).toStrictEqual(['image/*', 'video/*,audio/*']);
 	});
 
@@ -180,10 +200,13 @@ describe('insertTab', () => {
 	it('toggles the equation dialog open and closed', () => {
 		const target = mountTab(makeEditor());
 		expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-		control(target, 'insert.symbols.equation').click();
+		const face = target.querySelector<HTMLButtonElement>(
+			'[data-ribbon-control="insert.symbols.equation"] .primary',
+		)!;
+		face.click();
 		flushSync();
 		expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
-		control(target, 'insert.symbols.equation').click();
+		face.click();
 		flushSync();
 		expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 	});
@@ -196,6 +219,36 @@ describe('insertTab', () => {
 		control(target, 'insert.text.textBox').click();
 		expect(editor.slides[0]?.elements).toHaveLength(0);
 		expect(headerFooter(target).hasAttribute('hidden')).toBeTruthy();
+	});
+
+	it('inserts a table of the size picked on the Table grid', () => {
+		const editor = makeEditor();
+		const target = mountTab(editor);
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		target.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click();
+		target.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
+		flushSync();
+		const inserted = editor.slides[0]?.elements[0] as
+			| { tableData?: { rows: unknown[][] } }
+			| undefined;
+		expect(inserted?.tableData?.rows).toHaveLength(4);
+		expect((inserted?.tableData?.rows[0] as { cells: unknown[] }).cells).toHaveLength(3);
+	});
+
+	it('adds a slide from the layout and opens the comments pane', async () => {
+		const editor = makeEditor();
+		const chromeUi = { commentsOpen: false, toggleComments: vi.fn() };
+		const onnavigateslide = vi.fn();
+		const target = mountTab(editor, { chromeUi, onnavigateslide });
+		await vi.waitFor(() => flushSync());
+		target
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.slides.newSlide"] .primary')!
+			.click();
+		flushSync();
+		expect(editor.slides).toHaveLength(2);
+		expect(onnavigateslide).toHaveBeenCalledOnce();
+		control(target, 'insert.comments.comment').click();
+		expect(chromeUi.toggleComments).toHaveBeenCalledOnce();
 	});
 
 	it('opens Header & Footer when the host supplies a handler', () => {

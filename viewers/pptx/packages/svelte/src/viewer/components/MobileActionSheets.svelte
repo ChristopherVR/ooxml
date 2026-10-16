@@ -9,15 +9,15 @@
 	import { toggleSheet } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
-	import { newTextElement } from '../editor';
 	import type { EditorState } from '../editor/editor-state.svelte';
-	import InsertMenu from './InsertMenu.svelte';
+	import type { ChromeUiState } from '../state/chrome-ui.svelte';
+	import InsertTab from './ribbon/insert/InsertTab.svelte';
 	import InspectorPanel from './inspector/InspectorPanel.svelte';
 	import MobileSheet from './MobileSheet.svelte';
 	import ReviewCommentsPanel from './ribbon/review/ReviewCommentsPanel.svelte';
 	import ThumbnailRail from './ThumbnailRail.svelte';
 
-	const { active, onactivechange, editor, handler, presentationTheme, onthemechange, slides, canvasSize, mediaDataUrls, current, onselect }: {
+	const { active, onactivechange, editor, handler, presentationTheme, onthemechange, slides, canvasSize, mediaDataUrls, current, onselect, chromeUi, onheaderfooter }: {
 		active: MobileSheetKey;
 		onactivechange: (active: MobileSheetKey) => void;
 		editor: EditorState;
@@ -29,6 +29,9 @@
 		mediaDataUrls: Map<string, string>;
 		current: number;
 		onselect: (index: number) => void;
+		/** Insert > Comment opens the Comments pane, as on the ribbon. */
+		chromeUi?: ChromeUiState;
+		onheaderfooter?: () => void;
 	} = $props();
 	const t = useTranslator();
 	const open = (key: Exclude<MobileSheetKey, null>) => {
@@ -44,27 +47,30 @@
 	});
 	function request(event: MobileBarRequestEvent): void {
 		const key = event.detail.id;
-		if (key === 'insert') {
-			editor.insertElement(newTextElement());
-			onactivechange(null);
-		} else {
-			open(key);
-		}
+		open(key);
 	}
 </script>
 
 <div class="pptx-svelte-mobile-actions">
 	{#if active === 'slides'}
 		<MobileSheet title={t('pptx.sections.slides')} onclose={close}>
-			<ThumbnailRail {slides} {canvasSize} {mediaDataUrls} {current} onselect={selectSlide} />
+			<ThumbnailRail fullWidth {slides} {canvasSize} {mediaDataUrls} {current} onselect={selectSlide} />
 		</MobileSheet>
-	{:else if active === 'insert'}
-		<MobileSheet title={t('pptx.mobileBar.insert')} onclose={close}><InsertMenu {editor} /></MobileSheet>
 	{:else if active === 'inspector'}
 		<MobileSheet title={t('pptx.field.format')} onclose={close}><InspectorPanel {editor} {handler} {presentationTheme} {onthemechange} {mediaDataUrls} /></MobileSheet>
 	{:else if active === 'comments'}
 		<MobileSheet title={t('pptx.toolbar.comments')} onclose={close}><ReviewCommentsPanel {editor} embedded /></MobileSheet>
 	{/if}
+	<InsertTab
+		phone
+		open={active === 'insert'}
+		onclose={close}
+		{editor}
+		{canvasSize}
+		{onheaderfooter}
+		onnavigateslide={onselect}
+		{chromeUi}
+	/>
 	<pptx-ui-mobile-bar state={barState} onmobile-bar-request={request}></pptx-ui-mobile-bar>
 </div>
 
@@ -72,7 +78,7 @@
 	.pptx-svelte-mobile-actions { display: none; }
 	@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {
 		.pptx-svelte-mobile-actions { display: contents; }
-		.pptx-svelte-mobile-actions pptx-ui-mobile-bar { position: absolute; z-index: 50; right: 0; bottom: 0; left: 0; }
+		.pptx-svelte-mobile-actions pptx-ui-mobile-bar { position: absolute; z-index: 70; right: 0; bottom: 0; left: 0; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-thumbs) { display:flex !important; max-height:55dvh; border:0; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-insert) { display: flex; flex-wrap: wrap; gap: 8px; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-insert-btn) { min-width: 44px; min-height: 44px; }

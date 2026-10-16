@@ -35,7 +35,7 @@ import type { MobileBarIntent, MobileBarRequestEvent, MobileBarViewState } from 
 import { translationsSignal } from './translations-signal';
 
 /** Which mobile sheet/panel is currently active (highlights its button). */
-export type MobileBarSheet = 'slides' | 'inspector' | 'comments' | 'notes' | null;
+export type MobileBarSheet = 'slides' | 'insert' | 'inspector' | 'comments' | 'notes' | null;
 
 @Component({
 	selector: 'pptx-mobile-bottom-bar',
@@ -59,7 +59,7 @@ export class MobileBottomBarComponent {
 
 	/** User tapped the Slides button. */
 	readonly openSlides = output<void>();
-	/** User tapped Insert (quick-inserts a text box). */
+	/** User tapped Insert (opens the Insert sheet). */
 	readonly insert = output<void>();
 	/** User tapped the Format (inspector) button. */
 	readonly openFormat = output<void>();

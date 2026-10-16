@@ -18,6 +18,14 @@ import { applyChartAxisScaling, upsertChartAxisChild } from '../../utils/chart-a
 import { applyChartGroupOptionsToXml } from '../../utils/chart-group-options';
 import { applyChartSpaceFormatToXml } from '../../utils/chart-space-format';
 import {
+	collectChartSeriesNodes,
+	readChartElementFormatsFromXml,
+} from '../../utils/chart-element-format-read-xml';
+import {
+	applyChromeElementFormatsToXml,
+	applySeriesElementFormatsToXml,
+} from '../../utils/chart-element-format-targets';
+import {
 	applyChartAxisTitleToXml,
 	applyChartAxisTitleStyleToXml,
 } from '../../utils/chart-axis-title-serializer';
@@ -42,7 +50,10 @@ import {
 import { isLineDrawnChartType } from '../../utils/chart-container-type-map';
 import { buildChartExSpaceXml, canGenerateChartEx } from '../../utils/chart-cx-generator';
 import { applyDataLabelsRangeToDLbls } from '../../utils/chart-data-labels-range';
-import { applyChartDataLabelsToXml } from '../../utils/chart-data-labels-serializer';
+import {
+	applyChartDataLabelsToXml,
+	applySeriesDataLabelOptionsToXml,
+} from '../../utils/chart-data-labels-serializer';
 import { applyChartDataTable } from '../../utils/chart-data-table';
 import {
 	applySeriesDataPointsToXml,
@@ -60,6 +71,8 @@ import {
 	filteredSeriesUnchanged,
 } from '../../utils/chart-filtered-series-writer';
 import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
+import { embedChartElementPictures, ensureRelationshipNamespace } from './chart-element-pictures';
+import { syncChartAxisNodes } from '../../utils/chart-axis-nodes';
 import type { ChartGradientWriteOptions } from '../../utils/chart-gradient-fill-writer';
 import { buildChartGradFillXml } from '../../utils/chart-gradient-fill-writer';
 import { applyChartLayouts } from '../../utils/chart-layout';
@@ -255,6 +268,34 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Record `chartData` as parsed, straight off `enrichChartData`, as this
 	 * chart's load-time baseline. See {@link chartDataBaselines}.
 	 */
+	/** The element formats the original chart part authors (see `chart-element-format-read-xml`). */
+	private readAuthoredChartElementFormats(
+		chartXmlStr: string,
+		chartData: PptxChartData,
+	): PptxChartData['elementFormats'] {
+		const localName = (key: string) => this.compatibilityService.getXmlLocalName(key);
+		const original = this.parser.parse(chartXmlStr) as XmlObject;
+		const chartSpace = this.xmlLookupService.getChildByLocalName(original, 'chartSpace');
+		const plotArea = this.xmlLookupService.getChildByLocalName(
+			this.xmlLookupService.getChildByLocalName(chartSpace, 'chart'),
+			'plotArea',
+		);
+		return readChartElementFormatsFromXml(
+			{ chartSpace, seriesNodes: collectChartSeriesNodes(plotArea, localName) },
+			chartData,
+			localName,
+			{
+				resolve: (node) => this.parseColor(node),
+				...(this.colorStyleCodec
+					? {
+							parseGradient: (parent: XmlObject) =>
+								parseChartGradientFill(parent, this.xmlLookupService, this.colorStyleCodec),
+						}
+					: {}),
+			},
+		);
+	}
+
 	protected rememberChartDataBaseline(chartData: PptxChartData): void {
 		if (!chartData.chartPartPath) {
 			return;
@@ -303,7 +344,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			for (const slide of slides) visit(slide.elements, slide.id);
 			this.pendingChartUpdates = [...current.values()];
 		}
-		for (const { chartData, slidePath } of this.pendingChartUpdates) {
+		for (const pending of this.pendingChartUpdates) {
+			const { slidePath } = pending;
+			let { chartData } = pending;
 			// An untouched chart's `chartData` is byte-identical (as JSON) to what
 			// `enrichChartData` parsed off this same part at load time: nothing
 			// the editor did changed it. Rebuilding it anyway re-serializes every
@@ -347,6 +390,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			try {
 				const chartXmlStr = await chartFile.async('string');
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
+				// What the part authored for each element, read off a pristine copy, so only
+				// format sections the user changed are written back.
+				const authoredFormats = chartData.elementFormats
+					? this.readAuthoredChartElementFormats(chartXmlStr, chartData)
+					: undefined;
 				// Collected alongside the cache rewrite below and, once the chart
 				// XML is written back, handed to the embedded-workbook writer so
 				// "Edit Data in Excel" reflects the same edit; see
@@ -362,6 +410,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// part families; see `chart-part-family-switch` / `chart-cx-update`.
 				if (await this.saveChartAcrossFamilies(chartXmlData, chartSpace, chartData, slidePath)) {
 					continue;
+				}
+
+				// Pictures chosen in a Format pane become media parts of this chart.
+				const embeddedFormats = await embedChartElementPictures(
+					chartData.elementFormats,
+					chartPartPath,
+					{
+						zip: this.zip,
+						parse: (xml) => this.parser.parse(xml) as XmlObject,
+						build: (tree) => this.builder.build(tree),
+						parseDataUrl: (url) => this.parseDataUrlToBytes(url),
+					},
+				);
+				if (embeddedFormats !== chartData.elementFormats) {
+					chartData = { ...chartData, elementFormats: embeddedFormats };
+					ensureRelationshipNamespace(chartSpace);
 				}
 
 				const chartRoot = this.xmlLookupService.getChildByLocalName(chartSpace, 'chart');
@@ -640,6 +704,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						);
 					}
 
+					// The series' own label options (Format Data Labels on one series).
+					applySeriesDataLabelOptionsToXml(seriesNode, seriesData.dataLabelOptions, (key) =>
+						this.compatibilityService.getXmlLocalName(key),
+					);
+
 					// Series-wide "Value From Cells" (c15:datalabelsRange), independent
 					// of the per-point overrides above: it lives in c:ser/c:dLbls's OWN
 					// extLst, not a c:dLbl. dataLabelsRangeUnchanged compares against
@@ -736,11 +805,29 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
+				// Format-pane edits on series and data labels, while the model's series
+				// still line up with the consolidated container's c:ser list.
+				if (chartData.elementFormats) {
+					applySeriesElementFormatsToXml(
+						this.xmlLookupService.getChildrenArrayByLocalName(chartTypeContainer, 'ser'),
+						chartData,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+						authoredFormats,
+					);
+				}
+
 				// â”€â”€ Per-series combo types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				// When series carry differing `seriesChartType` values, split the
 				// single chart-type container into per-type sibling containers under
 				// c:plotArea (PowerPoint's combo-chart shape).
-				if (chartData.series.some((s) => s.seriesChartType !== undefined)) {
+				// A series on the secondary axis needs a chart group of its own too.
+				const valueAxisIds = new Set(
+					chartData.series.map((s) => s.axisId).filter((id) => id !== undefined),
+				);
+				if (
+					chartData.series.some((s) => s.seriesChartType !== undefined) ||
+					valueAxisIds.size > 1
+				) {
 					applyComboSeriesTypesToXml(
 						plotArea,
 						chartTypeKey,
@@ -749,6 +836,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						(key) => this.compatibilityService.getXmlLocalName(key),
 						chartData.axes,
 						consolidation?.containerChildren,
+						consolidation?.axisChildren,
 					);
 				}
 
@@ -1000,6 +1088,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// preserved via the original XML passthrough but lose any edits
 				// (see OPENXML_PARITY.md M-tier).
 				if (chartData.axes) {
+					// A secondary axis the model gained (or dropped) becomes (or stops being) an element.
+					syncChartAxisNodes(plotArea, chartData.axes, (key) =>
+						this.compatibilityService.getXmlLocalName(key),
+					);
 					const axisTypeNames = ['valAx', 'catAx', 'dateAx', 'serAx'] as const;
 					for (const axisTypeName of axisTypeNames) {
 						const axisNodes = this.xmlLookupService.getChildrenArrayByLocalName(
@@ -1118,6 +1210,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
+				// Format-pane edits on the chart area, plot area, title, legend, axes
+				// and gridlines: applied last so they win over the flat-field writers.
+				if (chartData.elementFormats) {
+					applyChromeElementFormatsToXml(
+						chartSpace,
+						chartData,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+						authoredFormats,
+					);
+				}
+
 				// Every chart-group container is a CT_* SEQUENCE, and the mutations
 				// above (new series appended, grouping inserted, ofPie options added)
 				// can land a child out of position. Re-emit each container in schema
@@ -1127,11 +1230,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					if (!local.endsWith('Chart')) {
 						continue;
 					}
-					const container = plotArea[key] as XmlObject | undefined;
-					if (container) {
-						orderChartContainerChildren(container, local, (k) =>
-							this.compatibilityService.getXmlLocalName(k),
-						);
+					// Two groups of one type (primary and secondary axis) are one key holding an array.
+					for (const container of ([] as Array<XmlObject | undefined>).concat(
+						plotArea[key] as XmlObject | XmlObject[] | undefined,
+					)) {
+						if (container) {
+							orderChartContainerChildren(container, local, (k) =>
+								this.compatibilityService.getXmlLocalName(k),
+							);
+						}
 					}
 				}
 

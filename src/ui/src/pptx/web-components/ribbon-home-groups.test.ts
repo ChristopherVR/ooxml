@@ -4,13 +4,18 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
 	arrangeAlignAction,
 	arrangeHomeControls,
+	RECENT_SHAPES_KEY,
 	drawingHomeControls,
 	slidesHomeControls,
 } from '../render';
 import { registerPptxWebControls } from './index';
 
 beforeAll(registerPptxWebControls);
-afterEach(() => document.body.replaceChildren());
+afterEach(() => {
+	document.body.replaceChildren();
+	// Picking a shape remembers it in Recently Used Shapes.
+	localStorage.removeItem(RECENT_SHAPES_KEY);
+});
 
 type Tag =
 	| 'slides'
@@ -46,9 +51,13 @@ describe('shared Slides group', () => {
 	it('renders the group, a split New Slide and the public ids once', () => {
 		const host = mount('slides', slidesHomeControls(slides));
 		expect(host.querySelectorAll('[data-ribbon-group="home.slides"]')).toHaveLength(1);
-		for (const id of ['newSlide', 'slideTemplates', 'layout', 'reset', 'section']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(host.querySelectorAll(`[data-ribbon-control="home.slides.${id}"]`)).toHaveLength(1);
 		}
+		// PowerPoint has no Slide Templates button on Home: it moved into New Slide's menu.
+		expect(
+			host.querySelector('.slot > [data-ribbon-control="home.slides.slideTemplates"]'),
+		).toBeNull();
 		const split = control(host, 'home.slides.newSlide');
 		expect(split.dataset.pptxChrome).toBe('split-button');
 		expect(split.querySelector('[data-pptx-chrome="split-main"]')?.textContent).toBe('New Slide');
@@ -66,14 +75,51 @@ describe('shared Slides group', () => {
 		};
 		host.querySelector<HTMLElement>('[data-ribbon-control="home.slides.reset"]')!.click();
 		expect(read()).toHaveLength(2);
+		// No layouts: the caret stays because Slide Templates still ends the menu.
+		expect(host.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden).toBeFalsy();
+	});
+
+	it('keeps Slide Templates reachable for a deck with no layouts, and hides the caret only without it', () => {
+		const noLayouts = { ...slides, hasLayouts: false, newSlideNeedsLayout: false };
+		const host = mount('slides', slidesHomeControls(noLayouts));
+		const caret = host.querySelector<HTMLButtonElement>('[data-pptx-chrome="split-caret"]')!;
+		expect(caret.hidden).toBeFalsy();
+		caret.click();
+		const entry = host.querySelector<HTMLButtonElement>(
+			'.popup [data-ribbon-control="home.slides.slideTemplates"]',
+		)!;
+		expect(entry.textContent).toBe('Slide Templates...');
+		const read = intents(host);
+		entry.click();
+		expect(read()).toStrictEqual([{ id: 'home.slides.slideTemplates' }]);
+		const bare = mount('slides', slidesHomeControls({ ...noLayouts, showTemplates: false }));
 		expect(
-			host.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden,
+			bare.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden,
 		).toBeTruthy();
 	});
 
-	it('hides templates, mirrors popover state and keeps the visible text as the name', () => {
-		const host = mount('slides', slidesHomeControls({ ...slides, showTemplates: false }));
-		expect(control(host, 'home.slides.slideTemplates').hidden).toBeTruthy();
+	it('offers Slide Templates at the end of the New Slide menu, unless hidden', () => {
+		const open = (state: typeof slides) => {
+			const host = mount('slides', slidesHomeControls(state));
+			host.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.click();
+			return host;
+		};
+		const shown = open(slides);
+		const entry = shown.querySelector<HTMLButtonElement>(
+			'.popup [data-ribbon-control="home.slides.slideTemplates"]',
+		)!;
+		expect(entry.textContent).toBe('Slide Templates...');
+		const read = intents(shown);
+		entry.click();
+		expect(read()).toStrictEqual([{ id: 'home.slides.slideTemplates' }]);
+		const hidden = open({ ...slides, showTemplates: false });
+		expect(
+			hidden.querySelector('.popup [data-ribbon-control="home.slides.slideTemplates"]'),
+		).toBeNull();
+	});
+
+	it('mirrors popover state and keeps the visible text as the name', () => {
+		const host = mount('slides', slidesHomeControls(slides));
 		const layout = control(host, 'home.slides.layout').querySelector('button')!;
 		expect(layout.getAttribute('aria-expanded')).toBe('false');
 		expect(layout.getAttribute('aria-haspopup')).toBe('dialog');
@@ -111,13 +157,28 @@ describe('shared Drawing triggers', () => {
 		shapes.click();
 		expect(shapes.getAttribute('aria-expanded')).toBe('true');
 		expect(popup.mock.calls[0][0].detail).toStrictEqual({ id: 'home.drawing.shapes', open: true });
-		const rows = control(host, 'home.drawing.shapes').querySelectorAll<HTMLElement>(
-			'[role="menuitem"]',
-		);
-		expect(rows).toHaveLength(12);
-		rows[2].click();
+		const menu = control(host, 'home.drawing.shapes');
+		const headings = [...menu.querySelectorAll('.heading')].map((heading) => heading.textContent);
+		expect(headings).toEqual([
+			'Lines',
+			'Rectangles',
+			'Basic Shapes',
+			'Block Arrows',
+			'Equation Shapes',
+			'Flowchart',
+			'Stars and Banners',
+			'Callouts',
+			'Action Buttons',
+		]);
+		const star = menu.querySelector<HTMLElement>('[role="menuitem"][data-value="star5"]')!;
+		expect(star.title).toBe('Star: 5 Points');
+		expect(star.querySelector('svg path')?.getAttribute('d')).toBeTruthy();
+		// Freeform tools are listed under Lines, but only Insert can draw them.
+		const freeform = menu.querySelector<HTMLButtonElement>('[data-value="freeform:curve"]')!;
+		expect(freeform.disabled).toBe(true);
+		star.click();
 		expect(shapes.getAttribute('aria-expanded')).toBe('false');
-		expect(read()).toStrictEqual([{ id: 'home.drawing.shapes', value: 'ellipse' }]);
+		expect(read()).toStrictEqual([{ id: 'home.drawing.shapes', value: 'star5' }]);
 	});
 
 	it('offers the colour popover with theme, standard and recent colours', () => {

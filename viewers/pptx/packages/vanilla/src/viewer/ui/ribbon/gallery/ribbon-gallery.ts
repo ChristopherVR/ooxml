@@ -1,11 +1,17 @@
 import { armEditorKeyboard, buildRibbonGallery } from 'ooxml-ui/pptx';
-import type { RibbonGalleryPickEvent, RibbonGalleryPlacement } from 'ooxml-ui/pptx';
+import type {
+	RibbonGalleryPickEvent,
+	RibbonGalleryPlacement,
+	RibbonGalleryPreviewEvent,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import type { RibbonGalleryHub, RibbonGalleryView } from './gallery-hub';
 
 export interface RibbonGalleryOptions {
 	chevronOnly?: boolean;
+	/** Runs a command a gallery lists under its tiles ("Format Background..."). */
+	onCommand?: (command: 'formatBackground') => void;
 }
 export interface RibbonGalleryControl extends RibbonGalleryView {
 	el: HTMLElement;
@@ -30,10 +36,20 @@ export function createRibbonGallery(
 	el.translateLabel = (key, params) => t(key, params ? { ...params } : undefined);
 	el.addEventListener('gallery-pick', (event) => {
 		if (!el.disabled) {
-			hub.pick(placement.gallery, (event as RibbonGalleryPickEvent).detail.itemId);
+			const { itemId, action } = (event as RibbonGalleryPickEvent).detail;
+			const command = hub.pick(placement.gallery, itemId, action);
+			if (command?.kind === 'command') {
+				options.onCommand?.(command.command);
+			}
 			armEditorKeyboard(el.closest<HTMLElement>('.pptxv'));
 		}
 	});
+	el.addEventListener('gallery-preview', (event) => {
+		if (!el.disabled) {
+			hub.preview(placement.gallery, (event as RibbonGalleryPreviewEvent).detail.itemId);
+		}
+	});
+	el.addEventListener('gallery-preview-end', () => hub.endPreview());
 	const control: RibbonGalleryControl = {
 		el,
 		// Live reads: the element re-renders its trigger, so a node captured here goes stale.

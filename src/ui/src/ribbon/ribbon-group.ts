@@ -22,7 +22,7 @@ function tokenPx(el: Element, name: string, fallback: number): number {
  * open in a popup at `--office-ribbon-collapse-x/-y`). The group marks itself `data-compact-row`
  * when every command is one line tall (they centre vertically) and `data-stack` when it holds only
  * small drop-down galleries (`[mode="dropdown"]` without `data-command-large`), which stack in
- * columns. Static `launcherEvent`/`collapseEvent` and `launcherDetail()` let a product subclass
+ * columns (`data-stack-beside` when an inline gallery sits next to them). Static `launcherEvent`/`collapseEvent` and `launcherDetail()` let a product subclass
  * keep its published events.
  */
 export class OfficeUiRibbonGroup extends OfficeElement {
@@ -83,6 +83,17 @@ export class OfficeUiRibbonGroup extends OfficeElement {
 			'data-stack',
 			stackable.length > 1 && stackable.length === children.length,
 		);
+		// An inline gallery beside several small drop-downs (Design > Variants): the drop-downs
+		// stack in columns of three next to it, and the gallery spans the rows.
+		const inline = children.filter(
+			(el) => el.matches('[mode="inline"]') || el.querySelector('[mode="inline"]') !== null,
+		);
+		const beside =
+			inline.length > 0 &&
+			stackable.length > 1 &&
+			stackable.length + inline.length === children.length;
+		this.toggleAttribute('data-stack-beside', beside);
+		for (const el of children) el.toggleAttribute('data-stack-span', beside && inline.includes(el));
 		const tallest = Math.max(0, ...children.map((el) => el.getBoundingClientRect().height));
 		if (tallest > 0)
 			this.toggleAttribute(

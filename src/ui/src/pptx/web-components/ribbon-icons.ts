@@ -28,6 +28,7 @@ export const RIBBON_ICON_PATHS: Readonly<Record<string, string>> = {
 	palette:
 		'M10 2a8 8 0 1 0 0 16h1a2 2 0 0 0 1-3.7 1.5 1.5 0 0 1 1-2.3h2a3 3 0 0 0 3-3c0-4-4-7-8-7M6 6h.1M10 5h.1M14 7h.1M5 10h.1',
 	pencil: 'M12 3l5 5M3 17l1-5L13 3l4 4-9 9Z',
+	lightbulb: 'M7 14h6M8 17h4M10 2a5 5 0 0 0-3 9c.6.5 1 1.2 1 2h4c0-.8.4-1.5 1-2a5 5 0 0 0-3-9',
 	monitor: 'M2 3h16v11H2ZM7 18h6M10 14v4',
 	paint: 'M3 9l6-6 8 8-6 6ZM4 4l8 8M3 18h12M17 13s-2 3-2 4a2 2 0 0 0 4 0c0-1-2-4-2-4',
 	camera: 'M2 6h4l2-3h4l2 3h4v11H2ZM7 11a3 3 0 1 0 6 0 3 3 0 1 0-6 0',

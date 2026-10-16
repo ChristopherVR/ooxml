@@ -1,3 +1,4 @@
+import { describeElementChange } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -193,7 +194,7 @@ export function SlideDiffRow({
 									className='flex items-start gap-2 rounded bg-muted/60 px-2 py-1.5 text-[11px]'
 								>
 									<ChangeKindIcon kind={change.kind} />
-									<span className='text-foreground'>{change.description}</span>
+									<span className='text-foreground'>{describeElementChange(change, t)}</span>
 								</div>
 							))}
 						</div>

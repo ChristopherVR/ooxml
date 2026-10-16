@@ -12,6 +12,8 @@
 	import { useTranslator } from '../../../i18n/context';
 	import { useViewerOptions } from '../../state/viewer-options-context';
 	import ModalDialog from './ModalDialog.svelte';
+	import ViewerRegion from '../../components/ViewerRegion.svelte';
+	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
 	import type { ShareDialogProps } from './props';
 	import {
 		buildJoinConfig,
@@ -114,14 +116,20 @@
 			return undefined;
 		});
 	}
+	// Host-supplied body (`regions['dialog.share']`): the modal frame stays.
+	const customization = useViewerCustomization();
+	const regionRenderer = $derived(customization.regionRenderer('dialog.share'));
 </script>
 
 <ModalDialog
 	{open}
 	title={active ? t('pptx.share.collaborationActive') : t('pptx.toolbar.share')}
 	{onclose}
+	bare={Boolean(regionRenderer)}
 >
-	{#if active}
+	{#if regionRenderer}
+		<ViewerRegion region="dialog.share" renderer={regionRenderer} close={onclose} />
+	{:else if active}
 		<div class="pptx-svelte-share-active">
 			<!-- Status -->
 			<div class="pptx-svelte-share-status-row">

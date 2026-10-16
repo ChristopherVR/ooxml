@@ -196,4 +196,17 @@ export const translations = {
 	'pptx.image.cropModeHint':
 		'Arrastre los controladores negros para recortar. Pulse Intro para aplicar o Esc para cancelar.',
 	'pptx.image.cropHint': 'Seleccione una imagen para recortarla',
+	'pptx.media.captionTracks': 'Pistas de subtítulos',
+	'pptx.media.trackName': 'Pista',
+	'pptx.media.trackLabel': 'Etiqueta',
+	'pptx.media.trackLanguage': 'Idioma',
+	'pptx.media.trackKind': 'Tipo',
+	'pptx.media.trackKind.subtitles': 'Subtítulos',
+	'pptx.media.trackKind.descriptions': 'Descripciones',
+	'pptx.media.trackDefault': 'Predeterminada',
+	'pptx.media.trackSource': 'Origen',
+	'pptx.media.trackSourcePlaceholder': 'captions.vtt o URL de datos',
+	'pptx.media.trackInlineWebVtt': 'WebVTT en línea',
+	'pptx.media.removeTrack': 'Quitar pista',
+	'pptx.media.addCaptionTrack': 'Agregar pista de subtítulos',
 } as const;

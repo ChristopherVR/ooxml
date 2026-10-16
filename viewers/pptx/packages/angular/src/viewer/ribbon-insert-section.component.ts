@@ -19,6 +19,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	CUSTOM_ELEMENTS_SCHEMA,
 	inject,
 	input,
@@ -26,7 +27,12 @@ import {
 	viewChild,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { classifyMediaType, DEFAULT_INSERT_CHART_KIND } from 'ooxml-ui/pptx';
+import {
+	classifyMediaType,
+	DEFAULT_INSERT_CHART_KIND,
+	isDialogAvailable,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
@@ -42,10 +48,12 @@ import {
 	newTextElement,
 } from './editor-insert';
 import { EditorStateService } from './editor-state.service';
+import { LoadContentService } from './load-content.service';
 import { OutlineAuthoringService } from './outline-authoring.service';
 import { RibbonInsertFieldsComponent } from './ribbon-insert-fields.component';
 import { imageDimensions, pickFile, readAsDataUrl } from './ribbon-insert-file-picker';
 import { visibleFreeformTools } from './ribbon-insert-freeform';
+import { layoutOptionsFrom } from './ribbon-layout-options';
 import { injectResolvedCustomization } from './viewer-customization.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 
@@ -57,7 +65,11 @@ import { ViewerDialogsService } from './viewer-dialogs.service';
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [RibbonInsertFieldsComponent],
 	template: `
-		<pptx-ui-ribbon-insert [state]="view()" (insert-request)="request($event)" />
+		@if (phone()) {
+			<pptx-ui-mobile-insert [state]="view()" (insert-request)="request($event)" />
+		} @else {
+			<pptx-ui-ribbon-insert [state]="view()" (insert-request)="request($event)" />
+		}
 		<pptx-ribbon-insert-fields [slideIndex]="slideIndex()" />
 	`,
 })
@@ -68,17 +80,35 @@ export class RibbonInsertSectionComponent {
 	private readonly outline = inject(OutlineAuthoringService, { optional: true });
 	private readonly customization = injectResolvedCustomization();
 	private readonly fields = viewChild(RibbonInsertFieldsComponent);
+	private readonly loader = inject(LoadContentService);
+	/** Layouts New Slide offers: one entry per layout of the deck's masters. */
+	private readonly layouts = computed(() => layoutOptionsFrom(this.loader.slideMasters()));
 
 	readonly slideIndex = input<number>(0);
+	/** Whether the comments pane is open: Comment must not toggle it shut. */
+	readonly commentsOpen = input<boolean>(false);
 	readonly canEdit = input<boolean>(false);
 	/** The insert-chart dropdown entry ('column' is vertical, 'bar' horizontal). */
 	readonly newChartType = input<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 	readonly newShapeType = input<ShapePresetType>('rect');
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	readonly phone = input<boolean>(false);
+	/** Phone only: a request was handled, so the sheet can close. */
+	readonly handled = output<void>();
 
 	readonly openSmartArtDialog = output<void>();
 	readonly openEquationDialog = output<void>();
 	/** "Hyperlink"; the host opens the hyperlink edit dialog for the selection. */
 	readonly openHyperlink = output<void>();
+	/** "Comment"; the host opens the comments pane, as Review > New Comment does. */
+	readonly toggleComments = output<void>();
+	/** Slide Templates... at the end of New Slide's menu; the host opens the gallery dialog. */
+	readonly openTemplateGallery = output<void>();
+	/**
+	 * Phone only: Date & Time; the sheet's host owns the picker so it outlives the sheet (the
+	 * section is torn down with the sheet's body the moment a pick closes it).
+	 */
+	readonly openDateTime = output<void>();
 	readonly chartTypeChange = output<InsertChartKind>();
 	readonly shapeTypeChange = output<ShapePresetType>();
 
@@ -90,8 +120,20 @@ export class RibbonInsertSectionComponent {
 			chartKind: this.newChartType(),
 			activeFreeformTool: this.outline?.activeFreeformTool() ?? null,
 			freeformTools: visibleFreeformTools(this.outline, this.customization()),
+			// Like Home, New Slide works without layouts (it adds a blank slide).
+			newSlideAvailable: true,
+			commentAvailable: true,
+			slideTemplatesAvailable: isDialogAvailable(this.customization(), 'slideTemplates'),
+			layouts: this.layouts(),
+			...this.currentLayout(),
 			translate: (key: string) => this.translate.instant(key),
 		};
+	}
+
+	/** The active slide's layout, marked in the New Slide gallery. */
+	private currentLayout(): { currentLayoutPath?: string } {
+		const path = this.editor.slides()[this.slideIndex()]?.layoutPath;
+		return path ? { currentLayoutPath: path } : {};
 	}
 
 	protected request(event: Event): void {
@@ -107,10 +149,27 @@ export class RibbonInsertSectionComponent {
 					equation: () => this.openEquationDialog.emit(),
 					link: () => this.openHyperlink.emit(),
 					headerFooter: () => this.dialogs.showHeaderFooter.set(true),
+					// Opening an already open pane would toggle it shut.
+					comment: () => (this.commentsOpen() ? undefined : this.toggleComments.emit()),
 				};
 				commands[intent.value]();
 				break;
 			}
+			case 'table':
+				this.editor.addElement(this.slideIndex(), newTableElement(intent.rows, intent.columns));
+				break;
+			case 'newSlide': {
+				const layout = resolveInsertSlideLayout(
+					this.layouts(),
+					intent.value,
+					this.currentLayout().currentLayoutPath,
+				);
+				this.editor.addSlide(this.slideIndex(), layout?.path);
+				break;
+			}
+			case 'slideTemplates':
+				this.openTemplateGallery.emit();
+				break;
 			case 'shapeType':
 				this.shapeTypeChange.emit(intent.value as ShapePresetType);
 				break;
@@ -134,10 +193,17 @@ export class RibbonInsertSectionComponent {
 				break;
 			case 'field':
 				if (intent.value === 'datetime') {
-					this.fields()?.openDatePicker();
+					if (this.phone()) {
+						this.openDateTime.emit();
+					} else {
+						this.fields()?.openDatePicker();
+					}
 				} else {
 					this.fields()?.insertField(intent.value);
 				}
+		}
+		if (this.phone()) {
+			this.handled.emit();
 		}
 	}
 

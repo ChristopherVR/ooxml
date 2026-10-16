@@ -31,7 +31,7 @@
 	import './thumbnail-rail.css';
 
 	const {
-		slides, canvasSize, mediaDataUrls, current, onselect, editable = false, onmove, onaddslide,
+		slides, canvasSize, mediaDataUrls, current, onselect, editable = false, fullWidth = false, onmove, onaddslide,
 		sections = [], onsectiontoggle, onsectionrename, onsectiondelete, onsectionmove,
 		onaddslideafter, onduplicateslides, ondeleteslides, ontogglehideslides, onopenlayoutforslide, onaddsectionat,
 	}: ThumbnailRailProps = $props();
@@ -222,7 +222,7 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -- Enter here only catches the keydown bubbled up from a focused (interactive) thumbnail button -->
-<nav data-pptx-chrome="slides" style={`width:${EDITOR_SLIDE_RAIL_WIDTH}px`} class="pptx-svelte-thumbs" aria-label={t('pptx.sections.slides')} onkeydown={onRailKeydown}>
+<nav data-pptx-chrome="slides" style={`width:${fullWidth ? '100%' : `${EDITOR_SLIDE_RAIL_WIDTH}px`}`} class="pptx-svelte-thumbs" aria-label={t('pptx.sections.slides')} onkeydown={onRailKeydown}>
 	<div bind:this={railEl} bind:clientHeight={viewportHeight} class="pptx-svelte-thumbs-scroll" data-pptx-chrome="slide-list" onscroll={onScroll}>
 	{#if hasSections}
 		{#each sectionGroups as group, groupIndex (group.section?.id ?? 'ungrouped')}

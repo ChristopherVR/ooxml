@@ -129,7 +129,7 @@ function onCopyLink(): void {
 </script>
 
 <template>
-	<ModalDialog :open="props.open" :title="title" @close="onClose">
+	<ModalDialog region="dialog.broadcast" :open="props.open" :title="title" @close="onClose">
 		<!-- Active: share the follow link + stop control -->
 		<div v-if="props.active" class="pptx-vue-broadcast flex flex-col gap-4">
 			<p class="pptx-vue-broadcast-desc text-[13px] leading-relaxed text-muted-foreground">

@@ -51,6 +51,9 @@
 							"name": "filter"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "selected-id"
 						}
 					],
@@ -65,6 +68,13 @@
 						{
 							"kind": "field",
 							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -116,6 +126,9 @@
 							"name": "hide-labels"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "selected"
 						}
 					],
@@ -131,6 +144,13 @@
 						{
 							"kind": "field",
 							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -176,6 +196,9 @@
 							"name": "color"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "name"
 						},
 						{
@@ -192,6 +215,13 @@
 						{
 							"kind": "field",
 							"name": "color",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "locale",
 							"type": {
 								"text": "string"
 							}
@@ -416,6 +446,9 @@
 					"description": "The Calendar app's side list: meetings in the next two weeks grouped by day, each with its time and a Join button once it is near or live. Properties: `meetings`, `zone`, `now` (the clock, for tests). Emits `office-agenda-open` `{ meetingId, start }`, `office-agenda-join` `{ meetingId }` and `office-agenda-new` `{}`.",
 					"attributes": [
 						{
+							"name": "locale"
+						},
+						{
 							"name": "now"
 						},
 						{
@@ -423,6 +456,13 @@
 						}
 					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
 						{
 							"kind": "field",
 							"name": "meetings"
@@ -477,6 +517,9 @@
 					"description": "A Teams-style calendar: a time grid for the work week, the full week or one day in the viewer's zone, with Today, previous and next, and the view switch. Overlapping meetings share a column. Properties: `meetings` (core `MeetingView[]`), `zone` (default: this device's), `now` (the clock, for tests), `mode`. Events: `office-calendar-open` `{ meetingId, start }`, `office-calendar-new` `{ start }` (a click on an empty slot, or the New meeting button), and `office-calendar-mode` `{ mode }`.",
 					"attributes": [
 						{
+							"name": "locale"
+						},
+						{
 							"name": "mode"
 						},
 						{
@@ -490,6 +533,13 @@
 						{
 							"kind": "field",
 							"name": "anchor"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -565,6 +615,9 @@
 							"name": "heading"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "mic"
 						},
 						{
@@ -598,6 +651,13 @@
 						{
 							"kind": "field",
 							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "locale",
 							"type": {
 								"text": "string"
 							}
@@ -671,8 +731,19 @@
 					"tagName": "office-ui-call-grid",
 					"customElement": true,
 					"description": "The meeting stage. Property `participants` (`CallTile[]`). Someone sharing their screen is spotlighted with everyone else in a side strip. Your own tile is muted (no echo) and mirrored unless it shows a screen; tiles without video show the avatar. The grid only attaches the streams it is handed; capture and connections belong to the host.",
-					"attributes": [],
+					"attributes": [
+						{
+							"name": "locale"
+						}
+					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
 						{
 							"kind": "field",
 							"name": "participants"
@@ -706,6 +777,9 @@
 							"name": "heading"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "selected-id"
 						}
 					],
@@ -721,6 +795,13 @@
 						{
 							"kind": "field",
 							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "locale",
 							"type": {
 								"text": "string"
 							}
@@ -772,6 +853,9 @@
 							"name": "editing"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "placeholder"
 						},
 						{
@@ -800,6 +884,13 @@
 						{
 							"kind": "field",
 							"name": "files"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -881,6 +972,9 @@
 							"name": "highlight-id"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "self-id"
 						}
 					],
@@ -892,6 +986,13 @@
 								"text": "string"
 							},
 							"attribute": "highlight-id"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -968,6 +1069,9 @@
 					"description": "The Chat app's list: 1:1 and group chats, most recent first, with presence on the avatar, the last message and an unread badge. Properties: `chats` (core `ChatView[]`), `selectedId`. Emits `office-chat-select` `{ id }` and `office-chat-new` `{}` (the host asks who to chat with).",
 					"attributes": [
 						{
+							"name": "locale"
+						},
+						{
 							"name": "selected-id"
 						}
 					],
@@ -975,6 +1079,13 @@
 						{
 							"kind": "field",
 							"name": "chats"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
 						},
 						{
 							"kind": "field",
@@ -1960,6 +2071,12 @@
 					"events": [
 						{
 							"name": "office-gallery-pick"
+						},
+						{
+							"name": "office-gallery-preview"
+						},
+						{
+							"name": "office-gallery-preview-end"
 						}
 					]
 				}
@@ -2259,8 +2376,11 @@
 					"name": "OfficeUiOptionsDialog",
 					"tagName": "office-ui-options-dialog",
 					"customElement": true,
-					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them and emit `office-options-cancel`. \"Reset all options\" (shown when `defaults` is set) puts the defaults in the draft. `heading` defaults to \"Options\"; `labels` translates the buttons. `live` is PowerPoint's behaviour: every edit applies at once (there is no draft), OK, Escape and the close button keep the edits and Cancel emits `office-options-cancel` for the host to restore its snapshot. \"Reset all options\" then only emits `office-options-reset`; the host resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and value) and selecting a category emits `office-options-category`.",
+					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them and emit `office-options-cancel`. \"Reset all options\" (shown when `defaults` is set) puts the defaults in the draft. `heading` defaults to \"Options\"; `labels` translates the buttons. `live` is PowerPoint's behaviour: every edit applies at once (there is no draft), OK, Escape and the close button keep the edits and Cancel emits `office-options-cancel` for the host to restore its snapshot. \"Reset all options\" then only emits `office-options-reset`; the host resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and value) and selecting a category emits `office-options-category`. `custom-body` hands the whole body to the host: the frame, heading and close button stay, and whatever the host puts in `slot=\"body\"` replaces the category rail, the pane and the footer. The close button and Escape then behave as they do without it (OK when `live`, else Cancel).",
 					"attributes": [
+						{
+							"name": "custom-body"
+						},
 						{
 							"name": "heading"
 						},
@@ -2283,6 +2403,14 @@
 						{
 							"kind": "field",
 							"name": "category"
+						},
+						{
+							"kind": "field",
+							"name": "customBody",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "custom-body"
 						},
 						{
 							"kind": "field",
@@ -2397,6 +2525,9 @@
 					"attributes": [
 						{
 							"name": "label"
+						},
+						{
+							"name": "locale"
 						}
 					],
 					"members": [
@@ -2411,6 +2542,13 @@
 						{
 							"kind": "field",
 							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "locale",
 							"type": {
 								"text": "string"
 							}
@@ -2462,6 +2600,9 @@
 							"name": "heading"
 						},
 						{
+							"name": "locale"
+						},
+						{
 							"name": "name"
 						},
 						{
@@ -2486,6 +2627,13 @@
 						{
 							"kind": "field",
 							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "locale",
 							"type": {
 								"text": "string"
 							}
@@ -3064,7 +3212,7 @@
 					"name": "OfficeUiRibbonGroup",
 					"tagName": "office-ui-ribbon-group",
 					"customElement": true,
-					"description": "Labelled group of ribbon commands: `role=\"group\"`, `label` is the caption and name. `launcher` adds Office's corner dialog launcher (`launcher=\"<command>\"` emits `office-command` `{ command }`; `launcher-label` names it; `launcher-disabled` disables it). For narrow windows an overflow controller sets `data-collapsed` (the group becomes one button showing `icon` and the label; activating it emits `office-ribbon-collapse-toggle`) and `data-open` (its commands open in a popup at `--office-ribbon-collapse-x/-y`). The group marks itself `data-compact-row` when every command is one line tall (they centre vertically) and `data-stack` when it holds only small drop-down galleries (`[mode=\"dropdown\"]` without `data-command-large`), which stack in columns. Static `launcherEvent`/`collapseEvent` and `launcherDetail()` let a product subclass keep its published events.",
+					"description": "Labelled group of ribbon commands: `role=\"group\"`, `label` is the caption and name. `launcher` adds Office's corner dialog launcher (`launcher=\"<command>\"` emits `office-command` `{ command }`; `launcher-label` names it; `launcher-disabled` disables it). For narrow windows an overflow controller sets `data-collapsed` (the group becomes one button showing `icon` and the label; activating it emits `office-ribbon-collapse-toggle`) and `data-open` (its commands open in a popup at `--office-ribbon-collapse-x/-y`). The group marks itself `data-compact-row` when every command is one line tall (they centre vertically) and `data-stack` when it holds only small drop-down galleries (`[mode=\"dropdown\"]` without `data-command-large`), which stack in columns (`data-stack-beside` when an inline gallery sits next to them). Static `launcherEvent`/`collapseEvent` and `launcherDetail()` let a product subclass keep its published events.",
 					"attributes": [
 						{
 							"name": "data-open"

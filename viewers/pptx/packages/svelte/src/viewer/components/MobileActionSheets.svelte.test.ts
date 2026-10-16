@@ -2,6 +2,7 @@ import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { EditorState } from '../editor/editor-state.svelte';
 import MobileActionSheets from './MobileActionSheets.svelte';
 
 registerPptxWebControls();
@@ -13,7 +14,9 @@ afterEach(() => {
 });
 
 function open(props: Record<string, unknown> = {}) {
-	const editor = { insertElement: vi.fn() };
+	const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
+	editor.editable = true;
+	editor.setSlides([{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [] }]);
 	const onactivechange = vi.fn();
 	const target = document.createElement('div');
 	const instance = mount(MobileActionSheets, {
@@ -35,16 +38,25 @@ function open(props: Record<string, unknown> = {}) {
 	const buttons = Array.from(
 		target.querySelector('pptx-ui-mobile-bar')!.shadowRoot!.querySelectorAll('button'),
 	);
-	return { buttons, editor, onactivechange };
+	return { buttons, editor, onactivechange, target };
 }
 
 describe('mobileActionSheets bottom bar adapter', () => {
-	it('opens the tapped sheet and quick-inserts a text box for Insert', () => {
-		const { buttons, editor, onactivechange } = open();
+	it('opens the tapped sheet, and Insert opens the shared phone Insert sheet', () => {
+		const { buttons, onactivechange } = open();
 		buttons[0].click();
 		expect(onactivechange).toHaveBeenLastCalledWith('slides');
 		buttons[1].click();
-		expect(editor.insertElement).toHaveBeenCalledOnce();
+		expect(onactivechange).toHaveBeenLastCalledWith('insert');
+	});
+
+	it('draws the phone Insert sheet and a Text Box tile inserts through the editor, then closes', () => {
+		const { editor, onactivechange, target } = open({ active: 'insert' });
+		const sheet = target.querySelector('pptx-ui-mobile-insert')!;
+		sheet
+			.shadowRoot!.querySelector<HTMLButtonElement>('[data-insert-control="insert.text.textBox"]')!
+			.click();
+		expect(editor.slides[0]?.elements).toHaveLength(1);
 		expect(onactivechange).toHaveBeenLastCalledWith(null);
 	});
 

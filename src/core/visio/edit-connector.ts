@@ -19,9 +19,9 @@ import {
 	effectiveNumber,
 	effectiveRows,
 	isStencilConnector,
-	proveStencilConnector,
 	stencilTemplate,
 } from './edit-stencil-connector';
+import { isStencilLine, proveAnyStencilConnector } from './edit-stencil-line';
 import {
 	ENDS,
 	chooseSites,
@@ -210,7 +210,7 @@ export function glueNewConnector(root: Element, shape: Element, edit: LineCreate
 export function proveConnector(root: Element, connectorId: string): ConnectorGlue {
 	const shape = topShape(root, connectorId);
 	// Visio's own Dynamic connector is a stencil instance: its glue cells are local, as here.
-	if (isStencilConnector(shape)) proveStencilConnector(shape!);
+	if (isStencilConnector(shape)) proveAnyStencilConnector(shape!);
 	else if (shape?.hasAttribute('Master') || shape?.hasAttribute('MasterShape'))
 		fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
 	if (
@@ -244,7 +244,9 @@ export function proveConnector(root: Element, connectorId: string): ConnectorGlu
 			(index === undefined
 				? toCell !== 'PinX' || attribute(row, 'ToPart') !== '3'
 				: attribute(row, 'ToPart') !== String(100 + index)) ||
-			visioGlueTriggerTarget(formula(triggerName(end))) !== target ||
+			// A line master has no glue trigger of its own unless Visio wrote one with the glue.
+			(visioGlueTriggerTarget(formula(triggerName(end))) !== target &&
+				!(isStencilLine(shape) && formula(triggerName(end)) === undefined)) ||
 			!glued('X') ||
 			!glued('Y')
 		)

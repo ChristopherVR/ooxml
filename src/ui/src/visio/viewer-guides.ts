@@ -29,6 +29,8 @@ export class ViewerGuides {
 	/** On by default, as in Visio: moving shapes snap to other shapes' edges and centres. */
 	#dynamic = true;
 	#selected: string | undefined;
+	/** What the drawn guides group shows, so a render with nothing new keeps its elements. */
+	#drawn: { group: SVGGElement; signature: string } | undefined;
 	#drag:
 		| { pointer: number; line: SVGGElement; id?: string; vertical: boolean; x: number; y: number }
 		| undefined;
@@ -174,6 +176,8 @@ export class ViewerGuides {
 			const line = existing || this.#line(vertical, -1e6, page);
 			if (!existing) svg.querySelector('[data-guides]')?.append(line);
 			line.classList.add('dragging');
+			// The drag edits the drawn lines, so the next render redraws them.
+			this.#drawn = undefined;
 			(event.currentTarget as Element).setPointerCapture?.(event.pointerId);
 			this.#drag = {
 				pointer: event.pointerId,
@@ -304,14 +308,28 @@ export class ViewerGuides {
 		const page = state.document?.pages[state.pageIndex];
 		if (this.#drag && (!svg || !this.#drag.line.isConnected)) this.#cancel();
 		if (this.#drag) return;
-		svg?.querySelector('[data-guides]')?.remove();
+		const drawn = svg?.querySelector<SVGGElement>('[data-guides]');
+		const visible = svg && page && this.#shown;
+		const guides = visible ? visioPageGuides(page) : [];
+		if (visible && !guides.some((guide) => guide.id === this.#selected)) this.#selected = undefined;
+		const signature = JSON.stringify([
+			page?.id,
+			page?.width,
+			page?.height,
+			this.#selected,
+			guides.map((guide) => [guide.id, guide.orientation, guide.position]),
+		]);
+		// Every status message re-renders: rebuilding unchanged guides would detach the line a
+		// pointer is about to press.
+		if (drawn && this.#drawn?.group === drawn && this.#drawn.signature === signature) return;
+		drawn?.remove();
+		this.#drawn = undefined;
 		if (!svg || !page || !this.#shown) return;
 		const group = svg.ownerDocument.createElementNS(SVG, 'g');
 		group.dataset.guides = '';
-		const guides = visioPageGuides(page);
-		if (!guides.some((guide) => guide.id === this.#selected)) this.#selected = undefined;
 		for (const guide of guides)
 			group.append(this.#line(guide.orientation === 'vertical', guide.position, page, guide.id));
 		svg.append(group);
+		this.#drawn = { group, signature };
 	}
 }

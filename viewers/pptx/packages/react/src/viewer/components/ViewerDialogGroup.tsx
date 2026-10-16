@@ -1,5 +1,6 @@
 import {
 	isDialogAvailable,
+	isPanelVisible,
 	printPropertiesFrameSlides,
 	printPropertiesSlidesPerPage,
 } from 'ooxml-ui/pptx';
@@ -106,7 +107,8 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 		onDiscardAnnotations,
 	} = props;
 	// A host-removed Print dialog never opens, whichever entry point asked.
-	const printAvailable = isDialogAvailable(useViewerCustomizationContext(), 'print');
+	const customization = useViewerCustomizationContext();
+	const printAvailable = isDialogAvailable(customization, 'print');
 
 	return (
 		<>
@@ -118,7 +120,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			/>
 
 			<ComparePanel
-				isOpen={propertyHandlers.isComparePanelOpen}
+				isOpen={propertyHandlers.isComparePanelOpen && isPanelVisible(customization, 'comparePane')}
 				compareResult={propertyHandlers.compareResult}
 				canvasSize={canvasSize}
 				onClose={() => propertyHandlers.setIsComparePanelOpen(false)}
@@ -128,7 +130,9 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			/>
 
 			<PasswordProtectionDialog
-				isOpen={dialogs.isPasswordDialogOpen}
+				isOpen={
+					dialogs.isPasswordDialogOpen && isDialogAvailable(customization, 'passwordProtection')
+				}
 				isCurrentlyProtected={dialogs.isPasswordProtected}
 				onClose={() => dialogs.setIsPasswordDialogOpen(false)}
 				onSetPassword={dialogs.handleSetPassword}
@@ -162,7 +166,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			/>
 
 			<DigitalSignaturesDialog
-				isOpen={dialogs.isDigitalSigDialogOpen}
+				isOpen={dialogs.isDigitalSigDialogOpen && isDialogAvailable(customization, 'signatures')}
 				onClose={() => dialogs.setIsDigitalSigDialogOpen(false)}
 				hasSignatures={hasDigitalSignatures}
 				signatureCount={digitalSignatureCount}
@@ -187,7 +191,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			/>
 
 			<EquationEditorDialog
-				isOpen={dialogs.isEquationDialogOpen}
+				isOpen={dialogs.isEquationDialogOpen && isDialogAvailable(customization, 'equation')}
 				onClose={() => dialogs.setIsEquationDialogOpen(false)}
 				onInsert={
 					dialogs.editingEquationOmml
@@ -198,7 +202,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			/>
 
 			<HyperlinkEditDialog
-				open={dialogs.isHyperlinkDialogOpen}
+				open={dialogs.isHyperlinkDialogOpen && isDialogAvailable(customization, 'hyperlink')}
 				initialUrl={selectedElements[0]?.actionClick?.url}
 				initialTooltip={selectedElements[0]?.actionClick?.tooltip}
 				initialAction={selectedElements[0]?.actionClick?.action}

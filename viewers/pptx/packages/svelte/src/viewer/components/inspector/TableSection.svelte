@@ -102,8 +102,8 @@
 				<button
 					type="button"
 					class="preset-swatch"
-					title={preset.label}
-					aria-label={preset.label}
+					title={t(preset.labelKey)}
+					aria-label={t(preset.labelKey)}
 					onclick={() => patchData({ rows: applyTableStylePreset(table, preset) })}
 				>
 					<span style:background={preset.headerBg}></span>
@@ -129,12 +129,12 @@
 		/>
 	{/if}
 
-	<label>Cell padding<input type="number" min="0" value={Math.round(inspectorState.cellPadding)} onchange={(event) => setCellPadding(event.currentTarget.value)} /></label>
-	<div class="structure"><label>Row<input type="number" min="1" max={table.rows.length} value={activeRow + 1} onchange={(event) => (activeRow = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementRow(element, activeRow, 'below'))}>Insert row</button><button type="button" disabled={table.rows.length <= 1} onclick={() => editStructure((element) => removeTableElementRow(element, activeRow))}>Delete row</button><label>Column<input type="number" min="1" max={table.columnWidths.length} value={activeColumn + 1} onchange={(event) => (activeColumn = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementColumn(element, activeColumn, 'right'))}>Insert column</button><button type="button" disabled={table.columnWidths.length <= 1} onclick={() => editStructure((element) => removeTableElementColumn(element, activeColumn))}>Delete column</button></div>
-	{#if table.bandedRows}<label>Row band cycle<input type="number" min="1" value={table.bandRowCycle ?? 1} onchange={(event) => patchData({ bandRowCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
-	{#if table.bandedColumns}<label>Column band cycle<input type="number" min="1" value={table.bandColCycle ?? 1} onchange={(event) => patchData({ bandColCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
-	<details><summary>Column widths</summary><button type="button" onclick={() => patchData({ columnWidths: evenColumnWidths(table.columnWidths.length) })}>Distribute evenly</button>{#each table.columnWidths as width, index}<label>Column {index + 1}<input type="range" min="5" max="80" value={Math.round(width * 100)} onchange={(event) => patchData({ columnWidths: redistributeColumnWidth(table.columnWidths, index, Number(event.currentTarget.value) / 100) })} /></label>{/each}</details>
-	<details><summary>Row heights</summary><button type="button" onclick={() => patchData({ rows: evenRowHeights(table.rows) })}>Distribute evenly</button>{#each table.rows as row, index}<label>Row {index + 1}<input type="number" min="16" max="500" value={inspectorNumber(row.height, 32)} onchange={(event) => patchData({rows:table.rows.map((item,i)=>i===index?{...item,height:Number(event.currentTarget.value)}:item)})} /></label>{/each}</details>
+	<label>{t('pptx.table.cellPadding')}<input type="number" min="0" value={Math.round(inspectorState.cellPadding)} onchange={(event) => setCellPadding(event.currentTarget.value)} /></label>
+	<div class="structure"><label>{t('pptx.table.rowNumber')}<input type="number" min="1" max={table.rows.length} value={activeRow + 1} onchange={(event) => (activeRow = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementRow(element, activeRow, 'below'))}>{t('pptx.table.insertRow')}</button><button type="button" disabled={table.rows.length <= 1} onclick={() => editStructure((element) => removeTableElementRow(element, activeRow))}>{t('pptx.table.deleteRow')}</button><label>{t('pptx.table.columnNumber')}<input type="number" min="1" max={table.columnWidths.length} value={activeColumn + 1} onchange={(event) => (activeColumn = Math.max(0, Number(event.currentTarget.value) - 1))} /></label><button type="button" onclick={() => editStructure((element) => insertTableElementColumn(element, activeColumn, 'right'))}>{t('pptx.table.insertColumn')}</button><button type="button" disabled={table.columnWidths.length <= 1} onclick={() => editStructure((element) => removeTableElementColumn(element, activeColumn))}>{t('pptx.table.deleteColumn')}</button></div>
+	{#if table.bandedRows}<label>{t('pptx.table.bandRowCycle')}<input type="number" min="1" value={table.bandRowCycle ?? 1} onchange={(event) => patchData({ bandRowCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
+	{#if table.bandedColumns}<label>{t('pptx.table.bandColCycle')}<input type="number" min="1" value={table.bandColCycle ?? 1} onchange={(event) => patchData({ bandColCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
+	<details><summary>{t('pptx.table.columnWidths')}</summary><button type="button" onclick={() => patchData({ columnWidths: evenColumnWidths(table.columnWidths.length) })}>{t('pptx.table.distributeEvenly')}</button>{#each table.columnWidths as width, index}<label>{t('pptx.table.columnIndex', { index: index + 1 })}<input type="range" min="5" max="80" value={Math.round(width * 100)} onchange={(event) => patchData({ columnWidths: redistributeColumnWidth(table.columnWidths, index, Number(event.currentTarget.value) / 100) })} /></label>{/each}</details>
+	<details><summary>{t('pptx.table.rowHeights')}</summary><button type="button" onclick={() => patchData({ rows: evenRowHeights(table.rows) })}>{t('pptx.table.distributeEvenly')}</button>{#each table.rows as row, index}<label>{t('pptx.table.rowIndex', { index: index + 1 })}<input type="number" min="16" max="500" value={inspectorNumber(row.height, 32)} onchange={(event) => patchData({rows:table.rows.map((item,i)=>i===index?{...item,height:Number(event.currentTarget.value)}:item)})} /></label>{/each}</details>
 	<TableCellSection {editor} {table} onpatch={patchData} />
 {/if}
 

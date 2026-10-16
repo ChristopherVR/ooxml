@@ -11,3 +11,25 @@ export {
 	numberGroupLabels,
 	pivotGroupableFields,
 } from './groups';
+
+export { pivotRowFields } from './data';
+export { pivotValuesIndex } from './axes';
+export {
+	PIVOT_DATE_UNITS,
+	dateGroupDays,
+	dateGroupFieldName,
+	dateGroupRange,
+	dateGroupUnits,
+	dateUnitLabels,
+	defaultDateGroup,
+	pivotAxisChoices,
+} from './date-groups';
+export { dateGroupAxisNames } from './date-axes';
+export { pivotGroupableDateFields } from './dates';
+export {
+	PIVOT_SUBTOTALS,
+	PIVOT_SUBTOTAL_ORDER,
+	fieldSubtotalFunctions,
+	pivotSubtotalFields,
+} from './subtotals';
+export { isoToSerial as pivotIsoToSerial, serialToIso as pivotSerialToIso } from './dates';

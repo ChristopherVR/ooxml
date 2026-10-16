@@ -38,6 +38,8 @@ export const Teams = defineComponent({
 		workspaceId: String,
 		userName: String,
 		userId: String,
+		/** Display language: de, es, fr, zh-CN or en (the default). */
+		locale: String,
 		config: Object as PropType<TeamsServerConfig | null>,
 		uploadFile: Function as PropType<FileUploader>,
 		openers: Object as PropType<FileOpeners>,
@@ -65,6 +67,7 @@ export const Teams = defineComponent({
 				props.workspaceId,
 				props.userName,
 				props.userId,
+				props.locale,
 				props.config,
 				props.uploadFile,
 				props.openers,

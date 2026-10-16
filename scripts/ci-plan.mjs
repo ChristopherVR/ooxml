@@ -51,6 +51,7 @@ export const VIEWERS = {
 			'bun run build:packages',
 			'bun run typecheck',
 			'bun run e2e:contract',
+			'bun run check:viewer-props',
 			'bun run test:binding-packages',
 		],
 	},

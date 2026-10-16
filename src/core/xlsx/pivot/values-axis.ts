@@ -2,10 +2,13 @@ import type { XmlElement } from '../../xml/index';
 import { attrs } from '../write/xml-out';
 import type { PivotGrid } from './aggregate';
 
-/** Selected reports retain the full cache axis lists; hierarchy tuples use their item indexes. */
+/**
+ * Selected reports retain the full cache axis lists; hierarchy tuples use their item indexes.
+ * The Values level (`null`) holds measure indexes and keeps them.
+ */
 export function remapPivotRowEntries(
 	entries: NonNullable<PivotGrid['rowEntries']>,
-	axes: readonly (readonly number[])[],
+	axes: readonly (readonly number[] | null)[],
 ): NonNullable<PivotGrid['rowEntries']> {
 	return entries.map((entry) =>
 		entry.type === 'grand'
@@ -13,6 +16,7 @@ export function remapPivotRowEntries(
 			: {
 					...entry,
 					indices: entry.indices.map((item, axis) => {
+						if (axes[axis] === null) return item;
 						const index = axes[axis]?.[item];
 						if (index === undefined) throw new Error('Invalid report row axis item');
 						return index;
@@ -27,42 +31,27 @@ export function pivotFieldIndex(field: XmlElement | undefined): number {
 	return Number.isSafeInteger(value) ? value : NaN;
 }
 
-/** Native leading or between-field row Values carry an explicit position matching their axis slot. */
+/** Native row Values before the last field carry an explicit position matching their axis slot. */
 export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): number {
 	const index = axis.findIndex((field) => pivotFieldIndex(field) === -2);
 	const position = root.getAttribute('dataPosition');
 	if (position !== null && (!/^\d+$/.test(position.trim()) || Number(position) !== index))
 		throw new Error('Inconsistent Values axis position');
-	if (axis.length === 3 && index < 2 && position === null)
+	if (index >= 0 && index < axis.length - 1 && position === null)
 		throw new Error('Missing leading or between-field Values position');
 	return index;
 }
-/** Native Values-on-columns entries, with each measure nested inside each column item. */
-export function pivotValueAxisItems(
-	measures: number,
-	columns?: number,
-	columnIndices?: readonly number[],
-): string {
+/** Native Values-on-columns entries of a report without column fields: one per measure. */
+export function pivotValueAxisItems(measures: number): string {
 	const entries: string[] = [];
-	if (columns === undefined) {
-		for (let measure = 0; measure < measures; measure++)
-			entries.push(
-				`<i${attrs({ i: measure || undefined })}><x${attrs({ v: measure || undefined })}/></i>`,
-			);
-	} else {
-		for (let column = 0; column < columns; column++)
-			for (let measure = 0; measure < measures; measure++) {
-				entries.push(
-					`<i${attrs({ r: measure ? 1 : undefined, i: measure || undefined })}>${measure ? '' : `<x${attrs({ v: (columnIndices?.[column] ?? column) || undefined })}/>`}<x${attrs({ v: measure || undefined })}/></i>`,
-				);
-			}
-		for (let measure = 0; measure < measures; measure++)
-			entries.push(`<i${attrs({ t: 'grand', i: measure || undefined })}><x/></i>`);
-	}
+	for (let measure = 0; measure < measures; measure++)
+		entries.push(
+			`<i${attrs({ i: measure || undefined })}><x${attrs({ v: measure || undefined })}/></i>`,
+		);
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values follow the column field, or sit last/between/before two real row fields. */
+/** Values follow the column fields, or sit anywhere among the real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],
@@ -73,18 +62,15 @@ export function supportedPivotAxes(
 	if (valuesOnRows)
 		return (
 			measures > 1 &&
-			(rows.length === 2 || rows.length === 3) &&
-			(index(rows[0]) >= 0 || rows.length === 3) &&
+			rows.length > 1 &&
 			rows.filter((field) => index(field) === -2).length === 1 &&
 			rows.filter((field) => index(field) !== -2).every((field) => index(field) >= 0) &&
-			columns.length <= 1 &&
-			(!columns.length || index(columns[0]) >= 0)
+			columns.every((field) => index(field) >= 0)
 		);
 	if (rows.some((field) => !Number.isInteger(index(field)) || index(field) < 0)) return false;
-	return measures === 1
-		? columns.length <= 1
-		: columns.length >= 1 &&
-				columns.length <= 2 &&
-				index(columns.at(-1)) === -2 &&
-				(columns.length !== 2 || index(columns[0]) >= 0);
+	// Several measures put Values last on the columns, after any number of column fields.
+	if (measures > 1 && (!columns.length || index(columns.at(-1)) !== -2)) return false;
+	return (measures > 1 ? columns.slice(0, -1) : columns).every(
+		(field) => Number.isInteger(index(field)) && index(field) >= 0,
+	);
 }

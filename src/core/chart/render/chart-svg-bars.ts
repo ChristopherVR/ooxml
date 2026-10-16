@@ -6,6 +6,18 @@ import { chartBarSpacing } from './chart-spacing';
 import { buildChartGradientDef } from '../gradient-definition';
 import { chartGradientMarkup } from '../gradient-markup';
 
+/** The cluster geometry of a bar or column group, and where series `si`'s bar starts in its band. */
+export function barLayout(model: ChartViewModel, frame: Frame) {
+	const count = Math.max(1, model.series.length);
+	const geometry = clusteredBarGeometry(frame.bandSize, count, chartBarSpacing(model));
+	const barSize = geometry.singleBarWidth;
+	const offset = (si: number): number =>
+		model.horizontal
+			? geometry.clusterWidth / 2 - barSize - si * geometry.step
+			: -geometry.clusterWidth / 2 + si * geometry.step;
+	return { barSize, offset };
+}
+
 export function bars(
 	model: ChartViewModel,
 	frame: Frame,
@@ -13,9 +25,7 @@ export function bars(
 	values: (number | null)[][],
 ): void {
 	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
-	const count = Math.max(1, model.series.length);
-	const geometry = clusteredBarGeometry(frame.bandSize, count, chartBarSpacing(model));
-	const barSize = geometry.singleBarWidth;
+	const { barSize, offset: barOffset } = barLayout(model, frame);
 	const base = frame.value(0);
 	const pos = new Array<number>(model.categories.length).fill(0);
 	const neg = new Array<number>(model.categories.length).fill(0);
@@ -32,9 +42,7 @@ export function bars(
 			}
 			const a = stacked ? frame.value(from) : base;
 			const b = frame.value(to);
-			const offset = model.horizontal
-				? geometry.clusterWidth / 2 - barSize - si * geometry.step
-				: -geometry.clusterWidth / 2 + si * geometry.step;
+			const offset = barOffset(si);
 			const center = frame.band(i);
 			const width = model.horizontal ? Math.abs(b - a) : barSize;
 			const height = model.horizontal ? barSize : Math.abs(b - a);

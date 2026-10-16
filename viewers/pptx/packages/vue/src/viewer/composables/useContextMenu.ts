@@ -1,6 +1,7 @@
 import {
 	buildContextMenuEntries,
 	canCropElement,
+	chartFormatTargetFromEvent,
 	contextMenuInspectorAnchor,
 	customizeContextMenuEntries,
 	hasMultipleSelectedTableCells,
@@ -64,6 +65,7 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 		customization,
 		onEditPoints,
 		mergeCrop,
+		chartFormat,
 	} = input;
 
 	const contextMenu = ref<ContextMenuState>({
@@ -72,6 +74,8 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 		y: 0,
 		elementId: null,
 	});
+	/** For a chart: the chart element under the pointer when the menu opened. */
+	const contextChartTarget = ref<string | null>(null);
 	/** The element the menu was opened on, whatever its type. */
 	const contextElement = computed(() => {
 		const id = contextMenu.value.elementId;
@@ -116,6 +120,7 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 			editPoints: onEditPoints ? resolveEditPointsAvailability(contextElement.value) : undefined,
 			canMergeShapes: mergeCrop?.canMerge.value,
 			canCrop: canCropElement(contextElement.value),
+			chartFormatTarget: contextChartTarget.value,
 		});
 		const entries = customization
 			? customizeContextMenuEntries(built, customization(), {
@@ -168,6 +173,15 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 		if (!selectedElementIds.value.includes(id)) {
 			selectedElementIds.value = [id];
 		}
+		const element = findActiveElement(id);
+		contextChartTarget.value =
+			element?.type === 'chart'
+				? chartFormatTargetFromEvent(
+						event,
+						(event.target as Element | null)?.closest?.('[data-element-id]'),
+						element,
+					)
+				: null;
 		contextMenu.value = { open: true, x: event.clientX, y: event.clientY, elementId: id };
 		// The host removed every entry (or the whole menu): render nothing.
 		if (contextItems.value.length === 0) {
@@ -252,6 +266,9 @@ export function useContextMenu(input: UseContextMenuInput): UseContextMenuResult
 				break;
 			case 'crop':
 				mergeCrop?.enterCrop(target);
+				break;
+			case 'format-chart-element':
+				chartFormat?.openPane(contextChartTarget.value ?? 'chartArea');
 				break;
 			default: {
 				const op = mergeOperationForCommand(actionId);

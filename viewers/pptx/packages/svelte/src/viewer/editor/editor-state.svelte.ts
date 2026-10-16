@@ -43,6 +43,7 @@ import type {
 } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
 
+import { ChartFormatState } from './chart-format-state.svelte';
 import { EditorAnimationController } from './editor-animation-controller';
 import { EditorArrangeController } from './editor-arrange-controller';
 import { EditorBackgroundController } from './editor-background-controller';
@@ -95,6 +96,8 @@ export interface EditorStateDeps {
 	 * unit tests, where a single-element align is then a no-op.
 	 */
 	getCanvasSize?: () => { width: number; height: number } | undefined;
+	/** Host `authorName` prop: the comment/reply author that wins over Options > General. */
+	getAuthorName?: () => string | undefined;
 	/**
 	 * The `tableStyles`/`tableStylesDefaultId`/`tableStylesToDelete` save
 	 * options (see `pptx-viewer-shared`'s `tableStyleSaveOptions`). Table style
@@ -147,6 +150,13 @@ export class EditorState {
 	 * undo stack owns.
 	 */
 	theme = $state.raw<PptxTheme | undefined>(undefined);
+	/**
+	 * True while a Design gallery hover preview shows over the slides. Autosave and collaboration
+	 * read {@link committedRenderedSlides} instead of the live slides for that time.
+	 */
+	deckStyleHeld = $state(false);
+	/** `renderedSlides` as they were when the preview began (see {@link deckStyleHeld}). */
+	heldRenderedSlides: PptxSlide[] | null = null;
 	/**
 	 * `ppt/viewProps.xml`, seeded from the load and kept in sync with the View >
 	 * Grid/Guides/Snap toggles (wave 4 #5: `viewPropertiesPatchFromPreferences`
@@ -243,6 +253,8 @@ export class EditorState {
 	readonly arrangeOps = new EditorArrangeController(this);
 	/** On-canvas picture crop mode (ribbon Crop / context-menu Crop). */
 	readonly cropOps = new EditorCropController(this);
+	/** The chart Format pane's target element and open state. */
+	readonly chartFormat = new ChartFormatState();
 	readonly backgroundOps = new EditorBackgroundController(this);
 	readonly transitionOps = new EditorTransitionController(this);
 	readonly animationOps = new EditorAnimationController(this);
@@ -343,6 +355,13 @@ export class EditorState {
 		return this.templateOps.renderedSlides();
 	}
 
+	/** The slides the document really holds: not what a Design gallery hover preview shows. */
+	get committedRenderedSlides(): PptxSlide[] {
+		return this.deckStyleHeld && this.heldRenderedSlides
+			? this.heldRenderedSlides
+			: this.renderedSlides;
+	}
+
 	get hasClipboard(): boolean {
 		return this.clipboard !== null;
 	}
@@ -370,6 +389,11 @@ export class EditorState {
 	 */
 	getSlideSize(): PptxSlideSize | undefined {
 		return this.#deps.getSlideSize?.();
+	}
+
+	/** The host `authorName` prop, or undefined (see {@link EditorStateDeps.getAuthorName}). */
+	get hostAuthorName(): string | undefined {
+		return this.#deps.getAuthorName?.();
 	}
 
 	/** The slide canvas in px (see {@link EditorStateDeps.getCanvasSize}). */

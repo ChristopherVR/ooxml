@@ -45,6 +45,22 @@ export function applyHeaderFooterFlagsToNode(
 }
 
 /**
+ * `cSld` with `bg` as its first child (CT_CommonSlideData orders `p:bg` before the shape tree),
+ * replacing any background it carries.
+ */
+export function withLeadingBackground(cSld: XmlObject, bg: XmlObject): XmlObject {
+	const rest = { ...cSld };
+	delete rest['p:bg'];
+	const attributes = Object.fromEntries(
+		Object.entries(rest).filter(([key]) => key.startsWith('@_')),
+	);
+	const children = Object.fromEntries(
+		Object.entries(rest).filter(([key]) => !key.startsWith('@_')),
+	);
+	return { ...attributes, 'p:bg': structuredClone(bg), ...children };
+}
+
+/**
  * Apply a *chosen* background colour to a `<p:cSld>` node in place.
  *
  * `<p:bg>` has two mutually exclusive shapes (§19.3.1.1, CT_Background):

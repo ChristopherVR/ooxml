@@ -1,0 +1,27 @@
+/** Design tab: Themes and Variants galleries and the Designer group. */
+export const translations: Record<string, string> = {
+	'pptx.ribbon.groupDesigner': 'Concepteur',
+	'pptx.ribbon.designIdeas': 'Idées de conception',
+	'pptx.design.designIdeasTooltip':
+		'Idées de conception propose des dispositions de diapositive via un service en ligne. Cette fonction n’est pas disponible dans cette visionneuse.',
+	'pptx.gallery.themes.title': 'Thèmes',
+	'pptx.gallery.themes.theme': 'Thème : {{name}}',
+	'pptx.gallery.themes.current': 'Thème actuel',
+	'pptx.gallery.themes.section.builtIn': 'Intégrés',
+	'pptx.gallery.themeVariants.title': 'Variantes',
+	'pptx.gallery.themeVariants.original': 'Variante 1 : couleurs d’origine',
+	'pptx.gallery.themeVariants.inverted': 'Variante 2 : clair et foncé inversés',
+	'pptx.gallery.themeVariants.shiftTwo': 'Variante 3 : couleurs d’accentuation décalées de deux',
+	'pptx.gallery.themeVariants.shiftFour': 'Variante 4 : couleurs d’accentuation décalées de quatre',
+	'pptx.gallery.themeEffects.title': 'Effets',
+	'pptx.gallery.themeBackgrounds.title': 'Styles d’arrière-plan',
+	'pptx.gallery.themeVariants.section.computed': 'Calculées à partir des couleurs du thème',
+	'pptx.gallery.themeVariants.section.theme': 'Variantes de ce thème',
+	'pptx.gallery.themeVariants.real': 'Variante {{number}} : {{name}}',
+	'pptx.gallery.themeEffects.scheme': 'Effets : {{name}}',
+	'pptx.gallery.themeEffects.section.builtIn': 'Intégrés',
+	'pptx.gallery.themeBackgrounds.style': 'Style {{number}}',
+	'pptx.gallery.themeBackgrounds.applyAll': 'Appliquer à toutes les diapositives',
+	'pptx.gallery.themeBackgrounds.applySelected': 'Appliquer aux diapositives sélectionnées',
+	'pptx.gallery.themeBackgrounds.formatBackground': 'Format de l’arrière-plan...',
+};

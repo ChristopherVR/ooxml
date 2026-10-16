@@ -7,6 +7,128 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.15.0) - 2026-10-16
+
+### Features
+
+- **teams:** Probe, check and end sessions from the client ([dab7217](https://github.com/ChristopherVR/ooxml/commit/dab7217734937ba5851796ad89e3a9c25d640d37))
+- **teams:** Repeat meetings monthly and yearly ([3eb2406](https://github.com/ChristopherVR/ooxml/commit/3eb2406733a4a19791af8b0196357288d0e7b04e))
+- **xlsx:** Custom subtotals on PivotTable column fields ([0b86fd5](https://github.com/ChristopherVR/ooxml/commit/0b86fd53c1743829a003cad9ea1a22d1d9f1eb0e))
+- **xlsx:** Values on rows with any number of PivotTable fields ([c227437](https://github.com/ChristopherVR/ooxml/commit/c2274377b777b4ca98bc95a1b7d2d5c6ab97f634))
+- **xlsx:** Date groups with report filters, hidden items and timelines ([a072ec6](https://github.com/ChristopherVR/ooxml/commit/a072ec6c8b1e8983686abe15f064eee8ed0741e9))
+- **xlsx:** Read date group labels written in another language ([eccf72b](https://github.com/ChristopherVR/ooxml/commit/eccf72bb7ce10e827b0b9a360dbdf60c7489cfb3))
+- **geometry:** Add the PowerPoint shape gallery catalogue ([2fb79e2](https://github.com/ChristopherVR/ooxml/commit/2fb79e2717cf9094a2692d04503e95cc09453467))
+- **pptx:** Add chart element format and options edit operations ([d99f83e](https://github.com/ChristopherVR/ooxml/commit/d99f83ec63e6251c4aaa39a31ad5d2f4d2659b54))
+- **pptx:** Read chart element formats from each element's spPr on load ([46620d0](https://github.com/ChristopherVR/ooxml/commit/46620d08e61513234ba61964e4f751d679fcb28b))
+
+### Testing
+
+- **xlsx:** Accept column subtotals, row values and filtered date groups in Excel ([c8c0f05](https://github.com/ChristopherVR/ooxml/commit/c8c0f053fcaf956a2b2df2d52f2eac17558e53a0))
+
+## [1.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.14.0) - 2026-10-15
+
+### Features
+
+- **ui:** Edit headers and footers in place on print layout pages ([9e985ae](https://github.com/ChristopherVR/ooxml/commit/9e985ae1a29ec3a23d9555d2b5e847bf143c3173))
+- **chart:** Draw combination, waterfall and histogram charts ([ae79ec2](https://github.com/ChristopherVR/ooxml/commit/ae79ec24da6576a4497fcc4fce0b444be436dcc1))
+- **xlsx:** Draw combination, waterfall and histogram charts ([753dea7](https://github.com/ChristopherVR/ooxml/commit/753dea7e9f64cb3641643df907d5faa35612cf11))
+- **docx:** Draw combination, waterfall and histogram charts ([93ee797](https://github.com/ChristopherVR/ooxml/commit/93ee797ad2083797d13e28ef8bce6df9bbdc333e))
+- **xlsx:** Add page layout and page break preview geometry ([ec99c5d](https://github.com/ChristopherVR/ooxml/commit/ec99c5d1078371b436f5b729bbcf71947f4295b0))
+- **xlsx:** Add workbook view commands, icons and strings ([d956e46](https://github.com/ChristopherVR/ooxml/commit/d956e46817dc62d46f21bc471e87cbfda428e9dc))
+- **xlsx:** Fill each page view page with the cells that fit ([c76fb60](https://github.com/ChristopherVR/ooxml/commit/c76fb606796a9734956427b5ae33120925583f67))
+- **xlsx:** Add goal seek, data tables and scenarios to core ([a9ebe39](https://github.com/ChristopherVR/ooxml/commit/a9ebe39efc70d330b1ca34adfcc2b18568d9fff2))
+- **xlsx:** Add what-if commands, strings and data table formula text ([532dedc](https://github.com/ChristopherVR/ooxml/commit/532dedc25aaa80df06ba75e77f90db0bd1d4acd6))
+- **teams:** Add @mentions with a people picker in the composer ([2bb877a](https://github.com/ChristopherVR/ooxml/commit/2bb877a050dae027eb948e6d52b9b068934d927e))
+- **teams:** Add an Activity feed derived from the shared chat data ([6f53e8a](https://github.com/ChristopherVR/ooxml/commit/6f53e8ac925ba74f7f4a4b1dec37c5b6849797ff))
+- **teams:** Announce new activity with toasts, desktop notifications and sound ([fe29b00](https://github.com/ChristopherVR/ooxml/commit/fe29b006d4830489b19c097290b132a5581ddb98))
+- **visio:** Read stencils and drop their masters into a drawing ([2920f00](https://github.com/ChristopherVR/ooxml/commit/2920f00549b4831486b85d6a91b2726de9daf83d))
+- **ui:** Open stencil files and collect My Shapes in the visio pane ([fe6312f](https://github.com/ChristopherVR/ooxml/commit/fe6312fa2da5e0dab162acacfc28b3b91fb80bc2))
+- **visio:** Reroute right-angle connectors around a shape moved onto them ([fb19bef](https://github.com/ChristopherVR/ooxml/commit/fb19befbba9c2483a6627f33c730ccbc6cfcc658))
+- **visio:** Recalculate formulas that use rounding, power and log ([b2bc840](https://github.com/ChristopherVR/ooxml/commit/b2bc8408557c6b997fe8315c822929a334233b62))
+- **teams:** Add private chats, meetings and a calendar to the client ([a6c2748](https://github.com/ChristopherVR/ooxml/commit/a6c2748426473192a2e16d37d3856f8accc27673))
+- **chart:** Draw bubble, stock, treemap and sunburst charts ([94a4240](https://github.com/ChristopherVR/ooxml/commit/94a424016e799722b22205f87b17e68fd5d5f816))
+- **xlsx:** Draw bubble, stock, treemap and sunburst charts from live cells ([11a4b36](https://github.com/ChristopherVR/ooxml/commit/11a4b367b7e116590c60d8eaccbf051563ae5c97))
+- **docx:** Draw bubble, stock, treemap and sunburst charts ([7053196](https://github.com/ChristopherVR/ooxml/commit/7053196003aeb7ad83dcb546ffef0a179c4331c5))
+- **chart:** Honour stock bar formatting, draw volume stock, pad bubble axes ([614fc42](https://github.com/ChristopherVR/ooxml/commit/614fc421668e707be211c37658ea76681174eed5))
+- **ui:** Edit nested table cells on print layout pages ([8b2662b](https://github.com/ChristopherVR/ooxml/commit/8b2662b9dc87322311a02d7ec6e9b97164da6280))
+- **docx:** Write moved floating pictures and report their frame origin ([e272dc4](https://github.com/ChristopherVR/ooxml/commit/e272dc42157b758b96bf4c425681fdb9597d9c89))
+- **docx:** Paginate plain documents incrementally after an edit ([7521712](https://github.com/ChristopherVR/ooxml/commit/7521712eba07913ff90a9205d982cd7a434a95b9))
+- **xlsx:** Read, filter and write table and pivot slicers ([9cb2c26](https://github.com/ChristopherVR/ooxml/commit/9cb2c26b7d8226707b0d299d313e145dd2934d5b))
+- **xlsx:** Add slicer commands, helpers and strings ([bf7db7f](https://github.com/ChristopherVR/ooxml/commit/bf7db7f08d54279540d942230c15cec98f4f2193))
+- **xlsx:** Read, filter and write PivotTable timelines ([e4282ec](https://github.com/ChristopherVR/ooxml/commit/e4282ec69e15ffbecdab8ce7371df2cffa801128))
+- **ui:** Draw timelines and add Insert > Timeline with a Timeline tab ([c525b8c](https://github.com/ChristopherVR/ooxml/commit/c525b8c83558ba8c23ec0e2c772cae57bd4e26d8))
+- **xlsx:** Group PivotTable fields by number ranges ([9a9014f](https://github.com/ChristopherVR/ooxml/commit/9a9014f0728979e09843d7781130e09b45cecfac))
+- **docx:** Read, edit and write content controls ([42a22a3](https://github.com/ChristopherVR/ooxml/commit/42a22a3d6bdb0babf6eb82792173958d179cfeb4))
+- **docx:** Edit and insert content controls in the editor ([b1f3fce](https://github.com/ChristopherVR/ooxml/commit/b1f3fce94392d32919e1bd716c1cc5c0b7bf8911))
+- **math:** Draw equations as SVG and write them to Office Math ([cf5d2c0](https://github.com/ChristopherVR/ooxml/commit/cf5d2c09691aea6434a35a23d8116d888a79f320))
+- **ui:** Insert and edit equations from LaTeX in the Word editor ([88b8964](https://github.com/ChristopherVR/ooxml/commit/88b8964bc1ff1509f37889f835dad75762f57268))
+- **docx:** Read, draw and write drawing shapes ([7c39452](https://github.com/ChristopherVR/ooxml/commit/7c3945284384cf263c4a3c21f2b31bce57a43d82))
+- **ui:** Draw and format shapes from Insert > Shapes ([b63e03c](https://github.com/ChristopherVR/ooxml/commit/b63e03c93b3dca7e9bb37946b9a841f7b779358c))
+- **automation:** Build word, excel and powerpoint files from outlines ([eda7e9e](https://github.com/ChristopherVR/ooxml/commit/eda7e9e7e5739764d2de03f93a71dcb7a268a78a))
+- **teams:** Share assistant chats over the collaboration engine ([439b0ce](https://github.com/ChristopherVR/ooxml/commit/439b0ce5010fb4722b955c3385eb087bf76301b1))
+- **automation:** Suggest word edits as tracked changes, read all cells ([0fdfd3a](https://github.com/ChristopherVR/ooxml/commit/0fdfd3ae752d605db5171d66b2355f8a25e85054))
+- **teams:** Add session sign-in and send the session on sockets ([1abb030](https://github.com/ChristopherVR/ooxml/commit/1abb03076b9cab5aa1332abed9701e7c30f8a519))
+- **teams:** Recurrence end, exceptions and zoned ics export ([fa6a0b0](https://github.com/ChristopherVR/ooxml/commit/fa6a0b08c26dc838b81ce506b3eb1fb6f8f15871))
+- **visio:** Evaluate string, angle, point and error ShapeSheet functions ([af348d0](https://github.com/ChristopherVR/ooxml/commit/af348d0f460e5372bbc16573f2827d5ddf9dfbb4))
+- **visio:** Follow glued shapes with straight stencil line connectors ([0866862](https://github.com/ChristopherVR/ooxml/commit/0866862d13fef36c0140501b83a7aec605055e9a))
+- **chart:** Model series trendlines and error bars ([bd885ce](https://github.com/ChristopherVR/ooxml/commit/bd885ce5b90b318232363f1d801461ef0bce053e))
+- **chart:** Fit trendlines and size error bars in data space ([1023d6f](https://github.com/ChristopherVR/ooxml/commit/1023d6f892c4534af9e83b34c638c17d26079bef))
+- **chart:** Draw trendlines and error bars in the shared painter ([dcce901](https://github.com/ChristopherVR/ooxml/commit/dcce901233ca1c72580b094c243125c837961b17))
+- **xlsx:** Date groups, any number of row fields, custom subtotals ([5e86f18](https://github.com/ChristopherVR/ooxml/commit/5e86f18d1b8f635f8d4ead3b5e52b4a9ee91fc0e))
+- **ui:** Group dates, nest row fields and set subtotals per field ([614ac2c](https://github.com/ChristopherVR/ooxml/commit/614ac2c5206fb8b5a7fe538cccbb31ef958d248d))
+- **xlsx:** Nest any number of PivotTable column fields ([3b612e4](https://github.com/ChristopherVR/ooxml/commit/3b612e40ba69c5bbcbc2e2f80064f521f334d3e0))
+- **ui:** Add further column fields in the PivotTable settings ([a8d540b](https://github.com/ChristopherVR/ooxml/commit/a8d540b4b5292349cca62ee21476d45352b1513e))
+
+### Bug Fixes
+
+- **opc:** Stop reporting digest checks as a valid signature ([9b3cac4](https://github.com/ChristopherVR/ooxml/commit/9b3cac4c24c3a2fd17693fa253ceea6970ca0fe7))
+- **pptx:** Guard OCSP responder requests against SSRF ([b223ee0](https://github.com/ChristopherVR/ooxml/commit/b223ee0f2ac593f3b3ac2ec1c452724be4a3fd07))
+- **opc:** Guard zip reads against forged sizes and unsafe part names ([39294e9](https://github.com/ChristopherVR/ooxml/commit/39294e97d434e7132a22e39930d262a0d0b281da))
+- **digest:** Add timingSafeEqual and a 1M default spin limit ([5efd9c9](https://github.com/ChristopherVR/ooxml/commit/5efd9c95dcb2fa1b5e8d830333b9dce5d253e816))
+- **crypto:** Harden agile and standard decryption against hostile input ([b1e7be5](https://github.com/ChristopherVR/ooxml/commit/b1e7be51db6aee35ed91dfcf143a3710d199308a))
+- **xlsx:** Bound formula work from names, wildcards, regex and arrays ([bcc5ec4](https://github.com/ChristopherVR/ooxml/commit/bcc5ec43ee4357e9d7b7d571a9f8b83b896c4aa7))
+- **xlsx:** Clamp pasted html table spans to the sheet and a cell budget ([776913c](https://github.com/ChristopherVR/ooxml/commit/776913ce48357c521cad63467d2c3ff6885c005c))
+- **xlsx:** Mark spills over populated cells, not every row of the ref ([1de1d03](https://github.com/ChristopherVR/ooxml/commit/1de1d03e0e6663253231035dcf0a48d84a205726))
+- **xlsx:** Scan carried chart and pivot tags in linear time ([365b079](https://github.com/ChristopherVR/ooxml/commit/365b079a614e29e2a59b813b68c111f31da4438d))
+- **automation:** Confine file io by realpath with relative results ([3b0340f](https://github.com/ChristopherVR/ooxml/commit/3b0340fa753c4fa0c483c0715c19693bd5b40b4e))
+- **xml:** Bound nesting depth and element count in parseXml ([7441f60](https://github.com/ChristopherVR/ooxml/commit/7441f60925b128da24500833aecb5936d24ee024))
+- **opc:** Match attribute names exactly and accept single quotes ([9220247](https://github.com/ChristopherVR/ooxml/commit/922024743255a61b6f39b2ef231dffc533da8b14))
+- **math:** Cap LaTeX and OMML nesting and use null-prototype sibling maps ([553cd72](https://github.com/ChristopherVR/ooxml/commit/553cd7232a58d7b979f5065e35d1e9f31c2d48fc))
+- **docx:** Bound list start values and letter labels, use null-prototype maps ([4f9360a](https://github.com/ChristopherVR/ooxml/commit/4f9360ae98ea061a556db4a773bed3271dbc4052))
+- **diagram:** Null-prototype layout variables and a presentation node budget ([572bf71](https://github.com/ChristopherVR/ooxml/commit/572bf71479c24389793db22dc80f056e090d4264))
+- **teams:** Require wss on https pages and flag untrusted configs ([cd8cd90](https://github.com/ChristopherVR/ooxml/commit/cd8cd9058c70d5412c98c83fea14589f7d52cbe7))
+- **xlsx:** Tidy float noise in the goal seek result ([3bbb9dd](https://github.com/ChristopherVR/ooxml/commit/3bbb9dd087f2e4ca611899e04e4a36a48b05e499))
+- **teams:** Place notification toasts clear of the composer and show mentions without @ ([1e46d6d](https://github.com/ChristopherVR/ooxml/commit/1e46d6dc907b72cbe63359ae94cd4648b5e09697))
+- **ui:** Polish the Chat and Calendar apps after a browser pass ([02e5543](https://github.com/ChristopherVR/ooxml/commit/02e5543393713280ab8c941094ef4a282c39ddfc))
+- **chart:** Match Excel for extended chart text, labels and fills ([9514ba1](https://github.com/ChristopherVR/ooxml/commit/9514ba19f9624b205da5a64b2ea6f32ea3355d65))
+- **xlsx:** Remove unused slicer imports ([3948cbc](https://github.com/ChristopherVR/ooxml/commit/3948cbc08a57b1cb4401a8e329935baf05078098))
+- **xlsx:** Soften slicer and timeline style tints ([5640e20](https://github.com/ChristopherVR/ooxml/commit/5640e20a4345f47e2b6980858c80e37ff13d7f68))
+- **xlsx:** Save sheets built without a view as the default view ([0246f49](https://github.com/ChristopherVR/ooxml/commit/0246f499ce835acea563c2b7ba120925cfe5b79d))
+- **docx:** Refuse typing at the ends of a content-locked block ([3c49b40](https://github.com/ChristopherVR/ooxml/commit/3c49b40f7fcfae5a70015c01364aec2d60e3ec38))
+- **geometry:** Draw the wedge callout presets as ECMA-376 defines them ([2a4f2b0](https://github.com/ChristopherVR/ooxml/commit/2a4f2b0b100040a5ab1352f6d36f6a5e64d82a58))
+- **math:** Draw the minus sign and space only a binary one ([1620cb0](https://github.com/ChristopherVR/ooxml/commit/1620cb00486131c99437dc13259b5d82c5d7d63f))
+- **geometry:** Keep the oval callout on its ellipse ([a98b010](https://github.com/ChristopherVR/ooxml/commit/a98b010ba274ae857d2bd3bc618761a1dce4bb39))
+- **teams:** Keep message times strictly increasing per client ([972da6f](https://github.com/ChristopherVR/ooxml/commit/972da6f4bd662b72fd4eb8dacfa0cdf258694d92))
+- **site:** Keep teams consent and formula rules in the new assistant ([7e43888](https://github.com/ChristopherVR/ooxml/commit/7e43888029e8ff1108a0e7b8fb9e7450d47b24bb))
+
+### Refactor
+
+- **pptx:** Drop the unused jszip import from the chart parser ([66f67dc](https://github.com/ChristopherVR/ooxml/commit/66f67dcb464a61015ea3b56fcc6578a29e7016a5))
+- **chart:** Move waterfall steps and range into the chart area ([b6fa22a](https://github.com/ChristopherVR/ooxml/commit/b6fa22a987d40b63f3369868083435eba35afa83))
+- **chart:** Move number formats, palettes, axis labels, auto title to core ([26bde03](https://github.com/ChristopherVR/ooxml/commit/26bde036faed3663e9a037b8e755e5c517202263))
+- **chart:** Move bubble, stock, treemap and sunburst geometry to core ([a465fa6](https://github.com/ChristopherVR/ooxml/commit/a465fa63dfd1f15c67a22a97fa5ed9c97d2965e8))
+- **pptx:** Read chart trendlines and error bars from core model ([fa53d97](https://github.com/ChristopherVR/ooxml/commit/fa53d97b442df87b60ac1be85f5e4480bb8fec7a))
+
+### Testing
+
+- **xlsx:** Guard the spill test cell lookups for the linter ([e1810b5](https://github.com/ChristopherVR/ooxml/commit/e1810b5d89d1153edd9da5991adcc929e3546e03))
+- **xlsx:** Refresh authored PivotTables in Excel during acceptance ([9901e5b](https://github.com/ChristopherVR/ooxml/commit/9901e5bec604779ba1f5d83aa0e6ecda4adccb0f))
+- **teams:** Check every sync room carries the signed session ([e6c386c](https://github.com/ChristopherVR/ooxml/commit/e6c386ca75852e30cba6c7657abbe725fe8b0edb))
+
+### Chores
+
+- **ui:** Drop an unused chart import and clarify the note lookup ([76ed6f1](https://github.com/ChristopherVR/ooxml/commit/76ed6f1bbd263129a0d3950119a8f062ba020d9f))
+
 ## [1.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.13.0) - 2026-10-15
 
 ### Features

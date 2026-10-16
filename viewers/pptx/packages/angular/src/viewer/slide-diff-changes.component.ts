@@ -9,8 +9,9 @@
  * icon by change kind.
  */
 
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import type { ElementChange } from 'ooxml-ui/pptx';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { describeElementChange, type ElementChange } from 'ooxml-ui/pptx';
 
 import { changeIcon } from './slide-diff-helpers';
 
@@ -25,7 +26,7 @@ import { changeIcon } from './slide-diff-helpers';
 					<span class="pptx-ng-diff-change-icon" [attr.data-kind]="change.kind">
 						{{ icon(change.kind) }}
 					</span>
-					<span class="pptx-ng-diff-change-desc">{{ change.description }}</span>
+					<span class="pptx-ng-diff-change-desc">{{ describe(change) }}</span>
 				</div>
 			}
 		</div>
@@ -75,5 +76,10 @@ import { changeIcon } from './slide-diff-helpers';
 export class SlideDiffChangesComponent {
 	readonly changes = input.required<readonly ElementChange[]>();
 
+	private readonly translate = inject(TranslateService);
 	protected readonly icon = changeIcon;
+
+	protected describe(change: ElementChange): string {
+		return describeElementChange(change, (key, params) => this.translate.instant(key, params));
+	}
 }

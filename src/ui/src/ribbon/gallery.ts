@@ -8,7 +8,22 @@ import { definer, present } from '../registry';
 import { attachGalleryStyles } from './gallery-styles';
 import { parseSvgPreview } from './safe-svg';
 
-export type OfficeGalleryPickEvent = CustomEvent<{ gallery: string; itemId: string }>;
+/** `action` is set when a tile's context menu entry was chosen instead of the tile itself. */
+export type OfficeGalleryPickEvent = CustomEvent<{
+	gallery: string;
+	itemId: string;
+	action?: string;
+}>;
+/** The tile under the pointer (or keyboard focus) of a gallery whose state sets `preview`. */
+export type OfficeGalleryPreviewEvent = CustomEvent<{ gallery: string; itemId: string }>;
+/** The preview ended: the pointer left the tiles, the popup closed or a pick was made. */
+export type OfficeGalleryPreviewEndEvent = CustomEvent<{ gallery: string }>;
+
+/** An entry of a tile's context menu (right-click, the Menu key or Shift+F10). */
+export interface OfficeGalleryAction {
+	id: string;
+	label: string;
+}
 
 /** One tile. `preview` is SVG markup, parsed as an SVG document with executable parts removed. */
 export interface OfficeGalleryItem {
@@ -16,6 +31,8 @@ export interface OfficeGalleryItem {
 	label: string;
 	applied?: boolean | undefined;
 	preview?: string | undefined;
+	/** Context menu entries; a plain click still picks the tile itself. */
+	actions?: readonly OfficeGalleryAction[] | undefined;
 }
 
 export interface OfficeGallerySection {
@@ -37,10 +54,19 @@ export interface OfficeGalleryState {
 	sections: readonly OfficeGallerySection[];
 	/** Tiles shown inline (`mode="inline"`); defaults to the first section's items. */
 	inline?: readonly OfficeGalleryItem[] | undefined;
+	/**
+	 * Emit `previewEvent` while a tile is hovered or keyboard-focused and `previewEndEvent` when
+	 * that stops (Themes, Colors, ...: the host shows the result without committing it).
+	 */
+	preview?: boolean | undefined;
+	/** Commands listed under the tiles of the popup ("Format Background..."); a click picks `id`. */
+	footer?: readonly OfficeGalleryAction[] | undefined;
 }
 
 type Statics = {
 	pickEvent: string;
+	previewEvent: string;
+	previewEndEvent: string;
 	triggerAttribute: string;
 	popupAttribute: string;
 	itemAttribute: string;
@@ -67,6 +93,12 @@ const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; 
  */
 export class OfficeUiGallery extends OfficeElement {
 	static pickEvent = 'office-gallery-pick';
+	static previewEvent = 'office-gallery-preview';
+	static previewEndEvent = 'office-gallery-preview-end';
+	/** Hover time before the first preview shows, so sweeping across the strip does not flash. */
+	static previewDelayMs = 120;
+	/** Grace before a preview ends, so moving between tiles does not flash the original. */
+	static previewEndDelayMs = 60;
 	static triggerAttribute = 'data-gallery';
 	static popupAttribute = 'data-gallery-popup';
 	static itemAttribute = 'data-gallery-item';
@@ -79,6 +111,10 @@ export class OfficeUiGallery extends OfficeElement {
 	private model: OfficeGalleryState | undefined;
 	private locked = false;
 	private opened = false;
+	private previewing: string | undefined;
+	private previewStartTimer: ReturnType<typeof setTimeout> | undefined;
+	private previewEndTimer: ReturnType<typeof setTimeout> | undefined;
+	private menu: { itemId: string; x: number; y: number } | undefined;
 
 	override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
 		super.attributeChangedCallback(name, old, value);
@@ -122,7 +158,150 @@ export class OfficeUiGallery extends OfficeElement {
 	}
 
 	close(): void {
+		this.endPreview(true);
+		this.closeMenu();
 		this.open = false;
+	}
+
+	/** Close the popup and menu but leave a running preview for the pick that follows to settle. */
+	private dismiss(): void {
+		clearTimeout(this.previewStartTimer);
+		this.previewStartTimer = undefined;
+		this.closeMenu();
+		this.open = false;
+	}
+
+	// ---- Preview and context menu ---------------------------------------------------------
+
+	private canPreview(): boolean {
+		return (
+			this.model?.preview === true &&
+			!this.model.command &&
+			!this.unavailable() &&
+			this.getAttribute('mode') !== 'panel'
+		);
+	}
+
+	private startPreview(itemId: string): void {
+		if (!this.canPreview() || this.menu) return;
+		clearTimeout(this.previewEndTimer);
+		if (this.previewing === itemId) return;
+		clearTimeout(this.previewStartTimer);
+		const show = (): void => {
+			const state = this.model;
+			if (!state || !this.canPreview()) return;
+			this.previewing = itemId;
+			this.fire((this.constructor as unknown as Statics).previewEvent, {
+				gallery: state.id,
+				itemId,
+			});
+		};
+		const statics = this.constructor as unknown as Statics & { previewDelayMs: number };
+		// Moving from one previewed tile to the next is immediate; the first one waits for a pause.
+		if (this.previewing !== undefined) show();
+		else this.previewStartTimer = setTimeout(show, statics.previewDelayMs);
+	}
+
+	private endPreview(immediate = false): void {
+		clearTimeout(this.previewStartTimer);
+		this.previewStartTimer = undefined;
+		clearTimeout(this.previewEndTimer);
+		this.previewEndTimer = undefined;
+		if (this.previewing === undefined) return;
+		const end = (): void => {
+			this.previewEndTimer = undefined;
+			const state = this.model;
+			if (this.previewing === undefined) return;
+			this.previewing = undefined;
+			this.fire((this.constructor as unknown as Statics).previewEndEvent, {
+				gallery: state?.id ?? '',
+			});
+		};
+		const statics = this.constructor as unknown as Statics & { previewEndDelayMs: number };
+		if (immediate) end();
+		else this.previewEndTimer = setTimeout(end, statics.previewEndDelayMs);
+	}
+
+	private findItem(itemId: string): OfficeGalleryItem | undefined {
+		for (const section of this.model?.sections ?? []) {
+			const found = section.items.find((item) => item.id === itemId);
+			if (found) return found;
+		}
+		return this.model?.inline?.find((item) => item.id === itemId);
+	}
+
+	private openMenu(itemId: string, x: number, y: number): void {
+		if (this.unavailable() || !this.findItem(itemId)?.actions?.length) return;
+		this.endPreview(true);
+		this.menu = { itemId, x, y };
+		this.ownerDocument.addEventListener('pointerdown', this.onMenuOutside, true);
+		this.requestUpdate();
+	}
+
+	private closeMenu(): void {
+		if (!this.menu) return;
+		this.menu = undefined;
+		this.ownerDocument.removeEventListener('pointerdown', this.onMenuOutside, true);
+		this.requestUpdate();
+	}
+
+	private readonly onMenuOutside = (event: Event): void => {
+		if (!event.composedPath().some((node) => (node as Element).classList?.contains('tile-menu')))
+			this.closeMenu();
+	};
+
+	private onTileContextMenu(event: MouseEvent, itemId: string): void {
+		if (!this.findItem(itemId)?.actions?.length) return;
+		event.preventDefault();
+		event.stopPropagation();
+		this.openMenu(itemId, event.clientX, event.clientY);
+	}
+
+	private onMenuKey(event: KeyboardEvent): void {
+		const items = Array.from(
+			(event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button'),
+		);
+		const index = items.indexOf(event.target as HTMLButtonElement);
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+			const itemId = this.menu?.itemId;
+			this.closeMenu();
+			const statics = this.constructor as unknown as Statics;
+			this.querySelector<HTMLElement>(`[${statics.itemAttribute}="${itemId}"]`)?.focus();
+		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			event.preventDefault();
+			event.stopPropagation();
+			const step = event.key === 'ArrowDown' ? 1 : -1;
+			items[(index + step + items.length) % items.length]?.focus();
+		} else if (event.key === 'Tab') {
+			this.closeMenu();
+		}
+	}
+
+	private menuTemplate(): TemplateResult | string {
+		const menu = this.menu;
+		const item = menu ? this.findItem(menu.itemId) : undefined;
+		if (!menu || !item?.actions?.length) return '';
+		return html`<div
+			class="tile-menu"
+			role="menu"
+			aria-label=${item.label}
+			style="left:${menu.x}px;top:${menu.y}px"
+			@keydown=${this.onMenuKey}
+		>
+			${item.actions.map(
+				(action) =>
+					html`<button
+						type="button"
+						role="menuitem"
+						class="tile-menu-item"
+						data-gallery-action=${action.id}
+						@click=${() => this.pick(menu.itemId, action.id)}
+						>${action.label}</button
+					>`,
+			)}
+		</div>`;
 	}
 
 	get trigger(): HTMLButtonElement {
@@ -172,6 +351,8 @@ export class OfficeUiGallery extends OfficeElement {
 		super.disconnectedCallback();
 		this.close();
 		this.cleanup();
+		clearTimeout(this.previewStartTimer);
+		clearTimeout(this.previewEndTimer);
 	}
 
 	private unavailable(): boolean {
@@ -184,18 +365,26 @@ export class OfficeUiGallery extends OfficeElement {
 		);
 	}
 
-	private pick(itemId: string): void {
+	private pick(itemId: string, action?: string): void {
 		const state = this.model;
 		if (
 			this.unavailable() ||
-			!state?.sections.some((section) => section.items.some((item) => item.id === itemId))
+			!state ||
+			!(
+				state.sections.some((section) => section.items.some((item) => item.id === itemId)) ||
+				state.footer?.some((entry) => entry.id === itemId)
+			)
 		)
 			return;
-		if (this.getAttribute('mode') !== 'panel') {
-			this.close();
-			this.trigger.focus();
-		}
-		this.fire((this.constructor as unknown as Statics).pickEvent, { gallery: state.id, itemId });
+		// The pick goes out while the preview still stands, so the host settles on the state it
+		// previewed from; the preview ends right after.
+		this.dismiss();
+		if (this.getAttribute('mode') !== 'panel') this.trigger.focus();
+		this.fire(
+			(this.constructor as unknown as Statics).pickEvent,
+			action === undefined ? { gallery: state.id, itemId } : { gallery: state.id, itemId, action },
+		);
+		this.endPreview(true);
 	}
 
 	private onTrigger(): void {
@@ -255,6 +444,16 @@ export class OfficeUiGallery extends OfficeElement {
 			this.popup.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
 		}
 		if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+	}
+
+	/** The Menu key and Shift+F10 open a tile's context menu where the tile is. */
+	private onTileKey(event: KeyboardEvent, itemId: string): void {
+		if (event.key !== 'ContextMenu' && !(event.key === 'F10' && event.shiftKey)) return;
+		if (!this.findItem(itemId)?.actions?.length) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		this.openMenu(itemId, box.left, box.bottom);
 	}
 
 	private readonly onOutside = (event: Event): void => {
@@ -317,6 +516,17 @@ export class OfficeUiGallery extends OfficeElement {
 			title=${item.label}
 			style="width:${width + 6}px;height:${height + 6}px;--office-gallery-preview-width:${width}px;--office-gallery-preview-height:${height}px"
 			@click=${() => this.pick(item.id)}
+			@pointerenter=${(event: PointerEvent) => {
+				if (event.pointerType !== 'touch') this.startPreview(item.id);
+			}}
+			@pointerleave=${() => this.endPreview()}
+			@focus=${(event: FocusEvent) => {
+				if ((event.currentTarget as HTMLElement).matches(':focus-visible'))
+					this.startPreview(item.id);
+			}}
+			@blur=${() => this.endPreview()}
+			@contextmenu=${(event: MouseEvent) => this.onTileContextMenu(event, item.id)}
+			@keydown=${(event: KeyboardEvent) => this.onTileKey(event, item.id)}
 		>${preview}${this.getAttribute('mode') === 'panel' ? html`<span class="tile-label">${item.label}</span>` : ''}</button>`;
 	}
 
@@ -361,7 +571,7 @@ export class OfficeUiGallery extends OfficeElement {
 			role="dialog"
 			aria-label=${title}
 			${unsafeStatic(statics.popupAttribute)}=${ifDefined(state?.id)}
-		>${(state?.sections ?? []).map((section) => this.section(section, disabled))}</div>`;
+		>${(state?.sections ?? []).map((section) => this.section(section, disabled))}${this.footer(disabled)}</div>`;
 		return html`<span class="gallery-view" @keydown=${this.onKey}>
 			<div class="strip" ?hidden=${!inline} style=${inline ? '' : 'display:none'}>
 				${
@@ -375,8 +585,26 @@ export class OfficeUiGallery extends OfficeElement {
 						: ''
 				}
 			</div>
-			${trigger}${this.opened ? popup : ''}
+			${trigger}${this.opened ? popup : ''}${this.menuTemplate()}
 		</span>`;
+	}
+
+	private footer(disabled: boolean) {
+		const entries = this.model?.footer ?? [];
+		if (entries.length === 0) return '';
+		return html`<div class="footer" role="group">
+			${entries.map(
+				(entry) =>
+					html`<button
+						type="button"
+						class="footer-item"
+						data-gallery-footer=${entry.id}
+						?disabled=${disabled}
+						@click=${() => this.pick(entry.id)}
+						>${entry.label}</button
+					>`,
+			)}
+		</div>`;
 	}
 
 	private section(section: OfficeGallerySection, disabled: boolean) {
@@ -405,6 +633,9 @@ export class OfficeUiGallery extends OfficeElement {
 		render(this.lightTemplate(), this, { host: this });
 		this.markHost();
 		if (this.opened) this.position();
+		const menu = this.querySelector<HTMLElement>('.tile-menu');
+		if (menu && !menu.contains(this.ownerDocument.activeElement))
+			menu.querySelector<HTMLElement>('button')?.focus();
 	}
 }
 

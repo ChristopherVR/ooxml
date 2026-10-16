@@ -56,6 +56,7 @@ declare module 'react' {
 			'pptx-ui-ribbon-home-arrange-shape': WebControlProps;
 			'pptx-ui-ribbon-transitions': WebControlProps;
 			'pptx-ui-ribbon-insert': WebControlProps;
+			'pptx-ui-mobile-insert': WebControlProps;
 			'pptx-ui-ribbon-view': WebControlProps;
 			'pptx-ui-ribbon-group': WebControlProps;
 			'pptx-ui-ribbon-section': WebControlProps;
@@ -67,6 +68,8 @@ declare module 'react' {
 			'pptx-ui-context-menu': WebControlProps;
 			'pptx-ui-subtitle-settings': WebControlProps;
 			'pptx-ui-theme-editor': WebControlProps;
+			'pptx-ui-chart-format-pane': WebControlProps;
+			'pptx-ui-ribbon-home-chart-selection': WebControlProps;
 			'pptx-ui-title-bar': WebControlProps;
 			'pptx-ui-ribbon-actions': WebControlProps;
 		}

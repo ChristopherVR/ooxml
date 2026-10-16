@@ -79,9 +79,15 @@ describe('canvas viewport fit policy', () => {
 	});
 
 	it('reserves the same horizontal allowance as the other editor bindings', () => {
+		const { service } = setup(968, 1080);
+		service.recompute();
+		expect(service.fitScale()).toBe(1);
+	});
+
+	it('insets the slide by the phone margin below the mobile breakpoint', () => {
 		const { service } = setup(488, 540);
 		service.recompute();
-		expect(service.fitScale()).toBe(0.5);
+		expect(service.fitScale()).toBeCloseTo((488 - 24) / 960);
 	});
 
 	it('falls back safely for invalid options and unavailable measurements', () => {

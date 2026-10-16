@@ -1,5 +1,6 @@
 import type {
 	CellCoord,
+	ChartFormatPointerEvent,
 	ContextMenuCommandId,
 	ContextMenuEntry,
 	InspectorSectionAnchor,
@@ -10,6 +11,7 @@ import {
 	canInteractWithElement,
 	canMergeCells,
 	canMergeShapes,
+	chartFormatTargetFromEvent,
 	computeMergeCellDown,
 	computeMergeCellRight,
 	computeSplitCell,
@@ -107,6 +109,27 @@ export function readTableCellTarget(target: EventTarget | null): ContextMenuCell
 		: null;
 }
 
+/**
+ * Record which chart element a right-click on chart `elementId` landed on, so
+ * the menu offers "Format Data Series...", "Format Axis..." and so on and the
+ * command opens the pane on that element. A no-op for anything but a chart.
+ */
+export function recordChartContextTarget(
+	editor: EditorState,
+	elementId: string,
+	event: ChartFormatPointerEvent,
+): void {
+	const element = editor.elementById(elementId);
+	if (element?.type !== 'chart') {
+		return;
+	}
+	let host = event.target instanceof Element ? event.target.closest('[data-element-id]') : null;
+	while (host && host.getAttribute('data-element-id') !== elementId) {
+		host = host.parentElement?.closest('[data-element-id]') ?? null;
+	}
+	editor.chartFormat.setTarget(elementId, chartFormatTargetFromEvent(event, host, element));
+}
+
 /** The selected element's table model, or undefined when it is not a table. */
 function selectedTableData(editor: EditorState): PptxTableData | undefined {
 	const element = editor.selectedElement;
@@ -156,6 +179,10 @@ export function buildEditorContextMenuEntries(deps: ContextMenuDispatchDeps): Co
 		// Merge Shapes on a mergeable multi-selection; Crop on a lone picture.
 		canMergeShapes: canMergeShapes(editor.selectedElements),
 		canCrop: canCropElement(editor.selectedElement),
+		chartFormatTarget:
+			editor.selectedElement?.type === 'chart'
+				? editor.chartFormat.targetFor(editor.selectedElement.id)
+				: null,
 	});
 }
 
@@ -335,6 +362,13 @@ export function runContextMenuCommand(
 			const anchor = contextMenuInspectorAnchor(id);
 			if (anchor) {
 				deps.onFocusInspectorSection?.(anchor);
+			}
+			return;
+		}
+		case 'format-chart-element': {
+			const chart = editor.selectedElement;
+			if (chart?.type === 'chart') {
+				editor.chartFormat.openPane(chart.id, editor.chartFormat.targetFor(chart.id));
 			}
 			return;
 		}

@@ -169,7 +169,7 @@ export function ChartDataGrid({
 									<td key={si} className='p-0.5'>
 										<input
 											type='number'
-											aria-label={`${s.name} value ${ci + 1}`}
+											aria-label={t('pptx.chart.seriesValueCell', { name: s.name, number: ci + 1 })}
 											disabled={!canEdit}
 											ref={
 												isValueHighlight(si, ci) ? (highlightRef as Ref<HTMLInputElement>) : null

@@ -16,7 +16,9 @@
  */
 import type {
 	PptxElement,
+	PptxSlide,
 	PptxTheme,
+	PptxThemeVariant,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 	ResolvedStyleMatrix,
@@ -73,8 +75,12 @@ export type RibbonGalleryId =
 	| 'smartArtMoveDown'
 	| 'smartArtResetGraphic'
 	| 'smartArtConvert'
+	| 'themes'
+	| 'themeVariants'
 	| 'themeColors'
-	| 'themeFonts';
+	| 'themeFonts'
+	| 'themeEffects'
+	| 'themeBackgrounds';
 
 /** One tile. */
 export interface RibbonGalleryItem {
@@ -105,6 +111,18 @@ export interface RibbonGalleryItem {
 	previewFilter?: string;
 	/** True when this entry is what the selection currently carries. */
 	applied: boolean;
+	/**
+	 * Context menu entries (right-click, Menu key, Shift+F10); a plain click picks the tile with
+	 * no action. Background Styles offers "Apply to All Slides" and "Apply to Selected Slides".
+	 */
+	actions?: RibbonGalleryAction[];
+}
+
+/** A named entry of a tile's context menu or of the dropdown footer. */
+export interface RibbonGalleryAction {
+	id: string;
+	labelKey: string;
+	label: string;
 }
 
 /** A titled block of tiles (PowerPoint's "Theme Styles" / "Presets"). */
@@ -127,6 +145,15 @@ export interface RibbonGalleryDescriptor {
 	labelKey: string;
 	label: string;
 	sections: RibbonGallerySection[];
+	/** Tiles an inline gallery shows in the ribbon itself (default 6). */
+	inlineCount?: number;
+	/**
+	 * True when hovering a tile shows its result on the slides without committing it (the Design
+	 * galleries). The element emits `gallery-preview` / `gallery-preview-end`.
+	 */
+	previewable?: boolean;
+	/** Commands under the tiles of the dropdown ("Format Background..."); a click picks `id`. */
+	footer?: RibbonGalleryAction[];
 	/** True when the selection cannot take this gallery (trigger disabled). */
 	disabled: boolean;
 	/**
@@ -170,12 +197,16 @@ export interface RibbonGalleryContext {
 	 * to resolve `<p:style>` exactly as the load path does; without it they
 	 * fall back to an approximation from `themeColorMap`.
 	 */
-	resolveStyleMatrix?: (styleXml: XmlObject) => ResolvedStyleMatrix;
+	resolveStyleMatrix?: (styleXml: XmlObject, effectSchemeId?: string) => ResolvedStyleMatrix;
 	/**
 	 * The table cells the selection covers (`row` and `column` are zero-based), for the Table
 	 * Layout commands. Omitted or empty when the table frame itself is selected.
 	 */
 	selectedTableCells?: ReadonlyArray<{ row: number; column: number }>;
+	/** The slide being edited (Background Styles marks the style it uses). */
+	activeSlide?: PptxSlide | null;
+	/** `PptxData.themeVariants`: real variants from the package, when it has any. */
+	themeVariants?: readonly PptxThemeVariant[];
 }
 
 /** What a pick asks the binding to do. */
@@ -187,6 +218,13 @@ export type RibbonGalleryApplyResult =
 			patch: Partial<PptxElement>;
 	  }
 	| {
+			/** A whole theme: colour and font scheme together (Design > Themes). */
+			kind: 'theme';
+			colorScheme: PptxThemeColorScheme;
+			fontScheme: PptxThemeFontScheme;
+			name: string;
+	  }
+	| {
 			kind: 'themeColorScheme';
 			colorScheme: PptxThemeColorScheme;
 			name: string;
@@ -195,4 +233,27 @@ export type RibbonGalleryApplyResult =
 			kind: 'themeFontScheme';
 			fontScheme: PptxThemeFontScheme;
 			name: string;
+	  }
+	| {
+			/** Design > Variants > Effects: a built-in scheme, or a variant's own `a:fmtScheme`. */
+			kind: 'themeEffects';
+			schemeId?: string;
+			fmtSchemeXml?: string;
+			name: string;
+	  }
+	| {
+			/** Design > Variants > Background Styles: preset 1 to 12. */
+			kind: 'backgroundStyle';
+			styleIndex: number;
+			scope: 'all' | 'selected';
+	  }
+	| {
+			/** A command the host runs (Format Background... opens its background pane). */
+			kind: 'command';
+			command: 'formatBackground';
+	  }
+	| {
+			/** Several results in order (a real theme variant: colours and fonts, effects, background). */
+			kind: 'sequence';
+			steps: RibbonGalleryApplyResult[];
 	  };

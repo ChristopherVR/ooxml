@@ -43,6 +43,7 @@ import {
 	openPptxFile,
 	overlayInlineTextSnapshot,
 	resolve3DRenderingFlags,
+	isEditingAllowed,
 	resolveAutosaveIntervalSeconds,
 	resolveExpiredAutosaveSnapshots,
 	resolveHistoryDepth,
@@ -64,10 +65,20 @@ import type {
 	PptxElement,
 	PptxLayoutOption,
 	PptxLayoutPreview,
+	PptxSlide,
 	PptxTheme,
 	ShapeStyle,
 } from 'pptx-viewer-core';
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue';
+import {
+	computed,
+	onBeforeUnmount,
+	onMounted,
+	provide,
+	ref,
+	shallowRef,
+	watch,
+	watchEffect,
+} from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { provideViewerTheme, useThemeStyle } from '../theme';
@@ -97,6 +108,7 @@ import ViewerSlideRail from './components/ViewerSlideRail.vue';
 import { AccountAuthKey } from './composables/account-auth';
 import { useAiBridge } from './composables/ai/useAiBridge';
 import { useAiPanelController } from './composables/ai/useAiPanelController';
+import { useChartFormatPane } from './composables/chart-format-pane';
 import { useChartCanvasEditContext } from './composables/chart-part-selection';
 import { useCustomizedRibbonProps } from './composables/customization-ribbon-gates';
 import { readDeckData } from './composables/deck-data';
@@ -121,6 +133,7 @@ import { useCompatibilityToasts } from './composables/useCompatibilityToasts';
 import { useContentSource } from './composables/useContentSource';
 import { useContextMenu } from './composables/useContextMenu';
 import { useCustomShowsWiring } from './composables/useCustomShowsWiring';
+import { useDeckStyleHost } from './composables/useDeckStyleHost';
 import { useDeckViewPreferencesSync } from './composables/useDeckViewPreferencesSync';
 import { useDeckViews } from './composables/useDeckViews';
 import { useDocumentPropertiesDialog } from './composables/useDocumentPropertiesDialog';
@@ -187,6 +200,8 @@ import { useViewerApi } from './composables/useViewerApi';
 import { useViewerCustomization } from './composables/useViewerCustomization';
 import { useViewerOptionsStore } from './composables/useViewerOptionsStore';
 import { useViewerPreferences } from './composables/useViewerPreferences';
+import { ViewerRegionBaseKey } from './composables/useViewerRegions';
+import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
@@ -258,7 +273,12 @@ const { panelVisible, dialogAvailable, effectiveHiddenActions, aiEnabled, aiConf
 // Ribbon group/control hiding: a scoped stylesheet from the shared rules.
 const ribbonScope = useRibbonCustomizationStyle(customization.resolved);
 
+// The real deck while a Design gallery hover preview shows over the slides (see `deckStyle`).
+const deckStyleHeldDeck = shallowRef<
+	{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+>(undefined);
 const deck = useLoadContent(() => activeContent.value, {
+	getHeldDeck: () => deckStyleHeldDeck.value,
 	getPendingInlineEdit: () => {
 		if (!canEditEffective.value) {
 			return undefined;
@@ -363,6 +383,7 @@ const canEditEffective = computed(
 	() =>
 		editingRequested.value &&
 		props.canEdit &&
+		isEditingAllowed(customization.resolved.value) &&
 		!collaborationReadOnly.value &&
 		!protectedViewActive.value &&
 		!readOnlyRec.locked.value,
@@ -532,6 +553,17 @@ watch(selectedElementIds, (ids) => {
 });
 watch(slideCount, (count) => {
 	emit('slide-count-change', count);
+});
+// `load` / `error`: the Svelte and vanilla bindings' load notifications.
+watch(loading, (isLoading, wasLoading) => {
+	if (wasLoading && !isLoading && !error.value) {
+		emit('load', { slideCount: slides.value.length, canvasSize: canvasSize.value });
+	}
+});
+watch(error, (message) => {
+	if (message) {
+		emit('error', message);
+	}
 });
 
 // Rubber-band selection. Template-owned elements join the band only in
@@ -739,6 +771,14 @@ const presentation = usePresentationControls({
 useChartCanvasEditContext({
 	canEditInline: () => canEditEffective.value && !presentation.presenting.value,
 	isElementSelected: (id) => selectedElementIds.value.includes(id),
+	updateElement: (id, patch) => ops.updateElement(id, patch),
+});
+
+// Chart Format pane + Chart Format > Current Selection state, injected by the
+// pane host, the ribbon strip, the chart canvas handlers and the context menu.
+const chartFormat = useChartFormatPane({
+	selectedElement: () => (selectedElementIds.value.length === 1 ? selectedElements.value[0] : null),
+	canEdit: () => canEditEffective.value && !presentation.presenting.value,
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 });
 
@@ -968,6 +1008,7 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 	customization: () => customization.resolved.value,
 	onEditPoints: outlineAuthoring.startEditPoints,
 	mergeCrop,
+	chartFormat,
 	onAskAi: () => {
 		aiPanel.askAboutSelection();
 		aiPanelOpen.value = true;
@@ -977,6 +1018,10 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 		aiPanelOpen.value = true;
 	},
 });
+
+// -- Design galleries: hover preview + effect/background commits -----------
+// Declared before autosave and collaboration, which both stand still while a preview shows.
+const deckStyleHeld = ref(false);
 
 // -- Autosave ----------------------------------------------------------
 const {
@@ -990,6 +1035,7 @@ const {
 	slides,
 	// Edit-template mode rebuilds only this map, never `slides`.
 	templateElements: templateElementsBySlideId,
+	paused: deckStyleHeld,
 	loading,
 	canEdit: () => canEditEffective.value,
 	// Undefined (the host said nothing) permits autosave; only an explicit
@@ -1074,6 +1120,7 @@ const comments = useCommentsWiring({
 // -- Collaboration (Yjs) + broadcast -----------------------------------
 const collaboration = useCollaborationWiring({
 	slides,
+	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
 	// never one the user opened during the session.
@@ -1320,7 +1367,6 @@ useTouchGestures({
 });
 const mobileChrome = useMobileChrome({
 	presenting: presentation.presenting,
-	addText: insertion.addText,
 });
 
 // -- Ribbon-facing actions (hoisted above keyboard shortcuts) ----------
@@ -1581,7 +1627,20 @@ function applyAiTheme(updates: Partial<PptxTheme>): void {
 }
 // Ribbon style galleries: context from the deck, picks through the same
 // history-tracked element update / theme paths the inspector uses.
+const deckStyle = useDeckStyleHost({
+	held: deckStyleHeld,
+	heldDeck: deckStyleHeldDeck,
+	slides,
+	templateElementsBySlideId,
+	pptxTheme,
+	themeColorMap,
+	handler,
+	selectedSlideIds: () => (activeSlide.value ? [activeSlide.value.id] : []),
+	pushHistory: history.pushHistory,
+});
 provideRibbonGalleryHost({
+	deckStyle,
+	activeSlide: () => activeSlide.value ?? null,
 	editable: () => canEditEffective.value,
 	selectedElement: () => selectedElements.value[0] ?? null,
 	theme: pptxTheme,
@@ -1766,7 +1825,7 @@ useCanvasImagePaste(viewerRootRef, {
 	insertElement: ops.addElement,
 });
 
-defineExpose<PowerPointViewerExpose>({
+const exposedHandle: PowerPointViewerExpose = {
 	...useViewerApi({
 		slides,
 		activeSlide,
@@ -1804,7 +1863,21 @@ defineExpose<PowerPointViewerExpose>({
 		elementOps: ops,
 	}),
 	...customization.api,
-});
+};
+defineExpose<PowerPointViewerExpose>(exposedHandle);
+// Host region renderers (`customization.regions`) read this base context.
+provide(
+	ViewerRegionBaseKey,
+	computed<ViewerRegionBase>(() => ({
+		viewer: exposedHandle,
+		mode: ribbonMode.value,
+		canEdit: canEditEffective.value,
+		activeSlideIndex: activeSlideIndex.value,
+		slideCount: slideCount.value,
+		selectedElementIds: selectedElementIds.value,
+		locale: prefs.localeCode.value,
+	})),
+);
 const slidePackageClipboard = createSlidePackageClipboard({
 	getSnapshot: () =>
 		handler.value
@@ -1879,7 +1952,9 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     editing but the option is still blocking it; a document the host
 				     opened read-only never shows this (there is nothing to enable). -->
 				<div
-					v-if="props.canEdit && protectedViewActive"
+					v-if="
+						props.canEdit && isEditingAllowed(customization.resolved.value) && protectedViewActive
+					"
 					class="pptx-vue-protected-view-banner flex items-center gap-3 border-b border-amber-700/30 bg-amber-900/20 px-4 py-2"
 					role="status"
 				>
@@ -1982,6 +2057,8 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:ai-enabled="aiEnabled"
 					:is-ai-panel-open="aiPanelOpen"
 					:on-toggle-ai-panel="() => (aiPanelOpen = !aiPanelOpen)"
+					:insert-open="mobileChrome.mobileInsertOpen.value"
+					@close-insert="mobileChrome.mobileInsertOpen.value = false"
 				/>
 			</template>
 
@@ -2005,7 +2082,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 
 			<!-- Find & replace bar -->
 			<FindReplaceBar
-				v-if="canEditEffective && findOpen"
+				v-if="canEditEffective && findOpen && panelVisible('findReplace')"
 				v-model:query="find.query.value"
 				v-model:replacement="find.replacement.value"
 				v-model:match-case="find.matchCase.value"

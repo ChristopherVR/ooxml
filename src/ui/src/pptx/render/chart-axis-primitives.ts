@@ -40,6 +40,7 @@ export function buildVerticalAxisLine(
 				x2: axisX,
 				y2: layout.plotBottom,
 				...chartLineStyle(axis.spPr),
+				...(axis.axisId !== undefined ? { axisLine: axis.axisId } : {}),
 			}
 		: undefined;
 }

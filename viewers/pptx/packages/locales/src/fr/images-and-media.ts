@@ -195,4 +195,17 @@ export const translations = {
 	'pptx.image.cropModeHint':
 		'Faites glisser les poignées noires pour rogner. Appuyez sur Entrée pour appliquer ou Échap pour annuler.',
 	'pptx.image.cropHint': 'Sélectionnez une image pour la rogner',
+	'pptx.media.captionTracks': 'Pistes de sous-titres',
+	'pptx.media.trackName': 'Piste',
+	'pptx.media.trackLabel': 'Libellé',
+	'pptx.media.trackLanguage': 'Langue',
+	'pptx.media.trackKind': 'Type',
+	'pptx.media.trackKind.subtitles': 'Sous-titres',
+	'pptx.media.trackKind.descriptions': 'Descriptions',
+	'pptx.media.trackDefault': 'Par défaut',
+	'pptx.media.trackSource': 'Source',
+	'pptx.media.trackSourcePlaceholder': 'captions.vtt ou URL de données',
+	'pptx.media.trackInlineWebVtt': 'WebVTT intégré',
+	'pptx.media.removeTrack': 'Supprimer la piste',
+	'pptx.media.addCaptionTrack': 'Ajouter une piste de sous-titres',
 } as const;

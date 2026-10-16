@@ -11,9 +11,12 @@ import { PASTE_SPECIAL_OPTIONS } from 'ooxml-ui/pptx';
 import type { Translator } from '../i18n';
 import { appendDialogFooter } from './dialog-footer';
 import { appendRadioRow, createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 export interface PasteSpecialDialogOptions {
 	onConfirm(format: PasteSpecialFormat): void;
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet;
 }
 
 export function openPasteSpecialDialog(
@@ -21,7 +24,12 @@ export function openPasteSpecialDialog(
 	t: Translator,
 	options: PasteSpecialDialogOptions,
 ): void {
-	const shell = createParityDialogShell(doc, t, t('pptx.pasteSpecial.dialogTitle'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.pasteSpecial.dialogTitle'),
+		options.regions && { regions: options.regions },
+	);
 	let selected: PasteSpecialFormat = 'keep-source-formatting';
 	appendRadioRow(
 		doc,

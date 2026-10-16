@@ -1,5 +1,6 @@
 // Which plot painter draws a chart view model: bars, lines and areas (alone or layered in a
 // combination chart), scatter, waterfall and histogram.
+import { categoryAnalysis } from './chart-svg-analysis';
 import { bars } from './chart-svg-bars';
 import { cartesianAxes, linesAndAreas, plotted, type Frame } from './chart-svg-cartesian';
 import { scatter } from './chart-svg-xy';
@@ -73,5 +74,6 @@ export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 				(RANK[a.layer.model.type] ?? 1) - (RANK[b.layer.model.type] ?? 1) || a.order - b.order,
 		)
 		.forEach(({ layer }) => paint(layer, out));
+	categoryAnalysis(model, frame, out);
 	return out.join('');
 }

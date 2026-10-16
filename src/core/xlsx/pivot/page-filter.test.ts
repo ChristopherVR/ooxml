@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { expect, it, vi } from 'vitest';
 import { createWorkbook, createEditSession, loadXlsx, saveXlsx, getCell } from '../index';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 import { children, first, parseXml, NS } from '../../xml/index';
 const profiles = [
 	'tabular-all',
@@ -142,7 +142,7 @@ it('includes the two report rows in the output budget before allocating headers'
 		aggregate: 'sum',
 		caption: 'Measure ' + i,
 	}));
-	const headers = vi.spyOn(measures, 'pivotHeaders');
+	const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 	try {
 		expect(() => pivotGrid(pivot)).toThrow('too large');
 		expect(headers).not.toHaveBeenCalled();
@@ -152,15 +152,17 @@ it('includes the two report rows in the output budget before allocating headers'
 	expect(name).toBe(pivot.name);
 });
 
-it('refuses report filters with Values on rows before history', async () => {
+it('moves a report filter to Values on rows with history', async () => {
 	const wb = await loadXlsx(native()),
 		edit = createEditSession(wb),
 		pivot = wb.sheets[0]!.pivotTables![0]!;
-	expect(() => edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' })).toThrow(
-		'Report filters require',
-	);
-	expect(edit.canUndo()).toBe(false);
-	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+	edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' });
+	const rows = wb.sheets[0]!.pivotTables![0]!;
+	expect(rows.valuesAxis).toBe('rows');
+	expect(rows.pageFilter).toEqual(pivot.pageFilter);
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]!.valuesAxis).toBe(pivot.valuesAxis);
+	expect(pivotGrid(wb.sheets[0]!.pivotTables![0]!).values).toEqual(pivotGrid(pivot).values);
 });
 it('refuses ambiguous typed item captions without changing source or report', () => {
 	const wb = createWorkbook(),

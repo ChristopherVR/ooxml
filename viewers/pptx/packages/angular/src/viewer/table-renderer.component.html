@@ -32,6 +32,7 @@
 								[ngStyle]="vm.tdStyle"
 								[attr.colspan]="vm.colSpan ?? null"
 								[attr.rowspan]="vm.rowSpan ?? null"
+								(pointerdown)="onCellPointerDown($event)"
 								(click)="onCellClick($event, vm.rowIndex, vm.colIndex)"
 								(dblclick)="onCellDblClick($event, vm.rowIndex, vm.colIndex)"
 							>

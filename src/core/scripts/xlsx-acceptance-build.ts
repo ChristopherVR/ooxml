@@ -12,6 +12,7 @@ import { internStyle } from '../xlsx/styles';
 import { createWorkbook, createWorksheet, defaultCellStyle } from '../xlsx/workbook';
 import { loadXlsx } from '../xlsx/read/index';
 import { saveXlsx } from '../xlsx/write/index';
+import { pivotBuilds } from './xlsx-acceptance-pivots';
 import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session';
 
 const out = process.argv[2];
@@ -453,6 +454,7 @@ for (const [file, build, cellChecks] of sessionBuilds(fixtures, FIXTURES, PNG)) 
 		},
 	]);
 }
+builds.push(...pivotBuilds(fixtures));
 for (const fixture of FIXTURES) {
 	builds.push([
 		`roundtrip-${fixture}`,

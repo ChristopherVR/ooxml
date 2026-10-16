@@ -45,6 +45,11 @@ export interface UseAutosaveOptions {
 	 * without that path having to remember to announce itself.
 	 */
 	templateElements?: Ref<unknown>;
+	/**
+	 * True while a Design gallery hover preview shows over the slides: the stores change but the
+	 * document does not, so nothing is marked dirty and no timer is armed.
+	 */
+	paused?: Ref<boolean>;
 	/** Master on/off switch. When falsy the debounce timer never fires. */
 	enabled?: Ref<boolean> | boolean;
 	/**
@@ -92,7 +97,7 @@ const defaultTimers: AutosaveTimerApi = {
  * any pending debounce. The timer is torn down on scope dispose.
  */
 export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
-	const { slides, templateElements, enabled = true, intervalMs, onSave } = options;
+	const { slides, templateElements, enabled = true, intervalMs, onSave, paused } = options;
 	const timers = options.timers ?? defaultTimers;
 
 	const status = ref<AutosaveStatus>('idle');
@@ -188,6 +193,9 @@ export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
 	watch(
 		templateElements ? [slides, templateElements] : [slides],
 		() => {
+			if (paused?.value) {
+				return;
+			}
 			if (!isDirty.value || firstDirtyAt === null) {
 				firstDirtyAt = Date.now();
 			}

@@ -29,6 +29,7 @@ export const PRESENTATION_FIELD_KEYS: Record<keyof Omit<PptxData, 'slides'>, tru
 	themeColorMap: true,
 	theme: true,
 	themeOptions: true,
+	themeVariants: true,
 	tableStyleMap: true,
 	tableStylesDefaultId: true,
 	isPasswordProtected: true,

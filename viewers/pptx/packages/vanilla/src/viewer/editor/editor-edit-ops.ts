@@ -26,6 +26,8 @@ import type { ArrangeActions } from './editor-arrange-actions';
 import { createArrangeActions } from './editor-arrange-actions';
 import type { SlideBackgroundActions } from './editor-background-actions';
 import { createSlideBackgroundActions } from './editor-background-actions';
+import type { ChartFormatActions } from './editor-chart-format-actions';
+import { createChartFormatActions } from './editor-chart-format-actions';
 import type { ClipboardActions } from './editor-clipboard-actions';
 import { createClipboardActions } from './editor-clipboard-actions';
 import type { CommentActions } from './editor-comment-actions';
@@ -100,7 +102,8 @@ export interface EditActions
 		DeckActions,
 		GalleryActions,
 		MergeActions,
-		CropActions {
+		CropActions,
+		ChartFormatActions {
 	/** Slide section CRUD and ordering actions. */
 	sections: SectionActions;
 	/** Slide Master view sidebar CRUD (Insert/Duplicate/Delete/Rename Layout/Master). */
@@ -117,7 +120,11 @@ export interface EditActions
 	pushRecentColor(hex: string): void;
 	/** Commit an inspector geometry edit (X/Y/W/H/rotation). */
 	setGeometry(patch: GeometryPatch): void;
-	insert(kind: InsertKind, shapeType?: ShapePresetType): void;
+	insert(
+		kind: InsertKind,
+		shapeType?: ShapePresetType,
+		tableSize?: { rows: number; columns: number },
+	): void;
 	insertImage(): Promise<void>;
 	insertMedia(): Promise<void>;
 	/** Existing history-tracked insertion transaction for a prepared element. */
@@ -203,9 +210,10 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		...createInspectorActions(applyToSelected),
 		...createInkActions({ store, ops }),
 		...deckActions,
-		...createGalleryActions({ store, ops, deck: deckActions }),
+		...createGalleryActions({ store, ops, deck: deckActions, getHandler: deps.getHandler }),
 		...createMergeActions({ store, ops }),
 		...createCropActions({ doc, store, ops }),
+		...createChartFormatActions({ store, applyToSelected }),
 		sections: createSectionActions(store, ops),
 		masterView: createMasterViewCrudActions({
 			doc,
@@ -269,12 +277,12 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 			});
 		},
 
-		insert(kind, shapeType) {
+		insert(kind, shapeType, tableSize) {
 			const state = store.get();
 			if (!state.slides[state.currentSlide]) {
 				return;
 			}
-			insertElement(buildInsertElement(kind, state.canvasSize, shapeType));
+			insertElement(buildInsertElement(kind, state.canvasSize, shapeType, tableSize));
 		},
 		async insertImage() {
 			const state = store.get();

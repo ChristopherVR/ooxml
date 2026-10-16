@@ -14,8 +14,18 @@
 	color: var(--office-foreground, #201f1e);
 	font-size: 20px;
 	line-height: 1;
-	box-shadow: -6px 0 6px -2px rgb(0 0 0 / 12%);
 	cursor: pointer;
+}
+/* A fade into the chevron: content scrolling under it dims out instead of being cut off by the box. */
+.ribbon-scroll-more::before {
+	content: '';
+	position: absolute;
+	top: -1px;
+	right: calc(100% + 1px);
+	bottom: -1px;
+	width: 32px;
+	background: linear-gradient(to right, transparent, var(--office-background, #fff));
+	pointer-events: none;
 }
 
 @media (pointer: coarse) {

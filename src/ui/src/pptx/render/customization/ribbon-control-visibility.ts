@@ -52,13 +52,26 @@ export function isRibbonGroupVisible(resolved: ResolvedCustomization, id: Ribbon
 	return !resolved.hiddenRibbonGroups.has(id);
 }
 
-/** True unless the host hid this control or the group it sits in. */
+/**
+ * Deprecated ids that stand for several controls. `insert.text.field` was the Header, Date and
+ * Slide Number menu; hiding it still hides the two buttons that replaced it.
+ */
+export const RIBBON_CONTROL_ALIASES: Readonly<Record<string, readonly RibbonControlId[]>> = {
+	'insert.text.field': ['insert.text.dateTime', 'insert.text.slideNumber'],
+};
+
+/** True unless the host hid this control, an alias that covers it, or the group it sits in. */
 export function isRibbonControlVisible(
 	resolved: ResolvedCustomization,
 	id: RibbonControlId,
 ): boolean {
 	if (resolved.hiddenRibbonControls.has(id)) {
 		return false;
+	}
+	for (const [alias, covered] of Object.entries(RIBBON_CONTROL_ALIASES)) {
+		if (covered.includes(id) && resolved.hiddenRibbonControls.has(alias as RibbonControlId)) {
+			return false;
+		}
 	}
 	const group = id.slice(0, id.lastIndexOf('.')) as RibbonGroupId;
 	return !resolved.hiddenRibbonGroups.has(group);
@@ -104,6 +117,9 @@ export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: 
 	for (const id of resolved.hiddenRibbonControls) {
 		if (isRibbonControlId(id)) {
 			selectors.push(attrSelector(safeScope, RIBBON_CONTROL_ATTR, id));
+			for (const covered of RIBBON_CONTROL_ALIASES[id] ?? []) {
+				selectors.push(attrSelector(safeScope, RIBBON_CONTROL_ATTR, covered));
+			}
 		}
 	}
 	if (selectors.length === 0) {

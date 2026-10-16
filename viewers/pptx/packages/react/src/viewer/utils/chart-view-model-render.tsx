@@ -239,8 +239,9 @@ export function renderChartViewModel(
 	elementId: string,
 	vm: ChartViewModel,
 	preserveAspectRatio: 'none' | 'xMidYMid meet' = 'none',
+	translate?: (key: string) => string,
 ): React.ReactNode {
-	const legendItems = computeChartLegendLayout(vm);
+	const legendItems = computeChartLegendLayout(vm, translate);
 	return (
 		<svg
 			className='w-full h-full pointer-events-none'

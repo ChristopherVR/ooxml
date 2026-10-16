@@ -12,13 +12,15 @@
 	 * present, nothing more.
 	 */
 	import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
-	import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
+	import { EDITOR_SLIDE_RAIL_WIDTH, MAX_ZOOM_SCALE, MIN_ZOOM_SCALE, observeElementHeight } from 'ooxml-ui/pptx';
 
 	import { canvasPinchZoom } from '../canvas-pinch-zoom';
 	import InspectorPanel from './inspector/InspectorPanel.svelte';
 	import NotesPanel from './NotesPanel.svelte';
 	import LayoutGalleryMenu from './ribbon/home/LayoutGalleryMenu.svelte';
 	import ThumbnailRail from './ThumbnailRail.svelte';
+	import ViewerRegion from './ViewerRegion.svelte';
+	import { useNotesBarHeightSink } from '../state/notes-bar-height.svelte';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import type { ViewerBodyProps } from './viewer-body-props';
 	import ViewerStage from './ViewerStage.svelte';
@@ -108,11 +110,43 @@
 	}
 	// Host-removed regions (`hiddenPanels`): slides pane, notes, inspector.
 	const customization = useViewerCustomization();
+	// A replaced notes panel keeps the slot (content-driven height, collapse via display:none) and
+	// reports its live height like the built-in strip, so the compat toasts clear it.
+	const notesBarSink = useNotesBarHeightSink();
+	function reportNotesHeight(node: HTMLElement, expanded: boolean) {
+		let stop: (() => void) | undefined;
+		const start = (): void => {
+			stop?.();
+			stop = undefined;
+			if (expanded && notesBarSink) {
+				stop = observeElementHeight(node, (height) => notesBarSink.report(height));
+			} else {
+				notesBarSink?.report(0);
+			}
+		};
+		start();
+		return {
+			update(next: boolean): void {
+				expanded = next;
+				start();
+			},
+			destroy(): void {
+				stop?.();
+				notesBarSink?.report(0);
+			},
+		};
+	}
 </script>
 
 <div class="pptx-svelte-body-stack">
 <div class="pptx-svelte-body" data-pptx-chrome="body">
 	{#if showThumbnails && !chromeUi?.sidebarCollapsed && chromeVisible && displaySlides.length > 0 && customization.isPanelVisible('slidesPane')}
+		{@const slidesRenderer = customization.regionRenderer('slidesPane')}
+		{#if slidesRenderer}
+			<nav data-pptx-chrome="slides" class="pptx-svelte-slides-region" style={`width:${EDITOR_SLIDE_RAIL_WIDTH}px`} aria-label={t('pptx.sections.slides')}>
+				<ViewerRegion region="slidesPane" renderer={slidesRenderer} />
+			</nav>
+		{:else}
 		<ThumbnailRail
 			slides={displaySlides}
 			sections={editor.sections}
@@ -141,6 +175,7 @@
 			onsectionmove={(id, direction) =>
 				direction === 'up' ? editor.sectionOps.moveUp(id) : editor.sectionOps.moveDown(id)}
 		/>
+		{/if}
 	{/if}
 	{#if railLayoutGalleryAnchor}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -231,6 +266,12 @@
 	{/if}
 </div>
 		{#if showNotes && chromeVisible && displaySlides.length > 0 && customization.isPanelVisible('notes')}
+			{@const notesRenderer = customization.regionRenderer('notes')}
+			{#if notesRenderer}
+				<section class="pptx-svelte-notes-region" data-pptx-chrome="notes" data-collapsed={!notesExpanded} hidden={!notesExpanded} use:reportNotesHeight={notesExpanded}>
+					<ViewerRegion region="notes" renderer={notesRenderer} />
+				</section>
+			{:else}
 			<NotesPanel
 				slide={activeSlide}
 				expanded={notesExpanded}
@@ -238,6 +279,7 @@
 				ontoggle={onNotesToggle}
 				notesStyle={editor.notesMaster?.notesStyle}
 			/>
+			{/if}
 		{/if}
 </div>
 
@@ -248,6 +290,10 @@
 		flex: 1;
 		min-height: 0;
 	}
+
+	.pptx-svelte-slides-region { display: flex; flex: none; flex-direction: column; min-height: 0; overflow: hidden; }
+	.pptx-svelte-notes-region { display: flex; flex: none; flex-direction: column; min-height: 0; overflow: hidden; }
+	.pptx-svelte-notes-region[hidden] { display: none; }
 
 	.pptx-svelte-main {
 		display: flex;

@@ -126,6 +126,9 @@ export const EDITOR_CSS = `
 	border-bottom: 1px solid var(--pptx-border);
 }
 .pptxv-inspector-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 	padding: 4px 8px;
 	border: none;
 	border-radius: 4px;
@@ -135,6 +138,7 @@ export const EDITOR_CSS = `
 	font-size: 11px;
 	cursor: pointer;
 }
+.pptxv-inspector-tab svg { flex: none; width: 14px; height: 14px; }
 .pptxv-inspector-tab:hover { color: var(--pptx-foreground); background: var(--pptx-accent); }
 .pptxv-inspector-tab.is-active { background: var(--pptx-primary); color: var(--pptx-primary-foreground, #fff); }
 /* Below this width, matches isDensePanelCompact()/MOBILE_BREAKPOINT (768) in
@@ -351,7 +355,12 @@ export const EDITOR_CSS = `
 .pptxv-smartart-layout-button:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 .pptxv-smartart-layout-button.is-active { border-color: var(--pptx-primary); background: color-mix(in srgb, var(--pptx-primary) 16%, transparent); color: var(--pptx-primary); }
 .pptxv-smartart-nodes { display: flex; max-height: 208px; flex-direction: column; gap: 5px; overflow-y: auto; }
-.pptxv-smartart-node { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 5px; }
+/* One row per node: index, text, fill, font colour, bold, italic; the
+   hierarchy actions (inspector-extras-css.ts) wrap onto a second row under
+   the text. With two columns the six controls used to scatter over four. */
+.pptxv-smartart-node { display: grid; grid-template-columns: 20px minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 5px; }
+.pptxv-smartart-node > input[type='color'] { width: 22px; height: 22px; }
+.pptxv-smartart-node > button { min-width: 22px; height: 22px; padding: 0 4px; border: 1px solid var(--pptx-border); border-radius: var(--pptx-radius); background: transparent; color: var(--pptx-foreground); font: inherit; font-weight: 600; cursor: pointer; }
 .pptxv-smartart-node-index { color: var(--pptx-muted-foreground); text-align: center; }
 .pptxv-smartart-node-input { min-width: 0; height: 26px; box-sizing: border-box; padding: 2px 6px; border: 1px solid var(--pptx-border); border-radius: var(--pptx-radius); background: var(--pptx-background); color: var(--pptx-foreground); font: inherit; }
 .pptxv-smartart-node-input:focus-visible { outline: 2px solid var(--pptx-ring); outline-offset: -1px; }

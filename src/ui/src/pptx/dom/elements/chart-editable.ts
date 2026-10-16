@@ -11,6 +11,7 @@ import {
 	buildChartViewModel,
 	canDrillDown,
 	CHART_INTERACTIVE_CLASS,
+	chartFormatTargetFromEvent,
 	ensureChartInteractionStyles,
 	findChartPartTarget,
 	formatAxisValue,
@@ -21,6 +22,18 @@ import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from '../.
 
 import type { ElementRenderContext } from '../types';
 import { createChartTitleEditor } from './chart-title-editor';
+
+/**
+ * Bubbling event a selected chart dispatches with the chart element a press
+ * (or double-click, `open: true`) landed on, for the host's chart Format pane
+ * and Chart Format > Current Selection.
+ */
+export const CHART_FORMAT_REQUEST_EVENT = 'pptx-chart-format-request';
+export type ChartFormatRequestEvent = CustomEvent<{
+	elementId: string;
+	target: string;
+	open: boolean;
+}>;
 
 /**
  * chart-editable: direct on-canvas chart editing for the vanilla binding, the
@@ -190,6 +203,19 @@ export function attachChartEditing(
 		}
 	});
 
+	const requestFormat = (event: MouseEvent, open: boolean): void => {
+		container.dispatchEvent(
+			new CustomEvent(CHART_FORMAT_REQUEST_EVENT, {
+				bubbles: true,
+				detail: {
+					elementId: element.id,
+					target: chartFormatTargetFromEvent(event, container, chart),
+					open,
+				},
+			}),
+		);
+	};
+
 	container.addEventListener('dblclick', (event: MouseEvent) => {
 		const target = event.target;
 		if (!(target instanceof Element)) {
@@ -202,14 +228,15 @@ export function attachChartEditing(
 			}
 			return;
 		}
-		if (findChartPartTarget(event.target)) {
-			// A mark double-click is already handled as two selects; keep it from
-			// bubbling into the element-level inline-text-edit handler.
-			event.stopPropagation();
-		}
+		// PowerPoint: double-clicking any other chart element opens its Format pane.
+		// Keep it from bubbling into the element-level inline-text-edit handler.
+		event.stopPropagation();
+		requestFormat(event, true);
 	});
 
 	container.addEventListener('pointerdown', (event: PointerEvent) => {
+		// Every press on the selected chart retargets Current Selection and the pane.
+		requestFormat(event, false);
 		const part = findChartPartTarget(event.target);
 		if (!part || !chart.chartData) {
 			return;

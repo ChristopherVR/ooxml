@@ -33,3 +33,16 @@ describe.each(Object.entries(bindings))('%s binding', (name, file) => {
 		expect(source).toMatch(classProp[name as keyof typeof classProp]);
 	});
 });
+
+describe('locale prop', () => {
+	const read = (file: string): string =>
+		readFileSync(resolve(process.cwd(), 'packages', file), 'utf8');
+	it('reaches the element through the shared pickTeamsProps list', () => {
+		expect(read('web-component/src/bind.ts')).toMatch(/'userId',\s+'locale'/u);
+	});
+	it('is declared by the bindings that name their props one by one', () => {
+		expect(read('vue/src/index.ts')).toContain('locale: String');
+		expect(read('vue/src/index.ts')).toContain('props.locale');
+		expect(read('angular/src/index.ts')).toContain('@Input() locale');
+	});
+});

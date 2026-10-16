@@ -11,6 +11,7 @@ const KEYS = [
 	'workspaceId',
 	'userName',
 	'userId',
+	'locale',
 	'config',
 	'uploadFile',
 	'openers',

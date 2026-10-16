@@ -13,6 +13,7 @@ import type {
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
+	ViewerMode,
 	ViewerTheme,
 	ViewportFitOptions,
 	RibbonAddInTab,
@@ -82,6 +83,24 @@ export interface PptxViewerCallbacks {
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/**
+	 * Fired with the serialised `.pptx` bytes after each committed edit. Serialising
+	 * is asynchronous, so a burst of edits can deliver several snapshots in order.
+	 */
+	onContentChange?: (content: Uint8Array) => void;
+	/** Fired when the viewer mode changes (`preview`, `edit`, `present`, `master`). */
+	onModeChange?: (mode: ViewerMode) => void;
+	/** Fired when the total slide count changes (slide added, deleted or a deck loaded). */
+	onSlideCountChange?: (count: number) => void;
+	/** Fired when the user starts a collaboration session from the Share or Broadcast dialog. */
+	onStartCollaboration?: (config: CollaborationConfig) => void;
+	/** Fired when the user stops a collaboration session from the Share or Broadcast dialog. */
+	onStopCollaboration?: () => void;
+	/**
+	 * Host override for File > Open. When provided, the built-in file picker is bypassed and
+	 * this is invoked instead; the host then supplies the deck through `loadFile`.
+	 */
+	onOpenFile?: () => void;
 }
 
 export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptions {
@@ -97,8 +116,26 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	theme?: ViewerTheme;
 	/** Display name shown in the PowerPoint-style title bar. */
 	fileName?: string;
-	/** UI locale (default `'en'`). Dictionaries come from `messages`. */
+	/**
+	 * UI locale (default `'en'`). Dictionaries come from `messages`. Kept alongside
+	 * {@link defaultLocale}, which the other bindings use and which wins when both are set.
+	 */
 	locale?: string;
+	/**
+	 * Initial locale for File > Options > Language. Wins over a persisted choice and over
+	 * {@link locale}; the user's later picks still apply for the session.
+	 */
+	defaultLocale?: string;
+	/**
+	 * Initial key into `availableThemes` (or the built-in catalog) for File > Options >
+	 * Appearance. Wins over a persisted choice; ignored once the user picks another entry.
+	 */
+	defaultThemeKey?: string;
+	/**
+	 * Display name used as the author for comments and as the broadcast presenter.
+	 * Falls back to Options > General > "User name", then a generic label.
+	 */
+	authorName?: string;
 	/**
 	 * Per-locale `pptx.*` message dictionaries. English falls back to the
 	 * built-in shared dictionary; other locales fall back to English.
@@ -145,7 +182,9 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	editable?: boolean;
 	/**
 	 * Legacy flag superseded by {@link editable}; kept so existing option
-	 * objects stay type-valid. It has no effect.
+	 * objects stay type-valid.
+	 *
+	 * @deprecated Use {@link editable} (or `customization.capabilities.edit`) instead.
 	 */
 	readOnly?: boolean;
 	/** Show the toolbar (default `true`). */
@@ -166,6 +205,9 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	/**
 	 * Build the property inspector panel (position/size/fill/line); default
 	 * `true`. Only *visible* while editing is enabled.
+	 *
+	 * @deprecated Hide the inspector with `customization.hiddenPanels` instead, as the
+	 * other bindings do.
 	 */
 	showInspector?: boolean;
 	/**
@@ -315,7 +357,14 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * snapshot once per interval instead of deferring one forever.
 	 */
 	autosaveIntervalMs?: number;
-	/** IndexedDB recovery key (defaults to fileName, or 'presentation.pptx' for an unnamed deck). */
+	/** Original file path, used as the IndexedDB recovery key (defaults to fileName, or 'presentation.pptx' for an unnamed deck). */
+	filePath?: string;
+	/**
+	 * IndexedDB recovery key.
+	 *
+	 * @deprecated Use {@link filePath}, the name the other bindings use. When both are set,
+	 * `filePath` wins.
+	 */
 	autosaveFilePath?: string;
 	/**
 	 * Start a real-time collaboration session immediately (Yjs over y-websocket

@@ -12,6 +12,8 @@ export interface TeamsProps {
 	userName?: string;
 	/** Stable id for authorship. Defaults to one remembered in this browser. */
 	userId?: string;
+	/** Display language: a BCP 47 tag such as `de` or `zh-CN`. English, German, Spanish, French and Simplified Chinese ship; empty or unknown means English. */
+	locale?: string;
 	/** Server settings. Omit to use the settings dialog or local mode. */
 	config?: TeamsServerConfig | null;
 	uploadFile?: FileUploader;
@@ -23,7 +25,7 @@ export interface TeamsProps {
 	onConfigChange?: (detail: { config: TeamsServerConfig }) => void;
 }
 
-const SCALARS = ['workspaceId', 'userName', 'userId'] as const;
+const SCALARS = ['workspaceId', 'userName', 'userId', 'locale'] as const;
 
 /** Push props onto the element. Only changed values are written, so frameworks can call it freely. */
 export function applyTeamsProps(el: TeamsApp, props: TeamsProps, prev: TeamsProps = {}): void {

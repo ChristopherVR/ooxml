@@ -25,6 +25,8 @@
 	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
+	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
+	import ViewerRegion from '../ViewerRegion.svelte';
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import type { ChromeUiState, InspectorTabId } from '../../state/chrome-ui.svelte';
 	import { useInspectorDeck } from '../../state/inspector-deck';
@@ -49,6 +51,9 @@
 
 	const { editor, handler, presentationTheme, onthemechange, mediaDataUrls = new Map(), ui, canvasSize }: { editor: EditorState; handler?: PptxHandler | null; presentationTheme?: PptxTheme; onthemechange?: (theme: PptxTheme) => void; mediaDataUrls?: Map<string, string>; ui?: ChromeUiState; canvasSize?: CanvasSize } = $props();
 	const t = useTranslator();
+	// Host-supplied inspector content (`regions.inspector`): replaces the pane, keeps the column.
+	const customization = useViewerCustomization();
+	const regionRenderer = $derived(customization.regionRenderer('inspector'));
 	const viewport = useWindowViewport();
 	// The tab-strip buttons are sized for a mouse (3px/8px padding); below the
 	// dense-panel breakpoint they must clear the 44px WCAG touch target.
@@ -103,6 +108,9 @@
 	data-pptx-inspector data-pptx-chrome="inspector"
 	aria-label={t('pptx.inspector.properties')}
 >
+	{#if regionRenderer}
+		<ViewerRegion region="inspector" renderer={regionRenderer} close={() => (ui ? (ui.inspectorOpen = false) : undefined)} />
+	{:else}
 	<div class="pptx-svelte-inspector-header" data-pptx-chrome="inspector-header">
 		<div class="pptx-svelte-inspector-tabs" data-pptx-chrome="inspector-tabs" role="tablist">
 			{#each tabs as tab (tab.id)}
@@ -216,6 +224,7 @@
 
 	<!-- Bottom dock: per-element animations, any tab (React InspectorPane parity). -->
 	<AnimationPanel {editor} />
+	{/if}
 </aside>
 
 <style>

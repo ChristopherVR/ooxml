@@ -48,6 +48,7 @@ export function buildInsertElement(
 	kind: InsertKind,
 	canvasSize: CanvasSize,
 	shapeType: ShapePresetType = 'rect',
+	tableSize: { rows: number; columns: number } = { rows: 3, columns: 3 },
 ): PptxElement {
 	let el: PptxElement;
 	let size: { width: number; height: number };
@@ -57,7 +58,10 @@ export function buildInsertElement(
 			size = TEXT_SIZE;
 			break;
 		case 'table':
-			el = { ...newTableElement(3, 3), id: createEditorId('table') } as PptxElement;
+			el = {
+				...newTableElement(tableSize.rows, tableSize.columns),
+				id: createEditorId('table'),
+			} as PptxElement;
 			size = TABLE_SIZE;
 			break;
 		case 'shape':

@@ -24,8 +24,11 @@ export function parseGraphicElement(
 	if (!graphicEl) {
 		return undefined;
 	}
-	const dgm = graphicEl['p:dgm'] as XmlObject | undefined;
-	const chart = graphicEl['p:chart'] as XmlObject | undefined;
+	// The children are DrawingML elements (`a:dgm`, `a:chart`; CT_AnimationElementChoice), which is
+	// how PowerPoint writes them. The `p:` spelling is read too, for decks this library wrote
+	// before it knew.
+	const dgm = (graphicEl['a:dgm'] ?? graphicEl['p:dgm']) as XmlObject | undefined;
+	const chart = (graphicEl['a:chart'] ?? graphicEl['p:chart']) as XmlObject | undefined;
 	const node = dgm ?? chart;
 	if (!node) {
 		return undefined;
@@ -37,7 +40,7 @@ export function parseGraphicElement(
 		kind: dgm ? 'dgm' : 'chart',
 		...(seriesIdx !== undefined && !Number.isNaN(seriesIdx) ? { seriesIdx } : {}),
 		...(categoryIdx !== undefined && !Number.isNaN(categoryIdx) ? { categoryIdx } : {}),
-		// `p:dgm/@id` (CT_TLBuildDiagram): the diagram data-model point id this
+		// `a:dgm/@id` (CT_AnimationDgmElement): the diagram data-model point id this
 		// effect reveals. Chart targets never carry this attribute.
 		...(dgm && node['@_id'] !== undefined ? { id: String(node['@_id']) } : {}),
 		...(node['@_bldStep'] !== undefined ? { bldStep: String(node['@_bldStep']) } : {}),
@@ -69,10 +72,12 @@ export function serializeGraphicElement(
 		return;
 	}
 	const { kind, seriesIdx, categoryIdx, id, bldStep } = graphicElement;
-	const nodeKey = kind === 'dgm' ? 'p:dgm' : 'p:chart';
-	const existingGraphicEl = (shape['p:graphicEl'] as XmlObject | undefined) ?? {};
+	const nodeKey = kind === 'dgm' ? 'a:dgm' : 'a:chart';
+	const legacyKey = kind === 'dgm' ? 'p:dgm' : 'p:chart';
+	const { [legacyKey]: legacyNode, ...existingGraphicEl } =
+		(shape['p:graphicEl'] as XmlObject | undefined) ?? {};
 	const node: XmlObject = {
-		...((existingGraphicEl[nodeKey] as XmlObject | undefined) ?? {}),
+		...(((existingGraphicEl[nodeKey] ?? legacyNode) as XmlObject | undefined) ?? {}),
 		...(seriesIdx !== undefined ? { '@_seriesIdx': String(seriesIdx) } : {}),
 		...(categoryIdx !== undefined ? { '@_categoryIdx': String(categoryIdx) } : {}),
 		...(kind === 'dgm' && id !== undefined ? { '@_id': id } : {}),

@@ -23,11 +23,15 @@ import type {
 	ToolbarButtonId,
 	ToolbarTabId,
 	ViewerCustomization,
+	ViewerCapabilityId,
 	ViewerCustomizationApi,
 	ViewerDialogId,
 	ViewerFeatureId,
 	ViewerOptionPrimitive,
 	ViewerPanelId,
+	ViewerRegionId,
+	ViewerRegionRenderer,
+	HostBackstagePage,
 } from 'ooxml-ui/pptx';
 
 import type { ViewerCustomizationLifecycle } from './customization-lifecycle';
@@ -150,5 +154,17 @@ export abstract class ViewerCustomizationHost
 	}
 	setDialogAvailable(dialog: ViewerDialogId, available: boolean): void {
 		this.customizationApi.setDialogAvailable(dialog, available);
+	}
+	setCapability(capability: ViewerCapabilityId, allowed: boolean | undefined): void {
+		this.customizationApi.setCapability(capability, allowed);
+	}
+	setRegion(region: ViewerRegionId, renderer: ViewerRegionRenderer | undefined): void {
+		this.customizationApi.setRegion(region, renderer);
+	}
+	addBackstagePage(page: HostBackstagePage): void {
+		this.customizationApi.addBackstagePage(page);
+	}
+	removeBackstagePage(id: string): void {
+		this.customizationApi.removeBackstagePage(id);
 	}
 }

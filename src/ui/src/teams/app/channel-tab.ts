@@ -1,11 +1,13 @@
-import { LitElement, html, unsafeCSS, type PropertyValues } from 'lit';
+import { html, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import type { ChannelTab, TeamsClient } from 'ooxml-core/teams';
 import type { FileEmbeds, SaveFileCopy } from './content-preview';
 import type { OpenFileDetail } from './teams-app';
+import { localizeCoreText } from '../i18n/core-text';
 import css from './channel-tab.css?raw';
 
 /** Resolves shared tab references to local, short-lived preview URLs. */
-export class TeamsChannelTab extends LitElement {
+export class TeamsChannelTab extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		tab: { attribute: false },
@@ -68,12 +70,15 @@ export class TeamsChannelTab extends LitElement {
 		try {
 			const url = tab.content.type === 'file' ? await client.fileUrl(attachment) : attachment.url;
 			if (generation !== this.generation || !this.isConnected) return;
-			if (!url) throw new Error('Could not resolve the tab content');
+			if (!url) throw new Error(this.t('tab.unresolved'));
 			this.detail = { attachment, url, channelId: tab.channelId };
 			if (tab.content.type === 'file') this.openInHost();
 		} catch (error) {
 			if (generation === this.generation)
-				this.error = error instanceof Error ? error.message : 'Could not open the tab';
+				this.error =
+					error instanceof Error
+						? localizeCoreText(error.message, this.i18n)
+						: this.t('tab.openFailed');
 		}
 	}
 	private saveCopy(): SaveFileCopy | undefined {
@@ -96,7 +101,9 @@ export class TeamsChannelTab extends LitElement {
 	protected override render() {
 		if (this.hostOpened)
 			return html`<p>${this.detail?.attachment.name}</p>
-				<button type="button" @click=${() => this.openInHost()}>Open document</button>`;
+				<button type="button" @click=${() => this.openInHost()}>
+					${this.t('tab.openDocument')}
+				</button>`;
 		return html`${
 			this.error
 				? html`<p role="alert">${this.error}</p>
@@ -107,7 +114,7 @@ export class TeamsChannelTab extends LitElement {
 								void this.resolve();
 							}}
 						>
-							Retry
+							${this.t('common.retry')}
 						</button>`
 				: this.detail
 					? html`<teams-content-preview
@@ -115,7 +122,7 @@ export class TeamsChannelTab extends LitElement {
 							.embeds=${this.embeds}
 							.saveCopy=${this.saveCopy()}
 						></teams-content-preview>`
-					: html`<p role="status">Opening tab...</p>`
+					: html`<p role="status">${this.t('tab.opening')}</p>`
 		}`;
 	}
 }

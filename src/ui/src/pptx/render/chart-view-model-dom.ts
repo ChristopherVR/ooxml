@@ -12,7 +12,7 @@
  *
  * @module chart-view-model-dom
  */
-import { computeChartLegendLayout } from './chart-legend-layout';
+import { computeChartLegendLayout, type LegendLabelTranslate } from './chart-legend-layout';
 import type { ChartViewModel, SvgLine, SvgPrimitive, SvgText } from './chart-view-model';
 import {
 	appendTitle,
@@ -26,6 +26,7 @@ export function renderChartViewModelSvg(
 	doc: Document,
 	vm: ChartViewModel,
 	preserveAspectRatio: 'none' | 'xMidYMid meet',
+	translate?: LegendLabelTranslate,
 ): SVGSVGElement {
 	const svg = createSvgEl(doc, 'svg', {
 		class: 'pptxv-chart-svg',
@@ -120,7 +121,7 @@ export function renderChartViewModelSvg(
 		svg.appendChild(renderChartTextSvg(doc, dl));
 	}
 
-	appendChartLegendSvg(doc, svg, vm);
+	appendChartLegendSvg(doc, svg, vm, translate);
 	return svg;
 }
 
@@ -245,8 +246,13 @@ export function renderChartTextSvg(doc: Document, text: SvgText): SVGTextElement
 }
 
 /** Legend swatches + labels (horizontal row, or a vertical stack on the side). */
-export function appendChartLegendSvg(doc: Document, svg: SVGElement, vm: ChartViewModel): void {
-	computeChartLegendLayout(vm).forEach((item) => {
+export function appendChartLegendSvg(
+	doc: Document,
+	svg: SVGElement,
+	vm: ChartViewModel,
+	translate?: LegendLabelTranslate,
+): void {
+	computeChartLegendLayout(vm, translate).forEach((item) => {
 		const g = createSvgEl(doc, 'g', {
 				class: 'pptxv-chart-legend-item',
 				transform: `translate(${item.x.toFixed(1)},${item.y.toFixed(1)})`,

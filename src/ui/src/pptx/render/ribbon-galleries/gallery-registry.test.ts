@@ -142,7 +142,7 @@ describe('contextual tabs', () => {
 		expect(of('image')).toStrictEqual(['pictureFormat']);
 		expect(of('picture')).toStrictEqual(['pictureFormat']);
 		expect(of('table')).toStrictEqual(['tableDesign', 'tableLayout']);
-		expect(of('chart')).toStrictEqual(['chartDesign']);
+		expect(of('chart')).toStrictEqual(['chartDesign', 'chartFormat']);
 		expect(of('smartArt')).toStrictEqual(['smartArtDesign']);
 	});
 

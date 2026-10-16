@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useWebControl } from '../../hooks/useWebControl';
 import type { ToolbarProps } from '../toolbar/toolbar-types';
+import { MobileInsertSheet } from './MobileInsertSheet';
 import { MobileMenuSheet } from './MobileMenuSheet';
 
 /**
@@ -73,6 +74,7 @@ export function MobileToolbar(props: ToolbarProps): React.ReactElement {
 			<pptx-ui-mobile-toolbar ref={ref} />
 			{/* Section sheet */}
 			<MobileMenuSheet open={menuOpen} onClose={() => setMenuOpen(false)} {...props} />
+			<MobileInsertSheet {...props} />
 		</div>
 	);
 }

@@ -26,7 +26,13 @@ export interface ElementChange {
 	elementId: string;
 	label: string;
 	kind: ElementChangeKind;
+	/** English sentence; bindings show {@link describeElementChange} so it is translated. */
 	description: string;
+	/** Dictionary key of the sentence (`pptx.compare.change.*`), with its `{{name}}` values. */
+	descriptionKey?: string;
+	descriptionParams?: Readonly<Record<string, string | number>>;
+	/** The element the sentence names, so its label is spelled in the viewer's language. */
+	descriptionElement?: { type: string; text?: string; id: string };
 }
 
 export interface SlideDiff {
@@ -72,6 +78,15 @@ function getElementText(element: PptxElement): string {
 		return element.textSegments.map((s) => s.text).join('');
 	}
 	return element.text ?? '';
+}
+
+function elementRef(element: PptxElement): { type: string; text?: string; id: string } {
+	const text = getElementText(element);
+	return {
+		type: element.type,
+		id: element.id,
+		...(text.length > 0 && { text: text.length > 30 ? `${text.slice(0, 30)}...` : text }),
+	};
 }
 
 function getElementLabel(element: PptxElement): string {
@@ -129,6 +144,8 @@ export function diffSlideElements(
 				label: getElementLabel(el),
 				kind: 'removed',
 				description: `Element removed: ${getElementLabel(el)}`,
+				descriptionKey: 'pptx.compare.change.removed',
+				descriptionElement: elementRef(el),
 			});
 		}
 	}
@@ -141,6 +158,8 @@ export function diffSlideElements(
 				label: getElementLabel(el),
 				kind: 'added',
 				description: `Element added: ${getElementLabel(el)}`,
+				descriptionKey: 'pptx.compare.change.added',
+				descriptionElement: elementRef(el),
 			});
 		}
 	}
@@ -161,6 +180,13 @@ export function diffSlideElements(
 				label: getElementLabel(baseEl),
 				kind: 'moved',
 				description: `Moved from (${Math.round(baseEl.x)}, ${Math.round(baseEl.y)}) to (${Math.round(compareEl.x)}, ${Math.round(compareEl.y)})`,
+				descriptionKey: 'pptx.compare.change.moved',
+				descriptionParams: {
+					fromX: Math.round(baseEl.x),
+					fromY: Math.round(baseEl.y),
+					toX: Math.round(compareEl.x),
+					toY: Math.round(compareEl.y),
+				},
 			});
 		}
 
@@ -173,6 +199,13 @@ export function diffSlideElements(
 				label: getElementLabel(baseEl),
 				kind: 'resized',
 				description: `Resized from ${Math.round(baseEl.width)}x${Math.round(baseEl.height)} to ${Math.round(compareEl.width)}x${Math.round(compareEl.height)}`,
+				descriptionKey: 'pptx.compare.change.resized',
+				descriptionParams: {
+					fromW: Math.round(baseEl.width),
+					fromH: Math.round(baseEl.height),
+					toW: Math.round(compareEl.width),
+					toH: Math.round(compareEl.height),
+				},
 			});
 		}
 
@@ -184,6 +217,7 @@ export function diffSlideElements(
 				label: getElementLabel(baseEl),
 				kind: 'textChanged',
 				description: 'Text content changed',
+				descriptionKey: 'pptx.compare.change.textChanged',
 			});
 		}
 	}
@@ -209,6 +243,11 @@ export function compareSlide(base: PptxSlide, compare: PptxSlide): ElementChange
 			label: 'Background',
 			kind: 'textChanged',
 			description: `Background changed from ${base.backgroundColor ?? 'default'} to ${compare.backgroundColor ?? 'default'}`,
+			descriptionKey: 'pptx.compare.change.background',
+			descriptionParams: {
+				from: base.backgroundColor ?? '',
+				to: compare.backgroundColor ?? '',
+			},
 		});
 	}
 
@@ -218,6 +257,7 @@ export function compareSlide(base: PptxSlide, compare: PptxSlide): ElementChange
 			label: 'Speaker Notes',
 			kind: 'textChanged',
 			description: 'Speaker notes changed',
+			descriptionKey: 'pptx.compare.change.notes',
 		});
 	}
 

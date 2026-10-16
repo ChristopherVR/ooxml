@@ -6,36 +6,47 @@
  */
 import type { BevelPresetType, MaterialPresetType } from 'ooxml-core/pptx';
 
-export const BEVEL_PRESETS: ReadonlyArray<{ value: BevelPresetType; label: string }> = [
-	{ value: 'none', label: 'None' },
-	{ value: 'circle', label: 'Circle' },
-	{ value: 'relaxedInset', label: 'Relaxed Inset' },
-	{ value: 'cross', label: 'Cross' },
-	{ value: 'coolSlant', label: 'Cool Slant' },
-	{ value: 'angle', label: 'Angle' },
-	{ value: 'softRound', label: 'Soft Round' },
-	{ value: 'convex', label: 'Convex' },
-	{ value: 'slope', label: 'Slope' },
-	{ value: 'divot', label: 'Divot' },
-	{ value: 'riblet', label: 'Riblet' },
-	{ value: 'hardEdge', label: 'Hard Edge' },
-	{ value: 'artDeco', label: 'Art Deco' },
+export const BEVEL_PRESETS: ReadonlyArray<{
+	value: BevelPresetType;
+	label: string;
+	/** Translation key for `label`; bindings paint the translated name. */
+	labelKey: string;
+}> = [
+	{ value: 'none', label: 'None', labelKey: 'pptx.bevelTypes.none' },
+	{ value: 'circle', label: 'Circle', labelKey: 'pptx.bevelTypes.circle' },
+	{ value: 'relaxedInset', label: 'Relaxed Inset', labelKey: 'pptx.bevelTypes.relaxedInset' },
+	{ value: 'cross', label: 'Cross', labelKey: 'pptx.bevelTypes.cross' },
+	{ value: 'coolSlant', label: 'Cool Slant', labelKey: 'pptx.bevelTypes.coolSlant' },
+	{ value: 'angle', label: 'Angle', labelKey: 'pptx.bevelTypes.angle' },
+	{ value: 'softRound', label: 'Soft Round', labelKey: 'pptx.bevelTypes.softRound' },
+	{ value: 'convex', label: 'Convex', labelKey: 'pptx.bevelTypes.convex' },
+	{ value: 'slope', label: 'Slope', labelKey: 'pptx.bevelTypes.slope' },
+	{ value: 'divot', label: 'Divot', labelKey: 'pptx.bevelTypes.divot' },
+	{ value: 'riblet', label: 'Riblet', labelKey: 'pptx.bevelTypes.riblet' },
+	{ value: 'hardEdge', label: 'Hard Edge', labelKey: 'pptx.bevelTypes.hardEdge' },
+	{ value: 'artDeco', label: 'Art Deco', labelKey: 'pptx.bevelTypes.artDeco' },
 ];
 
 export const MATERIAL_PRESETS: ReadonlyArray<{
 	value: MaterialPresetType | '';
 	label: string;
+	/** Translation key for `label`; bindings paint the translated name. */
+	labelKey: string;
 }> = [
-	{ value: '', label: 'None' },
-	{ value: 'matte', label: 'Matte' },
-	{ value: 'warmMatte', label: 'Warm Matte' },
-	{ value: 'plastic', label: 'Plastic' },
-	{ value: 'metal', label: 'Metal' },
-	{ value: 'dkEdge', label: 'Dark Edge' },
-	{ value: 'softEdge', label: 'Soft Edge' },
-	{ value: 'flat', label: 'Flat' },
-	{ value: 'softmetal', label: 'Soft Metal' },
-	{ value: 'clear', label: 'Clear' },
-	{ value: 'powder', label: 'Powder' },
-	{ value: 'translucentPowder', label: 'Translucent Powder' },
+	{ value: '', label: 'None', labelKey: 'pptx.material.none' },
+	{ value: 'matte', label: 'Matte', labelKey: 'pptx.material.matte' },
+	{ value: 'warmMatte', label: 'Warm Matte', labelKey: 'pptx.material.warmMatte' },
+	{ value: 'plastic', label: 'Plastic', labelKey: 'pptx.material.plastic' },
+	{ value: 'metal', label: 'Metal', labelKey: 'pptx.material.metal' },
+	{ value: 'dkEdge', label: 'Dark Edge', labelKey: 'pptx.material.dkEdge' },
+	{ value: 'softEdge', label: 'Soft Edge', labelKey: 'pptx.material.softEdge' },
+	{ value: 'flat', label: 'Flat', labelKey: 'pptx.material.flat' },
+	{ value: 'softmetal', label: 'Soft Metal', labelKey: 'pptx.material.softmetal' },
+	{ value: 'clear', label: 'Clear', labelKey: 'pptx.material.clear' },
+	{ value: 'powder', label: 'Powder', labelKey: 'pptx.material.powder' },
+	{
+		value: 'translucentPowder',
+		label: 'Translucent Powder',
+		labelKey: 'pptx.material.translucentPowder',
+	},
 ];

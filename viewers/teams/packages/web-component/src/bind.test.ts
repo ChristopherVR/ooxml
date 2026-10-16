@@ -49,3 +49,18 @@ describe('bindTeams', () => {
 		expect(latest).toHaveBeenCalledOnce();
 	});
 });
+
+describe('locale', () => {
+	it('is a shared prop: picked from the framework, applied to the element and reset when removed', () => {
+		expect(pickTeamsProps({ locale: 'de', userName: undefined })).toEqual({ locale: 'de' });
+		const el = element();
+		const binding = bindTeams(el, () => ({}));
+		binding.update({ locale: 'de' });
+		expect(el.locale).toBe('de');
+		binding.update({ locale: 'zh-CN' });
+		expect(el.locale).toBe('zh-CN');
+		binding.update({});
+		expect(el.locale).toBe('');
+		binding.destroy();
+	});
+});

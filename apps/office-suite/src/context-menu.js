@@ -1,4 +1,7 @@
-/** Small keyboard-accessible context menu, shared by tabs and library rows. */
+/**
+ * Small keyboard-accessible context menu, shared by tabs, library rows and the model menu. An item
+ * with `checked` is a radio choice; `{ separator: true }` draws a rule.
+ */
 export function contextMenu(event, items) {
 	event.preventDefault();
 	document.querySelector('.workspace-context-menu')?.remove();
@@ -7,9 +10,14 @@ export function contextMenu(event, items) {
 	menu.setAttribute('popover', 'auto');
 	menu.setAttribute('role', 'menu');
 	for (const item of items) {
+		if (item.separator) {
+			menu.append(Object.assign(document.createElement('hr'), { role: 'separator' }));
+			continue;
+		}
 		const button = document.createElement('button');
 		button.type = 'button';
-		button.setAttribute('role', 'menuitem');
+		button.setAttribute('role', item.checked === undefined ? 'menuitem' : 'menuitemradio');
+		if (item.checked !== undefined) button.setAttribute('aria-checked', String(item.checked));
 		button.textContent = item.label;
 		button.disabled = !!item.disabled;
 		button.onclick = () => {

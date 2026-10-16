@@ -1,6 +1,7 @@
 import {
 	applyChartPartHighlight,
 	canDrillDown,
+	chartFormatTargetFromEvent,
 	ensureChartInteractionStyles,
 	findChartPartTarget,
 	getBarFacePicturePixelSampleVersion,
@@ -18,10 +19,12 @@ import React, {
 	useState,
 	useSyncExternalStore,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { renderChartElement } from '../../utils';
 import { formatAxisValue } from '../../utils/chart-helpers';
 import { buildReactChartViewModel } from '../../utils/chart-view-model-render';
+import { useChartFormatContext } from '../chart-format-context';
 import { useChartPartSelection } from '../chart-part-selection';
 import { Rendering3DFlagsContext } from './rendering-3d-flags-context';
 import { ThreeView } from './ThreeView';
@@ -57,12 +60,16 @@ export function ChartElementView({
 	onUpdateElement,
 	animationState,
 }: ChartElementViewProps): React.ReactElement {
+	const { t } = useTranslation();
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const { selection, setSelection } = useChartPartSelection();
 	const [titleDraft, setTitleDraft] = useState<string | null>(null);
 
 	const selectedPart = selection?.elementId === element.id ? selection.part : null;
 	const canEdit = editable && Boolean(onUpdateElement);
+	// Chart Format pane: only the canvas copy of the selected chart drives it.
+	const chartFormat = useChartFormatContext();
+	const formatsThisChart = canEdit && chartFormat?.chart?.id === element.id;
 
 	// The host's six 3D opt-in flags, already narrowed by the viewer user's own
 	// Options > Advanced override (see `Rendering3DFlagsContext`).
@@ -154,6 +161,12 @@ export function ChartElementView({
 			setTitleDraft(element.chartData?.title ?? '');
 			return;
 		}
+		if (formatsThisChart) {
+			// PowerPoint: double-clicking a chart element opens its Format pane.
+			e.stopPropagation();
+			chartFormat?.openPane(chartFormatTargetFromEvent(e.nativeEvent, wrapperRef.current, element));
+			return;
+		}
 		if (findChartPartTarget(e.target)) {
 			// A mark double-click is already handled as two selects; keep it from
 			// bubbling into the element-level inline-text-edit handler.
@@ -195,10 +208,26 @@ export function ChartElementView({
 		<div
 			ref={wrapperRef}
 			className={`relative w-full h-full ${canEdit ? 'pptx-chart-interactive' : ''}`}
-			onPointerDown={handlePointerDown}
+			onPointerDown={(e) => {
+				if (formatsThisChart) {
+					chartFormat?.setTarget(
+						chartFormatTargetFromEvent(e.nativeEvent, wrapperRef.current, element),
+					);
+				}
+				handlePointerDown(e);
+			}}
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
 			onDoubleClick={handleDoubleClick}
+			onContextMenu={(e) => {
+				// Name the context menu's "Format <element>..." entry after the clicked part.
+				if (onUpdateElement && chartFormat) {
+					chartFormat.setTarget(
+						chartFormatTargetFromEvent(e.nativeEvent, wrapperRef.current, element),
+						element.id,
+					);
+				}
+			}}
 		>
 			{chart3D.spec ? (
 				<ThreeView
@@ -209,10 +238,10 @@ export function ChartElementView({
 					onSelect={chart3D.onSelect}
 					onDrag={chart3D.onDrag}
 				>
-					{renderChartElement(renderedElement)}
+					{renderChartElement(renderedElement, (key) => t(key))}
 				</ThreeView>
 			) : (
-				renderChartElement(renderedElement)
+				renderChartElement(renderedElement, (key) => t(key))
 			)}
 			{dragValue !== null && (
 				<div className='absolute top-1 right-1 z-10 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-white pointer-events-none'>

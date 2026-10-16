@@ -1,12 +1,13 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { isPanelVisible } from 'ooxml-ui/pptx';
+import { isPanelVisible, observeElementHeight } from 'ooxml-ui/pptx';
+import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
 /**
  * ViewerBottomPanels: SlideNotesPanel + StatusBar wrapper.
  *
  * Renders the bottom section of the viewer (notes panel and status bar)
  * when the viewer is not in presentation mode.
  */
-import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
+import { useEffect, useState } from 'react';
 
 import type { AutosaveStatus } from '../hooks/useAutosave';
 import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
@@ -15,6 +16,7 @@ import { ResizeHandle } from './ResizeHandle';
 import { SlideNotesPanel } from './SlideNotesPanel';
 import { StatusBar } from './StatusBar';
 import { useViewerCustomizationContext } from './viewer-customization-context';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -99,12 +101,43 @@ export function ViewerBottomPanels({
 	const { isHidden } = useToolbarVisibility(hiddenActions);
 	const customization = useViewerCustomizationContext();
 	const showNotes = isPanelVisible(customization, 'notes');
+	const notesRenderer = useRegionRenderer('notes');
+	const statusBarRenderer = useRegionRenderer('statusBar');
+	// A replaced notes panel keeps reporting its live height like the built-in
+	// one does, so the toast stack still clears it.
+	const [notesSlot, setNotesSlot] = useState<HTMLDivElement | null>(null);
+	const reportsNotesHeight = Boolean(showNotes && notesRenderer);
+	useEffect(() => {
+		if (!notesSlot || !reportsNotesHeight || !onNotesHeightChange) {
+			return undefined;
+		}
+		const stop = observeElementHeight(notesSlot, onNotesHeightChange);
+		return () => {
+			stop();
+			onNotesHeightChange(0);
+		};
+	}, [notesSlot, reportsNotesHeight, onNotesHeightChange]);
 	return (
 		<>
 			{showNotes && onResizeBottom && !isSlideNotesCollapsed && (
 				<ResizeHandle direction='vertical' onResize={onResizeBottom} />
 			)}
-			{showNotes && (
+			{showNotes && notesRenderer && (
+				// The slot (height, resize handle, collapse) stays the viewer's; a
+				// collapsed strip is hidden, not unmounted, so the host keeps its state.
+				<div
+					ref={setNotesSlot}
+					data-pptx-chrome='notes'
+					className='flex-shrink-0 overflow-hidden border-t border-border/60 bg-background'
+					style={{
+						height: notesPanelHeight ?? 120,
+						display: isSlideNotesCollapsed ? 'none' : undefined,
+					}}
+				>
+					<ViewerRegion region='notes' renderer={notesRenderer} />
+				</div>
+			)}
+			{showNotes && !notesRenderer && (
 				<SlideNotesPanel
 					activeSlide={activeSlide}
 					allSlides={allSlides}
@@ -117,7 +150,12 @@ export function ViewerBottomPanels({
 					onHeightChange={onNotesHeightChange}
 				/>
 			)}
-			{!hideStatusBar && isPanelVisible(customization, 'statusBar') && (
+			{!hideStatusBar && isPanelVisible(customization, 'statusBar') && statusBarRenderer && (
+				<div data-pptx-chrome='status-bar' className='flex-shrink-0'>
+					<ViewerRegion region='statusBar' renderer={statusBarRenderer} />
+				</div>
+			)}
+			{!hideStatusBar && isPanelVisible(customization, 'statusBar') && !statusBarRenderer && (
 				<StatusBar
 					slideCount={slideCount}
 					activeSlideIndex={activeSlideIndex}

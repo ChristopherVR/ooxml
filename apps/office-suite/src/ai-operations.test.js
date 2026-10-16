@@ -1,10 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDocx, createXlsx, setXlsxCells } from 'ooxml-core/automation';
-import { describeChanges, formulaProblem, validateChanges } from './ai-operations.js';
+import { formulaProblem, validateChanges } from './ai-operations.js';
 
 const xlsxDoc = { id: 'd1', kind: 'xlsx', name: 'budget.xlsx', revision: 1 };
-const docxDoc = { id: 'd2', kind: 'docx', name: 'letter.docx', revision: 1 };
 const cellChange = (input) => ({
 	documentId: 'd1',
 	type: 'cells',
@@ -64,40 +62,4 @@ test('validateChanges rejects an unsafe formula and names the cell', () => {
 test('validateChanges accepts an ordinary formula and plain values', () => {
 	assert.doesNotThrow(() => validateChanges([cellChange('=SUM(A1:A3)')], [xlsxDoc]));
 	assert.doesNotThrow(() => validateChanges([cellChange('12.5')], [xlsxDoc]));
-});
-
-test('describeChanges shows the current and proposed value of a Word run', async () => {
-	const bytes = await createDocx(['Hello world']);
-	const rows = await describeChanges(
-		[{ documentId: 'd2', type: 'word_run', paragraphId: 'p0', runIndex: 0, text: 'Goodbye' }],
-		[{ ...docxDoc, bytes }],
-	);
-	assert.deepEqual(rows, [
-		{
-			file: 'letter.docx',
-			target: 'Paragraph p0, run 1',
-			before: 'Hello world',
-			after: 'Goodbye',
-		},
-	]);
-});
-
-test('describeChanges shows the current value and formula of a worksheet cell', async () => {
-	const base = await createXlsx(['Budget']);
-	const bytes = (
-		await setXlsxCells(base, 0, [
-			{ address: 'A1', input: '5' },
-			{ address: 'B2', input: '=A1*2' },
-		])
-	).bytes;
-	const rows = await describeChanges(
-		[cellChange('=SUM(A1:A3)'), { ...cellChange('7'), cells: [{ address: 'A1', input: '7' }] }],
-		[{ ...xlsxDoc, bytes }],
-	);
-	assert.equal(rows[0].file, 'budget.xlsx');
-	assert.equal(rows[0].target, 'Sheet 1, cell B2');
-	assert.equal(rows[0].before, '=A1*2');
-	assert.equal(rows[0].after, '=SUM(A1:A3)');
-	assert.equal(rows[1].before, '5');
-	assert.equal(rows[1].after, '7');
 });

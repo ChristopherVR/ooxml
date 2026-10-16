@@ -1,5 +1,6 @@
 import { ARRANGE_ALIGNMENT_ICONS } from './ribbon-icons/arrange-alignment-icons';
 import { ARRANGE_OPERATIONS_ICONS } from './ribbon-icons/arrange-operations-icons';
+import { CHART_FORMAT_ICONS } from './ribbon-icons/chart-format-icons';
 import { CLIPBOARD_ICONS } from './ribbon-icons/clipboard-icons';
 import { DRAWING_ICONS } from './ribbon-icons/drawing-icons';
 import { EDITING_ICONS } from './ribbon-icons/editing-icons';
@@ -20,6 +21,7 @@ export const RIBBON_CONTROL_ICONS: Record<string, RibbonIconArtwork> = {
 	...DRAWING_ICONS,
 	...ARRANGE_ALIGNMENT_ICONS,
 	...ARRANGE_OPERATIONS_ICONS,
+	...CHART_FORMAT_ICONS,
 };
 
 /** Thin DOM renderer for Vanilla; reactive bindings render the same nodes. */

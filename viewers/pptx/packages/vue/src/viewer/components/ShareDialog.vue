@@ -172,6 +172,7 @@ const minHeightStyle = computed(() => ({ minHeight: `${touchTargetPx.value}px` }
 
 <template>
 	<ModalDialog
+		region="dialog.share"
 		:open="open"
 		:title="active ? t('pptx.share.collaborationActive') : t('pptx.toolbar.share')"
 		@close="emit('close')"

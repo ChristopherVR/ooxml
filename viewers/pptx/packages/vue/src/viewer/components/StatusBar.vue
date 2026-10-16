@@ -13,6 +13,8 @@ import { useI18n } from 'vue-i18n';
 
 import type { AutosaveStatus } from '../composables/useAutosave';
 import { useToolbarVisibility } from '../composables/useToolbarVisibility';
+import { useRegion } from '../composables/useViewerRegions';
+import ViewerRegion from './ViewerRegion.vue';
 
 const { t } = useI18n();
 
@@ -34,6 +36,10 @@ const props = defineProps<{
 	/** Toolbar buttons the host has asked to hide (zoom, notes, fullscreen). */
 	hiddenActions?: ToolbarActionId[];
 }>();
+
+// A host `regions.statusBar` replaces the whole bar in its slot.
+const region = useRegion('statusBar');
+const regionContext = computed(() => region.context(() => undefined));
 
 const slots = useSlots();
 const { isHidden } = useToolbarVisibility(() => props.hiddenActions);
@@ -97,7 +103,14 @@ function request(event: Event): void {
 </script>
 
 <template>
-	<pptx-ui-status-bar :state.prop="state" @status-request="request">
+	<div
+		v-if="region.renderer.value && regionContext"
+		data-pptx-chrome="status-bar"
+		style="flex: none"
+	>
+		<ViewerRegion :renderer="region.renderer.value" :context="regionContext" />
+	</div>
+	<pptx-ui-status-bar v-else :state.prop="state" @status-request="request">
 		<div v-if="slots.collaboration" slot="collaboration" style="display: contents">
 			<slot name="collaboration" />
 		</div>

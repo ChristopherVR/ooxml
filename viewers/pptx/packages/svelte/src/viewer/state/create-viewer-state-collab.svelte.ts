@@ -94,7 +94,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		return source instanceof Uint8Array ? source : new Uint8Array(source);
 	}
 	const collab = new CollaborationController({
-		getSlides: () => editor.renderedSlides,
+		getSlides: () => editor.committedRenderedSlides,
 		applyRemoteSlides: (slides: PptxSlide[]) => editor.applyRemoteSlides(slides),
 		getConfig: () => options.collaboration,
 		getSourceBytes: sourceBytes,
@@ -151,7 +151,11 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSelectedElementId: () => editor.selectedElementId,
 		goTo: (index) => viewer.goTo(index),
 	});
-	const dialogs = new CollaborationDialogsState(collab, () => options.shareDefaults);
+	const dialogs = new CollaborationDialogsState(
+		collab,
+		() => options.shareDefaults,
+		() => options.getAuthorName?.(),
+	);
 
 	let versionHistoryOpen = $state(false);
 	let signatureWarningOpen = $state(false);
@@ -196,7 +200,9 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 				optionsIntervalSeconds: deps.getOptionsIntervalSeconds?.(),
 			}),
 		getFilePath: options.getFilePath,
-		getSlides: () => editor.renderedSlides,
+		getSlides: () => editor.committedRenderedSlides,
+		getPreviewHeld: () => editor.deckStyleHeld,
+		getDocumentKey: () => [editor.slides, editor.templateElementsBySlideId],
 		getSlideMasters: () => editor.slideMasters,
 		getNotesMaster: () => editor.notesMaster,
 		getHandoutMaster: () => editor.handoutMaster,

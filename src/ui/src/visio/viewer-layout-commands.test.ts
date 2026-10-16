@@ -213,6 +213,34 @@ it('toggles guides and Dynamic Grid, and snaps a move to another shape', async (
 	view.controller.destroy();
 });
 
+it('keeps drawn guides across renders until the guides change', async () => {
+	const view = await setup();
+	const guides = view.commands.layoutCommands.guides;
+	const guide = (shapeId: string, position: number) =>
+		view.controller.applyEdits([
+			{ type: 'create-guide', pageId: '1', shapeId, orientation: 'vertical', position },
+		]);
+	const paper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	paper.classList.add('paper');
+	view.viewport.append(paper);
+	await guide('9', 1);
+	view.commands.run({ type: 'guides' });
+	const lines = () => [...view.root.querySelectorAll<SVGGElement>('svg.paper [data-guide-id]')];
+	const [first] = lines();
+	expect(first).toBeDefined();
+	// A status message or any other re-render must not detach the line a click is about to press.
+	guides.render(view.controller.state);
+	view.commands.render(view.controller.state);
+	expect(lines()).toEqual([first]);
+	expect(first!.isConnected).toBe(true);
+	await guide('10', 2);
+	view.commands.render(view.controller.state);
+	expect(lines().map((line) => line.dataset.guideId)).toEqual(['9', '10']);
+	expect(first!.isConnected).toBe(false);
+	view.dispose();
+	view.controller.destroy();
+});
+
 it('opens the Drawing Explorer and selects from it', async () => {
 	const view = await setup();
 	view.commands.run({ type: 'drawing-explorer' });

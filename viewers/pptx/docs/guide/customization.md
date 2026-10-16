@@ -1,6 +1,6 @@
 ---
 title: UI Customization
-description: Hide, lock and remap any part of the viewer chrome from code - ribbon tabs and buttons, File > Options pages, sections and settings, the File tab, context menus, keyboard shortcuts, panels, features and dialogs - with one framework-neutral object that works the same in React, Vue, Angular, Svelte and Vanilla JS.
+description: Hide, lock, remap or replace any part of the viewer chrome from code - ribbon tabs and buttons, File > Options pages, sections and settings, the File tab, context menus, keyboard shortcuts, panels, features, dialogs and capabilities, or swap the Settings dialog, inspector, panels and File pages for your own UI - with one framework-neutral object that works the same in React, Vue, Angular, Svelte and Vanilla JS.
 ---
 
 # UI Customization
@@ -55,6 +55,8 @@ const customization: ViewerCustomization = {
 	disabledFeatures: ['ai'],
 	hiddenDialogs: ['broadcast'],
 	hiddenExportFormats: ['video', 'gif'],
+	capabilities: { print: false },
+	regions: { 'dialog.options': 'acme-settings' }, // your own Settings view
 };
 ```
 
@@ -63,6 +65,33 @@ in all five bindings. The logic lives once in the internal shared package, so a
 customisation that works in React works the same way in Svelte.
 
 [[toc]]
+
+## What you can configure
+
+Everything below is either a field of `customization` (this guide) or a prop of
+the viewer component (the binding's own guide). The customisation fields:
+
+| You want to                                                                                              | Field                                                                                                           |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Hide ribbon tabs, groups, controls and toolbar buttons                                                   | `ribbon.hiddenTabs`, `ribbon.hiddenGroups`, `ribbon.hiddenButtons`                                              |
+| Add your own ribbon tabs                                                                                 | the `ribbonAddIns` prop ([below](#host-ribbon-tabs-ribbonaddins))                                               |
+| Hide, lock or set defaults for File > Options pages, sections and settings                               | `options.hiddenPages`, `options.hiddenSections`, `options.hiddenSettings`, `options.locked`, `options.defaults` |
+| Remove File > Options entirely                                                                           | `hiddenDialogs: ['options']`                                                                                    |
+| Replace File > Options with your own Settings view                                                       | `regions['dialog.options']`                                                                                     |
+| Hide File tab pages and cards                                                                            | `backstage.hiddenPages`, `backstage.hiddenCards`                                                                |
+| Add your own File tab pages                                                                              | `backstage.extraPages`                                                                                          |
+| Replace a File tab page                                                                                  | `regions['backstage.<page>']`                                                                                   |
+| Hide or add context-menu commands                                                                        | `contextMenu.*`                                                                                                 |
+| Disable or remap shortcuts                                                                               | `keyboard.*`                                                                                                    |
+| Hide panels (inspector, slide rail, notes, status bar, title bar, Selection Pane, Find and Replace, ...) | `hiddenPanels`                                                                                                  |
+| Replace the inspector, slide rail, notes or status bar                                                   | `regions.inspector`, `regions.slidesPane`, `regions.notes`, `regions.statusBar`                                 |
+| Hide inspector cards                                                                                     | `inspector.hiddenCards`                                                                                         |
+| Switch off AI, collaboration, comments, present mode, Edit Points                                        | `disabledFeatures`                                                                                              |
+| Remove dialogs and every entry point that opens them                                                     | `hiddenDialogs`                                                                                                 |
+| Replace the Share, Broadcast or Print dialog body                                                        | `regions['dialog.share']`, `regions['dialog.broadcast']`, `regions['dialog.print']`                             |
+| Remove export formats                                                                                    | `hiddenExportFormats`                                                                                           |
+| Remove drawing tools                                                                                     | `hiddenDrawingTools`                                                                                            |
+| Make the deck read-only, or forbid export, print, share, copy, present or comment                        | `capabilities`                                                                                                  |
 
 ## Concepts
 
@@ -104,11 +133,22 @@ resolver:
 - `disabledFeatures: ['ai']` removes the AI toggle and panel, the "Ask AI" /
   "Fix with AI" context-menu entries and the AI page of File > Options, even
   when the host passes an `ai` config.
-- `disabledFeatures: ['comments']` removes the Add Comment context-menu entry.
+- `disabledFeatures: ['comments']` removes the Add Comment context-menu entry
+  and the Comments groups of the Insert and Review tabs.
 - `disabledFeatures: ['presentMode']` removes the Slide Show ribbon tab and the
   F5 / Shift+F5 start-show shortcuts.
 - `hiddenExportFormats` removes individual File > Export cards; hiding all six
   removes the Export button and page too.
+- Hiding a panel removes the ribbon controls and shortcuts that open it:
+  `findReplace` takes Home > Find / Replace and Ctrl+F / Ctrl+H with it,
+  `selectionPane` View > Selection Pane, `accessibilityPane` Review > Check
+  Accessibility and Help > Accessibility checker, `comparePane` Review >
+  Compare, and `notes` the Notes buttons.
+- Hiding a dialog does the same for its entry points: `hyperlink` removes
+  Insert > Link, the Link menu entry and Ctrl+K; `equation` Insert > Equation;
+  `pasteSpecial` its shortcut; `slideTemplates` the Slide Templates entry of Home > New Slide;
+  `passwordProtection` and `signatures` their File > Info cards.
+- `capabilities` expand into the lists above (see [Capabilities](#capabilities)).
 - An Options section that loses every control is removed; an Options page that
   loses every section is removed. Menus repair their separators when the first
   entry of a group is hidden.
@@ -249,6 +289,9 @@ template ref, Angular component instance, Svelte `bind:this`, Vanilla instance):
 | `setPanelVisible(id, visible)`                                          | Show or hide a chrome region.                                              |
 | `setFeatureEnabled(id, enabled)`                                        | Switch a feature area on or off.                                           |
 | `setDialogAvailable(id, available)`                                     | Allow or remove a dialog and its entry points.                             |
+| `setCapability(id, allowed)`                                            | Switch a capability; `undefined` returns it to the default.                |
+| `setRegion(id, renderer)`                                               | Replace a region with your UI; `undefined` restores the built-in.          |
+| `addBackstagePage(page)` / `removeBackstagePage(id)`                    | Add (or replace by id) and remove a host File tab page.                    |
 
 ### Shortcut chords
 
@@ -367,6 +410,264 @@ document.getElementById('hide-insert')!.addEventListener('click', () => {
 
 :::
 
+## Replace a region with your own UI
+
+Hiding removes a region; replacing keeps its place in the layout and hands that
+place to you. The viewer renders an empty container where the built-in UI
+would be (the inspector's column, the Options dialog's body, a File tab page)
+and you fill it, in any framework or none. Put the renderer under `regions`:
+
+```ts
+const customization: ViewerCustomization = {
+	regions: {
+		'dialog.options': 'acme-settings', // a custom element you registered
+		inspector: (container, context) => {
+			const view = new AcmeInspector(container, context.viewer);
+			view.show(context.selectedElementIds);
+			return {
+				update: (next) => view.show(next.selectedElementIds),
+				destroy: () => view.dispose(),
+			};
+		},
+	},
+};
+```
+
+### Regions
+
+| Region                                             | What you replace                                                          | What the viewer keeps                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `inspector`                                        | The inspector pane                                                        | Its column, width, resize handle, open/closed state and mobile sheet |
+| `slidesPane`                                       | The slide thumbnail rail                                                  | Its width and collapse state                                         |
+| `notes`                                            | The speaker-notes panel                                                   | Its height, resize handle and collapse state                         |
+| `statusBar`                                        | The status bar                                                            | Its row under the canvas                                             |
+| `dialog.options`                                   | The body of File > Options (the Settings dialog)                          | The dialog frame: backdrop, title, close button, Escape              |
+| `dialog.share`, `dialog.broadcast`, `dialog.print` | The body of that dialog                                                   | The dialog frame                                                     |
+| `backstage.<page>`                                 | The body of one File tab page (`backstage.info`, `backstage.export`, ...) | The File tab nav, title and back button                              |
+
+The full list is in the [reference](#replaceable-regions-regions). Hiding wins
+over replacing: a region that is also hidden (through `hiddenPanels`,
+`hiddenDialogs`, `backstage.hiddenPages` or a capability) is not rendered at
+all.
+
+### Renderer forms
+
+A region takes any of three forms. Use whichever fits your stack:
+
+- **A mount function** `(container, context) => cleanup | handle | void`. It
+  runs once when the region appears. Return a cleanup function, or a handle
+  `{ update?(context), destroy?() }` to also receive context changes.
+- **A custom element tag**, as a string (`'acme-settings'`). The viewer creates
+  the element, appends it to the container and assigns its `context` property,
+  then assigns `context` again whenever the context changes. Register the
+  element yourself before the region first appears.
+- **A custom element spec** `{ element: 'acme-settings', properties: { tenant } }`.
+  The same, with `properties` assigned once before the element is attached. An
+  equal spec passed again (same tag, same property values) keeps the element.
+
+The viewer remounts a region only when its renderer changes: a different
+function, a different tag, or different `properties`. Define mount functions
+once (outside a render function, or memoised), as you do for the rest of the
+`customization` object.
+
+A renderer that throws is caught and logged; it never takes the viewer down.
+
+### When a region is mounted
+
+A replaced region appears exactly where and when the built-in would, and the
+viewer keeps the slot's own behaviour:
+
+- **Visibility rules carry over.** A read-only deck has no inspector, so it has
+  no host inspector either; a region the built-in shows only on desktop, or
+  only while editing, follows the same rule.
+- **Collapsing hides, it does not unmount.** Collapsed notes or a closed
+  inspector keep your renderer mounted and hidden, so its state survives; it is
+  destroyed when the region stops being replaced, its renderer changes, or the
+  viewer is destroyed.
+- **Size stays with the viewer.** The inspector keeps its width and resize
+  handle, the notes panel its height, resize handle and collapse toggle. Your
+  content fills the container (`width` and `height` are 100%).
+- **Phone layouts** replace the same content inside the bottom sheets that hold
+  the inspector, notes and slide rail.
+- **`close()` on a dialog** behaves like the dialog's close (X) button: it
+  closes the dialog and keeps every change made through `setOption`.
+
+Each container carries a `data-pptx-region="<id>"` attribute, a stable hook for
+your own CSS and tests.
+
+### The context
+
+Every renderer receives a `ViewerRegionContext`:
+
+| Field                            | Meaning                                                                                                                                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `region`                         | The region id (`inspector`, `dialog.options`, `backstage.host.<id>`, ...)                                                                                                      |
+| `viewer`                         | The viewer's imperative API, the same object as the component handle: `getSlides()`, `getElementById()`, `updateElement()`, `goTo()`, `undo()`, the customisation helpers, ... |
+| `mode`                           | `'edit'`, `'preview'`, `'present'` or `'master'`                                                                                                                               |
+| `canEdit`                        | `false` when the deck is read-only (edit prop, `capabilities.edit` or protection)                                                                                              |
+| `activeSlideIndex`, `slideCount` | The active slide (zero-based) and the slide count                                                                                                                              |
+| `selectedElementIds`             | The selected elements on the active slide (empty: nothing selected)                                                                                                            |
+| `locale`                         | The active UI locale                                                                                                                                                           |
+| `close()`                        | Closes the dialog, leaves the File tab or closes the inspector; a no-op for the status bar, notes and slides pane                                                              |
+
+`dialog.options` adds the File > Options model, so a host Settings view can
+read and write the same settings the built-in dialog does:
+
+| Field                  | Meaning                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `options`              | The current `ViewerOptions` (host locks applied)                                              |
+| `setOption(id, value)` | Change one setting by its `<group>.<key>` id (`advanced.showGrid`); locked settings ignore it |
+| `resetOptions()`       | Back to the host defaults, or the built-ins                                                   |
+
+`close`, `setOption` and `resetOptions` are stable: keeping an older context
+and calling them later is safe.
+
+Every binding shows File > Options in the shared `<pptx-ui-options-dialog>`
+element. A replaced body is slotted into it (`slot="body"`), in the page's own
+DOM rather than the element's shadow tree, so your page styles reach it. Your
+view sizes itself; the dialog scrolls it when it is taller than the window.
+The close button and Escape keep your `setOption` edits, as in the built-in
+dialog.
+
+### Mounting a framework component
+
+The mount function is framework-neutral, so a region can hold a component from
+any framework, including a different one from the viewer's binding:
+
+::: code-group
+
+```tsx [React]
+import type { ViewerRegionMount } from 'pptx-react-viewer';
+import { createRoot } from 'react-dom/client';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const root = createRoot(container);
+	root.render(<AcmeSettings context={context} />);
+	return {
+		update: (next) => root.render(<AcmeSettings context={next} />),
+		destroy: () => root.unmount(),
+	};
+};
+
+<PowerPointViewer content={bytes} customization={{ regions: { 'dialog.options': settings } }} />;
+```
+
+```ts [Vue]
+import type { ViewerRegionContext, ViewerRegionMount } from 'pptx-vue-viewer';
+import { createApp, shallowRef } from 'vue';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const current = shallowRef<ViewerRegionContext>(context);
+	const app = createApp(AcmeSettings, { context: current });
+	app.mount(container);
+	return { update: (next) => (current.value = next), destroy: () => app.unmount() };
+};
+```
+
+```ts [Angular]
+import { createComponent, type ApplicationRef, type EnvironmentInjector } from '@angular/core';
+import type { ViewerRegionMount } from 'pptx-angular-viewer';
+
+function settingsRegion(app: ApplicationRef, injector: EnvironmentInjector): ViewerRegionMount {
+	return (container, context) => {
+		const ref = createComponent(AcmeSettingsComponent, {
+			environmentInjector: injector,
+			hostElement: container.appendChild(document.createElement('acme-settings-host')),
+		});
+		ref.setInput('context', context);
+		app.attachView(ref.hostView);
+		return {
+			update: (next) => ref.setInput('context', next),
+			destroy: () => {
+				app.detachView(ref.hostView);
+				ref.destroy();
+			},
+		};
+	};
+}
+```
+
+```ts [Svelte]
+import type { ViewerRegionMount } from 'pptx-svelte-viewer';
+// settings-region.svelte.ts (runes need a .svelte.ts module)
+import { mount, unmount } from 'svelte';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const props = $state({ context });
+	const component = mount(AcmeSettings, { target: container, props });
+	return { update: (next) => (props.context = next), destroy: () => unmount(component) };
+};
+```
+
+```ts [Vanilla]
+import type { ViewerRegionMount, ViewerSettingsRegionContext } from 'pptx-vanilla-viewer';
+
+const settings: ViewerRegionMount = (container, context) => {
+	// `dialog.options` receives the settings model on top of the base context.
+	const { options, setOption } = context as ViewerSettingsRegionContext;
+	const grid = document.createElement('label');
+	const box = document.createElement('input');
+	box.type = 'checkbox';
+	box.checked = options.advanced.showGrid;
+	box.addEventListener('change', () => setOption('advanced.showGrid', box.checked));
+	grid.append(box, ' Show gridlines');
+	container.append(grid);
+};
+```
+
+:::
+
+### Your own File tab pages
+
+`backstage.extraPages` adds pages to the File tab, after the built-in pages of
+their group. Each page's body is a region (`backstage.host.<id>`) and takes
+the same renderer forms:
+
+```ts
+const customization: ViewerCustomization = {
+	backstage: {
+		extraPages: [
+			{ id: 'policies', label: 'Policies', render: 'acme-policies' },
+			{ id: 'about', label: 'About Acme', group: 'footer', render: mountAbout },
+		],
+	},
+};
+```
+
+`label` is your own text and is not translated. Page ids must be unique among
+your pages; a repeated id is ignored. `addBackstagePage(page)` and
+`removeBackstagePage(id)` change them at runtime.
+
+## Capabilities
+
+`capabilities` states what the user may do, one switch per capability, and
+removes every path to what is switched off: buttons, menu entries, shortcuts,
+File pages and cards. An omitted key (or `true`) leaves the viewer's own rules
+in charge.
+
+```ts
+const portal: ViewerCustomization = {
+	capabilities: { edit: false, export: false, print: false, copy: false },
+};
+```
+
+| Capability | `false` means                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| `edit`     | The deck opens read-only, whatever the edit prop says (`canEdit`, `editable`).             |
+| `export`   | No File > Export page, Export button or export cards.                                      |
+| `print`    | No Print dialog, File > Print page or Print card.                                          |
+| `share`    | No Share or Broadcast dialogs, buttons, pages or cards.                                    |
+| `copy`     | No Copy, Cut or Save as Picture (menus, ribbon, shortcuts) and no Copy as image.           |
+| `present`  | No Slide Show tab or F5 / Shift+F5 (the `presentMode` feature).                            |
+| `comment`  | No Add Comment entry and no Comments groups in Insert and Review (the `comments` feature). |
+
+Capabilities are UI policy, not document protection. A user with the browser's
+developer tools still has the bytes you handed the viewer; if a deck must not
+be copied or exported, do not send it to the browser.
+
+`setCapability(id, allowed)` changes one at runtime; `undefined` returns it to
+the default.
+
 ## Recipes
 
 ### Kiosk: a viewer with no editing chrome
@@ -478,6 +779,46 @@ const keys: ViewerCustomization = {
 };
 ```
 
+### Your own Settings view
+
+Keep the viewer's Options dialog frame but show your own settings, reading and
+writing the same model:
+
+```ts
+customElements.define(
+	'acme-settings',
+	class extends HTMLElement {
+		set context(context: ViewerSettingsRegionContext) {
+			this.textContent = '';
+			const grid = document.createElement('input');
+			grid.type = 'checkbox';
+			grid.checked = context.options.advanced.showGrid;
+			grid.onchange = () => context.setOption('advanced.showGrid', grid.checked);
+			const done = document.createElement('button');
+			done.textContent = 'Done';
+			done.onclick = () => context.close();
+			this.append(grid, done);
+		}
+	},
+);
+
+const customization: ViewerCustomization = { regions: { 'dialog.options': 'acme-settings' } };
+```
+
+To send users to your application's own settings page instead, hide the
+dialog (`hiddenDialogs: ['options']`) and add a File tab page or a ribbon
+add-in command that navigates there.
+
+### A read-only portal
+
+```ts
+const portal: ViewerCustomization = {
+	capabilities: { edit: false, export: false, print: false, share: false, copy: false },
+	disabledFeatures: ['ai'],
+	hiddenPanels: ['inspector'],
+};
+```
+
 ### Build your own admin screen
 
 Every id list is exported as a runtime array, alongside the types:
@@ -485,8 +826,8 @@ Every id list is exported as a runtime array, alongside the types:
 `OPTIONS_SECTION_IDS`, `OPTIONS_SETTING_IDS`, `BACKSTAGE_PAGE_IDS`,
 `BACKSTAGE_CARD_IDS`, `ELEMENT_CONTEXT_MENU_COMMAND_IDS`,
 `CANVAS_CONTEXT_MENU_COMMAND_IDS`, `EDITOR_SHORTCUT_ACTION_IDS`,
-`VIEWER_PANEL_IDS`, `VIEWER_FEATURE_IDS`, `VIEWER_DIALOG_IDS` and
-`VIEWER_EXPORT_FORMAT_IDS`. Render checkboxes from them, store the resulting
+`VIEWER_PANEL_IDS`, `VIEWER_FEATURE_IDS`, `VIEWER_DIALOG_IDS`,
+`VIEWER_EXPORT_FORMAT_IDS`, `VIEWER_CAPABILITY_IDS` and `VIEWER_REGION_IDS`. Render checkboxes from them, store the resulting
 object per tenant, and feed it back through `setCustomization`.
 
 ## What is not customisable yet
@@ -502,7 +843,16 @@ object per tenant, and feed it back through `setCustomization`.
   it with `keyboard.disabled: ['toggleShortcuts']` and
   `options.hiddenSections: ['ribbon.shortcutReference']` if that matters.
 - **Inspector sections** and the slide rail's own context menu are not
-  addressable individually; hide the whole region with `hiddenPanels`.
+  addressable individually; hide the whole region with `hiddenPanels`, or
+  replace the whole inspector with `regions.inspector`.
+- **Replaceable regions** are the ones listed under
+  [Regions](#regions). The ribbon, title bar, Quick Access strip and the other
+  dialogs can be hidden but not replaced; add your own ribbon tab with
+  `ribbonAddIns` instead.
+- **Framework-native slots** (React render props, Vue slots, Angular templates,
+  Svelte snippets) are not offered; every binding takes the same mount
+  function or custom element, which can render a component of any framework
+  (see [Mounting a framework component](#mounting-a-framework-component)).
 - **Mobile layouts** honour ribbon, menu, dialog and feature customisation,
   but the mobile bottom sheets have no panel ids of their own, and some
   mobile bottom-bar buttons (Slides, Notes, Format) stay visible when their
@@ -547,6 +897,7 @@ unit test fails if an id is missing here.
 | `tableDesign`    | Table Design    |
 | `tableLayout`    | Table Layout    |
 | `chartDesign`    | Chart Design    |
+| `chartFormat`    | Chart Format    |
 | `smartArtDesign` | SmartArt Design |
 
 ### Ribbon groups (`ribbon.hiddenGroups`)
@@ -563,7 +914,10 @@ unit test fails if an id is missing here.
 | `insert.slides`                     | Slides                   |
 | `insert.tables`                     | Tables                   |
 | `insert.images`                     | Images                   |
+| `insert.camera`                     | Camera                   |
 | `insert.illustrations`              | Illustrations            |
+| `insert.forms`                      | Forms                    |
+| `insert.addIns`                     | Add-ins                  |
 | `insert.links`                      | Links                    |
 | `insert.comments`                   | Comments                 |
 | `insert.text`                       | Text                     |
@@ -574,6 +928,7 @@ unit test fails if an id is missing here.
 | `design.themes`                     | Themes                   |
 | `design.variants`                   | Variants                 |
 | `design.customize`                  | Customize                |
+| `design.designer`                   | Designer                 |
 | `transitions.preview`               | Preview                  |
 | `transitions.transitionToThisSlide` | Transition to This Slide |
 | `transitions.timing`                | Timing                   |
@@ -618,6 +973,7 @@ unit test fails if an id is missing here.
 | `tableLayout.arrange`               | Arrange                  |
 | `chartDesign.chartLayouts`          | Chart Layouts            |
 | `chartDesign.chartStyles`           | Chart Styles             |
+| `chartFormat.currentSelection`      | Current Selection        |
 | `smartArtDesign.createGraphic`      | Create Graphic           |
 | `smartArtDesign.layouts`            | Layouts                  |
 | `smartArtDesign.smartArtStyles`     | SmartArt Styles          |
@@ -625,224 +981,249 @@ unit test fails if an id is missing here.
 
 ### Ribbon controls (`ribbon.hiddenButtons`)
 
-| Id                                                | Control                             |
-| ------------------------------------------------- | ----------------------------------- |
-| `home.clipboard.paste`                            | Paste                               |
-| `home.clipboard.cut`                              | Cut                                 |
-| `home.clipboard.copy`                             | Copy                                |
-| `home.clipboard.formatPainter`                    | Format Painter                      |
-| `home.slides.newSlide`                            | New Slide                           |
-| `home.slides.layout`                              | Layout                              |
-| `home.slides.reset`                               | Reset                               |
-| `home.slides.section`                             | Section                             |
-| `home.slides.slideTemplates`                      | Slide templates                     |
-| `home.font.fontFamily`                            | Font                                |
-| `home.font.fontSize`                              | Font Size                           |
-| `home.font.increaseFontSize`                      | Increase Font Size                  |
-| `home.font.decreaseFontSize`                      | Decrease Font Size                  |
-| `home.font.clearFormatting`                       | Clear All Formatting                |
-| `home.font.bold`                                  | Bold                                |
-| `home.font.italic`                                | Italic                              |
-| `home.font.underline`                             | Underline                           |
-| `home.font.strikethrough`                         | Strikethrough                       |
-| `home.font.shadow`                                | Text Shadow                         |
-| `home.font.characterSpacing`                      | Character Spacing                   |
-| `home.font.changeCase`                            | Change Case                         |
-| `home.font.fontColor`                             | Font Color                          |
-| `home.font.highlightColor`                        | Text Highlight Color                |
-| `home.font.superscript`                           | Superscript                         |
-| `home.font.subscript`                             | Subscript                           |
-| `home.paragraph.bullets`                          | Bullets (toggle and gallery)        |
-| `home.paragraph.numbering`                        | Numbering (toggle and gallery)      |
-| `home.paragraph.decreaseIndent`                   | Decrease List Level                 |
-| `home.paragraph.increaseIndent`                   | Increase List Level                 |
-| `home.paragraph.lineSpacing`                      | Line Spacing                        |
-| `home.paragraph.alignLeft`                        | Align Left                          |
-| `home.paragraph.alignCenter`                      | Center                              |
-| `home.paragraph.alignRight`                       | Align Right                         |
-| `home.paragraph.justify`                          | Justify                             |
-| `home.paragraph.columns`                          | Columns                             |
-| `home.paragraph.textDirection`                    | Text Direction                      |
-| `home.paragraph.alignText`                        | Align Text                          |
-| `home.drawing.shapes`                             | Shapes                              |
-| `home.drawing.arrange`                            | Arrange                             |
-| `home.drawing.quickStyles`                        | Quick Styles (Shape Styles gallery) |
-| `home.drawing.shapeFill`                          | Shape Fill                          |
-| `home.drawing.shapeOutline`                       | Shape Outline                       |
-| `home.drawing.shapeEffects`                       | Shape Effects gallery               |
-| `home.arrange.bringForward`                       | Bring Forward                       |
-| `home.arrange.sendBackward`                       | Send Backward                       |
-| `home.arrange.bringToFront`                       | Bring to Front                      |
-| `home.arrange.sendToBack`                         | Send to Back                        |
-| `home.arrange.flipHorizontal`                     | Flip Horizontal                     |
-| `home.arrange.flipVertical`                       | Flip Vertical                       |
-| `home.arrange.duplicate`                          | Duplicate                           |
-| `home.arrange.delete`                             | Delete                              |
-| `home.arrange.group`                              | Group                               |
-| `home.arrange.ungroup`                            | Ungroup                             |
-| `home.arrange.align`                              | Align                               |
-| `home.arrange.mergeShapes`                        | Merge Shapes                        |
-| `home.arrange.crop`                               | Crop                                |
-| `home.arrange.outlineWidth`                       | Outline width                       |
-| `home.editing.find`                               | Find                                |
-| `home.editing.replace`                            | Replace                             |
-| `home.editing.select`                             | Select                              |
-| `insert.slides.newSlide`                          | New Slide                           |
-| `insert.tables.table`                             | Table                               |
-| `insert.images.pictures`                          | Pictures                            |
-| `insert.illustrations.shapes`                     | Shapes                              |
-| `insert.illustrations.smartArt`                   | SmartArt                            |
-| `insert.illustrations.chart`                      | Chart                               |
-| `insert.links.link`                               | Link                                |
-| `insert.links.action`                             | Action button                       |
-| `insert.comments.comment`                         | Comment                             |
-| `insert.text.textBox`                             | Text Box                            |
-| `insert.text.field`                               | Header, date, slide number field    |
-| `insert.symbols.equation`                         | Equation                            |
-| `insert.symbols.symbol`                           | Symbol                              |
-| `insert.media.media`                              | Video / Audio                       |
-| `draw.tools.select`                               | Select                              |
-| `draw.tools.pen`                                  | Pen                                 |
-| `draw.tools.highlighter`                          | Highlighter                         |
-| `draw.tools.freeform`                             | Freeform                            |
-| `draw.tools.eraser`                               | Eraser                              |
-| `draw.tools.penColor`                             | Pen colour                          |
-| `draw.tools.penWidth`                             | Pen width                           |
-| `draw.convert.inkToShape`                         | Ink to Shape                        |
-| `design.themes.browseThemes`                      | Themes gallery                      |
-| `design.themes.editTheme`                         | Edit theme                          |
-| `design.variants.colors`                          | Variants: Colors gallery            |
-| `design.variants.fonts`                           | Variants: Fonts gallery             |
-| `design.customize.slideSize`                      | Slide Size                          |
-| `design.customize.formatBackground`               | Format Background                   |
-| `transitions.preview.preview`                     | Preview                             |
-| `transitions.transitionToThisSlide.gallery`       | Transition gallery                  |
-| `transitions.transitionToThisSlide.effectOptions` | Effect Options                      |
-| `transitions.timing.sound`                        | Sound                               |
-| `transitions.timing.duration`                     | Duration                            |
-| `transitions.timing.applyToAll`                   | Apply To All                        |
-| `transitions.timing.advanceOnClick`               | On Mouse Click                      |
-| `transitions.timing.advanceAfter`                 | After                               |
-| `animations.preview.preview`                      | Preview                             |
-| `animations.animation.gallery`                    | Animation gallery                   |
-| `animations.animation.effectOptions`              | Effect Options                      |
-| `animations.motionPath.gallery`                   | Motion path gallery                 |
-| `animations.advancedAnimation.addAnimation`       | Add Animation                       |
-| `animations.advancedAnimation.animationPane`      | Animation Pane                      |
-| `animations.advancedAnimation.trigger`            | Trigger                             |
-| `animations.advancedAnimation.animationPainter`   | Animation Painter                   |
-| `animations.advancedAnimation.remove`             | Remove animation                    |
-| `animations.timing.start`                         | Start                               |
-| `animations.timing.duration`                      | Duration                            |
-| `animations.timing.delay`                         | Delay                               |
-| `animations.timing.reorder`                       | Reorder                             |
-| `slideShow.startSlideShow.fromBeginning`          | From Beginning                      |
-| `slideShow.startSlideShow.fromCurrent`            | From Current Slide                  |
-| `slideShow.startSlideShow.customShow`             | Custom Slide Show                   |
-| `slideShow.present.presenterView`                 | Presenter View                      |
-| `slideShow.present.broadcast`                     | Present Online                      |
-| `slideShow.setUp.setUpSlideShow`                  | Set Up Slide Show                   |
-| `slideShow.setUp.hideSlide`                       | Hide Slide                          |
-| `slideShow.setUp.rehearseTimings`                 | Rehearse Timings                    |
-| `slideShow.setUp.record`                          | Record                              |
-| `slideShow.setUp.rehearseWithCoach`               | Rehearse with Coach                 |
-| `slideShow.captions.subtitles`                    | Always Use Subtitles                |
-| `slideShow.captions.subtitleSettings`             | Subtitle Settings                   |
-| `record.camera.cameo`                             | Cameo                               |
-| `record.record.fromBeginning`                     | From Beginning                      |
-| `record.record.fromCurrent`                       | From Current Slide                  |
-| `record.manage.clear`                             | Clear                               |
-| `record.manage.reset`                             | Reset to Cameo                      |
-| `record.help.learnMore`                           | Learn more                          |
-| `review.proofing.spelling`                        | Spelling                            |
-| `review.proofing.thesaurus`                       | Thesaurus                           |
-| `review.accessibility.check`                      | Check Accessibility                 |
-| `review.language.translate`                       | Translate                           |
-| `review.language.language`                        | Language                            |
-| `review.comments.newComment`                      | New Comment                         |
-| `review.comments.delete`                          | Delete                              |
-| `review.comments.deleteSlide`                     | Delete Slide Comments               |
-| `review.comments.deleteAll`                       | Delete All Comments                 |
-| `review.comments.previous`                        | Previous                            |
-| `review.comments.next`                            | Next                                |
-| `review.comments.showComments`                    | Show Comments                       |
-| `review.compare.compare`                          | Compare                             |
-| `review.compare.markAllRead`                      | Mark all read                       |
-| `review.protect.readOnly`                         | Read-only                           |
-| `review.protect.restrictPermission`               | Restrict Permission                 |
-| `review.ink.hideInk`                              | Hide Ink                            |
-| `view.presentationViews.normal`                   | Normal                              |
-| `view.presentationViews.outline`                  | Outline View                        |
-| `view.presentationViews.slideSorter`              | Slide Sorter                        |
-| `view.presentationViews.notesPage`                | Notes Page                          |
-| `view.presentationViews.readingView`              | Reading View                        |
-| `view.masterViews.slideMaster`                    | Slide Master                        |
-| `view.masterViews.handoutMaster`                  | Handout Master                      |
-| `view.masterViews.notesMaster`                    | Notes Master                        |
-| `view.show.ruler`                                 | Ruler                               |
-| `view.show.gridlines`                             | Gridlines                           |
-| `view.show.guides`                                | Guides                              |
-| `view.show.snapToGrid`                            | Snap to Grid                        |
-| `view.show.snapToShape`                           | Snap to Shape                       |
-| `view.show.addGuide`                              | Add horizontal / vertical guide     |
-| `view.show.selectionPane`                         | Selection Pane                      |
-| `view.show.eyedropper`                            | Eyedropper                          |
-| `view.show.notes`                                 | Notes                               |
-| `view.zoom.zoom`                                  | Zoom                                |
-| `view.zoom.fitToWindow`                           | Fit to Window                       |
-| `view.window.templateEditing`                     | Edit template elements              |
-| `view.window.macros`                              | Macros                              |
-| `help.help.options`                               | Options                             |
-| `help.help.keyboardShortcuts`                     | Keyboard shortcuts                  |
-| `help.help.accessibility`                         | Accessibility checker               |
-| `shapeFormat.shapeStyles.gallery`                 | Shape Styles gallery                |
-| `shapeFormat.shapeStyles.shapeEffects`            | Shape Effects gallery               |
-| `shapeFormat.wordArtStyles.gallery`               | WordArt Styles gallery              |
-| `pictureFormat.adjust.corrections`                | Corrections gallery                 |
-| `pictureFormat.adjust.color`                      | Color gallery                       |
-| `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery            |
-| `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery              |
-| `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery             |
-| `pictureFormat.size.crop`                         | Crop                                |
-| `tableDesign.tableStyles.gallery`                 | Table Styles gallery                |
-| `tableLayout.table.select`                        | Select                              |
-| `tableLayout.table.viewGridlines`                 | View Gridlines                      |
-| `tableLayout.rowsColumns.deleteRows`              | Delete Rows                         |
-| `tableLayout.rowsColumns.deleteColumns`           | Delete Columns                      |
-| `tableLayout.rowsColumns.insertAbove`             | Insert Above                        |
-| `tableLayout.rowsColumns.insertBelow`             | Insert Below                        |
-| `tableLayout.rowsColumns.insertLeft`              | Insert Left                         |
-| `tableLayout.rowsColumns.insertRight`             | Insert Right                        |
-| `tableLayout.merge.mergeCells`                    | Merge Cells                         |
-| `tableLayout.merge.splitCells`                    | Split Cells                         |
-| `tableLayout.cellSize.distributeRows`             | Distribute Rows                     |
-| `tableLayout.cellSize.distributeColumns`          | Distribute Columns                  |
-| `tableLayout.alignment.alignLeft`                 | Align Left                          |
-| `tableLayout.alignment.alignCenter`               | Center                              |
-| `tableLayout.alignment.alignRight`                | Align Right                         |
-| `tableLayout.alignment.alignTop`                  | Align Top                           |
-| `tableLayout.alignment.alignMiddle`               | Center Vertically                   |
-| `tableLayout.alignment.alignBottom`               | Align Bottom                        |
-| `tableLayout.alignment.textDirection`             | Text Direction                      |
-| `tableLayout.alignment.cellMargins`               | Cell Margins                        |
-| `tableLayout.tableSize.size`                      | Table Size                          |
-| `tableLayout.arrange.arrange`                     | Arrange                             |
-| `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                |
-| `chartDesign.chartStyles.changeColors`            | Change Colors gallery               |
-| `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                |
-| `smartArtDesign.createGraphic.addShape`           | Add Shape                           |
-| `smartArtDesign.createGraphic.addBullet`          | Add Bullet                          |
-| `smartArtDesign.createGraphic.textPane`           | Text Pane                           |
-| `smartArtDesign.createGraphic.promote`            | Promote                             |
-| `smartArtDesign.createGraphic.demote`             | Demote                              |
-| `smartArtDesign.createGraphic.rightToLeft`        | Right to Left                       |
-| `smartArtDesign.createGraphic.moveUp`             | Move Up                             |
-| `smartArtDesign.createGraphic.moveDown`           | Move Down                           |
-| `smartArtDesign.layouts.gallery`                  | Layouts gallery                     |
-| `smartArtDesign.smartArtStyles.changeColors`      | Change Colors gallery               |
-| `smartArtDesign.smartArtStyles.gallery`           | SmartArt Styles gallery             |
-| `smartArtDesign.reset.resetGraphic`               | Reset Graphic                       |
-| `smartArtDesign.reset.convert`                    | Convert                             |
+| Id                                                | Control                                                                       |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `home.clipboard.paste`                            | Paste                                                                         |
+| `home.clipboard.cut`                              | Cut                                                                           |
+| `home.clipboard.copy`                             | Copy                                                                          |
+| `home.clipboard.formatPainter`                    | Format Painter                                                                |
+| `home.slides.newSlide`                            | New Slide                                                                     |
+| `home.slides.layout`                              | Layout                                                                        |
+| `home.slides.reset`                               | Reset                                                                         |
+| `home.slides.section`                             | Section                                                                       |
+| `home.slides.slideTemplates`                      | Slide templates (New Slide menu entry)                                        |
+| `home.font.fontFamily`                            | Font                                                                          |
+| `home.font.fontSize`                              | Font Size                                                                     |
+| `home.font.increaseFontSize`                      | Increase Font Size                                                            |
+| `home.font.decreaseFontSize`                      | Decrease Font Size                                                            |
+| `home.font.clearFormatting`                       | Clear All Formatting                                                          |
+| `home.font.bold`                                  | Bold                                                                          |
+| `home.font.italic`                                | Italic                                                                        |
+| `home.font.underline`                             | Underline                                                                     |
+| `home.font.strikethrough`                         | Strikethrough                                                                 |
+| `home.font.shadow`                                | Text Shadow                                                                   |
+| `home.font.characterSpacing`                      | Character Spacing                                                             |
+| `home.font.changeCase`                            | Change Case                                                                   |
+| `home.font.fontColor`                             | Font Color                                                                    |
+| `home.font.highlightColor`                        | Text Highlight Color                                                          |
+| `home.font.superscript`                           | Superscript                                                                   |
+| `home.font.subscript`                             | Subscript                                                                     |
+| `home.paragraph.bullets`                          | Bullets (toggle and gallery)                                                  |
+| `home.paragraph.numbering`                        | Numbering (toggle and gallery)                                                |
+| `home.paragraph.decreaseIndent`                   | Decrease List Level                                                           |
+| `home.paragraph.increaseIndent`                   | Increase List Level                                                           |
+| `home.paragraph.lineSpacing`                      | Line Spacing                                                                  |
+| `home.paragraph.alignLeft`                        | Align Left                                                                    |
+| `home.paragraph.alignCenter`                      | Center                                                                        |
+| `home.paragraph.alignRight`                       | Align Right                                                                   |
+| `home.paragraph.justify`                          | Justify                                                                       |
+| `home.paragraph.columns`                          | Columns                                                                       |
+| `home.paragraph.textDirection`                    | Text Direction                                                                |
+| `home.paragraph.alignText`                        | Align Text                                                                    |
+| `home.drawing.shapes`                             | Shapes                                                                        |
+| `home.drawing.arrange`                            | Arrange                                                                       |
+| `home.drawing.quickStyles`                        | Quick Styles (Shape Styles gallery)                                           |
+| `home.drawing.shapeFill`                          | Shape Fill                                                                    |
+| `home.drawing.shapeOutline`                       | Shape Outline                                                                 |
+| `home.drawing.shapeEffects`                       | Shape Effects gallery                                                         |
+| `home.arrange.bringForward`                       | Bring Forward                                                                 |
+| `home.arrange.sendBackward`                       | Send Backward                                                                 |
+| `home.arrange.bringToFront`                       | Bring to Front                                                                |
+| `home.arrange.sendToBack`                         | Send to Back                                                                  |
+| `home.arrange.flipHorizontal`                     | Flip Horizontal                                                               |
+| `home.arrange.flipVertical`                       | Flip Vertical                                                                 |
+| `home.arrange.duplicate`                          | Duplicate                                                                     |
+| `home.arrange.delete`                             | Delete                                                                        |
+| `home.arrange.group`                              | Group                                                                         |
+| `home.arrange.ungroup`                            | Ungroup                                                                       |
+| `home.arrange.align`                              | Align                                                                         |
+| `home.arrange.mergeShapes`                        | Merge Shapes                                                                  |
+| `home.arrange.crop`                               | Crop                                                                          |
+| `home.arrange.outlineWidth`                       | Outline width                                                                 |
+| `home.editing.find`                               | Find                                                                          |
+| `home.editing.replace`                            | Replace                                                                       |
+| `home.editing.select`                             | Select                                                                        |
+| `insert.slides.newSlide`                          | New Slide                                                                     |
+| `insert.slides.reuseSlides`                       | Reuse Slides                                                                  |
+| `insert.tables.table`                             | Table                                                                         |
+| `insert.images.pictures`                          | Pictures                                                                      |
+| `insert.images.screenshot`                        | Screenshot                                                                    |
+| `insert.images.photoAlbum`                        | Photo Album                                                                   |
+| `insert.camera.cameo`                             | Cameo                                                                         |
+| `insert.illustrations.shapes`                     | Shapes                                                                        |
+| `insert.illustrations.icons`                      | Icons                                                                         |
+| `insert.illustrations.threeDModels`               | 3D Models                                                                     |
+| `insert.illustrations.smartArt`                   | SmartArt                                                                      |
+| `insert.illustrations.chart`                      | Chart                                                                         |
+| `insert.forms.forms`                              | Forms                                                                         |
+| `insert.addIns.getAddIns`                         | Get Add-ins                                                                   |
+| `insert.addIns.myAddIns`                          | My Add-ins                                                                    |
+| `insert.links.zoom`                               | Zoom                                                                          |
+| `insert.links.link`                               | Link                                                                          |
+| `insert.links.action`                             | Action button                                                                 |
+| `insert.comments.comment`                         | Comment                                                                       |
+| `insert.text.textBox`                             | Text Box                                                                      |
+| `insert.text.headerFooter`                        | Header & Footer                                                               |
+| `insert.text.wordArt`                             | WordArt                                                                       |
+| `insert.text.dateTime`                            | Date & Time                                                                   |
+| `insert.text.slideNumber`                         | Slide Number                                                                  |
+| `insert.text.object`                              | Object                                                                        |
+| `insert.text.field`                               | Date & Time and Slide Number (deprecated alias: use dateTime and slideNumber) |
+| `insert.symbols.equation`                         | Equation                                                                      |
+| `insert.symbols.symbol`                           | Symbol                                                                        |
+| `insert.media.media`                              | Video                                                                         |
+| `insert.media.audio`                              | Audio                                                                         |
+| `insert.media.screenRecording`                    | Screen Recording                                                              |
+| `draw.tools.select`                               | Select                                                                        |
+| `draw.tools.pen`                                  | Pen                                                                           |
+| `draw.tools.highlighter`                          | Highlighter                                                                   |
+| `draw.tools.freeform`                             | Freeform                                                                      |
+| `draw.tools.eraser`                               | Eraser                                                                        |
+| `draw.tools.penColor`                             | Pen colour                                                                    |
+| `draw.tools.penWidth`                             | Pen width                                                                     |
+| `draw.convert.inkToShape`                         | Ink to Shape                                                                  |
+| `design.themes.gallery`                           | Themes (inline gallery)                                                       |
+| `design.themes.browseThemes`                      | Themes gallery                                                                |
+| `design.themes.editTheme`                         | Edit theme                                                                    |
+| `design.variants.gallery`                         | Variants (inline gallery)                                                     |
+| `design.variants.colors`                          | Variants: Colors gallery                                                      |
+| `design.variants.fonts`                           | Variants: Fonts gallery                                                       |
+| `design.variants.effects`                         | Variants: Effects gallery                                                     |
+| `design.variants.backgroundStyles`                | Variants: Background Styles gallery                                           |
+| `design.customize.slideSize`                      | Slide Size                                                                    |
+| `design.customize.formatBackground`               | Format Background                                                             |
+| `design.designer.designIdeas`                     | Design Ideas                                                                  |
+| `transitions.preview.preview`                     | Preview                                                                       |
+| `transitions.transitionToThisSlide.gallery`       | Transition gallery                                                            |
+| `transitions.transitionToThisSlide.effectOptions` | Effect Options                                                                |
+| `transitions.timing.sound`                        | Sound                                                                         |
+| `transitions.timing.duration`                     | Duration                                                                      |
+| `transitions.timing.applyToAll`                   | Apply To All                                                                  |
+| `transitions.timing.advanceOnClick`               | On Mouse Click                                                                |
+| `transitions.timing.advanceAfter`                 | After                                                                         |
+| `animations.preview.preview`                      | Preview                                                                       |
+| `animations.animation.gallery`                    | Animation gallery                                                             |
+| `animations.animation.effectOptions`              | Effect Options                                                                |
+| `animations.motionPath.gallery`                   | Motion path gallery                                                           |
+| `animations.advancedAnimation.addAnimation`       | Add Animation                                                                 |
+| `animations.advancedAnimation.animationPane`      | Animation Pane                                                                |
+| `animations.advancedAnimation.trigger`            | Trigger                                                                       |
+| `animations.advancedAnimation.animationPainter`   | Animation Painter                                                             |
+| `animations.advancedAnimation.remove`             | Remove animation                                                              |
+| `animations.timing.start`                         | Start                                                                         |
+| `animations.timing.duration`                      | Duration                                                                      |
+| `animations.timing.delay`                         | Delay                                                                         |
+| `animations.timing.reorder`                       | Reorder                                                                       |
+| `slideShow.startSlideShow.fromBeginning`          | From Beginning                                                                |
+| `slideShow.startSlideShow.fromCurrent`            | From Current Slide                                                            |
+| `slideShow.startSlideShow.customShow`             | Custom Slide Show                                                             |
+| `slideShow.present.presenterView`                 | Presenter View                                                                |
+| `slideShow.present.broadcast`                     | Present Online                                                                |
+| `slideShow.setUp.setUpSlideShow`                  | Set Up Slide Show                                                             |
+| `slideShow.setUp.hideSlide`                       | Hide Slide                                                                    |
+| `slideShow.setUp.rehearseTimings`                 | Rehearse Timings                                                              |
+| `slideShow.setUp.record`                          | Record                                                                        |
+| `slideShow.setUp.rehearseWithCoach`               | Rehearse with Coach                                                           |
+| `slideShow.captions.subtitles`                    | Always Use Subtitles                                                          |
+| `slideShow.captions.subtitleSettings`             | Subtitle Settings                                                             |
+| `record.camera.cameo`                             | Cameo                                                                         |
+| `record.record.fromBeginning`                     | From Beginning                                                                |
+| `record.record.fromCurrent`                       | From Current Slide                                                            |
+| `record.manage.clear`                             | Clear                                                                         |
+| `record.manage.reset`                             | Reset to Cameo                                                                |
+| `record.help.learnMore`                           | Learn more                                                                    |
+| `review.proofing.spelling`                        | Spelling                                                                      |
+| `review.proofing.thesaurus`                       | Thesaurus                                                                     |
+| `review.accessibility.check`                      | Check Accessibility                                                           |
+| `review.language.translate`                       | Translate                                                                     |
+| `review.language.language`                        | Language                                                                      |
+| `review.comments.newComment`                      | New Comment                                                                   |
+| `review.comments.delete`                          | Delete                                                                        |
+| `review.comments.deleteSlide`                     | Delete Slide Comments                                                         |
+| `review.comments.deleteAll`                       | Delete All Comments                                                           |
+| `review.comments.previous`                        | Previous                                                                      |
+| `review.comments.next`                            | Next                                                                          |
+| `review.comments.showComments`                    | Show Comments                                                                 |
+| `review.compare.compare`                          | Compare                                                                       |
+| `review.compare.markAllRead`                      | Mark all read                                                                 |
+| `review.protect.readOnly`                         | Read-only                                                                     |
+| `review.protect.restrictPermission`               | Restrict Permission                                                           |
+| `review.ink.hideInk`                              | Hide Ink                                                                      |
+| `view.presentationViews.normal`                   | Normal                                                                        |
+| `view.presentationViews.outline`                  | Outline View                                                                  |
+| `view.presentationViews.slideSorter`              | Slide Sorter                                                                  |
+| `view.presentationViews.notesPage`                | Notes Page                                                                    |
+| `view.presentationViews.readingView`              | Reading View                                                                  |
+| `view.masterViews.slideMaster`                    | Slide Master                                                                  |
+| `view.masterViews.handoutMaster`                  | Handout Master                                                                |
+| `view.masterViews.notesMaster`                    | Notes Master                                                                  |
+| `view.show.ruler`                                 | Ruler                                                                         |
+| `view.show.gridlines`                             | Gridlines                                                                     |
+| `view.show.guides`                                | Guides                                                                        |
+| `view.show.snapToGrid`                            | Snap to Grid                                                                  |
+| `view.show.snapToShape`                           | Snap to Shape                                                                 |
+| `view.show.addGuide`                              | Add horizontal / vertical guide                                               |
+| `view.show.selectionPane`                         | Selection Pane                                                                |
+| `view.show.eyedropper`                            | Eyedropper                                                                    |
+| `view.show.notes`                                 | Notes                                                                         |
+| `view.zoom.zoom`                                  | Zoom                                                                          |
+| `view.zoom.fitToWindow`                           | Fit to Window                                                                 |
+| `view.window.templateEditing`                     | Edit template elements                                                        |
+| `view.window.macros`                              | Macros                                                                        |
+| `help.help.options`                               | Options                                                                       |
+| `help.help.keyboardShortcuts`                     | Keyboard shortcuts                                                            |
+| `help.help.accessibility`                         | Accessibility checker                                                         |
+| `shapeFormat.shapeStyles.gallery`                 | Shape Styles gallery                                                          |
+| `shapeFormat.shapeStyles.shapeEffects`            | Shape Effects gallery                                                         |
+| `shapeFormat.wordArtStyles.gallery`               | WordArt Styles gallery                                                        |
+| `pictureFormat.adjust.corrections`                | Corrections gallery                                                           |
+| `pictureFormat.adjust.color`                      | Color gallery                                                                 |
+| `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
+| `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery                                                        |
+| `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery                                                       |
+| `pictureFormat.size.crop`                         | Crop                                                                          |
+| `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
+| `tableLayout.table.select`                        | Select                                                                        |
+| `tableLayout.table.viewGridlines`                 | View Gridlines                                                                |
+| `tableLayout.rowsColumns.deleteRows`              | Delete Rows                                                                   |
+| `tableLayout.rowsColumns.deleteColumns`           | Delete Columns                                                                |
+| `tableLayout.rowsColumns.insertAbove`             | Insert Above                                                                  |
+| `tableLayout.rowsColumns.insertBelow`             | Insert Below                                                                  |
+| `tableLayout.rowsColumns.insertLeft`              | Insert Left                                                                   |
+| `tableLayout.rowsColumns.insertRight`             | Insert Right                                                                  |
+| `tableLayout.merge.mergeCells`                    | Merge Cells                                                                   |
+| `tableLayout.merge.splitCells`                    | Split Cells                                                                   |
+| `tableLayout.cellSize.distributeRows`             | Distribute Rows                                                               |
+| `tableLayout.cellSize.distributeColumns`          | Distribute Columns                                                            |
+| `tableLayout.alignment.alignLeft`                 | Align Left                                                                    |
+| `tableLayout.alignment.alignCenter`               | Center                                                                        |
+| `tableLayout.alignment.alignRight`                | Align Right                                                                   |
+| `tableLayout.alignment.alignTop`                  | Align Top                                                                     |
+| `tableLayout.alignment.alignMiddle`               | Center Vertically                                                             |
+| `tableLayout.alignment.alignBottom`               | Align Bottom                                                                  |
+| `tableLayout.alignment.textDirection`             | Text Direction                                                                |
+| `tableLayout.alignment.cellMargins`               | Cell Margins                                                                  |
+| `tableLayout.tableSize.size`                      | Table Size                                                                    |
+| `tableLayout.arrange.arrange`                     | Arrange                                                                       |
+| `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                                                          |
+| `chartDesign.chartStyles.changeColors`            | Change Colors gallery                                                         |
+| `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                                                          |
+| `chartFormat.currentSelection.chartElements`      | Chart Elements                                                                |
+| `chartFormat.currentSelection.formatSelection`    | Format Selection                                                              |
+| `chartFormat.currentSelection.resetToMatchStyle`  | Reset to Match Style                                                          |
+| `smartArtDesign.createGraphic.addShape`           | Add Shape                                                                     |
+| `smartArtDesign.createGraphic.addBullet`          | Add Bullet                                                                    |
+| `smartArtDesign.createGraphic.textPane`           | Text Pane                                                                     |
+| `smartArtDesign.createGraphic.promote`            | Promote                                                                       |
+| `smartArtDesign.createGraphic.demote`             | Demote                                                                        |
+| `smartArtDesign.createGraphic.rightToLeft`        | Right to Left                                                                 |
+| `smartArtDesign.createGraphic.moveUp`             | Move Up                                                                       |
+| `smartArtDesign.createGraphic.moveDown`           | Move Down                                                                     |
+| `smartArtDesign.layouts.gallery`                  | Layouts gallery                                                               |
+| `smartArtDesign.smartArtStyles.changeColors`      | Change Colors gallery                                                         |
+| `smartArtDesign.smartArtStyles.gallery`           | SmartArt Styles gallery                                                       |
+| `smartArtDesign.reset.resetGraphic`               | Reset Graphic                                                                 |
+| `smartArtDesign.reset.convert`                    | Convert                                                                       |
 
 ### Toolbar buttons (`ribbon.hiddenButtons`)
 
@@ -1089,6 +1470,7 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `edit-alt-text`          | Edit Alt Text...     |
 | `size-and-position`      | Size and Position... |
 | `format-shape`           | Format Shape...      |
+| `format-chart-element`   | Format Chart Area... |
 | `delete`                 | Delete               |
 
 ### Empty-canvas context menu (`contextMenu.hiddenCanvasCommands`)
@@ -1156,34 +1538,44 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 
 ### Panels (`hiddenPanels`)
 
-| Id                   | Region                                                               |
-| -------------------- | -------------------------------------------------------------------- |
-| `statusBar`          | The status bar under the canvas (slide counter, zoom, view buttons). |
-| `slidesPane`         | The slide thumbnail rail on the left.                                |
-| `inspector`          | The format / properties inspector on the right.                      |
-| `notes`              | The speaker-notes panel under the canvas.                            |
-| `quickAccessToolbar` | The quick-access strip in the title bar (save, undo, redo, ...).     |
-| `titleBar`           | The title bar above the ribbon (file name, quick access, account).   |
+| Id                   | Region                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `statusBar`          | The status bar under the canvas (slide counter, zoom, view buttons).                            |
+| `slidesPane`         | The slide thumbnail rail on the left.                                                           |
+| `inspector`          | The format / properties inspector on the right.                                                 |
+| `notes`              | The speaker-notes panel under the canvas.                                                       |
+| `quickAccessToolbar` | The quick-access strip in the title bar (save, undo, redo, ...).                                |
+| `titleBar`           | The title bar above the ribbon (file name, quick access, account).                              |
+| `selectionPane`      | The Selection Pane and View > Selection Pane.                                                   |
+| `findReplace`        | The Find and Replace panel, Home > Find / Replace and their shortcuts.                          |
+| `accessibilityPane`  | The accessibility checker panel, Review > Check Accessibility and Help > Accessibility checker. |
+| `comparePane`        | The Compare panel and Review > Compare.                                                         |
 
 ### Features (`disabledFeatures`)
 
-| Id              | What it switches off                                                                    |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `ai`            | The AI assistant: toolbar toggle, chat panel, AI context-menu entries, AI Options page. |
-| `collaboration` | Real-time collaboration: Share and Broadcast buttons, dialogs and File pages.           |
-| `comments`      | Commenting: the Add Comment context-menu entry.                                         |
-| `presentMode`   | Slide-show entry points: the Slide Show ribbon tab.                                     |
-| `editPoints`    | Edit Points: the Edit Points context-menu entry and the point-editing mode it opens.    |
+| Id              | What it switches off                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `ai`            | The AI assistant: toolbar toggle, chat panel, AI context-menu entries, AI Options page.      |
+| `collaboration` | Real-time collaboration: Share and Broadcast buttons, dialogs and File pages.                |
+| `comments`      | Commenting: the Add Comment context-menu entry and the Comments groups of Insert and Review. |
+| `presentMode`   | Slide-show entry points: the Slide Show ribbon tab.                                          |
+| `editPoints`    | Edit Points: the Edit Points context-menu entry and the point-editing mode it opens.         |
 
 ### Dialogs (`hiddenDialogs`)
 
-| Id          | What it removes                                                            |
-| ----------- | -------------------------------------------------------------------------- |
-| `options`   | File > Options (the Settings dialog) and the File tab entry that opens it. |
-| `share`     | The Share dialog, its toolbar button, File > Share page and card.          |
-| `broadcast` | The Broadcast dialog and its button.                                       |
-| `print`     | The Print dialog, File > Print page and card.                              |
-| `export`    | File > Export page, its cards and the Export button.                       |
+| Id                   | What it removes                                                                   |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `options`            | File > Options (the Settings dialog) and the File tab entry that opens it.        |
+| `share`              | The Share dialog, its toolbar button, File > Share page and card.                 |
+| `broadcast`          | The Broadcast dialog and its button.                                              |
+| `print`              | The Print dialog, File > Print page and card.                                     |
+| `export`             | File > Export page, its cards and the Export button.                              |
+| `hyperlink`          | The Insert Hyperlink dialog: Insert > Link, the Link menu entry and its shortcut. |
+| `equation`           | The Equation editor and Insert > Equation.                                        |
+| `pasteSpecial`       | The Paste Special dialog and its shortcut.                                        |
+| `slideTemplates`     | The slide template gallery and its entry at the end of the Home > New Slide menu. |
+| `passwordProtection` | The password protection dialog and the File > Info Protect card.                  |
+| `signatures`         | The digital signatures dialog and the File > Info Signatures card.                |
 
 ### Export formats (`hiddenExportFormats`)
 
@@ -1195,6 +1587,43 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `gif`       | Export the deck as an animated GIF.                  |
 | `json`      | Export the parsed deck as JSON.                      |
 | `copyImage` | Copy the current slide to the clipboard as an image. |
+
+### Capabilities (`capabilities`)
+
+| Id        | What `false` removes                                                                |
+| --------- | ----------------------------------------------------------------------------------- |
+| `edit`    | Editing. `false` opens the deck read-only whatever the edit prop says.              |
+| `export`  | Exporting: the same as hiding the `export` dialog.                                  |
+| `print`   | Printing: the same as hiding the `print` dialog.                                    |
+| `share`   | Sharing: hides the `share` and `broadcast` dialogs.                                 |
+| `copy`    | Copying content out: Copy, Cut, Save as Picture, their shortcuts and Copy as image. |
+| `present` | Presenting: the same as disabling the `presentMode` feature.                        |
+| `comment` | Commenting: the same as disabling the `comments` feature.                           |
+
+### Replaceable regions (`regions`)
+
+| Id                  | Region                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `inspector`         | The right-hand inspector column (the pane, not its open/close state).                                  |
+| `slidesPane`        | The slide thumbnail rail on the left.                                                                  |
+| `notes`             | The speaker-notes panel under the canvas.                                                              |
+| `statusBar`         | The status bar under the canvas.                                                                       |
+| `dialog.options`    | The body of File > Options (the Settings dialog). Context adds `options`, `setOption`, `resetOptions`. |
+| `dialog.share`      | The body of the Share dialog.                                                                          |
+| `dialog.broadcast`  | The body of the Broadcast dialog.                                                                      |
+| `dialog.print`      | The body of the Print dialog.                                                                          |
+| `backstage.home`    | The body of File > Home.                                                                               |
+| `backstage.new`     | The body of File > New.                                                                                |
+| `backstage.open`    | The body of File > Open.                                                                               |
+| `backstage.info`    | The body of File > Info.                                                                               |
+| `backstage.save`    | The body of File > Save.                                                                               |
+| `backstage.saveAs`  | The body of File > Save As.                                                                            |
+| `backstage.print`   | The body of File > Print.                                                                              |
+| `backstage.share`   | The body of File > Share.                                                                              |
+| `backstage.export`  | The body of File > Export.                                                                             |
+| `backstage.close`   | The body of File > Close.                                                                              |
+| `backstage.account` | The body of File > Account.                                                                            |
+| `backstage.options` | The body of File > Options.                                                                            |
 
 ### Drawing tools (`hiddenDrawingTools`)
 

@@ -60,7 +60,7 @@ describe('shared Slides group', () => {
 		const editor = makeEditor();
 		const target = render(SlidesGroup, { editor, onnavigate: () => undefined });
 		expect(target.querySelectorAll('[data-ribbon-group="home.slides"]')).toHaveLength(1);
-		for (const id of ['newSlide', 'slideTemplates', 'layout', 'reset', 'section']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(target.querySelectorAll(`[data-ribbon-control="home.slides.${id}"]`)).toHaveLength(1);
 		}
 		expect(buttonOf(target, 'home.slides.newSlide').disabled).toBeFalsy();
@@ -72,7 +72,7 @@ describe('shared Slides group', () => {
 		const editor = makeEditor();
 		editor.editable = false;
 		const target = render(SlidesGroup, { editor, onnavigate: () => undefined });
-		for (const id of ['newSlide', 'slideTemplates', 'layout', 'reset', 'section']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(buttonOf(target, `home.slides.${id}`).disabled).toBeTruthy();
 		}
 	});

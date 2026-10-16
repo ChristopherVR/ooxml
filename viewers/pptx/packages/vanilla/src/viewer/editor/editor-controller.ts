@@ -2,6 +2,7 @@ import {
 	armEditorKeyboard,
 	cycleSelectableElement,
 	downloadBlob,
+	isDialogAvailable,
 	mapCustomizedEditorKey,
 	mapInlineTextFormatKey,
 	moveGuide,
@@ -36,7 +37,9 @@ import type { ViewerChrome } from '../ui';
 import { rasterizePastedElementAsPicture } from '../ui/context-menu-format-actions';
 import { openHyperlinkEditDialog } from '../ui/hyperlink-edit-dialog';
 import { openPasteSpecialDialog } from '../ui/paste-special-dialog';
+import type { RegionSet } from '../ui/region-set';
 import { syncAlignmentGuides } from './alignment-guide-view';
+import { createChartFormatPaneHost } from './chart-format-pane-host';
 import { createChartQuickActionsOverlay } from './chart-quick-actions-overlay';
 import type { ChartQuickActionsOverlay } from './chart-quick-actions-overlay';
 import { createConnectorEndpointOverlay } from './connector-endpoint-overlay';
@@ -73,6 +76,8 @@ export interface EditorControllerDeps {
 	store: Store<ViewerState>;
 	getChrome(): ViewerChrome;
 	getTranslator(): Translator;
+	/** The viewer's dialog regions: the editor's dialogs close with the viewer. */
+	getDialogRegions?(): RegionSet;
 	getScale(): number;
 	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	getHandler(): PptxHandler | null;
@@ -223,6 +228,10 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 
 	/** Ctrl+K: open the hyperlink dialog for the currently selected element. */
 	const openHyperlinkForSelection = (): void => {
+		const customization = deps.getCustomization?.();
+		if (customization && !isDialogAvailable(customization, 'hyperlink')) {
+			return;
+		}
 		const state = store.get();
 		const element = state.selectedElementId
 			? findActiveElement(state, state.selectedElementId)
@@ -230,8 +239,12 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		if (!element) {
 			return;
 		}
-		openHyperlinkEditDialog(doc, deps.getTranslator(), element, (patch) =>
-			applyElementPatch(element.id, patch),
+		openHyperlinkEditDialog(
+			doc,
+			deps.getTranslator(),
+			element,
+			(patch) => applyElementPatch(element.id, patch),
+			deps.getDialogRegions?.(),
 		);
 	};
 
@@ -352,6 +365,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		selectedElement: (state) => ops.selectedElement(state),
 		layoutPreviews: ensureLayoutPreviews,
 		getHandler: deps.getHandler,
+		getHeldDeckStyle: () => editActions.heldDeckStyleState(),
 	});
 
 	const interactions = createStageInteractions({
@@ -419,10 +433,20 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		actions: editActions,
 	});
 
+	// The shared chart Format task pane, docked in the editor body.
+	const chartFormatPane = createChartFormatPaneHost({
+		doc,
+		store,
+		getTranslator: deps.getTranslator,
+		actions: editActions,
+		selectedElement: (state) => ops.selectedElement(state),
+	});
+
 	const syncOverlay = (): void => {
 		// The format toolbar + inspector track selection even before the overlay
 		// layer is mounted, so refresh them regardless of the overlay guard.
 		syncEditingChrome();
+		chartFormatPane.sync();
 		motionPath.sync();
 		outlineAuthoring.sync();
 		cropMode.sync();
@@ -549,7 +573,11 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			}
 		},
 		onPasteSpecial: () => {
-			if (!store.get().clipboardPayload) {
+			const customization = deps.getCustomization?.();
+			if (
+				!store.get().clipboardPayload ||
+				(customization && !isDialogAvailable(customization, 'pasteSpecial'))
+			) {
 				return;
 			}
 			openPasteSpecialDialog(doc, deps.getTranslator(), {
@@ -573,6 +601,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 						});
 					});
 				},
+				regions: deps.getDialogRegions?.(),
 			});
 		},
 	});
@@ -611,6 +640,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		motionPath.detach();
 		outlineAuthoring.detach();
 		cropMode.detach();
+		chartFormatPane.detach();
 	};
 
 	// -- Store subscription: keep selection/overlay/toolbar consistent -------------
@@ -695,6 +725,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			attachedWrap = chrome.stageWrap;
 			attachedRoot = chrome.root;
 			cropMode.attach(attachedRoot);
+			chartFormatPane.attach(attachedRoot);
 			detachImagePaste = attachCanvasImagePaste(attachedRoot, attachedWrap, {
 				store,
 				getHandler: deps.getHandler,

@@ -46,7 +46,7 @@ export const INSPECTOR_FORMAT_CSS = `
 .pptxv-text3d-color { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
 /* ── Chart data grid ─────────────────────────────────────────────────── */
-.pptxv-chart-grid { display: grid; gap: 4px; margin: 6px 0; }
+.pptxv-chart-grid { display: grid; gap: 4px; margin: 6px 0; max-width: 100%; overflow-x: auto; }
 .pptxv-chart-grid[hidden] { display: none; }
 .pptxv-chart-grid-toolbar { display: flex; justify-content: flex-end; gap: 4px; }
 .pptxv-chart-grid-btn {

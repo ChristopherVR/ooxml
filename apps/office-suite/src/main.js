@@ -1,6 +1,9 @@
 import { SuiteDocumentStore } from 'ooxml-ui/suite';
 import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
+import { showVersions, withVersions } from './versions.js';
+import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
+import { mountTabOrder } from './tabs.js';
 import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
@@ -17,13 +20,20 @@ import { mountShell } from './shell.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 
-const store = new SuiteDocumentStore(documentDatabase());
+// Every write keeps the bytes it replaces as a version, unless the AI policy turns history off.
+const store = withVersions(
+	new SuiteDocumentStore(documentDatabase()),
+	() => currentPolicy().features.versions,
+);
 let files = [],
 	active = null,
 	view = 'home',
 	filter = '',
 	teams,
-	teamsTabOpen = false;
+	teamsTabOpen = false,
+	chatTabOpen = false,
+	chatPage,
+	assistant;
 const origins = new Map();
 let disk;
 const sessions = new SuiteSessions(store, $('editors'), renderTabs, (command, id) =>
@@ -68,8 +78,11 @@ function chooseBlank() {
 let applyShell = () => {};
 function renderTabs() {
 	document.body.dataset.view = view;
-	$('tabs').hidden = !teamsTabOpen && !sessions.sessions.size;
+	$('tabs').hidden = !teamsTabOpen && !chatTabOpen && !sessions.sessions.size;
 	$('tabs').innerHTML =
+		(chatTabOpen
+			? `<button role="tab" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
+			: '') +
 		`<button role="tab" aria-selected="${view === 'home'}" data-home>Home</button>` +
 		(teamsTabOpen
 			? `<button role="tab" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
@@ -77,14 +90,20 @@ function renderTabs() {
 		[...sessions.sessions.values()]
 			.map(
 				(s) =>
-					`<span class="file-tab"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
+					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
 	$('save-state').textContent =
 		active && sessions.isDirty(active) ? 'Unsaved changes' : 'Saved to this device';
-	for (const s of sessions.sessions.values())
-		s.node.hidden = view !== 'editor' || s.doc.id !== active;
+	for (const s of sessions.sessions.values()) {
+		const hide = view !== 'editor' || s.doc.id !== active;
+		// A hidden editor must not keep a full-screen layer (a Visio presentation) over the next tab.
+		if (hide && !s.node.hidden && s.node.contains(document.fullscreenElement))
+			void document.exitFullscreen?.().catch(() => {});
+		s.node.hidden = hide;
+	}
 	$('home').hidden = view !== 'home';
+	$('chat').hidden = view !== 'chat';
 	$('teams-host').hidden = view !== 'teams';
 	$('editor-area').hidden = view !== 'editor';
 	$('back-teams').hidden = !origins.has(active);
@@ -92,9 +111,11 @@ function renderTabs() {
 	document.title =
 		active && view === 'editor'
 			? `${sessions.sessions.get(active)?.doc.name ?? 'Document'} - OOXML Office`
-			: product
-				? `OOXML ${apps.find((a) => a.id === product)?.name ?? 'Teams'}`
-				: 'OOXML Office';
+			: view === 'chat'
+				? 'Chat - OOXML Office'
+				: product
+					? `OOXML ${apps.find((a) => a.id === product)?.name ?? 'Teams'}`
+					: 'OOXML Office';
 	for (const button of $('rail').querySelectorAll('button'))
 		button.setAttribute(
 			'aria-current',
@@ -126,6 +147,65 @@ async function open(id, origin) {
 				: 'Ready',
 	);
 	history.replaceState(null, '', `#/file/${id}`);
+}
+/** What the chat page and the assistant pane need from the shell. */
+const aiDeps = {
+	store,
+	sessions,
+	refresh,
+	open,
+	getTeams: () => teams,
+	openIds: () => [...sessions.sessions.keys()],
+	showVersions: (id) => task(() => showVersions({ id, store, sessions, refresh })),
+};
+/** The chat page; `id` reopens a conversation from the history, `room` joins a shared chat. */
+async function showChat(id, room) {
+	if (!assistantEnabled()) return goHome();
+	chatTabOpen = true;
+	view = 'chat';
+	renderTabs();
+	if (!chatPage) {
+		const { mountChatPage } = await import('./ai/chat-page.js');
+		chatPage = mountChatPage({
+			host: $('chat'),
+			deps: aiDeps,
+			onRoute: (conversation) => {
+				if (view === 'chat')
+					history.replaceState(null, '', conversation ? `#/chat/${conversation}` : '#/chat');
+			},
+		});
+	}
+	if (room) await chatPage.join(room);
+	else await chatPage.show(id);
+	history.replaceState(null, '', chatPage.id ? `#/chat/${chatPage.id}` : '#/chat');
+}
+const chatRoute = () => /^#\/chat(?:\/([\w-]{1,100}))?$/u.exec(location.hash);
+const joinRoute = () => /^#\/chat\/join\/(aichat-[0-9a-f]{32})$/u.exec(location.hash)?.[1];
+function goHome() {
+	active = null;
+	view = 'home';
+	filter = '';
+	renderTabs();
+	renderFiles();
+	history.replaceState(null, '', '#/');
+}
+async function showAssistant(show = true) {
+	if (!assistant) {
+		const { mountAssistant } = await import('./assistant.js');
+		assistant = mountAssistant({
+			deps: aiDeps,
+			getActive: () => (view === 'editor' ? active : null),
+			openChat: (id) =>
+				task(async () => {
+					await showAssistant(false);
+					await showChat(id ?? undefined);
+				}),
+		});
+	}
+	$('ai-close').onclick = () => task(() => showAssistant(false));
+	$('assistant').hidden = !show;
+	$('assistant-toggle').setAttribute('aria-expanded', String(show));
+	if (show) await assistant.opened();
 }
 async function showTeams() {
 	teamsTabOpen = true;
@@ -220,7 +300,7 @@ async function share() {
 }
 
 $('rail').innerHTML =
-	`<span class="nav-caption">Workspace</span><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
+	`<span class="nav-caption">Workspace</span><button class="ai-only" data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
 	apps
 		.map(
 			(a) =>
@@ -254,6 +334,7 @@ document.addEventListener('click', (event) => {
 		renderFiles();
 		history.replaceState(null, '', '#/');
 	}
+	if (b.hasAttribute('data-chat')) task(() => showChat());
 	if (b.hasAttribute('data-import')) $('file-input').click();
 	if (b.hasAttribute('data-teams')) task(showTeams);
 	if (b.dataset.app) {
@@ -305,6 +386,7 @@ $('save').onclick = () =>
 	});
 $('download').onclick = () => task(async () => download(await sessions.save(active)));
 $('embedded').onclick = () => task(embeddings);
+$('versions').onclick = () => aiDeps.showVersions(active);
 $('share').onclick = () => task(share);
 $('back-teams').onclick = () =>
 	task(async () => {
@@ -338,17 +420,18 @@ $('rename').onclick = () =>
 		choose('Rename file', content);
 	});
 $('dialog-close').onclick = () => $('dialog').close();
-let assistantReady = false;
-$('assistant-toggle').onclick = () =>
+$('assistant-toggle').onclick = () => task(() => showAssistant($('assistant').hidden));
+$('ask-ai').onclick = () => task(() => showAssistant(true));
+$('home-ask').onsubmit = (event) => {
+	event.preventDefault();
+	const prompt = $('home-ask-input').value.trim();
+	if (!prompt) return;
+	$('home-ask-input').value = '';
 	task(async () => {
-		if (!assistantReady) {
-			const { mountAssistant } = await import('./assistant.js');
-			mountAssistant({ store, sessions, refresh, getActive: () => active, getTeams: () => teams });
-			assistantReady = true;
-		}
-		$('assistant').hidden = !$('assistant').hidden;
-		$('assistant-toggle').setAttribute('aria-expanded', String(!$('assistant').hidden));
+		await showChat();
+		chatPage.ask(prompt);
 	});
+};
 window.addEventListener('beforeunload', (event) => {
 	if ([...sessions.sessions.keys()].some((id) => sessions.isDirty(id))) {
 		event.preventDefault();
@@ -395,13 +478,15 @@ mountProfile({
 	changed: () => renderFiles(),
 });
 $('app-launcher').innerHTML =
-	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid">${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
+	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid"><button class="ai-only" data-chat><span class="app-badge chat-badge">${icon('spark')}</span><span>Chat</span></button>${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
 $('app-launcher').addEventListener('click', (event) => {
 	if (event.target.closest('button')) $('app-launcher').hidePopover();
 });
 $('launcher-toggle').innerHTML = icon('grid');
 $('theme-picker').innerHTML = icon('settings');
 $('assistant-toggle').innerHTML = `${icon('spark')}<span>Assistant</span>`;
+$('ask-ai').innerHTML = `${icon('spark')}<span>Ask AI</span>`;
+$('home-ask-symbol').innerHTML = icon('spark');
 $('search-symbol').innerHTML = icon('search');
 $('mobile-search-toggle').innerHTML = icon('search');
 $('mobile-search-toggle').onclick = () => {
@@ -418,17 +503,16 @@ window.addEventListener('hashchange', () =>
 			await showAttachment(localAttachmentId(location.href));
 		else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 			await showTeams();
-		else {
-			active = null;
-			view = 'home';
-			filter = '';
-			renderTabs();
-			renderFiles();
-		}
+		else if (joinRoute()) await showChat(undefined, joinRoute());
+		else if (assistantEnabled() && (chatRoute() || (!product && !location.hash)))
+			await showChat(chatRoute()?.[1]);
+		else goHome();
 	}),
 );
+mountTabOrder({ strip: $('tabs'), sessions });
 $('tabs').addEventListener('keydown', (event) => {
 	if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+	if (event.ctrlKey || event.metaKey || event.altKey) return;
 	const tabs = [...$('tabs').querySelectorAll('[role=tab]')];
 	const index = tabs.indexOf(document.activeElement);
 	if (index < 0) return;
@@ -444,11 +528,19 @@ $('tabs').addEventListener('keydown', (event) => {
 });
 task(async () => {
 	await refresh();
+	// The assistant is off unless the deployment configures it (ai/policy.js).
+	await loadPolicy();
+	document.body.dataset.ai = assistantEnabled() ? 'on' : 'off';
 	const id = localDocumentId(location.href);
 	if (id) await open(id);
 	else if (localAttachmentId(location.href)) await showAttachment(localAttachmentId(location.href));
 	else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 		await showTeams();
+	else if (joinRoute()) await showChat(undefined, joinRoute());
+	// With the assistant on, the suite opens on chat; a product's own app opens on its files.
+	else if (assistantEnabled() && (chatRoute() || (!product && !location.hash)))
+		await showChat(chatRoute()?.[1]);
+	else if (chatRoute()) goHome();
 });
 
 for (const eventName of ['pointerover', 'focusin'])

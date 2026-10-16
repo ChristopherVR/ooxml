@@ -1,6 +1,9 @@
 import { PptxXmlBuilder } from './builders/fluent';
 import { createDefaultPptxHandlerRuntime } from './core';
 import type {
+	BackgroundStyleApplication,
+	BackgroundStyleScope,
+	StyleReferenceReResolution,
 	IPptxHandlerRuntime,
 	IPptxHandlerRuntimeFactory,
 	PptxHandlerLoadOptions,
@@ -19,7 +22,9 @@ import type {
 	PptxSmartArtData,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 	PptxThemePreset,
+	PptxThemeVariant,
 	ResolvedStyleMatrix,
 	XmlObject,
 } from './types';
@@ -289,8 +294,75 @@ export class PptxHandlerCore {
 	 * shape and it renders like PowerPoint's Shape Styles entry and saves as a
 	 * bare `<p:style>` with an empty `spPr`, which is what PowerPoint writes.
 	 */
-	public resolveStyleMatrixReferences(styleXml: XmlObject): ResolvedStyleMatrix {
-		return this.runtime.resolveStyleMatrixReferences(styleXml);
+	public resolveStyleMatrixReferences(
+		styleXml: XmlObject,
+		effectSchemeId?: string,
+	): ResolvedStyleMatrix {
+		return this.runtime.resolveStyleMatrixReferences(styleXml, effectSchemeId);
+	}
+
+	/**
+	 * Design > Variants > Effects: write a built-in effect scheme (the theme's `a:fmtScheme`) into
+	 * every theme part. Follow it with {@link reResolveThemeStyleReferences} to redraw the shapes.
+	 */
+	public async applyThemeEffectScheme(id: string): Promise<PptxThemeFormatScheme | undefined> {
+		return this.runtime.applyThemeEffectScheme(id);
+	}
+
+	/** Write an `a:fmtScheme` element (a real theme variant's) into the theme parts. */
+	public async applyThemeFormatSchemeXml(
+		fmtSchemeXml: string,
+	): Promise<PptxThemeFormatScheme | undefined> {
+		return this.runtime.applyThemeFormatSchemeXml(fmtSchemeXml);
+	}
+
+	/** The real theme variants the loaded package carries (`themeVariants/` parts), or none. */
+	public getThemeVariants(): PptxThemeVariant[] {
+		return this.runtime.getThemeVariants();
+	}
+
+	/** The format scheme the deck's primary theme carries now. */
+	public getThemeFormatScheme(): PptxThemeFormatScheme | undefined {
+		return this.runtime.getThemeFormatScheme();
+	}
+
+	/**
+	 * Resolve every shape's `p:style` references again. With `effectSchemeId` the result is a
+	 * preview against that built-in scheme; without it, the scheme now in force.
+	 */
+	public reResolveThemeStyleReferences(
+		slides: readonly PptxSlide[],
+		templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		effectSchemeId?: string,
+	): StyleReferenceReResolution {
+		return this.runtime.reResolveThemeStyleReferences(
+			slides,
+			templateElementsBySlideId,
+			effectSchemeId,
+		);
+	}
+
+	/**
+	 * Design > Background Styles: apply preset `index` (1 to 12) to the slides in `scope`. Does not
+	 * change the handler (a preview); {@link commitMasterBackgroundStyle} saves a deck-wide pick.
+	 */
+	public applyBackgroundStyleToSlides(
+		slides: readonly PptxSlide[],
+		templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		index: number,
+		scope: BackgroundStyleScope,
+	): BackgroundStyleApplication | undefined {
+		return this.runtime.applyBackgroundStyleToSlides(
+			slides,
+			templateElementsBySlideId,
+			index,
+			scope,
+		);
+	}
+
+	/** Write background style `index` onto every slide master so a deck-wide pick is saved. */
+	public async commitMasterBackgroundStyle(index: number): Promise<boolean> {
+		return this.runtime.commitMasterBackgroundStyle(index);
 	}
 
 	/**

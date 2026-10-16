@@ -184,6 +184,13 @@ export interface ViewerCoreState extends InlineEditingState, EditPointsModeState
 	setRecentColors: React.Dispatch<React.SetStateAction<string[]>>;
 	/** The currently active theme applied to the presentation. */
 	theme: PptxTheme | undefined;
+	/**
+	 * The real slides and template elements while a Design gallery hover preview shows over them.
+	 * Save, autosave and recovery snapshots serialize these, never the previewed look.
+	 */
+	deckStyleHeldRef: React.MutableRefObject<
+		{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+	>;
 	setTheme: React.Dispatch<React.SetStateAction<PptxTheme | undefined>>;
 	/** Parsed table style definitions from `ppt/tableStyles.xml`. */
 	tableStyleMap: ParsedTableStyleMap | undefined;

@@ -120,28 +120,36 @@ describe('slideTemplateGalleryDialog', () => {
 describe('slidesGroup template affordance', () => {
 	const base = {
 		canEdit: true,
-		layoutOptions: [],
+		layoutOptions: [{ path: 'ppt/slideLayouts/slideLayout1.xml', name: 'Title Slide' }],
 		onInsertSlideFromLayout: (): void => {},
 	};
 
-	function templatesButton(): HTMLButtonElement | undefined {
-		return Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
-			(b) => b.getAttribute('title') === 'Slide Templates',
+	/** PowerPoint has no Slide Templates button on Home: it ends the New Slide menu. */
+	function templatesEntry(): HTMLButtonElement | undefined {
+		document.body
+			.querySelector<HTMLElement>(
+				'[data-ribbon-control="home.slides.newSlide"] [data-pptx-chrome="split-caret"]',
+			)
+			?.click();
+		return (
+			document.body.querySelector<HTMLButtonElement>(
+				'.popup [data-ribbon-control="home.slides.slideTemplates"]',
+			) ?? undefined
 		);
 	}
 
-	it('shows the Slide Templates button and routes inserts to the handler', async () => {
+	it('lists Slide Templates in the New Slide menu and routes inserts to the handler', async () => {
 		const onInsertSlideFromTemplate = vi.fn<(templateId: SlideTemplateId) => void>();
 		const wrapper = mount(SlidesGroup, {
 			props: { ...base, onInsertSlideFromTemplate },
 			attachTo: document.body,
 		});
 
-		const button = templatesButton();
-		expect(button).toBeTruthy();
-		expect(button?.textContent).toContain('Slide Templates');
+		const entry = templatesEntry();
+		expect(entry).toBeTruthy();
+		expect(entry?.textContent).toContain('Slide Templates');
 
-		button?.click();
+		entry?.click();
 		await wrapper.vm.$nextTick();
 		expect(dialogEl().getAttribute('aria-label')).toBe('Slide Templates');
 
@@ -154,9 +162,8 @@ describe('slidesGroup template affordance', () => {
 		expect(document.body.querySelector('[role="dialog"]:not([hidden])')).toBeNull();
 	});
 
-	it('hides the button when no template handler is provided', () => {
+	it('leaves the entry out when no template handler is provided', () => {
 		mount(SlidesGroup, { props: { ...base }, attachTo: document.body });
-		// The shared strip keeps the control in the DOM but hidden.
-		expect(templatesButton()?.hidden).toBeTruthy();
+		expect(templatesEntry()).toBeUndefined();
 	});
 });

@@ -18,7 +18,16 @@ export type GalleryTranslate = (
 	key: string,
 	params?: Readonly<Record<string, string | number>>,
 ) => string;
-export type RibbonGalleryPickEvent = CustomEvent<{ gallery: string; itemId: string }>;
+export type RibbonGalleryPickEvent = CustomEvent<{
+	gallery: string;
+	itemId: string;
+	/** The context menu entry chosen on the tile (Background Styles: `all` or `selected`). */
+	action?: string;
+}>;
+/** A previewable gallery's tile is hovered or keyboard-focused (`gallery-preview`). */
+export type RibbonGalleryPreviewEvent = CustomEvent<{ gallery: string; itemId: string }>;
+/** The preview stopped (`gallery-preview-end`): leave, close or pick. */
+export type RibbonGalleryPreviewEndEvent = CustomEvent<{ gallery: string }>;
 export interface PptxUiRibbonGalleryElement extends HTMLElement {
 	readonly trigger: HTMLButtonElement;
 	readonly popup: HTMLElement;
@@ -52,6 +61,12 @@ export function officeGalleryState(
 		label: galleryItemLabel(entry, t),
 		applied: entry.applied,
 		preview: entry.previewSvg,
+		...(entry.actions && {
+			actions: entry.actions.map((action) => ({
+				id: action.id,
+				label: caption(t, action.labelKey, action.label),
+			})),
+		}),
 	});
 	const command = descriptor.command;
 	if (command) {
@@ -77,6 +92,11 @@ export function officeGalleryState(
 			items: section.items.map(item),
 		})),
 		inline: inlineGalleryItems(descriptor).map(item),
+		preview: descriptor.previewable === true,
+		footer: descriptor.footer?.map((action) => ({
+			id: action.id,
+			label: caption(t, action.labelKey, action.label),
+		})),
 	};
 }
 
@@ -104,6 +124,8 @@ export function definePptxRibbonGallery(registry: CustomElementRegistry): void {
 	const setShared = Object.getOwnPropertyDescriptor(Base.prototype, 'state')!.set!;
 	class PptxRibbonGallery extends Base {
 		static pickEvent = 'gallery-pick';
+		static previewEvent = 'gallery-preview';
+		static previewEndEvent = 'gallery-preview-end';
 		static triggerAttribute = 'data-ribbon-gallery';
 		static popupAttribute = 'data-ribbon-gallery-popup';
 		static itemAttribute = 'data-gallery-item';

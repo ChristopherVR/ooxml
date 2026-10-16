@@ -107,6 +107,8 @@ describe('Activity in <teams-app>', () => {
 		mentionsOnly.dispatchEvent(new Event('change'));
 		await tick(50);
 		expect(ada.client!.getState().notificationSettings.level).toBe('mentions');
-		expect(settings.shadowRoot!.textContent).not.toContain('not available yet');
+		expect(settings.shadowRoot!.querySelector('#panel-notifications')!.textContent).not.toContain(
+			'not available yet',
+		);
 	});
 });

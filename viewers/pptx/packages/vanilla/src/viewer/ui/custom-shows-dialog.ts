@@ -5,6 +5,7 @@ import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { createInspectorCheckbox, createInspectorSelect } from './inspector/controls-extra';
 import { createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 export interface CustomShowsDialogOptions {
 	shows: readonly PptxCustomShow[];
@@ -16,6 +17,8 @@ export interface CustomShowsDialogOptions {
 	onSetActive(id: string | null): void;
 	/** Start the show, already restricted to `show`. */
 	onRun(show: PptxCustomShow): void;
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet;
 }
 
 /**
@@ -35,7 +38,12 @@ export function openCustomShowsDialog(
 	options: CustomShowsDialogOptions,
 ): void {
 	const { shows, slides, onSave, onSetActive, onRun } = options;
-	const shell = createParityDialogShell(doc, t, t('pptx.customShows.title'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.customShows.title'),
+		options.regions && { regions: options.regions },
+	);
 	let draft = structuredClone(shows) as PptxCustomShow[];
 	let activeShowId = options.activeShowId;
 

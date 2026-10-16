@@ -256,33 +256,59 @@ test.describe('Home', () => {
 });
 
 test.describe('Insert', () => {
+	// Wide enough for all twelve groups to stay expanded.
+	test.use({ viewport: { width: 2800, height: 900 } });
 	const GROUPS = [
+		['insert.slides', 'Slides'],
 		['insert.tables', 'Tables'],
 		['insert.images', 'Images'],
+		['insert.camera', 'Camera'],
 		['insert.illustrations', 'Illustrations'],
+		['insert.forms', 'Forms'],
+		['insert.addIns', 'Add-ins'],
 		['insert.links', 'Links'],
+		['insert.comments', 'Comments'],
 		['insert.text', 'Text'],
 		['insert.symbols', 'Symbols'],
 		['insert.media', 'Media'],
 	];
+	/** Split buttons: the face is 50px, the chevron sits below it. */
+	const SPLIT = ['insert.slides.newSlide', 'insert.symbols.equation'];
 	const LARGE = [
+		'insert.slides.reuseSlides',
 		'insert.tables.table',
 		'insert.images.pictures',
+		'insert.images.screenshot',
+		'insert.images.photoAlbum',
+		'insert.camera.cameo',
 		'insert.illustrations.shapes',
+		'insert.illustrations.icons',
+		'insert.illustrations.threeDModels',
 		'insert.illustrations.smartArt',
 		'insert.illustrations.chart',
+		'insert.forms.forms',
+		'insert.addIns.getAddIns',
+		'insert.addIns.myAddIns',
+		'insert.links.zoom',
 		'insert.links.link',
 		'insert.links.action',
+		'insert.comments.comment',
 		'insert.text.textBox',
-		'insert.text.field',
-		'insert.symbols.equation',
+		'insert.text.headerFooter',
+		'insert.text.wordArt',
+		'insert.symbols.symbol',
 		'insert.media.media',
+		'insert.media.audio',
+		'insert.media.screenRecording',
 	];
+	const SMALL = ['insert.text.dateTime', 'insert.text.slideNumber', 'insert.text.object'];
 
-	test('groups follow Office order and every command is a large tile', async ({ page }) => {
+	test('groups follow Office order, with large tiles and a stack of small rows', async ({
+		page,
+	}) => {
 		await loadDeck(page);
 		await ribbonTab(page, 'Insert').click();
-		const { groups, controls } = await probe(page, 'insert.', LARGE);
+		const { groups, controls } = await probe(page, 'insert.', [...SPLIT, ...LARGE, ...SMALL]);
 		expect(groups.map((group) => group.id)).toStrictEqual(GROUPS.map(([id]) => id));
 		expect(groups.map((group) => group.caption)).toStrictEqual(
 			GROUPS.map(([, caption]) => caption),
@@ -291,9 +317,21 @@ test.describe('Insert', () => {
 		for (const id of LARGE) {
 			expectLarge(controls[id], id);
 		}
-		// Left to right: Table, Images, Illustrations, Links, Text, Symbols, Media.
-		const xs = LARGE.map((id) => controls[id]!.x);
+		for (const id of SPLIT) {
+			expectLarge(controls[id], id, 46);
+		}
+		for (const id of SMALL) {
+			expectSmall(controls[id], id);
+		}
+		// Left to right, in PowerPoint's order.
+		const order = [SPLIT[0]!, ...LARGE.slice(0, 21), SPLIT[1]!, ...LARGE.slice(21)];
+		const xs = order.map((id) => controls[id]!.x);
 		expect(xs).toStrictEqual([...xs].sort((a, b) => a - b));
+		// The three small rows stack in one column.
+		const column = SMALL.map((id) => controls[id]!);
+		expect(column[0]!.x).toBe(column[1]!.x);
+		expect(column[1]!.y).toBeGreaterThan(column[0]!.y);
+		expect(column[2]!.y).toBeGreaterThan(column[1]!.y);
 	});
 
 	test('Shapes and Chart open a gallery under a chevron, as Office does', async ({ page }) => {
@@ -310,6 +348,38 @@ test.describe('Insert', () => {
 		const box = await first.first().boundingBox();
 		expect(box!.width).toBeLessThanOrEqual(34);
 	});
+});
+
+test.describe('Insert at normal widths', () => {
+	for (const width of [1280, 1440]) {
+		test(`${width}px: the working groups stay visible, nothing overflows`, async ({ page }) => {
+			await page.setViewportSize({ width, height: 900 });
+			await loadDeck(page);
+			await ribbonTab(page, 'Insert').click();
+			await settle(page, 'insert.');
+			await page.waitForTimeout(600);
+			const state = await page.evaluate(() => {
+				const groups = [
+					...document.querySelectorAll<HTMLElement>('[data-ribbon-group^="insert."]'),
+				];
+				const row = groups[0]?.closest<HTMLElement>('[data-pptx-chrome="ribbon-content"]');
+				return {
+					overflow: row ? row.scrollWidth - row.clientWidth : -1,
+					collapsed: groups
+						.filter((g) => g.hasAttribute('data-collapsed'))
+						.map((g) => g.dataset.ribbonGroup),
+				};
+			});
+			expect(state.overflow, 'the row fits').toBeLessThanOrEqual(1);
+			// Only the groups with nothing runnable become popups; the working ones stay on the ribbon.
+			for (const id of ['insert.illustrations', 'insert.text', 'insert.symbols', 'insert.media']) {
+				expect(state.collapsed, id).not.toContain(id);
+			}
+			for (const name of ['Shapes', 'Chart', 'SmartArt', 'Text Box', 'Equation', 'Video']) {
+				await expect(page.getByRole('button', { name, exact: true }).first(), name).toBeVisible();
+			}
+		});
+	}
 });
 
 test.describe('Draw', () => {
@@ -350,18 +420,26 @@ test.describe('Design', () => {
 			'design.variants.fonts',
 			'design.customize.slideSize',
 			'design.customize.formatBackground',
+			'design.designer.designIdeas',
 		]);
 		expect(groups.map((group) => group.id)).toStrictEqual([
 			'design.themes',
 			'design.variants',
 			'design.customize',
+			'design.designer',
 		]);
-		expect(groups.map((group) => group.caption)).toStrictEqual(['Themes', 'Variants', 'Customize']);
+		expect(groups.map((group) => group.caption)).toStrictEqual([
+			'Themes',
+			'Variants',
+			'Customize',
+			'Designer',
+		]);
 		for (const id of [
 			'design.themes.browseThemes',
 			'design.themes.editTheme',
 			'design.customize.slideSize',
 			'design.customize.formatBackground',
+			'design.designer.designIdeas',
 		]) {
 			expectLarge(controls[id], id);
 		}

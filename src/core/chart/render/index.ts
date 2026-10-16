@@ -13,6 +13,11 @@ export {
 	type EvaluateRef,
 	type ValueAxisView,
 } from './chart-view';
+export type {
+	ChartErrorBarsView,
+	ChartStrokeView,
+	ChartTrendlineView,
+} from './chart-view-analysis';
 export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
 export { autoSeriesColor, chartColorScheme, modulateLuminance } from './chart-colors';
 export { THEME_SLOTS, DEFAULT_THEME_COLORS, themeColor } from './theme-palette';
