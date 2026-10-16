@@ -32,6 +32,7 @@ import {
 	input,
 	signal,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import {
 	computeChartLegendLayout,
 	resolveChartSvgDef,
@@ -339,7 +340,10 @@ export class ChartRendererComponent {
 	readonly svgDefs = computed(() => (this.vm().defs ?? []).map(resolveChartSvgDef));
 	readonly viewBox = computed(() => `0 0 ${this.vm().svgWidth} ${this.vm().svgHeight}`);
 	readonly swatchSize = LEGEND_SWATCH_SIZE;
-	readonly legendItems = computed(() => computeChartLegendLayout(this.vm()));
+	private readonly translate = inject(TranslateService);
+	readonly legendItems = computed(() =>
+		computeChartLegendLayout(this.vm(), (key) => this.translate.instant(key)),
+	);
 
 	legendTransform(item: { x: number; y: number }): string {
 		return `translate(${item.x.toFixed(1)},${item.y.toFixed(1)})`;

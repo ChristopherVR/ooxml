@@ -122,7 +122,9 @@ export const renderChartSvgElement: ElementRenderer = (element, zIndex, context)
 		};
 		container.querySelector('svg')?.remove();
 		container.appendChild(
-			renderChartViewModelSvg(doc, buildChartViewModel(themedElement), preserveAspectRatio),
+			renderChartViewModelSvg(doc, buildChartViewModel(themedElement), preserveAspectRatio, (key) =>
+				context.t(key),
+			),
 		);
 	};
 

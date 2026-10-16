@@ -93,8 +93,11 @@ export interface ChartLegendItem {
 }
 
 /** Legend layout: a horizontal row, or a vertical stack on the side. */
-export function buildLegendItems(vm: ChartViewModel): ChartLegendItem[] {
-	return computeChartLegendLayout(vm).map((item, i) => ({
+export function buildLegendItems(
+	vm: ChartViewModel,
+	translate?: (key: string) => string,
+): ChartLegendItem[] {
+	return computeChartLegendLayout(vm, translate).map((item, i) => ({
 		key: `lg${i}`,
 		transform: `translate(${item.x.toFixed(1)},${item.y.toFixed(1)})`,
 		color: item.color,

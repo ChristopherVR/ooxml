@@ -19,6 +19,7 @@ import React, {
 	useState,
 	useSyncExternalStore,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { renderChartElement } from '../../utils';
 import { formatAxisValue } from '../../utils/chart-helpers';
@@ -59,6 +60,7 @@ export function ChartElementView({
 	onUpdateElement,
 	animationState,
 }: ChartElementViewProps): React.ReactElement {
+	const { t } = useTranslation();
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const { selection, setSelection } = useChartPartSelection();
 	const [titleDraft, setTitleDraft] = useState<string | null>(null);
@@ -236,10 +238,10 @@ export function ChartElementView({
 					onSelect={chart3D.onSelect}
 					onDrag={chart3D.onDrag}
 				>
-					{renderChartElement(renderedElement)}
+					{renderChartElement(renderedElement, (key) => t(key))}
 				</ThreeView>
 			) : (
-				renderChartElement(renderedElement)
+				renderChartElement(renderedElement, (key) => t(key))
 			)}
 			{dragValue !== null && (
 				<div className='absolute top-1 right-1 z-10 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-white pointer-events-none'>

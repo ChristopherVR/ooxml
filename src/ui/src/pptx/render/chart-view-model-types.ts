@@ -113,7 +113,10 @@ export interface ChartValueDrag {
 
 export interface LegendEntry {
 	color: string;
+	/** English label; shown as is unless the renderer translates `labelKey`. */
 	label: string;
+	/** Dictionary key of a fixed (non-authored) label such as a waterfall's "Increase". */
+	labelKey?: string;
 	/** Per-entry text override from `c:legendEntry/c:txPr`, applied by `applyLegendEntryOverrides`. */
 	textStyle?: PptxChartLegendTextStyle;
 	/**

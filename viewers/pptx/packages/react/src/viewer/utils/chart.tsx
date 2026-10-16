@@ -30,7 +30,10 @@ import { buildReactChartViewModel, renderChartViewModel } from './chart-view-mod
  * binding reaches it through `<pptx-three-view>` when the host opts in with
  * `surfaceChart3D`.
  */
-export function renderChartElement(element: PptxElement): React.ReactNode {
+export function renderChartElement(
+	element: PptxElement,
+	translate?: (key: string) => string,
+): React.ReactNode {
 	if (element.type !== 'chart') {
 		return (
 			<div className='w-full h-full flex items-center justify-center text-[11px] text-white/80 pointer-events-none'>
@@ -53,5 +56,6 @@ export function renderChartElement(element: PptxElement): React.ReactNode {
 		element.id,
 		buildReactChartViewModel(element),
 		chartPreserveAspectRatio(kind),
+		translate,
 	);
 }

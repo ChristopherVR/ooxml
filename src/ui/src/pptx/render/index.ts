@@ -868,6 +868,7 @@ export * from './collaboration-departure';
 // Vue/Svelte/Vanilla (Angular keeps its own DI-style class).
 export * from './collaboration-writeback';
 export * from './slide-compare';
+export * from './slide-compare-text';
 // Morph (PowerPoint Morph transition)  -  pure element-matching, SVG-path /
 // colour interpolation, text tokenisation, and CSS keyframe generation. The
 // DOM injection of the generated keyframes stays in each binding.

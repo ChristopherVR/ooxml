@@ -2,6 +2,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import X from '@lucide/svelte/icons/x';
 	import type { CompareController } from '../compare/compare-controller.svelte';
+	import { describeElementChange } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const { compare, onclose }: { compare: CompareController; onclose: () => void } = $props();
@@ -13,7 +14,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 	<aside class="panel" role="dialog" tabindex="-1" aria-labelledby="compare-title"><header><div><h2 id="compare-title">{t('pptx.compare.title')}</h2><p>{t('pptx.compare.summary', { added: compare.result.addedCount, removed: compare.result.removedCount, changed: compare.result.changedCount })}</p></div><button type="button" aria-label={t('pptx.compare.close')} onclick={onclose}><X size={16} aria-hidden="true" /></button></header>
 	{#if diffs.length}<div class="actions"><button type="button" onclick={() => compare.acceptAll()}><Check size={14} aria-hidden="true" /> {t('pptx.compare.acceptAll')}</button></div>{/if}
-	<div class="list">{#if !diffs.length}<p class="empty">{t('pptx.compare.noDifferences')}</p>{:else}{#each diffs as diff}<article><div class="summary"><span class:added={diff.status === 'added'} class:removed={diff.status === 'removed'}>{t(`pptx.compare.status${diff.status[0].toUpperCase()}${diff.status.slice(1)}`)}</span><strong>{t('pptx.compare.slideNumber', { number: Math.max(diff.baseIndex, diff.compareIndex) + 1 })}</strong></div>{#if diff.changes.length}<ul>{#each diff.changes as change}<li>{change.description}</li>{/each}</ul>{/if}<footer><button class:chosen={compare.rejected.has(resultIndex(diff))} onclick={() => compare.reject(resultIndex(diff))}><X size={14} aria-hidden="true" /> {t('pptx.compare.reject')}</button><button class="accept" class:chosen={compare.accepted.has(resultIndex(diff))} onclick={() => compare.accept(resultIndex(diff))}><Check size={14} aria-hidden="true" /> {t('pptx.compare.accept')}</button></footer></article>{/each}{/if}</div>
+	<div class="list">{#if !diffs.length}<p class="empty">{t('pptx.compare.noDifferences')}</p>{:else}{#each diffs as diff}<article><div class="summary"><span class:added={diff.status === 'added'} class:removed={diff.status === 'removed'}>{t(`pptx.compare.status${diff.status[0].toUpperCase()}${diff.status.slice(1)}`)}</span><strong>{t('pptx.compare.slideNumber', { number: Math.max(diff.baseIndex, diff.compareIndex) + 1 })}</strong></div>{#if diff.changes.length}<ul>{#each diff.changes as change}<li>{describeElementChange(change, t)}</li>{/each}</ul>{/if}<footer><button class:chosen={compare.rejected.has(resultIndex(diff))} onclick={() => compare.reject(resultIndex(diff))}><X size={14} aria-hidden="true" /> {t('pptx.compare.reject')}</button><button class="accept" class:chosen={compare.accepted.has(resultIndex(diff))} onclick={() => compare.accept(resultIndex(diff))}><Check size={14} aria-hidden="true" /> {t('pptx.compare.accept')}</button></footer></article>{/each}{/if}</div>
 	</aside>
 {/if}
 <style>

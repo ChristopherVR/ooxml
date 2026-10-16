@@ -7,6 +7,7 @@ import { translations as backstage } from './backstage';
 import { translations as chart_format } from './chart-format';
 import { translations as charts } from './charts';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
+import { translations as compare_and_waterfall } from './compare-and-waterfall';
 import { translations as design_galleries } from './design-galleries';
 import { translations as drawing_and_layout } from './drawing-and-layout';
 import { translations as editing_and_review } from './editing-and-review';
@@ -57,6 +58,7 @@ export const translationsEs: Record<string, string> = {
 	...ribbon_galleries,
 	...ribbon_galleries_effects,
 	...ribbon_galleries_picture,
+	...compare_and_waterfall,
 	...ribbon_galleries_smartart_layouts,
 	...ribbon_galleries_adjust,
 	...ribbon_galleries_data,

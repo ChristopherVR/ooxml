@@ -128,7 +128,7 @@
 		void barFacePictureSampleVersion.value;
 		return revealedElement.type === 'chart' ? buildChartView(revealedElement, t) : undefined;
 	});
-	const legendItems = $derived(view?.kind === 'chart' ? buildLegendItems(view.vm) : []);
+	const legendItems = $derived(view?.kind === 'chart' ? buildLegendItems(view.vm, (key) => t(key)) : []);
 	const containerStyle = $derived(styleToString(getContainerStyle(element, zIndex)));
 
 	// The projector re-creates every SVG mark whenever the chart changes, which
