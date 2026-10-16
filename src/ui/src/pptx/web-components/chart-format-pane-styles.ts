@@ -37,6 +37,8 @@ button { color: inherit; font: inherit; background: var(--pptx-secondary, #20252
  border: 1px solid var(--pptx-border, #33334d); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
 button:hover:not(:disabled) { background: var(--pptx-accent, #33334d); }
 button:disabled, input:disabled { opacity: .5; cursor: default; }
+.text-options[aria-pressed=true] { border-color: var(--pptx-primary, #ec6b3d); background: var(--pptx-accent, #33334d); }
+.file-button { justify-self: start; }
 .close { border: 0; background: transparent; min-width: 28px; min-height: 28px; font-size: 18px; line-height: 1; }
 .note { margin: 2px 0 0; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--pptx-ring, #ec6b3d); outline-offset: 1px; }

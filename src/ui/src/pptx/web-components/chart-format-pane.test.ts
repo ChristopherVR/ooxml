@@ -111,4 +111,46 @@ describe('pptx-ui-chart-format-pane', () => {
 		node.chartData = { ...node.chartData! };
 		expect(q(node, '[data-chart-format-choice="solid"]')).toBe(before);
 	});
+
+	it('switches to Text Options and back, only for elements with text', () => {
+		const node = pane('title');
+		const toggle = q<HTMLButtonElement>(node, '[data-chart-format-text-options]');
+		expect(toggle.disabled).toBe(false);
+		toggle.click();
+		expect(toggle.getAttribute('aria-pressed')).toBe('true');
+		expect(
+			[...node.shadowRoot!.querySelectorAll('[data-chart-format-tab]')].map((b) => b.textContent),
+		).toEqual(['Text Fill & Outline', 'Text Effects', 'Textbox']);
+		const change = vi.fn();
+		node.addEventListener('chart-format-change', change);
+		const solid = q<HTMLElement & { checked: boolean }>(
+			node,
+			'[data-chart-format-field="text.fill.kind"] [data-chart-format-choice="solid"]',
+		);
+		solid.checked = true;
+		solid.dispatchEvent(new Event('change'));
+		const detail = (change.mock.calls[0]![0] as ChartFormatChangeEvent).detail;
+		expect(detail.chartData.elementFormats?.title?.text?.fill?.kind).toBe('solid');
+		toggle.click();
+		expect(q(node, '[data-chart-format-tab="fillLine"]')).not.toBeNull();
+		// Plot area has no text: the toggle is off.
+		node.target = 'plotArea';
+		expect(toggle.disabled).toBe(true);
+	});
+
+	it('offers a picture chooser once Picture or texture fill is picked', () => {
+		const node = pane('chartArea');
+		const picture = q<HTMLElement & { checked: boolean }>(
+			node,
+			'[data-chart-format-choice="picture"]',
+		);
+		picture.checked = true;
+		picture.dispatchEvent(new Event('change'));
+		const field = q<HTMLElement>(node, '[data-chart-format-field="fill.picture"]');
+		expect(field.querySelector('input[type=file]')).not.toBeNull();
+		expect(field.dataset.chartFormatFileSet).toBe('true');
+		expect(
+			node.shadowRoot!.querySelector('[data-chart-format-field="fill.pictureTile"]'),
+		).not.toBeNull();
+	});
 });

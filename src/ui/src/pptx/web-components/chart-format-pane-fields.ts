@@ -116,6 +116,45 @@ function control(doc: Document, field: ChartFormatField, tr: PaneTranslate, auto
 	return box as ControlLike;
 }
 
+/** A file chooser: a button opens it and the chosen file is reported as a `data:` URL. */
+function fileField(
+	doc: Document,
+	field: Extract<ChartFormatField, { kind: 'file' }>,
+	tr: PaneTranslate,
+	change: (id: string, value: ChartFormatFieldValue) => void,
+): PaneFieldView {
+	const label = doc.createElement('div');
+	label.className = 'field field-file';
+	label.dataset.chartFormatField = field.id;
+	const input = doc.createElement('input');
+	input.type = 'file';
+	input.accept = field.accept;
+	input.hidden = true;
+	const button = doc.createElement('button');
+	button.type = 'button';
+	button.className = 'file-button';
+	button.textContent = tr(field.button);
+	button.addEventListener('click', () => input.click());
+	input.addEventListener('change', () => {
+		const file = input.files?.[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.addEventListener('load', () => {
+			if (typeof reader.result === 'string') change(field.id, reader.result);
+		});
+		reader.readAsDataURL(file);
+		input.value = '';
+	});
+	label.append(caption(doc, tr(field.label)), button, input);
+	return {
+		node: label,
+		paint(next, locked) {
+			button.disabled = locked || Boolean(next.disabled);
+			label.dataset.chartFormatFileSet = String(next.kind === 'file' && next.value);
+		},
+	};
+}
+
 /** Build the control for `field`; `change` reports a committed value. */
 export function createPaneField(
 	doc: Document,
@@ -126,6 +165,9 @@ export function createPaneField(
 ): PaneFieldView {
 	if (field.kind === 'radio') {
 		return radioGroup(doc, field, tr, change);
+	}
+	if (field.kind === 'file') {
+		return fileField(doc, field, tr, change);
 	}
 	const label = doc.createElement('label');
 	label.className = `field field-${field.kind}`;
@@ -155,7 +197,7 @@ export function createPaneField(
 			}
 			if (next.kind === 'checkbox') {
 				input.checked = next.value;
-			} else if (next.kind !== 'radio') {
+			} else if (next.kind !== 'radio' && next.kind !== 'file') {
 				input.value = String(next.value);
 			}
 		},

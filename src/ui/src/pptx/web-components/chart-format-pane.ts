@@ -7,6 +7,7 @@ import {
 } from '../render';
 import type {
 	ChartFormatFieldValue,
+	ChartFormatPaneMode,
 	ChartFormatPaneModel,
 	ChartFormatTabId,
 	ChartFormatText,
@@ -51,6 +52,8 @@ function signature(model: ChartFormatPaneModel, tr: (text: ChartFormatText) => s
 		model.targets.map((t) => [t.key, tr(t.label)]),
 		model.tabs.map((tab) => [tab.id, tr(tab.label)]),
 		model.activeTab,
+		model.mode,
+		model.textOptions,
 		model.sections.map((s) => [
 			s.id,
 			tr(s.title),
@@ -81,6 +84,7 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 		#data: PptxChartData | undefined;
 		#target = 'chartArea';
 		#tab: ChartFormatTabId = 'fillLine';
+		#mode: ChartFormatPaneMode = 'chart';
 		#t: ChartFormatPaneTranslate = (key) => key;
 		#locked = false;
 		#signature = '';
@@ -128,7 +132,14 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 			this.#textOptions = doc.createElement('button');
 			this.#textOptions.type = 'button';
 			this.#textOptions.className = 'text-options';
+			this.#textOptions.dataset.chartFormatTextOptions = '';
 			this.#textOptions.disabled = true;
+			// Chart Options / Text Options: the picker's label and this button swap halves.
+			this.#textOptions.addEventListener('click', () => {
+				this.#mode = this.#mode === 'text' ? 'chart' : 'text';
+				this.#tab = this.#mode === 'text' ? 'textFill' : 'fillLine';
+				this.#paint();
+			});
 			options.append(pickerField, this.#textOptions);
 			this.#tabs = doc.createElement('div');
 			this.#tabs.className = 'tabs';
@@ -236,8 +247,12 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 				this.#signature = '';
 				return;
 			}
-			const model = buildChartFormatPaneModel(this.#data, this.#target, this.#tab);
+			const model = buildChartFormatPaneModel(this.#data, this.#target, this.#tab, this.#mode);
 			this.#tab = model.activeTab;
+			this.#mode = model.mode;
+			this.#panel.dataset.chartFormatMode = model.mode;
+			this.#textOptions.disabled = this.#locked || !model.textOptions;
+			this.#textOptions.setAttribute('aria-pressed', String(model.mode === 'text'));
 			const title = this.#tr(model.title);
 			this.#heading.textContent = title;
 			this.#panel.setAttribute('aria-label', title);
@@ -266,10 +281,12 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 			this.#pickerLabel.textContent = this.#label('pptx.chartFormat.chartOptions', 'Chart Options');
 			this.#picker.setAttribute('aria-label', this.#pickerLabel.textContent);
 			this.#textOptions.textContent = this.#label('pptx.chartFormat.textOptions', 'Text Options');
-			this.#textOptions.title = this.#label(
-				'pptx.chartFormat.textOptionsHint',
-				'Format chart text with Home > Font',
-			);
+			this.#textOptions.title = model.textOptions
+				? this.#label(
+						'pptx.chartFormat.textOptionsHint',
+						'Fill, outline, effects and text box of the text',
+					)
+				: this.#label('pptx.chartFormat.textOptionsNone', 'This element has no text');
 			this.#picker.replaceChildren(
 				...model.targets.map((option) => {
 					const node = doc.createElement('option');

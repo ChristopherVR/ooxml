@@ -5,33 +5,11 @@
  */
 import type { ChartElementFormatView, PptxChartFormatTarget } from 'ooxml-core/pptx';
 
+import { choice, hexForInput, pct, t } from './chart-format-pane-common';
+import { gradientFields, patternFields, pictureFields } from './chart-format-pane-fill-kinds';
 import type { ChartFormatChoice, ChartFormatSection } from './chart-format-pane-types';
-import type { ChartFormatText } from './chart-format-targets';
 
-export const t = (key: string, fallback: string): ChartFormatText => ({
-	key: `pptx.chartFormat.${key}`,
-	fallback,
-});
-
-export const choice = (
-	value: string,
-	key: string,
-	fallback: string,
-	extra?: Partial<ChartFormatChoice>,
-): ChartFormatChoice => ({ value, label: t(key, fallback), ...extra });
-
-const NOT_YET = t('notSupported', 'Not available yet in this viewer');
-
-/** Percent 0..100 for display. */
-const pct = (value: number | undefined): number => Math.round(value ?? 0);
-
-/** `#RRGGBB` for an `<input type=color>`; unknown colours fall back to black. */
-export function hexForInput(color: string | undefined, fallback = '#000000'): string {
-	if (color && /^#?[0-9a-f]{6}$/iu.test(color)) {
-		return `#${color.replace(/^#/u, '').toUpperCase()}`;
-	}
-	return fallback;
-}
+export { choice, hexForInput, t } from './chart-format-pane-common';
 
 const DASHES: Array<[string, string]> = [
 	['solid', 'Solid'],
@@ -90,15 +68,9 @@ function fillSection(view: ChartElementFormatView): ChartFormatSection | undefin
 				choices: [
 					choice('none', 'fill.none', 'No fill'),
 					choice('solid', 'fill.solid', 'Solid fill'),
-					choice('gradient', 'fill.gradient', 'Gradient fill', {
-						disabled: !view.support.gradient,
-						...(view.support.gradient ? {} : { hint: NOT_YET }),
-					}),
-					choice('picture', 'fill.picture', 'Picture or texture fill', {
-						disabled: true,
-						hint: NOT_YET,
-					}),
-					choice('pattern', 'fill.pattern', 'Pattern fill', { disabled: true, hint: NOT_YET }),
+					choice('gradient', 'fill.gradient', 'Gradient fill'),
+					choice('picture', 'fill.picture', 'Picture or texture fill'),
+					choice('pattern', 'fill.pattern', 'Pattern fill'),
 					choice('automatic', 'fill.automatic', 'Automatic'),
 				],
 			},
@@ -124,31 +96,11 @@ function fillSection(view: ChartElementFormatView): ChartFormatSection | undefin
 			},
 		);
 	} else if (kind === 'gradient' && view.fill.gradient) {
-		const stops = view.fill.gradient.stops;
-		section.fields.push(
-			{
-				id: 'fill.gradientStart',
-				kind: 'color',
-				label: t('gradientStart', 'Start color'),
-				value: hexForInput(stops[0]?.color, '#FFFFFF'),
-			},
-			{
-				id: 'fill.gradientEnd',
-				kind: 'color',
-				label: t('gradientEnd', 'End color'),
-				value: hexForInput(stops[stops.length - 1]?.color),
-			},
-			{
-				id: 'fill.gradientAngle',
-				kind: 'number',
-				label: t('angle', 'Angle'),
-				value: Math.round(view.fill.gradient.angle ?? 0),
-				min: 0,
-				max: 359,
-				step: 1,
-				unit: '°',
-			},
-		);
+		section.fields.push(...gradientFields('fill', view.fill.gradient));
+	} else if (kind === 'pattern' && view.fill.pattern) {
+		section.fields.push(...patternFields(view.fill.pattern));
+	} else if (kind === 'picture') {
+		section.fields.push(...pictureFields(view.fill.picture));
 	}
 	return section;
 }
@@ -172,7 +124,7 @@ function lineSection(
 				choices: [
 					choice('none', 'line.none', 'No line'),
 					choice('solid', 'line.solid', 'Solid line'),
-					choice('gradient', 'line.gradient', 'Gradient line', { disabled: true, hint: NOT_YET }),
+					choice('gradient', 'line.gradient', 'Gradient line'),
 					choice('automatic', 'fill.automatic', 'Automatic'),
 				],
 			},
@@ -200,6 +152,8 @@ function lineSection(
 				unit: '%',
 			},
 		);
+	} else if (line.kind === 'gradient' && line.gradient) {
+		section.fields.push(...gradientFields('line', line.gradient));
 	}
 	section.fields.push(
 		{

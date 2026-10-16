@@ -176,7 +176,12 @@ export function listChartFormatTargets(data: PptxChartData): ChartFormatTargetOp
 	if (data.style?.hasDataLabels) {
 		targets.push({ kind: 'dataLabels' });
 	}
-	data.series.forEach((_, seriesIndex) => targets.push({ kind: 'series', seriesIndex }));
+	data.series.forEach((_, seriesIndex) => {
+		targets.push({ kind: 'series', seriesIndex });
+		// Each series' own labels (PowerPoint's "Series "X" Data Labels"), listed even while
+		// hidden: their Label Options are where one series' labels are switched on.
+		targets.push({ kind: 'dataLabels', seriesIndex });
+	});
 	return targets.map((target) => ({
 		key: chartFormatTargetKey(target),
 		target,
@@ -201,6 +206,9 @@ export function resolveChartFormatTarget(
 	if (data && parsed) {
 		const valid =
 			(parsed.kind === 'series' && data.series[parsed.seriesIndex]) ||
+			(parsed.kind === 'dataLabels' &&
+				parsed.seriesIndex !== undefined &&
+				data.series[parsed.seriesIndex]) ||
 			((parsed.kind === 'axis' ||
 				parsed.kind === 'majorGridlines' ||
 				parsed.kind === 'minorGridlines') &&

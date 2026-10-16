@@ -5,8 +5,9 @@
  * @module render/chart-format/chart-format-pane-options
  */
 import type { PptxChartData, PptxChartFormatTarget, PptxChartType } from 'ooxml-core/pptx';
+import { chartSupportsSecondaryAxis, isChartSeriesOnSecondaryAxis } from 'ooxml-core/pptx';
 
-import { choice, t } from './chart-format-pane-fill-line';
+import { choice, t } from './chart-format-pane-common';
 import type { ChartFormatField, ChartFormatSection } from './chart-format-pane-types';
 import type { ChartFormatText } from './chart-format-targets';
 import { axisOptions } from './chart-format-pane-axis';
@@ -35,10 +36,25 @@ function groupType(data: PptxChartData): PptxChartType | undefined {
 	return data.chartType === 'combo' ? undefined : data.chartType;
 }
 
-/** Series Options: gap width / overlap for bars, slice angle / hole size for pies. */
-function seriesOptions(data: PptxChartData): ChartFormatSection[] {
+/**
+ * Series Options: Plot Series On (primary or secondary axis), gap width /
+ * overlap for bars, slice angle / hole size for pies.
+ */
+function seriesOptions(data: PptxChartData, seriesIndex: number): ChartFormatSection[] {
 	const type = groupType(data);
 	const fields: ChartFormatField[] = [];
+	if (chartSupportsSecondaryAxis(data)) {
+		fields.push({
+			id: 'series.axis',
+			kind: 'radio',
+			label: t('plotSeriesOn', 'Plot Series On'),
+			value: isChartSeriesOnSecondaryAxis(data, seriesIndex) ? 'secondary' : 'primary',
+			choices: [
+				choice('primary', 'axis.primary', 'Primary Axis'),
+				choice('secondary', 'axis.secondary', 'Secondary Axis'),
+			],
+		});
+	}
 	if (type === 'bar' || type === 'bar3D') {
 		if (type === 'bar') {
 			fields.push(
@@ -155,8 +171,18 @@ function labelPositions(type: PptxChartType): Array<[string, string, string]> {
 	return [];
 }
 
-function labelOptions(data: PptxChartData): ChartFormatSection[] {
-	const labels = data.style?.dataLabels ?? {};
+function labelOptions(data: PptxChartData, seriesIndex: number | undefined): ChartFormatSection[] {
+	const series = seriesIndex === undefined ? undefined : data.series[seriesIndex];
+	const chartLevel = data.style?.dataLabels ?? {};
+	// One series' labels: its own options, each flag falling back to the chart-level one.
+	const labels = series
+		? {
+				...chartLevel,
+				...Object.fromEntries(
+					Object.entries(series.dataLabelOptions ?? {}).filter(([, v]) => v !== undefined),
+				),
+			}
+		: chartLevel;
 	const check = (
 		id: string,
 		key: string,
@@ -194,7 +220,9 @@ function labelOptions(data: PptxChartData): ChartFormatSection[] {
 			),
 		});
 	}
-	const note: ChartFormatText = t('labelsAllSeries', 'Label options apply to every series');
+	const note: ChartFormatText = series
+		? t('labelsOneSeries', 'Label options apply to this series only')
+		: t('labelsAllSeries', 'Label options apply to every series');
 	return [{ id: 'labelOptions', title: t('section.labelOptions', 'Label Options'), fields, note }];
 }
 
@@ -205,13 +233,13 @@ export function optionsSections(
 ): ChartFormatSection[] {
 	switch (target.kind) {
 		case 'series':
-			return seriesOptions(data);
+			return seriesOptions(data, target.seriesIndex);
 		case 'axis':
 			return axisOptions(data, target.axisIndex);
 		case 'legend':
 			return legendOptions(data);
 		case 'dataLabels':
-			return labelOptions(data);
+			return labelOptions(data, target.seriesIndex);
 		default:
 			return [];
 	}

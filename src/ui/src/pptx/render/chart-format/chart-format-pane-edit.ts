@@ -21,10 +21,18 @@ import {
 	withChartDataLabelOptions,
 	withChartElementFormat,
 	withChartLegendOptions,
+	withChartSeriesOnSecondaryAxis,
 	withChartSeriesOptions,
 } from 'ooxml-core/pptx';
 
 import { DEFAULT_CHART_GLOW, DEFAULT_CHART_SHADOW } from './chart-format-pane-effects';
+import {
+	DEFAULT_CHART_TEXTURE,
+	defaultChartGradient,
+	fillDetailPatch,
+	textPatch,
+	threeDPatch,
+} from './chart-format-pane-edit-extra';
 import type { ChartFormatFieldValue } from './chart-format-pane-types';
 import { resolveChartFormatTarget } from './chart-format-targets';
 
@@ -50,7 +58,17 @@ function formatPatch(
 	const text = String(value);
 	switch (field) {
 		case 'fill.kind':
-			return text === 'none' || text === 'solid' || text === 'gradient' || text === 'automatic'
+			if (text === 'picture') {
+				// PowerPoint applies its default texture until a picture is inserted.
+				return view.fill.picture?.src || view.fill.picture?.relId
+					? { fill: { kind: 'picture' } }
+					: { fill: { kind: 'picture', picture: { src: DEFAULT_CHART_TEXTURE, tile: true } } };
+			}
+			return text === 'none' ||
+				text === 'solid' ||
+				text === 'gradient' ||
+				text === 'pattern' ||
+				text === 'automatic'
 				? {
 						fill: {
 							kind: text,
@@ -62,31 +80,15 @@ function formatPatch(
 			return { fill: { kind: 'solid', color: text } };
 		case 'fill.transparency':
 			return n === null ? null : { fill: { transparency: clamp(n, 0, 100) } };
-		case 'fill.gradientStart':
-		case 'fill.gradientEnd':
-		case 'fill.gradientAngle': {
-			const gradient = view.fill.gradient;
-			if (!gradient) {
-				return null;
-			}
-			const stops = gradient.stops.map((stop) => ({ ...stop }));
-			if (field === 'fill.gradientStart' && stops[0]) {
-				stops[0].color = text;
-			} else if (field === 'fill.gradientEnd' && stops.length > 0) {
-				stops[stops.length - 1]!.color = text;
-			} else if (field === 'fill.gradientAngle' && n === null) {
-				return null;
-			}
-			const angle =
-				field === 'fill.gradientAngle' && n !== null ? clamp(n, 0, 359) : gradient.angle;
-			return {
-				fill: {
-					kind: 'gradient',
-					gradient: { ...gradient, stops, ...(angle !== undefined ? { angle } : {}) },
-				},
-			};
-		}
 		case 'line.kind':
+			if (text === 'gradient') {
+				return {
+					line: {
+						kind: 'gradient',
+						gradient: view.line.gradient ?? defaultChartGradient(view.line.color),
+					},
+				};
+			}
 			return text === 'none' || text === 'solid' || text === 'automatic'
 				? {
 						line: {
@@ -120,6 +122,18 @@ function formatPatch(
 		case 'softEdge.size':
 			return n === null ? null : { effects: { softEdge: n > 0 ? clamp(n, 0, 100) : null } };
 		default: {
+			if (field.startsWith('threeD.')) {
+				return threeDPatch(view, field, value);
+			}
+			if (field.startsWith('text.')) {
+				return textPatch(view, field, value, {
+					shadow: { ...DEFAULT_CHART_SHADOW },
+					glow: { ...DEFAULT_CHART_GLOW },
+				});
+			}
+			if (field.startsWith('fill.') || field.startsWith('line.gradient')) {
+				return fillDetailPatch(view, field, value);
+			}
 			const [effect, prop] = field.split('.');
 			if (effect === 'shadow' && view.effects.shadow && prop) {
 				const shadow = { ...view.effects.shadow };
@@ -212,6 +226,11 @@ export function applyChartFormatField(
 ): PptxChartData | null {
 	const { target } = resolveChartFormatTarget(data, targetKey);
 	try {
+		if (field === 'series.axis') {
+			return target.kind === 'series'
+				? withChartSeriesOnSecondaryAxis(data, target.seriesIndex, value === 'secondary')
+				: null;
+		}
 		if (field.startsWith('series.')) {
 			const n = number(value);
 			if (n === null) {
@@ -232,11 +251,17 @@ export function applyChartFormatField(
 		if (field === 'legend.noOverlap') {
 			return withChartLegendOptions(data, { overlay: !value });
 		}
+		// A series' own data labels (`dataLabels:N`) edit that series only.
+		const labelSeries = target.kind === 'dataLabels' ? target.seriesIndex : undefined;
 		if (field === 'labels.position') {
-			return withChartDataLabelOptions(data, { position: value === '' ? null : (value as 'ctr') });
+			return withChartDataLabelOptions(
+				data,
+				{ position: value === '' ? null : (value as 'ctr') },
+				labelSeries,
+			);
 		}
 		if (field.startsWith('labels.')) {
-			return withChartDataLabelOptions(data, { [field.slice(7)]: Boolean(value) });
+			return withChartDataLabelOptions(data, { [field.slice(7)]: Boolean(value) }, labelSeries);
 		}
 		const patch = formatPatch(data, targetKey, field, value);
 		return patch ? withChartElementFormat(data, target, patch) : null;

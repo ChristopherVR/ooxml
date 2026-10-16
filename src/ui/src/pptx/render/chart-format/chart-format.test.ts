@@ -40,7 +40,9 @@ describe('chart format targets', () => {
 			'Plot Area',
 			'Data Labels',
 			'Series "East"',
+			'Series "East" Data Labels',
 			'Series "West"',
+			'Series "West" Data Labels',
 		]);
 	});
 
@@ -84,7 +86,14 @@ describe('chart format pane model', () => {
 		for (const chart of [columnChart(), lineChart(), pieChart(), doughnutChart()]) {
 			for (const option of listChartFormatTargets(chart)) {
 				captions(option.label, keys);
-				for (const tab of chartFormatTabs(chart, option.key)) {
+				const tabs = [
+					...chartFormatTabs(chart, option.key).map((tab) => ({ tab, mode: 'chart' as const })),
+					...chartFormatTabs(chart, option.key, 'text').map((tab) => ({
+						tab,
+						mode: 'text' as const,
+					})),
+				];
+				for (const { tab, mode } of tabs) {
 					captions(tab.label, keys);
 					let data = chart;
 					for (const [field, value] of [
@@ -93,17 +102,24 @@ describe('chart format pane model', () => {
 						['shadow.enabled', true],
 						['glow.enabled', true],
 						['axis.crosses', 'value'],
+						['threeD.bevelTop', 'circle'],
+						['text.fill.kind', 'solid'],
+						['text.outline.kind', 'solid'],
+						['text.shadow.enabled', true],
+						['text.glow.enabled', true],
 					] as const) {
 						data = applyChartFormatField(data, option.key, field, value) ?? data;
 					}
+					const variant = (field: string, value: string) =>
+						applyChartFormatField(data, option.key, field, value) ?? data;
 					for (const model of [
-						buildChartFormatPaneModel(data, option.key, tab.id),
-						buildChartFormatPaneModel(
-							applyChartFormatField(data, option.key, 'fill.kind', 'gradient') ?? data,
-							option.key,
-							tab.id,
-						),
-					]) {
+						data,
+						variant('fill.kind', 'gradient'),
+						variant('fill.kind', 'pattern'),
+						variant('fill.kind', 'picture'),
+						variant('line.kind', 'gradient'),
+						variant('text.fill.kind', 'gradient'),
+					].map((next) => buildChartFormatPaneModel(next, option.key, tab.id, mode))) {
 						captions(model.title, keys);
 						for (const section of model.sections) {
 							captions(section.title, keys);
