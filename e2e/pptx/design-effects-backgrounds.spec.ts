@@ -2,6 +2,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { goToSlide } from './support/context-menu';
 import { loadDeck, ribbonTab, slideStage } from './support/deck';
 
 /**
@@ -80,8 +81,12 @@ test.describe('Design > Background Styles', () => {
 		await root.locator('[data-gallery-item="4"]').click({ button: 'right' });
 		await root.getByRole('menuitem', { name: 'Apply to Selected Slides' }).click();
 		await expect.poll(() => stageBackground(page)).not.toBe(original);
-		// One undo step puts the slide back (the other slides were never touched; the
-		// unit and core tests pin that).
+		// The next slide keeps the deck's own background (reached through the thumbnail rail).
+		await goToSlide(page, 2);
+		await expect.poll(() => stageBackground(page)).toBe(original);
+		await goToSlide(page, 1);
+		await expect.poll(() => stageBackground(page)).not.toBe(original);
+		// One undo step puts the first slide back.
 		await undo(page).click();
 		await expect.poll(() => stageBackground(page)).toBe(original);
 	});
