@@ -29,6 +29,7 @@ import { translations as ribbon_galleries_adjust } from './ribbon-galleries-adju
 import { translations as ribbon_galleries_data } from './ribbon-galleries-data';
 import { translations as ribbon_galleries_effects } from './ribbon-galleries-effects';
 import { translations as ribbon_galleries_picture } from './ribbon-galleries-picture';
+import { translations as ribbon_galleries_smartart_layouts } from './ribbon-galleries-smartart-layouts';
 import { translations as shape_gallery } from './shape-gallery';
 import { translations as slide_templates } from './slide-templates';
 import { translations as smart_art } from './smart-art';
@@ -72,6 +73,7 @@ export const translationsZhCN: Record<string, string> = {
 	...ribbon_galleries,
 	...ribbon_galleries_effects,
 	...ribbon_galleries_picture,
+	...ribbon_galleries_smartart_layouts,
 	...ribbon_galleries_adjust,
 	...ribbon_galleries_data,
 	...table_layout,
