@@ -3,6 +3,7 @@ export { slideClipboardLabels } from './slide-clipboard';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
 import { HOST_STYLES } from './host-styles';
 import { definePptxMobileBar } from './mobile-bar';
+import { definePptxMobileInsert } from './mobile-insert';
 import { definePptxMobileToolbar } from './mobile-toolbar';
 import { definePptxNotesToolbar } from './notes-toolbar';
 import {
@@ -36,6 +37,7 @@ import {
 	definePptxRibbonHomeArrangePainter,
 	definePptxRibbonHomeArrangeShape,
 	definePptxRibbonHomePictureSize,
+	definePptxRibbonHomeChartSelection,
 	definePptxRibbonHomeFontPicker,
 	definePptxRibbonHomeClipboard,
 	definePptxRibbonHomeDrawing,
@@ -54,12 +56,20 @@ import { definePptxStatusBar } from './status-bar';
 import { definePptxRibbonActions } from './ribbon-actions';
 import { definePptxSubtitleSettings } from './subtitle-settings';
 import { definePptxThemeEditor } from './theme-editor';
+import { definePptxChartFormatPane } from './chart-format-pane';
 import { definePptxTitleBar } from './title-bar';
 
 export type { PptxUiThemeEditorElement, ThemeEditorApplyEvent } from './theme-editor';
+export type {
+	ChartFormatChangeEvent,
+	ChartFormatPaneTranslate,
+	ChartFormatTargetEvent,
+	PptxUiChartFormatPaneElement,
+} from './chart-format-pane';
 export type { CompatToastsRequestEvent, PptxUiCompatToastsElement } from './office-alias-types';
 export type { DialogFooterRequestEvent, PptxUiDialogFooterElement } from './office-alias-types';
 export type { MobileBarRequestEvent, PptxUiMobileBarElement } from './mobile-bar';
+export type { MobileInsertRequestEvent, PptxUiMobileInsertElement } from './mobile-insert';
 export type { MobileToolbarRequestEvent, PptxUiMobileToolbarElement } from './mobile-toolbar';
 export type { PasteOptionsRequestEvent, PptxUiPasteOptionsElement } from './office-alias-types';
 export type { PptxUiPresentToolbarElement, PresentToolbarRequestEvent } from './present-toolbar';
@@ -94,7 +104,12 @@ export type { PptxUiRibbonInsertElement, RibbonInsertRequestEvent } from './ribb
 export type { PptxUiRibbonViewElement, RibbonViewRequestEvent } from './ribbon-view';
 export type { PptxUiRibbonSectionElement } from './ribbon-section';
 export type { PptxUiRibbonAddInElement } from './ribbon-add-in';
-export type { PptxUiRibbonGalleryElement, RibbonGalleryPickEvent } from './ribbon-gallery';
+export type {
+	PptxUiRibbonGalleryElement,
+	RibbonGalleryPickEvent,
+	RibbonGalleryPreviewEndEvent,
+	RibbonGalleryPreviewEvent,
+} from './ribbon-gallery';
 export type { GalleryTranslate } from './ribbon-gallery';
 export type { RibbonToggleRequestEvent } from './office-alias-types';
 export type {
@@ -139,6 +154,7 @@ const controls = [
 	['pptx-ui-compat-toasts', definePptxCompatToasts],
 	['pptx-ui-dialog-footer', definePptxDialogFooter],
 	['pptx-ui-mobile-bar', definePptxMobileBar],
+	['pptx-ui-mobile-insert', definePptxMobileInsert],
 	['pptx-ui-mobile-toolbar', definePptxMobileToolbar],
 	['pptx-ui-paste-options', definePptxPasteOptions],
 	['pptx-ui-present-toolbar', definePptxPresentToolbar],
@@ -162,6 +178,7 @@ const controls = [
 	['pptx-ui-ribbon-home-arrange-painter', definePptxRibbonHomeArrangePainter],
 	['pptx-ui-ribbon-home-arrange-shape', definePptxRibbonHomeArrangeShape],
 	['pptx-ui-ribbon-home-picture-size', definePptxRibbonHomePictureSize],
+	['pptx-ui-ribbon-home-chart-selection', definePptxRibbonHomeChartSelection],
 	['pptx-ui-ribbon-view', definePptxRibbonView],
 	['pptx-ui-ribbon-transitions', definePptxRibbonTransitions],
 	['pptx-ui-ribbon-group', definePptxRibbonGroup],
@@ -175,6 +192,7 @@ const controls = [
 	['pptx-ui-context-menu', definePptxContextMenu],
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],
 	['pptx-ui-theme-editor', definePptxThemeEditor],
+	['pptx-ui-chart-format-pane', definePptxChartFormatPane],
 	['pptx-ui-title-bar', definePptxTitleBar],
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 	['pptx-ui-options-dialog', definePptxOptionsDialog],

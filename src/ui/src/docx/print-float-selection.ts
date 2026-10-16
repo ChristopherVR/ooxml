@@ -4,13 +4,16 @@ import {
 	CURSORS,
 	boxOf,
 	isFloat,
+	isShapeFloat,
 	locateFloat,
 	number,
 	parsePlacement,
 	place,
 	selectedFloat,
+	shapeSpecOf,
 	type Located,
 } from './print-float-locate';
+import { editShapeText } from './print-float-text';
 import {
 	FLOAT_HANDLES,
 	NUDGE_PX,
@@ -39,9 +42,10 @@ export interface PrintFloats {
 }
 
 /**
- * Floating pictures on Print Layout pages are selectable like in Word: a press selects the picture
+ * Floating pictures, shapes and text boxes on Print Layout pages are selectable like in Word: a press selects the object
  * (the same node selection the Draft surface uses) and draws a frame with eight handles; dragging
- * moves it, corner handles resize it keeping the aspect ratio, arrow keys nudge it and Delete
+ * moves it, corner handles resize it (keeping the aspect ratio for pictures; a second press on a shape
+ * that holds text, or a double-click on any shape, edits its text in place), arrow keys nudge it and Delete
  * removes it. Each gesture is one transaction, so it is one undo step. Pictures behind the text
  * are only taken where no text is, so a press on text still places the caret.
  */
@@ -50,6 +54,18 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 	let frame: HTMLElement | undefined;
 	let frameFor: HTMLElement | undefined;
 	let redraw: number | undefined;
+	let closeText: (() => void) | undefined;
+
+	/** Opens the in-place text editor on the selected shape or text box, when its text is editable. */
+	function editText(located: Located, element: HTMLElement): void {
+		const view = host.view();
+		const spec = shapeSpecOf(located.node);
+		if (!view || !spec?.textEditable || !spec.editable || !view.editable) return;
+		closeText?.();
+		closeText = editShapeText(view, element, spec.text ?? [], () => {
+			closeText = undefined;
+		});
+	}
 
 	const floatElement = (blockId: string, index: number): HTMLElement | undefined =>
 		[...host.pages.querySelectorAll<HTMLElement>('.dve-print-float[data-block-id]')].find(
@@ -123,6 +139,8 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		if (!view || view.isDestroyed || !view.editable) return;
 		const current = view.state.doc.nodeAt(located.pos);
 		if (!current || !isFloat(current)) return;
+		// A shape whose outline or fill we do not model can be selected but not rewritten.
+		if (isShapeFloat(current) && !shapeSpecOf(current)?.editable) return;
 		const placement = placementAt(parsePlacement(current.attrs.placement), box, origin);
 		const tr = view.state.tr.setNodeMarkup(located.pos, undefined, {
 			...current.attrs,
@@ -152,14 +170,17 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		located: Located,
 		element: HTMLElement,
 		handle: FloatHandle | undefined,
+		wasSelected: boolean,
 	): void {
 		const view = host.view();
 		const sheet = element.closest<HTMLElement>('.dve-print-page');
 		if (!view?.editable || !sheet) return;
+		const reopen =
+			!handle && wasSelected && Boolean(shapeSpecOf(located.node)?.text?.some(Boolean));
 		const scale = scaleOf(sheet);
 		const start = boxOf(element);
 		const origin = originOf(element);
-		const lockAspect = !located.node.attrs.unsupported;
+		const lockAspect = !isShapeFloat(located.node) && !located.node.attrs.unsupported;
 		let box = start;
 		let moved = false;
 		const move = (moveEvent: PointerEvent) => {
@@ -176,6 +197,7 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			window.removeEventListener('pointerup', finish);
 			window.removeEventListener('pointercancel', finish);
 			if (moved) commit(located, box, origin);
+			else if (reopen) editText(located, element);
 		};
 		window.addEventListener('pointermove', move);
 		window.addEventListener('pointerup', finish);
@@ -190,11 +212,34 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			const grip = event.target.closest<HTMLElement>('[data-float-handle]');
 			const element = grip ? frameFor : floatAt(event.clientX, event.clientY);
 			if (!element) return;
+			closeText?.();
+			const view = host.view();
+			const before = view && selectedFloat(view.state);
 			const located = select(element);
 			if (!located) return;
 			event.preventDefault();
 			event.stopImmediatePropagation();
-			drag(event, located, element, grip?.dataset.floatHandle as FloatHandle | undefined);
+			drag(
+				event,
+				located,
+				element,
+				grip?.dataset.floatHandle as FloatHandle | undefined,
+				before?.pos === located.pos,
+			);
+		},
+		{ capture: true, signal: controller.signal },
+	);
+
+	host.pages.addEventListener(
+		'dblclick',
+		(event) => {
+			if (!host.printActive() || !host.view()) return;
+			const element = floatAt(event.clientX, event.clientY);
+			const located = element && select(element);
+			if (!element || !located || !isShapeFloat(located.node)) return;
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			editText(located, element);
 		},
 		{ capture: true, signal: controller.signal },
 	);
@@ -246,6 +291,7 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		refresh: schedule,
 		destroy() {
 			controller.abort();
+			closeText?.();
 			observer.disconnect();
 			if (redraw !== undefined) cancelAnimationFrame(redraw);
 			clearFrame();

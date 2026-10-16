@@ -41,6 +41,8 @@ const props = withDefaults(
 		canEdit: boolean;
 		/** Thumbnail content width in px (matches React's SLIDE_NAV_THUMBNAIL_WIDTH). */
 		thumbWidth?: number;
+		/** Fill the container instead of the rail width (the phone Slides sheet). */
+		fullWidth?: boolean;
 	}>(),
 	{ thumbWidth: EDITOR_THUMBNAIL_WIDTH },
 );
@@ -156,7 +158,7 @@ const {
 		role="navigation"
 		:aria-label="t('pptx.sections.slides')"
 		class="flex h-full flex-col border-r border-border bg-secondary/30 shrink-0"
-		:style="{ width: `${thumbWidth + 48}px` }"
+		:style="{ width: fullWidth ? '100%' : `${thumbWidth + 48}px` }"
 		data-pptx-chrome="slides"
 		@keydown="onPaneKeydown"
 	>

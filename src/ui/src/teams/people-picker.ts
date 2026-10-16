@@ -30,7 +30,7 @@ export class OfficeUiPeoplePicker extends TeamsElement {
 		this.contacts = [];
 		this.selected = [];
 		this.exclude = [];
-		this.label = 'People';
+		this.label = '';
 		this.query = '';
 	}
 
@@ -47,17 +47,18 @@ export class OfficeUiPeoplePicker extends TeamsElement {
 			(c) => !this.exclude.includes(c.id) && (!q || c.name.toLocaleLowerCase().includes(q)),
 		);
 		const chosen = this.contacts.filter((c) => this.selected.includes(c.id));
+		const label = this.label || this.t('people.label');
 		return html`
 			${
 				chosen.length
-					? html`<ul class="chips" aria-label="Selected people">
+					? html`<ul class="chips" aria-label=${this.t('people.selected')}>
 							${chosen.map(
 								(c) =>
 									html`<li>
 										<button
 											type="button"
 											class="chip"
-											aria-label=${`Remove ${c.name}`}
+											aria-label=${this.t('people.remove', { name: c.name })}
 											@click=${() => this.toggle(c.id)}
 										>
 											${c.name} <span aria-hidden="true">×</span>
@@ -69,21 +70,17 @@ export class OfficeUiPeoplePicker extends TeamsElement {
 			}
 			<input
 				type="search"
-				placeholder="Search people"
-				aria-label=${`Search ${this.label.toLocaleLowerCase()}`}
+				placeholder=${this.t('people.search')}
+				aria-label=${this.t('people.search')}
 				.value=${this.query}
 				@input=${(e: Event) => (this.query = (e.target as HTMLInputElement).value)}
 			/>
 			${
 				offered.length === 0
 					? html`<p class="none">
-							${
-								this.contacts.length === 0
-									? 'Nobody else has joined this workspace yet.'
-									: 'No one matches that search.'
-							}
+							${this.contacts.length === 0 ? this.t('people.nobodyElse') : this.t('people.noMatch')}
 						</p>`
-					: html`<ul class="list" role="group" aria-label=${this.label}>
+					: html`<ul class="list" role="group" aria-label=${label}>
 							${offered.map(
 								(c) =>
 									html`<li>

@@ -201,6 +201,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		notesMaster: state.notesMaster,
 		handoutMaster: state.handoutMaster,
 		handlerRef,
+		heldDeckRef: state.deckStyleHeldRef,
 		inlineEditingElementIdRef: state.inlineEditingElementIdRef,
 		inlineEditingTextRef: state.inlineEditingTextRef,
 		inlineEditingSnapshotRef: state.inlineEditingSnapshotRef,

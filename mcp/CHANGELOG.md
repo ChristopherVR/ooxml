@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.16](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.16) - 2026-10-15
+
+### Bug Fixes
+
+- **automation:** Add --root and untrusted-content notes to MCP servers ([0da2c7d](https://github.com/ChristopherVR/ooxml/commit/0da2c7d1ec6655f649a608ded1f36dea41f34962))
+
+### Styling
+
+- Fix the oxfmt and oxlint warnings outside the viewers ([cd66f32](https://github.com/ChristopherVR/ooxml/commit/cd66f324a45aad1d9bd680d1518f0dbe8baf8fc3))
+
 ## [0.1.15](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.15) - 2026-10-09
 
 ### Dependencies

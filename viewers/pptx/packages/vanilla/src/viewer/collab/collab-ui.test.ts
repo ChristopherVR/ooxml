@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
 import { createInitialViewerState, createStore } from '../state';
@@ -74,5 +74,56 @@ describe('createCollabUi', () => {
 		expect(primaryRow?.querySelectorAll(':scope > button')).toHaveLength(1);
 		const mobileHost = deps.getChrome().mobileToolbar?.collaborationHost;
 		expect(mobileHost?.querySelector('button')).not.toBeNull();
+	});
+});
+
+describe('createCollabUi host events', () => {
+	afterEach(() => {
+		document.body.replaceChildren();
+	});
+
+	/** Open the broadcast dialog and press its Start action (a `dialog-footer-request`). */
+	function startBroadcastFromDialog(deps: CollabUiDeps): void {
+		createCollabUi(deps).openBroadcast();
+		// The Share dialog mounts first, so the Broadcast dialog's footer is the last one.
+		const footer = [...document.body.querySelectorAll('pptx-ui-dialog-footer')].at(-1);
+		expect(footer).toBeDefined();
+		// The dialog opens with the (blank) remembered room; give it one to start.
+		let scope: HTMLElement | null = footer?.parentElement ?? null;
+		while (scope && !scope.querySelector('input')) {
+			scope = scope.parentElement;
+		}
+		const room = scope?.querySelector('input');
+		expect(room).toBeDefined();
+		if (room) {
+			room.value = 'room-1';
+			room.dispatchEvent(new Event('input', { bubbles: true }));
+		}
+		footer?.dispatchEvent(
+			new CustomEvent('dialog-footer-request', { detail: { id: 'start' }, bubbles: true }),
+		);
+	}
+
+	it('reports the started session, named after authorName, to onStarted', () => {
+		const onStarted = vi.fn();
+		const deps = makeDeps({ getAuthorName: () => 'Dana Host', onStarted });
+
+		startBroadcastFromDialog(deps);
+
+		expect(onStarted).toHaveBeenCalledWith(
+			expect.objectContaining({ userName: 'Dana Host', role: 'owner' }),
+		);
+		expect(deps.startCollaboration).toHaveBeenCalledTimes(1);
+	});
+
+	it('reports a stop from the dialog to onStopped', () => {
+		const onStopped = vi.fn();
+		const deps = makeDeps({ onStopped });
+		startBroadcastFromDialog(deps);
+
+		document.body.querySelector<HTMLButtonElement>('.pptxv-modal-danger-btn')?.click();
+
+		expect(onStopped).toHaveBeenCalledTimes(1);
+		expect(deps.stopCollaboration).toHaveBeenCalledTimes(1);
 	});
 });

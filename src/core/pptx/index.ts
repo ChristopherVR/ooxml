@@ -16,7 +16,12 @@
 
 // ── Core PPTX engine (parse, save, types, geometry, services) ──
 export * from './core';
-export { inspectPresentationText, setPresentationRunText } from './core/utils/suite-text';
+export {
+	createPresentationFromOutline,
+	inspectPresentationText,
+	setPresentationRunText,
+	type PresentationOutlineSlide,
+} from './core/utils/suite-text';
 
 // ── PPTX-to-Markdown converter ──
 export {

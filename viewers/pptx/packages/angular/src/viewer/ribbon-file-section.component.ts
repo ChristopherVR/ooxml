@@ -13,8 +13,8 @@ import {
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
 	backstageCardsFor,
+	backstageNavEntries,
 	customizeBackstageCards,
-	customizeBackstageNav,
 	formatBackstageDate,
 	formatBackstageSize,
 	isActionHidden,
@@ -23,14 +23,19 @@ import {
 import type {
 	AccountAuthConfig,
 	BackstageCardId,
+	BackstageNavEntry,
 	BackstagePage,
 	BackstageRecentFile,
+	HostBackstageRegionId,
+	ViewerRegionId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 
 import { AccountPageComponent } from './account-page.component';
 import { BackstageNavIconComponent } from './backstage-nav-icon.component';
 import { injectResolvedCustomization } from './viewer-customization.service';
+import { ViewerRegionHostComponent } from './viewer-region-host.component';
+import { ViewerRegionService } from './viewer-region.service';
 
 interface BackstageAction {
 	titleKey: string;
@@ -78,7 +83,12 @@ export function visibleMainNav(
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: { class: 'contents' },
-	imports: [BackstageNavIconComponent, AccountPageComponent, TranslatePipe],
+	imports: [
+		BackstageNavIconComponent,
+		AccountPageComponent,
+		TranslatePipe,
+		ViewerRegionHostComponent,
+	],
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	templateUrl: './ribbon-file-section.component.html',
 	styleUrl: './ribbon-file-section.component.css',
@@ -131,19 +141,26 @@ export class RibbonFileSectionComponent {
 		: undefined;
 	protected readonly templates = BACKSTAGE_TEMPLATES;
 	private readonly customization = injectResolvedCustomization();
-	protected readonly mainNav = computed(() =>
-		customizeBackstageNav(visibleMainNav(this.hiddenActions()), this.customization()),
-	);
-	protected readonly footerNav = computed(() =>
-		customizeBackstageNav(
-			BACKSTAGE_NAV.filter((item) => item.group),
+	private readonly regions = inject(ViewerRegionService, { optional: true });
+	/** Built-in pages (customised) then the host's `backstage.extraPages`. */
+	private readonly navEntries = computed<BackstageNavEntry[]>(() =>
+		backstageNavEntries(
+			BACKSTAGE_NAV.filter(
+				(item) => !(item.id === 'export' && isActionHidden('export', this.hiddenActions())),
+			),
 			this.customization(),
 		),
 	);
+	protected readonly mainNav = computed(() =>
+		this.navEntries().filter((item) => item.group !== 'footer'),
+	);
+	protected readonly footerNav = computed(() =>
+		this.navEntries().filter((item) => item.group === 'footer'),
+	);
 	/** The page the user picked; see {@link currentPage} for the one shown. */
-	protected readonly page = signal<BackstagePage>('home');
+	protected readonly page = signal<string>('home');
 	/** The picked page, or 'home' (else the first visible page) when the host hid it. */
-	protected readonly currentPage = computed<BackstagePage>(() => {
+	protected readonly currentPage = computed<string>(() => {
 		const visible = [...this.mainNav(), ...this.footerNav()].map((item) => item.id);
 		const picked = this.page();
 		if (visible.includes(picked)) {
@@ -158,6 +175,35 @@ export class RibbonFileSectionComponent {
 			BACKSTAGE_NAV.find((item) => item.id === this.currentPage())?.labelKey ??
 			'pptx.backstage.nav.home',
 	);
+	/** The host page shown (a `backstage.extraPages` entry), or undefined for a built-in page. */
+	protected readonly hostEntry = computed(
+		() => [...this.mainNav(), ...this.footerNav()].find((e) => e.id === this.currentPage())?.host,
+	);
+	/**
+	 * The renderer filling the page body: the host page's own, or a replaced
+	 * built-in page. Undefined (the built-in) while no context can be built.
+	 */
+	protected readonly pageRenderer = computed(() => {
+		if (!this.pageContext()) {
+			return undefined;
+		}
+		const host = this.hostEntry();
+		if (host) {
+			return host.render;
+		}
+		return this.regions?.renderer(`backstage.${this.currentPage() as BackstagePage}`);
+	});
+	protected readonly pageContext = computed(() => {
+		const host = this.hostEntry();
+		const region: ViewerRegionId | HostBackstageRegionId = host
+			? `backstage.host.${host.id}`
+			: `backstage.${this.currentPage() as BackstagePage}`;
+		return this.regions?.context(region, () => this.close.emit()) ?? null;
+	});
+	/** Nav icon page for a built-in id (host pages render no icon). */
+	protected iconPage(id: string): BackstagePage {
+		return id as BackstagePage;
+	}
 	protected readonly visibleRecent = computed(() => {
 		const q = this.query().trim().toLowerCase();
 		return q
@@ -165,7 +211,9 @@ export class RibbonFileSectionComponent {
 			: this.recent();
 	});
 	protected readonly size = formatBackstageSize;
-	protected readonly actions = computed(() => this.pageActions(this.currentPage()));
+	protected readonly actions = computed(() =>
+		this.pageActions(this.currentPage() as BackstagePage),
+	);
 
 	constructor() {
 		void (async () =>
@@ -176,7 +224,7 @@ export class RibbonFileSectionComponent {
 		return formatBackstageDate(timestamp, Date.now(), this.t);
 	}
 
-	protected selectPage(id: BackstagePage): void {
+	protected selectPage(id: string): void {
 		if (id === 'close') {
 			this.close.emit();
 			return;

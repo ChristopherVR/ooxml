@@ -65,6 +65,16 @@ test('english keys with locales are not flagged', () => {
 	assert.ok(!found.includes('missing-locales'));
 });
 
+test('monorepo paths are read like the old repository layout', () => {
+	const found = ids([
+		'viewers/pptx/packages/react/src/viewer/components/Ribbon.tsx',
+		'src/ui/src/pptx/i18n/translations-en.ts',
+	]);
+	assert.ok(found.includes('partial-bindings'));
+	assert.ok(found.includes('missing-locales'));
+	assert.ok(!found.includes('no-shared'));
+});
+
 test('renderReport returns null when there is nothing to say', () => {
 	assert.equal(renderReport(analyse(['README.md'])), null);
 });

@@ -1,4 +1,4 @@
-import type { CompareResult, SlideDiff } from 'ooxml-ui/pptx';
+import { describeElementChange, type CompareResult, type SlideDiff } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
@@ -73,7 +73,7 @@ function createDiffRow(
 	heading.textContent = `${t('pptx.compare.slideNumber', { number: Math.max(diff.baseIndex, diff.compareIndex) + 1 })} · ${t(`pptx.compare.status${capitalize(diff.status)}`)}`;
 	const details = createEl(doc, 'p');
 	details.textContent =
-		diff.changes.map((item) => item.description).join('; ') || heading.textContent;
+		diff.changes.map((item) => describeElementChange(item, t)).join('; ') || heading.textContent;
 	const controls = createEl(doc, 'div');
 	const reject = createEl(doc, 'button');
 	reject.type = 'button';

@@ -73,7 +73,7 @@ const PICTURE =
 const AUDIO =
 	`<p:pic><p:nvPicPr><p:cNvPr id="102" name="Trimmed Audio"/><p:cNvPicPr/>` +
 	`<p:nvPr><a:audioFile r:link="rIdAudio"/><p:extLst><p:ext uri="{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}">` +
-	`<p14:media xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" r:embed="rIdAudio"><p14:trim st="500"/></p14:media>` +
+	`<p14:media xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" r:embed="rIdMedia"><p14:trim st="500"/></p14:media>` +
 	`</p:ext></p:extLst></p:nvPr></p:nvPicPr>` +
 	`<p:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>` +
 	`<p:spPr>${xfrm(320, 60, 100, 100)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
@@ -116,6 +116,9 @@ export async function generateInspectorResetActionsFixture(): Promise<string> {
 		[
 			relXml('rIdImg', 'image', '../media/reset-image.png'),
 			relXml('rIdAudio', 'audio', '../media/reset-sound.wav'),
+			// PowerPoint pairs the `a:audioFile` link with a second, `media`-typed relationship to the
+			// same part for `p14:media`; one id used for both makes it refuse the deck.
+			`<Relationship Id="rIdMedia" Type="http://schemas.microsoft.com/office/2007/relationships/media" Target="../media/reset-sound.wav"/>`,
 			relXml('rIdChart', 'chart', '../charts/chart1.xml'),
 			'</Relationships>',
 		].join(''),

@@ -36,8 +36,9 @@ for (const theme of ['light', 'dark'] as const) {
 					fullPage: true,
 				});
 				if (route.name === 'landing') {
-					const load = page.getByRole('button', { name: 'Load the live demo' });
-					if (await load.count()) await load.click();
+					// The section starts its demo once it scrolls into view, which removes the load
+					// button; clicking it raced that and could wait on a button that was gone.
+					await page.locator('#live-demo').scrollIntoViewIfNeeded();
 					const embedded = page.frameLocator('.pv-livepane iframe');
 					await expect(embedded.locator('visio-viewer .viewport > svg')).toBeVisible();
 					await expect(embedded.locator('html')).toHaveAttribute('data-theme', theme);

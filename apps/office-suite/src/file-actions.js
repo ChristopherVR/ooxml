@@ -1,3 +1,4 @@
+import { showVersions } from './versions.js';
 import { $, task, notify, choose, escape, download } from './ui.js';
 import { contextMenu } from './context-menu.js';
 export function mountFileActions({
@@ -95,6 +96,7 @@ export function mountFileActions({
 					]
 				: []),
 			item('Download a copy', async () => download(await sessions.save(id))),
+			item('Version history', () => showVersions({ id, store, sessions, refresh })),
 			item('File location', () => locate(id)),
 			item('Remove from workspace…', () => remove(id)),
 		]);

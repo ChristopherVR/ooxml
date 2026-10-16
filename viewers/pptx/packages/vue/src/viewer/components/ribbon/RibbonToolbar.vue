@@ -107,9 +107,17 @@ const launchers = homeLaunchers(
 	},
 );
 let detachOverflow: (() => void) | null = null;
+let ribbonContent: HTMLElement | null = null;
 function setRibbonContent(el: unknown): void {
+	// Vue calls a function ref on every patch. Re-attaching for the same row would reset the
+	// scaling and collapsing each render, so the row never settled.
+	const next = el instanceof HTMLElement ? el : null;
+	if (next === ribbonContent && detachOverflow) {
+		return;
+	}
 	detachOverflow?.();
-	detachOverflow = el instanceof HTMLElement ? attachRibbonOverflow(el, { launchers }) : null;
+	ribbonContent = next;
+	detachOverflow = next ? attachRibbonOverflow(next, { launchers }) : null;
 }
 onBeforeUnmount(() => detachOverflow?.());
 </script>
@@ -228,6 +236,13 @@ onBeforeUnmount(() => detachOverflow?.());
 					:on-open-media-picker="props.onOpenMediaPicker"
 					:has-selection="Boolean(props.selectedElement)"
 					:on-open-hyperlink-dialog="props.onOpenHyperlinkDialog"
+					:layout-options="props.layoutOptions"
+					:current-layout-path="props.currentLayoutPath"
+					:on-insert-slide-from-layout="props.onInsertSlideFromLayout"
+					:on-insert-slide-from-template="props.onInsertSlideFromTemplate"
+					:template-scheme="props.templateScheme"
+					:on-toggle-comments="props.onToggleComments"
+					:is-comments-panel-open="props.isCommentsPanelOpen"
 				/>
 
 				<TextSection

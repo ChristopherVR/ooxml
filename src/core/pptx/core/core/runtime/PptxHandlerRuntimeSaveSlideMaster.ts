@@ -33,7 +33,11 @@ import type { PptxSlideMaster } from '../../types';
 import { applyMasterTextStyles } from '../../utils/master-text-style-writer';
 import { COLOR_MAP_ALIAS_KEYS, DEFAULT_COLOR_MAP } from '../../utils/theme-override-utils';
 import { masterPartLoadedBackground } from './master-part-background-cache';
-import { applyHeaderFooterFlagsToNode, applyBackgroundColorToCSld } from './master-save-helpers';
+import {
+	applyHeaderFooterFlagsToNode,
+	applyBackgroundColorToCSld,
+	withLeadingBackground,
+} from './master-save-helpers';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTheme';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
@@ -90,6 +94,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// partial dictionary (which would fail schema validation).
 		if (master.clrMap !== undefined) {
 			root['p:clrMap'] = buildClrMapAttributes(master.clrMap);
+		}
+
+		// A background style picked in the editor outranks the loaded model above.
+		const styleOverride = this.masterStyleOverrides.get(master.path);
+		if (styleOverride) {
+			root['p:cSld'] = withLeadingBackground(cSld, styleOverride.bg);
+			root['p:clrMap'] = buildClrMapAttributes(styleOverride.clrMap);
 		}
 
 		// `<p:hf>` - header/footer flags. Only emit when typed model has at

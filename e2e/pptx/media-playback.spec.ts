@@ -92,10 +92,12 @@ async function insertMediaFile(page: Page, filePath: string): Promise<void> {
 	// (Playwright's accessible-name computation folds that into the button's
 	// name, e.g. "🎬 Media"), so an exact "Media" match only works for
 	// some bindings; match the label as a substring across all five.
-	const mediaButton = page.getByRole('button', { name: /media|audio or video/iu });
+	const mediaButton = page.getByRole('button', { name: /video|media/iu });
 	await expect(mediaButton).toBeVisible();
 	const fileChooserPromise = page.waitForEvent('filechooser');
 	await mediaButton.click();
+	// Video is a dropdown, as in PowerPoint: This Device opens the file chooser.
+	await page.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	const fileChooser = await fileChooserPromise;
 	await fileChooser.setFiles(filePath);
 	// Let the data-URL read + probe (video intrinsic size / audio) settle.

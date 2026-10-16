@@ -1,7 +1,7 @@
 /**
  * Generates `smartart-build-reveal.pptx` - a single-slide deck carrying a
  * SmartArt diagram whose entrance builds ONE NODE AT A TIME, authored with
- * explicit per-node `p:spTgt/p:graphicEl/p:dgm` targets in REVERSE node-list
+ * explicit per-node `p:spTgt/p:graphicEl/a:dgm` targets in REVERSE node-list
  * order, for `e2e/smartart-build-reveal.spec.ts`.
  *
  * Why this generator post-processes the package zip instead of using the
@@ -39,7 +39,7 @@
  *      exact `tmRoot -> mainSeq -> par(delay=indefinite) -> par(delay=0) ->
  *      par(clickEffect)` nesting PowerPoint's own COM-authored ground-truth
  *      fixture uses), each one's `p:set`/`p:animEffect` targeting the
- *      SmartArt shape with `p:graphicEl><p:dgm id="<node guid>"
+ *      SmartArt shape with `p:graphicEl><a:dgm id="<node guid>"
  *      bldStep="sp"/></p:graphicEl>` for the node it reveals - in REVERSE
  *      node-list order (Gamma, then Beta, then Alpha), plus a
  *      `p:bldLst/p:bldGraphic/p:bldSub/a:bldDgm bld="one"` declaration so the
@@ -95,7 +95,7 @@ const SMARTART_SHAPE_ID = '87';
  * One discrete on-click reveal step for a single SmartArt node, mirroring the
  * exact `tmRoot -> mainSeq -> par(delay=indefinite) -> par(delay=0) ->
  * par(clickEffect)` nesting PowerPoint's own COM-authored ground truth uses
- * (see the module doc), extended with `p:graphicEl/p:dgm` per ECMA-376
+ * (see the module doc), extended with `p:graphicEl/a:dgm` per ECMA-376
  * S19.5.34 (`CT_TLGraphicalObjectBuildElement`) / S19.5.10
  * (`CT_TLBuildDiagram`).
  *
@@ -111,7 +111,7 @@ function clickStepXml(
 	const [outer, inner, click, setBhvr, effectBhvr] = ids;
 	const spTgt =
 		`<p:spTgt spid="${SMARTART_SHAPE_ID}">` +
-		`<p:graphicEl><p:dgm id="${nodeGuid}" bldStep="sp"/></p:graphicEl>` +
+		`<p:graphicEl><a:dgm id="${nodeGuid}" bldStep="sp"/></p:graphicEl>` +
 		`</p:spTgt>`;
 	return (
 		`<p:par><p:cTn id="${outer}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst><p:childTnLst>` +

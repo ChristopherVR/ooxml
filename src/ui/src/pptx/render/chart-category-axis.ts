@@ -75,6 +75,7 @@ function buildTickMarks(
 			x2: layout.plotRight,
 			y2: y,
 			...chartLineStyle(axis.spPr),
+			...(axis.axisId !== undefined ? { axisLine: axis.axisId } : {}),
 		});
 	}
 	const majorSkip = Math.max(1, axis.tickMarkSkip ?? 1);

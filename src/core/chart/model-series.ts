@@ -6,6 +6,7 @@
 // and extension lists stay raw XML for round-trip.
 import type { DrawingFill, DrawingLine, DrawingTextBody } from '../drawingml/types';
 import type { ChartManualLayout } from './manual-layout';
+import type { ChartErrorBars, ChartTrendline } from './model-analysis';
 
 /** Something in a chart part the parser did not model or could not read. */
 export interface ChartParseIssue {
@@ -193,6 +194,10 @@ export interface ChartSpaceSeries {
 	marker?: ChartMarker;
 	dataLabels?: ChartDataLabels;
 	dataPoints: ChartDataPoint[];
+	/** `c:trendline` elements, present when at least one is written. */
+	trendlines?: ChartTrendline[];
+	/** `c:errBars` elements (two on a scatter or bubble series), present when written. */
+	errorBars?: ChartErrorBars[];
 	/** `c:cat`, present whenever the element is written. */
 	categories?: ChartDataSource;
 	/** `c:val`. */

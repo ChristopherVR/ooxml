@@ -50,6 +50,9 @@ export function useCollaborationDocumentSync(
 		if (!doc || !factories || !config || applyingRemote || !gate.isOpen()) {
 			return;
 		}
+		if (options.slidesPaused?.()) {
+			return;
+		}
 		if (
 			config.role === 'viewer' ||
 			(config.externalSession && !config.externalSession.getSnapshot().synced)

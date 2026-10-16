@@ -1,4 +1,5 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	MAX_CHANNEL_NAME_CHARS,
 	MAX_CHANNEL_TOPIC_CHARS,
@@ -7,7 +8,7 @@ import {
 import css from './create-channel-dialog.css?raw';
 
 /** Standard channel creation. The host owns the client and checks unsaved Office content. */
-export class TeamsCreateChannelDialog extends LitElement {
+export class TeamsCreateChannelDialog extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		open: { type: Boolean, reflect: true },
@@ -50,12 +51,11 @@ export class TeamsCreateChannelDialog extends LitElement {
 		event.preventDefault();
 		const name = sanitizeChannelName(this.name);
 		if (!name) {
-			this.issue = 'Enter a channel name.';
+			this.issue = this.t('channel.enterName');
 			this.renderRoot.querySelector<HTMLInputElement>('input')?.focus();
 			return;
 		}
-		if (!this.create?.(name, this.description))
-			this.issue = 'The channel was not created. Your details are kept here.';
+		if (!this.create?.(name, this.description)) this.issue = this.t('channel.notCreated');
 	}
 	protected override render() {
 		return html`<dialog
@@ -66,12 +66,14 @@ export class TeamsCreateChannelDialog extends LitElement {
 			}}
 		>
 			<header>
-				<h2 id="title">Create a channel</h2>
-				<button type="button" aria-label="Close create channel" @click=${this.close}>×</button>
+				<h2 id="title">${this.t('channel.create')}</h2>
+				<button type="button" aria-label=${this.t('channel.closeCreate')} @click=${this.close}>
+					×
+				</button>
 			</header>
 			<form @submit=${this.submit}>
 				<label
-					>Channel name<input
+					>${this.t('channel.name')}<input
 						autofocus
 						maxlength=${MAX_CHANNEL_NAME_CHARS}
 						.value=${this.name}
@@ -79,29 +81,28 @@ export class TeamsCreateChannelDialog extends LitElement {
 							this.name = (event.target as HTMLInputElement).value;
 							this.issue = '';
 						}}
-						placeholder="Give your channel a name"
+						placeholder=${this.t('channel.namePlaceholder')}
 						aria-describedby="channel-name-help"
 				/></label>
-				<small id="channel-name-help">${MAX_CHANNEL_NAME_CHARS} characters maximum.</small>
+				<small id="channel-name-help"
+					>${this.t('channel.maxChars', { count: MAX_CHANNEL_NAME_CHARS })}</small
+				>
 				<label
-					>Description (optional)<textarea
+					>${this.t('channel.description')}<textarea
 						maxlength=${MAX_CHANNEL_TOPIC_CHARS}
 						.value=${this.description}
 						@input=${(event: Event) => (this.description = (event.target as HTMLTextAreaElement).value)}
-						placeholder="Help others understand what this channel is for"
+						placeholder=${this.t('channel.descriptionPlaceholder')}
 					></textarea>
 				</label>
 				<div>
-					<strong>Standard channel</strong>
-					<p>
-						Available to everyone in this workspace. Private and shared channels are not available
-						yet.
-					</p>
+					<strong>${this.t('channel.standard')}</strong>
+					<p>${this.t('channel.standardNote')}</p>
 				</div>
 				${this.issue ? html`<p class="issue" role="alert">${this.issue}</p>` : nothing}
 				<footer>
-					<button type="button" @click=${this.close}>Cancel</button
-					><button type="submit" class="primary">Create</button>
+					<button type="button" @click=${this.close}>${this.t('common.cancel')}</button
+					><button type="submit" class="primary">${this.t('common.create')}</button>
 				</footer>
 			</form>
 		</dialog>`;

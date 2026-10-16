@@ -130,7 +130,7 @@ export interface UseRibbonPropsActionsInput {
 	redo: () => void;
 	addText: () => void;
 	addShape: (preset: ShapePreset) => void;
-	addTable: () => void;
+	addTable: (rows?: number, columns?: number) => void;
 	addChart: (chartKind: InsertChartKind) => void;
 	addField: (fieldType: string, value?: string) => void;
 	addActionButton: (shapeType: string) => void;

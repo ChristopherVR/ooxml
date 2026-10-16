@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isPanelVisible } from 'ooxml-ui/pptx';
 import type { ViewerAddinStatus, ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
 /**
  * ViewerFileDialogs: the File / Help menu surfaces (document properties,
@@ -18,6 +19,7 @@ import type {
 	PptxHeaderFooter,
 	PptxSlide,
 } from 'pptx-viewer-core';
+import { computed } from 'vue';
 
 import type { LocaleCatalogEntry } from '../../i18n';
 import type { ThemeCatalogEntry } from '../../theme';
@@ -25,6 +27,7 @@ import type { UseDocumentPropertiesDialogResult } from '../composables/useDocume
 import type { UseHeaderFooterDialogResult } from '../composables/useHeaderFooterDialog';
 import type { UsePrintResult } from '../composables/usePrint';
 import type { UseVersionHistoryWiringResult } from '../composables/useVersionHistoryWiring';
+import { useResolvedCustomization } from '../composables/useViewerCustomization';
 import type { CanvasSize } from '../types';
 import ComparePanel from './ComparePanel.vue';
 import DocumentPropertiesDialog from './DocumentPropertiesDialog.vue';
@@ -68,6 +71,9 @@ defineProps<{
 	onClearCache: () => void;
 }>();
 
+const customization = useResolvedCustomization();
+const comparePaneVisible = computed(() => isPanelVisible(customization.value, 'comparePane'));
+
 const emit = defineEmits<{
 	/** A font file was registered; the ribbon adds the family to its list. */
 	(e: 'customFontRegistered', family: string): void;
@@ -100,7 +106,7 @@ const emit = defineEmits<{
 
 	<!-- Version history > compare against current -->
 	<ComparePanel
-		:open="versionHistory.showCompare.value"
+		:open="versionHistory.showCompare.value && comparePaneVisible"
 		:compare-result="versionHistory.compareResult.value"
 		:canvas-size="canvasSize"
 		:media-data-urls="mediaDataUrls"

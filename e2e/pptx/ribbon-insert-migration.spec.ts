@@ -11,26 +11,50 @@ import { downloadBytes } from './support/exports';
 test.use({ viewport: { width: 1440, height: 900 } });
 
 const GROUPS = [
+	'insert.slides',
 	'insert.tables',
 	'insert.images',
+	'insert.camera',
 	'insert.illustrations',
+	'insert.forms',
+	'insert.addIns',
 	'insert.links',
+	'insert.comments',
 	'insert.text',
 	'insert.symbols',
 	'insert.media',
 ];
 const CONTROLS = [
+	'insert.slides.newSlide',
+	'insert.slides.reuseSlides',
 	'insert.tables.table',
 	'insert.images.pictures',
+	'insert.images.screenshot',
+	'insert.images.photoAlbum',
+	'insert.camera.cameo',
 	'insert.illustrations.shapes',
+	'insert.illustrations.icons',
+	'insert.illustrations.threeDModels',
 	'insert.illustrations.smartArt',
 	'insert.illustrations.chart',
+	'insert.forms.forms',
+	'insert.addIns.getAddIns',
+	'insert.addIns.myAddIns',
+	'insert.links.zoom',
 	'insert.links.link',
 	'insert.links.action',
+	'insert.comments.comment',
 	'insert.text.textBox',
-	'insert.text.field',
+	'insert.text.headerFooter',
+	'insert.text.wordArt',
+	'insert.text.dateTime',
+	'insert.text.slideNumber',
+	'insert.text.object',
 	'insert.symbols.equation',
+	'insert.symbols.symbol',
 	'insert.media.media',
+	'insert.media.audio',
+	'insert.media.screenRecording',
 ];
 
 async function openInsert(page: Page, customization?: unknown) {
@@ -73,6 +97,7 @@ test('Text Box, Shape and Table insert into the deck, undo and survive save and 
 		.click();
 	await expect(slideElements(page)).toHaveCount(before + 2);
 	await insert.getByRole('button', { name: 'Table', exact: true }).click();
+	await insert.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click();
 	await expect(slideElements(page)).toHaveCount(before + 3);
 	await page.keyboard.press('Control+z');
 	await expect(slideElements(page)).toHaveCount(before + 2);
@@ -107,13 +132,12 @@ test('Chart, Action and Field menus insert native elements and dismiss from the 
 	await insert.getByRole('menuitem').first().click();
 	await expect(slideElements(page)).toHaveCount(before + 2);
 
-	const field = insert.getByRole('button', { name: 'Field', exact: true });
-	await field.click();
-	await insert.getByRole('menuitem', { name: 'Slide Number', exact: true }).click();
+	await insert.getByRole('button', { name: 'Slide Number', exact: true }).click();
 	await expect(slideElements(page)).toHaveCount(before + 3);
-	await field.click();
+	const table = insert.getByRole('button', { name: 'Table', exact: true });
+	await table.click();
 	await page.mouse.click(5, 5);
-	await expect(field).toHaveAttribute('aria-expanded', 'false');
+	await expect(table).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('Freeform tools keep pressed state, and Link follows the selection', async ({ page }) => {
@@ -124,7 +148,7 @@ test('Freeform tools keep pressed state, and Link follows the selection', async 
 	await expect(curve).toHaveAttribute('aria-pressed', 'true');
 	await curve.click();
 	await expect(curve).toHaveAttribute('aria-pressed', 'false');
-	const link = insert.getByRole('button', { name: 'Hyperlink', exact: true });
+	const link = insert.getByRole('button', { name: 'Link', exact: true });
 	await expect(link).toBeDisabled();
 	await selectElement(page, slideElements(page).first());
 	await expect(link).toBeEnabled();
@@ -142,7 +166,8 @@ test('native dialogs and pickers stay with the host', async ({ page }) => {
 	await expect(page.getByRole('dialog', { name: /^Insert Equation$/iu })).toBeVisible();
 	await page.keyboard.press('Escape');
 	const chooser = page.waitForEvent('filechooser');
-	await insert.getByRole('button', { name: 'Image', exact: true }).click();
+	await insert.getByRole('button', { name: 'Pictures', exact: true }).click();
+	await insert.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	await (await chooser).setFiles(fixture('test-image.gif'));
 	await expect(slideElements(page)).toHaveCount(before + 1);
 });
@@ -150,7 +175,7 @@ test('native dialogs and pickers stay with the host', async ({ page }) => {
 test('Insert groups and controls retain public customization IDs', async ({ page }) => {
 	const customization = {
 		ribbon: {
-			hiddenButtons: ['insert.illustrations.chart', 'insert.links.action', 'insert.text.field'],
+			hiddenButtons: ['insert.illustrations.chart', 'insert.links.action', 'insert.text.dateTime'],
 			hiddenGroups: ['insert.media'],
 		},
 	};
@@ -170,23 +195,29 @@ test.describe('touch Insert controls', () => {
 		const insert = page.locator('pptx-ui-ribbon-insert');
 		await insert.evaluate((host) => host.style.setProperty('--pptx-primary', '#123456'));
 		await page.setViewportSize({ width: 900, height: 900 });
+		// At 900px several groups collapse into popups: open the one holding the control.
+		const reveal = async (group: string) => {
+			const collapsed = insert.locator(`[data-ribbon-group="${group}"][data-collapsed]`);
+			if ((await collapsed.count()) > 0) {
+				await collapsed.locator('.face').tap();
+			}
+		};
+		await reveal('insert.tables');
 		const table = insert.getByRole('button', { name: 'Table', exact: true });
 		expect((await table.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-		const shape = insert.getByRole('button', { name: 'Shapes', exact: true });
-		expect((await shape.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 		await table.focus();
 		await expect(table).toBeFocused();
-		// At 900px the Text group is collapsed into a popup: open it before reaching Field.
-		const text = insert.locator('[data-ribbon-group="insert.text"][data-collapsed]');
-		if ((await text.count()) > 0) {
-			await text.locator('.face').tap();
-		}
-		await insert.getByRole('button', { name: 'Field', exact: true }).tap();
-		const item = insert.getByRole('menuitem', { name: 'Slide Number', exact: true });
+		await reveal('insert.illustrations');
+		const shape = insert.getByRole('button', { name: 'Shapes', exact: true });
+		expect((await shape.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+		await reveal('insert.images');
+		const pictures = insert.getByRole('button', { name: 'Pictures', exact: true });
+		await pictures.tap();
+		const item = insert.getByRole('menuitem', { name: 'This Device...', exact: true });
 		expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 		await page.emulateMedia({ forcedColors: 'active' });
 		await expect(item).toBeVisible();
 		await page.keyboard.press('Escape');
-		await expect(insert.getByRole('button', { name: 'Field', exact: true })).toBeFocused();
+		await expect(pictures).toBeFocused();
 	});
 });

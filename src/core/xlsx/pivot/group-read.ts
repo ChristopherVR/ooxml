@@ -12,7 +12,8 @@ export function readFieldGroups(fields: XmlElement[], names: string[]): PivotFie
 	const groups: PivotFieldGroup[] = [];
 	fields.forEach((field, index) => {
 		const group = first(field, 'fieldGroup', NS.x);
-		if (!group) return;
+		// A date field's `par` link belongs to its date groups (read separately).
+		if (!group || (att(group, 'par') !== undefined && !first(group, 'rangePr', NS.x))) return;
 		const range = first(group, 'rangePr', NS.x);
 		const list = first(group, 'groupItems', NS.x);
 		const number = (name: string) => {

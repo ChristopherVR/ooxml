@@ -95,6 +95,8 @@ export interface ContextMenuActions {
 	sizeAndPosition(): void;
 	/** "Format Shape...": open the properties tab, focused on the Fill & Stroke section. */
 	formatShape(): void;
+	/** "Format Chart Area...", "Format Axis...": open the chart Format pane on the clicked element. */
+	formatChartElement(): void;
 	/** Commit a table transform against the current cell selection. */
 	applyTable(op: TableCommandOp): void;
 	/** Merge Shapes (Union / Combine / Fragment / Intersect / Subtract) on the selection. */
@@ -182,6 +184,9 @@ export function runContextMenuCommand(id: ContextMenuCommandId, actions: Context
 			break;
 		case 'format-shape':
 			actions.formatShape();
+			break;
+		case 'format-chart-element':
+			actions.formatChartElement();
 			break;
 		case 'crop':
 			actions.crop();

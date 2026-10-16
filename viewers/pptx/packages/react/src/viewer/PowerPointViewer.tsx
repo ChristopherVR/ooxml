@@ -35,6 +35,7 @@ import {
 	buildUserFontFaceStyles,
 	deleteAutosaveSnapshot,
 	isDialogAvailable,
+	isEditingAllowed,
 	isFeatureEnabled,
 	isPanelVisible,
 	openPptxFile,
@@ -83,6 +84,7 @@ import {
 } from './components';
 // Collaboration
 import { AutosaveRecoveryDialog } from './components/AutosaveRecoveryDialog';
+import { ChartFormatContext } from './components/chart-format-context';
 import {
 	CollaborationProvider,
 	useCollaboration,
@@ -112,18 +114,23 @@ import { ViewerDialogGroup } from './components/ViewerDialogGroup';
 import { ViewerMainContent } from './components/ViewerMainContent';
 import { ViewerOptionsProvider } from './components/ViewerOptionsProvider';
 import { ViewerPresentationLayer } from './components/ViewerPresentationLayer';
+import { ViewerRegionBaseContext } from './components/ViewerRegion';
+import type { ViewerRegionBase } from './components/ViewerRegion';
 import { ViewerToolbarSection } from './components/ViewerToolbarSection';
 import { useAiBridge } from './hooks/ai/useAiBridge';
 import { useAiPanelController } from './hooks/ai/useAiPanelController';
 import { useBroadcastFollower, useFollowMode } from './hooks/collaboration';
 import { useCollaborationDocumentSync } from './hooks/collaboration/useCollaborationDocumentSync';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
+import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
+import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
 import { useEditorOperations } from './hooks/useEditorOperations';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLayoutSwitching } from './hooks/useLayoutSwitching';
+import { useLoadNotifications } from './hooks/useLoadNotifications';
 import { useMasterViewCrud } from './hooks/useMasterViewCrud';
 import { usePresentationSetup } from './hooks/usePresentationSetup';
 import { useReadOnlyRecommendationState } from './hooks/useReadOnlyRecommendationState';
@@ -182,6 +189,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onZoomChange,
 			onSelectionChange,
 			onSlideCountChange,
+			onLoad,
+			onError,
 			onOpenFile: hostOpenFile,
 			theme,
 			defaultThemeKey,
@@ -397,7 +406,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 
 		const [collaborationReadOnly, setCollaborationReadOnly] = useState(Boolean(collaboration));
 		const canEdit =
-			hostCanEdit && !collaborationReadOnly && !isProtectedView && !readOnlyRec.locked;
+			hostCanEdit &&
+			isEditingAllowed(customizationResolved) &&
+			!collaborationReadOnly &&
+			!isProtectedView &&
+			!readOnlyRec.locked;
 
 		// ── Settings dialog ─────────────────────────────────────────
 		const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -452,6 +465,16 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			activeSlide,
 			selectedElement,
 		} = state;
+
+		// Host `onLoad` / `onError` (the Svelte and vanilla bindings' load notifications).
+		useLoadNotifications({
+			loading,
+			error,
+			slideCount: slides.length,
+			canvasSize,
+			onLoad,
+			onError,
+		});
 
 		// ── Recent colours ("Most Recently Used") ─────────────────────
 		// Shared by every colour picker in BOTH the ribbon toolbar and the
@@ -912,6 +935,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			isEncryptedDialogOpen,
 			setIsEncryptedDialogOpen,
 			handlerRef,
+			viewerApi,
 			loadVersion,
 		} = useViewerIntegration({
 			transformCommittedText: (text) => applyAutoCorrect(text, viewerOptions.proofing),
@@ -1015,7 +1039,26 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		}
 		slidePackageClipboardRef.current.updateHost(slidePackageHost);
 		useEffect(() => () => slidePackageClipboardRef.current?.dispose(), []);
+		// Design galleries: hover preview over the live slides (no undo step, not dirty) and the
+		// effect/background commits. The slide a "selected slides" pick lands on is the active one.
+		const galleryDeckStyle = useDeckStyleHost({
+			slides,
+			templateElementsBySlideId,
+			theme: state.theme,
+			themeColorMap: themeColorMapValue,
+			handlerRef,
+			selectedSlideIds: slides[activeSlideIndex] ? [slides[activeSlideIndex].id] : [],
+			setSlides: state.setSlides,
+			setTemplateElementsBySlideId: state.setTemplateElementsBySlideId,
+			setTheme: state.setTheme,
+			heldDeckRef: state.deckStyleHeldRef,
+			holdTracking: history.holdTracking,
+			bumpHistory: () => state.setPointerCommitNonce((n) => n + 1),
+			markDirty: history.markDirty,
+		});
 		const ribbonGalleries = useRibbonGalleryCommands({
+			deckStyle: galleryDeckStyle,
+			activeSlide: slides[activeSlideIndex] ?? null,
 			selectedElement,
 			theme: state.theme,
 			themeColorMap: themeColorMapValue,
@@ -1025,6 +1068,12 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			updateElementById: editorOps.ops.updateElementById,
 			updateThemeColorScheme: themeHandlers.handleUpdateThemeColorScheme,
 			updateThemeFontScheme: themeHandlers.handleUpdateThemeFontScheme,
+			applyThemeData: themeHandlers.handleApplyThemeData,
+		});
+		const chartFormat = useChartFormatCommands({
+			selectedElement,
+			editable: canEdit && (mode === 'edit' || mode === 'master'),
+			updateElementById: editorOps.ops.updateElementById,
 		});
 		const ribbonScope = useRibbonScopeToken();
 
@@ -1196,6 +1245,23 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			locales: resolvedLocales.length > 1,
 		};
 
+		// What every host region renderer receives besides its own fields. The
+		// selection is keyed by value so a re-render alone is not a context change.
+		const selectionKey = state.effectiveSelectedIds.join(' ');
+		const regionBase = useMemo<ViewerRegionBase>(
+			() => ({
+				viewer: viewerApi,
+				mode,
+				canEdit,
+				activeSlideIndex,
+				slideCount: slides.length,
+				selectedElementIds: [...state.effectiveSelectedIds],
+				locale: localeCode,
+			}),
+			// oxlint-disable-next-line react-hooks/exhaustive-deps -- selectionKey stands for the ids
+			[viewerApi, mode, canEdit, activeSlideIndex, slides.length, selectionKey, localeCode],
+		);
+
 		// ── JSX ───────────────────────────────────────────────────────
 		const viewerContent = (
 			<div
@@ -1286,7 +1352,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 										isAiPanelOpen={aiPanel.isOpen}
 										onToggleAiPanel={aiPanel.toggle}
 										isProtectedView={isProtectedView}
-										onEnableEditing={hostCanEdit ? handleEnableEditing : undefined}
+										onEnableEditing={
+											hostCanEdit && isEditingAllowed(customizationResolved)
+												? handleEnableEditing
+												: undefined
+										}
 										onSetSnapToGrid={viewPreferencesSync.handleSetSnapToGrid}
 										onSetSnapToShape={viewPreferencesSync.handleSetSnapToShape}
 										onSetShowGuides={viewPreferencesSync.handleSetShowGuides}
@@ -1468,7 +1538,10 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 
 				{/* Ctrl/Cmd+Alt+V and the post-paste follow-up toolbar. */}
 				<PasteSpecialDialog
-					isOpen={editorOps.pasteSpecial.isPasteSpecialDialogOpen}
+					isOpen={
+						editorOps.pasteSpecial.isPasteSpecialDialogOpen &&
+						isDialogAvailable(customizationResolved, 'pasteSpecial')
+					}
 					onCancel={editorOps.pasteSpecial.closePasteSpecialDialog}
 					onConfirm={(format) => {
 						void editorOps.pasteSpecial.pasteWithFormat(format);
@@ -1651,62 +1724,69 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			// the user changed in the Options dialog.
 			<ViewerOptionsProvider options={viewerOptions} store={optionsStore}>
 				<ViewerCustomizationContext.Provider value={customizationResolved}>
-					<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
-						<AccountAuthContext.Provider value={accountAuth}>
-							<Rendering3DFlagsContext.Provider value={effective3D}>
-								<ViewerThemeProvider theme={effectiveTheme}>
-									<CollaborationProvider
-										config={collaboration}
-										canvasWidth={canvasSize.width}
-										canvasHeight={canvasSize.height}
-									>
-										<CollaborationDocumentSync
-											slides={slides}
-											templateElementsBySlideId={templateElementsBySlideId}
-											setSlides={state.setSlides}
-											content={content}
-											loadVersion={loadVersion}
-											loadOrigin={loadOrigin}
-											livePatcher={state.livePatcher}
-											onReadOnlyChange={setCollaborationReadOnly}
-											deckSaveState={{
-												headerFooter: state.headerFooter,
-												presentationProperties: state.presentationProperties,
-												viewProperties: state.viewProperties,
-												customShows: state.customShows,
-												sections: state.sections,
-												coreProperties: state.coreProperties,
-												appProperties: state.appProperties,
-												customProperties: state.customProperties,
-												tagCollections: state.tagCollections,
-												slideMasters: state.slideMasters,
-												notesMaster: state.notesMaster,
-												handoutMaster: state.handoutMaster,
-												slideSize: resolveSlideSizeSelection({
-													current: state.slideSizeEmu,
-													canvas: canvasSize,
-												}).size,
-												tableStyleMap: state.tableStyleMap,
-												tableStylesDefaultId: state.tableStylesDefaultId,
-												tableStylesToDelete: state.tableStylesToDelete,
-												embedFonts: dialogs.embedFontsEnabled,
-											}}
-										/>
-										<CollaborationFollowLayer
-											activeSlideIndex={activeSlideIndex}
-											setActiveSlideIndex={state.setActiveSlideIndex}
-											slideCount={slides.length}
-										/>
-										<ShapeFormatContext.Provider value={shapeFormat}>
-											<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-												{viewerContent}
-											</RibbonGalleryCommandsContext.Provider>
-										</ShapeFormatContext.Provider>
-									</CollaborationProvider>
-								</ViewerThemeProvider>
-							</Rendering3DFlagsContext.Provider>
-						</AccountAuthContext.Provider>
-					</RibbonAddInsContext.Provider>
+					<ViewerRegionBaseContext.Provider value={regionBase}>
+						<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
+							<AccountAuthContext.Provider value={accountAuth}>
+								<Rendering3DFlagsContext.Provider value={effective3D}>
+									<ViewerThemeProvider theme={effectiveTheme}>
+										<CollaborationProvider
+											config={collaboration}
+											canvasWidth={canvasSize.width}
+											canvasHeight={canvasSize.height}
+										>
+											<CollaborationDocumentSync
+												slides={galleryDeckStyle.held()?.slides ?? slides}
+												templateElementsBySlideId={
+													galleryDeckStyle.held()?.templateElementsBySlideId ??
+													templateElementsBySlideId
+												}
+												setSlides={state.setSlides}
+												content={content}
+												loadVersion={loadVersion}
+												loadOrigin={loadOrigin}
+												livePatcher={state.livePatcher}
+												onReadOnlyChange={setCollaborationReadOnly}
+												deckSaveState={{
+													headerFooter: state.headerFooter,
+													presentationProperties: state.presentationProperties,
+													viewProperties: state.viewProperties,
+													customShows: state.customShows,
+													sections: state.sections,
+													coreProperties: state.coreProperties,
+													appProperties: state.appProperties,
+													customProperties: state.customProperties,
+													tagCollections: state.tagCollections,
+													slideMasters: state.slideMasters,
+													notesMaster: state.notesMaster,
+													handoutMaster: state.handoutMaster,
+													slideSize: resolveSlideSizeSelection({
+														current: state.slideSizeEmu,
+														canvas: canvasSize,
+													}).size,
+													tableStyleMap: state.tableStyleMap,
+													tableStylesDefaultId: state.tableStylesDefaultId,
+													tableStylesToDelete: state.tableStylesToDelete,
+													embedFonts: dialogs.embedFontsEnabled,
+												}}
+											/>
+											<CollaborationFollowLayer
+												activeSlideIndex={activeSlideIndex}
+												setActiveSlideIndex={state.setActiveSlideIndex}
+												slideCount={slides.length}
+											/>
+											<ShapeFormatContext.Provider value={shapeFormat}>
+												<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
+													<ChartFormatContext.Provider value={chartFormat}>
+														{viewerContent}
+													</ChartFormatContext.Provider>
+												</RibbonGalleryCommandsContext.Provider>
+											</ShapeFormatContext.Provider>
+										</CollaborationProvider>
+									</ViewerThemeProvider>
+								</Rendering3DFlagsContext.Provider>
+							</AccountAuthContext.Provider>
+						</RibbonAddInsContext.Provider>
+					</ViewerRegionBaseContext.Provider>
 				</ViewerCustomizationContext.Provider>
 			</ViewerOptionsProvider>
 		);

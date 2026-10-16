@@ -11,6 +11,10 @@
    `--fix` cannot do this safely once a non-declaration statement sits between
    them) would churn geometry code far beyond this change's scope. */
 
+import {
+	applyChartElementFormats,
+	withElementFormatLabelBoxes,
+} from './chart-format/chart-format-render';
 import type { ChartPptxElement, PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
 import { applyChart3DDepth } from './chart-3d-depth';
@@ -48,7 +52,17 @@ import { buildRegionMapViewModel, buildWaterfallViewModel } from './chart-waterf
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function buildChartViewModel(element: PptxElement): ChartViewModel {
-	const vm = buildChartViewModelInner(element);
+	const inner = buildChartViewModelInner(element);
+	// Transparency, effects and element boxes from the Format panes / each element's c:spPr.
+	// Also strips the build-time axis-line tags, so it runs for every chart.
+	const vm =
+		element.type === 'chart'
+			? applyChartElementFormats(
+					inner,
+					element.chartData ?? { chartType: 'bar', categories: [], series: [] },
+					element.id,
+				)
+			: inner;
 	// A label with a line break (a "\n" `c:separator`) paints as one `<text>` per
 	// line in every binding; single-line labels pass through untouched.
 	return vm.dataLabels.some((label) => label.text.includes('\n'))
@@ -63,7 +77,9 @@ function buildChartViewModelInner(element: PptxElement): ChartViewModel {
 	const chartEl = element as ChartPptxElement,
 		// Resolved once here (chart-style-palette.ts), so every binding paints one colour cycle.
 		chartData = chartEl.chartData
-			? withResolvedPalette(withChartTextDefaults(withAutoTitle(chartEl.chartData)))
+			? withResolvedPalette(
+					withChartTextDefaults(withAutoTitle(withElementFormatLabelBoxes(chartEl.chartData))),
+				)
 			: chartEl.chartData;
 
 	if (!chartData || chartData.series.length === 0) {

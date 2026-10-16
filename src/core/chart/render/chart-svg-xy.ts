@@ -1,6 +1,7 @@
 // Scatter and bubble plots: two numeric axes, then one dot per point (a bubble's radius follows its
 // size, scaled as PowerPoint scales it: `../bubble-radius`).
 import { computeBubbleRadius, maxBubbleSize, medianBubbleRadius } from '../bubble-radius';
+import { scatterAnalysis } from './chart-svg-analysis';
 import { formatAxisValue, type AxisScale } from './chart-scale';
 import { line, n, text, textWidth, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
@@ -96,4 +97,5 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 				`<circle cx="${n(px(x))}" cy="${n(py(v))}" r="${n(r)}" fill="${fill}" fill-opacity="0.6" data-chart-series="${si}" data-chart-point="${i}"${filter}/>`,
 			);
 		});
+	scatterAnalysis(model, px, py, out);
 }

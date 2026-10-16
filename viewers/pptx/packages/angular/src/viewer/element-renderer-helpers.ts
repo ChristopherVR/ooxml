@@ -1,4 +1,4 @@
-import { elementHitTargetStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+import { elementHitTargetStyle, getFrameEffectStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 
 import { getContainerStyle, getShapeFillStrokeStyle } from './element-style';
@@ -55,6 +55,8 @@ export function buildElementContainerStyle(
 ): StyleMap {
 	return {
 		...getContainerStyle(element, zIndex),
+		// A chart area's outer shadow and glow sit on the chart frame, outside the chart (shared).
+		...(element.type === 'chart' ? getFrameEffectStyle(element) : undefined),
 		...buildTemplateAffordanceStyle(element, editTemplateMode),
 	};
 }

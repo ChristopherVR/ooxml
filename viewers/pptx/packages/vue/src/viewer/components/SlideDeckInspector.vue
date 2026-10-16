@@ -20,13 +20,16 @@ import type {
 	PptxPresentationProperties,
 	PptxSlide,
 } from 'pptx-viewer-core';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import type { UseCommentsWiringResult } from '../composables/useCommentsWiring';
 import type { UseInspectorDeckActionsResult } from '../composables/useInspectorDeckActions';
 import type { UseLoadContentResult } from '../composables/useLoadContent';
+import { useRegion } from '../composables/useViewerRegions';
 import InspectorPane from './inspector/InspectorPane.vue';
 import SlideInspector from './inspector/SlideInspector.vue';
+import ViewerRegion from './ViewerRegion.vue';
 
 const props = defineProps<{
 	deck: UseLoadContentResult;
@@ -55,6 +58,11 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
+// A host `regions.inspector` replaces the pane content; the rail keeps its
+// column width and border (and the mobile sheet its frame).
+const region = useRegion('inspector');
+const regionContext = computed(() => region.context(props.onClose));
+
 /** Commit a comments mutation through the history-aware wiring. */
 function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]): void {
 	props.comments.commitComments(next);
@@ -62,8 +70,18 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 </script>
 
 <template>
+	<aside
+		v-if="region.renderer.value && regionContext"
+		data-pptx-chrome="inspector"
+		:data-pptx-inspector="mobile ? undefined : ''"
+		class="pptx-vue-inspector flex flex-col overflow-hidden bg-background box-border text-xs text-foreground"
+		:class="mobile ? 'w-full' : 'w-72 flex-[0_0_18rem] border-l border-border'"
+	>
+		<ViewerRegion :renderer="region.renderer.value" :context="regionContext" />
+	</aside>
+
 	<InspectorPane
-		v-if="element"
+		v-else-if="element"
 		:mobile="mobile"
 		:element="element"
 		:can-edit="canEdit"

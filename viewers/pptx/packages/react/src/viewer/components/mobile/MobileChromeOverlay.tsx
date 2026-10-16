@@ -11,7 +11,7 @@ import { MobileBottomBar } from './MobileBottomBar';
 import { MobileSlidesSheet } from './MobileSlidesSheet';
 
 /** The mobile sheets this overlay toggles; a subset of shared's `MobileSheetKey`. */
-export type MobileChromeSheet = 'slides' | 'inspector' | 'comments' | 'notes';
+export type MobileChromeSheet = 'slides' | 'insert' | 'inspector' | 'comments' | 'notes';
 
 /**
  * Decide the next active sheet for a bottom-bar tap, delegating to shared's
@@ -63,17 +63,20 @@ export function MobileChromeOverlay(props: MobileChromeOverlayProps): React.Reac
 			commentCount,
 		} = props,
 		{ keyboardInset, isKeyboardOpen } = useKeyboardInsets(),
-		activeSheet: MobileChromeSheet | null = s.isSlidesPaneOpen
-			? 'slides'
-			: s.isInspectorPaneOpen
-				? s.sidebarPanelMode === 'comments'
-					? 'comments'
-					: 'inspector'
-				: !s.isSlideNotesCollapsed
-					? 'notes'
-					: null,
+		activeSheet: MobileChromeSheet | null = s.isMobileInsertOpen
+			? 'insert'
+			: s.isSlidesPaneOpen
+				? 'slides'
+				: s.isInspectorPaneOpen
+					? s.sidebarPanelMode === 'comments'
+						? 'comments'
+						: 'inspector'
+					: !s.isSlideNotesCollapsed
+						? 'notes'
+						: null,
 		closeAllSheets = () => {
 			s.setIsSlidesPaneOpen(false);
+			s.setIsMobileInsertOpen(false);
 			s.setIsInspectorPaneOpen(false);
 			s.setIsSlideNotesCollapsed(true);
 		},
@@ -82,6 +85,9 @@ export function MobileChromeOverlay(props: MobileChromeOverlayProps): React.Reac
 			switch (which) {
 				case 'slides':
 					s.setIsSlidesPaneOpen(true);
+					break;
+				case 'insert':
+					s.setIsMobileInsertOpen(true);
 					break;
 				case 'inspector':
 					s.setSidebarPanelMode('properties');
@@ -175,11 +181,7 @@ export function MobileChromeOverlay(props: MobileChromeOverlayProps): React.Reac
 					activeSheet={activeSheet}
 					commentCount={commentCount}
 					onOpenSlides={() => applySheetTap('slides')}
-					onOpenInsert={() => {
-						// Quick-insert: a text box is the most common starter element
-						// on mobile. Full Insert section lives in the top-bar menu.
-						editorOps.insertHandlers.handleAddTextBox();
-					}}
+					onOpenInsert={() => applySheetTap('insert')}
 					onOpenInspector={() => applySheetTap('inspector')}
 					onOpenComments={() => applySheetTap('comments')}
 					onToggleNotes={() => applySheetTap('notes')}

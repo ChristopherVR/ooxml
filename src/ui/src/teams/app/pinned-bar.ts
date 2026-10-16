@@ -1,13 +1,14 @@
-import { LitElement, html, nothing, unsafeCSS } from 'lit';
+import { html, nothing, unsafeCSS } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import type { PinnedMessage } from 'ooxml-core/teams';
 import { icon } from '../icons';
 import css from './pinned-bar.css?raw';
 
 const SNIPPET = 140;
-const snippet = (m: PinnedMessage['message']): string => {
+const snippet = (m: PinnedMessage['message'], attachment: string): string => {
 	const text = m.text.replace(/\s+/gu, ' ').trim();
 	if (text) return text.length > SNIPPET ? `${text.slice(0, SNIPPET)}...` : text;
-	return m.attachments[0]?.name ?? 'Attachment';
+	return m.attachments[0]?.name ?? attachment;
 };
 
 /**
@@ -15,7 +16,7 @@ const snippet = (m: PinnedMessage['message']): string => {
  * expands the full list. Properties: `pinned` (newest first). Events (bubbling, composed):
  * `teams-pinned-open` `{ messageId }` (jump to the message) and `teams-pinned-unpin` `{ messageId }`.
  */
-export class TeamsPinnedBar extends LitElement {
+export class TeamsPinnedBar extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = { pinned: { attribute: false }, expanded: { state: true } };
 	declare pinned: PinnedMessage[];
@@ -37,7 +38,7 @@ export class TeamsPinnedBar extends LitElement {
 		const [latest] = this.pinned;
 		if (!latest) return nothing;
 		return html`
-			<section aria-label="Pinned messages">
+			<section aria-label=${this.t('pinned.messages')}>
 				<div class="summary">
 					<button
 						type="button"
@@ -46,7 +47,7 @@ export class TeamsPinnedBar extends LitElement {
 					>
 						<span class="mark">${icon('pin')}</span>
 						<strong>${latest.message.authorName}</strong>
-						<span class="text">${snippet(latest.message)}</span>
+						<span class="text">${snippet(latest.message, this.t('pinned.attachment'))}</span>
 					</button>
 					<button
 						type="button"
@@ -55,7 +56,7 @@ export class TeamsPinnedBar extends LitElement {
 						aria-controls="pins"
 						@click=${() => (this.expanded = !this.expanded)}
 					>
-						${this.pinned.length} pinned
+						${this.t('pinned.count', { count: this.pinned.length })}
 					</button>
 				</div>
 				${
@@ -70,17 +71,19 @@ export class TeamsPinnedBar extends LitElement {
 												@click=${() => this.emit('teams-pinned-open', pin.message.id)}
 											>
 												<strong>${pin.message.authorName}</strong>
-												<span class="text">${snippet(pin.message)}</span>
-												<span class="by">Pinned by ${pin.pinnedByName}</span>
+												<span class="text"
+													>${snippet(pin.message, this.t('pinned.attachment'))}</span
+												>
+												<span class="by">${this.t('pinned.by', { name: pin.pinnedByName })}</span>
 											</button>
 											<button
 												type="button"
 												class="unpin"
-												aria-label=${`Unpin message from ${pin.message.authorName}`}
-												title="Unpin"
+												aria-label=${this.t('pinned.unpinFrom', { name: pin.message.authorName })}
+												title=${this.t('chat.unpin')}
 												@click=${() => this.emit('teams-pinned-unpin', pin.message.id)}
 											>
-												Unpin
+												${this.t('chat.unpin')}
 											</button>
 										</li>`,
 								)}

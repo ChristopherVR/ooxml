@@ -28,6 +28,7 @@ import { useResolvedCustomization } from '../composables/useViewerCustomization'
 import type { ContextMenuItem } from './ContextMenu.vue';
 import ContextMenu from './ContextMenu.vue';
 import HyperlinkDialog from './HyperlinkDialog.vue';
+import ChartFormatPanel from './inspector/ChartFormatPanel.vue';
 import ThemeEditorPanel from './inspector/ThemeEditorPanel.vue';
 import PasteOptionsToolbar from './PasteOptionsToolbar.vue';
 import PasteSpecialDialog from './PasteSpecialDialog.vue';
@@ -77,6 +78,11 @@ const { t } = useI18n();
 // The host can remove the Share dialog (hiddenDialogs / disabled collaboration).
 const customization = useResolvedCustomization();
 const shareAvailable = computed(() => isDialogAvailable(customization.value, 'share'));
+// The hyperlink and Paste Special dialogs are removable too, whatever opens them.
+const hyperlinkAvailable = computed(() => isDialogAvailable(customization.value, 'hyperlink'));
+const pasteSpecialAvailable = computed(() =>
+	isDialogAvailable(customization.value, 'pasteSpecial'),
+);
 
 /** Zero-size anchor positioned at the canvas menu's click point; `LayoutGalleryMenu` hangs off its rect. */
 const layoutGalleryAnchorEl = ref<HTMLElement | null>(null);
@@ -100,6 +106,9 @@ const layoutGalleryAnchorEl = ref<HTMLElement | null>(null);
 		@apply="themeEditing.applyThemeEdit"
 		@close="onCloseThemeEditor"
 	/>
+
+	<!-- Chart Format pane (Format Chart Area / Data Series / Axis / ...) -->
+	<ChartFormatPanel />
 
 	<!-- Element context menu (edit mode) -->
 	<ContextMenu
@@ -152,7 +161,7 @@ const layoutGalleryAnchorEl = ref<HTMLElement | null>(null);
 
 	<!-- Hyperlink editor -->
 	<HyperlinkDialog
-		:open="hyperlink.hyperlinkOpen.value"
+		:open="hyperlink.hyperlinkOpen.value && hyperlinkAvailable"
 		:element="hyperlink.hyperlinkTarget.value"
 		:slide-count="slideCount"
 		@save="hyperlink.onHyperlinkSave"
@@ -173,7 +182,7 @@ const layoutGalleryAnchorEl = ref<HTMLElement | null>(null);
 
 	<!-- Paste Special (Ctrl/Cmd+Alt+V) + the post-paste Paste Options toolbar -->
 	<PasteSpecialDialog
-		:open="pasteSpecial.isPasteSpecialDialogOpen.value"
+		:open="pasteSpecial.isPasteSpecialDialogOpen.value && pasteSpecialAvailable"
 		@cancel="pasteSpecial.closePasteSpecialDialog"
 		@confirm="pasteSpecial.pasteWithFormat"
 	/>

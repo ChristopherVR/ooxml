@@ -17,6 +17,8 @@ if (name) {
 	props.userId = params.get('id') ?? `demo-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
 if (params.get('room')) props.workspaceId = params.get('room')!;
+// ?locale=de shows the whole app in German; en, de, es, fr and zh-CN ship.
+if (params.get('locale')) props.locale = params.get('locale')!;
 
 // The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it, so it starts in local mode:
 // tabs of this browser share chat, presence and calls over BroadcastChannel and nothing leaves the

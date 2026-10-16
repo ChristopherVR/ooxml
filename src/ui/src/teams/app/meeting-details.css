@@ -17,3 +17,23 @@ h3 {
 	color: var(--office-foreground);
 	white-space: pre-wrap;
 }
+.scope {
+	display: grid;
+	gap: var(--office-space-3);
+}
+.scope fieldset {
+	display: grid;
+	gap: var(--office-space-2);
+	margin: 0;
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+}
+.scope label {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
+footer[hidden] {
+	display: none;
+}

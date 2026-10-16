@@ -96,10 +96,13 @@ export class OfficeUiChatList extends TeamsElement {
 		super.connectedCallback();
 		this.setAttribute('role', 'log');
 		this.setAttribute('aria-live', 'polite');
-		this.setAttribute('aria-label', 'Messages');
 		this.addEventListener('scroll', () => {
 			this.stickToBottom = this.scrollHeight - this.scrollTop - this.clientHeight < 64;
 		});
+	}
+
+	protected override hostLabel(): string {
+		return this.t('chat.messages');
 	}
 
 	protected override updated(): void {
@@ -107,7 +110,8 @@ export class OfficeUiChatList extends TeamsElement {
 	}
 
 	protected override render() {
-		if (this.messages.length === 0) return html`<p class="empty">No messages yet. Say hello.</p>`;
+		if (this.messages.length === 0) return html`<p class="empty">${this.t('chat.empty')}</p>`;
+		const now = Date.now();
 		const byId = new Map(this.messages.map((m) => [m.id, m]));
 		const rows: TemplateResult[] = [];
 		let previous: ChatMessage | undefined;
@@ -117,14 +121,14 @@ export class OfficeUiChatList extends TeamsElement {
 				previous = undefined;
 				continue;
 			}
-			if (!previous || dayLabel(previous.ts) !== dayLabel(m.ts))
-				rows.push(html`<div class="day"><span>${dayLabel(m.ts)}</span></div>`);
+			if (!previous || dayLabel(previous.ts, now, this.locale) !== dayLabel(m.ts, now, this.locale))
+				rows.push(html`<div class="day"><span>${dayLabel(m.ts, now, this.locale)}</span></div>`);
 			const grouped =
 				previous !== undefined &&
 				previous.authorId === m.authorId &&
 				m.ts - previous.ts < GROUP_MS &&
 				!m.replyTo &&
-				dayLabel(previous.ts) === dayLabel(m.ts);
+				dayLabel(previous.ts, now, this.locale) === dayLabel(m.ts, now, this.locale);
 			rows.push(this.message(m, grouped, byId.get(m.replyTo ?? '')));
 			previous = m;
 		}
@@ -157,7 +161,7 @@ export class OfficeUiChatList extends TeamsElement {
 							? nothing
 							: html`<header>
 									<span class="author">${m.authorName}</span>
-									<time>${formatTime(m.ts)}</time>
+									<time>${formatTime(m.ts, this.locale)}</time>
 								</header>`
 					}
 					${this.pinMark(m)}
@@ -166,20 +170,22 @@ export class OfficeUiChatList extends TeamsElement {
 							parent
 								? html`<blockquote>
 										<strong>${parent.authorName}</strong
-										>${parent.deleted ? 'This message was deleted' : parent.text.slice(0, 120)}
+										>${parent.deleted ? this.t('chat.deleted') : parent.text.slice(0, 120)}
 									</blockquote>`
 								: nothing
 						}
 						${
 							m.deleted
-								? html`<span class="deleted">This message was deleted</span>`
+								? html`<span class="deleted">${this.t('chat.deleted')}</span>`
 								: html`<span class="text">${this.body(m)}</span>${
-											m.editedAt ? html` <span class="edited">(edited)</span>` : nothing
+											m.editedAt
+												? html` <span class="edited">${this.t('chat.edited')}</span>`
+												: nothing
 										}`
 						}
 						${!m.deleted && m.meetingId ? this.meetingCard(m.meetingId) : nothing}
 						${!m.deleted && m.attachments?.length ? this.files(m.attachments) : nothing}
-						${!m.deleted && m.tabId ? html`<button class="thread-link" type="button" @click=${() => this.fire('office-chat-open-tab', { tabId: m.tabId })}>Open tab</button>` : nothing}
+						${!m.deleted && m.tabId ? html`<button class="thread-link" type="button" @click=${() => this.fire('office-chat-open-tab', { tabId: m.tabId })}>${this.t('chat.openTab')}</button>` : nothing}
 					</div>
 					${
 						!m.deleted && reactions.length
@@ -201,7 +207,7 @@ export class OfficeUiChatList extends TeamsElement {
 							: nothing
 					}
 					${m.deleted ? nothing : this.toolbar(m, own)}
-					${this.replyCounts[m.id] === undefined ? nothing : html`<button type="button" class="thread-link" @click=${() => this.fire('office-chat-thread', { messageId: m.id })}>${this.replyCounts[m.id]} ${this.replyCounts[m.id] === 1 ? 'reply' : 'replies'}</button>`}
+					${this.replyCounts[m.id] === undefined ? nothing : html`<button type="button" class="thread-link" @click=${() => this.fire('office-chat-thread', { messageId: m.id })}>${this.tn('chat.replies', this.replyCounts[m.id]!)}</button>`}
 				</div>
 			</article>
 		`;
@@ -226,40 +232,40 @@ export class OfficeUiChatList extends TeamsElement {
 			return html`<div class="meeting-card" data-gone="true">
 				<span class="meeting-icon">${icon('calendar')}</span>
 				<span class="meeting-meta">
-					<span class="meeting-title">This meeting was canceled or is not in your calendar</span>
+					<span class="meeting-title">${this.t('chat.meetingGone')}</span>
 				</span>
 			</div>`;
 		return html`<div class="meeting-card">
 			<span class="meeting-icon">${icon('calendar')}</span>
 			<span class="meeting-meta">
 				<span class="meeting-title">${card.title}</span>
-				<span class="meeting-time">${formatWhen(card.start, card.end)}</span>
+				<span class="meeting-time">${formatWhen(card.start, card.end, this.locale)}</span>
 			</span>
 			<button
 				type="button"
 				class="meeting-open"
 				@click=${() => this.fire('office-chat-meeting', { meetingId, action: 'open' })}
 			>
-				Details
+				${this.t('chat.meetingDetails')}
 			</button>
 			<button
 				type="button"
 				class="meeting-join"
 				@click=${() => this.fire('office-chat-meeting', { meetingId, action: 'join' })}
 			>
-				${card.live ? 'Join now' : 'Join'}
+				${this.t(card.live ? 'call.joinNow' : 'call.join')}
 			</button>
 		</div>`;
 	}
 
 	private toolbar(m: ChatMessage, own: boolean) {
 		return html`
-			<div class="toolbar" role="toolbar" aria-label="Message actions">
+			<div class="toolbar" role="toolbar" aria-label=${this.t('chat.messageActions')}>
 				${QUICK_REACTIONS.slice(0, 4).map(
 					(emoji) =>
 						html`<button
 							type="button"
-							aria-label=${`React ${emoji}`}
+							aria-label=${this.t('chat.react', { emoji })}
 							@click=${() => this.fire('office-chat-react', { messageId: m.id, emoji })}
 						>
 							${emoji}
@@ -267,8 +273,9 @@ export class OfficeUiChatList extends TeamsElement {
 				)}
 				<button
 					type="button"
-					title="Reply"
-					aria-label="Reply"
+					data-action="reply"
+					title=${this.t('chat.reply')}
+					aria-label=${this.t('chat.reply')}
 					@click=${() => this.fire('office-chat-reply', { messageId: m.id })}
 				>
 					${icon('reply')}
@@ -278,16 +285,16 @@ export class OfficeUiChatList extends TeamsElement {
 					own
 						? html`<button
 									type="button"
-									title="Edit"
-									aria-label="Edit"
+									title=${this.t('common.edit')}
+									aria-label=${this.t('common.edit')}
 									@click=${() => this.fire('office-chat-edit', { messageId: m.id })}
 								>
 									${icon('pencil')}
 								</button>
 								<button
 									type="button"
-									title="Delete"
-									aria-label="Delete"
+									title=${this.t('chat.delete')}
+									aria-label=${this.t('chat.delete')}
 									@click=${() => this.fire('office-chat-delete', { messageId: m.id })}
 								>
 									${icon('trash')}
@@ -300,13 +307,13 @@ export class OfficeUiChatList extends TeamsElement {
 
 	private pinMark(m: ChatMessage) {
 		return !m.deleted && this.pinnedIds.includes(m.id)
-			? html`<span class="pin-mark">${icon('pin')} Pinned</span>`
+			? html`<span class="pin-mark">${icon('pin')} ${this.t('chat.pinned')}</span>`
 			: nothing;
 	}
 
 	private pinButton(m: ChatMessage) {
 		const pinned = this.pinnedIds.includes(m.id);
-		const label = pinned ? 'Unpin' : 'Pin';
+		const label = this.t(pinned ? 'chat.unpin' : 'chat.pin');
 		return html`<button
 			type="button"
 			title=${label}
@@ -325,13 +332,15 @@ export class OfficeUiChatList extends TeamsElement {
 					<button
 						type="button"
 						class="file"
-						aria-label=${`Open ${a.name}`}
+						aria-label=${this.t('chat.openFile', { name: a.name })}
 						@click=${() => this.fire('office-chat-open-file', { attachment: a })}
 					>
 						<span class="badge" data-kind=${a.kind}>${KIND_LETTER[a.kind]}</span>
 						<span class="meta">
 							<span class="file-name">${a.name}</span>
-							<span class="file-size">${a.kind.toUpperCase()} ${formatSize(a.size)}</span>
+							<span class="file-size"
+								>${a.kind.toUpperCase()} ${formatSize(a.size, this.locale)}</span
+							>
 						</span>
 					</button>
 				`,

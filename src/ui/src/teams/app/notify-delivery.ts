@@ -1,4 +1,6 @@
-import { type ActivityItem, type NotificationSettings, describeActivity } from 'ooxml-core/teams';
+import type { ActivityItem, NotificationSettings } from 'ooxml-core/teams';
+import { describeActivityIn } from '../i18n/describe';
+import { teamsI18n, type TeamsI18n } from '../i18n/translator';
 
 /** The browser features delivery uses, injectable so the rules are testable without a browser. */
 export interface DeliveryEnv {
@@ -28,13 +30,14 @@ export function deliverNotification(
 	settings: Pick<NotificationSettings, 'sound'>,
 	env: DeliveryEnv,
 	actions: DeliveryActions,
+	i18n: TeamsI18n = teamsI18n(),
 ): 'toast' | 'desktop' | 'none' {
 	let result: 'toast' | 'desktop' | 'none' = 'none';
 	if (!env.hidden()) {
 		actions.toast(item);
 		result = 'toast';
 	} else if (env.permission() === 'granted') {
-		env.show(describeActivity(item), { body: item.preview, tag: item.id }, () =>
+		env.show(describeActivityIn(item, i18n), { body: item.preview, tag: item.id }, () =>
 			actions.open(item),
 		);
 		result = 'desktop';

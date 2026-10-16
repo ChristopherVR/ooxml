@@ -131,10 +131,14 @@
 		gap: 3px 9px;
 		min-height: 80px;
 	}
-	.create-row .app-badge {
+	.create-row .app-badge,
+	.create-row > button > .ui-icon {
 		width: 26px;
 		height: 26px;
 		font-size: 13px;
+	}
+	.create-row > button > .ui-icon {
+		padding: 6px;
 	}
 	.create-row span:not(.app-badge) {
 		font-size: 12px;

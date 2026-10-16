@@ -14,6 +14,7 @@ import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { appendDialogActions } from '../dialog-footer';
 import { createParityDialogShell } from '../parity-dialog-shell';
+import type { RegionSet } from '../region-set';
 import {
 	renderOleDeckEditor,
 	renderOleDocumentEditor,
@@ -23,6 +24,8 @@ import {
 /** Sink for a committed OLE content edit, matching `InspectorHandlers.setOleContent`. */
 export interface OleEditorDialogDeps {
 	onUpdateElement(patch: Partial<OlePptxElement>): void;
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet;
 }
 
 /**
@@ -46,7 +49,12 @@ export function openOleEditorDialog(
 	deps: OleEditorDialogDeps,
 ): void {
 	const descriptor = buildOleEditDialogDescriptor(element);
-	const shell = createParityDialogShell(doc, t, t(descriptor.titleKey));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t(descriptor.titleKey),
+		deps.regions && { regions: deps.regions },
+	);
 	shell.dialog.classList.add('pptxv-ole-edit-dialog');
 
 	// The element mutates across edits (each commit returns a NEW object with

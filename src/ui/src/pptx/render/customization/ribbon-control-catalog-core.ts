@@ -18,7 +18,7 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				layout: 'Layout',
 				reset: 'Reset',
 				section: 'Section',
-				slideTemplates: 'Slide templates',
+				slideTemplates: 'Slide templates (New Slide menu entry)',
 			},
 		},
 		font: {
@@ -95,21 +95,47 @@ export const RIBBON_CATALOG_CORE_TABS = {
 		},
 	},
 	insert: {
-		slides: { label: 'Slides', controls: { newSlide: 'New Slide' } },
+		slides: { label: 'Slides', controls: { newSlide: 'New Slide', reuseSlides: 'Reuse Slides' } },
 		tables: { label: 'Tables', controls: { table: 'Table' } },
-		images: { label: 'Images', controls: { pictures: 'Pictures' } },
+		images: {
+			label: 'Images',
+			controls: { pictures: 'Pictures', screenshot: 'Screenshot', photoAlbum: 'Photo Album' },
+		},
+		camera: { label: 'Camera', controls: { cameo: 'Cameo' } },
 		illustrations: {
 			label: 'Illustrations',
-			controls: { shapes: 'Shapes', smartArt: 'SmartArt', chart: 'Chart' },
+			controls: {
+				shapes: 'Shapes',
+				icons: 'Icons',
+				threeDModels: '3D Models',
+				smartArt: 'SmartArt',
+				chart: 'Chart',
+			},
 		},
-		links: { label: 'Links', controls: { link: 'Link', action: 'Action button' } },
+		forms: { label: 'Forms', controls: { forms: 'Forms' } },
+		addIns: { label: 'Add-ins', controls: { getAddIns: 'Get Add-ins', myAddIns: 'My Add-ins' } },
+		links: {
+			label: 'Links',
+			controls: { zoom: 'Zoom', link: 'Link', action: 'Action button' },
+		},
 		comments: { label: 'Comments', controls: { comment: 'Comment' } },
 		text: {
 			label: 'Text',
-			controls: { textBox: 'Text Box', field: 'Header, date, slide number field' },
+			controls: {
+				textBox: 'Text Box',
+				headerFooter: 'Header & Footer',
+				wordArt: 'WordArt',
+				dateTime: 'Date & Time',
+				slideNumber: 'Slide Number',
+				object: 'Object',
+				field: 'Date & Time and Slide Number (deprecated alias: use dateTime and slideNumber)',
+			},
 		},
 		symbols: { label: 'Symbols', controls: { equation: 'Equation', symbol: 'Symbol' } },
-		media: { label: 'Media', controls: { media: 'Video / Audio' } },
+		media: {
+			label: 'Media',
+			controls: { media: 'Video', audio: 'Audio', screenRecording: 'Screen Recording' },
+		},
 	},
 	draw: {
 		tools: {
@@ -129,15 +155,26 @@ export const RIBBON_CATALOG_CORE_TABS = {
 	design: {
 		themes: {
 			label: 'Themes',
-			controls: { browseThemes: 'Themes gallery', editTheme: 'Edit theme' },
+			controls: {
+				gallery: 'Themes (inline gallery)',
+				browseThemes: 'Themes gallery',
+				editTheme: 'Edit theme',
+			},
 		},
 		variants: {
 			label: 'Variants',
-			controls: { colors: 'Variants: Colors gallery', fonts: 'Variants: Fonts gallery' },
+			controls: {
+				gallery: 'Variants (inline gallery)',
+				colors: 'Variants: Colors gallery',
+				fonts: 'Variants: Fonts gallery',
+				effects: 'Variants: Effects gallery',
+				backgroundStyles: 'Variants: Background Styles gallery',
+			},
 		},
 		customize: {
 			label: 'Customize',
 			controls: { slideSize: 'Slide Size', formatBackground: 'Format Background' },
 		},
+		designer: { label: 'Designer', controls: { designIdeas: 'Design Ideas' } },
 	},
 } as const satisfies Readonly<Record<string, TabEntry>>;

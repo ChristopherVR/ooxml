@@ -25,6 +25,7 @@ import { AccessibilityService } from './accessibility.service';
 import { AiPanelStore } from './ai/ai-panel-store';
 import { AutosaveRecoveryService } from './autosave-recovery.service';
 import { AutosaveService } from './autosave.service';
+import { ChartFormatPaneService } from './chart-format-pane.service';
 import { ChartPartSelectionService } from './chart-part-selection.service';
 import { CollaborationService } from './collaboration.service';
 import { CustomFontsService } from './custom-fonts.service';
@@ -50,6 +51,7 @@ import { ViewerCollaborationSessionService } from './viewer-collaboration-sessio
 import { ViewerCompareService } from './viewer-compare.service';
 import { ViewerCustomShowsService } from './viewer-custom-shows.service';
 import { ViewerCustomizationService } from './viewer-customization.service';
+import { ViewerDeckStyleService } from './viewer-deck-style.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { ViewerDocumentPropertiesService } from './viewer-document-properties.service';
 import { ViewerExportService } from './viewer-export.service';
@@ -61,6 +63,7 @@ import { ViewerKeyboardService } from './viewer-keyboard.service';
 import { ViewerMobileSheetService } from './viewer-mobile-sheet.service';
 import { ViewerOptionsService } from './viewer-options.service';
 import { ViewerPresentationModeService } from './viewer-presentation-mode.service';
+import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
 import { ViewerZoomService } from './viewer-zoom.service';
@@ -79,6 +82,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ExportService,
 	EditorStateService,
 	ChartPartSelectionService,
+	ChartFormatPaneService,
 	TableSelectionService,
 	EmbeddedFontsService,
 	GoogleWebfontsService,
@@ -111,8 +115,10 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ViewerMobileSheetService,
 	ViewerOptionsService,
 	ViewerCustomizationService,
+	ViewerRegionService,
 	ViewerPresentationModeService,
 	ViewerThemeGalleryService,
+	ViewerDeckStyleService,
 	ViewerTouchGesturesService,
 	ViewerZoomService,
 	OutlineAuthoringService,

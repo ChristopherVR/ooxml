@@ -1,6 +1,10 @@
 import { formulaFailure } from './formula';
 import type { VisioFormulaValue } from './formula';
-import { finiteFormulaValue, formulaExponentUnit } from './formula-arithmetic';
+import {
+	compatibleFormulaUnits,
+	finiteFormulaValue,
+	formulaExponentUnit,
+} from './formula-arithmetic';
 
 /**
  * Rounding, power, logarithm and inverse trigonometric functions of the ShapeSheet, the ones
@@ -20,6 +24,10 @@ export const mathFormulaFunctions: ReadonlySet<string> = new Set([
 	'ASIN',
 	'ACOS',
 	'ATAN',
+	'DEG',
+	'RAD',
+	'ANG360',
+	'SUM',
 ]);
 
 /** A quotient a rounding error away from a whole number is that whole number. */
@@ -64,6 +72,38 @@ export function evaluateMathFormulaFunction(
 			value: name === 'INT' ? Math.floor(whole) : Math.trunc(whole),
 			unit: value.unit,
 		});
+	}
+	if (name === 'SUM') {
+		// Adds its arguments, which must share a dimension (`SUM(1 in,2 in)` is 3 in).
+		let total = value;
+		for (const item of args.slice(1)) {
+			const next = finiteFormulaValue(item);
+			total = finiteFormulaValue({
+				value: total.value + next.value,
+				unit: compatibleFormulaUnits(total, next),
+			});
+		}
+		return total;
+	}
+	if (name === 'DEG' || name === 'RAD' || name === 'ANG360') {
+		arity(1);
+		if (value.unit !== 'scalar' && value.unit !== 'angle')
+			return formulaFailure('unit', `${name} requires an angle or a number`);
+		// Angles are radians inside the sheet. DEG only labels its argument as an angle (Visio
+		// shows DEG(90) as 5156.6 deg, since 90 is taken as radians); RAD reads a plain number
+		// as degrees and converts it, and leaves an angle alone.
+		if (name === 'DEG') return { value: value.value, unit: 'angle' };
+		if (name === 'RAD')
+			return finiteFormulaValue({
+				value: value.unit === 'scalar' ? (value.value * Math.PI) / 180 : value.value,
+				unit: 'angle',
+			});
+		const turn = 2 * Math.PI;
+		let angle = value.value % turn;
+		if (angle < 0) angle += turn;
+		// A rounding error short of a full turn is the start of the turn.
+		if (Math.abs(angle - turn) < 1e-12) angle = 0;
+		return { value: angle + 0, unit: 'angle' };
 	}
 	if (name === 'POW') {
 		arity(2);

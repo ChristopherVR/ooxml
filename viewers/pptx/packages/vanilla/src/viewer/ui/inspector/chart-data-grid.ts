@@ -198,7 +198,7 @@ export function createChartDataGrid(
 				const valueInput = cellInput(
 					'number',
 					String(series.values[categoryIndex] ?? 0),
-					`${series.name} value ${categoryIndex + 1}`,
+					t('pptx.chart.seriesValueCell', { name: series.name, number: categoryIndex + 1 }),
 					(raw) => {
 						const padded =
 							categoryIndex >= series.values.length

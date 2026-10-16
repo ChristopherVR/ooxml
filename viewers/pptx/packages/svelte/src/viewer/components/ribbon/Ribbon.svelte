@@ -155,7 +155,7 @@
 		chromeUi={props.chromeUi}
 		commentCount={slideCommentCount}
 	/>
-	<FindReplacePanel findReplace={props.findReplace} editable={props.editor.editable} />
+	{#if custom.isPanelVisible('findReplace')}<FindReplacePanel findReplace={props.findReplace} editable={props.editor.editable} />{/if}
 	<!-- The File backstage is a full-screen `position: fixed` overlay, not a row
 	     of ribbon groups, so it is deliberately a sibling of
 	     `.pptx-svelte-ribbon-content` rather than routed through its
@@ -191,10 +191,10 @@
 {#if fontsOpen}
 	<FontEmbeddingPanel usedFontFamilies={usedFontFamilies} embeddedFonts={props.embeddedFontNames} enabled={props.editor.embedFonts} canEmbed={fontEmbedding.interactive} unavailableKey={fontEmbedding.disabledReasonKey} ontoggle={(enabled) => (props.editor.embedFonts = enabled)} onclose={() => (fontsOpen = false)} />
 {/if}
-{#if signaturesOpen}
+{#if signaturesOpen && custom.isDialogAvailable('signatures')}
 	<DigitalSignaturesDialog hasSignatures={props.hasDigitalSignatures} signatureCount={props.digitalSignatureCount} onclose={() => (signaturesOpen = false)} />
 {/if}
-{#if protectionOpen}
+{#if protectionOpen && custom.isDialogAvailable('passwordProtection')}
 	<!-- The secret lives on `EditorState`, not this component: the save path
 	     reads it there and routes a protected deck through `saveEncrypted`. -->
 	<PasswordProtectionDialog protected={passwordProtected} onset={(password) => { props.editor.setSavePassword(password); passwordProtected = true; }} onremove={() => { props.editor.clearSavePassword(); passwordProtected = false; }} onclose={() => (protectionOpen = false)} />

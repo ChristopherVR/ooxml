@@ -115,4 +115,5 @@ export const translations = {
 	'pptx.smartart.category.timeline': '时间轴',
 	'pptx.smartart.category.chevron': 'V 形',
 	'pptx.smartart.category.bending': '弯曲',
+	'pptx.smartArt.selectItemIndex': '选择项目 {{index}}',
 } as const;

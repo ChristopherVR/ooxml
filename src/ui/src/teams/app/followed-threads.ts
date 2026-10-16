@@ -1,5 +1,6 @@
 import { html } from 'lit';
 import type { FollowedThread, TeamsClient, TeamsState } from 'ooxml-core/teams';
+import { teamsI18n, type TeamsI18n } from '../i18n/translator';
 
 export function followedThreads(
 	state: TeamsState,
@@ -7,23 +8,22 @@ export function followedThreads(
 	open: (thread: FollowedThread) => void,
 	unreadOnly: boolean,
 	filter: (unreadOnly: boolean) => void,
+	i18n: TeamsI18n = teamsI18n(),
 ) {
+	const { t, tn } = i18n;
 	const threads = state.followedThreads.filter((thread) => !unreadOnly || thread.unread > 0);
-	return html`<section class="followed-threads" aria-label="Followed threads">
-		<h1>Followed threads</h1>
-		<p>
-			Threads you follow on this device. Their replies appear in Activity and notify you according
-			to your notification settings.
-		</p>
+	return html`<section class="followed-threads" aria-label=${t('followed.title')}>
+		<h1>${t('followed.title')}</h1>
+		<p>${t('followed.intro')}</p>
 		<fieldset>
-			<legend>Automatically follow</legend>
+			<legend>${t('followed.autoFollow')}</legend>
 			<label
 				><input
 					type="checkbox"
 					.checked=${state.threadFollowSettings.started}
 					@change=${(event: Event) => client.setThreadFollowSettings({ started: (event.target as HTMLInputElement).checked })}
 				/>
-				Threads I start</label
+				${t('followed.started')}</label
 			>
 			<label
 				><input
@@ -31,7 +31,7 @@ export function followedThreads(
 					.checked=${state.threadFollowSettings.replied}
 					@change=${(event: Event) => client.setThreadFollowSettings({ replied: (event.target as HTMLInputElement).checked })}
 				/>
-				Threads I reply to</label
+				${t('followed.replied')}</label
 			>
 		</fieldset>
 		<label
@@ -40,7 +40,7 @@ export function followedThreads(
 				.checked=${unreadOnly}
 				@change=${(event: Event) => filter((event.target as HTMLInputElement).checked)}
 			/>
-			Unread only</label
+			${t('followed.unreadOnly')}</label
 		>
 		<ul>
 			${
@@ -51,33 +51,35 @@ export function followedThreads(
 									<button
 										type="button"
 										@click=${() => open(thread)}
-										aria-label=${`Open thread in ${thread.channelName}: ${thread.root.deleted ? 'Deleted message' : thread.root.text}`}
+										aria-label=${t('followed.open', {
+											channel: thread.channelName,
+											text: thread.root.deleted ? t('followed.deletedMessage') : thread.root.text,
+										})}
 									>
 										<strong># ${thread.channelName}</strong
 										><span
-											>${thread.root.deleted ? 'This message was deleted' : thread.root.text || 'Shared file'}</span
+											>${thread.root.deleted ? t('chat.deleted') : thread.root.text || t('followed.sharedFile')}</span
 										>
 										<small
-											>${thread.replyCount} ${thread.replyCount === 1 ? 'reply' : 'replies'} ·
-											${new Date(thread.updatedAt).toLocaleString()}</small
+											>${tn('chat.replies', thread.replyCount)} ·
+											${new Date(thread.updatedAt).toLocaleString(i18n.intl)}</small
 										></button
-									><span>${thread.unread > 0 ? `${thread.unread} unread` : 'Read'}</span
+									><span
+										>${thread.unread > 0 ? t('followed.unreadCount', { count: thread.unread }) : t('followed.read')}</span
 									><button
 										type="button"
 										@click=${() => client.markThreadRead(thread.channelId, thread.root.id, thread.unread > 0)}
 									>
-										${thread.unread > 0 ? 'Mark as read' : 'Mark as unread'}</button
+										${t(thread.unread > 0 ? 'activity.markRead' : 'activity.markUnread')}</button
 									><button
 										type="button"
 										@click=${() => client.followThread(thread.channelId, thread.root.id, false)}
 									>
-										Unfollow thread
+										${t('thread.unfollow')}
 									</button>
 								</li>`,
 						)
-					: html`<li>
-							${unreadOnly ? 'No unread followed threads.' : 'No followed threads yet. Open a thread and choose Follow thread.'}
-						</li>`
+					: html`<li>${t(unreadOnly ? 'followed.noneUnread' : 'followed.none')}</li>`
 			}
 		</ul>
 	</section>`;

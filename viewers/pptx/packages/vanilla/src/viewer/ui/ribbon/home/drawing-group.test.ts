@@ -1,4 +1,4 @@
-import { RIBBON_SHAPE_SWATCHES, SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
+import { RECENT_SHAPES_KEY, RIBBON_SHAPE_SWATCHES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';
@@ -60,8 +60,12 @@ describe('createDrawingGroup', () => {
 		const group = createDrawingGroup(document, createTranslator(), actions);
 		group.update({ editable: true, hasSelection: false });
 		trigger(group, 'shapes').click();
-		slot(group, 'shapes').querySelector<HTMLElement>('[role="menuitem"]')?.click();
-		expect(actions.insertShape).toHaveBeenCalledWith(SHAPE_PRESET_DEFS[0].type);
+		const menu = slot(group, 'shapes');
+		expect(menu.querySelectorAll('.heading')).toHaveLength(9);
+		menu.querySelector<HTMLElement>('[role="menuitem"][data-value="star5"]')?.click();
+		expect(actions.insertShape).toHaveBeenCalledWith('star5');
+		// The pick is remembered in Recently Used Shapes; leave no storage behind.
+		localStorage.removeItem(RECENT_SHAPES_KEY);
 	});
 
 	it('runs the four z-order commands from the Arrange menu', () => {

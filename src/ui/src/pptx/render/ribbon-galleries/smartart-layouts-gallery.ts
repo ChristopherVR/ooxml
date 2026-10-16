@@ -21,6 +21,19 @@ import {
 import { smartArtLayoutTileSvg } from './smartart-layout-tiles';
 
 const TILE = { width: 56, height: 36 };
+
+/**
+ * Dictionary key of a built-in layout's name: the English title in camelCase
+ * ("Basic Block List" -> `pptx.gallery.smartArtLayouts.name.basicBlockList`).
+ */
+export function smartArtLayoutNameKey(title: string): string {
+	const words = title.split(/[^A-Za-z0-9]+/u).filter(Boolean);
+	const camel = words
+		.map((word, i) => (i === 0 ? word[0]!.toLowerCase() : word[0]!.toUpperCase()) + word.slice(1))
+		.join('');
+	return `pptx.gallery.smartArtLayouts.name.${camel}`;
+}
+
 /** PowerPoint's gallery order for the built-in layouts' categories, with English headings. */
 const NAMED_CATEGORIES: ReadonlyArray<readonly [string, string]> = [
 	['list', 'List'],
@@ -56,6 +69,9 @@ function namedLayoutSections(
 				id: entry.id,
 				labelKey: 'pptx.gallery.smartArtLayouts.named',
 				labelParams: { name: entry.title },
+				labelParamKeys: {
+					name: { key: smartArtLayoutNameKey(entry.title), fallback: entry.title },
+				},
 				label: entry.title,
 				previewSvg: smartArtLayoutTileSvg(category, accent1, TILE),
 				applied: currentId === entry.id,

@@ -72,6 +72,26 @@ office-ui-status-bar.status {
 	color: inherit;
 	font-weight: 600;
 }
+/*
+ * The bar measures its own width, not the window's (a suite sidebar narrows the editor without
+ * narrowing the window): the shape metrics, then the language, give way before the zoom controls
+ * at the trailing edge are clipped.
+ */
+office-ui-status-bar.status {
+	container: visio-status / inline-size;
+}
+@container visio-status (max-width: 900px) {
+	office-ui-status-item[data-language-status] {
+		display: none;
+	}
+}
+@container visio-status (max-width: 700px) {
+	office-ui-status-item[data-width-status],
+	office-ui-status-item[data-height-status],
+	office-ui-status-item[data-angle-status] {
+		display: none;
+	}
+}
 /* Presentation Mode sits beside the zoom, at the trailing edge. */
 office-ui-status-bar.status .zoom-controls {
 	margin-inline-start: 0;

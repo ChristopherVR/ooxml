@@ -33,11 +33,14 @@ export class CollaborationDialogsState {
 
 	readonly #collab: CollaborationController;
 	readonly #getShareDefaults: () => ShareDefaultsInput | undefined;
+	readonly #getAuthorName: (() => string | undefined) | undefined;
 
 	constructor(
 		collab: CollaborationController,
 		getShareDefaults: () => ShareDefaultsInput | undefined,
+		getAuthorName?: () => string | undefined,
 	) {
+		this.#getAuthorName = getAuthorName;
 		this.#collab = collab;
 		this.#getShareDefaults = getShareDefaults;
 	}
@@ -83,7 +86,7 @@ export class CollaborationDialogsState {
 		this.#broadcastConfig = config;
 		const full: CollaborationConfig = {
 			...config,
-			userName: this.#getShareDefaults()?.userName ?? 'Presenter',
+			userName: this.#getAuthorName?.() ?? this.#getShareDefaults()?.userName ?? 'Presenter',
 			role: 'owner',
 		};
 		this.#lastDialogConfig = full;

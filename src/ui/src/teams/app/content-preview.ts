@@ -1,4 +1,5 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import { keyed } from 'lit/directives/keyed.js';
 import {
 	contentUrl,
@@ -9,6 +10,7 @@ import {
 	type FileOperationOptions,
 } from 'ooxml-core/teams';
 import type { OpenFileDetail } from './teams-app';
+import { localizeCoreText } from '../i18n/core-text';
 import css from './content-preview.css?raw';
 import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands';
 import { workbookActions } from './workbook-actions';
@@ -18,7 +20,7 @@ import { markdownPreview } from './markdown-preview';
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
 export type SaveFileCopy = (file: File, options?: FileOperationOptions) => Promise<void>;
 
-export class TeamsContentPreview extends LitElement {
+export class TeamsContentPreview extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		detail: { attribute: false },
@@ -99,14 +101,14 @@ export class TeamsContentPreview extends LitElement {
 	/** Called by the workspace before replacing this pane. */
 	canLeave(): boolean {
 		if (this.saving) {
-			this.saveError = 'Wait for the workbook copy to finish saving or cancel the save.';
+			this.saveError = this.t('preview.waitSave');
 			return false;
 		}
 		if (!this.commitPendingEdit()) {
-			this.saveError = 'Finish or cancel the current cell edit before leaving.';
+			this.saveError = this.t('preview.finishEditLeave');
 			return false;
 		}
-		return !this.dirty || globalThis.confirm?.('Discard unsaved workbook edits?') === true;
+		return !this.dirty || globalThis.confirm?.(this.t('preview.discardEdits')) === true;
 	}
 
 	private commitPendingEdit(): boolean {
@@ -136,15 +138,15 @@ export class TeamsContentPreview extends LitElement {
 		const kind = detectContentKind(detail.attachment.name, detail.attachment.mime);
 		try {
 			const url = contentUrl(detail.url, this.ownerDocument.baseURI);
-			if (!url) throw new Error('This content has no valid web URL');
+			if (!url) throw new Error(this.t('preview.noUrl'));
 			const embed = this.embeds[detail.attachment.kind];
 			if (embed || kind === 'website') {
 				this.frame = contentUrl(embed ? embed(detail) : url, this.ownerDocument.baseURI);
-				if (!this.frame) throw new Error('The viewer returned an invalid embed URL');
+				if (!this.frame) throw new Error(this.t('preview.badEmbed'));
 				this.status = 'ready';
 				return;
 			}
-			if (kind === 'other') throw new Error('No embedded viewer is configured for this file type');
+			if (kind === 'other') throw new Error(this.t('preview.noViewer'));
 			const bytes = await readContent(
 				url,
 				request.signal,
@@ -166,21 +168,24 @@ export class TeamsContentPreview extends LitElement {
 				const viewer = this.shadowRoot?.querySelector<
 					HTMLElement & { load(bytes: Uint8Array, name?: string): Promise<void> }
 				>('docx-editor, xlsx-editor, visio-viewer, teams-presentation-preview');
-				if (!viewer) throw new Error('The viewer could not be mounted');
+				if (!viewer) throw new Error(this.t('preview.notMounted'));
 				await viewer.load(bytes, detail.attachment.name);
 			}
 			if (!request.signal.aborted) this.status = 'ready';
 		} catch (error) {
 			if (request.signal.aborted) return;
 			this.native = null;
-			this.error = error instanceof Error ? error.message : 'Could not preview content';
+			this.error =
+				error instanceof Error
+					? localizeCoreText(error.message, this.i18n)
+					: this.t('preview.failed');
 			this.status = 'error';
 		}
 	}
 
 	private toggleWorkbook(): void {
 		if (!this.commitPendingEdit()) {
-			this.saveError = 'Finish or cancel the current cell edit before switching modes.';
+			this.saveError = this.t('preview.finishEditSwitch');
 			return;
 		}
 		this.saveError = '';
@@ -190,7 +195,7 @@ export class TeamsContentPreview extends LitElement {
 		if (this.saving || (!download && !this.saveCopy) || this.native !== 'xlsx' || !this.detail)
 			return;
 		if (!this.commitPendingEdit()) {
-			this.saveError = 'Finish or cancel the current cell edit before saving.';
+			this.saveError = this.t('preview.finishEditSave');
 			return;
 		}
 		const viewer = this.shadowRoot?.querySelector<
@@ -228,7 +233,9 @@ export class TeamsContentPreview extends LitElement {
 		} catch (error) {
 			if (!request?.signal.aborted && !controller.signal.aborted)
 				this.saveError =
-					error instanceof Error ? error.message : 'Could not save the workbook copy';
+					error instanceof Error
+						? localizeCoreText(error.message, this.i18n)
+						: this.t('preview.saveFailed');
 		} finally {
 			if (this.saveAbort === controller) {
 				this.saveAbort = undefined;
@@ -241,7 +248,7 @@ export class TeamsContentPreview extends LitElement {
 		this.saveAbort?.abort();
 		this.saveAbort = undefined;
 		this.saving = false;
-		this.saveError = 'Workbook save canceled. Your edits remain local.';
+		this.saveError = this.t('preview.saveCanceled');
 	}
 
 	protected override render() {
@@ -249,7 +256,7 @@ export class TeamsContentPreview extends LitElement {
 		if (!detail) return nothing;
 		const kind = detectContentKind(detail.attachment.name, detail.attachment.mime);
 		const url = contentUrl(detail.url, this.ownerDocument.baseURI);
-		return html`<section aria-label="Content preview">
+		return html`<section aria-label=${this.t('preview.title')}>
 			<header>
 				<h2>${detail.attachment.name}</h2>
 				${
@@ -262,31 +269,34 @@ export class TeamsContentPreview extends LitElement {
 									download: () => void this.saveWorkbookCopy(true),
 									cancel: () => this.cancelWorkbookSave(),
 								},
+								this.i18n,
 							)
 						: nothing
 				}
-				${url ? html`<a href=${url} target="_blank" rel="noopener noreferrer">Open externally</a>` : nothing}
+				${url ? html`<a href=${url} target="_blank" rel="noopener noreferrer">${this.t('preview.openExternally')}</a>` : nothing}
 				<button
 					type="button"
 					@click=${() => this.dispatchEvent(new CustomEvent('teams-preview-close', { bubbles: true, composed: true }))}
 				>
-					Close preview
+					${this.t('preview.close')}
 				</button>
 			</header>
-			${this.native === 'xlsx' ? html`<p class="hint">Edits stay local. Download a copy${this.saveCopy ? ' or save a copy to the channel' : ''} to keep them. Other people keep their own copy open.</p>` : nothing}
-			${this.saved ? html`<p role="status">Workbook copy shared in the channel.</p>` : nothing}
-			${this.downloaded ? html`<p role="status">Workbook download started. Your changes remain local.</p>` : nothing}
+			${this.native === 'xlsx' ? html`<p class="hint">${this.t(this.saveCopy ? 'preview.editsLocalShare' : 'preview.editsLocal')}</p>` : nothing}
+			${this.saved ? html`<p role="status">${this.t('preview.copyShared')}</p>` : nothing}
+			${this.downloaded ? html`<p role="status">${this.t('preview.downloadStarted')}</p>` : nothing}
 			${this.saveError ? html`<p role="alert">${this.saveError}</p>` : nothing}
-			${this.status === 'loading' ? html`<p role="status">Loading preview...</p>` : nothing}
+			${this.status === 'loading' ? html`<p role="status">${this.t('preview.loading')}</p>` : nothing}
 			${
 				this.status === 'error'
 					? html`<p role="alert">${this.error}</p>
-							<button type="button" @click=${() => void this.load()}>Retry</button>`
+							<button type="button" @click=${() => void this.load()}>
+								${this.t('common.retry')}
+							</button>`
 					: nothing
 			}
 			${
 				this.frame
-					? html`<p class="hint">If this site blocks embedding, use Open externally.</p>
+					? html`<p class="hint">${this.t('preview.blocksEmbedding')}</p>
 							<iframe
 								title=${detail.attachment.name}
 								src=${this.frame}
@@ -298,10 +308,15 @@ export class TeamsContentPreview extends LitElement {
 			${keyed(
 				detail,
 				this.native === 'docx'
-					? html`<docx-editor .readOnly=${true} .fileName=${detail.attachment.name}></docx-editor>`
+					? html`<docx-editor
+							.readOnly=${true}
+							.locale=${this.i18n.locale}
+							.fileName=${detail.attachment.name}
+						></docx-editor>`
 					: this.native === 'xlsx'
 						? html`<xlsx-editor
 								.readOnly=${!this.editing}
+								.locale=${this.i18n.locale}
 								.fileName=${detail.attachment.name}
 								@workbook-change=${() => {
 									this.revision++;
@@ -318,7 +333,7 @@ export class TeamsContentPreview extends LitElement {
 										!this.commitPendingEdit()
 									) {
 										e.preventDefault();
-										this.saveError = 'Finish or cancel the current cell edit before saving.';
+										this.saveError = this.t('preview.finishEditSave');
 										return;
 									}
 									if (e.detail.command === 'save') {
@@ -329,7 +344,7 @@ export class TeamsContentPreview extends LitElement {
 								}}
 							></xlsx-editor>`
 						: this.native === 'vsdx'
-							? html`<visio-viewer .showToolbar=${false}></visio-viewer>`
+							? html`<visio-viewer .showToolbar=${false} locale=${this.i18n.locale}></visio-viewer>`
 							: this.native === 'pptx'
 								? html`<teams-presentation-preview></teams-presentation-preview>`
 								: nothing,
@@ -339,7 +354,7 @@ export class TeamsContentPreview extends LitElement {
 					? html`<article>
 							${
 								kind === 'markdown'
-									? markdownPreview(this.text, url!)
+									? markdownPreview(this.text, url!, this.i18n)
 									: html`<pre>${this.text}</pre>`
 							}
 						</article>`

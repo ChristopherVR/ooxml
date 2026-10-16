@@ -41,7 +41,7 @@ export function stencilConnectorPath(
 }
 
 /** Other shapes that compute cells from this connector are not recalculated here. */
-function assertNoDependents(root: Element, shape: Element, check: () => void): void {
+export function assertNoStencilDependents(root: Element, shape: Element, check: () => void): void {
 	const mention = new RegExp(`\\bSheet\\.${attribute(shape, 'ID')}!`, 'i');
 	for (const node of Array.from(root.getElementsByTagName('Cell'))) {
 		check();
@@ -81,7 +81,7 @@ export function layoutStencilConnector(
 			effectiveNumber(effective, `Lock${prefix}`, 0) !== 0
 		)
 			fail('EDIT_PROTECTED_CELL', 'This connector is protected against moving its ends.');
-	assertNoDependents(root, shape, check);
+	assertNoStencilDependents(root, shape, check);
 	writeStencilConnector(shape, route, vertices);
 	return [pageId];
 }

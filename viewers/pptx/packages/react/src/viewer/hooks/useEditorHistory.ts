@@ -63,6 +63,12 @@ export interface EditorHistoryResult {
 	handleUndo: () => void;
 	handleRedo: () => void;
 	resetHistory: () => void;
+	/**
+	 * Pause (`true`) and resume (`false`) change tracking. A gallery hover preview swaps the
+	 * slides in for a moment; while tracking is held that is neither an undo step nor an edit, and
+	 * when the original is back the tracker sees no change.
+	 */
+	holdTracking: (held: boolean) => void;
 	markDirty: () => void;
 	buildHistorySnapshot: (actionLabel?: string) => EditorHistorySnapshot;
 }
@@ -110,6 +116,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	 */
 	const lastCheapHashRef = useRef<string>('');
 	const isApplyingHistoryRef = useRef(false);
+	const trackingHeldRef = useRef(false);
 	const unlockHistoryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// -- State --------------------------------------------------------------
@@ -304,7 +311,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		if (loading || error) {
 			return;
 		}
-		if (isApplyingHistoryRef.current) {
+		if (isApplyingHistoryRef.current || trackingHeldRef.current) {
 			return;
 		}
 		if (hasActivePointerInteraction()) {
@@ -425,8 +432,13 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		updateHistoryAvailability();
 	};
 
+	const holdTracking = useCallback((held: boolean) => {
+		trackingHeldRef.current = held;
+	}, []);
+
 	return {
 		commitSlides,
+		holdTracking,
 		canUndo,
 		canRedo,
 		undoLabel,

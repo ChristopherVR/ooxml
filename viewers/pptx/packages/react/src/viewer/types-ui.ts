@@ -30,6 +30,7 @@ import type {
 import type React from 'react';
 
 import type { CollaborationConfig } from './hooks/collaboration/types';
+import type { ViewerLoadDetail } from './hooks/useLoadNotifications';
 import type { ConnectorGeometryType, SupportedShapeType } from './types-core';
 /**
  * Base handle interface for file viewer components.
@@ -287,6 +288,13 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onSelectionChange?: (elementIds: string[]) => void;
 	/** Callback when the total slide count changes (slide added/deleted). */
 	onSlideCountChange?: (count: number) => void;
+	/**
+	 * Fired each time a presentation finishes loading without an error, with the slide count
+	 * and canvas size.
+	 */
+	onLoad?: (detail: ViewerLoadDetail) => void;
+	/** Fired once per distinct load failure, with a human-readable message. */
+	onError?: (message: string) => void;
 	/**
 	 * Host override for the File ▸ Open action. When provided, the built-in
 	 * native file picker is bypassed and this is invoked instead; the host is

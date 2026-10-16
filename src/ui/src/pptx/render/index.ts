@@ -84,6 +84,7 @@ export * from './unicode-script-detection';
 // descriptor now.
 export * from './text-script-fonts';
 export * from './visual-effects';
+export * from './frame-effect-style';
 export * from './reflection';
 export * from './image-effects';
 export * from './image-background-removal';
@@ -171,6 +172,7 @@ export * from './chart-ext-editor-actions';
 // mutation helpers (axis visibility/title toggles, style-preset apply).
 export * from './chart-quick-actions';
 export * from './chart-quick-action-toggles';
+export * from './chart-format';
 export * from './chart-quick-action-styles';
 // What a data label SAYS: the c:showVal / c:showCatName / c:showSerName /
 // c:showPercent / c:separator cascade (per-point -> series -> chart-type).
@@ -867,6 +869,7 @@ export * from './collaboration-departure';
 // Vue/Svelte/Vanilla (Angular keeps its own DI-style class).
 export * from './collaboration-writeback';
 export * from './slide-compare';
+export * from './slide-compare-text';
 // Morph (PowerPoint Morph transition)  -  pure element-matching, SVG-path /
 // colour interpolation, text tokenisation, and CSS keyframe generation. The
 // DOM injection of the generated keyframes stays in each binding.
@@ -1484,6 +1487,8 @@ export * from './preview-elements';
 // Insert > Shape picker catalogue: preset geometry types + labels/i18n keys +
 // framework-neutral glyph descriptors; each binding maps glyphs to its icons.
 export * from './shape-preset-catalog';
+export * from './shape-gallery';
+export * from './shape-gallery-home';
 // Home-tab text formatting presets: font family/size dropdown lists,
 // character/line-spacing presets, and the change-case options + transforms.
 export * from './text-format-presets';
@@ -1589,6 +1594,7 @@ export * from './options';
 // per-viewer controller whose helpers every binding exposes imperatively.
 export * from './customization';
 export * from './ribbon-galleries';
+export * from './deck-style';
 // Host ribbon tabs (`ribbonAddIns`): which show, which is active and how a command runs.
 export * from './ribbon-add-ins';
 
@@ -1769,6 +1775,7 @@ export * from './theme-editor-model';
 export * from './ribbon-animations-state';
 export * from './ribbon-draw-state';
 export * from './ribbon-insert-state';
+export * from './ribbon-insert-layout';
 export * from './ribbon-home-state';
 export * from './ribbon-view-state';
 export * from './ribbon-transitions-state';

@@ -159,7 +159,9 @@ describe('intent validation for new kinds', () => {
 		expect(pick('home.drawing.shapes', 'ellipse')).toBeTruthy();
 		expect(pick('home.drawing.shapes', 'nope')).toBeFalsy();
 		expect(pick('home.drawing.arrange', 'front')).toBeTruthy();
-		expect(HOME_SHAPE_ITEMS).toHaveLength(12);
+		// The categorised gallery: every preset once, headed by PowerPoint's category names.
+		expect(new Set(HOME_SHAPE_ITEMS.map((row) => row.group)).size).toBe(9);
+		expect(HOME_SHAPE_ITEMS.length).toBeGreaterThan(180);
 	});
 
 	it('accepts only hex colours and bounded numbers', () => {

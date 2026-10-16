@@ -15,6 +15,7 @@
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import type { ViewerOptionsState } from '../state/viewer-options.svelte';
+	import { useRegionBase } from '../state/viewer-regions';
 	import SettingsAiSection from './ai/SettingsAiSection.svelte';
 	import SettingsAppearanceTab from './SettingsAppearanceTab.svelte';
 	import SettingsCustomFontsSection from './SettingsCustomFontsSection.svelte';
@@ -64,6 +65,8 @@
 
 	const t = useTranslator();
 	const customization = useViewerCustomization();
+	// A host `dialog.options` region fills the body; the shared binding adds the options model.
+	const regionBase = useRegionBase();
 	const options = $derived<ViewerOptions>(optionsState.options);
 	// Real runtime signals for the Add-ins pane's active/inactive split: the two
 	// three.js-backed renderers follow Advanced > "Disable 3D rendering", and
@@ -98,6 +101,9 @@
 			languageKey: locale,
 			customization: customization.resolved,
 			aiEnabled,
+			regionContext: regionBase
+				? { ...regionBase(), region: 'dialog.options', close: () => onclose() }
+				: null,
 		});
 	});
 

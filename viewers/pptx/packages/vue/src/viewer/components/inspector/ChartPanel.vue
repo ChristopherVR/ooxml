@@ -148,6 +148,18 @@ const CONTROL =
 
 		<template v-else>
 			<label :class="FIELD">
+				<span :class="LABEL">{{ t('pptx.chart.title') }}</span>
+				<input
+					:class="['pptx-vue-chart-input', CONTROL]"
+					data-testid="chart-title"
+					type="text"
+					:value="currentTitle"
+					:placeholder="t('pptx.chart.titlePlaceholder')"
+					@input="onTitleInput"
+				/>
+			</label>
+
+			<label :class="FIELD">
 				<span :class="LABEL">{{ t('pptx.chart.type') }}</span>
 				<pptx-ui-select
 					:aria-label="t('pptx.chart.type')"
@@ -160,18 +172,6 @@ const CONTROL =
 						{{ t(opt.labelKey) }}
 					</option>
 				</pptx-ui-select>
-			</label>
-
-			<label :class="FIELD">
-				<span :class="LABEL">{{ t('pptx.chart.title') }}</span>
-				<input
-					:class="['pptx-vue-chart-input', CONTROL]"
-					data-testid="chart-title"
-					type="text"
-					:value="currentTitle"
-					:placeholder="t('pptx.chart.titlePlaceholder')"
-					@input="onTitleInput"
-				/>
 			</label>
 
 			<label v-if="showGrouping" :class="FIELD">

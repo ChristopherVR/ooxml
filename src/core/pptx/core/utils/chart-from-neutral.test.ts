@@ -35,7 +35,6 @@ const reader: ChartTreeReader = {
 	},
 	resolveTypeface: (raw) => raw,
 	localName: (key) => key.slice(key.lastIndexOf(':') + 1),
-	extractPointValues: () => [],
 };
 
 const part = (plotArea: string) =>

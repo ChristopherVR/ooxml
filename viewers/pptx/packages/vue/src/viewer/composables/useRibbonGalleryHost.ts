@@ -1,5 +1,6 @@
-import { tableLayoutCells } from 'ooxml-ui/pptx';
+import { galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
 import type {
+	DeckStyleHost,
 	RibbonGalleryApplyResult,
 	RibbonGalleryContext,
 	TableCursorState,
@@ -19,7 +20,7 @@ import type {
  * components read it with {@link useRibbonGalleryHost}, which falls back to an
  * inert host (no selection, no-op dispatch) when mounted standalone.
  */
-import type { PptxElement, PptxHandler, PptxTheme } from 'pptx-viewer-core';
+import type { PptxElement, PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { computed, inject, provide } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 
@@ -29,6 +30,10 @@ export interface RibbonGalleryHost {
 	context: ComputedRef<RibbonGalleryContext>;
 	/** Carry out what a tile pick asked for. */
 	dispatch: (result: RibbonGalleryApplyResult) => void;
+	/** Show what a Design gallery tile would do while it is hovered; `null` ends the preview. */
+	preview?: (result: RibbonGalleryApplyResult | null) => void;
+	/** Put the slides back (the pointer left the tiles, or the gallery closed). */
+	endPreview?: () => void;
 }
 
 export const RibbonGalleryHostKey: InjectionKey<RibbonGalleryHost> =
@@ -40,6 +45,8 @@ export interface RibbonGallerySinks {
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
 	/** Deck-wide theme update; unset scheme parts keep the current theme's. */
 	applyTheme: (updates: Partial<PptxTheme>) => void;
+	/** The Design galleries' hover preview and their effect and background commits. */
+	deckStyle?: DeckStyleHost | undefined;
 }
 
 /** Route one apply result to its sink. */
@@ -47,9 +54,26 @@ export function dispatchRibbonGalleryResult(
 	result: RibbonGalleryApplyResult,
 	sinks: RibbonGallerySinks,
 ): void {
+	if (
+		result.kind === 'themeEffects' ||
+		result.kind === 'backgroundStyle' ||
+		result.kind === 'sequence'
+	) {
+		// Settles the hover preview itself, so the commit starts from the real slides.
+		void sinks.deckStyle?.commit(result);
+		return;
+	}
+	sinks.deckStyle?.endPreview();
 	switch (result.kind) {
 		case 'element':
 			sinks.updateElement(result.elementId, result.patch);
+			return;
+		case 'theme':
+			sinks.applyTheme({
+				colorScheme: result.colorScheme,
+				fontScheme: result.fontScheme,
+				name: result.name,
+			});
 			return;
 		case 'themeColorScheme':
 			sinks.applyTheme({ colorScheme: result.colorScheme });
@@ -68,24 +92,42 @@ export interface UseRibbonGalleryHostInput extends RibbonGallerySinks {
 	handler: ShallowRef<PptxHandler | null>;
 	/** The table cell cursor / range (Table Layout commands act on it). */
 	tableSelection?: () => TableCursorState | null;
+	/** The slide being edited, for Background Styles' applied mark. */
+	activeSlide?: () => PptxSlide | null;
 }
 
 /** Build and provide the gallery host for the viewer's ribbon. */
 export function provideRibbonGalleryHost(input: UseRibbonGalleryHostInput): RibbonGalleryHost {
 	const context = computed<RibbonGalleryContext>(() => {
 		const handler = input.handler.value;
-		return {
-			element: input.selectedElement(),
+		// While a hover preview shows, galleries are built from the original deck (stable tiles).
+		const deck = galleryDeckView(input.deckStyle?.held(), {
 			theme: input.theme.value,
 			themeColorMap: input.themeColorMap.value,
-			resolveStyleMatrix: handler ? (xml) => handler.resolveStyleMatrixReferences(xml) : undefined,
+			activeSlide: input.activeSlide?.() ?? null,
+		});
+		return {
+			element: input.selectedElement(),
+			theme: deck.theme,
+			themeColorMap: deck.themeColorMap,
+			resolveStyleMatrix: handler
+				? (xml, effectSchemeId) => handler.resolveStyleMatrixReferences(xml, effectSchemeId)
+				: undefined,
 			selectedTableCells: tableLayoutCells(input.tableSelection?.()),
+			activeSlide: deck.activeSlide ?? null,
+			...(handler?.getThemeVariants().length ? { themeVariants: handler.getThemeVariants() } : {}),
 		};
 	});
 	const host: RibbonGalleryHost = {
 		editable: computed(input.editable),
 		context,
 		dispatch: (result) => dispatchRibbonGalleryResult(result, input),
+		preview: (result) => {
+			if (input.editable()) {
+				input.deckStyle?.preview(result);
+			}
+		},
+		endPreview: () => input.deckStyle?.endPreview(),
 	};
 	provide(RibbonGalleryHostKey, host);
 	return host;

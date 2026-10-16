@@ -14,7 +14,7 @@
 		"server": "node server/index.mjs",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run --passWithNoTests && npm run test:server",
-		"test:server": "node --test server/server.test.mjs server/hardening.test.mjs server/chat-access.test.mjs",
+		"test:server": "node --test server/server.test.mjs server/hardening.test.mjs server/chat-access.test.mjs server/auth.test.mjs server/accounts.test.mjs server/session-hardening.test.mjs",
 		"build:packages": "node scripts/build-packages.mjs",
 		"docs:dev": "bun run --cwd docs docs:dev",
 		"docs:build": "bun run --cwd docs docs:build",

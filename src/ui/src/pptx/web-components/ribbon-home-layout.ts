@@ -95,3 +95,30 @@ export function paintHomeLayouts(
 		}
 	};
 }
+
+/**
+ * New Slide's gallery ends with "Slide Templates...": PowerPoint has no such Home button, so the
+ * starter-slide dialog lives with the other ways to add a slide. It raises the same request the
+ * old button did, and follows that control's disabled and hidden state.
+ */
+export function paintSlideTemplatesEntry(
+	doc: Document,
+	popup: HTMLElement,
+	state: RibbonHomeViewState,
+	open: () => void,
+): void {
+	const status = state.controls['home.slides.slideTemplates'];
+	if (status?.hidden) {
+		return;
+	}
+	const entry = doc.createElement('button');
+	entry.type = 'button';
+	entry.className = 'item templates';
+	entry.dataset.pptxCompact = '';
+	entry.dataset.ribbonControl = 'home.slides.slideTemplates';
+	entry.disabled = Boolean(status?.disabled);
+	entry.textContent = homeLabel(state, 'pptx.home.slideTemplatesMenu', 'Slide Templates...');
+	entry.addEventListener('mousedown', (event) => event.preventDefault());
+	entry.addEventListener('click', open);
+	popup.append(entry);
+}

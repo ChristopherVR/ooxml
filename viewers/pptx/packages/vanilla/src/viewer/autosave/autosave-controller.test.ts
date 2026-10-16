@@ -362,4 +362,37 @@ describe('recovery probing', () => {
 		expect(probeAutosaveRecovery).not.toHaveBeenCalled();
 		controller.destroy();
 	});
+
+	it('neither marks a Design gallery hover preview as an edit nor puts it in a snapshot', async () => {
+		const { handler, save } = makeHandler();
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getIntervalMs: () => 1000,
+		});
+		const real = [makeSlide('real')];
+		store.set({ slides: real });
+		store.set({ deckStyleHeld: true });
+		store.set({ slides: [makeSlide('preview')] });
+		store.set({ slides: real });
+		store.set({ deckStyleHeld: false });
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(save).not.toHaveBeenCalled();
+		expect(saveAutosaveSnapshot).not.toHaveBeenCalled();
+		expect(store.get().dirty).toBeFalsy();
+
+		// A document that is already dirty, with a timer armed, skips the tick that lands
+		// while a preview shows, and writes the real slides once it ends.
+		store.set({ slides: [makeSlide('edited')], dirty: true });
+		store.set({ deckStyleHeld: true });
+		store.set({ slides: [makeSlide('preview')] });
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(save).not.toHaveBeenCalled();
+		store.set({ slides: [makeSlide('edited')], deckStyleHeld: false });
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(save).toHaveBeenCalledOnce();
+		expect((save.mock.calls[0]![0] as PptxSlide[])[0]!.id).toBe('edited');
+		controller.destroy();
+	});
 });

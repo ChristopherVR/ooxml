@@ -22,6 +22,7 @@ import {
 	createCustomizationController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isDialogAvailable,
+	isEditingAllowed,
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
@@ -91,6 +92,11 @@ export class ViewerCustomizationService {
 	/** The legacy `hiddenActions` list unioned with the customisation. */
 	effectiveHiddenActions(legacy: readonly ToolbarActionId[]): ToolbarActionId[] {
 		return resolveEffectiveHiddenActions(this.resolved(), legacy) ?? [];
+	}
+
+	/** False when the host set `capabilities.edit` to false. */
+	editingAllowed(): boolean {
+		return isEditingAllowed(this.resolved());
 	}
 
 	panelVisible(panel: ViewerPanelId): boolean {

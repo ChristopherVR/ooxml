@@ -12,7 +12,7 @@ export const frText: Readonly<Record<string, string>> = {
 	'Font Size': 'Taille de police',
 	'Shape Data Window': 'Fenêtre Données de forme',
 	'External Data Window': 'Fenêtre Données externes',
-	'Data Graphic Fields': 'Champs de graphique de données',
+	'Data Graphic Fields': 'Champs des graphiques de données',
 	'Issues Window': 'Fenêtre Problèmes',
 	Ruler: 'Règle',
 	Grid: 'Grille',
@@ -30,7 +30,7 @@ export const frText: Readonly<Record<string, string>> = {
 	'More Colors...': 'Autres couleurs...',
 	'No Fill': 'Aucun remplissage',
 	'No Line': 'Aucune ligne',
-	'Tell me what you want to do': 'Que voulez-vous faire ?',
+	'Tell me what you want to do': 'Dites-moi ce que vous voulez faire',
 	"Theme styles from the drawing's theme. A drawing without a theme gets the fixed Office colours shown here.":
 		'Styles issus du thème du dessin. Un dessin sans thème reçoit les couleurs Office fixes affichées ici.',
 	'Select one shape to change.': 'Sélectionnez une forme à modifier.',

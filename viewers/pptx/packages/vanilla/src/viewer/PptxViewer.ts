@@ -47,6 +47,8 @@ import {
 	resolveAutosaveFileKey,
 	resolveExpiredAutosaveSnapshots,
 	resolveImageResolutionScale,
+	isEditingAllowed,
+	isPanelVisible,
 	resolveSlideSizeSelection,
 	shouldClearAutosaveCacheOnClose,
 	shouldConfirmExternalHyperlink,
@@ -115,6 +117,7 @@ import { applyPresentationThemePreset } from './presentation-theme-controller';
 import { createPresenterCaptions, mountPresenterView } from './presenter';
 import type { PresenterCaptions, PresenterViewHandle, PresenterViewOptions } from './presenter';
 import { renderAudienceEffects } from './presenter-console';
+import { createRegionSupport } from './region-support';
 import type { ElementRendererRegistry } from './render';
 import { createDefaultRegistry } from './render';
 import type { RenderController } from './render-controller';
@@ -152,6 +155,8 @@ import { openFontEmbeddingDialog } from './ui/font-embedding-dialog';
 import { openPasswordProtectionDialog } from './ui/password-protection-dialog';
 import type { PasteOptionsToolbarHandle } from './ui/paste-options-toolbar';
 import { mountPasteOptionsToolbar } from './ui/paste-options-toolbar';
+import type { RegionSet, RegionSupport } from './ui/region-set';
+import { createRegionSet } from './ui/region-set';
 import { openSignatureStrippedDialog } from './ui/signature-stripped-dialog';
 import { openVersionHistoryPanel } from './ui/version-history-panel';
 import type { ViewerControls } from './viewer-controls';
@@ -228,6 +233,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private ribbonAddIns: readonly RibbonAddInTab[];
 	/** The host `customization` option + the imperative API's live edits. */
 	protected readonly customization: ViewerCustomizationLifecycle;
+	/** Region context + subscription for host-replaced regions (built on first use). */
+	private regionSupport: RegionSupport | null = null;
+	/** Host-replaced dialog bodies (Options, Share, Broadcast, Print); destroyed with the viewer. */
+	private dialogRegions: RegionSet | null = null;
+	private chromeRegions: RegionSet | null = null;
 
 	constructor(container: HTMLElement, options: PptxViewerOptions = {}) {
 		super();
@@ -236,7 +246,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.options = options;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
-		this.requestedEditable = options.editable ?? false;
+		// The legacy `readOnly` flag is AND-ed in: it can only take editing away.
+		this.requestedEditable = (options.editable ?? false) && !options.readOnly;
 		const storedPrefs = readStoredViewerPrefs();
 		this.availableThemes = options.availableThemes ?? THEME_CATALOG;
 		this.availableLocales = resolveAvailableLocales(options);
@@ -413,13 +424,18 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			getChrome: () => this.lifecycle.chrome,
 			getTranslator: () => this.t,
+			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler) => this.loading.setHandler(handler),
-			getUserName: () => this.optionsController?.getOptions().general.userName,
+			getUserName: () =>
+				options.authorName || this.optionsController?.getOptions().general.userName,
 			transformCommittedText: (text) =>
 				this.optionsController?.transformCommittedText(text) ?? text,
-			onChange: options.onChange,
+			onChange: () => {
+				options.onChange?.();
+				this.emitContentChange();
+			},
 			onCursorMove: (x, y) => this.sessions.setCollaborationCursor(x, y),
 			onInlineTextInput: (elementId, text) =>
 				this.sessions.publishCollaborationInlineText(elementId, text),
@@ -548,6 +564,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			},
 			aiEnabled: false,
 			getCustomization: () => this.customization.getResolved(),
+			regions: this.getDialogRegions(),
 			root: () => this.lifecycle.chrome.root,
 			setAutosaveEnabled: (enabled) => this.setAutosaveEnabled(enabled),
 			print: (printOptions) => this.print(printOptions),
@@ -608,7 +625,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				this.editor.getEditActions().reformatPasted(entry.id, entry.sourceClone, format);
 			},
 		});
-		if (options.editable) {
+		if (this.effectiveEditable()) {
 			this.store.set({ editable: true });
 			this.editor.setEditable(true);
 		}
@@ -641,7 +658,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				!this.signatureWarningAcknowledged
 			) {
 				this.signatureWarningAcknowledged = true;
-				openSignatureStrippedDialog(this.doc, this.t, state.digitalSignatureCount);
+				openSignatureStrippedDialog(
+					this.doc,
+					this.t,
+					state.digitalSignatureCount,
+					this.getDialogRegions(),
+				);
 			}
 		});
 		// Fetch Google-served webfonts for referenced families that are neither
@@ -708,8 +730,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTranslator: () => this.t,
 			getScale: () => this.renderer.effectiveScale(),
 			setEditable: (editable) => this.setEditable(editable),
-			onCollaborationReadOnlyChange: (readOnly) =>
-				this.applyEditable(this.requestedEditable && !readOnly),
+			onCollaborationReadOnlyChange: () => this.applyEditable(this.effectiveEditable()),
 			goToSlide: (index) => this.controls.goToSlide(index),
 			// Restoring a crash-recovery snapshot re-enters the normal load path,
 			// exactly as `openRecentFile` does, except it is the SAME document the
@@ -720,12 +741,17 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// dialog's local-user avatar-circle fallback (see `getUserInitials`
 			// in `collaboration-active-session.ts`).
 			getUserInitials: () => this.optionsController?.getOptions().general.userInitials,
+			getRegions: () => this.getDialogRegions(),
 			getHiddenActions: () => this.getChromeOptions().hiddenActions,
 			isShareAvailable: () => this.customization.isDialogAvailable('share'),
 		});
 		// Host locks/defaults reach the options store before its first apply; a
 		// later customisation change rebuilds the chrome the way `setLocale` does.
-		this.customization.bind(this.optionsController.optionsStore, () => this.rebuildChrome());
+		this.customization.bind(this.optionsController.optionsStore, () => {
+			// `capabilities.edit` can flip the effective edit state live.
+			this.applyEditable(this.effectiveEditable());
+			this.rebuildChrome();
+		});
 		// Every subsystem the options controller drives now exists: apply the
 		// persisted File > Options values (undo depth, ribbon visibility, root
 		// classes, ScreenTips, etc.) for the first time.
@@ -913,7 +939,15 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		await this.loading.load(file, 'user', options);
 	}
 
+	/**
+	 * File > Open. When the host supplied `onOpenFile` it is invoked instead of the
+	 * built-in picker, and the host loads the chosen deck itself (`loadFile`).
+	 */
 	openFile(): void {
+		if (this.options.onOpenFile) {
+			this.options.onOpenFile();
+			return;
+		}
 		void (async () => {
 			const picked = await openPptxFile();
 			if (picked) {
@@ -1163,6 +1197,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** Run the shared WCAG checks against the live deck and show the results. */
 	openAccessibility(): void {
+		if (!isPanelVisible(this.customization.getResolved(), 'accessibilityPane')) {
+			return;
+		}
 		this.lifecycle.chrome.accessibility.open(collectAccessibilityIssues(this.store.get().slides));
 	}
 
@@ -1254,6 +1291,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			custom: state.customProperties,
 			editable: state.editable,
 			onSave: (core, app, custom) => this.editor.updateDocumentProperties(core, app, custom),
+			owner: this.getDialogRegions(),
 		});
 	}
 
@@ -1270,20 +1308,28 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			canEmbed: descriptor.interactive,
 			unavailableKey: descriptor.disabledReasonKey,
 			onToggle: (enabled) => this.store.set({ embedFonts: enabled }),
+			owner: this.getDialogRegions(),
 		});
 	}
 
 	openDigitalSignatures(): void {
+		if (!this.customization.isDialogAvailable('signatures')) {
+			return;
+		}
 		const state = this.store.get();
 		openDigitalSignaturesDialog(
 			this.doc,
 			this.t,
 			state.hasDigitalSignatures,
 			state.digitalSignatureCount,
+			this.getDialogRegions(),
 		);
 	}
 
 	openPasswordProtection(): void {
+		if (!this.customization.isDialogAvailable('passwordProtection')) {
+			return;
+		}
 		openPasswordProtectionDialog(this.doc, this.t, {
 			protected: this.store.get().isPasswordProtected,
 			// The secret is kept, not just the badge: the save path reads it and
@@ -1294,6 +1340,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			onRemove: () => {
 				this.store.set({ isPasswordProtected: false, presentationPassword: null });
 			},
+			owner: this.getDialogRegions(),
 		});
 	}
 
@@ -1715,7 +1762,20 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	setEditable(editable: boolean): void {
 		this.requestedEditable = editable;
-		this.applyEditable(editable && !this.sessions?.isCollaborationReadOnly());
+		this.applyEditable(this.effectiveEditable());
+	}
+
+	/**
+	 * The edit state the viewer actually runs in: what the host asked for (the
+	 * `editable` option and `readOnly` flag, `setEditable`), AND-ed with a
+	 * collaboration read-only role and the `capabilities.edit` customisation.
+	 */
+	private effectiveEditable(): boolean {
+		return (
+			this.requestedEditable &&
+			!this.sessions?.isCollaborationReadOnly() &&
+			isEditingAllowed(this.customization.getResolved())
+		);
 	}
 
 	private applyEditable(editable: boolean): void {
@@ -1979,9 +2039,26 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		}
 	}
 
+	/**
+	 * Host `onContentChange`: serialise the deck after each committed edit. Calls the editor's
+	 * `save` directly so no save side effects (recovery cleanup, success cue) run.
+	 */
+	private emitContentChange(): void {
+		const onContentChange = this.options.onContentChange;
+		if (!onContentChange) {
+			return;
+		}
+		void this.editor.save('pptx').then(onContentChange, (error: unknown) => {
+			this.options.onError?.(error instanceof Error ? error.message : String(error), error);
+		});
+	}
+
 	/** IndexedDB key for this deck's AutoRecover snapshot. */
 	private autosaveFilePath(): string {
-		return resolveAutosaveFileKey(this.options.autosaveFilePath, this.options.fileName);
+		return resolveAutosaveFileKey(
+			this.options.filePath ?? this.options.autosaveFilePath,
+			this.options.fileName,
+		);
 	}
 
 	/** File > Options > Save > "cache retention": a one-time sweep on mount. */
@@ -2068,6 +2145,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.destroyed = true;
 		this.slidePackageClipboard.dispose();
 		this.customization.destroy();
+		this.dialogRegions?.destroy();
 		// File > Options > Save > "clear cache on close": wipe recovery snapshots
 		// before the options store that answers the question is disposed below.
 		if (shouldClearAutosaveCacheOnClose(this.optionsController.getOptions())) {
@@ -2099,6 +2177,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.webfontsToken++;
 		removeGoogleWebfontsLink(this.doc);
 		unmountChrome(this.lifecycle, () => this.editor?.detachChrome());
+		this.chromeRegions?.destroy();
 		this.loading.releaseLoaded();
 	}
 
@@ -2144,6 +2223,30 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.lifecycle?.chrome.ribbon?.setRibbonAddIns(this.ribbonAddIns);
 	}
 
+	/** What the region hosts need from the viewer: context, change subscription. */
+	getRegionSupport(): RegionSupport {
+		this.regionSupport ??= createRegionSupport({
+			viewer: this,
+			store: this.store,
+			getOptionsStore: () => this.optionsController?.optionsStore,
+			getResolved: () => this.customization.getResolved(),
+			getLocale: () => this.currentLocale,
+		});
+		return this.regionSupport;
+	}
+
+	/** The region set of the chrome's panels; it survives chrome rebuilds. */
+	getChromeRegions(): RegionSet {
+		this.chromeRegions ??= createRegionSet(this.getRegionSupport());
+		return this.chromeRegions;
+	}
+
+	/** The region set of the dialogs (Options, Share, Broadcast, Print). */
+	private getDialogRegions(): RegionSet {
+		this.dialogRegions ??= createRegionSet(this.getRegionSupport());
+		return this.dialogRegions;
+	}
+
 	/** The live resolved UI customisation (every render site reads this). */
 	getResolvedCustomization(): ResolvedCustomization {
 		return this.customization.getResolved();
@@ -2160,7 +2263,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	private remountChrome(): void {
-		unmountChrome(this.lifecycle, () => this.editor?.detachChrome());
+		// Live region hosts are parked, not destroyed: the new chrome adopts those whose
+		// renderer is unchanged and `mountChrome` sweeps the rest.
+		unmountChrome(this.lifecycle, () => this.editor?.detachChrome(), { keepRegions: true });
 		this.lifecycle = mountChrome(buildMountChromeDeps(this));
 		this.lifecycle.chrome.ribbon?.setRibbonAddIns(this.ribbonAddIns);
 		// Re-apply option-driven chrome behavior (ribbon visibility, ScreenTips,

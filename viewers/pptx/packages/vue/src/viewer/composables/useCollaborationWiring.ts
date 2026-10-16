@@ -18,6 +18,8 @@ export interface UseCollaborationWiringInput {
 	/** Why the last content load ran; see `shouldRoomSlidesReplaceLoad`. */
 	getLoadOrigin?: () => CollabLoadOrigin;
 	getTemplateElements: () => Record<string, PptxElement[]>;
+	/** True while a gallery hover preview shows over the slides. */
+	slidesPaused?: () => boolean;
 	/** Retain the loaded source bytes for elected-writer (role 'owner') write-back. */
 	getSourceBytes: () => Uint8Array | null;
 	/**
@@ -104,6 +106,7 @@ export function useCollaborationWiring(
 			slides.value = remote;
 		},
 		getTemplateElements,
+		...(input.slidesPaused ? { slidesPaused: input.slidesPaused } : {}),
 		getSourceBytes,
 		getSaveOptions,
 		userColor: initialUserColor,

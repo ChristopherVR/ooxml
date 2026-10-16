@@ -18,6 +18,7 @@
 		applyChart3DSelect,
 		canDrillDown,
 		formatAxisValue,
+		getFrameEffectStyle,
 		resolveChartThreeViewSpec,
 		resolveRevealedChartData,
 		shouldRenderHitTarget,
@@ -30,6 +31,8 @@
 	import { BarFacePictureSampleVersion } from './bar-face-picture-sample.svelte';
 	import ChartSvgView from './ChartSvgView.svelte';
 	import { ChartDragController } from './chart-drag.svelte';
+	import { chartFormatDoubleClick, chartFormatPointerDown } from './chart-format-pointer';
+	import { useChartFormat } from '../editor/chart-format-state.svelte';
 	import type { ElementRendererProps } from './props';
 	import ThreeView from './ThreeView.svelte';
 
@@ -85,6 +88,18 @@
 		commit: (id, chartData) => onchartpointcommit?.(id, chartData),
 	});
 	$effect(() => () => drag.destroy());
+	// Chart Format: a press targets the element under the pointer, a double-click
+	// (anywhere but the title, which edits in place) opens the Format pane on it.
+	const chartFormat = useChartFormat();
+	function onChartPointerDown(event: PointerEvent): void {
+		chartFormatPointerDown(event, rootEl, element, chartFormat);
+		drag.onpointerdown(event);
+	}
+	function onChartDblClick(event: MouseEvent): void {
+		if (!chartFormatDoubleClick(event, rootEl, element, chartFormat)) {
+			drag.ondblclick(event);
+		}
+	}
 
 	/**
 	 * The chart element with its data trimmed to the stages revealed at the current
@@ -114,8 +129,11 @@
 		void barFacePictureSampleVersion.value;
 		return revealedElement.type === 'chart' ? buildChartView(revealedElement, t) : undefined;
 	});
-	const legendItems = $derived(view?.kind === 'chart' ? buildLegendItems(view.vm) : []);
-	const containerStyle = $derived(styleToString(getContainerStyle(element, zIndex)));
+	const legendItems = $derived(view?.kind === 'chart' ? buildLegendItems(view.vm, (key) => t(key)) : []);
+	// The chart area's outer shadow and glow sit on the frame, outside the chart (shared).
+	const containerStyle = $derived(
+		styleToString({ ...getContainerStyle(element, zIndex), ...getFrameEffectStyle(element) }),
+	);
 
 	// The projector re-creates every SVG mark whenever the chart changes, which
 	// drops DOM-only classes, so the selected-mark highlight is re-applied after
@@ -173,8 +191,8 @@
 		style={containerStyle}
 		data-element-id={element.id}
 		data-pptx-element={interactive || marked ? 'true' : undefined}
-		onpointerdown={interactiveArmed ? drag.onpointerdown : undefined}
-		ondblclick={interactiveArmed ? drag.ondblclick : undefined}
+		onpointerdown={interactiveArmed ? onChartPointerDown : undefined}
+		ondblclick={interactiveArmed ? onChartDblClick : undefined}
 	>
 		<!-- Interaction-only hit target for a degenerate chart; see `hitTarget`. -->
 		{#if hitTarget}

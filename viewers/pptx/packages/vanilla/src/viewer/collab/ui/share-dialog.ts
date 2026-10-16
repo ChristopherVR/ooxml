@@ -14,6 +14,7 @@ import {
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { appendDialogFooter } from '../../ui/dialog-footer';
+import type { RegionSet } from '../../ui/region-set';
 import type { ShareDefaults, ShareFormFields } from '../share-helpers';
 import {
 	buildJoinConfig,
@@ -70,6 +71,8 @@ export function createShareDialog(
 	themeHost?: () => HTMLElement | null,
 	/** Options > General > "Initials" override for the local-user avatar. */
 	getUserInitials?: () => string | undefined,
+	/** The viewer's dialog regions: a host can replace the body (`dialog.share`). */
+	getRegions?: () => RegionSet | undefined,
 ): ShareDialog {
 	let fields: ShareFormFields = seedShareFields();
 	let active = false;
@@ -88,6 +91,7 @@ export function createShareDialog(
 		title: t('pptx.toolbar.share'),
 		onClose: () => modal.setOpen(false),
 		themeHost,
+		...(getRegions && { region: { regions: getRegions, id: 'dialog.share' as const } }),
 	});
 	doc.body.appendChild(modal.el);
 

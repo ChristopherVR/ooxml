@@ -68,6 +68,17 @@ describe('ribbon group / control customisation', () => {
 		expect(css).toContain('display: none !important');
 	});
 
+	it('keeps the deprecated insert.text.field alias hiding Date & Time and Slide Number', () => {
+		const resolved = resolveCustomization({ ribbon: { hiddenButtons: ['insert.text.field'] } });
+		const css = ribbonCustomizationCss(resolved);
+		for (const id of ['insert.text.field', 'insert.text.dateTime', 'insert.text.slideNumber']) {
+			expect(css).toContain(`[data-ribbon-control="${id}"]`);
+		}
+		expect(isRibbonControlVisible(resolved, 'insert.text.dateTime')).toBeFalsy();
+		expect(isRibbonControlVisible(resolved, 'insert.text.slideNumber')).toBeFalsy();
+		expect(isRibbonControlVisible(resolved, 'insert.text.textBox')).toBeTruthy();
+	});
+
 	it('ignores ids and scopes that are not catalogued or not safe', () => {
 		const resolved = resolveCustomization({
 			ribbon: { hiddenGroups: ['home.font"]{} body{' as never] },

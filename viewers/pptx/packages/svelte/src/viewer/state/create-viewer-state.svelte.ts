@@ -1,5 +1,6 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
+	isEditingAllowed,
 	buildFieldSubstitutionContext,
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
@@ -14,6 +15,7 @@ import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import type { PptxSaveFormat } from 'pptx-viewer-core';
 
 import { provideTranslator } from '../../i18n/context';
+import { provideChartFormat } from '../editor/chart-format-state.svelte';
 import { createDeckApi } from '../editor/deck-api';
 import type { DeckApi } from '../editor/deck-api';
 import { createEditingApi } from '../editor/editing-api';
@@ -93,6 +95,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	let protectedViewDismissed = $state(false);
 	const getEditable = (): boolean =>
 		editable &&
+		isEditingAllowed(getCustomization()) &&
 		(!editorUi.optionsState.options.trust.openInProtectedView || protectedViewDismissed);
 	const isProtectedViewActive = (): boolean =>
 		editable && editorUi.optionsState.options.trust.openInProtectedView && !protectedViewDismissed;
@@ -116,6 +119,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 
 	const editor = new EditorState({
 		getCurrent: () => viewer.current,
+		getAuthorName: () => options.getAuthorName?.(),
 		getHandler: () => loader.handler,
 		setHandler: (handler, keepPrevious, data) => loader.adoptHandler(handler, keepPrevious, data),
 		// Design > Slide Size. The EMU state wins wherever it still agrees with
@@ -225,6 +229,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 			editorUi.optionsState.options,
 		);
 	provideRendering3DFlags(getEffective3D);
+	provideChartFormat(editor.chartFormat);
 
 	// oxlint-disable-next-line react-hooks/rules-of-hooks
 	const ai = useAiCluster({
@@ -412,7 +417,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		exportingApi,
 		deck,
 		get editable() {
-			return editable;
+			return editable && isEditingAllowed(getCustomization());
 		},
 		set editable(next: boolean) {
 			editable = next;

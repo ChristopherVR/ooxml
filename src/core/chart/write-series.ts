@@ -1,9 +1,9 @@
 // `c:chartSpace` writer: series (`c:ser`), markers and data points. One element order serves every
 // series type (bar, line, scatter, pie, area, radar, bubble, surface), because the model only holds
-// what the type allows: idx, order, tx, spPr, invertIfNegative, marker, explosion, dPt, dLbls, cat,
-// val, xVal, yVal, bubbleSize, smooth, shape, bubble3D, extLst. Trendlines and error bars are not
-// modelled, so they are not written.
+// what the type allows: idx, order, tx, spPr, invertIfNegative, marker, explosion, dPt, dLbls,
+// trendline, errBars, cat, val, xVal, yVal, bubbleSize, smooth, shape, bubble3D, extLst.
 import type { ChartDataPoint, ChartMarker, ChartSpaceSeries } from './model-series';
+import { seriesAnalysisXml } from './write-analysis';
 import { shapePropertiesXml } from './write-shape';
 import { chartTextXml, dataLabelsXml, dataSourceXml } from './write-text';
 import { elementXml, raw, valXml, type ChartWriteContext } from './write-util';
@@ -50,6 +50,7 @@ export function seriesXml(
 			valXml('explosion', series.explosion) +
 			series.dataPoints.map((point) => dataPointXml(context, point)).join('') +
 			dataLabelsXml(context, series.dataLabels) +
+			seriesAnalysisXml(context, series) +
 			dataSourceXml('cat', series.categories) +
 			dataSourceXml('val', series.values) +
 			dataSourceXml('xVal', series.xValues) +

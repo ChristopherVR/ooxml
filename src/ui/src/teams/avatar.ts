@@ -5,14 +5,14 @@ import { TeamsElement, colorFor, withStyles } from './base';
 import css from './avatar.css?raw';
 
 export type Presence = 'available' | 'busy' | 'dnd' | 'brb' | 'away' | 'offline';
-const PRESENCE_LABEL: Record<Presence, string> = {
-	available: 'Available',
-	busy: 'Busy',
-	dnd: 'Do not disturb',
-	brb: 'Be right back',
-	away: 'Away',
-	offline: 'Offline',
-};
+const PRESENCE_KEY = {
+	available: 'presence.available',
+	busy: 'presence.busy',
+	dnd: 'presence.dnd',
+	brb: 'presence.brb',
+	away: 'presence.away',
+	offline: 'presence.offline',
+} as const satisfies Record<Presence, string>;
 
 /**
  * Round avatar with initials and an optional presence badge, like the Teams persona.
@@ -44,9 +44,9 @@ export class OfficeUiAvatar extends TeamsElement {
 	}
 
 	protected override willUpdate(changed: PropertyValues<this>): void {
-		if (changed.has('name') || changed.has('presence')) {
+		if (changed.has('name') || changed.has('presence') || changed.has('locale')) {
 			this.setAttribute('role', 'img');
-			const status = this.presence ? `, ${PRESENCE_LABEL[this.presence]}` : '';
+			const status = this.presence ? `, ${this.t(PRESENCE_KEY[this.presence])}` : '';
 			this.setAttribute('aria-label', `${this.name}${status}`);
 		}
 	}
@@ -60,7 +60,7 @@ export class OfficeUiAvatar extends TeamsElement {
 					? html`<span
 							class="presence"
 							data-presence=${this.presence}
-							title=${PRESENCE_LABEL[this.presence]}
+							title=${this.t(PRESENCE_KEY[this.presence])}
 						></span>`
 					: ''
 			}

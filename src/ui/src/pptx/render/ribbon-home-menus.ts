@@ -2,7 +2,7 @@ import { MERGE_SHAPES_MENU_ITEMS } from './merge-shapes/merge-shapes-menu';
 import { CROP_ASPECT_GROUP_LABEL_KEYS, CROP_ASPECT_PRESETS } from './picture-crop/crop-aspect';
 import { CROP_FILL_LABEL_KEY, CROP_FIT_LABEL_KEY } from './picture-crop/crop-session';
 import type { RibbonHomeItem } from './ribbon-home-spec';
-import { SHAPE_PRESET_DEFS } from './shape-preset-catalog';
+import { homeShapeGalleryItems } from './shape-gallery-home';
 import {
 	CHANGE_CASE_OPTIONS,
 	CHARACTER_SPACING_OPTIONS,
@@ -65,13 +65,8 @@ export const HOME_DRAWING_ARRANGE_ITEMS: readonly RibbonHomeItem[] = [
 	item('back', 'pptx.contextMenu.sendToBack', 'Send to Back'),
 ];
 
-/** Drawing > Shapes: the first dozen presets of the shared catalogue. */
-export const HOME_SHAPE_ITEMS: readonly RibbonHomeItem[] = SHAPE_PRESET_DEFS.slice(0, 12).map(
-	(preset) =>
-		item(preset.type, preset.i18nKey, preset.label, {
-			icon: `shape:${preset.glyph}|${preset.glyphClass}`,
-		}),
-);
+/** Drawing > Shapes: the categorised gallery (the live state adds Recently Used Shapes). */
+export const HOME_SHAPE_ITEMS: readonly RibbonHomeItem[] = homeShapeGalleryItems([]);
 
 /** Merge Shapes operations; keeps the `data-pptx-merge-op` automation hook. */
 export const HOME_MERGE_ITEMS: readonly RibbonHomeItem[] = MERGE_SHAPES_MENU_ITEMS.map((entry) =>

@@ -189,8 +189,11 @@
 {/if}
 
 <style>
+	/* Fill above Line, as in the other bindings: side by side, the two theme
+	   grids (ten 16px swatches each) were wider than the 288px panel. */
 	.pptx-svelte-inspector-color-row {
 		display: flex;
+		flex-direction: column;
 		gap: 12px;
 	}
 

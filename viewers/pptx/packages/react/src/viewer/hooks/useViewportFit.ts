@@ -1,6 +1,6 @@
 import {
 	calculateViewportFit,
-	EDITOR_VIEWPORT_FIT,
+	editorViewportFitFor,
 	resolveViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { ViewportFitOptions } from 'ooxml-ui/pptx';
@@ -8,8 +8,6 @@ import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
 import type { CanvasSize } from '../types';
-
-const DEFAULT_FIT = EDITOR_VIEWPORT_FIT;
 
 /** Keep measured fit and available selection area on the same host layout policy. */
 export function useViewportFit(
@@ -19,8 +17,8 @@ export function useViewportFit(
 	viewportNode?: HTMLDivElement | null,
 ) {
 	const [editorDimensions, setEditorDimensions] = useState<CanvasSize | null>(null);
-	const { fitPadding, maxFitScale } = resolveViewportFitOptions(options, DEFAULT_FIT);
-	const { horizontal, vertical } = fitPadding;
+	const { maxFitScale } = resolveViewportFitOptions(options, editorViewportFitFor(Infinity));
+	const hostPadding = options.fitPadding;
 	const effectiveEditorDimensions = editorDimensions ?? canvasSize;
 	const { scale: fitScale } = calculateViewportFit({
 		viewportWidth: effectiveEditorDimensions.width,
@@ -44,7 +42,11 @@ export function useViewportFit(
 				viewportHeight: element.clientHeight,
 				canvasWidth: canvasSize.width,
 				canvasHeight: canvasSize.height,
-				fitPadding: { horizontal, vertical },
+				// The host's padding when it gave one, else the width-aware editor default.
+				...resolveViewportFitOptions(
+					{ fitPadding: hostPadding },
+					editorViewportFitFor(element.clientWidth),
+				),
 			});
 			// A hidden or not-yet-sized viewport must not reset a valid measurement.
 			if (width > 0 && height > 0) {
@@ -66,7 +68,7 @@ export function useViewportFit(
 			cancelAnimationFrame(raf);
 			observer?.disconnect();
 		};
-	}, [viewportRef, viewportNode, canvasSize.width, canvasSize.height, horizontal, vertical]);
+	}, [viewportRef, viewportNode, canvasSize.width, canvasSize.height, hostPadding]);
 
 	return { editorDimensions, setEditorDimensions, effectiveEditorDimensions, fitScale };
 }

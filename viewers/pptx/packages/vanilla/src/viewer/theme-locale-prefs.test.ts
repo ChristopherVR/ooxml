@@ -95,6 +95,37 @@ describe('theme-locale-prefs', () => {
 		});
 	});
 
+	describe('defaultThemeKey and defaultLocale', () => {
+		it('lets defaultThemeKey win over a stored choice', () => {
+			const state = resolveInitialThemeState(
+				{ defaultThemeKey: 'vermilionDark' } as PptxViewerOptions,
+				'vermilionLight',
+				THEME_CATALOG,
+			);
+			expect(state.key).toBe('vermilionDark');
+		});
+
+		it('ignores a defaultThemeKey the catalog does not offer', () => {
+			const state = resolveInitialThemeState(
+				{ defaultThemeKey: 'nope' } as PptxViewerOptions,
+				'vermilionLight',
+				THEME_CATALOG,
+			);
+			expect(state.key).toBe('vermilionLight');
+		});
+
+		it('lets defaultLocale win over a stored locale and over locale', () => {
+			const offered = [LOCALE_CATALOG[0]!];
+			expect(
+				resolveInitialLocale(
+					{ defaultLocale: 'de', locale: 'fr' } as PptxViewerOptions,
+					offered[0]!.code,
+					offered,
+				),
+			).toBe('de');
+		});
+	});
+
 	describe('resolveAvailableLocales', () => {
 		it('prefers an explicit options.availableLocales', () => {
 			const custom = [{ code: 'xx', label: 'Xx', nativeLabel: 'Xx' }];

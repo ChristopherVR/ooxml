@@ -36,6 +36,8 @@ export class TeamsWorkspaceComponent implements AfterViewInit, OnChanges, OnDest
 	@Input() workspaceId?: string;
 	@Input() userName?: string;
 	@Input() userId?: string;
+	/** Display language: de, es, fr, zh-CN or en (the default). */
+	@Input() locale?: string;
 	@Input() config?: TeamsServerConfig | null;
 	@Input() uploadFile?: FileUploader;
 	@Input() openers?: FileOpeners;

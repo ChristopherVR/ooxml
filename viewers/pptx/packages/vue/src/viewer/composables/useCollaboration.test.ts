@@ -358,6 +358,37 @@ describe('useCollaboration', () => {
 		scope.stop();
 	});
 
+	it('never publishes a Design gallery hover preview to the room', async () => {
+		state.slidesArray = null;
+		state.awarenessStates.clear();
+		state.lastTransactionOrigin = undefined;
+		const original = [slide('1')];
+		const slides = ref<PptxSlide[]>(original);
+		const paused = ref(false);
+		const scope = effectScope();
+		const collab = scope.run(() =>
+			useCollaboration({ slides, onRemoteSlides: vi.fn(), slidesPaused: () => paused.value }),
+		)!;
+		await collab.start(config);
+		state.syncCb?.(true);
+		const written = state.slidesArray?.length ?? 0;
+		state.lastTransactionOrigin = undefined;
+
+		paused.value = true;
+		slides.value = [slide('1'), slide('preview')];
+		await Promise.resolve();
+		await Promise.resolve();
+		slides.value = original;
+		paused.value = false;
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(state.slidesArray?.length ?? 0).toBe(written);
+		expect(state.lastTransactionOrigin).toBeUndefined();
+
+		collab.stop();
+		scope.stop();
+	});
+
 	it('ignores slide observer events from its own local-sync transaction', async () => {
 		state.slidesArray = null;
 		state.slidesObserverCb = null;

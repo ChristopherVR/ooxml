@@ -36,19 +36,54 @@ function button(root: Element, id: string): HTMLButtonElement {
 	return root.querySelector(`[data-ribbon-control="${id}"]`)!.shadowRoot!.querySelector('button')!;
 }
 
+describe('insert section slide templates', () => {
+	const menu = () =>
+		document.body.querySelector<HTMLElement>('[data-ribbon-control="insert.slides.newSlide"]')!;
+
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', async () => {
+		const { wrapper } = mountInsert({ onInsertSlideFromTemplate: vi.fn(), layoutOptions: [] });
+		menu().querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...menu().querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.map((item) => item.textContent)).toStrictEqual(['Slide Templates...']);
+		items[0].click();
+		await wrapper.vm.$nextTick();
+		expect(document.body.querySelector('[role="dialog"]:not([hidden])')).not.toBeNull();
+		wrapper.unmount();
+	});
+
+	it('leaves the entry out without a template handler', () => {
+		const { wrapper } = mountInsert({ layoutOptions: [] });
+		expect(menu().querySelector<HTMLButtonElement>('.trigger')!.disabled).toBeTruthy();
+		wrapper.unmount();
+	});
+});
+
 describe('insert section', () => {
 	it('routes commands to the native handlers', () => {
 		const { props, wrapper } = mountInsert({ hasSelection: true });
 		for (const id of [
 			'insert.text.textBox',
-			'insert.tables.table',
-			'insert.images.pictures',
-			'insert.media.media',
 			'insert.illustrations.smartArt',
-			'insert.symbols.equation',
 			'insert.links.link',
 		]) {
 			button(document.body, id).click();
+		}
+		document.body
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.symbols.equation"] .primary')!
+			.click();
+		for (const [id, item] of [
+			['insert.tables.table', 'insertTable'],
+			['insert.images.pictures', 'thisDevice'],
+			['insert.media.media', 'videoThisDevice'],
+		]) {
+			document.body
+				.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!
+				.click();
+			document.body
+				.querySelector<HTMLButtonElement>(
+					`[data-ribbon-control="${id}"] [data-insert-item="${item}"]`,
+				)!
+				.click();
 		}
 		expect(props.onAddTextBox).toHaveBeenCalledOnce();
 		expect(props.onAddTable).toHaveBeenCalledOnce();
@@ -95,15 +130,9 @@ describe('insert section', () => {
 
 	it('inserts simple fields directly and opens the native Date/Time dialog', async () => {
 		const { props, wrapper } = mountInsert();
-		const trigger = () =>
-			document.body.querySelector<HTMLButtonElement>(
-				'[data-ribbon-control="insert.text.field"] .trigger',
-			)!;
-		trigger().click();
-		document.body.querySelector<HTMLButtonElement>('[data-insert-item="footer"]')!.click();
-		expect(props.onInsertField).toHaveBeenCalledExactlyOnceWith('footer');
-		trigger().click();
-		document.body.querySelector<HTMLButtonElement>('[data-insert-item="datetime"]')!.click();
+		button(document.body, 'insert.text.slideNumber').click();
+		expect(props.onInsertField).toHaveBeenCalledExactlyOnceWith('slidenum');
+		button(document.body, 'insert.text.dateTime').click();
 		await wrapper.vm.$nextTick();
 		expect(footerAction(document.body, 'insert')).toBeDefined();
 		footerAction(document.body, 'insert')!.click();
@@ -132,7 +161,82 @@ describe('insert section', () => {
 		});
 		const hidden = (selector: string) => document.body.querySelector<HTMLElement>(selector)!.hidden;
 		expect(hidden('[data-ribbon-control="insert.illustrations.chart"]')).toBeTruthy();
-		expect(hidden('[data-ribbon-control="insert.text.field"]')).toBeTruthy();
+		expect(hidden('[data-ribbon-control="insert.text.dateTime"]')).toBeTruthy();
+		expect(hidden('[data-ribbon-control="insert.text.slideNumber"]')).toBeTruthy();
+		wrapper.unmount();
+	});
+
+	it('inserts a table of the size picked on the Table grid', () => {
+		const { props, wrapper } = mountInsert();
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		document.body.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click();
+		document.body.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
+		expect(props.onAddTable).toHaveBeenCalledExactlyOnceWith(4, 3);
+		wrapper.unmount();
+	});
+
+	it('adds a slide from the layout and opens the comments pane without toggling it shut', async () => {
+		const onInsertSlideFromLayout = vi.fn();
+		const onToggleComments = vi.fn();
+		const layoutOptions = [
+			{ path: 'l1.xml', name: 'Title' },
+			{ path: 'l2.xml', name: 'Content' },
+		];
+		const { wrapper } = mountInsert({
+			layoutOptions,
+			currentLayoutPath: 'l2.xml',
+			onInsertSlideFromLayout,
+			onToggleComments,
+		});
+		const slide = '[data-ribbon-control="insert.slides.newSlide"]';
+		document.body.querySelector<HTMLButtonElement>(`${slide} .primary`)!.click();
+		expect(onInsertSlideFromLayout).toHaveBeenLastCalledWith('l2.xml', 'Content');
+		document.body.querySelector<HTMLButtonElement>(`${slide} .trigger`)!.click();
+		document.body.querySelector<HTMLButtonElement>(`${slide} [data-insert-item="l1.xml"]`)!.click();
+		expect(onInsertSlideFromLayout).toHaveBeenLastCalledWith('l1.xml', 'Title');
+		button(document.body, 'insert.comments.comment').click();
+		expect(onToggleComments).toHaveBeenCalledOnce();
+		await wrapper.setProps({ isCommentsPanelOpen: true });
+		button(document.body, 'insert.comments.comment').click();
+		expect(onToggleComments).toHaveBeenCalledOnce();
+		wrapper.unmount();
+	});
+
+	it('leaves New Slide and Comment disabled when the host offers neither', () => {
+		const { wrapper } = mountInsert();
+		expect(button(document.body, 'insert.comments.comment').disabled).toBeTruthy();
+		expect(
+			document.body.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.slides.newSlide"] .primary',
+			)!.disabled,
+		).toBeTruthy();
+		wrapper.unmount();
+	});
+});
+
+describe('insert section phone variant', () => {
+	it('draws the shared phone sheet, routes a tile to the same handler and reports done', () => {
+		const onRequestHandled = vi.fn();
+		const { props, wrapper } = mountInsert({ phone: true, onRequestHandled });
+		const sheet = wrapper.element.parentElement!.querySelector('pptx-ui-mobile-insert')!;
+		expect(document.body.querySelector('pptx-ui-ribbon-insert')).toBeNull();
+		sheet
+			.shadowRoot!.querySelector<HTMLButtonElement>('[data-insert-control="insert.text.textBox"]')!
+			.click();
+		expect(props.onAddTextBox).toHaveBeenCalledOnce();
+		expect(onRequestHandled).toHaveBeenCalledOnce();
+		wrapper.unmount();
+	});
+
+	it('hands Date & Time to a dialog host that outlives the sheet', () => {
+		const dialogHost = { openDateTime: vi.fn(), openSlideTemplates: vi.fn() };
+		const { wrapper } = mountInsert({ phone: true, dialogHost });
+		const sheet = wrapper.element.parentElement!.querySelector('pptx-ui-mobile-insert')!;
+		sheet
+			.shadowRoot!.querySelector<HTMLButtonElement>('[data-insert-control="insert.text.dateTime"]')!
+			.click();
+		expect(dialogHost.openDateTime).toHaveBeenCalledOnce();
+		expect(document.body.querySelector('.fixed.inset-0')).toBeNull();
 		wrapper.unmount();
 	});
 });

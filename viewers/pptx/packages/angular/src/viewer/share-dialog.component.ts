@@ -17,6 +17,7 @@ import {
 	Component,
 	computed,
 	effect,
+	inject,
 	input,
 	output,
 	signal,
@@ -31,12 +32,14 @@ import { DialogFooterComponent } from './dialog-footer.component';
 import { ModalDialogComponent } from './modal-dialog.component';
 import { seedShareFields } from './share-helpers';
 import type { ShareDefaults } from './share-helpers';
+import { ViewerRegionHostComponent } from './viewer-region-host.component';
+import { ViewerRegionService } from './viewer-region.service';
 
 @Component({
 	selector: 'pptx-share-dialog',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [DialogFooterComponent, ModalDialogComponent, TranslatePipe],
+	imports: [DialogFooterComponent, ModalDialogComponent, TranslatePipe, ViewerRegionHostComponent],
 	templateUrl: './share-dialog.component.html',
 	styleUrl: './share-dialog.component.css',
 })
@@ -102,6 +105,13 @@ export class ShareDialogComponent {
 
 	/** Fired when the dialog is dismissed. */
 	readonly close = output<void>();
+
+	private readonly regions = inject(ViewerRegionService, { optional: true });
+	/** The host renderer replacing the dialog body, if any. */
+	protected readonly regionRenderer = computed(() => this.regions?.renderer('dialog.share'));
+	protected readonly regionContext = computed(
+		() => this.regions?.context('dialog.share', () => this.close.emit()) ?? null,
+	);
 
 	readonly roomId = signal('');
 	readonly userName = signal('');

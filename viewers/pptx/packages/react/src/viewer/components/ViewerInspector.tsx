@@ -30,6 +30,7 @@ import type { UseCommentsResult } from '../hooks/useComments-helpers';
 import type { CanvasSize, ViewerMode, TableCellEditorState } from '../types';
 import type { InspectorTab } from './inspector/inspector-pane-types';
 import { InspectorPane } from './InspectorPane';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -159,9 +160,26 @@ export function ViewerInspector({
 	panelWidth,
 }: ViewerInspectorProps): React.ReactElement | null {
 	const { t } = useTranslation();
+	const regionRenderer = useRegionRenderer('inspector');
 
 	if (!isOpen) {
 		return null;
+	}
+
+	if (regionRenderer) {
+		// The column (open state, width, mobile sheet placement) stays the
+		// viewer's; the host fills the pane.
+		return (
+			<div
+				data-pptx-inspector
+				role='complementary'
+				aria-label={t('pptx.inspector.properties')}
+				className='h-full flex-shrink-0 max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:z-30'
+				style={panelWidth ? { width: panelWidth } : undefined}
+			>
+				<ViewerRegion region='inspector' renderer={regionRenderer} close={onClose} />
+			</div>
+		);
 	}
 
 	// No tab is gated on having a selection. Every one of them is slide-scoped:

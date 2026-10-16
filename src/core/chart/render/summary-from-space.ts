@@ -6,6 +6,7 @@ import type { ChartGroupKind, ChartSpace } from '../model';
 import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import type { ChartStyleDefinition } from '../style-definition';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
+import { summaryAnalysis } from './summary-analysis';
 import type {
 	ChartSummary,
 	ChartSummaryGroup,
@@ -82,6 +83,7 @@ export function chartSummarySeries(
 	}
 	if (Object.keys(points).length) out.pointColors = points;
 	if (Object.keys(pointFills).length) out.pointFills = pointFills;
+	Object.assign(out, summaryAnalysis(source));
 	return out;
 }
 

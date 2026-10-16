@@ -7,7 +7,9 @@
  * records every workspace's version and `--frozen-lockfile` would refuse the bump. That install
  * could also resolve a newer third-party package and the release commit would ship it unreviewed.
  * This check compares the lockfile on disk with the one at a git revision (default `HEAD`) and
- * allows only `workspaces.<path>.version` to differ.
+ * allows only `workspaces.<path>.version` to differ, plus a workspace's ranges on other workspace
+ * packages (the planner raises a released viewer's `ooxml-core` range to the version it releases),
+ * which resolve inside the repository and so cannot move a third-party resolution.
  *
  *   node scripts/check-lockfile-drift.mjs [--base <rev>] [--file bun.lock]
  */
@@ -21,10 +23,29 @@ export function parseLock(text) {
 	return JSON.parse(text.replace(/,(\s*[}\]])/gu, '$1'));
 }
 
-/** A copy of the lockfile without the workspace package versions the release job bumps. */
+const DEPENDENCY_FIELDS = [
+	'dependencies',
+	'devDependencies',
+	'optionalDependencies',
+	'peerDependencies',
+];
+
+/**
+ * A copy of the lockfile without what the release job bumps: each workspace package's version and
+ * each workspace's ranges on other workspace packages.
+ */
 export function withoutWorkspaceVersions(lock) {
 	const copy = structuredClone(lock);
-	for (const workspace of Object.values(copy.workspaces ?? {})) delete workspace.version;
+	const workspaces = Object.values(copy.workspaces ?? {});
+	const names = new Set(workspaces.map((workspace) => workspace.name).filter(Boolean));
+	for (const workspace of workspaces) {
+		delete workspace.version;
+		for (const field of DEPENDENCY_FIELDS) {
+			const ranges = workspace[field];
+			if (!ranges) continue;
+			for (const name of Object.keys(ranges)) if (names.has(name)) delete ranges[name];
+		}
+	}
 	return copy;
 }
 

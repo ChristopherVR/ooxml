@@ -18,6 +18,7 @@ import { chartAppearance, type ChartAppearance } from './chart-appearance';
 import type { ChartGradientFill } from '../gradient-definition';
 import type { DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
+import type { ChartErrorBarsView, ChartTrendlineView } from './chart-view-analysis';
 import type { ChartManualLayout } from '../manual-layout';
 import {
 	chartExtraAxes,
@@ -51,6 +52,10 @@ export interface ChartSeriesView {
 	color: string;
 	/** Per-point colours (pie and doughnut vary colours by point). */
 	pointColors?: string[];
+	/** Trendlines drawn over the series. */
+	trendlines?: ChartTrendlineView[];
+	/** Error bars drawn at each point. */
+	errorBars?: ChartErrorBarsView[];
 }
 
 export interface ValueAxisView extends AxisScale {

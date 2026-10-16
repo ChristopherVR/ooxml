@@ -200,6 +200,9 @@ export function runContextMenuCommand(
 				deps.store,
 				contextMenuInspectorAnchor('format-shape')!,
 			);
+		case 'format-chart-element':
+			// The menu already made the clicked chart element the current one.
+			return actions.openChartFormatPane();
 	}
 }
 

@@ -55,7 +55,24 @@ export interface ChartLegendLayoutItem {
  *   carry a `textStyle` applied by `applyLegendEntryOverrides` from that
  *   entry's `c:legendEntry/c:txPr` override.
  */
-export function computeChartLegendLayout(vm: ChartViewModel): ChartLegendLayoutItem[] {
+/** Looks a dictionary key up; returns the key itself on a miss (every binding's translator does). */
+export type LegendLabelTranslate = (key: string) => string;
+
+function legendLabel(
+	entry: ChartViewModel['legend'][number],
+	translate?: LegendLabelTranslate,
+): string {
+	if (!entry.labelKey || !translate) {
+		return entry.label;
+	}
+	const value = translate(entry.labelKey);
+	return value && value !== entry.labelKey ? value : entry.label;
+}
+
+export function computeChartLegendLayout(
+	vm: ChartViewModel,
+	translate?: LegendLabelTranslate,
+): ChartLegendLayoutItem[] {
 	const vertical = vm.legendAnchor === 'start';
 	return vm.legend.map((entry, i) => {
 		const x = vertical
@@ -67,7 +84,7 @@ export function computeChartLegendLayout(vm: ChartViewModel): ChartLegendLayoutI
 			x,
 			y,
 			color: entry.color,
-			label: entry.label,
+			label: legendLabel(entry, translate),
 			fontSize:
 				textStyle?.fontSize !== undefined
 					? chartFontPx(textStyle.fontSize)

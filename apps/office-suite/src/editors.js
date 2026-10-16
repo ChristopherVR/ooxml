@@ -31,6 +31,12 @@ export async function mountEditor(host, doc, changed, command) {
 		return {
 			save: () => viewer.save(),
 			load: (bytes) => viewer.loadFile(bytes),
+			readOnly: (on) => viewer.setEditable(!on),
+			/** Shows where a proposed change lands: its slide, with its shape selected. */
+			reveal(change) {
+				viewer.goToSlide(change.slideIndex);
+				requestAnimationFrame(() => viewer.selectElements([change.elementId]));
+			},
 			dispose: () => {
 				stopTheme();
 				viewer.destroy();
@@ -102,6 +108,23 @@ export async function mountEditor(host, doc, changed, command) {
 			fit();
 		},
 		clean: () => element.markClean?.(),
+		// Visio has no read-only switch; edits made while reviewing are discarded with the preview.
+		readOnly: (on) => {
+			if (doc.kind !== 'vsdx') element.readOnly = on;
+		},
+		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
+		reveal(change) {
+			if (change.type === 'cells') {
+				element.setActiveSheet(change.sheetIndex);
+				element.select(change.cells.map((c) => c.address).join(','));
+			}
+			if (change.type === 'shape_text') {
+				const pages = element.controller.state.document?.pages ?? [];
+				const index = pages.findIndex((p) => p.id === change.pageId);
+				if (index >= 0) element.pageIndex = index;
+				element.selectShapes([{ id: change.shapeId, name: '', pageId: change.pageId }]);
+			}
+		},
 		flush: () => {
 			if (element.commitEdit && !element.commitEdit())
 				throw new Error('Finish the current cell edit.');

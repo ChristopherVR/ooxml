@@ -18,6 +18,7 @@ import type { Translator } from './i18n';
 import type { Store, ViewerState } from './state';
 import type { PptxViewerOptions } from './types';
 import type { ViewerChrome } from './ui';
+import type { RegionSet } from './ui/region-set';
 
 export interface SessionControllersDeps {
 	doc: Document;
@@ -36,6 +37,8 @@ export interface SessionControllersDeps {
 	getScale: () => number;
 	setEditable: (editable: boolean) => void;
 	onCollaborationReadOnlyChange?: (readOnly: boolean) => void;
+	/** The viewer's dialog regions (host-replaced Share and Broadcast bodies). */
+	getRegions?: () => RegionSet | undefined;
 	/** Navigate to a slide (follow-mode target). */
 	goToSlide: (index: number) => void;
 	/** Load bytes through the viewer's normal pipeline (recovery restore). */
@@ -135,7 +138,10 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		getTranslator: deps.getTranslator,
 		hostAutosave: options.autosave,
 		hostIntervalMs: options.autosaveIntervalMs,
-		filePath: resolveAutosaveFileKey(options.autosaveFilePath, options.fileName),
+		filePath: resolveAutosaveFileKey(
+			options.filePath ?? options.autosaveFilePath,
+			options.fileName,
+		),
 		fileName: options.fileName,
 		// Threaded through only so the snapshot uses the shared save decision;
 		// a recovery snapshot stays plaintext whatever the protection state is.
@@ -212,9 +218,13 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			getConfig: () => collaboration.getConfig(),
 			followUser: (clientId) => collaboration.followUser(clientId),
 			shareDefaults: options.shareDefaults,
+			getAuthorName: () => options.authorName,
+			onStarted: (config) => options.onStartCollaboration?.(config),
+			onStopped: () => options.onStopCollaboration?.(),
 			hiddenActions: deps.getHiddenActions ? deps.getHiddenActions() : options.hiddenActions,
 			showCollaborationStatus: deps.isShareAvailable?.() ?? true,
 			getUserInitials: deps.getUserInitials,
+			getRegions: deps.getRegions,
 		});
 	let collabUi = buildCollabUi();
 	notifyCollabUi = (status) => collabUi.onStatusChange(status);

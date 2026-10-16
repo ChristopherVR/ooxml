@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
-import { createDocx, inspectDocx, setDocxRunText } from './docx';
-import { createXlsx, readXlsxRange, setXlsxCells } from './xlsx';
+import { createDocx, inspectDocx, setDocxRunText, suggestDocxRunText } from './docx';
+import { acceptAllRevisions, listRevisions, rejectAllRevisions } from '../docx/revision-commands';
+import { createXlsx, readXlsxFilledCells, readXlsxRange, setXlsxCells } from './xlsx';
 import { createDocument } from '../docx/model';
 import { saveDocx } from '../docx/save';
 import { loadDocx } from '../docx/parse';
@@ -67,6 +68,30 @@ test('spreadsheet batch edits use the core formula engine and save cached result
 	await expect(createXlsx(['same', 'SAME'])).rejects.toThrow();
 });
 
+test('filled-cell reads reach past any fixed range and report what the cap left out', async () => {
+	const input = await createXlsx(['Data', 'Far']);
+	let bytes = (
+		await setXlsxCells(input, 0, [
+			{ address: 'A1', input: 'Item' },
+			{ address: 'AZ500', input: '=1+1' },
+		])
+	).bytes;
+	bytes = (await setXlsxCells(bytes, 1, [{ address: 'C3', input: 'x' }])).bytes;
+	const all = await readXlsxFilledCells(bytes);
+	expect(all.truncated).toBe(false);
+	expect(all.sheets[0]!.cells).toEqual([
+		{ address: 'A1', value: 'Item' },
+		{ address: 'AZ500', value: 2, formula: '1+1' },
+	]);
+	expect(all.sheets[1]!.cells.map((c) => c.address)).toEqual(['C3']);
+	const capped = await readXlsxFilledCells(bytes, { maxCells: 1 });
+	expect(capped.truncated).toBe(true);
+	expect(capped.sheets.map((s) => [s.cells.length, s.omitted])).toEqual([
+		[1, 1],
+		[0, 1],
+	]);
+});
+
 test('Visio automation delegates source-backed edits and returns core diagnostics', async () => {
 	const input = await fixture({
 		pages: [{ id: '0', contents: `<Shapes>${shape('1', '<Text>before</Text>')}</Shapes>` }],
@@ -78,4 +103,31 @@ test('Visio automation delegates source-backed edits and returns core diagnostic
 	expect(result.diagnostics).toContainEqual(
 		expect.objectContaining({ code: 'edit-caches-not-recalculated' }),
 	);
+});
+
+test('Word suggestions are tracked changes that accept to the new text and reject to the old', async () => {
+	const input = await createDocx(['Launch brief', 'Ships in November.']);
+	const id = (await inspectDocx(input)).blocks[1]!;
+	if (id.type !== 'paragraph') throw new Error('expected a paragraph');
+	const { bytes } = await suggestDocxRunText(input, [
+		{ paragraphId: id.id, runIndex: 0, text: 'Ships in December.' },
+	]);
+	const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+	expect(xml).toMatch(/<w:del [^>]*w:author="Assistant"/u);
+	expect(xml).toMatch(/<w:ins [^>]*w:author="Assistant"/u);
+	const { model } = await loadDocx(bytes);
+	expect(
+		listRevisions(model)
+			.map((r) => r.kind)
+			.sort(),
+	).toEqual(['delete', 'insert']);
+	const text = (m: typeof model) => {
+		const block = m.blocks[1]!;
+		return block.type === 'paragraph' ? block.runs.map((r) => r.text).join('') : '';
+	};
+	expect(text(acceptAllRevisions(model))).toBe('Ships in December.');
+	expect(text(rejectAllRevisions(model))).toBe('Ships in November.');
+	await expect(
+		suggestDocxRunText(input, [{ paragraphId: 'missing', runIndex: 0, text: 'x' }]),
+	).rejects.toThrow('does not exist');
 });

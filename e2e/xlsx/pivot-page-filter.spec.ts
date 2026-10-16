@@ -46,7 +46,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			await expect(dialog.getByLabel('Second Row Field:', { exact: true })).toBeEnabled();
 			await expect(
 				dialog.getByLabel('Values Axis:', { exact: true }).locator('option[value=rows]'),
-			).toHaveAttribute('disabled');
+			).not.toHaveAttribute('disabled');
 			await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 			const total = columns ? 'J7' : 'H5';
 			await goToCell(page, total);

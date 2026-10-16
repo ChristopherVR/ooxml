@@ -1,3 +1,4 @@
+import { homeShapeGalleryItems } from './shape-gallery-home';
 import type { RibbonHomeLayoutModel, RibbonHomeViewState } from './ribbon-home-spec';
 import type { HomeColourInput } from './ribbon-home-state';
 import { homeColourState } from './ribbon-home-state';
@@ -26,7 +27,11 @@ export function slidesHomeControls(input: SlidesHomeInput): RibbonHomeViewState[
 			disabled: locked || (input.newSlideNeedsLayout && !input.hasLayouts),
 			layouts: input.layouts && { ...input.layouts, current: undefined },
 		},
-		'home.slides.newSlide#caret': { disabled: locked, hidden: !input.hasLayouts },
+		// Slide Templates ends the menu, so the caret stays whenever the menu has any entry.
+		'home.slides.newSlide#caret': {
+			disabled: locked,
+			hidden: !input.hasLayouts && !input.showTemplates,
+		},
 		'home.slides.slideTemplates': { disabled: locked, hidden: !input.showTemplates },
 		'home.slides.layout': { disabled: locked || !input.hasLayouts, layouts: input.layouts },
 		'home.slides.reset': { disabled: locked || noSlide },
@@ -48,7 +53,11 @@ export interface DrawingHomeInput {
 export function drawingHomeControls(input: DrawingHomeInput): RibbonHomeViewState['controls'] {
 	const noTarget = !input.editable || !input.hasSelection;
 	return {
-		'home.drawing.shapes': { disabled: !input.editable, value: input.shapeType },
+		'home.drawing.shapes': {
+			disabled: !input.editable,
+			value: input.shapeType,
+			items: homeShapeGalleryItems(),
+		},
 		'home.drawing.arrange': { disabled: noTarget },
 		'home.drawing.shapeFill': input.fill
 			? homeColourState(noTarget, input.fill)

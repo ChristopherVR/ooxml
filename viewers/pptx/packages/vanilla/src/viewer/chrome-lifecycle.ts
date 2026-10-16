@@ -2,6 +2,7 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
+	isEditingAllowed,
 	isFeatureEnabled,
 	readRibbonTransitionDraft,
 	resolveViewerRootOptions,
@@ -45,6 +46,8 @@ import {
 	createPresentationController,
 	mountPresentationContextMenu,
 } from './ui';
+import type { RegionSet, RegionSupport } from './ui/region-set';
+import { createRegionSet } from './ui/region-set';
 
 /** The mutable pieces `PptxViewer` owns for one chrome mount lifecycle. */
 export interface ChromeLifecycle {
@@ -144,6 +147,10 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	 * has not wired the gate.
 	 */
 	confirmExternalHyperlink?(url: string): boolean;
+	/** What the region hosts need from the viewer (omitted: no region is replaced). */
+	getRegionSupport?(): RegionSupport;
+	/** The chrome's region set, kept across rebuilds (default: one per mount). */
+	regions?: RegionSet;
 }
 
 /**
@@ -177,14 +184,19 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	const customization = (): ResolvedCustomization =>
 		deps.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
 	const rootOptions = resolveViewerRootOptions(options);
+	// Every host-replaced panel and File tab page of this chrome; destroyed with it.
+	// The set outlives a rebuild (`deps.regions`), so a live host moves into the new chrome.
+	const regions = deps.regions ?? createRegionSet(deps.getRegionSupport?.());
 	const chrome = buildViewerChrome(doc, t, {
+		regions,
+		closeInspector: () => store.set({ inspectorOpen: false }),
 		...resolveChromePanelFlags(customization()),
 		showToolbar: rootOptions.showToolbar,
 		showThumbnails: rootOptions.showThumbnails,
 		showCompatibilityToasts: rootOptions.showCompatibilityToasts,
 		showFormatToolbar: options.showFormatToolbar ?? true,
 		showInspector: options.showInspector ?? true,
-		editable: options.editable ?? false,
+		editable: (options.editable ?? false) && !options.readOnly && isEditingAllowed(customization()),
 		hiddenActions: options.hiddenActions,
 		titleBar: {
 			fileName: options.fileName,
@@ -246,8 +258,10 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			deleteSlides: (indexes) => deps.deleteSlides(indexes),
 			toggleHideSlides: (indexes) => deps.toggleHideSlides(indexes),
 		},
-		...buildChromeCallbacks(deps),
+		...buildChromeCallbacks({ ...deps, getRegionSet: () => regions }),
 	});
+	// Hosts parked by the previous chrome and not adopted by this one are done.
+	regions.sweep();
 	const appliedThemeVars = applyThemeVars(chrome.root, deps.initialTheme ?? options.theme, []);
 	container.appendChild(chrome.root);
 	chrome.statusBar?.setNotesExpanded(store.get().notesExpanded);
@@ -584,7 +598,11 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 }
 
 /** Tear down everything `mountChrome` set up, in reverse order. */
-export function unmountChrome(lifecycle: ChromeLifecycle, detachEditorChrome: () => void): void {
+export function unmountChrome(
+	lifecycle: ChromeLifecycle,
+	detachEditorChrome: () => void,
+	options: { keepRegions?: boolean } = {},
+): void {
 	detachEditorChrome();
 	lifecycle.detachKeyboard();
 	lifecycle.detachPresentationClick();
@@ -594,6 +612,14 @@ export function unmountChrome(lifecycle: ChromeLifecycle, detachEditorChrome: ()
 	// The ribbon registered window/document listeners (group overflow): without this a destroyed
 	// viewer stays reachable from them, pinning the whole ribbon for the life of the page.
 	lifecycle.chrome.ribbon?.destroy();
+	lifecycle.chrome.dispose();
+	// Host-supplied renderers (replaced panels, File tab pages) must not outlive the chrome.
+	// On a rebuild they are parked and adopted by the new chrome when the renderer is unchanged.
+	if (options.keepRegions) {
+		lifecycle.chrome.regions.park();
+	} else {
+		lifecycle.chrome.regions.destroy();
+	}
 	lifecycle.chrome.root.remove();
 }
 
@@ -611,6 +637,10 @@ export interface ChromeHost {
 	getChromeOptions(): PptxViewerOptions;
 	/** The live resolved UI customisation. */
 	getResolvedCustomization(): ResolvedCustomization;
+	/** The region support (context, subscription) for host-replaced regions. */
+	getRegionSupport(): RegionSupport;
+	/** The chrome's region set, which survives a chrome rebuild. */
+	getChromeRegions(): RegionSet;
 	/** The viewer's live theme (kept in sync by `setTheme`); read on mount/remount instead of the static `options.theme`. */
 	currentTheme: ViewerTheme | undefined;
 	editor: {
@@ -767,6 +797,8 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		t: host.t,
 		options: host.getChromeOptions(),
 		getCustomization: () => host.getResolvedCustomization(),
+		getRegionSupport: () => host.getRegionSupport(),
+		regions: host.getChromeRegions(),
 		store: host.store,
 		renderer: host.renderer,
 		initialTheme: host.currentTheme,

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { fileInput, reveal } from './helpers';
 
 test('mobile Print Layout bounds page DOM while typing, jumping, scrolling and printing', async ({
 	page,
@@ -29,7 +29,11 @@ test('mobile Print Layout bounds page DOM while typing, jumping, scrolling and p
 	});
 	const editor = page.locator('docx-editor');
 	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	// A phone-width status bar drops its view switcher, so switch from View > Layout view, which
+	// the narrow ribbon folds into its group's dropdown.
+	const layoutView = editor.getByRole('combobox', { name: 'Layout view', exact: true });
+	await reveal(editor, layoutView);
+	await layoutView.selectOption('print');
 	const sheets = editor.locator('.dve-print-page');
 	const lines = editor.locator('.dve-print-column .dve-print-line');
 	await expect(sheets).toHaveCount(60);

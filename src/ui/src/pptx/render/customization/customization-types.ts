@@ -33,6 +33,11 @@ import type {
 	HostElementMenuContext,
 	HostCanvasMenuContext,
 } from './host-menu-commands';
+import type {
+	HostBackstagePage,
+	ViewerRegionId,
+	ViewerRegionRenderer,
+} from './customization-regions';
 import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
 
 /** Keys of an options group whose value is a primitive (not an array). */
@@ -111,6 +116,11 @@ export interface BackstageCustomization {
 	hiddenPages?: readonly BackstagePage[];
 	/** Action cards to remove from the pages that show them. */
 	hiddenCards?: readonly BackstageCardId[];
+	/**
+	 * Host pages added to the File tab, after the built-in pages of their
+	 * group. Each body is a host region (`backstage.host.<id>`).
+	 */
+	extraPages?: readonly HostBackstagePage[];
 }
 
 /** Right-click menu customisation. */
@@ -163,7 +173,11 @@ export type ViewerPanelId =
 	| 'inspector'
 	| 'notes'
 	| 'quickAccessToolbar'
-	| 'titleBar';
+	| 'titleBar'
+	| 'selectionPane'
+	| 'findReplace'
+	| 'accessibilityPane'
+	| 'comparePane';
 
 /** Feature areas that can be switched off as a whole. */
 export type ViewerFeatureId = 'ai' | 'collaboration' | 'comments' | 'presentMode' | 'editPoints';
@@ -175,7 +189,44 @@ export type ViewerFeatureId = 'ai' | 'collaboration' | 'comments' | 'presentMode
 export type ViewerDrawingToolId = FreeformToolKind;
 
 /** Dialogs (and the entry points that open them) a host can remove. */
-export type ViewerDialogId = 'options' | 'share' | 'broadcast' | 'print' | 'export';
+export type ViewerDialogId =
+	| 'options'
+	| 'share'
+	| 'broadcast'
+	| 'print'
+	| 'export'
+	| 'hyperlink'
+	| 'equation'
+	| 'pasteSpecial'
+	| 'slideTemplates'
+	| 'passwordProtection'
+	| 'signatures';
+
+/**
+ * What the user may do with the deck. Each `false` removes every UI path to
+ * the capability (buttons, menus, shortcuts, File pages and cards); `true` or
+ * an omitted key leaves the viewer's own rules in charge. This is UI policy,
+ * not document protection: a host that must prevent copying or export should
+ * not hand the bytes to the browser.
+ */
+export type ViewerCapabilityId =
+	| 'edit'
+	| 'export'
+	| 'print'
+	| 'share'
+	| 'copy'
+	| 'present'
+	| 'comment';
+
+/** Per-capability switches; see `ViewerCapabilityId`. */
+export type ViewerCapabilities = Partial<Record<ViewerCapabilityId, boolean>>;
+
+/**
+ * Regions the host fills with its own UI. A replaced region keeps its place
+ * in the layout; hiding the same region (`hiddenPanels`, `hiddenDialogs`)
+ * wins over replacing it.
+ */
+export type ViewerRegions = Partial<Record<ViewerRegionId, ViewerRegionRenderer>>;
 
 /** Export formats offered by the File > Export page. */
 export type ViewerExportFormatId = 'pdf' | 'png' | 'video' | 'gif' | 'json' | 'copyImage';
@@ -202,4 +253,8 @@ export interface ViewerCustomization {
 	hiddenExportFormats?: readonly ViewerExportFormatId[];
 	/** Drawing tools to remove from the Insert > Shapes gallery. */
 	hiddenDrawingTools?: readonly ViewerDrawingToolId[];
+	/** What the user may do (edit, export, print, share, copy, present, comment). */
+	capabilities?: ViewerCapabilities;
+	/** Host UI that replaces built-in regions (settings, inspector, panels, pages). */
+	regions?: ViewerRegions;
 }

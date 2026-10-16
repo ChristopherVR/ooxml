@@ -162,7 +162,7 @@
 								<input
 									type="number"
 									disabled={!canEdit}
-									aria-label={`${series.name} value ${categoryIndex + 1}`}
+									aria-label={t('pptx.chart.seriesValueCell', { name: series.name, number: categoryIndex + 1 })}
 									value={series.values[categoryIndex] ?? 0}
 									onchange={(event) =>
 										apply(

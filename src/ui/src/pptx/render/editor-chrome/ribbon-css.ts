@@ -22,8 +22,9 @@ export const EDITOR_RIBBON_CSS = `
     padding: 0; gap: 0; border: 0; scrollbar-width: none;
   }
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-tabs"]:has([data-pptx-chrome="ribbon-tab-scroll"]) { overflow: visible; }
+  /* Tabs keep their labels whole; a narrow editor scrolls the strip, as Office does. */
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-tabs"] [role="tab"] {
-    position: relative; height: 34px; padding: 8px 14px;
+    position: relative; flex: none; height: 34px; padding: 8px 14px;
     border: 0; border-radius: 0; font-size: 12px; line-height: 18px;
     font-weight: 500; white-space: nowrap; background: transparent;
     color: var(--pptx-muted-foreground);

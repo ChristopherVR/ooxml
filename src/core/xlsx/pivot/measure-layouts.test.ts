@@ -6,7 +6,7 @@ import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import type { PivotTable } from '../model';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 
 for (const [suffix, layout] of [
 	['compact', 'compact'],
@@ -71,7 +71,7 @@ it.each([false, true])(
 			]),
 			...(hierarchy ? { secondRowField: 'Inner' } : {}),
 		};
-		const headers = vi.spyOn(measures, 'pivotHeaders');
+		const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 		try {
 			expect(() => pivotGrid(pivot)).toThrow('too large');
 			expect(headers).not.toHaveBeenCalled();
@@ -81,7 +81,7 @@ it.each([false, true])(
 	},
 );
 
-it('preserves a custom invisible Values caption and refuses converting it to an unmodeled visible header', async () => {
+it('reads a custom Values caption and refuses a header that does not match it', async () => {
 	const zip = await JSZip.loadAsync(
 		readFileSync(new URL('../__fixtures__/excel-pivot-values-compact.xlsx', import.meta.url)),
 	);
@@ -92,8 +92,8 @@ it('preserves a custom invisible Values caption and refuses converting it to an 
 	);
 	zip.file(part, xml);
 	const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
-	expect(wb.sheets[0]!.pivotTables).toBeUndefined();
-	expect(wb.warnings.some((warning) => warning.includes('cannot be refreshed'))).toBe(true);
+	expect(wb.warnings).toEqual([]);
+	expect(wb.sheets[0]!.pivotTables![0]!.captions).toEqual({ values: 'Metrics' });
 	expect(await (await JSZip.loadAsync(await saveXlsx(wb))).file(part)!.async('string')).toBe(xml);
 	const single = await loadXlsx(
 		readFileSync(new URL('../__fixtures__/excel-pivot.xlsx', import.meta.url)),

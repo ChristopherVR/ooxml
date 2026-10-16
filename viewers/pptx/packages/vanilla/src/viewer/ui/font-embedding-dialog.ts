@@ -5,6 +5,7 @@ import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendInfoDoneButton, openFileInfoDialogShell } from './file-info-dialog-shell';
 import { createInspectorCheckbox } from './inspector/controls-extra';
+import type { OverlayOwner } from './overlay-owner';
 
 export interface FontEmbeddingDialogOptions {
 	slides: readonly PptxSlide[];
@@ -19,6 +20,8 @@ export interface FontEmbeddingDialogOptions {
 	/** i18n key for the explanation shown when `canEmbed` is false. */
 	unavailableKey?: string;
 	onToggle(enabled: boolean): void;
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner;
 }
 
 export function openFontEmbeddingDialog(
@@ -26,7 +29,7 @@ export function openFontEmbeddingDialog(
 	t: Translator,
 	options: FontEmbeddingDialogOptions,
 ): HTMLElement {
-	const shell = openFileInfoDialogShell(doc, t, t('pptx.fonts.embedFonts'));
+	const shell = openFileInfoDialogShell(doc, t, t('pptx.fonts.embedFonts'), options.owner);
 	const description = createEl(doc, 'p', 'pptxv-info-description');
 	description.textContent = t('pptx.fonts.embedDescription');
 	const canEmbed = options.canEmbed !== false;

@@ -16,7 +16,7 @@
  */
 
 import { Injectable, signal } from '@angular/core';
-import { calculateViewportFit, EDITOR_VIEWPORT_FIT } from 'ooxml-ui/pptx';
+import { calculateViewportFit, editorViewportFitFor } from 'ooxml-ui/pptx';
 import type { CanvasSize, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 /** Live host accessors the fit computation needs. */
@@ -72,7 +72,7 @@ export class CanvasFitService {
 				canvasHeight: size.height,
 				...this.host.fitOptions?.(),
 			},
-			EDITOR_VIEWPORT_FIT,
+			editorViewportFitFor(el.clientWidth),
 		);
 		this.fitScale.set(fit.scale);
 	}

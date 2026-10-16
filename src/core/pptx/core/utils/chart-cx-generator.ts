@@ -50,9 +50,9 @@ function buildHistogramBinning(series: PptxChartSeries): XmlObject {
 		binning['@_overflow'] = String(options.overflow);
 	}
 	if (options?.binSize !== undefined) {
-		binning['cx:binSize'] = String(options.binSize);
+		binning['cx:binSize'] = { '@_val': String(options.binSize) };
 	} else if (options?.binCount !== undefined) {
-		binning['cx:binCount'] = String(options.binCount);
+		binning['cx:binCount'] = { '@_val': String(options.binCount) };
 	}
 	return binning;
 }

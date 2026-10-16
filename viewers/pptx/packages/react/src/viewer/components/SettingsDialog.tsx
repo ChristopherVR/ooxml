@@ -16,7 +16,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { OptionsAddInsPane } from './settings/OptionsAddInsPane';
@@ -27,6 +27,7 @@ import { SettingsAppearanceTab } from './SettingsAppearanceTab';
 import { SettingsCustomFontsSection } from './SettingsCustomFontsSection';
 import { SettingsLanguageTab } from './SettingsLanguageTab';
 import { useViewerCustomizationContext } from './viewer-customization-context';
+import { ViewerRegionBaseContext } from './ViewerRegion';
 
 /**
  * Stable empty default for `customFontFamilies`. A fresh `[]` in the parameter
@@ -106,6 +107,13 @@ function OpenSettingsDialog({
 }: SettingsDialogProps): React.ReactElement {
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
+	const regionBase = useContext(ViewerRegionBaseContext);
+	// A host `dialog.options` region fills the body; the shared binding adds the options model.
+	const regionContext = useMemo(
+		() =>
+			regionBase ? { ...regionBase, region: 'dialog.options' as const, close: onClose } : null,
+		[regionBase, onClose],
+	);
 	const dialogRef = useRef<PptxOptionsDialogElement>(null);
 	const bindingRef = useRef<PptxOptionsDialogBinding | null>(null);
 	const [category, setCategory] = useState('general');
@@ -133,8 +141,9 @@ function OpenSettingsDialog({
 			t,
 			customization,
 			aiEnabled: Boolean(aiEnabled),
+			regionContext,
 		});
-	}, [options, t, customization, aiEnabled]);
+	}, [options, t, customization, aiEnabled, regionContext]);
 
 	return (
 		<pptx-ui-options-dialog ref={dialogRef}>

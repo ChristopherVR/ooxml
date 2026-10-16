@@ -1,13 +1,20 @@
-import { DEFAULT_INSERT_CHART_KIND, registerPptxWebControls } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_INSERT_CHART_KIND,
+	registerPptxWebControls,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
+	SlideTemplateId,
 	InsertChartKind,
+	InsertSlideLayout,
 	RibbonInsertRequestEvent,
 	RibbonInsertState,
 	ShapePresetType,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
+import { createSlideTemplateDialog } from '../home/slide-template-dialog';
 import type { RibbonInsertHandlers } from '../ribbon-types';
 import { createSmartArtDialog } from './insert/smartart-dialog';
 
@@ -20,6 +27,8 @@ export interface InsertTab {
 	setFreeformTool(tool: FreeformToolKind | null): void;
 	/** Open the SmartArt gallery dialog (title-bar command search). */
 	openSmartArt(): void;
+	/** The layouts New Slide offers and the active slide's layout (gallery marker). */
+	setLayouts(layouts: readonly InsertSlideLayout[], currentLayoutPath?: string): void;
 }
 
 /**
@@ -38,6 +47,14 @@ export function createInsertTab(
 	onToggleEquationPanel: () => void,
 	onOpenHeaderFooter: () => void,
 	onOpenHyperlink: () => void,
+	/** Insert > Comment: opens the comments pane (reopening it is harmless). */
+	onOpenComments?: () => void,
+	/** Slide Templates... at the end of the New Slide menu; omit to leave the entry out. */
+	templates?: {
+		insert(templateId: SlideTemplateId): void;
+		scheme?(): Record<string, string> | undefined;
+		available?(): boolean;
+	},
 ): InsertTab {
 	registerPptxWebControls();
 	// The pane keeps the ribbon's shared row layout (scrolling when narrow).
@@ -48,6 +65,12 @@ export function createInsertTab(
 	const smartArt = createSmartArtDialog(doc, t, (layout, defaultItems) =>
 		handlers.insertSmartArt(layout, defaultItems),
 	);
+	const templateDialog = templates
+		? createSlideTemplateDialog(doc, t, {
+				onInsert: (templateId) => templates.insert(templateId),
+				getScheme: () => templates.scheme?.(),
+			})
+		: undefined;
 	let state: RibbonInsertState = {
 		editable: true,
 		hasSelection: false,
@@ -55,6 +78,10 @@ export function createInsertTab(
 		chartKind: DEFAULT_INSERT_CHART_KIND,
 		activeFreeformTool: null,
 		freeformTools: handlers.armFreeformTool ? (handlers.visibleDrawingTools?.() ?? []) : [],
+		newSlideAvailable: Boolean(handlers.addSlide),
+		commentAvailable: Boolean(onOpenComments),
+		slideTemplatesAvailable: templates ? (templates.available?.() ?? true) : false,
+		layouts: [],
 		translate: t,
 	};
 	const sync = () => {
@@ -90,7 +117,29 @@ export function createInsertTab(
 						break;
 					case 'headerFooter':
 						onOpenHeaderFooter();
+						break;
+					case 'comment':
+						onOpenComments?.();
 				}
+				break;
+			case 'table':
+				handlers.insert('table', undefined, { rows: intent.rows, columns: intent.columns });
+				break;
+			case 'newSlide': {
+				const layout = resolveInsertSlideLayout(
+					state.layouts ?? [],
+					intent.value,
+					state.currentLayoutPath,
+				);
+				if (layout && handlers.insertSlideFromLayout) {
+					handlers.insertSlideFromLayout(layout.path, layout.name);
+				} else {
+					handlers.addSlide?.();
+				}
+				break;
+			}
+			case 'slideTemplates':
+				templateDialog?.open(el.closest<HTMLElement>('.pptxv') ?? doc.body);
 				break;
 			case 'shapeType':
 				state = { ...state, shapeType: intent.value };
@@ -124,6 +173,7 @@ export function createInsertTab(
 			state = { ...state, editable };
 			if (!editable) {
 				smartArt.close();
+				templateDialog?.close();
 			}
 			sync();
 		},
@@ -134,6 +184,23 @@ export function createInsertTab(
 		setFreeformTool(tool) {
 			state = { ...state, activeFreeformTool: tool };
 			sync();
+		},
+		setLayouts(layouts, currentLayoutPath) {
+			const same =
+				state.currentLayoutPath === currentLayoutPath &&
+				(state.layouts ?? []).length === layouts.length &&
+				layouts.every((item, index) => item.path === state.layouts?.[index]?.path);
+			if (!same) {
+				state = {
+					...state,
+					layouts: layouts.map(({ path, name }) => ({ path, name })),
+					...(currentLayoutPath ? { currentLayoutPath } : {}),
+				};
+				if (!currentLayoutPath) {
+					delete state.currentLayoutPath;
+				}
+				sync();
+			}
 		},
 	};
 }

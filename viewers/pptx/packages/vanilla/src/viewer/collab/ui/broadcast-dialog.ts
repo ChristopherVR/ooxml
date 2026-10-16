@@ -3,6 +3,7 @@ import type { DialogFooterAction } from 'ooxml-ui/pptx';
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { appendDialogFooter } from '../../ui/dialog-footer';
+import type { RegionSet } from '../../ui/region-set';
 import type { BroadcastConfig, BroadcastDefaults } from '../broadcast-helpers';
 import {
 	buildBroadcastConfig,
@@ -44,6 +45,8 @@ export function createBroadcastDialog(
 	t: Translator,
 	handlers: BroadcastDialogHandlers,
 	themeHost?: () => HTMLElement | null,
+	/** The viewer's dialog regions: a host can replace the body (`dialog.broadcast`). */
+	getRegions?: () => RegionSet | undefined,
 ): BroadcastDialog {
 	let fields: BroadcastConfig = seedBroadcastFields();
 	let active = false;
@@ -53,6 +56,7 @@ export function createBroadcastDialog(
 		title: t('pptx.broadcast.startTitle'),
 		onClose: () => modal.setOpen(false),
 		themeHost,
+		...(getRegions && { region: { regions: getRegions, id: 'dialog.broadcast' as const } }),
 	});
 	doc.body.appendChild(modal.el);
 

@@ -117,4 +117,5 @@ export const translations = {
 	'pptx.smartArt.boundsHintMin': 'Funciona mejor con al menos {{min}} elementos.',
 	'pptx.smartArt.boundsHintRange': 'Funciona mejor con entre {{min}} y {{max}} elementos.',
 	'pptx.smartArt.fillColor': 'Color de relleno',
+	'pptx.smartArt.selectItemIndex': 'Seleccionar elemento {{index}}',
 } as const;

@@ -98,7 +98,7 @@ describe('help dialogs', () => {
 		expect(text).toContain('one optional column field and one cached report filter');
 		expect(text).toContain('Unmodeled PivotTable layouts');
 		expect(text).toContain(
-			'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)',
+			'Multiple/dynamic report filters and repeated column captions (preserved)',
 		);
 		expect(text).toContain('Sparklines (create, format and clear)');
 		expect(text).toContain('Freeze panes');

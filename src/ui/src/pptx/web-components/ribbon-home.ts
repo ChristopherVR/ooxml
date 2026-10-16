@@ -30,6 +30,7 @@ declare global {
 		'pptx-ui-ribbon-home-arrange-painter': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-arrange-shape': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-picture-size': PptxUiRibbonHomeElement;
+		'pptx-ui-ribbon-home-chart-selection': PptxUiRibbonHomeElement;
 	}
 }
 
@@ -113,3 +114,5 @@ export const definePptxRibbonHomeArrangeShape = (registry: CustomElementRegistry
 	definePptxRibbonHome(registry, 'arrange-shape');
 export const definePptxRibbonHomePictureSize = (registry: CustomElementRegistry) =>
 	definePptxRibbonHome(registry, 'picture-size');
+export const definePptxRibbonHomeChartSelection = (registry: CustomElementRegistry) =>
+	definePptxRibbonHome(registry, 'chart-selection');

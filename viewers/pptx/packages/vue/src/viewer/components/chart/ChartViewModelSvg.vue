@@ -13,6 +13,7 @@ import type {
 	SvgText,
 } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 /**
  * ChartViewModelSvg: Vue projector for the framework-agnostic chart view-model
@@ -80,7 +81,8 @@ function partAttrs(part: ChartPartRef | undefined): Record<string, string> {
 }
 
 const svgDefs = computed(() => (props.vm.defs ?? []).map(resolveChartSvgDef));
-const legendItems = computed(() => computeChartLegendLayout(props.vm));
+const { t } = useI18n();
+const legendItems = computed(() => computeChartLegendLayout(props.vm, (key) => t(key)));
 </script>
 
 <template>

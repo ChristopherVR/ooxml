@@ -81,7 +81,12 @@ describe('fitScale', () => {
 	it('fits the canvas inside the viewport with padding', () => {
 		// Decorative padding reserves 4px horizontally and 16px vertically.
 		expect(fitScale(1328, 768, 1280, 720)).toBe(1);
-		expect(fitScale(648, 768, 1280, 720)).toBeCloseTo(0.5);
+		expect(fitScale(808, 768, 1600, 900)).toBeCloseTo(0.5);
+	});
+
+	it('insets the slide 12px per side on a phone', () => {
+		// 412 - 2 * 12 = 388 available, on a 776px-wide canvas.
+		expect(fitScale(412, 915, 776, 436)).toBeCloseTo(0.5);
 	});
 
 	it('falls back to 1 while unmeasured', () => {

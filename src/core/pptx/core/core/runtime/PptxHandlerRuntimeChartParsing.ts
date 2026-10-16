@@ -1,3 +1,5 @@
+import { readChartElementFormatsFromXml } from '../../utils/chart-element-format-read-xml';
+import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
 import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 /**
  * @fileoverview Chart parsing orchestrator for OOXML chart graphic frames.
@@ -5,8 +7,8 @@ import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
  * A classic chart part (`c:chartSpace`) is read by the neutral parser (`chart/parseChartSpace`),
  * and `PptxChartData` is built from that model through the adapter in
  * `utils/chart-from-neutral*.ts` (docs/agnostic-core-plan.md, steps 5 and 6). What the neutral
- * model does not carry (resolved colours and fonts, gradients, trendlines, error bars, picture
- * fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
+ * model does not carry (resolved colours and fonts, gradients, the line styles of trendlines and
+ * error bars, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
  * parts, `c:clrMapOvr`, pivot source and formats, print settings, protection) is still read from
  * the part's `fast-xml-parser` tree by the existing object-tree readers. ChartEx parts stay on the
  * object tree entirely (`PptxHandlerRuntimeChartExParsing`).
@@ -46,6 +48,7 @@ import { readChartPartModel } from '../../utils/chart-part-repair';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 import { parseChartUpDownBars } from '../../utils/chart-up-down-bars';
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
+import { resolveChartElementPictures } from './chart-element-pictures';
 import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
@@ -145,8 +148,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			resolveTypeface: (raw) => this.resolveThemeTypeface(raw) ?? raw,
 			localName: (key) => this.compatibilityService.getXmlLocalName(key),
 			...(this.colorStyleCodec ? { colorStyleCodec: this.colorStyleCodec } : {}),
-			extractPointValues: (node, preferNumeric) =>
-				this.extractChartPointValues(node, preferNumeric),
 		};
 	}
 
@@ -352,6 +353,31 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// The deck theme's accent1..accent6, for rendering a c:style palette only
 		// (never written on save).
 		const themeAccentColors = this.resolveChartThemeAccents();
+		// Format-pane state the part already carries (transparency, line details, effects, the
+		// legend / axis / data-label boxes), so the pane and the renderer see it after reopening.
+		const elementFormats = readChartElementFormatsFromXml(
+			{ chartSpace, seriesNodes: built.seriesNodes },
+			{ axes },
+			reader.localName,
+			{
+				resolve: (node) => reader.parseColor(node),
+				...(this.colorStyleCodec
+					? {
+							parseGradient: (parent: XmlObject) =>
+								parseChartGradientFill(parent, reader.xml, this.colorStyleCodec),
+						}
+					: {}),
+			},
+		);
+
+		// A picture fill names its image by relationship; resolve it for the renderer.
+		await resolveChartElementPictures(
+			elementFormats,
+			chartPartPath,
+			this.readChartRels.bind(this),
+			this.resolveImagePath.bind(this),
+			this.getImageDataAsDataUrl.bind(this),
+		);
 
 		return {
 			chartType,
@@ -380,6 +406,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			chartRelationshipId,
 			...linesAndChrome,
 			...(axes.length > 0 ? { axes } : {}),
+			...(elementFormats ? { elementFormats } : {}),
 			...(bandFmts ? { bandFmts } : {}),
 			...facts,
 			...(neutral.plotVisibleOnly !== undefined

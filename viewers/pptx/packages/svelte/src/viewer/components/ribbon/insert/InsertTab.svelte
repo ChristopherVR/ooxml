@@ -8,11 +8,13 @@
 	 * pickers, the SmartArt gallery, the equation editor and the hyperlink dialog stay
 	 * native to the Svelte binding.
 	 */
-	import type { SmartArtLayout } from 'pptx-viewer-core';
+	import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
 	import {
 		DEFAULT_INSERT_CHART_KIND,
 		FREEFORM_TOOL_IDS,
 		isDrawingToolVisible,
+		resolveInsertSlideLayout,
+		scopeLayoutOptionsToSlide,
 	} from 'ooxml-ui/pptx';
 	import type {
 		CanvasSize,
@@ -25,6 +27,7 @@
 	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';
+	import MobileSheet from '../../MobileSheet.svelte';
 	import {
 		buildActionButtonInsertElement,
 		buildChartInsertElement,
@@ -38,12 +41,39 @@
 		resolveFieldDisplayText,
 	} from '../../../editor';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import type { ChromeUiState } from '../../../state/chrome-ui.svelte';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import EquationEditorDialog from './EquationEditorDialog.svelte';
 	import HyperlinkDialog from './HyperlinkDialog.svelte';
+	import SlideTemplatesLauncher from '../home/SlideTemplatesLauncher.svelte';
 	import SmartArtDialog from './SmartArtDialog.svelte';
 
-	const { editor, canvasSize, onheaderfooter }: { editor: EditorState; canvasSize: CanvasSize; onheaderfooter?: () => void } = $props();
+	const {
+		editor,
+		canvasSize,
+		onheaderfooter,
+		onnavigateslide,
+		chromeUi,
+		phone = false,
+		open = true,
+		onclose,
+	}: {
+		editor: EditorState;
+		canvasSize: CanvasSize;
+		onheaderfooter?: () => void;
+		/** Select the slide New Slide just added. */
+		onnavigateslide?: (index: number) => void;
+		/** Comment opens the inspector's Comments pane, as Review > New Comment does. */
+		chromeUi?: ChromeUiState;
+		/**
+		 * Draw the phone Insert sheet (`pptx-ui-mobile-insert` in a bottom sheet) instead of the ribbon
+		 * group row. The dialogs below stay mounted while the sheet is closed, so a pick that opens
+		 * one (SmartArt, equation, link) can close the sheet first.
+		 */
+		phone?: boolean;
+		open?: boolean;
+		onclose?: () => void;
+	} = $props();
 	const t = useTranslator();
 	const customization = useViewerCustomization();
 
@@ -55,6 +85,7 @@
 	let mediaInput = $state<HTMLInputElement | null>(null);
 	let equationOpen = $state(false);
 	let smartArtOpen = $state(false);
+	let templatesOpen = $state(false);
 	// eslint-disable-next-line prefer-const
 	let hyperlinkOpen = $state(false);
 	let shapeType = $state<ShapePresetType>('rect');
@@ -65,6 +96,15 @@
 		}
 	});
 
+	/** The deck's layouts, loaded once so the New Slide chevron can list them. */
+	let layouts = $state<PptxLayoutOption[]>([]);
+	const currentLayoutPath = $derived(editor.slides[editor.currentSlideIndex]?.layoutPath);
+	/** Scoped to the active slide's own master; dedupes same-named layouts across masters. */
+	const scopedLayouts = $derived(scopeLayoutOptionsToSlide(layouts, currentLayoutPath));
+	$effect(() => {
+		void editor.slidesOps.availableLayouts().then((loaded) => (layouts = loaded));
+	});
+
 	const insertState = $derived({
 		editable: editor.editable,
 		hasSelection: Boolean(editor.selectedElementId),
@@ -73,6 +113,12 @@
 		activeFreeformTool: editor.outlineOps.freeformTool,
 		freeformTools: FREEFORM_TOOL_IDS.filter((tool) => isDrawingToolVisible(customization.resolved, tool)),
 		headerFooterAvailable: Boolean(onheaderfooter),
+		// Like Home, New Slide works without layouts (it adds a blank slide).
+		newSlideAvailable: true,
+		slideTemplatesAvailable: customization.isDialogAvailable('slideTemplates'),
+		commentAvailable: Boolean(chromeUi),
+		layouts: scopedLayouts.map(({ path, name }) => ({ path, name })),
+		...(currentLayoutPath ? { currentLayoutPath } : {}),
 		translate: t,
 	});
 
@@ -157,8 +203,28 @@
 					case 'equation': equationOpen = !equationOpen; break;
 					case 'link': hyperlinkOpen = true; break;
 					case 'headerFooter': onheaderfooter?.(); break;
+					case 'comment':
+						// Opening an already open pane would toggle it shut.
+						if (chromeUi && !chromeUi.commentsOpen) {
+							chromeUi.toggleComments();
+						}
+						break;
 				}
 				break;
+			case 'table':
+				editor.insertElement(newTableElement(intent.rows, intent.columns));
+				break;
+			case 'newSlide': {
+				const layout = resolveInsertSlideLayout(scopedLayouts, intent.value, currentLayoutPath);
+				const index = layout
+					? editor.slidesOps.insertSlideFromLayout(layout.path, layout.name)
+					: editor.slidesOps.insertSlideAfterCurrent();
+				if (index !== null) {
+					onnavigateslide?.(index);
+				}
+				break;
+			}
+			case 'slideTemplates': templatesOpen = true; break;
 			case 'shapeType': shapeType = intent.value as ShapePresetType; break;
 			case 'shape': editor.insertElement(newPresetShapeElement(intent.value as ShapePresetType)); break;
 			case 'chartType': chartKind = intent.value as InsertChartKind; break;
@@ -173,16 +239,26 @@
 			}
 			case 'field': insertField(intent.value); break;
 		}
+		if (phone) {
+			onclose?.();
+		}
 	}
 </script>
 
-<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
+{#if !phone}
+	<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
+{:else if open}
+	<MobileSheet title={t('pptx.mobileBar.insert')} onclose={() => onclose?.()}>
+		<pptx-ui-mobile-insert state={insertState} oninsert-request={request}></pptx-ui-mobile-insert>
+	</MobileSheet>
+{/if}
 <input bind:this={imageInput} type="file" accept="image/*" class="pptx-svelte-inserttab-file" onchange={onImageFileChange} />
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
+<SlideTemplatesLauncher {editor} onnavigate={(index) => onnavigateslide?.(index)} bind:open={templatesOpen} />
 {#if smartArtOpen}<SmartArtDialog oncancel={closeSmartArt} oninsert={insertSmartArt} />{/if}
-<EquationEditorDialog {editor} {canvasSize} open={equationOpen} onclose={closeEquationDialog} />
-{#if hyperlinkOpen}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
+<EquationEditorDialog {editor} {canvasSize} open={equationOpen && customization.isDialogAvailable('equation')} onclose={closeEquationDialog} />
+{#if hyperlinkOpen && customization.isDialogAvailable('hyperlink')}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
 
 <style>
 	.pptx-svelte-inserttab-file {

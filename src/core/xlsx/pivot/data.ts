@@ -3,11 +3,29 @@ import { isCellError, type CellValue, type PivotTable, type Workbook } from '../
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { parseXml } from '../../xml/index';
-import { groupOf, groupRank, validateFieldGroups } from './groups';
+import { pivotColumnFields, pivotRowFields } from './axes';
+import { pivotCaptions, pivotMeasureName, type CaptionHolder } from './captions';
+import { pivotAxisFieldNames } from './date-groups';
+
+export { pivotColumnFields, pivotRowFields };
+import { groupLabelsOf, groupRank, validateFieldGroups } from './groups';
+import { validateFieldSubtotals } from './subtotals';
 import { validatePivotItemFilters } from './item-filters';
 import { validatePivotPageFilter } from './page-filter';
 
-export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
+export const PIVOT_AGGREGATES = [
+	'sum',
+	'count',
+	'average',
+	'min',
+	'max',
+	'product',
+	'countNums',
+	'stdDev',
+	'stdDevp',
+	'var',
+	'varp',
+] as const;
 
 /** Reads a rectangular, header-led source, retaining blanks and cached formula values. */
 export function pivotSourceData(
@@ -49,10 +67,14 @@ export function pivotValueKey(value: CellValue): string {
 }
 
 export function pivotItems(
-	pivot: Pick<PivotTable, 'fields' | 'records'> & { fieldGroups?: PivotTable['fieldGroups'] },
+	pivot: Pick<PivotTable, 'fields' | 'records'> & {
+		fieldGroups?: PivotTable['fieldGroups'];
+		dateGroups?: PivotTable['dateGroups'];
+		date1904?: boolean | undefined;
+	},
 	field: string,
 ): CellValue[] {
-	const group = groupOf(pivot, field);
+	const group = groupLabelsOf(pivot, field);
 	const index = pivot.fields.indexOf(field);
 	const items = new Map<string, CellValue>();
 	for (const record of pivot.records) {
@@ -98,9 +120,14 @@ export function validatePivotFields(
 		| 'layout'
 		| 'subtotalPosition'
 		| 'secondRowField'
+		| 'moreRowFields'
 		| 'subtotals'
+		| 'fieldSubtotals'
+		| 'dateGroups'
+		| 'date1904'
 		| 'repeatLabels'
 		| 'columnField'
+		| 'moreColumnFields'
 		| 'valueField'
 		| 'aggregate'
 		| 'valueCaption'
@@ -108,6 +135,7 @@ export function validatePivotFields(
 		| 'sourceXml'
 		| 'valuesAxis'
 		| 'valuesPosition'
+		| 'captions'
 		| 'pageFilter'
 		| 'itemFilters'
 		| 'dateFilter'
@@ -119,23 +147,50 @@ export function validatePivotFields(
 	validatePivotPageFilter(pivot);
 	validatePivotItemFilters(pivot);
 	validateFieldGroups(pivot);
-	const used = [
-		pivot.rowField,
-		...(pivot.secondRowField ? [pivot.secondRowField] : []),
-		...(pivot.columnField ? [pivot.columnField] : []),
-		pivot.valueField,
-	];
+	const rows = pivotRowFields(pivot);
+	if (
+		pivot.moreRowFields !== undefined &&
+		(!Array.isArray(pivot.moreRowFields) ||
+			(pivot.moreRowFields.length > 0 && !pivot.secondRowField) ||
+			pivot.moreRowFields.length > 62 ||
+			pivot.moreRowFields.some((name) => typeof name !== 'string'))
+	)
+		throw new Error('Choose valid PivotTable row fields.');
+	const columns = pivotColumnFields(pivot);
+	if (
+		pivot.moreColumnFields !== undefined &&
+		(!Array.isArray(pivot.moreColumnFields) ||
+			(pivot.moreColumnFields.length > 0 && !pivot.columnField) ||
+			pivot.moreColumnFields.length > 62 ||
+			pivot.moreColumnFields.some((name) => typeof name !== 'string'))
+	)
+		throw new Error('Choose valid PivotTable column fields.');
+	if (pivot.pageFilter && columns.length > 1)
+		throw new Error('Report filters support one column field.');
+	validateFieldSubtotals(pivot, [...rows, ...columns]);
+	const axisNames = pivotAxisFieldNames(pivot);
+	if (
+		(pivot.dateGroups ?? []).some((group) =>
+			[...rows, ...columns].some((name) => name === group.field),
+		)
+	)
+		throw new Error('A date field with groups is replaced on the axes by its group fields.');
 	const extras = pivot.additionalValues ?? [];
 	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
 		throw new Error('Choose a valid Values axis.');
+	const position = pivot.valuesPosition;
 	if (
-		pivot.valuesPosition !== undefined &&
-		!['last', 'between', 'first'].includes(pivot.valuesPosition)
+		position !== undefined &&
+		!['last', 'between', 'first'].includes(position as string) &&
+		!(typeof position === 'number' && Number.isInteger(position) && position >= 0)
 	)
 		throw new Error('Choose a valid Values position.');
 	if (
-		(pivot.valuesPosition === 'between' || pivot.valuesPosition === 'first') &&
-		(pivot.valuesAxis !== 'rows' || !pivot.secondRowField)
+		position !== undefined &&
+		position !== 'last' &&
+		(pivot.valuesAxis !== 'rows' ||
+			(position === 'between' && !pivot.secondRowField) ||
+			(typeof position === 'number' && position > rows.length))
 	)
 		throw new Error('Values before or between fields require two row fields and Values on rows.');
 	if (pivot.valuesAxis === 'rows' && (!Array.isArray(extras) || !extras.length))
@@ -143,7 +198,8 @@ export function validatePivotFields(
 	if (
 		extras.length > 0 &&
 		pivot.sourceXml &&
-		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !== 'Values'
+		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !==
+			pivotCaptions(pivot).values
 	)
 		throw new Error('This PivotTable uses unsupported Values header captions.');
 	if (
@@ -171,15 +227,19 @@ export function validatePivotFields(
 		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
 		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||
 		!PIVOT_AGGREGATES.includes(pivot.aggregate) ||
-		used.some((field) => !pivot.fields.includes(field)) ||
-		new Set([pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean)).size !==
-			[pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean).length ||
+		!pivot.fields.includes(pivot.valueField) ||
+		[...rows, ...columns].some((field) => !axisNames.includes(field)) ||
+		new Set([...rows, ...columns]).size !== rows.length + columns.length ||
 		(pivot.subtotals !== undefined && typeof pivot.subtotals !== 'boolean') ||
 		(pivot.repeatLabels !== undefined && typeof pivot.repeatLabels !== 'boolean')
 	)
 		throw new Error('Choose valid PivotTable fields; row and column fields must differ.');
 }
 
-export function pivotCaption(aggregate: PivotTable['aggregate'], field: string): string {
-	return `${aggregate[0]!.toUpperCase()}${aggregate.slice(1)} of ${field}`;
+export function pivotCaption(
+	aggregate: PivotTable['aggregate'],
+	field: string,
+	pivot?: CaptionHolder,
+): string {
+	return pivotMeasureName(aggregate, field, pivot);
 }

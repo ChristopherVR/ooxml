@@ -250,6 +250,8 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 					{sIns && (
 						<InsertSection
 							canEdit={p.canEdit}
+							onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+							templateScheme={p.templateScheme}
 							newShapeType={p.newShapeType}
 							onSetNewShapeType={p.onSetNewShapeType}
 							activeFreeformTool={p.activeFreeformTool}
@@ -267,6 +269,11 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							onOpenMediaPicker={p.onOpenMediaPicker}
 							hasSelection={Boolean(p.selectedElement)}
 							onOpenHyperlinkDialog={p.onOpenHyperlinkDialog}
+							layoutOptions={p.layoutOptions}
+							currentLayoutPath={p.currentLayoutPath}
+							onInsertSlideFromLayout={p.onInsertSlideFromLayout}
+							onToggleComments={p.onToggleComments}
+							isCommentsPanelOpen={p.isCommentsPanelOpen}
 						/>
 					)}
 

@@ -186,6 +186,15 @@ function remapShapeStyleColors(
 		}
 	}
 
+	// The baselines recording what the style references resolved to travel with the colours they
+	// describe; left behind, the unchanged inherited fill would read as an edit and be baked.
+	for (const key of ['inheritedFillStyle', 'inheritedLineStyle', 'inheritedEffectStyle'] as const) {
+		const baseline = patched[key];
+		if (baseline) {
+			patched[key] = remapShapeStyleColors({ ...baseline }, remap, newColorMap);
+		}
+	}
+
 	return patched;
 }
 
@@ -236,6 +245,15 @@ function remapTextStyleColors(
 			...stop,
 			color: remapColor(stop.color, remap) ?? stop.color,
 		}));
+	}
+
+	// What the run authored and what it inherits move with the flat colour: left behind, the
+	// unchanged inherited colour would read as an edit and be written into the run.
+	if (patched.inheritedRunStyle) {
+		patched.inheritedRunStyle = remapTextStyleColors(patched.inheritedRunStyle, remap, newColorMap);
+	}
+	if (patched.authoredRunStyle) {
+		patched.authoredRunStyle = remapTextStyleColors(patched.authoredRunStyle, remap, newColorMap);
 	}
 
 	return patched;
@@ -557,4 +575,51 @@ export function applyThemeToData(
 		themeColorMap: newColorMap,
 		theme: newTheme,
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Colour map (light / dark background pair) changes
+// ---------------------------------------------------------------------------
+
+/**
+ * The scheme colour map as a slide sees it: the twelve slots plus the `bg1`/`tx1`/`bg2`/`tx2`
+ * aliases routed to the light pair (`dark === false`) or the dark pair (`dark === true`).
+ */
+export function buildColorMapForBackgroundPair(
+	colorScheme: PptxThemeColorScheme,
+	dark: boolean,
+): Record<string, string> {
+	const map = buildThemeColorMap(colorScheme);
+	if (dark) {
+		map.tx1 = map.lt1;
+		map.bg1 = map.dk1;
+		map.tx2 = map.lt2;
+		map.bg2 = map.dk2;
+	}
+	return map;
+}
+
+/**
+ * Re-resolve the colours of `elements` when the colour map flips between the light and dark
+ * background pair (a Background Styles pick on the dark columns): text drawn in `tx1` turns light,
+ * shapes filled with `bg1` turn dark, while `dk1`/`lt1` and the accents stay where they are.
+ * A colour that carries a theme reference is resolved against the new map; a plain hex is
+ * remapped by value, as for a colour scheme change.
+ */
+export function reResolveElementsForColorMapChange(
+	elements: PptxElement[],
+	colorScheme: PptxThemeColorScheme,
+	fromDark: boolean,
+	toDark: boolean,
+): PptxElement[] {
+	if (fromDark === toDark) {
+		return elements;
+	}
+	const oldMap = buildColorMapForBackgroundPair(colorScheme, fromDark);
+	const newMap = buildColorMapForBackgroundPair(colorScheme, toDark);
+	const remap = buildColorRemapTable(oldMap, newMap);
+	if (remap.size === 0) {
+		return elements;
+	}
+	return elements.map((el) => remapElementColors(el, remap, newMap));
 }

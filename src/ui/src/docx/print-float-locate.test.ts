@@ -3,7 +3,7 @@ import { createDocument, type DocumentModel, type InlineImage } from 'ooxml-core
 import { EditorState, NodeSelection } from 'prosemirror-state';
 import { describe, expect, it } from 'vitest';
 import { modelToDoc } from './model-adapter';
-import { locateFloat, selectedFloat } from './print-float-locate';
+import { isShapeFloat, locateFloat, selectedFloat, shapeSpecOf } from './print-float-locate';
 
 const picture = (partName: string, anchored: boolean): InlineImage => ({
 	relId: 'rId1',
@@ -42,7 +42,7 @@ describe('floating picture lookup', () => {
 		expect(locateFloat(doc, 'missing', 0)).toBeUndefined();
 	});
 
-	it('counts floating shapes in the index like the layout, but selects only pictures', () => {
+	it('counts floating shapes in the index like the layout and selects them too', () => {
 		const shape: InlineImage = {
 			relId: '',
 			partName: '',
@@ -66,11 +66,16 @@ describe('floating picture lookup', () => {
 				},
 			],
 		});
-		expect(locateFloat(doc, 'p2', 0)).toBeUndefined();
+		const located = locateFloat(doc, 'p2', 0)!;
+		expect(located.node.attrs.shape).toBeTruthy();
+		expect(isShapeFloat(located.node)).toBe(true);
+		expect(shapeSpecOf(located.node)?.preset).toBe('rect');
 		const after = locateFloat(doc, 'p2', 1)!;
 		expect(after.node.attrs.partName).toBe('word/media/after.png');
 		const state = EditorState.create({ doc, selection: NodeSelection.create(doc, after.pos) });
 		expect(selectedFloat(state)).toMatchObject({ blockId: 'p2', index: 1 });
+		const onShape = EditorState.create({ doc, selection: NodeSelection.create(doc, located.pos) });
+		expect(selectedFloat(onShape)).toMatchObject({ blockId: 'p2', index: 0 });
 	});
 
 	it('reads the picture a node selection holds back as paragraph and index', () => {

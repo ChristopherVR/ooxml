@@ -1,8 +1,8 @@
 /**
  * chart-overlays-trendline-fit.ts: per-series trendline point computation
- * (linear / exponential / logarithmic / power / polynomial / moving-average),
- * built on the regression math in chart-overlays-regression.ts. Split out of
- * chart-overlays.ts to keep that module under the repo's file-size guideline.
+ * (linear / exponential / logarithmic / power / polynomial / moving-average).
+ * The fit itself is `fitChartTrendline` in `ooxml-core/chart`, in data space;
+ * this module chooses the x values and maps the fitted samples to pixels.
  *
  * Excel fits a trendline against x = 1, 2, ..., n on a category chart (bar /
  * line / area): the category POSITION, never a 0-based array index. A scatter
@@ -19,20 +19,9 @@
  * @module chart-overlays-trendline-fit
  */
 
+import { fitChartTrendline } from 'ooxml-core/chart';
 import type { PptxChartSeries, PptxChartTrendline } from 'ooxml-core/pptx';
 
-import {
-	computeLinearRegression,
-	computeRSquared,
-	fitPolynomial,
-} from './chart-overlays-regression';
-import {
-	formatExponentialEquation,
-	formatLinearEquation,
-	formatLogarithmicEquation,
-	formatPolynomialEquation,
-	formatPowerEquation,
-} from './chart-trendline-equation-format';
 import type { PlotLayout, ValueRange } from './chart-view-model';
 import { valueToY } from './chart-view-model';
 
@@ -55,13 +44,8 @@ export function xToPixel(
 	return layout.plotLeft + (xVal / maxIdx) * layout.plotWidth;
 }
 
-interface TrendlinePoint {
-	x: number;
-	y: number;
-}
-
 export interface ComputedTrend {
-	points: TrendlinePoint[];
+	points: { x: number; y: number }[];
 	equation: string;
 	rSquared: number;
 }
@@ -112,114 +96,21 @@ export function computeTrendlinePoints(
 				(xDomain!.span > 0 ? (fitX - xDomain!.min) / xDomain!.span : 0) * layout.plotWidth
 			: xToPixel(fitX - 1, catCount, layout, mode);
 
-	const forward = trendline.forward ?? 0;
-	const backward = trendline.backward ?? 0;
-	const minX = Math.min(...xVals);
-	const maxX = Math.max(...xVals);
-	const startX = minX - backward;
-	const endX = maxX + forward;
-	const steps = Math.max(Math.ceil((endX - startX) * 4), 20);
-
-	let evalFn: (x: number) => number;
-	let equation = '';
-	let rSquared = 0;
-
-	switch (trendline.trendlineType) {
-		case 'linear': {
-			const reg = computeLinearRegression(xVals, yVals);
-			const fixedIntercept = trendline.intercept;
-			const slope =
-				fixedIntercept !== undefined
-					? yVals.reduce((s, y, i) => s + (y - fixedIntercept) * xVals[i], 0) /
-						xVals.reduce((s, x) => s + x * x, 0)
-					: reg.slope;
-			const b = fixedIntercept ?? reg.intercept;
-			evalFn = (x) => slope * x + b;
-			equation = formatLinearEquation(slope, b);
-			rSquared = reg.rSquared;
-			break;
-		}
-		case 'exponential': {
-			const posY = yVals.filter((y) => y > 0).map((y) => Math.log(y));
-			const posX = xVals.filter((_x, i) => yVals[i] > 0);
-			if (posY.length < 2) {
-				return { points: [], equation: '', rSquared: 0 };
-			}
-			const reg = computeLinearRegression(posX, posY);
-			const a = Math.exp(reg.intercept);
-			const b = reg.slope;
-			evalFn = (x) => a * Math.exp(b * x);
-			equation = formatExponentialEquation(a, b);
-			rSquared = reg.rSquared;
-			break;
-		}
-		case 'logarithmic': {
-			const posLnX = xVals.filter((x) => x > 0).map((x) => Math.log(x));
-			const filteredY = yVals.filter((_y, i) => xVals[i] > 0);
-			if (posLnX.length < 2) {
-				return { points: [], equation: '', rSquared: 0 };
-			}
-			const reg = computeLinearRegression(posLnX, filteredY);
-			evalFn = (x) => (x > 0 ? reg.slope * Math.log(x) + reg.intercept : 0);
-			equation = formatLogarithmicEquation(reg.slope, reg.intercept);
-			rSquared = reg.rSquared;
-			break;
-		}
-		case 'power': {
-			const logXArr = xVals.filter((x, i) => x > 0 && yVals[i] > 0).map((x) => Math.log(x));
-			const logYArr = yVals.filter((y, i) => y > 0 && xVals[i] > 0).map((y) => Math.log(y));
-			if (logXArr.length < 2) {
-				return { points: [], equation: '', rSquared: 0 };
-			}
-			const reg = computeLinearRegression(logXArr, logYArr);
-			const a = Math.exp(reg.intercept);
-			evalFn = (x) => (x > 0 ? a * x ** reg.slope : 0);
-			equation = formatPowerEquation(a, reg.slope);
-			rSquared = reg.rSquared;
-			break;
-		}
-		case 'polynomial': {
-			const order = Math.min(trendline.order ?? 2, 6);
-			const coeffs = fitPolynomial(xVals, yVals, order);
-			evalFn = (x) => coeffs.reduce((s, c, i) => s + c * x ** i, 0);
-			equation = formatPolynomialEquation(coeffs);
-			rSquared = computeRSquared(xVals, yVals, evalFn);
-			break;
-		}
-		case 'movingAvg': {
-			const period = trendline.period ?? 2;
-			const maPoints: TrendlinePoint[] = [];
-			for (let i = period - 1; i < n; i++) {
-				let sum = 0;
-				for (let j = i - period + 1; j <= i; j++) {
-					sum += yVals[j];
-				}
-				const avgVal = sum / period;
-				const px = toPixelX(xVals[i]);
-				const py = valueToY(avgVal, range, layout.plotTop, layout.plotBottom);
-				maPoints.push({ x: px, y: py });
-			}
-			return {
-				points: maPoints,
-				equation: `${period}-period moving average`,
-				rSquared: 0,
-			};
-		}
-		default:
-			return { points: [], equation: '', rSquared: 0 };
-	}
-
-	const points: TrendlinePoint[] = [];
-	for (let step = 0; step <= steps; step++) {
-		const xVal = startX + ((endX - startX) * step) / steps;
-		const yVal = evalFn(xVal);
-		if (!Number.isFinite(yVal)) {
-			continue;
-		}
-		const px = toPixelX(xVal);
-		const py = valueToY(yVal, range, layout.plotTop, layout.plotBottom);
-		points.push({ x: px, y: py });
-	}
-
-	return { points, equation, rSquared };
+	const fit = fitChartTrendline(
+		{
+			kind: trendline.trendlineType,
+			order: trendline.order,
+			period: trendline.period,
+			forward: trendline.forward,
+			backward: trendline.backward,
+			intercept: trendline.intercept,
+		},
+		xVals,
+		yVals,
+	);
+	const points = fit.points.map((point) => ({
+		x: toPixelX(point.x),
+		y: valueToY(point.y, range, layout.plotTop, layout.plotBottom),
+	}));
+	return { points, equation: fit.equation, rSquared: fit.rSquared };
 }

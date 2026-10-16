@@ -6,9 +6,12 @@ import { translations as animations_2 } from './animations-2';
 import { translations as animations_3 } from './animations-3';
 import { translations as application_shell } from './application-shell';
 import { translations as backstage } from './backstage';
+import { translations as chart_format } from './chart-format';
 import { translations as charts } from './charts';
 import { translations as charts_2 } from './charts-2';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
+import { translations as compare_and_waterfall } from './compare-and-waterfall';
+import { translations as design_galleries } from './design-galleries';
 import { translations as drawing_and_layout } from './drawing-and-layout';
 import { translations as drawing_and_layout_2 } from './drawing-and-layout-2';
 import { translations as editing_and_review } from './editing-and-review';
@@ -27,6 +30,8 @@ import { translations as ribbon_galleries_adjust } from './ribbon-galleries-adju
 import { translations as ribbon_galleries_data } from './ribbon-galleries-data';
 import { translations as ribbon_galleries_effects } from './ribbon-galleries-effects';
 import { translations as ribbon_galleries_picture } from './ribbon-galleries-picture';
+import { translations as ribbon_galleries_smartart_layouts } from './ribbon-galleries-smartart-layouts';
+import { translations as shape_gallery } from './shape-gallery';
 import { translations as slide_templates } from './slide-templates';
 import { translations as smart_art } from './smart-art';
 import { translations as table_layout } from './table-layout';
@@ -69,7 +74,12 @@ export const translationsZhCN: Record<string, string> = {
 	...ribbon_galleries,
 	...ribbon_galleries_effects,
 	...ribbon_galleries_picture,
+	...compare_and_waterfall,
+	...ribbon_galleries_smartart_layouts,
 	...ribbon_galleries_adjust,
 	...ribbon_galleries_data,
 	...table_layout,
+	...shape_gallery,
+	...design_galleries,
+	...chart_format,
 };

@@ -32,6 +32,7 @@ import type {
 	ViewerOptionPrimitive,
 	ViewerOptions,
 	ViewerOptionsGroupId,
+	ViewerRegionContext,
 } from 'ooxml-ui/pptx';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
@@ -46,6 +47,7 @@ import { SettingsCustomFontsComponent } from './settings-custom-fonts.component'
 import { SettingsLanguageTabComponent } from './settings-language-tab.component';
 import { translationsSignal } from './translations-signal';
 import { injectResolvedCustomization } from './viewer-customization.service';
+import { ViewerRegionService } from './viewer-region.service';
 
 export type { ViewerSettings } from 'ooxml-ui/pptx';
 
@@ -195,6 +197,7 @@ export class SettingsDialogComponent {
 	private readonly translate = inject(TranslateService);
 	private readonly translations = translationsSignal(this.translate);
 	private readonly customization = injectResolvedCustomization();
+	private readonly regions = inject(ViewerRegionService, { optional: true });
 	private readonly dialog = viewChild<ElementRef<PptxOptionsDialogElement>>('dialog');
 	private binding: PptxOptionsDialogBinding | null = null;
 	private readonly t = (key: string): string => this.translate.instant(key);
@@ -227,7 +230,16 @@ export class SettingsDialogComponent {
 			languageKey: String(this.translations()),
 			customization: this.customization(),
 			aiEnabled: this.aiExportVisible(),
+			regionContext: this.regionContext(),
 		};
+	}
+
+	/**
+	 * The base context of a host `dialog.options` region (the shared binding adds the options
+	 * model); null outside a viewer, which keeps the built-in body.
+	 */
+	protected regionContext(): ViewerRegionContext | null {
+		return this.regions?.context('dialog.options', () => this.close.emit()) ?? null;
 	}
 
 	private bind(element: PptxOptionsDialogElement): void {

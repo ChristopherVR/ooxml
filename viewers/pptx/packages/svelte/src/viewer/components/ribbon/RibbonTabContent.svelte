@@ -64,7 +64,7 @@
 	{:else if tab === 'home'}
 		<HomeTab editor={ribbon.editor} findReplace={ribbon.findReplace} onnavigateslide={ribbon.onnavigateslide} hiddenActions={ribbon.hiddenActions} />
 	{:else if tab === 'insert'}
-		<InsertTab editor={ribbon.editor} canvasSize={ribbon.canvasSize} onheaderfooter={ribbon.onheaderfooter} />
+		<InsertTab editor={ribbon.editor} canvasSize={ribbon.canvasSize} onheaderfooter={ribbon.onheaderfooter} onnavigateslide={ribbon.onnavigateslide} chromeUi={ribbon.chromeUi} />
 	{:else if tab === 'draw'}
 		<DrawTab editor={ribbon.editor} />
 	{:else if tab === 'design'}

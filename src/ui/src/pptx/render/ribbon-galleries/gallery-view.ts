@@ -24,7 +24,9 @@ export function inlineGalleryItems(
 	descriptor: RibbonGalleryDescriptor,
 	count: number = INLINE_GALLERY_TILE_COUNT,
 ): RibbonGalleryItem[] {
-	return descriptor.sections.flatMap((section) => section.items).slice(0, count);
+	return descriptor.sections
+		.flatMap((section) => section.items)
+		.slice(0, descriptor.inlineCount ?? count);
 }
 
 /** True when the descriptor has at least one tile. */

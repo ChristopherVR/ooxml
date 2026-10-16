@@ -1,12 +1,14 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import { contentUrl, readContent, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
 import { downloadBytes } from '../../xlsx/file-commands';
 import css from './file-actions.css?raw';
+import { localizeCoreText } from '../i18n/core-text';
 import { toggleAnchoredPopover } from './anchored-popover';
 const fileKey = (file: FileEntry | null | undefined): string =>
 	JSON.stringify([file?.channelId, file?.messageId, file?.url, file?.name]);
 
-export class TeamsFileActions extends LitElement {
+export class TeamsFileActions extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		file: { attribute: false },
@@ -88,7 +90,7 @@ export class TeamsFileActions extends LitElement {
 		try {
 			const url = contentUrl(await client.fileUrl(file), this.ownerDocument.baseURI);
 			if (!this.isConnected || abort.signal.aborted) return;
-			if (!url) throw new Error('The file is no longer available');
+			if (!url) throw new Error(this.t('core.fileGone'));
 			if (action === 'download') {
 				const bytes = await readContent(url, abort.signal, 33_554_432);
 				if (this.isConnected && !abort.signal.aborted)
@@ -109,7 +111,10 @@ export class TeamsFileActions extends LitElement {
 			}
 		} catch (error) {
 			if (!abort.signal.aborted)
-				this.error = error instanceof Error ? error.message : 'Could not access this file';
+				this.error =
+					error instanceof Error
+						? localizeCoreText(error.message, this.i18n)
+						: this.t('files.accessFailed');
 		} finally {
 			if (this.abort === abort) {
 				this.abort = undefined;
@@ -120,7 +125,7 @@ export class TeamsFileActions extends LitElement {
 	protected override render() {
 		return html`<button
 				type="button"
-				aria-label=${`More actions for ${this.file?.name ?? 'file'}`}
+				aria-label=${this.t('files.moreActions', { name: this.file?.name ?? this.t('files.fileFallback') })}
 				?disabled=${!this.file?.url}
 				aria-controls="actions"
 				aria-expanded=${String(this.menuOpen)}
@@ -131,27 +136,33 @@ export class TeamsFileActions extends LitElement {
 			<div
 				id="actions"
 				popover="auto"
-				aria-label="File actions"
+				aria-label=${this.t('files.actions')}
 				@toggle=${() => (this.menuOpen = this.renderRoot.querySelector<HTMLElement>('[popover]')!.matches(':popover-open'))}
 			>
-				<button type="button" @click=${() => this.open('open')}>Open in OpenTeams</button>
-				<button type="button" @click=${() => this.open('browser')}>Open in browser</button>
+				<button type="button" @click=${() => this.open('open')}>
+					${this.t('files.openInTeams')}
+				</button>
+				<button type="button" @click=${() => this.open('browser')}>
+					${this.t('files.openInBrowser')}
+				</button>
 				<button type="button" ?disabled=${this.busy} @click=${() => void this.transfer('download')}>
-					Download
+					${this.t('files.download')}
 				</button>
 				<button type="button" ?disabled=${this.busy} @click=${() => void this.transfer('copy')}>
-					Copy link
+					${this.t('files.copyLink')}
 				</button>
-				<button type="button" @click=${() => this.open('pin')}>Pin as tab</button>
+				<button type="button" @click=${() => this.open('pin')}>${this.t('files.pinAsTab')}</button>
 				${
 					this.busy
-						? html`<p role="status">Preparing file…</p>
-								<button type="button" @click=${() => this.abort?.abort()}>Cancel</button>`
+						? html`<p role="status">${this.t('files.preparingFile')}</p>
+								<button type="button" @click=${() => this.abort?.abort()}>
+									${this.t('common.cancel')}
+								</button>`
 						: nothing
 				}
 				${this.error ? html`<p role="alert">${this.error}</p>` : nothing}
-				${this.copied ? html`<p role="status">Link copied</p>` : nothing}
-				${this.copyUrl ? html`<label>File link<input readonly .value=${this.copyUrl} @focus=${(event: Event) => (event.target as HTMLInputElement).select()} /></label>` : nothing}
+				${this.copied ? html`<p role="status">${this.t('files.linkCopied')}</p>` : nothing}
+				${this.copyUrl ? html`<label>${this.t('files.fileLink')}<input readonly .value=${this.copyUrl} @focus=${(event: Event) => (event.target as HTMLInputElement).select()} /></label>` : nothing}
 			</div>`;
 	}
 }

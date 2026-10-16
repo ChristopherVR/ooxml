@@ -20,6 +20,8 @@ import type { PptxTableCellStyle, PptxTableData, PptxTableRow } from 'ooxml-core
 export interface TableStylePreset {
 	id: string;
 	label: string;
+	/** Translation key for `label`; bindings paint the translated name. */
+	labelKey: string;
 	headerBg: string;
 	headerFg: string;
 	bandBg: string;
@@ -31,6 +33,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'light-1',
 		label: 'Light 1',
+		labelKey: 'pptx.tableStylePreset.light1',
 		headerBg: '#4472C4',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(217, 226, 243, 0.5)',
@@ -39,6 +42,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'light-2',
 		label: 'Light 2',
+		labelKey: 'pptx.tableStylePreset.light2',
 		headerBg: '#ED7D31',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(252, 228, 214, 0.5)',
@@ -47,6 +51,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'light-3',
 		label: 'Light 3',
+		labelKey: 'pptx.tableStylePreset.light3',
 		headerBg: '#70AD47',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(226, 239, 218, 0.5)',
@@ -56,6 +61,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'medium-1',
 		label: 'Medium 1',
+		labelKey: 'pptx.tableStylePreset.medium1',
 		headerBg: '#2F5597',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(180, 198, 231, 0.4)',
@@ -64,6 +70,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'medium-2',
 		label: 'Medium 2',
+		labelKey: 'pptx.tableStylePreset.medium2',
 		headerBg: '#C55A11',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(244, 176, 132, 0.4)',
@@ -72,6 +79,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'medium-3',
 		label: 'Medium 3',
+		labelKey: 'pptx.tableStylePreset.medium3',
 		headerBg: '#548235',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(169, 209, 142, 0.4)',
@@ -81,6 +89,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'dark-1',
 		label: 'Dark 1',
+		labelKey: 'pptx.tableStylePreset.dark1',
 		headerBg: '#1F3864',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(31, 56, 100, 0.15)',
@@ -89,6 +98,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'dark-2',
 		label: 'Dark 2',
+		labelKey: 'pptx.tableStylePreset.dark2',
 		headerBg: '#843C0C',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(132, 60, 12, 0.15)',
@@ -97,6 +107,7 @@ export const TABLE_STYLE_PRESETS: TableStylePreset[] = [
 	{
 		id: 'dark-3',
 		label: 'Dark 3',
+		labelKey: 'pptx.tableStylePreset.dark3',
 		headerBg: '#375623',
 		headerFg: '#FFFFFF',
 		bandBg: 'rgba(55, 86, 35, 0.15)',

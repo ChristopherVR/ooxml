@@ -30,6 +30,6 @@ const ICONS: Partial<Record<BackstagePage, Component>> = {
 	options: Settings,
 };
 
-export function backstageIcon(page: BackstagePage): Component | undefined {
-	return ICONS[page];
+export function backstageIcon(page: string): Component | undefined {
+	return ICONS[page as BackstagePage];
 }

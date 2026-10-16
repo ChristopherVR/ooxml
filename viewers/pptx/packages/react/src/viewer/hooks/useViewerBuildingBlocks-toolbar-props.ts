@@ -309,6 +309,8 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 			}
 		},
 		isCommentsPanelOpen: s.isInspectorPaneOpen,
+		isMobileInsertOpen: s.isMobileInsertOpen,
+		onCloseMobileInsert: () => s.setIsMobileInsertOpen(false),
 		slideCommentCount: activeSlide?.comments?.length ?? 0,
 		reviewComments: createReviewCommentsHost({
 			state: s,

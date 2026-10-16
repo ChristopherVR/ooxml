@@ -9,7 +9,7 @@ import {
 	type PivotTableOptions,
 } from '../index';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 import { buildXml, children, elements, first, NS, parseXml } from '../../xml/index';
 import { assertPageAxisItems } from './page-filter-admission';
 import evidence from '../__fixtures__/native-pivot-nested-page-evidence.json';
@@ -134,7 +134,7 @@ it('counts nested headings and two page rows before header allocation', () => {
 		aggregate: 'sum',
 		caption: 'Measure ' + i,
 	}));
-	const headers = vi.spyOn(measures, 'pivotHeaders');
+	const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 	try {
 		expect(() => pivotGrid(pivot)).toThrow('too large');
 		expect(headers).not.toHaveBeenCalled();

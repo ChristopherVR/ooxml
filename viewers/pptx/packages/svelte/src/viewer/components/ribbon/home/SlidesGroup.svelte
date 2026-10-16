@@ -16,6 +16,7 @@
 	import type { PptxUiRibbonHomeElement, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import { createLayoutArtwork } from './home-adapter';
 	import SlideTemplatesLauncher from './SlideTemplatesLauncher.svelte';
 
@@ -27,6 +28,7 @@
 	let layouts = $state<PptxLayoutOption[]>([]);
 	/** Artwork is fetched alongside the layout list, only once a gallery opens. */
 	let previews = $state<ReadonlyMap<string, PptxLayoutPreview>>(new Map());
+	const customization = useViewerCustomization();
 	const layoutArtwork = createLayoutArtwork();
 	const currentLayoutPath = $derived(editor.slides[editor.currentSlideIndex]?.layoutPath);
 	/** Scoped to the active slide's own master; dedupes same-named layouts across masters. */
@@ -40,7 +42,7 @@
 				editable: editor.editable,
 				hasLayouts: true,
 				hasSlides: editor.slides.length > 0,
-				showTemplates: true,
+				showTemplates: customization.isDialogAvailable('slideTemplates'),
 				newSlideNeedsLayout: false,
 				resetNeedsSlide: false,
 				layouts: {

@@ -89,8 +89,8 @@ export function createTableSection(
 		...TABLE_STYLE_PRESETS.map((preset) => {
 			const swatch = createEl(doc, 'button', 'pptxv-table-preset-swatch');
 			swatch.type = 'button';
-			swatch.title = preset.label;
-			swatch.setAttribute('aria-label', preset.label);
+			swatch.title = t(preset.labelKey);
+			swatch.setAttribute('aria-label', t(preset.labelKey));
 			const header = createEl(doc, 'span');
 			header.style.background = preset.headerBg;
 			const band = createEl(doc, 'span');

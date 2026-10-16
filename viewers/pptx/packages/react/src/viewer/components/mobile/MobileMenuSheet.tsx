@@ -160,6 +160,8 @@ function MobileSectionBody({
 				<div className={wrap}>
 					<InsertSection
 						canEdit={p.canEdit}
+						onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+						templateScheme={p.templateScheme}
 						newShapeType={p.newShapeType}
 						onSetNewShapeType={p.onSetNewShapeType}
 						onAddTextBox={p.onAddTextBox}
@@ -174,6 +176,11 @@ function MobileSectionBody({
 						onOpenMediaPicker={p.onOpenMediaPicker}
 						hasSelection={Boolean(p.selectedElement)}
 						onOpenHyperlinkDialog={p.onOpenHyperlinkDialog}
+						layoutOptions={p.layoutOptions}
+						currentLayoutPath={p.currentLayoutPath}
+						onInsertSlideFromLayout={p.onInsertSlideFromLayout}
+						onToggleComments={p.onToggleComments}
+						isCommentsPanelOpen={p.isCommentsPanelOpen}
 					/>
 				</div>
 			);

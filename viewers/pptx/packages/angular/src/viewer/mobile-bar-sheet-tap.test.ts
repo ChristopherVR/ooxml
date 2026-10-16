@@ -6,6 +6,7 @@ import { toggleSheet } from './mobile-chrome-helpers';
 function actionsSpy() {
 	return {
 		openSlides: vi.fn(),
+		openInsert: vi.fn(),
 		openInspector: vi.fn(),
 		openComments: vi.fn(),
 		openNotes: vi.fn(),
@@ -41,9 +42,10 @@ describe('applyMobileBarSheetTap priority', () => {
 	});
 
 	it('matches shared toggleSheet for every pair, the same priority order every binding shares', () => {
-		const keys = ['slides', 'inspector', 'comments', 'notes'] as const,
+		const keys = ['slides', 'insert', 'inspector', 'comments', 'notes'] as const,
 			openerByKey = {
 				slides: 'openSlides',
+				insert: 'openInsert',
 				inspector: 'openInspector',
 				comments: 'openComments',
 				notes: 'openNotes',

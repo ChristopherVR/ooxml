@@ -195,7 +195,7 @@ try {
 			await expect(page.locator(editor)).toBeVisible();
 		}
 	}
-	await page.goto(base + '/');
+	await page.goto(base + '/#/');
 	await page.locator('[data-create=docx]').click();
 	await expect(page.locator('docx-editor')).toBeVisible();
 	await context.setOffline(false);
@@ -209,12 +209,15 @@ try {
 	await visitor.goto(base + '/');
 	await visitor.locator('#dialog [data-start=office]').click();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	// The suite opens on chat; its rail leads to the file home.
+	await expect(visitor.locator('#chat-input')).toBeVisible();
+	await visitor.locator('#rail [data-home]').click();
 	await visitor.locator('[data-create=docx]').click();
 	await expect(visitor.locator('docx-editor')).toBeVisible();
 	await visitor.reload();
 	await expect(visitor.locator('#dialog [data-start=office]')).toBeVisible();
 	assert.equal(await visitor.evaluate(() => sessionStorage.length), 0);
-	await visitor.goto(base + '/?suite');
+	await visitor.goto(base + '/?suite#/');
 	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
 	// Every new visit asks again, and nothing of the suite shows or loads until it is picked.

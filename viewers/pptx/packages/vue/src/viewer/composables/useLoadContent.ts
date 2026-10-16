@@ -38,6 +38,7 @@ import type {
 	PptxPresentationProperties,
 	PptxSaveFormat,
 	PptxSection,
+	PptxElement,
 	PptxSlide,
 	PptxSlideMaster,
 	PptxTagCollection,
@@ -270,6 +271,10 @@ export interface UseLoadContentResult {
 export interface UseLoadContentOptions {
 	/** Current list edit only; serialization does not blur or commit the editor. */
 	getPendingInlineEdit?: () => PendingInlineTextEdit | undefined;
+	/** The real deck while a Design gallery hover preview shows; save and recovery serialize it. */
+	getHeldDeck?: () =>
+		| { slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> }
+		| undefined;
 	/**
 	 * Called after a parse fully applies to viewer state (slides & co.).
 	 * Collaboration uses this to re-adopt the shared doc's slides when a local
@@ -604,16 +609,18 @@ export function useLoadContent(
 						pending.text,
 					)
 				: null;
-		const saveSlides = buildSaveSlides(slides.value, templateElementsBySlideId.value).map(
-			(slide) =>
-				pending && 'slideId' in pending.target && slide.id === pending.target.slideId
-					? {
-							...slide,
-							elements: [
-								...overlayInlineTextSnapshot(slide.elements, pending.snapshot, pending.text),
-							],
-						}
-					: slide,
+		const saveSlides = buildSaveSlides(
+			options?.getHeldDeck?.()?.slides ?? slides.value,
+			options?.getHeldDeck?.()?.templateElementsBySlideId ?? templateElementsBySlideId.value,
+		).map((slide) =>
+			pending && 'slideId' in pending.target && slide.id === pending.target.slideId
+				? {
+						...slide,
+						elements: [
+							...overlayInlineTextSnapshot(slide.elements, pending.snapshot, pending.text),
+						],
+					}
+				: slide,
 		);
 		// Merge the separately-stored template (master/layout) elements back in
 		// front of (behind) each slide's content before serialising, so template

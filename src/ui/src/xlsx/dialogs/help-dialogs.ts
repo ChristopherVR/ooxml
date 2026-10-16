@@ -51,7 +51,7 @@ export const SUPPORTED_FEATURES = [
 
 export const UNSUPPORTED_FEATURES = [
 	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)',
-	'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)',
+	'Multiple/dynamic report filters and repeated column captions (preserved)',
 	'Show Formulas',
 	'Manual calculation',
 	'Outline (grouping) for columns',

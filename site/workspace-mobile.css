@@ -48,8 +48,8 @@ body[data-hide-tabs='true'] .tabs {
 body[data-collapsible='true'] #chrome-toggle {
 	display: inline-flex;
 	position: fixed;
-	right: 8px;
-	bottom: 8px;
+	right: 4px;
+	top: 8px;
 	z-index: 30;
 	width: 32px;
 	height: 32px;
@@ -73,6 +73,10 @@ body[data-chrome='collapsed'] .statusbar {
 }
 body[data-chrome='collapsed'] .suite-layout {
 	height: var(--app-h, 100dvh);
+}
+/* The toggle owns a slim column beside the editor, so it never covers an editor control. */
+body[data-collapsible='true'][data-chrome='collapsed'] .suite-layout {
+	margin-right: 52px;
 }
 
 @media (pointer: coarse) {
@@ -127,8 +131,11 @@ body[data-chrome='collapsed'] .suite-layout {
 	body[data-drawer='true']:not([data-product]) .nav-caption {
 		display: block;
 	}
-	body[data-drawer='true']:not([data-product]) .app-rail button {
+	body[data-drawer='true']:not([data-product]) .app-rail button,
+	body[data-drawer='true']:not([data-product]) .app-rail a {
 		flex-direction: row;
+		justify-content: flex-start;
+		text-align: left;
 		min-height: 44px;
 		padding: 8px 12px;
 		gap: 13px;

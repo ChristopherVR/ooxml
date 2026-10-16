@@ -2,7 +2,7 @@ import { Settings } from 'lucide';
 import {
 	BACKSTAGE_NAV,
 	BACKSTAGE_TEMPLATES,
-	customizeBackstageNav,
+	backstageNavEntries,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	formatBackstageDate,
 	formatBackstageSize,
@@ -12,11 +12,14 @@ import type {
 	AccountAuthConfig,
 	BackstagePage,
 	BackstageRecentFile,
+	HostBackstagePage,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
+import { NO_REGIONS } from '../../region-set';
+import type { RegionHandle } from '../../region-set';
 import type { RibbonFileHandlers } from '../ribbon-types';
 import { renderAccountPage } from './file-tab-account';
 import { createFileActionGrid } from './file-tab-actions';
@@ -26,6 +29,11 @@ import { createLucideIcon } from './file-tab-icons';
 export interface FileTab {
 	el: HTMLElement;
 	setHasMacros(hasMacros: boolean): void;
+	/**
+	 * The File tab was shown or left. Host-supplied page renderers are mounted
+	 * only while it is shown, and released when it is left.
+	 */
+	setVisible(visible: boolean): void;
 }
 
 /** A `<span>` carrying translated text, built as a node so the label is never
@@ -60,10 +68,13 @@ export function createFileTab(
 	// The host's customisation removes pages; the chrome is rebuilt when it
 	// changes, so resolving once per build is enough.
 	const customization = handlers.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
-	const navItems = customizeBackstageNav(BACKSTAGE_NAV, customization);
-	let page: BackstagePage = navItems.some((item) => item.id === 'home')
+	const navItems = backstageNavEntries(BACKSTAGE_NAV, customization);
+	const regions = handlers.getRegionSet?.() ?? NO_REGIONS;
+	let page: string = navItems.some((item) => item.id === 'home')
 		? 'home'
 		: (navItems[0]?.id ?? 'home');
+	let visible = false;
+	let regionHandle: RegionHandle | null = null;
 	let hasMacros = false;
 	let query = '';
 	let recent: BackstageRecentFile[] = [];
@@ -81,7 +92,7 @@ export function createFileTab(
 			onClose();
 		}
 	}
-	function setPage(next: BackstagePage): void {
+	function setPage(next: string): void {
 		if (next === 'close') {
 			return onClose();
 		}
@@ -94,13 +105,24 @@ export function createFileTab(
 		page = next;
 		render();
 	}
+	function releaseRegion(): void {
+		regionHandle?.destroy();
+		regionHandle = null;
+	}
 	function renderNav(): void {
 		nav.replaceChildren();
 		for (const item of navItems) {
-			if (item.group && !nav.querySelector('i')) {
+			if (item.group === 'footer' && !nav.querySelector('i')) {
 				nav.appendChild(doc.createElement('i'));
 			}
-			const itemButton = labeledIconButton(doc, item.id, t(item.labelKey), () => setPage(item.id));
+			// A host page's label is used as given; a built-in page's is translated.
+			const label = item.host || !item.labelKey ? item.label : t(item.labelKey);
+			const itemButton = labeledIconButton(
+				doc,
+				item.host ? undefined : (item.id as BackstagePage),
+				label,
+				() => setPage(item.id),
+			);
 			itemButton.setAttribute('data-pptx-backstage-nav-item', '');
 			itemButton.classList.toggle('active', page === item.id);
 			if (page === item.id) {
@@ -197,7 +219,16 @@ export function createFileTab(
 	}
 	function renderActions(): void {
 		main.appendChild(
-			createFileActionGrid(doc, page, handlers, hasMacros, run, t, hiddenActions, customization),
+			createFileActionGrid(
+				doc,
+				page as BackstagePage,
+				handlers,
+				hasMacros,
+				run,
+				t,
+				hiddenActions,
+				customization,
+			),
 		);
 	}
 	function renderOptionsCard(): void {
@@ -219,15 +250,38 @@ export function createFileTab(
 		);
 		main.appendChild(card);
 	}
+	/** The host page behind the current nav entry, if it is one. */
+	function currentHostPage(): HostBackstagePage | undefined {
+		return navItems.find((item) => item.id === page)?.host;
+	}
+	function hostPageOrReplaced(): boolean {
+		return (
+			currentHostPage() !== undefined || regions.isReplaced(`backstage.${page as BackstagePage}`)
+		);
+	}
 	function render(): void {
+		releaseRegion();
 		renderNav();
 		main.replaceChildren();
+		const hostPage = currentHostPage();
 		const heading = doc.createElement('h1');
-		heading.textContent =
-			page === 'home'
+		heading.textContent = hostPage
+			? hostPage.label
+			: page === 'home'
 				? t('pptx.backstage.greeting')
 				: t(BACKSTAGE_NAV.find((item) => item.id === page)?.labelKey ?? 'pptx.backstage.nav.home');
 		main.appendChild(heading);
+		// A host page, or a built-in page the host replaced, fills the page body
+		// (nav, title and back button stay). Mounted only while the tab is shown.
+		const replaced = hostPage ? true : regions.isReplaced(`backstage.${page as BackstagePage}`);
+		if (replaced) {
+			if (visible) {
+				regionHandle = hostPage
+					? regions.mountHostPage(hostPage, main, { close: onClose })
+					: regions.mount(`backstage.${page as BackstagePage}`, main, { close: onClose });
+			}
+			return;
+		}
 		if (page === 'home' || page === 'new') {
 			renderTemplates();
 		}
@@ -253,6 +307,17 @@ export function createFileTab(
 		setHasMacros(value) {
 			hasMacros = value;
 			if (page === 'saveAs') {
+				render();
+			}
+		},
+		setVisible(next) {
+			if (next === visible) {
+				return;
+			}
+			visible = next;
+			if (!next) {
+				releaseRegion();
+			} else if (hostPageOrReplaced()) {
 				render();
 			}
 		},

@@ -7,6 +7,7 @@ import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { resolveDrawingShadowXml } from '../../drawingml/drawing-shadow';
 import { resolveChartGradient, type ChartGradientFill } from '../gradient-definition';
 import { autoSeriesColor, chartColorScheme } from './chart-colors';
+import { analysisView } from './chart-view-analysis';
 import type { ChartSeriesView } from './chart-view';
 import type { ChartSummary, ChartSummarySeries, ChartThemePalette } from './summary';
 
@@ -129,5 +130,6 @@ export function seriesView<S extends ChartSummarySeries>(
 		}),
 	);
 	if (Object.keys(points).length) view.pointGradients = points;
+	Object.assign(view, analysisView(s, color, ctx.drawingColor));
 	return view;
 }

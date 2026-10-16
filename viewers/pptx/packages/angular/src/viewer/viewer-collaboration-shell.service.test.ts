@@ -179,6 +179,28 @@ describe('custom-shell collaboration wiring', () => {
 		expect(h.session.syncHostConfig).toHaveBeenLastCalledWith(config);
 	});
 
+	it('never broadcasts a Design gallery hover preview', () => {
+		const h = harness();
+		h.config.set(config);
+		h.collab.active.set(true);
+		const real = [{ id: 'slide', elements: [] }] as PptxSlide[];
+		h.loader.slides.set(real);
+		h.flush();
+		h.collab.broadcastSlides.mockClear();
+
+		const preview = [{ id: 'slide', elements: [], backgroundColor: '#000000' }] as PptxSlide[];
+		h.editor.deckStyleHeld.set(true);
+		h.editor.slides.set(preview);
+		h.flush();
+		expect(h.collab.broadcastSlides).not.toHaveBeenCalledWith(preview);
+		h.editor.slides.set(real);
+		h.editor.deckStyleHeld.set(false);
+		h.flush();
+		for (const call of h.collab.broadcastSlides.mock.calls) {
+			expect(call[0]).not.toBe(preview);
+		}
+	});
+
 	it('does not let stale source completion re-block an already loaded replacement', async () => {
 		const h = harness();
 		h.config.set(config);

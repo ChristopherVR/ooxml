@@ -16,6 +16,10 @@ export async function mountTeams(host, store, open, refresh) {
 	teams.toggleAttribute('host-profile', true);
 	teams.setAttribute('host-theme', '');
 	teams.addEventListener('teams-settings-theme', (event) => setThemeMode(event.detail.theme));
+	// The suite has no language preference of its own yet: it shows Teams in the page language
+	// (`<html lang>`) when that is one Teams ships, else English. A host that does set a language
+	// passes it the same way, as the `locale` property of <teams-app>.
+	teams.locale = document.documentElement.lang || '';
 	teams.workspaceId = teamsWorkspace();
 	teams.userName = profile.name;
 	teams.userId = profile.userId;

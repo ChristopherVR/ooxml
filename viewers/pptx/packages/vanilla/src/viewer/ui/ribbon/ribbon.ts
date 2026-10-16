@@ -2,14 +2,18 @@ import type {
 	AccountAuthConfig,
 	PptxUiRibbonAddInElement,
 	RibbonAddInTab,
+	ResolvedCustomization,
 	RibbonContextualTabId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 import {
 	attachRibbonOverflow,
+	EMPTY_RESOLVED_CUSTOMIZATION,
 	homeLaunchers,
 	filterVisibleTabs,
 	isActionHidden,
+	isDialogAvailable,
+	isPanelVisible,
 	resolveActiveRibbonAddIn,
 	resolveActiveRibbonTab,
 	visibleContextualTabs,
@@ -22,6 +26,7 @@ import { createEl } from '../../render';
 import { createEquationPanel } from './equation-panel';
 import { createFindReplacePanel } from './find-replace-panel';
 import { createFormatBackgroundPanel } from './format-background-panel';
+import { createChartSelectionStrip } from './gallery/chart-selection-strip';
 import { createContextualTabPanes, mountVisibleContextualPanes } from './gallery/contextual-tabs';
 import { createRibbonGalleryHub } from './gallery/gallery-hub';
 import { createPictureSizeStrip } from './gallery/picture-size-strip';
@@ -84,19 +89,44 @@ export function createRibbon(
 	tabBar.el.hidden = true;
 	el.appendChild(tabBar.el);
 
+	// The host can remove the Find and Equation panels outright; every path that
+	// opens them (ribbon, keyboard, context menu) goes through these guards.
+	const resolved = (): ResolvedCustomization =>
+		handlers.nav.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
 	const findReplace = createFindReplacePanel(doc, t, handlers.findReplace);
 	el.appendChild(findReplace.el);
+	const toggleFindReplace = (): void => {
+		if (isPanelVisible(resolved(), 'findReplace')) {
+			findReplace.toggle();
+		}
+	};
 
 	const equationPanel = createEquationPanel(doc, t, (omml, id) =>
 		id ? handlers.edit.updateEquation(id, omml) : handlers.insert.insertEquation(omml),
 	);
 	el.appendChild(equationPanel.el);
+	/**
+	 * The ribbon is hidden on phones, so a panel left inside it would open invisibly (the phone
+	 * Insert sheet's Equation tile, or editing an equation). Move it to the viewer root first, as
+	 * the SmartArt and Slide Templates dialogs do.
+	 */
+	const attachEquationPanel = (): void => {
+		const root = el.closest<HTMLElement>('.pptxv');
+		if (root && equationPanel.el.parentElement !== root) {
+			root.appendChild(equationPanel.el);
+		}
+	};
+	const equationAvailable = (): boolean => isDialogAvailable(resolved(), 'equation');
 
 	const formatBackgroundPanel = createFormatBackgroundPanel(doc, t, handlers.edit);
 	el.appendChild(formatBackgroundPanel.el);
 
-	const galleryHub = createRibbonGalleryHub((result) =>
-		handlers.edit.applyRibbonGalleryResult(result),
+	const galleryHub = createRibbonGalleryHub(
+		(result) => handlers.edit.applyRibbonGalleryResult(result),
+		{
+			preview: (result) => handlers.edit.previewRibbonGalleryResult(result),
+			end: () => handlers.edit.endRibbonGalleryPreview(),
+		},
 	);
 	const hidden = (id: RibbonTabId): boolean => isActionHidden(id, hiddenActions);
 	const fileTab = hidden('file')
@@ -106,7 +136,8 @@ export function createRibbon(
 		? null
 		: createHomeTab(doc, t, {
 				edit: handlers.edit,
-				onToggleFindReplace: () => findReplace.toggle(),
+				onToggleFindReplace: toggleFindReplace,
+				isSlideTemplatesAvailable: () => isDialogAvailable(resolved(), 'slideTemplates'),
 				hiddenActions,
 				galleryHub,
 			});
@@ -116,9 +147,20 @@ export function createRibbon(
 				doc,
 				t,
 				handlers.insert,
-				() => equationPanel.toggle(),
+				() => {
+					if (equationAvailable()) {
+						attachEquationPanel();
+						equationPanel.toggle();
+					}
+				},
 				() => handlers.nav.openHeaderFooter(),
 				() => handlers.nav.openHyperlink(),
+				() => handlers.nav.openComments(),
+				{
+					insert: (templateId) => handlers.edit.insertSlideFromTemplate(templateId),
+					scheme: () => handlers.edit.getTemplateScheme(),
+					available: () => isDialogAvailable(resolved(), 'slideTemplates'),
+				},
 			);
 	const drawTab: DrawTab | null = hidden('draw') ? null : createDrawTab(doc, t, handlers.draw);
 	let inspectorOpen = false;
@@ -202,8 +244,10 @@ export function createRibbon(
 	// Contextual tabs (Shape Format, ...) sit after the fixed tabs, mounted only
 	// while the selection brings them up (`mountVisibleContextualPanes`).
 	const pictureSize = createPictureSizeStrip(doc, t, handlers.edit, hiddenActions);
+	const chartSelection = createChartSelectionStrip(doc, t, handlers.edit);
 	const contextualPanes = createContextualTabPanes(doc, t, galleryHub, {
 		'picture-size': pictureSize.el,
+		'chart-selection': chartSelection.el,
 	});
 	for (const [id, pane] of contextualPanes) {
 		pane.hidden = true;
@@ -225,6 +269,7 @@ export function createRibbon(
 		}
 		activeTab = tab;
 		tabBar.setActive(tab);
+		fileTab?.setVisible(tab === 'file');
 		for (const id of Object.keys(panes) as AnyTabId[]) {
 			const pane = panes[id];
 			if (pane) {
@@ -253,7 +298,13 @@ export function createRibbon(
 		galleryHub.sync(latestExtra.galleryContext, lastEditable);
 		syncContextual();
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
+		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
+		chartSelection.update({
+			editable: lastEditable,
+			element: latestSelected,
+			chartFormatTarget: latestExtra.chartFormatTarget,
+		});
 	};
 	const syncAnimations = (): void => {
 		animationsTab?.update({
@@ -373,9 +424,19 @@ export function createRibbon(
 			primary.setInspectorOpen(open);
 			syncAnimations();
 		},
-		toggleFindReplace: () => findReplace.toggle(),
-		openEquationEditor: (id, omml) => equationPanel.openEdit(id, omml),
-		toggleEquationPanel: () => equationPanel.toggle(),
+		toggleFindReplace,
+		openEquationEditor: (id, omml) => {
+			if (equationAvailable()) {
+				attachEquationPanel();
+				equationPanel.openEdit(id, omml);
+			}
+		},
+		toggleEquationPanel: () => {
+			if (equationAvailable()) {
+				attachEquationPanel();
+				equationPanel.toggle();
+			}
+		},
 		openSmartArtDialog: () => insertTab?.openSmartArt(),
 		openSlideSize,
 		toggleThemeGallery: () => {

@@ -1,6 +1,6 @@
 {
 	"name": "openteams-server",
-	"version": "0.1.3",
+	"version": "0.3.0",
 	"description": "Reference bring-your-own server for OpenTeams: Yjs sync, WebRTC signaling relay and file storage in one small Node process.",
 	"keywords": [
 		"openteams",
@@ -23,11 +23,16 @@
 		"directory": "viewers/teams/server"
 	},
 	"bin": {
+		"openteams-hash-password": "hash-password.mjs",
 		"openteams-server": "bin.mjs"
 	},
 	"files": [
 		"index.mjs",
 		"guards.mjs",
+		"auth.mjs",
+		"passwords.mjs",
+		"rate-limit.mjs",
+		"hash-password.mjs",
 		"chat-access.mjs",
 		"bin.mjs",
 		"README.md",

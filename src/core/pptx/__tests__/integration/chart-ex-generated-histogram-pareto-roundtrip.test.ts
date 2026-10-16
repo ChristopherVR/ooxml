@@ -54,7 +54,7 @@ describe('generated chartEx histogram and Pareto package', () => {
 		expect(chartXml).toContain('<cx:series layoutId="clusteredColumn"');
 		expect(chartXml).toContain('<cx:series layoutId="paretoLine"');
 		expect(chartXml).toContain(
-			'<cx:binning intervalClosed="r" underflow="auto" overflow="100"><cx:binCount>5</cx:binCount></cx:binning>',
+			'<cx:binning intervalClosed="r" underflow="auto" overflow="100"><cx:binCount val="5"></cx:binCount></cx:binning>',
 		);
 		expect(chartXml.indexOf('<cx:dataId')).toBeLessThan(chartXml.indexOf('<cx:layoutPr'));
 

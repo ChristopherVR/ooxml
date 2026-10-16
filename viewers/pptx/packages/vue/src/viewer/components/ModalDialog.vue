@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next';
 import { activateModalFocus } from 'ooxml-ui/pptx';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useSheetDismissDrag } from '../composables/useSheetDismissDrag';
+import { useRegion } from '../composables/useViewerRegions';
+import ViewerRegion from './ViewerRegion.vue';
 
 /**
  * ModalDialog - a reusable, accessible modal dialog for the Vue viewer.
@@ -43,6 +46,12 @@ const props = defineProps<{
 	closeDisabled?: boolean;
 	/** Expose an in-flight action to assistive technology. */
 	busy?: boolean;
+	/**
+	 * The host-replaceable region this dialog is (`dialog.share`, ...). When the
+	 * host registered a renderer for it, the frame (backdrop, title, close
+	 * button, Escape, drag-to-dismiss) stays and the body and footer are replaced.
+	 */
+	region?: ViewerDialogRegionId;
 }>();
 
 const emit = defineEmits<{
@@ -50,6 +59,9 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const region = useRegion(() => props.region);
+const regionContext = computed(() => region.context(requestClose));
 
 function requestClose(): void {
 	if (props.closeDisabled) {
@@ -165,11 +177,16 @@ onMounted(() => document.addEventListener('keydown', onDocumentKeydown));
 				</header>
 
 				<div class="pptx-vue-modal-body overflow-y-auto p-4">
-					<slot />
+					<ViewerRegion
+						v-if="region.renderer.value && regionContext"
+						:renderer="region.renderer.value"
+						:context="regionContext"
+					/>
+					<slot v-else />
 				</div>
 
 				<footer
-					v-if="$slots.footer"
+					v-if="$slots.footer && !region.renderer.value"
 					class="pptx-vue-modal-footer flex flex-wrap justify-end gap-2 border-t border-border px-4 py-3"
 				>
 					<slot name="footer" />

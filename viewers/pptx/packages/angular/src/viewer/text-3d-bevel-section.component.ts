@@ -83,7 +83,7 @@ export function bevelSizePatch(
 					>
 						@for (preset of bevelPresets; track preset.value) {
 							<option [value]="preset.value" [selected]="preset.value === bevelType()">
-								{{ preset.label }}
+								{{ preset.labelKey | translate }}
 							</option>
 						}
 					</pptx-ui-select>

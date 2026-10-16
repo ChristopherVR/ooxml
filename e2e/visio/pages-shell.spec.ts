@@ -26,10 +26,10 @@ for (const width of [1440, 390]) {
 			await expect(page.locator('.VPLocalSearchBox')).toBeVisible();
 			await page.keyboard.press('Escape');
 
-			// Navigation: the Developer Guide link, then Architecture from the sidebar or menu.
+			// Navigation: the Guide link, then Architecture from the sidebar or menu.
 			if (width === 390) await page.locator('.VPNavBarHamburger').click();
 			await page
-				.getByRole('link', { name: 'Developer Guide', exact: true })
+				.getByRole('link', { name: 'Guide', exact: true })
 				.filter({ visible: true })
 				.first()
 				.click();

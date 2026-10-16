@@ -16,10 +16,12 @@ import {
 	OPTIONS_SETTING_IDS,
 	RIBBON_TAB_IDS,
 	TOOLBAR_BUTTON_IDS,
+	VIEWER_CAPABILITY_IDS,
 	VIEWER_DIALOG_IDS,
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
+	VIEWER_REGION_IDS,
 } from './customization-catalog';
 import {
 	normalizeReferenceMarkdown,
@@ -55,6 +57,8 @@ describe('docs/guide/customization.md', () => {
 			...VIEWER_EXPORT_FORMAT_IDS,
 			...EDIT_POINTS_MENU_COMMAND_IDS,
 			...DRAWING_TOOL_IDS,
+			...VIEWER_CAPABILITY_IDS,
+			...VIEWER_REGION_IDS,
 		];
 		const missing = ids.filter((id) => !doc.includes(`\`${id}\``));
 		expect(missing).toStrictEqual([]);

@@ -180,6 +180,7 @@ export function buildDateAxisPlan(
 			x2: layout.plotRight,
 			y2: y,
 			...chartLineStyle(axis.spPr),
+			...(axis.axisId !== undefined ? { axisLine: axis.axisId } : {}),
 		});
 	}
 	if (!axis.deleted && axis.minorTickMark && axis.minorTickMark !== 'none') {

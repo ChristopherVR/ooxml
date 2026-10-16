@@ -20,6 +20,7 @@
 		source,
 		autosave,
 		filePath,
+		authorName,
 		editable = false,
 		onautosavetoggle,
 		oncontentchange,
@@ -39,6 +40,7 @@
 		 */
 		autosave?: boolean;
 		filePath?: string;
+		authorName?: string;
 		editable?: boolean;
 		onautosavetoggle?: (enabled: boolean) => void;
 		oncontentchange?: (content: Uint8Array) => void;
@@ -55,6 +57,7 @@
 		get collaboration() { return getCollaboration?.(); },
 		getAutosave: () => autosave,
 		getFilePath: () => filePath,
+		getAuthorName: () => authorName,
 		getInitialSlide: () => 0,
 		t: (key: string) => key,
 		getSmartArt3D: () => false,

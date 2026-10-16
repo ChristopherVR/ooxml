@@ -23,6 +23,7 @@ import { EditPointsOverlayComponent } from './edit-points-overlay.component';
 import { EditorContextMenuComponent } from './editor-context-menu.component';
 import { EditorStateService } from './editor-state.service';
 import { FreeformToolOverlayComponent } from './freeform-tool-overlay.component';
+import { LoadContentService } from './load-content.service';
 import { OutlineAuthoringService } from './outline-authoring.service';
 import { RibbonInsertSectionComponent } from './ribbon-insert-section.component';
 import { ViewerCustomizationService } from './viewer-customization.service';
@@ -201,7 +202,8 @@ describe('freeform drawing tools', () => {
 				useFactory: () => new OutlineAuthoringService(),
 				deps: [],
 			},
-			{ provide: EditorStateService, useValue: { hasSelection: () => false } },
+			{ provide: EditorStateService, useValue: { hasSelection: () => false, slides: () => [] } },
+			{ provide: LoadContentService, useValue: { slideMasters: () => [] } },
 			{ provide: TranslateService, useValue: { instant: (key: string) => key } },
 			{ provide: ViewerDialogsService, useValue: {} },
 		]);

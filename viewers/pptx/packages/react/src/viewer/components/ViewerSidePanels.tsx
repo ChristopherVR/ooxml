@@ -21,6 +21,7 @@ import type { ViewerState } from '../hooks/useViewerState';
 import type { CanvasSize } from '../types';
 import type { ViewerMode } from '../types-core';
 import { AiChatPanelLazy } from './ai';
+import { ChartFormatPanel } from './inspector/ChartFormatPanel';
 import { ThemeEditorPanel } from './inspector/ThemeEditorPanel';
 import { MobileDismissSheet } from './mobile/MobileDismissSheet';
 import { ResizeHandle } from './ResizeHandle';
@@ -186,25 +187,27 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 				panelWidth={panelWidth}
 			/>
 
-			{s.isSelectionPaneOpen && (mode === 'edit' || mode === 'master') && (
-				<MobileDismissSheet
-					onClose={() => s.setIsSelectionPaneOpen(false)}
-					className='absolute right-0 top-0 z-30 h-full max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:h-auto max-md:max-h-[50vh] max-md:rounded-t-xl max-md:border-t max-md:border-border max-md:shadow-2xl max-md:bg-background'
-				>
-					<SelectionPane
-						slides={slides}
-						activeSlideIndex={activeSlideIndex}
-						selectedElementId={s.selectedElementId}
-						selectedElementIds={s.selectedElementIds}
-						canEdit={canEdit}
-						setSelectedElementId={s.setSelectedElementId}
-						setSelectedElementIds={s.setSelectedElementIds}
-						setSlides={s.setSlides}
-						markDirty={history.markDirty}
+			{s.isSelectionPaneOpen &&
+				isPanelVisible(customization, 'selectionPane') &&
+				(mode === 'edit' || mode === 'master') && (
+					<MobileDismissSheet
 						onClose={() => s.setIsSelectionPaneOpen(false)}
-					/>
-				</MobileDismissSheet>
-			)}
+						className='absolute right-0 top-0 z-30 h-full max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:h-auto max-md:max-h-[50vh] max-md:rounded-t-xl max-md:border-t max-md:border-border max-md:shadow-2xl max-md:bg-background'
+					>
+						<SelectionPane
+							slides={slides}
+							activeSlideIndex={activeSlideIndex}
+							selectedElementId={s.selectedElementId}
+							selectedElementIds={s.selectedElementIds}
+							canEdit={canEdit}
+							setSelectedElementId={s.setSelectedElementId}
+							setSelectedElementIds={s.setSelectedElementIds}
+							setSlides={s.setSlides}
+							markDirty={history.markDirty}
+							onClose={() => s.setIsSelectionPaneOpen(false)}
+						/>
+					</MobileDismissSheet>
+				)}
 
 			{s.isThemeEditorOpen && mode === 'edit' && (
 				<ThemeEditorPanel
@@ -217,6 +220,8 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 					onClose={() => s.setIsThemeEditorOpen(false)}
 				/>
 			)}
+
+			{(mode === 'edit' || mode === 'master') && <ChartFormatPanel />}
 
 			{aiPanel?.isOpen && aiConfig && aiBridge && (mode === 'edit' || mode === 'master') && (
 				<AiChatPanelLazy

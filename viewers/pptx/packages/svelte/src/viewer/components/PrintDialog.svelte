@@ -1,5 +1,7 @@
 <script lang="ts">
 	import DialogFooter from './DialogFooter.svelte';
+	import ViewerRegion from './ViewerRegion.svelte';
+	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import Printer from '@lucide/svelte/icons/printer';
 	import X from '@lucide/svelte/icons/x';
 	import { useTranslator } from '../../i18n/context';
@@ -24,6 +26,9 @@
 		defaultSettings?: PrintOptions;
 	} = $props();
 	const t = useTranslator();
+	// Host-supplied body (`regions['dialog.print']`): the frame and header stay.
+	const customization = useViewerCustomization();
+	const regionRenderer = $derived(customization.regionRenderer('dialog.print'));
 	// eslint-disable-next-line prefer-const
 	let printWhat = $state<'slides' | 'handouts' | 'notes' | 'outline'>(
 		defaultSettings?.printWhat ?? 'slides',
@@ -70,6 +75,9 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 	<section role="dialog" tabindex="-1" aria-modal="true" aria-label={t('pptx.print.title')}>
 		<header><h2><Printer size={16} aria-hidden="true" /> {t('pptx.print.title')}</h2><button aria-label={t('pptx.common.close')} onclick={onclose}><X size={16} aria-hidden="true" /></button></header>
+		{#if regionRenderer}
+			<ViewerRegion region="dialog.print" renderer={regionRenderer} close={onclose} />
+		{:else}
 		<div class="body">
 			<label>{t('pptx.print.printWhat')}<pptx-ui-select aria-label={t('pptx.print.printWhat')} value={printWhat} onchange={(event) => (printWhat = event.currentTarget.value as typeof printWhat)}><option value="slides">{t('pptx.print.fullPageSlides')}</option><option value="handouts">{t('pptx.print.handouts')}</option><option value="notes">{t('pptx.print.notesPages')}</option><option value="outline">{t('pptx.print.outline')}</option></pptx-ui-select></label>
 			{#if printWhat === 'handouts'}<label>{t('pptx.print.slidesPerPage')}<pptx-ui-select aria-label={t('pptx.print.slidesPerPage')} value={slidesPerPage} onchange={(event) => (slidesPerPage = Number(event.currentTarget.value) as typeof slidesPerPage)}>{#each [1, 2, 3, 4, 6, 9] as value}<option value={value}>{value}</option>{/each}</pptx-ui-select></label>{/if}
@@ -80,6 +88,7 @@
 			<label class="check"><pptx-ui-checkbox checked={frameSlides} onchange={(event) => (frameSlides = event.currentTarget.checked)}></pptx-ui-checkbox>{t('pptx.print.frameSlides')}</label>
 		</div>
 		<footer><DialogFooter actions={[{ id: 'cancel', label: t('pptx.common.cancel') }, { id: 'print', label: t('pptx.print.printButton'), variant: 'primary', icon: 'print' }]} onaction={(id) => (id === 'print' ? print() : onclose())} /></footer>
+		{/if}
 	</section>
 </div>
 

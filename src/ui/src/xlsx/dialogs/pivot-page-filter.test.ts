@@ -44,7 +44,7 @@ it.each(['compact', 'outline', 'tabular'])(
 			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
 				'[value=rows]',
 			)!.disabled,
-		).toBe(true);
+		).toBe(false);
 		clickButton(dialog, 'OK');
 		await done;
 		const pivot = wb.sheets[0]!.pivotTables![0]!;
@@ -188,4 +188,49 @@ it('compares unchanged public filter properties independently of object key orde
 	clickButton(dialog, 'OK');
 	await done;
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+});
+it('authors a report filter above Values on rows and keeps it when the axis changes', async () => {
+	const wb = createWorkbook(),
+		ctx = createTestContext(wb),
+		edit = ctx.session()!;
+	[
+		['Category', 'Region', 'Amount', 'Quantity'],
+		['Fruit', 'East', 10, 2],
+		['Fruit', 'West', 20, 3],
+		['Veg', 'East', 5, 4],
+	].forEach((line, r) => line.forEach((v, c) => edit.setCellInput(0, r, c, String(v))));
+	ctx.select('A1:D4');
+	registerToolDialogs(ctx);
+	let done = ctx.dialogs.open('create-pivot-table'),
+		dialog = dialogEl(ctx, 'create-pivot-table');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	clickButton(dialog, 'Add Value Field');
+	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+	setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), 'Region');
+	// The filter field stays selected and enabled with Values on rows.
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').value).toBe('Region');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').disabled).toBe(false);
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '1');
+	clickButton(dialog, 'OK');
+	await done;
+	let pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(pivot).toMatchObject({
+		valuesAxis: 'rows',
+		pageFilter: { field: 'Region', item: 'West' },
+	});
+	expect(getCell(wb.sheets[0]!, 0, 6)?.value).toBe('West');
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').value).toBe('rows');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').value).toBe('Region');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'columns');
+	clickButton(dialog, 'OK');
+	await done;
+	pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(pivot.valuesAxis).toBe('columns');
+	expect(pivot.pageFilter).toEqual({ field: 'Region', item: 'West' });
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]!.valuesAxis).toBe('rows');
 });

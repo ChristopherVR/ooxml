@@ -69,7 +69,7 @@ function newFieldGuid(): string {
 			>
 				<div class="w-72 space-y-3 rounded-lg border border-border bg-card p-4 shadow-2xl">
 					<div class="text-sm font-medium text-foreground">
-						{{ 'pptx.headerFooter.dateAndTime' | translate }}
+						{{ 'pptx.field.dateTime' | translate }}
 					</div>
 					<input
 						type="datetime-local"

@@ -1,8 +1,11 @@
 import type {
 	MobileBarId,
 	MobileBarRequestEvent,
+	MobileInsertRequestEvent,
 	MobileBarViewState,
 	MobileSheetKey,
+	PptxUiMobileInsertElement,
+	PptxUiRibbonInsertElement,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 import {
@@ -50,7 +53,13 @@ export function createMobileActionSheets(
 	onSelectSlide: (index: number) => void,
 	inspector: HTMLElement | null,
 	hiddenActions?: readonly ToolbarActionId[],
+	/**
+	 * The ribbon's shared Insert element. The phone Insert sheet reads its state and hands every
+	 * request back to it, so Insert behaves exactly as on the ribbon (dialogs, undo, selection).
+	 */
+	insertSource?: () => PptxUiRibbonInsertElement | null,
 ): MobileActionSheets {
+	registerPptxWebControls();
 	const el = createEl(doc, 'div', 'pptxv-mobile-actions');
 	const sheetHost = createEl(doc, 'div', 'pptxv-mobile-sheet-host');
 	sheetHost.setAttribute('role', 'dialog');
@@ -70,6 +79,17 @@ export function createMobileActionSheets(
 	sheetHost.hidden = true;
 	el.appendChild(sheetHost);
 
+	const insertSheet: PptxUiMobileInsertElement = doc.createElement('pptx-ui-mobile-insert');
+	insertSheet.addEventListener('insert-request', (event) => {
+		insertSource?.()?.dispatchEvent(
+			new CustomEvent('insert-request', {
+				detail: (event as MobileInsertRequestEvent).detail,
+				bubbles: true,
+				composed: true,
+			}),
+		);
+		close();
+	});
 	let active: MobileSheetKey = null;
 	let current = 0;
 	let slides: readonly PptxSlide[] = [];
@@ -138,6 +158,7 @@ export function createMobileActionSheets(
 						width: `${MOBILE_THUMB_WIDTH}px`,
 						height: `${Math.round(canvasHeight * scale)}px`,
 					});
+					frame.dataset.pptxChrome = 'slide-frame';
 					frame.appendChild(renderThumbnail(slides[index], scale));
 					button.appendChild(frame);
 				} else {
@@ -155,18 +176,11 @@ export function createMobileActionSheets(
 			}
 			body.appendChild(list);
 		} else if (key === 'insert') {
-			const buttons = [
-				[t('pptx.insert.addTextBox'), () => handlers.insert.insert('text')],
-				[t('pptx.ribbon.rectangle'), () => handlers.insert.insert('shape', 'rect')],
-				[t('pptx.insert.insertTable'), () => handlers.insert.insert('table')],
-			] as const;
-			for (const [label, run] of buttons) {
-				const button = doc.createElement('button');
-				button.type = 'button';
-				button.textContent = label;
-				button.addEventListener('click', run);
-				body.appendChild(button);
+			const source = insertSource?.();
+			if (source) {
+				insertSheet.state = source.state;
 			}
+			body.appendChild(insertSheet);
 		} else if (key === 'inspector' && inspector) {
 			body.appendChild(inspector);
 		} else if (key === 'comments') {
@@ -238,7 +252,6 @@ export function createMobileActionSheets(
 		}
 	};
 
-	registerPptxWebControls();
 	// A thin adapter over the shared `pptx-ui-mobile-bar`, which owns the markup,
 	// the no-slides gating, the pressed state and the comment badge.
 	const bar = doc.createElement('pptx-ui-mobile-bar');
@@ -248,6 +261,9 @@ export function createMobileActionSheets(
 			close();
 			return;
 		}
+		if (active === 'insert') {
+			insertSheet.reset();
+		}
 		render(active);
 		sheetHost.hidden = false;
 		syncBar();
@@ -256,8 +272,6 @@ export function createMobileActionSheets(
 		const key = (event as MobileBarRequestEvent).detail.id;
 		if (key === 'notes') {
 			handlers.nav.toggleNotes();
-		} else if (key === 'insert') {
-			handlers.insert.insert('text');
 		} else {
 			openSheet(key);
 		}
@@ -270,7 +284,11 @@ export function createMobileActionSheets(
 			activeSheet: active && active !== 'menu' ? active : notesExpanded ? 'notes' : null,
 			commentCount: comments.length,
 			hidden: isActionHidden('notes', hiddenActions) ? ['notes'] : [],
-			disabled: [...(editable ? [] : editOnly), ...(inspector ? [] : (['inspector'] as const))],
+			disabled: [
+				...(editable ? [] : editOnly),
+				...(inspector ? [] : (['inspector'] as const)),
+				...(insertSource?.() ? [] : (['insert'] as const)),
+			],
 			translate: t,
 		};
 		bar.state = state;

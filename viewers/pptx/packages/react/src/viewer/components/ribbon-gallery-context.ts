@@ -20,6 +20,10 @@ export interface RibbonGalleryCommands {
 	editable: boolean;
 	/** Route a pick's result onto the viewer's update + history paths. */
 	dispatch: (result: RibbonGalleryApplyResult) => void;
+	/** Show what a Design gallery tile would do while it is hovered; `null` ends the preview. */
+	preview?: (result: RibbonGalleryApplyResult | null) => void;
+	/** Put the slides back (the pointer left the tiles, or the gallery closed). */
+	endPreview?: () => void;
 }
 
 export const RibbonGalleryCommandsContext = createContext<RibbonGalleryCommands | null>(null);

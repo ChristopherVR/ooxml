@@ -117,9 +117,12 @@ describe('parseChartSpace on chart-gallery.pptx (one chart kind per slide)', () 
 		expect(groups[1]?.marker).toBe(true);
 	});
 
-	it('reports trendlines and chartex parts instead of failing', async () => {
+	it('reads trendlines and reports chartex parts instead of failing', async () => {
 		const line = await chartPart(deck, 'ppt/charts/chart2.xml');
-		expect(issueCodes(line.issues)).toEqual(['CHART_ELEMENT_NOT_MODELLED c:ser/c:trendline']);
+		expect(line.issues).toEqual([]);
+		const trendline = line.chartSpace.plotArea.groups[0]?.series[0]?.trendlines?.[0];
+		expect(trendline?.trendlineType).toBe('linear');
+		expect(trendline?.spPr?.line?.fill).toMatchObject({ kind: 'solid' });
 		const chartex = await chartPart(deck, 'ppt/charts/chart11.xml');
 		expect(chartex.issues.map((issue) => issue.code)).toEqual(['CHART_ROOT_UNEXPECTED']);
 		expect(chartex.chartSpace.plotArea.groups).toEqual([]);

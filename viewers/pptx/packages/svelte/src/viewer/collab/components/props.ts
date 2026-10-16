@@ -29,6 +29,8 @@ export interface ModalDialogProps {
 	children?: Snippet;
 	/** Optional footer (action buttons), right-aligned. */
 	footer?: Snippet;
+	/** Omit the footer (a host region replaces the body and owns its actions). */
+	bare?: boolean;
 }
 
 /** Props for the share (collaboration) dialog. */

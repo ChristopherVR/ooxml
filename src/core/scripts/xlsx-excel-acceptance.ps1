@@ -139,6 +139,29 @@ try {
 						if (-not $ok) { $problems += "$($ws.Name).$key=$($seen[$key]) expected $want" }
 					}
 				}
+				# Every PivotTable must survive a refresh in Excel with the cells we wrote.
+				for ($i = 1; $i -le $wb.Worksheets.Count; $i++) {
+					$ws = $wb.Worksheets.Item($i)
+					for ($p = 1; $p -le $ws.PivotTables().Count; $p++) {
+						$pt = $ws.PivotTables($p)
+						$range = $pt.TableRange2
+						$before = @($range.Value2 | ForEach-Object { [string]$_ })
+						$address = $range.Address($false, $false)
+						$pt.RefreshTable() | Out-Null
+						$range = $pt.TableRange2
+						$after = @($range.Value2 | ForEach-Object { [string]$_ })
+						if ($range.Address($false, $false) -ne $address) { $problems += "$($ws.Name)/$($pt.Name) moved from $address to $($range.Address($false, $false)) on refresh" }
+						elseif ($before.Count -ne $after.Count) { $problems += "$($ws.Name)/$($pt.Name) changed size on refresh" }
+						else {
+							for ($k = 0; $k -lt $before.Count; $k++) {
+								$a = $before[$k]; $b = $after[$k]
+								$na = 0.0; $nb = 0.0
+								$same = ($a -eq $b) -or (([double]::TryParse($a, [ref]$na)) -and ([double]::TryParse($b, [ref]$nb)) -and ([math]::Abs($na - $nb) -le 1e-9 * [math]::Max(1, [math]::Abs($na))))
+								if (-not $same) { $problems += "$($ws.Name)/$($pt.Name) cell $($k + 1) '$a' became '$b' on refresh"; break }
+							}
+						}
+					}
+				}
 				$fileChecks = if ($cellChecks) { $cellChecks.($file.Name) } else { $null }
 				foreach ($check in @($fileChecks)) {
 					if ($null -eq $check) { continue }

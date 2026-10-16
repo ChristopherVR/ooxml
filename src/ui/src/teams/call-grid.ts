@@ -39,12 +39,15 @@ export class OfficeUiCallGrid extends TeamsElement {
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this.setAttribute('role', 'list');
-		this.setAttribute('aria-label', 'Participants');
+	}
+
+	protected override hostLabel(): string {
+		return this.t('call.participants');
 	}
 
 	protected override render() {
 		const people = this.participants;
-		if (people.length === 0) return html`<p class="empty">Nobody is in the call</p>`;
+		if (people.length === 0) return html`<p class="empty">${this.t('call.nobody')}</p>`;
 		const sharer = people.find((p) => p.screen);
 		const spotlight = sharer !== undefined && people.length > 1;
 		const ordered = sharer ? [sharer, ...people.filter((p) => p !== sharer)] : people;
@@ -84,13 +87,13 @@ export class OfficeUiCallGrid extends TeamsElement {
 				${showAvatar ? html`<office-ui-avatar size="xl" name=${p.name} seed=${p.id}></office-ui-avatar>` : nothing}
 				<div class="name">
 					${p.audio === false ? html`<span class="muted">${icon('micOff')}</span>` : nothing}
-					<span>${p.self ? `${p.name} (you)` : p.name}</span>
+					<span>${p.self ? this.t('common.nameYou', { name: p.name }) : p.name}</span>
 				</div>
-				${p.hand ? html`<span class="hand" role="img" aria-label="Hand raised">✋</span>` : nothing}
+				${p.hand ? html`<span class="hand" role="img" aria-label=${this.t('call.handRaised')}>✋</span>` : nothing}
 				${
 					!p.self && p.connection && p.connection !== 'connected'
 						? html`<span class="status"
-								>${p.connection === 'failed' ? 'Connection failed' : 'Connecting…'}</span
+								>${this.t(p.connection === 'failed' ? 'call.connectionFailed' : 'call.connecting')}</span
 							>`
 						: nothing
 				}

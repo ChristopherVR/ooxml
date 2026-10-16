@@ -10,6 +10,8 @@ import type {
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogFooter } from './dialog-footer';
+import { ownOverlay } from './overlay-owner';
+import type { OverlayOwner } from './overlay-owner';
 
 export interface DocumentPropertiesDialogOptions {
 	slides: readonly PptxSlide[];
@@ -18,6 +20,8 @@ export interface DocumentPropertiesDialogOptions {
 	custom: readonly PptxCustomProperty[];
 	editable: boolean;
 	onSave(core: PptxCoreProperties, app: PptxAppProperties, custom: PptxCustomProperty[]): void;
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner;
 }
 
 type DialogTab = 'summary' | 'statistics' | 'custom';
@@ -40,7 +44,7 @@ export function openDocumentPropertiesDialog(
 	let custom: PptxCustomProperty[] = options.custom.map((property) => ({ ...property }));
 	const original = JSON.stringify({ core, app, custom });
 
-	const close = (): void => overlay.remove();
+	const close = ownOverlay(options.owner, () => overlay.remove());
 	scrim.addEventListener('click', close);
 	const header = createEl(doc, 'header');
 	const title = createEl(doc, 'h2');

@@ -17,6 +17,8 @@ import { EDITOR_CSS } from './editor-css';
 import { EQUATION_DIALOG_CSS } from './equation-dialog-css';
 import { EXPORT_PROGRESS_CSS } from './export-progress-css';
 import { FILE_INFO_CSS } from './file-info-css';
+import { INSPECTOR_BASE_CSS } from './inspector-base-css';
+import { INSPECTOR_EXTRAS_CSS } from './inspector-extras-css';
 import { INSPECTOR_FORMAT_CSS } from './inspector-format-css';
 import { INSPECTOR_PANELS_CSS } from './inspector-panels-css';
 import { INSPECTOR_TABLE_CELL_CSS } from './inspector-table-cell-css';
@@ -30,6 +32,7 @@ import { PRESENTATION_TOOLBAR_CSS } from './presentation-toolbar-css';
 import { PRESENTATION_TOUCH_CSS } from './presentation-touch-css';
 import { PRESENTER_VIEW_CSS } from './presenter-view-css';
 import { READING_VIEW_CSS } from './reading-view-css';
+import { REGION_CSS } from './region-css';
 import { RIBBON_CSS } from './ribbon-css';
 import { RIBBON_QUICK_CSS } from './ribbon-quick-css';
 import { SLIDE_TEMPLATE_DIALOG_CSS } from './slide-template-dialog-css';
@@ -86,6 +89,9 @@ const CHROME_CSS = `
 	 * and clips text). Mirrors the React theme.css rule. */
 	-webkit-text-size-adjust: none;
 	text-size-adjust: none;
+	/* Own stacking context: the slide, selection handles and every overlay inside stay
+	 * below whatever the host page stacks above the viewer (a drawer, a dialog). */
+	isolation: isolate;
 }
 .pptxv *, .pptxv *::before, .pptxv *::after { box-sizing: border-box; }
 .pptxv:focus { outline: none; }
@@ -836,6 +842,7 @@ const CHROME_CSS = `
 /** The full stylesheet text (theme-var defaults + chrome rules + editor + collab chrome). */
 export function buildViewerCss(): string {
 	return `${defaultVarsBlock()}
+${INSPECTOR_BASE_CSS}
 ${CHROME_CSS}
 ${EDITOR_CSS}
 ${RIBBON_CSS}
@@ -857,6 +864,7 @@ ${ANIMATION_AUTHORING_CSS}
 ${INSPECTOR_PANELS_CSS}
 ${INSPECTOR_FORMAT_CSS}
 ${INSPECTOR_TABLE_CELL_CSS}
+${INSPECTOR_EXTRAS_CSS}
 ${ACCOUNT_CSS}
 ${AI_CSS}
 ${AI_HISTORY_CSS}
@@ -865,5 +873,6 @@ ${READING_VIEW_CSS}
 ${OUTLINE_VIEW_CSS}
 ${EXPORT_PROGRESS_CSS}
 ${PARITY_BANNERS_CSS}
+${REGION_CSS}
 ${EDITOR_CHROME_CSS}`;
 }

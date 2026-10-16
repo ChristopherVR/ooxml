@@ -34,10 +34,10 @@ import { connectorObstacles } from './edit-connector-obstacles';
 import {
 	effectiveCells,
 	isStencilConnector,
-	proveStencilConnector,
 	stencilConnectorRoute,
 	stencilTemplate,
 } from './edit-stencil-connector';
+import { isStencilLine, layoutStencilLine, proveAnyStencilConnector } from './edit-stencil-line';
 import {
 	layoutStencilConnector,
 	stencilConnectorPath,
@@ -49,7 +49,11 @@ const connectorCells = (shape: Element) =>
 	isStencilConnector(shape) ? effectiveCells(shape) : cells(shape);
 /** A connector's route, read from its own cells or, for a stencil connector, the ones in effect. */
 export const routeOf = (shape: Element): VisioConnectorRoute =>
-	isStencilConnector(shape) ? stencilConnectorRoute(shape) : connectorRoute(shape);
+	isStencilLine(shape)
+		? 'straight'
+		: isStencilConnector(shape)
+			? stencilConnectorRoute(shape)
+			: connectorRoute(shape);
 
 const canonical = (shape: Element, name: string, expected: string) =>
 	executableCellFormula(attribute(cells(shape).get(name), 'F'))
@@ -65,7 +69,7 @@ export function isRoutedConnector(shape: Element): boolean {
 /** Prove a connector's transform is the owned form of its route before it is laid out again. */
 export function proveConnectorShape(shape: Element, route = routeOf(shape)): void {
 	if (isStencilConnector(shape)) {
-		proveStencilConnector(shape);
+		proveAnyStencilConnector(shape);
 		return;
 	}
 	if (route === 'straight') {
@@ -122,6 +126,23 @@ export function rerouteConnector(
 		];
 	};
 	const chosen = chooseSites(sites('begin'), sites('end'));
+	if (isStencilLine(shape)) {
+		// A line master draws one straight run; its style is the master's, not a routing choice.
+		if (options.route && options.route !== 'straight')
+			fail(
+				'UNSUPPORTED_GEOMETRY_EDIT',
+				"This connector is a straight line from a stencil; only Visio's Dynamic connector can be restyled.",
+			);
+		const pages = layoutStencilLine(
+			root,
+			pageId,
+			shape,
+			{ begin: chosen.begin.point, end: chosen.end.point },
+			check,
+		);
+		proveConnectorShape(shape, 'straight');
+		return pages;
+	}
 	const walk = (end: End) => {
 		const target = glue.ends[end];
 		return target && target.point === undefined
@@ -273,7 +294,7 @@ export function refuseStencilConnector(root: Element | undefined, shapeId: strin
 		if (from !== shapeId && attribute(row, 'ToSheet') !== shapeId) continue;
 		if (!/^(Begin|End)X$/.test(attribute(row, 'FromCell') ?? '')) continue;
 		const connector = topShape(root, from);
-		if (stencilTemplate(connector)) proveStencilConnector(connector!);
+		if (stencilTemplate(connector)) proveAnyStencilConnector(connector!);
 		else if (connector?.hasAttribute('Master') || connector?.hasAttribute('MasterShape'))
 			fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
 	}

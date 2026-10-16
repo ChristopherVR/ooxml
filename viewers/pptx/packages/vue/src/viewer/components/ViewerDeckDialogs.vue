@@ -8,7 +8,9 @@
  * sibling order. As in {@link ViewerEditDialogs}, open state arrives as `Ref`s
  * because each dialog closes itself.
  */
+import { isDialogAvailable } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
+import { computed } from 'vue';
 
 import type { UseCollaborationWiringResult } from '../composables/useCollaborationWiring';
 import type { UseFontEmbeddingResult } from '../composables/useFontEmbedding';
@@ -17,6 +19,7 @@ import type { UseInspectorDeckActionsResult } from '../composables/useInspectorD
 import type { UsePasswordProtectionResult } from '../composables/usePasswordProtection';
 import type { UseSignatureWorkflowResult } from '../composables/useSignatureWorkflow';
 import type { UseSlideShowSettingsResult } from '../composables/useSlideShowSettings';
+import { useResolvedCustomization } from '../composables/useViewerCustomization';
 import BroadcastDialog from './BroadcastDialog.vue';
 import EquationEditorDialog from './EquationEditorDialog.vue';
 import FontEmbeddingPanel from './FontEmbeddingPanel.vue';
@@ -40,6 +43,13 @@ defineProps<{
 	signatureCount: number;
 	deckActions: UseInspectorDeckActionsResult;
 }>();
+
+// The host can remove the dialogs the ribbon, backstage and shortcuts open.
+const customization = useResolvedCustomization();
+const passwordAvailable = computed(() =>
+	isDialogAvailable(customization.value, 'passwordProtection'),
+);
+const equationAvailable = computed(() => isDialogAvailable(customization.value, 'equation'));
 </script>
 
 <template>
@@ -66,7 +76,7 @@ defineProps<{
 
 	<!-- File > Protect Presentation -->
 	<PasswordProtectionDialog
-		:open="password.showPasswordDialog.value"
+		:open="password.showPasswordDialog.value && passwordAvailable"
 		:is-currently-protected="password.isPasswordProtected.value"
 		@set-password="password.onSetPassword"
 		@remove-password="password.onRemovePassword"
@@ -94,7 +104,7 @@ defineProps<{
 
 	<!-- Insert > Equation (also re-edits an existing equation) -->
 	<EquationEditorDialog
-		:open="insertDialogs.showEquationEditor.value"
+		:open="insertDialogs.showEquationEditor.value && equationAvailable"
 		:existing-omml="insertDialogs.editingEquationOmml.value"
 		@insert="insertDialogs.onInsertElement"
 		@apply="insertDialogs.onApplyEquation"

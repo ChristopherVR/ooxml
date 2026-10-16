@@ -40,10 +40,10 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 
 	protected override render() {
 		const chat = this.chat;
-		if (!chat) return this.frame('People', html``);
+		if (!chat) return this.frame(this.t('chat.people'), html``, this.t('dialog.closePeople'));
 		const group = chat.kind === 'group';
 		return this.frame(
-			'People',
+			this.t('chat.people'),
 			html`<div class="body">
 				${
 					group
@@ -55,17 +55,17 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 								}}
 							>
 								<label
-									>Group name<input
+									>${this.t('chatPeople.groupName')}<input
 										maxlength=${MAX_CHANNEL_NAME_CHARS}
 										.value=${this.name}
-										placeholder="Name this group chat"
+										placeholder=${this.t('chatPeople.groupPlaceholder')}
 										@input=${(e: Event) => (this.name = (e.target as HTMLInputElement).value)}
 								/></label>
-								<button type="submit">Rename</button>
+								<button type="submit">${this.t('chatPeople.rename')}</button>
 							</form>`
 						: nothing
 				}
-				<h3>In this chat (${chat.members.length})</h3>
+				<h3>${this.t('chatPeople.inChat', { count: chat.members.length })}</h3>
 				<ul class="members">
 					${chat.members.map(
 						(m) =>
@@ -76,15 +76,17 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 									seed=${m.id}
 									presence=${m.availability}
 								></office-ui-avatar>
-								<span class="name">${m.name}${m.self ? ' (you)' : ''}</span>
+								<span class="name"
+									>${m.self ? this.t('common.nameYou', { name: m.name }) : m.name}</span
+								>
 								${
 									group && !m.self && chat.members.length > 1
 										? html`<button
 												type="button"
-												aria-label=${`Remove ${m.name}`}
+												aria-label=${this.t('people.remove', { name: m.name })}
 												@click=${() => this.fire('teams-chat-remove', { id: chat.id, userId: m.id })}
 											>
-												Remove
+												${this.t('chatPeople.remove')}
 											</button>`
 										: nothing
 								}
@@ -93,9 +95,9 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 				</ul>
 				${
 					group
-						? html`<h3>Add people</h3>
+						? html`<h3>${this.t('chatPeople.addPeople')}</h3>
 								<office-ui-people-picker
-									label="People to add"
+									label=${this.t('chatPeople.peopleToAdd')}
 									.contacts=${this.contacts}
 									.exclude=${chat.members.map((m) => m.id)}
 									.selected=${this.adding}
@@ -111,12 +113,10 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 											this.adding = [];
 										}}
 									>
-										Add to chat
+										${this.t('chatPeople.addToChat')}
 									</button>
 								</footer>`
-						: html`<p>
-								People cannot be added to or removed from a 1:1 chat. Start a group chat instead.
-							</p>`
+						: html`<p>${this.t('chatPeople.directNote')}</p>`
 				}
 				<footer>
 					${
@@ -126,13 +126,14 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 									class="danger"
 									@click=${() => this.fire('teams-chat-leave', { id: chat.id })}
 								>
-									Leave chat
+									${this.t('chatPeople.leave')}
 								</button>`
 							: nothing
 					}
-					<button type="button" @click=${this.requestClose}>Done</button>
+					<button type="button" @click=${this.requestClose}>${this.t('common.done')}</button>
 				</footer>
 			</div>`,
+			this.t('dialog.closePeople'),
 		);
 	}
 }

@@ -1,6 +1,6 @@
 // Base of the Chat and Calendar dialogs: a modal <dialog> opened by the `open` property, closed by
 // Escape or the close button through a bubbling `teams-dialog-close` event the host answers by
-// clearing `open`. Subclasses render a `<dialog>` with `this.frame(title, body)`.
+// clearing `open`. Subclasses render a `<dialog>` with `this.frame(title, body, closeLabel)`.
 import { html, type TemplateResult } from 'lit';
 import { TeamsElement, withStyles } from '../base';
 import formCss from './form-dialog.css?raw';
@@ -31,11 +31,7 @@ export class TeamsDialog extends TeamsElement {
 	}
 
 	/** The dialog frame with a title and a close button around `body`. */
-	protected frame(
-		title: string,
-		body: TemplateResult,
-		closeLabel = `Close ${title.toLowerCase()}`,
-	) {
+	protected frame(title: string, body: TemplateResult, closeLabel = this.t('common.close')) {
 		return html`<dialog
 			aria-labelledby="title"
 			@cancel=${(event: Event) => {

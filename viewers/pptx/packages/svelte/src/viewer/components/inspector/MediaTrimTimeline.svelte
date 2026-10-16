@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { MediaBookmark } from 'pptx-viewer-core';
 	import { mediaTimelineGeometry, mediaTrimEndSeconds, mediaTrimRangeForDrag } from 'ooxml-ui/pptx';
+	import { useTranslator } from '../../../i18n/context';
+
+	const t = useTranslator();
 
 	const { duration, startMs, endMs, currentTime, bookmarks, onchange, onseek }: { duration: number; startMs: number; endMs?: number; currentTime: number; bookmarks: MediaBookmark[]; onchange: (startMs: number, endMs: number) => void; onseek: (seconds: number) => void } = $props();
 	// eslint-disable-next-line prefer-const
@@ -39,11 +42,11 @@
 
 <svelte:window onpointermove={move} onpointerup={() => (dragging = null)} />
 <div class="times"><span>{(startMs / 1000).toFixed(1)}s</span><span>{effectiveEndSeconds.toFixed(1)}s</span></div>
-<div class="timeline" bind:this={bar} role="slider" aria-label="Media trim timeline" aria-valuemin="0" aria-valuemax={duration} aria-valuenow={currentTime} tabindex="0" onclick={(event) => onseek(timeAt(event.clientX))} onkeydown={keySeek}>
+<div class="timeline" bind:this={bar} role="slider" aria-label={t('pptx.media.trim')} aria-valuemin="0" aria-valuemax={duration} aria-valuenow={currentTime} tabindex="0" onclick={(event) => onseek(timeAt(event.clientX))} onkeydown={keySeek}>
 	<div class="range" style={`left:${geometry.startPercent}%;right:${100 - geometry.endPercent}%`}></div>
 	<div class="playhead" style={`left:${geometry.playheadPercent}%`}></div>
-	<button type="button" class="handle start" aria-label="Trim start" style={`left:${geometry.startPercent}%`} data-pptx-compact onpointerdown={(event) => { event.stopPropagation(); dragging = 'start'; }}></button>
-	<button type="button" class="handle end" aria-label="Trim end" style={`left:${geometry.endPercent}%`} data-pptx-compact onpointerdown={(event) => { event.stopPropagation(); dragging = 'end'; }}></button>
+	<button type="button" class="handle start" aria-label={t('pptx.media.trimStart')} style={`left:${geometry.startPercent}%`} data-pptx-compact onpointerdown={(event) => { event.stopPropagation(); dragging = 'start'; }}></button>
+	<button type="button" class="handle end" aria-label={t('pptx.media.trimEnd')} style={`left:${geometry.endPercent}%`} data-pptx-compact onpointerdown={(event) => { event.stopPropagation(); dragging = 'end'; }}></button>
 	{#each bookmarks as bookmark}<button type="button" class="bookmark" title={bookmark.label} aria-label={bookmark.label} style={`left:${bookmark.time / safeDuration * 100}%`} data-pptx-compact onclick={(event) => { event.stopPropagation(); onseek(bookmark.time); }}></button>{/each}
 </div>
 

@@ -58,7 +58,7 @@ function onHeight(event: Event): void {
 					@change="onType"
 				>
 					<option v-for="opt in BEVEL_PRESETS" :key="opt.value" :value="opt.value">
-						{{ opt.label }}
+						{{ t(opt.labelKey) }}
 					</option>
 				</pptx-ui-select>
 			</label>

@@ -326,3 +326,19 @@ export interface PptxThemeObjectDefaults {
 	/** Raw `<a:txDef>` parser object, or `undefined` if absent. */
 	txDef?: unknown;
 }
+
+/**
+ * A real theme variant read from the package's `themeVariants/` parts (see `loadThemeVariants`).
+ */
+export interface PptxThemeVariant {
+	/** The variant's `vid` GUID. */
+	id: string;
+	/** Display name (the theme family's). */
+	name: string;
+	colorScheme: PptxThemeColorScheme;
+	fontScheme: PptxThemeFontScheme;
+	/** The variant's `a:fmtScheme`, as the text its theme part carries. */
+	formatSchemeXml?: string;
+	/** The Background Styles preset (1 to 12) the variant's master uses, when it is one. */
+	backgroundStyleIndex?: number;
+}

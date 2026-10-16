@@ -7,8 +7,8 @@ import {
 } from './ribbon-design-commands';
 
 describe('design command contract', () => {
-	it('places four unique commands in the themes and customize groups', () => {
-		expect(new Set(DESIGN_RIBBON_COMMANDS.map((command) => command.id)).size).toBe(4);
+	it('places five unique commands in the themes, customize and designer groups', () => {
+		expect(new Set(DESIGN_RIBBON_COMMANDS.map((command) => command.id)).size).toBe(5);
 		expect(
 			DESIGN_RIBBON_COMMANDS.every((command) =>
 				DESIGN_RIBBON_GROUPS.some((group) => command.id.startsWith(`${group.id}.`)),
@@ -21,6 +21,12 @@ describe('design command contract', () => {
 			expect(designCommandState(command.id, { editable: false }).disabled).toBe(
 				command.id !== 'design.customize.slideSize',
 			);
+		}
+	});
+
+	it('lists Designer but never enables it', () => {
+		for (const editable of [true, false]) {
+			expect(designCommandState('design.designer.designIdeas', { editable }).disabled).toBe(true);
 		}
 	});
 

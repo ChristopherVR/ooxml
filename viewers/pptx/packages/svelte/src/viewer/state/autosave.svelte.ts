@@ -1,5 +1,6 @@
 import type { DeckSaveIntent } from 'ooxml-ui/pptx';
 import {
+	createPreviewEditGuard,
 	nextAutosaveDelayMs,
 	recoverySnapshotIntent,
 	saveAutosaveSnapshot,
@@ -63,6 +64,12 @@ export interface AutosaveDeps {
 	getFilePath: () => string | undefined;
 	/** The current editable slides (watched for edits). */
 	getSlides: () => PptxSlide[];
+	/**
+	 * True while a Design gallery hover preview shows over the slides, and the identities of the
+	 * stores a preview swaps: the effect then tells an edit from a preview and its restore.
+	 */
+	getPreviewHeld?: () => boolean;
+	getDocumentKey?: () => readonly unknown[];
 	getSlideMasters?: () => PptxSlideMaster[];
 	getNotesMaster?: () => PptxNotesMaster | undefined;
 	getHandoutMaster?: () => PptxHandoutMaster | undefined;
@@ -119,6 +126,7 @@ export class AutosaveController {
 	 * measured against.
 	 */
 	#firstDirtyAt: number | null = null;
+	readonly #previewGuard = createPreviewEditGuard();
 
 	constructor(deps: AutosaveDeps) {
 		this.#deps = deps;
@@ -138,6 +146,8 @@ export class AutosaveController {
 			this.#deps.getNotesMaster?.();
 			this.#deps.getHandoutMaster?.();
 			this.#deps.getSections?.();
+			const held = this.#deps.getPreviewHeld?.() ?? false;
+			const documentKey = this.#deps.getDocumentKey?.();
 
 			if (!this.#started) {
 				this.#started = true;
@@ -153,6 +163,9 @@ export class AutosaveController {
 				this.#clearTimer();
 				this.#firstDirtyAt = null;
 				this.isDirty = false;
+				return;
+			}
+			if (documentKey && !this.#previewGuard.isEdit(documentKey, held)) {
 				return;
 			}
 			this.isDirty = true;

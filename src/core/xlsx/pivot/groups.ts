@@ -1,5 +1,7 @@
 import type { CellValue, PivotFieldGroup, PivotTable } from '../model';
 import { isCellError } from '../model';
+import { pivotColumnFields, pivotRowFields } from './axes';
+import { derivedDateLabels, expandDateGroups, validateDateGroups } from './date-groups';
 
 const MAX_BUCKETS = 10_000;
 
@@ -43,10 +45,14 @@ export function validateFieldGroups(
 		| 'pageFilter'
 		| 'itemFilters'
 		| 'dateFields'
+		| 'dateFilter'
+		| 'dateGroups'
+		| 'date1904'
 		| 'valueField'
 		| 'additionalValues'
 	>,
 ): void {
+	validateDateGroups(pivot);
 	const groups = pivot.fieldGroups;
 	if (groups === undefined) return;
 	if (!Array.isArray(groups)) throw new Error('Choose a valid number group.');
@@ -82,7 +88,8 @@ export function validateFieldGroups(
 }
 
 /** The records with every grouped field replaced by its bucket label (the cache is unchanged). */
-export function applyPivotGroups(pivot: PivotTable): PivotTable {
+export function applyPivotGroups(source: PivotTable): PivotTable {
+	const pivot = expandDateGroups(source);
 	const groups = (pivot.fieldGroups ?? []).filter((group) => pivot.fields.includes(group.field));
 	if (!groups.length) return pivot;
 	const targets = groups.map((group) => ({ group, index: pivot.fields.indexOf(group.field) }));
@@ -106,20 +113,40 @@ export const groupOf = (
 ): PivotFieldGroup | undefined => pivot.fieldGroups?.find((group) => group.field === field);
 
 /** Sort rank of a group label (its index in the group's item list); labels from elsewhere last. */
-export function groupRank(group: PivotFieldGroup, value: CellValue): number {
+export function groupRank(labels: readonly string[], value: CellValue): number {
 	if (typeof value !== 'string' || isCellError(value)) return Number.MAX_SAFE_INTEGER;
-	const at = numberGroupLabels(group).indexOf(value);
+	const at = labels.indexOf(value);
 	return at < 0 ? Number.MAX_SAFE_INTEGER : at;
+}
+
+/** The ordered group items of a number-grouped or derived date field, if it is one. */
+export function groupLabelsOf(
+	pivot: Pick<PivotTable, 'fields' | 'records'> & {
+		fieldGroups?: PivotTable['fieldGroups'];
+		dateGroups?: PivotTable['dateGroups'];
+		date1904?: boolean | undefined;
+	},
+	field: string,
+): string[] | undefined {
+	const group = groupOf(pivot, field);
+	return group ? numberGroupLabels(group) : derivedDateLabels(pivot, field);
 }
 
 /** Axis fields whose every value is an integer, so they can be grouped by number ranges. */
 export function pivotGroupableFields(
 	pivot: Pick<
 		PivotTable,
-		'fields' | 'records' | 'rowField' | 'secondRowField' | 'columnField' | 'dateFields'
+		| 'fields'
+		| 'records'
+		| 'rowField'
+		| 'secondRowField'
+		| 'moreRowFields'
+		| 'columnField'
+		| 'moreColumnFields'
+		| 'dateFields'
 	>,
 ): string[] {
-	return [pivot.rowField, pivot.secondRowField, pivot.columnField].filter(
+	return [...pivotRowFields(pivot), ...pivotColumnFields(pivot)].filter(
 		(field): field is string => {
 			if (!field || (pivot.dateFields ?? []).includes(field)) return false;
 			const index = pivot.fields.indexOf(field);

@@ -30,6 +30,7 @@ import { useI18n } from 'vue-i18n';
 import type { LocaleCatalogEntry } from '../../i18n';
 import type { ThemeCatalogEntry } from '../../theme';
 import { useResolvedCustomization } from '../composables/useViewerCustomization';
+import { useRegion } from '../composables/useViewerRegions';
 import OptionsAddInsPane from './settings/OptionsAddInsPane.vue';
 import OptionsQuickAccessPane from './settings/OptionsQuickAccessPane.vue';
 import OptionsRibbonPane from './settings/OptionsRibbonPane.vue';
@@ -86,6 +87,8 @@ const emit = defineEmits<{
 
 const { t, locale } = useI18n();
 const resolved = useResolvedCustomization();
+// A host `dialog.options` region fills the body; the shared binding adds the options model.
+const region = useRegion('dialog.options');
 const dialog = ref<PptxOptionsDialogElement | null>(null);
 const category = ref('general');
 let binding: PptxOptionsDialogBinding | null = null;
@@ -104,6 +107,7 @@ function sync(): void {
 		languageKey: locale.value,
 		customization: resolved.value,
 		aiEnabled: Boolean(props.aiEnabled),
+		regionContext: region.context(() => emit('close')) ?? null,
 	});
 }
 
@@ -129,7 +133,7 @@ watch(
 	{ flush: 'post' },
 );
 watch(
-	() => [props.options, locale.value, resolved.value, props.aiEnabled],
+	() => [props.options, locale.value, resolved.value, props.aiEnabled, region.context(() => {})],
 	() => nextTick(sync),
 );
 onBeforeUnmount(unbind);

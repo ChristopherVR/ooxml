@@ -40,6 +40,7 @@ export type {
 	ViewportFitOptions,
 	ViewportFitPadding,
 	PowerPointViewerEmits,
+	ViewerLoadDetail,
 	PowerPointViewerExpose,
 	CollaborationConfig,
 	CollaborationRole,

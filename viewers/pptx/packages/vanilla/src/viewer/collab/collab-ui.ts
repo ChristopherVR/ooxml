@@ -7,6 +7,7 @@ import { createEl } from '../render';
 import type { Store, ViewerState } from '../state';
 import type { ViewerChrome } from '../ui';
 import { createIcon } from '../ui';
+import type { RegionSet } from '../ui/region-set';
 import type { BroadcastConfig } from './broadcast-helpers';
 import { buildBroadcastSessionConfig } from './broadcast-helpers';
 import type { ShareDefaults } from './share-helpers';
@@ -48,12 +49,20 @@ export interface CollabUiDeps {
 	getConfig: () => CollaborationConfig | null;
 	followUser: (clientId: number | null) => void;
 	shareDefaults?: ShareDefaults;
+	/** Host `authorName`: the presenter name a broadcast starts with (before shareDefaults). */
+	getAuthorName?: () => string | undefined;
+	/** Host `onStartCollaboration`: the user started a session from the Share or Broadcast dialog. */
+	onStarted?: (config: CollaborationConfig) => void;
+	/** Host `onStopCollaboration`: the user stopped a session from the Share or Broadcast dialog. */
+	onStopped?: () => void;
 	/** Individually hidden toolbar buttons; gates the Share/Broadcast triggers this module builds. */
 	hiddenActions?: readonly ToolbarActionId[];
 	/** False drops the toolbar status pill (the host removed the Share dialog). */
 	showCollaborationStatus?: boolean;
 	/** Options > General > "Initials" override for the Share dialog's local-user avatar. */
 	getUserInitials?: () => string | undefined;
+	/** The viewer's dialog regions (Share and Broadcast bodies a host can replace). */
+	getRegions?: () => RegionSet | undefined;
 }
 
 export interface CollabUiController {
@@ -95,16 +104,20 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		doc,
 		t,
 		{
-			onStart: (config) =>
-				void deps.startCollaboration(config).then(() => shareDialog.setActive(true)),
+			onStart: (config) => {
+				deps.onStarted?.(config);
+				void deps.startCollaboration(config).then(() => shareDialog.setActive(true));
+			},
 			onStop: () => {
 				deps.stopCollaboration();
+				deps.onStopped?.();
 				shareDialog.setActive(false);
 				shareDialog.close();
 			},
 		},
 		themeHost,
 		deps.getUserInitials,
+		deps.getRegions,
 	);
 
 	const broadcastDialog = createBroadcastDialog(
@@ -114,13 +127,18 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			onStart: (config: BroadcastConfig) => {
 				broadcastRoomId = config.roomId;
 				broadcastServerUrl = config.serverUrl;
-				const session = buildBroadcastSessionConfig(config, deps.shareDefaults?.userName);
+				const session = buildBroadcastSessionConfig(
+					config,
+					deps.getAuthorName?.() ?? deps.shareDefaults?.userName,
+				);
+				deps.onStarted?.(session);
 				void deps
 					.startCollaboration(session)
 					.then(() => broadcastDialog.setActive(true, viewerUrl()));
 			},
 			onStop: () => {
 				deps.stopCollaboration();
+				deps.onStopped?.();
 				broadcastRoomId = '';
 				broadcastServerUrl = '';
 				broadcastDialog.setActive(false, '');
@@ -128,6 +146,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			},
 		},
 		themeHost,
+		deps.getRegions,
 	);
 
 	const statusPill = createCollaborationStatus(doc, t, () => {

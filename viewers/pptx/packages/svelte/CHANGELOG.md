@@ -7,6 +7,82 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.39.0) - 2026-10-16
+
+### Features
+
+- **pptx:** Open the shared Insert sheet from the phone bottom bar ([53526bd](https://github.com/ChristopherVR/ooxml/commit/53526bdaecc293fdd1be168362010921df6c112e))
+- **geometry:** Add the PowerPoint shape gallery catalogue ([2fb79e2](https://github.com/ChristopherVR/ooxml/commit/2fb79e2717cf9094a2692d04503e95cc09453467))
+- **locales:** Translate the Shapes gallery and the Design galleries ([c4aaeb3](https://github.com/ChristopherVR/ooxml/commit/c4aaeb31f9119e0bc825b922b964dfc37d62f7d3))
+- **svelte:** Apply a whole theme from the Design > Themes gallery ([ba1710a](https://github.com/ChristopherVR/ooxml/commit/ba1710a0a31e250d9a3400f3e6e61bb93285264d))
+- **pptx:** Keep Slide Templates reachable from every New Slide menu ([be03af6](https://github.com/ChristopherVR/ooxml/commit/be03af63a0ed6c23a79800b500d3d425ea22773f))
+- **pptx:** Add chart element format and options edit operations ([d99f83e](https://github.com/ChristopherVR/ooxml/commit/d99f83ec63e6251c4aaa39a31ad5d2f4d2659b54))
+- **locales:** Translate the chart Format pane and Chart Format tab ([3b0b7d2](https://github.com/ChristopherVR/ooxml/commit/3b0b7d2aebac14bcbc0df22f5ceef695b4443cc9))
+- **svelte:** Add the chart Format pane and Chart Format tab ([012d5a2](https://github.com/ChristopherVR/ooxml/commit/012d5a23ce1cae7476c892cff9ce79d799d2a7b0))
+- **pptx:** Read chart element formats from each element's spPr on load ([46620d0](https://github.com/ChristopherVR/ooxml/commit/46620d08e61513234ba61964e4f751d679fcb28b))
+
+### Bug Fixes
+
+- **svelte:** Translate media and picture inspector labels ([d0bde63](https://github.com/ChristopherVR/ooxml/commit/d0bde63ea46502a316e94f4b795901db20644c17))
+- **svelte:** Translate table, text effects and SmartArt inspector labels ([ca38b70](https://github.com/ChristopherVR/ooxml/commit/ca38b708db0399fec7db9f72046296c82587116d))
+- **ui:** Translate shared preset catalogue labels ([46661a1](https://github.com/ChristopherVR/ooxml/commit/46661a125e90b91b00f3fa66f584f232bc21a871))
+- **vanilla:** Lay out the phone sheets and stack them above the canvas ([1479b46](https://github.com/ChristopherVR/ooxml/commit/1479b46f3d0d928e03d9c5b232960a88ee1d5cae))
+- **pptx:** Stack the phone sheets above the canvas and end them above the bar ([5d38927](https://github.com/ChristopherVR/ooxml/commit/5d3892723a31b10109cc14e2211c616d5fb376bc))
+
+## [4.38.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.38.0) - 2026-10-15
+
+### Features
+
+- **chart:** Draw combination, waterfall and histogram charts ([ae79ec2](https://github.com/ChristopherVR/ooxml/commit/ae79ec24da6576a4497fcc4fce0b444be436dcc1))
+- **chart:** Draw bubble, stock, treemap and sunburst charts ([94a4240](https://github.com/ChristopherVR/ooxml/commit/94a424016e799722b22205f87b17e68fd5d5f816))
+- **xlsx:** Draw bubble, stock, treemap and sunburst charts from live cells ([11a4b36](https://github.com/ChristopherVR/ooxml/commit/11a4b367b7e116590c60d8eaccbf051563ae5c97))
+- **chart:** Honour stock bar formatting, draw volume stock, pad bubble axes ([614fc42](https://github.com/ChristopherVR/ooxml/commit/614fc421668e707be211c37658ea76681174eed5))
+- **math:** Draw equations as SVG and write them to Office Math ([cf5d2c0](https://github.com/ChristopherVR/ooxml/commit/cf5d2c09691aea6434a35a23d8116d888a79f320))
+- **automation:** Build word, excel and powerpoint files from outlines ([eda7e9e](https://github.com/ChristopherVR/ooxml/commit/eda7e9e7e5739764d2de03f93a71dcb7a268a78a))
+- **automation:** Suggest word edits as tracked changes, read all cells ([0fdfd3a](https://github.com/ChristopherVR/ooxml/commit/0fdfd3ae752d605db5171d66b2355f8a25e85054))
+- **pptx:** Host regions and capabilities in every binding ([18547f6](https://github.com/ChristopherVR/ooxml/commit/18547f6768fff10d8d8999ef109ef5381add8795))
+- **pptx:** Close binding props drift and guard prop parity ([167802e](https://github.com/ChristopherVR/ooxml/commit/167802e036f62e4c0dd23144a45ae1618eefd007))
+- **pptx:** Host dialog.options in the shared options dialog ([770e85b](https://github.com/ChristopherVR/ooxml/commit/770e85bed0d3bb0b61da4a34fb31591bfc6070e1))
+- **chart:** Model series trendlines and error bars ([bd885ce](https://github.com/ChristopherVR/ooxml/commit/bd885ce5b90b318232363f1d801461ef0bce053e))
+- **chart:** Fit trendlines and size error bars in data space ([1023d6f](https://github.com/ChristopherVR/ooxml/commit/1023d6f892c4534af9e83b34c638c17d26079bef))
+- **chart:** Draw trendlines and error bars in the shared painter ([dcce901](https://github.com/ChristopherVR/ooxml/commit/dcce901233ca1c72580b094c243125c837961b17))
+- **ui:** Lay out the PowerPoint Insert tab as Office does ([55aef8a](https://github.com/ChristopherVR/ooxml/commit/55aef8a30fd3ad7eabf0f2c4f1bd2fa3d8b0f49c))
+- **ui:** Scale the Insert tab like Office and add the Table grid ([e6f5dcc](https://github.com/ChristopherVR/ooxml/commit/e6f5dcc7f050f184de46af1ed07bed16ff6dc446))
+
+### Bug Fixes
+
+- **opc:** Stop reporting digest checks as a valid signature ([9b3cac4](https://github.com/ChristopherVR/ooxml/commit/9b3cac4c24c3a2fd17693fa253ceea6970ca0fe7))
+- **pptx:** Guard OCSP responder requests against SSRF ([b223ee0](https://github.com/ChristopherVR/ooxml/commit/b223ee0f2ac593f3b3ac2ec1c452724be4a3fd07))
+- **opc:** Guard zip reads against forged sizes and unsafe part names ([39294e9](https://github.com/ChristopherVR/ooxml/commit/39294e97d434e7132a22e39930d262a0d0b281da))
+- **digest:** Add timingSafeEqual and a 1M default spin limit ([5efd9c9](https://github.com/ChristopherVR/ooxml/commit/5efd9c95dcb2fa1b5e8d830333b9dce5d253e816))
+- **crypto:** Harden agile and standard decryption against hostile input ([b1e7be5](https://github.com/ChristopherVR/ooxml/commit/b1e7be51db6aee35ed91dfcf143a3710d199308a))
+- **automation:** Confine file io by realpath with relative results ([3b0340f](https://github.com/ChristopherVR/ooxml/commit/3b0340fa753c4fa0c483c0715c19693bd5b40b4e))
+- **svelte:** Render the morph stylesheet as text instead of html ([79761a1](https://github.com/ChristopherVR/ooxml/commit/79761a14e7ccecff15783f613a06eb5834c07ddb))
+- **xml:** Bound nesting depth and element count in parseXml ([7441f60](https://github.com/ChristopherVR/ooxml/commit/7441f60925b128da24500833aecb5936d24ee024))
+- **opc:** Match attribute names exactly and accept single quotes ([9220247](https://github.com/ChristopherVR/ooxml/commit/922024743255a61b6f39b2ef231dffc533da8b14))
+- **math:** Cap LaTeX and OMML nesting and use null-prototype sibling maps ([553cd72](https://github.com/ChristopherVR/ooxml/commit/553cd7232a58d7b979f5065e35d1e9f31c2d48fc))
+- **diagram:** Null-prototype layout variables and a presentation node budget ([572bf71](https://github.com/ChristopherVR/ooxml/commit/572bf71479c24389793db22dc80f056e090d4264))
+- **svelte:** Pass the morph style element tag as an expression ([5a25a10](https://github.com/ChristopherVR/ooxml/commit/5a25a107fe89cf1a0206dbba409b6554d07c0669))
+- **chart:** Match Excel for extended chart text, labels and fills ([9514ba1](https://github.com/ChristopherVR/ooxml/commit/9514ba19f9624b205da5a64b2ea6f32ea3355d65))
+- **geometry:** Draw the wedge callout presets as ECMA-376 defines them ([2a4f2b0](https://github.com/ChristopherVR/ooxml/commit/2a4f2b0b100040a5ab1352f6d36f6a5e64d82a58))
+- **math:** Draw the minus sign and space only a binary one ([1620cb0](https://github.com/ChristopherVR/ooxml/commit/1620cb00486131c99437dc13259b5d82c5d7d63f))
+- **geometry:** Keep the oval callout on its ellipse ([a98b010](https://github.com/ChristopherVR/ooxml/commit/a98b010ba274ae857d2bd3bc618761a1dce4bb39))
+- **svelte:** Translate the chart section and lead with its title ([1a102b6](https://github.com/ChristopherVR/ooxml/commit/1a102b60aeb7def69f05fd2d5d0b18286467cd46))
+- **svelte:** Fit the shape panel in its column and drop a duplicate ([9bfe5c1](https://github.com/ChristopherVR/ooxml/commit/9bfe5c1622026bd8cafe9542dacd6533d4331a6f))
+
+### Refactor
+
+- **pptx:** Drop the unused jszip import from the chart parser ([66f67dc](https://github.com/ChristopherVR/ooxml/commit/66f67dcb464a61015ea3b56fcc6578a29e7016a5))
+- **chart:** Move waterfall steps and range into the chart area ([b6fa22a](https://github.com/ChristopherVR/ooxml/commit/b6fa22a987d40b63f3369868083435eba35afa83))
+- **pptx:** Open file > options through the shared options dialog ([d6d4fba](https://github.com/ChristopherVR/ooxml/commit/d6d4fbad29c6d0f7ccf5ce676fa8ca3a2e8c0ae6))
+- **chart:** Move number formats, palettes, axis labels, auto title to core ([26bde03](https://github.com/ChristopherVR/ooxml/commit/26bde036faed3663e9a037b8e755e5c517202263))
+- **chart:** Move bubble, stock, treemap and sunburst geometry to core ([a465fa6](https://github.com/ChristopherVR/ooxml/commit/a465fa63dfd1f15c67a22a97fa5ed9c97d2965e8))
+- **pptx:** Read chart trendlines and error bars from core model ([fa53d97](https://github.com/ChristopherVR/ooxml/commit/fa53d97b442df87b60ac1be85f5e4480bb8fec7a))
+
+### Chores
+
+- **ui:** Drop an unused chart import and clarify the note lookup ([76ed6f1](https://github.com/ChristopherVR/ooxml/commit/76ed6f1bbd263129a0d3950119a8f062ba020d9f))
+
 ## [4.37.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.37.0) - 2026-10-15
 
 ### Features

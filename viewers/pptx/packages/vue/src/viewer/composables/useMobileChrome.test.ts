@@ -9,8 +9,21 @@ import { ref } from 'vue';
 import { useMobileChrome } from './useMobileChrome';
 
 function setup() {
-	return useMobileChrome({ presenting: ref(false), addText: () => {} });
+	return useMobileChrome({ presenting: ref(false) });
 }
+
+describe('useMobileChrome insert sheet', () => {
+	it('opens the Insert sheet exclusively and closes it on a second tap', () => {
+		const chrome = setup();
+		chrome.toggleMobileSheet('slides');
+		chrome.toggleMobileSheet('insert');
+		expect(chrome.activeSheet.value).toBe('insert');
+		expect(chrome.mobileInsertOpen.value).toBeTruthy();
+		expect(chrome.mobileSlidesOpen.value).toBeFalsy();
+		chrome.toggleMobileSheet('insert');
+		expect(chrome.mobileInsertOpen.value).toBeFalsy();
+	});
+});
 
 describe('useMobileChrome toggleMobileSheet priority', () => {
 	it('opens a sheet from closed', () => {

@@ -5,6 +5,7 @@ import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { createInspectorRadio, createInspectorSelect } from './inspector/controls-extra';
 import { appendCheckRow, appendRadioControl, createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 /**
  * PowerPoint's Set Up Show dialog.
@@ -21,8 +22,15 @@ export function openSlideShowDialog(
 	slideCount: number,
 	onSave: (next: PptxPresentationProperties) => void,
 	customShows: readonly PptxCustomShow[] = [],
+	/** The viewer's dialog regions: the dialog closes with the viewer. */
+	regions?: RegionSet,
 ): void {
-	const shell = createParityDialogShell(doc, t, t('pptx.slideShow.setUpTitle'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.slideShow.setUpTitle'),
+		regions && { regions },
+	);
 	const draft = { ...properties };
 	const group = (legend: string): HTMLFieldSetElement => {
 		const fieldset = createEl(doc, 'fieldset');

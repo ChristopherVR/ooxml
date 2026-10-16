@@ -59,8 +59,10 @@ export class OfficeUiCallControls extends TeamsElement {
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this.setAttribute('role', 'toolbar');
-		this.setAttribute('aria-label', 'Meeting controls');
 		this.timer = setInterval(() => (this.now = Date.now()), 1000);
+	}
+	protected override hostLabel(): string {
+		return this.t('call.controls');
 	}
 	override disconnectedCallback(): void {
 		clearInterval(this.timer);
@@ -101,19 +103,19 @@ export class OfficeUiCallControls extends TeamsElement {
 				>${this.startedAt ? html`<time>${formatElapsed(this.now - this.startedAt)}</time>` : nothing}
 			</div>
 			<div class="actions">
-				${this.button('chat', 'Chat', 'chat', { on: this.panel === 'chat' })}
-				${this.button('people', 'People', 'users', { on: this.panel === 'people' })}
-				${this.button('hand', this.hand ? 'Lower' : 'Raise', 'hand', { on: this.hand })}
-				${this.button('camera', this.camera ? 'Camera off' : 'Camera on', this.camera ? 'video' : 'videoOff', { off: !this.camera })}
-				${this.button('mic', this.mic ? 'Mute' : 'Unmute', this.mic ? 'mic' : 'micOff', { off: !this.mic })}
-				${this.button('screen', this.screen ? 'Stop sharing' : 'Share', 'screenShare', { on: this.screen, disabled: this.shareUnavailable })}
+				${this.button('chat', this.t('call.chat'), 'chat', { on: this.panel === 'chat' })}
+				${this.button('people', this.t('call.people'), 'users', { on: this.panel === 'people' })}
+				${this.button('hand', this.t(this.hand ? 'call.lower' : 'call.raise'), 'hand', { on: this.hand })}
+				${this.button('camera', this.t(this.camera ? 'call.cameraOff' : 'call.cameraOn'), this.camera ? 'video' : 'videoOff', { off: !this.camera })}
+				${this.button('mic', this.t(this.mic ? 'call.mute' : 'call.unmute'), this.mic ? 'mic' : 'micOff', { off: !this.mic })}
+				${this.button('screen', this.t(this.screen ? 'call.stopSharing' : 'call.share'), 'screenShare', { on: this.screen, disabled: this.shareUnavailable })}
 				<button
 					type="button"
 					class="leave"
-					aria-label="Leave call"
+					aria-label=${this.t('call.leaveCall')}
 					@click=${() => this.fire('office-call-action', { action: 'leave' })}
 				>
-					${icon('phoneOff')}<span class="text">Leave</span>
+					${icon('phoneOff')}<span class="text">${this.t('call.leave')}</span>
 				</button>
 			</div>
 		`;

@@ -169,6 +169,7 @@
 .start-card {
 	display: flex;
 	align-items: center;
+	justify-content: flex-start;
 	gap: 12px;
 	text-align: left;
 	padding: 12px 14px;
@@ -193,7 +194,7 @@
 .start-card:active {
 	transform: translateY(-1px) scale(0.99);
 }
-.start-card > span {
+.start-card > span:not(.app-badge) {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -236,7 +237,7 @@
 .start-center:active {
 	transform: translate(-50%, calc(-50% - 1px)) scale(0.99);
 }
-.start-center > span {
+.start-center > span:not(.app-badge) {
 	align-items: center;
 	text-align: center;
 }
@@ -337,7 +338,7 @@
 		text-align: left;
 		padding: 12px 14px;
 	}
-	.start-center > span {
+	.start-center > span:not(.app-badge) {
 		align-items: flex-start;
 		text-align: left;
 	}

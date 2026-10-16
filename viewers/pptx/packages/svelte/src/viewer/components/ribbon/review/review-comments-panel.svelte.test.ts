@@ -122,4 +122,26 @@ describe('reviewCommentsPanel', () => {
 		expect(saved?.text).toBe('hey @Alice');
 		expect(saved?.mentions?.[0]).toMatchObject({ personId: 'a1', authorName: 'Alice' });
 	});
+
+	it('authors comments as the host authorName prop', () => {
+		const target = document.createElement('div');
+		const editor = new EditorState({
+			getCurrent: () => 0,
+			getHandler: () => null,
+			getAuthorName: () => 'Dana Host',
+		});
+		editor.editable = true;
+		editor.setSlides([{ id: 'slide-1', elements: [] } as PptxSlide]);
+		const instance = mount(ReviewCommentsPanel, { target, props: { editor } });
+		cleanup = () => unmount(instance);
+
+		const textarea = target.querySelector('textarea') as HTMLTextAreaElement;
+		textarea.value = 'Written by the host identity';
+		textarea.dispatchEvent(new Event('input', { bubbles: true }));
+		flushSync();
+		(target.querySelector('.pptx-svelte-comments-compose button') as HTMLButtonElement).click();
+		flushSync();
+
+		expect(editor.slides[0]?.comments?.[0]?.author).toBe('Dana Host');
+	});
 });

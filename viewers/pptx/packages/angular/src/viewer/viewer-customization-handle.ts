@@ -13,6 +13,7 @@ import type {
 	CanvasContextMenuCommandId,
 	ContextMenuCommandId,
 	EditorKeyActionName,
+	HostBackstagePage,
 	OptionsPageId,
 	OptionsSectionId,
 	OptionsSettingId,
@@ -23,11 +24,14 @@ import type {
 	ToolbarButtonId,
 	ToolbarTabId,
 	ViewerCustomization,
+	ViewerCapabilityId,
 	ViewerCustomizationApi,
 	ViewerDialogId,
 	ViewerFeatureId,
 	ViewerOptionPrimitive,
 	ViewerPanelId,
+	ViewerRegionId,
+	ViewerRegionRenderer,
 } from 'ooxml-ui/pptx';
 
 import type { ViewerCustomizationService } from './viewer-customization.service';
@@ -147,5 +151,17 @@ export abstract class ViewerCustomizationHandle implements ViewerCustomizationAp
 	}
 	setDialogAvailable(dialog: ViewerDialogId, available: boolean): void {
 		this.customizationApi.setDialogAvailable(dialog, available);
+	}
+	setCapability(capability: ViewerCapabilityId, allowed: boolean | undefined): void {
+		this.customizationApi.setCapability(capability, allowed);
+	}
+	setRegion(region: ViewerRegionId, renderer: ViewerRegionRenderer | undefined): void {
+		this.customizationApi.setRegion(region, renderer);
+	}
+	addBackstagePage(page: HostBackstagePage): void {
+		this.customizationApi.addBackstagePage(page);
+	}
+	removeBackstagePage(id: string): void {
+		this.customizationApi.removeBackstagePage(id);
 	}
 }

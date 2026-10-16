@@ -28,10 +28,15 @@ const CONTROL_FACE: Readonly<Record<string, string>> = {
 };
 /** Shared 20px artwork for the other tabs' groups. */
 const PATH_FACE: Readonly<Record<string, string>> = {
+	'insert.slides': 'newSlide',
 	'insert.tables': 'table',
 	'insert.images': 'image',
+	'insert.camera': 'camera',
 	'insert.illustrations': 'shapes',
+	'insert.forms': 'forms',
+	'insert.addIns': 'addIns',
 	'insert.links': 'link',
+	'insert.comments': 'messagePlus',
 	'insert.text': 'textBox',
 	'insert.symbols': 'equation',
 	'insert.media': 'video',
@@ -39,6 +44,7 @@ const PATH_FACE: Readonly<Record<string, string>> = {
 	'design.themes': 'palette',
 	'design.variants': 'palette',
 	'design.customize': 'paint',
+	'design.designer': 'lightbulb',
 };
 
 const isGroup = (el: Element): el is HTMLElement => el instanceof HTMLElement;
@@ -151,18 +157,91 @@ export function reflowRibbon(content: HTMLElement): string[] {
 	}
 	const overflows = () => content.scrollWidth - content.clientWidth > 1;
 	const collapsed: string[] = [];
+	for (const scalable of content.querySelectorAll<HTMLElement>('[data-ribbon-scalable]')) {
+		setScale(scalable, 'large');
+	}
 	if (!overflows()) {
 		return collapsed;
 	}
-	for (const group of groupsOf(content).reverse()) {
+	// Least important first (`data-ribbon-priority`, ties right to left); a group with no
+	// priority keeps the original right-to-left order.
+	const order = groupsOf(content)
+		.map((group, index) => ({ group, index }))
+		.sort((a, b) => priorityOf(a.group) - priorityOf(b.group) || b.index - a.index)
+		.map(({ group }) => group);
+	const collapse = (group: HTMLElement): void => {
+		setScale(group, 'large');
 		ensureFace(group);
 		group.setAttribute('data-collapsed', '');
 		collapsed.push(group.dataset.ribbonGroup ?? '');
+	};
+	const scalable = order.filter((item) => item.hasAttribute('data-ribbon-scalable'));
+	/** Once the row fits, give size back to the most important groups while it still does. */
+	const refine = (): string[] => {
+		const steps: RibbonScale[] = ['large', 'small', 'icons'];
+		for (let changed = true; changed;) {
+			changed = false;
+			for (const group of [...scalable].reverse()) {
+				const current = steps.indexOf((group.dataset.scale as RibbonScale | undefined) ?? 'large');
+				if (group.hasAttribute('data-collapsed') || current <= 0) {
+					continue;
+				}
+				setScale(group, steps[current - 1]!);
+				if (overflows()) {
+					setScale(group, steps[current]!);
+				} else {
+					changed = true;
+				}
+			}
+		}
+		return collapsed;
+	};
+	// Groups that hold nothing runnable go first, before a working group loses its large buttons.
+	for (const group of order.filter((item) => item.hasAttribute('data-ribbon-collapse-first'))) {
+		collapse(group);
 		if (!overflows()) {
-			break;
+			return refine();
 		}
 	}
-	return collapsed;
+	// Office's scaling: every scalable group steps large, small with labels, small icons only.
+	for (const scale of ['small', 'icons'] as const) {
+		for (const group of scalable) {
+			if (!group.hasAttribute('data-collapsed')) {
+				setScale(group, scale);
+				if (!overflows()) {
+					return refine();
+				}
+			}
+		}
+	}
+	for (const group of order) {
+		if (!group.hasAttribute('data-collapsed')) {
+			collapse(group);
+			if (!overflows()) {
+				break;
+			}
+		}
+	}
+	return refine();
+}
+
+type RibbonScale = 'large' | 'small' | 'icons';
+const priorityOf = (group: HTMLElement): number => Number(group.dataset.ribbonPriority ?? 0);
+
+/** Groups that can shrink expose `setRibbonScale`; the attribute drives their stylesheet. */
+function setScale(group: HTMLElement, scale: RibbonScale): void {
+	const current = (group.dataset.scale as RibbonScale | undefined) ?? 'large';
+	if (current === scale) {
+		return;
+	}
+	if (scale === 'large') {
+		delete group.dataset.scale;
+	} else {
+		group.dataset.scale = scale;
+	}
+	(group as HTMLElement & { setRibbonScale?: (scale: RibbonScale) => void }).setRibbonScale?.(
+		scale,
+	);
 }
 
 export interface RibbonRowOptions {
@@ -201,12 +280,25 @@ export function attachRibbonOverflow(
 			observer?.disconnect();
 			lastWidth = content.clientWidth;
 			reflowRibbon(content);
+			// A scalable group can grow later (labels arrive, a font loads): watch it as well.
+			for (const scalable of content.querySelectorAll('[data-ribbon-scalable]')) {
+				resize?.observe(scalable);
+			}
 			if (options.launchers) {
 				syncLaunchers(content, options.launchers);
 			}
 			observer?.observe(content, { childList: true, subtree: true });
+			// A face or a label can finish rendering after the pass measured it: check once more
+			// next frame and, if the row still overflows, fit it again with the settled sizes.
+			if (verifications < 2 && content.scrollWidth - content.clientWidth > 1) {
+				verifications += 1;
+				schedule(true);
+			} else if (content.scrollWidth - content.clientWidth <= 1) {
+				verifications = 0;
+			}
 		});
 	};
+	let verifications = 0;
 	/** Menus rendered inside an open popup must not close it; only added or removed groups matter. */
 	const touchesGroup = (record: MutationRecord) =>
 		[...record.addedNodes, ...record.removedNodes].some(
@@ -301,6 +393,9 @@ export function attachRibbonOverflow(
 		closeAll(content);
 		for (const collapsed of content.querySelectorAll('[data-ribbon-group][data-collapsed]')) {
 			collapsed.removeAttribute('data-collapsed');
+		}
+		for (const scalable of content.querySelectorAll<HTMLElement>('[data-ribbon-scalable]')) {
+			setScale(scalable, 'large');
 		}
 	};
 }

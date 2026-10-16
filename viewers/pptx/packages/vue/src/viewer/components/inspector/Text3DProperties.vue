@@ -135,7 +135,7 @@ const COLOR_CLS = 'h-8 bg-muted border border-border rounded px-1';
 					@change="onMaterial"
 				>
 					<option v-for="opt in MATERIAL_PRESETS" :key="opt.value" :value="opt.value">
-						{{ opt.label }}
+						{{ t(opt.labelKey) }}
 					</option>
 				</pptx-ui-select>
 			</label>

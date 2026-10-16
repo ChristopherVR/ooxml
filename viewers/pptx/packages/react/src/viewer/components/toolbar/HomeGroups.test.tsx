@@ -1,4 +1,4 @@
-import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import { RECENT_SHAPES_KEY, registerPptxWebControls } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Home > Slides, Drawing triggers and Arrange: the shared `pptx-ui-ribbon-home-*`
@@ -28,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
 	act(() => root.unmount());
 	container.remove();
+	localStorage.removeItem(RECENT_SHAPES_KEY);
 });
 
 const control = (id: string) =>
@@ -145,8 +146,18 @@ describe('home slides group', () => {
 		act(() => gallery('home.slides.newSlide')!.querySelectorAll<HTMLElement>('button')[0].click());
 		expect(props.onInsertSlideFromLayout).toHaveBeenCalledWith('/l1', 'Title');
 		mountSlides(true, []);
-		expect(caret().hidden).toBeTruthy();
+		// No layouts: the face is off, but the caret stays for Slide Templates.
+		expect(caret().hidden).toBeFalsy();
 		expect(button('home.slides.newSlide').hasAttribute('disabled')).toBeTruthy();
+		act(() => caret().click());
+		const entry = control('home.slides.newSlide').querySelector<HTMLButtonElement>(
+			'[data-ribbon-control="home.slides.slideTemplates"]',
+		);
+		expect(entry?.textContent).toBe('Slide Templates...');
+		act(() =>
+			root.render(<SlidesGroup canEdit layoutOptions={[]} onInsertSlideFromLayout={vi.fn()} />),
+		);
+		expect(caret().hidden).toBeTruthy();
 	});
 
 	it('loads previews on open and portals the host artwork into the tiles', async () => {
@@ -169,21 +180,36 @@ describe('home slides group', () => {
 		expect(gallery('home.slides.layout')!.querySelectorAll('.thumb .surface')).toHaveLength(2);
 	});
 
-	it('hides Slide Templates until a template handler is wired', () => {
+	it('lists Slide Templates at the end of the New Slide menu until no handler is wired', () => {
+		const caret = () =>
+			control('home.slides.newSlide').querySelector<HTMLElement>(
+				'[data-pptx-chrome="split-caret"]',
+			)!;
+		const entry = () =>
+			control('home.slides.newSlide').querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="home.slides.slideTemplates"]',
+			);
 		const props = mountSlides();
-		expect(control('home.slides.slideTemplates').hidden).toBeFalsy();
+		expect(
+			container.querySelector('.slot > [data-ribbon-control="home.slides.slideTemplates"]'),
+		).toBeNull();
+		act(() => caret().click());
+		expect(entry()?.textContent).toBe('Slide Templates...');
+		act(() => entry()!.click());
+		expect(document.querySelector('[role="dialog"]')).not.toBeNull();
 		act(() =>
 			root.render(
 				<SlidesGroup canEdit layoutOptions={layouts} onInsertSlideFromLayout={vi.fn()} />,
 			),
 		);
-		expect(control('home.slides.slideTemplates').hidden).toBeTruthy();
+		act(() => caret().click());
+		expect(entry()).toBeNull();
 		expect(props.onInsertSlideFromTemplate).not.toHaveBeenCalled();
 	});
 
 	it('locks every action in a read-only viewer', () => {
 		const props = mountSlides(false);
-		for (const id of ['newSlide', 'layout', 'reset', 'section', 'slideTemplates']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(button(`home.slides.${id}`).hasAttribute('disabled')).toBeTruthy();
 		}
 		act(() => button('home.slides.reset').click());
@@ -233,10 +259,12 @@ describe('home drawing triggers', () => {
 	it('picks a shape from the shared Shapes menu and adds it', () => {
 		const props = mountDrawing();
 		act(() => button('home.drawing.shapes').click());
-		const rows = control('home.drawing.shapes').querySelectorAll<HTMLElement>('button.item');
-		expect(rows).toHaveLength(12);
-		act(() => rows[2].click());
-		expect(props.onSetNewShapeType).toHaveBeenCalledWith('ellipse');
+		const menu = control('home.drawing.shapes');
+		expect(menu.querySelectorAll('.heading')).toHaveLength(9);
+		const star = menu.querySelector<HTMLElement>('button.item[data-value="star5"]')!;
+		expect(star.title).toBe('Star: 5 Points');
+		act(() => star.click());
+		expect(props.onSetNewShapeType).toHaveBeenCalledWith('star5');
 		expect(props.onAddShape).toHaveBeenCalledOnce();
 	});
 

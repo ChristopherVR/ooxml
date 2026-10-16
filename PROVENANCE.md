@@ -2369,3 +2369,21 @@ Source: ChristopherVR/ooxml, `src/ui/src/pptx/render/` at `origin/main` before t
 | `hierarchy.ts`, `sunburst-arcs.ts` (+ test)             | `chart-treemap-hierarchy.ts`, `chart-sunburst-hierarchy.ts`                                              | Tree building, squarified cells and arc geometry return indices instead of colours and SVG primitives.                                                                                               |
 
 New code (not moved): bubble, stock, treemap and sunburst in `chart/render` (`chart-svg-xy.ts`, `chart-svg-stock.ts`, `chart-svg-hierarchy.ts`, `chart-view-families.ts`, treemap/sunburst in `summary-from-chartex.ts`) and the regenerated Excel and Word chart-family fixtures. `PptxChartData` was not mapped onto `ChartSummary`: it carries 3D, trendlines, error bars, data tables, per-point pictures and callout labels that the summary does not, so PowerPoint keeps its own view-model builders and shares the DOM-free helpers above. The pptx combo and chartex parsers stay on the pptx XML object model.
+
+## Chart trendlines and error bars (2026-10-15)
+
+Source: ChristopherVR/ooxml, `origin/main` at `260a953ea` before these commits.
+
+- `src/core/chart/trendline-fit.ts` (`fitChartTrendline`) is the regression switch of `src/ui/src/pptx/render/chart-overlays-trendline-fit.ts` (`computeTrendlinePoints`), cut at the pixel boundary: it returns data-space samples, the equation text, R-squared and the fitted coefficients, and the PowerPoint module maps the samples to pixels. Same arithmetic, so the chart view-model parity hashes are unchanged; strict typing guards indexed access. The older public `src/ui/src/pptx/render/chart-trendlines.ts` entry now uses the same fit and keeps its 0-based x and two-decimal equations.
+- `src/core/chart/error-bar-amount.ts` (`chartErrorBarAmount`, `chartSampleVariance`) is `errorValue` and `sampleVariance` of `src/ui/src/pptx/render/chart-error-bars.ts`, unchanged arithmetic; the UI module keeps the pixel mapping.
+- The trendline type and error-bar enumerations of `src/core/pptx/core/utils/chart-advanced-parser.ts` and `chart-trendline-serializer.ts` are replaced by `src/core/chart/model-analysis.ts` (`chartTrendlineKind`, `chartTrendlineType`, the `CHART_ERROR_*` lists); the pptx types alias the core ones.
+
+New code (not moved): the neutral `c:trendline` and `c:errBars` model, parser and writer (`model-analysis.ts`, `parse-analysis.ts`, `write-analysis.ts`), the pptx adapter `chart-from-neutral-analysis.ts`, and the shared painter's trendlines and error bars (`render/summary-analysis.ts`, `render/chart-view-analysis.ts`, `render/chart-svg-analysis.ts`).
+
+## PowerPoint theme effect schemes and background styles (2026-10-16)
+
+Source: ChristopherVR/ooxml, `origin/main` at `906baa809` before these commits. No code moved.
+
+- `src/core/pptx/core/utils/theme-effect-schemes-data.ts` is generated from real PowerPoint output: `viewers/pptx/scripts/extract-theme-effect-schemes.ps1` loads each `Document Themes 16/Theme Effects/*.eftx` into a blank deck with `Theme.ThemeEffectScheme.Load`, saves it and cuts the `a:fmtScheme` out of `ppt/theme/theme1.xml` (the fragments are PowerPoint's, picture-free). "Grunge Texture" is left out because its fill styles are pictures.
+- The twelve Background Styles in `src/core/pptx/core/types/background-style.ts` (`bgRef` idx, `bg1`/`bg2`, and the swapped colour map of the dark columns) and the slide-level form (`bgRef` plus an explicit `overrideClrMapping`) were read from `SlideMaster.BackgroundStyle` and `Slide.BackgroundStyle` output of PowerPoint 16.
+- `src/core/pptx/__tests__/fixtures/theme-styles.pptx` was generated with PowerPoint COM (a default-styled rectangle, a hand-filled shape and two preset-styled shapes).

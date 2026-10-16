@@ -5,6 +5,7 @@ import {
 	CHART_TYPE_LABEL_KEYS,
 	CHART_TYPE_OPTIONS,
 	collapseChartTitleRunsForEdit,
+	GROUPING_SUPPORTED_TYPES,
 	patchChartData as sharedPatchChartData,
 	resolveDisplayedChartType,
 } from 'ooxml-ui/pptx';
@@ -16,13 +17,12 @@ import type { PptxChartData } from 'pptx-viewer-core';
 import type { Translator } from '../../i18n';
 import { createChartAdvancedSection } from './chart-advanced-section';
 import { createChartDataGrid } from './chart-data-grid';
-import { tokenSelect } from './chart-exhaustive-controls';
+import { checkbox, input, tokenSelect } from './chart-exhaustive-controls';
 import { createChartExhaustiveSection } from './chart-exhaustive-section';
 import { createChartFilteredSeriesSection } from './chart-filtered-series-section';
 import { createChartPointIndexField } from './chart-point-index';
 import { createChartSubtypeSection } from './chart-subtype-section';
 import { createChartUserShapeSection } from './chart-user-shape-section';
-import { createInspectorCheckbox } from './controls-extra';
 import type { InspectorHandlers, InspectorState } from './types';
 
 /**
@@ -44,7 +44,7 @@ export function createChartSection(
 	handlers: InspectorHandlers,
 ) {
 	const el = section(t('pptx.chart.data'));
-	const title = input(doc, 'text', t('pptx.chart.title'));
+	const title = input(doc, t('pptx.chart.title'));
 	// Both selects used to be bare, unlabelled `<select>`s whose options were the
 	// raw schema tokens (`percentStacked`, `doughnut`). React labels the same two
 	// with `pptx.chart.type` / `pptx.chart.grouping` and spells the options from
@@ -185,6 +185,8 @@ export function createChartSection(
 			// a chart the user picked "Pareto" for.
 			chartType.control.value = resolveDisplayedChartType(current);
 			grouping.control.value = current.grouping ?? 'clustered';
+			// Stacking applies to bar, line and area only, as in the other bindings.
+			grouping.label.hidden = !GROUPING_SUPPORTED_TYPES.has(current.chartType);
 			// Point the shared index picker at the canvas-clicked point BEFORE the
 			// advanced/exhaustive sections read it below, so their per-point fields
 			// (fill, marker, invert-if-negative, ...) reflect the pressed mark.
@@ -206,20 +208,4 @@ export function createChartSection(
 			advanced.setEditable(editable);
 		},
 	};
-}
-
-function input(doc: Document, type: string, text: string) {
-	const label = doc.createElement('label');
-	label.textContent = text;
-	const control = type === 'checkbox' ? createInspectorCheckbox(doc) : doc.createElement('input');
-	if (type !== 'checkbox') {
-		control.type = type;
-	}
-	label.appendChild(control);
-	return { label, control };
-}
-
-function checkbox(doc: Document, text: string) {
-	const field = input(doc, 'checkbox', text);
-	return field;
 }

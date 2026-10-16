@@ -23,6 +23,7 @@ import type { FindReplaceActions } from './editor/editor-find-replace-actions';
 import { createLazyActions } from './editor/editor-lazy-actions';
 import type { DrawTool } from './state';
 import type { ChromeOptions } from './ui';
+import type { RegionSet } from './ui/region-set';
 
 /**
  * The subset of {@link PptxViewer} behaviour the chrome (ribbon + notes
@@ -56,6 +57,8 @@ export interface ChromeCallbackDeps {
 	openSettings(tab?: 'general' | 'shortcuts'): void;
 	/** The host's resolved UI customisation, read lazily by the ribbon builders. */
 	getCustomization?(): ResolvedCustomization;
+	/** The chrome's region set (host File tab pages and replaced page bodies). */
+	getRegionSet?(): RegionSet;
 	openHeaderFooter(): void;
 	openCompare(): void;
 	openSetUpSlideShow(): void;
@@ -218,6 +221,7 @@ export function buildChromeCallbacks(
 			createPresentation: (templateId) => deps.createPresentation(templateId),
 			openSettings: () => deps.openSettings('general'),
 			getCustomization: deps.getCustomization,
+			getRegionSet: deps.getRegionSet,
 			openShare: () => deps.openShare(),
 			openDocumentProperties: () => deps.openDocumentProperties(),
 			openFontEmbedding: () => deps.openFontEmbedding(),
@@ -259,7 +263,8 @@ export function buildChromeCallbacks(
 		// actions, so a click after mount always hits the live editor instance.
 		edit: createLazyActions(() => deps.getEditActions()),
 		insert: {
-			insert: (kind, shapeType) => deps.getEditActions().insert(kind, shapeType),
+			insert: (kind, shapeType, tableSize) =>
+				deps.getEditActions().insert(kind, shapeType, tableSize),
 			insertImage: () => deps.getEditActions().insertImage(),
 			insertMedia: () => deps.getEditActions().insertMedia(),
 			insertChart: (chartType) => deps.getEditActions().insertChart(chartType),
@@ -268,6 +273,9 @@ export function buildChromeCallbacks(
 			insertEquation: (omml) => deps.getEditActions().insertEquation(omml),
 			insertActionButton: (shapeType) => deps.getEditActions().insertActionButton(shapeType),
 			insertField: (fieldType, value) => deps.getEditActions().insertField(fieldType, value),
+			addSlide: () => deps.getEditActions().addSlide(),
+			insertSlideFromLayout: (layoutPath, layoutName) =>
+				deps.getEditActions().insertSlideFromLayout(layoutPath, layoutName),
 			armFreeformTool: (tool) => deps.armFreeformTool?.(tool),
 			visibleDrawingTools: () =>
 				FREEFORM_TOOL_IDS.filter((tool) =>
@@ -365,6 +373,7 @@ export function buildChromeCallbacks(
 		setTitle: (text) => deps.getEditActions().setTitle(text),
 		setOleName: (name) => deps.getEditActions().setOleName(name),
 		setOleContent: (patch) => deps.getEditActions().setOleContent(patch),
+		getDialogRegions: () => deps.getRegionSet?.(),
 		setChartData: (data) => deps.getEditActions().setChartData(data),
 		setMediaProperties: (patch) => deps.getEditActions().setMediaProperties(patch),
 

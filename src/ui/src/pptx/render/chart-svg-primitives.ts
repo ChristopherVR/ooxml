@@ -91,6 +91,12 @@ export interface SvgLine {
 	title?: string;
 	/** Optional SVG transform (e.g. a chart-overlay connector's own rotation about its box centre). */
 	transform?: string;
+	/**
+	 * Build-time tag: the `axisId` of the axis whose line this is, so the
+	 * element-format pass can find it. Removed before the view model leaves
+	 * `buildChartViewModel`; bindings never see it.
+	 */
+	axisLine?: number;
 }
 
 export interface SvgText {

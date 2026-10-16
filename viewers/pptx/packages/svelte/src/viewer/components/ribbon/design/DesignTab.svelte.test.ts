@@ -75,13 +75,32 @@ function topLevelButtons(target: HTMLElement): string[] {
 }
 
 describe('designTab', () => {
-	it('offers exactly React’s four Design commands', () => {
-		expect(topLevelButtons(mountTab())).toStrictEqual([
+	it('offers exactly React’s Design commands, with Designer listed but disabled', () => {
+		const target = mountTab();
+		expect(topLevelButtons(target)).toStrictEqual([
 			'Browse Themes',
 			'Edit Theme',
 			'Slide Size',
 			'Format Background',
+			'Design Ideas',
 		]);
+		const designer = target.querySelector('[data-ribbon-control="design.designer.designIdeas"]')!;
+		expect(designer.hasAttribute('disabled')).toBe(true);
+		expect(designer.getAttribute('title')).toContain('not available');
+	});
+
+	it('leads Themes and Variants with inline galleries and lists Effects and Background Styles', () => {
+		const target = mountTab();
+		const inline = (control: string, gallery: string) =>
+			target.querySelector(`[data-ribbon-control="${control}"] [data-ribbon-gallery="${gallery}"]`);
+		expect(inline('design.themes.gallery', 'themes')).not.toBeNull();
+		expect(inline('design.variants.gallery', 'themeVariants')).not.toBeNull();
+		for (const [control, gallery] of [
+			['design.variants.effects', 'themeEffects'],
+			['design.variants.backgroundStyles', 'themeBackgrounds'],
+		]) {
+			expect(inline(control!, gallery!)).not.toBeNull();
+		}
 	});
 
 	it('adds the Variants group with the Colors and Fonts galleries', () => {

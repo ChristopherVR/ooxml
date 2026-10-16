@@ -30,7 +30,7 @@ export class ViewerMobileSheetService {
 	private readonly editor = inject(EditorStateService);
 
 	/** Open mobile bottom-sheet (slides / menu), or null. */
-	readonly mobileSheet = signal<'slides' | 'menu' | null>(null);
+	readonly mobileSheet = signal<'slides' | 'menu' | 'insert' | null>(null);
 	/** Speaker-notes strip visibility. */
 	readonly showNotes = signal(false);
 	/**

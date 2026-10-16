@@ -1,6 +1,10 @@
+import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
+
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { createInspectorCheckbox, createInspectorRadio } from './inspector/controls-extra';
+import { ownOverlay } from './overlay-owner';
+import type { RegionHandle, RegionSet } from './region-set';
 
 export interface DialogShell {
 	backdrop: HTMLButtonElement;
@@ -9,11 +13,31 @@ export interface DialogShell {
 	heading: HTMLHeadingElement;
 	body: HTMLElement;
 	footer: HTMLElement;
+	/**
+	 * True when the host replaced this dialog's body (`customization.regions`):
+	 * the shell holds the host's renderer instead, so the opener must not build
+	 * the built-in body and footer.
+	 */
+	replaced: boolean;
 	close(): void;
 }
 
+/**
+ * The viewer's dialog regions: the dialog closes with the viewer, and when
+ * `region` is set a host can replace its body through it.
+ */
+export interface DialogRegionBinding {
+	regions: RegionSet;
+	region?: ViewerDialogRegionId;
+}
+
 /** Accessible modal shell shared by the remaining React-parity dialogs. */
-export function createParityDialogShell(doc: Document, t: Translator, title: string): DialogShell {
+export function createParityDialogShell(
+	doc: Document,
+	t: Translator,
+	title: string,
+	binding?: DialogRegionBinding,
+): DialogShell {
 	const backdrop = createEl(doc, 'button', 'pptxv-parity-backdrop');
 	backdrop.type = 'button';
 	backdrop.setAttribute('aria-label', t('pptx.common.close'));
@@ -35,11 +59,14 @@ export function createParityDialogShell(doc: Document, t: Translator, title: str
 	const footer = createEl(doc, 'footer', 'pptxv-parity-footer');
 	dialog.append(header, body, footer);
 	doc.body.append(backdrop, dialog);
-	const close = (): void => {
+	let region: RegionHandle | null = null;
+	const close = ownOverlay(binding?.regions, (): void => {
 		doc.removeEventListener('keydown', onKeyDown);
+		region?.destroy();
+		region = null;
 		backdrop.remove();
 		dialog.remove();
-	};
+	});
 	const onKeyDown = (event: KeyboardEvent): void => {
 		if (event.key === 'Escape') {
 			close();
@@ -49,7 +76,13 @@ export function createParityDialogShell(doc: Document, t: Translator, title: str
 	backdrop.addEventListener('click', close);
 	closeButton.addEventListener('click', close);
 	queueMicrotask(() => closeButton.focus());
-	return { backdrop, dialog, heading, body, footer, close };
+	// The frame (backdrop, title, close button, Escape) stays; the host fills the body.
+	region = binding?.region ? binding.regions.mount(binding.region, dialog, { close }) : null;
+	if (region) {
+		body.hidden = true;
+		footer.hidden = true;
+	}
+	return { backdrop, dialog, heading, body, footer, replaced: region !== null, close };
 }
 
 export function appendDialogButton(

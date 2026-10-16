@@ -214,6 +214,15 @@ export class ViewerInspectorPanelService {
 		this.animationPanelRequest.update((n) => n + 1);
 	}
 
+	/** Close the inspector: any explicit tool panel and the format view. */
+	closeInspector(): void {
+		this.activePanel.set(null);
+		this.formatPanelClosed.set(true);
+		if (this.mobile.isMobile()) {
+			this.mobileInspectorHidden.set(true);
+		}
+	}
+
 	toggleFormatPanel(): void {
 		if (this.activePanel() !== null) {
 			this.activePanel.set(null);

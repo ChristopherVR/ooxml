@@ -1,11 +1,17 @@
 import { html } from 'lit';
+import { teamsI18n, type TeamsI18n } from '../i18n/translator';
 
 export type ChatDensity = 'comfy' | 'compact';
 
 /** Native radios retain keyboard and screen-reader behavior. */
-export function densityChoices(density: ChatDensity, change: (density: ChatDensity) => void) {
+export function densityChoices(
+	density: ChatDensity,
+	change: (density: ChatDensity) => void,
+	i18n: TeamsI18n = teamsI18n(),
+) {
+	const { t } = i18n;
 	return html`<fieldset class="density-options">
-		<legend>Chat density</legend>
+		<legend>${t('settings.density')}</legend>
 		${(['comfy', 'compact'] as const).map(
 			(value) =>
 				html`<label class="density-choice">
@@ -25,9 +31,9 @@ export function densityChoices(density: ChatDensity, change: (density: ChatDensi
 						)}
 					</span>
 					<span class="density-caption"
-						><strong>${value === 'comfy' ? 'Comfy' : 'Compact'}</strong>
+						><strong>${t(value === 'comfy' ? 'settings.comfy' : 'settings.compact')}</strong>
 						<small
-							>${value === 'comfy' ? 'More space between messages' : 'More messages in less space'}</small
+							>${t(value === 'comfy' ? 'settings.comfyText' : 'settings.compactText')}</small
 						></span
 					>
 				</label>`,

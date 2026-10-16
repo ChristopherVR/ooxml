@@ -7,6 +7,121 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.15.0) - 2026-10-16
+
+### Features
+
+- **ui:** Add a sign-in screen to the teams app ([e6ccc71](https://github.com/ChristopherVR/ooxml/commit/e6ccc71008003355b99554441b1dc4a84d01e2fc))
+- **ui:** Pick monthly and yearly repeats for a meeting ([bfc816a](https://github.com/ChristopherVR/ooxml/commit/bfc816a82c2c2670ae7f3dad7060bf37d86275b1))
+- **ui:** Add the phone Insert sheet and a phone slide fit ([00d8320](https://github.com/ChristopherVR/ooxml/commit/00d83205847b26a985e72456f25e4ea78356ac2b))
+- **ui:** Set Field Settings subtotals on PivotTable column fields ([71ae55a](https://github.com/ChristopherVR/ooxml/commit/71ae55a6314eae2ab2e32ebd4fa5e42886e8a70b))
+- **ui:** Place PivotTable Values among any number of row fields ([9d3b3df](https://github.com/ChristopherVR/ooxml/commit/9d3b3df483d1276b913e42c9800c4a1668bfb65b))
+- **ui:** Categorise the Shapes gallery and move Slide Templates ([e043c1a](https://github.com/ChristopherVR/ooxml/commit/e043c1a11c707277879617f9ae37d8901535c5a3))
+- **ui:** Add the Themes and Variants galleries and Designer to Design ([75ec95b](https://github.com/ChristopherVR/ooxml/commit/75ec95b682e017657310bf5dbfc8b6a8a0de5585))
+- **pptx:** Keep Slide Templates reachable from every New Slide menu ([be03af6](https://github.com/ChristopherVR/ooxml/commit/be03af63a0ed6c23a79800b500d3d425ea22773f))
+- **ui:** Add the shared pptx chart Format task pane ([7cc8761](https://github.com/ChristopherVR/ooxml/commit/7cc8761e3c8f7ea3c55ab54a9760a19a2650960a))
+- **ui:** Draw chart element transparency, effects and boxes ([d406438](https://github.com/ChristopherVR/ooxml/commit/d4064386a4e1d802de68fc0d829f887624ebc9cc))
+
+### Bug Fixes
+
+- **svelte:** Translate media and picture inspector labels ([d0bde63](https://github.com/ChristopherVR/ooxml/commit/d0bde63ea46502a316e94f4b795901db20644c17))
+- **visio:** End presentation when the editor stops rendering ([e16d93e](https://github.com/ChristopherVR/ooxml/commit/e16d93ee5bb21c655ff30102b1d4d54bced9e12d))
+- **visio:** Tidy the phone ribbon and narrow status bar ([32098eb](https://github.com/ChristopherVR/ooxml/commit/32098ebff2992dd305f60caa96d1154336f44226))
+- **svelte:** Translate table, text effects and SmartArt inspector labels ([ca38b70](https://github.com/ChristopherVR/ooxml/commit/ca38b708db0399fec7db9f72046296c82587116d))
+- **ui:** Translate shared preset catalogue labels ([46661a1](https://github.com/ChristopherVR/ooxml/commit/46661a125e90b91b00f3fa66f584f232bc21a871))
+- **ui:** Keep chart Format pane clicks and target marks under capture ([8c47310](https://github.com/ChristopherVR/ooxml/commit/8c473101245fbc5635dc278826064cb8f52b138e))
+- **ui:** End the phone chart Format sheet above the bottom bar ([16ea32a](https://github.com/ChristopherVR/ooxml/commit/16ea32a25a3f48537b3445ddab5e943b37a7a804))
+
+### Testing
+
+- **ui:** Group the dates of a PivotTable that has a report filter ([96efdb6](https://github.com/ChristopherVR/ooxml/commit/96efdb67138d46df04cf99c03d8dacdbdc53143e))
+
+## [1.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.14.0) - 2026-10-15
+
+### Features
+
+- **ui:** Add a translator for the visio ribbon ([c79d403](https://github.com/ChristopherVR/ooxml/commit/c79d40343b8c503927f43bfb2d089971977baa87))
+- **ui:** Fold visio's phone ribbon like word and excel ([871b77f](https://github.com/ChristopherVR/ooxml/commit/871b77fdb53a36bf37450c0e535c96a9cf2b06b2))
+- **ui:** Track caret affinity on the print layout selection ([7bed9f4](https://github.com/ChristopherVR/ooxml/commit/7bed9f4f1cc276729888400cb19520c473dab869))
+- **ui:** Tab and arrow through table cells on print layout pages ([43d7c81](https://github.com/ChristopherVR/ooxml/commit/43d7c816c8d6fa2003e0fde7753b247d8f25a7f8))
+- **ui:** Edit headers and footers in place on print layout pages ([9e985ae](https://github.com/ChristopherVR/ooxml/commit/9e985ae1a29ec3a23d9555d2b5e847bf143c3173))
+- **xlsx:** Draw combination, waterfall and histogram charts ([753dea7](https://github.com/ChristopherVR/ooxml/commit/753dea7e9f64cb3641643df907d5faa35612cf11))
+- **ui:** Add excel page layout and page break preview views ([8cbb6e5](https://github.com/ChristopherVR/ooxml/commit/8cbb6e573aad3ee27c869e44fff2092578d05ec7))
+- **ui:** Add what-if analysis to the excel data tab ([e51f768](https://github.com/ChristopherVR/ooxml/commit/e51f768738bd76d88d3122b2d32b5bd49a2b8cd5))
+- **teams:** Add @mentions with a people picker in the composer ([2bb877a](https://github.com/ChristopherVR/ooxml/commit/2bb877a050dae027eb948e6d52b9b068934d927e))
+- **teams:** Add an Activity feed derived from the shared chat data ([6f53e8a](https://github.com/ChristopherVR/ooxml/commit/6f53e8ac925ba74f7f4a4b1dec37c5b6849797ff))
+- **teams:** Announce new activity with toasts, desktop notifications and sound ([fe29b00](https://github.com/ChristopherVR/ooxml/commit/fe29b006d4830489b19c097290b132a5581ddb98))
+- **ui:** Drive powerpoint's options from the shared options dialog ([4ed1085](https://github.com/ChristopherVR/ooxml/commit/4ed1085fbdbb42519cdeb891ca5ce2624db4b1a1))
+- **ui:** Open stencil files and collect My Shapes in the visio pane ([fe6312f](https://github.com/ChristopherVR/ooxml/commit/fe6312fa2da5e0dab162acacfc28b3b91fb80bc2))
+- **teams:** Add private chats, meetings and a calendar to the client ([a6c2748](https://github.com/ChristopherVR/ooxml/commit/a6c2748426473192a2e16d37d3856f8accc27673))
+- **ui:** Add Chat and Calendar apps to the Teams app ([2ddec01](https://github.com/ChristopherVR/ooxml/commit/2ddec01568a2ff8e79fbf9666f0f1eb0941d8cee))
+- **ui:** Show a More sheet in the phone bottom bar ([a344495](https://github.com/ChristopherVR/ooxml/commit/a344495a4cb21c38eb70e7a79a96a5aa333f32f2))
+- **ui:** Edit nested table cells on print layout pages ([8b2662b](https://github.com/ChristopherVR/ooxml/commit/8b2662b9dc87322311a02d7ec6e9b97164da6280))
+- **ui:** Edit footnotes and endnotes on print layout pages ([294dd13](https://github.com/ChristopherVR/ooxml/commit/294dd131bf2701bec09f25ac5e9ca5a033bfc39a))
+- **ui:** Select, move and resize floating pictures on pages ([95a0799](https://github.com/ChristopherVR/ooxml/commit/95a0799d9d3f262060a62dec0acf87c4c1141827))
+- **docx:** Paginate plain documents incrementally after an edit ([7521712](https://github.com/ChristopherVR/ooxml/commit/7521712eba07913ff90a9205d982cd7a434a95b9))
+- **ui:** Draw slicers and add Insert > Slicer with a Slicer tab ([452a351](https://github.com/ChristopherVR/ooxml/commit/452a3510399551fc80cb6f9b1f480217a71ccc0e))
+- **ui:** Draw timelines and add Insert > Timeline with a Timeline tab ([c525b8c](https://github.com/ChristopherVR/ooxml/commit/c525b8c83558ba8c23ec0e2c772cae57bd4e26d8))
+- **xlsx:** Group PivotTable fields by number ranges ([9a9014f](https://github.com/ChristopherVR/ooxml/commit/9a9014f0728979e09843d7781130e09b45cecfac))
+- **docx:** Edit and insert content controls in the editor ([b1f3fce](https://github.com/ChristopherVR/ooxml/commit/b1f3fce94392d32919e1bd716c1cc5c0b7bf8911))
+- **ui:** Insert and edit equations from LaTeX in the Word editor ([88b8964](https://github.com/ChristopherVR/ooxml/commit/88b8964bc1ff1509f37889f835dad75762f57268))
+- **ui:** Draw and format shapes from Insert > Shapes ([b63e03c](https://github.com/ChristopherVR/ooxml/commit/b63e03c93b3dca7e9bb37946b9a841f7b779358c))
+- **ui:** Let pptx hosts replace regions and set capabilities ([fefbde5](https://github.com/ChristopherVR/ooxml/commit/fefbde5c7385b1805d8d4824704fdefe28d591f4))
+- **pptx:** Close binding props drift and guard prop parity ([167802e](https://github.com/ChristopherVR/ooxml/commit/167802e036f62e4c0dd23144a45ae1618eefd007))
+- **ui:** Let the options dialog host a pptx region body ([76299e0](https://github.com/ChristopherVR/ooxml/commit/76299e01420f280f5881c91e96bbb763c6c4c31e))
+- **ui:** Select, move, resize and edit floating shapes on pages ([b31198c](https://github.com/ChristopherVR/ooxml/commit/b31198c0fce3fa4910b5fde333daea3f0fae1ae2))
+- **ui:** Recurrence end and this-event edits in the Teams calendar ([88f0c9f](https://github.com/ChristopherVR/ooxml/commit/88f0c9f88bd4129fd8d9bf9cf2219596316a8945))
+- **ui:** Group dates, nest row fields and set subtotals per field ([614ac2c](https://github.com/ChristopherVR/ooxml/commit/614ac2c5206fb8b5a7fe538cccbb31ef958d248d))
+- **ui:** Add further column fields in the PivotTable settings ([a8d540b](https://github.com/ChristopherVR/ooxml/commit/a8d540b4b5292349cca62ee21476d45352b1513e))
+- **ui:** Lay out the PowerPoint Insert tab as Office does ([55aef8a](https://github.com/ChristopherVR/ooxml/commit/55aef8a30fd3ad7eabf0f2c4f1bd2fa3d8b0f49c))
+- **ui:** Scale the Insert tab like Office and add the Table grid ([e6f5dcc](https://github.com/ChristopherVR/ooxml/commit/e6f5dcc7f050f184de46af1ed07bed16ff6dc446))
+
+### Bug Fixes
+
+- **ui:** Escape morph selector values against markup injection ([08f3a94](https://github.com/ChristopherVR/ooxml/commit/08f3a94bc1c2916dd80bb5588c109a50005189fe))
+- **ui:** Escape the flood colour in the image fill overlay filter ([f2a0bbb](https://github.com/ChristopherVR/ooxml/commit/f2a0bbbe6cb851e2e182a9366fb3611b5045545d))
+- **ui:** Sandbox the xlsx print preview and print frames ([f4b87c9](https://github.com/ChristopherVR/ooxml/commit/f4b87c956d49a5cfbffcfc3783175a2ae8f49077))
+- **ui:** Strip active content from docx chart svg before printing ([53849cd](https://github.com/ChristopherVR/ooxml/commit/53849cd6ed1225518625dc0292b06013ab226b92))
+- **ui:** Refuse markup MIME types when opening OLE payloads in a tab ([4e997c8](https://github.com/ChristopherVR/ooxml/commit/4e997c8975c2f189f8cd1cfccded65920c588de7))
+- **ui:** Align page layout rulers and fit the page to narrow screens ([713f952](https://github.com/ChristopherVR/ooxml/commit/713f95291e7dc138f7d41a3fb935606d6546c677))
+- **teams:** Place notification toasts clear of the composer and show mentions without @ ([1e46d6d](https://github.com/ChristopherVR/ooxml/commit/1e46d6dc907b72cbe63359ae94cd4648b5e09697))
+- **ui:** Ignore edits to locked powerpoint options in the shared dialog ([4e9a0df](https://github.com/ChristopherVR/ooxml/commit/4e9a0df07a2867636f4b62882281df0f55643a31))
+- **ui:** Theme the shared options dialog's native controls ([85ad513](https://github.com/ChristopherVR/ooxml/commit/85ad513e509c2df44185ae4c280221790fe4d6b9))
+- **ui:** Keep the default colour scheme when tokens cannot resolve ([d34c6ab](https://github.com/ChristopherVR/ooxml/commit/d34c6abd43879aeeadb79169262b8ef7d68c9f68))
+- **ui:** Tolerate excel sheets without a view when reading the mode ([6ffb621](https://github.com/ChristopherVR/ooxml/commit/6ffb62192685f0156006077c8398de7c1aa3d452))
+- **ui:** Polish the Chat and Calendar apps after a browser pass ([02e5543](https://github.com/ChristopherVR/ooxml/commit/02e5543393713280ab8c941094ef4a282c39ddfc))
+- **ui:** Keep the page of an open story editor mounted when scrolling ([7e441d0](https://github.com/ChristopherVR/ooxml/commit/7e441d0567b9e58998454d2478650d84ebf3fadf))
+- **xlsx:** Soften slicer and timeline style tints ([5640e20](https://github.com/ChristopherVR/ooxml/commit/5640e20a4345f47e2b6980858c80e37ff13d7f68))
+- **ui:** Keep powerpoint ribbon tabs whole in a narrow editor ([604294a](https://github.com/ChristopherVR/ooxml/commit/604294a1b9b9e18abf0bd1c67a39a7aeabe1c473))
+- **ui:** Correct visio ribbon translations ([c21a990](https://github.com/ChristopherVR/ooxml/commit/c21a990f83a585593528f65778369f8d02895832))
+- **svelte:** Translate the chart section and lead with its title ([1a102b6](https://github.com/ChristopherVR/ooxml/commit/1a102b60aeb7def69f05fd2d5d0b18286467cd46))
+- **ui:** Keep unchanged visio guides across renders ([3a4fa26](https://github.com/ChristopherVR/ooxml/commit/3a4fa26acdefc27aaf48f6e6f84a41b27ee47e73))
+
+### Refactor
+
+- **chart:** Move waterfall steps and range into the chart area ([b6fa22a](https://github.com/ChristopherVR/ooxml/commit/b6fa22a987d40b63f3369868083435eba35afa83))
+- **chart:** Move number formats, palettes, axis labels, auto title to core ([26bde03](https://github.com/ChristopherVR/ooxml/commit/26bde036faed3663e9a037b8e755e5c517202263))
+- **chart:** Move bubble, stock, treemap and sunburst geometry to core ([a465fa6](https://github.com/ChristopherVR/ooxml/commit/a465fa63dfd1f15c67a22a97fa5ed9c97d2965e8))
+- **ui:** Draw pptx trendlines and error bars through core fits ([ea36c2b](https://github.com/ChristopherVR/ooxml/commit/ea36c2b29c43d13596829418d96a9c39f095d12e))
+
+### Documentation
+
+- **xlsx:** Record slicers, timelines and number groups ([a397273](https://github.com/ChristopherVR/ooxml/commit/a3972734b2b384365cf13a73d5f475fec47187ee))
+
+### Testing
+
+- **xlsx:** Cover page views in the browser and document them ([cc2eec8](https://github.com/ChristopherVR/ooxml/commit/cc2eec8d9b641d8b1d9673f04e1da61d40580a95))
+- **pptx:** Guard chart view models with a golden parity snapshot ([9100a2b](https://github.com/ChristopherVR/ooxml/commit/9100a2b361c764761c51a7a0c113bdd2b89d1453))
+- **ui:** Count floating shapes when locating a picture on a page ([ad97f2f](https://github.com/ChristopherVR/ooxml/commit/ad97f2f1c94ef0adc27c93ccc58e622e23a5d782))
+- **ui:** Remove the clipboard the word context menu test defines ([260a953](https://github.com/ChristopherVR/ooxml/commit/260a953eabdd657fb744b8c4881d03f51da27a45))
+- **ui:** Give the ssr import tests room under load ([ee53704](https://github.com/ChristopherVR/ooxml/commit/ee5370423a0075a8a53c48557baef24d120c7db2))
+- **ui:** Unstub the globals the webfont and image tests replace ([d495e75](https://github.com/ChristopherVR/ooxml/commit/d495e75c188d605fd0a483a6dc3632e4b3c65d3c))
+
+### Chores
+
+- **ui:** Drop an unused chart import and clarify the note lookup ([76ed6f1](https://github.com/ChristopherVR/ooxml/commit/76ed6f1bbd263129a0d3950119a8f062ba020d9f))
+- Format files touched by the round three merges ([1da72f9](https://github.com/ChristopherVR/ooxml/commit/1da72f9bc3f5bc20adff045c183048b31bc58b37))
+
 ## [1.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.13.0) - 2026-10-15
 
 ### Features

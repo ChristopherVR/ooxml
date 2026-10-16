@@ -7,7 +7,10 @@ import {
 	type PivotTable,
 } from '../model';
 import { pivotItems, pivotItemLabel, pivotValueKey } from './data';
+import { pivotItemLabeler } from './item-labels';
 import type { PivotGrid } from './aggregate';
+import { pivotCaptions } from './captions';
+import { resolveDateGroups } from './date-groups';
 import { applyPivotGroups } from './groups';
 import { applyPivotItemFilters } from './item-filters';
 
@@ -21,7 +24,6 @@ export function validatePivotPageFilter(
 		| 'columnField'
 		| 'valueField'
 		| 'additionalValues'
-		| 'valuesAxis'
 	>,
 ): void {
 	const filter = pivot.pageFilter;
@@ -40,10 +42,9 @@ export function validatePivotPageFilter(
 			pivot.columnField,
 			pivot.valueField,
 			...extras.map((v) => v?.field),
-		].includes(filter.field) ||
-		pivot.valuesAxis === 'rows'
+		].includes(filter.field)
 	)
-		throw new Error('Report filters require Values on columns and a separate source field.');
+		throw new Error('Report filters require a separate source field.');
 	if (
 		filter.item !== undefined &&
 		!(
@@ -60,7 +61,11 @@ export function validatePivotPageFilter(
 }
 /** The cache remains complete; only the existing aggregation projection sees selected records. */
 export function pivotPageProjection(pivot: PivotTable): PivotTable {
-	return applyPivotGroups(applyPivotItemFilters(pagedProjection(pivot)));
+	// The cache fixes the date ranges from every record, so they are resolved before any filter.
+	const groups = pivot.dateGroups?.length
+		? { ...pivot, dateGroups: resolveDateGroups(pivot) }
+		: pivot;
+	return applyPivotGroups(applyPivotItemFilters(pagedProjection(groups)));
 }
 function pagedProjection(pivot: PivotTable): PivotTable {
 	const filter = pivot.pageFilter;
@@ -90,7 +95,9 @@ export function prependPivotPage(grid: PivotGrid, pivot: PivotTable): PivotGrid 
 		values: [
 			[
 				pivot.pageFilter.field,
-				pivot.pageFilter.item === undefined ? '(All)' : pivotItemLabel(pivot.pageFilter.item),
+				pivot.pageFilter.item === undefined
+					? pivotCaptions(pivot).all
+					: pivotItemLabeler(pivot)(pivot.pageFilter.field, pivot.pageFilter.item),
 				...Array<CellValue>(width - 2).fill(null),
 			],
 			Array<CellValue>(width).fill(null),
