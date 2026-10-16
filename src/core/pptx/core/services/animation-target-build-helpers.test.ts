@@ -77,7 +77,7 @@ describe('presentationML timing target choices', () => {
 		const xml: XmlObject = {
 			'p:spTgt': {
 				'@_spid': '9',
-				'p:graphicEl': { 'p:chart': { '@_seriesIdx': '2', '@_bldStep': 'series' } },
+				'p:graphicEl': { 'a:chart': { '@_seriesIdx': '2', '@_bldStep': 'series' } },
 			},
 		};
 		const parsed = parseTimeTargetElement(xml);
@@ -89,11 +89,30 @@ describe('presentationML timing target choices', () => {
 		expect(serializeTimeTargetElement(parsed!)).toStrictEqual(xml);
 	});
 
+	it('reads the legacy p: spelling of the graphicEl child and writes the DrawingML one', () => {
+		const parsed = parseTimeTargetElement({
+			'p:spTgt': {
+				'@_spid': '14',
+				'p:graphicEl': { 'p:dgm': { '@_id': '{11111111-2222-3333-4444-555555555555}' } },
+			},
+		});
+		expect(parsed).toMatchObject({
+			type: 'shape',
+			graphicElement: { kind: 'dgm', id: '{11111111-2222-3333-4444-555555555555}' },
+		});
+		expect(serializeTimeTargetElement(parsed!)).toStrictEqual({
+			'p:spTgt': {
+				'@_spid': '14',
+				'p:graphicEl': { 'a:dgm': { '@_id': '{11111111-2222-3333-4444-555555555555}' } },
+			},
+		});
+	});
+
 	it('round-trips a p:graphicEl diagram category target', () => {
 		const xml: XmlObject = {
 			'p:spTgt': {
 				'@_spid': '11',
-				'p:graphicEl': { 'p:dgm': { '@_categoryIdx': '0', '@_bldStep': 'category' } },
+				'p:graphicEl': { 'a:dgm': { '@_categoryIdx': '0', '@_bldStep': 'category' } },
 			},
 		};
 		const parsed = parseTimeTargetElement(xml);
@@ -110,7 +129,7 @@ describe('presentationML timing target choices', () => {
 			'p:spTgt': {
 				'@_spid': '12',
 				'p:graphicEl': {
-					'p:dgm': { '@_id': '{11111111-2222-3333-4444-555555555555}', '@_bldStep': 'sp' },
+					'a:dgm': { '@_id': '{11111111-2222-3333-4444-555555555555}', '@_bldStep': 'sp' },
 				},
 			},
 		};
@@ -129,7 +148,7 @@ describe('presentationML timing target choices', () => {
 
 	it('round-trips a p:graphicEl diagram background build step', () => {
 		const xml: XmlObject = {
-			'p:spTgt': { '@_spid': '13', 'p:graphicEl': { 'p:dgm': { '@_bldStep': 'bg' } } },
+			'p:spTgt': { '@_spid': '13', 'p:graphicEl': { 'a:dgm': { '@_bldStep': 'bg' } } },
 		};
 		const parsed = parseTimeTargetElement(xml);
 		expect(parsed).toMatchObject({
@@ -150,7 +169,7 @@ describe('presentationML timing target choices', () => {
 		).toStrictEqual({
 			'p:spTgt': {
 				'@_spid': '14',
-				'p:graphicEl': { 'p:chart': { '@_seriesIdx': '1', '@_bldStep': 'series' } },
+				'p:graphicEl': { 'a:chart': { '@_seriesIdx': '1', '@_bldStep': 'series' } },
 			},
 		});
 	});
