@@ -313,7 +313,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			} else {
 				const at = parseAddress(destination.value.trim().replaceAll('$', ''));
 				if (!at) throw new Error('The reference is not valid.');
-				t.session.createPivotTable(t.sheet, at, { ...options, source: source.value });
+				// A new report is captioned in the editor's language, as Excel does in its UI language.
+				t.session.createPivotTable(t.sheet, at, {
+					...options,
+					source: source.value,
+					locale: ctx.locale(),
+				});
 				ctx.selection.set({ ranges: [{ start: at, end: at }], active: at, anchor: at });
 			}
 			return true;
