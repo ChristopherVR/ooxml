@@ -64,6 +64,7 @@ const groups = computed(() =>
 			:gallery="placement.gallery"
 			:control="placement.control"
 			:mode="placement.mode"
+			@command="props.isInspectorPaneOpen ? undefined : props.onToggleInspector?.()"
 		/>
 		<pptx-ui-ribbon-command
 			v-for="command in group.commands"

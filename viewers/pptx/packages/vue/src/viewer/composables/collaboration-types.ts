@@ -26,6 +26,8 @@ export interface UseCollaborationOptions {
 	sourceError?: MaybeRefOrGetter<boolean>;
 	/** Optional retained serializer for elected-owner write-back; the scheduler guards stale results. */
 	serialize?: (isCurrent: () => boolean) => Promise<Uint8Array | null> | Uint8Array | null;
+	/** True while a gallery hover preview shows over the slides: nothing is sent to peers. */
+	slidesPaused?: () => boolean;
 	/** The editor's reactive slides ref (broadcast on local change). */
 	slides: Ref<import('pptx-viewer-core').PptxSlide[]>;
 	/** Called when a remote peer broadcasts a newer slide set. */

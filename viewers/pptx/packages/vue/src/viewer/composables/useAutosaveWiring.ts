@@ -29,6 +29,8 @@ export interface UseAutosaveWiringOptions {
 	 * autosaved. See `UseAutosaveOptions.templateElements`.
 	 */
 	templateElements?: Ref<unknown>;
+	/** True while a Design gallery hover preview shows over the slides (see `useAutosave`). */
+	paused?: Ref<boolean>;
 	/** True while the load pipeline is running; used to clear the dirty flag after a load. */
 	loading: Ref<boolean>;
 	canEdit: () => boolean;
@@ -98,6 +100,7 @@ export function useAutosaveWiring(options: UseAutosaveWiringOptions): UseAutosav
 	const autosave = useAutosave({
 		slides: options.slides,
 		...(options.templateElements ? { templateElements: options.templateElements } : {}),
+		...(options.paused ? { paused: options.paused } : {}),
 		enabled: autosaveActive,
 		// A computed, not a snapshot: `useAutosave` re-reads it each time the timer
 		// is armed, so a host changing the AutoRecover cadence (File > Options >

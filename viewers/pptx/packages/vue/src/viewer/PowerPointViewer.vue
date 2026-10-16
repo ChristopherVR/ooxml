@@ -123,6 +123,7 @@ import { useCompatibilityToasts } from './composables/useCompatibilityToasts';
 import { useContentSource } from './composables/useContentSource';
 import { useContextMenu } from './composables/useContextMenu';
 import { useCustomShowsWiring } from './composables/useCustomShowsWiring';
+import { useDeckStyleHost } from './composables/useDeckStyleHost';
 import { useDeckViewPreferencesSync } from './composables/useDeckViewPreferencesSync';
 import { useDeckViews } from './composables/useDeckViews';
 import { useDocumentPropertiesDialog } from './composables/useDocumentPropertiesDialog';
@@ -1003,6 +1004,10 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 	},
 });
 
+// -- Design galleries: hover preview + effect/background commits -----------
+// Declared before autosave and collaboration, which both stand still while a preview shows.
+const deckStyleHeld = ref(false);
+
 // -- Autosave ----------------------------------------------------------
 const {
 	autosave,
@@ -1015,6 +1020,7 @@ const {
 	slides,
 	// Edit-template mode rebuilds only this map, never `slides`.
 	templateElements: templateElementsBySlideId,
+	paused: deckStyleHeld,
 	loading,
 	canEdit: () => canEditEffective.value,
 	// Undefined (the host said nothing) permits autosave; only an explicit
@@ -1099,6 +1105,7 @@ const comments = useCommentsWiring({
 // -- Collaboration (Yjs) + broadcast -----------------------------------
 const collaboration = useCollaborationWiring({
 	slides,
+	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
 	// never one the user opened during the session.
@@ -1605,7 +1612,19 @@ function applyAiTheme(updates: Partial<PptxTheme>): void {
 }
 // Ribbon style galleries: context from the deck, picks through the same
 // history-tracked element update / theme paths the inspector uses.
+const deckStyle = useDeckStyleHost({
+	held: deckStyleHeld,
+	slides,
+	templateElementsBySlideId,
+	pptxTheme,
+	themeColorMap,
+	handler,
+	selectedSlideIds: () => (activeSlide.value ? [activeSlide.value.id] : []),
+	pushHistory: history.pushHistory,
+});
 provideRibbonGalleryHost({
+	deckStyle,
+	activeSlide: () => activeSlide.value ?? null,
 	editable: () => canEditEffective.value,
 	selectedElement: () => selectedElements.value[0] ?? null,
 	theme: pptxTheme,
