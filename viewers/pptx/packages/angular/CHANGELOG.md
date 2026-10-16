@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.40.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.40.1) - 2026-10-16
+
+### Bug Fixes
+
+- **xml:** Close code scanning alerts and steady the docx presence spec ([442b249](https://github.com/ChristopherVR/ooxml/commit/442b249cce1de4fdd228d073b394d741733f4c08))
+
 ## [4.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.40.0) - 2026-10-16
 
 ### Features
