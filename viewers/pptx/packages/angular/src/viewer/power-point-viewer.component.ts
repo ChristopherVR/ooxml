@@ -210,6 +210,7 @@ import { ViewerCompareService } from './viewer-compare.service';
 import { ViewerCustomShowsService } from './viewer-custom-shows.service';
 import { ViewerCustomizationHandle } from './viewer-customization-handle';
 import { ViewerCustomizationService } from './viewer-customization.service';
+import { ViewerDeckStyleService } from './viewer-deck-style.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { ViewerDocumentPropertiesService } from './viewer-document-properties.service';
 import { ViewerExportService } from './viewer-export.service';
@@ -1823,6 +1824,7 @@ export class PowerPointViewerComponent
 	private readonly reviewNav = inject(ReviewCommentsNavigationService);
 	protected readonly fileIO = inject(ViewerFileIOService);
 	protected readonly themeGallery = inject(ViewerThemeGalleryService);
+	private readonly deckStyle = inject(ViewerDeckStyleService);
 	protected readonly canvasEditing = inject(ViewerCanvasEditingService);
 	protected readonly outlineAuthoring = inject(OutlineAuthoringService);
 	/** Shared AI panel scope + on-canvas highlight store (pick mode, tool focus). */
@@ -3951,8 +3953,10 @@ export class PowerPointViewerComponent
 		if (!this.canEdit()) {
 			return null;
 		}
+		// A Design gallery hover preview is never part of a recovery snapshot.
+		const saved = this.deckStyle.savedDeck();
 		return this.loader.saveSlides(
-			buildSaveSlides(this.editor.slides(), this.editor.templateElementsBySlideId()),
+			buildSaveSlides(saved.slides, saved.templateElementsBySlideId),
 			'pptx',
 			this.editor.sections(),
 			recoverySnapshotIntent({

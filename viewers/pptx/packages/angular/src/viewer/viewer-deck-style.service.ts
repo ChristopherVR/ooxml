@@ -25,6 +25,16 @@ export class ViewerDeckStyleService {
 	/** The slide a "selected slides" pick lands on; the gallery sets it from its input. */
 	readonly activeSlideIndex = signal(0);
 
+	/** The deck a save or recovery snapshot writes: never a Design gallery hover preview. */
+	savedDeck(): Pick<DeckStyleState, 'slides' | 'templateElementsBySlideId'> {
+		const held = this.host.held();
+		return {
+			slides: held?.slides ?? (this.editor.slides() as PptxSlide[]),
+			templateElementsBySlideId:
+				held?.templateElementsBySlideId ?? this.editor.templateElementsBySlideId(),
+		};
+	}
+
 	private write(state: DeckStyleState): void {
 		this.editor.slides.set(state.slides);
 		this.editor.templateElementsBySlideId.set(state.templateElementsBySlideId);

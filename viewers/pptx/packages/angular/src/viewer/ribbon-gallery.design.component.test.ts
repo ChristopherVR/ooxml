@@ -92,6 +92,22 @@ describe('Design > Background Styles (Angular)', () => {
 		root.remove();
 	});
 
+	it('keeps a hover preview out of what a save or recovery snapshot writes', () => {
+		const { root, editor, fixture } = mount();
+		const service = TestBed.inject(ViewerDeckStyleService);
+		const original = editor.slides();
+		const tile = root.querySelector<HTMLElement>('[data-gallery-item="3"]')!;
+		tile.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+		vi.advanceTimersByTime(150);
+		fixture.detectChanges();
+		expect(editor.slides()[0]!.backgroundColor).toBe('#000003');
+		expect(service.savedDeck().slides).toBe(original);
+		tile.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+		vi.advanceTimersByTime(100);
+		expect(service.savedDeck().slides).toBe(original);
+		root.remove();
+	});
+
 	it('commits a pick as one undo step from the real slides', async () => {
 		const { root, editor, fixture } = mount();
 		const tile = root.querySelector<HTMLElement>('[data-gallery-item="6"]')!;
