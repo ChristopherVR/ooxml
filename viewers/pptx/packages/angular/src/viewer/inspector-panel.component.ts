@@ -140,7 +140,10 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 				<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.transform' | translate }}</h3>
 
 				@if (elementKey(); as key) {
-					<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
+					<div
+						class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs"
+						[attr.data-el-key]="key"
+					>
 						<label class="pptx-ng-inspector__label" for="insp-x">{{
 							'pptx.inspector.x' | translate
 						}}</label>
@@ -165,7 +168,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						/>
 					</div>
 
-					<div class="pptx-ng-inspector__row">
+					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
 						<label class="pptx-ng-inspector__label" for="insp-w">{{
 							'pptx.inspector.w' | translate
 						}}</label>
@@ -192,7 +195,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						/>
 					</div>
 
-					<div class="pptx-ng-inspector__row">
+					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
 						<label class="pptx-ng-inspector__label" for="insp-rot">{{
 							'pptx.inspector.rotation' | translate
 						}}</label>
@@ -776,6 +779,23 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 			min-width: 28px;
 		}
 
+		/*
+		 * Two label + input pairs per row (X/Y, W/H, rotation/opacity): a wrapping flex row put
+		 * the second label beside the first input and its input on the next line. A four-column
+		 * grid keeps each label with its own input.
+		 */
+		.pptx-ng-inspector.is-mobile .pptx-ng-inspector__row--pairs {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+			align-items: center;
+			column-gap: 0.5rem;
+		}
+
+		.pptx-ng-inspector.is-mobile .pptx-ng-inspector__row--pairs .pptx-ng-inspector__input--number {
+			min-width: 0;
+			width: 100%;
+		}
+
 		.pptx-ng-inspector.is-mobile .pptx-ng-inspector__input {
 			flex: 1 1 auto;
 			min-height: 44px;
@@ -835,6 +855,18 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 			.pptx-ng-inspector__input--number {
 				width: auto;
 				min-width: 72px;
+			}
+
+			.pptx-ng-inspector__row--pairs {
+				display: grid;
+				grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+				align-items: center;
+				column-gap: 0.5rem;
+			}
+
+			.pptx-ng-inspector__row--pairs .pptx-ng-inspector__input--number {
+				min-width: 0;
+				width: 100%;
 			}
 
 			.pptx-ng-inspector__color {

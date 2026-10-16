@@ -64,6 +64,40 @@ test('the Format sheet is one column and nothing is clipped sideways', async ({ 
 	expect(scroll).toBeLessThanOrEqual(413);
 });
 
+test('the Format sheet lays X/Y and W/H out as two columns, each field beside its label', async ({
+	page,
+}) => {
+	await load(page);
+	await page.locator('[data-pptx-element="true"]').last().tap();
+	await bar(page).getByRole('button', { name: 'Format' }).tap();
+	// Some bindings label them W and H, others Width and Height.
+	const names: Record<string, RegExp> = {
+		X: /^\s*X\s*$/,
+		Y: /^\s*Y\s*$/,
+		W: /^\s*(W|Width)\s*$/,
+		H: /^\s*(H|Height)\s*$/,
+	};
+	const boxes: Record<string, { x: number; y: number; width: number; height: number }> = {};
+	for (const [name, label] of Object.entries(names)) {
+		const box = await page.getByLabel(label).filter({ visible: true }).first().boundingBox();
+		expect(box, `the ${name} field`).not.toBeNull();
+		boxes[name] = box!;
+	}
+	// X and Y share a row, Y to the right; W and H the next row down.
+	expect(Math.abs(boxes.X!.y - boxes.Y!.y)).toBeLessThan(8);
+	expect(boxes.Y!.x).toBeGreaterThan(boxes.X!.x + boxes.X!.width / 2);
+	expect(Math.abs(boxes.W!.y - boxes.H!.y)).toBeLessThan(8);
+	expect(boxes.H!.x).toBeGreaterThan(boxes.W!.x + boxes.W!.width / 2);
+	expect(boxes.W!.y).toBeGreaterThan(boxes.X!.y + boxes.X!.height / 2);
+	// Every field is inside the screen and none overlaps its neighbour.
+	for (const box of Object.values(boxes)) {
+		expect(box.x).toBeGreaterThanOrEqual(0);
+		expect(box.x + box.width).toBeLessThanOrEqual(412);
+	}
+	expect(boxes.X!.x + boxes.X!.width).toBeLessThanOrEqual(boxes.Y!.x + 1);
+	expect(boxes.W!.x + boxes.W!.width).toBeLessThanOrEqual(boxes.H!.x + 1);
+});
+
 test('Insert opens the phone sheet and a Text Box tile inserts and closes it', async ({ page }) => {
 	await load(page);
 	const elements = page.locator('[data-pptx-element="true"]');
