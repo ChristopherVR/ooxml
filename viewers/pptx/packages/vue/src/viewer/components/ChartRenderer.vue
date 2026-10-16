@@ -3,6 +3,7 @@ import type { ChartViewModel, ElementAnimationState } from 'ooxml-ui/pptx';
 import {
 	chartPlaceholderLabel,
 	chartPreserveAspectRatio,
+	getFrameEffectStyle,
 	resolveChartKind,
 	resolveRevealedChartData,
 } from 'ooxml-ui/pptx';
@@ -61,9 +62,11 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-const containerStyle = computed<CSSProperties>(() =>
-	getContainerStyle(props.element, props.zIndex),
-);
+// The chart area's outer shadow and glow sit on the frame, outside the chart (shared).
+const containerStyle = computed<CSSProperties>(() => ({
+	...getContainerStyle(props.element, props.zIndex),
+	...getFrameEffectStyle(props.element),
+}));
 
 /** Degenerate-size hit-target overlay; see `ElementRenderer`'s doc comment (issue #285). */
 const hitTargetStyle = useElementHitTargetStyle(
