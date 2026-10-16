@@ -31,7 +31,7 @@ describe('Teams dictionaries', () => {
 	it.each(TEAMS_LOCALES)('%s has no empty text, no em-dash and no stray markup', (locale) => {
 		for (const [key, text] of Object.entries(TEAMS_MESSAGES[locale])) {
 			expect(text.trim(), key).not.toBe('');
-			expect(text, key).not.toContain('—');
+			expect(text, key).not.toContain(String.fromCharCode(0x2014));
 			expect(text, key).not.toMatch(/[<>]/u);
 		}
 	});
