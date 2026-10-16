@@ -336,8 +336,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const chartTypeKeys = Object.keys(plotArea).filter((key) =>
 					this.compatibilityService.getXmlLocalName(key).endsWith('Chart'),
 				);
-				for (const ctKey of chartTypeKeys) {
-					const ctNode = plotArea[ctKey] as XmlObject | undefined;
+				// Two groups of one type (a series on the secondary axis) are one key holding an array.
+				const groupNodes = chartTypeKeys.flatMap((key) =>
+					([] as Array<XmlObject | undefined>).concat(
+						plotArea[key] as XmlObject | XmlObject[] | undefined,
+					),
+				);
+				for (const ctNode of groupNodes) {
 					if (!ctNode) {
 						continue;
 					}
