@@ -19,6 +19,8 @@
 import type { PptxElement, PptxSlide, TextSegment } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
+import { EMU_PER_PX } from '../../core/constants';
+
 export type SlideSizeRescaleMode = 'maximize' | 'ensureFit';
 
 export interface RescaleSlideSize {
@@ -27,7 +29,7 @@ export interface RescaleSlideSize {
 }
 
 /**
- * The uniform scale factor and centring offsets a slide-size change applies.
+ * The uniform scale factor and centring offsets in pixels a slide-size change applies.
  *
  * Exposed separately from {@link scaleSlidesForSizeChange} so a caller that
  * only needs to reposition non-slide state (e.g. saved camera/zoom presets)
@@ -58,8 +60,8 @@ export function resolveSlideSizeRescaleTransform(
 	const scaledHeight = oldSize.heightEmu * scale;
 	return {
 		scale,
-		offsetX: (newSize.widthEmu - scaledWidth) / 2,
-		offsetY: (newSize.heightEmu - scaledHeight) / 2,
+		offsetX: (newSize.widthEmu - scaledWidth) / (2 * EMU_PER_PX),
+		offsetY: (newSize.heightEmu - scaledHeight) / (2 * EMU_PER_PX),
 	};
 }
 
