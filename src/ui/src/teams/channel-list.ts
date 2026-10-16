@@ -34,7 +34,7 @@ export class OfficeUiChannelList extends TeamsElement {
 
 	constructor() {
 		super();
-		this.heading = 'Channels';
+		this.heading = '';
 		this.channels = [];
 		this.selectedId = '';
 		this.collapsed = false;
@@ -50,13 +50,13 @@ export class OfficeUiChannelList extends TeamsElement {
 					@click=${() => (this.collapsed = !this.collapsed)}
 				>
 					<span class="chevron" data-open=${String(!this.collapsed)}>${icon('chevronRight')}</span>
-					<span class="name">${this.heading}</span>
+					<span class="name">${this.heading || this.t('channels.heading')}</span>
 				</button>
 				<button
 					class="add"
 					type="button"
-					title="Add channel"
-					aria-label="Add channel"
+					title=${this.t('channels.add')}
+					aria-label=${this.t('channels.add')}
 					@click=${() => this.fire('office-channel-create', {})}
 				>
 					${icon('plus')}
@@ -77,7 +77,9 @@ export class OfficeUiChannelList extends TeamsElement {
 								<span class="title">${c.name}</span>
 								${
 									c.live
-										? html`<span class="live" title="Call in progress">${icon('video')}</span>`
+										? html`<span class="live" title=${this.t('call.inProgress')}
+												>${icon('video')}</span
+											>`
 										: ''
 								}
 								${

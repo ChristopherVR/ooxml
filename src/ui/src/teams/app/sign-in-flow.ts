@@ -15,7 +15,8 @@ import {
 	serverOrigin,
 	signOutTeamsSession,
 } from 'ooxml-core/teams';
-import { SIGN_IN_STRINGS, signInErrorText } from './sign-in-strings';
+import { teamsI18n, type TeamsI18n } from '../i18n/translator';
+import { signInErrorText } from './sign-in-strings';
 
 export type AuthPhase = 'open' | 'checking' | 'required';
 
@@ -24,6 +25,8 @@ export interface SignInHost {
 	changed(): void;
 	/** Tell the embedding page (`teams-signed-in`, `teams-signed-out`). */
 	emit(name: string, detail: unknown): void;
+	/** The display language of the notices and errors the flow words; English when omitted. */
+	i18n?(): TeamsI18n;
 }
 
 /** How long a lost connection is tolerated before asking the server whether the session is dead. */
@@ -49,6 +52,10 @@ export class SignInFlow {
 	private generation = 0;
 
 	constructor(private readonly host: SignInHost) {}
+
+	private i18n(): TeamsI18n {
+		return this.host.i18n?.() ?? teamsI18n();
+	}
 
 	private key(config: TeamsServerConfig): string {
 		return `${serverOrigin(config) ?? ''}|${config.token ?? ''}`;
@@ -118,7 +125,11 @@ export class SignInFlow {
 			this.host.emit('teams-signed-in', { userId: session.userId, expiresAt: session.expiresAt });
 		} catch (error) {
 			const failure = error instanceof TeamsSignInError ? error : null;
-			this.error = signInErrorText(failure?.reason ?? 'server', failure?.retryAfterSec);
+			this.error = signInErrorText(
+				failure?.reason ?? 'server',
+				failure?.retryAfterSec,
+				this.i18n(),
+			);
 			this.retryAfterSec = failure?.retryAfterSec ?? 0;
 		} finally {
 			this.busy = false;
@@ -140,7 +151,7 @@ export class SignInFlow {
 		if (!session) return;
 		this.drop();
 		this.userId = '';
-		this.notice = SIGN_IN_STRINGS.signedOut;
+		this.notice = this.i18n().t('signIn.signedOut');
 		this.host.emit('teams-signed-out', { userId: session.userId });
 		this.host.changed();
 		// Ending it on the server is best effort: the local session is gone either way.
@@ -168,7 +179,7 @@ export class SignInFlow {
 			void checkTeamsSession(config, session.token).then((result: SessionCheck) => {
 				this.checking = false;
 				if (this.session !== session) return;
-				if (result === 'rejected') this.expire(SIGN_IN_STRINGS.ended);
+				if (result === 'rejected') this.expire(this.i18n().t('signIn.ended'));
 				else this.scheduleCheck(config, PROBE_AGAIN_MS);
 			});
 		}, delay);
@@ -178,7 +189,7 @@ export class SignInFlow {
 		clearTimeout(this.expiryTimer);
 		const wait = Math.min(Math.max(session.expiresAt - Date.now(), 0), MAX_TIMER_MS);
 		this.expiryTimer = setTimeout(() => {
-			if (this.session === session) this.expire(SIGN_IN_STRINGS.expired);
+			if (this.session === session) this.expire(this.i18n().t('signIn.expired'));
 		}, wait);
 	}
 

@@ -1,10 +1,11 @@
-import { LitElement, html, nothing, unsafeCSS } from 'lit';
+import { html, nothing, unsafeCSS } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import { styleMap } from 'lit/directives/style-map.js';
 import type { LoadedPresentation, ElementRendererRegistry } from 'ooxml-ui/pptx/dom';
 import css from './presentation-preview.css?raw';
 
 /** An embedded reading surface over the shared PowerPoint DOM renderer. */
-export class TeamsPresentationPreview extends LitElement {
+export class TeamsPresentationPreview extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		data: { state: true },
@@ -53,9 +54,9 @@ export class TeamsPresentationPreview extends LitElement {
 		}
 		try {
 			const { width, height } = data.canvasSize;
-			if (!data.slides.length) throw new Error('The presentation has no slides');
+			if (!data.slides.length) throw new Error(this.t('pptx.noSlides'));
 			if (!(width > 0 && height > 0 && Number.isFinite(width) && Number.isFinite(height)))
-				throw new Error('The presentation has an invalid slide size');
+				throw new Error(this.t('pptx.badSize'));
 			this.renderer = renderer;
 			this.registry = renderer.createDefaultRegistry();
 			this.data = data;
@@ -145,7 +146,7 @@ export class TeamsPresentationPreview extends LitElement {
 			canvasSize: data.canvasSize,
 			mediaDataUrls: data.mediaDataUrls,
 			registry,
-			t: renderer.createTranslator(),
+			t: renderer.createTranslator(this.i18n.locale),
 			...(data.colorScheme ? { colorScheme: data.colorScheme } : {}),
 			...(data.fontScheme ? { fontScheme: data.fontScheme } : {}),
 			...(data.formatScheme ? { formatScheme: data.formatScheme } : {}),
@@ -158,7 +159,7 @@ export class TeamsPresentationPreview extends LitElement {
 			}),
 			reading: true,
 		});
-		this.stageNode.setAttribute('aria-label', `Slide ${this.slide + 1}`);
+		this.stageNode.setAttribute('aria-label', this.t('pptx.slide', { n: this.slide + 1 }));
 	}
 	private move(delta: number): void {
 		const next = Math.max(0, Math.min((this.data?.slides.length ?? 1) - 1, this.slide + delta));
@@ -182,27 +183,27 @@ export class TeamsPresentationPreview extends LitElement {
 			(this.availableHeight || data.canvasSize.height) / data.canvasSize.height,
 		);
 		const width = data.canvasSize.width * scale;
-		if (this.stageNode) this.stageNode.style.transform = `scale(${scale})`;
+		if (this.stageNode) {
+			this.stageNode.style.transform = `scale(${scale})`;
+			this.stageNode.setAttribute('aria-label', this.t('pptx.slide', { n: this.slide + 1 }));
+		}
 		return html`<style>
 				${this.fontCss}
 			</style>
-			<p class="hint">
-				Reading view. Animation, transitions and editing are unavailable. Layout and fonts may
-				differ from PowerPoint.
-			</p>
-			<nav aria-label="Slide navigation">
+			<p class="hint">${this.t('pptx.readingView')}</p>
+			<nav aria-label=${this.t('pptx.navigation')}>
 				<button type="button" ?disabled=${this.slide === 0} @click=${() => this.move(-1)}>
-					Previous slide
+					${this.t('pptx.previous')}
 				</button>
 				<span role="status"
-					>Slide ${this.slide + 1} of ${data.slides.length}${slide.hidden ? ' (hidden)' : ''}</span
+					>${this.t('pptx.slideOf', { n: this.slide + 1, total: data.slides.length })}${slide.hidden ? ` ${this.t('pptx.hidden')}` : ''}</span
 				>
 				<button
 					type="button"
 					?disabled=${this.slide === data.slides.length - 1}
 					@click=${() => this.move(1)}
 				>
-					Next slide
+					${this.t('pptx.next')}
 				</button>
 			</nav>
 			<div class="stage">
@@ -210,7 +211,7 @@ export class TeamsPresentationPreview extends LitElement {
 					class="stage-frame"
 					tabindex="0"
 					role="group"
-					aria-label="Slide navigation canvas"
+					aria-label=${this.t('pptx.canvas')}
 					@keydown=${this.navigate}
 					style=${styleMap({ width: `${width}px`, height: `${data.canvasSize.height * scale}px` })}
 				>
@@ -218,7 +219,7 @@ export class TeamsPresentationPreview extends LitElement {
 				</div>
 			</div>
 			<details>
-				<summary>Slide text</summary>
+				<summary>${this.t('pptx.slideText')}</summary>
 				<pre>
 ${slide.elements
 						.filter((element) => 'text' in element && element.text)
@@ -228,7 +229,7 @@ ${slide.elements
 			${
 				slide.notes
 					? html`<details>
-							<summary>Speaker notes</summary>
+							<summary>${this.t('pptx.notes')}</summary>
 							<pre>${slide.notes}</pre>
 						</details>`
 					: nothing
@@ -236,7 +237,7 @@ ${slide.elements
 			${
 				this.warnings.length
 					? html`<details open>
-							<summary>Compatibility warnings</summary>
+							<summary>${this.t('pptx.warnings')}</summary>
 							<ul>
 								${this.warnings.map((warning) => html`<li>${warning}</li>`)}
 							</ul>

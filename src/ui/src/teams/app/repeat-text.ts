@@ -1,39 +1,31 @@
 import { type MeetingRepeat, type MonthlyBy, repeatChoices } from 'ooxml-core/teams';
+import { teamsI18n, type TeamsI18n, type TeamsKey } from '../i18n/translator';
 
-const WEEKDAYS = [
-	'Sunday',
-	'Monday',
-	'Tuesday',
-	'Wednesday',
-	'Thursday',
-	'Friday',
-	'Saturday',
-] as const;
-const MONTHS = [
-	'January',
-	'February',
-	'March',
-	'April',
-	'May',
-	'June',
-	'July',
-	'August',
-	'September',
-	'October',
-	'November',
-	'December',
-] as const;
-const ORDINALS: Record<number, string> = {
-	1: 'first',
-	2: 'second',
-	3: 'third',
-	4: 'fourth',
-	[-1]: 'last',
+/** Month and day as the locale writes them ("October 15"); the year is a leap year so 29 Feb exists. */
+const monthDay = (month: number, day: number, i18n: TeamsI18n): string =>
+	new Intl.DateTimeFormat(i18n.locale, { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
+		Date.UTC(2000, month - 1, day),
+	);
+
+/** A weekday's name in the display locale (0 is Sunday); names sit inside translated sentences. */
+const weekdayName = (weekday: number, i18n: TeamsI18n): string =>
+	new Intl.DateTimeFormat(i18n.locale, { weekday: 'long', timeZone: 'UTC' }).format(
+		Date.UTC(2000, 0, 2 + (weekday % 7)),
+	);
+
+const ORDINAL_KEYS: Record<number, TeamsKey> = {
+	1: 'repeat.monthlyOrdinal.1',
+	2: 'repeat.monthlyOrdinal.2',
+	3: 'repeat.monthlyOrdinal.3',
+	4: 'repeat.monthlyOrdinal.4',
+	[-1]: 'repeat.monthlyOrdinal.last',
 };
 
-/** `the third Tuesday` / `the last Friday`. */
-const weekdayRule = (ordinal: number, weekday: number): string =>
-	`the ${ORDINALS[ordinal] ?? 'first'} ${WEEKDAYS[weekday] ?? ''}`;
+/** `Every month on the third Tuesday` / `Every month on the last Friday`, in the locale. */
+const monthlyWeekday = (ordinal: number, weekday: number, i18n: TeamsI18n): string =>
+	i18n.t(ORDINAL_KEYS[ordinal] ?? 'repeat.monthlyOrdinal.1', {
+		weekday: weekdayName(weekday, i18n),
+	});
 
 /** The repeat the dialog's select shows: one option per way a start date can repeat. */
 export interface RepeatSelection {
@@ -62,37 +54,52 @@ export function parseRepeatValue(value: string): RepeatSelection {
 	return NO_REPEAT;
 }
 
-/** The options of the Repeat select for a start date, with labels such as "Monthly on day 15". */
-export function repeatOptions(start: number, zone: string): { value: string; label: string }[] {
+/** The options of the Repeat select for a start date, with labels such as "Every month on day 15". */
+export function repeatOptions(
+	start: number,
+	zone: string,
+	i18n: TeamsI18n = teamsI18n(),
+): { value: string; label: string }[] {
 	const { month, day, weekday, ordinals } = repeatChoices(start, zone);
-	const options = [
-		{ value: 'none', label: 'Does not repeat' },
-		{ value: 'daily', label: 'Every day' },
-		{ value: 'weekly', label: 'Every week' },
-		{ value: 'monthly-date', label: `Every month on day ${day}` },
+	return [
+		{ value: 'none', label: i18n.t('repeat.none') },
+		{ value: 'daily', label: i18n.t('repeat.daily') },
+		{ value: 'weekly', label: i18n.t('repeat.weekly') },
+		{ value: 'monthly-date', label: i18n.t('repeat.monthlyDay', { day }) },
 		...ordinals.map((o) => ({
 			value: `monthly-${o}`,
-			label: `Every month on ${weekdayRule(o, weekday)}`,
+			label: monthlyWeekday(o, weekday, i18n),
 		})),
-		{ value: 'yearly', label: `Every year on ${MONTHS[month - 1]} ${day}` },
+		{ value: 'yearly', label: i18n.t('repeat.yearlyOn', { date: monthDay(month, day, i18n) }) },
 	];
-	return options;
 }
 
+/** Makes an option label read inside a sentence ("Every day" -> "every day"). */
+const inSentence = (label: string, i18n: TeamsI18n): string =>
+	label.charAt(0).toLocaleLowerCase(i18n.locale) + label.slice(1);
+
 /** The sentence a meeting's details show: "Repeats every month on the third Tuesday". */
-export function repeatText(m: {
-	repeat: MeetingRepeat;
-	monthlyBy?: MonthlyBy | undefined;
-	ordinal?: number | undefined;
-	start: number;
-	zone: string;
-}): string {
+export function repeatText(
+	m: {
+		repeat: MeetingRepeat;
+		monthlyBy?: MonthlyBy | undefined;
+		ordinal?: number | undefined;
+		start: number;
+		zone: string;
+	},
+	i18n: TeamsI18n = teamsI18n(),
+): string {
 	if (m.repeat === 'none') return '';
-	if (m.repeat === 'daily') return 'Repeats every day';
-	if (m.repeat === 'weekly') return 'Repeats every week';
 	const { month, day, weekday } = repeatChoices(m.start, m.zone);
-	if (m.repeat === 'yearly') return `Repeats every year on ${MONTHS[month - 1]} ${day}`;
-	return m.monthlyBy === 'weekday' && m.ordinal !== undefined
-		? `Repeats every month on ${weekdayRule(m.ordinal, weekday)}`
-		: `Repeats every month on day ${day}`;
+	const rule =
+		m.repeat === 'daily'
+			? i18n.t('repeat.daily')
+			: m.repeat === 'weekly'
+				? i18n.t('repeat.weekly')
+				: m.repeat === 'yearly'
+					? i18n.t('repeat.yearlyOn', { date: monthDay(month, day, i18n) })
+					: m.monthlyBy === 'weekday' && m.ordinal !== undefined
+						? monthlyWeekday(m.ordinal, weekday, i18n)
+						: i18n.t('repeat.monthlyDay', { day });
+	return i18n.t('repeat.sentence', { rule: inSentence(rule, i18n) });
 }

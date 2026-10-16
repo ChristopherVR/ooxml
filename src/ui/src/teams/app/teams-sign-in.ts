@@ -1,6 +1,6 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import css from './teams-sign-in.css?raw';
-import { SIGN_IN_STRINGS as S } from './sign-in-strings';
 
 /** The detail of `teams-sign-in-submit`. The credential is a secret: do not log or store it. */
 export interface SignInSubmit {
@@ -16,7 +16,7 @@ export interface SignInSubmit {
  * `teams-sign-in-submit` `{ userId, credential }`. The password field is cleared after every
  * attempt and never leaves this element except in that event.
  */
-export class TeamsSignIn extends LitElement {
+export class TeamsSignIn extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		userId: { type: String },
@@ -92,19 +92,19 @@ export class TeamsSignIn extends LitElement {
 		if (this.checking)
 			return html`<div class="card" role="status" aria-live="polite">
 				<span class="logo" aria-hidden="true">T</span>
-				<p class="muted">${S.checking}</p>
+				<p class="muted">${this.t('signIn.checking')}</p>
 			</div>`;
 		const locked = this.busy || this.wait > 0;
 		const error =
 			this.error && this.wait > 0 && this.retryAfter > 0
-				? this.error.replace(/\d+ seconds/u, `${this.wait} seconds`)
+				? this.t('signIn.error.rateLimited', { seconds: this.wait })
 				: this.error;
 		return html`<form class="card" @submit=${this.submit} aria-busy=${String(this.busy)}>
 			<span class="logo" aria-hidden="true">T</span>
-			<h1>${S.title}</h1>
-			<p class="muted">${this.notice || S.intro}</p>
+			<h1>${this.t('signIn.title')}</h1>
+			<p class="muted">${this.notice || this.t('signIn.intro')}</p>
 			<label
-				>${S.userLabel}<input
+				>${this.t('signIn.userLabel')}<input
 					name="user"
 					autocomplete="username"
 					autocapitalize="none"
@@ -115,7 +115,7 @@ export class TeamsSignIn extends LitElement {
 					?disabled=${this.busy}
 			/></label>
 			<label
-				>${S.credentialLabel}<input
+				>${this.t('signIn.credentialLabel')}<input
 					name="credential"
 					type="password"
 					autocomplete="current-password"
@@ -123,7 +123,9 @@ export class TeamsSignIn extends LitElement {
 					?disabled=${this.busy}
 			/></label>
 			${error ? html`<p class="error" role="alert">${error}</p>` : nothing}
-			<button type="submit" ?disabled=${locked}>${this.busy ? S.submitting : S.submit}</button>
+			<button type="submit" ?disabled=${locked}>
+				${this.t(this.busy ? 'signIn.submitting' : 'signIn.submit')}
+			</button>
 		</form>`;
 	}
 }

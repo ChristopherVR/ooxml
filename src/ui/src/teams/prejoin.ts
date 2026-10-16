@@ -69,21 +69,21 @@ export class OfficeUiPrejoin extends TeamsElement {
 									.srcObject=${this.preview}
 								></video>`
 							: html`<office-ui-avatar size="xl" name=${this.name}></office-ui-avatar>
-									<p>${this.video ? 'Starting camera…' : 'Your camera is turned off'}</p>`
+									<p>${this.t(this.video ? 'prejoin.startingCamera' : 'prejoin.cameraOff')}</p>`
 					}
 				</div>
 				<div class="panel">
-					<h2>Choose your audio and video settings</h2>
+					<h2>${this.t('prejoin.title')}</h2>
 					<p class="for">${this.heading}</p>
-					${this.toggle('Camera', this.video ? 'video' : 'videoOff', this.video, 'video')}
-					${this.toggle('Microphone', this.audio ? 'mic' : 'micOff', this.audio, 'audio')}
+					${this.toggle(this.t('prejoin.camera'), this.video ? 'video' : 'videoOff', this.video, 'video')}
+					${this.toggle(this.t('prejoin.microphone'), this.audio ? 'mic' : 'micOff', this.audio, 'audio')}
 					<div class="actions">
 						<button
 							type="button"
 							class="cancel"
 							@click=${() => this.fire('office-prejoin-cancel', {})}
 						>
-							Cancel
+							${this.t('common.cancel')}
 						</button>
 						<button
 							type="button"
@@ -91,7 +91,7 @@ export class OfficeUiPrejoin extends TeamsElement {
 							?disabled=${this.busy}
 							@click=${() => this.fire('office-prejoin-join', {})}
 						>
-							${this.busy ? 'Joining…' : 'Join now'}
+							${this.t(this.busy ? 'prejoin.joining' : 'call.joinNow')}
 						</button>
 					</div>
 					${nothing}

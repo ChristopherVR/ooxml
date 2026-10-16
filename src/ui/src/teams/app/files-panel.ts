@@ -1,4 +1,5 @@
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
 import {
 	filterFiles,
 	sortFiles,
@@ -14,10 +15,11 @@ import css from './files-panel.css?raw';
 import { defineTeamsFileActions } from './file-actions';
 import { defineMenuButton } from '../../menu/menu-button';
 import { defineMenuItem } from '../../menu/menu-item';
+import { localizeCoreText } from '../i18n/core-text';
 import { icon } from '../icons';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
-export class TeamsFilesPanel extends LitElement {
+export class TeamsFilesPanel extends TeamsLitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		client: { attribute: false },
@@ -126,7 +128,10 @@ export class TeamsFilesPanel extends LitElement {
 			if (this.client === client && this.active === controller && this.isConnected) {
 				this.canceled = controller.signal.aborted;
 				if (!this.canceled)
-					this.error = error instanceof Error ? error.message : 'Could not share files';
+					this.error =
+						error instanceof Error
+							? localizeCoreText(error.message, this.i18n)
+							: this.t('files.shareFailed');
 			}
 		} finally {
 			if (this.active === controller) {
@@ -180,10 +185,10 @@ export class TeamsFilesPanel extends LitElement {
 			this.sortDirection,
 		);
 		const disabled = this.busy || !this.canUpload || !this.channelId;
-		return html`<div class="toolbar" role="toolbar" aria-label="File actions">
+		return html`<div class="toolbar" role="toolbar" aria-label=${this.t('files.actions')}>
 				<office-ui-menu-button
 					class="new-command"
-					label="+ New"
+					label=${this.t('files.new')}
 					.disabled=${disabled}
 					@office-command=${async (event: CustomEvent<{ command: string }>) => {
 						if (event.detail.command !== 'new-workbook' || disabled) return;
@@ -193,7 +198,7 @@ export class TeamsFilesPanel extends LitElement {
 					}}
 				>
 					<office-ui-menu-item
-						label="New Excel workbook"
+						label=${this.t('files.newWorkbook')}
 						command="new-workbook"
 					></office-ui-menu-item>
 				</office-ui-menu-button>
@@ -202,12 +207,12 @@ export class TeamsFilesPanel extends LitElement {
 					?disabled=${disabled}
 					@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
 				>
-					${icon('upload')} Upload
+					${icon('upload')} ${this.t('files.upload')}
 				</button>
 				<input
 					type="file"
 					class="file-picker"
-					aria-label="Upload files"
+					aria-label=${this.t('files.uploadFiles')}
 					multiple
 					?disabled=${disabled}
 					@change=${this.upload}
@@ -215,29 +220,31 @@ export class TeamsFilesPanel extends LitElement {
 				<span class="toolbar-space"></span>
 				<input
 					type="search"
-					aria-label="Search files"
-					placeholder="Search files"
+					aria-label=${this.t('files.search')}
+					placeholder=${this.t('files.search')}
 					.value=${this.query}
 					@input=${(e: Event) => (this.query = (e.target as HTMLInputElement).value)}
 				/>
 			</div>
 			<p class="hint">
-				${this.canUpload ? `New files are shared in # ${this.channelName}.` : 'Configure file storage to upload files or create workbooks.'}
+				${this.canUpload ? this.t('files.sharedIn', { channel: this.channelName }) : this.t('files.configureStorage')}
 			</p>
 			${
 				this.creating
-					? html`<form aria-label="Create Excel workbook" @submit=${this.create}>
+					? html`<form aria-label=${this.t('files.createWorkbook')} @submit=${this.create}>
 							<input
 								name="name"
-								aria-label="Workbook name"
-								placeholder="Workbook name"
+								aria-label=${this.t('files.workbookName')}
+								placeholder=${this.t('files.workbookName')}
 								maxlength="75"
 								required
 								?disabled=${this.busy}
 							/>
-							<button type="submit" ?disabled=${disabled}>Create workbook</button>
+							<button type="submit" ?disabled=${disabled}>
+								${this.t('files.createWorkbookButton')}
+							</button>
 							<button type="button" ?disabled=${this.busy} @click=${() => (this.creating = false)}>
-								Cancel
+								${this.t('common.cancel')}
 							</button>
 						</form>`
 					: nothing
@@ -246,36 +253,46 @@ export class TeamsFilesPanel extends LitElement {
 				this.busy
 					? html`<div class="transfer">
 							<p role="status">
-								Sharing files in # ${this.destination}:
-								${this.transfer?.phase === 'preparing' ? 'Preparing' : 'Uploading'}
-								${this.transfer?.fileName ?? ''} (${this.transfer?.completed ?? 0} of
-								${this.transfer?.total ?? 0} uploaded)
+								${this.t('files.sharing', {
+									channel: this.destination,
+									phase: this.t(
+										this.transfer?.phase === 'preparing' ? 'files.preparing' : 'files.uploading',
+									),
+									file: this.transfer?.fileName ?? '',
+									completed: this.transfer?.completed ?? 0,
+									total: this.transfer?.total ?? 0,
+								})}
 							</p>
-							${this.transfer ? html`<progress aria-label="Files uploaded" max=${this.transfer.total} value=${this.transfer.completed}></progress>` : nothing}
-							<button type="button" @click=${() => this.active?.abort()}>Cancel sharing</button>
+							${this.transfer ? html`<progress aria-label=${this.t('files.uploaded')} max=${this.transfer.total} value=${this.transfer.completed}></progress>` : nothing}
+							<button type="button" @click=${() => this.active?.abort()}>
+								${this.t('files.cancelSharing')}
+							</button>
 						</div>`
 					: nothing
 			}
 			${
 				this.error || this.canceled
-					? html`${this.canceled ? html`<p role="status">Sharing in # ${this.destination} canceled.</p>` : html`<p role="alert">Sharing in # ${this.destination} failed: ${this.error}</p>`}
+					? html`${this.canceled ? html`<p role="status">${this.t('files.canceled', { channel: this.destination })}</p>` : html`<p role="alert">${this.t('files.failed', { channel: this.destination, error: this.error })}</p>`}
 							<button
 								type="button"
 								?disabled=${this.busy}
 								@click=${() => this.retry && void this.run(this.retry)}
 							>
-								Retry sharing files
+								${this.t('files.retry')}
 							</button>`
 					: nothing
 			}
 			<div class="file-list">
-				<table aria-label="Shared files">
+				<table aria-label=${this.t('files.shared')}>
 					<thead>
 						<tr>
-							${this.sortHeading('name', 'Name')} ${this.sortHeading('ts', 'Shared on')}
-							${this.sortHeading('author', 'Shared by')}
-							<th scope="col">Location</th>
-							<th scope="col"><span class="visually-hidden">Actions</span></th>
+							${this.sortHeading('name', this.t('files.name'))}
+							${this.sortHeading('ts', this.t('files.sharedOn'))}
+							${this.sortHeading('author', this.t('files.sharedBy'))}
+							<th scope="col">${this.t('files.location')}</th>
+							<th scope="col">
+								<span class="visually-hidden">${this.t('files.actionsColumn')}</span>
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -292,7 +309,7 @@ export class TeamsFilesPanel extends LitElement {
 														<button
 															class="file-open"
 															type="button"
-															aria-label=${`Open ${file.name}`}
+															aria-label=${this.t('chat.openFile', { name: file.name })}
 															title=${file.name}
 															?disabled=${!file.url}
 															@click=${() => this.emit('open', file)}
@@ -301,7 +318,9 @@ export class TeamsFilesPanel extends LitElement {
 														</button>
 													</div>
 												</td>
-												<td><time>${new Date(file.ts).toLocaleDateString()}</time></td>
+												<td>
+													<time>${new Date(file.ts).toLocaleDateString(this.i18n.intl)}</time>
+												</td>
 												<td>${file.author}</td>
 												<td>
 													${file.channelName ? `# ${file.channelName}` : `# ${this.channelName}`}
@@ -316,7 +335,7 @@ export class TeamsFilesPanel extends LitElement {
 									)
 								: html`<tr>
 										<td colspan="5" class="none">
-											${this.query.trim() ? 'No matching files.' : 'No files shared yet.'}
+											${this.t(this.query.trim() ? 'files.noMatch' : 'files.none')}
 										</td>
 									</tr>`
 						}

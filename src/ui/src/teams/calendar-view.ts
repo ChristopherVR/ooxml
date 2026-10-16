@@ -17,11 +17,11 @@ import { TeamsElement, withStyles } from './base';
 import { icon } from './icons';
 import css from './calendar-view.css?raw';
 
-const MODES: { id: CalendarMode; label: string }[] = [
-	{ id: 'workweek', label: 'Work week' },
-	{ id: 'week', label: 'Week' },
-	{ id: 'day', label: 'Day' },
-];
+const MODES = [
+	{ id: 'workweek', label: 'calendar.workWeek' },
+	{ id: 'week', label: 'calendar.week' },
+	{ id: 'day', label: 'calendar.day' },
+] as const satisfies readonly { id: CalendarMode; label: string }[];
 const SLOT_MINUTES = 30;
 const FIRST_VISIBLE_HOUR = 8;
 
@@ -70,7 +70,6 @@ export class OfficeUiCalendarView extends TeamsElement {
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this.setAttribute('role', 'region');
-		this.setAttribute('aria-label', 'Calendar');
 		if (!this.anchor) this.anchor = this.clock();
 		// A phone starts on the day view, like the Teams mobile calendar.
 		if (globalThis.matchMedia?.('(max-width: 40em)').matches && this.mode === 'workweek')
@@ -81,6 +80,10 @@ export class OfficeUiCalendarView extends TeamsElement {
 			this.resize = new ResizeObserver(() => this.scrollToWorkday());
 			this.resize.observe(this);
 		}
+	}
+
+	protected override hostLabel(): string {
+		return this.t('calendar.title');
 	}
 
 	override disconnectedCallback(): void {
@@ -113,11 +116,12 @@ export class OfficeUiCalendarView extends TeamsElement {
 	private range(days: CalendarDay[]): string {
 		const first = days[0]!;
 		const last = days[days.length - 1]!;
+		const intl = this.i18n.intl;
 		const fmt = (opts: Intl.DateTimeFormatOptions, ms: number): string =>
-			new Intl.DateTimeFormat([], { ...opts, timeZone: this.zone }).format(ms);
+			new Intl.DateTimeFormat(intl, { ...opts, timeZone: this.zone }).format(ms);
 		if (days.length === 1)
 			return fmt({ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }, first.start);
-		return new Intl.DateTimeFormat([], {
+		return new Intl.DateTimeFormat(intl, {
 			month: 'long',
 			day: 'numeric',
 			year: 'numeric',
@@ -146,12 +150,12 @@ export class OfficeUiCalendarView extends TeamsElement {
 			<div class="bar">
 				<h2 class="range" aria-live="polite">${this.range(days)}</h2>
 				<button type="button" class="today" @click=${() => (this.anchor = this.clock())}>
-					Today
+					${this.t('time.today')}
 				</button>
 				<button
 					type="button"
 					class="step"
-					aria-label=${this.mode === 'day' ? 'Previous day' : 'Previous week'}
+					aria-label=${this.t(this.mode === 'day' ? 'calendar.previousDay' : 'calendar.previousWeek')}
 					@click=${() => (this.anchor = shiftAnchor(this.anchor || now, this.mode, -1, this.zone))}
 				>
 					${icon('back')}
@@ -159,12 +163,12 @@ export class OfficeUiCalendarView extends TeamsElement {
 				<button
 					type="button"
 					class="step next"
-					aria-label=${this.mode === 'day' ? 'Next day' : 'Next week'}
+					aria-label=${this.t(this.mode === 'day' ? 'calendar.nextDay' : 'calendar.nextWeek')}
 					@click=${() => (this.anchor = shiftAnchor(this.anchor || now, this.mode, 1, this.zone))}
 				>
 					${icon('back')}
 				</button>
-				<div class="modes" role="group" aria-label="Calendar view">
+				<div class="modes" role="group" aria-label=${this.t('calendar.viewLabel')}>
 					${MODES.map(
 						(m) =>
 							html`<button
@@ -172,7 +176,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 								aria-pressed=${String(this.mode === m.id)}
 								@click=${() => this.setMode(m.id)}
 							>
-								${m.label}
+								${this.t(m.label)}
 							</button>`,
 					)}
 				</div>
@@ -181,7 +185,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 					class="new"
 					@click=${() => this.fire('office-calendar-new', { start: 0 })}
 				>
-					${icon('plus')} New meeting
+					${icon('plus')} ${this.t('calendar.newMeeting')}
 				</button>
 			</div>
 			<div class="scroller">
@@ -199,16 +203,17 @@ export class OfficeUiCalendarView extends TeamsElement {
 
 	private hourLabel(hour: number): string {
 		if (hour === 0) return '';
-		return new Date(Date.UTC(2000, 0, 1, hour)).toLocaleTimeString([], {
+		return new Date(Date.UTC(2000, 0, 1, hour)).toLocaleTimeString(this.i18n.intl, {
 			hour: 'numeric',
 			timeZone: 'UTC',
 		});
 	}
 
 	private dayHead(day: CalendarDay, today: boolean) {
-		const name = new Intl.DateTimeFormat([], { weekday: 'short', timeZone: this.zone }).format(
-			day.start,
-		);
+		const name = new Intl.DateTimeFormat(this.i18n.intl, {
+			weekday: 'short',
+			timeZone: this.zone,
+		}).format(day.start);
 		return html`<div class="head" data-today=${String(today)}>
 			<span class="dow">${name}</span>
 			<span class="dom">${day.day}</span>
@@ -225,7 +230,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 			this.zone,
 		);
 		const byKey = new Map(occurrences.map((x) => [x.o.key, x.m]));
-		const label = new Intl.DateTimeFormat([], {
+		const label = new Intl.DateTimeFormat(this.i18n.intl, {
 			weekday: 'long',
 			month: 'long',
 			day: 'numeric',
@@ -277,7 +282,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 	}
 
 	private clockText(ms: number): string {
-		return new Date(ms).toLocaleTimeString([], {
+		return new Date(ms).toLocaleTimeString(this.i18n.intl, {
 			hour: 'numeric',
 			minute: '2-digit',
 			timeZone: this.zone,

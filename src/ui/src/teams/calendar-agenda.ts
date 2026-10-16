@@ -54,7 +54,7 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 			const key = dayKey(row.o.start, this.zone);
 			let group = groups.get(key);
 			if (!group) {
-				const label = new Intl.DateTimeFormat([], {
+				const label = new Intl.DateTimeFormat(this.i18n.intl, {
 					weekday: 'long',
 					month: 'short',
 					day: 'numeric',
@@ -62,19 +62,23 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 				}).format(row.o.start);
 				groups.set(
 					key,
-					(group = { label: key === dayKey(now, this.zone) ? `Today, ${label}` : label, rows: [] }),
+					(group = {
+						label:
+							key === dayKey(now, this.zone) ? this.t('agenda.todayDate', { date: label }) : label,
+						rows: [],
+					}),
 				);
 			}
 			group.rows.push(row);
 		}
 		return html`
 			<header>
-				<h2>Calendar</h2>
+				<h2>${this.t('calendar.title')}</h2>
 				<button
 					class="new"
 					type="button"
-					title="New meeting"
-					aria-label="New meeting"
+					title=${this.t('calendar.newMeeting')}
+					aria-label=${this.t('calendar.newMeeting')}
 					@click=${() => this.fire('office-agenda-new', {})}
 				>
 					${icon('plus')}
@@ -82,7 +86,7 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 			</header>
 			${
 				groups.size === 0
-					? html`<p class="empty">No upcoming meetings. Schedule one with the plus button.</p>`
+					? html`<p class="empty">${this.t('agenda.empty')}</p>`
 					: [...groups.values()].map(
 							(g) =>
 								html`<section>
@@ -110,17 +114,17 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 			>
 				<span class="time">${time}</span>
 				<span class="title">${title}</span>
-				<span class="who">${m.mine ? 'You organized' : m.organizerName}</span>
+				<span class="who">${m.mine ? this.t('agenda.youOrganized') : m.organizerName}</span>
 			</button>
 			${
 				joinable
 					? html`<button
 							type="button"
 							class="join"
-							aria-label=${`Join ${title}`}
+							aria-label=${this.t('agenda.join', { title })}
 							@click=${() => this.fire('office-agenda-join', { meetingId: m.id })}
 						>
-							${m.live ? 'Join now' : 'Join'}
+							${this.t(m.live ? 'call.joinNow' : 'call.join')}
 						</button>`
 					: ''
 			}
@@ -128,7 +132,7 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 	}
 
 	private clock(ms: number): string {
-		return new Date(ms).toLocaleTimeString([], {
+		return new Date(ms).toLocaleTimeString(this.i18n.intl, {
 			hour: 'numeric',
 			minute: '2-digit',
 			timeZone: this.zone,

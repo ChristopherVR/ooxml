@@ -1,7 +1,11 @@
 // <teams-app>: one reactive element, one template, one CSS file. All collaboration and call logic
 // lives in `createTeamsClient` (ooxml-core/teams); the visual pieces are ooxml-ui elements. This
 // file only decides what is on screen (`render`) and forwards user intent to client actions.
-import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { type LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
+import { TeamsLitElement } from '../i18n/lit-element';
+import { describeActivityIn } from '../i18n/describe';
+import { localizeCoreText } from '../i18n/core-text';
+import type { TeamsKey } from '../i18n/translator';
 import {
 	type ActivityFilter,
 	type ActivityItem,
@@ -14,7 +18,6 @@ import {
 	type DraftContext,
 	type MeetingFormInput,
 	type TabContent,
-	describeActivity,
 	isPresenceStatus,
 	isStatusDuration,
 	parseServerConfig,
@@ -96,23 +99,29 @@ const LOCAL_THEME = THEME_CSS.replaceAll(
 	.replaceAll(':root:not([data-office-theme="light"])', ':host([data-office-theme="system"])')
 	.replaceAll(':root', ':host([data-office-theme])');
 const RAIL = [
-	{ id: 'activity', label: 'Activity', icon: 'bell' },
-	{ id: 'chat', label: 'Chat', icon: 'message' },
-	{ id: 'teams', label: 'Teams', icon: 'users' },
-	{ id: 'calendar', label: 'Calendar', icon: 'calendar' },
-	{ id: 'calls', label: 'Calls', icon: 'phone', secondary: true },
-	{ id: 'files', label: 'Files', icon: 'folder', secondary: true },
+	{ id: 'activity', label: 'rail.activity', icon: 'bell' },
+	{ id: 'chat', label: 'rail.chat', icon: 'message' },
+	{ id: 'teams', label: 'rail.teams', icon: 'users' },
+	{ id: 'calendar', label: 'rail.calendar', icon: 'calendar' },
+	{ id: 'calls', label: 'rail.calls', icon: 'phone', secondary: true },
+	{ id: 'files', label: 'rail.files', icon: 'folder', secondary: true },
 	{
 		id: 'followed',
-		label: 'Followed threads',
-		shortLabel: 'Threads',
+		label: 'rail.followed',
+		shortLabel: 'rail.threads',
 		icon: 'chat',
 		secondary: true,
 	},
-	{ id: 'drafts', label: 'Drafts', icon: 'chat', secondary: true },
-] as const;
+	{ id: 'drafts', label: 'rail.drafts', icon: 'chat', secondary: true },
+] as const satisfies readonly {
+	id: string;
+	label: TeamsKey;
+	shortLabel?: TeamsKey;
+	icon: string;
+	secondary?: boolean;
+}[];
 
-export class TeamsApp extends LitElement {
+export class TeamsApp extends TeamsLitElement {
 	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
 	static override properties = {
 		workspaceId: { type: String, attribute: 'workspace-id' },
@@ -197,12 +206,13 @@ export class TeamsApp extends LitElement {
 		changed: () => this.authRevision++,
 		emit: (name, detail) =>
 			this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true })),
+		i18n: () => this.i18n,
 	});
 	private authKey = '';
 
 	private readonly teams = new TeamsController(
 		this,
-		(text) => this.notify(text),
+		(text) => this.notify(localizeCoreText(text, this.i18n)),
 		(item) => this.announce(item),
 	);
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -462,12 +472,12 @@ export class TeamsApp extends LitElement {
 				return;
 			}
 			popout?.close();
-			this.notify('Allow popups to open this file in a browser tab');
+			this.notify(this.t('app.allowPopups'));
 			return;
 		}
 		popout?.close();
 		if (url) this.preview = detail;
-		else this.notify('This file was shared by name only');
+		else this.notify(this.t('app.nameOnly'));
 	}
 
 	/** Preview a host-provided website or file without changing shared conversation state. */
@@ -579,7 +589,7 @@ export class TeamsApp extends LitElement {
 		await this.updateComplete;
 		if (!this.isConnected || this.settingsOpen) return;
 		this.renderRoot
-			.querySelector('office-ui-menu-button[label="Settings and more"]')
+			.querySelector('office-ui-menu-button.settings-menu')
 			?.shadowRoot?.querySelector<HTMLButtonElement>('button')
 			?.focus();
 	}
@@ -605,7 +615,7 @@ export class TeamsApp extends LitElement {
 							@teams-preview-close=${() => globalThis.close()}
 						></teams-content-preview>
 					</div>`
-				: html`<p role="alert">The file preview link is invalid.</p>`;
+				: html`<p role="alert">${this.t('app.invalidPreview')}</p>`;
 		if (this.signIn.phase !== 'open') return this.signInScreen();
 		const s = this.teams.state;
 		if (!s) return this.welcome();
@@ -616,14 +626,14 @@ export class TeamsApp extends LitElement {
 				@office-chat-open-tab=${(event: CustomEvent<{ tabId: string }>) => {
 					if (this.teams.state?.tabs.some((entry) => entry.id === event.detail.tabId))
 						this.selectTab(event.detail.tabId);
-					else this.notify('This tab is no longer available in this channel');
+					else this.notify(this.t('app.tabGone'));
 				}}
 			>
 				${this.topbar(s)}
 				<div class="body">
 					<office-ui-app-rail
 						.hideLabels=${!this.showAppNames}
-						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}), ...(i.id === 'activity' && s.activityUnread ? { badge: s.activityUnread } : {}), ...(i.id === 'chat' && s.chats.some((c) => c.unread) ? { badge: s.chats.reduce((n, c) => n + c.unread, 0) } : {}) }))}
+						.items=${RAIL.map((i) => ({ ...i, label: this.t(i.label), ...('shortLabel' in i ? { shortLabel: this.t(i.shortLabel) } : {}), ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}), ...(i.id === 'activity' && s.activityUnread ? { badge: s.activityUnread } : {}), ...(i.id === 'chat' && s.chats.some((c) => c.unread) ? { badge: s.chats.reduce((n, c) => n + c.unread, 0) } : {}) }))}
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
 							if (!this.closePreview()) return;
@@ -764,17 +774,17 @@ export class TeamsApp extends LitElement {
 					}}
 				>
 					<span class="logo">T</span>
-					<h1>Welcome to Teams</h1>
-					<p>Pick the name your colleagues will see.</p>
+					<h1>${this.t('welcome.title')}</h1>
+					<p>${this.t('welcome.pickName')}</p>
 					<input
 						name="name"
-						placeholder="Your name"
-						aria-label="Your name"
+						placeholder=${this.t('welcome.yourName')}
+						aria-label=${this.t('welcome.yourName')}
 						maxlength="40"
 						autocomplete="name"
 						required
 					/>
-					<button type="submit">Continue</button>
+					<button type="submit">${this.t('welcome.continue')}</button>
 				</form>
 			</div>
 		`;
@@ -783,21 +793,21 @@ export class TeamsApp extends LitElement {
 	private topbar(s: TeamsState) {
 		return html`
 			<header class="topbar">
-				<div class="brand"><span class="logo">T</span><span>Teams</span></div>
+				<div class="brand"><span class="logo">T</span><span>${this.t('rail.teams')}</span></div>
 				<div class="search">
 					<input
 						type="search"
-						placeholder="Search messages"
-						aria-label="Search messages"
+						placeholder=${this.t('search.messages')}
+						aria-label=${this.t('search.messages')}
 						.value=${s.searchQuery}
 						@input=${(e: Event) => this.teams.client?.search((e.target as HTMLInputElement).value)}
 					/>
 					${
 						s.searchQuery
-							? html`<ul class="results" role="listbox" aria-label="Search results">
+							? html`<ul class="results" role="listbox" aria-label=${this.t('search.results')}>
 									${
 										s.searchResults.length === 0
-											? html`<li class="none">No results</li>`
+											? html`<li class="none">${this.t('search.none')}</li>`
 											: s.searchResults.map(
 													(h) =>
 														html`<li>
@@ -812,8 +822,7 @@ export class TeamsApp extends LitElement {
 															>
 																<strong>${h.message.authorName}</strong>
 																<span class="in"
-																	>in
-																	${s.chats.some((c) => c.id === h.channelId) ? '' : '# '}${h.channelName}</span
+																	>${this.t('search.in', { where: `${s.chats.some((c) => c.id === h.channelId) ? '' : '# '}${h.channelName}` })}</span
 																>
 																<span class="snippet">${h.message.text.slice(0, 100)}</span>
 															</button>
@@ -826,14 +835,18 @@ export class TeamsApp extends LitElement {
 				</div>
 				<div class="me">
 					<office-ui-menu-button
-						label="Settings and more"
+						class="settings-menu"
+						label=${this.t('app.settingsAndMore')}
 						icon="more"
 						icon-only
 						@office-command=${(event: CustomEvent<{ command: string }>) => {
 							if (event.detail.command === 'teams-settings') this.askSettings();
 						}}
 					>
-						<office-ui-menu-item label="Settings" command="teams-settings"></office-ui-menu-item>
+						<office-ui-menu-item
+							label=${this.t('settings.title')}
+							command="teams-settings"
+						></office-ui-menu-item>
 					</office-ui-menu-button>
 					<teams-profile-menu
 						.state=${s}
@@ -873,7 +886,7 @@ export class TeamsApp extends LitElement {
 	private activityToastView(item: ActivityItem) {
 		return html`<div class="activity-toast" role="status" data-kind=${item.kind}>
 			<span class="toast-text"
-				><strong>${describeActivity(item)}</strong
+				><strong>${describeActivityIn(item, this.i18n)}</strong
 				><span class="toast-preview">${item.preview}</span></span
 			>
 			<button
@@ -884,9 +897,13 @@ export class TeamsApp extends LitElement {
 					else void this.openActivity(item.id);
 				}}
 			>
-				View
+				${this.t('app.view')}
 			</button>
-			<button type="button" aria-label="Dismiss" @click=${() => this.dismissToast(item.id)}>
+			<button
+				type="button"
+				aria-label=${this.t('app.dismiss')}
+				@click=${() => this.dismissToast(item.id)}
+			>
 				${icon('close')}
 			</button>
 		</div>`;
@@ -913,7 +930,7 @@ export class TeamsApp extends LitElement {
 					class="show-calendar"
 					@click=${() => (this.mobileView = 'conversation')}
 				>
-					${icon('calendar')} Open calendar
+					${icon('calendar')} ${this.t('app.openCalendar')}
 				</button>`;
 		if (this.rail === 'activity')
 			return html`<office-ui-activity-feed
@@ -927,7 +944,7 @@ export class TeamsApp extends LitElement {
 		if (this.rail === 'calls') {
 			const live = s.channels.filter((c) => c.live);
 			return html`
-				<h2>Calls</h2>
+				<h2>${this.t('rail.calls')}</h2>
 				<ul class="plain">
 					${s.channels.map(
 						(c) =>
@@ -938,17 +955,16 @@ export class TeamsApp extends LitElement {
 									class=${c.live ? 'join live' : 'join'}
 									@click=${() => this.startMeeting(c.id)}
 								>
-									${c.live ? 'Join' : 'Meet now'}
+									${this.t(c.live ? 'call.join' : 'call.meetNow')}
 								</button>
 							</li>`,
 					)}
 				</ul>
-				${live.length === 0 ? html`<p class="hint">Nobody is in a call right now.</p>` : nothing}
+				${live.length === 0 ? html`<p class="hint">${this.t('app.nobodyInCall')}</p>` : nothing}
 			`;
 		}
 		return html`
 			<office-ui-channel-list
-				heading="Channels"
 				selected-id=${s.selectedChannelId}
 				.channels=${s.channels}
 				@office-channel-select=${(e: CustomEvent<{ id: string }>) => this.selectChannel(e.detail.id)}
@@ -959,7 +975,12 @@ export class TeamsApp extends LitElement {
 
 	private main(s: TeamsState) {
 		if (this.rail === 'drafts' && this.teams.client)
-			return draftList(s, this.teams.client, (context) => void this.resumeDraft(context));
+			return draftList(
+				s,
+				this.teams.client,
+				(context) => void this.resumeDraft(context),
+				this.i18n,
+			);
 		if (this.preview)
 			return html`<teams-content-preview
 				.detail=${this.preview}
@@ -979,6 +1000,7 @@ export class TeamsApp extends LitElement {
 				(value) => {
 					this.followedUnreadOnly = value;
 				},
+				this.i18n,
 			);
 		if (s.call && this.meeting) return this.meetingView(s);
 		if (this.rail === 'calendar') return this.calendarMain(s);
@@ -988,7 +1010,7 @@ export class TeamsApp extends LitElement {
 			${
 				s.call && !this.meeting
 					? html`<div class="callbar">
-							You are in a call in ${this.callHeading(s.call)}
+							${this.t('app.inCall', { where: this.callHeading(s.call) })}
 							<button
 								type="button"
 								@click=${() => {
@@ -997,7 +1019,7 @@ export class TeamsApp extends LitElement {
 									} else if (this.selectChannel(s.call!.channelId)) this.meeting = true;
 								}}
 							>
-								Return to call
+								${this.t('app.returnToCall')}
 							</button>
 						</div>`
 					: nothing
@@ -1023,22 +1045,26 @@ export class TeamsApp extends LitElement {
 				compact
 					? nothing
 					: chat
-						? chatHeader(chat, {
-								back: () => (this.mobileView = 'list'),
-								call: () => this.startMeeting(),
-								people: () => (this.chatPeople = true),
-							})
+						? chatHeader(
+								chat,
+								{
+									back: () => (this.mobileView = 'list'),
+									call: () => this.startMeeting(),
+									people: () => (this.chatPeople = true),
+								},
+								this.i18n,
+							)
 						: html`<header class="channel-head">
 								<button
 									type="button"
 									class="back"
-									aria-label="Back to channels"
-									title="Back to channels"
+									aria-label=${this.t('app.backToChannels')}
+									title=${this.t('app.backToChannels')}
 									@click=${() => (this.mobileView = 'list')}
 								>
 									${icon('back')}
 								</button>
-								<h1><span class="hash">#</span> ${channel?.name ?? 'No channel yet'}</h1>
+								<h1><span class="hash">#</span> ${channel?.name ?? this.t('app.noChannel')}</h1>
 								<nav class="tabs" role="tablist">
 									${(['posts', 'files'] as const).map(
 										(t) =>
@@ -1048,15 +1074,15 @@ export class TeamsApp extends LitElement {
 												aria-selected=${String(this.tab === t)}
 												@click=${() => this.selectTab(t)}
 											>
-												${t === 'posts' ? 'Posts' : 'Shared'}
+												${this.t(t === 'posts' ? 'app.posts' : 'app.shared')}
 											</button>`,
 									)}
 									${s.tabs.map((t) => html`<button type="button" role="tab" aria-selected=${String(this.tab === t.id)} @click=${() => this.selectTab(t.id)}>${t.name}</button>`)}
 								</nav>
 								<button
 									type="button"
-									aria-label="Add tab"
-									title="Add tab"
+									aria-label=${this.t('app.addTab')}
+									title=${this.t('app.addTab')}
 									?disabled=${!channel}
 									@click=${() => (this.addingTab = !this.addingTab)}
 								>
@@ -1067,8 +1093,8 @@ export class TeamsApp extends LitElement {
 										? html`<button
 												type="button"
 												data-tab-conversation
-												aria-label="Show tab conversation"
-												title="Show tab conversation"
+												aria-label=${this.t('app.tabConversation')}
+												title=${this.t('app.tabConversation')}
 												aria-expanded=${String(s.thread?.root.tabId === sharedTab.id)}
 												@click=${async () => {
 													if (s.thread?.root.tabId === sharedTab.id) {
@@ -1076,7 +1102,7 @@ export class TeamsApp extends LitElement {
 														return;
 													}
 													if (!c?.openTabConversation(sharedTab.id)) {
-														this.notify('Could not open this tab conversation');
+														this.notify(this.t('app.tabConversationFailed'));
 														return;
 													}
 													await Promise.resolve();
@@ -1093,18 +1119,20 @@ export class TeamsApp extends LitElement {
 								${
 									sharedTab?.createdBy === s.user.id
 										? html`<office-ui-menu-button
-												label="Tab options"
+												label=${this.t('app.tabOptions')}
 												icon="more"
 												icon-only
 												@office-command=${(event: CustomEvent<{ command: string }>) => {
 													if (event.detail.command === 'rename-tab') {
-														const name = globalThis.prompt?.('Tab name', sharedTab.name)?.trim();
+														const name = globalThis
+															.prompt?.(this.t('app.tabNamePrompt'), sharedTab.name)
+															?.trim();
 														if (name) c?.renameTab(sharedTab.id, name);
 													} else if (event.detail.command === 'remove-tab') {
 														if (!this.canLeaveContent()) return;
 														if (
 															globalThis.confirm?.(
-																`Remove ${sharedTab.name} from this channel?`,
+																this.t('app.confirmRemoveTab', { name: sharedTab.name }),
 															) === true &&
 															c?.removeTab(sharedTab.id)
 														) {
@@ -1115,18 +1143,18 @@ export class TeamsApp extends LitElement {
 													}
 												}}
 												><office-ui-menu-item
-													label="Rename tab"
+													label=${this.t('app.renameTab')}
 													command="rename-tab"
 												></office-ui-menu-item
 												><office-ui-menu-item
-													label="Remove tab"
+													label=${this.t('app.removeTab')}
 													command="remove-tab"
 												></office-ui-menu-item
 											></office-ui-menu-button>`
 										: nothing
 								}
 								<span class="topic">${channel?.topic ?? ''}</span>
-								<div class="people" aria-label="People online">
+								<div class="people" aria-label=${this.t('app.peopleOnline')}>
 									${s.people.slice(0, 5).map((p) => html`<office-ui-avatar size="sm" name=${p.name} seed=${p.id} color=${p.color} presence=${p.availability}></office-ui-avatar>`)}
 									${s.people.length > 5 ? html`<span class="more">+${s.people.length - 5}</span>` : nothing}
 								</div>
@@ -1136,12 +1164,12 @@ export class TeamsApp extends LitElement {
 									?disabled=${!channel}
 									@click=${() => this.startMeeting()}
 								>
-									${s.channels.find((x) => x.id === s.selectedChannelId)?.live ? 'Join call' : 'Meet now'}
+									${this.t(s.channels.find((x) => x.id === s.selectedChannelId)?.live ? 'call.joinCall' : 'call.meetNow')}
 								</button>
 							</header>`
 			}
-			${c ? messageTransfers(s, c) : nothing}
-			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
+			${c ? messageTransfers(s, c, this.i18n) : nothing}
+			${activeTab && !sharedTab && !compact ? html`<p role="status">${this.t('app.tabRemoved')}</p>` : nothing}
 			${
 				activeTab && !compact
 					? html`<div
@@ -1165,6 +1193,7 @@ export class TeamsApp extends LitElement {
 											(attachment) => void this.openFile(attachment),
 											() => void this.closeThread(),
 											this.highlightId,
+											this.i18n,
 										)
 									: nothing
 							}
@@ -1196,7 +1225,7 @@ export class TeamsApp extends LitElement {
 										@office-chat-thread=${(e: CustomEvent<{ messageId: string }>) => void this.openThread(e.detail.messageId)}
 										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startReply(e.detail.messageId) : void this.openThread(e.detail.messageId, 'reply'))}
 										@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startEdit(e.detail.messageId) : void this.openThread(e.detail.messageId, 'edit'))}
-										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.('Delete this message?') !== false && c?.deleteMessage(e.detail.messageId)}
+										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.(this.t('chat.confirmDelete')) !== false && c?.deleteMessage(e.detail.messageId)}
 										@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
 									></office-ui-chat-list>
 									${
@@ -1212,7 +1241,7 @@ export class TeamsApp extends LitElement {
 													.mentionTargets=${s.mentionTargets}
 													@office-chat-draft=${(e: CustomEvent<TeamsState['draft']>) => c?.setDraft(e.detail)}
 													?disabled=${!channel}
-													placeholder=${chat ? `Message ${chat.title}` : channel ? `Message # ${channel.name}` : 'Create a channel first'}
+													placeholder=${chat ? this.t('app.messageTo', { name: chat.title }) : channel ? this.t('app.messageTo', { name: `# ${channel.name}` }) : this.t('app.createChannelFirst')}
 													@office-chat-typing=${() => c?.notifyTyping()}
 													@office-chat-cancel=${() => c?.cancelCompose()}
 													@office-chat-send=${(e: CustomEvent<ChatSendDetail>) => void c?.send(e.detail)}
@@ -1228,6 +1257,7 @@ export class TeamsApp extends LitElement {
 												(attachment) => void this.openFile(attachment),
 												() => void this.closeThread(),
 												this.highlightId,
+												this.i18n,
 											)
 										: nothing
 								}
@@ -1310,9 +1340,9 @@ export class TeamsApp extends LitElement {
 
 	private chatEmpty() {
 		return html`<div class="empty-main">
-			<h1>Chat</h1>
-			<p>Pick a chat from the list, or start a new one.</p>
-			<button type="button" @click=${() => (this.newChat = true)}>New chat</button>
+			<h1>${this.t('rail.chat')}</h1>
+			<p>${this.t('app.pickChat')}</p>
+			<button type="button" @click=${() => (this.newChat = true)}>${this.t('chat.new')}</button>
 		</div>`;
 	}
 
@@ -1347,10 +1377,7 @@ export class TeamsApp extends LitElement {
 				@teams-chat-add=${(e: CustomEvent<{ id: string; userIds: string[] }>) => c?.addToChat(e.detail.id, e.detail.userIds)}
 				@teams-chat-remove=${(e: CustomEvent<{ id: string; userId: string }>) => c?.removeFromChat(e.detail.id, e.detail.userId)}
 				@teams-chat-leave=${(e: CustomEvent<{ id: string }>) => {
-					if (
-						globalThis.confirm?.('Leave this chat? You will stop receiving its messages.') === false
-					)
-						return;
+					if (globalThis.confirm?.(this.t('chatPeople.confirmLeave')) === false) return;
 					if (c?.leaveChat(e.detail.id)) {
 						this.chatPeople = false;
 						this.mobileView = 'list';
@@ -1366,7 +1393,7 @@ export class TeamsApp extends LitElement {
 		return html`
 			<div class="calendar-back">
 				<button type="button" @click=${() => (this.mobileView = 'list')}>
-					${icon('back')} Upcoming meetings
+					${icon('back')} ${this.t('app.upcoming')}
 				</button>
 			</div>
 			<office-ui-calendar-view
@@ -1467,15 +1494,15 @@ export class TeamsApp extends LitElement {
 					}
 					const ask =
 						details?.repeat === 'none'
-							? 'Cancel this meeting for everyone?'
-							: 'Cancel every event in this series?';
+							? this.t('details.confirmCancel')
+							: this.t('details.confirmCancelSeries');
 					if (globalThis.confirm?.(ask) === false) return;
 					if (c?.cancelMeeting(meetingId)) this.meetingDetails = null;
 				}}
 				@teams-meeting-ics=${(e: CustomEvent<{ meetingId: string }>) => {
 					const file = c?.meetingIcs(e.detail.meetingId);
 					if (file && !downloadText(file.name, file.text))
-						this.notify('Could not start the download');
+						this.notify(this.t('app.downloadFailed'));
 				}}
 				@teams-dialog-close=${() => (this.meetingDetails = null)}
 			></teams-meeting-details>
@@ -1509,7 +1536,7 @@ export class TeamsApp extends LitElement {
 		const message = Array.from(
 			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
 		).find((element) => element.dataset.messageId === root);
-		message?.querySelector<HTMLElement>('.thread-link, button[aria-label="Reply"]')?.focus();
+		message?.querySelector<HTMLElement>('.thread-link, [data-action="reply"]')?.focus();
 	}
 
 	private pinFile(file: TeamsState['files'][number]): void {
@@ -1520,7 +1547,7 @@ export class TeamsApp extends LitElement {
 			{ postToChannel: true },
 		);
 		if (tab) this.selectTab(tab.id);
-		else this.notify('This file needs an uploaded URL before it can be pinned');
+		else this.notify(this.t('app.pinNeedsUrl'));
 	}
 
 	private saveCopyFor(detail: OpenFileDetail, state: TeamsState): SaveFileCopy | undefined {
@@ -1547,8 +1574,8 @@ export class TeamsApp extends LitElement {
 
 	private allFiles(s: TeamsState) {
 		return html`<header class="channel-head">
-				<h1>Files</h1>
-				<span class="topic">Shared across your channels</span>
+				<h1>${this.t('rail.files')}</h1>
+				<span class="topic">${this.t('app.sharedAcross')}</span>
 			</header>
 			${this.fileList(s.allFiles, s)}`;
 	}
@@ -1601,7 +1628,7 @@ export class TeamsApp extends LitElement {
 							? html`<aside class="panel chat">${this.conversation(s, true)}</aside>`
 							: this.panel === 'people'
 								? html`<aside class="panel people-panel">
-										<h2>People (${call.participants.length})</h2>
+										<h2>${this.t('app.peopleCount', { count: call.participants.length })}</h2>
 										<ul class="plain">
 											${call.participants.map(
 												(p) =>
@@ -1611,8 +1638,10 @@ export class TeamsApp extends LitElement {
 															name=${p.name}
 															seed=${p.id}
 														></office-ui-avatar>
-														<span>${p.name}${p.self ? ' (you)' : ''}</span>
-														${p.state.hand ? html`<span title="Hand raised">✋</span>` : nothing}
+														<span
+															>${p.self ? this.t('common.nameYou', { name: p.name }) : p.name}</span
+														>
+														${p.state.hand ? html`<span title=${this.t('call.handRaised')}>✋</span>` : nothing}
 													</li>`,
 											)}
 										</ul>

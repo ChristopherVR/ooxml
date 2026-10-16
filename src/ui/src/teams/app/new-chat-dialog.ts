@@ -44,22 +44,22 @@ export class TeamsNewChatDialog extends TeamsDialog {
 	private submit(event: Event): void {
 		event.preventDefault();
 		if (this.selected.length === 0) {
-			this.issue = 'Pick at least one person.';
+			this.issue = this.t('newChat.pickOne');
 			return;
 		}
 		if (!this.create?.(this.selected, this.selected.length > 1 ? this.name : ''))
-			this.issue = 'The chat could not be started.';
+			this.issue = this.t('newChat.failed');
 	}
 
 	protected override render() {
 		const group = this.selected.length > 1;
 		return this.frame(
-			'New chat',
+			this.t('chat.new'),
 			html`<form @submit=${this.submit}>
 				<div class="field">
-					To
+					${this.t('newChat.to')}
 					<office-ui-people-picker
-						label="People to chat with"
+						label=${this.t('newChat.peopleLabel')}
 						.contacts=${this.contacts}
 						.selected=${this.selected}
 						@office-people-change=${(e: CustomEvent<{ selected: string[] }>) => {
@@ -71,29 +71,24 @@ export class TeamsNewChatDialog extends TeamsDialog {
 				${
 					group
 						? html`<label
-								>Group name (optional)<input
+								>${this.t('chatPeople.groupNameOptional')}<input
 									maxlength=${MAX_CHANNEL_NAME_CHARS}
 									.value=${this.name}
-									placeholder="Name this group chat"
+									placeholder=${this.t('chatPeople.groupPlaceholder')}
 									@input=${(e: Event) => (this.name = (e.target as HTMLInputElement).value)}
 							/></label>`
 						: nothing
 				}
-				<small
-					>${
-						group
-							? 'Everyone you pick joins one group chat. Only its members can read it.'
-							: 'Pick one person for a 1:1 chat, or several for a group chat.'
-					}</small
-				>
+				<small>${group ? this.t('newChat.hintGroup') : this.t('newChat.hintOne')}</small>
 				${this.issue ? html`<p class="issue" role="alert">${this.issue}</p>` : nothing}
 				<footer>
-					<button type="button" @click=${this.requestClose}>Cancel</button>
+					<button type="button" @click=${this.requestClose}>${this.t('common.cancel')}</button>
 					<button type="submit" class="primary" ?disabled=${this.selected.length === 0}>
-						${group ? 'Start group chat' : 'Start chat'}
+						${this.t(group ? 'newChat.startGroup' : 'newChat.start')}
 					</button>
 				</footer>
 			</form>`,
+			this.t('dialog.closeNewChat'),
 		);
 	}
 }

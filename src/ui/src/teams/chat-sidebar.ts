@@ -1,16 +1,17 @@
 import { html, nothing } from 'lit';
 import type { ChatView } from 'ooxml-core/teams';
 import { definer } from '../registry';
-import { TeamsElement, dayLabel, formatTime, withStyles } from './base';
+import { TeamsElement, dayKind, formatTime, withStyles } from './base';
+import { teamsI18n } from './i18n/translator';
 import { icon } from './icons';
 import css from './chat-sidebar.css?raw';
 
 /** The time a row shows: the clock today, otherwise a short date. */
-function stamp(ts: number): string {
+function stamp(ts: number, locale: string): string {
 	if (!ts) return '';
-	return dayLabel(ts) === 'Today'
-		? formatTime(ts)
-		: new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+	return dayKind(ts) === 'today'
+		? formatTime(ts, locale)
+		: new Date(ts).toLocaleDateString(teamsI18n(locale).intl, { month: 'short', day: 'numeric' });
 }
 
 /**
@@ -36,12 +37,12 @@ export class OfficeUiChatSidebar extends TeamsElement {
 	protected override render() {
 		return html`
 			<header>
-				<h2>Chat</h2>
+				<h2>${this.t('rail.chat')}</h2>
 				<button
 					class="new"
 					type="button"
-					title="New chat"
-					aria-label="New chat"
+					title=${this.t('chat.new')}
+					aria-label=${this.t('chat.new')}
 					@click=${() => this.fire('office-chat-new', {})}
 				>
 					${icon('plus')}
@@ -49,7 +50,7 @@ export class OfficeUiChatSidebar extends TeamsElement {
 			</header>
 			${
 				this.chats.length === 0
-					? html`<p class="empty">No chats yet. Start one with the plus button.</p>`
+					? html`<p class="empty">${this.t('chat.none')}</p>`
 					: html`<ul>
 							${this.chats.map((c) => this.row(c))}
 						</ul>`
@@ -63,11 +64,14 @@ export class OfficeUiChatSidebar extends TeamsElement {
 			? c.lastMessage.system
 				? c.lastMessage.text
 				: c.lastMessage.mine
-					? `You: ${c.lastMessage.text}`
+					? this.t('chat.previewYou', { text: c.lastMessage.text })
 					: c.kind === 'direct'
 						? c.lastMessage.text
-						: `${c.lastMessage.authorName}: ${c.lastMessage.text}`
-			: 'No messages yet';
+						: this.t('chat.previewAuthor', {
+								author: c.lastMessage.authorName,
+								text: c.lastMessage.text,
+							})
+			: this.t('chat.noMessagesPreview');
 		return html`
 			<li>
 				<button
@@ -91,18 +95,20 @@ export class OfficeUiChatSidebar extends TeamsElement {
 					<span class="text">
 						<span class="line">
 							<span class="title">${c.title}</span>
-							<time>${stamp(c.ts)}</time>
+							<time>${stamp(c.ts, this.locale)}</time>
 						</span>
 						<span class="preview">${preview}</span>
 					</span>
 					${
 						c.live
-							? html`<span class="live" title="Call in progress">${icon('video')}</span>`
+							? html`<span class="live" title=${this.t('call.inProgress')}>${icon('video')}</span>`
 							: nothing
 					}
 					${
 						c.unread
-							? html`<span class="count" aria-label=${`${c.unread} unread`}
+							? html`<span
+									class="count"
+									aria-label=${this.t('chat.unreadCount', { count: c.unread })}
 									>${c.unread > 99 ? '99+' : c.unread}</span
 								>`
 							: nothing

@@ -87,18 +87,18 @@ export class TeamsMeetingDetails extends TeamsDialog {
 
 	private endText(m: MeetingView): string {
 		const date = (ms: number): string =>
-			new Intl.DateTimeFormat([], {
+			new Intl.DateTimeFormat(this.i18n.intl, {
 				dateStyle: 'medium',
 				...(this.zone ? { timeZone: this.zone } : {}),
 			}).format(ms);
-		if (m.count !== undefined) return m.count === 1 ? ', 1 time' : `, ${m.count} times`;
-		return m.until !== undefined ? `, until ${date(m.until)}` : '';
+		if (m.count !== undefined) return this.tn('details.times', m.count);
+		return m.until !== undefined ? this.t('details.until', { date: date(m.until) }) : '';
 	}
 
 	private scopeChoice(action: 'edit' | 'cancel') {
 		const options: [MeetingScope, string][] = [
-			['occurrence', action === 'edit' ? 'This event' : 'This event only'],
-			['series', action === 'edit' ? 'All events in the series' : 'All events in the series'],
+			['occurrence', this.t(action === 'edit' ? 'details.thisEvent' : 'details.thisEventOnly')],
+			['series', this.t('details.allEvents')],
 		];
 		return html`<form
 			class="scope"
@@ -109,7 +109,7 @@ export class TeamsMeetingDetails extends TeamsDialog {
 		>
 			<fieldset>
 				<legend>
-					${action === 'edit' ? 'Edit recurring meeting' : 'Cancel recurring meeting'}
+					${this.t(action === 'edit' ? 'details.editRecurring' : 'details.cancelRecurring')}
 				</legend>
 				${options.map(
 					([value, label]) =>
@@ -126,9 +126,11 @@ export class TeamsMeetingDetails extends TeamsDialog {
 				)}
 			</fieldset>
 			<footer>
-				<button type="button" @click=${() => (this.pending = null)}>Back</button>
+				<button type="button" @click=${() => (this.pending = null)}>
+					${this.t('common.back')}
+				</button>
 				<button type="submit" class=${action === 'cancel' ? 'danger' : 'primary'}>
-					${action === 'edit' ? 'Continue' : 'Cancel meeting'}
+					${this.t(action === 'edit' ? 'details.continue' : 'details.cancelMeeting')}
 				</button>
 			</footer>
 		</form>`;
@@ -136,7 +138,8 @@ export class TeamsMeetingDetails extends TeamsDialog {
 
 	protected override render() {
 		const m = this.meeting;
-		if (!m) return this.frame('Meeting', html``);
+		if (!m)
+			return this.frame(this.t('details.meeting'), html``, this.t('dialog.closeMeetingDetails'));
 		const occurrence = occurrenceAt(m, this.occurrenceStart || m.start);
 		const start = occurrence?.start ?? (this.occurrenceStart || m.start);
 		const end = occurrence?.end ?? start + (m.end - m.start);
@@ -145,24 +148,25 @@ export class TeamsMeetingDetails extends TeamsDialog {
 		return this.frame(
 			occurrence?.title ?? m.title,
 			html`<div class="body">
-				<p class="when">${icon('calendar')} ${formatWhen(start, end)}</p>
-				${m.repeat !== 'none' ? html`<p>${repeatText(m)}${this.endText(m)}</p>` : nothing}
+				<p class="when">${icon('calendar')} ${formatWhen(start, end, this.locale)}</p>
+				${m.repeat !== 'none' ? html`<p>${repeatText(m, this.i18n)}${this.endText(m)}</p>` : nothing}
 				${
 					m.zone !== this.zone
-						? html`<p>Scheduled in the organizer's time zone, ${m.zone.replaceAll('_', ' ')}.</p>`
+						? html`<p>${this.t('details.organizerZone', { zone: m.zone.replaceAll('_', ' ') })}</p>`
 						: nothing
 				}
-				<p>Organized by ${m.mine ? 'you' : m.organizerName}</p>
+				<p>
+					${m.mine ? this.t('details.organizedByYou') : this.t('details.organizedBy', { name: m.organizerName })}
+				</p>
 				${
 					m.channelId
 						? html`<p>
-								Channel meeting in # ${this.channelName || 'a channel'}. Everyone in the channel can
-								join.
+								${this.t('details.channelMeeting', { channel: this.channelName || this.t('details.aChannel') })}
 							</p>`
 						: html`<div class="people">
-								<h3>Attendees (${m.attendees.length + 1})</h3>
+								<h3>${this.t('details.attendees', { count: m.attendees.length + 1 })}</h3>
 								<ul>
-									<li>${m.organizerName} (organizer)</li>
+									<li>${this.t('details.organizerItem', { name: m.organizerName })}</li>
 									${m.attendees.map((a) => html`<li>${a.name}</li>`)}
 								</ul>
 							</div>`
@@ -171,27 +175,31 @@ export class TeamsMeetingDetails extends TeamsDialog {
 				${this.pending ? this.scopeChoice(this.pending) : nothing}
 				<footer ?hidden=${this.pending !== null}>
 					<button type="button" class="primary" @click=${() => this.emit('teams-meeting-join')}>
-						${m.live ? 'Join now' : 'Join'}
+						${this.t(m.live ? 'call.joinNow' : 'call.join')}
 					</button>
 					${
 						hasChat
 							? html`<button type="button" @click=${() => this.emit('teams-meeting-chat')}>
-									Meeting chat
+									${this.t('details.meetingChat')}
 								</button>`
 							: nothing
 					}
-					<button type="button" @click=${() => this.emit('teams-meeting-ics')}>Export .ics</button>
+					<button type="button" @click=${() => this.emit('teams-meeting-ics')}>
+						${this.t('details.exportIcs')}
+					</button>
 					${
 						m.mine
-							? html`<button type="button" @click=${() => this.change('edit')}>Edit</button>
+							? html`<button type="button" @click=${() => this.change('edit')}>
+										${this.t('common.edit')}
+									</button>
 									<button type="button" class="danger" @click=${() => this.change('cancel')}>
-										Cancel meeting
+										${this.t('details.cancelMeeting')}
 									</button>`
 							: nothing
 					}
 				</footer>
 			</div>`,
-			'Close meeting details',
+			this.t('dialog.closeMeetingDetails'),
 		);
 	}
 }

@@ -21,7 +21,6 @@ import {
 } from './repeat-text';
 
 const SLOT = 30 * MINUTE_MS;
-const NOT_SAVED = 'The meeting was not saved. Your details are kept here.';
 
 const repeatOption = (o: { value: string; label: string }, current: string) =>
 	html`<option value=${o.value} ?selected=${o.value === current}>${o.label}</option>`;
@@ -154,7 +153,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 	private repeatToStore(start: number): RepeatSelection {
 		const choice = this.repeatChoice;
 		if (choice.repeat !== 'monthly' || choice.monthlyBy !== 'weekday') return choice;
-		const fits = repeatOptions(start, this.zone()).map((o) => o.value);
+		const fits = repeatOptions(start, this.zone(), this.i18n).map((o) => o.value);
 		return fits.includes(repeatValue(choice))
 			? choice
 			: parseRepeatValue(fits.find((v) => v.startsWith('monthly-') && v !== 'monthly-date') ?? '');
@@ -187,25 +186,27 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		event.preventDefault();
 		const start = new Date(this.startText).getTime();
 		const end = new Date(this.endText).getTime();
-		if (!this.meetingTitle.trim()) this.issue = 'Add a title.';
-		else if (!Number.isFinite(start) || !Number.isFinite(end)) this.issue = 'Pick a start and end.';
-		else if (end <= start) this.issue = 'The meeting must end after it starts.';
-		else if (end - start > 24 * 60 * MINUTE_MS) this.issue = 'A meeting can last at most 24 hours.';
+		if (!this.meetingTitle.trim()) this.issue = this.t('meeting.addTitle');
+		else if (!Number.isFinite(start) || !Number.isFinite(end))
+			this.issue = this.t('meeting.pickStartEnd');
+		else if (end <= start) this.issue = this.t('meeting.endAfterStart');
+		else if (end - start > 24 * 60 * MINUTE_MS) this.issue = this.t('meeting.maxDuration');
 		else if (this.occurrence) {
 			const one = { title: this.meetingTitle, description: this.description, start, end };
-			if (!this.save?.(one, this.meeting?.id, this.occurrence)) this.issue = NOT_SAVED;
+			if (!this.save?.(one, this.meeting?.id, this.occurrence))
+				this.issue = this.t('meeting.notSaved');
 		} else if (
 			this.repeatChoice.repeat !== 'none' &&
 			this.endMode === 'count' &&
 			!this.validCount()
 		)
-			this.issue = `Enter a number of events from 1 to ${MAX_RECURRENCE_COUNT}.`;
+			this.issue = this.t('meeting.countRange', { max: MAX_RECURRENCE_COUNT });
 		else if (
 			this.repeatChoice.repeat !== 'none' &&
 			this.endMode === 'date' &&
 			!this.validUntil(start)
 		)
-			this.issue = 'The series must end on or after its first event.';
+			this.issue = this.t('meeting.untilBeforeStart');
 		else if (
 			!this.save?.(
 				{
@@ -221,7 +222,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 				this.meeting?.id,
 			)
 		)
-			this.issue = NOT_SAVED;
+			this.issue = this.t('meeting.notSaved');
 	}
 
 	protected override render() {
@@ -229,13 +230,13 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		const single = this.occurrence !== 0;
 		const current = repeatValue(this.repeatToStore(new Date(this.startText).getTime()));
 		return this.frame(
-			single ? 'Edit this event' : editing ? 'Edit meeting' : 'New meeting',
+			this.t(single ? 'meeting.editEvent' : editing ? 'meeting.edit' : 'calendar.newMeeting'),
 			html`<form @submit=${this.submit}>
 				<label
-					>Title<input
+					>${this.t('meeting.title')}<input
 						maxlength=${MAX_MEETING_TITLE}
 						.value=${this.meetingTitle}
-						placeholder="Add a title"
+						placeholder=${this.t('meeting.titlePlaceholder')}
 						@input=${(e: Event) => {
 							this.meetingTitle = (e.target as HTMLInputElement).value;
 							this.issue = '';
@@ -243,13 +244,13 @@ export class TeamsMeetingDialog extends TeamsDialog {
 				/></label>
 				<div class="times">
 					<label
-						>Start<input
+						>${this.t('meeting.start')}<input
 							type="datetime-local"
 							.value=${this.startText}
 							@change=${(e: Event) => this.moveStart((e.target as HTMLInputElement).value)}
 					/></label>
 					<label
-						>End<input
+						>${this.t('meeting.end')}<input
 							type="datetime-local"
 							.value=${this.endText}
 							@change=${(e: Event) => {
@@ -260,15 +261,16 @@ export class TeamsMeetingDialog extends TeamsDialog {
 				</div>
 				${
 					single
-						? html`<small>Only this event changes. The rest of the series stays as it is.</small>`
+						? html`<small>${this.t('meeting.onlyThisEvent')}</small>`
 						: html`
 								<label
-									>Repeat<select
+									>${this.t('meeting.repeat')}<select
 										@change=${(e: Event) => (this.repeatChoice = parseRepeatValue((e.target as HTMLSelectElement).value))}
 									>
 										${repeatOptions(
 											new Date(this.startText).getTime() || Date.now(),
 											this.zone(),
+											this.i18n,
 										).map((o) => repeatOption(o, current))}
 									</select></label
 								>
@@ -276,19 +278,19 @@ export class TeamsMeetingDialog extends TeamsDialog {
 									this.repeatChoice.repeat === 'none'
 										? nothing
 										: html`<label
-													>Ends<select
+													>${this.t('meeting.ends')}<select
 														.value=${this.endMode}
 														@change=${(e: Event) => (this.endMode = (e.target as HTMLSelectElement).value as typeof this.endMode)}
 													>
-														<option value="never">Never</option>
-														<option value="date">On a date</option>
-														<option value="count">After a number of events</option>
+														<option value="never">${this.t('meeting.endsNever')}</option>
+														<option value="date">${this.t('meeting.endsDate')}</option>
+														<option value="count">${this.t('meeting.endsCount')}</option>
 													</select></label
 												>
 												${
 													this.endMode === 'date'
 														? html`<label
-																>End date<input
+																>${this.t('meeting.endDate')}<input
 																	type="date"
 																	.value=${this.untilText}
 																	@change=${(e: Event) => {
@@ -301,7 +303,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 												${
 													this.endMode === 'count'
 														? html`<label
-																>Number of events<input
+																>${this.t('meeting.numberOfEvents')}<input
 																	type="number"
 																	min="1"
 																	max=${MAX_RECURRENCE_COUNT}
@@ -315,25 +317,22 @@ export class TeamsMeetingDialog extends TeamsDialog {
 												}`
 								}
 								<label
-									>Channel (optional)<select
+									>${this.t('meeting.channelOptional')}<select
 										?disabled=${editing}
 										.value=${this.channelId}
 										@change=${(e: Event) => (this.channelId = (e.target as HTMLSelectElement).value)}
 									>
-										<option value="">No channel: invite people</option>
+										<option value="">${this.t('meeting.noChannel')}</option>
 										${this.channels.map((c) => html`<option value=${c.id}># ${c.name}</option>`)}
 									</select></label
 								>
 								${
 									this.channelId
-										? html`<small
-												>A channel meeting posts a meeting card in the channel and shows in
-												everyone's calendar.</small
-											>`
+										? html`<small>${this.t('meeting.channelNote')}</small>`
 										: html`<div class="field">
-												Attendees
+												${this.t('meeting.attendees')}
 												<office-ui-people-picker
-													label="Attendees"
+													label=${this.t('meeting.attendees')}
 													.contacts=${this.contacts}
 													.selected=${this.attendees}
 													@office-people-change=${(e: CustomEvent<{ selected: string[] }>) => (this.attendees = e.detail.selected)}
@@ -343,22 +342,29 @@ export class TeamsMeetingDialog extends TeamsDialog {
 							`
 				}
 				<label
-					>Details (optional)<textarea
+					>${this.t('meeting.detailsOptional')}<textarea
 						maxlength=${MAX_MEETING_DESCRIPTION}
 						.value=${this.description}
-						placeholder="Add an agenda or notes"
+						placeholder=${this.t('meeting.detailsPlaceholder')}
 						@input=${(e: Event) => (this.description = (e.target as HTMLTextAreaElement).value)}
 					></textarea>
 				</label>
-				<small
-					>Times are shown in your time zone. The organizer's zone keeps repeats on schedule.</small
-				>
+				<small>${this.t('meeting.zoneNote')}</small>
 				${this.issue ? html`<p class="issue" role="alert">${this.issue}</p>` : nothing}
 				<footer>
-					<button type="button" @click=${this.requestClose}>Cancel</button>
-					<button type="submit" class="primary">${editing ? 'Save' : 'Send'}</button>
+					<button type="button" @click=${this.requestClose}>${this.t('common.cancel')}</button>
+					<button type="submit" class="primary">
+						${this.t(editing ? 'common.save' : 'meeting.send')}
+					</button>
 				</footer>
 			</form>`,
+			this.t(
+				single
+					? 'dialog.closeEditEvent'
+					: editing
+						? 'dialog.closeEditMeeting'
+						: 'dialog.closeNewMeeting',
+			),
 		);
 	}
 }
