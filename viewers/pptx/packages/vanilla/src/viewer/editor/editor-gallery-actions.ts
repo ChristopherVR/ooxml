@@ -1,5 +1,12 @@
-import type { RibbonGalleryApplyResult } from 'ooxml-ui/pptx';
-import type { PptxElement } from 'pptx-viewer-core';
+import { createDeckStyleHost } from 'ooxml-ui/pptx';
+import type {
+	DeckStyleHandler,
+	DeckStyleHost,
+	DeckStyleState,
+	RibbonGalleryApplyResult,
+} from 'ooxml-ui/pptx';
+import { buildThemeColorMap } from 'pptx-viewer-core';
+import type { PptxElement, PptxHandler } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';
@@ -16,20 +23,95 @@ import type { EditorOps } from './editor-operations';
  */
 export interface GalleryActions {
 	applyRibbonGalleryResult(result: RibbonGalleryApplyResult): void;
+	/** Show what a Design gallery tile would do while it is hovered; `null` ends the preview. */
+	previewRibbonGalleryResult(result: RibbonGalleryApplyResult | null): void;
+	/** Put the slides back (the pointer left the tiles, or the gallery closed). */
+	endRibbonGalleryPreview(): void;
+	/** The original deck while a preview shows; the ribbon builds its galleries from it. */
+	heldDeckStyleState(): DeckStyleState | undefined;
 }
 
 export interface GalleryActionsDeps {
 	store: Store<ViewerState>;
 	ops: Pick<EditorOps, 'pushHistory' | 'commitChange'>;
 	deck: Pick<DeckActions, 'applyThemeEdit'>;
+	getHandler?: () => PptxHandler | null;
+}
+
+/** The Design galleries' preview and commit over the viewer store. */
+function createStoreDeckStyleHost(
+	store: Store<ViewerState>,
+	ops: Pick<EditorOps, 'pushHistory' | 'commitChange'>,
+	getHandler: () => PptxHandler | null,
+): DeckStyleHost {
+	const write = (state: DeckStyleState): void => {
+		store.set({
+			slides: state.slides,
+			templateElementsBySlideId: state.templateElementsBySlideId,
+			...(state.theme?.colorScheme ? { colorScheme: state.theme.colorScheme } : {}),
+			...(state.theme?.fontScheme ? { fontScheme: state.theme.fontScheme } : {}),
+			...(state.theme?.formatScheme ? { formatScheme: state.theme.formatScheme } : {}),
+			...(state.theme?.name ? { themeName: state.theme.name } : {}),
+		});
+	};
+	return createDeckStyleHost(() => ({
+		read: () => {
+			const state = store.get();
+			return {
+				slides: state.slides,
+				templateElementsBySlideId: state.templateElementsBySlideId,
+				theme: {
+					name: state.themeName,
+					colorScheme: state.colorScheme,
+					fontScheme: state.fontScheme,
+					formatScheme: state.formatScheme,
+				},
+				themeColorMap: state.colorScheme ? buildThemeColorMap(state.colorScheme) : undefined,
+			};
+		},
+		show: write,
+		hold: (on) => store.set({ deckStyleHeld: on }),
+		handler: () => getHandler() as unknown as DeckStyleHandler | null,
+		selectedSlideIds: () => {
+			const state = store.get();
+			const slide = state.slides[state.currentSlide];
+			return slide ? [slide.id] : [];
+		},
+		apply: (state) => {
+			ops.pushHistory();
+			write(state);
+			ops.commitChange();
+		},
+	}));
 }
 
 export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
 	const { store, ops, deck } = deps;
+	const deckStyle = createStoreDeckStyleHost(store, ops, deps.getHandler ?? (() => null));
 	return {
+		previewRibbonGalleryResult(result) {
+			if (store.get().editable) {
+				deckStyle.preview(result);
+			}
+		},
+		endRibbonGalleryPreview: () => deckStyle.endPreview(),
+		heldDeckStyleState: () => deckStyle.held(),
 		applyRibbonGalleryResult(result) {
 			const state = store.get();
 			if (!state.editable) {
+				return;
+			}
+			if (
+				result.kind === 'themeEffects' ||
+				result.kind === 'backgroundStyle' ||
+				result.kind === 'sequence'
+			) {
+				// Settles the hover preview itself, so the commit starts from the real slides.
+				void deckStyle.commit(result);
+				return;
+			}
+			deckStyle.endPreview();
+			if (result.kind === 'command') {
 				return;
 			}
 			if (result.kind === 'element') {

@@ -365,6 +365,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		selectedElement: (state) => ops.selectedElement(state),
 		layoutPreviews: ensureLayoutPreviews,
 		getHandler: deps.getHandler,
+		getHeldDeckStyle: () => editActions.heldDeckStyleState(),
 	});
 
 	const interactions = createStageInteractions({

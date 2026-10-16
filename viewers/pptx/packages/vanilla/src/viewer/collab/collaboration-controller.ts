@@ -151,7 +151,13 @@ export function createCollaborationController(
 			// while the load pipeline is committing a parsed deck (adoption in
 			// notifyContentLoaded decides whether that deck may be published).
 			unsubscribeStore = store.subscribe((state, previous) => {
-				if (state.slides !== previous.slides && !loadApplying && syncGate.isOpen()) {
+				if (
+					state.slides !== previous.slides &&
+					!state.deckStyleHeld &&
+					!previous.deckStyleHeld &&
+					!loadApplying &&
+					syncGate.isOpen()
+				) {
 					flushLocal();
 				}
 			});

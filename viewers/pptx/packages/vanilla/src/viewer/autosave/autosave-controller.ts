@@ -231,7 +231,13 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		if (state.loading && !previous.loading) {
 			recoveryChecked = false;
 		}
-		if (state.dirty && (state.dirty !== previous.dirty || state.slides !== previous.slides)) {
+		// A hover preview swaps the slides for a moment; neither it nor the restore is an edit.
+		const previewing = state.deckStyleHeld || previous.deckStyleHeld;
+		if (
+			state.dirty &&
+			!previewing &&
+			(state.dirty !== previous.dirty || state.slides !== previous.slides)
+		) {
 			schedule();
 		} else if (!state.dirty && previous.dirty && !saving) {
 			// A manual save cleared the dirty flag: reflect it in the indicator.

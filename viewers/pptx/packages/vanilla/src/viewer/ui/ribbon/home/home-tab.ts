@@ -83,7 +83,11 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 	const el = createEl(doc, 'div', 'pptxv-ribbon-tab-content');
 	const { edit } = deps;
 	const galleryHub =
-		deps.galleryHub ?? createRibbonGalleryHub((result) => edit.applyRibbonGalleryResult(result));
+		deps.galleryHub ??
+		createRibbonGalleryHub((result) => edit.applyRibbonGalleryResult(result), {
+			preview: (result) => edit.previewRibbonGalleryResult(result),
+			end: () => edit.endRibbonGalleryPreview(),
+		});
 
 	const clipboard: ClipboardGroup = createClipboardGroup(doc, t, {
 		copy: edit.copy,

@@ -110,8 +110,12 @@ export function createRibbon(
 	const formatBackgroundPanel = createFormatBackgroundPanel(doc, t, handlers.edit);
 	el.appendChild(formatBackgroundPanel.el);
 
-	const galleryHub = createRibbonGalleryHub((result) =>
-		handlers.edit.applyRibbonGalleryResult(result),
+	const galleryHub = createRibbonGalleryHub(
+		(result) => handlers.edit.applyRibbonGalleryResult(result),
+		{
+			preview: (result) => handlers.edit.previewRibbonGalleryResult(result),
+			end: () => handlers.edit.endRibbonGalleryPreview(),
+		},
 	);
 	const hidden = (id: RibbonTabId): boolean => isActionHidden(id, hiddenActions);
 	const fileTab = hidden('file')

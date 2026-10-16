@@ -170,7 +170,11 @@ export function createDesignTab(
 		const variants = group('design.variants');
 		for (const placement of FIXED_TAB_GALLERIES) {
 			if (placement.control.startsWith('design.variants.')) {
-				variants.appendChild(createRibbonGallery(doc, t, placement, galleryHub).el);
+				variants.appendChild(
+					createRibbonGallery(doc, t, placement, galleryHub, {
+						onCommand: () => onToggleFormatBackground(),
+					}).el,
+				);
 			}
 		}
 		el.appendChild(variants);

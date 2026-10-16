@@ -1,5 +1,10 @@
-import { canCropElement, canInteractWithElement, canMergeShapes } from 'ooxml-ui/pptx';
-import type { RibbonGalleryContext } from 'ooxml-ui/pptx';
+import {
+	canCropElement,
+	canInteractWithElement,
+	canMergeShapes,
+	galleryDeckView,
+} from 'ooxml-ui/pptx';
+import type { DeckStyleState, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s building each chrome update payload);
    merging them isn't a style choice here. */
@@ -67,12 +72,28 @@ export function buildRibbonGalleryContext(
 	state: ViewerState,
 	element: PptxElement | undefined,
 	handler: PptxHandler | null | undefined,
+	held?: DeckStyleState | undefined,
 ): RibbonGalleryContext {
+	// While a hover preview shows, galleries are built from the original deck (stable tiles).
+	const deck = galleryDeckView(held, {
+		theme: {
+			name: state.themeName,
+			colorScheme: state.colorScheme,
+			fontScheme: state.fontScheme,
+			formatScheme: state.formatScheme,
+		},
+		themeColorMap: state.colorScheme ? buildThemeColorMap(state.colorScheme) : undefined,
+		activeSlide: state.slides[state.currentSlide] ?? null,
+	});
 	return {
 		element: element ?? null,
-		themeColorMap: state.colorScheme ? buildThemeColorMap(state.colorScheme) : undefined,
-		theme: { name: state.themeName, colorScheme: state.colorScheme, fontScheme: state.fontScheme },
-		resolveStyleMatrix: handler ? (xml) => handler.resolveStyleMatrixReferences(xml) : undefined,
+		themeColorMap: deck.themeColorMap,
+		theme: deck.theme,
+		resolveStyleMatrix: handler
+			? (xml, effectSchemeId) => handler.resolveStyleMatrixReferences(xml, effectSchemeId)
+			: undefined,
+		activeSlide: deck.activeSlide ?? null,
+		...(handler?.getThemeVariants().length ? { themeVariants: handler.getThemeVariants() } : {}),
 		selectedTableCells:
 			state.selectedTableCells.length > 0
 				? state.selectedTableCells
@@ -102,6 +123,8 @@ export interface EditingChromeSyncDeps {
 	layoutPreviews?(): ReadonlyMap<string, PptxLayoutPreview>;
 	/** The loaded deck's handler (ribbon gallery style-matrix resolution); null before a load. */
 	getHandler?(): PptxHandler | null;
+	/** The original deck while a Design gallery hover preview shows. */
+	getHeldDeckStyle?(): DeckStyleState | undefined;
 }
 
 /** Build the `sync()` function that refreshes the ribbon + inspector. */
@@ -159,7 +182,12 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 			canMergeShapes: editingVisible && canMergeShapes(selectedElements(state)),
 			canCrop: state.selectedElementIds.length === 1 && canCropElement(el),
 			cropActive: state.cropSession !== null,
-			galleryContext: buildRibbonGalleryContext(state, el, deps.getHandler?.()),
+			galleryContext: buildRibbonGalleryContext(
+				state,
+				el,
+				deps.getHandler?.(),
+				deps.getHeldDeckStyle?.(),
+			),
 			chartFormatTarget: chartFormatTargetOf(state),
 		});
 		ribbon?.setDrawState({

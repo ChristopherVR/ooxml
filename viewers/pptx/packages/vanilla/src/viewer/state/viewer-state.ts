@@ -171,6 +171,11 @@ export interface ViewerState {
 	/** The loaded theme's name (inspector THEME EDITOR card). */
 	themeName?: string;
 	/**
+	 * True while a Design gallery hover preview shows over the slides: autosave and collaboration
+	 * then keep to the real document, and nothing here is an edit.
+	 */
+	deckStyleHeld: boolean;
+	/**
 	 * Families the user registered from a local font file this session
 	 * (File > Options > Fonts, off by default).
 	 *
@@ -393,6 +398,7 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		fontScheme: undefined,
 		formatScheme: undefined,
 		themeName: undefined,
+		deckStyleHeld: false,
 		tagCollections: [],
 		tableStyleMap: undefined,
 		tableStylesDefaultId: undefined,
