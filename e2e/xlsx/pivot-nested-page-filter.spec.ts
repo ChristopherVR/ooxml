@@ -55,7 +55,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			).toHaveAttribute('disabled');
 			await expect(
 				dialog.getByLabel('Values Axis:', { exact: true }).locator('option[value=rows]'),
-			).toHaveAttribute('disabled');
+			).not.toHaveAttribute('disabled');
 			await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 			const total = `${layout === 'compact' ? 'I' : 'J'}${(layout === 'tabular' ? 6 : 7) + (columns ? 2 : 0)}`;
 			await goToCell(page, total);
