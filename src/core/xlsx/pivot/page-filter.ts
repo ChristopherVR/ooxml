@@ -7,7 +7,9 @@ import {
 	type PivotTable,
 } from '../model';
 import { pivotItems, pivotItemLabel, pivotValueKey } from './data';
+import { pivotItemLabeler } from './item-labels';
 import type { PivotGrid } from './aggregate';
+import { pivotCaptions } from './captions';
 import { resolveDateGroups } from './date-groups';
 import { applyPivotGroups } from './groups';
 import { applyPivotItemFilters } from './item-filters';
@@ -93,7 +95,9 @@ export function prependPivotPage(grid: PivotGrid, pivot: PivotTable): PivotGrid 
 		values: [
 			[
 				pivot.pageFilter.field,
-				pivot.pageFilter.item === undefined ? '(All)' : pivotItemLabel(pivot.pageFilter.item),
+				pivot.pageFilter.item === undefined
+					? pivotCaptions(pivot).all
+					: pivotItemLabeler(pivot)(pivot.pageFilter.field, pivot.pageFilter.item),
 				...Array<CellValue>(width - 2).fill(null),
 			],
 			Array<CellValue>(width).fill(null),

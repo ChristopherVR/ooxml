@@ -152,15 +152,17 @@ it('includes the two report rows in the output budget before allocating headers'
 	expect(name).toBe(pivot.name);
 });
 
-it('refuses Values on rows with a single measure behind a report filter before history', async () => {
+it('moves a report filter to Values on rows with history', async () => {
 	const wb = await loadXlsx(native()),
 		edit = createEditSession(wb),
 		pivot = wb.sheets[0]!.pivotTables![0]!;
-	expect(() => edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' })).toThrow(
-		'Values on rows require multiple measures',
-	);
-	expect(edit.canUndo()).toBe(false);
-	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+	edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' });
+	const rows = wb.sheets[0]!.pivotTables![0]!;
+	expect(rows.valuesAxis).toBe('rows');
+	expect(rows.pageFilter).toEqual(pivot.pageFilter);
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]!.valuesAxis).toBe(pivot.valuesAxis);
+	expect(pivotGrid(wb.sheets[0]!.pivotTables![0]!).values).toEqual(pivotGrid(pivot).values);
 });
 it('refuses ambiguous typed item captions without changing source or report', () => {
 	const wb = createWorkbook(),

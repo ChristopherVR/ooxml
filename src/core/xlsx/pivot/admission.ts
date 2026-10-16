@@ -5,7 +5,7 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
+		'name cacheId dataCaption grandTotalCaption rowHeaderCaption colHeaderCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol rowPageCount colPageCount',
 	pageFields: 'count',
 	pageField: 'fld item hier',
@@ -13,7 +13,7 @@ const TABLE: Record<string, string> = {
 	pivotField:
 		'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId sumSubtotal countASubtotal avgSubtotal maxSubtotal minSubtotal productSubtotal countSubtotal stdDevSubtotal stdDevPSubtotal varSubtotal varPSubtotal',
 	items: 'count',
-	item: 'x t h',
+	item: 'x t h n',
 	rowFields: 'count',
 	colFields: 'count',
 	field: 'x',

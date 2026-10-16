@@ -6,6 +6,7 @@ import {
 	type PivotValueField,
 	type PivotValueFieldOptions,
 } from '../model';
+import { pivotMeasureName, type CaptionHolder } from './captions';
 import { PIVOT_AGGREGATES } from './data';
 
 export const pivotMeasures = (
@@ -16,6 +17,7 @@ export const pivotMeasures = (
 ];
 export function normalizedPivotMeasures(
 	values: readonly PivotValueFieldOptions[],
+	pivot?: CaptionHolder,
 ): PivotValueField[] {
 	if (!Array.isArray(values) || values.length > 15)
 		throw new Error('Choose between one and sixteen PivotTable value fields.');
@@ -28,8 +30,7 @@ export function normalizedPivotMeasures(
 		return {
 			field: value.field,
 			aggregate,
-			caption:
-				value.caption ?? `${aggregate[0]!.toUpperCase()}${aggregate.slice(1)} of ${value.field}`,
+			caption: value.caption ?? pivotMeasureName(aggregate, value.field, pivot),
 		};
 	});
 }

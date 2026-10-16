@@ -10,6 +10,8 @@ import type { CellValue, PivotTable } from '../model';
 import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
 import { pivotGrid } from './aggregate';
 import type { PivotCacheData } from './cache-xml';
+import { ENGLISH_PIVOT_CAPTIONS, pivotCaptions } from './captions';
+import { pivotItemName } from './item-labels';
 import { pivotMeasures } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 import { pivotValueAxisItems, remapPivotRowEntries } from './values-axis';
@@ -71,6 +73,10 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	const compact = pivot.layout === 'compact';
 	const outline = pivot.layout === 'compact' || pivot.layout === 'outline';
 	const top = (pivot.subtotalPosition ?? (outline ? 'top' : 'bottom')) === 'top';
+	const named = (field: string, item: CellValue) => {
+		const text = pivotItemName(pivot, field, item);
+		return text === undefined ? '' : attrs({ n: encodeEscapes(text) });
+	};
 	const fields = pivot.fields
 		.map((name, index) => {
 			const isDate = pivot.dateFields?.includes(name) ?? false;
@@ -99,7 +105,7 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 			const entries = automatic
 				? '<item t="default"/>'
 				: custom.map((fn) => `<item t="${PIVOT_SUBTOTALS[fn].item}"/>`).join('');
-			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : at >= 0 ? 'axisRow' : colAt >= 0 ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: at >= 0 ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: automatic ? undefined : false, ...flags })}>${items ? `<items count="${items.length + (automatic ? 1 : custom.length)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${itemX(index, item)}"/>`).join('')}${entries}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : at >= 0 ? 'axisRow' : colAt >= 0 ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: at >= 0 ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: automatic ? undefined : false, ...flags })}>${items ? `<items count="${items.length + (automatic ? 1 : custom.length)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''}${named(name, item)} x="${itemX(index, item)}"/>`).join('')}${entries}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
 	const items = (count: number, indices?: readonly number[]) =>
@@ -149,6 +155,16 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	const root = doc.documentElement;
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
+	// The captions Excel would otherwise take from its own UI language travel with the report.
+	const caps = pivotCaptions(pivot);
+	root.setAttribute('dataCaption', caps.values);
+	for (const [attribute, key] of [
+		['rowHeaderCaption', 'rowLabels'],
+		['colHeaderCaption', 'columnLabels'],
+		['grandTotalCaption', 'grandTotal'],
+	] as const)
+		if (caps[key] !== ENGLISH_PIVOT_CAPTIONS[key] || root.hasAttribute(attribute))
+			root.setAttribute(attribute, caps[key]);
 	root.setAttribute('dataOnRows', rowsAxis ? '1' : '0');
 	if (rowsAxis && valuesAt < rowIdx.length) root.setAttribute('dataPosition', String(valuesAt));
 	else root.removeAttribute('dataPosition');

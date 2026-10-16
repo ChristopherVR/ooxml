@@ -8,6 +8,12 @@ import { att, decodeEscapes } from '../read/xml-util';
 import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
+import {
+	aggregateCaptionsOf,
+	inferPivotCaptions,
+	readPivotCaptionAttributes,
+} from './captions-read';
+import { pivotCaptions, trimmedCaptions } from './captions';
 import { pivotKey, type SlicerRefs } from '../slicer/read';
 import { readDateFields, readDateFilter } from './date-read';
 import { readFieldGroups } from './group-read';
@@ -15,6 +21,7 @@ import { databaseFieldCount, readDateGroups } from './date-group-read';
 import { fieldSubtotalsOf } from './subtotal-read';
 import { isoToSerial } from './dates';
 import { readItemFilters, readSlicerCacheId } from './item-filters-read';
+import { readItemNames } from './item-names-read';
 import { assertPageAxisItems } from './page-filter-admission';
 import { readPivotPageFilter } from './page-filter';
 import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
@@ -33,6 +40,11 @@ function value(node: XmlElement, date1904 = false): CellValue {
 	if (node.localName === 'e' && isErrorCode(v)) return { error: v };
 	throw new Error('Unsupported pivot cache item');
 }
+
+const namedAggregates = (pivot: PivotTable): PivotTable['captions'] => {
+	const aggregates = aggregateCaptionsOf(pivot);
+	return aggregates ? { aggregates } : {};
+};
 
 function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTable {
 	const xml = source.text(part)!;
@@ -214,6 +226,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		location.start.row -= 2;
 	}
 	const itemFilters = readItemFilters(tableFields, names, shared);
+	const itemNames = readItemNames(tableFields, names, shared);
 	const slicerCacheId = readSlicerCacheId(cache);
 	const fieldGroups = readFieldGroups(fields, names);
 	const dateFields = readDateFields(fields, names);
@@ -255,6 +268,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
+		...(itemNames.length ? { itemNames } : {}),
 		...(fieldGroups.length ? { fieldGroups } : {}),
 		...(dateFields.length ? { dateFields } : {}),
 		...(dateGroups.length ? { dateGroups } : {}),
@@ -312,6 +326,13 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		...(col ? { columnField: col } : {}),
 		...(moreColumns.length ? { moreColumnFields: moreColumns as string[] } : {}),
 	};
+	// The header, grand total and Values captions the definition names; the cached cells add the rest.
+	const captions = trimmedCaptions(
+		pivotCaptions({
+			captions: { ...readPivotCaptionAttributes(root), ...namedAggregates(pivot) },
+		}),
+	);
+	if (captions) pivot.captions = captions;
 	if (pageFilter && moreColumns.length) throw new Error('Report filters support one column field');
 	assertPageAxisItems(root, pivot, shared, cache, recordRoot);
 	return pivot;
@@ -349,6 +370,13 @@ export function readPivotTables(
 					)
 						throw new Error('Shared pivot cache or unsupported slicer connection');
 					const pivot = readOne(workbook, source, part);
+					// A localized Excel wrote its words into the cells; reproduce them on refresh.
+					const inferred = inferPivotCaptions(pivot, sheet, {
+						...readPivotCaptionAttributes(parseXml(pivot.sourceXml!).documentElement),
+						...namedAggregates(pivot),
+					});
+					if (inferred) pivot.captions = inferred;
+					else delete pivot.captions;
 					const grid = pivotGrid(pivot);
 					if (
 						grid.values.length !== pivot.location.end.row - pivot.location.start.row + 1 ||

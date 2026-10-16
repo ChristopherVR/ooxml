@@ -1,6 +1,7 @@
 import type { CellValue, PivotAggregate, PivotTable } from '../model';
 import type { PivotGrid, PivotRowEntry } from './aggregate';
-import { pivotItemLabel, pivotItems, pivotRowFields, pivotValueKey } from './data';
+import { pivotItems, pivotRowFields, pivotValueKey } from './data';
+import { pivotItemLabeler } from './item-labels';
 import { pivotValuesIndex } from './axes';
 import {
 	columnKey,
@@ -10,9 +11,9 @@ import {
 	recordColumnKeys,
 } from './columns';
 import { aggregateValues, pivotMeasureNumber, pivotMeasures } from './measures';
-import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
+import { fillCaption, pivotCaptions } from './captions';
+import { fieldSubtotalFunctions } from './subtotals';
 
-const label = pivotItemLabel;
 const MAX_CELLS = 1_000_000;
 
 interface Node {
@@ -68,6 +69,8 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	const labelColumns = compact ? 1 : levels;
 	const measures = pivotMeasures(pivot);
 	const functions = names.map((name) => fieldSubtotalFunctions(pivot, name));
+	const caps = pivotCaptions(pivot);
+	const labelOf = pivotItemLabeler(pivot);
 
 	const root = node(0, null);
 	for (const record of pivot.records) {
@@ -96,7 +99,7 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 
 	const dimensions = pivotColumnDimensions(pivot, columns, labelColumns, onRows);
 	const rowTitles = names.map((name): CellValue => name);
-	if (onRows) rowTitles.splice(valuesAt, 0, 'Values');
+	if (onRows) rowTitles.splice(valuesAt, 0, caps.values);
 	let values: CellValue[][] = [];
 	let indents: number[] = [];
 	const rowEntries: PivotRowEntry[] = [];
@@ -197,11 +200,11 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 		const children = [...group.children.values()].sort((a, b) => a.index - b.index);
 		children.forEach((child, position) => {
 			const here: Path = {
-				labels: [...path.labels, label(child.value)],
+				labels: [...path.labels, labelOf(names[field]!, child.value)],
 				indices: [...path.indices, child.index],
 				firsts: [...path.firsts, position === 0],
 			};
-			const text = label(child.value);
+			const text = labelOf(names[field]!, child.value);
 			if (last)
 				return push(level, () => [
 					labelCells(path, leafShown(here.firsts), level, text),
@@ -225,14 +228,14 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 				]);
 			if (own === 'auto') {
 				if (showsValue) return;
-				if (valuesAbove) subtotal(`${caption} Total`, undefined, measure);
+				if (valuesAbove) subtotal(fillCaption(caps.subtotal, caption), undefined, measure);
 				else measures.forEach((one, m) => subtotal(`${caption} ${one.caption}`, undefined, m));
 			} else
 				for (const fn of own)
-					if (valuesAbove) subtotal(`${caption} ${PIVOT_SUBTOTALS[fn].label}`, fn, measure);
+					if (valuesAbove) subtotal(`${caption} ${caps.functions[fn]}`, fn, measure);
 					else
 						measures.forEach((one, m) =>
-							subtotal(`${caption} ${PIVOT_SUBTOTALS[fn].label} of ${one.field}`, fn, m),
+							subtotal(`${caption} ${caps.functions[fn]} of ${one.field}`, fn, m),
 						);
 		});
 	};
@@ -244,12 +247,12 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 		]);
 	const build = () => {
 		walk(0, root, undefined, { labels: [], indices: [], firsts: [] });
-		if (onRows) measures.forEach((one, m) => grand(`Total ${one.caption}`, m));
-		else grand('Grand Total');
+		if (onRows) measures.forEach((one, m) => grand(fillCaption(caps.measureTotal, one.caption), m));
+		else grand(caps.grandTotal);
 	};
 	build();
 	counting = false;
-	values = pivotColumnHeaders(pivot, columns, compact ? ['Row Labels'] : rowTitles, onRows);
+	values = pivotColumnHeaders(pivot, columns, compact ? [caps.rowLabels] : rowTitles, onRows);
 	const firstDataRow = values.length;
 	indents = values.map(() => 0);
 	build();

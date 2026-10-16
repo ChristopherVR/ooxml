@@ -4,6 +4,7 @@ import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { parseXml } from '../../xml/index';
 import { pivotColumnFields, pivotRowFields } from './axes';
+import { pivotCaptions, pivotMeasureName, type CaptionHolder } from './captions';
 import { pivotAxisFieldNames } from './date-groups';
 
 export { pivotColumnFields, pivotRowFields };
@@ -134,6 +135,7 @@ export function validatePivotFields(
 		| 'sourceXml'
 		| 'valuesAxis'
 		| 'valuesPosition'
+		| 'captions'
 		| 'pageFilter'
 		| 'itemFilters'
 		| 'dateFilter'
@@ -196,7 +198,8 @@ export function validatePivotFields(
 	if (
 		extras.length > 0 &&
 		pivot.sourceXml &&
-		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !== 'Values'
+		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !==
+			pivotCaptions(pivot).values
 	)
 		throw new Error('This PivotTable uses unsupported Values header captions.');
 	if (
@@ -233,6 +236,10 @@ export function validatePivotFields(
 		throw new Error('Choose valid PivotTable fields; row and column fields must differ.');
 }
 
-export function pivotCaption(aggregate: PivotTable['aggregate'], field: string): string {
-	return `${aggregate[0]!.toUpperCase()}${aggregate.slice(1)} of ${field}`;
+export function pivotCaption(
+	aggregate: PivotTable['aggregate'],
+	field: string,
+	pivot?: CaptionHolder,
+): string {
+	return pivotMeasureName(aggregate, field, pivot);
 }

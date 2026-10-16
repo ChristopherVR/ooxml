@@ -1,11 +1,12 @@
 import type { CellValue, PivotAggregate, PivotTable } from '../model';
 import { attrs } from '../write/xml-out';
-import { pivotColumnFields, pivotItemLabel, pivotItems, pivotValueKey } from './data';
+import { pivotColumnFields, pivotItems, pivotValueKey } from './data';
+import { pivotItemLabeler } from './item-labels';
+import { fillCaption, pivotCaptions } from './captions';
 import { pivotMeasures } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 
 const SEPARATOR = '\u0001';
-const label = pivotItemLabel;
 
 /** One column group of the report: a detail column, a subtotal of a group, or the grand total. */
 export interface ColumnEntry {
@@ -148,7 +149,11 @@ export function pivotColumnHeaders(
 	const rows = levels + 1 + Number(count > 1);
 	const grid = Array.from({ length: rows }, () => Array<CellValue>(width).fill(null));
 	if (count === 1 && !valuesOnRows) grid[0]![0] = pivot.valueCaption;
-	const titles = compact ? ['Column Labels'] : [...columns.names, ...(count > 1 ? ['Values'] : [])];
+	const caps = pivotCaptions(pivot);
+	const labelOf = pivotItemLabeler(pivot);
+	const titles = compact
+		? [caps.columnLabels]
+		: [...columns.names, ...(count > 1 ? [caps.values] : [])];
 	titles.forEach((title, i) => {
 		grid[0]![labelColumns + i] = title;
 	});
@@ -162,27 +167,30 @@ export function pivotColumnHeaders(
 			// A group is labelled where its first column starts.
 			entry.path.forEach((_index, level) => {
 				const continued = entry.path.slice(0, level + 1).every((p, i) => p === previous[i]);
-				if (!continued) grid[1 + level]![at] = label(entry.values[level]!);
+				if (!continued) grid[1 + level]![at] = labelOf(columns.names[level]!, entry.values[level]!);
 			});
 			previous = entry.path;
 			if (count > 1) measures.forEach((measure, m) => (grid[rows - 1]![at + m] = measure.caption));
 			return;
 		}
 		const row = entry.kind === 'grand' ? 1 : entry.path.length;
-		const name = entry.kind === 'grand' ? '' : String(label(entry.values.at(-1)!));
+		const name =
+			entry.kind === 'grand'
+				? ''
+				: String(labelOf(columns.names[entry.path.length - 1]!, entry.values.at(-1)!));
 		measures.forEach((measure, m) => {
 			// A custom subtotal names its function, and with several measures its source field.
-			const custom = entry.fn ? PIVOT_SUBTOTALS[entry.fn].label : undefined;
+			const custom = entry.fn ? caps.functions[entry.fn] : undefined;
 			grid[row]![at + m] = custom
 				? count === 1
 					? `${name} ${custom}`
 					: `${name} ${custom} of ${measure.field}`
 				: count === 1
 					? entry.kind === 'grand'
-						? 'Grand Total'
-						: `${name} Total`
+						? caps.grandTotal
+						: fillCaption(caps.subtotal, name)
 					: entry.kind === 'grand'
-						? `Total ${measure.caption}`
+						? fillCaption(caps.measureTotal, measure.caption)
 						: `${name} ${measure.caption}`;
 		});
 	});

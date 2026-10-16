@@ -53,6 +53,42 @@ export interface PivotDateGroup {
 	 */
 	localized?: Partial<Record<PivotDateUnit, { name: string; labels: string[] }>>;
 }
+/**
+ * The captions a PivotTable writes into its cells. Excel takes them from its UI language, so a
+ * workbook saved by a localized Excel holds them in that language: the row and column header
+ * (`rowHeaderCaption`, `colHeaderCaption`), the grand total (`grandTotalCaption`), the Values
+ * header (`dataCaption`) and the words of subtotal rows, which only the cached cells record.
+ * Templates use `{0}` for the item (`{0} Total`) or the measure (`Total {0}`).
+ */
+export interface PivotCaptions {
+	rowLabels: string;
+	columnLabels: string;
+	grandTotal: string;
+	values: string;
+	/** The report filter item that selects everything. */
+	all: string;
+	/** The label of a blank item. */
+	blank: string;
+	/** A group's automatic subtotal row or column. */
+	subtotal: string;
+	/** A measure's grand total, or its total with several measures. */
+	measureTotal: string;
+	/** The suffix of a custom subtotal row (`East Sum`). */
+	functions: Record<PivotAggregate, string>;
+	/** The default name of a value field (`Sum of {0}`). */
+	aggregates: Record<PivotAggregate, string>;
+}
+/** A display name Excel keeps for an item of a field (`item/@n`), such as Eastern for East. */
+export interface PivotItemName {
+	field: string;
+	item: CellValue;
+	name: string;
+}
+/** Captions that differ from English; the rest keep their English text. */
+export type PivotCaptionOverrides = Partial<Omit<PivotCaptions, 'functions' | 'aggregates'>> & {
+	functions?: Partial<Record<PivotAggregate, string>>;
+	aggregates?: Partial<Record<PivotAggregate, string>>;
+};
 export type PivotValuesPosition = 'last' | 'between' | 'first' | number;
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
 export interface PivotPageFilter {
@@ -133,6 +169,13 @@ export interface PivotTable {
 	date1904?: boolean;
 	/** `x14:pivotCacheDefinition/@pivotCacheId`, the identity slicers use to find the cache. */
 	slicerCacheId?: number;
+	/**
+	 * Captions in the language of the file or of the editor that authored the report. Omitted
+	 * means English; a loaded file holds what its cached cells and attributes use.
+	 */
+	captions?: PivotCaptionOverrides;
+	/** Item display names the file carries; they replace the item's value in the cells. */
+	itemNames?: PivotItemName[];
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;
@@ -177,6 +220,10 @@ export interface PivotTableOptions {
 	valuesPosition?: PivotValuesPosition;
 	aggregate?: PivotAggregate;
 	name?: string;
+	/** The captions of the new report; English when omitted. */
+	captions?: PivotCaptionOverrides;
+	/** The editor language (`de`, `es-ES`): the captions Excel writes in that UI language. */
+	locale?: string;
 }
 
 export type PivotTablePatch = Partial<

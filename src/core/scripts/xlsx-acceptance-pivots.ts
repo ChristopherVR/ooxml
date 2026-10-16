@@ -87,6 +87,9 @@ const REFRESHED = [
 	'rvp-cols-compact',
 	'rvp-tabular-repeat',
 	'rvp-first-compact-bottom',
+	// Item display names written by Excel (PivotItem.Caption).
+	'captions-items-tabular',
+	'captions-items-compact-page',
 	// Date groups with report filters, hidden items, a slicer and a timeline.
 	'group-page-all',
 	'group-page-west',
@@ -310,6 +313,27 @@ function created(): Workbook {
 			},
 		],
 	];
+	// Captions Excel keeps in the definition (header, grand total, Values) and the value names. The
+	// words only a UI language supplies stay English: an English Excel refreshes them as English.
+	s.createPivotTable(
+		1,
+		{ row: 320, col: 0 },
+		{
+			source,
+			name: 'GermanCaptions',
+			layout: 'compact',
+			rowField: 'Product',
+			columnField: 'Size',
+			valueField: 'Amount',
+			additionalValues: [{ field: 'Amount', aggregate: 'count', caption: 'Anzahl von Amount' }],
+			captions: {
+				rowLabels: 'Zeilenbeschriftungen',
+				columnLabels: 'Spaltenbeschriftungen',
+				grandTotal: 'Gesamtergebnis',
+				values: 'Werte',
+			},
+		},
+	);
 	underFilter.forEach(([layout, options], i) =>
 		s.createPivotTable(
 			1,

@@ -21,6 +21,7 @@ import { sparklineDataRange } from './sparkline-ranges';
 import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
+import { authoredCaptions } from '../pivot/captions';
 import { normalizedPivotMeasures } from '../pivot/measures';
 import { pivotDateFieldsOf, roundDateRecords } from '../pivot/dates';
 import { reconcileDateAxes } from '../pivot/date-axes';
@@ -187,8 +188,10 @@ export function createPivotTable(
 	const name = options.name ?? uniqueName(ctx);
 	checkName(ctx, name);
 	const aggregate = options.aggregate ?? 'sum';
+	const captions = authoredCaptions(options);
 	const pivot: PivotTable = {
 		...data,
+		...(captions ? { captions } : {}),
 		name,
 		rowField: options.rowField,
 		layout: options.layout ?? 'tabular',
@@ -208,7 +211,7 @@ export function createPivotTable(
 		...(options.repeatLabels !== undefined ? { repeatLabels: options.repeatLabels } : {}),
 		valueField: options.valueField,
 		aggregate,
-		valueCaption: pivotCaption(aggregate, options.valueField),
+		valueCaption: pivotCaption(aggregate, options.valueField, { captions }),
 		...(options.pageFilter !== undefined
 			? { pageFilter: structuredClone(options.pageFilter) }
 			: {}),
@@ -216,7 +219,7 @@ export function createPivotTable(
 		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
 		...(options.valuesPosition !== undefined ? { valuesPosition: options.valuesPosition } : {}),
 		...(options.additionalValues
-			? { additionalValues: normalizedPivotMeasures(options.additionalValues) }
+			? { additionalValues: normalizedPivotMeasures(options.additionalValues, { captions }) }
 			: {}),
 		location: { start: { ...destination }, end: { ...destination } },
 		...(options.columnField ? { columnField: options.columnField } : {}),
@@ -251,7 +254,7 @@ export function refreshPivotTable(
 		valueCaption:
 			aggregate === old.aggregate && valueField === old.valueField
 				? old.valueCaption
-				: pivotCaption(aggregate, valueField),
+				: pivotCaption(aggregate, valueField, old),
 	};
 	if (patch.columnField !== undefined) {
 		if (patch.columnField) next.columnField = patch.columnField;
@@ -301,7 +304,7 @@ export function refreshPivotTable(
 	else if (patch.valuesAxis === 'columns' || patch.secondRowField === '')
 		delete next.valuesPosition;
 	if (patch.additionalValues !== undefined) {
-		const measures = normalizedPivotMeasures(patch.additionalValues);
+		const measures = normalizedPivotMeasures(patch.additionalValues, old);
 		if (measures.length) next.additionalValues = measures;
 		else delete next.additionalValues;
 	}
