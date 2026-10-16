@@ -22,6 +22,7 @@ import type {
 	MasterViewTab,
 	PptxModernCommentAuthor,
 	PptxNotesMaster,
+	PptxSlide,
 	PptxSlideMaster,
 	PptxTheme,
 	PptxThemeOption,
@@ -138,6 +139,9 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const [modernCommentAuthors, setModernCommentAuthors] = useState<PptxModernCommentAuthor[]>([]);
 	const [recentColors, setRecentColors] = useState<string[]>([]);
 	const [theme, setTheme] = useState<PptxTheme | undefined>();
+	const deckStyleHeldRef = useRef<
+		{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+	>(undefined);
 	const [tableStyleMap, setTableStyleMap] = useState<ParsedTableStyleMap | undefined>();
 	const [tableStylesDefaultId, setTableStylesDefaultId] = useState<string | undefined>();
 	const [tableStylesToDelete, setTableStylesToDelete] = useState<string[]>([]);
@@ -241,6 +245,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		recentColors,
 		setRecentColors,
 		theme,
+		deckStyleHeldRef,
 		setTheme,
 		tableStyleMap,
 		setTableStyleMap,

@@ -46,6 +46,11 @@ let state: {
 	bumps: number;
 	dirty: number;
 	commands: string[];
+	heldDeck: {
+		current:
+			| { slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> }
+			| undefined;
+	};
 };
 
 beforeEach(() => {
@@ -54,7 +59,14 @@ beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
-	state = { slides: () => [], held: [], bumps: 0, dirty: 0, commands: [] };
+	state = {
+		slides: () => [],
+		held: [],
+		bumps: 0,
+		dirty: 0,
+		commands: [],
+		heldDeck: { current: undefined },
+	};
 });
 
 afterEach(() => {
@@ -82,6 +94,7 @@ function Harness() {
 		setSlides,
 		setTemplateElementsBySlideId: setTemplates,
 		setTheme,
+		heldDeckRef: state.heldDeck,
 		holdTracking: (held) => state.held.push(held),
 		bumpHistory: () => {
 			state.bumps += 1;
@@ -126,12 +139,15 @@ describe('React Background Styles gallery', () => {
 		});
 		expect(state.slides()[0]!.backgroundColor).toBe('#000003');
 		expect(state.held).toEqual([true]);
+		// Save, autosave and collaboration are given the real slides while it shows.
+		expect(state.heldDeck.current?.slides).toBe(original);
 		act(() => {
 			tile.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
 			vi.advanceTimersByTime(100);
 		});
 		expect(state.slides()).toBe(original);
 		expect(state.held).toEqual([true, false]);
+		expect(state.heldDeck.current).toBeUndefined();
 		expect(state.bumps).toBe(0);
 		expect(state.dirty).toBe(0);
 	});

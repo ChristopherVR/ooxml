@@ -23,6 +23,12 @@ export interface UseDeckStyleHostInput {
 	setTheme: Dispatch<SetStateAction<PptxTheme | undefined>>;
 	/** Pause and resume the undo tracker around a preview. */
 	holdTracking: (held: boolean) => void;
+	/** Receives the real deck while a preview shows (for save and recovery), cleared after. */
+	heldDeckRef?: {
+		current:
+			| { slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> }
+			| undefined;
+	};
 	/** Open the undo tracker's gate so the committed change is recorded as one step. */
 	bumpHistory: () => void;
 	markDirty: () => void;
@@ -48,7 +54,17 @@ export function useDeckStyleHost(input: UseDeckStyleHostInput): DeckStyleHost {
 						themeColorMap: current.themeColorMap,
 					}),
 					show: write,
-					hold: current.holdTracking,
+					hold: (on) => {
+						if (current.heldDeckRef) {
+							current.heldDeckRef.current = on
+								? {
+										slides: current.slides,
+										templateElementsBySlideId: current.templateElementsBySlideId,
+									}
+								: undefined;
+						}
+						current.holdTracking(on);
+					},
 					handler: () => current.handlerRef.current as unknown as DeckStyleHandler | null,
 					selectedSlideIds: () => current.selectedSlideIds,
 					apply: (state) => {

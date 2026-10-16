@@ -102,6 +102,10 @@ export interface UseSerializeInput {
 	notesMaster: PptxNotesMaster | undefined;
 	handoutMaster: PptxHandoutMaster | undefined;
 	handlerRef: React.RefObject<PptxHandler | null>;
+	/** While a gallery hover preview shows, the real slides to serialize instead of `slides`. */
+	heldDeckRef?: React.RefObject<
+		{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
+	>;
 	inlineEditingElementIdRef: React.MutableRefObject<string | null>;
 	inlineEditingTextRef: React.MutableRefObject<string>;
 	inlineEditingSnapshotRef?: React.MutableRefObject<InlineTextEditSnapshot | undefined>;
@@ -171,6 +175,7 @@ export function useSerialize(input: UseSerializeInput): SerializeSlides {
 		notesMaster,
 		handoutMaster,
 		handlerRef,
+		heldDeckRef,
 		inlineEditingElementIdRef,
 		inlineEditingTextRef,
 		inlineEditingSnapshotRef,
@@ -202,8 +207,9 @@ export function useSerialize(input: UseSerializeInput): SerializeSlides {
 
 			const pending = overlayPendingInlineEdit(
 				{
-					slides,
-					templateElementsBySlideId,
+					slides: heldDeckRef?.current?.slides ?? slides,
+					templateElementsBySlideId:
+						heldDeckRef?.current?.templateElementsBySlideId ?? templateElementsBySlideId,
 					activeSlideIndex,
 					editTemplateMode,
 					masterViewTarget,

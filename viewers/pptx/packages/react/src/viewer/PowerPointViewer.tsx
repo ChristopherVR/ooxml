@@ -1051,6 +1051,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			setSlides: state.setSlides,
 			setTemplateElementsBySlideId: state.setTemplateElementsBySlideId,
 			setTheme: state.setTheme,
+			heldDeckRef: state.deckStyleHeldRef,
 			holdTracking: history.holdTracking,
 			bumpHistory: () => state.setPointerCommitNonce((n) => n + 1),
 			markDirty: history.markDirty,
