@@ -36,9 +36,10 @@ test('on a phone File is accent text and the groups chevron fades in instead of 
 	const viewer = page.locator('visio-viewer');
 	const file = viewer.locator('office-ui-ribbon').locator('.file');
 	await expect(file).toBeVisible();
-	expect(await file.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe(
-		'rgba(0, 0, 0, 0)',
-	);
+	// The File button fades its fill out when the phone layout applies; wait the fade out.
+	await expect
+		.poll(() => file.evaluate((node) => getComputedStyle(node).backgroundColor))
+		.toBe('rgba(0, 0, 0, 0)');
 	const more = viewer.locator('#home-panel > .ribbon-scroll-more');
 	await expect(more).toBeVisible();
 	// The chevron sits at the panel's end, and a gradient fades the content into it.
