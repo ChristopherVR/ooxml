@@ -68,7 +68,7 @@ ${script}`;
 					'trace-2',
 				);
 		} finally {
-			rmSync(dir, { recursive: true, force: true });
+			rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 		}
 	}
 	assert.match(browserJob, /- name: Preserve the report\s+if: always\(\)/u);
