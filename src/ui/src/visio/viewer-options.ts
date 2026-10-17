@@ -166,6 +166,18 @@ export class ViewerProfile {
 					// The light looks are remembered here; light or dark is the host's preference.
 					if (values.officeTheme !== 'dark') writeStatusBarTheme(values.officeTheme);
 				}
+				const screenTips = isScreenTipStyle(values.screenTips)
+					? values.screenTips
+					: this.#behaviour.screenTips;
+				const undoLevels = clampUndo(values.undoLevels ?? this.#behaviour.undoLevels);
+				if (
+					screenTips !== this.#behaviour.screenTips ||
+					undoLevels !== this.#behaviour.undoLevels
+				) {
+					this.#behaviour = { screenTips, undoLevels };
+					writeBehaviour(this.#behaviour);
+					this.onBehaviour({ ...this.#behaviour });
+				}
 				const initial = String(values.userInitials ?? '').trim();
 				this.#update({
 					displayName: String(values.userName ?? '').trim(),

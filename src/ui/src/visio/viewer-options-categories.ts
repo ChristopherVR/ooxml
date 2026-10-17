@@ -46,7 +46,7 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 		label: 'General',
 		description: 'General options for working with Visio.',
 		sections: [
-			userInterfaceSection(visio),
+			visioUserInterface(),
 			personalizeSection(
 				visio,
 				[

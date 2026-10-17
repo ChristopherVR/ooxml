@@ -97,6 +97,29 @@ describe('Visio File > Account and Options', () => {
 		viewer.destroy();
 	});
 
+	it('applies the undo depth and ScreenTip style, and remembers them', () => {
+		const { viewer, root, item, file, dialog, field } = setup();
+		file().click();
+		item('options').click();
+		const tips = field('screenTips') as unknown as HTMLSelectElement;
+		expect(tips.closest('label')!.title).not.toMatch(/^Not available yet/);
+		tips.value = 'off';
+		tips.dispatchEvent(new Event('change'));
+		const undo = field('undoLevels');
+		undo.value = '5';
+		undo.dispatchEvent(new Event('input'));
+		dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
+		expect(viewer.element.controller.undoLevels).toBe(5);
+		expect(
+			root.querySelectorAll('office-ui-ribbon [title]:not([title*="not available"])'),
+		).toHaveLength(0);
+		expect(JSON.parse(localStorage.getItem('ooxml-visio-options')!)).toEqual({
+			screenTips: 'off',
+			undoLevels: 5,
+		});
+		viewer.destroy();
+	});
+
 	it('switches the status bar between the neutral and Colorful Office themes and remembers it', () => {
 		const { viewer, item, file, dialog, field } = setup();
 		// Neutral by default; a host may set the attribute or property itself.
