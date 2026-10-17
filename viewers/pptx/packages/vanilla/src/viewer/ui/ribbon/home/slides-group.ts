@@ -3,6 +3,7 @@ import type { LayoutPreviewGeometry, SlideTemplateId } from 'ooxml-ui/pptx';
 import type { PptxLayoutPreview } from 'pptx-viewer-core';
 
 import type { Translator } from '../../../i18n';
+import { disposePptxRenderStage } from '../../../render';
 import type { LayoutOption } from '../ribbon-types';
 import { createSharedHomeStrip } from './shared-strip';
 import { createSlideTemplateDialog } from './slide-template-dialog';
@@ -103,7 +104,10 @@ export function createSlidesGroup(
 		if (artwork) {
 			container.append(artwork);
 		}
-		return () => artwork?.remove();
+		return () => {
+			if (artwork) disposePptxRenderStage(artwork);
+			artwork?.remove();
+		};
 	};
 	strip.set(slidesHomeControls(last));
 

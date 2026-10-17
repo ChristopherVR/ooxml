@@ -10,6 +10,7 @@ import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { buildPresenterNavigator } from './presenter-navigator';
 import { scaleForWidth, scaleToFit, sizePreviewHost } from './presenter-preview-box';
 import type { PresenterCanvasSize } from './presenter-preview-box';
@@ -133,6 +134,7 @@ export function mountPresenterView(options: PresenterViewOptions): PresenterView
 
 	let navigator: HTMLElement | null = null;
 	function openNavigator(): void {
+		if (navigator) disposePptxRenderStage(navigator);
 		navigator?.remove();
 		navigator = buildPresenterNavigator({
 			doc,
@@ -151,6 +153,7 @@ export function mountPresenterView(options: PresenterViewOptions): PresenterView
 		root.append(navigator);
 	}
 	function closeNavigator(): void {
+		if (navigator) disposePptxRenderStage(navigator);
 		navigator?.remove();
 		navigator = null;
 	}
@@ -160,6 +163,7 @@ export function mountPresenterView(options: PresenterViewOptions): PresenterView
 		const slides = options.getSlides();
 		const current = options.getCurrent();
 		const slide = slides[current];
+		disposePptxRenderStage(mainFrame);
 		mainFrame.replaceChildren();
 		if (slide) {
 			const scale = mainScale();
@@ -232,6 +236,7 @@ export function mountPresenterView(options: PresenterViewOptions): PresenterView
 		dispose: () => {
 			clearInterval(clockTimer);
 			closeNavigator();
+			disposePptxRenderStage(root);
 			root.remove();
 		},
 	};

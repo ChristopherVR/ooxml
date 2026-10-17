@@ -114,6 +114,7 @@ export class TeamsPresentationPreview extends TeamsLitElement {
 			player.removeAttribute('src');
 			player.load();
 		}
+		if (this.stageNode) this.renderer?.disposePptxRenderStage(this.stageNode);
 		this.stageNode?.remove();
 		this.stageNode = null;
 	}

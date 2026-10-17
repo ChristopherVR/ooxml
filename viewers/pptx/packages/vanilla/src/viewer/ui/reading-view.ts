@@ -15,6 +15,7 @@ import {
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { createEl } from '../render';
 import { makeButton } from './controls';
 
@@ -63,7 +64,11 @@ export function openReadingViewOverlay(
 	options: ReadingViewOptions,
 ): ReadingViewHandle | null {
 	const slideCount = options.slides.length;
-	host.querySelector(`[${READING_VIEW_ATTR}]`)?.remove();
+	const previousView = host.querySelector<HTMLElement>(`[${READING_VIEW_ATTR}]`);
+	if (previousView) {
+		disposePptxRenderStage(previousView);
+		previousView.remove();
+	}
 	if (slideCount === 0) {
 		return null;
 	}
@@ -128,6 +133,7 @@ export function openReadingViewOverlay(
 		if (slide && scale > 0) {
 			stage.appendChild(options.renderStage(slide, scale));
 		}
+		disposePptxRenderStage(viewport);
 		viewport.replaceChildren(stage);
 	};
 
@@ -183,6 +189,7 @@ export function openReadingViewOverlay(
 		closed = true;
 		doc.removeEventListener('keydown', onKeyDown, true);
 		observer?.disconnect();
+		disposePptxRenderStage(el);
 		el.remove();
 	}
 

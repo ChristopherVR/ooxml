@@ -32,6 +32,7 @@ import {
 import type { Translator } from '../i18n/translator';
 import { buildActiveXControlsOverlay } from './activex-controls-overlay';
 import { createEl } from './dom';
+import { disposeChartPixelSubscriptions } from './chart-pixel-subscriptions';
 import type { ChartPartSelection, ElementRenderContext, ElementRendererRegistry } from './types';
 
 export interface SlideStageOptions {
@@ -166,6 +167,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		stage.setAttribute('aria-roledescription', 'slide');
 		stage.setAttribute('aria-label', t('pptx.canvas.slide'));
 	}
+	const renderedNodes: Element[] = [];
 	const context: ElementRenderContext = {
 		reading: options.reading,
 		document: doc,
@@ -211,6 +213,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 				return null;
 			}
 			const node = registry.resolve(element.type)(element, zIndex, context);
+			if (node) renderedNodes.push(node);
 			if (node && interactive && 'setAttribute' in node) {
 				// The element marker means "rendered slide element carrying the
 				// contract", not "editable right now": an interaction-locked template
@@ -251,57 +254,72 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		},
 	};
 
-	options.captureContext?.(context);
+	try {
+		options.captureContext?.(context);
 
-	slide.elements.forEach((element, index) => {
-		const node = context.renderElement(element, index);
-		if (node) {
-			stage.appendChild(node);
-		}
-	});
-
-	// Give every interactive rendered element the same shared role/label/
-	// decorative model the other four bindings apply at their own stage
-	// boundary. This used to be a hand-rolled subset with no "Mark as
-	// decorative" (G16) handling at all, so a decorative picture (or any other
-	// decorative element) stayed announced to assistive tech in this binding
-	// alone; it also stays at the stage boundary (rather than per-renderer) so
-	// custom host renderers receive it too, and thumbnails do not duplicate the
-	// slide's screen-reader tree.
-	if (interactive || options.reading) {
-		applyRenderedElementAccessibility(stage, slide.elements, {
-			presenting: options.presenting ?? false,
+		slide.elements.forEach((element, index) => {
+			const node = context.renderElement(element, index);
+			if (node) {
+				stage.appendChild(node);
+			}
 		});
-	}
 
-	// Authoring chrome for an Action Setting (amber "has action" badge + hover
-	// link tooltip). Applied here, once the stage is assembled, rather than
-	// inside each element renderer: the registry hands every type its own root
-	// node, so a per-renderer copy would be a dozen duplicates of the same
-	// markup. An inherited master/layout shape only gets it while template
-	// editing is on, matching the interaction gate above.
-	if (interactive) {
-		applyElementActionAffordances(
-			stage,
-			slide.elements.filter(
-				(element) => options.templateEditing || !isTemplateElementId(element.id),
-			),
-			{
-				canInteract: true,
+		// Give every interactive rendered element the same shared role/label/
+		// decorative model the other four bindings apply at their own stage
+		// boundary. This used to be a hand-rolled subset with no "Mark as
+		// decorative" (G16) handling at all, so a decorative picture (or any other
+		// decorative element) stayed announced to assistive tech in this binding
+		// alone; it also stays at the stage boundary (rather than per-renderer) so
+		// custom host renderers receive it too, and thumbnails do not duplicate the
+		// slide's screen-reader tree.
+		if (interactive || options.reading) {
+			applyRenderedElementAccessibility(stage, slide.elements, {
 				presenting: options.presenting ?? false,
-				labels: actionAffordanceLabels((key) => t(key)),
-			},
-		);
-	}
+			});
+		}
 
-	// ActiveX controls (`p:controls > p:control`) cannot run inside a viewer.
-	// Draw each one's static fallback picture when core resolved one, otherwise
-	// a labelled placeholder badge, so the slide shows where the control lives
-	// instead of a blank gap (React-only before this; the other bindings drew
-	// nothing).
-	if (slide.activeXControls && slide.activeXControls.length > 0) {
-		stage.appendChild(buildActiveXControlsOverlay(doc, slide.activeXControls, canvasSize));
-	}
+		// Authoring chrome for an Action Setting (amber "has action" badge + hover
+		// link tooltip). Applied here, once the stage is assembled, rather than
+		// inside each element renderer: the registry hands every type its own root
+		// node, so a per-renderer copy would be a dozen duplicates of the same
+		// markup. An inherited master/layout shape only gets it while template
+		// editing is on, matching the interaction gate above.
+		if (interactive) {
+			applyElementActionAffordances(
+				stage,
+				slide.elements.filter(
+					(element) => options.templateEditing || !isTemplateElementId(element.id),
+				),
+				{
+					canInteract: true,
+					presenting: options.presenting ?? false,
+					labels: actionAffordanceLabels((key) => t(key)),
+				},
+			);
+		}
 
-	return stage;
+		// ActiveX controls (`p:controls > p:control`) cannot run inside a viewer.
+		// Draw each one's static fallback picture when core resolved one, otherwise
+		// a labelled placeholder badge, so the slide shows where the control lives
+		// instead of a blank gap (React-only before this; the other bindings drew
+		// nothing).
+		if (slide.activeXControls && slide.activeXControls.length > 0) {
+			stage.appendChild(buildActiveXControlsOverlay(doc, slide.activeXControls, canvasSize));
+		}
+
+		return stage;
+	} catch (error) {
+		// A nested group may fail before its already-rendered charts reach stage.
+		for (const node of renderedNodes) disposeChartPixelSubscriptions(node);
+		disposePptxRenderStage(stage);
+		throw error;
+	}
+}
+
+/**
+ * Retire raw-DOM render subscriptions before removing/replacing a stage or host.
+ * Idempotent; does not remove DOM, clear other viewers' caches or revoke URLs.
+ */
+export function disposePptxRenderStage(stage: HTMLElement): void {
+	disposeChartPixelSubscriptions(stage);
 }

@@ -3,6 +3,7 @@ import type { CanvasSize, MasterViewCrudAction, MasterViewCrudActionId } from 'o
 import type { MasterViewTab, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { createEl } from '../render';
 
 const THUMB_WIDTH = 128;
@@ -194,6 +195,7 @@ export function createMasterViewSidebar(doc: Document, t: Translator): MasterVie
 	return {
 		el,
 		render(o) {
+			disposePptxRenderStage(el);
 			el.replaceChildren();
 			const header = createEl(doc, 'header', 'pptxv-master-header');
 			const title = createEl(doc, 'span', 'pptxv-master-title');

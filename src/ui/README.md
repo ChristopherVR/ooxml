@@ -336,3 +336,26 @@ content and native media controls without editing overlays.
 
 Apache-2.0. Several controls are derived from `pptx-viewer`; see
 `PROVENANCE.md` at the repository root.
+
+## Raw PowerPoint DOM lifecycle
+
+Custom hosts using `ooxml-ui/pptx/dom` own the returned stage. Before replacing
+or removing a stage (including thumbnails and offscreen export stages), call
+`disposePptxRenderStage(stage)`, then remove its DOM. Disposal is idempotent and
+releases that subtree's chart-sampler subscriptions immediately, even if no
+later image-sample event occurs. It does not clear another stage's subscriptions,
+remove nodes or revoke URLs owned by the host.
+
+After closing all viewers/documents sharing the module instance, a host may call
+`releasePptxRenderCaches()` to discard intrinsic-size, chart-picture-sample,
+colour-change and duotone memoisation. This global operation invalidates pending
+cache writes and chart notifications; pending decodes can still return results
+to their original caller. Do not call it to close one viewer while another needs
+pending samples. It cannot purge browser-internal decoded-image caches.
+
+These caches also retain at most 128 intrinsic sizes/picture samples and 64
+results per pixel effect, with an 8 MiB conservative UTF-16 key/value budget per
+cache. An oversized effect result still renders but is not memoised. Custom
+async effect integrations using the low-level setters should capture
+`getPptxRenderCacheEpoch()` before starting work and pass it as the setter's third
+argument, so a late result cannot refill caches after release.

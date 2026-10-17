@@ -1302,6 +1302,8 @@ export * from './alignment-guides';
 // caches + duotone presets. Each binding draws onto its own `<canvas>`.
 export * from './image-color-change';
 export * from './image-source-effects';
+export { getPptxRenderCacheEpoch } from './render-cache';
+export { releasePptxRenderCaches } from './render-cache-lifecycle';
 export * from './image-duotone-canvas';
 // Hyperlink-edit dialog patch-builders: turn a URL+tooltip draft into an
 // `{ actionClick }` element merge patch, reusing `hyperlink-security` guards.

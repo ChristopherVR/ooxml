@@ -1,4 +1,5 @@
 import type { PptxImageEffects } from 'ooxml-core/pptx';
+import { getPptxRenderCacheEpoch } from './render-cache';
 
 import {
 	applyColorChange,
@@ -33,6 +34,7 @@ export async function resolveColorChangedImageSource(
 	if (cached) {
 		return cached;
 	}
+	const epoch = getPptxRenderCacheEpoch();
 	try {
 		const result = await applyColorChange(
 			src,
@@ -41,7 +43,7 @@ export async function resolveColorChangedImageSource(
 			tolerance,
 			Boolean(clrChange.clrToTransparent),
 		);
-		setCachedResult(key, result.dataUrl);
+		setCachedResult(key, result.dataUrl, epoch);
 		return result.dataUrl;
 	} catch {
 		return src;

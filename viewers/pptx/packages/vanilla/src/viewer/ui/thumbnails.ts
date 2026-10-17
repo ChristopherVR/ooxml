@@ -10,6 +10,7 @@ import type { PptxSection, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 
 import type { EditActions } from '../editor';
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { collectThreeViews, createEl, withReusableThreeViews } from '../render';
 import type { Store, ViewerState } from '../state';
 import { createThumbnailContextMenu } from './thumbnail-context-menu';
@@ -160,6 +161,7 @@ export function createThumbnailRail(
 		if (!sourceRenderStage) {
 			return;
 		}
+		disposePptxRenderStage(list);
 		buttons = new Map();
 		const scale = THUMB_STAGE_WIDTH / Math.max(sourceCanvasSize.width, 1);
 		if (sourceSections.length > 0) {
@@ -283,6 +285,7 @@ export function createThumbnailRail(
 		renderMasters(masters, canvasSize, renderStage, select, active) {
 			masterMode = true;
 			applyFooterVisibility();
+			disposePptxRenderStage(list);
 			list.replaceChildren();
 			buttons = new Map();
 			virtualized = false;

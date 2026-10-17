@@ -12,6 +12,7 @@
 
 import type { RgbColor, ColorChangeResult } from './image-color-change';
 import { parseHexToRgb } from './image-color-change';
+import { getPptxRenderCacheEpoch, setBoundedRenderCache } from './render-cache';
 
 // ---------------------------------------------------------------------------
 // Pixel mapping (pure logic, operates on raw Uint8ClampedArray)
@@ -131,15 +132,20 @@ export function getDuotoneCachedResult(key: string): string | undefined {
 	return duotoneCache.get(key);
 }
 
-/** Store a duotone result in the cache. Evicts oldest entry when full. */
-export function setDuotoneCachedResult(key: string, dataUrl: string): void {
-	if (duotoneCache.size >= DUOTONE_CACHE_MAX) {
-		const firstKey = duotoneCache.keys().next().value;
-		if (firstKey !== undefined) {
-			duotoneCache.delete(firstKey);
-		}
+/** Store a result from the captured render epoch, bounded by count and bytes. */
+export function setDuotoneCachedResult(
+	key: string,
+	dataUrl: string,
+	epoch = getPptxRenderCacheEpoch(),
+): void {
+	if (epoch === getPptxRenderCacheEpoch()) {
+		setBoundedRenderCache(duotoneCache, key, dataUrl, DUOTONE_CACHE_MAX);
 	}
-	duotoneCache.set(key, dataUrl);
+}
+
+/** Release transformed image data retained by the duotone cache. */
+export function clearDuotoneCache(): void {
+	duotoneCache.clear();
 }
 
 // ---------------------------------------------------------------------------

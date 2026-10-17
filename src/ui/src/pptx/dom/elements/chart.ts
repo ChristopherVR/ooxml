@@ -8,11 +8,11 @@ import {
 	resolveChartKind,
 	resolveChartThreeViewSpec,
 	resolveRevealedChartData,
-	subscribeBarFacePicturePixelSamples,
 } from '../../index';
 
 import type { Translator } from '../../i18n/translator';
 import { createEl } from '../dom';
+import { subscribeChartPixelRepaint } from '../chart-pixel-subscriptions';
 import type { ElementRenderer } from '../types';
 import { attachChartEditing } from './chart-editable';
 import { renderChartViewModelSvg } from './chart-svg';
@@ -115,15 +115,15 @@ export const renderChartSvgElement: ElementRenderer = (element, zIndex, context)
 	 * Reused as the repaint hook for on-canvas value dragging: the drag previews
 	 * locally (no editor round trip per pointermove) and commits once on release.
 	 */
-	const paint = (data: PptxChartData): void => {
+	const paint = (data: PptxChartData, target: HTMLElement = container): void => {
 		// Thread the resolved palette into the shared engine (non-destructively)
 		// so `seriesColor` / `paletteColor` produce the binding's colours.
 		const themedElement = {
 			...element,
 			chartData: { ...data, colorPalette: resolveChartPalette(data) },
 		};
-		container.querySelector('svg')?.remove();
-		container.appendChild(
+		target.querySelector('svg')?.remove();
+		target.appendChild(
 			renderChartViewModelSvg(doc, buildChartViewModel(themedElement), preserveAspectRatio, (key) =>
 				context.t(key),
 			),
@@ -137,18 +137,10 @@ export const renderChartSvgElement: ElementRenderer = (element, zIndex, context)
 	// colour from the picture ASYNCHRONOUSLY (see `chart-bar3d-face-picture-
 	// sample.ts`'s module doc for the COM-verified ground truth this
 	// reproduces); `buildChartViewModel` only ever sees whatever is already
-	// cached, so this repaints once a sample lands. Vanilla has no unmount
-	// hook to unsubscribe from, so the listener self-unsubscribes the first
-	// time it notices `container` left the document, rather than leaking one
-	// subscription (and the closure's whole `container`/`paint` graph)
-	// forever every time a slide with a bar3D picture-fill chart unmounts.
-	const unsubscribe = subscribeBarFacePicturePixelSamples(() => {
-		if (!container.isConnected) {
-			unsubscribe();
-			return;
-		}
-		paint(chartData);
-	});
+	// cached, so this repaints once a sample lands. A stage/host explicitly
+	// disposes this subscription before removing its DOM; the disconnected
+	// check remains a fallback for low-level consumers that omit disposal.
+	subscribeChartPixelRepaint(container, (target) => paint(chartData, target));
 
 	return container;
 };

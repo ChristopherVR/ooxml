@@ -16,6 +16,7 @@ import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { createIcon } from '../ui/icons';
 import { sizePreviewHost } from './presenter-preview-box';
 import type { PresenterCanvasSize } from './presenter-preview-box';
@@ -226,6 +227,7 @@ export function buildPresenterRail(options: PresenterRailOptions): PresenterRail
 		// end-of-show screen and then out of the show. Disabling it strands the
 		// presenter on the final slide, so the audience display never closes.
 		next.disabled = presenterNextDisabled();
+		disposePptxRenderStage(nextBody);
 		nextBody.replaceChildren();
 		// Hidden slides and custom-show membership are the show order's business,
 		// not `current + 1`: the preview must show what Next will actually reach.

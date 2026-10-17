@@ -2,7 +2,7 @@ import type { DialogFooterAction, SlideTemplateId } from 'ooxml-ui/pptx';
 import { modalActiveElement, modalFocusableElements, SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
-import { createEl } from '../../../render';
+import { createEl, disposePptxRenderStage } from '../../../render';
 import { appendDialogFooter } from '../../dialog-footer';
 import { renderSlideTemplatePreview } from './slide-template-preview';
 
@@ -107,6 +107,7 @@ export function createSlideTemplateDialog(
 
 	function renderOptions(): void {
 		const scheme = options.getScheme?.();
+		disposePptxRenderStage(listbox);
 		listbox.replaceChildren();
 		for (const spec of SLIDE_TEMPLATES) {
 			const option = createEl(doc, 'button', 'pptxv-tpl-option');
@@ -132,6 +133,8 @@ export function createSlideTemplateDialog(
 		if (layer.hidden) {
 			return;
 		}
+		disposePptxRenderStage(listbox);
+		listbox.replaceChildren();
 		layer.hidden = true;
 		previousFocus?.focus();
 		previousFocus = null;
