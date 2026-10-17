@@ -76,7 +76,7 @@ jobs:
       - name: Publish to pkg.pr.new
         run: |
           set +e
-          bunx pkg-pr-new@0.0.88 publish --compact --comment=update --commentWithSha --template ./suite-dist ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
+          bunx pkg-pr-new@0.0.88 publish --no-compact --comment=update --commentWithSha --template ./preview-template ./suite-dist ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
           status=${PIPESTATUS[0]}
           set -e
           if [ "$status" -ne 0 ] && grep -q 'is not installed on or does not have access to' "$RUNNER_TEMP/pkg-pr-new.log"; then

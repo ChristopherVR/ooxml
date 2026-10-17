@@ -135,10 +135,19 @@ export function workbookXml(
 		: '';
 	const owned = ['fullCalcOnLoad', 'calcId', 'calcMode', 'iterate', 'iterateCount', 'iterateDelta'];
 	out += `<calcPr${copyAttrs(calc, owned)} calcId="191029"${mode}${iterate} fullCalcOnLoad="1"/>`;
+	// The model owns oleSize; a source's own element is kept only when the model sets none.
+	const tailOf = (names: readonly string[]) =>
+		names
+			.map((name) =>
+				name === 'oleSize' && workbook.oleSize
+					? `<oleSize ref="${escapeAttr(workbook.oleSize)}"/>`
+					: raw([name]),
+			)
+			.join('');
 	out +=
 		pivotCachesXml === undefined
-			? raw(KEPT_TAIL)
-			: raw(KEPT_TAIL.slice(0, 2)) + pivotCachesXml + raw(KEPT_TAIL.slice(3));
+			? tailOf(KEPT_TAIL)
+			: tailOf(KEPT_TAIL.slice(0, 2)) + pivotCachesXml + tailOf(KEPT_TAIL.slice(3));
 	return `${out}</workbook>`;
 }
 

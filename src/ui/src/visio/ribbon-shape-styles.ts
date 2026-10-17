@@ -64,6 +64,8 @@ export function quickStyleGalleryState(disabled: boolean): OfficeGalleryState {
 		id: 'quick-styles',
 		label: 'Quick Styles',
 		disabled,
+		// Live Preview: hovering a style shows it on the selection.
+		preview: true,
 		// The ribbon row is the first style row, one tile per theme colour, as in Visio.
 		inline: items.slice(0, VISIO_QUICK_STYLE_COLORS.length),
 		sections: [

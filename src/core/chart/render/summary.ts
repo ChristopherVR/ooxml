@@ -2,7 +2,10 @@
 // cached data and DrawingML paint, plus the legend, title and formatting metadata. Spreadsheet
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
+import type { ChartMarkerSummary } from './chart-view-markers';
+import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
+import type { DataLabelFlagLevel } from '../data-label-text';
 import type { ChartErrorAmountOptions } from '../error-bar-amount';
 import type { ChartErrorBarDirection, ChartErrorBarType } from '../model-analysis';
 import type { ChartTrendlineFitOptions } from '../trendline-fit';
@@ -31,7 +34,27 @@ export type ChartSummaryType =
 	| 'treemap'
 	| 'sunburst';
 
-export interface ChartSummarySeries {
+/** One cascade level of a series' data labels: its content switches, placement and format. */
+export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {
+	/** `c:delete`: the label (or, at series and group level, every label) is suppressed. */
+	deleted?: boolean;
+	/** `c:dLblPos`: `ctr`, `inEnd`, `inBase`, `outEnd`, `bestFit`, `t`, `b`, `l`, `r`. */
+	position?: string;
+	/** Number format code of the label. */
+	numberFormat?: string;
+	/** Custom label text (`c:dLbl/c:tx/c:rich`), which replaces the built label. */
+	text?: string;
+}
+
+/** The data labels of a series by cascade level; absent when the series shows none. */
+export interface ChartSummaryDataLabels {
+	chart?: ChartSummaryLabelLevel;
+	series?: ChartSummaryLabelLevel;
+	/** Per-point labels by `c:idx`. */
+	points?: Record<number, ChartSummaryLabelLevel>;
+}
+
+export interface ChartSummarySeries extends ChartMarkerSummary {
 	name?: string;
 	/** Formula reference for the series name (`Sheet1!$B$1`). */
 	nameRef?: string;
@@ -40,6 +63,8 @@ export interface ChartSummarySeries {
 	/** Cached categories and values from the chart part, used when references cannot resolve. */
 	categories: (string | number)[];
 	values: (number | null)[];
+	/** Cached source value format, used when data labels declare no number format. */
+	numberFormat?: string;
 	/** Bubble charts: the `c:bubbleSize` values, parallel to `values`. */
 	bubbleSizes?: (number | null)[];
 	/** Formula reference for the bubble sizes. */
@@ -54,6 +79,8 @@ export interface ChartSummarySeries {
 	pointFills?: Record<number, DrawingFill>;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
+	/** Data labels the painter draws at each point (`c:dLbls`). */
+	dataLabels?: ChartSummaryDataLabels;
 	/** Trendlines the painter fits and draws over the series (`c:trendline`). */
 	trendlines?: ChartSummaryTrendline[];
 	/** Error bars the painter draws at each point (`c:errBars`). */
@@ -125,6 +152,9 @@ export interface HierarchySummaryOptions {
 
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
+	/** Native axes and the primary plot group IDs, retained for shared rendering. */
+	axes?: ChartAxis[];
+	axisIds?: number[];
 	/** Bar/column grouping. */
 	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
 	/** Gap between category clusters, as a percentage of one bar's width (0..500). */

@@ -5,6 +5,7 @@ import { clusteredBarGeometry } from '../bar-cluster-geometry';
 import { chartBarSpacing } from './chart-spacing';
 import { buildChartGradientDef } from '../gradient-definition';
 import { chartGradientMarkup } from '../gradient-markup';
+import { barLabels, type BarMark } from './chart-svg-labels';
 
 /** The cluster geometry of a bar or column group, and where series `si`'s bar starts in its band. */
 export function barLayout(model: ChartViewModel, frame: Frame) {
@@ -29,6 +30,7 @@ export function bars(
 	const base = frame.value(0);
 	const pos = new Array<number>(model.categories.length).fill(0);
 	const neg = new Array<number>(model.categories.length).fill(0);
+	const marks: BarMark[] = [];
 	model.series.forEach((s, si) => {
 		values[si]?.forEach((v, i) => {
 			if (v === null || i >= model.categories.length) return;
@@ -63,15 +65,13 @@ export function bars(
 				}
 			}
 			out.push(`<g data-chart-series="${si}" data-chart-point="${i}">`);
-			if (model.horizontal)
-				out.push(
-					rect(Math.min(a, b), center + offset, Math.abs(b - a), barSize, color, s.shadowFilter),
-				);
-			else
-				out.push(
-					rect(center + offset, Math.min(a, b), barSize, Math.abs(b - a), color, s.shadowFilter),
-				);
+			const box = model.horizontal
+				? { x: Math.min(a, b), y: center + offset, w: Math.abs(b - a), h: barSize }
+				: { x: center + offset, y: Math.min(a, b), w: barSize, h: Math.abs(b - a) };
+			out.push(rect(box.x, box.y, box.w, box.h, color, s.shadowFilter));
 			out.push('</g>');
+			marks.push({ series: s, index: i, ...box, negative: v < 0 });
 		});
 	});
+	barLabels(model, marks, out);
 }

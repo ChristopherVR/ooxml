@@ -1,3 +1,5 @@
+import type { ChartMarkerSeriesView } from './chart-view-markers';
+import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
 import { stockView, type StockView } from './chart-view-stock';
@@ -20,6 +22,7 @@ import type { DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
 import type { ChartErrorBarsView, ChartTrendlineView } from './chart-view-analysis';
 import type { ChartManualLayout } from '../manual-layout';
+import { applyDataLabels, type SeriesLabelViews } from './chart-view-labels';
 import {
 	chartExtraAxes,
 	chartExtraView,
@@ -38,7 +41,7 @@ import {
 export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-series';
 export type { WaterfallView } from './chart-view-ex';
 
-export interface ChartSeriesView {
+export interface ChartSeriesView extends ChartMarkerSeriesView {
 	shadow?: DrawingSvgShadow;
 	shadowFilter?: string;
 	gradient?: ChartGradientFill;
@@ -52,6 +55,8 @@ export interface ChartSeriesView {
 	color: string;
 	/** Per-point colours (pie and doughnut vary colours by point). */
 	pointColors?: string[];
+	/** Data labels by point index. */
+	labels?: SeriesLabelViews;
 	/** Trendlines drawn over the series. */
 	trendlines?: ChartTrendlineView[];
 	/** Error bars drawn at each point. */
@@ -78,6 +83,7 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	axes?: ChartAxesView;
 	legendLayout?: ChartManualLayout;
 	legendOverlay?: boolean;
 	titleLayout?: ChartManualLayout;
@@ -246,6 +252,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		chartExtraView(chart, model, ctx, total, collect);
 	if (type === 'waterfall') waterfallView(chart, model, ctx);
 	else if (!byPoint) model.valueAxis = valueAxis(model);
+	applyDataLabels(model, chart.series, extra);
 	chartExtraAxes(model);
+	applyChartAxes(model, chart, ctx.drawingColor);
 	return model;
 }

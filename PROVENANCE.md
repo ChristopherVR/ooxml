@@ -2387,3 +2387,22 @@ Source: ChristopherVR/ooxml, `origin/main` at `906baa809` before these commits. 
 - `src/core/pptx/core/utils/theme-effect-schemes-data.ts` is generated from real PowerPoint output: `viewers/pptx/scripts/extract-theme-effect-schemes.ps1` loads each `Document Themes 16/Theme Effects/*.eftx` into a blank deck with `Theme.ThemeEffectScheme.Load`, saves it and cuts the `a:fmtScheme` out of `ppt/theme/theme1.xml` (the fragments are PowerPoint's, picture-free). "Grunge Texture" is left out because its fill styles are pictures.
 - The twelve Background Styles in `src/core/pptx/core/types/background-style.ts` (`bgRef` idx, `bg1`/`bg2`, and the swapped colour map of the dark columns) and the slide-level form (`bgRef` plus an explicit `overrideClrMapping`) were read from `SlideMaster.BackgroundStyle` and `Slide.BackgroundStyle` output of PowerPoint 16.
 - `src/core/pptx/__tests__/fixtures/theme-styles.pptx` was generated with PowerPoint COM (a default-styled rectangle, a hand-filled shape and two preset-styled shapes).
+
+## Shared chart renderer: data labels (2026-10-17)
+
+Source: ChristopherVR/ooxml, `origin/main` at `7fbea8563` before these commits.
+
+- `src/core/chart/data-label-text.ts` (`resolveDataLabelFlags`, `composeDataLabelText`) is the point > series > group flag cascade (`resolveDataLabelContent`) and the component join (`buildDataLabelText`) of `src/ui/src/pptx/render/chart-data-label-text.ts`, with the same rules (an all-zero level means no labels, a sibling series that owns labels, `Category` over `%` default separator, Office component order, `[Red]` colour only on a lone value). The PowerPoint module keeps reading its own `PptxChartData` levels and calls the core functions, so its output and the chart view-model parity hashes are unchanged.
+- `src/core/chart/render/chart-svg-labels.ts` places labels for the shared painter: bar, column, line, scatter, bubble, radar and pie positions follow `c:dLblPos` and the PowerPoint renderer's defaults (outside the end of clustered bars, centred in stacked ones, right of line points, best fit on pies through the existing `pie-best-fit.ts`). Written for core's summary and view model, not moved: the PowerPoint renderer places labels over its own primitive tree (`chart-data-label-anchor.ts`, `chart-pie-labels.ts`), which stays.
+- `src/core/chart/formatting-nodes.ts` (`chartDataLabelNode`): the first `c:dLbls` that switches a label on or carries `c:txPr`, read into the `dataLabel` formatting entry so labels inherit the chart-level text properties.
+
+## Shared chart renderer: axes and markers (2026-10-17)
+
+Source: ChristopherVR/ooxml, `origin/main` at `e53e793ef` before these commits.
+
+- `src/core/chart/axis-range.ts`, `axis-ticks.ts`, and `axis-range-types.ts` extract the log ranges, explicit bounds, stacking, orientation and tick generation from `src/ui/src/pptx/render/chart-axis-range.ts`. Numeric series and axis inputs are structural, without PowerPoint dependencies; the PowerPoint file is a compatibility facade. The regression tests move alongside the core code.
+- `src/core/chart/axis-range-auto.ts` extracts the automatic and stacked ranges of `src/ui/src/pptx/render/chart-view-model-scale.ts`. That module and `chart-helpers.ts` now call the same implementation, including filtering non-finite and missing values when computing automatic extents. The two documented automatic scaling policies (PowerPoint and Excel) remain distinct.
+- `src/core/chart/line-dash.ts` extracts `dashArray` from `src/ui/src/pptx/render/chart-axis-style.ts`. Both painters use the same dash mapping.
+- New adapters `render/chart-view-axes.ts` and `render/chart-svg-axes.ts` carry native axes through the chart summary into the shared painter, bind them by plot-group axis IDs, and apply the shared bounds/ticks to cartesian and scatter coordinates. Gridlines follow their own native presence and line styling; deleted axes suppress labels and axis lines. The Excel reader retains axis metadata, also reaching embedded Visio charts.
+
+- `src/core/chart/marker-shape.ts` and its tests extract `src/ui/src/pptx/render/chart-marker-shape.ts`. Geometry and the PowerPoint adapter's selection metadata are preserved through a generic primitive type. New neutral marker adapters retain group/series/point defaults and theme paint, and all shared line/scatter/radar painters call the extracted geometry. PowerPoint delegates to it through its existing module. Picture markers retain the existing fallback behavior; image relationship resolution is not added.

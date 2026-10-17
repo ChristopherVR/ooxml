@@ -1,3 +1,4 @@
+import { seriesMarkerViews } from './chart-view-markers';
 // Resolving one summary series into its painter view: live or cached values, its name and the
 // colour chosen from its DrawingML paint, the host colour, the colour style or the theme. Shared by
 // the first chart group and the groups a combination chart layers over it.
@@ -130,6 +131,10 @@ export function seriesView<S extends ChartSummarySeries>(
 		}),
 	);
 	if (Object.keys(points).length) view.pointGradients = points;
-	Object.assign(view, analysisView(s, color, ctx.drawingColor));
+	Object.assign(
+		view,
+		analysisView(s, color, ctx.drawingColor),
+		seriesMarkerViews(s, ctx.drawingColor),
+	);
 	return view;
 }

@@ -9,6 +9,11 @@ import {
 	type VisioConnectorGlue,
 	type VisioConnectorRoute,
 } from './edit-connector-commands';
+import {
+	isVisioChartObjectEdit,
+	snapshotChartObjectEdit,
+	type VisioChartObjectEdit,
+} from './edit-chart-object-commands';
 export { snapshotConnectorGlue } from './edit-connector-commands';
 export type {
 	VisioConnectorGlue,
@@ -238,6 +243,7 @@ export type VisioEdit =
 	| VisioChangeShapeEdit
 	| VisioMetadataEdit
 	| VisioPictureInsertEdit
+	| VisioChartObjectEdit
 	| VisioGroupEdit
 	| VisioPageThemeEdit
 	| VisioCommentEdit
@@ -353,6 +359,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'paste-shapes') return snapshotPasteShapes(edit);
 		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
+		if (isVisioChartObjectEdit(edit)) return snapshotChartObjectEdit(edit);
 		if (edit.type === 'set-page-theme') return snapshotPageTheme(edit);
 		if (edit.type === 'assign-layers') return snapshotAssignLayers(edit);
 		if (edit.type === 'set-layer-properties') return snapshotLayerProperties(edit);

@@ -62,7 +62,8 @@ describe('combination charts', () => {
 		const svg = renderChartSpaceSvg(chartSpace, { width: 480, height: 300 });
 		expect(svg.match(/<g data-chart-series="0"/g)).toHaveLength(4);
 		expect(svg).toContain('<polyline');
-		expect(svg.match(/<circle /g)).toHaveLength(4);
+		// Series index 1 uses the native automatic square marker.
+		expect(svg.match(/width="5" height="5"/g)).toHaveLength(4);
 		// Secondary tick labels: percent-scale fractions sit right of the plot.
 		expect(svg).toContain('>0.3<');
 		expect(svg).toContain('>Revenue<');

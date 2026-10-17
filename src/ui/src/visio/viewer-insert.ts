@@ -8,6 +8,7 @@ import {
 	editErrorMessage,
 	isEditCancellation,
 	normalizeVisioHyperlinkAddress,
+	visioChartObjectInsertCommand,
 	visioFollowTarget,
 	visioPictureInsertCommand,
 	visioSelectionIsOnPage,
@@ -17,6 +18,7 @@ import type { VisioInsertItem } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { selectedShape, safeExternalHref } from './shape-inspector';
 import { InsertDialog } from './viewer-insert-dialog';
+import { InsertChartDialog, type ChartObjectData, type ChartTarget } from './viewer-insert-chart';
 
 type Run = (action: () => Promise<void>, success: string) => void;
 
@@ -28,6 +30,7 @@ export class ViewerInsert {
 	readonly input: HTMLInputElement;
 	readonly link: InsertDialog;
 	readonly tip: InsertDialog;
+	readonly chart: InsertChartDialog;
 	#target: { pageId: string; shapeId: string; row?: string; generation: number } | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
@@ -59,6 +62,7 @@ export class ViewerInsert {
 			['OK', 'Remove Link', 'Cancel'],
 			(button) => void this.#applyLink(button),
 		);
+		this.chart = new InsertChartDialog(root, (data, target) => this.#saveChart(data, target));
 		this.tip = new InsertDialog(
 			root,
 			'screen-tip-dialog',
@@ -87,6 +91,10 @@ export class ViewerInsert {
 		if (!this.#editable(state)) return;
 		if (item === 'picture') {
 			if (state.document?.pages[state.pageIndex]) this.input.click();
+			return;
+		}
+		if (item === 'chart') {
+			if (state.document?.pages[state.pageIndex]) this.chart.open();
 			return;
 		}
 		const shape = this.#shape(state);
@@ -120,6 +128,68 @@ export class ViewerInsert {
 	close(): void {
 		this.link.dialog.close();
 		this.tip.dialog.close();
+		this.chart.close();
+	}
+	/** Open the editor for the embedded chart `shapeId` on this page; false if it is not one. */
+	editChart(shapeId: string): boolean {
+		const state = this.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		const shape = page && embeddedChartShape(page.shapes, shapeId);
+		if (!page || !shape?.embeddedObject || !this.#editable(state)) return false;
+		void this.chart.edit(
+			{
+				pageId: page.id,
+				shapeId,
+				width: shape.width,
+				height: shape.height,
+				generation: this.controller.documentGeneration,
+			},
+			shape.embeddedObject.bytes,
+		);
+		return true;
+	}
+	/**
+	 * Embed the dialog's workbook and preview: a new chart object on the page, or the existing one
+	 * replaced. Rejects (so the dialog can say why) when the editor refuses.
+	 */
+	async #saveChart(data: ChartObjectData, target: ChartTarget | undefined): Promise<void> {
+		const state = this.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		if (!page || !this.#editable(state)) throw new Error('Open a .vsdx file to insert a chart.');
+		if (target) {
+			if (target.pageId !== page.id || target.generation !== this.controller.documentGeneration)
+				throw new Error('The drawing changed; open the chart again to edit it.');
+			await this.#edit(
+				() =>
+					this.controller.applyEdits([
+						{
+							type: 'replace-chart-object',
+							pageId: target.pageId,
+							shapeId: target.shapeId,
+							...data,
+						},
+					]),
+				'Updated the chart.',
+			);
+			return;
+		}
+		const token = this.controller.captureCreationToken(page.id);
+		const command = visioChartObjectInsertCommand(page, data.workbook, data.preview);
+		await this.#edit(() => this.controller.applyCreationEdits([command], token), 'Inserted chart.');
+	}
+	/** Run an edit through the viewer's usual path, but resolve or reject with its outcome. */
+	#edit(edit: () => Promise<void>, message: string): Promise<void> {
+		return new Promise<void>((resolve, reject) =>
+			this.run(async () => {
+				try {
+					await edit();
+					resolve();
+				} catch (error) {
+					reject(error);
+					throw error;
+				}
+			}, message),
+		);
 	}
 	async #picture(file: File): Promise<void> {
 		const state = this.controller.state;
@@ -250,6 +320,13 @@ export class ViewerInsert {
 				? 'Insert a PNG, JPEG or GIF picture from this device (up to 8 MB).'
 				: 'Open a .vsdx file to insert pictures.';
 		}
+		const chart = button('chart');
+		if (chart) {
+			chart.disabled = !editing || !page;
+			chart.title = editing
+				? 'Insert a chart drawn from data you type or paste. Double-click it to edit.'
+				: 'Open a .vsdx file to insert a chart.';
+		}
 		for (const [name, label] of [
 			['link', 'Link (Ctrl+K)'],
 			['ctx-hyperlink', 'Hyperlink (Ctrl+K)'],
@@ -260,6 +337,8 @@ export class ViewerInsert {
 			control.disabled = !shape;
 			control.title = shape ? label : `${label}: select one shape on an editable drawing.`;
 		}
+		if (this.chart.dialog.open && (!state.edit.sourceAvailable || state.loading))
+			this.chart.close();
 		for (const dialog of [this.link, this.tip]) {
 			if (!dialog.dialog.open) continue;
 			if (
@@ -272,4 +351,14 @@ export class ViewerInsert {
 		}
 		this.link.buttons.get('Remove Link')!.hidden = this.#target?.row === undefined;
 	}
+}
+
+/** The shape `id` when it embeds a chart, looking inside groups. */
+function embeddedChartShape(shapes: readonly VisioShape[], id: string): VisioShape | undefined {
+	for (const shape of shapes) {
+		if (shape.id === id) return shape.embeddedObject ? shape : undefined;
+		const inner = embeddedChartShape(shape.children, id);
+		if (inner) return inner;
+	}
+	return undefined;
 }

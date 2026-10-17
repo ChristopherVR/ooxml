@@ -837,6 +837,72 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "dialog/chart-picker.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChartPicker",
+					"tagName": "office-ui-chart-picker",
+					"customElement": true,
+					"description": "`<office-ui-chart-picker>`: the body of every product's Insert Chart and Change Chart Type dialog. It owns the chart type gallery, grouping, title, an optional data editor and a live preview; the product owns the dialog around it, the OK and Cancel buttons and the chart model. The host sets `types`, `groupings`, `groupedTypes` (the type ids that offer a grouping), `labels` (translated) and `drawPreview`, which returns SVG for the current choices and is also called once per type tile with `value.type` set to that tile. Read and write the choices with `value`; leave `value.data` undefined when the numbers come from elsewhere (a spreadsheet selection) and set it to a string to show the data editor. `change-only` hides the title and data fields, as Change Chart Type keeps the chart's own. Emits `office-chart-change` with the value as `detail` on every edit.",
+					"attributes": [
+						{
+							"name": "change-only"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "changeOnly",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "change-only"
+						},
+						{
+							"kind": "field",
+							"name": "drawPreview"
+						},
+						{
+							"kind": "field",
+							"name": "groupedTypes"
+						},
+						{
+							"kind": "field",
+							"name": "groupings"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "types"
+						},
+						{
+							"kind": "field",
+							"name": "value"
+						}
+					],
+					"events": [
+						{
+							"name": "office-chart-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chart-picker",
+					"declaration": {
+						"name": "OfficeUiChartPicker"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "teams/chat-composer.ts",
 			"declarations": [
 				{

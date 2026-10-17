@@ -328,6 +328,13 @@ export {
 } from './filled-arrow';
 export { VISIO_PICTURE_MAX_BYTES, VISIO_METADATA_TEXT_LIMIT } from './edit-metadata-commands';
 export {
+	VISIO_CHART_OBJECT_MAX_BYTES,
+	type VisioChartObjectEdit,
+	type VisioChartObjectInsertEdit,
+	type VisioChartObjectReplaceEdit,
+} from './edit-chart-object-commands';
+export { encodeBitmapEmf, EmfBitmapError } from './emf-bitmap';
+export {
 	VISIO_COMMENT_LIMIT,
 	VISIO_COMMENT_TEXT_LIMIT,
 	VISIO_COMMENT_AUTHOR_LIMIT,

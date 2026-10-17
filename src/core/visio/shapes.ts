@@ -69,6 +69,7 @@ function mergeShape(base: RawShape, local: RawShape, context: ShapeContext): Raw
 	};
 	if (local.foreign && !local.image) delete result.image;
 	if (local.foreign && !local.foreignVector) delete result.foreignVector;
+	if (local.foreign && !local.embeddedObject) delete result.embeddedObject;
 	return result;
 }
 function cloneInherited(shape: RawShape, parentId: string, context: ShapeContext): RawShape {
@@ -181,7 +182,12 @@ export function normalizeShapes(
 			const groupDisplayMode = mode === 0 || mode === 1 || mode === 2 ? mode : undefined;
 			if (mode !== undefined && groupDisplayMode === undefined)
 				report('invalid-group-display-mode', 'Invalid cached group display mode was ignored.');
-			if ((shape.foreign || type === 'Foreign') && !shape.image && !shape.foreignVector)
+			if (
+				(shape.foreign || type === 'Foreign') &&
+				!shape.image &&
+				!shape.foreignVector &&
+				!shape.embeddedObject
+			)
 				report(
 					'unsupported-foreign-object',
 					'This foreign object is not a supported embedded image or bounded vector and is not rendered.',
@@ -297,6 +303,21 @@ export function normalizeShapes(
 					? {
 							foreignVector: {
 								vector: shape.foreignVector,
+								opacity: Math.max(
+									0,
+									Math.min(1, 1 - number(sheet.cells, 'Transparency', 0, report)),
+								),
+								x: number(sheet.cells, 'ImgOffsetX', 0, report),
+								y: number(sheet.cells, 'ImgOffsetY', 0, report),
+								width: Math.max(0, number(sheet.cells, 'ImgWidth', width, report)),
+								height: Math.max(0, number(sheet.cells, 'ImgHeight', height, report)),
+							},
+						}
+					: {}),
+				...(shape.embeddedObject
+					? {
+							embeddedObject: {
+								...shape.embeddedObject,
 								opacity: Math.max(
 									0,
 									Math.min(1, 1 - number(sheet.cells, 'Transparency', 0, report)),

@@ -17,7 +17,8 @@ import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
 import { createTitleBar, renderTitleBar } from './title-bar';
 import { localizeRibbon } from './ribbon-localize';
-import { applyScreenTips, restoreScreenTips, type ScreenTipStyle } from './viewer-screen-tips';
+import { applyScreenTips, restoreScreenTips } from './viewer-screen-tips';
+import { CUSTOMIZABLE_TABS, DEFAULT_BEHAVIOUR, type VisioBehaviour } from './viewer-behaviour';
 import { wireRibbonOverflow } from './ribbon-overflow';
 import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
@@ -30,6 +31,10 @@ import { ViewerBackstage } from './viewer-backstage';
 import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import { ViewerMiniToolbar } from './viewer-mini-toolbar';
+import { ViewerLivePreview } from './viewer-live-preview';
+import { ViewerAutoRecover, indexedDbRecoveryStore } from './viewer-autorecover';
+import { RecoverDialog } from './viewer-recover-dialog';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
 import {
@@ -99,7 +104,12 @@ export class VisioViewerElement extends BaseElement {
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
 	#disposed = false;
-	#screenTips: ScreenTipStyle = 'descriptions';
+	#behaviour: VisioBehaviour = DEFAULT_BEHAVIOUR;
+	#mini: ViewerMiniToolbar;
+	#livePreview: ViewerLivePreview;
+	#recover: ViewerAutoRecover;
+	/** A drawing shown in place of the real one while a gallery tile is previewed. */
+	#preview: { document: VisioDocument; base: VisioDocument | null } | undefined;
 	#suspended = false;
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
@@ -134,10 +144,37 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
+		const say = (message: string): void => {
+			this.#announcement = message;
+			this.#status.textContent = message;
+		};
+		const recoverDialog = new RecoverDialog(this.#root, say, () => this.#locale());
+		this.#recover = new ViewerAutoRecover(
+			this.controller,
+			() => this.#fileName,
+			indexedDbRecoveryStore(),
+			(offer) => recoverDialog.show(offer),
+		);
+		this.#mini = new ViewerMiniToolbar(this.#root, this.#toolbar);
+		this.#livePreview = new ViewerLivePreview(
+			this.#root,
+			this.controller,
+			(document) => {
+				this.#preview = { document, base: this.controller.state.document };
+				this.#render(this.controller.state);
+			},
+			() => {
+				if (!this.#preview) return;
+				this.#preview = undefined;
+				this.#render(this.controller.state);
+			},
+		);
 		this.#edit = new ViewerInlineText(this.#viewport, this.controller, (message) => {
 			this.#announcement = message;
 			this.#status.textContent = message;
 		});
+		// Selecting text in the editor shows the Mini Toolbar over it; collapsing the selection hides it.
+		this.#edit.onSelection = (at) => (at ? this.#mini.showAt(at.x, at.y) : this.#mini.hide());
 		this.#notes = this.#root.querySelector('.backstage-notes ul')!;
 		this.#canvas = new ViewerCanvas(
 			this.#viewport,
@@ -189,7 +226,13 @@ export class VisioViewerElement extends BaseElement {
 			},
 		});
 		const profileChanged = (): void =>
-			renderTitleBar(this.#titleBar, this.controller.state, this.#fileName, this.#profile.profile);
+			renderTitleBar(
+				this.#titleBar,
+				this.controller.state,
+				this.#fileName,
+				this.#profile.profile,
+				this.#behaviour,
+			);
 		this.#profile = new ViewerProfile(
 			this.#root,
 			profileChanged,
@@ -202,9 +245,8 @@ export class VisioViewerElement extends BaseElement {
 				},
 			},
 			(behaviour) => {
-				this.#screenTips = behaviour.screenTips;
-				applyScreenTips(this.#toolbar, this.#screenTips);
-				this.controller.undoLevels = behaviour.undoLevels;
+				this.#behaviour = behaviour;
+				this.#applyBehaviour();
 			},
 		);
 		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
@@ -245,7 +287,12 @@ export class VisioViewerElement extends BaseElement {
 			fileName: () => this.#fileName,
 			load: (source) => this.load(source),
 			createBlankDrawing: () => this.createBlankDrawing(),
-			exportVsdx: () => this.controller.exportVsdx(),
+			exportVsdx: () => {
+				const saved = this.controller.exportVsdx();
+				// File > Save made a copy as a file: the AutoRecover copy has done its job.
+				this.#recover.saved();
+				return saved;
+			},
 			exportSvg: () => this.exportSvg(),
 			exportPicture: async (format) => {
 				const { document: model, pageIndex } = this.controller.state;
@@ -370,6 +417,8 @@ export class VisioViewerElement extends BaseElement {
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
 		this.#render(this.controller.state);
+		// Now the drawing has its name: offer back a copy kept from an earlier, unsaved session.
+		this.#recover.opened();
 	}
 	/** Create a source-backed drawing and name only the accepted request. */
 	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
@@ -563,19 +612,55 @@ export class VisioViewerElement extends BaseElement {
 	attributeChangedCallback(): void {
 		this.#localizeRibbon();
 	}
-	/** The ribbon speaks the `locale` attribute, else `lang`, else the page's, else the browser's. */
+	/** Put the File > Options behaviour settings to work on the pieces they govern. */
+	#applyBehaviour(): void {
+		const behaviour = this.#behaviour;
+		this.controller.undoLevels = behaviour.undoLevels;
+		this.#edit.spellcheck = behaviour.checkSpelling;
+		this.#edit.autoSize = behaviour.autoSizeText;
+		this.#mini.enabled = behaviour.miniToolbar;
+		this.#livePreview.enabled = behaviour.livePreview;
+		this.#recover.configure(behaviour.autoRecover, behaviour.autoRecoverMinutes);
+		if (!behaviour.livePreview) this.#livePreview.stop();
+		const ribbon = this.#toolbar as unknown as HTMLElement & {
+			selected: string;
+			setTabHidden(tab: string, reason: string, hidden: boolean): void;
+		};
+		const shown = CUSTOMIZABLE_TABS.filter(([id]) => behaviour[`tab-${id}`]).map(([id]) => id);
+		for (const [id] of CUSTOMIZABLE_TABS) ribbon.setTabHidden?.(id, 'options', !shown.includes(id));
+		// A hidden tab cannot stay the open one.
+		if (shown.length && !(shown as readonly string[]).includes(ribbon.selected))
+			ribbon.selected = shown[0]!;
+		this.#localizeRibbon();
+		// The title bar is built before the profile exists; it redraws with the first render.
+		if (this.#profile)
+			renderTitleBar(
+				this.#titleBar,
+				this.controller.state,
+				this.#fileName,
+				this.#profile.profile,
+				behaviour,
+			);
+	}
+	/**
+	 * The ribbon speaks the `locale` attribute, else the language chosen in Options, else `lang`,
+	 * else the page's, else the browser's. A host that sets `locale` itself keeps its choice.
+	 */
+	#locale(): string {
+		return (
+			this.getAttribute('locale') ||
+			this.#behaviour.displayLanguage ||
+			this.lang ||
+			this.ownerDocument.documentElement.lang ||
+			navigator.language
+		);
+	}
 	#localizeRibbon(): void {
 		if (this.#disposed || !this.#overflow) return;
 		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
 		restoreScreenTips(this.#toolbar);
-		localizeRibbon(
-			this.#toolbar,
-			this.getAttribute('locale') ||
-				this.lang ||
-				this.ownerDocument.documentElement.lang ||
-				navigator.language,
-		);
-		applyScreenTips(this.#toolbar, this.#screenTips);
+		localizeRibbon(this.#toolbar, this.#locale());
+		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();
 	}
 	connectedCallback(): void {
@@ -610,7 +695,12 @@ export class VisioViewerElement extends BaseElement {
 		const disposeRotation = this.#rotationHandle.wire();
 		const disposeResize = this.#resizeHandles.wire();
 		const disposeBackstage = this.#backstage.wire();
-		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
+		const disposeMini = this.#mini.wire(this.#viewport);
+		const disposePreview = this.#livePreview.wire();
+		const disposeRecover = this.#recover.wire(this.ownerDocument);
+		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
+			this.#mini.showAt(x, y),
+		);
 		const disposeTellMe = wireTellMe(this.#root);
 		const disposeGalleries = wireInlineGalleries(this, this.#root);
 		const keyTips = attachKeyTips(this.#root);
@@ -669,6 +759,10 @@ export class VisioViewerElement extends BaseElement {
 			disposeResize();
 			disposeBackstage();
 			disposeMenus();
+			disposeMini();
+			this.#recover.dispose();
+			disposePreview();
+			disposeRecover();
 			disposeTellMe();
 			disposeGalleries();
 			keyTips.dispose();
@@ -694,7 +788,11 @@ export class VisioViewerElement extends BaseElement {
 	#render(state: ViewerState): void {
 		if (this.#suspended) return;
 		const page = state.document?.pages[state.pageIndex];
-		const changed = this.#canvas.render(state);
+		// A preview belongs to the drawing it was made from; any real change ends it.
+		if (this.#preview && this.#preview.base !== state.document) this.#preview = undefined;
+		const changed = this.#canvas.render(
+			this.#preview ? { ...state, document: this.#preview.document } : state,
+		);
 		const previous = this.#handleState;
 		this.#handleState = state;
 		if (
@@ -719,7 +817,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
-		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile);
+		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile, this.#behaviour);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);
@@ -727,6 +825,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit.render(state);
 		this.#chrome.render(state);
 		this.#commands.render(state);
+		if (this.#mini.visible) this.#mini.sync();
 		this.#presentation.render(state);
 		this.#backstage.render(state);
 		this.#pointer.render(state);

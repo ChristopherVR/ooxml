@@ -49,6 +49,7 @@ export type {
 	OfficeUiColorCustom,
 } from './form/color-custom';
 import { defineColorCustom } from './form/color-custom';
+import { defineChartPicker } from './dialog/chart-picker';
 
 export {
 	defineAccount,
@@ -92,6 +93,7 @@ export {
 	defineSymbolPicker,
 	defineColorGrid,
 	defineColorCustom,
+	defineChartPicker,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -218,6 +220,12 @@ export {
 	type OfficeOptionValues,
 } from './dialog/options-dialog';
 export {
+	type OfficeChartPickerLabels,
+	type OfficeChartPreview,
+	type OfficeChartType,
+	type OfficeChartValue,
+} from './dialog/chart-picker';
+export {
 	optionsLabels,
 	optionText,
 	personalizeSection,
@@ -271,6 +279,7 @@ export const CONTROL_DEFINERS = [
 	defineSymbolPicker,
 	defineColorGrid,
 	defineColorCustom,
+	defineChartPicker,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

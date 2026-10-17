@@ -1,4 +1,5 @@
-import type { PptxChartSeries } from 'ooxml-core/pptx';
+import type { ChartAxisSeries } from './axis-range-types';
+type PptxChartSeries = ChartAxisSeries & { name?: string };
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,7 +9,7 @@ import {
 	generateAxisTicks,
 	generateLogTicks,
 	generateMinorAxisTicks,
-} from './chart-axis';
+} from './index';
 
 const SERIES: PptxChartSeries[] = [{ name: 'Values', values: [20, 40] }];
 
@@ -72,7 +73,7 @@ describe('axis-constrained value ranges', () => {
 	});
 
 	it('uses explicit bounds with logarithmic span math', () => {
-		const range = computeValueRangeForAxis([{ name: 'Log', values: [2, 200] }], {
+		const range = computeValueRangeForAxis([{ values: [2, 200] }], {
 			axisType: 'valAx',
 			min: 1,
 			max: 1000,

@@ -5,6 +5,7 @@ export * from './blank-display';
 export * from './stacked-series';
 export * from './axis-nice';
 export * from './number-format';
+export * from './data-label-text';
 export * from './auto-title';
 export * from './axis-format';
 export * from './bubble-radius';
@@ -43,3 +44,10 @@ export { readDisplayNaAsBlank } from './parse-chrome';
 export { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 export { CHART_GROUP_ELEMENTS } from './parse-plot';
 export * from './render/index';
+
+export * from './axis-range-types';
+export * from './axis-range';
+export * from './axis-ticks';
+export * from './line-dash';
+export * from './axis-range-auto';
+export * from './marker-shape';

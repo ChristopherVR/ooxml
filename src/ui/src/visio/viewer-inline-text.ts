@@ -42,6 +42,17 @@ export class ViewerInlineText {
 		this.input.hidden = true;
 		this.input.setAttribute('aria-label', 'Shape text');
 	}
+	/** The browser's spell checker underlines mistakes while editing (Options > Proofing). */
+	set spellcheck(value: boolean) {
+		this.input.spellcheck = value;
+	}
+	/** Whether the editor grows with text taller than the shape (Options > Advanced). */
+	autoSize = true;
+	/**
+	 * Told where the text selection is (viewport pixels, top centre of the editor) when it is
+	 * non-empty, or `undefined` when it collapses: the Mini Toolbar follows it.
+	 */
+	onSelection: ((at: { x: number; y: number } | undefined) => void) | undefined;
 	get editing(): boolean {
 		return !!this.#session;
 	}
@@ -51,6 +62,14 @@ export class ViewerInlineText {
 		const options = { signal: events.signal };
 		const input = this.input;
 		input.addEventListener('input', () => this.#layout(), options);
+		const selection = () => {
+			if (!this.onSelection) return;
+			if (input.selectionStart === input.selectionEnd) return this.onSelection(undefined);
+			const rect = input.getBoundingClientRect();
+			this.onSelection({ x: rect.left + rect.width / 2, y: rect.top });
+		};
+		for (const name of ['select', 'mouseup', 'keyup'])
+			input.addEventListener(name, selection, options);
 		input.addEventListener(
 			'keydown',
 			(event) => {
@@ -229,6 +248,14 @@ export class ViewerInlineText {
 		style.left = `${(rect ? rect.left - box.left : 16) + this.viewport.scrollLeft}px`;
 		style.top = `${(rect ? rect.top - box.top : 16) + this.viewport.scrollTop}px`;
 		style.width = `${width}px`;
+		if (!this.autoSize) {
+			// Keep the shape's own frame and let longer text scroll inside it.
+			style.paddingTop = '0px';
+			style.height = `${height}px`;
+			style.overflowY = 'auto';
+			return;
+		}
+		style.overflowY = '';
 		// Measure the text alone (no padding, no height), then pad it to the shape's alignment.
 		style.paddingTop = '0px';
 		style.height = '0px';

@@ -126,8 +126,35 @@ export class OfficeUiGallery extends OfficeElement {
 		return this.model;
 	}
 	set state(value: OfficeGalleryState | null | undefined) {
-		this.model = value ?? undefined;
+		const next = value ?? undefined;
+		// A host that sets its state on every render of its own hands over an equal one most of the
+		// time: drawing it again would rebuild every tile for nothing and make them flash.
+		const json = next ? JSON.stringify(next) : '';
+		if (this.stateJson === json && this.hasUpdated) return;
+		this.stateJson = json;
+		this.model = next;
+		this.pruneParsed(next);
 		this.requestUpdate('state');
+	}
+	private stateJson = '';
+	/** The parsed preview of each tile, kept while its markup is unchanged so Lit leaves it alone. */
+	private parsed = new Map<string, { markup: string; node: Element | null }>();
+	private parsedPreview(slot: string, item: OfficeGalleryItem): Element | null {
+		if (!item.preview) return null;
+		const key = `${slot}::${item.id}`;
+		const cached = this.parsed.get(key);
+		if (cached?.markup === item.preview) return cached.node;
+		const node = parseSvgPreview(this.ownerDocument, item.preview);
+		this.parsed.set(key, { markup: item.preview, node });
+		return node;
+	}
+	/** Forget previews of tiles the new state no longer has. */
+	private pruneParsed(state: OfficeGalleryState | undefined): void {
+		const keep = new Set<string>();
+		for (const item of state?.inline ?? []) keep.add(`inline::${item.id}`);
+		for (const section of state?.sections ?? [])
+			for (const item of section.items) keep.add(`${section.title ?? ''}::${item.id}`);
+		for (const key of this.parsed.keys()) if (!keep.has(key)) this.parsed.delete(key);
 	}
 
 	get disabled(): boolean {
@@ -329,9 +356,12 @@ export class OfficeUiGallery extends OfficeElement {
 	triggerIcon(): Element | null {
 		const name = this.model?.command?.icon ?? this.getAttribute('icon');
 		if (!name) return null;
-		const svg = createIconSvg(this.ownerDocument);
+		// One node for the gallery's life: a new one each render would be swapped into the page.
+		const svg = (this.iconNode ??= createIconSvg(this.ownerDocument));
 		return paintIcon(svg, name) ? svg : null;
 	}
+	private iconNode: SVGSVGElement | undefined;
+	private emptyIcon: SVGSVGElement | undefined;
 
 	override connectedCallback(): void {
 		this.setAttribute('data-office-gallery', '');
@@ -501,9 +531,15 @@ export class OfficeUiGallery extends OfficeElement {
 
 	// ---- Light-DOM template ---------------------------------------------------------------
 
-	private tile(item: OfficeGalleryItem, width: number, height: number, disabled: boolean) {
+	private tile(
+		slot: string,
+		item: OfficeGalleryItem,
+		width: number,
+		height: number,
+		disabled: boolean,
+	) {
 		const { itemAttribute, compactAttribute } = this.constructor as unknown as Statics;
-		const preview = item.preview ? parseSvgPreview(this.ownerDocument, item.preview) : null;
+		const preview = this.parsedPreview(slot, item);
 		// Tile size is document data (the preview's own aspect), so it is set inline.
 		return staticHtml`<button
 			type="button"
@@ -553,7 +589,7 @@ export class OfficeUiGallery extends OfficeElement {
 			: inline
 				? (state?.moreLabel ?? `More ${title}`)
 				: title;
-		const icon = this.triggerIcon() ?? createIconSvg(this.ownerDocument);
+		const icon = this.triggerIcon() ?? (this.emptyIcon ??= createIconSvg(this.ownerDocument));
 		const trigger = staticHtml`<button
 			type="button"
 			class="trigger${command ? ' command' : ''}${command?.large ? ' command-large' : ''}"
@@ -580,7 +616,13 @@ export class OfficeUiGallery extends OfficeElement {
 								inlineItems,
 								(item) => item.id,
 								(item) =>
-									this.tile(item, first?.tileWidth ?? 40, first?.tileHeight ?? 30, disabled),
+									this.tile(
+										'inline',
+										item,
+										first?.tileWidth ?? 40,
+										first?.tileHeight ?? 30,
+										disabled,
+									),
 							)
 						: ''
 				}
@@ -614,7 +656,8 @@ export class OfficeUiGallery extends OfficeElement {
 				${repeat(
 					section.items,
 					(item) => item.id,
-					(item) => this.tile(item, section.tileWidth, section.tileHeight, disabled),
+					(item) =>
+						this.tile(section.title ?? '', item, section.tileWidth, section.tileHeight, disabled),
 				)}
 			</div>
 		</section>`;

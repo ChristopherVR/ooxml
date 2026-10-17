@@ -74,6 +74,8 @@ export function themesGalleryState(
 		id: 'themes',
 		label: 'Themes',
 		disabled,
+		// Live Preview: hovering a theme shows it on the page.
+		preview: true,
 		inline: items.slice(start, start + row),
 		sections: [{ title: 'Office', columns: 4, tileWidth: 64, tileHeight: 44, items }],
 	};
@@ -102,6 +104,7 @@ export function variantsGalleryState(
 		id: 'variants',
 		label: 'Variants',
 		disabled: disabled || !current,
+		preview: true,
 		// A page without a theme has no variants: the row keeps four empty, disabled tiles.
 		...(current ? {} : { inline: [0, 1, 2, 3].map(blankVariant) }),
 		sections: [

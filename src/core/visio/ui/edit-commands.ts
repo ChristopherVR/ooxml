@@ -9,6 +9,7 @@ import {
 	snapshotMetadataEdit,
 	snapshotPictureInsert,
 } from '../edit-metadata-commands';
+import { isVisioChartObjectEdit, snapshotChartObjectEdit } from '../edit-chart-object-commands';
 import { isVisioGroupEdit, snapshotGroupEdit } from '../edit-group-commands';
 import { isVisioPageSetupEdit, snapshotPageSetupEdit } from '../edit-page-setup-commands';
 import { isVisioDiagramPartEdit, snapshotDiagramPartEdit } from '../edit-diagram-parts-commands';
@@ -52,6 +53,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'paste-shapes') return snapshotPasteShapes(command);
 		if (command.type === 'change-shape') return snapshotChangeShape(command);
 		if (command.type === 'insert-picture') return snapshotPictureInsert(command);
+		if (isVisioChartObjectEdit(command)) return snapshotChartObjectEdit(command);
 		if (command.type === 'set-page-theme') return snapshotPageTheme(command);
 		if (command.type === 'assign-layers') return snapshotAssignLayers(command);
 		if (command.type === 'set-layer-properties') return snapshotLayerProperties(command);

@@ -97,7 +97,7 @@ export function chartStroke(
 		color:
 			entry?.axisVisible === false
 				? 'none'
-				: (entry?.lineColor ?? (part === 'gridlineMajor' ? GRID_COLOR : AXIS_COLOR)),
+				: (entry?.lineColor ?? (part.startsWith('gridline') ? GRID_COLOR : AXIS_COLOR)),
 		width: entry?.lineWidth === undefined ? 1 : chartPointsToPixels(entry.lineWidth),
 	};
 }

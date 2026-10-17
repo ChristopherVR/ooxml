@@ -60,6 +60,8 @@ export function parseChart(
 		showLegend: summary.showLegend,
 		partName,
 	};
+	if (summary.axes) object.axes = summary.axes;
+	if (summary.axisIds) object.axisIds = summary.axisIds;
 	if (summary.grouping) object.grouping = summary.grouping;
 	if (summary.barGapWidth !== undefined) object.barGapWidth = summary.barGapWidth;
 	if (summary.barOverlap !== undefined) object.barOverlap = summary.barOverlap;

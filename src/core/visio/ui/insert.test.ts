@@ -4,6 +4,7 @@ import type { VisioHyperlink } from '../shape-metadata';
 import {
 	normalizeVisioHyperlinkAddress,
 	visioFollowTarget,
+	visioChartObjectInsertCommand,
 	visioPictureInsertCommand,
 } from './insert';
 
@@ -19,6 +20,36 @@ const page = (patch: Partial<VisioPage> = {}): VisioPage =>
 		...patch,
 	}) as VisioPage;
 const image = new Uint8Array([1]);
+
+describe('chart object placement', () => {
+	it('centres a 640 x 400 pixel chart and keeps its aspect ratio on a small page', () => {
+		const workbook = new Uint8Array([1]);
+		expect(visioChartObjectInsertCommand(page(), workbook, undefined)).toMatchObject({
+			type: 'insert-chart-object',
+			shapeId: '1',
+			x: 4.25,
+			y: 5.5,
+		});
+		const small = visioChartObjectInsertCommand(page({ width: 5, height: 5 }), workbook, undefined);
+		expect(small.width).toBeCloseTo(4);
+		expect(small.width / small.height).toBeCloseTo(1.6);
+	});
+	it('converts to drawing inches on scaled pages and carries the preview', () => {
+		const preview = new Uint8Array([2]);
+		const command = visioChartObjectInsertCommand(
+			page({
+				drawingToPageScale: 0.5,
+				shapes: [{ id: '7', children: [] } as unknown as VisioShape],
+			}),
+			new Uint8Array([1]),
+			preview,
+		);
+		expect(command).toMatchObject({ shapeId: '8', x: 8.5, y: 11, preview });
+		expect(() =>
+			visioChartObjectInsertCommand(page({ width: 0 }), new Uint8Array([1]), undefined),
+		).toThrow(/unusable/);
+	});
+});
 
 describe('picture placement', () => {
 	it('centres the natural 96 DPI size and keeps the aspect ratio when scaling to the page', () => {

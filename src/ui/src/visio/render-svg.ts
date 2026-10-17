@@ -15,6 +15,7 @@ import {
 import { visioLineJumpPaths } from 'ooxml-core/visio';
 import { fillPaint, linePaint } from './render-fill';
 import { renderImage } from './render-image';
+import { renderEmbeddedChart } from './render-embedded-chart';
 import { renderForeignVectorShape } from './render-foreign-vector-shape';
 import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 import { RenderResources } from './render-resources';
@@ -289,9 +290,11 @@ function drawOwn(
 	if (shadow) group.insertBefore(shadow, effects.below[0] ?? paths[0]!);
 	const raster = renderImage(shape, resources);
 	if (raster) group.append(raster);
+	const chart = renderEmbeddedChart(shape);
+	if (chart) group.append(chart);
 	const vector = renderForeignVectorShape(shape, context.vectorBudget);
 	if (vector) group.append(vector);
 	if (shape.text.plainText) group.append(renderText(shape.text, warnings, context.textBudget));
-	if (shape.kind === 'foreign' && !shape.image && !shape.foreignVector)
+	if (shape.kind === 'foreign' && !shape.image && !shape.foreignVector && !shape.embeddedObject)
 		warnings.add('Embedded or foreign objects are not rendered in this build.');
 }

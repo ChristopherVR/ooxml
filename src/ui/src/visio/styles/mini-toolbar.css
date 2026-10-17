@@ -1,0 +1,16 @@
+.mini-toolbar {
+	position: fixed;
+	z-index: 60;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 4px;
+	color: var(--_vv-ink);
+	background: var(--_vv-surface);
+	border: 1px solid var(--_vv-border);
+	border-radius: 4px;
+	box-shadow: var(--_vv-shadow);
+}
+.mini-toolbar[hidden] {
+	display: none;
+}

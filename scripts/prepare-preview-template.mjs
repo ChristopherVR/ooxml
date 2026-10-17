@@ -10,6 +10,7 @@ export async function preparePreviewTemplate(root, source) {
 	if (prUrl && !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+$/.test(prUrl))
 		throw new Error('Invalid preview pull request URL');
 	const out = join(root, 'suite-dist');
+	const template = join(root, 'preview-template');
 	const html = await readFile(join(out, 'index.html'), 'utf8');
 	const commitUrl = `https://github.com/${repository}/commit/${sha}`;
 	await mkdir(join(out, 'scripts'), { recursive: true });
@@ -20,12 +21,29 @@ export async function preparePreviewTemplate(root, source) {
 			{
 				name: 'ooxml-office-preview',
 				version: '0.0.0',
-				private: true,
 				type: 'module',
 				description: `Office suite from ${repository}@${sha.slice(0, 7)}`,
 				scripts: { start: 'node scripts/preview-site.mjs 5173 .' },
-				// pkg.pr.new replaces these with the same commit's published preview URLs.
-				dependencies: { 'ooxml-core': '*', 'ooxml-ui': '*' },
+				stackblitz: { startCommand: 'npm start' },
+			},
+			null,
+			2,
+		) + '\n',
+	);
+	// StackBlitz POSTs every template file to /run. Keep bundled JS and binary assets
+	// in an installable preview package instead of exceeding the request body limit.
+	await mkdir(template, { recursive: true });
+	await writeFile(
+		join(template, 'package.json'),
+		JSON.stringify(
+			{
+				name: 'ooxml-office-playground',
+				private: true,
+				type: 'module',
+				scripts: {
+					start: 'node node_modules/ooxml-office-preview/scripts/preview-site.mjs 5173 .',
+				},
+				dependencies: { 'ooxml-office-preview': '*', 'ooxml-core': '*', 'ooxml-ui': '*' },
 				stackblitz: { startCommand: 'npm start' },
 			},
 			null,
@@ -43,6 +61,8 @@ export async function preparePreviewTemplate(root, source) {
 			'for separate package experiments.\n',
 	);
 	await writeFile(join(out, 'preview-source.json'), JSON.stringify(source, null, 2) + '\n');
+	await cp(join(out, 'README.md'), join(template, 'README.md'));
+	await cp(join(out, 'preview-source.json'), join(template, 'preview-source.json'));
 	await writeFile(
 		join(out, 'index.html'),
 		html.replace(

@@ -1,5 +1,6 @@
 import type { VisioPageLayout } from './page-layout';
 import type { VisioSnapGlue } from './snap-glue';
+import type { ChartViewModel } from '../chart/index';
 import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 import type { VisioComment } from './comments';
@@ -234,6 +235,22 @@ export interface VisioImage {
 	width?: number;
 	height?: number;
 }
+/**
+ * An Excel chart embedded as an OLE object (Insert > Chart). Draw `chart` with
+ * `renderChartSvg(chart, width, height)`; `bytes` is the whole workbook, kept so the chart can be
+ * edited and put back. Placement is in local y-up inches and defaults to the shape bounds.
+ */
+export interface VisioEmbeddedObject {
+	/** ForeignData ObjectType as written, when it is a number. */
+	objectType?: number;
+	bytes: Uint8Array;
+	chart: ChartViewModel;
+	opacity?: number;
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+}
 export interface VisioLayer {
 	id: string;
 	name: string;
@@ -289,6 +306,7 @@ export interface VisioShape {
 	masterId?: string;
 	layerIds?: string[];
 	image?: VisioImage;
+	embeddedObject?: VisioEmbeddedObject;
 	foreignVector?: VisioPlacedForeignVector;
 	shapeData?: VisioShapeData[];
 	hyperlinks?: VisioHyperlink[];

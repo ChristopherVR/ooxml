@@ -27,6 +27,8 @@ export interface WorkbookPart {
 	workbookPasswordHash?: string;
 	/** `workbookProtection workbookAlgorithmName` and friends (Excel 2013+ agile hash). */
 	workbookModernHash?: ModernPasswordHash;
+	/** `oleSize ref`. */
+	oleSize?: string;
 	/** `calcPr calcMode`: `manual` (and `autoNoTable`, read as automatic). */
 	calcMode?: 'auto' | 'manual';
 	/** `calcPr iterate` with its count (default 100) and maximum change (default 0.001). */
@@ -70,7 +72,9 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 				delta: numAttr(calcPr, 'iterateDelta') ?? 0.001,
 			}
 		: undefined;
+	const oleSize = att(xFirst(root, 'oleSize'), 'ref');
 	return {
+		...(oleSize ? { oleSize } : {}),
 		...(iterate ? { iterate } : {}),
 		...(password ? { workbookPasswordHash: password } : {}),
 		...(modernHash ? { workbookModernHash: modernHash } : {}),

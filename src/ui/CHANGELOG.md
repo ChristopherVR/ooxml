@@ -7,6 +7,39 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.18.0) - 2026-10-17
+
+### Features
+
+- **ui:** Insert and edit charts as embedded objects in visio ([7fbea85](https://github.com/ChristopherVR/ooxml/commit/7fbea8563b1bfe5ca2b925c72fcdc5dbc0e23261))
+- **ui:** Honour more visio options: language, spelling, tabs, toolbar ([95505e5](https://github.com/ChristopherVR/ooxml/commit/95505e5b7b9ab81529131a2f325b434332149d99))
+- **ui:** Add the Mini Toolbar to visio ([d513a7e](https://github.com/ChristopherVR/ooxml/commit/d513a7e28329b41f2c9ba5daaec7638f78541100))
+- **ui:** Add Live Preview to visio's style and theme galleries ([ddb7151](https://github.com/ChristopherVR/ooxml/commit/ddb7151622b8930111c030327e4767c2a10ddafe))
+- **ui:** Add AutoRecover to visio's Save options ([b30dc43](https://github.com/ChristopherVR/ooxml/commit/b30dc43d8b181708640eb8c053755f539dd18242))
+- **chart:** Draw data labels in the shared chart renderer ([32142ef](https://github.com/ChristopherVR/ooxml/commit/32142ef32c392548fdf5f79aa9d7f659356fac70))
+
+### Bug Fixes
+
+- **ui:** Keep gallery tiles intact when the visio language changes ([47455ef](https://github.com/ChristopherVR/ooxml/commit/47455ef95553dfa592c58ea65d24a0ff7aa756cd))
+- **ui:** Stop galleries rebuilding their tiles and icons on every render ([35043f8](https://github.com/ChristopherVR/ooxml/commit/35043f833160d712d42b3b93f4dd6f8c4f8956e6))
+- **ui:** Reject stale visio recovery offers ([5f4012c](https://github.com/ChristopherVR/ooxml/commit/5f4012c96e870b56444e41018c855a3200303651))
+
+## [1.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.17.0) - 2026-10-17
+
+### Features
+
+- **ui:** Honour undo levels and ScreenTip style in visio options ([1ce62d3](https://github.com/ChristopherVR/ooxml/commit/1ce62d39fe7c7101f91ce93d4a34e612830946be))
+- **ui:** Share the chart picker and add Insert > Chart to visio ([ab7f2ea](https://github.com/ChristopherVR/ooxml/commit/ab7f2ea0208f698b47def57f361b5a1f4eb457ba))
+
+### Bug Fixes
+
+- **ui:** Wire visio behaviour options and test them ([11bb768](https://github.com/ChristopherVR/ooxml/commit/11bb768187d87d55acff1f74f3809b48dba27924))
+- **ui:** Keep the chart picker to declared design tokens ([406d92a](https://github.com/ChristopherVR/ooxml/commit/406d92a212de56fbd2751e80a81f5f4cb4ac1ae9))
+
+### Testing
+
+- **ui:** Drive the visio behaviour options through the dialog ([dc55882](https://github.com/ChristopherVR/ooxml/commit/dc55882dcf4dac95c42ef90abda4aa100bc49a1c))
+
 ## [1.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.16.0) - 2026-10-16
 
 ### Features

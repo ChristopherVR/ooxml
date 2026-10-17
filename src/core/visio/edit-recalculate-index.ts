@@ -1,5 +1,5 @@
 import { textSizeFormula } from './edit-text-size-formula';
-import { isLocalBitmapShape } from './edit-foreign-bitmap';
+import { isLocalForeignFrameShape } from './edit-foreign-frame';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
 import { independentTextFieldFormula } from './text-field-independent';
@@ -104,7 +104,7 @@ export function indexCells(
 						node.hasAttribute('Master') ||
 						node.hasAttribute('MasterShape') ||
 						attribute(node, 'Type') === 'Group' ||
-						(!isLocalBitmapShape(node) &&
+						(!isLocalForeignFrameShape(node) &&
 							((attribute(node, 'Type') !== undefined && attribute(node, 'Type') !== 'Shape') ||
 								children(node, 'ForeignData').length > 0 ||
 								children(node, 'Rel').length > 0)) ||

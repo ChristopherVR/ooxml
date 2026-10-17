@@ -22,17 +22,20 @@ const FORMATS: Record<
 	'image/gif': { extension: 'gif', compression: 'GIF' },
 };
 
-function copy(root: Element): Element {
+export function cloneRoot(root: Element): Element {
 	return (root.ownerDocument!.cloneNode(true) as Document).documentElement;
 }
 
-/** The new Foreign shape: frame cells, an invisible frame geometry and the bitmap reference. */
-function pictureShape(
+/**
+ * The new Foreign shape: frame cells, an invisible frame geometry and a ForeignData that carries
+ * `foreignAttributes` (a bitmap's compression, or an embedded object's type) and the reference.
+ */
+export function foreignFrameShape(
 	root: Element,
 	document: Element,
-	edit: VisioPictureInsertEdit,
+	edit: Pick<VisioPictureInsertEdit, 'shapeId' | 'x' | 'y' | 'width' | 'height'>,
 	relId: string,
-	compression: string,
+	foreignAttributes: Readonly<Record<string, string>>,
 ): void {
 	const shape = createShape(root, edit.shapeId);
 	shape.setAttribute('Type', 'Foreign');
@@ -81,12 +84,29 @@ function pictureShape(
 	}
 	shape.appendChild(section);
 	const foreign = node('ForeignData');
-	foreign.setAttribute('ForeignType', 'Bitmap');
-	foreign.setAttribute('CompressionType', compression);
+	for (const [name, value] of Object.entries(foreignAttributes)) foreign.setAttribute(name, value);
 	const rel = node('Rel');
 	rel.setAttributeNS(NS.r, 'r:id', relId);
 	foreign.appendChild(rel);
 	shape.appendChild(foreign);
+}
+
+/** A dangling Sheet.N! reference must not start resolving to a newly created shape. */
+export async function assertShapeIdUnreferenced(
+	pkg: VisioPackage,
+	pages: ReadonlyMap<string, string>,
+	shapeId: string,
+	check: () => void,
+): Promise<void> {
+	const reference = new RegExp(`\\bSheet\\.${shapeId}!`, 'i');
+	for (const pagePath of pages.values()) {
+		const pageRoot = await visioXml(pkg, pagePath, 'PageContents');
+		for (const cell of Array.from(pageRoot.getElementsByTagNameNS(pageRoot.namespaceURI, 'Cell'))) {
+			check();
+			if (reference.test(attribute(cell, 'F') ?? ''))
+				fail('INVALID_SHAPE_ID', 'An existing formula already refers to the new shape ID.');
+		}
+	}
 }
 
 /** Embed one validated raster as visio/media part, page relationship and Foreign shape. */
@@ -110,23 +130,14 @@ export async function editVsdxPicture(
 	const format = FORMATS[info.mimeType];
 	const path = pages.get(edit.pageId);
 	if (!path) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
-	// A dangling Sheet.N! reference must not start resolving to the new picture.
-	const reference = new RegExp(`\\bSheet\\.${edit.shapeId}!`, 'i');
-	for (const pagePath of pages.values()) {
-		const pageRoot = await visioXml(pkg, pagePath, 'PageContents');
-		for (const cell of Array.from(pageRoot.getElementsByTagNameNS(pageRoot.namespaceURI, 'Cell'))) {
-			check();
-			if (reference.test(attribute(cell, 'F') ?? ''))
-				fail('INVALID_SHAPE_ID', 'An existing formula already refers to the new shape ID.');
-		}
-	}
-	const root = copy(await visioXml(pkg, path!, 'PageContents'));
+	await assertShapeIdUnreferenced(pkg, pages, edit.shapeId, check);
+	const root = cloneRoot(await visioXml(pkg, path!, 'PageContents'));
 	const document = await visioXml(pkg, (await related(pkg, '', 'document'))!, 'VisioDocument');
 	const relsPart = relationshipsPartFor(path!);
 	const rels = parts.has(relsPart)
-		? copy(await pkg.readXml(relsPart, 'Relationships'))
+		? cloneRoot(await pkg.readXml(relsPart, 'Relationships'))
 		: parseXml(`<Relationships xmlns="${NS.rels}"/>`).documentElement;
-	const types = copy(await pkg.readXml('[Content_Types].xml', 'Types'));
+	const types = cloneRoot(await pkg.readXml('[Content_Types].xml', 'Types'));
 	const taken = new Set([...parts.keys()].map((name) => decodePath(name).toLowerCase()));
 	const ids = new Set<string>();
 	for (const node of Array.from(types.getElementsByTagNameNS(types.namespaceURI, 'Override'))) {
@@ -146,7 +157,10 @@ export async function editVsdxPicture(
 	index = 1;
 	while (ids.has(`rId${index}`)) index++;
 	const relId = `rId${index}`;
-	pictureShape(root, document, edit, relId, format.compression);
+	foreignFrameShape(root, document, edit, relId, {
+		ForeignType: 'Bitmap',
+		CompressionType: format.compression,
+	});
 	const relationship = rels.ownerDocument!.createElementNS(rels.namespaceURI, 'Relationship');
 	relationship.setAttribute('Id', relId);
 	relationship.setAttribute('Type', RELATIONSHIP_TYPES.image);

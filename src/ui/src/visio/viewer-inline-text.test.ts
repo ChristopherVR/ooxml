@@ -133,3 +133,41 @@ it('needs one selected shape and an editable source', async () => {
 	expect(preview.editor.input.isConnected).toBe(false);
 	preview.end();
 });
+
+it('follows the Proofing option for the browser spell checker', async () => {
+	const view = await setup();
+	expect(view.editor.input.spellcheck).toBe(true);
+	view.editor.spellcheck = false;
+	view.ui.select(['1']);
+	view.editor.start();
+	expect(view.editor.input.spellcheck).toBe(false);
+	view.editor.spellcheck = true;
+	expect(view.editor.input.spellcheck).toBe(true);
+	view.end();
+});
+
+it('keeps the shape frame and scrolls long text when auto-size is off', async () => {
+	const view = await setup();
+	view.editor.autoSize = false;
+	view.ui.select(['1']);
+	view.editor.start();
+	const style = view.editor.input.style;
+	expect(style.overflowY).toBe('auto');
+	// The frame is the shape's own; text is never allowed to grow it.
+	const fixed = style.height;
+	view.editor.input.value = 'line\n'.repeat(40);
+	view.editor.input.dispatchEvent(new Event('input'));
+	expect(view.editor.input.style.height).toBe(fixed);
+	view.end();
+});
+
+it('lets the frame follow its text again when auto-size is on', async () => {
+	const view = await setup();
+	view.editor.autoSize = false;
+	view.ui.select(['1']);
+	view.editor.start();
+	view.editor.autoSize = true;
+	view.editor.input.dispatchEvent(new Event('input'));
+	expect(view.editor.input.style.overflowY).toBe('');
+	view.end();
+});

@@ -8,6 +8,7 @@ import sizePosition from './size-position.css?raw';
 import textTool from './text-tool.css?raw';
 import presentation from './presentation.css?raw';
 import insert from './insert.css?raw';
+import miniToolbar from './mini-toolbar.css?raw';
 import pageSetup from './page-setup.css?raw';
 import review from './review.css?raw';
 import data from './data.css?raw';
@@ -33,6 +34,7 @@ export const canvasAndRibbonStyles = [
 	textTool,
 	presentation,
 	insert,
+	miniToolbar,
 	pageSetup,
 	review,
 	data,

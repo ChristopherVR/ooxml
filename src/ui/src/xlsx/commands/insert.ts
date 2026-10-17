@@ -3,24 +3,27 @@ import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xl
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { icon } from 'ooxml-core/xlsx/ui';
-import { editing, target } from 'ooxml-core/xlsx/ui';
+import { editing, target, INSERT_CHART_TYPES } from 'ooxml-core/xlsx/ui';
 
 /** Picture types the core stores that a browser can also paint. */
 const PICTURE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'].filter(
 	(type) => type in IMAGE_EXTENSIONS,
 );
 
+const CHART_GLYPHS: Partial<Record<ChartType, string>> = {
+	column: 'chartColumn',
+	line: 'chartLine',
+	pie: 'chartPie',
+	bar: 'chartBar',
+	area: 'chartArea',
+	scatter: 'chartScatter',
+	doughnut: 'chartPie',
+	radar: 'chartLine',
+};
+
+/** The chart types of Insert Chart (shared with other products) with the ribbon glyph of each. */
 export const CHART_TYPES: ReadonlyArray<readonly [type: ChartType, label: string, glyph: string]> =
-	[
-		['column', 'Column', 'chartColumn'],
-		['line', 'Line', 'chartLine'],
-		['pie', 'Pie', 'chartPie'],
-		['bar', 'Bar', 'chartBar'],
-		['area', 'Area', 'chartArea'],
-		['scatter', 'Scatter', 'chartScatter'],
-		['doughnut', 'Doughnut', 'chartPie'],
-		['radar', 'Radar', 'chartLine'],
-	];
+	INSERT_CHART_TYPES.map(([type, label]) => [type, label, CHART_GLYPHS[type] ?? 'chartColumn']);
 
 /** Picks an image file with a native file input. Resolves undefined when cancelled. */
 function pickImage(ctx: EditorContext): Promise<File | undefined> {

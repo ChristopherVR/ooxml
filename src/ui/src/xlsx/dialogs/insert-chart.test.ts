@@ -1,18 +1,15 @@
 // @vitest-environment jsdom
 import { createWorkbook, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-	clickButton,
-	createTestContext,
-	dialogEl,
-	inputByLabel,
-	pressKey,
-	setValue,
-} from '../commands/test-support';
+import { clickButton, createTestContext, dialogEl, pressKey } from '../commands/test-support';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools';
 
 afterEach(() => (document.body.innerHTML = ''));
+
+/** The shared chart picker inside the dialog; its controls live in its shadow root. */
+const pickerRoot = (dialog: Element): ShadowRoot =>
+	dialog.querySelector('office-ui-chart-picker')!.shadowRoot!;
 
 function setup() {
 	const ctx = createTestContext(createWorkbook());
@@ -55,13 +52,15 @@ describe('Insert Chart dialog', () => {
 		const ctx = setup();
 		const result = ctx.dialogs.open('insert-chart', { type: 'column' });
 		const dialog = dialogEl(ctx, 'insert-chart');
-		expect(dialog.querySelector('.xve-preview svg')).not.toBeNull();
-		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="line"]')!.click();
-		expect(dialog.querySelector('[data-gallery-item="line"]')!.getAttribute('aria-pressed')).toBe(
-			'true',
-		);
-		expect(dialog.querySelectorAll('office-ui-gallery .tile svg')).toHaveLength(8);
-		setValue(inputByLabel(dialog, 'Chart title'), 'Q1');
+		expect(pickerRoot(dialog).querySelector('.preview svg')).not.toBeNull();
+		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="line"]')!.click();
+		expect(
+			pickerRoot(dialog).querySelector('[data-gallery-item="line"]')!.getAttribute('aria-pressed'),
+		).toBe('true');
+		expect(pickerRoot(dialog).querySelectorAll('office-ui-gallery .tile svg')).toHaveLength(8);
+		const title = pickerRoot(dialog).querySelector<HTMLInputElement>('[data-key="title"]')!;
+		title.value = 'Q1';
+		title.dispatchEvent(new Event('input'));
 		clickButton(dialog, 'OK');
 		await result;
 		const drawings = ctx.workbook()!.sheets[0]!.drawings;
@@ -97,7 +96,7 @@ describe('Insert Chart dialog', () => {
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
 		const dialog = dialogEl(ctx, 'insert-chart');
-		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="pie"]')!.click();
+		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="pie"]')!.click();
 		clickButton(dialog, 'OK');
 		await result;
 		expect(ctx.workbook()!.sheets[0]!.drawings).toHaveLength(1);
@@ -117,10 +116,11 @@ describe('Insert Chart dialog', () => {
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
 		const dialog = dialogEl(ctx, 'insert-chart');
-		const grouping = inputByLabel<HTMLSelectElement>(dialog, 'Grouping');
-		expect(grouping.closest('label')?.hidden).toBe(false);
-		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="bar"]')!.click();
-		setValue(grouping, 'percentStacked');
+		expect(pickerRoot(dialog).querySelector('[data-key="grouping"]')).not.toBeNull();
+		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="bar"]')!.click();
+		const grouping = pickerRoot(dialog).querySelector<HTMLSelectElement>('[data-key="grouping"]')!;
+		grouping.value = 'percentStacked';
+		grouping.dispatchEvent(new Event('change'));
 		clickButton(dialog, 'OK');
 		await result;
 		const chart = () => ctx.workbook()!.sheets[0]!.drawings[0]!;

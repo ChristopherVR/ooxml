@@ -158,6 +158,9 @@ export class ViewerController {
 	});
 	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
+	#previewId = 0;
+	#previewSink: ((document: VisioDocument | undefined) => void) | undefined;
+	#previewEditor: CancellableEditor | undefined;
 	#visible = documentVisibility(null);
 	#clipboard: ViewerClipboardCapture;
 	#clipboardQueued = false;
@@ -510,7 +513,76 @@ export class ViewerController {
 	}
 	/** Atomic source-backed edits. Core owns protection, dependency and target validation. */
 	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
-		return this.#mutate('edit', snapshotEdits(edits));
+		const preview = this.#previewSink;
+		if (!preview) return this.#mutate('edit', snapshotEdits(edits));
+		// A preview of an edit the editor would refuse is no preview, not an error.
+		let commands: VisioEdit[];
+		try {
+			commands = snapshotEdits(edits);
+		} catch {
+			return preview(undefined);
+		}
+		return this.#preview(commands, preview);
+	}
+	/** True while `previewing` runs, so a caller that wraps edits can skip its own follow-up work. */
+	get isPreviewing(): boolean {
+		return this.#previewSink !== undefined;
+	}
+	/**
+	 * Run `apply`, which asks for edits as usual (a gallery's pick handler, say), and hand the
+	 * drawing those edits would produce to `sink` instead of committing them: history, the saved
+	 * state and the selection are untouched. `sink` gets `undefined` when the edit is refused or
+	 * the drawing changed first. Edits are worked out on their own editor, so a preview never
+	 * cancels a real edit and a real edit never waits on one.
+	 */
+	previewing(sink: (document: VisioDocument | undefined) => void, apply: () => void): void {
+		this.#previewSink = sink;
+		try {
+			apply();
+		} finally {
+			this.#previewSink = undefined;
+		}
+	}
+	/** Drop any preview in flight: its result will be ignored and its worker stopped. */
+	cancelPreview(): void {
+		++this.#previewId;
+		this.#previewEditor?.cancel?.();
+	}
+	async #preview(
+		commands: VisioEdit[],
+		sink: (document: VisioDocument | undefined) => void,
+	): Promise<void> {
+		const history = this.#history;
+		const snapshot = history?.current;
+		const loadId = this.#loadId;
+		const id = ++this.#previewId;
+		const state = this.#state;
+		if (
+			!history ||
+			this.#destroyed ||
+			state.loading ||
+			state.edit.busy ||
+			state.document?.format !== 'vsdx'
+		)
+			return sink(undefined);
+		this.#previewEditor ??=
+			typeof this.editor.cancel === 'function' ? createWorkerEditor() : this.editor;
+		let document: VisioDocument | undefined;
+		try {
+			const result = await this.#previewEditor(Uint8Array.from(snapshot!.bytes), commands);
+			document = result.document;
+		} catch {
+			document = undefined;
+		}
+		// A newer preview, a real edit or a reload since the request makes this one stale.
+		const stale =
+			id !== this.#previewId ||
+			this.#destroyed ||
+			history !== this.#history ||
+			history.current !== snapshot ||
+			loadId !== this.#loadId ||
+			this.#state.edit.busy;
+		sink(stale ? undefined : document);
 	}
 	captureTextReplaceToken(scope: ViewerTextReplaceScope): ViewerTextReplaceToken {
 		this.#assertAlive();
@@ -544,6 +616,18 @@ export class ViewerController {
 	}
 	/** Gesture batches may only edit the captured current-page selection. */
 	async applySelectionEdits(edits: readonly VisioEdit[]): Promise<void> {
+		const preview = this.#previewSink;
+		try {
+			return await this.#applySelectionEdits(edits, preview);
+		} catch (error) {
+			if (!preview) throw error;
+			preview(undefined);
+		}
+	}
+	async #applySelectionEdits(
+		edits: readonly VisioEdit[],
+		preview: ((document: VisioDocument | undefined) => void) | undefined,
+	): Promise<void> {
 		this.#assertAlive();
 		const revision = this.#revision;
 		const state = this.#state;
@@ -566,6 +650,7 @@ export class ViewerController {
 			)
 		)
 			throw new Error('Selection edits must target selected shapes on the current page.');
+		if (preview) return this.#preview(commands, preview);
 		return this.#mutate('edit', commands, undefined, undefined, true);
 	}
 	/** Capture an internal drawing intent before pointer movement or draft input. */
@@ -592,6 +677,7 @@ export class ViewerController {
 				'create-text-box',
 				'create-path',
 				'insert-picture',
+				'insert-chart-object',
 				'insert-master-instance',
 				'drop-stencil-master',
 			].includes(command.type),

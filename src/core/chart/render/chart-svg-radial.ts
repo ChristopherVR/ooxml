@@ -1,7 +1,17 @@
-import { formatAxisValue } from './chart-scale';
-import { fit, line, n, text, type Rect } from './chart-svg-util';
+import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
+import { axisTickText, axisLine } from './chart-svg-axes';
+import { fit, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
+import type { ChartMarkerSeriesView } from './chart-view-markers';
+import {
+	hasOutsideLabels,
+	pointLabels,
+	sliceLabels,
+	type PointMark,
+	type SliceMark,
+} from './chart-svg-labels';
 
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [
 	cx + r * Math.sin(angle),
@@ -38,7 +48,10 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 	const out: string[] = [chartAreaRect(model, 'plotArea', area)];
 	const cx = area.x + area.w / 2;
 	const cy = area.y + area.h / 2;
-	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 4);
+	// Labels outside the pie (`outEnd`, `bestFit`) need a margin around it.
+	const margin = hasOutsideLabels(model) ? Math.min(area.w, area.h) * 0.12 : 0;
+	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 4 - margin);
+	const slices: SliceMark[] = [];
 	const rings = model.type === 'doughnut' ? model.series : model.series.slice(0, 1);
 	const hole = model.type === 'doughnut' ? radius * 0.5 : 0;
 	const ringSize = (radius - hole) / Math.max(1, rings.length);
@@ -55,9 +68,20 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 			out.push(
 				`<path d="${slicePath(cx, cy, outer, inner, angle, angle + sweep)}" fill="${color}" stroke="#FFFFFF" stroke-width="1"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 			);
+			slices.push({
+				series: s,
+				index: i,
+				cx,
+				cy,
+				outer,
+				inner,
+				start: angle,
+				end: angle + sweep,
+			});
 			angle += sweep;
 		});
 	});
+	sliceLabels(model, slices, out);
 	return out.join('');
 }
 
@@ -72,12 +96,11 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 	const valueSize = valueAttrs.size ?? 9;
 	const categorySize = categoryAttrs.size ?? 10;
 	const grid = chartStroke(model, 'gridlineMajor');
-	const axis = chartStroke(model, 'categoryAxis');
 	const cx = area.x + area.w / 2;
 	const cy = area.y + area.h / 2 + 4;
 	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - Math.max(18, categorySize * 1.8));
 	const angle = (i: number): number => (i / count) * Math.PI * 2;
-	const r = (v: number): number => ((v - scale.min) / (scale.max - scale.min || 1)) * radius;
+	const r = (v: number): number => chartAxisRatio(v, scale, model.axes?.value) * radius;
 	const labelEvery = Math.max(
 		1,
 		Math.ceil(12 / Math.max(1, radius / Math.max(1, scale.ticks.length - 1))),
@@ -86,20 +109,33 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 		const ring = Array.from({ length: count }, (_, i) => polar(cx, cy, r(t), angle(i)))
 			.map(([x, y]) => `${n(x)},${n(y)}`)
 			.join(' ');
-		out.push(
-			`<polygon points="${ring}" fill="none" stroke="${grid.color}" stroke-width="${n(grid.width)}"/>`,
-		);
-		if (model.appearance?.valueAxis?.labelsVisible !== false && k % labelEvery === 0)
+		if (!model.axes?.value || model.axes.value.source.majorGridlines)
 			out.push(
-				text(cx + 3, cy - r(t) + valueSize * 0.3, formatAxisValue(t, scale.percent), valueAttrs),
+				`<polygon points="${ring}" fill="none" stroke="${grid.color}" stroke-width="${n(grid.width)}"/>`,
+			);
+		if (
+			chartAxisLabels(model.axes?.value) &&
+			model.appearance?.valueAxis?.labelsVisible !== false &&
+			k % labelEvery === 0
+		)
+			out.push(
+				text(
+					cx + 3,
+					cy - r(t) + valueSize * 0.3,
+					axisTickText(t, model.axes?.value, scale.percent),
+					valueAttrs,
+				),
 			);
 	}
 	model.categories.forEach((c, i) => {
 		const [x, y] = polar(cx, cy, radius, angle(i));
-		out.push(line(cx, cy, x, y, axis.color, axis.width));
+		out.push(axisLine(model, model.axes?.category, 'categoryAxis', cx, cy, x, y));
 		const [lx, ly] = polar(cx, cy, radius + 10, angle(i));
 		const anchor = Math.abs(lx - cx) < 2 ? 'middle' : lx > cx ? 'start' : 'end';
-		if (model.appearance?.categoryAxis?.labelsVisible !== false)
+		if (
+			chartAxisLabels(model.axes?.category) &&
+			model.appearance?.categoryAxis?.labelsVisible !== false
+		)
 			out.push(
 				text(lx, ly + categorySize * 0.3, fit(c, area.w / 4, categorySize), {
 					anchor,
@@ -107,15 +143,23 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 				}),
 			);
 	});
+	const marks: PointMark[] = [];
 	for (const s of model.series) {
-		const points = s.values
+		const vertices = s.values
 			.slice(0, count)
-			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)))
-			.map(([x, y]) => `${n(x)},${n(y)}`)
-			.join(' ');
+			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)));
+		vertices.forEach(([x, y], i) => {
+			if (s.values[i] === null) return;
+			const markerSeries: ChartMarkerSeriesView = s;
+			if (markerSeries.marker || markerSeries.pointMarkers)
+				out.push(chartSeriesMarkerSvg(s, i, x, y));
+			marks.push({ series: s, index: i, x, y, radius: chartMarkerRadius(s, i) });
+		});
+		const points = vertices.map(([x, y]) => `${n(x)},${n(y)}`).join(' ');
 		out.push(
 			`<polygon points="${points}" fill="none" stroke="${s.color}" stroke-width="2"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 		);
 	}
+	pointLabels(model, marks, out);
 	return out.join('');
 }

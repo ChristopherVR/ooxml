@@ -3,42 +3,74 @@ import {
 	unavailableCategory,
 	userInterfaceSection,
 	type OfficeOptionCategory,
+	type OfficeOptionControl,
+	type OfficeOptionSection,
 	type OptionsContext,
 } from '../controls';
+import {
+	CUSTOMIZABLE_TABS,
+	DISPLAY_LANGUAGES,
+	MAX_RECOVER_MINUTES,
+	MAX_UNDO_LEVELS,
+	QUICK_ACCESS_COMMANDS,
+} from './viewer-behaviour';
+
+export { MAX_UNDO_LEVELS };
 
 const visio: OptionsContext = { product: 'Visio', t: (text) => text };
-/** Undo depth is bounded by the retained drawing snapshots (see EDIT_HISTORY_LIMITS). */
-export const MAX_UNDO_LEVELS = 19;
-const disabled = (reason: string) => ({ disabled: `Not available yet. ${reason}` });
+const disabled = (reason: string) => ({ disabled: `Not available. ${reason}` });
+const BROWSER_SPELLING = "Your browser's spell checker decides this.";
 
-/** Office's User Interface options; ScreenTip style is honoured, the rest wait for their feature. */
-function visioUserInterface() {
+/** Office's User Interface options, with the ones this viewer honours switched on. */
+function visioUserInterface(): OfficeOptionSection {
 	const section = userInterfaceSection(visio);
 	return {
 		...section,
-		controls: section.controls.map((control) =>
-			control.key === 'screenTips'
-				? {
-						kind: 'select' as const,
-						key: 'screenTips',
-						label: control.label,
-						info: 'Applies to the ribbon. Commands that are not available always say why.',
-						choices: [
-							{ value: 'descriptions', label: 'Show ScreenTips with shortcut keys' },
-							{ value: 'plain', label: "Don't show shortcut keys in ScreenTips" },
-							{ value: 'off', label: "Don't show ScreenTips" },
-						],
-					}
-				: control,
-		),
+		controls: section.controls.map((control): OfficeOptionControl => {
+			if (control.key === 'miniToolbar') {
+				const { disabled: _off, ...rest } = control;
+				return {
+					...rest,
+					info: 'Shows text formatting beside the shape when you right-click it or select text in it.',
+				};
+			}
+			if (control.key === 'livePreview') {
+				const { disabled: _off, ...rest } = control;
+				return {
+					...rest,
+					info: 'Hovering a style or theme in a gallery shows it on the drawing before you apply it.',
+				};
+			}
+			if (control.key === 'screenTips')
+				return {
+					kind: 'select',
+					key: 'screenTips',
+					label: control.label,
+					info: 'Applies to the ribbon. Commands that are not available always say why.',
+					choices: [
+						{ value: 'descriptions', label: 'Show ScreenTips with shortcut keys' },
+						{ value: 'plain', label: "Don't show shortcut keys in ScreenTips" },
+						{ value: 'off', label: "Don't show ScreenTips" },
+					],
+				};
+			return control;
+		}),
 	};
 }
 
+const toggles = (
+	prefix: 'tab' | 'qat',
+	entries: readonly (readonly [string, string])[],
+): OfficeOptionControl[] =>
+	entries.map(([id, label]) => ({ kind: 'toggle', key: `${prefix}-${id}`, label }));
+
 /**
- * Visio's File > Options categories, in Visio's order, built from the shared Office categories
- * (`unavailableCategory`, `userInterfaceSection`, `personalizeSection`). User name and Initials
- * (the local profile, also the identity in a shared session) and Office Theme (the status bar's
- * look) are honoured; every other setting is shown disabled with the capability it is waiting for.
+ * Visio's File > Options categories, in Visio's order, built from the shared Office categories.
+ * User name and Initials (the local profile, also the identity in a shared session) and Office
+ * Theme (the status bar's look) are honoured, and so is everything below that says so by being
+ * enabled: ScreenTips, the Mini Toolbar, Live Preview, undo levels, text auto-size, spelling, the
+ * display language and which ribbon tabs and Quick Access Toolbar commands are shown. A setting the
+ * viewer cannot honour is shown disabled with the reason.
  */
 export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 	{
@@ -68,16 +100,106 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 			),
 		],
 	},
-	unavailableCategory(visio, 'proofing', {
-		reason: 'Not available yet. Spelling and AutoCorrect need rich text editing.',
-	}),
-	unavailableCategory(visio, 'save', {
+	{
+		id: 'proofing',
+		label: 'Proofing',
+		description: 'Change how Visio corrects and formats your text.',
+		sections: [
+			{
+				id: 'spelling',
+				title: 'When correcting spelling in Visio',
+				controls: [
+					{
+						kind: 'toggle',
+						key: 'checkSpelling',
+						label: 'Check spelling as you type',
+						info: "Uses your browser's spell checker while you edit a shape's text.",
+					},
+				],
+			},
+			{
+				id: 'office',
+				title: 'When correcting spelling in Microsoft Office programs',
+				controls: [
+					'Ignore words in UPPERCASE',
+					'Ignore words that contain numbers',
+					'Ignore Internet and file addresses',
+					'Flag repeated words',
+				].map((label, index): OfficeOptionControl => ({
+					kind: 'toggle',
+					key: `proofing-${index}`,
+					label,
+					...disabled(BROWSER_SPELLING),
+				})),
+			},
+		],
+	},
+	{
+		id: 'save',
+		label: 'Save',
 		description: 'Customize how drawings are saved.',
-		reason: 'Not available yet. Drawings are saved as downloaded copies; AutoRecover is not kept.',
-	}),
-	unavailableCategory(visio, 'language', {
-		reason: 'Not available yet. The viewer is English only.',
-	}),
+		sections: [
+			{
+				id: 'save-drawings',
+				title: 'Save drawings',
+				controls: [
+					{
+						kind: 'select',
+						key: 'defaultFormat',
+						label: 'Save files in this format',
+						choices: [{ value: 'vsdx', label: 'Visio Drawing (*.vsdx)' }],
+						...disabled('Drawings are always saved as .vsdx.'),
+					},
+					{
+						kind: 'toggle',
+						key: 'autoRecover',
+						label: 'Save AutoRecover information',
+						info: 'Keeps a copy of a drawing with unsaved changes in this browser, and offers it back when you open the same file again. Off unless you choose it. Saving a copy removes it.',
+					},
+					{
+						kind: 'number',
+						key: 'autoRecoverMinutes',
+						label: 'Minutes between AutoRecover saves',
+						min: 1,
+						max: MAX_RECOVER_MINUTES,
+						enabledBy: 'autoRecover',
+						indent: true,
+					},
+					{
+						kind: 'text',
+						key: 'defaultLocation',
+						label: 'Default local file location',
+						...disabled('Your browser saves downloads to its own folder.'),
+					},
+				],
+			},
+		],
+	},
+	{
+		id: 'language',
+		label: 'Language',
+		description: 'Set the Office Language Preferences.',
+		sections: [
+			{
+				id: 'display',
+				title: 'Choose Display Language',
+				description:
+					'The ribbon and its commands are translated. Dialogs and panes stay in English for now.',
+				controls: [
+					{
+						kind: 'select',
+						key: 'displayLanguage',
+						label: 'Display language',
+						info: 'Leave it on the page language to follow the page or the browser.',
+						choices: [
+							{ value: '', label: 'Use the page or browser language' },
+							...DISPLAY_LANGUAGES.map(([value, label]) => ({ value, label })),
+						],
+					},
+				],
+			},
+		],
+	},
 	{
 		id: 'advanced',
 		label: 'Advanced',
@@ -99,16 +221,37 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 						kind: 'toggle',
 						key: 'autoSizeText',
 						label: 'Auto-size text while editing',
-						...disabled('Needs core text layout.'),
+						info: 'The text box grows with the text when it is taller than the shape. Off, it keeps the size of the shape and scrolls.',
 					},
 				],
 			},
 		],
 	},
-	unavailableCategory(visio, 'ribbon'),
-	unavailableCategory(visio, 'qat', {
-		reason: 'Not available yet. The Quick Access Toolbar shows Undo and Redo.',
-	}),
+	{
+		id: 'ribbon',
+		label: 'Customize Ribbon',
+		description: 'Customize the Ribbon.',
+		sections: [
+			{
+				id: 'tabs',
+				title: 'Main Tabs',
+				description: 'Choose the tabs the ribbon shows. File is always shown.',
+				controls: toggles('tab', CUSTOMIZABLE_TABS),
+			},
+		],
+	},
+	{
+		id: 'qat',
+		label: 'Quick Access Toolbar',
+		description: 'Customize the Quick Access Toolbar.',
+		sections: [
+			{
+				id: 'commands',
+				title: 'Commands shown on the toolbar',
+				controls: toggles('qat', QUICK_ACCESS_COMMANDS),
+			},
+		],
+	},
 	unavailableCategory(visio, 'addins'),
 	unavailableCategory(visio, 'trust'),
 ];

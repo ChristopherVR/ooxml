@@ -7,6 +7,35 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.18.0) - 2026-10-17
+
+### Features
+
+- **xlsx:** Write and read a chart workbook for embedding ([393bb58](https://github.com/ChristopherVR/ooxml/commit/393bb58720f7f268f43fb5c42331b8cd9a46f893))
+- **visio:** Embed an Excel chart as an object, as Insert > Chart does ([e1f7db3](https://github.com/ChristopherVR/ooxml/commit/e1f7db3de67b3afe5aa76d6c980c5ce59e3476b1))
+- **visio:** Place a new chart object on the page ([c3a8a01](https://github.com/ChristopherVR/ooxml/commit/c3a8a0115b2db7366c0ff570bd0b2a67ae89f8a4))
+- **chart:** Draw data labels in the shared chart renderer ([32142ef](https://github.com/ChristopherVR/ooxml/commit/32142ef32c392548fdf5f79aa9d7f659356fac70))
+
+### Bug Fixes
+
+- **chart:** Preserve data label inheritance and source formats ([e92e5eb](https://github.com/ChristopherVR/ooxml/commit/e92e5eb80b098f6331fa21a5dc284018d56ec686))
+
+### Documentation
+
+- **chart:** Gap report and harness for the shared chart renderer ([b166877](https://github.com/ChristopherVR/ooxml/commit/b1668770e66e241704dd5ec9a04d2813e522acc4))
+
+## [1.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.17.0) - 2026-10-17
+
+### Features
+
+- **ui:** Honour undo levels and ScreenTip style in visio options ([1ce62d3](https://github.com/ChristopherVR/ooxml/commit/1ce62d39fe7c7101f91ce93d4a34e612830946be))
+- **xlsx:** Draw a chart from typed grid data ([ff985b6](https://github.com/ChristopherVR/ooxml/commit/ff985b69c0018da39896e21504132d07bf8fdf5b))
+
+### Bug Fixes
+
+- **xml:** Close the remaining code scanning alerts ([6d85151](https://github.com/ChristopherVR/ooxml/commit/6d85151b85dc65fe03c26079c8e76e162dffd5c5))
+- **xlsx:** Look sheets up with at so no key reaches a prototype ([41a0b04](https://github.com/ChristopherVR/ooxml/commit/41a0b04fd2dde8a6f5ece20ac46b595c3a130108))
+
 ## [1.16.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.16.1) - 2026-10-16
 
 ### Bug Fixes

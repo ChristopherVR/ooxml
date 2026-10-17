@@ -75,10 +75,12 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 					icon: 'visioPicture',
 					action: { type: 'insert', item: 'picture' },
 				}),
-				command(
-					doc,
-					unsupported('chart', 'Chart', 'visioChart', 'Embedded Excel charts are not supported.'),
-				),
+				command(doc, {
+					id: 'chart',
+					label: 'Chart',
+					icon: 'visioChart',
+					action: { type: 'insert', item: 'chart' },
+				}),
 				command(
 					doc,
 					unsupported(

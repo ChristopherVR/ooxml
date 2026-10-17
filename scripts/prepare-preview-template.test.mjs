@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { preparePreviewTemplate } from './prepare-preview-template.mjs';
@@ -23,13 +23,36 @@ test('the fork preview starts and serves its commit-specific suite and binary as
 	const manifest = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
 	assert.equal(manifest.stackblitz.startCommand, 'npm start');
 	assert.equal(manifest.scripts.start, 'node scripts/preview-site.mjs 5173 .');
-	assert.deepEqual(manifest.dependencies, { 'ooxml-core': '*', 'ooxml-ui': '*' });
+	assert.equal(manifest.dependencies, undefined);
+	const template = join(root, 'preview-template');
+	const playground = JSON.parse(await readFile(join(template, 'package.json'), 'utf8'));
+	assert.deepEqual(playground.dependencies, {
+		'ooxml-office-preview': '*',
+		'ooxml-core': '*',
+		'ooxml-ui': '*',
+	});
+	assert.deepEqual((await readdir(template)).sort(), [
+		'README.md',
+		'package.json',
+		'preview-source.json',
+	]);
+	let templateBytes = 0;
+	for (const file of await readdir(template))
+		templateBytes += (await readFile(join(template, file))).length;
+	assert.ok(templateBytes < 10_000, 'StackBlitz launch must not inline built assets');
+	// Simulate installing the suite package, then execute the actual playground command.
+	const installed = join(template, 'node_modules/ooxml-office-preview');
+	await cp(out, installed, { recursive: true });
 	assert.deepEqual(JSON.parse(await readFile(join(out, 'preview-source.json'), 'utf8')), source);
 	assert.match(await readFile(join(out, 'README.md'), 'utf8'), /contributor\/ooxml\/commit\/a{40}/);
-	const child = spawn(process.execPath, ['scripts/preview-site.mjs', '0', '.'], {
-		cwd: out,
-		stdio: ['ignore', 'pipe', 'pipe'],
-	});
+	const child = spawn(
+		process.execPath,
+		['node_modules/ooxml-office-preview/scripts/preview-site.mjs', '0', '.'],
+		{
+			cwd: template,
+			stdio: ['ignore', 'pipe', 'pipe'],
+		},
+	);
 	t.after(async () => {
 		if (child.exitCode === null) {
 			const exited = once(child, 'exit');
