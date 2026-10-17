@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.42.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.42.0) - 2026-10-17
+
+### Features
+
+- **chart:** Honor native markers throughout shared rendering ([a7aeee1](https://github.com/ChristopherVR/ooxml/commit/a7aeee171248fc565b7bc9d611e054b659954243))
+
+### Bug Fixes
+
+- **chart:** Apply shared axis scaling to radar charts ([4acbf15](https://github.com/ChristopherVR/ooxml/commit/4acbf1556d8ac89371f736a8b7b5f7a5aedc3609))
+- **pptx:** Bound image caches and dispose chart subscriptions ([0f2c004](https://github.com/ChristopherVR/ooxml/commit/0f2c0041b94c32293f8502bc299a4c18f586b3f3))
+
+### Refactor
+
+- **chart:** Share axis ranges and native gridline rendering ([8c26687](https://github.com/ChristopherVR/ooxml/commit/8c26687a7b3196955df602198528adc83fce259b))
+- **chart:** Share pptx marker geometry with neutral rendering ([b246d63](https://github.com/ChristopherVR/ooxml/commit/b246d6315c32412298508d9b2a944b0c9bafc26b))
+
 ## [4.41.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.41.0) - 2026-10-17
 
 ### Features

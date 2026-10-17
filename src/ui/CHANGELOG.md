@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.18.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.18.1) - 2026-10-17
+
+### Bug Fixes
+
+- **pptx:** Bound image caches and dispose chart subscriptions ([0f2c004](https://github.com/ChristopherVR/ooxml/commit/0f2c0041b94c32293f8502bc299a4c18f586b3f3))
+
+### Refactor
+
+- **chart:** Share axis ranges and native gridline rendering ([8c26687](https://github.com/ChristopherVR/ooxml/commit/8c26687a7b3196955df602198528adc83fce259b))
+- **chart:** Share pptx marker geometry with neutral rendering ([b246d63](https://github.com/ChristopherVR/ooxml/commit/b246d6315c32412298508d9b2a944b0c9bafc26b))
+
 ## [1.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.18.0) - 2026-10-17
 
 ### Features
