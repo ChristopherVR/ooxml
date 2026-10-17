@@ -42,7 +42,8 @@ it('enables Pictures for editable drawings and Link/ScreenTip only for one selec
 	expect(view.button('link').disabled).toBe(true);
 	expect(view.button('screen-tip').disabled).toBe(true);
 	expect(view.button('field').disabled).toBe(true);
-	expect(view.button('chart').title).toMatch(/Excel charts/);
+	expect(view.button('chart').disabled).toBe(false);
+	expect(view.button('chart').title).toMatch(/placed as a picture/);
 	view.selection();
 	expect(view.button('link').disabled).toBe(false);
 	expect(view.button('screen-tip').disabled).toBe(false);
@@ -149,4 +150,15 @@ it('sets the ScreenTip and follows links with Ctrl+click without navigating the 
 	expect(open).toHaveBeenCalledTimes(1);
 	expect(selected).toHaveBeenCalledTimes(1);
 	view.dispose();
+});
+
+it('opens the chart dialog from Insert > Chart and keeps it closed for a read-only drawing', async () => {
+	const view = await setup();
+	view.press('chart');
+	expect(view.dialog('chart-dialog').open).toBe(true);
+	view.dispose();
+	const readOnly = await setup(false);
+	expect(readOnly.button('chart').disabled).toBe(true);
+	expect(readOnly.button('chart').title).toMatch(/Open a \.vsdx file/);
+	readOnly.dispose();
 });

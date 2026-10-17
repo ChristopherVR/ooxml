@@ -53,7 +53,7 @@ export type VisioTextFeature =
 	| 'spelling'
 	| 'language';
 /** Insert-tab items that act on the page or the selected shape. */
-export type VisioInsertItem = 'picture' | 'link' | 'screen-tip';
+export type VisioInsertItem = 'picture' | 'chart' | 'link' | 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
 export type VisioReviewCommand =
 	| 'check-accessibility'

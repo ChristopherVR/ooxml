@@ -17,6 +17,7 @@ import type { VisioInsertItem } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { selectedShape, safeExternalHref } from './shape-inspector';
 import { InsertDialog } from './viewer-insert-dialog';
+import { InsertChartDialog } from './viewer-insert-chart';
 
 type Run = (action: () => Promise<void>, success: string) => void;
 
@@ -28,6 +29,7 @@ export class ViewerInsert {
 	readonly input: HTMLInputElement;
 	readonly link: InsertDialog;
 	readonly tip: InsertDialog;
+	readonly chart: InsertChartDialog;
 	#target: { pageId: string; shapeId: string; row?: string; generation: number } | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
@@ -59,6 +61,7 @@ export class ViewerInsert {
 			['OK', 'Remove Link', 'Cancel'],
 			(button) => void this.#applyLink(button),
 		);
+		this.chart = new InsertChartDialog(root, (png) => this.#insertChart(png));
 		this.tip = new InsertDialog(
 			root,
 			'screen-tip-dialog',
@@ -87,6 +90,10 @@ export class ViewerInsert {
 		if (!this.#editable(state)) return;
 		if (item === 'picture') {
 			if (state.document?.pages[state.pageIndex]) this.input.click();
+			return;
+		}
+		if (item === 'chart') {
+			if (state.document?.pages[state.pageIndex]) this.chart.open();
 			return;
 		}
 		const shape = this.#shape(state);
@@ -120,6 +127,28 @@ export class ViewerInsert {
 	close(): void {
 		this.link.dialog.close();
 		this.tip.dialog.close();
+		this.chart.close();
+	}
+	/** Place the chart dialog's PNG on the page; rejects (so the dialog can say why) when refused. */
+	async #insertChart(png: Uint8Array): Promise<void> {
+		const state = this.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		if (!page || !this.#editable(state)) throw new Error('Open a .vsdx file to insert a chart.');
+		if (png.byteLength > VISIO_PICTURE_MAX_BYTES)
+			throw new Error('The chart is larger than the 8 MB picture limit.');
+		const token = this.controller.captureCreationToken(page.id);
+		const command = visioPictureInsertCommand(page, inspectVisioRasterImage(png), png);
+		await new Promise<void>((resolve, reject) =>
+			this.run(async () => {
+				try {
+					await this.controller.applyCreationEdits([command], token);
+					resolve();
+				} catch (error) {
+					reject(error);
+					throw error;
+				}
+			}, 'Inserted chart.'),
+		);
 	}
 	async #picture(file: File): Promise<void> {
 		const state = this.controller.state;
@@ -250,6 +279,13 @@ export class ViewerInsert {
 				? 'Insert a PNG, JPEG or GIF picture from this device (up to 8 MB).'
 				: 'Open a .vsdx file to insert pictures.';
 		}
+		const chart = button('chart');
+		if (chart) {
+			chart.disabled = !editing || !page;
+			chart.title = editing
+				? 'Insert a chart drawn from data you type or paste. It is placed as a picture.'
+				: 'Open a .vsdx file to insert a chart.';
+		}
 		for (const [name, label] of [
 			['link', 'Link (Ctrl+K)'],
 			['ctx-hyperlink', 'Hyperlink (Ctrl+K)'],
@@ -260,6 +296,8 @@ export class ViewerInsert {
 			control.disabled = !shape;
 			control.title = shape ? label : `${label}: select one shape on an editable drawing.`;
 		}
+		if (this.chart.dialog.open && (!state.edit.sourceAvailable || state.loading))
+			this.chart.close();
 		for (const dialog of [this.link, this.tip]) {
 			if (!dialog.dialog.open) continue;
 			if (
