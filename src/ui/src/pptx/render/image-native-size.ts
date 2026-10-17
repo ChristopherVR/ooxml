@@ -57,7 +57,9 @@ export function probeNativeImageSize(src: string): Promise<NativeImageSize | und
 		return inflight;
 	}
 
-	if (pendingProbes.size >= CACHE_MAX) return Promise.resolve(undefined);
+	// Bound deduplication bookkeeping without dropping the caller's dimension
+	// probe: a large slide still needs every tiled picture's intrinsic size.
+	const rememberPending = pendingProbes.size < CACHE_MAX;
 	const epoch = cacheEpoch;
 	const probe = new Promise<NativeImageSize | undefined>((resolve) => {
 		if (typeof Image === 'undefined') {
@@ -79,7 +81,7 @@ export function probeNativeImageSize(src: string): Promise<NativeImageSize | und
 		return size;
 	});
 
-	pendingProbes.set(src, probe);
+	if (rememberPending) pendingProbes.set(src, probe);
 	return probe;
 }
 

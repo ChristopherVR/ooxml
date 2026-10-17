@@ -29,6 +29,15 @@ afterEach(() => {
 });
 
 describe('render cache bounds', () => {
+	it('resolves every intrinsic size when more than 128 pictures start together', async () => {
+		vi.stubGlobal('Image', LoadedImage);
+		const probes = Array.from({ length: 129 }, (_, index) =>
+			probeNativeImageSize(`blob:concurrent-${index}`),
+		);
+		const sizes = await Promise.all(probes);
+		expect(sizes).toEqual(Array.from({ length: 129 }, () => ({ width: 4, height: 2 })));
+	});
+
 	it('evicts old intrinsic dimensions after 128 different sources', async () => {
 		vi.stubGlobal('Image', LoadedImage);
 		for (let i = 0; i < 129; i++) await probeNativeImageSize(`blob:${i}`);
