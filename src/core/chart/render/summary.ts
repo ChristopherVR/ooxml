@@ -2,6 +2,7 @@
 // cached data and DrawingML paint, plus the legend, title and formatting metadata. Spreadsheet
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
+import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import type { DataLabelFlagLevel } from '../data-label-text';
 import type { ChartErrorAmountOptions } from '../error-bar-amount';
@@ -150,6 +151,9 @@ export interface HierarchySummaryOptions {
 
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
+	/** Native axes and the primary plot group IDs, retained for shared rendering. */
+	axes?: ChartAxis[];
+	axisIds?: number[];
 	/** Bar/column grouping. */
 	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
 	/** Gap between category clusters, as a percentage of one bar's width (0..500). */

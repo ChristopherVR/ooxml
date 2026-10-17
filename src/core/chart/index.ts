@@ -44,3 +44,9 @@ export { readDisplayNaAsBlank } from './parse-chrome';
 export { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 export { CHART_GROUP_ELEMENTS } from './parse-plot';
 export * from './render/index';
+
+export * from './axis-range-types';
+export * from './axis-range';
+export * from './axis-ticks';
+export * from './line-dash';
+export * from './axis-range-auto';

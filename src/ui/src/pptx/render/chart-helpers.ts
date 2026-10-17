@@ -5,7 +5,7 @@ import type {
 	PptxChartAxisFormatting,
 } from 'ooxml-core/pptx';
 
-import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
+import { computeAxisValueRange } from 'ooxml-core/chart';
 import { chartFontPx } from './chart-font';
 import { reserveLegendSpace } from './chart-legend-placement';
 import { formatCompactAxisValue } from 'ooxml-core/chart';
@@ -99,21 +99,7 @@ export interface ValueRange {
  *   them in; omitting this falls back to a constant tuned for a short chart
  *   (see `axisTargetIntervals`'s doc comment).
  */
-export function computeValueRange(
-	series: ReadonlyArray<PptxChartSeries>,
-	plotHeightPx?: number,
-): ValueRange {
-	const allValues = series.flatMap((s) => s.values);
-	if (allValues.length === 0) {
-		return { min: 0, max: 1, span: 1 };
-	}
-	const { min, max, majorUnit } = niceValueAxisBounds(
-		Math.min(...allValues),
-		Math.max(...allValues),
-		plotHeightPx !== undefined ? axisTargetIntervals(plotHeightPx) : undefined,
-	);
-	return { min, max, span: Math.max(max - min, Number.EPSILON), majorUnit };
-}
+export const computeValueRange = computeAxisValueRange;
 
 /**
  * Map a data value to a Y pixel coordinate (top = max, bottom = min).

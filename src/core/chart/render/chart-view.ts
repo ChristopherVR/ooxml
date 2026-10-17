@@ -1,3 +1,4 @@
+import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
 import { stockView, type StockView } from './chart-view-stock';
@@ -81,6 +82,7 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	axes?: ChartAxesView;
 	legendLayout?: ChartManualLayout;
 	legendOverlay?: boolean;
 	titleLayout?: ChartManualLayout;
@@ -251,5 +253,6 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	else if (!byPoint) model.valueAxis = valueAxis(model);
 	applyDataLabels(model, chart.series, extra);
 	chartExtraAxes(model);
+	applyChartAxes(model, chart, ctx.drawingColor);
 	return model;
 }

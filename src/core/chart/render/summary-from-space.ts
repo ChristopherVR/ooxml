@@ -165,6 +165,8 @@ export function chartSummaryFromSpace(
 		chartType,
 		series,
 		showLegend: chartSpace.legend !== undefined,
+		axes: chartSpace.plotArea.axes,
+		axisIds: group?.axisIds ?? [],
 	};
 	const combined = extraGroups(chartSpace, chartType);
 	if (combined.length) summary.extraGroups = combined;
