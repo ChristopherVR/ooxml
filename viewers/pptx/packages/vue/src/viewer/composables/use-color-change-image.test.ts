@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { buildCacheKey, getCachedResult, releasePptxRenderCaches } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, nextTick, ref } from 'vue';
 
@@ -7,13 +8,12 @@ import type { ClrChangeEffect } from './use-color-change-image';
 
 // ---------------------------------------------------------------------------
 // Mock the shared colour-change surface so no real canvas/DOM image is needed.
-// We keep the rest of `pptx-viewer-shared` real and back the cache with a tiny
-// in-memory map so the cache-reuse path is exercised faithfully.
+// Keep the production cache real so unmount/release races exercise the
+// actual retention boundary.
 // Defined via vi.hoisted so the hoisted vi.mock factory can reference them.
 // ---------------------------------------------------------------------------
 
-const { fakeCache, applyColorChangeMock } = vi.hoisted(() => ({
-	fakeCache: new Map<string, string>(),
+const { applyColorChangeMock } = vi.hoisted(() => ({
 	applyColorChangeMock: vi.fn(),
 }));
 
@@ -22,10 +22,6 @@ vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	return {
 		...actual,
 		applyColorChange: (...args: unknown[]) => applyColorChangeMock(...args),
-		getCachedResult: (key: string): string | undefined => fakeCache.get(key),
-		setCachedResult: (key: string, url: string): void => {
-			fakeCache.set(key, url);
-		},
 	};
 });
 
@@ -34,6 +30,7 @@ const CLR: ClrChangeEffect = { clrFrom: '#00FF00', clrTo: '#FF0000' };
 // Alias keeps the composable out of a `use*`-named call site in plain helpers,
 // which the react-hooks linter would otherwise flag as a rules-of-hooks issue.
 const runColorChange = useColorChangeImage;
+const mounted = new Set<{ unmount(): void }>();
 
 /** Mount a harness component that exposes the composable's `displaySrc`. */
 function mountHarness(
@@ -46,15 +43,42 @@ function mountHarness(
 			return () => h('img', { src: displaySrc.value ?? '' });
 		},
 	});
-	return mount(Harness);
+	const wrapper = mount(Harness);
+	mounted.add(wrapper);
+	return wrapper;
 }
 
 describe('useColorChangeImage', () => {
+	it('does not refill the released cache when processing finishes after unmount', async () => {
+		let finish!: (value: { dataUrl: string; width: number; height: number }) => void;
+		applyColorChangeMock.mockReturnValue(
+			new Promise((resolve) => {
+				finish = resolve;
+			}),
+		);
+		const source = 'blob:unmounted-colour-change';
+		const wrapper = mountHarness(
+			ref<string | undefined>(source),
+			ref<ClrChangeEffect | undefined>(CLR),
+		);
+		const key = buildCacheKey(source, CLR.clrFrom, CLR.clrTo, 12, false);
+		wrapper.unmount();
+		mounted.delete(wrapper);
+		releasePptxRenderCaches();
+		finish({ dataUrl: 'data:must-not-be-retained', width: 1, height: 1 });
+		await nextTick();
+		await nextTick();
+		expect(getCachedResult(key)).toBeUndefined();
+	});
+
 	beforeEach(() => {
-		fakeCache.clear();
+		releasePptxRenderCaches();
 		applyColorChangeMock.mockReset();
 	});
 	afterEach(() => {
+		for (const wrapper of mounted) wrapper.unmount();
+		mounted.clear();
+		releasePptxRenderCaches();
 		vi.restoreAllMocks();
 	});
 
