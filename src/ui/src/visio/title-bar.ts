@@ -1,5 +1,6 @@
 import type { OfficeProfile, OfficeTitleBarState } from '../controls';
 import type { ViewerState } from './controller';
+import type { QuickAccessCommand } from './viewer-behaviour';
 
 type TitleBarElement = HTMLElement & { state: OfficeTitleBarState };
 
@@ -50,6 +51,8 @@ export function renderTitleBar(
 	state: ViewerState,
 	fileName: string,
 	profile: OfficeProfile,
+	/** Which Quick Access Toolbar commands to show; all of them when omitted. */
+	shown: Readonly<Partial<Record<`qat-${QuickAccessCommand}`, boolean>>> = {},
 ): void {
 	const busy = state.loading || state.edit.busy;
 	(bar as TitleBarElement).state = {
@@ -83,7 +86,7 @@ export function renderTitleBar(
 					title: 'Redo (Ctrl+Y)',
 					disabled: !state.edit.canRedo || busy,
 				},
-			],
+			].filter((item) => shown[`qat-${item.id as QuickAccessCommand}`] !== false),
 		},
 	};
 	const account = bar.querySelector<HTMLElement>('.title-account')!;

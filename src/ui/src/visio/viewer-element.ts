@@ -17,7 +17,8 @@ import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
 import { createTitleBar, renderTitleBar } from './title-bar';
 import { localizeRibbon } from './ribbon-localize';
-import { applyScreenTips, restoreScreenTips, type ScreenTipStyle } from './viewer-screen-tips';
+import { applyScreenTips, restoreScreenTips } from './viewer-screen-tips';
+import { CUSTOMIZABLE_TABS, DEFAULT_BEHAVIOUR, type VisioBehaviour } from './viewer-behaviour';
 import { wireRibbonOverflow } from './ribbon-overflow';
 import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
@@ -99,7 +100,7 @@ export class VisioViewerElement extends BaseElement {
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
 	#disposed = false;
-	#screenTips: ScreenTipStyle = 'descriptions';
+	#behaviour: VisioBehaviour = DEFAULT_BEHAVIOUR;
 	#suspended = false;
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
@@ -189,7 +190,13 @@ export class VisioViewerElement extends BaseElement {
 			},
 		});
 		const profileChanged = (): void =>
-			renderTitleBar(this.#titleBar, this.controller.state, this.#fileName, this.#profile.profile);
+			renderTitleBar(
+				this.#titleBar,
+				this.controller.state,
+				this.#fileName,
+				this.#profile.profile,
+				this.#behaviour,
+			);
 		this.#profile = new ViewerProfile(
 			this.#root,
 			profileChanged,
@@ -202,9 +209,8 @@ export class VisioViewerElement extends BaseElement {
 				},
 			},
 			(behaviour) => {
-				this.#screenTips = behaviour.screenTips;
-				applyScreenTips(this.#toolbar, this.#screenTips);
-				this.controller.undoLevels = behaviour.undoLevels;
+				this.#behaviour = behaviour;
+				this.#applyBehaviour();
 			},
 		);
 		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
@@ -563,7 +569,36 @@ export class VisioViewerElement extends BaseElement {
 	attributeChangedCallback(): void {
 		this.#localizeRibbon();
 	}
-	/** The ribbon speaks the `locale` attribute, else `lang`, else the page's, else the browser's. */
+	/** Put the File > Options behaviour settings to work on the pieces they govern. */
+	#applyBehaviour(): void {
+		const behaviour = this.#behaviour;
+		this.controller.undoLevels = behaviour.undoLevels;
+		this.#edit.spellcheck = behaviour.checkSpelling;
+		this.#edit.autoSize = behaviour.autoSizeText;
+		const ribbon = this.#toolbar as unknown as HTMLElement & {
+			selected: string;
+			setTabHidden(tab: string, reason: string, hidden: boolean): void;
+		};
+		const shown = CUSTOMIZABLE_TABS.filter(([id]) => behaviour[`tab-${id}`]).map(([id]) => id);
+		for (const [id] of CUSTOMIZABLE_TABS) ribbon.setTabHidden?.(id, 'options', !shown.includes(id));
+		// A hidden tab cannot stay the open one.
+		if (shown.length && !(shown as readonly string[]).includes(ribbon.selected))
+			ribbon.selected = shown[0]!;
+		this.#localizeRibbon();
+		// The title bar is built before the profile exists; it redraws with the first render.
+		if (this.#profile)
+			renderTitleBar(
+				this.#titleBar,
+				this.controller.state,
+				this.#fileName,
+				this.#profile.profile,
+				behaviour,
+			);
+	}
+	/**
+	 * The ribbon speaks the `locale` attribute, else the language chosen in Options, else `lang`,
+	 * else the page's, else the browser's. A host that sets `locale` itself keeps its choice.
+	 */
 	#localizeRibbon(): void {
 		if (this.#disposed || !this.#overflow) return;
 		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
@@ -571,11 +606,12 @@ export class VisioViewerElement extends BaseElement {
 		localizeRibbon(
 			this.#toolbar,
 			this.getAttribute('locale') ||
+				this.#behaviour.displayLanguage ||
 				this.lang ||
 				this.ownerDocument.documentElement.lang ||
 				navigator.language,
 		);
-		applyScreenTips(this.#toolbar, this.#screenTips);
+		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();
 	}
 	connectedCallback(): void {
@@ -719,7 +755,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
-		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile);
+		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile, this.#behaviour);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);

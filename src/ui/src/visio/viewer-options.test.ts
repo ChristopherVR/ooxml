@@ -45,7 +45,7 @@ describe('Visio File > Account and Options', () => {
 		viewer.destroy();
 	});
 
-	it('opens Visio Options over the drawing and honours only the profile settings', () => {
+	it('opens Visio Options over the drawing with its categories in Visio order', () => {
 		const { viewer, item, file, backstage, dialog, field } = setup();
 		file().click();
 		item('options').click();
@@ -66,9 +66,12 @@ describe('Visio File > Account and Options', () => {
 			'Add-ins',
 			'Trust Center',
 		]);
-		expect(field('livePreview').disabled).toBe(true);
-		expect(field('livePreview').closest('label')!.title).toMatch(/^Not available yet\./);
+		// What the viewer honours is enabled; what it cannot do yet says why.
+		expect(field('livePreview').disabled).toBe(false);
+		expect(field('miniToolbar').disabled).toBe(false);
 		expect(field('userName').value).toBe('Ada Lovelace');
+		(dialog as unknown as { category: string }).category = 'save';
+		expect(dialog.shadowRoot!.querySelector('.unavailable')!.textContent).toMatch(/^Not available/);
 		viewer.destroy();
 	});
 
@@ -114,7 +117,7 @@ describe('Visio File > Account and Options', () => {
 		expect(
 			root.querySelectorAll('office-ui-ribbon [title]:not([title*="not available"])'),
 		).toHaveLength(0);
-		expect(JSON.parse(localStorage.getItem('ooxml-visio-options')!)).toEqual({
+		expect(JSON.parse(localStorage.getItem('ooxml-visio-options')!)).toMatchObject({
 			screenTips: 'off',
 			undoLevels: 5,
 		});
@@ -145,5 +148,91 @@ describe('Visio File > Account and Options', () => {
 		document.body.append(chosen);
 		expect(chosen.statusBar).toBe('neutral');
 		chosen.remove();
+	});
+
+	describe('behaviour options', () => {
+		type Ctx = ReturnType<typeof setup>;
+		/** Open Options on `category`, set `key` through its control, and press OK. */
+		function change(ctx: Ctx, category: string, key: string, value: string | boolean): void {
+			ctx.file().click();
+			ctx.item('options').click();
+			(ctx.dialog as unknown as { category: string }).category = category;
+			const control = ctx.field(key) as unknown as HTMLInputElement | HTMLSelectElement;
+			if (typeof value === 'boolean') (control as HTMLInputElement).checked = value;
+			else control.value = value;
+			control.dispatchEvent(new Event('change'));
+			ctx.dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
+		}
+		const ribbon = (ctx: Ctx) =>
+			ctx.root.querySelector('office-ui-ribbon') as HTMLElement & { selected: string };
+		const tabHidden = (ctx: Ctx, tab: string) =>
+			ribbon(ctx).querySelector(`[data-ribbon-tab="${tab}"]`)!.hasAttribute('data-tab-hidden');
+		const stored = () => JSON.parse(localStorage.getItem('ooxml-visio-options') ?? '{}');
+
+		it('hides a ribbon tab and remembers it', () => {
+			const ctx = setup();
+			expect(tabHidden(ctx, 'insert')).toBe(false);
+			change(ctx, 'ribbon', 'tab-insert', false);
+			expect(tabHidden(ctx, 'insert')).toBe(true);
+			expect(stored()['tab-insert']).toBe(false);
+			ctx.viewer.destroy();
+		});
+
+		it('moves off a tab that is hidden while it is open', () => {
+			const ctx = setup();
+			ribbon(ctx).selected = 'view';
+			change(ctx, 'ribbon', 'tab-view', false);
+			expect(ribbon(ctx).selected).not.toBe('view');
+			ctx.viewer.destroy();
+		});
+
+		it('shows only the Quick Access Toolbar commands that are switched on', () => {
+			const ctx = setup();
+			const bar = () =>
+				ctx.root.querySelector('office-ui-title-bar') as HTMLElement & {
+					state: { quickAccess: { items: { id: string }[] } };
+				};
+			const ids = () => bar().state.quickAccess.items.map((item) => item.id);
+			expect(ids()).toEqual(['save', 'undo', 'redo']);
+			change(ctx, 'qat', 'qat-redo', false);
+			expect(ids()).toEqual(['save', 'undo']);
+			ctx.viewer.destroy();
+		});
+
+		it('translates the ribbon into the chosen display language, unless the host chose one', () => {
+			const ctx = setup();
+			change(ctx, 'language', 'displayLanguage', 'de');
+			expect(ribbon(ctx).dataset.visioLocale).toBe('de');
+			expect(stored().displayLanguage).toBe('de');
+			ctx.viewer.destroy();
+			const host = document.createElement('div');
+			document.body.append(host);
+			const fixed = mountViewer(host);
+			fixed.element.setAttribute('locale', 'fr');
+			const fixedRibbon = fixed.element.shadowRoot!.querySelector(
+				'office-ui-ribbon',
+			) as HTMLElement;
+			expect(fixedRibbon.dataset.visioLocale).toBe('fr');
+			fixed.destroy();
+		});
+
+		it('turns the browser spell checker on or off for the text editor', () => {
+			const ctx = setup();
+			change(ctx, 'proofing', 'checkSpelling', false);
+			expect(stored().checkSpelling).toBe(false);
+			ctx.viewer.destroy();
+		});
+
+		it('keeps one tab when every tab is switched off in storage', () => {
+			const ids = ['home', 'insert', 'design', 'data', 'process', 'review', 'view', 'help'];
+			localStorage.setItem(
+				'ooxml-visio-options',
+				JSON.stringify(Object.fromEntries(ids.map((id) => [`tab-${id}`, false]))),
+			);
+			const ctx = setup();
+			expect(tabHidden(ctx, 'home')).toBe(false);
+			expect(ids.filter((id) => tabHidden(ctx, id))).toHaveLength(7);
+			ctx.viewer.destroy();
+		});
 	});
 });

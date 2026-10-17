@@ -42,6 +42,12 @@ export class ViewerInlineText {
 		this.input.hidden = true;
 		this.input.setAttribute('aria-label', 'Shape text');
 	}
+	/** The browser's spell checker underlines mistakes while editing (Options > Proofing). */
+	set spellcheck(value: boolean) {
+		this.input.spellcheck = value;
+	}
+	/** Whether the editor grows with text taller than the shape (Options > Advanced). */
+	autoSize = true;
 	get editing(): boolean {
 		return !!this.#session;
 	}
@@ -229,6 +235,14 @@ export class ViewerInlineText {
 		style.left = `${(rect ? rect.left - box.left : 16) + this.viewport.scrollLeft}px`;
 		style.top = `${(rect ? rect.top - box.top : 16) + this.viewport.scrollTop}px`;
 		style.width = `${width}px`;
+		if (!this.autoSize) {
+			// Keep the shape's own frame and let longer text scroll inside it.
+			style.paddingTop = '0px';
+			style.height = `${height}px`;
+			style.overflowY = 'auto';
+			return;
+		}
+		style.overflowY = '';
 		// Measure the text alone (no padding, no height), then pad it to the shape's alignment.
 		style.paddingTop = '0px';
 		style.height = '0px';

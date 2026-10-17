@@ -8,10 +8,18 @@ import {
 	type OfficeProfile,
 	type OfficeProfileChangeEvent,
 } from '../controls';
-import { VISIO_OPTION_CATEGORIES, MAX_UNDO_LEVELS } from './viewer-options-categories';
-import { isScreenTipStyle, type ScreenTipStyle } from './viewer-screen-tips';
+import {
+	DEFAULT_BEHAVIOUR,
+	behaviourChanged,
+	mergeBehaviour,
+	readBehaviour,
+	writeBehaviour,
+	type VisioBehaviour,
+} from './viewer-behaviour';
+import { VISIO_OPTION_CATEGORIES } from './viewer-options-categories';
 
 export { VISIO_OPTION_CATEGORIES };
+export { DEFAULT_BEHAVIOUR, readBehaviour, type VisioBehaviour };
 
 type OptionsDialog = HTMLElement & {
 	categories: readonly OfficeOptionCategory[];
@@ -49,59 +57,14 @@ export type OfficeThemeChoice = StatusBarTheme | 'dark';
 const isOfficeThemeChoice = (value: unknown): value is OfficeThemeChoice =>
 	value === 'dark' || isStatusBarTheme(value);
 
-/** The Options that change how the viewer behaves, remembered on this device. */
-export interface VisioBehaviour {
-	screenTips: ScreenTipStyle;
-	undoLevels: number;
-}
-export const DEFAULT_BEHAVIOUR: VisioBehaviour = {
-	screenTips: 'descriptions',
-	undoLevels: MAX_UNDO_LEVELS,
-};
-const BEHAVIOUR_KEY = 'ooxml-visio-options';
-const clampUndo = (value: unknown): number => {
-	const levels = Math.round(Number(value));
-	return Number.isFinite(levels)
-		? Math.min(MAX_UNDO_LEVELS, Math.max(1, levels))
-		: DEFAULT_BEHAVIOUR.undoLevels;
-};
-/** The behaviour Options saved on this device (storage may be unavailable or hold junk). */
-export function readBehaviour(): VisioBehaviour {
-	try {
-		const stored = JSON.parse(globalThis.localStorage?.getItem(BEHAVIOUR_KEY) ?? '{}') as Record<
-			string,
-			unknown
-		>;
-		return {
-			screenTips: isScreenTipStyle(stored.screenTips)
-				? stored.screenTips
-				: DEFAULT_BEHAVIOUR.screenTips,
-			undoLevels: clampUndo(stored.undoLevels ?? DEFAULT_BEHAVIOUR.undoLevels),
-		};
-	} catch {
-		return { ...DEFAULT_BEHAVIOUR };
-	}
-}
-function writeBehaviour(behaviour: VisioBehaviour): void {
-	try {
-		globalThis.localStorage?.setItem(BEHAVIOUR_KEY, JSON.stringify(behaviour));
-	} catch {
-		// Kept for this session only.
-	}
-}
-
 function profileValues(
 	profile: OfficeProfile,
 	officeTheme: OfficeThemeChoice,
 	behaviour: VisioBehaviour,
 ): OfficeOptionValues {
 	return {
+		...behaviour,
 		officeTheme,
-		miniToolbar: false,
-		livePreview: false,
-		screenTips: behaviour.screenTips,
-		undoLevels: behaviour.undoLevels,
-		autoSizeText: false,
 		userName: profile.displayName,
 		userInitials: profile.initial ?? '',
 	};
@@ -139,7 +102,7 @@ export class ViewerProfile {
 			get: () => 'neutral',
 			set: () => {},
 		},
-		/** Applies the behaviour Options (ScreenTip style, undo depth), now and after each change. */
+		/** Applies the behaviour Options, now and after each change. */
 		private readonly onBehaviour: (behaviour: VisioBehaviour) => void = () => {},
 	) {
 		this.#dialog = root.querySelector<OptionsDialog>('office-ui-options-dialog')!;
@@ -169,17 +132,11 @@ export class ViewerProfile {
 					// The light looks are remembered here; light or dark is the host's preference.
 					if (values.officeTheme !== 'dark') writeStatusBarTheme(values.officeTheme);
 				}
-				const screenTips = isScreenTipStyle(values.screenTips)
-					? values.screenTips
-					: this.#behaviour.screenTips;
-				const undoLevels = clampUndo(values.undoLevels ?? this.#behaviour.undoLevels);
-				if (
-					screenTips !== this.#behaviour.screenTips ||
-					undoLevels !== this.#behaviour.undoLevels
-				) {
-					this.#behaviour = { screenTips, undoLevels };
-					writeBehaviour(this.#behaviour);
-					this.onBehaviour({ ...this.#behaviour });
+				const next = mergeBehaviour(this.#behaviour, values);
+				if (behaviourChanged(next, this.#behaviour)) {
+					this.#behaviour = next;
+					writeBehaviour(next);
+					this.onBehaviour({ ...next });
 				}
 				const initial = String(values.userInitials ?? '').trim();
 				this.#update({
