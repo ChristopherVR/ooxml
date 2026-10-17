@@ -35,6 +35,7 @@ site/suite.js
 site/suite-assets/
 site/assets/
 suite-dist/
+preview-template/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/
 

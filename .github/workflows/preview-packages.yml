@@ -66,8 +66,8 @@ jobs:
           PREVIEW_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PREVIEW_PR_URL: ${{ github.event.pull_request.html_url }}
         run: node .preview-tools/scripts/prepare-preview-template.mjs
-      # --compact gives short URLs (pkg.pr.new/ooxml-core@<sha>); it works because both packages
-      # are on npm with this repository in their `repository` field.
+      # Full URLs also support the built suite package, which is only published to this
+      # preview registry. The small playground installs it instead of POSTing its assets.
       # Until the app is installed the upload is refused with "is not installed on or does not have
       # access to"; that is a missing setup step, not a broken change, so it warns instead of failing
       # the pull request. Any other error still fails.
