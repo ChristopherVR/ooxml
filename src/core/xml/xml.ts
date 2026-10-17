@@ -29,7 +29,9 @@ export const DEFAULT_XML_LIMITS: Readonly<Required<XmlParseLimits>> = {
 // Tags (with quoted attribute values) give: group 1 `/` for end tags, group 2 the name, group 3
 // `/` for empty-element tags. Comments, CDATA and processing instructions are skipped whole with
 // `indexOf` (see MARKUP_SKIPS), so their text never counts as markup and no scan is quadratic.
-const TAG_RE = /<(\/?)([^\s\/>]+)(?:\s+[^\s=\/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*\s*(\/?)>/y;
+// Names and values never contain `<` (XML forbids it), so one attempt cannot run past the next
+// `<` and a run of unterminated tags is scanned once, not once per tag.
+const TAG_RE = /<(\/?)([^\s\/><]+)(?:\s+[^\s=\/><]+\s*=\s*(?:"[^"<]*"|'[^'<]*'))*\s*(\/?)>/y;
 const MARKUP_SKIPS: readonly (readonly [open: string, close: string])[] = [
 	['<!--', '-->'],
 	['<![CDATA[', ']]>'],

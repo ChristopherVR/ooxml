@@ -174,7 +174,7 @@ export function editScenario(
 	const name = checkName(sheet, draft.name, index);
 	const scenario = build(ctx, sheet, draft, name);
 	ctx.run('Edit scenario', 'view', PARTS(s), () => {
-		(sheet.scenarios as ScenarioSet).list[index] = scenario;
+		(sheet.scenarios as ScenarioSet).list.splice(index, 1, scenario);
 	});
 }
 
@@ -201,7 +201,7 @@ export function deleteScenario(ctx: EditContext, s: number, index: number): void
 /** Shows a scenario: writes its values into the changing cells. One undo step. */
 export function showScenario(ctx: EditContext, s: number, index: number): void {
 	const sheet = sheetAt(ctx.workbook, s);
-	const scenario = scenariosOf(sheet)[index];
+	const scenario = Number.isInteger(index) ? scenariosOf(sheet)[index] : undefined;
 	if (!scenario) throw new ScenarioError('missing');
 	const addresses = scenarioAddresses(scenario);
 	const ranges = addresses.map((a) => ({ start: a, end: a }));

@@ -225,6 +225,16 @@ describe('data tables', () => {
 });
 
 describe('scenarios', () => {
+	it('rejects a non-numeric scenario index without touching the prototype', () => {
+		const { s } = book();
+		s.addScenario(0, { name: 'Only', cells: 'A1' });
+		const hostile = '__proto__' as unknown as number;
+		expect(() => s.showScenario(0, hostile)).toThrow();
+		expect(() => s.editScenario(0, hostile, { name: 'X', cells: 'A1' })).toThrow();
+		expect(() => s.deleteScenario(0, hostile)).toThrow();
+		expect(({} as Record<string, unknown>).name).toBeUndefined();
+	});
+
 	it('adds, shows, edits and deletes scenarios with undo', () => {
 		const { wb, s } = book();
 		s.setCellValue(0, 0, 0, 5);

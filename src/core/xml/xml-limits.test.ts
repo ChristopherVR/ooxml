@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { NS, parseXml, textContent } from './index';
+import { checkXmlLimits } from './xml';
 
 describe('parseXml resource limits', () => {
+	it('scans a long run of unterminated tags in linear time', () => {
+		const xml = `<root>${'<a'.repeat(200_000)}`;
+		const start = performance.now();
+		checkXmlLimits(xml, 'XML');
+		expect(performance.now() - start).toBeLessThan(500);
+	});
+
 	it('rejects nesting deeper than the default depth limit', () => {
 		const depth = 10_000;
 		const xml = `<root>${'<a>'.repeat(depth)}${'</a>'.repeat(depth)}</root>`;

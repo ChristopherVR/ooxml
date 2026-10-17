@@ -236,13 +236,21 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	return XML_HEADER + buildXml(root);
 }
 
+/** The first `<filter ...>` start tag of `xml`, or ''. An `indexOf` scan, linear on any input. */
+function firstFilterTag(xml: string): string {
+	for (let at = xml.indexOf('<filter'); at !== -1; at = xml.indexOf('<filter', at + 1)) {
+		if (!/\s/.test(xml.charAt(at + 7))) continue;
+		const end = xml.indexOf('>', at);
+		return end === -1 ? '' : xml.slice(at, end + 1);
+	}
+	return '';
+}
+
 /** The timeline's `filters` element: one inclusive date range on a date field. */
 function dateFilterXml(pivot: PivotTable, filter: NonNullable<PivotTable['dateFilter']>): string {
 	const x15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
 	// Excel numbers filters across the workbook's pivot work; a loaded table keeps its number.
-	const id = Number(
-		/\bid="(\d+)"/.exec(/<filter\s[^>]*>/.exec(pivot.sourceXml ?? '')?.[0] ?? '')?.[1] ?? 1,
-	);
+	const id = Number(/\bid="(\d+)"/.exec(firstFilterTag(pivot.sourceXml ?? ''))?.[1] ?? 1);
 	return (
 		`<filters count="1"><filter${attrs({ fld: pivot.fields.indexOf(filter.field), type: 'dateBetween', evalOrder: -1, id, name: filter.field })}>` +
 		`<autoFilter ref="A1"><filterColumn colId="0"><customFilters and="1">` +
