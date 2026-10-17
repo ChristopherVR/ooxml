@@ -10,6 +10,7 @@ import {
 import {
 	CUSTOMIZABLE_TABS,
 	DISPLAY_LANGUAGES,
+	MAX_RECOVER_MINUTES,
 	MAX_UNDO_LEVELS,
 	QUICK_ACCESS_COMMANDS,
 } from './viewer-behaviour';
@@ -133,10 +134,47 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 			},
 		],
 	},
-	unavailableCategory(visio, 'save', {
+	{
+		id: 'save',
+		label: 'Save',
 		description: 'Customize how drawings are saved.',
-		reason: 'Not available yet. Drawings are saved as downloaded copies; AutoRecover is not kept.',
-	}),
+		sections: [
+			{
+				id: 'save-drawings',
+				title: 'Save drawings',
+				controls: [
+					{
+						kind: 'select',
+						key: 'defaultFormat',
+						label: 'Save files in this format',
+						choices: [{ value: 'vsdx', label: 'Visio Drawing (*.vsdx)' }],
+						...disabled('Drawings are always saved as .vsdx.'),
+					},
+					{
+						kind: 'toggle',
+						key: 'autoRecover',
+						label: 'Save AutoRecover information',
+						info: 'Keeps a copy of a drawing with unsaved changes in this browser, and offers it back when you open the same file again. Off unless you choose it. Saving a copy removes it.',
+					},
+					{
+						kind: 'number',
+						key: 'autoRecoverMinutes',
+						label: 'Minutes between AutoRecover saves',
+						min: 1,
+						max: MAX_RECOVER_MINUTES,
+						enabledBy: 'autoRecover',
+						indent: true,
+					},
+					{
+						kind: 'text',
+						key: 'defaultLocation',
+						label: 'Default local file location',
+						...disabled('Your browser saves downloads to its own folder.'),
+					},
+				],
+			},
+		],
+	},
 	{
 		id: 'language',
 		label: 'Language',

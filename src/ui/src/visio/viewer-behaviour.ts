@@ -3,6 +3,8 @@ import { isScreenTipStyle, type ScreenTipStyle } from './viewer-screen-tips';
 
 /** Undo depth is bounded by the retained drawing snapshots (see EDIT_HISTORY_LIMITS). */
 export const MAX_UNDO_LEVELS = 19;
+/** The AutoRecover interval, in minutes, Options accepts. */
+export const MAX_RECOVER_MINUTES = 120;
 
 /** The main tabs Customize Ribbon can hide; File is the backstage and always stays. */
 export const CUSTOMIZABLE_TABS = [
@@ -54,6 +56,10 @@ export interface VisioBehaviour extends TabSettings, QuickAccessSettings {
 	displayLanguage: VisioLocale | '';
 	/** The browser's spell checker underlines mistakes in the in-place text editor. */
 	checkSpelling: boolean;
+	/** Keep a copy of a drawing with unsaved changes in this browser (off unless chosen). */
+	autoRecover: boolean;
+	/** Minutes between AutoRecover copies. */
+	autoRecoverMinutes: number;
 }
 
 const tabDefaults = Object.fromEntries(
@@ -71,6 +77,8 @@ export const DEFAULT_BEHAVIOUR: Readonly<VisioBehaviour> = {
 	autoSizeText: true,
 	displayLanguage: '',
 	checkSpelling: true,
+	autoRecover: false,
+	autoRecoverMinutes: 10,
 	...tabDefaults,
 	...qatDefaults,
 };
@@ -78,6 +86,10 @@ export const DEFAULT_BEHAVIOUR: Readonly<VisioBehaviour> = {
 const clampUndo = (value: unknown, fallback: number): number => {
 	const levels = Math.round(Number(value));
 	return Number.isFinite(levels) ? Math.min(MAX_UNDO_LEVELS, Math.max(1, levels)) : fallback;
+};
+const clampMinutes = (value: unknown, fallback: number): number => {
+	const minutes = Math.round(Number(value));
+	return Number.isFinite(minutes) ? Math.min(MAX_RECOVER_MINUTES, Math.max(1, minutes)) : fallback;
 };
 const isLanguage = (value: unknown): value is VisioLocale | '' =>
 	value === '' || (VISIO_LOCALES as readonly unknown[]).includes(value);
@@ -97,6 +109,8 @@ export function mergeBehaviour(
 		if (key === 'screenTips') {
 			if (isScreenTipStyle(value)) next.screenTips = value;
 		} else if (key === 'undoLevels') next.undoLevels = clampUndo(value, base.undoLevels);
+		else if (key === 'autoRecoverMinutes')
+			next.autoRecoverMinutes = clampMinutes(value, base.autoRecoverMinutes);
 		else if (key === 'displayLanguage') {
 			if (isLanguage(value)) next.displayLanguage = value;
 		} else if (typeof value === 'boolean')

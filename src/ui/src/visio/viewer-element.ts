@@ -33,6 +33,8 @@ import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
 import { ViewerLivePreview } from './viewer-live-preview';
+import { ViewerAutoRecover, indexedDbRecoveryStore } from './viewer-autorecover';
+import { RecoverDialog } from './viewer-recover-dialog';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
 import {
@@ -105,6 +107,7 @@ export class VisioViewerElement extends BaseElement {
 	#behaviour: VisioBehaviour = DEFAULT_BEHAVIOUR;
 	#mini: ViewerMiniToolbar;
 	#livePreview: ViewerLivePreview;
+	#recover: ViewerAutoRecover;
 	/** A drawing shown in place of the real one while a gallery tile is previewed. */
 	#preview: { document: VisioDocument; base: VisioDocument | null } | undefined;
 	#suspended = false;
@@ -141,6 +144,17 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
+		const say = (message: string): void => {
+			this.#announcement = message;
+			this.#status.textContent = message;
+		};
+		const recoverDialog = new RecoverDialog(this.#root, say, () => this.#locale());
+		this.#recover = new ViewerAutoRecover(
+			this.controller,
+			() => this.#fileName,
+			indexedDbRecoveryStore(),
+			(offer) => recoverDialog.show(offer),
+		);
 		this.#mini = new ViewerMiniToolbar(this.#root, this.#toolbar);
 		this.#livePreview = new ViewerLivePreview(
 			this.#root,
@@ -273,7 +287,12 @@ export class VisioViewerElement extends BaseElement {
 			fileName: () => this.#fileName,
 			load: (source) => this.load(source),
 			createBlankDrawing: () => this.createBlankDrawing(),
-			exportVsdx: () => this.controller.exportVsdx(),
+			exportVsdx: () => {
+				const saved = this.controller.exportVsdx();
+				// File > Save made a copy as a file: the AutoRecover copy has done its job.
+				this.#recover.saved();
+				return saved;
+			},
 			exportSvg: () => this.exportSvg(),
 			exportPicture: async (format) => {
 				const { document: model, pageIndex } = this.controller.state;
@@ -398,6 +417,8 @@ export class VisioViewerElement extends BaseElement {
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
 		this.#render(this.controller.state);
+		// Now the drawing has its name: offer back a copy kept from an earlier, unsaved session.
+		this.#recover.opened();
 	}
 	/** Create a source-backed drawing and name only the accepted request. */
 	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
@@ -599,6 +620,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit.autoSize = behaviour.autoSizeText;
 		this.#mini.enabled = behaviour.miniToolbar;
 		this.#livePreview.enabled = behaviour.livePreview;
+		this.#recover.configure(behaviour.autoRecover, behaviour.autoRecoverMinutes);
 		if (!behaviour.livePreview) this.#livePreview.stop();
 		const ribbon = this.#toolbar as unknown as HTMLElement & {
 			selected: string;
@@ -624,18 +646,20 @@ export class VisioViewerElement extends BaseElement {
 	 * The ribbon speaks the `locale` attribute, else the language chosen in Options, else `lang`,
 	 * else the page's, else the browser's. A host that sets `locale` itself keeps its choice.
 	 */
+	#locale(): string {
+		return (
+			this.getAttribute('locale') ||
+			this.#behaviour.displayLanguage ||
+			this.lang ||
+			this.ownerDocument.documentElement.lang ||
+			navigator.language
+		);
+	}
 	#localizeRibbon(): void {
 		if (this.#disposed || !this.#overflow) return;
 		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
 		restoreScreenTips(this.#toolbar);
-		localizeRibbon(
-			this.#toolbar,
-			this.getAttribute('locale') ||
-				this.#behaviour.displayLanguage ||
-				this.lang ||
-				this.ownerDocument.documentElement.lang ||
-				navigator.language,
-		);
+		localizeRibbon(this.#toolbar, this.#locale());
 		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();
 	}
@@ -673,6 +697,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMini = this.#mini.wire(this.#viewport);
 		const disposePreview = this.#livePreview.wire();
+		const disposeRecover = this.#recover.wire(this.ownerDocument);
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
 			this.#mini.showAt(x, y),
 		);
@@ -735,7 +760,9 @@ export class VisioViewerElement extends BaseElement {
 			disposeBackstage();
 			disposeMenus();
 			disposeMini();
+			this.#recover.dispose();
 			disposePreview();
+			disposeRecover();
 			disposeTellMe();
 			disposeGalleries();
 			keyTips.dispose();

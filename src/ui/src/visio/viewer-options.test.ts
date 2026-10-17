@@ -70,7 +70,7 @@ describe('Visio File > Account and Options', () => {
 		expect(field('livePreview').disabled).toBe(false);
 		expect(field('miniToolbar').disabled).toBe(false);
 		expect(field('userName').value).toBe('Ada Lovelace');
-		(dialog as unknown as { category: string }).category = 'save';
+		(dialog as unknown as { category: string }).category = 'add-ins';
 		expect(dialog.shadowRoot!.querySelector('.unavailable')!.textContent).toMatch(/^Not available/);
 		viewer.destroy();
 	});
@@ -220,6 +220,16 @@ describe('Visio File > Account and Options', () => {
 			const ctx = setup();
 			change(ctx, 'proofing', 'checkSpelling', false);
 			expect(stored().checkSpelling).toBe(false);
+			ctx.viewer.destroy();
+		});
+
+		it('keeps AutoRecover off until it is chosen, and remembers the choice and interval', () => {
+			const ctx = setup();
+			expect(stored().autoRecover).toBeUndefined();
+			change(ctx, 'save', 'autoRecover', true);
+			expect(stored()).toMatchObject({ autoRecover: true, autoRecoverMinutes: 10 });
+			change(ctx, 'save', 'autoRecoverMinutes', '3');
+			expect(stored().autoRecoverMinutes).toBe(3);
 			ctx.viewer.destroy();
 		});
 
