@@ -31,6 +31,7 @@ import { ViewerBackstage } from './viewer-backstage';
 import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import { ViewerMiniToolbar } from './viewer-mini-toolbar';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
 import {
@@ -101,6 +102,7 @@ export class VisioViewerElement extends BaseElement {
 	#eventUnsubscribe: () => void;
 	#disposed = false;
 	#behaviour: VisioBehaviour = DEFAULT_BEHAVIOUR;
+	#mini: ViewerMiniToolbar;
 	#suspended = false;
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
@@ -135,10 +137,13 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
+		this.#mini = new ViewerMiniToolbar(this.#root, this.#toolbar);
 		this.#edit = new ViewerInlineText(this.#viewport, this.controller, (message) => {
 			this.#announcement = message;
 			this.#status.textContent = message;
 		});
+		// Selecting text in the editor shows the Mini Toolbar over it; collapsing the selection hides it.
+		this.#edit.onSelection = (at) => (at ? this.#mini.showAt(at.x, at.y) : this.#mini.hide());
 		this.#notes = this.#root.querySelector('.backstage-notes ul')!;
 		this.#canvas = new ViewerCanvas(
 			this.#viewport,
@@ -575,6 +580,7 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.undoLevels = behaviour.undoLevels;
 		this.#edit.spellcheck = behaviour.checkSpelling;
 		this.#edit.autoSize = behaviour.autoSizeText;
+		this.#mini.enabled = behaviour.miniToolbar;
 		const ribbon = this.#toolbar as unknown as HTMLElement & {
 			selected: string;
 			setTabHidden(tab: string, reason: string, hidden: boolean): void;
@@ -646,7 +652,10 @@ export class VisioViewerElement extends BaseElement {
 		const disposeRotation = this.#rotationHandle.wire();
 		const disposeResize = this.#resizeHandles.wire();
 		const disposeBackstage = this.#backstage.wire();
-		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
+		const disposeMini = this.#mini.wire(this.#viewport);
+		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
+			this.#mini.showAt(x, y),
+		);
 		const disposeTellMe = wireTellMe(this.#root);
 		const disposeGalleries = wireInlineGalleries(this, this.#root);
 		const keyTips = attachKeyTips(this.#root);
@@ -705,6 +714,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeResize();
 			disposeBackstage();
 			disposeMenus();
+			disposeMini();
 			disposeTellMe();
 			disposeGalleries();
 			keyTips.dispose();
@@ -763,6 +773,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit.render(state);
 		this.#chrome.render(state);
 		this.#commands.render(state);
+		if (this.#mini.visible) this.#mini.sync();
 		this.#presentation.render(state);
 		this.#backstage.render(state);
 		this.#pointer.render(state);

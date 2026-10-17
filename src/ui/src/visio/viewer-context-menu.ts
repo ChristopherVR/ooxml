@@ -161,6 +161,8 @@ export function wireContextMenus(
 	root: ShadowRoot,
 	viewport: HTMLElement,
 	controller: ViewerController,
+	/** Told where a shape's menu opened, so a Mini Toolbar can sit above it. */
+	onShapeMenu: (x: number, y: number) => void = () => {},
 ): () => void {
 	const Abort = root.ownerDocument.defaultView?.AbortController ?? AbortController;
 	const events = new Abort();
@@ -181,7 +183,11 @@ export function wireContextMenus(
 				);
 			if (!containsTarget()) controller.selectShape(selected);
 			// Selection may be refused (for example a hidden layer); fall back to the page menu.
-			if (containsTarget()) return menu('shape').openAt(x, y);
+			if (containsTarget()) {
+				menu('shape').openAt(x, y);
+				onShapeMenu(x, y);
+				return;
+			}
 		}
 		menu('page').openAt(x, y);
 	};
