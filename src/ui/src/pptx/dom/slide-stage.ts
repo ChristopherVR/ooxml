@@ -167,7 +167,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		stage.setAttribute('aria-roledescription', 'slide');
 		stage.setAttribute('aria-label', t('pptx.canvas.slide'));
 	}
-	const renderedNodes: Element[] = [];
+	let renderedNodes: Element[] | undefined = [];
 	const context: ElementRenderContext = {
 		reading: options.reading,
 		document: doc,
@@ -213,7 +213,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 				return null;
 			}
 			const node = registry.resolve(element.type)(element, zIndex, context);
-			if (node) renderedNodes.push(node);
+			if (node) renderedNodes?.push(node);
 			if (node && interactive && 'setAttribute' in node) {
 				// The element marker means "rendered slide element carrying the
 				// contract", not "editable right now": an interaction-locked template
@@ -310,9 +310,13 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		return stage;
 	} catch (error) {
 		// A nested group may fail before its already-rendered charts reach stage.
-		for (const node of renderedNodes) disposeChartPixelSubscriptions(node);
+		for (const node of renderedNodes ?? []) disposeChartPixelSubscriptions(node);
 		disposePptxRenderStage(stage);
 		throw error;
+	} finally {
+		// The captured context also renders later animation frames. Retain nodes
+		// only during construction, otherwise every replaced frame stays alive.
+		renderedNodes = undefined;
 	}
 }
 

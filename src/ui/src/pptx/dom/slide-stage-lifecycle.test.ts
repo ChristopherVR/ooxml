@@ -109,7 +109,9 @@ describe('slide stage disposal', () => {
 		mounted.add(stage);
 		document.body.appendChild(stage);
 		const wrapper = stage.querySelector('[data-element-id="chart"]');
-		reRenderPresentationElements(context, stage, ['chart']);
+		for (let frame = 0; frame < 20; frame++) {
+			reRenderPresentationElements(context, stage, ['chart']);
+		}
 		const svg = stage.querySelector('svg');
 		await sample();
 		expect(stage.querySelector('[data-element-id="chart"]')).toBe(wrapper);
