@@ -355,7 +355,4 @@ pending samples. It cannot purge browser-internal decoded-image caches.
 
 These caches also retain at most 128 intrinsic sizes/picture samples and 64
 results per pixel effect, with an 8 MiB conservative UTF-16 key/value budget per
-cache. An oversized effect result still renders but is not memoised. Custom
-async effect integrations using the low-level setters should capture
-`getPptxRenderCacheEpoch()` before starting work and pass it as the setter's third
-argument, so a late result cannot refill caches after release.
+cache. An oversized effect result still renders but is not memoised.

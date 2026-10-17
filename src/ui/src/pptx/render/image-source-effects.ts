@@ -43,7 +43,7 @@ export async function resolveColorChangedImageSource(
 			tolerance,
 			Boolean(clrChange.clrToTransparent),
 		);
-		setCachedResult(key, result.dataUrl, epoch);
+		if (epoch === getPptxRenderCacheEpoch()) setCachedResult(key, result.dataUrl);
 		return result.dataUrl;
 	} catch {
 		return src;

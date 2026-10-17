@@ -62,7 +62,6 @@ describe('render cache bounds', () => {
 });
 
 import { releasePptxRenderCaches } from './render-cache-lifecycle';
-import { getPptxRenderCacheEpoch } from './render-cache';
 import {
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
@@ -135,13 +134,10 @@ describe('releasePptxRenderCaches', () => {
 	it.each([
 		['colour change', setCachedResult, getCachedResult],
 		['duotone', setDuotoneCachedResult, getDuotoneCachedResult],
-	] as const)('clears %s results and ignores setters from an earlier epoch', (_name, set, get) => {
-		const epoch = getPptxRenderCacheEpoch();
-		set('existing', 'data:old', epoch);
+	] as const)('clears %s results while allowing new explicit cache writes', (_name, set, get) => {
+		set('existing', 'data:old');
 		releasePptxRenderCaches();
 		expect(get('existing')).toBeUndefined();
-		set('late', 'data:late', epoch);
-		expect(get('late')).toBeUndefined();
 		set('fresh', 'data:fresh');
 		expect(get('fresh')).toBe('data:fresh');
 	});

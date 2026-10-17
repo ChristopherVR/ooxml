@@ -14,7 +14,7 @@
  * canvas/pixel chroma-key path.
  */
 
-import { getPptxRenderCacheEpoch, setBoundedRenderCache } from './render-cache';
+import { setBoundedRenderCache } from './render-cache';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -227,15 +227,9 @@ export function getCachedResult(key: string): string | undefined {
 	return colorChangeCache.get(key);
 }
 
-/** Store a result from the captured render epoch, bounded by count and bytes. */
-export function setCachedResult(
-	key: string,
-	dataUrl: string,
-	epoch = getPptxRenderCacheEpoch(),
-): void {
-	if (epoch === getPptxRenderCacheEpoch()) {
-		setBoundedRenderCache(colorChangeCache, key, dataUrl, CACHE_MAX);
-	}
+/** Store a result in the cache, bounded by entry count and bytes. */
+export function setCachedResult(key: string, dataUrl: string): void {
+	setBoundedRenderCache(colorChangeCache, key, dataUrl, CACHE_MAX);
 }
 
 /** Release transformed image data retained by the colour-change cache. */
