@@ -60,7 +60,13 @@ export function localizeRibbon(ribbon: HTMLElement, value: string | null | undef
 			if (text)
 				translateSlot(element, name, text, locale, (next) => element.setAttribute(name, next));
 		}
-		if (element.childElementCount === 0 && element.textContent?.trim()) {
+		// A gallery's tiles are drawn by Lit into the gallery itself: rewriting their text would
+		// remove the markers Lit renders into, and its next update would throw.
+		if (
+			element.childElementCount === 0 &&
+			element.textContent?.trim() &&
+			!element.closest('office-ui-gallery')
+		) {
 			const text = element.textContent;
 			translateSlot(element, '#text', text, locale, (next) => (element.textContent = next));
 		}
