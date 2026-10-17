@@ -592,6 +592,7 @@ export class ViewerController {
 				'create-text-box',
 				'create-path',
 				'insert-picture',
+				'insert-chart-object',
 				'insert-master-instance',
 				'drop-stencil-master',
 			].includes(command.type),

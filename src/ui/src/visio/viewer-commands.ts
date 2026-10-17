@@ -355,8 +355,11 @@ export class ViewerCommands {
 			'dblclick',
 			(event) => {
 				if (this.#tool !== 'pointer') return;
-				if ((event.target as Element)?.closest?.('[data-shape-id]'))
-					this.run({ type: 'reveal', panel: 'edit', focusText: true });
+				const group = (event.target as Element)?.closest?.<SVGGElement>('[data-shape-id]');
+				if (!group) return;
+				// Like activating an OLE object in Visio: a chart opens its editor, not its text.
+				if (this.#insert.editChart(group.dataset.shapeId!)) return;
+				this.run({ type: 'reveal', panel: 'edit', focusText: true });
 			},
 			options,
 		);

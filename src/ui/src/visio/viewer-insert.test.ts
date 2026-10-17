@@ -43,7 +43,7 @@ it('enables Pictures for editable drawings and Link/ScreenTip only for one selec
 	expect(view.button('screen-tip').disabled).toBe(true);
 	expect(view.button('field').disabled).toBe(true);
 	expect(view.button('chart').disabled).toBe(false);
-	expect(view.button('chart').title).toMatch(/placed as a picture/);
+	expect(view.button('chart').title).toMatch(/Double-click it to edit/);
 	view.selection();
 	expect(view.button('link').disabled).toBe(false);
 	expect(view.button('screen-tip').disabled).toBe(false);

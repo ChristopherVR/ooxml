@@ -1,11 +1,15 @@
 import {
 	GROUPED_CHART_TYPES,
 	INSERT_CHART_TYPES,
+	chartGridText,
 	gridChart,
 	gridChartSvg,
+	gridChartWorkbook,
 	parseChartGrid,
+	readEmbeddedChart,
 } from 'ooxml-core/xlsx/ui';
 import type { ChartType } from 'ooxml-core/xlsx';
+import { encodeBitmapEmf } from 'ooxml-core/visio';
 import { defineChartPicker } from '../dialog/chart-picker';
 import type { OfficeChartPreview, OfficeChartValue } from '../dialog/chart-picker';
 
@@ -19,17 +23,34 @@ type Picker = HTMLElement & {
 	value: OfficeChartValue;
 };
 
-/** Turns a chart's SVG into PNG bytes (Visio pictures are raster); replaceable for tests. */
+/** What the dialog hands back: the workbook to embed and its metafile preview. */
+export interface ChartObjectData {
+	workbook: Uint8Array;
+	preview: Uint8Array;
+}
+
+/** The chart object being edited; absent for a new chart. */
+export interface ChartTarget {
+	pageId: string;
+	shapeId: string;
+	/** The shape's size in inches, so the preview keeps its proportions. */
+	width: number;
+	height: number;
+	generation: number;
+}
+
+/** Draws an SVG document to pixels; replaceable for tests (a metafile preview needs raw pixels). */
 export type RasterizeSvg = (
 	doc: Document,
 	svg: string,
 	width: number,
 	height: number,
-) => Promise<Uint8Array>;
+) => Promise<{ width: number; height: number; rgba: Uint8ClampedArray }>;
 
-/** Size of the picture a chart becomes, in CSS pixels (drawn at twice this for sharpness). */
-const CHART_SIZE = { width: 640, height: 400 };
-const SCALE = 2;
+/** Width of the preview in CSS pixels; the height follows the chart's proportions. */
+const PREVIEW_WIDTH = 640;
+const NEW_HEIGHT = 400;
+const SCALE = 1.5;
 
 const SAMPLE = 'Category\tSeries 1\tSeries 2\nA\t4\t2\nB\t3\t5\nC\t6\t4\nD\t2\t6';
 const GROUPINGS = [
@@ -37,6 +58,8 @@ const GROUPINGS = [
 	{ id: 'stacked', label: 'Stacked' },
 	{ id: 'percentStacked', label: '100% Stacked' },
 ];
+const EDIT_NOTE =
+	'Saving draws the chart again from the data above; formatting made in Excel is not kept.';
 
 /** The browser's canvas draws the SVG; a chart is never loaded from a URL, only from this blob. */
 export const rasterizeSvg: RasterizeSvg = async (doc, svg, width, height) => {
@@ -48,47 +71,48 @@ export const rasterizeSvg: RasterizeSvg = async (doc, svg, width, height) => {
 		image.src = url;
 		await image.decode();
 		const canvas = doc.createElement('canvas');
-		canvas.width = width * SCALE;
-		canvas.height = height * SCALE;
+		canvas.width = Math.round(width * SCALE);
+		canvas.height = Math.round(height * SCALE);
 		const context = canvas.getContext('2d');
 		if (!context) throw new Error('This browser cannot draw the chart.');
-		// A transparent PNG would show the page colour through the chart in dark themes.
+		// Transparent pixels would show the page colour through the preview in dark themes.
 		context.fillStyle = '#ffffff';
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		context.drawImage(image, 0, 0, canvas.width, canvas.height);
-		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-		if (!blob) throw new Error('The chart could not be saved as a picture.');
-		return new Uint8Array(await blob.arrayBuffer());
+		const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+		return { width: pixels.width, height: pixels.height, rgba: pixels.data };
 	} finally {
 		win.URL.revokeObjectURL(url);
 	}
 };
 
 /**
- * Insert > Chart: the shared chart picker (type, grouping, title and a data grid with a live
- * preview) in a dialog. OK draws the chart with the same core renderer Excel's charts use and
- * hands the PNG to `insert`, which places it on the page like any picture. The chart is a
- * picture: it is not an embedded workbook and cannot be edited as data afterwards.
+ * Insert > Chart and Edit Chart: the shared chart picker (type, grouping, title and a data grid
+ * with a live preview) in a dialog. OK writes an Excel workbook holding the chart, draws the same
+ * chart as a metafile preview and hands both to `submit`, which embeds them as an object. The
+ * chart is a real embedded workbook, so Visio itself can open it in Excel.
  */
 export class InsertChartDialog {
 	readonly dialog: Dialog;
 	readonly picker: Picker;
 	readonly error: HTMLElement;
-	readonly #insert: (png: Uint8Array) => Promise<void>;
+	readonly #note: HTMLElement;
+	readonly #submit: (data: ChartObjectData, target: ChartTarget | undefined) => Promise<void>;
 	readonly #rasterize: RasterizeSvg;
+	readonly #buttons = new Map<string, Button>();
+	#target: ChartTarget | undefined;
 	#busy = false;
 	constructor(
 		root: ShadowRoot,
-		insert: (png: Uint8Array) => Promise<void>,
+		submit: (data: ChartObjectData, target: ChartTarget | undefined) => Promise<void>,
 		rasterize: RasterizeSvg = rasterizeSvg,
 	) {
-		this.#insert = insert;
+		this.#submit = submit;
 		this.#rasterize = rasterize;
 		const doc = root.ownerDocument;
 		defineChartPicker(doc.defaultView?.customElements);
 		this.dialog = doc.createElement('office-ui-dialog') as Dialog;
 		this.dialog.className = 'chart-dialog';
-		this.dialog.setAttribute('heading', 'Insert Chart');
 		this.picker = doc.createElement('office-ui-chart-picker') as Picker;
 		this.picker.types = INSERT_CHART_TYPES.map(([id, label]) => ({ id, label }));
 		this.picker.groupings = GROUPINGS;
@@ -97,10 +121,11 @@ export class InsertChartDialog {
 			const grid = this.#grid(value);
 			return grid ? gridChartSvg(grid, size.width, size.height, tile) : '';
 		};
+		this.#note = doc.createElement('p');
+		this.#note.className = 'chart-note';
 		this.error = doc.createElement('p');
 		this.error.setAttribute('role', 'alert');
-		this.dialog.append(this.picker, this.error);
-		const buttons = new Map<string, Button>();
+		this.dialog.append(this.picker, this.#note, this.error);
 		for (const name of ['Cancel', 'Insert']) {
 			const button = doc.createElement('office-ui-button') as Button;
 			button.slot = 'footer';
@@ -109,9 +134,9 @@ export class InsertChartDialog {
 			button.addEventListener('office-command', () => {
 				if (button.disabled) return;
 				if (name === 'Cancel') this.dialog.close();
-				else void this.#submit(buttons);
+				else void this.#save();
 			});
-			buttons.set(name, button);
+			this.#buttons.set(name, button);
 			this.dialog.append(button);
 		}
 		root.append(this.dialog);
@@ -122,41 +147,82 @@ export class InsertChartDialog {
 			...(value.title.trim() ? { title: value.title.trim() } : {}),
 		});
 	}
-	/** Open with the sample data, ready to be replaced. */
-	open(): void {
+	#show(heading: string, action: string, note: string): void {
 		this.error.textContent = '';
-		this.picker.value = { type: 'column', grouping: 'clustered', title: '', data: SAMPLE };
+		this.#note.textContent = note;
+		this.#note.hidden = !note;
+		this.dialog.setAttribute('heading', heading);
+		this.#buttons.get('Insert')!.setAttribute('label', action);
 		this.dialog.show();
+	}
+	/** Open for a new chart, with sample data ready to be replaced. */
+	open(): void {
+		this.#target = undefined;
+		this.picker.value = { type: 'column', grouping: 'clustered', title: '', data: SAMPLE };
+		this.#show('Insert Chart', 'Insert', '');
+	}
+	/** Open an existing chart object with its own type, title and data. False if it has no chart. */
+	async edit(target: ChartTarget, workbook: Uint8Array): Promise<boolean> {
+		const embedded = await readEmbeddedChart(workbook);
+		if (!embedded) return false;
+		this.#target = target;
+		this.picker.value = {
+			type: embedded.chart.chartType,
+			grouping: embedded.chart.grouping ?? 'clustered',
+			title: embedded.chart.title ?? '',
+			data: chartGridText(embedded.rows),
+		};
+		this.#show('Edit Chart', 'OK', EDIT_NOTE);
+		return true;
 	}
 	close(): void {
 		this.dialog.close();
 	}
-	async #submit(buttons: ReadonlyMap<string, Button>): Promise<void> {
+	/** The chart being edited while the dialog is open, so a host can close it if the shape goes. */
+	get target(): ChartTarget | undefined {
+		return this.dialog.open ? this.#target : undefined;
+	}
+	async #save(): Promise<void> {
 		if (this.#busy) return;
-		const grid = this.#grid(this.picker.value);
+		const value = this.picker.value;
+		const grid = this.#grid(value);
 		if (!grid || grid.chart.series.length === 0) {
 			this.error.textContent =
 				'Enter a header row and at least one row of numbers, separated by tabs or commas.';
 			return;
 		}
 		this.#busy = true;
-		for (const button of buttons.values()) button.disabled = true;
+		for (const button of this.#buttons.values()) button.disabled = true;
 		try {
-			const svg = gridChartSvg(grid, CHART_SIZE.width, CHART_SIZE.height);
-			const png = await this.#rasterize(
+			const target = this.#target;
+			const height = target
+				? Math.min(1600, Math.max(120, Math.round((PREVIEW_WIDTH * target.height) / target.width)))
+				: NEW_HEIGHT;
+			const raster = await this.#rasterize(
 				this.dialog.ownerDocument,
-				svg,
-				CHART_SIZE.width,
-				CHART_SIZE.height,
+				gridChartSvg(grid, PREVIEW_WIDTH, height),
+				PREVIEW_WIDTH,
+				height,
 			);
-			await this.#insert(png);
+			const workbook = await gridChartWorkbook(
+				parseChartGrid(value.data ?? ''),
+				value.type as ChartType,
+				{
+					grouping: value.grouping as 'clustered' | 'stacked' | 'percentStacked',
+					...(value.title.trim() ? { title: value.title.trim() } : {}),
+				},
+			);
+			if (!workbook) throw new Error('The chart could not be written.');
+			await this.#submit(
+				{ workbook, preview: encodeBitmapEmf(raster.width, raster.height, raster.rgba) },
+				target,
+			);
 			this.dialog.close();
 		} catch (error) {
-			this.error.textContent =
-				error instanceof Error ? error.message : 'The chart was not inserted.';
+			this.error.textContent = error instanceof Error ? error.message : 'The chart was not saved.';
 		} finally {
 			this.#busy = false;
-			for (const button of buttons.values()) button.disabled = false;
+			for (const button of this.#buttons.values()) button.disabled = false;
 		}
 	}
 }
