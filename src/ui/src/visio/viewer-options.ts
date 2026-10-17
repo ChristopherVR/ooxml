@@ -54,7 +54,10 @@ export interface VisioBehaviour {
 	screenTips: ScreenTipStyle;
 	undoLevels: number;
 }
-export const DEFAULT_BEHAVIOUR: VisioBehaviour = { screenTips: 'descriptions', undoLevels: 20 };
+export const DEFAULT_BEHAVIOUR: VisioBehaviour = {
+	screenTips: 'descriptions',
+	undoLevels: MAX_UNDO_LEVELS,
+};
 const BEHAVIOUR_KEY = 'ooxml-visio-options';
 const clampUndo = (value: unknown): number => {
 	const levels = Math.round(Number(value));

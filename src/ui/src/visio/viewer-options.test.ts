@@ -105,9 +105,10 @@ describe('Visio File > Account and Options', () => {
 		expect(tips.closest('label')!.title).not.toMatch(/^Not available yet/);
 		tips.value = 'off';
 		tips.dispatchEvent(new Event('change'));
+		(dialog as unknown as { category: string }).category = 'advanced';
 		const undo = field('undoLevels');
 		undo.value = '5';
-		undo.dispatchEvent(new Event('input'));
+		undo.dispatchEvent(new Event('change'));
 		dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
 		expect(viewer.element.controller.undoLevels).toBe(5);
 		expect(
