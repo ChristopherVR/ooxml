@@ -2,6 +2,8 @@ import { formatAxisValue } from './chart-scale';
 import { fit, line, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
+import type { ChartMarkerSeriesView } from './chart-view-markers';
 import {
 	hasOutsideLabels,
 	pointLabels,
@@ -133,7 +135,13 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 		const vertices = s.values
 			.slice(0, count)
 			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)));
-		vertices.forEach(([x, y], i) => marks.push({ series: s, index: i, x, y, radius: 3 }));
+		vertices.forEach(([x, y], i) => {
+			if (s.values[i] === null) return;
+			const markerSeries: ChartMarkerSeriesView = s;
+			if (markerSeries.marker || markerSeries.pointMarkers)
+				out.push(chartSeriesMarkerSvg(s, i, x, y));
+			marks.push({ series: s, index: i, x, y, radius: chartMarkerRadius(s, i) });
+		});
 		const points = vertices.map(([x, y]) => `${n(x)},${n(y)}`).join(' ');
 		out.push(
 			`<polygon points="${points}" fill="none" stroke="${s.color}" stroke-width="2"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,

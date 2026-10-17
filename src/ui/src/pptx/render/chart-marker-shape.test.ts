@@ -1,116 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
+import { buildMarkerPrimitive as coreMarker } from 'ooxml-core/chart';
+import { buildMarkerPrimitive } from './chart-marker-shape';
 
-import { automaticMarkerSymbol, buildMarkerPrimitive, markerOutline } from './chart-marker-shape';
-
-// COM-measured ground truth: a stacked Line-with-Markers chart, 9 series each
-// carrying `<c:marker><c:spPr>.../></c:marker>` with no `c:symbol`
-// ("automatic"), `SeriesCollection(i).MarkerStyle` read back via
-// `PowerPoint.Application` after a real save/reopen round trip resolved
-// idx 0..8 to: Diamond, Square, Triangle, X, Star, Circle, Plus, Dot, Dash.
-describe('automaticMarkerSymbol', () => {
-	const expectedCycle = [
-		'diamond',
-		'square',
-		'triangle',
-		'x',
-		'star',
-		'circle',
-		'plus',
-		'dot',
-		'dash',
-	] as const;
-
-	it('matches the COM-measured 9-shape automatic cycle for idx 0..8', () => {
-		expectedCycle.forEach((symbol, idx) => {
-			expect(automaticMarkerSymbol(idx)).toBe(symbol);
-		});
-	});
-
-	it('repeats the cycle every 9 series (idx 9 == idx 0)', () => {
-		expect(automaticMarkerSymbol(9)).toBe('diamond');
-		expect(automaticMarkerSymbol(10)).toBe('square');
-		expect(automaticMarkerSymbol(17)).toBe('dash');
-		expect(automaticMarkerSymbol(18)).toBe('diamond');
-	});
-
-	// Real-world regression: a stacked line chart's two series carried
-	// NON-SEQUENTIAL `c:idx` (1 and 2, not 0 and 1) and no `c:symbol`. Real
-	// PowerPoint rendered idx 1 as a square marker and idx 2 as a triangle.
-	it('resolves the real-world idx 1 / idx 2 pair to square / triangle', () => {
-		expect(automaticMarkerSymbol(1)).toBe('square');
-		expect(automaticMarkerSymbol(2)).toBe('triangle');
-	});
-
-	it('handles a negative index by wrapping into the cycle', () => {
-		expect(automaticMarkerSymbol(-1)).toBe(automaticMarkerSymbol(8));
-	});
-});
-
-describe('buildMarkerPrimitive shape mapping', () => {
-	it('draws a square as a rect', () => {
-		const marker = buildMarkerPrimitive({
-			symbol: 'square',
-			size: undefined,
-			cx: 10,
-			cy: 10,
-			fill: '#000',
-			defaultRadius: 3,
-		});
-		expect(marker?.kind).toBe('rect');
-	});
-
-	it('draws a triangle as a polygon', () => {
-		const marker = buildMarkerPrimitive({
-			symbol: 'triangle',
-			size: undefined,
-			cx: 10,
-			cy: 10,
-			fill: '#000',
-			defaultRadius: 3,
-		});
-		expect(marker?.kind).toBe('polygon');
-	});
-});
-
-describe('marker outline', () => {
-	const base = { size: 5, cx: 0, cy: 0, fill: '#FFFFFF', defaultRadius: 2.5 };
-
-	it.each(['circle', 'dot', 'square', 'dash', 'diamond', 'triangle', 'star'] as const)(
-		'outlines a %s marker when a stroke is given',
-		(symbol) => {
-			const marker = buildMarkerPrimitive({
-				...base,
-				symbol,
-				stroke: '#05507D',
-				strokeWidth: 1.5,
-			});
-			expect(marker).toMatchObject({ fill: '#FFFFFF', stroke: '#05507D', strokeWidth: 1.5 });
-		},
-	);
-
-	it.each(['x', 'plus'] as const)('draws a %s marker in the outline colour', (symbol) => {
-		const marker = buildMarkerPrimitive({ ...base, symbol, stroke: '#05507D', strokeWidth: 1.5 });
-		expect(marker).toMatchObject({ kind: 'path', stroke: '#05507D' });
-	});
-
-	it('keeps the plain dot when no stroke is given', () => {
-		const marker = buildMarkerPrimitive({ ...base, symbol: 'circle', fill: '#05507D' });
-		expect(marker).not.toHaveProperty('stroke');
-	});
-
-	it('keeps an unoutlined square a rect', () => {
-		expect(buildMarkerPrimitive({ ...base, symbol: 'square' })?.kind).toBe('rect');
-	});
-
-	it('converts the outline width from points and falls back to 0.75pt', () => {
-		expect(markerOutline({ stroke: '#000000', strokeWidth: 1.5 })).toStrictEqual({
-			stroke: '#000000',
-			strokeWidth: 2,
-		});
-		expect(markerOutline({ stroke: '#000000' })).toStrictEqual({
-			stroke: '#000000',
-			strokeWidth: 1,
-		});
-		expect(markerOutline({})).toStrictEqual({});
-	});
+it('delegates to shared marker geometry and retains PowerPoint selection metadata', () => {
+	const input = {
+		symbol: 'triangle' as const,
+		size: 12,
+		cx: 10,
+		cy: 20,
+		fill: '#123456',
+		defaultRadius: 3,
+		part: { role: 'dataPoint' as const, seriesIndex: 1, pointIndex: 7 },
+	};
+	expect(buildMarkerPrimitive(input)).toStrictEqual(coreMarker(input));
+	expect(buildMarkerPrimitive(input)?.part).toBe(input.part);
 });

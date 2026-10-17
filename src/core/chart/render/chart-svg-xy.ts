@@ -9,6 +9,7 @@ import { line, n, text, textWidth, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
 import { pointLabels, type PointMark } from './chart-svg-labels';
+import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 
 export function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 	const ys = model.valueAxis;
@@ -105,8 +106,8 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 			const filter = s.shadowFilter ? ` filter="${s.shadowFilter}"` : '';
 			const fill = s.pointColors?.[i] ?? s.color;
 			if (!bubble) {
-				out.push(`<circle cx="${n(px(x))}" cy="${n(py(v))}" r="3" fill="${fill}"${filter}/>`);
-				marks.push({ series: s, index: i, x: px(x), y: py(v), radius: 3 });
+				out.push(chartSeriesMarkerSvg(s, i, px(x), py(v)));
+				marks.push({ series: s, index: i, x: px(x), y: py(v), radius: chartMarkerRadius(s, i) });
 				return;
 			}
 			// A negative-size bubble is not plotted at all unless the chart shows them.

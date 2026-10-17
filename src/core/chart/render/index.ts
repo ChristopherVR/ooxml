@@ -3,6 +3,8 @@ export * from './summary';
 export * from './summary-from-space';
 export * from './summary-from-chartex';
 export * from './render-space';
+export * from './chart-view-markers';
+export * from './chart-svg-markers';
 export {
 	chartSummaryView,
 	categoryTotals,

@@ -50,3 +50,4 @@ export * from './axis-range';
 export * from './axis-ticks';
 export * from './line-dash';
 export * from './axis-range-auto';
+export * from './marker-shape';
