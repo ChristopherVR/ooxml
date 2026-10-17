@@ -1,7 +1,7 @@
 import { NS, buildXml, first, type XmlElement } from '../xml/index';
 import { readChartAppearance } from './read-appearance';
 import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
-import { chartFormattingNodes } from './formatting-nodes';
+import { chartDataLabelNode, chartFormattingNodes } from './formatting-nodes';
 import { readBuiltInChartStyle } from './built-in-text-style';
 import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { readChartManualLayoutValues } from './manual-layout';
@@ -50,6 +50,8 @@ export function readChartFormatting(root: XmlElement): ChartStyleDefinition | un
 	const entries = Object.fromEntries(
 		Object.entries(nodes).flatMap(([name, node]) => (node ? [[name, entry(node)]] : [])),
 	);
+	const labels = chartDataLabelNode(root);
+	if (labels) entries['dataLabel'] = entry(labels);
 	const builtInStyle = readBuiltInChartStyle(root);
 	const textBody = c(root, 'txPr');
 	const textDefaults = textBody

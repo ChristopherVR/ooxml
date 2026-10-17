@@ -6,6 +6,7 @@ import { formatAxisValue, type AxisScale } from './chart-scale';
 import { line, n, text, textWidth, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import { pointLabels, type PointMark } from './chart-svg-labels';
 
 export function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 	const ys = model.valueAxis;
@@ -80,6 +81,7 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 		line(plot.x, plot.y + plot.h, plot.x + plot.w, plot.y + plot.h, xAxis.color, xAxis.width),
 	);
 	out.push(line(plot.x, plot.y, plot.x, plot.y + plot.h, yAxis.color, yAxis.width));
+	const marks: PointMark[] = [];
 	for (const [si, s] of model.series.entries())
 		s.values.forEach((v, i) => {
 			const x = s.xValues?.[i] ?? null;
@@ -88,14 +90,17 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 			const fill = s.pointColors?.[i] ?? s.color;
 			if (!bubble) {
 				out.push(`<circle cx="${n(px(x))}" cy="${n(py(v))}" r="3" fill="${fill}"${filter}/>`);
+				marks.push({ series: s, index: i, x: px(x), y: py(v), radius: 3 });
 				return;
 			}
 			// A negative-size bubble is not plotted at all unless the chart shows them.
 			const r = radiusOf(s.sizes?.[i] ?? undefined);
 			if (r === undefined) return;
+			marks.push({ series: s, index: i, x: px(x), y: py(v), radius: r });
 			out.push(
 				`<circle cx="${n(px(x))}" cy="${n(py(v))}" r="${n(r)}" fill="${fill}" fill-opacity="0.6" data-chart-series="${si}" data-chart-point="${i}"${filter}/>`,
 			);
 		});
+	pointLabels(model, marks, out);
 	scatterAnalysis(model, px, py, out);
 }

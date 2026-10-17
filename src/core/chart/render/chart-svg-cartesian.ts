@@ -2,6 +2,7 @@ import { formatAxisValue } from './chart-scale';
 import { fit, line, n, text, textWidth, type Rect } from './chart-svg-util';
 import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import { pointLabels, type PointMark } from './chart-svg-labels';
 
 export interface Frame {
 	plot: Rect;
@@ -146,6 +147,7 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
 	const acc = new Array<number>(model.categories.length).fill(0);
 	const area = model.type === 'area';
+	const marks: PointMark[] = [];
 	const layers: {
 		points: [number, number][];
 		lower: [number, number][];
@@ -165,6 +167,13 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 			const top = below + (v ?? 0);
 			if (stacked) acc[i] = top;
 			points.push([frame.band(i), frame.value(top)]);
+			marks.push({
+				series: s,
+				index: i,
+				x: frame.band(i),
+				y: frame.value(top),
+				radius: area ? 0 : 3,
+			});
 			lower.push([frame.band(i), frame.value(below)]);
 		});
 		layers.push({
@@ -199,4 +208,5 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 			if (!Number.isNaN(x))
 				out.push(`<circle cx="${n(x)}" cy="${n(y)}" r="2.5" fill="${color}"${filter}/>`);
 	}
+	pointLabels(model, marks, out);
 }

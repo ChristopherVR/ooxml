@@ -3,10 +3,11 @@
 // colours. Lifted from the spreadsheet chart reader so every format maps a chart part one way.
 import { chartSourceValues } from '../data-cache';
 import type { ChartGroupKind, ChartSpace } from '../model';
-import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
+import type { ChartDataLabels, ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import type { ChartStyleDefinition } from '../style-definition';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { summaryAnalysis } from './summary-analysis';
+import { summaryDataLabels } from './summary-labels';
 import type {
 	ChartSummary,
 	ChartSummaryGroup,
@@ -42,6 +43,7 @@ const GROUPINGS = new Set(['clustered', 'stacked', 'percentStacked', 'standard']
 export function chartSummarySeries(
 	source: ChartSpaceSeries,
 	chartType: ChartSummaryType,
+	groupLabels?: ChartDataLabels,
 ): ChartSummarySeries {
 	const categories = source.categories ?? source.xValues;
 	const values = source.values ?? source.yValues;
@@ -83,6 +85,8 @@ export function chartSummarySeries(
 	}
 	if (Object.keys(points).length) out.pointColors = points;
 	if (Object.keys(pointFills).length) out.pointFills = pointFills;
+	const dataLabels = summaryDataLabels(source, groupLabels);
+	if (dataLabels) out.dataLabels = dataLabels;
 	Object.assign(out, summaryAnalysis(source));
 	return out;
 }
@@ -123,7 +127,7 @@ function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): Chart
 			group.kind === 'bar' ? 'column' : (group.kind as 'line' | 'area' | 'stock');
 		const entry: ChartSummaryGroup = {
 			chartType: type,
-			series: group.series.map((source) => chartSummarySeries(source, type)),
+			series: group.series.map((source) => chartSummarySeries(source, type, group.dataLabels)),
 			secondary: valueAxisId(chartSpace, group.axisIds) !== primary,
 		};
 		if (group.grouping && GROUPINGS.has(group.grouping))
@@ -153,7 +157,9 @@ export function chartSummaryFromSpace(
 	const group = chartSpace.plotArea.groups[0];
 	let chartType: ChartSummaryType = group ? GROUP_TYPES[group.kind] : 'column';
 	if (chartType === 'bar' && group?.barDirection !== 'bar') chartType = 'column';
-	const series = (group?.series ?? []).map((source) => chartSummarySeries(source, chartType));
+	const series = (group?.series ?? []).map((source) =>
+		chartSummarySeries(source, chartType, group?.dataLabels),
+	);
 	const summary: ChartSummary = {
 		chartType,
 		series,

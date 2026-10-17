@@ -2,6 +2,13 @@ import { formatAxisValue } from './chart-scale';
 import { fit, line, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import {
+	hasOutsideLabels,
+	pointLabels,
+	sliceLabels,
+	type PointMark,
+	type SliceMark,
+} from './chart-svg-labels';
 
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [
 	cx + r * Math.sin(angle),
@@ -38,7 +45,10 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 	const out: string[] = [chartAreaRect(model, 'plotArea', area)];
 	const cx = area.x + area.w / 2;
 	const cy = area.y + area.h / 2;
-	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 4);
+	// Labels outside the pie (`outEnd`, `bestFit`) need a margin around it.
+	const margin = hasOutsideLabels(model) ? Math.min(area.w, area.h) * 0.12 : 0;
+	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 4 - margin);
+	const slices: SliceMark[] = [];
 	const rings = model.type === 'doughnut' ? model.series : model.series.slice(0, 1);
 	const hole = model.type === 'doughnut' ? radius * 0.5 : 0;
 	const ringSize = (radius - hole) / Math.max(1, rings.length);
@@ -55,9 +65,20 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 			out.push(
 				`<path d="${slicePath(cx, cy, outer, inner, angle, angle + sweep)}" fill="${color}" stroke="#FFFFFF" stroke-width="1"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 			);
+			slices.push({
+				series: s,
+				index: i,
+				cx,
+				cy,
+				outer,
+				inner,
+				start: angle,
+				end: angle + sweep,
+			});
 			angle += sweep;
 		});
 	});
+	sliceLabels(model, slices, out);
 	return out.join('');
 }
 
@@ -107,15 +128,17 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 				}),
 			);
 	});
+	const marks: PointMark[] = [];
 	for (const s of model.series) {
-		const points = s.values
+		const vertices = s.values
 			.slice(0, count)
-			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)))
-			.map(([x, y]) => `${n(x)},${n(y)}`)
-			.join(' ');
+			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)));
+		vertices.forEach(([x, y], i) => marks.push({ series: s, index: i, x, y, radius: 3 }));
+		const points = vertices.map(([x, y]) => `${n(x)},${n(y)}`).join(' ');
 		out.push(
 			`<polygon points="${points}" fill="none" stroke="${s.color}" stroke-width="2"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 		);
 	}
+	pointLabels(model, marks, out);
 	return out.join('');
 }

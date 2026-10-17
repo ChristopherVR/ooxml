@@ -5,6 +5,7 @@ export * from './blank-display';
 export * from './stacked-series';
 export * from './axis-nice';
 export * from './number-format';
+export * from './data-label-text';
 export * from './auto-title';
 export * from './axis-format';
 export * from './bubble-radius';

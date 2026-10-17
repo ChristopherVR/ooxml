@@ -20,6 +20,7 @@ import type { DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
 import type { ChartErrorBarsView, ChartTrendlineView } from './chart-view-analysis';
 import type { ChartManualLayout } from '../manual-layout';
+import { applyDataLabels, type SeriesLabelViews } from './chart-view-labels';
 import {
 	chartExtraAxes,
 	chartExtraView,
@@ -52,6 +53,8 @@ export interface ChartSeriesView {
 	color: string;
 	/** Per-point colours (pie and doughnut vary colours by point). */
 	pointColors?: string[];
+	/** Data labels by point index. */
+	labels?: SeriesLabelViews;
 	/** Trendlines drawn over the series. */
 	trendlines?: ChartTrendlineView[];
 	/** Error bars drawn at each point. */
@@ -246,6 +249,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		chartExtraView(chart, model, ctx, total, collect);
 	if (type === 'waterfall') waterfallView(chart, model, ctx);
 	else if (!byPoint) model.valueAxis = valueAxis(model);
+	applyDataLabels(model, chart.series, extra);
 	chartExtraAxes(model);
 	return model;
 }

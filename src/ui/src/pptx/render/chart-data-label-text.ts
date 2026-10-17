@@ -26,7 +26,7 @@
 import type { PptxChartData, PptxChartLegendTextStyle, PptxChartSeries } from 'ooxml-core/pptx';
 
 import { chartFontPx, chartTextFontFamily } from './chart-font';
-import { formatChartNumberWithColor } from 'ooxml-core/chart';
+import { composeDataLabelText, resolveDataLabelFlags } from 'ooxml-core/chart';
 import { resolveChartTextStyle } from './chart-text-defaults';
 import type { SvgText } from './chart-view-model';
 import { formatAxisValue } from './chart-view-model';
@@ -46,16 +46,6 @@ export interface ResolvedDataLabelContent {
 	customText?: string;
 }
 
-/** PowerPoint's default separator between combined label components. */
-const DEFAULT_SEPARATOR = ', ';
-
-/**
- * PowerPoint's default separator when a label shows the category name AND the
- * percentage and the file carries no `c:separator` (a pie's "Cat 1" over
- * "25%"): a line break, not ", ". Every other combination keeps ", ".
- */
-const CATEGORY_PERCENT_SEPARATOR = '\n';
-
 /**
  * Resolve the label content flags for one point.
  *
@@ -72,43 +62,24 @@ export function resolveDataLabelContent(
 	const seriesLevel = series.dataLabelOptions;
 	const point = series.dataLabels?.find((label) => label.idx === pointIndex);
 
-	const pick = (
-		fromPoint: boolean | undefined,
-		fromSeries: boolean | undefined,
-		fromChart: boolean | undefined,
-	): boolean | undefined => fromPoint ?? fromSeries ?? fromChart;
-
-	const showValue = pick(point?.showVal, seriesLevel?.showValue, chartLevel?.showValue);
-	const showCategory = pick(
-		point?.showCatName,
-		seriesLevel?.showCategory,
-		chartLevel?.showCategory,
-	);
-	const showSeriesName = pick(
-		point?.showSerName,
-		seriesLevel?.showSeriesName,
-		chartLevel?.showSeriesName,
-	);
-	const showPercent = pick(point?.showPercent, seriesLevel?.showPercent, chartLevel?.showPercent);
-	const showBubbleSize = pick(
-		point?.showBubbleSize,
-		seriesLevel?.showBubbleSize,
-		chartLevel?.showBubbleSize,
-	);
-
-	// "Declared" means a flag is written at ANY level, even as `0`. PowerPoint
-	// writes an all-zero chart-type-level group on every chart it authors;
-	// that group means "no labels", never "fall back to the value".
-	const anyDeclared = [showValue, showCategory, showSeriesName, showPercent, showBubbleSize].some(
-		(flag) => flag !== undefined,
-	);
-	// Labels switched on by one series' own `c:dLbls` (no chart-level group)
-	// must not leak onto its sibling series that declare nothing.
-	const siblingOwnsLabels =
-		!anyDeclared &&
-		chartLevel === undefined &&
-		seriesLevel === undefined &&
-		chartData.series.some((other) => other !== series && other.dataLabelOptions !== undefined);
+	const flags = resolveDataLabelFlags({
+		point: point && {
+			showValue: point.showVal,
+			showCategory: point.showCatName,
+			showSeriesName: point.showSerName,
+			showPercent: point.showPercent,
+			showBubbleSize: point.showBubbleSize,
+			separator: point.separator,
+		},
+		series: seriesLevel,
+		chart: chartLevel,
+		// Labels switched on by one series' own `c:dLbls` (no chart-level group) must not leak onto
+		// its sibling series that declare nothing.
+		siblingOwnsLabels:
+			chartLevel === undefined &&
+			seriesLevel === undefined &&
+			chartData.series.some((other) => other !== series && other.dataLabelOptions !== undefined),
+	});
 
 	// PowerPoint 2013+ "Value From Cells", series-wide form
 	// (`c15:datalabelsRange`): one cell range's cache supplies every label in
@@ -128,20 +99,7 @@ export function resolveDataLabelContent(
 			: undefined;
 
 	return {
-		// Nothing declared anywhere => the historical "just print the value"
-		// (what the serializer writes for a bare `hasDataLabels: true`).
-		showValue: anyDeclared ? showValue === true : !siblingOwnsLabels,
-		showCategory: showCategory === true,
-		showSeriesName: showSeriesName === true,
-		showPercent: showPercent === true,
-		showBubbleSize: showBubbleSize === true,
-		separator:
-			point?.separator ??
-			seriesLevel?.separator ??
-			chartLevel?.separator ??
-			(showCategory === true && showPercent === true
-				? CATEGORY_PERCENT_SEPARATOR
-				: DEFAULT_SEPARATOR),
+		...flags,
 		deleted: point?.deleted === true,
 		...(point?.text !== undefined
 			? { customText: point.text }
@@ -206,39 +164,17 @@ export function buildDataLabelText(params: DataLabelTextParams): DataLabelTextRe
 		chartLevelOptions?.numberFormat ??
 		series.numberFormat;
 
-	const parts: string[] = [];
-	let valueColor: string | undefined;
-	// PowerPoint's own component order, matching the Format Data Labels list.
-	if (content.showSeriesName && series.name.length > 0) {
-		parts.push(series.name);
-	}
-	if (content.showCategory) {
-		const category = chartData.categories[pointIndex];
-		if (category !== undefined && category.length > 0) {
-			parts.push(category);
-		}
-	}
-	if (content.showValue) {
-		const formatted = formatChartNumberWithColor(value, numberFormat);
-		parts.push(formatted?.text ?? formatAxisValue(value, numberFormat));
-		valueColor = formatted?.color;
-	}
-	if (content.showPercent) {
-		const base = percentBase ?? series.values.reduce((total, entry) => total + Math.abs(entry), 0);
-		parts.push(base > 0 ? `${Math.round((Math.abs(value) / base) * 100)}%` : '0%');
-	}
-	if (content.showBubbleSize) {
-		const size = series.bubbleSizes?.[pointIndex];
-		if (size !== undefined) {
-			parts.push(formatAxisValue(size, series.numberFormat));
-		}
-	}
-
-	const text = parts.join(content.separator);
-	if (text.length === 0) {
-		return undefined;
-	}
-	return { text, color: parts.length === 1 && content.showValue ? valueColor : undefined };
+	return composeDataLabelText({
+		flags: content,
+		seriesName: series.name,
+		category: chartData.categories[pointIndex],
+		value,
+		numberFormat,
+		percentBase: percentBase ?? series.values.reduce((total, entry) => total + Math.abs(entry), 0),
+		bubbleSize: series.bubbleSizes?.[pointIndex],
+		formatValue: (v, format) => formatAxisValue(v, format),
+		formatBubbleSize: (size) => formatAxisValue(size, series.numberFormat),
+	});
 }
 
 /**

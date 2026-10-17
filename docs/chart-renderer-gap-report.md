@@ -101,3 +101,5 @@ helpers.
 
 Status of each port is recorded in `docs/agnostic-core-plan.md` (step 5, "Renderer unification")
 and `PROVENANCE.md`.
+
+1. **Data labels (landed 2026-10-17).** After the slice the harness measures core drawing labels on 27 of 27 parts that use them (0 of 27 before). Content, number format, `c:dLblPos` placement, per-point deletion and custom text, pie best fit. Still open inside gap 1: callout shapes and leader lines, manual label layout, "value from cells", rich-text runs, per-point fonts, labels on stock, waterfall, histogram and hierarchy charts.

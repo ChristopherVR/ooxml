@@ -3,6 +3,7 @@
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
+import type { DataLabelFlagLevel } from '../data-label-text';
 import type { ChartErrorAmountOptions } from '../error-bar-amount';
 import type { ChartErrorBarDirection, ChartErrorBarType } from '../model-analysis';
 import type { ChartTrendlineFitOptions } from '../trendline-fit';
@@ -31,6 +32,26 @@ export type ChartSummaryType =
 	| 'treemap'
 	| 'sunburst';
 
+/** One cascade level of a series' data labels: its content switches, placement and format. */
+export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {
+	/** `c:delete`: the label (or, at series and group level, every label) is suppressed. */
+	deleted?: boolean;
+	/** `c:dLblPos`: `ctr`, `inEnd`, `inBase`, `outEnd`, `bestFit`, `t`, `b`, `l`, `r`. */
+	position?: string;
+	/** Number format code of the label. */
+	numberFormat?: string;
+	/** Custom label text (`c:dLbl/c:tx/c:rich`), which replaces the built label. */
+	text?: string;
+}
+
+/** The data labels of a series by cascade level; absent when the series shows none. */
+export interface ChartSummaryDataLabels {
+	chart?: ChartSummaryLabelLevel;
+	series?: ChartSummaryLabelLevel;
+	/** Per-point labels by `c:idx`. */
+	points?: Record<number, ChartSummaryLabelLevel>;
+}
+
 export interface ChartSummarySeries {
 	name?: string;
 	/** Formula reference for the series name (`Sheet1!$B$1`). */
@@ -54,6 +75,8 @@ export interface ChartSummarySeries {
 	pointFills?: Record<number, DrawingFill>;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
+	/** Data labels the painter draws at each point (`c:dLbls`). */
+	dataLabels?: ChartSummaryDataLabels;
 	/** Trendlines the painter fits and draws over the series (`c:trendline`). */
 	trendlines?: ChartSummaryTrendline[];
 	/** Error bars the painter draws at each point (`c:errBars`). */
