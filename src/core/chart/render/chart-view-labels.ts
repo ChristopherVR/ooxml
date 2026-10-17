@@ -20,9 +20,10 @@ function labelsOf(
 	source: ChartSummaryDataLabels,
 	view: ChartSeriesView,
 	categories: string[],
+	numberFormat: string | undefined,
 ): SeriesLabelViews | undefined {
 	const { chart, series, points } = source;
-	if (series?.deleted === true || (chart?.deleted === true && !series)) return undefined;
+	if ((series?.deleted ?? chart?.deleted) === true) return undefined;
 	// A percentage is a share of the series' total, which only a pie or doughnut offers.
 	const percentBase = view.values.reduce<number>(
 		(sum, v) => sum + (v === null ? 0 : Math.abs(v)),
@@ -49,7 +50,8 @@ function labelsOf(
 				seriesName: view.name,
 				category,
 				value,
-				numberFormat: point?.numberFormat ?? series?.numberFormat ?? chart?.numberFormat,
+				numberFormat:
+					point?.numberFormat ?? series?.numberFormat ?? chart?.numberFormat ?? numberFormat,
 				percentBase,
 				bubbleSize: view.sizes?.[i] ?? undefined,
 				formatValue: (v) => formatAxisValue(v),
@@ -75,7 +77,7 @@ export function applyDataLabels(
 ): void {
 	const apply = (source: ChartSummarySeries | undefined, view: ChartSeriesView): void => {
 		if (!source?.dataLabels) return;
-		const labels = labelsOf(source.dataLabels, view, model.categories);
+		const labels = labelsOf(source.dataLabels, view, model.categories, source.numberFormat);
 		if (labels) view.labels = labels;
 	};
 	model.series.forEach((view, i) => apply(sources[i], view));

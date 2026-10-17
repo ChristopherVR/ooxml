@@ -61,6 +61,8 @@ export interface ChartSummarySeries {
 	/** Cached categories and values from the chart part, used when references cannot resolve. */
 	categories: (string | number)[];
 	values: (number | null)[];
+	/** Cached source value format, used when data labels declare no number format. */
+	numberFormat?: string;
 	/** Bubble charts: the `c:bubbleSize` values, parallel to `values`. */
 	bubbleSizes?: (number | null)[];
 	/** Formula reference for the bubble sizes. */

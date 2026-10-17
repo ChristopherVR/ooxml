@@ -53,6 +53,7 @@ export function chartSummarySeries(
 		categories: chartSourceValues(categories),
 		values: chartSourceValues(values).map(numeric),
 	};
+	if (values?.cache?.formatCode !== undefined) out.numberFormat = values.cache.formatCode;
 	if (source.bubbleSizes) {
 		out.bubbleSizes = chartSourceValues(source.bubbleSizes).map(numeric);
 		if (source.bubbleSizes.formula) out.bubbleSizesRef = source.bubbleSizes.formula;

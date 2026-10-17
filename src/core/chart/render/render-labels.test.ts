@@ -45,6 +45,65 @@ const textX = (svg: string, content: string) =>
 	);
 
 describe('data labels in the summary and view', () => {
+	const viewOf = (xml: string) =>
+		chartSummaryView(
+			chartSummaryFromSpace(parseChartSpace(xml).chartSpace),
+			chartThemePalette(undefined),
+		);
+
+	it('keeps bare declarations, without enabling labels on an undeclared sibling', () => {
+		const view = viewOf(column(series(0, 'A', [12], dLbls('')) + series(1, 'B', [34])));
+		expect(view.series[0]?.labels?.[0]?.text).toBe('12');
+		expect(view.series[1]?.labels).toBeUndefined();
+	});
+
+	it('inherits group point overrides and merges series point properties by index', () => {
+		const group = dLbls(
+			'<c:dLbl><c:idx val="0"/><c:delete val="1"/></c:dLbl>' +
+				'<c:dLbl><c:idx val="1"/><c:showCatName val="1"/></c:dLbl>' +
+				flags(['showVal']),
+		);
+		const own = dLbls('<c:dLbl><c:idx val="1"/><c:showVal val="0"/></c:dLbl>');
+		const view = viewOf(column(series(0, 'S', [12, 34], own) + group));
+		expect(view.series[0]?.labels?.[0]).toBeUndefined();
+		expect(view.series[0]?.labels?.[1]?.text).toBe('B');
+	});
+
+	it('retains a group point label even when every group content switch is off', () => {
+		const group = dLbls('<c:dLbl><c:idx val="1"/><c:showVal val="1"/></c:dLbl>' + flags([]));
+		const view = viewOf(column(series(0, 'S', [12, 34]) + group));
+		expect(view.series[0]?.labels?.[0]).toBeUndefined();
+		expect(view.series[0]?.labels?.[1]?.text).toBe('34');
+	});
+
+	it('inherits group deletion unless the series explicitly overrides it', () => {
+		const group = dLbls('<c:delete val="1"/>' + flags(['showVal']));
+		const view = viewOf(
+			column(
+				series(0, 'A', [12], dLbls('<c:dLblPos val="ctr"/>')) +
+					series(1, 'B', [34], dLbls('<c:delete val="0"/>')) +
+					group,
+			),
+		);
+		expect(view.series[0]?.labels).toBeUndefined();
+		expect(view.series[1]?.labels?.[0]?.text).toBe('34');
+	});
+
+	it('uses the source cache format unless a label format overrides it', () => {
+		const xml = column(
+			series(
+				0,
+				'S',
+				[0.25, 0.5],
+				dLbls(
+					'<c:dLbl><c:idx val="1"/><c:numFmt formatCode="0.00" sourceLinked="0"/></c:dLbl>' +
+						flags(['showVal']),
+				),
+			),
+		).replace('<c:formatCode>General</c:formatCode>', '<c:formatCode>0%</c:formatCode>');
+		expect(viewOf(xml).series[0]?.labels?.map((l) => l?.text)).toEqual(['25%', '0.50']);
+	});
+
 	it('carries the group and series levels and prunes an all-zero group', () => {
 		const zero = parseChartSpace(column(series(0, 'S', [1, 2, 3]) + dLbls(flags([])))).chartSpace;
 		expect(chartSummaryFromSpace(zero).series[0]?.dataLabels).toBeUndefined();

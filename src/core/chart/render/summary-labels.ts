@@ -1,6 +1,7 @@
 // The data labels of a summary series: the three cascade levels of `c:dLbls` (group, series,
 // point) as the painter needs them, read from a parsed chart part.
 import type { ChartDataLabelOptions, ChartDataLabels, ChartSpaceSeries } from '../model-series';
+import { resolveDataLabelFlags } from '../data-label-text';
 import type { ChartSummaryDataLabels, ChartSummaryLabelLevel } from './summary';
 
 function level(
@@ -21,15 +22,11 @@ function level(
 	return out;
 }
 
-/** Whether a level switches any label content on (or writes a custom text). */
-const shows = (l: ChartSummaryLabelLevel | undefined): boolean =>
-	l !== undefined &&
-	(l.showValue === true ||
-		l.showCategory === true ||
-		l.showSeriesName === true ||
-		l.showPercent === true ||
-		l.showBubbleSize === true ||
-		l.text !== undefined);
+/** Whether the resolved switches or custom text enable this label. */
+function shows(levels: ChartSummaryDataLabels, point?: ChartSummaryLabelLevel): boolean {
+	const flags = resolveDataLabelFlags({ ...levels, ...(point ? { point } : {}) });
+	return point?.text !== undefined || Object.values(flags).some((value) => value === true);
+}
 
 /**
  * The labels of one series: its own `c:dLbls` over the group's. Absent when neither level is
@@ -44,14 +41,14 @@ export function summaryDataLabels(
 	if (!own && !group) return undefined;
 	const out: ChartSummaryDataLabels = {};
 	if (group) out.chart = level(group);
-	if (own) {
-		out.series = level(own);
-		const points: Record<number, ChartSummaryLabelLevel> = {};
-		for (const label of own.labels)
-			if (label.index !== undefined) points[label.index] = level(label, label.tx);
-		if (Object.keys(points).length) out.points = points;
-	}
-	if (!shows(out.chart) && !shows(out.series) && !Object.values(out.points ?? {}).some(shows))
-		return undefined;
+	if (own) out.series = level(own);
+	const points: Record<number, ChartSummaryLabelLevel> = {};
+	// Group-level point overrides apply to each series. Series-level point properties win.
+	for (const labels of [group, own])
+		for (const label of labels?.labels ?? [])
+			if (label.index !== undefined)
+				points[label.index] = { ...points[label.index], ...level(label, label.tx) };
+	if (Object.keys(points).length) out.points = points;
+	if (!shows(out) && !Object.values(points).some((point) => shows(out, point))) return undefined;
 	return out;
 }
