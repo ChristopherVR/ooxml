@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.40.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.40.2) - 2026-10-17
+
+### Bug Fixes
+
+- **xml:** Close the remaining code scanning alerts ([6d85151](https://github.com/ChristopherVR/ooxml/commit/6d85151b85dc65fe03c26079c8e76e162dffd5c5))
+
 ## [4.40.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.40.1) - 2026-10-16
 
 ### Bug Fixes

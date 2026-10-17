@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.17.0) - 2026-10-17
+
+### Features
+
+- **ui:** Honour undo levels and ScreenTip style in visio options ([1ce62d3](https://github.com/ChristopherVR/ooxml/commit/1ce62d39fe7c7101f91ce93d4a34e612830946be))
+- **ui:** Share the chart picker and add Insert > Chart to visio ([ab7f2ea](https://github.com/ChristopherVR/ooxml/commit/ab7f2ea0208f698b47def57f361b5a1f4eb457ba))
+
+### Bug Fixes
+
+- **ui:** Wire visio behaviour options and test them ([11bb768](https://github.com/ChristopherVR/ooxml/commit/11bb768187d87d55acff1f74f3809b48dba27924))
+- **ui:** Keep the chart picker to declared design tokens ([406d92a](https://github.com/ChristopherVR/ooxml/commit/406d92a212de56fbd2751e80a81f5f4cb4ac1ae9))
+
+### Testing
+
+- **ui:** Drive the visio behaviour options through the dialog ([dc55882](https://github.com/ChristopherVR/ooxml/commit/dc55882dcf4dac95c42ef90abda4aa100bc49a1c))
+
 ## [1.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.16.0) - 2026-10-16
 
 ### Features

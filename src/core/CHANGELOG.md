@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.17.0) - 2026-10-17
+
+### Features
+
+- **ui:** Honour undo levels and ScreenTip style in visio options ([1ce62d3](https://github.com/ChristopherVR/ooxml/commit/1ce62d39fe7c7101f91ce93d4a34e612830946be))
+- **xlsx:** Draw a chart from typed grid data ([ff985b6](https://github.com/ChristopherVR/ooxml/commit/ff985b69c0018da39896e21504132d07bf8fdf5b))
+
+### Bug Fixes
+
+- **xml:** Close the remaining code scanning alerts ([6d85151](https://github.com/ChristopherVR/ooxml/commit/6d85151b85dc65fe03c26079c8e76e162dffd5c5))
+- **xlsx:** Look sheets up with at so no key reaches a prototype ([41a0b04](https://github.com/ChristopherVR/ooxml/commit/41a0b04fd2dde8a6f5ece20ac46b595c3a130108))
+
 ## [1.16.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.16.1) - 2026-10-16
 
 ### Bug Fixes
