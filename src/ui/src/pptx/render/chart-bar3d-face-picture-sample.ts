@@ -37,15 +37,38 @@
  * @module chart-bar3d-face-picture-sample
  */
 import { parseDataUrlToBytes, sampleFirstPixelColorFromBytes } from 'ooxml-core/pptx';
+import { RENDER_CACHE_MAX_BYTES } from './render-cache';
 
 /** Decodes an image URL (typically a `data:` URL) and resolves its sampled colour, or `undefined` when it cannot be decoded. */
 export type BarFacePictureSampler = (imageUrl: string) => Promise<string | undefined>;
 
+const CACHE_MAX = 128;
+let cacheEpoch = 0;
+let cacheBytes = 0;
+let reservedBytes = 0;
+// The browser sampler returns #rrggbb. Reserve the result as well as its URL key.
+const COLOR_BYTES = 7 * 2;
 const sampleCache = new Map<string, string | undefined>();
 const inFlight = new Map<string, Promise<void>>();
 const listeners = new Set<() => void>();
 /** Bumped every time a sample resolves; a cheap primitive snapshot for `useSyncExternalStore`-style hooks (see {@link getBarFacePicturePixelSampleVersion}). */
 let sampleVersion = 0;
+
+/**
+ * Keep admitted samples for this epoch. Evicting them during broadcast-driven
+ * repaint would make the same chart request them again, producing a decode loop.
+ */
+function rememberSample(imageUrl: string, color: string | undefined): void {
+	if (sampleCache.has(imageUrl) || sampleCache.size + inFlight.size >= CACHE_MAX) return;
+	const keyBytes = imageUrl.length * 2;
+	const remaining = RENDER_CACHE_MAX_BYTES - cacheBytes - reservedBytes;
+	if (keyBytes > remaining) return;
+	// A custom sampler may return more than a seven-character colour. Retain a
+	// failed-sample tombstone if that result exceeds the budget, avoiding retries.
+	const retained = keyBytes + (color?.length ?? 0) * 2 <= remaining ? color : undefined;
+	sampleCache.set(imageUrl, retained);
+	cacheBytes += keyBytes + (retained?.length ?? 0) * 2;
+}
 
 /**
  * Synchronously read a previously-resolved sample. `undefined` means either
@@ -150,24 +173,31 @@ export function decodeFirstPixelColor(imageUrl: string): Promise<string | undefi
  * back via {@link getCachedBarFacePicturePixelColor} once
  * {@link subscribeBarFacePicturePixelSamples} fires). Safe to call on every
  * view-model build; a cached/in-flight URL is a single `Map` lookup.
+ * Completed samples and pending requests share a 128-entry/8 MiB admission
+ * budget. Full or oversized sources keep the caller's existing colour fallback
+ * until the cache is released; admitted samples are not evicted by broadcasts.
  */
 export function ensureBarFacePicturePixelSampled(
 	imageUrl: string,
 	sampler: BarFacePictureSampler = decodeFirstPixelColor,
 ): void {
-	if (sampleCache.has(imageUrl) || inFlight.has(imageUrl)) {
+	if (sampleCache.has(imageUrl) || inFlight.has(imageUrl)) return;
+	const reservation = imageUrl.length * 2 + COLOR_BYTES;
+	if (
+		sampleCache.size + inFlight.size >= CACHE_MAX ||
+		cacheBytes + reservedBytes + reservation > RENDER_CACHE_MAX_BYTES
+	)
 		return;
-	}
-	const pending = sampler(imageUrl)
+	const epoch = cacheEpoch;
+	reservedBytes += reservation;
+	const pending = Promise.resolve()
+		.then(() => sampler(imageUrl))
+		.catch(() => undefined)
 		.then((color) => {
-			sampleCache.set(imageUrl, color);
-			return undefined;
-		})
-		.catch(() => {
-			sampleCache.set(imageUrl, undefined);
-		})
-		.finally(() => {
+			if (epoch !== cacheEpoch || inFlight.get(imageUrl) !== pending) return;
 			inFlight.delete(imageUrl);
+			reservedBytes -= reservation;
+			rememberSample(imageUrl, color);
 			notifyBarFacePicturePixelListeners();
 		});
 	inFlight.set(imageUrl, pending);
@@ -210,17 +240,25 @@ export function resolveBarFacePicturePixelColor(imageUrl: string): string | unde
 	}
 	const sync = trySampleFirstPixelColorSync(imageUrl);
 	if (sync !== undefined) {
-		sampleCache.set(imageUrl, sync);
+		rememberSample(imageUrl, sync);
 		return sync;
 	}
 	ensureBarFacePicturePixelSampled(imageUrl);
 	return undefined;
 }
 
-/** Test-only: reset every module-level cache/subscription between specs. */
-export function resetBarFacePicturePixelCacheForTests(): void {
+/** Release sampled source URLs without removing subscriptions owned by other live stages. */
+export function clearBarFacePicturePixelCache(): void {
+	cacheEpoch++;
 	sampleCache.clear();
 	inFlight.clear();
+	cacheBytes = 0;
+	reservedBytes = 0;
+}
+
+/** Test-only: reset every module-level cache/subscription between specs. */
+export function resetBarFacePicturePixelCacheForTests(): void {
+	clearBarFacePicturePixelCache();
 	listeners.clear();
 	sampleVersion = 0;
 }

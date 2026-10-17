@@ -53,8 +53,6 @@ export function useColorChangeImage(options: UseColorChangeImageOptions): {
 
 	// The processed data-URL, or null while we fall back to the original src.
 	const processed = ref<string | null>(null);
-	// Cancels the most recent in-flight processing; re-set on every watch run.
-	let cancelInFlight: (() => void) | null = null;
 
 	const cacheKey = computed<string | null>(() => {
 		const source = src.value;
@@ -74,10 +72,7 @@ export function useColorChangeImage(options: UseColorChangeImageOptions): {
 
 	watch(
 		cacheKey,
-		(key) => {
-			// Cancel any still-pending work from the previous key before starting.
-			cancelInFlight?.();
-			cancelInFlight = null;
+		(key, _previous, onCleanup) => {
 			processed.value = null;
 			if (!key) {
 				return;
@@ -103,9 +98,10 @@ export function useColorChangeImage(options: UseColorChangeImageOptions): {
 			const tolerance = tolerancePct?.value ?? DEFAULT_COLOR_CHANGE_TOLERANCE;
 
 			let cancelled = false;
-			cancelInFlight = () => {
+			// Runs both when the key changes and when the component stops its watcher.
+			onCleanup(() => {
 				cancelled = true;
-			};
+			});
 
 			applyColorChange(
 				source,

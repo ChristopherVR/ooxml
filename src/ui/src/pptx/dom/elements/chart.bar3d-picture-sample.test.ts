@@ -8,7 +8,6 @@
  * the document (vanilla has no unmount hook to drive cleanup from).
  */
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
-import * as pptxViewerShared from '../../index';
 import {
 	ensureBarFacePicturePixelSampled,
 	getCachedBarFacePicturePixelColor,
@@ -101,44 +100,29 @@ describe('renderChartElement - bar3D untargeted-face picture colour sample', () 
 		expect(fills).toContain(resolveUntargetedBarFaceFill('end', SAMPLED_COLOR));
 	});
 
-	it('repaints an already-mounted, still-connected chart when its registered listener fires (the live-update wiring)', () => {
-		const subscribeSpy = vi.spyOn(pptxViewerShared, 'subscribeBarFacePicturePixelSamples');
+	it('repaints an already-mounted chart when a real sample resolves', async () => {
 		const container = renderChartElement(bar3DPictureElement(), 1, buildContext()) as HTMLElement;
 		document.body.appendChild(container);
-		expect(subscribeSpy).toHaveBeenCalledOnce();
-		const onSampleResolved = subscribeSpy.mock.calls[0][0];
-
-		// Invoke the registered listener directly, exactly as the shared
-		// module calls it once ANY sample resolves (a chart repaints on every
-		// notification, not only ones for its own picture - see this
-		// module's `subscribeBarFacePicturePixelSamples` doc comment): while
-		// still connected, this must repaint in place without throwing or
-		// dropping the chart's markup. The specific fallback-to-sampled
-		// COLOUR transition is proven DOM-free by `chart-3d-depth.test.ts`.
-		expect(() => onSampleResolved()).not.toThrow();
-		const fills = [...container.querySelectorAll('polygon')].map((p) => p.getAttribute('fill'));
-		expect(fills.length).toBeGreaterThanOrEqual(2);
-
-		container.remove();
-		subscribeSpy.mockRestore();
+		try {
+			const svg = container.querySelector('svg');
+			ensureBarFacePicturePixelSampled('blob:live-chart-event', async () => SAMPLED_COLOR);
+			await vi.waitFor(() => expect(container.querySelector('svg')).not.toBe(svg));
+			const fills = [...container.querySelectorAll('polygon')].map((p) => p.getAttribute('fill'));
+			expect(fills.length).toBeGreaterThanOrEqual(2);
+		} finally {
+			container.remove();
+		}
 	});
 
-	it('self-unsubscribes (and never repaints) once its container has left the document', () => {
-		const subscribeSpy = vi.spyOn(pptxViewerShared, 'subscribeBarFacePicturePixelSamples');
+	it('does not repaint a detached chart when a real sample resolves', async () => {
 		const container = renderChartElement(bar3DPictureElement(), 1, buildContext()) as HTMLElement;
 		document.body.appendChild(container);
-		const onSampleResolved = subscribeSpy.mock.calls[0][0];
-		container.remove(); // never connected again
-
-		const fillsBefore = [...container.querySelectorAll('polygon')].map((p) =>
-			p.getAttribute('fill'),
+		container.remove();
+		const svg = container.querySelector('svg');
+		ensureBarFacePicturePixelSampled('blob:detached-chart-event', async () => SAMPLED_COLOR);
+		await vi.waitFor(() =>
+			expect(getCachedBarFacePicturePixelColor('blob:detached-chart-event')).toBe(SAMPLED_COLOR),
 		);
-		expect(() => onSampleResolved()).not.toThrow();
-		const fillsAfter = [...container.querySelectorAll('polygon')].map((p) =>
-			p.getAttribute('fill'),
-		);
-		// A detached container's own listener call is a no-op: unchanged markup.
-		expect(fillsAfter).toStrictEqual(fillsBefore);
-		subscribeSpy.mockRestore();
+		expect(container.querySelector('svg')).toBe(svg);
 	});
 });

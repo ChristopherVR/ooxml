@@ -1,6 +1,10 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 
 import type { ElementRenderContext } from './types';
+import {
+	adoptChartPixelSubscription,
+	disposeChartPixelSubscriptions,
+} from './chart-pixel-subscriptions';
 
 /** An element located in the render tree, with its z-index among its siblings. */
 interface LocatedElement {
@@ -65,8 +69,10 @@ export function reRenderPresentationElements(
 			continue;
 		}
 		if (found.element.type === 'chart' || found.element.type === 'smartArt') {
+			adoptChartPixelSubscription(fresh, old);
 			old.replaceChildren(...Array.from(fresh.childNodes));
 		} else {
+			disposeChartPixelSubscriptions(old);
 			old.replaceWith(fresh);
 		}
 	}

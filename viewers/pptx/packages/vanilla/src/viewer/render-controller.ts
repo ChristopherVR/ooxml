@@ -25,6 +25,7 @@ import type { Translator } from './i18n';
 import type { ElementRenderContext, ElementRendererRegistry } from './render';
 import {
 	collectThreeViews,
+	disposePptxRenderStage,
 	renderSlideStage,
 	reRenderPresentationElements,
 	withReusableThreeViews,
@@ -313,6 +314,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		// Keep the outgoing stage's live 3D views for the rebuild below
 		// (render/elements/three-view-reuse.ts).
 		const liveThreeViews = collectThreeViews(chrome.stageWrap);
+		disposePptxRenderStage(chrome.stageWrap);
 		if (liveOverlay) {
 			for (const child of Array.from(chrome.stageWrap.childNodes)) {
 				if (child !== liveOverlay) {

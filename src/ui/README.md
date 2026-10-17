@@ -336,3 +336,31 @@ content and native media controls without editing overlays.
 
 Apache-2.0. Several controls are derived from `pptx-viewer`; see
 `PROVENANCE.md` at the repository root.
+
+## Raw PowerPoint DOM lifecycle
+
+Custom hosts using `ooxml-ui/pptx/dom` own the returned stage. Before replacing
+or removing a stage (including thumbnails and offscreen export stages), call
+`disposePptxRenderStage(stage)`, then remove its DOM. Disposal is idempotent and
+releases that subtree's chart-sampler subscriptions immediately, even if no
+later image-sample event occurs. It does not clear another stage's subscriptions,
+remove nodes or revoke URLs owned by the host.
+
+After closing all viewers/documents sharing the module instance, a host may call
+`releasePptxRenderCaches()` to discard intrinsic-size, chart-picture-sample,
+colour-change and duotone memoisation. This global operation invalidates pending
+library-managed cache writes and chart notifications; pending decodes can still return results
+to their original caller. Do not call it to close one viewer while another needs
+pending samples. It cannot purge browser-internal decoded-image caches.
+
+Intrinsic-size memoisation keeps at most 128 entries; colour-change and duotone
+keep at most 64 each. These FIFO caches each have an 8 MiB conservative UTF-16
+key/value budget. Oversized effect results still render without memoisation.
+
+Bar-face picture sampling uses admission rather than eviction: completed samples
+and pending requests together reserve at most 128 entries and 8 MiB (URL keys and
+sample colours) for one cache epoch. Keeping admitted samples prevents a sample
+notification/repaint from endlessly re-decoding a just-evicted image. If full or
+a source key exceeds the budget, additional async sampling uses the existing
+point/series-colour fallback until `releasePptxRenderCaches()` starts a new epoch.
+Synchronously decoded colours still render even when they cannot be memoised.

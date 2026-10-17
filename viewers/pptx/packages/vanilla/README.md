@@ -373,6 +373,25 @@ The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 [localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
+## Custom DOM stage cleanup
+
+The cleanup helpers belong to the shared DOM renderer:
+
+```ts
+import { disposePptxRenderStage, releasePptxRenderCaches } from 'ooxml-ui/pptx/dom';
+```
+
+Before a custom host replaces or removes a `renderSlideStage` result, call
+`disposePptxRenderStage(stage)` to release chart subscriptions, then remove the
+node. It also accepts a host containing multiple stages. The built-in viewer
+performs this cleanup for its canvas, thumbnails, reading/presenter previews,
+layout/template galleries and export stages.
+
+A host that has closed all viewers sharing the renderer module may call
+`releasePptxRenderCaches()` (from `ooxml-ui/pptx/dom`) to release retained image
+memoisation. This is global, so wait until other live viewers no longer need
+pending picture samples. Stage disposal itself only affects its own subtree.
+
 ## License
 
 Apache-2.0. See `LICENSE` and `NOTICE`.

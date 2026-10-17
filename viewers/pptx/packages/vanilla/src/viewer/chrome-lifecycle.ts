@@ -33,6 +33,7 @@ import { isSwipeAdvanceBlocked, resolvePresentationStageClick } from './presenta
 import { attachAutoAdvance } from './presentation-auto-advance';
 import { attachShowVisibilityPause } from './presentation-visibility';
 import { createCustomShowRunner } from './presenter/presentation-custom-show-runner';
+import { disposePptxRenderStage } from './render';
 import type { RenderController } from './render-controller';
 import type { DrawTool, Store, ViewerState } from './state';
 import { applyThemeVars } from './theme-apply';
@@ -620,6 +621,7 @@ export function unmountChrome(
 	} else {
 		lifecycle.chrome.regions.destroy();
 	}
+	disposePptxRenderStage(lifecycle.chrome.root);
 	lifecycle.chrome.root.remove();
 }
 

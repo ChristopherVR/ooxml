@@ -59,7 +59,8 @@ describe('vanilla callbacks shared with the other bindings', () => {
 		expect(onContentChange).not.toHaveBeenCalled();
 
 		instance.addSlide();
-		await vi.waitFor(() => expect(onContentChange).toHaveBeenCalled());
+		// ZIP serialization competes with the other viewer suites on hosted runners.
+		await vi.waitFor(() => expect(onContentChange).toHaveBeenCalled(), { timeout: 10_000 });
 
 		const bytes = onContentChange.mock.calls.at(-1)?.[0] as Uint8Array;
 		expect(bytes).toBeInstanceOf(Uint8Array);

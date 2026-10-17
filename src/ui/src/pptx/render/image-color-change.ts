@@ -14,6 +14,8 @@
  * canvas/pixel chroma-key path.
  */
 
+import { setBoundedRenderCache } from './render-cache';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -201,7 +203,7 @@ export function applyColorChange(
 // ---------------------------------------------------------------------------
 
 /**
- * Simple LRU-ish cache keyed by a composite string.
+ * FIFO cache keyed by a composite string, bounded by entry count and bytes.
  * Prevents re-processing the same image + effect combo on every render.
  */
 const colorChangeCache = new Map<string, string>();
@@ -225,14 +227,12 @@ export function getCachedResult(key: string): string | undefined {
 	return colorChangeCache.get(key);
 }
 
-/** Store a result in the cache. Evicts oldest entry when full. */
+/** Store a result in the cache, bounded by entry count and bytes. */
 export function setCachedResult(key: string, dataUrl: string): void {
-	if (colorChangeCache.size >= CACHE_MAX) {
-		// Evict first (oldest) entry
-		const firstKey = colorChangeCache.keys().next().value;
-		if (firstKey !== undefined) {
-			colorChangeCache.delete(firstKey);
-		}
-	}
-	colorChangeCache.set(key, dataUrl);
+	setBoundedRenderCache(colorChangeCache, key, dataUrl, CACHE_MAX);
+}
+
+/** Release transformed image data retained by the colour-change cache. */
+export function clearColorChangeCache(): void {
+	colorChangeCache.clear();
 }

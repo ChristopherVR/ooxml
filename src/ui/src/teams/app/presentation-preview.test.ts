@@ -6,12 +6,14 @@ import {
 const engine = vi.hoisted(() => ({
 	load: vi.fn(),
 	dispose: vi.fn(),
+	disposeStage: vi.fn(),
 	revoke: vi.fn(),
 	fieldContext: vi.fn(() => ({})),
 }));
 vi.mock('ooxml-ui/pptx/dom', () => ({
 	loadPresentation: engine.load,
 	revokeBlobUrls: engine.revoke,
+	disposePptxRenderStage: engine.disposeStage,
 	createDefaultRegistry: () => ({}),
 	createTranslator: () => (key: string) => key,
 	buildFieldSubstitutionContext: engine.fieldContext,
@@ -31,6 +33,7 @@ beforeAll(() => defineTeamsPresentationPreview());
 beforeEach(() => {
 	engine.load.mockReset();
 	engine.dispose.mockClear();
+	engine.disposeStage.mockClear();
 	engine.revoke.mockClear();
 	vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 	vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
@@ -66,6 +69,26 @@ async function mount() {
 }
 
 describe('presentation reading preview', () => {
+	it('retires each rendered stage before navigation, reload and disconnect', async () => {
+		engine.load.mockResolvedValue(deck());
+		const preview = await mount();
+		await preview.load(new Uint8Array([1]));
+		const first = preview.shadowRoot!.querySelector('[role=region]')!;
+		preview
+			.shadowRoot!.querySelector('.stage-frame')!
+			.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, composed: true }),
+			);
+		await preview.updateComplete;
+		expect(engine.disposeStage).toHaveBeenCalledExactlyOnceWith(first);
+		const second = preview.shadowRoot!.querySelector('[role=region]')!;
+		await preview.load(new Uint8Array([2]));
+		expect(engine.disposeStage).toHaveBeenNthCalledWith(2, second);
+		const reloaded = preview.shadowRoot!.querySelector('[role=region]')!;
+		preview.remove();
+		expect(engine.disposeStage).toHaveBeenNthCalledWith(3, reloaded);
+	});
+
 	it('navigates, renders safe notes, stops media and releases the archive and URLs', async () => {
 		engine.load.mockResolvedValue(deck());
 		const preview = await mount();

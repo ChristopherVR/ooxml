@@ -18,6 +18,7 @@ import {
 import type { PptxComment, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
+import { disposePptxRenderStage } from '../render';
 import { createEl } from '../render';
 import type { RibbonHandlers } from './ribbon/ribbon-types';
 
@@ -109,6 +110,7 @@ export function createMobileActionSheets(
 	};
 	const close = () => {
 		active = null;
+		disposePptxRenderStage(body);
 		sheetHost.hidden = true;
 		sheet.style.transform = '';
 		restoreInspector();
@@ -130,6 +132,7 @@ export function createMobileActionSheets(
 	header.addEventListener('pointercancel', (event) => gesture.cancel(pointer(event)));
 
 	const render = (key: Exclude<MobileSheetKey, null>) => {
+		disposePptxRenderStage(body);
 		body.replaceChildren();
 		title.textContent =
 			key === 'inspector'

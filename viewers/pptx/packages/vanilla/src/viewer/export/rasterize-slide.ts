@@ -12,7 +12,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
 import type { ElementRendererRegistry } from '../render';
-import { createEl, renderSlideStage } from '../render';
+import { createEl, disposePptxRenderStage, renderSlideStage } from '../render';
 import { buildRenderFieldContext } from '../render-field-context';
 import type { Store, ViewerState } from '../state';
 import { renderToCanvas } from './render-to-canvas';
@@ -174,6 +174,7 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 		if (!slide) {
 			throw new Error(`Export failed: no slide at index ${index}`);
 		}
+		disposePptxRenderStage(host);
 		host.replaceChildren();
 		const stage = renderSlideStage({
 			document: deps.doc,
@@ -292,6 +293,7 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 		rasterizeSlideToRaster,
 		rasterizeSlideToTiles,
 		destroy() {
+			disposePptxRenderStage(host);
 			host.remove();
 		},
 	};

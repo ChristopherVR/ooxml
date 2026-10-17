@@ -20,12 +20,16 @@
  * @module render/image-native-size
  */
 
+import { setBoundedRenderCache } from './render-cache';
+
 /** A picture's native, unscaled pixel dimensions. */
 export interface NativeImageSize {
 	width: number;
 	height: number;
 }
 
+const CACHE_MAX = 128;
+let cacheEpoch = 0;
 const sizeCache = new Map<string, NativeImageSize>();
 const pendingProbes = new Map<string, Promise<NativeImageSize | undefined>>();
 
@@ -53,6 +57,10 @@ export function probeNativeImageSize(src: string): Promise<NativeImageSize | und
 		return inflight;
 	}
 
+	// Bound deduplication bookkeeping without dropping the caller's dimension
+	// probe: a large slide still needs every tiled picture's intrinsic size.
+	const rememberPending = pendingProbes.size < CACHE_MAX;
+	const epoch = cacheEpoch;
 	const probe = new Promise<NativeImageSize | undefined>((resolve) => {
 		if (typeof Image === 'undefined') {
 			resolve(undefined);
@@ -66,19 +74,25 @@ export function probeNativeImageSize(src: string): Promise<NativeImageSize | und
 		img.onerror = () => resolve(undefined);
 		img.src = src;
 	}).then((size) => {
-		pendingProbes.delete(src);
-		if (size) {
-			sizeCache.set(src, size);
+		if (pendingProbes.get(src) === probe) pendingProbes.delete(src);
+		if (size && epoch === cacheEpoch) {
+			setBoundedRenderCache(sizeCache, src, size, CACHE_MAX);
 		}
 		return size;
 	});
 
-	pendingProbes.set(src, probe);
+	if (rememberPending) pendingProbes.set(src, probe);
 	return probe;
 }
 
-/** Test-only: clear the memoised probe cache between test cases. */
-export function _resetNativeImageSizeCacheForTests(): void {
+/** Release retained source URLs and ignore results from probes already in flight. */
+export function clearNativeImageSizeCache(): void {
+	cacheEpoch++;
 	sizeCache.clear();
 	pendingProbes.clear();
+}
+
+/** Test-only compatibility alias. */
+export function _resetNativeImageSizeCacheForTests(): void {
+	clearNativeImageSizeCache();
 }
