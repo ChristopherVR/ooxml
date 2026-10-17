@@ -326,7 +326,7 @@ store.subscribe((state) => {
 
 Be aware of what this buys you and what it doesn't:
 
-- `renderSlideStage`, `disposePptxRenderStage`, `createElementRendererRegistry` / `createDefaultRegistry`,
+- `renderSlideStage`, `createElementRendererRegistry` / `createDefaultRegistry`,
   and `createRibbon` are pure, callback-driven building blocks with no hidden
   coupling to `PptxViewer`; they are safe to use standalone.
 - `createStore` / `createInitialViewerState` give you the same reactive
@@ -374,6 +374,12 @@ The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 for registration and runtime switching. Existing English imports are unchanged.
 
 ## Custom DOM stage cleanup
+
+The cleanup helpers belong to the shared DOM renderer:
+
+```ts
+import { disposePptxRenderStage, releasePptxRenderCaches } from 'ooxml-ui/pptx/dom';
+```
 
 Before a custom host replaces or removes a `renderSlideStage` result, call
 `disposePptxRenderStage(stage)` to release chart subscriptions, then remove the
