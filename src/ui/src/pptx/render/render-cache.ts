@@ -2,7 +2,7 @@
 const MAX_BYTES = 8 * 1024 * 1024;
 let epoch = 0;
 
-/** Capture before async image work; pass to the cache setter when it settles. */
+/** Capture before async image work; compare again before writing its result. */
 export function getPptxRenderCacheEpoch(): number {
 	return epoch;
 }

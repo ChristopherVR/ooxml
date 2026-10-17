@@ -349,7 +349,7 @@ remove nodes or revoke URLs owned by the host.
 After closing all viewers/documents sharing the module instance, a host may call
 `releasePptxRenderCaches()` to discard intrinsic-size, chart-picture-sample,
 colour-change and duotone memoisation. This global operation invalidates pending
-cache writes and chart notifications; pending decodes can still return results
+library-managed cache writes and chart notifications; pending decodes can still return results
 to their original caller. Do not call it to close one viewer while another needs
 pending samples. It cannot purge browser-internal decoded-image caches.
 
