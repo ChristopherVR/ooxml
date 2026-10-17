@@ -69,7 +69,9 @@ test('File > Options and Account edit one local profile', async ({ page }) => {
 		'aria-selected',
 		'true',
 	);
-	await expect(dialog.getByLabel('Enable Live Preview')).toBeDisabled();
+	await expect(dialog.getByLabel('Enable Live Preview')).toBeEnabled();
+	await expect(dialog.getByLabel('Enable Live Preview')).toBeChecked();
+	await dialog.getByLabel('Enable Live Preview').uncheck();
 	await dialog.getByLabel('User name').fill('Grace Hopper');
 	await dialog.getByRole('tab', { name: 'Trust Center' }).click();
 	await expect(dialog).toContainText('active content is never run');
@@ -83,6 +85,14 @@ test('File > Options and Account edit one local profile', async ({ page }) => {
 	await account.getByRole('radio', { name: '#c2431f' }).click();
 	await page.reload();
 	await sampleSettled(page);
+	await fileBackstage(page.locator('visio-viewer'), 'options');
+	await expect(
+		page.locator('visio-viewer office-ui-options-dialog').getByLabel('Enable Live Preview'),
+	).not.toBeChecked();
+	await page
+		.locator('visio-viewer office-ui-options-dialog')
+		.getByRole('button', { name: 'OK' })
+		.click();
 	await fileBackstage(page.locator('visio-viewer'), 'account');
 	await expect(
 		page.locator('visio-viewer office-ui-account').getByLabel('Display name'),

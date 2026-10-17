@@ -140,7 +140,8 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 	await bob.getByRole('button', { name: 'Cancel', exact: true }).click();
 
 	// The organizer edits and then cancels; the meeting leaves everyone's calendar.
-	await calendar(ada)
+	// The agenda includes today's meetings on weekends too, when Work week hides them.
+	await agenda(ada)
 		.getByRole('button', { name: /^Design sync/u })
 		.first()
 		.click();
@@ -154,7 +155,7 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 	await form.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(agenda(bob)).toContainText('Design sync v2');
 	ada.once('dialog', (dialog) => void dialog.accept());
-	await calendar(ada)
+	await agenda(ada)
 		.getByRole('button', { name: /^Design sync v2/u })
 		.first()
 		.click();
