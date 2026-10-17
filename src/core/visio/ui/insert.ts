@@ -1,5 +1,6 @@
 import type { VisioDocument, VisioPage, VisioShape } from '../model';
 import type { VisioPictureInsertEdit } from '../edit-metadata-commands';
+import type { VisioChartObjectInsertEdit } from '../edit-chart-object-commands';
 import type { VisioRasterImageInfo } from '../media';
 import { visioNextShapeId } from './shape-id';
 
@@ -32,6 +33,39 @@ export function visioPictureInsertCommand(
 		width: (width * scale) / ratio,
 		height: (height * scale) / ratio,
 		image,
+	};
+}
+
+/** A new chart object's natural size in inches: Excel's default chart area, 640 x 400 pixels. */
+export const VISIO_CHART_OBJECT_SIZE = {
+	width: 640 / VISIO_PICTURE_DPI,
+	height: 400 / VISIO_PICTURE_DPI,
+};
+
+/**
+ * Centre a chart object on the page at its natural size, scaled down (aspect kept) to fit within
+ * 80% of the page. Returns the edit in drawing inches, as the edit API expects.
+ */
+export function visioChartObjectInsertCommand(
+	page: VisioPage,
+	workbook: Uint8Array,
+	preview: Uint8Array | undefined,
+): VisioChartObjectInsertEdit {
+	const ratio = page.drawingToPageScale ?? 1;
+	if (!(ratio > 0) || !Number.isFinite(ratio) || !(page.width > 0) || !(page.height > 0))
+		throw new Error('The page size or drawing scale is unusable for inserting a chart.');
+	const { width, height } = VISIO_CHART_OBJECT_SIZE;
+	const scale = Math.min(1, (page.width * 0.8) / width, (page.height * 0.8) / height);
+	return {
+		type: 'insert-chart-object',
+		pageId: page.id,
+		shapeId: visioNextShapeId(page),
+		x: page.width / 2 / ratio,
+		y: page.height / 2 / ratio,
+		width: (width * scale) / ratio,
+		height: (height * scale) / ratio,
+		workbook,
+		...(preview ? { preview } : {}),
 	};
 }
 
