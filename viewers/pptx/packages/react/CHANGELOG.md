@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.41.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.41.0) - 2026-10-17
+
+### Features
+
+- **chart:** Draw data labels in the shared chart renderer ([32142ef](https://github.com/ChristopherVR/ooxml/commit/32142ef32c392548fdf5f79aa9d7f659356fac70))
+
+### Bug Fixes
+
+- **chart:** Preserve data label inheritance and source formats ([e92e5eb](https://github.com/ChristopherVR/ooxml/commit/e92e5eb80b098f6331fa21a5dc284018d56ec686))
+
+### Documentation
+
+- **chart:** Gap report and harness for the shared chart renderer ([b166877](https://github.com/ChristopherVR/ooxml/commit/b1668770e66e241704dd5ec9a04d2813e522acc4))
+
 ## [4.40.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.40.2) - 2026-10-17
 
 ### Bug Fixes
