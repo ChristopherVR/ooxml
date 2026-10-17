@@ -67,7 +67,10 @@ export function metadataText(value: unknown, singleLine: boolean): string {
 	return value;
 }
 const field = metadataText;
-function target(edit: { pageId: unknown; shapeId: unknown }): { pageId: string; shapeId: string } {
+export function target(edit: { pageId: unknown; shapeId: unknown }): {
+	pageId: string;
+	shapeId: string;
+} {
 	if (
 		typeof edit.pageId !== 'string' ||
 		!edit.pageId ||

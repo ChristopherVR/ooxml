@@ -46,6 +46,8 @@ import { isVisioMetadataEdit } from './edit-metadata-commands';
 import { applyMetadataEdit } from './edit-metadata';
 import { applyShapeAltText } from './edit-alt-text-scope';
 import { editVsdxPicture } from './edit-picture';
+import { editVsdxChartObject } from './edit-chart-object';
+import { isVisioChartObjectEdit } from './edit-chart-object-commands';
 import { isVisioGroupEdit } from './edit-group-commands';
 import { groupVisioShapes, ungroupVisioShape } from './edit-group';
 import { autoSizePageIds, growAutoSizePages } from './edit-page-auto-size';
@@ -265,6 +267,12 @@ async function editVsdxTransaction(
 			fail('EDIT_MIXED_PICTURE_TRANSACTION', 'Picture insertion requires its own transaction.');
 		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
 	}
+	const chartObject = allCommands.find(isVisioChartObjectEdit);
+	if (chartObject) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_CHART_TRANSACTION', 'Chart insertion requires its own transaction.');
+		return editVsdxChartObject(pkg, parts, pages, chartObject, limits, maxOutput, deadline, check);
+	}
 	const theme = allCommands.find((command) => command.type === 'set-page-theme');
 	if (theme) {
 		if (allCommands.length !== 1)
@@ -362,6 +370,7 @@ async function editVsdxTransaction(
 			command.type !== 'paste-shapes' &&
 			command.type !== 'change-shape' &&
 			command.type !== 'insert-picture' &&
+			!isVisioChartObjectEdit(command) &&
 			command.type !== 'set-page-theme' &&
 			!isVisioMetadataEdit(command) &&
 			command.type !== 'set-shape-data' &&
@@ -642,6 +651,7 @@ async function editVsdxTransaction(
 			duplicateChanged = true;
 		} else if (
 			command.type !== 'insert-picture' &&
+			!isVisioChartObjectEdit(command) &&
 			command.type !== 'set-page-theme' &&
 			command.type !== 'create-subprocess' &&
 			!isVisioCommentEdit(command) &&

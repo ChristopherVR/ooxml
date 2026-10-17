@@ -1,11 +1,12 @@
 import { attribute, children } from './sheet';
 
 /**
- * A local embedded bitmap (Type="Foreign" with one Bitmap ForeignData relationship and nothing
- * else foreign). Its placement is entirely ShapeSheet cells, so the same move, resize and delete
- * admission as an ordinary 2D shape applies; the media relationship is left untouched.
+ * A local embedded bitmap, or an embedded chart object (Type="Foreign" with one ForeignData of
+ * type Bitmap or Object, one Rel, and nothing else foreign). Its placement is entirely ShapeSheet
+ * cells, so the same move, resize and delete admission as an ordinary 2D shape applies; the media
+ * or embedding relationship is left untouched.
  */
-export function isLocalBitmapShape(shape: Element): boolean {
+export function isLocalForeignFrameShape(shape: Element): boolean {
 	const data = children(shape, 'ForeignData');
 	return (
 		attribute(shape, 'Type') === 'Foreign' &&
@@ -14,7 +15,7 @@ export function isLocalBitmapShape(shape: Element): boolean {
 		!children(shape, 'Shapes').length &&
 		!children(shape, 'Rel').length &&
 		data.length === 1 &&
-		attribute(data[0], 'ForeignType') === 'Bitmap' &&
+		['Bitmap', 'Object'].includes(attribute(data[0], 'ForeignType') ?? '') &&
 		children(data[0], 'Rel').length === 1 &&
 		!Array.from(data[0]!.childNodes).some(
 			(node) =>

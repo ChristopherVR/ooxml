@@ -1,6 +1,7 @@
 import type { VisioMetafileTreeConverter } from './convert-metafile';
 import { inspectEmbeddedVisioMetafile } from './prepare-metafiles';
 import { readVisioImage, type VisioImageOptions } from './media';
+import { readEmbeddedChartObject } from './prepare-embedded';
 import type { VisioPackage } from './package';
 import type { RawShape, Report } from './sheet';
 
@@ -27,6 +28,14 @@ export async function prepareImages(
 					converter,
 				);
 				if (vector) shape.foreignVector = vector;
+			} else if (shape.foreignData.getAttribute('ForeignType') === 'Object') {
+				const embedded = await readEmbeddedChartObject(
+					pkg,
+					sourcePart,
+					shape.foreignData,
+					localReport,
+				);
+				if (embedded) shape.embeddedObject = embedded;
 			} else {
 				const image = await readVisioImage(
 					pkg,
