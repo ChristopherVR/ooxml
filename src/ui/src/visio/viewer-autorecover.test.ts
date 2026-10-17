@@ -33,6 +33,9 @@ function rig(
 		get sourceGeneration() {
 			return generation;
 		},
+		get documentGeneration() {
+			return generation;
+		},
 		exportVsdx: () => ({ bytes: current, dirty: flags.dirty }),
 		load,
 	} as unknown as ViewerController;
@@ -153,6 +156,31 @@ describe('AutoRecover saving', () => {
 
 describe('AutoRecover offering', () => {
 	const kept = { name: 'Plan.vsdx', savedAt: 5_000, bytes: bytes(9, 9) };
+
+	it('ignores a storage lookup that finishes after another drawing opens', async () => {
+		const { recover, store, offers, newSource } = rig({ dirty: false });
+		let finish!: (entry: typeof kept) => void;
+		store.get = () =>
+			new Promise((resolve) => {
+				finish = resolve;
+			});
+		recover.opened();
+		newSource();
+		finish(kept);
+		await Promise.resolve();
+		expect(offers).toHaveLength(0);
+	});
+
+	it('refuses to restore an offer after the user edits the drawing', async () => {
+		const { recover, store, offers, flags, load } = rig({ dirty: false });
+		await store.put(kept);
+		recover.opened();
+		await vi.waitFor(() => expect(offers).toHaveLength(1));
+		flags.dirty = true;
+		await expect(offers[0]!.restore()).rejects.toThrow('The drawing changed');
+		expect(load).not.toHaveBeenCalled();
+		expect(store.entries.has(kept.name)).toBe(true);
+	});
 
 	it('offers a kept copy when the same file opens, even with the option off', async () => {
 		const { recover, store, offers } = rig({ dirty: false });

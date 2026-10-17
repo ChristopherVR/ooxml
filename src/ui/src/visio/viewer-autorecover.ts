@@ -85,6 +85,7 @@ const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
 export class ViewerAutoRecover {
 	#enabled = false;
 	#timer: unknown;
+	#lookup = 0;
 	constructor(
 		private readonly controller: ViewerController,
 		private readonly fileName: () => string,
@@ -147,13 +148,29 @@ export class ViewerAutoRecover {
 		const store = this.store;
 		if (!store) return;
 		const name = this.#name();
+		const lookup = ++this.#lookup;
+		const source = this.controller.sourceGeneration;
+		const revision = this.controller.documentGeneration;
+		const current = () => {
+			const state = this.controller.state;
+			return (
+				lookup === this.#lookup &&
+				source === this.controller.sourceGeneration &&
+				revision === this.controller.documentGeneration &&
+				name === this.#name() &&
+				!state.loading &&
+				!state.edit.busy &&
+				!state.edit.dirty &&
+				state.edit.sourceAvailable
+			);
+		};
 		let entry: RecoveryEntry | undefined;
 		try {
 			entry = await store.get(name);
 		} catch {
 			return;
 		}
-		if (!entry) return;
+		if (!entry || !current()) return;
 		// A copy identical to what just opened has nothing to give back (it is also what a restore
 		// opens), so it is neither offered nor removed: it stays until a copy is saved.
 		if (sameBytes(entry.bytes, this.controller.exportVsdx().bytes)) return;
@@ -162,6 +179,8 @@ export class ViewerAutoRecover {
 			name: kept.name,
 			savedAt: kept.savedAt,
 			restore: async () => {
+				if (!current())
+					throw new Error('The drawing changed. Reopen the file to recover its copy.');
 				await this.controller.load(kept.bytes);
 			},
 			discard: async () => {
@@ -178,6 +197,7 @@ export class ViewerAutoRecover {
 		return () => doc.removeEventListener('visibilitychange', hidden);
 	}
 	dispose(): void {
+		++this.#lookup;
 		if (this.#timer !== undefined) this.timers.clearInterval(this.#timer);
 		this.#timer = undefined;
 		this.#enabled = false;
