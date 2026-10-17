@@ -57,6 +57,14 @@ export function chartColorPalettePatch(chart: ChartObject, id: number): ChartPat
 		if (!previous) return copy;
 		const previousChoice = chartPaletteSeriesColorChoice(previous, index, chart.series.length);
 		const nextChoice = chartPaletteSeriesColorChoice(next, index, chart.series.length);
+		for (const marker of [copy.marker, ...Object.values(copy.pointMarkers ?? {})]) {
+			const shape = marker?.spPr;
+			if (!shape) continue;
+			for (const paint of [shape, shape.line]) {
+				if (paint?.fill?.kind === 'solid' && sameChartColor(paint.fill.color, previousChoice))
+					paint.fill = { kind: 'solid', color: structuredClone(nextChoice) };
+			}
+		}
 		const fill = recolorGradient(copy.fill, previousChoice, nextChoice);
 		if (fill) copy.fill = fill;
 		if (

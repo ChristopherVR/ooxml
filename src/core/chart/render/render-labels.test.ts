@@ -223,7 +223,7 @@ describe('data labels in the SVG', () => {
 	it('labels a line chart at its points, to the right by default', () => {
 		const svg = render(
 			chart(
-				`<c:lineChart><c:grouping val="standard"/>${series(0, 'S', [5.25, 8.5, 3.5], dLbls(flags(['showVal'])))}<c:axId val="1"/><c:axId val="2"/></c:lineChart>`,
+				`<c:lineChart><c:grouping val="standard"/>${series(0, 'S', [5.25, 8.5, 3.5], dLbls(flags(['showVal']))).replace('<c:val>', '<c:marker><c:symbol val="circle"/></c:marker><c:val>')}<c:axId val="1"/><c:axId val="2"/></c:lineChart>`,
 			),
 		);
 		const circle = /<circle cx="([\d.]+)" cy="([\d.]+)" r="2.5"/u.exec(svg);

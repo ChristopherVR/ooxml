@@ -58,7 +58,17 @@ export function summaryMarkers(
 			...(override.symbol === 'auto' || (!source.marker && override.symbol === undefined)
 				? { symbol: automaticMarkerSymbol(source.index ?? seriesPosition) }
 				: {}),
-			...(marker.spPr || override.spPr ? { spPr: { ...marker.spPr, ...override.spPr } } : {}),
+			...(marker.spPr || override.spPr
+				? {
+						spPr: {
+							...marker.spPr,
+							...override.spPr,
+							...(marker.spPr?.line || override.spPr?.line
+								? { line: { ...marker.spPr?.line, ...override.spPr?.line } }
+								: {}),
+						},
+					}
+				: {}),
 		};
 	}
 	return { marker, ...(Object.keys(pointMarkers).length ? { pointMarkers } : {}) };

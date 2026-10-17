@@ -103,3 +103,20 @@ Status of each port is recorded in `docs/agnostic-core-plan.md` (step 5, "Render
 and `PROVENANCE.md`.
 
 1. **Data labels (landed 2026-10-17).** After the slice the harness measures core drawing labels on 27 of 27 parts that use them (0 of 27 before). Content, number format, `c:dLblPos` placement, per-point deletion and custom text, pie best fit. Still open inside gap 1: callout shapes and leader lines, manual label layout, "value from cells", rich-text runs, per-point fonts, labels on stock, waterfall, histogram and hierarchy charts.
+
+### Axes and markers follow-up (2026-10-17)
+
+The baseline measurements above precede these slices. Native axis metadata now reaches the
+shared renderer through the summary, including the Excel/Visio workbook path. Axis IDs select
+the primary and secondary scales; explicit bounds, log scales, reversed orientation, major/minor
+units, number formats, deleted-axis labels/lines and gridline presence/paint are honored. The
+range and tick implementations are extracted from PowerPoint, which imports the same core code.
+
+PowerPoint's marker geometry also lives in strict core. The shared line, scatter and radar
+painters honor native group defaults and series/point symbol, size, visibility, fill and outline.
+The complete parse-to-SVG path is covered for all three families; the Excel native palette
+round-trip checks also cover live and saved marker recoloring.
+
+These are partial ports of rows 2 and 3: axis titles, display-unit captions, complete tick-mark
+placement, date axes and line styling/smoothing remain. The baseline fixture counts above have
+not been remeasured and are not evidence that those remaining features work.

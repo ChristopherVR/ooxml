@@ -112,7 +112,10 @@ export function applyChartAxes(
 		out.value = bind(
 			value,
 			model.valueAxis,
-			model.series.flatMap((s) => s.values),
+			[
+				...model.series,
+				...(model.extraGroups?.filter((g) => !g.secondary).flatMap((g) => g.series) ?? []),
+			].flatMap((s) => s.values),
 		);
 	if (category)
 		out.category = bind(

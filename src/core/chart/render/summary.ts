@@ -2,6 +2,7 @@
 // cached data and DrawingML paint, plus the legend, title and formatting metadata. Spreadsheet
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
+import type { ChartMarkerSummary } from './chart-view-markers';
 import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import type { DataLabelFlagLevel } from '../data-label-text';
@@ -53,7 +54,7 @@ export interface ChartSummaryDataLabels {
 	points?: Record<number, ChartSummaryLabelLevel>;
 }
 
-export interface ChartSummarySeries {
+export interface ChartSummarySeries extends ChartMarkerSummary {
 	name?: string;
 	/** Formula reference for the series name (`Sheet1!$B$1`). */
 	nameRef?: string;

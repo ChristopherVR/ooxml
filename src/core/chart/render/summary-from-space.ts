@@ -1,6 +1,7 @@
 // Builds the painter's chart summary from the format-neutral chart model (`parseChartSpace`): the
 // first chart group decides the chart type, its series give the cached data, references and
 // colours. Lifted from the spreadsheet chart reader so every format maps a chart part one way.
+import { summaryMarkers } from './chart-view-markers';
 import { chartSourceValues } from '../data-cache';
 import type { ChartGroupKind, ChartSpace } from '../model';
 import type { ChartDataLabels, ChartShapeProperties, ChartSpaceSeries } from '../model-series';
@@ -128,7 +129,10 @@ function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): Chart
 			group.kind === 'bar' ? 'column' : (group.kind as 'line' | 'area' | 'stock');
 		const entry: ChartSummaryGroup = {
 			chartType: type,
-			series: group.series.map((source) => chartSummarySeries(source, type, group.dataLabels)),
+			series: group.series.map((source, index) => ({
+				...chartSummarySeries(source, type, group.dataLabels),
+				...summaryMarkers(source, group, index),
+			})),
 			secondary: valueAxisId(chartSpace, group.axisIds) !== primary,
 		};
 		if (group.grouping && GROUPINGS.has(group.grouping))
@@ -158,9 +162,10 @@ export function chartSummaryFromSpace(
 	const group = chartSpace.plotArea.groups[0];
 	let chartType: ChartSummaryType = group ? GROUP_TYPES[group.kind] : 'column';
 	if (chartType === 'bar' && group?.barDirection !== 'bar') chartType = 'column';
-	const series = (group?.series ?? []).map((source) =>
-		chartSummarySeries(source, chartType, group?.dataLabels),
-	);
+	const series = (group?.series ?? []).map((source, index) => ({
+		...chartSummarySeries(source, chartType, group?.dataLabels),
+		...(group ? summaryMarkers(source, group, index) : {}),
+	}));
 	const summary: ChartSummary = {
 		chartType,
 		series,

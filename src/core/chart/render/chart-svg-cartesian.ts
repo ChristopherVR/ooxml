@@ -1,3 +1,4 @@
+import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
 import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
 import { fit, n, text, textWidth, type Rect } from './chart-svg-util';
@@ -187,6 +188,7 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 		lower: [number, number][];
 		color: string;
 		filter: string;
+		series: ChartViewModel['series'][number];
 	}[] = [];
 	model.series.forEach((s, si) => {
 		const points: [number, number][] = [];
@@ -206,18 +208,19 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 				index: i,
 				x: frame.band(i),
 				y: frame.value(top),
-				radius: area ? 0 : 3,
+				radius: area ? 0 : chartMarkerRadius(s, i, 2.5),
 			});
 			lower.push([frame.band(i), frame.value(below)]);
 		});
 		layers.push({
+			series: s,
 			points,
 			lower,
 			color: s.color,
 			filter: s.shadowFilter ? ` filter="${s.shadowFilter}"` : '',
 		});
 	});
-	for (const { points, lower, color, filter } of area ? [...layers].reverse() : layers) {
+	for (const { points, lower, color, filter, series } of area ? [...layers].reverse() : layers) {
 		if (area) {
 			const poly = [...points, ...[...lower].reverse()]
 				.map(([x, y]) => `${n(x)},${n(y)}`)
@@ -238,9 +241,9 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 			else segment.push(`${n(x)},${n(y)}`);
 		}
 		flush();
-		for (const [x, y] of points)
-			if (!Number.isNaN(x))
-				out.push(`<circle cx="${n(x)}" cy="${n(y)}" r="2.5" fill="${color}"${filter}/>`);
+		points.forEach(([x, y], index) => {
+			if (!Number.isNaN(x)) out.push(chartSeriesMarkerSvg(series, index, x, y, 2.5));
+		});
 	}
 	pointLabels(model, marks, out);
 }

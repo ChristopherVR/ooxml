@@ -36,6 +36,9 @@ describe('Excel combination chart', () => {
 		expect(combo.extraGroups![0]).toMatchObject({ chartType: 'line', secondary: true });
 		const model = chartView(wb, 0, combo, createRefEvaluator(wb));
 		expect(model.extraGroups![0]!.series[0]!.values).toEqual([0.12, 0.2, 0.15, 0.3]);
+		expect(combo.axes?.length).toBeGreaterThanOrEqual(4);
+		expect(model.axes?.value?.source.kind).toBe('val');
+		expect(model.axes?.secondary?.source.position).toBe('r');
 		expect(model.secondaryAxis!.max).toBeLessThanOrEqual(0.4);
 		expect(model.valueAxis!.max).toBeGreaterThanOrEqual(190);
 		const svg = draw(wb, combo);

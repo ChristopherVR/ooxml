@@ -1,5 +1,5 @@
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
-import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
+import { chartAxisRatio, chartAxisLabels, type ChartAxisView } from './chart-view-axes';
 // Scatter and bubble plots: two numeric axes, then one dot per point (a bubble's radius follows its
 // size, scaled as PowerPoint scales it: `../bubble-radius`).
 import { computeBubbleRadius, maxBubbleSize, medianBubbleRadius } from '../bubble-radius';
@@ -50,12 +50,17 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 			s.values.forEach((_, i) => {
 				reach = Math.max(reach, radiusOf(s.sizes?.[i] ?? undefined) ?? 0);
 			});
-	const widen = (s: AxisScale, length: number): AxisScale => {
+	const widen = (s: AxisScale, length: number, axis?: ChartAxisView): AxisScale => {
+		if (axis?.range.logScale) return s;
 		const pad = (reach * (s.max - s.min || 1)) / Math.max(1, length - 2 * reach);
-		return { ...s, min: s.min - pad, max: s.max + pad };
+		return {
+			...s,
+			min: axis?.source.scaling.min === undefined ? s.min - pad : s.min,
+			max: axis?.source.scaling.max === undefined ? s.max + pad : s.max,
+		};
 	};
-	const xView = model.axes?.category ? xs : widen(xs, plot.w);
-	const yView = model.axes?.value ? ys : widen(ys, plot.h);
+	const xView = widen(xs, plot.w, model.axes?.category);
+	const yView = widen(ys, plot.h, model.axes?.value);
 	const px = (v: number): number =>
 		plot.x + chartAxisRatio(v, xView, model.axes?.category) * plot.w;
 	const py = (v: number): number =>

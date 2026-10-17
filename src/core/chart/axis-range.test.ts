@@ -73,7 +73,7 @@ describe('axis-constrained value ranges', () => {
 	});
 
 	it('uses explicit bounds with logarithmic span math', () => {
-		const range = computeValueRangeForAxis([{ name: 'Log', values: [2, 200] }], {
+		const range = computeValueRangeForAxis([{ values: [2, 200] }], {
 			axisType: 'valAx',
 			min: 1,
 			max: 1000,

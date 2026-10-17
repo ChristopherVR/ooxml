@@ -1,3 +1,4 @@
+import type { ChartMarkerSeriesView } from './chart-view-markers';
 import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
@@ -40,7 +41,7 @@ import {
 export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-series';
 export type { WaterfallView } from './chart-view-ex';
 
-export interface ChartSeriesView {
+export interface ChartSeriesView extends ChartMarkerSeriesView {
 	shadow?: DrawingSvgShadow;
 	shadowFilter?: string;
 	gradient?: ChartGradientFill;

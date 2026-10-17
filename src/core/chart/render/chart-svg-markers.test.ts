@@ -5,6 +5,8 @@ import { seriesMarkerViews, summaryMarkers } from './chart-view-markers';
 import { scatter } from './chart-svg-xy';
 import { radarSvg } from './chart-svg-radial';
 import type { ChartSeriesView, ChartViewModel } from './chart-view';
+import { renderChartSpaceSvg } from './render-space';
+import { parseChartSpace } from '../parse-space';
 
 const group = (
 	kind: ChartPlotGroup['kind'],
@@ -24,6 +26,14 @@ const source = (overrides: Partial<ChartSpaceSeries> = {}): ChartSpaceSeries => 
 const color = () => '#123456';
 
 describe('neutral OOXML markers', () => {
+	it.each(['line', 'scatter', 'radar'])(
+		'retains %s markers through the complete shared pipeline',
+		(kind) => {
+			const xml = `<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart><c:plotArea><c:${kind}Chart><c:ser><c:idx val="0"/><c:order val="0"/><c:marker><c:symbol val="square"/><c:size val="12"/></c:marker><c:val><c:numLit><c:ptCount val="2"/><c:pt idx="0"><c:v>2</c:v></c:pt><c:pt idx="1"><c:v>3</c:v></c:pt></c:numLit></c:val></c:ser></c:${kind}Chart></c:plotArea></c:chart></c:chartSpace>`;
+			const svg = renderChartSpaceSvg(parseChartSpace(xml).chartSpace, { width: 480, height: 300 });
+			expect(svg).toContain('width="12" height="12"');
+		},
+	);
 	it('uses the series OOXML index for automatic symbols', () => {
 		expect(summaryMarkers(source({ index: 2, marker: {} }), group('line'), 0).marker?.symbol).toBe(
 			'triangle',
