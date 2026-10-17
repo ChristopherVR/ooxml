@@ -120,6 +120,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	if (book.structureLocked) workbook.structureLocked = true;
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
 	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;
+	if (book.oleSize) workbook.oleSize = book.oleSize;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
 	if (book.iterate) workbook.iterate = book.iterate;
 	if (signatures.hasSignatures)

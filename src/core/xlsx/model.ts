@@ -788,6 +788,11 @@ export interface Workbook {
 	/** Dates count from 1904-01-01 instead of 1900-01-01. */
 	date1904: boolean;
 	properties: WorkbookProperties;
+	/**
+	 * `oleSize ref`: the range shown when the workbook is embedded as an OLE object (in Visio or
+	 * Word). A chart-only object sets it to the chart's cells so only the chart is visible.
+	 */
+	oleSize?: string;
 	/** Recalculate formulas when the file opens (`calcPr fullCalcOnLoad`). */
 	fullCalcOnLoad?: boolean;
 	/** Workbook structure protection (no adding, deleting or renaming sheets). */

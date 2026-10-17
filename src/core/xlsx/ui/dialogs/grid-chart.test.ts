@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
 	GROUPED_CHART_TYPES,
+	chartGridText,
+	gridChartWorkbook,
+	readEmbeddedChart,
 	INSERT_CHART_TYPES,
 	MAX_GRID_COLS,
 	MAX_GRID_ROWS,
@@ -57,5 +60,34 @@ describe('gridChart', () => {
 
 	it('knows which types can be grouped', () => {
 		expect(GROUPED_CHART_TYPES).toEqual(['column', 'bar']);
+	});
+});
+
+describe('embedded chart workbook', () => {
+	const rows = parseChartGrid('Month\tSales\tCost\nJan\t10\t4\nFeb\t20\t8');
+
+	it('writes a workbook whose visible range is only the chart, and reads the chart back', async () => {
+		const bytes = (await gridChartWorkbook(rows, 'line', { title: 'Q1' }))!;
+		expect(bytes[0]).toBe(0x50); // a zip
+		const read = (await readEmbeddedChart(bytes))!;
+		expect(read.chart).toMatchObject({ chartType: 'line', title: 'Q1' });
+		expect(read.rows).toEqual([
+			['Month', 'Sales', 'Cost'],
+			['Jan', 10, 4],
+			['Feb', 20, 8],
+		]);
+		expect(read.view.series.map((s) => s.name)).toEqual(['Sales', 'Cost']);
+		expect(chartGridText(read.rows)).toBe('Month\tSales\tCost\nJan\t10\t4\nFeb\t20\t8');
+	});
+
+	it('records the chart anchor as the OLE visible range', async () => {
+		const bytes = (await gridChartWorkbook(rows, 'column'))!;
+		const { loadXlsx } = await import('../../index');
+		expect((await loadXlsx(bytes)).oleSize).toBe('E1:N20');
+	});
+
+	it('has nothing to write or read without data or a chart', async () => {
+		expect(await gridChartWorkbook([], 'column')).toBeUndefined();
+		expect(await readEmbeddedChart(new Uint8Array([1, 2, 3]))).toBeUndefined();
 	});
 });
