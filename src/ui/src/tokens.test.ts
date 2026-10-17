@@ -28,6 +28,13 @@ function outsideTokens(css: string): string {
 	return text;
 }
 
+/** Set inline by the element that draws with them, so they have no theme default. */
+const PER_ELEMENT = new Set([
+	'--office-switch-knob-travel',
+	'--office-gallery-preview-width',
+	'--office-gallery-preview-height',
+]);
+
 describe('design tokens', () => {
 	it('declares every token on :root in the theme, with the table default', () => {
 		for (const [name, value] of Object.entries(OFFICE_TOKENS))
@@ -52,7 +59,7 @@ describe('design tokens', () => {
 		const unknown = new Set<string>();
 		for (const tag of OFFICE_UI_TAGS)
 			for (const [, name] of shadowCss(tag).matchAll(/var\((--office-[\w-]+)/g))
-				if (!declared.has(name!) && name !== '--office-switch-knob-travel') unknown.add(name!);
+				if (!declared.has(name!) && !PER_ELEMENT.has(name!)) unknown.add(name!);
 		expect([...unknown]).toEqual([]);
 	});
 

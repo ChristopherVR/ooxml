@@ -36,7 +36,7 @@ textarea {
 	font: inherit;
 }
 textarea {
-	font-family: var(--office-font-mono, monospace);
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 	resize: vertical;
 }
 input:focus-visible,
@@ -44,13 +44,13 @@ select:focus-visible,
 textarea:focus-visible,
 button:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
-	outline-offset: 1px;
+	outline-offset: 0;
 }
 .preview {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 200px;
+	aspect-ratio: 360 / 220;
 	border: var(--office-border-width) solid var(--office-border);
 	border-radius: var(--office-radius);
 	background: var(--office-background);
