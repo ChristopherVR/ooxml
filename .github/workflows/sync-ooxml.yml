@@ -135,7 +135,7 @@ jobs:
           if [ "$stage" = push ]; then
             title="Adopting $SUMMARY could not be pushed"
             lead="The checks for $SUMMARY passed, but the push to main was rejected, so nothing landed."
-            hint='The repository rejected the push, usually because `main` requires a status check the default token cannot bypass. Let GitHub Actions push to `main` in the repository's rules (see the header of the reusable workflow in `ooxml`). The next scheduled run retries and closes this issue once the bump lands.'
+            hint='The repository rejected the push, usually because `main` requires a status check the default token cannot bypass. Let GitHub Actions push to `main` in the repository rules (see the header of the reusable workflow in `ooxml`). The next scheduled run retries and closes this issue once the bump lands.'
           else
             title="Adopting $SUMMARY fails verification"
             lead="Bumping to $SUMMARY did not pass the repository checks (the **$stage** step failed), so nothing was pushed."
