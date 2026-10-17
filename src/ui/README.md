@@ -353,6 +353,14 @@ library-managed cache writes and chart notifications; pending decodes can still 
 to their original caller. Do not call it to close one viewer while another needs
 pending samples. It cannot purge browser-internal decoded-image caches.
 
-These caches also retain at most 128 intrinsic sizes/picture samples and 64
-results per pixel effect, with an 8 MiB conservative UTF-16 key/value budget per
-cache. An oversized effect result still renders but is not memoised.
+Intrinsic-size memoisation keeps at most 128 entries; colour-change and duotone
+keep at most 64 each. These FIFO caches each have an 8 MiB conservative UTF-16
+key/value budget. Oversized effect results still render without memoisation.
+
+Bar-face picture sampling uses admission rather than eviction: completed samples
+and pending requests together reserve at most 128 entries and 8 MiB (URL keys and
+sample colours) for one cache epoch. Keeping admitted samples prevents a sample
+notification/repaint from endlessly re-decoding a just-evicted image. If full or
+a source key exceeds the budget, additional async sampling uses the existing
+point/series-colour fallback until `releasePptxRenderCaches()` starts a new epoch.
+Synchronously decoded colours still render even when they cannot be memoised.

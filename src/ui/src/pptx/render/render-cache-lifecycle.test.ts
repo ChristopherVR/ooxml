@@ -36,13 +36,13 @@ describe('render cache bounds', () => {
 		expect(getCachedNativeImageSize('blob:128')).toEqual({ width: 4, height: 2 });
 	});
 
-	it('evicts old sampled picture colours after 128 different sources', async () => {
+	it('keeps the first 128 admitted picture samples until release', async () => {
 		for (let i = 0; i < 129; i++) {
 			ensureBarFacePicturePixelSampled(`blob:${i}`, async () => '#123456');
 			await flush();
-			expect(getCachedBarFacePicturePixelColor(`blob:${i}`)).toBe('#123456');
 		}
-		expect(getCachedBarFacePicturePixelColor('blob:0')).toBeUndefined();
+		expect(getCachedBarFacePicturePixelColor('blob:0')).toBe('#123456');
+		expect(getCachedBarFacePicturePixelColor('blob:128')).toBeUndefined();
 	});
 
 	it.each([
