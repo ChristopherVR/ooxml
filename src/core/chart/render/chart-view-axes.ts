@@ -120,7 +120,12 @@ export function applyChartAxes(
 	if (category)
 		out.category = bind(
 			category,
-			model.xAxis,
+			model.xAxis ?? {
+				min: 0,
+				max: Math.max(1, model.categories.length - 1),
+				majorUnit: 1,
+				ticks: [],
+			},
 			model.series.flatMap((s) => s.xValues ?? []),
 		);
 	if (secondary)

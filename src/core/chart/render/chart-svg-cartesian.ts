@@ -70,7 +70,7 @@ export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]):
 		: (i: number): number => plot.x + bandSize * (index(i) + 0.5);
 	out.push(chartAreaRect(model, 'plotArea', plot));
 	out.push(axisGridlines(model, model.axes?.value, scale.ticks, value, plot, horizontal));
-	if (model.axes?.category?.source.majorGridlines)
+	if (model.axes?.category?.source.majorGridlines || model.axes?.category?.source.minorGridlines)
 		out.push(
 			axisGridlines(
 				model,

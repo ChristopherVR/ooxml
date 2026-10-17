@@ -38,6 +38,32 @@ describe('shared native chart axes', () => {
 		expect(model.axes?.value?.source.id).toBe(20);
 		expect(model.valueAxis?.ticks).toEqual([0, 25, 50, 75, 100]);
 	});
+	it('draws category minor gridlines without requiring major gridlines', () => {
+		const svg = render(
+			xml(
+				'',
+				'<c:minorGridlines><c:spPr><a:ln><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:ln></c:spPr></c:minorGridlines><c:minorUnit val="0.5"/>',
+			),
+		);
+		expect(svg).toContain('stroke="#0000FF"');
+	});
+	it('uses the same logarithmic mapping for radar vertices', () => {
+		const source = xml(
+			'',
+			'',
+			'<c:logBase val="10"/><c:min val="1"/><c:max val="100"/>',
+		).replaceAll('barChart', 'radarChart');
+		const svg = render(source);
+		const points = /<polygon points="([^"]+)" fill="none" stroke="#4472C4"/
+			.exec(svg)?.[1]
+			?.split(' ');
+		expect(points).toHaveLength(3);
+		const coords = points!.map((point) => point.split(',').map(Number));
+		const [cx, cy] = coords[0]!;
+		const distance = (point: number[]) => Math.hypot(point[0]! - cx!, point[1]! - cy!);
+		// 1 is at the center; 10 is halfway to the outer point at 100.
+		expect(distance(coords[1]!) / distance(coords[2]!)).toBeCloseTo(0.5, 3);
+	});
 	it('maps logarithmic powers evenly and reverses the value axis', () => {
 		const model = view(
 			xml(
