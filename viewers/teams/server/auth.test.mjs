@@ -60,7 +60,7 @@ test('a hash is salted, versioned and never equals the password', async () => {
 	const b = await hashPassword('pw');
 	assert.notEqual(a, b);
 	assert.ok(a.startsWith('scrypt$16384$8$1$'));
-	assert.ok(!a.includes('pw$'));
+	assert.ok(!a.split('$').includes('pw'));
 	assert.equal(await verifyPassword('pw', a), true);
 	assert.equal(await verifyPassword('pw', 'scrypt$3$8$1$AA$AA'), false);
 	assert.equal(await verifyPassword('pw', 'scrypt$16384$8$1$AA'), false);
