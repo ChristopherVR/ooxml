@@ -38,6 +38,8 @@ export const visioThemeBridge = themeBridge(':host > *', {
 	'--office-surface': 'var(--_vv-accent-soft)',
 	'--office-border': 'var(--_vv-border)',
 	'--office-accent': 'var(--_vv-accent)',
+	// Hover and selected rows: an opaque accent tint over the page, not the shared cool grey.
+	'--office-selected': 'color-mix(in srgb, var(--_vv-accent) 12%, var(--_vv-surface))',
 	'--office-accent-foreground': 'var(--_vv-accent-ink)',
 	'--office-ring': 'var(--_vv-focus)',
 	'--office-font': "'Segoe UI', Arial, sans-serif",

@@ -17,6 +17,7 @@ import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
 import { createTitleBar, renderTitleBar } from './title-bar';
 import { localizeRibbon } from './ribbon-localize';
+import { applyScreenTips, restoreScreenTips, type ScreenTipStyle } from './viewer-screen-tips';
 import { wireRibbonOverflow } from './ribbon-overflow';
 import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
@@ -98,6 +99,7 @@ export class VisioViewerElement extends BaseElement {
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
 	#disposed = false;
+	#screenTips: ScreenTipStyle = 'descriptions';
 	#suspended = false;
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
@@ -188,14 +190,23 @@ export class VisioViewerElement extends BaseElement {
 		});
 		const profileChanged = (): void =>
 			renderTitleBar(this.#titleBar, this.controller.state, this.#fileName, this.#profile.profile);
-		this.#profile = new ViewerProfile(this.#root, profileChanged, {
-			get: () => (this.#dark() ? 'dark' : this.statusBar),
-			set: (theme) => {
-				if (theme !== 'dark') this.statusBar = theme;
-				if ((theme === 'dark') !== this.#dark())
-					this.#requestScheme(theme === 'dark' ? 'dark' : 'light');
+		this.#profile = new ViewerProfile(
+			this.#root,
+			profileChanged,
+			{
+				get: () => (this.#dark() ? 'dark' : this.statusBar),
+				set: (theme) => {
+					if (theme !== 'dark') this.statusBar = theme;
+					if ((theme === 'dark') !== this.#dark())
+						this.#requestScheme(theme === 'dark' ? 'dark' : 'light');
+				},
 			},
-		});
+			(behaviour) => {
+				this.#screenTips = behaviour.screenTips;
+				applyScreenTips(this.#toolbar, this.#screenTips);
+				this.controller.undoLevels = behaviour.undoLevels;
+			},
+		);
 		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
 			announce: (message) => {
@@ -555,6 +566,8 @@ export class VisioViewerElement extends BaseElement {
 	/** The ribbon speaks the `locale` attribute, else `lang`, else the page's, else the browser's. */
 	#localizeRibbon(): void {
 		if (this.#disposed || !this.#overflow) return;
+		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
+		restoreScreenTips(this.#toolbar);
 		localizeRibbon(
 			this.#toolbar,
 			this.getAttribute('locale') ||
@@ -562,6 +575,7 @@ export class VisioViewerElement extends BaseElement {
 				this.ownerDocument.documentElement.lang ||
 				navigator.language,
 		);
+		applyScreenTips(this.#toolbar, this.#screenTips);
 		this.#overflow.refit();
 	}
 	connectedCallback(): void {

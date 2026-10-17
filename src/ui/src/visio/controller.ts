@@ -139,6 +139,7 @@ export class ViewerController {
 	#sourceGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
 	#history: DocumentHistory | null = null;
+	#undoLevels: number | undefined;
 	#selectionHistory = new WeakMap<SourceSnapshot, SelectionHistory>();
 	#selectionIntent = 0;
 	#viewIntent = 0;
@@ -434,7 +435,10 @@ export class ViewerController {
 			if (this.#destroyed || id !== this.#loadId) return;
 			assertViewableDocument(document);
 			// Retain original binary source privately, including preview-only VSD.
-			history = new DocumentHistory(owned);
+			history = new DocumentHistory(
+				owned,
+				this.#undoLevels === undefined ? undefined : this.#undoLevels + 1,
+			);
 			visible = documentVisibility(document);
 		} catch (cause) {
 			if (this.#destroyed || id !== this.#loadId) return;
@@ -782,6 +786,16 @@ export class ViewerController {
 		} catch {
 			return undefined;
 		}
+	}
+	/** Number of undo steps kept (File > Options > Advanced); applies to the open drawing at once. */
+	get undoLevels(): number | undefined {
+		return this.#undoLevels;
+	}
+	set undoLevels(levels: number | undefined) {
+		this.#undoLevels = levels;
+		if (!this.#history || levels === undefined) return;
+		this.#history.maxEntries = levels + 1;
+		this.#change({ edit: this.#sourceEditState() });
 	}
 	async undo(): Promise<void> {
 		return this.#mutate('undo');

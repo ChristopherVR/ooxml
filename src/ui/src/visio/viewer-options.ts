@@ -8,7 +8,8 @@ import {
 	type OfficeProfile,
 	type OfficeProfileChangeEvent,
 } from '../controls';
-import { VISIO_OPTION_CATEGORIES } from './viewer-options-categories';
+import { VISIO_OPTION_CATEGORIES, MAX_UNDO_LEVELS } from './viewer-options-categories';
+import { isScreenTipStyle, type ScreenTipStyle } from './viewer-screen-tips';
 
 export { VISIO_OPTION_CATEGORIES };
 
@@ -48,13 +49,55 @@ export type OfficeThemeChoice = StatusBarTheme | 'dark';
 const isOfficeThemeChoice = (value: unknown): value is OfficeThemeChoice =>
 	value === 'dark' || isStatusBarTheme(value);
 
-function profileValues(profile: OfficeProfile, officeTheme: OfficeThemeChoice): OfficeOptionValues {
+/** The Options that change how the viewer behaves, remembered on this device. */
+export interface VisioBehaviour {
+	screenTips: ScreenTipStyle;
+	undoLevels: number;
+}
+export const DEFAULT_BEHAVIOUR: VisioBehaviour = { screenTips: 'descriptions', undoLevels: 20 };
+const BEHAVIOUR_KEY = 'ooxml-visio-options';
+const clampUndo = (value: unknown): number => {
+	const levels = Math.round(Number(value));
+	return Number.isFinite(levels)
+		? Math.min(MAX_UNDO_LEVELS, Math.max(1, levels))
+		: DEFAULT_BEHAVIOUR.undoLevels;
+};
+/** The behaviour Options saved on this device (storage may be unavailable or hold junk). */
+export function readBehaviour(): VisioBehaviour {
+	try {
+		const stored = JSON.parse(globalThis.localStorage?.getItem(BEHAVIOUR_KEY) ?? '{}') as Record<
+			string,
+			unknown
+		>;
+		return {
+			screenTips: isScreenTipStyle(stored.screenTips)
+				? stored.screenTips
+				: DEFAULT_BEHAVIOUR.screenTips,
+			undoLevels: clampUndo(stored.undoLevels ?? DEFAULT_BEHAVIOUR.undoLevels),
+		};
+	} catch {
+		return { ...DEFAULT_BEHAVIOUR };
+	}
+}
+function writeBehaviour(behaviour: VisioBehaviour): void {
+	try {
+		globalThis.localStorage?.setItem(BEHAVIOUR_KEY, JSON.stringify(behaviour));
+	} catch {
+		// Kept for this session only.
+	}
+}
+
+function profileValues(
+	profile: OfficeProfile,
+	officeTheme: OfficeThemeChoice,
+	behaviour: VisioBehaviour,
+): OfficeOptionValues {
 	return {
 		officeTheme,
 		miniToolbar: false,
 		livePreview: false,
-		screenTips: 'descriptions',
-		undoLevels: 20,
+		screenTips: behaviour.screenTips,
+		undoLevels: behaviour.undoLevels,
 		autoSizeText: false,
 		userName: profile.displayName,
 		userInitials: profile.initial ?? '',
@@ -67,7 +110,12 @@ export function createOptionsDialog(doc: Document): HTMLElement {
 	dialog.setAttribute('heading', 'Visio Options');
 	dialog.categories = VISIO_OPTION_CATEGORIES;
 	// Reset all options: no user name or initials, and the neutral status bar.
-	dialog.defaults = { userName: '', userInitials: '', officeTheme: 'neutral' };
+	dialog.defaults = {
+		userName: '',
+		userInitials: '',
+		officeTheme: 'neutral',
+		...DEFAULT_BEHAVIOUR,
+	};
 	return dialog;
 }
 
@@ -77,6 +125,7 @@ export function createOptionsDialog(doc: Document): HTMLElement {
  */
 export class ViewerProfile {
 	#profile: OfficeProfile = readOfficeProfile();
+	#behaviour: VisioBehaviour = readBehaviour();
 	readonly #dialog: OptionsDialog;
 	readonly #account: Account | null;
 	constructor(
@@ -87,17 +136,20 @@ export class ViewerProfile {
 			get: () => 'neutral',
 			set: () => {},
 		},
+		/** Applies the behaviour Options (ScreenTip style, undo depth), now and after each change. */
+		private readonly onBehaviour: (behaviour: VisioBehaviour) => void = () => {},
 	) {
 		this.#dialog = root.querySelector<OptionsDialog>('office-ui-options-dialog')!;
 		this.#account = root.querySelector<Account>('office-ui-account');
 		this.#sync();
+		this.onBehaviour({ ...this.#behaviour });
 	}
 	get profile(): OfficeProfile {
 		return { ...this.#profile };
 	}
 	/** Open Visio Options, on General as Visio does. */
 	showOptions(category = 'general'): void {
-		this.#dialog.values = profileValues(this.#profile, this.theme.get());
+		this.#dialog.values = profileValues(this.#profile, this.theme.get(), this.#behaviour);
 		this.#dialog.category = category;
 		this.#dialog.show();
 	}
@@ -139,6 +191,6 @@ export class ViewerProfile {
 	}
 	#sync(): void {
 		if (this.#account) this.#account.profile = this.#profile;
-		this.#dialog.values = profileValues(this.#profile, this.theme.get());
+		this.#dialog.values = profileValues(this.#profile, this.theme.get(), this.#behaviour);
 	}
 }

@@ -29,6 +29,12 @@ export const EMPTY_EDIT_STATE: ViewerEditState = Object.freeze({
 	diagnostics: Object.freeze([]),
 });
 export const EDIT_HISTORY_LIMITS = Object.freeze({ maxBytes: 96 * 1024 * 1024, maxEntries: 20 });
+/** A requested undo depth as a snapshot count: whole, at least 2 (one undo), at most the cap. */
+export const clampHistoryEntries = (entries: number): number =>
+	Math.min(
+		EDIT_HISTORY_LIMITS.maxEntries,
+		Math.max(2, Number.isFinite(entries) ? Math.round(entries) : EDIT_HISTORY_LIMITS.maxEntries),
+	);
 export interface SourceSnapshot {
 	readonly bytes: Uint8Array;
 	readonly diagnostics: readonly EditDiagnostic[];
@@ -39,7 +45,9 @@ export class DocumentHistory {
 	#entries: SourceSnapshot[];
 	#index = 0;
 	#truncated = false;
-	constructor(bytes: Uint8Array) {
+	#maxEntries: number = EDIT_HISTORY_LIMITS.maxEntries;
+	constructor(bytes: Uint8Array, maxEntries?: number) {
+		if (maxEntries !== undefined) this.#maxEntries = clampHistoryEntries(maxEntries);
 		this.original = { bytes: Uint8Array.from(bytes), diagnostics: Object.freeze([]) };
 		this.#entries = [this.original];
 	}
@@ -73,9 +81,27 @@ export class DocumentHistory {
 		this.#entries = this.#entries.slice(0, this.#index + 1);
 		this.#entries.push(snapshot);
 		this.#index++;
+		this.#trim();
+	}
+	/** Keep at most `entries` snapshots (the original plus its edits), dropping the oldest first. */
+	set maxEntries(entries: number) {
+		this.#maxEntries = clampHistoryEntries(entries);
+		// Lowering the depth while undone drops redo steps from the far end before any undo step.
+		while (this.#entries.length > this.#maxEntries) {
+			if (this.#index > 0) {
+				this.#entries.shift();
+				this.#index--;
+				this.#truncated = true;
+			} else this.#entries.pop();
+		}
+	}
+	get maxEntries(): number {
+		return this.#maxEntries;
+	}
+	#trim(): void {
 		const retained = () => new Set([this.original, ...this.#entries]);
 		while (
-			this.#entries.length > EDIT_HISTORY_LIMITS.maxEntries ||
+			this.#entries.length > this.#maxEntries ||
 			[...retained()].reduce((sum, entry) => sum + entry.bytes.byteLength, 0) >
 				EDIT_HISTORY_LIMITS.maxBytes
 		) {

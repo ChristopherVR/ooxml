@@ -7,7 +7,32 @@ import {
 } from '../controls';
 
 const visio: OptionsContext = { product: 'Visio', t: (text) => text };
+/** Undo depth is bounded by the retained drawing snapshots (see EDIT_HISTORY_LIMITS). */
+export const MAX_UNDO_LEVELS = 19;
 const disabled = (reason: string) => ({ disabled: `Not available yet. ${reason}` });
+
+/** Office's User Interface options; ScreenTip style is honoured, the rest wait for their feature. */
+function visioUserInterface() {
+	const section = userInterfaceSection(visio);
+	return {
+		...section,
+		controls: section.controls.map((control) =>
+			control.key === 'screenTips'
+				? {
+						kind: 'select' as const,
+						key: 'screenTips',
+						label: control.label,
+						info: 'Applies to the ribbon. Commands that are not available always say why.',
+						choices: [
+							{ value: 'descriptions', label: 'Show ScreenTips with shortcut keys' },
+							{ value: 'plain', label: "Don't show shortcut keys in ScreenTips" },
+							{ value: 'off', label: "Don't show ScreenTips" },
+						],
+					}
+				: control,
+		),
+	};
+}
 
 /**
  * Visio's File > Options categories, in Visio's order, built from the shared Office categories
@@ -67,8 +92,8 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 						key: 'undoLevels',
 						label: 'Number of undo levels',
 						min: 1,
-						max: 99,
-						...disabled('The history depth is fixed.'),
+						max: MAX_UNDO_LEVELS,
+						info: 'Each step keeps a copy of the drawing, so very large drawings may keep fewer.',
 					},
 					{
 						kind: 'toggle',
