@@ -35,7 +35,9 @@ export interface EditContext {
 }
 
 export function sheetAt(workbook: Workbook, index: number): Worksheet {
-	const sheet = Number.isInteger(index) ? workbook.sheets[index] : undefined;
+	// `at` (not `[index]`) so no key can name a prototype property; it also takes negative
+	// indexes from the end, which a sheet index never means, so those are refused first.
+	const sheet = Number.isInteger(index) && index >= 0 ? workbook.sheets.at(index) : undefined;
 	if (!sheet) throw new RangeError(`No sheet at index ${index}`);
 	return sheet;
 }
