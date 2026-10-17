@@ -513,6 +513,12 @@ export class ViewerCommands {
 			);
 	}
 	async #edit(action: () => Promise<void>, success?: string): Promise<void> {
+		// A preview only asks the controller for a picture of the result: no announcement, no
+		// focus change, and a refusal is not an error the user caused.
+		if (this.host.controller.isPreviewing) {
+			await action().catch(() => {});
+			return;
+		}
 		const request = ++this.#pending;
 		const { root, viewport } = this.host;
 		const canvasFocused = viewport.contains(root.activeElement);

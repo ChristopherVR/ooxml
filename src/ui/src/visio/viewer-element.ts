@@ -32,6 +32,7 @@ import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
+import { ViewerLivePreview } from './viewer-live-preview';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
 import {
@@ -103,6 +104,9 @@ export class VisioViewerElement extends BaseElement {
 	#disposed = false;
 	#behaviour: VisioBehaviour = DEFAULT_BEHAVIOUR;
 	#mini: ViewerMiniToolbar;
+	#livePreview: ViewerLivePreview;
+	/** A drawing shown in place of the real one while a gallery tile is previewed. */
+	#preview: { document: VisioDocument; base: VisioDocument | null } | undefined;
 	#suspended = false;
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
@@ -138,6 +142,19 @@ export class VisioViewerElement extends BaseElement {
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
 		this.#mini = new ViewerMiniToolbar(this.#root, this.#toolbar);
+		this.#livePreview = new ViewerLivePreview(
+			this.#root,
+			this.controller,
+			(document) => {
+				this.#preview = { document, base: this.controller.state.document };
+				this.#render(this.controller.state);
+			},
+			() => {
+				if (!this.#preview) return;
+				this.#preview = undefined;
+				this.#render(this.controller.state);
+			},
+		);
 		this.#edit = new ViewerInlineText(this.#viewport, this.controller, (message) => {
 			this.#announcement = message;
 			this.#status.textContent = message;
@@ -581,6 +598,8 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit.spellcheck = behaviour.checkSpelling;
 		this.#edit.autoSize = behaviour.autoSizeText;
 		this.#mini.enabled = behaviour.miniToolbar;
+		this.#livePreview.enabled = behaviour.livePreview;
+		if (!behaviour.livePreview) this.#livePreview.stop();
 		const ribbon = this.#toolbar as unknown as HTMLElement & {
 			selected: string;
 			setTabHidden(tab: string, reason: string, hidden: boolean): void;
@@ -653,6 +672,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeResize = this.#resizeHandles.wire();
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMini = this.#mini.wire(this.#viewport);
+		const disposePreview = this.#livePreview.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
 			this.#mini.showAt(x, y),
 		);
@@ -715,6 +735,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeBackstage();
 			disposeMenus();
 			disposeMini();
+			disposePreview();
 			disposeTellMe();
 			disposeGalleries();
 			keyTips.dispose();
@@ -740,7 +761,11 @@ export class VisioViewerElement extends BaseElement {
 	#render(state: ViewerState): void {
 		if (this.#suspended) return;
 		const page = state.document?.pages[state.pageIndex];
-		const changed = this.#canvas.render(state);
+		// A preview belongs to the drawing it was made from; any real change ends it.
+		if (this.#preview && this.#preview.base !== state.document) this.#preview = undefined;
+		const changed = this.#canvas.render(
+			this.#preview ? { ...state, document: this.#preview.document } : state,
+		);
 		const previous = this.#handleState;
 		this.#handleState = state;
 		if (
