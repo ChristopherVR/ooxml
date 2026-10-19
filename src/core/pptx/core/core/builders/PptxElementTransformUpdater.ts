@@ -5,6 +5,7 @@ import { xmlChild, xmlHasChild } from '../../utils/xml-access';
 import { resolveGroupChildBoxEmu } from '../runtime/group-tight-rewrap';
 import type { GroupChildSpaceOwner } from '../runtime/group-xfrm-preservation';
 import { materializeInheritedShapeTransform } from './inherited-shape-transform';
+import { validateElementGeometry } from '../runtime/save-geometry-validation';
 
 export interface IPptxElementTransformUpdater {
 	applyTransform(
@@ -31,6 +32,7 @@ export class PptxElementTransformUpdater implements IPptxElementTransformUpdater
 		if (!transform) {
 			return;
 		}
+		validateElementGeometry(element, 'Transform writer', emuPerPx);
 
 		if (!transform['a:off']) {
 			transform['a:off'] = {};
