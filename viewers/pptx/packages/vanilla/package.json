@@ -101,12 +101,12 @@
 		"pack": "bun run build && bun pm pack"
 	},
 	"dependencies": {
-		"dompurify": "^3.4.16",
+		"dompurify": "^3.4.17",
 		"fast-xml-parser": "^5.11.2",
 		"html2canvas-pro": "^2.5.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"lucide": "^1.54.0",
+		"lucide": "^1.57.0",
 		"ooxml-core": "^1.19.0",
 		"ooxml-ui": "^1.18.1",
 		"opentype.js": "^2.0.0"

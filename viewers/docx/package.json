@@ -29,11 +29,11 @@
 		"@angular/platform-browser": "^22.2.2",
 		"@xmldom/xmldom": "^0.9.12",
 		"jszip": "^3.10.2",
-		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1",
 		"rxjs": "^7.8.2",
 		"svelte": "^5.57.2",
-		"vue": "^3.5.43"
+		"vue": "^3.5.44"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.64.0",

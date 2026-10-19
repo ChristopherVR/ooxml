@@ -10,9 +10,9 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.67",
-		"ai": "^7.0.137",
-		"emf-converter": "4.18.1",
+		"@ai-sdk/openai-compatible": "^3.0.70",
+		"ai": "^7.0.142",
+		"emf-converter": "4.20.3",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"pptx-vanilla-viewer": "workspace:*",
