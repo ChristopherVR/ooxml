@@ -6,7 +6,7 @@
 	"type": "module",
 	"devDependencies": {
 		"@playwright/test": "^1.64.0",
-		"@types/node": "^26.6.4",
+		"@types/node": "^26.6.5",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"pptx-viewer-core": "workspace:*",
