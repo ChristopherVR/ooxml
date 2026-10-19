@@ -7,6 +7,7 @@
  * @module sdk/SlideBuilder
  */
 
+import type { PptxHandlerCore } from '../../PptxHandlerCore';
 import type { PptxChartType } from '../../types/chart';
 import type { PptxElement } from '../../types/elements';
 import type { PptxSlide } from '../../types/presentation';
@@ -24,6 +25,8 @@ import {
 import type {
 	TextOptions,
 	TextSegmentInput,
+	TextPlaceholderType,
+	PlaceholderOptions,
 	ShapeOptions,
 	ImageOptions,
 	TableInput,
@@ -58,8 +61,14 @@ export class SlideBuilder {
 	 * @param slideNumber - 1-based slide number.
 	 * @param layoutPath - Optional layout archive path.
 	 * @param layoutName - Optional layout display name.
+	 * @param handler - Loaded deck context for placeholder geometry and text styles.
 	 */
-	constructor(slideNumber: number, layoutPath?: string, layoutName?: string) {
+	constructor(
+		slideNumber: number,
+		layoutPath?: string,
+		layoutName?: string,
+		private readonly handler?: PptxHandlerCore,
+	) {
 		this.slide = {
 			id: `slide${slideNumber}`,
 			rId: `rId${slideNumber + 1}`,
@@ -73,6 +82,50 @@ export class SlideBuilder {
 	/** Add a text box to the slide. */
 	addText(text: string | TextSegmentInput[], options?: TextOptions): this {
 		this.slide.elements.push(createTextElement(text, options));
+		return this;
+	}
+
+	/**
+	 * Fill a layout placeholder, inheriting its frame and text styles.
+	 *
+	 * Unlike addText, this writes a real p:ph binding, not a free text box.
+	 * Use idx to select repeated slots (for example, Two Content's 1 and 2).
+	 * Explicit frame fields override the layout; all other fields inherit.
+	 * A standalone builder requires the fourth constructor argument (a loaded
+	 * handler), even with an explicit frame, so text styles resolve consistently.
+	 * Missing slots without a complete frame throw instead of creating a text box.
+	 * Master frames requiring compatible-role fallback are materialized locally
+	 * for new content only, keeping existing-deck loading unchanged.
+	 *
+	 * @example
+	 * ```ts
+	 * createSlide('Title Slide')
+	 *   .addPlaceholder('ctrTitle', 'Quarterly review')
+	 *   .addPlaceholder('subTitle', 'October 2026');
+	 * createSlide('Two Content').addPlaceholder('body', 'Right column', { idx: 2 });
+	 * ```
+	 */
+	addPlaceholder(
+		type: TextPlaceholderType,
+		text: string | TextSegmentInput[],
+		options: PlaceholderOptions = {},
+	): this {
+		const input = createTextElement(text);
+		const context = `Slide ${this.slide.slideNumber} (${this.slide.id}), placeholder ${type} idx=${options.idx ?? 'auto'}, layout ${this.slide.layoutName} (${this.slide.layoutPath})`;
+		try {
+			if (!this.handler) {
+				throw new Error(
+					'addPlaceholder requires a loaded handler as the fourth SlideBuilder constructor argument',
+				);
+			}
+			this.slide.elements.push(
+				this.handler.createPlaceholderElement(this.slide.layoutPath!, input, type, options),
+			);
+		} catch (error) {
+			throw new Error(`${context}: ${error instanceof Error ? error.message : String(error)}`, {
+				cause: error,
+			});
+		}
 		return this;
 	}
 

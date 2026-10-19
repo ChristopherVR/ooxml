@@ -13,7 +13,12 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 import type { ShapeTextParsingContext } from './PptxHandlerRuntimeTypes';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	protected parseShape(shape: XmlObject, id: string, slidePath?: string): PptxElement | null {
+	protected parseShape(
+		shape: XmlObject,
+		id: string,
+		slidePath?: string,
+		layoutPath?: string,
+	): PptxElement | null {
 		try {
 			const spPr = shape['p:spPr'] as XmlObject | undefined;
 			const slideRelationshipMap = slidePath ? this.slideRelsMap.get(slidePath) : undefined;
@@ -21,8 +26,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				(shape?.['p:nvSpPr'] as XmlObject | undefined)?.['p:nvPr'] as XmlObject | undefined,
 			);
 			const inheritedPlaceholder =
-				slidePath && placeholderInfo
-					? this.findPlaceholderContext(slidePath, placeholderInfo)
+				(slidePath || layoutPath) && placeholderInfo
+					? this.findPlaceholderContext(slidePath ?? '', placeholderInfo, layoutPath)
 					: undefined;
 			const inheritedSpPr = (inheritedPlaceholder?.shape?.['p:spPr'] ||
 				inheritedPlaceholder?.picture?.['p:spPr']) as XmlObject | undefined;
@@ -210,8 +215,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			// Placeholder defaults
 			const phDefaults =
-				slidePath && placeholderInfo
-					? this.lookupPlaceholderDefaults(slidePath, placeholderInfo)
+				(slidePath || layoutPath) && placeholderInfo
+					? this.lookupPlaceholderDefaults(slidePath ?? '', placeholderInfo, layoutPath)
 					: undefined;
 			if (phDefaults) {
 				this.applyPlaceholderBodyDefaults(textStyle, phDefaults);

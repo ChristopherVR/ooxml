@@ -97,13 +97,35 @@ data.slides.push(slide);
 
 ### `SlideBuilder` 方法 {#slidebuilder-methods}
 
-| 分组           | 方法                                                                                                                                                                                                                                                                                                                        |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **添加元素**   | `addText(text, options)`、`addShape(preset, options)`、`addImage(src, options)`、`addTable(data, options?)`、`addChart(type, data, options?)`、`addConnector(options)`、`addMedia(kind, src, options)`、`addGroup(children, options)`、`addFreeform(svgPath, options)`、`addElement(element)`、`addBuilderElement(builder)` |
-| **幻灯片属性** | `setBackground(fill)`、`setTransition(transition)`、`addAnimation(elementId, options)`、`setNotes(text)`、`setHidden(bool)`、`setSection(name)`、`setName(name)`                                                                                                                                                            |
-| **查询与完成** | `getElements()`、`getLastElement()`、`elementCount`、`removeElement(id)`、`build()`                                                                                                                                                                                                                                         |
+| 分组           | 方法                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **添加元素**   | `addText(text, options)`、`addPlaceholder(type, text, options?)`、`addShape(preset, options)`、`addImage(src, options)`、`addTable(data, options?)`、`addChart(type, data, options?)`、`addConnector(options)`、`addMedia(kind, src, options)`、`addGroup(children, options)`、`addFreeform(svgPath, options)`、`addElement(element)`、`addBuilderElement(builder)` |
+| **幻灯片属性** | `setBackground(fill)`、`setTransition(transition)`、`addAnimation(elementId, options)`、`setNotes(text)`、`setHidden(bool)`、`setSection(name)`、`setName(name)`                                                                                                                                                                                                    |
+| **查询与完成** | `getElements()`、`getLastElement()`、`elementCount`、`removeElement(id)`、`build()`                                                                                                                                                                                                                                                                                 |
 
 `add*` 选项中的位置以**像素**为单位（内部转换为 EMU）。`addText` 选项包括 `fontSize`、`fontFamily`、`bold`、`italic`、`underline`、`color`、`x`、`y`、`width`、`height` 等。
+
+### 填充版式占位符 {#filling-layout-placeholders}
+
+内容需要继承版式的位置、大小和文本样式时，使用 `addPlaceholder`，而不是 `addText`：
+
+```ts
+const title = createSlide('Title Slide')
+	.addPlaceholder('ctrTitle', 'Q4 2026 Results')
+	.addPlaceholder('subTitle', 'Revenue and priorities')
+	.build();
+const columns = createSlide('Two Content')
+	.addPlaceholder('body', 'Left column', { idx: 1 })
+	.addPlaceholder('body', [{ text: 'Right column', style: { bold: true } }], { idx: 2 })
+	.build();
+data.slides.push(title, columns);
+```
+
+`TextPlaceholderType` 支持 `title`、`ctrTitle`、`subTitle`、`body`、`obj`、`dt`、`ftr`、`hdr` 和 `sldNum`。兼容的内容占位符也可以匹配，例如 `body` 可以填充版式中的 `obj`。保存时使用实际匹配槽位的类型和索引。重复槽位可通过 `idx` 指定；省略时选择最匹配的兼容槽位。
+
+可选的 `x`、`y`、`width` 和 `height` 以像素为单位覆盖位置和大小。不覆盖时，保存的形状不会写入本地变换或默认文本格式，因此仍可继承版式和母版。显式富文本格式保留为本地设置。如果版式槽位需要现有加载器无法解析的兼容角色母版位置回退，则只为新建占位符写入显式位置，以便重新加载后位置保持一致。已有文件的加载和版式切换行为不变。无法解析位置时会抛出包含幻灯片、类型、索引和版式的错误，除非完整提供四个位置字段。
+
+`PptxHandler.create`、`createBlank` 和 `Presentation` 返回的构建器自动携带演示文稿上下文。独立构建器需要已加载的处理器：`new SlideBuilder(number, layoutPath, layoutName, handler)`。即使完整指定位置，也需要该上下文来正确解析文本样式继承。
 
 ## 元素构建器 {#element-builders}
 
