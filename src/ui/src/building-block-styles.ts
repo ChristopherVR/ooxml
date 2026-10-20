@@ -73,7 +73,9 @@ ${(['docx', 'xlsx', 'visio', 'pptx'] as const).map(productAliases).join('\n')}
 :where([data-office-block] button, [data-office-block] input, [data-office-block] select,
   button[data-office-block], input[data-office-block], select[data-office-block]) {
   box-sizing: border-box;
-  font: inherit;
+  font-family: var(--_office-block-font);
+  font-size: ${value('--office-font-size')};
+  line-height: ${value('--office-line-height')};
   color: var(--_office-block-foreground);
   background: var(--_office-block-background);
   border: ${value('--office-border-width')} solid var(--_office-block-border);
