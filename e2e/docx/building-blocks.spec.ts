@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openSample } from './helpers';
-import type { DocxEditorElement } from '../../src/ui/src/docx/component';
+type DocxEditorElement = HTMLElementTagNameMap['docx-editor'];
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: host controls edit a standalone Word surface`, async ({ page }) => {

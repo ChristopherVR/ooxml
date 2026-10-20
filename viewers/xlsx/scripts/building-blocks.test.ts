@@ -41,6 +41,10 @@ it('composes a surface in StrictMode and keeps lifecycle, callbacks and permissi
 		await act(async () => {
 			expect(await retained.onItalic()).toBe(false);
 		});
+		await act(async () => {
+			await expect(handle.current!.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow();
+		});
+		expect(blocks.error).not.toBeNull();
 		const bytes = await saveXlsx(model);
 		await act(async () => {
 			await handle.current!.load(bytes);
@@ -53,4 +57,34 @@ it('composes a surface in StrictMode and keeps lifecycle, callbacks and permissi
 	}
 	expect(handle.current).toBeNull();
 	expect(host.children).toHaveLength(0);
+});
+
+it('reloads bytes into a replaced canvas without creating a second engine', async () => {
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const handle = createRef<EditorHandle>();
+	const model = createWorkbook({ sheets: ['Remounted content'] });
+
+	const bytes = await saveXlsx(model);
+	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
+	function Host(props: { canvasKey: number }) {
+		blocks = useViewerBuildingBlocks({ bytes, handle });
+		return createElement(SpreadsheetCanvas, { ...blocks.canvasProps, key: props.canvasKey });
+	}
+	try {
+		for (const canvasKey of [1, 2]) {
+			await act(async () => root.render(createElement(Host, { canvasKey })));
+			await act(async () => {
+				await vi.waitFor(() =>
+					expect(JSON.stringify(handle.current!.element.workbook)).toContain('Remounted content'),
+				);
+			});
+			expect(host.querySelectorAll('xlsx-editor')).toHaveLength(1);
+			expect(blocks.loading).toBe(false);
+		}
+	} finally {
+		await act(async () => root.unmount());
+	}
 });

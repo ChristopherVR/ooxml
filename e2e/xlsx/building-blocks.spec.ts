@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openSample, FRAMEWORKS } from './helpers';
-import type { XlsxEditorElement } from '../../src/ui/src/xlsx/component';
+type XlsxEditorElement = HTMLElementTagNameMap['xlsx-editor'];
 
 for (const framework of FRAMEWORKS) {
 	test(`${framework}: host controls edit and save a standalone spreadsheet grid`, async ({

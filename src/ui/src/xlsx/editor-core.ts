@@ -197,6 +197,7 @@ export class EditorCore {
 
 	/** Replaces the workbook (load, new, template, property), with a fresh edit session. */
 	setWorkbook(workbook: Workbook | undefined): void {
+		this.loading = false;
 		// The room is bound to the old edit session: leave it, and rejoin below only when the host
 		// asked for sharing declaratively (the `collaboration` property).
 		if (this.collab.suspend() && !this.collab.wanted)

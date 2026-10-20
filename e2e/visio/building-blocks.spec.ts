@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openDemo } from './demo-page';
+type VisioViewerElement = HTMLElementTagNameMap['visio-viewer'];
 import { createVsdxFixture } from './fixture.mjs';
-import type { VisioViewerElement } from '../../src/ui/src/visio/viewer-element';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: host permission blocks diagram edits and preserves viewing interactions`, async ({
@@ -16,6 +16,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: await createVsdxFixture('Host controlled diagram'),
 		});
+		await expect(page.locator('#file-name')).toHaveText('composition.vsdx');
 		await expect(page.locator('visio-viewer svg.paper text')).toContainText(
 			'Host controlled diagram',
 		);

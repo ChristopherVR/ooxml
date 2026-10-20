@@ -106,6 +106,9 @@ for (const [name, entry] of Object.entries(frameworks)) {
 	for (const helper of ['loadWorkbook', 'detectWorkbookFormat', 'saveWorkbook', 'defineXlsxEditor', 'normalizeEditorLocale', 'createWorkbook', 'saveXlsx', 'XlsxEditorElement'])
 		assert.equal(typeof entry[helper], 'function', name + ' must export ' + helper);
 }
+for (const key of ['useViewerBuildingBlocks', 'SpreadsheetCanvas', 'Toolbar', 'FormulaBar', 'SheetTabs']) assert.equal(typeof react[key], 'function', key);
+for (const [name, entry] of Object.entries(frameworks))
+	assert.equal(typeof entry.mountEditorSurface, 'function', name + ' must export mountEditorSurface');
 assert.equal(typeof vanilla.mountEditor, 'function');
 assert.equal(typeof svelte.mountEditor, 'function');
 

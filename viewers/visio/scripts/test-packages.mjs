@@ -104,6 +104,8 @@ for (const name of ${JSON.stringify(names)}) {
  assert.equal(legacyDocument.pages[0].shapes[0].text.plainText, 'Hello\\n');
  if (name !== 'visio-core') {
   assert.equal(typeof api.mountViewer, 'function', name);
+  for (const key of ['mountDiagramCanvas', 'mountDiagramInspector', 'diagramToolbarProps']) assert.equal(typeof api[key], 'function', name + ': ' + key);
+  if (name === 'visio-react-viewer') for (const key of ['useViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.equal(typeof api[key], 'function', key);
   const controller = new api.ViewerController();
   controller.setZoom(1.25);
   assert.equal(controller.state.zoom, 1.25);

@@ -28,3 +28,30 @@ it('keeps navigation and selection available while rejecting direct mutations', 
 	expect(props.canUndo).toBe(false);
 	controller.destroy();
 });
+
+it('rejects an in-flight local edit when the host revokes permission', async () => {
+	let finish!: (result: import('./worker-editor').EditTransactionResult) => void;
+	const edited = new Promise<import('./worker-editor').EditTransactionResult>((resolve) => {
+		finish = resolve;
+	});
+	const controller = new ViewerController(
+		async () => structuredClone(demoDocument),
+		() => {},
+		() => edited,
+	);
+	await controller.load(new Uint8Array([1]));
+	const operation = controller.applyEdits([]);
+	expect(controller.state.edit.busy).toBe(true);
+	controller.canEdit = false;
+	finish({
+		bytes: new Uint8Array([2]),
+		document: structuredClone(demoDocument),
+		changedParts: ['page.xml'],
+		diagnostics: [],
+	});
+	await expect(operation).rejects.toMatchObject({ name: 'AbortError' });
+	expect(controller.exportVsdx().bytes).toEqual(new Uint8Array([1]));
+	expect(controller.state.edit.dirty).toBe(false);
+	expect(controller.canEdit).toBe(false);
+	controller.destroy();
+});

@@ -34,6 +34,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	const stop = useRef<(() => void) | undefined>(undefined);
 	const [toolbarProps, setToolbarProps] = useState<SpreadsheetToolbarProps | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [mountVersion, setMountVersion] = useState(0);
 	const [error, setError] = useState<Error | null>(null);
 	const lastBytes = useRef<Uint8Array | ArrayBuffer | undefined>(undefined);
 	const effective = () => ({
@@ -47,6 +48,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	});
 	const refresh = () => {
 		setLoading(binding.current?.element.loading ?? false);
+		if (binding.current?.element.loading) setError(null);
 		const next = binding.current?.element.getToolbarProps() ?? null;
 		setToolbarProps((previous) =>
 			JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
@@ -59,13 +61,18 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 		binding.current = null;
 		if (!host) {
 			setToolbarProps(null);
+			setLoading(false);
 			return;
 		}
+		setMountVersion((version) => version + 1);
 		lastBytes.current = undefined;
 		binding.current = mountEditor(host, effective(), true);
 		stop.current = binding.current.element.subscribeEditorState(refresh);
 		refresh();
 	}, []);
+	useEffect(() => {
+		setError(null);
+	}, [options.workbook]);
 	useEffect(() => {
 		binding.current?.update(effective());
 	}, [options]);
@@ -89,7 +96,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 					refresh();
 				}
 			});
-	}, [options.bytes, toolbarProps === null]);
+	}, [options.bytes, mountVersion]);
 	useImperativeHandle(options.handle, () => deferredHandle(() => binding.current), []);
 	return {
 		canvasProps: { mount } satisfies CanvasProps,

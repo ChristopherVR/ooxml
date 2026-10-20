@@ -36,10 +36,11 @@ test('unrelated incoming artwork keeps its orientation during a morph (#105)', a
 		.getByRole('button', { name: /^present$|slide show/iu })
 		.first()
 		.click();
+	await expect(page.locator('pptx-ui-present-toolbar:visible')).toHaveCount(1);
 	await page.keyboard.press('ArrowRight');
-	await page.locator('[data-pptx-transition-layer="outgoing"]').waitFor();
+	await page.locator('[data-pptx-morph-outgoing]').first().waitFor({ state: 'attached' });
 	for (const label of ['Incoming radar', 'Incoming aircraft']) {
-		const image = page.getByAltText(label).last();
+		const image = page.getByRole('img', { name: label }).last();
 		await image.waitFor();
 		const angle = await image.evaluate((node) => {
 			const element = node.closest('[data-element-id]')!;

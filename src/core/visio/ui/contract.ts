@@ -2,7 +2,7 @@ import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/inde
 import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
-	canEdit: boolean;
+	canEdit?: boolean;
 	document: VisioDocument | null;
 	pageIndex: number;
 	zoom: number;
