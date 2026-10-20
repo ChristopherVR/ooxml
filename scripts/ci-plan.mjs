@@ -22,7 +22,7 @@ const ZERO_SHA = /^0+$/;
 
 /** A copy of a viewer's standalone MCP server, installed on its own from the registry as a user would. */
 const STANDALONE_MCP =
-	'tmp=$(mktemp -d) && cp -r mcp/. "$tmp" && (cd "$tmp" && npm install --ignore-scripts --no-package-lock && npm test)';
+	'tmp=$(mktemp -d) && node ../../scripts/copy-mcp-sources.mjs mcp "$tmp" && (cd "$tmp" && npm install --ignore-scripts --no-package-lock && npm test)';
 const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
 
 /**
