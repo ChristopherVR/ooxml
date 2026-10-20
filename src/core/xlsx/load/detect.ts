@@ -13,6 +13,7 @@ import type { Workbook } from '../model';
 import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { csvToWorkbook, sheetNameFromFileName, sheetToCsv } from './csv';
+import type { CsvImportOptions } from './csv-import';
 import { xlsbUnsupported } from './errors';
 import { loadLegacyXls } from './legacy-xls';
 import { decodeSpreadsheetText } from './text-decode';
@@ -111,6 +112,11 @@ export interface LoadWorkbookOptions {
 	 * untrusted source would otherwise inject live formulas (`=HYPERLINK(...)`).
 	 */
 	formulas?: boolean;
+	/**
+	 * How CSV fields are typed: the automatic conversions, column formats (text, a date order,
+	 * skip), number separators and trailing minus, and whether lossy conversions are reported.
+	 */
+	csv?: CsvImportOptions;
 }
 
 const ENCRYPTED_WARNING =
@@ -146,6 +152,7 @@ export async function loadWorkbook(
 	if (format === 'xls') return loadLegacyXls(bytes);
 	if (format === 'csv') {
 		return csvToWorkbook(decodeText(bytes), {
+			...options.csv,
 			sheetName: sheetNameFromFileName(options.fileName),
 			...(options.delimiter === undefined ? {} : { delimiter: options.delimiter }),
 			...(options.formulas === undefined ? {} : { formulas: options.formulas }),
