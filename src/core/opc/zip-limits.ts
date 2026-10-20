@@ -8,6 +8,18 @@ export const DEFAULT_ZIP_LIMITS = {
 	maxTotalBytes: 100 * 1024 * 1024,
 } as const;
 
+/**
+ * The check a package failed: one of the {@link ZipLimits} sizes, `declaredSize` (an entry
+ * inflates past the size its header declares) or `partName` (an unsafe part name).
+ */
+export type ZipLimitKind =
+	| 'maxInputBytes'
+	| 'maxEntries'
+	| 'maxEntryBytes'
+	| 'maxTotalBytes'
+	| 'declaredSize'
+	| 'partName';
+
 /** Size and hygiene limits applied while opening and reading a zip package. */
 export interface ZipLimits {
 	/** Largest accepted package (compressed bytes). */
@@ -21,17 +33,20 @@ export interface ZipLimits {
 	/** Format name used in error messages, such as `DOCX`. */
 	label?: string;
 	/** Builds the error thrown on a violation; defaults to {@link ZipLimitError}. */
-	createError?: (message: string, details: { limit: number }) => Error;
+	createError?: (message: string, details: { limit: number; kind: ZipLimitKind }) => Error;
 }
 
 /** Thrown when a package breaks a size, entry-count or part-name limit. */
 export class ZipLimitError extends Error {
 	readonly code = 'ZIP_BOMB';
 	readonly limit: number;
-	constructor(message: string, details: { limit: number }) {
+	/** The check that failed (absent when the error was built without one). */
+	readonly kind: ZipLimitKind | undefined;
+	constructor(message: string, details: { limit: number; kind?: ZipLimitKind }) {
 		super(message);
 		this.name = 'ZipLimitError';
 		this.limit = details.limit;
+		this.kind = details.kind;
 	}
 }
 
@@ -62,7 +77,7 @@ interface Resolved {
 	maxEntryBytes: number;
 	maxTotalBytes: number;
 	label: string;
-	fail: (message: string, limit: number) => Error;
+	fail: (message: string, limit: number, kind: ZipLimitKind) => Error;
 }
 
 function resolveLimits(limits: ZipLimits): Resolved {
@@ -72,8 +87,8 @@ function resolveLimits(limits: ZipLimits): Resolved {
 		maxEntryBytes: limits.maxEntryBytes ?? DEFAULT_ZIP_LIMITS.maxEntryBytes,
 		maxTotalBytes: limits.maxTotalBytes ?? DEFAULT_ZIP_LIMITS.maxTotalBytes,
 		label: limits.label ?? 'ZIP',
-		fail: (message, limit) =>
-			create ? create(message, { limit }) : new ZipLimitError(message, { limit }),
+		fail: (message, limit, kind) =>
+			create ? create(message, { limit, kind }) : new ZipLimitError(message, { limit, kind }),
 	};
 }
 
@@ -106,13 +121,18 @@ export function inflateEntryGuarded(
 			size += chunk.byteLength;
 			if (size > declared || size > r.maxEntryBytes)
 				return abort(
-					r.fail(`${r.label} part ${entry.name} inflates past its declared size`, r.maxEntryBytes),
+					r.fail(
+						`${r.label} part ${entry.name} inflates past its declared size`,
+						r.maxEntryBytes,
+						size > declared ? 'declaredSize' : 'maxEntryBytes',
+					),
 				);
 			if (alreadyRead + size > r.maxTotalBytes)
 				return abort(
 					r.fail(
 						`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
 						r.maxTotalBytes,
+						'maxTotalBytes',
 					),
 				);
 			chunks.push(chunk);
@@ -153,18 +173,20 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 		throw r.fail(
 			`${r.label} package exceeds the ${r.maxEntries.toLocaleString('en-US')} part limit`,
 			r.maxEntries,
+			'maxEntries',
 		);
 	let declared = 0;
 	for (const entry of entries) {
 		const original = (entry as unknown as { unsafeOriginalName?: string }).unsafeOriginalName;
 		if (!isSafePartName(entry.name) || (original !== undefined && !isSafePartName(original)))
-			throw r.fail(`${r.label} package has an unsafe part name`, r.maxEntries);
+			throw r.fail(`${r.label} package has an unsafe part name`, r.maxEntries, 'partName');
 		if (entry.dir) continue;
 		const size = declaredEntrySize(entry);
 		if (size > r.maxEntryBytes)
 			throw r.fail(
 				`${r.label} part ${entry.name} exceeds the uncompressed part size limit`,
 				r.maxEntryBytes,
+				'maxEntryBytes',
 			);
 		declared += size;
 	}
@@ -172,6 +194,7 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 		throw r.fail(
 			`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
 			r.maxTotalBytes,
+			'maxTotalBytes',
 		);
 	const produced = new Map<string, number>();
 	let total = 0;
@@ -218,6 +241,7 @@ export async function openZip(
 		throw r.fail(
 			`${r.label} package exceeds the ${mib(maxInput)} MiB compressed input limit`,
 			maxInput,
+			'maxInputBytes',
 		);
 	return guardZip(await JSZip.loadAsync(bytes), limits);
 }
