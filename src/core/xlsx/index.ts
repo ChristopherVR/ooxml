@@ -17,3 +17,4 @@ export * from './edit/index';
 export * from './layout/index';
 export * from './pivot/index';
 export * from './slicer/index';
+export * from './compare/index';
