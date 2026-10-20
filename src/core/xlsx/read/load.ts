@@ -7,6 +7,7 @@ import { createWorksheet } from '../workbook';
 import { readPivotTables } from '../pivot/read';
 import { readSlicers, settleSlicers } from '../slicer/read';
 import { parsePersons } from './comments';
+import { resolveLoadLimits, type XlsxLoadLimits } from './limits';
 import { CONTENT_TYPES, SourceIndex, readZipParts } from './package';
 import { parseDynamicArrayMetadata } from './metadata';
 import { parseSharedStrings } from './shared-strings';
@@ -32,12 +33,26 @@ function liftPrintAreas(workbook: Workbook): void {
 	});
 }
 
+export interface LoadXlsxOptions {
+	/**
+	 * Size limits on the package and its parts (see {@link XlsxLoadLimits}). The defaults guard
+	 * against zip bombs; raise one only for workbooks expected to be that large. A package over a
+	 * limit throws `WorkbookTooLargeError` naming it (`code: 'workbook-too-large'`; test it with
+	 * `isWorkbookTooLargeError`, which also matches errors from other entry points).
+	 */
+	limits?: XlsxLoadLimits;
+}
+
 /**
  * Reads an `.xlsx`, `.xlsm` or `.xltx` package into the workbook model. Parts the model does not
  * represent stay in `workbook.source.parts` and are written back by `saveXlsx`.
  */
-export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workbook> {
-	const parts = await readZipParts(input);
+export async function loadXlsx(
+	input: Uint8Array | ArrayBuffer,
+	options: LoadXlsxOptions = {},
+): Promise<Workbook> {
+	const limits = resolveLoadLimits(options.limits);
+	const parts = await readZipParts(input, limits);
 	const source = new SourceIndex(parts);
 	const workbookPart = source.workbookPart();
 	if (!workbookPart) throw new Error('XLSX package has no workbook part (xl/workbook.xml)');
@@ -59,6 +74,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 		sharedStrings: parseSharedStrings(
 			stringsPart ? source.text(stringsPart) : undefined,
 			styles.palette,
+			limits.maxXmlElements,
 		),
 		xfMap: styles.xfMap,
 		date1904: book.date1904,
@@ -67,6 +83,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 		persons: parsePersons(personsPart ? source.text(personsPart) : undefined),
 		dynamicCells: parseDynamicArrayMetadata(metadataPart ? source.text(metadataPart) : undefined),
 		warn,
+		maxXmlElements: limits.maxXmlElements,
 	};
 	const rels = source.rels(workbookPart);
 	const sheets: Worksheet[] = book.sheets.map((entry) => {

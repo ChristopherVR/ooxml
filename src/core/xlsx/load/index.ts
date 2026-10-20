@@ -16,7 +16,9 @@ export {
 	IncorrectPasswordError,
 	PasswordRequiredError,
 	UnsupportedWorkbookError,
+	WorkbookTooLargeError,
 	isOoxmlCryptoError,
+	isWorkbookTooLargeError,
 	type OoxmlCryptoErrorCode,
 	type UnsupportedWorkbookErrorCode,
 } from './errors';

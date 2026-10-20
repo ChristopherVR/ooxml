@@ -1,5 +1,6 @@
-import { parseXml, type XmlElement } from '../../xml/index';
+import type { XmlElement } from '../../xml/index';
 import type { RichTextRun } from '../model';
+import { parseDataXml } from './limits';
 import { parseFont } from './style-parts';
 import { xChildren, xFirst, xText } from './xml-util';
 
@@ -34,8 +35,9 @@ export function parseRichString(
 export function parseSharedStrings(
 	xml: string | undefined,
 	palette: readonly string[] | undefined,
+	maxXmlElements?: number,
 ): SharedString[] {
 	if (!xml) return [];
-	const root = parseXml(xml, { label: 'XLSX shared strings' }).documentElement;
+	const root = parseDataXml(xml, 'XLSX shared strings', maxXmlElements).documentElement;
 	return xChildren(root, 'si').map((si) => parseRichString(si, palette));
 }
