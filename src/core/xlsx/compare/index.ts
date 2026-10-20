@@ -3,3 +3,4 @@
 export { compareWorkbooks } from './compare';
 export { groupCellDifferences } from './group';
 export * from './types';
+export { comparisonText, type ComparisonTextOptions } from './text';
