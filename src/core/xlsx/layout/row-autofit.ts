@@ -2,7 +2,8 @@
 import type { Workbook } from '../model';
 import type { MeasureText } from './autofit';
 import { cellView } from './cell-view';
-import { createGridMetrics } from './metrics';
+import { MergeSweep } from './merge-sweep';
+import { createColumnWidths } from './metrics';
 import { COLUMN_PADDING_PX } from './units';
 
 /** Excel's row heights (points) for Calibri at common font sizes (points). */
@@ -88,34 +89,54 @@ export function autoFitRowHeight(
 	row: number,
 	measure: MeasureText,
 ): number {
+	return fitRowHeights(workbook, sheetIndex, [row], measure).get(row) ?? 15;
+}
+
+/**
+ * {@link autoFitRowHeight} for many rows of one sheet at once (a missing sheet gives an empty
+ * map). The column widths and the merges are read once for all of `rows`, so the cost follows
+ * the cells of those rows, not the size of the sheet.
+ */
+export function fitRowHeights(
+	workbook: Workbook,
+	sheetIndex: number,
+	rows: Iterable<number>,
+	measure: MeasureText,
+): Map<number, number> {
+	const heights = new Map<number, number>();
 	const sheet = workbook.sheets[sheetIndex];
-	if (!sheet) return 15;
-	const cells = sheet.rows.get(row);
-	if (!cells?.size) return sheet.defaultRowHeight;
-	const metrics = createGridMetrics(sheet, { zoom: 100 });
-	let tallest = 0;
-	for (const col of cells.keys()) {
-		const merged = sheet.merges.some(
-			(m) =>
-				row >= m.start.row &&
-				row <= m.end.row &&
-				col >= m.start.col &&
-				col <= m.end.col &&
-				(m.start.row !== m.end.row || m.start.col !== m.end.col),
-		);
-		if (merged) continue;
-		const view = cellView(workbook, sheetIndex, row, col);
-		if (!view.text) continue;
-		const fonts = view.rich?.length ? view.rich.map((run) => run.font) : [view.font];
-		const sizePt = Math.max(...fonts.map((f) => (f.sizePx * 3) / 4));
-		let lines = 1;
-		if (view.wrap) {
-			const width = metrics.colWidth(col) - COLUMN_PADDING_PX - 1 - view.indentPx;
-			lines = wrappedLineCount(view.text, width, (text) => measure(text, view.font));
-		}
-		tallest = Math.max(tallest, lines * lineHeightPoints(sizePt));
+	if (!sheet) return heights;
+	const filled: number[] = [];
+	for (const row of new Set(rows)) {
+		if (sheet.rows.get(row)?.size) filled.push(row);
+		else heights.set(row, sheet.defaultRowHeight);
 	}
-	return tallest > 0 ? tallest : sheet.defaultRowHeight;
+	// The sweep visits the rows top to bottom and holds only the merges covering the current one.
+	filled.sort((a, b) => a - b);
+	const merges = new MergeSweep(sheet.merges);
+	// Only wrapped text needs the column widths, so they are read on first use.
+	let colWidth: ((c: number) => number) | undefined;
+	for (const row of filled) {
+		merges.moveTo(row);
+		let tallest = 0;
+		for (const col of sheet.rows.get(row)?.keys() ?? []) {
+			const cover = merges.at(col);
+			if (cover.spanned) continue;
+			const view = cellView(workbook, sheetIndex, row, col, undefined, { merged: cover.merged });
+			if (!view.text) continue;
+			const fonts = view.rich?.length ? view.rich.map((run) => run.font) : [view.font];
+			const sizePt = Math.max(...fonts.map((f) => (f.sizePx * 3) / 4));
+			let lines = 1;
+			if (view.wrap) {
+				colWidth ??= createColumnWidths(sheet, { zoom: 100 });
+				const width = colWidth(col) - COLUMN_PADDING_PX - 1 - view.indentPx;
+				lines = wrappedLineCount(view.text, width, (text) => measure(text, view.font));
+			}
+			tallest = Math.max(tallest, lines * lineHeightPoints(sizePt));
+		}
+		heights.set(row, tallest > 0 ? tallest : sheet.defaultRowHeight);
+	}
+	return heights;
 }
 
 /** A font-size based text measure (px) for when no real text measurement is available. */
