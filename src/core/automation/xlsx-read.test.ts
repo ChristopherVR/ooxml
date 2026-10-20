@@ -4,7 +4,7 @@ import type { Workbook } from '../xlsx/model';
 import { internStyle, styleAt } from '../xlsx/styles';
 import { createWorkbook } from '../xlsx/workbook';
 import { saveXlsx } from '../xlsx/write/save';
-import { findXlsxCells, inspectXlsx, readXlsxRange } from './xlsx';
+import { findXlsxCells, inspectXlsx, readXlsxRange, readXlsxTable } from './xlsx';
 
 /** Puts a value with a number format straight into the model, as a loaded file would hold it. */
 function put(workbook: Workbook, sheet: number, ref: string, value: number, numFmt: string) {
@@ -232,5 +232,24 @@ describe('findXlsxCells', () => {
 		expect(result.truncated).toBe(true);
 		expect(result.total).toBeGreaterThan(3);
 		await expect(findXlsxCells(await sample(), '*', { maxResults: 1001 })).rejects.toThrow('1000');
+	});
+});
+
+describe('readXlsxTable', () => {
+	it('reads a table by name, ignoring case, with its column names and cells', async () => {
+		const result = await readXlsxTable(await sample(), 'table1');
+		expect(result).toMatchObject({
+			sheetIndex: 0,
+			sheet: 'Sales',
+			name: 'Table1',
+			range: 'A1:D4',
+			headerRow: true,
+			totalsRow: false,
+			columns: ['Region', 'Opened', 'Share', 'Amount'],
+		});
+		expect(result.cells).toHaveLength(16);
+		expect(result.cells[4]).toEqual({ address: 'A2', value: 'North', text: 'North' });
+		expect(result.cells[5]).toMatchObject({ address: 'B2', iso: '2024-04-03' });
+		await expect(readXlsxTable(await sample(), 'Missing')).rejects.toThrow('No table named');
 	});
 });

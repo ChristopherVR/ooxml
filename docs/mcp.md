@@ -40,6 +40,8 @@ General) and, for date and time formats, the value in ISO 8601 without a time zo
 `findXlsxCells` searches the way Excel's Find does (formulas as typed or values as displayed,
 match case, whole cell, `*` `?` `~` wildcards, optionally one sheet or range) and returns at most
 1,000 matches, each with its sheet, address and the same cell view, plus the total count.
+`readXlsxTable` reads a table by name (ignoring case, as Excel does): its sheet, range, header
+and totals rows, column names and cells (at most 10,000, as a range read).
 
 The existing PowerPoint MCP keeps its established tool set and names. Its server
 exports registration and accepts a root directory for composition. Its model

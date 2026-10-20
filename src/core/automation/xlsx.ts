@@ -2,7 +2,14 @@ import { createWorkbook, validateSheetName } from '../xlsx/workbook';
 import { loadXlsx } from '../xlsx/read/load';
 import { saveXlsx } from '../xlsx/write/save';
 import { createEditSession } from '../xlsx/edit/session';
-import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address';
+import {
+	parseAddress,
+	parseRange,
+	MAX_COL,
+	MAX_ROW,
+	formatAddress,
+	formatRange,
+} from '../xlsx/address';
 import { forEachCell, getCell } from '../xlsx/cells';
 import { findAll } from '../xlsx/edit/find';
 import type { FindQuery } from '../xlsx/edit/types-clipboard';
@@ -164,4 +171,29 @@ export async function findXlsxCells(
 		truncated: found.length > max,
 		warnings: workbook.warnings,
 	};
+}
+
+/**
+ * A table found by name (ignoring case, as Excel does) on any sheet: its sheet, range, header and
+ * totals rows, column names and cells as a range read returns them (at most 10,000 cells).
+ */
+export async function readXlsxTable(bytes: Uint8Array, name: string) {
+	const workbook = await loadXlsx(bytes);
+	const wanted = name.toLowerCase();
+	for (const [sheetIndex, sheet] of workbook.sheets.entries()) {
+		const table = sheet.tables.find((t) => t.displayName.toLowerCase() === wanted);
+		if (!table) continue;
+		return {
+			sheetIndex,
+			sheet: sheet.name,
+			name: table.displayName,
+			range: formatRange(table.range),
+			headerRow: table.headerRow,
+			totalsRow: table.totalsRow,
+			columns: table.columns.map((column) => column.name),
+			cells: rangeCells(workbook, sheet, table.range),
+			warnings: workbook.warnings,
+		};
+	}
+	throw new Error(`No table named ${name}`);
 }
