@@ -12,6 +12,9 @@ export {
 } from './building-block-styles';
 
 export {
+	LEGACY_OFFICE_THEME_TOKENS,
+	legacyThemeAliases,
+	legacyThemeBridge,
 	shadcnBridge,
 	themeBridge,
 	type ShadcnBridgeOptions,

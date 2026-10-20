@@ -13,6 +13,7 @@ const palette = {
 	selected: '--office-selected',
 	ring: '--office-ring',
 	font: '--office-font',
+	radius: '--office-radius',
 } as const;
 
 function productAliases(product: OfficeUiProduct): string {
@@ -27,6 +28,7 @@ function productAliases(product: OfficeUiProduct): string {
 					selected: 'accent-soft',
 					ring: 'focus',
 					font: 'font',
+					radius: 'radius',
 				}
 			: {
 					foreground: 'foreground',
@@ -37,6 +39,7 @@ function productAliases(product: OfficeUiProduct): string {
 					selected: 'accent',
 					ring: 'ring',
 					font: 'font',
+					radius: 'radius',
 				};
 	const prefix = { docx: '--dve-', xlsx: '--xve-', visio: '--vv-', pptx: '--pptx-' }[product];
 	return `:where([data-office-block][data-office-product="${product}"]) {\n${Object.entries(palette)
@@ -68,7 +71,7 @@ ${(['docx', 'xlsx', 'visio', 'pptx'] as const).map(productAliases).join('\n')}
   gap: ${value('--office-space-1')};
   padding: ${value('--office-space-1')};
   border: ${value('--office-border-width')} solid var(--_office-block-border);
-  border-radius: ${value('--office-radius')};
+  border-radius: var(--_office-block-radius);
 }
 :where([data-office-block] button, [data-office-block] input, [data-office-block] select,
   button[data-office-block], input[data-office-block], select[data-office-block]) {
@@ -79,7 +82,7 @@ ${(['docx', 'xlsx', 'visio', 'pptx'] as const).map(productAliases).join('\n')}
   color: var(--_office-block-foreground);
   background: var(--_office-block-background);
   border: ${value('--office-border-width')} solid var(--_office-block-border);
-  border-radius: ${value('--office-radius')};
+  border-radius: var(--_office-block-radius);
   min-height: ${value('--office-target-size')};
   padding: ${value('--office-space-1')} ${value('--office-space-2')};
 }
