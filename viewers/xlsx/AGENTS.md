@@ -127,17 +127,17 @@ ranges before committing.
 
 ### Where does my change go?
 
-| The change is about...                                                                | Make it in                                          |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Parsing, the workbook model, saving or round-trip loss                                | `src/core/xlsx/` in `ooxml`, with a round-trip test |
-| Formulas, functions, recalculation, number formats, editing commands, undo            | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)          |
-| Grid metrics, cell views, conditional formats, chart view models, keyboard navigation | `ooxml` (`xlsx/layout`)                             |
-| `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                               |
-| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`src/ui`)                    |
-| `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                | `ole2`                                              |
-| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `src/ui/src/xlsx` in the ooxml repository           |
-| Framework wiring (props, events, lifecycle)                                           | `packages/bindings` here (all adapters at once)     |
-| Demos, docs site, browser tests, packaging and release scripts                        | here                                                |
+| The change is about...                                                                | Make it in                                                                       |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Parsing, the workbook model, saving or round-trip loss                                | `src/core/xlsx/` in `ooxml`, with a round-trip test                              |
+| Formulas, functions, recalculation, number formats, editing commands, undo            | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)                                       |
+| Grid metrics, cell views, conditional formats, chart view models, keyboard navigation | `ooxml` (`xlsx/layout`)                                                          |
+| `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                                                            |
+| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`src/ui`)                                                 |
+| `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                | `ole2`                                                                           |
+| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `src/ui/src/xlsx` in the ooxml repository                                        |
+| Framework wiring (props, events, lifecycle)                                           | `packages/<framework>/src`; neutral engine ownership only in `packages/bindings` |
+| Demos, docs site, browser tests, packaging and release scripts                        | here                                                                             |
 
 ### GitHub Pages
 
@@ -234,3 +234,5 @@ and CI never release anything).
 - Formatting is `oxfmt`; run `bun run fmt` before committing.
 - Record extraction provenance (source repository, path, commit) when code moves
   between repositories.
+
+New native building-block integrations live in their owning framework package, including React hooks, Vue composables, Angular services and components, Svelte stores and components, and Solid accessors and components. Keep framework imports out of new neutral helpers in `packages/bindings`.

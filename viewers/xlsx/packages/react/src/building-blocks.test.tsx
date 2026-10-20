@@ -2,9 +2,9 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { act, createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useViewerBuildingBlocks, SpreadsheetCanvas } from '../packages/bindings/src/react';
-import type { EditorHandle } from '../packages/bindings/src/index';
-import { createWorkbook, saveXlsx } from '../packages/core/src/index';
+import { useViewerBuildingBlocks, SpreadsheetCanvas } from './building-blocks';
+import type { EditorHandle } from '../../bindings/src/index';
+import { createWorkbook, saveXlsx } from '../../core/src/index';
 
 afterEach(() => {
 	document.body.replaceChildren();
@@ -42,7 +42,7 @@ it('composes a surface in StrictMode and keeps lifecycle, callbacks and permissi
 			expect(await retained.onItalic()).toBe(false);
 		});
 		await act(async () => {
-			await expect(handle.current!.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow();
+			await expect(handle.current!.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/./);
 		});
 		expect(blocks.error).not.toBeNull();
 		const bytes = await saveXlsx(model);
@@ -83,6 +83,10 @@ it('reloads bytes into a replaced canvas without creating a second engine', asyn
 			});
 			expect(host.querySelectorAll('xlsx-editor')).toHaveLength(1);
 			expect(blocks.loading).toBe(false);
+			await act(async () => {
+				expect(await blocks.toolbarProps!.onBold()).toBe(true);
+			});
+			expect(blocks.toolbarProps?.bold).toBe(true);
 		}
 	} finally {
 		await act(async () => root.unmount());

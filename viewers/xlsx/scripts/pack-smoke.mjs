@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -109,6 +109,12 @@ for (const [name, entry] of Object.entries(frameworks)) {
 		assert.equal(typeof entry[helper], 'function', name + ' must export ' + helper);
 }
 for (const key of ['useViewerBuildingBlocks', 'SpreadsheetCanvas', 'Toolbar', 'FormulaBar', 'SheetTabs']) assert.equal(typeof react[key], 'function', key);
+for (const entry of [vue, solid]) for (const key of ['SpreadsheetCanvas', 'Toolbar', 'FormulaBar', 'SheetTabs']) assert(entry[key], key);
+assert.equal(typeof vue.useViewerBuildingBlocks, 'function');
+assert.equal(typeof solid.createViewerBuildingBlocks, 'function');
+assert.equal(typeof svelte.createViewerBuildingBlocks, 'function');
+for (const key of ['SpreadsheetBuildingBlocks', 'ViewerBuildingBlocks', 'SpreadsheetCanvasComponent', 'ToolbarComponent', 'FormulaBarComponent', 'SheetTabsComponent']) assert.equal(typeof angular[key], 'function', key);
+
 for (const [name, entry] of Object.entries(frameworks))
 	assert.equal(typeof entry.mountEditorSurface, 'function', name + ' must export mountEditorSurface');
 assert.equal(typeof vanilla.mountEditor, 'function');
@@ -139,15 +145,21 @@ for (const [name, entry] of Object.entries(frameworks)) {
 const typingSource = `import { createWorkbook, type Workbook } from '@christophervr/xlsx-core';
 import { loadWorkbook as loadAny, type WorkbookFormat } from '@christophervr/xlsx-core/load';
 import { SpreadsheetEditor as ReactEditor, loadWorkbook, type EditorOptions } from '@christophervr/xlsx-react-viewer';
-import { SpreadsheetEditor as VueEditor } from 'xlsx-vue-viewer';
-import { SpreadsheetEditorComponent } from 'xlsx-angular-viewer';
-import { SpreadsheetEditor as SolidEditor } from 'xlsx-solid-viewer';
+import { SpreadsheetEditor as VueEditor, useViewerBuildingBlocks as vueBlocks, SpreadsheetCanvas as VueCanvas, Toolbar as VueToolbar, FormulaBar as VueFormula, SheetTabs as VueTabs } from 'xlsx-vue-viewer';
+import { SpreadsheetEditorComponent, ViewerBuildingBlocks, SpreadsheetCanvasComponent, ToolbarComponent, FormulaBarComponent, SheetTabsComponent } from 'xlsx-angular-viewer';
+import { SpreadsheetEditor as SolidEditor, createViewerBuildingBlocks as solidBlocks, SpreadsheetCanvas as SolidCanvas, Toolbar as SolidToolbar, FormulaBar as SolidFormula, SheetTabs as SolidTabs } from 'xlsx-solid-viewer';
 import SvelteEditor from 'xlsx-svelte-viewer';
+import {createViewerBuildingBlocks as svelteBlocks} from 'xlsx-svelte-viewer/runtime';
+import SvelteCanvas from 'xlsx-svelte-viewer/SpreadsheetCanvas.svelte';
+import SvelteToolbar from 'xlsx-svelte-viewer/Toolbar.svelte';
+import SvelteFormula from 'xlsx-svelte-viewer/FormulaBar.svelte';
+import SvelteTabs from 'xlsx-svelte-viewer/SheetTabs.svelte';
 import { mountEditor, XlsxEditorElement, type EditorHandle } from 'xlsx-vanilla-viewer';
 const options: EditorOptions = { workbook: createWorkbook(), locale: 'fr', showFormulaBar: false };
 const workbook: Workbook = options.workbook!;
 const format: WorkbookFormat = 'xls';
 void [workbook, format, loadAny, ReactEditor, loadWorkbook, VueEditor, SpreadsheetEditorComponent, SolidEditor, SvelteEditor, mountEditor, XlsxEditorElement];
+void [vueBlocks, VueCanvas, VueToolbar, VueFormula, VueTabs, solidBlocks, SolidCanvas, SolidToolbar, SolidFormula, SolidTabs, svelteBlocks, SvelteCanvas, SvelteToolbar, SvelteFormula, SvelteTabs, ViewerBuildingBlocks, SpreadsheetCanvasComponent, ToolbarComponent, FormulaBarComponent, SheetTabsComponent];
 export type Handle = EditorHandle;
 `;
 
@@ -163,6 +175,15 @@ async function checkSvelte(inspected, installed) {
 		'utf8',
 	);
 	compile(source, { filename: 'XlsxEditor.svelte', generate: 'client' });
+	for (const name of ['SpreadsheetCanvas', 'Toolbar', 'FormulaBar', 'SheetTabs']) {
+		assert.equal(manifest.exports[`./${name}.svelte`].svelte, `./dist/${name}.svelte`);
+		const component = await readFile(
+			path.join(inspected, 'svelte', 'dist', `${name}.svelte`),
+			'utf8',
+		);
+		compile(component, { filename: `${name}.svelte`, generate: 'client' });
+	}
+
 	const runtime = await import(
 		pathToFileURL(path.join(installed, 'xlsx-svelte-viewer', 'dist', 'runtime.js')).href
 	);
@@ -197,15 +218,21 @@ try {
 	}
 	if (workspaceRuntime) {
 		for (const area of ['core', 'ui']) {
+			// npm pack omits symlinked directories. Stage actual runtime files for isolated worktrees.
+			const source = path.join(root, '../../src', area);
+			const staged = path.join(work, 'runtime', area);
+			await mkdir(staged, { recursive: true });
+			for (const file of ['package.json', 'README.md', 'LICENSE', 'NOTICE']) {
+				await cp(path.join(source, file), path.join(staged, file)).catch((error) => {
+					if (file === 'package.json' || error.code !== 'ENOENT') throw error;
+				});
+			}
+			await cp(path.join(source, 'dist'), path.join(staged, 'dist'), {
+				recursive: true,
+				dereference: true,
+			});
 			const packed = JSON.parse(
-				run('npm', [
-					'pack',
-					'--json',
-					'--ignore-scripts',
-					'--pack-destination',
-					work,
-					path.join(root, '../../src', area),
-				]),
+				run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', work, staged]),
 			)[0];
 			tarballs.push(path.join(work, packed.filename));
 		}

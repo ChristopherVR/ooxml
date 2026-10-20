@@ -123,6 +123,22 @@ async function writeSvelteComponent(distDir) {
 	if (component === source)
 		throw new Error("XlsxEditor.svelte no longer imports from './index'; update this step");
 	await writeFile(path.join(distDir, 'XlsxEditor.svelte'), component);
+	for (const name of ['SpreadsheetCanvas', 'Toolbar', 'FormulaBar', 'SheetTabs']) {
+		const blockSource = await readFile(path.join(packagesDir, `svelte/src/${name}.svelte`), 'utf8');
+		await writeFile(
+			path.join(distDir, `${name}.svelte`),
+			blockSource.replace(/from '\.\/runtime'/g, "from './runtime.js'"),
+		);
+		const props =
+			name === 'SpreadsheetCanvas'
+				? 'mount: (host: HTMLElement | null) => void; class?: string'
+				: 'toolbarProps: SpreadsheetToolbarProps';
+		await writeFile(
+			path.join(distDir, `${name}.svelte.d.ts`),
+			`import type { Component } from 'svelte';\nimport type { SpreadsheetToolbarProps } from './runtime';\ndeclare const component: Component<{ ${props} }>;\nexport default component;\n`,
+		);
+	}
+
 	await writeFile(
 		path.join(distDir, 'index.d.ts'),
 		[

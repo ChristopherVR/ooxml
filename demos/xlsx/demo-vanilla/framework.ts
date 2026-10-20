@@ -60,6 +60,10 @@ export async function mountFramework(
 		new URLSearchParams(location.search).get('framework') ||
 		import.meta.env.VITE_DEMO_FRAMEWORK ||
 		'vanilla';
+	if (new URLSearchParams(location.search).has('blocks')) {
+		const { mountNativeBlocks } = await import('./native-building-blocks');
+		return expose(await mountNativeBlocks(host, options, framework));
+	}
 	if (framework === 'react') {
 		const [{ createRoot }, { createElement }, { SpreadsheetEditor }] = await Promise.all([
 			import('react-dom/client'),

@@ -1,0 +1,1 @@
+{ "extends": "../../../viewers/xlsx/tsconfig.json", "include": ["./**/*.ts", "./**/*.svelte"] }

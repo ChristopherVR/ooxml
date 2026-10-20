@@ -13,7 +13,7 @@ import {
 	type EditorOptions,
 	type EditorBinding,
 	type EditorHandle,
-} from './index';
+} from '../../bindings/src/index';
 import type { SpreadsheetToolbarProps } from 'xlsx-web-component';
 export interface BuildingBlockOptions extends EditorOptions {
 	canEdit?: boolean | undefined;
@@ -35,23 +35,27 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	const [toolbarProps, setToolbarProps] = useState<SpreadsheetToolbarProps | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [mountVersion, setMountVersion] = useState(0);
+	const snapshotElement = useRef<EditorBinding['element'] | undefined>(undefined);
 	const [error, setError] = useState<Error | null>(null);
 	const lastBytes = useRef<Uint8Array | ArrayBuffer | undefined>(undefined);
 	const effective = () => ({
 		...latest.current,
 		bytes: undefined,
 		readOnly: latest.current.canEdit === false || latest.current.readOnly === true,
-		onWorkbookError: (error: Error) => {
-			setError(error);
-			latest.current.onWorkbookError?.(error);
+		onWorkbookError: (cause: Error) => {
+			setError(cause);
+			latest.current.onWorkbookError?.(cause);
 		},
 	});
 	const refresh = () => {
 		setLoading(binding.current?.element.loading ?? false);
 		if (binding.current?.element.loading) setError(null);
-		const next = binding.current?.element.getToolbarProps() ?? null;
+		const element = binding.current?.element;
+		const sameElement = snapshotElement.current === element;
+		snapshotElement.current = element;
+		const next = element?.getToolbarProps() ?? null;
 		setToolbarProps((previous) =>
-			JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+			sameElement && JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
 		);
 	};
 	const mount = useCallback((host: HTMLDivElement | null) => {

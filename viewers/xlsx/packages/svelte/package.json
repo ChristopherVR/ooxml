@@ -40,7 +40,27 @@
 			"types": "./dist/runtime.d.ts",
 			"import": "./dist/runtime.js"
 		},
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		"./SpreadsheetCanvas.svelte": {
+			"types": "./dist/SpreadsheetCanvas.svelte.d.ts",
+			"svelte": "./dist/SpreadsheetCanvas.svelte",
+			"default": "./dist/SpreadsheetCanvas.svelte"
+		},
+		"./Toolbar.svelte": {
+			"types": "./dist/Toolbar.svelte.d.ts",
+			"svelte": "./dist/Toolbar.svelte",
+			"default": "./dist/Toolbar.svelte"
+		},
+		"./FormulaBar.svelte": {
+			"types": "./dist/FormulaBar.svelte.d.ts",
+			"svelte": "./dist/FormulaBar.svelte",
+			"default": "./dist/FormulaBar.svelte"
+		},
+		"./SheetTabs.svelte": {
+			"types": "./dist/SheetTabs.svelte.d.ts",
+			"svelte": "./dist/SheetTabs.svelte",
+			"default": "./dist/SheetTabs.svelte"
+		}
 	},
 	"publishConfig": {
 		"access": "public"
