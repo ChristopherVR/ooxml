@@ -1,4 +1,4 @@
-import { installOfficeUiTheme, prepareOfficeUiBlock } from '../theme';
+import { installOfficeUiThemeFor, prepareOfficeUiBlock } from '../theme';
 import type { ViewerController } from './controller';
 import { ViewerCanvas } from './viewer-canvas';
 import { wireViewerInputs } from './viewer-input';
@@ -39,7 +39,7 @@ export function mountDiagramInspector(host: HTMLElement, controller: ViewerContr
 /** The shared drawing engine, without application chrome or file/settings handlers. */
 export function mountDiagramCanvas(host: HTMLElement, controller: ViewerController): () => void {
 	const doc = host.ownerDocument;
-	installOfficeUiTheme(doc);
+	installOfficeUiThemeFor(host);
 	const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
 	const style = doc.createElement('style');
 	style.textContent = `${visioThemeAliases}${viewerStyles}${canvasAndRibbonStyles}`;

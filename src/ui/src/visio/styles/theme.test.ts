@@ -30,7 +30,7 @@ describe('visio theme', () => {
 	});
 
 	it('installs the shared theme and the alias block from the viewer element', () => {
-		expect(viewerElementSource).toContain('installOfficeUiTheme()');
+		expect(viewerElementSource).toContain('installOfficeUiThemeFor(this)');
 		expect(viewerElementSource).toContain('${visioThemeAliases}');
 	});
 });

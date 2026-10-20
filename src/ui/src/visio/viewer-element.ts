@@ -7,7 +7,7 @@ import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
-import { installOfficeUiTheme } from '../theme';
+import { installOfficeUiThemeFor } from '../theme';
 import { createRibbon } from './ribbon';
 import { wireInlineGalleries } from './ribbon-inline-galleries';
 import { syncRibbonAddIns, type RibbonAddInTab } from '../ribbon/add-in-tabs';
@@ -128,7 +128,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#root = this.attachShadow({ mode: 'open' });
 		// Shared Office controls must be defined before the static template upgrades them.
 		registerViewerControls();
-		installOfficeUiTheme();
+		installOfficeUiThemeFor(this);
 		// This template is static, never document content.
 		this.#root.innerHTML = `<style>${visioThemeAliases}${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
 		const workspace = this.#root.querySelector('.workspace')!;
@@ -671,6 +671,7 @@ export class VisioViewerElement extends BaseElement {
 	}
 	connectedCallback(): void {
 		if (this.#disposed) return;
+		installOfficeUiThemeFor(this);
 		// Office Theme: the host's status-bar attribute wins; otherwise the choice saved in Options.
 		const savedTheme = readStatusBarTheme();
 		if (!this.hasAttribute('status-bar') && savedTheme) this.statusBar = savedTheme;

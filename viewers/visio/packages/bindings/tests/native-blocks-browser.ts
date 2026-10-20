@@ -20,6 +20,13 @@ let dispose!: () => void;
 let options: BuildingBlockOptions = {};
 const root = document.querySelector<HTMLElement>('#app')!;
 const framework = new URLSearchParams(location.search).get('framework');
+if (new URLSearchParams(location.search).has('shadow')) {
+	const shell = document.createElement('div');
+	root.before(shell);
+	const shadow = shell.attachShadow({ mode: 'open' });
+	shadow.append(root);
+	root.dataset.officeTheme = 'dark';
+}
 @Component({
 	standalone: true,
 	selector: 'native-host',
