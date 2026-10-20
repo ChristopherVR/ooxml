@@ -169,6 +169,30 @@ describe('readXlsxRange ISO dates', () => {
 		]);
 	});
 
+	it('keeps the time a format shows on a whole serial', async () => {
+		expect(
+			await isoForms(false, [
+				[45385, 'h:mm'],
+				[45385, 'yyyy-mm-dd hh:mm'],
+				[1, 'h:mm:ss'],
+				[45385.75, 'h:mm'],
+				[45385, 'yyyy-mm-dd'],
+			]),
+		).toEqual([
+			'2024-04-03T00:00:00',
+			'2024-04-03T00:00:00',
+			'1900-01-01T00:00:00',
+			'2024-04-03T18:00:00',
+			'2024-04-03',
+		]);
+		expect(
+			await isoForms(true, [
+				[1, 'h:mm'],
+				[0, 'h:mm'],
+			]),
+		).toEqual(['1904-01-02T00:00:00', '00:00:00']);
+	});
+
 	it('reads the 1904 date system, whose day 0 is a real date', async () => {
 		expect(
 			await isoForms(true, [
