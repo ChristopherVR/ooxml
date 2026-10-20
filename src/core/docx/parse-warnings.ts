@@ -9,6 +9,17 @@ function hasAny(document: XmlDocument, names: string[]): boolean {
 	return names.some((name) => document.getElementsByTagNameNS(WORD_NS, name).length > 0);
 }
 
+/** Whether the element sits inside a paragraph rather than around paragraphs or tables. */
+function insideParagraph(element: XmlElement): boolean {
+	for (let node = element.parentNode; node; node = node.parentNode) {
+		const local = (node as XmlElement).localName;
+		if (local === 'p') return true;
+		if (['body', 'tc', 'tbl', 'hdr', 'ftr', 'footnote', 'endnote', 'txbxContent'].includes(local))
+			return false;
+	}
+	return false;
+}
+
 /** Warnings derived from raw XML feature scans (features not represented in the model at all). */
 export function warningsFor(document: XmlDocument): string[] {
 	const warnings: string[] = [];
@@ -44,6 +55,13 @@ export function warningsFor(document: XmlDocument): string[] {
 	)
 		warnings.push(
 			'Complex HYPERLINK field codes (w:fldChar/w:instrText) are preserved but not parsed as links; their result text edits as plain text.',
+		);
+	if (
+		hasAny(document, ['smartTag']) ||
+		Array.from(document.getElementsByTagNameNS(WORD_NS, 'customXml')).some(insideParagraph)
+	)
+		warnings.push(
+			'Smart tags and custom XML markup inside paragraphs are read as their text; editing such a paragraph keeps the text but removes the markup.',
 		);
 	const specialBreak =
 		Array.from(document.getElementsByTagNameNS(WORD_NS, 'br')).some(
@@ -100,7 +118,7 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 		);
 	if (hasBookmarks)
 		warnings.push(
-			'Bookmark names are read-only; editing a paragraph that contains bookmarks preserves them but moves their start/end to the paragraph boundaries.',
+			'Bookmark names are read-only; editing a paragraph keeps its bookmarks at the same runs, and a bookmark that starts or ends inside the edited text then covers all of it.',
 		);
 	return warnings;
 }

@@ -19,6 +19,7 @@ import type { ShapeSpec } from '../shape-model';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
+import { symbolOnly } from '../special-characters';
 import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
@@ -110,7 +111,10 @@ export function adaptDocumentModel(
 			paragraphStyleId,
 		});
 		const role = formatting.fontTheme?.ascii ?? formatting.fontTheme?.hAnsi;
-		const family = formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined);
+		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
+		const family =
+			(symbolOnly(run) && run.symbol?.font) ||
+			(formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined));
 		const color =
 			formatting.color ??
 			(formatting.colorTheme && theme

@@ -55,3 +55,4 @@ export * from './zoom-fit';
 export * from './content-control-commands';
 export * from './content-control-guard';
 export * from './content-control-spans';
+export * from './symbol-font';

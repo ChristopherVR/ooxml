@@ -15,6 +15,7 @@ import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from 
 import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
+import { runPositionalTab, runSymbol, specialCharacterText } from './special-characters';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
@@ -123,11 +124,14 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 						if (named(child, 't') || named(child, 'delText')) return textContent(child);
 						if (named(child, 'tab')) return '\t';
 						if (named(child, 'br') || named(child, 'cr')) return '\n';
-						if (named(child, 'noBreakHyphen')) return '‑';
-						return '';
+						return specialCharacterText(child) ?? '';
 					})
 					.join('');
 	const run: TextRun = { text, ...parseDirectRunProperties(props) };
+	const symbol = runSymbol(content);
+	if (symbol) run.symbol = symbol;
+	const positionalTab = runPositionalTab(content);
+	if (positionalTab) run.positionalTab = positionalTab;
 	if (props && runPropertiesHaveUnknownContent(props)) run.sourceRunPropertiesXml = buildXml(props);
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
@@ -179,6 +183,16 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 			);
 		const equation = parseEquation(item);
 		if (equation) return [equation];
+		// Smart tags and inline custom XML only annotate the runs they wrap.
+		if (named(item, 'smartTag') || named(item, 'customXml'))
+			return collectParagraphRuns(
+				item,
+				parseInlineRun,
+				parseOther,
+				resolveInlineLink,
+				openComments,
+				openMoves,
+			).runs;
 		if (!named(item, 'fldSimple')) return undefined;
 		const instr = getW(item, 'instr') ?? '';
 		const link = parseSimpleHyperlinkField(instr);

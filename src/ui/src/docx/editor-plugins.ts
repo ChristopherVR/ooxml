@@ -6,6 +6,7 @@ import { editorKeymap } from './editor-commands';
 import {
 	contentControlPlugin,
 	fieldGuardPlugin,
+	symbolFontPlugin,
 	tableStructureGuardPlugin,
 } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
@@ -43,6 +44,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		tableStructureGuardPlugin(),
 		contentControlPlugin(),
 		contentControlViewPlugin(),
+		symbolFontPlugin(),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({
