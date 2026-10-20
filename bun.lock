@@ -584,6 +584,7 @@
         "docx-core": "workspace:*",
         "docx-web-component": "workspace:*",
         "ooxml-core": "*",
+        "ooxml-ui": "*",
       },
       "devDependencies": {
         "react": "^19.3.1",
@@ -1540,6 +1541,7 @@
       "dependencies": {
         "@christophervr/xlsx-core": "workspace:*",
         "ooxml-core": "*",
+        "ooxml-ui": "*",
         "xlsx-web-component": "workspace:*",
       },
       "devDependencies": {
