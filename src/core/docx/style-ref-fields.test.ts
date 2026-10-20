@@ -71,4 +71,44 @@ describe('refreshing STYLEREF results', () => {
 		expect(refreshStyleRefFields(withNumber).sections).toBe(withNumber.sections);
 	});
 
+	it('updates a body field from the nearest text before it, else after it, only when asked', async () => {
+		const model = await load({
+			body:
+				paragraph('Scope', 'Heading1') +
+				paragraph('', undefined, complexField('STYLEREF 1', ['old'])) +
+				paragraph('Method', 'Heading1') +
+				paragraph('', undefined, complexField('STYLEREF "Doc Number"', ['old'])) +
+				paragraph('DOC-3', 'DocNumber'),
+		});
+		expect(refreshStyleRefFields(model)).toBe(model);
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		expect(shown(expectParagraph(refreshed.blocks[1]))).toBe('Scope');
+		expect(shown(expectParagraph(refreshed.blocks[3]))).toBe('DOC-3');
+		expect(refreshed.blocks[0]).toBe(model.blocks[0]);
+	});
+
+	it('searches a body field own paragraph first, back from the field and then on from it', async () => {
+		const styled = (text: string) =>
+			`<w:r><w:rPr><w:rStyle w:val="EntryName"/></w:rPr><w:t>${text}</w:t></w:r>`;
+		const plain = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>`;
+		const field = complexField('STYLEREF "Entry Name"', ['old']);
+		// A result in the style it refers to is the field's own, not text it can take.
+		const own =
+			'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+			'<w:r><w:instrText xml:space="preserve"> STYLEREF "Entry Name" </w:instrText></w:r>' +
+			`<w:r><w:fldChar w:fldCharType="separate"/></w:r>${styled('stale')}` +
+			'<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+		const model = await load({
+			body:
+				paragraph('', undefined, `${field}${plain(' then ')}${styled('Oak')}`) +
+				paragraph('', undefined, styled('Alder')) +
+				paragraph('', undefined, `${styled('Ash')}${plain(', see ')}${field}`) +
+				paragraph('', undefined, styled('Pine')) +
+				paragraph('', undefined, own),
+		});
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		expect(shown(expectParagraph(refreshed.blocks[0]))).toBe('Oak then Oak');
+		expect(shown(expectParagraph(refreshed.blocks[2]))).toBe('Ash, see Ash');
+		expect(shown(expectParagraph(refreshed.blocks[4]))).toBe('Pine');
+	});
 });

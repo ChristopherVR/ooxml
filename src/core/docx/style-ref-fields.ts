@@ -12,12 +12,13 @@ import type {
 import {
 	parseStyleReference,
 	styleRefSource,
+	type RunSpan,
 	type StyleRefSource,
 	type StyleReference,
 } from './style-ref';
 
-/** A field's cached result in a paragraph's runs. */
-interface FieldResult {
+/** A field's cached result in a paragraph's runs; `from` and `to` span the whole field. */
+interface FieldResult extends RunSpan {
 	instr: string;
 	locked: boolean;
 	/** The runs holding the result. */
@@ -31,10 +32,17 @@ interface FieldResult {
 /** Complex fields closed in this paragraph, and simple fields, with the runs of their results. */
 function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 	const found: FieldResult[] = [];
-	const open: { code: string; codeRun?: number; separate?: number; locked: boolean }[] = [];
+	const open: {
+		begin: number;
+		code: string;
+		codeRun?: number;
+		separate?: number;
+		locked: boolean;
+	}[] = [];
 	runs.forEach((run, index) => {
 		const top = open.at(-1);
-		if (run.fieldChar === 'begin') open.push({ code: '', locked: isFieldLocked(run) });
+		if (run.fieldChar === 'begin')
+			open.push({ begin: index, code: '', locked: isFieldLocked(run) });
 		else if (run.fieldCode !== undefined && top && top.separate === undefined) {
 			top.code += run.fieldCode;
 			top.codeRun ??= index;
@@ -50,6 +58,8 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 					results.push(at);
 			}
 			found.push({
+				from: top.begin,
+				to: index,
 				instr,
 				locked: top.locked || results.some((at) => isFieldLocked(runs[at])),
 				runs: results,
@@ -65,10 +75,18 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 			simple = undefined;
 			return;
 		}
-		if (simple && simple.instr === run.field.instr && identity === run.fieldInstanceId)
+		if (simple && simple.instr === run.field.instr && identity === run.fieldInstanceId) {
 			simple.runs.push(index);
-		else {
-			simple = { instr: run.field.instr, locked: false, runs: [index], insertAt: index };
+			simple.to = index;
+		} else {
+			simple = {
+				from: index,
+				to: index,
+				instr: run.field.instr,
+				locked: false,
+				runs: [index],
+				insertAt: index,
+			};
 			identity = run.fieldInstanceId;
 			found.push(simple);
 		}
@@ -118,6 +136,8 @@ function replaceResult(runs: readonly TextRun[], field: FieldResult, text: strin
 export type StyleRefEvaluator = (
 	reference: StyleReference,
 	paragraph: Paragraph,
+	/** The field's own runs in `paragraph`. */
+	field: RunSpan,
 ) => string | undefined;
 
 function paragraphWithResults(paragraph: Paragraph, evaluate: StyleRefEvaluator): Paragraph {
@@ -126,7 +146,7 @@ function paragraphWithResults(paragraph: Paragraph, evaluate: StyleRefEvaluator)
 	const start = (field: FieldResult) => field.runs[0] ?? field.insertAt;
 	for (const field of fieldResults(runs).sort((a, b) => start(b) - start(a))) {
 		const reference = field.locked ? undefined : parseStyleReference(field.instr);
-		const text = reference && evaluate(reference, paragraph);
+		const text = reference && evaluate(reference, paragraph, field);
 		if (text !== undefined) runs = replaceResult(runs, field, text) ?? runs;
 	}
 	return runs === paragraph.runs ? paragraph : { ...paragraph, runs: [...runs] };
@@ -183,16 +203,53 @@ function pageIndependentResult(
 	return result;
 }
 
+/**
+ * The result of a STYLEREF in the body: the nearest text in the style before the field, else the
+ * nearest after it (ECMA-376 Part 1, 17.16.5; Word searches back from the field, then on from
+ * it). Text in a character style in the field's own paragraph is nearest, the field's own runs
+ * (`field`) left out; a paragraph style's match is a whole paragraph, so the field's own is not
+ * one. Undefined when the paragraph is not in the main document or nothing is in the style.
+ */
+export function bodyStyleRefResult(
+	source: StyleRefSource,
+	reference: StyleReference,
+	paragraph: Paragraph,
+	field?: RunSpan,
+): string | undefined {
+	const target = source.target(reference.style);
+	const at = source.index.get(paragraph.id);
+	if (!target || at === undefined) return undefined;
+	const own =
+		field && target.kind === 'character' ? source.portions(at, reference, target, field) : [];
+	const earlier = own.filter((portion) => portion.to < field!.from);
+	if (earlier.length) return earlier.at(-1)!.text;
+	for (let index = at - 1; index >= 0; index--) {
+		const found = source.results(index, reference, target);
+		if (found.length) return found.at(-1);
+	}
+	const later = own.find((portion) => portion.from > field!.to);
+	if (later) return later.text;
+	for (let index = at + 1; index < source.paragraphs.length; index++) {
+		const found = source.results(index, reference, target);
+		if (found.length) return found[0];
+	}
+	return undefined;
+}
+
 const SLOTS = ['default', 'first', 'even'] as const;
 
 /**
  * Brings STYLEREF results up to date. A field in a header or footer takes the text it shows on
  * every page, when that does not depend on the page (`pageIndependentResult`); Word updates such
- * fields as the page is drawn, so a saved header should not keep a stale value. Locked fields
- * and fields with switches that are not evaluated keep their result. Returns `model` itself when
- * nothing changed.
+ * fields as the page is drawn, so a saved header should not keep a stale value. With
+ * `body: true`, fields in the body take the nearest text in their style before them, else after
+ * them, as Word's Update Field does. Locked fields and fields with switches that are not evaluated
+ * keep their result. Returns `model` itself when nothing changed.
  */
-export function refreshStyleRefFields(model: DocumentModel): DocumentModel {
+export function refreshStyleRefFields(
+	model: DocumentModel,
+	options: { body?: boolean } = {},
+): DocumentModel {
 	let source: StyleRefSource | undefined;
 	const read = () => (source ??= styleRefSource(model));
 	const everywhere = new Map<string, string | undefined>();
@@ -230,6 +287,11 @@ export function refreshStyleRefFields(model: DocumentModel): DocumentModel {
 			...(footers ? { footers } : {}),
 		};
 	});
-	if (!changed) return model;
-	return { ...model, ...(sections ? { sections } : {}) };
+	const blocks = options.body
+		? withStyleRefResults(model.blocks, (reference, paragraph, field) =>
+				bodyStyleRefResult(read(), reference, paragraph, field),
+			)
+		: model.blocks;
+	if (!changed && blocks === model.blocks) return model;
+	return { ...model, blocks, ...(sections ? { sections } : {}) };
 }

@@ -17,7 +17,7 @@ export { layoutSections } from './page-flow';
 export { adaptDocumentModel } from './adapter';
 export { paragraphFloats } from './adapt-floats';
 export { layoutDocument, layoutDocumentModel } from './layout';
-export type { LayoutReviewOptions } from './review-display';
+export { reviewSourceLength, type LayoutReviewOptions } from './review-display';
 export { floatPosition, floatOrigin, positionFloats, FLOAT_WRAP_NOTE } from './floats';
 export { cssFontStack } from './fonts';
 export { placeTab, type TabPlacement } from './tab-stops';

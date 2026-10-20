@@ -137,18 +137,29 @@ const shownText = (run: TextRun): string =>
 		? ''
 		: run.text;
 
-/** Text a STYLEREF can take, and the runs of its paragraph it comes from (`from` to `to`). */
-export interface StyleRefPortion {
-	text: string;
+/** Runs of a paragraph, `from` to `to` (both included). */
+export interface RunSpan {
 	from: number;
 	to: number;
 }
 
-/** Each stretch of runs in the character style; runs without text do not break one. */
-function characterPortions(paragraph: Paragraph, id: string): StyleRefPortion[] {
+/** Text a STYLEREF can take, and the runs of its paragraph it comes from. */
+export interface StyleRefPortion extends RunSpan {
+	text: string;
+}
+
+/**
+ * Each stretch of runs in the character style; runs without text do not break one, the runs of
+ * `skip` (a field's own) do and are not read.
+ */
+function characterPortions(paragraph: Paragraph, id: string, skip?: RunSpan): StyleRefPortion[] {
 	const portions: StyleRefPortion[] = [];
 	let open: StyleRefPortion | undefined;
 	paragraph.runs.forEach((run, index) => {
+		if (skip && index >= skip.from && index <= skip.to) {
+			open = undefined;
+			return;
+		}
 		const text = shownText(run);
 		if (!text) return;
 		if (run.style !== id) open = undefined;
@@ -173,9 +184,15 @@ export interface StyleRefSource {
 	/**
 	 * Every result the field could take from `paragraphs[index]`, first to last, with the runs it
 	 * comes from; empty when that paragraph has no text in the style (or, with `\n`, no number).
-	 * A paragraph-style match has one result; a character style has one per stretch of runs in it.
+	 * A paragraph-style match has one result; a character style has one per stretch of runs in it,
+	 * leaving out the runs of `skip`.
 	 */
-	portions(index: number, reference: StyleReference, target: StyleTarget): StyleRefPortion[];
+	portions(
+		index: number,
+		reference: StyleReference,
+		target: StyleTarget,
+		skip?: RunSpan,
+	): StyleRefPortion[];
 	/** The texts of `portions`. */
 	results(index: number, reference: StyleReference, target: StyleTarget): string[];
 }
@@ -207,11 +224,12 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 		at: number,
 		reference: StyleReference,
 		target: StyleTarget,
+		skip?: RunSpan,
 	): StyleRefPortion[] => {
 		const paragraph = paragraphs[at];
 		if (!paragraph) return [];
 		let found: StyleRefPortion[];
-		if (target.kind === 'character') found = characterPortions(paragraph, target.id);
+		if (target.kind === 'character') found = characterPortions(paragraph, target.id, skip);
 		else {
 			// A paragraph without text holds no text in its style, so it is passed over.
 			const text = inParagraphStyle(paragraph, target)

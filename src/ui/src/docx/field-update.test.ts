@@ -7,11 +7,12 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { seqInstruction } from './caption-commands';
 import { insertCaption } from './caption-commands';
 import { runToInlineNodes, inlineNodeRun } from 'ooxml-core/docx/ui';
-import { loadDocx, type Paragraph } from 'ooxml-core/docx';
+import { createDocument, loadDocx, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
 import { readFile } from 'node:fs/promises';
 import { URL as NodeURL } from 'node:url';
 import { fieldLockFixture } from '../../../core/docx/test-support/field-lock-fixture';
 import { updateFields } from './field-update';
+import { docToModel } from './model-adapter';
 import { schema } from './schema';
 
 beforeAll(() => {
@@ -220,6 +221,82 @@ describe('updateFields', () => {
 		expect(updateFields(view, pages)).toBe(false);
 		undo(view.state, view.dispatch);
 		expect(texts(view)[1]).toBe('Old title|x|gone');
+	});
+
+	it('gives a body STYLEREF the nearest text in its style before it, else after it', () => {
+		const heading = (id: string, text: string) =>
+			schema.nodes.paragraph!.create({ id, style: 'Heading1' }, [schema.text(text)]);
+		const view = editor(
+			heading('p0', 'Scope'),
+			paragraph('p1', [schema.text('See '), field('old', ' STYLEREF 1 ')]),
+			paragraph('p2', [
+				field('old', ' STYLEREF "Doc Number" '),
+				schema.text('|'),
+				field('x', ' STYLEREF 1 \\w '),
+			]),
+			schema.nodes.paragraph!.create({ id: 'p3', style: 'DocNumber' }, [schema.text('DOC-5')]),
+		);
+		const paragraphOf = (id: string, style: string | undefined, text: string): Paragraph => ({
+			type: 'paragraph',
+			id,
+			...(style ? { style } : {}),
+			runs: [{ text }],
+		});
+		const model: DocumentModel = {
+			...createDocument(),
+			blocks: [
+				paragraphOf('p0', 'Heading1', 'Scope'),
+				paragraphOf('p1', undefined, 'See old'),
+				paragraphOf('p2', undefined, 'old|x'),
+				paragraphOf('p3', 'DocNumber', 'DOC-5'),
+			],
+			paragraphStyles: {
+				docDefaults: {},
+				styles: {
+					Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} },
+					DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} },
+				},
+				warnings: [],
+			},
+		};
+		expect(updateFields(view, pages)).toBe(false);
+		expect(updateFields(view, pages, model)).toBe(true);
+		expect(texts(view)).toEqual(['Scope', 'See Scope', 'DOC-5|x', 'DOC-5']);
+	});
+
+	it('reads a body STYLEREF from its own paragraph and from captions renumbered with it', () => {
+		const styled = (text: string) => runToInlineNodes({ text, style: 'EntryName' }, schema)[0]!;
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'Caption' }, [
+				schema.text('Figure '),
+				field('9', seqInstruction('Figure')),
+			]),
+			paragraph('p1', [styled('Alder')]),
+			paragraph('p2', [
+				styled('Ash'),
+				schema.text(', see '),
+				field('old', ' STYLEREF "Entry Name" '),
+				schema.text(' in '),
+				field('old', ' STYLEREF Caption '),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Caption: { id: 'Caption', name: 'caption', formatting: {} } },
+				warnings: [],
+			},
+			characterStyles: {
+				docDefaults: {},
+				styles: {
+					EntryName: { id: 'EntryName', type: 'character', name: 'Entry Name', formatting: {} },
+				},
+				warnings: [],
+			},
+		};
+		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(true);
+		expect(texts(view)).toEqual(['Figure 1', 'Alder', 'Ash, see Ash in Figure 1']);
 	});
 
 	it('does nothing in a read-only view', () => {
