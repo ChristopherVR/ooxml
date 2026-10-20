@@ -3,8 +3,10 @@ import { loadXlsx } from '../xlsx/read/load';
 import { saveXlsx } from '../xlsx/write/save';
 import { createEditSession } from '../xlsx/edit/session';
 import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address';
-import { forEachCell } from '../xlsx/cells';
-import { definedNameList, rangeCells, sheetSummaries } from './xlsx-read';
+import { forEachCell, getCell } from '../xlsx/cells';
+import { findAll } from '../xlsx/edit/find';
+import type { FindQuery } from '../xlsx/edit/types-clipboard';
+import { cellView, definedNameList, rangeCells, sheetSummaries } from './xlsx-read';
 
 /**
  * The sheets (index, name, state, used range with its row and column counts, tables), the
@@ -96,6 +98,70 @@ export async function readXlsxFilledCells(bytes: Uint8Array, { maxCells = 5000 }
 	return {
 		sheets,
 		truncated: sheets.some((s) => s.omitted > 0),
+		warnings: workbook.warnings,
+	};
+}
+
+export interface XlsxFindOptions {
+	/** The sheet to search; every sheet when absent. */
+	sheetIndex?: number;
+	/** An A1 range to search within (needs `sheetIndex`). */
+	range?: string;
+	/** `formulas` (Excel's default) searches what was typed; `values` the text as displayed. */
+	lookIn?: 'formulas' | 'values';
+	matchCase?: boolean;
+	/** The whole cell content must match. */
+	wholeCell?: boolean;
+	/** Excel wildcards: `*` any run, `?` one character, `~` escapes. On by default. */
+	wildcards?: boolean;
+	/** At most this many matches (1 to 1000, default 100); `total` counts them all. */
+	maxResults?: number;
+}
+
+/**
+ * The cells matching `text` the way Excel's Find does, sheet by sheet in row order, each with
+ * its sheet, address and the same view as a range read. Bounded by `maxResults`.
+ */
+export async function findXlsxCells(
+	bytes: Uint8Array,
+	text: string,
+	options: XlsxFindOptions = {},
+) {
+	if (!text) throw new Error('The search text is empty');
+	const max = options.maxResults ?? 100;
+	if (!Number.isSafeInteger(max) || max < 1 || max > 1000)
+		throw new Error('Return between 1 and 1000 matches per request');
+	const workbook = await loadXlsx(bytes);
+	const query: FindQuery = { text, lookIn: options.lookIn ?? 'formulas' };
+	const { sheetIndex } = options;
+	if (sheetIndex !== undefined) {
+		if (!Number.isSafeInteger(sheetIndex) || !workbook.sheets[sheetIndex])
+			throw new Error('Invalid sheet');
+		query.sheet = sheetIndex;
+	}
+	if (options.range !== undefined) {
+		const range = parseRange(options.range);
+		if (sheetIndex === undefined) throw new Error('A range needs a sheetIndex');
+		if (!range) throw new Error('Invalid range');
+		query.range = range;
+	}
+	if (options.matchCase) query.matchCase = true;
+	if (options.wholeCell) query.wholeCell = true;
+	if (options.wildcards === false) query.wildcards = false;
+	const found = findAll(workbook, query);
+	const matches = found.slice(0, max).map((match) => {
+		const sheet = workbook.sheets[match.sheet];
+		return {
+			sheetIndex: match.sheet,
+			sheet: sheet?.name ?? '',
+			address: formatAddress(match),
+			...cellView(workbook, sheet && getCell(sheet, match.row, match.col)),
+		};
+	});
+	return {
+		matches,
+		total: found.length,
+		truncated: found.length > max,
 		warnings: workbook.warnings,
 	};
 }

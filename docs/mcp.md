@@ -37,6 +37,9 @@ A range read returns, for each cell, its value and formula, the text as the grid
 (the cell's number format applied by the core formatter), the number format code (absent for
 General) and, for date and time formats, the value in ISO 8601 without a time zone (`2024-04-03`,
 `10:30:00` or `2024-04-03T10:30:00`; durations such as `[h]:mm` have none).
+`findXlsxCells` searches the way Excel's Find does (formulas as typed or values as displayed,
+match case, whole cell, `*` `?` `~` wildcards, optionally one sheet or range) and returns at most
+1,000 matches, each with its sheet, address and the same cell view, plus the total count.
 
 The existing PowerPoint MCP keeps its established tool set and names. Its server
 exports registration and accepts a root directory for composition. Its model

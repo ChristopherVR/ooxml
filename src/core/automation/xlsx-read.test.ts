@@ -4,7 +4,7 @@ import type { Workbook } from '../xlsx/model';
 import { internStyle, styleAt } from '../xlsx/styles';
 import { createWorkbook } from '../xlsx/workbook';
 import { saveXlsx } from '../xlsx/write/save';
-import { inspectXlsx, readXlsxRange } from './xlsx';
+import { findXlsxCells, inspectXlsx, readXlsxRange } from './xlsx';
 
 /** Puts a value with a number format straight into the model, as a loaded file would hold it. */
 function put(workbook: Workbook, sheet: number, ref: string, value: number, numFmt: string) {
@@ -179,5 +179,58 @@ describe('readXlsxRange ISO dates', () => {
 				[2957004, 'yyyy-mm-dd'],
 			]),
 		).toEqual(['1904-01-01', '1904-01-01T06:00:00', '06:00:00', '9999-12-31', undefined]);
+	});
+});
+
+describe('findXlsxCells', () => {
+	it('finds values as displayed and formulas as typed, with Excel wildcards', async () => {
+		const bytes = await sample();
+		const north = await findXlsxCells(bytes, 'nor*', { lookIn: 'values' });
+		expect(north.matches).toEqual([
+			{ sheetIndex: 0, sheet: 'Sales', address: 'A2', value: 'North', text: 'North' },
+		]);
+		expect(north.truncated).toBe(false);
+		// Values are searched as displayed: the date reads 4/3/2024, not 45385.
+		expect((await findXlsxCells(bytes, '4/3/2024', { lookIn: 'values' })).matches).toMatchObject([
+			{ address: 'B2', iso: '2024-04-03' },
+		]);
+		expect((await findXlsxCells(bytes, '45385', { lookIn: 'values' })).matches).toEqual([]);
+		// Formulas (Excel's default) search what was typed.
+		expect((await findXlsxCells(bytes, 'D2*2', { wildcards: false })).matches).toMatchObject([
+			{ address: 'D3', formula: 'D2*2', value: 2469 },
+		]);
+	});
+
+	it('honours case, whole-cell, sheet and range limits', async () => {
+		const bytes = await sample();
+		const addresses = async (query: string, options: Parameters<typeof findXlsxCells>[2]) =>
+			(await findXlsxCells(bytes, query, options)).matches.map(
+				(m) => `${m.sheetIndex}!${m.address}`,
+			);
+		expect(await addresses('north', { matchCase: true })).toEqual([]);
+		expect(await addresses('o', { wholeCell: true })).toEqual([]);
+		expect(await addresses('o', { lookIn: 'values' })).toEqual([
+			'0!A1',
+			'0!B1',
+			'0!D1',
+			'0!A2',
+			'0!A3',
+		]);
+		expect(await addresses('o', { lookIn: 'values', sheetIndex: 0, range: 'A2:B3' })).toEqual([
+			'0!A2',
+			'0!A3',
+		]);
+		expect(await addresses('0.08', {})).toEqual(['1!B2']);
+		await expect(findXlsxCells(bytes, 'x', { sheetIndex: 9 })).rejects.toThrow('Invalid sheet');
+		await expect(findXlsxCells(bytes, 'x', { range: 'A1:B2' })).rejects.toThrow('sheetIndex');
+		await expect(findXlsxCells(bytes, '', {})).rejects.toThrow('empty');
+	});
+
+	it('bounds the matches and counts the rest', async () => {
+		const result = await findXlsxCells(await sample(), '*', { maxResults: 3 });
+		expect(result.matches).toHaveLength(3);
+		expect(result.truncated).toBe(true);
+		expect(result.total).toBeGreaterThan(3);
+		await expect(findXlsxCells(await sample(), '*', { maxResults: 1001 })).rejects.toThrow('1000');
 	});
 });
