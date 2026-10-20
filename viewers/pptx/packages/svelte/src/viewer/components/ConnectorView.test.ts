@@ -53,14 +53,14 @@ describe('connectorView arrow markers', () => {
 			connectorEndArrowLength: 'lg',
 			connectorEndArrowWidth: 'lg',
 		});
-		// Sanity: the shared geometry derives a scaled marker (4 * 1.5 = 6).
+		// PowerPoint's large triangle spans five stroke widths.
 		const geometry = buildConnectorGeometry(element, 2);
-		expect(geometry.endMarker?.markerWidth).toBe(6);
+		expect(geometry.endMarker?.markerWidth).toBe(5);
 
 		const marker = render(element).querySelector('marker');
 		expect(marker).not.toBeNull();
-		expect(marker?.getAttribute('markerWidth')).toBe('6');
-		expect(marker?.getAttribute('markerHeight')).toBe('6');
+		expect(marker?.getAttribute('markerWidth')).toBe('5');
+		expect(marker?.getAttribute('markerHeight')).toBe('5');
 	});
 
 	// Shared `markerPath` flags the open chevron ('arrow') as `strokeOnly`: a

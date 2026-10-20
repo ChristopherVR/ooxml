@@ -62,7 +62,7 @@ describe('connectorRenderer', () => {
 		expect(wrapper.get('line').attributes('marker-end')).toBeUndefined();
 	});
 
-	it('sizes the marker box from the shared markerPath (med default is 4)', () => {
+	it('sizes the marker box from the shared markerPath (med default is 3)', () => {
 		const wrapper = mount(ConnectorRenderer, {
 			props: {
 				element: connector({ shapeStyle: { connectorEndArrow: 'triangle' } }),
@@ -70,8 +70,8 @@ describe('connectorRenderer', () => {
 			},
 		});
 		const marker = wrapper.get('marker#cxn_1-end');
-		expect(marker.attributes('markerWidth')).toBe('4');
-		expect(marker.attributes('markerHeight')).toBe('4');
+		expect(marker.attributes('markerWidth')).toBe('3');
+		expect(marker.attributes('markerHeight')).toBe('3');
 	});
 
 	it('scales the marker box for lg length / sm width arrow-size tokens', () => {
@@ -88,9 +88,9 @@ describe('connectorRenderer', () => {
 			},
 		});
 		const marker = wrapper.get('marker#cxn_1-end');
-		// markerWidth follows @len (lg = 1.5 * 4 = 6); markerHeight follows @w (sm = 0.6 * 4 = 2.4).
-		expect(marker.attributes('markerWidth')).toBe('6');
-		expect(marker.attributes('markerHeight')).toBe('2.4');
+		// Length and width use independent PowerPoint size tokens.
+		expect(marker.attributes('markerWidth')).toBe('5');
+		expect(marker.attributes('markerHeight')).toBe('2');
 	});
 
 	// Shared `markerPath` flags the 'arrow' open-chevron type `strokeOnly: true`
