@@ -16,6 +16,9 @@
 		"ooxml-core": "*",
 		"xlsx-web-component": "workspace:*"
 	},
+	"devDependencies": {
+		"react": "^19.3.1"
+	},
 	"peerDependencies": {
 		"@angular/core": ">=19",
 		"react": ">=18",

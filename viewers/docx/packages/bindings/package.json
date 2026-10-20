@@ -16,6 +16,9 @@
 		"docx-web-component": "workspace:*",
 		"ooxml-core": "*"
 	},
+	"devDependencies": {
+		"react": "^19.3.1"
+	},
 	"peerDependencies": {
 		"@angular/core": ">=19",
 		"react": ">=18",
