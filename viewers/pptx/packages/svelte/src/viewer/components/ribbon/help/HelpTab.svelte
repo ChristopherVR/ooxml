@@ -1,23 +1,26 @@
 <script lang="ts">
-	import { HELP_RIBBON_COMMANDS } from 'ooxml-ui/pptx';
+	import { buildHelpRibbon } from 'ooxml-ui/pptx';
+	import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { HelpTabProps } from './help-tab-props';
 
 	const props: HelpTabProps = $props();
 	const t = useTranslator();
-	const actions = $derived({
-		'help.help.options': props.onsettings,
-		'help.help.keyboardShortcuts': props.onshortcuts,
-		'help.help.accessibility': props.onaccessibility,
-	});
+	// The host wires Settings only while the Options dialog is available.
+	const groups = $derived(buildHelpRibbon(t, { options: props.onsettings !== undefined }));
+	function request(event: Event): void {
+		switch ((event as RibbonCommandRequestEvent).detail.id) {
+			case 'help.help.options':
+				props.onsettings?.();
+				break;
+			case 'help.help.keyboardShortcuts':
+				props.onshortcuts();
+				break;
+			case 'help.help.accessibility':
+				props.onaccessibility();
+				break;
+		}
+	}
 </script>
 
-<pptx-ui-ribbon-group label={t('pptx.ribbon.tab.help')} data-ribbon-group="help.help">
-	{#each HELP_RIBBON_COMMANDS as command (command.id)}
-		{#if command.id !== 'help.help.options' || props.onsettings}
-			<pptx-ui-ribbon-command data-ribbon-control={command.id} label={t(command.labelKey)} icon={command.icon} compact
-				oncommand-request={() => actions[command.id as keyof typeof actions]?.()}
-			></pptx-ui-ribbon-command>
-		{/if}
-	{/each}
-</pptx-ui-ribbon-group>
+<pptx-ui-ribbon-section {groups} oncommand-request={request}></pptx-ui-ribbon-section>
