@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { loadDocx } from './index';
 import { checkboxState } from './content-control-edit';
 import { at, expectTable, must } from './test-support/access';
+import { twips } from './units';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const w14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
@@ -88,6 +89,30 @@ describe('DOCX text edits in tables whose rows have different cell counts', () =
 			['Indented', 'Second cell'],
 			['Approved', '☐ Yes'],
 		]);
+	});
+
+	it('keeps a row offset (gridBefore, gridAfter) exactly when the row text and height change', async () => {
+		const trPr =
+			'<w:trPr><w:gridBefore w:val="1"/><w:gridAfter w:val="1"/><w:trHeight w:val="400"/></w:trPr>';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblGrid><w:gridCol w:w="1000"/><w:gridCol w:w="2000"/><w:gridCol w:w="1000"/></w:tblGrid>` +
+				`<w:tr>${cell(text('A'))}${cell(text('B'))}${cell(text('C'))}</w:tr>` +
+				`<w:tr>${trPr}${cell(text('Offset'))}</w:tr></w:tbl><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const table = expectTable(loaded.model.blocks[0]);
+		at(at(at(at(table.rows, 1), 0).paragraphs, 0).runs, 0).text = 'Edited';
+		const rows = rowsOf(await documentXml(await loaded.save()));
+		expect(at(rows, 1)).toContain(`${trPr}<w:tc>`);
+		expect(at(rows, 1)).toContain('Edited');
+		// The row model has no offsets to change: only height, keep-together and header are written.
+		const props = must(table.rowProperties?.[1]);
+		props.heightTwips = twips(600);
+		const resized = rowsOf(await documentXml(await loaded.save()));
+		expect(at(resized, 1)).toContain('<w:gridBefore w:val="1"/><w:gridAfter w:val="1"/>');
+		expect(at(resized, 1)).toContain('w:val="600"');
 	});
 
 	it('saves a check box toggled inside the grid', async () => {
