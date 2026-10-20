@@ -41,6 +41,6 @@
 		"@angular/platform-browser": "^22.2.3"
 	},
 	"peerDependencies": {
-		"@angular/core": "^21.0.0"
+		"@angular/core": "^21.0.0 || ^22.0.0"
 	}
 }

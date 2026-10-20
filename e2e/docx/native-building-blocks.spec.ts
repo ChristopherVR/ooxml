@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type {} from '../../demos/docx/demo-vanilla/building-blocks-types';
+import type { NativeHarness } from '../../demos/docx/demo-vanilla/building-blocks-types';
 for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native Word composition reacts, persists and disposes`, async ({ page }) => {
 		const errors: string[] = [];
@@ -21,7 +21,7 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
 		await page.keyboard.type(' native bold');
 		await expect(editor.locator('strong')).toContainText('native bold');
 		const saved = await page.evaluate(async () => {
-			const host = window.nativeWord!;
+			const host: NativeHarness = window.nativeWord!;
 			const saved = await host.handle.save();
 			const dirty = host.handle.dirty;
 			await host.handle.load(await saved.arrayBuffer());

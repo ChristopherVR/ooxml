@@ -45,6 +45,11 @@
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
+	"devDependencies": {
+		"@angular/compiler": "^22.2.3",
+		"@angular/core": "^22.2.3",
+		"@angular/platform-browser": "^22.2.3"
+	},
 	"peerDependencies": {
 		"@angular/core": ">=19"
 	}
