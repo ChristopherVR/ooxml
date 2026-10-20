@@ -48,6 +48,12 @@ describe('helpSection', () => {
 		});
 		const labels = wrapper.findAll('pptx-ui-ribbon-command').map((b) => b.attributes('label'));
 		expect(labels).toStrictEqual(['Settings', 'Keyboard Shortcuts', 'Accessibility Check']);
+		// The shared section builds the group, as in the other four bindings.
+		expect(
+			wrapper
+				.find('pptx-ui-ribbon-section > pptx-ui-ribbon-group[data-ribbon-group="help.help"]')
+				.exists(),
+		).toBeTruthy();
 	});
 
 	it('opens the options dialog when the host wires it', async () => {
