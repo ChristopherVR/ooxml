@@ -1,4 +1,5 @@
 import type { RibbonControlId, RibbonGroupId } from './customization';
+import type { RibbonGroupView } from './ribbon-command-view';
 
 /** View-only command metadata; hosts retain all document and dialog operations. */
 export interface SlideShowRibbonCommand {
@@ -85,3 +86,24 @@ export const SLIDE_SHOW_COMMAND_GROUPS: readonly SlideShowRibbonGroup[] = [
 		],
 	},
 ];
+
+/**
+ * Translated `pptx-ui-ribbon-section` groups for a command catalogue: labels and ScreenTips
+ * through `t`, unsupported commands disabled.
+ */
+export function ribbonGroupViews(
+	t: (key: string) => string,
+	groups: readonly SlideShowRibbonGroup[],
+): RibbonGroupView[] {
+	return groups.map((group) => ({
+		id: group.id,
+		label: t(group.labelKey),
+		commands: group.commands.map((command) => ({
+			id: command.id,
+			label: t(command.labelKey),
+			icon: command.icon,
+			...(command.tooltipKey ? { title: t(command.tooltipKey) } : {}),
+			...(command.unsupported ? { disabled: true } : {}),
+		})),
+	}));
+}

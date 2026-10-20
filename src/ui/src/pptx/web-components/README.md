@@ -363,7 +363,7 @@ Shared gallery buttons carry `data-pptx-compact` to opt out of a native binding'
 generic button size reset. Their own shared media rules retain 44px targets on
 coarse pointers and narrow ribbon layouts.
 
-## Command sections and Review
+## Command sections: Review, Help and Record
 
 `pptx-ui-ribbon-section.groups` receives translated `RibbonGroupView` arrays.
 The shared keyed renderer reuses the command and group primitives, preserves
@@ -378,6 +378,13 @@ has the public ID `review.language.language`; Hide Ink belongs to `review.ink`.
 Native adapters retain settings, comparison, spell-check preferences, comment
 mutation/history and accessibility panels. The Angular-only duplicate Link
 command is removed from Review; its native output remains compatible.
+
+`buildHelpRibbon` and `buildRecordRibbon` own the Help and Record tabs the same
+way: order, labels, icons, compact Help commands and the disabled Record
+placeholders. Help leaves out a command the binding cannot open: Options when
+the dialog is unavailable, and Keyboard Shortcuts when the binding says so
+(Vanilla, whose shortcuts are a tab of Options). Bindings keep the native
+actions (settings, shortcuts sheet, accessibility check, recording).
 
 ## Draw tools
 
