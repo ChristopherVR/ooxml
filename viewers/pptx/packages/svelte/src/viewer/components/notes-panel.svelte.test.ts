@@ -1,3 +1,4 @@
+import type { Window as HappyWindow } from 'happy-dom';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -180,35 +181,43 @@ describe('notesPanel', () => {
 	});
 
 	it('prints the current slide notes into a hidden iframe via the shared buildNotesPrintHtml builder', () => {
-		const target = document.createElement('div');
-		document.body.appendChild(target);
-		const props = $state<NotesPanelProps>({
-			slide: slide({ notes: 'Remember the demo.', slideNumber: 2 }),
-			expanded: true,
-			onupdate: () => {},
-		});
-		const instance = mount(NotesPanel, { target, props });
-		flushSync();
+		// Happy DOM 21 disables iframe documents unless the test opts in.
+		const settings = (window as unknown as HappyWindow).happyDOM.settings;
+		const enabled = settings.enableIframePageLoading;
+		settings.enableIframePageLoading = true;
 		try {
-			const printLabel = translate('en', 'pptx.notes.printNotes');
-			const printButton = toolbarRoot(target)?.querySelector<HTMLButtonElement>(
-				`[aria-label="${printLabel}"]`,
-			);
-			expect(printButton).not.toBeNull();
+			const target = document.createElement('div');
+			document.body.appendChild(target);
+			const props = $state<NotesPanelProps>({
+				slide: slide({ notes: 'Remember the demo.', slideNumber: 2 }),
+				expanded: true,
+				onupdate: () => {},
+			});
+			const instance = mount(NotesPanel, { target, props });
+			flushSync();
+			try {
+				const printLabel = translate('en', 'pptx.notes.printNotes');
+				const printButton = toolbarRoot(target)?.querySelector<HTMLButtonElement>(
+					`[aria-label="${printLabel}"]`,
+				);
+				expect(printButton).not.toBeNull();
 
-			const framesBefore = document.body.querySelectorAll('iframe[aria-hidden="true"]').length;
-			printButton?.click();
+				const framesBefore = document.body.querySelectorAll('iframe[aria-hidden="true"]').length;
+				printButton?.click();
 
-			const frames = document.body.querySelectorAll<HTMLIFrameElement>(
-				'iframe[aria-hidden="true"]',
-			);
-			expect(frames).toHaveLength(framesBefore + 1);
-			const frame = frames[frames.length - 1];
-			expect(frame.contentDocument?.body.textContent).toContain('Remember the demo.');
-			frame.remove();
+				const frames = document.body.querySelectorAll<HTMLIFrameElement>(
+					'iframe[aria-hidden="true"]',
+				);
+				expect(frames).toHaveLength(framesBefore + 1);
+				const frame = frames[frames.length - 1];
+				expect(frame.contentDocument?.body.textContent).toContain('Remember the demo.');
+				frame.remove();
+			} finally {
+				unmount(instance);
+				target.remove();
+			}
 		} finally {
-			unmount(instance);
-			target.remove();
+			settings.enableIframePageLoading = enabled;
 		}
 	});
 

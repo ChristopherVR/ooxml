@@ -30,7 +30,8 @@ export function createFileOperations(rootDir = process.cwd()) {
 					.split(host)
 					.join('<root>');
 			const safe = new Error(message, { cause: undefined });
-			(safe as NodeJS.ErrnoException).code = (error as NodeJS.ErrnoException).code;
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code !== undefined) (safe as NodeJS.ErrnoException).code = code;
 			throw safe;
 		}
 	}

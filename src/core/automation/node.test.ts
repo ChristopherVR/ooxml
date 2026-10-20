@@ -3,6 +3,29 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createFileOperations } from './node';
 
+test('scrubbed errors preserve defined filesystem codes and omit absent codes', async () => {
+	const root = await mkdtemp(join(tmpdir(), 'ooxml-errors-'));
+	try {
+		const files = createFileOperations(root);
+		await expect(files.inspect('missing.docx', ['.docx'], async () => null)).rejects.toMatchObject({
+			code: 'ENOENT',
+		});
+		await writeFile(join(root, 'sample.docx'), new Uint8Array([0]));
+		try {
+			await files.inspect('sample.docx', ['.docx'], async () => {
+				throw new Error('invalid document');
+			});
+			throw new Error('expected inspection to fail');
+		} catch (error) {
+			expect(error).toBeInstanceOf(Error);
+			expect((error as Error).message).toBe('invalid document');
+			expect(Object.hasOwn(error as Error, 'code')).toBe(false);
+		}
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
 test('file operations scope paths, preserve originals on failure and serialize concurrent edits', async () => {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-files-'));
 	try {

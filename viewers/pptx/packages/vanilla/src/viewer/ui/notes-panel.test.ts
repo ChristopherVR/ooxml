@@ -1,3 +1,4 @@
+import type { Window as HappyWindow } from 'happy-dom';
 import type { PptxSlide, PptxTextStyleLevels } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -218,23 +219,33 @@ describe('createNotesPanel', () => {
 	});
 
 	it('prints the current slide notes into a hidden iframe via the shared buildNotesPrintHtml builder', () => {
-		const t = createTranslator();
-		const panel = createNotesPanel(document, t, vi.fn(), vi.fn());
-		panel.update({
-			slide: buildSlide({ notes: 'Remember the demo.', slideNumber: 3 }),
-			editable: true,
-		});
+		// Happy DOM 21 disables iframe documents unless the test opts in.
+		const settings = (window as unknown as HappyWindow).happyDOM.settings;
+		const enabled = settings.enableIframePageLoading;
+		settings.enableIframePageLoading = true;
+		try {
+			const t = createTranslator();
+			const panel = createNotesPanel(document, t, vi.fn(), vi.fn());
+			panel.update({
+				slide: buildSlide({ notes: 'Remember the demo.', slideNumber: 3 }),
+				editable: true,
+			});
 
-		const printButton = toolbarControl(panel.el, `[aria-label="${t('pptx.notes.printNotes')}"]`);
-		expect(printButton).not.toBeNull();
-		const framesBefore = document.body.querySelectorAll('iframe[aria-hidden="true"]').length;
-		printButton?.click();
+			const printButton = toolbarControl(panel.el, `[aria-label="${t('pptx.notes.printNotes')}"]`);
+			expect(printButton).not.toBeNull();
+			const framesBefore = document.body.querySelectorAll('iframe[aria-hidden="true"]').length;
+			printButton?.click();
 
-		const frames = document.body.querySelectorAll<HTMLIFrameElement>('iframe[aria-hidden="true"]');
-		expect(frames).toHaveLength(framesBefore + 1);
-		const frame = frames[frames.length - 1];
-		expect(frame.contentDocument?.body.textContent).toContain('Remember the demo.');
-		frame.remove();
+			const frames = document.body.querySelectorAll<HTMLIFrameElement>(
+				'iframe[aria-hidden="true"]',
+			);
+			expect(frames).toHaveLength(framesBefore + 1);
+			const frame = frames[frames.length - 1];
+			expect(frame.contentDocument?.body.textContent).toContain('Remember the demo.');
+			frame.remove();
+		} finally {
+			settings.enableIframePageLoading = enabled;
+		}
 	});
 
 	it('does nothing when the print button is clicked with no slide selected', () => {
