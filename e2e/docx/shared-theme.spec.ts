@@ -129,3 +129,82 @@ test('full Word ribbon reads shared selected, foreground and border roles', asyn
 		border: 'rgb(141, 142, 143)',
 	});
 });
+
+test.describe('embedding shadow scopes', () => {
+	test.use({ hasTouch: true });
+	for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
+		test(`${framework}: nested shadow modes retain inherited fonts and touch geometry`, async ({
+			page,
+		}) => {
+			await page.emulateMedia({ colorScheme: 'light' });
+			await page.goto(`/building-blocks.html?framework=${framework}`);
+			await expect(page.locator('[data-office-block="toolbar"]')).toBeVisible();
+			await page.evaluate(() => {
+				const host = document.createElement('div');
+				host.id = 'shadow-word-app';
+				document.body.append(host);
+				const outer = host.attachShadow({ mode: 'open' });
+				const scope = document.createElement('section');
+				scope.dataset.officeTheme = 'dark';
+				scope.style.setProperty('--office-font', 'monospace');
+				scope.style.setProperty('--office-target-size', '60px');
+				outer.append(scope);
+				const innerHost = document.createElement('div');
+				scope.append(innerHost);
+				const inner = innerHost.attachShadow({ mode: 'open' });
+				const innerScope = document.createElement('section');
+				innerScope.id = 'nested-word-scope';
+				inner.append(innerScope);
+				innerScope.append(document.querySelector('#native-host')!);
+			});
+			const read = () =>
+				page.evaluate(() => {
+					const editor = window.nativeWord!.handle.element;
+					const inner = editor.getRootNode() as ShadowRoot;
+					const toolbar = inner.querySelector<HTMLElement>('[data-office-block="toolbar"]')!;
+					const button = toolbar.querySelector('button')!;
+					const outer = inner.host.getRootNode() as ShadowRoot;
+					return {
+						canvas: getComputedStyle(editor.shadowRoot!.querySelector('.dve-canvas')!)
+							.backgroundColor,
+						toolbar: getComputedStyle(toolbar).backgroundColor,
+						font: getComputedStyle(button).fontFamily,
+						target: getComputedStyle(button).minHeight,
+						outerStyles: outer.querySelectorAll('#office-ui-theme').length,
+						innerStyles: inner.querySelectorAll('#office-ui-theme').length,
+						coarse: matchMedia('(pointer:coarse)').matches,
+					};
+				});
+			await expect.poll(async () => (await read()).canvas).toBe('rgb(31, 41, 55)');
+			const dark = await read();
+			expect(dark).toMatchObject({
+				toolbar: 'rgb(31, 41, 55)',
+				font: 'monospace',
+				target: '60px',
+				outerStyles: 1,
+				innerStyles: 1,
+				coarse: true,
+			});
+			await page.evaluate(() =>
+				(window.nativeWord!.handle.element.getRootNode() as ShadowRoot)
+					.querySelector('#nested-word-scope')!
+					.setAttribute('data-office-theme', 'light'),
+			);
+			const light = await read();
+			expect(light.canvas).not.toBe(dark.canvas);
+			expect(light.toolbar).not.toBe(dark.toolbar);
+			expect(light).toMatchObject({ font: 'monospace', target: '60px' });
+			await page.evaluate(() =>
+				(window.nativeWord!.handle.element.getRootNode() as ShadowRoot)
+					.querySelector('#nested-word-scope')!
+					.removeAttribute('data-office-theme'),
+			);
+			expect((await read()).canvas).toBe(dark.canvas);
+			const bold = page.getByRole('button', { name: 'Bold', exact: true });
+			await bold.click();
+			await expect(bold).toHaveAttribute('aria-pressed', 'true');
+			await page.evaluate(() => window.nativeWord!.permission(false));
+			await expect(bold).toBeDisabled();
+		});
+	}
+});

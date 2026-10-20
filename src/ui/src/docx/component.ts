@@ -1,4 +1,4 @@
-import { installOfficeUiTheme } from '../theme';
+import { installOfficeUiThemeFor } from '../theme';
 import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
 import { docToModel } from './model-adapter';
@@ -183,7 +183,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	connectedCallback() {
-		installOfficeUiTheme(this.ownerDocument);
+		installOfficeUiThemeFor(this);
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
 	}
