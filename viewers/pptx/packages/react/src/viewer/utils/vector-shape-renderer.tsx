@@ -1,5 +1,6 @@
 import {
 	buildStrokeOutline,
+	isArrowedCustomPath,
 	buildSvgGradientDef,
 	getPresetShapeVectorGeometry,
 	isWedgeCalloutPresetShape,
@@ -135,7 +136,7 @@ export function renderVectorShape(
 			fillColor,
 			element.shapeStyle?.fillOpacity,
 			strokePaint,
-			strokeWidth,
+			isArrowedCustomPath(element) ? 0 : strokeWidth,
 			dashArray,
 			Boolean(animatesFill),
 			// A freeform's `a:gradFill` needs a real SVG paint server: the

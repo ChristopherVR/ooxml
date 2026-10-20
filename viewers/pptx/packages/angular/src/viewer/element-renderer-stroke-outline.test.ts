@@ -42,6 +42,16 @@ const PATTERN: ShapeStyle = {
 	strokePatternBackgroundColor: '#FFF2CC',
 };
 
+it('exposes an unclipped freeform arrowhead for the stroke template', () => {
+	const element = shape(
+		{ fillMode: 'none', strokeWidth: 3, strokeColor: '#1F4E79', connectorEndArrow: 'triangle' },
+		{ pathData: 'M 0 100 L 100 0', pathWidth: 100, pathHeight: 100 } as Partial<PptxElement>,
+	);
+	const outline = getStrokeOutline(element)!;
+	expect(outline.markers?.end).toContain('url(#freeform-');
+	expect(outline.markers?.markup).toContain('markerWidth="3"');
+});
+
 const GRADIENT: ShapeStyle = {
 	strokeFillMode: 'gradient',
 	strokeWidth: 6,

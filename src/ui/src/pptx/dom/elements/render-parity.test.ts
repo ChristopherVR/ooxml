@@ -160,9 +160,9 @@ describe('vanilla rendering parity', () => {
 		} as PptxElement;
 		const result = renderConnectorElement(element, 0, makeContext()) as HTMLElement;
 		const marker = result.querySelector('marker');
-		// Base marker size 4 scaled by the `lg` factor 1.5 = 6.
-		expect(marker?.getAttribute('markerWidth')).toBe('6');
-		expect(marker?.getAttribute('markerHeight')).toBe('6');
+		// PowerPoint's large triangle spans five stroke widths.
+		expect(marker?.getAttribute('markerWidth')).toBe('5');
+		expect(marker?.getAttribute('markerHeight')).toBe('5');
 	});
 
 	it('renders connector text plus SVG line shadow and glow', () => {

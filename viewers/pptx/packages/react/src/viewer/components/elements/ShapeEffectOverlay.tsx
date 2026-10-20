@@ -245,10 +245,15 @@ export function ShapeEffectOverlay({
 					}}
 				>
 					{strokeOutline.paint ? <defs>{renderOutlinePaint(strokeOutline.paint)}</defs> : null}
+					{strokeOutline.markers && (
+						<defs dangerouslySetInnerHTML={{ __html: strokeOutline.markers.markup }} />
+					)}
 					{strokeOutline.strands.map((strand, idx) => (
 						<path
 							key={idx}
 							d={strokeOutline.d}
+							markerStart={idx === 0 ? strokeOutline.markers?.start : undefined}
+							markerEnd={idx === 0 ? strokeOutline.markers?.end : undefined}
 							fill='none'
 							stroke={animatesStroke ? 'inherit' : strokeOutline.stroke}
 							strokeWidth={strand.strokeWidth}

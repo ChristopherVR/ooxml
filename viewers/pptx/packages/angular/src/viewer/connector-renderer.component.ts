@@ -61,9 +61,10 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 						<marker
 							[attr.id]="geo().startMarkerId"
 							viewBox="0 0 10 10"
-							refX="5"
+							[attr.refX]="geo().startMarker!.refX"
 							refY="5"
 							[attr.markerWidth]="geo().startMarker!.markerWidth"
+							preserveAspectRatio="none"
 							[attr.markerHeight]="geo().startMarker!.markerHeight"
 							orient="auto-start-reverse"
 							markerUnits="strokeWidth"
@@ -79,9 +80,10 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 						<marker
 							[attr.id]="geo().endMarkerId"
 							viewBox="0 0 10 10"
-							refX="5"
+							[attr.refX]="geo().endMarker!.refX"
 							refY="5"
 							[attr.markerWidth]="geo().endMarker!.markerWidth"
+							preserveAspectRatio="none"
 							[attr.markerHeight]="geo().endMarker!.markerHeight"
 							orient="auto-start-reverse"
 							markerUnits="strokeWidth"

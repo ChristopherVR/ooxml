@@ -192,8 +192,17 @@ export function buildTextBuildSpec<TStyle>(
 export function textBuildSpanStyle(span: {
 	hidden?: boolean;
 	cssAnimation?: string;
+	style?: unknown;
 }): Record<string, string> {
 	const style: Record<string, string> = { display: 'inline' };
+	// A separate bidi embedding per letter changes kerning and line-break
+	// opportunities, even when the letters have identical direction and style.
+	// Keep explicit overrides (mixed-direction text), but let ordinary pieces
+	// participate in the paragraph's existing embedding.
+	if ('style' in span) {
+		const runStyle = span.style as { unicodeBidi?: string } | undefined;
+		if (runStyle?.unicodeBidi === 'embed') style.unicodeBidi = 'normal';
+	}
 	if (span.hidden) {
 		style.visibility = 'hidden';
 	}

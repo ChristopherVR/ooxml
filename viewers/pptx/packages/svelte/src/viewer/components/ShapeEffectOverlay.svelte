@@ -236,9 +236,12 @@
 				{/if}
 			</defs>
 		{/if}
+		{#if strokeOutline.markers}<defs>{@html strokeOutline.markers.markup}</defs>{/if}
 		{#each strokeOutline.strands as strand, idx (idx)}
 			<path
 				d={strokeOutline.d}
+				marker-start={idx === 0 ? strokeOutline.markers?.start : undefined}
+				marker-end={idx === 0 ? strokeOutline.markers?.end : undefined}
 				fill="none"
 				stroke={strokeOutline.stroke}
 				stroke-width={strand.strokeWidth}

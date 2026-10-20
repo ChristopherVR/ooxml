@@ -1,3 +1,4 @@
+import { generateFixture as generateArrowTextRegressions } from './generate-arrow-text-regressions';
 /**
  * Every fixture the browser suite generates, in one place: `global-setup.ts`
  * runs it before each Playwright run, and `check-fixtures.ts` runs it in CI to
@@ -95,6 +96,7 @@ const GENERATORS: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
 	['generateRectPathGradientFixture', generateRectPathGradientFixture],
 	['generateRunProgramFixture', generateRunProgramFixture],
 	['generateFidelityShowcaseFixture', generateFidelityShowcaseFixture],
+	['generateArrowTextRegressions', generateArrowTextRegressions],
 ];
 
 /** A small, fast, seedable PRNG (mulberry32) with `Math.random`'s contract. */

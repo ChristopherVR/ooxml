@@ -20,6 +20,24 @@ function render(element: PptxElement): string {
 	return renderToStaticMarkup(<ShapeEffectOverlay element={element} />);
 }
 
+it('renders an open custom path with its arrowhead at PowerPoint dimensions', () => {
+	const element = {
+		...shape({
+			fillMode: 'none',
+			strokeWidth: 3,
+			strokeColor: '#1F4E79',
+			connectorEndArrow: 'triangle',
+		}),
+		pathData: 'M 0 100 L 100 0',
+		pathWidth: 100,
+		pathHeight: 100,
+	} as PptxElement;
+	const html = render(element);
+	expect(html).toContain('marker-end="url(#freeform-');
+	expect(html).toContain('markerWidth="3"');
+	expect(html).toContain('refX="10"');
+});
+
 describe('shapeEffectOverlay', () => {
 	it('renders nothing when the element has no fill overlay or soft edge', () => {
 		expect(render(shape({ fillColor: '#ffffff' }))).toBe('');

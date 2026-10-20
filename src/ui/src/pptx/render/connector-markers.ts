@@ -24,11 +24,13 @@ export interface MarkerShape {
 	/**
 	 * Suggested `markerWidth` (along the line: arrow *length*). Derived from the
 	 * connector's `@len` size token. Bindings should apply this instead of a
-	 * hard-coded value so `sm`/`lg` arrows scale. Defaults to the historical `4`.
+	 * hard-coded value so `sm`/`lg` arrows scale. Defaults to `3`.
 	 */
 	markerWidth: number;
 	/** Suggested `markerHeight` (perpendicular: arrow *width*, from `@w`). */
 	markerHeight: number;
+	/** Position of the line endpoint in the marker's viewBox. */
+	refX: number;
 	/**
 	 * True for a stroke-only (open, unfilled) marker path, i.e. the `'arrow'`
 	 * open chevron. A binding should render this path with `fill="none"` and
@@ -40,11 +42,10 @@ export interface MarkerShape {
 }
 
 /**
- * Base `markerWidth`/`markerHeight` (in `strokeWidth` units) for a `med` arrow.
- * `sm`/`lg` scale relative to this, mirroring PowerPoint's discrete sizes.
+ * Dimensions in stroke widths, measured from PowerPoint's PNG export of the
+ * issue #104 reproduction at native slide size (2, 3 and 5 for triangle ends).
  */
-const ARROW_BASE_MARKER_SIZE = 4;
-const ARROW_SIZE_SCALE: Record<ArrowSize, number> = { sm: 0.6, med: 1, lg: 1.5 };
+const ARROW_MARKER_SIZE: Record<ArrowSize, number> = { sm: 2, med: 3, lg: 5 };
 
 /**
  * Map a `ConnectorArrowType` value to its SVG marker shape, scaling the marker
@@ -64,21 +65,21 @@ export function markerPath(
 	arrowWidth?: ArrowSize,
 	arrowLength?: ArrowSize,
 ): MarkerShape {
-	const markerWidth = ARROW_BASE_MARKER_SIZE * (ARROW_SIZE_SCALE[arrowLength ?? 'med'] ?? 1);
-	const markerHeight = ARROW_BASE_MARKER_SIZE * (ARROW_SIZE_SCALE[arrowWidth ?? 'med'] ?? 1);
-	const box = { markerWidth, markerHeight };
+	const markerWidth = ARROW_MARKER_SIZE[arrowLength ?? 'med'] ?? 3;
+	const markerHeight = ARROW_MARKER_SIZE[arrowWidth ?? 'med'] ?? 3;
+	const box = { markerWidth, markerHeight, refX: 10 };
 	switch (type) {
 		case 'diamond':
-			return { shape: 'path', d: 'M5 0 L10 5 L5 10 L0 5 Z', ...box };
+			return { shape: 'path', d: 'M5 0 L10 5 L5 10 L0 5 Z', ...box, refX: 5 };
 		case 'oval':
-			return { shape: 'circle', ...box };
+			return { shape: 'circle', ...box, refX: 5 };
 		case 'stealth':
 			return { shape: 'path', d: 'M0 0 L10 5 L0 10 L3 5 Z', ...box };
 		case 'arrow':
 			// Open chevron ("<"), stroke-only: distinct from the solid 'triangle'
 			// wedge below. No closing `Z`, so a binding rendering it with
 			// `fill="none"` draws two open strokes rather than a filled shape.
-			return { shape: 'path', d: 'M1 1 L9 5 L1 9', strokeOnly: true, ...box };
+			return { shape: 'path', d: 'M1 1 L9 5 L1 9', strokeOnly: true, ...box, refX: 9 };
 		// triangle / fallback
 		default:
 			return { shape: 'path', d: 'M0 0 L10 5 L0 10 Z', ...box };

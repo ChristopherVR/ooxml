@@ -247,5 +247,13 @@ export function renderStrokeOutline(doc: Document, element: PptxElement): SVGSVG
 		}
 		svg.appendChild(path);
 	}
+	if (outline.markers) {
+		const defs = createSvgEl(doc, 'defs');
+		defs.innerHTML = outline.markers.markup;
+		svg.prepend(defs);
+		const path = svg.querySelector(':scope > path');
+		if (path && outline.markers.start) path.setAttribute('marker-start', outline.markers.start);
+		if (path && outline.markers.end) path.setAttribute('marker-end', outline.markers.end);
+	}
 	return svg;
 }

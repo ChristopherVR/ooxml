@@ -38,6 +38,8 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
 import { screenStrokeWidth } from './device-pixel-stroke';
+import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
+import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
 import { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from './shape-geometry';
@@ -78,6 +80,8 @@ export interface StrokeOutlineStrand {
 
 /** Everything needed to stroke one shape's outline as an SVG overlay. */
 export interface StrokeOutline {
+	/** Arrow decorations for an open custom-geometry path. */
+	markers?: CustomPathMarkers | undefined;
 	/** Path data in the element's own pixel space (viewBox `0 0 width height`). */
 	d: string;
 	/**
@@ -317,7 +321,9 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 				buildSvgStrokePatternDef(style, element.id))
 			: undefined;
 	const centeredFlatStroke =
-		!paint && !openPresetD && needsCenteredStrokeOverlay(element, style, declaredWidth);
+		!paint &&
+		!openPresetD &&
+		(isArrowedCustomPath(element) || needsCenteredStrokeOverlay(element, style, declaredWidth));
 	if (!paint && !openPresetD && !centeredFlatStroke) {
 		return undefined;
 	}
@@ -328,12 +334,14 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 		return undefined;
 	}
 	const strokeWidth = declaredWidth > 0 ? declaredWidth : DEFAULT_OPEN_PRESET_STROKE_WIDTH;
+	const stroke = paint
+		? svgGradientFillRef(paint)
+		: colorWithOpacity(style?.strokeColor ?? DEFAULT_STROKE_COLOR, style?.strokeOpacity);
 	return {
+		markers: buildCustomPathMarkers(element, stroke),
 		d,
 		paint,
-		stroke: paint
-			? svgGradientFillRef(paint)
-			: colorWithOpacity(style?.strokeColor ?? DEFAULT_STROKE_COLOR, style?.strokeOpacity),
+		stroke,
 		strokeWidth,
 		strands: outlineStrands(style?.compoundLine, strokeWidth),
 		dashArray: getSvgStrokeDasharray(

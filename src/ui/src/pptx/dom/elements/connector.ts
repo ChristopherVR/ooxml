@@ -242,12 +242,13 @@ function buildMarker(
 	const marker = createSvgEl(doc, 'marker', {
 		id,
 		viewBox: '0 0 10 10',
-		refX: 5,
+		refX: shape.refX,
 		refY: 5,
 		markerWidth: shape.markerWidth,
 		markerHeight: shape.markerHeight,
 		orient: 'auto-start-reverse',
 		markerUnits: 'strokeWidth',
+		preserveAspectRatio: 'none',
 	});
 	if (shape.shape === 'circle') {
 		marker.appendChild(createSvgEl(doc, 'circle', { cx: 5, cy: 5, r: 4, fill: strokeColor }));

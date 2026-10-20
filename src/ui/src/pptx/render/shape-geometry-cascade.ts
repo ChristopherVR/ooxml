@@ -26,6 +26,7 @@ import { getRoundRectRadiusPx, getShapeType, hasShapeProperties } from 'ooxml-co
 
 import { getResolvedShapeClipPath, isIdentityRectClip } from './shape-geometry';
 import { isStrokeOnlyPresetElement } from './stroke-only-preset';
+import { isArrowedCustomPath } from './custom-path-markers';
 
 /**
  * What the geometry cascade decided to do with a shape's box.
@@ -74,7 +75,7 @@ export function resolveShapeGeometry(element: PptxElement): ShapeGeometryDecisio
 
 	// Open presets have no region to fill and no box to outline; the clip in
 	// particular encloses zero area and would clip the stroked overlay away.
-	if (isStrokeOnlyPresetElement(element)) {
+	if (isStrokeOnlyPresetElement(element) || isArrowedCustomPath(element)) {
 		return { kind: 'strokeOnly' };
 	}
 
