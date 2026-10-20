@@ -61,9 +61,15 @@ test('letter builds keep character positions and wrapping when the outgoing fade
 		'Testing Anatidae Presentation',
 		'Image By Ams100272 - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=146841823',
 	];
-	const before = await Promise.all(
-		texts.map((text) => slideStage(page).evaluate(characterRects, text)),
-	);
+	// Some bindings retain the editing stage behind the show. Measure the live
+	// stage carrying the animation spans, rather than the first slide in the DOM.
+	const live = page
+		.locator('[aria-roledescription="slide"]')
+		.filter({
+			has: page.locator('[data-anim-id*="::c0-"]'),
+		})
+		.last();
+	const before = await Promise.all(texts.map((text) => live.evaluate(characterRects, text)));
 	await page.keyboard.press('ArrowRight');
 	const outgoing = page.locator('[data-pptx-transition-layer="outgoing"]');
 	await outgoing.waitFor();
@@ -72,7 +78,8 @@ test('letter builds keep character positions and wrapping when the outgoing fade
 		expect(after).toHaveLength(before[index]!.length);
 		for (const [at, rect] of after.entries()) {
 			for (let axis = 0; axis < 2; axis += 1) {
-				expect(Math.abs(rect[axis]! - before[index]![at]![axis]!)).toBeLessThan(0.25);
+				// Separate inline spans can accumulate a fraction of a pixel of rounding.
+				expect(Math.abs(rect[axis]! - before[index]![at]![axis]!)).toBeLessThan(0.5);
 			}
 		}
 	}

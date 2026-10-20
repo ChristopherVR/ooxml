@@ -43,6 +43,18 @@ export async function generateFixture(): Promise<string> {
 		pathData: 'M 0 1000 L 500 500 L 1500 100 L 2000 0',
 		pathWidth: 2000,
 		pathHeight: 1000,
+		customGeometryPaths: [
+			{
+				width: 2000,
+				height: 1000,
+				segments: [
+					{ type: 'moveTo', pt: { x: 0, y: 1000 } },
+					{ type: 'lineTo', pt: { x: 500, y: 500 } },
+					{ type: 'lineTo', pt: { x: 1500, y: 100 } },
+					{ type: 'lineTo', pt: { x: 2000, y: 0 } },
+				],
+			},
+		],
 		shapeStyle: {
 			fillMode: 'none',
 			fillColor: 'transparent',
