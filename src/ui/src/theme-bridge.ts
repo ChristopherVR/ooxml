@@ -62,21 +62,23 @@ export type ThemeBridgeMap = Partial<Record<OfficeToken, string>>;
 
 /** The shadcn token names each `--office-*` colour reads, without the product prefix. */
 const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
-	['--office-foreground', 'foreground'],
-	['--office-muted-foreground', 'muted-foreground'],
-	['--office-background', 'background'],
-	['--office-surface', 'card'],
-	['--office-selected', 'accent'],
-	['--office-border', 'border'],
-	['--office-accent', 'primary'],
-	['--office-accent-foreground', 'primary-foreground'],
-	['--office-ring', 'ring'],
-	['--office-popover', 'popover'],
-	// Popover text falls back to the plain foreground, as it does in the shadcn themes.
-	['--office-popover-foreground', 'popover-foreground', 'foreground'],
-	['--office-danger', 'destructive'],
-	['--office-danger-foreground', 'destructive-foreground'],
-];
+	'foreground',
+	'muted-foreground',
+	'background',
+	'card',
+	'accent',
+	'border',
+	'primary',
+	'primary-foreground',
+	'ring',
+	'popover',
+	'popover-foreground',
+	'destructive',
+	'destructive-foreground',
+].map((name) => {
+	const token = LEGACY_OFFICE_THEME_TOKENS[name as keyof typeof LEGACY_OFFICE_THEME_TOKENS];
+	return name === 'popover-foreground' ? [token, name, 'foreground'] : [token, name];
+});
 
 /** The `--office-*` tokens a token's default reads, such as `--office-background` for selects. */
 const reads = (value: string) => [...value.matchAll(/var\((--office-[\w-]+)/g)].map((m) => m[1]!);

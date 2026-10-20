@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { shadcnBridge, themeBridge } from './theme-bridge';
+import { legacyThemeAliases, legacyThemeBridge, shadcnBridge, themeBridge } from './theme-bridge';
+
+it('resolves legacy compatibility on a separate host from the canonical chrome bridge', () => {
+	const aliases = legacyThemeAliases(':host', '--dve-', '--_dve-');
+	expect(aliases).toContain(
+		'--_dve-background: var(--dve-background, var(--office-background, #ffffff));',
+	);
+	expect(aliases).toContain('--_dve-radius: var(--dve-radius, var(--office-radius, 4px));');
+	expect(aliases).not.toContain('--office-background:');
+	const chrome = legacyThemeBridge('.frame', '--_dve-');
+	expect(chrome).toContain('.frame {');
+	expect(chrome).toContain('--office-background: var(--_dve-background);');
+	expect(chrome).toContain('--office-radius: var(--_dve-radius);');
+	expect(chrome).not.toContain('--dve-background');
+});
 
 describe('themeBridge', () => {
 	it('declares each mapped token on the selector and skips empty ones', () => {
