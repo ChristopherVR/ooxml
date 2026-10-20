@@ -8,12 +8,9 @@
 	padding: 1px 4px;
 	border: 1px solid var(--line);
 	border-radius: 3px;
-	background: #1f1f1f;
-	color: #fff;
-	font:
-		600 11px/14px 'Segoe UI',
-		Arial,
-		sans-serif;
+	background: var(--office-keytip-background, #fff);
+	color: var(--office-keytip-foreground, #1f1f1f);
+	font: 600 11px/14px var(--office-font, system-ui, sans-serif);
 	text-align: center;
 	pointer-events: none;
 }
@@ -23,10 +20,7 @@
 	gap: 4px 24px;
 	padding: 10px 14px;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 }
 .dve-word-count strong {
 	text-align: right;
@@ -58,10 +52,7 @@
 	border-radius: 3px;
 	background: var(--surface);
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 }
 
 /* Editable combo boxes (font family and size). */
@@ -90,10 +81,7 @@
 	border: 0;
 	background: transparent;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 	outline: none;
 }
 .ribbon-group .ribbon-combo .ribbon-combo-caret {
@@ -116,10 +104,7 @@
 	border: 0;
 	background: none;
 	color: var(--ink);
-	font:
-		14px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 14px var(--office-font, system-ui, sans-serif);
 	text-align: left;
 	cursor: pointer;
 }

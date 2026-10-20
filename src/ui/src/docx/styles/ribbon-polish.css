@@ -1,36 +1,22 @@
 /* Ribbon polish: distinct pressed state and Word's accent hues on command icons. Loaded last. */
 :host {
-	--ribbon-accent-blue: #2b7cd3;
-	--ribbon-accent-green: #2f9e5f;
-	--ribbon-accent-red: #d13438;
-	--ribbon-accent-orange: #d9822b;
-}
-@media (prefers-color-scheme: dark) {
-	:host(:not([theme='light'])) {
-		--ribbon-accent-blue: #5ea5f0;
-		--ribbon-accent-green: #5cc98a;
-		--ribbon-accent-red: #f07a7d;
-		--ribbon-accent-orange: #f0a35e;
-	}
-}
-:host([theme='dark']) {
-	--ribbon-accent-blue: #5ea5f0;
-	--ribbon-accent-green: #5cc98a;
-	--ribbon-accent-red: #f07a7d;
-	--ribbon-accent-orange: #f0a35e;
+	--ribbon-accent-blue: var(--office-accent, #2563eb);
+	--ribbon-accent-green: var(--office-info, #3b82f6);
+	--ribbon-accent-red: var(--office-danger, #b91c1c);
+	--ribbon-accent-orange: var(--office-warning, #d97706);
 }
 
 /* Pressed reads darker than hover, and pressing a control gives immediate feedback. */
 .ribbon-group button[aria-pressed='true'] {
-	border-color: color-mix(in srgb, var(--blue) 45%, transparent);
-	background: color-mix(in srgb, var(--blue) 20%, transparent);
+	border-color: var(--blue);
+	background: var(--accent-soft);
 }
 .ribbon-group button[aria-pressed='true']:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--blue) 30%, transparent);
+	background: var(--accent-soft);
 }
 .ribbon-group button:active:not(:disabled),
 .ribbon-menu:active:not(:has(select:disabled)) {
-	background: color-mix(in srgb, var(--blue) 28%, transparent);
+	background: var(--accent-soft);
 }
 
 /* Accent hues (buttons only; a disabled control keeps its 0.4 opacity). */

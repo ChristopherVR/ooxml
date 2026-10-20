@@ -165,3 +165,12 @@ The factory tracks its options accessor in an effect and returns signal accessor
 Optional toolbar controls keep their DOM nodes while formatting state changes, so keyboard
 focus is preserved. All adapters accept `bytes` reactively, clear failed loads when a new
 model or load arrives, and keep their handle stable across canvas replacement.
+
+## Shared styling
+
+Optional native toolbar components use the shared `ooxml-ui` styles, including spacing,
+backgrounds, borders, pressed/disabled states and keyboard focus rings. Place the toolbar and
+canvas beneath one `data-office-theme` ancestor and customize `--office-*` variables there.
+Changes apply immediately to every framework. Existing ancestor `--dve-*` overrides remain
+supported. Host-created controls keep their own styling unless the host opts into the shared
+`prepareOfficeUiBlock(element, 'toolbar', 'docx')` helper from `ooxml-ui/theme`.

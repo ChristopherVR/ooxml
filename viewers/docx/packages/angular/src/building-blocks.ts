@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import {
 	createBuildingBlockSession,
+	prepareWordToolbar,
 	type BuildingBlockOptions,
 	type CanvasProps,
 	type WordToolbarProps,
@@ -148,6 +149,10 @@ export class DocumentCanvasComponent implements AfterViewInit, OnChanges, OnDest
 		</button>
 	</div>`,
 })
-export class ToolbarComponent {
+export class ToolbarComponent implements AfterViewInit {
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareWordToolbar(this.host.nativeElement.querySelector<HTMLElement>('[role="toolbar"]'));
+	}
 	@Input({ required: true }) toolbarProps!: WordToolbarProps;
 }

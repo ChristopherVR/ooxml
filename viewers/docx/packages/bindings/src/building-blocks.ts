@@ -1,3 +1,4 @@
+import * as officeTheme from 'ooxml-ui/theme';
 import { mountEditorSurface, type EditorHandle, type SurfaceOptions } from './index';
 import type { WordToolbarProps } from 'docx-web-component';
 export interface BuildingBlockOptions extends SurfaceOptions {
@@ -124,3 +125,20 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 	};
 }
 export type { WordToolbarProps } from 'docx-web-component';
+
+/** Keep optional native controls on the shared Office styles without making old viewer imports fail. */
+export function prepareWordToolbar(host: HTMLElement | null): void {
+	if (!host) return;
+	const prepare: unknown = Reflect.get(officeTheme, 'prepareOfficeUiBlock');
+	if (typeof prepare === 'function') {
+		(prepare as (host: HTMLElement, kind: 'toolbar', product: 'docx') => void)(
+			host,
+			'toolbar',
+			'docx',
+		);
+	} else {
+		officeTheme.installOfficeUiTheme(host.ownerDocument);
+		host.setAttribute('data-office-block', 'toolbar');
+		host.setAttribute('data-office-product', 'docx');
+	}
+}

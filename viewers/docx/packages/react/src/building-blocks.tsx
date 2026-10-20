@@ -13,6 +13,7 @@ import {
 	type EditorBinding,
 	type EditorHandle,
 } from '../../bindings/src/index';
+import { prepareWordToolbar } from '../../bindings/src/building-blocks';
 import type { WordToolbarProps } from 'docx-web-component';
 export interface BuildingBlockOptions extends EditorOptions {
 	canEdit?: boolean | undefined;
@@ -140,7 +141,7 @@ export function Toolbar(props: WordToolbarProps) {
 	] as const;
 	return createElement(
 		'div',
-		{ role: 'toolbar' },
+		{ role: 'toolbar', ref: prepareWordToolbar },
 		...buttons.map(([label, pressed, run, disabled]) =>
 			createElement(
 				'button',

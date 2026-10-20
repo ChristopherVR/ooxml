@@ -14,7 +14,8 @@
 	"dependencies": {
 		"docx-core": "workspace:*",
 		"docx-web-component": "workspace:*",
-		"ooxml-core": "*"
+		"ooxml-core": "*",
+		"ooxml-ui": "*"
 	},
 	"devDependencies": {
 		"react": "^19.3.1"

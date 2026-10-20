@@ -1,8 +1,8 @@
 <script lang="ts">
- import type { WordToolbarProps } from './runtime';
+ import { prepareWordToolbar, type WordToolbarProps } from './runtime';
  let { toolbarProps }: { toolbarProps: WordToolbarProps } = $props();
 </script>
-<div role="toolbar">
+<div role="toolbar" use:prepareWordToolbar>
  {#each ['Bold', 'Italic', 'Underline', 'Undo', 'Redo'] as label}
   {@const action = label === 'Bold' ? toolbarProps.onBold : label === 'Italic' ? toolbarProps.onItalic : label === 'Underline' ? toolbarProps.onUnderline : label === 'Undo' ? toolbarProps.onUndo : toolbarProps.onRedo}
   {@const pressed = label === 'Bold' ? toolbarProps.bold : label === 'Italic' ? toolbarProps.italic : label === 'Underline' ? toolbarProps.underline : false}

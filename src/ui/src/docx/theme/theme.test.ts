@@ -25,14 +25,16 @@ describe('theme tokens', () => {
 		expect(Object.keys(themeToCssVars(lightTheme))).toHaveLength(THEME_KEYS.length);
 	});
 
-	it('generates the shadow-root token CSS from the presets for light, dark and auto', () => {
-		expect(themeTokenText).toContain(`--dve-background:${lightTheme.background}`);
-		expect(themeTokenText).toContain(
-			`:host([theme="dark"]){--dve-background:${darkTheme.background}`,
+	it('inherits canonical tokens and resolves legacy overrides without redefining either on the host', () => {
+		expect(themeTokenText.replace(/\s/g, '')).toContain(
+			'--_dve-background:var(--dve-background,var(--office-background,',
 		);
-		expect(themeTokenText).toContain(
-			'@media (prefers-color-scheme: dark){:host(:not([theme="light"]))',
+		expect(themeTokenText.replace(/\s/g, '')).toContain(
+			'--_dve-primary:var(--dve-primary,var(--office-accent,',
 		);
+		expect(themeTokenText).not.toMatch(/--dve-[a-z-]+:/);
+		expect(themeTokenText).not.toMatch(/--office-[a-z-]+:/);
+		expect(themeTokenText).toContain('color-scheme:inherit');
 	});
 });
 
@@ -43,10 +45,12 @@ describe('theme element API', () => {
 		expect(editor.theme).toBe('auto');
 		editor.theme = 'dark';
 		expect(editor.getAttribute('theme')).toBe('dark');
+		expect(editor.getAttribute('data-office-theme')).toBe('dark');
 		editor.setAttribute('theme', 'light');
 		expect(editor.theme).toBe('light');
 		editor.setAttribute('theme', 'sepia');
 		expect(editor.theme).toBe('auto');
+		expect(editor.hasAttribute('data-office-theme')).toBe(false);
 	});
 
 	it('applies themeColors inline and clears stale overrides', () => {
@@ -60,4 +64,16 @@ describe('theme element API', () => {
 		editor.themeColors = undefined;
 		expect(editor.style.getPropertyValue('--dve-ring')).toBe('');
 	});
+});
+
+it('keeps a host-owned canonical scope when the default theme option is applied', () => {
+	registerDocxEditor();
+	const editor = document.createElement('docx-editor');
+	editor.setAttribute('data-office-theme', 'dark');
+	editor.theme = 'auto';
+	expect(editor.getAttribute('data-office-theme')).toBe('dark');
+	editor.theme = 'light';
+	expect(editor.getAttribute('data-office-theme')).toBe('light');
+	editor.theme = 'auto';
+	expect(editor.hasAttribute('data-office-theme')).toBe(false);
 });

@@ -33,10 +33,7 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	overflow: hidden;
 	background: var(--dve-sdt-active, #4472c4);
 	color: #fff;
-	font:
-		11px/16px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 11px/16px var(--office-font, system-ui, sans-serif);
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	pointer-events: none;
@@ -94,10 +91,7 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	align-items: center;
 	justify-content: space-between;
 	color: var(--ink);
-	font:
-		600 13px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 600 13px var(--office-font, system-ui, sans-serif);
 }
 .sdt-calendar-head button,
 .sdt-calendar-foot button {
@@ -125,10 +119,7 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 	line-height: 24px;
 }
 .sdt-calendar-grid span {

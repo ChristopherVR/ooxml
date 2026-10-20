@@ -1,7 +1,4 @@
-import { shadcnBridge } from '../../theme';
-import { darkTheme, lightTheme } from 'ooxml-core/docx/ui';
-import { themeToCssVars } from 'ooxml-core/docx/ui';
-import type { EditorTheme } from 'ooxml-core/docx/ui';
+import { legacyThemeAliases, legacyThemeBridge } from '../../theme';
 import aliases from './aliases.css?raw';
 import base from './base.css?raw';
 import ribbon from './ribbon.css?raw';
@@ -25,25 +22,16 @@ import smartArt from './smartart.css?raw';
 import contentControls from './content-controls.css?raw';
 import shapesCss from './shapes.css?raw';
 
-const declarations = (theme: EditorTheme, scheme: 'light' | 'dark') =>
-	Object.entries(themeToCssVars(theme))
-		.map(([name, value]) => `${name}:${value};`)
-		.join('') + `color-scheme:${scheme};`;
-
-/**
- * Token presets are generated from theme/defaults.ts so the TypeScript presets and the shadow-root
- * CSS cannot drift. `theme="auto"` (the default) follows the OS; explicit values always win.
- */
-export const themeTokenText = `:host{${declarations(lightTheme, 'light')}}
-@media (prefers-color-scheme: dark){:host(:not([theme="light"])){${declarations(darkTheme, 'dark')}}}
-:host([theme="dark"]){${declarations(darkTheme, 'dark')}}
-:host([theme="light"]){${declarations(lightTheme, 'light')}}`;
+// Legacy custom properties remain inputs, never defaults that hide an inherited Office theme.
+// Resolve at the host before mapping onto inner shared controls to avoid CSS variable cycles.
+export const themeTokenText =
+	legacyThemeAliases(':host', '--dve-', '--_dve-') + ':host{color-scheme:inherit;}';
 
 export const editorStyleText = [
 	themeTokenText,
 	aliases,
-	// The shared elements read --office-*; feed them from the editor's --dve-* theme.
-	shadcnBridge(':host', '--dve-', { extra: { '--office-font': "'Segoe UI', Arial, sans-serif" } }),
+	// Private aliases resolve on the host; legacy compatibility only remaps the inner chrome.
+	legacyThemeBridge('.dve-frame', '--_dve-'),
 	base,
 	ribbon,
 	ribbonButtons,

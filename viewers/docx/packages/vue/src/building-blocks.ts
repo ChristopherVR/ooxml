@@ -12,6 +12,7 @@ import {
 } from 'vue';
 import {
 	createBuildingBlockSession,
+	prepareWordToolbar,
 	type BuildingBlockOptions,
 	type CanvasProps,
 	type WordToolbarProps,
@@ -71,7 +72,7 @@ export const Toolbar = defineComponent({
 		return () =>
 			h(
 				'div',
-				{ role: 'toolbar' },
+				{ role: 'toolbar', ref: (host: unknown) => prepareWordToolbar(host as HTMLElement | null) },
 				[
 					['Bold', props.toolbarProps.bold, props.toolbarProps.onBold, !props.toolbarProps.canEdit],
 					[

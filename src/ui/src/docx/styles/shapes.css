@@ -57,10 +57,7 @@
 .shape-picker h4 {
 	margin: 6px 0 4px;
 	color: var(--muted);
-	font:
-		600 11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 600 11px var(--office-font, system-ui, sans-serif);
 }
 .shape-picker-grid {
 	display: grid;

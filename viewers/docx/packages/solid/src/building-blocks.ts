@@ -1,6 +1,7 @@
 import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js';
 import {
 	createBuildingBlockSession,
+	prepareWordToolbar,
 	type BuildingBlockOptions,
 	type CanvasProps,
 	type WordToolbarProps,
@@ -49,6 +50,7 @@ export function Toolbar(props: { toolbarProps: WordToolbarProps }) {
 	if (typeof document === 'undefined') return undefined;
 	const host = document.createElement('div');
 	host.setAttribute('role', 'toolbar');
+	prepareWordToolbar(host);
 	for (const [label, field, action] of [
 		['Bold', 'bold', 'onBold'],
 		['Italic', 'italic', 'onItalic'],

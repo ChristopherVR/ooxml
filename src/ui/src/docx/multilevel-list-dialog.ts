@@ -85,7 +85,7 @@ export function createMultilevelListDialog(
 	preview.setAttribute('role', 'group');
 	preview.setAttribute('aria-label', 'List preview');
 	preview.style.cssText =
-		'max-height:70px;overflow:auto;padding:8px;border:1px solid var(--dve-border,#ccc)';
+		'max-height:70px;overflow:auto;padding:8px;border:1px solid var(--dve-border,var(--office-border,#d1d5db))';
 	const message = document.createElement('p');
 	message.setAttribute('role', 'alert');
 	const ok = dialogButton('OK', true),

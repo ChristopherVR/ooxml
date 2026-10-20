@@ -52,3 +52,5 @@ export function documentCanvas(node: HTMLElement, props: CanvasProps) {
 		},
 	};
 }
+
+export { prepareWordToolbar } from '../../bindings/src/building-blocks';
