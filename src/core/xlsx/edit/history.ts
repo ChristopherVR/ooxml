@@ -1,4 +1,4 @@
-import { type CellRange, normalizeRange } from '../address';
+import { type CellRange, cellKey, normalizeRange } from '../address';
 import { deleteCell, forEachCellInRange, getCell, putCell } from '../cells';
 import type { Cell, DefinedName, Workbook, Worksheet } from '../model';
 import {
@@ -10,6 +10,7 @@ import {
 	restoreRefs,
 	shiftEdgeCells,
 } from './history-refs';
+import { cloneCell } from './clone-cell';
 
 /** Worksheet properties a `parts` scope can record (everything but the cells). */
 export type SheetPart = Exclude<keyof Worksheet, 'rows'>;
@@ -114,12 +115,15 @@ const PROBE_LIMIT = 4096;
 
 function captureCells(sheet: Worksheet, ranges: CellRange[]): [number, number, Cell][] {
 	const cells: [number, number, Cell][] = [];
-	const seen = new Set<string>();
+	// One range visits each cell once; only overlapping ranges can repeat one.
+	const seen = ranges.length > 1 ? new Set<number>() : undefined;
 	const take = (cell: Cell, row: number, col: number): void => {
-		const key = `${row},${col}`;
-		if (seen.has(key)) return;
-		seen.add(key);
-		cells.push([row, col, structuredClone(cell)]);
+		if (seen) {
+			const key = cellKey(row, col);
+			if (seen.has(key)) return;
+			seen.add(key);
+		}
+		cells.push([row, col, cloneCell(cell)]);
 	};
 	for (const raw of ranges) {
 		const range = normalizeRange(raw);
@@ -207,7 +211,7 @@ function restoreShift(workbook: Workbook, snapshot: Extract<Snapshot, { kind: 's
 	const shift =
 		snapshot.phase === 'before' ? { ...spec.shift, count: -spec.shift.count } : spec.shift;
 	moveCellsRaw(sheet, shift, spec.band);
-	for (const [row, col, cell] of snapshot.cells) putCell(sheet, row, col, structuredClone(cell));
+	for (const [row, col, cell] of snapshot.cells) putCell(sheet, row, col, cloneCell(cell));
 	restoreRefs(workbook, snapshot.data);
 	workbook.activeSheet = snapshot.activeSheet;
 }
@@ -257,20 +261,22 @@ export function restoreSnapshot(workbook: Workbook, snapshot: Snapshot): void {
 		forEachCellInRange(sheet, range, (_cell, row, col) => doomed.push([row, col]));
 		for (const [row, col] of doomed) deleteCell(sheet, row, col);
 	}
-	for (const [row, col, cell] of snapshot.cells) putCell(sheet, row, col, structuredClone(cell));
+	for (const [row, col, cell] of snapshot.cells) putCell(sheet, row, col, cloneCell(cell));
 }
 
 /** The cells a step's snapshots cover, for incremental recalculation. */
 export function touchedCells(step: HistoryStep): { sheet: number; row: number; col: number }[] {
 	const out: { sheet: number; row: number; col: number }[] = [];
-	const seen = new Set<string>();
+	const seen = new Map<number, Set<number>>();
 	for (const entry of step.entries)
 		for (const snapshot of [entry.before, entry.after]) {
 			if (snapshot.kind !== 'cells') continue;
+			let keys = seen.get(snapshot.sheet);
+			if (!keys) seen.set(snapshot.sheet, (keys = new Set()));
 			for (const [row, col] of snapshot.cells) {
-				const key = `${snapshot.sheet},${row},${col}`;
-				if (seen.has(key)) continue;
-				seen.add(key);
+				const key = cellKey(row, col);
+				if (keys.has(key)) continue;
+				keys.add(key);
 				out.push({ sheet: snapshot.sheet, row, col });
 			}
 		}
