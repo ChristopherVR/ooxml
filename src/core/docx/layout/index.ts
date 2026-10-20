@@ -6,6 +6,7 @@ export * from './text-breaks';
 export * from './input';
 export * from './result';
 export * from './page-fields';
+export * from './page-style-refs';
 export { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout';
 export { adjustForWidowOrphan, suppressesSpacing, widowControlEnabled } from './keep-rules';
 export { layoutRow, splitRowAtHeight, type RowLayout, type RowSplit } from './table-layout';
