@@ -74,6 +74,10 @@ own `AGENTS.md` (`viewers/<name>/AGENTS.md`, read it before working there) has t
 - **Declare what you import.** The workspace uses Bun's isolated linker, so a package (a demo, a test
   package, a script's package) sees only its declared dependencies. An import that only worked
   because a parent folder's `node_modules` had it fails here.
+- **Native building blocks belong to their framework package.** Keep composition hooks, reactive
+  adapters, components and their tests in `viewers/<product>/packages/<framework>/src`, including
+  React. Shared composition lifecycle plumbing belongs in `packages/bindings`; it must not import
+  framework runtimes. Each native adapter reuses the same document engine and flat control props.
 - **Every English UI string needs every locale.** A key added to a viewer's English dictionary needs
   an entry in each locale; the locale tests enforce it.
 - **Browser tests that crash hosted runners** are tagged `@local-only` and excluded in CI; run them
