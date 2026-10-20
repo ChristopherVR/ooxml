@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioEdit, VisioPage, VisioShape } from 'ooxml-core/visio';
 import {
 	VISIO_TEXT_LANGUAGES,
@@ -62,7 +63,7 @@ export class ViewerTextFeatures {
 	#state() {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		const editing = state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		const editing = canEditDiagram(state) && !state.loading && !state.edit.busy;
 		const onPage =
 			!!page && state.selectedShapes.every((item) => visioSelectionIsOnPage(item, page.id));
 		const candidates =
@@ -250,7 +251,7 @@ export class ViewerTextFeatures {
 			this.#targets.generation !== this.controller.documentGeneration
 		) {
 			const stale = !this.#dialog.dialog.open && !this.#language.dialog.open;
-			if (stale || !state.edit.sourceAvailable || state.loading) {
+			if (stale || !canEditDiagram(state) || state.loading) {
 				this.#dialog.dialog.close();
 				this.#language.dialog.close();
 			}

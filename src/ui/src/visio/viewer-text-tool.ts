@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -52,7 +53,7 @@ export class ViewerTextTool {
 		if (!draft) return;
 		const replaced =
 			state.loading ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			this.controller.sourceGeneration !== draft.drag.sourceGeneration;
 		const pendingChanged =
 			draft.pending &&

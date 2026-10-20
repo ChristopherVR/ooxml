@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	VISIO_FORMAT_PAINTER_LIMITS,
 	visioFormatPainterEdits,
@@ -73,7 +74,7 @@ export class ViewerFormatPainter {
 		if (announce) this.announce('Format Painter is off.');
 	}
 	#canEdit(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	#apply(state: ViewerState, armed: Armed): void {
 		const page = state.document?.pages[state.pageIndex];
@@ -94,7 +95,7 @@ export class ViewerFormatPainter {
 	}
 	render(state: ViewerState): void {
 		const armed = this.#armed;
-		if (armed && (!state.document || state.loading || !state.edit.sourceAvailable))
+		if (armed && (!state.document || state.loading || !canEditDiagram(state)))
 			this.#armed = undefined;
 		const key = selectionKey(state);
 		if (this.#armed && key !== this.#key && state.selectedShapes.length && this.#canEdit(state)) {
@@ -112,7 +113,7 @@ export class ViewerFormatPainter {
 			!!state.selectedShape &&
 			visioSelectionIsOnPage(state.selectedShape, page.id) &&
 			!!visioFormatPainterSnapshot(state.document, page, state.selectedShape.id);
-		const reason = !state.edit.sourceAvailable
+		const reason = !canEditDiagram(state)
 			? 'Open a .vsdx file to copy formatting.'
 			: state.selectedShapes.length !== 1
 				? 'Select one shape to copy its formatting.'

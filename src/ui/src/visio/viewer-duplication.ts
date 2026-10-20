@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { visioDuplicateCommand, visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import type { RibbonCommand } from './ribbon-parts';
@@ -10,7 +11,7 @@ export class ViewerDuplication {
 		private readonly edit: (run: () => Promise<void>, message: string) => void,
 	) {}
 	private reason(state: ViewerState): string {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to duplicate shapes.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to duplicate shapes.';
 		if (state.loading || state.edit.busy) return 'Wait for the current operation to finish.';
 		if (!state.selectedShapes.length) return 'Select shapes to duplicate.';
 		const page = state.document?.pages[state.pageIndex];

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 type Dialog = HTMLElement & { open: boolean; show(): void; close(): void };
@@ -39,7 +40,7 @@ export class ViewerPageDelete {
 	show(): void {
 		const state = this.controller.state,
 			page = state.document?.pages[state.pageIndex];
-		if (!page || !state.edit.sourceAvailable || state.edit.busy || state.loading) return;
+		if (!page || !canEditDiagram(state) || state.edit.busy || state.loading) return;
 		this.#pageId = page.id;
 		this.#generation = this.controller.documentGeneration;
 		this.message.textContent = `Delete “${page.name}” and its shapes? You can undo this change. A blank page remains when the last foreground page is deleted.`;
@@ -53,7 +54,7 @@ export class ViewerPageDelete {
 	render(state: ViewerState): void {
 		if (!this.dialog.open) return;
 		if (
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			this.controller.documentGeneration !== this.#generation
 		) {

@@ -65,7 +65,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 			// A callback may synchronously replace this patch with a newer update.
 			if (destroyed || revision !== updateRevision) break;
 			if (!(key in options)) continue;
-			if (key === 'document' && options.document !== undefined) {
+			if (key === 'canEdit' && options.canEdit !== undefined) element.canEdit = options.canEdit;
+			else if (key === 'document' && options.document !== undefined) {
 				if (element.document !== options.document) element.document = options.document;
 			} else if (key === 'pageIndex' && options.pageIndex !== undefined)
 				element.pageIndex = options.pageIndex;

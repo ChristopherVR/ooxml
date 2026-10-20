@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { createRotationDrag, resolveRotateHandlePlacement, snapAngle } from 'ooxml-core/geometry';
 import {
 	editErrorMessage,
@@ -53,7 +54,7 @@ export class ViewerRotationHandle {
 			!selection ||
 			!visioSelectionIsOnPage(selection, page.id) ||
 			state.selectedShapes.length !== 1 ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			state.edit.busy ||
 			!this.options.active()
@@ -159,7 +160,7 @@ export class ViewerRotationHandle {
 			event.button !== 0 ||
 			state.edit.busy ||
 			state.loading ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			!this.options.active()
 		)
 			return;

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioDataRecordset, VisioPage, VisioShape } from 'ooxml-core/visio';
 import { visioDataGraphicMarker } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -294,10 +295,10 @@ export class ViewerDataLinks {
 			active,
 			selectedRows: this.#selected,
 			currentRows: current,
-			editable: state.edit.sourceAvailable && !state.loading && !state.edit.busy,
+			editable: canEditDiagram(state) && !state.loading && !state.edit.busy,
 			shapesSelected: selected.size > 0,
 		});
-		if (this.autoLink.dialog.open && (!active || !state.edit.sourceAvailable))
+		if (this.autoLink.dialog.open && (!active || !canEditDiagram(state)))
 			this.autoLink.dialog.close();
 	}
 }

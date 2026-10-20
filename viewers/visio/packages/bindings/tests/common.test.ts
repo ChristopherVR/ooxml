@@ -14,6 +14,7 @@ beforeEach(reset);
 describe('complete shared adapter contract', () => {
 	it('copies every property, keeps null and false, omits undefined and clears removed callbacks', () => {
 		const props: ViewerProps = {
+			canEdit: false,
 			document: null,
 			pageIndex: 0,
 			zoom: 2,

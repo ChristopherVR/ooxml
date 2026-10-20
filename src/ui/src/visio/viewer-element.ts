@@ -68,6 +68,12 @@ const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 ) as typeof HTMLElement;
 export class VisioViewerElement extends BaseElement {
+	get canEdit(): boolean {
+		return this.controller.canEdit;
+	}
+	set canEdit(value: boolean) {
+		this.controller.canEdit = value;
+	}
 	static observedAttributes = ['lang', 'locale'];
 	#overflow: { refit(): void } | undefined;
 	readonly controller = new ViewerController(createWorkerParser());
@@ -798,6 +804,7 @@ export class VisioViewerElement extends BaseElement {
 		if (
 			changed ||
 			!previous ||
+			previous.canEdit !== state.canEdit ||
 			previous.zoom !== state.zoom ||
 			previous.selectedShape !== state.selectedShape ||
 			previous.selectedShapes !== state.selectedShapes ||

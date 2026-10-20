@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { VISIO_BUILT_IN_THEMES, type VisioPageThemeEdit } from 'ooxml-core/visio';
 import type { OfficeUiGallery } from '../ribbon/gallery';
 import type { ViewerController, ViewerState } from './controller';
@@ -25,7 +26,7 @@ export class ViewerThemes {
 			? 'Opening diagram.'
 			: state.edit.busy
 				? 'Updating diagram.'
-				: !state.edit.sourceAvailable
+				: !canEditDiagram(state)
 					? 'Open a .vsdx file to apply a theme.'
 					: !state.document?.pages[state.pageIndex]
 						? 'The drawing has no page.'

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import {
 	visioResizeShape,
@@ -45,7 +46,7 @@ export class ViewerResizeHandles {
 			state.selectedShapes === drag.selection &&
 			state.layerVisibilityOverrides === drag.layers &&
 			state.zoom === drag.zoom &&
-			state.edit.sourceAvailable &&
+			canEditDiagram(state) &&
 			!state.edit.busy &&
 			!state.loading &&
 			drag.svg.isConnected &&
@@ -66,7 +67,7 @@ export class ViewerResizeHandles {
 			!selection ||
 			state.selectedShapes.length !== 1 ||
 			!visioSelectionIsOnPage(selection, page.id) ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.edit.busy ||
 			state.loading ||
 			!this.options.active()
@@ -123,7 +124,7 @@ export class ViewerResizeHandles {
 			event.button !== 0 ||
 			this.#drag ||
 			handle.dataset.resizeShape !== selection.id ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.edit.busy ||
 			state.loading ||
 			!this.options.active()

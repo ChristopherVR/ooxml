@@ -36,6 +36,7 @@ function nudge(
 		!page ||
 		!state.selectedShapes.length ||
 		!state.edit.sourceAvailable ||
+		!state.canEdit ||
 		state.loading ||
 		event.ctrlKey ||
 		event.metaKey ||
@@ -105,6 +106,7 @@ export function wireViewerInputs(
 				!editableTarget(event) &&
 				controller.state.selectedShapes.length === 1 &&
 				controller.state.edit.sourceAvailable &&
+				controller.state.canEdit &&
 				typeText(event.key)
 			) {
 				event.preventDefault();

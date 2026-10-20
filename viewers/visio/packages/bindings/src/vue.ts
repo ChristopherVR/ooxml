@@ -28,6 +28,7 @@ import {
 export const VisioViewer = defineComponent({
 	name: 'VisioViewer',
 	props: {
+		canEdit: { type: Boolean, default: undefined },
 		document: { type: Object as PropType<ViewerProperties['document']>, default: undefined },
 		pageIndex: { type: Number, default: undefined },
 		zoom: { type: Number, default: undefined },

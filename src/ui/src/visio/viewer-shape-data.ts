@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	VISIO_SHAPE_DATA_TYPES,
 	visioShapeDataRowName,
@@ -71,7 +72,7 @@ export class ViewerShapeData {
 		return selectedShape(state.document, state.selectedShape, state.pageIndex);
 	}
 	#editable(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	#rows(): VisioShape['shapeData'] {
 		const state = this.controller.state;
@@ -173,7 +174,7 @@ export class ViewerShapeData {
 		}
 		if (!this.form.dialog.open) return;
 		const current = this.#shape(state);
-		if (!state.edit.sourceAvailable || state.loading || current?.id !== this.#target?.shapeId)
+		if (!canEditDiagram(state) || state.loading || current?.id !== this.#target?.shapeId)
 			this.form.dialog.close();
 		else if (this.#target) this.#target.generation = this.controller.documentGeneration;
 		this.form.busy(state.edit.busy);

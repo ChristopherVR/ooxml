@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioPage, VisioDocument } from 'ooxml-core/visio';
 import {
 	visioDrawBounds,
@@ -87,7 +88,7 @@ export class ViewerDrawingGesture {
 		const kind = this.options.tool();
 		if (!kind || this.#drag || event.button !== 0) return;
 		const state = this.controller.state;
-		if (!state.edit.sourceAvailable) return;
+		if (!canEditDiagram(state)) return;
 		const sourceGeneration = this.controller.sourceGeneration;
 		const page = state.document?.pages[state.pageIndex];
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
@@ -97,7 +98,7 @@ export class ViewerDrawingGesture {
 			!svg ||
 			state.loading ||
 			state.edit.busy ||
-			!state.edit.sourceAvailable
+			!canEditDiagram(state)
 		)
 			return;
 		if (this.options.existingShape?.(event)) return;

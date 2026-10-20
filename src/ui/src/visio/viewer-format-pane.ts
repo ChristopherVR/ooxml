@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioThemeColorRef } from 'ooxml-core/visio';
 import type { OfficeColorPick } from '../controls';
 import type { ViewerController, ViewerState } from './controller';
@@ -32,7 +33,7 @@ const round = (value: number) => String(Math.round(value * 100) / 100);
 function reasonFor(state: ViewerState): string {
 	if (state.loading) return 'Opening diagram.';
 	if (!state.document) return 'Open a drawing to format its shapes.';
-	if (!state.edit.sourceAvailable) return 'Open a .vsdx file to format shapes.';
+	if (!canEditDiagram(state)) return 'Open a .vsdx file to format shapes.';
 	if (!state.selectedShapes.length) return 'Select a shape to format.';
 	return styleSelection(state)
 		? ''

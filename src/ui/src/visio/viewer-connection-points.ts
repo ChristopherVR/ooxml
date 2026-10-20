@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioMatrix, VisioPage, VisioShape } from 'ooxml-core/visio';
 import {
 	composeVisioTransform,
@@ -138,7 +139,7 @@ export class ViewerConnectionPoints {
 		const state = this.controller.state;
 		const page = this.#page(state);
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
-		if (!page || !svg || state.loading || state.edit.busy || !state.edit.sourceAvailable) return;
+		if (!page || !svg || state.loading || state.edit.busy || !canEditDiagram(state)) return;
 		const point = pagePoint(svg, page, event, { snap: false, bounded: false });
 		if (!point) return;
 		const near = this.#pointNear(page, point, (svg.getScreenCTM?.()?.a || 96 * state.zoom) / 1);

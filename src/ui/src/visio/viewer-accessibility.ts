@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { checkVisioAlternativeText, type VisioShape } from 'ooxml-core/visio';
 import { editErrorMessage, isEditCancellation, visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -56,7 +57,7 @@ export class ViewerAccessibility {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
 		const shape = pageOnly ? page : this.#shape(state);
-		if (!state.edit.sourceAvailable || state.edit.busy || state.loading || !page || !shape) return;
+		if (!canEditDiagram(state) || state.edit.busy || state.loading || !page || !shape) return;
 		this.#target = {
 			pageId: page.id,
 			...(pageOnly ? {} : { shapeId: shape.id }),
@@ -134,7 +135,7 @@ export class ViewerAccessibility {
 		this.report.dialog.close();
 	}
 	render(state: ViewerState): void {
-		const editable = state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		const editable = canEditDiagram(state) && !state.loading && !state.edit.busy;
 		const alt = this.root.querySelector<HTMLElement & { disabled: boolean }>(
 			'[command="alt-text"]',
 		);
@@ -149,7 +150,7 @@ export class ViewerAccessibility {
 		if (check) check.disabled = !state.document || state.loading;
 		if (this.alt.dialog.open) {
 			if (
-				!state.edit.sourceAvailable ||
+				!canEditDiagram(state) ||
 				state.loading ||
 				this.#target?.generation !== this.controller.documentGeneration
 			)

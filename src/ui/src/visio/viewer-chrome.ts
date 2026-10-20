@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioDocument } from 'ooxml-core/visio';
 import type { OfficeTab } from '../controls';
 import type { ViewerController, ViewerState } from './controller';
@@ -194,11 +195,11 @@ export class ViewerChrome {
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
 		this.#pageTabs.toggleAttribute(
 			'add-disabled',
-			!page || !state.edit.sourceAvailable || state.edit.busy || state.loading,
+			!page || !canEditDiagram(state) || state.edit.busy || state.loading,
 		);
 		this.#pageTabs.setAttribute(
 			'add-title',
-			state.edit.sourceAvailable ? 'Insert Page' : 'Insert Page: open a .vsdx file to edit pages.',
+			canEditDiagram(state) ? 'Insert Page' : 'Insert Page: open a .vsdx file to edit pages.',
 		);
 		for (const item of this.#allPages.querySelectorAll('office-ui-menu-item'))
 			item.setAttribute(
@@ -208,22 +209,13 @@ export class ViewerChrome {
 		this.#allPages.disabled = !page;
 		this.#allPages
 			.querySelector('[command="delete-page"]')
-			?.toggleAttribute(
-				'disabled',
-				!state.edit.sourceAvailable || state.edit.busy || state.loading,
-			);
+			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
 		this.#allPages
 			.querySelector('[command="rename-page"]')
-			?.toggleAttribute(
-				'disabled',
-				!state.edit.sourceAvailable || state.edit.busy || state.loading,
-			);
+			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
 		this.#allPages
 			.querySelector('[command="reorder-pages"]')
-			?.toggleAttribute(
-				'disabled',
-				!state.edit.sourceAvailable || state.edit.busy || state.loading,
-			);
+			?.toggleAttribute('disabled', !canEditDiagram(state) || state.edit.busy || state.loading);
 		this.#root
 			.querySelector('[data-page-status]')!
 			.setAttribute(

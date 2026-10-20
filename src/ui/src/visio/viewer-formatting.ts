@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioEdit, VisioTextFormatEdit, VisioThemeColorRef } from 'ooxml-core/visio';
 import {
 	visioChangeCaseCommand,
@@ -50,7 +51,7 @@ export class ViewerFormatting {
 				patch: { glow: { size: action.size, color, transparency: VISIO_GLOW_TRANSPARENCY } },
 			});
 		}
-		if (!state.edit.sourceAvailable || state.loading || state.edit.busy) return;
+		if (!canEditDiagram(state) || state.loading || state.edit.busy) return;
 		const sourceGeneration = this.controller.sourceGeneration;
 		const page = state.document?.pages[state.pageIndex];
 		const selections = state.selectedShapes;
@@ -177,7 +178,7 @@ export class ViewerFormatting {
 			? 'Opening diagram.'
 			: state.edit.busy
 				? 'Updating diagram.'
-				: !state.edit.sourceAvailable
+				: !canEditDiagram(state)
 					? 'Open a .vsdx file to edit formatting.'
 					: !selection
 						? 'Select a shape to edit formatting.'
@@ -283,7 +284,7 @@ export class ViewerFormatting {
 		const ordering =
 			page && selection && currentPage ? visioOrderingShape(page, selection.id) : undefined;
 		const orderReason =
-			state.loading || state.edit.busy || !state.edit.sourceAvailable || !selection
+			state.loading || state.edit.busy || !canEditDiagram(state) || !selection
 				? baseReason
 				: selections.length > 1
 					? 'Select one shape to change its drawing order.'

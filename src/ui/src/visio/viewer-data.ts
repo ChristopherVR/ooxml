@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_DATA_GRAPHIC_FILL_ROW,
@@ -65,7 +66,7 @@ export class ViewerData {
 		this.shapeData = new ViewerShapeData(root, controller, announce);
 	}
 	#editable(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	#page(): VisioPage | undefined {
 		const state = this.controller.state;
@@ -232,7 +233,6 @@ export class ViewerData {
 		this.links.render(state);
 		this.shapeData.render(state);
 		for (const dialog of [this.sources.importer, this.graphics])
-			if (dialog.dialog.open && (!state.edit.sourceAvailable || state.loading))
-				dialog.dialog.close();
+			if (dialog.dialog.open && (!canEditDiagram(state) || state.loading)) dialog.dialog.close();
 	}
 }

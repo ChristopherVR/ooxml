@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_GRID_DENSITY_CHOICES,
@@ -94,7 +95,7 @@ export class ViewerRulerGrid {
 	}
 	#refusal(state: ViewerState): string | undefined {
 		if (!this.#page(state)) return 'Open a drawing first.';
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to change the ruler and grid.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to change the ruler and grid.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		return undefined;
 	}

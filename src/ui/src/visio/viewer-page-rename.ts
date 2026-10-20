@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 
@@ -52,7 +53,7 @@ export class ViewerPageRename {
 	show(): void {
 		const state = this.controller.state,
 			page = state.document?.pages[state.pageIndex];
-		if (!page || !state.edit.sourceAvailable || state.edit.busy || state.loading) return;
+		if (!page || !canEditDiagram(state) || state.edit.busy || state.loading) return;
 		this.#pageId = page.id;
 		this.#generation = this.controller.documentGeneration;
 		this.input.value = page.name;
@@ -68,7 +69,7 @@ export class ViewerPageRename {
 	render(state: ViewerState): void {
 		if (!this.dialog.open) return;
 		if (
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			this.controller.documentGeneration !== this.#generation
 		) {

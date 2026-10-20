@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { VISIO_SNAP, visioSnapGlue, type VisioPage } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
@@ -63,7 +64,7 @@ export class ViewerGuides {
 		return this.viewport.querySelector<SVGSVGElement>('svg.paper');
 	}
 	#editable(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	/**
 	 * Snap a shape drag; draws alignment hints. `grid` is the Snap to Grid step in page inches (0

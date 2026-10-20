@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioChangeShapeTarget, VisioMaster } from 'ooxml-core/visio';
 import {
 	visioChangeMasterCommand,
@@ -38,7 +39,7 @@ export class ViewerChangeShape {
 		private readonly edit: (run: () => Promise<void>, message: string) => void,
 	) {}
 	#busy(state: ViewerState): string | undefined {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to change shapes.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to change shapes.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		const page = state.document?.pages[state.pageIndex];
 		if (state.selectedShapes.some((shape) => shape.pageId && shape.pageId !== page?.id))

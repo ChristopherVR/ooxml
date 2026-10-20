@@ -42,7 +42,8 @@ function initials(profile: OfficeProfile): string {
 function status(state: ViewerState): string {
 	if (!state.document) return '';
 	if (state.loading) return 'Opening...';
-	if (state.document.format === 'vsd' || !state.edit.sourceAvailable) return 'Read-only';
+	if (!state.canEdit || state.document.format === 'vsd' || !state.edit.sourceAvailable)
+		return 'Read-only';
 	return state.edit.dirty ? 'Unsaved changes' : '';
 }
 

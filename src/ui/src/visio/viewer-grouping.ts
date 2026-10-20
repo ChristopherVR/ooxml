@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	visioGroupCommand,
 	visioUngroupCommand,
@@ -20,7 +21,7 @@ export class ViewerGrouping {
 		private readonly edit: (run: () => Promise<void>, message: string) => void,
 	) {}
 	private reason(state: ViewerState, operation: Operation): string {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to group shapes.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to group shapes.';
 		if (state.loading || state.edit.busy) return 'Wait for the current operation to finish.';
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || state.selectedShapes.some((shape) => !visioSelectionIsOnPage(shape, page.id)))

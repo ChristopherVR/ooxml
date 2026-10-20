@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	VISIO_LAYOUT_LABELS,
 	VISIO_LAYOUT_STYLES,
@@ -67,7 +68,7 @@ export class ViewerLayout {
 		);
 	}
 	#editable(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	/** The selection when two or more shapes on the page are selected, else the whole page. */
 	#scope(state: ViewerState, page = true): string[] | undefined {
@@ -155,7 +156,7 @@ export class ViewerLayout {
 	}
 	render(state: ViewerState): void {
 		const availability = this.#availability(state);
-		const reason = !state.edit.sourceAvailable
+		const reason = !canEditDiagram(state)
 			? 'Open a .vsdx file to lay out its shapes.'
 			: state.loading || state.edit.busy
 				? 'Wait for the current edit to finish.'

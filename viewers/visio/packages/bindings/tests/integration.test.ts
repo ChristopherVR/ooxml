@@ -129,6 +129,9 @@ const mounts: Record<string, NativeMount> = {
 					get showToolbar() {
 						return props().showToolbar;
 					},
+					get canEdit() {
+						return props().canEdit;
+					},
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
 					},
@@ -180,6 +183,22 @@ const payloads: ViewerEvents = {
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: keeps host edit permission authoritative while allowing navigation`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, canEdit: false });
+			try {
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				mounted.handle.controller.setZoom(2);
+				expect(mounted.handle.controller.state.zoom).toBe(2);
+				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
+				await mounted.update({ canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(true);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
 		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioEdit, VisioPage, VisioPageSetupEdit, VisioScaleUnit } from 'ooxml-core/visio';
 import { visioPageLayout, type VisioPageLayoutEdit } from 'ooxml-core/visio';
 import {
@@ -71,7 +72,7 @@ export class ViewerPageSetupDialog {
 	show(tab: VisioPageSetupTab = this.#tab): void {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		if (!page || !state.document || !state.edit.sourceAvailable || state.loading) return;
+		if (!page || !state.document || !canEditDiagram(state) || state.loading) return;
 		this.#pageId = page.id;
 		this.#generation = this.controller.documentGeneration;
 		const setup = page.pageSetup;
@@ -163,7 +164,7 @@ export class ViewerPageSetupDialog {
 	render(state: ViewerState): void {
 		if (!this.#view.dialog.open) return;
 		if (
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			this.controller.documentGeneration !== this.#generation ||
 			!this.#page()
