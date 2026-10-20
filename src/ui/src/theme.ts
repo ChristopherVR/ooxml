@@ -1,4 +1,15 @@
 import { OFFICE_TOKENS, TOUCH } from './tokens';
+import { themeBridge } from './theme-bridge';
+import {
+	BUILDING_BLOCKS_CSS,
+	type OfficeUiBlockKind,
+	type OfficeUiProduct,
+} from './building-block-styles';
+export {
+	BUILDING_BLOCKS_CSS,
+	type OfficeUiBlockKind,
+	type OfficeUiProduct,
+} from './building-block-styles';
 
 export {
 	shadcnBridge,
@@ -47,21 +58,36 @@ const LIGHT = Object.entries(OFFICE_TOKENS)
 	.map(([name, value]) => `\t${name}: ${value};`)
 	.join('\n');
 
+// Mode scopes reset palette values and their dependents, while typography and geometry inherit.
+const darkEntries = [...DARK.matchAll(/(--office-[\w-]+): ([^;]+);/g)].map(
+	(match) => [match[1]!, match[2]!] as const,
+);
+const lightPalette = Object.fromEntries(
+	darkEntries.map(([name]) => [name, OFFICE_TOKENS[name as keyof typeof OFFICE_TOKENS]]),
+);
+const darkPalette = Object.fromEntries(darkEntries);
+const modeCss = (selector: string, dark: boolean) =>
+	themeBridge(selector, {
+		...lightPalette,
+		...(dark ? darkPalette : {}),
+		'--office-accent-foreground': OFFICE_TOKENS['--office-accent-foreground'],
+	}) + `${selector} { color-scheme: ${dark ? 'dark' : 'light'}; }`;
+
 export const THEME_CSS = `
-:root {
+:where(:root) {
 ${LIGHT}
+color-scheme: light;
 }
+${modeCss(':where([data-office-theme="light"], [data-office-theme="auto"])', false)}
+${modeCss(':where([data-office-theme="dark"])', true)}
 @media (prefers-color-scheme: dark) {
-	:root:not([data-office-theme="light"]) {${DARK}
-	}
-}
-:root[data-office-theme="dark"] {${DARK}
+	${modeCss(':where(:root:not([data-office-theme="light"]), [data-office-theme="auto"])', true)}
 }
 @media ${TOUCH} {
-	:root { --office-target-size: var(--office-target-size-touch); }
+	:where(:root, [data-office-theme]) { --office-target-size: var(--office-target-size-touch); }
 }
 @media (forced-colors: active) {
-	:root {
+	:where(:root, [data-office-theme]) {
 		--office-foreground: CanvasText;
 		--office-muted-foreground: GrayText;
 		--office-background: Canvas;
@@ -73,6 +99,7 @@ ${LIGHT}
 		--office-danger: CanvasText;
 	}
 }
+${BUILDING_BLOCKS_CSS}
 `;
 
 /** Idempotent. Browser-only; returns false (and does nothing) without a document. */
@@ -85,4 +112,15 @@ export function installOfficeUiTheme(doc: Document | undefined = globalThis.docu
 		doc.head.append(style);
 	}
 	return true;
+}
+
+/** Marks only the library control's own root. Theme state and custom tokens stay on host scopes. */
+export function prepareOfficeUiBlock(
+	host: HTMLElement,
+	kind: OfficeUiBlockKind,
+	product?: OfficeUiProduct,
+): void {
+	host.setAttribute('data-office-block', kind);
+	if (product) host.setAttribute('data-office-product', product);
+	installOfficeUiTheme(host.ownerDocument);
 }
