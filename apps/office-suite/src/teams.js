@@ -89,7 +89,7 @@ export async function mountTeams(host, store, open, refresh) {
 					id = doc.id;
 				}
 			}
-			await open(id, { channelId, remote: !localDocumentId(url) });
+			await open(id, { channelId, remote: !localDocumentId(url) }, { focus: true });
 		})().catch(notify);
 	});
 	host.append(teams);
