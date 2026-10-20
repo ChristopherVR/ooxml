@@ -47,7 +47,7 @@
 		"ooxml-ui": "*"
 	},
 	"devDependencies": {
-		"@angular/core": "^22.2.2"
+		"@angular/core": "^22.2.3"
 	},
 	"peerDependencies": {
 		"@angular/core": ">=17"
