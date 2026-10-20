@@ -115,6 +115,17 @@ only the newly created placeholder receives an explicit frame. A missing slot
 requires a complete explicit frame; otherwise the builder throws. Standalone `new SlideBuilder(number, layoutPath, name, handler)`
 requires a loaded handler for this method. Use `addText` for a free text box.
 
+**Compare two versions of a workbook**
+
+```ts
+import { compareWorkbooks, comparisonText, loadXlsx } from 'ooxml-core/xlsx';
+
+const result = compareWorkbooks(await loadXlsx(v1), await loadXlsx(v2));
+console.log(comparisonText(result)); // values, formulas, formats, sheets, names
+```
+
+Cells are matched by address; see [workbook comparison](../../docs/xlsx-compare.md) for the categories and limits.
+
 **Work at the package level**
 
 ```ts
