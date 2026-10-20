@@ -2,7 +2,7 @@
 export const viewerStyles = `
 :host {
   display:flex; flex-direction:column; min-width:0; min-height:320px; height:100%; overflow:hidden;
-  color:var(--_vv-ink); background:var(--_vv-bg); font:12px/1.5 "Segoe UI",Arial,sans-serif; contain:layout;
+  color:var(--_vv-ink); background:var(--_vv-bg); font:12px/1.5 var(--_vv-font); contain:layout;
 }
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }

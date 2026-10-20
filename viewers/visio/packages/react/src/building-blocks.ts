@@ -1,3 +1,4 @@
+import { prepareDiagramBlock } from '../../bindings/src/building-blocks';
 import {
 	createElement,
 	useCallback,
@@ -25,6 +26,9 @@ function buildingBlock<K extends keyof BuildingBlockApi>(key: K): BuildingBlockA
 	if (typeof value !== 'function') throw new Error('Update ooxml-ui to use Visio building blocks.');
 	return value as BuildingBlockApi[K];
 }
+
+const toolbarRef = (host: HTMLDivElement | null) => prepareDiagramBlock(host, 'toolbar');
+const tabsRef = (host: HTMLSelectElement | null) => prepareDiagramBlock(host, 'tabs');
 
 export interface BuildingBlockOptions {
 	content?: VsdxSource | undefined;
@@ -112,7 +116,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 export function Toolbar(props: DiagramToolbarProps) {
 	return createElement(
 		'div',
-		{ role: 'toolbar' },
+		{ role: 'toolbar', ref: toolbarRef },
 		createElement(
 			'button',
 			{
@@ -147,6 +151,7 @@ export function PageNavigation(props: DiagramToolbarProps) {
 		'select',
 		{
 			'aria-label': props.labels.Page,
+			ref: tabsRef,
 			value: props.pageIndex,
 			onChange: (event: import('react').ChangeEvent<HTMLSelectElement>) =>
 				props.onPageChange(Number(event.currentTarget.value)),

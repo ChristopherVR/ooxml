@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createSignal, onCleanup, For, type Accessor } from 'solid-js';
 import {
 	buildingBlock,
+	prepareDiagramBlock,
 	createBuildingBlockSession,
 	type BuildingBlockOptions,
 	type DiagramToolbarProps,
@@ -44,7 +45,7 @@ export function DiagramCanvas(props: {
 }
 export function Toolbar(props: DiagramToolbarProps) {
 	return (
-		<div role="toolbar">
+		<div role="toolbar" ref={(host) => prepareDiagramBlock(host, 'toolbar')}>
 			<button type="button" disabled={!props.canUndo} onClick={() => void props.onUndo()}>
 				{props.labels.Undo}
 			</button>
@@ -60,6 +61,7 @@ export function Toolbar(props: DiagramToolbarProps) {
 export function PageNavigation(props: DiagramToolbarProps) {
 	return (
 		<select
+			ref={(host) => prepareDiagramBlock(host, 'tabs')}
 			aria-label={props.labels.Page}
 			value={props.pageIndex}
 			onChange={(event) => props.onPageChange(Number(event.currentTarget.value))}

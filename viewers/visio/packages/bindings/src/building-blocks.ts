@@ -1,3 +1,4 @@
+import * as officeTheme from 'ooxml-ui/theme';
 import { ViewerController, createWorkerParser, type VsdxSource } from 'ooxml-ui/visio';
 import * as ui from 'ooxml-ui/visio';
 export interface BuildingBlockOptions {
@@ -83,3 +84,16 @@ export function createBuildingBlockSession() {
 }
 export type BuildingBlockSession = ReturnType<typeof createBuildingBlockSession>;
 export type { DiagramToolbarProps, ViewerController } from 'ooxml-ui/visio';
+
+/** Resolve the new optional-control theme API only when that control is mounted. */
+export function prepareDiagramBlock(host: HTMLElement | null, kind: 'toolbar' | 'tabs') {
+	if (!host) return;
+	const prepare: unknown = Reflect.get(officeTheme, 'prepareOfficeUiBlock');
+	if (typeof prepare !== 'function')
+		throw new Error('Update ooxml-ui to theme Visio building blocks.');
+	(prepare as (host: HTMLElement, kind: 'toolbar' | 'tabs', product: 'visio') => void)(
+		host,
+		kind,
+		'visio',
+	);
+}

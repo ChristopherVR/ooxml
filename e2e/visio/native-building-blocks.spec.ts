@@ -6,7 +6,7 @@ declare global {
 		nativeBlocks: { controller: ViewerController };
 	}
 }
-for (const framework of ['vue', 'angular', 'svelte', 'solid'])
+for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid'])
 	test(`${framework}: native composed canvas edits, reloads and follows permissions`, async ({
 		page,
 	}) => {

@@ -18,6 +18,7 @@ import {
 } from '@angular/core';
 import {
 	buildingBlock,
+	prepareDiagramBlock,
 	createBuildingBlockSession,
 	type BuildingBlockOptions,
 } from '../../bindings/src/building-blocks';
@@ -130,7 +131,11 @@ export class DiagramCanvasComponent implements AfterViewInit, OnDestroy {
 		</button>
 	</div>`,
 })
-export class ToolbarComponent {
+export class ToolbarComponent implements AfterViewInit {
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareDiagramBlock(this.host.nativeElement.querySelector('div'), 'toolbar');
+	}
 	readonly blocks = inject(ViewerBuildingBlocks);
 }
 @Component({
@@ -146,7 +151,11 @@ export class ToolbarComponent {
 		}
 	</select>`,
 })
-export class PageNavigationComponent {
+export class PageNavigationComponent implements AfterViewInit {
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareDiagramBlock(this.host.nativeElement.querySelector('select'), 'tabs');
+	}
 	readonly blocks = inject(ViewerBuildingBlocks);
 	change(event: Event) {
 		this.blocks.toolbarProps().onPageChange(Number((event.target as HTMLSelectElement).value));

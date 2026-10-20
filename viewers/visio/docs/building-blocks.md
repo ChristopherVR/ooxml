@@ -171,3 +171,33 @@ Changing a standalone canvas's `mount` prop releases its previous owner before a
 the next one to the same host. Changing an inspector's controller similarly replaces its
 subscription. This supports switching between independent editor sessions without orphaned
 input handlers or state subscriptions.
+
+## Shared Office theme
+
+Every native optional toolbar, page selector and inspector follows the same `--office-*`
+CSS variables as the drawing canvas. The blocks install their shared stylesheet automatically;
+there is no framework-specific theme object or second document state store. Scope themes on
+your own host element:
+
+```html
+<section
+	data-office-theme="dark"
+	style="--office-accent: #a78bfa; --office-font: Inter, sans-serif"
+>
+	<!-- DiagramCanvas, Toolbar, PageNavigation and Inspector -->
+</section>
+```
+
+Use `data-office-theme="light"`, `"dark"` or `"auto"` on the document root or a containing
+section. `auto` follows the system preference, including runtime changes. Scoped light/dark
+hosts can coexist on one page. With no scoped attribute, blocks inherit the root theme and
+host variables across the canvas's shadow boundary. Changing the theme does not reload the
+canvas, reset selection or modify document colors or serialized bytes.
+
+For a host-specific palette, override `--office-background`, `--office-surface`,
+`--office-foreground`, `--office-muted-foreground`, `--office-border`, `--office-accent`,
+`--office-ring` and `--office-font` on the containing section. Legacy Visio overrides
+`--vv-surface`, `--vv-ink`, `--vv-border`, `--vv-accent`, `--vv-focus` and `--vv-font`
+remain supported, with precedence over their canonical counterparts. The canvas additionally
+keeps `--vv-background`, `--vv-secondary` and the existing status-bar overrides. The diagram
+page retains its own document appearance while the surrounding controls follow the UI theme.

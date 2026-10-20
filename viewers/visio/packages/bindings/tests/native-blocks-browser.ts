@@ -1,3 +1,6 @@
+import { createElement, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import * as react from '../../react/src/building-blocks';
 import '@angular/compiler';
 import { createApplication } from '@angular/platform-browser';
 import { Component, createComponent, inject, provideZonelessChangeDetection } from '@angular/core';
@@ -34,7 +37,26 @@ const framework = new URLSearchParams(location.search).get('framework');
 class AngularHost {
 	readonly blocks = inject(angular.ViewerBuildingBlocks);
 }
-if (framework === 'vue') {
+if (framework === 'react') {
+	const rootHandle = createRoot(root);
+	function ReactHost() {
+		const [source, setSource] = useState<BuildingBlockOptions>({});
+		update = setSource;
+		const blocks = react.useViewerBuildingBlocks(source);
+		controller = blocks.inspectorProps.controller;
+		return createElement(
+			'section',
+			null,
+			createElement(react.DiagramCanvas, blocks.canvasProps),
+			createElement(react.Toolbar, blocks.toolbarProps),
+			createElement(react.PageNavigation, blocks.toolbarProps),
+			createElement(react.Inspector, blocks.inspectorProps),
+			createElement('output', null, `${blocks.mode}:${blocks.toolbarProps.zoom}`),
+		);
+	}
+	rootHandle.render(createElement(ReactHost));
+	dispose = () => rootHandle.unmount();
+} else if (framework === 'vue') {
 	const source = shallowRef<BuildingBlockOptions>({});
 	update = (value) => {
 		source.value = value;

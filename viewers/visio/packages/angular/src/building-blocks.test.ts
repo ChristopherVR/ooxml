@@ -31,7 +31,10 @@ it('Angular shares its DI owner and signals through native canvas and optional c
 		const host = document.createElement('div');
 		hosts.push(host);
 		document.body.append(host);
-		const component = createComponent(type, { environmentInjector: injector, hostElement: host });
+		const component = createComponent<{ blocks: ViewerBuildingBlocks }>(type, {
+			environmentInjector: injector,
+			hostElement: host,
+		});
 		app.attachView(component.hostView);
 		component.changeDetectorRef.detectChanges();
 		return component;

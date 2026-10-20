@@ -19,6 +19,9 @@ describe('visio theme', () => {
 		expect(visioThemeAliases).toContain('var(--office-foreground,');
 		expect(visioThemeAliases).toContain('var(--office-accent,');
 		expect(visioThemeAliases).toContain('var(--office-background,');
+		expect(visioThemeAliases).toContain('--_vv-font:var(--vv-font,var(--office-font,');
+		expect(viewerStyles).toContain('font:12px/1.5 var(--_vv-font)');
+		expect(canvasAndRibbonStyles).toContain('--office-font: var(--_vv-font);');
 	});
 
 	it('bridges the aliases back to --office-* for the shared controls', () => {

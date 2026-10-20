@@ -13,6 +13,7 @@ import {
 } from 'vue';
 import {
 	buildingBlock,
+	prepareDiagramBlock,
 	createBuildingBlockSession,
 	type BuildingBlockOptions,
 	type DiagramToolbarProps,
@@ -78,31 +79,38 @@ export const Toolbar = defineComponent({
 	props: { toolbarProps: { type: Object as PropType<DiagramToolbarProps>, required: true } },
 	setup(props) {
 		return () =>
-			h('div', { role: 'toolbar' }, [
-				h(
-					'button',
-					{
-						type: 'button',
-						disabled: !props.toolbarProps.canUndo,
-						onClick: props.toolbarProps.onUndo,
-					},
-					props.toolbarProps.labels.Undo,
-				),
-				h(
-					'button',
-					{
-						type: 'button',
-						disabled: !props.toolbarProps.canRedo,
-						onClick: props.toolbarProps.onRedo,
-					},
-					props.toolbarProps.labels.Redo,
-				),
-				h(
-					'button',
-					{ type: 'button', onClick: props.toolbarProps.onFit },
-					props.toolbarProps.labels['Fit to Window'],
-				),
-			]);
+			h(
+				'div',
+				{
+					role: 'toolbar',
+					ref: (host: unknown) => prepareDiagramBlock(host as HTMLElement | null, 'toolbar'),
+				},
+				[
+					h(
+						'button',
+						{
+							type: 'button',
+							disabled: !props.toolbarProps.canUndo,
+							onClick: props.toolbarProps.onUndo,
+						},
+						props.toolbarProps.labels.Undo,
+					),
+					h(
+						'button',
+						{
+							type: 'button',
+							disabled: !props.toolbarProps.canRedo,
+							onClick: props.toolbarProps.onRedo,
+						},
+						props.toolbarProps.labels.Redo,
+					),
+					h(
+						'button',
+						{ type: 'button', onClick: props.toolbarProps.onFit },
+						props.toolbarProps.labels['Fit to Window'],
+					),
+				],
+			);
 	},
 });
 export const PageNavigation = defineComponent({
@@ -114,6 +122,7 @@ export const PageNavigation = defineComponent({
 				'select',
 				{
 					'aria-label': props.toolbarProps.labels.Page,
+					ref: (host: unknown) => prepareDiagramBlock(host as HTMLElement | null, 'tabs'),
 					value: props.toolbarProps.pageIndex,
 					onChange: (event: Event) =>
 						props.toolbarProps.onPageChange(Number((event.target as HTMLSelectElement).value)),

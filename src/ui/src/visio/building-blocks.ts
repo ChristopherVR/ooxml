@@ -1,3 +1,4 @@
+import { installOfficeUiTheme, prepareOfficeUiBlock } from '../theme';
 import type { ViewerController } from './controller';
 import { ViewerCanvas } from './viewer-canvas';
 import { wireViewerInputs } from './viewer-input';
@@ -21,6 +22,7 @@ export function fitDiagramCanvas(
 
 /** The existing non-mutating selection inspector, independently mounted. */
 export function mountDiagramInspector(host: HTMLElement, controller: ViewerController): () => void {
+	prepareOfficeUiBlock(host, 'inspector', 'visio');
 	const render = () => {
 		const state = controller.state;
 		const shape = selectedShape(state.document, state.selectedShape, state.pageIndex);
@@ -37,6 +39,7 @@ export function mountDiagramInspector(host: HTMLElement, controller: ViewerContr
 /** The shared drawing engine, without application chrome or file/settings handlers. */
 export function mountDiagramCanvas(host: HTMLElement, controller: ViewerController): () => void {
 	const doc = host.ownerDocument;
+	installOfficeUiTheme(doc);
 	const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
 	const style = doc.createElement('style');
 	style.textContent = `${visioThemeAliases}${viewerStyles}${canvasAndRibbonStyles}`;
