@@ -131,7 +131,8 @@ function renderTabs() {
 }
 /**
  * Opens a document in its tab. `focus` moves the keyboard into it when the user asked to open it
- * (new, upload, the file list), not on a restored tab, a switch between tabs or a reload. Phones
+ * (new, upload, the file list, a connected folder's search, a Teams attachment), not on a restored
+ * tab, a switch between tabs, a hash change or an assistant open. Phones
  * and tablets keep it: focusing the grid's text field would raise the on-screen keyboard over the
  * sheet before a cell is chosen, and tapping a cell already focuses it.
  */

@@ -312,7 +312,12 @@ try {
 	await managed.close();
 	console.log('A managed ai-config.json chose the models, instructions and style');
 	// The workbook reopened as the app starts (a restored tab) leaves the focus alone.
+	// A reload: changing only the hash would run the hash route on the mounted session instead.
 	await page.goto(`${base}/#/file/${workbookId}`);
+	await page.reload();
+	await page.waitForFunction(
+		() => document.querySelector('.document-host:not([hidden]) xlsx-editor')?.workbook,
+	);
 	await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Ready');
 	await page.waitForTimeout(500);
 	assert.equal(await gridFocused(), false, 'a restored workbook took the focus');
