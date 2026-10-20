@@ -6,10 +6,10 @@ export const TABS_CSS = `
 	align-items: stretch;
 	height: 32px;
 	box-sizing: border-box;
-	border-top: 1px solid var(--xve-border, #e1dfdd);
-	background: var(--xve-secondary, #f3f2f1);
-	color: var(--xve-foreground, #242424);
-	font: 13px/1 'Segoe UI', system-ui, -apple-system, sans-serif;
+	border-top: 1px solid var(--xve-border, var(--office-border, #e1dfdd));
+	background: var(--xve-secondary, var(--office-surface, #f3f2f1));
+	color: var(--xve-foreground, var(--office-foreground, #242424));
+	font: var(--office-font-size, 13px)/var(--office-line-height, 1.4) var(--xve-font, var(--office-font, system-ui, sans-serif));
 	user-select: none;
 	overflow: hidden;
 }
@@ -35,10 +35,10 @@ export const TABS_CSS = `
 	font-size: 14px;
 	cursor: pointer;
 }
-.xst-btn:hover:not(:disabled) { background: var(--xve-accent, #e1dfdd); }
-.xst-btn:disabled { color: var(--xve-muted-foreground, #a19f9d); cursor: default; }
+.xst-btn:hover:not(:disabled) { background: var(--xve-accent, var(--office-selected, #e1dfdd)); }
+.xst-btn:disabled { color: var(--xve-muted-foreground, var(--office-muted-foreground, #a19f9d)); cursor: default; }
 .xst-btn:focus-visible, .xst-tab:focus-visible {
-	outline: 2px solid var(--xve-ring, #616161);
+	outline: 2px solid var(--xve-ring, var(--office-ring, #616161));
 	outline-offset: -2px;
 }
 .xst-btn[hidden] { display: none; }
@@ -59,14 +59,14 @@ export const TABS_CSS = `
 	max-width: 240px;
 	padding: 0 14px;
 	border: 0;
-	border-right: 1px solid var(--xve-border, #e1dfdd);
+	border-right: 1px solid var(--xve-border, var(--office-border, #e1dfdd));
 	background: transparent;
 	color: inherit;
 	font: inherit;
 	white-space: nowrap;
 	cursor: pointer;
 }
-.xst-tab:hover:not(.xst-active) { background: var(--xve-accent, #e9e8e7); }
+.xst-tab:hover:not(.xst-active) { background: var(--xve-accent, var(--office-selected, #e9e8e7)); }
 .xst-tab .xst-label { overflow: hidden; text-overflow: ellipsis; }
 .xst-tab::after {
 	content: '';
@@ -82,12 +82,12 @@ export const TABS_CSS = `
 	background: color-mix(in srgb, var(--xst-color) 22%, transparent);
 }
 .xst-tab.xst-active {
-	background: var(--xve-sheet-bg, #ffffff);
-	color: var(--xve-selection-border, #217346);
+	background: var(--xve-sheet-bg, var(--office-paper, #ffffff));
+	color: var(--xve-selection-border, var(--office-accent, #217346));
 	font-weight: 600;
 }
 .xst-tab.xst-active::after {
-	background: var(--xve-selection-border, #217346);
+	background: var(--xve-selection-border, var(--office-accent, #217346));
 }
 .xst-tab.xst-active.xst-colored::after { background: var(--xst-color); }
 .xst-tab.xst-dragging { opacity: 0.6; }
@@ -96,11 +96,11 @@ export const TABS_CSS = `
 	height: 22px;
 	box-sizing: border-box;
 	padding: 0 4px;
-	border: 1px solid var(--xve-selection-border, #217346);
+	border: 1px solid var(--xve-selection-border, var(--office-accent, #217346));
 	border-radius: 2px;
 	font: inherit;
-	color: var(--xve-foreground, #242424);
-	background: var(--xve-sheet-bg, #ffffff);
+	color: var(--xve-foreground, var(--office-foreground, #242424));
+	background: var(--xve-sheet-bg, var(--office-paper, #ffffff));
 }
 .xst-marker {
 	position: absolute;
@@ -108,7 +108,7 @@ export const TABS_CSS = `
 	bottom: 4px;
 	width: 2px;
 	margin-left: -1px;
-	background: var(--xve-selection-border, #217346);
+	background: var(--xve-selection-border, var(--office-accent, #217346));
 	pointer-events: none;
 }
 @media ${TOUCH_CONTROL_MEDIA} {

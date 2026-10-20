@@ -1,3 +1,4 @@
+import { prepareBlock } from '../../bindings/src/block-theme';
 import { createEffect, createSignal, onCleanup, onMount, untrack } from 'solid-js';
 import {
 	createBuildingBlockSession,
@@ -57,6 +58,7 @@ export function SpreadsheetCanvas(props: {
 export function Toolbar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 	if (typeof document === 'undefined') return undefined;
 	const host = document.createElement('div');
+	prepareBlock(host, 'toolbar');
 	host.setAttribute('role', 'toolbar');
 	const buttons = Array.from({ length: 5 }, (_, index) => {
 		const button = document.createElement('button');
@@ -81,6 +83,7 @@ export function Toolbar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 export function FormulaBar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 	if (typeof document === 'undefined') return undefined;
 	const host = document.createElement('div');
+	prepareBlock(host, 'formula-bar');
 	const name = document.createElement('input');
 	const formula = document.createElement('input');
 	host.append(name, formula);
@@ -127,6 +130,7 @@ export function FormulaBar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 export function SheetTabs(props: { toolbarProps: SpreadsheetToolbarProps }) {
 	if (typeof document === 'undefined') return undefined;
 	const host = document.createElement('div');
+	prepareBlock(host, 'tabs');
 	host.setAttribute('role', 'tablist');
 	const buttons = new Map<number, HTMLButtonElement>();
 	createEffect(() => {

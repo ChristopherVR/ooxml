@@ -16,18 +16,18 @@ import type { GridView } from './grid-view';
 export const PAGE_BREAK_CSS = `
 .xgpb-layer{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
 .xgpb-layer[hidden]{display:none}
-.xgpb-shade{position:absolute;background:rgba(128,128,128,.32)}
-.xgpb-area{position:absolute;box-sizing:border-box;border:2px solid #2b579a}
+.xgpb-shade{position:absolute;background:color-mix(in srgb,var(--office-muted-foreground,#808080) 32%,transparent)}
+.xgpb-area{position:absolute;box-sizing:border-box;border:2px solid var(--office-accent,#2b579a)}
 .xgpb-mark{position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden;
-	font:700 clamp(28px,6vw,72px)/1 "Segoe UI",system-ui,sans-serif;color:rgba(128,128,128,.42);white-space:nowrap}
-.xgpb-line{position:absolute;pointer-events:none;background:#2b579a}
+	font:700 clamp(28px,6vw,72px)/1 var(--xve-font,var(--office-font,system-ui,sans-serif));color:color-mix(in srgb,var(--office-muted-foreground,#808080) 42%,transparent);white-space:nowrap}
+.xgpb-line{position:absolute;pointer-events:none;background:var(--office-accent,#2b579a)}
 .xgpb-line.xgpb-auto{background:none}
-.xgpb-line.xgpb-auto.xgpb-row{border-top:2px dashed #2b579a}
-.xgpb-line.xgpb-auto.xgpb-col{border-left:2px dashed #2b579a}
+.xgpb-line.xgpb-auto.xgpb-row{border-top:2px dashed var(--office-accent,#2b579a)}
+.xgpb-line.xgpb-auto.xgpb-col{border-left:2px dashed var(--office-accent,#2b579a)}
 .xgpb-grab{position:absolute;pointer-events:auto;z-index:1;touch-action:none}
 .xgpb-grab.xgpb-row{cursor:ns-resize}
 .xgpb-grab.xgpb-col{cursor:ew-resize}
-.xgpb-ghost{position:absolute;pointer-events:none;background:rgba(43,87,154,.55);z-index:2}
+.xgpb-ghost{position:absolute;pointer-events:none;background:color-mix(in srgb,var(--office-accent,#2b579a) 55%,transparent);z-index:2}
 `;
 
 type Grab = { kind: 'line'; line: PageBreakLine } | { kind: 'edge'; edge: PrintAreaEdge };

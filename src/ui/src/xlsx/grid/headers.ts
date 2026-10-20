@@ -49,8 +49,8 @@ export class HeaderLayer {
 			node.xgSig = sig;
 			node.className = `xg-hd${st === 'part' ? ' xg-hd-sel' : st === 'full' ? ' xg-hd-full' : ''}`;
 			node.style.cssText = row
-				? `top:${pos}px;height:${size}px;font-size:${fontPx}px`
-				: `left:${pos}px;width:${size}px;font-size:${fontPx}px`;
+				? `top:${pos}px;height:${size}px;font-size:max(6px,calc(var(--office-font-size-xs,11px) * ${fontPx / 11}))`
+				: `left:${pos}px;width:${size}px;font-size:max(6px,calc(var(--office-font-size-xs,11px) * ${fontPx / 11}))`;
 			node.textContent = row ? String(index + 1) : columnLabel(index);
 			node.dataset.index = String(index);
 			if (row) node.setAttribute('role', 'rowheader');

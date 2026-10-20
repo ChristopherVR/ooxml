@@ -1,3 +1,4 @@
+import { prepareBlock } from '../../bindings/src/block-theme';
 import {
 	Component,
 	EventEmitter,
@@ -112,7 +113,11 @@ export class SpreadsheetCanvasComponent implements AfterViewInit, OnDestroy, OnC
 		}
 	</div>`,
 })
-export class ToolbarComponent {
+export class ToolbarComponent implements AfterViewInit {
+	private readonly themeHost = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareBlock(this.themeHost.nativeElement, 'toolbar');
+	}
 	@Input({ required: true }) toolbarProps!: SpreadsheetToolbarProps;
 	buttons() {
 		return toolbarButtons(this.toolbarProps);
@@ -140,7 +145,11 @@ export class ToolbarComponent {
 		/>
 	</div>`,
 })
-export class FormulaBarComponent {
+export class FormulaBarComponent implements AfterViewInit {
+	private readonly themeHost = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareBlock(this.themeHost.nativeElement, 'formula-bar');
+	}
 	@Input({ required: true }) toolbarProps!: SpreadsheetToolbarProps;
 	invalid = false;
 	invalidName = false;
@@ -181,7 +190,11 @@ export class FormulaBarComponent {
 		}
 	</div>`,
 })
-export class SheetTabsComponent {
+export class SheetTabsComponent implements AfterViewInit {
+	private readonly themeHost = inject<ElementRef<HTMLElement>>(ElementRef);
+	ngAfterViewInit() {
+		prepareBlock(this.themeHost.nativeElement, 'tabs');
+	}
 	@Input({ required: true }) toolbarProps!: SpreadsheetToolbarProps;
 }
 

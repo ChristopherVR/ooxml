@@ -16,7 +16,8 @@ export function openPrintPreview(ctx: EditorContext): Promise<undefined> {
 	// `contentDocument` to paginate and zoom the pages.
 	frame.setAttribute('sandbox', 'allow-same-origin');
 	frame.srcdoc = html;
-	frame.style.cssText = 'width:100%;height:60vh;border:1px solid var(--xve-border,#ccc)';
+	frame.style.cssText =
+		'width:100%;height:60vh;border:1px solid var(--xve-border, var(--office-border, #ccc))';
 	let page = 1;
 	let actualSize = false;
 	const previous = button(ctx, 'Previous Page');

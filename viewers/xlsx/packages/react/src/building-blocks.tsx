@@ -1,3 +1,4 @@
+import { prepareBlock } from '../../bindings/src/block-theme';
 import {
 	createElement,
 	useCallback,
@@ -123,7 +124,7 @@ export function Toolbar(props: SpreadsheetToolbarProps) {
 	] as const;
 	return createElement(
 		'div',
-		{ role: 'toolbar' },
+		{ role: 'toolbar', ref: (host: HTMLDivElement | null) => prepareBlock(host, 'toolbar') },
 		...buttons.map(([label, pressed, run, disabled]) =>
 			createElement(
 				'button',
@@ -152,7 +153,7 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 	}, [props.formula, props.activeCell]);
 	return createElement(
 		'div',
-		null,
+		{ ref: (host: HTMLDivElement | null) => prepareBlock(host, 'formula-bar') },
 		createElement('input', {
 			key: props.selection,
 			'aria-label': props.labels['Name Box'],
@@ -200,7 +201,11 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 export function SheetTabs(props: SpreadsheetToolbarProps) {
 	return createElement(
 		'div',
-		{ role: 'tablist', 'aria-label': props.labels['Sheet'] },
+		{
+			role: 'tablist',
+			'aria-label': props.labels['Sheet'],
+			ref: (host: HTMLDivElement | null) => prepareBlock(host, 'tabs'),
+		},
 		...props.sheets
 			.filter((sheet) => sheet.state === 'visible')
 			.map((sheet) =>

@@ -1,3 +1,4 @@
+import { installOfficeUiThemeFor } from '../theme';
 /**
  * `<xlsx-editor>`: the properties, attributes and lifecycle. Methods are in element-api.ts, state
  * in editor-core.ts and the DOM in editor-shell.ts.
@@ -76,6 +77,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	private addIns: readonly RibbonAddInTab[] = [];
 
 	connectedCallback(): void {
+		installOfficeUiThemeFor(this);
 		if (this.surfaceOnly) {
 			this.disposeSurface ??= buildSurface(this.core);
 			this.core.requestRender();
@@ -93,6 +95,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 	disconnectedCallback(): void {
+		installOfficeUiThemeFor(this);
 		if (this.disposeSurface) {
 			this.disposeSurface();
 			this.disposeSurface = undefined;
@@ -135,13 +138,18 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		reflectAttribute(this, 'author-name', this.core.authorName);
 	}
 
-	/** `light`, `dark` or `auto` (default, follows the OS). */
+	/** `light`, `dark` or `auto` (default, inherits the Office scope and system appearance). */
 	get theme(): EditorThemeMode {
 		return this.core.theme;
 	}
 	set theme(value: EditorThemeMode) {
+		const previous = this.core.theme;
 		this.core.theme = normalizeThemeMode(value);
 		reflectAttribute(this, 'theme', this.core.theme);
+		if (this.core.theme === 'auto') {
+			if (previous !== 'auto' && this.getAttribute('data-office-theme') === previous)
+				this.removeAttribute('data-office-theme');
+		} else this.setAttribute('data-office-theme', this.core.theme);
 	}
 
 	get showToolbar(): boolean {

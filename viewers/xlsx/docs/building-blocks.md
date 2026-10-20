@@ -198,3 +198,16 @@ The component sources and their declarations are published as explicit subpaths.
 rejected entry. Retry allows correction; Escape cancels. Conflicting formatting, selection,
 sheet navigation and saving remain blocked while validation rejects a draft. Readonly
 blocks mutation while preserving selection, sheet navigation and serialization.
+
+## Shared appearance
+
+Place the canvas and optional native controls under one `data-office-theme="light|dark|auto"`
+ancestor. All five native framework integrations install the same shared control styles and
+read inherited `--office-*` tokens. Customise `--office-surface`, `--office-background`,
+`--office-foreground`, `--office-border`, `--office-accent`, `--office-ring`, `--office-font`
+and `--office-radius` at that scope. Runtime changes preserve drafts and focus.
+
+The canvas's existing `theme` and `themeColors` options continue to apply locally; they do
+not rewrite the host's ancestors or sibling controls. Legacy `--xve-*` overrides on a common
+ancestor still reach both the canvas and optional controls. See [Theming](./theming) for
+scope and compatibility examples.

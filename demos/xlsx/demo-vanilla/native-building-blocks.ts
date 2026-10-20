@@ -22,7 +22,54 @@ export async function mountNativeBlocks(
 	framework: string,
 ): Promise<EditorHandle> {
 	let harness: NativeHarness;
-	if (framework === 'vue') {
+	if (framework === 'react') {
+		const { createElement, createRef, useState, useEffect } = await import('react');
+		const { createRoot } = await import('react-dom/client');
+		const { useViewerBuildingBlocks, SpreadsheetCanvas, Toolbar, FormulaBar, SheetTabs } =
+			await import('../../../viewers/xlsx/packages/react/src');
+		const handle = createRef<EditorHandle>();
+		let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
+		let updateOptions!: (value: BuildingBlockOptions) => void;
+		let ready!: () => void;
+		const mounted = new Promise<void>((resolve) => {
+			ready = resolve;
+		});
+		function Host() {
+			const [options, setOptions] = useState<BuildingBlockOptions>(initial);
+			updateOptions = setOptions;
+			blocks = useViewerBuildingBlocks({ ...options, handle });
+			useEffect(() => {
+				if (blocks.toolbarProps) ready();
+			}, [blocks.toolbarProps]);
+			const p = blocks.toolbarProps;
+			return createElement(
+				'div',
+				null,
+				...(p
+					? [
+							createElement(Toolbar, { ...p, key: 'toolbar' }),
+							createElement(FormulaBar, { ...p, key: 'formula' }),
+							createElement(SheetTabs, { ...p, key: 'tabs' }),
+						]
+					: []),
+				createElement(SpreadsheetCanvas, { ...blocks.canvasProps, key: 'canvas' }),
+			);
+		}
+		const root = createRoot(host);
+		root.render(createElement(Host));
+		await mounted;
+		harness = {
+			handle: handle.current!,
+			update: (next) => updateOptions(next),
+			snapshot: () => ({
+				toolbarProps: blocks.toolbarProps,
+				loading: blocks.loading,
+				error: blocks.error,
+				mode: blocks.mode,
+			}),
+			destroy: () => root.unmount(),
+		};
+	} else if (framework === 'vue') {
 		const { createApp, h, shallowRef } = await import('vue');
 		const { useViewerBuildingBlocks, SpreadsheetCanvas, Toolbar, FormulaBar, SheetTabs } =
 			await import('../../../viewers/xlsx/packages/vue/src');

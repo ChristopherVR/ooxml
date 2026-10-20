@@ -1,3 +1,4 @@
+import { prepareBlock } from '../../bindings/src/block-theme';
 import {
 	computed,
 	defineComponent,
@@ -70,7 +71,7 @@ export const Toolbar = defineComponent({
 		return () =>
 			h(
 				'div',
-				{ role: 'toolbar' },
+				{ role: 'toolbar', ref: (host) => prepareBlock(host, 'toolbar') },
 				toolbarButtons(props.toolbarProps).map((b) =>
 					h(
 						'button',
@@ -104,7 +105,7 @@ export const FormulaBar = defineComponent({
 			},
 		);
 		return () =>
-			h('div', {}, [
+			h('div', { ref: (host) => prepareBlock(host, 'formula-bar') }, [
 				h('input', {
 					'aria-label': props.toolbarProps.labels['Name Box'],
 					value: name.value,
@@ -153,7 +154,11 @@ export const SheetTabs = defineComponent({
 		return () =>
 			h(
 				'div',
-				{ role: 'tablist', 'aria-label': props.toolbarProps.labels['Sheet'] },
+				{
+					role: 'tablist',
+					'aria-label': props.toolbarProps.labels['Sheet'],
+					ref: (host) => prepareBlock(host, 'tabs'),
+				},
 				props.toolbarProps.sheets
 					.filter((s) => s.state === 'visible')
 					.map((s) =>

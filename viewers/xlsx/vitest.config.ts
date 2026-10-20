@@ -30,6 +30,7 @@ export default defineConfig({
 			})),
 		],
 	},
+	server: { fs: { allow: [local('../..')] } },
 	test: {
 		include: ['packages/**/*.test.ts', 'packages/**/*.test.tsx', 'scripts/**/*.test.ts'],
 		environment: 'node',

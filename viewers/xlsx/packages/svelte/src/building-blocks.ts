@@ -25,3 +25,5 @@ export function createViewerBuildingBlocks(initial: BuildingBlockOptions = {}) {
 		destroy: session.destroy,
 	};
 }
+
+export { prepareBlock } from '../../bindings/src/block-theme';

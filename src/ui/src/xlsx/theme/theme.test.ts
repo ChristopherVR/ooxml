@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { darkTheme, lightTheme } from 'ooxml-core/xlsx/ui';
 import { THEME_KEYS, themeToCssVars } from 'ooxml-core/xlsx/ui';
 import { editorStyleText, themeTokenText } from './styles';
+import { defineXlsxEditor } from '../component';
 import { normalizeThemeMode } from 'ooxml-core/xlsx/ui';
 
 describe('theme tokens', () => {
@@ -26,14 +27,12 @@ describe('theme tokens', () => {
 		expect(themeToCssVars(undefined)).toEqual({});
 	});
 
-	it('generates light, dark and auto token blocks for the shadow root', () => {
-		expect(themeTokenText).toContain(`--xve-background:${lightTheme.background}`);
-		expect(themeTokenText).toContain(
-			`:host([theme="dark"]){--xve-background:${darkTheme.background}`,
-		);
-		expect(themeTokenText).toContain(
-			'@media (prefers-color-scheme: dark){:host(:not([theme="light"]))',
-		);
+	it('inherits shared Office theme values without shadow-local defaults', () => {
+		expect(themeTokenText).toContain(':host{color-scheme:inherit;');
+		expect(editorStyleText).not.toContain('--xve-background:');
+		expect(themeTokenText).not.toContain('--office-background:');
+		expect(editorStyleText).toContain('.xve-frame {');
+		expect(editorStyleText).toContain('var(--xve-card, var(--office-surface))');
 	});
 
 	it('falls back to auto for unknown modes', () => {
@@ -42,11 +41,25 @@ describe('theme tokens', () => {
 	});
 });
 
-describe('office bridge', () => {
-	it('feeds the shared --office-* tokens from the --xve-* theme', () => {
-		expect(editorStyleText).toContain('--office-foreground: var(--xve-foreground);');
-		expect(editorStyleText).toContain('--office-accent: var(--xve-primary);');
-		expect(editorStyleText).toContain('--office-danger: var(--xve-destructive);');
-		expect(editorStyleText).toContain("--office-font: 'Segoe UI'");
+describe('canonical Office tokens', () => {
+	it('reads legacy host overrides before canonical semantic colours', () => {
+		expect(editorStyleText).toContain('var(--xve-foreground, var(--office-foreground))');
+		expect(themeTokenText).toContain(
+			'--xlsx-theme-primary: var(--xve-primary, var(--office-accent, #2563eb))',
+		);
+		expect(editorStyleText).toContain('--office-accent: var(--xlsx-theme-primary);');
+		expect(editorStyleText).toContain('var(--xve-border, var(--office-border))');
 	});
+});
+
+it('preserves a host-authored canonical scope when the default auto property is applied', () => {
+	defineXlsxEditor();
+	const editor = document.createElement('xlsx-editor');
+	editor.dataset.officeTheme = 'dark';
+	editor.theme = 'auto';
+	expect(editor.dataset.officeTheme).toBe('dark');
+	editor.theme = 'light';
+	expect(editor.dataset.officeTheme).toBe('light');
+	editor.theme = 'auto';
+	expect(editor.dataset.officeTheme).toBeUndefined();
 });

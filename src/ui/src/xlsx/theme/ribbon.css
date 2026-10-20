@@ -111,10 +111,8 @@
 	border-radius: 4px;
 	background: transparent;
 	color: var(--ink);
-	font:
-		400 12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 400 var(--office-font-size-sm, 12px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	cursor: pointer;
@@ -251,10 +249,8 @@
 	border: 0;
 	background: transparent;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: var(--office-font-size-sm, 12px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 	outline: none;
 }
 .ribbon-group .ribbon-combo .ribbon-caret {
@@ -274,10 +270,8 @@
 	border-radius: 3px;
 	background: var(--surface);
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: var(--office-font-size-sm, 12px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 	text-overflow: ellipsis;
 }
 .ribbon-group select.ribbon-select:focus-visible {
@@ -353,12 +347,10 @@
 	padding: 1px 4px;
 	border: 1px solid var(--line);
 	border-radius: 3px;
-	background: #1f1f1f;
-	color: #fff;
-	font:
-		600 11px/14px 'Segoe UI',
-		Arial,
-		sans-serif;
+	background: var(--office-keytip-background, #fff);
+	color: var(--office-keytip-foreground, #1f1f1f);
+	font: 600 var(--office-font-size-xs, 11px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 	text-align: center;
 	pointer-events: none;
 	transform: translateX(-50%);
@@ -368,26 +360,12 @@
 	bottom: auto;
 }
 
-/* Accent hues on command icons, as in Office. */
+/* Command icon accents inherit the common semantic palette. */
 :host {
-	--ribbon-accent-blue: #2b7cd3;
-	--ribbon-accent-green: #2f9e5f;
-	--ribbon-accent-red: #d13438;
-	--ribbon-accent-orange: #d9822b;
-}
-@media (prefers-color-scheme: dark) {
-	:host(:not([theme='light'])) {
-		--ribbon-accent-blue: #5ea5f0;
-		--ribbon-accent-green: #5cc98a;
-		--ribbon-accent-red: #f07a7d;
-		--ribbon-accent-orange: #f0a35e;
-	}
-}
-:host([theme='dark']) {
-	--ribbon-accent-blue: #5ea5f0;
-	--ribbon-accent-green: #5cc98a;
-	--ribbon-accent-red: #f07a7d;
-	--ribbon-accent-orange: #f0a35e;
+	--ribbon-accent-blue: var(--office-info, #2b7cd3);
+	--ribbon-accent-green: var(--office-accent, #2f9e5f);
+	--ribbon-accent-red: var(--office-danger, #d13438);
+	--ribbon-accent-orange: var(--office-warning, #d9822b);
 }
 .ribbon-icon[data-accent='blue'] {
 	color: var(--ribbon-accent-blue);
