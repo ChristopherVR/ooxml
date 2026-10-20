@@ -60,3 +60,4 @@ export {
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
+export type { SpreadsheetToolbarProps } from './building-blocks';

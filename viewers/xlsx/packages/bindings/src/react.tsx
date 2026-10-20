@@ -27,3 +27,5 @@ export const SpreadsheetEditor = forwardRef<EditorHandle, SpreadsheetEditorProps
 		return createElement('div', { ref: host, className: props.className });
 	},
 );
+
+export * from './react-building-blocks';

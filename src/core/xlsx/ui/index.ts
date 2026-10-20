@@ -57,3 +57,4 @@ export * from './theme/css-vars';
 export * from './theme/defaults';
 export * from './theme/element';
 export * from './theme/types';
+export { selectionFormatting } from './selection-format';

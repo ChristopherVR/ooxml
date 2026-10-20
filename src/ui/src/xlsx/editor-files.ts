@@ -56,6 +56,8 @@ export async function loadInto(
 	chrome?: FileChrome,
 ): Promise<void> {
 	const generation = ++core.loadGeneration;
+	core.loading = true;
+	core.requestRender();
 	try {
 		const { loadWorkbook, isOoxmlCryptoError } = await import('ooxml-core/xlsx/load');
 		let password: string | undefined;
@@ -85,6 +87,11 @@ export async function loadInto(
 		if (notes[0]) core.shell?.toast(notes[0], 'info');
 	} catch (cause) {
 		if (generation === core.loadGeneration) throw reportError(core, cause);
+	} finally {
+		if (generation === core.loadGeneration) {
+			core.loading = false;
+			core.requestRender();
+		}
 	}
 }
 

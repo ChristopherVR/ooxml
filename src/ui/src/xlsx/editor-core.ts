@@ -58,6 +58,7 @@ export class EditorCore {
 	appliedThemeVars: string[] = [];
 	hiddenActions: string[] = [];
 	loadGeneration = 0;
+	loading = false;
 	savePassword: string | undefined;
 	shell: ShellHooks | undefined;
 	readonly selection: SelectionModel = createSelectionModel();
@@ -174,6 +175,7 @@ export class EditorCore {
 		queueMicrotask(() => {
 			this.renderQueued = false;
 			this.shell?.render();
+			this.host.dispatchEvent(new CustomEvent('editor-state-change'));
 		});
 	}
 
@@ -253,7 +255,7 @@ export class EditorCore {
 	setActiveSheet(index: number, force = false): void {
 		const sheet = this.workbook?.sheets[index];
 		if (!sheet || (index === this.activeSheet && !force)) return;
-		if (this.gridController?.isEditing()) this.gridController.commitEdit();
+		if (this.gridController?.isEditing() && !this.gridController.commitEdit()) return;
 		this.activeSheet = index;
 		this.shownSheet = sheet;
 		this.selection.set(this.sheetSelections.restore(index, this.workbook));

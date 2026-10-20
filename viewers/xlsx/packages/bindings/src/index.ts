@@ -195,9 +195,14 @@ export function deferredHandle(current: () => EditorBinding | null | undefined):
 type Listener<K extends EditorEventName> = (event: CustomEvent<XlsxEditorEventDetail<K>>) => void;
 
 /** All framework adapters share property, event and lifecycle semantics here. */
-export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): EditorBinding {
+export function mountEditor(
+	host: HTMLElement,
+	initial: EditorOptions = {},
+	surfaceOnly = false,
+): EditorBinding {
 	defineXlsxEditor();
 	const element = host.ownerDocument.createElement('xlsx-editor');
+	element.surfaceOnly = surfaceOnly;
 	let options: EditorOptions = {};
 	let lastInput: Workbook | undefined;
 	let lastEmitted: Workbook | undefined;
@@ -334,3 +339,21 @@ const handleKeysAreComplete: Exclude<keyof EditorHandle, EditorHandleKey> extend
 	? true
 	: never = true;
 void handleKeysAreComplete;
+
+/** Framework-neutral composition API, shared by every adapter. Choose before mount. */
+export interface SurfaceOptions extends EditorOptions {
+	canEdit?: boolean | undefined;
+}
+export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = {}) {
+	const effective = (options: SurfaceOptions): EditorOptions => ({
+		...options,
+		readOnly: options.canEdit === false || options.readOnly === true,
+	});
+	const binding = mountEditor(host, effective(initial), true);
+	const update = binding.update;
+	return Object.assign(binding, {
+		update: (options: SurfaceOptions) => update(effective(options)),
+		getToolbarProps: () => binding.element.getToolbarProps(),
+		subscribe: (listener: () => void) => binding.element.subscribeEditorState(listener),
+	});
+}

@@ -8,6 +8,7 @@ import { loadInto, newInto, saveBlob, saveBytes, type FileChrome } from './edito
 import { downloadBytes, saveExtension, withExtension } from './file-commands';
 import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
+import { spreadsheetToolbarProps, type SpreadsheetToolbarProps } from './building-blocks';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (
@@ -15,6 +16,18 @@ export const HTMLElementBase = (
 ) as typeof HTMLElement;
 
 export class XlsxEditorApi extends HTMLElementBase {
+	/** Set before mounting to omit application UI. */
+	surfaceOnly = false;
+	getToolbarProps(): SpreadsheetToolbarProps {
+		return spreadsheetToolbarProps(this.core);
+	}
+	get loading(): boolean {
+		return this.core.loading;
+	}
+	subscribeEditorState(listener: () => void): () => void {
+		this.addEventListener('editor-state-change', listener);
+		return () => this.removeEventListener('editor-state-change', listener);
+	}
 	protected readonly core: EditorCore = new EditorCore(this);
 	/** Set by the shell once connected. */
 	protected chrome: FileChrome | undefined;
@@ -62,6 +75,7 @@ export class XlsxEditorApi extends HTMLElementBase {
 
 	/** Selects `B2`, `B2:C5`, `A:A`, `B2:C5,E1` or `'Sheet 2'!A1` and scrolls it into view. */
 	select(ref: string): void {
+		if (!this.commitEdit()) throw new Error('The current cell edit failed validation.');
 		const parsed = parseSelectionRef(ref, this.core.workbook);
 		if (!parsed) throw new Error(`Not a cell reference: ${ref}`);
 		if (parsed.sheet !== undefined) this.core.setActiveSheet(parsed.sheet);

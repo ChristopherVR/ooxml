@@ -22,3 +22,5 @@ export type {
 	EditorOptions,
 	EditorProps,
 } from './index';
+
+export { mountEditorSurface, type SurfaceOptions } from './index';
