@@ -1,7 +1,8 @@
+import { createBuildingBlockSession } from '../../bindings/src/building-blocks';
 import { expect, it, vi } from 'vitest';
 import { createComponent, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
-import { DiagramCanvas, createViewerBuildingBlocks } from './building-blocks';
+import { DiagramCanvas, Inspector, createViewerBuildingBlocks } from './building-blocks';
 it('Solid accessors track controller commands and reactive permissions and release ownership', () => {
 	const host = document.createElement('div');
 	document.body.append(host);
@@ -23,5 +24,54 @@ it('Solid accessors track controller commands and reactive permissions and relea
 	dispose();
 	expect(destroy).toHaveBeenCalledOnce();
 	expect(canvas.shadowRoot!.children).toHaveLength(0);
+	host.remove();
+});
+
+it('Solid swaps canvas and inspector owners reactively without replacing host elements', () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const first = createBuildingBlockSession();
+	const second = createBuildingBlockSession();
+	const firstMount = vi.fn(first.mount);
+	const secondMount = vi.fn(second.mount);
+	const [mount, setMount] = createSignal(firstMount);
+	const [controller, setController] = createSignal(first.controller);
+	const firstStop = vi.fn();
+	const secondStop = vi.fn();
+	const firstSubscribe = vi.spyOn(first.controller, 'subscribe').mockReturnValue(firstStop);
+	const secondSubscribe = vi.spyOn(second.controller, 'subscribe').mockReturnValue(secondStop);
+	const dispose = render(() => {
+		const section = document.createElement('section');
+		section.append(
+			createComponent(DiagramCanvas, {
+				get mount() {
+					return mount();
+				},
+			}) as Node,
+			createComponent(Inspector, {
+				get controller() {
+					return controller();
+				},
+			}) as Node,
+		);
+		return section;
+	}, host);
+	const canvas = host.querySelector('section > div')!;
+	const oldViewport = canvas.shadowRoot!.querySelector('[part="canvas"]');
+	setMount(() => secondMount);
+	setController(second.controller);
+	expect(host.querySelector('section > div')).toBe(canvas);
+	expect(firstMount).toHaveBeenLastCalledWith(null);
+	expect(secondMount).toHaveBeenLastCalledWith(canvas);
+	expect(canvas.shadowRoot!.querySelector('[part="canvas"]')).not.toBe(oldViewport);
+	expect(firstStop).toHaveBeenCalled();
+	expect(secondSubscribe).toHaveBeenCalled();
+	dispose();
+	expect(secondMount).toHaveBeenLastCalledWith(null);
+	expect(secondStop).toHaveBeenCalled();
+	firstSubscribe.mockRestore();
+	secondSubscribe.mockRestore();
+	first.destroy();
+	second.destroy();
 	host.remove();
 });

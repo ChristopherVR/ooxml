@@ -1,12 +1,4 @@
-import {
-	createEffect,
-	createMemo,
-	createSignal,
-	onCleanup,
-	onMount,
-	For,
-	type Accessor,
-} from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, For, type Accessor } from 'solid-js';
 import {
 	buildingBlock,
 	createBuildingBlockSession,
@@ -43,8 +35,11 @@ export function DiagramCanvas(props: {
 	class?: string | undefined;
 }) {
 	let host!: HTMLDivElement;
-	onMount(() => props.mount(host));
-	onCleanup(() => props.mount(null));
+	createEffect(() => {
+		const mount = props.mount;
+		mount(host);
+		onCleanup(() => mount(null));
+	});
 	return <div ref={host} class={props.class} />;
 }
 export function Toolbar(props: DiagramToolbarProps) {

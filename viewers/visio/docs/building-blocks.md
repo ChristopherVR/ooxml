@@ -161,3 +161,13 @@ All optional controls render native framework templates. Hosts may omit them and
 flat toolbar actions from their own UI. Toolbar callbacks retain the controller's permission,
 loading and source-format checks. Browser regression tests cover all four native compositions,
 including editing, undo/redo, permission revocation, serialization/reload, error recovery and teardown.
+
+For a host already using Angular signals, `createViewerBuildingBlocks(() => ({
+content: bytes(), canEdit: allowed() }))` injects the scoped `ViewerBuildingBlocks` service
+and connects the options getter with an Angular effect. Call it in the component's injection
+context. The service's event emitters are active even before the first explicit `update`.
+
+Changing a standalone canvas's `mount` prop releases its previous owner before attaching
+the next one to the same host. Changing an inspector's controller similarly replaces its
+subscription. This supports switching between independent editor sessions without orphaned
+input handlers or state subscriptions.

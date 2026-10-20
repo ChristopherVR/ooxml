@@ -107,7 +107,7 @@ for (const name of ${JSON.stringify(names)}) {
   if (${workspaceRuntime}) for (const key of ['mountDiagramCanvas', 'mountDiagramInspector', 'diagramToolbarProps']) assert.equal(typeof api[key], 'function', name + ': ' + key);
   if (name === 'visio-react-viewer') for (const key of ['useViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.equal(typeof api[key], 'function', key);
   if (name === 'visio-vue-viewer') for (const key of ['useViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.ok(api[key], name + ': ' + key);
-  if (name === 'visio-angular-viewer') for (const key of ['ViewerBuildingBlocks', 'ViewerBuildingBlocksComponent', 'DiagramCanvasComponent', 'ToolbarComponent', 'PageNavigationComponent', 'InspectorComponent']) assert.equal(typeof api[key], 'function', name + ': ' + key);
+  if (name === 'visio-angular-viewer') for (const key of ['ViewerBuildingBlocks', 'createViewerBuildingBlocks', 'ViewerBuildingBlocksComponent', 'DiagramCanvasComponent', 'ToolbarComponent', 'PageNavigationComponent', 'InspectorComponent']) assert.equal(typeof api[key], 'function', name + ': ' + key);
   if (name === 'visio-solid-viewer' || name === 'visio-svelte-viewer') for (const key of ['createViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.equal(typeof api[key], 'function', name + ': ' + key);
   const controller = new api.ViewerController();
   controller.setZoom(1.25);

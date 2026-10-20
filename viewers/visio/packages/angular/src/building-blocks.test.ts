@@ -3,6 +3,8 @@ import '@angular/compiler';
 import { createApplication } from '@angular/platform-browser';
 import {
 	createComponent,
+	Component,
+	signal,
 	createEnvironmentInjector,
 	provideZonelessChangeDetection,
 } from '@angular/core';
@@ -13,6 +15,7 @@ import {
 	PageNavigationComponent,
 	InspectorComponent,
 	ViewerBuildingBlocksComponent,
+	createViewerBuildingBlocks,
 } from './building-blocks';
 it('Angular shares its DI owner and signals through native canvas and optional controls', async () => {
 	const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
@@ -24,7 +27,6 @@ it('Angular shares its DI owner and signals through native canvas and optional c
 		ToolbarComponent,
 		PageNavigationComponent,
 		InspectorComponent,
-		ViewerBuildingBlocksComponent,
 	].map((type) => {
 		const host = document.createElement('div');
 		hosts.push(host);
@@ -88,4 +90,25 @@ it('Angular input/output owner initializes callbacks even when no inputs are bou
 	component.destroy();
 	app.destroy();
 	host.remove();
+});
+
+it('Angular host signals update the DI composition through its native factory', async () => {
+	@Component({ standalone: true, template: '', providers: [ViewerBuildingBlocks] })
+	class Host {
+		readonly allowed = signal(true);
+		readonly blocks = createViewerBuildingBlocks(() => ({ canEdit: this.allowed() }));
+	}
+	const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
+	const component = createComponent(Host, { environmentInjector: app.injector });
+	app.attachView(component.hostView);
+	component.changeDetectorRef.detectChanges();
+	expect(component.instance.blocks.mode()).toBe('edit');
+	component.instance.allowed.set(false);
+	component.changeDetectorRef.detectChanges();
+	expect(component.instance.blocks.mode()).toBe('view');
+	const destroy = vi.spyOn(component.instance.blocks.controller, 'destroy');
+	app.detachView(component.hostView);
+	component.destroy();
+	app.destroy();
+	expect(destroy).toHaveBeenCalledOnce();
 });

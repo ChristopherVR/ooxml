@@ -1,7 +1,6 @@
 <script lang="ts">
- import { onMount } from 'svelte';
  let { mount, class: className }: { mount(node: HTMLElement | null): void; class?: string } = $props();
  let host: HTMLDivElement;
- onMount(() => { mount(host); return () => mount(null); });
+ $effect(() => { const current = mount; current(host); return () => current(null); });
 </script>
 <div bind:this={host} class={className}></div>

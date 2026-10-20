@@ -7,6 +7,7 @@ import {
 	shallowRef,
 	toValue,
 	watchEffect,
+	watch,
 	type MaybeRefOrGetter,
 	type PropType,
 } from 'vue';
@@ -49,8 +50,26 @@ export const DiagramCanvas = defineComponent({
 		mount: { type: Function as PropType<(node: HTMLElement | null) => void>, required: true },
 	},
 	setup(props) {
-		const mount = (node: unknown) => props.mount(node as HTMLElement | null);
-		onBeforeUnmount(() => props.mount(null));
+		let host: HTMLElement | null = null;
+		let mounted = props.mount;
+		const mount = (node: unknown) => {
+			const next = node as HTMLElement | null;
+			if (next === host) return;
+			host = next;
+			mounted(next);
+		};
+		watch(
+			() => props.mount,
+			(next) => {
+				mounted(null);
+				mounted = next;
+				if (host) mounted(host);
+			},
+		);
+		onBeforeUnmount(() => {
+			mounted(null);
+			host = null;
+		});
 		return () => h('div', { ref: mount });
 	},
 });

@@ -7,6 +7,8 @@ import {
 	Input,
 	Output,
 	computed,
+	effect,
+	untracked,
 	inject,
 	signal,
 	type AfterViewInit,
@@ -39,6 +41,7 @@ export class ViewerBuildingBlocks {
 	readonly canvasProps = { mount: (node: HTMLElement | null) => this.session.mount(node) };
 	readonly inspectorProps = { controller: this.controller };
 	constructor() {
+		this.update({});
 		const stop = this.controller.subscribe((state) => this.current.set(state));
 		inject(DestroyRef).onDestroy(() => {
 			stop();
@@ -64,6 +67,16 @@ export class ViewerBuildingBlocks {
 		});
 	}
 }
+/** Connect host signals to the scoped owner within an Angular injection context. */
+export function createViewerBuildingBlocks(options: () => BuildingBlockOptions = () => ({})) {
+	const blocks = inject(ViewerBuildingBlocks);
+	effect(() => {
+		const next = options();
+		untracked(() => blocks.update(next));
+	});
+	return blocks;
+}
+
 @Component({
 	selector: 'visio-building-blocks',
 	standalone: true,
