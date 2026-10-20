@@ -62,7 +62,9 @@ describe('pptx-ui-ribbon-actions', () => {
 		expect(part(host, 'comments').getAttribute('aria-label')).toBe('pptx.toolbar.comments');
 		expect(part(host, 'comments').getAttribute('aria-pressed')).toBe('true');
 		expect(part(host, 'share').textContent).toBe('pptx.toolbar.share');
-		expect(host.shadowRoot!.textContent).toContain('--office-accent: var(--pptx-primary');
+		const css = host.shadowRoot!.textContent!;
+		expect(css).toContain('--_pptx-primary: var(--pptx-primary, var(--office-accent,');
+		expect(css).toContain('--office-accent: var(--_pptx-primary);');
 	});
 
 	it('keeps the pptx event names and hides Share when the host does', () => {
