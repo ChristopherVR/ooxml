@@ -1,3 +1,7 @@
+// Explicit file lists can form a batch containing only formats oxfmt skips (for example Svelte).
+// Existing supported files still fail the check when their formatting differs.
+export const FORMATTER_CHECK = 'bunx oxfmt --check --no-error-on-unmatched-pattern';
+
 /** Keep shell commands below Windows command-line limits, preserving each literal argument. */
 export function argumentBatches(prefix, args, limit = 4000) {
 	const commands = [];
