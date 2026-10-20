@@ -213,6 +213,8 @@ export function createContentControl(
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
 	sdt.appendChild(buildProperties(doc, control));
+	if (control.endSourceXml)
+		sdt.appendChild(doc.importNode(parseXml(control.endSourceXml).documentElement, true));
 	const content = makeW(doc, 'sdtContent');
 	sdt.appendChild(content);
 	patchContentControl(doc, sdt, control);

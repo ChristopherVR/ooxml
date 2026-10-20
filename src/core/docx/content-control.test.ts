@@ -216,6 +216,20 @@ describe('content controls in tables and with unmodeled properties', () => {
 		expect(xml).toContain('<w:t>changed</w:t>');
 	});
 
+	it('keeps the end properties of an inline control it writes anew', async () => {
+		const loaded = await hand(
+			`<w:p><w:r><w:t xml:space="preserve">Name: </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="57"/><w:text/></w:sdtPr>` +
+				`<w:sdtEndPr><w:rPr><w:b/></w:rPr></w:sdtEndPr><w:sdtContent><w:r><w:t>A. Writer</w:t></w:r></w:sdtContent></w:sdt></w:p>`,
+		);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		// A run before the control moves it to a run index that has no source control there.
+		paragraph.runs.splice(1, 0, { text: '(author) ', italic: true });
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toMatch(
+			/<w:sdtPr[^>]*><w:id w:val="57"\/><w:text\/><\/w:sdtPr><w:sdtEndPr[^>]*><w:rPr><w:b\/><\/w:rPr><\/w:sdtEndPr><w:sdtContent>/,
+		);
+	});
+
 	it('creates a new inline control from the model', async () => {
 		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
 		const paragraph = expectParagraph(loaded.model.blocks[0]);

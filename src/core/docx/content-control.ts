@@ -115,5 +115,7 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 		if (lid) control.dateLocale = lid;
 	}
 	control.sourceXml = buildXml(sdtPr);
+	const end = first(sdt, 'sdtEndPr');
+	if (end) control.endSourceXml = buildXml(end);
 	return control;
 }
