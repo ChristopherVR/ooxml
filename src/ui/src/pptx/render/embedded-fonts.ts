@@ -17,7 +17,15 @@
  */
 
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
-import { deobfuscateFont, detectFontFormat, getSubstituteFontFamily } from 'ooxml-core/pptx';
+import { detectFontFormat, getSubstituteFontFamily } from 'ooxml-core/pptx';
+
+import { isInjectableUrl, resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
+import { selectTrustedEmbeddedFonts } from './embedded-font-trust';
+import { resolveFontWeight } from './font-weight-names';
+
+export { isInjectableUrl, resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
+export { readFontFileStyle, selectTrustedEmbeddedFonts } from './embedded-font-trust';
+export type { FontFileStyle } from './embedded-font-trust';
 
 /**
  * Characters that would let a PPTX-supplied font name escape the `@font-face`
@@ -27,10 +35,6 @@ const FONT_NAME_UNSAFE_CHARS = /["\\\n\r;}<>]/u;
 
 /** CSS `format()` hints we are willing to emit. */
 const FONT_FORMAT_ALLOWED = new Set<string>(['truetype', 'opentype', 'woff', 'woff2']);
-
-/** Whitelist of `data:`/`blob:` URLs safe to interpolate into `url("…")`. */
-const FONT_DATA_URL_PATTERN =
-	/^data:font\/[a-z0-9+.-]+(?:;charset=[a-z0-9-]+)?;base64,[a-z0-9+/=]+$/iu;
 
 /** MIME type to stamp on a minted `Blob`, keyed by resolved CSS font format. */
 const FONT_MIME_BY_FORMAT: Record<string, string> = {
@@ -45,70 +49,6 @@ const DEFAULT_FONT_FORMAT = 'truetype';
 
 /** Default MIME type when no format-specific mapping applies. */
 const DEFAULT_FONT_MIME = 'font/ttf';
-
-/** Decode a validated `data:font/…;base64,…` URL's payload to raw bytes. */
-function decodeFontDataUrl(dataUrl: string): Uint8Array | undefined {
-	const match = FONT_DATA_URL_PATTERN.exec(dataUrl);
-	if (!match) {
-		return undefined;
-	}
-	const commaIndex = dataUrl.indexOf(',');
-	if (commaIndex < 0) {
-		return undefined;
-	}
-	try {
-		const binary = atob(dataUrl.slice(commaIndex + 1));
-		const bytes = new Uint8Array(binary.length);
-		for (let i = 0; i < binary.length; i++) {
-			bytes[i] = binary.charCodeAt(i);
-		}
-		return bytes;
-	} catch {
-		return undefined;
-	}
-}
-
-/**
- * Resolve an embedded-font entry to its raw (clear-text) font bytes,
- * independent of how the caller will use them (CSS `@font-face` injection via
- * {@link resolveFontVariant}, or glyph-outline parsing via
- * `text-warp-outline-font-cache.ts`). Tries, in order: decoding the core
- * loader's own `dataUrl` (the common case), the preserved `rawFontData`, and
- * de-obfuscating `originalPartBytes` with `fontGuid`. Returns `undefined` when
- * none of these yield usable bytes.
- */
-export function resolveEmbeddedFontClearBytes(font: PptxEmbeddedFont): Uint8Array | undefined {
-	if (isInjectableUrl(font.dataUrl) && !font.dataUrl.startsWith('blob:')) {
-		const decoded = decodeFontDataUrl(font.dataUrl);
-		if (decoded && decoded.length >= 4) {
-			return decoded;
-		}
-	}
-	if (font.rawFontData && font.rawFontData.length > 0) {
-		return font.rawFontData;
-	}
-	if (font.originalPartBytes && font.originalPartBytes.length > 0 && font.fontGuid) {
-		return deobfuscateFont(font.originalPartBytes, font.fontGuid);
-	}
-	return undefined;
-}
-
-/**
- * True when `url` is safe to interpolate into `src: url("…")`.
- *
- * Accepts `blob:` URLs (minted by the binding from de-obfuscated bytes) and
- * base64 `data:font/…` URLs produced by the core loader; everything else is
- * rejected to prevent CSS-injection / exfiltration via a hostile PPTX.
- */
-export function isInjectableUrl(url: string): boolean {
-	if (typeof url !== 'string' || url.length === 0) {
-		return false;
-	}
-	if (url.startsWith('blob:')) {
-		return true;
-	}
-	return FONT_DATA_URL_PATTERN.test(url);
-}
 
 /** Map a resolved CSS font format to the MIME type for a minted `Blob`. */
 export function fontMimeForFormat(format: string): string {
@@ -176,7 +116,9 @@ export function resolveFontVariant(
 		return null;
 	}
 
-	const weight = font.bold ? '700' : '400';
+	// The weight runs in this family ask for (300 for a regular "DM Sans Light"
+	// face, see `resolveFontWeight`), so the face matches exactly.
+	const weight = String(resolveFontWeight(name, font.bold));
 	const style = font.italic ? 'italic' : 'normal';
 
 	// Strategy 1: ready-made, validated data URL from the core loader.
@@ -254,13 +196,20 @@ export interface EmbeddedFontStyles {
  * the distinct substitution-resolved family strings, and any object URLs minted
  * along the way (so the caller can track them for revocation).
  *
+ * The stylesheet only registers typefaces whose files match them (see
+ * {@link selectTrustedEmbeddedFonts}); a rejected one is left to the Google
+ * Fonts stylesheet, which `resolveGoogleWebfontHref` then requests for it.
+ * `fontFamilies` still lists every embedded family, since the deck embeds it.
+ *
  * Pure aside from the injected `mintObjectUrl` callback.
  */
 export function buildEmbeddedFontStyles(
 	fonts: readonly PptxEmbeddedFont[] | null | undefined,
 	mintObjectUrl: ObjectUrlFactory,
 ): EmbeddedFontStyles {
+	const trusted = new Set(selectTrustedEmbeddedFonts(fonts));
 	const variants: ResolvedFontVariant[] = [];
+	const registered: ResolvedFontVariant[] = [];
 	const objectUrls: string[] = [];
 	for (const font of fonts ?? []) {
 		const variant = resolveFontVariant(font, mintObjectUrl);
@@ -271,9 +220,12 @@ export function buildEmbeddedFontStyles(
 		if (variant.objectUrl) {
 			objectUrls.push(variant.objectUrl);
 		}
+		if (trusted.has(font)) {
+			registered.push(variant);
+		}
 	}
 
-	const fontFaceCss = variants.map(buildFontFaceRule).join('\n\n');
+	const fontFaceCss = registered.map(buildFontFaceRule).join('\n\n');
 
 	const seen = new Set<string>();
 	const fontFamilies: string[] = [];

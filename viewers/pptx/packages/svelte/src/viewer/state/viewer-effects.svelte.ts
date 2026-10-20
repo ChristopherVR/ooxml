@@ -2,6 +2,7 @@ import {
 	collectReferencedFontFamilies,
 	fetchGoogleWebfontOutlineBytes,
 	selectGoogleWebfontFamilies,
+	selectTrustedEmbeddedFonts,
 } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
@@ -206,7 +207,7 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 			const referenced = collectReferencedFontFamilies(slides);
 			const candidates = selectGoogleWebfontFamilies(
 				referenced,
-				embeddedFonts.map((font) => font.name),
+				selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
 			);
 			if (candidates.length === 0) {
 				return;

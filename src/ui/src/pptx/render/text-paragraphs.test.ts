@@ -112,6 +112,20 @@ describe('buildParagraphs autofit + bullet typeface', () => {
 		expect(paras[0].bulletStyle.fontStyle).toBe('normal');
 	});
 
+	it('paints a marker in a weight variant at its weight', () => {
+		const paras = buildParagraphs(
+			textEl([
+				{
+					text: '• ',
+					style: { fontFamily: 'DM Sans Light', fontSize: 18 },
+					bulletInfo: { char: '•' },
+				},
+				{ text: 'Light item', style: { fontFamily: 'DM Sans Light', fontSize: 18 } },
+			]),
+		);
+		expect(paras[0].bulletStyle.fontWeight).toBe(300);
+	});
+
 	it('shrinks the bullet marker with the body autofit scale', () => {
 		const paras = buildParagraphs(
 			textEl(

@@ -1,8 +1,10 @@
 import {
 	collectReferencedFontFamilies,
 	fetchGoogleWebfontOutlineBytes,
+	resolveFontWeight,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
+	selectTrustedEmbeddedFonts,
 	syncGoogleWebfontStylesheet,
 } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
@@ -85,7 +87,9 @@ export function useFontInjection({ embeddedFonts, slides }: UseFontInjectionInpu
 		const styleEl = document.createElement('style');
 		styleEl.id = EMBEDDED_FONTS_STYLE_ID;
 
-		const cssRules = embeddedFonts
+		// Only typefaces whose files match them; the rest are requested from
+		// Google Fonts by the effect below (see `selectTrustedEmbeddedFonts`).
+		const cssRules = selectTrustedEmbeddedFonts(embeddedFonts)
 			.flatMap((font) => {
 				// Reject fonts whose name, dataUrl, or format would let the value
 				// escape the @font-face block and inject arbitrary CSS rules.
@@ -103,7 +107,7 @@ export function useFontInjection({ embeddedFonts, slides }: UseFontInjectionInpu
 				if (!FONT_FORMAT_ALLOWED.has(fontFormat)) {
 					return [];
 				}
-				const fontWeight = font.bold ? '700' : '400';
+				const fontWeight = String(resolveFontWeight(font.name, font.bold));
 				const fontStyleCss = font.italic ? 'italic' : 'normal';
 				return [
 					`@font-face {
@@ -168,7 +172,7 @@ export function useFontInjection({ embeddedFonts, slides }: UseFontInjectionInpu
 		const referenced = collectReferencedFontFamilies(slides);
 		const candidates = selectGoogleWebfontFamilies(
 			referenced,
-			embeddedFonts.map((font) => font.name),
+			selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
 		);
 		if (candidates.length === 0) {
 			return;

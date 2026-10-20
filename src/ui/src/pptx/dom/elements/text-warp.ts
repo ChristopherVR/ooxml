@@ -5,6 +5,7 @@ import {
 	buildGlyphEnvelopeBlock,
 	buildWarpPath,
 	DEFAULT_FONT_FAMILY,
+	fontWeightAttribute,
 	getWarpCssTransform,
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
@@ -55,8 +56,9 @@ export function renderWarpedText(
 		if (style?.fontSize) {
 			text.style.fontSize = `${style.fontSize}px`;
 		}
-		if (style?.bold) {
-			text.style.fontWeight = 'bold';
+		const fontWeight = fontWeightAttribute(style?.fontFamily, style?.bold);
+		if (fontWeight) {
+			text.style.fontWeight = fontWeight;
 		}
 		text.textContent = paragraphs.map((p) => p.segments.map((s) => s.text).join('')).join('\n');
 		return text;
@@ -141,7 +143,7 @@ function renderGlyphWarp(
 					? getSubstituteFontFamily(renderedFamily)
 					: DEFAULT_FONT_FAMILY,
 				'font-size': s.fontSize ?? style.fontSize ?? 18,
-				'font-weight': (s.bold ?? style.bold) ? 'bold' : undefined,
+				'font-weight': fontWeightAttribute(renderedFamily, s.bold ?? style.bold),
 				'font-style': (s.italic ?? style.italic) ? 'italic' : undefined,
 			};
 			if (g.outlinePath) {
@@ -241,7 +243,7 @@ function renderPathWarp(
 				? getSubstituteFontFamily(style.fontFamily)
 				: DEFAULT_FONT_FAMILY,
 			'font-size': style.fontSize ?? 18,
-			'font-weight': style.bold ? 'bold' : undefined,
+			'font-weight': fontWeightAttribute(style.fontFamily, style.bold),
 			'font-style': style.italic ? 'italic' : undefined,
 		});
 		const textPath = createSvgEl(context.document, 'textPath', {

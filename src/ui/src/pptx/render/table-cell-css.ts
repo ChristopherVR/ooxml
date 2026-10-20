@@ -31,10 +31,17 @@
  * @module render/table-cell-css
  */
 import type { PptxTableCell, PptxTableData } from 'ooxml-core/pptx';
+import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import { DEFAULT_TEXT_COLOR } from '../constants';
+import { resolveFontWeight } from './font-weight-names';
 import type { TableCellCss, TableStyleContext } from './table-style';
-import { cellStyleToCss, getTableCellBandStyle } from './table-style';
+import {
+	cellStyleToCss,
+	cssFontWeightNumber,
+	getTableCellBandStyle,
+	recordTableCellBold,
+} from './table-style';
 import { DEFAULT_LINE_HEIGHT } from './text-line-height';
 
 /** Where a cell sits in its table, which is what the band cascade keys on. */
@@ -98,5 +105,31 @@ export function tableCellCss(
 	if (css.color === undefined) {
 		css.color = DEFAULT_TEXT_COLOR;
 	}
-	return { ...TABLE_CELL_TEXT_DEFAULTS, ...css };
+	const result: TableCellCss = { ...TABLE_CELL_TEXT_DEFAULTS, ...css };
+	applyTableCellFontWeight(result);
+	return result;
+}
+
+/**
+ * Resolve the cell's text weight once its family and boldness are both known.
+ *
+ * Boldness can come from the table style (a bold header row) as well as the
+ * cell, so this is the one place that sees both. A cell family that is a
+ * weight variant named as its own family ("DM Sans Light") renders at its
+ * weight here, like shape text does; runs without a family of their own
+ * inherit it, and runs with one weigh themselves against it (see
+ * `cellRunStyle`). A bare family from the table style also gets its
+ * substitution chain.
+ */
+export function applyTableCellFontWeight(css: TableCellCss): void {
+	if (typeof css.fontFamily === 'string' && !css.fontFamily.includes(',')) {
+		css.fontFamily = getSubstituteFontFamily(css.fontFamily);
+	}
+	const family = typeof css.fontFamily === 'string' ? css.fontFamily : undefined;
+	const bold = cssFontWeightNumber(css.fontWeight) >= 700;
+	recordTableCellBold(css, bold);
+	const weight = resolveFontWeight(family, bold);
+	if (weight !== (bold ? 700 : 400)) {
+		css.fontWeight = weight;
+	}
 }

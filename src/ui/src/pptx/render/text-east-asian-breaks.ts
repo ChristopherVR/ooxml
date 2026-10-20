@@ -54,6 +54,7 @@
 
 import type { RunFontSpec } from './text-metric-tracking';
 import type { RunStyle } from './text-run-style';
+import { fontWeightShorthand } from './font-weight-names';
 
 /** Which of the two behaviours a paragraph asks for. */
 export interface EastAsianBreakOptions {
@@ -169,7 +170,7 @@ function measure(text: string, font: RunFontSpec): number | undefined {
 		return undefined;
 	}
 	const family = font.fontFamily || 'sans-serif';
-	measureContext.font = `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${font.fontSizePx}px ${family}`;
+	measureContext.font = `${font.italic ? 'italic ' : ''}${fontWeightShorthand(family, font.bold)}${font.fontSizePx}px ${family}`;
 	const width = measureContext.measureText(text).width;
 	return width > 0 ? width : undefined;
 }

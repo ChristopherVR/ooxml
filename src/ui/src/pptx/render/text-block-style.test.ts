@@ -243,4 +243,12 @@ describe('buildTextBlockStyle', () => {
 		expect(style.lineHeight).toBe(1.2);
 		expect(style.fontWeight).toBe(400);
 	});
+
+	it('renders a weight variant of a Google Fonts family at its weight', () => {
+		expect(buildTextBlockStyle(textEl({ fontFamily: 'DM Sans Light' })).fontWeight).toBe(300);
+		expect(
+			buildTextBlockStyle(textEl({ fontFamily: 'DM Sans Light', bold: true })).fontWeight,
+		).toBe(700);
+		expect(buildTextBlockStyle(textEl({ fontFamily: 'Archivo Black' })).fontWeight).toBe(400);
+	});
 });

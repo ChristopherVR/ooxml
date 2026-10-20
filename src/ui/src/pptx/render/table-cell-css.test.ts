@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_TEXT_COLOR } from '../constants';
 import { tableCellCss } from './table-cell-css';
+import { cellRunStyle } from './table-style';
 
 /**
  * A programmatically inserted table: exactly what `newTableElement` produces
@@ -97,5 +98,70 @@ describe('tableCellCss', () => {
 		const cell = { text: '', style: { marginLeft: 0 } } as PptxTableCell;
 		const css = tableCellCss(insertedTable(), cell, POS);
 		expect(css.paddingLeft).toBe('0px');
+	});
+
+	describe('weight variants named as their own family', () => {
+		const body = { ...POS, rowIndex: 1 };
+		const runWeights = (families: string[], position: typeof POS) => {
+			const cell = {
+				text: 'x',
+				textRuns: families.map((fontFamily) => ({ text: 'x', fontFamily })),
+			} as PptxTableCell;
+			const css = tableCellCss(insertedTable(), cell, position);
+			return {
+				cell: css.fontWeight,
+				runs: cell.textRuns!.map((run) => cellRunStyle(run, css).fontWeight),
+			};
+		};
+
+		it('render each regular run at the weight its family names', () => {
+			expect(runWeights(['DM Sans Light', 'DM Sans Medium', 'DM Sans Black'], body)).toStrictEqual({
+				cell: undefined,
+				runs: [300, 500, 900],
+			});
+			// Whatever the order: a Black run first does not make the cell bold.
+			expect(
+				runWeights(['DM Sans Black', 'DM Sans Light', 'DM Sans Medium'], body).runs,
+			).toStrictEqual([900, 300, 500]);
+		});
+
+		it('keep a header row bold when the cell itself is in a Black family', () => {
+			// Core copies the first run's typeface onto the cell style.
+			const cell = {
+				text: 'x',
+				style: { fontFamily: 'DM Sans Black' },
+				textRuns: ['DM Sans Black', 'DM Sans Light', 'DM Sans Medium'].map((fontFamily) => ({
+					text: 'x',
+					fontFamily,
+				})),
+			} as PptxTableCell;
+			const header = tableCellCss(insertedTable(), cell, POS);
+			expect(header.fontWeight).toBe(900);
+			expect(cell.textRuns!.map((run) => cellRunStyle(run, header).fontWeight)).toStrictEqual([
+				undefined,
+				700,
+				700,
+			]);
+			const row = tableCellCss(insertedTable(), cell, body);
+			expect(cell.textRuns!.map((run) => cellRunStyle(run, row).fontWeight)).toStrictEqual([
+				undefined,
+				300,
+				500,
+			]);
+		});
+
+		it('keep a header row bold, and Black at 900', () => {
+			expect(runWeights(['DM Sans Light', 'DM Sans Medium', 'DM Sans Black'], POS)).toStrictEqual({
+				cell: 700,
+				runs: [undefined, undefined, 900],
+			});
+		});
+
+		it('use the substitution chain for a cell family', () => {
+			const cell = { text: 'A', style: { fontFamily: 'DM Sans Medium' } } as PptxTableCell;
+			const css = tableCellCss(insertedTable(), cell, body);
+			expect(css.fontFamily).toMatch(/^"DM Sans Medium", "DM Sans"/u);
+			expect(css.fontWeight).toBe(500);
+		});
 	});
 });

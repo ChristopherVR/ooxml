@@ -1113,6 +1113,9 @@ export * from './embedded-fonts';
 // injection stay per-binding).
 export * from './google-webfonts';
 export * from './google-webfonts-link';
+// Weight variants named as their own family ("DM Sans Light"): the Google
+// Fonts face that serves them and the CSS weight their text renders at.
+export * from './font-weight-names';
 // Pure slide text search: per-element/-slide text collection + case-insensitive
 // substring search with match counts and context snippets.
 export * from './slide-search';

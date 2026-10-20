@@ -6,6 +6,7 @@
  */
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
 import type { EnvelopeFontSpec } from './text-warp-envelope-types';
+import { fontWeightShorthand } from './font-weight-names';
 
 let measureCtx: CanvasRenderingContext2D | null | undefined;
 
@@ -29,7 +30,7 @@ export function envelopeFontSizePx(font: EnvelopeFontSpec): number {
 /** The CSS `font` shorthand for `font`, shared by measurement and glyph tracing. */
 export function toCanvasFont(font: EnvelopeFontSpec, sizePx = envelopeFontSizePx(font)): string {
 	const family = font.fontFamily || DEFAULT_FONT_FAMILY;
-	return `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${sizePx}px ${family}`;
+	return `${font.italic ? 'italic ' : ''}${fontWeightShorthand(family, font.bold)}${sizePx}px ${family}`;
 }
 
 /**

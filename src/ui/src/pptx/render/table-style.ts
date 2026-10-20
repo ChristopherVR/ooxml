@@ -29,9 +29,11 @@ import type {
 	PptxThemeFontScheme,
 	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
+import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import { screenBorder } from './device-pixel-stroke';
 import { getPatternSvg, normalizeHexColor } from './fill-style';
+import { fontWeightAttribute, resolveFontWeight } from './font-weight-names';
 import { cellPaddingCss } from './table-cell-padding';
 import type { CellBorderPosition } from './table-style-borders';
 import { resolveCellBorderCss, resolveStyleDiagonalBorders } from './table-style-borders';
@@ -104,14 +106,56 @@ export interface CellTextRun {
 	lineHeight?: number;
 }
 
+/** A CSS `font-weight` value as a number (`bold` is 700, unset is 400). */
+export function cssFontWeightNumber(value: string | number | undefined): number {
+	if (value === 'bold') {
+		return 700;
+	}
+	const weight = Number(value);
+	return Number.isFinite(weight) && weight > 0 ? weight : 400;
+}
+
+/** Whether each cell style `tableCellCss` resolved is bold (see {@link isBoldCell}). */
+const boldCellStyles = new WeakMap<TableCellCss, boolean>();
+
+/** Record whether a resolved cell style is bold, for its runs to read. */
+export function recordTableCellBold(cellCss: TableCellCss, bold: boolean): void {
+	boldCellStyles.set(cellCss, bold);
+}
+
+/**
+ * Whether a cell's resolved style is bold. Its weight alone cannot say: a cell
+ * in "DM Sans Black" is 900 whether it is bold or not. `tableCellCss` records
+ * the answer for the style it returns; for any other style the weight is read
+ * against the family (a 900 Black cell then reads as regular).
+ */
+function isBoldCell(cellCss: TableCellCss): boolean {
+	const recorded = boldCellStyles.get(cellCss);
+	if (recorded !== undefined) {
+		return recorded;
+	}
+	const weight = cssFontWeightNumber(cellCss.fontWeight);
+	const family = typeof cellCss.fontFamily === 'string' ? cellCss.fontFamily : undefined;
+	return weight >= 700 && weight !== resolveFontWeight(family, false);
+}
+
 /**
  * Convert a {@link CellTextRun}'s per-run formatting to an inline CSS style
  * object suitable for a `<span>` element.
+ *
+ * @param cellCss - The cell's own resolved style ({@link tableCellCss}), when
+ *   the caller has it. A regular run in a weight variant named as its own
+ *   family ("DM Sans Light") then renders at that family's weight, relative to
+ *   whether the cell is bold; without it the run inherits the cell's weight.
  */
-export function cellRunStyle(run: CellTextRun): TableCellCss {
+export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCellCss {
 	const css: TableCellCss = {};
 	if (run.fontFamily) {
-		css.fontFamily = run.fontFamily;
+		// Through the substitution chain, as shape text does: the bare name leaves
+		// a font that is not installed or embedded to the browser default (a
+		// serif), and the chain carries the base family of a weight variant
+		// ("DM Sans" for "DM Sans Light"), which is what Google Fonts serves.
+		css.fontFamily = getSubstituteFontFamily(run.fontFamily);
 	}
 	if (run.lineHeight !== undefined) {
 		css.lineHeight = run.lineHeight;
@@ -129,8 +173,18 @@ export function cellRunStyle(run: CellTextRun): TableCellCss {
 	if (run.color) {
 		css.color = run.color;
 	}
+	// A bold run is at least bold, and a bold "Black" run stays 900. A regular
+	// run in its own family takes that family's weight, bold when the cell is
+	// (a table style's bold header row); otherwise it inherits the cell's.
 	if (run.bold) {
-		css.fontWeight = 'bold';
+		const family = run.fontFamily ?? (cellCss?.fontFamily as string | undefined);
+		css.fontWeight = fontWeightAttribute(family, true) ?? 'bold';
+	} else if (run.fontFamily && cellCss) {
+		const cellWeight = cssFontWeightNumber(cellCss.fontWeight);
+		const weight = resolveFontWeight(run.fontFamily, isBoldCell(cellCss));
+		if (weight !== cellWeight) {
+			css.fontWeight = weight;
+		}
 	}
 	if (run.italic) {
 		css.fontStyle = 'italic';
@@ -335,7 +389,7 @@ export function cellStyleToCss(style?: PptxTableCellStyle): TableCellCss {
 	const css: TableCellCss = {};
 
 	if (style.fontFamily) {
-		css.fontFamily = style.fontFamily;
+		css.fontFamily = getSubstituteFontFamily(style.fontFamily);
 	}
 	if (style.fontSize) {
 		// Table-cell controls and the OOXML save path use PowerPoint points.
@@ -343,7 +397,7 @@ export function cellStyleToCss(style?: PptxTableCellStyle): TableCellCss {
 		css.fontSize = `${style.fontSize}pt`;
 	}
 	if (style.bold) {
-		css.fontWeight = 'bold';
+		css.fontWeight = fontWeightAttribute(style.fontFamily, true) ?? 'bold';
 	}
 	if (style.italic) {
 		css.fontStyle = 'italic';
