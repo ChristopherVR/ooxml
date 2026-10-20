@@ -40,6 +40,8 @@ export interface LayoutRun {
 	script?: 'super' | 'sub';
 	/** `#rrggbb`, display only. */
 	color?: string;
+	/** `#rrggbb` shading behind the run's text, display only (Word's form field shading). */
+	background?: string;
 	underline?: boolean;
 	strike?: boolean;
 }

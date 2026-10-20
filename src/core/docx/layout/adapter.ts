@@ -20,6 +20,10 @@ import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
 import { symbolOnly } from '../special-characters';
+import { formFieldDisplayText } from '../form-fields';
+
+/** Word's grey behind form fields while "Form field shading" is on. */
+const FORM_FIELD_SHADING = '#d9d9d9';
 import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
@@ -143,8 +147,13 @@ export function adaptDocumentModel(
 			: run.noteMark
 				? (markLabel ?? '')
 				: undefined;
+		// A legacy check box or drop-down draws its value on its begin marker; Word shades form fields.
+		const formText = formFieldDisplayText(run);
+		const shaded =
+			model.formFieldShading !== false && (formText !== undefined || name === 'FORMTEXT');
 		const text =
 			noteText ??
+			formText ??
 			(run.field && !isFieldLocked(run) && (name === 'DATE' || name === 'TIME')
 				? dateFieldResult(name, run.field.instr, now)
 				: run.equation
@@ -210,6 +219,7 @@ export function adaptDocumentModel(
 						: (formatting.positionHalfPoints * 2) / 3,
 			}),
 			...(color && /^#[0-9a-f]{6}$/i.test(color) ? { color } : {}),
+			...(shaded ? { background: FORM_FIELD_SHADING } : {}),
 			...(formatting.underline ? { underline: true } : {}),
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
 			...(run.break ? { breakAfter: run.break } : {}),

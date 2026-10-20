@@ -4,6 +4,7 @@
 import { alternateContentDrawing } from './write-drawing';
 import { isSdt, sdtContent } from './content-control';
 import { isEquationElement } from './equation';
+import { isModeledFormFieldData } from './form-fields';
 import { isAnnotationWrapper, isPositionMarker, type InlineMarker } from './inline-markers';
 import { runPositionalTab, runSymbol } from './special-characters';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
@@ -36,9 +37,17 @@ function runIsSafe(run: XmlElement): boolean {
 		)
 	)
 		return true;
-	// A complex field's marker (without form-field data) or its instruction text are modeled runs.
-	if (only && named(only, 'fldChar') && !only.childNodes.length)
-		return ['begin', 'separate', 'end'].includes(getW(only, 'fldCharType') ?? '');
+	// A complex field's marker, with legacy form field data on a begin marker, or its instruction
+	// text are modeled runs.
+	if (only && named(only, 'fldChar')) {
+		const type = getW(only, 'fldCharType') ?? '';
+		const data = Array.from(only.childNodes);
+		if (!data.length) return ['begin', 'separate', 'end'].includes(type);
+		const [ffData] = data;
+		return (
+			type === 'begin' && data.length === 1 && isElement(ffData!) && isModeledFormFieldData(ffData)
+		);
+	}
 	if (content.length && content.every((element) => named(element, 'instrText'))) return true;
 	// One kind of symbol and one kind of positional tab per run, as the model holds them.
 	if (runSymbol(content) === null || runPositionalTab(content) === null) return false;

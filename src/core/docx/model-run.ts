@@ -6,6 +6,7 @@ import type {
 	StPTabRelativeTo,
 } from './generated/wml-simple-types';
 import type { ContentControl } from './content-control-model';
+import type { FormField } from './form-field-model';
 import type { HyperlinkInfo, InlineImage } from './inline-model';
 import type {
 	ThemeColorReference,
@@ -101,6 +102,8 @@ export interface TextRun {
 	fieldChar?: 'begin' | 'separate' | 'end';
 	/** A complex field's instruction text run (`w:instrText`), e.g. ` TOC \o "1-3" `; `text` is empty. */
 	fieldCode?: string;
+	/** On a legacy form field's begin marker: the field's `w:ffData`. */
+	formField?: FormField;
 	/**
 	 * The symbol (`w:sym`) this run shows: its font and hexadecimal character code, such as
 	 * Wingdings `F0FE`. Each occurrence of the symbol's private-use character in `text` is that

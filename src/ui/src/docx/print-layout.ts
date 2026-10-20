@@ -96,6 +96,7 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	if (fragment.topPx !== undefined) el.style.top = `${fragment.topPx}px`;
 	if (fragment.boxHeightPx !== undefined) el.style.lineHeight = `${fragment.boxHeightPx}px`;
 	if (fragment.color) el.style.color = fragment.color;
+	if (fragment.background) el.style.backgroundColor = fragment.background;
 	if (fragment.ligatures !== undefined)
 		el.style.fontVariantLigatures = ligatureCss(fragment.ligatures);
 	const lines = [fragment.underline && 'underline', fragment.strike && 'line-through'].filter(

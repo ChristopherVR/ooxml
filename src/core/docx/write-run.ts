@@ -10,6 +10,7 @@ import { writeRunFormatRevision } from './write-revisions';
 import { parseRunPropertiesSnapshot } from './restore-run-format';
 import { parseDirectRunProperties, runPropertyChanged } from './run-properties';
 import { writeFieldFlags } from './field-flags';
+import { writeFormFieldData } from './form-fields';
 import {
 	NON_BREAKING_HYPHEN,
 	SOFT_HYPHEN,
@@ -294,6 +295,8 @@ export function createRun(
 	}
 	setRunProperties(doc, node, run, base);
 	if (run.image) return node;
+	// A form field's own data element, kept so an unchanged field is written back byte for byte.
+	const formData = run.formField ? first(first(node, 'fldChar'), 'ffData') : undefined;
 	for (const child of Array.from(node.childNodes))
 		if (child.nodeType !== 1 || (child as XmlElement).localName !== 'rPr') node.removeChild(child);
 	if (run.break) {
@@ -306,6 +309,8 @@ export function createRun(
 		const marker = makeW(doc, 'fldChar');
 		setAttribute(marker, 'fldCharType', run.fieldChar);
 		writeFieldFlags(marker, run.fieldFlags);
+		if (run.fieldChar === 'begin' && run.formField)
+			marker.appendChild(writeFormFieldData(doc, run.formField, formData));
 		node.appendChild(marker);
 		return node;
 	}

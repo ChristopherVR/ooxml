@@ -10,7 +10,7 @@ import { parseBlocksFromContainer } from './block-parser';
 import { parseDocumentParts } from './document-parts';
 import { parseNumberingCatalog } from './numbering-parse';
 import { parseComments } from './comments';
-import { parseTrackChangesSetting, parseReviewPreferences } from './settings';
+import { parseFormSettings, parseReviewPreferences, parseTrackChangesSetting } from './settings';
 import { parsePageBackground } from './page-background';
 import { parseRunStyleCatalog } from './character-styles';
 import { parseTableStyleCatalog } from './table-styles';
@@ -166,7 +166,13 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	if (settingsFile) {
 		const settingsXml = await settingsFile.async('string');
 		model.trackChanges = parseTrackChangesSetting(settingsXml);
-		Object.assign(model, parseReviewPreferences(settingsXml));
+		Object.assign(model, parseReviewPreferences(settingsXml), parseFormSettings(settingsXml));
+		if (model.protection?.enforced)
+			model.warnings.push(
+				model.protection.edit === 'forms'
+					? 'The document is protected for filling in forms: the editor lets only form fields and content controls change. The protection password is not checked.'
+					: `The document's "${model.protection.edit}" protection is kept but not enforced while editing.`,
+			);
 	}
 	if (
 		blocks.some(

@@ -43,6 +43,10 @@ export function warningsFor(document: XmlDocument): string[] {
 			'Paragraph-formatting-change revisions retain their prior properties snapshots and support acceptance and rejection; recording new paragraph formatting changes and showing prior formatting in Original display are not supported yet.',
 		],
 		[
+			['ffData'],
+			'Legacy form fields (text, check box and drop-down) are filled, toggled and picked; their entry and exit macros, calculated results and number or date formats are not applied.',
+		],
+		[
 			['tblPrChange', 'trPrChange', 'tcPrChange'],
 			'Table-structure tracked changes are preserved in the source XML but are not represented in the document model.',
 		],

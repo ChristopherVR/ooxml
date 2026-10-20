@@ -15,6 +15,7 @@ import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from 
 import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
+import { parseFormField } from './form-fields';
 import { runPositionalTab, runSymbol, specialCharacterText } from './special-characters';
 import {
 	collectParagraphRuns,
@@ -141,6 +142,9 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 		run.fieldChar = fieldChar;
 		const flags = parseFieldFlags(only!);
 		if (flags) run.fieldFlags = flags;
+		const data = fieldChar === 'begin' ? first(only, 'ffData') : undefined;
+		const formField = data && parseFormField(data);
+		if (formField) run.formField = formField;
 	}
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
