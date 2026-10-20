@@ -3,12 +3,20 @@ import { loadXlsx } from '../xlsx/read/load';
 import { saveXlsx } from '../xlsx/write/save';
 import { createEditSession } from '../xlsx/edit/session';
 import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address';
-import { forEachCell, getCell } from '../xlsx/cells';
+import { forEachCell } from '../xlsx/cells';
+import { definedNameList, rangeCells, sheetSummaries } from './xlsx-read';
 
+/**
+ * The sheets (index, name, state, used range with its row and column counts, tables), the
+ * active sheet, the defined names, the document properties and the loader warnings. Tables per
+ * sheet and names are capped at 500 each; `tablesOmitted` and `definedNamesOmitted` count the rest.
+ */
 export async function inspectXlsx(bytes: Uint8Array) {
 	const workbook = await loadXlsx(bytes);
 	return {
-		sheets: workbook.sheets.map((sheet, index) => ({ index, name: sheet.name })),
+		sheets: sheetSummaries(workbook),
+		activeSheet: workbook.activeSheet,
+		...definedNameList(workbook),
 		properties: workbook.properties,
 		warnings: workbook.warnings,
 	};
@@ -27,6 +35,10 @@ export async function createXlsx(names: readonly string[]): Promise<Uint8Array> 
 	return saveXlsx(workbook);
 }
 
+/**
+ * The cells of an A1 range (at most 10,000), row by row: value, formula, the text as displayed,
+ * the number format (absent for General) and, for dates and times, the value in ISO 8601.
+ */
 export async function readXlsxRange(bytes: Uint8Array, sheetIndex: number, reference: string) {
 	const workbook = await loadXlsx(bytes);
 	const sheet =
@@ -34,19 +46,7 @@ export async function readXlsxRange(bytes: Uint8Array, sheetIndex: number, refer
 	const range = parseRange(reference);
 	if (!sheet || !range || range.end.col > MAX_COL || range.end.row > MAX_ROW)
 		throw new Error('Invalid sheet or range');
-	const count = (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
-	if (count > 10_000) throw new Error('Read at most 10000 cells per request');
-	const cells = [];
-	for (let row = range.start.row; row <= range.end.row; row++)
-		for (let col = range.start.col; col <= range.end.col; col++) {
-			const cell = getCell(sheet, row, col);
-			cells.push({
-				address: formatAddress({ row, col }),
-				value: cell?.value ?? null,
-				formula: cell?.formula,
-			});
-		}
-	return { cells, warnings: workbook.warnings };
+	return { cells: rangeCells(workbook, sheet, range), warnings: workbook.warnings };
 }
 
 export async function setXlsxCells(
