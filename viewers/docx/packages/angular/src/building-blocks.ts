@@ -47,7 +47,12 @@ export class ViewerBuildingBlocks {
 		inject(DestroyRef).onDestroy(() => {
 			stop();
 			this.session.destroy();
+			this.documentChange.complete();
+			this.documentError.complete();
+			this.dirtyChange.complete();
+			this.pageChange.complete();
 		});
+		this.update({});
 	}
 	update(options: BuildingBlockOptions) {
 		this.session.update({
@@ -91,7 +96,10 @@ export class DocumentCanvasComponent implements AfterViewInit, OnChanges, OnDest
 		if (this.mounted) this.attach();
 	}
 	private attach() {
-		if (this.mounted === this.canvasProps) return;
+		if (this.mounted?.mount === this.canvasProps.mount) {
+			this.mounted = this.canvasProps;
+			return;
+		}
 		this.mounted?.mount(null);
 		this.mounted = this.canvasProps;
 		this.mounted.mount(this.host.nativeElement);
