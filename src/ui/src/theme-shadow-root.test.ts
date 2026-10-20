@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import {
 	installOfficeUiTheme,
 	installOfficeUiThemeFor,
@@ -14,9 +14,16 @@ const host = () => {
 	hosts.push(node);
 	return node;
 };
-afterEach(() => {
+let existingTheme: HTMLElement | null;
+beforeEach(() => {
+	existingTheme = document.getElementById(THEME_STYLE_ID);
+});
+
+afterEach(async () => {
+	await Promise.resolve();
 	hosts.splice(0).forEach((node) => node.remove());
-	document.getElementById(THEME_STYLE_ID)?.remove();
+	const current = document.getElementById(THEME_STYLE_ID);
+	if (current !== existingTheme) current?.remove();
 });
 it('installs exactly one stylesheet in each embedding shadow root and its owner document', () => {
 	const outer = host().attachShadow({ mode: 'open' });
@@ -29,16 +36,23 @@ it('installs exactly one stylesheet in each embedding shadow root and its owner 
 	installOfficeUiThemeFor(toolbar);
 	for (const root of [document, outer, inner]) {
 		expect(root.querySelectorAll(`#${THEME_STYLE_ID}`)).toHaveLength(1);
-		expect(root.getElementById(THEME_STYLE_ID)?.textContent).toBe(THEME_CSS);
+		if (root === document && existingTheme)
+			expect(root.getElementById(THEME_STYLE_ID)).toBe(existingTheme);
+		else expect(root.getElementById(THEME_STYLE_ID)?.textContent).toBe(THEME_CSS);
 	}
 });
-it('supports explicitly installing a shadow stylesheet without modifying the owner document', () => {
-	const root = host().attachShadow({ mode: 'open' });
-	expect(installOfficeUiTheme(root)).toBe(true);
-	installOfficeUiTheme(root);
-	expect(root.querySelectorAll('style')).toHaveLength(1);
-	expect(document.getElementById(THEME_STYLE_ID)).toBeNull();
-});
+it.each([false, true])(
+	'preserves the owner document when installing in a shadow root (global theme preinstalled: %s)',
+	(preinstall) => {
+		if (preinstall) installOfficeUiTheme(document);
+		const documentTheme = document.getElementById(THEME_STYLE_ID);
+		const root = host().attachShadow({ mode: 'open' });
+		expect(installOfficeUiTheme(root)).toBe(true);
+		installOfficeUiTheme(root);
+		expect(root.querySelectorAll('style')).toHaveLength(1);
+		expect(document.getElementById(THEME_STYLE_ID)).toBe(documentTheme);
+	},
+);
 it.each(['native control', 'canvas'] as const)(
 	'prepares a %s before framework insertion into a shadow root',
 	async (kind) => {
