@@ -1,9 +1,10 @@
-import { HELP_RIBBON_COMMANDS, isDialogAvailable } from 'ooxml-ui/pptx';
+import { buildHelpRibbon, isDialogAvailable } from 'ooxml-ui/pptx';
+import type { RibbonControlId } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useViewerCustomizationContext } from '../viewer-customization-context';
-import { WebRibbonCommand, WebRibbonGroup } from './WebRibbonControls';
+import { WebRibbonSection } from './WebRibbonSection';
 
 export interface HelpSectionProps {
 	/** Opens Options, or the shortcuts sheet when the host does not wire Options. */
@@ -14,26 +15,21 @@ export interface HelpSectionProps {
 
 export function HelpSection(p: HelpSectionProps): React.ReactElement {
 	const { t } = useTranslation();
-	const showSettings = isDialogAvailable(useViewerCustomizationContext(), 'options');
-	const actions = {
-		'help.help.options': p.onOpenSettings ?? p.onToggleShortcuts,
-		'help.help.keyboardShortcuts': p.onToggleShortcuts,
-		'help.help.accessibility': p.onRunAccessibilityCheck,
+	const groups = buildHelpRibbon(t, {
+		options: isDialogAvailable(useViewerCustomizationContext(), 'options'),
+	});
+	const request = (id: RibbonControlId) => {
+		switch (id) {
+			case 'help.help.options':
+				(p.onOpenSettings ?? p.onToggleShortcuts)();
+				break;
+			case 'help.help.keyboardShortcuts':
+				p.onToggleShortcuts();
+				break;
+			case 'help.help.accessibility':
+				p.onRunAccessibilityCheck();
+				break;
+		}
 	};
-	return (
-		<WebRibbonGroup label={t('pptx.ribbon.tab.help')} groupId='help.help'>
-			{HELP_RIBBON_COMMANDS.filter(
-				(command) => command.id !== 'help.help.options' || showSettings,
-			).map((command) => (
-				<WebRibbonCommand
-					key={command.id}
-					controlId={command.id}
-					label={t(command.labelKey)}
-					icon={command.icon}
-					compact
-					onCommand={() => actions[command.id as keyof typeof actions]()}
-				/>
-			))}
-		</WebRibbonGroup>
-	);
+	return <WebRibbonSection groups={groups} onCommand={request} />;
 }
