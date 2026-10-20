@@ -109,4 +109,27 @@ describe('saving an edited Word package', () => {
 		});
 		expect(await sectionOf(zip)).toBe(SECTION.replace('w:top="1417"', 'w:top="1000"'));
 	});
+	it('declares the main namespace only on the document root after rebuilding properties', async () => {
+		const control =
+			'<w:sdt><w:sdtPr><w:alias w:val="Name"/><w:id w:val="5"/><w:text/></w:sdtPr><w:sdtContent>' +
+			`${text('Ada')}</w:sdtContent></w:sdt>`;
+		const loaded = await loadDocx(
+			await wordPackage(
+				'<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:fitText w:val="1200" w:id="9"/></w:rPr>' +
+					`<w:t>Body</w:t></w:r></w:p><w:p>${control}</w:p>` +
+					'<w:p><w:r><w:rPr><w:b/><w:rPrChange w:id="1" w:author="A" w:date="2024-01-01T00:00:00Z"><w:rPr><w:i/></w:rPr>' +
+					'</w:rPrChange></w:rPr><w:t>Bold</w:t></w:r></w:p>',
+			),
+		);
+		const zip = await saved(loaded, (model) => {
+			editBody(model);
+			at(expectParagraph(model.blocks[2]).runs, 0).text = 'Bolder';
+			// A copy of the paragraph that holds the control, as a paste makes, writes a new w:sdt.
+			model.blocks.push({ ...structuredClone(expectParagraph(model.blocks[1])), id: 'copy' });
+		});
+		const xml = await part(zip, 'word/document.xml');
+		expect(xml).toContain('>Edited<');
+		expect(xml.match(/<w:sdtPr>/g)).toHaveLength(2);
+		expect(xml.match(/xmlns:w=/g)).toHaveLength(1);
+	});
 });

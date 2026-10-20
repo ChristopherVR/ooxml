@@ -1,6 +1,14 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph } from './model';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+import {
+	children,
+	first,
+	importElement,
+	makeW,
+	WORD_NS,
+	type XmlDocument,
+	type XmlElement,
+} from './xml';
 import { writeParagraphProperties } from './write-paragraph-properties';
 import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
@@ -102,7 +110,7 @@ export function writeParagraphImpl(
 	if (propertiesXml && (restoring || paragraph.sourceParagraphPropertiesXml || !base)) {
 		const restored = parsePropertiesSnapshot(propertiesXml, 'pPr');
 		if (pPr) node.removeChild(pPr);
-		pPr = doc.importNode(restored, true) as XmlElement;
+		pPr = importElement(doc, restored);
 		node.insertBefore(pPr, node.firstChild);
 		propertyBase = {
 			type: 'paragraph',

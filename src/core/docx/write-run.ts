@@ -1,7 +1,15 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { orderChildren, RPR_ORDER } from './element-order';
 import type { TextRun } from './model';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import {
+	children,
+	first,
+	importElement,
+	makeW,
+	type XmlDocument,
+	type XmlElement,
+	WORD_NS,
+} from './xml';
 import { setExtendedRunProperties } from './write-run-extra';
 import { fractionToThemeByte } from './theme-color';
 import { createImageRun } from './write-drawing';
@@ -258,7 +266,7 @@ export function createRun(
 		const restored = parseRunPropertiesSnapshot(propertiesXml);
 		const props = first(node, 'rPr');
 		if (props) node.removeChild(props);
-		node.insertBefore(doc.importNode(restored, true), node.firstChild);
+		node.insertBefore(importElement(doc, restored), node.firstChild);
 		base = { text: run.text, ...parseDirectRunProperties(restored) };
 	}
 	setRunProperties(doc, node, run, base);

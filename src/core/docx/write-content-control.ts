@@ -7,6 +7,7 @@ import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
 	first,
+	importElement,
 	makeW,
 	parseXml,
 	WORD_NS,
@@ -166,8 +167,7 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 
 /** Builds the `w:sdtPr` of a control that has no source element. */
 function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement {
-	if (control.sourceXml)
-		return doc.importNode(parseXml(control.sourceXml).documentElement, true) as XmlElement;
+	if (control.sourceXml) return importElement(doc, parseXml(control.sourceXml).documentElement);
 	const sdtPr = makeW(doc, 'sdtPr');
 	if (control.alias !== undefined) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);

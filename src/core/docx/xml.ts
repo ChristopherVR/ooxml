@@ -43,3 +43,26 @@ export const getR = (element: XmlElement | null | undefined, local: string): str
 	relAttr(element, local);
 export const makeW = (doc: XmlDocument, local: string): XmlElement =>
 	doc.createElementNS(WORD_NS, `w:${local}`);
+
+const XMLNS = 'http://www.w3.org/2000/xmlns/';
+
+/**
+ * Imports `element` and its subtree into `doc`, without the namespace declarations `doc`'s root
+ * element already makes. An element serialized on its own, such as a properties snapshot, declares
+ * every prefix it uses; inside the document those declarations would only repeat the root's.
+ */
+export function importElement(doc: XmlDocument, element: XmlElement): XmlElement {
+	const imported = doc.importNode(element, true) as XmlElement;
+	const root = doc.documentElement;
+	const drop = (node: XmlElement) => {
+		for (const attribute of Array.from(node.attributes))
+			if (
+				attribute.namespaceURI === XMLNS &&
+				root?.lookupNamespaceURI(attribute.prefix ? attribute.localName : null) === attribute.value
+			)
+				node.removeAttributeNode(attribute);
+		for (const child of Array.from(node.childNodes)) if (isElement(child)) drop(child);
+	};
+	drop(imported);
+	return imported;
+}
