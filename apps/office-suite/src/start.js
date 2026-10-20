@@ -2,6 +2,7 @@
  * The start screen on the suite root: open the integrated suite, the documentation, or one
  * product's own site (its docs and framework demos under /ooxml/<product>/, built by
  * scripts/build-pages.mjs). It asks on every visit and every reload; the choice is never stored.
+ * Package previews link to the bundled standalone apps instead of the separate product sites.
  * boot.js shows it before the suite loads, and the app launcher can show it again later.
  *
  * The layout is a ring: the workspace in the centre, the products around it, the documentation
@@ -10,7 +11,7 @@
  */
 import { $, apps, badge, escape, tag, teamsApp } from './ui.js';
 import { icon } from './icons.js';
-import { product, suiteBase } from './product.js';
+import { product, productPaths, suiteBase } from './product.js';
 import { currentTheme, setThemeMode } from './themes.js';
 
 const sites = {
@@ -55,6 +56,7 @@ export function needsChooser() {
  * the suite loads) cannot be dismissed; onSuite runs when the suite is picked
  */
 export function showChooser({ required = false, onSuite } = {}) {
+	const preview = !!document.querySelector('meta[name="ooxml-preview"]');
 	$('start-screen')?.remove();
 	const screen = document.createElement('section');
 	screen.id = 'start-screen';
@@ -65,7 +67,7 @@ export function showChooser({ required = false, onSuite } = {}) {
 	const step = 360 / products.length;
 	screen.innerHTML =
 		`<div class="start-tools"><button class="start-theme" aria-label="Switch to light mode"></button>${required ? '' : '<button class="start-close" aria-label="Close">×</button>'}</div>` +
-		`<div class="start-heading"><h1 id="start-title">Where would you like to start?</h1><p>Every app in one workspace, or one product on its own site with its guides and demos.</p></div>
+		`<div class="start-heading"><h1 id="start-title">Where would you like to start?</h1><p>${preview ? 'Preview every app in one workspace, or open one app separately.' : 'Every app in one workspace, or one product on its own site with its guides and demos.'}</p></div>
 		<div class="start-stage">
 			<svg class="rings rings--start" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" /><circle cx="50" cy="50" r="33" /><circle cx="50" cy="50" r="19" /></svg>
 			<button class="start-card start-center" data-start="office">${badges.office}<span><strong>OOXML Office</strong><small>Word, Excel, PowerPoint, Visio and Teams in one workspace</small></span></button>
@@ -103,7 +105,8 @@ export function showChooser({ required = false, onSuite } = {}) {
 		const id = event.target.closest('[data-start]')?.dataset.start;
 		if (!id) return;
 		if (id !== 'office') {
-			location.assign(new URL(`${sites[id]}/`, suiteBase));
+			const path = preview && productPaths[id] ? `apps/${productPaths[id]}` : sites[id];
+			location.assign(new URL(`${path}/`, suiteBase));
 			return;
 		}
 		close();
