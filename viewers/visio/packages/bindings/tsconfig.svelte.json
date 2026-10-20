@@ -1,11 +1,16 @@
 {
 	"extends": "./tsconfig.json",
-	"compilerOptions": { "verbatimModuleSyntax": true },
+	"compilerOptions": {
+		"verbatimModuleSyntax": true
+	},
 	"include": [
 		"src/**/*.ts",
+		"../svelte/src/**/*.ts",
+		"../svelte/src/**/*.svelte",
 		"src/**/*.svelte",
 		"tests/**/*.svelte",
-		"../../../../demos/visio/demo-*/**/*.svelte"
+		"../../../../demos/visio/demo-*/**/*.svelte",
+		"../svelte/src/**/*.svelte"
 	],
 	"exclude": ["node_modules", "src/solid.tsx"]
 }

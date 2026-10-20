@@ -18,7 +18,7 @@ import {
 	type ViewerProps,
 	type ViewerState,
 } from './common';
-export * from './react-building-blocks';
+
 export interface VisioViewerProps extends ViewerProps {
 	className?: string | undefined;
 	style?: CSSProperties | undefined;

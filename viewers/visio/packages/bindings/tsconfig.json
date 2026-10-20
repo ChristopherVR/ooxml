@@ -4,7 +4,10 @@
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
 		"experimentalDecorators": true,
-		"useDefineForClassFields": false
+		"useDefineForClassFields": false,
+		"paths": {
+			"visio-core": ["../core/src/index.ts"]
+		}
 	},
 	"include": [
 		"src/**/*.ts",
@@ -13,7 +16,10 @@
 		"../../../../demos/visio/demo-*/**/*.ts",
 		"../../../../demos/visio/demo-*/**/*.tsx",
 		"vitest.config.ts",
-		"vitest.ssr.config.ts"
+		"vitest.ssr.config.ts",
+		"../*/src/building-blocks.ts",
+		"../*/src/building-blocks.tsx",
+		"../*/src/building-blocks.test.ts"
 	],
 	"exclude": ["node_modules"]
 }

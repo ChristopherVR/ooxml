@@ -35,6 +35,11 @@
 		"ooxml-ui": "*",
 		"visio-core": "^0.4.1"
 	},
+	"devDependencies": {
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"react-dom": "^19.3.1"
+	},
 	"peerDependencies": {
 		"react": ">=18"
 	}

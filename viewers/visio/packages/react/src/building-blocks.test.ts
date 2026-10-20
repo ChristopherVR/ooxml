@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { act, createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { DiagramCanvas, useViewerBuildingBlocks } from '../src/react';
+import { DiagramCanvas, useViewerBuildingBlocks } from './building-blocks';
 import { ViewerController } from 'ooxml-ui/visio';
 
 it('renders the standalone canvas in StrictMode and exposes the existing controller', async () => {

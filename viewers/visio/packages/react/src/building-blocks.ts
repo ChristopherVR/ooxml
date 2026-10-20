@@ -85,19 +85,13 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	}, [controller, options.canEdit]);
 	useEffect(() => {
 		if (!options.content) return;
-		let active = true;
-		void (async () => {
-			const bytes =
-				options.content instanceof Blob
-					? new Uint8Array(await options.content.arrayBuffer())
-					: options.content;
-			if (active && bytes) await controller.load(bytes);
-		})().catch((error: unknown) => {
-			if (active)
-				latest.current.onDocumentError?.(error instanceof Error ? error : new Error(String(error)));
-		});
+		const content = options.content;
+		void controller
+			.loadSource(async () =>
+				content instanceof Blob ? new Uint8Array(await content.arrayBuffer()) : content,
+			)
+			.catch(() => {});
 		return () => {
-			active = false;
 			controller.cancelLoad();
 		};
 	}, [controller, options.content]);

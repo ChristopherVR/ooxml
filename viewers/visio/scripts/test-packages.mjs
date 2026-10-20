@@ -106,6 +106,9 @@ for (const name of ${JSON.stringify(names)}) {
   assert.equal(typeof api.mountViewer, 'function', name);
   if (${workspaceRuntime}) for (const key of ['mountDiagramCanvas', 'mountDiagramInspector', 'diagramToolbarProps']) assert.equal(typeof api[key], 'function', name + ': ' + key);
   if (name === 'visio-react-viewer') for (const key of ['useViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.equal(typeof api[key], 'function', key);
+  if (name === 'visio-vue-viewer') for (const key of ['useViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.ok(api[key], name + ': ' + key);
+  if (name === 'visio-angular-viewer') for (const key of ['ViewerBuildingBlocks', 'ViewerBuildingBlocksComponent', 'DiagramCanvasComponent', 'ToolbarComponent', 'PageNavigationComponent', 'InspectorComponent']) assert.equal(typeof api[key], 'function', name + ': ' + key);
+  if (name === 'visio-solid-viewer' || name === 'visio-svelte-viewer') for (const key of ['createViewerBuildingBlocks', 'DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector']) assert.equal(typeof api[key], 'function', name + ': ' + key);
   const controller = new api.ViewerController();
   controller.setZoom(1.25);
   assert.equal(controller.state.zoom, 1.25);
@@ -153,7 +156,7 @@ writeFileSync(
 	names
 		.map(
 			(name, index) =>
-				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx; void p${index}.loadVisio;${
+				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx; void p${index}.loadVisio;${name === 'visio-react-viewer' || name === 'visio-vue-viewer' ? `void p${index}.useViewerBuildingBlocks; void p${index}.DiagramCanvas; void p${index}.Toolbar;` : name === 'visio-solid-viewer' || name === 'visio-svelte-viewer' ? `void p${index}.createViewerBuildingBlocks; void p${index}.DiagramCanvas; void p${index}.Toolbar;` : name === 'visio-angular-viewer' ? `declare const blocks${index}: p${index}.ViewerBuildingBlocks; const zoom${index}: number = blocks${index}.toolbarProps().zoom; void zoom${index}; void p${index}.DiagramCanvasComponent;` : ''}${
 					index
 						? `void new p${index}.ViewerController();${
 								workspaceRuntime
