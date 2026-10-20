@@ -7,7 +7,8 @@
 //
 // One implementation: the pptx binding packages call it from their own setup file too
 // (viewers/pptx/scripts). It is a function, not top-level code, because with shared workers an
-// imported module is evaluated once per worker while a setup file runs once per test file.
+// imported module is evaluated once per worker while a setup file runs once per test file (which
+// Vitest does not always do by itself; see vitest.runner.ts).
 //
 // Only live registrations are kept (removal and `once` drop the entry), so a test that mounts and
 // destroys many viewers does not have its listeners, and everything they close over, retained.
