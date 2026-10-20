@@ -15,16 +15,23 @@
 	import NotesMasterCanvas from './NotesMasterCanvas.svelte';
 	import SlideStage from './SlideStage.svelte';
 
-	const { editor, controller, canvasSize, notesCanvasSize, mediaDataUrls, onstageholder, onscalechange } =
-		$props<{
-			editor: EditorState;
-			controller: EditorController;
-			canvasSize: CanvasSize;
-			notesCanvasSize?: CanvasSize;
-			mediaDataUrls: Map<string, string>;
-			onstageholder: (element: HTMLDivElement | null) => void;
-			onscalechange: (scale: number) => void;
-		}>();
+	const {
+		editor,
+		controller,
+		canvasSize,
+		notesCanvasSize,
+		mediaDataUrls,
+		onstageholder,
+		onscalechange,
+	}: {
+		editor: EditorState;
+		controller: EditorController;
+		canvasSize: CanvasSize;
+		notesCanvasSize?: CanvasSize;
+		mediaDataUrls: Map<string, string>;
+		onstageholder: (element: HTMLDivElement | null) => void;
+		onscalechange: (scale: number) => void;
+	} = $props();
 	const t = useTranslator();
 	const target = $derived(
 		editor.masterViewTarget ?? { tab: 'slides' as const, masterIndex: 0, layoutIndex: null },

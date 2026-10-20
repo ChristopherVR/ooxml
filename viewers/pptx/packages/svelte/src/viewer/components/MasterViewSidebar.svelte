@@ -11,11 +11,11 @@
 	import NotesMasterPanel from './NotesMasterPanel.svelte';
 	import SlideStage from './SlideStage.svelte';
 
-	const { editor, canvasSize, mediaDataUrls } = $props<{
+	const { editor, canvasSize, mediaDataUrls }: {
 		editor: EditorState;
 		canvasSize: CanvasSize;
 		mediaDataUrls: Map<string, string>;
-	}>();
+	} = $props();
 	const t = useTranslator();
 	const THUMB_WIDTH = 160;
 	const thumbScale = $derived(THUMB_WIDTH / Math.max(1, canvasSize.width));

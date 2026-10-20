@@ -429,34 +429,35 @@ describe('font re-embedding (save pipeline)', () => {
 // ---------------------------------------------------------------------------
 
 describe('font re-embedding data integrity', () => {
-	it('obfuscated file can be loaded back correctly', () => {
-		// Simulate a real TrueType font
-		const fontBody = new Uint8Array(1024);
-		fontBody[0] = 0x00;
-		fontBody[1] = 0x01;
-		fontBody[2] = 0x00;
-		fontBody[3] = 0x00;
-		for (let i = 4; i < 1024; i++) {
-			fontBody[i] = (i * 37 + 13) & 0xff;
-		}
+	it.each(['00112233-4455-4677-8899-AABBCCDDEE00', '00112233-4455-4677-8899-AABBCCDDEEFF'])(
+		'obfuscated file can be loaded back correctly (%s)',
+		(guid) => {
+			// Simulate a real TrueType font
+			const fontBody = new Uint8Array(1024);
+			fontBody[0] = 0x00;
+			fontBody[1] = 0x01;
+			fontBody[2] = 0x00;
+			fontBody[3] = 0x00;
+			for (let i = 4; i < 1024; i++) {
+				fontBody[i] = (i * 37 + 13) & 0xff;
+			}
 
-		const guid = generateFontGuid();
+			// Save: obfuscate
+			const stored = obfuscateFont(fontBody, guid);
 
-		// Save: obfuscate
-		const stored = obfuscateFont(fontBody, guid);
+			// A zero first key byte leaves the first font byte unchanged. Compare the whole header.
+			expect(stored.slice(0, 32)).not.toStrictEqual(fontBody.slice(0, 32));
 
-		// Verify obfuscated header is different from original
-		expect(stored[0]).not.toBe(fontBody[0]);
+			// Load: deobfuscate
+			const loaded = deobfuscateFont(stored, guid);
 
-		// Load: deobfuscate
-		const loaded = deobfuscateFont(stored, guid);
-
-		// Every byte must match
-		expect(loaded).toHaveLength(fontBody.length);
-		for (let i = 0; i < loaded.length; i++) {
-			expect(loaded[i]).toBe(fontBody[i]);
-		}
-	});
+			// Every byte must match
+			expect(loaded).toHaveLength(fontBody.length);
+			for (let i = 0; i < loaded.length; i++) {
+				expect(loaded[i]).toBe(fontBody[i]);
+			}
+		},
+	);
 
 	it('obfuscation only affects first 32 bytes', () => {
 		const fontBody = new Uint8Array(256);
