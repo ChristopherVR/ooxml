@@ -24,7 +24,7 @@
 	},
 	"devDependencies": {
 		"@tailwindcss/vite": "^4.3.3",
-		"@types/node": "^26.6.4",
+		"@types/node": "^26.6.5",
 		"pptx-viewer-shared": "workspace:*",
 		"tailwindcss": "^4.3.3",
 		"typescript": "^7.0.2",
