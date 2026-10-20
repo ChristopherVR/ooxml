@@ -46,3 +46,122 @@ subscribe to selection/format changes, wire controls directly, and destroy on un
 The composition API requires the matching `ooxml-ui` runtime, released with these additions.
 Existing full-viewer imports remain compatible with the previous published runtime. An older
 runtime rejects a composition request explicitly instead of mounting application UI by accident.
+
+## Native framework composition
+
+Framework adapters live in their own framework package. They share only the engine lifetime
+helper. Their state uses the framework's normal reactive primitives and their canvas components
+mount the existing Word document surface.
+
+### Vue
+
+```vue
+<script setup lang="ts">
+import { computed } from 'vue';
+import { DocumentCanvas, Toolbar, useViewerBuildingBlocks } from 'docx-vue-viewer';
+const props = defineProps<{ documentModel: import('docx-core').DocumentModel; canEdit: boolean }>();
+const { canvasProps, toolbarProps, error, handle } = useViewerBuildingBlocks(
+	computed(() => ({ documentModel: props.documentModel, canEdit: props.canEdit })),
+);
+</script>
+<template>
+	<Toolbar v-if="toolbarProps" :toolbar-props="toolbarProps" />
+	<DocumentCanvas v-bind="canvasProps" class="document-surface" />
+	<p v-if="error" role="alert">{{ error.message }}</p>
+</template>
+```
+
+The composable watches a ref, computed ref or getter and disposes the engine with its scope.
+`toolbarProps`, `loading`, `error` and `mode` are readonly computed refs. `handle` exposes the
+existing imperative editor API.
+
+### Angular
+
+Provide one `ViewerBuildingBlocks` service per host component. Signals read in the template
+participate in Angular change detection, including zoneless applications. `DestroyRef` releases
+the engine when its provider is destroyed.
+
+```ts
+import { Component, signal } from '@angular/core';
+import { createDocument } from 'docx-core';
+import {
+	createViewerBuildingBlocks,
+	ViewerBuildingBlocks,
+	DocumentCanvasComponent,
+	ToolbarComponent,
+} from 'docx-angular-viewer';
+
+@Component({
+	selector: 'embedded-word',
+	standalone: true,
+	imports: [DocumentCanvasComponent, ToolbarComponent],
+	providers: [ViewerBuildingBlocks],
+	template: `
+		@if (blocks.toolbarProps(); as toolbar) {
+			<word-toolbar [toolbarProps]="toolbar" />
+		}
+		<word-document-canvas [canvasProps]="blocks.canvasProps" />
+	`,
+})
+export class EmbeddedWord {
+	readonly canEdit = signal(true);
+	readonly model = createDocument();
+	readonly blocks = createViewerBuildingBlocks(() => ({
+		documentModel: this.model,
+		canEdit: this.canEdit(),
+	}));
+}
+```
+
+The service exposes readonly `toolbarProps`, `loading`, `error` and `mode` signals, a stable
+`handle`, and typed `documentChange`, `documentError`, `dirtyChange` and `pageChange`
+event emitters. Subscribe to those emitters or supply the existing option callbacks. For
+imperative hosts, inject the service and call `update(options)` instead of the helper.
+
+### Svelte 5
+
+```svelte
+<script lang="ts">
+  import { writable } from 'svelte/store';
+  import { createDocument } from 'docx-core';
+  import { createViewerBuildingBlocks } from 'docx-svelte-viewer/runtime';
+  import DocumentCanvas from 'docx-svelte-viewer/DocumentCanvas';
+  import Toolbar from 'docx-svelte-viewer/Toolbar';
+  const options = writable({ documentModel: createDocument(), canEdit: true });
+  const blocks = createViewerBuildingBlocks(options);
+  const { toolbarProps, error } = blocks;
+</script>
+{#if $toolbarProps}<Toolbar toolbarProps={$toolbarProps} />{/if}
+<DocumentCanvas {...blocks.canvasProps} />
+{#if $error}<p role="alert">{$error.message}</p>{/if}
+```
+
+Call the factory during component initialization. It accepts a readable options store or an
+initial options object; `blocks.update(next)` also supports rune-driven `$effect` updates.
+Snapshots are readable stores. `documentCanvas` is exported as an action for custom host
+markup. Component destruction unsubscribes from options and destroys the engine.
+
+### Solid
+
+```tsx
+import { createSignal, Show } from 'solid-js';
+import { createDocument } from 'docx-core';
+import { createViewerBuildingBlocks, DocumentCanvas, Toolbar } from 'docx-solid-viewer';
+function EmbeddedWord() {
+	const [canEdit, setCanEdit] = createSignal(true);
+	const model = createDocument();
+	const blocks = createViewerBuildingBlocks(() => ({ documentModel: model, canEdit: canEdit() }));
+	return (
+		<>
+			<Show when={blocks.toolbarProps()}>{(toolbar) => <Toolbar toolbarProps={toolbar()} />}</Show>
+			<DocumentCanvas {...blocks.canvasProps} />
+		</>
+	);
+}
+```
+
+The factory tracks its options accessor in an effect and returns signal accessors for
+`toolbarProps`, `loading`, `error` and `mode`. Its owner controls cleanup through `onCleanup`.
+Optional toolbar controls keep their DOM nodes while formatting state changes, so keyboard
+focus is preserved. All adapters accept `bytes` reactively, clear failed loads when a new
+model or load arrives, and keep their handle stable across canvas replacement.

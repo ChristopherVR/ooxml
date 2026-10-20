@@ -123,6 +123,21 @@ async function writeSvelteComponent(distDir) {
 	if (component === source)
 		throw new Error("WordEditor.svelte no longer imports from './index'; update this step");
 	await writeFile(path.join(distDir, 'WordEditor.svelte'), component);
+	for (const name of ['DocumentCanvas', 'Toolbar']) {
+		const blockSource = await readFile(path.join(packagesDir, `svelte/src/${name}.svelte`), 'utf8');
+		await writeFile(
+			path.join(distDir, `${name}.svelte`),
+			blockSource.replace(/from '\.\/runtime'/g, "from './runtime.js'"),
+		);
+	}
+	await writeFile(
+		path.join(distDir, 'DocumentCanvas.d.ts'),
+		"import type { Component } from 'svelte';\nimport type { CanvasProps } from './runtime';\ndeclare const DocumentCanvas: Component<CanvasProps>;\nexport default DocumentCanvas;\n",
+	);
+	await writeFile(
+		path.join(distDir, 'Toolbar.d.ts'),
+		"import type { Component } from 'svelte';\nimport type { WordToolbarProps } from './runtime';\ndeclare const Toolbar: Component<{ toolbarProps: WordToolbarProps }>;\nexport default Toolbar;\n",
+	);
 	await writeFile(
 		path.join(distDir, 'index.d.ts'),
 		[

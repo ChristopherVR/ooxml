@@ -7,7 +7,12 @@ import {
 	useState,
 	type Ref,
 } from 'react';
-import { mountEditor, type EditorOptions, type EditorBinding, type EditorHandle } from './index';
+import {
+	mountEditor,
+	type EditorOptions,
+	type EditorBinding,
+	type EditorHandle,
+} from '../../bindings/src/index';
 import type { WordToolbarProps } from 'docx-web-component';
 export interface BuildingBlockOptions extends EditorOptions {
 	canEdit?: boolean | undefined;
@@ -32,20 +37,24 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	const [mountVersion, setMountVersion] = useState(0);
 	const [error, setError] = useState<Error | null>(null);
 	const lastBytes = useRef<Uint8Array | ArrayBuffer | undefined>(undefined);
+	const lastElement = useRef<EditorBinding['element'] | null>(null);
 	const effective = () => ({
 		...latest.current,
 		readOnly: latest.current.canEdit === false || latest.current.readOnly === true,
-		onDocumentError: (error: Error) => {
-			setError(error);
-			latest.current.onDocumentError?.(error);
+		onDocumentError: (failure: Error) => {
+			setError(failure);
+			latest.current.onDocumentError?.(failure);
 		},
 	});
 	const refresh = () => {
+		const element = binding.current?.element ?? null;
+		const sameElement = lastElement.current === element;
+		lastElement.current = element;
 		setLoading(binding.current?.element.loading ?? false);
 		if (binding.current?.element.loading) setError(null);
 		const next = binding.current?.element.getToolbarProps() ?? null;
 		setToolbarProps((previous) =>
-			JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+			sameElement && JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
 		);
 	};
 	const mount = useCallback((host: HTMLDivElement | null) => {

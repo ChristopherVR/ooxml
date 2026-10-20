@@ -48,5 +48,3 @@ export const WordEditor = forwardRef<EditorHandle, WordEditorProps>(
 		return createElement('div', { ref: host, className: props.className });
 	},
 );
-
-export * from './react-building-blocks';

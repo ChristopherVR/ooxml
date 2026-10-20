@@ -44,6 +44,9 @@
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
+	"devDependencies": {
+		"@types/react": "^19.3.0"
+	},
 	"peerDependencies": {
 		"react": ">=18"
 	}

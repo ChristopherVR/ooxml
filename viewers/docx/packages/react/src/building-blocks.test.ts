@@ -2,9 +2,9 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { act, createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useViewerBuildingBlocks, DocumentCanvas } from '../packages/bindings/src/react';
-import type { EditorHandle } from '../packages/bindings/src/index';
-import { createDocument, saveDocx } from '../packages/core/src/index';
+import { useViewerBuildingBlocks, DocumentCanvas } from './building-blocks';
+import type { EditorHandle } from '../../bindings/src/index';
+import { createDocument, saveDocx } from '../../core/src/index';
 
 afterEach(() => {
 	document.body.replaceChildren();
@@ -42,7 +42,7 @@ it('composes a surface in StrictMode and keeps lifecycle, callbacks and permissi
 			expect(await retained.onItalic()).toBe(false);
 		});
 		await act(async () => {
-			await expect(handle.current!.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow();
+			await expect(handle.current!.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/.+/);
 		});
 		expect(blocks.error).not.toBeNull();
 		const bytes = await saveDocx(model);
@@ -86,6 +86,29 @@ it('reloads bytes into a replaced canvas without creating a second engine', asyn
 			expect(host.querySelectorAll('docx-editor')).toHaveLength(1);
 			expect(blocks.loading).toBe(false);
 		}
+	} finally {
+		await act(async () => root.unmount());
+	}
+});
+
+it('routes identical toolbar snapshots to the new canvas engine after a keyed remount', async () => {
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const model = createDocument();
+	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
+	function Host({ canvasKey }: { canvasKey: number }) {
+		blocks = useViewerBuildingBlocks({ documentModel: model });
+		return createElement(DocumentCanvas, { ...blocks.canvasProps, key: canvasKey });
+	}
+	try {
+		await act(async () => root.render(createElement(Host, { canvasKey: 1 })));
+		await act(async () => root.render(createElement(Host, { canvasKey: 2 })));
+		await act(async () => {
+			expect(blocks.toolbarProps!.onBold()).toBe(true);
+		});
+		expect(blocks.toolbarProps!.bold).toBe(true);
 	} finally {
 		await act(async () => root.unmount());
 	}

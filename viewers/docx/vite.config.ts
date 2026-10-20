@@ -8,6 +8,9 @@ export default defineConfig({
 		target: 'es2022',
 		rollupOptions: {
 			input: {
+				composition: fileURLToPath(
+					new URL('./../../demos/docx/demo-vanilla/building-blocks.html', import.meta.url),
+				),
 				editor: fileURLToPath(
 					new URL('./../../demos/docx/demo-vanilla/index.html', import.meta.url),
 				),
