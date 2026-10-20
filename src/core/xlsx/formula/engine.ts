@@ -1,6 +1,7 @@
 // The calc engine: the public API (full and incremental recalculation, invalidation, ad hoc
 // evaluation) over the recalculation core in engine-core.ts.
 import { cellKey } from '../address';
+import { changeAreas } from './change-areas';
 import { getCell } from '../cells';
 import type { Cell, CellValue, Workbook } from '../model';
 import { FormulaError } from './ast';
@@ -106,6 +107,7 @@ class Engine extends EngineStructure implements CalcEngine {
 			return;
 		}
 		const changed: Area[] = [];
+		const written: CellPosition[] = [];
 		let structural = false;
 		for (const change of changes) {
 			const sheet = this.workbook.sheets[change.sheet];
@@ -129,7 +131,9 @@ class Engine extends EngineStructure implements CalcEngine {
 				seeds.add(this.createNode(change.sheet, row, col, cell as Cell, false));
 				structural = true;
 			} else if (existing && formula) seeds.add(existing);
-			changed.push({ sheet: change.sheet, range: { start: { row, col }, end: { row, col } } });
+			written.push(change);
+			// A spill or array result overwritten here reruns its anchor; most workbooks have none.
+			if (!this.footprints.size) continue;
 			const anchors: FormulaNode[] = [];
 			this.footprintsBy().dependents(
 				change.sheet,
@@ -146,7 +150,9 @@ class Engine extends EngineStructure implements CalcEngine {
 		if (structural) this.graphChanged();
 		this.takeStructuralSeeds(seeds);
 		const reverse = this.reverse();
-		for (const area of changed) reverse.dependents(area.sheet, area.range, seeds);
+		// Formulas reading any changed cell: one query per rectangle of them, not per cell.
+		for (const area of [...changed, ...changeAreas(written)])
+			reverse.dependents(area.sheet, area.range, seeds);
 		for (const node of this.allNodes()) if (node.volatile) seeds.add(node);
 		this.run(seeds, false);
 	}

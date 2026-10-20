@@ -264,9 +264,50 @@ export function restoreSnapshot(workbook: Workbook, snapshot: Snapshot): void {
 	for (const [row, col, cell] of snapshot.cells) putCell(sheet, row, col, cloneCell(cell));
 }
 
-/** The cells a step's snapshots cover, for incremental recalculation. */
-export function touchedCells(step: HistoryStep): { sheet: number; row: number; col: number }[] {
-	const out: { sheet: number; row: number; col: number }[] = [];
+type Position = { sheet: number; row: number; col: number };
+
+/** Whether captured cells are in row-major order, as one capture of one range leaves them. */
+function rowMajor(cells: readonly [number, number, Cell][]): boolean {
+	for (let i = 1; i < cells.length; i++) {
+		const [row0, col0] = cells[i - 1]!;
+		const [row1, col1] = cells[i]!;
+		if (row1 < row0 || (row1 === row0 && col1 <= col0)) return false;
+	}
+	return true;
+}
+
+/**
+ * The cells a step's snapshots cover, for incremental recalculation: each once, in snapshot order.
+ * A bulk write is one range on one sheet, captured before and after in row-major order, so its two
+ * lists are merged in step without a set of every cell.
+ */
+export function touchedCells(step: HistoryStep): Position[] {
+	const out: Position[] = [];
+	const lists = step.entries
+		.flatMap((entry) => [entry.before, entry.after])
+		.filter((snapshot) => snapshot.kind === 'cells' && snapshot.cells.length > 0);
+	const [first, second, ...rest] = lists as Extract<Snapshot, { kind: 'cells' }>[];
+	if (first && !rest.length && (!second || second.sheet === first.sheet)) {
+		const sheet = first.sheet;
+		for (const [row, col] of first.cells) out.push({ sheet, row, col });
+		if (!second) return out;
+		if (rowMajor(first.cells) && rowMajor(second.cells)) {
+			let i = 0;
+			for (const [row, col] of second.cells) {
+				const key = cellKey(row, col);
+				while (i < first.cells.length) {
+					const [r, c] = first.cells[i]!;
+					if (cellKey(r, c) >= key) break;
+					i++;
+				}
+				const at = first.cells[i];
+				if (at && cellKey(at[0], at[1]) === key) continue;
+				out.push({ sheet, row, col });
+			}
+			return out;
+		}
+		out.length = 0;
+	}
 	const seen = new Map<number, Set<number>>();
 	for (const entry of step.entries)
 		for (const snapshot of [entry.before, entry.after]) {
