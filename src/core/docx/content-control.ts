@@ -78,7 +78,8 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 	const showing = first(sdtPr, 'showingPlcHdr');
 	if (showing) control.showingPlaceholder = parseOnOff(getW(showing, 'val')) ?? true;
 	if (first(sdtPr, 'dataBinding')) control.dataBound = true;
-	if (first(sdtPr, 'temporary')) control.temporary = true;
+	const temporary = first(sdtPr, 'temporary');
+	if (temporary && (parseOnOff(getW(temporary, 'val')) ?? true)) control.temporary = true;
 	if (kind === 'text') {
 		const multi = parseOnOff(getW(first(sdtPr, 'text'), 'multiLine'));
 		if (multi) control.multiLine = true;

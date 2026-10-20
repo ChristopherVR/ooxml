@@ -142,6 +142,10 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 		for (const old of children(sdtPr, 'showingPlcHdr')) sdtPr.removeChild(old);
 		if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
 	}
+	if (Boolean(control.temporary) !== Boolean(current.temporary)) {
+		for (const old of children(sdtPr, 'temporary')) sdtPr.removeChild(old);
+		if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
+	}
 	if (control.kind === 'checkbox') {
 		if (
 			Boolean(control.checked) !== Boolean(current.checked) ||
@@ -173,6 +177,7 @@ function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement 
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);
 	setValued(doc, sdtPr, 'id', control.id);
 	if (control.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
 	if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
 	switch (control.kind) {
 		case 'text': {
@@ -212,6 +217,15 @@ export function createContentControl(
 	sdt.appendChild(content);
 	patchContentControl(doc, sdt, control);
 	return { sdt, content };
+}
+
+/** Replaces a `w:sdt` by its content: the control goes, what it held stays where it was. */
+export function unwrapContentControl(sdt: XmlElement): void {
+	const parent = sdt.parentNode;
+	const content = sdtContent(sdt);
+	if (!parent) return;
+	for (const child of Array.from(content?.childNodes ?? [])) parent.insertBefore(child, sdt);
+	parent.removeChild(sdt);
 }
 
 /** Removes the children of a reused `w:sdt`'s content and returns it, ready for new runs. */

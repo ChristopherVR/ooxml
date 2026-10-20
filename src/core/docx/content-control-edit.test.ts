@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	afterEdit,
 	canDeleteControl,
 	canEditControlContent,
 	checkboxState,
@@ -56,6 +57,45 @@ describe('content control editing', () => {
 		expect(change.text).toBe('05 March 2026');
 		expect(change.control.fullDate).toBe('2026-03-05T00:00:00Z');
 		expect(controlDate(change.control)?.getDate()).toBe(5);
+	});
+
+	it('removes a temporary control once its content is edited, as Word does', () => {
+		const list: ContentControl = {
+			id: '4',
+			level: 'cell',
+			kind: 'dropDownList',
+			temporary: true,
+			showingPlaceholder: true,
+			items: [{ display: 'Primary', value: 'primary' }],
+		};
+		expect(selectListItem(list, 0)).toMatchObject({ text: 'Primary', removed: true });
+		expect(toggleCheckbox({ ...base, temporary: true }).removed).toBe(true);
+		const date = setControlDate(
+			{ id: '5', level: 'inline', kind: 'date', temporary: true },
+			new Date(),
+		);
+		expect(date.removed).toBe(true);
+		expect(afterEdit({ control: list, text: 'typed' }).removed).toBe(true);
+		const { temporary: _temporary, ...kept } = list;
+		expect(selectListItem(kept, 0)!.removed).toBeUndefined();
+		expect(toggleCheckbox(base).removed).toBeUndefined();
+	});
+
+	it('keeps a temporary control whose lock forbids deleting it', () => {
+		const locked: ContentControl = {
+			id: '6',
+			level: 'inline',
+			kind: 'dropDownList',
+			temporary: true,
+			lock: 'sdtLocked',
+			items: [{ display: 'Primary', value: 'primary' }],
+		};
+		expect(selectListItem(locked, 0)!.removed).toBeUndefined();
+		expect(toggleCheckbox({ ...base, temporary: true, lock: 'sdtLocked' }).removed).toBeUndefined();
+		const both = { ...locked, lock: 'sdtContentLocked' as const };
+		expect(afterEdit({ control: both, text: 'typed' }).removed).toBeUndefined();
+		const removable = { ...locked, lock: 'contentLocked' as const };
+		expect(afterEdit({ control: removable, text: 'typed' }).removed).toBe(true);
 	});
 
 	it('reports what the lock setting allows', () => {

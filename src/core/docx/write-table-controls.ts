@@ -4,7 +4,11 @@
 // control the model added wraps its row or cell in a new `w:sdt`.
 import type { ContentControl } from './content-control-model';
 import { isSdt } from './content-control';
-import { createContentControl, patchContentControl } from './write-content-control';
+import {
+	createContentControl,
+	patchContentControl,
+	unwrapContentControl,
+} from './write-content-control';
 import { isElement, named, type XmlDocument, type XmlElement } from './xml';
 
 /** The `w:sdt` whose content directly holds `element`, if any. */
@@ -20,9 +24,7 @@ function unwrap(sdt: XmlElement, element: XmlElement): void {
 	const others = Array.from(content.childNodes)
 		.filter(isElement)
 		.some((child) => child !== element && (named(child, 'tc') || named(child, 'tr')));
-	if (others || !sdt.parentNode) return;
-	for (const child of Array.from(content.childNodes)) sdt.parentNode.insertBefore(child, sdt);
-	sdt.parentNode.removeChild(sdt);
+	if (!others) unwrapContentControl(sdt);
 }
 
 /**

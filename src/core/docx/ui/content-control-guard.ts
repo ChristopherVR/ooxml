@@ -8,6 +8,7 @@ import {
 	typeOverPlaceholder,
 } from './content-control-commands';
 import { controlSpans } from './content-control-spans';
+import { removeEditedTemporaryControls } from './content-control-temporary';
 
 /** Remote collaboration transactions are applied as they arrive; the guard only filters local edits. */
 const isRemote = (tr: Transaction): boolean => tr.getMeta('y-sync$') !== undefined;
@@ -56,6 +57,7 @@ export function contentControlPlugin(): Plugin {
 			Boolean(tr.getMeta(CONTROL_EDIT_META)) ||
 			isRemote(tr) ||
 			!violatesControlLock(tr, state),
+		appendTransaction: removeEditedTemporaryControls,
 		props: {
 			handleTextInput: (view, from, to, text) => {
 				if (!view.editable) return false;

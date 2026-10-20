@@ -2,9 +2,11 @@
 import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import {
+	afterEdit,
 	canEditControlContent,
 	checkboxState,
 	defaultPlaceholder,
+	removedByEdit,
 	selectListItem,
 	setControlDate,
 	toggleCheckbox,
@@ -36,7 +38,8 @@ function contentMarks(state: EditorState, span: ControlSpan, change: ControlChan
 			schema.marks.font!.create({ size: null, color: null, ...font?.attrs, family: change.font }),
 		);
 	}
-	marks.push(schema.marks.contentControl!.create({ data: JSON.stringify(change.control) }));
+	if (!change.removed)
+		marks.push(schema.marks.contentControl!.create({ data: JSON.stringify(change.control) }));
 	return marks;
 }
 
@@ -130,7 +133,7 @@ export function typeOverPlaceholder(
 	}
 	if (!control.showingPlaceholder) return undefined;
 	if (!canEditControlContent(control)) return 'blocked';
-	const tr = replaceControlContent(state, span, { control: withValue(control), text });
+	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	const end = tr.mapping.map(span.to);
 	return tr.setSelection(TextSelection.near(tr.doc.resolve(end)));
 }
@@ -144,6 +147,8 @@ export function deleteToPlaceholder(
 	const span = controlAt(controlSpans(state.doc), selection.from, true);
 	if (span?.level !== 'inline' || span.control.showingPlaceholder) return undefined;
 	if (!canEditControlContent(span.control) || span.control.kind === 'checkbox') return undefined;
+	// Deleting a temporary control's text removes the control instead (content-control-temporary).
+	if (removedByEdit(span.control)) return undefined;
 	const [from, to] = selection.empty
 		? direction === 'backward'
 			? [selection.from - 1, selection.from]

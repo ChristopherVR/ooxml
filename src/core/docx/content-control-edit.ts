@@ -9,6 +9,8 @@ export interface ControlChange {
 	control: ContentControl;
 	text: string;
 	font?: string;
+	/** The control is temporary (`w:temporary`): the edit keeps `text` and removes the control. */
+	removed?: boolean;
 }
 
 const DEFAULT_GLYPHS = {
@@ -24,6 +26,17 @@ export const canEditControlContent = (control: ContentControl | undefined): bool
 export const canDeleteControl = (control: ContentControl | undefined): boolean =>
 	!isContentControlLocked(control, 'control');
 
+/**
+ * Whether editing the control's content removes it, its content staying as ordinary text: Word
+ * removes a temporary control (ECMA-376 17.5.2.43) unless its lock forbids deleting it.
+ */
+export const removedByEdit = (control: ContentControl): boolean =>
+	Boolean(control.temporary) && canDeleteControl(control);
+
+/** The change as Word applies it (`removedByEdit`). */
+export const afterEdit = (change: ControlChange): ControlChange =>
+	removedByEdit(change.control) ? { ...change, removed: true } : change;
+
 export function checkboxState(control: ContentControl, checked: boolean): ControlChange {
 	const glyph =
 		(checked ? control.checkedGlyph : control.uncheckedGlyph) ??
@@ -36,14 +49,14 @@ export function checkboxState(control: ContentControl, checked: boolean): Contro
 }
 
 export const toggleCheckbox = (control: ContentControl): ControlChange =>
-	checkboxState(control, !control.checked);
+	afterEdit(checkboxState(control, !control.checked));
 
 /** Choosing entry `index` of a drop-down list or combo box. */
 export function selectListItem(control: ContentControl, index: number): ControlChange | undefined {
 	const item = control.items?.[index];
 	if (!item) return undefined;
 	const { showingPlaceholder: _placeholder, ...rest } = control;
-	return { control: rest, text: item.display };
+	return afterEdit({ control: rest, text: item.display });
 }
 
 /** The date the control holds, from `w:fullDate`. */
@@ -61,10 +74,10 @@ export const fullDateOf = (date: Date): string =>
 /** Choosing `date` in the calendar: shown with the control's date format. */
 export function setControlDate(control: ContentControl, date: Date): ControlChange {
 	const { showingPlaceholder: _placeholder, ...rest } = control;
-	return {
+	return afterEdit({
 		control: { ...rest, fullDate: fullDateOf(date) },
 		text: formatWordDate(date, control.dateFormat ?? 'M/d/yyyy', control.dateLocale ?? 'en-US'),
-	};
+	});
 }
 
 /** The placeholder text Word shows for an empty control of this kind. */
