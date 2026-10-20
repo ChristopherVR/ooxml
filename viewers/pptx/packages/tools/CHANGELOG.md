@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.8.7](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.7) - 2026-10-20
+
+### Dependencies
+
+- **deps:** Merge dependency update ([#92](https://github.com/ChristopherVR/ooxml/issues/92)) ([ce1b012](https://github.com/ChristopherVR/ooxml/commit/ce1b01215261b162443f903e1a2086ed4110ae28))
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([02d7713](https://github.com/ChristopherVR/ooxml/commit/02d7713ceb301921fd6c7706138d64f4c10a9d38))
+- **deps:** Merge dependency update ([#94](https://github.com/ChristopherVR/ooxml/issues/94)) ([e381aba](https://github.com/ChristopherVR/ooxml/commit/e381abaa11794233cdea85a9dc6d098d4cb338c4))
+- **deps:** Merge dependency update ([#95](https://github.com/ChristopherVR/ooxml/issues/95)) ([0926eac](https://github.com/ChristopherVR/ooxml/commit/0926eac231cb49749433fb7a9eac870cc7996e52))
+- **deps:** Merge dependency update ([#96](https://github.com/ChristopherVR/ooxml/issues/96)) ([33b0ebb](https://github.com/ChristopherVR/ooxml/commit/33b0ebb6a16b4448d577c169c79187466d4148a3))
+
+### Chores
+
+- **deps-dev:** Bump @types/node ([df60cd7](https://github.com/ChristopherVR/ooxml/commit/df60cd7aff4efb7006ac0a6cfd1c69b08230a011))
+- **deps-dev:** Bump tsup from 8.5.1 to 9.0.0 ([9835e80](https://github.com/ChristopherVR/ooxml/commit/9835e8038a9a271e37e286e524496513910553a6))
+- **deps-dev:** Bump the development-minor-and-patch group with 14 updates ([1cdc60b](https://github.com/ChristopherVR/ooxml/commit/1cdc60b0f0a591304a2240ffcb550eccfd8d2487))
+
 ## [2.8.6](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.6) - 2026-10-15
 
 ### Bug Fixes

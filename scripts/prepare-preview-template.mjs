@@ -55,6 +55,7 @@ export async function preparePreviewTemplate(root, source) {
 		`# OOXML Office preview\n\nSource: [${repository}@${sha.slice(0, 7)}](${commitUrl}).\n` +
 			(prUrl ? `\n[Pull request](${prUrl}).\n` : '') +
 			'\nRun `npm start` to open the Office suite. Create a document or open your own file.\n' +
+			'\nThe start screen opens the bundled standalone apps. Documentation links use the published guides.\n' +
 			'\nThe application assets were bundled in CI from this exact source commit, including ' +
 			'its core, UI and PowerPoint binding. Editing an installed package does not rebuild ' +
 			'the bundled application. The preview dependencies in package.json are available ' +
@@ -67,7 +68,18 @@ export async function preparePreviewTemplate(root, source) {
 		join(out, 'index.html'),
 		html.replace(
 			'<title>OOXML Office</title>',
-			`<title>OOXML Office preview: ${sha.slice(0, 7)}</title>`,
+			`<meta name="ooxml-preview" content="true" />\n<title>OOXML Office preview: ${sha.slice(0, 7)}</title>`,
+		),
+	);
+	// The preview bundles the apps, not the viewers' separate documentation and demo builds.
+	// Keep the local documentation hub, but send its viewer links to the published sites.
+	const docsPath = join(out, 'docs/index.html');
+	const docs = await readFile(docsPath, 'utf8');
+	await writeFile(
+		docsPath,
+		docs.replace(
+			/href="\.\.\/(docx|xlsx|pptx|visio|teams)([\/#][^"]*|)"/g,
+			'href="https://christophervr.github.io/ooxml/$1$2"',
 		),
 	);
 }

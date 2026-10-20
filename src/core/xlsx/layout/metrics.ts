@@ -69,18 +69,40 @@ function columnOverrides(sheet: Worksheet, mdw: number, defaultPx: number): Map<
 	return out;
 }
 
-/** Builds the grid geometry of a sheet. Sizes are whole pixels scaled by the zoom. */
-export function createGridMetrics(sheet: Worksheet, options: GridMetricsOptions = {}): GridMetrics {
-	const zoom = zoomPercent(options.zoom ?? sheet.view.zoom);
+/** Scales pixel sizes by a zoom (percent) to whole pixels; a visible line stays at least 1 px. */
+function pixelScale(zoom: number): (px: number) => number {
 	const factor = zoom / 100;
-	const mdw = options.mdw ?? DEFAULT_MAX_DIGIT_WIDTH;
-	const scale = (px: number): number => (px > 0 ? Math.max(1, Math.round(px * factor)) : 0);
+	return (px) => (px > 0 ? Math.max(1, Math.round(px * factor)) : 0);
+}
 
+/** The column widths (default, custom and hidden) as an axis, scaled by `scale`. */
+function columnAxis(sheet: Worksheet, mdw: number, scale: (px: number) => number): AxisMetrics {
 	const defaultColPx = defaultColumnPixels(sheet.defaultColWidth, mdw);
 	const colOverrides = [...columnOverrides(sheet, mdw, defaultColPx)].map(
 		([c, px]) => [c, scale(px)] as const,
 	);
-	const cols = new AxisMetrics(scale(defaultColPx), MAX_COL + 1, colOverrides);
+	return new AxisMetrics(scale(defaultColPx), MAX_COL + 1, colOverrides);
+}
+
+/**
+ * The column widths of `createGridMetrics(sheet, options).colWidth`, read from the column
+ * definitions alone: unlike the full metrics, this never walks the sheet's cells or rows.
+ */
+export function createColumnWidths(
+	sheet: Worksheet,
+	options: Pick<GridMetricsOptions, 'zoom' | 'mdw'> = {},
+): (c: number) => number {
+	const zoom = zoomPercent(options.zoom ?? sheet.view.zoom);
+	const cols = columnAxis(sheet, options.mdw ?? DEFAULT_MAX_DIGIT_WIDTH, pixelScale(zoom));
+	return (c) => cols.size(c);
+}
+
+/** Builds the grid geometry of a sheet. Sizes are whole pixels scaled by the zoom. */
+export function createGridMetrics(sheet: Worksheet, options: GridMetricsOptions = {}): GridMetrics {
+	const zoom = zoomPercent(options.zoom ?? sheet.view.zoom);
+	const mdw = options.mdw ?? DEFAULT_MAX_DIGIT_WIDTH;
+	const scale = pixelScale(zoom);
+	const cols = columnAxis(sheet, mdw, scale);
 
 	const defaultRowPx = pointsToPixels(sheet.defaultRowHeight);
 	const rowOverrides: [number, number][] = [];

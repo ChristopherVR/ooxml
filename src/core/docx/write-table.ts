@@ -152,9 +152,15 @@ export function writeTable(
 			'Cannot change the structure of a merged, nested, or complex table. The original DOCX package remains unchanged.',
 		);
 	const width = table.rows[0]?.length ?? 0;
+	// The rows of a merged table differ in physical cell count (a label beside a value spanning
+	// three columns). A text edit leaves every cell where it is, so only a structural edit, which
+	// canEditTableStructure limits to plain grids, needs rows of a single width.
+	const reshaped = structural || !base;
 	if (
 		!width ||
-		table.rows.some((row) => row.length !== width || row.some((cell) => !cell.paragraphs.length))
+		table.rows.some(
+			(row) => (reshaped && row.length !== width) || row.some((cell) => !cell.paragraphs.length),
+		)
 	)
 		throw new Error('Tables must contain rectangular rows and at least one paragraph per cell.');
 	const oldRows = flatRows(node).map((entry) => entry.element);
