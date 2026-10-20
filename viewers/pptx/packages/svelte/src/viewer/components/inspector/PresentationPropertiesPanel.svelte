@@ -192,7 +192,7 @@
 	.pptx-svelte-inspector-section {
 		margin-top: 12px;
 		padding-top: 12px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-inspector-section:first-child {
@@ -207,11 +207,11 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-meta {
 		margin: 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 </style>

@@ -56,7 +56,7 @@
 		align-items: center;
 		gap: 12px;
 		padding: 10px 12px;
-		border: 1px solid var(--pptx-border, #3f3f52);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 8px;
 		background: transparent;
 		color: inherit;
@@ -69,13 +69,13 @@
 	}
 
 	.gallery button:hover {
-		border-color: color-mix(in srgb, var(--pptx-primary, #6366f1) 50%, transparent);
-		background: var(--pptx-accent, #33334d);
+		border-color: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 50%, transparent);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.gallery button.active {
-		border-color: var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 10%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 10%, transparent);
 	}
 
 	.swatch {
@@ -84,17 +84,17 @@
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
-		border: 1px solid var(--pptx-border, #3f3f52);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
 	}
 
 	.label {
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.gallery button.active .label {
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 </style>

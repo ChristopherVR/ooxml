@@ -92,7 +92,7 @@
 	}
 
 	.pptx-svelte-pattern-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-pattern-grid {
@@ -102,7 +102,7 @@
 		max-height: 160px;
 		overflow-y: auto;
 		padding: 4px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
 	}
 
@@ -111,15 +111,15 @@
 		width: 100%;
 		aspect-ratio: 1;
 		padding: 0;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: #fff;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-pattern-swatch-on {
-		border-color: var(--pptx-primary, #6366f1);
-		outline: 2px solid color-mix(in srgb, var(--pptx-primary, #6366f1) 30%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		outline: 2px solid color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 30%, transparent);
 	}
 
 	.pptx-svelte-pattern-swatch-fill {
@@ -139,14 +139,14 @@
 	}
 
 	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-field input[type='color'] {
 		width: 40px;
 		height: 26px;
 		padding: 0;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: transparent;
 		cursor: pointer;

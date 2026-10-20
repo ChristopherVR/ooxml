@@ -123,8 +123,8 @@
 
 <style>
 	.pptx-svelte-ai-focus {
-		border-bottom: 1px solid var(--pptx-border, #33334d);
-		background: color-mix(in srgb, var(--pptx-secondary, #2a2a3d) 30%, transparent);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: color-mix(in srgb, var(--pptx-secondary, var(--office-surface, #f3f4f6)) 30%, transparent);
 	}
 
 	.pptx-svelte-ai-focus-row {
@@ -140,7 +140,7 @@
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-focus-chip {
@@ -149,14 +149,14 @@
 		max-width: 10rem;
 		padding: 1px 8px;
 		border-radius: 999px;
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
 	.pptx-svelte-ai-focus-chip.is-active {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 15%, transparent);
-		color: var(--pptx-primary, #a5b4fc);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 15%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-focus-chip-label {
@@ -168,8 +168,8 @@
 	.pptx-svelte-ai-focus-pinned {
 		padding: 1px 6px;
 		border-radius: 999px;
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 15%, transparent);
-		color: var(--pptx-primary, #a5b4fc);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 15%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 		font-size: 10px;
 		font-weight: 500;
 	}
@@ -188,8 +188,8 @@
 		padding: 2px 6px;
 		border: none;
 		border-radius: 3px;
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 90%, transparent);
-		color: var(--pptx-primary-foreground, #fff);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 90%, transparent);
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 		font: inherit;
 		font-size: 11px;
 		font-weight: 500;
@@ -197,7 +197,7 @@
 	}
 
 	.pptx-svelte-ai-focus-merge:hover {
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-focus-btn {
@@ -206,17 +206,17 @@
 		border: none;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 	}
 
 	.pptx-svelte-ai-focus-btn:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-ai-focus-btn.is-active {
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 	}
 
 	.pptx-svelte-ai-focus-hint {
@@ -224,11 +224,11 @@
 		align-items: center;
 		gap: 8px;
 		padding: 4px 10px;
-		border-top: 1px solid color-mix(in srgb, var(--pptx-primary, #6366f1) 20%, transparent);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 6%, transparent);
+		border-top: 1px solid color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 20%, transparent);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 6%, transparent);
 		font-size: 11px;
 		font-weight: 500;
-		color: var(--pptx-primary, #a5b4fc);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	:global(.pptx-svelte-ai-focus-hint-ic) {
@@ -241,8 +241,8 @@
 		padding: 2px 8px;
 		border: none;
 		border-radius: 3px;
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 		font: inherit;
 		font-size: 11px;
 		font-weight: 500;

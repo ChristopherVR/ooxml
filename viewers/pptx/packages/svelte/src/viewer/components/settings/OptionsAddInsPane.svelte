@@ -63,18 +63,18 @@
 
 <style>
 	.addins-pane { display: flex; flex-direction: column; gap: 14px; font-size: 12px; }
-	.head { display: grid; grid-template-columns: 1fr auto auto; gap: 0 8px; border-bottom: 1px solid var(--pptx-border, #3f3f52); padding: 0 0 4px 8px; color: var(--pptx-muted-foreground, #94a3b8); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-	h4 { margin: 0 0 4px; color: var(--pptx-foreground, #e2e8f0); font-size: 11.5px; }
-	.empty { margin: 0; padding: 4px 8px; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; font-style: italic; }
+	.head { display: grid; grid-template-columns: 1fr auto auto; gap: 0 8px; border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); padding: 0 0 4px 8px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+	h4 { margin: 0 0 4px; color: var(--pptx-foreground, var(--office-foreground, #1f2937)); font-size: 11.5px; }
+	.empty { margin: 0; padding: 4px 8px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 11px; font-style: italic; }
 	table { width: 100%; border-collapse: collapse; text-align: left; }
-	tr { border-bottom: 1px solid color-mix(in srgb, var(--pptx-border, #3f3f52) 40%, transparent); cursor: pointer; }
-	tr:hover { background: var(--pptx-accent, #33334d); }
-	tr.selected { background: color-mix(in srgb, var(--pptx-primary, #6366f1) 10%, transparent); }
+	tr { border-bottom: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 40%, transparent); cursor: pointer; }
+	tr:hover { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); }
+	tr.selected { background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 10%, transparent); }
 	td { padding: 5px 8px; font-size: 12px; }
-	.mono { color: var(--pptx-muted-foreground, #94a3b8); font: 11px ui-monospace, monospace; }
-	.muted { color: var(--pptx-muted-foreground, #94a3b8); }
+	.mono { color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font: 11px ui-monospace, monospace; }
+	.muted { color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.muted, .mono { margin: 0; }
-	.details { border: 1px solid color-mix(in srgb, var(--pptx-border, #3f3f52) 60%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 40%, transparent); padding: 10px 12px; }
+	.details { border: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--pptx-muted, var(--office-surface, #f3f4f6)) 40%, transparent); padding: 10px 12px; }
 	.details p { margin: 0 0 4px; }
 	.name { font-weight: 600; }
 </style>

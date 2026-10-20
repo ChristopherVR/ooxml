@@ -153,7 +153,7 @@
 	.pptx-svelte-sel-box {
 		position: absolute;
 		box-sizing: border-box;
-		border: 1px solid var(--pptx-ring, #6366f1);
+		border: 1px solid var(--pptx-ring, var(--office-ring, #2563eb));
 		pointer-events: none;
 		transform-origin: center;
 	}
@@ -197,7 +197,7 @@
 		left: 50%;
 		width: 1px;
 		margin-left: -0.5px;
-		background: var(--pptx-ring, #6366f1);
+		background: var(--pptx-ring, var(--office-ring, #2563eb));
 		pointer-events: none;
 	}
 
@@ -240,13 +240,13 @@
 	.pptx-svelte-marquee {
 		position: absolute;
 		box-sizing: border-box;
-		border: 1px solid var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 14%, transparent);
+		border: 1px solid var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 14%, transparent);
 	}
 
 	.pptx-svelte-snap-line {
 		position: absolute;
-		background: var(--pptx-destructive, #ef4444);
+		background: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.pptx-svelte-snap-v {

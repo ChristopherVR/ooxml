@@ -4,7 +4,7 @@ export const NOTES_TOOLBAR_STYLES = `
 [hidden] { display: none !important; }
 .bar {
 	display: flex; align-items: center; justify-content: space-between; gap: 8px;
-	font: 12px/1.2 system-ui, sans-serif; color: var(--pptx-foreground, inherit);
+	font: 12px/1.2 var(--pptx-font,var(--office-font,system-ui,sans-serif)); color: var(--pptx-foreground, inherit);
 }
 .group {
 	display: inline-flex; align-items: center; flex-wrap: wrap;
@@ -33,7 +33,7 @@ svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; s
 .popover label { display: grid; gap: 2px; font-size: 10px; color: var(--pptx-muted-foreground, #a5a5b5); }
 .popover input {
 	box-sizing: border-box; width: 100%; min-height: 28px; padding: 4px 8px; border: 1px solid var(--pptx-border, #33334d);
-	border-radius: 4px; background: var(--pptx-background, #11111b); color: var(--pptx-foreground, #e2e8f0); font: 12px system-ui, sans-serif;
+	border-radius: 4px; background: var(--pptx-background, #11111b); color: var(--pptx-foreground, #e2e8f0); font: 12px var(--pptx-font,var(--office-font,system-ui,sans-serif));
 }
 .popover input:focus-visible { outline: 2px solid var(--pptx-ring, #6366f1); outline-offset: -1px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }

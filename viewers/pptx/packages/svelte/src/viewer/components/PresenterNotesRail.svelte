@@ -213,7 +213,7 @@
 		min-width: var(--pptx-pv-rail-min);
 		max-width: var(--pptx-pv-rail-max);
 		flex-direction: column;
-		border-left: 1px solid var(--pptx-border, #334155);
+		border-left: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	header,
@@ -223,7 +223,7 @@
 		justify-content: space-between;
 		gap: 8px;
 		padding: 12px;
-		border-bottom: 1px solid var(--pptx-border, #334155);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	header div {
@@ -232,7 +232,7 @@
 	}
 
 	small {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -242,7 +242,7 @@
 		border: 0;
 		border-radius: var(--pptx-pv-control-radius);
 		padding: 7px 10px;
-		background: var(--pptx-secondary, #334155);
+		background: var(--pptx-secondary, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 	}
@@ -254,7 +254,7 @@
 
 	.pptx-svelte-presenter-next {
 		padding: 14px;
-		border-bottom: 1px solid var(--pptx-border, #334155);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-presenter-next-frame {
@@ -284,7 +284,7 @@
 
 	.pptx-svelte-presenter-notes-readout {
 		min-width: 34px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-family: ui-monospace, monospace;
 		font-size: 10px;
 		text-align: center;
@@ -293,7 +293,7 @@
 	.pptx-svelte-presenter-notes-body {
 		flex: 1;
 		padding: 12px;
-		border: 1px solid var(--pptx-border, #334155);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
 		line-height: 1.5;
 		overflow: auto;

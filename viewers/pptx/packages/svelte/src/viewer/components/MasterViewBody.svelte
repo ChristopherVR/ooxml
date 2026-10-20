@@ -128,7 +128,7 @@
 </div>
 
 <style>
-	.workspace { display:flex; flex:1; min-height:0; background:var(--pptx-background,#11111b); }
+	.workspace { display:flex; flex:1; min-height:0; background:var(--pptx-background, var(--office-background, #ffffff)); }
 	.canvas { display:flex; flex:1; min-width:0; min-height:0; overflow:hidden; }
 	.stage { position:relative; margin:auto; overflow:hidden; background:#fff; box-shadow:0 5px 30px #0008; }
 	.master-page { position:relative; overflow:hidden; transform-origin:top left; background:#fff; }

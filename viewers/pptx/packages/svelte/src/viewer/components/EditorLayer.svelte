@@ -93,7 +93,7 @@
 	.pptx-svelte-entered-group {
 		position: absolute;
 		box-sizing: border-box;
-		border: 1px dashed var(--pptx-ring, #6366f1);
+		border: 1px dashed var(--pptx-ring, var(--office-ring, #2563eb));
 		opacity: 0.7;
 		pointer-events: none;
 		z-index: 57;

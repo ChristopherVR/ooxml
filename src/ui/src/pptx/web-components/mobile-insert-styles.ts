@@ -1,7 +1,7 @@
 import { TABLE_PICKER_CSS } from './ribbon-insert-table-picker';
 
 export const MOBILE_INSERT_STYLES = `
-:host { display: block; min-width: 0; color: var(--pptx-foreground, #e2e8f0); font: 13px/1.3 system-ui, sans-serif; }
+:host { display: block; min-width: 0; color: var(--pptx-foreground, #e2e8f0); font: 13px/1.3 var(--pptx-font,var(--office-font,system-ui,sans-serif)); }
 :host([hidden]), [hidden] { display: none !important; }
 * { box-sizing: border-box; }
 svg { flex: none; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }

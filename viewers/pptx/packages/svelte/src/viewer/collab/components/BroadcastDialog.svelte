@@ -156,7 +156,7 @@
 		margin: 0;
 		font-size: 13px;
 		line-height: 1.5;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-broadcast-field {
@@ -168,22 +168,22 @@
 	.pptx-svelte-broadcast-field label {
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-broadcast-field input {
 		width: 100%;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 6px 10px;
 		font: inherit;
 		font-size: 13px;
 	}
 
 	.pptx-svelte-broadcast-field input:focus {
-		outline: 1px solid var(--pptx-primary, #6366f1);
+		outline: 1px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: -1px;
 	}
 
@@ -203,13 +203,13 @@
 	.pptx-svelte-broadcast-p2p-hint {
 		margin: 0;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-broadcast-stop {
 		width: 100%;
 		border: 1px solid rgba(239, 68, 68, 0.3);
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: rgba(239, 68, 68, 0.1);
 		color: #f87171;
 		padding: 8px 12px;
@@ -224,10 +224,10 @@
 	.pptx-svelte-broadcast-btn {
 		flex-shrink: 0;
 		white-space: nowrap;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #1f2937);
-		color: var(--pptx-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 6px 12px;
 		font-size: 12px;
 		font-family: inherit;
@@ -235,7 +235,7 @@
 	}
 
 	.pptx-svelte-broadcast-btn:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-broadcast-btn:disabled {

@@ -1,3 +1,4 @@
+import * as pptxUi from 'ooxml-ui/pptx';
 import {
 	defaultCssVars,
 	EDITOR_CHROME_CSS,
@@ -82,7 +83,7 @@ const CHROME_CSS = `
 	overflow: hidden;
 	background: var(--pptx-background);
 	color: var(--pptx-foreground);
-	font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+	font-family: var(--_pptx-font, system-ui, sans-serif);
 	font-size: 14px;
 	/* Text autosizing: the viewer scales the whole slide as one unit, so a
 	 * mobile browser must not inflate the glyphs alone (it changes wrapping
@@ -176,7 +177,7 @@ const CHROME_CSS = `
 .pptxv-autosave-recovery-message { margin: 0; overflow-wrap: anywhere; line-height: 1.45; }
 .pptxv-autosave-recovery-age { margin: 0; color: var(--pptx-muted-foreground); font-size: 11px; }
 
-/* ── PowerPoint-style title bar ───────────────────────────────────────
+/* â”€â”€ PowerPoint-style title bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    The shared pptx-ui-title-bar owns its own layout, metrics and responsive rules;
    only host-owned slotted parts (the AI toggle) are styled here. */
 .pptxv-titlebar, .pptxv-qat-strip { display: block; }
@@ -216,7 +217,7 @@ const CHROME_CSS = `
 }
 .pptxv-protected-view-enable:hover { background: #fde68a; }
 
-/* ── Body: thumbnail rail + viewport ─────────────────────────────────── */
+/* â”€â”€ Body: thumbnail rail + viewport â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-body { display: flex; flex: 1; min-height: 0; }
 .pptxv-thumbs {
 	flex: none;
@@ -347,7 +348,7 @@ const CHROME_CSS = `
 }
 .pptxv-thumb-section-slides { display: flex; flex-direction: column; gap: 8px; }
 
-/* ── Viewport / stage ────────────────────────────────────────────────── */
+/* â”€â”€ Viewport / stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-viewport {
 	flex: 1;
 	min-width: 0;
@@ -386,7 +387,7 @@ const CHROME_CSS = `
 .pptxv-stage-wrap[data-draw-tool="eraser"] { cursor: cell; }
 .pptxv-para { margin: 0; }
 
-/* ── Selection overlay (editing) ─────────────────────────────────────── */
+/* â”€â”€ Selection overlay (editing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Every slide element carries an explicit numeric z-index (index-based, see
    element-styles.ts), so on a slide with more than 5 elements this host used
    to paint BEHIND later ones, hiding the selected element's own resize/rotate
@@ -660,7 +661,7 @@ const CHROME_CSS = `
 .pptxv-snap-v { top: 0; bottom: 0; width: 1px; }
 .pptxv-snap-h { left: 0; right: 0; height: 1px; }
 
-/* ── Speaker notes panel ─────────────────────────────────────────────── */
+/* â”€â”€ Speaker notes panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-notes {
 	display: flex;
 	flex-direction: column;
@@ -722,7 +723,7 @@ const CHROME_CSS = `
 	.pptxv-notes[data-collapsed='true'] { display: none; }
 }
 
-/* ── Bottom status bar ──────────────────────────────────────────────── */
+/* â”€â”€ Bottom status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* The row itself is the shared pptx-ui-status-bar; only visibility is host-owned. */
 .pptxv.pptxv-presenting .pptxv-statusbar { display: none; }
 
@@ -734,7 +735,7 @@ const CHROME_CSS = `
 	.pptxv-viewport { padding: 10px; }
 }
 
-/* ── Placeholder (element types without a renderer yet) ──────────────── */
+/* â”€â”€ Placeholder (element types without a renderer yet) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-placeholder {
 	display: flex;
 	align-items: center;
@@ -751,7 +752,7 @@ const CHROME_CSS = `
 	border-radius: 4px;
 }
 
-/* ── Media fallback chrome (authoring canvas only, see mediaFallbackVisual) ── */
+/* â”€â”€ Media fallback chrome (authoring canvas only, see mediaFallbackVisual) â”€â”€ */
 .pptxv-media-badge {
 	position: absolute;
 	inset: 0;
@@ -786,7 +787,7 @@ const CHROME_CSS = `
 	height: 32px;
 }
 
-/* ── Overlays ────────────────────────────────────────────────────────── */
+/* â”€â”€ Overlays â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-overlay {
 	position: absolute;
 	inset: 0;
@@ -800,7 +801,7 @@ const CHROME_CSS = `
 .pptxv-error-message { color: var(--pptx-destructive); padding: 0 24px; text-align: center; }
 .pptxv-empty { color: var(--pptx-muted-foreground); }
 
-/* ── In-content loading (e.g. a 3D chart scene probing/mounting three.js) ── */
+/* â”€â”€ In-content loading (e.g. a 3D chart scene probing/mounting three.js) â”€â”€ */
 .pptxv-chart3d-loading {
 	width: 100%;
 	height: 100%;
@@ -823,7 +824,7 @@ const CHROME_CSS = `
 	to { transform: rotate(360deg); }
 }
 
-/* ── Presentation (fullscreen) mode ──────────────────────────────────── */
+/* â”€â”€ Presentation (fullscreen) mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv.pptxv-presenting .pptxv-ribbon,
 .pptxv.pptxv-presenting .pptxv-thumbs,
 .pptxv.pptxv-presenting .pptxv-qat-row,
@@ -841,8 +842,7 @@ const CHROME_CSS = `
 
 /** The full stylesheet text (theme-var defaults + chrome rules + editor + collab chrome). */
 export function buildViewerCss(): string {
-	return `${defaultVarsBlock()}
-${INSPECTOR_BASE_CSS}
+	const css = `${INSPECTOR_BASE_CSS}
 ${CHROME_CSS}
 ${EDITOR_CSS}
 ${RIBBON_CSS}
@@ -875,4 +875,8 @@ ${EXPORT_PROGRESS_CSS}
 ${PARITY_BANNERS_CSS}
 ${REGION_CSS}
 ${EDITOR_CHROME_CSS}`;
+	const themeCss: unknown = Reflect.get(pptxUi, 'withOfficeThemeCss');
+	return typeof themeCss === 'function'
+		? (themeCss as (css: string, selector: string) => string)(css, '.pptxv')
+		: `${defaultVarsBlock()}\n${css}`;
 }

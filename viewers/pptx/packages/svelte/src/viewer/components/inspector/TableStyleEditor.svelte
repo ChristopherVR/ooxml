@@ -119,13 +119,13 @@
 </div>
 
 <style>
-	.editor { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--pptx-border); border-radius: 5px; padding: 8px; }
+	.editor { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 5px; padding: 8px; }
 	.hdr { display: flex; align-items: center; justify-content: space-between; }
-	.hdg { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--pptx-muted-foreground); }
-	.empty { font-size: 11px; color: var(--pptx-muted-foreground); }
+	.hdg { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
+	.empty { font-size: 11px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.parts { display: flex; flex-wrap: wrap; gap: 4px; }
-	.actions { display: flex; gap: 6px; padding-top: 4px; border-top: 1px solid var(--pptx-border); }
-	button { font-size: 11px; border: 1px solid var(--pptx-border); border-radius: 4px; padding: 3px 6px; background: var(--pptx-muted); color: inherit; cursor: pointer; }
-	button.active { background: var(--pptx-primary, #c43b32); color: #fff; }
+	.actions { display: flex; gap: 6px; padding-top: 4px; border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); }
+	button { font-size: 11px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 4px; padding: 3px 6px; background: var(--pptx-muted, var(--office-surface, #f3f4f6)); color: inherit; cursor: pointer; }
+	button.active { background: var(--pptx-primary, var(--office-accent, #2563eb)); color: #fff; }
 	button:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

@@ -185,7 +185,7 @@
 	}
 
 	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-field-label b {
@@ -211,7 +211,7 @@
 	}
 
 	.pptx-svelte-inspector-grid span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-grid input {
@@ -219,12 +219,12 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
-	.pptx-svelte-field select{height:26px;border:1px solid var(--pptx-border);border-radius:6px;background:var(--pptx-background);color:inherit}.pptx-svelte-duotone{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px}.pptx-svelte-duotone>span{width:100%;color:var(--pptx-muted-foreground);font-size:10px}.pptx-svelte-duotone button{width:24px;height:24px;border:1px solid var(--pptx-border);border-radius:50%;background:linear-gradient(135deg,var(--shadow) 50%,var(--highlight) 50%);color:inherit}
-	.pptx-svelte-image-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pptx-svelte-image-actions label,.pptx-svelte-image-actions button{display:grid;place-items:center;min-height:28px;border:1px solid var(--pptx-border);border-radius:5px;background:var(--pptx-muted);color:inherit;font-size:10px}.pptx-svelte-image-actions input{position:absolute;width:1px;height:1px;opacity:0}.pptx-svelte-reset-crop{width:100%;min-height:28px;margin-top:8px;border:1px solid var(--pptx-border);border-radius:5px;background:var(--pptx-muted);color:inherit;font-size:10px}.pptx-svelte-field-checkbox{display:flex;align-items:center;gap:5px;margin-top:8px}
+	.pptx-svelte-field select{height:26px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:6px;background:var(--pptx-background, var(--office-background, #ffffff));color:inherit}.pptx-svelte-duotone{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px}.pptx-svelte-duotone>span{width:100%;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:10px}.pptx-svelte-duotone button{width:24px;height:24px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:50%;background:linear-gradient(135deg,var(--shadow) 50%,var(--highlight) 50%);color:inherit}
+	.pptx-svelte-image-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pptx-svelte-image-actions label,.pptx-svelte-image-actions button{display:grid;place-items:center;min-height:28px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit;font-size:10px}.pptx-svelte-image-actions input{position:absolute;width:1px;height:1px;opacity:0}.pptx-svelte-reset-crop{width:100%;min-height:28px;margin-top:8px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:5px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit;font-size:10px}.pptx-svelte-field-checkbox{display:flex;align-items:center;gap:5px;margin-top:8px}
 </style>

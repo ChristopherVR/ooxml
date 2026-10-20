@@ -2,7 +2,7 @@ export const SUBTITLE_SETTINGS_STYLES = `
 :host { display: inline-flex; }
 dialog { box-sizing: border-box; width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
  margin: auto; padding: 24px; border: 1px solid var(--pptx-border, #374151); border-radius: 10px;
- background: var(--pptx-background, #181b20); color: var(--pptx-foreground, #f9fafb); font: 14px/1.5 system-ui; }
+ background: var(--pptx-background, #181b20); color: var(--pptx-foreground, #f9fafb); font: 14px/1.5 var(--pptx-font,var(--office-font,system-ui,sans-serif)); }
 dialog::backdrop { background: #0008; }
 h2 { margin: 0 0 12px; font-size: 18px; } p { margin: 0 0 20px; }
 label { display: block; margin-bottom: 8px; }

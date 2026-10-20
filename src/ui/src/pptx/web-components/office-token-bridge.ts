@@ -1,3 +1,5 @@
+import { legacyThemeBridge, LEGACY_OFFICE_THEME_TOKENS } from '../../theme';
+import { withOfficeThemeCss } from '../theme/office-css';
 import { STATUS_BAR_METRICS, TITLE_BAR_METRICS as M } from '../render';
 import { tok } from './control-tokens';
 
@@ -31,27 +33,7 @@ export const OFFICE_ALIAS_TAGS = [
 
 /** Every alias maps the shared tokens onto the pptx theme and control tokens. */
 const BASE = `
-	--office-font: system-ui, sans-serif;
-	--office-foreground: var(--pptx-foreground, #f3f4f6);
-	--office-muted-foreground: var(--pptx-muted-foreground, #9ca3af);
-	--office-background: var(--pptx-background, #030712);
-	--office-surface: var(--pptx-muted, #2a2a3d);
-	--office-selected: var(--pptx-accent, #33334d);
-	--office-border: var(--pptx-border, #374151);
-	--office-accent: var(--pptx-primary, #6366f1);
-	--office-accent-foreground: var(--pptx-primary-foreground, #fff);
-	--office-ring: ${tok('--pptx-focus-ring-color')};
-	--office-popover: var(--pptx-popover, #111827);
-	--office-popover-foreground: var(--pptx-popover-foreground, var(--pptx-foreground, #e2e8f0));
-	--office-danger: #b91c1c;
-	--office-warning: #d97706;
-	--office-info: #60a5fa;
-	--office-notice-background: rgb(120 53 15 / 20%);
-	--office-notice-foreground: #fde68a;
-	--office-notice-border: rgb(180 83 9 / 30%);
-	--office-notice-accent: #fbbf24;
-	--office-shadow: 0 8px 20px rgb(0 0 0 / 35%);
-	--office-shadow-lg: 0 10px 25px rgb(0 0 0 / 35%);
+	--office-ring: var(--pptx-focus-ring-color, var(--_pptx-ring));
 	--office-focus-width: ${tok('--pptx-focus-ring-width')};
 	--office-focus-offset: ${tok('--pptx-focus-ring-offset')};
 	--office-target-size-touch: ${tok('--pptx-touch-target')};
@@ -110,10 +92,7 @@ const TITLE_BAR = `:host {
 	--office-icon-stroke: 1.4;
 	--office-control-height-md: 24px;
 	--office-selected: color-mix(in srgb, var(--pptx-accent, #33334d) 60%, transparent);
-	--office-warning: #eab308;
-	--office-danger: #f87171;
 	--office-popover: var(--pptx-popover, var(--pptx-card, #1e1e2e));
-	--office-shadow-lg: 0 14px 28px rgb(0 0 0 / 40%);
 	--pptx-switch-width: ${M.switchTrackWidth}px;
 	--pptx-switch-height: ${M.switchTrackHeight}px;
 	--pptx-switch-knob-size: ${M.switchKnobSize}px;
@@ -134,8 +113,6 @@ const STATUS_BAR = `:host {
 	--office-font-size-xs: 10px;
 	--office-control-height-xs: 24px;
 	--office-icon-stroke: 1.45;
-	--office-warning: #facc15;
-	--office-danger: #f87171;
 	line-height: 1.2;
 }`;
 
@@ -149,7 +126,7 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	'pptx-ui-ribbon-gallery': `:host { --office-foreground: var(--pptx-foreground, #f9fafb); --office-background: var(--pptx-background, #111827);
 	--office-gallery-strip-background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 30%, transparent);
 	--office-command-icon-color: var(--pptx-primary, #6366f1); --office-z-popover: 1200;
-	--office-popover-foreground: var(--pptx-popover-foreground, #f9fafb); --office-shadow-lg: 0 8px 24px #0006;
+	--office-popover-foreground: var(--pptx-popover-foreground, #f9fafb);
 	--office-icon-stroke: 1.6; --office-line-height-tight: 11px; }`,
 	'pptx-ui-select': `:host { --office-select-background: var(--pptx-select-control-bg, var(--pptx-background, #11111b)); }
 :host(.bg-muted) { --office-select-background: var(--pptx-muted, #1f2937); }
@@ -179,7 +156,32 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
  * switch) never see document styles.
  */
 export function bridgeCss(tag: (typeof OFFICE_ALIAS_TAGS)[number]): string {
-	return `:host {${BASE}}\n${EXTRAS[tag] ?? ''}`;
+	const extras = EXTRAS[tag] ?? '';
+	// Basic canonical colors belong on inner chrome. Their inherited host inputs remain readable.
+	const palette = new Set<string>(Object.values(LEGACY_OFFICE_THEME_TOKENS));
+	const inner = extras.replace(
+		/(:host(?:\([^)]*\))?)\s*\{([^{}]*)\}/g,
+		(_rule, selector: string, body: string) => {
+			const host: string[] = [];
+			const children: string[] = [];
+			for (const declaration of body
+				.split(';')
+				.map((value) => value.trim())
+				.filter(Boolean)) {
+				const property = declaration.slice(0, declaration.indexOf(':')).trim();
+				(palette.has(property) ? children : host).push(declaration);
+			}
+			return `${selector} { ${host.join(';')}; } ${selector} > * { ${children.join(';')}; }`;
+		},
+	);
+	const hostTokens = BASE.replace(/--office-ring:[^;]+;/, '');
+	const hostColor = ['pptx-ui-checkbox', 'pptx-ui-radio', 'pptx-ui-switch'].includes(tag)
+		? ''
+		: 'color:var(--_pptx-foreground);';
+	return withOfficeThemeCss(
+		`:host { ${hostTokens} ${hostColor} font-family:var(--_pptx-font); }\n${legacyThemeBridge(':host > *', '--_pptx-')}\n:host > * {${BASE}}\n${inner}\n:host(:focus-visible) { outline-color:var(--pptx-focus-ring-color,var(--_pptx-ring)); }`,
+		':host',
+	);
 }
 
 /**

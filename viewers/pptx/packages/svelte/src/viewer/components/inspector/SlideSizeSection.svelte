@@ -177,17 +177,17 @@
 		display: grid;
 		gap: 4px;
 		margin-bottom: 8px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
 	.pptx-svelte-slide-size-preset select {
 		width: 100%;
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, inherit);
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-slide-size-orientation {
@@ -199,16 +199,16 @@
 
 	.pptx-svelte-slide-size-orientation button {
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font-size: 11px;
 	}
 
 	.pptx-svelte-slide-size-orientation button.active {
-		border-color: var(--pptx-primary, #c43b32);
-		background: var(--pptx-primary, #c43b32);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 
@@ -220,7 +220,7 @@
 		display: flex;
 		align-items: center;
 		gap: 5px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
@@ -228,9 +228,9 @@
 		min-width: 0;
 		width: 100%;
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 </style>

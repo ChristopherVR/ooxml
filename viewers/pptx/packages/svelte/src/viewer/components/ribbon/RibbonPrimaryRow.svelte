@@ -171,7 +171,7 @@
 		align-items: center;
 		gap: 4px;
 		padding: 3px 10px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ribbon-primary-spacer {
@@ -182,7 +182,7 @@
 		width: 1px;
 		align-self: stretch;
 		margin: 2px 4px;
-		background: var(--pptx-border, #33334d);
+		background: var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ribbon-primary button {
@@ -192,16 +192,16 @@
 		min-width: 26px;
 		height: 26px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 		font: inherit;
 	}
 
 	.pptx-svelte-ribbon-primary button:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ribbon-primary button:disabled {
@@ -215,18 +215,18 @@
 	}
 
 	.pptx-svelte-ribbon-primary-on {
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ribbon-primary-ai.pptx-svelte-ribbon-primary-on {
-		color: var(--pptx-primary, #a5b4fc);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ribbon-primary-shows {
 		padding: 0 8px;
 		font-size: 11px;
 		white-space: nowrap;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-ribbon-primary-readonly {

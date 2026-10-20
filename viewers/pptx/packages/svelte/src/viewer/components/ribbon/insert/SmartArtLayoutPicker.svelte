@@ -73,14 +73,14 @@
 
 	button {
 		border: 0;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		font: inherit;
 	}
 
 	nav {
 		flex: 0 0 160px;
 		padding: 8px 0;
-		border-right: 1px solid var(--pptx-border, #33334d);
+		border-right: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	nav button {
@@ -94,11 +94,11 @@
 	}
 
 	nav button:hover {
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	nav button.active {
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: white;
 	}
 
@@ -121,7 +121,7 @@
 		gap: 6px;
 		min-height: 76px;
 		padding: 8px 4px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -130,12 +130,12 @@
 	}
 
 	[role='option']:hover {
-		background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 55%, transparent);
+		background: color-mix(in srgb, var(--pptx-muted, var(--office-surface, #f3f4f6)) 55%, transparent);
 	}
 
 	[role='option'].selected {
-		border-color: var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 20%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 20%, transparent);
 	}
 
 	@media (max-width: 640px) {

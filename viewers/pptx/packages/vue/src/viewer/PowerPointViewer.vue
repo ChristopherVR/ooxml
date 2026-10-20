@@ -1909,6 +1909,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 	<div
 		ref="viewerRootRef"
 		class="pptx-vue-viewer"
+		data-pptx-theme-root
 		data-pptx-editor-chrome
 		:class="[props.class, { 'pptx-vue-reduced-motion': reducedMotion }, ...optionRootClasses]"
 		:style="themeStyle"

@@ -109,14 +109,14 @@
 	.hint {
 		margin: 0;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.grid-wrap {
 		max-height: 50vh;
 		overflow: auto;
-		border: 1px solid var(--pptx-border, #3f3f52);
-		border-radius: var(--pptx-radius, 6px);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 	}
 
 	table {
@@ -127,7 +127,7 @@
 
 	td {
 		padding: 0;
-		border: 1px solid var(--pptx-border, #3f3f52);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	input {
@@ -141,7 +141,7 @@
 	}
 
 	input:focus {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 		outline: none;
 	}
 </style>

@@ -53,10 +53,10 @@
 {/if}
 
 <style>
-	.crud { display:flex; flex-wrap:wrap; gap:4px; margin:0 0 8px; padding:8px; border:1px solid var(--pptx-border,#33334d); border-radius:6px; }
-	.crud button { flex:1 1 calc(50% - 4px); padding:4px 6px; border:1px solid var(--pptx-border,#33334d); border-radius:4px; background:transparent; color:inherit; font:11px system-ui,sans-serif; cursor:pointer; }
-	.crud button:hover:not(:disabled) { background:var(--pptx-accent,#33334d); }
+	.crud { display:flex; flex-wrap:wrap; gap:4px; margin:0 0 8px; padding:8px; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:6px; }
+	.crud button { flex:1 1 calc(50% - 4px); padding:4px 6px; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:4px; background:transparent; color:inherit; font:11px system-ui,sans-serif; cursor:pointer; }
+	.crud button:hover:not(:disabled) { background:var(--pptx-accent, var(--office-selected, #e5e7eb)); }
 	.crud button:disabled { opacity:.45; cursor:not-allowed; }
-	.crud button:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); outline-offset:-2px; }
+	.crud button:focus-visible { outline:2px solid var(--pptx-ring, var(--office-ring, #2563eb)); outline-offset:-2px; }
 	.error { flex-basis:100%; margin:4px 0 0; color:#f59e0b; font:11px system-ui,sans-serif; }
 </style>

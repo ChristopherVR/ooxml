@@ -160,9 +160,9 @@
 		top: 0;
 		left: 0;
 		z-index: 51;
-		background: var(--pptx-muted, #f1f5f9);
-		border-right: 1px solid var(--pptx-border, #cbd5e1);
-		border-bottom: 1px solid var(--pptx-border, #cbd5e1);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		border-right: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ruler {
@@ -190,24 +190,24 @@
 	}
 
 	.pptx-svelte-ruler-bg {
-		fill: var(--pptx-muted, #f1f5f9);
+		fill: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-ruler-edge {
-		stroke: var(--pptx-border, #cbd5e1);
+		stroke: var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ruler-tick {
-		stroke: var(--pptx-muted-foreground, #94a3b8);
+		stroke: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ruler-highlight {
-		fill: var(--pptx-primary, #2563eb);
+		fill: var(--pptx-primary, var(--office-accent, #2563eb));
 		opacity: 0.2;
 	}
 
 	.pptx-svelte-ruler-label {
-		fill: var(--pptx-muted-foreground, #94a3b8);
+		fill: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-family: system-ui, sans-serif;
 	}
 </style>

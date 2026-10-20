@@ -210,9 +210,9 @@
 		justify-content: space-between;
 		gap: 8px;
 		padding: 6px 10px;
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-family: system-ui, sans-serif;
 		font-size: 13px;
 		flex: none;
@@ -232,7 +232,7 @@
 		height: 28px;
 		padding: 0 6px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -240,8 +240,8 @@
 	}
 
 	.pptx-svelte-toolbar button:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-toolbar button:disabled {
@@ -257,7 +257,7 @@
 	.pptx-svelte-toolbar-counter {
 		min-width: 90px;
 		text-align: center;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-toolbar-zoom {
@@ -271,7 +271,7 @@
 	}
 
 	.pptx-svelte-toolbar-notes-active {
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-toolbar-notes-label {
@@ -281,14 +281,14 @@
 	.pptx-svelte-toolbar-edit {
 		margin-right: 4px;
 		padding-right: 8px;
-		border-right: 1px solid var(--pptx-border, #33334d);
+		border-right: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-toolbar-dirty {
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-toolbar-share-active {
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 </style>

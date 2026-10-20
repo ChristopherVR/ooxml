@@ -40,7 +40,7 @@
 		display: grid;
 		gap: 4px;
 		padding-left: 8px;
-		border-left: 2px solid var(--pptx-border, #33334d);
+		border-left: 2px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 	.pptx-svelte-comment-reply strong {
 		font-size: 10.5px;

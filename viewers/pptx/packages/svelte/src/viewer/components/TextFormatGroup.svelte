@@ -145,7 +145,7 @@
 		height: 28px;
 		padding: 0 6px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -154,8 +154,8 @@
 	}
 
 	.pptx-svelte-fmt-btn:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-fmt-btn:disabled {
@@ -164,7 +164,7 @@
 	}
 
 	.pptx-svelte-fmt-on {
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 
@@ -172,9 +172,9 @@
 		width: 46px;
 		height: 28px;
 		text-align: center;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 		font-size: 12px;

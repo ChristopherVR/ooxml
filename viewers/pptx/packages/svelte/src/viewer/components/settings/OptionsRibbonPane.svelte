@@ -53,16 +53,16 @@
 
 <style>
 	.ribbon-pane { display: flex; flex-direction: column; gap: 18px; }
-	h3 { margin: 0 0 4px; border-bottom: 1px solid color-mix(in srgb, var(--pptx-border, #3f3f52) 60%, transparent); padding-bottom: 4px; color: var(--pptx-muted-foreground, #94a3b8); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-	.hint { margin: 0 0 8px; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; }
-	.tabs { display: flex; flex-direction: column; gap: 2px; border: 1px solid color-mix(in srgb, var(--pptx-border, #3f3f52) 60%, transparent); border-radius: 6px; padding: 6px; }
+	h3 { margin: 0 0 4px; border-bottom: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent); padding-bottom: 4px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+	.hint { margin: 0 0 8px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 11px; }
+	.tabs { display: flex; flex-direction: column; gap: 2px; border: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent); border-radius: 6px; padding: 6px; }
 	.tabs label { display: flex; align-items: center; gap: 8px; border-radius: 4px; padding: 5px 8px; font-size: 12px; cursor: pointer; }
-	.tabs label:hover { background: var(--pptx-accent, #33334d); }
+	.tabs label:hover { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); }
 	.tabs label.locked { opacity: 0.6; cursor: not-allowed; }
 	.tabs label.locked:hover { background: transparent; }
-	.reset { margin-top: 8px; border: 1px solid var(--pptx-border, #3f3f52); border-radius: 5px; padding: 6px 11px; background: transparent; color: var(--pptx-foreground, #e2e8f0); font-size: 11px; cursor: pointer; }
-	.reset:hover { background: var(--pptx-accent, #33334d); }
+	.reset { margin-top: 8px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 5px; padding: 6px 11px; background: transparent; color: var(--pptx-foreground, var(--office-foreground, #1f2937)); font-size: 11px; cursor: pointer; }
+	.reset:hover { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); }
 	.shortcut { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; border-radius: 5px; padding: 7px 10px; font-size: 12px; }
-	.stripe { background: var(--pptx-muted, #2a2a3d); }
-	kbd { color: var(--pptx-muted-foreground, #94a3b8); font: 11px ui-monospace, monospace; white-space: nowrap; }
+	.stripe { background: var(--pptx-muted, var(--office-surface, #f3f4f6)); }
+	kbd { color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font: 11px ui-monospace, monospace; white-space: nowrap; }
 </style>

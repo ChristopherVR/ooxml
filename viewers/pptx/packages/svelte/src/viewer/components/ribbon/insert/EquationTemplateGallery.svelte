@@ -55,7 +55,7 @@
 	.label {
 		font-size: 11px;
 		font-weight: 500;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.math {
@@ -74,20 +74,20 @@
 		align-items: center;
 		gap: 4px;
 		padding: 7px;
-		border: 1px solid var(--pptx-border, #3f3f52);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 	}
 
 	.template:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.template.active {
-		border-color: var(--pptx-primary, #c43b32);
-		background: color-mix(in srgb, var(--pptx-primary, #c43b32) 14%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 14%, transparent);
 	}
 
 	.tile {
@@ -106,6 +106,6 @@
 		white-space: nowrap;
 		text-align: center;
 		font-size: 9px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 </style>

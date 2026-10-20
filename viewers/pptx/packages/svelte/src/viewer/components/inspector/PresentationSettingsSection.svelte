@@ -111,7 +111,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 8px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
@@ -126,9 +126,9 @@
 		min-width: 0;
 		width: 96px;
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 

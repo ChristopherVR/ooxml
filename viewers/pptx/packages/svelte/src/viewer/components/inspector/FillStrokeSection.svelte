@@ -204,14 +204,14 @@
 	}
 
 	.pptx-svelte-inspector-color span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-color input[type='color'] {
 		width: 40px;
 		height: 26px;
 		padding: 0;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: transparent;
 		cursor: pointer;
@@ -225,7 +225,7 @@
 	}
 
 	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-field-label b {

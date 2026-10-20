@@ -70,16 +70,16 @@
 	label {
 		display: grid;
 		gap: 3px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
 	select {
 		min-width: 0;
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 
@@ -91,9 +91,9 @@
 
 	button {
 		padding: 4px 6px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 		font: inherit;

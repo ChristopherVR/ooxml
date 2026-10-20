@@ -124,9 +124,9 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 10px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-family: system-ui, sans-serif;
 		font-size: 12px;
 	}
@@ -135,9 +135,9 @@
 		height: 26px;
 		min-width: 140px;
 		padding: 0 8px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
@@ -150,12 +150,12 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-findreplace-count {
 		min-width: 70px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-findreplace button {
@@ -165,8 +165,8 @@
 		height: 26px;
 		padding: 0 8px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 		font: inherit;
@@ -174,8 +174,8 @@
 	}
 
 	.pptx-svelte-findreplace button:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-findreplace button:disabled {

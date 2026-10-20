@@ -143,6 +143,6 @@
 
 <style>
 	.pptx-svelte-review-shell { position: relative; display: flex; align-items: stretch; min-width: 0; }
-	.pptx-svelte-review-panel { position: absolute; z-index: 40; top: calc(100% + 8px); left: 0; display: flex; gap: 12px; width: min(920px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 180px)); padding: 12px; overflow: auto; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-card, #1e1e2e); box-shadow: 0 12px 32px rgb(0 0 0 / 35%); }
+	.pptx-svelte-review-panel { position: absolute; z-index: 40; top: calc(100% + 8px); left: 0; display: flex; gap: 12px; width: min(920px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 180px)); padding: 12px; overflow: auto; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-card, var(--office-surface, #f3f4f6)); box-shadow: 0 12px 32px rgb(0 0 0 / 35%); }
 	.pptx-svelte-review-close { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; }
 </style>

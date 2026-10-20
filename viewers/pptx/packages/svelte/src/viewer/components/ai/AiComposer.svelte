@@ -101,7 +101,7 @@
 
 <style>
 	.pptx-svelte-ai-composer {
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		padding: 8px;
 	}
 
@@ -110,13 +110,13 @@
 		align-items: flex-end;
 		gap: 6px;
 		padding: 6px 8px;
-		border: 1px solid var(--pptx-input, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-input, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 	}
 
 	.pptx-svelte-ai-composer-box:focus-within {
-		border-color: var(--pptx-ring, #818cf8);
+		border-color: var(--pptx-ring, var(--office-ring, #2563eb));
 	}
 
 	.pptx-svelte-ai-input {
@@ -126,14 +126,14 @@
 		resize: none;
 		border: none;
 		background: transparent;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 		font-size: 13px;
 		outline: none;
 	}
 
 	.pptx-svelte-ai-input::placeholder {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-send {
@@ -145,22 +145,22 @@
 		border: none;
 		border-radius: 4px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 	}
 
 	.pptx-svelte-ai-send:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-send.is-ready {
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 	}
 
 	.pptx-svelte-ai-send.is-ready:hover {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 90%, #000);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 90%, #000);
 	}
 
 	.pptx-svelte-ai-send:disabled {

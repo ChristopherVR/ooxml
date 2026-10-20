@@ -25,7 +25,7 @@
 	}
 
 	:global(.pptx-svelte-viewer :is(button, a, input, select, textarea, [tabindex]):not([data-pptx-search-input]):focus-visible) {
-		outline: 2px solid var(--pptx-ring, #818cf8) !important;
+		outline: 2px solid var(--pptx-ring, var(--office-ring, #2563eb)) !important;
 		outline-offset: 2px;
 	}
 

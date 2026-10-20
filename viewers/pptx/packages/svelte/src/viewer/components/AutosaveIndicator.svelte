@@ -75,8 +75,8 @@
 		gap: 5px;
 		padding: 2px 9px;
 		border-radius: 999px;
-		background: var(--pptx-muted, #33334d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 12px;
 		line-height: 1.4;
 		white-space: nowrap;

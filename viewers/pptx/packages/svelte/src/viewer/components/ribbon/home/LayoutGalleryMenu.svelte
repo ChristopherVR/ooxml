@@ -126,7 +126,7 @@
 	.pptx-svelte-lgal-empty {
 		grid-column: 1 / -1;
 		padding: 8px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
@@ -137,7 +137,7 @@
 		align-items: center;
 		gap: 4px;
 		border: 2px solid transparent;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		padding: 4px;
@@ -147,19 +147,19 @@
 	}
 
 	.pptx-svelte-lgal-tile:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-lgal-current {
-		border-color: var(--pptx-primary, #2563eb);
-		background: color-mix(in srgb, var(--pptx-primary, #2563eb) 12%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 12%, transparent);
 	}
 
 	.pptx-svelte-lgal-thumb {
 		position: relative;
 		flex: none;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 2px;
 	}
 
@@ -173,8 +173,8 @@
 	.pptx-svelte-lgal-frame {
 		position: absolute;
 		border-style: dashed;
-		border-color: color-mix(in srgb, var(--pptx-muted-foreground, #94a3b8) 70%, transparent);
-		background: color-mix(in srgb, var(--pptx-background, #0f172a) 20%, transparent);
+		border-color: color-mix(in srgb, var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)) 70%, transparent);
+		background: color-mix(in srgb, var(--pptx-background, var(--office-background, #ffffff)) 20%, transparent);
 	}
 
 	.pptx-svelte-lgal-name {

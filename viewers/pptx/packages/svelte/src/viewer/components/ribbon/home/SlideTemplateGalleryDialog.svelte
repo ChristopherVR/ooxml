@@ -132,12 +132,12 @@
 		flex-direction: column;
 		width: min(640px, 92vw);
 		max-height: 80vh;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 2px);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 2px);
 		outline: none;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		box-shadow: 0 24px 70px rgb(0 0 0 / 48%);
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	header,
@@ -149,7 +149,7 @@
 
 	header {
 		justify-content: space-between;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-slide-templates-heading {
@@ -166,13 +166,13 @@
 
 	.pptx-svelte-slide-templates-heading p {
 		margin: 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
 	button {
 		border: 0;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		font: inherit;
 	}
 
@@ -215,7 +215,7 @@
 		align-items: center;
 		gap: 4px;
 		padding: 8px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -225,18 +225,18 @@
 	}
 
 	.pptx-svelte-slide-templates-tile:hover {
-		background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 50%, transparent);
+		background: color-mix(in srgb, var(--pptx-muted, var(--office-surface, #f3f4f6)) 50%, transparent);
 	}
 
 	.pptx-svelte-slide-templates-tile.is-selected {
-		border-color: var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 20%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 20%, transparent);
 	}
 
 	footer {
 		justify-content: flex-end;
 		gap: 8px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	

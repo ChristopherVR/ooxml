@@ -258,7 +258,7 @@
 		max-height: 220px;
 		overflow-y: auto;
 		padding: 8px 12px 12px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -276,7 +276,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-animp-preview {
@@ -285,7 +285,7 @@
 		gap: 4px;
 		border: none;
 		background: transparent;
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 		cursor: pointer;
 		font: inherit;
 		font-size: 10px;
@@ -299,7 +299,7 @@
 
 	.pptx-svelte-animp label > span,
 	.pptx-svelte-animp-direction > span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-animp select {
@@ -307,9 +307,9 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		font-size: 11px;
@@ -320,7 +320,7 @@
 		flex-direction: column;
 		gap: 4px;
 		padding-top: 6px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-animp-direction-row {
@@ -333,18 +333,18 @@
 		place-items: center;
 		width: 28px;
 		height: 28px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 		font: inherit;
 	}
 
 	.pptx-svelte-animp-direction-row button.is-active {
-		border-color: var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 20%, transparent);
-		color: var(--pptx-primary, #6366f1);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 20%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-animp-direction-row button:disabled {

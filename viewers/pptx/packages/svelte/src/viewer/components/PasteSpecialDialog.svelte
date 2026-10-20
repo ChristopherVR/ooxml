@@ -45,9 +45,9 @@
 
 <style>
 	.backdrop { position: fixed; inset: 0; z-index: 1250; display: grid; place-items: center; background: #0009; }
-	section { width: min(360px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--pptx-border, #3f3f52); border-radius: 12px; background: var(--pptx-card, #1e1e2e); box-shadow: 0 24px 80px #0009; }
+	section { width: min(360px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 12px; background: var(--pptx-card, var(--office-surface, #f3f4f6)); box-shadow: 0 24px 80px #0009; }
 	h2 { margin: 0 0 12px; font-size: 15px; }
 	ul { margin: 0 0 16px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
 	label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; }
-	label:hover { background: var(--pptx-muted, #2a2a3d); }
+	label:hover { background: var(--pptx-muted, var(--office-surface, #f3f4f6)); }
 </style>

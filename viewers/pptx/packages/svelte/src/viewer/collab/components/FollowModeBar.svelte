@@ -93,11 +93,11 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 12px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 8px;
 		padding: 6px 10px;
-		background: color-mix(in srgb, var(--pptx-card, #1e1e2e) 95%, transparent);
-		color: var(--pptx-foreground, #e2e8f0);
+		background: color-mix(in srgb, var(--pptx-card, var(--office-surface, #f3f4f6)) 95%, transparent);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font-family: system-ui, sans-serif;
 		font-size: 12px;
 		box-shadow: 0 10px 15px -3px rgb(0 0 0 / 25%);
@@ -108,26 +108,26 @@
 		align-items: center;
 		gap: 6px;
 		white-space: nowrap;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-follow-name-strong {
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-follow-stop {
 		cursor: pointer;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
 		background: transparent;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 2px 8px;
 		font: inherit;
 		font-size: 11px;
 	}
 
 	.pptx-svelte-follow-stop:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-follow-list {
@@ -147,19 +147,19 @@
 		cursor: pointer;
 		border: 1px solid transparent;
 		border-radius: 9999px;
-		background: color-mix(in srgb, var(--pptx-muted, #1f2937) 60%, transparent);
-		color: var(--pptx-foreground, #e2e8f0);
+		background: color-mix(in srgb, var(--pptx-muted, var(--office-surface, #f3f4f6)) 60%, transparent);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 2px 8px 2px 2px;
 		font: inherit;
 	}
 
 	.pptx-svelte-follow-peer:hover {
-		background: var(--pptx-muted, #1f2937);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-follow-peer-active {
-		border-color: var(--pptx-primary, #6366f1);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 30%, transparent);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 30%, transparent);
 	}
 
 	.pptx-svelte-follow-avatar {

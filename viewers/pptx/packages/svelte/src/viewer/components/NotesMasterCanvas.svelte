@@ -71,5 +71,5 @@
 	.region { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; border:1px dashed #9ca3af66; font-size:12px; text-align:center; }
 	.region.slide { border-color:#3b82f680; background:#3b82f60d; color:#2563ebaa; }
 	.region.body { align-items:flex-start; justify-content:flex-start; padding:8px; border-color:#22c55e80; background:#22c55e0d; color:#16a34aaa; }
-	.empty { margin:auto; color:var(--pptx-muted-foreground,#a5a5b5); font-size:14px; }
+	.empty { margin:auto; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:14px; }
 </style>

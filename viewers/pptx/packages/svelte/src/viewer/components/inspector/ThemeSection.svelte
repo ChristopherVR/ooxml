@@ -137,7 +137,7 @@
 		display: grid;
 		gap: 3px;
 		margin-top: 6px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 
@@ -165,19 +165,19 @@
 	.aliases span {
 		width: 16px;
 		height: 16px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 3px;
 	}
 
 	.edit-theme {
 		margin-top: 12px;
 		padding-top: 8px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.edit-theme summary {
 		margin-bottom: 8px;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-weight: 600;
 		cursor: pointer;
 	}
@@ -185,9 +185,9 @@
 	select {
 		min-width: 0;
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 </style>

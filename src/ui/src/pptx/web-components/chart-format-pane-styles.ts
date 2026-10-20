@@ -3,7 +3,7 @@ export const CHART_FORMAT_PANE_STYLES = `
 :host { display: block; position: fixed; z-index: 1090; box-sizing: border-box; width: 288px;
  color: var(--pptx-foreground, #e2e8f0); background: var(--pptx-card, #181c20);
  border-left: 1px solid var(--pptx-border, #33334d); box-shadow: -8px 0 24px #0002;
- font: 12px/1.4 var(--pptx-ui-font-family, system-ui, sans-serif); }
+ font: 12px/1.4 var(--pptx-ui-font-family, var(--office-font, system-ui, sans-serif)); }
 :host([inline]) { position: static; width: 100%; border: 0; box-shadow: none; }
 * { box-sizing: border-box; }
 .panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }

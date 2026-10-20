@@ -56,7 +56,7 @@
 		padding: 9px 11px;
 		border: 0;
 		border-radius: 6px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 		font: inherit;
@@ -65,11 +65,11 @@
 	}
 
 	.list button:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.list button.active {
-		outline: 2px solid var(--pptx-primary, #c43b32);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: -2px;
 	}
 
@@ -78,6 +78,6 @@
 	}
 
 	.label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 </style>

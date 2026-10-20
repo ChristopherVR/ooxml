@@ -150,10 +150,10 @@
 		max-height: 80vh;
 		overflow-y: auto;
 		padding: 18px;
-		border: 1px solid var(--pptx-border, #3f3f52);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 11px;
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-foreground, #f3f4f6);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	header {
@@ -170,16 +170,16 @@
 	.close {
 		border: none;
 		background: none;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 16px;
 		cursor: pointer;
 		padding: 2px 6px;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 	}
 
 	.close:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.content {
@@ -192,13 +192,13 @@
 	.error {
 		margin: 0;
 		font-size: 11px;
-		color: var(--pptx-destructive, #ef4444);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.unsupported {
 		margin: 0;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.hidden-file-input {

@@ -94,23 +94,23 @@
 <style>
 	.pptx-svelte-review { display: flex; flex-direction: column; gap: 8px; width: min(560px, 100%); }
 	.pptx-svelte-review-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-	.pptx-svelte-review-eyebrow { display: block; color: var(--pptx-muted-foreground, #94a3b8); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+	.pptx-svelte-review-eyebrow { display: block; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 	.pptx-svelte-review h3 { margin: 1px 0 0; font-size: 13px; }
-	.pptx-svelte-review-heading button { height: 28px; padding: 0 10px; border: none; border-radius: var(--pptx-radius, 6px); background: var(--pptx-primary, #6366f1); color: var(--pptx-primary-foreground, white); cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; }
+	.pptx-svelte-review-heading button { height: 28px; padding: 0 10px; border: none; border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-primary, var(--office-accent, #2563eb)); color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff)); cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; }
 	.pptx-svelte-review-heading button:hover { filter: brightness(1.12); }
-	.pptx-svelte-review-summary { margin: 0; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; }
-	.pptx-svelte-review-success { display: grid; gap: 2px; padding: 10px; border: 1px solid #238636; border-radius: var(--pptx-radius, 6px); background: color-mix(in srgb, #238636 18%, transparent); color: #9be9a8; font-size: 12px; }
-	.pptx-svelte-review-success span { color: var(--pptx-muted-foreground, #94a3b8); }
+	.pptx-svelte-review-summary { margin: 0; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 11px; }
+	.pptx-svelte-review-success { display: grid; gap: 2px; padding: 10px; border: 1px solid #238636; border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: color-mix(in srgb, #238636 18%, transparent); color: #9be9a8; font-size: 12px; }
+	.pptx-svelte-review-success span { color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.pptx-svelte-review-list { display: grid; gap: 8px; max-height: 240px; overflow-y: auto; }
 	.pptx-svelte-review-group { display: grid; gap: 3px; }
-	.pptx-svelte-review-group h4 { margin: 0; color: var(--pptx-muted-foreground, #94a3b8); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
-	.pptx-svelte-review-issue { display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 7px; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-muted, #2a2a3d); color: inherit; cursor: pointer; font: inherit; text-align: left; }
-	.pptx-svelte-review-issue:hover { background: var(--pptx-accent, #33334d); }
+	.pptx-svelte-review-group h4 { margin: 0; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+	.pptx-svelte-review-issue { display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 7px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-muted, var(--office-surface, #f3f4f6)); color: inherit; cursor: pointer; font: inherit; text-align: left; }
+	.pptx-svelte-review-issue:hover { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); }
 	.pptx-svelte-review-icon { display: grid; place-items: center; flex: none; width: 15px; height: 15px; border-radius: 50%; font-size: 10px; font-weight: 800; }
 	.pptx-svelte-review-error .pptx-svelte-review-icon { background: #e5484d; color: white; }
 	.pptx-svelte-review-warning .pptx-svelte-review-icon { background: #d97706; color: white; }
 	.pptx-svelte-review-tip .pptx-svelte-review-icon { background: #2563eb; color: white; }
 	.pptx-svelte-review-copy { display: grid; gap: 1px; min-width: 0; font-size: 11.5px; }
-	.pptx-svelte-review-copy span, .pptx-svelte-review-copy small { color: var(--pptx-muted-foreground, #94a3b8); }
+	.pptx-svelte-review-copy span, .pptx-svelte-review-copy small { color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.pptx-svelte-review-copy small { font-size: 10.5px; }
 </style>

@@ -66,10 +66,10 @@
 
 	.pptx-svelte-export-progress-panel {
 		width: min(92vw, 384px);
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 6px);
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 6px);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 		padding: 24px;
 		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 		font-family: system-ui, sans-serif;
@@ -86,14 +86,14 @@
 		width: 100%;
 		overflow: hidden;
 		border-radius: 9999px;
-		background: var(--pptx-muted, #1f2937);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		margin-bottom: 12px;
 	}
 
 	.pptx-svelte-export-progress-fill {
 		height: 100%;
 		border-radius: 9999px;
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		transition: width 0.3s ease-out;
 	}
 
@@ -103,7 +103,7 @@
 		justify-content: space-between;
 		margin-bottom: 16px;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-export-progress-pct {

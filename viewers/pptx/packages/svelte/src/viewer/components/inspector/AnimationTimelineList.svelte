@@ -173,7 +173,7 @@
 	.pptx-svelte-animtl-block {
 		margin-top: 8px;
 		padding-top: 8px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-animtl-heading {
@@ -181,7 +181,7 @@
 		font-size: 10px;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-animtl-list {
@@ -197,8 +197,8 @@
 		gap: 4px;
 		padding: 2px 4px;
 		border-radius: 4px;
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 		cursor: grab;
 	}
@@ -210,8 +210,8 @@
 	}
 
 	.pptx-svelte-animtl-row.is-selected {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 30%, transparent);
-		color: var(--pptx-primary, #6366f1);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 30%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-animtl-row.is-dragging {
@@ -219,7 +219,7 @@
 	}
 
 	.pptx-svelte-animtl-row.is-dragover {
-		box-shadow: 0 -2px 0 var(--pptx-primary, #6366f1);
+		box-shadow: 0 -2px 0 var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-animtl-grip {

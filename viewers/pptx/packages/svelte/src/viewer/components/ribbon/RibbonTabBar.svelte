@@ -132,8 +132,8 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		border-top: 1px solid var(--pptx-border, #33334d);
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ribbon-tabs {
@@ -175,11 +175,11 @@
 
 	.pptx-svelte-ribbon-record {
 		background: transparent;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ribbon-record:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-ribbon-record-dot {
@@ -193,7 +193,7 @@
 		padding: 6px 12px;
 		border: none;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font: inherit;
 		font-size: 12.5px;
 		font-weight: 500;
@@ -203,8 +203,8 @@
 	}
 
 	.pptx-svelte-ribbon-tab:hover {
-		color: var(--pptx-card-foreground, #e2e8f0);
-		background: var(--pptx-accent, #33334d);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	/* PowerPoint tints its contextual tabs with an accent colour. */
@@ -213,7 +213,7 @@
 	}
 
 	.pptx-svelte-ribbon-tab-active {
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ribbon-tab-active::after {
@@ -223,6 +223,6 @@
 		right: 8px;
 		bottom: -1px;
 		height: 2px;
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 </style>

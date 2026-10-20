@@ -152,7 +152,7 @@
 		display: grid;
 		gap: 3px;
 		margin-top: 5px;
-		color: var(--pptx-muted-foreground);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 	}
 	.row {
@@ -164,7 +164,7 @@
 	}
 	.name {
 		overflow: hidden;
-		color: var(--pptx-muted-foreground);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -173,7 +173,7 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		color: var(--pptx-muted-foreground);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 	}
 	.overrides {
@@ -186,9 +186,9 @@
 	select {
 		min-width: 0;
 		height: 25px;
-		border: 1px solid var(--pptx-border);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 </style>

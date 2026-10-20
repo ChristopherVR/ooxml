@@ -208,6 +208,7 @@ export function buildViewerChrome(
 ): ViewerChrome {
 	const regions = options.regions ?? NO_REGIONS;
 	const root = createEl(doc, 'div', 'pptxv');
+	root.setAttribute('data-pptx-theme-root', '');
 	root.dataset.pptxEditorChrome = '';
 	root.tabIndex = 0;
 	root.setAttribute('role', 'region');

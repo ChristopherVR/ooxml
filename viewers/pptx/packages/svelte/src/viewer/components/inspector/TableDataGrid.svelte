@@ -221,7 +221,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-table-grid-actions {
@@ -233,9 +233,9 @@
 
 	.pptx-svelte-table-grid-actions button {
 		padding: 2px 6px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		font-size: 10px;
@@ -272,9 +272,9 @@
 		gap: 2px;
 		margin: -1px;
 		padding: 1px 4px;
-		border: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		white-space: nowrap;
 	}
 
@@ -297,7 +297,7 @@
 		flex: 1 1 64px;
 		margin: -1px;
 		padding: 1px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-table-grid-cell input {
@@ -307,7 +307,7 @@
 		padding: 1px 4px;
 		border: none;
 		outline: none;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		font-size: 11px;
@@ -323,7 +323,7 @@
 		padding: 0;
 		border: none;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		line-height: 1;
 		cursor: pointer;
 	}

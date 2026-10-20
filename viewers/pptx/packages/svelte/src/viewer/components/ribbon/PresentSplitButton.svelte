@@ -91,8 +91,8 @@
 	.pptx-svelte-present-split {
 		display: inline-flex;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 	}
 
 	.pptx-svelte-present-main,
@@ -115,17 +115,17 @@
 
 	.pptx-svelte-present-chev {
 		padding: 0 3px;
-		border-left: 1px solid var(--pptx-border, #33334d);
+		border-left: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-present-main:hover,
 	.pptx-svelte-present-chev:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-present-chev-open {
-		background: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 
@@ -144,10 +144,10 @@
 		width: 208px;
 		flex-direction: column;
 		padding: 4px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 2px);
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 2px);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
 	}
 
@@ -158,7 +158,7 @@
 		width: 100%;
 		padding: 6px 10px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -168,13 +168,13 @@
 	}
 
 	.pptx-svelte-present-menu button:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-present-divider {
 		margin: 4px 0;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-present-grow {
@@ -184,6 +184,6 @@
 	.pptx-svelte-present-check {
 		width: 12px;
 		height: 12px;
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 </style>

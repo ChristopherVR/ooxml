@@ -272,9 +272,9 @@
 		box-sizing: border-box;
 		padding: 2px;
 		margin: 0;
-		border: 1px solid var(--pptx-ring, #6366f1);
-		background: var(--pptx-background, #ffffff);
-		color: var(--pptx-foreground, #0f172a);
+		border: 1px solid var(--pptx-ring, var(--office-ring, #2563eb));
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		outline: none;
 		white-space: pre-wrap;
 		overflow-wrap: break-word;

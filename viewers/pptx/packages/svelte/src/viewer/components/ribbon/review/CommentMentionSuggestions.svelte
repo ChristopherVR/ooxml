@@ -59,9 +59,9 @@
 		margin: 2px 0 0;
 		padding: 4px;
 		overflow-y: auto;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-popover, #1e1e2e);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
 		list-style: none;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 	}
@@ -85,6 +85,6 @@
 
 	.pptx-svelte-comment-mention-active,
 	.pptx-svelte-comment-mentions button:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 </style>

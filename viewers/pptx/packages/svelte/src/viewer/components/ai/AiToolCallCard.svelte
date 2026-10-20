@@ -97,11 +97,11 @@
 
 	:global(.pptx-svelte-ai-tool-ic) {
 		flex-shrink: 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	:global(.pptx-svelte-ai-tool-ic.is-error) {
-		color: var(--pptx-destructive, #fca5a5);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.pptx-svelte-ai-tool-label {
@@ -109,11 +109,11 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-tool-label.is-error {
-		color: var(--pptx-destructive, #fca5a5);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.pptx-svelte-ai-tool-chip {
@@ -123,26 +123,26 @@
 		margin-left: auto;
 		padding: 1px 6px;
 		border-radius: 3px;
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 	}
 
 	.pptx-svelte-ai-tool-chip.is-done {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 15%, transparent);
-		color: var(--pptx-primary, #a5b4fc);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 15%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-tool-chip.is-error {
-		background: color-mix(in srgb, var(--pptx-destructive, #ef4444) 15%, transparent);
-		color: var(--pptx-destructive, #fca5a5);
+		background: color-mix(in srgb, var(--pptx-destructive, var(--office-danger, #b91c1c)) 15%, transparent);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.pptx-svelte-ai-tool-error {
 		margin-top: 4px;
 		padding-left: 20px;
 		font-size: 11px;
-		color: var(--pptx-destructive, #fca5a5);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	.pptx-svelte-ai-tool-details {
@@ -154,11 +154,11 @@
 		cursor: pointer;
 		list-style: none;
 		font-size: 10px;
-		color: color-mix(in srgb, var(--pptx-muted-foreground, #94a3b8) 70%, transparent);
+		color: color-mix(in srgb, var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)) 70%, transparent);
 	}
 
 	.pptx-svelte-ai-tool-details summary:hover {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-tool-details summary::-webkit-details-marker {
@@ -169,7 +169,7 @@
 		margin-top: 2px;
 		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 		font-size: 10px;
-		color: color-mix(in srgb, var(--pptx-muted-foreground, #94a3b8) 80%, transparent);
+		color: color-mix(in srgb, var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)) 80%, transparent);
 		word-break: break-word;
 	}
 

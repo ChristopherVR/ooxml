@@ -7,7 +7,7 @@ export const PRESENTER_CONSOLE_STYLES = `
 .strip {
 	box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: ${m.stripGap}px;
 	padding: ${m.stripPaddingY}px ${m.stripPaddingX}px; border-bottom: 1px solid var(--pptx-border, #33334d);
-	background: var(--pptx-card, #1e1e2e); color: var(--pptx-foreground, #e2e8f0); font: 12px/16px system-ui, sans-serif;
+	background: var(--pptx-card, #1e1e2e); color: var(--pptx-foreground, #e2e8f0); font: 12px/16px var(--pptx-font,var(--office-font,system-ui,sans-serif));
 }
 svg { flex: none; width: ${m.controlIconSize}px; height: ${m.controlIconSize}px; }
 button {

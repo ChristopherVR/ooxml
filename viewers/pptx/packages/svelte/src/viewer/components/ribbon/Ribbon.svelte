@@ -205,9 +205,9 @@
 	.pptx-svelte-ribbon {
 		display: flex;
 		flex-direction: column;
-		background: color-mix(in srgb, var(--pptx-secondary, #1e1e2e) 50%, transparent);
-		color: var(--pptx-card-foreground, #e2e8f0);
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		background: color-mix(in srgb, var(--pptx-secondary, var(--office-surface, #f3f4f6)) 50%, transparent);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-family: system-ui, sans-serif;
 		flex: none;
 	}
@@ -219,14 +219,14 @@
 	.pptx-svelte-ribbon :global(select.pptx-svelte-ribbon-select) {
 		height: 24px;
 		padding: 0 18px 0 8px;
-		border: 1px solid color-mix(in srgb, var(--pptx-border, #33334d) 60%, transparent);
+		border: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent);
 		border-radius: 4px;
-		background-color: color-mix(in srgb, var(--pptx-background, #11111b) 60%, transparent);
+		background-color: color-mix(in srgb, var(--pptx-background, var(--office-background, #ffffff)) 60%, transparent);
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 		background-repeat: no-repeat;
 		background-position: right 5px center;
 		background-size: 9px;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 		font-size: 11px;
 		line-height: 1;
@@ -236,7 +236,7 @@
 	}
 
 	.pptx-svelte-ribbon :global(select.pptx-svelte-ribbon-select:hover:not(:disabled)) {
-		background-color: color-mix(in srgb, var(--pptx-accent, #33334d) 40%, transparent);
+		background-color: color-mix(in srgb, var(--pptx-accent, var(--office-selected, #e5e7eb)) 40%, transparent);
 	}
 
 	.pptx-svelte-ribbon :global(select.pptx-svelte-ribbon-select:disabled) {
@@ -245,8 +245,8 @@
 	}
 
 	.pptx-svelte-ribbon :global(select.pptx-svelte-ribbon-select option) {
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 	}
 
 	@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {

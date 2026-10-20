@@ -116,12 +116,12 @@
 <style>
 	.pptx-svelte-animp-subhead {
 		padding-top: 6px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-size: 11px;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	label {
@@ -131,7 +131,7 @@
 	}
 
 	label > span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	select,
@@ -140,9 +140,9 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		font-size: 11px;

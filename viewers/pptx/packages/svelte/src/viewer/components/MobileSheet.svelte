@@ -67,8 +67,8 @@
 <style>
 	.pptx-svelte-mobile-sheet-host { position: absolute; z-index: 69; inset: 0 0 56px; display: flex; align-items: end; }
 	.pptx-svelte-mobile-sheet-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(0 0 0 / 40%); }
-	.pptx-svelte-mobile-sheet { position: relative; display: flex; flex-direction: column; width: 100%; max-height: min(70dvh, 620px); border: 1px solid var(--pptx-border, #33334d); border-bottom: 0; border-radius: 16px 16px 0 0; background: var(--pptx-background, #11111b); box-shadow: 0 -12px 36px rgb(0 0 0 / 35%); color: var(--pptx-foreground, #e2e8f0); transition: transform 150ms ease-out; }
-	.pptx-svelte-mobile-sheet header { position:relative; display: grid; justify-items: center; gap: 5px; padding: 8px 16px 10px; border-bottom: 1px solid var(--pptx-border, #33334d); cursor: grab; touch-action: none; }
+	.pptx-svelte-mobile-sheet { position: relative; display: flex; flex-direction: column; width: 100%; max-height: min(70dvh, 620px); border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-bottom: 0; border-radius: 16px 16px 0 0; background: var(--pptx-background, var(--office-background, #ffffff)); box-shadow: 0 -12px 36px rgb(0 0 0 / 35%); color: var(--pptx-foreground, var(--office-foreground, #1f2937)); transition: transform 150ms ease-out; }
+	.pptx-svelte-mobile-sheet header { position:relative; display: grid; justify-items: center; gap: 5px; padding: 8px 16px 10px; border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); cursor: grab; touch-action: none; }
 	.pptx-svelte-mobile-sheet header button { position:absolute; top:8px; right:12px; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:0; border-radius:4px; background:transparent; color:inherit; font-size:20px; cursor:pointer; }
 	/* Touch target: matches MIN_TOUCH_TARGET_PX (44) from pptx-viewer-shared's
 	   render/responsive module. This is the shared mobile bottom-sheet shell
@@ -79,7 +79,7 @@
 	@media (max-width: 767px) {
 		.pptx-svelte-mobile-sheet header button { width: 44px !important; height: 44px !important; }
 	}
-	.pptx-svelte-mobile-sheet header button:hover { background:var(--pptx-accent,#33334d); }
-	.pptx-svelte-mobile-sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--pptx-muted-foreground, #94a3b8); opacity: .45; }
+	.pptx-svelte-mobile-sheet header button:hover { background:var(--pptx-accent, var(--office-selected, #e5e7eb)); }
+	.pptx-svelte-mobile-sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); opacity: .45; }
 	.pptx-svelte-mobile-sheet-body { overflow: auto; padding: 12px; overscroll-behavior: contain; }
 </style>

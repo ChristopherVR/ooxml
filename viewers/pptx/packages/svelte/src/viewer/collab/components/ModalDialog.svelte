@@ -90,10 +90,10 @@
 		width: min(92vw, 420px);
 		max-height: 88vh;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 6px);
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 6px);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 		overscroll-behavior: contain;
 		font-family: system-ui, sans-serif;
@@ -105,7 +105,7 @@
 		justify-content: space-between;
 		gap: 12px;
 		padding: 12px 16px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-modal-title {
@@ -122,17 +122,17 @@
 		width: 24px;
 		height: 24px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 18px;
 		line-height: 1;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-modal-close:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-modal-body {
@@ -145,7 +145,7 @@
 		justify-content: flex-end;
 		gap: 8px;
 		padding: 12px 16px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	/*
@@ -168,7 +168,7 @@
 			width: 100%;
 			max-width: none;
 			max-height: 88dvh;
-			border-radius: calc(var(--pptx-radius, 6px) + 6px) calc(var(--pptx-radius, 6px) + 6px) 0 0;
+			border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 6px) calc(var(--pptx-radius, var(--office-radius, 4px)) + 6px) 0 0;
 			border-right: 0;
 			border-bottom: 0;
 			border-left: 0;

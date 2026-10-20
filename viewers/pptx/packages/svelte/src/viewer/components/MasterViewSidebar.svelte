@@ -126,21 +126,21 @@
 </aside>
 
 <style>
-	.sidebar { display:flex; width:224px; min-height:0; flex-direction:column; border-right:1px solid var(--pptx-border,#33334d); background:var(--pptx-card,#1e1e2e); }
+	.sidebar { display:flex; width:224px; min-height:0; flex-direction:column; border-right:1px solid var(--pptx-border, var(--office-border, #d1d5db)); background:var(--pptx-card, var(--office-surface, #f3f4f6)); }
 	header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; }
-	header strong { color:var(--pptx-muted-foreground,#a5a5b5); font-size:11px; letter-spacing:.04em; text-transform:uppercase; }
+	header strong { color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:11px; letter-spacing:.04em; text-transform:uppercase; }
 	header button { border:0; background:transparent; color:inherit; font-size:20px; cursor:pointer; }
-	.tabs { display:flex; padding:0 4px; border-bottom:1px solid var(--pptx-border,#33334d); }
-	.tabs button { flex:1; padding:6px 3px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--pptx-muted-foreground,#a5a5b5); font-size:10px; cursor:pointer; }
+	.tabs { display:flex; padding:0 4px; border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db)); }
+	.tabs button { flex:1; padding:6px 3px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:10px; cursor:pointer; }
 	.tabs button.active { border-bottom-color:#f59e0b; color:#f59e0b; }
-	.tabs button:focus-visible, header button:focus-visible, .master-item:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); outline-offset:-2px; }
+	.tabs button:focus-visible, header button:focus-visible, .master-item:focus-visible { outline:2px solid var(--pptx-ring, var(--office-ring, #2563eb)); outline-offset:-2px; }
 	.body { flex:1; min-height:0; overflow-y:auto; padding:6px; }
-	.bg-card { display:flex; flex-direction:column; gap:6px; margin:0 0 8px; padding:8px; border:1px solid var(--pptx-border,#33334d); border-radius:6px; font:11px system-ui,sans-serif; color:var(--pptx-muted-foreground,#a5a5b5); }
-	.bg-card .swatch { width:100%; height:30px; border:1px solid var(--pptx-border,#33334d); border-radius:5px; background:transparent; cursor:pointer; }
+	.bg-card { display:flex; flex-direction:column; gap:6px; margin:0 0 8px; padding:8px; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:6px; font:11px system-ui,sans-serif; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
+	.bg-card .swatch { width:100%; height:30px; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:5px; background:transparent; cursor:pointer; }
 	.master-item { display:flex; width:100%; flex-direction:column; gap:5px; margin:0 0 8px; padding:5px; border:2px solid transparent; border-radius:6px; background:transparent; color:inherit; text-align:left; cursor:pointer; font:10px system-ui,sans-serif; }
 	.master-item.layout { width:calc(100% - 14px); margin-left:14px; }
-	.master-item:hover { background:var(--pptx-accent,#33334d); }
-	.master-item.active { border-color:var(--pptx-primary,#6366f1); background:color-mix(in srgb,var(--pptx-primary,#6366f1) 12%,transparent); }
+	.master-item:hover { background:var(--pptx-accent, var(--office-selected, #e5e7eb)); }
+	.master-item.active { border-color:var(--pptx-primary, var(--office-accent, #2563eb)); background:color-mix(in srgb,var(--pptx-primary, var(--office-accent, #2563eb)) 12%,transparent); }
 	.thumb { position:relative; display:block; overflow:hidden; max-width:100%; background:white; pointer-events:none; }
-	p { color:var(--pptx-muted-foreground,#a5a5b5); font-size:12px; }
+	p { color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:12px; }
 </style>

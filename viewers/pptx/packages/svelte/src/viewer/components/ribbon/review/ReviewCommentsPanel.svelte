@@ -257,30 +257,30 @@
 </section>
 
 <style>
-	.pptx-svelte-comments { display: grid; gap: 8px; width: min(340px, 100%); padding-left: 12px; border-left: 1px solid var(--pptx-border, #33334d); }
+	.pptx-svelte-comments { display: grid; gap: 8px; width: min(340px, 100%); padding-left: 12px; border-left: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); }
 	.pptx-svelte-comments-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-	.pptx-svelte-comments-eyebrow { display: block; color: var(--pptx-muted-foreground, #94a3b8); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+	.pptx-svelte-comments-eyebrow { display: block; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 	.pptx-svelte-comments h3 { margin: 1px 0 0; font-size: 13px; }
-	.pptx-svelte-comments-count { display: grid; place-items: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--pptx-muted, #2a2a3d); font-size: 11px; font-weight: 700; }
-	.pptx-svelte-comments-target, .pptx-svelte-comments-empty { margin: 0; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; }
+	.pptx-svelte-comments-count { display: grid; place-items: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--pptx-muted, var(--office-surface, #f3f4f6)); font-size: 11px; font-weight: 700; }
+	.pptx-svelte-comments-target, .pptx-svelte-comments-empty { margin: 0; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 11px; }
 	.pptx-svelte-comments-compose { display: grid; gap: 5px; }
 	.pptx-svelte-comment-composer { position: relative; }
-	.pptx-svelte-comments textarea { box-sizing: border-box; width: 100%; resize: vertical; padding: 6px 7px; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-muted, #2a2a3d); color: inherit; font: inherit; font-size: 12px; }
-	.pptx-svelte-comments-compose button { justify-self: end; padding: 4px 8px; border: 0; border-radius: var(--pptx-radius, 6px); background: var(--pptx-primary, #6366f1); color: var(--pptx-primary-foreground, white); cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; }
+	.pptx-svelte-comments textarea { box-sizing: border-box; width: 100%; resize: vertical; padding: 6px 7px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-muted, var(--office-surface, #f3f4f6)); color: inherit; font: inherit; font-size: 12px; }
+	.pptx-svelte-comments-compose button { justify-self: end; padding: 4px 8px; border: 0; border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-primary, var(--office-accent, #2563eb)); color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff)); cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; }
 	.pptx-svelte-comments-compose button:disabled { cursor: default; opacity: .45; }
 	.pptx-svelte-comments-list { display: grid; gap: 5px; max-height: 230px; overflow-y: auto; }
-	.pptx-svelte-comment-card { display: grid; gap: 5px; padding: 7px; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-muted, #2a2a3d); }
+	.pptx-svelte-comment-card { display: grid; gap: 5px; padding: 7px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-muted, var(--office-surface, #f3f4f6)); }
 	.pptx-svelte-comment-card.resolved { opacity: .67; }
 	.pptx-svelte-comment-meta, .pptx-svelte-comment-actions { display: flex; align-items: center; gap: 6px; }
 	.pptx-svelte-comment-meta { justify-content: space-between; font-size: 11px; }
 	.pptx-svelte-comment-meta span { color: #9be9a8; font-size: 10px; font-weight: 600; }
 	.pptx-svelte-comment-card p { margin: 0; font-size: 11.5px; line-height: 1.35; white-space: pre-wrap; }
-	.pptx-svelte-comment-actions button { padding: 0; border: 0; background: transparent; color: var(--pptx-primary, #818cf8); cursor: pointer; font: inherit; font-size: 10.5px; }
+	.pptx-svelte-comment-actions button { padding: 0; border: 0; background: transparent; color: var(--pptx-primary, var(--office-accent, #2563eb)); cursor: pointer; font: inherit; font-size: 10.5px; }
 	.pptx-svelte-comment-actions button:last-child { color: #fb7185; }
 	.pptx-svelte-comment-reply-compose { display: grid; gap: 5px; }
 	.pptx-svelte-comment-reply-buttons { display: flex; justify-content: flex-end; gap: 6px; }
-	.pptx-svelte-comment-reply-cancel { padding: 3px 7px; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: 10.5px; }
-	.pptx-svelte-comment-reply-submit { padding: 3px 8px; border: 0; border-radius: var(--pptx-radius, 6px); background: var(--pptx-primary, #6366f1); color: var(--pptx-primary-foreground, white); cursor: pointer; font: inherit; font-size: 10.5px; font-weight: 600; }
+	.pptx-svelte-comment-reply-cancel { padding: 3px 7px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: 10.5px; }
+	.pptx-svelte-comment-reply-submit { padding: 3px 8px; border: 0; border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-primary, var(--office-accent, #2563eb)); color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff)); cursor: pointer; font: inherit; font-size: 10.5px; font-weight: 600; }
 	.pptx-svelte-comment-reply-submit:disabled { cursor: default; opacity: .45; }
 
 	/*

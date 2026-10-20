@@ -46,5 +46,5 @@
 	.top-right { top:0; right:0; border-bottom-width:1px; border-left-width:1px; }
 	.bottom-left { bottom:0; left:0; border-top-width:1px; border-right-width:1px; }
 	.bottom-right { right:0; bottom:0; border-top-width:1px; border-left-width:1px; }
-	.empty { margin:auto; color:var(--pptx-muted-foreground,#a5a5b5); font-size:14px; }
+	.empty { margin:auto; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:14px; }
 </style>

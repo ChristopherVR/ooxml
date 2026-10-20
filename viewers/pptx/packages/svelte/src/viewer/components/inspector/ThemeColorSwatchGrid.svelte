@@ -80,7 +80,7 @@
 
 	.pptx-svelte-theme-swatch-grid-heading {
 		font-size: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-theme-swatch-grid-rows {
@@ -103,7 +103,7 @@
 	.pptx-svelte-theme-swatch-grid-swatch {
 		padding: 0;
 		border-radius: 2px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		cursor: pointer;
 	}
 
@@ -117,7 +117,7 @@
 	}
 
 	.pptx-svelte-theme-swatch-grid-swatch-selected {
-		outline: 2px solid var(--pptx-primary, #6366f1);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: 1px;
 	}
 </style>

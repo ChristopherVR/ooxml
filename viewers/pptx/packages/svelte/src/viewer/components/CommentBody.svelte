@@ -24,8 +24,8 @@
 <style>
 	.pptx-comment-mention {
 		border-radius: 3px;
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 15%, transparent);
-		color: var(--pptx-primary, #6366f1);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 15%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 		font-weight: 600;
 		padding: 0 2px;
 	}

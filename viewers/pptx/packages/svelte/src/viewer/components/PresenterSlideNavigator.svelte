@@ -84,7 +84,7 @@
 		inset: 0;
 		display: flex;
 		flex-direction: column;
-		background: var(--pptx-card, #020617);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
 	}
 
 	header {
@@ -92,7 +92,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 22px;
-		border-bottom: 1px solid var(--pptx-border, #334155);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	h2 {
@@ -104,7 +104,7 @@
 		border: 0;
 		border-radius: var(--pptx-pv-control-radius);
 		padding: 7px 12px;
-		background: var(--pptx-secondary, #334155);
+		background: var(--pptx-secondary, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 	}
@@ -132,7 +132,7 @@
 	}
 
 	main button.active {
-		outline: 2px solid var(--pptx-primary, #38bdf8);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	main button.hidden {

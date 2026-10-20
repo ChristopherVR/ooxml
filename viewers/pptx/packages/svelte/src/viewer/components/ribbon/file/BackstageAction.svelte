@@ -15,9 +15,9 @@
 </button>
 
 <style>
-	button{display:flex;min-height:112px;gap:16px;padding:20px;border:1px solid var(--pptx-border,#ddd);background:var(--pptx-card,#fff);text-align:left;color:var(--pptx-card-foreground,#242424)}
-	button:hover{border-color:var(--pptx-primary,#c43e1c);box-shadow:0 5px 15px #0002}
-	b{display:grid;width:40px;height:40px;flex:none;place-items:center;background:var(--pptx-accent,#fbe9e3);color:var(--pptx-primary,#c43e1c)}
+	button{display:flex;min-height:112px;gap:16px;padding:20px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));background:var(--pptx-card, var(--office-surface, #f3f4f6));text-align:left;color:var(--pptx-card-foreground, var(--office-foreground, #1f2937))}
+	button:hover{border-color:var(--pptx-primary, var(--office-accent, #2563eb));box-shadow:0 5px 15px #0002}
+	b{display:grid;width:40px;height:40px;flex:none;place-items:center;background:var(--pptx-accent, var(--office-selected, #e5e7eb));color:var(--pptx-primary, var(--office-accent, #2563eb))}
 	strong,small{display:block;font-size:15px}
-	small{margin-top:7px;color:var(--pptx-muted-foreground,#666);font-size:12px;line-height:1.5}
+	small{margin-top:7px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:12px;line-height:1.5}
 </style>

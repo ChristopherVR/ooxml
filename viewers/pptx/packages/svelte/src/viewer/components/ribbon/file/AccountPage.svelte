@@ -147,9 +147,9 @@
 
 	.card {
 		padding: 24px 28px;
-		border: 1px solid var(--pptx-border, #ddd);
-		background: var(--pptx-card, #fff);
-		color: var(--pptx-card-foreground, #242424);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	h2 {
@@ -163,12 +163,12 @@
 	}
 
 	.muted {
-		color: var(--pptx-muted-foreground, #666);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 12px;
 	}
 
 	.notice {
-		color: var(--pptx-primary, #c43e1c);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 		font-size: 12px;
 	}
 
@@ -197,20 +197,20 @@
 		flex-direction: column;
 		gap: 4px;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #666);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.name-field input {
 		height: 36px;
 		padding: 0 12px;
-		border: 1px solid var(--pptx-input, #888);
-		background: var(--pptx-card, #fff);
-		color: var(--pptx-card-foreground, #242424);
+		border: 1px solid var(--pptx-input, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-size: 13px;
 	}
 
 	.name-field input:focus {
-		border-color: var(--pptx-ring, #c43e1c);
+		border-color: var(--pptx-ring, var(--office-ring, #2563eb));
 		outline: none;
 	}
 
@@ -218,7 +218,7 @@
 		display: block;
 		margin-bottom: 8px;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #666);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.swatch-row {
@@ -235,22 +235,22 @@
 	}
 
 	.swatch-row button.active {
-		border-color: var(--pptx-foreground, #242424);
+		border-color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.secondary,
 	.primary {
 		padding: 8px 16px;
-		border: 1px solid var(--pptx-border, #ddd);
-		background: var(--pptx-secondary, #f5eee9);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-secondary, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font-size: 12px;
 	}
 
 	.primary {
 		border: 0;
-		background: var(--pptx-primary, #c43e1c);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 		font-weight: 600;
 	}
 </style>

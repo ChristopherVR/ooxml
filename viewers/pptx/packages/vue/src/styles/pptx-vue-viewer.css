@@ -63,9 +63,9 @@
 	   scrolling (side panels, canvas area) keep working via their own
 	   `overflow-*-auto` rules. */
 	overflow: hidden;
-	background: var(--pptx-background, #030712);
-	color: var(--pptx-foreground, #f3f4f6);
-	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	background: var(--pptx-background, var(--office-background, #ffffff));
+	color: var(--pptx-foreground, var(--office-foreground, #1f2937));
+	font-family: var(--pptx-font, var(--office-font, system-ui, sans-serif));
 }
 
 /* ── States ─────────────────────────────────────────────────────────── */
@@ -85,8 +85,8 @@
 	overflow: auto;
 	padding: 0.75rem;
 	border-radius: 0.5rem;
-	background: var(--pptx-card, #111827);
-	color: var(--pptx-muted-foreground, #9ca3af);
+	background: var(--pptx-card, var(--office-surface, #f3f4f6));
+	color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	font-size: 0.8rem;
 	white-space: pre-wrap;
 }
@@ -94,8 +94,8 @@
 .pptx-vue-spinner {
 	width: 2rem;
 	height: 2rem;
-	border: 3px solid var(--pptx-border, #374151);
-	border-top-color: var(--pptx-primary, #6366f1);
+	border: 3px solid var(--pptx-border, var(--office-border, #d1d5db));
+	border-top-color: var(--pptx-primary, var(--office-accent, #2563eb));
 	border-radius: 50%;
 	animation: pptx-vue-spin 0.8s linear infinite;
 }
@@ -113,8 +113,8 @@
 	justify-content: space-between;
 	gap: 1rem;
 	padding: 0.5rem 0.75rem;
-	border-bottom: 1px solid var(--pptx-border, #374151);
-	background: var(--pptx-card, #111827);
+	border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+	background: var(--pptx-card, var(--office-surface, #f3f4f6));
 }
 
 .pptx-vue-nav,
@@ -128,17 +128,17 @@
 	min-width: 2rem;
 	height: 2rem;
 	padding: 0 0.5rem;
-	border: 1px solid var(--pptx-border, #374151);
+	border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	border-radius: 0.375rem;
 	background: transparent;
-	color: var(--pptx-foreground, #f3f4f6);
+	color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	font-size: 1rem;
 	line-height: 1;
 	cursor: pointer;
 }
 
 .pptx-vue-toolbar button:hover:not(:disabled) {
-	border-color: var(--pptx-primary, #6366f1);
+	border-color: var(--pptx-primary, var(--office-accent, #2563eb));
 }
 
 .pptx-vue-toolbar button:disabled {
@@ -168,8 +168,8 @@
 	width: 11.25rem;
 	padding: 0.75rem;
 	overflow-y: auto;
-	border-right: 1px solid var(--pptx-border, #374151);
-	background: var(--pptx-card, #111827);
+	border-right: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+	background: var(--pptx-card, var(--office-surface, #f3f4f6));
 }
 
 .pptx-vue-thumb {
@@ -177,14 +177,14 @@
 	width: 100%;
 	padding: 0;
 	overflow: hidden;
-	border: 2px solid var(--pptx-border, #374151);
+	border: 2px solid var(--pptx-border, var(--office-border, #d1d5db));
 	border-radius: 0.375rem;
 	background: #ffffff;
 	cursor: pointer;
 }
 
 .pptx-vue-thumb.is-active {
-	border-color: var(--pptx-primary, #6366f1);
+	border-color: var(--pptx-primary, var(--office-accent, #2563eb));
 }
 
 /* Mini slide preview fills the button; non-interactive. */
@@ -213,7 +213,7 @@
 	overflow: auto;
 	/* Theme-aware canvas backdrop (mirrors React's `<main class="bg-background">`)
 	   so non-dark themes (e.g. Warm Sepia) don't leave a hardcoded dark slate. */
-	background: var(--pptx-background, #030712);
+	background: var(--pptx-background, var(--office-background, #ffffff));
 }
 
 /*

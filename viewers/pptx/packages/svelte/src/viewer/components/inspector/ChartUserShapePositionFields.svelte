@@ -241,9 +241,9 @@
 		flex: 1;
 		min-width: 0;
 		height: 22px;
-		border: 1px solid var(--pptx-border);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 	}
 	.toggle {

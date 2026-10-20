@@ -1,3 +1,5 @@
+import { installOfficeUiTheme } from '../../theme';
+import { withOfficeThemeCss } from '../theme/office-css';
 import { definePptxSlideClipboard } from './slide-clipboard';
 export { slideClipboardLabels } from './slide-clipboard';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
@@ -203,6 +205,7 @@ export function registerPptxWebControls(): void {
 	if (typeof window === 'undefined' || !window.customElements) {
 		return;
 	}
+	installOfficeUiTheme(document);
 	const registry = window.customElements;
 	assertWebControlContract(
 		registry,
@@ -211,7 +214,10 @@ export function registerPptxWebControls(): void {
 	if (!document.getElementById('pptx-ui-control-hosts')) {
 		const style = document.createElement('style');
 		style.id = 'pptx-ui-control-hosts';
-		style.textContent = HOST_STYLES + OFFICE_TOKEN_BRIDGE;
+		style.textContent = withOfficeThemeCss(
+			HOST_STYLES + OFFICE_TOKEN_BRIDGE,
+			controls.map(([name]) => name).join(','),
+		);
 		document.head.append(style);
 	}
 	for (const [name, define] of controls) {

@@ -155,6 +155,6 @@
 </pptx-ui-options-dialog>
 
 <style>
-	.hint { margin: 0 0 8px; color: var(--pptx-muted-foreground, #94a3b8); font-size: 11px; }
-	button.ghost { border: 1px solid var(--pptx-border, #3f3f52); border-radius: 6px; padding: 6px 14px; background: transparent; color: var(--pptx-foreground, #e2e8f0); font-size: 12px; cursor: pointer; }
+	.hint { margin: 0 0 8px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size: 11px; }
+	button.ghost { border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 6px; padding: 6px 14px; background: transparent; color: var(--pptx-foreground, var(--office-foreground, #1f2937)); font-size: 12px; cursor: pointer; }
 </style>

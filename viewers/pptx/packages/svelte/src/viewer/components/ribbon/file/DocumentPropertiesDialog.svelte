@@ -99,14 +99,14 @@
 <style>
 	.pptx-svelte-props-backdrop { position:fixed; inset:0; z-index:80; display:grid; place-items:center; background:#0009; }
 	.pptx-svelte-props-scrim { position:absolute; inset:0; width:100%; height:100%; border:0; background:transparent; }
-	.pptx-svelte-props { position:relative; width:min(680px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; border:1px solid var(--pptx-border,#3f3f52); border-radius:10px; background:var(--pptx-card,#1e1e2e); color:var(--pptx-card-foreground,#e2e8f0); box-shadow:0 24px 80px #0008; }
-	header,footer { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--pptx-border,#3f3f52); }
+	.pptx-svelte-props { position:relative; width:min(680px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:10px; background:var(--pptx-card, var(--office-surface, #f3f4f6)); color:var(--pptx-card-foreground, var(--office-foreground, #1f2937)); box-shadow:0 24px 80px #0008; }
+	header,footer { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db)); }
 	header h2 { margin:0; font-size:16px; } header button { font-size:20px; }
-	button,input,select { border:1px solid var(--pptx-border,#3f3f52); border-radius:5px; background:var(--pptx-muted,#2a2a3d); color:inherit; padding:6px 8px; }
-	nav { display:flex; gap:4px; padding:8px 16px 0; } nav button.active { background:var(--pptx-primary,#c43b32); color:#fff; }
+	button,input,select { border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:5px; background:var(--pptx-muted, var(--office-surface, #f3f4f6)); color:inherit; padding:6px 8px; }
+	nav { display:flex; gap:4px; padding:8px 16px 0; } nav button.active { background:var(--pptx-primary, var(--office-accent, #2563eb)); color:#fff; }
 	.pptx-svelte-props-body { min-height:310px; padding:16px; }
-	.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; } label { display:grid; gap:4px; font-size:11px; color:var(--pptx-muted-foreground,#94a3b8); } label input { color:var(--pptx-foreground,#e2e8f0); }
-	dl { display:grid; grid-template-columns:1fr auto; gap:8px 24px; margin:0; } dt { color:var(--pptx-muted-foreground,#94a3b8); } dd { margin:0; }
+	.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; } label { display:grid; gap:4px; font-size:11px; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); } label input { color:var(--pptx-foreground, var(--office-foreground, #1f2937)); }
+	dl { display:grid; grid-template-columns:1fr auto; gap:8px 24px; margin:0; } dt { color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); } dd { margin:0; }
 	.custom-list { display:grid; gap:8px; } .custom-row { display:grid; grid-template-columns:1fr 1fr 120px 34px; gap:6px; }
-	footer { justify-content:flex-end; gap:8px; border-top:1px solid var(--pptx-border,#3f3f52); border-bottom:0; } 	@media (max-width:600px) { .grid { grid-template-columns:1fr; } .custom-row { grid-template-columns:1fr; } }
+	footer { justify-content:flex-end; gap:8px; border-top:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-bottom:0; } 	@media (max-width:600px) { .grid { grid-template-columns:1fr; } .custom-row { grid-template-columns:1fr; } }
 </style>

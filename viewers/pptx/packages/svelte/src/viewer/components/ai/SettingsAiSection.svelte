@@ -118,34 +118,34 @@
 		align-items: flex-start;
 		gap: 8px;
 		padding: 12px;
-		border: 1px solid color-mix(in srgb, var(--pptx-border, #3f3f52) 60%, transparent);
+		border: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent);
 		border-radius: 8px;
-		background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 30%, transparent);
+		background: color-mix(in srgb, var(--pptx-muted, var(--office-surface, #f3f4f6)) 30%, transparent);
 	}
 
 	:global(.pptx-svelte-ai-settings-ic) {
 		margin-top: 2px;
 		flex-shrink: 0;
-		color: var(--pptx-primary, #c43b32);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-settings-title {
 		margin: 0;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-settings-hint {
 		margin: 4px 0 0;
 		font-size: 11.5px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-settings-count {
 		margin: 0;
 		font-size: 11.5px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-settings-detailed {
@@ -153,7 +153,7 @@
 		align-items: center;
 		gap: 8px;
 		font-size: 12px;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-settings-actions {
@@ -167,17 +167,17 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 12px;
-		border: 1px solid var(--pptx-border, #3f3f52);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
 		background: transparent;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 		font-size: 12px;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-ai-settings-actions button:hover:not(:disabled) {
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-ai-settings-actions button:disabled {
@@ -188,6 +188,6 @@
 	.pptx-svelte-ai-settings-done {
 		margin: 0;
 		font-size: 11.5px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 </style>
