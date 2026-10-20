@@ -82,8 +82,13 @@ export function conflictingMorphNames(a: PptxElement, b: PptxElement): boolean {
 
 /** The media part an image/picture element paints (path, else data URL). */
 export function mediaIdentity(el: PptxElement): string | undefined {
-	const props = el as { imagePath?: string; imageData?: string };
-	return props.imagePath ?? props.imageData ?? undefined;
+	const props = el as {
+		imagePath?: string;
+		imageData?: string;
+		svgPath?: string;
+		svgData?: string;
+	};
+	return props.imagePath ?? props.imageData ?? props.svgPath ?? props.svgData ?? undefined;
 }
 
 /** Euclidean distance between two elements' top-left corners (slide space). */
@@ -162,6 +167,14 @@ export function appearanceSignature(el: PptxElement): string {
 export function proximityAccepts(a: PptxElement, b: PptxElement): boolean {
 	if (a.type !== b.type || differentText(a, b) || conflictingMorphNames(a, b)) {
 		return false;
+	}
+	// Unrelated artwork can occupy the same box. A wheel SVG near an incoming animated
+	// picture must not lend it its rotation (#105). Replaced pictures with explicit
+	// identity are handled by the earlier name, creation-id and native-id passes.
+	if (a.type === 'picture' || a.type === 'image') {
+		const fromMedia = mediaIdentity(a);
+		const toMedia = mediaIdentity(b);
+		if (fromMedia && toMedia && fromMedia !== toMedia) return false;
 	}
 	const ratio = (p: number, q: number): number => Math.max(p, q, 1) / Math.max(Math.min(p, q), 1);
 	if (
