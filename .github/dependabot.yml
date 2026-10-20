@@ -11,6 +11,10 @@ version: 2
 updates:
   - package-ecosystem: 'bun'
     directory: '/'
+    # This fixture deliberately exercises React 18 while the main package uses React 19.
+    # Keep its peer set maintained by hand so grouped updates cannot upgrade its major.
+    exclude-paths:
+      - 'viewers/pptx/packages/react-compat/**'
     schedule:
       interval: 'weekly'
       day: 'monday'
