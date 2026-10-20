@@ -78,6 +78,10 @@ own `AGENTS.md` (`viewers/<name>/AGENTS.md`, read it before working there) has t
   adapters, components and their tests in `viewers/<product>/packages/<framework>/src`, including
   React. Shared composition lifecycle plumbing belongs in `packages/bindings`; it must not import
   framework runtimes. Each native adapter reuses the same document engine and flat control props.
+- **UI themes share the `--office-*` contract.** Canvas chrome and standalone controls inherit the
+  host's scoped `data-office-theme` and CSS tokens. Preserve product-prefixed overrides through
+  compatibility fallbacks, without masking inherited tokens or creating custom-property cycles.
+  Theme changes must preserve mounted editor state and never change document styles or content.
 - **Every English UI string needs every locale.** A key added to a viewer's English dictionary needs
   an entry in each locale; the locale tests enforce it.
 - **Browser tests that crash hosted runners** are tagged `@local-only` and excluded in CI; run them

@@ -126,6 +126,48 @@ Importing an entry never touches the DOM (SSR-safe). Elements are defined by the
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
 with an incompatible build of this package.
 
+## One theme for composed editors
+
+Use the shared `--office-*` CSS tokens on a common ancestor of the canvas and its standalone
+controls. `data-office-theme="light"`, `"dark"`, or `"auto"` works on the document root or a
+scoped container, so two editors on the same page can use different modes. `auto` follows the
+system colour scheme. Nested mode scopes retain inherited typography, spacing and radii.
+
+```html
+<section class="office-scope" data-office-theme="dark">
+	<!-- Mount the framework's standalone toolbar, canvas and other controls here. -->
+</section>
+```
+
+```css
+.office-scope {
+	--office-accent: #0d9488;
+	--office-accent-foreground: #ffffff;
+	--office-ring: #0f766e;
+	--office-font: 'Inter', system-ui, sans-serif;
+	--office-radius: 6px;
+}
+```
+
+Change the attribute or CSS tokens through your framework's normal bindings. Theme changes do
+not require remounting the editor. The semantic palette includes `--office-background` (fields
+and application background), `--office-surface` (toolbar and panel surfaces), `--office-foreground`,
+`--office-muted-foreground`, `--office-border`, `--office-selected`, and the accent and focus tokens
+above. Document paper, cell fills and slide artwork remain document content.
+
+Library-supplied native building blocks opt into `BUILDING_BLOCKS_CSS` through
+`prepareOfficeUiBlock(element, kind, product)`, exported by `ooxml-ui/theme`. It installs the shared
+theme in the element's owner document and marks only that control root with `data-office-block`
+and `data-office-product`. Hosts' own unmarked controls are unaffected. Shadow-root controls
+inherit the same tokens. The installed stylesheet is idempotent and supports forced colours and
+touch targets.
+
+Existing product overrides (`--dve-*`, `--xve-*`, `--vv-*`, `--pptx-*`, and legacy theme options)
+remain compatibility inputs. An explicit product override wins for that product. For a uniform
+composition, put the shared tokens and mode on the common ancestor instead of configuring only
+the canvas: a canvas's local theme cannot change the CSS inherited by a sibling toolbar. This UI
+theme contract is separate from an Office document's embedded theme.
+
 ## Features: elements
 
 `office-ui-menu-button` accepts `submenu` when nested inside another menu.
