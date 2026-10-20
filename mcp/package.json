@@ -35,7 +35,7 @@
 		"ooxml-core": "*"
 	},
 	"devDependencies": {
-		"zod": "^4.6.5"
+		"zod": "^4.6.7"
 	},
 	"peerDependencies": {
 		"docx-viewer-mcp": "^0.1.10",

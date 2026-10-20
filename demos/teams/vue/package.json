@@ -9,6 +9,6 @@
 	},
 	"dependencies": {
 		"openteams-vue-viewer": "workspace:*",
-		"vue": "^3.5.43"
+		"vue": "^3.5.44"
 	}
 }

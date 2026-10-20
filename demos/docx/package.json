@@ -10,13 +10,13 @@
 		"@angular/core": "^22.2.3",
 		"@angular/platform-browser": "^22.2.3",
 		"ooxml-core": "workspace:*",
-		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1",
 		"rxjs": "^7.8.2",
 		"solid-js": "^1.9.17",
 		"svelte": "^5.57.2",
 		"tailwindcss": "^4.3.3",
-		"vue": "^3.5.43"
+		"vue": "^3.5.44"
 	},
 	"devDependencies": {
 		"@types/node": "^26.6.5",
