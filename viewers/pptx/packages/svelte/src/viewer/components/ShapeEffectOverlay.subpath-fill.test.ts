@@ -35,6 +35,30 @@ function render(element: PptxElement): HTMLElement {
 	return target;
 }
 
+it('renders arrowheads on open freeforms without clipping them', () => {
+	const element = {
+		id: 'freeform',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 100,
+		pathData: 'M 0 100 L 100 0',
+		pathWidth: 100,
+		pathHeight: 100,
+		shapeStyle: {
+			fillMode: 'none',
+			strokeWidth: 3,
+			strokeColor: '#1F4E79',
+			connectorEndArrow: 'triangle',
+		},
+	} as PptxElement;
+	const target = render(element);
+	expect(target.querySelector('path[marker-end]')).not.toBeNull();
+	expect(target.querySelector('marker')?.getAttribute('markerWidth')).toBe('3');
+	expect(getShapeFillStrokeStyle(element).clipPath).toBeUndefined();
+});
+
 function smileyFace(): PptxElement {
 	return {
 		id: 'smiley-1',

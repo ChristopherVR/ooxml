@@ -7,7 +7,8 @@
  * the plain `<svg>` the caller positions and gives its `viewBox`). Shapes and
  * pictures share it, so a picture's frame paints exactly like a shape's line.
  */
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import type { StrokeOutline } from 'ooxml-ui/pptx';
 
 @Component({
@@ -76,9 +77,14 @@ import type { StrokeOutline } from 'ooxml-ui/pptx';
 				}
 			</svg:defs>
 		}
+		@if (o.markers; as markers) {
+			<svg:defs [innerHTML]="sanitizer.bypassSecurityTrustHtml(markers.markup)" />
+		}
 		@for (strand of o.strands; track $index) {
 			<svg:path
 				[attr.d]="o.d"
+				[attr.marker-start]="$index === 0 ? o.markers?.start : null"
+				[attr.marker-end]="$index === 0 ? o.markers?.end : null"
 				fill="none"
 				[attr.stroke]="o.stroke"
 				[attr.stroke-width]="strand.strokeWidth"
@@ -92,6 +98,7 @@ import type { StrokeOutline } from 'ooxml-ui/pptx';
 	`,
 })
 export class StrokeOutlineComponent {
+	readonly sanitizer = inject(DomSanitizer);
 	// A decorator input, not a signal `input()`: the host is matched by an
 	// attribute selector inside other components' templates, and plain JIT
 	// (the viewer's TestBed specs) only binds decorator inputs.

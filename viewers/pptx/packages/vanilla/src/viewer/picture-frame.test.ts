@@ -34,6 +34,30 @@ const PICTURE = {
 	imageData: 'data:image/png;base64,AA==',
 } as PptxElement;
 
+it('renders an unfilled freeform with its arrowhead and no clipping box', () => {
+	const element = {
+		id: 'freeform',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 100,
+		pathData: 'M 0 100 L 100 0',
+		pathWidth: 100,
+		pathHeight: 100,
+		shapeStyle: {
+			fillMode: 'none',
+			strokeWidth: 3,
+			strokeColor: '#1F4E79',
+			connectorEndArrow: 'triangle',
+		},
+	} as PptxElement;
+	const box = stageWith(element).querySelector<HTMLElement>('[data-element-id="freeform"]')!;
+	expect(box.querySelector('path[marker-end]')).not.toBeNull();
+	expect(box.querySelector('marker')?.getAttribute('markerWidth')).toBe('3');
+	expect(box.style.clipPath).toBe('');
+});
+
 describe('vanilla: a picture paints its own frame and outer shadow', () => {
 	it('strokes the frame outside the clipped surface and casts the shadow', () => {
 		const stage = stageWith({

@@ -275,10 +275,13 @@ const reflection = computed<CSSProperties | undefined>(() =>
 				/>
 			</linearGradient>
 		</defs>
+		<defs v-if="strokeOutline.markers" v-html="strokeOutline.markers.markup" />
 		<path
 			v-for="(strand, idx) in strokeOutline.strands"
 			:key="idx"
 			:d="strokeOutline.d"
+			:marker-start="idx === 0 ? strokeOutline.markers?.start : undefined"
+			:marker-end="idx === 0 ? strokeOutline.markers?.end : undefined"
 			fill="none"
 			:stroke="strokeOutline.stroke"
 			:stroke-width="strand.strokeWidth"

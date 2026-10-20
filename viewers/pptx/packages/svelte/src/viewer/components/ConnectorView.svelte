@@ -54,9 +54,10 @@
 				<marker
 					id={geometry.startMarkerId}
 					viewBox="0 0 10 10"
-					refX="5"
+					refX={geometry.startMarker.refX}
 					refY="5"
 					markerWidth={geometry.startMarker.markerWidth}
+					preserveAspectRatio="none"
 					markerHeight={geometry.startMarker.markerHeight}
 					orient="auto-start-reverse"
 					markerUnits="strokeWidth"
@@ -74,9 +75,10 @@
 				<marker
 					id={geometry.endMarkerId}
 					viewBox="0 0 10 10"
-					refX="5"
+					refX={geometry.endMarker.refX}
 					refY="5"
 					markerWidth={geometry.endMarker.markerWidth}
+					preserveAspectRatio="none"
 					markerHeight={geometry.endMarker.markerHeight}
 					orient="auto-start-reverse"
 					markerUnits="strokeWidth"

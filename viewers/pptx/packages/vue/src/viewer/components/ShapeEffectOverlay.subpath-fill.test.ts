@@ -26,6 +26,26 @@ function smileyFace(): PptxElement {
 	} as unknown as PptxElement;
 }
 
+it('renders arrowheads on open freeforms outside the geometry clip', () => {
+	const element = {
+		...smileyFace(),
+		pathData: 'M 0 100 L 100 0',
+		pathWidth: 100,
+		pathHeight: 100,
+		shapeStyle: {
+			fillMode: 'none',
+			strokeWidth: 3,
+			strokeColor: '#1F4E79',
+			connectorEndArrow: 'triangle',
+		},
+	} as PptxElement;
+	const wrapper = mount(ShapeEffectOverlay, { props: { element } });
+	expect(wrapper.find('path[marker-end]').exists()).toBeTruthy();
+	expect(wrapper.find('marker').attributes('markerWidth')).toBe('3');
+	expect(getShapeFillStrokeStyle(element).clipPath).toBeUndefined();
+	wrapper.unmount();
+});
+
 describe('shapeEffectOverlay per-sub-path fill', () => {
 	it('paints smileyFace as layered paths, with the eyes unfilled', () => {
 		const wrapper = mount(ShapeEffectOverlay, { props: { element: smileyFace() } });

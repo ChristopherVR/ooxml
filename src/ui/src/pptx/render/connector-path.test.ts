@@ -45,24 +45,24 @@ describe('buildDashArray', () => {
 });
 
 describe('markerPath', () => {
-	it('defaults to a med-sized (4x4) marker box', () => {
+	it('defaults to a med-sized (3x3) marker box measured in PowerPoint', () => {
 		const m = markerPath('triangle');
 		expect(m.shape).toBe('path');
 		expect(m.d).toBe('M0 0 L10 5 L0 10 Z');
-		expect(m.markerWidth).toBe(4);
-		expect(m.markerHeight).toBe(4);
+		expect(m.markerWidth).toBe(3);
+		expect(m.markerHeight).toBe(3);
 	});
 
 	it('scales markerWidth by @len and markerHeight by @w', () => {
 		const lg = markerPath('triangle', 'lg', 'lg');
-		expect(lg.markerWidth).toBe(6);
-		expect(lg.markerHeight).toBe(6);
+		expect(lg.markerWidth).toBe(5);
+		expect(lg.markerHeight).toBe(5);
 
 		// arrowWidth=sm (height), arrowLength=med (width)
 		const mixed = markerPath('oval', 'sm', 'med');
 		expect(mixed.shape).toBe('circle');
-		expect(mixed.markerWidth).toBe(4);
-		expect(mixed.markerHeight).toBeCloseTo(2.4, 5);
+		expect(mixed.markerWidth).toBe(3);
+		expect(mixed.markerHeight).toBe(2);
 	});
 
 	it('keeps the historical shape/d for each arrow type', () => {
