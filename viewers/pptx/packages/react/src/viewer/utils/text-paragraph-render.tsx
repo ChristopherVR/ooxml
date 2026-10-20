@@ -196,7 +196,7 @@ function renderParagraph(
 		element.id,
 		paraIndex,
 		renderedRuns,
-		runs,
+		para.runs,
 		subElementAnimStates,
 		// A staged build splits the paragraph but must not flatten it: each piece
 		// is re-rendered through the SAME run renderer, so it keeps its run's
@@ -205,7 +205,7 @@ function renderParagraph(
 			renderParagraphRun(
 				{ ...run, text },
 				segments[run.segmentIndex ?? -1],
-				runCtx,
+				{ ...runCtx, textBuildPiece: true },
 				`-build-${pieceKey}`,
 			),
 	);

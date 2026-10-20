@@ -101,6 +101,12 @@ describe('buildTextBuildSpec', () => {
 });
 
 describe('textBuildSpanStyle', () => {
+	it('keeps ordinary letter pieces in the paragraph embedding and preserves bidi overrides', () => {
+		expect(textBuildSpanStyle({ style: { unicodeBidi: 'embed' } }).unicodeBidi).toBe('normal');
+		expect(
+			textBuildSpanStyle({ style: { unicodeBidi: 'bidi-override' } }).unicodeBidi,
+		).toBeUndefined();
+	});
 	it('always keeps the wrapper inline so text layout is unchanged', () => {
 		expect(textBuildSpanStyle({})).toStrictEqual({ display: 'inline' });
 	});

@@ -31,6 +31,8 @@ const BASELINE_FONT_SCALE = 0.65;
 
 /** What a run needs from its surroundings to render. */
 export interface RunRenderContext {
+	/** Animation pieces retain their source word's metrics instead of remeasuring letters. */
+	textBuildPiece?: boolean;
 	element: PptxElement & Partial<{ textStyle: TextStyle }>;
 	/** Colour a run with no resolved colour of its own falls back to. */
 	fallbackColor: string;
@@ -232,10 +234,9 @@ export function renderParagraphRun(
 	spanStyle.fontFamily = baseFontFamily;
 	spanStyle.verticalAlign = baselineShift;
 	spanStyle.fontKerning = fontKerning;
-	spanStyle.letterSpacing = pieceLetterSpacing(
-		authoredLetterSpacing,
-		resolveMetricTrackingPx(textValue, metricFont),
-	);
+	spanStyle.letterSpacing = ctx.textBuildPiece
+		? (run.style.letterSpacing as React.CSSProperties['letterSpacing'])
+		: pieceLetterSpacing(authoredLetterSpacing, resolveMetricTrackingPx(textValue, metricFont));
 
 	// Re-apply the shared hollow (`a:rPr > a:noFill`) decision OVER the colour
 	// just resolved. Shared already merged it into `run.style`, but the `color`
@@ -261,6 +262,9 @@ export function renderParagraphRun(
 	if (runRtl !== undefined) {
 		spanStyle.direction = runRtl ? 'rtl' : 'ltr';
 		spanStyle.unicodeBidi = runRtl !== ctx.paragraphRtl ? 'bidi-override' : 'embed';
+		if (ctx.textBuildPiece && (runRtl === true) === (ctx.paragraphRtl === true)) {
+			spanStyle.unicodeBidi = 'normal';
+		}
 	}
 
 	// D2-G3: `a:rPr/@u="words"` underlines only the words, leaving inter-word
@@ -307,7 +311,7 @@ export function renderParagraphRun(
 			Boolean(segmentStyle.italic),
 			{ language: segmentStyle.language, rtl: ctx.paragraphRtl === true },
 		),
-		metricContext,
+		ctx.textBuildPiece ? undefined : metricContext,
 		isUnderlineWords,
 		wordDecoration,
 	);

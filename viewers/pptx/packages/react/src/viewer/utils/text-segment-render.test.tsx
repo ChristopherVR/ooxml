@@ -18,6 +18,19 @@ function makeElement(): PptxElement & Partial<{ textStyle: TextStyle }> {
 	} as unknown as PptxElement & Partial<{ textStyle: TextStyle }>;
 }
 
+it('keeps a letter-build piece at its source word spacing without a bidi boundary', () => {
+	const element = makeElement();
+	const segment: TextSegment = { text: 'Testing', style: { fontSize: 20, rtl: false } };
+	const run = buildParagraphs({ ...element, textSegments: [segment] } as PptxElement)[0].runs[0];
+	const node = renderParagraphRun(
+		{ ...run, text: 'T', style: { ...run.style, letterSpacing: '0.035px' } },
+		segment,
+		{ element, fallbackColor: '#000000', textBuildPiece: true, paragraphRtl: false },
+	) as React.ReactElement<{ style: React.CSSProperties }>;
+	expect(node.props.style.letterSpacing).toBe('0.035px');
+	expect(node.props.style.unicodeBidi).toBe('normal');
+});
+
 /**
  * Render one run the way the paragraph renderer does - shared builds the run's
  * CSS, React layers its own resolution on top - and return the span's style.
