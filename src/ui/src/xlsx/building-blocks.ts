@@ -1,17 +1,34 @@
 import type { EditorCore } from './editor-core';
 import { cellInputText, type HorizontalAlignment } from 'ooxml-core/xlsx';
-import { activeRef, selectionRef, selectionFormatting, style } from 'ooxml-core/xlsx/ui';
+import {
+	activeRef,
+	selectionRef,
+	selectionFormatting,
+	style,
+	editBridge,
+} from 'ooxml-core/xlsx/ui';
 
 /** Commands always re-read permission and commit cell input before changing their target. */
 export function spreadsheetToolbarProps(core: EditorCore) {
 	const ctx = core.ctx;
 	const selection = core.selection.get();
-	const commit = (): boolean => !ctx.grid()?.isEditing() || ctx.grid()!.commitEdit();
+	const bridge = editBridge(ctx);
+	const draft = bridge.state();
+	const onFormulaInput = (text: string, caret = text.length): boolean => {
+		if (!core.host.isConnected || !core.session || core.readOnly || core.loading) return false;
+		if (!bridge.state().editing && !bridge.begin({ text, caret, mode: 'edit', source: 'bar' }))
+			return false;
+		bridge.update(text, caret, 'bar');
+		core.requestRender();
+		return true;
+	};
+	const commit = (): boolean =>
+		core.host.isConnected && (!ctx.grid()?.isEditing() || ctx.grid()!.commitEdit());
 	const run = async (id: string, arg?: unknown): Promise<boolean> => {
 		if (core.loading || !commit()) return false;
 		return core.commands.run(id, arg);
 	};
-	const canEdit = Boolean(core.session && !core.readOnly && !core.loading);
+	const canEdit = Boolean(core.host.isConnected && core.session && !core.readOnly && !core.loading);
 	return {
 		enabled: {
 			bold: core.commands.isEnabled('home.bold'),
@@ -31,6 +48,9 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 		selection: selectionRef(selection),
 		activeCell: activeRef(selection),
 		activeSheet: core.activeSheet,
+		editing: draft.editing,
+		editMode: draft.mode,
+		formulaCaret: draft.caret,
 		sheets:
 			core.workbook?.sheets.map((sheet, index) => ({
 				name: sheet.name,
@@ -39,9 +59,11 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 			})) ?? [],
 		canUndo: core.commands.isEnabled('edit.undo'),
 		canRedo: core.commands.isEnabled('edit.redo'),
-		formula: core.workbook
-			? cellInputText(core.workbook, core.activeSheet, selection.active.row, selection.active.col)
-			: '',
+		formula: draft.editing
+			? draft.text
+			: core.workbook
+				? cellInputText(core.workbook, core.activeSheet, selection.active.row, selection.active.col)
+				: '',
 		onBold: () => run('home.bold'),
 		onItalic: () => run('home.italic'),
 		onUnderline: () => run('home.underline'),
@@ -66,13 +88,12 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 			core.setActiveSheet(index);
 			return true;
 		},
-		onFormulaChange: (text: string): boolean => {
-			if (!canEdit || core.readOnly || core.loading || !commit()) return false;
-			const grid = ctx.grid();
-			if (!grid) return false;
-			grid.beginEdit(text);
-			if (!grid.isEditing()) return false;
-			return commit();
+		onFormulaInput,
+		onFormulaChange: (text: string): boolean => onFormulaInput(text) && bridge.commit('none'),
+		onCancelEdit: () => {
+			bridge.cancel();
+			core.requestRender();
+			ctx.grid()?.focus();
 		},
 		commitEdit: commit,
 	};

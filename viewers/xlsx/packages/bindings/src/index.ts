@@ -202,6 +202,8 @@ export function mountEditor(
 ): EditorBinding {
 	defineXlsxEditor();
 	const element = host.ownerDocument.createElement('xlsx-editor');
+	if (surfaceOnly && typeof element.getToolbarProps !== 'function')
+		throw new Error('Update ooxml-ui to use editor building blocks.');
 	element.surfaceOnly = surfaceOnly;
 	let options: EditorOptions = {};
 	let lastInput: Workbook | undefined;

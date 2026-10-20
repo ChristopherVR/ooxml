@@ -141,6 +141,11 @@ export function Toolbar(props: SpreadsheetToolbarProps) {
 
 export function FormulaBar(props: SpreadsheetToolbarProps) {
 	const [invalid, setInvalid] = useState(false);
+	const [invalidName, setInvalidName] = useState(false);
+	const input = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		if (input.current && input.current.value !== props.formula) input.current.value = props.formula;
+	}, [props.formula, props.activeCell]);
 	return createElement(
 		'div',
 		null,
@@ -148,18 +153,42 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 			key: props.selection,
 			'aria-label': props.labels['Name Box'],
 			defaultValue: props.selection,
+			'aria-invalid': invalidName,
+			onChange: () => setInvalidName(false),
 			onKeyDown: (event: import('react').KeyboardEvent<HTMLInputElement>) => {
-				if (event.key === 'Enter') props.onSelect(event.currentTarget.value);
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					try {
+						setInvalidName(!props.onSelect(event.currentTarget.value));
+					} catch {
+						setInvalidName(true);
+					}
+				}
 			},
 		}),
 		createElement('input', {
-			key: `${props.activeCell}:${props.formula}`,
+			key: props.activeCell,
+			ref: input,
 			'aria-label': props.labels['Formula Bar'],
 			defaultValue: props.formula,
 			readOnly: !props.canEdit,
 			'aria-invalid': invalid,
+			onChange: (event: import('react').ChangeEvent<HTMLInputElement>) => {
+				setInvalid(false);
+				props.onFormulaInput(
+					event.currentTarget.value,
+					event.currentTarget.selectionEnd ?? undefined,
+				);
+			},
 			onKeyDown: (event: import('react').KeyboardEvent<HTMLInputElement>) => {
-				if (event.key === 'Enter') setInvalid(!props.onFormulaChange(event.currentTarget.value));
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					setInvalid(!props.onFormulaChange(event.currentTarget.value));
+				} else if (event.key === 'Escape') {
+					event.preventDefault();
+					props.onCancelEdit();
+					setInvalid(false);
+				}
 			},
 		}),
 	);

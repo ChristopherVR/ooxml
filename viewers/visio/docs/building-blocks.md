@@ -44,3 +44,7 @@ Every framework package exports `mountDiagramCanvas(host, controller)`,
 `diagramToolbarProps(controller, fit, locale?)` and `mountDiagramInspector(host, controller)`.
 Subscribe through the existing controller, and call returned disposers on unmount. No second
 state store is introduced.
+
+The composition API requires the matching `ooxml-ui` runtime, released with these additions.
+Existing full-viewer imports remain compatible with the previous published runtime. An older
+runtime rejects a composition request explicitly instead of mounting application UI by accident.

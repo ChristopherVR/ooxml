@@ -12,7 +12,7 @@ import {
 	type Workbook,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import { createCommandRegistry, type CommandRegistry } from 'ooxml-core/xlsx/ui';
+import { createCommandRegistry, editBridge, type CommandRegistry } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, GridController, SelectionModel } from 'ooxml-core/xlsx/ui';
 import { createDialogRegistry, type DialogRegistry } from 'ooxml-core/xlsx/ui';
 import { DirtyState } from 'ooxml-core/xlsx/ui';
@@ -118,6 +118,9 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
+		editBridge(this.ctx).onChange(() =>
+			this.host.dispatchEvent(new CustomEvent('editor-state-change')),
+		);
 		this.collab = collaborationFor(this);
 		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
 	}

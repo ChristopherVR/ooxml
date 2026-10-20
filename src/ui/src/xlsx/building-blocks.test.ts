@@ -6,32 +6,60 @@ import { defineXlsxEditor, XlsxEditorElement } from './component';
 
 let editing = false;
 let valid = true;
-vi.mock('./grid', () => ({
-	mountGrid(ctx: EditorContext, host: HTMLElement) {
-		host.textContent = 'grid';
-		const grid: GridController = {
-			focus() {},
-			scrollTo() {},
-			invalidate() {},
-			measureText: () => 0,
-			beginEdit() {
-				editing = true;
-			},
-			commitEdit() {
-				if (valid) editing = false;
+vi.mock('./grid', async () => {
+	const { editBridge } = await import('ooxml-core/xlsx/ui');
+	return {
+		mountGrid(ctx: EditorContext, host: HTMLElement) {
+			host.textContent = 'grid';
+			const bridge = editBridge(ctx);
+			const commit = () => {
+				if (valid) {
+					editing = false;
+					bridge.set({ editing: false, mode: 'ready' }, 'grid');
+				}
 				return valid;
-			},
-			cancelEdit() {
+			};
+			const cancel = () => {
 				editing = false;
-			},
-			isEditing: () => editing,
-			zoom: () => 100,
-			setZoom() {},
-		};
-		ctx.attachGrid(grid);
-		return () => {};
-	},
-}));
+				bridge.set({ editing: false, mode: 'ready' }, 'grid');
+			};
+			const stop = bridge.attach({
+				begin(options) {
+					editing = true;
+					bridge.set(
+						{
+							editing: true,
+							mode: options.mode ?? 'edit',
+							text: options.text ?? '',
+							caret: options.caret ?? 0,
+						},
+						'grid',
+					);
+					return true;
+				},
+				commit,
+				cancel,
+				changed() {},
+			});
+			const grid: GridController = {
+				focus() {},
+				scrollTo() {},
+				invalidate() {},
+				measureText: () => 0,
+				beginEdit() {
+					editing = true;
+				},
+				commitEdit: commit,
+				cancelEdit: cancel,
+				isEditing: () => editing,
+				zoom: () => 100,
+				setZoom() {},
+			};
+			ctx.attachGrid(grid);
+			return stop;
+		},
+	};
+});
 defineXlsxEditor();
 afterEach(() => {
 	document.body.replaceChildren();
@@ -79,4 +107,37 @@ it('blocks formatting, navigation and saving while cell validation fails', async
 	expect(editing).toBe(false);
 	expect(props.onSheetChange(1)).toBe(true);
 	expect(editor.activeSheet).toBe(1);
+});
+
+it('shares live formula input with the grid and permits correction after validation rejects a draft', () => {
+	const editor = mount();
+	let updates = 0;
+	const stop = editor.subscribeEditorState(() => updates++);
+	const props = editor.getToolbarProps();
+	valid = false;
+	expect(props.onFormulaChange('rejected')).toBe(false);
+	expect(editor.getToolbarProps()).toMatchObject({ formula: 'rejected', editing: true });
+	expect(props.onFormulaInput('corrected', 4)).toBe(true);
+	expect(editor.getToolbarProps()).toMatchObject({
+		formula: 'corrected',
+		formulaCaret: 4,
+		editing: true,
+	});
+	expect(updates).toBeGreaterThan(0);
+	valid = true;
+	expect(props.commitEdit()).toBe(true);
+	expect(editor.getToolbarProps().editing).toBe(false);
+	expect(props.onFormulaInput('cancel me')).toBe(true);
+	props.onCancelEdit();
+	expect(editor.getToolbarProps()).toMatchObject({ formula: '', editing: false });
+	stop();
+});
+
+it('does not let retained callbacks edit the workbook after the canvas is removed', async () => {
+	const editor = mount();
+	const props = editor.getToolbarProps();
+	editor.remove();
+	expect(await props.onBold()).toBe(false);
+	expect(props.onFormulaInput('detached input')).toBe(false);
+	expect(editor.dirty).toBe(false);
 });

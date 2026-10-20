@@ -49,3 +49,12 @@ cannot be committed. Permissions and worksheet protection remain authoritative.
 For every framework, `mountEditorSurface(host, options)` exposes the same surface, existing
 handle, `getToolbarProps()`, `subscribe(listener)`, `update` and `destroy`. Hosts own file
 and optional dialog workflows; no hidden library toolbar is required.
+
+`formula`, `formulaCaret`, `editing` and `editMode` read the grid's live edit bridge.
+`onFormulaInput(text, caret?)` updates that same draft; `onFormulaChange(text)` commits it.
+A rejected draft can be corrected through `onFormulaInput` without first committing the invalid
+value. `onCancelEdit()` cancels it. There is no separate formula state store.
+
+The composition API requires the matching `ooxml-ui` runtime, released with these additions.
+Existing full-viewer imports remain compatible with the previous published runtime. An older
+runtime rejects a composition request explicitly instead of mounting application UI by accident.

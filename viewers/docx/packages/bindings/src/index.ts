@@ -118,6 +118,8 @@ export function mountEditor(
 ): EditorBinding {
 	registerDocxEditor();
 	const element = host.ownerDocument.createElement('docx-editor');
+	if (surfaceOnly && typeof element.getToolbarProps !== 'function')
+		throw new Error('Update ooxml-ui to use editor building blocks.');
 	element.surfaceOnly = surfaceOnly;
 	let options: EditorOptions = {};
 	let lastInput: DocumentModel | undefined;

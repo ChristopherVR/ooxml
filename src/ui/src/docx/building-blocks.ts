@@ -62,7 +62,11 @@ export function wordToolbarProps(core: EditorCore) {
 			]),
 		),
 		canEdit,
-		list: state ? listKindOf(state.selection.$from.parent, core.model.numberingCatalog) : null,
+		list: (state ? listKindOf(state.selection.$from.parent, core.model.numberingCatalog) : null) as
+			| 'bullet'
+			| 'decimal'
+			| 'other'
+			| null,
 		selection: state ? { from: state.selection.from, to: state.selection.to } : null,
 		bold: value<boolean>('bold', false),
 		italic: value<boolean>('italic', false),

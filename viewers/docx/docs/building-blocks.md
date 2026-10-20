@@ -42,3 +42,7 @@ Every framework package also exports `mountEditorSurface(host, options)`. Its bi
 `getToolbarProps()` and `subscribe(listener)`, plus the existing editor handle and
 `update`/`destroy`. This is the framework-neutral equivalent for native lifecycle adapters:
 subscribe to selection/format changes, wire controls directly, and destroy on unmount.
+
+The composition API requires the matching `ooxml-ui` runtime, released with these additions.
+Existing full-viewer imports remain compatible with the previous published runtime. An older
+runtime rejects a composition request explicitly instead of mounting application UI by accident.

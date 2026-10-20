@@ -10,13 +10,21 @@ import {
 import {
 	ViewerController,
 	createWorkerParser,
-	mountDiagramCanvas,
-	fitDiagramCanvas,
-	mountDiagramInspector,
-	diagramToolbarProps,
 	type DiagramToolbarProps,
 	type VsdxSource,
 } from 'ooxml-ui/visio';
+
+import * as diagramUi from 'ooxml-ui/visio';
+type BuildingBlockApi = Pick<
+	typeof diagramUi,
+	'mountDiagramCanvas' | 'fitDiagramCanvas' | 'mountDiagramInspector' | 'diagramToolbarProps'
+>;
+/** Existing viewer imports also work against the previous runtime; new surfaces require its new API. */
+function buildingBlock<K extends keyof BuildingBlockApi>(key: K): BuildingBlockApi[K] {
+	const value: unknown = Reflect.get(diagramUi, key);
+	if (typeof value !== 'function') throw new Error('Update ooxml-ui to use Visio building blocks.');
+	return value as BuildingBlockApi[K];
+}
 
 export interface BuildingBlockOptions {
 	content?: VsdxSource | undefined;
@@ -50,7 +58,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 			dispose.current?.();
 			dispose.current = undefined;
 			host.current = node;
-			if (node) dispose.current = mountDiagramCanvas(node, controller);
+			if (node) dispose.current = buildingBlock('mountDiagramCanvas')(node, controller);
 		},
 		[controller],
 	);
@@ -95,11 +103,11 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	}, [controller, options.content]);
 	useImperativeHandle(options.handle, () => controller, [controller]);
 	const fit = () => {
-		if (host.current) fitDiagramCanvas(host.current, controller);
+		if (host.current) buildingBlock('fitDiagramCanvas')(host.current, controller);
 	};
 	return {
 		canvasProps: { mount } satisfies DiagramCanvasProps,
-		toolbarProps: diagramToolbarProps(controller, fit, options.locale),
+		toolbarProps: buildingBlock('diagramToolbarProps')(controller, fit, options.locale),
 		inspectorProps: { controller },
 		loading: state.loading,
 		error: state.error ?? state.edit.error,
@@ -157,7 +165,10 @@ export function PageNavigation(props: DiagramToolbarProps) {
 export function Inspector(props: { controller: ViewerController }) {
 	const host = useRef<HTMLDivElement>(null);
 	useEffect(
-		() => (host.current ? mountDiagramInspector(host.current, props.controller) : undefined),
+		() =>
+			host.current
+				? buildingBlock('mountDiagramInspector')(host.current, props.controller)
+				: undefined,
 		[props.controller],
 	);
 	return createElement('div', { ref: host });
