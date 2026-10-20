@@ -877,6 +877,6 @@ ${REGION_CSS}
 ${EDITOR_CHROME_CSS}`;
 	const themeCss: unknown = Reflect.get(pptxUi, 'withOfficeThemeCss');
 	return typeof themeCss === 'function'
-		? (themeCss as (css: string, selector: string) => string)(css, '.pptxv')
+		? (themeCss as (css: string, selector: string) => string)(css, '.pptxv, .pptxv-inspector')
 		: `${defaultVarsBlock()}\n${css}`;
 }
