@@ -5,7 +5,7 @@ import {
 	afterEdit,
 	canEditControlContent,
 	checkboxState,
-	defaultPlaceholder,
+	placeholderTextOf,
 	removedByEdit,
 	selectListItem,
 	setControlDate,
@@ -26,8 +26,13 @@ const isPlaceholderStyle = (mark: Mark) =>
 function contentMarks(state: EditorState, span: ControlSpan, change: ControlChange): Mark[] {
 	const schema = state.schema;
 	const first = state.doc.nodeAt(span.from);
+	// A placeholder is drawn in the Placeholder Text style, as Word writes it; a value is not.
+	const placeholder = Boolean(change.control.showingPlaceholder && !change.removed);
 	const kept = (first?.marks ?? []).filter(
-		(mark) => mark.type.name !== 'contentControl' && !isPlaceholderStyle(mark),
+		(mark) =>
+			mark.type.name !== 'contentControl' &&
+			!isPlaceholderStyle(mark) &&
+			!(placeholder && mark.type.name === 'characterStyle'),
 	);
 	const marks = change.font
 		? kept.filter((mark) => mark.type.name !== 'font')
@@ -38,6 +43,8 @@ function contentMarks(state: EditorState, span: ControlSpan, change: ControlChan
 			schema.marks.font!.create({ size: null, color: null, ...font?.attrs, family: change.font }),
 		);
 	}
+	if (placeholder && schema.marks.characterStyle)
+		marks.push(schema.marks.characterStyle.create({ id: PLACEHOLDER_STYLE }));
 	if (!change.removed)
 		marks.push(schema.marks.contentControl!.create({ data: JSON.stringify(change.control) }));
 	return marks;
@@ -106,7 +113,7 @@ export function chooseDate(state: EditorState, id: string, date: Date): Transact
 
 const placeholderChange = (control: ContentControl): ControlChange => ({
 	control: { ...control, showingPlaceholder: true },
-	text: defaultPlaceholder(control),
+	text: placeholderTextOf(control),
 });
 
 /**

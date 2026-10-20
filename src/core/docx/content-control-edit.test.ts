@@ -5,6 +5,7 @@ import {
 	canEditControlContent,
 	checkboxState,
 	controlDate,
+	placeholderTextOf,
 	selectListItem,
 	setControlDate,
 	toggleCheckbox,
@@ -105,5 +106,11 @@ describe('content control editing', () => {
 		expect(canEditControlContent({ ...base, lock: 'sdtLocked' })).toBe(true);
 		expect(canEditControlContent({ ...base, lock: 'sdtContentLocked' })).toBe(false);
 		expect(canDeleteControl(undefined)).toBe(true);
+	});
+
+	it('uses the default placeholder when the glossary entry has no text', () => {
+		const empty: ContentControl = { id: '7', level: 'inline', kind: 'text', placeholderText: '' };
+		expect(placeholderTextOf(empty)).toBe('Click or tap here to enter text.');
+		expect(placeholderTextOf({ ...empty, placeholderText: 'Enter a name.' })).toBe('Enter a name.');
 	});
 });

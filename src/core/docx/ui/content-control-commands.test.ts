@@ -129,6 +129,34 @@ describe('content control commands', () => {
 		expect(controlSpans(next.doc)[0]?.control.showingPlaceholder).toBe(true);
 	});
 
+	it('keeps a control whose own placeholder text is empty when its text is deleted', () => {
+		const empty = control({ kind: 'text', placeholderText: '' });
+		const state = stateOf([{ text: 'DOC-1', contentControl: empty }]);
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		const next = all.apply(deleteToPlaceholder(all, 'backward')!);
+		expect(text(next)).toBe('Click or tap here to enter text.');
+		expect(controlSpans(next.doc)).toHaveLength(1);
+	});
+
+	it('brings back the control’s own placeholder, in the Placeholder Text style', () => {
+		const own = control({ kind: 'text', placeholderText: 'Enter the document number.' });
+		const state = stateOf([{ text: 'DOC-1', contentControl: own, style: 'Strong' }]);
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		const next = all.apply(deleteToPlaceholder(all, 'backward')!);
+		expect(text(next)).toBe('Enter the document number.');
+		const styles = next.doc
+			.nodeAt(1)!
+			.marks.filter((mark) => mark.type.name === 'characterStyle')
+			.map((mark) => mark.attrs.id);
+		expect(styles).toEqual(['PlaceholderText']);
+		const typed = typeOverPlaceholder(next, 3, 'D');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const value = next.apply(typed);
+		expect(value.doc.nodeAt(1)!.marks.some((mark) => mark.attrs.id === 'PlaceholderText')).toBe(
+			false,
+		);
+	});
+
 	it('inserts a new control around the selection or as a placeholder', () => {
 		const state = stateOf([{ text: 'Plain words' }]);
 		const selected = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));

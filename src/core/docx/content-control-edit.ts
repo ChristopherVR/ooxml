@@ -95,6 +95,13 @@ export function defaultPlaceholder(control: ContentControl): string {
 	}
 }
 
+/**
+ * The control's own placeholder text (from the glossary), else Word's default for its kind. An
+ * entry without text gives the default too: an inline control left without text is lost with it.
+ */
+export const placeholderTextOf = (control: ContentControl): string =>
+	control.placeholderText || defaultPlaceholder(control);
+
 /** Typed text replaces a placeholder: the control no longer shows one. */
 export function withValue(control: ContentControl): ContentControl {
 	const { showingPlaceholder: _placeholder, ...rest } = control;

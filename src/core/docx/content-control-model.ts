@@ -67,6 +67,10 @@ export interface ContentControl {
 	dataBound?: boolean;
 	/** `w:temporary`: Word removes the control once the user edits it. */
 	temporary?: boolean;
+	/** `w:placeholder/w:docPart`: the glossary entry that holds the control's placeholder text. */
+	placeholder?: string;
+	/** The text of that glossary entry, which the control shows while it is empty (read only). */
+	placeholderText?: string;
 	/** Verbatim `w:sdtPr`, used to recreate the control and to keep what is not modeled. */
 	sourceXml?: string;
 }
