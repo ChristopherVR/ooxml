@@ -73,24 +73,67 @@ export function writeSectionProperties(
 	section: SectionProperties,
 	base?: SectionProperties,
 ) {
+	// A new break writes every property; an edited section only those that changed, so the rest
+	// stays as the source wrote it (editing a header's text leaves the page setup alone).
+	const changed = (...keys: (keyof SectionProperties)[]) =>
+		!base || keys.some((key) => JSON.stringify(section[key]) !== JSON.stringify(base[key]));
 	if (section.footnoteColumns !== base?.footnoteColumns)
 		writeFootnoteColumns(doc, sectPr, section.footnoteColumns);
-	if (section.type === 'nextPage')
-		for (const type of children(sectPr, 'type')) sectPr.removeChild(type);
-	else setW(child(doc, sectPr, 'type', AFTER_TYPE), 'val', section.type);
-	const size = child(doc, sectPr, 'pgSz', AFTER_PGSZ);
-	setW(size, 'w', String(section.pageWidthTwips));
-	setW(size, 'h', String(section.pageHeightTwips));
-	if (section.orientation === 'landscape') setW(size, 'orient', 'landscape');
-	else size.removeAttributeNS(WORD_NS, 'orient');
-	const margins = child(doc, sectPr, 'pgMar', AFTER_PGSZ.slice(1));
-	setW(margins, 'top', String(section.marginTopTwips));
-	setW(margins, 'right', String(section.marginRightTwips));
-	setW(margins, 'bottom', String(section.marginBottomTwips));
-	setW(margins, 'left', String(section.marginLeftTwips));
-	setW(margins, 'header', String(section.headerDistanceTwips ?? 720));
-	setW(margins, 'footer', String(section.footerDistanceTwips ?? 720));
-	setW(margins, 'gutter', String(section.gutterTwips ?? 0));
+	if (changed('type')) {
+		if (section.type === 'nextPage')
+			for (const type of children(sectPr, 'type')) sectPr.removeChild(type);
+		else setW(child(doc, sectPr, 'type', AFTER_TYPE), 'val', section.type);
+	}
+	if (changed('pageWidthTwips', 'pageHeightTwips', 'orientation')) {
+		const size = child(doc, sectPr, 'pgSz', AFTER_PGSZ);
+		setW(size, 'w', String(section.pageWidthTwips));
+		setW(size, 'h', String(section.pageHeightTwips));
+		if (section.orientation === 'landscape') setW(size, 'orient', 'landscape');
+		else size.removeAttributeNS(WORD_NS, 'orient');
+	}
+	if (
+		changed(
+			'marginTopTwips',
+			'marginRightTwips',
+			'marginBottomTwips',
+			'marginLeftTwips',
+			'headerDistanceTwips',
+			'footerDistanceTwips',
+			'gutterTwips',
+		)
+	) {
+		const margins = child(doc, sectPr, 'pgMar', AFTER_PGSZ.slice(1));
+		setW(margins, 'top', String(section.marginTopTwips));
+		setW(margins, 'right', String(section.marginRightTwips));
+		setW(margins, 'bottom', String(section.marginBottomTwips));
+		setW(margins, 'left', String(section.marginLeftTwips));
+		setW(margins, 'header', String(section.headerDistanceTwips ?? 720));
+		setW(margins, 'footer', String(section.footerDistanceTwips ?? 720));
+		setW(margins, 'gutter', String(section.gutterTwips ?? 0));
+	}
+	if (changed('columns')) writeColumns(doc, sectPr, section);
+	if (changed('verticalAlign')) {
+		if (section.verticalAlign && section.verticalAlign !== 'top')
+			setW(
+				child(doc, sectPr, 'vAlign', ['noEndnote', 'titlePg', ...AFTER_TITLEPG]),
+				'val',
+				section.verticalAlign,
+			);
+		else for (const vAlign of children(sectPr, 'vAlign')) sectPr.removeChild(vAlign);
+	}
+	if (changed('titlePage')) {
+		if (section.titlePage)
+			child(doc, sectPr, 'titlePg', AFTER_TITLEPG).removeAttributeNS(WORD_NS, 'val');
+		else for (const titlePg of children(sectPr, 'titlePg')) sectPr.removeChild(titlePg);
+	}
+	if (changed('lineNumberSettings', 'lineNumbering')) writeLineNumbers(doc, sectPr, section);
+	patchPageBorders(doc, sectPr, section.pageBorders, base?.pageBorders, (d, parent, name) =>
+		child(d, parent, name, AFTER_PGBORDERS),
+	);
+	if (changed('pageNumbering')) writePageNumbering(doc, sectPr, section);
+}
+
+function writeColumns(doc: XmlDocument, sectPr: XmlElement, section: SectionProperties) {
 	const columns = child(doc, sectPr, 'cols', AFTER_COLS);
 	setW(columns, 'num', String(section.columns.count));
 	setW(columns, 'space', String(section.columns.spacingTwips ?? 720));
@@ -111,16 +154,9 @@ export function writeSectionProperties(
 	}
 	if (section.columns.separator) setW(columns, 'sep', '1');
 	else columns.removeAttributeNS(WORD_NS, 'sep');
-	if (section.verticalAlign && section.verticalAlign !== 'top')
-		setW(
-			child(doc, sectPr, 'vAlign', ['noEndnote', 'titlePg', ...AFTER_TITLEPG]),
-			'val',
-			section.verticalAlign,
-		);
-	else for (const vAlign of children(sectPr, 'vAlign')) sectPr.removeChild(vAlign);
-	if (section.titlePage)
-		child(doc, sectPr, 'titlePg', AFTER_TITLEPG).removeAttributeNS(WORD_NS, 'val');
-	else for (const titlePg of children(sectPr, 'titlePg')) sectPr.removeChild(titlePg);
+}
+
+function writeLineNumbers(doc: XmlDocument, sectPr: XmlElement, section: SectionProperties) {
 	const line = section.lineNumberSettings;
 	if (line) {
 		const lnNum = child(doc, sectPr, 'lnNumType', AFTER_LNNUM);
@@ -134,9 +170,9 @@ export function writeSectionProperties(
 		else lnNum.removeAttributeNS(WORD_NS, 'restart');
 	} else if (!section.lineNumbering)
 		for (const lnNum of children(sectPr, 'lnNumType')) sectPr.removeChild(lnNum);
-	patchPageBorders(doc, sectPr, section.pageBorders, base?.pageBorders, (d, parent, name) =>
-		child(d, parent, name, AFTER_PGBORDERS),
-	);
+}
+
+function writePageNumbering(doc: XmlDocument, sectPr: XmlElement, section: SectionProperties) {
 	const numbering = section.pageNumbering;
 	if (numbering?.format || numbering?.start !== undefined) {
 		const pgNumType = child(doc, sectPr, 'pgNumType', AFTER_PGNUMTYPE);

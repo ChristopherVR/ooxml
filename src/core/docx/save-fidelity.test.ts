@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx, saveDocx, type DocumentModel } from './index';
 import { at, expectParagraph, must } from './test-support/access';
+import { signedTwips } from './units';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -90,5 +91,22 @@ describe('saving an edited Word package', () => {
 	it('keeps the order of the header and footer references when the body changes', async () => {
 		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`));
 		expect(await sectionOf(await saved(loaded, editBody))).toBe(SECTION);
+	});
+	it('leaves the section properties as they were when only a header changes', async () => {
+		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`));
+		const zip = await saved(loaded, (model) => {
+			const header = must(at(model.sections, 0).headers?.default, 'default header');
+			at(expectParagraph(header.blocks[0]).runs, 0).text = 'Edited header';
+		});
+		expect(await part(zip, 'word/header1.xml')).toContain('>Edited header<');
+		expect(await sectionOf(zip)).toBe(SECTION);
+	});
+
+	it('writes only the section properties that changed', async () => {
+		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`));
+		const zip = await saved(loaded, (model) => {
+			at(model.sections, 0).marginTopTwips = signedTwips(1000);
+		});
+		expect(await sectionOf(zip)).toBe(SECTION.replace('w:top="1417"', 'w:top="1000"'));
 	});
 });
