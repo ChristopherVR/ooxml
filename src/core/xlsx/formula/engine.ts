@@ -166,12 +166,20 @@ class Engine extends EngineStructure implements CalcEngine {
 		const prepared = this.prepared;
 		this.prepared = undefined;
 		if (!prepared) return false;
-		const changed = new Set(changes.map((c) => `${c.sheet}:${cellKey(c.row, c.col)}`));
 		const current = (node: FormulaNode): boolean =>
 			this.nodes.get(node.sheet)?.get(cellKey(node.row, node.col)) === node;
-		for (const node of prepared.dynamic) {
-			if (current(node) && !changed.has(`${node.sheet}:${cellKey(node.row, node.col)}`))
-				return false;
+		// Only a formula that can spill needs the changed cells looked up; most workbooks have none,
+		// and a bulk write changes far more cells than there are formulas.
+		const dynamic = prepared.dynamic.filter(current);
+		if (dynamic.length) {
+			const changed = new Map<number, Set<number>>();
+			for (const c of changes) {
+				let keys = changed.get(c.sheet);
+				if (!keys) changed.set(c.sheet, (keys = new Set()));
+				keys.add(cellKey(c.row, c.col));
+			}
+			for (const node of dynamic)
+				if (!changed.get(node.sheet)?.has(cellKey(node.row, node.col))) return false;
 		}
 		for (const node of prepared.unvalued) {
 			const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
