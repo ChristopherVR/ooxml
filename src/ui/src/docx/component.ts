@@ -201,6 +201,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		const { core } = this;
 		this.assertDocumentReplaceable();
 		const generation = ++core.loadGeneration;
+		core.loading = true;
+		core.refreshControls();
 		try {
 			const session = await loadDocument(input);
 			if (generation !== core.loadGeneration) return;
@@ -212,6 +214,11 @@ export class DocxEditorElement extends DocxEditorApi {
 			const error = cause instanceof Error ? cause : new Error(String(cause));
 			if (generation === core.loadGeneration) emit(this, 'document-error', error);
 			throw error;
+		} finally {
+			if (generation === core.loadGeneration) {
+				core.loading = false;
+				core.refreshControls();
+			}
 		}
 	}
 
@@ -274,6 +281,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		const { core } = this;
 		core.detachedState = undefined;
 		if (bumpGeneration) core.loadGeneration++;
+		if (bumpGeneration) core.loading = false;
 		core.loaded = session;
 		core.model = model;
 		core.inserts.reset();

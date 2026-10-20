@@ -17,6 +17,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
+import { wordToolbarProps, type WordToolbarProps } from './building-blocks';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -26,6 +27,26 @@ const HTMLElementBase: typeof HTMLElement =
  * the shared `EditorCore`, so the element class stays a thin lifecycle facade.
  */
 export abstract class DocxEditorApi extends HTMLElementBase {
+	/** Choose before connecting. This mode mounts only the document and its editing surface. */
+	get surfaceOnly(): boolean {
+		return this.core.surfaceOnly;
+	}
+	set surfaceOnly(value: boolean) {
+		if (this.core.shell.paper && value !== this.core.surfaceOnly)
+			throw new Error('Choose surfaceOnly before mounting the editor.');
+		this.core.surfaceOnly = Boolean(value);
+	}
+	getToolbarProps(): WordToolbarProps {
+		return wordToolbarProps(this.core);
+	}
+	get loading(): boolean {
+		return this.core.loading;
+	}
+	/** Selection and formatting updates, including changes which do not dirty the document. */
+	subscribeEditorState(listener: () => void): () => void {
+		this.addEventListener('editor-state-change', listener);
+		return () => this.removeEventListener('editor-state-change', listener);
+	}
 	protected abstract readonly core: EditorCore;
 	abstract fileName: string;
 	abstract reviewAuthor: string;

@@ -1,0 +1,40 @@
+// @vitest-environment jsdom
+import { afterEach, expect, it } from 'vitest';
+import { TextSelection } from 'prosemirror-state';
+import { createDocument, loadDocx } from 'ooxml-core/docx';
+import { registerDocxEditor } from './index';
+import type { DocxEditorElement } from './component';
+
+registerDocxEditor();
+afterEach(() => document.body.replaceChildren());
+it('mounts only the surface, edits the retained selection, serializes and enforces permission', async () => {
+	const editor = document.createElement('docx-editor') as DocxEditorElement;
+	editor.surfaceOnly = true;
+	const model = createDocument();
+	model.blocks = [{ type: 'paragraph', id: 'p1', runs: [{ text: 'Selected text' }] }];
+	editor.documentModel = model;
+	document.body.append(editor);
+	const root = editor.shadowRoot!;
+	expect(root.querySelector('office-ui-ribbon')).toBeNull();
+	expect(root.querySelector('office-ui-title-bar')).toBeNull();
+	expect(root.querySelector('office-ui-backstage')).toBeNull();
+	expect(root.querySelector('.ProseMirror')).not.toBeNull();
+	const view = (editor as unknown as { view: import('prosemirror-view').EditorView }).view;
+	view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 9)));
+	let updates = 0;
+	const stop = editor.subscribeEditorState(() => updates++);
+	const props = editor.getToolbarProps();
+	expect(props.onBold()).toBe(true);
+	expect(editor.getToolbarProps().bold).toBe(true);
+	expect(editor.dirty).toBe(true);
+	const saved = await loadDocx(await editor.saveBytes());
+	expect(JSON.stringify(saved)).toContain('Selected');
+	expect(JSON.stringify(saved)).toContain('"bold":true');
+	editor.readOnly = true;
+	expect(props.onItalic()).toBe(false);
+	expect(editor.getToolbarProps().canEdit).toBe(false);
+	expect(updates).toBeGreaterThan(0);
+	stop();
+	editor.markClean();
+	expect(editor.dirty).toBe(false);
+});

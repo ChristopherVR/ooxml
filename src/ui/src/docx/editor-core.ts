@@ -70,7 +70,10 @@ export class EditorCore {
 	view?: EditorView | undefined;
 	loaded?: LoadedDocument | undefined;
 	loadGeneration = 0;
+	loading = false;
 	readOnly = false;
+	/** Set before mounting to render only the document surface. */
+	surfaceOnly = false;
 	locale: EditorLocale = 'en';
 	reviewAuthor = 'Author';
 	theme: EditorThemeMode = 'auto';
@@ -276,6 +279,7 @@ export class EditorCore {
 	}
 
 	refreshControls(): void {
+		this.element.dispatchEvent(new CustomEvent('editor-state-change'));
 		this.parts.syncSection(this.shell.canvas, this.shell.paper);
 		this.shell.headings?.sync(this.locale);
 		if (this.shell.toolbar)

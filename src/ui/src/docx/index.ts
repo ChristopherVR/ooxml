@@ -1,4 +1,5 @@
 export { DocxEditorElement, registerDocxEditor } from './component';
+export type { WordToolbarProps } from './building-blocks';
 export { DOCX_EDITOR_EVENTS } from './events';
 export type { RibbonAction } from './ribbon';
 export {
