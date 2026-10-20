@@ -97,13 +97,17 @@ test('the caret after a soft line break sits at the start of the new line', asyn
 	const before = editor.locator('.dve-print-line', { hasText: 'Before' }).first();
 	const box = (await after.boundingBox())!;
 	await page.mouse.click(box.x + 1, box.y + box.height / 2);
-	const caret = (await editor.locator('.dve-print-caret').boundingBox())!;
-	expect(caret.y).toBeGreaterThanOrEqual(box.y - 1);
+	const caret = editor.locator('.dve-print-caret');
+	await expect.poll(async () => (await caret.boundingBox())?.y).toBeGreaterThanOrEqual(box.y - 1);
 	await page.keyboard.press('ArrowLeft');
 	const beforeBox = (await before.boundingBox())!;
-	const moved = (await editor.locator('.dve-print-caret').boundingBox())!;
-	expect(moved.y).toBeLessThan(box.y);
-	expect(moved.y).toBeGreaterThanOrEqual(beforeBox.y - 1);
+	// Selection overlays are replaced on an animation frame after keyboard navigation.
+	await expect(async () => {
+		const moved = await caret.boundingBox();
+		expect(moved).not.toBeNull();
+		expect(moved!.y).toBeLessThan(box.y);
+		expect(moved!.y).toBeGreaterThanOrEqual(beforeBox.y - 1);
+	}).toPass({ timeout: 5000 });
 });
 
 test('arrow keys carry the caret across a page boundary and back', async ({ page }) => {
