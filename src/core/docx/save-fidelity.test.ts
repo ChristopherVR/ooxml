@@ -62,6 +62,8 @@ async function saved(
 }
 
 const part = (zip: JSZip, name: string) => must(zip.file(name), name).async('string');
+const sectionOf = async (zip: JSZip) =>
+	(await part(zip, 'word/document.xml')).match(/<w:sectPr>[\s\S]*<\/w:sectPr>/)?.[0];
 const folders = (zip: JSZip) =>
 	Object.values(zip.files)
 		.filter((file) => file.dir)
@@ -84,5 +86,9 @@ describe('saving an edited Word package', () => {
 		const source = await JSZip.loadAsync(await wordPackage(`<w:p>${text('Body')}</w:p>`, true));
 		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`, true));
 		expect(folders(await saved(loaded, editBody)).sort()).toEqual(folders(source).sort());
+	});
+	it('keeps the order of the header and footer references when the body changes', async () => {
+		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`));
+		expect(await sectionOf(await saved(loaded, editBody))).toBe(SECTION);
 	});
 });
