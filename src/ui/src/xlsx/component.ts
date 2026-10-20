@@ -95,7 +95,6 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 	disconnectedCallback(): void {
-		installOfficeUiThemeFor(this);
 		if (this.disposeSurface) {
 			this.disposeSurface();
 			this.disposeSurface = undefined;
