@@ -122,6 +122,18 @@ PowerPoint continues to use the same component for ribbon galleries.
 
 Every entry declares an `import` and a `default` export condition, so CommonJS consumers on Node 20.19+ or 22.12+ load it through `require(esm)`.
 
+`installOfficeUiTheme()` installs one theme stylesheet in the document by default. Pass a
+`ShadowRoot` to install scoped mode and control rules inside an embedding app's shadow tree.
+`installOfficeUiThemeFor(element)` installs document defaults plus rules in every enclosing shadow
+root. Product canvases and `prepareOfficeUiBlock()` use this host-aware installation automatically;
+the latter checks again after native framework insertion. Theme attributes inside Angular shadow
+views and other shadow containers therefore work alongside inherited custom properties.
+
+Use semantic `--office-*` palette tokens on a shared ancestor to theme all controls. When overriding
+a specific derived control token, such as `--office-select-background`, apply it to the actual
+control. Product compatibility bridges recompute dependent defaults on their inner chrome so those
+controls follow the product palette.
+
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
 with an incompatible build of this package.

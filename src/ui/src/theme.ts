@@ -87,7 +87,7 @@ ${modeCss(':where([data-office-theme="dark"])', true)}
 	${modeCss(':where(:root:not([data-office-theme="light"]), [data-office-theme="auto"])', true)}
 }
 @media ${TOUCH} {
-	:where(:root, [data-office-theme]) { --office-target-size: var(--office-target-size-touch); }
+	:where(:root) { --office-target-size: var(--office-target-size-touch); }
 }
 @media (forced-colors: active) {
 	:where(:root, [data-office-theme]) {
@@ -105,16 +105,43 @@ ${modeCss(':where([data-office-theme="dark"])', true)}
 ${BUILDING_BLOCKS_CSS}
 `;
 
-/** Idempotent. Browser-only; returns false (and does nothing) without a document. */
-export function installOfficeUiTheme(doc: Document | undefined = globalThis.document): boolean {
-	if (!doc?.head) return false;
-	if (!doc.getElementById(THEME_STYLE_ID)) {
+/** Idempotent per document or shadow root. Browser-only; false without a style container. */
+export function installOfficeUiTheme(
+	root: Document | ShadowRoot | undefined = globalThis.document,
+): boolean {
+	if (!root) return false;
+	const documentRoot = root.nodeType === 9;
+	if (!documentRoot && !('host' in root)) return false;
+	const doc = documentRoot ? (root as Document) : root.ownerDocument;
+	const container = documentRoot ? (root as Document).head : root;
+	if (!doc || !container) return false;
+	if (!root.getElementById(THEME_STYLE_ID)) {
 		const style = doc.createElement('style');
 		style.id = THEME_STYLE_ID;
 		style.textContent = THEME_CSS;
-		doc.head.append(style);
+		container.append(style);
 	}
 	return true;
+}
+
+function installOfficeUiThemeRoots(host: HTMLElement): boolean {
+	let installed = installOfficeUiTheme(host.ownerDocument);
+	let root = host.getRootNode();
+	while (root.nodeType === 11 && 'host' in root) {
+		const shadow = root as ShadowRoot;
+		installed = installOfficeUiTheme(shadow) && installed;
+		root = shadow.host.getRootNode();
+	}
+	return installed;
+}
+
+/** Install enclosing root rules now, then recheck after a native framework inserts a prepared host. */
+export function installOfficeUiThemeFor(host: HTMLElement): boolean {
+	const installed = installOfficeUiThemeRoots(host);
+	queueMicrotask(() => {
+		installOfficeUiThemeRoots(host);
+	});
+	return installed;
 }
 
 /** Marks only the library control's own root. Theme state and custom tokens stay on host scopes. */
@@ -125,5 +152,5 @@ export function prepareOfficeUiBlock(
 ): void {
 	host.setAttribute('data-office-block', kind);
 	if (product) host.setAttribute('data-office-product', product);
-	installOfficeUiTheme(host.ownerDocument);
+	installOfficeUiThemeFor(host);
 }

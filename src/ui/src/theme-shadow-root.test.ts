@@ -1,0 +1,61 @@
+// @vitest-environment jsdom
+import { afterEach, expect, it } from 'vitest';
+import {
+	installOfficeUiTheme,
+	installOfficeUiThemeFor,
+	prepareOfficeUiBlock,
+	THEME_CSS,
+	THEME_STYLE_ID,
+} from './theme';
+const hosts: HTMLElement[] = [];
+const host = () => {
+	const node = document.createElement('div');
+	document.body.append(node);
+	hosts.push(node);
+	return node;
+};
+afterEach(() => {
+	hosts.splice(0).forEach((node) => node.remove());
+	document.getElementById(THEME_STYLE_ID)?.remove();
+});
+it('installs exactly one stylesheet in each embedding shadow root and its owner document', () => {
+	const outer = host().attachShadow({ mode: 'open' });
+	const innerHost = document.createElement('div');
+	outer.append(innerHost);
+	const inner = innerHost.attachShadow({ mode: 'open' });
+	const toolbar = document.createElement('div');
+	inner.append(toolbar);
+	expect(installOfficeUiThemeFor(toolbar)).toBe(true);
+	installOfficeUiThemeFor(toolbar);
+	for (const root of [document, outer, inner]) {
+		expect(root.querySelectorAll(`#${THEME_STYLE_ID}`)).toHaveLength(1);
+		expect(root.getElementById(THEME_STYLE_ID)?.textContent).toBe(THEME_CSS);
+	}
+});
+it('supports explicitly installing a shadow stylesheet without modifying the owner document', () => {
+	const root = host().attachShadow({ mode: 'open' });
+	expect(installOfficeUiTheme(root)).toBe(true);
+	installOfficeUiTheme(root);
+	expect(root.querySelectorAll('style')).toHaveLength(1);
+	expect(document.getElementById(THEME_STYLE_ID)).toBeNull();
+});
+it.each(['native control', 'canvas'] as const)(
+	'prepares a %s before framework insertion into a shadow root',
+	async (kind) => {
+		const root = host().attachShadow({ mode: 'open' });
+		const toolbar = document.createElement('div');
+		if (kind === 'native control') prepareOfficeUiBlock(toolbar, 'toolbar', 'docx');
+		else installOfficeUiThemeFor(toolbar);
+		expect(root.getElementById(THEME_STYLE_ID)).toBeNull();
+		root.append(toolbar);
+		await Promise.resolve();
+		expect(root.getElementById(THEME_STYLE_ID)).not.toBeNull();
+		if (kind === 'native control') expect(toolbar.getAttribute('data-office-product')).toBe('docx');
+	},
+);
+it('inherits touch target geometry through color mode scopes', () => {
+	expect(THEME_CSS).toContain(
+		':where(:root) { --office-target-size: var(--office-target-size-touch); }',
+	);
+	expect(THEME_CSS).not.toContain(':where(:root, [data-office-theme]) { --office-target-size:');
+});
