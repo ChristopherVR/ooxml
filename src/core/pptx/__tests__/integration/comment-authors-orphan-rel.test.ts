@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { XMLParser } from 'fast-xml-parser';
 import { describe, it, expect } from 'vitest';
 
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
@@ -70,6 +71,55 @@ async function authorPackageState(bytes: Uint8Array | ArrayBuffer): Promise<{
 }
 
 describe('commentAuthors part, relationship and override stay consistent', () => {
+	it.each(['transitional', 'strict'] as const)(
+		'links first-time comments in %s output without duplicate relationships',
+		async (conformance) => {
+			const { handler, data, createSlide } = await PresentationBuilder.create();
+			data.slides.push(createSlide('Blank').build());
+			const initial = await handler.save(data.slides);
+			expect(await authorPackageState(initial)).toStrictEqual({
+				part: undefined,
+				rel: false,
+				override: false,
+			});
+			const loadedHandler = new PptxHandler();
+			const loaded = await loadedHandler.load(
+				initial.buffer.slice(
+					initial.byteOffset,
+					initial.byteOffset + initial.byteLength,
+				) as ArrayBuffer,
+			);
+			loaded.slides[0]!.comments = [{ id: '0', author: 'Tester', text: 'First comment' }];
+			const type =
+				conformance === 'strict'
+					? 'http://purl.oclc.org/ooxml/officeDocument/relationships/commentAuthors'
+					: COMMENT_AUTHORS_REL_TYPE;
+			const parser = new XMLParser({ ignoreAttributes: false });
+			for (let save = 0; save < 2; save += 1) {
+				const bytes = await loadedHandler.save(loaded.slides, { conformance });
+				const zip = await JSZip.loadAsync(bytes);
+				const xml = await zip.file('ppt/_rels/presentation.xml.rels')!.async('string');
+				const parsed = parser.parse(xml).Relationships.Relationship;
+				const rels = Array.isArray(parsed) ? parsed : [parsed];
+				const authors = rels.filter((rel) => rel['@_Type'].endsWith('/commentAuthors'));
+				expect(authors).toHaveLength(1);
+				expect(authors[0]).toMatchObject({ '@_Type': type, '@_Target': 'commentAuthors.xml' });
+				expect(new Set(rels.map((rel) => rel['@_Id'])).size).toBe(rels.length);
+				expect(await zip.file('ppt/commentAuthors.xml')!.async('string')).toContain('Tester');
+				expect(await zip.file('[Content_Types].xml')!.async('string')).toContain(
+					'/ppt/commentAuthors.xml',
+				);
+				const reloaded = await new PptxHandler().load(
+					bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+				);
+				expect(reloaded.slides[0]!.comments?.[0]).toMatchObject({
+					text: 'First comment',
+					author: 'Tester',
+				});
+			}
+		},
+	);
+
 	it('keeps an author list the source shipped without comments, with its rel and override', async () => {
 		const inputBytes = await buildPptxWithOrphanableCommentAuthors();
 		const before = await authorPackageState(inputBytes);

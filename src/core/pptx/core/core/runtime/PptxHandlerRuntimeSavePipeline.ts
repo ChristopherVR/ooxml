@@ -1,3 +1,4 @@
+import { nextRelationshipId } from '../../../../opc/relationships';
 import { XmlObject, PptxSlide } from '../../types';
 import type { PptxHeaderFooter, PptxSlideSize } from '../../types';
 import type { OoxmlConformanceClass } from '../../utils';
@@ -134,8 +135,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// Strip the matching Relationship from presentation.xml.rels; otherwise
 			// the dangling reference causes PowerPoint to flag the file as corrupted
 			// and prompt the user to repair it on open.
-			await this.stripPresentationCommentAuthorsRelationship();
 		}
+		await this.updatePresentationCommentAuthorsRelationship(
+			hasCommentAuthors,
+			slideRelationshipType.replace(/\/slide$/, '/commentAuthors'),
+		);
 
 		// Update content types for comments
 		const contentTypesXmlAfterComments = await this.zip
@@ -404,10 +408,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Remove any Relationship in presentation.xml.rels whose Type matches either
-	 * the Transitional or Strict commentAuthors relationship URI.
+	 * Keep the authors part linked, or remove its relationship with the part.
 	 */
-	private async stripPresentationCommentAuthorsRelationship(): Promise<void> {
+	private async updatePresentationCommentAuthorsRelationship(
+		hasAuthors: boolean,
+		relationshipType: string,
+	): Promise<void> {
 		const relsPath = 'ppt/_rels/presentation.xml.rels';
 		const relsXml = await this.zip.file(relsPath)?.async('string');
 		if (!relsXml) {
@@ -427,6 +433,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				type !== 'http://purl.oclc.org/ooxml/officeDocument/relationships/commentAuthors'
 			);
 		});
+		if (hasAuthors) {
+			if (filtered.length === relationships.length) {
+				const usedIds = new Set(relationships.map((rel) => String(rel['@_Id'] ?? '')));
+				relationships.push({
+					'@_Id': nextRelationshipId(usedIds),
+					'@_Type': relationshipType,
+					'@_Target': 'commentAuthors.xml',
+				});
+				root['Relationship'] = relationships;
+				this.zip.file(relsPath, this.builder.build(relsData));
+			}
+			return;
+		}
 		if (filtered.length === relationships.length) {
 			return;
 		}
