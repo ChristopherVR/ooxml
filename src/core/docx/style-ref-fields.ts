@@ -1,8 +1,20 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Brings the cached results of STYLEREF fields up to date in a story's paragraphs.
 import { isFieldLocked } from './field-lock';
-import type { Block, Paragraph, TextRun } from './model';
-import { parseStyleReference, type StyleReference } from './style-ref';
+import type {
+	Block,
+	DocumentModel,
+	HeaderFooterContent,
+	HeaderFooterSlots,
+	Paragraph,
+	TextRun,
+} from './model';
+import {
+	parseStyleReference,
+	styleRefSource,
+	type StyleRefSource,
+	type StyleReference,
+} from './style-ref';
 
 /** A field's cached result in a paragraph's runs. */
 interface FieldResult {
@@ -149,4 +161,75 @@ export function withStyleRefResults(
 		return { ...block, rows };
 	});
 	return changed ? next : (blocks as Block[]);
+}
+
+/**
+ * The result a header or footer STYLEREF shows on every page, when that does not depend on the
+ * page: every text in the document it could pick up reads the same (typically the style is used
+ * once, for a title or a document number). Undefined otherwise, or when nothing is in the style.
+ */
+function pageIndependentResult(
+	source: StyleRefSource,
+	reference: StyleReference,
+): string | undefined {
+	const target = source.target(reference.style);
+	if (!target) return undefined;
+	let result: string | undefined;
+	for (let index = 0; index < source.paragraphs.length; index++)
+		for (const text of source.results(index, reference, target)) {
+			if (result !== undefined && text !== result) return undefined;
+			result = text;
+		}
+	return result;
+}
+
+const SLOTS = ['default', 'first', 'even'] as const;
+
+/**
+ * Brings STYLEREF results up to date. A field in a header or footer takes the text it shows on
+ * every page, when that does not depend on the page (`pageIndependentResult`); Word updates such
+ * fields as the page is drawn, so a saved header should not keep a stale value. Locked fields
+ * and fields with switches that are not evaluated keep their result. Returns `model` itself when
+ * nothing changed.
+ */
+export function refreshStyleRefFields(model: DocumentModel): DocumentModel {
+	let source: StyleRefSource | undefined;
+	const read = () => (source ??= styleRefSource(model));
+	const everywhere = new Map<string, string | undefined>();
+	const story: StyleRefEvaluator = (reference) => {
+		const key = JSON.stringify(reference);
+		if (!everywhere.has(key)) everywhere.set(key, pageIndependentResult(read(), reference));
+		return everywhere.get(key);
+	};
+	const content = (item: HeaderFooterContent | undefined) => {
+		if (!item) return item;
+		const blocks = withStyleRefResults(item.blocks, story);
+		return blocks === item.blocks ? item : { ...item, blocks };
+	};
+	const slots = (item: HeaderFooterSlots | undefined) => {
+		if (!item) return item;
+		let changed = false;
+		const next: HeaderFooterSlots = { ...item };
+		for (const slot of SLOTS) {
+			const refreshed = content(item[slot]);
+			if (refreshed === item[slot]) continue;
+			changed = true;
+			next[slot] = refreshed!;
+		}
+		return changed ? next : item;
+	};
+	let changed = false;
+	const sections = model.sections?.map((section) => {
+		const headers = slots(section.headers);
+		const footers = slots(section.footers);
+		if (headers === section.headers && footers === section.footers) return section;
+		changed = true;
+		return {
+			...section,
+			...(headers ? { headers } : {}),
+			...(footers ? { footers } : {}),
+		};
+	});
+	if (!changed) return model;
+	return { ...model, ...(sections ? { sections } : {}) };
 }

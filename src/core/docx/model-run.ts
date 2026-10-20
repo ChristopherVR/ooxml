@@ -85,7 +85,8 @@ export interface TextRun {
 	noteSeparator?: 'separator' | 'continuationSeparator';
 	/**
 	 * Present on runs holding a field's displayed result (`w:fldSimple`, or text between a complex
-	 * field's `separate` and `end`). Cached display metadata; saving does not recalculate instructions.
+	 * field's `separate` and `end`). Cached display metadata; saving recalculates only the STYLEREF
+	 * results of headers and footers (`refreshStyleRefFields`).
 	 */
 	field?: { instr: string; simple?: boolean };
 	/** Imported simple-field boundary identity, shared by its result runs; not an OOXML attribute. */

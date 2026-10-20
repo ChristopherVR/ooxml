@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import JSZip from 'jszip';
 import { fileInput } from './helpers';
 import { styleRefFixture } from './support/styleref-fixture';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
-	test(`${framework}: header STYLEREF fields follow the body page by page`, async ({
+	test(`${framework}: header STYLEREF fields follow the body page by page and are saved`, async ({
 		page,
 	}) => {
 		const errors: string[] = [];
@@ -37,5 +38,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.keyboard.type('0042');
 		await expect.poll(headers).toEqual(['No. DOC-0042 | Scope', 'No. DOC-0042 | Method']);
 
+		const bytes = await editor.evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const header = await (
+			await JSZip.loadAsync(Buffer.from(bytes))
+		)
+			.file('word/header1.xml')!
+			.async('string');
+		// The number is the same on every page, so its saved result follows the body; the heading
+		// depends on the page and keeps the result it was saved with.
+		expect(header).toContain('<w:t>DOC-0042</w:t>');
+		expect(header).toContain('<w:t>Scope</w:t>');
 		expect(errors).toEqual([]);
 	});
