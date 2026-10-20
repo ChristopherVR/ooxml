@@ -132,4 +132,14 @@ describe('saving an edited Word package', () => {
 		expect(xml.match(/<w:sdtPr>/g)).toHaveLength(2);
 		expect(xml.match(/xmlns:w=/g)).toHaveLength(1);
 	});
+	it('keeps the line break after the declaration in the parts it rewrites', async () => {
+		const loaded = await loadDocx(await wordPackage(`<w:p>${text('Body')}</w:p>`));
+		const zip = await saved(loaded, (model) => {
+			editBody(model);
+			const header = must(at(model.sections, 0).headers?.default, 'default header');
+			at(expectParagraph(header.blocks[0]).runs, 0).text = 'Edited header';
+		});
+		for (const name of ['word/document.xml', 'word/header1.xml'])
+			expect((await part(zip, name)).startsWith(DECLARATION), name).toBe(true);
+	});
 });
