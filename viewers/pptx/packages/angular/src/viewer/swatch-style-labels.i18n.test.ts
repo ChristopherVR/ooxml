@@ -57,6 +57,7 @@ describe('swatch and style names follow the locale', () => {
 	it('names theme colour swatches with the host dictionary', () => {
 		const grid = inject(() => new ThemeColorSwatchGridComponent()) as unknown as {
 			columns(): readonly ThemeColorSwatchColumn[];
+			heading(): string;
 		};
 		const labels = grid
 			.columns()
@@ -64,6 +65,7 @@ describe('swatch and style names follow the locale', () => {
 			.map((swatch) => swatch.label);
 		expect(labels).toContain('Akzent 1, heller 80 %');
 		expect(labels.some((label) => label.includes('Accent'))).toBeFalsy();
+		expect(grid.heading()).toBe('Designfarben');
 	});
 
 	it('names quick style presets with the host dictionary', () => {
