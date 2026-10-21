@@ -1,5 +1,7 @@
 import {
 	registerDocxEditor,
+	type DocxCollaborationOptions,
+	type DocxCollaborationState,
 	type DocxEditorElement,
 	type DocxEditorEventDetail,
 	type DocxEditorEventName,
@@ -30,6 +32,11 @@ export interface EditorProps {
 	hiddenActions?: readonly RibbonActionInput[] | undefined;
 	/** Tabs the host adds after Word's own, as an Office add-in does. */
 	ribbonAddIns?: readonly RibbonAddInTab[] | undefined;
+	/**
+	 * Shares the loaded document in a room while set; `null` leaves (see `DocxCollaborationOptions`).
+	 * Forwarded only when the object changes, so pass a stable object, not a new literal per render.
+	 */
+	collaboration?: DocxCollaborationOptions | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -39,6 +46,8 @@ export interface EditorEventOptions {
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	onRibbonAddIn?: ((detail: RibbonAddInCommandDetail) => void) | undefined;
+	/** Sharing started, stopped, reconnected or the people in the room changed. */
+	onCollaborationChange?: ((state: DocxCollaborationState) => void) | undefined;
 }
 export interface EditorOptions extends EditorProps, EditorEventOptions {}
 
@@ -52,6 +61,7 @@ export const EDITOR_PROP_KEYS = [
 	'showToolbar',
 	'hiddenActions',
 	'ribbonAddIns',
+	'collaboration',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -66,6 +76,7 @@ export const EDITOR_EVENT_NAMES = [
 	'page-change',
 	'dirty-change',
 	'office-ribbon-add-in',
+	'collaboration-change',
 ] as const satisfies readonly DocxEditorEventName[];
 export type EditorEventName = (typeof EDITOR_EVENT_NAMES)[number];
 /** One handler per bound event; a missing key is a compile error in every adapter. */
@@ -93,6 +104,7 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onPageChange: handlers['page-change'],
 		onDirtyChange: handlers['dirty-change'],
 		onRibbonAddIn: handlers['office-ribbon-add-in'],
+		onCollaborationChange: handlers['collaboration-change'],
 	};
 }
 
@@ -125,6 +137,7 @@ export function mountEditor(
 	let lastInput: DocumentModel | undefined;
 	let lastEmitted: DocumentModel | undefined;
 	let lastAddIns: readonly RibbonAddInTab[] | undefined;
+	let lastCollaboration: DocxCollaborationOptions | null = null;
 	let destroyed = false;
 	const changed = (event: CustomEvent<DocumentModel>) => {
 		lastEmitted = event.detail;
@@ -135,11 +148,14 @@ export function mountEditor(
 	const dirtied = (event: CustomEvent<boolean>) => options.onDirtyChange?.(event.detail);
 	const addIn = (event: CustomEvent<RibbonAddInCommandDetail>) =>
 		options.onRibbonAddIn?.(event.detail);
+	const collaborated = (event: CustomEvent<DocxCollaborationState>) =>
+		options.onCollaborationChange?.(event.detail);
 	element.addEventListener('document-change', changed);
 	element.addEventListener('document-error', failed);
 	element.addEventListener('page-change', paged);
 	element.addEventListener('dirty-change', dirtied);
 	element.addEventListener('office-ribbon-add-in', addIn);
+	element.addEventListener('collaboration-change', collaborated);
 	const binding: EditorBinding = {
 		element,
 		update(next) {
@@ -155,6 +171,11 @@ export function mountEditor(
 			// The element keeps panels whose look is unchanged, so a fresh array per render is cheap.
 			if (next.ribbonAddIns !== lastAddIns) element.ribbonAddIns = next.ribbonAddIns ?? [];
 			lastAddIns = next.ribbonAddIns;
+			// Before the document model: a document opened below joins the room.
+			if ((next.collaboration ?? null) !== lastCollaboration) {
+				lastCollaboration = next.collaboration ?? null;
+				element.collaboration = lastCollaboration;
+			}
 			if (
 				next.documentModel &&
 				next.documentModel !== lastInput &&
@@ -179,6 +200,10 @@ export function mountEditor(
 			element.removeEventListener('page-change', paged);
 			element.removeEventListener('dirty-change', dirtied);
 			element.removeEventListener('office-ribbon-add-in', addIn);
+			// Leave a room this binding joined: an unmounted editor must not keep editing the shared
+			// document. A session the host started itself (startYjsCollaboration) stays the host's.
+			if (lastCollaboration) element.stopCollaboration();
+			element.removeEventListener('collaboration-change', collaborated);
 			element.remove();
 		},
 	};

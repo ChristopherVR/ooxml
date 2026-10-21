@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import type { DocumentModel } from 'docx-core';
 import type {
+	DocxCollaborationOptions,
+	DocxCollaborationState,
 	EditorThemeMode,
 	PageChangeDetail,
 	RibbonActionInput,
@@ -28,11 +30,13 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() showToolbar = true;
 	@Input() hiddenActions: readonly RibbonActionInput[] = [];
 	@Input() ribbonAddIns?: readonly RibbonAddInTab[];
+	@Input() collaboration?: DocxCollaborationOptions | null;
 	@Output() documentChange = new EventEmitter<DocumentModel>();
 	@Output() documentError = new EventEmitter<Error>();
 	@Output() pageChange = new EventEmitter<PageChangeDetail>();
 	@Output() dirtyChange = new EventEmitter<boolean>();
 	@Output() ribbonAddIn = new EventEmitter<RibbonAddInCommandDetail>();
+	@Output() collaborationChange = new EventEmitter<DocxCollaborationState>();
 	private host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding?: EditorBinding;
 	private options() {
@@ -44,6 +48,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 				'page-change': (detail) => this.pageChange.emit(detail),
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
 				'office-ribbon-add-in': (detail) => this.ribbonAddIn.emit(detail),
+				'collaboration-change': (state) => this.collaborationChange.emit(state),
 			}),
 		};
 	}
