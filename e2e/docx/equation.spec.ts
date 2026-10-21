@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 import { equationFixture, fractionOmml, displayOmml } from './support/equation-fixture';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -31,7 +31,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			).toBeGreaterThan(10);
 		}
 		const inlineParagraph = editor.locator('.dve-paper > .ProseMirror > p').first();
-		await inlineParagraph.click();
+		await clickInEditor(inlineParagraph);
 		await page.keyboard.press('Home');
 		await page.keyboard.type('Edited ');
 		const paragraph = editor.locator('.dve-paper > .ProseMirror > p').last();

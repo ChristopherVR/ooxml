@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { fileInput, waitForEditorFocus } from './helpers';
 
 test.use({ viewport: { width: 1366, height: 1500 } });
 
@@ -99,6 +99,8 @@ test('the caret after a soft line break sits at the start of the new line', asyn
 	await page.mouse.click(box.x + 1, box.y + box.height / 2);
 	const caret = editor.locator('.dve-print-caret');
 	await expect.poll(async () => (await caret.boundingBox())?.y).toBeGreaterThanOrEqual(box.y - 1);
+	// Print Layout moves the caret for most keys itself, but ArrowLeft is the browser's own move.
+	await waitForEditorFocus(editor.locator('.ProseMirror').first());
 	await page.keyboard.press('ArrowLeft');
 	const beforeBox = (await before.boundingBox())!;
 	// Selection overlays are replaced on an animation frame after keyboard navigation.

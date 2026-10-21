@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
 import type { EditorView } from 'prosemirror-view';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 
 const fixture = fileURLToPath(
 	new URL('../../src/core/docx/__fixtures__/review-preferences/preferences.docx', import.meta.url),
@@ -20,7 +20,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const editor = page.locator('docx-editor');
 		const body = editor.locator('.ProseMirror');
 		await expect(body).toContainText('Preference text');
-		await body.click();
+		await clickInEditor(body);
 		await page.keyboard.press('Control+Home');
 		const selection = () =>
 			editor.evaluate((element) => {

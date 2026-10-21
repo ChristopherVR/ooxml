@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import type { EditorView } from 'prosemirror-view';
+import { clickInEditor, fileInput } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
@@ -29,10 +30,19 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(body).toContainText('Text');
 		await editor.getByRole('tab', { name: 'Review', exact: true }).click();
 		await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
-		await body.click();
+		await clickInEditor(body);
+		// ProseMirror reads each caret move back on selectionchange; pressing on before it has read
+		// one can redraw the older caret over it, so wait for every step.
+		const caret = () =>
+			editor.evaluate(
+				(element) => (element as unknown as { view: EditorView }).view.state.selection.head,
+			);
 		await page.keyboard.press('Control+Home');
-		await page.keyboard.press('ArrowRight');
-		await page.keyboard.press('ArrowRight');
+		await expect.poll(caret).toBe(1);
+		for (const head of [2, 3]) {
+			await page.keyboard.press('ArrowRight');
+			await expect.poll(caret).toBe(head);
+		}
 		await page.keyboard.type('!');
 		await expect(body).toContainText('Te!xt');
 		const exportXml = async () => {

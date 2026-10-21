@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { dialogByHeading, fileInput, newDocument, openSample } from './helpers';
+import { dialogByHeading, fileInput, newDocument, openSample, reveal } from './helpers';
 import { multiPageDocx } from './print-click-fixture';
 
 test.use({ viewport: { width: 1366, height: 1500 } });
@@ -17,11 +17,23 @@ async function renderedBox(locator: Locator) {
 	return box;
 }
 
+/**
+ * View > Layout view. On a phone-width ribbon the group folds into a button once the ribbon has
+ * fitted its groups, which can happen just before or just after the select is reached.
+ */
+async function chooseLayout(editor: Locator, view: 'print' | 'draft') {
+	await editor.getByRole('tab', { name: 'View', exact: true }).click();
+	const select = editor.getByRole('combobox', { name: 'Layout view', exact: true });
+	await expect(async () => {
+		await reveal(editor, select);
+		await select.selectOption(view, { force: true, timeout: 2_000 });
+	}).toPass();
+}
+
 /** A click anywhere on a Print Layout page puts a visible caret at the nearest text, like Word. */
 async function enterPrint(page: Page) {
 	const editor = page.locator('docx-editor');
-	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor.getByRole('combobox', { name: 'Layout view', exact: true }).selectOption('print');
+	await chooseLayout(editor, 'print');
 	await expect(editor.locator('.dve-print-line').first()).toBeVisible();
 	return editor;
 }
@@ -90,10 +102,7 @@ async function openMultiPage(page: Page, view: 'print' | 'draft' = 'print') {
 	});
 	const editor = page.locator('docx-editor');
 	await expect(editor.locator('.ProseMirror').first()).toContainText('Page one intro');
-	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor
-		.getByRole('combobox', { name: 'Layout view', exact: true })
-		.selectOption(view, { force: true });
+	await chooseLayout(editor, view);
 	if (view === 'print') await expect(editor.locator('.dve-print-line').first()).toBeVisible();
 	return editor;
 }

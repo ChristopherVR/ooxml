@@ -5,6 +5,7 @@ import {
 	setReadOnly,
 	insertTableOfSize,
 	dialogByHeading,
+	waitForEditorFocus,
 } from './helpers';
 
 const editor = (page: Page) => page.locator('docx-editor');
@@ -164,7 +165,11 @@ test.describe('clipboard', () => {
 		await page.keyboard.press('Control+a');
 		await surface(page).click({ button: 'right' });
 		await item(page, 'Copy').click();
+		// Closing the menu gave the editor its focus back.
+		await waitForEditorFocus(surface(page));
 		await page.keyboard.press('End');
+		// The editor reads the caret End moved only while it has focus, which the menu takes next.
+		await waitForEditorFocus(surface(page));
 		await surface(page).click({ button: 'right' });
 		await item(page, 'Paste').click();
 		await expect(surface(page)).toContainText('abcabc');

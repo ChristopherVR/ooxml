@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { headingLabels, headingNumberingFixture } from './support/heading-numbering-fixture';
-import { fileInput, dialogByHeading } from './helpers';
+import { clickInEditor, fileInput, dialogByHeading } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: heading-linked outline markers retain their levels after editing`, async ({
@@ -22,7 +22,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			);
 		await expect.poll(labels).toEqual(headingLabels);
 		await page.evaluate(() => document.fonts.ready);
-		await paragraphs.nth(1).click();
+		await clickInEditor(paragraphs.nth(1));
 		await page.keyboard.press('Home');
 		await page.keyboard.type('Edited ');
 		await expect(paragraphs.nth(1)).toHaveText('Edited Heading 1');

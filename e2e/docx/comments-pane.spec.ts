@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { EditorView } from 'prosemirror-view';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument } from './helpers';
+import { newDocument, waitForEditorFocus } from './helpers';
 
 // Word's comments pane is the shared `office-ui-comments-pane`; its controls live in the
 // element's open shadow root, which Playwright's locators pierce. The pane only fires events, so
@@ -18,6 +18,9 @@ const comments = (page: Page) =>
 /** Selects `word` inside the text node that holds it (comment anchors split the paragraph). */
 async function selectWord(surface: Locator, word: string) {
 	await surface.focus();
+	// Let the editor check its selection after taking focus, or that check can draw its older
+	// selection over the one set here.
+	await waitForEditorFocus(surface);
 	await surface.evaluate((root, target) => {
 		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 		let text = walker.nextNode();
