@@ -130,7 +130,10 @@ export function getStaticElementInteractionState(
 
 export function getStaticElementWrapperClassName(
 	element: PptxElement,
-	visual: Pick<StaticElementVisualState, 'isImage' | 'letsTextOverflow' | 'isCallout'>,
+	visual: Pick<
+		StaticElementVisualState,
+		'isImage' | 'letsTextOverflow' | 'isCallout' | 'strokeWidth'
+	>,
 	positioned: boolean,
 	isActionable: boolean,
 ): string {
@@ -139,8 +142,14 @@ export function getStaticElementWrapperClassName(
 	// `non-scaling-stroke`, which is why connectors vanished from thumbnails
 	// while the live stage (ConnectorElementRenderer, an unclipped
 	// MIN_ELEMENT_SIZE box) drew them fine.
+	//
+	// An outline is centred on the geometry edge, so half of it lies outside
+	// the box: clipping a stroked shape halved its visible width (a 3pt circle
+	// outline on a grouped shape drew at about 1.5pt). The other four bindings
+	// leave the wrapper unclipped.
 	const overflowClass =
 		visual.isImage ||
+		visual.strokeWidth > 0 ||
 		element.type === 'group' ||
 		isConnectorOrLineElement(element) ||
 		visual.isCallout ||
