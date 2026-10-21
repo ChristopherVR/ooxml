@@ -395,6 +395,18 @@ describe('legacy form fields in the editor', () => {
 		expect(aligned.doc.child(0).attrs).toMatchObject({ id: 'p0', align: null });
 	});
 
+	it('lets a split move text between two unprotected sections', () => {
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0', formProtection: false },
+			{ endsAtBlockId: 'p1', formProtection: false },
+		]);
+		const end = state.doc.child(0).nodeSize - 1;
+		expect(
+			state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }])).doc.childCount,
+		).toBe(3);
+		expect(state.apply(state.tr.split(3)).doc.childCount).toBe(3);
+	});
+
 	it('only lets form fields change in a document protected for forms', () => {
 		const state = stateOf({ edit: 'forms', enforced: true });
 		const [result] = formTextResults(state.doc);

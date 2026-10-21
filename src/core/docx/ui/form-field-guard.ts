@@ -69,7 +69,12 @@ function unprotectedSections(doc: Node): Range[] {
 				next = found + 1;
 			}
 		}
-		if (section.formProtection === false && end > start) ranges.push({ from: start, to: end });
+		// Neighbouring unprotected sections make one editable range.
+		const last = ranges.at(-1);
+		if (section.formProtection === false && end > start) {
+			if (last?.to === start) last.to = end;
+			else ranges.push({ from: start, to: end });
+		}
 		start = end;
 	});
 	return ranges;
