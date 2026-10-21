@@ -137,10 +137,10 @@ export class XlsxEditorApi extends HTMLElementBase {
 	/**
 	 * Opens File > Share, where the user starts or stops sharing and sees who is in the room. Without
 	 * application UI (`surfaceOnly`) it calls the host's `onOpenShareDialog` instead, and does
-	 * nothing when there is none (`getToolbarProps().enabled.share` tells which).
+	 * nothing when there is none (`getToolbarProps().enabled.openShareDialog` tells which).
 	 */
 	share(): void {
-		if (this.surfaceOnly) void this.getToolbarProps().onShare();
+		if (this.surfaceOnly) void this.getToolbarProps().onOpenShareDialog();
 		else this.openShare?.();
 	}
 

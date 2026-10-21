@@ -256,11 +256,11 @@ it('returns dirty, selection, collaboration and editError next to the props, plu
 		expect(blocks.selection).toBe('A1');
 		expect(blocks.collaboration.active).toBe(false);
 		expect(blocks.editError).toBeNull();
-		expect(blocks.toolbarProps?.enabled.share).toBe(false);
+		expect(blocks.toolbarProps?.enabled.openShareDialog).toBe(false);
 		handle.current!.share();
 		expect(onOpenShareDialog).not.toHaveBeenCalled();
 		await act(async () => root.render(createElement(Host, { share: true })));
-		expect(blocks.toolbarProps?.enabled.share).toBe(true);
+		expect(blocks.toolbarProps?.enabled.openShareDialog).toBe(true);
 		handle.current!.share();
 		expect(onOpenShareDialog).toHaveBeenCalledTimes(1);
 		await act(async () => {

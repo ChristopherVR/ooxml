@@ -113,12 +113,12 @@ it('disables controls in view mode and routes dialog workflows to host callbacks
 	expect(blocks.getState().mode).toBe('view');
 	expect(button(toolbar, 'Bold').disabled).toBe(true);
 	expect(toolbar.querySelector<HTMLSelectElement>('select')!.disabled).toBe(true);
-	expect(blocks.getState().toolbarProps?.enabled.share).toBe(true);
+	expect(blocks.getState().toolbarProps?.enabled.openShareDialog).toBe(true);
 	blocks.handle.share();
 	expect(onOpenShareDialog).toHaveBeenCalledTimes(1);
 	blocks.update({ canEdit: true, workbook: blocks.handle.element.workbook! });
 	await vi.waitFor(() => expect(button(toolbar, 'Bold').disabled).toBe(false));
-	expect(blocks.getState().toolbarProps?.enabled.share).toBe(false);
+	expect(blocks.getState().toolbarProps?.enabled.openShareDialog).toBe(false);
 	blocks.handle.share();
 	expect(onOpenShareDialog).toHaveBeenCalledTimes(1);
 	blocks.destroy();

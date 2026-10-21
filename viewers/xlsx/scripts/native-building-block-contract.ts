@@ -47,11 +47,11 @@ export async function nativeBuildingBlockContract(framework: string) {
 		const onOpenShareDialog = vi.fn();
 		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.canEdit).toBe(true));
-		expect(snapshot().toolbarProps?.enabled.share).toBe(false);
+		expect(snapshot().toolbarProps?.enabled.openShareDialog).toBe(false);
 		blocks.handle.share();
 		expect(onOpenShareDialog).not.toHaveBeenCalled();
 		blocks.update({ workbook, canEdit: true, onWorkbookError: errors, onOpenShareDialog });
-		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.share).toBe(true));
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.openShareDialog).toBe(true));
 		blocks.handle.share();
 		expect(onOpenShareDialog).toHaveBeenCalledTimes(1);
 		expect(host.querySelector('office-ui-backstage')).toBeNull();

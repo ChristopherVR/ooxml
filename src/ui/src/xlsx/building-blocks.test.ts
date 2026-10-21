@@ -153,7 +153,7 @@ it('reports every control as enabled for an editable workbook and none for host 
 		fontSize: true,
 		alignment: true,
 		numberFormat: true,
-		share: false,
+		openShareDialog: false,
 		settings: false,
 		formatCells: false,
 		findReplace: false,
@@ -187,13 +187,17 @@ it('routes dialog workflows to host callbacks and never mounts library dialogs',
 	const editor = mount();
 	const onOpenShareDialog = vi.fn();
 	const onOpenFormatCells = vi.fn();
-	expect(await editor.getToolbarProps().onShare()).toBe(false);
+	expect(await editor.getToolbarProps().onOpenShareDialog()).toBe(false);
 	editor.share();
 	expect(onOpenShareDialog).not.toHaveBeenCalled();
 	editor.surfaceActions = { onOpenShareDialog, onOpenFormatCells };
 	editor.select('B2');
 	const props = editor.getToolbarProps();
-	expect(props.enabled).toMatchObject({ share: true, formatCells: true, findReplace: false });
+	expect(props.enabled).toMatchObject({
+		openShareDialog: true,
+		formatCells: true,
+		findReplace: false,
+	});
 	editor.share();
 	expect(onOpenShareDialog).toHaveBeenCalledWith({
 		sheet: 0,
@@ -206,7 +210,7 @@ it('routes dialog workflows to host callbacks and never mounts library dialogs',
 	expect(await props.onOpenFindReplace()).toBe(false);
 	editor.readOnly = true;
 	expect(await editor.getToolbarProps().onOpenFormatCells()).toBe(false);
-	expect(editor.getToolbarProps().enabled.share).toBe(true);
+	expect(editor.getToolbarProps().enabled.openShareDialog).toBe(true);
 	expect(editor.shadowRoot!.querySelector('[role="dialog"], office-ui-backstage')).toBeNull();
 });
 

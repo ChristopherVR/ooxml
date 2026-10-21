@@ -161,7 +161,9 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		expect(await page.evaluate(() => window.xlsxNativeBlocks.snapshot().dirty)).toBe(true);
 		// Sharing is a host workflow here: not enabled, and a silent no-op, until the host provides it.
 		expect(
-			await page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.share),
+			await page.evaluate(
+				() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.openShareDialog,
+			),
 		).toBe(false);
 		await page.evaluate(() => {
 			const b = window.xlsxNativeBlocks;
@@ -171,7 +173,9 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		});
 		await expect
 			.poll(() =>
-				page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.share),
+				page.evaluate(
+					() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.openShareDialog,
+				),
 			)
 			.toBe(true);
 		await page.evaluate(() => window.xlsxNativeBlocks.handle.share());
