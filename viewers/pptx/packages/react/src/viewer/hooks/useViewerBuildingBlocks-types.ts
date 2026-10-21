@@ -24,6 +24,13 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	filePath?: string;
 	/** Display name for the toolbar's file-name-aware controls (e.g. title bar hosts build themselves). */
 	fileName?: string;
+	/**
+	 * Zero-based slide shown after each load, clamped into the deck, as `PowerPointViewer`'s
+	 * `initialSlide`. It is applied in the same render that shows the loaded deck, so slide 1 is
+	 * never shown first. Changing it later applies to the next load, not the current slide; use
+	 * the handle's `goTo` to move an open deck.
+	 */
+	initialSlide?: number;
 	/** Whether the built-in autosave-to-localStorage recovery timer is active. Defaults to true. */
 	autosaveEnabled?: boolean;
 	/** Display name used as the author for comments. */
