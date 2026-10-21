@@ -1,8 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Word names a legacy form field's bookmark after the field (`w:ffData/w:name`) and keeps it around
-// the field, from its begin marker to its end marker. Every field reads as the same characters in
-// the paragraph's text diff, so swapping two fields, or moving one, changes nothing the diff can
-// see: a rebuilt paragraph puts such a bookmark back around its field wherever the field went.
+// the field, from its begin marker (or just after it, in some templates) to its end marker. Every
+// field reads as the same characters in the paragraph's text diff, so swapping two fields, or
+// moving one, changes nothing the diff can see: a rebuilt paragraph puts such a bookmark back
+// around its field wherever the field went.
 import { runPositions, type MarkerAt } from './inline-marker-positions';
 import type { TextRun } from './model';
 import { getW, named, type XmlElement } from './xml';
@@ -34,8 +35,9 @@ function formFieldSpans(runs: readonly TextRun[]): Map<string, Span[]> {
 }
 
 /**
- * Puts each form field's own bookmark (named after the field, and around exactly that field before
- * the edit) around the field again, once the paragraph's markers were moved (`markers`, with their
+ * Puts each form field's own bookmark (named after the field, and within that field before the
+ * edit: around it, or from just after its begin marker) around the field again, at the same
+ * distance from its start and end, once the paragraph's markers were moved (`markers`, with their
  * `source` positions in `before`). A bookmark whose field is gone, or is no longer the only one of
  * its name, stays where it was put.
  */
@@ -59,10 +61,16 @@ export function followFormFieldBookmarks<
 		const [from, other] = (name && was.get(name)) || [];
 		const [to, another] = (name && now.get(name)) || [];
 		if (!end || !from || other || !to || another) continue;
-		if (start.source !== from.start || end.source !== from.end) continue;
-		if (start.position === to.start && end.position === to.end) continue;
-		placed.set(start, to.start);
-		placed.set(end, to.end);
+		// Word opens the bookmark before the begin marker, or in some templates just after it, and
+		// closes it after the end marker: it keeps its place from the field's start and end.
+		const head = start.source - from.start;
+		const tail = from.end - end.source;
+		if (head < 0 || tail < 0 || start.source >= end.source) continue;
+		const opens = to.start + head;
+		const closes = to.end - tail;
+		if (opens >= closes || (start.position === opens && end.position === closes)) continue;
+		placed.set(start, opens);
+		placed.set(end, closes);
 	}
 	if (!placed.size) return [...markers];
 	// Markers at one place are written in the order they come here: a bookmark put back around its

@@ -225,6 +225,33 @@ describe('legacy form fields', () => {
 			expect(bookmarked(xml)).toEqual({ Rejected: ['Rejected'], Approved: ['Approved'] });
 		});
 
+		it('keeps each field in its own bookmark when the bookmark starts after the begin marker', async () => {
+			// Word templates can open the bookmark after the begin run, before the field code.
+			const afterBegin = (xml: string) => {
+				const start = xml.match(/^<w:bookmarkStart[^>]*\/>/)![0];
+				const rest = xml.slice(start.length);
+				const cut = rest.indexOf('</w:r>') + '</w:r>'.length;
+				return rest.slice(0, cut) + start + rest.slice(cut);
+			};
+			const { loaded } = await load(
+				`<w:p>${afterBegin(checkboxField)}${plain(' Yes ')}${afterBegin(rejected)}${plain(' No')}</w:p>`,
+			);
+			const paragraph = expectParagraph(loaded.model.blocks[0]);
+			const runs = paragraph.runs;
+			expect(runs).toHaveLength(8);
+			paragraph.runs = [...runs.slice(4, 7), at(runs, 3), ...runs.slice(0, 3), at(runs, 7)];
+			const xml = await documentXml(await loaded.save());
+			/** The field named `name`, its bookmark from after its begin run to after its end run. */
+			const ownField = (name: string, id: number) =>
+				new RegExp(
+					`<w:name w:val="${name}"/>(?:(?!<w:ffData\\b)[\\s\\S])*?</w:r><w:bookmarkStart w:id="${id}" w:name="${name}"/>` +
+						`(?:(?!<w:ffData\\b)[\\s\\S])*?w:fldCharType="end"/></w:r><w:bookmarkEnd w:id="${id}"/>`,
+				);
+			expect(xml).toMatch(ownField('Rejected', 4));
+			expect(xml).toMatch(ownField('Approved', 2));
+			expect(xml.indexOf('w:name="Rejected"')).toBeLessThan(xml.indexOf('w:name="Approved"'));
+		});
+
 		it('takes a field its bookmark along when the field moves in its paragraph', async () => {
 			const { loaded, paragraph, approved, yes, rejected, no } = await twoBoxes();
 			paragraph.runs = [yes, ...rejected, no, ...approved];
