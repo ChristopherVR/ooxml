@@ -468,6 +468,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.exporter = createExportLifecycle({
 			doc: this.doc,
 			container: this.container,
+			getModalHost: () => this.lifecycle.chrome.root,
 			store: this.store,
 			registry: this.registry,
 			getTranslator: () => this.t,
