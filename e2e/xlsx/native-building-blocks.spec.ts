@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { NativeHarness } from '../../demos/xlsx/demo-vanilla/native-building-blocks';
-for (const framework of ['angular', 'vue', 'svelte', 'solid']) {
+for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 	test(`${framework}: native composed controls retain drafts, permission and saved edits`, async ({
 		page,
 	}) => {
@@ -19,6 +19,7 @@ for (const framework of ['angular', 'vue', 'svelte', 'solid']) {
 			canvas.locator('office-ui-ribbon, office-ui-title-bar, office-ui-backstage'),
 		).toHaveCount(0);
 		await page.evaluate(() => window.xlsxNativeBlocks.handle.select('B20'));
+		await expect(page.getByRole('textbox', { name: 'Name Box', exact: true })).toHaveCount(1);
 		const formula = page.getByRole('textbox', { name: 'Formula Bar', exact: true });
 		await formula.fill('=1+2');
 		await formula.press('Enter');

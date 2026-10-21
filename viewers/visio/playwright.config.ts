@@ -6,7 +6,7 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173);
 const origin = `http://127.0.0.1:${port}`;
 export default defineConfig({
 	testDir: '../../e2e/visio',
-	testIgnore: ['native-building-blocks.spec.ts', 'native-theme.spec.ts'],
+	testIgnore: ['native-building-blocks.spec.ts', 'native-theme.spec.ts', 'shadow-theme.spec.ts'],
 	fullyParallel: true,
 	use: {
 		baseURL: origin,

@@ -155,7 +155,7 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 		'div',
 		{ ref: (host: HTMLDivElement | null) => prepareBlock(host, 'formula-bar') },
 		createElement('input', {
-			key: props.selection,
+			key: `name:${props.selection}`,
 			'aria-label': props.labels['Name Box'],
 			defaultValue: props.selection,
 			'aria-invalid': invalidName,
@@ -172,7 +172,7 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 			},
 		}),
 		createElement('input', {
-			key: props.activeCell,
+			key: `formula:${props.activeCell}`,
 			ref: input,
 			'aria-label': props.labels['Formula Bar'],
 			defaultValue: props.formula,

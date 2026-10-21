@@ -37,6 +37,7 @@
 		"build:suite": "bun run build && bun run --cwd src/ui build && node scripts/build-suite.mjs",
 		"preview:suite": "node scripts/preview-site.mjs",
 		"test:suite": "node scripts/suite-browser-check.mjs",
+		"test:demos": "node scripts/demo-browser-check.mjs",
 		"test:suite:profile": "node scripts/suite-profile-check.mjs",
 		"build:visio": "bun run --cwd src/core build:visio",
 		"typecheck": "bun run --cwd src/core typecheck",

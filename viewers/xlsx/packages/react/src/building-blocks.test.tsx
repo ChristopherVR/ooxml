@@ -2,13 +2,37 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { act, createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useViewerBuildingBlocks, SpreadsheetCanvas } from './building-blocks';
+import { useViewerBuildingBlocks, SpreadsheetCanvas, FormulaBar } from './building-blocks';
 import type { EditorHandle } from '../../bindings/src/index';
+import { mountEditor } from '../../bindings/src/index';
 import { createWorkbook, saveXlsx } from '../../core/src/index';
 
 afterEach(() => {
 	document.body.replaceChildren();
 	vi.unstubAllGlobals();
+});
+it('keeps one name box and formula input when their cell keys overlap', async () => {
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const canvas = document.createElement('div');
+	document.body.append(canvas);
+	const binding = mountEditor(canvas, { workbook: createWorkbook() }, true);
+	const editor = binding.element;
+	try {
+		for (const cell of ['A1', 'B20', 'C30', 'A1']) {
+			editor.select(cell);
+			await act(async () => root.render(createElement(FormulaBar, editor.getToolbarProps())));
+			expect(host.querySelectorAll('input')).toHaveLength(2);
+			expect(host.querySelectorAll('[aria-label="Name Box"]')).toHaveLength(1);
+			expect(host.querySelector<HTMLInputElement>('[aria-label="Name Box"]')!.value).toBe(cell);
+			expect(host.querySelectorAll('[aria-label="Formula Bar"]')).toHaveLength(1);
+		}
+	} finally {
+		await act(async () => root.unmount());
+		binding.destroy();
+	}
 });
 it('composes a surface in StrictMode and keeps lifecycle, callbacks and permission reactive', async () => {
 	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

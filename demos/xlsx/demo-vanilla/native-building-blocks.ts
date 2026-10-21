@@ -48,6 +48,11 @@ export async function mountNativeBlocks(
 				...(p
 					? [
 							createElement(Toolbar, { ...p, key: 'toolbar' }),
+							createElement(
+								'button',
+								{ key: 'host-italic', onClick: () => p.onItalic() },
+								'Host italic',
+							),
 							createElement(FormulaBar, { ...p, key: 'formula' }),
 							createElement(SheetTabs, { ...p, key: 'tabs' }),
 						]
