@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { DOMSerializer } from 'prosemirror-model';
+import { DOMParser, DOMSerializer } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { loadDocx } from 'ooxml-core/docx';
 import { chooseListItem, controlSpans } from 'ooxml-core/docx/ui';
@@ -57,6 +57,15 @@ describe('content controls around table cells in the editor', () => {
 			sdtPlaceholder: '1',
 		});
 		expect(JSON.parse(td.dataset.sdt!).items).toHaveLength(2);
+	});
+
+	it('keeps a cell control through HTML, as when cells are copied and pasted', async () => {
+		const doc = modelToDoc((await form()).model);
+		const html = document.createElement('div');
+		html.append(DOMSerializer.fromSchema(schema).serializeFragment(doc.content));
+		const parsed = DOMParser.fromSchema(schema).parse(html);
+		expect(controlSpans(parsed)).toEqual(controlSpans(doc));
+		expect(controlSpans(parsed)[0]).toMatchObject({ level: 'cell', control: { id: '71' } });
 	});
 
 	for (const merged of [false, true])
