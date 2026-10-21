@@ -143,6 +143,54 @@ describe('textPanel theme colour picker', () => {
 	});
 });
 
+describe('textPanel text warp', () => {
+	function warpTiles(wrapper: ReturnType<typeof mount>) {
+		return wrapper.findAll<HTMLButtonElement>('pptx-ui-ribbon-gallery [data-gallery-item]');
+	}
+
+	it('renders the shared Text Warp gallery with the current preset marked', () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: textEl({ textWarpPreset: 'textArchUp' }) },
+		});
+		const tiles = warpTiles(wrapper);
+		expect(tiles).toHaveLength(39);
+		expect(
+			tiles
+				.filter((tile) => tile.attributes('aria-pressed') === 'true')
+				.map((tile) => tile.attributes('data-gallery-item')),
+		).toStrictEqual(['textArchUp']);
+	});
+
+	it('merges a picked warp into the full textStyle patch, and No Transform clears it', async () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: textEl({ bold: true, textWarpPreset: 'textArchUp' }) },
+		});
+		await wrapper.get('.pptx-vue-textwarp-toggle').trigger('click');
+		wrapper.get<HTMLButtonElement>('[data-gallery-item="textInflate"]').element.click();
+		wrapper.get<HTMLButtonElement>('[data-gallery-item="textNoShape"]').element.click();
+		expect(wrapper.emitted('update')).toStrictEqual([
+			[{ textStyle: { bold: true, textWarpPreset: 'textInflate' } }],
+			[{ textStyle: { bold: true, textWarpPreset: undefined } }],
+		]);
+	});
+
+	it('keeps the warp tiles unpickable when the deck is read-only', () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: textEl({ textWarpPreset: 'textArchUp' }), canEdit: false },
+		});
+		expect(warpTiles(wrapper).every((tile) => tile.element.disabled)).toBeTruthy();
+		wrapper.get<HTMLButtonElement>('[data-gallery-item="textInflate"]').element.click();
+		expect(wrapper.emitted('update')).toBeUndefined();
+	});
+
+	it('has no warp gallery for an element without text properties', () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: { type: 'image', id: 'i1' } as PptxElement },
+		});
+		expect(wrapper.find('pptx-ui-ribbon-gallery').exists()).toBeFalsy();
+	});
+});
+
 describe('textPanel font family', () => {
 	it('applies a picked font to every run, not only the body', async () => {
 		const sameFace = { fontFamily: 'Old Sans', eastAsiaFont: 'Old Sans' };
