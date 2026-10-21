@@ -130,6 +130,10 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			resolve(declarations, 'packages/bindings/src/building-blocks.d.ts'),
 			resolve(bindings, 'building-blocks.d.ts'),
 		);
+		cpSync(
+			resolve(declarations, 'packages/bindings/src/toolbar-controls.d.ts'),
+			resolve(bindings, 'toolbar-controls.d.ts'),
+		);
 		if (key === 'svelte') {
 			cpSync(
 				resolve(root, 'packages/bindings/src/VisioViewer.svelte'),
@@ -145,7 +149,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			const runtimeEntry = resolve(temporary, 'svelte-runtime.ts');
 			writeFileSync(
 				runtimeEntry,
-				"export * from '../src/index';\nexport * from '../packages/bindings/src/common';\nexport * from '../packages/bindings/src/building-blocks';\nexport * from '../packages/svelte/src/building-blocks';\nexport * from 'visio-core';\n",
+				"export * from '../src/index';\nexport * from '../packages/bindings/src/common';\nexport * from '../packages/bindings/src/building-blocks';\nexport * from '../packages/bindings/src/toolbar-controls';\nexport * from '../packages/svelte/src/building-blocks';\nexport * from 'visio-core';\n",
 			);
 			await build({
 				configFile: false,
@@ -168,7 +172,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			});
 			writeFileSync(
 				resolve(outDir, 'runtime.d.ts'),
-				"export * from './types/packages/bindings/src/common.js';\nexport * from './types/packages/bindings/src/building-blocks.js';\nexport * from './types/packages/svelte/src/building-blocks.js';\nexport * from './types/src/index.js';\nexport * from 'visio-core';\n",
+				"export * from './types/packages/bindings/src/common.js';\nexport * from './types/packages/bindings/src/building-blocks.js';\nexport * from './types/packages/bindings/src/toolbar-controls.js';\nexport * from './types/packages/svelte/src/building-blocks.js';\nexport * from './types/src/index.js';\nexport * from 'visio-core';\n",
 			);
 			writeFileSync(
 				resolve(outDir, 'VisioViewer.svelte.d.ts'),
@@ -190,10 +194,11 @@ export default VisioViewer;
 			copyDeclarations(resolve(declarations, 'packages/svelte'), resolve(types, 'packages/svelte'));
 			const names = ['DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector', 'ShapesPane'];
 			for (const name of names) {
-				const source = readFileSync(resolve(directory, `src/${name}.svelte`), 'utf8').replaceAll(
-					'../../bindings/src/building-blocks',
+				const source = readFileSync(resolve(directory, `src/${name}.svelte`), 'utf8').replace(
+					/\.\.\/\.\.\/bindings\/src\/(?:building-blocks|toolbar-controls)/g,
 					'./runtime.js',
 				);
+				assert.ok(!source.includes('../../bindings/'), `Packaged ${name}.svelte imports resolve`);
 				writeFileSync(resolve(outDir, `${name}.svelte`), source);
 				const props =
 					name === 'DiagramCanvas'
