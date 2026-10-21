@@ -24,7 +24,12 @@ const schema = new Schema({
 			attrs: { id: { default: null }, contentControl: { default: null } },
 			toDOM: () => ['p', 0],
 		},
-		table: { group: 'block', content: 'tableRow+', toDOM: () => ['table', ['tbody', 0]] },
+		table: {
+			group: 'block',
+			content: 'tableRow+',
+			attrs: { contentControl: { default: null } },
+			toDOM: () => ['table', ['tbody', 0]],
+		},
 		tableRow: {
 			content: 'tableCell+',
 			attrs: { properties: { default: null } },
@@ -413,6 +418,43 @@ describe('content controls around table cells in the editor', () => {
 		expect(ids).toEqual([null, '67', null]);
 	});
 
+	it('removes a temporary block control from a table it holds once the table is edited', () => {
+		const block: ContentControl = { id: '69', level: 'block', kind: 'richText', temporary: true };
+		const table = (control: ContentControl | null) =>
+			schema.node('table', { contentControl: control }, [
+				schema.node('tableRow', null, [schema.node('tableCell', null, [paragraph('Inside')])]),
+			]);
+		const controls = (state: EditorState) => {
+			const ids: unknown[] = [];
+			state.doc.forEach((node) => ids.push(node.attrs.contentControl?.id ?? null));
+			return ids;
+		};
+		// Around the table alone, and around a paragraph, the table and a paragraph.
+		for (const blocks of [
+			[table(block), paragraph('Elsewhere')],
+			[
+				paragraph('Before', { contentControl: block }),
+				table(block),
+				paragraph('After', { contentControl: block }),
+				paragraph('Elsewhere'),
+			],
+		]) {
+			const state = EditorState.create({
+				schema,
+				doc: schema.node('doc', null, blocks),
+				plugins: [contentControlPlugin()],
+			});
+			const outside = state.apply(state.tr.insertText('!', state.doc.content.size - 1));
+			expect(controls(outside)).toEqual(controls(state));
+			let at = -1;
+			state.doc.descendants((node, pos) => {
+				if (at < 0 && node.isText && node.text === 'Inside') at = pos + 2;
+			});
+			const edited = state.apply(state.tr.insertText('!', at));
+			expect(controls(edited).every((id) => id === null)).toBe(true);
+		}
+	});
+
 	it('takes a temporary control off only itself when another one shares its id', () => {
 		// Files from other tools repeat ids: here a cell control and a block control in its cell.
 		const cellControl = (temporary: boolean): ContentControl => ({
@@ -453,6 +495,44 @@ describe('content controls around table cells in the editor', () => {
 		try {
 			random.mockReturnValueOnce(draw(1000)).mockReturnValueOnce(draw(1001));
 			expect(newControlId(doc)).toBe('1001');
+		} finally {
+			random.mockRestore();
+		}
+	});
+
+	it('gives a new or pasted control an id that no table control has', () => {
+		const sheet: ContentControl = { id: '1000', level: 'block', kind: 'richText' };
+		const doc = schema.node('doc', null, [
+			schema.node('table', { contentControl: sheet }, [
+				schema.node('tableRow', null, [schema.node('tableCell', null, [paragraph('Line')])]),
+			]),
+			paragraph('After'),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const draw = (id: number) => (id - 0.5) / (2 ** 31 - 1);
+		const random = vi.spyOn(Math, 'random');
+		try {
+			random.mockReturnValueOnce(draw(1000)).mockReturnValueOnce(draw(1001));
+			expect(newControlId(doc)).toBe('1001');
+			// A copy of an inline control with the table control's id, pasted after it.
+			const name: ContentControl = { id: '1000', level: 'inline', kind: 'text' };
+			const copied = schema.node('doc', null, [
+				schema.node('paragraph', null, [
+					schema.text('Ann', [schema.marks.contentControl!.create({ data: JSON.stringify(name) })]),
+				]),
+			]);
+			const plugin = contentControlPlugin();
+			random.mockReturnValueOnce(draw(1002));
+			const pasted = plugin.props.transformPasted!.call(
+				plugin,
+				copied.slice(0, copied.content.size),
+				{ state, dragging: null } as unknown as EditorView,
+				false,
+			);
+			const ids = controlSpans(schema.node('doc', null, pasted.content)).map(
+				(span) => span.control.id,
+			);
+			expect(ids).toEqual(['1002']);
 		} finally {
 			random.mockRestore();
 		}

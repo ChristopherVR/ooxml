@@ -1,6 +1,7 @@
 // Where content controls sit in the editor document: inline controls are runs of text sharing a
 // `contentControl` mark, block controls are consecutive paragraphs sharing a node attribute, and
-// cell controls are a table cell's node attribute.
+// cell controls are a table cell's node attribute. A block control around a table is the table's
+// node attribute; no command operates it, so it is listed apart (`tableControlSpans`).
 import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
 import type { ContentControl } from '../content-control-model';
@@ -58,6 +59,23 @@ export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 			previous.control = control;
 		} else spans.push({ control, level: 'inline', from: pos, to: pos + node.nodeSize });
 		return false;
+	});
+	return spans;
+}
+
+/** The tables held by a block control, in document order. */
+export function tableControlSpans(doc: ProseMirrorNode): ControlSpan[] {
+	const spans: ControlSpan[] = [];
+	doc.descendants((node, pos) => {
+		const control = node.type.name === 'table' ? node.attrs.contentControl : undefined;
+		if (control)
+			spans.push({
+				control: control as ContentControl,
+				level: 'block',
+				from: pos,
+				to: pos + node.nodeSize,
+			});
+		return !node.isTextblock;
 	});
 	return spans;
 }

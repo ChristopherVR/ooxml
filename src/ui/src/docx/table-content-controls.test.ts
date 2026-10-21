@@ -180,6 +180,75 @@ describe('content controls around table cells in the editor', () => {
 			expect(xml).not.toContain('<w:sdt>');
 		});
 
+	for (const [around, edited] of [
+		['a paragraph, a table and a paragraph', 'Inside'],
+		['a paragraph, a table and a paragraph', 'After'],
+		['a table', 'Inside'],
+	] as const)
+		it(`removes a temporary control around ${around} once ${edited} is edited`, async () => {
+			const paragraph = (text: string) => `<w:p><w:r><w:t>${text}</w:t></w:r></w:p>`;
+			const table =
+				`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid>` +
+				`<w:tr>${cell('Inside')}</w:tr></w:tbl>`;
+			const content =
+				around === 'a table' ? table : paragraph('Before') + table + paragraph('After');
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:sdt><w:sdtPr><w:alias w:val="Section"/>` +
+					`<w:id w:val="76"/><w:temporary/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>` +
+					`${paragraph('Elsewhere')}<w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+			const end = (s: EditorState, text: string) => {
+				let found = -1;
+				s.doc.descendants((node, pos) => {
+					if (found < 0 && node.isText && node.text === text) found = pos + node.nodeSize;
+				});
+				return found;
+			};
+			const save = async (s: EditorState) => {
+				const bytes = await loaded.save(docToModel(s.doc, loaded.model, doc));
+				return (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			};
+			// An edit outside it leaves it; an edit in it removes all of it.
+			const outside = state.apply(state.tr.insertText('!', end(state, 'Elsewhere')));
+			expect(await save(outside)).toContain('<w:alias w:val="Section"/>');
+			const next = outside.apply(outside.tr.insertText('!', end(outside, edited)));
+			const xml = await save(next);
+			expect(xml).toContain(`<w:t>${edited}!</w:t>`);
+			expect(xml).not.toContain('<w:sdt>');
+		});
+
+	for (const temporary of [false, true])
+		it(`${temporary ? 'drops a temporary' : 'keeps a'} block control around a table the editor holds none for`, async () => {
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"/><w:id w:val="77"/>` +
+					`${temporary ? '<w:temporary/>' : ''}</w:sdtPr><w:sdtContent><w:tbl><w:tblPr/>` +
+					`<w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${cell('Title')}</w:tr></w:tbl>` +
+					`</w:sdtContent></w:sdt><w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			expect(doc.firstChild!.attrs.contentControl).toMatchObject({ id: '77' });
+			// As a document shared with an editor that kept no controls on tables has it: only a
+			// temporary control is ever taken off a table, so another one stays.
+			const state = EditorState.create({ schema, doc });
+			const lost = state.tr.setNodeMarkup(0, undefined, {
+				...doc.firstChild!.attrs,
+				contentControl: null,
+			});
+			const bytes = await loaded.save(docToModel(state.apply(lost).doc, loaded.model, doc));
+			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			if (temporary) expect(xml).not.toContain('<w:sdt>');
+			else
+				expect(xml).toMatch(/<w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"\/><w:id w:val="77"\/>/);
+		});
+
 	it('keeps a block control around a table, and one around a cell paragraph, through an edit', async () => {
 		const zip = new JSZip();
 		const note =

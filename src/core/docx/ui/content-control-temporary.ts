@@ -8,7 +8,12 @@ import { Mapping } from 'prosemirror-transform';
 import { removedByEdit } from '../content-control-edit';
 import { CONTROL_EDIT_META } from './content-control-commands';
 import { rowControlSpans, type RowControlSpan } from './content-control-rows';
-import { controlOfMark, controlSpans, type ControlSpan } from './content-control-spans';
+import {
+	controlOfMark,
+	controlSpans,
+	tableControlSpans,
+	type ControlSpan,
+} from './content-control-spans';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
 
 type Span = ControlSpan | RowControlSpan;
@@ -24,7 +29,7 @@ const contentOf = (state: EditorState, range: { from: number; to: number }): str
 			: '\uFFFC',
 	);
 
-/** Takes the control of `span` off its text, paragraphs, cell or row; its content stays as it is. */
+/** Takes the control of `span` off its text, paragraphs, table, cell or row; its content stays. */
 export function removeControl(tr: Transaction, span: Span): Transaction {
 	const { id } = span.control;
 	if (span.level === 'row') {
@@ -45,13 +50,17 @@ export function removeControl(tr: Transaction, span: Span): Transaction {
 					tr.removeMark(pos, pos + node.nodeSize, mark);
 			return true;
 		}
-		// Its own paragraphs: not the cell around them, whose control may share its id.
-		if (pos >= span.from && node.type.name === 'paragraph' && node.attrs.contentControl?.id === id)
+		// Its own paragraphs or table: not a cell around them, nor a paragraph in the table, whose
+		// control may share its id.
+		if (pos < span.from) return true;
+		if (BLOCKS.has(node.type.name) && node.attrs.contentControl?.id === id)
 			tr.setNodeMarkup(pos, undefined, { ...node.attrs, contentControl: null });
-		return true;
+		return false;
 	});
 	return tr;
 }
+
+const BLOCKS = new Set(['paragraph', 'table']);
 
 /** One control and its range: its spans, more than one when it holds what splits them. */
 interface Occurrence {
@@ -100,7 +109,11 @@ function temporaryControls(doc: ProseMirrorNode): Occurrence[] {
 	const inline = spans.filter((span) => span.level === 'inline');
 	const found: Occurrence[] = [];
 	const last = new Map<string, Occurrence>();
-	for (const span of [...spans, ...rowControlSpans(doc)]) {
+	// In document order: the paragraphs and tables of one block control are its spans in turn.
+	const candidates = [...spans, ...tableControlSpans(doc), ...rowControlSpans(doc)].sort(
+		(a, b) => a.from - b.from,
+	);
+	for (const span of candidates) {
 		if (!removedByEdit(span.control)) continue;
 		const key = `${span.level}:${span.control.id}`;
 		const previous = last.get(key);

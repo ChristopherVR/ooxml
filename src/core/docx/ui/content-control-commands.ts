@@ -17,7 +17,12 @@ import {
 import type { ContentControl, ContentControlKind } from '../content-control-model';
 import { freshControlId } from './content-control-paste';
 import { rowControlSpans } from './content-control-rows';
-import { controlAt, controlSpans, type ControlSpan } from './content-control-spans';
+import {
+	controlAt,
+	controlSpans,
+	tableControlSpans,
+	type ControlSpan,
+} from './content-control-spans';
 
 /** Transactions carrying this meta are the control's own edits and bypass the lock guard. */
 export const CONTROL_EDIT_META = 'dve-content-control';
@@ -277,10 +282,17 @@ export function deleteToPlaceholder(
 	return replaceControlContent(state, span, placeholderChange(span.control));
 }
 
-/** A new control id that no control in `doc` has, rows included: Word uses signed 32-bit ids. */
+/**
+ * A new control id that no control in `doc` has, rows and tables included: Word uses signed 32-bit
+ * integers.
+ */
 export const newControlId = (doc: ProseMirrorNode): string =>
 	freshControlId(
-		new Set([...controlSpans(doc), ...rowControlSpans(doc)].map((span) => span.control.id)),
+		new Set(
+			[...controlSpans(doc), ...tableControlSpans(doc), ...rowControlSpans(doc)].map(
+				(span) => span.control.id,
+			),
+		),
 	);
 
 export interface NewControlOptions {

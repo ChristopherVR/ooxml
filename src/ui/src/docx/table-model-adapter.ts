@@ -3,7 +3,7 @@
 // id, because vertical-merge continuation cells and nested-table previews have no 1:1 visible
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { cellSourceBlocks } from 'ooxml-core/docx';
+import { cellSourceBlocks, removedByEdit } from 'ooxml-core/docx';
 import type {
 	ContentControl,
 	Paragraph,
@@ -109,6 +109,7 @@ export function tableNode(
 			indentTwips: block.indentTwips ?? null,
 			borders: block.borders ? JSON.stringify(block.borders) : null,
 			cellMargins: block.cellMargins ? JSON.stringify(block.cellMargins) : null,
+			contentControl: block.contentControl ?? null,
 		},
 		rows,
 	);
@@ -119,6 +120,18 @@ const cellControl = (cell: ProseMirrorNode): Pick<TableCell, 'contentControl'> =
 	cell.attrs.contentControl
 		? { contentControl: structuredClone(cell.attrs.contentControl as ContentControl) }
 		: {};
+
+/**
+ * The block control around a table as the editor holds it: a temporary one is gone after an edit.
+ * The editor takes no other control off a table, so one the node lacks (a document shared with an
+ * editor that kept none on tables) stays as `prior` had it, and its `w:sdt` is never unwrapped.
+ */
+export function tableControl(node: ProseMirrorNode, prior?: Table): Pick<Table, 'contentControl'> {
+	const control = (node.attrs.contentControl as ContentControl | null) ?? prior?.contentControl;
+	return control && (node.attrs.contentControl || !removedByEdit(control))
+		? { contentControl: structuredClone(control) }
+		: {};
+}
 
 /** Reads editable formatting from nodes rather than a stale prior model. */
 export function tableFormattingFromNode(node: ProseMirrorNode): {
@@ -197,6 +210,8 @@ export function convertMergedTable(
 	convertParagraph: (paragraph: ProseMirrorNode) => Paragraph,
 ): Table {
 	const updated = structuredClone(prior);
+	delete updated.contentControl;
+	Object.assign(updated, tableControl(node, prior));
 	const cellByKey = new Map<string, TableCell>();
 	for (const row of updated.rows) for (const cell of row) cellByKey.set(cellKey(cell), cell);
 	// A row's control as the editor holds it (a temporary one goes after an edit); the rows of a

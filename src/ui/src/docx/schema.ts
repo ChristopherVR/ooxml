@@ -271,6 +271,8 @@ export const schema = new Schema({
 				borders: { default: null },
 				/** Default cell margins (`w:tblCellMar`) as JSON. */
 				cellMargins: { default: null },
+				/** The block-level content control around the table (`w:sdt` around `w:tbl`). */
+				contentControl: { default: null },
 			},
 			parseDOM: [{ tag: 'table' }],
 			toDOM: (node) => ['table', { style: tableStyle(node.attrs) }, ['tbody', 0]],
