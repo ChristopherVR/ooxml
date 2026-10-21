@@ -1,11 +1,13 @@
 // @vitest-environment happy-dom
 /**
  * The theme colour grid and the Quick Styles gallery name their swatches through the host's
- * i18next dictionary (tooltip and accessible name), not in hard-coded English.
+ * i18next dictionary (tooltip and accessible name), not in hard-coded English, and Quick Styles
+ * follows a language change.
  */
 import { createInstance } from 'i18next';
 import { translationsDe } from 'pptx-viewer-locales';
-import React from 'react';
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { describe, expect, it, vi } from 'vitest';
@@ -63,7 +65,23 @@ describe('swatch and style names follow the locale', () => {
 	});
 
 	it('names Quick Styles presets with the host dictionary', async () => {
-		const container = render(<QuickStylesGallery onUpdateShapeStyle={vi.fn()} />, await german());
-		expect(container.querySelector('button')!.getAttribute('aria-label')).toBe('Blaue Füllung');
+		// The shared gallery draws its tiles once mounted, so this one is not static markup.
+		const i18n = await german();
+		const container = document.createElement('div');
+		document.body.append(container);
+		const root = createRoot(container);
+		act(() =>
+			root.render(
+				<I18nextProvider i18n={i18n}>
+					<QuickStylesGallery onUpdateShapeStyle={vi.fn()} />
+				</I18nextProvider>,
+			),
+		);
+		const tile = () => container.querySelector('[data-gallery-item]')!;
+		expect(tile().getAttribute('aria-label')).toBe('Blaue Füllung');
+		await act(() => i18n.changeLanguage('en'));
+		expect(tile().getAttribute('aria-label')).toBe('Blue Fill');
+		act(() => root.unmount());
+		container.remove();
 	});
 });
