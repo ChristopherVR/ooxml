@@ -24,7 +24,11 @@ const schema = new Schema({
 			toDOM: () => ['p', 0],
 		},
 		table: { group: 'block', content: 'tableRow+', toDOM: () => ['table', ['tbody', 0]] },
-		tableRow: { content: 'tableCell+', toDOM: () => ['tr', 0] },
+		tableRow: {
+			content: 'tableCell+',
+			attrs: { properties: { default: null } },
+			toDOM: () => ['tr', 0],
+		},
 		tableCell: {
 			content: 'paragraph+',
 			attrs: { sourceCellKey: { default: '' }, contentControl: { default: null } },
@@ -283,6 +287,25 @@ describe('content controls around table cells in the editor', () => {
 			'61',
 			'65',
 		]);
+	});
+
+	it('removes a temporary row control once its row is edited, and not for an edit elsewhere', () => {
+		const item: ContentControl = { id: '66', level: 'row', kind: 'richText', temporary: true };
+		const row = (text: string, properties: unknown = null) =>
+			schema.node('tableRow', { properties }, [schema.node('tableCell', null, [paragraph(text)])]);
+		const doc = schema.node('doc', null, [
+			schema.node('table', null, [
+				row('Title'),
+				row('Line', { heightTwips: 400, contentControl: item }),
+			]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const rowOf = (s: EditorState) => s.doc.firstChild!.child(1).attrs.properties;
+		const elsewhere = state.apply(state.tr.insertText('!', 4));
+		expect(rowOf(elsewhere)).toMatchObject({ contentControl: { id: '66' } });
+		const edited = elsewhere.apply(elsewhere.tr.insertText('!', 18));
+		expect(edited.doc.firstChild!.child(1).textContent).toBe('Li!ne');
+		expect(rowOf(edited)).toEqual({ heightTwips: 400 });
 	});
 
 	it('stores new properties on the cell', () => {
