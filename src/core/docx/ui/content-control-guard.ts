@@ -60,7 +60,7 @@ export function contentControlPlugin(): Plugin {
 			!violatesControlLock(tr, state),
 		appendTransaction: removeEditedTemporaryControls,
 		props: {
-			transformPasted: (slice, view) => pastedControlSlice(slice, view),
+			transformPasted: (slice, view, plain) => pastedControlSlice(slice, view, plain),
 			handleTextInput: (view, from, to, text) => {
 				if (!view.editable) return false;
 				const result = typeOverPlaceholder(view.state, from, text, to);
