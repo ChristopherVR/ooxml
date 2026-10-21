@@ -197,7 +197,7 @@ function pageIndependentResult(
 	let result: string | undefined;
 	for (let index = 0; index < source.paragraphs.length; index++)
 		for (const text of source.results(index, reference, target)) {
-			if (result !== undefined && text !== result) return undefined;
+			if (text === undefined || (result !== undefined && text !== result)) return undefined;
 			result = text;
 		}
 	return result;

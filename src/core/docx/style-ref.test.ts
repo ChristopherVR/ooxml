@@ -106,6 +106,30 @@ describe('STYLEREF styles', () => {
 		expect(source.results(0, parseStyleReference('STYLEREF 1 \\s')!, target)).toEqual(['2.01']);
 	});
 
+	it('keeps the result of a field with \\t when words stand between the levels of its number', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const model = await load({
+			body:
+				paragraph(
+					'',
+					undefined,
+					'<w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="1"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Scope</w:t></w:r>',
+				) + paragraph('', undefined, complexField('STYLEREF 1 \\n \\t', ['old'])),
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="2"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Part %1"/></w:lvl><w:lvl w:ilvl="1"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Part %1, Section %2"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+		});
+		const source = styleRefSource(model);
+		const target = styleTarget(model, '1')!;
+		expect(source.results(0, parseStyleReference('STYLEREF 1 \\n')!, target)).toEqual([
+			'Part 2, Section 1',
+		]);
+		// Which of those words Word would drop is not said anywhere, so the saved result stays.
+		expect(source.results(0, parseStyleReference('STYLEREF 1 \\n \\t')!, target)).toEqual([
+			undefined,
+		]);
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		expect(refreshed.blocks[1]).toBe(model.blocks[1]);
+	});
+
 	it('reads a cell and the tables nested in it in reading order', async () => {
 		const cell = (inner: string) =>
 			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;

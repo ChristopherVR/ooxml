@@ -145,7 +145,8 @@ export interface RunSpan {
 
 /** Text a STYLEREF can take, and the runs of its paragraph it comes from. */
 export interface StyleRefPortion extends RunSpan {
-	text: string;
+	/** Undefined for a match this code cannot evaluate: the field keeps its saved result. */
+	text: string | undefined;
 }
 
 /**
@@ -193,8 +194,8 @@ export interface StyleRefSource {
 		target: StyleTarget,
 		skip?: RunSpan,
 	): StyleRefPortion[];
-	/** The texts of `portions`. */
-	results(index: number, reference: StyleReference, target: StyleTarget): string[];
+	/** The texts of `portions` (undefined where the field keeps its saved result). */
+	results(index: number, reference: StyleReference, target: StyleTarget): (string | undefined)[];
 }
 
 /** Reads one document for STYLEREF fields. The model must not change while this is used. */
@@ -203,7 +204,8 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 	const index = new Map(paragraphs.map((paragraph, at) => [paragraph.id, at]));
 	const targets = new Map<string, StyleTarget | undefined>();
 	let labels: ReturnType<typeof computeListLabels> | undefined;
-	const number = (paragraph: Paragraph, numberOnly: boolean): string | undefined => {
+	/** The paragraph's number; undefined without one, null when `\t` cannot be applied to it. */
+	const number = (paragraph: Paragraph, numberOnly: boolean): string | null | undefined => {
 		labels ??= computeListLabels(model);
 		const label = labels.get(paragraph.id);
 		if (!label || !model.numberingCatalog) return undefined;
@@ -215,6 +217,9 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 			const end = level.lvlText.search(/%[1-9](?!.*%[1-9])/);
 			const prefix = first < 0 ? '' : level.lvlText.slice(0, first);
 			const suffix = end < 0 ? '' : level.lvlText.slice(end + 2);
+			// Words between the levels (`Part %1, Section %2`): what Word drops of them is unknown.
+			const inner = first < 0 || end < 0 ? '' : level.lvlText.slice(first, end + 2);
+			if (/\p{L}/u.test(inner.replace(/%[1-9]/g, ''))) return null;
 			if (prefix && text.startsWith(prefix)) text = text.slice(prefix.length);
 			if (suffix && text.endsWith(suffix)) text = text.slice(0, -suffix.length);
 		}
@@ -237,12 +242,18 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 				: [];
 		if (reference.number && found.length) {
 			const label = number(paragraph, reference.numberOnly);
-			found = label === undefined ? [] : found.map((portion) => ({ ...portion, text: label }));
+			found =
+				label === undefined
+					? []
+					: found.map((portion) => ({ ...portion, text: label === null ? undefined : label }));
 		}
 		return reference.textCase
 			? found.map((portion) => ({
 					...portion,
-					text: applyFieldTextCase(portion.text, reference.textCase!),
+					text:
+						portion.text === undefined
+							? undefined
+							: applyFieldTextCase(portion.text, reference.textCase!),
 				}))
 			: found;
 	};
