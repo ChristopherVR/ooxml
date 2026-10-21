@@ -268,19 +268,27 @@ export function containerSources(
 		);
 		if (index >= 0) claim(target, index, true);
 	}
-	// A changed link, control or field keeps the markers of the container its text came from.
-	for (const target of targets.filter(open)) {
+	// A changed link, control or field keeps the markers of the container its text came from. The
+	// same link whose whole label was replaced there continues it, markup and all, as a label edit
+	// does: it is preferred to a container of another link that the new text also overlaps.
+	const widest = (target: RunGroup, same: boolean) => {
 		let found = -1;
 		let best = 0;
 		for (const [index, source] of sources.entries()) {
-			const shared =
-				!taken.has(index) && source.group.kind === target.group.kind ? overlap(target, index) : 0;
+			if (taken.has(index) || source.group.kind !== target.group.kind) continue;
+			if (same && !sameGroup(source.group, target.group)) continue;
+			const shared = overlap(target, index);
 			if (shared > best) {
 				best = shared;
 				found = index;
 			}
 		}
-		if (found >= 0) claim(target, found, false);
+		return found;
+	};
+	for (const target of targets.filter(open)) {
+		const same = widest(target, true);
+		const found = same >= 0 ? same : widest(target, false);
+		if (found >= 0) claim(target, found, same >= 0);
 	}
 	return result;
 }

@@ -8,6 +8,7 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { loadDocx } from 'ooxml-core/docx';
 import { docToModel, modelToDoc } from './model-adapter';
+import { SearchController } from './search-controller';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const run = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>`;
@@ -68,5 +69,24 @@ describe('saving paragraphs with markers edited in the editor', () => {
 			'</w:ins>',
 			'> tail!<',
 		]);
+	});
+
+	it('keeps the markup of a hyperlink whose whole label Replace All replaces', async () => {
+		const { loaded, view } = await open(
+			`<w:p>${run('See ')}<w:hyperlink w:anchor="t" w:tgtFrame="_blank" w:docLocation="here">` +
+				`${run('Docs')}</w:hyperlink>${run(' now')}</w:p>`,
+		);
+		const search = new SearchController(() => view);
+		search.search('Docs');
+		expect(search.replaceAll('Help')).toBe(1);
+		const xml = await savedParagraph(loaded, view);
+		expectInOrder(xml, [
+			'>See <',
+			'<w:hyperlink w:anchor="t" w:tgtFrame="_blank" w:docLocation="here">',
+			'>Help<',
+			'</w:hyperlink>',
+			'> now<',
+		]);
+		expect(xml).not.toContain('w:history');
 	});
 });

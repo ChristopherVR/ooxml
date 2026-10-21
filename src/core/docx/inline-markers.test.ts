@@ -636,6 +636,40 @@ describe('editing paragraphs that hold position markers', () => {
 		expect(at(links, 1)).toContain('>one<');
 	});
 
+	it('keeps the markup of a hyperlink whose whole label is retyped', async () => {
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('See ')}<w:hyperlink w:anchor="t" w:tgtFrame="_blank" w:docLocation="here">` +
+				`<w:bookmarkStart w:id="1" w:name="Label"/>${run('Docs')}<w:bookmarkEnd w:id="1"/></w:hyperlink>${run(' now')}</w:p>`,
+		);
+		at(paragraph.runs, 1).text = 'Help';
+		const xml = await savedParagraph(loaded);
+		expect(xml.match(/<w:hyperlink\b/g)).toHaveLength(1);
+		const link = element(xml, 'hyperlink');
+		expect(link).toContain('w:tgtFrame="_blank"');
+		expect(link).toContain('w:docLocation="here"');
+		expect(link).not.toContain('w:history');
+		expectInOrder(link, [
+			'<w:bookmarkStart w:id="1" w:name="Label"/>',
+			'>Help<',
+			'<w:bookmarkEnd w:id="1"/>',
+		]);
+	});
+
+	it('gives a retyped label the markup of its own link, not of a link to another place', async () => {
+		const { loaded, paragraph } = await load(
+			`<w:p><w:hyperlink w:anchor="a" w:tgtFrame="_blank">${run('Alpha')}</w:hyperlink>` +
+				`<w:hyperlink w:anchor="b" w:docLocation="here">${run('Beta')}</w:hyperlink></w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'One';
+		at(paragraph.runs, 1).text = 'Two';
+		const links = (await savedParagraph(loaded)).match(/<w:hyperlink\b[^>]*>/g) ?? [];
+		expect(links).toHaveLength(2);
+		expect(at(links, 0)).toContain('w:tgtFrame="_blank"');
+		expect(at(links, 0)).not.toContain('docLocation');
+		expect(at(links, 1)).toContain('w:docLocation="here"');
+		expect(at(links, 1)).not.toContain('tgtFrame');
+	});
+
 	it('keeps each hyperlink its own markup when an edit swaps two of them', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p><w:hyperlink w:anchor="a" w:tgtFrame="_blank">${run('Alpha')}</w:hyperlink>${run(' and ')}` +
