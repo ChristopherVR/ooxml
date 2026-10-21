@@ -350,6 +350,30 @@ describe('content controls pasted in the editor', () => {
 			expect(controlFromValue(fine, 'cell')).toBe(fine);
 		});
 
+		it('takes no pasted control nested deeper than a control is', () => {
+			// Turning one back into JSON overflows the stack, where the editor draws a cell's control
+			// and in every later save: it is no control, and its content is pasted alone.
+			const deep = '['.repeat(20000) + ']'.repeat(20000);
+			const cell = JSON.parse(`{"id":"83","level":"cell","kind":"richText","extra":${deep}}`);
+			const editor = contentControlPlugin();
+			const slice = new Slice(Fragment.from(table(cell as ContentControl)), 0, 0);
+			const result = editor.props.transformPasted!.call(editor, slice, view(empty), false);
+			const pasted = schema.node('doc', null, result.content);
+			expect(controlSpans(pasted).map((span) => span.control.id)).toEqual([]);
+			expect(pasted.textContent).toBe('Cell');
+			const inline = `{"id":"84","level":"inline","kind":"text","extra":${deep}}`;
+			expect(controlFromData(inline, 'inline')?.id).toBeUndefined();
+			// One as deep as a control's fields go is taken as it is.
+			const full: ContentControl = {
+				id: '85',
+				level: 'cell',
+				kind: 'dropDownList',
+				items: [{ display: 'Shown', value: 'shown' }],
+				checkedGlyph: { code: '2612', font: 'MS Gothic' },
+			};
+			expect(controlFromValue(full, 'cell')).toBe(full);
+		});
+
 		it('keeps the end properties of a pasted inline control only when they come from the editor', () => {
 			const mine: ContentControl = {
 				id: '33',

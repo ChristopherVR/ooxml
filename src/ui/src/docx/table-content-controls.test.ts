@@ -161,6 +161,49 @@ describe('content controls around table cells in the editor', () => {
 		host.remove();
 	});
 
+	it('pastes the text of controls from another page that nest deeper than a control does', async () => {
+		// Turning such a control back into JSON overflowed the stack: the paste failed to draw, and
+		// the pasted cell, row or table stayed in the document, so every later save failed.
+		const deep = '['.repeat(20000) + ']'.repeat(20000);
+		const control = (id: string, level: string) =>
+			`{"id":"${id}","level":"${level}","kind":"richText","extra":${deep}}`;
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>After</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({ schema, doc, plugins: [contentControlPlugin()] }),
+		});
+		for (const html of [
+			`<table data-pm-slice="0 0 []"><tbody><tr><td data-sdt='${control('90', 'cell')}'><p>Cell</p></td></tr></tbody></table>`,
+			`<p data-pm-slice="1 1 []"><span data-sdt='${control('91', 'inline')}'>Inline</span></p>`,
+			`<tr data-pm-slice='0 0 ["table",{"contentControl":${control('92', 'block')}}]'><td><p>Table</p></td></tr>`,
+			`<td data-pm-slice='0 0 ["table",null,"tableRow",{"properties":{"contentControl":${control('93', 'row')}}}]'><p>Row</p></td>`,
+		]) {
+			const end = view.state.doc.content.size - 1;
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+			view.pasteHTML(html, new Event('paste') as ClipboardEvent);
+		}
+		const held: string[] = [];
+		view.state.doc.descendants((node) => {
+			if (node.attrs.contentControl ?? node.attrs.properties?.contentControl)
+				held.push(node.type.name);
+			if (node.marks.some((mark) => mark.type.name === 'contentControl')) held.push('text');
+		});
+		expect(held).toEqual([]);
+		const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		for (const text of ['Cell', 'Inline', 'Table', 'Row']) expect(xml).toContain(`>${text}<`);
+		expect(xml).not.toContain('w:sdt');
+		view.destroy();
+		host.remove();
+	});
+
 	it('keeps a cell control through HTML, as when cells are copied and pasted', async () => {
 		const doc = modelToDoc((await form()).model);
 		const html = document.createElement('div');

@@ -24,7 +24,7 @@ export interface ControlSpan {
 /**
  * The control `data` (a `data-sdt` attribute, or an inline control's mark) holds, at `level`. HTML
  * pasted from another page and remote peers can put anything there: only an object with an id and
- * a kind is a control.
+ * a kind, nested no deeper than a control's fields, is a control.
  */
 export function controlFromData(
 	data: unknown,
@@ -115,15 +115,31 @@ function wellFormed(control: ContentControl): ContentControl {
 }
 
 /**
+ * Whether `value` nests objects and arrays no deeper than a control does, the fields of its list
+ * entries included, checked level by level: deeper nesting can make turning it back into JSON
+ * overflow the stack, in a paste or in every later save.
+ */
+function nestsLikeControl(value: unknown): boolean {
+	const isNode = (item: unknown): item is object => Boolean(item) && typeof item === 'object';
+	let level = [value];
+	for (let depth = 0; level.length; depth++) {
+		if (depth > 3) return false;
+		level = level.flatMap((item) => (isNode(item) ? Object.values(item).filter(isNode) : []));
+	}
+	return true;
+}
+
+/**
  * The control `value` is at `level`: itself when it is an object with an id and a kind at that
  * level, holding values of the kinds its fields hold; a copy at that level, or without the values
- * of other kinds, otherwise; nothing when it is not a control.
+ * of other kinds, otherwise; nothing when it is not a control or nests deeper than one does.
  */
 export function controlFromValue(
 	value: unknown,
 	level: ContentControl['level'],
 ): ContentControl | undefined {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+	if (!nestsLikeControl(value)) return undefined;
 	const { id, kind } = value as { id?: unknown; kind?: unknown };
 	if (typeof id !== 'string' || typeof kind !== 'string') return undefined;
 	const control = wellFormed(value as ContentControl);
