@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
 import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
-import { detectFileFormat, EncryptedFileError, isEncryptedOoxmlPackage } from './detect';
+import {
+	detectFileFormat,
+	EncryptedFileError,
+	isEncryptedOoxmlPackage,
+	toArrayBuffer,
+} from './detect';
 import { encryptOoxmlPackage } from './index';
 
 // ---------------------------------------------------------------------------
@@ -145,6 +150,15 @@ describe('encryptedFileError', () => {
 });
 
 describe('isEncryptedOoxmlPackage', () => {
+	it('recognises an encrypted package held in a Node Buffer view of a larger store', async () => {
+		const zip = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0, 0, 0]);
+		const encrypted = await encryptOoxmlPackage(zip, 'pw', { spinCount: 10 });
+		// Small Buffers live inside Node's shared pool like this, at a non-zero offset.
+		const store = new Uint8Array(encrypted.length + 64);
+		store.set(encrypted, 32);
+		expect(isEncryptedOoxmlPackage(Buffer.from(store.buffer, 32, encrypted.length))).toBe(true);
+	});
+
 	it('needs both encryption streams in a compound file', async () => {
 		const zip = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0, 0, 0]);
 		const encrypted = await encryptOoxmlPackage(zip, 'pw', { spinCount: 10 });
@@ -156,5 +170,18 @@ describe('isEncryptedOoxmlPackage', () => {
 		expect(isEncryptedOoxmlPackage(zip)).toBe(false);
 		// A truncated compound file is not an encrypted package (and does not throw).
 		expect(isEncryptedOoxmlPackage(encrypted.subarray(0, 600))).toBe(false);
+	});
+});
+
+describe('toArrayBuffer', () => {
+	it('copies exactly the bytes of a Node Buffer view, not its backing store', () => {
+		const store = new Uint8Array(64).fill(7);
+		store.set([1, 2, 3], 10);
+		expect([...new Uint8Array(toArrayBuffer(Buffer.from(store.buffer, 10, 3)))]).toEqual([1, 2, 3]);
+	});
+
+	it('returns the backing buffer itself for a view that covers all of it', () => {
+		const bytes = new Uint8Array([4, 5, 6]);
+		expect(toArrayBuffer(bytes)).toBe(bytes.buffer);
 	});
 });
