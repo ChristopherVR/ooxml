@@ -19,11 +19,8 @@ import type { ShapeSpec } from '../shape-model';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
-import { symbolOnly } from '../special-characters';
+import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
-
-/** Word's grey behind form fields while "Form field shading" is on. */
-const FORM_FIELD_SHADING = '#d9d9d9';
 import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
@@ -44,6 +41,8 @@ import type {
 	LayoutSection,
 } from './input';
 
+/** Word's grey behind form fields while "Form field shading" is on. */
+const FORM_FIELD_SHADING = '#d9d9d9';
 const TABLE_ROW_NOTE =
 	'Table rows with an exact height clip content that does not fit; text in them is not shrunk.';
 const VERTICAL_MERGE_NOTE =
@@ -261,7 +260,10 @@ export function adaptDocumentModel(
 		// Numbering level indents apply unless the paragraph or its style sets its own.
 		const ownFirstLine =
 			resolved.firstLineTwips !== undefined || resolved.hangingTwips !== undefined;
-		const runs = paragraph.runs.map((run) => adaptRun(run, paragraph.style, markLabel));
+		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
+		const runs = paragraph.runs.flatMap((run) =>
+			symbolSegments(run).map((segment) => adaptRun(segment, paragraph.style, markLabel)),
+		);
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
 		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);
 		const { betweenBorder: _between, ...box } = paragraphBox(resolved, model.theme);

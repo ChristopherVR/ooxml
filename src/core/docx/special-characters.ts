@@ -25,6 +25,29 @@ export function symbolOnly(run: TextRun): boolean {
 	return Boolean(symbol && run.text && [...run.text].every((character) => character === symbol));
 }
 
+/**
+ * The run split into stretches of its symbol characters and of other text, so each stretch of
+ * symbols can be drawn in the symbol's font and the text in the run's own.
+ */
+export function symbolSegments(run: TextRun): TextRun[] {
+	const symbol = run.symbol && symbolCharacter(run.symbol.char);
+	if (!symbol || symbolOnly(run) || !run.text.includes(symbol)) return [run];
+	const segments: TextRun[] = [];
+	let piece = '';
+	let symbols = false;
+	for (const character of run.text) {
+		const isSymbol = character === symbol;
+		if (piece && isSymbol !== symbols) {
+			segments.push({ ...run, text: piece });
+			piece = '';
+		}
+		piece += character;
+		symbols = isSymbol;
+	}
+	if (piece) segments.push({ ...run, text: piece });
+	return segments;
+}
+
 /** The one symbol a run's content shows; `null` when it holds different or unreadable symbols. */
 export function runSymbol(content: readonly XmlElement[]): TextRun['symbol'] | null | undefined {
 	let found: TextRun['symbol'];
