@@ -168,7 +168,7 @@ export function mountDiskSearch({ store, open, refresh }) {
 					folderName: folder.name,
 					path: entry.path,
 				});
-			await open(doc.id);
+			await open(doc.id, undefined, { focus: true });
 			await refresh();
 		});
 	});

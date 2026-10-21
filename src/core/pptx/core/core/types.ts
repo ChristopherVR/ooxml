@@ -256,6 +256,13 @@ export interface IPptxHandlerRuntime {
 
 	getCompatibilityWarnings(): PptxCompatibilityWarning[];
 	getLayoutOptions(): PptxLayoutOption[];
+	/** Resolve SDK text through the same placeholder cascade as loaded shapes. */
+	createPlaceholderElement?(
+		layoutPath: string,
+		input: PptxElement,
+		type: string,
+		options: { idx?: number; x?: number; y?: number; width?: number; height?: number },
+	): PptxElement;
 	getLayoutPreview(layoutPath: string): Promise<PptxLayoutPreview | null>;
 	getLayoutPreviews(layoutPaths?: readonly string[]): Promise<PptxLayoutPreview[]>;
 	createXmlBuilder(data: PptxData): PptxXmlBuilder;

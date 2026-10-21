@@ -10,13 +10,15 @@ import {
 	restoreRefs,
 	shiftEdgeCells,
 } from './history-refs';
+import { type RowInfoEntries, captureRowInfo, restoreRowInfo } from './history-rows';
 
 /** Worksheet properties a `parts` scope can record (everything but the cells). */
 export type SheetPart = Exclude<keyof Worksheet, 'rows'>;
 
 /**
  * What an edit may change. `cells` records only the stored cells inside the ranges, `parts` some
- * of a sheet's non-cell properties (tables, merges, ...), `sheet` the whole worksheet, `refs` what
+ * of a sheet's non-cell properties (tables, merges, ...), `rowInfo` the row metadata (height,
+ * hiding, outline) of the given rows only, `sheet` the whole worksheet, `refs` what
  * a workbook-wide reference rewrite touches (sheet metadata, names and the formulas that change),
  * `shift` a row or column insert or delete on one sheet (the moved cells are not copied, only the
  * destroyed and created ones and the changed references), `workbook` every sheet plus the
@@ -25,6 +27,7 @@ export type SheetPart = Exclude<keyof Worksheet, 'rows'>;
 export type EditScope =
 	| { kind: 'cells'; sheet: number; ranges: CellRange[] }
 	| { kind: 'parts'; sheet: number; parts: SheetPart[] }
+	| { kind: 'rowInfo'; sheet: number; rows: readonly number[] }
 	| { kind: 'sheet'; sheet: number }
 	| { kind: 'refs' }
 	| ({ kind: 'shift' } & ShiftSpec)
@@ -34,6 +37,7 @@ export type EditScope =
 type Snapshot =
 	| { kind: 'cells'; sheet: number; ranges: CellRange[]; cells: [number, number, Cell][] }
 	| { kind: 'parts'; sheet: number; parts: SheetPart[]; data: Partial<Worksheet> }
+	| { kind: 'rowInfo'; sheet: number; rows: RowInfoEntries }
 	| { kind: 'sheet'; sheet: number; data: Worksheet }
 	| { kind: 'refs'; data: RefsData; activeSheet: number }
 	| {
@@ -181,6 +185,8 @@ export function captureScope(workbook: Workbook, scope: EditScope, before?: Snap
 	if (!sheet) throw new RangeError(`No sheet at index ${scope.sheet}`);
 	if (scope.kind === 'sheet')
 		return { kind: 'sheet', sheet: scope.sheet, data: structuredClone(sheet) };
+	if (scope.kind === 'rowInfo')
+		return { kind: 'rowInfo', sheet: scope.sheet, rows: captureRowInfo(sheet, scope.rows) };
 	if (scope.kind === 'parts') {
 		const data: Record<string, unknown> = {};
 		for (const part of scope.parts) if (sheet[part] !== undefined) data[part] = sheet[part];
@@ -237,6 +243,7 @@ export function restoreSnapshot(workbook: Workbook, snapshot: Snapshot): void {
 	}
 	const sheet = workbook.sheets[snapshot.sheet];
 	if (!sheet) return;
+	if (snapshot.kind === 'rowInfo') return restoreRowInfo(sheet, snapshot.rows);
 	if (snapshot.kind === 'parts') {
 		const target = sheet as unknown as Record<string, unknown>;
 		const data = structuredClone(snapshot.data) as Record<string, unknown>;

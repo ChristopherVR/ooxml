@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const require = createRequire(join(root, 'e2e/docx/package.json'));
-const { chromium } = require('@playwright/test');
+const { chromium, expect } = require('@playwright/test');
 const { createDocx, createXlsx, setXlsxCells, inspectDocx, readXlsxRange } =
 	await import('../src/core/dist/automation/index.mjs');
 const JSZip = require('jszip');
@@ -206,6 +206,43 @@ try {
 	assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
 	console.log('Themes and mobile layout passed');
 	await page.setViewportSize({ width: 1440, height: 960 });
+	// A new workbook takes typing at once, as in Excel; so does one opened from the file list. A
+	// tab switch and a workbook restored when the app starts leave the focus where it was.
+	const gridFocused = () =>
+		page.evaluate(() => {
+			const editor = document.querySelector('.document-host:not([hidden]) xlsx-editor');
+			return !!editor && document.activeElement === editor && !!editor.shadowRoot?.activeElement;
+		});
+	const cellValue = (row) =>
+		page.evaluate(
+			(r) =>
+				document
+					.querySelector('.document-host:not([hidden]) xlsx-editor')
+					?.workbook?.sheets[0]?.rows.get(r)
+					?.get(0)?.value ?? null,
+			row,
+		);
+	await page.locator('[data-create=xlsx]').click();
+	await page.waitForFunction(() => document.querySelector('#status').textContent === 'Ready');
+	await expect.poll(() => gridFocused()).toBe(true);
+	await page.keyboard.type('42');
+	await page.keyboard.press('Enter');
+	await expect.poll(() => cellValue(0)).toBe(42);
+	const workbookId = new URL(page.url()).hash.replace('#/file/', '');
+	await page.locator('#rail [data-home]').click();
+	await page.locator(`#files [data-open="${workbookId}"]`).click();
+	await expect.poll(() => gridFocused()).toBe(true);
+	await page.keyboard.type('7');
+	await page.keyboard.press('Enter');
+	await expect.poll(() => cellValue(1)).toBe(7);
+	const workbookTab = page.locator(`#tabs [data-open="${workbookId}"]`);
+	await page.locator('#rail [data-home]').click();
+	await workbookTab.click();
+	// The tab's open finishes asynchronously; a focus taken by it would land after this pause.
+	await page.waitForTimeout(500);
+	assert.equal(await gridFocused(), false, 'a tab switch moved the focus into the workbook');
+	await page.locator('#rail [data-home]').click();
+	console.log('A new or listed workbook takes typing at once; a tab switch does not');
 	await page.locator('[data-create=pptx]').click();
 	await page.waitForFunction(() => document.querySelector('#status').textContent === 'Ready');
 	console.log('PowerPoint created and mounted');
@@ -274,6 +311,17 @@ try {
 	assert.equal(sent.headers.authorization, undefined);
 	await managed.close();
 	console.log('A managed ai-config.json chose the models, instructions and style');
+	// The workbook reopened as the app starts (a restored tab) leaves the focus alone.
+	// A reload: changing only the hash would run the hash route on the mounted session instead.
+	await page.goto(`${base}/#/file/${workbookId}`);
+	await page.reload();
+	await page.waitForFunction(
+		() => document.querySelector('.document-host:not([hidden]) xlsx-editor')?.workbook,
+	);
+	await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Ready');
+	await page.waitForTimeout(500);
+	assert.equal(await gridFocused(), false, 'a restored workbook took the focus');
+	console.log('A workbook restored at startup does not take the focus');
 	assert.deepEqual(errors, []);
 } catch (error) {
 	console.error(error);

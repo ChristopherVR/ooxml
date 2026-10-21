@@ -16,6 +16,8 @@ import { escAttr, escText } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData } from '../../types/presentation';
 import { SlideBuilder } from './SlideBuilder';
+import { generateLayoutXml } from './layout-operations';
+import { standardLayoutPlaceholders } from './standard-layout-placeholders';
 import type { PresentationOptions } from './types';
 
 // ---------------------------------------------------------------------------
@@ -292,22 +294,6 @@ ${layoutRels}
 </Relationships>`;
 }
 
-function slideLayoutXml(name: string, layoutType: string): string {
-	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-  xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
-  type="${escAttr(layoutType)}" preserve="1">
-  <p:cSld name="${escAttr(name)}">
-    <p:spTree>
-      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
-      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
-    </p:spTree>
-  </p:cSld>
-  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
-</p:sldLayout>`;
-}
-
 function slideLayoutRelsXml(): string {
 	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -491,7 +477,14 @@ export async function buildBlankPresentationArchive(
 
 	for (let i = 0; i < layoutCount; i++) {
 		const layout = STANDARD_LAYOUTS[i];
-		zip.file(`ppt/slideLayouts/slideLayout${i + 1}.xml`, slideLayoutXml(layout.name, layout.type));
+		zip.file(
+			`ppt/slideLayouts/slideLayout${i + 1}.xml`,
+			generateLayoutXml({
+				name: layout.name,
+				type: layout.type,
+				placeholders: standardLayoutPlaceholders(layout.type, width / 9525, height / 9525),
+			}),
+		);
 		zip.file(`ppt/slideLayouts/_rels/slideLayout${i + 1}.xml.rels`, slideLayoutRelsXml());
 	}
 
@@ -566,7 +559,7 @@ export class PresentationBuilder {
 			const layoutIdx = STANDARD_LAYOUTS.findIndex((l) => l.name === layoutName) + 1 || 7; // default: Blank
 			const layoutPath = `ppt/slideLayouts/slideLayout${layoutIdx}.xml`;
 			const resolvedName = layoutName ?? STANDARD_LAYOUTS[layoutIdx - 1]?.name ?? 'Blank';
-			return new SlideBuilder(slideNum, layoutPath, resolvedName);
+			return new SlideBuilder(slideNum, layoutPath, resolvedName, handler);
 		};
 
 		return { handler, data, createSlide };

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cellError } from '../model';
+import { dateTimeParts } from './format';
 import { BUILTIN_NUMBER_FORMATS, formatValue, isDateFormat, OVERFLOW_TEXT } from './index';
 
 const fmt = (value: number | string, format: string): string => formatValue(value, format).text;
@@ -188,5 +189,23 @@ describe('isDateFormat', () => {
 		['[Red][>100]0', false],
 	])('%s -> %s', (format, expected) => {
 		expect(isDateFormat(format)).toBe(expected);
+	});
+});
+
+describe('dateTimeParts', () => {
+	it.each([
+		['m/d/yyyy', 1, { date: true, time: false }],
+		['h:mm AM/PM', 0.5, { date: false, time: true }],
+		['yyyy-mm-dd hh:mm:ss.000', 1, { date: true, time: true }],
+		['mm:ss.0', 0.5, { date: false, time: true }],
+		['[h]:mm:ss', 1.5, undefined],
+		['General', 1, undefined],
+		['"[h]"0', 1, undefined],
+		// The section that shows the value decides.
+		['yyyy-mm-dd;[h]:mm', 45385, { date: true, time: false }],
+		['yyyy-mm-dd;[h]:mm', -1, undefined],
+		['0.00;yyyy', 5, undefined],
+	])('%s for %s', (format, value, expected) => {
+		expect(dateTimeParts(format, value)).toEqual(expected);
 	});
 });

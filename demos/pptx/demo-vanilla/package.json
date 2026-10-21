@@ -12,7 +12,7 @@
 	"dependencies": {
 		"@ai-sdk/openai-compatible": "^3.0.70",
 		"ai": "^7.0.142",
-		"emf-converter": "4.20.3",
+		"emf-converter": "4.21.0",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"pptx-vanilla-viewer": "workspace:*",

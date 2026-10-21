@@ -5,12 +5,14 @@
 
 	import { useTranslator } from '../../i18n/context';
 
-	const { notesMaster, canvasSize } = $props<{
+	const { notesMaster, canvasSize }: {
 		notesMaster: PptxNotesMaster | undefined;
 		canvasSize: CanvasSize;
-	}>();
+	} = $props();
 	const t = useTranslator();
-	const defaultPlaceholders = Object.keys(NOTES_MASTER_PLACEHOLDER_RECTS).map((type) => ({ type }));
+	const defaultPlaceholders: NonNullable<PptxNotesMaster['placeholders']> = Object.keys(
+		NOTES_MASTER_PLACEHOLDER_RECTS,
+	).map((type) => ({ type }));
 	const placeholders = $derived(notesMaster?.placeholders ?? defaultPlaceholders);
 	const labels: Record<string, string> = {
 		sldImg: 'pptx.master.notesMasterSlideImage',

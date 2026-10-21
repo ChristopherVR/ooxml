@@ -108,6 +108,10 @@ export async function mountEditor(host, doc, changed, command) {
 			fit();
 		},
 		clean: () => element.markClean?.(),
+		// Puts the cursor in the active cell, as Excel does when a workbook opens.
+		focus: () => {
+			if (doc.kind === 'xlsx') element.focusGrid();
+		},
 		// Visio has no read-only switch; edits made while reviewing are discarded with the preview.
 		readOnly: (on) => {
 			if (doc.kind !== 'vsdx') element.readOnly = on;

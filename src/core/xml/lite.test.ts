@@ -86,12 +86,31 @@ describe('parseLiteFragment', () => {
 		expect(row.getAttribute('s')).toBeNull();
 	});
 
+	it('skips comments and reads CDATA text like the DOM parser', () => {
+		const inner = [
+			'<!-- before --><row r="1"><!-- in a row -->',
+			'<c r="A1" t="inlineStr"><!-- in a cell --><is><t>a<!-- in text -->b</t></is></c>',
+			'<c r="B1"><f><![CDATA[IF(A1<2,"x & y","]]")]]></f><v>1<![CDATA[]]>2</v></c>',
+			'<c r="C1" t="inlineStr"><is><t><![CDATA[ line\r\nnext <b> ]]>tail &amp; more</t></is></c>',
+			'</row><!-- <row r="9"/> --><row r="2"/><!---->',
+		].join('');
+		const { dom, lite: light } = both(inner);
+		expect(light).toEqual(dom);
+		expect(dom[0]?.children[2]?.children[0]?.children[0]?.text).toBe(' line\nnext <b> tail & more');
+		expect(dom.map((row) => row.attrs.r)).toEqual(['1', '2']);
+	});
+
 	it.each([
 		['an undeclared element prefix', '<y:row/>'],
 		['a namespace declaration', '<row xmlns="urn:other"/>'],
 		['a prefixed namespace declaration', '<row xmlns:y="urn:y"/>'],
-		['a comment', '<row/><!-- note -->'],
-		['CDATA', '<t><![CDATA[x]]></t>'],
+		['a comment with -- inside', '<row/><!-- a -- b -->'],
+		['a comment ending in -', '<row/><!-- a --->'],
+		['an unterminated comment', '<row/><!-- note'],
+		['unterminated CDATA', '<t><![CDATA[x</t>'],
+		['CDATA quoting a DTD', '<t><![CDATA[<!DOCTYPE x>]]></t>'],
+		['a comment quoting an entity declaration', '<row/><!-- <!ENTITY x "y"> -->'],
+		['a declaration', '<!DOCTYPE x><row/>'],
 		['a processing instruction', '<?pi x?><row/>'],
 		['an unknown entity', '<t>&nbsp;</t>'],
 		['a bare ampersand', '<t>a & b</t>'],

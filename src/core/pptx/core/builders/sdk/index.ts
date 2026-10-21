@@ -236,6 +236,8 @@ export type {
 	TextStyleInput,
 	TextSegmentInput,
 	TextOptions,
+	TextPlaceholderType,
+	PlaceholderOptions,
 	ShapeOptions,
 	ImageOptions,
 	TableInput,

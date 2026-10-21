@@ -4,7 +4,7 @@ import { isElapsedOnly, renderDate, renderElapsedOnly } from './date';
 import { renderFraction } from './fraction';
 import { formatGeneral } from './general';
 import { renderNumber } from './number';
-import type { FormatOptions, FormattedValue, Token } from './types';
+import type { DatePart, FormatOptions, FormattedValue, Token } from './types';
 
 /** What Excel shows when a value does not fit its format (negative date, no matching section). */
 export const OVERFLOW_TEXT = '########';
@@ -144,4 +144,45 @@ export function formatValue(
 /** True when the format shows numbers as dates or times. */
 export function isDateFormat(format: string): boolean {
 	return compileFormat(format).isDate;
+}
+
+/** Date parts that name a calendar day (year, month, day, era) rather than a time of day. */
+const DAY_PARTS: ReadonlySet<DatePart> = new Set([
+	'y',
+	'yyyy',
+	'e',
+	'g',
+	'b',
+	'bbbb',
+	'm',
+	'mm',
+	'mmm',
+	'mmmm',
+	'mmmmm',
+	'd',
+	'dd',
+	'ddd',
+	'dddd',
+]);
+
+/**
+ * What the section of `format` that shows `value` displays: a calendar date, a time of day or
+ * both; `undefined` when that section shows a number, text or a duration (`[h]:mm`).
+ */
+export function dateTimeParts(
+	format: string,
+	value: number,
+): { date: boolean; time: boolean } | undefined {
+	const section = chooseSection(compileFormat(format), value)?.section;
+	if (section?.kind !== 'date') return undefined;
+	let date = false;
+	let time = false;
+	for (const token of section.tokens) {
+		if (token.t === 'elapsed') return undefined;
+		if (token.t === 'date') {
+			if (DAY_PARTS.has(token.part)) date = true;
+			else time = true;
+		} else if (token.t === 'ampm' || token.t === 'subsec') time = true;
+	}
+	return date || time ? { date, time } : undefined;
 }

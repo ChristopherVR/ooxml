@@ -40,6 +40,28 @@ export interface ElementPosition {
 	rotation?: number;
 }
 
+/** Text-capable ST_PlaceholderType values (ECMA-376 19.7.10). */
+export type TextPlaceholderType =
+	| 'title'
+	| 'ctrTitle'
+	| 'subTitle'
+	| 'body'
+	| 'obj'
+	| 'dt'
+	| 'ftr'
+	| 'hdr'
+	| 'sldNum';
+
+/** Target a layout slot, optionally overriding some or all of its frame. */
+export interface PlaceholderOptions {
+	/** Layout placeholder index. Required to disambiguate repeated content slots. */
+	idx?: number;
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+}
+
 // ---------------------------------------------------------------------------
 // Fill, stroke, shadow helpers
 // ---------------------------------------------------------------------------
