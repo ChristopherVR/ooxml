@@ -34,6 +34,7 @@ export interface CollaborationHost {
 }
 
 interface Active {
+	collab: CollabRuntime[0];
 	session: CollabSession<XlsxPresence>;
 	binding: WorkbookBinding;
 	owned: boolean;
@@ -136,7 +137,7 @@ export class XlsxCollaboration {
 		const binding = xlsx.bindWorkbookSession(session, edit, {
 			onError: (error) => this.host.error(asError(error)),
 		});
-		const active: Active = { session, binding, owned: !options.session, stop: [] };
+		const active: Active = { collab, session, binding, owned: !options.session, stop: [] };
 		this.#active = active;
 		this.#lost = false;
 		this.#connected = session.status === 'connected';
@@ -211,28 +212,7 @@ export class XlsxCollaboration {
 
 	state(): XlsxCollaborationState {
 		const active = this.#active;
-		if (!active) return OFF_STATE;
-		const { session } = active;
-		return {
-			active: true,
-			roomId: session.roomId,
-			status: session.status,
-			synced: session.synced,
-			people: [
-				{
-					clientId: session.clientId,
-					name: session.identity.userName,
-					color: session.identity.userColor,
-					self: true,
-				},
-				...session.peers().map((peer) => ({
-					clientId: peer.clientId,
-					name: peer.userName,
-					color: peer.userColor,
-					self: false,
-				})),
-			],
-		};
+		return active ? active.collab.collaborationStateOf(active.session) : OFF_STATE;
 	}
 
 	#status(status: ConnectionStatus): void {
