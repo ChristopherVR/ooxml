@@ -6,13 +6,15 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
 		page,
 	}) => {
 		await page.goto(`/building-blocks.html?framework=${framework}`);
-		await expect(page.locator('[data-office-block="toolbar"]')).toBeVisible();
+		await expect(page.locator('[data-office-block="toolbar"][role="toolbar"]')).toBeVisible();
 		const snapshot = () =>
 			page.evaluate(() => {
 				const root = document.querySelector<HTMLElement>('#native-host')!;
 				const editor = root.querySelector('docx-editor')!;
 				const chrome = editor.shadowRoot!;
-				const toolbar = root.querySelector<HTMLElement>('[data-office-block="toolbar"]')!;
+				const toolbar = root.querySelector<HTMLElement>(
+					'[data-office-block="toolbar"][role="toolbar"]',
+				)!;
 				const probe = document.createElement('span');
 				root.append(probe);
 				const token = (name: string) => {
@@ -138,7 +140,7 @@ test.describe('embedding shadow scopes', () => {
 		}) => {
 			await page.emulateMedia({ colorScheme: 'light' });
 			await page.goto(`/building-blocks.html?framework=${framework}`);
-			await expect(page.locator('[data-office-block="toolbar"]')).toBeVisible();
+			await expect(page.locator('[data-office-block="toolbar"][role="toolbar"]')).toBeVisible();
 			await page.evaluate(() => {
 				const host = document.createElement('div');
 				host.id = 'shadow-word-app';
@@ -161,7 +163,9 @@ test.describe('embedding shadow scopes', () => {
 				page.evaluate(() => {
 					const editor = window.nativeWord!.handle.element;
 					const inner = editor.getRootNode() as ShadowRoot;
-					const toolbar = inner.querySelector<HTMLElement>('[data-office-block="toolbar"]')!;
+					const toolbar = inner.querySelector<HTMLElement>(
+						'[data-office-block="toolbar"][role="toolbar"]',
+					)!;
 					const button = toolbar.querySelector('button')!;
 					const outer = inner.host.getRootNode() as ShadowRoot;
 					return {
