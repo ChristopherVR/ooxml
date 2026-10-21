@@ -10,6 +10,7 @@ import {
 	type DocumentModel,
 	type Paragraph,
 	type StyleRefSource,
+	type TextRun,
 } from 'ooxml-core/docx';
 import { reviewSourceLength } from 'ooxml-core/docx/layout';
 import {
@@ -165,14 +166,100 @@ function codeFormattedResult(
 		: undefined;
 }
 
-/** Whether every text node of `range` is formatted like the first of `nodes`. */
+/**
+ * The marks of text formatted like `node`: its own for text, those its run properties give for a
+ * line break, which holds them in `format`.
+ */
+function textMarks(node: ProseMirrorNode): readonly Mark[] {
+	return node.isText
+		? node.marks
+		: runToInlineNodes({ ...inlineNodeRun(node)!, text: ' ' }, schema)[0]!.marks;
+}
+
+/** Whether the text and line breaks of `range` are formatted like the first of `nodes`. */
 function formattedAs(doc: ProseMirrorNode, range: FieldResultRange, nodes: ProseMirrorNode[]) {
-	const marks = nodes[0]?.marks;
+	const marks = nodes[0] && textMarks(nodes[0]);
 	let same = marks !== undefined;
 	doc.nodesBetween(range.from, range.to, (node) => {
-		if (node.isText && marks && !Mark.sameSet(node.marks, marks)) same = false;
+		if (node.isInline && marks && !Mark.sameSet(textMarks(node), marks)) same = false;
 	});
 	return same;
+}
+
+/** What makes runs parts of one field's result: the field, its identity and its flags. */
+function fieldIdentity(run: TextRun | undefined): string | undefined {
+	return run?.field
+		? JSON.stringify([
+				run.field.instr,
+				run.field.simple === true,
+				run.fieldInstanceId ?? null,
+				run.fieldFlags?.locked ?? null,
+				run.fieldFlags?.dirty ?? null,
+			])
+		: undefined;
+}
+
+/** A field's whole result, the line breaks in it included. */
+interface FieldResult extends FieldResultRange {
+	/** Its first text, else its first line break: how a new result is formatted. */
+	run: TextRun;
+}
+
+/** The run of a node of a field's result: text marked with the field, or a line break of it. */
+function resultRun(node: ProseMirrorNode): TextRun | undefined {
+	const holds = node.isText
+		? schema.marks.field!.isInSet(node.marks) !== undefined
+		: node.type.name === 'hardBreak' && String(node.attrs.format ?? '').includes('"field"');
+	const run = holds ? inlineNodeRun(node) : undefined;
+	return run?.field ? run : undefined;
+}
+
+/**
+ * The result of each field in `doc`: its text and the line breaks in it, before, between or after
+ * the text, which the editor holds as `hardBreak` nodes of the field (the model holds them as
+ * `\n` in the text). `text` reads each break as `\n`, as the model does. A result that is only
+ * line breaks is a result too.
+ */
+function fieldResults(doc: ProseMirrorNode): FieldResult[] {
+	const spans: { from: number; to: number; identity: string }[] = [];
+	doc.descendants((node, pos) => {
+		if (node.type.name !== 'paragraph') return true;
+		let open: (typeof spans)[number] | undefined;
+		node.forEach((child, offset) => {
+			const identity = fieldIdentity(resultRun(child));
+			const at = pos + 1 + offset;
+			if (identity === undefined) open = undefined;
+			else if (open?.identity === identity) open.to = at + child.nodeSize;
+			else spans.push((open = { from: at, to: at + child.nodeSize, identity }));
+		});
+		return false;
+	});
+	return spans.map(({ from, to }): FieldResult => {
+		let text = '';
+		let first: ProseMirrorNode | undefined;
+		doc.nodesBetween(from, to, (node) => {
+			if (!node.isInline) return true;
+			text += node.isText ? node.text! : '\n';
+			if (node.isText) first ??= node;
+			return false;
+		});
+		const run = inlineNodeRun(first ?? doc.nodeAt(from)!)!;
+		const marks = textMarks(first ?? doc.nodeAt(from)!);
+		return { from, to, text, mark: schema.marks.field!.isInSet(marks)!, marks, run };
+	});
+}
+
+/** `text` as the result of `field`, formatted as its first run, a line break as `hardBreak`. */
+function resultNodes(field: FieldResult, text: string): ProseMirrorNode[] {
+	return text
+		.split(/(\n)/)
+		.flatMap((piece) =>
+			piece === '\n'
+				? runToInlineNodes({ ...field.run, text: piece }, schema)
+				: piece
+					? [schema.text(piece, field.marks)]
+					: [],
+		);
 }
 
 /** The runs of a model paragraph that hold its editor positions `start` to `end`. */
@@ -239,8 +326,8 @@ export function refreshFieldResults(
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
-	const changes: Array<{ run: FieldResultRange; text: string; formatted?: ProseMirrorNode[] }> = [];
-	for (const run of fieldResultRanges(tr.doc)) {
+	const changes: Array<{ run: FieldResult; text: string; formatted?: ProseMirrorNode[] }> = [];
+	for (const run of fieldResults(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
 		const styleRef = source && parseStyleReference(String(run.mark.attrs.instr ?? ''));
 		if (styleRef) {
@@ -279,10 +366,13 @@ export function refreshFieldResults(
 		apply: () => {
 			// An empty result keeps its field: a simple one becomes a complex field with no result.
 			if (!text) {
-				if (!emptySimpleFieldResult(tr, run.from, run.to)) tr.delete(run.from, run.to);
+				// The result becomes one letter of its text first, so that a simple field is found as
+				// one result to empty, which keeps its instruction.
+				tr.replaceWith(run.from, run.to, schema.text('x', run.marks));
+				if (!emptySimpleFieldResult(tr, run.from, run.from + 1)) tr.delete(run.from, run.from + 1);
 				return;
 			}
-			tr.replaceWith(run.from, run.to, formatted ?? schema.text(text, run.marks));
+			tr.replaceWith(run.from, run.to, formatted ?? resultNodes(run, text));
 		},
 	}));
 	if (source)
