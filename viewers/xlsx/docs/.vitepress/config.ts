@@ -65,6 +65,7 @@ export default defineConfig({
 					{ text: 'The live demos', link: '/demos' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Framework bindings', link: '/bindings' },
+					{ text: 'Building blocks', link: '/building-blocks' },
 				],
 			},
 			{

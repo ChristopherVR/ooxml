@@ -54,6 +54,16 @@ vanilla package supplies `mountEditor(container, options)` for framework-free
 lifecycle management. `ooxml-core` and `ooxml-ui` are regular
 dependencies. Parsing, formulas, editing and grid calculations live in core.
 
+## Building blocks
+
+To build your own UI around the grid, use `useViewerBuildingBlocks` with `SpreadsheetCanvas` and
+the optional `Toolbar`, `FormulaBar` and `SheetTabs`. The hook returns `canvasProps`,
+`toolbarProps` (state, `enabled` flags and callbacks for formatting, undo, redo, formula entry and
+sheet navigation), `loading`, `error`, `mode`, `dirty`, `selection`, `collaboration` and
+`editError`, and takes host callbacks such as `onOpenShareDialog` and `onValidationError`. No
+title bar, ribbon, backstage or dialog is mounted. See the
+[building blocks guide](https://christophervr.github.io/ooxml/xlsx/building-blocks).
+
 ## Limitations
 
 This is an early editor, without Microsoft Excel parity or guaranteed lossless
