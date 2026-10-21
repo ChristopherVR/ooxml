@@ -361,10 +361,17 @@ describe('content controls around table cells in the editor', () => {
 			paragraph('After', { contentControl: block }),
 		]);
 		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const blocks = (s: EditorState) => {
+			const controls: unknown[] = [];
+			s.doc.forEach((node) => controls.push(node.attrs.contentControl?.id ?? null));
+			return controls;
+		};
 		const edited = state.apply(state.tr.insertText('!', doc.content.size - 2));
-		const blocks: unknown[] = [];
-		edited.doc.forEach((node) => blocks.push(node.attrs.contentControl ?? null));
-		expect(blocks).toEqual([null, null, null]);
+		expect(blocks(edited)).toEqual([null, null, null]);
+		// The table is part of its content: editing only the table removes it too.
+		const inTable = state.apply(state.tr.insertText('!', 14));
+		expect(inTable.doc.child(1).textContent).toBe('In!side');
+		expect(blocks(inTable)).toEqual([null, null, null]);
 		// One holding a paragraph of a nested block control between two of its own.
 		const nested = { id: '67', level: 'block' as const, kind: 'richText' as const };
 		const around = schema.node('doc', null, [

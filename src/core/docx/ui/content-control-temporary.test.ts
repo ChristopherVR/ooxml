@@ -191,6 +191,10 @@ describe('temporary content controls in the editor', () => {
 		const edited = state.apply(state.tr.insertText('!', 2));
 		expect(edited.doc.textContent).toBe('O!utinside');
 		expect(controlSpans(edited.doc).map((span) => span.control.id)).toEqual(['22']);
+		// The nested control is part of its content: editing only that removes it too.
+		const inner2 = state.apply(state.tr.insertText('!', 5));
+		expect(inner2.doc.textContent).toBe('Outi!nside');
+		expect(controlSpans(inner2.doc).map((span) => span.control.id)).toEqual(['22']);
 	});
 
 	it('leaves a control that cannot be deleted, and edits from elsewhere, as they are', () => {

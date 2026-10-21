@@ -17,8 +17,8 @@ type Span = ControlSpan | RowControlSpan;
  * The control's content as its text, with each object as a character and a picture by its parts,
  * so replacing a picture is an edit too. Formatting is not: it changes no content.
  */
-const contentOf = (state: EditorState, span: Span): string =>
-	state.doc.textBetween(span.from, span.to, '\n', (leaf) =>
+const contentOf = (state: EditorState, range: { from: number; to: number }): string =>
+	state.doc.textBetween(range.from, range.to, '\n', (leaf) =>
 		leaf.type.name === 'image'
 			? `\uFFFC${String(leaf.attrs.partName)}\uFFFC${String(leaf.attrs.svgPartName ?? '')}`
 			: '\uFFFC',
@@ -110,9 +110,6 @@ function temporaryControls(doc: ProseMirrorNode): Occurrence[] {
 	return found;
 }
 
-const contentOfAll = (state: EditorState, spans: readonly Span[]): string =>
-	spans.map((span) => contentOf(state, span)).join('\n');
-
 /** The transaction removing every temporary control whose content `transactions` changed. */
 export function removeEditedTemporaryControls(
 	transactions: readonly Transaction[],
@@ -142,8 +139,9 @@ export function removeEditedTemporaryControls(
 		const became = now.filter(
 			(occurrence) => occurrence.key === old.key && occurrence.from <= to && occurrence.to >= from,
 		);
-		const content = became.map((occurrence) => contentOfAll(after, occurrence.spans)).join('\n');
-		if (!became.length || content === contentOfAll(before, old.spans)) continue;
+		// Its whole range: what splits its spans (a nested control, a table) is its content too.
+		const content = became.map((occurrence) => contentOf(after, occurrence)).join('\n');
+		if (!became.length || content === contentOf(before, old)) continue;
 		// Every span of an edited control goes: Word removes the whole control.
 		for (const occurrence of became) {
 			if (removed.has(occurrence)) continue;
