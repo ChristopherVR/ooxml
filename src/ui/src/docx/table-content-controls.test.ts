@@ -109,6 +109,58 @@ describe('content controls around table cells in the editor', () => {
 		]);
 	});
 
+	it('draws and saves a pasted control whose values a page made of other kinds', async () => {
+		// An object where text is drawn or saved, one whose toString is null included, made the
+		// paste fail to draw and the document fail to save: such values are not taken.
+		const crafted = { toString: null };
+		const fields = {
+			alias: crafted,
+			tag: crafted,
+			lock: crafted,
+			dateFormat: crafted,
+			items: [
+				{ display: crafted, value: 'x' },
+				{ display: 'Fine', value: 'fine' },
+			],
+		};
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>After</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({ schema, doc, plugins: [contentControlPlugin()] }),
+		});
+		const paste = (html: string) => {
+			const end = view.state.doc.content.size - 1;
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+			view.pasteHTML(html, new Event('paste') as ClipboardEvent);
+		};
+		const td = document.createElement('td');
+		td.dataset.sdt = JSON.stringify({ id: '90', level: 'cell', kind: 'dropDownList', ...fields });
+		td.innerHTML = '<p>Cell</p>';
+		paste(`<table data-pm-slice="0 0 []"><tbody><tr>${td.outerHTML}</tr></tbody></table>`);
+		const span = document.createElement('span');
+		span.dataset.sdt = JSON.stringify({ id: '91', level: 'inline', kind: 'comboBox', ...fields });
+		span.textContent = 'Inline';
+		paste(`<p data-pm-slice="1 1 []">${span.outerHTML}</p>`);
+		expect(controlSpans(view.state.doc).map((found) => found.control.id)).toEqual(['90', '91']);
+		const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		for (const id of ['90', '91'])
+			expect(xml).toContain(
+				`<w:id w:val="${id}"/><w:${id === '90' ? 'dropDownList' : 'comboBox'}>` +
+					`<w:listItem w:displayText="x" w:value="x"/><w:listItem w:displayText="Fine" w:value="fine"/>`,
+			);
+		expect(xml).not.toContain('w:alias');
+		view.destroy();
+		host.remove();
+	});
+
 	it('keeps a cell control through HTML, as when cells are copied and pasted', async () => {
 		const doc = modelToDoc((await form()).model);
 		const html = document.createElement('div');

@@ -541,7 +541,9 @@ describe('row and cell content controls on save', () => {
 
 	it('writes only valid properties for a control the model gives a cell', async () => {
 		// A cell pasted from another page, a remote peer or the model API can hold any values: what
-		// Word cannot read is not written (w:id is optional, so a bad id is left out).
+		// Word cannot read is not written (w:id is optional, so a bad id is left out), and an object
+		// where text goes, one whose toString is null included, does not make the save fail.
+		const crafted = { toString: null };
 		const controls = [
 			{ id: 'abc', kind: 'bogus', lock: 'everything' },
 			{ id: '99999999999', kind: 'unknown' },
@@ -554,6 +556,17 @@ describe('row and cell content controls on save', () => {
 			},
 			{ id: '13', kind: 'dropDownList', items: 5 },
 			{ id: '14', kind: 'date', fullDate: 'soon', dateFormat: 'd/M/yyyy' },
+			{
+				id: '15',
+				kind: 'comboBox',
+				alias: crafted,
+				tag: crafted,
+				items: [
+					{ display: crafted, value: 'x' },
+					{ display: 'Fine', value: crafted },
+				],
+			},
+			{ id: '16', kind: 'date', dateFormat: crafted, dateLocale: crafted },
 		];
 		const loaded = await hand(
 			grid(controls.map((_, index) => row(`${label(`L${index}`)}${label(`V${index}`)}`)).join('')),
@@ -571,10 +584,16 @@ describe('row and cell content controls on save', () => {
 		);
 		expect(properties).toHaveLength(controls.length);
 		const ids = properties.map((sdtPr) => /<w:id w:val="([^"]*)"\/>/.exec(sdtPr)?.[1]);
-		expect(ids).toEqual([undefined, undefined, undefined, '12', '13', '14']);
+		expect(ids).toEqual([undefined, undefined, undefined, '12', '13', '14', '15', '16']);
 		expect(xml).not.toMatch(
-			/w:bogus|w:unknown|w:repeatingSection|w:lock|"zz"|w:fullDate|w:listItem/,
+			/w:bogus|w:unknown|w:repeatingSection|w:lock|"zz"|w:fullDate|w:alias|w:tag/,
 		);
+		expect(properties[4]).not.toContain('w:listItem');
+		expect(properties[6]).toContain(
+			'<w:comboBox><w:listItem w:displayText="x" w:value="x"/>' +
+				'<w:listItem w:displayText="Fine" w:value="Fine"/></w:comboBox>',
+		);
+		expect(properties[7]).toContain('<w:date/>');
 		expect(properties[3]).toContain('<w14:uncheckedState w14:val="2610"/>');
 		expect(properties[5]).toContain('<w:date><w:dateFormat w:val="d/M/yyyy"/></w:date>');
 		const reopened = tableOf((await loadDocx(await loaded.save(loaded.model))).model.blocks);
@@ -584,6 +603,8 @@ describe('row and cell content controls on save', () => {
 			'richText',
 			'checkbox',
 			'dropDownList',
+			'date',
+			'comboBox',
 			'date',
 		]);
 	});

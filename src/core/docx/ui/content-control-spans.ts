@@ -4,7 +4,11 @@
 // node attribute; no command operates it, so it is listed apart (`tableControlSpans`).
 import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
-import type { ContentControl } from '../content-control-model';
+import type {
+	ContentControl,
+	ContentControlGlyph,
+	ContentControlListItem,
+} from '../content-control-model';
 import { rowControlSpans, type RowControlSpan } from './content-control-rows';
 
 /** A control and the document range it covers. */
@@ -36,9 +40,84 @@ export function controlFromData(
 	return controlFromValue(value, level);
 }
 
+/** The fields of a control that hold text, and those that hold a flag. */
+const TEXT_FIELDS = [
+	'alias',
+	'tag',
+	'lock',
+	'dateFormat',
+	'dateLocale',
+	'fullDate',
+	'placeholder',
+	'placeholderText',
+	'sourceXml',
+	'endSourceXml',
+] as const;
+const FLAG_FIELDS = [
+	'showingPlaceholder',
+	'multiLine',
+	'checked',
+	'dataBound',
+	'temporary',
+] as const;
+
+const isGlyph = (value: unknown): value is ContentControlGlyph => {
+	const { code, font } = (value ?? {}) as { code?: unknown; font?: unknown };
+	return typeof code === 'string' && (font === undefined || typeof font === 'string');
+};
+const isItem = (value: unknown): value is ContentControlListItem => {
+	const { display, value: entry } = (value ?? {}) as { display?: unknown; value?: unknown };
+	return typeof display === 'string' && typeof entry === 'string';
+};
+/** A list entry's text: text, or a number written as text. */
+const entryText = (value: unknown): string | undefined =>
+	typeof value === 'string'
+		? value
+		: typeof value === 'number' && Number.isFinite(value)
+			? String(value)
+			: undefined;
+
+/**
+ * `control` with only values of the kinds its fields hold: text, flags, glyphs with a text code,
+ * list entries with a text display and value. A page can put any JSON in `data-sdt`, and an object
+ * where the editor draws or the writer saves text can make the paste fail to draw or the document
+ * fail to save. Itself when every value is of its kind.
+ */
+function wellFormed(control: ContentControl): ContentControl {
+	const fields = control as unknown as Record<string, unknown>;
+	const dropped = [
+		...TEXT_FIELDS.filter(
+			(field) => fields[field] !== undefined && typeof fields[field] !== 'string',
+		),
+		...FLAG_FIELDS.filter(
+			(field) => fields[field] !== undefined && typeof fields[field] !== 'boolean',
+		),
+		...(['checkedGlyph', 'uncheckedGlyph'] as const).filter(
+			(field) => fields[field] !== undefined && !isGlyph(fields[field]),
+		),
+	];
+	const items = fields.items;
+	const listed = items === undefined || (Array.isArray(items) && items.every(isItem));
+	if (!dropped.length && listed) return control;
+	const kept: Record<string, unknown> = { ...fields };
+	for (const field of dropped) delete kept[field];
+	if (!listed) {
+		if (!Array.isArray(items)) delete kept.items;
+		else
+			kept.items = items.flatMap((item: unknown) => {
+				const { display, value } = (item ?? {}) as { display?: unknown; value?: unknown };
+				const [shown, entry] = [entryText(display), entryText(value)];
+				const text = shown ?? entry;
+				return text === undefined ? [] : [{ display: text, value: entry ?? text }];
+			});
+	}
+	return kept as unknown as ContentControl;
+}
+
 /**
  * The control `value` is at `level`: itself when it is an object with an id and a kind at that
- * level, a copy at that level when it is at another, nothing when it is not a control.
+ * level, holding values of the kinds its fields hold; a copy at that level, or without the values
+ * of other kinds, otherwise; nothing when it is not a control.
  */
 export function controlFromValue(
 	value: unknown,
@@ -47,7 +126,7 @@ export function controlFromValue(
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
 	const { id, kind } = value as { id?: unknown; kind?: unknown };
 	if (typeof id !== 'string' || typeof kind !== 'string') return undefined;
-	const control = value as ContentControl;
+	const control = wellFormed(value as ContentControl);
 	return control.level === level ? control : { ...control, level };
 }
 

@@ -53,7 +53,8 @@ function place(sdtPr: XmlElement, element: XmlElement): void {
 
 function setValued(doc: XmlDocument, sdtPr: XmlElement, local: string, value: string | undefined) {
 	for (const existing of children(sdtPr, local)) sdtPr.removeChild(existing);
-	if (value === undefined) return;
+	// Only text is written: a model from elsewhere can hold anything.
+	if (typeof value !== 'string') return;
 	const element = makeW(doc, local);
 	element.setAttributeNS(WORD_NS, 'w:val', value);
 	place(sdtPr, element);
@@ -82,16 +83,23 @@ function checkboxElement(sdtPr: XmlElement): XmlElement | undefined {
 // A list, a check box or a date pasted from another page holds whatever that page wrote: only
 // values Word reads are written.
 
+/** A list entry's display or value as text: text, or a number; anything else is none. */
+const entryText = (value: unknown): string | undefined =>
+	typeof value === 'string'
+		? value
+		: typeof value === 'number' && Number.isFinite(value)
+			? String(value)
+			: undefined;
+
 /** The entries of a list control that can be written, each with a text display and value. */
 function validItems(items: unknown): ContentControlListItem[] {
 	if (!Array.isArray(items)) return [];
 	return items.flatMap((item: unknown) => {
 		if (!item || typeof item !== 'object') return [];
 		const { display, value } = item as { display?: unknown; value?: unknown };
-		const text = display ?? value;
-		return text === undefined || text === null
-			? []
-			: [{ display: String(text), value: String(value ?? text) }];
+		const [shown, entry] = [entryText(display), entryText(value)];
+		const text = shown ?? entry;
+		return text === undefined ? [] : [{ display: text, value: entry ?? text }];
 	});
 }
 
@@ -158,9 +166,9 @@ function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl)
 	else date.removeAttributeNS(WORD_NS, 'fullDate');
 	const set = (local: string, value: string | undefined, order: number) => {
 		for (const old of children(date, local)) date.removeChild(old);
-		if (value === undefined) return;
+		if (typeof value !== 'string') return;
 		const element = makeW(doc, local);
-		element.setAttributeNS(WORD_NS, 'w:val', String(value));
+		element.setAttributeNS(WORD_NS, 'w:val', value);
 		date.insertBefore(element, Array.from(date.childNodes)[order] ?? null);
 	};
 	set('dateFormat', control.dateFormat, 0);

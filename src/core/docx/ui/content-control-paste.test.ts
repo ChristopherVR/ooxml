@@ -6,7 +6,7 @@ import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
 import { contentControlPlugin } from './content-control-guard';
 import { freshControlId } from '../content-control-model';
-import { controlSpans } from './content-control-spans';
+import { controlFromData, controlFromValue, controlSpans } from './content-control-spans';
 
 const schema = new Schema({
 	nodes: {
@@ -301,6 +301,53 @@ describe('content controls pasted in the editor', () => {
 				kind: 'text',
 				level: 'cell',
 			});
+		});
+
+		it('takes only the values of a pasted control that are of the kind its fields hold', () => {
+			// A page can give any JSON: an object where text is drawn or saved (one whose toString is
+			// null cannot even become text) is not taken, and the rest of the control is.
+			const crafted = { toString: null };
+			const fields = {
+				alias: crafted,
+				tag: crafted,
+				lock: crafted,
+				dateFormat: crafted,
+				showingPlaceholder: 'yes',
+				checkedGlyph: { code: crafted },
+				items: [
+					{ display: crafted, value: 'x' },
+					{ display: 'Shown', value: crafted },
+					{ display: 7, value: 7 },
+					{ display: crafted },
+					{ display: 'Fine', value: 'fine' },
+				],
+			};
+			const taken = {
+				items: [
+					{ display: 'x', value: 'x' },
+					{ display: 'Shown', value: 'Shown' },
+					{ display: '7', value: '7' },
+					{ display: 'Fine', value: 'fine' },
+				],
+			};
+			const editor = contentControlPlugin();
+			const cell = { id: '80', level: 'cell', kind: 'dropDownList', ...fields };
+			expect(paste(editor, empty, table(cell as unknown as ContentControl))).toEqual({
+				id: '80',
+				level: 'cell',
+				kind: 'dropDownList',
+				...taken,
+			});
+			const inline = { id: '81', level: 'inline', kind: 'comboBox', ...fields };
+			expect(controlFromData(JSON.stringify(inline), 'inline')).toEqual({
+				id: '81',
+				level: 'inline',
+				kind: 'comboBox',
+				...taken,
+			});
+			// A well-formed control is taken as it is.
+			const fine: ContentControl = { id: '82', level: 'cell', kind: 'checkbox', checked: true };
+			expect(controlFromValue(fine, 'cell')).toBe(fine);
 		});
 
 		it('keeps the end properties of a pasted inline control only when they come from the editor', () => {
