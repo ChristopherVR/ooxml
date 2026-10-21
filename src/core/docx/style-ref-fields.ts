@@ -298,8 +298,10 @@ function pageIndependentResult(
  * The result of a STYLEREF in the body: the nearest text in the style before the field, else the
  * nearest after it (ECMA-376 Part 1, 17.16.5; Word searches back from the field, then on from
  * it). Text in a character style in the field's own paragraph is nearest, the field's own runs
- * (`field`) left out; a paragraph style's match is a whole paragraph, so the field's own is not
- * one. Undefined when the paragraph is not in the main document or nothing is in the style.
+ * (`field`) left out. A paragraph style's match is a whole paragraph: the field's own is the
+ * nearest for its number (`\n`), which Word shows when a paragraph repeats its own number in its
+ * text, but not for its text, which holds the field's own result. Undefined when the paragraph
+ * is not in the main document or nothing is in the style.
  */
 export function bodyStyleRefResult(
 	source: StyleRefSource,
@@ -314,6 +316,9 @@ export function bodyStyleRefResult(
 		field && target.kind === 'character' ? source.portions(at, reference, target, field) : [];
 	const earlier = own.filter((portion) => portion.to < field!.from);
 	if (earlier.length) return earlier.at(-1)!.text;
+	const number =
+		target.kind === 'paragraph' && reference.number ? source.results(at, reference, target) : [];
+	if (number.length) return number[0];
 	for (let index = at - 1; index >= 0; index--) {
 		const found = source.results(index, reference, target);
 		if (found.length) return found.at(-1);
