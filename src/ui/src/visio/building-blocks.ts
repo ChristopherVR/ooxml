@@ -2,12 +2,26 @@ import { installOfficeUiThemeFor, prepareOfficeUiBlock } from '../theme';
 import type { ViewerController } from './controller';
 import { ViewerCanvas } from './viewer-canvas';
 import { wireViewerInputs } from './viewer-input';
-import { ViewerPointerGestures } from './viewer-pointer-gestures';
+import { ViewerClipboard } from './viewer-clipboard';
 import { fitZoom } from './viewer-fit';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
 import { selectedShape, shapeDetails } from './shape-inspector';
-import { normalizeVisioLocale, translateRibbonText } from './ribbon-locale';
+import { createCanvasEditing } from './canvas-editing';
+import { registerCanvasServices } from './canvas-services';
+import { wireCanvasKeys } from './canvas-keys';
+import { isEditCancellation, editErrorMessage } from 'ooxml-core/visio/ui';
+
+export { diagramToolbarProps, diagramMode } from './building-blocks-toolbar';
+export type {
+	DiagramToolbarProps,
+	DiagramToolbarLabels,
+	DiagramToolbarHostCallbacks,
+	DiagramMode,
+	DiagramToolSummary,
+} from './building-blocks-toolbar';
+export { mountDiagramShapes } from './building-blocks-shapes';
+export { DIAGRAM_DRAW_TOOLS, type DiagramTool, type DiagramDrawTool } from './diagram-tool';
 
 export function fitDiagramCanvas(
 	host: HTMLElement,
@@ -36,7 +50,11 @@ export function mountDiagramInspector(host: HTMLElement, controller: ViewerContr
 	};
 }
 
-/** The shared drawing engine, without application chrome or file/settings handlers. */
+/**
+ * The shared drawing engine, without application chrome or file/settings handlers. Moving,
+ * inline text, resize, rotate, line end points and the draw tools are the full viewer's own
+ * gestures, and all of them stand down unless the controller may edit.
+ */
 export function mountDiagramCanvas(host: HTMLElement, controller: ViewerController): () => void {
 	const doc = host.ownerDocument;
 	installOfficeUiThemeFor(host);
@@ -47,67 +65,66 @@ export function mountDiagramCanvas(host: HTMLElement, controller: ViewerControll
 	viewport.className = 'viewport';
 	viewport.tabIndex = 0;
 	viewport.setAttribute('part', 'canvas');
+	// Edit rejections and gesture feedback reach assistive technology; the host owns visible UI.
+	const live = doc.createElement('div');
+	live.setAttribute('role', 'status');
+	live.setAttribute('aria-live', 'polite');
+	live.style.cssText =
+		'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap';
+	const announce = (message: string) => {
+		live.textContent = message;
+	};
 	const notes = doc.createElement('ul');
 	const inspector = doc.createElement('aside');
 	inspector.append(doc.createElement('div'));
 	const canvas = new ViewerCanvas(viewport, notes, doc.createElement('aside'), inspector);
 	const fit = (mode: 'page' | 'width') => fitDiagramCanvas(host, controller, mode);
-	root.append(style, viewport);
+	root.append(style, viewport, live);
 	const slider = Object.assign(doc.createElement('span'), { value: 100 });
-	const offInputs = wireViewerInputs({ viewport, zoomSlider: slider }, controller, fit);
-	const pointer = new ViewerPointerGestures(viewport, controller, {
-		active: () => true,
-		announce: () => {},
+	const pointerActive = () => controller.state.tool === 'pointer';
+	const editing = createCanvasEditing(viewport, controller, {
+		pointerActive,
+		announce,
+		drawTool: () => {
+			const tool = controller.state.tool;
+			return tool === 'pointer' ? undefined : tool;
+		},
 	});
-	const offPointer = pointer.wire();
+	const clipboard = new ViewerClipboard(root, controller, announce, () => {});
+	const report = (error: unknown) => {
+		if (!isEditCancellation(error)) announce(editErrorMessage(error));
+	};
+	const offServices = registerCanvasServices(controller, {
+		viewport,
+		announce,
+		clipboard: (operation) => clipboard.run(operation),
+	});
+	const offClipboard = clipboard.wire((operation, event) => {
+		void clipboard.run(operation, event).catch(report);
+	});
+	const offInputs = wireViewerInputs(
+		{ viewport, zoomSlider: slider },
+		controller,
+		fit,
+		announce,
+		(character) => pointerActive() && editing.edit.start(character),
+	);
+	const offKeys = wireCanvasKeys(viewport, controller, editing, announce);
+	const offEditing = editing.wire();
 	const render = () => {
-		pointer.render(controller.state);
 		canvas.render(controller.state);
+		editing.render(controller.state);
 	};
 	const stop = controller.subscribe(render);
 	render();
 	return () => {
 		stop();
 		offInputs();
-		offPointer();
+		offKeys();
+		offEditing();
+		offClipboard();
+		offServices();
 		canvas.dispose();
 		root.replaceChildren();
 	};
 }
-
-export function diagramToolbarProps(controller: ViewerController, fit: () => void, locale = 'en') {
-	const state = controller.state;
-	const canEdit = state.canEdit && state.edit.sourceAvailable && !state.loading && !state.edit.busy;
-	return {
-		labels: Object.fromEntries(
-			['Undo', 'Redo', 'Fit to Window', 'Page'].map((label) => [
-				label,
-				translateRibbonText(normalizeVisioLocale(locale), label),
-			]),
-		),
-		canEdit,
-		pageIndex: state.pageIndex,
-		pages: state.document?.pages.map((page) => ({ id: page.id, name: page.name })) ?? [],
-		zoom: state.zoom,
-		selection: state.selectedShapes,
-		canUndo: canEdit && state.edit.canUndo,
-		canRedo: canEdit && state.edit.canRedo,
-		canDuplicate: canEdit && state.selectedShapes.length > 0,
-		canGroup: canEdit && state.selectedShapes.length > 1,
-		canUngroup: canEdit && state.selectedShapes.length > 0,
-		onPageChange: (index: number) => controller.setPage(index),
-		onZoomChange: (zoom: number) => controller.setZoom(zoom),
-		onFit: fit,
-		onUndo: () => controller.undo(),
-		onRedo: () => controller.redo(),
-		onDuplicate: () => controller.duplicateSelection(),
-		onGroup: () => controller.groupSelection('group'),
-		onUngroup: () => controller.groupSelection('ungroup'),
-		onTextChange: (pageId: string, shapeId: string, text: string) =>
-			controller.replacePlainText(pageId, shapeId, text),
-		onSearchChange: (query: string) => controller.setSearchQuery(query),
-		onNextSearchResult: () => controller.nextSearchResult(),
-		onPreviousSearchResult: () => controller.previousSearchResult(),
-	};
-}
-export type DiagramToolbarProps = ReturnType<typeof diagramToolbarProps>;

@@ -3,8 +3,17 @@ export {
 	mountDiagramCanvas,
 	fitDiagramCanvas,
 	mountDiagramInspector,
+	mountDiagramShapes,
 	diagramToolbarProps,
+	diagramMode,
+	DIAGRAM_DRAW_TOOLS,
 	type DiagramToolbarProps,
+	type DiagramToolbarLabels,
+	type DiagramToolbarHostCallbacks,
+	type DiagramMode,
+	type DiagramToolSummary,
+	type DiagramTool,
+	type DiagramDrawTool,
 } from './building-blocks';
 export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';

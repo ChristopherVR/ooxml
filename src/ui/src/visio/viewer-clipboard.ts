@@ -67,6 +67,10 @@ export class ViewerClipboard {
 			typeof this.root.ownerDocument.defaultView?.ClipboardItem === 'function'
 		);
 	}
+	/** Why the operation is unavailable now, or an empty string when it can run. */
+	reason(operation: ClipboardOperation, state: ViewerState): string {
+		return this.operationReason(operation, state);
+	}
 	private operationReason(operation: ClipboardOperation, state: ViewerState): string {
 		if (operation !== 'copy' && !state.canEdit) return 'Read-only';
 		const reason = operation === 'paste' ? this.baseReason(state) : this.selectionReason(state);
@@ -191,7 +195,14 @@ export class ViewerClipboard {
 			}
 		}
 	}
-	wire(): () => void {
+	/**
+	 * Listen for the browser's clipboard events. By default they become ribbon actions; a surface
+	 * without a ribbon passes its own `dispatch`.
+	 */
+	wire(
+		dispatch: (operation: ClipboardOperation, event: ClipboardEvent) => void = (operation, event) =>
+			emitRibbonAction(this.root, { type: 'clipboard', operation, event }),
+	): () => void {
 		this.#disposed = false;
 		const Abort = this.root.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
@@ -202,11 +213,7 @@ export class ViewerClipboard {
 					if (event.defaultPrevented || editable(event)) return;
 					// Prevent a refused cut from deleting canvas text or leaking a stale native fallback.
 					event.preventDefault();
-					emitRibbonAction(this.root, {
-						type: 'clipboard',
-						operation,
-						event: event as ClipboardEvent,
-					});
+					dispatch(operation, event as ClipboardEvent);
 				},
 				{ signal: events.signal },
 			);

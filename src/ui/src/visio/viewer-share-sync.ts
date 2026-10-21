@@ -55,8 +55,9 @@ export class PackageSync {
 			() => map.unobserve(observer),
 			session.on('ready', settle),
 			this.controller.onEvent((name, detail) => {
-				if (name === 'document-change' && (detail as { kind: string }).kind !== 'remote')
-					this.#publish();
+				const kind = name === 'document-change' ? (detail as { kind: string }).kind : null;
+				// A host save only moves the clean point; it changes nothing to publish.
+				if (kind !== null && kind !== 'remote' && kind !== 'save') this.#publish();
 				if (name === 'document-load' && !this.#adopting) this.#publish();
 			}),
 			this.controller.subscribe((state) => this.#flush(state)),

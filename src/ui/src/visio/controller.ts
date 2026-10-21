@@ -55,6 +55,7 @@ import {
 } from './viewer-layers';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import type { CancellableParser } from './worker-parser';
+import type { DiagramTool } from './diagram-tool';
 import type { ViewerEvents, VisioShapeSelection } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,
@@ -96,6 +97,8 @@ export interface ViewerState {
 	readonly selectedShapes: readonly VisioShapeSelection[];
 	/** Prepared source selection availability for native clipboard gestures. Payload stays private. */
 	readonly clipboard: ViewerClipboardState;
+	/** The standalone canvas's active tool; it falls back to the pointer whenever editing stops. */
+	readonly tool: DiagramTool;
 }
 /** Effective mutation availability shared by every diagram UI tool. */
 export function canEditDiagram(state: Pick<ViewerState, 'canEdit' | 'edit'>): boolean {
@@ -137,6 +140,7 @@ export class ViewerController {
 		search: EMPTY_TEXT_SEARCH,
 		layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		clipboard: EMPTY_CLIPBOARD_STATE,
+		tool: 'pointer',
 	});
 	#subscribers = new Set<(state: ViewerState) => void>();
 	#events = new Set<EventListener>();
@@ -220,6 +224,13 @@ export class ViewerController {
 			this.cancelPreview();
 		}
 		this.#change({ canEdit: Boolean(value) });
+	}
+	/** Pick the canvas tool. A drawing tool needs edit permission and a source-backed drawing. */
+	setTool(tool: DiagramTool): void {
+		this.#assertAlive();
+		if (tool === this.#state.tool) return;
+		if (tool !== 'pointer' && !canEditDiagram(this.#state)) return;
+		this.#change({ tool });
 	}
 	onEvent(listener: EventListener): () => void {
 		this.#assertAlive();
@@ -526,6 +537,7 @@ export class ViewerController {
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 			clipboard: EMPTY_CLIPBOARD_STATE,
+			tool: 'pointer',
 		});
 	}
 	/** Replace one source-backed local plain-text target. Core decides target support. */
@@ -931,6 +943,24 @@ export class ViewerController {
 		this.parser.cancel?.();
 		this.#change({ edit: this.#sourceEditState() });
 	}
+	/**
+	 * Declare the current content saved, for hosts that persist `exportVsdx()` themselves. Clears
+	 * `edit.dirty` and emits `document-change` with `dirty: false` and kind `save`. Later edits
+	 * and undo steps are measured against this point.
+	 */
+	markClean(): void {
+		this.#assertAlive();
+		const history = this.#history;
+		const document = this.#state.document;
+		if (!history || !document || this.#sourceFormat !== 'vsdx' || document.format !== 'vsdx')
+			return;
+		if (this.#state.edit.busy || this.#state.loading)
+			throw new Error('Wait for the current document operation before marking the drawing saved.');
+		const was = this.#state.edit.dirty;
+		history.markClean();
+		this.#change({ edit: this.#sourceEditState() });
+		if (was) this.#emit('document-change', { document, dirty: false, kind: 'save' });
+	}
 	exportVsdx(): VsdxExportResult {
 		this.#assertAlive();
 		if (!this.#history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
@@ -1335,6 +1365,11 @@ export class ViewerController {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');
 	}
 	#change(change: Partial<ViewerState>): boolean {
+		if (this.#state.tool !== 'pointer' || (change.tool && change.tool !== 'pointer')) {
+			const merged = { ...this.#state, ...change };
+			if (merged.tool !== 'pointer' && !canEditDiagram(merged))
+				change = { ...change, tool: 'pointer' };
+		}
 		const revision = ++this.#revision;
 		if (
 			(change.zoom !== undefined && change.zoom !== this.#state.zoom) ||
