@@ -29,7 +29,7 @@ const GRADIENT_TYPE_OPTIONS: Array<{ value: string; i18nKey: string }> = [
 	{ value: 'radial', i18nKey: 'pptx.table.gradientRadial' },
 ];
 
-const PATTERN_OPTIONS = OOXML_PATTERN_PRESETS.slice(0, 20);
+const PATTERN_OPTIONS = /* @__PURE__ */ OOXML_PATTERN_PRESETS.slice(0, 20);
 
 // ---------------------------------------------------------------------------
 // Gradient sub-controls

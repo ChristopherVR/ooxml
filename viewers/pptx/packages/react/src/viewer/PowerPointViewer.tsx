@@ -153,6 +153,7 @@ import { useViewPreferencesSync } from './hooks/useViewPreferencesSync';
 import { useZoomViewport } from './hooks/useZoomViewport';
 import type { PowerPointViewerProps, PowerPointViewerHandle } from './types';
 import { cn } from './utils';
+import { withDisplayName } from './utils/display-name';
 
 export type { PowerPointViewerProps, PowerPointViewerHandle } from './types';
 export { getAnimationInitialStyle } from './utils/animation';
@@ -164,16 +165,11 @@ export { getAnimationInitialStyle } from './utils/animation';
 /** Stable empty list, so a viewer without host tabs never re-renders its ribbon for them. */
 const NO_RIBBON_ADD_INS: readonly RibbonAddInTab[] = [];
 
-/**
- * Root React component for the PowerPoint viewer/editor.
- *
- * Accepts binary `.pptx` content and renders a full-featured editor with
- * slide canvas, toolbar, inspector panels, presentation mode, and more.
- *
- * Uses `forwardRef` to expose a `PowerPointViewerHandle` for imperative
- * access (e.g. serialising the current content for saving).
- */
-export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointViewerProps>(
+/** The viewer component before its display name is set; see {@link PowerPointViewer}. */
+const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
+	PowerPointViewerHandle,
+	PowerPointViewerProps
+>(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the forwardRef component its displayName
 	function PowerPointViewer(props, ref) {
 		const {
@@ -1799,7 +1795,19 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 	},
 );
 
-PowerPointViewer.displayName = 'PowerPointViewer';
+/**
+ * Root React component for the PowerPoint viewer/editor.
+ *
+ * Accepts binary `.pptx` content and renders a full-featured editor with
+ * slide canvas, toolbar, inspector panels, presentation mode, and more.
+ *
+ * Uses `forwardRef` to expose a `PowerPointViewerHandle` for imperative
+ * access (e.g. serialising the current content for saving).
+ */
+export const PowerPointViewer = /* @__PURE__ */ withDisplayName(
+	PowerPointViewerComponent,
+	'PowerPointViewer',
+);
 
 /* ------------------------------------------------------------------ */
 /*  Collaboration sub-components (only rendered when collab is active) */

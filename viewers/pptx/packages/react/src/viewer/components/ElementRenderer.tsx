@@ -50,7 +50,7 @@ import { StaticElementRenderer } from './StaticElementRenderer';
 export type { ElementRendererProps } from './elements/element-renderer-types';
 export { shapeParams } from './elements/element-shape-params';
 
-export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
+export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ React.memo(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the memo component its displayName
 	function ElementRendererInner({
 		element: el,

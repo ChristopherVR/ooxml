@@ -34,7 +34,7 @@ export interface ViewerRegionBase {
 }
 
 /** Provided by `PowerPointViewer`; `null` when a component is rendered standalone. */
-export const ViewerRegionBaseContext = createContext<ViewerRegionBase | null>(null);
+export const ViewerRegionBaseContext = /* @__PURE__ */ createContext<ViewerRegionBase | null>(null);
 
 /**
  * The host renderer replacing `id`, or `undefined` when none is set OR no region

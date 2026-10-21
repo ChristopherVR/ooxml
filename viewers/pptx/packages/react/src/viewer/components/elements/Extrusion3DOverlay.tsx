@@ -18,6 +18,7 @@
  */
 import React from 'react';
 
+import { withDisplayName } from '../../utils/display-name';
 import type { Extrusion3DData, ExtrusionPanel } from '../../utils/shape-visual-3d';
 
 interface Extrusion3DOverlayProps {
@@ -30,7 +31,7 @@ interface Extrusion3DOverlayProps {
  * within a `preserve-3d` container. This component should be rendered
  * as a sibling or wrapper alongside the shape's main content.
  */
-export const Extrusion3DOverlay: React.FC<Extrusion3DOverlayProps> = React.memo(
+const Extrusion3DOverlayMemo: React.FC<Extrusion3DOverlayProps> = /* @__PURE__ */ React.memo(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the memo component its displayName
 	function Extrusion3DOverlayInner({ data }) {
 		if (!data.hasExtrusion || data.panels.length === 0) {
@@ -67,4 +68,7 @@ export const Extrusion3DOverlay: React.FC<Extrusion3DOverlayProps> = React.memo(
 	},
 );
 
-Extrusion3DOverlay.displayName = 'Extrusion3DOverlay';
+export const Extrusion3DOverlay = /* @__PURE__ */ withDisplayName(
+	Extrusion3DOverlayMemo,
+	'Extrusion3DOverlay',
+);

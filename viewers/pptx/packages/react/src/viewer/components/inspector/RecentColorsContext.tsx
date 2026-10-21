@@ -25,7 +25,7 @@ const DEFAULT_VALUE: RecentColorsContextValue = {
 	pushColor: () => {},
 };
 
-const RecentColorsContext = createContext<RecentColorsContextValue>(DEFAULT_VALUE);
+const RecentColorsContext = /* @__PURE__ */ createContext<RecentColorsContextValue>(DEFAULT_VALUE);
 
 export const RecentColorsProvider = RecentColorsContext.Provider;
 

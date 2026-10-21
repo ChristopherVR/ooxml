@@ -160,4 +160,7 @@ export function scaledSlidePreviewPropsEqual(
 	return true;
 }
 
-export const ScaledSlidePreview = React.memo(ScaledSlidePreviewImpl, scaledSlidePreviewPropsEqual);
+export const ScaledSlidePreview = /* @__PURE__ */ React.memo(
+	ScaledSlidePreviewImpl,
+	scaledSlidePreviewPropsEqual,
+);

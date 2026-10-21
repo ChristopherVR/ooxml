@@ -28,7 +28,7 @@ export interface ChartDataPointMarkerOptionsProps {
 }
 
 // Concrete symbol options only (exclude the '' auto sentinel).
-const SYMBOL_OPTIONS = MARKER_SYMBOL_OPTIONS.filter((o) => o.value !== '');
+const SYMBOL_OPTIONS = /* @__PURE__ */ MARKER_SYMBOL_OPTIONS.filter((o) => o.value !== '');
 
 // ---------------------------------------------------------------------------
 // Component

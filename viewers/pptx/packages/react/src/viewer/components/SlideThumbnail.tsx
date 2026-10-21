@@ -160,4 +160,7 @@ export function slideThumbnailPropsEqual(
 	return true;
 }
 
-export const SlideThumbnail = React.memo(SlideThumbnailImpl, slideThumbnailPropsEqual);
+export const SlideThumbnail = /* @__PURE__ */ React.memo(
+	SlideThumbnailImpl,
+	slideThumbnailPropsEqual,
+);

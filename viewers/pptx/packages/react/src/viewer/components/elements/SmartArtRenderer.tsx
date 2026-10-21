@@ -316,7 +316,7 @@ function sameDiagramReveal(
 	return true;
 }
 
-export const SmartArtRenderer = React.memo(SmartArtRendererImpl, arePropsEqual);
+export const SmartArtRenderer = /* @__PURE__ */ React.memo(SmartArtRendererImpl, arePropsEqual);
 
 // ── Exported test utilities ─────────────────────────────────────────────────
 
