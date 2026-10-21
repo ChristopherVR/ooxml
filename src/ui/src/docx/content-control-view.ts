@@ -26,6 +26,19 @@ function controlOfElement(
 	}
 }
 
+/**
+ * Where the control drawn as `el` starts in the document: controls can share an id (a file from
+ * another tool may repeat one), and the commands act on the control around this position.
+ */
+function positionOf(view: EditorView, el: HTMLElement): number | undefined {
+	if (!el.isConnected) return undefined;
+	try {
+		return view.posAtDOM(el, 0);
+	} catch {
+		return undefined;
+	}
+}
+
 /** Opens the popup the control's kind calls for. Returns whether a popup (or toggle) took the click. */
 function operate(
 	view: EditorView,
@@ -35,7 +48,7 @@ function operate(
 ): boolean {
 	if (!canEditControlContent(control)) return control.kind === 'checkbox';
 	if (control.kind === 'checkbox') {
-		const tr = toggleCheckboxControl(view.state, control.id);
+		const tr = toggleCheckboxControl(view.state, control.id, positionOf(view, el));
 		if (tr) view.dispatch(tr);
 		return true;
 	}
@@ -48,7 +61,10 @@ function operate(
 		const items = control.items.map((item) => item.display);
 		openListPopover(el, items, el.textContent ?? '', false, (display) => {
 			const index = items.indexOf(display);
-			const tr = index >= 0 ? chooseListItem(view.state, control.id, index) : undefined;
+			const tr =
+				index >= 0
+					? chooseListItem(view.state, control.id, index, positionOf(view, el))
+					: undefined;
 			if (tr) view.dispatch(tr);
 			view.focus();
 		});
@@ -56,7 +72,7 @@ function operate(
 	}
 	if (control.kind === 'date') {
 		openCalendarPopover(el, controlDate(control), control.dateLocale ?? 'en-US', (date) => {
-			const tr = chooseDate(view.state, control.id, date);
+			const tr = chooseDate(view.state, control.id, date, positionOf(view, el));
 			if (tr) view.dispatch(tr);
 			view.focus();
 		});
