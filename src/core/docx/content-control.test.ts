@@ -550,4 +550,146 @@ describe('content controls in tables and with unmodeled properties', () => {
 			'<w:sdt><w:sdtPr><w:id w:val="-12"/><w:lock w:val="contentLocked"/></w:sdtPr><w:sdtContent>',
 		);
 	});
+
+	it('writes only the text values of a new control, a list entry when its text is text', async () => {
+		// A model from elsewhere can hold anything: an object where text is written (one whose
+		// toString is null cannot even become text) is left out instead of failing the save.
+		const crafted = { toString: null } as unknown as string;
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		paragraph.runs.push(
+			{
+				text: 'Red',
+				contentControl: {
+					id: '41',
+					level: 'inline',
+					kind: 'dropDownList',
+					alias: crafted,
+					tag: crafted,
+					items: [
+						{ display: crafted, value: 'x' },
+						{ display: 7, value: 7 } as unknown as { display: string; value: string },
+						{ display: 'Fine', value: 'fine' },
+					],
+				},
+			},
+			{
+				text: 'Today',
+				contentControl: {
+					id: '42',
+					level: 'inline',
+					kind: 'date',
+					dateFormat: crafted,
+					dateLocale: crafted,
+					fullDate: crafted,
+				},
+			},
+		);
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain(
+			'<w:dropDownList><w:listItem w:displayText="x" w:value="x"/><w:listItem w:displayText="7" w:value="7"/><w:listItem w:displayText="Fine" w:value="fine"/></w:dropDownList>',
+		);
+		expect(xml).not.toContain('w:alias');
+		expect(xml).not.toContain('w:tag');
+		expect(xml).toContain('<w:date/>');
+	});
+
+	it('keeps a full date written in another form when a date control changes', async () => {
+		// Another program can write a date without its time; only a value that is not text is left out.
+		const loaded = await hand(
+			`<w:p><w:sdt><w:sdtPr><w:id w:val="51"/><w:date w:fullDate="2024-01-15"><w:dateFormat w:val="M/d/yyyy"/></w:date></w:sdtPr>` +
+				`<w:sdtContent><w:r><w:t>1/15/2024</w:t></w:r></w:sdtContent></w:sdt></w:p>`,
+		);
+		const control = controlOf(expectParagraph(loaded.model.blocks[0]));
+		expect(control.fullDate).toBe('2024-01-15');
+		control.dateFormat = 'd MMMM yyyy';
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('<w:date w:fullDate="2024-01-15"><w:dateFormat w:val="d MMMM yyyy"/>');
+	});
+
+	it('keeps verbatim properties that hold the attributes later versions of Word write', async () => {
+		// Word 2021 and later put a checksum on a data binding, in w:dataBinding and in the
+		// w15:dataBinding of a rich text control (w16sdtdh, [MS-DOCX] 2.2.12 and 2.11.2.1), and a UTC
+		// date on a formatting revision (w16du, [MS-DOCX] 2.12.2.1): a copy of such a control keeps
+		// its properties as Word wrote them, its binding included.
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		const W15 = 'http://schemas.microsoft.com/office/word/2012/wordml';
+		const DH = 'http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash';
+		const DU = 'http://schemas.microsoft.com/office/word/2023/wordml/word16du';
+		const sdtPr = (inner: string) =>
+			`<w:sdtPr xmlns:w="${WORD_NS}" xmlns:w15="${W15}" xmlns:w16sdtdh="${DH}" xmlns:w16du="${DU}">${inner}</w:sdtPr>`;
+		const revision =
+			'<w:rPrChange w:id="3" w:author="A" w:date="2026-01-01T00:00:00Z" w16du:dateUtc="2026-01-01T00:00:00Z"><w:rPr/></w:rPrChange>';
+		paragraph.runs.push({
+			text: 'Red',
+			contentControl: {
+				id: '4245',
+				level: 'inline',
+				kind: 'text',
+				sourceXml: sdtPr(
+					`<w:rPr><w:b/>${revision}</w:rPr><w:id w:val="4245"/>` +
+						`<w:dataBinding w:xpath="/a" w:storeItemID="{1}" w16sdtdh:storeItemChecksum="Ab12"/><w:text/>`,
+				),
+			},
+		});
+		let xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('w16sdtdh:storeItemChecksum="Ab12"');
+		expect(xml).toContain('w:xpath="/a"');
+		expect(xml).toContain('w16du:dateUtc="2026-01-01T00:00:00Z"');
+		paragraph.runs[1]!.contentControl = {
+			id: '4245',
+			level: 'inline',
+			kind: 'richText',
+			sourceXml: sdtPr(
+				`<w:id w:val="4245"/><w15:dataBinding w:prefixMappings="" w:xpath="/root[1]/data[1]" ` +
+					`w:storeItemID="{5D9DE62B-DE87-4789-A4F4-7D834A2F3A10}" w16sdtdh:storeItemChecksum="nqI16g=="/>`,
+			),
+		};
+		xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('w16sdtdh:storeItemChecksum="nqI16g=="');
+		expect(xml).toContain('w:xpath="/root[1]/data[1]"');
+	});
+
+	it('writes no verbatim properties with a second type element, one of an extension included', async () => {
+		// Word's extensions add four types to a w:sdtPr ([MS-DOCX] 2.2.3): a check box and an entity
+		// picker in w14, a repeating section and its items in w15. Properties with one of them beside
+		// another type, or with an element of an extension twice, are built from the model.
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		const W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
+		const W15 = 'http://schemas.microsoft.com/office/word/2012/wordml';
+		const sdtPr = (inner: string) =>
+			`<w:sdtPr xmlns:w="${WORD_NS}" xmlns:w14="${W14}" xmlns:w15="${W15}"><w:id w:val="4246"/>${inner}</w:sdtPr>`;
+		paragraph.runs.push({
+			text: 'Red',
+			contentControl: { id: '4246', level: 'inline', kind: 'text' },
+		});
+		for (const sourceXml of [
+			sdtPr('<w:text/><w14:checkbox><w14:checked w14:val="0"/></w14:checkbox>'),
+			sdtPr('<w:text/><w14:entityPicker/>'),
+			sdtPr('<w:text/><w15:repeatingSection/>'),
+			sdtPr('<w:text/><w15:repeatingSectionItem/>'),
+			sdtPr('<w:text/><w15:appearance w15:val="hidden"/><w15:appearance w15:val="tags"/>'),
+		]) {
+			paragraph.runs[1]!.contentControl = { id: '4246', level: 'inline', kind: 'text', sourceXml };
+			const xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml, sourceXml).toContain(
+				'<w:sdt><w:sdtPr><w:id w:val="4246"/><w:text/></w:sdtPr><w:sdtContent>',
+			);
+		}
+		// A type of an extension on its own is the control's one type, as Word writes it.
+		paragraph.runs[1]!.contentControl = {
+			id: '4246',
+			level: 'inline',
+			kind: 'checkbox',
+			checked: false,
+			sourceXml: sdtPr(
+				'<w14:checkbox><w14:checked w14:val="0"/></w14:checkbox><w15:appearance w15:val="hidden"/>',
+			),
+		};
+		expect(await documentXml(await loaded.save(loaded.model))).toMatch(
+			/<w:sdtPr[^>]*><w:id w:val="4246"\/><w14:checkbox><w14:checked w14:val="0"\/><\/w14:checkbox><w15:appearance w15:val="hidden"\/><\/w:sdtPr>/,
+		);
+	});
 });

@@ -161,7 +161,10 @@ function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl
 function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const date = first(sdtPr, 'date');
 	if (!date) return;
-	const fullDate = validDate(control.fullDate);
+	// A date another program wrote in its own form stays as read; a new one is an xsd:dateTime.
+	const existing = date.getAttributeNS(WORD_NS, 'fullDate') || undefined;
+	const fullDate =
+		validDate(control.fullDate) ?? (control.fullDate === existing ? existing : undefined);
 	if (fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', fullDate);
 	else date.removeAttributeNS(WORD_NS, 'fullDate');
 	const set = (local: string, value: string | undefined, order: number) => {
