@@ -69,7 +69,8 @@ The release workflow writes `chore(release): bump versions and update changelogs
     (`scripts/bundle-size.mjs`, posted by `.github/workflows/bundle-size-comment.yml`);
   - a **pkg.pr.new** comment with install URLs for preview builds of both packages, so a viewer or
     app can try the change before it is released (`.github/workflows/preview-packages.yml`);
-  - a review from **CodeRabbit** (`.coderabbit.yaml`): suggestions, not a required check.
+  - a review from **Codex** (its GitHub app; comment `@codex review` to rerun it): suggestions, not a
+    required check.
 - `ci-success` also requires no em-dash in the lines you add
   (`scripts/check-em-dashes.mjs`), and the packed packages' types must resolve under NodeNext and
   bundlers (`scripts/check-package-types.mjs`, Are the Types Wrong).
