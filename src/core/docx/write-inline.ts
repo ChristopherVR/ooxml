@@ -83,7 +83,7 @@ function runNodes(
 		nodes,
 		placed: {
 			...(nodes[0] && { first: nodes[0], last: nodes.at(-1)! }),
-			...(text && !wrapped && { splittable: node }),
+			...(text && { splittable: node }),
 			...(wrapper && { wrapper }),
 		},
 	};

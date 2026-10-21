@@ -6,6 +6,7 @@ import { isSdt } from './content-control';
 import { positionText } from './inline-marker-positions';
 import { isPositionMarker } from './inline-markers';
 import type { TextRun } from './model';
+import { isRevisionWrapperElement } from './write-revisions';
 import { isElement, named, WORD_NS, type XmlElement, type XmlNode } from './xml';
 
 /** One end of a smart tag or inline custom XML element, carried like a position marker. */
@@ -29,14 +30,17 @@ function within(node: XmlNode, ancestor: XmlNode): boolean {
 
 /**
  * When the text a wrapper marked now starts or ends inside a hyperlink or simple field (a link
- * was added over part of it), moves the stand-in from the container's first or last place to just
- * before or after the container, which the restored wrapper then holds. A content control is not
- * left: a wrapper around one could not be edited again.
+ * was added over part of it), or inside one of the tracked changes the writer gives each run of a
+ * change, moves the stand-in from the container's first or last place to just before or after the
+ * container, which the restored wrapper then holds. A content control is not left: a wrapper
+ * around one could not be edited again.
  */
 function liftOut(opening: XmlElement, closing: XmlElement): void {
 	const container = (edge: XmlElement): XmlElement | undefined => {
 		const parent = edge.parentNode;
-		return parent && isElement(parent) && (named(parent, 'hyperlink') || named(parent, 'fldSimple'))
+		return parent &&
+			isElement(parent) &&
+			(named(parent, 'hyperlink') || named(parent, 'fldSimple') || isRevisionWrapperElement(parent))
 			? parent
 			: undefined;
 	};

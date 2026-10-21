@@ -124,7 +124,7 @@ function runsOf(
 					element: annotationEdge(child),
 					boundary: slots.length,
 					annotation: { wrapper: child, edge: side },
-					...(container && { container }),
+					...inContainer,
 				});
 			edge('start');
 			if (!runsOf(child, container, slots, markers, paragraph, revision)) return false;

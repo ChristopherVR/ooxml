@@ -148,6 +148,127 @@ describe('editing paragraphs that hold position markers', () => {
 		);
 	});
 
+	it('keeps ranges at their characters inside a tracked change whose runs the editor merges', async () => {
+		const revision = 'w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins w:id="5" ${revision}>${run('left')}<w:bookmarkStart w:id="3" w:name="Mid"/>` +
+				`${run('right')}<w:bookmarkEnd w:id="3"/><w:permStart w:id="4" w:edGrp="everyone"/>${run('more')}` +
+				`<w:permEnd w:id="4"/></w:ins><w:del w:id="6" ${revision}><w:r><w:delText>was</w:delText></w:r>` +
+				`<w:bookmarkStart w:id="2" w:name="Gone"/><w:r><w:delText>here</w:delText></w:r>` +
+				`<w:bookmarkEnd w:id="2"/></w:del>${run(' tail')}</w:p>`,
+		);
+		// The editor holds the equally formatted runs of one change as one text.
+		const [fixed, left, , , was, , tail] = paragraph.runs;
+		paragraph.runs = [
+			{ ...fixed!, text: 'Still fixed ' },
+			{ ...left!, text: 'leftrightmore' },
+			{ ...was!, text: 'washere' },
+			tail!,
+		];
+		const xml = await savedParagraph(loaded);
+		expectInOrder(xml, [
+			'>Still fixed <',
+			'>left<',
+			'<w:bookmarkStart w:id="3" w:name="Mid"/>',
+			'>right<',
+			'<w:bookmarkEnd w:id="3"/>',
+			'<w:permStart w:id="4" w:edGrp="everyone"/>',
+			'>more<',
+			'<w:permEnd w:id="4"/>',
+			'<w:delText>was</w:delText>',
+			'<w:bookmarkStart w:id="2" w:name="Gone"/>',
+			'<w:delText>here</w:delText>',
+			'<w:bookmarkEnd w:id="2"/>',
+			'> tail<',
+		]);
+		expect(heldBy(xml, 'ins', ['>left<', '<w:bookmarkStart w:id="3"', '>right<'])).toBe(true);
+		expect(heldBy(xml, 'del', ['>was<', '<w:bookmarkStart w:id="2"', '>here<'])).toBe(true);
+	});
+
+	it('keeps a smart tag around its text inside a tracked change whose runs the editor merges', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins ${revision}>${run('Meet in ')}` +
+				`<w:smartTag w:element="City">${run('Paris')}</w:smartTag>${run(' today')}</w:ins></w:p>`,
+		);
+		const [fixed, meet] = paragraph.runs;
+		paragraph.runs = [
+			{ ...fixed!, text: 'Still fixed ' },
+			{ ...meet!, text: 'Meet in Paris today' },
+		];
+		const xml = await savedParagraph(loaded);
+		expect(heldBy(xml, 'ins', ['>Meet in <', '<w:smartTag w:element="City">', '>Paris<'])).toBe(
+			true,
+		);
+		expectInOrder(xml, ['>Meet in <', '<w:smartTag w:element="City">', '>Paris<', '</w:smartTag>']);
+		expect(element(xml, 'smartTag')).not.toContain('today');
+	});
+
+	it('keeps smart tags that start and end a tracked change whose runs the editor merges', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins ${revision}><w:smartTag w:element="Day">${run('Today')}</w:smartTag>` +
+				`${run(' in ')}<w:smartTag w:element="City">${run('Paris')}</w:smartTag></w:ins>${run(' tail')}</w:p>`,
+		);
+		const [fixed, today, , , tail] = paragraph.runs;
+		paragraph.runs = [
+			{ ...fixed!, text: 'Still fixed ' },
+			{ ...today!, text: 'Today in Paris' },
+			tail!,
+		];
+		const xml = await savedParagraph(loaded);
+		expect(
+			heldBy(xml, 'ins', [
+				'<w:smartTag w:element="Day">',
+				'>Today<',
+				'<w:smartTag w:element="City">',
+			]),
+		).toBe(true);
+		expectInOrder(xml, [
+			'<w:smartTag w:element="Day">',
+			'>Today<',
+			'</w:smartTag>',
+			'> in <',
+			'<w:smartTag w:element="City">',
+			'>Paris<',
+			'</w:smartTag>',
+			'</w:ins>',
+			'> tail<',
+		]);
+	});
+
+	it('keeps a smart tag around the tracked change it wraps', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:smartTag w:element="City"><w:ins ${revision}>${run('Paris')}</w:ins></w:smartTag></w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		expectInOrder(await savedParagraph(loaded), [
+			'>Still fixed <',
+			'<w:smartTag w:element="City">',
+			'<w:ins ',
+			'>Paris<',
+			'</w:ins>',
+			'</w:smartTag>',
+		]);
+	});
+
+	it('keeps a smart tag around two differently formatted runs of one tracked change', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins ${revision}><w:smartTag w:element="City">${run('Pa')}` +
+				`<w:r><w:rPr><w:b/></w:rPr><w:t>ris</w:t></w:r></w:smartTag></w:ins></w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		expectInOrder(await savedParagraph(loaded), [
+			'>Still fixed <',
+			'<w:smartTag w:element="City">',
+			'>Pa<',
+			'>ris<',
+			'</w:smartTag>',
+		]);
+	});
+
 	it('keeps a bookmark around the run it marks instead of widening it to the paragraph', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p>${run('Label: ')}<w:bookmarkStart w:id="3" w:name="Value"/>${run('old')}<w:bookmarkEnd w:id="3"/></w:p>`,
