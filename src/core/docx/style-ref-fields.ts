@@ -30,9 +30,19 @@ interface FieldResult extends RunSpan {
 	name?: number;
 	/** Where a result goes when there is none: just after the `separate` marker. */
 	insertAt: number;
+	/** Its result is text a revision removes: kept as it is until the revision is settled. */
+	removed?: true;
 }
 
-/** Complex fields closed in this paragraph, and simple fields, with the runs of their results. */
+/** Whether a revision takes a run's text out of the document: deleted, or moved away. */
+const removed = (run: TextRun) =>
+	run.revision?.kind === 'delete' || run.revision?.kind === 'moveFrom';
+
+/**
+ * Complex fields closed in this paragraph, and simple fields, with the runs of their results. A
+ * result run a revision removes is not part of the result: its text is gone, and a new result
+ * goes into the text the revisions keep (a result they remove whole stays as it is).
+ */
 function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 	const found: FieldResult[] = [];
 	const open: {
@@ -57,10 +67,12 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 			if (top.separate === undefined) return;
 			const instr = top.code.trim();
 			const results: number[] = [];
+			let gone = false;
 			for (let at = top.separate + 1; at < index; at++) {
 				const item = runs[at]!;
-				if (item.field?.instr === instr && !item.fieldChar && item.fieldCode === undefined)
-					results.push(at);
+				if (item.field?.instr !== instr || item.fieldChar || item.fieldCode !== undefined) continue;
+				if (removed(item)) gone = true;
+				else results.push(at);
 			}
 			found.push({
 				from: top.begin,
@@ -71,6 +83,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 				...(top.codeRun !== undefined ? { code: top.codeRun } : {}),
 				...(top.nameRun !== undefined ? { name: top.nameRun } : {}),
 				insertAt: top.separate + 1,
+				...(gone && !results.length ? { removed: true as const } : {}),
 			});
 		}
 	});
@@ -82,7 +95,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 			return;
 		}
 		if (simple && simple.instr === run.field.instr && identity === run.fieldInstanceId) {
-			simple.runs.push(index);
+			if (!removed(run)) simple.runs.push(index);
 			simple.to = index;
 		} else {
 			simple = {
@@ -90,7 +103,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 				to: index,
 				instr: run.field.instr,
 				locked: false,
-				runs: [index],
+				runs: removed(run) ? [] : [index],
 				insertAt: index,
 			};
 			identity = run.fieldInstanceId;
@@ -178,7 +191,7 @@ function replaceResult(
 		return next;
 	}
 	const code = charFormat ? name : field.code;
-	if (current || code === undefined) return undefined;
+	if (current || code === undefined || field.removed) return undefined;
 	next.splice(field.insertAt, 0, fieldResultRun(runs[code]!, field.instr, text));
 	return next;
 }

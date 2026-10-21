@@ -191,4 +191,53 @@ describe('refreshing STYLEREF results', () => {
 		expect(fieldText(refreshed.blocks)).toEqual(['old']);
 		expect(fieldText(refreshStyleRefFields(model, { body: true }).blocks)).toEqual(['DOC-7']);
 	});
+
+	it('writes a result into the text a revision keeps, never into deleted text', async () => {
+		const revised = (deleted: string, inserted?: string) =>
+			'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+			'<w:r><w:instrText xml:space="preserve"> STYLEREF "Doc Number" </w:instrText></w:r>' +
+			'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+			`<w:del w:id="1" w:author="A"><w:r><w:delText>${deleted}</w:delText></w:r></w:del>` +
+			(inserted === undefined
+				? ''
+				: `<w:ins w:id="2" w:author="A"><w:r><w:t>${inserted}</w:t></w:r></w:ins>`) +
+			'<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+		const results = (model: DocumentModel) =>
+			headerParagraph(model)
+				.runs.filter((run) => run.field)
+				.map((run) => [run.text, run.revision?.kind]);
+		const replaced = await load({
+			body: paragraph('DOC-3', 'DocNumber'),
+			header: paragraph('', undefined, revised('DOC-1', 'DOC-2')),
+		});
+		expect(results(refreshStyleRefFields(replaced))).toEqual([
+			['DOC-1', 'delete'],
+			['DOC-3', 'insert'],
+		]);
+		// The text the revision keeps is current: nothing changes.
+		const current = await load({
+			body: paragraph('DOC-2', 'DocNumber'),
+			header: paragraph('', undefined, revised('DOC-1', 'DOC-2')),
+		});
+		expect(refreshStyleRefFields(current)).toBe(current);
+		// A result a revision deletes whole stays as it is until the revision is settled.
+		const deleted = await load({
+			body: paragraph('DOC-3', 'DocNumber'),
+			header: paragraph('', undefined, revised('DOC-1')),
+		});
+		expect(refreshStyleRefFields(deleted)).toBe(deleted);
+		// A field a revision deletes keeps its result.
+		const gone = await load({
+			body: paragraph('DOC-3', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				'<w:del w:id="3" w:author="A"><w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+					'<w:r><w:delInstrText xml:space="preserve"> STYLEREF "Doc Number" </w:delInstrText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:delText>DOC-1</w:delText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="end"/></w:r></w:del>',
+			),
+		});
+		expect(refreshStyleRefFields(gone)).toBe(gone);
+	});
 });

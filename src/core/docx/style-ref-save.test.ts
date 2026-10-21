@@ -204,4 +204,34 @@ describe('saving STYLEREF fields', () => {
 		header.runs[0] = { ...header.runs[0]!, text: 'Plan B' };
 		await expect(loaded.save(model)).rejects.toThrow(/Cannot edit paragraph/);
 	});
+
+	it('saves a refreshed result in the text a revision keeps', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+					'<w:r><w:instrText xml:space="preserve"> STYLEREF "Doc Number" </w:instrText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+					'<w:del w:id="1" w:author="A"><w:r><w:delText>DOC-0</w:delText></w:r></w:del>' +
+					'<w:ins w:id="2" w:author="A"><w:r><w:t>DOC-1</w:t></w:r></w:ins>' +
+					'<w:r><w:fldChar w:fldCharType="end"/></w:r>',
+			),
+		});
+		const loaded = await loadDocx(original);
+		const header = (
+			await parts(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')))
+		).get('word/header1.xml')!;
+		expect(header).toMatch(/<w:del\b[^>]*><w:r><w:delText>DOC-0<\/w:delText><\/w:r><\/w:del>/);
+		expect(header).toMatch(/<w:ins\b[^>]*><w:r><w:t>DOC-2<\/w:t><\/w:r><\/w:ins>/);
+		const reloaded = await loadDocx(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')));
+		const runs = expectParagraph(
+			must(reloaded.model.sections?.[0]?.headers?.default).blocks[0],
+		).runs;
+		expect(runs.filter((run) => run.field).map((run) => [run.text, run.revision?.kind])).toEqual([
+			['DOC-0', 'delete'],
+			['DOC-2', 'insert'],
+		]);
+	});
 });

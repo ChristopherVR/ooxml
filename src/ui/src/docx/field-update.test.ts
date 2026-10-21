@@ -670,6 +670,63 @@ describe('updateFields', () => {
 		).toEqual(['STYLEREF 1', 'STYLEREF 1']);
 	});
 
+	it('writes a body STYLEREF result into the text a revision keeps, never into deleted text', () => {
+		const instr = 'STYLEREF "Doc Number"';
+		const result = (deleted: string, inserted?: string) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ` ${instr} ` },
+					{ text: '', fieldChar: 'separate' },
+					{
+						text: deleted,
+						field: { instr },
+						revision: { kind: 'delete', id: '1', author: 'A' },
+					},
+					...(inserted === undefined
+						? []
+						: [
+								{
+									text: inserted,
+									field: { instr },
+									revision: { kind: 'insert', id: '2', author: 'A' },
+								},
+							]),
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-3')]),
+			paragraph('p1', result('DOC-1', 'DOC-2')),
+			paragraph('p2', result('DOC-1')),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		const results = (index: number) => {
+			const out: [string, string | undefined][] = [];
+			view.state.doc.child(index).forEach((child) => {
+				const run = child.isText ? inlineNodeRun(child) : undefined;
+				if (run?.field) out.push([run.text, run.revision?.kind]);
+			});
+			return out;
+		};
+		expect(update()).toBe(true);
+		expect(results(1)).toEqual([
+			['DOC-1', 'delete'],
+			['DOC-3', 'insert'],
+		]);
+		// A result a revision deletes whole stays as it is until the revision is settled.
+		expect(results(2)).toEqual([['DOC-1', 'delete']]);
+		expect(update()).toBe(false);
+	});
+
 	it('keeps a line break in a REF result a line break, written once', () => {
 		const view = editor(
 			paragraph('p0', runToInlineNodes({ text: 'Line one\nLine two' }, schema), ['Target']),
