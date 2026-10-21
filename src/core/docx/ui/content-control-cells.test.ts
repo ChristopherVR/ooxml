@@ -36,7 +36,7 @@ const schema = new Schema({
 			toDOM: () => ['tr', 0],
 		},
 		tableCell: {
-			content: 'paragraph+',
+			content: '(paragraph | table)+',
 			attrs: { sourceCellKey: { default: '' }, contentControl: { default: null } },
 			toDOM: () => ['td', 0],
 		},
@@ -560,6 +560,104 @@ describe('content controls around table cells in the editor', () => {
 		} finally {
 			random.mockRestore();
 		}
+	});
+
+	it('leaves a control alone when a control around it forbids editing its content', () => {
+		// The commands replace a control's content past the lock guard, so they look at the
+		// controls it sits in: an outer cell or block control whose content is locked.
+		const locked = (level: 'cell' | 'block'): ContentControl => ({
+			id: '71',
+			level,
+			kind: 'richText',
+			lock: 'contentLocked',
+		});
+		const list = choice({ showingPlaceholder: false });
+		const inner = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', { contentControl: list }, [paragraph('Primary', { id: 'n1' })]),
+			]),
+		]);
+		const outer = schema.node('tableCell', { contentControl: locked('cell') }, [
+			paragraph('Sources', { id: 'o1' }),
+			inner,
+		]);
+		const nested = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [schema.node('tableRow', null, [outer])]),
+			]),
+		});
+		expect(chooseListItem(nested, '61', 1)).toBeUndefined();
+		const pick: ContentControl = { ...list, id: '72', level: 'inline' };
+		const box: ContentControl = { id: '73', level: 'inline', kind: 'checkbox', checked: false };
+		const prompt: ContentControl = {
+			id: '74',
+			level: 'inline',
+			kind: 'text',
+			showingPlaceholder: true,
+		};
+		const run = (text: string, control: ContentControl) =>
+			schema.text(text, [schema.marks.contentControl!.create({ data: JSON.stringify(control) })]);
+		const block = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [
+				schema.node('paragraph', { contentControl: locked('block') }, [
+					run('Primary', pick),
+					run('\u2610', box),
+					run('Enter a name.', prompt),
+				]),
+			]),
+		});
+		expect(chooseListItem(block, '72', 1)).toBeUndefined();
+		expect(toggleCheckboxControl(block, '73')).toBeUndefined();
+		const inPrompt = controlSpans(block.doc).find((span) => span.control.id === '74')!.from + 2;
+		expect(typeOverPlaceholder(block, inPrompt, 'A')).toBe('blocked');
+		// Not locked around, each of them is operated.
+		const open = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [
+				schema.node('paragraph', null, [run('Primary', pick), run('\u2610', box)]),
+			]),
+		});
+		expect(chooseListItem(open, '72', 1)).toBeDefined();
+		expect(toggleCheckboxControl(open, '73')).toBeDefined();
+		// In a group control the controls follow their own locks, whatever the group's lock says.
+		const group = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [
+				schema.node('paragraph', { contentControl: { ...locked('block'), kind: 'group' } }, [
+					run('Primary', pick),
+					run('\u2610', box),
+				]),
+			]),
+		});
+		expect(chooseListItem(group, '72', 1)).toBeDefined();
+		expect(toggleCheckboxControl(group, '73')).toBeDefined();
+		// A row control locks its row's content too, for the commands and for typing.
+		const rowLocked = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [
+					schema.node(
+						'tableRow',
+						{ properties: { contentControl: { ...locked('cell'), level: 'row' } } },
+						[
+							schema.node('tableCell', { contentControl: list }, [
+								paragraph('Primary', { id: 'r1' }),
+							]),
+						],
+					),
+				]),
+				paragraph('After'),
+			]),
+		});
+		expect(chooseListItem(rowLocked, '61', 1)).toBeUndefined();
+		expect(violatesControlLock(rowLocked.tr.insertText('!', 5), rowLocked)).toBe(true);
+		const after = rowLocked.doc.content.size - 1;
+		expect(violatesControlLock(rowLocked.tr.insertText('!', after), rowLocked)).toBe(false);
 	});
 
 	it('stores new properties on the cell', () => {

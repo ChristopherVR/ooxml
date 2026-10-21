@@ -122,6 +122,24 @@ function replaceable(state: EditorState, span: ControlSpan): boolean {
 	);
 }
 
+/**
+ * Whether the content of `span` may be edited: by its own lock, and by those of the controls around
+ * it (a row, cell or block control whose content is locked), since the commands go past the lock
+ * guard.
+ * A group control is the exception: the controls in a group follow their own locks.
+ */
+function editable(state: EditorState, span: ControlSpan): boolean {
+	if (!canEditControlContent(span.control)) return false;
+	return ![...controlSpans(state.doc), ...rowControlSpans(state.doc)].some(
+		(around) =>
+			around.control.kind !== 'group' &&
+			!canEditControlContent(around.control) &&
+			around.from <= span.from &&
+			around.to >= span.to &&
+			!(around.level === span.level && around.from === span.from && around.to === span.to),
+	);
+}
+
 /** Stores new properties on every run or paragraph of the control. */
 export function updateControlProperties(
 	state: EditorState,
@@ -169,7 +187,7 @@ export function toggleCheckboxControl(
 	if (
 		!span ||
 		span.control.kind !== 'checkbox' ||
-		!canEditControlContent(span.control) ||
+		!editable(state, span) ||
 		!replaceable(state, span)
 	)
 		return undefined;
@@ -183,7 +201,7 @@ export function chooseListItem(
 	at?: number,
 ): Transaction | undefined {
 	const span = spanById(state, id, at);
-	if (!span || !canEditControlContent(span.control) || !replaceable(state, span)) return undefined;
+	if (!span || !editable(state, span) || !replaceable(state, span)) return undefined;
 	const change = selectListItem(span.control, index);
 	return change ? replaceControlContent(state, span, change) : undefined;
 }
@@ -195,12 +213,7 @@ export function chooseDate(
 	at?: number,
 ): Transaction | undefined {
 	const span = spanById(state, id, at);
-	if (
-		!span ||
-		span.control.kind !== 'date' ||
-		!canEditControlContent(span.control) ||
-		!replaceable(state, span)
-	)
+	if (!span || span.control.kind !== 'date' || !editable(state, span) || !replaceable(state, span))
 		return undefined;
 	return replaceControlContent(state, span, setControlDate(span.control, date));
 }
@@ -234,7 +247,7 @@ export function typeOverPlaceholder(
 		return state.tr.insertText(text, from).removeMark(from, from + text.length, type);
 	}
 	if (!control.showingPlaceholder) return undefined;
-	if (!canEditControlContent(control)) return 'blocked';
+	if (!editable(state, span)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	const end = tr.mapping.map(span.to);
 	return tr.setSelection(TextSelection.near(tr.doc.resolve(end)));
@@ -254,7 +267,7 @@ function typeInCell(
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
 	if (to > span.to - 1 || !control.showingPlaceholder || !replaceable(state, span))
 		return undefined;
-	if (!canEditControlContent(control)) return 'blocked';
+	if (!editable(state, span)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));
 }
@@ -267,7 +280,7 @@ export function deleteToPlaceholder(
 	const { selection } = state;
 	const span = controlAt(controlSpans(state.doc), selection.from, true);
 	if (!span || span.level === 'block' || span.control.showingPlaceholder) return undefined;
-	if (!canEditControlContent(span.control) || span.control.kind === 'checkbox') return undefined;
+	if (!editable(state, span) || span.control.kind === 'checkbox') return undefined;
 	if (!replaceable(state, span)) return undefined;
 	// Deleting a temporary control's text removes the control instead (content-control-temporary).
 	if (removedByEdit(span.control)) return undefined;

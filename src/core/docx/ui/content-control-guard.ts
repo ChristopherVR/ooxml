@@ -8,6 +8,7 @@ import {
 	typeOverPlaceholder,
 } from './content-control-commands';
 import { pastedControlSlice } from './content-control-paste';
+import { rowControlSpans } from './content-control-rows';
 import { controlSpans } from './content-control-spans';
 import { removeEditedTemporaryControls } from './content-control-temporary';
 
@@ -26,7 +27,10 @@ const isRangeStep = (step: unknown): step is RangeStep =>
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
  */
 export function violatesControlLock(tr: Transaction, state: EditorState): boolean {
-	const locked = controlSpans(state.doc).filter((span) => span.control.lock);
+	// Row controls are kept in the rows' properties, apart from `controlSpans`.
+	const locked = [...controlSpans(state.doc), ...rowControlSpans(state.doc)].filter(
+		(span) => span.control.lock,
+	);
 	if (!locked.length) return false;
 	return tr.steps.some((step, index) => {
 		if (!isRangeStep(step)) return false;
