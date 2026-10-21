@@ -7,6 +7,7 @@ import { writeFootnoteColumns } from './write-footnote-columns';
 import { patchPageBorders } from './page-borders';
 import { orderSectionProperties } from './element-order';
 import { orderParagraphProperties } from './tab-stops';
+import { flatBlocks } from './parse-content-control';
 import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 /** Section properties this writer can change; any other difference is rejected. */
@@ -255,10 +256,8 @@ export function applySectionEdits(
 			throw new Error('A document needs at least one section; the section list cannot be emptied.');
 		return;
 	}
-	const topLevel = Array.from(body.childNodes).filter(
-		(node): node is XmlElement =>
-			node.nodeType === 1 && ['p', 'tbl'].includes((node as XmlElement).localName),
-	);
+	// The body's paragraphs and tables as the model's blocks are read, through content controls.
+	const topLevel = flatBlocks(body).map(({ element }) => element);
 	const nodeFor = (id: string) => topLevel[blocks.findIndex((block) => block.id === id)];
 	const ends = new Set(sections.slice(0, -1).map((section) => section.endsAtBlockId));
 	// Remove breaks the model no longer has.
