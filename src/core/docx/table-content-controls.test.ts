@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './index';
 import { selectListItem } from './content-control-edit';
-import type { Table } from './model';
+import type { ContentControl, Table } from './model';
 import { WORD_NS } from './xml';
 
 const hand = async (body: string) => {
@@ -382,6 +382,55 @@ describe('row and cell content controls on save', () => {
 				expected.map((id) => (id === '23' ? 'Own' : 'Group')),
 			);
 		}
+	});
+
+	it('writes only valid properties for a control the model gives a cell', async () => {
+		// A cell pasted from another page, a remote peer or the model API can hold any values: what
+		// Word cannot read is not written (w:id is optional, so a bad id is left out).
+		const controls = [
+			{ id: 'abc', kind: 'bogus', lock: 'everything' },
+			{ id: '99999999999', kind: 'unknown' },
+			{ id: 'sdt-gen-5', kind: 'repeatingSection' },
+			{
+				id: '12',
+				kind: 'checkbox',
+				checkedGlyph: { code: 'zz' },
+				uncheckedGlyph: { code: '2610' },
+			},
+			{ id: '13', kind: 'dropDownList', items: 5 },
+			{ id: '14', kind: 'date', fullDate: 'soon', dateFormat: 'd/M/yyyy' },
+		];
+		const loaded = await hand(
+			grid(controls.map((_, index) => row(`${label(`L${index}`)}${label(`V${index}`)}`)).join('')),
+		);
+		const table = tableOf(loaded.model.blocks);
+		controls.forEach((control, index) => {
+			table.rows[index]![1]!.contentControl = {
+				level: 'cell',
+				...control,
+			} as unknown as ContentControl;
+		});
+		const xml = await documentXml(await loaded.save(loaded.model));
+		const properties = [...xml.matchAll(/<w:sdtPr(?:\/>|>(.*?)<\/w:sdtPr>)/g)].map(
+			(match) => match[1] ?? '',
+		);
+		expect(properties).toHaveLength(controls.length);
+		const ids = properties.map((sdtPr) => /<w:id w:val="([^"]*)"\/>/.exec(sdtPr)?.[1]);
+		expect(ids).toEqual([undefined, undefined, undefined, '12', '13', '14']);
+		expect(xml).not.toMatch(
+			/w:bogus|w:unknown|w:repeatingSection|w:lock|"zz"|w:fullDate|w:listItem/,
+		);
+		expect(properties[3]).toContain('<w14:uncheckedState w14:val="2610"/>');
+		expect(properties[5]).toContain('<w:date><w:dateFormat w:val="d/M/yyyy"/></w:date>');
+		const reopened = tableOf((await loadDocx(await loaded.save(loaded.model))).model.blocks);
+		expect(reopened.rows.map((cells) => cells[1]!.contentControl?.kind)).toEqual([
+			'richText',
+			'richText',
+			'richText',
+			'checkbox',
+			'dropDownList',
+			'date',
+		]);
 	});
 
 	it('wraps a cell in the control the model gives it', async () => {
