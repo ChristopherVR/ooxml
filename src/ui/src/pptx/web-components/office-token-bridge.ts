@@ -37,6 +37,7 @@ const BASE = `
 	--office-focus-width: ${tok('--pptx-focus-ring-width')};
 	--office-focus-offset: ${tok('--pptx-focus-ring-offset')};
 	--office-target-size-touch: ${tok('--pptx-touch-target')};
+	--office-touch-target: ${tok('--pptx-touch-target')};
 	--office-field-height: ${tok('--pptx-field-height')};
 	--office-field-height-lg: ${tok('--pptx-field-height-lg')};
 	--office-field-radius: ${tok('--pptx-field-radius')};
