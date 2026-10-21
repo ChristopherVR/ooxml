@@ -8,8 +8,10 @@ import type { Paragraph, TableCell, TextRun } from './model';
 import { shownText } from './style-ref';
 
 /** Text as a label: one line, single spaces, without a trailing colon. */
-export const labelText = (text: string): string =>
-	text.replace(/\s+/gu, ' ').trim().replace(/\s*:$/u, '');
+export const labelText = (text: string): string => {
+	const line = text.replace(/\s+/gu, ' ').trim();
+	return line.endsWith(':') ? line.slice(0, -1).trimEnd() : line;
+};
 
 const runsText = (runs: readonly TextRun[]) =>
 	labelText(
