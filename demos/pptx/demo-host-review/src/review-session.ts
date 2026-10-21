@@ -37,7 +37,7 @@ export async function openReviewSession(
 	const grant = await requestGrant(reviewId);
 	const doc = new Y.Doc();
 	const awareness = new Awareness(doc);
-	const relay = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/collab`;
+	const relay = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/sync`;
 	const provider = new WebsocketProvider(relay, reviewId, doc, {
 		awareness,
 		disableBc: true,

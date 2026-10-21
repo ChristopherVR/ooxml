@@ -32,9 +32,7 @@ hub.server.listen(port, '127.0.0.1', () => {
 });
 
 const stop = (): void => {
-	hub.close();
-	void vite.close();
-	process.exit(0);
+	void Promise.all([hub.close(), vite.close()]).finally(() => process.exit(0));
 };
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);

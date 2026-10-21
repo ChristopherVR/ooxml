@@ -75,20 +75,7 @@ export function createReviewHub(options: {
 	const { secret } = options;
 	const ai = options.ai === undefined ? aiSettings() : options.ai;
 	const directory = createDirectory(options.source);
-	const online = new Map<string, Set<string>>();
-	const relay = createRelay({
-		verify: (token) => verifyTicket(secret, token),
-		onPresence(reviewId, accounts) {
-			const review = directory.review(reviewId);
-			const before = online.get(reviewId) ?? new Set<string>();
-			const now = new Set(accounts);
-			if (review) {
-				for (const id of now) if (!before.has(id)) directory.log(review, id, 'joined');
-				for (const id of before) if (!now.has(id)) directory.log(review, id, 'left');
-			}
-			online.set(reviewId, now);
-		},
-	});
+	const relay = createRelay({ verify: (token) => verifyTicket(secret, token) });
 
 	const signedIn = (request: IncomingMessage): string => {
 		const session = verifySignIn(secret, cookie(request, COOKIE));
@@ -165,7 +152,7 @@ export function createReviewHub(options: {
 		const { account, review, permission } = access(request, reviewId);
 
 		if (!part && method === 'GET') {
-			const here = online.get(reviewId) ?? new Set<string>();
+			const here = new Set(relay.online(reviewId));
 			return json(response, 200, {
 				id: review.id,
 				title: review.title,
@@ -267,8 +254,8 @@ export function createReviewHub(options: {
 	return {
 		server,
 		directory,
-		close(): void {
-			relay.close();
+		async close(): Promise<void> {
+			await relay.close();
 			server.close();
 		},
 	};

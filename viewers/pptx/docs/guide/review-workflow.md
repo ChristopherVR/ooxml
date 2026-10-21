@@ -96,8 +96,11 @@ authenticated API call instead, and let the relay trust only what the ticket say
 - **Ticket refresh**: a ticket only admits a connection. Refresh it before it expires and update
   `provider.params.ticket`, so an automatic reconnect uses a valid one.
 
-See `server/relay.ts` and `server/relay-policy.ts` in the example; the policy is a pure function
-with unit tests.
+You do not have to write this relay. `openteams-server` (the reference server of the OpenTeams
+viewer, a y-websocket compatible Yjs server) takes an `authorizeSync` hook that returns `'write'`,
+`'read'` or a refusal per socket, already pins awareness ids, and exposes `closeSync`,
+`syncPrincipals`, `isSyncRoomEmpty` and `handleUpgrade` for the steps below. The example's
+`server/relay.ts` is about sixty lines around it.
 
 ## 4. Change access while people are working
 
