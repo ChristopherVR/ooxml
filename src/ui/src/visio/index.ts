@@ -9,6 +9,7 @@ export {
 export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';
 export { mountViewer, type MountedViewer } from './binding';
+export type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element';
 export { renderPage, type RenderResult, type RenderOptions } from './render-svg';
 export {

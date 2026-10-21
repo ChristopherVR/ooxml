@@ -75,6 +75,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 				element.showToolbar = options.showToolbar;
 			else if (key === 'ribbonAddIns' && options.ribbonAddIns !== undefined)
 				element.ribbonAddIns = options.ribbonAddIns;
+			else if (key === 'collaboration' && options.collaboration !== undefined)
+				element.collaboration = options.collaboration;
 		}
 	}
 	update(initial);

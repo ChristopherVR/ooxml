@@ -37,6 +37,10 @@ export const VisioViewer = defineComponent({
 			type: Array as unknown as PropType<ViewerProperties['ribbonAddIns']>,
 			default: undefined,
 		},
+		collaboration: {
+			type: Object as PropType<ViewerProperties['collaboration']>,
+			default: undefined,
+		},
 		events: Object as PropType<ViewerCallbacks>,
 	} satisfies Record<keyof ViewerProperties | 'events', unknown>,
 	emits: [...eventKeys],

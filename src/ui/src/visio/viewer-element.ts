@@ -44,6 +44,7 @@ import {
 	type StatusBarTheme,
 } from './viewer-options';
 import { ViewerShare } from './viewer-share';
+import type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 import { wireStencil } from './viewer-stencil';
 import { createRulers, type Rulers } from './viewer-ruler';
 import { ViewerInlineText } from './viewer-inline-text';
@@ -73,6 +74,28 @@ export class VisioViewerElement extends BaseElement {
 	}
 	set canEdit(value: boolean) {
 		this.controller.canEdit = value;
+	}
+	/**
+	 * Shares the open drawing in a room (the shared embedding contract of `ooxml-core/collab`):
+	 * while set, the drawing is shared and one loaded later rejoins; null leaves the room.
+	 */
+	get collaboration(): VisioCollaborationOptions | null {
+		return this.#share.wanted;
+	}
+	set collaboration(value: VisioCollaborationOptions | null | undefined) {
+		this.#share.want(value ?? null);
+	}
+	/** What `collaboration-change` last reported. */
+	get collaborationState(): VisioCollaborationState {
+		return this.#share.state;
+	}
+	/** Leaves the room and clears `collaboration`. A host-owned session stays alive. */
+	stopCollaboration(): void {
+		this.#share.stop();
+	}
+	/** Restarts the connection, keeping the shared drawing and queued offline changes. */
+	reconnectCollaboration(): void {
+		this.#share.reconnect();
 	}
 	static observedAttributes = ['lang', 'locale'];
 	#overflow: { refit(): void } | undefined;
@@ -287,6 +310,14 @@ export class VisioViewerElement extends BaseElement {
 			},
 		});
 		this.#share = new ViewerShare(this.#root, this.controller, () => this.#profile.profile);
+		this.#share.onChange = (detail) =>
+			this.dispatchEvent(
+				new CustomEvent('collaboration-change', { detail, bubbles: true, composed: true }),
+			);
+		this.#share.onError = (error) =>
+			this.dispatchEvent(
+				new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),
+			);
 		this.#backstage = new ViewerBackstage({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -606,6 +637,7 @@ export class VisioViewerElement extends BaseElement {
 	destroy(): void {
 		if (this.#disposed) return;
 		this.#disposed = true;
+		this.#share.stop();
 		this.#disposeInputs();
 		this.#fontEvents?.removeEventListener('loadingdone', this.#fontsChanged);
 		this.#fontEvents = undefined;

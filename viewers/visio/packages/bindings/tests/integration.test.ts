@@ -14,6 +14,7 @@ import { VisioViewerComponent } from '../src/angular';
 import { VisioViewer as SolidViewer } from '../src/solid';
 import SvelteHarness from './IntegrationHarness.svelte';
 import { demoDocument } from 'ooxml-core/visio/ui';
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import { mountViewer } from '../src/vanilla';
 import {
 	eventKeys,
@@ -135,6 +136,9 @@ const mounts: Record<string, NativeMount> = {
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
 					},
+					get collaboration() {
+						return props().collaboration;
+					},
 					get events() {
 						return props().events;
 					},
@@ -180,6 +184,13 @@ const payloads: ViewerEvents = {
 	'shape-select': { id: 'shape-7', name: 'Example' },
 	'selection-change': Object.freeze([{ id: 'shape-7', name: 'Example' }]),
 	'office-ribbon-add-in': { tab: 'reports', command: 'export' },
+	'collaboration-change': {
+		active: false,
+		roomId: undefined,
+		status: 'off',
+		synced: false,
+		people: [],
+	},
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
@@ -330,6 +341,43 @@ describe('native adapters against the real shared custom element', () => {
 			expect(panel()).toBeNull();
 			await mounted.destroy();
 			host.remove();
+		});
+		it(`${framework}: forwards collaboration, relays collaboration-change and leaves on unmount`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const session = createCollabSession({
+				roomId: 'bind-room',
+				provider: transportProvider({ transport: createMemoryHub().createTransport('bind-room') }),
+				user: { name: 'Ada' },
+				heartbeatMs: 0,
+				syncGraceMs: 0,
+			});
+			const destroy = vi.spyOn(session, 'destroy');
+			const onChange = vi.fn();
+			const events: ViewerCallbacks = { 'collaboration-change': onChange };
+			const options = { session };
+			const mounted = await mountNative(host, { document: null, collaboration: options, events });
+			const element = mounted.handle.element;
+			try {
+				expect(element.collaboration).toBe(options);
+				await vi.waitFor(() => expect(element.collaborationState.active).toBe(true));
+				expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ active: true }));
+				await mounted.update({ document: null, collaboration: null, events });
+				expect(element.collaboration).toBeNull();
+				expect(element.collaborationState.active).toBe(false);
+				expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ active: false }));
+				await mounted.update({ document: null, collaboration: options, events });
+				expect(element.collaboration).toBe(options);
+				await vi.waitFor(() => expect(element.collaborationState.active).toBe(true));
+				await mounted.destroy();
+				expect(element.collaborationState.active).toBe(false);
+				expect(element.collaboration).toBeNull();
+				// A session the host made outlives the viewer.
+				expect(destroy).not.toHaveBeenCalled();
+			} finally {
+				session.destroy();
+				host.remove();
+			}
 		});
 		it(`${framework}: properties, complete event map, real load rejection, disposal`, async () => {
 			const host = document.createElement('div');
