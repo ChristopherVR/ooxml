@@ -5,6 +5,7 @@ import { xlsxTools } from './xlsx-tools';
 
 export type {
 	AutomationCreateTool,
+	AutomationEditResult,
 	AutomationEditTool,
 	AutomationFormat,
 	AutomationReadTool,
@@ -13,8 +14,14 @@ export type {
 export { UNTRUSTED_NOTE } from './types';
 export { docxTools, visioTools, xlsxTools };
 
-/** Every headless tool, by format. PowerPoint's tools are in `ooxml-core/pptx/automation`. */
-export const automationTools: Readonly<Record<AutomationFormat, readonly AutomationTool[]>> = {
+/**
+ * The Word, Excel and Visio tools, by format. PowerPoint's are `pptxTools` in
+ * `ooxml-core/pptx/automation` (the same kind of definitions, kept out of this entry so it never
+ * pulls in the PowerPoint bundle).
+ */
+export const automationTools: Readonly<
+	Record<Exclude<AutomationFormat, 'pptx'>, readonly AutomationTool[]>
+> = {
 	docx: docxTools,
 	xlsx: xlsxTools,
 	visio: visioTools,

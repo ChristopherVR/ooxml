@@ -72,13 +72,17 @@ match case, whole cell, `*` `?` `~` wildcards, optionally one sheet or range) an
 `xlsx_read_table` (`readXlsxTable`) reads a table by name (ignoring case, as Excel does): its sheet, range, header
 and totals rows, column names and cells (at most 10,000, as a range read).
 
-The existing PowerPoint MCP keeps its established tool set and names. Its server
-exports registration and accepts a root directory for composition. Its model
-operations, execution pipeline and collaboration codec live in
-`ooxml-core/pptx/automation`; viewer-side compatibility modules delegate to core.
-Its schemas are in core (`ooxml-core/pptx/automation/schemas`); its registration still lists
-each tool by hand in `viewers/pptx/packages/tools/src/mcp/server.ts` and has not moved onto
-`registerAutomationTools` yet.
+PowerPoint uses the same definitions: `pptxTools` in `ooxml-core/pptx/automation`
+(`src/core/pptx/automation/catalogue/`), registered by `pptx-viewer-mcp` with the same
+`registerAutomationTools` call. It keeps its established 73 tool names (`get_slide`, not
+`pptx_get_slide`). Each wraps a core tool function (`(ctx, params) => ToolResult`): the deck is
+loaded from the bytes, the function runs, and an edit that marked the deck dirty returns the
+saved bytes; one that changed nothing (a list action) writes nothing. Reads accept `.pptx` and
+`.ppt`; edits only `.pptx`, because they save PresentationML. `convert_to_markdown` takes a
+relative `outputDir` only (it prefixes media links; nothing is written). The `pptxTools` list is
+kept out of `ooxml-core/automation` so that entry never pulls in the PowerPoint bundle. The
+PowerPoint assistant in `ooxml-ui` runs the same core tool functions and schemas on the open,
+in-memory deck rather than on bytes.
 
 Release core first (the automation entry requires 0.11.0 or later), then the new
 standalone packages and the PowerPoint version with registration (2.6.0+), then

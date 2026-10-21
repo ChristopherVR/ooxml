@@ -93,7 +93,7 @@ test('Word tools inspect, edit and suggest through the same definitions', async 
 	const set = tool('docx_set_run_text');
 	if (set.kind !== 'edit') throw new Error('docx_set_run_text is not an edit tool');
 	const edited = await set.run(bytes, { paragraphId, runIndex: 0, text: 'Bye' });
-	const after = await read('docx_inspect', edited.bytes, {});
+	const after = await read('docx_inspect', edited.bytes!, {});
 	expect(after.blocks).toMatchObject([{ runs: [{ text: 'Bye' }] }]);
 	const suggest = tool('docx_suggest_run_text');
 	if (suggest.kind !== 'edit') throw new Error('docx_suggest_run_text is not an edit tool');
@@ -101,7 +101,7 @@ test('Word tools inspect, edit and suggest through the same definitions', async 
 		suggestions: [{ paragraphId, runIndex: 0, text: 'Hi' }],
 		author: 'Reviewer',
 	});
-	const redlined = await read('docx_inspect', suggested.bytes, {});
+	const redlined = await read('docx_inspect', suggested.bytes!, {});
 	expect(redlined.blocks).toMatchObject([
 		{
 			runs: [

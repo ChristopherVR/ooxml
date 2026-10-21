@@ -1,6 +1,7 @@
 export * from './tools/index';
 export * from './types';
 export * from './execution';
+export * from './catalogue/index';
 export * as apiToolsChartFormattingTools from './tools/chart-formatting-tools';
 export * as apiToolsChartPareto from './tools/chart-pareto';
 export * as apiToolsChartTools from './tools/chart-tools';

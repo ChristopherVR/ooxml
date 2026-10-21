@@ -5,10 +5,13 @@
  * Parameters never include a file path: where the bytes come from is the caller's business
  * (`ooxml-core/automation/node` adds `filePath` and `outputPath` for the local filesystem).
  */
-export type AutomationFormat = 'docx' | 'xlsx' | 'visio';
+export type AutomationFormat = 'docx' | 'xlsx' | 'pptx' | 'visio';
 
 interface AutomationToolBase {
-	/** Unique across formats, prefixed with the format (`xlsx_read_range`). */
+	/**
+	 * Unique across formats. Word, Excel and Visio names start with the format (`xlsx_read_range`);
+	 * PowerPoint keeps the names its MCP server has always used (`get_slide`).
+	 */
 	readonly name: string;
 	readonly description: string;
 	readonly format: AutomationFormat;
@@ -34,10 +37,18 @@ export interface AutomationCreateTool extends AutomationToolBase {
 	run(params: unknown): Promise<Uint8Array>;
 }
 
-/** Changes a file: returns its new bytes and a JSON-serialisable report (warnings, results). */
+/**
+ * Changes a file: returns its new bytes with a JSON-serialisable report (warnings, results). A
+ * call that changed nothing (a list action, an edit to the same value) leaves `bytes` out.
+ */
 export interface AutomationEditTool extends AutomationToolBase {
 	readonly kind: 'edit';
-	run(bytes: Uint8Array, params: unknown): Promise<{ bytes: Uint8Array }>;
+	run(bytes: Uint8Array, params: unknown): Promise<AutomationEditResult>;
+}
+
+export interface AutomationEditResult {
+	/** The changed file; absent when the call changed nothing. */
+	bytes?: Uint8Array | undefined;
 }
 
 export type AutomationTool = AutomationReadTool | AutomationCreateTool | AutomationEditTool;
