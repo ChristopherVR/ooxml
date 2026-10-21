@@ -214,7 +214,7 @@ export function typeOverPlaceholder(
 	to = from,
 ): Transaction | 'blocked' | undefined {
 	const span = controlAt(controlSpans(state.doc), from, true);
-	if (span?.level === 'cell') return typeInCell(state, span, text);
+	if (span?.level === 'cell') return typeInCell(state, span, text, to);
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') {
@@ -231,15 +231,20 @@ export function typeOverPlaceholder(
 	return tr.setSelection(TextSelection.near(tr.doc.resolve(end)));
 }
 
-/** Typing in a cell control: a list or check box takes no text, a placeholder is replaced whole. */
+/**
+ * Typing in a cell control: a list or check box takes no text, a placeholder is replaced whole. A
+ * selection that runs on past the cell (`to`) is typed over as ordinary text, as it is deleted.
+ */
 function typeInCell(
 	state: EditorState,
 	span: ControlSpan,
 	text: string,
+	to: number,
 ): Transaction | 'blocked' | undefined {
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
-	if (!control.showingPlaceholder || !replaceable(state, span)) return undefined;
+	if (to > span.to - 1 || !control.showingPlaceholder || !replaceable(state, span))
+		return undefined;
 	if (!canEditControlContent(control)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));

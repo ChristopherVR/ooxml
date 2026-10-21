@@ -164,6 +164,31 @@ describe('content controls around table cells in the editor', () => {
 		expect(deleteToPlaceholder(into, 'backward')).toBeUndefined();
 	});
 
+	it('types as usual over a selection running from a placeholder cell into the next', () => {
+		const control: ContentControl = {
+			id: '62',
+			level: 'cell',
+			kind: 'text',
+			showingPlaceholder: true,
+		};
+		const cell = schema.node('tableCell', { sourceCellKey: 'c1', contentControl: control }, [
+			placeholder('Enter a number.'),
+		]);
+		const after = schema.node('tableCell', null, [paragraph('Next')]);
+		const doc = schema.node('doc', null, [
+			schema.node('table', null, [schema.node('tableRow', null, [cell, after])]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const span = controlSpans(state.doc)[0]!;
+		// From inside the placeholder into the second cell's text: not the placeholder's to replace.
+		expect(typeOverPlaceholder(state, span.from + 4, '7', span.to + 4)).toBeUndefined();
+		// Within the cell, typing replaces the whole placeholder.
+		const within = typeOverPlaceholder(state, span.from + 4, '7', span.to - 3);
+		if (within === 'blocked' || !within) throw new Error('expected a transaction');
+		const row = state.apply(within).doc.firstChild!.firstChild!;
+		expect([row.child(0).textContent, row.child(1).textContent]).toEqual(['7', 'Next']);
+	});
+
 	it('types over an inline placeholder at its edge inside a cell control', () => {
 		const name: ContentControl = {
 			id: '65',
