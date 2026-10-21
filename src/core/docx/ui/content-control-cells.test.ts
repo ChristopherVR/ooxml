@@ -1165,6 +1165,71 @@ describe('content controls around table cells in the editor', () => {
 		}
 	});
 
+	it('applies the locks of a control that a step over all of it puts back with other content', () => {
+		// A step over a whole control whose new content holds that control again (a table rebuilt
+		// with another row, sorted paragraphs, a cell put in place of the cell) leaves the control
+		// and edits its content: a content lock refuses it, one that may not be deleted allows it.
+		// Putting the node back without the control deletes the control, as before.
+		const cellOfText = (text: string, attrs: Record<string, unknown> = {}) =>
+			schema.node('tableCell', attrs, [paragraph(text)]);
+		const rowOf = (cells: ProseMirrorNode[], attrs: Record<string, unknown> = {}) =>
+			schema.node('tableRow', attrs, cells);
+		type Held = ContentControl | null;
+		/** The node holding the control at each level, and the blocks around it. */
+		const levels = {
+			cell: {
+				holder: (held: Held, text: string) => cellOfText(text, { contentControl: held }),
+				around: (node: ProseMirrorNode) =>
+					schema.node('table', null, [rowOf([cellOfText('Label'), node])]),
+			},
+			row: {
+				holder: (held: Held, text: string) =>
+					rowOf([cellOfText(text)], { properties: held && { contentControl: held } }),
+				around: (node: ProseMirrorNode) =>
+					schema.node('table', null, [rowOf([cellOfText('Label')]), node]),
+			},
+			block: {
+				holder: (held: Held, text: string) => paragraph(text, { contentControl: held }),
+				around: (node: ProseMirrorNode) => node,
+			},
+			table: {
+				holder: (held: Held, text: string) =>
+					schema.node('table', { contentControl: held }, [
+						rowOf([cellOfText('Fixed')]),
+						...(text === 'Fixed' ? [] : [rowOf([cellOfText(text)])]),
+					]),
+				around: (node: ProseMirrorNode) => node,
+			},
+		};
+		for (const [name, { holder, around }] of Object.entries(levels))
+			for (const lock of ['contentLocked', 'sdtLocked'] as const) {
+				const level = name === 'table' ? 'block' : (name as ContentControl['level']);
+				const held: ContentControl = { id: '78', level, kind: 'richText', lock };
+				const node = holder(held, 'Fixed');
+				const state = EditorState.create({
+					schema,
+					doc: schema.node('doc', null, [paragraph('Before'), around(node)]),
+				});
+				let from = -1;
+				state.doc.descendants((child, pos) => {
+					if (child === node) from = pos;
+				});
+				const to = from + node.nodeSize;
+				const putBack = state.tr.replaceWith(from, to, holder(held, 'Changed'));
+				const removed = state.tr.replaceWith(from, to, holder(null, 'Changed'));
+				expect([name, lock, violatesControlLock(putBack, state)]).toEqual([
+					name,
+					lock,
+					lock === 'contentLocked',
+				]);
+				expect([name, lock, violatesControlLock(removed, state)]).toEqual([
+					name,
+					lock,
+					lock === 'sdtLocked',
+				]);
+			}
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;

@@ -77,11 +77,19 @@ function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
 const isMarkOf = (mark: Mark, control: ContentControl): boolean =>
 	mark.type.name === 'contentControl' && sameControl(controlOfMark(mark), control);
 
+/** Whether `node` holds the control of `span`: an inline one as its mark, another as its node's. */
+function holdsControl(node: ProseMirrorNode, span: ControlSpan | RowControlSpan): boolean {
+	if (span.level === 'inline') return node.marks.some((mark) => isMarkOf(mark, span.control));
+	const held = nodeControlOf(node);
+	return held?.level === span.level && sameControl(held.value, span.control);
+}
+
 /**
  * Whether `step`, which covers all of `span`, keeps its control. A mark changes no node, so only
- * an inline control's own mark, taken off or replaced by another control's, removes it; text put in
- * place of an inline control's text keeps it when it carries the control, as undoing or redoing a
- * command on it does.
+ * an inline control's own mark, taken off or replaced by another control's, removes it; content put
+ * in place of the control's keeps it when it holds the control: text carrying an inline control's
+ * mark, as undoing or redoing a command on it does, or a paragraph, table, row or cell holding a
+ * block, row or cell control, as a table rebuilt with another row or sorted paragraphs do.
  */
 function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): boolean {
 	if (step instanceof AddMarkStep)
@@ -93,9 +101,9 @@ function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): bool
 	if (step instanceof RemoveMarkStep)
 		return span.level !== 'inline' || !isMarkOf(step.mark, span.control);
 	let kept = false;
-	if (span.level === 'inline' && step instanceof ReplaceStep)
+	if (step instanceof ReplaceStep)
 		step.slice.content.descendants((node) => {
-			kept ||= node.marks.some((mark) => isMarkOf(mark, span.control));
+			kept ||= holdsControl(node, span);
 			return !kept;
 		});
 	return kept;

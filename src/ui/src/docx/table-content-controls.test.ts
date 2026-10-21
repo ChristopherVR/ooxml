@@ -13,6 +13,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 import { schema } from './schema';
+import { executeTableCommand } from './table-commands';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const cell = (text: string, properties = '') =>
@@ -666,6 +667,43 @@ describe('content controls around table cells in the editor', () => {
 			'<w:sdtContent><w:tc><w:p><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/>',
 		);
 	});
+
+	for (const lock of ['contentLocked', 'sdtLocked'] as const)
+		it(`applies the ${lock} lock of a block control around a table to Insert Row`, async () => {
+			// Insert Row puts a copy of the table, its control included, in place of the table: the
+			// control stays and its content changes, which a content lock refuses and a control that
+			// may not be deleted allows.
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"/><w:id w:val="74"/>` +
+					`<w:lock w:val="${lock}"/></w:sdtPr><w:sdtContent><w:tbl><w:tblPr/><w:tblGrid>` +
+					`<w:gridCol w:w="4000"/></w:tblGrid><w:tr>${cell('Title')}</w:tr></w:tbl>` +
+					`</w:sdtContent></w:sdt><w:p/><w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			const host = document.createElement('div');
+			document.body.append(host);
+			const view = new EditorView(host, {
+				state: EditorState.create({
+					schema,
+					doc,
+					selection: TextSelection.create(doc, 4),
+					plugins: [contentControlPlugin()],
+				}),
+			});
+			executeTableCommand(view, 'rowAfter');
+			const table = view.state.doc.firstChild!;
+			expect(table.attrs.contentControl).toMatchObject({ id: '74', lock });
+			expect(table.childCount).toBe(lock === 'contentLocked' ? 1 : 2);
+			const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			expect(xml).toMatch(/<w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"\/><w:id w:val="74"\/>/);
+			expect(xml.match(/<w:tr>/g)).toHaveLength(lock === 'contentLocked' ? 1 : 2);
+			view.destroy();
+			host.remove();
+		});
 
 	it('keeps a block control around a table, and one around a cell paragraph, through an edit', async () => {
 		const zip = new JSZip();
