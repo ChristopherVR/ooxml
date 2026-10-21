@@ -79,7 +79,7 @@ export {
 	type StyleRefSource,
 	type StyleReference,
 } from './style-ref';
-export { withFieldCodeFormatting } from './style-ref-fields';
+export { fieldResultRun, withFieldCodeFormatting } from './style-ref-fields';
 export { bodyStyleRefResult, refreshStyleRefFields } from './style-ref-fields';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';

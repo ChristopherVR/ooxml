@@ -17,6 +17,12 @@ import {
 import { readFile } from 'node:fs/promises';
 import { URL as NodeURL } from 'node:url';
 import { fieldLockFixture } from '../../../core/docx/test-support/field-lock-fixture';
+import {
+	complexField,
+	paragraph as styleParagraph,
+	simpleField,
+	styleRefFixture,
+} from '../../../core/docx/test-support/style-ref-fixture';
 import { updateFields } from './field-update';
 import { docToModel } from './model-adapter';
 import { schema } from './schema';
@@ -344,6 +350,46 @@ describe('updateFields', () => {
 			['DOC-5', true, undefined],
 			['DOC-5', undefined, true],
 		]);
+	});
+
+	it('clears a body STYLEREF whose paragraph in the style is empty, and fills it again', async () => {
+		const loaded = await loadDocx(
+			await styleRefFixture({
+				body:
+					styleParagraph('Scope', 'Heading1') +
+					styleParagraph(
+						'',
+						undefined,
+						`${complexField('STYLEREF 1', ['Scope'])}<w:r><w:t xml:space="preserve"> | </w:t></w:r>${simpleField('STYLEREF 1', 'Scope')}`,
+					),
+			}),
+		);
+		const blocks = loaded.model.blocks as Paragraph[];
+		const view = editor(
+			...blocks.map((block) =>
+				schema.nodes.paragraph!.create(
+					{ id: block.id, ...(block.style ? { style: block.style } : {}) },
+					block.runs.flatMap((run) => runToInlineNodes(run, schema)),
+				),
+			),
+		);
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, loaded.model));
+		view.dispatch(view.state.tr.delete(1, 1 + 'Scope'.length));
+		expect(update()).toBe(true);
+		expect(texts(view)).toEqual(['', ' | ']);
+		// Both fields keep their instruction, saved as fields with an empty result.
+		const saved = await loadDocx(await loaded.save(docToModel(view.state.doc, loaded.model)));
+		const runs = (saved.model.blocks[1] as Paragraph).runs;
+		expect(
+			runs.filter((run) => run.fieldCode !== undefined).map((run) => run.fieldCode!.trim()),
+		).toEqual(['STYLEREF 1', 'STYLEREF 1']);
+		expect(runs.filter((run) => run.field).map((run) => run.text)).toEqual([]);
+		expect(runs.map((run) => run.text).join('')).toBe(' | ');
+		// Typed again, the heading fills both empty results.
+		view.dispatch(view.state.tr.insertText('Method', 1));
+		expect(update()).toBe(true);
+		expect(texts(view)).toEqual(['Method', 'Method | Method']);
+		expect(update()).toBe(false);
 	});
 
 	it('does nothing in a read-only view', () => {

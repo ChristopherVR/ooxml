@@ -172,10 +172,15 @@ function replaceResult(
 	}
 	const code = charFormat ? name : field.code;
 	if (code === undefined) return undefined;
-	const formatted: Partial<TextRun> = { ...runs[code]! };
-	for (const key of STRUCTURE) delete formatted[key];
-	next.splice(field.insertAt, 0, { ...formatted, text, field: { instr: field.instr } });
+	next.splice(field.insertAt, 0, fieldResultRun(runs[code]!, field.instr, text));
 	return next;
+}
+
+/** The result run `text` of a complex field that has none, formatted like its instruction run. */
+export function fieldResultRun(code: TextRun, instr: string, text: string): TextRun {
+	const formatted: Partial<TextRun> = { ...code };
+	for (const key of STRUCTURE) delete formatted[key];
+	return { ...formatted, text, field: { instr } };
 }
 
 /** Gives a STYLEREF field its result, or undefined to keep the one it has. */

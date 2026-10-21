@@ -2,15 +2,18 @@ import { closeHistory } from 'prosemirror-history';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import {
 	bodyStyleRefResult,
+	fieldResultRun,
 	isFieldLocked,
 	parseStyleReference,
 	styleRefSource,
 	withFieldCodeFormatting,
 	type DocumentModel,
 	type Paragraph,
+	type StyleRefSource,
 } from 'ooxml-core/docx';
 import { reviewSourceLength } from 'ooxml-core/docx/layout';
 import {
+	emptySimpleFieldResult,
 	fieldResultRanges,
 	inlineNodeRun,
 	runToInlineNodes,
@@ -77,6 +80,77 @@ function fieldNameMarker(paragraph: ProseMirrorNode, index: number): ProseMirror
 	return undefined;
 }
 
+/** A complex field whose result is empty, in one paragraph. */
+interface EmptyField {
+	/** Where its result goes: just after its `separate` marker. */
+	at: number;
+	instr: string;
+	paragraph: ProseMirrorNode;
+	begin: ProseMirrorNode;
+	/** Its first instruction marker, and the one holding the first letter of the field name. */
+	code?: ProseMirrorNode;
+	name?: ProseMirrorNode;
+	/** Where its markers start and end in the paragraph. */
+	from: number;
+	to: number;
+}
+
+/** The complex fields of `doc` that begin and end in one paragraph with nothing as their result. */
+function emptyFields(doc: ProseMirrorNode): EmptyField[] {
+	const found: EmptyField[] = [];
+	doc.descendants((node, pos) => {
+		if (node.type.name !== 'paragraph') return true;
+		const open: (Omit<EmptyField, 'at' | 'to'> & { separate?: number })[] = [];
+		node.forEach((child, offset) => {
+			if (child.type.name !== 'fieldMarker') return;
+			const top = open.at(-1);
+			const kind = child.attrs.kind;
+			if (kind === 'begin') open.push({ instr: '', paragraph: node, begin: child, from: offset });
+			else if (kind === 'code' && top && top.separate === undefined) {
+				const code = String(child.attrs.code ?? '');
+				top.instr += code;
+				top.code ??= child;
+				if (!top.name && /\S/.test(code)) top.name = child;
+			} else if (kind === 'separate' && top) top.separate = offset + child.nodeSize;
+			else if (kind === 'end' && top) {
+				open.pop();
+				const { separate, ...field } = top;
+				if (separate === offset)
+					found.push({ ...field, instr: field.instr.trim(), at: pos + 1 + offset, to: offset + 1 });
+			}
+		});
+		return false;
+	});
+	return found;
+}
+
+/**
+ * The result runs for the empty STYLEREF fields of `doc`: each takes the nearest text in its
+ * style, formatted like its instruction (with `\* CHARFORMAT`, like the first letter of its name).
+ */
+function emptyStyleRefResults(
+	doc: ProseMirrorNode,
+	source: StyleRefSource,
+): { at: number; nodes: ProseMirrorNode[] }[] {
+	const results: { at: number; nodes: ProseMirrorNode[] }[] = [];
+	for (const field of emptyFields(doc)) {
+		const reference = parseStyleReference(field.instr);
+		if (!reference || isFieldLocked(inlineNodeRun(field.begin))) continue;
+		const at = source.index.get(String(field.paragraph.attrs.id));
+		const paragraph = at === undefined ? undefined : source.paragraphs[at];
+		const own = paragraph && runsAt(paragraph, field.from, field.to);
+		const text = paragraph && bodyStyleRefResult(source, reference, paragraph, own);
+		const code = reference.charFormat ? (field.name ?? field.code) : field.code;
+		const run = code && inlineNodeRun(code);
+		if (text && run)
+			results.push({
+				at: field.at,
+				nodes: runToInlineNodes(fieldResultRun(run, field.instr, text), schema),
+			});
+	}
+	return results;
+}
+
 /** The runs of a model paragraph that hold its editor positions `start` to `end`. */
 function runsAt(
 	paragraph: Paragraph,
@@ -100,8 +174,10 @@ function runsAt(
  * follow their bookmarked paragraph and `PAGEREF` results take the page from `pageOf`. A REF that
  * pointed at a caption's label and number keeps showing the label; a longer result is treated as
  * the entire caption. With the document's `model`, `STYLEREF` results take the nearest text in
- * their style before the field, else after it. Fields with other switches or a missing bookmark
- * or style are left as they are. One undoable step; returns whether anything changed.
+ * their style before the field, else after it, which an empty paragraph in the style makes empty
+ * (the field stays, with its instruction, and a later update fills it). Fields with other
+ * switches or a missing bookmark or style are left as they are. One undoable step; returns
+ * whether anything changed.
  */
 export function updateFields(
 	view: EditorView,
@@ -152,7 +228,8 @@ export function refreshFieldResults(
 			const text = paragraph && bodyStyleRefResult(source, styleRef, paragraph, field);
 			// `\* CHARFORMAT`: the result takes the formatting of the field name's first letter.
 			const code = styleRef.charFormat ? fieldNameMarker($from.parent, $from.index()) : undefined;
-			if (text && text !== run.text) changes.push({ run, text, ...(code ? { code } : {}) });
+			if (text !== undefined && text !== run.text)
+				changes.push({ run, text, ...(code ? { code } : {}) });
 			continue;
 		}
 		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
@@ -168,17 +245,29 @@ export function refreshFieldResults(
 		}
 		if (text && text !== run.text) changes.push({ run, text });
 	}
-	// Later fields first, so replacing one never shifts the positions still to be processed.
-	for (const { run, text, code } of changes.reverse()) {
-		const result = code && inlineNodeRun(tr.doc.nodeAt(run.from)!);
-		const codeRun = code && inlineNodeRun(code);
-		tr.replaceWith(
-			run.from,
-			run.to,
-			result && codeRun
-				? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
-				: schema.text(text, run.marks),
-		);
-	}
+	const edits = changes.map(({ run, text, code }) => ({
+		at: run.from,
+		apply: () => {
+			// An empty result keeps its field: a simple one becomes a complex field with no result.
+			if (!text) {
+				if (!emptySimpleFieldResult(tr, run.from, run.to)) tr.delete(run.from, run.to);
+				return;
+			}
+			const result = code && inlineNodeRun(tr.doc.nodeAt(run.from)!);
+			const codeRun = code && inlineNodeRun(code);
+			tr.replaceWith(
+				run.from,
+				run.to,
+				result && codeRun
+					? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
+					: schema.text(text, run.marks),
+			);
+		},
+	}));
+	if (source)
+		for (const { at, nodes } of emptyStyleRefResults(tr.doc, source))
+			edits.push({ at, apply: () => void tr.insert(at, nodes) });
+	// Later fields first, so an edit never shifts the positions still to be processed.
+	for (const edit of edits.sort((a, b) => b.at - a.at)) edit.apply();
 	return tr;
 }
