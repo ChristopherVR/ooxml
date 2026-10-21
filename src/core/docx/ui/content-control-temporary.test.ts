@@ -167,6 +167,32 @@ describe('temporary content controls in the editor', () => {
 		expect(blocks(edited)).toEqual([null, null, null]);
 	});
 
+	it('keeps a temporary control that shares an id with the one edited', () => {
+		const state = stateOf([
+			{ text: 'Draft', contentControl: temporary() },
+			{ text: ' and ' },
+			{ text: 'Draft', contentControl: temporary() },
+		]);
+		const edited = state.apply(state.tr.insertText('s', 6));
+		expect(edited.doc.textContent).toBe('Drafts and Draft');
+		expect(controlSpans(edited.doc).map((span) => [span.from, span.to])).toEqual([[12, 17]]);
+		// Deleting all of the first one's text leaves the second as well.
+		const deleted = state.apply(state.tr.delete(1, 6));
+		expect(controlSpans(deleted.doc).map((span) => span.control.id)).toEqual(['21']);
+	});
+
+	it('removes a temporary control that a nested control splits, all of it', () => {
+		const inner: ContentControl = { id: '22', level: 'inline', kind: 'richText' };
+		const state = stateOf([
+			{ text: 'Out', contentControl: temporary() },
+			{ text: 'in', contentControl: inner },
+			{ text: 'side', contentControl: temporary() },
+		]);
+		const edited = state.apply(state.tr.insertText('!', 2));
+		expect(edited.doc.textContent).toBe('O!utinside');
+		expect(controlSpans(edited.doc).map((span) => span.control.id)).toEqual(['22']);
+	});
+
 	it('leaves a control that cannot be deleted, and edits from elsewhere, as they are', () => {
 		const locked = stateOf([{ text: 'Draft', contentControl: temporary({ lock: 'sdtLocked' }) }]);
 		expect(controlSpans(locked.apply(locked.tr.insertText('s', 6)).doc)).toHaveLength(1);

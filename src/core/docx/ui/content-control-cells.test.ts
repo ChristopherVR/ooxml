@@ -308,6 +308,58 @@ describe('content controls around table cells in the editor', () => {
 		expect(rowOf(edited)).toEqual({ heightTwips: 400 });
 	});
 
+	it('removes a temporary control around two cells, or around a table in a block, as one control', () => {
+		const pair = choice({ kind: 'richText', temporary: true, showingPlaceholder: false });
+		const cell = (text: string, control: ContentControl | null) =>
+			schema.node('tableCell', { contentControl: control }, [paragraph(text)]);
+		const twoCells = (separate: boolean) =>
+			EditorState.create({
+				schema,
+				plugins: [contentControlPlugin()],
+				doc: schema.node('doc', null, [
+					schema.node('table', null, [
+						schema.node('tableRow', null, [
+							cell('One', pair),
+							...(separate ? [cell('Gap', null)] : []),
+							cell('Two', pair),
+						]),
+					]),
+				]),
+			});
+		const controls = (state: EditorState) => controlSpans(state.doc).length;
+		// One control around two cells: an edit in either takes it off both.
+		const joined = twoCells(false);
+		expect(controls(joined.apply(joined.tr.insertText('!', 5)))).toBe(0);
+		// Two controls that share an id: the one not edited stays.
+		const separate = twoCells(true);
+		expect(controls(separate.apply(separate.tr.insertText('!', 5)))).toBe(1);
+		// A block control holding a paragraph, a table and a paragraph is one control.
+		const block = { ...pair, level: 'block' as const };
+		const doc = schema.node('doc', null, [
+			paragraph('Before', { contentControl: block }),
+			schema.node('table', null, [schema.node('tableRow', null, [cell('Inside', null)])]),
+			paragraph('After', { contentControl: block }),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const edited = state.apply(state.tr.insertText('!', doc.content.size - 2));
+		const blocks: unknown[] = [];
+		edited.doc.forEach((node) => blocks.push(node.attrs.contentControl ?? null));
+		expect(blocks).toEqual([null, null, null]);
+		// One holding a paragraph of a nested block control between two of its own.
+		const nested = { id: '67', level: 'block' as const, kind: 'richText' as const };
+		const around = schema.node('doc', null, [
+			paragraph('First', { contentControl: block }),
+			paragraph('Inner', { contentControl: nested }),
+			paragraph('Last', { contentControl: block }),
+		]);
+		const outer = EditorState.create({ schema, doc: around, plugins: [contentControlPlugin()] });
+		const ids: unknown[] = [];
+		outer
+			.apply(outer.tr.insertText('!', 2))
+			.doc.forEach((node) => ids.push(node.attrs.contentControl?.id ?? null));
+		expect(ids).toEqual([null, '67', null]);
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;
