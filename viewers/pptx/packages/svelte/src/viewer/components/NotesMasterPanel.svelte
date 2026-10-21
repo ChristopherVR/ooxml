@@ -2,10 +2,10 @@
 	import type { PptxNotesMaster } from 'pptx-viewer-core';
 	import { useTranslator } from '../../i18n/context';
 
-	const { notesMaster, onchange } = $props<{
+	const { notesMaster, onchange }: {
 		notesMaster: PptxNotesMaster | undefined;
 		onchange: (color: string) => void;
-	}>();
+	} = $props();
 	const t = useTranslator();
 	const labels: Record<string, string> = {
 		body: 'pptx.master.notesMasterBody', sldImg: 'pptx.master.notesMasterSlideImage',

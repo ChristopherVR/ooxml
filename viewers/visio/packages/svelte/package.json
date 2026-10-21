@@ -1,6 +1,6 @@
 {
 	"name": "visio-svelte-viewer",
-	"version": "0.7.3",
+	"version": "0.7.4",
 	"description": "Local-first Visio viewer for svelte",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {
@@ -37,7 +37,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"emf-converter": "4.20.3",
+		"emf-converter": "4.21.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
 		"visio-core": "^0.4.1"

@@ -63,6 +63,14 @@ try {
 			for (const kind of ['docx', 'xlsx', 'pptx']) {
 				await page.evaluate((k) => document.querySelector(`[data-create="${k}"]`).click(), kind);
 				await page.waitForTimeout(1200);
+				// A new workbook on a touch screen leaves the grid's text field alone: focusing it would
+				// raise the on-screen keyboard over the sheet before a cell is chosen.
+				if (kind === 'xlsx')
+					assert.equal(
+						await page.evaluate(() => document.activeElement?.localName === 'xlsx-editor'),
+						false,
+						`${label}: a new workbook focused the grid on a touch screen`,
+					);
 			}
 			await noOverflow('three editors');
 			await shot('editor');

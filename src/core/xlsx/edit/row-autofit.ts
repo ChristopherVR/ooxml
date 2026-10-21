@@ -1,7 +1,7 @@
 import { type CellRange, normalizeRange } from '../address';
 import type { MeasureText } from '../layout/autofit';
 import type { Worksheet } from '../model';
-import { approximateMeasure, autoFitRowHeight } from '../layout/row-autofit';
+import { approximateMeasure, fitRowHeights } from '../layout/row-autofit';
 import { type EditContext, sheetAt } from './context';
 
 /** Excel's largest row height in points. */
@@ -23,22 +23,26 @@ export function autoGrowRows(
 	measure: MeasureText = approximateMeasure,
 ): number[] {
 	const sheet = sheetAt(ctx.workbook, s);
-	const updates: [number, number | undefined][] = [];
-	for (const row of new Set(rows)) {
+	const candidates = [...new Set(rows)].filter((row) => {
 		const info = sheet.rowInfo.get(row);
-		if (info?.customHeight || info?.hidden) continue;
-		const fit = Math.min(MAX_HEIGHT, autoFitRowHeight(ctx.workbook, s, row, measure));
+		return !info?.customHeight && !info?.hidden;
+	});
+	const fits = fitRowHeights(ctx.workbook, s, candidates, measure);
+	const updates: [number, number | undefined][] = [];
+	for (const row of candidates) {
+		const fit = Math.min(MAX_HEIGHT, fits.get(row) ?? sheet.defaultRowHeight);
 		const next = Math.abs(fit - sheet.defaultRowHeight) < 1e-9 ? undefined : fit;
-		const current = info?.height;
+		const current = sheet.rowInfo.get(row)?.height;
 		if (current === next) continue;
 		if (current !== undefined && next !== undefined && Math.abs(current - next) < 1e-9) continue;
 		updates.push([row, next]);
 	}
 	if (!updates.length) return [];
+	const changed = updates.map(([row]) => row);
 	ctx.run(
 		'Row height',
 		'view',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'rowInfo', sheet: s, rows: changed }],
 		() => {
 			for (const [row, height] of updates) {
 				const info = { ...sheet.rowInfo.get(row) };
@@ -50,7 +54,7 @@ export function autoGrowRows(
 		},
 		{ sheet: s, structural: true },
 	);
-	return updates.map(([row]) => row);
+	return changed;
 }
 
 /** Largest number of rows one edit re-fits. */

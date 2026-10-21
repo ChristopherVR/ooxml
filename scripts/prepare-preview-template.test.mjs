@@ -6,11 +6,17 @@ import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/pr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { preparePreviewTemplate } from './prepare-preview-template.mjs';
+import { buildPwa } from './build-pwa.mjs';
 
 test('the fork preview starts and serves its commit-specific suite and binary assets', async (t) => {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-preview-'));
 	await mkdir(join(root, 'suite-dist/suite-assets'), { recursive: true });
-	await writeFile(join(root, 'suite-dist/index.html'), '<title>OOXML Office</title>');
+	await mkdir(join(root, 'suite-dist/docs'), { recursive: true });
+	await writeFile(
+		join(root, 'suite-dist/docs/index.html'),
+		'<a href="../visio/">Visio</a><a href="../xlsx/getting-started">Excel</a><a href="../?suite">Office</a>',
+	);
+	await cp(new URL('../site/index.html', import.meta.url), join(root, 'suite-dist/index.html'));
 	const binary = Buffer.from([0, 128, 255, 12]);
 	await writeFile(join(root, 'suite-dist/suite-assets/icon.png'), binary);
 	const source = {
@@ -18,8 +24,9 @@ test('the fork preview starts and serves its commit-specific suite and binary as
 		sha: 'a'.repeat(40),
 		prUrl: 'https://github.com/ChristopherVR/ooxml/pull/76',
 	};
-	await preparePreviewTemplate(root, source);
 	const out = join(root, 'suite-dist');
+	await buildPwa(out);
+	await preparePreviewTemplate(root, source);
 	const manifest = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
 	assert.equal(manifest.stackblitz.startCommand, 'npm start');
 	assert.equal(manifest.scripts.start, 'node scripts/preview-site.mjs 5173 .');
@@ -73,6 +80,22 @@ test('the fork preview starts and serves its commit-specific suite and binary as
 		});
 	});
 	assert.match(await (await fetch(url)).text(), /OOXML Office preview: aaaaaaa/);
+	assert.match(await (await fetch(url)).text(), /name="ooxml-preview" content="true"/);
+	for (const [slug, kind] of Object.entries({
+		word: 'docx',
+		excel: 'xlsx',
+		powerpoint: 'pptx',
+		visio: 'vsdx',
+		teams: 'teams',
+	})) {
+		const response = await fetch(new URL(`apps/${slug}/`, url));
+		assert.equal(response.status, 200);
+		assert.match(await response.text(), new RegExp(`data-product="${kind}"`));
+	}
+	const docs = await (await fetch(new URL('docs/', url))).text();
+	assert.match(docs, /href="https:\/\/christophervr.github.io\/ooxml\/visio\/"/);
+	assert.match(docs, /href="https:\/\/christophervr.github.io\/ooxml\/xlsx\/getting-started"/);
+	assert.match(docs, /href="\.\.\/\?suite"/);
 	const asset = await fetch(new URL('suite-assets/icon.png', url));
 	assert.equal(asset.headers.get('content-type'), 'image/png');
 	assert.deepEqual(Buffer.from(await asset.arrayBuffer()), binary);

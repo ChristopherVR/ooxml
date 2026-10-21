@@ -155,6 +155,19 @@ export class PptxHandlerCore {
 		return this.runtime.getLayoutOptions();
 	}
 
+	/** Resolve a text placeholder in this loaded deck, preserving layout inheritance. */
+	public createPlaceholderElement(
+		layoutPath: string,
+		input: PptxElement,
+		type: string,
+		options: { idx?: number; x?: number; y?: number; width?: number; height?: number } = {},
+	): PptxElement {
+		if (!this.runtime.createPlaceholderElement) {
+			throw new Error('This runtime does not support creating layout placeholders');
+		}
+		return this.runtime.createPlaceholderElement(layoutPath, input, type, options);
+	}
+
 	/**
 	 * Build the artwork thumbnails backing the New Slide / Layout galleries.
 	 *

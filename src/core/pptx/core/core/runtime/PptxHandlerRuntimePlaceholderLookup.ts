@@ -89,8 +89,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	private findPlaceholderContexts(
 		slidePath: string,
 		expected: PlaceholderInfo | null,
+		layoutPath = this.resolveLayoutPathForSlide(slidePath),
 	): { layout?: PlaceholderNodeContext; master?: PlaceholderNodeContext } {
-		const layoutPath = this.resolveLayoutPathForSlide(slidePath);
 		if (!layoutPath) {
 			return {};
 		}
@@ -114,10 +114,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected findPlaceholderContext(
 		slidePath: string,
 		expected: PlaceholderInfo | null,
+		layoutPath?: string,
 	): PlaceholderNodeContext | undefined {
 		const { layout: layoutContext, master: masterContext } = this.findPlaceholderContexts(
 			slidePath,
 			expected,
+			layoutPath,
 		);
 		if (!layoutContext) {
 			return masterContext;
@@ -152,8 +154,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected findPlaceholderNode(
 		slidePath: string,
 		expected: PlaceholderInfo | null,
+		layoutPath?: string,
 	): XmlObject | undefined {
-		const { layout, master } = this.findPlaceholderContexts(slidePath, expected);
+		const { layout, master } = this.findPlaceholderContexts(slidePath, expected, layoutPath);
 		const firstNode = (context: PlaceholderNodeContext | undefined): XmlObject | undefined =>
 			context?.shape ?? context?.picture ?? context?.graphicFrame;
 		const layoutNode = firstNode(layout);
@@ -210,8 +213,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected lookupPlaceholderDefaults(
 		slidePath: string,
 		phInfo: PlaceholderInfo,
+		layoutPath = this.resolveLayoutPathForSlide(slidePath),
 	): PlaceholderDefaults | undefined {
-		const layoutPath = this.resolveLayoutPathForSlide(slidePath);
 		if (!layoutPath) {
 			return undefined;
 		}

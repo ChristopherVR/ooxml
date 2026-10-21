@@ -11,7 +11,7 @@
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';
 
-	const { editor } = $props<{ editor: EditorState }>();
+	const { editor }: { editor: EditorState } = $props();
 	const t = useTranslator();
 	const actions = $derived(editor.masterCrud.actions());
 	let error = $state<string | null>(null);

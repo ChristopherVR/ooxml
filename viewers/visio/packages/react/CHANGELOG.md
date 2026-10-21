@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.7.4](https://github.com/ChristopherVR/ooxml/releases/tag/visio-react-viewer@0.7.4) - 2026-10-20
+
+### Dependencies
+
+- **deps:** Update emf-converter to 4.21.0 ([#106](https://github.com/ChristopherVR/ooxml/issues/106)) ([641ae31](https://github.com/ChristopherVR/ooxml/commit/641ae316b7de07ed6f3c5158e8b154c991e1b719))
+
 ## [0.7.3](https://github.com/ChristopherVR/ooxml/releases/tag/visio-react-viewer@0.7.3) - 2026-10-20
 
 ### Dependencies

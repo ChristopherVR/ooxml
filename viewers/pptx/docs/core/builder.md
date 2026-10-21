@@ -97,13 +97,35 @@ data.slides.push(slide);
 
 ### `SlideBuilder` methods
 
-| Group              | Methods                                                                                                                                                                                                                                                                                                                     |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Add elements**   | `addText(text, options)`, `addShape(preset, options)`, `addImage(src, options)`, `addTable(data, options?)`, `addChart(type, data, options?)`, `addConnector(options)`, `addMedia(kind, src, options)`, `addGroup(children, options)`, `addFreeform(svgPath, options)`, `addElement(element)`, `addBuilderElement(builder)` |
-| **Slide props**    | `setBackground(fill)`, `setTransition(transition)`, `addAnimation(elementId, options)`, `setNotes(text)`, `setHidden(bool)`, `setSection(name)`, `setName(name)`                                                                                                                                                            |
-| **Query / finish** | `getElements()`, `getLastElement()`, `elementCount`, `removeElement(id)`, `build()`                                                                                                                                                                                                                                         |
+| Group              | Methods                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Add elements**   | `addText(text, options)`, `addPlaceholder(type, text, options?)`, `addShape(preset, options)`, `addImage(src, options)`, `addTable(data, options?)`, `addChart(type, data, options?)`, `addConnector(options)`, `addMedia(kind, src, options)`, `addGroup(children, options)`, `addFreeform(svgPath, options)`, `addElement(element)`, `addBuilderElement(builder)` |
+| **Slide props**    | `setBackground(fill)`, `setTransition(transition)`, `addAnimation(elementId, options)`, `setNotes(text)`, `setHidden(bool)`, `setSection(name)`, `setName(name)`                                                                                                                                                                                                    |
+| **Query / finish** | `getElements()`, `getLastElement()`, `elementCount`, `removeElement(id)`, `build()`                                                                                                                                                                                                                                                                                 |
 
 Positions in `add*` options are **pixels** (converted to EMU internally). `addText` options include `fontSize`, `fontFamily`, `bold`, `italic`, `underline`, `color`, `x`, `y`, `width`, `height`, and more.
+
+### Filling layout placeholders
+
+Use `addPlaceholder` instead of `addText` when content should follow a layout's frame and text styles:
+
+```ts
+const title = createSlide('Title Slide')
+	.addPlaceholder('ctrTitle', 'Q4 2026 Results')
+	.addPlaceholder('subTitle', 'Revenue and priorities')
+	.build();
+const columns = createSlide('Two Content')
+	.addPlaceholder('body', 'Left column', { idx: 1 })
+	.addPlaceholder('body', [{ text: 'Right column', style: { bold: true } }], { idx: 2 })
+	.build();
+data.slides.push(title, columns);
+```
+
+`TextPlaceholderType` accepts `title`, `ctrTitle`, `subTitle`, `body`, `obj`, `dt`, `ftr`, `hdr`, and `sldNum`. Compatible content slots are supported: `body` can fill a layout's `obj` placeholder. The saved shape binds to the selected slot's actual type and index. Use `idx` to select repeated slots; without it, the best compatible slot is selected.
+
+Optional `x`, `y`, `width`, and `height` override the frame in pixels. Without an override, the saved shape has no local transform or default text formatting, so it keeps inheriting from the layout and master. Explicit rich-text formatting remains local. If a template's layout slot needs a compatible-role master-frame fallback that the existing loader does not resolve, only the newly created placeholder gets an explicit frame so its geometry survives reload. Existing-deck loading and layout switching are unchanged. A missing frame throws an error naming the slide, type, index, and layout unless all four frame fields were supplied.
+
+Factories returned by `PptxHandler.create`, `createBlank`, and `Presentation` provide deck context automatically. A standalone builder needs a loaded handler: `new SlideBuilder(number, layoutPath, layoutName, handler)`. Even a complete explicit frame requires that context so text-style inheritance resolves consistently.
 
 ## Element builders
 

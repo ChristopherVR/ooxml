@@ -1,6 +1,6 @@
 {
 	"name": "ooxml-core",
-	"version": "1.19.1",
+	"version": "1.19.2",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"keywords": [
 		"charts",
@@ -261,7 +261,7 @@
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
-		"emf-converter": "^4.20.3",
+		"emf-converter": "^4.21.0",
 		"fast-xml-parser": "^5.11.2",
 		"fflate": "^0.8.3",
 		"jszip": "^3.10.2",
