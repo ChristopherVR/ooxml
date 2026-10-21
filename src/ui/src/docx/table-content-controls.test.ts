@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { DOMParser, DOMSerializer } from 'prosemirror-model';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, TextSelection } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
 import { loadDocx } from 'ooxml-core/docx';
 import { chooseListItem, contentControlPlugin, controlSpans } from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
@@ -115,6 +116,127 @@ describe('content controls around table cells in the editor', () => {
 		const parsed = DOMParser.fromSchema(schema).parse(html);
 		expect(controlSpans(parsed)).toEqual(controlSpans(doc));
 		expect(controlSpans(parsed)[0]).toMatchObject({ level: 'cell', control: { id: '71' } });
+	});
+
+	it('keeps the verbatim properties of a pasted cell control only when they come from the editor', async () => {
+		const bound = (path: string) => `<w:dataBinding w:xpath="${path}" w:storeItemID="{1}"/>`;
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/>` +
+				`</w:tblGrid><w:tr><w:sdt><w:sdtPr><w:id w:val="71"/>${bound('/mine')}</w:sdtPr>` +
+				`<w:sdtContent>${cell('Mine')}</w:sdtContent></w:sdt></w:tr></w:tbl>` +
+				`<w:p><w:r><w:t>After</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({ schema, doc, plugins: [contentControlPlugin()] }),
+		});
+		const paste = (html: string) => {
+			let after = 0;
+			view.state.doc.forEach((node, offset) => {
+				if (node.textContent === 'After') after = offset + node.nodeSize - 1;
+			});
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, after)));
+			// The paste reads nothing else from the event.
+			view.pasteHTML(html, new Event('paste') as ClipboardEvent);
+		};
+		// A table from another page: properties that bind its cell to that page's data go.
+		const td = document.createElement('td');
+		td.dataset.sdt = JSON.stringify({
+			id: '90',
+			level: 'cell',
+			kind: 'richText',
+			alias: 'Theirs',
+			sourceXml: `<w:sdtPr xmlns:w="${W}"><w:alias w:val="Theirs"/><w:id w:val="90"/>${bound('/theirs')}</w:sdtPr>`,
+			endSourceXml: `<w:sdtEndPr xmlns:w="${W}"><w:rPr><w:b/></w:rPr></w:sdtEndPr>`,
+		});
+		td.innerHTML = '<p>Theirs</p>';
+		paste(`<table data-pm-slice="0 0 []"><tbody><tr>${td.outerHTML}</tr></tbody></table>`);
+		const controlOf = (id: string) =>
+			controlSpans(view.state.doc).find((span) => span.level === 'cell' && span.control.id === id);
+		expect(controlOf('90')?.control).toEqual({
+			id: '90',
+			level: 'cell',
+			kind: 'richText',
+			alias: 'Theirs',
+		});
+		const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml).toContain('<w:t>Theirs</w:t>');
+		expect(xml).toContain('<w:alias w:val="Theirs"/><w:id w:val="90"/>');
+		expect(xml).toContain('w:xpath="/mine"');
+		expect(xml).not.toContain('/theirs');
+		expect(xml).not.toContain('w:sdtEndPr');
+		// A copy of the document's own table keeps its cell's properties, under a new id.
+		const own = controlOf('71')!.control.sourceXml;
+		paste(
+			view.serializeForClipboard(view.state.doc.slice(0, doc.firstChild!.nodeSize)).dom.innerHTML,
+		);
+		const copies = controlSpans(view.state.doc).filter(
+			(span) => span.level === 'cell' && span.control.sourceXml === own,
+		);
+		expect(own).toContain('w:xpath="/mine"');
+		expect(copies.map((span) => span.control.id === '71')).toEqual([true, false]);
+		view.destroy();
+		host.remove();
+	});
+
+	it('keeps no properties another page gives a table or a row through the slice context', async () => {
+		// Pasted HTML names the nodes around what it holds, and their attributes, in data-pm-slice:
+		// a page can put a control there on a table or a row, which no parse rule reads.
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>After</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({ schema, doc, plugins: [contentControlPlugin()] }),
+		});
+		const theirs = (id: string, level: string) => ({
+			id,
+			level,
+			kind: 'richText',
+			sourceXml: `<w:sdtPr xmlns:w="${W}"><w:id w:val="${id}"/><w:dataBinding w:xpath="/theirs" w:storeItemID="{2}"/></w:sdtPr>`,
+		});
+		const context = (nodes: unknown[]) => JSON.stringify(nodes).replace(/'/g, '&#39;');
+		for (const html of [
+			`<tr data-pm-slice='0 0 ${context(['table', { contentControl: theirs('56', 'block') }])}'><td><p>Table</p></td></tr>`,
+			`<td data-pm-slice='0 0 ${context(['table', null, 'tableRow', { properties: { contentControl: theirs('57', 'row') } }])}'><p>Row</p></td>`,
+		]) {
+			let after = 0;
+			view.state.doc.forEach((node, offset) => {
+				if (node.textContent === 'After') after = offset + node.nodeSize - 1;
+			});
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, after)));
+			// The paste reads nothing else from the event.
+			view.pasteHTML(html, new Event('paste') as ClipboardEvent);
+		}
+		const held: unknown[] = [];
+		view.state.doc.descendants((node) => {
+			const control = node.attrs.contentControl ?? node.attrs.properties?.contentControl;
+			if (control && node.type.name !== 'tableCell') held.push(control);
+		});
+		expect(held).toHaveLength(2);
+		expect(held).toEqual(
+			expect.arrayContaining([
+				{ id: '56', level: 'block', kind: 'richText' },
+				{ id: '57', level: 'row', kind: 'richText' },
+			]),
+		);
+		const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml).toContain('<w:sdt><w:sdtPr><w:id w:val="57"/></w:sdtPr><w:sdtContent><w:tr>');
+		expect(xml).not.toContain('/theirs');
+		view.destroy();
+		host.remove();
 	});
 
 	for (const merged of [false, true])

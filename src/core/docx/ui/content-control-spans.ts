@@ -32,10 +32,22 @@ export function controlFromData(
 	} catch {
 		return undefined;
 	}
+	return controlFromValue(value, level);
+}
+
+/**
+ * The control `value` is at `level`: itself when it is an object with an id and a kind at that
+ * level, a copy at that level when it is at another, nothing when it is not a control.
+ */
+export function controlFromValue(
+	value: unknown,
+	level: ContentControl['level'],
+): ContentControl | undefined {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
 	const { id, kind } = value as { id?: unknown; kind?: unknown };
 	if (typeof id !== 'string' || typeof kind !== 'string') return undefined;
-	return { ...(value as ContentControl), level };
+	const control = value as ContentControl;
+	return control.level === level ? control : { ...control, level };
 }
 
 export const controlOfMark = (mark: Mark | undefined): ContentControl | undefined =>

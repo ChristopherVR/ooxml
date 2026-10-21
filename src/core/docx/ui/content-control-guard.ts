@@ -1,4 +1,5 @@
-// Enforces content control lock settings and routes typing and deleting into controls.
+// Enforces content control lock settings, routes typing and deleting into controls, and keeps
+// verbatim properties from another page out of pasted controls.
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep } from 'prosemirror-transform';
 import { isContentControlLocked } from '../content-control-model';
@@ -7,8 +8,9 @@ import {
 	deleteToPlaceholder,
 	typeOverPlaceholder,
 } from './content-control-commands';
-import { pastedControlSlice } from './content-control-paste';
+import { otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
 import { rowControlSpans } from './content-control-rows';
+import { controlSourcesOf, pastedControlSources } from './content-control-sources';
 import { controlSpans } from './content-control-spans';
 import { removeEditedTemporaryControls } from './content-control-temporary';
 
@@ -56,6 +58,8 @@ export function violatesControlLock(tr: Transaction, state: EditorState): boolea
 }
 
 export function contentControlPlugin(): Plugin {
+	// The verbatim properties of controls a copy, cut or drag in this editor took: a paste keeps them.
+	const copied = new Set<string>();
 	return new Plugin({
 		filterTransaction: (tr, state) =>
 			!tr.docChanged ||
@@ -64,7 +68,20 @@ export function contentControlPlugin(): Plugin {
 			!violatesControlLock(tr, state),
 		appendTransaction: removeEditedTemporaryControls,
 		props: {
-			transformPasted: (slice, view, plain) => pastedControlSlice(slice, view, plain),
+			transformCopied: (slice) => {
+				for (const source of controlSourcesOf(slice)) copied.add(source);
+				for (const source of otherControlSourcesOf(slice)) copied.add(source);
+				return slice;
+			},
+			transformPasted: (slice, view, plain) =>
+				view
+					? pastedControlSlice(
+							pastedControlSources(slice, view.state.doc, copied),
+							view,
+							plain,
+							copied,
+						)
+					: slice,
 			handleTextInput: (view, from, to, text) => {
 				if (!view.editable) return false;
 				const result = typeOverPlaceholder(view.state, from, text, to);
