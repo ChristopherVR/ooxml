@@ -17,8 +17,8 @@ import { CONTROL_EDIT_META } from './content-control-commands';
 import { controlSpans } from './content-control-spans';
 import {
 	FORM_FIELD_EDIT_META,
-	formFieldOfNode,
 	formTextResults,
+	operatesFormField,
 	type FormTextResult,
 } from './form-field-commands';
 import { isBlankFormText, replacedBlanks } from './form-text-blank';
@@ -175,8 +175,10 @@ export function staysInFormFields(tr: Transaction): boolean {
 		const within = (ranges: Range[], from: number, to: number) =>
 			ranges.some((range) => from >= map.map(range.from, -1) && to <= map.map(range.to, 1));
 		if (step instanceof AttrStep) {
-			// Operating a field sets its marker's data; a node in an editable range may change too.
-			if (formFieldOfNode(tr.docs[index]?.nodeAt(step.pos))) return true;
+			// Operating a field sets its marker's data (its own commands pass with their meta; this is
+			// their undo and redo), but not the marker's formatting, as in Word, where a protected form
+			// takes no formatting. A node in an editable range may change.
+			if (operatesFormField(step, tr.docs[index])) return true;
 			return within([...fields, ...sections], step.pos, step.pos + 1);
 		}
 		// Typing, and the field guard re-marking typed text as the field's result, stay in range.

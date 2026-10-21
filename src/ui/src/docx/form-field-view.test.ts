@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import JSZip from 'jszip';
 import { createDocument, type FormField, type TextRun } from 'ooxml-core/docx';
 import { formFieldOfNode } from 'ooxml-core/docx/ui';
-import { TextSelection } from 'prosemirror-state';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
 
@@ -208,6 +209,23 @@ describe('legacy form fields from the keyboard', () => {
 		} finally {
 			browser.mockRestore();
 		}
+	});
+
+	it('keeps the check box and drop-down of a protected form unformatted, as Word does', async () => {
+		const { view, editor } = mount();
+		for (const kind of ['checkbox', 'dropDown'] as const) {
+			const at = markerOf(view, kind);
+			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, at)));
+			const before = view.state.doc;
+			view.someProp('handleKeyDown', (handle) =>
+				handle(view, new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true })),
+			);
+			expect(view.state.doc.eq(before)).toBe(true);
+		}
+		const zip = await JSZip.loadAsync(await editor.saveBytes());
+		const xml = await zip.file('word/document.xml')!.async('string');
+		expect(xml).toContain('<w:name w:val="Approved"/>');
+		expect(xml).not.toContain('<w:b/>');
 	});
 
 	it('leaves keys alone away from a check box or drop-down, or with a modifier', () => {

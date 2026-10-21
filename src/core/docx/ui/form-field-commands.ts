@@ -2,6 +2,7 @@
 // rewriting the field data that rides on the begin marker; a text field's value is its result text.
 import type { Node } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
+import type { AttrStep } from 'prosemirror-transform';
 import type { FormField, TextRun } from '../model';
 import {
 	formCheckboxChecked,
@@ -19,6 +20,33 @@ export const FORM_FIELD_EDIT_META = 'dve-form-field-edit';
 export function formFieldOfNode(node: Node | null | undefined): FormField | undefined {
 	if (node?.type.name !== 'fieldMarker' || node.attrs.kind !== 'begin') return undefined;
 	return inlineRunProperties(node).formField;
+}
+
+/** A begin marker's run properties (its `format`) without the field data, in a stable order. */
+function formattingOf(format: unknown): string | undefined {
+	try {
+		const { formField: _field, ...rest } =
+			typeof format === 'string' ? (JSON.parse(format) as Record<string, unknown>) : {};
+		return JSON.stringify(Object.entries(rest).sort(([a], [b]) => (a < b ? -1 : 1)));
+	} catch {
+		return undefined;
+	}
+}
+
+/**
+ * Whether `step` gives the begin marker of an enabled form field other field data and nothing
+ * else, as operating the field does (an undo or redo of that too): the field stays the same kind
+ * and name, and its formatting stays as it was.
+ */
+export function operatesFormField(step: AttrStep, doc: Node | undefined): boolean {
+	const node = doc?.nodeAt(step.pos);
+	const field = formFieldOfNode(node);
+	if (!field || field.enabled === false || step.attr !== 'format') return false;
+	if (typeof step.value !== 'string') return false;
+	const before = formattingOf(node!.attrs.format);
+	if (before === undefined || before !== formattingOf(step.value)) return false;
+	const next = (JSON.parse(step.value) as { formField?: Partial<FormField> } | null)?.formField;
+	return next?.kind === field.kind && next.name === field.name;
 }
 
 /** What a begin marker node draws for its field: a ballot box, a drop-down's entry, or nothing. */

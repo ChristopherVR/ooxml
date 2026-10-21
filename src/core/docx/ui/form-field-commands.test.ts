@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
-import { history, undo } from 'prosemirror-history';
+import { history, redo, undo } from 'prosemirror-history';
 import { EditorState, type Transaction } from 'prosemirror-state';
 import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
 import { setFormCheckbox } from '../form-fields';
 import { contentControlPlugin, violatesControlLock } from './content-control-guard';
 import { markSpecs } from './schema-marks';
 import { fieldMarkerNodeSpec } from './break-note-schema';
-import { appendInlineNode, runToInlineNodes } from './run-adapter';
+import { appendInlineNode, inlineNodeRun, runToInlineNodes } from './run-adapter';
+import { setInlineRunFormatting } from './inline-formatting';
 import {
 	formFieldBeside,
 	formFieldLocked,
@@ -515,6 +516,39 @@ describe('legacy form fields in the editor', () => {
 			state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }])).doc.childCount,
 		).toBe(3);
 		expect(state.apply(state.tr.split(3)).doc.childCount).toBe(3);
+	});
+
+	it('keeps the formatting of form fields fixed in a document protected for forms', () => {
+		const locked: FormField = { ...approved, name: 'Locked', enabled: false };
+		const runs: TextRun[] = [...field(approved), { text: ' ' }, ...field(locked)];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		let state = EditorState.create({
+			schema,
+			doc,
+			plugins: [history(), formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
+		});
+		const markers: number[] = [];
+		state.doc.descendants((node, pos) => {
+			if (formFieldOfNode(node)) markers.push(pos);
+		});
+		expect(markers).toHaveLength(2);
+		// Bold on the marker alone, as the editor applies it to a selected check box.
+		for (const pos of markers) {
+			const tr = state.tr;
+			setInlineRunFormatting(tr, pos, { ...inlineNodeRun(state.doc.nodeAt(pos)!)!, bold: true });
+			expect(tr.docChanged).toBe(true);
+			expect(state.apply(tr).doc.eq(state.doc)).toBe(true);
+		}
+		// Operating the enabled field, and undoing and redoing that, still goes through.
+		const box = markers[0]!;
+		const isChecked = () => Boolean(formFieldOfNode(state.doc.nodeAt(box))?.checkBox?.checked);
+		state = state.apply(toggleFormCheckboxAt(state, box)!);
+		expect(isChecked()).toBe(true);
+		undo(state, (tr) => (state = state.apply(tr)));
+		expect(isChecked()).toBe(false);
+		redo(state, (tr) => (state = state.apply(tr)));
+		expect(isChecked()).toBe(true);
 	});
 
 	it('only lets form fields change in a document protected for forms', () => {
