@@ -148,4 +148,35 @@ describe('content controls around table cells in the editor', () => {
 			expect(xml).toContain('<w:t>Line two</w:t>');
 			expect(xml).not.toContain('<w:sdt>');
 		});
+
+	it('keeps a block control around a table, and one around a cell paragraph, through an edit', async () => {
+		const zip = new JSZip();
+		const note =
+			`<w:tc><w:sdt><w:sdtPr><w:alias w:val="Note"/><w:id w:val="75"/></w:sdtPr><w:sdtContent>` +
+			`<w:p><w:r><w:t>Remark</w:t></w:r></w:p></w:sdtContent></w:sdt></w:tc>`;
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"/><w:id w:val="74"/>` +
+				`</w:sdtPr><w:sdtContent><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/>` +
+				`<w:gridCol w:w="3000"/></w:tblGrid><w:tr>${cell('Title')}${note}</w:tr></w:tbl>` +
+				`</w:sdtContent></w:sdt><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		let next = state;
+		for (const word of ['Title', 'Remark']) {
+			let at = -1;
+			next.doc.descendants((node, pos) => {
+				if (at < 0 && node.isText && node.text === word) at = pos + node.nodeSize;
+			});
+			next = next.apply(next.tr.insertText(' two', at));
+		}
+		const bytes = await loaded.save(docToModel(next.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml).toContain('<w:t>Title two</w:t>');
+		expect(xml).toContain('<w:t>Remark two</w:t>');
+		expect(xml).toMatch(/<w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"\/><w:id w:val="74"\/>/);
+		expect(xml).toMatch(/<w:tc><w:sdt><w:sdtPr><w:alias w:val="Note"\/><w:id w:val="75"\/>/);
+	});
 });
