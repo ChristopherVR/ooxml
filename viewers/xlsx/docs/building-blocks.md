@@ -40,7 +40,7 @@ to custom controls. Formatting fields are null for mixed values. Formatting insp
 bounded to 4096 cells: larger selections return null and `formattingComplete=false`.
 
 `onSelect`, `onSheetChange`, `onFormulaChange` and `commitEdit` return false when cell validation
-blocks the action. Formatting callbacks return a Promise<boolean>. They commit an active
+blocks the action. Formatting callbacks return a `Promise<boolean>`. They commit an active
 cell edit before acting, and retain its selection when custom controls take focus. Formula
 text is committed on Enter by the optional FormulaBar; a rejected entry sets aria-invalid.
 The existing handle retains save/serialization and dirty tracking. A save rejects if input

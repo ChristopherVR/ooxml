@@ -23,7 +23,16 @@ Local profiles are organizational conveniences, not authentication or authorizat
 
 ## Build and verification
 
-`bun run build:suite` builds core, shared UI and a self-contained `suite-dist` application. `bun run preview:suite` bundles and serves the launcher (build core and UI first). `scripts/build-pages.mjs` includes the same suite bundle alongside the viewer documentation. Desktop builds consume `suite-dist` through Tauri.
+`bun run build:suite` builds core, shared UI and a self-contained `suite-dist` application. `bun run preview:suite` serves that application, including its standalone PWA routes. It does not include the viewer documentation or framework demo sites. Desktop builds consume `suite-dist` through Tauri.
+
+To test the complete site locally, including links such as `/docx/` and all viewer demos, build core and shared UI first, then run:
+
+```sh
+node scripts/build-pages.mjs
+node scripts/preview-site.mjs 8123 pages-dist /ooxml/
+```
+
+Open `http://localhost:8123/ooxml/`. The preview preserves the published asset base and redirects short links such as `/docx/` to `/ooxml/docx/`, so documentation navigation and framework demo assets resolve as they do on GitHub Pages.
 
 Run `bun run test:suite` against the preview URL (default localhost:8128, override with `SUITE_URL`). The browser check uses actual editors and round-trips downloaded files. Only the external AI provider is stubbed; it asserts the supplied Word and Excel context, applies a proposal and undoes it. Unit tests cover package preservation, missing embedded targets, atomic storage conflicts, presentation text edits and Teams host events.
 
