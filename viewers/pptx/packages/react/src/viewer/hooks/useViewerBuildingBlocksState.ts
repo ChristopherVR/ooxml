@@ -39,6 +39,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	content: ArrayBuffer | Uint8Array | null;
 	canEdit: boolean;
 	filePath?: string;
+	/** Host `initialSlide`: the slide shown after each load; forwarded to `useViewerIntegration`. */
+	initialSlide?: number;
 	autosaveEnabled: boolean;
 	userName?: string;
 	handle?: React.ForwardedRef<PowerPointViewerHandle>;
@@ -80,6 +82,7 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
+	const { initialSlide } = input;
 	const {
 		onContentChange,
 		onDirtyChange,
@@ -203,6 +206,7 @@ export function useViewerBuildingBlocksState(
 		content,
 		filePath,
 		autosaveEnabled,
+		initialSlide,
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images
 		// under the same default-off, core-side SSRF/privacy guard.

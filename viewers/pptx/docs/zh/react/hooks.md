@@ -49,6 +49,16 @@ description: 了解 PowerPointViewer 的 hooks 架构、/viewer 提供的稳定�
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
 ```
 
+### 打开指定幻灯片 {#opening-on-a-slide}
+
+`useViewerBuildingBlocks` 接受与 `PowerPointViewer` 相同的 `initialSlide` 选项：每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。它在首次显示已加载演示文稿的那次渲染中生效，因此自定义界面不会先显示第 1 张幻灯片，也无需在加载后调用 `goTo()` 或在跳转完成前隐藏画布。
+
+```tsx
+const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
+```
+
+之后修改 `initialSlide` 只对下一次加载生效，不会移动已打开的演示文稿；要切换当前幻灯片，请使用句柄的 `goTo(index)`。
+
 ### `useThemeSwitching` {#usethemeswitching}
 
 切换已加载**文档本身**的 PowerPoint 主题，即 OOXML 颜色和字体方案，不是组件界面主题，两者区别见[主题配置](/zh/guide/theming)。它使用手动加载得到的同一组 `PptxHandler` 和 `PptxData`。
