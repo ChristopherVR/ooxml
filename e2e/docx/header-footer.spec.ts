@@ -156,7 +156,7 @@ test('inserts footnotes in a new document, numbers them in order and saves them'
 	await page.keyboard.type('Later source');
 	await page.keyboard.press('Escape');
 
-	await surface.locator('p').first().click();
+	await clickInEditor(surface.locator('p').first());
 	await page.keyboard.press('Home');
 	await page.keyboard.type('First claim');
 	await editor.getByRole('button', { name: 'Insert footnote', exact: true }).click();

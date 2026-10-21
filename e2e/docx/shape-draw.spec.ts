@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { savedDocument } from './saved-document';
-import { dialogByHeading, fileInput, newDocument } from './helpers';
+import { clickInEditor, dialogByHeading, fileInput, newDocument } from './helpers';
 
 test('Insert > Shapes draws a floating shape that Shape Format edits and the file keeps', async ({
 	page,
@@ -85,7 +85,7 @@ test('a shape authored in Word is drawn and keeps its markup when text is typed'
 		'Red box',
 	);
 	const first = editor.locator('.dve-paper > .ProseMirror > p').first();
-	await first.click();
+	await clickInEditor(first);
 	await page.keyboard.press('End');
 	await page.keyboard.type(' typed');
 	const { xml } = await savedDocument(page, 'ui-shape-word-edited.docx');

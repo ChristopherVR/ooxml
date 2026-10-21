@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { clickInEditor } from './helpers';
 
 // A `?room=` session is only a name on a BroadcastChannel, so windows built from different
 // framework adapters must meet in it: the host (`sample=1`) opens the sample and the guest joins by
@@ -20,12 +21,12 @@ for (const [host, guest] of [
 		// The guest starts blank and receives the host's document.
 		await expect(textB).toContainText('Document title');
 
-		await textA.click();
+		await clickInEditor(textA);
 		await a.keyboard.press('Control+End');
 		await a.keyboard.type(` from-${host}`);
 		await expect(textB).toContainText(`from-${host}`);
 
-		await textB.click();
+		await clickInEditor(textB);
 		await b.keyboard.press('Control+End');
 		await b.keyboard.type(` from-${guest}`);
 		await expect(textA).toContainText(`from-${guest}`);

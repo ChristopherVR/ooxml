@@ -23,7 +23,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		for (const peer of [a, b])
 			await expect(peer.locator('.ProseMirror')).toContainText('Shared document');
 		await expect(page.locator('#collaboration-status')).toContainText('Synced');
-		await a.locator('.ProseMirror').click();
+		await clickInEditor(a.locator('.ProseMirror'));
 		await page.keyboard.press('Control+End');
 		const picture = Buffer.from(
 			await page.evaluate(() => {

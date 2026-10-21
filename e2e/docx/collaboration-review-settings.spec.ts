@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import { clickInEditor } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: rejecting a peer revision preserves the other author's insertion`, async ({
@@ -20,7 +21,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			[a, ' AdaEdit'],
 			[b, ' GraceEdit'],
 		] as const) {
-			await editor.locator('.ProseMirror').click();
+			await clickInEditor(editor.locator('.ProseMirror'));
 			await page.keyboard.press('Control+End');
 			await page.keyboard.insertText(text);
 		}
@@ -67,7 +68,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				b.evaluate((element) => (element as DocxEditorElement).documentModel!.trackChanges),
 			)
 			.toBe(true);
-		await b.locator('.ProseMirror').click();
+		await clickInEditor(b.locator('.ProseMirror'));
 		await page.keyboard.press('Control+End');
 		await page.keyboard.type(' peer revision');
 		await expect(a.locator('.ProseMirror')).toContainText('peer revision');

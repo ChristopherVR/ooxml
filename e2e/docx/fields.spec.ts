@@ -243,6 +243,9 @@ test('records cut and paste under Track Changes as a tracked move and saves it',
 	await page.keyboard.type('Gamma');
 	await editor.getByRole('tab', { name: 'Review', exact: true }).click();
 	await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
+	// The double click would also focus the editor, whose check after focus can undo its selection.
+	await body.focus();
+	await waitForEditorFocus(body);
 	// Select "Beta" and cut it, then paste it at the end of "Gamma".
 	await body
 		.locator('p')

@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { openSample, reveal, fileInput, saveButton, fileNameLabel, setReadOnly } from './helpers';
+import {
+	clickInEditor,
+	openSample,
+	reveal,
+	fileInput,
+	saveButton,
+	fileNameLabel,
+	setReadOnly,
+} from './helpers';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
 
@@ -85,7 +93,7 @@ for (const framework of frameworks) {
 		);
 		expect(modelAfterEnglish).toBe(modelBefore);
 
-		await styledParagraph.click();
+		await clickInEditor(styledParagraph);
 		await page.keyboard.press('End');
 		await page.keyboard.type(' edited');
 		const pending = page.waitForEvent('download');

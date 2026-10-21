@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { NativeHarness } from '../../demos/docx/demo-vanilla/building-blocks-types';
+import { clickInEditor } from './helpers';
 for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native Word composition reacts, persists and disposes`, async ({ page }) => {
 		const errors: string[] = [];
@@ -11,7 +12,7 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
 			page.locator('office-ui-ribbon, office-ui-title-bar, office-ui-backstage'),
 		).toHaveCount(0);
 		const editor = page.locator('.ProseMirror');
-		await editor.click();
+		await clickInEditor(editor);
 		await page.keyboard.press('End');
 		await page.getByRole('button', { name: 'Bold', exact: true }).click();
 		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toHaveAttribute(
