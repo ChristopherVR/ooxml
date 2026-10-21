@@ -3,6 +3,7 @@ import {
 	OFFICE_STANDARD_COLORS,
 	buildThemePalette,
 	normalizePaletteHex,
+	type ThemePaletteColumn,
 	type ThemePaletteSwatch,
 	type ThemePaletteVariant,
 } from 'ooxml-core/color';
@@ -23,6 +24,11 @@ export interface OfficeColorPick {
 	index?: number;
 }
 export type OfficeColorPickEvent = CustomEvent<OfficeColorPick>;
+/** A Theme Colors swatch by position: its column and, below the base row, its variant. */
+export interface OfficeThemeSwatchPosition {
+	column: number;
+	variant?: ThemePaletteVariant;
+}
 
 const COLUMNS = 10;
 
@@ -35,7 +41,10 @@ const COLUMNS = 10;
  * Colors...). `value` (`#rrggbb`, `'none'` or `'automatic'`) marks the current choice.
  *
  * `themeNames` renames the ten columns and `variantLabel` names their variants (for a translated
- * product). Choosing emits `office-color-pick`
+ * product). A product that computes its own swatches sets `palette` instead (one column per
+ * colour it can resolve, each with five variants), and one that stores theme references marks
+ * the current swatch with `selectedTheme`. An empty `standardColors` leaves out Standard Colors.
+ * Choosing emits `office-color-pick`
  * `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a
  * product can save a theme reference instead of the colour); the More Colors command emits
  * `office-color-more`. Arrow keys move through the swatches and commands, Home and End jump to
@@ -47,6 +56,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 	static override properties = {
 		themeColors: { attribute: false },
 		themeNames: { attribute: false },
+		palette: { attribute: false },
+		selectedTheme: { attribute: false },
 		variantLabel: { attribute: false },
 		extraColors: { attribute: false },
 		standardColors: { attribute: false },
@@ -67,6 +78,10 @@ export class OfficeUiColorGrid extends OfficeElement {
 	declare themeNames: readonly string[] | null;
 	/** Names a variant swatch (a translated "Accent 1, Lighter 80%"); English when unset. */
 	declare variantLabel: ((column: string, variant: ThemePaletteVariant) => string) | null;
+	/** The Theme Colors grid as the product computes it; replaces `themeColors` and its names. */
+	declare palette: readonly ThemePaletteColumn[] | null;
+	/** Marks this Theme Colors swatch, and `value` then marks no swatch. */
+	declare selectedTheme: OfficeThemeSwatchPosition | null;
 	/** One more row of theme-bound swatches under the variants. */
 	declare extraColors: readonly ThemePaletteSwatch[];
 	declare standardColors: readonly ThemePaletteSwatch[];
@@ -86,6 +101,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 		this.themeColors = null;
 		this.themeNames = null;
 		this.variantLabel = null;
+		this.palette = null;
+		this.selectedTheme = null;
 		this.extraColors = [];
 		this.standardColors = OFFICE_STANDARD_COLORS;
 		this.recentColors = [];
@@ -179,6 +196,14 @@ export class OfficeUiColorGrid extends OfficeElement {
 	protected override render() {
 		const disabled = present(this.disabled);
 		const value = this.value ? (normalizePaletteHex(this.value) ?? this.value) : null;
+		const position = this.selectedTheme;
+		const checked = (item: ThemePaletteSwatch, source: OfficeColorSource, column: number) =>
+			position
+				? source === 'theme' &&
+					column === position.column &&
+					item.variant?.kind === position.variant?.kind &&
+					item.variant?.percent === position.variant?.percent
+				: value === item.hex;
 		let row = 0;
 		const command = (text: string, name: string, checked: boolean | undefined, run: () => void) =>
 			html`<button
@@ -204,7 +229,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 				data-column=${column}
 				title=${item.label}
 				aria-label=${item.label}
-				aria-checked=${String(value === item.hex)}
+				aria-checked=${String(checked(item, source, column))}
 				style=${`--swatch:${item.hex}`}
 				?disabled=${disabled}
 				@click=${() =>
@@ -226,9 +251,13 @@ export class OfficeUiColorGrid extends OfficeElement {
 			row++;
 			return result;
 		};
-		const palette = buildThemePalette(this.themeColors ?? undefined, this.themeNames ?? undefined);
+		const palette =
+			this.palette ??
+			buildThemePalette(this.themeColors ?? undefined, this.themeNames ?? undefined);
 		const extra = (this.extraColors ?? []).slice(0, COLUMNS);
-		const name = this.variantLabel;
+		// A product's own palette already names its swatches.
+		const name = this.palette ? null : this.variantLabel;
+		const standard = this.standardColors ?? OFFICE_STANDARD_COLORS;
 		const variants = (index: number) =>
 			palette.map((column) => {
 				const item = column.variants[index]!;
@@ -261,8 +290,11 @@ export class OfficeUiColorGrid extends OfficeElement {
 			)}
 			<div class="variants">${[0, 1, 2, 3, 4].map((index) => cells(variants(index), 'theme'))}</div>
 			${extra.length ? cells(extra, 'extra') : nothing}
-			<div class="heading">${this.standardHeading}</div>
-			${cells(this.standardColors ?? OFFICE_STANDARD_COLORS, 'standard')}
+			${
+				standard.length
+					? html`<div class="heading">${this.standardHeading}</div> ${cells(standard, 'standard')}`
+					: nothing
+			}
 			${
 				recent.length
 					? html`<div class="heading">${this.recentHeading}</div> ${cells(recent, 'recent')}`
