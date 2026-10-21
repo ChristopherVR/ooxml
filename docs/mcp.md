@@ -48,6 +48,9 @@ Importing a package never starts a stdio transport; each CLI does so explicitly.
   10,000 cells, default 2,000, with per-sheet totals and omitted counts), `xlsx_find` (at most
   1,000 matches plus the total) and `xlsx_read_table` (at most 10,000 cells); then
   `xlsx_create` and `xlsx_set_cells` (at most 10,000 inputs, recalculated by the core).
+  `xlsx_propose_edits` (read-only: the diff of a list of edits and a sealed proposal) and
+  `xlsx_apply_proposal` (applies an approved proposal to the unchanged file), see
+  `docs/agent-edit-review.md`.
 - Visio: `visio_inspect` (binary image payloads omitted) and `visio_edit`, an atomic batch of
   the supported text and conservative geometry edits.
 
@@ -68,9 +71,6 @@ match case, whole cell, `*` `?` `~` wildcards, optionally one sheet or range) an
 1,000 matches, each with its sheet, address and the same cell view, plus the total count.
 `xlsx_read_table` (`readXlsxTable`) reads a table by name (ignoring case, as Excel does): its sheet, range, header
 and totals rows, column names and cells (at most 10,000, as a range read).
-`proposeXlsxEdits` and `applyXlsxProposal` let agent edits land as a reviewable diff: the edits
-are compared before anything is saved, and only an approved, unaltered proposal is applied to the
-unchanged file (see `docs/agent-edit-review.md`).
 
 The existing PowerPoint MCP keeps its established tool set and names. Its server
 exports registration and accepts a root directory for composition. Its model

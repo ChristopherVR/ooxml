@@ -78,8 +78,12 @@ format-neutral half. A format adds its edit type, an apply function and a diff. 
 native review flow: `suggestDocxRunText` writes tracked changes the user accepts or rejects in Word
 or the suite's editor.
 
-## MCP
+## Tools
 
-The tools belong to `viewers/xlsx/mcp` (see `docs/mcp.md`), which depends on the published core,
-so they land after the core release that ships these functions: `xlsx_propose_edits` (read-only:
-returns the report and the proposal) and `xlsx_apply_proposal`.
+The headless tool list (`xlsxTools` in `ooxml-core/automation`, see `docs/mcp.md`) has both
+steps: `xlsx_propose_edits` is a read tool returning the report, the number of differences,
+`truncated`, `notCompared` and the proposal; `xlsx_apply_proposal` is an edit tool taking that
+proposal unchanged. Their results leave out the per-cell styles of the full comparison to stay
+small; call `proposeXlsxEdits` directly for the structured `comparison`. A host gives the user the
+report between the two calls; an MCP client shows it as the propose tool's result before the
+apply call, which is not read-only, asks for approval.

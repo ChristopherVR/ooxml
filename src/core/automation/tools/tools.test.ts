@@ -112,3 +112,26 @@ test('Word tools inspect, edit and suggest through the same definitions', async 
 	]);
 	expect(await read('docx_list_form_fields', bytes, {})).toMatchObject({ fields: [] });
 });
+
+test('spreadsheet edits can be proposed, reviewed and then applied', async () => {
+	const bytes = await createXlsxFromSheets([{ name: 'Data', rows: [[1, '=A1*2']] }]);
+	const propose = tool('xlsx_propose_edits');
+	const apply = tool('xlsx_apply_proposal');
+	if (propose.kind !== 'read' || apply.kind !== 'edit') throw new Error('Unexpected tool kinds');
+	expect(propose.jsonSchema()).toMatchObject({ required: ['edits'] });
+	const proposed = (await propose.run(bytes, {
+		edits: [{ op: 'setCells', sheet: 0, cells: [{ address: 'A1', input: '4' }] }],
+	})) as { proposal: unknown; report: string; differences: number };
+	expect(proposed.report).toContain('A1 entered value: 1 -> 4');
+	expect(proposed.report).toContain('B1 calculated value: 2 -> 8');
+	expect(proposed.differences).toBe(2);
+	const proposal = JSON.parse(JSON.stringify(proposed.proposal));
+	const applied = (await apply.run(bytes, { proposal })) as { bytes: Uint8Array; report: string };
+	expect(applied.report).toBe(proposed.report);
+	const reread = await read('xlsx_read_range', applied.bytes, { sheetIndex: 0, range: 'A1:B1' });
+	expect(reread.cells).toMatchObject([{ value: 4 }, { value: 8 }]);
+	await expect(apply.run(applied.bytes, { proposal })).rejects.toThrow('document changed');
+	await expect(
+		propose.run(bytes, { edits: [{ op: 'deleteSheet', sheet: 0, extra: 1 }] }),
+	).rejects.toThrow(/Invalid xlsx_propose_edits parameters/);
+});
