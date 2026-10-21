@@ -175,11 +175,55 @@ describe('content controls in the editor', () => {
 		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
 		// jsdom has no ClipboardEvent; the paste reads nothing else from the event.
 		view.pasteHTML(`<p>${span.outerHTML}</p>`, new Event('paste') as ClipboardEvent);
+		const pasted = controlSpans(view.state.doc);
+		expect(pasted.map((item) => item.control.id)).toEqual(['4321']);
+		// A paragraph brings no block control: only an inline control is read back from HTML.
+		const block = document.createElement('p');
+		Object.assign(block.dataset, { sdtBlock: '77', sdtKind: 'richText', sdt: span.dataset.sdt });
+		block.textContent = 'Block';
+		view.pasteHTML(block.outerHTML, new Event('paste') as ClipboardEvent);
 		expect(controlSpans(view.state.doc).map((item) => item.control.id)).toEqual(['4321']);
+		// The paste takes off the page's verbatim properties: the document holds none like them.
+		expect(pasted[0]!.control.sourceXml).toBeUndefined();
 		const xml = await savedXml(loaded, view);
 		expect(xml).toContain('<w:t>Pasted</w:t>');
+		expect(xml).toContain('<w:t>Block</w:t>');
 		expect(xml).not.toContain('INCLUDEPICTURE');
 		expect(xml).not.toContain('w:bogus');
+		view.destroy();
+		host.remove();
+	});
+
+	it('keeps the verbatim properties of a control copied within the document', async () => {
+		const { view, host } = await open();
+		const source = controlSpans(view.state.doc).find((span) => span.control.sourceXml)!;
+		const { dom } = view.serializeForClipboard(view.state.doc.slice(source.from, source.to));
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		// jsdom has no ClipboardEvent; the paste reads nothing else from the event.
+		view.pasteHTML(dom.innerHTML, new Event('paste') as ClipboardEvent);
+		const copies = controlSpans(view.state.doc).filter(
+			(span) => span.control.id === source.control.id && span.from !== source.from,
+		);
+		expect(copies.length).toBeGreaterThan(0);
+		expect(copies.every((span) => span.control.sourceXml === source.control.sourceXml)).toBe(true);
+		view.destroy();
+		host.remove();
+	});
+
+	it('keeps the verbatim properties of a control cut and pasted back, as when it moves', async () => {
+		const { view, host } = await open();
+		const source = controlSpans(view.state.doc).find(
+			(span) => span.control.sourceXml && !span.control.lock,
+		)!;
+		// A cut serializes the selection for the clipboard, then deletes it.
+		const { dom } = view.serializeForClipboard(view.state.doc.slice(source.from, source.to));
+		view.dispatch(view.state.tr.delete(source.from, source.to));
+		const held = (doc: typeof view.state.doc) =>
+			controlSpans(doc).filter((span) => span.control.sourceXml === source.control.sourceXml);
+		expect(held(view.state.doc)).toEqual([]);
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		view.pasteHTML(dom.innerHTML, new Event('paste') as ClipboardEvent);
+		expect(held(view.state.doc).map((span) => span.control.id)).toContain(source.control.id);
 		view.destroy();
 		host.remove();
 	});
