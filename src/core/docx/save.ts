@@ -21,6 +21,7 @@ import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { refreshStyleRefFields } from './style-ref-fields';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
@@ -42,6 +43,23 @@ function newDocument(): XmlDocument {
 	return parseXml(
 		'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body/></w:document>',
 	);
+}
+
+/**
+ * `model` with its header and footer STYLEREF results brought up to date, or undefined when none
+ * changes. Word updates those fields as it draws each page, so a saved header should not keep a
+ * stale result; a part the writer cannot rebuild with the new results keeps the ones it has, and
+ * a model the update cannot read is saved as it is: the update never makes a save fail.
+ */
+function headerFooterResults(model: DocumentModel): DocumentModel | undefined {
+	try {
+		const refreshed = refreshStyleRefFields(model);
+		if (refreshed === model) return undefined;
+		assertValidDocumentModel(refreshed);
+		return refreshed;
+	} catch {
+		return undefined;
+	}
 }
 
 export async function saveDocx(
@@ -127,6 +145,7 @@ export async function saveDocx(
 		binding?.base ?? { ...model, sections: [] },
 		pendingMedia,
 		docPrIds,
+		headerFooterResults(model),
 	);
 	// A new document starts without notes, so every note is created along with its part.
 	await applyNoteEdits(
