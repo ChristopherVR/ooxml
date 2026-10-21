@@ -456,6 +456,57 @@ describe('row and cell content controls on save', () => {
 		);
 	});
 
+	it('writes cells given one control under an id Word cannot read as one control', async () => {
+		// Such an id is not written (a control pasted from another page keeps the one it came with
+		// when the document has none like it), so the cells after the first join it by the model's.
+		for (const id of ['99999999999', 'sdt-gen-9']) {
+			const loaded = await hand(grid(row(`${label('A')}${label('B')}`)));
+			for (const cell of tableOf(loaded.model.blocks).rows[0]!)
+				cell.contentControl = { id, level: 'cell', kind: 'richText', alias: 'Pair' };
+			const xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml.match(/<w:sdt>/g)).toHaveLength(1);
+			expect(xml).toContain(
+				`<w:sdt><w:sdtPr><w:alias w:val="Pair"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}</w:sdtContent></w:sdt>`,
+			);
+		}
+		// One that another w:sdt has is given a new id, which the cells after it join.
+		const taken = await hand(
+			grid(
+				row(`${label('A')}${label('B')}`) +
+					row(
+						`<w:sdt><w:sdtPr><w:id w:val="99999999999"/></w:sdtPr><w:sdtContent>${label('C')}` +
+							`</w:sdtContent></w:sdt>${label('D')}`,
+					),
+			),
+		);
+		for (const cell of tableOf(taken.model.blocks).rows[0]!)
+			cell.contentControl = { id: '99999999999', level: 'cell', kind: 'richText' };
+		const takenXml = await documentXml(await taken.save(taken.model));
+		expect(takenXml.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(takenXml).toMatch(
+			new RegExp(
+				`<w:tr><w:sdt><w:sdtPr><w:id w:val="-?\\d{1,10}"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}</w:sdtContent>`,
+			),
+		);
+		// A control without an id of its own, as a remote peer could give one, joins none.
+		const loose = await hand(
+			grid(
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="None"/></w:sdtPr><w:sdtContent>${label('A')}` +
+						`</w:sdtContent></w:sdt>${label('B')}`,
+				),
+			),
+		);
+		tableOf(loose.model.blocks).rows[0]![1]!.contentControl = {
+			level: 'cell',
+			kind: 'richText',
+			alias: 'Own',
+		} as unknown as ContentControl;
+		const looseXml = await documentXml(await loose.save(loose.model));
+		expect(looseXml.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(looseXml).toContain(`<w:alias w:val="Own"/></w:sdtPr><w:sdtContent>${label('B')}`);
+	});
+
 	it('writes only valid properties for a control the model gives a cell', async () => {
 		// A cell pasted from another page, a remote peer or the model API can hold any values: what
 		// Word cannot read is not written (w:id is optional, so a bad id is left out).

@@ -23,7 +23,8 @@ function enclosingSdt(element: XmlElement): XmlElement | undefined {
 const renumbered = new WeakSet<XmlElement>();
 /**
  * The model's id of each `w:sdt` written under a new id because another `w:sdt` has the model's
- * (a new control's, or the rest of a split one): the rows or cells after it with that id join it.
+ * (a new control's, or the rest of a split one), or under none because Word cannot read it: the
+ * rows or cells after it with that id join it.
  */
 const createdFor = new WeakMap<XmlElement, string>();
 const idOf = (sdt: XmlElement): string | undefined => getW(first(first(sdt, 'sdtPr'), 'id'), 'val');
@@ -124,19 +125,22 @@ export function placeTableControl(
 		before = before.previousSibling;
 	}
 	const shared = isSdt(before as XmlElement | null) && sdtContent(before as XmlElement);
-	const id = /^-?\d+$/.test(next.id) ? next.id : undefined;
+	const { id } = next;
+	// A control without an id of its own (a remote peer can give one) joins none.
 	if (
 		shared &&
-		id !== undefined &&
+		typeof id === 'string' &&
 		(createdFor.get(before as XmlElement) ?? idOf(before as XmlElement)) === id
 	) {
 		for (const node of [...between, element]) shared.appendChild(node);
 		return;
 	}
 	// Ids are unique in a document: a control given the id of another `w:sdt` gets a new one.
-	const taken = id !== undefined && controlIds(doc).has(id);
+	const taken = controlIds(doc).has(id);
 	const fresh = createContentControl(doc, taken ? { ...next, id: unusedControlId(doc) } : next);
-	if (taken) createdFor.set(fresh.sdt, id);
+	// Written under another id, or none when Word cannot read the model's, it is still the one the
+	// rows or cells after it with the model's id join.
+	if (idOf(fresh.sdt) !== id) createdFor.set(fresh.sdt, id);
 	element.parentNode.replaceChild(fresh.sdt, element);
 	fresh.content.appendChild(element);
 }
