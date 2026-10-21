@@ -1,18 +1,20 @@
 # Compose a diagram viewer
 
 `visio-react-viewer` exports `useViewerBuildingBlocks`, `DiagramCanvas`, and optional
-`Toolbar`, `PageNavigation` and `Inspector`. These reuse ViewerController and the existing
-SVG renderer and selection inspector.
+`Toolbar`, `PageNavigation`, `Inspector` and `ShapesPane`. These reuse ViewerController, the
+existing SVG renderer, the selection inspector and the stencil window. Every other framework
+has the same pieces (see below), including vanilla JavaScript.
 
 ```tsx
 import { DiagramCanvas, PageNavigation, useViewerBuildingBlocks } from 'visio-react-viewer';
 
 function EmbeddedDiagram({ content, canEdit, handle }) {
-	const { canvasProps, toolbarProps, loading, error } = useViewerBuildingBlocks({
+	const { canvasProps, toolbarProps, loading, error, markClean } = useViewerBuildingBlocks({
 		content,
 		canEdit,
 		handle,
 		onDirtyChange: (dirty) => console.log(dirty),
+		onOpenSettings: () => openMySettingsDialog(),
 	});
 	return (
 		<>
@@ -29,21 +31,81 @@ ViewerController; use `load`, `applyEdits`, `exportVsdx` and its reactive `state
 for host persistence. `onDocumentChange`, `onDirtyChange` and `onDocumentError` are optional.
 Give the canvas container a height and keep it mounted while loading.
 
-The flat `toolbarProps` exposes page, zoom, selection, effective edit availability, undo/redo,
-fit, search and the supported duplicate/group/ungroup/plain-text editing callbacks.
-`Inspector` consumes `inspectorProps`. The canvas itself mounts no title bar, ribbon, page
-controls, stencil/shape panes, inspector, file UI, recovery, settings or sharing dialogs.
-Hosts own those optional workflows. Existing VSDX editing/protection limits still apply.
+The flat `toolbarProps` is the whole contract a custom UI needs; every field comes from the
+existing controller, so nothing is stored twice:
 
-`canEdit={false}` is also available on the full viewer in every framework. It rejects local
-mutation methods and editing gestures, including pending edits when permission is revoked.
-Page navigation, selection, search, scrolling/pan, zoom, fit and serialization remain available.
-Source-format editing support is separate from host permission.
+| Field                                                                                                                               | Meaning                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mode`, `canEdit`                                                                                                                   | `mode` is `'edit'` only when the host granted `canEdit` **and** the open drawing is a source-backed `.vsdx` (a legacy `.vsd` or a model-only drawing reports `'view'`). `canEdit` is the same permission, further false while loading or while an edit is running. |
+| `pageIndex`, `pages`, `zoom`, `selection`                                                                                           | Current page, page list, zoom factor and selected shapes.                                                                                                                                                                                                          |
+| `canUndo`, `canRedo`, `canDuplicate`, `canGroup`, `canUngroup`, `canDelete`, `canCut`, `canCopy`, `canPaste`                        | Enabled flags. Edit actions are false while read-only; `canCopy` only needs a selection.                                                                                                                                                                           |
+| `canZoomIn`, `canZoomOut`                                                                                                           | Zoom limits (10% to 800%).                                                                                                                                                                                                                                         |
+| `search`                                                                                                                            | `{ query, resultCount, activeIndex, truncated }` from the controller's search. `activeIndex` is -1 until the host navigates.                                                                                                                                       |
+| `tool`, `tools`, `canDraw`                                                                                                          | Active canvas tool (`'pointer'` or one of `rectangle`, `ellipse`, `line`, `freeform`, `arc`, `pencil`), the list with localized labels and active flags, and whether drawing is allowed.                                                                           |
+| `labels`                                                                                                                            | Typed, localized labels (`DiagramToolbarLabels`), one entry for every control, in `en`, `de`, `es`, `fr` and `zh-CN`.                                                                                                                                              |
+| `onPageChange`, `onZoomChange`, `onZoomIn`, `onZoomOut`, `onFit`                                                                    | Viewing actions, always available.                                                                                                                                                                                                                                 |
+| `onUndo`, `onRedo`, `onDuplicate`, `onGroup`, `onUngroup`, `onDelete`, `onCut`, `onCopy`, `onPaste`, `onToolChange`, `onTextChange` | Editing actions. They keep the controller's permission, loading and source-format checks. Clipboard actions use the mounted canvas and the browser clipboard, so they need a user gesture.                                                                         |
+| `onSearchChange`, `onNextSearchResult`, `onPreviousSearchResult`                                                                    | Search, always available.                                                                                                                                                                                                                                          |
 
-Every framework package exports `mountDiagramCanvas(host, controller)`,
-`diagramToolbarProps(controller, fit, locale?)` and `mountDiagramInspector(host, controller)`.
-Subscribe through the existing controller, and call returned disposers on unmount. No second
-state store is introduced.
+`Inspector` consumes `inspectorProps`, and `ShapesPane` consumes `shapesProps`. The canvas
+itself mounts no title bar, ribbon, page controls, shape/stencil pane, inspector, file UI,
+recovery, settings or sharing dialogs. Existing VSDX editing/protection limits still apply.
+
+## Permission and mode
+
+`canEdit` follows the PowerPoint building blocks: the drawing is **read-only until the host
+passes `canEdit: true`**, and the permission is applied when the controller is created, before the
+canvas mounts, so nothing is briefly editable (the full viewer keeps its editable default).
+Revoking it cancels pending edits, drops the draw tool and removes the resize, rotate and
+end-point handles. Page navigation, selection, search, scrolling/pan, zoom, fit, copy and
+serialization remain available. Source-format editing support is separate from host permission,
+which is why `mode` also checks it.
+
+## What the canvas can do
+
+The standalone canvas uses the full viewer's own gestures (one shared wiring, not a copy): move,
+inline text (double-click, F2 or typing on a selected shape), resize and rotate handles, line end
+points, and the draw tools picked with `onToolChange`. Delete, Ctrl+Z, Ctrl+Y and Escape (leave
+the draw tool) work on the focused canvas, and the browser's copy/cut/paste events are honoured.
+Every one of them is gated by `canEdit`, exactly like the full viewer. Edit refusals are announced
+in a polite live region inside the canvas.
+
+## Optional library UI
+
+`Toolbar` renders every control `toolbarProps` supports: history, zoom and fit, duplicate, group,
+ungroup and delete, cut/copy/paste, the drawing tools, search and the host dialog buttons below,
+with enabled state. It is optional: pass `include` (`'file' | 'history' | 'zoom' | 'selection' |
+'clipboard' | 'tools' | 'search'`) to show only some groups, or skip it and wire `toolbarProps` to your
+own controls. `PageNavigation` is the page selector.
+
+`ShapesPane` is the Shapes (stencil) window: Search shapes, the drawing's Document Stencil and the
+built-in stencils. Clicking a master, or dropping it on the mounted canvas, goes through the
+same creation flow as the full viewer, so it obeys the same permission. Mount the canvas on the
+same controller; without a canvas, masters are added at the page centre.
+
+## Host-owned dialogs
+
+As in PowerPoint's `onOpen...` callbacks, dialogs belong to the host and the library never mounts
+one in surface mode. Pass any of `onOpenFile`, `onOpenPageSetup`, `onOpenSettings` and
+`onOpenShareDialog` to the hook or factory. They come back on `toolbarProps` with
+`canOpenFile`, `canOpenPageSetup`, `canOpenSettings` and `canOpenShareDialog`; a callback you
+omit is absent and its flag is `false` (not enabled), and the library `Toolbar` shows a button
+only for the ones you supplied.
+
+## Persistence and dirty tracking
+
+`controller.exportVsdx()` returns the bytes and never changes `dirty`. After the host has persisted
+them it calls `markClean()` (on the hook result, the controller or the handle). That clears
+`state.edit.dirty`, fires `onDirtyChange(false)` and a `document-change` event of kind `save`.
+Later edits and undo steps are measured from that saved point.
+
+## Packages
+
+Every framework package re-exports `ooxml-ui/visio`, so `mountDiagramCanvas(host, controller)`,
+`mountDiagramInspector(host, controller)`, `mountDiagramShapes(host, controller, { locale? })`,
+`diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` and `fitDiagramCanvas` are available
+from any of them; they need an `ooxml-ui` runtime that contains them. Subscribe through the existing
+controller and call the returned disposers on unmount. No second state store is introduced.
 
 The composition API requires the matching `ooxml-ui` runtime, released with these additions.
 Existing full-viewer imports remain compatible with the previous published runtime. An older
@@ -101,7 +163,8 @@ function EmbeddedDiagram(props: { content?: Uint8Array; canEdit?: boolean }) {
 
 `toolbarProps`, `state`, `loading`, `error` and `mode` are accessors. The controller is
 available as `blocks.controller`; disposal follows the Solid owner. `PageNavigation`
-accepts the same flat toolbar descriptor and `Inspector` accepts `inspectorProps`.
+accepts the same flat toolbar descriptor, `Inspector` accepts `inspectorProps` and
+`ShapesPane` accepts `shapesProps`.
 
 ### Svelte 5
 
@@ -120,8 +183,28 @@ accepts the same flat toolbar descriptor and `Inspector` accepts `inspectorProps
 
 The options argument accepts a readable store or a plain initial object; plain-object hosts
 can call `blocks.update(options)` from a rune effect. `toolbarProps`, `state`, `loading`,
-`error` and `mode` are readable stores. `PageNavigation` takes `toolbarProps` and `Inspector`
-takes `inspectorProps`. The controller is available as `blocks.controller`.
+`error` and `mode` are readable stores. `PageNavigation` takes `toolbarProps`, `Inspector`
+takes `inspectorProps` and `ShapesPane` takes `shapesProps`. The controller is available as `blocks.controller`.
+
+### Vanilla JavaScript
+
+```ts
+import { createViewerBuildingBlocks } from 'visio-vanilla-viewer';
+const blocks = createViewerBuildingBlocks({ canEdit: false, onOpenSettings: openSettings });
+blocks.mountCanvas(document.querySelector('#canvas')!);
+blocks.mountToolbar(document.querySelector('#toolbar')!, ['history', 'zoom']);
+blocks.mountPageNavigation(document.querySelector('select')!);
+blocks.mountInspector(document.querySelector('#inspector')!);
+blocks.mountShapes(document.querySelector('#shapes')!);
+blocks.update({ content: bytes, canEdit: true });
+blocks.subscribe(() => render(blocks.toolbarProps, blocks.mode));
+// later: blocks.markClean(); blocks.destroy();
+```
+
+The vanilla factory runs the same session as the other adapters. `toolbarProps`, `state`,
+`loading`, `error` and `mode` are getters, `subscribe(listener)` reports every state or option
+change, and each `mount...` helper returns its disposer; `destroy()` disposes whatever is
+still mounted. The mounted toolbar updates its elements in place, so focus survives refreshes.
 
 ### Angular
 
@@ -141,7 +224,7 @@ import {
 })
 export class EmbeddedDiagram implements OnChanges {
 	@Input() content?: Uint8Array;
-	@Input() canEdit = true;
+	@Input() canEdit = false;
 	readonly blocks = inject(ViewerBuildingBlocks);
 	ngOnChanges() {
 		this.blocks.update({ content: this.content, canEdit: this.canEdit });
@@ -151,15 +234,15 @@ export class EmbeddedDiagram implements OnChanges {
 
 The scoped service exposes readonly `state`, `toolbarProps`, `loading`, `error` and `mode`
 signals, the existing controller, and `documentChange`, `dirtyChange` and `documentError`
-event emitters. `DiagramCanvasComponent`, `ToolbarComponent`, `PageNavigationComponent`
-and `InspectorComponent` inject that owner. Place the provider on each editor host, rather
+event emitters. `DiagramCanvasComponent`, `ToolbarComponent`, `PageNavigationComponent`,
+`InspectorComponent` and `ShapesPaneComponent` inject that owner. Place the provider on each editor host, rather
 than application-wide, to isolate multiple documents. Alternatively wrap controls in
 `<visio-building-blocks [content]="bytes" [canEdit]="allowed" (dirtyChange)="saveNeeded = $event">`
 using `ViewerBuildingBlocksComponent`, which supplies inputs, outputs and a scoped provider.
 
 All optional controls render native framework templates. Hosts may omit them and call the
 flat toolbar actions from their own UI. Toolbar callbacks retain the controller's permission,
-loading and source-format checks. Browser regression tests cover all four native compositions,
+loading and source-format checks. Browser regression tests cover all six native compositions,
 including editing, undo/redo, permission revocation, serialization/reload, error recovery and teardown.
 
 For a host already using Angular signals, `createViewerBuildingBlocks(() => ({

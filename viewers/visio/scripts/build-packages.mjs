@@ -188,7 +188,7 @@ export default VisioViewer;
 				"export * from './runtime.js';\nexport { default, default as VisioViewer } from './VisioViewer.svelte';\n",
 			);
 			copyDeclarations(resolve(declarations, 'packages/svelte'), resolve(types, 'packages/svelte'));
-			const names = ['DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector'];
+			const names = ['DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector', 'ShapesPane'];
 			for (const name of names) {
 				const source = readFileSync(resolve(directory, `src/${name}.svelte`), 'utf8').replaceAll(
 					'../../bindings/src/building-blocks',
@@ -200,10 +200,14 @@ export default VisioViewer;
 						? '{ mount(node: HTMLElement | null): void; class?: string }'
 						: name === 'Inspector'
 							? '{ controller: ViewerController }'
-							: '{ toolbarProps: DiagramToolbarProps }';
+							: name === 'ShapesPane'
+								? '{ controller: ViewerController; locale?: string | undefined }'
+								: name === 'Toolbar'
+									? '{ toolbarProps: DiagramToolbarProps; include?: readonly ToolbarGroupId[] }'
+									: '{ toolbarProps: DiagramToolbarProps }';
 				writeFileSync(
 					resolve(outDir, `${name}.svelte.d.ts`),
-					`import type { Component } from 'svelte';\nimport type { ViewerController, DiagramToolbarProps } from './runtime.js';\ndeclare const component: Component<${props}>;\nexport default component;\n`,
+					`import type { Component } from 'svelte';\nimport type { ViewerController, DiagramToolbarProps, ToolbarGroupId } from './runtime.js';\ndeclare const component: Component<${props}>;\nexport default component;\n`,
 				);
 			}
 			const exports = names
