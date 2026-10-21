@@ -125,4 +125,31 @@ describe('STYLEREF in headers and footers, page by page', () => {
 		expectParagraph(locked.blocks[0]).runs[0]!.fieldFlags = { locked: true };
 		expect(refs.content(locked, 1)).toBe(locked);
 	});
+
+	it('fills a field in a table nested in a header table cell', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const header = table(
+			cell(
+				table(cell(paragraph('', undefined, complexField('STYLEREF 1', ['Old'])))) + paragraph(''),
+			),
+		);
+		const { model, refs } = await layout(
+			paragraph('Alpha', 'Heading1') + PAGE_BREAK + paragraph('Beta', 'Heading1'),
+			header,
+		);
+		const content = must(at(model.sections, 0).headers?.default, 'header');
+		const nestedText = (page: number) => {
+			const outer = refs.content(content, page).blocks[0];
+			if (outer?.type !== 'table') throw new Error('expected the header table');
+			const inner = at(at(outer.rows, 0), 0).sourceBlocks?.find((block) => block.type === 'table');
+			if (inner?.type !== 'table') throw new Error('expected the nested table');
+			return expectParagraph(at(at(inner.rows, 0), 0).paragraphs[0])
+				.runs.map((run) => run.text)
+				.join('');
+		};
+		expect([nestedText(0), nestedText(1)]).toEqual(['Alpha', 'Beta']);
+	});
 });

@@ -85,6 +85,34 @@ describe('saving STYLEREF fields', () => {
 		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
 	});
 
+	it('refreshes a header field in a table nested in a cell', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: table(
+				cell(
+					paragraph('Number') +
+						table(
+							cell(paragraph('', undefined, complexField('STYLEREF "Doc Number"', ['DOC-1']))),
+						) +
+						// A field in the cell's own paragraph, beside the nested table.
+						paragraph('', undefined, complexField('STYLEREF "Doc Number"', ['DOC-1'])),
+				),
+			),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-0042'));
+		const header = (await parts(saved)).get('word/header1.xml')!;
+		expect(header).toMatch(
+			/<w:tbl>.*<w:tbl>.*>DOC-0042<\/w:t>.*<\/w:tbl>.*>DOC-0042<\/w:t>.*<\/w:tbl>/s,
+		);
+		expect(header).not.toContain('>DOC-1<');
+		expect(header).toContain('>Number<');
+	});
+
 	it('saves without the refresh when the header cannot be rebuilt', async () => {
 		const original = await styleRefFixture({
 			body: paragraph('DOC-1', 'DocNumber'),

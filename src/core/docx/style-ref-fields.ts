@@ -7,6 +7,7 @@ import type {
 	HeaderFooterContent,
 	HeaderFooterSlots,
 	Paragraph,
+	Table,
 	TextRun,
 } from './model';
 import {
@@ -153,6 +154,30 @@ function paragraphWithResults(paragraph: Paragraph, evaluate: StyleRefEvaluator)
 }
 
 /**
+ * A table with its cells' results set, in the tables nested in a cell too (they are the cell's
+ * source blocks; its own paragraphs are `paragraphs`). The table itself when nothing changed.
+ */
+function tableWithResults(table: Table, evaluate: StyleRefEvaluator): Table {
+	let changed = false;
+	const rows = table.rows.map((row) =>
+		row.map((cell) => {
+			const paragraphs = cell.paragraphs.map((item) => paragraphWithResults(item, evaluate));
+			const sourceBlocks = cell.sourceBlocks?.map((item) =>
+				item.type === 'table' ? tableWithResults(item, evaluate) : item,
+			);
+			if (
+				paragraphs.every((item, index) => item === cell.paragraphs[index]) &&
+				(sourceBlocks ?? []).every((item, index) => item === cell.sourceBlocks![index])
+			)
+				return cell;
+			changed = true;
+			return { ...cell, paragraphs, ...(sourceBlocks ? { sourceBlocks } : {}) };
+		}),
+	);
+	return changed ? { ...table, rows } : table;
+}
+
+/**
  * The blocks with every unlocked STYLEREF result that `evaluate` answers set to its answer.
  * Unchanged paragraphs and tables are returned as they are, so the writer keeps their XML.
  */
@@ -162,23 +187,12 @@ export function withStyleRefResults(
 ): Block[] {
 	let changed = false;
 	const next = blocks.map((block): Block => {
-		if (block.type === 'paragraph') {
-			const paragraph = paragraphWithResults(block, evaluate);
-			changed ||= paragraph !== block;
-			return paragraph;
-		}
-		let tableChanged = false;
-		const rows = block.rows.map((row) =>
-			row.map((cell) => {
-				const paragraphs = cell.paragraphs.map((item) => paragraphWithResults(item, evaluate));
-				if (paragraphs.every((item, index) => item === cell.paragraphs[index])) return cell;
-				tableChanged = true;
-				return { ...cell, paragraphs };
-			}),
-		);
-		if (!tableChanged) return block;
-		changed = true;
-		return { ...block, rows };
+		const updated =
+			block.type === 'paragraph'
+				? paragraphWithResults(block, evaluate)
+				: tableWithResults(block, evaluate);
+		changed ||= updated !== block;
+		return updated;
 	});
 	return changed ? next : (blocks as Block[]);
 }

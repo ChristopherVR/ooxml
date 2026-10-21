@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel, type Paragraph } from './index';
+import { cellSourceBlocks } from './cell-blocks';
+import { loadDocx, type Block, type DocumentModel, type Paragraph } from './index';
 import { refreshStyleRefFields } from './style-ref-fields';
 import { at, expectParagraph, must } from './test-support/access';
 import {
@@ -110,5 +111,44 @@ describe('refreshing STYLEREF results', () => {
 		expect(shown(expectParagraph(refreshed.blocks[0]))).toBe('Oak then Oak');
 		expect(shown(expectParagraph(refreshed.blocks[2]))).toBe('Ash, see Ash');
 		expect(shown(expectParagraph(refreshed.blocks[4]))).toBe('Pine');
+	});
+
+	it('updates fields in tables nested in a cell, in headers and in the body', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const nested = (instr: string) =>
+			table(
+				cell(
+					paragraph('Label') +
+						table(cell(paragraph('', undefined, complexField(instr, ['old'])))) +
+						paragraph(''),
+				),
+			);
+		const model = await load({
+			body: paragraph('DOC-7', 'DocNumber') + nested('STYLEREF "Doc Number"'),
+			header: nested('STYLEREF "Doc Number" \\* MERGEFORMAT'),
+		});
+		const fieldText = (blocks: readonly Block[]) => {
+			const found: string[] = [];
+			const visit = (items: readonly Block[]) => {
+				for (const block of items)
+					if (block.type === 'paragraph') {
+						if (block.runs.some((run) => run.field)) found.push(shown(block));
+					} else
+						for (const row of block.rows) for (const item of row) visit(cellSourceBlocks(item));
+			};
+			visit(blocks);
+			return found;
+		};
+		const header = must(at(model.sections, 0).headers?.default, 'header');
+		const refreshed = refreshStyleRefFields(model);
+		expect(fieldText(must(at(refreshed.sections, 0).headers?.default, 'header').blocks)).toEqual([
+			'DOC-7',
+		]);
+		expect(fieldText(header.blocks)).toEqual(['old']);
+		expect(fieldText(refreshed.blocks)).toEqual(['old']);
+		expect(fieldText(refreshStyleRefFields(model, { body: true }).blocks)).toEqual(['DOC-7']);
 	});
 });
