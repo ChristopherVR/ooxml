@@ -10,9 +10,8 @@ import {
 	typeOverPlaceholder,
 } from './content-control-commands';
 import { nodeControlOf, otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
-import { rowControlSpans } from './content-control-rows';
 import { controlSourcesOf, pastedControlSources } from './content-control-sources';
-import { controlSpans } from './content-control-spans';
+import { everyControlSpan } from './content-control-spans';
 import { removeEditedTemporaryControls } from './content-control-temporary';
 
 /** Remote collaboration transactions are applied as they arrive; the guard only filters local edits. */
@@ -59,10 +58,7 @@ function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
  */
 export function violatesControlLock(tr: Transaction, state: EditorState): boolean {
-	// Row controls are kept in the rows' properties, apart from `controlSpans`.
-	const locked = [...controlSpans(state.doc), ...rowControlSpans(state.doc)].filter(
-		(span) => span.control.lock,
-	);
+	const locked = everyControlSpan(state.doc).filter((span) => span.control.lock);
 	if (!locked.length) return false;
 	return tr.steps.some((step, index) => {
 		if (!isRangeStep(step)) return false;

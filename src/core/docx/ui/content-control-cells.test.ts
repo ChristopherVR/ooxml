@@ -737,6 +737,50 @@ describe('content controls around table cells in the editor', () => {
 		expect(violatesControlLock(rowLocked.tr.insertText('!', after), rowLocked)).toBe(false);
 	});
 
+	it('applies the lock of a block control around a table to the table', () => {
+		// The editor keeps a block control around a whole table on the table node: its content is
+		// the table, whose cells hold controls the commands operate past the lock guard.
+		const list = choice({ showingPlaceholder: false });
+		const around = (lock: ContentControl['lock']) =>
+			EditorState.create({
+				schema,
+				plugins: [contentControlPlugin()],
+				doc: schema.node('doc', null, [
+					schema.node(
+						'table',
+						{ contentControl: { id: '75', level: 'block', kind: 'richText', lock } },
+						[
+							schema.node('tableRow', null, [
+								schema.node('tableCell', null, [paragraph('Status', { id: 't1' })]),
+								schema.node('tableCell', { contentControl: list }, [
+									paragraph('Primary', { id: 't2' }),
+								]),
+							]),
+						],
+					),
+					paragraph('After'),
+				]),
+			});
+		const locked = around('contentLocked');
+		const table = locked.doc.firstChild!.nodeSize;
+		const after = locked.doc.content.size - 1;
+		expect(chooseListItem(locked, '61', 1)).toBeUndefined();
+		expect(violatesControlLock(locked.tr.insertText('!', 4), locked)).toBe(true);
+		expect(violatesControlLock(locked.tr.insertText('!', after), locked)).toBe(false);
+		// Its content cannot be edited, but the control can still be deleted whole.
+		expect(violatesControlLock(locked.tr.delete(0, table), locked)).toBe(false);
+		// One that may not be deleted keeps its content editable.
+		const fixed = around('sdtLocked');
+		expect(chooseListItem(fixed, '61', 1)).toBeDefined();
+		expect(violatesControlLock(fixed.tr.insertText('!', 4), fixed)).toBe(false);
+		expect(violatesControlLock(fixed.tr.delete(0, table), fixed)).toBe(true);
+		// Neither keeps the table from taking other properties (Table Properties).
+		for (const state of [locked, fixed]) {
+			const properties = state.tr.setNodeMarkup(0, undefined, state.doc.firstChild!.attrs);
+			expect(violatesControlLock(properties, state)).toBe(false);
+		}
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;

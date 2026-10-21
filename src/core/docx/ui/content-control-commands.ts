@@ -19,11 +19,10 @@ import {
 	type ContentControl,
 	type ContentControlKind,
 } from '../content-control-model';
-import { rowControlSpans } from './content-control-rows';
 import {
 	controlAt,
 	controlSpans,
-	tableControlSpans,
+	everyControlSpan,
 	type ControlSpan,
 } from './content-control-spans';
 
@@ -124,13 +123,13 @@ function replaceable(state: EditorState, span: ControlSpan): boolean {
 
 /**
  * Whether the content of `span` may be edited: by its own lock, and by those of the controls around
- * it (a row, cell or block control whose content is locked), since the commands go past the lock
- * guard.
+ * it (a row, cell or block control whose content is locked, one around a whole table included),
+ * since the commands go past the lock guard.
  * A group control is the exception: the controls in a group follow their own locks.
  */
 function editable(state: EditorState, span: ControlSpan): boolean {
 	if (!canEditControlContent(span.control)) return false;
-	return ![...controlSpans(state.doc), ...rowControlSpans(state.doc)].some(
+	return !everyControlSpan(state.doc).some(
 		(around) =>
 			around.control.kind !== 'group' &&
 			!canEditControlContent(around.control) &&
@@ -303,13 +302,7 @@ export function deleteToPlaceholder(
  * integers.
  */
 export const newControlId = (doc: ProseMirrorNode): string =>
-	freshControlId(
-		new Set(
-			[...controlSpans(doc), ...tableControlSpans(doc), ...rowControlSpans(doc)].map(
-				(span) => span.control.id,
-			),
-		),
-	);
+	freshControlId(new Set(everyControlSpan(doc).map((span) => span.control.id)));
 
 export interface NewControlOptions {
 	alias?: string;
