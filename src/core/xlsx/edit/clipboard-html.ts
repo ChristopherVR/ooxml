@@ -59,23 +59,34 @@ export function toHtml(cells: ClipboardCells, theme: ThemePalette): string {
 			for (let c = m.start.col; c <= m.end.col; c++)
 				if (r !== m.start.row || c !== m.start.col) covered.add(`${r},${c}`);
 	}
+	// Cells of a copied block share their format objects: one style attribute per format.
+	const styleAttrs = new Map<CellStyle | undefined, string>();
+	const styleAttr = (style: CellStyle | undefined): string => {
+		let attr = styleAttrs.get(style);
+		if (attr === undefined) {
+			const css = cssFor(style, theme);
+			styleAttrs.set(style, (attr = css ? `style="${escapeHtml(css)}"` : ''));
+		}
+		return attr;
+	};
 	const rows: string[] = [];
 	for (let r = 0; r < cells.rows; r++) {
 		const tds: string[] = [];
 		for (let c = 0; c < cells.cols; c++) {
-			if (covered.has(`${r},${c}`)) continue;
+			const key = covered.size || spans.size || links.size ? `${r},${c}` : '';
+			if (covered.has(key)) continue;
 			const cell = cells.data[r]?.[c] ?? null;
 			const attrs: string[] = [];
-			const span = spans.get(`${r},${c}`);
+			const span = spans.get(key);
 			if (span && span.end.row > span.start.row)
 				attrs.push(`rowspan="${span.end.row - span.start.row + 1}"`);
 			if (span && span.end.col > span.start.col)
 				attrs.push(`colspan="${span.end.col - span.start.col + 1}"`);
 			if (cell && typeof cell.value === 'number') attrs.push(`x:num="${cell.value}"`);
-			const css = cssFor(cell?.style, theme);
-			if (css) attrs.push(`style="${escapeHtml(css)}"`);
+			const css = styleAttr(cell?.style);
+			if (css) attrs.push(css);
 			let text = escapeHtml(cell?.text ?? '').replace(/\n/g, '<br>');
-			const link = links.get(`${r},${c}`);
+			const link = links.get(key);
 			const href = htmlHref(link);
 			if (href)
 				text = `<a href="${escapeHtml(href)}"${link?.tooltip ? ` title="${escapeHtml(link.tooltip)}"` : ''}>${text}</a>`;

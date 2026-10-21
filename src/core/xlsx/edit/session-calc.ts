@@ -58,7 +58,7 @@ export class SessionCalculator {
 			}
 			this.calc.discardPreparation();
 			if (structural) this.staleGraph = true;
-			else this.dirty.push(...touchedCells(step));
+			else for (const cell of touchedCells(step)) this.dirty.push(cell);
 			return;
 		}
 		if (hint && !this.staleGraph) {
@@ -78,7 +78,7 @@ export class SessionCalculator {
 			this.calc.discardPreparation();
 			if (!this.enabled) return;
 			if (structural) this.staleGraph = true;
-			else this.dirty.push(...cells);
+			else for (const cell of cells) this.dirty.push(cell);
 			return;
 		}
 		this.recalc(structural, () => cells);

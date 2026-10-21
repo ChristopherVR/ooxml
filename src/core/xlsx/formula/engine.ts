@@ -1,6 +1,7 @@
 // The calc engine: the public API (full and incremental recalculation, invalidation, ad hoc
 // evaluation) over the recalculation core in engine-core.ts.
 import { cellKey } from '../address';
+import { changeAreas } from './change-areas';
 import { getCell } from '../cells';
 import type { Cell, CellValue, Workbook } from '../model';
 import { FormulaError } from './ast';
@@ -106,6 +107,7 @@ class Engine extends EngineStructure implements CalcEngine {
 			return;
 		}
 		const changed: Area[] = [];
+		const written: CellPosition[] = [];
 		let structural = false;
 		for (const change of changes) {
 			const sheet = this.workbook.sheets[change.sheet];
@@ -129,7 +131,9 @@ class Engine extends EngineStructure implements CalcEngine {
 				seeds.add(this.createNode(change.sheet, row, col, cell as Cell, false));
 				structural = true;
 			} else if (existing && formula) seeds.add(existing);
-			changed.push({ sheet: change.sheet, range: { start: { row, col }, end: { row, col } } });
+			written.push(change);
+			// A spill or array result overwritten here reruns its anchor; most workbooks have none.
+			if (!this.footprints.size) continue;
 			const anchors: FormulaNode[] = [];
 			this.footprintsBy().dependents(
 				change.sheet,
@@ -146,7 +150,9 @@ class Engine extends EngineStructure implements CalcEngine {
 		if (structural) this.graphChanged();
 		this.takeStructuralSeeds(seeds);
 		const reverse = this.reverse();
-		for (const area of changed) reverse.dependents(area.sheet, area.range, seeds);
+		// Formulas reading any changed cell: one query per rectangle of them, not per cell.
+		for (const area of [...changed, ...changeAreas(written)])
+			reverse.dependents(area.sheet, area.range, seeds);
 		for (const node of this.allNodes()) if (node.volatile) seeds.add(node);
 		this.run(seeds, false);
 	}
@@ -160,12 +166,20 @@ class Engine extends EngineStructure implements CalcEngine {
 		const prepared = this.prepared;
 		this.prepared = undefined;
 		if (!prepared) return false;
-		const changed = new Set(changes.map((c) => `${c.sheet}:${cellKey(c.row, c.col)}`));
 		const current = (node: FormulaNode): boolean =>
 			this.nodes.get(node.sheet)?.get(cellKey(node.row, node.col)) === node;
-		for (const node of prepared.dynamic) {
-			if (current(node) && !changed.has(`${node.sheet}:${cellKey(node.row, node.col)}`))
-				return false;
+		// Only a formula that can spill needs the changed cells looked up; most workbooks have none,
+		// and a bulk write changes far more cells than there are formulas.
+		const dynamic = prepared.dynamic.filter(current);
+		if (dynamic.length) {
+			const changed = new Map<number, Set<number>>();
+			for (const c of changes) {
+				let keys = changed.get(c.sheet);
+				if (!keys) changed.set(c.sheet, (keys = new Set()));
+				keys.add(cellKey(c.row, c.col));
+			}
+			for (const node of dynamic)
+				if (!changed.get(node.sheet)?.has(cellKey(node.row, node.col))) return false;
 		}
 		for (const node of prepared.unvalued) {
 			const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
