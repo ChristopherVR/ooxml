@@ -90,6 +90,24 @@ describe('content controls around table cells in the editor', () => {
 		expect(xml).not.toContain('INCLUDEPICTURE');
 	});
 
+	it('takes a control from pasted HTML only when it has the shape of one', () => {
+		// A page can put anything in data-sdt: what is not a control (an object with an id and a
+		// kind) is not taken, and one that is takes the level of where it is.
+		const html = document.createElement('div');
+		html.innerHTML =
+			`<p><span data-sdt='5'>a</span><span data-sdt='{"id":"7"}'>b</span>` +
+			`<span data-sdt='{"id":"8","kind":"text","level":"cell"}'>c</span></p>` +
+			`<table><tbody><tr><td data-sdt='[1]'><p>d</p></td><td data-sdt='{"kind":"text"}'><p>e</p></td>` +
+			`<td data-sdt='{"id":"9","kind":"checkbox","level":"inline"}'><p>f</p></td></tr></tbody></table>`;
+		const doc = DOMParser.fromSchema(schema).parse(html);
+		expect(
+			controlSpans(doc).map((span) => [span.level, span.control.id, span.control.level]),
+		).toEqual([
+			['inline', '8', 'inline'],
+			['cell', '9', 'cell'],
+		]);
+	});
+
 	it('keeps a cell control through HTML, as when cells are copied and pasted', async () => {
 		const doc = modelToDoc((await form()).model);
 		const html = document.createElement('div');
