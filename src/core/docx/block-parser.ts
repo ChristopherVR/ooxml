@@ -16,6 +16,7 @@ import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
 import { parseFormField } from './form-fields';
+import { isAnnotationWrapper } from './inline-markers';
 import { runPositionalTab, runSymbol, specialCharacterText } from './special-characters';
 import {
 	collectParagraphRuns,
@@ -175,6 +176,20 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		const link = resolveHyperlink(hyperlink, activeContext.rels);
 		return link.href !== undefined || link.anchor !== undefined ? link : undefined;
 	};
+	// A simple field's cached result: runs, equations, and the runs smart tags and custom XML wrap.
+	const parseFieldResult = (child: XmlElement): TextRun[] | undefined => {
+		const equation = parseEquation(child);
+		if (equation) return [equation];
+		if (!isAnnotationWrapper(child)) return undefined;
+		return collectParagraphRuns(
+			child,
+			parseRun,
+			parseFieldResult,
+			undefined,
+			openComments,
+			openMoves,
+		).runs;
+	};
 	const parseOther = (item: XmlElement): TextRun[] | undefined => {
 		if (named(item, 'sdt'))
 			return parseInlineControl(
@@ -188,7 +203,7 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		const equation = parseEquation(item);
 		if (equation) return [equation];
 		// Smart tags and inline custom XML only annotate the runs they wrap.
-		if (named(item, 'smartTag') || named(item, 'customXml'))
+		if (isAnnotationWrapper(item))
 			return collectParagraphRuns(
 				item,
 				parseInlineRun,
@@ -203,10 +218,7 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		const { runs: results } = collectParagraphRuns(
 			item,
 			parseRun,
-			(child) => {
-				const equation = parseEquation(child);
-				return equation ? [equation] : undefined;
-			},
+			parseFieldResult,
 			undefined,
 			openComments,
 			openMoves,

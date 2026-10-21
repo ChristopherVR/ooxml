@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './index';
-import { at, expectParagraph } from './test-support/access';
+import { at, expectParagraph, lastOf } from './test-support/access';
 import { symbolOnly } from './special-characters';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -222,6 +222,26 @@ describe('editing paragraphs with smart tags, symbols, positional tabs and speci
 		const xml = await savedParagraph(loaded);
 		expectInOrder(xml, ['>See <', '>A-1<', '> Paris<']);
 		expect(xml).not.toMatch(/customXmlPr|smartTagPr/);
+	});
+
+	it('reads a smart tag inside a simple field as part of the field result', async () => {
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Issued ')}<w:fldSimple w:instr=" DOCPROPERTY Issued ">${run('Oct ')}` +
+				`<w:smartTag w:element="date">${run('20')}</w:smartTag></w:fldSimple>` +
+				`<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve"> by hand</w:t></w:r></w:p>`,
+		);
+		const result = paragraph.runs.filter((item) => item.field?.simple);
+		expect(result.map((item) => item.text)).toEqual(['Oct ', '20']);
+		lastOf(paragraph.runs).text = ' by post';
+		expectInOrder(await savedParagraph(loaded), [
+			'>Issued <',
+			'<w:fldSimple w:instr=" DOCPROPERTY Issued ">',
+			'>Oct <',
+			'>20<',
+			'</w:fldSimple>',
+			'<w:b/>',
+			'> by post<',
+		]);
 	});
 
 	it('draws only a run made of its symbol in the symbol font', () => {
