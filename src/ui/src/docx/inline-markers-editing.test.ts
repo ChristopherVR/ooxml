@@ -4,11 +4,12 @@
 // sees what a user edit really produces.
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { loadDocx } from 'ooxml-core/docx';
+import { loadDocx, type Block } from 'ooxml-core/docx';
 import { formTextResults } from 'ooxml-core/docx/ui';
 import { DocxEditorElement, registerDocxEditor } from './index';
+import { openBlocksEditor } from './header-footer-editor';
 import { docToModel, modelToDoc } from './model-adapter';
 import { SearchController } from './search-controller';
 
@@ -99,6 +100,34 @@ describe('saving paragraphs with markers edited in the editor', () => {
 	});
 });
 
+describe('saving a form field moved in the editor', () => {
+	it('keeps each check box in the bookmark of its name when one is moved past the other', async () => {
+		const box = (name: string, id: number) =>
+			`<w:bookmarkStart w:id="${id}" w:name="${name}"/>` +
+			`<w:r><w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="${name}"/><w:enabled/>` +
+			`<w:calcOnExit w:val="0"/><w:checkBox><w:sizeAuto/><w:default w:val="0"/></w:checkBox></w:ffData></w:fldChar></w:r>` +
+			`<w:r><w:instrText xml:space="preserve"> FORMCHECKBOX </w:instrText></w:r>` +
+			`<w:r><w:fldChar w:fldCharType="end"/></w:r><w:bookmarkEnd w:id="${id}"/>`;
+		const { loaded, view } = await open(
+			`<w:p>${box('Approved', 1)}${run(' Yes ')}${box('Rejected', 2)}${run(' No')}</w:p>`,
+		);
+		// The first check box is its first three nodes: cut it and paste it after the second.
+		const field = view.state.doc.slice(1, 4);
+		const tr = view.state.tr.delete(1, 4);
+		view.dispatch(tr.insert(tr.mapping.map(12), field.content));
+		const xml = await savedParagraph(loaded, view);
+		expectInOrder(xml, [
+			'> Yes <',
+			'<w:bookmarkStart w:id="2" w:name="Rejected"/>',
+			'<w:name w:val="Rejected"/>',
+			'<w:bookmarkEnd w:id="2"/>',
+			'<w:bookmarkStart w:id="1" w:name="Approved"/>',
+			'<w:name w:val="Approved"/>',
+			'<w:bookmarkEnd w:id="1"/>',
+		]);
+	});
+});
+
 describe('saving a form field filled in the editor', () => {
 	it('saves text typed into a blank text field as Word writes it, its result still unproofed', async () => {
 		const field = (inner: string, props = '') =>
@@ -131,5 +160,80 @@ describe('saving a form field filled in the editor', () => {
 		expect(filled.map((item) => item.text)).toEqual(['Ada']);
 		expect(filled[0]!.sourceRunPropertiesXml).toContain('noProof');
 		expect(reopened.runs.find((item) => item.formField)?.formField?.name).toBe('Name');
+	});
+});
+
+describe('pasting and replacing tabs beside a positional tab', () => {
+	const ptab = '<w:ptab w:relativeTo="margin" w:alignment="right" w:leader="none"/>';
+
+	/** The editor with the caret at the end of a paragraph whose last run starts with a positional tab. */
+	async function editorAtEnd() {
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		document.body.append(editor);
+		await editor.load(await docx(`<w:p>${run('Left')}<w:r>${ptab}<w:t>Right</w:t></w:r></w:p>`));
+		const view = (editor as unknown as { view: EditorView }).view;
+		const end = view.state.doc.firstChild!.nodeSize - 1;
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+		return { editor, view };
+	}
+
+	async function paragraphXml(editor: DocxEditorElement): Promise<string> {
+		const bytes = await editor.saveBytes();
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		return xml.match(/<w:p\b[\s\S]*?<\/w:p>/)?.[0] ?? '';
+	}
+
+	it('saves a tab pasted as plain text there as an ordinary tab', async () => {
+		const { editor, view } = await editorAtEnd();
+		view.pasteText('a\tb', new Event('paste') as ClipboardEvent);
+		const xml = await paragraphXml(editor);
+		expectInOrder(xml, ['>Left<', ptab, '>Right', 'a<', '<w:tab/>', '>b<']);
+		expect(xml.match(/<w:ptab\b/g)).toHaveLength(1);
+	});
+
+	it('keeps a positional tab copied and pasted within the editor positional', async () => {
+		const { editor, view } = await editorAtEnd();
+		// The last run: its positional tab and "Right", after "Left".
+		const copied = view.serializeForClipboard(
+			view.state.doc.slice(5, view.state.doc.firstChild!.nodeSize - 1),
+		);
+		view.pasteHTML(copied.dom.innerHTML, new Event('paste') as ClipboardEvent);
+		const xml = await paragraphXml(editor);
+		expectInOrder(xml, ['>Left<', ptab, '>Right', ptab, 'Right<']);
+		expect(xml).not.toContain('<w:tab/>');
+	});
+
+	it('pastes a tab as an ordinary tab in a header, footer or note editor too', async () => {
+		const loaded = await loadDocx(
+			await docx(`<w:p>${run('Left')}<w:r>${ptab}<w:t>Right</w:t></w:r></w:p>`),
+		);
+		const container = document.createElement('div');
+		const body = container.appendChild(document.createElement('div'));
+		document.body.append(container);
+		let view: EditorView | undefined;
+		let changed: Block[] = [];
+		openBlocksEditor(container, body, loaded.model.blocks, (blocks) => (changed = blocks), {
+			activate: (opened) => (view = opened),
+		});
+		const end = view!.state.doc.firstChild!.nodeSize - 1;
+		view!.dispatch(view!.state.tr.setSelection(TextSelection.create(view!.state.doc, end)));
+		view!.pasteText('a\tb', new Event('paste') as ClipboardEvent);
+		const [paragraph] = changed;
+		if (paragraph?.type !== 'paragraph') throw new Error('Expected a paragraph');
+		expect(paragraph.runs.map((item) => [item.text, Boolean(item.positionalTab)])).toEqual([
+			['Left', false],
+			['\tRight', true],
+			['a\tb', false],
+		]);
+	});
+
+	it('saves a tab that Replace puts there as an ordinary tab', async () => {
+		const { editor, view } = await editorAtEnd();
+		const search = new SearchController(() => view);
+		search.search('Right');
+		expect(search.replaceAll('Ri\tght')).toBe(1);
+		const xml = await paragraphXml(editor);
+		expectInOrder(xml, ['>Left<', ptab, '>Ri<', '<w:tab/>', '>ght<']);
+		expect(xml.match(/<w:ptab\b/g)).toHaveLength(1);
 	});
 });

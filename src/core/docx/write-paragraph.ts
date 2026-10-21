@@ -15,6 +15,7 @@ import { paragraphJustification } from './paragraph-alignment';
 import { buildInlineContent } from './write-inline';
 import { containerSources } from './inline-containers';
 import { followContainers } from './inline-container-markers';
+import { followFormFieldBookmarks } from './inline-form-field-bookmarks';
 import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
@@ -137,9 +138,13 @@ export function writeParagraphImpl(
 	const sources = containerSources(paragraph.runs, base?.runs, slots);
 	const carried = orderRangeEnds(
 		base
-			? followContainers(
-					moveMarkers(base.runs, paragraph.runs, read),
-					sources,
+			? followFormFieldBookmarks(
+					followContainers(
+						moveMarkers(base.runs, paragraph.runs, read),
+						sources,
+						base.runs,
+						paragraph.runs,
+					),
 					base.runs,
 					paragraph.runs,
 				)

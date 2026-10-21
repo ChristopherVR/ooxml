@@ -183,6 +183,57 @@ describe('legacy form fields', () => {
 		expect(xml).toContain('<w:result w:val="0"/>');
 	});
 
+	describe('the bookmark Word gives each field its name', () => {
+		const plain = (value: string) => run(`<w:t xml:space="preserve">${value}</w:t>`);
+		const rejected = checkboxField
+			.replaceAll('Approved', 'Rejected')
+			.replaceAll('w:id="2"', 'w:id="4"');
+		/** For each bookmark in `xml`, the names of the form fields it holds. */
+		const bookmarked = (xml: string) =>
+			Object.fromEntries(
+				[
+					...xml.matchAll(
+						/<w:bookmarkStart w:id="(\d+)" w:name="(\w+)"\/>([\s\S]*?)<w:bookmarkEnd w:id="\1"\/>/g,
+					),
+				].map(([, , name, inner]) => [
+					name,
+					[...inner!.matchAll(/<w:name w:val="(\w+)"\/>/g)].map((found) => found[1]),
+				]),
+			);
+		/** A paragraph of two check boxes with labels: begin, code and end runs for each field. */
+		async function twoBoxes() {
+			const { loaded } = await load(
+				`<w:p>${checkboxField}${plain(' Yes ')}${rejected}${plain(' No')}</w:p>`,
+			);
+			const paragraph = expectParagraph(loaded.model.blocks[0]);
+			const runs = paragraph.runs;
+			expect(runs).toHaveLength(8);
+			return {
+				loaded,
+				paragraph,
+				approved: runs.slice(0, 3),
+				yes: at(runs, 3),
+				rejected: runs.slice(4, 7),
+				no: at(runs, 7),
+			};
+		}
+
+		it('keeps each field in its own bookmark when two fields swap places', async () => {
+			const { loaded, paragraph, approved, yes, rejected, no } = await twoBoxes();
+			paragraph.runs = [...rejected, yes, ...approved, no];
+			const xml = await documentXml(await loaded.save());
+			expect(bookmarked(xml)).toEqual({ Rejected: ['Rejected'], Approved: ['Approved'] });
+		});
+
+		it('takes a field its bookmark along when the field moves in its paragraph', async () => {
+			const { loaded, paragraph, approved, yes, rejected, no } = await twoBoxes();
+			paragraph.runs = [yes, ...rejected, no, ...approved];
+			const xml = await documentXml(await loaded.save());
+			expect(bookmarked(xml)).toEqual({ Rejected: ['Rejected'], Approved: ['Approved'] });
+			expect(xml.indexOf('w:name="Approved"')).toBeGreaterThan(xml.indexOf('> No<'));
+		});
+	});
+
 	it('leaves the package untouched when nothing changes', async () => {
 		const { loaded, original } = await load(
 			`<w:p>${textField}${checkboxField}${dropDownField}</w:p>`,
