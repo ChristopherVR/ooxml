@@ -1,4 +1,12 @@
-@import 'tailwindcss';
+/*
+ * Same layers as `packages/react/src/styles/pptx-viewer.css`: Tailwind's theme
+ * and utilities, with the preflight scoped to the viewer, so this demo renders
+ * the viewer exactly as a host that imports the package stylesheet sees it.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import '../../../src/ui/src/pptx/theme/viewer-preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
 
 @source "../../../viewers/pptx/packages/react/src/**/*.{ts,tsx}";
 /*

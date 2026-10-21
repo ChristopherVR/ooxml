@@ -702,6 +702,7 @@ useTouchGestures({
 		<div
 			ref="overlayRef"
 			class="pptx-vue-presentation"
+			data-pptx-scope
 			:class="{ 'pptx-vue-reduced-motion': reducedMotion }"
 			@click="onOverlayClick"
 			@contextmenu="onOverlayContextMenu"

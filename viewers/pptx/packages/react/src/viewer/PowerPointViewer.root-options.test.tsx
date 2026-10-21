@@ -109,6 +109,21 @@ const statusBar = (): Element | null => container.querySelector('pptx-ui-status-
 const compatToasts = (): Element | null => container.querySelector('pptx-ui-compat-toasts');
 
 describe('powerPointViewer root display props', () => {
+	it('renders the chrome inside a root the scoped stylesheet reset matches', async () => {
+		// The stylesheet's Tailwind preflight only matches `[data-pptx-viewer]`, a canvas
+		// viewport and `[data-pptx-scope]` (the standalone Toolbar), never the host page.
+		await mount({});
+		const viewerRoot = container.querySelector('[data-pptx-viewer]');
+		expect(viewerRoot).not.toBeNull();
+		expect(viewerRoot?.contains(ribbon())).toBeTruthy();
+		expect(ribbon()?.hasAttribute('data-pptx-scope')).toBeTruthy();
+		const viewport = container.querySelector('[data-pptx-viewport]');
+		expect(viewport).not.toBeNull();
+		expect(viewerRoot?.contains(viewport)).toBeTruthy();
+		// Nothing the viewer renders sits outside its root (no portal to document.body).
+		expect([...document.body.children]).toStrictEqual([container]);
+	});
+
 	it('shows the toolbar, status bar and thumbnails and opens slide 0 by default', async () => {
 		const handle = await mount({}, 3);
 		expect(ribbon()).not.toBeNull();

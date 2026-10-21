@@ -206,6 +206,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 	<div
 		ref="stageRef"
 		class="pptx-vue-stage"
+		data-pptx-scope
 		:style="stageStyle"
 		:role="presenting ? 'region' : undefined"
 		:aria-roledescription="presenting ? 'slide' : undefined"

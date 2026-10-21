@@ -192,6 +192,8 @@ function plainText(el: PptxElement): string {
 @Component({
 	selector: 'pptx-slide-canvas',
 	standalone: true,
+	// A canvas rendered on its own (outside `pptx-viewer`) keeps the viewer's scoped reset.
+	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [
 		CanvasFitService,

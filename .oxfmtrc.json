@@ -5,7 +5,9 @@
 		"**/__fixtures__/**",
 		"**/__snapshots__/**",
 		"**/excel-*.json",
-		"**/evidence.json"
+		"**/evidence.json",
+		// Generated from Tailwind's preflight; a test compares it with the generator output.
+		"src/ui/src/pptx/theme/viewer-preflight.css"
 	],
 	"singleQuote": true,
 	"useTabs": true,

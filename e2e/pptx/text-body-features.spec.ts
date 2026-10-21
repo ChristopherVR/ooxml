@@ -82,13 +82,22 @@ async function measureBody(page: Page, marker: string): Promise<BodyFacts> {
 			throw new Error(`no rendered element contains ${JSON.stringify(text)}`);
 		}
 		const nodes = [root, ...root.querySelectorAll('*')];
-		// `tab-size` INHERITS, and the demos' CSS reset sets it on `<html>`, so
-		// every node reports the reset's value whether or not the text body
-		// declared one. The page baseline is therefore "not authored here" too,
-		// alongside each property's own initial value.
+		// `tab-size` INHERITS, and the CSS reset sets it on the page (`<html>`, for
+		// a global reset) or on the viewer root (the viewer stylesheet's scoped
+		// one), so every node reports the reset's value whether or not the text
+		// body declared one. What the element inherits from its parent is
+		// therefore "not authored here" too, alongside each property's own
+		// initial value. The other properties do not inherit, so the page is
+		// their baseline (the slide stage itself clips, which must not hide a
+		// clipping text body).
 		const pageBaseline = getComputedStyle(document.body);
-		const firstOf = (property: string, initial: readonly string[]): string => {
-			const inherited = pageBaseline.getPropertyValue(property).trim();
+		const parentBaseline = getComputedStyle(root.parentElement ?? document.body);
+		const firstOf = (
+			property: string,
+			initial: readonly string[],
+			baseline: CSSStyleDeclaration = pageBaseline,
+		): string => {
+			const inherited = baseline.getPropertyValue(property).trim();
 			for (const node of nodes) {
 				const value = getComputedStyle(node).getPropertyValue(property).trim();
 				if (value && value !== inherited && !initial.includes(value)) {
@@ -140,7 +149,7 @@ async function measureBody(page: Page, marker: string): Promise<BodyFacts> {
 		return {
 			columnCount: firstOf('column-count', ['auto']),
 			columnGap: firstOf('column-gap', ['normal']),
-			tabSize: firstOf('tab-size', ['8']),
+			tabSize: firstOf('tab-size', ['8'], parentBaseline),
 			overflow: firstOf('overflow', ['visible']),
 			rotated,
 			clipsOverflow,

@@ -38,6 +38,8 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 @Component({
 	selector: 'pptx-ribbon',
 	standalone: true,
+	// A ribbon rendered on its own (outside `pptx-viewer`) keeps the viewer's scoped reset.
+	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [
 		TranslatePipe,

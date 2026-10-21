@@ -256,6 +256,8 @@ const noopClose = (): void => undefined;
 @Component({
 	selector: 'pptx-viewer',
 	standalone: true,
+	// The scoped Tailwind reset of the viewer stylesheet applies inside this element only.
+	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [...POWER_POINT_VIEWER_PROVIDERS],
 	imports: [

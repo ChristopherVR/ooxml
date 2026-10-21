@@ -50,6 +50,7 @@ export function SlideTemplatePreview({
 	return (
 		<div
 			aria-hidden='true'
+			data-pptx-scope=''
 			className='overflow-hidden pointer-events-none rounded'
 			style={{
 				width: PREVIEW_TILE_WIDTH,
