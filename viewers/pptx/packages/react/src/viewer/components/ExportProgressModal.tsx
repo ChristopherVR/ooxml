@@ -1,11 +1,12 @@
 /**
- * ExportProgressModal: A modal overlay that shows export progress
- * for video, GIF, and package-for-sharing operations.
+ * ExportProgressModal: the progress modal shown while a multi-slide export (PDF, GIF, video)
+ * runs. A thin adapter over the shared `pptx-ui-export-progress`, which owns the dialog and
+ * progress bar semantics, focus and the look; the host owns cancelling the export.
  */
-import { clampPercent } from 'ooxml-ui/pptx';
+import type { PptxUiExportProgressElement } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
-import { DialogFooter } from './DialogFooter';
+import { useWebControl } from '../hooks/useWebControl';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -34,45 +35,12 @@ export function ExportProgressModal({
 	progress,
 	statusMessage,
 	onCancel,
-}: ExportProgressModalProps): React.ReactElement | null {
+}: ExportProgressModalProps): React.ReactElement {
 	const { t } = useTranslation();
-
-	if (!isOpen) {
-		return null;
-	}
-
-	const clampedProgress = clampPercent(progress);
-
-	return (
-		<div
-			style={{ zIndex: 1200 }}
-			className='fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm'
-		>
-			<div className='w-96 max-w-[calc(100%-2rem)] rounded-xl border border-border bg-background p-6 shadow-2xl'>
-				<h3 className='mb-4 text-sm font-semibold text-foreground'>{title}</h3>
-
-				{/* Progress bar */}
-				<div className='mb-3 h-2.5 w-full overflow-hidden rounded-full bg-accent'>
-					<div
-						className='h-full rounded-full bg-primary transition-all duration-300 ease-out'
-						style={{ width: `${clampedProgress}%` }}
-					/>
-				</div>
-
-				{/* Status text */}
-				<div className='mb-4 flex items-center justify-between text-xs text-muted-foreground'>
-					<span>{statusMessage ?? t('pptx.export.processing')}</span>
-					<span className='tabular-nums'>{clampedProgress}%</span>
-				</div>
-
-				{/* Cancel button */}
-				<div className='flex justify-end'>
-					<DialogFooter
-						actions={[{ id: 'cancel', label: t('pptx.export.cancel') }]}
-						onAction={onCancel}
-					/>
-				</div>
-			</div>
-		</div>
+	// Kept mounted while closed, so it can hand focus back when an export ends.
+	const ref = useWebControl<PptxUiExportProgressElement>(
+		{ open: isOpen, title, progress, status: statusMessage, translate: t },
+		{ 'export-cancel': () => onCancel() },
 	);
+	return <pptx-ui-export-progress ref={ref} />;
 }
