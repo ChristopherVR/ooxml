@@ -269,4 +269,111 @@ describe('content controls in the editor', () => {
 		view.destroy();
 		host.remove();
 	});
+
+	it('pastes and saves a control from another page with only values of its fields kinds', async () => {
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t xml:space="preserve">Pick: </w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({
+				doc: modelToDoc(loaded.model),
+				plugins: [contentControlPlugin(), contentControlViewPlugin()],
+			}),
+		});
+		// A page can give any JSON: an object where text is drawn or saved (one whose toString is
+		// null cannot even become text) is not taken, and the rest of the control is.
+		const crafted = { toString: null };
+		const span = (data: unknown, text: string) => {
+			const element = document.createElement('span');
+			element.dataset.sdt = JSON.stringify(data);
+			element.textContent = text;
+			return element.outerHTML;
+		};
+		const list = {
+			id: '4321',
+			level: 'inline',
+			kind: 'dropDownList',
+			alias: crafted,
+			tag: crafted,
+			lock: crafted,
+			showingPlaceholder: 'yes',
+			items: [
+				{ display: crafted, value: 'x' },
+				{ display: 'Shown', value: crafted },
+				{ display: 7, value: 7 },
+				{ display: 'Fine', value: 'fine' },
+			],
+		};
+		const date = { id: '4322', level: 'inline', kind: 'date', dateFormat: crafted };
+		// Without an id and a kind that are text, it is no control: its text is pasted alone.
+		const none = { id: crafted, level: 'inline', kind: 'richText' };
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		view.pasteHTML(
+			`<p>${span(list, 'Pasted')}${span(date, 'When')}${span(none, 'Plain')}</p>`,
+			new Event('paste') as ClipboardEvent,
+		);
+		expect(view.state.doc.textContent).toContain('PastedWhenPlain');
+		const pasted = controlSpans(view.state.doc).map((item) => item.control);
+		expect(pasted).toEqual([
+			{
+				id: '4321',
+				level: 'inline',
+				kind: 'dropDownList',
+				items: [
+					{ display: 'x', value: 'x' },
+					{ display: 'Shown', value: 'Shown' },
+					{ display: '7', value: '7' },
+					{ display: 'Fine', value: 'fine' },
+				],
+			},
+			{ id: '4322', level: 'inline', kind: 'date' },
+		]);
+		const xml = await savedXml(loaded, view);
+		expect(xml).toContain('<w:listItem w:displayText="7" w:value="7"/>');
+		expect(xml).toContain('<w:listItem w:displayText="Fine" w:value="fine"/>');
+		expect(xml).not.toContain('w:alias');
+		expect(xml).not.toContain('w:lock');
+		expect(xml).toContain('<w:t>Plain</w:t>');
+		view.destroy();
+		host.remove();
+	});
+
+	it('pastes the text of a control from another page that nests deeper than a control does', async () => {
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t xml:space="preserve">Pick: </w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({
+				doc: modelToDoc(loaded.model),
+				plugins: [contentControlPlugin(), contentControlViewPlugin()],
+			}),
+		});
+		// Nesting no control has can make turning the control into JSON overflow the stack, in
+		// the paste or later in every save; such a control is no control, and its text is pasted.
+		const deep = '['.repeat(20000) + ']'.repeat(20000);
+		const element = document.createElement('span');
+		element.dataset.sdt = `{"id":"4323","level":"inline","kind":"text","extra":${deep}}`;
+		element.textContent = 'Deep';
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		view.pasteHTML(`<p>${element.outerHTML}</p>`, new Event('paste') as ClipboardEvent);
+		expect(view.state.doc.textContent).toContain('Deep');
+		expect(controlSpans(view.state.doc)).toEqual([]);
+		const xml = await savedXml(loaded, view);
+		expect(xml).toContain('Pick: Deep</w:t>');
+		expect(xml).not.toContain('<w:sdt>');
+		view.destroy();
+		host.remove();
+	});
 });

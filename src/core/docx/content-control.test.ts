@@ -338,6 +338,62 @@ describe('content controls in tables and with unmodeled properties', () => {
 		);
 	});
 
+	it('writes only the text values of a new control, a list entry when its text is text', async () => {
+		// A model from elsewhere can hold anything: an object where text is written (one whose
+		// toString is null cannot even become text) is left out instead of failing the save.
+		const crafted = { toString: null } as unknown as string;
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		paragraph.runs.push(
+			{
+				text: 'Red',
+				contentControl: {
+					id: '41',
+					level: 'inline',
+					kind: 'dropDownList',
+					alias: crafted,
+					tag: crafted,
+					items: [
+						{ display: crafted, value: 'x' },
+						{ display: 7, value: 7 } as unknown as { display: string; value: string },
+						{ display: 'Fine', value: 'fine' },
+					],
+				},
+			},
+			{
+				text: 'Today',
+				contentControl: {
+					id: '42',
+					level: 'inline',
+					kind: 'date',
+					dateFormat: crafted,
+					dateLocale: crafted,
+					fullDate: crafted,
+				},
+			},
+		);
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain(
+			'<w:dropDownList><w:listItem w:displayText="x" w:value="x"/><w:listItem w:displayText="7" w:value="7"/><w:listItem w:displayText="Fine" w:value="fine"/></w:dropDownList>',
+		);
+		expect(xml).not.toContain('w:alias');
+		expect(xml).not.toContain('w:tag');
+		expect(xml).toContain('<w:date/>');
+	});
+
+	it('keeps a full date written in another form when a date control changes', async () => {
+		// Another program can write a date without its time; only a value that is not text is left out.
+		const loaded = await hand(
+			`<w:p><w:sdt><w:sdtPr><w:id w:val="51"/><w:date w:fullDate="2024-01-15"><w:dateFormat w:val="M/d/yyyy"/></w:date></w:sdtPr>` +
+				`<w:sdtContent><w:r><w:t>1/15/2024</w:t></w:r></w:sdtContent></w:sdt></w:p>`,
+		);
+		const control = controlOf(expectParagraph(loaded.model.blocks[0]));
+		expect(control.fullDate).toBe('2024-01-15');
+		control.dateFormat = 'd MMMM yyyy';
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('<w:date w:fullDate="2024-01-15"><w:dateFormat w:val="d MMMM yyyy"/>');
+	});
+
 	it('keeps verbatim properties that hold the attributes later versions of Word write', async () => {
 		// Word 2021 and later put a checksum on a data binding, in w:dataBinding and in the
 		// w15:dataBinding of a rich text control (w16sdtdh, [MS-DOCX] 2.2.12 and 2.11.2.1), and a UTC

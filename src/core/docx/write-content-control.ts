@@ -1,7 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes content control (`w:sdt`) properties: patches only what the model changed on an existing
 // control, and builds a new control (from its verbatim `w:sdtPr` when it has one).
-import type { ContentControl } from './content-control-model';
+import type {
+	ContentControl,
+	ContentControlGlyph,
+	ContentControlListItem,
+} from './content-control-model';
 import { parseContentControl, sdtContent } from './content-control';
 import { NAMED_TYPES, validId, validLock, verbatimProperties } from './content-control-values';
 import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
@@ -34,7 +38,8 @@ function place(sdtPr: XmlElement, element: XmlElement): void {
 
 function setValued(doc: XmlDocument, sdtPr: XmlElement, local: string, value: string | undefined) {
 	for (const existing of children(sdtPr, local)) sdtPr.removeChild(existing);
-	if (value === undefined) return;
+	// Only text is written: a model from elsewhere can hold anything.
+	if (typeof value !== 'string') return;
 	const element = makeW(doc, local);
 	element.setAttributeNS(WORD_NS, 'w:val', value);
 	place(sdtPr, element);
@@ -60,6 +65,36 @@ function checkboxElement(sdtPr: XmlElement): XmlElement | undefined {
 	);
 }
 
+// A list, a check box or a date pasted from another page holds whatever that page wrote: only
+// values Word reads are written.
+
+/** A list entry's display or value as text: text, or a number; anything else is none. */
+const entryText = (value: unknown): string | undefined =>
+	typeof value === 'string'
+		? value
+		: typeof value === 'number' && Number.isFinite(value)
+			? String(value)
+			: undefined;
+
+/** The entries of a list control that can be written, each with a text display and value. */
+function validItems(items: unknown): ContentControlListItem[] {
+	if (!Array.isArray(items)) return [];
+	return items.flatMap((item: unknown) => {
+		if (!item || typeof item !== 'object') return [];
+		const { display, value } = item as { display?: unknown; value?: unknown };
+		const [shown, entry] = [entryText(display), entryText(value)];
+		const text = shown ?? entry;
+		return text === undefined ? [] : [{ display: text, value: entry ?? text }];
+	});
+}
+
+/** A check box glyph Word reads: a code point in four hexadecimal digits (`ST_ShortHexNumber`). */
+function validGlyph(glyph: unknown): ContentControlGlyph | undefined {
+	const { code, font } = (glyph ?? {}) as { code?: unknown; font?: unknown };
+	if (typeof code !== 'string' || !/^[0-9A-Fa-f]{4}$/.test(code)) return undefined;
+	return typeof font === 'string' ? { code, font } : { code };
+}
+
 function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	let box = checkboxElement(sdtPr);
 	if (!box) {
@@ -75,31 +110,25 @@ function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentCont
 		box!.insertBefore(element, siblings[order] ?? null);
 	};
 	replace('checked', (el) => w14Attribute(el, 'val', control.checked ? '1' : '0'), 0);
-	if (control.checkedGlyph)
-		replace(
-			'checkedState',
-			(el) => {
-				w14Attribute(el, 'val', control.checkedGlyph!.code);
-				if (control.checkedGlyph!.font) w14Attribute(el, 'font', control.checkedGlyph!.font);
-			},
-			1,
-		);
-	if (control.uncheckedGlyph)
-		replace(
-			'uncheckedState',
-			(el) => {
-				w14Attribute(el, 'val', control.uncheckedGlyph!.code);
-				if (control.uncheckedGlyph!.font) w14Attribute(el, 'font', control.uncheckedGlyph!.font);
-			},
-			2,
-		);
+	const states = [validGlyph(control.checkedGlyph), validGlyph(control.uncheckedGlyph)];
+	states.forEach((glyph, index) => {
+		if (glyph)
+			replace(
+				index ? 'uncheckedState' : 'checkedState',
+				(el) => {
+					w14Attribute(el, 'val', glyph.code);
+					if (glyph.font) w14Attribute(el, 'font', glyph.font);
+				},
+				index + 1,
+			);
+	});
 }
 
 function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const list = first(sdtPr, control.kind);
 	if (!list) return;
 	for (const item of children(list, 'listItem')) list.removeChild(item);
-	for (const item of control.items ?? []) {
+	for (const item of validItems(control.items)) {
 		const element = makeW(doc, 'listItem');
 		element.setAttributeNS(WORD_NS, 'w:displayText', item.display);
 		element.setAttributeNS(WORD_NS, 'w:value', item.value);
@@ -110,11 +139,13 @@ function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl
 function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const date = first(sdtPr, 'date');
 	if (!date) return;
-	if (control.fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', control.fullDate);
+	// Only text is written, as read: a date another program wrote in its own form stays.
+	const fullDate = typeof control.fullDate === 'string' ? control.fullDate : undefined;
+	if (fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', fullDate);
 	else date.removeAttributeNS(WORD_NS, 'fullDate');
 	const set = (local: string, value: string | undefined, order: number) => {
 		for (const old of children(date, local)) date.removeChild(old);
-		if (value === undefined) return;
+		if (typeof value !== 'string') return;
 		const element = makeW(doc, local);
 		element.setAttributeNS(WORD_NS, 'w:val', value);
 		date.insertBefore(element, Array.from(date.childNodes)[order] ?? null);

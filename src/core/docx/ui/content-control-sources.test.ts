@@ -76,4 +76,67 @@ describe('verbatim properties of pasted controls', () => {
 		]);
 		expect(sources(pastedControlSources(moved, empty))).toEqual([undefined]);
 	});
+
+	it('takes only the values of a pasted control that are of the kind its fields hold', () => {
+		// A page can give any JSON: an object where text is drawn or saved (one whose toString is
+		// null cannot even become text) is not taken, and the rest of the control is; without an
+		// id and a kind that are text, it is no control and its text is pasted alone.
+		const crafted = { toString: null };
+		const marked = (text: string, data: unknown) =>
+			schema.text(text, [schema.marks.contentControl!.create({ data: JSON.stringify(data) })]);
+		const slice = new Slice(
+			schema.node('doc', null, [
+				schema.node('paragraph', null, [
+					marked('Pasted', {
+						id: '13',
+						level: 'inline',
+						kind: 'comboBox',
+						alias: crafted,
+						lock: crafted,
+						showingPlaceholder: 'yes',
+						checkedGlyph: { code: crafted },
+						items: [
+							{ display: crafted, value: 'x' },
+							{ display: 7, value: 7 },
+							{ display: crafted },
+						],
+					}),
+					marked('Plain', { id: crafted, level: 'inline', kind: 'text' }),
+				]),
+			]).content,
+			0,
+			0,
+		);
+		const pasted = schema.node('doc', null, pastedControlSources(slice, doc).content);
+		expect(controlSpans(pasted).map((span) => span.control)).toEqual([
+			{
+				id: '13',
+				level: 'inline',
+				kind: 'comboBox',
+				items: [
+					{ display: 'x', value: 'x' },
+					{ display: '7', value: '7' },
+				],
+			},
+		]);
+		expect(pasted.textContent).toBe('PastedPlain');
+	});
+
+	it('takes no control from JSON that nests deeper than a control does', () => {
+		// Turning it back into JSON could overflow the stack, in the paste or in every later save.
+		const deep = '['.repeat(20000) + ']'.repeat(20000);
+		const data = `{"id":"14","level":"inline","kind":"text","extra":${deep}}`;
+		const slice = new Slice(
+			schema.node('doc', null, [
+				schema.node('paragraph', null, [
+					schema.text('Deep', [schema.marks.contentControl!.create({ data })]),
+				]),
+			]).content,
+			0,
+			0,
+		);
+		const pasted = schema.node('doc', null, pastedControlSources(slice, doc).content);
+		expect(controlSpans(pasted)).toEqual([]);
+		expect(pasted.textContent).toBe('Deep');
+	});
 });
