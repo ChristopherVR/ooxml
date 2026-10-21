@@ -65,7 +65,9 @@ export function getShapeType(shapeType: string | undefined): SupportedShapeType 
 	if (normalized === 'downarrow') {
 		return 'downArrow';
 	}
-	if (normalized.includes('connector')) {
+	// flowChart presets (flowChartConnector, flowChartOffpageConnector) are filled
+	// shapes, not connector lines, despite the name.
+	if (normalized.includes('connector') && !normalized.startsWith('flowchart')) {
 		return 'connector';
 	}
 	// If the shape has a known clip-path in the preset library, treat it as a rect
