@@ -68,6 +68,9 @@ match case, whole cell, `*` `?` `~` wildcards, optionally one sheet or range) an
 1,000 matches, each with its sheet, address and the same cell view, plus the total count.
 `xlsx_read_table` (`readXlsxTable`) reads a table by name (ignoring case, as Excel does): its sheet, range, header
 and totals rows, column names and cells (at most 10,000, as a range read).
+`proposeXlsxEdits` and `applyXlsxProposal` let agent edits land as a reviewable diff: the edits
+are compared before anything is saved, and only an approved, unaltered proposal is applied to the
+unchanged file (see `docs/agent-edit-review.md`).
 
 The existing PowerPoint MCP keeps its established tool set and names. Its server
 exports registration and accepts a root directory for composition. Its model
