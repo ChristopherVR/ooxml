@@ -8,6 +8,7 @@ import { autoSeriesColor } from './chart-colors';
 import { niceScale, formatAxisValue } from './chart-scale';
 import type { ChartGroupView, ChartViewModel, ValueAxisView } from './chart-view';
 import { valueExtent } from './chart-value-axis';
+import { extentOf } from '../extent';
 import { stockView } from './chart-view-stock';
 import { seriesView, type ChartRefValue, type SeriesContext } from './chart-view-series';
 import type { ChartSummary, ChartSummarySeries } from './summary';
@@ -98,8 +99,9 @@ export function waterfallView<S extends ChartSummarySeries>(
 		colors: { increase: role(0), decrease: role(1), total: role(2) },
 	};
 	const ends = steps.flatMap((step) => [step.startValue, step.endValue]);
+	const range = extentOf(ends);
 	model.valueAxis = {
-		...(ends.length ? niceScale(Math.min(...ends), Math.max(...ends)) : niceScale(0, 1)),
+		...(ends.length ? niceScale(range.min, range.max) : niceScale(0, 1)),
 		percent: false,
 	};
 	const labels = model.categories;

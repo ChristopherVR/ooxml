@@ -25,6 +25,15 @@ describe('computeHistogramBins', () => {
 		expect(bins.flatMap((bin) => bin.sourceIndices).sort()).toEqual([0, 2]);
 	});
 
+	it('bins more values than a call can pass as arguments', () => {
+		const values = Array.from({ length: 200_000 }, (_, i) => 1 + (i % 9));
+		values[150_000] = 0;
+		values[60_000] = 10;
+		const bins = computeHistogramBins(values, { binSize: 5 });
+		expect(bins.map((bin) => bin.label)).toEqual(['[0, 5)', '[5, 10)', '[10, 15)']);
+		expect(bins.reduce((sum, bin) => sum + bin.value, 0)).toBe(200_000);
+	});
+
 	it('closes intervals on the right when asked', () => {
 		const bins = computeHistogramBins([2, 4], { binSize: 2, intervalClosed: 'r' });
 		expect(bins.map((bin) => bin.label)).toEqual(['(2, 4]']);
