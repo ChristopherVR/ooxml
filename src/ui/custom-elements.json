@@ -2863,6 +2863,40 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "dialog/progress-dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiProgressDialog",
+					"tagName": "office-ui-progress-dialog",
+					"customElement": true,
+					"description": "`<office-ui-progress-dialog>`: the modal a long job (an export, a package, a save) shows while it runs: a heading, a determinate `role=\"progressbar\"`, a status line and Cancel. Set `state` (text arrives translated). It is deliberately not dismissable: Escape and the backdrop do nothing, so the job ends by finishing, failing or Cancel, which emits `office-progress-cancel` for the host to abort and close it. Focus moves to Cancel when it opens, stays inside while it is open and returns to where it was when it closes. The event name and test id prefix are static fields a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-progress-cancel"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-progress-dialog",
+					"declaration": {
+						"name": "OfficeUiProgressDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "form/radio.ts",
 			"declarations": [
 				{

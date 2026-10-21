@@ -1,0 +1,100 @@
+:host {
+	display: none;
+	position: fixed;
+	inset: 0;
+	/* Above popovers and the File backstage the job is started from. */
+	z-index: calc(var(--office-z-popover) + 100);
+	align-items: center;
+	justify-content: center;
+}
+:host([open]) {
+	display: flex;
+}
+.backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--office-overlay);
+}
+.box {
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-3);
+	width: min(calc(100vw - 2 * var(--office-space-4)), 24rem);
+	padding: var(--office-space-5);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-popover);
+	color: var(--office-popover-foreground);
+	box-shadow: var(--office-shadow-lg);
+	font-family: var(--office-font);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size);
+	font-weight: 600;
+}
+.track {
+	height: var(--office-space-2-5);
+	overflow: hidden;
+	border-radius: var(--office-radius-full);
+	background: var(--office-selected);
+}
+.fill {
+	height: 100%;
+	border-radius: inherit;
+	background: var(--office-accent);
+	transition: width 300ms ease-out;
+}
+.row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2);
+	font-size: var(--office-font-size-xs);
+	color: var(--office-muted-foreground);
+}
+.percent {
+	font-variant-numeric: tabular-nums;
+}
+.actions {
+	display: flex;
+	justify-content: flex-end;
+}
+button {
+	box-sizing: border-box;
+	min-height: var(--office-control-height-lg);
+	padding: var(--office-space-1-5) var(--office-space-3-5);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: 500 var(--office-font-size) / 1.2 var(--office-font);
+	cursor: pointer;
+}
+button:hover {
+	background: var(--office-selected);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+	.fill {
+		transition: none;
+	}
+}
+@media (pointer: coarse) {
+	button {
+		min-height: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	.fill {
+		background: Highlight;
+	}
+	.track {
+		border: 1px solid CanvasText;
+	}
+}
