@@ -12,7 +12,6 @@ import { reconcileBookmarks } from './bookmarks';
 import { writeNumberingProperties } from './numbering-write';
 import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
 import { paragraphJustification } from './paragraph-alignment';
-import { runHasUnknownProperties } from './write-run-validation';
 import { buildInlineContent } from './write-inline';
 import { containerSources } from './inline-containers';
 import { followContainers } from './inline-container-markers';
@@ -20,61 +19,13 @@ import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
-import { samePictureSource } from './inline-source';
+import { runsToWriteAnew } from './run-segmentation';
 
 export function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
 }
 function removeChildren(element: XmlElement, local: string): void {
 	for (const child of children(element, local)) element.removeChild(child);
-}
-
-function rejectUnsafeRunSegmentation(
-	paragraph: Paragraph,
-	base: Paragraph | undefined,
-	oldRuns: XmlElement[],
-): void {
-	if (!base || !oldRuns.some(runHasUnknownProperties)) return;
-	// Pictures are matched by their media source, so splitting surrounding text does not move
-	// their opaque properties to a different run. Retained opaque text still needs its own basis.
-	if (
-		oldRuns.length === base.runs.length &&
-		oldRuns.every((node, index) => {
-			if (!runHasUnknownProperties(node)) return true;
-			const image = base.runs[index]?.image;
-			if (!image) return false;
-			// A drawing without a media part (a shape, text box or chart) is the same drawing when
-			// its model is unchanged; a changed one is rebuilt from its own source element.
-			const remaining = paragraph.runs.filter((run) =>
-				image.partName
-					? samePictureSource(run.image, image)
-					: run.image !== undefined && JSON.stringify(run.image) === JSON.stringify(image),
-			);
-			return (
-				!remaining.length ||
-				remaining.every((run) => run.restoredRunPropertiesXml || run.sourceRunPropertiesXml)
-			);
-		})
-	)
-		return;
-	// Imported opaque properties or a rejected format revision supply a complete XML basis.
-	// The writer imports that basis before applying modeled edits, independently of source slots.
-	if (
-		paragraph.runs.every(
-			(run) =>
-				!run.image && !run.equation && (run.restoredRunPropertiesXml || run.sourceRunPropertiesXml),
-		)
-	)
-		return;
-	const sameText =
-		paragraph.runs.map((run) => run.text).join('') === base.runs.map((run) => run.text).join('');
-	const sameBoundaries =
-		paragraph.runs.length === base.runs.length &&
-		paragraph.runs.every((run, index) => run.text === base.runs[index]?.text);
-	if (sameBoundaries || (!sameText && paragraph.runs.length === base.runs.length)) return;
-	throw new Error(
-		`Cannot edit paragraph ${paragraph.id}: changing run boundaries could drop unsupported run properties. The original DOCX package remains unchanged.`,
-	);
 }
 
 export function writeParagraphImpl(
@@ -150,11 +101,7 @@ export function writeParagraphImpl(
 	writeTabStops(doc, pPr, paragraph, propertyBase);
 	orderParagraphProperties(pPr);
 	const { slots, markers } = layout;
-	rejectUnsafeRunSegmentation(
-		paragraph,
-		base,
-		slots.flatMap((slot) => (slot.element ? [slot.element] : [])),
-	);
+	const anew = runsToWriteAnew(paragraph, base, slots);
 	// Bookmarks, permissions and proofing marks keep their character positions (inline-markers.ts).
 	// Bookmark names removed from the model lose their markers; names added bracket the paragraph.
 	const isBookmark = (element: XmlElement) =>
@@ -208,6 +155,7 @@ export function writeParagraphImpl(
 		allocator,
 		ranges,
 		sources,
+		anew,
 	);
 	let anchor: XmlElement = pPr;
 	for (const bookmark of starts.filter((element) => !source.has(element))) {

@@ -1,25 +1,33 @@
 // @vitest-environment jsdom
-// Paragraphs with position markers edited through the editor and saved: the editor merges equally
-// formatted runs and keeps or drops marks the way ProseMirror does, so the writer sees what a user
-// edit really produces.
+// Paragraphs with position markers or form fields edited through the editor and saved: the editor
+// merges equally formatted runs and keeps or drops marks the way ProseMirror does, so the writer
+// sees what a user edit really produces.
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { loadDocx } from 'ooxml-core/docx';
+import { formTextResults } from 'ooxml-core/docx/ui';
+import { DocxEditorElement, registerDocxEditor } from './index';
 import { docToModel, modelToDoc } from './model-adapter';
 import { SearchController } from './search-controller';
+
+registerDocxEditor();
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const run = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>`;
 
-async function open(paragraphXml: string) {
+async function docx(paragraphXml: string): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file(
 		'word/document.xml',
 		`<w:document xmlns:w="${W}"><w:body>${paragraphXml}<w:sectPr/></w:body></w:document>`,
 	);
-	const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+	return zip.generateAsync({ type: 'uint8array' });
+}
+
+async function open(paragraphXml: string) {
+	const loaded = await loadDocx(await docx(paragraphXml));
 	const host = document.createElement('div');
 	document.body.append(host);
 	const view = new EditorView(host, {
@@ -88,5 +96,40 @@ describe('saving paragraphs with markers edited in the editor', () => {
 			'> now<',
 		]);
 		expect(xml).not.toContain('w:history');
+	});
+});
+
+describe('saving a form field filled in the editor', () => {
+	it('saves text typed into a blank text field as Word writes it, its result still unproofed', async () => {
+		const field = (inner: string, props = '') =>
+			`<w:r>${props ? `<w:rPr>${props}</w:rPr>` : ''}${inner}</w:r>`;
+		// Word's result for a text field with no text: five en spaces, one run each.
+		const blank = Array.from({ length: 5 }, () => field('<w:t>\u2002</w:t>', '<w:noProof/>')).join(
+			'',
+		);
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		document.body.append(editor);
+		await editor.load(
+			await docx(
+				`<w:p>${run('Name: ')}` +
+					field(
+						'<w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="Name"/><w:enabled/><w:calcOnExit w:val="0"/><w:textInput/></w:ffData></w:fldChar>',
+					) +
+					field('<w:instrText xml:space="preserve"> FORMTEXT </w:instrText>') +
+					field('<w:fldChar w:fldCharType="separate"/>') +
+					blank +
+					field('<w:fldChar w:fldCharType="end"/>') +
+					'</w:p>',
+			),
+		);
+		const view = (editor as unknown as { view: EditorView }).view;
+		const [result] = formTextResults(view.state.doc);
+		view.dispatch(view.state.tr.insertText('Ada', result!.from + 2));
+		const reopened = (await loadDocx(await editor.saveBytes())).model.blocks[0]!;
+		if (reopened.type !== 'paragraph') throw new Error('Expected a paragraph');
+		const filled = reopened.runs.filter((item) => item.field?.instr.trim() === 'FORMTEXT');
+		expect(filled.map((item) => item.text)).toEqual(['Ada']);
+		expect(filled[0]!.sourceRunPropertiesXml).toContain('noProof');
+		expect(reopened.runs.find((item) => item.formField)?.formField?.name).toBe('Name');
 	});
 });

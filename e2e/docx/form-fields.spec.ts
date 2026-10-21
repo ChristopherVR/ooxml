@@ -162,7 +162,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(editor.locator('.ProseMirror > p').first()).toHaveText('Code: AB12 end');
 
 		const { xml } = await savedDocument(page, `${framework}-blank-field.docx`);
-		expect(xml).toContain('>AB12<');
+		// What was typed keeps the result's properties, as Word's own result runs had them.
+		expect(xml).toMatch(/<w:rPr[^>]*><w:noProof\/><\/w:rPr><w:t>AB12<\/w:t>/);
 		expect(xml).not.toContain('\u2002');
 		expect(xml).toContain('<w:maxLength w:val="4"/>');
 	});

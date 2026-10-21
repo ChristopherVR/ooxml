@@ -6,14 +6,15 @@ const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const rel = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const office = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const run = (inner: string) => `<w:r>${inner}</w:r>`;
-const text = (value: string) => run(`<w:t xml:space="preserve">${value}</w:t>`);
+const text = (value: string, props = '') =>
+	run(`${props ? `<w:rPr>${props}</w:rPr>` : ''}<w:t xml:space="preserve">${value}</w:t>`);
 
-/** A legacy form field; a result given as several strings is written one run per string. */
+/** A legacy form field; its result is plain text, or the result's runs as written. */
 function formField(
 	name: string,
 	data: string,
 	code: string,
-	result: string | string[] | null,
+	result: string | { runs: string } | null,
 	id: number,
 ) {
 	return (
@@ -24,7 +25,8 @@ function formField(
 		run(`<w:instrText xml:space="preserve"> ${code} </w:instrText>`) +
 		(result === null
 			? ''
-			: run('<w:fldChar w:fldCharType="separate"/>') + [result].flat().map(text).join('')) +
+			: run('<w:fldChar w:fldCharType="separate"/>') +
+				(typeof result === 'string' ? text(result) : result.runs)) +
 		run('<w:fldChar w:fldCharType="end"/>') +
 		`<w:bookmarkEnd w:id="${id}"/>`
 	);
@@ -67,10 +69,10 @@ export function formFieldsFixture(protect = false): Promise<Uint8Array> {
 
 /**
  * A form protected for filling in with a blank text field of four characters at most, as Word
- * writes a text field that holds no text: five en spaces, one run each.
+ * writes a text field that holds no text: five en spaces, one run each, kept from proofing.
  */
 export function blankFieldFixture(): Promise<Uint8Array> {
-	const blank = Array.from({ length: 5 }, () => '\u2002');
+	const blank = { runs: Array.from({ length: 5 }, () => text('\u2002', '<w:noProof/>')).join('') };
 	return formPackage(
 		FORMS_PROTECTION,
 		`<w:p>${text('Code: ')}${formField('Code', '<w:textInput><w:maxLength w:val="4"/></w:textInput>', 'FORMTEXT', blank, 1)}${text(' end')}</w:p>` +
