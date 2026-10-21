@@ -139,7 +139,9 @@ export function parseFormSettings(xml: string): {
 		...(protect && {
 			protection: {
 				edit: isStDocProtect(edit) ? edit : 'none',
-				enforced: parseOnOff(getW(protect, 'enforcement')) === true,
+				// Word enforces the protection unless `w:enforcement` turns it off ([MS-OE376]
+				// 2.1.410), where ECMA-376 would ignore it when the attribute is missing.
+				enforced: parseOnOff(getW(protect, 'enforcement')) !== false,
 			},
 		}),
 		...(onOffElement(children(root, 'doNotShadeFormData')[0]) && {
