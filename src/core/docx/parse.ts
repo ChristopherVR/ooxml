@@ -10,7 +10,7 @@ import { parseBlocksFromContainer } from './block-parser';
 import { parseDocumentParts } from './document-parts';
 import { parseNumberingCatalog } from './numbering-parse';
 import { parseComments } from './comments';
-import { parseTrackChangesSetting, parseReviewPreferences } from './settings';
+import { parseFormSettings, parseReviewPreferences, parseTrackChangesSetting } from './settings';
 import { parsePageBackground } from './page-background';
 import { parseRunStyleCatalog } from './character-styles';
 import { parseTableStyleCatalog } from './table-styles';
@@ -31,6 +31,23 @@ export interface PackageContext {
 	original: Uint8Array;
 	sourceXml: string;
 	base: DocumentModel;
+}
+
+/** What a user may still do under each enforced editing restriction this editor does not apply. */
+const RESTRICTED_TO: Record<string, string | undefined> = {
+	readOnly: 'reading',
+	comments: 'comments',
+	trackedChanges: 'tracked changes',
+};
+
+/** The load warning for an enforced editing restriction (`w:documentProtection`), if any. */
+function protectionWarning(edit: string): string | undefined {
+	if (edit === 'forms')
+		return 'The document is protected for filling in forms: the editor lets only form fields, content controls and sections left unprotected change. The protection password is not checked.';
+	const allowed = RESTRICTED_TO[edit];
+	return allowed
+		? `The document limits editing to ${allowed}; the restriction is kept but not enforced while editing.`
+		: undefined;
 }
 
 export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
@@ -168,7 +185,9 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	if (settingsFile) {
 		const settingsXml = await settingsFile.async('string');
 		model.trackChanges = parseTrackChangesSetting(settingsXml);
-		Object.assign(model, parseReviewPreferences(settingsXml));
+		Object.assign(model, parseReviewPreferences(settingsXml), parseFormSettings(settingsXml));
+		const warning = model.protection?.enforced && protectionWarning(model.protection.edit);
+		if (warning) model.warnings.push(warning);
 	}
 	if (
 		blocks.some(

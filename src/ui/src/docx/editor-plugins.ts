@@ -6,9 +6,13 @@ import { editorKeymap } from './editor-commands';
 import {
 	contentControlPlugin,
 	fieldGuardPlugin,
+	formFieldGuardPlugin,
+	positionalTabInputPlugin,
+	symbolFontPlugin,
 	tableStructureGuardPlugin,
 } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
+import { formFieldViewPlugin } from './form-field-view';
 import { tabStopsPlugin } from './tab-stops-view';
 import { noteNumberingPlugin } from './note-commands';
 import { paragraphStylesPlugin } from './paragraph-styles';
@@ -43,6 +47,10 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		tableStructureGuardPlugin(),
 		contentControlPlugin(),
 		contentControlViewPlugin(),
+		formFieldGuardPlugin(() => host.model().protection),
+		formFieldViewPlugin(() => host.model()),
+		symbolFontPlugin(),
+		positionalTabInputPlugin(),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({

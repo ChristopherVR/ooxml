@@ -5,10 +5,14 @@ import {
 	first,
 	importElement,
 	makeW,
+	named,
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
 } from './xml';
+import { opensRange, orderRangeEnds, placeMarkers } from './inline-markers';
+import { moveMarkers, runPositions } from './inline-marker-positions';
+import { restoreAnnotations } from './inline-annotations';
 import { writeParagraphProperties } from './write-paragraph-properties';
 import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
@@ -17,66 +21,21 @@ import { reconcileBookmarks } from './bookmarks';
 import { writeNumberingProperties } from './numbering-write';
 import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
 import { paragraphJustification } from './paragraph-alignment';
-import { runHasUnknownProperties } from './write-run-validation';
-import { buildInlineContent, collectInlineSlots, replaceableInlineChildren } from './write-inline';
+import { buildInlineContent } from './write-inline';
+import { containerSources } from './inline-containers';
+import { followContainers } from './inline-container-markers';
+import { followFormFieldBookmarks } from './inline-form-field-bookmarks';
+import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
-import { samePictureSource } from './inline-source';
+import { runsToWriteAnew } from './run-segmentation';
 
 export function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
 }
 function removeChildren(element: XmlElement, local: string): void {
 	for (const child of children(element, local)) element.removeChild(child);
-}
-
-function rejectUnsafeRunSegmentation(
-	paragraph: Paragraph,
-	base: Paragraph | undefined,
-	oldRuns: XmlElement[],
-): void {
-	if (!base || !oldRuns.some(runHasUnknownProperties)) return;
-	// Pictures are matched by their media source, so splitting surrounding text does not move
-	// their opaque properties to a different run. Retained opaque text still needs its own basis.
-	if (
-		oldRuns.length === base.runs.length &&
-		oldRuns.every((node, index) => {
-			if (!runHasUnknownProperties(node)) return true;
-			const image = base.runs[index]?.image;
-			if (!image) return false;
-			// A drawing without a media part (a shape, text box or chart) is the same drawing when
-			// its model is unchanged; a changed one is rebuilt from its own source element.
-			const remaining = paragraph.runs.filter((run) =>
-				image.partName
-					? samePictureSource(run.image, image)
-					: run.image !== undefined && JSON.stringify(run.image) === JSON.stringify(image),
-			);
-			return (
-				!remaining.length ||
-				remaining.every((run) => run.restoredRunPropertiesXml || run.sourceRunPropertiesXml)
-			);
-		})
-	)
-		return;
-	// Imported opaque properties or a rejected format revision supply a complete XML basis.
-	// The writer imports that basis before applying modeled edits, independently of source slots.
-	if (
-		paragraph.runs.every(
-			(run) =>
-				!run.image && !run.equation && (run.restoredRunPropertiesXml || run.sourceRunPropertiesXml),
-		)
-	)
-		return;
-	const sameText =
-		paragraph.runs.map((run) => run.text).join('') === base.runs.map((run) => run.text).join('');
-	const sameBoundaries =
-		paragraph.runs.length === base.runs.length &&
-		paragraph.runs.every((run, index) => run.text === base.runs[index]?.text);
-	if (sameBoundaries || (!sameText && paragraph.runs.length === base.runs.length)) return;
-	throw new Error(
-		`Cannot edit paragraph ${paragraph.id}: changing run boundaries could drop unsupported run properties. The original DOCX package remains unchanged.`,
-	);
 }
 
 export function writeParagraphImpl(
@@ -95,8 +54,8 @@ export function writeParagraphImpl(
 	const sameRanges =
 		continuationKey(continuation) === continuationKey(spans?.original.get(paragraph.id));
 	if (base && sameRanges && JSON.stringify(paragraph) === JSON.stringify(base)) return node;
-	const slots = collectInlineSlots(node);
-	if (!slots)
+	const layout = collectInlineSlots(node);
+	if (!layout)
 		throw new Error(
 			`Cannot edit paragraph ${paragraph.id}: it contains inline OOXML that this editor cannot safely relocate. The original DOCX package remains unchanged.`,
 		);
@@ -151,39 +110,80 @@ export function writeParagraphImpl(
 	writeParagraphFormatRevision(doc, pPr, paragraph.formatRevision);
 	writeTabStops(doc, pPr, paragraph, propertyBase);
 	orderParagraphProperties(pPr);
-	rejectUnsafeRunSegmentation(
-		paragraph,
-		base,
-		slots.flatMap((slot) => (slot.element ? [slot.element] : [])),
-	);
-	// Bookmarks are preserved but not repositioned precisely: an edited paragraph's bookmarks move
-	// to its boundaries (starts right after pPr, ends at the close) instead of their exact original
-	// run offsets, which this run-level model does not track.
-	const { starts: bookmarkStarts, ends: bookmarkEnds } = reconcileBookmarks(
+	const { slots, markers } = layout;
+	const anew = runsToWriteAnew(paragraph, base, slots);
+	// Bookmarks, permissions and proofing marks keep their character positions (inline-markers.ts).
+	// Bookmark names removed from the model lose their markers; names added bracket the paragraph.
+	const isBookmark = (element: XmlElement) =>
+		named(element, 'bookmarkStart') || named(element, 'bookmarkEnd');
+	const sourceBookmarks = markers.map((marker) => marker.element).filter(isBookmark);
+	const { starts, ends } = reconcileBookmarks(
 		doc,
-		children(node, 'bookmarkStart'),
-		children(node, 'bookmarkEnd'),
+		sourceBookmarks.filter((element) => named(element, 'bookmarkStart')),
+		sourceBookmarks.filter((element) => named(element, 'bookmarkEnd')),
 		paragraph.bookmarks ?? [],
 		base?.bookmarks ?? [],
 		() => spans?.nextId() ?? '0',
 	);
-	for (const bookmark of [...children(node, 'bookmarkStart'), ...children(node, 'bookmarkEnd')])
-		node.removeChild(bookmark);
+	const source = new Set(sourceBookmarks);
+	const kept = new Set([...starts, ...ends]);
+	const sourcePositions = runPositions(base?.runs ?? []);
+	const read = markers
+		.filter((marker) => !isBookmark(marker.element) || kept.has(marker.element))
+		.map((marker) => {
+			const position = sourcePositions[marker.boundary] ?? 0;
+			const annotation = marker.annotation;
+			return {
+				element: marker.element,
+				position,
+				source: position,
+				opening: annotation ? annotation.edge === 'start' : opensRange(marker.element),
+				...(marker.container && { container: marker.container }),
+				...(marker.revision && { revision: marker.revision }),
+				...(annotation && { annotation, exact: true }),
+			};
+		});
+	const end = runPositions(paragraph.runs).at(-1)!;
+	const sources = containerSources(paragraph.runs, base?.runs, slots);
+	const carried = orderRangeEnds(
+		base
+			? followFormFieldBookmarks(
+					followContainers(
+						moveMarkers(base.runs, paragraph.runs, read),
+						sources,
+						base.runs,
+						paragraph.runs,
+					),
+					base.runs,
+					paragraph.runs,
+				)
+			: read.map((marker) => ({ ...marker, position: marker.opening ? 0 : end })),
+	);
+	for (const marker of markers) marker.element.parentNode?.removeChild(marker.element);
 	for (const oldNode of replaceableInlineChildren(node)) node.removeChild(oldNode);
-	const newNodes = buildInlineContent(doc, paragraph.runs, base?.runs, slots, allocator, ranges);
+	const { nodes, placed, containers } = buildInlineContent(
+		doc,
+		paragraph.runs,
+		base?.runs,
+		slots,
+		allocator,
+		ranges,
+		sources,
+		anew,
+	);
 	let anchor: XmlElement = pPr;
-	for (const bookmark of bookmarkStarts) {
+	for (const bookmark of starts.filter((element) => !source.has(element))) {
 		node.insertBefore(bookmark, anchor.nextSibling);
 		anchor = bookmark;
 	}
-	for (const run of newNodes) {
+	for (const run of nodes) {
 		node.insertBefore(run, anchor.nextSibling);
 		anchor = run;
 	}
-	for (const bookmark of bookmarkEnds) {
-		node.insertBefore(bookmark, anchor.nextSibling);
-		anchor = bookmark;
-	}
+	placeMarkers(node, carried, paragraph.runs, placed, containers);
+	// Smart tags and inline custom XML go back around text the edit left as it was.
+	restoreAnnotations(carried, base?.runs ?? [], paragraph.runs);
+	for (const bookmark of ends.filter((element) => !source.has(element))) node.appendChild(bookmark);
 	if (!pPr.childNodes.length) node.removeChild(pPr);
 	return node;
 }

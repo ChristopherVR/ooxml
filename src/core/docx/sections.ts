@@ -1,7 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, SectionColumns, SectionProperties } from './model';
-import { children, elements, first, getW, isElement, named, type XmlElement } from './xml';
+import { children, elements, first, getW, named, type XmlElement } from './xml';
 import { getRelationshipId } from './relationships';
+import { flatBlocks } from './parse-content-control';
 import { parsePageBorders } from './page-borders';
 import { isStNumberFormat, isStSectionMark, isStVerticalJc } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
@@ -126,6 +127,9 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 		columns: parseColumns(section),
 		...(footnoteColumns !== undefined ? { footnoteColumns } : {}),
 		...(onOffElement(first(section, 'titlePg')) === true ? { titlePage: true } : {}),
+		...(onOffElement(first(section, 'formProt')) === false
+			? { formProtection: false as const }
+			: {}),
 		...(vAlignValue ? { verticalAlign: vAlignValue } : {}),
 		...(pgNum
 			? {
@@ -144,23 +148,17 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 
 /**
  * Parses every section in document order: one per paragraph whose `pPr` carries a `sectPr`
- * (that paragraph ends the section), followed by the final body-level `sectPr`. Header/footer
- * relationship ids are returned unresolved; see `document-parts.ts` for content resolution.
+ * (that paragraph ends the section), followed by the final body-level `sectPr`. Paragraphs and
+ * tables are counted as the block parser reads them, through block-level content controls.
+ * Header/footer relationship ids are returned unresolved; see `document-parts.ts` for content
+ * resolution.
  */
 export function parseRawSections(body: XmlElement, blocks: Block[]): RawSection[] {
 	const sections: RawSection[] = [];
-	let position = 0;
-	for (const node of Array.from(body.childNodes).filter(isElement)) {
-		if (named(node, 'p')) {
-			const sectPr = first(first(node, 'pPr'), 'sectPr');
-			if (sectPr) {
-				const blockId = blocks[position]?.id;
-				if (blockId) sections.push(parseOneSection(sectPr, blockId));
-			}
-			position++;
-		} else if (named(node, 'tbl')) {
-			position++;
-		}
+	for (const [position, { element: node }] of flatBlocks(body).entries()) {
+		const sectPr = named(node, 'p') ? first(first(node, 'pPr'), 'sectPr') : undefined;
+		const blockId = sectPr && blocks[position]?.id;
+		if (sectPr && blockId) sections.push(parseOneSection(sectPr, blockId));
 	}
 	const finalSectPr = children(body, 'sectPr').at(-1);
 	if (finalSectPr) {

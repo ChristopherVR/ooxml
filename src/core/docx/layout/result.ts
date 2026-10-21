@@ -18,6 +18,7 @@ export interface LayoutFragment {
 	/** An inline picture drawn in this fragment's box, bottom-aligned on the line. */
 	object?: import('./input').LayoutObject;
 	color?: string;
+	background?: string;
 	underline?: boolean;
 	strike?: boolean;
 	script?: 'super' | 'sub';
