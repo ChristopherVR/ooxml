@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { DOMParser, DOMSerializer } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { loadDocx } from 'ooxml-core/docx';
-import { chooseListItem, controlSpans } from 'ooxml-core/docx/ui';
+import { chooseListItem, contentControlPlugin, controlSpans } from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 import { schema } from './schema';
 
@@ -112,5 +112,40 @@ describe('content controls around table cells in the editor', () => {
 			expect(xml).toMatch(
 				/<w:sdt><w:sdtPr><w:alias w:val="Item"\/><w:id w:val="72"\/><\/w:sdtPr><w:sdtContent><w:tr>/,
 			);
+		});
+
+	for (const merged of [false, true])
+		it(`removes a temporary row control once its ${merged ? 'merged ' : ''}row is edited`, async () => {
+			const zip = new JSZip();
+			const first = merged ? cell('Title', '<w:vMerge w:val="restart"/>') : cell('Title');
+			const continued = merged ? cell('', '<w:vMerge/>') : cell('Again');
+			const item =
+				`<w:sdt><w:sdtPr><w:alias w:val="Item"/><w:id w:val="73"/><w:temporary/></w:sdtPr>` +
+				`<w:sdtContent><w:tr>${continued}${cell('Line')}</w:tr></w:sdtContent></w:sdt>`;
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/>` +
+					`<w:gridCol w:w="3000"/></w:tblGrid><w:tr>${first}${cell('Value')}</w:tr>${item}` +
+					`</w:tbl><w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+			const at = (s: EditorState, text: string) => {
+				let found = -1;
+				s.doc.descendants((node, pos) => {
+					if (found < 0 && node.isText && node.text === text) found = pos + node.nodeSize;
+				});
+				return found;
+			};
+			// An edit in another row leaves the control; an edit in its row removes it.
+			const elsewhere = state.apply(state.tr.insertText('!', at(state, 'Value')));
+			expect(elsewhere.doc.firstChild!.child(1).attrs.properties?.contentControl?.id).toBe('73');
+			const next = elsewhere.apply(elsewhere.tr.insertText(' two', at(elsewhere, 'Line')));
+			expect(next.doc.firstChild!.child(1).attrs.properties?.contentControl).toBeUndefined();
+			const bytes = await loaded.save(docToModel(next.doc, loaded.model, doc));
+			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			expect(xml).toContain('<w:t>Line two</w:t>');
+			expect(xml).not.toContain('<w:sdt>');
 		});
 });
