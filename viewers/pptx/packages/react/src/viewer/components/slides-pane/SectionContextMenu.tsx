@@ -1,7 +1,7 @@
 import { buildSectionContextMenuEntries, sectionAddAfterSlideIndex } from 'ooxml-ui/pptx';
 import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 import type React from 'react';
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SlideSectionGroup } from '../../types';
@@ -108,12 +108,12 @@ export function SectionContextMenu({
 			onClick={(e: React.MouseEvent) => e.stopPropagation()}
 		>
 			{entries.map((entry) => (
-				<span key={entry.id}>
+				<Fragment key={entry.id}>
 					{entry.separatorBefore && <ContextMenuSeparator />}
 					<ContextMenuItem disabled={entry.disabled} onSelect={() => run(entry.id)}>
 						{t(entry.labelKey)}
 					</ContextMenuItem>
-				</span>
+				</Fragment>
 			))}
 		</div>
 	);
