@@ -3,7 +3,7 @@ import { createEffect, createSignal, onCleanup, onMount, untrack } from 'solid-j
 import {
 	createBuildingBlockSession,
 	emptyBuildingBlockState,
-	toolbarButtons,
+	toolbarModel,
 	selectReference,
 	type BuildingBlockOptions,
 	type SpreadsheetToolbarProps,
@@ -25,6 +25,10 @@ export function createViewerBuildingBlocks(options: () => BuildingBlockOptions =
 		loading: () => state().loading,
 		error: () => state().error,
 		mode: () => state().mode,
+		dirty: () => state().dirty,
+		selection: () => state().selection,
+		collaboration: () => state().collaboration,
+		editError: () => state().editError,
 	};
 }
 export function SpreadsheetCanvas(props: {
@@ -60,22 +64,50 @@ export function Toolbar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 	const host = document.createElement('div');
 	prepareBlock(host, 'toolbar');
 	host.setAttribute('role', 'toolbar');
-	const buttons = Array.from({ length: 5 }, (_, index) => {
+	// The structure of the controls is fixed, so each element is created once and only updated.
+	const model = () => toolbarModel(props.toolbarProps);
+	const controls = untrack(model).map((item, index) => {
+		if (item.kind === 'select') {
+			const select = document.createElement('select');
+			select.onchange = () => {
+				const current = model()[index];
+				if (current?.kind === 'select') void current.change(select.value);
+			};
+			return select;
+		}
 		const button = document.createElement('button');
 		button.type = 'button';
 		button.onmousedown = (e) => e.preventDefault();
 		button.onclick = () => {
-			void toolbarButtons(props.toolbarProps)[index]?.run();
+			const current = model()[index];
+			if (current?.kind === 'button') void current.run();
 		};
 		return button;
 	});
-	host.append(...buttons);
+	host.append(...controls);
 	createEffect(() => {
-		toolbarButtons(props.toolbarProps).forEach((b, index) => {
-			const button = buttons[index]!;
-			button.disabled = b.disabled;
-			button.textContent = b.label;
-			button.setAttribute('aria-pressed', b.pressed === null ? 'mixed' : String(b.pressed));
+		model().forEach((item, index) => {
+			const control = controls[index]!;
+			if (item.kind === 'select' && control instanceof HTMLSelectElement) {
+				control.setAttribute('aria-label', item.label);
+				control.disabled = item.disabled;
+				control.replaceChildren(
+					...item.options.map((o) => {
+						const option = document.createElement('option');
+						option.value = o.value;
+						option.textContent = o.label;
+						return option;
+					}),
+				);
+				control.value = item.value;
+			} else if (item.kind === 'button' && control instanceof HTMLButtonElement) {
+				control.disabled = item.disabled;
+				control.textContent = item.label;
+				control.setAttribute(
+					'aria-pressed',
+					item.pressed === null ? 'mixed' : String(item.pressed),
+				);
+			}
 		});
 	});
 	return host;
@@ -86,7 +118,15 @@ export function FormulaBar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 	prepareBlock(host, 'formula-bar');
 	const name = document.createElement('input');
 	const formula = document.createElement('input');
+	const alert = document.createElement('span');
+	alert.setAttribute('role', 'alert');
 	host.append(name, formula);
+	let invalidDraft = false;
+	const markFormula = () =>
+		formula.setAttribute(
+			'aria-invalid',
+			String(invalidDraft || props.toolbarProps.editError !== null),
+		);
 	let lastSelection: string | undefined;
 	createEffect(() => {
 		if (props.toolbarProps.selection !== lastSelection) {
@@ -99,6 +139,10 @@ export function FormulaBar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 		const p = props.toolbarProps;
 		if (formula.value !== p.formula) formula.value = p.formula;
 		formula.readOnly = !p.canEdit;
+		markFormula();
+		alert.textContent = p.editError ?? '';
+		if (p.editError === null) alert.remove();
+		else if (!alert.isConnected) host.append(alert);
 		formula.setAttribute('aria-label', p.labels['Formula Bar'] ?? 'Formula Bar');
 	});
 	name.oninput = () => name.setAttribute('aria-invalid', 'false');
@@ -109,20 +153,20 @@ export function FormulaBar(props: { toolbarProps: SpreadsheetToolbarProps }) {
 		}
 	};
 	formula.oninput = () => {
-		formula.setAttribute('aria-invalid', 'false');
+		invalidDraft = false;
+		markFormula();
 		props.toolbarProps.onFormulaInput(formula.value, formula.selectionEnd ?? undefined);
 	};
 	formula.onkeydown = (e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			formula.setAttribute(
-				'aria-invalid',
-				String(!props.toolbarProps.onFormulaChange(formula.value)),
-			);
+			invalidDraft = !props.toolbarProps.onFormulaChange(formula.value);
+			markFormula();
 		} else if (e.key === 'Escape') {
 			e.preventDefault();
 			props.toolbarProps.onCancelEdit();
-			formula.setAttribute('aria-invalid', 'false');
+			invalidDraft = false;
+			markFormula();
 		}
 	};
 	return host;

@@ -14,7 +14,7 @@ import {
 import {
 	createBuildingBlockSession,
 	emptyBuildingBlockState,
-	toolbarButtons,
+	toolbarModel,
 	selectReference,
 	type BuildingBlockOptions,
 	type SpreadsheetToolbarProps,
@@ -38,6 +38,10 @@ export function useViewerBuildingBlocks(options: () => BuildingBlockOptions = ()
 		loading: computed(() => state.value.loading),
 		error: computed(() => state.value.error),
 		mode: computed(() => state.value.mode),
+		dirty: computed(() => state.value.dirty),
+		selection: computed(() => state.value.selection),
+		collaboration: computed(() => state.value.collaboration),
+		editError: computed(() => state.value.editError),
 	};
 }
 export const SpreadsheetCanvas = defineComponent({
@@ -72,20 +76,41 @@ export const Toolbar = defineComponent({
 			h(
 				'div',
 				{ role: 'toolbar', ref: (host) => prepareBlock(host, 'toolbar') },
-				toolbarButtons(props.toolbarProps).map((b) =>
-					h(
-						'button',
-						{
-							type: 'button',
-							disabled: b.disabled,
-							'aria-pressed': b.pressed === null ? 'mixed' : b.pressed,
-							onMousedown: (e: MouseEvent) => e.preventDefault(),
-							onClick: () => {
-								void b.run();
-							},
-						},
-						b.label,
-					),
+				toolbarModel(props.toolbarProps).map((item) =>
+					item.kind === 'select'
+						? h(
+								'select',
+								{
+									key: item.id,
+									'aria-label': item.label,
+									disabled: item.disabled,
+									value: item.value,
+									onChange: (e: Event) => {
+										void item.change((e.target as HTMLSelectElement).value);
+									},
+								},
+								item.options.map((o) =>
+									h(
+										'option',
+										{ key: o.value, value: o.value, selected: o.value === item.value },
+										o.label,
+									),
+								),
+							)
+						: h(
+								'button',
+								{
+									key: item.id,
+									type: 'button',
+									disabled: item.disabled,
+									'aria-pressed': item.pressed === null ? 'mixed' : item.pressed,
+									onMousedown: (e: MouseEvent) => e.preventDefault(),
+									onClick: () => {
+										void item.run();
+									},
+								},
+								item.label,
+							),
 				),
 			);
 	},
@@ -125,7 +150,7 @@ export const FormulaBar = defineComponent({
 					'aria-label': props.toolbarProps.labels['Formula Bar'],
 					value: props.toolbarProps.formula,
 					readonly: !props.toolbarProps.canEdit,
-					'aria-invalid': invalid.value,
+					'aria-invalid': invalid.value || props.toolbarProps.editError !== null,
 					onInput: (e: Event) => {
 						const input = e.target as HTMLInputElement;
 						invalid.value = false;
@@ -144,6 +169,9 @@ export const FormulaBar = defineComponent({
 						}
 					},
 				}),
+				props.toolbarProps.editError === null
+					? null
+					: h('span', { role: 'alert' }, props.toolbarProps.editError),
 			]);
 	},
 });

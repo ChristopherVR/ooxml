@@ -71,6 +71,10 @@ export async function mountNativeBlocks(
 				loading: blocks.loading,
 				error: blocks.error,
 				mode: blocks.mode,
+				dirty: blocks.dirty,
+				selection: blocks.selection,
+				collaboration: blocks.collaboration,
+				editError: blocks.editError,
 			}),
 			destroy: () => root.unmount(),
 		};
@@ -114,6 +118,10 @@ export async function mountNativeBlocks(
 				loading: blocks.loading.value,
 				error: blocks.error.value,
 				mode: blocks.mode.value,
+				dirty: blocks.dirty.value,
+				selection: blocks.selection.value,
+				collaboration: blocks.collaboration.value,
+				editError: blocks.editError.value,
 			}),
 			destroy: () => app.unmount(),
 		};
@@ -158,6 +166,10 @@ export async function mountNativeBlocks(
 				loading: blocks.loading(),
 				error: blocks.error(),
 				mode: blocks.mode(),
+				dirty: blocks.dirty(),
+				selection: blocks.selection(),
+				collaboration: blocks.collaboration(),
+				editError: blocks.editError(),
 			}),
 			destroy: dispose,
 		};
@@ -196,14 +208,49 @@ export async function mountNativeBlocks(
 				loading: blocks.loading(),
 				error: blocks.error(),
 				mode: blocks.mode(),
+				dirty: blocks.dirty(),
+				selection: blocks.selection(),
+				collaboration: blocks.collaboration(),
+				editError: blocks.editError(),
 			}),
 			destroy: () => {
 				component.destroy();
 				app.destroy();
 			},
 		};
+	} else if (framework === 'vanilla') {
+		const { createViewerBuildingBlocks } =
+			await import('../../../viewers/xlsx/packages/vanilla/src');
+		const blocks = createViewerBuildingBlocks(initial);
+		const layout = document.createElement('div');
+		const controls = document.createElement('div');
+		const toolbar = document.createElement('div');
+		const custom = document.createElement('button');
+		custom.textContent = 'Host italic';
+		custom.onclick = () => {
+			void blocks.getState().toolbarProps?.onItalic();
+		};
+		const formula = document.createElement('div');
+		const tabs = document.createElement('div');
+		const canvas = document.createElement('div');
+		controls.append(toolbar, custom, formula, tabs);
+		layout.append(controls, canvas);
+		host.append(layout);
+		blocks.mountToolbar(toolbar);
+		blocks.mountFormulaBar(formula);
+		blocks.mountSheetTabs(tabs);
+		blocks.mountCanvas(canvas);
+		harness = {
+			handle: blocks.handle,
+			update: (next) => blocks.update(next),
+			snapshot: () => blocks.getState(),
+			destroy: () => {
+				blocks.destroy();
+				layout.remove();
+			},
+		};
 	} else {
-		throw new Error('Choose angular, vue, svelte or solid for native composition.');
+		throw new Error('Choose angular, vue, svelte, solid or vanilla for native composition.');
 	}
 	window.xlsxNativeBlocks = harness;
 	return harness.handle;

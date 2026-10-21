@@ -9,15 +9,15 @@ import {
 	type Ref,
 } from 'react';
 import {
-	mountEditor,
+	mountEditorSurface,
 	deferredHandle,
-	type EditorOptions,
-	type EditorBinding,
+	type SurfaceOptions,
 	type EditorHandle,
 } from '../../bindings/src/index';
+import { derivedBlockState, toolbarModel } from '../../bindings/src/building-blocks';
 import type { SpreadsheetToolbarProps } from 'xlsx-web-component';
-export interface BuildingBlockOptions extends EditorOptions {
-	canEdit?: boolean | undefined;
+type Surface = ReturnType<typeof mountEditorSurface>;
+export interface BuildingBlockOptions extends SurfaceOptions {
 	handle?: Ref<EditorHandle> | undefined;
 }
 export interface CanvasProps {
@@ -31,12 +31,12 @@ export function SpreadsheetCanvas(props: CanvasProps) {
 export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	const latest = useRef(options);
 	latest.current = options;
-	const binding = useRef<EditorBinding | null>(null);
+	const binding = useRef<Surface | null>(null);
 	const stop = useRef<(() => void) | undefined>(undefined);
 	const [toolbarProps, setToolbarProps] = useState<SpreadsheetToolbarProps | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [mountVersion, setMountVersion] = useState(0);
-	const snapshotElement = useRef<EditorBinding['element'] | undefined>(undefined);
+	const snapshotElement = useRef<Surface['element'] | undefined>(undefined);
 	const [error, setError] = useState<Error | null>(null);
 	const lastBytes = useRef<Uint8Array | ArrayBuffer | undefined>(undefined);
 	const effective = () => ({
@@ -71,8 +71,8 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 		}
 		setMountVersion((version) => version + 1);
 		lastBytes.current = undefined;
-		binding.current = mountEditor(host, effective(), true);
-		stop.current = binding.current.element.subscribeEditorState(refresh);
+		binding.current = mountEditorSurface(host, effective());
+		stop.current = binding.current.subscribe(refresh);
 		refresh();
 	}, []);
 	useEffect(() => {
@@ -106,6 +106,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	return {
 		canvasProps: { mount } satisfies CanvasProps,
 		toolbarProps,
+		...derivedBlockState(toolbarProps),
 		loading,
 		error,
 		mode: options.canEdit === false || options.readOnly ? ('view' as const) : ('edit' as const),
@@ -115,31 +116,40 @@ export type { SpreadsheetToolbarProps } from 'xlsx-web-component';
 
 /** Optional controls using exactly the callbacks exposed to custom host controls. */
 export function Toolbar(props: SpreadsheetToolbarProps) {
-	const buttons = [
-		['Bold', props.bold, props.onBold, !props.canEdit || !props.enabled.bold],
-		['Italic', props.italic, props.onItalic, !props.canEdit || !props.enabled.italic],
-		['Underline', props.underline, props.onUnderline, !props.canEdit || !props.enabled.underline],
-		['Undo', false, props.onUndo, !props.canUndo],
-		['Redo', false, props.onRedo, !props.canRedo],
-	] as const;
 	return createElement(
 		'div',
 		{ role: 'toolbar', ref: (host: HTMLDivElement | null) => prepareBlock(host, 'toolbar') },
-		...buttons.map(([label, pressed, run, disabled]) =>
-			createElement(
-				'button',
-				{
-					key: label,
-					type: 'button',
-					disabled,
-					'aria-pressed': pressed === null ? 'mixed' : pressed,
-					onMouseDown: (event: import('react').MouseEvent) => event.preventDefault(),
-					onClick: () => {
-						void run();
-					},
-				},
-				props.labels[label] ?? label,
-			),
+		...toolbarModel(props).map((item) =>
+			item.kind === 'select'
+				? createElement(
+						'select',
+						{
+							key: item.id,
+							'aria-label': item.label,
+							disabled: item.disabled,
+							value: item.value,
+							onChange: (event: import('react').ChangeEvent<HTMLSelectElement>) => {
+								void item.change(event.currentTarget.value);
+							},
+						},
+						...item.options.map((o) =>
+							createElement('option', { key: o.value, value: o.value }, o.label),
+						),
+					)
+				: createElement(
+						'button',
+						{
+							key: item.id,
+							type: 'button',
+							disabled: item.disabled,
+							'aria-pressed': item.pressed === null ? 'mixed' : item.pressed,
+							onMouseDown: (event: import('react').MouseEvent) => event.preventDefault(),
+							onClick: () => {
+								void item.run();
+							},
+						},
+						item.label,
+					),
 		),
 	);
 }
@@ -177,7 +187,7 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 			'aria-label': props.labels['Formula Bar'],
 			defaultValue: props.formula,
 			readOnly: !props.canEdit,
-			'aria-invalid': invalid,
+			'aria-invalid': invalid || props.editError !== null,
 			onChange: (event: import('react').ChangeEvent<HTMLInputElement>) => {
 				setInvalid(false);
 				props.onFormulaInput(
@@ -196,6 +206,9 @@ export function FormulaBar(props: SpreadsheetToolbarProps) {
 				}
 			},
 		}),
+		props.editError === null
+			? null
+			: createElement('span', { key: 'edit-error', role: 'alert' }, props.editError),
 	);
 }
 export function SheetTabs(props: SpreadsheetToolbarProps) {
