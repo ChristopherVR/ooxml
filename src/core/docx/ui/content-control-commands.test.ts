@@ -9,6 +9,7 @@ import {
 	chooseListItem,
 	deleteToPlaceholder,
 	insertContentControl,
+	replaceControlContent,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
 } from './content-control-commands';
@@ -104,6 +105,45 @@ describe('content control commands', () => {
 		dated = dated.apply(chooseDate(dated, '11', new Date(2026, 0, 9))!);
 		expect(text(dated)).toBe('2026-01-09');
 		expect(controlSpans(dated.doc)[0]?.control.fullDate).toBe('2026-01-09T00:00:00Z');
+	});
+
+	it('writes a control whose placeholder shows no text either in one pass', () => {
+		// A picture control's default placeholder has no text: the control is left without text, as
+		// before, rather than tried again with its placeholder.
+		const picture = control({ kind: 'picture' });
+		const state = stateOf([{ text: 'x', contentControl: picture }]);
+		const span = controlSpans(state.doc)[0]!;
+		expect(
+			text(state.apply(replaceControlContent(state, span, { control: picture, text: '' }))),
+		).toBe('');
+	});
+
+	it('keeps a control whose picked entry or date shows no text, showing its placeholder', () => {
+		// An entry's display text can be empty (`w:displayText=""`, or no attributes at all), and so
+		// can a date format: an inline control lives on its text, so it would go with it.
+		for (const kind of ['dropDownList', 'comboBox'] as const) {
+			const list = control({
+				kind,
+				items: [
+					{ display: 'Red', value: 'r' },
+					{ display: '', value: 'none' },
+				],
+			});
+			const state = stateOf([{ text: 'Pick ' }, { text: 'Red', contentControl: list }]);
+			const next = state.apply(chooseListItem(state, '11', 1)!);
+			expect(
+				controlSpans(next.doc).map((span) => span.control),
+				kind,
+			).toEqual([{ ...list, showingPlaceholder: true }]);
+			expect(text(next), kind).toBe('Pick Choose an item.');
+		}
+		const date = control({ kind: 'date', dateFormat: '' });
+		const dated = stateOf([{ text: 'Due ' }, { text: '1/9/2026', contentControl: date }]);
+		const next = dated.apply(chooseDate(dated, '11', new Date(2026, 0, 9))!);
+		expect(controlSpans(next.doc).map((span) => span.control)).toEqual([
+			{ ...date, fullDate: '2026-01-09T00:00:00Z', showingPlaceholder: true },
+		]);
+		expect(text(next)).toBe('Due Click or tap to enter a date.');
 	});
 
 	it('typing over a placeholder replaces it; a drop-down takes no typing', () => {

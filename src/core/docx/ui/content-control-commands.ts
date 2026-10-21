@@ -71,6 +71,11 @@ function contentMarks(state: EditorState, span: ControlSpan, change: ControlChan
 	return marks;
 }
 
+const placeholderChange = (control: ContentControl): ControlChange => ({
+	control: { ...control, showingPlaceholder: true },
+	text: placeholderTextOf(control),
+});
+
 /**
  * Replaces a control's content (and its state) as one edit. An inline control's text is replaced;
  * a cell control's cell keeps one paragraph, its first, holding the new text.
@@ -78,8 +83,13 @@ function contentMarks(state: EditorState, span: ControlSpan, change: ControlChan
 export function replaceControlContent(
 	state: EditorState,
 	span: ControlSpan,
-	change: ControlChange,
+	edit: ControlChange,
 ): Transaction {
+	// An inline control lives on its text, so an entry or a date that shows none (an empty display
+	// text or date format) would take the control with it: it shows its placeholder instead, as a
+	// control does once its text is deleted.
+	const change =
+		span.level === 'inline' && !edit.text && !edit.removed ? placeholderChange(edit.control) : edit;
 	const marks = contentMarks(state, span, change);
 	const text = change.text ? state.schema.text(change.text, marks) : null;
 	if (span.level !== 'cell')
@@ -217,11 +227,6 @@ export function chooseDate(
 		return undefined;
 	return replaceControlContent(state, span, setControlDate(span.control, date));
 }
-
-const placeholderChange = (control: ContentControl): ControlChange => ({
-	control: { ...control, showingPlaceholder: true },
-	text: placeholderTextOf(control),
-});
 
 /**
  * Typing over a control that shows its placeholder replaces the whole placeholder. Returns
