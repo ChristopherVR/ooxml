@@ -74,4 +74,34 @@ describe('content controls around table cells in the editor', () => {
 		expect(xml).not.toContain('<w:sdt');
 		expect(xml).toContain('<w:tc><w:p><w:r><w:t>Primary</w:t></w:r></w:p></w:tc>');
 	});
+
+	for (const merged of [false, true])
+		it(`keeps a row control when text is typed in its ${merged ? 'merged ' : ''}table`, async () => {
+			const zip = new JSZip();
+			const first = merged ? cell('Title', '<w:vMerge w:val="restart"/>') : cell('Title');
+			const continued = merged ? cell('', '<w:vMerge/>') : cell('Again');
+			const item =
+				`<w:sdt><w:sdtPr><w:alias w:val="Item"/><w:id w:val="72"/></w:sdtPr><w:sdtContent>` +
+				`<w:tr>${continued}${cell('Line')}</w:tr></w:sdtContent></w:sdt>`;
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/>` +
+					`<w:gridCol w:w="3000"/></w:tblGrid><w:tr>${first}${cell('Value')}</w:tr>${item}` +
+					`</w:tbl><w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			const state = EditorState.create({ schema, doc });
+			let at = -1;
+			state.doc.descendants((node, pos) => {
+				if (at < 0 && node.isText && node.text === 'Line') at = pos + node.nodeSize;
+			});
+			const next = state.apply(state.tr.insertText(' two', at));
+			const bytes = await loaded.save(docToModel(next.doc, loaded.model, doc));
+			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			expect(xml).toContain('<w:t>Line two</w:t>');
+			expect(xml).toMatch(
+				/<w:sdt><w:sdtPr><w:alias w:val="Item"\/><w:id w:val="72"\/><\/w:sdtPr><w:sdtContent><w:tr>/,
+			);
+		});
 });
