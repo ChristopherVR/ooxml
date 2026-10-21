@@ -81,7 +81,9 @@ const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; 
  * More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the
  * chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window
  * and closes on Escape, an outside press or a pick. `mode="panel"` shows labelled sections directly
- * for modal pickers, with arrow/Home/End selection and no dropdown trigger. ArrowDown on the trigger opens it and focuses
+ * for modal pickers, with arrow/Home/End selection and no dropdown trigger; `compact` keeps its
+ * tiles at their preview size without visible labels and lets arrow keys only move focus, for a
+ * pane whose pick applies at once. ArrowDown on the trigger opens it and focuses
  * the first tile. Dropdown arrows/Home/End move focus across sections without applying a choice.
  * A pick emits `office-gallery-pick` `{ gallery, itemId }`.
  *
@@ -104,9 +106,9 @@ export class OfficeUiGallery extends OfficeElement {
 	static itemAttribute = 'data-gallery-item';
 	static compactAttribute: string | null = null;
 	static override styles = controlStyles(HOST_CSS);
-	/** `mode`, `chevron-only` and `icon` are read from the attributes, as before. */
+	/** `mode`, `chevron-only`, `icon` and `compact` are read from the attributes. */
 	static override get observedAttributes(): string[] {
-		return [...super.observedAttributes, 'mode', 'chevron-only', 'icon'];
+		return [...super.observedAttributes, 'mode', 'chevron-only', 'icon', 'compact'];
 	}
 	private model: OfficeGalleryState | undefined;
 	private locked = false;
@@ -455,7 +457,8 @@ export class OfficeUiGallery extends OfficeElement {
 				event.preventDefault();
 				event.stopPropagation();
 				items[next]?.focus();
-				if (panel) items[next]?.click();
+				// A compact panel applies its pick at once, so browsing must not apply each tile passed.
+				if (panel && !this.hasAttribute('compact')) items[next]?.click();
 				return;
 			}
 			if (panel) return;
@@ -563,7 +566,7 @@ export class OfficeUiGallery extends OfficeElement {
 			@blur=${() => this.endPreview()}
 			@contextmenu=${(event: MouseEvent) => this.onTileContextMenu(event, item.id)}
 			@keydown=${(event: KeyboardEvent) => this.onTileKey(event, item.id)}
-		>${preview}${this.getAttribute('mode') === 'panel' ? html`<span class="tile-label">${item.label}</span>` : ''}</button>`;
+		>${preview}${this.getAttribute('mode') === 'panel' && !this.hasAttribute('compact') ? html`<span class="tile-label">${item.label}</span>` : ''}</button>`;
 	}
 
 	private lightTemplate(): TemplateResult {
