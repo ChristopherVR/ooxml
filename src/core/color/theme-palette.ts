@@ -24,12 +24,17 @@ export interface ThemePaletteSwatch {
 	readonly variant?: ThemePaletteVariant;
 }
 
+/** A swatch below the base row: it always names its lighter or darker step. */
+export interface ThemePaletteVariantSwatch extends ThemePaletteSwatch {
+	readonly variant: ThemePaletteVariant;
+}
+
 /** One column: the base swatch, then its five variants from top to bottom. */
 export interface ThemePaletteColumn {
 	/** Column name, in Office's order: "Background 1", "Text 1", ... "Accent 6". */
 	readonly name: string;
 	readonly base: ThemePaletteSwatch;
-	readonly variants: readonly ThemePaletteSwatch[];
+	readonly variants: readonly ThemePaletteVariantSwatch[];
 }
 
 /** The ten columns of the Theme Colors grid, in Office's order. */
