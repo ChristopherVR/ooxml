@@ -100,6 +100,24 @@ describe('STYLEREF in headers and footers, page by page', () => {
 		expect(each(refs, 2, 'STYLEREF "Doc Number"')).toEqual(['DOC-7', '']);
 	});
 
+	it('looks before and after a page by the pages that show the text, in a split table row', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const lines = Array.from({ length: 60 }, (_, index) => paragraph(`Line ${index}`)).join('');
+		// The row runs onto the next page: its first cell ends there with the heading, while the
+		// second cell, later in reading order, is all on the first page.
+		const { pages, refs } = await layout(
+			'<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/><w:gridCol w:w="4000"/></w:tblGrid><w:tr>' +
+				cell(paragraph('Intro') + lines + paragraph('Alpha', 'Heading1')) +
+				cell(paragraph('DOC-7', 'DocNumber')) +
+				'</w:tr></w:tbl>' +
+				paragraph('After'),
+		);
+		expect(pages).toHaveLength(2);
+		expect(each(refs, 2, 'STYLEREF 1')).toEqual(['Alpha', 'Alpha']);
+		expect(each(refs, 2, 'STYLEREF "Doc Number"')).toEqual(['DOC-7', 'DOC-7']);
+	});
+
 	it('counts the whole paragraph of a box without lines as shown on its page', async () => {
 		const { model } = await layout(
 			paragraph('Text') +

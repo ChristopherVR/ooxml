@@ -56,24 +56,37 @@ function paragraphsByPage(
 	});
 }
 
-/** The last entry of an ascending list below `value`, or the first above it, by binary search. */
-function nearest(sorted: readonly number[], value: number, direction: 'before' | 'after') {
-	let low = 0;
-	let high = sorted.length;
-	while (low < high) {
-		const middle = (low + high) >> 1;
-		if (direction === 'before' ? sorted[middle]! < value : sorted[middle]! <= value)
-			low = middle + 1;
-		else high = middle;
-	}
-	return direction === 'before' ? sorted[low - 1] : sorted[low];
+/** Whether `shown` holds the part `start` to `end` of a paragraph (an empty part, its place). */
+const shows = (shown: Shown, start: number, end: number) =>
+	shown.some(([from, to]) =>
+		start === end ? from <= start && start <= to : start < to && end > from,
+	);
+
+/** A match and the first and last page that show it. */
+interface Placed {
+	text: string | undefined;
+	first: number;
+	last: number;
+}
+
+/** The matches of one reference, in reading order, and the nearest of them around each page. */
+interface Matches {
+	portions: Map<number, StyleRefPortion[]>;
+	placed: Placed[];
+	/** For each page, the last match in reading order that only pages before it show, or -1. */
+	before: number[];
+	/** For each page, the first match in reading order that only pages after it show, or -1. */
+	after: number[];
 }
 
 /**
  * Evaluates header and footer STYLEREF fields for each page of a layout of `model`. On a page,
  * the field takes the first text in the style from the top (with `\l`, the last from the bottom);
  * when the page has none, the nearest before the page, then the nearest after it. Only the text
- * a page shows counts for it, so a paragraph that runs over two pages gives each page its own.
+ * a page shows counts for it, so a paragraph that runs over two pages gives each page its own,
+ * and text is before or after a page by the pages that show it: in a table row that runs onto
+ * the next page, a cell's text there is after the first page, though it comes before the text of
+ * the next cell in reading order.
  */
 export function pageStyleRefs(
 	model: DocumentModel,
@@ -81,19 +94,21 @@ export function pageStyleRefs(
 ): PageStyleRefs {
 	let source: StyleRefSource | undefined;
 	let onPage: Map<number, Shown>[] | undefined;
-	let bounds: { first: number; last: number }[] | undefined;
-	const matches = new Map<string, { portions: Map<number, StyleRefPortion[]>; sorted: number[] }>();
+	/** The pages that show each paragraph, first to last. */
+	let pagesOf: Map<number, number[]> | undefined;
+	const matches = new Map<string, Matches>();
 	const offsets = new Map<number, number[]>();
 	const read = () => {
 		if (!source) {
 			source = styleRefSource(model);
 			onPage = paragraphsByPage(pages, source);
-			let previous = -1;
-			bounds = onPage.map((here) => {
-				if (!here.size) return { first: previous + 1, last: previous };
-				const range = { first: Math.min(...here.keys()), last: Math.max(...here.keys()) };
-				previous = range.last;
-				return range;
+			pagesOf = new Map();
+			onPage.forEach((here, page) => {
+				for (const at of here.keys()) {
+					const list = pagesOf!.get(at);
+					if (list) list.push(page);
+					else pagesOf!.set(at, [page]);
+				}
 			});
 		}
 		return source;
@@ -109,6 +124,53 @@ export function pageStyleRefs(
 		}
 		return [starts[portion.from]!, starts[portion.to + 1]!];
 	};
+	/**
+	 * Places the matches of one reference. A paragraph no page shows sits between its neighbours:
+	 * after the last page of the shown paragraph before it, before the first page of the one after.
+	 */
+	const place = (portions: Map<number, StyleRefPortion[]>): Matches => {
+		const count = source!.paragraphs.length;
+		const lastBefore: number[] = [];
+		for (let at = 0, last = -1; at < count; at++) {
+			lastBefore[at] = last;
+			last = pagesOf!.get(at)?.at(-1) ?? last;
+		}
+		const firstAfter: number[] = [];
+		for (let at = count - 1, first = pages.length; at >= 0; at--) {
+			firstAfter[at] = first;
+			first = pagesOf!.get(at)?.[0] ?? first;
+		}
+		const placed: Placed[] = [];
+		for (const [at, found] of portions) {
+			const showing = pagesOf!.get(at);
+			for (const portion of found) {
+				if (!showing) {
+					placed.push({ text: portion.text, first: firstAfter[at]!, last: lastBefore[at]! });
+					continue;
+				}
+				const [start, end] = span(at, portion);
+				const on = showing.filter((page) => shows(onPage![page]!.get(at)!, start, end));
+				const list = on.length ? on : showing;
+				placed.push({ text: portion.text, first: list[0]!, last: list.at(-1)! });
+			}
+		}
+		// A match is before every page after its last one, and after every page before its first.
+		const before = new Array<number>(pages.length).fill(-1);
+		const after = new Array<number>(pages.length).fill(-1);
+		placed.forEach((item, index) => {
+			if (item.last + 1 < pages.length) before[Math.max(0, item.last + 1)] = index;
+		});
+		for (let index = placed.length - 1; index >= 0; index--) {
+			const page = placed[index]!.first - 1;
+			if (page >= 0) after[Math.min(page, pages.length - 1)] = index;
+		}
+		for (let page = 1; page < pages.length; page++)
+			before[page] = Math.max(before[page]!, before[page - 1]!);
+		for (let page = pages.length - 2; page >= 0; page--)
+			if (after[page]! < 0 || (after[page + 1]! >= 0 && after[page + 1]! < after[page]!))
+				after[page] = after[page + 1]!;
+		return { portions, placed, before, after };
+	};
 	const result = (page: number, reference: StyleReference): string | undefined => {
 		const document = read();
 		const target = document.target(reference.style);
@@ -121,41 +183,22 @@ export function pageStyleRefs(
 				const results = document.portions(at, reference, target);
 				if (results.length) portions.set(at, results);
 			}
-			found = { portions, sorted: [...portions.keys()] };
+			found = place(portions);
 			matches.set(key, found);
 		}
 		const here = onPage![page] ?? new Map<number, Shown>();
-		const inParagraph = (at: number, keep: (start: number, end: number) => boolean) =>
-			(found.portions.get(at) ?? []).filter((portion) => keep(...span(at, portion)));
 		const order = [...here.keys()];
 		for (const at of reference.last ? order.reverse() : order) {
 			const shown = here.get(at)!;
 			// An empty match (an empty paragraph in the style) is on the page that shows its line.
-			const texts = inParagraph(at, (start, end) =>
-				shown.some(([from, to]) =>
-					start === end ? from <= start && start <= to : start < to && end > from,
-				),
+			const texts = (found.portions.get(at) ?? []).filter((portion) =>
+				shows(shown, ...span(at, portion)),
 			);
 			if (texts.length) return (reference.last ? texts.at(-1) : texts[0])!.text;
 		}
-		const range = bounds![page] ?? { first: 0, last: -1 };
-		// The page's first paragraph may have begun on an earlier page, and its last may go on.
-		const first = here.get(range.first);
-		if (first) {
-			const top = Math.min(...first.map(([from]) => from));
-			const earlier = inParagraph(range.first, (_start, end) => end <= top);
-			if (earlier.length) return earlier.at(-1)!.text;
-		}
-		const before = nearest(found.sorted, range.first, 'before');
-		if (before !== undefined) return found.portions.get(before)!.at(-1)!.text;
-		const last = here.get(range.last);
-		if (last) {
-			const bottom = Math.max(...last.map(([, to]) => to));
-			const later = inParagraph(range.last, (start) => start >= bottom);
-			if (later.length) return later[0]!.text;
-		}
-		const after = nearest(found.sorted, range.last, 'after');
-		return after === undefined ? undefined : found.portions.get(after)![0]!.text;
+		const nearest =
+			(found.before[page] ?? -1) >= 0 ? found.before[page]! : (found.after[page] ?? -1);
+		return nearest >= 0 ? found.placed[nearest]!.text : undefined;
 	};
 	return {
 		result,
