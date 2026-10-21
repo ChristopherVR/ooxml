@@ -19,7 +19,6 @@ import { createRoot } from 'react-dom/client';
  * (`parseMissingKeyHandler: keyToLabel`), so a key with no dictionary entry
  * renders the label a real browser would show.
  */
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
@@ -38,10 +37,6 @@ vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
 
 const { HelpSection } = await import('./HelpSection');
 const { TextSection } = await import('./TextSection');
-
-function render(el: React.ReactElement): string {
-	return renderToStaticMarkup(el);
-}
 
 registerPptxWebControls();
 
@@ -212,16 +207,20 @@ describe('home tab font controls', () => {
 });
 
 describe('help tab', () => {
-	it('offers Settings, which angular, vanilla and svelte already did', () => {
-		const html = render(
+	it('offers Settings, which angular, vanilla and svelte already did', async () => {
+		// The shared section builds the commands once it is in the document.
+		const { target, unmount } = await mountInto(
 			React.createElement(HelpSection, {
 				onOpenSettings: vi.fn<() => void>(),
 				onToggleShortcuts: vi.fn<() => void>(),
 				onRunAccessibilityCheck: vi.fn<() => void>(),
 			}),
 		);
-		for (const label of ['Settings', 'Keyboard Shortcuts', 'Accessibility Check']) {
-			expect(html).toContain(`<pptx-ui-ribbon-command label="${label}"`);
-		}
+		expect(
+			[...target.querySelectorAll('pptx-ui-ribbon-command')].map((command) =>
+				command.getAttribute('label'),
+			),
+		).toStrictEqual(['Settings', 'Keyboard Shortcuts', 'Accessibility Check']);
+		await unmount();
 	});
 });
