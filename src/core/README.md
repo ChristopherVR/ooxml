@@ -99,10 +99,21 @@ import { PptxHandler } from 'ooxml-core/pptx';
 
 const { handler, data, createSlide } = await PptxHandler.create({ title: 'Quarterly Review' });
 data.slides.push(
-	createSlide().addText('Hello World', { x: 100, y: 100, width: 600, height: 80 }).build(),
+	createSlide('Title Slide')
+		.addPlaceholder('ctrTitle', 'Quarterly Review')
+		.addPlaceholder('subTitle', 'Results and next steps')
+		.build(),
 );
 const bytes = await handler.save(data.slides); // a valid .pptx
 ```
+
+`addPlaceholder(type, text, { idx? })` binds text to the selected layout and inherits
+its position, size, and text styles. Use `{ idx: 1 }` or `{ idx: 2 }` for repeated
+content slots in Two Content. Optional `x`, `y`, `width`, and `height` override the
+inherited frame. If a template's master frame needs a compatible-role fallback,
+only the newly created placeholder receives an explicit frame. A missing slot
+requires a complete explicit frame; otherwise the builder throws. Standalone `new SlideBuilder(number, layoutPath, name, handler)`
+requires a loaded handler for this method. Use `addText` for a free text box.
 
 **Work at the package level**
 

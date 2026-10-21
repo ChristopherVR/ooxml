@@ -99,7 +99,12 @@ export class Presentation {
 			data,
 			createSlide: (layoutName?: string) => {
 				const slideNum = data.slides.length + 1;
-				return new SlideBuilder(slideNum, undefined, layoutName);
+				const layouts = handler.getLayoutOptions();
+				const layout =
+					layouts.find((item) => item.name === layoutName) ??
+					layouts.find((item) => item.name === 'Blank') ??
+					layouts[0];
+				return new SlideBuilder(slideNum, layout?.path, layout?.name ?? layoutName, handler);
 			},
 		});
 	}
