@@ -62,7 +62,7 @@ import {
 ## Honest limits
 
 - Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back.
-- There is no authentication, authorisation or persistence here; `role: 'viewer'` is advisory on the client. A server must enforce permissions.
+- There is no authentication, authorisation or persistence here; `role: 'viewer'` is advisory on the client. A server must enforce permissions. `demos/pptx/demo-host-review` shows one way (signed room tickets, a relay that drops writes from read-only sockets, live access changes); its recipe is the PowerPoint guide "Review inside your application" (`viewers/pptx/docs/guide/review-workflow.md`).
 - Awareness has no integrity protection; presence is sanitised for display, not trusted.
 - Asset entries are not garbage-collected when their owner is deleted.
 - No Word layout, document or PowerPoint model parity is claimed: this area only moves bytes and presence.
