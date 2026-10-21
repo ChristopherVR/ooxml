@@ -21,7 +21,7 @@
 }
 .cells {
 	display: grid;
-	grid-template-columns: repeat(10, var(--office-space-4));
+	grid-template-columns: repeat(var(--_columns, 10), var(--office-space-4));
 	gap: var(--office-space-1);
 }
 /* The five variant rows sit flush under one another, as in Office. */

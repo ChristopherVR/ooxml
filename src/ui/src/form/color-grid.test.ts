@@ -196,6 +196,16 @@ describe('office-ui-color-grid', () => {
 		);
 		const theme = buttons(grid, '[data-source="theme"]');
 		expect(theme).toHaveLength(12);
+		// Each theme row lays out the palette's two columns, not ten with eight empty.
+		const rows = [...grid.shadowRoot!.querySelectorAll<HTMLElement>('[data-cells="theme"]')];
+		expect(rows.map((row) => row.style.getPropertyValue('--_columns'))).toStrictEqual(
+			Array(6).fill('2'),
+		);
+		expect(
+			[...grid.shadowRoot!.querySelectorAll<HTMLElement>('[data-cells="standard"]')].map((row) =>
+				row.style.getPropertyValue('--_columns'),
+			),
+		).toStrictEqual(['10']);
 		expect(theme.map((button) => button.dataset.color)).toContain('#014014');
 		const variant = buttons(grid, '[data-color="#014014"]')[0]!;
 		expect(variant.getAttribute('aria-label')).toBe('Column 1 variant 4');

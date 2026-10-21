@@ -244,8 +244,13 @@ export class OfficeUiColorGrid extends OfficeElement {
 								: {},
 					)}
 			></button>`;
-		const cells = (items: readonly ThemePaletteSwatch[], source: OfficeColorSource) => {
-			const result = html`<div class="cells" data-cells=${source}
+		// A row lays out Office's ten columns, or as many as a product's palette has.
+		const cells = (
+			items: readonly ThemePaletteSwatch[],
+			source: OfficeColorSource,
+			columns = COLUMNS,
+		) => {
+			const result = html`<div class="cells" data-cells=${source} style=${`--_columns:${columns}`}
 				>${items.map((item, index) => swatch(item, source, index))}</div
 			>`;
 			row++;
@@ -287,8 +292,13 @@ export class OfficeUiColorGrid extends OfficeElement {
 			${cells(
 				palette.map((column) => column.base),
 				'theme',
+				palette.length || COLUMNS,
 			)}
-			<div class="variants">${[0, 1, 2, 3, 4].map((index) => cells(variants(index), 'theme'))}</div>
+			<div class="variants"
+				>${[0, 1, 2, 3, 4].map((index) =>
+					cells(variants(index), 'theme', palette.length || COLUMNS),
+				)}</div
+			>
 			${extra.length ? cells(extra, 'extra') : nothing}
 			${
 				standard.length
