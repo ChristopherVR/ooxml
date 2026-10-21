@@ -75,6 +75,21 @@ describe('STYLEREF styles', () => {
 		expect(styleTarget(model, 'Missing')).toBeUndefined();
 	});
 
+	it('finds a heading level by the built-in heading name, whatever its id', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		// Word names its built-in headings `heading 1` to `heading 9` in every language and takes
+		// the id from the name shown in its interface: `berschrift1` in German, `Titre1` in French.
+		const model = await load({
+			styles: `<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="berschrift1"><w:name w:val="heading 1"/></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="Chapter"/></w:style></w:styles>`,
+			body: paragraph('Body'),
+		});
+		expect(styleTarget(model, '1')).toEqual({ kind: 'paragraph', id: 'berschrift1' });
+		expect(styleTarget(model, 'Heading 1')).toEqual({ kind: 'paragraph', id: 'berschrift1' });
+		// A style named otherwise is not the built-in heading, for Word either.
+		expect(styleTarget(model, '2')).toBeUndefined();
+		expect(styleTarget(model, 'Chapter')).toEqual({ kind: 'paragraph', id: 'Heading2' });
+	});
+
 	it('reads paragraph text without hidden or deleted text, and stretches of a character style', async () => {
 		const model = await load({
 			body:
