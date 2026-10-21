@@ -10,7 +10,7 @@ import type { TextSegment } from 'ooxml-core/pptx';
 import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import type { ParagraphBulletResult } from './bullet-list';
-import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
 import type { RunStyle } from './text-run-style';
 
 export function buildBulletMarkerStyle(
@@ -27,7 +27,12 @@ export function buildBulletMarkerStyle(
 		bulletStyle.color = bullet.color;
 	}
 	if (bullet.fontFamily) {
-		bulletStyle.fontFamily = bullet.fontFamily;
+		// A weight or style variant named as its own family ("Lato Light Italic") falls back to
+		// its base family, as text in it does; any other `a:buFont` (a symbol font) is used as is.
+		bulletStyle.fontFamily =
+			resolveGoogleFontsFace(bullet.fontFamily)?.weight === undefined
+				? bullet.fontFamily
+				: getSubstituteFontFamily(bullet.fontFamily);
 	} else if (firstSeg?.style?.fontFamily) {
 		// A bullet that declares no `a:buFont` is painted in the paragraph's own
 		// typeface, which is what React does (the marker rides the first segment's
