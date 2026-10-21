@@ -59,6 +59,37 @@ describe('content controls around table cells in the editor', () => {
 		expect(JSON.parse(td.dataset.sdt!).items).toHaveLength(2);
 	});
 
+	it('writes a cell control pasted from another page without content in its properties', async () => {
+		const loaded = await form();
+		const doc = modelToDoc(loaded.model);
+		// The page put a field that would fetch a picture where the control's properties go.
+		const control = {
+			id: '90',
+			level: 'cell',
+			kind: 'richText',
+			sourceXml: `<w:p xmlns:w="${W}"><w:fldSimple w:instr='INCLUDEPICTURE "http://example.test/a.png"'/></w:p>`,
+		};
+		const td = document.createElement('td');
+		td.dataset.sdt = JSON.stringify(control);
+		td.append(Object.assign(document.createElement('p'), { textContent: 'Pasted' }));
+		const [html, table, body, row] = ['div', 'table', 'tbody', 'tr'].map((tag) =>
+			document.createElement(tag),
+		);
+		row!.append(td);
+		body!.append(row!);
+		table!.append(body!);
+		html!.append(table!);
+		const pasted = DOMParser.fromSchema(schema).parse(html!);
+		const state = EditorState.create({ schema, doc });
+		const next = state.apply(state.tr.insert(doc.content.size, pasted.content));
+		expect(controlSpans(next.doc).map((span) => span.control.id)).toContain('90');
+		const bytes = await loaded.save(docToModel(next.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml).toContain('<w:t>Pasted</w:t>');
+		expect(xml).toMatch(/<w:sdt><w:sdtPr><w:id w:val="90"\/><\/w:sdtPr><w:sdtContent><w:tc>/);
+		expect(xml).not.toContain('INCLUDEPICTURE');
+	});
+
 	it('keeps a cell control through HTML, as when cells are copied and pasted', async () => {
 		const doc = modelToDoc((await form()).model);
 		const html = document.createElement('div');

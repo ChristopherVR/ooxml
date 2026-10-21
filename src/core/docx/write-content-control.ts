@@ -170,10 +170,33 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 		writeDate(doc, sdtPr, control);
 }
 
+/**
+ * The `w:<local>` element `xml` holds, imported into `doc`; nothing when it holds no XML or another
+ * element. A control's verbatim properties come with it when it is copied, also from a page pasted
+ * into the editor, so they could hold content, such as a field that fetches a picture when it is
+ * updated, which must not reach the saved document.
+ */
+function verbatimElement(
+	doc: XmlDocument,
+	xml: string | undefined,
+	local: string,
+): XmlElement | undefined {
+	if (!xml) return undefined;
+	let root: XmlElement | null;
+	try {
+		root = parseXml(xml).documentElement;
+	} catch {
+		return undefined;
+	}
+	return root?.localName === local && root.namespaceURI === WORD_NS
+		? (doc.importNode(root, true) as XmlElement)
+		: undefined;
+}
+
 /** Builds the `w:sdtPr` of a control that has no source element. */
 function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement {
-	if (control.sourceXml)
-		return doc.importNode(parseXml(control.sourceXml).documentElement, true) as XmlElement;
+	const verbatim = verbatimElement(doc, control.sourceXml, 'sdtPr');
+	if (verbatim) return verbatim;
 	const sdtPr = makeW(doc, 'sdtPr');
 	if (control.alias !== undefined) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);
@@ -220,8 +243,8 @@ export function createContentControl(
 	if (/^-?\d+$/.test(control.id) && getW(first(sdtPr, 'id'), 'val') !== control.id)
 		setValued(doc, sdtPr, 'id', control.id);
 	sdt.appendChild(sdtPr);
-	if (control.endSourceXml)
-		sdt.appendChild(doc.importNode(parseXml(control.endSourceXml).documentElement, true));
+	const end = verbatimElement(doc, control.endSourceXml, 'sdtEndPr');
+	if (end) sdt.appendChild(end);
 	const content = makeW(doc, 'sdtContent');
 	sdt.appendChild(content);
 	patchContentControl(doc, sdt, control);
