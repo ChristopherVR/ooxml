@@ -46,7 +46,7 @@ it('draws the toolbar, page navigation and status controls from signals and keep
 		const model = createDocument();
 		model.blocks = [{ type: 'paragraph', id: 'p', runs: [{ text: 'Angular composed words' }] }];
 		const { blocks } = component.instance;
-		blocks.update({ documentModel: model });
+		blocks.update({ documentModel: model, canEdit: true });
 		component.changeDetectorRef.detectChanges();
 		component.changeDetectorRef.detectChanges();
 		const bold = host.querySelector<HTMLButtonElement>('button[aria-label="Bold"]')!;

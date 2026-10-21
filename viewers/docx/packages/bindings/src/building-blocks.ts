@@ -33,14 +33,14 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 		statusProps: null,
 		loading: false,
 		error: null,
-		mode: 'edit',
+		mode: 'view',
 	};
 	const listeners = new Set<(state: BuildingBlockState) => void>();
 	const publish = (patch: Partial<BuildingBlockState>) => {
 		const next: BuildingBlockState = {
 			...state,
 			...patch,
-			mode: options.canEdit === false || options.readOnly ? 'view' : 'edit',
+			mode: options.canEdit !== true || options.readOnly ? 'view' : 'edit',
 		};
 		if (
 			(Object.keys(next) as (keyof BuildingBlockState)[]).every((key) => next[key] === state[key])

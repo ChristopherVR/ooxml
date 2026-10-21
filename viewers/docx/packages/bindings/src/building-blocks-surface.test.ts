@@ -45,7 +45,7 @@ it('routes host workflow callbacks through update and reports a missing one as n
 		session.canvasProps.mount(host);
 		expect(session.state.toolbarProps?.canInsertLink).toBe(false);
 		expect(session.state.toolbarProps?.openHyperlinkDialog()).toBe(false);
-		session.update({ documentModel: model, onOpenHyperlinkDialog });
+		session.update({ documentModel: model, onOpenHyperlinkDialog, canEdit: true });
 		expect(session.state.toolbarProps?.canInsertLink).toBe(true);
 		expect(session.state.toolbarProps?.openHyperlinkDialog()).toBe(true);
 		expect(onOpenHyperlinkDialog).toHaveBeenCalledOnce();

@@ -88,6 +88,7 @@ for (const framework of FRAMEWORKS) {
 		await page.evaluate(() => {
 			const model = window.nativeWord!.handle.element.documentModel!;
 			window.nativeWord!.options({
+				canEdit: true,
 				documentModel: {
 					...model,
 					blocks: Array.from({ length: 140 }, (_, index) => ({
@@ -115,6 +116,7 @@ for (const framework of FRAMEWORKS) {
 		await page.evaluate(() => {
 			const model = window.nativeWord!.handle.element.documentModel!;
 			window.nativeWord!.options({
+				canEdit: true,
 				documentModel: {
 					...model,
 					blocks: [{ type: 'paragraph', id: 'only', runs: [{ text: 'Native Word composition' }] }],
@@ -170,6 +172,7 @@ for (const framework of FRAMEWORKS) {
 			const store = window as unknown as { requests: Record<string, unknown> };
 			store.requests = {};
 			host.options({
+				canEdit: true,
 				documentModel: host.handle.element.documentModel!,
 				onOpenHyperlinkDialog: (request) => (store.requests.link = request),
 				onOpenFindReplace: (request) => (store.requests.find = request),

@@ -26,7 +26,10 @@ it('composes a surface with every library control, keeps nodes on updates and cl
 	model.blocks = [{ type: 'paragraph', id: 'p', runs: [{ text: 'Solid composed words' }] }];
 	const host = document.createElement('div');
 	document.body.append(host);
-	const [options, setOptions] = createSignal<BuildingBlockOptions>({ documentModel: model });
+	const [options, setOptions] = createSignal<BuildingBlockOptions>({
+		documentModel: model,
+		canEdit: true,
+	});
 	let blocks!: ReturnType<typeof createViewerBuildingBlocks>;
 	let dispose = () => {};
 	createRoot((stop) => {

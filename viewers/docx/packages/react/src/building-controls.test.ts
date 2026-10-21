@@ -40,7 +40,7 @@ it('renders every library control from the props, keeps nodes on updates and hon
 	const render = (options: BuildingBlockOptions) =>
 		act(async () => root.render(createElement(StrictMode, null, createElement(Host, { options }))));
 	try {
-		await render({ documentModel: model });
+		await render({ documentModel: model, canEdit: true });
 		const label = (name: string) => host.querySelector<HTMLElement>(`[aria-label="${name}"]`);
 		const bold = label('Bold') as HTMLButtonElement;
 		expect(bold.disabled).toBe(false);
@@ -58,7 +58,7 @@ it('renders every library control from the props, keeps nodes on updates and hon
 			zoom.dispatchEvent(new Event('change', { bubbles: true }));
 		});
 		expect(blocks.statusProps?.zoom).toBe(150);
-		await render({ documentModel: model, onOpenFindReplace: opened });
+		await render({ documentModel: model, onOpenFindReplace: opened, canEdit: true });
 		const find = label('Find') as HTMLButtonElement;
 		await act(async () => find.click());
 		expect(opened).toHaveBeenCalledOnce();

@@ -250,7 +250,7 @@ export interface SurfaceOptions extends Omit<EditorOptions, RibbonOnlyOption>, S
 export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = {}) {
 	const effective = (options: SurfaceOptions): EditorOptions => ({
 		...options,
-		readOnly: options.canEdit === false || options.readOnly === true,
+		readOnly: options.canEdit !== true || options.readOnly === true,
 	});
 	const actions = (options: SurfaceOptions): SurfaceHostActions => ({
 		...(options.onOpenHyperlinkDialog && { onOpenHyperlinkDialog: options.onOpenHyperlinkDialog }),

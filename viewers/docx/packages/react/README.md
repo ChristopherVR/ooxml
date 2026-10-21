@@ -44,7 +44,8 @@ To render only the controls you use, with your own design system, use the buildi
 `navigationProps` and `statusProps` (selection and formatting state, enabled flags and callbacks).
 Optional `Toolbar`, `PageNavigation` and `StatusBar` components consume the same props, and
 `onOpenHyperlinkDialog`, `onOpenFindReplace` and `onOpenImagePicker` hand those workflows to your own
-dialogs. A read-only surface still allows selection, keyboard navigation and copy. See
+dialogs. The surface is read-only until you pass `canEdit: true`; a read-only surface still
+allows selection, keyboard navigation and copy. See
 [Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
 
 ## Features

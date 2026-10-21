@@ -14,7 +14,7 @@ afterEach(() => document.body.replaceChildren());
 it('composes a surface with library controls from the shared session and disposes cleanly', () => {
 	const model = createDocument();
 	model.blocks = [{ type: 'paragraph', id: 'p', runs: [{ text: 'Vanilla composition here' }] }];
-	const blocks = createViewerBuildingBlocks({ documentModel: model });
+	const blocks = createViewerBuildingBlocks({ documentModel: model, canEdit: true });
 	const part = (id: string) => {
 		const node = document.createElement('div');
 		node.id = id;

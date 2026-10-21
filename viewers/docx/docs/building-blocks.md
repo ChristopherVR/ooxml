@@ -112,7 +112,10 @@ Office styles. Custom controls never need them.
 
 ## Read-only surfaces
 
-`canEdit={false}` (or `readOnly`) is authoritative: every editing callback returns `false` and
+The surface is **read-only until the host passes `canEdit: true`**, matching the PowerPoint and
+Visio building blocks (the full `WordEditor` stays editable by default). The permission is applied
+before the canvas mounts, so `mode` starts as `'view'` and there is no editable flash. `readOnly`
+still wins over `canEdit: true`. While read-only, every editing callback returns `false` and
 the document cannot change. The reader can still focus the surface, select text with the mouse or
 keyboard (arrows, Shift+arrows, Home, End, Ctrl+A), copy, and read the selection from
 `toolbarProps.selection`. Keyboard shortcuts that belong to the application (find, save, print)

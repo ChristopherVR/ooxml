@@ -22,7 +22,7 @@ function document3() {
 it('composes a surface with every library control, reacts to permission and disposes the engine', async () => {
 	const host = document.createElement('div');
 	document.body.append(host);
-	const options = shallowRef<BuildingBlockOptions>({ documentModel: document3() });
+	const options = shallowRef<BuildingBlockOptions>({ documentModel: document3(), canEdit: true });
 	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
 	const app = createApp(
 		defineComponent({
