@@ -10,7 +10,8 @@ import {
 	type EncryptionOptions,
 } from '../../crypto/index';
 import type { Workbook } from '../model';
-import { loadXlsx } from '../read/index';
+import { loadXlsx, type XlsxLoadLimits } from '../read/index';
+import { resolveLoadLimits } from '../read/limits';
 import { saveXlsx } from '../write/index';
 import { csvToWorkbook, sheetNameFromFileName, sheetToCsv } from './csv';
 import { xlsbUnsupported } from './errors';
@@ -111,6 +112,12 @@ export interface LoadWorkbookOptions {
 	 * untrusted source would otherwise inject live formulas (`=HYPERLINK(...)`).
 	 */
 	formulas?: boolean;
+	/**
+	 * Size limits for an .xlsx/.xlsm/.xltx package, also once decrypted (see `loadXlsx`). Over a
+	 * limit throws `WorkbookTooLargeError` (`code: 'workbook-too-large'`, `limit` names it; test it
+	 * with `isWorkbookTooLargeError`). The .xls and CSV readers do not apply them.
+	 */
+	limits?: XlsxLoadLimits;
 }
 
 const ENCRYPTED_WARNING =
@@ -135,6 +142,8 @@ export async function loadWorkbook(
 	input: Uint8Array | ArrayBuffer,
 	options: LoadWorkbookOptions = {},
 ): Promise<Workbook> {
+	// Checked before detection and decryption, so a bad limit fails at once, whatever the input.
+	const limits = options.limits && resolveLoadLimits(options.limits);
 	let bytes = toBytes(input);
 	let format = detectWorkbookFormat(bytes, options.fileName);
 	const encrypted = format === 'encrypted';
@@ -151,7 +160,7 @@ export async function loadWorkbook(
 			...(options.formulas === undefined ? {} : { formulas: options.formulas }),
 		});
 	}
-	const workbook = await loadXlsx(bytes);
+	const workbook = await loadXlsx(bytes, limits ? { limits } : {});
 	if (format === 'xlsm' && workbook.format === 'xlsx') workbook.format = 'xlsm';
 	if (encrypted) workbook.warnings.push(ENCRYPTED_WARNING);
 	return workbook;

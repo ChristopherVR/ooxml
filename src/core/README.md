@@ -115,6 +115,20 @@ only the newly created placeholder receives an explicit frame. A missing slot
 requires a complete explicit frame; otherwise the builder throws. Standalone `new SlideBuilder(number, layoutPath, name, handler)`
 requires a loaded handler for this method. Use `addText` for a free text box.
 
+**Open a very large workbook**
+
+```ts
+import { DEFAULT_XLSX_LOAD_LIMITS, isWorkbookTooLargeError, loadXlsx } from 'ooxml-core/xlsx';
+
+// The default limits guard against zip bombs; raise only what the expected files need.
+const workbook = await loadXlsx(bytes, {
+	limits: { maxTotalBytes: 4 * DEFAULT_XLSX_LOAD_LIMITS.maxTotalBytes, maxXmlElements: 20_000_000 },
+});
+// Over a limit, loading throws an error that isWorkbookTooLargeError(error) recognises (code
+// 'workbook-too-large'): `limit` names the limit and `maximum` is its value. loadWorkbook
+// ('ooxml-core/xlsx/load') takes `limits` too.
+```
+
 **Work at the package level**
 
 ```ts

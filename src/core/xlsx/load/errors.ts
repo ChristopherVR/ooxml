@@ -8,6 +8,7 @@ export {
 	isOoxmlCryptoError,
 	type OoxmlCryptoErrorCode,
 } from '../../crypto/errors';
+export { WorkbookTooLargeError, isWorkbookTooLargeError } from '../read/limits';
 
 export type UnsupportedWorkbookErrorCode = 'xlsb-unsupported';
 
