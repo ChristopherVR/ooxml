@@ -183,6 +183,16 @@ function characterPortions(
 const inParagraphStyle = (paragraph: Paragraph, target: StyleTarget) =>
 	paragraph.style === target.id || (paragraph.style === undefined && target.isDefault === true);
 
+/**
+ * Whether a tracked change deletes a paragraph whole, its mark and all its text: it is not in the
+ * document then, and no match, as deleted text is not.
+ */
+const deletedWhole = (paragraph: Paragraph) =>
+	(paragraph.markRevision?.kind === 'delete' || paragraph.markRevision?.kind === 'moveFrom') &&
+	paragraph.runs.every(
+		(run) => !run.text || run.revision?.kind === 'delete' || run.revision?.kind === 'moveFrom',
+	);
+
 /** Evaluates STYLEREF fields of one document against its paragraphs. */
 export interface StyleRefSource {
 	readonly paragraphs: readonly Paragraph[];
@@ -256,17 +266,18 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 		if (target.kind === 'character') found = characterPortions(paragraph, target.id, hidden, skip);
 		else
 			// An empty paragraph in the style is a match too, which shows nothing, as in Word.
-			found = inParagraphStyle(paragraph, target)
-				? [
-						{
-							text: paragraph.runs
-								.map((run) => (hidden(run, paragraph) ? '' : shownText(run)))
-								.join(''),
-							from: 0,
-							to: paragraph.runs.length - 1,
-						},
-					]
-				: [];
+			found =
+				inParagraphStyle(paragraph, target) && !deletedWhole(paragraph)
+					? [
+							{
+								text: paragraph.runs
+									.map((run) => (hidden(run, paragraph) ? '' : shownText(run)))
+									.join(''),
+								from: 0,
+								to: paragraph.runs.length - 1,
+							},
+						]
+					: [];
 		if (reference.number && found.length) {
 			const label = number(paragraph, reference.numberOnly);
 			found = found.map((portion) => ({ ...portion, text: label ?? undefined }));
