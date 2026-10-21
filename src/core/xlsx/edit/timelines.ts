@@ -119,10 +119,17 @@ export function insertTimeline(
 	const pivot = sheet.pivotTables?.find((entry) => entry.name === ref.pivot);
 	if (!pivot || !pivot.dateFields?.includes(ref.field))
 		throw new Error('Choose a PivotTable with a date field.');
-	const dates = pivot.records
-		.map((record) => record[pivot.fields.indexOf(ref.field)])
-		.filter((value): value is number => typeof value === 'number');
-	if (!dates.length) throw new Error('Choose a PivotTable with a date field.');
+	// The earliest and latest dates in a loop: a spread passes one argument per record and overflows.
+	const column = pivot.fields.indexOf(ref.field);
+	let earliest = Infinity;
+	let latest = -Infinity;
+	for (const record of pivot.records) {
+		const value = record[column];
+		if (typeof value !== 'number') continue;
+		earliest = Math.min(earliest, value);
+		latest = Math.max(latest, value);
+	}
+	if (earliest > latest) throw new Error('Choose a PivotTable with a date field.');
 	const taken = new Set([
 		...(workbook.slicers?.slicers ?? []).map((entry) => entry.name.toLowerCase()),
 		...(workbook.slicers?.timelines ?? []).map((entry) => entry.name.toLowerCase()),
@@ -140,8 +147,8 @@ export function insertTimeline(
 		'_',
 	);
 	const bounds = boundsOfSerialRange(
-		serialToIso(Math.min(...dates), workbook.date1904),
-		serialToIso(Math.max(...dates), workbook.date1904),
+		serialToIso(earliest, workbook.date1904),
+		serialToIso(latest, workbook.date1904),
 	);
 	const metrics = createGridMetrics(sheet, { zoom: 100 });
 	let right = 0;
