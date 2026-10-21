@@ -191,8 +191,19 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(tr).doc.textContent).toBe(state.doc.textContent);
 	});
 
-	/** A form protected for filling in whose second section (`p1`) is left unprotected. */
-	function sectionedState() {
+	type SectionLayout = { endsAtBlockId: string; formProtection?: false }[];
+
+	/**
+	 * A form protected for filling in, by default with a protected first section (`p0`) and a last
+	 * section (`p1`) the protection leaves unprotected.
+	 */
+	function sectionedState(
+		sections: SectionLayout = [
+			{ endsAtBlockId: 'p0' },
+			{ endsAtBlockId: 'p1', formProtection: false },
+		],
+		texts: Record<string, string> = {},
+	) {
 		const sectioned = new Schema({
 			nodes: {
 				doc: { content: 'paragraph+', attrs: { sections: { default: null } } },
@@ -212,10 +223,11 @@ describe('legacy form fields in the editor', () => {
 				{ id },
 				runs.flatMap((run) => runToInlineNodes(run, sectioned)),
 			);
-		const sections = [{ endsAtBlockId: 'p0' }, { endsAtBlockId: 'p1', formProtection: false }];
+		const extra = Object.entries(texts).map(([id, text]) => paragraph(id, [{ text }]));
 		const doc = sectioned.node('doc', { sections: JSON.stringify(sections) }, [
 			paragraph('p0', [{ text: 'Name: ' }, ...field(name, 'Ada')]),
 			paragraph('p1', [{ text: 'Notes' }]),
+			...extra,
 		]);
 		return EditorState.create({
 			schema: sectioned,
@@ -240,6 +252,76 @@ describe('legacy form fields in the editor', () => {
 		const aligned = (at: number) => state.apply(state.tr.setNodeAttribute(at, 'align', 'center'));
 		expect(aligned(notes).doc.child(1).attrs.align).toBe('center');
 		expect(aligned(0).doc.child(0).attrs.align).toBeNull();
+	});
+
+	/** The text of each paragraph, after typing `text` at the start of paragraph `index`. */
+	const typedAt = (state: EditorState, index: number, text: string): string[] => {
+		let pos = 0;
+		for (let at = 0; at < index; at++) pos += state.doc.child(at).nodeSize;
+		const typed = state.apply(state.tr.insertText(text, pos + 1));
+		const texts: string[] = [];
+		typed.doc.forEach((node) => texts.push(node.textContent));
+		return texts;
+	};
+
+	it('lets a paragraph added at the end of an unprotected last section be typed into', () => {
+		const state = sectionedState();
+		// Enter at the end of the section's last paragraph: the new paragraph has no id yet.
+		const end = state.doc.content.size - 1;
+		const split = state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }]));
+		expect(split.doc.childCount).toBe(3);
+		expect(typedAt(split, 2, 'More')).toEqual(['Name: Ada', 'Notes', 'More']);
+	});
+
+	it('keeps the last section editable when the block it named is gone', () => {
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0' },
+			{ endsAtBlockId: 'removed', formProtection: false },
+		]);
+		expect(typedAt(state, 1, 'My ')).toEqual(['Name: Ada', 'My Notes']);
+		expect(typedAt(state, 0, 'X')).toEqual(['Name: Ada', 'Notes']);
+	});
+
+	it('gives the blocks of a section whose last block is gone to the next section', () => {
+		const state = sectionedState(
+			[
+				{ endsAtBlockId: 'p0' },
+				{ endsAtBlockId: 'removed' },
+				{ endsAtBlockId: 'p2', formProtection: false },
+			],
+			{ p2: 'Remarks' },
+		);
+		expect(typedAt(state, 1, 'My ')).toEqual(['Name: Ada', 'My Notes', 'Remarks']);
+		expect(typedAt(state, 2, 'Our ')).toEqual(['Name: Ada', 'Notes', 'Our Remarks']);
+	});
+
+	it('refuses an edit that would move text of an unprotected section into a protected one', () => {
+		// The first section is unprotected and ends at `p0`; a split puts its second part in the
+		// next section, as the editor and the saved document place a section break on the first.
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0', formProtection: false },
+			{ endsAtBlockId: 'p1' },
+		]);
+		const end = state.doc.child(0).nodeSize - 1;
+		const atEnd = state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }]));
+		expect(atEnd.doc.childCount).toBe(2);
+		const inside = state.apply(state.tr.split(3));
+		expect(inside.doc.childCount).toBe(2);
+		expect(typedAt(state, 0, 'My ')).toEqual(['My Name: Ada', 'Notes']);
+	});
+
+	it('lets paragraphs split anywhere else in an unprotected section', () => {
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p1', formProtection: false }, { endsAtBlockId: 'p2' }],
+			{ p2: 'Protected' },
+		);
+		// `p0` is in the unprotected section but does not end it.
+		expect(state.apply(state.tr.split(3)).doc.childCount).toBe(4);
+		const start = state.doc.child(0).nodeSize - 1;
+		expect(
+			state.apply(state.tr.split(start, 1, [{ type: state.schema.nodes.paragraph! }])).doc
+				.childCount,
+		).toBe(4);
 	});
 
 	it('only lets form fields change in a document protected for forms', () => {

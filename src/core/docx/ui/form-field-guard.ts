@@ -36,23 +36,40 @@ export function exceedsFormTextLength(tr: Transaction): boolean {
 	});
 }
 
-/** The sections a document protected for forms leaves editable (`w:formProt w:val="0"`). */
-function unprotectedSections(doc: Node): { from: number; to: number }[] {
+type Range = { from: number; to: number };
+
+/**
+ * The sections a document protected for forms leaves editable (`w:formProt w:val="0"`), placed as
+ * Print Layout and the saved document place them: a section ends after the first block with its
+ * end id, the last section runs to the end of the document, and a section whose last block is
+ * gone is empty, its blocks falling to the next one (deleting a break merges sections).
+ */
+function unprotectedSections(doc: Node): Range[] {
 	if (typeof doc.attrs.sections !== 'string') return [];
 	const sections = JSON.parse(doc.attrs.sections) as {
 		endsAtBlockId?: string;
 		formProtection?: false;
 	}[];
 	if (!sections.some((section) => section.formProtection === false)) return [];
-	const ranges: { from: number; to: number }[] = [];
-	let index = 0;
+	const blocks: { id: unknown; end: number }[] = [];
+	doc.forEach((node, offset) => blocks.push({ id: node.attrs.id, end: offset + node.nodeSize }));
+	const ranges: Range[] = [];
 	let start = 0;
-	doc.forEach((node, offset) => {
-		const section = sections[index];
-		if (!section || node.attrs.id !== section.endsAtBlockId) return;
-		if (section.formProtection === false) ranges.push({ from: start, to: offset + node.nodeSize });
-		index++;
-		start = offset + node.nodeSize;
+	let next = 0;
+	sections.forEach((section, index) => {
+		let end = start;
+		if (index === sections.length - 1) end = doc.content.size;
+		else {
+			const found = blocks.findIndex(
+				(block, at) => at >= next && block.id === section.endsAtBlockId,
+			);
+			if (found >= 0) {
+				end = blocks[found]!.end;
+				next = found + 1;
+			}
+		}
+		if (section.formProtection === false && end > start) ranges.push({ from: start, to: end });
+		start = end;
 	});
 	return ranges;
 }
@@ -63,21 +80,22 @@ function unprotectedSections(doc: Node): { from: number; to: number }[] {
  */
 export function staysInFormFields(tr: Transaction): boolean {
 	const doc = tr.before;
-	const allowed = [
+	const fields: Range[] = [
 		...formTextResults(doc)
 			.filter(({ field }) => field.enabled !== false)
 			.map(({ from, to }) => ({ from, to })),
 		...controlSpans(doc).map(({ from, to }) => ({ from, to })),
-		...unprotectedSections(doc),
 	];
+	const sections = unprotectedSections(doc);
+	let sectionsAfter: Range[] | undefined;
 	return tr.steps.every((step, index) => {
 		const map = tr.mapping.slice(0, index);
+		const within = (ranges: Range[], from: number, to: number) =>
+			ranges.some((range) => from >= map.map(range.from, -1) && to <= map.map(range.to, 1));
 		if (step instanceof AttrStep) {
 			// Operating a field sets its marker's data; a node in an editable range may change too.
 			if (formFieldOfNode(tr.docs[index]?.nodeAt(step.pos))) return true;
-			return allowed.some(
-				(range) => step.pos >= map.map(range.from, -1) && step.pos < map.map(range.to, 1),
-			);
+			return within([...fields, ...sections], step.pos, step.pos + 1);
 		}
 		// Typing, and the field guard re-marking typed text as the field's result, stay in range.
 		if (
@@ -90,7 +108,17 @@ export function staysInFormFields(tr: Transaction): boolean {
 		)
 			return false;
 		const { from, to } = step as unknown as { from: number; to: number };
-		return allowed.some((range) => from >= map.map(range.from, -1) && to <= map.map(range.to, 1));
+		if (within(fields, from, to)) return true;
+		if (!within(sections, from, to)) return false;
+		if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) return true;
+		// What the step wrote has to stay in an unprotected section as well: splitting the paragraph
+		// that ends one moves the text after the split into the next section.
+		const rest = tr.mapping.slice(index + 1);
+		const own = step.getMap();
+		const start = rest.map(own.map(from, -1), -1);
+		const end = rest.map(own.map(to, 1), 1);
+		sectionsAfter ??= unprotectedSections(tr.doc);
+		return sectionsAfter.some((range) => start >= range.from && end <= range.to);
 	});
 }
 

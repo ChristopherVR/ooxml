@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDocument, type DocumentModel } from 'ooxml-core/docx';
+import { createDocument, sectionsOf, type DocumentModel } from 'ooxml-core/docx';
+import { splitBlock } from 'prosemirror-commands';
+import { TextSelection } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
 import type { PartsController } from './parts-controller';
 
@@ -39,5 +42,62 @@ describe('forms protection outside the body', () => {
 		expect(openHeader(mount({ edit: 'forms', enforced: false }))).toBe(true);
 		document.body.replaceChildren();
 		expect(openHeader(mount(undefined))).toBe(true);
+	});
+});
+
+/** A form protected for filling in, in two sections; `free` names the one left unprotected. */
+function sectionedForm(free: 'first' | 'last') {
+	const model = createDocument();
+	model.blocks = [
+		{ type: 'paragraph', id: 'p1', runs: [{ text: 'First section' }] },
+		{ type: 'paragraph', id: 'p2', runs: [{ text: 'Last section' }] },
+	];
+	const [base] = sectionsOf(model);
+	model.sections = [
+		{ ...structuredClone(base!), endsAtBlockId: 'p1' },
+		{ ...structuredClone(base!), endsAtBlockId: 'p2' },
+	];
+	model.sections[free === 'first' ? 0 : 1]!.formProtection = false;
+	model.protection = { edit: 'forms', enforced: true };
+	const editor = document.createElement('docx-editor') as DocxEditorElement;
+	editor.documentModel = model;
+	document.body.append(editor);
+	return { editor, view: (editor as unknown as { view: EditorView }).view };
+}
+
+/** Presses Enter at `pos`. */
+function split(view: EditorView, pos: number): void {
+	view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)));
+	splitBlock(view.state, view.dispatch);
+}
+
+/** Types `text` at the start of the paragraph holding the selection; the paragraphs' text. */
+function typeHere(view: EditorView, text: string): string[] {
+	view.dispatch(view.state.tr.insertText(text, view.state.selection.$from.start()));
+	const texts: string[] = [];
+	view.state.doc.forEach((node) => texts.push(node.textContent));
+	return texts;
+}
+
+describe('forms protection and sections', () => {
+	afterEach(() => document.body.replaceChildren());
+
+	it('lets paragraphs be added at the end of an unprotected last section', () => {
+		const { editor, view } = sectionedForm('last');
+		split(view, view.state.doc.content.size - 1);
+		expect(typeHere(view, 'More')).toEqual(['First section', 'Last section', 'More']);
+		expect(editor.documentModel!.blocks.map((block) => block.id)).toHaveLength(3);
+		expect(new Set(editor.documentModel!.blocks.map((block) => block.id)).size).toBe(3);
+	});
+
+	it('does not move text of an unprotected section into the protected one after it', () => {
+		// The break after the first section stays on the first part of a split paragraph.
+		const { view } = sectionedForm('first');
+		const before = view.state.doc;
+		split(view, view.state.doc.child(0).nodeSize - 1);
+		expect(view.state.doc.eq(before)).toBe(true);
+		split(view, 6);
+		expect(view.state.doc.eq(before)).toBe(true);
+		expect(typeHere(view, 'Still ')).toEqual(['Still First section', 'Last section']);
 	});
 });

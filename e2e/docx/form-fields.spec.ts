@@ -90,9 +90,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.keyboard.press('End');
 		await page.keyboard.type(' to add');
 		await expect(notes).toHaveText('Notes to add');
+		// A paragraph added at the end of the last section is in that section too.
+		await page.keyboard.press('Enter');
+		await page.keyboard.type('More notes');
+		await expect(editor.locator('.ProseMirror > p').last()).toHaveText('More notes');
 
 		const { xml } = await savedDocument(page, `${framework}-protected-sections.docx`);
 		expect(xml).toContain('>Notes to add<');
+		expect(xml).toContain('>More notes<');
 		const field = (name: string) =>
 			xml.slice(
 				xml.indexOf(`<w:name w:val="${name}"/>`),
