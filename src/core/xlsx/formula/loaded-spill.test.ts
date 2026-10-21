@@ -63,3 +63,31 @@ describe.each([
 		expect(isSpilledCell(getCell(wb.sheets[0]!, 2, 0))).toBe(true);
 	});
 });
+
+describe('a sparse stored spill whose anchor is gone', () => {
+	it('is released by visiting its stored cells, not every cell of its extent', () => {
+		// Marks at XFD1 and A2000 give an extent of 2,000 rows by 16,384 columns with three cells.
+		const wb = createWorkbook();
+		const sheet = wb.sheets[0]!;
+		putCell(sheet, 0, 0, { value: 1, formula: 'SEQUENCE(1)', dynamicArray: true });
+		const mark = (row: number, col: number) =>
+			putCell(sheet, row, col, { value: 1, spillAnchor: { row: 0, col: 0 } } as SpilledCell);
+		mark(0, 16_383);
+		mark(1_999, 0);
+		mark(5, 5);
+		const edit = createEditSession(wb, { autoRowHeight: false });
+		let lookups = 0;
+		for (const cells of sheet.rows.values()) {
+			const get = cells.get.bind(cells);
+			Object.defineProperty(cells, 'get', {
+				configurable: true,
+				value: (col: number) => (lookups++, get(col)),
+			});
+		}
+		// The anchor is overwritten before the graph is built, so its stored spill has no owner.
+		edit.setCellValue(0, 0, 0, 5);
+		expect(getCell(sheet, 1_999, 0)).toBeUndefined();
+		expect(getCell(sheet, 0, 16_383)).toBeUndefined();
+		expect(lookups).toBeLessThan(1_000);
+	});
+});
