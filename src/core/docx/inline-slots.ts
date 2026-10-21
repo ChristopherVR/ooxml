@@ -42,7 +42,10 @@ function runIsSafe(run: XmlElement): boolean {
 	// text are modeled runs.
 	if (only && named(only, 'fldChar')) {
 		const type = getW(only, 'fldCharType') ?? '';
-		const data = Array.from(only.childNodes);
+		// Indentation between the marker's tags is not content.
+		const data = Array.from(only.childNodes).filter(
+			(node) => isElement(node) || Boolean(node.textContent?.trim()),
+		);
 		if (!data.length) return ['begin', 'separate', 'end'].includes(type);
 		const [ffData] = data;
 		return (

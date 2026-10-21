@@ -141,6 +141,18 @@ describe('legacy form fields', () => {
 		expect(formFieldDisplayText(reread)).toBe('☒');
 	});
 
+	it('fills a field whose data is indented inside its begin marker', async () => {
+		const indented = checkboxField
+			.replace('<w:ffData>', '\n\t<w:ffData>\n\t\t')
+			.replace('</w:ffData>', '\n\t</w:ffData>\n');
+		const { loaded } = await load(`<w:p>${indented}</w:p>`);
+		const begin = beginOf(expectParagraph(loaded.model.blocks[0]));
+		begin.formField = setFormCheckbox(must(begin.formField), true);
+		const xml = await documentXml(await loaded.save());
+		expect(xml).toContain('<w:checked/>');
+		expect(xml).toContain('<w:name w:val="Approved"/>');
+	});
+
 	it('picks a drop-down entry by writing w:result', async () => {
 		const { loaded } = await load(`<w:p>${dropDownField}</w:p>`);
 		const begin = beginOf(expectParagraph(loaded.model.blocks[0]));
