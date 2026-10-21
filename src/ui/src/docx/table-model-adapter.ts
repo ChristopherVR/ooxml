@@ -115,23 +115,25 @@ export function tableNode(
 	);
 }
 
-/** The cell's content control as the editor holds it (picked values, cleared placeholders). */
-const cellControl = (cell: ProseMirrorNode): Pick<TableCell, 'contentControl'> =>
-	cell.attrs.contentControl
-		? { contentControl: structuredClone(cell.attrs.contentControl as ContentControl) }
-		: {};
-
 /**
- * The block control around a table as the editor holds it: a temporary one is gone after an edit.
- * The editor takes no other control off a table, so one the node lacks (a document shared with an
- * editor that kept none on tables) stays as `prior` had it, and its `w:sdt` is never unwrapped.
+ * The control around a table or a cell as the editor holds it (picked values, cleared
+ * placeholders): a temporary one is gone after an edit. The editor takes no other control off a
+ * table or a cell, so one the node lacks (a document shared with an editor that kept none there)
+ * stays as `prior` had it, and its `w:sdt` is never unwrapped.
  */
-export function tableControl(node: ProseMirrorNode, prior?: Table): Pick<Table, 'contentControl'> {
-	const control = (node.attrs.contentControl as ContentControl | null) ?? prior?.contentControl;
+function heldControl(
+	node: ProseMirrorNode,
+	prior: ContentControl | undefined,
+): { contentControl?: ContentControl } {
+	const control = (node.attrs.contentControl as ContentControl | null) ?? prior;
 	return control && (node.attrs.contentControl || !removedByEdit(control))
 		? { contentControl: structuredClone(control) }
 		: {};
 }
+
+/** The block control around a table as the editor holds it. */
+export const tableControl = (node: ProseMirrorNode, prior?: Table): Pick<Table, 'contentControl'> =>
+	heldControl(node, prior?.contentControl);
 
 /** Reads editable formatting from nodes rather than a stale prior model. */
 export function tableFormattingFromNode(node: ProseMirrorNode): {
@@ -186,7 +188,7 @@ export function convertSimpleTable(
 				...(typeof cell.attrs.margins === 'string'
 					? { margins: JSON.parse(cell.attrs.margins) as NonNullable<TableCell['margins']> }
 					: {}),
-				...cellControl(cell),
+				...heldControl(cell, source?.contentControl),
 				paragraphs,
 			});
 			if (cell.attrs.shadingEdited) {
@@ -235,8 +237,9 @@ export function convertMergedTable(
 				else if (child.type.name === 'table') nested.push(child);
 			});
 			if (paragraphs.length) target.paragraphs = paragraphs;
+			const control = target.contentControl;
 			delete target.contentControl;
-			Object.assign(target, cellControl(cellNode));
+			Object.assign(target, heldControl(cellNode, control));
 			let index = 0;
 			if (target.sourceBlocks)
 				target.sourceBlocks = target.sourceBlocks.map((block) => {

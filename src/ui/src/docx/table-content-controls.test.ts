@@ -389,6 +389,48 @@ describe('content controls around table cells in the editor', () => {
 				expect(xml).toMatch(/<w:body><w:sdt><w:sdtPr><w:alias w:val="Sheet"\/><w:id w:val="77"\/>/);
 		});
 
+	for (const merged of [false, true])
+		for (const temporary of [false, true])
+			it(`${temporary ? 'drops a temporary' : 'keeps a'} cell control the editor holds none for${merged ? ', in a merged table' : ''}`, async () => {
+				const loaded = await form(temporary ? '<w:temporary/>' : '', merged);
+				const doc = modelToDoc(loaded.model);
+				// As a document shared with an editor that kept no controls on cells has it: only a
+				// temporary control is ever taken off a cell, so another one stays.
+				const state = EditorState.create({ schema, doc });
+				let at = -1;
+				state.doc.descendants((node, pos) => {
+					if (at < 0 && node.type.name === 'tableCell' && node.attrs.contentControl) at = pos;
+				});
+				const lost = state.tr.setNodeMarkup(at, undefined, {
+					...state.doc.nodeAt(at)!.attrs,
+					contentControl: null,
+				});
+				const bytes = await loaded.save(docToModel(state.apply(lost).doc, loaded.model, doc));
+				const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+				if (temporary) expect(xml).not.toContain('<w:sdt>');
+				else expect(xml).toContain('<w:sdt><w:sdtPr><w:alias w:val="Kind"/><w:id w:val="71"/>');
+			});
+
+	it('gives a cell added before a cell control none of its control', async () => {
+		// A cell keeps the control of the cell it was loaded as, found by its source cell, not by
+		// its place: a cell added before it, as Insert Column adds one, has none.
+		const loaded = await form();
+		const doc = modelToDoc(loaded.model);
+		const state = EditorState.create({ schema, doc });
+		let at = -1;
+		state.doc.descendants((node, pos) => {
+			if (at < 0 && node.type.name === 'tableCell' && node.attrs.contentControl) at = pos;
+		});
+		const added = schema.nodes.tableCell.create(null, schema.nodes.paragraph.create({ id: 'n1' }));
+		const next = state.apply(state.tr.insert(at, added));
+		const bytes = await loaded.save(docToModel(next.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml.match(/<w:sdt>/g)).toHaveLength(1);
+		expect(xml).toContain(
+			'<w:sdtContent><w:tc><w:p><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/>',
+		);
+	});
+
 	it('keeps a block control around a table, and one around a cell paragraph, through an edit', async () => {
 		const zip = new JSZip();
 		const note =
