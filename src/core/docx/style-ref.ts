@@ -18,7 +18,10 @@ export interface StyleReference {
 	style: string;
 	/** `\l`: in a header or footer, the last matching text on the page instead of the first. */
 	last: boolean;
-	/** `\n`: the paragraph number of the matching paragraph instead of its text. */
+	/**
+	 * `\n`: the paragraph number of the matching paragraph instead of its text; `0` when that
+	 * paragraph is not numbered, as Word shows.
+	 */
 	number: boolean;
 	/**
 	 * `\t` with `\n`: the number without the text around it (`1.01` for `Section 1.01`). Word writes
@@ -184,9 +187,9 @@ export interface StyleRefSource {
 	target(style: string): StyleTarget | undefined;
 	/**
 	 * Every result the field could take from `paragraphs[index]`, first to last, with the runs it
-	 * comes from; empty when that paragraph has no text in the style (or, with `\n`, no number).
-	 * A paragraph-style match has one result; a character style has one per stretch of runs in it,
-	 * leaving out the runs of `skip`.
+	 * comes from; empty when that paragraph has no text in the style. A paragraph-style match has
+	 * one result; a character style has one per stretch of runs in it, leaving out the runs of
+	 * `skip`.
 	 */
 	portions(
 		index: number,
@@ -204,13 +207,18 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 	const index = new Map(paragraphs.map((paragraph, at) => [paragraph.id, at]));
 	const targets = new Map<string, StyleTarget | undefined>();
 	let labels: ReturnType<typeof computeListLabels> | undefined;
-	/** The paragraph's number; undefined without one, null when `\t` cannot be applied to it. */
-	const number = (paragraph: Paragraph, numberOnly: boolean): string | null | undefined => {
+	/**
+	 * The paragraph's number, `0` without one: an unnumbered paragraph in the style is still the
+	 * match, and Word shows 0 for its number (a heading whose numbering was taken off gives a
+	 * caption the chapter number 0). Null when it cannot be evaluated here: a bullet, whose result
+	 * Word does not document, or `\t` with words between the levels.
+	 */
+	const number = (paragraph: Paragraph, numberOnly: boolean): string | null => {
 		labels ??= computeListLabels(model);
 		const label = labels.get(paragraph.id);
-		if (!label || !model.numberingCatalog) return undefined;
+		if (!label || !model.numberingCatalog) return '0';
 		const level = resolveNumberingLevel(model.numberingCatalog, label.numId, label.level);
-		if (!level || level.numFmt === 'bullet') return undefined;
+		if (!level || level.numFmt === 'bullet') return null;
 		let text = label.text;
 		if (numberOnly) {
 			const first = level.lvlText.indexOf('%');
@@ -242,10 +250,7 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 				: [];
 		if (reference.number && found.length) {
 			const label = number(paragraph, reference.numberOnly);
-			found =
-				label === undefined
-					? []
-					: found.map((portion) => ({ ...portion, text: label === null ? undefined : label }));
+			found = found.map((portion) => ({ ...portion, text: label ?? undefined }));
 		}
 		return reference.textCase
 			? found.map((portion) => ({
