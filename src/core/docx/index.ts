@@ -73,6 +73,13 @@ export { DEFAULT_TABLE_BORDERS } from './table-defaults';
 export { fieldName } from './field-runs';
 export { isFieldLocked } from './field-lock';
 export { dateFieldResult, datePicture, formatWordDate } from './field-date';
+export {
+	parseStyleReference,
+	styleRefSource,
+	type StyleRefSource,
+	type StyleReference,
+} from './style-ref';
+export { bodyStyleRefResult, refreshStyleRefFields } from './style-ref-fields';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';
 export { DEFAULT_STYLES_XML, defaultStyleCatalogs } from './default-styles';

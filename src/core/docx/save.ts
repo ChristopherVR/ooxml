@@ -20,6 +20,7 @@ import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { refreshStyleRefFields } from './style-ref-fields';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
@@ -63,6 +64,24 @@ export async function saveDocx(
 	const binding = contexts.get(model);
 	if (binding && JSON.stringify(model) === JSON.stringify(binding.base))
 		return new Uint8Array(binding.context.original);
+	// Word updates header and footer STYLEREF fields as it draws each page, so a saved header
+	// should not keep a stale result. A header that cannot be rebuilt keeps the one it has: the
+	// update never makes a save fail that would succeed without it.
+	const refreshed = refreshStyleRefFields(model);
+	if (refreshed !== model)
+		try {
+			return await writePackage(refreshed, binding, pendingMedia);
+		} catch {
+			// Saved below without the update; that save reports any error of its own.
+		}
+	return writePackage(model, binding, pendingMedia);
+}
+
+async function writePackage(
+	model: DocumentModel,
+	binding: { context: PackageContext; base: DocumentModel } | undefined,
+	pendingMedia: ReadonlyMap<string, PendingMediaPart> | undefined,
+): Promise<Uint8Array> {
 	assertValidDocumentModel(model);
 	model = numberMoveNames(
 		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.context.sourceXml)),

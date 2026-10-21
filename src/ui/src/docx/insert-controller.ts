@@ -134,7 +134,11 @@ export class InsertController {
 				} else if (action.key === 'fields') {
 					// Word's Update Field refreshes everything: captions and references first, then
 					// the tables built from them (headings, then each figure label).
-					let changed = updateFields(view, (id) => blockPageNumbers(this.host.model()).get(id));
+					let changed = updateFields(
+						view,
+						(id) => blockPageNumbers(this.host.model()).get(id),
+						this.host.model(),
+					);
 					for (const label of [undefined, 'Figure', 'Table', 'Equation'])
 						changed = updateTableOfContents(view, this.host.model(), undefined, label) || changed;
 					if (!changed) this.host.reportError(new Error('No fields needed updating.'));
