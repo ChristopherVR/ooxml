@@ -33,9 +33,12 @@ function operate(view: EditorView, el: HTMLElement): boolean {
 	}
 	const entries = field.dropDown?.entries ?? [];
 	if (field.kind !== 'dropDown' || !entries.length) return false;
-	// Entries can repeat a name, so the list goes by the entry's place, as `w:result` does.
+	// Entries can repeat a name, so the list goes by the entry's place, as `w:result` does. The
+	// document can change while the list is open (a collaborator's edit), so the pick goes to the
+	// field the list was opened for, wherever it is now, and to none once it is gone or redrawn.
 	openListPopover(el, entries, formDropDownIndex(field) ?? -1, false, (_entry, index) => {
-		const tr = selectFormDropDownAt(view.state, pos, index);
+		const at = el.isConnected ? markerPosition(view, el) : undefined;
+		const tr = at === undefined ? undefined : selectFormDropDownAt(view.state, at, index);
 		if (tr) view.dispatch(tr);
 		view.focus();
 	});

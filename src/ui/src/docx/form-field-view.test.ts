@@ -150,6 +150,33 @@ describe('legacy form fields from the keyboard', () => {
 		expect(result?.dropDown?.result).toBe(2);
 	});
 
+	it('picks in the drop-down the list was opened for, after the document changed meanwhile', () => {
+		const { view, editor } = mount();
+		press(view, markerOf(view, 'dropDown'), 'ArrowDown', { altKey: true });
+		// A collaborator's edit arrives while the list is open and moves the field along.
+		view.dispatch(view.state.tr.insertText('Remote ', 1).setMeta('y-sync$', {}));
+		const focus = vi.spyOn(view, 'focus').mockImplementation(() => {});
+		entriesList(editor)!.querySelectorAll<HTMLButtonElement>('[role="option"]')[1]!.click();
+		focus.mockRestore();
+		const status = formFieldOfNode(view.state.doc.nodeAt(markerOf(view, 'dropDown')));
+		expect(status?.dropDown?.result).toBe(1);
+		expect(view.state.doc.textContent).toBe('Remote Approved  Status ');
+	});
+
+	it('picks nothing once the drop-down the list was opened for is gone', () => {
+		const { view, editor } = mount();
+		const list = markerOf(view, 'dropDown');
+		press(view, list, 'ArrowDown', { altKey: true });
+		const before = view.state.doc.content.size;
+		view.dispatch(view.state.tr.delete(list, list + 3).setMeta('y-sync$', {}));
+		const after = view.state.doc;
+		const focus = vi.spyOn(view, 'focus').mockImplementation(() => {});
+		entriesList(editor)!.querySelectorAll<HTMLButtonElement>('[role="option"]')[1]!.click();
+		focus.mockRestore();
+		expect(after.content.size).toBe(before - 3);
+		expect(view.state.doc.eq(after)).toBe(true);
+	});
+
 	it('leaves Space and Enter to typing where they can edit, as in an unprotected form', () => {
 		const { view, editor } = mount(true);
 		const box = markerOf(view, 'checkbox');
