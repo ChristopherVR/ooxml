@@ -145,65 +145,68 @@ function resetQuickAccess(): void {
 
 <template>
 	<Teleport to="body">
-		<pptx-ui-options-dialog v-if="open" ref="dialog">
-			<template v-if="category === 'general'">
-				<div :slot="optionsBlockSlot('themePicker')" class="mt-2">
-					<SettingsAppearanceTab
-						:theme-key="themeKey"
-						:catalog="availableThemes"
-						:on-select="onThemeSelect"
+		<!-- The scope marker sits on a box-less wrapper, not on the shared dialog (see ContextMenu). -->
+		<div v-if="open" class="contents" data-pptx-scope>
+			<pptx-ui-options-dialog ref="dialog">
+				<template v-if="category === 'general'">
+					<div :slot="optionsBlockSlot('themePicker')" class="mt-2">
+						<SettingsAppearanceTab
+							:theme-key="themeKey"
+							:catalog="availableThemes"
+							:on-select="onThemeSelect"
+						/>
+					</div>
+					<div :slot="optionsBlockSlot('customFonts')">
+						<SettingsCustomFontsSection
+							:enabled="props.options.general.enableCustomFontUpload"
+							:families="props.customFontFamilies ?? []"
+							@registered="(family: string) => emit('customFontRegistered', family)"
+						/>
+					</div>
+				</template>
+				<div v-else-if="category === 'save'" :slot="optionsBlockSlot('clearCache')" class="mt-2">
+					<p class="mb-2 text-xs text-muted-foreground">
+						{{ t('pptx.options.save.clearCacheDescription') }}
+					</p>
+					<button
+						type="button"
+						class="rounded border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent"
+						@click="onClearCache"
+					>
+						{{ t('pptx.options.save.clearCacheNow') }}
+					</button>
+				</div>
+				<div v-else-if="category === 'language'" :slot="optionsBlockSlot('language')">
+					<SettingsLanguageTab
+						:locale-code="localeCode"
+						:locales="availableLocales"
+						:on-select="onLocaleSelect"
 					/>
 				</div>
-				<div :slot="optionsBlockSlot('customFonts')">
-					<SettingsCustomFontsSection
-						:enabled="props.options.general.enableCustomFontUpload"
-						:families="props.customFontFamilies ?? []"
-						@registered="(family: string) => emit('customFontRegistered', family)"
+				<div v-else-if="category === 'ribbon'" :slot="optionsPaneSlot('ribbon')">
+					<OptionsRibbonPane
+						:options="options"
+						:on-ribbon-tab-hidden-change="onRibbonTabHiddenChange"
+						:on-reset-ribbon="() => onResetOptions('ribbon')"
 					/>
 				</div>
-			</template>
-			<div v-else-if="category === 'save'" :slot="optionsBlockSlot('clearCache')" class="mt-2">
-				<p class="mb-2 text-xs text-muted-foreground">
-					{{ t('pptx.options.save.clearCacheDescription') }}
-				</p>
-				<button
-					type="button"
-					class="rounded border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent"
-					@click="onClearCache"
+				<div v-else-if="category === 'quickAccess'" :slot="optionsPaneSlot('quickAccess')">
+					<OptionsQuickAccessPane
+						:options="options"
+						:on-quick-access-commands-change="onQuickAccessCommandsChange"
+						:on-reset-quick-access="resetQuickAccess"
+					/>
+				</div>
+				<div v-else-if="category === 'addIns'" :slot="optionsPaneSlot('addIns')">
+					<OptionsAddInsPane :addin-status="addinStatus" />
+				</div>
+				<div
+					v-else-if="category === AI_OPTIONS_CATEGORY"
+					:slot="optionsPaneSlot(AI_OPTIONS_CATEGORY)"
 				>
-					{{ t('pptx.options.save.clearCacheNow') }}
-				</button>
-			</div>
-			<div v-else-if="category === 'language'" :slot="optionsBlockSlot('language')">
-				<SettingsLanguageTab
-					:locale-code="localeCode"
-					:locales="availableLocales"
-					:on-select="onLocaleSelect"
-				/>
-			</div>
-			<div v-else-if="category === 'ribbon'" :slot="optionsPaneSlot('ribbon')">
-				<OptionsRibbonPane
-					:options="options"
-					:on-ribbon-tab-hidden-change="onRibbonTabHiddenChange"
-					:on-reset-ribbon="() => onResetOptions('ribbon')"
-				/>
-			</div>
-			<div v-else-if="category === 'quickAccess'" :slot="optionsPaneSlot('quickAccess')">
-				<OptionsQuickAccessPane
-					:options="options"
-					:on-quick-access-commands-change="onQuickAccessCommandsChange"
-					:on-reset-quick-access="resetQuickAccess"
-				/>
-			</div>
-			<div v-else-if="category === 'addIns'" :slot="optionsPaneSlot('addIns')">
-				<OptionsAddInsPane :addin-status="addinStatus" />
-			</div>
-			<div
-				v-else-if="category === AI_OPTIONS_CATEGORY"
-				:slot="optionsPaneSlot(AI_OPTIONS_CATEGORY)"
-			>
-				<SettingsAiTab :store="chatStore" />
-			</div>
-		</pptx-ui-options-dialog>
+					<SettingsAiTab :store="chatStore" />
+				</div>
+			</pptx-ui-options-dialog>
+		</div>
 	</Teleport>
 </template>

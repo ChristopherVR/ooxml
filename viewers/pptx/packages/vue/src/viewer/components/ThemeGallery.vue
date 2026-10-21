@@ -57,13 +57,14 @@ function handleApply(): void {
 			<!-- Backdrop -->
 			<button
 				type="button"
+				data-pptx-scope
 				class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
 				:aria-label="t('pptx.common.close')"
 				@click="emit('close')"
 			/>
 
 			<!-- Modal -->
-			<div class="fixed inset-0 z-[101] flex items-center justify-center p-4">
+			<div data-pptx-scope class="fixed inset-0 z-[101] flex items-center justify-center p-4">
 				<div
 					class="bg-background border border-border rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col"
 					role="dialog"

@@ -52,6 +52,21 @@ describe('slide template gallery dialog', () => {
 		expect(html).toContain('>Cancel</button>');
 	});
 
+	it('carries the scoped stylesheet reset on both fixed layers and the previews', () => {
+		// Used on its own the dialog sits outside any viewer root, so the backdrop and the
+		// dialog layer mark themselves for the stylesheet's scoped preflight.
+		const html = renderToStaticMarkup(
+			<SlideTemplateGalleryDialog isOpen onClose={vi.fn()} onInsert={vi.fn()} />,
+		);
+		const layers = html.match(/<(button|div) [^>]*class="fixed inset-0[^"]*"[^>]*>/gu) ?? [];
+		expect(layers).toHaveLength(2);
+		for (const layer of layers) {
+			expect(layer).toContain('data-pptx-scope=""');
+		}
+		const previews = (html.match(/aria-hidden="true" data-pptx-scope=""/gu) ?? []).length;
+		expect(previews).toBe(SLIDE_TEMPLATES.length);
+	});
+
 	it('renders live previews with the provided theme scheme colour', () => {
 		const html = renderToStaticMarkup(
 			<SlideTemplateGalleryDialog

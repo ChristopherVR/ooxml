@@ -103,6 +103,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	return (
 		<div
 			role='toolbar'
+			data-pptx-scope=''
 			data-pptx-chrome='ribbon'
 			aria-label={t('pptx.toolbar.presentationToolbarAria')}
 			className='relative z-20 border-b border-border bg-secondary/50 overflow-visible'

@@ -125,6 +125,7 @@ onBeforeUnmount(() => detachOverflow?.());
 <template>
 	<div
 		role="toolbar"
+		data-pptx-scope
 		data-pptx-chrome="ribbon"
 		:aria-label="t('pptx.toolbar.presentationToolbarAria')"
 		class="relative z-20 border-b border-border bg-secondary/50 overflow-visible"

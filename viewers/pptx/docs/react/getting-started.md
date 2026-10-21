@@ -153,6 +153,14 @@ bundled stylesheet once at your entry point:
 import 'pptx-react-viewer/styles'; // or 'pptx-react-viewer/styles.css'
 ```
 
+The stylesheet's base reset (Tailwind's preflight) is scoped to the viewer: it applies only inside
+the viewer's root, a canvas viewport and any element carrying `data-pptx-scope` (the viewer adds it
+to the dialogs and menus it renders outside its root), so your page keeps its own headings, lists,
+margins and images. If you render one of the exported pieces on its own, outside the viewer, put it
+inside an element with the `data-pptx-scope` attribute to give it the same reset. Put the attribute
+on an ordinary element such as a `div`, never on a `pptx-ui-*` control: the outermost scope starts
+from the page's base text, which would override the control's own text styles.
+
 See [Theming](/react/theming) for the three styling modes and how to customise colours.
 
 ## Next steps

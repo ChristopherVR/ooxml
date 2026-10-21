@@ -228,6 +228,8 @@ viewport rather than the whole 540 px host.
 
 `useViewerBuildingBlocks` accepts the same `content` / `canEdit` / `filePath` / `hiddenActions` / `onDirtyChange`-style inputs as `PowerPointViewer`, plus `onOpenSettings` / `onOpenHeaderFooter` / `onOpenShareDialog` callbacks (fired by the corresponding toolbar buttons) since this composition doesn't render those dialogs itself. It's an additive alternative, not a replacement: dialogs, presentation-mode overlays, mobile chrome, resizable side panels, and real-time collaboration are all part of `PowerPointViewer` and are out of scope for these building blocks. Reach for `PowerPointViewer` when you need the full editor; reach for `useViewerBuildingBlocks` when you're assembling your own chrome around just the toolbar and canvas.
 
+The bundled stylesheet's base reset (Tailwind's preflight) applies only inside the viewer root, a canvas viewport and elements with a `data-pptx-scope` attribute, so your page's own headings, lists and margins stay as they are. `SlideCanvas` and `Toolbar` carry the scope themselves; give any other element of a composed shell that uses the viewer's classes an ancestor with `data-pptx-scope`.
+
 ---
 
 ## Styling & theming
