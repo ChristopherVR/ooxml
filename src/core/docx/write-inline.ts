@@ -15,22 +15,15 @@ import {
 
 import { createRun } from './write-run';
 import { createContentControl, resetContentControl } from './write-content-control';
-import type { ContentControl } from './content-control-model';
 import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
 import { writeFieldFlags } from './field-flags';
-import { sameFieldFlags } from './field-lock';
 import { isEquationElement, writeEquation } from './equation';
+import { containerGroup, containerSources, sameGroup } from './inline-containers';
 import type { PlacedRun } from './inline-markers';
 import type { InlineSlot } from './inline-slots';
 import { convertToDeleteText, revisionWrapper } from './write-revisions';
 import { getW, makeW, REL_NS, WORD_NS, type XmlDocument, type XmlElement } from './xml';
-
-function sameLink(a: HyperlinkInfo | undefined, b: HyperlinkInfo | undefined): boolean {
-	if (!a && !b) return true;
-	if (!a || !b) return false;
-	return a.href === b.href && a.anchor === b.anchor && a.tooltip === b.tooltip;
-}
 
 function setW(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -86,13 +79,18 @@ function runNodes(
 		!run.break;
 	return {
 		nodes,
-		placed: { ...(nodes[0] && { first: nodes[0] }), ...(text && !wrapped && { splittable: node }) },
+		placed: {
+			...(nodes[0] && { first: nodes[0], last: nodes.at(-1)! }),
+			...(text && !wrapped && { splittable: node }),
+		},
 	};
 }
 
 /**
- * Builds the paragraph's ordered top-level inline nodes from the model's flat run list, and where
- * each run was written (inside its hyperlink or content control when it has one).
+ * Builds the paragraph's ordered top-level inline nodes from the model's flat run list, where
+ * each run was written (inside its hyperlink or content control when it has one), and what was
+ * written in place of each source hyperlink, simple field or content control (`containers`: the
+ * elements its runs went into, the control's content for a control).
  */
 export function buildInlineContent(
 	doc: XmlDocument,
@@ -101,12 +99,14 @@ export function buildInlineContent(
 	slots: InlineSlot[],
 	allocator?: RelationshipAllocator,
 	ranges?: ParagraphRanges,
-): { nodes: XmlElement[]; placed: PlacedRun[] } {
+	sources = containerSources(runs, base, slots),
+): { nodes: XmlElement[]; placed: PlacedRun[]; containers: Map<XmlElement, Set<XmlElement>> } {
 	// Ranges continuing from an earlier paragraph or into a later one open or close there instead.
 	const { opens, closes } = rangeEdges(runs, ranges);
 	const runAt = (at: number) => expectDefined(runs[at], `run ${at}`);
 	const sourceFor = inlineSourceLookup(runs, base);
 	const placed: PlacedRun[] = [];
+	const containers = new Map<XmlElement, Set<XmlElement>>();
 	const nodesFor = (index: number) => {
 		const written = runNodesAt(index);
 		placed[index] = written.placed;
@@ -140,18 +140,20 @@ export function buildInlineContent(
 		}
 		const start = index;
 		while (index < runs.length && sameGroup(containerGroup(runAt(index)), group)) index++;
-		const oldContainers = new Set(slots.slice(start, index).map((slot) => slot?.container));
+		// The source container this group continues (see inline-containers.ts).
+		const source = sources.get(start);
+		const oldContainers = source?.containers ?? new Set<XmlElement | undefined>();
 		const [onlyContainer] = oldContainers;
 		const reusable =
+			source?.same === true &&
 			oldContainers.size === 1 &&
 			onlyContainer !== undefined &&
 			onlyContainer.localName ===
-				(group.kind === 'link' ? 'hyperlink' : group.kind === 'control' ? 'sdt' : 'fldSimple') &&
-			base?.slice(start, index).every((run) => sameGroup(run && containerGroup(run), group)) ===
-				true;
+				(group.kind === 'link' ? 'hyperlink' : group.kind === 'control' ? 'sdt' : 'fldSimple');
 		let container: XmlElement;
 		let target: XmlElement | undefined;
-		if (reusable && group.kind === 'control') {
+		if (reusable && source.clone) container = onlyContainer.cloneNode(false) as XmlElement;
+		else if (reusable && group.kind === 'control') {
 			container = onlyContainer;
 			target = resetContentControl(doc, container, group.control);
 		} else if (reusable) {
@@ -171,47 +173,14 @@ export function buildInlineContent(
 			group.kind === 'simpleField'
 				? takeSimpleFieldCommentEdges(doc, runs, start, index, opens, closes)
 				: { before: [], after: [] };
-		for (let item = start; item < index; item++)
-			for (const node of nodesFor(item)) (target ?? container).appendChild(node);
+		const parent = target ?? container;
+		if (oldContainers.size === 1 && onlyContainer)
+			containers.set(onlyContainer, (containers.get(onlyContainer) ?? new Set()).add(parent));
+		for (let item = start; item < index; item++) {
+			for (const node of nodesFor(item)) parent.appendChild(node);
+			placed[item] = { ...placed[item], parent };
+		}
 		output.push(...edges.before, container, ...edges.after);
 	}
-	return { nodes: output, placed };
-}
-
-type ContainerGroup =
-	| { kind: 'link'; link: HyperlinkInfo }
-	| { kind: 'control'; control: ContentControl }
-	| {
-			kind: 'simpleField';
-			instr: string;
-			instanceId: string | undefined;
-			fieldFlags: TextRun['fieldFlags'];
-	  };
-
-/** The wrapper a run is written inside: a hyperlink, or a simple field (`w:fldSimple`). */
-function containerGroup(run: TextRun): ContainerGroup | undefined {
-	if (run.contentControl) return { kind: 'control', control: run.contentControl };
-	if (run.link) return { kind: 'link', link: run.link };
-	if (run.field?.simple)
-		return {
-			kind: 'simpleField',
-			instr: run.field.instr,
-			instanceId: run.fieldInstanceId,
-			fieldFlags: run.fieldFlags,
-		};
-	return undefined;
-}
-
-function sameGroup(a: ContainerGroup | undefined, b: ContainerGroup | undefined): boolean {
-	if (!a || !b) return a === b;
-	if (a.kind === 'control' || b.kind === 'control')
-		return a.kind === 'control' && b.kind === 'control' && a.control.id === b.control.id;
-	if (a.kind === 'link' && b.kind === 'link') return sameLink(a.link, b.link);
-	return (
-		a.kind === 'simpleField' &&
-		b.kind === 'simpleField' &&
-		a.instr === b.instr &&
-		a.instanceId === b.instanceId &&
-		sameFieldFlags(a.fieldFlags, b.fieldFlags)
-	);
+	return { nodes: output, placed, containers };
 }

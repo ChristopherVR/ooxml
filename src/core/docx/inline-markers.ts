@@ -1,93 +1,36 @@
 // Zero-width markers inside a paragraph (bookmarks, editing permissions, proofing marks) are not
 // in the run model. When an edited paragraph is rebuilt they are carried to the same character
-// position: text before and after the edit keeps its markers, a marker inside the edited text
-// moves to its start if it opens a range or its end if it closes one, and a range from the
-// paragraph's start or to its end keeps covering the paragraph. Positions count
-// characters, so an editor that merges runs of the same formatting does not move markers; a
-// field marker, picture or note reference counts as one character.
+// position (inline-marker-positions.ts) and inserted there, between runs or inside a split run.
 import type { TextRun } from './model';
+import type { AnnotationEdge } from './inline-annotations';
+import { runPositions } from './inline-marker-positions';
 import { symbolCharacter } from './special-characters';
-import { getW, isElement, named, type XmlElement } from './xml';
+import { getW, isElement, named, type XmlElement, type XmlNode } from './xml';
 
 const POSITION_MARKERS = ['bookmarkStart', 'bookmarkEnd', 'proofErr', 'permStart', 'permEnd'];
-const OBJECT = '\uFFFC';
 
 /** A zero-width marker the writer carries through a rebuilt paragraph. */
 export const isPositionMarker = (element: XmlElement): boolean =>
 	POSITION_MARKERS.some((name) => named(element, name));
 
-/** Smart tags and inline custom XML only annotate their runs; a rebuilt paragraph keeps the runs. */
+/** Smart tags and inline custom XML only annotate their runs (see inline-annotations.ts). */
 export const isAnnotationWrapper = (element: XmlElement): boolean =>
 	named(element, 'smartTag') || named(element, 'customXml');
 
-/** A marker and the number of the paragraph's runs before it. */
+/** A marker, the number of the paragraph's runs before it, and the container it was read in. */
 export interface InlineMarker {
 	element: XmlElement;
 	boundary: number;
+	/** The hyperlink, simple field or content control (`w:sdt`) around the marker. */
+	container?: XmlElement;
+	/** Set when the marker stands in for one end of a smart tag or custom XML element. */
+	annotation?: AnnotationEdge;
 }
 
 /** Whether the marker opens a range (`bookmarkStart`, `permStart`, a proofing `...Start`). */
 export function opensRange(element: XmlElement): boolean {
 	if (named(element, 'proofErr')) return /Start$/.test(getW(element, 'type') ?? '');
 	return named(element, 'bookmarkStart') || named(element, 'permStart');
-}
-
-/** Field markers, pictures, equations, notes and breaks are one character; text is its length. */
-function positionText(run: TextRun): string {
-	return run.fieldChar ||
-		run.fieldCode !== undefined ||
-		run.image ||
-		run.equation ||
-		run.noteReference ||
-		run.noteMark ||
-		run.noteSeparator ||
-		run.break
-		? OBJECT
-		: run.text;
-}
-
-/** The character position of each run boundary (0 to `runs.length`). */
-export function runPositions(runs: readonly TextRun[]): number[] {
-	const positions = [0];
-	for (const run of runs) positions.push(positions.at(-1)! + positionText(run).length);
-	return positions;
-}
-
-const isHighSurrogate = (code: number) => code >= 0xd800 && code <= 0xdbff;
-const isLowSurrogate = (code: number) => code >= 0xdc00 && code <= 0xdfff;
-
-/** Maps a character position in the paragraph `before` an edit onto the paragraph `after` it. */
-export function markerPositions(
-	before: readonly TextRun[],
-	after: readonly TextRun[],
-): (position: number, opening: boolean) => number {
-	const from = before.map(positionText).join('');
-	const to = after.map(positionText).join('');
-	let prefix = 0;
-	while (prefix < from.length && prefix < to.length && from[prefix] === to[prefix]) prefix++;
-	// Never end the unchanged stretch inside a surrogate pair: no marker may split a character.
-	if (prefix > 0 && isHighSurrogate(from.charCodeAt(prefix - 1))) prefix--;
-	let suffix = 0;
-	while (
-		suffix < from.length - prefix &&
-		suffix < to.length - prefix &&
-		from[from.length - 1 - suffix] === to[to.length - 1 - suffix]
-	)
-		suffix++;
-	if (suffix > 0 && isLowSurrogate(from.charCodeAt(from.length - suffix))) suffix--;
-	const delta = to.length - from.length;
-	return (position, opening) => {
-		// A range from the paragraph's start, or to its end, keeps covering the edited paragraph.
-		if (opening && position === 0) return 0;
-		if (!opening && position === from.length) return to.length;
-		const leading = position <= prefix;
-		const trailing = position >= from.length - suffix;
-		// Text inserted exactly at a marker stays outside the range it opens or closes.
-		if (leading && trailing) return opening ? position + delta : position;
-		if (leading) return position;
-		if (trailing) return position + delta;
-		return opening ? prefix : to.length - suffix;
-	};
 }
 
 /** The paragraph child that holds `node`. */
@@ -137,18 +80,18 @@ function splitRun(run: XmlElement, offset: number): XmlElement | undefined {
 	return second;
 }
 
-/** Where each run was written: its first node, and its `w:r` when a marker may split it. */
+/**
+ * Where each run was written: its first and last nodes, the hyperlink, simple field or control
+ * content it was written into (none at the paragraph's level), and its `w:r` when a marker may
+ * split it.
+ */
 export interface PlacedRun {
 	first?: XmlElement;
+	last?: XmlElement;
+	parent?: XmlElement;
 	splittable?: XmlElement;
 }
 
-/**
- * Inserts each marker at its character position: between the runs there, or inside a text run,
- * which is split in two. A position inside a run that cannot be split (a tracked change) moves to
- * the run's start for a marker that opens a range, its end for one that closes it. A marker that
- * was a direct child of the paragraph stays one when its run starts a hyperlink or content control.
- */
 /** The id that pairs a range's start and end markers (`bookmarkStart`/`End`, `permStart`/`End`). */
 function rangeKey(element: XmlElement): string | undefined {
 	const id = getW(element, 'id');
@@ -158,33 +101,52 @@ function rangeKey(element: XmlElement): string | undefined {
 	return undefined;
 }
 
-/** Keeps every range's end at or after its start (an empty range typed into stays empty). */
+/**
+ * Keeps every range's end, and a smart tag's or custom XML element's end, at or after its start
+ * (an empty range or wrapper typed into stays empty).
+ */
 export function orderRangeEnds<
-	T extends { element: XmlElement; position: number; opening: boolean },
+	T extends {
+		element: XmlElement;
+		position: number;
+		opening: boolean;
+		annotation?: AnnotationEdge;
+	},
 >(markers: T[]): T[] {
-	const starts = new Map<string, number>();
+	const keyOf = (marker: T) => marker.annotation?.wrapper ?? rangeKey(marker.element);
+	const starts = new Map<XmlElement | string, number>();
 	for (const marker of markers) {
-		const key = rangeKey(marker.element);
+		const key = keyOf(marker);
 		if (key && marker.opening) starts.set(key, marker.position);
 	}
 	return markers.map((marker) => {
-		const start = !marker.opening && starts.get(rangeKey(marker.element) ?? '');
-		return start !== undefined && start !== false && marker.position < start
-			? { ...marker, position: start }
-			: marker;
+		const key = keyOf(marker);
+		const start = !marker.opening && key ? starts.get(key) : undefined;
+		return start !== undefined && marker.position < start ? { ...marker, position: start } : marker;
 	});
 }
 
+/**
+ * Inserts each marker at its character position: between the runs there, or inside a text run,
+ * which is split in two. A position inside a run that cannot be split (a tracked change) moves to
+ * the run's start for a marker that opens a range, its end for one that closes it. A marker read
+ * inside a hyperlink, simple field or content control stays in what was written in its place
+ * (`containers` maps each source container to those elements) when a run beside the marker is
+ * there; any other marker goes between the paragraph's children, or between two runs of one
+ * container.
+ */
 export function placeMarkers(
 	paragraph: XmlElement,
 	markers: readonly {
 		element: XmlElement;
 		position: number;
 		opening: boolean;
-		topLevel: boolean;
+		container?: XmlElement;
+		annotation?: AnnotationEdge;
 	}[],
 	runs: readonly TextRun[],
 	placed: PlacedRun[],
+	containers: ReadonlyMap<XmlElement, ReadonlySet<XmlElement>>,
 ): void {
 	const positions = runPositions(runs);
 	// The parts a split run now has, each with the position of its first character.
@@ -204,11 +166,21 @@ export function placeMarkers(
 		const second = splitRun(part.element, position - part.start);
 		if (!second) return false;
 		parts.splice(at + 1, 0, { element: second, start: position });
+		// A marker at the run's end now goes after its second part.
+		const written = placed[index];
+		if (written?.last === part.element) written.last = second;
 		second.parentNode!.insertBefore(element, second);
 		return true;
 	};
-	for (const marker of markers) {
-		marker.element.parentNode?.removeChild(marker.element);
+	// A marker placed after a node goes after the markers already placed there, which come before
+	// it in the source.
+	const done = new Set<XmlNode>();
+	const after = (node: XmlElement, element: XmlElement) => {
+		let anchor: XmlNode = node;
+		while (anchor.nextSibling && done.has(anchor.nextSibling)) anchor = anchor.nextSibling;
+		anchor.parentNode!.insertBefore(element, anchor.nextSibling);
+	};
+	const put = (marker: (typeof markers)[number]) => {
 		let boundary = marker.opening
 			? positions.indexOf(marker.position)
 			: positions.lastIndexOf(marker.position);
@@ -216,18 +188,52 @@ export function placeMarkers(
 			const inside = positions.findIndex(
 				(start, index) => start < marker.position && marker.position < positions[index + 1]!,
 			);
-			if (insideRun(inside, marker.position, marker.element)) continue;
+			if (insideRun(inside, marker.position, marker.element)) return;
 			boundary = marker.opening ? inside : inside + 1;
 		}
-		const first = placed[boundary]?.first;
-		if (!first?.parentNode) {
-			paragraph.appendChild(marker.element);
+		const previous = placed[boundary - 1];
+		const next = placed[boundary];
+		const home = marker.container && containers.get(marker.container);
+		// A smart tag's or custom XML element's edges stay beside the text it wraps, in whatever
+		// container that text is now written: its start before the first run, its end after the last.
+		const side = marker.annotation?.edge;
+		if (side === 'start' && next?.first?.parentNode)
+			return void next.first.parentNode.insertBefore(marker.element, next.first);
+		if (side === 'end' && previous?.last) return after(previous.last, marker.element);
+		if (home && previous?.last && previous.parent && home.has(previous.parent))
+			return after(previous.last, marker.element);
+		if (home && next?.first?.parentNode && next.parent && home.has(next.parent))
+			return void next.first.parentNode.insertBefore(marker.element, next.first);
+		if (!next?.first?.parentNode) return void paragraph.appendChild(marker.element);
+		// Between two runs written into one container the marker stays inside it.
+		const holder = topLevel(next.first, paragraph);
+		const shared =
+			previous?.last && holder !== next.first && topLevel(previous.last, paragraph) === holder;
+		const before = shared ? next.first : holder;
+		before.parentNode!.insertBefore(marker.element, before);
+	};
+	// An empty smart tag or custom XML element keeps its ends together: its end goes where its
+	// start went, after the markers placed there since (the ones it held).
+	const starts = new Map<XmlElement, { parent: XmlNode; next: XmlNode | null; position: number }>();
+	for (const marker of markers) {
+		marker.element.parentNode?.removeChild(marker.element);
+		const annotation = marker.annotation;
+		const start = annotation?.edge === 'end' ? starts.get(annotation.wrapper) : undefined;
+		if (
+			start?.position === marker.position &&
+			(!start.next || start.next.parentNode === start.parent)
+		) {
+			start.parent.insertBefore(marker.element, start.next);
+			done.add(marker.element);
 			continue;
 		}
-		const holder = topLevel(first, paragraph);
-		const previous = placed[boundary - 1]?.first;
-		const startsHolder = holder === first || !previous || topLevel(previous, paragraph) !== holder;
-		const before = marker.topLevel && startsHolder ? holder : first;
-		before.parentNode!.insertBefore(marker.element, before);
+		put(marker);
+		done.add(marker.element);
+		if (annotation?.edge === 'start' && marker.element.parentNode)
+			starts.set(annotation.wrapper, {
+				parent: marker.element.parentNode,
+				next: marker.element.nextSibling,
+				position: marker.position,
+			});
 	}
 }

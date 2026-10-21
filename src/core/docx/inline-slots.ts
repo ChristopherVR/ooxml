@@ -5,6 +5,7 @@ import { alternateContentDrawing } from './write-drawing';
 import { isSdt, sdtContent } from './content-control';
 import { isEquationElement } from './equation';
 import { isModeledFormFieldData } from './form-fields';
+import { annotationEdge } from './inline-annotations';
 import { isAnnotationWrapper, isPositionMarker, type InlineMarker } from './inline-markers';
 import { runPositionalTab, runSymbol } from './special-characters';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
@@ -81,39 +82,60 @@ function runIsSafe(run: XmlElement): boolean {
 	return !((kinds.has('drawing') || kinds.has('pict')) && kinds.size > 1);
 }
 
+/**
+ * Collects the slots and markers of `parent`'s children: the paragraph itself, or a container
+ * (hyperlink, simple field or control content) or wrapper inside it. Inline content controls are
+ * read only at the paragraph's level.
+ */
 function runsOf(
 	parent: XmlElement,
 	container: XmlElement | undefined,
 	slots: InlineSlot[],
 	markers: InlineMarker[],
+	paragraph: XmlElement,
 ): boolean {
+	const inContainer = container && { container };
 	for (const child of Array.from(parent.childNodes)) {
 		if (!isElement(child)) {
 			if (child.nodeType === 3 && child.textContent?.trim()) return false;
 			continue;
 		}
+		if (parent === paragraph && named(child, 'pPr')) continue;
 		if (isEquationElement(child)) {
-			slots.push({ element: child, ...(container && { container }) });
+			slots.push({ element: child, ...inContainer });
 		} else if (named(child, 'r')) {
 			if (isCommentReferenceRun(child)) continue;
 			if (!runIsSafe(child)) return false;
-			slots.push({ element: child, ...(container && { container }) });
+			slots.push({ element: child, ...inContainer });
 		} else if (isPositionMarker(child)) {
-			markers.push({ element: child, boundary: slots.length });
+			markers.push({ element: child, boundary: slots.length, ...inContainer });
 		} else if (named(child, 'smartTagPr') || named(child, 'customXmlPr')) {
-			// An annotation wrapper's own properties; the wrapper is dropped when rebuilt.
+			// An annotation wrapper's own properties, copied when the wrapper is restored.
 			if (!isAnnotationWrapper(parent)) return false;
 		} else if (isAnnotationWrapper(child)) {
-			if (!runsOf(child, container, slots, markers)) return false;
+			const edge = (side: 'start' | 'end') =>
+				markers.push({
+					element: annotationEdge(child),
+					boundary: slots.length,
+					annotation: { wrapper: child, edge: side },
+					...inContainer,
+				});
+			edge('start');
+			if (!runsOf(child, container, slots, markers, paragraph)) return false;
+			edge('end');
 		} else if (isRevisionWrapperElement(child) && (!container || isSdt(container))) {
-			if (!runsOf(child, container, slots, markers)) return false;
+			if (!runsOf(child, container, slots, markers, paragraph)) return false;
+		} else if (isSdt(child) && parent === paragraph) {
+			const content = sdtContent(child);
+			const before = slots.length;
+			if (content && !runsOf(content, child, slots, markers, paragraph)) return false;
+			if (slots.length === before) slots.push({ container: child });
 		} else if ((named(child, 'hyperlink') || named(child, 'fldSimple')) && !container) {
 			const before = slots.length;
-			if (!runsOf(child, child, slots, markers)) return false;
+			if (!runsOf(child, child, slots, markers, paragraph)) return false;
 			// The parser shows a placeholder for a simple field without a cached result.
 			if (named(child, 'fldSimple') && slots.length === before) slots.push({ container: child });
-		} else if (isCommentAnchorElement(child) && !container) continue;
-		else return false;
+		} else if (!isCommentAnchorElement(child) || container) return false;
 	}
 	return true;
 }
@@ -128,34 +150,7 @@ export function collectInlineSlots(
 ): { slots: InlineSlot[]; markers: InlineMarker[] } | undefined {
 	const slots: InlineSlot[] = [];
 	const markers: InlineMarker[] = [];
-	for (const child of Array.from(paragraph.childNodes)) {
-		if (isElement(child) && named(child, 'pPr')) continue;
-		if (!isElement(child)) {
-			if (child.nodeType === 3 && child.textContent?.trim()) return undefined;
-			continue;
-		}
-		if (isEquationElement(child)) {
-			slots.push({ element: child });
-		} else if (named(child, 'r')) {
-			if (isCommentReferenceRun(child)) continue;
-			if (!runIsSafe(child)) return undefined;
-			slots.push({ element: child });
-		} else if (isPositionMarker(child)) {
-			markers.push({ element: child, boundary: slots.length });
-		} else if (isRevisionWrapperElement(child) || isAnnotationWrapper(child)) {
-			if (!runsOf(child, undefined, slots, markers)) return undefined;
-		} else if (isSdt(child)) {
-			const content = sdtContent(child);
-			const before = slots.length;
-			if (content && !runsOf(content, child, slots, markers)) return undefined;
-			if (slots.length === before) slots.push({ container: child });
-		} else if (named(child, 'hyperlink') || named(child, 'fldSimple')) {
-			const before = slots.length;
-			if (!runsOf(child, child, slots, markers)) return undefined;
-			if (named(child, 'fldSimple') && slots.length === before) slots.push({ container: child });
-		} else if (!isCommentAnchorElement(child)) return undefined;
-	}
-	return { slots, markers };
+	return runsOf(paragraph, undefined, slots, markers, paragraph) ? { slots, markers } : undefined;
 }
 
 /** Top-level paragraph children that `buildInlineContent` output replaces. */

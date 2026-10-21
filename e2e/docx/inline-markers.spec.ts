@@ -39,7 +39,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 
 		const { xml } = await savedDocument(page, `${framework}-inline-markers.docx`);
 		// The marks keep their characters although the editor merges runs of the same formatting;
-		// ranges that end with their paragraph take in the text typed at its end.
+		// ranges that end with their paragraph take in the text typed at its end, and the smart tag
+		// stays around the text it marks.
 		expectInOrder(xml, [
 			'<w:proofErr w:type="spellStart"/>',
 			'>speling<',
@@ -48,11 +49,15 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			'> mistake!<',
 			'<w:permEnd w:id="1"/>',
 			'<w:bookmarkStart w:id="2" w:name="Place"/>',
-			'>Meet in ',
-			'Paris!<',
+			'>Meet in <',
+			'<w:smartTag w:uri="urn:schemas-microsoft-com:office:smarttags" w:element="City">',
+			'>Paris<',
+			'</w:smartTag>',
+			'>!<',
 			'<w:bookmarkEnd w:id="2"/>',
 			'<w:ptab w:relativeTo="margin" w:alignment="right" w:leader="none"/>',
 			'<w:sym w:font="Wingdings" w:char="F0FE"/>',
 		]);
+
 	});
 }

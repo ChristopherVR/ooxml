@@ -65,7 +65,7 @@ export function warningsFor(document: XmlDocument): string[] {
 		Array.from(document.getElementsByTagNameNS(WORD_NS, 'customXml')).some(insideParagraph)
 	)
 		warnings.push(
-			'Smart tags and custom XML markup inside paragraphs are read as their text; editing such a paragraph keeps the text but removes the markup.',
+			'Smart tags and custom XML markup inside paragraphs are read as their text; an edit keeps the markup around text it leaves as it was and removes it from text it changes.',
 		);
 	const specialBreak =
 		Array.from(document.getElementsByTagNameNS(WORD_NS, 'br')).some(

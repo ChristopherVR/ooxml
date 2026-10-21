@@ -1,13 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph } from './model';
 import { children, first, makeW, named, WORD_NS, type XmlDocument, type XmlElement } from './xml';
-import {
-	markerPositions,
-	opensRange,
-	orderRangeEnds,
-	placeMarkers,
-	runPositions,
-} from './inline-markers';
+import { opensRange, orderRangeEnds, placeMarkers } from './inline-markers';
+import { moveMarkers, runPositions } from './inline-marker-positions';
+import { restoreAnnotations } from './inline-annotations';
 import { writeParagraphProperties } from './write-paragraph-properties';
 import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
@@ -18,6 +14,8 @@ import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './writ
 import { paragraphJustification } from './paragraph-alignment';
 import { runHasUnknownProperties } from './write-run-validation';
 import { buildInlineContent } from './write-inline';
+import { containerSources } from './inline-containers';
+import { followContainers } from './inline-container-markers';
 import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
@@ -173,31 +171,42 @@ export function writeParagraphImpl(
 	const source = new Set(sourceBookmarks);
 	const kept = new Set([...starts, ...ends]);
 	const sourcePositions = runPositions(base?.runs ?? []);
-	const positionOf = base
-		? markerPositions(base.runs, paragraph.runs)
-		: (_position: number, opening: boolean) => (opening ? 0 : runPositions(paragraph.runs).at(-1)!);
+	const read = markers
+		.filter((marker) => !isBookmark(marker.element) || kept.has(marker.element))
+		.map((marker) => {
+			const position = sourcePositions[marker.boundary] ?? 0;
+			const annotation = marker.annotation;
+			return {
+				element: marker.element,
+				position,
+				source: position,
+				opening: annotation ? annotation.edge === 'start' : opensRange(marker.element),
+				...(marker.container && { container: marker.container }),
+				...(annotation && { annotation, exact: true }),
+			};
+		});
+	const end = runPositions(paragraph.runs).at(-1)!;
+	const sources = containerSources(paragraph.runs, base?.runs, slots);
 	const carried = orderRangeEnds(
-		markers
-			.filter((marker) => !isBookmark(marker.element) || kept.has(marker.element))
-			.map((marker) => {
-				const opening = opensRange(marker.element);
-				return {
-					element: marker.element,
-					position: positionOf(sourcePositions[marker.boundary] ?? 0, opening),
-					opening,
-					topLevel: marker.element.parentNode === node,
-				};
-			}),
+		base
+			? followContainers(
+					moveMarkers(base.runs, paragraph.runs, read),
+					sources,
+					base.runs,
+					paragraph.runs,
+				)
+			: read.map((marker) => ({ ...marker, position: marker.opening ? 0 : end })),
 	);
 	for (const marker of markers) marker.element.parentNode?.removeChild(marker.element);
 	for (const oldNode of replaceableInlineChildren(node)) node.removeChild(oldNode);
-	const { nodes, placed } = buildInlineContent(
+	const { nodes, placed, containers } = buildInlineContent(
 		doc,
 		paragraph.runs,
 		base?.runs,
 		slots,
 		allocator,
 		ranges,
+		sources,
 	);
 	let anchor: XmlElement = pPr;
 	for (const bookmark of starts.filter((element) => !source.has(element))) {
@@ -208,7 +217,9 @@ export function writeParagraphImpl(
 		node.insertBefore(run, anchor.nextSibling);
 		anchor = run;
 	}
-	placeMarkers(node, carried, paragraph.runs, placed);
+	placeMarkers(node, carried, paragraph.runs, placed, containers);
+	// Smart tags and inline custom XML go back around text the edit left as it was.
+	restoreAnnotations(carried, base?.runs ?? [], paragraph.runs);
 	for (const bookmark of ends.filter((element) => !source.has(element))) node.appendChild(bookmark);
 	if (!pPr.childNodes.length) node.removeChild(pPr);
 	return node;
