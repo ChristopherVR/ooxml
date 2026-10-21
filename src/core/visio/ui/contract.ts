@@ -24,7 +24,7 @@ export interface ViewerEvents {
 	'document-change': {
 		document: VisioDocument;
 		dirty: boolean;
-		kind: 'edit' | 'undo' | 'redo' | 'remote';
+		kind: 'edit' | 'undo' | 'redo' | 'remote' | 'save';
 	};
 	'document-error': Error;
 	'page-change': number;

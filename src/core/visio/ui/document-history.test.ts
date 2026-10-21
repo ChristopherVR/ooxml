@@ -28,3 +28,18 @@ it('caps aggregate retained bytes including pinned original and current', () => 
 	}
 	expect(count).toBe(1);
 });
+it('measures dirty from the last saved snapshot after markClean', () => {
+	const history = new DocumentHistory(new Uint8Array([1]));
+	history.append(new Uint8Array([2]), []);
+	expect(history.state.dirty).toBe(true);
+	history.markClean();
+	expect(history.state.dirty).toBe(false);
+	expect(history.export().dirty).toBe(false);
+	history.append(new Uint8Array([3]), []);
+	expect(history.state.dirty).toBe(true);
+	history.move(history.undoTarget!);
+	expect(history.state.dirty).toBe(false);
+	history.move(history.undoTarget!);
+	expect(history.state.dirty).toBe(true);
+	expect(history.original.bytes[0]).toBe(2);
+});
