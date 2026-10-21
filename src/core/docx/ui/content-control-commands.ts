@@ -16,6 +16,7 @@ import {
 } from '../content-control-edit';
 import type { ContentControl, ContentControlKind } from '../content-control-model';
 import { freshControlId } from './content-control-paste';
+import { rowControlSpans } from './content-control-rows';
 import { controlAt, controlSpans, type ControlSpan } from './content-control-spans';
 
 /** Transactions carrying this meta are the control's own edits and bypass the lock guard. */
@@ -276,9 +277,11 @@ export function deleteToPlaceholder(
 	return replaceControlContent(state, span, placeholderChange(span.control));
 }
 
-/** A new control id: Word uses signed 32-bit integers. */
+/** A new control id that no control in `doc` has, rows included: Word uses signed 32-bit ids. */
 export const newControlId = (doc: ProseMirrorNode): string =>
-	freshControlId(new Set(controlSpans(doc).map((span) => span.control.id)));
+	freshControlId(
+		new Set([...controlSpans(doc), ...rowControlSpans(doc)].map((span) => span.control.id)),
+	);
 
 export interface NewControlOptions {
 	alias?: string;

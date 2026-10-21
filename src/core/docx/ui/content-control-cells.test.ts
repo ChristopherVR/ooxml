@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Schema, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -7,6 +7,7 @@ import { markSpecs } from './schema-marks';
 import {
 	chooseListItem,
 	deleteToPlaceholder,
+	newControlId,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
 	updateControlProperties,
@@ -434,6 +435,26 @@ describe('content controls around table cells in the editor', () => {
 				edited.attrs.contentControl?.id,
 				edited.firstChild!.attrs.contentControl?.id,
 			]).toEqual(temporaryCell ? [undefined, '5'] : ['5', undefined]);
+		}
+	});
+
+	it('gives a new control an id that no row control has', () => {
+		const item: ContentControl = { id: '1000', level: 'row', kind: 'richText' };
+		const doc = schema.node('doc', null, [
+			schema.node('table', null, [
+				schema.node('tableRow', { properties: { contentControl: item } }, [
+					schema.node('tableCell', null, [paragraph('Line')]),
+				]),
+			]),
+		]);
+		// The first id drawn is the row control's, the second one is free.
+		const draw = (id: number) => (id - 0.5) / (2 ** 31 - 1);
+		const random = vi.spyOn(Math, 'random');
+		try {
+			random.mockReturnValueOnce(draw(1000)).mockReturnValueOnce(draw(1001));
+			expect(newControlId(doc)).toBe('1001');
+		} finally {
+			random.mockRestore();
 		}
 	});
 
