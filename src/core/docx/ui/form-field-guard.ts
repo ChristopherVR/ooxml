@@ -80,17 +80,21 @@ function unprotectedSections(doc: Node): Range[] {
 	return ranges;
 }
 
+const isBlock = (node: Node | null | undefined): node is Node =>
+	node?.type.name === 'paragraph' || node?.type.name === 'table';
+
 /**
- * Whether the step only gives a block another id, as the editor does to the copy a split makes of
- * a paragraph: bookkeeping, not an edit.
+ * Whether the step only gives a paragraph or table another id, as the editor does to the copy a
+ * split makes of a paragraph: bookkeeping, not an edit, as long as no section moves with it.
  */
 function renamesBlock(step: Step, before: Node | undefined, after: Node): boolean {
-	if (step instanceof AttrStep) return step.attr === 'id';
-	if (!(step instanceof ReplaceAroundStep) || !before) return false;
+	if (!before) return false;
+	if (step instanceof AttrStep) return step.attr === 'id' && isBlock(before.nodeAt(step.pos));
+	if (!(step instanceof ReplaceAroundStep)) return false;
 	const old = before.nodeAt(step.from);
 	const next = after.nodeAt(step.from);
 	return Boolean(
-		old &&
+		isBlock(old) &&
 		next &&
 		old.nodeSize === step.to - step.from &&
 		old.type === next.type &&
@@ -122,7 +126,14 @@ export function staysInFormFields(tr: Transaction): boolean {
 		.filter((range) => !sections.some((free) => range.from >= free.from && range.to <= free.to));
 	let sectionsAfter: Range[] | undefined;
 	return tr.steps.every((step, index) => {
-		if (renamesBlock(step, tr.docs[index], tr.docs[index + 1] ?? tr.doc)) return true;
+		const after = tr.docs[index + 1] ?? tr.doc;
+		// Sections end at blocks named by id: a new id must leave the unprotected ones as they were.
+		if (
+			renamesBlock(step, tr.docs[index], after) &&
+			JSON.stringify(unprotectedSections(tr.docs[index]!)) ===
+				JSON.stringify(unprotectedSections(after))
+		)
+			return true;
 		const map = tr.mapping.slice(0, index);
 		const within = (ranges: Range[], from: number, to: number) =>
 			ranges.some((range) => from >= map.map(range.from, -1) && to <= map.map(range.to, 1));

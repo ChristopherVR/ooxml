@@ -384,15 +384,28 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(state.tr.insertText('B', result!.to)).doc.textContent).toContain('AdaB');
 	});
 
-	it('lets the editor give a paragraph another id anywhere in a protected form', () => {
-		const state = sectionedState();
-		const node = state.doc.child(0);
-		const renamed = state.apply(state.tr.setNodeMarkup(0, undefined, { ...node.attrs, id: 'p9' }));
-		expect(renamed.doc.child(0).attrs.id).toBe('p9');
-		const aligned = state.apply(
-			state.tr.setNodeMarkup(0, undefined, { ...node.attrs, id: 'p9', align: 'center' }),
+	it('lets the editor give a paragraph another id unless that moves a section', () => {
+		// The first section, protected, holds `p0` and ends at `p1`; the last is left unprotected.
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p1' }, { endsAtBlockId: 'p2', formProtection: false }],
+			{ p2: 'Free' },
 		);
-		expect(aligned.doc.child(0).attrs).toMatchObject({ id: 'p0', align: null });
+		const rename = (index: number, attrs: Record<string, unknown>) => {
+			let pos = 0;
+			for (let at = 0; at < index; at++) pos += state.doc.child(at).nodeSize;
+			const node = state.doc.child(index);
+			return state
+				.apply(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...attrs }))
+				.doc.child(index).attrs;
+		};
+		expect(rename(0, { id: 'p9' })).toMatchObject({ id: 'p9' });
+		expect(rename(0, { id: 'p9', align: 'center' })).toMatchObject({ id: 'p0', align: null });
+		// Renaming the block a protected section ends at would give its text to the next section.
+		expect(rename(1, { id: 'p9' })).toMatchObject({ id: 'p1' });
+		expect(
+			state.apply(state.tr.setNodeAttribute(state.doc.child(0).nodeSize, 'id', 'p9')).doc.child(1)
+				.attrs.id,
+		).toBe('p1');
 	});
 
 	it('lets a split move text between two unprotected sections', () => {
