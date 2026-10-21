@@ -207,15 +207,18 @@ export function placeMarkers(
 		if (side === 'start' && next?.first?.parentNode)
 			return void next.first.parentNode.insertBefore(marker.element, next.first);
 		if (side === 'end' && previous?.last) return after(previous.last, marker.element);
+		// Inside a change, the end of the run before the marker is taken first, so that markers at
+		// one position stay together in their order.
 		const changed = (run: PlacedRun | undefined) =>
 			marker.revision && run?.revision === marker.revision ? run.wrapper : undefined;
-		const [opens, closes] = [changed(next), changed(previous)];
-		if (opens && (marker.opening || !closes)) {
-			let anchor = opens.firstChild;
+		const ending = changed(previous);
+		if (ending) return void ending.appendChild(marker.element);
+		const starting = changed(next);
+		if (starting) {
+			let anchor = starting.firstChild;
 			while (anchor && done.has(anchor)) anchor = anchor.nextSibling;
-			return void opens.insertBefore(marker.element, anchor);
+			return void starting.insertBefore(marker.element, anchor);
 		}
-		if (closes) return void closes.appendChild(marker.element);
 		if (home && previous?.last && previous.parent && home.has(previous.parent))
 			return after(previous.last, marker.element);
 		if (home && next?.first?.parentNode && next.parent && home.has(next.parent))

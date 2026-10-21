@@ -129,6 +129,25 @@ describe('editing paragraphs that hold position markers', () => {
 		]);
 	});
 
+	it('keeps an empty range inside a tracked change in order', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins ${revision}>${run('one')}` +
+				`<w:bookmarkStart w:id="8" w:name="Empty"/><w:bookmarkEnd w:id="8"/>${run('two')}</w:ins></w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		const xml = await savedParagraph(loaded);
+		expectInOrder(xml, [
+			'>one<',
+			'<w:bookmarkStart w:id="8"',
+			'<w:bookmarkEnd w:id="8"/>',
+			'>two<',
+		]);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkStart w:id="8"', '<w:bookmarkEnd w:id="8"/>'])).toBe(
+			true,
+		);
+	});
+
 	it('keeps a bookmark around the run it marks instead of widening it to the paragraph', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p>${run('Label: ')}<w:bookmarkStart w:id="3" w:name="Value"/>${run('old')}<w:bookmarkEnd w:id="3"/></w:p>`,
