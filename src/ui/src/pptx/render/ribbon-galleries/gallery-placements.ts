@@ -33,6 +33,9 @@ export interface RibbonGalleryGroupPlacement {
 	strip?: 'picture-size' | 'chart-selection';
 }
 
+/** Galleries the format inspector shows as panels (`mode="panel"`) instead of the ribbon. */
+export const INSPECTOR_GALLERIES: readonly RibbonGalleryId[] = ['textWarp'];
+
 /** The groups each contextual tab renders, in order. */
 export const CONTEXTUAL_TAB_GROUPS: Record<
 	RibbonContextualTabId,

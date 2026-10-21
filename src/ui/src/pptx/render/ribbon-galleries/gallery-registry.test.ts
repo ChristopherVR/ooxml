@@ -6,6 +6,7 @@ import {
 	CONTEXTUAL_TAB_GROUPS,
 	contextualTabsForElement,
 	FIXED_TAB_GALLERIES,
+	INSPECTOR_GALLERIES,
 	resolveActiveRibbonTab,
 	visibleContextualTabs,
 } from './gallery-placements';
@@ -42,8 +43,9 @@ describe('ribbon gallery registry', () => {
 		}
 	});
 
-	it('places every gallery on a tab', () => {
+	it('places every gallery on a tab or in the inspector', () => {
 		const placed = new Set([
+			...INSPECTOR_GALLERIES,
 			...FIXED_TAB_GALLERIES.map((p) => p.gallery),
 			...Object.values(CONTEXTUAL_TAB_GROUPS).flatMap((groups) =>
 				groups.flatMap((group) => group.galleries.map((g) => g.gallery)),

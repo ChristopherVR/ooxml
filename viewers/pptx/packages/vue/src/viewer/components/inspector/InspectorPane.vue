@@ -126,7 +126,7 @@ function relay(patch: Partial<PptxElement>): void {
 		</InspectorSectionCard>
 
 		<InspectorSectionCard v-if="isText" :title="t('pptx.inspector.text')">
-			<TextPanel :element="element" @update="relay" />
+			<TextPanel :element="element" :can-edit="props.canEdit" @update="relay" />
 		</InspectorSectionCard>
 
 		<InspectorSectionCard v-if="isImage" :title="t('pptx.inspector.image')">

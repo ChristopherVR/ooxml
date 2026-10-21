@@ -29,6 +29,7 @@ import { SMARTART_STYLES_GALLERY } from './smartart-styles-gallery';
 import { TABLE_LAYOUT_COMMAND_MODULES } from './table-layout-commands';
 import { TABLE_STYLES_GALLERY } from './table-styles-gallery';
 import { TABLE_TEXT_DIRECTION_GALLERY } from './table-text-direction-gallery';
+import { TEXT_WARP_GALLERY } from './text-warp-gallery';
 import { THEME_COLORS_GALLERY } from './theme-colors-gallery';
 import { THEME_BACKGROUNDS_GALLERY } from './theme-backgrounds-gallery';
 import { THEME_EFFECTS_GALLERY } from './theme-effects-gallery';
@@ -41,6 +42,7 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	shapeStyles: { build: buildShapeStylesGallery, apply: applyShapeStylesItem },
 	shapeEffects: SHAPE_EFFECTS_GALLERY,
 	wordArtStyles: WORDART_STYLES_GALLERY,
+	textWarp: TEXT_WARP_GALLERY,
 	pictureStyles: PICTURE_STYLES_GALLERY,
 	pictureCorrections: PICTURE_CORRECTIONS_GALLERY,
 	pictureColor: PICTURE_COLOR_GALLERY,
