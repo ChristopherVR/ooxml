@@ -2,6 +2,7 @@ import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
 import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
 import { fit, n, text, textWidth, type Rect } from './chart-svg-util';
+import { extentOf } from '../extent';
 import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes } from './chart-svg-appearance';
 import { pointLabels, type PointMark } from './chart-svg-labels';
@@ -36,7 +37,7 @@ export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]):
 	const cats = Math.max(1, model.categories.length);
 	const catW = Math.min(
 		area.w * 0.3,
-		Math.max(...model.categories.map((c) => textWidth(c, categorySize)), 8) + 6,
+		Math.max(extentOf(model.categories.map((c) => textWidth(c, categorySize))).max, 8) + 6,
 	);
 	const second = horizontal ? undefined : model.secondaryAxis;
 	const secondLabels =
