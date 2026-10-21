@@ -86,6 +86,11 @@ Any server that does these three things works with every binding.
 awareness, query awareness). A stock y-websocket server works. A server that keeps a `Y.Doc` per
 room and persists it gives history to people who join later.
 
+The reference server also takes an `authorizeSync({ room, user, url, headers })` hook that admits a
+socket for writing, read-only (its document updates are dropped) or not at all, and `closeSync`,
+`syncPrincipals`, `isSyncRoomEmpty` and `handleUpgrade` for hosts that keep their own permissions
+and origin. See "Per-room permissions" in the server's README.
+
 ### Signaling
 
 `ws(s)://host/<base>/<room>` forwards each JSON text message to the **other** sockets of the room,
