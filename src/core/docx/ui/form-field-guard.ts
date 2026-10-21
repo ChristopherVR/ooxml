@@ -24,6 +24,8 @@ import {
 import { isBlankFormText, replacedBlanks } from './form-text-blank';
 
 const isRemote = (tr: Transaction): boolean => tr.getMeta('y-sync$') !== undefined;
+/** An undo or redo, which puts back text the field held before, whatever its length. */
+const isHistory = (tr: Transaction): boolean => tr.getMeta('history$') !== undefined;
 
 /**
  * Whether the document is protected for filling in forms: only its form fields, content controls
@@ -263,7 +265,7 @@ export function formFieldGuardPlugin(protection: () => DocumentProtection | unde
 		filterTransaction: (tr, state) => {
 			if (!tr.docChanged || isRemote(tr)) return true;
 			const limited = textFields.getState(state)?.limited || insertsFieldMarker(tr);
-			if (limited && exceedsFormTextLength(tr)) return false;
+			if (limited && !isHistory(tr) && exceedsFormTextLength(tr)) return false;
 			if (!isFormsProtected(protection())) return true;
 			return (
 				Boolean(tr.getMeta(CONTROL_EDIT_META) || tr.getMeta(FORM_FIELD_EDIT_META)) ||

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
+import { history, undo } from 'prosemirror-history';
 import { EditorState, type Transaction } from 'prosemirror-state';
 import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
 import { setFormCheckbox } from '../form-fields';
@@ -166,6 +167,23 @@ describe('legacy form fields in the editor', () => {
 		expect(longer.doc.textContent).toContain('Ada!!!');
 		const tooLong = longer.apply(longer.tr.insertText('!', result!.to + 3));
 		expect(tooLong.doc.textContent).toBe(longer.doc.textContent);
+	});
+
+	it('undoes a deletion in a text field that was already past its maximum length', () => {
+		// The file's result is longer than the field allows; shortening it is an edit to undo.
+		const runs: TextRun[] = [{ text: 'Name: ' }, ...field(name, 'Ada Lovelace')];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		let state = EditorState.create({
+			schema,
+			doc,
+			plugins: [history(), formFieldGuardPlugin(() => undefined)],
+		});
+		const [result] = formTextResults(state.doc);
+		state = state.apply(state.tr.delete(result!.to - 'Lovelace'.length, result!.to));
+		expect(state.doc.textContent).toBe('Name: Ada ');
+		undo(state, (tr) => (state = state.apply(tr)));
+		expect(state.doc.textContent).toBe('Name: Ada Lovelace');
 	});
 
 	it("replaces a blank text field's en spaces with the first text typed into it", () => {
