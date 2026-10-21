@@ -240,4 +240,12 @@ describe('refreshing STYLEREF results', () => {
 		});
 		expect(refreshStyleRefFields(gone)).toBe(gone);
 	});
+
+	it('updates a field whose switches come before its style', async () => {
+		const model = await load({
+			body: paragraph('DOC-9', 'DocNumber'),
+			header: paragraph('', undefined, complexField('STYLEREF \\* Upper "Doc Number"', ['doc-1'])),
+		});
+		expect(shown(headerParagraph(refreshStyleRefFields(model)))).toBe('DOC-9');
+	});
 });

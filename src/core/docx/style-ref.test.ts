@@ -27,6 +27,18 @@ describe('STYLEREF instructions', () => {
 			number: true,
 			numberOnly: true,
 		});
+		// Word's Edit Field dialog writes the switches before the style.
+		expect(parseStyleReference(' STYLEREF \\s "Heading 1" ')).toEqual({
+			style: 'Heading 1',
+			last: false,
+			number: true,
+			numberOnly: true,
+		});
+		expect(parseStyleReference('STYLEREF \\l \\* Upper Title')).toMatchObject({
+			style: 'Title',
+			last: true,
+			textCase: 'upper',
+		});
 	});
 
 	it('leaves fields it cannot evaluate to the result they were saved with', () => {
@@ -37,6 +49,8 @@ describe('STYLEREF instructions', () => {
 			'STYLEREF Title \\# "0.00"',
 			'STYLEREF Title \\* Arabic',
 			'STYLEREF Doc Number',
+			'STYLEREF \\s Doc Number',
+			'STYLEREF \\l',
 			'STYLEREF',
 			'REF Title',
 		])

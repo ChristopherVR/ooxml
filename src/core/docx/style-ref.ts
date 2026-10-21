@@ -43,25 +43,28 @@ export interface StyleReference {
 }
 
 /**
- * Reads a STYLEREF instruction. Undefined for another field, a STYLEREF without a style, and
- * one with a switch that is not evaluated here (`\p`, `\r`, `\w`, number or date pictures,
- * number formats): such fields keep the result they were saved with.
+ * Reads a STYLEREF instruction. The style may come before or after the switches: Word's Edit
+ * Field dialog writes `STYLEREF \s "Heading 1"`. Undefined for another field, a STYLEREF without
+ * a style or with more than one argument, and one with a switch that is not evaluated here
+ * (`\p`, `\r`, `\w`, number or date pictures, number formats): such fields keep the result they
+ * were saved with.
  */
 export function parseStyleReference(instr: string): StyleReference | undefined {
 	const tokens = fieldTokens(instr);
 	if (tokens[0]?.kind !== 'text' || tokens[0].value.toUpperCase() !== 'STYLEREF') return undefined;
-	const style = tokens[1]?.kind === 'text' ? tokens[1].value : undefined;
-	if (!style) return undefined;
+	let style: string | undefined;
 	const reference: StyleReference = {
-		style,
+		style: '',
 		last: false,
 		number: false,
 		numberOnly: false,
 	};
-	for (let index = 2; index < tokens.length; index++) {
+	for (let index = 1; index < tokens.length; index++) {
 		const token = tokens[index]!;
-		if (token.kind === 'text') return undefined;
-		if (token.value === 'l') reference.last = true;
+		if (token.kind === 'text') {
+			if (style !== undefined) return undefined;
+			style = token.value;
+		} else if (token.value === 'l') reference.last = true;
 		else if (token.value === 'n') reference.number = true;
 		else if (token.value === 't') reference.numberOnly = true;
 		else if (token.value === 's') {
@@ -76,6 +79,8 @@ export function parseStyleReference(instr: string): StyleReference | undefined {
 			else if (name !== 'mergeformat') return undefined;
 		} else return undefined;
 	}
+	if (!style) return undefined;
+	reference.style = style;
 	return reference;
 }
 
