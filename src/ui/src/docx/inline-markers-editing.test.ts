@@ -99,6 +99,34 @@ describe('saving paragraphs with markers edited in the editor', () => {
 	});
 });
 
+describe('saving a form field moved in the editor', () => {
+	it('keeps each check box in the bookmark of its name when one is moved past the other', async () => {
+		const box = (name: string, id: number) =>
+			`<w:bookmarkStart w:id="${id}" w:name="${name}"/>` +
+			`<w:r><w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="${name}"/><w:enabled/>` +
+			`<w:calcOnExit w:val="0"/><w:checkBox><w:sizeAuto/><w:default w:val="0"/></w:checkBox></w:ffData></w:fldChar></w:r>` +
+			`<w:r><w:instrText xml:space="preserve"> FORMCHECKBOX </w:instrText></w:r>` +
+			`<w:r><w:fldChar w:fldCharType="end"/></w:r><w:bookmarkEnd w:id="${id}"/>`;
+		const { loaded, view } = await open(
+			`<w:p>${box('Approved', 1)}${run(' Yes ')}${box('Rejected', 2)}${run(' No')}</w:p>`,
+		);
+		// The first check box is its first three nodes: cut it and paste it after the second.
+		const field = view.state.doc.slice(1, 4);
+		const tr = view.state.tr.delete(1, 4);
+		view.dispatch(tr.insert(tr.mapping.map(12), field.content));
+		const xml = await savedParagraph(loaded, view);
+		expectInOrder(xml, [
+			'> Yes <',
+			'<w:bookmarkStart w:id="2" w:name="Rejected"/>',
+			'<w:name w:val="Rejected"/>',
+			'<w:bookmarkEnd w:id="2"/>',
+			'<w:bookmarkStart w:id="1" w:name="Approved"/>',
+			'<w:name w:val="Approved"/>',
+			'<w:bookmarkEnd w:id="1"/>',
+		]);
+	});
+});
+
 describe('saving a form field filled in the editor', () => {
 	it('saves text typed into a blank text field as Word writes it, its result still unproofed', async () => {
 		const field = (inner: string, props = '') =>
