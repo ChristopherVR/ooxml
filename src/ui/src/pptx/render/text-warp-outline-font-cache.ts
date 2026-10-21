@@ -28,7 +28,8 @@ import type { Font } from 'opentype.js';
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 
 import { DEFAULT_TEXT_FONT_SIZE } from '../constants';
-import { resolveEmbeddedFontClearBytes } from './embedded-fonts';
+import { resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
+import { selectTrustedEmbeddedFonts } from './embedded-font-trust';
 import type { GlyphOutlineCommand } from './text-warp-glyph-outline';
 import { traceGlyphOutlineCommands } from './text-warp-glyph-trace';
 import { parseOpenTypeFont } from './text-warp-opentype-parser';
@@ -93,10 +94,11 @@ export class GlyphOutlineFontCache {
 	 * Synchronously parse every embedded font whose bytes are already
 	 * resolvable, no network involved. Safe to call repeatedly (e.g. once per
 	 * render) with the same list: already-resolved or already-failed entries
-	 * are skipped.
+	 * are skipped. Typefaces whose files do not match them are skipped too
+	 * (see `selectTrustedEmbeddedFonts`), exactly as for `@font-face`.
 	 */
 	registerEmbeddedFonts(fonts: readonly PptxEmbeddedFont[]): void {
-		for (const font of fonts) {
+		for (const font of selectTrustedEmbeddedFonts(fonts)) {
 			if (!font.name) {
 				continue;
 			}

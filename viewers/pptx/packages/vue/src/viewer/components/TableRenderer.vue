@@ -315,8 +315,8 @@ function tdStyle(cell: RenderableCell): TableCellCss {
  * Convert a {@link CellTextRun} to an inline style object for a `<span>`.
  * Delegates to the framework-agnostic `cellRunStyle` helper.
  */
-function runStyle(run: CellTextRun): TableCellCss {
-	return cellRunStyle(run);
+function runStyle(run: CellTextRun, cellCss: TableCellCss): TableCellCss {
+	return cellRunStyle(run, cellCss);
 }
 
 // ---------------------------------------------------------------------------
@@ -644,7 +644,7 @@ onBeforeUnmount(() => {
 										:key="`${cell.key}-para-${pi}-run-${ri}`"
 									>
 										<br v-if="run.isLineBreak" />
-										<span v-else class="pptx-vue-table__run" :style="runStyle(run)">{{
+										<span v-else class="pptx-vue-table__run" :style="runStyle(run, cell.style)">{{
 											run.text
 										}}</span>
 									</template>
@@ -659,7 +659,7 @@ onBeforeUnmount(() => {
 								<template v-for="(run, ri) in cell.textRuns" :key="`${cell.key}-run-${ri}`">
 									<div v-if="run.isParagraphBreak" class="pptx-vue-table__para-break" />
 									<br v-else-if="run.isLineBreak" />
-									<span v-else class="pptx-vue-table__run" :style="runStyle(run)">{{
+									<span v-else class="pptx-vue-table__run" :style="runStyle(run, cell.style)">{{
 										run.text
 									}}</span>
 								</template>

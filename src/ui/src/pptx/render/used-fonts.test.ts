@@ -44,4 +44,26 @@ describe('used font collection', () => {
 	it('returns an empty list when no element specifies a font', () => {
 		expect(collectUsedFonts([slide([])])).toStrictEqual([]);
 	});
+
+	it('collects the fonts of table cells and their runs', () => {
+		const table = {
+			type: 'table',
+			id: 't',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			tableData: {
+				rows: [
+					{
+						cells: [
+							{ text: 'A', style: { fontFamily: 'DM Sans Medium' } },
+							{ text: 'B', textRuns: [{ text: 'B', fontFamily: 'DM Sans Light' }] },
+						],
+					},
+				],
+			},
+		} as unknown as PptxElement;
+		expect(collectUsedFonts([slide([table])])).toStrictEqual(['DM Sans Light', 'DM Sans Medium']);
+	});
 });

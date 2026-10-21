@@ -1,4 +1,4 @@
-import type { CellTextRun } from 'ooxml-ui/pptx';
+import type { CellTextRun, TableCellCss } from 'ooxml-ui/pptx';
 import { cellParagraphBlocks, cellRunStyle } from 'ooxml-ui/pptx';
 import type { PptxTableCell } from 'pptx-viewer-core';
 import React from 'react';
@@ -19,16 +19,19 @@ import React from 'react';
  * @param cell - The cell, or `undefined` for the raw-XML path when no parsed
  *   cell is available at this position.
  * @param fallbackText - Plain text rendered when the cell has no runs.
+ * @param cellCss - The cell's resolved style, so a run's own weight-variant
+ *   family renders at its weight relative to the cell (see `cellRunStyle`).
  */
 export function renderTableCellContent(
 	cell: PptxTableCell | undefined,
 	fallbackText: string,
+	cellCss?: TableCellCss,
 ): React.ReactNode {
 	const blocks = cell ? cellParagraphBlocks(cell) : undefined;
 	if (blocks) {
 		return blocks.map((block, index) => (
 			<div key={`p-${index}`} style={{ display: 'block', ...(block.css as React.CSSProperties) }}>
-				{block.runs.map(renderRun)}
+				{block.runs.map((run, runIndex) => renderRun(run, runIndex, cellCss))}
 			</div>
 		));
 	}
@@ -40,20 +43,20 @@ export function renderTableCellContent(
 		run.isParagraphBreak ? (
 			<div key={`p-${index}`} style={{ display: 'block', height: 0 }} />
 		) : (
-			renderRun(run, index)
+			renderRun(run, index, cellCss)
 		),
 	);
 }
 
 /** A run as a styled `<span>`, or a soft break as `<br>`. */
-function renderRun(run: CellTextRun, index: number): React.ReactNode {
+function renderRun(run: CellTextRun, index: number, cellCss?: TableCellCss): React.ReactNode {
 	if (run.isLineBreak) {
 		return <br key={`br-${index}`} />;
 	}
 	return (
 		<span
 			key={`r-${index}`}
-			style={{ position: 'relative', ...(cellRunStyle(run) as React.CSSProperties) }}
+			style={{ position: 'relative', ...(cellRunStyle(run, cellCss) as React.CSSProperties) }}
 		>
 			{run.text}
 		</span>

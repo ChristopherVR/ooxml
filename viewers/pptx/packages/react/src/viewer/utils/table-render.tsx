@@ -8,7 +8,9 @@
  *   - table-render-data.tsx       - renderTableFromTableData (programmatic tables)
  *   - table-render.tsx            - renderTableElement (XML-based tables)
  */
+import type { TableCellCss } from 'ooxml-ui/pptx';
 import {
+	applyTableCellFontWeight,
 	canDrillDown,
 	DEFAULT_FONT_FAMILY,
 	TABLE_CELL_TEXT_DEFAULTS,
@@ -210,6 +212,10 @@ export function renderTableElement(
 											...(tdCellOverride ? cellStyleToCss(tdCellOverride) : undefined),
 											...(diag ? { position: 'relative' } : undefined),
 										};
+										// The weight once family and boldness are both known, as
+										// `tableCellCss` does on the structured-model path: the XML
+										// layer above resolves both from the raw run properties.
+										applyTableCellFontWeight(mergedStyle as TableCellCss);
 
 										return (
 											<td
@@ -294,6 +300,7 @@ export function renderTableElement(
 													renderTableCellContent(
 														tableEl.tableData?.rows[rowIndex]?.cells[cellIndex],
 														extractCellText(cell) || '\u00a0',
+														mergedStyle as TableCellCss,
 													)
 												)}
 											</td>
