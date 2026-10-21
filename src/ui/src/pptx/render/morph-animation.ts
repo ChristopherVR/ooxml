@@ -21,6 +21,11 @@ import {
 	serializeShapeAdjustments,
 } from './morph-geometry-keyframes';
 import {
+	generateImageAlphaGhostAnimations,
+	generateImageAlphaMorphAnimations,
+	morphImageAlphaChanged,
+} from './morph-image-alpha';
+import {
 	generateImageCropGhostAnimations,
 	generateImageCropMorphAnimations,
 	morphImageCropChanged,
@@ -212,11 +217,16 @@ const GEOMETRY_EPSILON = 0.5;
  * A picture's SOURCE CROP counts here even though it moves no box: PowerPoint's
  * "Scale Height"/"Scale Width" is an `a:srcRect` crop inside an unchanged frame,
  * so a picture rescaled between two slides compares equal on every other axis
- * and would otherwise be skipped entirely (issue #148).
+ * and would otherwise be skipped entirely (issue #148). Its TRANSPARENCY
+ * (`a:alphaModFix`) counts for the same reason: the same picture faded from
+ * invisible to opaque between two slides is a staple of Morph authoring, and
+ * treating it as inert held it at the old transparency until the overlay came
+ * down, when it popped in (issue #141).
  */
 export function isInertMorphPair(fromElement: PptxElement, toElement: PptxElement): boolean {
 	return (
 		!morphImageCropChanged(fromElement, toElement) &&
+		!morphImageAlphaChanged(fromElement, toElement) &&
 		Math.abs(fromElement.x - toElement.x) <= GEOMETRY_EPSILON &&
 		Math.abs(fromElement.y - toElement.y) <= GEOMETRY_EPSILON &&
 		Math.abs(fromElement.width - toElement.width) <= GEOMETRY_EPSILON &&
@@ -983,6 +993,12 @@ export function generateFullMorphTransition(
 	// The same zoom on the painted ghosts, so a crop change that IS crossfading
 	// dissolves from the region the outgoing slide actually showed.
 	allAnimations.push(...generateImageCropGhostAnimations(matchResult.pairs, durationMs, ghostIds));
+
+	// Picture transparency (`a:alphaModFix`) tweens on the `<img>` of both
+	// halves, like the crop: the incoming picture is painted at its final
+	// transparency and a painted ghost has to arrive there too (issue #141).
+	allAnimations.push(...generateImageAlphaMorphAnimations(matchResult.pairs, durationMs));
+	allAnimations.push(...generateImageAlphaGhostAnimations(matchResult.pairs, durationMs, ghostIds));
 
 	// Generate fade-out for unmatched from elements
 	const fadeOuts = generateUnmatchedFadeOutAnimations(
