@@ -13,8 +13,7 @@ import {
 	type FieldSite,
 	type FormFieldStory,
 } from './form-fill-sites';
-import type { DocumentModel, TextRun } from './model';
-import { shownText } from './style-ref';
+import type { DocumentModel, Paragraph, TextRun } from './model';
 
 export type FormFieldType = 'text' | 'date' | 'number' | 'checkbox' | 'dropdown';
 export type { FormFieldStory } from './form-fill-sites';
@@ -72,25 +71,31 @@ export interface FormFieldInfo {
 /** A text field's result is empty when it is only Word's en-space placeholder or spaces. */
 const resultValue = (text: string) => (/^\s*$/u.test(text) ? '' : text);
 
-const contentText = (runs: readonly TextRun[]) =>
+/** The text runs of `paragraph` show in a site's document. */
+const contentText = (
+	site: FieldSite,
+	runs: readonly TextRun[],
+	paragraph: Paragraph = site.paragraph,
+) =>
 	runs
 		.filter((run) => !run.fieldChar && run.fieldCode === undefined)
-		.map(shownText)
+		.map((run) => site.shown(run, paragraph))
 		.join('');
 
 /** The text a site's content shows: a legacy field's result, a control's runs or paragraphs. */
 export function siteText(site: FieldSite): string {
 	if (site.kind === 'legacy') {
 		const result = legacyResult(site);
-		return result ? contentText(site.paragraph.runs.slice(result.from, result.to + 1)) : '';
+		return result ? contentText(site, site.paragraph.runs.slice(result.from, result.to + 1)) : '';
 	}
-	if (site.kind === 'inline') return contentText(site.paragraph.runs.slice(site.from, site.to + 1));
+	if (site.kind === 'inline')
+		return contentText(site, site.paragraph.runs.slice(site.from, site.to + 1));
 	const paragraphs =
 		site.kind === 'cell'
 			? (siteCell(site)?.paragraphs ?? [])
 			: (site.paragraphs ?? []).map((index) => site.blocks[index]!);
 	return paragraphs
-		.map((item) => (item.type === 'paragraph' ? contentText(item.runs) : ''))
+		.map((item) => (item.type === 'paragraph' ? contentText(site, item.runs, item) : ''))
 		.join('\n');
 }
 

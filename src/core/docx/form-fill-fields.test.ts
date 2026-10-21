@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from './index';
 import { listFormFields, type FormFieldInfo } from './form-fill-fields';
-import { formTemplateFixture } from './test-support/form-template-fixture';
+import {
+	formTemplateFixture,
+	inlineControl,
+	paragraph,
+	textRun,
+} from './test-support/form-template-fixture';
 
 const fields = async () => listFormFields((await loadDocx(await formTemplateFixture())).model);
 const byLabel = (list: FormFieldInfo[], label: string) => {
@@ -168,6 +173,28 @@ describe('listing the fill-in fields of a form', () => {
 		expect(list.map((field) => [field.id, field.label, field.value])).toEqual([
 			['tag:code', 'Code', 'A1'],
 			['control#2', 'Text', 'B2'],
+		]);
+	});
+
+	it('leaves text hidden through its style out of labels and values, as Word shows them', async () => {
+		const styles =
+			'<w:style w:type="character" w:styleId="Hint"><w:name w:val="Hint"/><w:rPr><w:vanish/></w:rPr></w:style>' +
+			'<w:style w:type="paragraph" w:styleId="Note"><w:name w:val="Note"/><w:rPr><w:vanish/></w:rPr></w:style>';
+		const hint = (text: string) => textRun(text, '<w:rStyle w:val="Hint"/>');
+		const body =
+			paragraph(textRun('Reference')) +
+			paragraph(textRun('Filled in by the office'), 'Note') +
+			paragraph(inlineControl('<w:id w:val="7"/><w:text/>', textRun('A1') + hint(' draft'))) +
+			paragraph(
+				textRun('Code') +
+					hint(' (internal)') +
+					textRun(': ') +
+					inlineControl('<w:id w:val="8"/><w:text/>', textRun('B2')),
+			);
+		const { model } = await loadDocx(await formTemplateFixture({ body, styles }));
+		expect(listFormFields(model).map((field) => [field.id, field.label, field.value])).toEqual([
+			['control:7', 'Reference', 'A1'],
+			['control:8', 'Code', 'B2'],
 		]);
 	});
 });

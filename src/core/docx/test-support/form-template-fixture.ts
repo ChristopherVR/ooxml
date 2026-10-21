@@ -257,11 +257,11 @@ const HEADER =
 	'</w:p></w:hdr>';
 
 /**
- * The whole package; `protect` adds forms protection, `body` replaces the form's body and
- * `header` the paragraphs of its header.
+ * The whole package; `protect` adds forms protection, `body` replaces the form's body, `header`
+ * the paragraphs of its header, and `styles` adds style definitions.
  */
 export async function formTemplateFixture(
-	options: { protect?: boolean; body?: string; header?: string } = {},
+	options: { protect?: boolean; body?: string; header?: string; styles?: string } = {},
 ): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file(
@@ -276,7 +276,7 @@ export async function formTemplateFixture(
 		'word/_rels/document.xml.rels',
 		`<Relationships xmlns="${REL}"><Relationship Id="rId1" Type="${R}/styles" Target="styles.xml"/><Relationship Id="rId2" Type="${R}/settings" Target="settings.xml"/><Relationship Id="rId3" Type="${R}/header" Target="header1.xml"/></Relationships>`,
 	);
-	zip.file('word/styles.xml', STYLES);
+	zip.file('word/styles.xml', STYLES.replace('</w:styles>', `${options.styles ?? ''}</w:styles>`));
 	zip.file(
 		'word/settings.xml',
 		`<w:settings xmlns:w="${W}">${options.protect ? '<w:documentProtection w:edit="forms" w:enforcement="1"/>' : ''}</w:settings>`,

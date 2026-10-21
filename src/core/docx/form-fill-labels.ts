@@ -3,9 +3,14 @@
 // reads a form: in a grid, the nearest label cell to its left, with the row's first label; else
 // the column's header; the text beside the field in its own paragraph (after a check box, the text
 // after it); in the body, the paragraph before it. Repeated labels are numbered ("To 1", "To 2").
-import { isFilledControl, holdsField, siteCell, type FieldSite } from './form-fill-sites';
+import {
+	isFilledControl,
+	holdsField,
+	siteCell,
+	type FieldSite,
+	type ShownText,
+} from './form-fill-sites';
 import type { Paragraph, TableCell, TextRun } from './model';
-import { shownText } from './style-ref';
 
 /** Text as a label: one line, single spaces, without a trailing colon. */
 export const labelText = (text: string): string => {
@@ -13,20 +18,25 @@ export const labelText = (text: string): string => {
 	return line.endsWith(':') ? line.slice(0, -1).trimEnd() : line;
 };
 
-const runsText = (runs: readonly TextRun[]) =>
+/** The label text runs of `paragraph` show. */
+const runsText = (runs: readonly TextRun[], paragraph: Paragraph, shown: ShownText) =>
 	labelText(
 		runs
 			.filter((run) => !run.fieldChar && run.fieldCode === undefined)
-			.map(shownText)
+			.map((run) => shown(run, paragraph))
 			.join(''),
 	);
-const paragraphText = (paragraph: Paragraph) => runsText(paragraph.runs);
+const paragraphText = (paragraph: Paragraph, shown: ShownText) =>
+	runsText(paragraph.runs, paragraph, shown);
 
 /** A cell that labels others: it has text and no fill-in field. */
-function cellLabel(cell: TableCell | undefined): string | undefined {
+function cellLabel(cell: TableCell | undefined, shown: ShownText): string | undefined {
 	if (!cell || isFilledControl(cell.contentControl) || cell.paragraphs.some(holdsField))
 		return undefined;
-	return labelText(cell.paragraphs.map(paragraphText).join(' ')) || undefined;
+	return (
+		labelText(cell.paragraphs.map((paragraph) => paragraphText(paragraph, shown)).join(' ')) ||
+		undefined
+	);
 }
 
 /** The grid columns each cell of a row covers. */
@@ -45,9 +55,9 @@ function rowLabels(site: FieldSite): string[] {
 	const place = site.place!;
 	const cells = place.table.rows[place.row] ?? [];
 	for (let index = place.cell - 1; index >= 0; index--) {
-		const left = cellLabel(cells[index]);
+		const left = cellLabel(cells[index], site.shown);
 		if (!left) continue;
-		const first = index > 0 ? cellLabel(cells[0]) : undefined;
+		const first = index > 0 ? cellLabel(cells[0], site.shown) : undefined;
 		return first && first !== left ? [first, left] : [left];
 	}
 	return [];
@@ -60,7 +70,7 @@ function columnHeader(site: FieldSite): string | undefined {
 		const above = columns(table.rows[index] ?? []).find(
 			(item) => item.column <= column && item.column + item.span >= column + span,
 		);
-		const text = cellLabel(above?.cell);
+		const text = cellLabel(above?.cell, site.shown);
 		if (text) return text;
 	}
 	return undefined;
@@ -72,8 +82,10 @@ function besideText(site: FieldSite, siblings: readonly FieldSite[]): string | u
 	const mine = siblings.filter((item) => item.paragraph === site.paragraph);
 	const at = mine.indexOf(site);
 	const runs = site.paragraph.runs;
-	const before = runsText(runs.slice((mine[at - 1]?.to ?? -1) + 1, site.from));
-	const after = runsText(runs.slice(site.to + 1, mine[at + 1]?.from ?? runs.length));
+	const text = (from: number, to: number) =>
+		runsText(runs.slice(from, to), site.paragraph, site.shown);
+	const before = text((mine[at - 1]?.to ?? -1) + 1, site.from);
+	const after = text(site.to + 1, mine[at + 1]?.from ?? runs.length);
 	const checkbox = site.formField?.kind === 'checkbox' || site.control?.kind === 'checkbox';
 	return (checkbox ? after || before : before) || undefined;
 }
@@ -83,7 +95,7 @@ function previousParagraph(site: FieldSite): string | undefined {
 	for (let index = site.block - 1; index >= 0; index--) {
 		const block = site.blocks[index]!;
 		if (block.type === 'table') return undefined;
-		const text = holdsField(block) ? '' : paragraphText(block);
+		const text = holdsField(block) ? '' : paragraphText(block, site.shown);
 		if (text) return text;
 	}
 	return undefined;
@@ -94,7 +106,7 @@ function previousInCell(site: FieldSite): string | undefined {
 	const cell = siteCell(site);
 	for (let index = (site.place?.paragraph ?? 0) - 1; index >= 0; index--) {
 		const paragraph = cell?.paragraphs[index];
-		const text = paragraph && !holdsField(paragraph) ? paragraphText(paragraph) : '';
+		const text = paragraph && !holdsField(paragraph) ? paragraphText(paragraph, site.shown) : '';
 		if (text) return text;
 	}
 	return undefined;

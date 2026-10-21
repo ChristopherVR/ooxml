@@ -6,9 +6,29 @@
 import type { ContentControl, ContentControlKind } from './content-control-model';
 import type { FormField } from './form-field-model';
 import type { Block, DocumentModel, Paragraph, Table, TableCell, TextRun } from './model';
+import { resolveRunFormatting } from './run-formatting';
+import { shownText } from './style-ref';
 
 /** The story a field is in. */
 export type FormFieldStory = 'body' | 'header' | 'footer';
+
+/**
+ * The text a run of a paragraph shows, as a person reads the form: none for hidden text, set on
+ * the run or through its paragraph or character style, or for text a revision deletes or moves.
+ */
+export type ShownText = (run: TextRun, paragraph: Paragraph) => string;
+
+/** How the runs of `model` show, through its styles. */
+const shownTextIn =
+	(model: DocumentModel): ShownText =>
+	(run, paragraph) =>
+		resolveRunFormatting(run, {
+			runCatalog: model.characterStyles,
+			paragraphCatalog: model.paragraphStyles,
+			paragraphStyleId: paragraph.style,
+		}).vanish
+			? ''
+			: shownText(run);
 
 /** A cell's place in its table: its row, its index in the row and the grid columns it covers. */
 export interface CellPlace {
@@ -42,6 +62,8 @@ export interface FieldSite {
 	control?: ContentControl;
 	/** The field is in a table nested in a cell, which this library keeps but does not edit. */
 	nested?: boolean;
+	/** The text the runs of its document show, for its value and the labels around it. */
+	shown: ShownText;
 }
 
 /** The content control kinds a user fills in. */
@@ -104,7 +126,7 @@ function paragraphSites(paragraph: Paragraph, base: Base): FieldSite[] {
 /** Whether a paragraph holds a fill-in field of its own. */
 export const holdsField = (paragraph: Paragraph): boolean =>
 	isFilledControl(paragraph.contentControl) ||
-	paragraphSites(paragraph, { story: 'body', blocks: [], block: 0 }).length > 0;
+	paragraphSites(paragraph, { story: 'body', blocks: [], block: 0, shown: shownText }).length > 0;
 
 function tableSites(table: Table, base: Base, nested: boolean): FieldSite[] {
 	const sites: FieldSite[] = [];
@@ -145,12 +167,12 @@ function tableSites(table: Table, base: Base, nested: boolean): FieldSite[] {
 }
 
 /** The fill-in fields of one story, in reading order. */
-function storySites(blocks: Block[], story: FormFieldStory): FieldSite[] {
+function storySites(blocks: Block[], story: FormFieldStory, shown: ShownText): FieldSite[] {
 	const sites: FieldSite[] = [];
 	for (let index = 0; index < blocks.length; index++) {
 		const block = blocks[index]!;
 		if (block.type === 'table') {
-			sites.push(...tableSites(block, { story, blocks, block: index }, false));
+			sites.push(...tableSites(block, { story, blocks, block: index, shown }, false));
 			continue;
 		}
 		const control = block.contentControl;
@@ -161,7 +183,8 @@ function storySites(blocks: Block[], story: FormFieldStory): FieldSite[] {
 			const container = members.some((at) => {
 				const item = blocks[at]!;
 				return (
-					item.type === 'table' || paragraphSites(item, { story, blocks, block: at }).length > 0
+					item.type === 'table' ||
+					paragraphSites(item, { story, blocks, block: at, shown }).length > 0
 				);
 			});
 			if (isFilledControl(control) && !container && control.kind !== 'checkbox')
@@ -175,16 +198,18 @@ function storySites(blocks: Block[], story: FormFieldStory): FieldSite[] {
 					to: block.runs.length - 1,
 					paragraphs: members,
 					control,
+					shown,
 				});
 		}
-		sites.push(...paragraphSites(block, { story, blocks, block: index }));
+		sites.push(...paragraphSites(block, { story, blocks, block: index, shown }));
 	}
 	return sites;
 }
 
 /** Every fill-in field of the document: the body, then each header and footer part once. */
 export function formFieldSites(model: DocumentModel): FieldSite[] {
-	const sites = storySites(model.blocks, 'body');
+	const shown = shownTextIn(model);
+	const sites = storySites(model.blocks, 'body', shown);
 	const seen = new Set<Block[]>();
 	for (const section of model.sections ?? [])
 		for (const [story, slots] of [
@@ -194,7 +219,7 @@ export function formFieldSites(model: DocumentModel): FieldSite[] {
 			for (const content of [slots?.default, slots?.first, slots?.even]) {
 				if (!content || seen.has(content.blocks)) continue;
 				seen.add(content.blocks);
-				sites.push(...storySites(content.blocks, story));
+				sites.push(...storySites(content.blocks, story, shown));
 			}
 	return sites;
 }
