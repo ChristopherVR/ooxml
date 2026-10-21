@@ -45,7 +45,7 @@ To render only the controls you use, with your own design system, use the buildi
 Optional `Toolbar`, `PageNavigation` and `StatusBar` components consume the same props, and
 `onOpenHyperlinkDialog`, `onOpenFindReplace` and `onOpenImagePicker` hand those workflows to your own
 dialogs. A read-only surface still allows selection, keyboard navigation and copy. See
-[Compose a custom editor](https://christophervr.github.io/ooxml/docx/building-blocks).
+[Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
 
 ## Features
 

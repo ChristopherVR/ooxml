@@ -1,4 +1,4 @@
-# Compose a Word editor
+# Building blocks
 
 `docx-react-viewer` exports `useViewerBuildingBlocks`, `DocumentCanvas` and optional
 `Toolbar`, `PageNavigation` and `StatusBar` components. They use WordEditor's existing editor,
@@ -77,7 +77,7 @@ The `list` state and `onListChange` use the same `'bullet' | 'number'` values.
 
 A surface mounts no dialog of its own. These workflows are the host's, named like the
 PowerPoint `onOpen...` callbacks. Pass them as options; `toolbarProps` then carries a matching
-`onOpen...` opener, a `can...` flag and `hostWorkflows` (which callbacks were supplied).
+`open...` opener (`openHyperlinkDialog`, `openFindReplace`, `openImagePicker`), a `can...` flag and `hostWorkflows` (which callbacks were supplied).
 
 | Option                  | Request object                                                                   | Enabled while                 |
 | ----------------------- | -------------------------------------------------------------------------------- | ----------------------------- |
@@ -139,7 +139,7 @@ runtime rejects a composition request explicitly instead of mounting application
 Framework adapters live in their own framework package. They share the engine lifetime
 helper and the control descriptors (`bindings/src/controls.ts`) the optional components draw.
 Every adapter exposes `toolbarProps`, `navigationProps`, `statusProps`, `loading`, `error`,
-`mode`, `canvasProps` and `handle`, and the components `Toolbar`, `PageNavigation` and
+`mode` and `canvasProps`, plus the editor `handle` (React takes a `handle` ref as an option instead of returning one), and the components `Toolbar`, `PageNavigation` and
 `StatusBar` (Angular: `ToolbarComponent`, `PageNavigationComponent`, `StatusBarComponent`; Svelte:
 `docx-svelte-viewer/Toolbar`, `/PageNavigation`, `/StatusBar`). Their state uses the framework's normal reactive primitives and their canvas components
 mount the existing Word document surface.

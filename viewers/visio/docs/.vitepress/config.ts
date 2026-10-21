@@ -89,7 +89,7 @@ export default defineConfig({
 			{
 				text: 'Using the Viewer',
 				items: [
-					{ text: 'Composable building blocks', link: '/building-blocks' },
+					{ text: 'Building blocks', link: '/building-blocks' },
 					{ text: 'Collaboration (sharing)', link: '/collaboration' },
 				],
 			},

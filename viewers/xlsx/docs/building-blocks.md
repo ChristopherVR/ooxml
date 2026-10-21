@@ -1,6 +1,6 @@
-# Compose a spreadsheet editor
+# Building blocks
 
-Every framework package (`xlsx-react-viewer`, `xlsx-vue-viewer`, `xlsx-angular-viewer`,
+Every framework package (`@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer`, `xlsx-angular-viewer`,
 `xlsx-svelte-viewer`, `xlsx-solid-viewer` and `xlsx-vanilla-viewer`) exports a building-block
 hook or factory (`useViewerBuildingBlocks`, `createViewerBuildingBlocks`), a `SpreadsheetCanvas`
 and optional `Toolbar`, `FormulaBar` and `SheetTabs` controls. All use the existing workbook
@@ -88,11 +88,11 @@ useViewerBuildingBlocks({
 
 The available callbacks are `onOpenShareDialog`, `onOpenSettings`, `onOpenFormatCells`,
 `onOpenFindReplace` and `onOpenInsertFunction`. Each receives `{ sheet, sheetName, selection,
-activeCell }`. `toolbarProps` exposes the matching `onShare`, `onOpenSettings`,
+activeCell }`. `toolbarProps` exposes the matching `onOpenShareDialog`, `onOpenSettings`,
 `onOpenFormatCells`, `onOpenFindReplace` and `onOpenInsertFunction` (they commit an in-progress
-edit first and return a `Promise<boolean>`), and `enabled.share` and the like are true only when
+edit first and return a `Promise<boolean>`), and `enabled.openShareDialog` and the like are true only when
 the callback was given (the formatting and insert ones also need edit permission). `handle.share()`
-calls `onOpenShareDialog`; without one it does nothing, and `enabled.share` is false. A
+calls `onOpenShareDialog`; without one it does nothing, and `enabled.openShareDialog` is false. A
 workflow without a callback is unreachable, never silently mounted. Hosts that want the
 bundled dialogs render the full `SpreadsheetEditor` instead.
 
@@ -119,7 +119,7 @@ one: undo, redo, font family, font size, bold, italic, underline, left / center 
 alignment and number format. Buttons expose `aria-pressed` (`mixed` for a mixed selection),
 selects show a blank value for mixed formatting, and all controls honour `enabled`. Buttons do
 not take focus, so the grid keeps its selection while you format. The Toolbar does not render
-the dialog workflows above; connect `onShare` and the other `onOpen*` callbacks to your own
+the dialog workflows above; connect `onOpenShareDialog` and the other `onOpen*` callbacks to your own
 controls. `toolbarModel(toolbarProps)` (exported by `xlsx-vanilla-viewer` and the Svelte runtime) returns
 the same control list for custom renderers.
 

@@ -75,7 +75,7 @@ export default defineConfig({
 					{ text: 'The live demos', link: '/demos' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Framework bindings', link: '/bindings' },
-					{ text: 'Compose a custom editor', link: '/building-blocks' },
+					{ text: 'Building blocks', link: '/building-blocks' },
 					{ text: 'Model units', link: '/model-units' },
 				],
 			},
