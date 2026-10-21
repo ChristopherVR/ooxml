@@ -129,6 +129,16 @@ describe('content control commands', () => {
 		expect(controlSpans(next.doc)[0]?.control.showingPlaceholder).toBe(true);
 	});
 
+	it('deletes a selection running past a control as ordinary text, without its placeholder', () => {
+		const state = stateOf([
+			{ text: 'Hi', contentControl: control({ kind: 'text' }) },
+			{ text: ' there' },
+		]);
+		// From the control's first character to the middle of the text after it.
+		const past = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		expect(deleteToPlaceholder(past, 'backward')).toBeUndefined();
+	});
+
 	it('keeps a control whose own placeholder text is empty when its text is deleted', () => {
 		const empty = control({ kind: 'text', placeholderText: '' });
 		const state = stateOf([{ text: 'DOC-1', contentControl: empty }]);

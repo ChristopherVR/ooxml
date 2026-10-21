@@ -236,9 +236,12 @@ export function deleteToPlaceholder(
 			? [selection.from - 1, selection.from]
 			: [selection.from, selection.from + 1]
 		: [selection.from, selection.to];
-	// A cell's text runs from inside its first paragraph to the end of its last.
-	const inner = span.level === 'cell' ? { from: span.from + 2, to: span.to - 2 } : span;
-	if (from > inner.from || to < inner.to) return undefined;
+	// A cell's text runs from inside its first paragraph to the end of its last. A selection that
+	// covers it and goes on past the control is deleted as ordinary text, all of it.
+	const cell = span.level === 'cell';
+	const inner = cell ? { from: span.from + 2, to: span.to - 2 } : span;
+	const outer = cell ? { from: span.from + 1, to: span.to - 1 } : span;
+	if (from > inner.from || to < inner.to || from < outer.from || to > outer.to) return undefined;
 	return replaceControlContent(state, span, placeholderChange(span.control));
 }
 
