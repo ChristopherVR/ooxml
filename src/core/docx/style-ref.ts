@@ -230,16 +230,14 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 		if (!paragraph) return [];
 		let found: StyleRefPortion[];
 		if (target.kind === 'character') found = characterPortions(paragraph, target.id, skip);
-		else {
-			// A paragraph without text holds no text in its style, so it is passed over.
-			const text = inParagraphStyle(paragraph, target)
-				? paragraph.runs.map(shownText).join('')
-				: '';
-			found = text ? [{ text, from: 0, to: paragraph.runs.length - 1 }] : [];
-		}
+		else
+			// An empty paragraph in the style is a match too, which shows nothing, as in Word.
+			found = inParagraphStyle(paragraph, target)
+				? [{ text: paragraph.runs.map(shownText).join(''), from: 0, to: paragraph.runs.length - 1 }]
+				: [];
 		if (reference.number && found.length) {
 			const label = number(paragraph, reference.numberOnly);
-			found = label ? found.map((portion) => ({ ...portion, text: label })) : [];
+			found = label === undefined ? [] : found.map((portion) => ({ ...portion, text: label }));
 		}
 		return reference.textCase
 			? found.map((portion) => ({

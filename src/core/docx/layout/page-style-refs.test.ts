@@ -91,12 +91,12 @@ describe('STYLEREF in headers and footers, page by page', () => {
 		expect(each(refs, 5, 'STYLEREF "Entry Name" \\l')).toEqual(['Ash', 'Ash', 'Elm', 'Elm', 'Oak']);
 	});
 
-	it('passes over a paragraph in the style that has no text', async () => {
+	it('takes an empty paragraph in the style as a match that shows nothing, as Word does', async () => {
 		const { pages, refs } = await layout(
 			paragraph('DOC-7', 'DocNumber') + PAGE_BREAK + paragraph('', 'DocNumber') + paragraph('Text'),
 		);
 		expect(pages).toHaveLength(2);
-		expect(each(refs, 2, 'STYLEREF "Doc Number"')).toEqual(['DOC-7', 'DOC-7']);
+		expect(each(refs, 2, 'STYLEREF "Doc Number"')).toEqual(['DOC-7', '']);
 	});
 
 	it('fills a header with the results of the page it is drawn on', async () => {

@@ -128,8 +128,11 @@ export function pageStyleRefs(
 		const order = [...here.keys()];
 		for (const at of reference.last ? order.reverse() : order) {
 			const shown = here.get(at)!;
+			// An empty match (an empty paragraph in the style) is on the page that shows its line.
 			const texts = inParagraph(at, (start, end) =>
-				shown.some(([from, to]) => start < to && end > from),
+				shown.some(([from, to]) =>
+					start === end ? from <= start && start <= to : start < to && end > from,
+				),
 			);
 			if (texts.length) return (reference.last ? texts.at(-1) : texts[0])!.text;
 		}
