@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import type { EditorView } from 'prosemirror-view';
 
 /** Browser-contract helpers for the demo host and the editor's built-in Word chrome. */
 const editor = (page: Page) => page.locator('docx-editor');
@@ -105,6 +106,17 @@ export async function waitForEditorFocus(editor: Locator) {
 	await expect(editor).toBeFocused();
 	await editorTimersRun(editor.page());
 }
+
+/**
+ * The text of the editor's own selection, the one its commands read. The browser's selection
+ * reaches it through an asynchronous selectionchange, which the editor ignores once focus has left
+ * it, so a test waits for this before a step that moves focus to the ribbon or a pane.
+ */
+export const editorSelectionText = (editor: Locator) =>
+	editor.evaluate((element) => {
+		const { state } = (element as unknown as { view: EditorView }).view;
+		return state.doc.textBetween(state.selection.from, state.selection.to);
+	});
 
 /**
  * A narrow ribbon folds groups into dropdown buttons, as Word does. Opens whichever of them holds

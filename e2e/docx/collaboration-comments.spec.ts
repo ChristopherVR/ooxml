@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { clickInEditor } from './helpers';
+import { clickInEditor, editorSelectionText } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: independent concurrent picture comments export and undo without reviving peer deletions`, async ({
@@ -122,7 +122,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await clickInEditor(a.locator('.ProseMirror'));
 		await page.keyboard.press('Control+Home');
 		await page.keyboard.press('Control+Shift+ArrowRight');
-		await expect.poll(() => page.evaluate(() => getSelection()?.toString())).not.toBe('');
+		await expect.poll(() => editorSelectionText(a)).not.toBe('');
 		await a.locator('office-ui-ribbon-actions [part="comments"]').click();
 		const paneA = a.locator('.dve-comments-panel');
 		await paneA.getByRole('textbox', { name: 'New comment', exact: true }).fill('Shared review');

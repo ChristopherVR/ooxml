@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { fileInput, fileNameLabel, newDocument, saveButton, waitForEditorFocus } from './helpers';
+import {
+	editorSelectionText,
+	fileInput,
+	fileNameLabel,
+	newDocument,
+	saveButton,
+	waitForEditorFocus,
+} from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import type { EditorView } from 'prosemirror-view';
 import type { TextSelection } from 'prosemirror-state';
@@ -92,6 +99,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				await expect
 					.poll(() => page.evaluate(() => window.getSelection()?.toString()), { timeout: 1000 })
 					.toBe('n');
+				await expect.poll(() => editorSelectionText(editor), { timeout: 1000 }).not.toBe('');
 			}).toPass();
 			await editor.locator('office-ui-ribbon-actions [part="comments"]').click();
 			const pane = editor.locator('.dve-comments-panel');
