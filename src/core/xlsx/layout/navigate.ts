@@ -73,9 +73,15 @@ function jump(
 			at = after;
 		}
 	}
-	const candidates = [...filledSet].filter((i) => (dir > 0 ? i > index : i < index) && !hidden(i));
-	if (!candidates.length) return edge(dir, max, hidden);
-	return dir > 0 ? Math.min(...candidates) : Math.max(...candidates);
+	// The nearest visible filled cell past `index`, found in a loop: a spread passes one argument per
+	// cell and overflows on a long column.
+	let nearest: number | undefined;
+	for (const i of filledSet) {
+		const ahead = dir > 0 ? i > index : i < index;
+		const closer = nearest === undefined || (dir > 0 ? i < nearest : i > nearest);
+		if (ahead && closer && !hidden(i)) nearest = i;
+	}
+	return nearest ?? edge(dir, max, hidden);
 }
 
 function filledInColumn(sheet: Worksheet, col: number): Set<number> {
