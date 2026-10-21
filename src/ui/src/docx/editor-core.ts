@@ -1,3 +1,4 @@
+import type { SurfaceHostActions } from './building-blocks-actions';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { FormatDialogs } from './format-dialogs';
 import type { EditorState, Transaction } from 'prosemirror-state';
@@ -55,6 +56,8 @@ export interface ShellParts {
 	printNoteEditing?: () => void;
 	/** Selection frame and gestures for floating pictures on the pages. */
 	printFloats?: PrintFloats;
+	/** Detaches read-only selection and keyboard navigation of the surface. */
+	surfaceNavigation?: () => void;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
 }
@@ -75,6 +78,8 @@ export class EditorCore {
 	readOnly = false;
 	/** Set before mounting to render only the document surface. */
 	surfaceOnly = false;
+	/** Host-owned workflows for surface mode (link, find and replace, picture picker). */
+	surfaceActions: SurfaceHostActions = {};
 	locale: EditorLocale = 'en';
 	reviewAuthor = 'Author';
 	theme: EditorThemeMode = 'auto';
@@ -343,5 +348,7 @@ export class EditorCore {
 				this.wordText,
 			);
 		syncPageState(this);
+		// A custom page control follows scrolling; the full editor has no listener for it.
+		if (this.surfaceOnly) this.element.dispatchEvent(new CustomEvent('editor-state-change'));
 	}
 }

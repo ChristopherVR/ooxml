@@ -141,6 +141,7 @@ export const deApp: AppStrings = {
 	'Next page section break': 'Abschnittswechsel (nächste Seite)',
 	'Continuous section break': 'Abschnittswechsel (fortlaufend)',
 	'Next page': 'Nächste Seite',
+	'Previous page': 'Vorherige Seite',
 	Continuous: 'Fortlaufend',
 	'Page numbers': 'Seitenzahlen',
 	'Page number format': 'Seitenzahlformat',

@@ -142,6 +142,7 @@ export const esApp: AppStrings = {
 	'Next page section break': 'Salto de sección (página siguiente)',
 	'Continuous section break': 'Salto de sección (continuo)',
 	'Next page': 'Página siguiente',
+	'Previous page': 'Página anterior',
 	Continuous: 'Continuo',
 	'Page numbers': 'Números de página',
 	'Page number format': 'Formato de número de página',

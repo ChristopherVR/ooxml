@@ -19,6 +19,13 @@ import {
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
 import { wordToolbarProps, type WordToolbarProps } from './building-blocks';
+import {
+	wordNavigationProps,
+	wordStatusProps,
+	type WordNavigationProps,
+	type WordStatusProps,
+} from './building-blocks-status';
+import type { SurfaceHostActions } from './building-blocks-actions';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -39,6 +46,25 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	}
 	getToolbarProps(): WordToolbarProps {
 		return wordToolbarProps(this.core);
+	}
+	/** Page, view mode and navigation callbacks for custom page controls. */
+	getNavigationProps(): WordNavigationProps {
+		return wordNavigationProps(this.core);
+	}
+	/** Word count and zoom for custom status controls. */
+	getStatusProps(): WordStatusProps {
+		return wordStatusProps(this.core);
+	}
+	/**
+	 * Host-owned dialogs for surface mode: `onOpenHyperlinkDialog`, `onOpenFindReplace` and
+	 * `onOpenImagePicker`. A workflow without its callback is reported as not enabled.
+	 */
+	get surfaceActions(): SurfaceHostActions {
+		return this.core.surfaceActions;
+	}
+	set surfaceActions(value: SurfaceHostActions) {
+		this.core.surfaceActions = { ...value };
+		if (this.core.view) this.core.refreshControls();
 	}
 	get loading(): boolean {
 		return this.core.loading;

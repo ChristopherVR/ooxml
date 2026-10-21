@@ -136,6 +136,7 @@ export const zhCNApp: AppStrings = {
 	'Next page section break': '分节符（下一页）',
 	'Continuous section break': '分节符（连续）',
 	'Next page': '下一页',
+	'Previous page': '上一页',
 	Continuous: '连续',
 	'Page numbers': '页码',
 	'Page number format': '页码格式',
