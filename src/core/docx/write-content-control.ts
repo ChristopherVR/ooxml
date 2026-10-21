@@ -2,7 +2,7 @@
 // Writes content control (`w:sdt`) properties: patches only what the model changed on an existing
 // control, and builds a new control (from its verbatim `w:sdtPr` when it has one).
 import type { ContentControl } from './content-control-model';
-import { parseContentControl, sdtContent } from './content-control';
+import { parseContentControl, propertiesKind, sdtContent, typeElements } from './content-control';
 import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
@@ -137,6 +137,15 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	const sdtPr = first(sdt, 'sdtPr');
 	if (!sdtPr) return;
 	const current = parseContentControl(sdt, control.level);
+	// The model can hold another control than this `w:sdt` (a row or cell given another one): its
+	// id and kind are written too, the old kind's element going, so the properties stay one control.
+	if (control.id !== current.id && /^-?\d+$/.test(control.id))
+		setValued(doc, sdtPr, 'id', control.id);
+	if (control.kind !== current.kind) {
+		for (const old of typeElements(sdtPr)) sdtPr.removeChild(old);
+		const { sourceXml: _source, ...model } = control;
+		for (const type of typeElements(buildProperties(doc, model))) sdtPr.appendChild(type);
+	}
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
 	if (control.lock !== current.lock) setValued(doc, sdtPr, 'lock', control.lock);
@@ -237,7 +246,12 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	const sdtPr = buildProperties(doc, control);
+	// Verbatim properties of another kind are another control's: the model's kind wins.
+	const { sourceXml, ...model } = control;
+	const sdtPr = buildProperties(
+		doc,
+		sourceXml && propertiesKind(sourceXml) !== control.kind ? model : control,
+	);
 	// A copy keeps the properties it was copied with, under the new id it was given: ids are
 	// unique in a document (ECMA-376 17.5.2.18). An id read from no `w:id` is not written.
 	if (/^-?\d+$/.test(control.id) && getW(first(sdtPr, 'id'), 'val') !== control.id)

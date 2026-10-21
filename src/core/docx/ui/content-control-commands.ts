@@ -14,8 +14,11 @@ import {
 	withValue,
 	type ControlChange,
 } from '../content-control-edit';
-import type { ContentControl, ContentControlKind } from '../content-control-model';
-import { freshControlId } from './content-control-paste';
+import {
+	freshControlId,
+	type ContentControl,
+	type ContentControlKind,
+} from '../content-control-model';
 import { rowControlSpans } from './content-control-rows';
 import {
 	controlAt,

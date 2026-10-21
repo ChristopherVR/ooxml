@@ -6,17 +6,9 @@
 // id, as it does for a paragraph typed at the end of one.
 import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
-import type { ContentControl } from '../content-control-model';
+import { freshControlId, type ContentControl } from '../content-control-model';
 import { rowControlOf, rowControlSpans } from './content-control-rows';
 import { controlOfMark, controlSpans, tableControlSpans } from './content-control-spans';
-
-/** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
-export function freshControlId(used: ReadonlySet<string>): string {
-	let id: string;
-	do id = String(Math.floor(Math.random() * (2 ** 31 - 1)) + 1);
-	while (used.has(id));
-	return id;
-}
 
 /**
  * `slice` as it is pasted in `view`: its inline, cell and row controls under ids the document

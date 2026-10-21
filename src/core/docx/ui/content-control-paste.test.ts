@@ -5,7 +5,7 @@ import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
 import { contentControlPlugin } from './content-control-guard';
-import { freshControlId } from './content-control-paste';
+import { freshControlId } from '../content-control-model';
 import { controlSpans } from './content-control-spans';
 
 const schema = new Schema({

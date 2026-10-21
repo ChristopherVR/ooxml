@@ -230,6 +230,49 @@ describe('content controls in tables and with unmodeled properties', () => {
 		);
 	});
 
+	it('writes the id and the kind the model gives a control around a paragraph', async () => {
+		// A model edit can give a block another control than its w:sdt holds: patching that w:sdt
+		// writes the new id, and the old kind's element goes, so the properties stay one control.
+		const loaded = await hand(
+			`<w:sdt><w:sdtPr><w:alias w:val="Pick"/><w:id w:val="5"/><w:dropDownList>` +
+				`<w:listItem w:displayText="Yes" w:value="y"/></w:dropDownList></w:sdtPr>` +
+				`<w:sdtContent><w:p><w:r><w:t>Yes</w:t></w:r></w:p></w:sdtContent></w:sdt>`,
+		);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		paragraph.contentControl = {
+			...paragraph.contentControl!,
+			id: '77',
+			kind: 'checkbox',
+			checked: true,
+		};
+		paragraph.runs = [{ text: '\u2612' }];
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('w:dropDownList');
+		expect(xml).not.toContain('<w:id w:val="5"/>');
+		expect(xml.match(/<w14:checkbox>/g)).toHaveLength(1);
+		const reopened = expectParagraph(
+			(await loadDocx(await loaded.save(loaded.model))).model.blocks[0],
+		);
+		expect(reopened.contentControl).toMatchObject({ id: '77', kind: 'checkbox', checked: true });
+	});
+
+	it('replaces any type element when the model gives a control another kind', async () => {
+		// w:richText may be written for the default type, and an entity picker is a type of Word's
+		// extensions: either goes when the kind changes, so the properties hold one type.
+		for (const type of ['<w:richText/>', '<w14:entityPicker/>']) {
+			const loaded = await hand(
+				`<w:sdt><w:sdtPr><w:id w:val="6"/>${type}</w:sdtPr>` +
+					`<w:sdtContent><w:p><w:r><w:t>Yes</w:t></w:r></w:p></w:sdtContent></w:sdt>`,
+			);
+			const paragraph = expectParagraph(loaded.model.blocks[0]);
+			paragraph.contentControl = { ...paragraph.contentControl!, kind: 'checkbox', checked: true };
+			paragraph.runs = [{ text: '\u2612' }];
+			const xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml, type).not.toContain(type.slice(1, -2));
+			expect(xml.match(/<w14:checkbox>/g), type).toHaveLength(1);
+		}
+	});
+
 	it('creates a new inline control from the model', async () => {
 		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
 		const paragraph = expectParagraph(loaded.model.blocks[0]);

@@ -9,7 +9,7 @@ import type {
 	ContentControlLock,
 } from './content-control-model';
 import { parseOnOff } from './simple-types';
-import { buildXml, first, getW, isElement, named, WORD_NS, type XmlElement } from './xml';
+import { buildXml, first, getW, isElement, named, parseXml, WORD_NS, type XmlElement } from './xml';
 
 import { WORD_2010_NS } from './ligatures';
 export const WORD_2012_NS = 'http://schemas.microsoft.com/office/word/2012/wordml';
@@ -44,16 +44,46 @@ function glyph(element: XmlElement | undefined): ContentControlGlyph | undefined
 	return { code, ...(font ? { font } : {}) };
 }
 
-function parseKind(sdtPr: XmlElement): ContentControlKind {
-	for (const child of Array.from(sdtPr.childNodes).filter(isElement)) {
-		if (child.namespaceURI === WORD_NS && TYPE_ELEMENTS[child.localName])
-			return TYPE_ELEMENTS[child.localName]!;
-		if (child.namespaceURI === WORD_2010_NS && child.localName === 'checkbox') return 'checkbox';
-		if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSection')
-			return 'repeatingSection';
-	}
+/** The kind of control a child of `w:sdtPr` makes it, if it is a type element. */
+function kindOf(child: XmlElement): ContentControlKind | undefined {
+	if (child.namespaceURI === WORD_NS)
+		return Object.hasOwn(TYPE_ELEMENTS, child.localName)
+			? TYPE_ELEMENTS[child.localName]
+			: undefined;
+	if (child.namespaceURI === WORD_2010_NS && child.localName === 'checkbox') return 'checkbox';
+	if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSection')
+		return 'repeatingSection';
+	return undefined;
+}
+
+/**
+ * The type elements of a `w:sdtPr`, one at most in a valid file: also `w:richText`, which the
+ * default type need not be written as, an entity picker and a repeating section's item.
+ */
+export const typeElements = (sdtPr: XmlElement): XmlElement[] =>
+	Array.from(sdtPr.childNodes)
+		.filter(isElement)
+		.filter(
+			(child) =>
+				kindOf(child) !== undefined ||
+				(child.namespaceURI === WORD_NS && child.localName === 'richText') ||
+				(child.namespaceURI === WORD_2010_NS && child.localName === 'entityPicker') ||
+				(child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSectionItem'),
+		);
+
+export function parseKind(sdtPr: XmlElement): ContentControlKind {
+	const [type] = typeElements(sdtPr);
 	// `w:richText` is the default type when no other type element is present.
-	return 'richText';
+	return (type && kindOf(type)) ?? 'richText';
+}
+
+/** The kind of control a verbatim `w:sdtPr` (a control's `sourceXml`) is, when it is XML. */
+export function propertiesKind(xml: string): ContentControlKind | undefined {
+	try {
+		return parseKind(parseXml(xml).documentElement);
+	} catch {
+		return undefined;
+	}
 }
 
 let generated = 0;

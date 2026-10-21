@@ -177,6 +177,213 @@ describe('row and cell content controls on save', () => {
 		expect(xml).toContain('<w:alias w:val="Choice 11"/><w:id w:val="9001"/>');
 	});
 
+	it('writes a cell or row given another control in a control of its own', async () => {
+		// A repeating section's item counts as the type element it replaces.
+		const W15 = 'http://schemas.microsoft.com/office/word/2012/wordml';
+		const item = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="3000"/></w:tblGrid><w:sdt><w:sdtPr xmlns:w15="${W15}">` +
+				`<w:id w:val="7"/><w15:repeatingSectionItem/></w:sdtPr><w:sdtContent>${row(label('A'))}</w:sdtContent></w:sdt></w:tbl>`,
+		);
+		const itemRow = tableOf(item.model.blocks).rowProperties![0]!;
+		itemRow.contentControl = { ...itemRow.contentControl!, kind: 'text' };
+		const itemXml = await documentXml(await item.save(item.model));
+		expect(itemXml).toContain('<w:text/>');
+		expect(itemXml).not.toContain('repeatingSectionItem');
+		// The same control given another kind is patched in place: the properties the model does
+		// not hold, such as its data binding, stay.
+		const bound = await hand(
+			grid(
+				row(
+					`${label('Status')}${choice('11', '<w:dataBinding w:xpath="/ns0:kind" w:storeItemID="{11111111-2222-3333-4444-555555555555}"/>')}`,
+				),
+			),
+		);
+		const kind = tableOf(bound.model.blocks).rows[0]![1]!;
+		kind.contentControl = { ...kind.contentControl!, kind: 'comboBox' };
+		const boundXml = await documentXml(await bound.save(bound.model));
+		expect(boundXml).toContain('w:xpath="/ns0:kind"');
+		expect(boundXml).toContain('<w:comboBox>');
+		expect(boundXml).not.toContain('dropDownList');
+		// Its properties come from the model: a changed title is written with the new id.
+		const renamed = await hand(grid(row(`${label('Status')}${choice('11')}`)));
+		const own = tableOf(renamed.model.blocks).rows[0]![1]!;
+		own.contentControl = { ...own.contentControl!, id: '98', alias: 'Changed' };
+		expect(await documentXml(await renamed.save(renamed.model))).toContain(
+			'<w:alias w:val="Changed"/><w:id w:val="98"/>',
+		);
+		// The model can give a cell or row another control, another id or kind, than the w:sdt the
+		// file has around it. Patching that w:sdt would keep its old id and put a second type
+		// element (w14:checkbox beside w:dropDownList) in its properties.
+		const cells = await hand(grid(row(`${label('Status')}${choice('11')}`)));
+		const loaded = tableOf(cells.model.blocks).rows[0]![1]!.contentControl!;
+		for (const control of [
+			{ id: '99', level: 'cell' as const, kind: 'checkbox' as const, checked: true },
+			{ ...loaded, kind: 'checkbox' as const, checked: true },
+		]) {
+			const cell = tableOf(cells.model.blocks).rows[0]![1]!;
+			cell.contentControl = control;
+			cell.paragraphs[0]!.runs = [{ text: '\u2612' }];
+			const xml = await documentXml(await cells.save(cells.model));
+			expect(xml).not.toContain('w:dropDownList');
+			expect(xml.match(/<w:sdt>/g)).toHaveLength(1);
+			expect(xml.match(/<w:id w:val="(\d+)"\/>/g)).toEqual([`<w:id w:val="${control.id}"/>`]);
+			const reopened = tableOf((await loadDocx(await cells.save(cells.model))).model.blocks);
+			expect(reopened.rows[0]![1]!.contentControl).toMatchObject({
+				id: control.id,
+				kind: 'checkbox',
+				checked: true,
+			});
+		}
+		const line = (content: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Item"/><w:id w:val="7"/><w:text/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		const rows = await hand(grid(line(row(`${label('A')}${label('B')}`))));
+		tableOf(rows.model.blocks).rowProperties![0]!.contentControl = {
+			id: '98',
+			level: 'row',
+			kind: 'richText',
+			alias: 'Line',
+		};
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).toContain(
+			`</w:tblGrid><w:sdt><w:sdtPr><w:alias w:val="Line"/><w:id w:val="98"/></w:sdtPr><w:sdtContent>${row(`${label('A')}${label('B')}`)}</w:sdtContent></w:sdt></w:tbl>`,
+		);
+	});
+
+	it('takes a cell given another control out of a control around several cells', async () => {
+		// A cell given the control of the cell before it joins its w:sdt, and a new control whose id
+		// another w:sdt has, in another row, takes a new one: ids are unique in a document.
+		const named = (id: string, text: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="C${id}"/><w:id w:val="${id}"/></w:sdtPr><w:sdtContent>${label(text)}</w:sdtContent></w:sdt>`;
+		const joined = await hand(
+			grid(row(`${named('21', 'A')}${named('23', 'B')}`) + row(`${label('C')}${label('D')}`)),
+		);
+		const rows = tableOf(joined.model.blocks).rows;
+		rows[0]![1]!.contentControl = { ...rows[0]![0]!.contentControl! };
+		rows[1]![1]!.contentControl = { ...rows[0]![0]!.contentControl! };
+		const joinedXml = await documentXml(await joined.save(joined.model));
+		expect(joinedXml).toContain(
+			`<w:id w:val="21"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}</w:sdtContent>`,
+		);
+		expect(joinedXml).not.toContain('<w:id w:val="23"/>');
+		const joinedIds = [...joinedXml.matchAll(/<w:id w:val="(\d+)"\/>/g)].map((match) => match[1]);
+		expect(joinedIds).toHaveLength(2);
+		expect(new Set(joinedIds).size).toBe(2);
+		// Cells given together a control whose id another w:sdt has share one, under a new id.
+		const both = await hand(
+			grid(row(`${named('21', 'A')}${label('B')}`) + row(`${label('C')}${label('D')}`)),
+		);
+		const bothRows = tableOf(both.model.blocks).rows;
+		for (const cell of bothRows[1]!) cell.contentControl = { ...bothRows[0]![0]!.contentControl! };
+		const bothXml = await documentXml(await both.save(both.model));
+		const bothIds = [...bothXml.matchAll(/<w:id w:val="(\d+)"\/>/g)].map((match) => match[1]);
+		expect(bothIds).toHaveLength(2);
+		expect(bothIds[0]).toBe('21');
+		expect(bothXml).toContain(`</w:sdtPr><w:sdtContent>${label('C')}${label('D')}</w:sdtContent>`);
+		// The rest of a split control keeps its new id when its own properties change too.
+		const split = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>` +
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>` +
+						`${label('A')}${label('B')}${label('C')}</w:sdtContent></w:sdt>`,
+				) +
+				'</w:tbl>',
+		);
+		const [left, middle, right] = tableOf(split.model.blocks).rows[0]!;
+		middle!.contentControl = { id: '23', level: 'cell', kind: 'richText' };
+		for (const cell of [left!, right!])
+			cell.contentControl = { ...cell.contentControl!, alias: 'Renamed' };
+		const splitIds = [
+			...(await documentXml(await split.save(split.model))).matchAll(/<w:id w:val="(\d+)"\/>/g),
+		].map((match) => match[1]);
+		expect(splitIds).toHaveLength(3);
+		expect(new Set(splitIds).size).toBe(3);
+		// A cell after the rest of a split control given that control joins the rest.
+		const after = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid>${'<w:gridCol w:w="1500"/>'.repeat(4)}</w:tblGrid>` +
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>` +
+						`${label('A')}${label('B')}${label('C')}</w:sdtContent></w:sdt>${label('D')}`,
+				) +
+				'</w:tbl>',
+		);
+		const afterCells = tableOf(after.model.blocks).rows[0]!;
+		afterCells[1]!.contentControl = { id: '23', level: 'cell', kind: 'richText' };
+		afterCells[3]!.contentControl = { ...afterCells[0]!.contentControl! };
+		const afterXml = await documentXml(await after.save(after.model));
+		expect([...afterXml.matchAll(/<w:id w:val="(\d+)"\/>/g)]).toHaveLength(3);
+		expect(afterXml).toContain(`</w:sdtPr><w:sdtContent>${label('C')}${label('D')}</w:sdtContent>`);
+		// Split twice, the rest keeps the control it is the rest of: a cell after it given that joins.
+		const twice = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid>${'<w:gridCol w:w="1000"/>'.repeat(6)}</w:tblGrid>` +
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>` +
+						`${['A', 'B', 'C', 'D', 'E'].map(label).join('')}</w:sdtContent></w:sdt>${label('F')}`,
+				) +
+				'</w:tbl>',
+		);
+		const twiceCells = tableOf(twice.model.blocks).rows[0]!;
+		twiceCells[1]!.contentControl = { id: '23', level: 'cell', kind: 'richText' };
+		twiceCells[3]!.contentControl = { id: '25', level: 'cell', kind: 'richText' };
+		twiceCells[5]!.contentControl = { ...twiceCells[0]!.contentControl! };
+		const twiceXml = await documentXml(await twice.save(twice.model));
+		expect(new Set([...twiceXml.matchAll(/<w:id w:val="(\d+)"\/>/g)].map((m) => m[1])).size).toBe(
+			5,
+		);
+		expect(twiceXml).toContain(`</w:sdtPr><w:sdtContent>${label('E')}${label('F')}</w:sdtContent>`);
+		// Cells given the same new control together keep one control, as they shared the old one.
+		const pair = await hand(
+			grid(
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>` +
+						`${label('A')}${label('B')}</w:sdtContent></w:sdt>`,
+				),
+			),
+		);
+		for (const cell of tableOf(pair.model.blocks).rows[0]!)
+			cell.contentControl = { ...cell.contentControl!, id: '99', alias: 'Moved' };
+		const pairXml = await documentXml(await pair.save(pair.model));
+		expect(pairXml.match(/<w:sdt>/g)).toHaveLength(1);
+		expect(pairXml).toContain(
+			`<w:id w:val="99"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}`,
+		);
+		expect(pairXml).toContain('<w:alias w:val="Moved"/>');
+		const wrap = (content: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		// At the start or end it moves out beside the control; from its middle, the cells after it
+		// go to a copy under a new id, since ids are unique (a repeated one would not survive Word).
+		for (const [at, expected] of [
+			[0, ['23', '21', '21']],
+			[1, ['21', '23', 'new']],
+			[2, ['21', '21', '23']],
+		] as const) {
+			const loaded = await hand(
+				`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>` +
+					`${row(wrap(`${label('A')}${label('B')}${label('C')}`))}</w:tbl>`,
+			);
+			tableOf(loaded.model.blocks).rows[0]![at]!.contentControl = {
+				id: '23',
+				level: 'cell',
+				kind: 'richText',
+				alias: 'Own',
+			};
+			const xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml).toContain(`${label('A')}`);
+			const reopened = tableOf((await loadDocx(await loaded.save(loaded.model))).model.blocks);
+			const cells = reopened.rows[0]!;
+			expect(cells.map((cell) => cell.paragraphs[0]!.runs[0]!.text)).toEqual(['A', 'B', 'C']);
+			const ids = cells.map((cell) => cell.contentControl!.id);
+			if (at !== 1) expect(ids).toEqual(expected);
+			else {
+				expect(ids.slice(0, 2)).toEqual(['21', '23']);
+				expect(ids[2]).toMatch(/^\d+$/);
+				expect(['21', '23']).not.toContain(ids[2]);
+			}
+			expect(cells.map((cell) => cell.contentControl?.alias)).toEqual(
+				expected.map((id) => (id === '23' ? 'Own' : 'Group')),
+			);
+		}
+	});
+
 	it('wraps a cell in the control the model gives it', async () => {
 		const loaded = await hand(grid(row(`${label('Remarks')}${label('None')}`)));
 		tableOf(loaded.model.blocks).rows[0]![1]!.contentControl = {
