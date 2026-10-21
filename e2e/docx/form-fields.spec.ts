@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import type { EditorView } from 'prosemirror-view';
 import { savedDocument } from './saved-document';
 import { fileInput } from './helpers';
 import { formFieldsFixture, protectedSectionsFixture } from './support/form-fields-fixture';
@@ -76,18 +77,24 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const editor = await open(page, framework, formFieldsFixture(true));
 		const box = editor.locator('.ProseMirror .dve-form-field[data-form-field="checkbox"]');
 		const status = editor.locator('.ProseMirror .dve-form-field[data-form-field="dropDown"]');
-		// The caret beside each field, at the end of its cell, as arrow keys leave it.
-		const besides = async (field: typeof box) => {
-			const cell = editor.locator('.ProseMirror td', { has: field });
-			const size = await cell.boundingBox();
-			await cell.click({ position: { x: size!.width - 4, y: size!.height / 2 } });
-		};
-		await besides(box);
+		// Tab from a label goes to the next cell, the field, as in Word; Space toggles it there.
+		await editor.locator('.ProseMirror td', { hasText: 'Approved' }).click();
+		await expect
+			.poll(() =>
+				editor.evaluate(
+					(element) =>
+						(element as unknown as { view: EditorView }).view.state.selection.$from.parent
+							.textContent,
+				),
+			)
+			.toBe('Approved');
+		await page.keyboard.press('Tab');
 		await page.keyboard.press('Space');
 		await expect(box).toHaveText('☒');
 		await page.keyboard.press('Space');
 		await expect(box).toHaveText('☐');
-		await besides(status);
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Tab');
 		// The list opens on the current entry; the arrows move through it and Enter picks one.
 		await page.keyboard.press('Alt+ArrowDown');
 		await expect(editor.getByRole('option', { name: 'Revised', exact: true })).toBeFocused();

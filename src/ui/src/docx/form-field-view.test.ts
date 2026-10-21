@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument, type FormField, type TextRun } from 'ooxml-core/docx';
 import { formFieldOfNode } from 'ooxml-core/docx/ui';
 import { TextSelection } from 'prosemirror-state';
@@ -82,6 +82,23 @@ describe('legacy form fields from the keyboard', () => {
 		expect(view.state.doc.childCount).toBe(1);
 	});
 
+	it('toggles a check box that Tab into its table cell selects, as Word does', () => {
+		const { view } = mount();
+		const box = markerOf(view, 'checkbox');
+		// Selecting only the field's markers leaves the caret just after it.
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, box, box + 3)));
+		expect(view.state.selection.empty).toBe(true);
+		const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+		view.someProp('handleKeyDown', (handle) => handle(view, event));
+		expect(checked(view)).toBe(true);
+		// A selection that also holds text is typing over it, not operating the box.
+		view.dispatch(
+			view.state.tr.setSelection(TextSelection.create(view.state.doc, box - 2, box + 3)),
+		);
+		view.someProp('handleKeyDown', (handle) => handle(view, event));
+		expect(checked(view)).toBe(true);
+	});
+
 	it('opens a drop-down list with Alt+Down, Space or Enter beside it', () => {
 		const { view, editor } = mount();
 		const list = markerOf(view, 'dropDown');
@@ -110,6 +127,25 @@ describe('legacy form fields from the keyboard', () => {
 		press(view, markerOf(view, 'dropDown'), 'ArrowDown', { altKey: true });
 		expect(entriesList(editor)).toBeDefined();
 		closeList();
+	});
+
+	it('leaves Space to the caret the browser shows when the editor has not read it yet', () => {
+		const { view } = mount();
+		const box = markerOf(view, 'checkbox');
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, box)));
+		// A click put the browser's caret in the label; the editor still has the old position.
+		const label = view.dom.querySelector('p span')!.firstChild!;
+		const root = view.root as ShadowRoot & { getSelection(): Selection | null };
+		const browser = vi
+			.spyOn(root, 'getSelection')
+			.mockReturnValue({ focusNode: label, focusOffset: 2 } as unknown as Selection);
+		try {
+			const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+			view.someProp('handleKeyDown', (handle) => handle(view, event));
+			expect(checked(view)).toBe(false);
+		} finally {
+			browser.mockRestore();
+		}
 	});
 
 	it('leaves keys alone away from a check box or drop-down, or with a modifier', () => {

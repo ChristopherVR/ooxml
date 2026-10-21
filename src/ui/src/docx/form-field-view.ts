@@ -57,6 +57,19 @@ function keyEdits(view: EditorView, key: string): boolean {
 	);
 }
 
+/** Where the browser's caret is in the editor's text, if it is there and maps to a position. */
+function browserCaret(view: EditorView): number | undefined {
+	const root = view.root as { getSelection?: () => Selection | null };
+	const selection = root.getSelection?.() ?? document.getSelection();
+	const node = selection?.focusNode;
+	if (!node || !view.dom.contains(node)) return undefined;
+	try {
+		return view.posAtDOM(node, selection!.focusOffset);
+	} catch {
+		return undefined;
+	}
+}
+
 /**
  * Operates the check box or drop-down beside the caret from the keyboard. Space or Enter toggles
  * a check box or opens a drop-down's entries where the key has nothing to type, as in a form
@@ -71,6 +84,10 @@ function operateFromKey(view: EditorView, event: KeyboardEvent): boolean {
 	const pos = formFieldBeside(view.state.doc, view.state.selection.from);
 	if (pos === undefined) return false;
 	if (list && formFieldOfNode(view.state.doc.nodeAt(pos))?.kind !== 'dropDown') return false;
+	// Right after a click the browser's caret can be where the editor has not read it yet: act
+	// only on a field the caret the user sees is beside too.
+	const caret = browserCaret(view);
+	if (caret !== undefined && formFieldBeside(view.state.doc, caret) !== pos) return false;
 	if (press && keyEdits(view, event.key)) return false;
 	const el = view.nodeDOM(pos);
 	return el instanceof HTMLElement && operate(view, el);
