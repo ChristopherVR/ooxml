@@ -73,11 +73,14 @@ SVG curve flattening is available from `geometry`. See the
 and remaining candidates.
 
 CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })` from `ooxml-core/xlsx/load`)
-types fields as Excel does when it opens a CSV, and takes Excel's own controls to change that:
-the automatic data conversion switches (`conversions: { leadingZeros: false }` keeps `00123`),
-and the Text Import Wizard's column formats (`columns: { 0: 'text', 2: 'DMY', 5: 'skip' }`),
-decimal and thousands separators and trailing minus. Each column whose data a conversion
-changed gets one entry in `workbook.warnings`, with a count and the first cell.
+types fields the way typing them into a cell does, which approximates Excel opening a CSV: a
+number past 15 significant digits keeps the nearest double where Excel keeps the first 15
+digits, and General columns read numeric dates month first. It takes Excel's own controls to
+change that: the automatic data conversion switches (`conversions: { leadingZeros: false }`
+keeps `00123`), and the Text Import Wizard's column formats
+(`columns: { 0: 'text', 2: 'DMY', 5: 'skip' }`), decimal and thousands separators and trailing
+minus. Each column whose data a conversion changed gets one entry in `workbook.warnings`, with a
+count and the first cell.
 
 ## Install
 
