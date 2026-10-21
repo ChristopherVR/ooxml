@@ -124,18 +124,6 @@ describe('shapeSection arrowhead selects', () => {
 });
 
 describe('textEffectsSection preset selects', () => {
-	const warps = [
-		'archUp',
-		'archDown',
-		'circle',
-		'wave1',
-		'wave2',
-		'inflate',
-		'deflate',
-		'fadeRight',
-		'slantUp',
-		'triangle',
-	];
 	const materials = ['matte', 'plastic', 'metal', 'warmMatte', 'softEdge', 'flat'];
 	const bevels = ['none', 'circle', 'relaxedInset', 'coolSlant', 'angle', 'softRound', 'convex'];
 
@@ -149,28 +137,27 @@ describe('textEffectsSection preset selects', () => {
 			height: 50,
 			content: 'Hello',
 			textStyle: {
-				textWarpPreset: 'archUp',
+				textWarpPreset: 'textArchUp',
 				text3d: { presetMaterial: 'plastic', bevelTopType: 'circle' },
 			},
 		} as PptxElement;
+	}
+
+	function warpTiles(root: ParentNode): HTMLButtonElement[] {
+		return Array.from(root.querySelectorAll<HTMLButtonElement>('[data-gallery-item]'));
 	}
 
 	it('labels warp, material and bevel from the shared preset catalogues', () => {
 		const element = textElement();
 		const target = mountAt(TextEffectsSection, { editor: editorWith(element), el: element });
 
-		const warp = selectFor(target, 'Transform');
-		// The 'none' sentinel stays first; only the ten preset rows are relabelled.
-		expect(values(warp)).toStrictEqual(['none', ...warps]);
-		expect(texts(warp)).toStrictEqual([
-			'None',
-			// The catalogue is keyed on the `text`-prefixed schema value even
-			// though the panel stores (and still submits) the short form.
-			...presetLabels(
-				TEXT_WARP_PRESETS,
-				warps.map((token) => `text${token[0].toUpperCase()}${token.slice(1)}`),
-			),
-		]);
+		// The warp picker is the shared Text Warp gallery: every catalogue preset, by its
+		// `text`-prefixed schema value, named from the catalogue.
+		const warps = TEXT_WARP_PRESETS.map((preset) => preset.value);
+		expect(warpTiles(target).map((tile) => tile.dataset.galleryItem)).toStrictEqual(warps);
+		expect(warpTiles(target).map((tile) => tile.getAttribute('aria-label'))).toStrictEqual(
+			presetLabels(TEXT_WARP_PRESETS, warps),
+		);
 
 		const material = selectFor(target, 'Material');
 		expect(values(material)).toStrictEqual(materials);
@@ -181,19 +168,19 @@ describe('textEffectsSection preset selects', () => {
 		expect(texts(bevel)).toStrictEqual(presetLabels(BEVEL_PRESETS, bevels));
 	});
 
-	it('still stores the short warp token when a preset is picked', () => {
+	it('stores the OOXML warp preset, not a short token, when a preset is picked', () => {
 		const element = textElement();
 		const editor = editorWith(element);
 		const target = mountAt(TextEffectsSection, { editor, el: element });
-		const warp = selectFor(target, 'Transform');
-		warp.value = 'slantUp';
-		warp.dispatchEvent(new Event('change', { bubbles: true }));
+		warpTiles(target)
+			.find((tile) => tile.dataset.galleryItem === 'textSlantUp')
+			?.click();
 		flushSync();
 
 		const selected = editor.selectedElement;
 		expect(
 			selected && 'textStyle' in selected ? selected.textStyle?.textWarpPreset : undefined,
-		).toBe('slantUp');
+		).toBe('textSlantUp');
 	});
 });
 
