@@ -23,7 +23,14 @@ test('Formats paste copies conditional rules through the native clipboard and re
 		await typeInActiveCell(page, text!);
 	}
 	await goToCell(page, 'A1');
-	await ribbon(page).getByRole('button', { name: 'Conditional Formatting', exact: true }).click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).getByRole('button', {
+			name: 'Conditional Formatting',
+			exact: true,
+			includeHidden: true,
+		}),
+	);
 	await editor(page).getByRole('menuitem', { name: 'Greater Than...', exact: true }).click();
 	const rule = editor(page).locator('[data-dialog="cf-quick"]');
 	await rule.getByLabel('Value', { exact: true }).fill('1');
