@@ -1,7 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Keeps the content controls around table rows and cells in step with the model: an edited control
 // is patched in place, a control the model dropped from every row or cell it holds is unwrapped
-// (they stay), and a control the model added wraps its row or cell in a new `w:sdt`.
+// (they stay), a row or cell it dropped from a control kept on others leaves that control, and a
+// control the model added wraps its row or cell in a new `w:sdt`.
 import type { ContentControl } from './content-control-model';
 import { isSdt, sdtContent } from './content-control';
 import {
@@ -173,7 +174,8 @@ export function placeTableControl(
 /**
  * Unwraps each `w:sdt` around `elements` (the rows of a table or the cells of a row, in place)
  * that the model takes off every one of them it holds: `next` is each element's control. The
- * rows or cells stay; a control the model keeps on any of them stays around all of them.
+ * rows or cells stay. One the model keeps on some of them stays around those: a row or cell it
+ * gives no control is taken out of it, as one given another control is.
  */
 export function unwrapDroppedControls(
 	elements: readonly XmlElement[],
@@ -185,4 +187,8 @@ export function unwrapDroppedControls(
 		if (sdt) kept.set(sdt, Boolean(kept.get(sdt)) || next[index] !== undefined);
 	});
 	for (const [sdt, keep] of kept) if (!keep) unwrapContentControl(sdt);
+	elements.forEach((element, index) => {
+		const sdt = next[index] === undefined ? enclosingSdt(element) : undefined;
+		if (sdt) takeOut(element.ownerDocument as XmlDocument, element, sdt);
+	});
 }

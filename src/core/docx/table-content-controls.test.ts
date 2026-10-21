@@ -121,6 +121,53 @@ describe('row and cell content controls on save', () => {
 		expect(rowXml).toContain(`</w:tblGrid>${row(`${label('A')}${label('B')}`)}<w:tr>`);
 	});
 
+	it('takes a cell or row the model gives no control out of a control around others', async () => {
+		const group = '<w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr>';
+		const wrap = (content: string) =>
+			`<w:sdt>${group}<w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		const dropped = async (body: string, at: number[], rows = false) => {
+			const loaded = await hand(body);
+			const table = tableOf(loaded.model.blocks);
+			for (const index of at)
+				if (rows) delete table.rowProperties![index]!.contentControl;
+				else delete table.rows[0]![index]!.contentControl;
+			const bytes = await loaded.save(loaded.model);
+			const reopened = tableOf((await loadDocx(bytes)).model.blocks);
+			return {
+				xml: await documentXml(bytes),
+				ids: rows
+					? reopened.rowProperties!.map((props) => props.contentControl?.id)
+					: reopened.rows[0]!.map((cell) => cell.contentControl?.id),
+			};
+		};
+		const pair = grid(row(wrap(label('Left') + label('Right'))));
+		const first = await dropped(pair, [0]);
+		expect(first.xml).toContain(`<w:tr>${label('Left')}${wrap(label('Right'))}</w:tr>`);
+		expect(first.ids).toEqual([undefined, '21']);
+		const last = await dropped(pair, [1]);
+		expect(last.xml).toContain(`<w:tr>${wrap(label('Left'))}${label('Right')}</w:tr>`);
+		expect(last.ids).toEqual(['21', undefined]);
+		// From the middle of three: the cells after it go to a copy under a new id (ids are unique).
+		const three =
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/>` +
+			`<w:gridCol w:w="2000"/></w:tblGrid>${row(wrap(label('A') + label('B') + label('C')))}</w:tbl>`;
+		const middle = await dropped(three, [1]);
+		expect(middle.ids[0]).toBe('21');
+		expect(middle.ids[1]).toBeUndefined();
+		expect(middle.ids[2]).toMatch(/^\d+$/);
+		expect(middle.ids[2]).not.toBe('21');
+		expect(middle.xml).toContain(`${wrap(label('A'))}${label('B')}<w:sdt>`);
+		// A row the same way.
+		const rowsXml = grid(
+			wrap(row(`${label('A')}${label('B')}`) + row(`${label('C')}${label('D')}`)),
+		);
+		const row0 = await dropped(rowsXml, [0], true);
+		expect(row0.ids).toEqual([undefined, '21']);
+		expect(row0.xml).toContain(
+			`</w:tblGrid>${row(`${label('A')}${label('B')}`)}${wrap(row(`${label('C')}${label('D')}`))}`,
+		);
+	});
+
 	it('keeps the range markers Word writes beside a cell or row control when unwrapping it', async () => {
 		// Word allows bookmarks, comment ranges and move ranges as children of a row or cell w:sdt
 		// (MS-OI29500 2.1.202 and 2.1.204), next to its w:sdtContent.
