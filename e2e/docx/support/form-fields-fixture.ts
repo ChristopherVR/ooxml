@@ -80,6 +80,16 @@ export function blankFieldFixture(): Promise<Uint8Array> {
 	);
 }
 
+/** A form protected for filling in whose drop-down lists one entry name twice. */
+export function repeatedEntriesFixture(): Promise<Uint8Array> {
+	const entries = ['Pass', 'Fail', 'Pass'].map((entry) => `<w:listEntry w:val="${entry}"/>`);
+	return formPackage(
+		FORMS_PROTECTION,
+		`<w:p>${text('Grade: ')}${formField('Grade', `<w:ddList><w:result w:val="0"/>${entries.join('')}</w:ddList>`, 'FORMDROPDOWN', null, 1)}</w:p>` +
+			`<w:sectPr/>`,
+	);
+}
+
 /**
  * A form protected for filling in: a check box, one inside a content control that locks its
  * content, and a last section the protection leaves editable (`w:formProt w:val="0"`).

@@ -115,6 +115,41 @@ describe('legacy form fields from the keyboard', () => {
 		closeList();
 	});
 
+	it('picks the entry chosen when a drop-down lists one name twice', () => {
+		const model = createDocument();
+		model.blocks = [
+			{
+				type: 'paragraph',
+				id: 'p1',
+				runs: field({
+					kind: 'dropDown',
+					name: 'Grade',
+					dropDown: { entries: ['Pass', 'Fail', 'Pass'], result: 0 },
+				}),
+			},
+		];
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		editor.documentModel = model;
+		document.body.append(editor);
+		const view = (editor as unknown as { view: EditorView }).view;
+		press(view, markerOf(view, 'dropDown'), 'ArrowDown', { altKey: true });
+		const options = [
+			...(editor.shadowRoot?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? []),
+		];
+		expect(options.map((option) => option.textContent)).toEqual(['Pass', 'Fail', 'Pass']);
+		expect(options.map((option) => option.getAttribute('aria-selected'))).toEqual([
+			'true',
+			'false',
+			'false',
+		]);
+		// The editor takes focus back after a pick, which jsdom cannot do inside a shadow root.
+		const focus = vi.spyOn(view, 'focus').mockImplementation(() => {});
+		options[2]!.click();
+		focus.mockRestore();
+		const result = formFieldOfNode(view.state.doc.nodeAt(markerOf(view, 'dropDown')));
+		expect(result?.dropDown?.result).toBe(2);
+	});
+
 	it('leaves Space and Enter to typing where they can edit, as in an unprotected form', () => {
 		const { view, editor } = mount(true);
 		const box = markerOf(view, 'checkbox');
