@@ -1,5 +1,6 @@
 // How the editor shows and operates content controls: the active outline, a click on a check box,
-// and the list and calendar popups of drop-down, combo box and date picker controls.
+// and the list and calendar popups of drop-down, combo box and date picker controls, inline or
+// around a table cell.
 import { Plugin } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
@@ -73,6 +74,10 @@ export function contentControlViewPlugin(): Plugin {
 				if (active.level === 'inline')
 					return DecorationSet.create(state.doc, [
 						Decoration.inline(active.from, active.to, { class: 'dve-sdt-active' }),
+					]);
+				if (active.level === 'cell')
+					return DecorationSet.create(state.doc, [
+						Decoration.node(active.from, active.to, { class: 'dve-sdt-active' }),
 					]);
 				const decorations: Decoration[] = [];
 				state.doc.nodesBetween(active.from, active.to, (node, pos) => {

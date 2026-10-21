@@ -9,6 +9,7 @@ import {
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties';
+import { placeTableControl } from './write-table-controls';
 import { children, first, isElement, makeW, named, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
@@ -189,6 +190,7 @@ export function writeTable(
 	const usedCells = new Set<XmlElement>();
 	const usedRows = new Set<number>();
 	const columns = new Map<number, number>();
+	const rowSources: (number | undefined)[] = [];
 	const nextRows = table.rows.map((row, rowIndex) => {
 		const sources = row.map((cell) =>
 			cell.paragraphs.map((p) => sourceById.get(p.id)).find(Boolean),
@@ -199,6 +201,7 @@ export function writeTable(
 		if (sourceRow !== undefined && usedRows.has(sourceRow))
 			throw new Error('Splitting an existing table row is not supported.');
 		if (sourceRow !== undefined) usedRows.add(sourceRow);
+		rowSources.push(sourceRow);
 		const tr =
 			sourceRow === undefined
 				? makeW(doc, 'tr')
@@ -246,9 +249,21 @@ export function writeTable(
 			return tc;
 		});
 		replaceSlots(doc, tr, oldCells, nextCells);
+		nextCells.forEach((tc, ci) =>
+			placeTableControl(doc, tc, row[ci]?.contentControl, sources[ci]?.model.contentControl),
+		);
 		return tr;
 	});
 	replaceSlots(doc, node, oldRows, nextRows);
+	nextRows.forEach((tr, ri) => {
+		const sourceRow = rowSources[ri];
+		placeTableControl(
+			doc,
+			tr,
+			table.rowProperties?.[ri]?.contentControl,
+			sourceRow === undefined ? undefined : base?.rowProperties?.[sourceRow]?.contentControl,
+		);
+	});
 	const grid = first(node, 'tblGrid');
 	if (
 		structural &&

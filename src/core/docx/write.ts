@@ -6,6 +6,7 @@ import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } fr
 import { commentContinuations } from './comment-spans';
 import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges';
 import { writeTable as writeTableContent } from './write-table';
+import { placeTableControl } from './write-table-controls';
 import { buildNewTableProperties, tableColumnCount } from './table-defaults';
 import { buildCellProperties, buildRowProperties } from './table-cell-write';
 import { orderSectionProperties } from './element-order';
@@ -44,8 +45,10 @@ function createTable(
 				tc.appendChild(createParagraph(doc, paragraph, allocator, spans));
 			if (!cell.paragraphs.length) tc.appendChild(makeW(doc, 'p'));
 			tr.appendChild(tc);
+			placeTableControl(doc, tc, cell.contentControl, undefined);
 		}
 		node.appendChild(tr);
+		placeTableControl(doc, tr, table.rowProperties?.[rowIndex]?.contentControl, undefined);
 	});
 	return node;
 }

@@ -3,7 +3,7 @@
 // block keeps its own `w:sdt` wrapper, and new blocks join the control of the block before them.
 import type { Block } from './model';
 import { isSdt, sdtContent } from './content-control';
-import { patchContentControl } from './write-content-control';
+import { patchContentControl, unwrapContentControl } from './write-content-control';
 import type { FlatBlock } from './parse-content-control';
 import type { XmlDocument, XmlElement } from './xml';
 
@@ -73,13 +73,18 @@ export function placeBlocksById(
 		}
 		previous = { node, block };
 	});
-	// Edited control properties reach the `w:sdt` that already wraps the block.
+	// Edited control properties reach the `w:sdt` that already wraps the block, and a control the
+	// model took off every block it held is unwrapped (a temporary control after an edit).
 	const bySdt = new Map<XmlElement, Block>();
+	const dropped = new Map<XmlElement, boolean>();
 	flat.forEach((entry) => {
-		const index = nodes.indexOf(entry.element);
-		const block = blocks[index];
-		if (entry.sdt && block?.contentControl && !bySdt.has(entry.sdt)) bySdt.set(entry.sdt, block);
+		const block = blocks[nodes.indexOf(entry.element)];
+		// A deleted block has no say: the blocks that remain decide whether their control stays.
+		if (!entry.sdt || !block) return;
+		if (block.contentControl && !bySdt.has(entry.sdt)) bySdt.set(entry.sdt, block);
+		dropped.set(entry.sdt, (dropped.get(entry.sdt) ?? true) && !block.contentControl);
 	});
 	for (const [sdt, block] of bySdt) patchContentControl(doc, sdt, block.contentControl!);
+	for (const [sdt, gone] of dropped) if (gone) unwrapContentControl(sdt);
 	return true;
 }

@@ -4,7 +4,13 @@
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { cellSourceBlocks } from 'ooxml-core/docx';
-import type { Paragraph, Table, TableCell, TableStyleCatalog } from 'ooxml-core/docx';
+import type {
+	ContentControl,
+	Paragraph,
+	Table,
+	TableCell,
+	TableStyleCatalog,
+} from 'ooxml-core/docx';
 import { schema } from './schema';
 import { resolveCellVisuals } from 'ooxml-core/docx/ui';
 
@@ -76,6 +82,7 @@ export function tableNode(
 						borders: visuals.borders ? JSON.stringify(visuals.borders) : null,
 						directBorders: cell.borders ? JSON.stringify(cell.borders) : null,
 						margins: cell.margins ? JSON.stringify(cell.margins) : null,
+						contentControl: cell.contentControl ?? null,
 					},
 					children,
 				),
@@ -106,6 +113,12 @@ export function tableNode(
 		rows,
 	);
 }
+
+/** The cell's content control as the editor holds it (picked values, cleared placeholders). */
+const cellControl = (cell: ProseMirrorNode): Pick<TableCell, 'contentControl'> =>
+	cell.attrs.contentControl
+		? { contentControl: structuredClone(cell.attrs.contentControl as ContentControl) }
+		: {};
 
 /** Reads editable formatting from nodes rather than a stale prior model. */
 export function tableFormattingFromNode(node: ProseMirrorNode): {
@@ -147,6 +160,7 @@ export function convertSimpleTable(
 				borders: _borders,
 				margins: _margins,
 				verticalAlign: _verticalAlign,
+				contentControl: _control,
 				...properties
 			} = source ?? { paragraphs: [] };
 			const direct = typeof cell.attrs.directBorders === 'string' ? cell.attrs.directBorders : null;
@@ -159,6 +173,7 @@ export function convertSimpleTable(
 				...(typeof cell.attrs.margins === 'string'
 					? { margins: JSON.parse(cell.attrs.margins) as NonNullable<TableCell['margins']> }
 					: {}),
+				...cellControl(cell),
 				paragraphs,
 			});
 			if (cell.attrs.shadingEdited) {
@@ -195,6 +210,8 @@ export function convertMergedTable(
 				else if (child.type.name === 'table') nested.push(child);
 			});
 			if (paragraphs.length) target.paragraphs = paragraphs;
+			delete target.contentControl;
+			Object.assign(target, cellControl(cellNode));
 			let index = 0;
 			if (target.sourceBlocks)
 				target.sourceBlocks = target.sourceBlocks.map((block) => {

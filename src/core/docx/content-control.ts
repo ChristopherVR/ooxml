@@ -78,7 +78,10 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 	const showing = first(sdtPr, 'showingPlcHdr');
 	if (showing) control.showingPlaceholder = parseOnOff(getW(showing, 'val')) ?? true;
 	if (first(sdtPr, 'dataBinding')) control.dataBound = true;
-	if (first(sdtPr, 'temporary')) control.temporary = true;
+	const temporary = first(sdtPr, 'temporary');
+	if (temporary && (parseOnOff(getW(temporary, 'val')) ?? true)) control.temporary = true;
+	const placeholder = getW(first(first(sdtPr, 'placeholder'), 'docPart'), 'val');
+	if (placeholder) control.placeholder = placeholder;
 	if (kind === 'text') {
 		const multi = parseOnOff(getW(first(sdtPr, 'text'), 'multiLine'));
 		if (multi) control.multiLine = true;
@@ -112,5 +115,7 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 		if (lid) control.dateLocale = lid;
 	}
 	control.sourceXml = buildXml(sdtPr);
+	const end = first(sdt, 'sdtEndPr');
+	if (end) control.endSourceXml = buildXml(end);
 	return control;
 }

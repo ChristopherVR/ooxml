@@ -10,6 +10,7 @@ import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui'
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
 import { markSpecs } from 'ooxml-core/docx/ui';
 import { equationNodeSpec } from './equation-schema';
+import type { ContentControl } from 'ooxml-core/docx';
 
 export { wordHighlightColors } from 'ooxml-core/docx/ui';
 
@@ -69,6 +70,18 @@ export function paragraphStyle(attrs: Record<string, unknown>): string {
 		...dropCapCss(attrs.dropCap),
 	].filter(Boolean);
 	return declarations.join(';');
+}
+
+/** The attributes a cell's content control draws with: its outline, title tab and arrow. */
+function cellControlAttributes(control: ContentControl): Record<string, string> {
+	return {
+		'data-sdt': JSON.stringify(control),
+		'data-sdt-cell': String(control.id ?? ''),
+		'data-sdt-kind': String(control.kind ?? 'richText'),
+		...(control.alias ? { 'data-sdt-title': String(control.alias) } : {}),
+		...(control.showingPlaceholder ? { 'data-sdt-placeholder': '1' } : {}),
+		...(control.lock ? { 'data-sdt-lock': String(control.lock) } : {}),
+	};
 }
 
 export const schema = new Schema({
@@ -277,6 +290,8 @@ export const schema = new Schema({
 				shadingEdited: { default: false },
 				/** Direct cell margins (`w:tcMar`) in twips as JSON; missing sides inherit table defaults. */
 				margins: { default: null },
+				/** The content control around the cell (`w:tr > w:sdt > w:tc`), as the model reads it. */
+				contentControl: { default: null },
 			},
 			parseDOM: [{ tag: 'td' }, { tag: 'th' }],
 			toDOM: (node) => [
@@ -285,6 +300,7 @@ export const schema = new Schema({
 					colspan: String(node.attrs.colspan || 1),
 					rowspan: String(node.attrs.rowspan || 1),
 					style: tableCellStyle(node.attrs),
+					...(node.attrs.contentControl ? cellControlAttributes(node.attrs.contentControl) : {}),
 				},
 				0,
 			],
