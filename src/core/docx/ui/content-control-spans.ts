@@ -62,21 +62,28 @@ export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 	return spans;
 }
 
-/** The innermost control around `pos` (an inline control wins over the block or cell around it). */
+/**
+ * The innermost control around `pos`. An inline control wins over the block or cell around it,
+ * and with `edges` also when `pos` is at its start or end.
+ */
 export function controlAt(
 	spans: readonly ControlSpan[],
 	pos: number,
 	edges = false,
 ): ControlSpan | undefined {
 	const inside = spans.filter((span) => pos > span.from && pos < span.to);
-	const found =
+	const inline =
 		inside.find((span) => span.level === 'inline') ??
+		(edges
+			? spans.find((span) => span.level === 'inline' && (pos === span.from || pos === span.to))
+			: undefined);
+	return (
+		inline ??
 		inside.reduce<ControlSpan | undefined>(
 			(inner, span) => (!inner || span.to - span.from < inner.to - inner.from ? span : inner),
 			undefined,
-		);
-	if (found || !edges) return found;
-	return spans.find((span) => span.level === 'inline' && (pos === span.from || pos === span.to));
+		)
+	);
 }
 
 export const controlAtSelection = (state: EditorState, edges = true): ControlSpan | undefined =>

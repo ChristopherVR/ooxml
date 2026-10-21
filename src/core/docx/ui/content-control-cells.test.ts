@@ -159,6 +159,28 @@ describe('content controls around table cells in the editor', () => {
 		expect(deleteToPlaceholder(into, 'backward')).toBeUndefined();
 	});
 
+	it('types over an inline placeholder at its edge inside a cell control', () => {
+		const name: ContentControl = {
+			id: '65',
+			level: 'inline',
+			kind: 'text',
+			showingPlaceholder: true,
+		};
+		const prompt = schema.text('Enter a name.', [
+			style('PlaceholderText'),
+			schema.marks.contentControl!.create({ data: JSON.stringify(name) }),
+		]);
+		const content = [
+			schema.node('paragraph', { id: 'c1' }, [schema.text('Name: ', [style('Normal')]), prompt]),
+		];
+		const state = stateOf({ id: '62', level: 'cell', kind: 'richText' }, content);
+		const inline = controlSpans(state.doc).find((span) => span.level === 'inline')!;
+		expect(controlAt(controlSpans(state.doc), inline.from, true)?.control.id).toBe('65');
+		const typed = typeOverPlaceholder(state, inline.from, 'A');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		expect(cellOf(state.apply(typed)).textContent).toBe('Name: A');
+	});
+
 	it('removes a temporary cell control with its first edit', () => {
 		const state = stateOf(choice({ temporary: true }), [placeholder('Choose an item.')]);
 		const next = state.apply(chooseListItem(state, '61', 0)!);
