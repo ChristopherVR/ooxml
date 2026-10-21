@@ -15,6 +15,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-switch',
 	'pptx-ui-radio',
 	'pptx-ui-search',
+	'pptx-ui-color-grid',
 	'pptx-ui-select',
 	'pptx-ui-ribbon-toggle',
 	'pptx-ui-dialog-footer',

@@ -1,6 +1,7 @@
 import {
 	defineButton,
 	defineCheckbox,
+	defineColorGrid,
 	defineContextMenu,
 	defineDialogFooter,
 	definePasteOptions,
@@ -13,6 +14,7 @@ import {
 	defineSwitch,
 	defineToasts,
 } from '../../controls';
+import type { OfficeUiColorGrid } from '../../controls';
 import { getIcon, registerIcon } from '../../icons';
 
 import {
@@ -110,6 +112,26 @@ export function definePptxSearchField(registry: CustomElementRegistry): void {
 		class extends bridged(
 			base(registry, defineSearchField, 'office-ui-search'),
 			'pptx-ui-search',
+		) {},
+	);
+}
+
+/** PowerPoint's name for the shared colour grid; `themeColorGridView` feeds it a deck's theme. */
+export type PptxUiColorGridElement = OfficeUiColorGrid;
+declare global {
+	interface HTMLElementTagNameMap {
+		'pptx-ui-color-grid': PptxUiColorGridElement;
+	}
+}
+export function definePptxColorGrid(registry: CustomElementRegistry): void {
+	if (registry.get('pptx-ui-color-grid')) {
+		return;
+	}
+	registry.define(
+		'pptx-ui-color-grid',
+		class extends bridged(
+			base(registry, defineColorGrid, 'office-ui-color-grid'),
+			'pptx-ui-color-grid',
 		) {},
 	);
 }
