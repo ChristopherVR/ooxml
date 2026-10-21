@@ -67,6 +67,11 @@ describe('getShapeType', () => {
 		expect(getShapeType('downArrow')).toBe('downArrow');
 	});
 
+	it('does not treat flowChart connector presets as connector lines', () => {
+		expect(getShapeType('flowChartOffpageConnector')).not.toBe('connector');
+		expect(getShapeType('flowChartConnector')).not.toBe('connector');
+	});
+
 	it("maps connector shapes to 'connector'", () => {
 		expect(getShapeType('bentConnector3')).toBe('connector');
 		expect(getShapeType('straightConnector1')).toBe('connector');
