@@ -7,7 +7,9 @@ import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
 	first,
+	getW,
 	makeW,
+	named,
 	parseXml,
 	WORD_NS,
 	type XmlDocument,
@@ -212,7 +214,12 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	sdt.appendChild(buildProperties(doc, control));
+	const sdtPr = buildProperties(doc, control);
+	// A copy keeps the properties it was copied with, under the new id it was given: ids are
+	// unique in a document (ECMA-376 17.5.2.18). An id read from no `w:id` is not written.
+	if (/^-?\d+$/.test(control.id) && getW(first(sdtPr, 'id'), 'val') !== control.id)
+		setValued(doc, sdtPr, 'id', control.id);
+	sdt.appendChild(sdtPr);
 	if (control.endSourceXml)
 		sdt.appendChild(doc.importNode(parseXml(control.endSourceXml).documentElement, true));
 	const content = makeW(doc, 'sdtContent');
@@ -221,12 +228,22 @@ export function createContentControl(
 	return { sdt, content };
 }
 
-/** Replaces a `w:sdt` by its content: the control goes, what it held stays where it was. */
+/**
+ * Replaces a `w:sdt` by its content: the control goes, what it held stays where it was, and so do
+ * the range markers (bookmarks, comment, custom XML and move ranges) that Word writes beside the
+ * content of a row or cell control (MS-OI29500 2.1.202, 2.1.204), before or after it as they were.
+ */
 export function unwrapContentControl(sdt: XmlElement): void {
 	const parent = sdt.parentNode;
-	const content = sdtContent(sdt);
 	if (!parent) return;
-	for (const child of Array.from(content?.childNodes ?? [])) parent.insertBefore(child, sdt);
+	for (const child of Array.from(sdt.childNodes)) {
+		if (child.nodeType !== 1) continue;
+		const element = child as XmlElement;
+		if (named(element, 'sdtContent'))
+			for (const inner of Array.from(element.childNodes)) parent.insertBefore(inner, sdt);
+		else if (!named(element, 'sdtPr') && !named(element, 'sdtEndPr'))
+			parent.insertBefore(element, sdt);
+	}
 	parent.removeChild(sdt);
 }
 

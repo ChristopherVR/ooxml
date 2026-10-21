@@ -199,6 +199,16 @@ export function convertMergedTable(
 	const updated = structuredClone(prior);
 	const cellByKey = new Map<string, TableCell>();
 	for (const row of updated.rows) for (const cell of row) cellByKey.set(cellKey(cell), cell);
+	// A row's control as the editor holds it (a temporary one goes after an edit); the rows of a
+	// merged table stay as they were, one node per row.
+	node.forEach((row, _offset, index) => {
+		const properties = updated.rowProperties?.[index];
+		if (!properties) return;
+		delete properties.contentControl;
+		const own = row.attrs.properties as NonNullable<Table['rowProperties']>[number] | null;
+		const control = own?.contentControl;
+		if (control) properties.contentControl = structuredClone(control);
+	});
 	node.forEach((row) =>
 		row.forEach((cellNode) => {
 			const target = cellByKey.get(String(cellNode.attrs.sourceCellKey || ''));

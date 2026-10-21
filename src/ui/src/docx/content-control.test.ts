@@ -130,6 +130,36 @@ describe('content controls in the editor', () => {
 		view.destroy();
 	});
 
+	it('toggles the check box that was clicked when two share an id', async () => {
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
+		const box = (label: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="${label}"/><w:id w:val="5"/><w14:checkbox>` +
+			`<w14:checked w14:val="0"/></w14:checkbox></w:sdtPr><w:sdtContent><w:r><w:t>\u2610</w:t>` +
+			`</w:r></w:sdtContent></w:sdt>`;
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}" xmlns:w14="${W14}"><w:body><w:p><w:r><w:t xml:space="preserve">` +
+				`First </w:t></w:r>${box('One')}<w:r><w:t xml:space="preserve"> second </w:t></w:r>` +
+				`${box('Two')}</w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({
+				doc: modelToDoc(loaded.model),
+				plugins: [contentControlPlugin(), contentControlViewPlugin()],
+			}),
+		});
+		const boxes = [...host.querySelectorAll<HTMLElement>('.dve-sdt[data-sdt-kind="checkbox"]')];
+		expect(boxes).toHaveLength(2);
+		expect(click(view, boxes[1]!)).toBe(true);
+		expect(view.state.doc.textContent).toBe('First \u2610 second \u2612');
+		view.destroy();
+	});
+
 	it('edits properties through the control and keeps list values', async () => {
 		const { loaded, view } = await open();
 		const drop = controlSpans(view.state.doc).find((span) => span.control.kind === 'dropDownList')!;

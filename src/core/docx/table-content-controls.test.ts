@@ -100,6 +100,48 @@ describe('row and cell content controls on save', () => {
 		);
 	});
 
+	it('takes away a control around several cells or rows once none of them has it', async () => {
+		const wrap = (content: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		const cells = await hand(grid(row(wrap(`${label('Left')}${label('Right')}`))));
+		const pair = tableOf(cells.model.blocks).rows[0]!;
+		expect(pair.map((cell) => cell.contentControl?.id)).toEqual(['21', '21']);
+		for (const cell of pair) delete cell.contentControl;
+		const cellXml = await documentXml(await cells.save(cells.model));
+		expect(cellXml).not.toContain('<w:sdt>');
+		expect(cellXml).toContain(`<w:tr>${label('Left')}${label('Right')}</w:tr>`);
+		const rows = await hand(
+			grid(wrap(row(`${label('A')}${label('B')}`) + row(`${label('C')}${label('D')}`))),
+		);
+		const table = tableOf(rows.model.blocks);
+		expect(table.rowProperties?.map((props) => props.contentControl?.id)).toEqual(['21', '21']);
+		for (const props of table.rowProperties ?? []) delete props.contentControl;
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).not.toContain('<w:sdt>');
+		expect(rowXml).toContain(`</w:tblGrid>${row(`${label('A')}${label('B')}`)}<w:tr>`);
+	});
+
+	it('keeps the range markers Word writes beside a cell or row control when unwrapping it', async () => {
+		// Word allows bookmarks, comment ranges and move ranges as children of a row or cell w:sdt
+		// (MS-OI29500 2.1.202 and 2.1.204), next to its w:sdtContent.
+		const marked = (content: string) =>
+			`<w:sdt><w:sdtPr><w:id w:val="22"/><w:temporary/></w:sdtPr><w:bookmarkStart w:id="7" w:name="Kept"/>` +
+			`<w:sdtContent>${content}</w:sdtContent><w:bookmarkEnd w:id="7"/></w:sdt>`;
+		const loaded = await hand(grid(row(`${label('Status')}${marked(label('Open'))}`)));
+		delete tableOf(loaded.model.blocks).rows[0]![1]!.contentControl;
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('<w:sdt>');
+		expect(xml).toContain(
+			`${label('Status')}<w:bookmarkStart w:id="7" w:name="Kept"/>${label('Open')}<w:bookmarkEnd w:id="7"/></w:tr>`,
+		);
+		const rows = await hand(grid(marked(row(`${label('A')}${label('B')}`))));
+		delete tableOf(rows.model.blocks).rowProperties![0]!.contentControl;
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).toContain(
+			`</w:tblGrid><w:bookmarkStart w:id="7" w:name="Kept"/>${row(`${label('A')}${label('B')}`)}<w:bookmarkEnd w:id="7"/>`,
+		);
+	});
+
 	it('writes the row and cell controls of a table added to the document', async () => {
 		const loaded = await hand(text('Before'));
 		loaded.model.blocks.push({
@@ -121,6 +163,18 @@ describe('row and cell content controls on save', () => {
 		expect(table.rowProperties?.[0]?.contentControl).toMatchObject({ id: '42', level: 'row' });
 		expect(table.rows[0]![1]!.contentControl).toMatchObject({ id: '41', alias: 'Status' });
 		expect(table.rows[0]![1]!.paragraphs[0]!.runs[0]!.text).toBe('Draft');
+	});
+
+	it('saves a copied cell control with the new id it was given', async () => {
+		const loaded = await hand(
+			grid(row(`${label('Status')}${choice('11')}`) + row(`${label('Again')}${label('Draft')}`)),
+		);
+		const table = tableOf(loaded.model.blocks);
+		// A pasted copy keeps the properties it was copied with and takes a new id.
+		table.rows[1]![1]!.contentControl = { ...table.rows[0]![1]!.contentControl!, id: '9001' };
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml.match(/<w:id w:val="11"\/>/g)).toHaveLength(1);
+		expect(xml).toContain('<w:alias w:val="Choice 11"/><w:id w:val="9001"/>');
 	});
 
 	it('wraps a cell in the control the model gives it', async () => {

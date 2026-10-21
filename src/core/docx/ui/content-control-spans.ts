@@ -30,6 +30,9 @@ const markOf = (node: ProseMirrorNode): Mark | undefined =>
 /** Every inline, block and cell control in document order. */
 export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 	const spans: ControlSpan[] = [];
+	// The last block span: the paragraphs of one block control stay one span when an inline
+	// control in one of them comes between them in this list.
+	let block: ControlSpan | undefined;
 	doc.descendants((node, pos) => {
 		if (node.type.name === 'tableCell' && node.attrs.contentControl)
 			spans.push({
@@ -40,10 +43,11 @@ export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 			});
 		if (node.type.name === 'paragraph' && node.attrs.contentControl) {
 			const control = node.attrs.contentControl as ContentControl;
-			const previous = spans.at(-1);
-			if (previous?.level === 'block' && previous.control.id === control.id && previous.to === pos)
-				previous.to = pos + node.nodeSize;
-			else spans.push({ control, level: 'block', from: pos, to: pos + node.nodeSize });
+			if (block?.control.id === control.id && block.to === pos) block.to = pos + node.nodeSize;
+			else {
+				block = { control, level: 'block', from: pos, to: pos + node.nodeSize };
+				spans.push(block);
+			}
 		}
 		if (!node.isInline) return true;
 		const control = controlOfMark(markOf(node));
@@ -58,21 +62,28 @@ export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 	return spans;
 }
 
-/** The innermost control around `pos` (an inline control wins over the block or cell around it). */
+/**
+ * The innermost control around `pos`. An inline control wins over the block or cell around it,
+ * and with `edges` also when `pos` is at its start or end.
+ */
 export function controlAt(
 	spans: readonly ControlSpan[],
 	pos: number,
 	edges = false,
 ): ControlSpan | undefined {
 	const inside = spans.filter((span) => pos > span.from && pos < span.to);
-	const found =
+	const inline =
 		inside.find((span) => span.level === 'inline') ??
+		(edges
+			? spans.find((span) => span.level === 'inline' && (pos === span.from || pos === span.to))
+			: undefined);
+	return (
+		inline ??
 		inside.reduce<ControlSpan | undefined>(
 			(inner, span) => (!inner || span.to - span.from < inner.to - inner.from ? span : inner),
 			undefined,
-		);
-	if (found || !edges) return found;
-	return spans.find((span) => span.level === 'inline' && (pos === span.from || pos === span.to));
+		)
+	);
 }
 
 export const controlAtSelection = (state: EditorState, edges = true): ControlSpan | undefined =>
