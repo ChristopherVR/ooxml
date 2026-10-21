@@ -17,6 +17,13 @@ import { FORM_FIELD_EDIT_META, formFieldOfNode, formTextResults } from './form-f
 
 const isRemote = (tr: Transaction): boolean => tr.getMeta('y-sync$') !== undefined;
 
+/**
+ * Whether the document is protected for filling in forms: only its form fields, content controls
+ * and unprotected sections can change, and its headers, footers and notes not at all.
+ */
+export const isFormsProtected = (protection: DocumentProtection | undefined): boolean =>
+	Boolean(protection?.enforced) && protection?.edit === 'forms';
+
 /** Whether the transaction makes a text field's result longer than its maximum length. */
 export function exceedsFormTextLength(tr: Transaction): boolean {
 	// The same field before and after: its begin marker, mapped through the transaction.
@@ -115,8 +122,7 @@ export function formFieldGuardPlugin(protection: () => DocumentProtection | unde
 			if (!tr.docChanged || isRemote(tr)) return true;
 			const limited = limitedFields.getState(state) || insertsFieldMarker(tr);
 			if (limited && exceedsFormTextLength(tr)) return false;
-			const forms = protection();
-			if (!forms?.enforced || forms.edit !== 'forms') return true;
+			if (!isFormsProtected(protection())) return true;
 			return (
 				Boolean(tr.getMeta(CONTROL_EDIT_META) || tr.getMeta(FORM_FIELD_EDIT_META)) ||
 				staysInFormFields(tr)
