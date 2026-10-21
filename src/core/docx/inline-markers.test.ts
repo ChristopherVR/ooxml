@@ -41,6 +41,12 @@ const run = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r
 const element = (xml: string, tag: string) =>
 	xml.match(new RegExp(`<w:${tag}\\b[^>]*>[\\s\\S]*?</w:${tag}>`))?.[0] ?? '';
 
+/** Whether some `w:<tag>` element in `xml` holds every needle. */
+const heldBy = (xml: string, tag: string, needles: string[]) =>
+	[...xml.matchAll(new RegExp(`<w:${tag}\\b[^>]*>[\\s\\S]*?</w:${tag}>`, 'g'))].some(([found]) =>
+		needles.every((needle) => found.includes(needle)),
+	);
+
 describe('editing paragraphs that hold position markers', () => {
 	it('keeps spelling and grammar marks where they were', async () => {
 		const { loaded, paragraph } = await load(
@@ -70,6 +76,35 @@ describe('editing paragraphs that hold position markers', () => {
 			'>editable<',
 			'<w:permEnd w:id="4"/>',
 			'> still fixed<',
+		]);
+	});
+
+	it('keeps markers inside the tracked change they were in', async () => {
+		const revision = 'w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins w:id="5" ${revision}><w:permStart w:id="4" w:edGrp="everyone"/>` +
+				`${run('added')}<w:permEnd w:id="4"/></w:ins>` +
+				`<w:del w:id="6" ${revision}><w:bookmarkStart w:id="2" w:name="Gone"/>` +
+				`<w:r><w:delText>old</w:delText></w:r><w:bookmarkEnd w:id="2"/></w:del>` +
+				`<w:ins w:id="7" ${revision}>${run('one')}<w:bookmarkStart w:id="3" w:name="Mid"/>` +
+				`${run('two')}<w:bookmarkEnd w:id="3"/></w:ins>${run(' tail')}</w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		const xml = await savedParagraph(loaded);
+		expect(xml).toContain('>Still fixed <');
+		expect(heldBy(xml, 'ins', ['<w:permStart w:id="4"', '>added<', '<w:permEnd w:id="4"/>'])).toBe(
+			true,
+		);
+		expect(
+			heldBy(xml, 'del', ['<w:bookmarkStart w:id="2"', '>old<', '<w:bookmarkEnd w:id="2"/>']),
+		).toBe(true);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkStart w:id="3"'])).toBe(true);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkEnd w:id="3"/>'])).toBe(true);
+		expectInOrder(xml, [
+			'>one<',
+			'<w:bookmarkStart w:id="3"',
+			'>two<',
+			'<w:bookmarkEnd w:id="3"/>',
 		]);
 	});
 
