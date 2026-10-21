@@ -1,5 +1,5 @@
 import { closeHistory } from 'prosemirror-history';
-import type { Node as ProseMirrorNode } from 'prosemirror-model';
+import { Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import {
 	bodyStyleRefResult,
 	fieldResultRun,
@@ -151,6 +151,30 @@ function emptyStyleRefResults(
 	return results;
 }
 
+/** The result `range` as `text` formatted like the instruction marker `code` (`\* CHARFORMAT`). */
+function codeFormattedResult(
+	doc: ProseMirrorNode,
+	range: FieldResultRange,
+	code: ProseMirrorNode,
+	text: string,
+): ProseMirrorNode[] | undefined {
+	const result = inlineNodeRun(doc.nodeAt(range.from)!);
+	const codeRun = inlineNodeRun(code);
+	return result && codeRun
+		? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
+		: undefined;
+}
+
+/** Whether every text node of `range` is formatted like the first of `nodes`. */
+function formattedAs(doc: ProseMirrorNode, range: FieldResultRange, nodes: ProseMirrorNode[]) {
+	const marks = nodes[0]?.marks;
+	let same = marks !== undefined;
+	doc.nodesBetween(range.from, range.to, (node) => {
+		if (node.isText && marks && !Mark.sameSet(node.marks, marks)) same = false;
+	});
+	return same;
+}
+
 /** The runs of a model paragraph that hold its editor positions `start` to `end`. */
 function runsAt(
 	paragraph: Paragraph,
@@ -215,7 +239,7 @@ export function refreshFieldResults(
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
-	const changes: Array<{ run: FieldResultRange; text: string; code?: ProseMirrorNode }> = [];
+	const changes: Array<{ run: FieldResultRange; text: string; formatted?: ProseMirrorNode[] }> = [];
 	for (const run of fieldResultRanges(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
 		const styleRef = source && parseStyleReference(String(run.mark.attrs.instr ?? ''));
@@ -226,10 +250,15 @@ export function refreshFieldResults(
 			const field =
 				paragraph && runsAt(paragraph, run.from - $from.start(), run.to - $from.start());
 			const text = paragraph && bodyStyleRefResult(source, styleRef, paragraph, field);
-			// `\* CHARFORMAT`: the result takes the formatting of the field name's first letter.
+			// `\* CHARFORMAT`: the result takes the formatting of the field name's first letter, also
+			// when its text is already current.
 			const code = styleRef.charFormat ? fieldNameMarker($from.parent, $from.index()) : undefined;
-			if (text !== undefined && text !== run.text)
-				changes.push({ run, text, ...(code ? { code } : {}) });
+			const formatted = code && text ? codeFormattedResult(tr.doc, run, code, text) : undefined;
+			if (
+				text !== undefined &&
+				(text !== run.text || (formatted && !formattedAs(tr.doc, run, formatted)))
+			)
+				changes.push({ run, text, ...(formatted ? { formatted } : {}) });
 			continue;
 		}
 		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
@@ -245,7 +274,7 @@ export function refreshFieldResults(
 		}
 		if (text && text !== run.text) changes.push({ run, text });
 	}
-	const edits = changes.map(({ run, text, code }) => ({
+	const edits = changes.map(({ run, text, formatted }) => ({
 		at: run.from,
 		apply: () => {
 			// An empty result keeps its field: a simple one becomes a complex field with no result.
@@ -253,15 +282,7 @@ export function refreshFieldResults(
 				if (!emptySimpleFieldResult(tr, run.from, run.to)) tr.delete(run.from, run.to);
 				return;
 			}
-			const result = code && inlineNodeRun(tr.doc.nodeAt(run.from)!);
-			const codeRun = code && inlineNodeRun(code);
-			tr.replaceWith(
-				run.from,
-				run.to,
-				result && codeRun
-					? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
-					: schema.text(text, run.marks),
-			);
+			tr.replaceWith(run.from, run.to, formatted ?? schema.text(text, run.marks));
 		},
 	}));
 	if (source)

@@ -350,6 +350,44 @@ describe('updateFields', () => {
 			['DOC-5', true, undefined],
 			['DOC-5', undefined, true],
 		]);
+		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(false);
+	});
+
+	it('brings a CHARFORMAT result up to date when only its formatting differs', () => {
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-5')]),
+			paragraph(
+				'p1',
+				(
+					[
+						{ text: '', fieldChar: 'begin' },
+						{ text: '', italic: true, fieldCode: ' STYLEREF "Doc Number" \\* CHARFORMAT ' },
+						{ text: '', fieldChar: 'separate' },
+						{ text: 'DOC-5', bold: true, field: { instr: 'STYLEREF "Doc Number" \\* CHARFORMAT' } },
+						{ text: '', fieldChar: 'end' },
+					] as TextRun[]
+				).flatMap((run) => runToInlineNodes(run, schema)),
+			),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		expect(update()).toBe(true);
+		const result: TextRun[] = [];
+		view.state.doc.child(1).forEach((child) => {
+			const run = child.isText ? inlineNodeRun(child) : undefined;
+			if (run?.field) result.push(run);
+		});
+		expect(result.map((run) => [run.text, run.italic, run.bold])).toEqual([
+			['DOC-5', true, undefined],
+		]);
+		expect(update()).toBe(false);
 	});
 
 	it('clears a body STYLEREF whose paragraph in the style is empty, and fills it again', async () => {

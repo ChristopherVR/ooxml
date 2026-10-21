@@ -57,6 +57,26 @@ describe('refreshing STYLEREF results', () => {
 			[undefined, true, '#C00000'],
 			[true, undefined, undefined],
 		]);
+		// The formatting is brought up to date when the text already is; MERGEFORMAT keeps its own.
+		const current = await load({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph('', undefined, field('CHARFORMAT') + field('MERGEFORMAT')),
+		});
+		const formatted = headerParagraph(refreshStyleRefFields(current)).runs.filter(
+			(run) => run.field,
+		);
+		expect(formatted.map((run) => [run.text, run.bold, run.italic])).toEqual([
+			['DOC-1', undefined, true],
+			['DOC-1', true, undefined],
+		]);
+		const merged = await load({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph('', undefined, field('MERGEFORMAT')),
+		});
+		expect(refreshStyleRefFields(merged)).toBe(merged);
+		expect(refreshStyleRefFields(refreshStyleRefFields(current))).toEqual(
+			refreshStyleRefFields(current),
+		);
 	});
 
 	it('returns the model itself when every result is current', async () => {

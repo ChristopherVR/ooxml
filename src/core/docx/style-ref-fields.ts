@@ -158,22 +158,35 @@ function replaceResult(
 	text: string,
 	charFormat: boolean,
 ) {
-	if (field.runs.map((at) => runs[at]!.text).join('') === text) return undefined;
+	const current = field.runs.map((at) => runs[at]!.text).join('') === text;
 	const next = [...runs];
 	const [first, ...rest] = field.runs;
 	const name = field.name ?? field.code;
 	if (first !== undefined) {
-		next[first] =
+		const formatted =
 			charFormat && name !== undefined
 				? withFieldCodeFormatting(runs[first]!, runs[name]!, text)
-				: { ...runs[first]!, text };
+				: undefined;
+		// CHARFORMAT also brings the formatting up to date when the text already is.
+		if (
+			current &&
+			(!formatted || (sameRun(formatted, runs[first]!) && rest.every((at) => !runs[at]!.text)))
+		)
+			return undefined;
+		next[first] = formatted ?? { ...runs[first]!, text };
 		for (const at of rest) next[at] = { ...runs[at]!, text: '' };
 		return next;
 	}
 	const code = charFormat ? name : field.code;
-	if (code === undefined) return undefined;
+	if (current || code === undefined) return undefined;
 	next.splice(field.insertAt, 0, fieldResultRun(runs[code]!, field.instr, text));
 	return next;
+}
+
+/** Whether two runs hold the same properties, in any order. */
+function sameRun(a: TextRun, b: TextRun): boolean {
+	const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof TextRun>;
+	return [...keys].every((key) => JSON.stringify(a[key]) === JSON.stringify(b[key]));
 }
 
 /** The result run `text` of a complex field that has none, formatted like its instruction run. */
