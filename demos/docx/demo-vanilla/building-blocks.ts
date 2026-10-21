@@ -25,6 +25,8 @@ async function mountNative() {
 					window.nativeWord = {
 						handle: blocks.handle,
 						toolbar: () => blocks.toolbarProps.value,
+						navigation: () => blocks.navigationProps.value,
+						status: () => blocks.statusProps.value,
 						error: () => blocks.error.value,
 						mode: () => blocks.mode.value,
 						permission: (canEdit) => {
@@ -40,6 +42,12 @@ async function mountNative() {
 							h(native.DocumentCanvas, { ...blocks.canvasProps, class: blocks.mode.value }),
 							...(blocks.toolbarProps.value
 								? [h(native.Toolbar, { toolbarProps: blocks.toolbarProps.value })]
+								: []),
+							...(blocks.navigationProps.value
+								? [h(native.PageNavigation, { navigationProps: blocks.navigationProps.value })]
+								: []),
+							...(blocks.statusProps.value
+								? [h(native.StatusBar, { statusProps: blocks.statusProps.value })]
 								: []),
 						]);
 				},
@@ -60,6 +68,8 @@ async function mountNative() {
 			window.nativeWord = {
 				handle: blocks.handle,
 				toolbar: blocks.toolbarProps,
+				navigation: blocks.navigationProps,
+				status: blocks.statusProps,
 				error: blocks.error,
 				mode: blocks.mode,
 				permission: (canEdit) => setOptions((current) => ({ ...current, canEdit })),
@@ -80,11 +90,23 @@ async function mountNative() {
 			const present = createMemo(() => blocks.toolbarProps() !== null);
 			insert(toolbar, () =>
 				present()
-					? createComponent(native.Toolbar, {
-							get toolbarProps() {
-								return blocks.toolbarProps()!;
-							},
-						})
+					? [
+							createComponent(native.Toolbar, {
+								get toolbarProps() {
+									return blocks.toolbarProps()!;
+								},
+							}),
+							createComponent(native.PageNavigation, {
+								get navigationProps() {
+									return blocks.navigationProps()!;
+								},
+							}),
+							createComponent(native.StatusBar, {
+								get statusProps() {
+									return blocks.statusProps()!;
+								},
+							}),
+						]
 					: null,
 			);
 			return shell;
@@ -121,10 +143,15 @@ async function mountNative() {
 		}
 		Component({
 			standalone: true,
-			imports: [native.DocumentCanvasComponent, native.ToolbarComponent],
+			imports: [
+				native.DocumentCanvasComponent,
+				native.ToolbarComponent,
+				native.PageNavigationComponent,
+				native.StatusBarComponent,
+			],
 			providers: [native.ViewerBuildingBlocks],
 			template:
-				'<word-document-canvas [class]="blocks.mode()" [canvasProps]="blocks.canvasProps" /> @if (blocks.toolbarProps(); as toolbar) { <word-toolbar [toolbarProps]="toolbar" /> }',
+				'<word-document-canvas [class]="blocks.mode()" [canvasProps]="blocks.canvasProps" /> @if (blocks.toolbarProps(); as toolbar) { <word-toolbar [toolbarProps]="toolbar" /> } @if (blocks.navigationProps(); as navigation) { <word-page-navigation [navigationProps]="navigation" /> } @if (blocks.statusProps(); as status) { <word-status-bar [statusProps]="status" /> }',
 		})(Host);
 		const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
 		const component = createComponent(Host, {
@@ -142,6 +169,8 @@ async function mountNative() {
 			handle: blocks.handle,
 			events,
 			toolbar: () => blocks.toolbarProps(),
+			navigation: () => blocks.navigationProps(),
+			status: () => blocks.statusProps(),
 			error: () => blocks.error(),
 			mode: () => blocks.mode(),
 			permission: (canEdit) =>
@@ -150,6 +179,41 @@ async function mountNative() {
 			destroy: () => {
 				component.destroy();
 				app.destroy();
+			},
+		};
+	} else if (framework === 'vanilla') {
+		const native = await import('../../../viewers/docx/packages/vanilla/src/building-blocks');
+		const blocks = native.createViewerBuildingBlocks(initial);
+		let latest: BuildingBlockOptions = initial;
+		const part = (className = '') => {
+			const node = document.createElement('div');
+			node.className = className;
+			host.append(node);
+			return node;
+		};
+		const canvas = part();
+		const stops = [
+			native.mountDocumentCanvas(canvas, blocks),
+			native.mountToolbar(part(), blocks),
+			native.mountPageNavigation(part(), blocks),
+			native.mountStatusBar(part(), blocks),
+		];
+		const unsubscribe = blocks.subscribe((state) => {
+			canvas.className = state.mode;
+		});
+		window.nativeWord = {
+			handle: blocks.handle,
+			toolbar: () => blocks.state.toolbarProps,
+			navigation: () => blocks.state.navigationProps,
+			status: () => blocks.state.statusProps,
+			error: () => blocks.state.error,
+			mode: () => blocks.state.mode,
+			permission: (canEdit) => blocks.update((latest = { ...latest, canEdit })),
+			options: (next) => blocks.update((latest = next)),
+			destroy: () => {
+				unsubscribe();
+				for (const stop of stops.reverse()) stop();
+				blocks.destroy();
 			},
 		};
 	} else if (framework === 'react') {
@@ -170,6 +234,8 @@ async function mountNative() {
 					return handle.current!;
 				},
 				toolbar: () => blocks.toolbarProps,
+				navigation: () => blocks.navigationProps,
+				status: () => blocks.statusProps,
 				error: () => blocks.error,
 				mode: () => blocks.mode,
 				permission: (canEdit) => setOptions((current) => ({ ...current, canEdit })),
@@ -181,6 +247,8 @@ async function mountNative() {
 				null,
 				createElement(native.DocumentCanvas, { ...blocks.canvasProps, className: blocks.mode }),
 				blocks.toolbarProps && createElement(native.Toolbar, blocks.toolbarProps),
+				blocks.navigationProps && createElement(native.PageNavigation, blocks.navigationProps),
+				blocks.statusProps && createElement(native.StatusBar, blocks.statusProps),
 			);
 		}
 		root.render(createElement(Composition));
