@@ -123,6 +123,18 @@ describe('row and cell content controls on save', () => {
 		expect(table.rows[0]![1]!.paragraphs[0]!.runs[0]!.text).toBe('Draft');
 	});
 
+	it('saves a copied cell control with the new id it was given', async () => {
+		const loaded = await hand(
+			grid(row(`${label('Status')}${choice('11')}`) + row(`${label('Again')}${label('Draft')}`)),
+		);
+		const table = tableOf(loaded.model.blocks);
+		// A pasted copy keeps the properties it was copied with and takes a new id.
+		table.rows[1]![1]!.contentControl = { ...table.rows[0]![1]!.contentControl!, id: '9001' };
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml.match(/<w:id w:val="11"\/>/g)).toHaveLength(1);
+		expect(xml).toContain('<w:alias w:val="Choice 11"/><w:id w:val="9001"/>');
+	});
+
 	it('wraps a cell in the control the model gives it', async () => {
 		const loaded = await hand(grid(row(`${label('Remarks')}${label('None')}`)));
 		tableOf(loaded.model.blocks).rows[0]![1]!.contentControl = {

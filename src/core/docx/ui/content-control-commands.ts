@@ -15,6 +15,7 @@ import {
 	type ControlChange,
 } from '../content-control-edit';
 import type { ContentControl, ContentControlKind } from '../content-control-model';
+import { freshControlId } from './content-control-paste';
 import { controlAt, controlSpans, type ControlSpan } from './content-control-spans';
 
 /** Transactions carrying this meta are the control's own edits and bypass the lock guard. */
@@ -132,11 +133,26 @@ export function updateControlProperties(
 	return tr.addMark(span.from, span.to, type.create({ data: JSON.stringify(control) }));
 }
 
-const spanById = (state: EditorState, id: string): ControlSpan | undefined =>
-	controlSpans(state.doc).find((span) => span.level !== 'block' && span.control.id === id);
+/**
+ * The cell or inline control `id`. Ids can repeat (in files from other tools), so `at`, a position
+ * in the control that was operated, picks the one meant: the innermost around it.
+ */
+function spanById(state: EditorState, id: string, at?: number): ControlSpan | undefined {
+	const spans = controlSpans(state.doc).filter(
+		(span) => span.level !== 'block' && span.control.id === id,
+	);
+	if (at === undefined || spans.length < 2) return spans[0];
+	return spans
+		.filter((span) => span.from <= at && at <= span.to)
+		.sort((a, b) => a.to - a.from - (b.to - b.from))[0];
+}
 
-export function toggleCheckboxControl(state: EditorState, id: string): Transaction | undefined {
-	const span = spanById(state, id);
+export function toggleCheckboxControl(
+	state: EditorState,
+	id: string,
+	at?: number,
+): Transaction | undefined {
+	const span = spanById(state, id, at);
 	if (
 		!span ||
 		span.control.kind !== 'checkbox' ||
@@ -151,15 +167,21 @@ export function chooseListItem(
 	state: EditorState,
 	id: string,
 	index: number,
+	at?: number,
 ): Transaction | undefined {
-	const span = spanById(state, id);
+	const span = spanById(state, id, at);
 	if (!span || !canEditControlContent(span.control) || !replaceable(state, span)) return undefined;
 	const change = selectListItem(span.control, index);
 	return change ? replaceControlContent(state, span, change) : undefined;
 }
 
-export function chooseDate(state: EditorState, id: string, date: Date): Transaction | undefined {
-	const span = spanById(state, id);
+export function chooseDate(
+	state: EditorState,
+	id: string,
+	date: Date,
+	at?: number,
+): Transaction | undefined {
+	const span = spanById(state, id, at);
 	if (
 		!span ||
 		span.control.kind !== 'date' ||
@@ -246,13 +268,8 @@ export function deleteToPlaceholder(
 }
 
 /** A new control id: Word uses signed 32-bit integers. */
-export const newControlId = (doc: ProseMirrorNode): string => {
-	const used = new Set(controlSpans(doc).map((span) => span.control.id));
-	let id: string;
-	do id = String(Math.floor(Math.random() * 2 ** 31) + 1);
-	while (used.has(id));
-	return id;
-};
+export const newControlId = (doc: ProseMirrorNode): string =>
+	freshControlId(new Set(controlSpans(doc).map((span) => span.control.id)));
 
 export interface NewControlOptions {
 	alias?: string;

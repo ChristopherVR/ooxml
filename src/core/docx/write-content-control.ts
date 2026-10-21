@@ -7,6 +7,7 @@ import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
 	first,
+	getW,
 	makeW,
 	parseXml,
 	WORD_NS,
@@ -212,7 +213,12 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	sdt.appendChild(buildProperties(doc, control));
+	const sdtPr = buildProperties(doc, control);
+	// A copy keeps the properties it was copied with, under the new id it was given: ids are
+	// unique in a document (ECMA-376 17.5.2.18). An id read from no `w:id` is not written.
+	if (/^-?\d+$/.test(control.id) && getW(first(sdtPr, 'id'), 'val') !== control.id)
+		setValued(doc, sdtPr, 'id', control.id);
+	sdt.appendChild(sdtPr);
 	if (control.endSourceXml)
 		sdt.appendChild(doc.importNode(parseXml(control.endSourceXml).documentElement, true));
 	const content = makeW(doc, 'sdtContent');

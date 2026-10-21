@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Schema, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
 import {
@@ -218,6 +219,70 @@ describe('content controls around table cells in the editor', () => {
 		expect(all.applyTransaction(all.tr.deleteSelection()).state.doc.eq(all.doc)).toBe(true);
 		const list = stateOf(choice({ showingPlaceholder: false }), content);
 		expect(chooseListItem(list, '61', 1)).toBeUndefined();
+	});
+
+	it('picks in the cell that was operated when two cell controls share an id', () => {
+		const label = schema.node('tableCell', null, [paragraph('Status')]);
+		const prompt = (id: string) => paragraph('Choose an item.', { id }, [style('PlaceholderText')]);
+		const first = schema.node('tableCell', { sourceCellKey: 'c1', contentControl: choice() }, [
+			prompt('c1'),
+		]);
+		const copy = schema.node('tableCell', { sourceCellKey: 'c2', contentControl: choice() }, [
+			prompt('c2'),
+		]);
+		const doc = schema.node('doc', null, [
+			schema.node('table', null, [schema.node('tableRow', null, [label, first, copy])]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const second = controlSpans(state.doc)[1]!;
+		const next = state.apply(chooseListItem(state, '61', 1, second.from + 3)!);
+		const row = next.doc.firstChild!.firstChild!;
+		expect([row.child(1).textContent, row.child(2).textContent]).toEqual([
+			'Choose an item.',
+			'Secondary',
+		]);
+	});
+
+	it('gives a pasted copy of a cell or inline control a new id, and a moved one its own', () => {
+		const name: ContentControl = { id: '65', level: 'inline', kind: 'text' };
+		const named = (text: string, marks = [style('Normal')]) =>
+			schema.text(text, [
+				...marks,
+				schema.marks.contentControl!.create({ data: JSON.stringify(name) }),
+			]);
+		const state = stateOf(choice(), [
+			schema.node('paragraph', { id: 'c1' }, [
+				named('Ann'),
+				named('e', [schema.marks.bold!.create()]),
+			]),
+		]);
+		const plugin = contentControlPlugin();
+		const transform = plugin.props.transformPasted!;
+		const slice = state.doc.slice(0, state.doc.content.size);
+		const pasted = (view: Partial<EditorView>) =>
+			controlSpans(
+				schema.node('doc', null, transform.call(plugin, slice, view as EditorView, false).content),
+			);
+		const copies = pasted({ state, dragging: null });
+		expect(copies.map((span) => span.level)).toEqual(['cell', 'inline']);
+		expect(copies[0]!.control).toMatchObject({ kind: 'dropDownList', items: choice().items });
+		for (const [index, id] of ['61', '65'].entries()) {
+			expect(copies[index]!.control.id).not.toBe(id);
+			expect(copies[index]!.control.id).toMatch(/^\d+$/);
+		}
+		// Both text nodes of the inline control keep one control: one span.
+		expect(copies[1]!.to - copies[1]!.from).toBe(4);
+		// Moving the control by dragging keeps its id, as does pasting where the id is not in use.
+		const moved = pasted({ state, dragging: { slice, move: true } });
+		expect(moved.map((span) => span.control.id)).toEqual(['61', '65']);
+		const elsewhere = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [paragraph('x')]),
+		});
+		expect(pasted({ state: elsewhere, dragging: null }).map((span) => span.control.id)).toEqual([
+			'61',
+			'65',
+		]);
 	});
 
 	it('stores new properties on the cell', () => {

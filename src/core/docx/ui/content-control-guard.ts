@@ -7,6 +7,7 @@ import {
 	deleteToPlaceholder,
 	typeOverPlaceholder,
 } from './content-control-commands';
+import { pastedControlSlice } from './content-control-paste';
 import { controlSpans } from './content-control-spans';
 import { removeEditedTemporaryControls } from './content-control-temporary';
 
@@ -59,6 +60,7 @@ export function contentControlPlugin(): Plugin {
 			!violatesControlLock(tr, state),
 		appendTransaction: removeEditedTemporaryControls,
 		props: {
+			transformPasted: (slice, view) => pastedControlSlice(slice, view),
 			handleTextInput: (view, from, to, text) => {
 				if (!view.editable) return false;
 				const result = typeOverPlaceholder(view.state, from, text, to);
