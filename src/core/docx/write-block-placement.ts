@@ -73,8 +73,22 @@ export function placeBlocksById(
 		}
 		previous = { node, block };
 	});
-	// Edited control properties reach the `w:sdt` that already wraps the block, and a control the
-	// model took off every block it held is unwrapped (a temporary control after an edit).
+	syncBlockControls(doc, flat, blocks, nodes);
+	return true;
+}
+
+/**
+ * Brings the `w:sdt` wrappers of `flat` (the source blocks, before the edit) in step with the
+ * model: edited control properties reach the `w:sdt` that already wraps a block, and a control the
+ * model took off every block it held is unwrapped (a temporary control after an edit). `nodes`
+ * are the written blocks, parallel to `blocks`.
+ */
+export function syncBlockControls(
+	doc: XmlDocument,
+	flat: FlatBlock[],
+	blocks: readonly Block[],
+	nodes: readonly XmlElement[],
+): void {
 	const bySdt = new Map<XmlElement, Block>();
 	const dropped = new Map<XmlElement, boolean>();
 	flat.forEach((entry) => {
@@ -86,5 +100,4 @@ export function placeBlocksById(
 	});
 	for (const [sdt, block] of bySdt) patchContentControl(doc, sdt, block.contentControl!);
 	for (const [sdt, gone] of dropped) if (gone) unwrapContentControl(sdt);
-	return true;
 }

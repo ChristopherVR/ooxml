@@ -54,6 +54,36 @@ describe('temporary content controls on save', () => {
 		expect(xml).toMatch(/Before<\/w:t>.*Typed<\/w:t>.*Second<\/w:t>.*After<\/w:t>/);
 	});
 
+	it('removes a temporary block control inside a table cell and keeps its paragraph there', async () => {
+		const loaded = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="3000"/></w:tblGrid><w:tr><w:tc>` +
+				`<w:sdt>${properties('59')}<w:sdtContent><w:p>${placeholder('Type here.')}</w:p></w:sdtContent></w:sdt>` +
+				`</w:tc></w:tr></w:tbl>`,
+		);
+		const paragraph = (loaded.model.blocks[0] as Table).rows[0]![0]!.paragraphs[0]!;
+		expect(paragraph.contentControl).toMatchObject({ id: '59', temporary: true });
+		delete paragraph.contentControl;
+		paragraph.runs = [{ text: 'Typed' }];
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('<w:sdt');
+		expect(xml).toContain('<w:tc><w:p><w:r><w:t>Typed</w:t></w:r></w:p></w:tc>');
+	});
+
+	it('saves the edited properties of a block control inside a table cell', async () => {
+		const loaded = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="3000"/></w:tblGrid><w:tr><w:tc>` +
+				`<w:sdt><w:sdtPr><w:id w:val="60"/><w:showingPlcHdr/></w:sdtPr><w:sdtContent><w:p>${placeholder('Type here.')}</w:p></w:sdtContent></w:sdt>` +
+				`</w:tc></w:tr></w:tbl>`,
+		);
+		const paragraph = (loaded.model.blocks[0] as Table).rows[0]![0]!.paragraphs[0]!;
+		const { showingPlaceholder: _shown, ...control } = paragraph.contentControl!;
+		paragraph.contentControl = control;
+		paragraph.runs = [{ text: 'Typed' }];
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('<w:sdt><w:sdtPr><w:id w:val="60"/></w:sdtPr><w:sdtContent><w:p>');
+		expect(xml).not.toContain('showingPlcHdr');
+	});
+
 	it('removes a temporary block control whose edit also deleted one of its paragraphs', async () => {
 		const loaded = await hand(
 			`<w:sdt>${properties('58')}<w:sdtContent><w:p>${placeholder('Type here.')}</w:p><w:p><w:r><w:t>Second</w:t></w:r></w:p></w:sdtContent></w:sdt>` +
