@@ -8,6 +8,8 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 for (const prefix of ['', '/ooxml']) {
+	const localized = (source) =>
+		prefix ? source.replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`) : source;
 	test(`preview serves viewer pages and assets with prefix ${prefix || '/'}`, async (t) => {
 		const dir = await mkdtemp(join(tmpdir(), 'ooxml-preview-'));
 		await mkdir(join(dir, 'docx'));
@@ -78,18 +80,12 @@ for (const prefix of ['', '/ooxml']) {
 			['/docx/links.js', demoRoot],
 		]) {
 			const response = await fetch(origin + prefix + path);
-			assert.equal(
-				await response.text(),
-				source.replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`) + external,
-			);
+			assert.equal(await response.text(), localized(source) + external);
 		}
 		const image = await fetch(origin + prefix + '/docx/image.png');
 		assert.deepEqual(Buffer.from(await image.arrayBuffer()), binary);
 		const missing = await fetch(origin + prefix + '/missing');
 		assert.equal(missing.status, 404);
-		assert.equal(
-			await missing.text(),
-			links.replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`),
-		);
+		assert.equal(await missing.text(), localized(links));
 	});
 }

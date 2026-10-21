@@ -12,9 +12,10 @@ const SITE = resolve(ROOT, process.argv[3] ?? 'suite-dist');
 const port = Number(process.argv[2] ?? 8123);
 const base = '/' + (process.argv[4] ?? '').split('/').filter(Boolean).join('/');
 const prefix = base === '/' ? '' : base;
+// Full Pages previews include the docs; suite-only package previews still need the published guides.
 // Rewrite compiled links too: the docs generate demo iframe and full-screen URLs in JavaScript.
 const localize = (body, type) =>
-	/^(text\/|application\/(json|manifest\+json))/.test(type)
+	prefix && /^(text\/|application\/(json|manifest\+json))/.test(type)
 		? body.toString().replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`)
 		: body;
 const TYPES = {
