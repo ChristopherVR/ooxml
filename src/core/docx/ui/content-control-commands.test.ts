@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
+import { closeHistory, history, redo, undo } from 'prosemirror-history';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import type { ContentControl, TextRun } from '../model';
 import { markSpecs } from './schema-marks';
@@ -238,11 +239,78 @@ describe('content control locks', () => {
 		expect(state.applyTransaction(state.tr.insertText('x', 5)).transactions).toHaveLength(0);
 	});
 
+	it('applies a content lock to a step over all of a control that keeps it', () => {
+		// Deleting a control whose content is locked is not editing what it holds; a step over all of
+		// its text that keeps the control, formatting or text that carries it, is.
+		for (const lock of ['contentLocked', 'sdtContentLocked'] as const) {
+			const state = locked(lock);
+			const span = controlSpans(state.doc)[0]!;
+			const bold = state.tr.addMark(span.from, span.to, schema.marks.bold!.create());
+			expect(violatesControlLock(bold, state), lock).toBe(true);
+			const marks = state.doc.nodeAt(span.from)!.marks;
+			const same = state.tr.replaceWith(span.from, span.to, schema.text('other', marks));
+			expect(violatesControlLock(same, state), lock).toBe(true);
+		}
+		const state = locked('contentLocked');
+		const span = controlSpans(state.doc)[0]!;
+		expect(violatesControlLock(state.tr.delete(span.from, span.to), state)).toBe(false);
+	});
+
 	it('sdtLocked refuses removing the control but allows editing inside', () => {
 		const state = locked('sdtLocked');
 		expect(violatesControlLock(state.tr.delete(3, 9), state)).toBe(true);
 		expect(violatesControlLock(state.tr.insertText('x', 5), state)).toBe(false);
 		expect(violatesControlLock(state.tr.delete(4, 6), state)).toBe(false);
+	});
+
+	it('undoes and redoes a command on a control that may not be deleted', () => {
+		// Undo and redo are not the control's own edit, and they put back the control's own text:
+		// that deletes no control, and refusing them would leave every earlier edit undone too.
+		const box = control({ kind: 'checkbox', checked: false, lock: 'sdtLocked' });
+		const list = control({
+			id: '12',
+			kind: 'dropDownList',
+			lock: 'sdtLocked',
+			items: [
+				{ display: 'Red', value: 'r' },
+				{ display: 'Blue', value: 'b' },
+			],
+		});
+		const loaded = stateOf([
+			{ text: '\u2610', contentControl: box },
+			{ text: ' and ' },
+			{ text: 'Red', contentControl: list },
+		]);
+		let state = EditorState.create({
+			schema,
+			doc: loaded.doc,
+			plugins: [history(), contentControlPlugin()],
+		});
+		state = state.apply(toggleCheckboxControl(state, '11')!);
+		state = state.apply(closeHistory(chooseListItem(state, '12', 1)!));
+		expect(text(state)).toBe('\u2612 and Blue');
+		const run = (command: typeof undo) =>
+			command(state, (tr) => {
+				state = state.apply(tr);
+			});
+		expect(run(undo)).toBe(true);
+		expect(text(state)).toBe('\u2612 and Red');
+		expect(run(undo)).toBe(true);
+		expect(text(state)).toBe('\u2610 and Red');
+		expect(controlSpans(state.doc).map((span) => span.control)).toEqual([box, list]);
+		expect(run(redo)).toBe(true);
+		expect(run(redo)).toBe(true);
+		expect(text(state)).toBe('\u2612 and Blue');
+		// Text that a step puts in place of all of the control's text without the control, or a
+		// step that takes the control's mark off it, still deletes it.
+		const span = controlSpans(state.doc)[1]!;
+		const plain = state.tr.replaceWith(span.from, span.to, schema.text('Green'));
+		expect(violatesControlLock(plain, state)).toBe(true);
+		const unmarked = state.tr.removeMark(span.from, span.to, schema.marks.contentControl!);
+		expect(violatesControlLock(unmarked, state)).toBe(true);
+		// Formatting all of its text keeps it.
+		const bold = state.tr.addMark(span.from, span.to, schema.marks.bold!.create());
+		expect(violatesControlLock(bold, state)).toBe(false);
 	});
 
 	it('a content-locked block refuses typing anywhere in it, its ends included', () => {

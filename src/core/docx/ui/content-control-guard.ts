@@ -1,9 +1,9 @@
 // Enforces content control lock settings, routes typing and deleting into controls, and keeps
 // verbatim properties from another page out of pasted controls.
-import type { Node as ProseMirrorNode } from 'prosemirror-model';
+import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep } from 'prosemirror-transform';
-import { isContentControlLocked } from '../content-control-model';
+import { isContentControlLocked, type ContentControl } from '../content-control-model';
 import {
 	CONTROL_EDIT_META,
 	deleteToPlaceholder,
@@ -11,7 +11,8 @@ import {
 } from './content-control-commands';
 import { nodeControlOf, otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
 import { controlSourcesOf, pastedControlSources } from './content-control-sources';
-import { everyControlSpan } from './content-control-spans';
+import type { RowControlSpan } from './content-control-rows';
+import { controlOfMark, everyControlSpan, type ControlSpan } from './content-control-spans';
 import { removeEditedTemporaryControls } from './content-control-temporary';
 
 /** Remote collaboration transactions are applied as they arrive; the guard only filters local edits. */
@@ -25,10 +26,20 @@ const isRangeStep = (step: unknown): step is RangeStep =>
 	step instanceof RemoveMarkStep;
 
 /**
- * Whether `step` only gives the node it covers other attributes, its control as it was, in one
- * step over the whole node (`setNodeMarkup`: a table's properties, a cell's shading, a paragraph's
- * alignment): the new node is empty and takes the old one's content, so the node, what it holds and
- * its control stay.
+ * Whether two controls are one control: the same id, kind and lock, whatever state they hold (a
+ * check box's checked state, a picked entry, a placeholder shown).
+ */
+function sameControl(left: unknown, right: unknown): boolean {
+	const [a, b] = [left ?? null, right ?? null] as (Partial<ContentControl> | null)[];
+	if (!a || !b) return a === b;
+	return a.id === b.id && a.kind === b.kind && (a.lock ?? null) === (b.lock ?? null);
+}
+
+/**
+ * Whether `step` only gives the node it covers other attributes, its control still that control,
+ * in one step over the whole node (`setNodeMarkup`: a table's properties, a cell's shading, a
+ * paragraph's alignment, undoing a command on a cell control): the new node is empty and takes the
+ * old one's content, so the node, what it holds and its control stay.
  */
 function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
 	if (!(step instanceof ReplaceAroundStep)) return false;
@@ -48,9 +59,36 @@ function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
 		next.content.size === 0 &&
 		node.nodeSize === to - from &&
 		next.type === node.type &&
-		JSON.stringify(nodeControlOf(node)?.value ?? null) ===
-			JSON.stringify(nodeControlOf(next)?.value ?? null)
+		sameControl(nodeControlOf(node)?.value, nodeControlOf(next)?.value)
 	);
+}
+
+/** Whether `mark` is the inline control `control`'s own mark. */
+const isMarkOf = (mark: Mark, control: ContentControl): boolean =>
+	mark.type.name === 'contentControl' && sameControl(controlOfMark(mark), control);
+
+/**
+ * Whether `step`, which covers all of `span`, keeps its control. A mark changes no node, so only
+ * an inline control's own mark, taken off or replaced by another control's, removes it; text put in
+ * place of an inline control's text keeps it when it carries the control, as undoing or redoing a
+ * command on it does.
+ */
+function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): boolean {
+	if (step instanceof AddMarkStep)
+		return (
+			span.level !== 'inline' ||
+			step.mark.type.name !== 'contentControl' ||
+			isMarkOf(step.mark, span.control)
+		);
+	if (step instanceof RemoveMarkStep)
+		return span.level !== 'inline' || !isMarkOf(step.mark, span.control);
+	let kept = false;
+	if (span.level === 'inline' && step instanceof ReplaceStep)
+		step.slice.content.descendants((node) => {
+			kept ||= node.marks.some((mark) => isMarkOf(mark, span.control));
+			return !kept;
+		});
+	return kept;
 }
 
 /**
@@ -70,8 +108,14 @@ export function violatesControlLock(tr: Transaction, state: EditorState): boolea
 			const spanFrom = before.map(span.from, 1);
 			const spanTo = before.map(span.to, -1);
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
-			if (isContentControlLocked(span.control, 'control') && removesWhole && !kept) return true;
-			if (!isContentControlLocked(span.control, 'content') || removesWhole) return false;
+			const keeps = kept || keepsControl(step, span);
+			if (isContentControlLocked(span.control, 'control') && removesWhole && !keeps) return true;
+			// Deleting a control is not editing what it holds; a step over all of it that keeps the
+			// control is, formatting included.
+			if (!isContentControlLocked(span.control, 'content') || (removesWhole && !keeps))
+				return false;
+			// Other attributes for one node edit that node alone: the control's own node or one in it.
+			if (kept) return from >= spanFrom && from < spanTo;
 			// A block or cell control's own boundary tokens are not its content, and every
 			// position between them (the ends of its text included) is inside it.
 			if (span.level !== 'inline') {

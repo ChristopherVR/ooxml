@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Fragment, Schema, Slice, type Node as ProseMirrorNode } from 'prosemirror-model';
+import { closeHistory, history, redo, undo } from 'prosemirror-history';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { ReplaceAroundStep } from 'prosemirror-transform';
 import type { EditorView } from 'prosemirror-view';
@@ -115,6 +116,59 @@ describe('content controls around table cells in the editor', () => {
 		expect(toggleCheckboxControl(locked, '63')).toBeUndefined();
 		const typed = locked.tr.insertText('x', controlSpans(locked.doc)[0]!.from + 2);
 		expect(violatesControlLock(typed, locked)).toBe(true);
+	});
+
+	it('undoes and redoes a command on a cell whose control may not be deleted', () => {
+		// Undo and redo are not the control's own edit, and they give the cell the control it had:
+		// that deletes no control, and refusing them would leave every earlier edit undone too.
+		const box: ContentControl = {
+			id: '63',
+			level: 'cell',
+			kind: 'checkbox',
+			checked: false,
+			lock: 'sdtLocked',
+		};
+		const loaded = stateOf(box, [paragraph('\u2610', { id: 'c1' })]);
+		let state = EditorState.create({
+			schema,
+			doc: loaded.doc,
+			plugins: [history(), contentControlPlugin()],
+		});
+		const typed = state.apply(state.tr.insertText('!', state.doc.content.size - 3));
+		state = typed.apply(closeHistory(toggleCheckboxControl(typed, '63')!));
+		expect(cellOf(state).attrs.contentControl.checked).toBe(true);
+		const run = (command: typeof undo) =>
+			command(state, (tr) => {
+				state = state.apply(tr);
+			});
+		expect(run(undo)).toBe(true);
+		expect(cellOf(state).attrs.contentControl).toEqual(box);
+		expect(cellOf(state).textContent).toBe('\u2610!');
+		expect(run(undo)).toBe(true);
+		expect(cellOf(state).textContent).toBe('\u2610');
+		expect(run(redo)).toBe(true);
+		expect(run(redo)).toBe(true);
+		expect(cellOf(state).attrs.contentControl.checked).toBe(true);
+		// The check box holds its glyph alone, as the toggle wrote it.
+		expect(cellOf(state).textContent).toBe('\u2612');
+	});
+
+	it('applies a content lock of a cell control to the cell node, not to the table around it', () => {
+		// The cell is what a cell control holds: other attributes for it edit that, and the table
+		// around it takes them as before.
+		const fixed: ContentControl = {
+			id: '67',
+			level: 'cell',
+			kind: 'richText',
+			lock: 'contentLocked',
+		};
+		const state = stateOf(fixed, [paragraph('Kept', { id: 'c1' })]);
+		const at = controlSpans(state.doc)[0]!.from;
+		const marked = (pos: number, attrs: Record<string, unknown>) =>
+			violatesControlLock(state.tr.setNodeMarkup(pos, undefined, attrs), state);
+		expect(marked(at, { ...state.doc.nodeAt(at)!.attrs, sourceCellKey: 'c9' })).toBe(true);
+		expect(marked(at + 1, { ...state.doc.nodeAt(at + 1)!.attrs, id: 'c2' })).toBe(true);
+		expect(marked(0, { contentControl: null })).toBe(false);
 	});
 
 	it('lets the node of a control that may not be deleted take other attributes', () => {
@@ -808,11 +862,12 @@ describe('content controls around table cells in the editor', () => {
 		expect(chooseListItem(fixed, '61', 1)).toBeDefined();
 		expect(violatesControlLock(fixed.tr.insertText('!', 4), fixed)).toBe(false);
 		expect(violatesControlLock(fixed.tr.delete(0, table), fixed)).toBe(true);
-		// Neither keeps the table from taking other properties (Table Properties).
-		for (const state of [locked, fixed]) {
-			const properties = state.tr.setNodeMarkup(0, undefined, state.doc.firstChild!.attrs);
-			expect(violatesControlLock(properties, state)).toBe(false);
-		}
+		// Other properties for the table (Table Properties) edit what the control holds: the one
+		// whose content is locked refuses them, the one that may not be deleted takes them.
+		const properties = (state: EditorState) =>
+			state.tr.setNodeMarkup(0, undefined, state.doc.firstChild!.attrs);
+		expect(violatesControlLock(properties(locked), locked)).toBe(true);
+		expect(violatesControlLock(properties(fixed), fixed)).toBe(false);
 	});
 
 	it('stores new properties on the cell', () => {
