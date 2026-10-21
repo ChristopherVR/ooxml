@@ -169,7 +169,17 @@ export function bridgeCss(tag: (typeof OFFICE_ALIAS_TAGS)[number]): string {
 				.map((value) => value.trim())
 				.filter(Boolean)) {
 				const property = declaration.slice(0, declaration.indexOf(':')).trim();
-				(palette.has(property) ? children : host).push(declaration);
+				if (palette.has(property)) children.push(declaration);
+				else {
+					host.push(declaration);
+					if (property.startsWith('--office-')) {
+						// Resolve product roles on the host, where inline overrides win, before the inner
+						// theme bridge declares its derived defaults (for example the app mark color).
+						const input = `--_pptx-control-${property.slice('--office-'.length)}`;
+						host.push(`${input}: var(${property})`);
+						children.push(`${property}: var(${input})`);
+					}
+				}
 			}
 			return `${selector} { ${host.join(';')}; } ${selector} > * { ${children.join(';')}; }`;
 		},

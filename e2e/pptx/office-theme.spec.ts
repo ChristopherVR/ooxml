@@ -65,6 +65,17 @@ test('Office tokens theme actual chrome and shadow controls while legacy inputs 
 			};
 		});
 	await expect(page.locator('#office-theme-probe pptx-ui-select')).toBeVisible();
+	const title = page.locator('pptx-ui-title-bar').first();
+	const mark = title.locator('.mark');
+	expect(await mark.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe(
+		'rgb(196, 62, 28)',
+	);
+	await title.evaluate((title) => {
+		title.style.setProperty('--office-title-bar-mark-background', '#123456');
+	});
+	expect(await mark.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe(
+		'rgb(18, 52, 86)',
+	);
 	const initial = await read();
 	await page.evaluate(() => (document.documentElement.dataset.officeTheme = 'dark'));
 	const dark = await read();
