@@ -53,6 +53,7 @@ export const VIEWERS = {
 			'bun run e2e:contract',
 			'bun run check:viewer-props',
 			'bun run test:binding-packages',
+			'bun run check:tree-shaking',
 		],
 	},
 	docx: {
