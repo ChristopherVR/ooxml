@@ -80,6 +80,13 @@ export {
 	type StyleReference,
 } from './style-ref';
 export { bodyStyleRefResult, refreshStyleRefFields } from './style-ref-fields';
+export {
+	listFormFields,
+	type FormFieldChoice,
+	type FormFieldInfo,
+	type FormFieldStory,
+	type FormFieldType,
+} from './form-fill-fields';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';
 export { DEFAULT_STYLES_XML, defaultStyleCatalogs } from './default-styles';

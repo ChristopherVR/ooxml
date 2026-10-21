@@ -131,8 +131,11 @@ export function documentParagraphs(blocks: readonly Block[]): Paragraph[] {
 	return result;
 }
 
-/** Text a STYLEREF can pick up: hidden text and text a revision deletes or moves away are not. */
-const shownText = (run: TextRun): string =>
+/**
+ * The text a run shows, as STYLEREF and form labels read it: none for hidden text, or for text a
+ * revision deletes or moves away.
+ */
+export const shownText = (run: TextRun): string =>
 	run.vanish || run.revision?.kind === 'delete' || run.revision?.kind === 'moveFrom'
 		? ''
 		: run.text;
