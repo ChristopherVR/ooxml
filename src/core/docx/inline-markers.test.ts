@@ -1301,6 +1301,21 @@ describe('editing paragraphs with smart tags, symbols, positional tabs and speci
 		});
 	});
 
+	it('keeps a paragraph read only when a symbol is a character its text can also hold', async () => {
+		for (const symbol of [
+			// A code outside a symbol font's range is an ordinary character: an en dash or a bullet.
+			`<w:r><w:t>a\u2013b</w:t><w:sym w:font="Symbol" w:char="2013"/></w:r>`,
+			`<w:r><w:sym w:font="Symbol" w:char="2022"/></w:r>`,
+			// The symbol's character in the run's own text could not be told apart from the symbol.
+			`<w:r><w:t>\uF0FE</w:t><w:sym w:font="Wingdings" w:char="F0FE"/></w:r>`,
+		]) {
+			const { loaded, paragraph } = await load(`<w:p>${run('A')}${symbol}</w:p>`);
+			expect(at(paragraph.runs, 1).symbol).toBeUndefined();
+			at(paragraph.runs, 0).text = 'B';
+			await expect(loaded.save()).rejects.toThrow('cannot safely relocate');
+		}
+	});
+
 	it('still refuses a run that holds two different symbols', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p>${run('A')}<w:r><w:sym w:font="Wingdings" w:char="F0FE"/><w:sym w:font="Symbol" w:char="F0B7"/></w:r></w:p>`,
