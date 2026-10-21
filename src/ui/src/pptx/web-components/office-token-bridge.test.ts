@@ -34,6 +34,19 @@ describe('pptx chrome bridges', () => {
 		expect(css).toContain('--office-status-bar-height: 29px;');
 		expect(css).toContain('--office-status-bar-separator-opacity: 0.6;');
 	});
+
+	// The shared status bar sizes its buttons on coarse pointers from `--office-touch-target`,
+	// whose shared default (36px) the installed Office theme declares on `:root`. The pptx
+	// chrome keeps its own 44px touch target, so the bridge must declare both touch tokens.
+	it.each(['pptx-ui-status-bar', 'pptx-ui-title-bar'] as const)(
+		'%s feeds both shared touch-target tokens from the pptx touch target',
+		(tag) => {
+			const css = bridgeCss(tag);
+			for (const token of ['--office-touch-target', '--office-target-size-touch']) {
+				expect(css).toContain(`${token}: var(--pptx-touch-target, 44px);`);
+			}
+		},
+	);
 });
 
 it('captures canonical inputs on the host and bridges inner chrome without a token cycle', () => {
