@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import type { EditorView } from 'prosemirror-view';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { newDocument } from './helpers';
 
@@ -16,6 +17,7 @@ const comments = (page: Page) =>
 
 /** Selects `word` inside the text node that holds it (comment anchors split the paragraph). */
 async function selectWord(surface: Locator, word: string) {
+	await surface.focus();
 	await surface.evaluate((root, target) => {
 		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 		let text = walker.nextNode();
@@ -26,6 +28,19 @@ async function selectWord(surface: Locator, word: string) {
 	}, word);
 	await expect
 		.poll(() => surface.page().evaluate(() => window.getSelection()?.toString()))
+		.toBe(word);
+	// Native selectionchange is asynchronous. Keep focus in the document until the editor has
+	// received it, before filling the pane's composer and moving focus out of the document.
+	await expect
+		.poll(() =>
+			surface
+				.page()
+				.locator('docx-editor')
+				.evaluate((element) => {
+					const { state } = (element as unknown as { view: EditorView }).view;
+					return state.doc.textBetween(state.selection.from, state.selection.to);
+				}),
+		)
 		.toBe(word);
 }
 
