@@ -163,6 +163,21 @@ from the page's base text, which would override the control's own text styles.
 
 See [Theming](/react/theming) for the three styling modes and how to customise colours.
 
+### Canvas-only stylesheet
+
+A host that renders only the read-only canvas (`SlideCanvas`, for example with the `canvasProps` of
+`useViewerBuildingBlocks`) can import a smaller stylesheet instead of `styles`. It carries the same
+theme tokens and scoped reset, and only the utilities that `SlideCanvas` and the files it imports
+use (every element type, but no ribbon, panels, dialogs or backstage):
+
+```tsx
+import 'pptx-react-viewer/canvas.css'; // instead of 'pptx-react-viewer/styles'
+```
+
+It is built from the import graph of `SlideCanvas` and `useViewerBuildingBlocks`, so it is about
+46 KB (8 KB gzipped) against about 112 KB (16 KB gzipped) for `styles.css`. `<PowerPointViewer>`
+and `<Toolbar>` need the full `styles.css`.
+
 ## Next steps
 
 - [Component Props](/react/props) - every prop in detail.

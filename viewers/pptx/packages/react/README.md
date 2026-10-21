@@ -228,7 +228,7 @@ viewport rather than the whole 540 px host.
 
 `useViewerBuildingBlocks` accepts the same `content` / `canEdit` / `filePath` / `hiddenActions` / `onDirtyChange`-style inputs as `PowerPointViewer`, plus `onOpenSettings` / `onOpenHeaderFooter` / `onOpenShareDialog` callbacks (fired by the corresponding toolbar buttons) since this composition doesn't render those dialogs itself. It's an additive alternative, not a replacement: dialogs, presentation-mode overlays, mobile chrome, resizable side panels, and real-time collaboration are all part of `PowerPointViewer` and are out of scope for these building blocks. Reach for `PowerPointViewer` when you need the full editor; reach for `useViewerBuildingBlocks` when you're assembling your own chrome around just the toolbar and canvas.
 
-The bundled stylesheet's base reset (Tailwind's preflight) applies only inside the viewer root, a canvas viewport and elements with a `data-pptx-scope` attribute, so your page's own headings, lists and margins stay as they are. `SlideCanvas` and `Toolbar` carry the scope themselves; give any other element of a composed shell that uses the viewer's classes an ancestor with `data-pptx-scope`.
+The bundled stylesheet's base reset (Tailwind's preflight) applies only inside the viewer root, a canvas viewport and elements with a `data-pptx-scope` attribute, so your page's own headings, lists and margins stay as they are. `SlideCanvas` and `Toolbar` carry the scope themselves; give any other element of a composed shell that uses the viewer's classes an ancestor with `data-pptx-scope`. A canvas-only shell can import `pptx-react-viewer/canvas.css` instead of `pptx-react-viewer/styles`.
 
 ---
 
@@ -238,6 +238,7 @@ The viewer's UI references **CSS custom properties** (`--pptx-*`, the shadcn/ui 
 
 - **Tailwind CSS v4 project**: the viewer classes resolve through your existing Tailwind tokens. No extra CSS import needed.
 - **No Tailwind**: import the bundled stylesheet once at your app entry: `import 'pptx-react-viewer/styles';`
+- **Canvas only**: a host that renders just `SlideCanvas` (see [Composing a custom viewer shell](#composing-a-custom-viewer-shell)) can import `pptx-react-viewer/canvas.css` instead: the same tokens and reset with only the utilities the canvas uses (about 46 KB, 8 KB gzipped, against 112 KB, 16 KB gzipped).
 - **CSS custom properties**: define the `--pptx-*` properties yourself for full control.
 
 Override specific values with the `theme` prop:
