@@ -9,6 +9,7 @@ import {
 	first,
 	getW,
 	makeW,
+	named,
 	parseXml,
 	WORD_NS,
 	type XmlDocument,
@@ -227,12 +228,22 @@ export function createContentControl(
 	return { sdt, content };
 }
 
-/** Replaces a `w:sdt` by its content: the control goes, what it held stays where it was. */
+/**
+ * Replaces a `w:sdt` by its content: the control goes, what it held stays where it was, and so do
+ * the range markers (bookmarks, comment, custom XML and move ranges) that Word writes beside the
+ * content of a row or cell control (MS-OI29500 2.1.202, 2.1.204), before or after it as they were.
+ */
 export function unwrapContentControl(sdt: XmlElement): void {
 	const parent = sdt.parentNode;
-	const content = sdtContent(sdt);
 	if (!parent) return;
-	for (const child of Array.from(content?.childNodes ?? [])) parent.insertBefore(child, sdt);
+	for (const child of Array.from(sdt.childNodes)) {
+		if (child.nodeType !== 1) continue;
+		const element = child as XmlElement;
+		if (named(element, 'sdtContent'))
+			for (const inner of Array.from(element.childNodes)) parent.insertBefore(inner, sdt);
+		else if (!named(element, 'sdtPr') && !named(element, 'sdtEndPr'))
+			parent.insertBefore(element, sdt);
+	}
 	parent.removeChild(sdt);
 }
 

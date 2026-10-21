@@ -121,6 +121,27 @@ describe('row and cell content controls on save', () => {
 		expect(rowXml).toContain(`</w:tblGrid>${row(`${label('A')}${label('B')}`)}<w:tr>`);
 	});
 
+	it('keeps the range markers Word writes beside a cell or row control when unwrapping it', async () => {
+		// Word allows bookmarks, comment ranges and move ranges as children of a row or cell w:sdt
+		// (MS-OI29500 2.1.202 and 2.1.204), next to its w:sdtContent.
+		const marked = (content: string) =>
+			`<w:sdt><w:sdtPr><w:id w:val="22"/><w:temporary/></w:sdtPr><w:bookmarkStart w:id="7" w:name="Kept"/>` +
+			`<w:sdtContent>${content}</w:sdtContent><w:bookmarkEnd w:id="7"/></w:sdt>`;
+		const loaded = await hand(grid(row(`${label('Status')}${marked(label('Open'))}`)));
+		delete tableOf(loaded.model.blocks).rows[0]![1]!.contentControl;
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('<w:sdt>');
+		expect(xml).toContain(
+			`${label('Status')}<w:bookmarkStart w:id="7" w:name="Kept"/>${label('Open')}<w:bookmarkEnd w:id="7"/></w:tr>`,
+		);
+		const rows = await hand(grid(marked(row(`${label('A')}${label('B')}`))));
+		delete tableOf(rows.model.blocks).rowProperties![0]!.contentControl;
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).toContain(
+			`</w:tblGrid><w:bookmarkStart w:id="7" w:name="Kept"/>${row(`${label('A')}${label('B')}`)}<w:bookmarkEnd w:id="7"/>`,
+		);
+	});
+
 	it('writes the row and cell controls of a table added to the document', async () => {
 		const loaded = await hand(text('Before'));
 		loaded.model.blocks.push({
