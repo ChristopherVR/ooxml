@@ -10,9 +10,9 @@ import { createReviewHub } from './app';
 const hubs: ReturnType<typeof createReviewHub>[] = [];
 const providers: WebsocketProvider[] = [];
 
-afterEach(() => {
+afterEach(async () => {
 	for (const provider of providers.splice(0)) provider.destroy();
-	for (const hub of hubs.splice(0)) hub.close();
+	await Promise.all(hubs.splice(0).map((hub) => hub.close()));
 });
 
 async function startHub() {
@@ -47,7 +47,7 @@ async function startHub() {
 
 function connect(base: string, ticket: string) {
 	const doc = new Y.Doc();
-	const provider = new WebsocketProvider(base.replace('http', 'ws') + '/collab', 'q3-launch', doc, {
+	const provider = new WebsocketProvider(base.replace('http', 'ws') + '/sync', 'q3-launch', doc, {
 		WebSocketPolyfill: WebSocket as unknown as typeof globalThis.WebSocket,
 		disableBc: true,
 		params: { ticket },
@@ -109,7 +109,7 @@ describe('review hub', () => {
 
 	it('refuses sockets without a valid ticket for the room', async () => {
 		const { base } = await startHub();
-		const socket = new WebSocket(`${base.replace('http', 'ws')}/collab/q3-launch?ticket=forged`);
+		const socket = new WebSocket(`${base.replace('http', 'ws')}/sync/q3-launch?ticket=forged`);
 		const outcome = await new Promise<string>((resolve) => {
 			socket.on('open', () => resolve('open'));
 			socket.on('error', () => resolve('refused'));

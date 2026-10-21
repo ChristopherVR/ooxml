@@ -96,13 +96,12 @@
         "emf-converter": "4.21.0",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
-        "lib0": "^0.2.119",
         "ooxml-ui": "workspace:*",
+        "openteams-server": "workspace:*",
         "pptx-vanilla-viewer": "workspace:*",
         "pptx-viewer-core": "workspace:*",
         "pptx-viewer-locales": "workspace:*",
         "vite": "^8.3.4",
-        "ws": "^8.22.0",
         "y-protocols": "^1.0.7",
         "y-websocket": "^3.1.0",
         "yjs": "^13.6.33",
@@ -113,6 +112,7 @@
         "pptx-viewer-shared": "workspace:*",
         "typescript": "^7.0.2",
         "vitest": "^5.0.5",
+        "ws": "^8.22.0",
       },
     },
     "demos/pptx/demo-react": {
@@ -1323,6 +1323,7 @@
       "name": "openteams-server",
       "version": "0.3.0",
       "bin": {
+        "openteams-hash-password": "hash-password.mjs",
         "openteams-server": "bin.mjs",
       },
       "dependencies": {
