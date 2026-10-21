@@ -266,7 +266,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 		const variants = (index: number) =>
 			palette.map((column) => {
 				const item = column.variants[index]!;
-				return name ? { ...item, label: name(column.name, item.variant!) } : item;
+				return name ? { ...item, label: name(column.name, item.variant) } : item;
 			});
 		const recent = (this.recentColors ?? [])
 			.map((hex) => normalizePaletteHex(hex))
