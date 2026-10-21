@@ -166,11 +166,11 @@ it('reports host workflows as not enabled until their callback is supplied', asy
 		false,
 		false,
 	]);
-	expect([
-		none.onOpenHyperlinkDialog(),
-		none.onOpenFindReplace(),
-		none.onOpenImagePicker(),
-	]).toEqual([false, false, false]);
+	expect([none.openHyperlinkDialog(), none.openFindReplace(), none.openImagePicker()]).toEqual([
+		false,
+		false,
+		false,
+	]);
 	let link: HyperlinkRequest | undefined;
 	let find: FindReplaceRequest | undefined;
 	let picker = false;
@@ -185,15 +185,15 @@ it('reports host workflows as not enabled until their callback is supplied', asy
 		true,
 		true,
 	]);
-	expect(props.onOpenHyperlinkDialog()).toBe(true);
+	expect(props.openHyperlinkDialog()).toBe(true);
 	expect(link).toMatchObject({ href: null, text: 'Find' });
 	expect(link!.apply('https://example.com')).toBe(true);
 	expect(JSON.stringify(view.state.doc.toJSON())).toContain('https://example.com');
-	expect(editor.getToolbarProps().onOpenFindReplace()).toBe(true);
+	expect(editor.getToolbarProps().openFindReplace()).toBe(true);
 	expect(find!.search('please').count).toBe(1);
 	expect(find!.replaceAll('now')).toBe(1);
 	expect(view.state.doc.textContent).toBe('Find me now');
-	expect(editor.getToolbarProps().onOpenImagePicker()).toBe(true);
+	expect(editor.getToolbarProps().openImagePicker()).toBe(true);
 	expect(picker).toBe(true);
 	// Read-only keeps find but closes the editing workflows, even for callbacks retained earlier.
 	editor.readOnly = true;
@@ -203,8 +203,8 @@ it('reports host workflows as not enabled until their callback is supplied', asy
 		true,
 		false,
 	]);
-	expect(retained.onOpenHyperlinkDialog()).toBe(false);
-	expect(retained.onOpenImagePicker()).toBe(false);
+	expect(retained.openHyperlinkDialog()).toBe(false);
+	expect(retained.openImagePicker()).toBe(false);
 	expect(find!.canReplace).toBe(false);
 	expect(find!.replaceAll('x')).toBe(0);
 	expect(find!.search('now').count).toBe(1);

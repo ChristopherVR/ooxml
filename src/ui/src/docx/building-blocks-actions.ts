@@ -89,7 +89,7 @@ export function wordHostActionProps(core: EditorCore) {
 		canFindReplace: findEnabled(),
 		canInsertPicture: pictureEnabled(),
 		/** Opens the host's link dialog for the selection. Returns false when not enabled. */
-		onOpenHyperlinkDialog: (): boolean => {
+		openHyperlinkDialog: (): boolean => {
 			const open = core.surfaceActions.onOpenHyperlinkDialog;
 			const request = linkEnabled() && open ? hyperlinkRequest(core) : undefined;
 			if (!request || !open) return false;
@@ -97,14 +97,14 @@ export function wordHostActionProps(core: EditorCore) {
 			return true;
 		},
 		/** Opens the host's find and replace workflow. Returns false when not enabled. */
-		onOpenFindReplace: (): boolean => {
+		openFindReplace: (): boolean => {
 			const open = core.surfaceActions.onOpenFindReplace;
 			if (!findEnabled() || !open) return false;
 			open(findReplaceRequest(core));
 			return true;
 		},
 		/** Opens the host's picture picker. Returns false when not enabled. */
-		onOpenImagePicker: (): boolean => {
+		openImagePicker: (): boolean => {
 			const open = core.surfaceActions.onOpenImagePicker;
 			if (!pictureEnabled() || !open) return false;
 			open({

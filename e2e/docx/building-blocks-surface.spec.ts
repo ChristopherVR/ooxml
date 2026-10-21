@@ -159,9 +159,9 @@ for (const framework of FRAMEWORKS) {
 					props.canInsertLink,
 					props.canFindReplace,
 					props.canInsertPicture,
-					props.onOpenHyperlinkDialog(),
-					props.onOpenFindReplace(),
-					props.onOpenImagePicker(),
+					props.openHyperlinkDialog(),
+					props.openFindReplace(),
+					props.openImagePicker(),
 				];
 			}),
 		).toEqual([false, false, false, false, false, false]);

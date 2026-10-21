@@ -153,13 +153,10 @@ export function toolbarControls(props: WordToolbarProps): ControlGroup[] {
 	const host: Control[] = [];
 	const { hyperlink, findReplace, picture } = props.hostWorkflows;
 	if (hyperlink)
-		host.push(action('link', 'Insert link', !props.canInsertLink, props.onOpenHyperlinkDialog));
-	if (findReplace)
-		host.push(action('find', 'Find', !props.canFindReplace, props.onOpenFindReplace));
+		host.push(action('link', 'Insert link', !props.canInsertLink, props.openHyperlinkDialog));
+	if (findReplace) host.push(action('find', 'Find', !props.canFindReplace, props.openFindReplace));
 	if (picture)
-		host.push(
-			action('picture', 'Insert picture', !props.canInsertPicture, props.onOpenImagePicker),
-		);
+		host.push(action('picture', 'Insert picture', !props.canInsertPicture, props.openImagePicker));
 	if (host.length) groups.push(host);
 	return groups;
 }

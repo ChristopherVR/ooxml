@@ -44,14 +44,14 @@ it('routes host workflow callbacks through update and reports a missing one as n
 	try {
 		session.canvasProps.mount(host);
 		expect(session.state.toolbarProps?.canInsertLink).toBe(false);
-		expect(session.state.toolbarProps?.onOpenHyperlinkDialog()).toBe(false);
+		expect(session.state.toolbarProps?.openHyperlinkDialog()).toBe(false);
 		session.update({ documentModel: model, onOpenHyperlinkDialog });
 		expect(session.state.toolbarProps?.canInsertLink).toBe(true);
-		expect(session.state.toolbarProps?.onOpenHyperlinkDialog()).toBe(true);
+		expect(session.state.toolbarProps?.openHyperlinkDialog()).toBe(true);
 		expect(onOpenHyperlinkDialog).toHaveBeenCalledOnce();
 		session.update({ documentModel: model, onOpenHyperlinkDialog, canEdit: false });
 		expect(session.state.toolbarProps?.canInsertLink).toBe(false);
-		expect(session.state.toolbarProps?.onOpenHyperlinkDialog()).toBe(false);
+		expect(session.state.toolbarProps?.openHyperlinkDialog()).toBe(false);
 	} finally {
 		session.destroy();
 	}
