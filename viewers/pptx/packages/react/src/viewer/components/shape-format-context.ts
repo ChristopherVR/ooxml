@@ -22,7 +22,7 @@ export interface ShapeFormatCommands {
 	crop: PictureCropController;
 }
 
-export const ShapeFormatContext = createContext<ShapeFormatCommands | null>(null);
+export const ShapeFormatContext = /* @__PURE__ */ createContext<ShapeFormatCommands | null>(null);
 
 export function useShapeFormatContext(): ShapeFormatCommands | null {
 	return useContext(ShapeFormatContext);

@@ -23,7 +23,7 @@ import { LuLoaderCircle } from 'react-icons/lu';
 import type { AiPanelController } from '../../hooks/ai/useAiPanelController';
 import type { AiChatPanelProps } from './AiChatPanel';
 
-const AiChatPanel = lazy(async () => {
+const AiChatPanel = /* @__PURE__ */ lazy(async () => {
 	const [{ useChat }, { default: Panel }] = await Promise.all([
 		import('@ai-sdk/react'),
 		import('./AiChatPanel'),

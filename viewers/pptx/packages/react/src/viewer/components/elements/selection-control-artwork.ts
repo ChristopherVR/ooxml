@@ -14,26 +14,26 @@ export const ROTATE_DEFAULT_CLASSES =
 	'[--pptx-react-rotate-default:20px] max-md:[--pptx-react-rotate-default:28px]';
 
 export const RESIZE_ARTWORK = {
-	corner: getSelectionControlArtworkStyle('corner', {
+	corner: /* @__PURE__ */ getSelectionControlArtworkStyle('corner', {
 		...appearance,
 		width: cornerSize,
 		height: cornerSize,
 		radius: '9999px',
 	}),
-	horizontal: getSelectionControlArtworkStyle('horizontal-edge', {
+	horizontal: /* @__PURE__ */ getSelectionControlArtworkStyle('horizontal-edge', {
 		...appearance,
 		width: edgeLength,
 		height: edgeThickness,
 		radius: 'var(--radius-sm, 0.25rem)',
 	}),
-	vertical: getSelectionControlArtworkStyle('vertical-edge', {
+	vertical: /* @__PURE__ */ getSelectionControlArtworkStyle('vertical-edge', {
 		...appearance,
 		width: edgeThickness,
 		height: edgeLength,
 		radius: 'var(--radius-sm, 0.25rem)',
 	}),
 };
-export const ROTATE_ARTWORK = getSelectionControlArtworkStyle('rotate', {
+export const ROTATE_ARTWORK = /* @__PURE__ */ getSelectionControlArtworkStyle('rotate', {
 	...appearance,
 	width: rotateSize,
 	height: rotateSize,

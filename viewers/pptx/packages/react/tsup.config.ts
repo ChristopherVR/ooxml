@@ -1,6 +1,23 @@
 import { defineConfig } from 'tsup';
+import type { Options } from 'tsup';
 
 import pkg from './package.json' with { type: 'json' };
+
+/**
+ * `pptx-viewer-core` is a thin `export * from 'ooxml-core/pptx'`. Bundling it turns that star
+ * re-export into a runtime namespace copy (`__reExport`), which makes every export of
+ * `ooxml-core/pptx` reachable for a host bundler, so it can no longer tree-shake the core.
+ * Rewriting the specifier to the external `ooxml-core/pptx` keeps the imports static and named.
+ */
+const pptxViewerCoreAsOoxmlCore: NonNullable<Options['esbuildPlugins']>[number] = {
+	name: 'pptx-viewer-core-as-ooxml-core',
+	setup(build) {
+		build.onResolve({ filter: /^pptx-viewer-core$/ }, () => ({
+			path: 'ooxml-core/pptx',
+			external: true,
+		}));
+	},
+};
 
 export default defineConfig((options) => ({
 	entry: ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts'],
@@ -48,11 +65,11 @@ export default defineConfig((options) => ({
 		// SVG outside a browser; optional peer, never part of a browser bundle.
 		'@napi-rs/canvas',
 	],
-	// Bundle the internal workspace package `pptx-viewer-core` (a thin
-	// re-export of `ooxml-core/pptx`) so consumers can install just
-	// `pptx-react-viewer`. The core itself, and with it `emf-converter` and
-	// `mtx-decompressor`, stays external above.
-	noExternal: ['pptx-viewer-core'],
+	// The internal workspace package `pptx-viewer-core` (a thin re-export of
+	// `ooxml-core/pptx`) is resolved to `ooxml-core/pptx` itself, so consumers
+	// can install just `pptx-react-viewer`. The core, and with it `emf-converter`
+	// and `mtx-decompressor`, stays external above.
+	esbuildPlugins: [pptxViewerCoreAsOoxmlCore],
 	treeshake: true,
 	platform: 'browser',
 }));

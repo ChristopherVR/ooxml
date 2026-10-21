@@ -9,7 +9,7 @@ import { createContext, useContext } from 'react';
  * bar. `PowerPointViewer` provides the value; consumers rendered standalone
  * (unit tests, headless building blocks) see "customise nothing".
  */
-export const ViewerCustomizationContext = createContext<ResolvedCustomization>(
+export const ViewerCustomizationContext = /* @__PURE__ */ createContext<ResolvedCustomization>(
 	EMPTY_RESOLVED_CUSTOMIZATION,
 );
 

@@ -17,6 +17,7 @@ import {
 	buildLineGlowFilter,
 } from '../../utils';
 import { getAriaLabel, getAriaRole, getAriaRoleDescription } from '../../utils/accessibility';
+import { withDisplayName } from '../../utils/display-name';
 import {
 	getCompoundLineOffsets,
 	getCompoundLineWidths,
@@ -29,7 +30,7 @@ import { ResizeHandles } from './ResizeHandles';
 
 export type { ConnectorRendererProps };
 
-export const ConnectorElementRenderer: React.FC<ConnectorRendererProps> = React.memo(
+const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PURE__ */ React.memo(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the memo component its displayName
 	function ConnectorElementRendererInner({
 		el,
@@ -305,4 +306,7 @@ export const ConnectorElementRenderer: React.FC<ConnectorRendererProps> = React.
 		);
 	},
 );
-ConnectorElementRenderer.displayName = 'ConnectorElementRenderer';
+export const ConnectorElementRenderer = /* @__PURE__ */ withDisplayName(
+	ConnectorElementRendererMemo,
+	'ConnectorElementRenderer',
+);

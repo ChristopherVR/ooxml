@@ -26,4 +26,6 @@ export const DEFAULT_RENDERING_3D_FLAGS: Rendering3DFlags = {
 	pieChart3D: false,
 };
 
-export const Rendering3DFlagsContext = createContext<Rendering3DFlags>(DEFAULT_RENDERING_3D_FLAGS);
+export const Rendering3DFlagsContext = /* @__PURE__ */ createContext<Rendering3DFlags>(
+	DEFAULT_RENDERING_3D_FLAGS,
+);

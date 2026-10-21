@@ -7,7 +7,7 @@ import type { ViewerTheme } from './types';
 // Context
 // ---------------------------------------------------------------------------
 
-const ViewerThemeContext = createContext<ViewerTheme | undefined>(undefined);
+const ViewerThemeContext = /* @__PURE__ */ createContext<ViewerTheme | undefined>(undefined);
 
 // ---------------------------------------------------------------------------
 // Provider
