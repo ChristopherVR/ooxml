@@ -58,19 +58,16 @@ export function forEachContentControl(
 	}
 }
 
-/** Gives each control whose placeholder is a glossary entry that entry's text. */
+/**
+ * Gives each control whose placeholder is a glossary entry that entry's text. The glossary is read
+ * only when a control names an entry, and a part that cannot be read leaves the built-in prompts
+ * (with a warning) rather than stopping the document from opening.
+ */
 export async function readPlaceholderTexts(
 	zip: JSZip,
 	relationships: ReadonlyMap<string, Relationship>,
 	model: DocumentModel,
 ): Promise<void> {
-	const relationship = [...relationships.values()].find(
-		(entry) => entry.type === GLOSSARY_DOCUMENT && entry.mode === 'Internal',
-	);
-	const part = relationship && zip.file(resolveInternalTarget(relationship.target));
-	if (!part) return;
-	const texts = parseGlossaryTexts(await part.async('string'));
-	if (!texts.size) return;
 	const stories = [
 		model.blocks,
 		...(model.sections ?? []).flatMap((section) =>
@@ -80,9 +77,28 @@ export async function readPlaceholderTexts(
 		),
 		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].map((note) => note.blocks),
 	];
+	const named: ContentControl[] = [];
 	for (const blocks of stories)
 		forEachContentControl(blocks, (control) => {
-			const text = control.placeholder === undefined ? undefined : texts.get(control.placeholder);
-			if (text !== undefined) control.placeholderText = text;
+			if (control.placeholder !== undefined) named.push(control);
 		});
+	if (!named.length) return;
+	const relationship = [...relationships.values()].find(
+		(entry) => entry.type === GLOSSARY_DOCUMENT && entry.mode === 'Internal',
+	);
+	const part = relationship && zip.file(resolveInternalTarget(relationship.target));
+	if (!part) return;
+	let texts: Map<string, string>;
+	try {
+		texts = parseGlossaryTexts(await part.async('string'));
+	} catch (error) {
+		model.warnings.push(
+			`The glossary part could not be read (${error instanceof Error ? error.message : String(error)}), so content controls show the built-in placeholder prompts; the part is saved as it was.`,
+		);
+		return;
+	}
+	for (const control of named) {
+		const text = texts.get(control.placeholder!);
+		if (text !== undefined) control.placeholderText = text;
+	}
 }
