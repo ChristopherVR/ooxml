@@ -119,6 +119,36 @@ describe('temporary content controls in the editor', () => {
 		}
 	});
 
+	it('keeps the formatting of deleted text for what is typed next when a temporary control goes', () => {
+		// Text typed over a deleted selection takes its formatting; removing the control the
+		// deletion edited does not change that, and only that control's mark leaves.
+		const marksOf = (state: EditorState) => {
+			const names: string[] = [];
+			state.doc.descendants((node) => {
+				if (node.isText && node.text!.includes('Z'))
+					names.push(...node.marks.map((mark) => mark.type.name));
+			});
+			return names;
+		};
+		const block = stateOf([{ text: 'Draft', bold: true }], temporary({ level: 'block' }));
+		const inline = stateOf([
+			{ text: 'x' },
+			{ text: 'Draft', bold: true, contentControl: temporary() },
+		]);
+		for (const [state, from, to] of [
+			[block, 1, 6],
+			[inline, 3, 5],
+		] as const) {
+			const select = state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+			const deleted = select.apply(select.tr.deleteSelection());
+			expect(controlSpans(deleted.doc)).toEqual([]);
+			expect(deleted.doc.firstChild!.attrs.contentControl).toBeNull();
+			const typed = deleted.apply(deleted.tr.insertText('Z'));
+			expect(marksOf(typed)).toContain('bold');
+			expect(marksOf(typed)).not.toContain('contentControl');
+		}
+	});
+
 	it('edits a temporary control that cannot be deleted as an ordinary control', () => {
 		const pick = stateOf([
 			{ text: 'See: ' },

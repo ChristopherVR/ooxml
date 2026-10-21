@@ -150,8 +150,8 @@ export function removeEditedTemporaryControls(
 	for (const transaction of transactions) mapping.appendMapping(transaction.mapping);
 	const now = temporaryControls(after.doc);
 	const removed = new Set<Occurrence>();
-	// The inline controls whose text was all deleted.
-	const gone = new Set<string>();
+	// The inline controls the edit removed, or whose text it deleted.
+	const dropped = new Set<string>();
 	const tr = after.tr;
 	for (const old of was) {
 		// What the control became: the controls of its level and id where its range went.
@@ -160,10 +160,12 @@ export function removeEditedTemporaryControls(
 		const became = now.filter(
 			(occurrence) => occurrence.key === old.key && occurrence.from <= to && occurrence.to >= from,
 		);
-		if (!became.length && old.spans[0]?.level === 'inline') gone.add(old.spans[0].control.id);
+		const inlineId = old.spans[0]?.level === 'inline' ? old.spans[0].control.id : undefined;
+		if (!became.length && inlineId) dropped.add(inlineId);
 		// Its whole range: what splits its spans (a nested control, a table) is its content too.
 		const content = became.map((occurrence) => contentOf(after, occurrence)).join('\n');
 		if (!became.length || content === contentOf(before, old)) continue;
+		if (inlineId) dropped.add(inlineId);
 		// Every span of an edited control goes: Word removes the whole control.
 		for (const occurrence of became) {
 			if (removed.has(occurrence)) continue;
@@ -171,13 +173,16 @@ export function removeEditedTemporaryControls(
 			for (const span of occurrence.spans) removeControl(tr, span);
 		}
 	}
-	// Deleting a selection keeps its marks for the text typed next, which would bring a control
-	// whose text went back, as a new temporary control.
+	// Deleting a selection keeps its marks for the text typed next. They stay through the removal,
+	// whose steps would clear them, except the mark of a control it took away, which would bring
+	// that control back around the typed text.
 	const stored = after.storedMarks;
-	const kept = stored?.filter((mark) => {
-		const control = mark.type.name === 'contentControl' ? controlOfMark(mark) : undefined;
-		return !control || !gone.has(control.id) || !removedByEdit(control);
-	});
-	if (stored && kept && kept.length !== stored.length) tr.setStoredMarks(kept);
+	if (stored) {
+		const kept = stored.filter((mark) => {
+			const control = mark.type.name === 'contentControl' ? controlOfMark(mark) : undefined;
+			return !control || !dropped.has(control.id) || !removedByEdit(control);
+		});
+		if (tr.docChanged || kept.length !== stored.length) tr.setStoredMarks(kept);
+	}
 	return tr.docChanged || tr.storedMarksSet ? tr.setMeta(CONTROL_EDIT_META, true) : null;
 }

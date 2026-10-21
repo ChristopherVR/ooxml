@@ -455,6 +455,30 @@ describe('content controls around table cells in the editor', () => {
 		}
 	});
 
+	it('keeps the formatting of deleted cell text for what is typed next when a table control goes', () => {
+		const block: ContentControl = { id: '69', level: 'block', kind: 'richText', temporary: true };
+		const bold = [style('Normal'), schema.marks.bold!.create()];
+		const doc = schema.node('doc', null, [
+			schema.node('table', { contentControl: block }, [
+				schema.node('tableRow', null, [
+					schema.node('tableCell', null, [paragraph('Inside', {}, bold)]),
+				]),
+			]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		// The whole text of the cell (table, row, cell and paragraph open first).
+		const all = state.apply(state.tr.setSelection(TextSelection.create(doc, 4, 10)));
+		const deleted = all.apply(all.tr.deleteSelection());
+		expect(deleted.doc.firstChild!.attrs.contentControl).toBeNull();
+		const typed = deleted.apply(deleted.tr.insertText('Z'));
+		expect(typed.doc.textContent).toBe('Z');
+		let marks: string[] = [];
+		typed.doc.descendants((node) => {
+			if (node.isText) marks = node.marks.map((mark) => mark.type.name);
+		});
+		expect(marks).toContain('bold');
+	});
+
 	it('takes a temporary control off only itself when another one shares its id', () => {
 		// Files from other tools repeat ids: here a cell control and a block control in its cell.
 		const cellControl = (temporary: boolean): ContentControl => ({
