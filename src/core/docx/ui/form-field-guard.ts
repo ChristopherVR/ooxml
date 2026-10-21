@@ -6,6 +6,7 @@ import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import {
 	AddMarkStep,
 	AttrStep,
+	Mapping,
 	RemoveMarkStep,
 	ReplaceAroundStep,
 	ReplaceStep,
@@ -14,7 +15,13 @@ import {
 import type { DocumentProtection } from '../model';
 import { CONTROL_EDIT_META } from './content-control-commands';
 import { controlSpans } from './content-control-spans';
-import { FORM_FIELD_EDIT_META, formFieldOfNode, formTextResults } from './form-field-commands';
+import {
+	FORM_FIELD_EDIT_META,
+	formFieldOfNode,
+	formTextResults,
+	type FormTextResult,
+} from './form-field-commands';
+import { isBlankFormText, replacedBlanks } from './form-text-blank';
 
 const isRemote = (tr: Transaction): boolean => tr.getMeta('y-sync$') !== undefined;
 
@@ -25,15 +32,28 @@ const isRemote = (tr: Transaction): boolean => tr.getMeta('y-sync$') !== undefin
 export const isFormsProtected = (protection: DocumentProtection | undefined): boolean =>
 	Boolean(protection?.enforced) && protection?.edit === 'forms';
 
-/** Whether the transaction makes a text field's result longer than its maximum length. */
+/**
+ * Whether the transaction makes a text field's result longer than its maximum length. Word's blank
+ * result (en spaces only) counts as empty, and so do the en spaces of a blank that text is typed
+ * into, which the guard then removes.
+ */
 export function exceedsFormTextLength(tr: Transaction): boolean {
+	const beforeResults = formTextResults(tr.before);
+	const afterResults = formTextResults(tr.doc);
+	const replaced = replacedBlanks(tr.before, beforeResults, tr.doc, afterResults, tr.mapping);
+	const length = (doc: Node, result: FormTextResult, removed: readonly Range[] = []) =>
+		isBlankFormText(doc, result)
+			? 0
+			: result.length -
+				removed.filter((space) => space.from >= result.from && space.to <= result.to).length;
 	// The same field before and after: its begin marker, mapped through the transaction.
 	const before = new Map(
-		formTextResults(tr.before).map((result) => [tr.mapping.map(result.begin), result.length]),
+		beforeResults.map((result) => [tr.mapping.map(result.begin), length(tr.before, result)]),
 	);
-	return formTextResults(tr.doc).some((result) => {
+	return afterResults.some((result) => {
 		const max = result.field.textInput?.maxLength;
-		return Boolean(max) && result.length > max! && result.length > (before.get(result.begin) ?? 0);
+		const now = length(tr.doc, result, replaced);
+		return Boolean(max) && now > max! && now > (before.get(result.begin) ?? 0);
 	});
 }
 
@@ -177,9 +197,22 @@ export function staysInFormFields(tr: Transaction): boolean {
 	});
 }
 
-/** Whether the document has a text field with a maximum length, the only fields the guard limits. */
-const hasLimitedField = (doc: Node): boolean =>
-	formTextResults(doc).some((result) => result.field.textInput?.maxLength);
+/**
+ * Whether the document has text fields, whose blank results typing replaces, and one with a
+ * maximum length, the only fields the guard limits.
+ */
+function textFieldsOf(doc: Node): FieldState {
+	const results = formTextResults(doc);
+	return {
+		text: results.length > 0,
+		limited: results.some((result) => result.field.textInput?.maxLength),
+	};
+}
+
+interface FieldState {
+	text: boolean;
+	limited: boolean;
+}
 
 /** Whether the transaction brings in a field marker (a paste, an undo, a remote change). */
 const insertsFieldMarker = (tr: Transaction): boolean =>
@@ -193,26 +226,48 @@ const insertsFieldMarker = (tr: Transaction): boolean =>
 		return found;
 	});
 
-const limitedFields = new PluginKey<boolean>('formFieldLimits');
+const textFields = new PluginKey<FieldState>('formFieldLimits');
 
-/** Rejects local edits that a field's maximum length or the document's protection forbids. */
+/**
+ * Rejects local edits that a field's maximum length or the document's protection forbids, and
+ * removes the en spaces of a blank text field that text was typed into.
+ */
 export function formFieldGuardPlugin(protection: () => DocumentProtection | undefined): Plugin {
-	return new Plugin<boolean>({
-		key: limitedFields,
-		// Whether any field limits its length, so documents without one skip the scan per edit.
+	return new Plugin<FieldState>({
+		key: textFields,
+		// Whether there are text fields, and whether one limits its length, so documents without
+		// them skip the scans per edit.
 		state: {
-			init: (_config, state) => hasLimitedField(state.doc),
-			apply: (tr, limited) => (insertsFieldMarker(tr) ? hasLimitedField(tr.doc) : limited),
+			init: (_config, state) => textFieldsOf(state.doc),
+			apply: (tr, fields) => (insertsFieldMarker(tr) ? textFieldsOf(tr.doc) : fields),
 		},
 		filterTransaction: (tr, state) => {
 			if (!tr.docChanged || isRemote(tr)) return true;
-			const limited = limitedFields.getState(state) || insertsFieldMarker(tr);
+			const limited = textFields.getState(state)?.limited || insertsFieldMarker(tr);
 			if (limited && exceedsFormTextLength(tr)) return false;
 			if (!isFormsProtected(protection())) return true;
 			return (
 				Boolean(tr.getMeta(CONTROL_EDIT_META) || tr.getMeta(FORM_FIELD_EDIT_META)) ||
 				staysInFormFields(tr)
 			);
+		},
+		appendTransaction: (transactions, old, state) => {
+			// A remote change comes with the other side's own removal.
+			if (!transactions.some((tr) => tr.docChanged) || transactions.some(isRemote)) return null;
+			if (!textFields.getState(old)?.text) return null;
+			const mapping = new Mapping();
+			for (const tr of transactions) mapping.appendMapping(tr.mapping);
+			const replaced = replacedBlanks(
+				old.doc,
+				formTextResults(old.doc),
+				state.doc,
+				formTextResults(state.doc),
+				mapping,
+			);
+			if (!replaced.length) return null;
+			const tr = state.tr;
+			for (const space of [...replaced].reverse()) tr.delete(space.from, space.to);
+			return tr;
 		},
 	});
 }

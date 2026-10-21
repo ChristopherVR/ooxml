@@ -50,6 +50,8 @@ const field = (formField: FormField, result?: string): TextRun[] => {
 	];
 };
 const name: FormField = { kind: 'text', name: 'Name', textInput: { maxLength: 6 } };
+/** Word's result for a text field with no text: five en spaces, which keep the field visible. */
+const BLANK = '\u2002'.repeat(5);
 const approved: FormField = { kind: 'checkbox', name: 'Approved', checkBox: { default: false } };
 const status: FormField = {
 	kind: 'dropDown',
@@ -164,6 +166,47 @@ describe('legacy form fields in the editor', () => {
 		expect(longer.doc.textContent).toContain('Ada!!!');
 		const tooLong = longer.apply(longer.tr.insertText('!', result!.to + 3));
 		expect(tooLong.doc.textContent).toBe(longer.doc.textContent);
+	});
+
+	it("replaces a blank text field's en spaces with the first text typed into it", () => {
+		const code: FormField = { kind: 'text', name: 'Code', textInput: { maxLength: 4 } };
+		const runs: TextRun[] = [{ text: 'Code: ' }, ...field(code, BLANK), { text: ' end' }];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		let state = EditorState.create({
+			schema,
+			doc,
+			plugins: [formFieldGuardPlugin(() => undefined)],
+		});
+		const result = () => formTextResults(state.doc)[0]!;
+		// An edit elsewhere leaves the blank as it is.
+		state = state.apply(state.tr.insertText('Post ', 1));
+		expect(state.doc.textContent).toBe(`Post Code: ${BLANK} end`);
+		// Typed anywhere in the blank, the first character takes the en spaces' place, and the
+		// maximum length counts only what was typed.
+		state = state.apply(state.tr.insertText('A', result().from + 2));
+		expect(state.doc.textContent).toBe('Post Code: A end');
+		for (const character of 'B12') state = state.apply(state.tr.insertText(character, result().to));
+		expect(state.doc.textContent).toBe('Post Code: AB12 end');
+		state = state.apply(state.tr.insertText('!', result().to));
+		expect(state.doc.textContent).toBe('Post Code: AB12 end');
+		expect(result().length).toBe(4);
+	});
+
+	it('takes text pasted into a blank text field up to its maximum length', () => {
+		const code: FormField = { kind: 'text', name: 'Code', textInput: { maxLength: 3 } };
+		const runs: TextRun[] = [...field(code, BLANK)];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		const state = EditorState.create({
+			schema,
+			doc,
+			plugins: [formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
+		});
+		const [result] = formTextResults(state.doc);
+		const pasted = (text: string) => state.apply(state.tr.insertText(text, result!.from)).doc;
+		expect(pasted('XYZ').textContent).toBe('XYZ');
+		expect(pasted('WXYZ').textContent).toBe(BLANK);
 	});
 
 	it('keeps a disabled text field read only in a document protected for forms', () => {

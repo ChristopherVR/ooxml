@@ -8,14 +8,23 @@ const office = 'http://schemas.openxmlformats.org/officeDocument/2006/relationsh
 const run = (inner: string) => `<w:r>${inner}</w:r>`;
 const text = (value: string) => run(`<w:t xml:space="preserve">${value}</w:t>`);
 
-function formField(name: string, data: string, code: string, result: string | null, id: number) {
+/** A legacy form field; a result given as several strings is written one run per string. */
+function formField(
+	name: string,
+	data: string,
+	code: string,
+	result: string | string[] | null,
+	id: number,
+) {
 	return (
 		`<w:bookmarkStart w:id="${id}" w:name="${name}"/>` +
 		run(
 			`<w:fldChar w:fldCharType="begin"><w:ffData><w:name w:val="${name}"/><w:enabled/><w:calcOnExit w:val="0"/>${data}</w:ffData></w:fldChar>`,
 		) +
 		run(`<w:instrText xml:space="preserve"> ${code} </w:instrText>`) +
-		(result === null ? '' : run('<w:fldChar w:fldCharType="separate"/>') + text(result)) +
+		(result === null
+			? ''
+			: run('<w:fldChar w:fldCharType="separate"/>') + [result].flat().map(text).join('')) +
 		run('<w:fldChar w:fldCharType="end"/>') +
 		`<w:bookmarkEnd w:id="${id}"/>`
 	);
@@ -53,6 +62,19 @@ export function formFieldsFixture(protect = false): Promise<Uint8Array> {
 			`<w:tr>${cell(text('Approved'))}${cell(formField('Approved', checkBox, 'FORMCHECKBOX', null, 2))}</w:tr>` +
 			`<w:tr>${cell(text('Status'))}${cell(formField('Status', '<w:ddList><w:result w:val="1"/><w:listEntry w:val="New"/><w:listEntry w:val="Revised"/><w:listEntry w:val="Withdrawn"/></w:ddList>', 'FORMDROPDOWN', null, 3))}</w:tr>` +
 			`</w:tbl><w:sectPr/>`,
+	);
+}
+
+/**
+ * A form protected for filling in with a blank text field of four characters at most, as Word
+ * writes a text field that holds no text: five en spaces, one run each.
+ */
+export function blankFieldFixture(): Promise<Uint8Array> {
+	const blank = Array.from({ length: 5 }, () => '\u2002');
+	return formPackage(
+		FORMS_PROTECTION,
+		`<w:p>${text('Code: ')}${formField('Code', '<w:textInput><w:maxLength w:val="4"/></w:textInput>', 'FORMTEXT', blank, 1)}${text(' end')}</w:p>` +
+			`<w:sectPr/>`,
 	);
 }
 
