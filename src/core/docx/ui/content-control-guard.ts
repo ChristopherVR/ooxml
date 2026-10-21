@@ -18,6 +18,7 @@ import {
 	pasteInCell,
 	typeOverPlaceholder,
 } from './content-control-commands';
+import { controlOccurrences, type Occurrence } from './content-control-occurrences';
 import { nodeControlOf, otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
 import { controlSourcesOf, pastedControlSources } from './content-control-sources';
 import type { RowControlSpan } from './content-control-rows';
@@ -101,6 +102,24 @@ function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): bool
 }
 
 /**
+ * The locked controls of `doc`, each with the range it holds. A block, row or cell control around
+ * several nodes (paragraphs and a table between them, rows, cells) is one, from its first to its
+ * last: deleting one of them leaves the control and edits its content.
+ */
+function lockedControls(doc: ProseMirrorNode): Occurrence[] {
+	const locked = everyControlSpan(doc).filter((span) => span.control.lock);
+	const inline = locked.filter((span) => span.level === 'inline');
+	return [
+		...inline.map((span) => ({ key: '', spans: [span], from: span.from, to: span.to })),
+		...controlOccurrences(
+			doc,
+			locked.filter((span) => span.level !== 'inline'),
+			[],
+		),
+	];
+}
+
+/**
  * Whether a step breaks a lock. `contentLocked` forbids editing what is inside the control (it can
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
  * Changing a node's attributes (a form field's data, the formatting of a picture) edits that node.
@@ -108,7 +127,7 @@ function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): bool
  * does; they are held to content locks as any other step is.
  */
 export function violatesControlLock(tr: Transaction, state: EditorState, history = false): boolean {
-	const locked = everyControlSpan(state.doc).filter((span) => span.control.lock);
+	const locked = lockedControls(state.doc);
 	return tr.steps.some((step, index) => {
 		const before = tr.mapping.slice(0, index);
 		if (step instanceof AttrStep) {
@@ -117,19 +136,20 @@ export function violatesControlLock(tr: Transaction, state: EditorState, history
 			if (node && isContentControlLocked(inlineRunProperties(node).contentControl, 'content'))
 				return true;
 			return locked.some(
-				(span) =>
-					isContentControlLocked(span.control, 'content') &&
-					step.pos >= before.map(span.from, 1) &&
-					step.pos < before.map(span.to, -1),
+				(occurrence) =>
+					isContentControlLocked(occurrence.spans[0]!.control, 'content') &&
+					step.pos >= before.map(occurrence.from, 1) &&
+					step.pos < before.map(occurrence.to, -1),
 			);
 		}
 		if (!locked.length || !isRangeStep(step)) return false;
 		const { from, to } = step as { from: number; to: number };
 		const inserts = from === to;
 		const kept = changesAttributesOnly(step, tr.docs[index]!);
-		return locked.some((span) => {
-			const spanFrom = before.map(span.from, 1);
-			const spanTo = before.map(span.to, -1);
+		return locked.some((occurrence) => {
+			const span = occurrence.spans[0]!;
+			const spanFrom = before.map(occurrence.from, 1);
+			const spanTo = before.map(occurrence.to, -1);
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
 			const keeps = kept || keepsControl(step, span);
 			if (isContentControlLocked(span.control, 'control') && removesWhole && !keeps && !history)

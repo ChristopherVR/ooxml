@@ -990,6 +990,81 @@ describe('content controls around table cells in the editor', () => {
 		expect(violatesControlLock(properties(fixed), fixed)).toBe(false);
 	});
 
+	it('applies the locks of a control around several blocks, rows or cells to all of them', () => {
+		// One w:sdt around paragraphs and a table, two rows or two cells is one control: deleting
+		// one of what it holds edits its content (a content lock refuses that) and leaves the
+		// control (one that may not be deleted allows it); deleting all of it deletes the control.
+		const control = (level: ContentControl['level'], lock: ContentControl['lock']) =>
+			({ id: '77', level, kind: 'richText', lock }) as ContentControl;
+		const cellOfText = (text: string, attrs: Record<string, unknown> = {}) =>
+			schema.node('tableCell', attrs, [paragraph(text)]);
+		const states = (lock: ContentControl['lock']) => ({
+			blocks: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					paragraph('Before'),
+					paragraph('Lead', { contentControl: control('block', lock) }),
+					schema.node('table', { contentControl: control('block', lock) }, [
+						schema.node('tableRow', null, [cellOfText('Cell')]),
+					]),
+					paragraph('Tail', { contentControl: control('block', lock) }),
+					paragraph('After'),
+				]),
+			}),
+			rows: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					schema.node('table', null, [
+						schema.node('tableRow', { properties: { contentControl: control('row', lock) } }, [
+							cellOfText('A'),
+						]),
+						schema.node('tableRow', { properties: { contentControl: control('row', lock) } }, [
+							cellOfText('B'),
+						]),
+					]),
+					paragraph('After'),
+				]),
+			}),
+			cells: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					schema.node('table', null, [
+						schema.node('tableRow', null, [
+							cellOfText('A', { contentControl: control('cell', lock) }),
+							cellOfText('B', { contentControl: control('cell', lock) }),
+						]),
+					]),
+					paragraph('After'),
+				]),
+			}),
+		});
+		/** The ranges of one of the nodes `state`'s control holds, and of all of them. */
+		const ranges = (name: 'blocks' | 'rows' | 'cells', state: EditorState) => {
+			const doc = state.doc;
+			if (name === 'blocks') {
+				const lead = doc.child(0).nodeSize;
+				const table = lead + doc.child(1).nodeSize;
+				const tail = table + doc.child(2).nodeSize;
+				return { one: [table, tail], all: [lead, tail + doc.child(3).nodeSize] };
+			}
+			// All of the rows or cells: the table they are in.
+			const table = doc.firstChild!;
+			const first = name === 'rows' ? table.firstChild! : table.firstChild!.firstChild!;
+			const start = name === 'rows' ? 1 : 2;
+			return { one: [start, start + first.nodeSize], all: [0, table.nodeSize] };
+		};
+		for (const name of ['blocks', 'rows', 'cells'] as const) {
+			for (const lock of ['sdtLocked', 'contentLocked'] as const) {
+				const state = states(lock)[name];
+				const { one, all } = ranges(name, state);
+				const removes = (range: number[]) =>
+					violatesControlLock(state.tr.delete(range[0]!, range[1]!), state);
+				expect([name, lock, removes(one)]).toEqual([name, lock, lock === 'contentLocked']);
+				expect([name, lock, removes(all)]).toEqual([name, lock, lock === 'sdtLocked']);
+			}
+		}
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;
