@@ -73,15 +73,40 @@ function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
 	);
 }
 
-/** Whether `mark` is the inline control `control`'s own mark. */
-const isMarkOf = (mark: Mark, control: ContentControl): boolean =>
-	mark.type.name === 'contentControl' && sameControl(controlOfMark(mark), control);
+/** Whether two controls have one id: the same control, whatever kind and lock either holds. */
+function sameId(left: unknown, right: unknown): boolean {
+	const id = (left as { id?: unknown } | null)?.id;
+	return typeof id === 'string' && id === (right as { id?: unknown } | null)?.id;
+}
+
+/** Whether `mark` is the inline control `control`'s own mark (`same` tells controls apart). */
+const isMarkOf = (mark: Mark, control: ContentControl, same = sameControl): boolean =>
+	mark.type.name === 'contentControl' && same(controlOfMark(mark), control);
 
 /** Whether `node` holds the control of `span`: an inline one as its mark, another as its node's. */
-function holdsControl(node: ProseMirrorNode, span: ControlSpan | RowControlSpan): boolean {
-	if (span.level === 'inline') return node.marks.some((mark) => isMarkOf(mark, span.control));
+function holdsControl(
+	node: ProseMirrorNode,
+	span: ControlSpan | RowControlSpan,
+	same = sameControl,
+): boolean {
+	if (span.level === 'inline') return node.marks.some((mark) => isMarkOf(mark, span.control, same));
 	const held = nodeControlOf(node);
-	return held?.level === span.level && sameControl(held.value, span.control);
+	return held?.level === span.level && same(held.value, span.control);
+}
+
+/** Whether the content `step` puts in place holds the control of `span` (`same` tells them apart). */
+function putsBack(
+	step: RangeStep,
+	span: ControlSpan | RowControlSpan,
+	same = sameControl,
+): boolean {
+	let found = false;
+	if (step instanceof ReplaceStep)
+		step.slice.content.descendants((node) => {
+			found ||= holdsControl(node, span, same);
+			return !found;
+		});
+	return found;
 }
 
 /**
@@ -100,13 +125,7 @@ function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): bool
 		);
 	if (step instanceof RemoveMarkStep)
 		return span.level !== 'inline' || !isMarkOf(step.mark, span.control);
-	let kept = false;
-	if (step instanceof ReplaceStep)
-		step.slice.content.descendants((node) => {
-			kept ||= holdsControl(node, span);
-			return !kept;
-		});
-	return kept;
+	return putsBack(step, span);
 }
 
 /**
@@ -160,6 +179,10 @@ export function violatesControlLock(tr: Transaction, state: EditorState, history
 			const spanTo = before.map(occurrence.to, -1);
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
 			const keeps = kept || keepsControl(step, span);
+			// A step over all of it that puts it back as another control of its id (another kind or
+			// lock, as undoing a pick does after a change outside the history locked it) changes the
+			// locked control, which only its own commands do.
+			if (removesWhole && !keeps && putsBack(step, span, sameId)) return true;
 			if (isContentControlLocked(span.control, 'control') && removesWhole && !keeps && !history)
 				return true;
 			// Deleting a control is not editing what it holds; a step over all of it that keeps the

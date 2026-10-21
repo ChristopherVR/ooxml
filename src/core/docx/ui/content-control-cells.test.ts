@@ -1227,7 +1227,27 @@ describe('content controls around table cells in the editor', () => {
 					lock,
 					lock === 'sdtLocked',
 				]);
+				// Putting it back as another control of its id, without its lock, changes it: refused.
+				const { lock: _lock, ...open } = held;
+				const changed = state.tr.replaceWith(from, to, holder(open, 'Changed'));
+				expect([name, lock, violatesControlLock(changed, state)]).toEqual([name, lock, true]);
 			}
+		// Controls without an id are not one control: replacing a cell control that has none with a
+		// cell holding another follows the locks of the control it replaces, as deleting it does.
+		const crafted = { level: 'cell', kind: 'richText', lock: 'contentLocked' } as ContentControl;
+		const cell = schema.node('tableCell', { contentControl: crafted }, [paragraph('Fixed')]);
+		const state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [schema.node('tableRow', null, [cell])]),
+			]),
+		});
+		const other = schema.node('tableCell', { contentControl: { ...crafted, kind: 'text' } }, [
+			paragraph('Other'),
+		]);
+		expect(violatesControlLock(state.tr.replaceWith(2, 2 + cell.nodeSize, other), state)).toBe(
+			false,
+		);
 	});
 
 	it('stores new properties on the cell', () => {
