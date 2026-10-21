@@ -9,6 +9,7 @@ import { refreshEditorControls } from './editor-controls';
 import { assignMissingParagraphIds, docToModel } from './model-adapter';
 import type { SearchPanelHandle } from './search-panel';
 import { CollaborationSession } from './collaboration-session';
+import { roomFor, type DocxRoom } from './collaboration-room';
 import { repairCollaborativeDocumentIds, isWordYjsRemoteTransaction } from 'ooxml-core/docx/ui';
 import type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';
 import type { EditorLocale } from './localization';
@@ -84,6 +85,8 @@ export class EditorCore {
 	pendingFileName?: string;
 	readonly shell: ShellParts = {};
 	readonly collab: CollaborationSession;
+	/** The declarative `collaboration` property and the Yjs state reporting. */
+	readonly room: DocxRoom;
 	readonly inserts: InsertController;
 	readonly formatDialogs: FormatDialogs;
 	readonly imageMedia: ImageMediaCache;
@@ -99,6 +102,8 @@ export class EditorCore {
 		this.dirtyState = new DirtyState((dirty) => emit(element, 'dirty-change', dirty));
 		this.pageTracker = new PageTracker(element);
 		this.collab = new CollaborationSession(element, () => this.view);
+		this.room = roomFor(this);
+		this.collab.onYjsChange = (session) => this.room.yjsChanged(session);
 		this.inserts = new InsertController({
 			view: () => this.targetView(),
 			model: () => this.model,

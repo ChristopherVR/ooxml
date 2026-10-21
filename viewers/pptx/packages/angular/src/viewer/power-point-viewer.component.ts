@@ -53,12 +53,15 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 	THEME_CATALOG,
+	createCollaborationStateReporter,
+	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	CollaborationState,
 	ElementUpdate,
 	ElementUpdateOptions,
 	AccountAuthConfig,
@@ -202,7 +205,7 @@ import { ThemeEditorFieldsComponent } from './theme-editor-fields.component';
 import { ThemeGalleryComponent } from './theme-gallery.component';
 import { resolveBelowRibbonQuickAccess, TitleBarComponent } from './title-bar.component';
 import { mergeHiddenActions } from './toolbar-visibility';
-import type { CollaborationConfig } from './types';
+import type { CollaborationConfig, CollaborationInput } from './types';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 import { ViewerCollabCursorService } from './viewer-collab-cursor.service';
 import { ViewerCollaborationSessionService } from './viewer-collaboration-session.service';
@@ -1543,7 +1546,7 @@ export class PowerPointViewerComponent
 	 */
 	readonly autosaveIntervalMs = input<number | undefined>(undefined);
 	/** Optional real-time collaboration config; when set, connects and shows remote cursors. */
-	readonly collaboration = input<CollaborationConfig | undefined>(undefined);
+	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	/**
 	 * Display name for the local user in collaboration/broadcast sessions and
 	 * presence avatars. Falls back to "You" (cursors/avatars) and "Presenter"
@@ -1747,6 +1750,12 @@ export class PowerPointViewerComponent
 	readonly startCollaboration = output<CollaborationConfig>();
 	/** Fired when the collaboration/broadcast session stops. Mirrors React/Vue. */
 	readonly stopCollaboration = output<void>();
+	/**
+	 * Fired with the shared `CollaborationState` when a session starts or stops (the off
+	 * state) and when its status, synced flag or people change. Viewer-owned and host-owned
+	 * (`collaboration.session`) sessions both report; unchanged states are not repeated.
+	 */
+	readonly collaborationChange = output<CollaborationState>();
 	/** Fired each time a presentation finishes loading without an error. */
 	readonly load = output<ViewerLoadDetail>();
 	/** Fired once per distinct load failure, with a human-readable message. */
@@ -2715,9 +2724,15 @@ export class PowerPointViewerComponent
 		// tracking those would re-run this effect mid-connect (e.g. when a guest's
 		// placeholder deck loads) and double-join the Yjs room.
 		effect(() => {
-			const config = this.collaboration();
+			const config = resolveCollaborationConfig(this.collaboration());
 			untracked(() => this.session.syncHostConfig(config));
 		});
+
+		// Report the shared CollaborationState, once per real change.
+		const collaborationReporter = createCollaborationStateReporter((state) =>
+			this.collaborationChange.emit(state),
+		);
+		effect(() => collaborationReporter.update(this.collab.state()));
 
 		// Push local slide edits into the shared Y.Doc (reconcile-based; the
 		// service guards against echoing remote-applied changes and against

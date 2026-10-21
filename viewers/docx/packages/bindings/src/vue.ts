@@ -1,6 +1,12 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
 import type { DocumentModel } from 'docx-core';
-import type { EditorThemeMode, RibbonActionInput, RibbonAddInTab } from 'docx-web-component';
+import type {
+	DocxCollaborationOptions,
+	DocxCollaborationState,
+	EditorThemeMode,
+	RibbonActionInput,
+	RibbonAddInTab,
+} from 'docx-web-component';
 import {
 	EDITOR_EVENT_NAMES,
 	EDITOR_PROP_KEYS,
@@ -21,6 +27,7 @@ export const WordEditor = defineComponent({
 		showToolbar: { type: Boolean, default: true },
 		hiddenActions: Array as PropType<readonly RibbonActionInput[]>,
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
+		collaboration: Object as PropType<DocxCollaborationOptions | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES],
 	setup(props, { emit, expose }) {
@@ -34,6 +41,8 @@ export const WordEditor = defineComponent({
 				'page-change': (detail) => emit('page-change', detail),
 				'dirty-change': (dirty) => emit('dirty-change', dirty),
 				'office-ribbon-add-in': (detail) => emit('office-ribbon-add-in', detail),
+				'collaboration-change': (state: DocxCollaborationState) =>
+					emit('collaboration-change', state),
 			}),
 		});
 		onMounted(() => {

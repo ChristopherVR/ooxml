@@ -1,7 +1,8 @@
 import type {
 	AutosaveActivation,
 	CollabLoadOrigin,
-	CollaborationConfig,
+	CollaborationInput,
+	CollaborationState,
 	ConnectionStatus,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
@@ -58,10 +59,11 @@ export interface SessionControllersDeps {
  * new session capabilities hang off this one indirection module.
  */
 export interface SessionControllers {
-	startCollaboration(config: CollaborationConfig): Promise<void>;
+	startCollaboration(config: CollaborationInput): Promise<void>;
 	stopCollaboration(): void;
 	isCollaborationReadOnly(): boolean;
 	getCollaborationStatus(): ConnectionStatus;
+	getCollaborationState(): CollaborationState;
 	getCollaborationLivePatcher(): import('ooxml-ui/pptx').CollaborationLivePatcher;
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */
 	setCollaborationCursor(x: number, y: number): void;
@@ -175,6 +177,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			options.onCollaborationStatus?.(status);
 			notifyCollabUi?.(status);
 		},
+		onStateChange: (state) => options.onCollaborationChange?.(state),
 	});
 
 	// URL-driven / host-configured join: auto-start when a config is supplied.
@@ -234,6 +237,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		stopCollaboration: () => collaboration.stop(),
 		isCollaborationReadOnly: () => collaboration.isReadOnly(),
 		getCollaborationStatus: () => collaboration.getStatus(),
+		getCollaborationState: () => collaboration.getState(),
 		getCollaborationLivePatcher: () => collaboration.livePatcher,
 		setCollaborationCursor: (x, y) => collaboration.setCursor(x, y, deps.store.get().currentSlide),
 		publishCollaborationInlineText: (elementId, text) => {

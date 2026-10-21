@@ -7,6 +7,41 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.44.0) - 2026-10-21
+
+### Features
+
+- **opc:** Name the check a zip package failed ([5125361](https://github.com/ChristopherVR/ooxml/commit/5125361f7787c1edf9863ccf85d0666a56610d1b))
+- **xml:** Throw a typed error when a part breaks a parse limit ([40e73f6](https://github.com/ChristopherVR/ooxml/commit/40e73f6e0ddb045ef5a3b960e26cfc07a1fc6d45))
+- **automation:** List and fill Word form fields from document bytes ([548ca2d](https://github.com/ChristopherVR/ooxml/commit/548ca2d53b2828bc69681e154e8bd668cfacf90b))
+
+### Bug Fixes
+
+- **react:** Render sorter and section menu rows without wrappers ([25e54e8](https://github.com/ChristopherVR/ooxml/commit/25e54e8a23b7c0740de3f8bd91b23f2ece94e747))
+- **chart:** Scale and draw series with very many points ([778a3e9](https://github.com/ChristopherVR/ooxml/commit/778a3e973b5d948e15ef2d0de6ac70a4243feb5a))
+- **docx:** Add no folder entries to a saved package ([9688c30](https://github.com/ChristopherVR/ooxml/commit/9688c30da93a3a73436a248b59b5a64d71fc7585))
+- **xml:** Keep the line break after the declaration of a part ([9af3e23](https://github.com/ChristopherVR/ooxml/commit/9af3e23b3c33368027123f1363c9d1236cc8230e))
+- **docx:** Keep markers and smart tags in place in a rebuilt paragraph ([8ddce70](https://github.com/ChristopherVR/ooxml/commit/8ddce70d17ba25ff6a1887f91c907ecba70a9b1f))
+- **text:** Keep unchanged words between far-apart edits in a diff ([3cf0b04](https://github.com/ChristopherVR/ooxml/commit/3cf0b0495a5c3c2d339b22c5db2b547c14921fbd))
+- **pptx:** Render weight-named font families at their weight ([7188288](https://github.com/ChristopherVR/ooxml/commit/718828829585145b461742c04e030fe3fbbd2d52))
+- **pptx:** Render style-named font families in their style ([5413be6](https://github.com/ChristopherVR/ooxml/commit/5413be6b74a6409c8a2f1454e1a1cf4c4f1b8ba8))
+- **color:** Require each palette variant to name its step ([70d7d9a](https://github.com/ChristopherVR/ooxml/commit/70d7d9a949e9dc5289bacf33bf63bd9af4c9f258))
+- **color:** Require each palette variant to name its step ([3135862](https://github.com/ChristopherVR/ooxml/commit/3135862978fd352498d977335777555ba519428a))
+- **pptx:** Render flowChart connector presets as shapes, not lines ([08399ae](https://github.com/ChristopherVR/ooxml/commit/08399aea49db3270d6ef9c9c163c0ea3b6f8e23f))
+- **pptx:** Paint picture fills inherited from layout placeholders ([70bf7f9](https://github.com/ChristopherVR/ooxml/commit/70bf7f91beda9ae8e4d70472134222afc873dc68))
+- **pptx:** Do not clip stroked shapes in the react static renderer ([dca0420](https://github.com/ChristopherVR/ooxml/commit/dca0420ebead89696ac83316de890e786188b101))
+
+### Refactor
+
+- **react:** Render Help and Record through the shared section ([db59aa2](https://github.com/ChristopherVR/ooxml/commit/db59aa2e38349eb27869b94cfb73368383cc2d36))
+- **react:** Draw the inspector theme colours on the shared grid ([5478038](https://github.com/ChristopherVR/ooxml/commit/5478038fb6737698c4f4535405733acf795d2308))
+- **react:** Draw the inspector Text Warp on the shared gallery ([fd2f582](https://github.com/ChristopherVR/ooxml/commit/fd2f5821475715f120a5ff802df714112fbda4aa))
+
+### Testing
+
+- **react:** Mount the Help tab to read its command names ([fdc1df3](https://github.com/ChristopherVR/ooxml/commit/fdc1df3ee2e806c6d1a46304ec077a9f3ecb7630))
+- **pptx:** Follow the cover direction fix in react and angular ([bb9f936](https://github.com/ChristopherVR/ooxml/commit/bb9f93638997cb8cef29f2eb4488e9b4e8f2a14f))
+
 ## [4.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.43.0) - 2026-10-21
 
 ### Features

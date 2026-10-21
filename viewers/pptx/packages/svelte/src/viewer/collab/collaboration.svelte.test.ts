@@ -1,3 +1,4 @@
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import type {
 	AwarenessLike,
 	CollaborationConfig,
@@ -14,6 +15,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { EditorState } from '../editor/editor-state.svelte';
+import { toViewerStateOptions } from '../state/viewer-state-options';
 import type { CollabSession, CollabSessionFactory } from './collaboration-session';
 import * as sessionModule from './collaboration-session';
 import { CollaborationController } from './collaboration.svelte';
@@ -434,6 +436,42 @@ describe('collaborationController external sessions', () => {
 		host.doc.destroy();
 	});
 
+	it('borrows a shared-contract CollabSession passed as collaboration.session', async () => {
+		const hub = createMemoryHub();
+		const shared = createCollabSession({
+			roomId: 'shared-room',
+			provider: transportProvider({ transport: hub.createTransport('shared-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		const props = { collaboration: { session: shared, user: { name: 'Bo' } } };
+		const options = toViewerStateOptions(() => props as never, {
+			t: (key) => key,
+			getRootEl: () => undefined,
+			getStageHolderEl: () => undefined,
+			getViewportWidth: () => 960,
+			getViewportHeight: () => 540,
+			getMasterScale: () => 1,
+		});
+		const config = options.collaboration as CollaborationConfig;
+		expect(options.collaboration).toBe(config);
+		expect(config).toMatchObject({ roomId: 'shared-room', userName: 'Bo' });
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => config,
+			});
+			await collab.start(config);
+			expect(collab.active).toBeTruthy();
+			collab.stop();
+			expect(collab.active).toBeFalsy();
+			expect(shared.doc.isDestroyed).toBeFalsy();
+		});
+		shared.destroy();
+	});
+
 	it('keeps editing disabled and ignores partial room content until synced', async () => {
 		const host = externalHost([slide('partial', [])], { status: 'connected', synced: false });
 		await inRoot(async () => {
@@ -692,5 +730,40 @@ describe('collaborationController external sessions', () => {
 			createSession.mockRestore();
 			host.doc.destroy();
 		}
+	});
+});
+
+describe('collaborationController state (the shared CollaborationState)', () => {
+	it('reports a host-owned session with its people, then the off state on stop', async () => {
+		const host = externalHost([slide('room', [])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => undefined,
+			});
+			expect(collab.state).toMatchObject({ active: false, status: 'off', people: [] });
+			await collab.start({ ...CONFIG, roomId: 'host-room', externalSession: host.session });
+			flushSync();
+			expect(collab.state).toMatchObject({
+				active: true,
+				roomId: 'host-room',
+				status: 'connected',
+				synced: true,
+			});
+			expect(collab.state.people).toStrictEqual([
+				expect.objectContaining({ clientId: host.doc.clientID, name: 'Tester', self: true }),
+			]);
+			collab.stop();
+			expect(collab.state).toMatchObject({
+				active: false,
+				roomId: undefined,
+				status: 'off',
+				synced: false,
+				people: [],
+			});
+		});
+		host.doc.destroy();
 	});
 });

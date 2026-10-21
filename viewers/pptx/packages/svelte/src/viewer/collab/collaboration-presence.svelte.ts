@@ -32,6 +32,8 @@ export class CollaborationPresence {
 	cursors = $state<RemoteCursor[]>([]);
 	remotePresences = $state<SanitizedPresence[]>([]);
 	followedClientId = $state<number | null>(null);
+	/** The local awareness client id while a session is live, else null. */
+	selfClientId = $state<number | null>(null);
 
 	readonly #getCanvasSize: () => { width?: number; height?: number };
 	#publisher: PresencePublisher | null = null;
@@ -51,6 +53,7 @@ export class CollaborationPresence {
 		this.stop();
 		this.#awareness = awareness;
 		this.#selfId = awareness.clientID ?? -1;
+		this.selfClientId = awareness.clientID ?? null;
 		this.#publisher = createPresencePublisher(awareness, identity);
 		awareness.on('change', this.#refresh);
 		awareness.on('update', this.#refresh);
@@ -70,6 +73,7 @@ export class CollaborationPresence {
 		this.#publisher = null;
 		this.#awareness = null;
 		this.#selfId = -1;
+		this.selfClientId = null;
 		this.#localActiveSlide = 0;
 		this.#projector.reset();
 		this.cursors = [];

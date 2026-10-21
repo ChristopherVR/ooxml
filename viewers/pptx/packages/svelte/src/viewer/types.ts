@@ -2,7 +2,9 @@ import type {
 	AccountAuthConfig,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
@@ -328,11 +330,17 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Share/Broadcast toolbar buttons; see `collab/collaboration.svelte.ts` and
 	 * `collab/components/`.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/** Fired when a collaboration session starts (with the resolved config). */
 	onstartcollaboration?: (config: CollaborationConfig) => void;
 	/** Fired when a collaboration session stops. */
 	onstopcollaboration?: () => void;
+	/**
+	 * Fired with the shared `CollaborationState` when a session starts or stops (the off
+	 * state) and when its status, synced flag or people change. Viewer-owned and host-owned
+	 * (`collaboration.session`) sessions both report; unchanged states are not repeated.
+	 */
+	oncollaborationchange?: (state: CollaborationState) => void;
 	/**
 	 * Prefilled values for the built-in Share dialog's form (room id, display
 	 * name, server URL). The Broadcast dialog reuses `serverUrl` from this same

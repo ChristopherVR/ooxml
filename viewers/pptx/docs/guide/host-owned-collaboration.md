@@ -48,6 +48,51 @@ host also installs its chosen provider and awareness implementation. Deduplicate
 Yjs if your dependency tree contains multiple versions: types from separate runtime
 copies cannot safely be mixed.
 
+## Using the shared collaboration contract
+
+Word, Excel and Visio take one `collaboration` option shape from `ooxml-core/collab`
+(`CollaborationOptions`: `roomId`, `serverUrl`, `session`, `user`, `intent`). PowerPoint accepts
+the same shape in its `collaboration` prop alongside its own `CollaborationConfig`, so a host
+embedding several products can hand them all one session:
+
+```ts
+import { createCollabSession, transportProvider } from 'ooxml-core/collab';
+
+const session = createCollabSession({ roomId, provider: transportProvider({ transport }), user });
+// <PowerPointViewer collaboration={{ session, user: { name: 'Ada' }, intent: 'join' }} />
+```
+
+- `session` is borrowed: it becomes the `externalSession`, and the viewer never destroys it. The
+  host creates, connects and destroys it. `roomId` defaults to the session's room.
+- `user.name`, `color`, `avatar` and `role` map to `userName`, `userColor`, `userAvatar` and
+  `role`; `intent` maps to `sessionIntent`. Explicit legacy fields win when both are set.
+- Every binding runs the same `resolveCollaborationConfig` (from `ooxml-ui/pptx`) where it reads the
+  prop, so they behave identically. A legacy `CollaborationConfig` is returned unchanged.
+
+Not supported, honestly: `provider` (a `ProviderFactory`) and the no-`serverUrl` BroadcastChannel
+fallback. PowerPoint's built-in transports are y-websocket and y-webrtc, selected by
+`serverUrl`/`transport`. A host with its own transport creates a session with
+`openCollaborationSession` and passes it as `session`. A `provider` without a `session` resolves to
+an empty room id, which each binding reports as its existing `error` collaboration status.
+
+## Reporting the shared state
+
+Every binding reports the same `CollaborationState` Word, Excel and Visio report (`active`, `roomId`,
+`status`, `synced`, `people`, the local person flagged `self`; type from `ooxml-core/collab`, also
+re-exported by each package). It fires when a session starts or stops (the off state, `status: 'off'`)
+and when the status, the synced flag or the people change, for host-owned and viewer-owned sessions
+alike, and never repeats an unchanged state:
+
+| Binding | Notification                                                 |
+| ------- | ------------------------------------------------------------ |
+| React   | `onCollaborationChange` prop                                 |
+| Vue     | `collaboration-change` event                                 |
+| Angular | `collaborationChange` output                                 |
+| Svelte  | `oncollaborationchange` callback prop                        |
+| Vanilla | `onCollaborationChange` option and `getCollaborationState()` |
+
+Vanilla keeps `onCollaborationStatus` and `getCollaborationStatus()` for the raw connection status.
+
 ## Readiness is the host's decision
 
 `getSnapshot()` returns `{ status, synced }`. Status is `connecting`, `connected`,

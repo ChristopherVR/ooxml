@@ -104,4 +104,6 @@ export interface CollaborationContextValue {
 	synced: boolean;
 	/** Manually retry the WebSocket connection after a timeout or error. */
 	retry: () => void;
+	/** The local awareness client id, once the session has one. */
+	clientId?: number | null;
 }

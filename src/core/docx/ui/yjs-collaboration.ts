@@ -22,8 +22,19 @@ import {
 export interface WordYjsOptions {
 	/** Host identity for the matching source package, including media and opaque parts. */
 	documentId: string;
-	/** Only the designated room creator may initialize an empty synchronized room. */
+	/**
+	 * Only the designated room creator may initialize an empty synchronized room. Two creators
+	 * joining one empty room at once each seed it and the room ends up with both bodies, so a host
+	 * must designate exactly one creator; a joiner whose room is still empty is rejected instead.
+	 */
 	initializeIfEmpty?: boolean;
+	/**
+	 * Lets the creator (`initializeIfEmpty`) join after the session's write gate opened without a
+	 * provider sync, as a first peer on a serverless mesh does. A room that has content but whose
+	 * peers answered late is then seeded a second time, so the declarative `collaboration` property
+	 * sets this only for `intent: 'create'`.
+	 */
+	seedWithoutSync?: boolean;
 	/** New media referenced by the creator's initial snapshot. */
 	initialMedia?: ReadonlyMap<string, PendingMediaPart>;
 	/** Comment threads from the creator's matching source package. */
@@ -67,7 +78,10 @@ export class WordYjsCollaboration {
 		initial: Node,
 		options: WordYjsOptions,
 	) {
-		if (!session.synced)
+		if (
+			!session.synced &&
+			!(options.seedWithoutSync && options.initializeIfEmpty && session.gate.isOpen())
+		)
 			throw new Error('Wait for initial provider synchronization before joining Word.');
 		if (!options.documentId.trim()) throw new Error('A matching source documentId is required.');
 		this.fragment = session.doc.getXmlFragment('docx:body');

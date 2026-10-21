@@ -146,6 +146,35 @@ Try the [Yjs two-peer demo](/demo/collaboration.html?mode=yjs){target="_self"}.
 Its Pause delivery, Reconnect providers and Resync providers actions exercise
 in-memory recovery. It provides no production networking or durable storage.
 
+## The `collaboration` property
+
+For the common case, `<docx-editor>` takes the same declarative embedding contract as the Excel, PowerPoint and Visio editors (`CollaborationOptions` in `ooxml-core/collab`; the Word aliases are `DocxCollaborationOptions` and `DocxCollaborationState`). It is a thin layer over the Yjs mode above, so you do not create a session, wait for it or choose a `documentId` yourself:
+
+```ts
+editor.collaboration = {
+	roomId: 'q3-report',
+	serverUrl: 'wss://example.com/collab',
+	user: { name: 'Ada' },
+	intent: 'create',
+};
+editor.addEventListener('collaboration-change', (event) => render(event.detail)); // { active, roomId, status, synced, people }
+editor.collaboration = null; // or editor.stopCollaboration()
+```
+
+- The transport is the first of `session` (yours, never destroyed by the editor), `provider`, `serverUrl`, else a BroadcastChannel between tabs of one browser. A session the editor opens itself is destroyed when it leaves.
+- `user.name` defaults to `reviewAuthor`; a `user.role` of `viewer` blocks local edits (advisory, as above).
+- `collaborationState` and `collaboration-change` report any Yjs binding, including one started with `startYjsCollaboration`. `reconnectCollaboration()` restarts the connection. Failures arrive as `document-error`.
+- `stopCollaboration()` without an argument also clears the property. The authority-mode `discardPending` argument is unchanged.
+- Loading or replacing the document leaves the room first and rejoins afterwards (the imperative API still throws "Stop collaboration before replacing the document."). Joining waits until a document is mounted and not loading.
+
+Honest limits:
+
+- The room name is the Word `documentId`. Nothing checks that every window loaded the same source package; that stays your contract.
+- **Two creators race.** With the default `intent: 'create'` a window seeds an empty room. Windows that open one empty room at the same moment each seed it and the room ends up holding both bodies. Give exactly one window `create` and the others `intent: 'join'`, which never seeds and reports `document-error` if the room is still empty after it synced.
+- A creator waits for the first exchange with the room, or for the write gate to open (a few seconds) when it is alone on a serverless mesh; in that second case it seeds without having seen the room, so a slow server whose content arrives later is seeded twice. Use a server or `join` when that matters.
+- After a leave and rejoin around a load, a host-owned `session` keeps the room's earlier content, which wins over the newly loaded document; an editor-owned session starts fresh.
+- Word's Yjs layer still shares the body only (see above), and this does not add server authorization or persistence.
+
 ## Protocol
 
 The web component exposes `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration`, and `stopCollaboration`. Hosts can use `createCollaborationAuthority(model, options)` to create the in-memory reference authority with the same schema and model conversion as the editor.

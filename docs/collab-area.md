@@ -59,6 +59,17 @@ import {
 
 `packageAdapter({ name?, maxBytes? })` is a ready-made `DocumentAdapter<{ bytes, revision }>` that shares the whole saved package (VSDX, DOCX, PPTX, XLSX). It suits products whose edits produce a new package rather than a mergeable model. It never merges: the last package written wins, and packages above `maxBytes` (32 MiB by default) are refused.
 
+## Embedding contract (every editor)
+
+A host embedding more than one product integrates collaboration once (issue #152). Every editor element takes the same `collaboration` property and reports the same state; the types and helpers are in `embedding.ts`:
+
+- `CollaborationOptions<P>`: `roomId`, `serverUrl` (y-websocket compatible), `provider` (a `ProviderFactory`), `session` (a host-owned `CollabSession`, never destroyed by the editor), `user` (`name`, `color`, `avatar`, `role`) and `intent` (`join` never seeds an empty room). One transport is used, in this order: `session`, `provider`, `serverUrl`, else a BroadcastChannel between windows of this browser.
+- `CollaborativeEditor`: the element surface. `collaboration` is declarative (while set the open document is shared, `null` leaves), `collaborationState` returns a `CollaborationState` (`active`, `roomId`, `status`, `synced`, `people`), `stopCollaboration()` and `reconnectCollaboration()`. Elements dispatch `collaboration-change` (`COLLABORATION_CHANGE_EVENT`) with the state as detail; every framework binding takes a `collaboration` prop and relays the event in its usual style (Word and Excel: `onCollaborationChange`, `@collaboration-change`, `(collaborationChange)`, `oncollaborationchange`; Visio: its `events` map and Angular `(collaborationChange)`). PowerPoint accepts the same options (`session`, `user`, `intent`, `roomId`, `serverUrl`) in its `collaboration` prop through `resolveCollaborationConfig`, and reports the same `CollaborationState` from every binding (React `onCollaborationChange`, Vue `collaboration-change`, Angular `(collaborationChange)`, Svelte `oncollaborationchange`, Vanilla `onCollaborationChange` and `getCollaborationState()`), but has no `provider` or BroadcastChannel path.
+- `openCollaborationSession(options, defaults)` is what an editor calls: it returns the host's session (`owned: false`) or opens one it owns, with the product's broadcast prefix, presence sanitiser and default user name. `collaborationStateOf(session)` and `onCollaborationStateChange(session, listener)` derive the reported state.
+- `toExternalSession(session)` presents a `CollabSession` as the borrowed `ExternalSession` (doc, awareness, stable `getSnapshot`, `subscribe`) that viewers taking host-owned Yjs resources observe; `synced` is the session's write gate.
+
+The document engine behind the contract still differs per product (Excel merges cell by cell, Word maps its document to Yjs, Visio shares the whole package with the last write winning, PowerPoint keeps its slide schema), so what merges concurrently differs too; each product's docs state its limits. A host session must be created with the product's presence sanitiser (for example `sanitizeXlsxPresence`), so one session cannot be passed to two different products.
+
 ## Honest limits
 
 - Validation checks structure and size, not semantics: a well-formed update from an authorised peer can still carry content the product must validate when it reads the model back.

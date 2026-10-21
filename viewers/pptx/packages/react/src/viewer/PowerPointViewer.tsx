@@ -55,6 +55,7 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 	shouldConfirmExternalHyperlink,
 	resolveAutosaveIntervalSeconds,
+	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
@@ -121,6 +122,7 @@ import { useAiBridge } from './hooks/ai/useAiBridge';
 import { useAiPanelController } from './hooks/ai/useAiPanelController';
 import { useBroadcastFollower, useFollowMode } from './hooks/collaboration';
 import { useCollaborationDocumentSync } from './hooks/collaboration/useCollaborationDocumentSync';
+import { useCollaborationStateReport } from './hooks/collaboration/useCollaborationStateReport';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
@@ -201,9 +203,10 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onLocaleChange,
 			accountAuth,
 			authorName,
-			collaboration,
+			collaboration: collaborationInput,
 			onStartCollaboration,
 			onStopCollaboration,
+			onCollaborationChange,
 			shareDefaults,
 			smartArt3D = false,
 			surfaceChart3D = false,
@@ -217,6 +220,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			customization,
 			initialSlide,
 		} = props;
+		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.
 		const rootOptions = resolveViewerRootOptions(props);
@@ -1735,6 +1739,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 											canvasWidth={canvasSize.width}
 											canvasHeight={canvasSize.height}
 										>
+											<CollaborationStateReporter onChange={onCollaborationChange} />
 											<CollaborationDocumentSync
 												slides={galleryDeckStyle.held()?.slides ?? slides}
 												templateElementsBySlideId={
@@ -1816,6 +1821,19 @@ function CollaborationStatusStrip() {
 			onRetry={collab.retry}
 		/>
 	);
+}
+
+/**
+ * Reports the shared `CollaborationState` to the host's `onCollaborationChange`.
+ * Must be rendered inside a `CollaborationProvider`; renders nothing.
+ */
+function CollaborationStateReporter({
+	onChange,
+}: {
+	onChange: PowerPointViewerProps['onCollaborationChange'];
+}) {
+	useCollaborationStateReport(useCollaboration(), onChange);
+	return null;
 }
 
 /**

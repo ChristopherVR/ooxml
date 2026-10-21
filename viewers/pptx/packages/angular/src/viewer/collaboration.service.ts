@@ -16,12 +16,14 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import type {
 	CollabLoadOrigin,
+	CollaborationState,
 	CollaborationConfig,
 	CollaborationLivePatcher,
 	CollaborationRole,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import {
+	buildCollaborationState,
 	createCollaborationLivePatcher,
 	isMixedContentBlocked,
 	registerCollaborationTeardown,
@@ -77,6 +79,25 @@ export class CollaborationService {
 	private readonly writeBack = new WriteBackScheduler();
 	/** Granular local<->doc slide sync (gate + echo dedupe + broadcast/adopt). */
 	private readonly slideSync = new SlideSyncEngine();
+	/** The first exchange with the room finished (the first-write gate is open). */
+	readonly synced = this.slideSync.synced;
+	/** The local awareness client id of the active session, or null. */
+	readonly clientId = signal<number | null>(null);
+	private readonly activeConfig = signal<CollaborationConfig | null>(null);
+	/** The shared `CollaborationState` a host reads (`collaborationChange`). */
+	readonly state = computed<CollaborationState>(() => {
+		const config = this.activeConfig();
+		return buildCollaborationState({
+			active: this.active(),
+			roomId: config?.roomId,
+			status: this.status(),
+			synced: this.synced(),
+			clientId: this.clientId(),
+			userName: config?.userName,
+			userColor: config?.userColor,
+			remoteUsers: this.presence(),
+		});
+	});
 
 	private onRemoteSlides: ((slides: PptxSlide[]) => void) | null = null;
 	private canvasWidth = DEFAULT_CANVAS_BOUND;
@@ -148,6 +169,7 @@ export class CollaborationService {
 		this.getTemplateElements = options.getTemplateElements ?? null;
 		this.getSaveOptions = options.getSaveOptions ?? null;
 		this.currentConfig = config;
+		this.activeConfig.set(config);
 		this.activeRole.set(config.role);
 		this.readOnly.set(Boolean(config.externalSession) || config.role === 'viewer');
 
@@ -179,6 +201,7 @@ export class CollaborationService {
 				return;
 			}
 			this.session = session;
+			this.clientId.set(session.selfId);
 			this.active.set(true);
 			this.refreshPresence();
 			// Readiness can seed/adopt synchronously before this.session exists.
@@ -215,6 +238,8 @@ export class CollaborationService {
 		this.livePatcher.configure(null, null);
 		this.onRemoteSlides = null;
 		this.currentConfig = null;
+		this.activeConfig.set(null);
+		this.clientId.set(null);
 
 		this.status.set('disconnected');
 		this.active.set(false);

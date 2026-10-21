@@ -816,6 +816,7 @@ export * from './hyperlink-target';
 export * from './collaboration-presence';
 export * from './collaboration-shell-state';
 export * from './collaboration-external-session';
+export * from './collaboration-options';
 export * from './collaboration-external-readiness';
 // Throttled local-presence publisher, shared by every binding's collaboration
 // layer (writes the same nested `presence` awareness field they all read).
@@ -1795,3 +1796,6 @@ export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
 export * from './slide-package-clipboard';
 export * from './custom-path-markers';
+
+// The shared `CollaborationState` every binding reports to its host (`collaboration-change`).
+export * from './collaboration-state';

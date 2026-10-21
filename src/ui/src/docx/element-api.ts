@@ -2,7 +2,8 @@ import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
 import type { WordYjsOptions } from 'ooxml-core/docx/ui';
-import { renderDocument } from './editor-render';
+import { joinYjs } from './collaboration-room';
+import type { DocxCollaborationState } from './collaboration-types';
 import { yjsPresenceProfile } from './yjs-presence';
 import { saveDocx } from 'ooxml-core/docx';
 import { schema } from './schema';
@@ -53,21 +54,19 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 
 	/** Join a synchronized Yjs room after loading its matching source package. */
 	startYjsCollaboration(session: CollabSession, options: WordYjsOptions): void {
-		const { core } = this;
-		if (!core.view) throw new Error('Mount and load the document before starting collaboration.');
-		core.collab.startYjs(session, core.view.state.doc, {
-			...options,
-			initialMedia: new Map([...(options.initialMedia ?? []), ...core.inserts.pendingMedia]),
-			initialComments: options.initialComments ?? core.model.comments ?? [],
-		});
-		core.loadGeneration++;
-		core.detachedState = undefined;
-		renderDocument(core);
+		joinYjs(this.core, session, options);
+	}
+
+	/** Who is in the room, and whether it is synced; the off state when not sharing. */
+	get collaborationState(): DocxCollaborationState {
+		return this.core.room.state();
 	}
 
 	reconnectCollaboration(): void {
-		if (!this.core.collab.yjs) throw new Error('No Yjs collaboration session.');
-		this.core.collab.yjs.reconnect();
+		const { core } = this;
+		const session = core.collab.yjs?.session ?? core.room.pendingSession;
+		if (!session) throw new Error('No Yjs collaboration session.');
+		session.reconnect();
 	}
 
 	resyncCollaboration(): boolean {

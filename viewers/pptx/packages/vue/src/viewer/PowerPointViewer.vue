@@ -24,7 +24,11 @@
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
 import { ShieldAlert } from 'lucide-vue-next';
-import { createSlidePackageClipboard } from 'ooxml-ui/pptx';
+import {
+	createCollaborationStateReporter,
+	createSlidePackageClipboard,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	attachViewerHyperlinks,
@@ -1162,7 +1166,7 @@ const collaboration = useCollaborationWiring({
 			tableStylesToDelete: deck.tableStylesToDelete.value,
 			embedFonts: fontEmbedding.embedFontsEnabled.value,
 		}),
-	initialUserColor: props.collaboration?.userColor,
+	initialUserColor: resolveCollaborationConfig(props.collaboration)?.userColor,
 	canvasWidth: computed(() => canvasSize.value.width),
 	canvasHeight: computed(() => canvasSize.value.height),
 	collaborationProp: () => props.collaboration,
@@ -1185,6 +1189,15 @@ watch(
 	},
 	{ immediate: true, flush: 'sync' },
 );
+
+// The shared CollaborationState, for viewer-owned and host-owned sessions alike.
+const collaborationReporter = createCollaborationStateReporter((state) =>
+	emit('collaboration-change', state),
+);
+watch(collaboration.collab.state, (state) => collaborationReporter.update(state), {
+	immediate: true,
+	flush: 'sync',
+});
 
 // -- Panels and dialogs owned by their own composables ------------------
 const signatureWorkflow = useSignatureWorkflow({ signatures, isDirty: autosave.isDirty });

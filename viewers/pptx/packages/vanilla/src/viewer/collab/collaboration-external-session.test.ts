@@ -1,5 +1,7 @@
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import type {
 	CollaborationConfig,
+	CollaborationState,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 } from 'ooxml-ui/pptx';
@@ -81,13 +83,14 @@ function host(synced = false) {
 	};
 }
 
-function build() {
+function build(onStateChange?: (state: CollaborationState) => void) {
 	const store = createStore(createInitialViewerState());
 	store.set({ editable: true, slides: [slide('placeholder')] });
 	const collab = createCollaborationController({
 		store,
 		getHandler: () => null,
 		setEditable: (editable) => store.set({ editable }),
+		...(onStateChange ? { onStateChange } : {}),
 	});
 	return { collab, store };
 }
@@ -220,6 +223,49 @@ describe('host-owned Vanilla collaboration', () => {
 		expect(store.get().editable).toBeTruthy();
 	});
 
+	it('reports the shared CollaborationState for a host-owned session, then the off state', async () => {
+		const room = host(true);
+		room.update({ status: 'connected', synced: true });
+		const states: CollaborationState[] = [];
+		const { collab, store } = build((state) => states.push(state));
+		expect(collab.getState()).toMatchObject({ active: false, status: 'off', people: [] });
+		await collab.start(config(room.session));
+		const remote = {
+			clientId: 99,
+			userName: 'Bo',
+			userColor: '#ef4444',
+			activeSlideIndex: 0,
+			cursorX: 1,
+			cursorY: 1,
+			lastUpdated: new Date().toISOString(),
+		};
+		store.set({ remotePresences: [remote] });
+		const state = states.at(-1);
+		expect(state).toMatchObject({
+			active: true,
+			roomId: 'external-room',
+			status: 'connected',
+			synced: true,
+		});
+		expect(state?.people).toStrictEqual([
+			expect.objectContaining({ clientId: room.doc.clientID, name: 'Viewer', self: true }),
+			expect.objectContaining({ clientId: 99, name: 'Bo', self: false }),
+		]);
+		expect(collab.getState()).toStrictEqual(state);
+		const count = states.length;
+		store.set({ remotePresences: [{ ...remote }] });
+		expect(states.length).toBe(count);
+		collab.stop();
+		expect(states.at(-1)).toMatchObject({
+			active: false,
+			roomId: undefined,
+			status: 'off',
+			synced: false,
+			people: [],
+		});
+		collab.destroy();
+	});
+
 	it('leaves a borrowed session attached after cancelled beforeunload', async () => {
 		const room = host(true);
 		const { collab } = build();
@@ -230,6 +276,31 @@ describe('host-owned Vanilla collaboration', () => {
 		expect(collab.isActive()).toBeFalsy();
 		expect(room.destroy).not.toHaveBeenCalled();
 		collab.destroy();
+	});
+
+	it('borrows a shared-contract CollabSession passed as collaboration.session', async () => {
+		const hub = createMemoryHub();
+		const shared = createCollabSession({
+			roomId: 'shared-room',
+			provider: transportProvider({ transport: hub.createTransport('shared-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		const destroy = vi.spyOn(shared.doc, 'destroy');
+		const { collab } = build();
+		await collab.start({ session: shared, user: { name: 'Bo' }, intent: 'join' });
+		expect(collab.isActive()).toBeTruthy();
+		expect(collab.getConfig()).toMatchObject({
+			roomId: 'shared-room',
+			userName: 'Bo',
+			sessionIntent: 'join',
+		});
+		expect(collab.getConfig()?.externalSession?.doc).toBe(shared.doc);
+		collab.stop();
+		expect(collab.isActive()).toBeFalsy();
+		expect(destroy).not.toHaveBeenCalled();
+		collab.destroy();
+		shared.destroy();
 	});
 
 	it('keeps the public viewer read-only through file loading and mode changes', async () => {

@@ -218,7 +218,11 @@ export type CollaborationSessionIntent = 'create' | 'join';
 /**
  * Real-time collaboration configuration.
  *
- * The same shape is accepted by every framework binding.
+ * The same shape is accepted by every framework binding. A host may also pass the
+ * shared `CollaborationOptions` contract (`session`, `user`, `intent`) that Word, Excel
+ * and Visio take; see `CollaborationInput` and `resolveCollaborationConfig`. A host
+ * `CollabSession` from `ooxml-core/collab` is borrowed (never destroyed) and becomes
+ * `externalSession`. `provider` and the BroadcastChannel fallback are not supported here.
  */
 export interface CollaborationConfig {
 	/** Unique identifier for the collaboration room (alphanumeric, hyphens, underscores). */

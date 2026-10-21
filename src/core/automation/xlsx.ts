@@ -79,14 +79,33 @@ export async function setXlsxCells(
 	return { bytes: await saveXlsx(workbook), warnings: workbook.warnings };
 }
 
+export interface XlsxFilledCellsOptions {
+	/** The most cells returned across all sheets (default 5000). */
+	maxCells?: number;
+	/** Read only this sheet; every sheet when absent. */
+	sheetIndex?: number;
+}
+
 /**
- * Every filled cell of every sheet, in row-major order, up to `maxCells` in all. Unlike a fixed
- * range it misses nothing inside the cap, and it says how much was left out when the cap is hit.
+ * Every filled cell of every sheet (or of `sheetIndex`), in row-major order, up to `maxCells` in
+ * all. Unlike a fixed range it misses nothing inside the cap, and it says how much was left out
+ * when the cap is hit.
  */
-export async function readXlsxFilledCells(bytes: Uint8Array, { maxCells = 5000 } = {}) {
+export async function readXlsxFilledCells(
+	bytes: Uint8Array,
+	{ maxCells = 5000, sheetIndex }: XlsxFilledCellsOptions = {},
+) {
 	const workbook = await loadXlsx(bytes);
+	if (
+		sheetIndex !== undefined &&
+		(!Number.isSafeInteger(sheetIndex) || sheetIndex < 0 || !workbook.sheets[sheetIndex])
+	)
+		throw new Error('Invalid sheet');
 	let budget = Math.max(0, Math.floor(maxCells));
-	const sheets = workbook.sheets.map((sheet, index) => {
+	const chosen = workbook.sheets
+		.map((sheet, index) => ({ sheet, index }))
+		.filter(({ index }) => sheetIndex === undefined || index === sheetIndex);
+	const sheets = chosen.map(({ sheet, index }) => {
 		const cells: { address: string; value: unknown; formula?: string }[] = [];
 		let total = 0;
 		forEachCell(sheet, (cell, row, col) => {

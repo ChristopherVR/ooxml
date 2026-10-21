@@ -1,4 +1,5 @@
 import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/index';
+import type { CollaborationOptions, CollaborationState } from '../../collab/index';
 import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
@@ -9,6 +10,8 @@ export interface ViewerProperties {
 	showToolbar: boolean;
 	/** Tabs the host adds after Help, as an Office add-in does. */
 	ribbonAddIns: readonly RibbonAddInTab[];
+	/** Shares the open drawing in a room while set; null leaves it (the shared embedding contract). */
+	collaboration: CollaborationOptions | null;
 }
 /** A page-scoped shape identity. Omitted pageId means the currently displayed page. */
 export interface VisioShapeSelection {
@@ -31,6 +34,8 @@ export interface ViewerEvents {
 	'selection-change': readonly VisioShapeSelection[];
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	'office-ribbon-add-in': RibbonAddInCommandDetail;
+	/** Sharing started, stopped or its status, sync or people changed. */
+	'collaboration-change': CollaborationState;
 }
 export type ViewerCallbacks = {
 	[K in keyof ViewerEvents]?: (detail: ViewerEvents[K]) => void;
@@ -42,6 +47,7 @@ export const propertyKeys = [
 	'zoom',
 	'showToolbar',
 	'ribbonAddIns',
+	'collaboration',
 ] as const satisfies readonly (keyof ViewerProperties)[];
 export const eventKeys = [
 	'document-load',
@@ -52,6 +58,7 @@ export const eventKeys = [
 	'shape-select',
 	'selection-change',
 	'office-ribbon-add-in',
+	'collaboration-change',
 ] as const satisfies readonly (keyof ViewerEvents)[];
 // Adding a contract member must also update the inventories used by every adapter.
 const allProperties: Record<

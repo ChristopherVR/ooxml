@@ -117,11 +117,12 @@ underscores to avoid surprises.
 Collaboration is **controlled** by the host app, same as React/Vue. The viewer's Share and Broadcast
 dialogs report intent via outputs; you flip the `collaboration` input in response.
 
-| Output/Input         | Type                                        | Purpose                                                                                                  |
-| -------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `startCollaboration` | `output<CollaborationConfig>`               | User started a session from the Share/Broadcast dialog - set the `collaboration` input with this config. |
-| `stopCollaboration`  | `output<void>`                              | User stopped the session - clear the `collaboration` input.                                              |
-| `shareDefaults`      | `input<{ roomId?; userName?; serverUrl? }>` | Pre-fills the Share dialog fields; falls back to `authorName` for `userName`, empty otherwise.           |
+| Output/Input          | Type                                        | Purpose                                                                                                                    |
+| --------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `startCollaboration`  | `output<CollaborationConfig>`               | User started a session from the Share/Broadcast dialog - set the `collaboration` input with this config.                   |
+| `stopCollaboration`   | `output<void>`                              | User stopped the session - clear the `collaboration` input.                                                                |
+| `collaborationChange` | `output<CollaborationState>`                | The shared state (`active`, `roomId`, `status`, `synced`, `people`), also for a host-owned session; the off state on stop. |
+| `shareDefaults`       | `input<{ roomId?; userName?; serverUrl? }>` | Pre-fills the Share dialog fields; falls back to `authorName` for `userName`, empty otherwise.                             |
 
 ```ts
 @Component({

@@ -1,4 +1,5 @@
 export { default as PowerPointViewer } from './PowerPointViewer.vue';
+export type { CollaborationState } from 'ooxml-core/collab';
 export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,

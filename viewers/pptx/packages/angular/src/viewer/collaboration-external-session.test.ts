@@ -4,7 +4,11 @@ import type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 } from 'ooxml-ui/pptx';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import {
+	readSlidesFromYDoc,
+	reconcileSlidesInYDoc,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -122,6 +126,40 @@ describe('host-owned Angular collaboration', () => {
 		collab.broadcastSlides(slides);
 		expect(readSlidesFromYDoc(room.doc).map((item) => item.id)).toStrictEqual(['startup']);
 		collab.disconnect();
+	});
+
+	it('borrows a shared-contract CollabSession resolved from collaboration.session', async () => {
+		const room = host(true);
+		const status = new Set<() => void>();
+		// A structural CollabSession: the normaliser only reads its public surface.
+		const shared = {
+			roomId: 'shared-room',
+			doc: room.doc,
+			awareness: room.awareness,
+			status: 'connected',
+			synced: true,
+			gate: { isOpen: () => true },
+			identity: { userName: 'Ada', userColor: '#336699' },
+			on: (_event: string, listener: () => void) => {
+				status.add(listener);
+				return () => status.delete(listener);
+			},
+		};
+		const input = { session: shared as never, intent: 'join' as const };
+		const resolved = resolveCollaborationConfig(input)!;
+		expect(resolveCollaborationConfig(input)).toBe(resolved);
+		const collab = service();
+		await collab.connect(resolved);
+		expect(collab.active()).toBeTruthy();
+		expect(resolved).toMatchObject({
+			roomId: 'shared-room',
+			userName: 'Ada',
+			sessionIntent: 'join',
+		});
+		collab.disconnect();
+		expect(collab.active()).toBeFalsy();
+		expect(room.destroy).not.toHaveBeenCalled();
+		expect(status.size).toBe(0);
 	});
 
 	it('does not adopt partially synchronized remote slides until the host is ready', async () => {
@@ -320,5 +358,30 @@ describe('host-owned Angular collaboration', () => {
 		expect(collab.active()).toBeFalsy();
 		expect(room.destroy).not.toHaveBeenCalled();
 		expect(room.awareness.getLocalState()?.presence).toStrictEqual({ userName: 'Host' });
+	});
+
+	it('reports the shared CollaborationState for a host-owned session, then the off state', async () => {
+		const room = host(true);
+		room.update({ status: 'connected', synced: true });
+		const collab = service();
+		expect(collab.state()).toMatchObject({ active: false, status: 'off', people: [] });
+		await collab.connect(config(room.session));
+		expect(collab.state()).toMatchObject({
+			active: true,
+			roomId: 'external-room',
+			status: 'connected',
+			synced: true,
+		});
+		expect(collab.state().people).toStrictEqual([
+			expect.objectContaining({ clientId: room.doc.clientID, name: 'Viewer', self: true }),
+		]);
+		collab.disconnect();
+		expect(collab.state()).toMatchObject({
+			active: false,
+			roomId: undefined,
+			status: 'off',
+			synced: false,
+			people: [],
+		});
 	});
 });

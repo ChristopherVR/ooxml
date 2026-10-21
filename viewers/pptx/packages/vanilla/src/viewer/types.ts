@@ -3,7 +3,9 @@ import type {
 	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	ConnectionStatus,
 	PowerPointViewerAPI,
@@ -48,7 +50,9 @@ export type {
 	AutosaveRecord,
 	AutosaveStatus,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	ConnectionStatus,
 };
@@ -83,6 +87,13 @@ export interface PptxViewerCallbacks {
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/**
+	 * Fired with the shared `CollaborationState` (the contract Word, Excel and Visio use)
+	 * when a session starts or stops (the off state) and when its status, synced flag or
+	 * people change. Viewer-owned and host-owned (`collaboration.session`) sessions both
+	 * report; unchanged states are not repeated.
+	 */
+	onCollaborationChange?: (state: CollaborationState) => void;
 	/**
 	 * Fired with the serialised `.pptx` bytes after each committed edit. Serialising
 	 * is asynchronous, so a burst of edits can deliver several snapshots in order.
@@ -377,7 +388,7 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * shared codec limitation), and a remote update replaces the whole local
 	 * slide array, so a joiner's host-provided media can degrade.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/**
 	 * Prefilled values for the built-in Share/Broadcast dialogs' form fields
 	 * (e.g. a host-generated display name), mirroring the Vue binding's
@@ -506,11 +517,13 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	 * transport is created; connection status arrives via
 	 * {@link PptxViewerCallbacks.onCollaborationStatus}.
 	 */
-	startCollaboration(config: CollaborationConfig): Promise<void>;
+	startCollaboration(config: CollaborationInput): Promise<void>;
 	/** Stop the active collaboration session (no-op when none is running). */
 	stopCollaboration(): void;
 	/** Current collaboration connection status (`'disconnected'` when inactive). */
 	getCollaborationStatus(): ConnectionStatus;
+	/** The shared `CollaborationState` (the off state when no session is active). */
+	getCollaborationState(): CollaborationState;
 	/** Force an immediate autosave snapshot (no-op when autosave is disabled). */
 	autosaveNow(): Promise<void>;
 	/** Enable or disable recovery autosave without rebuilding the viewer. */

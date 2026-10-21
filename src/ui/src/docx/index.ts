@@ -22,6 +22,11 @@ export type {
 	AuthorityResult,
 } from 'ooxml-core/docx/ui';
 export type { CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
+export type {
+	DocxCollaborationOptions,
+	DocxCollaborationState,
+	DocxCollaborator,
+} from './collaboration-types';
 export type { WordYjsOptions } from 'ooxml-core/docx/ui';
 export { createCollaborationAuthority } from './collaboration-model';
 export { PresenceClient, PRESENCE_PALETTE } from './presence';

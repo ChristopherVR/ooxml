@@ -7,6 +7,7 @@ export * from './awareness';
 export * from './binding';
 export * from './broadcast-transport';
 export * from './codec';
+export * from './embedding';
 export * from './emitter';
 export * from './external-provider';
 export * from './identity';

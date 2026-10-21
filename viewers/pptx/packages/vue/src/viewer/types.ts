@@ -1,7 +1,9 @@
+import type { CollaborationState } from 'ooxml-core/collab';
 import type {
 	AccountAuthConfig,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	PowerPointViewerAPI,
 	RibbonAddInTab,
@@ -119,7 +121,7 @@ export interface PowerPointViewerProps {
 	 * joins a Yjs session (y-websocket or serverless y-webrtc) with live cursors,
 	 * remote selections, follow mode and elected-writer write-back.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/** Default values for the Share dialog fields. */
 	shareDefaults?: {
 		roomId?: string;
@@ -333,6 +335,12 @@ export interface PowerPointViewerEmits {
 	(e: 'start-collaboration', config: CollaborationConfig): void;
 	/** Fired when the user stops a collaboration session from the Share dialog. */
 	(e: 'stop-collaboration'): void;
+	/**
+	 * Fired with the shared `CollaborationState` when a session starts or stops (the off
+	 * state) and when its status, synced flag or people change. Viewer-owned and host-owned
+	 * (`collaboration.session`) sessions both report; unchanged states are not repeated.
+	 */
+	(e: 'collaboration-change', state: CollaborationState): void;
 	/** Fired each time a presentation finishes loading without an error. */
 	(e: 'load', detail: ViewerLoadDetail): void;
 	/** Fired once per distinct load failure, with a human-readable message. */

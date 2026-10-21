@@ -124,10 +124,11 @@ Collaboration is **controlled by the host app**. The built-in Share dialog (and 
 Broadcast flow, where viewers follow the presenter's active slide) reports intent via
 callbacks; you flip the `collaboration` prop in response:
 
-| Callback               | Payload                       | Purpose                                                                    |
-| ---------------------- | ----------------------------- | -------------------------------------------------------------------------- |
-| `onstartcollaboration` | `config: CollaborationConfig` | The user started a session; set the `collaboration` prop with this config. |
-| `onstopcollaboration`  | -                             | The user stopped the session; clear the `collaboration` prop.              |
+| Callback                | Payload                       | Purpose                                                                                                                    |
+| ----------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `onstartcollaboration`  | `config: CollaborationConfig` | The user started a session; set the `collaboration` prop with this config.                                                 |
+| `onstopcollaboration`   | -                             | The user stopped the session; clear the `collaboration` prop.                                                              |
+| `oncollaborationchange` | `state: CollaborationState`   | The shared state (`active`, `roomId`, `status`, `synced`, `people`), also for a host-owned session; the off state on stop. |
 
 `shareDefaults` (`{ roomId?, userName?, serverUrl? }`) pre-fills the Share dialog's form; the
 Broadcast dialog reuses its `serverUrl`. Every field stays user-editable.

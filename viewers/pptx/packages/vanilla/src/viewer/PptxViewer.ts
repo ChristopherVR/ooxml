@@ -140,7 +140,8 @@ import {
 	resolveInitialThemeState,
 } from './theme-locale-prefs';
 import type {
-	CollaborationConfig,
+	CollaborationInput,
+	CollaborationState,
 	ConnectionStatus,
 	PptxViewerInstance,
 	PptxViewerOptions,
@@ -2108,12 +2109,13 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	getRegistry = (): ElementRendererRegistry => this.registry;
 	getHandler = (): PptxHandler | null => this.loading.getHandler();
 
-	startCollaboration(config: CollaborationConfig): Promise<void> {
+	startCollaboration(config: CollaborationInput): Promise<void> {
 		return this.sessions.startCollaboration(config);
 	}
 
 	stopCollaboration = (): void => this.sessions.stopCollaboration();
 	getCollaborationStatus = (): ConnectionStatus => this.sessions.getCollaborationStatus();
+	getCollaborationState = (): CollaborationState => this.sessions.getCollaborationState();
 
 	autosaveNow(): Promise<void> {
 		return this.sessions.autosaveNow();

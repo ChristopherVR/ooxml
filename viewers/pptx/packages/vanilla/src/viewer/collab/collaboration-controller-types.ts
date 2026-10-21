@@ -7,7 +7,9 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationLivePatcher,
+	CollaborationState,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxHandlerSaveOptions } from 'pptx-viewer-core';
@@ -31,11 +33,13 @@ export interface CollaborationControllerDeps {
 	onReadOnlyChange?: (readOnly: boolean) => void;
 	/** Notified on every connection-status transition. */
 	onStatusChange?: (status: ConnectionStatus) => void;
+	/** Notified with the shared `CollaborationState` whenever it really changes. */
+	onStateChange?: (state: CollaborationState) => void;
 }
 
 export interface CollaborationController {
 	/** Connect and begin syncing. Stops any prior session first. */
-	start(config: CollaborationConfig): Promise<void>;
+	start(config: CollaborationInput): Promise<void>;
 	/** Disconnect and tear the session down. */
 	stop(): void;
 	/** Whether a session is currently active. */
@@ -44,6 +48,8 @@ export interface CollaborationController {
 	isReadOnly(): boolean;
 	/** Current connection status. */
 	getStatus(): ConnectionStatus;
+	/** The shared `CollaborationState` (the off state when no session is active). */
+	getState(): CollaborationState;
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */
 	setCursor(x: number, y: number, activeSlideIndex?: number): void;
 	/** Publish the local selection; no-op when no session is active. */

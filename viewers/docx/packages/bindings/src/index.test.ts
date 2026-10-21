@@ -87,6 +87,7 @@ describe('shared option keys', () => {
 			'page-change': undefined,
 			'dirty-change': undefined,
 			'office-ribbon-add-in': undefined,
+			'collaboration-change': undefined,
 		});
 		options.onDocumentChange?.(model);
 		expect(change).toHaveBeenCalledWith(model);

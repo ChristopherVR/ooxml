@@ -19,6 +19,7 @@ export function WordEditor(props: WordEditorProps) {
 			'page-change': props.onPageChange,
 			'dirty-change': props.onDirtyChange,
 			'office-ribbon-add-in': props.onRibbonAddIn,
+			'collaboration-change': props.onCollaborationChange,
 		}),
 	});
 	onMount(() => {

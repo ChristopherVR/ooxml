@@ -1,6 +1,7 @@
 import type { AutosaveDisabledReason, CollaborationShellState } from 'ooxml-ui/pptx';
 import {
 	buildDeckSaveOptions,
+	createCollaborationStateReporter,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveCollaborationShellState,
@@ -145,6 +146,13 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 			remoteUsers: collab.remotePresences,
 		}),
 	);
+	// The shared CollaborationState, once per real change (viewer- and host-owned sessions).
+	const collaborationReporter = createCollaborationStateReporter((state) =>
+		options.oncollaborationchange?.(state),
+	);
+	$effect(() => {
+		collaborationReporter.update(collab.state);
+	});
 	useCollaborationPresenceEffects({
 		collab,
 		getCurrentSlide: () => viewer.current,
