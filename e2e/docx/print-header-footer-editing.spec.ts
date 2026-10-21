@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { fileInput, newDocument } from './helpers';
+import { fileInput, newDocument, waitForEditorFocus } from './helpers';
 import { multiPageDocx } from './print-click-fixture';
 
 test.use({ viewport: { width: 1366, height: 1500 } });
@@ -30,7 +30,7 @@ test('double-clicking a page header edits it in place and every page shows the e
 	await expect(header).toContainText('Header text');
 	await header.dblclick({ force: true });
 	const story = header.locator('.dve-header-footer-editor .ProseMirror');
-	await expect(story).toBeFocused();
+	await waitForEditorFocus(story);
 	// The body dims and the Header & Footer tab offers the exit.
 	await expect(editor.locator('.dve-print-pages').first()).toHaveClass(/dve-print-story-editing/);
 	await expect(editor.getByRole('button', { name: 'Close Header and Footer' })).toBeVisible();
@@ -50,7 +50,7 @@ test('footer: the Close button exits; a double-click on the body exits too', asy
 	const editor = await open(page);
 	const footer = editor.locator('.dve-print-page').first().locator('.dve-print-footer');
 	await footer.dblclick({ force: true });
-	await expect(footer.locator('.ProseMirror')).toBeFocused();
+	await waitForEditorFocus(footer.locator('.ProseMirror'));
 	await page.keyboard.press('End');
 	await page.keyboard.type('!');
 	await editor.getByRole('button', { name: 'Close Header and Footer' }).click();

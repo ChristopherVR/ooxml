@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { fileInput, fileNameLabel, newDocument, saveButton } from './helpers';
+import { fileInput, fileNameLabel, newDocument, saveButton, waitForEditorFocus } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import type { EditorView } from 'prosemirror-view';
 import type { TextSelection } from 'prosemirror-state';
@@ -146,6 +146,9 @@ test('edits text around and inside a complex field and saves the field intact', 
 	await expect(body).toContainText('Author: Ann wrote this.');
 	await expect(body).toHaveAttribute('contenteditable', 'true');
 
+	// The double click would also focus the editor, whose check after focus can undo the End below.
+	await body.focus();
+	await waitForEditorFocus(body);
 	await editor.locator('[data-field="AUTHOR"]').dblclick();
 	// Windows word selection includes the trailing space, crossing the hidden field end marker.
 	await page.keyboard.type('Bea');

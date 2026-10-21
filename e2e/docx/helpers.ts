@@ -73,6 +73,40 @@ export async function insertTableOfSize(page: Page, rows = 2, columns = 2) {
 }
 
 /**
+ * Resolves once the timers the page has started so far have run. A ProseMirror view that gains
+ * focus checks 20 ms later whether the browser's selection still matches its own and puts its own
+ * back if not. A page runs its timers in the order they fall due, so a longer one started now runs
+ * after that check.
+ */
+const editorTimersRun = (page: Page) =>
+	page.evaluate(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+
+/**
+ * Clicks into an editor's text before pressing keys, as a person does. When the click is what
+ * focuses the editor, ProseMirror's check after focus can run, on a busy machine, after the next
+ * key moved the caret (Home, End, Control+Home) and put the click's caret back. So the editor that
+ * holds `target` is focused first and its check allowed to run; the click then only moves the caret.
+ */
+export async function clickInEditor(target: Locator, options?: Parameters<Locator['click']>[0]) {
+	await target.evaluate((node) =>
+		node.closest<HTMLElement>('.ProseMirror')?.focus({ preventScroll: true }),
+	);
+	await editorTimersRun(target.page());
+	await target.click(options);
+	await editorTimersRun(target.page());
+}
+
+/**
+ * Waits until `editor`, a ProseMirror element that takes focus by itself (a header, footer or note
+ * opened by a double click), has focus and has run its check of the caret, so that the next key
+ * that moves the caret is not undone.
+ */
+export async function waitForEditorFocus(editor: Locator) {
+	await expect(editor).toBeFocused();
+	await editorTimersRun(editor.page());
+}
+
+/**
  * A narrow ribbon folds groups into dropdown buttons, as Word does. Opens whichever of them holds
  * `target` (a no-op when it is already on the ribbon) so the test can use the control.
  */

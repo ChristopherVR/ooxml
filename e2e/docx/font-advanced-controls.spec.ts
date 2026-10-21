@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { loadDocx } from '../../viewers/docx/packages/core/src/index';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument, reveal, saveButton, dialogByHeading } from './helpers';
+import { newDocument, reveal, saveButton, dialogByHeading, waitForEditorFocus } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: Advanced Font controls apply, undo and export`, async ({ page }) => {
@@ -130,6 +130,7 @@ test('header Font changes use one global undo without undoing earlier header typ
 	});
 	const header = editor.locator('.dve-header [data-slot=default]');
 	await header.dblclick();
+	await waitForEditorFocus(header.locator('.ProseMirror'));
 	await page.keyboard.press('Control+End');
 	await page.keyboard.type(' changed');
 	await page.keyboard.press('Control+a');
