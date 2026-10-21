@@ -127,3 +127,7 @@ you check remote cursors and selection outlines at different scales.
 See [React hooks](/react/hooks), [Vue collaboration](/vue/collaboration),
 [Angular collaboration](/angular/collaboration), [Svelte collaboration](/svelte/collaboration)
 and [Vanilla custom shells](/vanilla/api#custom-shell-collaboration) for each composition.
+
+For a complete application around this option (accounts, permission-checked relay, live access
+changes, owner versions and a gated AI route), see
+[Review inside your application](/guide/review-workflow).
