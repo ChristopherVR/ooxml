@@ -153,6 +153,79 @@ describe('content controls around table cells in the editor', () => {
 		expect(cellOf(state).textContent).toBe('\u2612');
 	});
 
+	it('undoes and redoes a paste of a cell whose control may not be deleted', () => {
+		// Before the paste the document held no control that may not be deleted: undoing it takes
+		// the pasted cell away again, which is not the user deleting that control.
+		const box: ContentControl = {
+			id: '64',
+			level: 'cell',
+			kind: 'checkbox',
+			checked: false,
+			lock: 'sdtLocked',
+		};
+		const pasted = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', { contentControl: box }, [paragraph('\u2610')]),
+			]),
+		]);
+		let state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [paragraph('After')]),
+			plugins: [history(), contentControlPlugin()],
+		});
+		const end = state.doc.content.size;
+		state = state.apply(state.tr.insert(end, pasted).setMeta('uiEvent', 'paste'));
+		expect(controlSpans(state.doc).map((span) => span.control.id)).toEqual(['64']);
+		const run = (command: typeof undo) =>
+			command(state, (tr) => {
+				state = state.apply(tr);
+			});
+		expect(run(undo)).toBe(true);
+		expect(state.doc.childCount).toBe(1);
+		expect(controlSpans(state.doc)).toEqual([]);
+		expect(run(redo)).toBe(true);
+		expect(controlSpans(state.doc).map((span) => span.control.id)).toEqual(['64']);
+		// Deleting the pasted table by hand still deletes a control that may not be deleted.
+		expect(violatesControlLock(state.tr.delete(end, state.doc.content.size), state)).toBe(true);
+		// So for a pasted inline control that may not be deleted, as a copy of one in the document.
+		const name: ContentControl = { id: '65', level: 'inline', kind: 'text', lock: 'sdtLocked' };
+		const text = schema.text('Name', [
+			schema.marks.contentControl!.create({ data: JSON.stringify(name) }),
+		]);
+		state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [paragraph('After')]),
+			plugins: [history(), contentControlPlugin()],
+		});
+		state = state.apply(state.tr.insert(1, text).setMeta('uiEvent', 'paste'));
+		expect(state.doc.textContent).toBe('NameAfter');
+		expect(run(undo)).toBe(true);
+		expect(state.doc.textContent).toBe('After');
+		// Undo and redo are still held to content locks: text typed in a control, undone, and redone
+		// after a change that is not in the history (a remote one) locked the control's content, stays
+		// out of it.
+		const open: ContentControl = { id: '66', level: 'inline', kind: 'text' };
+		state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [
+				schema.node('paragraph', null, [
+					schema.text('Name', [
+						schema.marks.contentControl!.create({ data: JSON.stringify(open) }),
+					]),
+				]),
+			]),
+			plugins: [history(), contentControlPlugin()],
+		});
+		state = state.apply(state.tr.insertText('X', 3));
+		expect(state.doc.textContent).toBe('NaXme');
+		expect(run(undo)).toBe(true);
+		const span = controlSpans(state.doc).find((found) => found.level === 'inline')!;
+		const lock = updateControlProperties(state, span, { ...open, lock: 'contentLocked' });
+		state = state.apply(lock.setMeta('addToHistory', false));
+		expect(run(redo)).toBe(true);
+		expect(state.doc.textContent).toBe('Name');
+	});
+
 	it('applies a content lock of a cell control to the cell node, not to the table around it', () => {
 		// The cell is what a cell control holds: other attributes for it edit that, and the table
 		// around it takes them as before.

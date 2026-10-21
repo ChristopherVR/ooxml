@@ -1,5 +1,6 @@
 // Enforces content control lock settings, routes typing and deleting into controls, and keeps
 // verbatim properties from another page out of pasted controls.
+import { isHistoryTransaction } from 'prosemirror-history';
 import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep } from 'prosemirror-transform';
@@ -95,8 +96,10 @@ function keepsControl(step: RangeStep, span: ControlSpan | RowControlSpan): bool
 /**
  * Whether a step breaks a lock. `contentLocked` forbids editing what is inside the control (it can
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
+ * Undo and redo (`history`) may take a control away whole, as undoing the paste that brought it
+ * does; they are held to content locks as any other step is.
  */
-export function violatesControlLock(tr: Transaction, state: EditorState): boolean {
+export function violatesControlLock(tr: Transaction, state: EditorState, history = false): boolean {
 	const locked = everyControlSpan(state.doc).filter((span) => span.control.lock);
 	if (!locked.length) return false;
 	return tr.steps.some((step, index) => {
@@ -110,7 +113,8 @@ export function violatesControlLock(tr: Transaction, state: EditorState): boolea
 			const spanTo = before.map(span.to, -1);
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
 			const keeps = kept || keepsControl(step, span);
-			if (isContentControlLocked(span.control, 'control') && removesWhole && !keeps) return true;
+			if (isContentControlLocked(span.control, 'control') && removesWhole && !keeps && !history)
+				return true;
 			// Deleting a control is not editing what it holds; a step over all of it that keeps the
 			// control is, formatting included.
 			if (!isContentControlLocked(span.control, 'content') || (removesWhole && !keeps))
@@ -137,7 +141,7 @@ export function contentControlPlugin(): Plugin {
 			!tr.docChanged ||
 			Boolean(tr.getMeta(CONTROL_EDIT_META)) ||
 			isRemote(tr) ||
-			!violatesControlLock(tr, state),
+			!violatesControlLock(tr, state, isHistoryTransaction(tr)),
 		appendTransaction: removeEditedTemporaryControls,
 		props: {
 			transformCopied: (slice) => {
