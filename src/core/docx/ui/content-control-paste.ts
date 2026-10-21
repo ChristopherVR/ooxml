@@ -42,7 +42,7 @@ const sourcesOf = (
 	});
 
 /** What `node` holds as its control: a paragraph's or table's block control, a row's or a cell's. */
-function nodeControlOf(
+export function nodeControlOf(
 	node: ProseMirrorNode,
 ): { value: unknown; level: ContentControl['level'] } | undefined {
 	switch (node.type.name) {

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Schema, type Node as ProseMirrorNode } from 'prosemirror-model';
+import { Fragment, Schema, Slice, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
+import { ReplaceAroundStep } from 'prosemirror-transform';
 import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
@@ -114,6 +115,82 @@ describe('content controls around table cells in the editor', () => {
 		expect(toggleCheckboxControl(locked, '63')).toBeUndefined();
 		const typed = locked.tr.insertText('x', controlSpans(locked.doc)[0]!.from + 2);
 		expect(violatesControlLock(typed, locked)).toBe(true);
+	});
+
+	it('lets the node of a control that may not be deleted take other attributes', () => {
+		// Table Properties, shading and paragraph formatting give a node other attributes in one
+		// step over the whole node (`setNodeMarkup`), which keeps the node, what it holds and its
+		// control: that deletes no control. Taking the control off that way still does.
+		const fixed = (level: ContentControl['level']): ContentControl => ({
+			id: '66',
+			level,
+			kind: 'richText',
+			lock: 'sdtLocked',
+		});
+		const marked = (state: EditorState, at: number, attrs: Record<string, unknown>) =>
+			violatesControlLock(state.tr.setNodeMarkup(at, undefined, attrs), state);
+		const cell = stateOf(fixed('cell'), [paragraph('Kept', { id: 'c1' })]);
+		const at = controlSpans(cell.doc)[0]!.from;
+		const attrs = cell.doc.nodeAt(at)!.attrs;
+		expect(marked(cell, at, { ...attrs, sourceCellKey: 'c9' })).toBe(false);
+		expect(marked(cell, at, { ...attrs, contentControl: null })).toBe(true);
+		// The table that holds it.
+		expect(marked(cell, 0, { contentControl: null })).toBe(false);
+		// A row and a paragraph the same way.
+		const properties = { contentControl: fixed('row') };
+		const row = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [
+					schema.node('tableRow', { properties }, [
+						schema.node('tableCell', null, [paragraph('Row', { id: 'r1' })]),
+					]),
+				]),
+			]),
+		});
+		expect(marked(row, 1, { properties: { ...properties, heightTwips: 400 } })).toBe(false);
+		expect(marked(row, 1, { properties: null })).toBe(true);
+		const block = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [
+				paragraph('Block', { id: 'b1', contentControl: fixed('block') }),
+				paragraph('After'),
+			]),
+		});
+		expect(marked(block, 0, { id: 'b2', contentControl: fixed('block') })).toBe(false);
+		expect(marked(block, 0, { id: 'b1', contentControl: null })).toBe(true);
+		// A step of that shape whose new node brings content of its own, or one over text, can
+		// delete a control: it is no such change.
+		const own = block.doc.firstChild!;
+		const added = new ReplaceAroundStep(
+			0,
+			own.nodeSize,
+			1,
+			own.nodeSize - 1,
+			new Slice(Fragment.from(own.type.create(own.attrs, schema.text('!'))), 0, 0),
+			1,
+			true,
+		);
+		expect(violatesControlLock(block.tr.step(added), block)).toBe(true);
+		const run = schema.text('ab', [
+			schema.marks.contentControl!.create({ data: JSON.stringify(fixed('inline')) }),
+		]);
+		const inline = EditorState.create({
+			schema,
+			plugins: [contentControlPlugin()],
+			doc: schema.node('doc', null, [schema.node('paragraph', null, [run])]),
+		});
+		const over = new ReplaceAroundStep(
+			1,
+			3,
+			2,
+			2,
+			new Slice(Fragment.from(schema.text('x')), 0, 0),
+			1,
+		);
+		expect(violatesControlLock(inline.tr.step(over), inline)).toBe(true);
 	});
 
 	it('replaces a text cell placeholder with what is typed, and brings it back on delete', () => {

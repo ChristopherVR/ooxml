@@ -1,5 +1,6 @@
 // Enforces content control lock settings, routes typing and deleting into controls, and keeps
 // verbatim properties from another page out of pasted controls.
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep } from 'prosemirror-transform';
 import { isContentControlLocked } from '../content-control-model';
@@ -8,7 +9,7 @@ import {
 	deleteToPlaceholder,
 	typeOverPlaceholder,
 } from './content-control-commands';
-import { otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
+import { nodeControlOf, otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
 import { rowControlSpans } from './content-control-rows';
 import { controlSourcesOf, pastedControlSources } from './content-control-sources';
 import { controlSpans } from './content-control-spans';
@@ -25,6 +26,35 @@ const isRangeStep = (step: unknown): step is RangeStep =>
 	step instanceof RemoveMarkStep;
 
 /**
+ * Whether `step` only gives the node it covers other attributes, its control as it was, in one
+ * step over the whole node (`setNodeMarkup`: a table's properties, a cell's shading, a paragraph's
+ * alignment): the new node is empty and takes the old one's content, so the node, what it holds and
+ * its control stay.
+ */
+function changesAttributesOnly(step: RangeStep, doc: ProseMirrorNode): boolean {
+	if (!(step instanceof ReplaceAroundStep)) return false;
+	const { from, to, gapFrom, gapTo, insert, slice } = step;
+	const node = doc.nodeAt(from);
+	const next = slice.content.firstChild;
+	return (
+		insert === 1 &&
+		gapFrom === from + 1 &&
+		gapTo === to - 1 &&
+		slice.openStart === 0 &&
+		slice.openEnd === 0 &&
+		slice.content.childCount === 1 &&
+		node !== null &&
+		next !== null &&
+		!node.isLeaf &&
+		next.content.size === 0 &&
+		node.nodeSize === to - from &&
+		next.type === node.type &&
+		JSON.stringify(nodeControlOf(node)?.value ?? null) ===
+			JSON.stringify(nodeControlOf(next)?.value ?? null)
+	);
+}
+
+/**
  * Whether a step breaks a lock. `contentLocked` forbids editing what is inside the control (it can
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
  */
@@ -39,11 +69,12 @@ export function violatesControlLock(tr: Transaction, state: EditorState): boolea
 		const { from, to } = step as { from: number; to: number };
 		const inserts = from === to;
 		const before = tr.mapping.slice(0, index);
+		const kept = changesAttributesOnly(step, tr.docs[index]!);
 		return locked.some((span) => {
 			const spanFrom = before.map(span.from, 1);
 			const spanTo = before.map(span.to, -1);
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
-			if (isContentControlLocked(span.control, 'control') && removesWhole) return true;
+			if (isContentControlLocked(span.control, 'control') && removesWhole && !kept) return true;
 			if (!isContentControlLocked(span.control, 'content') || removesWhole) return false;
 			// A block or cell control's own boundary tokens are not its content, and every
 			// position between them (the ends of its text included) is inside it.
