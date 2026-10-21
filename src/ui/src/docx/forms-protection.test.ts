@@ -101,3 +101,39 @@ describe('forms protection and sections', () => {
 		expect(typeHere(view, 'Still ')).toEqual(['Still First section', 'Last section']);
 	});
 });
+
+describe('forms protection and paragraph ids', () => {
+	afterEach(() => document.body.replaceChildren());
+
+	it('keeps paragraph ids unique when Enter splits a text field in a protected form', () => {
+		const model = createDocument();
+		model.blocks = [
+			{
+				type: 'paragraph',
+				id: 'p1',
+				runs: [
+					{ text: 'Name: ' },
+					{ text: '', fieldChar: 'begin', formField: { kind: 'text', name: 'Name' } },
+					{ text: '', fieldCode: ' FORMTEXT ' },
+					{ text: '', fieldChar: 'separate' },
+					{ text: 'Ada Lovelace', field: { instr: 'FORMTEXT' } },
+					{ text: '', fieldChar: 'end' },
+				],
+			},
+		];
+		model.protection = { edit: 'forms', enforced: true };
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		editor.documentModel = model;
+		document.body.append(editor);
+		const view = (editor as unknown as { view: EditorView }).view;
+		let inField = -1;
+		view.state.doc.descendants((node, pos) => {
+			if (node.isText && node.text === 'Ada Lovelace') inField = pos + 3;
+		});
+		split(view, inField);
+		const ids: string[] = [];
+		view.state.doc.forEach((node) => ids.push(String(node.attrs.id)));
+		expect(ids).toHaveLength(2);
+		expect(new Set(ids).size).toBe(2);
+	});
+});

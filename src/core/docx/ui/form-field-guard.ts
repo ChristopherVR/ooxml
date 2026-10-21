@@ -1,7 +1,7 @@
 // Enforces what legacy form fields allow while editing: a text field's maximum length, and a
 // document protected for filling in forms (`w:documentProtection w:edit="forms"`), where only
 // form fields, content controls and sections left unprotected can change.
-import type { Node } from 'prosemirror-model';
+import { Mark, type Node } from 'prosemirror-model';
 import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import {
 	AddMarkStep,
@@ -9,6 +9,7 @@ import {
 	RemoveMarkStep,
 	ReplaceAroundStep,
 	ReplaceStep,
+	type Step,
 } from 'prosemirror-transform';
 import type { DocumentProtection } from '../model';
 import { CONTROL_EDIT_META } from './content-control-commands';
@@ -75,6 +76,28 @@ function unprotectedSections(doc: Node): Range[] {
 }
 
 /**
+ * Whether the step only gives a block another id, as the editor does to the copy a split makes of
+ * a paragraph: bookkeeping, not an edit.
+ */
+function renamesBlock(step: Step, before: Node | undefined, after: Node): boolean {
+	if (step instanceof AttrStep) return step.attr === 'id';
+	if (!(step instanceof ReplaceAroundStep) || !before) return false;
+	const old = before.nodeAt(step.from);
+	const next = after.nodeAt(step.from);
+	return Boolean(
+		old &&
+		next &&
+		old.nodeSize === step.to - step.from &&
+		old.type === next.type &&
+		old.content.eq(next.content) &&
+		Mark.sameSet(old.marks, next.marks) &&
+		Object.keys({ ...old.attrs, ...next.attrs }).every(
+			(key) => key === 'id' || old.attrs[key] === next.attrs[key],
+		),
+	);
+}
+
+/**
  * Whether every step of a transaction stays inside a form field, a content control or a section
  * the protection leaves editable.
  */
@@ -89,6 +112,7 @@ export function staysInFormFields(tr: Transaction): boolean {
 	const sections = unprotectedSections(doc);
 	let sectionsAfter: Range[] | undefined;
 	return tr.steps.every((step, index) => {
+		if (renamesBlock(step, tr.docs[index], tr.docs[index + 1] ?? tr.doc)) return true;
 		const map = tr.mapping.slice(0, index);
 		const within = (ranges: Range[], from: number, to: number) =>
 			ranges.some((range) => from >= map.map(range.from, -1) && to <= map.map(range.to, 1));

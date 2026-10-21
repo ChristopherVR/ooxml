@@ -324,6 +324,17 @@ describe('legacy form fields in the editor', () => {
 		).toBe(4);
 	});
 
+	it('lets the editor give a paragraph another id anywhere in a protected form', () => {
+		const state = sectionedState();
+		const node = state.doc.child(0);
+		const renamed = state.apply(state.tr.setNodeMarkup(0, undefined, { ...node.attrs, id: 'p9' }));
+		expect(renamed.doc.child(0).attrs.id).toBe('p9');
+		const aligned = state.apply(
+			state.tr.setNodeMarkup(0, undefined, { ...node.attrs, id: 'p9', align: 'center' }),
+		);
+		expect(aligned.doc.child(0).attrs).toMatchObject({ id: 'p0', align: null });
+	});
+
 	it('only lets form fields change in a document protected for forms', () => {
 		const state = stateOf({ edit: 'forms', enforced: true });
 		const [result] = formTextResults(state.doc);
