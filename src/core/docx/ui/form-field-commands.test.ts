@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
-import type { DocumentProtection, FormField, TextRun } from '../model';
+import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
+import { setFormCheckbox } from '../form-fields';
+import { contentControlPlugin, violatesControlLock } from './content-control-guard';
 import { markSpecs } from './schema-marks';
 import { fieldMarkerNodeSpec } from './break-note-schema';
 import { appendInlineNode, runToInlineNodes } from './run-adapter';
 import {
+	formFieldLocked,
 	formFieldNodeDisplay,
 	formFieldOfNode,
 	formTextResults,
@@ -18,7 +21,11 @@ import { sameRuns } from './run-compare';
 const schema = new Schema({
 	nodes: {
 		doc: { content: 'paragraph+' },
-		paragraph: { content: 'inline*', toDOM: () => ['p', 0] },
+		paragraph: {
+			content: 'inline*',
+			attrs: { contentControl: { default: null } },
+			toDOM: () => ['p', 0],
+		},
 		text: { group: 'inline' },
 		fieldMarker: fieldMarkerNodeSpec,
 	},
@@ -197,5 +204,73 @@ describe('legacy form fields in the editor', () => {
 		).toMatchObject({ checked: true });
 		const open = stateOf({ edit: 'forms', enforced: false });
 		expect(open.apply(open.tr.insertText('X', 1)).doc.textContent).toMatch(/^XName/);
+	});
+});
+
+describe('legacy form fields inside locked content controls', () => {
+	const control = (
+		level: 'inline' | 'block',
+		lock: NonNullable<ContentControl['lock']>,
+	): ContentControl => ({
+		id: '7',
+		level,
+		kind: 'richText',
+		lock,
+	});
+	function lockedState(around: ContentControl) {
+		const runs: TextRun[] = [...field(approved), { text: ' ' }, ...field(status)].map((run) =>
+			around.level === 'inline' ? { ...run, contentControl: around } : run,
+		);
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const attrs = around.level === 'block' ? { contentControl: around } : null;
+		const doc = schema.node('doc', null, [schema.node('paragraph', attrs, nodes)]);
+		return EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+	}
+
+	it('does not operate a check box or drop-down whose control locks its content', () => {
+		for (const level of ['inline', 'block'] as const) {
+			const state = lockedState(control(level, 'contentLocked'));
+			const checkbox = markerPos(state, 'checkbox');
+			expect(formFieldLocked(state, checkbox)).toBe(true);
+			expect(toggleFormCheckboxAt(state, checkbox)).toBeUndefined();
+			expect(selectFormDropDownAt(state, markerPos(state, 'dropDown'), 1)).toBeUndefined();
+			// Changing the field data some other way is refused by the lock guard too.
+			const format = JSON.parse(state.doc.nodeAt(checkbox)!.attrs.format as string);
+			const forced = state.tr.setNodeAttribute(
+				checkbox,
+				'format',
+				JSON.stringify({ ...format, formField: setFormCheckbox(approved, true) }),
+			);
+			expect(violatesControlLock(forced, state)).toBe(true);
+			expect(state.apply(forced).doc.eq(state.doc)).toBe(true);
+		}
+	});
+
+	it('operates fields in a control that only locks its own removal', () => {
+		const state = lockedState(control('block', 'sdtLocked'));
+		expect(formFieldLocked(state, markerPos(state, 'checkbox'))).toBe(false);
+		const toggled = state.apply(toggleFormCheckboxAt(state, markerPos(state, 'checkbox'))!);
+		expect(
+			formFieldOfNode(toggled.doc.nodeAt(markerPos(toggled, 'checkbox')))?.checkBox,
+		).toMatchObject({
+			checked: true,
+		});
+	});
+
+	it('keeps the field data it does not model through a toggle in the editor', () => {
+		const sourceXml = '<w:ffData><w:name w:val="Approved"/><w:tabIndex w:val="4"/></w:ffData>';
+		const state = stateOf();
+		const pos = markerPos(state, 'checkbox');
+		const format = JSON.parse(state.doc.nodeAt(pos)!.attrs.format as string);
+		const withSource = state.apply(
+			state.tr.setNodeAttribute(
+				pos,
+				'format',
+				JSON.stringify({ ...format, formField: { ...approved, sourceXml } }),
+			),
+		);
+		const toggled = withSource.apply(toggleFormCheckboxAt(withSource, pos)!);
+		const begin = runsOf(toggled).find((run) => run.formField?.kind === 'checkbox');
+		expect(begin?.formField).toMatchObject({ sourceXml, checkBox: { checked: true } });
 	});
 });

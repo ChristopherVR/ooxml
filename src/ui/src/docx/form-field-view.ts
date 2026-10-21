@@ -1,7 +1,12 @@
 // How the editor operates legacy form fields: a click on a check box toggles it, a click on a
 // drop-down opens its entries, and Word's form field shading follows the document's setting.
 import type { DocumentModel } from 'ooxml-core/docx';
-import { formFieldOfNode, selectFormDropDownAt, toggleFormCheckboxAt } from 'ooxml-core/docx/ui';
+import {
+	formFieldLocked,
+	formFieldOfNode,
+	selectFormDropDownAt,
+	toggleFormCheckboxAt,
+} from 'ooxml-core/docx/ui';
 import { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { openListPopover } from './ribbon-popover';
@@ -16,7 +21,8 @@ function operate(view: EditorView, el: HTMLElement): boolean {
 	const pos = markerPosition(view, el);
 	if (pos === undefined) return false;
 	const field = formFieldOfNode(view.state.doc.nodeAt(pos));
-	if (!field || field.enabled === false) return Boolean(field);
+	// A disabled field, or one a content control locks, takes the click without changing.
+	if (!field || field.enabled === false || formFieldLocked(view.state, pos)) return Boolean(field);
 	if (field.kind === 'checkbox') {
 		const tr = toggleFormCheckboxAt(view.state, pos);
 		if (tr) view.dispatch(tr);

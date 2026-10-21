@@ -9,6 +9,7 @@ import {
 	selectFormDropDownEntry,
 	setFormCheckbox,
 } from '../form-fields';
+import { violatesControlLock } from './content-control-guard';
 import { inlineRunProperties } from './inline-run-properties';
 
 /** Marks a transaction made by operating a form field, which form protection lets through. */
@@ -36,13 +37,25 @@ function withField(state: EditorState, pos: number, field: FormField): Transacti
 		.setMeta(FORM_FIELD_EDIT_META, true);
 }
 
-const fillable = (field: FormField | undefined): field is FormField =>
-	Boolean(field) && field!.enabled !== false;
+/** Whether a content control around the field at `pos` locks its content, so it cannot change. */
+export function formFieldLocked(state: EditorState, pos: number): boolean {
+	const node = state.doc.nodeAt(pos);
+	return (
+		Boolean(node) &&
+		violatesControlLock(state.tr.setNodeAttribute(pos, 'format', node!.attrs.format), state)
+	);
+}
+
+const fillable = (
+	state: EditorState,
+	pos: number,
+	field: FormField | undefined,
+): field is FormField => Boolean(field) && field!.enabled !== false && !formFieldLocked(state, pos);
 
 /** Toggles the check box form field whose begin marker is at `pos`. */
 export function toggleFormCheckboxAt(state: EditorState, pos: number): Transaction | undefined {
 	const field = formFieldOfNode(state.doc.nodeAt(pos));
-	if (!fillable(field) || field.kind !== 'checkbox') return undefined;
+	if (!fillable(state, pos, field) || field.kind !== 'checkbox') return undefined;
 	return withField(state, pos, setFormCheckbox(field, !formCheckboxChecked(field)));
 }
 
@@ -54,7 +67,9 @@ export function selectFormDropDownAt(
 ): Transaction | undefined {
 	const field = formFieldOfNode(state.doc.nodeAt(pos));
 	const next =
-		fillable(field) && field.kind === 'dropDown' && selectFormDropDownEntry(field, index);
+		fillable(state, pos, field) &&
+		field.kind === 'dropDown' &&
+		selectFormDropDownEntry(field, index);
 	return next ? withField(state, pos, next) : undefined;
 }
 
