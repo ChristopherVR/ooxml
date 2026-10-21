@@ -191,11 +191,16 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(tr).doc.textContent).toBe(state.doc.textContent);
 	});
 
-	it('lets the sections a protected form leaves unprotected change freely', () => {
+	/** A form protected for filling in whose second section (`p1`) is left unprotected. */
+	function sectionedState() {
 		const sectioned = new Schema({
 			nodes: {
 				doc: { content: 'paragraph+', attrs: { sections: { default: null } } },
-				paragraph: { content: 'inline*', attrs: { id: { default: '' } }, toDOM: () => ['p', 0] },
+				paragraph: {
+					content: 'inline*',
+					attrs: { id: { default: '' }, align: { default: null } },
+					toDOM: () => ['p', 0],
+				},
 				text: { group: 'inline' },
 				fieldMarker: fieldMarkerNodeSpec,
 			},
@@ -212,17 +217,29 @@ describe('legacy form fields in the editor', () => {
 			paragraph('p0', [{ text: 'Name: ' }, ...field(name, 'Ada')]),
 			paragraph('p1', [{ text: 'Notes' }]),
 		]);
-		const state = EditorState.create({
+		return EditorState.create({
 			schema: sectioned,
 			doc,
 			plugins: [formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
 		});
+	}
+
+	it('lets the sections a protected form leaves unprotected change freely', () => {
+		const state = sectionedState();
 		const notes = state.doc.firstChild!.nodeSize + 1;
 		expect(state.apply(state.tr.insertText('My ', notes)).doc.textContent).toContain('My Notes');
 		expect(state.apply(state.tr.insertText('X', 1)).doc.textContent).toBe(state.doc.textContent);
 		// Joining the free section to the protected one before it is refused.
 		const joined = state.apply(state.tr.delete(notes - 2, notes));
 		expect(joined.doc.childCount).toBe(2);
+	});
+
+	it('lets attributes change in an unprotected section of a protected form, and nowhere else', () => {
+		const state = sectionedState();
+		const notes = state.doc.firstChild!.nodeSize;
+		const aligned = (at: number) => state.apply(state.tr.setNodeAttribute(at, 'align', 'center'));
+		expect(aligned(notes).doc.child(1).attrs.align).toBe('center');
+		expect(aligned(0).doc.child(0).attrs.align).toBeNull();
 	});
 
 	it('only lets form fields change in a document protected for forms', () => {

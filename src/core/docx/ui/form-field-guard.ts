@@ -73,8 +73,11 @@ export function staysInFormFields(tr: Transaction): boolean {
 	return tr.steps.every((step, index) => {
 		const map = tr.mapping.slice(0, index);
 		if (step instanceof AttrStep) {
-			const node = tr.docs[index]?.nodeAt(step.pos);
-			return Boolean(formFieldOfNode(node));
+			// Operating a field sets its marker's data; a node in an editable range may change too.
+			if (formFieldOfNode(tr.docs[index]?.nodeAt(step.pos))) return true;
+			return allowed.some(
+				(range) => step.pos >= map.map(range.from, -1) && step.pos < map.map(range.to, 1),
+			);
 		}
 		// Typing, and the field guard re-marking typed text as the field's result, stay in range.
 		if (
