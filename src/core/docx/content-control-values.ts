@@ -92,12 +92,30 @@ const PROPERTY_CHILDREN: Readonly<Record<string, ReadonlySet<string>>> = {
 /** The namespaces of the extensions Word writes in a `w:sdtPr` or its `w:rPr` (`w14`, `w15`). */
 const WORD_EXTENSIONS: ReadonlySet<string> = new Set([WORD_2010_NS, WORD_2012_NS]);
 
-/** The namespaces of the attributes a property may have: Word's, its extensions', and XML's own. */
+/**
+ * The namespaces of the attributes a property may have: Word's, its extensions', those later
+ * versions of Word add (a data binding's checksum, `w16sdtdh:storeItemChecksum`, [MS-DOCX]
+ * 2.11.2.1, and a revision's UTC date, `w16du:dateUtc`), and XML's own.
+ */
 const ATTRIBUTE_NAMESPACES: ReadonlySet<string> = new Set([
 	WORD_NS,
 	...WORD_EXTENSIONS,
+	'http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash',
+	'http://schemas.microsoft.com/office/word/2023/wordml/word16du',
 	'http://www.w3.org/XML/1998/namespace',
 	'http://www.w3.org/2000/xmlns/',
+]);
+
+/**
+ * The type elements, by namespace and name: `TYPE_CHOICES`, and those of Word's extensions (a check
+ * box, an entity picker, a repeating section and its items).
+ */
+const TYPES: ReadonlySet<string> = new Set([
+	...[...TYPE_CHOICES].map((local) => `${WORD_NS} ${local}`),
+	`${WORD_2010_NS} checkbox`,
+	`${WORD_2010_NS} entityPicker`,
+	`${WORD_2012_NS} repeatingSection`,
+	`${WORD_2012_NS} repeatingSectionItem`,
 ]);
 
 /** The WordprocessingML elements Word puts its extensions in: `w14:checkbox`, `w14:glow`. */
@@ -133,15 +151,14 @@ function propertyShaped(element: XmlElement): boolean {
 
 /**
  * Whether a `w:sdtPr` holds only properties Word reads: shaped as its schema allows, each property
- * once at most, one type at most, and an id and a lock whose values Word reads.
+ * once at most, Word's extensions included, one type at most, and an id and a lock whose values
+ * Word reads.
  */
 function onlyProperties(sdtPr: XmlElement): boolean {
 	if (!propertyShaped(sdtPr)) return false;
-	const names = elements(sdtPr)
-		.filter((child) => child.namespaceURI === WORD_NS)
-		.map((child) => child.localName);
+	const names = elements(sdtPr).map((child) => `${child.namespaceURI} ${child.localName}`);
 	if (new Set(names).size < names.length) return false;
-	if (names.filter((name) => TYPE_CHOICES.has(name)).length > 1) return false;
+	if (names.filter((name) => TYPES.has(name)).length > 1) return false;
 	const value = (local: string) => children(sdtPr, local).map((child) => getW(child, 'val'));
 	return (
 		value('id').every((id) => validId(id) !== undefined) &&

@@ -227,4 +227,46 @@ describe('content controls in the editor', () => {
 		view.destroy();
 		host.remove();
 	});
+
+	it('saves a copy of a data-bound control with its binding, as later versions of Word write it', async () => {
+		// Word 2021 and later put a checksum on a data binding ([MS-DOCX] 2.2.12): a copy of the
+		// control made in the editor keeps the binding and its checksum when it is saved.
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+		const DH = 'http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash';
+		const binding =
+			'<w:dataBinding w:prefixMappings="" w:xpath="/order[1]/number[1]" ' +
+			'w:storeItemID="{11111111-2222-3333-4444-555555555555}" w16sdtdh:storeItemChecksum="Ab12"/>';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}" xmlns:mc="${MC}" xmlns:w16sdtdh="${DH}" mc:Ignorable="w16sdtdh"><w:body>` +
+				`<w:p><w:sdt><w:sdtPr><w:alias w:val="Order"/><w:id w:val="5"/>${binding}<w:text/></w:sdtPr>` +
+				`<w:sdtContent><w:r><w:t>A-17</w:t></w:r></w:sdtContent></w:sdt></w:p>` +
+				`<w:p><w:r><w:t>Copy: </w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({
+				doc: modelToDoc(loaded.model),
+				plugins: [contentControlPlugin(), contentControlViewPlugin()],
+			}),
+		});
+		const [source] = controlSpans(view.state.doc);
+		const { dom } = view.serializeForClipboard(view.state.doc.slice(source!.from, source!.to));
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		// jsdom has no ClipboardEvent; the paste reads nothing else from the event.
+		view.pasteHTML(dom.innerHTML, new Event('paste') as ClipboardEvent);
+		expect(controlSpans(view.state.doc)).toHaveLength(2);
+		const xml = await savedXml(loaded, view);
+		expect(xml.match(/w16sdtdh:storeItemChecksum="Ab12"/g)).toHaveLength(2);
+		expect(xml.match(/w:xpath="\/order\[1\]\/number\[1\]"/g)).toHaveLength(2);
+		// The document Word wrote still lists the namespace as ignorable, so a consumer that does
+		// not know it skips the copy's checksum as it skips the original's.
+		expect(xml).toMatch(/^<w:document [^>]*mc:Ignorable="w16sdtdh"/);
+		view.destroy();
+		host.remove();
+	});
 });
