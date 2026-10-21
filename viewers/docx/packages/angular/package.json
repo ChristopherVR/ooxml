@@ -1,6 +1,6 @@
 {
 	"name": "docx-angular-viewer",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "Angular standalone component for the DOCX editor. Self-contained: includes the editor, layout engine and legacy .doc reader.",
 	"keywords": [
 		"angular",
@@ -40,9 +40,14 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"docx-core": "^0.1.13",
+		"docx-core": "^0.2.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
+	},
+	"devDependencies": {
+		"@angular/compiler": "^22.2.3",
+		"@angular/core": "^22.2.3",
+		"@angular/platform-browser": "^22.2.3"
 	},
 	"peerDependencies": {
 		"@angular/core": ">=19"

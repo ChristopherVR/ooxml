@@ -10,6 +10,7 @@ import type { TextSegment } from 'ooxml-core/pptx';
 import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import type { ParagraphBulletResult } from './bullet-list';
+import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
 import type { RunStyle } from './text-run-style';
 
 export function buildBulletMarkerStyle(
@@ -26,7 +27,12 @@ export function buildBulletMarkerStyle(
 		bulletStyle.color = bullet.color;
 	}
 	if (bullet.fontFamily) {
-		bulletStyle.fontFamily = bullet.fontFamily;
+		// A weight or style variant named as its own family ("Lato Light Italic") falls back to
+		// its base family, as text in it does; any other `a:buFont` (a symbol font) is used as is.
+		bulletStyle.fontFamily =
+			resolveGoogleFontsFace(bullet.fontFamily)?.weight === undefined
+				? bullet.fontFamily
+				: getSubstituteFontFamily(bullet.fontFamily);
 	} else if (firstSeg?.style?.fontFamily) {
 		// A bullet that declares no `a:buFont` is painted in the paragraph's own
 		// typeface, which is what React does (the marker rides the first segment's
@@ -39,8 +45,16 @@ export function buildBulletMarkerStyle(
 	// body: a bold heading whose marker segment core parsed as regular painted a
 	// bold glyph here and a regular one in React, and a heavier marker is also a
 	// wider one, so the first line started further in.
-	bulletStyle.fontWeight = firstSeg?.style?.bold ? 700 : 400;
-	bulletStyle.fontStyle = firstSeg?.style?.italic ? 'italic' : 'normal';
+	// The weight follows the family the marker is painted in, so a marker in a
+	// weight variant ("DM Sans Light") is as light as its text.
+	const markerFamily =
+		typeof bulletStyle.fontFamily === 'string'
+			? bulletStyle.fontFamily
+			: firstSeg?.style?.fontFamily;
+	bulletStyle.fontWeight = resolveFontWeight(markerFamily, firstSeg?.style?.bold);
+	bulletStyle.fontStyle = resolveFontItalic(markerFamily, firstSeg?.style?.italic)
+		? 'italic'
+		: 'normal';
 	// The marker shrinks with the body's autofit scale exactly as its runs do (an
 	// explicit `a:buSzPts` is an absolute size and stays put).
 	const runFontSize = firstSeg?.style?.fontSize;

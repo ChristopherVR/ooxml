@@ -19,6 +19,7 @@ import { getSubstituteFontFamily, parsePanoseString } from 'ooxml-core/pptx';
 
 import { HYPERLINK_COLOR } from '../constants';
 import { normalizeHexColor } from './fill-style';
+import { fontWeightAttribute, resolveFontItalic } from './font-weight-names';
 import { isKoreanLanguage } from './text-east-asian-breaks';
 import type { RunFontSpec } from './text-metric-tracking';
 import { resolveMetricTrackingPx } from './text-metric-tracking';
@@ -251,8 +252,15 @@ export function segmentStyleToCss(
 	// regular. On a real deck a bold heading in the first paragraph therefore
 	// turned every following paragraph of the same shape bold, which reflows the
 	// text and pushes it out of its box.
-	style.fontWeight = s.bold ? 'bold' : 'normal';
-	style.fontStyle = s.italic ? 'italic' : 'normal';
+	// Weight and style follow the family the run renders in, its own or the
+	// body's: a weight or style variant named as its own family ("DM Sans
+	// Light", "Lato Light Italic") renders as its name implies
+	// (`resolveFontWeight`, `resolveFontItalic`), so a run that inherits the
+	// body's font must not reset it to regular either.
+	const renderedFamily =
+		typeof style.fontFamily === 'string' ? style.fontFamily : context.blockFont?.fontFamily;
+	style.fontWeight = fontWeightAttribute(renderedFamily, s.bold) ?? 'normal';
+	style.fontStyle = resolveFontItalic(renderedFamily, s.italic) ? 'italic' : 'normal';
 	// PowerPoint wraps Korean at the spaces between words; browsers break Hangul
 	// between any two syllables unless told otherwise (`text-east-asian-breaks`).
 	// Under `latinLnBrk="1"` a Korean run breaks Hangul anywhere but still moves

@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-angular-viewer",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "Angular component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"angular",
@@ -41,9 +41,14 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@christophervr/xlsx-core": "^0.2.10",
+		"@christophervr/xlsx-core": "^0.3.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
+	},
+	"devDependencies": {
+		"@angular/compiler": "^22.2.3",
+		"@angular/core": "^22.2.3",
+		"@angular/platform-browser": "^22.2.3"
 	},
 	"peerDependencies": {
 		"@angular/core": ">=19"

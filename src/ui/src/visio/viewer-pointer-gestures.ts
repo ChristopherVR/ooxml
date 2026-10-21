@@ -144,6 +144,7 @@ export class ViewerPointerGestures {
 		if (
 			group &&
 			(!state.edit.sourceAvailable ||
+				!state.canEdit ||
 				(group.dataset.pageId ?? page.id) !== page.id ||
 				!visioMovementShape(page, group.dataset.shapeId!))
 		)

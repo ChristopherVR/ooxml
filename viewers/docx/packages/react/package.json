@@ -1,6 +1,6 @@
 {
 	"name": "docx-react-viewer",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "React component for the DOCX editor. Self-contained: includes the editor, layout engine and legacy .doc reader.",
 	"keywords": [
 		"doc",
@@ -40,9 +40,14 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"docx-core": "^0.1.13",
+		"docx-core": "^0.2.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
+	},
+	"devDependencies": {
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"react-dom": "^19.3.1"
 	},
 	"peerDependencies": {
 		"react": ">=18"

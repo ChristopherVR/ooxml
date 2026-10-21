@@ -40,7 +40,7 @@ export interface TableCellMargins {
 }
 /** Row-level properties (`w:trPr`): height, keep-together and repeat-as-header. */
 export interface TableRowProperties {
-	/** The `w:sdt` around this row (read and preserved; edited in the XML only). */
+	/** The `w:sdt` around this row: saving patches what changed, and wraps or unwraps the row. */
 	contentControl?: import('./content-control-model').ContentControl;
 	heightTwips?: Twips;
 	/** `exact` fixes the height; `atLeast` (Word's `atLeast` and `auto`) is a minimum. */
@@ -56,7 +56,7 @@ export interface NestedTablePreview {
 }
 export interface TableCell {
 	paragraphs: Paragraph[];
-	/** The `w:sdt` around this cell (read and preserved; edited in the XML only). */
+	/** The `w:sdt` around this cell: saving patches what changed, and wraps or unwraps the cell. */
 	contentControl?: import('./content-control-model').ContentControl;
 	/** `w:gridSpan`; number of grid columns this cell occupies (horizontal merge). */
 	gridSpan?: number;

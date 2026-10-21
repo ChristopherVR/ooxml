@@ -181,7 +181,7 @@
 		height: 28px;
 		padding: 0 6px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -189,8 +189,8 @@
 	}
 
 	.pptx-svelte-swatch-trigger:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-swatch-trigger:disabled {
@@ -208,7 +208,7 @@
 		width: 16px;
 		height: 3px;
 		border-radius: 1px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-swatch-menu {
@@ -218,17 +218,17 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 2px);
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 2px);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 		padding: 8px;
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
 	}
 
 	.pptx-svelte-swatch-standard-heading {
 		font-size: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-swatch-grid {
@@ -241,13 +241,13 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 50%;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		cursor: pointer;
 		padding: 0;
 	}
 
 	.pptx-svelte-swatch-cell-selected {
-		outline: 2px solid var(--pptx-primary, #6366f1);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: 1px;
 	}
 
@@ -264,7 +264,7 @@
 		width: 20px;
 		height: 20px;
 		padding: 0;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: transparent;
 		cursor: pointer;

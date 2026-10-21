@@ -61,9 +61,9 @@
 
 <style>
 	.pptx-svelte-ai-proposal {
-		border: 1px solid color-mix(in srgb, var(--pptx-primary, #6366f1) 40%, transparent);
-		border-radius: var(--pptx-radius, 6px);
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 6%, transparent);
+		border: 1px solid color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 40%, transparent);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 6%, transparent);
 		padding: 10px;
 	}
 
@@ -73,13 +73,13 @@
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: var(--pptx-primary, #a5b4fc);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-proposal-label {
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-proposal-summary {
@@ -87,7 +87,7 @@
 		padding-left: 16px;
 		list-style: disc;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		max-height: 10rem;
 		overflow-y: auto;
 	}
@@ -117,22 +117,22 @@
 	}
 
 	.pptx-svelte-ai-proposal-btn.is-accept {
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 	}
 
 	.pptx-svelte-ai-proposal-btn.is-accept:hover {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 90%, #000);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 90%, #000);
 	}
 
 	.pptx-svelte-ai-proposal-btn.is-reject {
 		background: transparent;
-		border-color: var(--pptx-border, #33334d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		border-color: var(--pptx-border, var(--office-border, #d1d5db));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-proposal-btn.is-reject:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 </style>

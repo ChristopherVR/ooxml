@@ -1,3 +1,5 @@
+import { installOfficeUiTheme } from '../../theme';
+import { withOfficeThemeCss } from '../theme/office-css';
 import { definePptxSlideClipboard } from './slide-clipboard';
 export { slideClipboardLabels } from './slide-clipboard';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
@@ -18,6 +20,7 @@ import {
 	definePptxRibbonGroup,
 	definePptxRibbonToggle,
 	definePptxSearchField,
+	definePptxColorGrid,
 	definePptxSelect,
 	definePptxSwitch,
 } from './office-aliases';
@@ -67,6 +70,7 @@ export type {
 	PptxUiChartFormatPaneElement,
 } from './chart-format-pane';
 export type { CompatToastsRequestEvent, PptxUiCompatToastsElement } from './office-alias-types';
+export type { PptxUiColorGridElement } from './office-aliases';
 export type { DialogFooterRequestEvent, PptxUiDialogFooterElement } from './office-alias-types';
 export type { MobileBarRequestEvent, PptxUiMobileBarElement } from './mobile-bar';
 export type { MobileInsertRequestEvent, PptxUiMobileInsertElement } from './mobile-insert';
@@ -146,6 +150,7 @@ export type {
 
 const controls = [
 	['pptx-ui-search', definePptxSearchField],
+	['pptx-ui-color-grid', definePptxColorGrid],
 	['pptx-ui-checkbox', definePptxCheckbox],
 	['pptx-ui-radio', definePptxRadio],
 	['pptx-ui-switch', definePptxSwitch],
@@ -204,14 +209,19 @@ export function registerPptxWebControls(): void {
 		return;
 	}
 	const registry = window.customElements;
+	// Refuse an incompatible earlier definition before anything is written to the document.
 	assertWebControlContract(
 		registry,
 		controls.map(([name]) => name),
 	);
+	installOfficeUiTheme(document);
 	if (!document.getElementById('pptx-ui-control-hosts')) {
 		const style = document.createElement('style');
 		style.id = 'pptx-ui-control-hosts';
-		style.textContent = HOST_STYLES + OFFICE_TOKEN_BRIDGE;
+		style.textContent = withOfficeThemeCss(
+			HOST_STYLES + OFFICE_TOKEN_BRIDGE,
+			controls.map(([name]) => name).join(','),
+		);
 		document.head.append(style);
 	}
 	for (const [name, define] of controls) {

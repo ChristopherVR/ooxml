@@ -85,7 +85,7 @@
 		align-self: stretch;
 		margin: 2px 0;
 		flex: none;
-		background: color-mix(in srgb, var(--pptx-border, #33334d) 40%, transparent);
+		background: color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 40%, transparent);
 	}
 
 	.pptx-svelte-hometab-group {
@@ -104,7 +104,7 @@
 
 	.pptx-svelte-hometab-label {
 		font-size: 9px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		line-height: 1;
 		white-space: nowrap;
 	}

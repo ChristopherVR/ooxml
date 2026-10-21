@@ -61,6 +61,21 @@ describe('fitChartTrendline', () => {
 	});
 });
 
+describe('fitChartTrendline over many points', () => {
+	it('samples its range from more x values than a call can pass as arguments', () => {
+		// A shuffled 1 to 2.99999, so the extremes sit inside the list rather than at its ends.
+		const x = Array.from({ length: 200_000 }, (_, i) => 1 + ((i * 7919) % 200_000) / 100_000);
+		const fit = fitChartTrendline(
+			{ kind: 'linear' },
+			x,
+			x.map((v) => 2 * v + 1),
+		);
+		expect(fit.coefficients[1]).toBeCloseTo(2);
+		expect(fit.points[0]?.x).toBe(1);
+		expect(fit.points.at(-1)?.x).toBeCloseTo(2.99999);
+	});
+});
+
 describe('chartErrorBarAmount', () => {
 	const values = [2, 4, 4, 4, 5, 5, 7, 9];
 

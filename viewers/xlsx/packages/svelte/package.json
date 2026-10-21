@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-svelte-viewer",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "Svelte 5 component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"editor",
@@ -40,13 +40,33 @@
 			"types": "./dist/runtime.d.ts",
 			"import": "./dist/runtime.js"
 		},
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		"./SpreadsheetCanvas.svelte": {
+			"types": "./dist/SpreadsheetCanvas.svelte.d.ts",
+			"svelte": "./dist/SpreadsheetCanvas.svelte",
+			"default": "./dist/SpreadsheetCanvas.svelte"
+		},
+		"./Toolbar.svelte": {
+			"types": "./dist/Toolbar.svelte.d.ts",
+			"svelte": "./dist/Toolbar.svelte",
+			"default": "./dist/Toolbar.svelte"
+		},
+		"./FormulaBar.svelte": {
+			"types": "./dist/FormulaBar.svelte.d.ts",
+			"svelte": "./dist/FormulaBar.svelte",
+			"default": "./dist/FormulaBar.svelte"
+		},
+		"./SheetTabs.svelte": {
+			"types": "./dist/SheetTabs.svelte.d.ts",
+			"svelte": "./dist/SheetTabs.svelte",
+			"default": "./dist/SheetTabs.svelte"
+		}
 	},
 	"publishConfig": {
 		"access": "public"
 	},
 	"dependencies": {
-		"@christophervr/xlsx-core": "^0.2.10",
+		"@christophervr/xlsx-core": "^0.3.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},

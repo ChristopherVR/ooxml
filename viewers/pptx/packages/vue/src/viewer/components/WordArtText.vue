@@ -4,6 +4,8 @@ import {
 	DEFAULT_FONT_FAMILY,
 	groupIntoParagraphs,
 	normalizeHexColor,
+	resolveFontItalic,
+	resolveFontWeight,
 	shouldUseSvgWarp,
 	substituteFieldText,
 } from 'ooxml-ui/pptx';
@@ -120,8 +122,16 @@ const baseFontFamily = computed(() =>
 const baseFill = computed(() =>
 	normalizeHexColor(textEl.value?.textStyle?.color, DEFAULT_TEXT_COLOR),
 );
-const baseFontWeight = computed(() => (textEl.value?.textStyle?.bold ? 700 : 400));
-const baseFontStyle = computed(() => (textEl.value?.textStyle?.italic ? 'italic' : 'normal'));
+// A weight or style variant named as its own family ("Lato Light Italic") renders as its name
+// implies, as the HTML text path does.
+const baseFontWeight = computed(() =>
+	resolveFontWeight(textEl.value?.textStyle?.fontFamily, textEl.value?.textStyle?.bold),
+);
+const baseFontStyle = computed(() =>
+	resolveFontItalic(textEl.value?.textStyle?.fontFamily, textEl.value?.textStyle?.italic)
+		? 'italic'
+		: 'normal',
+);
 
 interface TspanProps {
 	fill: string;
@@ -150,8 +160,8 @@ function tspanProps(segment: TextSegment): TspanProps {
 	return {
 		fill,
 		fontSize: s.fontSize ?? elStyle?.fontSize ?? DEFAULT_TEXT_FONT_SIZE,
-		fontWeight: s.bold ? 700 : 400,
-		fontStyle: s.italic ? 'italic' : 'normal',
+		fontWeight: resolveFontWeight(family, s.bold),
+		fontStyle: resolveFontItalic(family, s.italic) ? 'italic' : 'normal',
 		fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
 		textDecoration: decos.length > 0 ? decos.join(' ') : undefined,
 	};

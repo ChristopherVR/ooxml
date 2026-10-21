@@ -416,7 +416,7 @@ export class ViewerCommands {
 		this.host.toolChanged?.();
 	}
 	#canEdit(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return state.canEdit && state.edit.sourceAvailable && !state.loading && !state.edit.busy;
 	}
 	#history(key: 'undo' | 'redo'): void {
 		const { controller } = this.host;
@@ -647,7 +647,8 @@ export class ViewerCommands {
 		const box = (name: string) =>
 			root.querySelector<RibbonCommand & { checked: boolean }>(`[data-check="${name}"]`)!;
 		const editing = this.#canEdit(state);
-		if (this.#tool !== 'pointer' && !state.edit.sourceAvailable) this.#tool = 'pointer';
+		if (this.#tool !== 'pointer' && (!state.canEdit || !state.edit.sourceAvailable))
+			this.#tool = 'pointer';
 		const page = state.document?.pages[state.pageIndex];
 		const rotating =
 			editing &&

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioTextOccurrence } from 'ooxml-core/visio/ui';
 import type { ViewerState } from './controller';
 import type { FindBar } from './viewer-search';
@@ -14,8 +15,7 @@ export function renderReplaceStatus(
 	pending: boolean,
 	summary: string,
 ): void {
-	const disabled =
-		state.loading || state.edit.busy || !state.edit.sourceAvailable || !state.document;
+	const disabled = state.loading || state.edit.busy || !canEditDiagram(state) || !state.document;
 	bar.toggleAttribute('disabled', disabled);
 	const unavailable = disabled || !bar.value || !matches.length || pending;
 	bar.replaceDisabled = unavailable;
@@ -23,7 +23,7 @@ export function renderReplaceStatus(
 	bar.toggleAttribute('navigation-disabled', unavailable);
 	const index = current ? matches.findIndex((item) => sameTextOccurrence(item, current)) : -1;
 	const occurrences = `${matches.length} occurrence${matches.length === 1 ? '' : 's'}`;
-	bar.status = !state.edit.sourceAvailable
+	bar.status = !canEditDiagram(state)
 		? 'Open a .vsdx file to replace text'
 		: state.loading
 			? 'Opening diagram'

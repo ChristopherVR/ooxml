@@ -37,7 +37,7 @@
 	position: relative;
 	flex: none;
 	margin: 0 auto;
-	background: var(--dve-page-color, #fff);
+	background: var(--dve-page-color, var(--office-paper, #fff));
 	color: #202124;
 	box-shadow:
 		0 1px 3px #20212430,
@@ -126,10 +126,7 @@
 	background: var(--surface);
 	padding: 0 7px;
 	color: var(--ink);
-	font:
-		11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 11px var(--office-font, system-ui, sans-serif);
 }
 .multilingual-note {
 	align-self: end;

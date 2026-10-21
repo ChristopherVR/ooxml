@@ -11,6 +11,12 @@ describe('help shared commands', () => {
 		const openAccessibility = vi.fn();
 		const handlers = { openSettings, openAccessibility } as unknown as RibbonNavHandlers;
 		const el = createHelpTab(document, createTranslator(), handlers);
+		// The shared section builds the group, as in the other four bindings.
+		expect(
+			el.querySelector(
+				'pptx-ui-ribbon-section > pptx-ui-ribbon-group[data-ribbon-group="help.help"]',
+			),
+		).not.toBeNull();
 		const commands = [...el.querySelectorAll('pptx-ui-ribbon-command')];
 		expect(commands.map((command) => command.getAttribute('label'))).toStrictEqual([
 			'Settings',

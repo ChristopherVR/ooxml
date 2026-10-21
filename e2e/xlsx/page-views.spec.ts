@@ -91,8 +91,12 @@ test('Page Break Preview moves a manual break by dragging', async ({ page }) => 
 	const line = editor(page).locator('.xgpb-line.xgpb-manual');
 	const top = () => line.evaluate((node) => parseFloat((node as HTMLElement).style.top));
 	const before = await top();
-	const handle = editor(page).locator('.xgpb-grab.xgpb-row').nth(2);
-	const box = (await handle.boundingBox())!;
+	const handle = editor(page).locator('.xgpb-line.xgpb-manual + .xgpb-grab.xgpb-row');
+	await expect(handle).toBeVisible();
+	const box = await handle.evaluate((node) => {
+		const rect = node.getBoundingClientRect();
+		return { x: rect.x, y: rect.y, height: rect.height };
+	});
 	await page.mouse.move(box.x + 40, box.y + box.height / 2);
 	await page.mouse.down();
 	await page.mouse.move(box.x + 40, box.y + box.height / 2 + 60, { steps: 6 });

@@ -1,4 +1,7 @@
+import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from './index';
 import { miniPackage, roundTrip, ws } from './mini-package-fixtures';
 
 const ROWS =
@@ -89,6 +92,18 @@ describe('sheetFormatPr', () => {
 			thickBottom: true,
 			baseColWidth: 10,
 		});
+	});
+
+	it('saves the outline level of a sheet with more row records than a call takes arguments', async () => {
+		// Every row carries a height (as after fitting each row), one in the middle an outline level:
+		// about 125,000 is the most arguments a call takes in Node.
+		const workbook = createWorkbook();
+		const rows = workbook.sheets[0]!.rowInfo;
+		for (let row = 0; row < 200_000; row++) rows.set(row, { height: 20, customHeight: true });
+		rows.set(100_000, { height: 20, customHeight: true, outlineLevel: 3 });
+		const zip = await JSZip.loadAsync(await saveXlsx(workbook));
+		const xml = (await zip.file('xl/worksheets/sheet1.xml')?.async('string')) ?? '';
+		expect(/<sheetFormatPr[^>]*\/>/.exec(xml)?.[0]).toContain('outlineLevelRow="3"');
 	});
 });
 

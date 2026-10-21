@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createTranslator } from '../i18n';
 import { createQuickStylesGallery } from './inspector/quick-styles-gallery';
 import { createThemeColorSwatchGrid } from './theme-color-swatch-grid';
+import { themeSwatches } from './theme-color-swatch-grid.test-support';
 
 const OFFICE_THEME = {
 	dk1: '#000000',
@@ -32,13 +33,14 @@ describe('swatch and style names follow the locale', () => {
 	it('names theme colour swatches with the host dictionary', () => {
 		const grid = createThemeColorSwatchGrid(document, de, vi.fn());
 		grid.setThemeColorMap(OFFICE_THEME);
-		const titles = [...grid.el.querySelectorAll<HTMLButtonElement>('button')].map(
-			(button) => button.title,
-		);
+		const titles = themeSwatches(grid.el).map((button) => button.title);
 		expect(titles).toContain('Akzent 1');
 		expect(titles).toContain('Akzent 1, heller 80 %');
 		expect(titles).toContain('Akzent 1, dunkler 25 %');
 		expect(titles.some((title) => title.includes('Accent'))).toBeFalsy();
+		// The heading and the grid's accessible name are translated too.
+		expect(grid.el.shadowRoot!.querySelector('.heading')!.textContent).toBe('Designfarben');
+		expect(grid.el.getAttribute('aria-label')).toBe('Designfarben');
 	});
 
 	it('names Quick Styles presets with the host dictionary', () => {

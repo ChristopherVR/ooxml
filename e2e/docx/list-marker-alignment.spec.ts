@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import type { SignedTwips, Twips } from '../../viewers/docx/packages/core/src/index';
-import { newDocument, reveal } from './helpers';
+import { clickInEditor, newDocument, reveal } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: editor and Print Layout align list markers without adding editable characters`, async ({
@@ -79,7 +79,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			expect(geometry[i]!.marker + factor * geometry[i]!.width).toBeCloseTo(24, 1);
 		expect(geometry[1]!.body).toBeCloseTo(96, 1);
 		expect(geometry[2]!.body).toBeCloseTo(96, 1);
-		await paragraphs.nth(2).click();
+		await clickInEditor(paragraphs.nth(2));
 		await page.keyboard.press('Home');
 		await page.keyboard.type('X');
 		await expect(paragraphs.nth(2)).toHaveText('XBody text');

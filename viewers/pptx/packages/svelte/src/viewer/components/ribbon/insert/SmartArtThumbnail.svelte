@@ -30,7 +30,7 @@
 		height: 42px;
 		overflow: hidden;
 		border-radius: 4px;
-		background: var(--pptx-muted, #252538);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		pointer-events: none;
 	}
 

@@ -363,10 +363,9 @@ export const INSPECTOR_FORMAT_CSS = `
    no class of its own, so a touch-target fix here reaches all of them. */
 @media (max-width: 767px) {
 	.pptxv-exhaustive-field-control { min-height: 44px; min-width: 44px; }
-	/* text-effects-controls.ts's own local field() helper (Transform warp
-	   select, ...) carries no class of its own either; target it through its
-	   section container. */
-	.pptxv-inspector-text-effects select,
+	/* text-effects-controls.ts's own local field() helper carries no class of
+	   its own either; target it through its section container. (Its Transform
+	   gallery sizes its own tiles for touch.) */
 	.pptxv-inspector-text-effects input {
 		min-height: 44px;
 	}

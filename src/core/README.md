@@ -72,6 +72,16 @@ SVG curve flattening is available from `geometry`. See the
 [PowerPoint reuse audit](../../docs/pptx-shared-logic-audit.md) for extraction evidence
 and remaining candidates.
 
+CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })` from `ooxml-core/xlsx/load`)
+types fields the way typing them into a cell does, which approximates Excel opening a CSV: a
+number past 15 significant digits keeps the nearest double where Excel keeps the first 15
+digits, and General columns read numeric dates month first. It takes Excel's own controls to
+change that: the automatic data conversion switches (`conversions: { leadingZeros: false }`
+keeps `00123`), and the Text Import Wizard's column formats
+(`columns: { 0: 'text', 2: 'DMY', 5: 'skip' }`), decimal and thousands separators and trailing
+minus. Each column whose data a conversion changed gets one entry in `workbook.warnings`, with a
+count and the first cell.
+
 ## Install
 
 ```bash
@@ -114,6 +124,31 @@ inherited frame. If a template's master frame needs a compatible-role fallback,
 only the newly created placeholder receives an explicit frame. A missing slot
 requires a complete explicit frame; otherwise the builder throws. Standalone `new SlideBuilder(number, layoutPath, name, handler)`
 requires a loaded handler for this method. Use `addText` for a free text box.
+
+**Open a very large workbook**
+
+```ts
+import { DEFAULT_XLSX_LOAD_LIMITS, isWorkbookTooLargeError, loadXlsx } from 'ooxml-core/xlsx';
+
+// The default limits guard against zip bombs; raise only what the expected files need.
+const workbook = await loadXlsx(bytes, {
+	limits: { maxTotalBytes: 4 * DEFAULT_XLSX_LOAD_LIMITS.maxTotalBytes, maxXmlElements: 20_000_000 },
+});
+// Over a limit, loading throws an error that isWorkbookTooLargeError(error) recognises (code
+// 'workbook-too-large'): `limit` names the limit and `maximum` is its value. loadWorkbook
+// ('ooxml-core/xlsx/load') takes `limits` too.
+```
+
+**Compare two versions of a workbook**
+
+```ts
+import { compareWorkbooks, comparisonText, loadXlsx } from 'ooxml-core/xlsx';
+
+const result = compareWorkbooks(await loadXlsx(v1), await loadXlsx(v2));
+console.log(comparisonText(result)); // values, formulas, formats, sheets, names
+```
+
+Cells are matched by address; see [workbook comparison](../../docs/xlsx-compare.md) for the categories and limits.
 
 **Work at the package level**
 

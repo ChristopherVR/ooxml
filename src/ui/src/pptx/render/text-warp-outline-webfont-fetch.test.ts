@@ -61,6 +61,67 @@ function fakeFetch(fontBytesUrl?: string): FetchLike {
 }
 
 describe('fetchGoogleWebfontOutlineBytes', () => {
+	it('picks the weight a weight variant names from its base family', async () => {
+		const css = `@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: url(https://fonts.gstatic.com/s/dmsans/latin-300.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/dmsans/latin-400.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}`;
+		const fetchImpl: FetchLike = vi.fn(async (url: string) => ({
+			ok: true,
+			text: async () => css,
+			arrayBuffer: async () => new TextEncoder().encode(url).buffer,
+		}));
+		const bytes = await fetchGoogleWebfontOutlineBytes(
+			CSS_HREF,
+			'DM Sans Light',
+			false,
+			false,
+			fetchImpl,
+		);
+		expect(new TextDecoder().decode(bytes)).toBe(
+			'https://fonts.gstatic.com/s/dmsans/latin-300.woff2',
+		);
+	});
+
+	it('picks the italic face a style variant names from its base family', async () => {
+		const css = ['normal', 'italic']
+			.map(
+				(style) => `@font-face {
+  font-family: 'Lato';
+  font-style: ${style};
+  font-weight: 300;
+  src: url(https://fonts.gstatic.com/s/lato/latin-300-${style}.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}`,
+			)
+			.join('\n');
+		const fetchImpl: FetchLike = vi.fn(async (url: string) => ({
+			ok: true,
+			text: async () => css,
+			arrayBuffer: async () => new TextEncoder().encode(url).buffer,
+		}));
+		const bytes = await fetchGoogleWebfontOutlineBytes(
+			CSS_HREF,
+			'Lato Light Italic',
+			false,
+			false,
+			fetchImpl,
+		);
+		expect(new TextDecoder().decode(bytes)).toBe(
+			'https://fonts.gstatic.com/s/lato/latin-300-italic.woff2',
+		);
+	});
+
 	it('fetches the basic-Latin regular block for a catalogue family', async () => {
 		const fetchImpl = fakeFetch('https://fonts.gstatic.com/s/opensans/latin-400.woff2');
 		const bytes = await fetchGoogleWebfontOutlineBytes(

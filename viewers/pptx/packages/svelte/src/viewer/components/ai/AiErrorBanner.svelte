@@ -30,10 +30,10 @@
 		gap: 8px;
 		margin: 0 12px 8px;
 		padding: 6px 10px;
-		border: 1px solid color-mix(in srgb, var(--pptx-destructive, #ef4444) 40%, transparent);
-		border-radius: var(--pptx-radius, 6px);
-		background: color-mix(in srgb, var(--pptx-destructive, #ef4444) 6%, transparent);
-		color: var(--pptx-destructive, #fca5a5);
+		border: 1px solid color-mix(in srgb, var(--pptx-destructive, var(--office-danger, #b91c1c)) 40%, transparent);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: color-mix(in srgb, var(--pptx-destructive, var(--office-danger, #b91c1c)) 6%, transparent);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 		font-size: 12px;
 	}
 

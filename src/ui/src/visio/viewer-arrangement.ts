@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { visioArrangeCommands, type VisioArrangement } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import type { RibbonCommand } from './ribbon-parts';
@@ -13,7 +14,7 @@ export class ViewerArrangement {
 		const page = state.document?.pages[state.pageIndex];
 		if (
 			!page ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			state.edit.busy ||
 			state.selectedShapes.some((shape) => shape.pageId && shape.pageId !== page.id)

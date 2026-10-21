@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioComment, VisioEdit, VisioPage, VisioShape } from 'ooxml-core/visio';
 import { visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
 import type { OfficeUiCommentsPane } from '../comments/comments-pane';
@@ -54,7 +55,7 @@ export class ViewerComments {
 		return { author, initials: (profile.initial || commentInitials(author)).slice(0, 16) };
 	}
 	#editable(state = this.controller.state): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	#page(state = this.controller.state): VisioPage | undefined {
 		return state.document?.pages[state.pageIndex];
@@ -235,7 +236,7 @@ export class ViewerComments {
 		const button = (name: string) => this.root.querySelector<RibbonCommand>(`[command="${name}"]`);
 		const reason = !page
 			? 'Open a drawing first.'
-			: !state.edit.sourceAvailable
+			: !canEditDiagram(state)
 				? 'Open a .vsdx file to add comments.'
 				: !editable
 					? 'Wait for the current operation to finish.'

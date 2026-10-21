@@ -155,7 +155,8 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 	style.width = `${item.w}px`;
 	style.height = `${item.h}px`;
 	const fill = fillPaint(view.fill);
-	style.backgroundColor = fill?.background ?? (item.merged ? 'var(--xve-sheet-bg, #fff)' : '');
+	style.backgroundColor =
+		fill?.background ?? (item.merged ? 'var(--xve-sheet-bg, var(--office-paper, #fff))' : '');
 	style.backgroundImage = fill?.image ?? '';
 	node.className = `xg-c${item.overflowing ? ' xg-c-over' : ''}${view.hasHyperlink ? ' xg-link' : ''}${item.merged ? ' xg-merged' : ''}`;
 	node.replaceChildren();

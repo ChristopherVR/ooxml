@@ -120,7 +120,7 @@
 		gap: 5px;
 		margin-top: 8px;
 		padding-top: 7px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-chart-errbars-title {
@@ -136,7 +136,7 @@
 
 	.pptx-svelte-chart-errbars-name {
 		overflow: hidden;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
@@ -154,9 +154,9 @@
 		height: 25px;
 		box-sizing: border-box;
 		padding: 0 4px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}

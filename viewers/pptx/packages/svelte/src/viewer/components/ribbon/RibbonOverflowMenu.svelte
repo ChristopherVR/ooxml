@@ -133,20 +133,20 @@
 		min-width: 26px;
 		height: 26px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 		font: inherit;
 	}
 
 	.pptx-svelte-overflow-trigger:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-overflow-open {
-		background: var(--pptx-primary, #6366f1) !important;
+		background: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
 		color: #fff !important;
 	}
 
@@ -171,10 +171,10 @@
 		display: flex;
 		min-width: 176px;
 		flex-direction: column;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: calc(var(--pptx-radius, 6px) + 2px);
-		background: var(--pptx-popover, #111827);
-		color: var(--pptx-popover-foreground, #f3f4f6);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 2px);
+		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
+		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
 		padding: 4px;
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
 	}
@@ -183,7 +183,7 @@
 		display: block;
 		width: 100%;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		padding: 6px 10px;
@@ -194,8 +194,8 @@
 	}
 
 	.pptx-svelte-overflow-menu button:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-overflow-menu button:disabled {
@@ -206,6 +206,6 @@
 	.pptx-svelte-overflow-sep {
 		height: 1px;
 		margin: 4px 2px;
-		background: color-mix(in srgb, var(--pptx-border, #33334d) 60%, transparent);
+		background: color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent);
 	}
 </style>

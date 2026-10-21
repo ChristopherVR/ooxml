@@ -31,7 +31,7 @@
 	height: 30px;
 	padding: 0 8px;
 	border: 1px solid var(--line);
-	border-radius: 4px;
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
 	background: var(--surface);
 	color: var(--ink);
 	font: inherit;
@@ -45,7 +45,7 @@
 	min-height: 30px;
 	padding: 0 14px;
 	border: 1px solid var(--line);
-	border-radius: 4px;
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
 	background: var(--surface);
 	color: var(--ink);
 	font: inherit;
@@ -54,5 +54,5 @@
 .dve-dialog-actions .dve-dialog-primary {
 	border-color: var(--word);
 	background: var(--word);
-	color: var(--dve-primary-foreground);
+	color: var(--dve-primary-foreground, var(--office-accent-foreground, #fff));
 }

@@ -9,7 +9,10 @@ import { createSampleDocument } from './sample-document';
 const get = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 initTheme();
 
-const framework = new URLSearchParams(location.search).get('framework') || 'vanilla';
+const framework =
+	new URLSearchParams(location.search).get('framework') ||
+	import.meta.env.VITE_DEMO_FRAMEWORK ||
+	'vanilla';
 get('build-stamp').textContent = `docx-viewer demo · ${framework}`;
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;

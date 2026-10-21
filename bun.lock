@@ -381,7 +381,7 @@
     },
     "mcp": {
       "name": "ooxml-mcp",
-      "version": "0.1.16",
+      "version": "0.1.17",
       "bin": {
         "ooxml-tools": "src/cli.js",
       },
@@ -407,7 +407,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "1.19.2",
+      "version": "1.20.0",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },
@@ -463,7 +463,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "1.18.3",
+      "version": "1.19.0",
       "dependencies": {
         "dompurify": "^3.4.17",
         "emf-converter": "4.21.0",
@@ -550,7 +550,7 @@
     },
     "viewers/docx/mcp": {
       "name": "docx-viewer-mcp",
-      "version": "0.1.11",
+      "version": "0.2.0",
       "bin": {
         "docx-tools": "src/cli.js",
       },
@@ -562,11 +562,16 @@
     },
     "viewers/docx/packages/angular": {
       "name": "docx-angular-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
         "ooxml-ui": "*",
+      },
+      "devDependencies": {
+        "@angular/compiler": "^22.2.3",
+        "@angular/core": "^22.2.3",
+        "@angular/platform-browser": "^22.2.3",
       },
       "peerDependencies": {
         "@angular/core": ">=19",
@@ -579,6 +584,7 @@
         "docx-core": "workspace:*",
         "docx-web-component": "workspace:*",
         "ooxml-core": "*",
+        "ooxml-ui": "*",
       },
       "devDependencies": {
         "react": "^19.3.1",
@@ -600,18 +606,23 @@
     },
     "viewers/docx/packages/core": {
       "name": "docx-core",
-      "version": "0.1.13",
+      "version": "0.2.0",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/docx/packages/react": {
       "name": "docx-react-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
         "ooxml-ui": "*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "react-dom": "^19.3.1",
       },
       "peerDependencies": {
         "react": ">=18",
@@ -619,7 +630,7 @@
     },
     "viewers/docx/packages/solid": {
       "name": "docx-solid-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
@@ -631,7 +642,7 @@
     },
     "viewers/docx/packages/svelte": {
       "name": "docx-svelte-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
@@ -643,7 +654,7 @@
     },
     "viewers/docx/packages/vanilla": {
       "name": "docx-vanilla-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
@@ -652,7 +663,7 @@
     },
     "viewers/docx/packages/vue": {
       "name": "docx-vue-viewer",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "docx-core": "^0.1.13",
         "ooxml-core": "*",
@@ -733,7 +744,7 @@
     },
     "viewers/pptx/packages/angular": {
       "name": "pptx-angular-viewer",
-      "version": "4.42.1",
+      "version": "4.43.0",
       "dependencies": {
         "@lucide/angular": "^1.57.0",
         "dompurify": "^3.4.17",
@@ -887,13 +898,13 @@
     },
     "viewers/pptx/packages/react": {
       "name": "pptx-react-viewer",
-      "version": "4.42.1",
+      "version": "4.43.0",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.17",
         "html2canvas-pro": "^2.5.2",
-        "ooxml-core": "^1.19.1",
-        "ooxml-ui": "^1.18.2",
+        "ooxml-core": "^1.20.0",
+        "ooxml-ui": "^1.19.0",
         "opentype.js": "^2.0.0",
         "tailwind-merge": "^3.7.0",
       },
@@ -974,7 +985,7 @@
     },
     "viewers/pptx/packages/svelte": {
       "name": "pptx-svelte-viewer",
-      "version": "4.42.1",
+      "version": "4.43.0",
       "dependencies": {
         "@lucide/svelte": "^1.57.0",
         "fast-xml-parser": "^5.11.2",
@@ -1053,7 +1064,7 @@
     },
     "viewers/pptx/packages/vanilla": {
       "name": "pptx-vanilla-viewer",
-      "version": "3.42.1",
+      "version": "3.43.0",
       "dependencies": {
         "dompurify": "^3.4.17",
         "fast-xml-parser": "^5.11.2",
@@ -1094,7 +1105,7 @@
     },
     "viewers/pptx/packages/vue": {
       "name": "pptx-vue-viewer",
-      "version": "4.42.1",
+      "version": "4.43.0",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.17",
@@ -1326,7 +1337,7 @@
     },
     "viewers/visio/mcp": {
       "name": "visio-viewer-mcp",
-      "version": "0.3.5",
+      "version": "0.4.0",
       "bin": {
         "visio-tools": "src/cli.js",
       },
@@ -1338,15 +1349,20 @@
     },
     "viewers/visio/packages/angular": {
       "name": "visio-angular-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^0.4.1",
       },
+      "devDependencies": {
+        "@angular/compiler": "^22.2.3",
+        "@angular/core": "^22.2.3",
+        "@angular/platform-browser": "^22.2.3",
+      },
       "peerDependencies": {
-        "@angular/core": "^21.0.0",
+        "@angular/core": "^21.0.0 || ^22.0.0",
       },
     },
     "viewers/visio/packages/bindings": {
@@ -1376,19 +1392,24 @@
     },
     "viewers/visio/packages/core": {
       "name": "visio-core",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/visio/packages/react": {
       "name": "visio-react-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
         "visio-core": "^0.4.1",
+      },
+      "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "react-dom": "^19.3.1",
       },
       "peerDependencies": {
         "react": ">=18",
@@ -1396,7 +1417,7 @@
     },
     "viewers/visio/packages/solid": {
       "name": "visio-solid-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
@@ -1409,7 +1430,7 @@
     },
     "viewers/visio/packages/svelte": {
       "name": "visio-svelte-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
@@ -1422,7 +1443,7 @@
     },
     "viewers/visio/packages/vanilla": {
       "name": "visio-vanilla-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
@@ -1432,7 +1453,7 @@
     },
     "viewers/visio/packages/vue": {
       "name": "visio-vue-viewer",
-      "version": "0.7.4",
+      "version": "0.8.0",
       "dependencies": {
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
@@ -1487,7 +1508,7 @@
     },
     "viewers/xlsx/mcp": {
       "name": "xlsx-viewer-mcp",
-      "version": "0.1.11",
+      "version": "0.2.0",
       "bin": {
         "xlsx-tools": "src/cli.js",
       },
@@ -1499,11 +1520,16 @@
     },
     "viewers/xlsx/packages/angular": {
       "name": "xlsx-angular-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
         "ooxml-ui": "*",
+      },
+      "devDependencies": {
+        "@angular/compiler": "^22.2.3",
+        "@angular/core": "^22.2.3",
+        "@angular/platform-browser": "^22.2.3",
       },
       "peerDependencies": {
         "@angular/core": ">=19",
@@ -1515,6 +1541,7 @@
       "dependencies": {
         "@christophervr/xlsx-core": "workspace:*",
         "ooxml-core": "*",
+        "ooxml-ui": "*",
         "xlsx-web-component": "workspace:*",
       },
       "devDependencies": {
@@ -1537,18 +1564,23 @@
     },
     "viewers/xlsx/packages/core": {
       "name": "@christophervr/xlsx-core",
-      "version": "0.2.10",
+      "version": "0.3.0",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/xlsx/packages/react": {
       "name": "@christophervr/xlsx-react-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
         "ooxml-ui": "*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "react-dom": "^19.3.1",
       },
       "peerDependencies": {
         "react": ">=18",
@@ -1556,7 +1588,7 @@
     },
     "viewers/xlsx/packages/solid": {
       "name": "xlsx-solid-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
@@ -1568,7 +1600,7 @@
     },
     "viewers/xlsx/packages/svelte": {
       "name": "xlsx-svelte-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
@@ -1580,7 +1612,7 @@
     },
     "viewers/xlsx/packages/vanilla": {
       "name": "xlsx-vanilla-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
@@ -1589,7 +1621,7 @@
     },
     "viewers/xlsx/packages/vue": {
       "name": "xlsx-vue-viewer",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.10",
         "ooxml-core": "*",
@@ -3932,6 +3964,8 @@
 
     "@christophervr/visio-viewer-bindings/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
+    "@christophervr/xlsx-react-viewer/react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+
     "@inquirer/core/@inquirer/type": ["@inquirer/type@4.2.0", "", { "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-2rnHX8RPo4glJYqnFc/v3nQeIhDcjyRRyaT7MGcfL/8xv/8K03SXYoA2tX06WVSKywWOE/ncbG3dtuzLjR5TCQ=="],
 
     "@microsoft/api-extractor/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
@@ -4005,6 +4039,8 @@
     "docx-demos/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 
     "docx-demos/react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+
+    "docx-react-viewer/react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
 
     "docx-viewer-workspace/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 
@@ -4123,6 +4159,8 @@
     "visio-demos/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 
     "visio-demos/react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+
+    "visio-react-viewer/react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
 
     "vite/rolldown": ["rolldown@1.2.12", "", { "dependencies": { "@oxc-project/types": "=0.152.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm-eabi": "1.2.12", "@rolldown/binding-android-arm64": "1.2.12", "@rolldown/binding-darwin-arm64": "1.2.12", "@rolldown/binding-darwin-x64": "1.2.12", "@rolldown/binding-freebsd-x64": "1.2.12", "@rolldown/binding-linux-arm-gnueabihf": "1.2.12", "@rolldown/binding-linux-arm64-gnu": "1.2.12", "@rolldown/binding-linux-arm64-musl": "1.2.12", "@rolldown/binding-linux-ppc64-gnu": "1.2.12", "@rolldown/binding-linux-s390x-gnu": "1.2.12", "@rolldown/binding-linux-x64-gnu": "1.2.12", "@rolldown/binding-linux-x64-musl": "1.2.12", "@rolldown/binding-openharmony-arm64": "1.2.12", "@rolldown/binding-win32-arm64-msvc": "1.2.12", "@rolldown/binding-win32-x64-msvc": "1.2.12" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-8wafseiaG80xmXSfqidUNqZcylTlhmPZZt+za2m+js2sFZ8dTNlhIOV2WcbIPx2hgwPBJpEUGFAMZ9bgBBLTSQ=="],
 
@@ -4262,6 +4300,10 @@
 
     "@christophervr/visio-viewer-bindings/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
+    "@christophervr/xlsx-react-viewer/react-dom/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
+
+    "@christophervr/xlsx-react-viewer/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
+
     "@react-three/drei/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
     "@tailwindcss/cli/@parcel/watcher/@parcel/watcher-android-arm64": ["@parcel/watcher-android-arm64@2.5.1", "", { "os": "android", "cpu": "arm64" }, "sha512-KF8+j9nNbUN8vzOFDpRMsaKBHZ/mcjEjMToVMJOhTozkDonQFFrRcfdLWn6yWKCmJKmdVxSgHiYvTCef4/qcBA=="],
@@ -4321,6 +4363,10 @@
     "babel-plugin-jsx-dom-expressions/parse5/entities": ["entities@6.0.1", "", {}, "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="],
 
     "docx-demos/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
+
+    "docx-react-viewer/react-dom/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
+
+    "docx-react-viewer/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
     "docx-viewer-workspace/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
@@ -4447,6 +4493,10 @@
     "unrun/rolldown/@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.2.12", "", { "os": "win32", "cpu": "x64" }, "sha512-WIw2haVKwjuYdXkHaoC0mF8Le71TuCBxjrdKqLbJGctbBABj+ClfmNvtbOnzpq3RokNo5+V1qhtSzJyXorsklQ=="],
 
     "visio-demos/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
+
+    "visio-react-viewer/react-dom/react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
+
+    "visio-react-viewer/react-dom/scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
     "vite/rolldown/@oxc-project/types": ["@oxc-project/types@0.152.0", "", {}, "sha512-oM/5rLBm2tPkg0iBgkH/FOeR3PCDpY19GTgAZjMFM8h9WI9VW7cLgzp6nwtarYKmovavIQZ+Fe/RKX/8C8O/Rw=="],
 

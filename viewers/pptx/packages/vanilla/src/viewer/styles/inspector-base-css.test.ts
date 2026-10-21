@@ -82,6 +82,18 @@ describe('inspector baseline for bare form markup', () => {
 		expect(style.backgroundColor).not.toBe('');
 	});
 
+	it('inherits canonical fonts in a standalone inspector and keeps legacy overrides first', () => {
+		const chart = chartSection();
+		const root = inspector(chart.el);
+		const input = chart.el.querySelector<HTMLInputElement>('label > input:not([type])')!;
+		root.style.setProperty('--office-font', 'monospace');
+		expect(getComputedStyle(root).fontFamily).toBe('monospace');
+		expect(getComputedStyle(input).fontFamily).toBe('monospace');
+		root.style.setProperty('--pptx-font', 'serif');
+		expect(getComputedStyle(root).fontFamily).toBe('serif');
+		expect(getComputedStyle(input).fontFamily).toBe('serif');
+	});
+
 	it('resets the action fieldset and gives the alt-text textarea the panel font', () => {
 		const fieldset = document.createElement('fieldset');
 		const host = section();

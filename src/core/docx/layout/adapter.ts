@@ -19,6 +19,8 @@ import type { ShapeSpec } from '../shape-model';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
+import { symbolOnly, symbolSegments } from '../special-characters';
+import { formFieldDisplayText } from '../form-fields';
 import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
@@ -39,6 +41,8 @@ import type {
 	LayoutSection,
 } from './input';
 
+/** Word's grey behind form fields while "Form field shading" is on. */
+const FORM_FIELD_SHADING = '#d9d9d9';
 const TABLE_ROW_NOTE =
 	'Table rows with an exact height clip content that does not fit; text in them is not shrunk.';
 const VERTICAL_MERGE_NOTE =
@@ -110,7 +114,10 @@ export function adaptDocumentModel(
 			paragraphStyleId,
 		});
 		const role = formatting.fontTheme?.ascii ?? formatting.fontTheme?.hAnsi;
-		const family = formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined);
+		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
+		const family =
+			(symbolOnly(run) && run.symbol?.font) ||
+			(formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined));
 		const color =
 			formatting.color ??
 			(formatting.colorTheme && theme
@@ -139,8 +146,13 @@ export function adaptDocumentModel(
 			: run.noteMark
 				? (markLabel ?? '')
 				: undefined;
+		// A legacy check box or drop-down draws its value on its begin marker; Word shades form fields.
+		const formText = formFieldDisplayText(run);
+		const shaded =
+			model.formFieldShading !== false && (formText !== undefined || name === 'FORMTEXT');
 		const text =
 			noteText ??
+			formText ??
 			(run.field && !isFieldLocked(run) && (name === 'DATE' || name === 'TIME')
 				? dateFieldResult(name, run.field.instr, now)
 				: run.equation
@@ -206,6 +218,8 @@ export function adaptDocumentModel(
 						: (formatting.positionHalfPoints * 2) / 3,
 			}),
 			...(color && /^#[0-9a-f]{6}$/i.test(color) ? { color } : {}),
+			...(shaded ? { background: FORM_FIELD_SHADING } : {}),
+			...(run.positionalTab ? { positionalTab: run.positionalTab } : {}),
 			...(formatting.underline ? { underline: true } : {}),
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
 			...(run.break ? { breakAfter: run.break } : {}),
@@ -247,7 +261,10 @@ export function adaptDocumentModel(
 		// Numbering level indents apply unless the paragraph or its style sets its own.
 		const ownFirstLine =
 			resolved.firstLineTwips !== undefined || resolved.hangingTwips !== undefined;
-		const runs = paragraph.runs.map((run) => adaptRun(run, paragraph.style, markLabel));
+		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
+		const runs = paragraph.runs.flatMap((run) =>
+			symbolSegments(run).map((segment) => adaptRun(segment, paragraph.style, markLabel)),
+		);
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
 		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);
 		const { betweenBorder: _between, ...box } = paragraphBox(resolved, model.theme);

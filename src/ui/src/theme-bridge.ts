@@ -1,5 +1,53 @@
 import { OFFICE_TOKENS, type OfficeToken } from './tokens';
 
+/** Legacy shadcn names share one semantic mapping across all product compatibility layers. */
+export const LEGACY_OFFICE_THEME_TOKENS = {
+	background: '--office-background',
+	foreground: '--office-foreground',
+	card: '--office-surface',
+	'card-foreground': '--office-foreground',
+	popover: '--office-popover',
+	'popover-foreground': '--office-popover-foreground',
+	primary: '--office-accent',
+	'primary-foreground': '--office-accent-foreground',
+	secondary: '--office-surface',
+	'secondary-foreground': '--office-foreground',
+	muted: '--office-surface',
+	'muted-foreground': '--office-muted-foreground',
+	accent: '--office-selected',
+	'accent-foreground': '--office-foreground',
+	destructive: '--office-danger',
+	'destructive-foreground': '--office-danger-foreground',
+	border: '--office-border',
+	input: '--office-border',
+	ring: '--office-ring',
+	radius: '--office-radius',
+	font: '--office-font',
+} as const satisfies Record<string, OfficeToken>;
+
+/** Resolve on an outer host; bridge the computed aliases on inner chrome to avoid CSS cycles. */
+export function legacyThemeAliases(
+	selector: string,
+	prefix: string,
+	privatePrefix: string,
+): string {
+	return `${selector} {\n${Object.entries(LEGACY_OFFICE_THEME_TOKENS)
+		.map(
+			([name, canonical]) =>
+				`${privatePrefix}${name}: var(${prefix}${name}, var(${canonical}, ${OFFICE_TOKENS[canonical]}));`,
+		)
+		.join('\n')}\n}`;
+}
+
+export function legacyThemeBridge(selector: string, privatePrefix: string): string {
+	return shadcnBridge(selector, privatePrefix, {
+		extra: {
+			'--office-font': `var(${privatePrefix}font)`,
+			'--office-radius': `var(${privatePrefix}radius)`,
+		},
+	});
+}
+
 /**
  * Feeds the `--office-*` tokens from a product's own theme, so the shared elements follow it.
  * Products (docx, xlsx, pptx, visio) already name their theme after shadcn/ui
@@ -14,21 +62,23 @@ export type ThemeBridgeMap = Partial<Record<OfficeToken, string>>;
 
 /** The shadcn token names each `--office-*` colour reads, without the product prefix. */
 const SHADCN_NAMES: ReadonlyArray<readonly [OfficeToken, string, string?]> = [
-	['--office-foreground', 'foreground'],
-	['--office-muted-foreground', 'muted-foreground'],
-	['--office-background', 'background'],
-	['--office-surface', 'card'],
-	['--office-selected', 'accent'],
-	['--office-border', 'border'],
-	['--office-accent', 'primary'],
-	['--office-accent-foreground', 'primary-foreground'],
-	['--office-ring', 'ring'],
-	['--office-popover', 'popover'],
-	// Popover text falls back to the plain foreground, as it does in the shadcn themes.
-	['--office-popover-foreground', 'popover-foreground', 'foreground'],
-	['--office-danger', 'destructive'],
-	['--office-danger-foreground', 'destructive-foreground'],
-];
+	'foreground',
+	'muted-foreground',
+	'background',
+	'card',
+	'accent',
+	'border',
+	'primary',
+	'primary-foreground',
+	'ring',
+	'popover',
+	'popover-foreground',
+	'destructive',
+	'destructive-foreground',
+].map((name) => {
+	const token = LEGACY_OFFICE_THEME_TOKENS[name as keyof typeof LEGACY_OFFICE_THEME_TOKENS];
+	return name === 'popover-foreground' ? [token, name, 'foreground'] : [token, name];
+});
 
 /** The `--office-*` tokens a token's default reads, such as `--office-background` for selects. */
 const reads = (value: string) => [...value.matchAll(/var\((--office-[\w-]+)/g)].map((m) => m[1]!);

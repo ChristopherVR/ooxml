@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { themeSwatch, themeSwatches } from '../theme-color-swatch-grid.test-support';
 import { createTextSection } from './text-section';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -121,7 +122,7 @@ describe('createTextSection text colour theme grid', () => {
 	it('renders a theme-swatch grid, hidden until a theme is loaded', () => {
 		const { section } = mount();
 		section.update(baseState());
-		const grid = section.el.querySelector<HTMLElement>('.pptxv-theme-swatch-grid')!;
+		const grid = section.el.querySelector<HTMLElement>('pptx-ui-color-grid')!;
 		expect(grid.hidden).toBeTruthy();
 
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
@@ -132,7 +133,7 @@ describe('createTextSection text colour theme grid', () => {
 		const { section, handlers } = mount();
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
 
-		section.el.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		themeSwatch(section.el, 'Accent 2')!.click();
 		expect(handlers.setTextStyle).toHaveBeenCalledExactlyOnceWith({
 			color: '#ed7d31',
 			colorRef: { scheme: 'accent2' },
@@ -148,8 +149,8 @@ describe('createTextSection text colour theme grid', () => {
 			}),
 		);
 
-		const swatch = section.el.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!;
-		expect(swatch.classList.contains('is-selected')).toBeTruthy();
+		const swatch = themeSwatch(section.el, 'Accent 2')!;
+		expect(swatch.getAttribute('aria-checked')).toBe('true');
 	});
 
 	it('the native colour input clears colorRef', () => {
@@ -169,8 +170,8 @@ describe('createTextSection text colour theme grid', () => {
 		const { section } = mount();
 		section.update(baseState({ canText: false, themeColorMap: OFFICE_THEME }));
 
-		expect(
-			section.el.querySelector<HTMLButtonElement>('.pptxv-theme-swatch-grid-swatch')!.disabled,
-		).toBeTruthy();
+		const swatches = themeSwatches(section.el);
+		expect(swatches).toHaveLength(60);
+		expect(swatches.every((swatch) => swatch.disabled)).toBeTruthy();
 	});
 });

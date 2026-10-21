@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { themeSwatch, themeSwatches } from '../theme-color-swatch-grid.test-support';
 import { createFillSection } from './fill-section';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -191,15 +192,15 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section } = mount();
 		section.update(baseState());
 
-		const grids = section.el.querySelectorAll('.pptxv-theme-swatch-grid');
+		const grids = section.el.querySelectorAll('pptx-ui-color-grid');
 		expect(grids).toHaveLength(2);
 		for (const grid of grids) {
-			expect((grid as HTMLElement).hidden).toBeTruthy();
+			expect(grid.hidden).toBeTruthy();
 		}
 
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
-		for (const grid of section.el.querySelectorAll('.pptxv-theme-swatch-grid')) {
-			expect((grid as HTMLElement).hidden).toBeFalsy();
+		for (const grid of section.el.querySelectorAll('pptx-ui-color-grid')) {
+			expect(grid.hidden).toBeFalsy();
 		}
 	});
 
@@ -207,14 +208,12 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section, handlers } = mount();
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
 
-		const [fillGrid, strokeGrid] = Array.from(
-			section.el.querySelectorAll<HTMLElement>('.pptxv-theme-swatch-grid'),
-		);
-		fillGrid.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		const [fillGrid, strokeGrid] = Array.from(section.el.querySelectorAll('pptx-ui-color-grid'));
+		themeSwatch(fillGrid, 'Accent 2')!.click();
 		expect(handlers.setShapeFill).toHaveBeenCalledExactlyOnceWith('#ed7d31', { scheme: 'accent2' });
 		expect(handlers.setShapeStroke).not.toHaveBeenCalled();
 
-		strokeGrid.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		themeSwatch(strokeGrid, 'Accent 2')!.click();
 		expect(handlers.setShapeStroke).toHaveBeenCalledExactlyOnceWith('#ed7d31', {
 			scheme: 'accent2',
 		});
@@ -224,10 +223,12 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section } = mount();
 		section.update(baseState({ canShape: false, themeColorMap: OFFICE_THEME }));
 
-		for (const grid of section.el.querySelectorAll('.pptxv-theme-swatch-grid')) {
-			expect(
-				grid.querySelector<HTMLButtonElement>('.pptxv-theme-swatch-grid-swatch')!.disabled,
-			).toBeTruthy();
+		const grids = section.el.querySelectorAll('pptx-ui-color-grid');
+		expect(grids).toHaveLength(2);
+		for (const grid of grids) {
+			const swatches = themeSwatches(grid);
+			expect(swatches).toHaveLength(60);
+			expect(swatches.every((swatch) => swatch.disabled)).toBeTruthy();
 		}
 	});
 });
@@ -237,7 +238,8 @@ describe('createFillSection Fill and Line groups', () => {
 		const { section, handlers } = mount();
 		section.update(baseState({ themeColorMap: OFFICE_THEME, recentColors: ['#112233'] }));
 
-		const groups = Array.from(section.el.querySelectorAll<HTMLElement>('[role="group"]'));
+		// The theme grids are groups of their own ("Theme Colors"), inside these.
+		const groups = Array.from(section.el.querySelectorAll<HTMLElement>(':scope > [role="group"]'));
 		expect(groups.map((group) => group.getAttribute('aria-label'))).toStrictEqual([
 			'pptx.inspector.fill',
 			'pptx.inspector.line',
@@ -248,18 +250,16 @@ describe('createFillSection Fill and Line groups', () => {
 				group.getAttribute('aria-label'),
 			);
 			expect(group.querySelectorAll('input[type="color"]')).toHaveLength(1);
-			expect(group.querySelectorAll('.pptxv-theme-swatch-grid')).toHaveLength(1);
+			expect(group.querySelectorAll('pptx-ui-color-grid')).toHaveLength(1);
 			expect(group.querySelectorAll('[data-testid="pptx-color-recent"]')).toHaveLength(1);
 		}
 		// No grid or recent row is left loose in the section, outside a group.
 		for (const child of Array.from(section.el.children)) {
-			expect(
-				child.matches('.pptxv-theme-swatch-grid, [data-testid="pptx-color-recent"]'),
-			).toBeFalsy();
+			expect(child.matches('pptx-ui-color-grid, [data-testid="pptx-color-recent"]')).toBeFalsy();
 		}
 
 		const [fillGroup, lineGroup] = groups;
-		lineGroup.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		themeSwatch(lineGroup, 'Accent 2')!.click();
 		expect(handlers.setShapeStroke).toHaveBeenCalledExactlyOnceWith('#ed7d31', {
 			scheme: 'accent2',
 		});
@@ -290,19 +290,19 @@ describe('createFillSection gradient stop theme colour grid', () => {
 	it('renders one theme-swatch grid per gradient stop, hidden until a theme is loaded', () => {
 		const { section } = mount();
 		section.update(baseState({ ...gradientState(), themeColorMap: undefined }));
-		const grids = section.el.querySelectorAll(
-			'.pptxv-inspector-gradient-stops .pptxv-theme-swatch-grid',
+		const grids = section.el.querySelectorAll<HTMLElement>(
+			'.pptxv-inspector-gradient-stops pptx-ui-color-grid',
 		);
 		expect(grids).toHaveLength(2);
 		for (const grid of grids) {
-			expect((grid as HTMLElement).hidden).toBeTruthy();
+			expect(grid.hidden).toBeTruthy();
 		}
 
 		section.update(baseState(gradientState()));
-		for (const grid of section.el.querySelectorAll(
-			'.pptxv-inspector-gradient-stops .pptxv-theme-swatch-grid',
+		for (const grid of section.el.querySelectorAll<HTMLElement>(
+			'.pptxv-inspector-gradient-stops pptx-ui-color-grid',
 		)) {
-			expect((grid as HTMLElement).hidden).toBeFalsy();
+			expect(grid.hidden).toBeFalsy();
 		}
 	});
 
@@ -311,9 +311,9 @@ describe('createFillSection gradient stop theme colour grid', () => {
 		section.update(baseState(gradientState()));
 
 		const grids = section.el.querySelectorAll<HTMLElement>(
-			'.pptxv-inspector-gradient-stops .pptxv-theme-swatch-grid',
+			'.pptxv-inspector-gradient-stops pptx-ui-color-grid',
 		);
-		grids[0].querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		themeSwatch(grids[0], 'Accent 2')!.click();
 		expect(handlers.updateGradientStop).toHaveBeenCalledExactlyOnceWith(0, {
 			color: '#ed7d31',
 			colorRef: { scheme: 'accent2' },
@@ -325,10 +325,10 @@ describe('createFillSection gradient stop theme colour grid', () => {
 		section.update(baseState(gradientState()));
 
 		const grids = section.el.querySelectorAll<HTMLElement>(
-			'.pptxv-inspector-gradient-stops .pptxv-theme-swatch-grid',
+			'.pptxv-inspector-gradient-stops pptx-ui-color-grid',
 		);
-		const swatch = grids[1].querySelector<HTMLButtonElement>('button[title="Accent 2"]')!;
-		expect(swatch.classList.contains('is-selected')).toBeTruthy();
+		const swatch = themeSwatch(grids[1], 'Accent 2')!;
+		expect(swatch.getAttribute('aria-checked')).toBe('true');
 	});
 
 	it("the native colour input clears the stop's ref", () => {

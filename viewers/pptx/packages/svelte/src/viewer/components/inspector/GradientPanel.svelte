@@ -148,7 +148,7 @@
 	.pptx-svelte-gradient {
 		margin-top: 10px;
 		padding-top: 10px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -162,18 +162,18 @@
 	.pptx-svelte-gradient-type button {
 		flex: 1;
 		height: 26px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		cursor: pointer;
 		font: inherit;
 	}
 
 	.pptx-svelte-gradient-on {
-		background: var(--pptx-primary, #6366f1) !important;
+		background: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
 		color: #fff !important;
-		border-color: var(--pptx-primary, #6366f1) !important;
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
 	}
 
 	.pptx-svelte-gradient-angle {
@@ -183,16 +183,16 @@
 	}
 
 	.pptx-svelte-gradient-angle span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-gradient-angle input {
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
@@ -220,7 +220,7 @@
 		width: 32px;
 		height: 24px;
 		padding: 0;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
 		background: transparent;
 		cursor: pointer;
@@ -230,9 +230,9 @@
 		height: 24px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
@@ -254,8 +254,8 @@
 
 	.pptx-svelte-gradient-add {
 		height: 26px;
-		border: 1px dashed var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
+		border: 1px dashed var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;

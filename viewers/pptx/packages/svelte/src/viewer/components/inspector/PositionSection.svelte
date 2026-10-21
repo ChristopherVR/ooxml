@@ -95,7 +95,7 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 6px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-lock-btn {
@@ -104,14 +104,14 @@
 		justify-content: center;
 		padding: 4px;
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-inspector-lock-btn:hover {
-		background: var(--pptx-accent, #1e1e2e);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-inspector-grid {
@@ -127,7 +127,7 @@
 	}
 
 	.pptx-svelte-inspector-grid span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-grid input {
@@ -135,9 +135,9 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}

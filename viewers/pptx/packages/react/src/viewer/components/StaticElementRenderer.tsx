@@ -88,7 +88,7 @@ function StaticElementRendererImpl({
 			data-pptx-action={isActionable ? 'click' : undefined}
 			className={getStaticElementWrapperClassName(
 				element,
-				{ isImage, letsTextOverflow, isCallout },
+				{ isImage, letsTextOverflow, isCallout, strokeWidth },
 				positioned,
 				isActionable,
 			)}

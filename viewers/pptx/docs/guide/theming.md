@@ -9,6 +9,20 @@ The viewer chrome (toolbar, ribbon, dialogs, backstage) is themed through a `Vie
 
 The theme system is framework-agnostic. The types, defaults, presets, and helpers below are implemented once (in the public `ooxml-ui/pptx` API) and re-exported identically by every published binding: `pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`, `pptx-svelte-viewer`, and `pptx-vanilla-viewer`.
 
+## Shared Office appearance
+
+All five bindings inherit the same `--office-*` tokens as Word, Excel and Visio. Put `data-office-theme="light"`, `"dark"` or `"auto"` on the document root or a containing element. Scoped modes override the inherited palette; `auto` follows the operating system as it changes. Custom tokens on the same scope override the selected palette:
+
+```html
+<section data-office-theme="dark" style="--office-accent: #a78bfa; --office-font: Georgia, serif">
+	<!-- Mount a viewer here, without an explicit ViewerTheme palette. -->
+</section>
+```
+
+The toolbar, native chrome and shadow DOM controls inherit the nearest scope. Useful tokens include `--office-background`, `--office-surface`, `--office-foreground`, `--office-border`, `--office-accent`, `--office-ring` and `--office-font`. Existing `ViewerTheme`, `themeToCssVars()` and `defaultCssVars()` outputs remain compatible. Explicit legacy inputs continue to win over canonical token fallbacks, including partial palettes and control dimensions such as `--pptx-switch-width`.
+
+UI appearance does not modify a presentation's colors, fonts or document theme.
+
 ## The `ViewerTheme` shape
 
 ```ts
@@ -22,7 +36,7 @@ interface ViewerTheme {
 }
 ```
 
-Every field is optional; unset values fall back to the built-in dark defaults. `ViewerThemeColors` has 19 semantic tokens, named after the shadcn/ui convention. Any valid CSS color string is accepted (hex, `rgb()`, `hsl()`, `oklch()`, named colors):
+Every field is optional; unset values inherit the shared Office UI tokens at the viewer scope. Explicit `ViewerTheme` colors and legacy `--pptx-*` variables take precedence. `ViewerThemeColors` has 19 semantic tokens, named after the shadcn/ui convention. Any valid CSS color string is accepted (hex, `rgb()`, `hsl()`, `oklch()`, named colors):
 
 | Tokens                                 | Role                                     |
 | -------------------------------------- | ---------------------------------------- |
@@ -43,7 +57,7 @@ See the [React theming page](/react/theming#viewertheme-and-viewerthemecolors) f
 `themeToCssVars(theme, omitDefaults = false)` converts a `ViewerTheme` into a flat `Record<string, string>` of CSS custom properties ready to apply to the viewer root as inline style. Every binding calls it internally when you pass a theme; it is also exported for building your own tooling.
 
 - Each `colors` key becomes `--pptx-<kebab-case-key>`: `primaryForeground: '#fff'` emits `--pptx-primary-foreground: #fff`.
-- Each color is also mirrored to the matching Tailwind semantic token (`--color-primary-foreground`), so that in a Tailwind CSS v4 host the value overrides the `@theme` declaration, which cannot see variables set on a child element.
+- Each color is also mirrored to the matching Tailwind semantic token (`--color-primary-foreground`), for compatibility with Tailwind CSS v4 hosts. The viewer uses `@theme inline` so inherited Office tokens resolve at the component that consumes them.
 - `radius` becomes `--pptx-radius`, plus derived `--radius-sm` / `--radius-md` / `--radius-lg` / `--radius-xl` values (`calc(r - 4px)` through `calc(r + 4px)`).
 - `cssVars` entries pass through verbatim.
 - With `omitDefaults: true`, values equal to the built-in defaults are skipped.
@@ -65,12 +79,12 @@ defaultCssVars();
 
 ## Built-in themes and presets
 
-| Export                                         | Palette                                                                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `defaultThemeColors` + `defaultRadius`         | The built-in dark UI (Tailwind gray scale, indigo primary, `0.5rem` radius). Applied when no theme is passed. |
-| `vermilionLightTheme` / `vermilionLightColors` | Warm light "paper" palette with the vermilion accent used by this documentation site.                         |
-| `vermilionDarkTheme` / `vermilionDarkColors`   | Dimmed dark "presenter room" palette with the same accent.                                                    |
-| `vermilionRadius`                              | `'0.375rem'`, the radius both vermilion presets use.                                                          |
+| Export                                         | Palette                                                                                                                       |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `defaultThemeColors` + `defaultRadius`         | The built-in dark UI (Tailwind gray scale, indigo primary, `0.5rem` radius). Available explicitly through `defaultCssVars()`. |
+| `vermilionLightTheme` / `vermilionLightColors` | Warm light "paper" palette with the vermilion accent used by this documentation site.                                         |
+| `vermilionDarkTheme` / `vermilionDarkColors`   | Dimmed dark "presenter room" palette with the same accent.                                                                    |
+| `vermilionRadius`                              | `'0.375rem'`, the radius both vermilion presets use.                                                                          |
 
 Both vermilion presets are complete `ViewerTheme` objects (all 19 tokens plus radius), so they fully replace the dark defaults. The raw `*Colors` palettes are exported alongside for deriving variants:
 

@@ -260,9 +260,14 @@ export function pptxPlan(files, { everything, reaches }) {
 	for (const file of files) {
 		if (file.startsWith('src/core/') || file.startsWith('src/ui/')) {
 			// The engine or the shared elements: every package's tests, the parity reference's browser
-			// run. Their own tests, and the other products' editors in ooxml-ui, change nothing the
-			// viewer runs.
-			if (isTestFile(file) || (UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/')))
+			// run. Their own tests, the other formats' core areas and the other products' editors in
+			// ooxml-ui change nothing the viewer runs (as in `viewerGroups`), also when another file
+			// reaches the viewer.
+			if (
+				isTestFile(file) ||
+				(file.startsWith('src/core/') && !viewersOfArea(file.split('/')[2]).includes('pptx')) ||
+				(UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/'))
+			)
 				continue;
 			allLegs = true;
 			projects.add(PPTX_REFERENCE_PROJECT);

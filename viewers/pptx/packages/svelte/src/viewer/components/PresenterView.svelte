@@ -258,8 +258,8 @@
 		inset: 0;
 		display: flex;
 		flex-direction: column;
-		background: var(--pptx-card, #111827);
-		color: var(--pptx-foreground, #f8fafc);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-presenter-body {
@@ -272,12 +272,12 @@
 		flex-shrink: 0;
 		width: 100%;
 		height: var(--pptx-pv-progress-h);
-		background: var(--pptx-muted, #1e293b);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-presenter-progress > div {
 		height: 100%;
-		background: var(--pptx-primary, #38bdf8);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		transition: width 1s linear;
 	}
 </style>

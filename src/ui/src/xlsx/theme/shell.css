@@ -1,25 +1,23 @@
 /* Frame, title bar and status bar. Mirrors docx-viewer's chrome (styles/base.css,
    chrome-titlebar.css, status-dialogs.css) with --xve-* tokens. */
 :host {
-	--xl: var(--xve-primary);
-	--xl-strong: color-mix(in srgb, var(--xve-primary) 70%, #000);
-	--xl-soft: color-mix(in srgb, var(--xve-primary) 12%, transparent);
+	--xl: var(--xve-primary, var(--office-accent));
+	--xl-strong: color-mix(in srgb, var(--xve-primary, var(--office-accent)) 70%, #000);
+	--xl-soft: color-mix(in srgb, var(--xve-primary, var(--office-accent)) 12%, transparent);
 	--accent-soft: var(--xl-soft);
-	--ink: var(--xve-foreground);
-	--muted: var(--xve-muted-foreground);
-	--line: var(--xve-border);
-	--surface: var(--xve-card);
-	--chrome: var(--xve-background);
+	--ink: var(--xve-foreground, var(--office-foreground));
+	--muted: var(--xve-muted-foreground, var(--office-muted-foreground));
+	--line: var(--xve-border, var(--office-border));
+	--surface: var(--xve-card, var(--office-surface));
+	--chrome: var(--xve-background, var(--office-background));
 	display: block;
 	box-sizing: border-box;
 	width: 100%;
 	height: 100%;
 	min-height: 0;
 	color: var(--ink);
-	font:
-		13px/1.35 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: var(--office-font-size, 13px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 }
 .xve-frame {
 	position: relative;
@@ -34,7 +32,7 @@
 	background: var(--surface);
 }
 :focus-visible {
-	outline: 2px solid var(--xve-ring);
+	outline: 2px solid var(--xve-ring, var(--office-ring));
 	outline-offset: 1px;
 }
 [hidden],
@@ -75,7 +73,7 @@
 	min-height: 0;
 	min-width: 0;
 	flex-direction: column;
-	background: var(--xve-sheet-bg);
+	background: var(--xve-sheet-bg, var(--office-paper));
 }
 .xve-formula-row {
 	flex: none;
@@ -90,7 +88,7 @@
 	min-height: 0;
 	min-width: 0;
 	overflow: hidden;
-	background: var(--xve-sheet-bg);
+	background: var(--xve-sheet-bg, var(--office-paper));
 	color-scheme: light;
 }
 .xve-grid-host > * {
@@ -125,7 +123,10 @@
 	--office-title-bar-foreground: var(--ink);
 	--office-title-bar-border: var(--line);
 	--office-title-bar-mark-background: var(--xl);
-	--office-title-bar-mark-foreground: var(--xve-primary-foreground);
+	--office-title-bar-mark-foreground: var(
+		--xve-primary-foreground,
+		var(--office-accent-foreground)
+	);
 }
 
 /* Status bar: drawn by the shared office-ui-status-bar; this places it and styles the slotted stats. */

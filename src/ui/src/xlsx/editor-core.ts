@@ -12,7 +12,7 @@ import {
 	type Workbook,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import { createCommandRegistry, type CommandRegistry } from 'ooxml-core/xlsx/ui';
+import { createCommandRegistry, editBridge, type CommandRegistry } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, GridController, SelectionModel } from 'ooxml-core/xlsx/ui';
 import { createDialogRegistry, type DialogRegistry } from 'ooxml-core/xlsx/ui';
 import { DirtyState } from 'ooxml-core/xlsx/ui';
@@ -58,6 +58,7 @@ export class EditorCore {
 	appliedThemeVars: string[] = [];
 	hiddenActions: string[] = [];
 	loadGeneration = 0;
+	loading = false;
 	savePassword: string | undefined;
 	shell: ShellHooks | undefined;
 	readonly selection: SelectionModel = createSelectionModel();
@@ -117,6 +118,9 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
+		editBridge(this.ctx).onChange(() =>
+			this.host.dispatchEvent(new CustomEvent('editor-state-change')),
+		);
 		this.collab = collaborationFor(this);
 		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
 	}
@@ -174,6 +178,7 @@ export class EditorCore {
 		queueMicrotask(() => {
 			this.renderQueued = false;
 			this.shell?.render();
+			this.host.dispatchEvent(new CustomEvent('editor-state-change'));
 		});
 	}
 
@@ -195,6 +200,7 @@ export class EditorCore {
 
 	/** Replaces the workbook (load, new, template, property), with a fresh edit session. */
 	setWorkbook(workbook: Workbook | undefined): void {
+		this.loading = false;
 		// The room is bound to the old edit session: leave it, and rejoin below only when the host
 		// asked for sharing declaratively (the `collaboration` property).
 		if (this.collab.suspend() && !this.collab.wanted)
@@ -253,7 +259,7 @@ export class EditorCore {
 	setActiveSheet(index: number, force = false): void {
 		const sheet = this.workbook?.sheets[index];
 		if (!sheet || (index === this.activeSheet && !force)) return;
-		if (this.gridController?.isEditing()) this.gridController.commitEdit();
+		if (this.gridController?.isEditing() && !this.gridController.commitEdit()) return;
 		this.activeSheet = index;
 		this.shownSheet = sheet;
 		this.selection.set(this.sheetSelections.restore(index, this.workbook));

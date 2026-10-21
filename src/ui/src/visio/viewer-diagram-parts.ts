@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	visioCalloutCommand,
 	visioContainerCommand,
@@ -26,7 +27,7 @@ export class ViewerDiagramParts {
 		private readonly revealText: () => void,
 	) {}
 	reason(state: ViewerState, part: DiagramPart): string | undefined {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to insert diagram parts.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to insert diagram parts.';
 		if (state.loading || state.edit.busy) return 'Wait for the current operation to finish.';
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || state.selectedShapes.some((shape) => !visioSelectionIsOnPage(shape, page.id)))

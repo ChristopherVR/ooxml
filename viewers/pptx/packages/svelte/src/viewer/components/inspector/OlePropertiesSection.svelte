@@ -72,8 +72,8 @@
 	.pptx-svelte-ole-edit-content {
 		width: 100%;
 		padding: 6px 8px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -81,7 +81,7 @@
 		font-size: 11px;
 	}
 	.pptx-svelte-ole-edit-content:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 	.pptx-svelte-ole-info {
 		display: flex;
@@ -95,15 +95,15 @@
 		gap: 3px;
 	}
 	.pptx-svelte-ole-name span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 	.pptx-svelte-ole-name input {
 		width: 100%;
 		box-sizing: border-box;
 		padding: 4px 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
@@ -114,7 +114,7 @@
 		gap: 8px;
 	}
 	.pptx-svelte-ole-row > span:first-child {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 	.pptx-svelte-ole-value {
 		overflow: hidden;

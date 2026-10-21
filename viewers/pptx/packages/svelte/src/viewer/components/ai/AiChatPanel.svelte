@@ -189,9 +189,9 @@
 		max-width: 100%;
 		height: 100%;
 		min-height: 0;
-		border-left: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-card, #1a1a2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
+		border-left: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	/*
@@ -207,7 +207,7 @@
 			width: 100%;
 			height: 75dvh;
 			border-left: none;
-			border-top: 1px solid var(--pptx-border, #33334d);
+			border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 			border-top-left-radius: 12px;
 			border-top-right-radius: 12px;
 		}
@@ -229,11 +229,11 @@
 		align-items: center;
 		gap: 8px;
 		padding: 8px 12px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	:global(.pptx-svelte-ai-header-icon) {
-		color: var(--pptx-primary, #a5b4fc);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-title {
@@ -248,13 +248,13 @@
 		border: none;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 	}
 
 	.pptx-svelte-ai-close:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-state {
@@ -266,14 +266,14 @@
 		gap: 8px;
 		padding: 0 24px;
 		text-align: center;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-state-title {
 		margin: 0;
 		font-size: 13px;
 		font-weight: 500;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-state-hint {

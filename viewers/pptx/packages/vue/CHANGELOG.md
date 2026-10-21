@@ -7,6 +7,30 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.43.0) - 2026-10-21
+
+### Features
+
+- **xlsx:** Expand workbook inspection and cell reads ([#117](https://github.com/ChristopherVR/ooxml/issues/117)) ([481bcc2](https://github.com/ChristopherVR/ooxml/commit/481bcc265611822a628c121f00897ec6b3e95cd6))
+- **pptx:** Add layout-inheriting text placeholders ([#113](https://github.com/ChristopherVR/ooxml/issues/113)) ([a9bb079](https://github.com/ChristopherVR/ooxml/commit/a9bb07957fcf9aa1a12406911726211b415c690a))
+
+### Bug Fixes
+
+- **pptx:** Inherit shared office themes across native viewers ([8ae64f7](https://github.com/ChristopherVR/ooxml/commit/8ae64f7f72ea70c323fef9b6c712697c6c54aeb6))
+
+### Performance
+
+- **xlsx:** Keep comments and cdata on the XML fast path ([#119](https://github.com/ChristopherVR/ooxml/issues/119)) ([ee7212a](https://github.com/ChristopherVR/ooxml/commit/ee7212afc204e15b5977d215f5cc61c99aaf4bc3))
+
+### Dependencies
+
+- **deps:** Update emf-converter to 4.21.0 ([#106](https://github.com/ChristopherVR/ooxml/issues/106)) ([641ae31](https://github.com/ChristopherVR/ooxml/commit/641ae316b7de07ed6f3c5158e8b154c991e1b719))
+- **deps:** Update dev tools and fix svelte type checks ([#107](https://github.com/ChristopherVR/ooxml/issues/107)) ([550eac2](https://github.com/ChristopherVR/ooxml/commit/550eac24d469d14245a0ac71789e01c8d5fb50f9))
+
+### Chores
+
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+
 ## [4.42.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.42.1) - 2026-10-20
 
 ### Bug Fixes

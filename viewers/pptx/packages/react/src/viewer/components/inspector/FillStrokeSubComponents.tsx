@@ -130,7 +130,6 @@ export function ColorPickerRow({
 				</button>
 			</div>
 			<ThemeColorSwatchGrid
-				prefix={prefix}
 				disabled={disabled}
 				selectedRef={selectedRef}
 				selectedHex={value}
@@ -221,7 +220,6 @@ export function GradientStopRow({
 				</button>
 			</div>
 			<ThemeColorSwatchGrid
-				prefix={`gradient-stop-${index}`}
 				selectedRef={stop.colorRef}
 				selectedHex={stop.color}
 				onPick={(c) => {

@@ -80,6 +80,8 @@ import {
 } from 'ooxml-core/visio/ui';
 
 export interface ViewerState {
+	/** Host permission, independent of source-format editing support. */
+	readonly canEdit: boolean;
 	readonly document: VisioDocument | null;
 	readonly edit: ViewerEditState;
 	readonly pageIndex: number;
@@ -95,6 +97,11 @@ export interface ViewerState {
 	/** Prepared source selection availability for native clipboard gestures. Payload stays private. */
 	readonly clipboard: ViewerClipboardState;
 }
+/** Effective mutation availability shared by every diagram UI tool. */
+export function canEditDiagram(state: Pick<ViewerState, 'canEdit' | 'edit'>): boolean {
+	return state.canEdit !== false && state.edit.sourceAvailable;
+}
+
 interface SelectionHistory {
 	readonly pageId: string;
 	readonly beforePageId?: string;
@@ -118,6 +125,7 @@ type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
 export class ViewerController {
 	#state: ViewerState = Object.freeze({
+		canEdit: true,
 		document: null,
 		edit: EMPTY_EDIT_STATE,
 		pageIndex: 0,
@@ -200,6 +208,18 @@ export class ViewerController {
 		this.#subscribers.add(listener);
 		if (!this.#notify(() => listener(this.#state))) this.#subscribers.delete(listener);
 		return () => this.#subscribers.delete(listener);
+	}
+	get canEdit(): boolean {
+		return this.#state.canEdit;
+	}
+	set canEdit(value: boolean) {
+		this.#assertAlive();
+		if (Boolean(value) === this.#state.canEdit) return;
+		if (!value) {
+			this.cancelEdit();
+			this.cancelPreview();
+		}
+		this.#change({ canEdit: Boolean(value) });
 	}
 	onEvent(listener: EventListener): () => void {
 		this.#assertAlive();
@@ -494,6 +514,7 @@ export class ViewerController {
 		this.#searchIndex = null;
 		this.#visible = documentVisibility(null);
 		this.#state = Object.freeze({
+			canEdit: this.#state.canEdit,
 			document: null,
 			edit: EMPTY_EDIT_STATE,
 			pageIndex: 0,
@@ -513,6 +534,7 @@ export class ViewerController {
 	}
 	/** Atomic source-backed edits. Core owns protection, dependency and target validation. */
 	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
+		if (!this.canEdit) throw new Error('The drawing is read-only.');
 		const preview = this.#previewSink;
 		if (!preview) return this.#mutate('edit', snapshotEdits(edits));
 		// A preview of an edit the editor would refuse is no preview, not an error.
@@ -929,6 +951,7 @@ export class ViewerController {
 	#creationContext(allowBusy = false): CreationContext | undefined {
 		if (
 			this.#destroyed ||
+			!this.canEdit ||
 			!this.#history ||
 			this.#sourceFormat !== 'vsdx' ||
 			this.#state.document?.format !== 'vsdx' ||
@@ -1067,6 +1090,7 @@ export class ViewerController {
 		replacement?: ReplacementMutation,
 	): Promise<void> {
 		this.#assertAlive();
+		if (kind !== 'remote' && !this.canEdit) throw new Error('The drawing is read-only.');
 		const history = this.#history;
 		if (!history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
 			throw new Error('Open a .vsdx file before editing.');

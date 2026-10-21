@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioDocument, VisioPage, VisioShape } from 'ooxml-core/visio';
 import {
 	VISIO_TEXT_BLOCK_HANDLES,
@@ -75,7 +76,7 @@ export class ViewerTextBlockTool {
 			!selection ||
 			state.selectedShapes.length !== 1 ||
 			!visioSelectionIsOnPage(selection, page.id) ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.edit.busy ||
 			state.loading
 		)

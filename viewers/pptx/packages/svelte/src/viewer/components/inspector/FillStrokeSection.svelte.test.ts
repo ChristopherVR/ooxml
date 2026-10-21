@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
 import FillStrokeSection from './FillStrokeSection.svelte';
+import { themeSwatch } from './theme-color-grid.test-support';
 
 /**
  * FillStrokeSection tests: flat fill/stroke colour, fill/stroke opacity
@@ -166,7 +167,7 @@ describe('fillStrokeSection', () => {
 		};
 		const { target } = mountSection(editor, currentEl(editor));
 
-		const fillSwatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const fillSwatch = themeSwatch(target, 'Accent 2');
 		expect(fillSwatch).not.toBeNull();
 		fillSwatch?.click();
 		flushSync();

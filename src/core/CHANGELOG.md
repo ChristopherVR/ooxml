@@ -7,6 +7,32 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.20.0) - 2026-10-21
+
+### Features
+
+- **xlsx:** Expose composable spreadsheet building blocks ([9aef499](https://github.com/ChristopherVR/ooxml/commit/9aef499f76196be6dd008ae873ac8f0d4caeeb58))
+- **visio:** Expose canvas building blocks and host permissions ([e464a1c](https://github.com/ChristopherVR/ooxml/commit/e464a1c0399434430925e0e59b430b5788f5d8d9))
+- **xlsx:** Expand workbook inspection and cell reads ([#117](https://github.com/ChristopherVR/ooxml/issues/117)) ([481bcc2](https://github.com/ChristopherVR/ooxml/commit/481bcc265611822a628c121f00897ec6b3e95cd6))
+- **pptx:** Add layout-inheriting text placeholders ([#113](https://github.com/ChristopherVR/ooxml/issues/113)) ([a9bb079](https://github.com/ChristopherVR/ooxml/commit/a9bb07957fcf9aa1a12406911726211b415c690a))
+
+### Bug Fixes
+
+- **ui:** Harden composition lifecycle and consumer checks ([6aa52be](https://github.com/ChristopherVR/ooxml/commit/6aa52be88175ca4f46f6f3b1c223ef06a8f1f915))
+
+### Performance
+
+- **xlsx:** Record only changed row and column dimensions ([#115](https://github.com/ChristopherVR/ooxml/issues/115)) ([143cfd5](https://github.com/ChristopherVR/ooxml/commit/143cfd51c4a63aec19aae6df41993b6127378663))
+- **xlsx:** Keep comments and cdata on the XML fast path ([#119](https://github.com/ChristopherVR/ooxml/issues/119)) ([ee7212a](https://github.com/ChristopherVR/ooxml/commit/ee7212afc204e15b5977d215f5cc61c99aaf4bc3))
+
+### Dependencies
+
+- **deps:** Update dev tools and fix svelte type checks ([#107](https://github.com/ChristopherVR/ooxml/issues/107)) ([550eac2](https://github.com/ChristopherVR/ooxml/commit/550eac24d469d14245a0ac71789e01c8d5fb50f9))
+
+### Chores
+
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+
 ## [1.19.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.19.2) - 2026-10-20
 
 ### Bug Fixes

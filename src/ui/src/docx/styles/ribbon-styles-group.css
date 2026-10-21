@@ -27,10 +27,7 @@
 .styles-section-title {
 	margin: 4px 2px 6px;
 	color: var(--muted);
-	font:
-		600 11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 600 11px var(--office-font, system-ui, sans-serif);
 }
 .styles-grid {
 	display: grid;
@@ -76,10 +73,7 @@
 	border-radius: 3px;
 	background: none;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 	text-align: left;
 	cursor: pointer;
 }
@@ -116,10 +110,7 @@
 .dve-styles-pane h3 {
 	margin: 14px 0 6px;
 	color: var(--muted);
-	font:
-		600 11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 600 11px var(--office-font, system-ui, sans-serif);
 }
 .dve-styles-pane-header button {
 	border: 0;

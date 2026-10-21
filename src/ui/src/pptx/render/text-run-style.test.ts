@@ -10,6 +10,37 @@ function seg(style: NonNullable<TextSegment['style']>): TextSegment {
 }
 
 describe('segmentStyleToCss run properties', () => {
+	it('renders a weight variant of a Google Fonts family at its weight', () => {
+		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans Light' })).fontWeight).toBe('300');
+		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans Medium', bold: true })).fontWeight).toBe(
+			'bold',
+		);
+		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans Black', bold: true })).fontWeight).toBe(
+			'900',
+		);
+		expect(segmentStyleToCss(seg({ fontFamily: 'Archivo Black' })).fontWeight).toBe('normal');
+	});
+
+	it('renders a style variant of a Google Fonts family italic', () => {
+		const css = segmentStyleToCss(seg({ fontFamily: 'Lato Light Italic' }));
+		expect(css.fontStyle).toBe('italic');
+		expect(css.fontWeight).toBe('300');
+		expect(segmentStyleToCss(seg({ fontFamily: 'Lato Light' })).fontStyle).toBe('normal');
+		// A run inheriting a style-named body font stays italic.
+		const blockFont = { fontFamily: '"Lato Light Italic", "Lato", sans-serif', fontSizePx: 16 };
+		expect(segmentStyleToCss(seg({}), 1, { blockFont }).fontStyle).toBe('italic');
+	});
+
+	it('keeps the body weight on a run that inherits the body font', () => {
+		const blockFont = { fontFamily: '"DM Sans Light", "DM Sans", sans-serif', fontSizePx: 16 };
+		expect(segmentStyleToCss(seg({}), 1, { blockFont }).fontWeight).toBe('300');
+		expect(segmentStyleToCss(seg({ bold: true }), 1, { blockFont }).fontWeight).toBe('bold');
+		// A run's own font wins over the body's.
+		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans' }), 1, { blockFont }).fontWeight).toBe(
+			'normal',
+		);
+	});
+
 	it('maps character spacing to letter-spacing px (hundredths of a point)', () => {
 		// 100 (=1pt) -> 1 * 96/72 px. The PowerPoint metric compensation layers on
 		// top of this, but it needs a canvas to measure with and there is none

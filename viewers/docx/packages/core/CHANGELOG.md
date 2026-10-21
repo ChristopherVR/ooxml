@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@0.2.0) - 2026-10-21
+
+### Features
+
+- **docx:** Add native framework building blocks ([77db7c6](https://github.com/ChristopherVR/ooxml/commit/77db7c6a9965a6851fd0ee42488228a7931a632e))
+
 ## [0.1.13](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@0.1.13) - 2026-10-08
 
 ### Documentation

@@ -92,8 +92,8 @@
 	}
 
 	.pptx-svelte-rbcmd:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-rbcmd:disabled {
@@ -102,8 +102,8 @@
 	}
 
 	.pptx-svelte-rbcmd-active {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 18%, transparent);
-		color: var(--pptx-primary, #6366f1);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 18%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-rbcmd-icon {
@@ -112,7 +112,7 @@
 		place-items: center;
 		width: 24px;
 		height: 24px;
-		color: var(--pptx-primary, #6366f1);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-rbcmd-compact .pptx-svelte-rbcmd-icon {

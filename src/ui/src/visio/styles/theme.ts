@@ -6,6 +6,7 @@ import { themeBridge } from '../../theme-bridge';
  * `inch` is not a colour: it is the canvas scale set by `viewer-canvas.ts`.
  */
 export const visioThemeAliases = `:host {
+  --_vv-font:var(--vv-font,var(--office-font,'Segoe UI',Arial,sans-serif));
   --_vv-bg:var(--vv-background,var(--office-surface,#eceae8));
   --_vv-surface:var(--vv-surface,var(--office-background,#fff));
   --_vv-secondary:var(--vv-secondary,var(--office-surface,#f3f2f1));
@@ -42,5 +43,5 @@ export const visioThemeBridge = themeBridge(':host > *', {
 	'--office-selected': 'color-mix(in srgb, var(--_vv-accent) 12%, var(--_vv-surface))',
 	'--office-accent-foreground': 'var(--_vv-accent-ink)',
 	'--office-ring': 'var(--_vv-focus)',
-	'--office-font': "'Segoe UI', Arial, sans-serif",
+	'--office-font': 'var(--_vv-font)',
 });

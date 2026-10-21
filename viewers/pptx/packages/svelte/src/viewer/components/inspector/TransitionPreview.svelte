@@ -96,7 +96,7 @@
 	}
 
 	.pptx-svelte-transition-preview-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 	}
 
@@ -107,9 +107,9 @@
 		height: 64px;
 		padding: 0;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		cursor: pointer;
 	}
 
@@ -119,17 +119,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 9px;
 	}
 
 	/* Translucent BACKGROUND, not element opacity: the transition animations
 	   drive `opacity` themselves and would fight an inherited value. */
 	.pptx-svelte-transition-incoming {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 20%, transparent);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 20%, transparent);
 	}
 
 	.pptx-svelte-transition-outgoing {
-		background: var(--pptx-card, #1e1e2e);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
 	}
 </style>

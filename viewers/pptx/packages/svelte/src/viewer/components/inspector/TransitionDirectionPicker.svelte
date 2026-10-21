@@ -90,21 +90,21 @@
 		height: 24px;
 		min-width: 24px;
 		padding: 0 4px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		cursor: pointer;
 	}
 
 	button:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	.pptx-svelte-dir-active {
-		background: var(--pptx-primary, #6366f1);
-		border-color: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 </style>

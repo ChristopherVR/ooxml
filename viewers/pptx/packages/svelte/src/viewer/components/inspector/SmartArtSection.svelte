@@ -235,7 +235,7 @@
 	.pptx-svelte-smartart-label {
 		display: block;
 		margin-bottom: 6px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-smartart-layouts {
@@ -248,10 +248,10 @@
 	.pptx-svelte-smartart-layouts button {
 		min-width: 0;
 		padding: 6px 3px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font: inherit;
 		font-size: 10px;
 		cursor: pointer;
@@ -260,14 +260,14 @@
 	}
 
 	.pptx-svelte-smartart-layouts button:hover {
-		background: var(--pptx-accent, #313244);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-smartart-layouts button.active {
-		border-color: var(--pptx-primary, #89b4fa);
-		background: color-mix(in srgb, var(--pptx-primary, #89b4fa) 16%, transparent);
-		color: var(--pptx-primary, #89b4fa);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 16%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-smartart-field {
@@ -276,7 +276,7 @@
 		justify-content: space-between;
 		gap: 8px;
 		margin-bottom: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-smartart-field select,
@@ -284,10 +284,10 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 2px 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 	}
 
@@ -305,11 +305,11 @@
 		align-items: center;
 		gap: 5px;
 	}
-	.pptx-svelte-smartart-node.active { border-radius: 4px; outline: 2px solid var(--pptx-primary); }
+	.pptx-svelte-smartart-node.active { border-radius: 4px; outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb)); }
 	.pptx-svelte-smartart-node button { min-width: 20px; padding: 0; border: 0; background: transparent; color: inherit; }
 
 	.pptx-svelte-smartart-node input {
 		min-width: 0;
 	}
-	.pptx-svelte-smartart-actions,.pptx-svelte-smartart-style{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:7px}.pptx-svelte-smartart-actions button,.pptx-svelte-smartart-style button{min-width:0;height:25px;border:1px solid var(--pptx-border);border-radius:4px;background:var(--pptx-muted);color:inherit}.pptx-svelte-smartart-style{grid-template-columns:1fr 1fr auto auto}.pptx-svelte-smartart-style label{display:grid;gap:2px;color:var(--pptx-muted-foreground);font-size:9px}.pptx-svelte-smartart-style input{width:100%;height:24px}.pptx-svelte-smartart-style button.active{background:var(--pptx-primary);color:var(--pptx-primary-foreground)}
+	.pptx-svelte-smartart-actions,.pptx-svelte-smartart-style{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:7px}.pptx-svelte-smartart-actions button,.pptx-svelte-smartart-style button{min-width:0;height:25px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:4px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.pptx-svelte-smartart-style{grid-template-columns:1fr 1fr auto auto}.pptx-svelte-smartart-style label{display:grid;gap:2px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:9px}.pptx-svelte-smartart-style input{width:100%;height:24px}.pptx-svelte-smartart-style button.active{background:var(--pptx-primary, var(--office-accent, #2563eb));color:var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff))}
 </style>

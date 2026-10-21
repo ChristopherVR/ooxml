@@ -46,16 +46,16 @@
 		gap: 4px;
 		margin-top: 8px;
 		padding: 6px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		font-size: 11px;
 	}
 	.title {
 		font-weight: 600;
 	}
 	.description {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 	.choices {
 		display: grid;
@@ -65,16 +65,16 @@
 	}
 	.choices button {
 		height: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
 		color: inherit;
 		font-size: 11px;
 	}
 	.maximize {
-		background: var(--pptx-primary, #c43b32);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 	.ensure-fit {
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 	}
 </style>

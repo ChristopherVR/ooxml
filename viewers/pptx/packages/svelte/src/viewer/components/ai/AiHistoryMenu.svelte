@@ -145,7 +145,7 @@
 		align-items: center;
 		gap: 4px;
 		padding: 4px 8px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 	.pptx-svelte-ai-chats-btn,
 	.pptx-svelte-ai-history-icon-btn {
@@ -156,7 +156,7 @@
 		border: none;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 12px;
 		cursor: pointer;
 	}
@@ -164,8 +164,8 @@
 	.pptx-svelte-ai-history-icon-btn { padding: 4px; }
 	.pptx-svelte-ai-chats-btn:hover,
 	.pptx-svelte-ai-history-icon-btn:hover:not(:disabled) {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 	.pptx-svelte-ai-history-icon-btn:disabled { opacity: 0.4; cursor: default; }
 	.pptx-svelte-ai-history-menu {
@@ -174,10 +174,10 @@
 		top: calc(100% + 4px);
 		z-index: 40;
 		width: 256px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 6px;
-		background: var(--pptx-popover, var(--pptx-card, #1a1a2e));
-		color: var(--pptx-card-foreground, #e2e8f0);
+		background: var(--pptx-popover, var(--pptx-card, var(--office-surface, #f3f4f6)));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
 	}
 	.pptx-svelte-ai-history-head {
@@ -185,14 +185,14 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 6px 10px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 	.pptx-svelte-ai-history-title {
 		font-size: 11px;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 	.pptx-svelte-ai-history-new {
 		display: inline-flex;
@@ -201,8 +201,8 @@
 		padding: 2px 6px;
 		border: none;
 		border-radius: 3px;
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #f8fafc);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 		font-size: 11px;
 		font-weight: 500;
 		cursor: pointer;
@@ -212,7 +212,7 @@
 		padding: 16px 12px;
 		text-align: center;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 	.pptx-svelte-ai-history-list { margin: 0; padding: 4px 0; list-style: none; max-height: 256px; overflow-y: auto; }
 	.pptx-svelte-ai-history-row { display: flex; align-items: center; gap: 4px; padding: 0 4px; }
@@ -226,13 +226,13 @@
 		border: none;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		text-align: left;
 		cursor: pointer;
 	}
-	.pptx-svelte-ai-history-resume:hover { background: var(--pptx-accent, #33334d); }
+	.pptx-svelte-ai-history-resume:hover { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); }
 	.pptx-svelte-ai-history-resume.is-active {
-		background: color-mix(in srgb, var(--pptx-accent, #33334d) 60%, transparent);
+		background: color-mix(in srgb, var(--pptx-accent, var(--office-selected, #e5e7eb)) 60%, transparent);
 	}
 	.pptx-svelte-ai-history-text { display: flex; min-width: 0; flex: 1; flex-direction: column; }
 	.pptx-svelte-ai-history-name {
@@ -241,9 +241,9 @@
 		white-space: nowrap;
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
-	.pptx-svelte-ai-history-meta { font-size: 10px; color: var(--pptx-muted-foreground, #94a3b8); }
+	.pptx-svelte-ai-history-meta { font-size: 10px; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.pptx-svelte-ai-history-delete {
 		display: inline-flex;
 		flex: none;
@@ -251,19 +251,19 @@
 		border: none;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 	}
 	.pptx-svelte-ai-history-delete:hover {
-		background: color-mix(in srgb, var(--pptx-destructive, #ef4444) 10%, transparent);
-		color: var(--pptx-destructive, #ef4444);
+		background: color-mix(in srgb, var(--pptx-destructive, var(--office-danger, #b91c1c)) 10%, transparent);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 	.pptx-svelte-ai-history-hint {
 		margin: 0;
 		padding: 6px 10px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-size: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	/*

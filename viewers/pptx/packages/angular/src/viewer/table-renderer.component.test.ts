@@ -669,10 +669,11 @@ describe('buildCellParagraphs', () => {
 		expect(paras[0]).toHaveLength(2);
 		expect(paras[0][0].text).toBe('Revenue ');
 		expect(paras[0][0].style['font-weight']).toBeUndefined();
-		expect(paras[0][0].style['font-family']).toBe('Arial');
+		// Through the substitution chain, so a missing font falls back to a sans.
+		expect(paras[0][0].style['font-family']).toMatch(/^"Arial", /u);
 		expect(paras[0][1].style['font-weight']).toBe('bold');
 		expect(paras[0][1].style['color']).toBe('#C00000');
-		expect(paras[0][1].style['font-family']).toBe('Georgia');
+		expect(paras[0][1].style['font-family']).toMatch(/^"Georgia", /u);
 		expect(paras[0][1].style['font-size']).toBe('24pt');
 	});
 

@@ -1,5 +1,6 @@
 import type { NodeSpec } from 'prosemirror-model';
 import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
+import { formFieldNodeDisplay, formFieldOfNode } from './form-field-commands';
 
 /** A line break carries its own run properties through element-based collaboration mappings. */
 export const hardBreakNodeSpec: NodeSpec = {
@@ -116,14 +117,20 @@ export const fieldMarkerNodeSpec: NodeSpec = {
 			}),
 		},
 	],
-	toDOM: (node) => [
-		'span',
-		{
-			class: 'dve-field-marker',
-			'data-field-marker': node.attrs.kind,
-			...inlineRunPropertiesDomAttrs(node),
-			...(node.attrs.code != null ? { 'data-field-code': node.attrs.code } : {}),
-			contenteditable: 'false',
-		},
-	],
+	toDOM: (node) => {
+		// A legacy check box or drop-down has no result text: its begin marker draws its value.
+		const display = formFieldNodeDisplay(node);
+		return [
+			'span',
+			{
+				class: display === undefined ? 'dve-field-marker' : 'dve-field-marker dve-form-field',
+				'data-field-marker': node.attrs.kind,
+				...(display !== undefined && { 'data-form-field': formFieldOfNode(node)!.kind }),
+				...inlineRunPropertiesDomAttrs(node),
+				...(node.attrs.code != null ? { 'data-field-code': node.attrs.code } : {}),
+				contenteditable: 'false',
+			},
+			...(display === undefined ? [] : [display]),
+		];
+	},
 };

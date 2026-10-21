@@ -265,8 +265,8 @@
 		min-width: 11rem;
 		padding: 0.5rem;
 		border-radius: 6px;
-		border: 1px solid var(--pptx-border, #444);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 	}
 
@@ -302,14 +302,14 @@
 	.pptx-svelte-chart-quick-swatch {
 		border-radius: 4px;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #444);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		padding: 0;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-chart-quick-swatch.is-applied {
-		border-color: var(--pptx-primary, #6a8dff);
-		box-shadow: 0 0 0 1px var(--pptx-primary, #6a8dff);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		box-shadow: 0 0 0 1px var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.swatch-row {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openSample, saveStateLabel } from './helpers';
+import { clickInEditor, openSample, saveStateLabel } from './helpers';
 
 test('appearance changes from another window preserve the open document', async ({
 	page,
@@ -8,7 +8,7 @@ test('appearance changes from another window preserve the open document', async 
 	await openSample(page);
 	const surface = page.locator('docx-editor .ProseMirror');
 	await expect(surface).toContainText('Document title');
-	await surface.locator('p').last().click();
+	await clickInEditor(surface.locator('p').last());
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Theme synchronization keeps this edit.');
 	const controls = await context.newPage();

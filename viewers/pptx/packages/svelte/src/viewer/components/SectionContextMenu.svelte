@@ -81,10 +81,10 @@
 
 <style>
 	.pptx-svelte-context-backdrop { position: fixed; inset: 0; z-index: 119; }
-	.pptx-svelte-context-menu { position: fixed; z-index: 120; display: flex; min-width: 160px; flex-direction: column; padding: 6px 0; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-card, #1e1e2e); box-shadow: 0 18px 40px rgb(0 0 0 / 35%); color: var(--pptx-card-foreground, #e2e8f0); font-family: system-ui, sans-serif; font-size: 12px; }
+	.pptx-svelte-context-menu { position: fixed; z-index: 120; display: flex; min-width: 160px; flex-direction: column; padding: 6px 0; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-card, var(--office-surface, #f3f4f6)); box-shadow: 0 18px 40px rgb(0 0 0 / 35%); color: var(--pptx-card-foreground, var(--office-foreground, #1f2937)); font-family: system-ui, sans-serif; font-size: 12px; }
 	.pptx-svelte-context-menu button { padding: 6px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-	.pptx-svelte-context-menu button:hover, .pptx-svelte-context-menu button:focus-visible { background: var(--pptx-accent, #33334d); outline: none; }
+	.pptx-svelte-context-menu button:hover, .pptx-svelte-context-menu button:focus-visible { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); outline: none; }
 	.pptx-svelte-context-menu button:disabled { opacity: 0.45; cursor: default; }
 	.pptx-svelte-context-menu button:disabled:hover { background: transparent; }
-	.pptx-svelte-context-separator { height: 1px; margin: 5px 0; background: var(--pptx-border, #33334d); }
+	.pptx-svelte-context-separator { height: 1px; margin: 5px 0; background: var(--pptx-border, var(--office-border, #d1d5db)); }
 </style>

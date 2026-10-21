@@ -111,20 +111,20 @@
 		align-items: center;
 		gap: 6px;
 		cursor: pointer;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-weight: 600;
 	}
 
 	.pptx-svelte-tags summary b {
 		margin-left: auto;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 		font-weight: 500;
 	}
 
 	.pptx-svelte-tags-empty {
 		margin: 6px 0 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-tags-row {
@@ -139,16 +139,16 @@
 		height: 25px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
 
 	.pptx-svelte-tags-delete {
 		width: 25px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
 		background: transparent;
 		color: #f87171;
@@ -158,9 +158,9 @@
 	.pptx-svelte-tags-add {
 		margin-top: 7px;
 		padding: 3px 8px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		cursor: pointer;

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioEdit, VisioPage } from 'ooxml-core/visio';
 import {
 	visioAutoConnectArrows,
@@ -82,7 +83,7 @@ export class ViewerAutoConnect {
 			this.#on &&
 			!this.#pressed &&
 			this.host.pointerTool() &&
-			state.edit.sourceAvailable &&
+			canEditDiagram(state) &&
 			!state.loading &&
 			!state.edit.busy &&
 			this.host.viewport.dataset.textEditing === undefined
@@ -158,7 +159,7 @@ export class ViewerAutoConnect {
 		const state = this.host.controller.state;
 		const page = this.#page(state);
 		const source = page && this.#hover ? visioAutoConnectShape(page, this.#hover) : undefined;
-		if (!page || !source || !state.edit.sourceAvailable || state.loading || state.edit.busy) return;
+		if (!page || !source || !canEditDiagram(state) || state.loading || state.edit.busy) return;
 		const neighbour = masterId ? undefined : visioAutoConnectNeighbor(page, source, direction);
 		const id = masterId ?? (neighbour ? undefined : this.#quickShapes(state)[0]?.id);
 		const master = id ? masterCreation(id) : undefined;

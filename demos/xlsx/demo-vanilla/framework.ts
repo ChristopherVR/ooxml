@@ -60,6 +60,19 @@ export async function mountFramework(
 		new URLSearchParams(location.search).get('framework') ||
 		import.meta.env.VITE_DEMO_FRAMEWORK ||
 		'vanilla';
+	if (new URLSearchParams(location.search).has('blocks')) {
+		const { mountNativeBlocks } = await import('./native-building-blocks');
+		let blockHost = host;
+		if (new URLSearchParams(location.search).has('shadow')) {
+			const root = host.attachShadow({ mode: 'open' });
+			blockHost = document.createElement('div');
+			blockHost.dataset.officeTheme = 'dark';
+			blockHost.id = 'shadow-scope';
+			blockHost.style.height = '100%';
+			root.append(blockHost);
+		}
+		return expose(await mountNativeBlocks(blockHost, options, framework));
+	}
 	if (framework === 'react') {
 		const [{ createRoot }, { createElement }, { SpreadsheetEditor }] = await Promise.all([
 			import('react-dom/client'),

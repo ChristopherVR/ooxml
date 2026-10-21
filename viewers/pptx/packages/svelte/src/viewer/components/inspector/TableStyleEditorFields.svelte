@@ -72,16 +72,16 @@
 <style>
 	.fields { display: flex; flex-direction: column; gap: 8px; }
 	.group { display: flex; flex-direction: column; gap: 4px; }
-	.hdg { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--pptx-muted-foreground); }
+	.hdg { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
 	.row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
 	.check { display: flex; align-items: center; gap: 4px; font-size: 11px; }
 	.border-row { display: flex; align-items: center; gap: 5px; font-size: 11px; }
-	.side-lbl { width: 110px; flex-shrink: 0; color: var(--pptx-muted-foreground); }
-	input[type='color'] { height: 24px; width: 32px; border: 1px solid var(--pptx-border); border-radius: 4px; background: transparent; cursor: pointer; padding: 0; }
-	input[type='number'], select { height: 24px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-background); color: inherit; }
+	.side-lbl { width: 110px; flex-shrink: 0; color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); }
+	input[type='color'] { height: 24px; width: 32px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 4px; background: transparent; cursor: pointer; padding: 0; }
+	input[type='number'], select { height: 24px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 4px; background: var(--pptx-background, var(--office-background, #ffffff)); color: inherit; }
 	input[type='number'] { width: 48px; }
-	button { border: 1px solid var(--pptx-border); border-radius: 4px; padding: 3px 6px; background: var(--pptx-muted); color: inherit; }
-	button.active { background: var(--pptx-primary, #c43b32); color: #fff; }
+	button { border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: 4px; padding: 3px 6px; background: var(--pptx-muted, var(--office-surface, #f3f4f6)); color: inherit; }
+	button.active { background: var(--pptx-primary, var(--office-accent, #2563eb)); color: #fff; }
 	/* Touch target: matches MIN_TOUCH_TARGET_PX (44) from pptx-viewer-shared's
 	   render/responsive module. Bold/Italic/Underline are single-letter
 	   labels, so both dimensions need the floor, not just height. */

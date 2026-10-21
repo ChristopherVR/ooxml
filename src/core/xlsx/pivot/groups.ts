@@ -165,9 +165,14 @@ export function defaultFieldGroup(
 	const existing = groupOf(pivot, field);
 	if (existing) return { ...existing };
 	const index = pivot.fields.indexOf(field);
-	const values = pivot.records.map((record) => Number(record[index]));
-	const start = Math.min(...values);
-	const end = Math.max(...values);
+	// The extremes in a loop: a spread passes one argument per record and overflows on large pivots.
+	let start = Infinity;
+	let end = -Infinity;
+	for (const record of pivot.records) {
+		const value = Number(record[index]);
+		start = Math.min(start, value);
+		end = Math.max(end, value);
+	}
 	return {
 		field,
 		start,

@@ -31,6 +31,8 @@ const run = (command, args, options = {}) => {
 	return result.stdout;
 };
 
+const workspaceRuntime = process.argv.includes('--workspace-runtime');
+
 const FRAMEWORKS = ['react', 'vue', 'angular', 'solid', 'svelte', 'vanilla'];
 const PUBLISHED = ['core', ...FRAMEWORKS];
 const entryOf = (name) => (name === 'svelte' ? 'dist/runtime.js' : 'dist/index.js');
@@ -97,6 +99,14 @@ for (const [name, entry] of Object.entries(frameworks)) {
 	for (const helper of ['loadDocument', 'detectDocumentFormat', 'registerDocxEditor', 'normalizeEditorLocale', 'createDocument'])
 		assert.equal(typeof entry[helper], 'function', name + ' must export ' + helper);
 }
+for (const key of ['useViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar']) assert.equal(typeof react[key], 'function', key);
+assert.equal(typeof vue.useViewerBuildingBlocks, 'function');
+for (const key of ['DocumentCanvas', 'Toolbar']) assert(vue[key], 'vue ' + key);
+for (const key of ['createViewerBuildingBlocks', 'ViewerBuildingBlocks', 'DocumentCanvasComponent', 'ToolbarComponent']) assert.equal(typeof angular[key], 'function', 'angular ' + key);
+for (const key of ['createViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar']) assert.equal(typeof solid[key], 'function', 'solid ' + key);
+for (const key of ['createViewerBuildingBlocks', 'documentCanvas']) assert.equal(typeof svelte[key], 'function', 'svelte ' + key);
+for (const [name, entry] of Object.entries(frameworks))
+	assert.equal(typeof entry.mountEditorSurface, 'function', name + ' must export mountEditorSurface');
 assert.equal(typeof vanilla.mountEditor, 'function');
 assert.equal(typeof svelte.mountEditor, 'function');
 
@@ -133,6 +143,12 @@ assert.equal(authority.doc.firstChild.attrs.direction, 'rtl');
 
 const typingSource = `import { createDocument, resolveParagraphFormatting, type DocumentModel } from 'docx-core';
 import { WordEditor as ReactEditor, loadDocument, type EditorOptions } from 'docx-react-viewer';
+import { useViewerBuildingBlocks as useVueBlocks, DocumentCanvas as VueCanvas, Toolbar as VueToolbar, type BuildingBlockOptions as VueOptions } from 'docx-vue-viewer';
+import { createViewerBuildingBlocks as createAngularBlocks, ViewerBuildingBlocks, DocumentCanvasComponent, ToolbarComponent } from 'docx-angular-viewer';
+import { createViewerBuildingBlocks as createSolidBlocks, DocumentCanvas as SolidCanvas, Toolbar as SolidToolbar } from 'docx-solid-viewer';
+import { createViewerBuildingBlocks as createSvelteBlocks, documentCanvas } from 'docx-svelte-viewer/runtime';
+import SvelteCanvas from 'docx-svelte-viewer/DocumentCanvas';
+import SvelteToolbar from 'docx-svelte-viewer/Toolbar';
 import { WordEditor as VueEditor } from 'docx-vue-viewer';
 import { WordEditorComponent } from 'docx-angular-viewer';
 import { WordEditor as SolidEditor } from 'docx-solid-viewer';
@@ -141,6 +157,13 @@ import { mountEditor, PresenceClient, type EditorHandle } from 'docx-vanilla-vie
 const options: EditorOptions = { documentModel: createDocument(), locale: 'fr' };
 const model: DocumentModel = options.documentModel!;
 void [model, ReactEditor, loadDocument, VueEditor, WordEditorComponent, SolidEditor, SvelteEditor, mountEditor, PresenceClient, resolveParagraphFormatting];
+void [useVueBlocks, VueCanvas, VueToolbar, createAngularBlocks, ViewerBuildingBlocks, DocumentCanvasComponent, ToolbarComponent, createSolidBlocks, SolidCanvas, SolidToolbar, createSvelteBlocks, documentCanvas, SvelteCanvas, SvelteToolbar];
+const nativeOptions: VueOptions = options;
+function checkVueTypes() { const blocks = useVueBlocks(() => nativeOptions); blocks.toolbarProps.value?.onBold(); void blocks.handle.save(); return blocks.mode.value; }
+function checkAngularTypes() { const blocks = createAngularBlocks(() => options); blocks.toolbarProps()?.onBold(); blocks.documentChange.subscribe((document) => document.blocks); return blocks.mode(); }
+function checkSolidTypes() { const blocks = createSolidBlocks(() => options); blocks.toolbarProps()?.onBold(); void blocks.handle.save(); return blocks.mode(); }
+function checkSvelteTypes() { const blocks = createSvelteBlocks(options); blocks.toolbarProps.subscribe((toolbar) => toolbar?.onBold()); void blocks.handle.save(); return blocks.mode; }
+void [checkVueTypes, checkAngularTypes, checkSolidTypes, checkSvelteTypes];
 export type Handle = EditorHandle;
 `;
 
@@ -156,6 +179,12 @@ async function checkSvelte(inspected, installed) {
 		'utf8',
 	);
 	compile(source, { filename: 'WordEditor.svelte', generate: 'client' });
+	for (const name of ['DocumentCanvas', 'Toolbar']) {
+		assert.equal(manifest.exports['./' + name].svelte, './dist/' + name + '.svelte');
+		const block = await readFile(path.join(inspected, 'svelte', 'dist', name + '.svelte'), 'utf8');
+		compile(block, { filename: name + '.svelte', generate: 'client' });
+		assert(block.includes("from './runtime.js'"), name + ' uses shipped sibling runtime');
+	}
 	const runtime = await import(
 		pathToFileURL(path.join(installed, 'docx-svelte-viewer', 'dist', 'runtime.js')).href
 	);
@@ -187,6 +216,21 @@ try {
 		const manifest = await inspectTarball(name, packed, target);
 		for (const [dependency, version] of Object.entries(manifest.peerDependencies ?? {}))
 			peers.set(dependency, version);
+	}
+	if (workspaceRuntime) {
+		for (const area of ['core', 'ui']) {
+			const packed = JSON.parse(
+				run('npm', [
+					'pack',
+					'--json',
+					'--ignore-scripts',
+					'--pack-destination',
+					work,
+					path.join(root, '../../src', area),
+				]),
+			)[0];
+			tarballs.push(path.join(work, packed.filename));
+		}
 	}
 	await writeFile(
 		path.join(work, 'package.json'),

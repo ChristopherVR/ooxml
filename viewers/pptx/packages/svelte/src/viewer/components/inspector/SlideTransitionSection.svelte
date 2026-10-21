@@ -251,7 +251,7 @@
 
 	label > span,
 	.pptx-svelte-transition-field > span {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	select,
@@ -261,9 +261,9 @@
 		height: 26px;
 		box-sizing: border-box;
 		padding: 0 6px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
@@ -275,17 +275,17 @@
 
 	.pptx-svelte-transition-orient button {
 		padding: 3px 8px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-transition-orient-active {
-		background: var(--pptx-primary, #6366f1);
-		border-color: var(--pptx-primary, #6366f1);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 
@@ -302,13 +302,13 @@
 	.pptx-svelte-transition-sound {
 		margin: 0;
 		overflow: hidden;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.pptx-svelte-transition-sound b {
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-weight: 500;
 	}
 </style>

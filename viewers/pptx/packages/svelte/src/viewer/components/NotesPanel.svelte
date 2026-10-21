@@ -190,9 +190,9 @@
 		display: flex;
 		flex-direction: column;
 		flex: none;
-		border-top: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-family: system-ui, sans-serif;
 	}
 
@@ -204,7 +204,7 @@
 		padding: 6px 10px;
 		border: none;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font: inherit;
 		font-size: 13px;
 		font-weight: 600;
@@ -213,8 +213,8 @@
 	}
 
 	.pptx-svelte-notes-header:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-notes-body {
@@ -227,17 +227,17 @@
 		min-height: 80px;
 		resize: vertical;
 		padding: 8px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 		font-size: 13px;
 		line-height: 1.5;
 	}
 
 	.pptx-svelte-notes-textarea:focus {
-		outline: 2px solid var(--pptx-ring, #6366f1);
+		outline: 2px solid var(--pptx-ring, var(--office-ring, #2563eb));
 		outline-offset: -1px;
 	}
 
@@ -248,10 +248,10 @@
 
 	.pptx-svelte-notes-rich {
 		box-sizing: border-box; min-height: 80px; max-height: 240px; overflow-y: auto;
-		padding: 8px; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b); color: var(--pptx-foreground, #e2e8f0);
+		padding: 8px; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff)); color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font: 13px/1.5 system-ui, sans-serif; white-space: pre-wrap;
 	}
-	.pptx-svelte-notes-rich:focus { outline: 2px solid var(--pptx-ring, #6366f1); outline-offset: -1px; }
+	.pptx-svelte-notes-rich:focus { outline: 2px solid var(--pptx-ring, var(--office-ring, #2563eb)); outline-offset: -1px; }
 	.pptx-svelte-notes-rich :global(a) { color: #4a9eff; text-decoration: underline; cursor: pointer; }
 </style>

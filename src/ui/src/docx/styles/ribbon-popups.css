@@ -32,10 +32,7 @@
 	display: grid;
 	gap: 4px;
 	color: var(--muted);
-	font:
-		11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 11px var(--office-font, system-ui, sans-serif);
 }
 .go-to-panel select {
 	height: 28px;
@@ -56,10 +53,7 @@
 	border: 0;
 	background: none;
 	color: var(--ink);
-	font:
-		13px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 13px var(--office-font, system-ui, sans-serif);
 	text-align: left;
 	text-overflow: ellipsis;
 	cursor: pointer;
@@ -84,10 +78,7 @@
 }
 .table-picker-caption {
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 }
 .table-picker-grid {
 	display: grid;
@@ -121,10 +112,7 @@
 	display: grid;
 	gap: 2px;
 	color: var(--muted);
-	font:
-		11px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 11px var(--office-font, system-ui, sans-serif);
 }
 .table-picker-custom input {
 	height: 24px;
@@ -183,10 +171,7 @@
 	border-radius: 3px;
 	background: none;
 	color: var(--ink);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 12px var(--office-font, system-ui, sans-serif);
 	text-align: left;
 	cursor: pointer;
 }

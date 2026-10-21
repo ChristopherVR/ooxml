@@ -7,6 +7,29 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-angular-viewer@0.6.0) - 2026-10-21
+
+### Features
+
+- **docx:** Expose composable editor building blocks ([79bf480](https://github.com/ChristopherVR/ooxml/commit/79bf4801d8efb256a3e3e6fa81cca2613e6fd0fd))
+- **docx:** Add native framework building blocks ([77db7c6](https://github.com/ChristopherVR/ooxml/commit/77db7c6a9965a6851fd0ee42488228a7931a632e))
+- **docx:** Inherit shared office themes across editor blocks ([3adb658](https://github.com/ChristopherVR/ooxml/commit/3adb658f212e93a49beec631a618c8802b0c183a))
+
+### Bug Fixes
+
+- **deps:** Align private bindings with their react test host ([f4152ef](https://github.com/ChristopherVR/ooxml/commit/f4152ef04ccdc3e5c9d21ecf59f485b56de2ec52))
+- **ui:** Harden composition lifecycle and consumer checks ([6aa52be](https://github.com/ChristopherVR/ooxml/commit/6aa52be88175ca4f46f6f3b1c223ef06a8f1f915))
+- **ui:** Preserve live formula drafts and runtime compatibility ([3a7d4f1](https://github.com/ChristopherVR/ooxml/commit/3a7d4f184658c4d69b04bbd36bab7afa3896dd9e))
+- **docx:** Preserve angular canvas ownership and events ([9a324bf](https://github.com/ChristopherVR/ooxml/commit/9a324bfcb1d12c832937302715d4c7bd3f757b4e))
+
+### Styling
+
+- Fix the oxfmt and oxlint warnings in the viewers ([db0314f](https://github.com/ChristopherVR/ooxml/commit/db0314f319e3d0508960872260792215477d9ca5))
+
+### Dependencies
+
+- **deps:** Declare native adapter development dependencies ([b5f9957](https://github.com/ChristopherVR/ooxml/commit/b5f9957a65d934ebb4d40ed02bb872dcd24575fb))
+
 ## [0.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-angular-viewer@0.5.0) - 2026-10-10
 
 ### Features

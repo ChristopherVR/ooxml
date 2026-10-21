@@ -9,6 +9,7 @@ import {
 	type HeaderFooterContent,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
+import { positionalTabInputPlugin } from 'ooxml-core/docx/ui';
 import { assignMissingParagraphIds, docToModel, modelToDoc } from './model-adapter';
 import { editorKeymap } from './editor-commands';
 import { focusView } from './focus-view';
@@ -98,6 +99,7 @@ export function openBlocksEditor(
 						]
 					: []),
 				...(options.plugins ?? []),
+				positionalTabInputPlugin(),
 				editorKeymap(() => undefined),
 			],
 		}),

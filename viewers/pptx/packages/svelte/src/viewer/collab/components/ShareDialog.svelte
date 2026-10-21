@@ -286,14 +286,14 @@
 		margin: 0;
 		font-size: 13px;
 		line-height: 1.5;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-share-server-value,
 	.pptx-svelte-share-p2p-hint {
 		margin: 0;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-share-field {
@@ -308,43 +308,43 @@
 		gap: 4px;
 		padding: 4px;
 		border-radius: 8px;
-		background: var(--pptx-muted, #1f2937);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-share-tabs button {
 		border: 0;
 		border-radius: 6px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		padding: 6px 10px;
 		font: 500 12px/1.2 inherit;
 		cursor: pointer;
 	}
 
 	.pptx-svelte-share-tabs button[aria-selected='true'] {
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-share-field label {
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-share-field input {
 		width: 100%;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 6px 10px;
 		font: inherit;
 		font-size: 13px;
 	}
 
 	.pptx-svelte-share-field input:focus {
-		outline: 1px solid var(--pptx-primary, #6366f1);
+		outline: 1px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: -1px;
 	}
 
@@ -373,13 +373,13 @@
 		font-size: 13px;
 		font-weight: 500;
 		text-transform: capitalize;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-share-count {
 		margin-left: auto;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-share-link-row {
@@ -391,11 +391,11 @@
 	.pptx-svelte-share-link-value {
 		flex: 1;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		padding: 6px 10px;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font-family: monospace;
 		font-size: 11px;
 		text-overflow: ellipsis;
@@ -408,27 +408,27 @@
 		flex-wrap: wrap;
 		gap: 4px 12px;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-share-details-row code {
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font-family: monospace;
 	}
 
 	.pptx-svelte-share-users {
 		max-height: 140px;
 		overflow-y: auto;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 	}
 
 	.pptx-svelte-share-user {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		padding: 6px 10px;
 	}
 
@@ -459,7 +459,7 @@
 	.pptx-svelte-share-user-name {
 		overflow: hidden;
 		font-size: 12px;
-		color: var(--pptx-foreground, #e2e8f0);
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
@@ -467,14 +467,14 @@
 	.pptx-svelte-share-user-tag {
 		margin-left: auto;
 		font-size: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		white-space: nowrap;
 	}
 
 	.pptx-svelte-share-stop {
 		width: 100%;
 		border: 1px solid rgba(239, 68, 68, 0.3);
-		border-radius: var(--pptx-radius, 6px);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: rgba(239, 68, 68, 0.1);
 		color: #f87171;
 		padding: 8px 12px;
@@ -488,9 +488,9 @@
 
 	.pptx-svelte-share-btn {
 		border: none;
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #1f2937);
-		color: var(--pptx-foreground, #f3f4f6);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		padding: 6px 16px;
 		font-size: 12px;
 		font-family: inherit;
@@ -498,7 +498,7 @@
 	}
 
 	.pptx-svelte-share-btn:hover {
-		background: var(--pptx-accent, #33334d);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
 	}
 
 	

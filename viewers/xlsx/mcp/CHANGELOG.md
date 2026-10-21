@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.2.0) - 2026-10-21
+
+### Features
+
+- **xlsx:** Add native framework building blocks ([9689a65](https://github.com/ChristopherVR/ooxml/commit/9689a6520682e9db18f8cbee78d8434ad114b097))
+
 ## [0.1.11](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.1.11) - 2026-10-20
 
 ### Dependencies

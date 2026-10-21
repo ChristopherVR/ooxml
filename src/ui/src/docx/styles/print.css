@@ -16,7 +16,7 @@
 .dve-print-page {
 	position: relative;
 	flex: none;
-	background: var(--dve-page-color, #fff);
+	background: var(--dve-page-color, var(--office-paper, #fff));
 	color: #202124;
 	box-shadow:
 		0 1px 3px #20212430,
@@ -302,10 +302,7 @@ a.dve-link[data-anchor^='_Toc'] {
 	position: absolute;
 	width: 40px;
 	text-align: right;
-	font:
-		10px 'Segoe UI',
-		Arial,
-		sans-serif;
+	font: 10px var(--office-font, system-ui, sans-serif);
 	color: #444;
 	pointer-events: none;
 }

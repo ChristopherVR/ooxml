@@ -198,3 +198,5 @@ bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 ## License
 
 [Apache License 2.0](LICENSE). See [`NOTICE`](NOTICE) for attributions.
+
+Custom host controls: see [composable building blocks](docs/building-blocks.md).

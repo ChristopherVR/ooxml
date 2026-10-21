@@ -45,6 +45,7 @@ export function gestureIsCurrent(drag: Gesture, state: ViewerState, active: bool
 		drag.svg.isConnected &&
 		!state.loading &&
 		!state.edit.busy &&
+		(!drag.target || state.canEdit) &&
 		active
 	);
 }

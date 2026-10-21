@@ -52,7 +52,7 @@
 
 	.pptx-svelte-rgroup-label {
 		font-size: 9px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		line-height: 1;
 	}
 

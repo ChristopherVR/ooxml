@@ -238,7 +238,7 @@
 		border-collapse: collapse;
 		table-layout: fixed;
 	}
-	.pptx-svelte-table-cell input { box-sizing:border-box; width:100%; min-width:0; border:1px solid var(--pptx-primary,#6366f1); background:white; color:#111827; font:inherit; }
+	.pptx-svelte-table-cell input { box-sizing:border-box; width:100%; min-width:0; border:1px solid var(--pptx-primary, var(--office-accent, #2563eb)); background:white; color:#111827; font:inherit; }
 	/* Column/row drag-resize boundary lines: pointer-events none so a touch tap
 	   always reaches the cell underneath (double-tap-to-edit); the container's
 	   `onpointerdown` proximity-hit-tests the drag itself. */
@@ -278,7 +278,7 @@
 	   borders must stay exactly where they are, and a real border would move
 	   the text by a pixel as the range changes. */
 	.pptx-svelte-table-cell.is-cell-selected {
-		box-shadow: inset 0 0 0 2px var(--pptx-ring, #6366f1);
-		background-color: color-mix(in srgb, var(--pptx-ring, #6366f1) 16%, transparent);
+		box-shadow: inset 0 0 0 2px var(--pptx-ring, var(--office-ring, #2563eb));
+		background-color: color-mix(in srgb, var(--pptx-ring, var(--office-ring, #2563eb)) 16%, transparent);
 	}
 </style>

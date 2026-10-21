@@ -62,7 +62,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 8px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 11px;
 	}
 </style>

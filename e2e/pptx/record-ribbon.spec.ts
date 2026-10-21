@@ -14,6 +14,24 @@ test('Record ribbon retains its six commands and four disabled placeholders', as
 	expect(inventory[0].controls.filter((control) => control.disabled)).toHaveLength(4);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	await expect(toolbar.locator('pptx-ui-ribbon-group:visible')).toHaveCount(4);
+	// Every binding renders the tab through the shared section.
+	await expect(
+		toolbar.locator('pptx-ui-ribbon-section > pptx-ui-ribbon-group:visible'),
+	).toHaveCount(4);
+	// The section fills the ribbon row as a group does, so the three-line From Current Slide
+	// label clears the group caption.
+	const fill = await toolbar.locator('pptx-ui-ribbon-section:visible').evaluate((section) => {
+		// The row is the nearest ancestor with a box (a component host can be display: contents).
+		let row = section.parentElement!;
+		while (getComputedStyle(row).display === 'contents') {
+			row = row.parentElement!;
+		}
+		const style = getComputedStyle(row);
+		const content =
+			row.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+		return { section: section.getBoundingClientRect().height, content };
+	});
+	expect(fill.section).toBeCloseTo(fill.content, 0);
 	await expect(toolbar.locator('pptx-ui-ribbon-command:visible')).toHaveCount(6);
 	const beginning = toolbar.getByRole('button', { name: 'From Beginning', exact: true });
 	const current = toolbar.getByRole('button', { name: 'From Current Slide', exact: true });

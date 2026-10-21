@@ -16,7 +16,9 @@ describe('phone sheet stacking and layout', () => {
 	});
 
 	it('isolates the viewer so its layers cannot paint over the host page', () => {
-		const rule = buildViewerCss().match(/\n\.pptxv \{[^}]*\}/u)?.[0] ?? '';
+		const rule = [...buildViewerCss().matchAll(/\n\.pptxv \{[^}]*\}/gu)]
+			.map(([css]) => css)
+			.join('\n');
 		expect(rule).toContain('isolation: isolate');
 	});
 

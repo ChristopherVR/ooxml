@@ -126,18 +126,18 @@
 	}
 
 	.pptx-svelte-field-label {
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-field select {
 		height: 26px;
-		border: 1px solid var(--pptx-border, #33334d);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-background, #11111b);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 	}
-	.pptx-svelte-field input { height: 26px; box-sizing: border-box; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-background, #11111b); color: inherit; font: inherit; }
+	.pptx-svelte-field input { height: 26px; box-sizing: border-box; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-background, var(--office-background, #ffffff)); color: inherit; font: inherit; }
 	.pptx-svelte-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 6px; }
 	.pptx-svelte-grid input { min-width: 0; width: 100%; }
 

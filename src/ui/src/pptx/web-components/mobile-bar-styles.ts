@@ -6,7 +6,7 @@ nav {
 	box-sizing: border-box; display: flex; align-items: stretch; justify-content: space-around; width: 100%;
 	padding-bottom: max(env(safe-area-inset-bottom), 0px); border-top: 1px solid var(--pptx-border, #33334d);
 	background: color-mix(in srgb, var(--pptx-secondary, #1e1e2e) 70%, transparent);
-	color: var(--pptx-muted-foreground, #a5a5b5); font: 500 10px/1.2 system-ui, sans-serif;
+	color: var(--pptx-muted-foreground, #a5a5b5); font: 500 10px/1.2 var(--pptx-font,var(--office-font,system-ui,sans-serif));
 }
 button {
 	position: relative; box-sizing: border-box; display: flex; flex: 1; flex-direction: column;
@@ -43,7 +43,7 @@ export const MOBILE_TOOLBAR_STYLES = `
 	position: relative; z-index: 20; box-sizing: border-box; display: flex; align-items: center; gap: 4px;
 	min-height: 52px; padding: max(env(safe-area-inset-top), 0px) 8px 4px; border-bottom: 1px solid var(--pptx-border, #33334d);
 	background: color-mix(in srgb, var(--pptx-secondary, #1e1e2e) 50%, transparent);
-	color: var(--pptx-card-foreground, #e2e8f0); font: 12px/1.2 system-ui, sans-serif;
+	color: var(--pptx-card-foreground, #e2e8f0); font: 12px/1.2 var(--pptx-font,var(--office-font,system-ui,sans-serif));
 }
 .spacer { flex: 1; }
 button {

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	visioSnapGlue,
 	type VisioDocument,
@@ -62,7 +63,7 @@ export class ViewerLineEndpoints {
 			!state.selectedShape ||
 			!visioSelectionIsOnPage(state.selectedShape, page.id) ||
 			state.selectedShapes.length !== 1 ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.edit.busy ||
 			state.loading ||
 			!this.options.active()
@@ -148,7 +149,7 @@ export class ViewerLineEndpoints {
 			event.button !== 0 ||
 			state.edit.busy ||
 			state.loading ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			!this.options.active() ||
 			(endpoint !== 'begin' && endpoint !== 'end')
 		)

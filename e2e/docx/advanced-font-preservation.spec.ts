@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { loadDocx } from '../../viewers/docx/packages/core/src/index';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument, saveButton } from './helpers';
+import { clickInEditor, newDocument, saveButton } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: editing and exporting keeps advanced font settings`, async ({ page }) => {
@@ -32,7 +32,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			} as NonNullable<typeof host.documentModel>;
 		});
 		const body = editor.locator('.ProseMirror').first();
-		await body.click();
+		await clickInEditor(body);
 		await page.keyboard.press('Control+End');
 		await page.keyboard.type(' changed');
 		await expect(body).toHaveText('Advanced changed');

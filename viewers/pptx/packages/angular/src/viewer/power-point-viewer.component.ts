@@ -323,6 +323,7 @@ const noopClose = (): void => undefined;
 		<div
 			#viewerRoot
 			class="pptx-ng-viewer"
+			data-pptx-theme-root
 			data-pptx-editor-chrome
 			tabindex="0"
 			[ngClass]="rootClasses()"

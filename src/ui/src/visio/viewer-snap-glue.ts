@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { VISIO_GLUE, VISIO_SNAP, visioSnapGlue, type VisioSnapGlue } from 'ooxml-core/visio';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -77,7 +78,7 @@ export class ViewerSnapGlue {
 	}
 	#refusal(state: ViewerState): string | undefined {
 		if (!state.document) return 'Open a drawing first.';
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to change snap and glue.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to change snap and glue.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		return undefined;
 	}

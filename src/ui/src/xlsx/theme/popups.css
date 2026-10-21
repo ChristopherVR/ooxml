@@ -6,13 +6,11 @@
 	padding: 4px;
 	border: 1px solid var(--line);
 	border-radius: 6px;
-	background: var(--xve-popover);
+	background: var(--xve-popover, var(--office-popover));
 	box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
-	color: var(--xve-popover-foreground);
-	font:
-		12px 'Segoe UI',
-		Arial,
-		sans-serif;
+	color: var(--xve-popover-foreground, var(--office-popover-foreground));
+	font: var(--office-font-size-sm, 12px)/var(--office-line-height, 1.4)
+		var(--xve-font, var(--office-font, system-ui, sans-serif));
 }
 .ribbon-popover.ribbon-menu-list,
 .ribbon-popover.ribbon-list {
@@ -129,16 +127,16 @@
 	border: 1px solid var(--line);
 	border-left: 4px solid var(--xl);
 	border-radius: 6px;
-	background: var(--xve-popover);
+	background: var(--xve-popover, var(--office-popover));
 	box-shadow: 0 8px 24px #0003;
-	color: var(--xve-popover-foreground);
+	color: var(--xve-popover-foreground, var(--office-popover-foreground));
 	pointer-events: auto;
 }
 .xve-toast[data-kind='warning'] {
 	border-left-color: #b7791f;
 }
 .xve-toast[data-kind='error'] {
-	border-left-color: var(--xve-destructive);
+	border-left-color: var(--xve-destructive, var(--office-danger));
 }
 .xve-toast-text {
 	flex: 1;
@@ -157,7 +155,7 @@
 	padding: 18px 20px;
 	border: 1px solid var(--line);
 	border-radius: 8px;
-	background: var(--xve-popover);
+	background: var(--xve-popover, var(--office-popover));
 	box-shadow: 0 12px 32px #0003;
 	color: var(--ink);
 	transform: translateX(-50%);
@@ -186,7 +184,7 @@
 .xve-dialog-actions .xve-dialog-primary {
 	border-color: var(--xl);
 	background: var(--xl);
-	color: var(--xve-primary-foreground);
+	color: var(--xve-primary-foreground, var(--office-accent-foreground));
 }
 .xve-shortcut-help {
 	width: min(620px, calc(100% - 32px));

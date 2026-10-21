@@ -233,9 +233,9 @@
 		flex-direction: column;
 		width: 288px;
 		flex: none;
-		border-left: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
+		border-left: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		font-family: system-ui, sans-serif;
 		font-size: 12px;
 		overflow: hidden;
@@ -247,7 +247,7 @@
 		align-items: center;
 		gap: 8px;
 		padding: 8px 10px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-inspector-tabs {
@@ -255,16 +255,16 @@
 		align-items: center;
 		gap: 2px;
 		padding: 2px;
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-inspector-tabs button {
 		padding: 3px 8px;
 		border: none;
-		border-radius: calc(var(--pptx-radius, 6px) - 2px);
+		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) - 2px);
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 		font: inherit;
 		font-size: 11px;
@@ -272,12 +272,12 @@
 	}
 
 	.pptx-svelte-inspector-tabs button:hover {
-		background: var(--pptx-accent, #33334d);
-		color: var(--pptx-accent-foreground, #f8fafc);
+		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+		color: var(--pptx-accent-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-inspector-tab-active {
-		background: var(--pptx-primary, #6366f1) !important;
+		background: var(--pptx-primary, var(--office-accent, #2563eb)) !important;
 		color: #fff !important;
 	}
 
@@ -298,7 +298,7 @@
 	.pptx-svelte-inspector-section {
 		margin-top: 12px;
 		padding-top: 12px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-inspector-section:first-child {
@@ -317,12 +317,12 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-inspector-empty {
 		margin: 12px 0 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	/*

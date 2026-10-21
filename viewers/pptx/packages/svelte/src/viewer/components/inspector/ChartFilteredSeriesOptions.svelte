@@ -132,9 +132,9 @@
 		flex: none;
 		width: 22px;
 		height: 22px;
-		border: 1px solid var(--pptx-border);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		cursor: pointer;
 	}
@@ -145,7 +145,7 @@
 	}
 	.range-title {
 		overflow: hidden;
-		color: var(--pptx-muted-foreground);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -160,7 +160,7 @@
 		flex: none;
 		width: 64px;
 		overflow: hidden;
-		color: var(--pptx-muted-foreground);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
@@ -168,9 +168,9 @@
 		flex: 1;
 		min-width: 0;
 		height: 22px;
-		border: 1px solid var(--pptx-border);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
-		background: var(--pptx-background);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 		font-size: 11px;

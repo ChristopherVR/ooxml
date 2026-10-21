@@ -134,7 +134,7 @@
 	height: 66px;
 	padding: 4px 2px;
 	border: 1px solid transparent;
-	border-radius: 4px;
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
 	color: var(--ink);
 	font-size: 11px;
 	line-height: 1.15;

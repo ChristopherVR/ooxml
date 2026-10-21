@@ -1,8 +1,12 @@
+import { installOfficeUiThemeFor } from '../../theme';
+import { withOfficeThemeCss } from '../theme/office-css';
 /** Share parsed styles between control instances in the same document. */
 const sheetsByDocument = new WeakMap<Document, Map<string, CSSStyleSheet>>();
 
 export function attachControlStyles(root: ShadowRoot, css: string): void {
 	const doc = root.host.ownerDocument;
+	installOfficeUiThemeFor(root.host as HTMLElement);
+	css = withOfficeThemeCss(css, ':host');
 	const Sheet = doc.defaultView?.CSSStyleSheet;
 	if (Sheet && 'adoptedStyleSheets' in root && 'replaceSync' in Sheet.prototype) {
 		try {

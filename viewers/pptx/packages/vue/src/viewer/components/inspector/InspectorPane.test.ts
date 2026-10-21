@@ -97,3 +97,31 @@ describe('inspectorPane accessibility section', () => {
 		expect(wrapper.findComponent(AccessibilityPanel).exists()).toBeFalsy();
 	});
 });
+
+describe('inspectorPane text warp', () => {
+	function warpTile(wrapper: ReturnType<typeof mount>, preset: string): HTMLButtonElement {
+		return wrapper.get<HTMLButtonElement>(`[data-gallery-item="${preset}"]`).element;
+	}
+
+	it('relays a Text Warp pick on an editable deck as a text style patch', () => {
+		const wrapper = mount(InspectorPane, {
+			props: {
+				element: shape({ type: 'text', textStyle: { italic: true } } as never),
+				canEdit: true,
+			},
+		});
+		warpTile(wrapper, 'textWave1').click();
+		expect(wrapper.emitted('update')?.[0]?.[0]).toStrictEqual({
+			textStyle: { italic: true, textWarpPreset: 'textWave1' },
+		});
+	});
+
+	it('locks the Text Warp tiles of a read-only deck', () => {
+		const wrapper = mount(InspectorPane, {
+			props: { element: shape({ type: 'text' } as never), canEdit: false },
+		});
+		expect(warpTile(wrapper, 'textWave1').disabled).toBeTruthy();
+		warpTile(wrapper, 'textWave1').click();
+		expect(wrapper.emitted('update')).toBeUndefined();
+	});
+});

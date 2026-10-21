@@ -11,3 +11,5 @@ export {
 export { THEME_CATALOG, resolveThemeCatalogEntry } from './theme-catalog';
 export type { ThemeCatalogEntry } from './theme-catalog';
 export { activeGalleryThemePreset, GALLERY_THEME_PRESETS } from './theme-gallery-presets';
+
+export { withOfficeThemeCss, pptxThemeValue } from './office-css';

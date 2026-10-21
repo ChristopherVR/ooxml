@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -173,7 +174,7 @@ export class ViewerSizePosition {
 			return;
 		const state = this.controller.state;
 		const selection = this.#selection(state);
-		if (!selection || state.loading || state.edit.busy || !state.edit.sourceAvailable) return;
+		if (!selection || state.loading || state.edit.busy || !canEditDiagram(state)) return;
 		const command =
 			input.value !== ''
 				? visioSizePositionCommand(selection.page, selection.id, field, input.valueAsNumber)
@@ -235,7 +236,7 @@ export class ViewerSizePosition {
 			this.#initial.set(field, next);
 			if (!dirty) input.value = next;
 			input.disabled =
-				!values || !state.edit.sourceAvailable || state.loading || state.edit.busy || this.#pending;
+				!values || !canEditDiagram(state) || state.loading || state.edit.busy || this.#pending;
 		}
 		this.#pane.setAttribute('aria-busy', String(state.loading || state.edit.busy || this.#pending));
 		// The rows speak for themselves while a shape is shown; otherwise say what to select.

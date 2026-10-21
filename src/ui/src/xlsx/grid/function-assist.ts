@@ -24,14 +24,14 @@ export interface FunctionAssist {
 type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 const CSS = `
-.xg-assist{position:absolute;z-index:60;font:12px/1.4 'Segoe UI',system-ui,sans-serif;color:var(--xve-foreground,#252423)}
+.xg-assist{position:absolute;z-index:60;font:var(--office-font-size-sm,12px)/var(--office-line-height,1.4) var(--xve-font, var(--office-font, system-ui, sans-serif));color:var(--xve-foreground, var(--office-foreground, #252423))}
 .xg-assist[hidden]{display:none}
-.xg-assist-list{background:var(--xve-popover,#fff);border:1px solid var(--xve-border,#c8c6c4);box-shadow:0 4px 12px rgba(0,0,0,.16);min-width:180px;max-height:240px;overflow:auto;margin:0;padding:2px 0;list-style:none}
+.xg-assist-list{background:var(--xve-popover, var(--office-popover, #fff));border:1px solid var(--xve-border, var(--office-border, #c8c6c4));box-shadow:0 4px 12px rgba(0,0,0,.16);min-width:180px;max-height:240px;overflow:auto;margin:0;padding:2px 0;list-style:none}
 .xg-assist-option{padding:2px 8px;cursor:default;white-space:nowrap}
-.xg-assist-option[aria-selected="true"]{background:var(--xve-accent,#e1dfdd)}
-.xg-assist-desc{background:var(--xve-popover,#fff);border:1px solid var(--xve-border,#c8c6c4);border-top:0;padding:4px 8px;max-width:320px;white-space:normal;color:var(--xve-muted-foreground,#605e5c)}
-.xg-assist-tip{background:var(--xve-popover,#fff);border:1px solid var(--xve-border,#c8c6c4);box-shadow:0 2px 6px rgba(0,0,0,.12);padding:2px 6px;white-space:nowrap}
-.xg-assist-name{color:var(--xve-primary,#0f6cbd);text-decoration:underline}
+.xg-assist-option[aria-selected="true"]{background:var(--xve-accent, var(--office-selected, #e1dfdd))}
+.xg-assist-desc{background:var(--xve-popover, var(--office-popover, #fff));border:1px solid var(--xve-border, var(--office-border, #c8c6c4));border-top:0;padding:4px 8px;max-width:320px;white-space:normal;color:var(--xve-muted-foreground, var(--office-muted-foreground, #605e5c))}
+.xg-assist-tip{background:var(--xve-popover, var(--office-popover, #fff));border:1px solid var(--xve-border, var(--office-border, #c8c6c4));box-shadow:0 2px 6px rgba(0,0,0,.12);padding:2px 6px;white-space:nowrap}
+.xg-assist-name{color:var(--xve-primary, var(--office-accent, #0f6cbd));text-decoration:underline}
 .xg-assist-param-active{font-weight:700}
 `;
 

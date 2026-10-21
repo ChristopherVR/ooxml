@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	inspectVisioRasterImage,
 	VISIO_METADATA_TEXT_LIMIT,
@@ -73,7 +74,7 @@ export class ViewerInsert {
 		);
 	}
 	#editable(state: ViewerState): boolean {
-		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		return canEditDiagram(state) && !state.loading && !state.edit.busy;
 	}
 	#shape(state: ViewerState): VisioShape | undefined {
 		const page = state.document?.pages[state.pageIndex];
@@ -337,12 +338,11 @@ export class ViewerInsert {
 			control.disabled = !shape;
 			control.title = shape ? label : `${label}: select one shape on an editable drawing.`;
 		}
-		if (this.chart.dialog.open && (!state.edit.sourceAvailable || state.loading))
-			this.chart.close();
+		if (this.chart.dialog.open && (!canEditDiagram(state) || state.loading)) this.chart.close();
 		for (const dialog of [this.link, this.tip]) {
 			if (!dialog.dialog.open) continue;
 			if (
-				!state.edit.sourceAvailable ||
+				!canEditDiagram(state) ||
 				state.loading ||
 				this.controller.documentGeneration !== this.#target?.generation
 			)

@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@0.8.0) - 2026-10-21
+
+### Features
+
+- **visio:** Expose canvas building blocks and host permissions ([e464a1c](https://github.com/ChristopherVR/ooxml/commit/e464a1c0399434430925e0e59b430b5788f5d8d9))
+- **visio:** Add native framework building block integrations ([689e934](https://github.com/ChristopherVR/ooxml/commit/689e9340824a41e32a5024938e16b483e34c4452))
+- **visio:** Theme native building blocks with shared office tokens ([f86b882](https://github.com/ChristopherVR/ooxml/commit/f86b882e2081540997f14af754805c573b372dc9))
+
+### Bug Fixes
+
+- **ui:** Preserve live formula drafts and runtime compatibility ([3a7d4f1](https://github.com/ChristopherVR/ooxml/commit/3a7d4f184658c4d69b04bbd36bab7afa3896dd9e))
+- **visio:** Release replaced native canvas owners ([11b216f](https://github.com/ChristopherVR/ooxml/commit/11b216f6a2bfd36c91cd9747afea209a24617d29))
+
+### Chores
+
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+
 ## [0.7.4](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@0.7.4) - 2026-10-20
 
 ### Dependencies

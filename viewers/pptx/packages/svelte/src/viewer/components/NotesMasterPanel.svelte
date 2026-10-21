@@ -27,9 +27,9 @@
 
 <style>
 	.panel { display:flex; flex-direction:column; gap:6px; padding:6px; }
-	.label, small { color:var(--pptx-muted-foreground,#a5a5b5); font-size:10px; }
-	.swatch { height:32px; border:1px solid var(--pptx-border,#33334d); border-radius:5px; }
-	.placeholder { display:flex; align-items:center; gap:7px; padding:5px; border-radius:4px; background:var(--pptx-background,#11111b); font-size:10px; }
+	.label, small { color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:10px; }
+	.swatch { height:32px; border:1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius:5px; }
+	.placeholder { display:flex; align-items:center; gap:7px; padding:5px; border-radius:4px; background:var(--pptx-background, var(--office-background, #ffffff)); font-size:10px; }
 	i { width:8px; height:8px; border-radius:50%; background:#22c55e99; }
-	.empty { padding:12px; color:var(--pptx-muted-foreground,#a5a5b5); font-size:12px; text-align:center; }
+	.empty { padding:12px; color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280)); font-size:12px; text-align:center; }
 </style>

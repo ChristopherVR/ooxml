@@ -68,6 +68,7 @@ export class ViewerClipboard {
 		);
 	}
 	private operationReason(operation: ClipboardOperation, state: ViewerState): string {
+		if (operation !== 'copy' && !state.canEdit) return 'Read-only';
 		const reason = operation === 'paste' ? this.baseReason(state) : this.selectionReason(state);
 		if (reason) return reason;
 		if (!this.canUseAsync(operation))
@@ -77,6 +78,7 @@ export class ViewerClipboard {
 		return '';
 	}
 	async run(operation: ClipboardOperation, event?: ClipboardEvent): Promise<void> {
+		if (operation !== 'copy' && !this.controller.canEdit) throw new Error('Read-only');
 		if (this.#disposed || this.#pending)
 			throw new DOMException('Clipboard operation was cancelled.', 'AbortError');
 		const reason = event

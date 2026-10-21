@@ -1,22 +1,16 @@
 <script lang="ts">
 	/**
-	 * PowerPoint's "Theme Colors" grid: ten columns (Background 1, Text 1,
-	 * Background 2, Text 2, Accent 1..6) each with a base swatch and five
-	 * luminance variants, built from the loaded deck's real theme colours
-	 * (`EditorState.themeColorMap`) rather than a hard-coded Office palette.
+	 * PowerPoint's "Theme Colors" grid on the shared `pptx-ui-color-grid`: ten columns (Background 1,
+	 * Text 1, Background 2, Text 2, Accent 1..6), each a base swatch over five luminance variants,
+	 * built from the loaded deck's theme (`EditorState.themeColorMap`) rather than a hard-coded
+	 * Office palette.
 	 *
-	 * Renders nothing (not even the heading) when no deck theme is loaded yet,
-	 * so callers can render this unconditionally alongside their existing
-	 * hex/recent-colour controls.
+	 * Renders nothing when no deck theme is loaded yet, so callers can render this unconditionally
+	 * alongside their existing hex and recent-colour controls.
 	 */
 	import type { PptxThemeColorRef } from 'pptx-viewer-core';
-	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-	import {
-		buildThemeColorSwatchGrid,
-		findSelectedThemeSwatch,
-		themeColorSwatchRows,
-		themeSwatchCommit,
-	} from 'ooxml-ui/pptx';
+	import type { OfficeColorPickEvent, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+	import { buildThemeColorSwatchGrid, themeColorGridCommit, themeColorGridView } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 
@@ -37,87 +31,33 @@
 	const t = useTranslator();
 
 	const columns = $derived(buildThemeColorSwatchGrid(themeColorMap, t));
-	const rows = $derived(themeColorSwatchRows(columns));
-	const selected = $derived(findSelectedThemeSwatch(columns, selectedRef, selectedHex));
+	const view = $derived(themeColorGridView(columns, selectedRef, selectedHex));
+	const heading = $derived(t('pptx.colorPicker.themeColors'));
+
+	function pick(event: OfficeColorPickEvent): void {
+		const commit = themeColorGridCommit(columns, event.detail);
+		if (commit) {
+			onpick(commit);
+		}
+	}
 </script>
 
+<!-- The inspector keeps its own standard and recent rows, so the grid shows only Theme Colors. -->
 {#if columns.length > 0}
-	<div class="pptx-svelte-theme-swatch-grid">
-		<div class="pptx-svelte-theme-swatch-grid-heading">{t('pptx.colorPicker.themeColors')}</div>
-		<div class="pptx-svelte-theme-swatch-grid-rows">
-			{#each rows as row, rowIndex (rowIndex)}
-				<div class="pptx-svelte-theme-swatch-grid-row">
-					{#each row as swatch, colIndex (colIndex)}
-						{#if swatch}
-							<button
-								type="button"
-								{disabled}
-								data-pptx-compact
-								class="pptx-svelte-theme-swatch-grid-swatch"
-								class:pptx-svelte-theme-swatch-grid-swatch-selected={selected === swatch}
-								style={`background-color:${swatch.hex}`}
-								title={swatch.label}
-								aria-label={swatch.label}
-								onclick={() => onpick(themeSwatchCommit(swatch))}
-							></button>
-						{:else}
-							<div class="pptx-svelte-theme-swatch-grid-empty"></div>
-						{/if}
-					{/each}
-				</div>
-			{/each}
-		</div>
-	</div>
+	<pptx-ui-color-grid
+		class="pptx-svelte-theme-swatch-grid"
+		palette={view.palette}
+		selectedTheme={view.selectedTheme}
+		standardColors={[]}
+		themeHeading={heading}
+		label={heading}
+		{disabled}
+		onoffice-color-pick={pick}
+	></pptx-ui-color-grid>
 {/if}
 
 <style>
 	.pptx-svelte-theme-swatch-grid {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
 		margin-top: 4px;
-	}
-
-	.pptx-svelte-theme-swatch-grid-heading {
-		font-size: 10px;
-		color: var(--pptx-muted-foreground, #94a3b8);
-	}
-
-	.pptx-svelte-theme-swatch-grid-rows {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.pptx-svelte-theme-swatch-grid-row {
-		display: flex;
-		gap: 2px;
-	}
-
-	.pptx-svelte-theme-swatch-grid-swatch,
-	.pptx-svelte-theme-swatch-grid-empty {
-		width: 16px;
-		height: 16px;
-	}
-
-	.pptx-svelte-theme-swatch-grid-swatch {
-		padding: 0;
-		border-radius: 2px;
-		border: 1px solid var(--pptx-border, #33334d);
-		cursor: pointer;
-	}
-
-	.pptx-svelte-theme-swatch-grid-swatch:hover:not(:disabled) {
-		transform: scale(1.1);
-	}
-
-	.pptx-svelte-theme-swatch-grid-swatch:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
-	.pptx-svelte-theme-swatch-grid-swatch-selected {
-		outline: 2px solid var(--pptx-primary, #6366f1);
-		outline-offset: 1px;
 	}
 </style>

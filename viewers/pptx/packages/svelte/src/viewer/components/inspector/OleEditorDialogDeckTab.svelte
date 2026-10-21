@@ -115,7 +115,7 @@
 	.hint {
 		margin: 0;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.slides {
@@ -133,22 +133,22 @@
 	.label {
 		font-size: 11px;
 		font-weight: 600;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	input {
 		box-sizing: border-box;
 		width: 100%;
 		padding: 6px 8px;
-		border: 1px solid var(--pptx-border, #3f3f52);
-		border-radius: var(--pptx-radius, 6px);
-		background: var(--pptx-muted, #2a2a3d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: var(--pptx-radius, var(--office-radius, 4px));
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 	}
 
 	input:focus {
-		outline: 2px solid var(--pptx-primary, #c43b32);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: -1px;
 	}
 </style>

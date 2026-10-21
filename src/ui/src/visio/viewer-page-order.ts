@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import type { VisioPageReorder } from 'ooxml-core/visio';
@@ -53,7 +54,7 @@ export class ViewerPageOrder {
 	}
 	show(): void {
 		const state = this.controller.state;
-		if (!state.document || !state.edit.sourceAvailable || state.edit.busy || state.loading) return;
+		if (!state.document || !canEditDiagram(state) || state.edit.busy || state.loading) return;
 		this.list.replaceChildren(
 			...state.document.pages.map((page) => {
 				const option = this.list.ownerDocument.createElement('option');
@@ -74,7 +75,7 @@ export class ViewerPageOrder {
 	render(state: ViewerState): void {
 		if (!this.dialog.open) return;
 		if (
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			state.loading ||
 			this.controller.documentGeneration !== this.#generation
 		) {

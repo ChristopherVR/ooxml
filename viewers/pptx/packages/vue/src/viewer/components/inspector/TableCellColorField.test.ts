@@ -5,6 +5,7 @@ import { ref } from 'vue';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import TableCellColorField from './TableCellColorField.vue';
 import { setControlValue } from './test-control-value';
+import { themeSwatch } from './test-theme-swatch';
 
 /**
  * W3-G3: table cell text/fill colour pickers show the deck's theme palette
@@ -45,7 +46,7 @@ function mountField(props: Record<string, unknown>) {
 describe('tableCellColorField', () => {
 	it('commits both the resolved hex and the ref on a theme swatch click', async () => {
 		const wrapper = mountField({});
-		const accent1 = wrapper.get('button[title="Accent 1"]');
+		const accent1 = themeSwatch(wrapper, 'Accent 1');
 		await accent1.trigger('click');
 		expect(wrapper.emitted('commit')?.[0]).toStrictEqual(['#4472c4', { scheme: 'accent1' }]);
 	});

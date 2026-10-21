@@ -28,12 +28,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				return { from: view.state.selection.from, to: view.state.selection.to };
 			});
 		// On a slow runner a binding can still be re-rendering after the toggle and drop some of
-		// the key presses, so select again until the first six characters are selected.
+		// the key presses, so select again until the first six characters are selected. The editor
+		// takes the last key's selection from a selectionchange that can come after the presses
+		// return, so wait for it before selecting again.
 		await expect(async () => {
 			await body.click();
 			await page.keyboard.press('Control+Home');
 			for (let index = 0; index < 6; index++) await page.keyboard.press('Shift+ArrowRight');
-			expect(await selection()).toEqual({ from: 1, to: 7 });
+			await expect.poll(selection, { timeout: 2000 }).toEqual({ from: 1, to: 7 });
 		}).toPass({ timeout: 15_000 });
 		await page.keyboard.press('Control+b');
 		const marker = body.locator('.dve-revision-format');

@@ -99,17 +99,17 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.hint {
 		margin: 6px 0 0;
 		font-size: 11px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.error {
-		color: var(--pptx-destructive, #f87171);
+		color: var(--pptx-destructive, var(--office-danger, #b91c1c));
 	}
 
 	ul {

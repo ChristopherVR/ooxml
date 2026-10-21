@@ -517,6 +517,15 @@ describe('stripFontStyleSuffix', () => {
 		expect(stripFontStyleSuffix('Segoe UI Semibold Italic')).toBe('Segoe UI');
 	});
 
+	it('strips a weight spelled as two words with its prefix', () => {
+		expect(stripFontStyleSuffix('Poppins Semi Bold')).toBe('Poppins');
+		expect(stripFontStyleSuffix('Poppins Extra Light')).toBe('Poppins');
+		expect(stripFontStyleSuffix('Poppins Semi Bold Italic')).toBe('Poppins');
+		// The prefix only joins a weight after it.
+		expect(stripFontStyleSuffix('Foo Extra Italic')).toBe('Foo Extra');
+		expect(stripFontStyleSuffix('Ultra')).toBeUndefined();
+	});
+
 	it('returns undefined when nothing was stripped', () => {
 		expect(stripFontStyleSuffix('Arial')).toBeUndefined();
 		expect(stripFontStyleSuffix('Bebas Neue')).toBeUndefined();

@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { visioPageLayout, type VisioEdit, type VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_PAPER_SIZES,
@@ -48,7 +49,7 @@ export class ViewerPageSetup {
 	}
 	#refusal(state: ViewerState): string | undefined {
 		if (!state.document?.pages[state.pageIndex]) return 'Open a drawing first.';
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to change the page setup.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to change the page setup.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		return undefined;
 	}

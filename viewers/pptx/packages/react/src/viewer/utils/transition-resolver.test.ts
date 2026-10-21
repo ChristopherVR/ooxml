@@ -46,10 +46,10 @@ describe('getSlideTransitionAnimations', () => {
 
 	it('should produce cover animations with 8-way direction support', () => {
 		const lu = getSlideTransitionAnimations('cover', 500, 'lu');
-		expect(lu.incoming).toContain('cover-from-lu');
+		expect(lu.incoming).toContain('cover-from-rd');
 
 		const rd = getSlideTransitionAnimations('cover', 500, 'rd');
-		expect(rd.incoming).toContain('cover-from-rd');
+		expect(rd.incoming).toContain('cover-from-lu');
 	});
 
 	it('should produce uncover animations for "uncover" type', () => {

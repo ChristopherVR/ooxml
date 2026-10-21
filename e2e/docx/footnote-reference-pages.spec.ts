@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 async function fixture(): Promise<Buffer> {
@@ -57,7 +57,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await verify();
 		await layoutView.selectOption('draft');
 		const body = editor.locator('.ProseMirror').first();
-		await body.click();
+		await clickInEditor(body);
 		await page.keyboard.press('Control+Home');
 		await page.keyboard.type('Prefix ');
 		await expect(body).toContainText('Prefix Opening 0');

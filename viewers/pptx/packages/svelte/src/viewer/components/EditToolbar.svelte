@@ -34,9 +34,9 @@
 		flex-wrap: wrap;
 		gap: 6px;
 		padding: 5px 10px;
-		background: var(--pptx-card, #1e1e2e);
-		color: var(--pptx-card-foreground, #e2e8f0);
-		border-bottom: 1px solid var(--pptx-border, #33334d);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		font-family: system-ui, sans-serif;
 		font-size: 13px;
 		flex: none;
@@ -45,6 +45,6 @@
 	.pptx-svelte-edittoolbar-sep {
 		width: 1px;
 		height: 22px;
-		background: var(--pptx-border, #33334d);
+		background: var(--pptx-border, var(--office-border, #d1d5db));
 	}
 </style>

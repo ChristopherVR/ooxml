@@ -10,7 +10,7 @@
 	scroll-snap-type: x proximity;
 	scrollbar-width: none;
 	border: 1px solid var(--line);
-	border-radius: 4px;
+	border-radius: var(--dve-radius, var(--office-radius, 4px));
 	background: var(--surface);
 }
 .ribbon-group .ribbon-gallery .style-tile {

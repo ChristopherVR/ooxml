@@ -287,7 +287,7 @@ export class ViewerBackstage {
 			'[data-backstage-action="page-setup"]',
 		);
 		if (setup) {
-			setup.disabled = !state.edit.sourceAvailable || busy || !page;
+			setup.disabled = !state.canEdit || !state.edit.sourceAvailable || busy || !page;
 			setup.title = setup.disabled ? 'Open a .vsdx file to change the page setup.' : '';
 		}
 		// Rebuild the navigation only when Save or Close change, so focus stays put.

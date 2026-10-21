@@ -1,4 +1,4 @@
-import type { Block, TableCell } from './model';
+import type { Block, Paragraph, TableCell } from './model';
 /** Source child order, with current direct paragraphs and any new paragraphs beside their source anchor. */
 export function cellSourceBlocks(cell: TableCell): Block[] {
 	if (!cell.sourceBlocks) return cell.paragraphs;
@@ -23,4 +23,21 @@ export function cellSourceBlocks(cell: TableCell): Block[] {
 	}
 	blocks.push(...cell.paragraphs.slice(cursor));
 	return blocks;
+}
+
+/**
+ * The paragraphs of the main document in reading order: body paragraphs, and each table's cells
+ * row by row, a cell's paragraphs and the tables nested in it in the order they come. Headers,
+ * footers, notes and text boxes are not searched, as in Word.
+ */
+export function documentParagraphs(blocks: readonly Block[]): Paragraph[] {
+	const result: Paragraph[] = [];
+	const visit = (items: readonly Block[]) => {
+		for (const block of items) {
+			if (block.type === 'paragraph') result.push(block);
+			else for (const row of block.rows) for (const cell of row) visit(cellSourceBlocks(cell));
+		}
+	};
+	visit(blocks);
+	return result;
 }

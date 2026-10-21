@@ -21,6 +21,7 @@
  * sits in a cascade layer, as Tailwind 4's preflight does.
  */
 export const INSPECTOR_BASE_CSS = `
+.pptxv-inspector { font-family: var(--pptx-font, var(--office-font, system-ui, sans-serif)); }
 /* ── Inspector baseline for bare form markup ─────────────────────────── */
 .pptxv-inspector :where(input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='button']):not([type='submit']):not([type='reset']):not([type='hidden']), textarea) {
 	box-sizing: border-box;

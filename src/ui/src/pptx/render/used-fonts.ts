@@ -18,6 +18,21 @@ export function collectFontsFromElement(element: PptxElement, fonts: Set<string>
 			collectFontsFromElement(child, fonts);
 		}
 	}
+	// Table text keeps its fonts on the cells and their runs, not on the element.
+	if (element.type === 'table') {
+		for (const row of element.tableData?.rows ?? []) {
+			for (const cell of row.cells ?? []) {
+				if (cell.style?.fontFamily) {
+					fonts.add(cell.style.fontFamily);
+				}
+				for (const run of cell.textRuns ?? []) {
+					if (run.fontFamily) {
+						fonts.add(run.fontFamily);
+					}
+				}
+			}
+		}
+	}
 }
 
 /** Collect the sorted unique font families referenced across a presentation. */

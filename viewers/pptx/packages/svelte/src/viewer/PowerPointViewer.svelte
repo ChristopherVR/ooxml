@@ -349,7 +349,8 @@
 	class:pptx-svelte-show-guides={parityUi.showGuides}
 	class:pptx-svelte-reduced-motion={parityUi.preferences.reducedMotion}
 	style={rootStyle}
-	data-pptx-editor-chrome
+	data-pptx-theme-root
+ data-pptx-editor-chrome
 	data-pptx-ribbon-scope={ribbonScope}
 	role="region"
 	aria-label={t('pptx.titleBar.defaultFileName')}
@@ -457,6 +458,7 @@
 
 <style>
 	.pptx-svelte-viewer {
+ font-family: var(--pptx-font, var(--office-font, system-ui, sans-serif));
 		position: relative;
 		display: flex;
 		flex-direction: column;
@@ -468,8 +470,8 @@
 		 * and clips text). Mirrors the React `theme.css` rule. */
 		-webkit-text-size-adjust: none;
 		text-size-adjust: none;
-		background: var(--pptx-background, #11111b);
-		color: var(--pptx-foreground, #e2e8f0);
+		background: var(--pptx-background, var(--office-background, #ffffff));
+		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		outline: none;
 		overflow: hidden;
 		/* Own stacking context: the slide's selection handles and overlays (z-index 57 to 61)

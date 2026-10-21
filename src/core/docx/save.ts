@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
+import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart } from './model';
 import { buildXml, parseXml, type XmlDocument } from './xml';
@@ -20,6 +21,7 @@ import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { refreshStyleRefFields } from './style-ref-fields';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
@@ -41,6 +43,23 @@ function newDocument(): XmlDocument {
 	return parseXml(
 		'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body/></w:document>',
 	);
+}
+
+/**
+ * `model` with its header and footer STYLEREF results brought up to date, or undefined when none
+ * changes. Word updates those fields as it draws each page, so a saved header should not keep a
+ * stale result; a part the writer cannot rebuild with the new results keeps the ones it has, and
+ * a model the update cannot read is saved as it is: the update never makes a save fail.
+ */
+function headerFooterResults(model: DocumentModel): DocumentModel | undefined {
+	try {
+		const refreshed = refreshStyleRefFields(model);
+		if (refreshed === model) return undefined;
+		assertValidDocumentModel(refreshed);
+		return refreshed;
+	} catch {
+		return undefined;
+	}
 }
 
 export async function saveDocx(
@@ -91,6 +110,7 @@ export async function saveDocx(
 			'Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.',
 		);
 	const zip = binding ? await openZip(binding.context.original, DOCX_ZIP_LIMITS) : new JSZip();
+	const sourceEntries = entryNames(zip);
 	const document = binding ? parseXml(binding.context.sourceXml) : newDocument();
 	const docPrIds = new DocPrIdAllocator();
 	await docPrIds.reserveFromPackage(zip);
@@ -125,6 +145,7 @@ export async function saveDocx(
 		binding?.base ?? { ...model, sections: [] },
 		pendingMedia,
 		docPrIds,
+		headerFooterResults(model),
 	);
 	// A new document starts without notes, so every note is created along with its part.
 	await applyNoteEdits(
@@ -170,5 +191,6 @@ export async function saveDocx(
 	}
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
+	dropAddedFolders(zip, sourceEntries);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

@@ -47,6 +47,32 @@ describe('openZip', () => {
 	});
 });
 
+describe('limit kinds', () => {
+	it('names the check each violation failed', async () => {
+		const bytes = await zipOf({ 'a.xml': 'x'.repeat(600), 'b.xml': 'y'.repeat(600) });
+		const fails = (input: Uint8Array, limits: Parameters<typeof openZip>[1], kind: string) =>
+			expect(openZip(input, limits)).rejects.toMatchObject({ name: 'ZipLimitError', kind });
+		await fails(new Uint8Array(10), { maxInputBytes: 5 }, 'maxInputBytes');
+		await fails(bytes, { maxEntries: 1 }, 'maxEntries');
+		await fails(bytes, { maxEntryBytes: 500 }, 'maxEntryBytes');
+		await fails(bytes, { maxTotalBytes: 1000 }, 'maxTotalBytes');
+		await fails(await zipOf({ '../evil.xml': '<a/>' }), {}, 'partName');
+		const entry = { name: 'a.xml', data: await deflateZeros(1 << 16), declared: 100 };
+		const forged = await openZip(lyingZipOf([entry]));
+		await expect(forged.file('a.xml')!.async('string')).rejects.toMatchObject({
+			kind: 'declaredSize',
+		});
+	});
+	it('passes the kind to a custom error', async () => {
+		const createError = (message: string, details: { limit: number; kind: string }) =>
+			Object.assign(new Error(message), { details });
+		const bytes = await zipOf({ 'a.xml': 'x'.repeat(600) });
+		await expect(openZip(bytes, { maxEntryBytes: 500, createError })).rejects.toMatchObject({
+			details: { limit: 500, kind: 'maxEntryBytes' },
+		});
+	});
+});
+
 describe('forged headers in each loader', () => {
 	it('rejects a docx whose document part lies about its size', async () => {
 		const bytes = lyingZipOf([await bombEntry('word/document.xml')]);

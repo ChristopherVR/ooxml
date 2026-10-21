@@ -211,7 +211,9 @@ export function setRangeValues(
 	values: CellValue[][],
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
-	const width = Math.max(0, ...values.map((row) => row.length));
+	// A loop, not a spread: a spread passes one argument per row and overflows on tall blocks.
+	let width = 0;
+	for (const row of values) width = Math.max(width, row.length);
 	if (!values.length || !width) return;
 	const range = cellRange(at.row, at.col, at.row + values.length - 1, at.col + width - 1);
 	ctx.run(

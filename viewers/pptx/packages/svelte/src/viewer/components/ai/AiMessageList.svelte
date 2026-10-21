@@ -90,20 +90,20 @@
 		gap: 8px;
 		padding: 0 24px;
 		text-align: center;
-		color: var(--pptx-primary, #a5b4fc);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-empty-title {
 		margin: 0;
 		font-size: 14px;
 		font-weight: 500;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 	}
 
 	.pptx-svelte-ai-empty-hint {
 		margin: 0;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-messages {
@@ -128,13 +128,13 @@
 		height: 24px;
 		margin-top: 2px;
 		border-radius: 50%;
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 15%, transparent);
-		color: var(--pptx-primary, #a5b4fc);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 15%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 	.pptx-svelte-ai-avatar.is-user {
-		background: var(--pptx-secondary, #2a2a3d);
-		color: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-secondary, var(--office-surface, #f3f4f6));
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-msg-body {
@@ -149,7 +149,7 @@
 		margin: 0;
 		font-size: 13px;
 		line-height: 1.5;
-		color: var(--pptx-card-foreground, #e2e8f0);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
 		white-space: pre-wrap;
 		word-break: break-word;
 	}
@@ -160,7 +160,7 @@
 		gap: 8px;
 		padding-left: 32px;
 		font-size: 12px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-dots {
@@ -172,7 +172,7 @@
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
-		background: var(--pptx-muted-foreground, #94a3b8);
+		background: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		animation: pptx-svelte-ai-bounce 1s infinite;
 	}
 

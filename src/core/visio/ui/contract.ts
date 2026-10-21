@@ -2,6 +2,7 @@ import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/inde
 import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
+	canEdit?: boolean;
 	document: VisioDocument | null;
 	pageIndex: number;
 	zoom: number;
@@ -35,6 +36,7 @@ export type ViewerCallbacks = {
 	[K in keyof ViewerEvents]?: (detail: ViewerEvents[K]) => void;
 };
 export const propertyKeys = [
+	'canEdit',
 	'document',
 	'pageIndex',
 	'zoom',

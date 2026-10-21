@@ -30,7 +30,7 @@ function monthFromName(name: string): number | undefined {
 }
 
 /** Two-digit years: 00-29 are 20xx, 30-99 are 19xx (Excel's cut-over). */
-function fullYear(text: string): number {
+export function fullYear(text: string): number {
 	const y = Number(text);
 	if (text.length > 2) return y;
 	return y < 30 ? 2000 + y : 1900 + y;

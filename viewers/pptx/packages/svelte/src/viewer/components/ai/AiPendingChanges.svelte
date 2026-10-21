@@ -48,8 +48,8 @@
 		max-height: 38%;
 		overflow-y: auto;
 		padding: 8px 12px;
-		border-top: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-background, #11111b);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 	}
 
 	.pptx-svelte-ai-proposals-head {
@@ -63,15 +63,15 @@
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.pptx-svelte-ai-accept-all {
 		padding: 2px 8px;
 		border: none;
 		border-radius: 3px;
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
+		color: var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff));
 		font: inherit;
 		font-size: 11px;
 		font-weight: 500;

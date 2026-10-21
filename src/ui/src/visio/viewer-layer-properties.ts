@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { getVisioPageLayers, type VisioEdit, type VisioLayer } from 'ooxml-core/visio';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -55,7 +56,7 @@ export class ViewerLayerProperties {
 			return;
 		}
 		const doc = this.root.ownerDocument;
-		const editable = state.edit.sourceAvailable;
+		const editable = canEditDiagram(state);
 		const overrides = layerOverrideMaps(model, state.layerVisibilityOverrides);
 		const cell = (tag: 'th' | 'td', text = '') =>
 			Object.assign(doc.createElement(tag), { textContent: text });
@@ -133,7 +134,7 @@ export class ViewerLayerProperties {
 			this.dialog.close();
 			return;
 		}
-		const editable = state.edit.sourceAvailable;
+		const editable = canEditDiagram(state);
 		const sources = new Map(this.#sources(state).map((source) => [source.id, source]));
 		const edits: VisioEdit[] = [];
 		const shown: { pageId: string; layerId: string; visible: boolean | null }[] = [];

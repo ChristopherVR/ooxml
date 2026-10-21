@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -129,7 +130,7 @@ export class ViewerReplace {
 		if (
 			state.loading ||
 			state.edit.busy ||
-			!state.edit.sourceAvailable ||
+			!canEditDiagram(state) ||
 			!state.document ||
 			!this.bar.value
 		) {
@@ -172,7 +173,7 @@ export class ViewerReplace {
 			const pending = this.#pending;
 			if (
 				state.loading ||
-				!state.edit.sourceAvailable ||
+				!canEditDiagram(state) ||
 				this.controller.sourceGeneration !== pending.source ||
 				(state.edit.busy &&
 					(state.document !== pending.state.document ||
@@ -180,7 +181,7 @@ export class ViewerReplace {
 						state.selectedShapes !== pending.state.selectedShapes))
 			)
 				this.#reset();
-		} else if ((!state.edit.sourceAvailable || state.loading || !state.document) && this.#token)
+		} else if ((!canEditDiagram(state) || state.loading || !state.document) && this.#token)
 			this.#reset();
 		else if (
 			this.#token &&

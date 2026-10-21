@@ -189,7 +189,7 @@
 		gap: 6px;
 		margin-top: 8px;
 		padding-top: 7px;
-		border-top: 1px solid var(--pptx-border, #33334d);
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-chart-grid-head {
@@ -210,9 +210,9 @@
 
 	.pptx-svelte-chart-grid-actions button {
 		padding: 2px 6px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #2a2a3d);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font: inherit;
 		font-size: 10px;
@@ -244,7 +244,7 @@
 		position: sticky;
 		left: 0;
 		z-index: 1;
-		background: var(--pptx-card, #1e1e2e);
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
 	}
 
 	.pptx-svelte-chart-grid-cell {
@@ -259,9 +259,9 @@
 		height: 22px;
 		box-sizing: border-box;
 		padding: 0 4px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 4px;
-		background: var(--pptx-background, #11111b);
+		background: var(--pptx-background, var(--office-background, #ffffff));
 		color: inherit;
 		font: inherit;
 		font-size: 11px;
@@ -273,7 +273,7 @@
 		padding: 0;
 		border: none;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		cursor: pointer;
 	}
 

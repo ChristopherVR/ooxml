@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	inspectVisioRasterImage,
 	VISIO_CLIPBOARD_MAGIC,
@@ -55,7 +56,7 @@ export class ViewerPasteSpecial {
 		return this.root.ownerDocument.defaultView?.navigator.clipboard;
 	}
 	#reason(state: ViewerState): string | undefined {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to paste.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to paste.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		if (!state.document?.pages[state.pageIndex]) return 'Open a page first.';
 		if (typeof this.#clipboard?.readText !== 'function')

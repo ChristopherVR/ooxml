@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -49,7 +50,7 @@ export class ViewerLayerAssign {
 		this.dialog.body.append(fieldset(doc, 'Layers on this page', this.#list), label);
 	}
 	#reason(state: ViewerState): string | undefined {
-		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to assign layers.';
+		if (!canEditDiagram(state)) return 'Open a .vsdx file to assign layers.';
 		if (state.loading || state.edit.busy) return 'Wait for the current edit to finish.';
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || !state.selectedShapes.length) return 'Select one or more shapes.';
@@ -150,7 +151,7 @@ export class ViewerLayerAssign {
 		}
 		if (
 			this.dialog.open &&
-			(!state.edit.sourceAvailable ||
+			(!canEditDiagram(state) ||
 				state.loading ||
 				this.controller.documentGeneration !== this.#target?.generation)
 		)

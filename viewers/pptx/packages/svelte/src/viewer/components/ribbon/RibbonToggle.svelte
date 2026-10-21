@@ -49,8 +49,8 @@
 	}
 
 	.pptx-svelte-rbtoggle-on {
-		background: color-mix(in srgb, var(--pptx-primary, #6366f1) 18%, transparent);
-		color: var(--pptx-primary, #6366f1);
+		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 18%, transparent);
+		color: var(--pptx-primary, var(--office-accent, #2563eb));
 	}
 
 

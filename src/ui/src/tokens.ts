@@ -227,6 +227,8 @@ export const OFFICE_TOKENS = {
 	'--office-comments-pane-width': '300px',
 	'--office-comment-avatar-size': '24px',
 	'--office-account-field-width': '320px',
+	// Component: colour grid
+	'--office-color-swatch-gap': 'var(--office-space-1, 4px)',
 	// Component: galleries
 	'--office-gallery-trigger-height': '24px',
 	'--office-gallery-strip-background':

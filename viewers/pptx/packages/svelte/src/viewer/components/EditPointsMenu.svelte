@@ -56,11 +56,11 @@
 </div>
 
 <style>
-	.pptx-svelte-edit-points-menu { position: absolute; z-index: 61; pointer-events: auto; display: flex; min-width: 180px; flex-direction: column; padding: 6px 0; border: 1px solid var(--pptx-border, #33334d); border-radius: var(--pptx-radius, 6px); background: var(--pptx-card, #1e1e2e); box-shadow: 0 18px 40px rgb(0 0 0 / 35%); color: var(--pptx-card-foreground, #e2e8f0); font-family: system-ui, sans-serif; font-size: 12px; }
+	.pptx-svelte-edit-points-menu { position: absolute; z-index: 61; pointer-events: auto; display: flex; min-width: 180px; flex-direction: column; padding: 6px 0; border: 1px solid var(--pptx-border, var(--office-border, #d1d5db)); border-radius: var(--pptx-radius, var(--office-radius, 4px)); background: var(--pptx-card, var(--office-surface, #f3f4f6)); box-shadow: 0 18px 40px rgb(0 0 0 / 35%); color: var(--pptx-card-foreground, var(--office-foreground, #1f2937)); font-family: system-ui, sans-serif; font-size: 12px; }
 	.pptx-svelte-edit-points-menu button { width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-	.pptx-svelte-edit-points-menu button:hover, .pptx-svelte-edit-points-menu button:focus-visible { background: var(--pptx-accent, #33334d); outline: none; }
+	.pptx-svelte-edit-points-menu button:hover, .pptx-svelte-edit-points-menu button:focus-visible { background: var(--pptx-accent, var(--office-selected, #e5e7eb)); outline: none; }
 	.pptx-svelte-edit-points-menu button:disabled { opacity: 0.45; cursor: default; }
 	.pptx-svelte-edit-points-menu button:disabled:hover { background: transparent; }
-	.pptx-svelte-edit-points-separator { height: 1px; margin: 5px 0; background: var(--pptx-border, #33334d); }
+	.pptx-svelte-edit-points-separator { height: 1px; margin: 5px 0; background: var(--pptx-border, var(--office-border, #d1d5db)); }
 	.pptx-svelte-edit-points-check { display: inline-block; width: 12px; margin-right: 6px; }
 </style>

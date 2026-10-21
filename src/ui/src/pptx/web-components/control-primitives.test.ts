@@ -466,17 +466,12 @@ describe('switch', () => {
 });
 
 describe('office token bridge', () => {
-	it('is one valid :host block of --office-* declarations per alias', () => {
+	it('captures host inputs separately from the shared canonical bridge', () => {
 		const css = bridgeCss('pptx-ui-switch');
-		const body = css.slice(css.indexOf('{') + 1, css.indexOf('}'));
-		const declarations = body
-			.split(';')
-			.map((part) => part.trim())
-			.filter(Boolean);
-		expect(css.startsWith(':host {')).toBeTruthy();
-		expect(declarations.length).toBeGreaterThan(30);
-		for (const declaration of declarations) {
-			expect(declaration).toMatch(/^--office-[a-z0-9-]+:\s\S/u);
-		}
+		expect(css).toContain('--_pptx-background: var(--pptx-background, var(--office-background,');
+		expect(css).toContain(':host > * {');
+		expect(css).toContain('--office-background: var(--_pptx-background);');
+		expect(css).toContain('--office-switch-width: var(--pptx-switch-width');
+		expect(css).not.toContain('--office-background: var(--office-background');
 	});
 });

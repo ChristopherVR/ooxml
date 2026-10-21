@@ -18,6 +18,7 @@ import {
 	type ViewerProps,
 	type ViewerState,
 } from './common';
+
 export interface VisioViewerProps extends ViewerProps {
 	className?: string | undefined;
 	style?: CSSProperties | undefined;

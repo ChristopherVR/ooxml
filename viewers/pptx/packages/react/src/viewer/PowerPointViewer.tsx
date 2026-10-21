@@ -1267,6 +1267,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			<div
 				style={themeStyle}
 				data-pptx-viewer=''
+				data-pptx-theme-root
 				data-pptx-editor-chrome=''
 				{...{ [RIBBON_SCOPE_ATTR]: ribbonScope }}
 				aria-busy={loading}

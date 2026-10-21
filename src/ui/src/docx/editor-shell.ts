@@ -25,6 +25,7 @@ import { PageNavigator } from './page-navigator';
 import { HeadingNavigator } from './heading-navigator';
 import { applyViewOptions } from './view-options';
 import { attachEditorInteractions } from './editor-interactions';
+import { attachCanvasClick } from './canvas-click';
 
 /** Element-level operations the chrome needs; they stay on the element because they are public API. */
 export interface ShellApi {
@@ -104,7 +105,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 /** Builds the shadow-DOM shell (ribbon, canvas, panels, chrome) once; later calls are no-ops. */
 export function buildShell(core: EditorCore, api: ShellApi): void {
 	const { element, shell } = core;
-	if (shell.toolbar) {
+	if (shell.paper) {
 		attachPrintEditing(core);
 		return;
 	}
@@ -114,8 +115,8 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	style.textContent = editorStyleText;
 	const frame = document.createElement('section');
 	frame.className = 'dve-frame';
-	const toolbar = createRibbon(core.locale);
-	on(toolbar, 'ribbon-action', (event) => routeRibbonAction(core, event.detail));
+	const toolbar = core.surfaceOnly ? undefined : createRibbon(core.locale);
+	if (toolbar) on(toolbar, 'ribbon-action', (event) => routeRibbonAction(core, event.detail));
 	const canvas = document.createElement('main');
 	canvas.className = 'dve-canvas';
 	const paper = document.createElement('div');
@@ -148,6 +149,16 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		{ passive: true },
 	);
 	shell.printLayout = printLayout;
+	if (core.surfaceOnly) {
+		frame.append(canvas);
+		root.append(style, frame);
+		Object.assign(shell, { canvas, paper });
+		attachPrintEditing(core);
+		attachCanvasClick(core);
+		applyShellLabels(element, paper, core.locale);
+		return;
+	}
+	if (!toolbar) return;
 	shell.navigator = new PageNavigator({
 		pages: () => printLayout.pageElements(),
 		pageSnapshot: (index) => printLayout.pageSnapshot(index),

@@ -32,9 +32,16 @@ writeFileSync(
 			'../src/**/*.ts',
 			'../packages/bindings/src/**/*.ts',
 			'../packages/bindings/src/**/*.tsx',
-			'../packages/*/src/index.ts',
+			'../packages/*/src/**/*.ts',
+			'../packages/*/src/**/*.tsx',
 		],
-		exclude: ['../src/**/*.test.ts', '../packages/svelte/src/index.ts'],
+		exclude: [
+			'../src/**/*.test.ts',
+			'../packages/*/src/**/*.test.ts',
+			'../packages/*/src/**/*.test.tsx',
+			'../packages/*/src/*Harness.svelte',
+			'../packages/svelte/src/index.ts',
+		],
 	}),
 );
 execFileSync(
@@ -119,6 +126,10 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			resolve(declarations, 'packages/bindings/src/common.d.ts'),
 			resolve(bindings, 'common.d.ts'),
 		);
+		cpSync(
+			resolve(declarations, 'packages/bindings/src/building-blocks.d.ts'),
+			resolve(bindings, 'building-blocks.d.ts'),
+		);
 		if (key === 'svelte') {
 			cpSync(
 				resolve(root, 'packages/bindings/src/VisioViewer.svelte'),
@@ -134,7 +145,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			const runtimeEntry = resolve(temporary, 'svelte-runtime.ts');
 			writeFileSync(
 				runtimeEntry,
-				"export * from '../src/index';\nexport * from '../packages/bindings/src/common';\nexport * from 'visio-core';\n",
+				"export * from '../src/index';\nexport * from '../packages/bindings/src/common';\nexport * from '../packages/bindings/src/building-blocks';\nexport * from '../packages/svelte/src/building-blocks';\nexport * from 'visio-core';\n",
 			);
 			await build({
 				configFile: false,
@@ -151,13 +162,13 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 						fileName: () => 'runtime.js',
 					},
 					rolldownOptions: {
-						external: /^(?:visio-core|ooxml-core|ooxml-ui|emf-converter)(?:\/|$)/,
+						external: /^(?:visio-core|ooxml-core|ooxml-ui|emf-converter|svelte)(?:\/|$)/,
 					},
 				},
 			});
 			writeFileSync(
 				resolve(outDir, 'runtime.d.ts'),
-				"export * from './types/packages/bindings/src/common.js';\nexport * from './types/src/index.js';\nexport * from 'visio-core';\n",
+				"export * from './types/packages/bindings/src/common.js';\nexport * from './types/packages/bindings/src/building-blocks.js';\nexport * from './types/packages/svelte/src/building-blocks.js';\nexport * from './types/src/index.js';\nexport * from 'visio-core';\n",
 			);
 			writeFileSync(
 				resolve(outDir, 'VisioViewer.svelte.d.ts'),
@@ -175,6 +186,37 @@ export default VisioViewer;
 			writeFileSync(
 				resolve(outDir, 'index.svelte.js'),
 				"export * from './runtime.js';\nexport { default, default as VisioViewer } from './VisioViewer.svelte';\n",
+			);
+			copyDeclarations(resolve(declarations, 'packages/svelte'), resolve(types, 'packages/svelte'));
+			const names = ['DiagramCanvas', 'Toolbar', 'PageNavigation', 'Inspector'];
+			for (const name of names) {
+				const source = readFileSync(resolve(directory, `src/${name}.svelte`), 'utf8').replaceAll(
+					'../../bindings/src/building-blocks',
+					'./runtime.js',
+				);
+				writeFileSync(resolve(outDir, `${name}.svelte`), source);
+				const props =
+					name === 'DiagramCanvas'
+						? '{ mount(node: HTMLElement | null): void; class?: string }'
+						: name === 'Inspector'
+							? '{ controller: ViewerController }'
+							: '{ toolbarProps: DiagramToolbarProps }';
+				writeFileSync(
+					resolve(outDir, `${name}.svelte.d.ts`),
+					`import type { Component } from 'svelte';\nimport type { ViewerController, DiagramToolbarProps } from './runtime.js';\ndeclare const component: Component<${props}>;\nexport default component;\n`,
+				);
+			}
+			const exports = names
+				.map((name) => `export { default as ${name} } from './${name}.svelte';\n`)
+				.join('');
+			const { appendFileSync } = await import('node:fs');
+			appendFileSync(
+				resolve(outDir, 'index.d.ts'),
+				"export * from './types/packages/svelte/src/building-blocks.js';\n" + exports,
+			);
+			appendFileSync(
+				resolve(outDir, 'index.svelte.js'),
+				"export { createViewerBuildingBlocks } from './runtime.js';\n" + exports,
 			);
 		} else {
 			cpSync(

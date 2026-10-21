@@ -1,4 +1,11 @@
 export { ViewerController, type ViewerState } from './controller';
+export {
+	mountDiagramCanvas,
+	fitDiagramCanvas,
+	mountDiagramInspector,
+	diagramToolbarProps,
+	type DiagramToolbarProps,
+} from './building-blocks';
 export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';
 export { mountViewer, type MountedViewer } from './binding';

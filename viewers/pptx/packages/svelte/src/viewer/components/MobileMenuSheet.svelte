@@ -245,8 +245,8 @@
 		flex-wrap: wrap;
 		gap: 6px;
 		padding: 8px 12px;
-		border-bottom: 1px solid var(--pptx-border, #33334d);
-		background: var(--pptx-background, #11111b);
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		background: var(--pptx-background, var(--office-background, #ffffff));
 	}
 
 	.pptx-svelte-mobile-menu-chip {
@@ -255,10 +255,10 @@
 		flex-shrink: 0;
 		min-height: 36px;
 		padding: 8px 12px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 999px;
 		background: transparent;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font: inherit;
 		font-size: 12px;
 		font-weight: 500;
@@ -266,13 +266,13 @@
 	}
 
 	.pptx-svelte-mobile-menu-chip:hover {
-		color: var(--pptx-card-foreground, #e2e8f0);
-		background: color-mix(in srgb, var(--pptx-accent, #33334d) 40%, transparent);
+		color: var(--pptx-card-foreground, var(--office-foreground, #1f2937));
+		background: color-mix(in srgb, var(--pptx-accent, var(--office-selected, #e5e7eb)) 40%, transparent);
 	}
 
 	.pptx-svelte-mobile-menu-chip.is-active {
-		border-color: var(--pptx-primary, #6366f1);
-		background: var(--pptx-primary, #6366f1);
+		border-color: var(--pptx-primary, var(--office-accent, #2563eb));
+		background: var(--pptx-primary, var(--office-accent, #2563eb));
 		color: #fff;
 	}
 

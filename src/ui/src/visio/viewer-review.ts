@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioRibbonAction } from './ribbon-action';
 import { ViewerComments } from './viewer-comments';
@@ -93,7 +94,7 @@ export class ViewerReview {
 		this.issues.render(state);
 		this.subprocess.render(state);
 		this.accessibility.render(state);
-		const editable = state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		const editable = canEditDiagram(state) && !state.loading && !state.edit.busy;
 		const reports = this.root.querySelector<HTMLElement & { disabled: boolean }>(
 			'[command="shape-reports"]',
 		);

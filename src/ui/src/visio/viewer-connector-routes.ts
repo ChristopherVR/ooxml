@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import { VISIO_CONNECTOR_ROUTES, type VisioConnectorRoute, type VisioEdit } from 'ooxml-core/visio';
 import { visioConnectorRouteOf, visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -63,7 +64,7 @@ export class ViewerConnectorRoutes {
 		);
 	}
 	render(state: ViewerState): void {
-		const editable = state.edit.sourceAvailable && !state.loading && !state.edit.busy;
+		const editable = canEditDiagram(state) && !state.loading && !state.edit.busy;
 		const page = state.document?.pages[state.pageIndex];
 		const selected = this.#selected(state);
 		const shown =

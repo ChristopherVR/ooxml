@@ -1,3 +1,4 @@
+import { installOfficeUiThemeFor } from '../theme';
 import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
 import { docToModel } from './model-adapter';
@@ -117,13 +118,17 @@ export class DocxEditorElement extends DocxEditorApi {
 		reflectAttribute(this, 'file-name', this.fileName);
 	}
 
-	/** `light`, `dark`, or `auto` (default, follows the OS). Reflected to the `theme` attribute. */
+	/** `light`, `dark`, or `auto` (default, inherits the Office theme, then follows the OS). Reflected to the `theme` attribute. */
 	get theme(): EditorThemeMode {
 		return this.core.theme;
 	}
 	set theme(value: EditorThemeMode) {
+		const previous = this.core.theme;
 		this.core.theme = normalizeThemeMode(value);
 		reflectAttribute(this, 'theme', this.core.theme);
+		if (this.core.theme !== 'auto') this.setAttribute('data-office-theme', this.core.theme);
+		else if (previous !== 'auto' && this.getAttribute('data-office-theme') === previous)
+			this.removeAttribute('data-office-theme');
 	}
 	/** Token overrides applied as inline `--dve-*` custom properties on the host. */
 	get themeColors(): Partial<EditorTheme> | undefined {
@@ -178,6 +183,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	connectedCallback() {
+		installOfficeUiThemeFor(this);
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
 	}
@@ -201,6 +207,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		const { core } = this;
 		this.assertDocumentReplaceable();
 		const generation = ++core.loadGeneration;
+		core.loading = true;
+		core.refreshControls();
 		try {
 			const session = await loadDocument(input);
 			if (generation !== core.loadGeneration) return;
@@ -212,6 +220,11 @@ export class DocxEditorElement extends DocxEditorApi {
 			const error = cause instanceof Error ? cause : new Error(String(cause));
 			if (generation === core.loadGeneration) emit(this, 'document-error', error);
 			throw error;
+		} finally {
+			if (generation === core.loadGeneration) {
+				core.loading = false;
+				core.refreshControls();
+			}
 		}
 	}
 
@@ -274,6 +287,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		const { core } = this;
 		core.detachedState = undefined;
 		if (bumpGeneration) core.loadGeneration++;
+		if (bumpGeneration) core.loading = false;
 		core.loaded = session;
 		core.model = model;
 		core.inserts.reset();

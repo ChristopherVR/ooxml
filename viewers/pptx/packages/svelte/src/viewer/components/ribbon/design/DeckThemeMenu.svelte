@@ -46,7 +46,7 @@
 	.pptx-svelte-decktheme-strip {
 		display: inline-flex;
 		overflow: hidden;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 3px;
 	}
 
@@ -56,7 +56,7 @@
 	}
 
 	.pptx-svelte-decktheme-active {
-		outline: 2px solid var(--pptx-primary, #6366f1);
+		outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb));
 		outline-offset: -2px;
 	}
 </style>

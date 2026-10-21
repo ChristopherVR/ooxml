@@ -100,6 +100,7 @@ export type {
 	OfficeColorPick,
 	OfficeColorPickEvent,
 	OfficeColorSource,
+	OfficeThemeSwatchPosition,
 	OfficeUiColorGrid,
 } from './form/color-grid';
 export type { OfficeCommandEvent } from './ribbon/button';

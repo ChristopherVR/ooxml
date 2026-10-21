@@ -1,4 +1,5 @@
 export * from './docx';
+export * from './docx-forms';
 export * from './xlsx';
 export { inspectVisio, type VisioShapeSummary } from './visio';
 export { editVsdx as editVisio } from '../visio/edit';

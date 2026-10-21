@@ -115,10 +115,9 @@ export function sheetFormatXml(sheet: Worksheet): string {
 	const current: ReturnType<typeof readSheetFormat> = { defaultRowHeight: sheet.defaultRowHeight };
 	if (sheet.defaultColWidth !== undefined) current.defaultColWidth = sheet.defaultColWidth;
 	if (sheet.format && Object.keys(sheet.format).length) current.format = sheet.format;
-	const rowLevel = Math.max(
-		0,
-		...[...sheet.rowInfo.values()].map((info) => info.outlineLevel ?? 0),
-	);
+	// A loop, not a spread: a sheet can hold a row record per row, past a call's argument limit.
+	let rowLevel = 0;
+	for (const info of sheet.rowInfo.values()) rowLevel = Math.max(rowLevel, info.outlineLevel ?? 0);
 	const colLevel = Math.max(0, ...sheet.columns.map((col) => col.outlineLevel ?? 0));
 	if (
 		source &&

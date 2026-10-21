@@ -92,14 +92,14 @@
 	.row > span:first-child {
 		width: 40px;
 		flex-shrink: 0;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
 	.row input[type='color'] {
 		width: 32px;
 		height: 22px;
 		padding: 1px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 3px;
 		background: transparent;
 		cursor: pointer;
@@ -109,7 +109,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 10px;
 	}
 </style>

@@ -1,6 +1,20 @@
 import { OFFICE_TOKENS, TOUCH } from './tokens';
+import { themeBridge } from './theme-bridge';
+import {
+	BUILDING_BLOCKS_CSS,
+	type OfficeUiBlockKind,
+	type OfficeUiProduct,
+} from './building-block-styles';
+export {
+	BUILDING_BLOCKS_CSS,
+	type OfficeUiBlockKind,
+	type OfficeUiProduct,
+} from './building-block-styles';
 
 export {
+	LEGACY_OFFICE_THEME_TOKENS,
+	legacyThemeAliases,
+	legacyThemeBridge,
 	shadcnBridge,
 	themeBridge,
 	type ShadcnBridgeOptions,
@@ -47,21 +61,36 @@ const LIGHT = Object.entries(OFFICE_TOKENS)
 	.map(([name, value]) => `\t${name}: ${value};`)
 	.join('\n');
 
+// Mode scopes reset palette values and their dependents, while typography and geometry inherit.
+const darkEntries = [...DARK.matchAll(/(--office-[\w-]+): ([^;]+);/g)].map(
+	(match) => [match[1]!, match[2]!] as const,
+);
+const lightPalette = Object.fromEntries(
+	darkEntries.map(([name]) => [name, OFFICE_TOKENS[name as keyof typeof OFFICE_TOKENS]]),
+);
+const darkPalette = Object.fromEntries(darkEntries);
+const modeCss = (selector: string, dark: boolean) =>
+	themeBridge(selector, {
+		...lightPalette,
+		...(dark ? darkPalette : {}),
+		'--office-accent-foreground': OFFICE_TOKENS['--office-accent-foreground'],
+	}) + `${selector} { color-scheme: ${dark ? 'dark' : 'light'}; }`;
+
 export const THEME_CSS = `
-:root {
+:where(:root) {
 ${LIGHT}
+color-scheme: light;
 }
+${modeCss(':where([data-office-theme="light"], [data-office-theme="auto"])', false)}
+${modeCss(':where([data-office-theme="dark"])', true)}
 @media (prefers-color-scheme: dark) {
-	:root:not([data-office-theme="light"]) {${DARK}
-	}
-}
-:root[data-office-theme="dark"] {${DARK}
+	${modeCss(':where(:root:not([data-office-theme="light"]), [data-office-theme="auto"])', true)}
 }
 @media ${TOUCH} {
-	:root { --office-target-size: var(--office-target-size-touch); }
+	:where(:root) { --office-target-size: var(--office-target-size-touch); }
 }
 @media (forced-colors: active) {
-	:root {
+	:where(:root, [data-office-theme]) {
 		--office-foreground: CanvasText;
 		--office-muted-foreground: GrayText;
 		--office-background: Canvas;
@@ -73,16 +102,55 @@ ${LIGHT}
 		--office-danger: CanvasText;
 	}
 }
+${BUILDING_BLOCKS_CSS}
 `;
 
-/** Idempotent. Browser-only; returns false (and does nothing) without a document. */
-export function installOfficeUiTheme(doc: Document | undefined = globalThis.document): boolean {
-	if (!doc?.head) return false;
-	if (!doc.getElementById(THEME_STYLE_ID)) {
+/** Idempotent per document or shadow root. Browser-only; false without a style container. */
+export function installOfficeUiTheme(
+	root: Document | ShadowRoot | undefined = globalThis.document,
+): boolean {
+	if (!root) return false;
+	const documentRoot = root.nodeType === 9;
+	if (!documentRoot && !('host' in root)) return false;
+	const doc = documentRoot ? (root as Document) : root.ownerDocument;
+	const container = documentRoot ? (root as Document).head : root;
+	if (!doc || !container) return false;
+	if (!root.getElementById(THEME_STYLE_ID)) {
 		const style = doc.createElement('style');
 		style.id = THEME_STYLE_ID;
 		style.textContent = THEME_CSS;
-		doc.head.append(style);
+		container.append(style);
 	}
 	return true;
+}
+
+function installOfficeUiThemeRoots(host: HTMLElement): boolean {
+	let installed = installOfficeUiTheme(host.ownerDocument);
+	let root = host.getRootNode();
+	while (root.nodeType === 11 && 'host' in root) {
+		const shadow = root as ShadowRoot;
+		installed = installOfficeUiTheme(shadow) && installed;
+		root = shadow.host.getRootNode();
+	}
+	return installed;
+}
+
+/** Install enclosing root rules now, then recheck after a native framework inserts a prepared host. */
+export function installOfficeUiThemeFor(host: HTMLElement): boolean {
+	const installed = installOfficeUiThemeRoots(host);
+	queueMicrotask(() => {
+		installOfficeUiThemeRoots(host);
+	});
+	return installed;
+}
+
+/** Marks only the library control's own root. Theme state and custom tokens stay on host scopes. */
+export function prepareOfficeUiBlock(
+	host: HTMLElement,
+	kind: OfficeUiBlockKind,
+	product?: OfficeUiProduct,
+): void {
+	host.setAttribute('data-office-block', kind);
+	if (product) host.setAttribute('data-office-product', product);
+	installOfficeUiThemeFor(host);
 }

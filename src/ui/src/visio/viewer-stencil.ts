@@ -36,7 +36,7 @@ export function wireStencil(
 	// A drop is accepted while an earlier edit is still saving; the shape is added once it is done.
 	const editable = () => {
 		const { edit, loading } = controller.state;
-		return edit.sourceAvailable && !loading;
+		return controller.canEdit && edit.sourceAvailable && !loading;
 	};
 	const idle = () =>
 		new Promise<void>((resolve) => {

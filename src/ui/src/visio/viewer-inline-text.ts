@@ -1,3 +1,4 @@
+import { canEditDiagram } from './controller';
 import type { VisioShape } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
@@ -116,7 +117,7 @@ export class ViewerInlineText {
 			this.announce('Select one shape to edit its text.');
 			return false;
 		}
-		if (!state.edit.sourceAvailable || state.edit.busy || state.loading) {
+		if (!canEditDiagram(state) || state.edit.busy || state.loading) {
 			this.announce('This drawing cannot be edited.');
 			return false;
 		}
@@ -151,6 +152,10 @@ export class ViewerInlineText {
 	async commit(focusCanvas: boolean): Promise<void> {
 		const session = this.#session;
 		if (!session) return;
+		if (!this.controller.canEdit) {
+			this.#close();
+			return;
+		}
 		const draft = this.input.value;
 		this.#close();
 		if (focusCanvas) this.viewport.focus({ preventScroll: true });
@@ -182,6 +187,10 @@ export class ViewerInlineText {
 	render(state: ViewerState): void {
 		const session = this.#session;
 		if (!session) return;
+		if (!this.controller.canEdit) {
+			this.#close();
+			return;
+		}
 		const page = state.document?.pages[state.pageIndex];
 		const shape = page?.id === session.pageId ? visioTextShape(page, session.shapeId) : undefined;
 		if (this.controller.sourceGeneration !== session.generation || !state.document) {
@@ -240,6 +249,10 @@ export class ViewerInlineText {
 	#layout(): void {
 		const session = this.#session;
 		if (!session) return;
+		if (!this.controller.canEdit) {
+			this.#close();
+			return;
+		}
 		const box = this.viewport.getBoundingClientRect();
 		const rect = session.group?.getBoundingClientRect();
 		const width = Math.max(48, rect?.width ?? 160);

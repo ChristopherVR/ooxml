@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import JSZip from 'jszip';
-import { dialogByHeading } from './helpers';
+import { clickInEditor, dialogByHeading } from './helpers';
 
 for (const mode of ['steps', 'yjs']) {
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -27,12 +27,12 @@ for (const mode of ['steps', 'yjs']) {
 			await expect(textB).toContainText('Shared document');
 			await expect(page.locator('#collaboration-status')).toContainText('Synced');
 			await page.getByRole('button', { name: 'Pause delivery', exact: true }).click();
-			await textA.click();
+			await clickInEditor(textA);
 			await page.keyboard.press('Control+End');
 			await page.keyboard.type(' Alice');
 			await page.keyboard.press('Enter');
 			await page.keyboard.type('Alice paragraph');
-			await textB.click();
+			await clickInEditor(textB);
 			await page.keyboard.press('Control+End');
 			await page.keyboard.type(' Bob');
 			await page.keyboard.press('Enter');
@@ -57,7 +57,7 @@ for (const mode of ['steps', 'yjs']) {
 			await expect(page.locator('#collaboration-status')).toContainText('Synced');
 			await page.getByLabel('Editor B read only', { exact: true }).check();
 			await expect(textB).toHaveAttribute('contenteditable', 'false');
-			await textA.click();
+			await clickInEditor(textA);
 			await page.keyboard.press('Control+End');
 			await page.keyboard.type(' Remote updates still arrive.');
 			await expect(textB).toContainText('Remote updates still arrive.');

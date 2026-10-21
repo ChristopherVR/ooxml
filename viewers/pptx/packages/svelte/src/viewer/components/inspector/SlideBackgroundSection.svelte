@@ -50,9 +50,9 @@
 		width: 100%;
 		min-height: 28px;
 		margin-top: 8px;
-		border: 1px solid var(--pptx-border, #33334d);
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
 		border-radius: 5px;
-		background: var(--pptx-muted, #1e1e2e);
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
 		color: inherit;
 		font-size: 11px;
 	}

@@ -55,7 +55,7 @@
 		justify-content: space-between;
 		min-height: 78px;
 		padding: 2px 8px 2px;
-		border-right: 1px solid color-mix(in srgb, var(--pptx-border, #33334d) 60%, transparent);
+		border-right: 1px solid color-mix(in srgb, var(--pptx-border, var(--office-border, #d1d5db)) 60%, transparent);
 	}
 
 	.pptx-svelte-rbgroup:last-child {
@@ -70,7 +70,7 @@
 
 	.pptx-svelte-rbgroup-label {
 		padding-top: 2px;
-		color: var(--pptx-muted-foreground, #94a3b8);
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 		font-size: 9px;
 		line-height: 12px;
 		text-align: center;

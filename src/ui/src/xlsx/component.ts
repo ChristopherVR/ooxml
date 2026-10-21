@@ -1,3 +1,4 @@
+import { installOfficeUiThemeFor } from '../theme';
 /**
  * `<xlsx-editor>`: the properties, attributes and lifecycle. Methods are in element-api.ts, state
  * in editor-core.ts and the DOM in editor-shell.ts.
@@ -14,6 +15,7 @@ import {
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
+import { buildSurface } from './surface-shell';
 import type { XlsxEditorEventMap } from './events';
 import type { XlsxCollaborationOptions } from './collaboration-types';
 import type { EditorLocale, EditorLocaleInput } from 'ooxml-core/xlsx/ui';
@@ -71,9 +73,16 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		return XLSX_EDITOR_ATTRIBUTES;
 	}
 	private shell: Shell | undefined;
+	private disposeSurface: (() => void) | undefined;
 	private addIns: readonly RibbonAddInTab[] = [];
 
 	connectedCallback(): void {
+		installOfficeUiThemeFor(this);
+		if (this.surfaceOnly) {
+			this.disposeSurface ??= buildSurface(this.core);
+			this.core.requestRender();
+			return;
+		}
 		if (this.shell) return;
 		this.shell = buildShell(this.core);
 		this.chrome = this.shell.chrome;
@@ -84,6 +93,12 @@ export class XlsxEditorElement extends XlsxEditorApi {
 
 	attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
+	}
+	disconnectedCallback(): void {
+		if (this.disposeSurface) {
+			this.disposeSurface();
+			this.disposeSurface = undefined;
+		}
 	}
 
 	/** Interface language: `en`, `fr`, `de`, `es`, `zh-CN` (any tag mapping to one). */
@@ -122,13 +137,18 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		reflectAttribute(this, 'author-name', this.core.authorName);
 	}
 
-	/** `light`, `dark` or `auto` (default, follows the OS). */
+	/** `light`, `dark` or `auto` (default, inherits the Office scope and system appearance). */
 	get theme(): EditorThemeMode {
 		return this.core.theme;
 	}
 	set theme(value: EditorThemeMode) {
+		const previous = this.core.theme;
 		this.core.theme = normalizeThemeMode(value);
 		reflectAttribute(this, 'theme', this.core.theme);
+		if (this.core.theme === 'auto') {
+			if (previous !== 'auto' && this.getAttribute('data-office-theme') === previous)
+				this.removeAttribute('data-office-theme');
+		} else this.setAttribute('data-office-theme', this.core.theme);
 	}
 
 	get showToolbar(): boolean {
@@ -189,6 +209,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	}
 	set workbook(value: Workbook | null) {
 		this.core.loadGeneration++;
+		this.core.loading = false;
 		this.core.setWorkbook(value ?? undefined);
 		this.chrome?.setSaveState('saved');
 	}

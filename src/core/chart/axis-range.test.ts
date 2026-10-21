@@ -3,6 +3,7 @@ type PptxChartSeries = ChartAxisSeries & { name?: string };
 import { describe, expect, it } from 'vitest';
 
 import {
+	computeLogValueRange,
 	computeStackedValueRangeForAxis,
 	computeValueRangeForAxis,
 	computeValueRangeForChart,
@@ -115,5 +116,14 @@ describe('axis-constrained value ranges', () => {
 		const axis = { axisType: 'valAx' as const, majorUnit: 20, minorUnit: 10 };
 		expect(generateAxisTicks(range, axis, 5)).toStrictEqual([0, 20, 40, 60, 80, 100]);
 		expect(generateMinorAxisTicks(range, axis)).toStrictEqual([10, 30, 50, 70, 90]);
+	});
+});
+
+describe('logarithmic value ranges', () => {
+	it('spans more values than a call can pass as arguments', () => {
+		const values = Array.from({ length: 200_000 }, (_, i) => 50 + (i % 400));
+		values[120_000] = 3;
+		values[80_000] = 4_000;
+		expect(computeLogValueRange([{ values }], 10)).toMatchObject({ min: 1, max: 10_000 });
 	});
 });
