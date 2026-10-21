@@ -9,6 +9,8 @@ import {
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties';
+import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
+import { syncBlockControls } from './write-block-placement';
 import { children, first, isElement, makeW, named, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
@@ -189,6 +191,7 @@ export function writeTable(
 	const usedCells = new Set<XmlElement>();
 	const usedRows = new Set<number>();
 	const columns = new Map<number, number>();
+	const rowSources: (number | undefined)[] = [];
 	const nextRows = table.rows.map((row, rowIndex) => {
 		const sources = row.map((cell) =>
 			cell.paragraphs.map((p) => sourceById.get(p.id)).find(Boolean),
@@ -199,6 +202,7 @@ export function writeTable(
 		if (sourceRow !== undefined && usedRows.has(sourceRow))
 			throw new Error('Splitting an existing table row is not supported.');
 		if (sourceRow !== undefined) usedRows.add(sourceRow);
+		rowSources.push(sourceRow);
 		const tr =
 			sourceRow === undefined
 				? makeW(doc, 'tr')
@@ -231,7 +235,8 @@ export function writeTable(
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
 			patchCellVerticalAlignment(doc, tc, cell.verticalAlign, source?.model.verticalAlign);
-			const oldParagraphs = flatCellParagraphs(tc).map((entry) => entry.element);
+			const flatParagraphs = flatCellParagraphs(tc);
+			const oldParagraphs = flatParagraphs.map((entry) => entry.element);
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {
 				const index = source?.paragraphs.findIndex((p) => p.id === paragraph.id) ?? -1;
 				return writeParagraph(
@@ -242,13 +247,35 @@ export function writeTable(
 				);
 			});
 			replaceSlots(doc, tc, oldParagraphs, nextParagraphs);
+			// A block control around a cell's paragraphs follows the model as in the body.
+			syncBlockControls(doc, flatParagraphs, cell.paragraphs, nextParagraphs);
 			writeNestedTables(doc, tc, cell, source?.model, writeParagraph, replaceSlots);
 			return tc;
 		});
 		replaceSlots(doc, tr, oldCells, nextCells);
+		nextCells.forEach((tc, ci) =>
+			placeTableControl(doc, tc, row[ci]?.contentControl, sources[ci]?.model.contentControl),
+		);
+		unwrapDroppedControls(
+			nextCells,
+			row.map((cell) => cell.contentControl),
+		);
 		return tr;
 	});
 	replaceSlots(doc, node, oldRows, nextRows);
+	nextRows.forEach((tr, ri) => {
+		const sourceRow = rowSources[ri];
+		placeTableControl(
+			doc,
+			tr,
+			table.rowProperties?.[ri]?.contentControl,
+			sourceRow === undefined ? undefined : base?.rowProperties?.[sourceRow]?.contentControl,
+		);
+	});
+	unwrapDroppedControls(
+		nextRows,
+		nextRows.map((_, ri) => table.rowProperties?.[ri]?.contentControl),
+	);
 	const grid = first(node, 'tblGrid');
 	if (
 		structural &&

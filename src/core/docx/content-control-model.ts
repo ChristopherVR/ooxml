@@ -67,8 +67,14 @@ export interface ContentControl {
 	dataBound?: boolean;
 	/** `w:temporary`: Word removes the control once the user edits it. */
 	temporary?: boolean;
+	/** `w:placeholder/w:docPart`: the glossary entry that holds the control's placeholder text. */
+	placeholder?: string;
+	/** The text of that glossary entry, which the control shows while it is empty (read only). */
+	placeholderText?: string;
 	/** Verbatim `w:sdtPr`, used to recreate the control and to keep what is not modeled. */
 	sourceXml?: string;
+	/** Verbatim `w:sdtEndPr` (the formatting of the control's end), kept when it is recreated. */
+	endSourceXml?: string;
 }
 
 /** A content control surrounding a row or cell is read and preserved; the model keeps its fields. */
@@ -81,3 +87,11 @@ export const isContentControlLocked = (
 		? control.lock === 'contentLocked' || control.lock === 'sdtContentLocked'
 		: control.lock === 'sdtLocked' || control.lock === 'sdtContentLocked';
 };
+
+/** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
+export function freshControlId(used: ReadonlySet<string>): string {
+	let id: string;
+	do id = String(Math.floor(Math.random() * (2 ** 31 - 1)) + 1);
+	while (used.has(id));
+	return id;
+}

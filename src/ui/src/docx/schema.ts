@@ -8,8 +8,9 @@ import {
 } from 'ooxml-core/docx/ui';
 import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
-import { markSpecs } from 'ooxml-core/docx/ui';
+import { controlFromData, markSpecs } from 'ooxml-core/docx/ui';
 import { equationNodeSpec } from './equation-schema';
+import type { ContentControl } from 'ooxml-core/docx';
 
 export { wordHighlightColors } from 'ooxml-core/docx/ui';
 
@@ -69,6 +70,27 @@ export function paragraphStyle(attrs: Record<string, unknown>): string {
 		...dropCapCss(attrs.dropCap),
 	].filter(Boolean);
 	return declarations.join(';');
+}
+
+/** The attributes a cell's content control draws with: its outline, title tab and arrow. */
+function cellControlAttributes(control: ContentControl): Record<string, string> {
+	return {
+		'data-sdt': JSON.stringify(control),
+		'data-sdt-cell': String(control.id ?? ''),
+		'data-sdt-kind': String(control.kind ?? 'richText'),
+		...(control.alias ? { 'data-sdt-title': String(control.alias) } : {}),
+		...(control.showingPlaceholder ? { 'data-sdt-placeholder': '1' } : {}),
+		...(control.lock ? { 'data-sdt-lock': String(control.lock) } : {}),
+	};
+}
+
+/** The content control a copied cell carries (`data-sdt`), as an inline control's span does. */
+function cellControlFromDom(
+	element: HTMLElement | string,
+): { contentControl: ContentControl } | null {
+	const control =
+		typeof element === 'string' ? undefined : controlFromData(element.dataset.sdt, 'cell');
+	return control ? { contentControl: control } : null;
 }
 
 export const schema = new Schema({
@@ -245,6 +267,8 @@ export const schema = new Schema({
 				borders: { default: null },
 				/** Default cell margins (`w:tblCellMar`) as JSON. */
 				cellMargins: { default: null },
+				/** The block-level content control around the table (`w:sdt` around `w:tbl`). */
+				contentControl: { default: null },
 			},
 			parseDOM: [{ tag: 'table' }],
 			toDOM: (node) => ['table', { style: tableStyle(node.attrs) }, ['tbody', 0]],
@@ -277,14 +301,17 @@ export const schema = new Schema({
 				shadingEdited: { default: false },
 				/** Direct cell margins (`w:tcMar`) in twips as JSON; missing sides inherit table defaults. */
 				margins: { default: null },
+				/** The content control around the cell (`w:tr > w:sdt > w:tc`), as the model reads it. */
+				contentControl: { default: null },
 			},
-			parseDOM: [{ tag: 'td' }, { tag: 'th' }],
+			parseDOM: ['td', 'th'].map((tag) => ({ tag, getAttrs: cellControlFromDom })),
 			toDOM: (node) => [
 				'td',
 				{
 					colspan: String(node.attrs.colspan || 1),
 					rowspan: String(node.attrs.rowspan || 1),
 					style: tableCellStyle(node.attrs),
+					...(node.attrs.contentControl ? cellControlAttributes(node.attrs.contentControl) : {}),
 				},
 				0,
 			],
