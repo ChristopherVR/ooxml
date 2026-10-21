@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel } from './index';
-import { expectParagraph } from './test-support/access';
+import { DocxModelValidationError, loadDocx, type DocumentModel } from './index';
+import { expectParagraph, must } from './test-support/access';
 import {
 	complexField,
 	paragraph,
@@ -111,6 +111,29 @@ describe('saving STYLEREF fields', () => {
 		);
 		expect(header).not.toContain('>DOC-1<');
 		expect(header).toContain('>Number<');
+	});
+
+	it('reports an invalid model with its typed error, not one from the refresh', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const original = await styleRefFixture({
+			body: paragraph(
+				'',
+				undefined,
+				'<w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Scope</w:t></w:r>',
+			),
+			header: paragraph('', undefined, complexField('STYLEREF 1 \\s', ['0'])),
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Chapter %1"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+		});
+		const loaded = await loadDocx(original);
+		const model = structuredClone(loaded.model);
+		const level = must(model.numberingCatalog?.abstractNums['0']?.levels[0], 'level');
+		level.lvlText = 7 as never;
+		const error = await loaded.save(model).then(
+			() => undefined,
+			(caught: unknown) => caught,
+		);
+		expect(error).toBeInstanceOf(DocxModelValidationError);
+		expect((error as Error).message).toContain('lvlText');
 	});
 
 	it('saves without the refresh when the header cannot be rebuilt', async () => {
