@@ -118,6 +118,41 @@ describe('tab stops', () => {
 		expect(at(at(atIndent.lines, 0).fragments, 2).xPx).toBe(264);
 	});
 
+	it('aligns a positional tab to the closer of the indent and the margin, as Word does', () => {
+		const lay = (runs: LayoutRun[], extra: Partial<LayoutParagraph>) =>
+			layoutParagraph({ kind: 'paragraph', id: 'p', runs, ...extra }, 300, measurer, noop);
+		// A paragraph reaching past the margins: its indent-relative tab stops at the margin.
+		const wide = lay(
+			[
+				{ text: 'Title' },
+				{ text: '\t', positionalTab: { alignment: 'right', relativeTo: 'indent' } },
+				{ text: 'Page' },
+			],
+			{ indentLeftTwips: signedTwips(-1440), indentRightTwips: signedTwips(-1440) },
+		);
+		expect(at(at(wide.lines, 0).fragments, 2)).toMatchObject({ text: 'Page', xPx: 260 });
+		const hanging = lay(
+			[
+				{ text: '\t', positionalTab: { alignment: 'left', relativeTo: 'indent' } },
+				{ text: 'Text' },
+			],
+			{ indentLeftTwips: signedTwips(-1440) },
+		);
+		expect(at(at(hanging.lines, 0).fragments, 1)).toMatchObject({ text: 'Text', xPx: 0 });
+		// An indented paragraph: a tab to the left margin leaves its text at the indent.
+		const left = { alignment: 'left', relativeTo: 'margin' } as const;
+		const first = lay([{ text: '\t', positionalTab: left }, { text: 'Text' }], {
+			indentLeftTwips: signedTwips(1440),
+		});
+		expect(first.lines).toHaveLength(1);
+		expect(at(at(first.lines, 0).fragments, 1)).toMatchObject({ text: 'Text', xPx: 96 });
+		const after = lay([{ text: 'Title' }, { text: '\t', positionalTab: left }, { text: 'Text' }], {
+			indentLeftTwips: signedTwips(1440),
+		});
+		expect(after.lines).toHaveLength(2);
+		expect(at(at(after.lines, 1).fragments, 1)).toMatchObject({ text: 'Text', xPx: 96 });
+	});
+
 	it('carries the positional tab of a run into layout', () => {
 		const positionalTab = { alignment: 'right', relativeTo: 'margin', leader: 'dot' } as const;
 		const model: DocumentModel = {
