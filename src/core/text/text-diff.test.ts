@@ -88,6 +88,49 @@ describe('diffText', () => {
 		expect(apply(from, to, changes)).toBe(to);
 	});
 
+	it('keeps unchanged words between edits that together pass the edit limit', () => {
+		const from = `${'a'.repeat(300)} keep ${'b'.repeat(300)}`;
+		const to = `${'x'.repeat(300)} keep ${'y'.repeat(300)}`;
+		const changes = diffText(from, to);
+		expect(apply(from, to, changes)).toBe(to);
+		expect(changes).toEqual([
+			{ fromStart: 0, fromEnd: 300, toStart: 0, toEnd: 300 },
+			{ fromStart: 306, fromEnd: 606, toStart: 306, toEnd: 606 },
+		]);
+		// Within changed words the characters are compared again, as far as the limit allows.
+		const typo = diffText(
+			`${'a'.repeat(300)} speling ${'b'.repeat(300)}`,
+			`${'x'.repeat(300)} spelling ${'y'.repeat(300)}`,
+		);
+		expect(typo).toContainEqual({ fromStart: 305, fromEnd: 305, toStart: 305, toEnd: 306 });
+	});
+
+	it('rebuilds the new text, and keeps only unchanged text between changes, past the limit', () => {
+		let seed = 11;
+		const next = () => (seed = (seed * 48271) % 2147483647) / 2147483647;
+		const words = ['one', 'two', ' ', '  ', '.', 'three', '\u{1F600}', 'é', 'x'];
+		const text = () =>
+			Array.from(
+				{ length: 5 + Math.floor(next() * 40) },
+				() => words[Math.floor(next() * words.length)],
+			).join('');
+		for (let round = 0; round < 200; round++) {
+			const from = text();
+			const to = text();
+			const changes = diffText(from, to, 6);
+			expect(apply(from, to, changes), `${from} -> ${to}`).toBe(to);
+			let at = 0;
+			let toAt = 0;
+			for (const change of changes) {
+				// What lies between two changes is the same text on both sides.
+				expect(from.slice(at, change.fromStart)).toBe(to.slice(toAt, change.toStart));
+				at = change.fromEnd;
+				toAt = change.toEnd;
+			}
+			expect(from.slice(at)).toBe(to.slice(toAt));
+		}
+	});
+
 	it('reports one change past the edit limit', () => {
 		expect(diffText('x abcdef y', 'x uvwxyz y', 4)).toEqual([
 			{ fromStart: 2, fromEnd: 8, toStart: 2, toEnd: 8 },

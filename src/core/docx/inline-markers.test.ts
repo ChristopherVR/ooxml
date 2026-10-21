@@ -79,6 +79,27 @@ describe('editing paragraphs that hold position markers', () => {
 		]);
 	});
 
+	it('keeps a wrapper and a range around untouched text between two large edits', async () => {
+		const [before, after] = ['a'.repeat(130), 'b'.repeat(130)];
+		const { loaded, paragraph } = await load(
+			`<w:p>${run(`${before} `)}<w:permStart w:id="4" w:edGrp="everyone"/>` +
+				`<w:customXml w:uri="urn:x" w:element="name">${run('keep')}</w:customXml>` +
+				`<w:permEnd w:id="4"/>${run(` ${after}`)}</w:p>`,
+		);
+		at(paragraph.runs, 0).text = `${'x'.repeat(130)} `;
+		lastOf(paragraph.runs).text = ` ${'y'.repeat(130)}`;
+		const xml = await savedParagraph(loaded);
+		expectInOrder(xml, [
+			`>${'x'.repeat(130)} <`,
+			'<w:permStart w:id="4" w:edGrp="everyone"/>',
+			'<w:customXml w:uri="urn:x" w:element="name">',
+			'>keep<',
+			'</w:customXml>',
+			'<w:permEnd w:id="4"/>',
+			`> ${'y'.repeat(130)}<`,
+		]);
+	});
+
 	it('keeps markers inside the tracked change they were in', async () => {
 		const revision = 'w:author="Ann" w:date="2026-01-01T00:00:00Z"';
 		const { loaded, paragraph } = await load(
