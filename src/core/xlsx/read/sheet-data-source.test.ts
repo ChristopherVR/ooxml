@@ -112,8 +112,81 @@ describe('splitSheetData', () => {
 		expect(lite).toEqual(dom);
 	});
 
+	const COMMENTED: [string, (xml: string) => string][] = [
+		[
+			'a comment before the root',
+			(xml) => xml.replace('\r\n<worksheet', '\r\n<!-- written by a tool -->\r\n<worksheet'),
+		],
+		[
+			'a comment in the header',
+			(xml) => xml.replace('<sheetData>', '<!-- <sheetData> --><sheetData>'),
+		],
+		[
+			'a comment after the cell data',
+			(xml) => xml.replace('<pageMargins', '<!-- </sheetData> --><pageMargins'),
+		],
+		['a comment between rows', (xml) => xml.replace('<row r="3">', '<!-- c --><row r="3">')],
+		['a comment inside a row', (xml) => xml.replace('<c r="B3"', '<!-- in a row --><c r="B3"')],
+		[
+			'a comment inside a cell',
+			(xml) => xml.replace('<c r="B4" t="b"><v>', '<c r="B4" t="b"><!-- x --><v>'),
+		],
+		['a comment inside a value', (xml) => xml.replace('<v>#N/A</v>', '<v>#N<!-- x -->/A</v>')],
+		[
+			'a comment holding markup',
+			(xml) =>
+				xml.replace(
+					'<row r="4">',
+					'<!-- <row r="9"><c r="A9"><v>9</v></c></row></sheetData> --><row r="4">',
+				),
+		],
+		[
+			'CDATA in inline text',
+			(xml) => xml.replace('<t>Bold</t>', '<t><![CDATA[Bo<l>d & </sheetData>]]></t>'),
+		],
+		[
+			'CDATA in a formula',
+			(xml) => xml.replace('<f>"a"&amp;"b"</f>', '<f><![CDATA["a"&"b"]]></f>'),
+		],
+		[
+			'CDATA next to text',
+			(xml) => xml.replace('<v>ab_x000A_</v>', '<v>a<![CDATA[b]]>_x000A_</v>'),
+		],
+		['empty CDATA', (xml) => xml.replace('<v>4</v>', '<v>4<![CDATA[]]></v>')],
+	];
+
+	it.each(COMMENTED)('splits a sheet with %s and reads it as the DOM does', (_, edit) => {
+		const plain = sheet(`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`, CELLS);
+		const xml = edit(plain);
+		expect(xml).not.toBe(plain);
+		const { split, dom, lite } = readBothWays(xml);
+		expect(split).toBeDefined();
+		expect(lite).toEqual(dom);
+		// Everything outside the cell data stays in the part the DOM parses.
+		const rest = parseXml(split?.xml ?? '').documentElement;
+		expect(elements(rest).map((node) => node.localName)).toEqual(['sheetData', 'pageMargins']);
+		expect(elements(elements(rest)[0]!)).toHaveLength(0);
+	});
+
 	it.each([
-		['a comment', (xml: string) => xml.replace('<row r="3">', '<!-- c --><row r="3">')],
+		[
+			'a processing instruction',
+			(xml: string) => xml.replace('<row r="3">', '<?keep?><row r="3">'),
+		],
+		[
+			'a comment XML forbids',
+			(xml: string) => xml.replace('<row r="3">', '<!-- a -- b --><row r="3">'),
+		],
+		['an unterminated comment', (xml: string) => xml.replace('<row r="3">', '<!-- c <row r="3">')],
+		['unterminated CDATA', (xml: string) => xml.replace('<t>Bold</t>', '<t><![CDATA[Bold</t>')],
+		[
+			'CDATA quoting a DTD',
+			(xml: string) => xml.replace('<t>Bold</t>', '<t><![CDATA[<!doctype html>]]></t>'),
+		],
+		[
+			'a comment quoting an entity declaration',
+			(xml: string) => xml.replace('<row r="3">', '<!-- <!ENTITY x "y"> --><row r="3">'),
+		],
 		[
 			'an undeclared prefix',
 			(xml: string) =>
@@ -130,5 +203,16 @@ describe('splitSheetData', () => {
 		expect(
 			splitSheetData(edit(sheet(`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`, CELLS))),
 		).toBeUndefined();
+	});
+
+	it('still refuses a part whose cell data quotes a DTD or entity declaration', () => {
+		const base = sheet(`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`, CELLS);
+		for (const xml of [
+			base.replace('<t>Bold</t>', '<t><![CDATA[<!DOCTYPE html>]]></t>'),
+			base.replace('<row r="3">', '<!-- <!entity x "y"> --><row r="3">'),
+		]) {
+			expect(splitSheetData(xml)).toBeUndefined();
+			expect(() => parseXml(xml)).toThrow(/DTD or entity declarations/);
+		}
 	});
 });

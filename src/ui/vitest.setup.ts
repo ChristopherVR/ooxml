@@ -17,10 +17,15 @@ if (typeof HTMLCanvasElement !== 'undefined')
 // `vi.waitFor` polls for 1s by default. Mounting a viewer in jsdom costs about a second per ribbon
 // render, so under a parallel run a source-backed edit can settle after that and the wait fails
 // although the behaviour is right. Give it the same headroom as `testTimeout`, keeping any explicit
-// timeout a test passes.
-const waitFor = vi.waitFor.bind(vi);
-vi.waitFor = ((callback, options) =>
-	waitFor(
-		callback,
-		typeof options === 'number' ? options : { timeout: 10_000, ...options },
-	)) as typeof vi.waitFor;
+// timeout a test passes. This file runs again for every test file of a worker, which shares `vi`,
+// so wrap Vitest's own `waitFor` each time instead of the previous file's wrapper.
+type WaitFor = typeof vi.waitFor & { unwrapped?: typeof vi.waitFor };
+const waitFor = (vi.waitFor as WaitFor).unwrapped ?? vi.waitFor.bind(vi);
+vi.waitFor = Object.assign(
+	((callback, options) =>
+		waitFor(
+			callback,
+			typeof options === 'number' ? options : { timeout: 10_000, ...options },
+		)) as typeof vi.waitFor,
+	{ unwrapped: waitFor },
+);

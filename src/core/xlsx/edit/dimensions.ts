@@ -64,7 +64,7 @@ export function setColumnWidth(
 	ctx.run(
 		'Column width',
 		'view',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'parts', sheet: s, parts: ['columns'] }],
 		() =>
 			editColumns(sheet, cols, (info) => {
 				const next = widths.get(info.min);
@@ -111,7 +111,7 @@ export function setRowHeight(
 	ctx.run(
 		'Row height',
 		'view',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'rowInfo', sheet: s, rows }],
 		() => {
 			for (const row of rows) {
 				const info = { ...sheet.rowInfo.get(row) };
@@ -148,7 +148,11 @@ export function setHidden(
 	ctx.run(
 		`${hidden ? 'Hide' : 'Unhide'} ${noun}`,
 		'view',
-		[{ kind: 'sheet', sheet: s }],
+		[
+			axis === 'col'
+				? { kind: 'parts', sheet: s, parts: ['columns'] }
+				: { kind: 'rowInfo', sheet: s, rows: indices },
+		],
 		() => {
 			if (axis === 'col') {
 				editColumns(sheet, indices, (info) => {

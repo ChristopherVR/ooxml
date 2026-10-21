@@ -3,9 +3,10 @@
 // (`localName`, `namespaceURI`, `childNodes`, `textContent`, `getAttribute`, `hasAttribute`), so
 // the same reading code runs over them. It decodes text and attributes the way the DOM parser
 // does (line endings, attribute whitespace, the predefined and numeric entity references).
-// Element prefixes resolve through the namespaces in scope where the fragment sits. Anything it
-// does not handle (namespace declarations inside the fragment, an undeclared prefix, comments,
-// CDATA, processing instructions, unknown entities, malformed markup) makes it return
+// Element prefixes resolve through the namespaces in scope where the fragment sits. Comments are
+// skipped and CDATA sections kept as text, as the DOM's `textContent` reads them. Anything it does
+// not handle (namespace declarations inside the fragment, an undeclared prefix, processing
+// instructions, a comment XML forbids, unknown entities, malformed markup) makes it return
 // `undefined`, and the caller parses the XML with the full parser instead.
 import type { XmlElement } from './xml';
 
@@ -120,6 +121,12 @@ export function parseLiteFragment(
 		}
 		if (lt < 0) break;
 		const next = source.charCodeAt(lt + 1);
+		if (next === 33) {
+			const after = skipCommentOrCdata(source, lt, top);
+			if (after < 0) return undefined;
+			pos = after;
+			continue;
+		}
 		if (next === 47) {
 			const gt = source.indexOf('>', lt);
 			if (gt < 0 || stack.length < 2 || source.slice(lt + 2, gt).trimEnd() !== top.tagName)
@@ -139,6 +146,34 @@ export function parseLiteFragment(
 		pos = parsed.end;
 	}
 	return stack.length === 1 ? root : undefined;
+}
+
+/** `parseXml` refuses a part holding these anywhere, even quoted in a comment or CDATA. */
+const DECLARATIONS = /<!DOCTYPE|<!ENTITY/i;
+
+/**
+ * Reads the comment or CDATA section at `lt` (a `<!`), adding CDATA text to `parent`, and returns
+ * the position after it; -1 for other `<!` markup, an unterminated section, a comment with `--`
+ * inside or a `-` before its end, which XML forbids, or a section quoting a declaration (the full
+ * parser then decides).
+ */
+function skipCommentOrCdata(source: string, lt: number, parent: LiteElement): number {
+	if (source.startsWith('<!--', lt)) {
+		const end = source.indexOf('-->', lt + 4);
+		if (end < 0) return -1;
+		const body = source.slice(lt + 4, end);
+		if (body.includes('--') || body.endsWith('-') || DECLARATIONS.test(body)) return -1;
+		return end + 3;
+	}
+	if (source.startsWith('<![CDATA[', lt)) {
+		const end = source.indexOf(']]>', lt + 9);
+		if (end < 0) return -1;
+		const text = source.slice(lt + 9, end);
+		if (DECLARATIONS.test(text)) return -1;
+		parent.childNodes.push(text);
+		return end + 3;
+	}
+	return -1;
 }
 
 /** Reads a start tag from just after its `<`; undefined for anything but a plain element. */

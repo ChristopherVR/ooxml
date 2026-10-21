@@ -17,12 +17,13 @@ function span(from: number, to: number): number[] {
 
 function outlineRows(ctx: EditContext, s: number, from: number, to: number, delta: 1 | -1): void {
 	const sheet = sheetAt(ctx.workbook, s);
+	const rows = span(from, to);
 	ctx.run(
 		delta > 0 ? 'Group rows' : 'Ungroup rows',
 		'structure',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'rowInfo', sheet: s, rows }],
 		() => {
-			for (const row of span(from, to)) {
+			for (const row of rows) {
 				const info: RowInfo = { ...sheet.rowInfo.get(row) };
 				const level = nextLevel(info.outlineLevel, delta);
 				if (level) info.outlineLevel = level;
@@ -49,7 +50,7 @@ function outlineColumns(
 	ctx.run(
 		delta > 0 ? 'Group columns' : 'Ungroup columns',
 		'structure',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'parts', sheet: s, parts: ['columns'] }],
 		() =>
 			editColumns(sheet, span(from, to), (info: ColumnInfo) => {
 				const level = nextLevel(info.outlineLevel, delta);
@@ -88,7 +89,7 @@ export function setDefaultColumnWidth(
 	ctx.run(
 		'Standard width',
 		'format',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'parts', sheet: s, parts: ['defaultColWidth'] }],
 		() => {
 			if (width === undefined) Reflect.deleteProperty(sheet, 'defaultColWidth');
 			else sheet.defaultColWidth = width;

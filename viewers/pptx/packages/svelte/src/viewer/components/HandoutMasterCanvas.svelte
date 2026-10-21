@@ -5,12 +5,12 @@
 
 	import { useTranslator } from '../../i18n/context';
 
-	const { handoutMaster, canvasSize, slidesPerPage, pageNumber } = $props<{
+	const { handoutMaster, canvasSize, slidesPerPage, pageNumber }: {
 		handoutMaster: PptxHandoutMaster | undefined;
 		canvasSize: CanvasSize;
 		slidesPerPage: number;
 		pageNumber?: number;
-	}>();
+	} = $props();
 	const t = useTranslator();
 	const slots = $derived(computeHandoutSlotLayout(slidesPerPage));
 	function slotStyle(slot: { x: number; y: number; w: number; h: number }): string {

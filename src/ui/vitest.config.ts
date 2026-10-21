@@ -63,6 +63,8 @@ const AREAS = {
 			testTimeout: 20_000,
 			css,
 			setupFiles: ['./vitest.setup.ts', './vitest.dom-hygiene.setup.ts'],
+			// Vitest does not always run the setup files again for each file of a shared worker.
+			runner: './vitest.runner.ts',
 		},
 	},
 	pptx: {

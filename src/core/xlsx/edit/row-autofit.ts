@@ -38,10 +38,11 @@ export function autoGrowRows(
 		updates.push([row, next]);
 	}
 	if (!updates.length) return [];
+	const changed = updates.map(([row]) => row);
 	ctx.run(
 		'Row height',
 		'view',
-		[{ kind: 'sheet', sheet: s }],
+		[{ kind: 'rowInfo', sheet: s, rows: changed }],
 		() => {
 			for (const [row, height] of updates) {
 				const info = { ...sheet.rowInfo.get(row) };
@@ -53,7 +54,7 @@ export function autoGrowRows(
 		},
 		{ sheet: s, structural: true },
 	);
-	return updates.map(([row]) => row);
+	return changed;
 }
 
 /** Largest number of rows one edit re-fits. */

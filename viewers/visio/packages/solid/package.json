@@ -1,6 +1,6 @@
 {
 	"name": "visio-solid-viewer",
-	"version": "0.7.3",
+	"version": "0.7.4",
 	"description": "Local-first Visio viewer for solid",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {

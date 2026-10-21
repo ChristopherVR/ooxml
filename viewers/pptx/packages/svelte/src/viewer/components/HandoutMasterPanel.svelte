@@ -2,12 +2,12 @@
 	import type { PptxHandoutMaster } from 'pptx-viewer-core';
 	import { useTranslator } from '../../i18n/context';
 
-	const { handoutMaster, slidesPerPage, onchange, onbackgroundchange } = $props<{
+	const { handoutMaster, slidesPerPage, onchange, onbackgroundchange }: {
 		handoutMaster: PptxHandoutMaster | undefined;
 		slidesPerPage: number;
 		onchange: (count: number) => void;
 		onbackgroundchange: (color: string) => void;
-	}>();
+	} = $props();
 	const t = useTranslator();
 	const options = [1, 2, 3, 4, 6, 9];
 </script>

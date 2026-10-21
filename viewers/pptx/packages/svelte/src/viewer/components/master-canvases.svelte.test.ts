@@ -25,6 +25,16 @@ function mountComponent(component: Parameters<typeof mount>[0], props: Record<st
 }
 
 describe('master page canvases', () => {
+	it('renders default notes regions when the master has no placeholder list', () => {
+		const target = mountComponent(NotesMasterCanvas, {
+			notesMaster: { path: 'notes.xml' },
+			canvasSize: { width: 720, height: 960 },
+		});
+		expect(target.querySelectorAll('[data-region]')).toHaveLength(6);
+		expect(target.querySelector('[data-region="body"]')).not.toBeNull();
+		expect(target.querySelector('[data-region="sldImg"]')).not.toBeNull();
+	});
+
 	it('renders notes-master placeholder regions with canonical test hooks', () => {
 		const notesMaster: PptxNotesMaster = {
 			path: 'notes.xml',

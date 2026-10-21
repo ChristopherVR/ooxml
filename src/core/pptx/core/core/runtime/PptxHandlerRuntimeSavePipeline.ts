@@ -10,6 +10,7 @@ import { shouldKeepSourceCommentAuthors } from './comment-authors-retention';
 import { applyHeaderFooterToMaster } from './header-footer-parts';
 import { slidesPerPageToPrintOutput } from './pptx-print-properties';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveStructuralIds';
+import { validateElementGeometry, validateSlideGeometry } from './save-geometry-validation';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -29,6 +30,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	async save(slides: PptxSlide[], options?: PptxHandlerSaveOptions): Promise<Uint8Array> {
+		validateSlideGeometry(slides);
+		const templates = [
+			...(options?.slideMasters ?? []),
+			...(options?.slideLayouts ?? []),
+			...(options?.slideMasters?.flatMap((master) => master.layouts ?? []) ?? []),
+			...(options?.notesMaster ? [options.notesMaster] : []),
+			...(options?.handoutMaster ? [options.handoutMaster] : []),
+		];
+		for (const template of templates) {
+			for (const element of template.elements ?? []) {
+				validateElementGeometry(element, `Template (${template.path})`);
+			}
+		}
 		// A legacy binary `.ppt` is not an OOXML ZIP package: bypass the whole
 		// pipeline below (it builds/mutates `this.zip`) rather than converting
 		// an already-produced .pptx. See `PptxHandlerRuntimeSaveLegacyPpt`.

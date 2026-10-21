@@ -2,8 +2,7 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeImplementation } from './runtim
 import type { IPptxHandlerRuntime } from './types';
 
 /**
- * Concrete PPTX handler runtime — the "final" class in the runtime
- * inheritance chain.
+ * Final, sealed runtime that backs {@link PptxHandlerCore}.
  *
  * This thin subclass exists purely to seal the multi-file mixin hierarchy
  * defined under `./runtime/` and to declare that the assembled class

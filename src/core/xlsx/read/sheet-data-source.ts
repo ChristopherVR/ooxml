@@ -2,8 +2,9 @@
 // dominated opening a large workbook, so the cell data is cut out of the part and read with the
 // lightweight fragment reader; the rest of the part (views, columns, formatting, ...) still goes
 // through the DOM. Only plain markup takes this path, with element prefixes declared on the root:
-// comments, CDATA, nested namespace declarations or anything else the light reader declines is
-// parsed whole, as before, so the result is the same either way.
+// comments and CDATA sections may appear anywhere, but nested namespace declarations, processing
+// instructions in the cell data or anything else the light reader declines is parsed whole, as
+// before, so the result is the same either way.
 import {
 	LiteElement,
 	parseLiteFragment,
@@ -31,22 +32,60 @@ function rootNamespaces(xml: string): LiteNamespaces | undefined {
 	return out;
 }
 
+const SPECIAL = /<[!?]/g;
+const SECTIONS: readonly (readonly [open: string, close: string])[] = [
+	['<!--', '-->'],
+	['<![CDATA[', ']]>'],
+	['<?', '?>'],
+];
+
+/**
+ * `xml` with its comments and CDATA sections replaced by spaces of the same length, so a search for
+ * tags never matches text inside them and every position still points into `xml`; undefined for a
+ * declaration (`<!DOCTYPE`, ...) or an unterminated section.
+ */
+function blankComments(xml: string): string | undefined {
+	if (!xml.includes('<!--') && !xml.includes('<![CDATA[')) return xml;
+	const pieces: string[] = [];
+	let copied = 0;
+	SPECIAL.lastIndex = 0;
+	for (let match = SPECIAL.exec(xml); match; match = SPECIAL.exec(xml)) {
+		const at = match.index;
+		const section = SECTIONS.find(([open]) => xml.startsWith(open, at));
+		if (!section) return undefined;
+		const [open, close] = section;
+		const end = xml.indexOf(close, at + open.length);
+		if (end < 0) return undefined;
+		const after = end + close.length;
+		// Processing instructions are only stepped over: the root's declaration stays readable.
+		if (open !== '<?') {
+			pieces.push(xml.slice(copied, at), ' '.repeat(after - at));
+			copied = after;
+		}
+		SPECIAL.lastIndex = after;
+	}
+	pieces.push(xml.slice(copied));
+	return pieces.join('');
+}
+
 /** Splits the cell data from a worksheet part, or undefined when the whole part must be parsed. */
 export function splitSheetData(xml: string): SplitSheetData | undefined {
-	if (xml.includes('<!--') || xml.includes('<![CDATA[')) return undefined;
-	const namespaces = rootNamespaces(xml);
-	const open = OPEN.exec(xml);
+	// Tags are found in `plain` (comments and CDATA blanked); the parts are cut from `xml`.
+	const plain = blankComments(xml);
+	if (plain === undefined) return undefined;
+	const namespaces = rootNamespaces(plain);
+	const open = OPEN.exec(plain);
 	if (!namespaces || !open) return undefined;
 	const prefix = (open[1] ?? '').slice(0, -1);
 	const ns = namespaces[prefix];
 	if (prefix && ns === undefined) return undefined;
 	const tagName = `${open[1] ?? ''}sheetData`;
-	const openEnd = xml.indexOf('>', open.index);
+	const openEnd = plain.indexOf('>', open.index);
 	if (openEnd < 0) return undefined;
-	const attributes = xml.slice(open.index + tagName.length + 1, openEnd);
+	const attributes = plain.slice(open.index + tagName.length + 1, openEnd);
 	if (attributes.trimEnd().endsWith('/') || attributes.includes('xmlns')) return undefined;
-	const close = xml.indexOf(`</${tagName}`, openEnd);
-	if (close < 0 || OPEN.test(xml.slice(openEnd))) return undefined;
+	const close = plain.indexOf(`</${tagName}`, openEnd);
+	if (close < 0 || OPEN.test(plain.slice(openEnd))) return undefined;
 	const container = new LiteElement(tagName, 'sheetData', ns || null);
 	const data = parseLiteFragment(xml.slice(openEnd + 1, close), container, namespaces);
 	if (!data) return undefined;

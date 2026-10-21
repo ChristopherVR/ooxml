@@ -129,7 +129,14 @@ function renderTabs() {
 		);
 	applyShell();
 }
-async function open(id, origin) {
+/**
+ * Opens a document in its tab. `focus` moves the keyboard into it when the user asked to open it
+ * (new, upload, the file list, a connected folder's search, a Teams attachment), not on a restored
+ * tab, a switch between tabs, a hash change or an assistant open. Phones
+ * and tablets keep it: focusing the grid's text field would raise the on-screen keyboard over the
+ * sheet before a cell is chosen, and tapping a cell already focuses it.
+ */
+async function open(id, origin, { focus = false } = {}) {
 	if (origin) origins.set(id, origin);
 	const doc = await store.get(id);
 	active = id;
@@ -147,6 +154,8 @@ async function open(id, origin) {
 				: 'Ready',
 	);
 	history.replaceState(null, '', `#/file/${id}`);
+	if (focus && active === id && view === 'editor' && !matchMedia('(pointer: coarse)').matches)
+		sessions.sessions.get(id)?.editor?.focus?.();
 }
 /** What the chat page and the assistant pane need from the shell. */
 const aiDeps = {
@@ -225,13 +234,13 @@ async function create(kind) {
 	void preloadEditor(kind)?.catch(() => {});
 	const name = `${blankNames[kind]} ${files.filter((d) => d.kind === kind).length + 1}.${kind}`;
 	const doc = await store.create(name, await blankDocument(kind));
-	await open(doc.id);
+	await open(doc.id, undefined, { focus: true });
 }
 async function importFiles(items) {
 	for (const file of items) {
 		if (file.size > 32 * 1024 * 1024) throw new Error('Choose a file smaller than 32 MB.');
 		const doc = await store.create(file.name, new Uint8Array(await file.arrayBuffer()));
-		await open(doc.id);
+		await open(doc.id, undefined, { focus: true });
 	}
 }
 async function embeddings() {
@@ -264,7 +273,7 @@ async function embeddings() {
 						parent: { id: doc.id, path: item.path, revision: doc.revision },
 					}));
 				$('dialog').close();
-				await open(child.id);
+				await open(child.id, undefined, { focus: true });
 			});
 		content.append(button);
 	}
@@ -354,7 +363,9 @@ document.addEventListener('click', (event) => {
 		renderFiles();
 	}
 	if (b.dataset.create) task(() => create(b.dataset.create));
-	if (b.dataset.open) task(() => open(b.dataset.open));
+	// A tab keeps the focus (arrow keys move along the tab strip); a file in the list moves it in.
+	if (b.dataset.open)
+		task(() => open(b.dataset.open, undefined, { focus: b.getAttribute('role') !== 'tab' }));
 	if (b.dataset.download) task(async () => download(await sessions.save(b.dataset.download)));
 	if (b.dataset.close) task(() => fileActions.closeTabs([b.dataset.close]));
 });
