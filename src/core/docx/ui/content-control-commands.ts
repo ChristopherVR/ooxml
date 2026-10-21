@@ -3,6 +3,7 @@ import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import {
 	afterEdit,
+	canDeleteControl,
 	canEditControlContent,
 	checkboxState,
 	placeholderTextOf,
@@ -93,6 +94,20 @@ export function replaceControlContent(
 	return tr.setMeta(CONTROL_EDIT_META, true);
 }
 
+/**
+ * Whether the content of `span` may be replaced as a whole: not when it holds a control that may
+ * not be deleted (`sdtLocked`), since the replacement carries `CONTROL_EDIT_META` past the lock guard.
+ */
+function replaceable(state: EditorState, span: ControlSpan): boolean {
+	return !controlSpans(state.doc).some(
+		(inner) =>
+			inner.from >= span.from &&
+			inner.to <= span.to &&
+			(inner.level !== span.level || inner.from !== span.from) &&
+			!canDeleteControl(inner.control),
+	);
+}
+
 /** Stores new properties on every run or paragraph of the control. */
 export function updateControlProperties(
 	state: EditorState,
@@ -122,7 +137,12 @@ const spanById = (state: EditorState, id: string): ControlSpan | undefined =>
 
 export function toggleCheckboxControl(state: EditorState, id: string): Transaction | undefined {
 	const span = spanById(state, id);
-	if (!span || span.control.kind !== 'checkbox' || !canEditControlContent(span.control))
+	if (
+		!span ||
+		span.control.kind !== 'checkbox' ||
+		!canEditControlContent(span.control) ||
+		!replaceable(state, span)
+	)
 		return undefined;
 	return replaceControlContent(state, span, toggleCheckbox(span.control));
 }
@@ -133,13 +153,19 @@ export function chooseListItem(
 	index: number,
 ): Transaction | undefined {
 	const span = spanById(state, id);
-	const change = span && canEditControlContent(span.control) && selectListItem(span.control, index);
-	return span && change ? replaceControlContent(state, span, change) : undefined;
+	if (!span || !canEditControlContent(span.control) || !replaceable(state, span)) return undefined;
+	const change = selectListItem(span.control, index);
+	return change ? replaceControlContent(state, span, change) : undefined;
 }
 
 export function chooseDate(state: EditorState, id: string, date: Date): Transaction | undefined {
 	const span = spanById(state, id);
-	if (!span || span.control.kind !== 'date' || !canEditControlContent(span.control))
+	if (
+		!span ||
+		span.control.kind !== 'date' ||
+		!canEditControlContent(span.control) ||
+		!replaceable(state, span)
+	)
 		return undefined;
 	return replaceControlContent(state, span, setControlDate(span.control, date));
 }
@@ -187,7 +213,7 @@ function typeInCell(
 ): Transaction | 'blocked' | undefined {
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
-	if (!control.showingPlaceholder) return undefined;
+	if (!control.showingPlaceholder || !replaceable(state, span)) return undefined;
 	if (!canEditControlContent(control)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));
@@ -202,6 +228,7 @@ export function deleteToPlaceholder(
 	const span = controlAt(controlSpans(state.doc), selection.from, true);
 	if (!span || span.level === 'block' || span.control.showingPlaceholder) return undefined;
 	if (!canEditControlContent(span.control) || span.control.kind === 'checkbox') return undefined;
+	if (!replaceable(state, span)) return undefined;
 	// Deleting a temporary control's text removes the control instead (content-control-temporary).
 	if (removedByEdit(span.control)) return undefined;
 	const [from, to] = selection.empty

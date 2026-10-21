@@ -153,6 +153,33 @@ describe('content controls around table cells in the editor', () => {
 		expect(cellOf(edited).attrs.contentControl).toBeNull();
 	});
 
+	it('leaves a cell alone when replacing its content would delete a control that may not be', () => {
+		const fixed: ContentControl = {
+			id: '64',
+			level: 'inline',
+			kind: 'richText',
+			lock: 'sdtLocked',
+		};
+		const inner = schema.text('Fixed', [
+			style('Normal'),
+			schema.marks.contentControl!.create({ data: JSON.stringify(fixed) }),
+		]);
+		const content = [
+			schema.node('paragraph', { id: 'c1' }, [schema.text('Note ', [style('Normal')]), inner]),
+		];
+		const text = stateOf({ id: '62', level: 'cell', kind: 'text' }, content);
+		const span = controlSpans(text.doc)[0]!;
+		// The whole text of the cell selected, from its first character in plain text.
+		const all = text.apply(
+			text.tr.setSelection(TextSelection.create(text.doc, span.from + 2, span.to - 2)),
+		);
+		expect(deleteToPlaceholder(all, 'backward')).toBeUndefined();
+		// The ordinary deletion that runs instead is refused by the lock guard.
+		expect(all.applyTransaction(all.tr.deleteSelection()).state.doc.eq(all.doc)).toBe(true);
+		const list = stateOf(choice({ showingPlaceholder: false }), content);
+		expect(chooseListItem(list, '61', 1)).toBeUndefined();
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;
