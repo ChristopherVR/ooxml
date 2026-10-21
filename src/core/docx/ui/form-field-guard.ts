@@ -153,12 +153,14 @@ export function staysInFormFields(tr: Transaction): boolean {
 		)
 			return false;
 		const { from, to } = step as unknown as { from: number; to: number };
-		// A disabled field stays as it is, also inside a content control the user may edit.
-		let changesFixed = false;
+		// A disabled field stays as it is, also inside a content control the user may edit. A mark
+		// step maps no positions, so its own range is what it changes.
+		const touchesFixed = (start: number, end: number) =>
+			fixed.some((range) => start < map.map(range.to, -1) && end > map.map(range.from, 1));
+		let changesFixed =
+			(step instanceof AddMarkStep || step instanceof RemoveMarkStep) && touchesFixed(from, to);
 		step.getMap().forEach((start, end) => {
-			changesFixed ||= fixed.some(
-				(range) => start < map.map(range.to, -1) && end > map.map(range.from, 1),
-			);
+			changesFixed ||= touchesFixed(start, end);
 		});
 		if (changesFixed) return false;
 		if (within(fields, from, to)) return true;

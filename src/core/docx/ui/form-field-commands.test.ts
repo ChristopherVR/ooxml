@@ -201,6 +201,15 @@ describe('legacy form fields in the editor', () => {
 			expect(text(state.tr.insertText('B', result!.from + 1))).toBe('Ref: Fixed note');
 			expect(text(state.tr.delete(result!.from, result!.to))).toBe('Ref: Fixed note');
 			expect(text(state.tr.delete(result!.begin, result!.to + 1))).toBe('Ref: Fixed note');
+			// Nor its formatting: mark steps map no positions, so they are checked by their range.
+			const bold = schema.marks.bold!;
+			const bolded = (tr: Transaction, from: number, to: number) =>
+				state.apply(tr).doc.rangeHasMark(from, to, bold);
+			const end = state.doc.content.size - 1;
+			expect(bolded(state.tr.addMark(end - 4, end, bold.create()), end - 4, end)).toBe(true);
+			expect(
+				bolded(state.tr.addMark(result!.from, result!.to, bold.create()), result!.from, result!.to),
+			).toBe(false);
 		}
 	});
 
