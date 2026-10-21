@@ -1,48 +1,57 @@
 <script lang="ts">
 	/**
-	 * QuickStylesGallery: the 6-column preset swatch grid that PowerPoint calls
-	 * Shape Styles, mirroring React's `inspector/QuickStylesGallery.tsx`.
+	 * QuickStylesGallery: the inspector's Quick Styles (PowerPoint's Shape
+	 * Styles presets), mirroring React's `inspector/QuickStylesGallery.tsx`.
 	 *
-	 * Both the preset catalogue and the swatch CSS come from
-	 * `pptx-viewer-shared` (`SHAPE_QUICK_STYLES` / `quickStyleSwatchStyleAttr`),
-	 * so every binding renders the same gallery; applying a preset goes through
+	 * The tiles are the shared `pptx-ui-ribbon-gallery` panel (compact) over
+	 * `buildQuickStylesGallery`, so the presets, previews, accessible names and
+	 * touch sizes match every other binding. A pick applies the preset through
 	 * the shared `shapeQuickStylePatch`, which MERGES over the element's current
 	 * `shapeStyle` instead of replacing it (a quick style is an overlay in
-	 * PowerPoint, not a reset).
-	 *
-	 * Each swatch carries its preset name as its accessible name so an e2e spec
-	 * can drive it by role+name exactly as it does in React.
+	 * PowerPoint, not a reset). A read-only viewer shows the tiles disabled.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
 	import {
-		quickStyleSwatchStyleAttr,
-		SHAPE_QUICK_STYLES,
-		shapeQuickStyleLabel,
+		buildQuickStylesGallery,
+		quickStyleShapeStyle,
 		shapeQuickStylePatch,
 	} from 'ooxml-ui/pptx';
+	import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
+	import { strictTranslator } from '../ribbon/galleries/gallery-labels';
 
 	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
 	const t = useTranslator();
 	const canEdit = $derived(editor.editable);
+	const gallery = buildQuickStylesGallery();
+	// The element translates its tiles outside Svelte's tracking: read the caption here so a
+	// language switch hands it a new translator and the tiles are named again.
+	const translateLabel = $derived.by(() => {
+		void t('pptx.shape.quickStyles');
+		return strictTranslator(t);
+	});
+
+	function pick(event: Event): void {
+		const style = quickStyleShapeStyle((event as RibbonGalleryPickEvent).detail.itemId);
+		if (style) {
+			editor.applyElementPatch(el.id, shapeQuickStylePatch(el, style));
+		}
+	}
 </script>
 
+<!-- The caption is not a <label>: a click on it would press the first tile. -->
 <div class="pptx-svelte-quick-styles">
 	<span class="pptx-svelte-quick-styles-label">{t('pptx.shape.quickStyles')}</span>
-	<div class="pptx-svelte-quick-styles-grid">
-		{#each SHAPE_QUICK_STYLES as quickStyle (quickStyle.name)}
-			<button
-				type="button"
-				disabled={!canEdit}
-				title={shapeQuickStyleLabel(quickStyle, t)}
-				aria-label={shapeQuickStyleLabel(quickStyle, t)}
-				style={quickStyleSwatchStyleAttr(quickStyle)}
-				onclick={() => editor.applyElementPatch(el.id, shapeQuickStylePatch(el, quickStyle.style))}
-			></button>
-		{/each}
-	</div>
+	<pptx-ui-ribbon-gallery
+		mode="panel"
+		compact
+		descriptor={gallery}
+		{translateLabel}
+		disabled={!canEdit}
+		ongallery-pick={pick}
+	></pptx-ui-ribbon-gallery>
 </div>
 
 <style>
@@ -55,41 +64,5 @@
 
 	.pptx-svelte-quick-styles-label {
 		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-quick-styles-grid {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 4px;
-	}
-
-	.pptx-svelte-quick-styles-grid button {
-		height: 28px;
-		width: 100%;
-		padding: 0;
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	/* Each preset is a discrete, individually-named action button (not a
-	   colour swatch), so it gets the shared WCAG touch target below the
-	   mobile breakpoint (768px, `MOBILE_BREAKPOINT` /
-	   `getDensePanelTouchTargetPx` in pptx-viewer-shared) rather than an
-	   exemption - CLAUDE.md Rule 2: the threshold/size are the shared
-	   decision, this media query only applies it. */
-	@media (max-width: 767px) {
-		.pptx-svelte-quick-styles-grid button {
-			height: 44px;
-		}
-	}
-
-	.pptx-svelte-quick-styles-grid button:hover:not(:disabled) {
-		outline: 1px solid var(--pptx-primary, var(--office-accent, #2563eb));
-	}
-
-	.pptx-svelte-quick-styles-grid button:disabled {
-		cursor: not-allowed;
-		opacity: 0.4;
 	}
 </style>
