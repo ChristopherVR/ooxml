@@ -9,6 +9,7 @@ import * as loadEntry from '../load/index';
 import { ZipLimitError } from '../../opc/index';
 import { isWorkbookTooLargeError, WorkbookTooLargeError } from './limits';
 import { loadXlsx } from './load';
+import { splitSheetData } from './sheet-data-source';
 
 const STRINGS = 200;
 
@@ -68,22 +69,37 @@ describe('loadXlsx limits', () => {
 		}
 	});
 
-	it('applies the element limit to a worksheet read as a whole', async () => {
+	/** The workbook with its first worksheet part edited, and that part's new XML. */
+	async function withSheet(edit: (xml: string) => string) {
 		const zip = await JSZip.loadAsync(await workbookBytes());
 		const part = 'xl/worksheets/sheet1.xml';
-		// A comment makes the reader parse the whole part instead of cutting out its cell data.
-		const xml = (await zip.file(part)!.async('string')).replace(
-			'<sheetData>',
-			'<!--x--><sheetData>',
-		);
+		const xml = edit(await zip.file(part)!.async('string'));
 		zip.file(part, xml);
-		const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+		return { xml, bytes: await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }) };
+	}
+
+	it('applies the element limit to a worksheet read as a whole', async () => {
+		// The fast cell reader declines a processing instruction in the cell data, so the whole part
+		// goes to the XML parser.
+		const { xml, bytes } = await withSheet((part) =>
+			part.replace('<sheetData>', '<sheetData><?keep?>'),
+		);
+		expect(splitSheetData(xml)).toBeUndefined();
 		const limits = { maxXmlElements: 1000 };
 		await expect(loadXlsx(bytes, { limits })).rejects.toEqual(
 			expect.objectContaining({ message: expect.stringMatching(/^XLSX worksheet XML/) }),
 		);
 		await expect(loadXlsx(bytes, { limits })).rejects.toEqual(tooLarge('maxXmlElements', 1000));
 		const wb = await loadXlsx(bytes, { limits: { maxXmlElements: 10_000 } });
+		expect(getCell(wb.sheets[0]!, 3, 1)?.value).toBe(4.5);
+	});
+
+	it('does not count cell data the fast reader takes, also in a part with comments', async () => {
+		const { xml, bytes } = await withSheet((part) =>
+			part.replace('<sheetData>', '<!--x--><sheetData>'),
+		);
+		expect(splitSheetData(xml)).toBeDefined();
+		const wb = await loadXlsx(bytes, { limits: { maxXmlElements: 1000 } });
 		expect(getCell(wb.sheets[0]!, 3, 1)?.value).toBe(4.5);
 	});
 
