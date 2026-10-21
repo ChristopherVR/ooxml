@@ -171,4 +171,86 @@ describe('saving STYLEREF fields', () => {
 		expect(saved.get('word/document.xml')).toContain('>DOC-2<');
 		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
 	});
+
+	it('refreshes the other parts when one header cannot be rebuilt', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				`${complexField('STYLEREF "Doc Number"', ['DOC-1'])}<w:bdo w:val="rtl"><w:r><w:t>x</w:t></w:r></w:bdo>`,
+			),
+			footer: paragraph('', undefined, simpleField('STYLEREF &quot;Doc Number&quot;', 'DOC-1')),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await parts(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')));
+		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
+		expect(saved.get('word/footer1.xml')).toContain('>DOC-2<');
+		expect(saved.get('word/footer1.xml')).not.toContain('DOC-1');
+	});
+
+	it('reports the error of a header edit the writer cannot rebuild', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				`<w:r><w:t>Plan</w:t></w:r><w:bdo w:val="rtl"><w:r><w:t>x</w:t></w:r></w:bdo>${complexField('STYLEREF "Doc Number"', ['DOC-1'])}`,
+			),
+		});
+		const loaded = await loadDocx(original);
+		const model = setText(loaded.model, 'DocNumber', 'DOC-2');
+		const header = expectParagraph(must(model.sections?.[0]?.headers?.default).blocks[0]);
+		header.runs[0] = { ...header.runs[0]!, text: 'Plan B' };
+		await expect(loaded.save(model)).rejects.toThrow(/Cannot edit paragraph/);
+	});
+
+	it('saves a refreshed result in the text a revision keeps', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+					'<w:r><w:instrText xml:space="preserve"> STYLEREF "Doc Number" </w:instrText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+					'<w:del w:id="1" w:author="A"><w:r><w:delText>DOC-0</w:delText></w:r></w:del>' +
+					'<w:ins w:id="2" w:author="A"><w:r><w:t>DOC-1</w:t></w:r></w:ins>' +
+					'<w:r><w:fldChar w:fldCharType="end"/></w:r>',
+			),
+		});
+		const loaded = await loadDocx(original);
+		const header = (
+			await parts(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')))
+		).get('word/header1.xml')!;
+		expect(header).toMatch(/<w:del\b[^>]*><w:r><w:delText>DOC-0<\/w:delText><\/w:r><\/w:del>/);
+		expect(header).toMatch(/<w:ins\b[^>]*><w:r><w:t>DOC-2<\/w:t><\/w:r><\/w:ins>/);
+		const reloaded = await loadDocx(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')));
+		const runs = expectParagraph(
+			must(reloaded.model.sections?.[0]?.headers?.default).blocks[0],
+		).runs;
+		expect(runs.filter((run) => run.field).map((run) => [run.text, run.revision?.kind])).toEqual([
+			['DOC-0', 'delete'],
+			['DOC-2', 'insert'],
+		]);
+	});
+
+	it('keeps text hidden through its style out of a saved header result', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const original = await styleRefFixture({
+			styles: `<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="DocNumber"><w:name w:val="Doc Number"/></w:style><w:style w:type="character" w:styleId="Hidden"><w:name w:val="Hidden"/><w:rPr><w:vanish/></w:rPr></w:style></w:styles>`,
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: HEADER,
+		});
+		const loaded = await loadDocx(original);
+		const model = structuredClone(loaded.model);
+		expectParagraph(model.blocks[0]).runs = [
+			{ text: 'DOC-' },
+			{ text: 'draft', style: 'Hidden' },
+			{ text: '9' },
+		];
+		const header = (await parts(await loaded.save(model))).get('word/header1.xml')!;
+		expect(header).toContain('>DOC-9<');
+		expect(header).not.toContain('draft');
+	});
 });

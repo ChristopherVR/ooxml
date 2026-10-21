@@ -27,6 +27,18 @@ describe('STYLEREF instructions', () => {
 			number: true,
 			numberOnly: true,
 		});
+		// Word's Edit Field dialog writes the switches before the style.
+		expect(parseStyleReference(' STYLEREF \\s "Heading 1" ')).toEqual({
+			style: 'Heading 1',
+			last: false,
+			number: true,
+			numberOnly: true,
+		});
+		expect(parseStyleReference('STYLEREF \\l \\* Upper Title')).toMatchObject({
+			style: 'Title',
+			last: true,
+			textCase: 'upper',
+		});
 	});
 
 	it('leaves fields it cannot evaluate to the result they were saved with', () => {
@@ -37,6 +49,8 @@ describe('STYLEREF instructions', () => {
 			'STYLEREF Title \\# "0.00"',
 			'STYLEREF Title \\* Arabic',
 			'STYLEREF Doc Number',
+			'STYLEREF \\s Doc Number',
+			'STYLEREF \\l',
 			'STYLEREF',
 			'REF Title',
 		])
@@ -59,6 +73,21 @@ describe('STYLEREF styles', () => {
 			isDefault: true,
 		});
 		expect(styleTarget(model, 'Missing')).toBeUndefined();
+	});
+
+	it('finds a heading level by the built-in heading name, whatever its id', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		// Word names its built-in headings `heading 1` to `heading 9` in every language and takes
+		// the id from the name shown in its interface: `berschrift1` in German, `Titre1` in French.
+		const model = await load({
+			styles: `<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="berschrift1"><w:name w:val="heading 1"/></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="Chapter"/></w:style></w:styles>`,
+			body: paragraph('Body'),
+		});
+		expect(styleTarget(model, '1')).toEqual({ kind: 'paragraph', id: 'berschrift1' });
+		expect(styleTarget(model, 'Heading 1')).toEqual({ kind: 'paragraph', id: 'berschrift1' });
+		// A style named otherwise is not the built-in heading, for Word either.
+		expect(styleTarget(model, '2')).toBeUndefined();
+		expect(styleTarget(model, 'Chapter')).toEqual({ kind: 'paragraph', id: 'Heading2' });
 	});
 
 	it('reads paragraph text without hidden or deleted text, and stretches of a character style', async () => {
@@ -84,6 +113,48 @@ describe('STYLEREF styles', () => {
 		expect(source.results(2, reference, styleTarget(model, 'Doc Number')!)).toEqual([]);
 		// A paragraph without a style is in the default paragraph style.
 		expect(source.results(2, reference, styleTarget(model, 'Normal')!)).toEqual(['No style']);
+	});
+
+	it('finds hidden text, however it is hidden, and shows nothing for it, as Word does', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const styles = `<w:styles xmlns:w="${w}">
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+<w:style w:type="paragraph" w:styleId="DocNumber"><w:name w:val="Doc Number"/></w:style>
+<w:style w:type="paragraph" w:styleId="Secret"><w:name w:val="Secret"/><w:rPr><w:vanish/></w:rPr></w:style>
+<w:style w:type="character" w:styleId="EntryName"><w:name w:val="Entry Name"/></w:style>
+<w:style w:type="character" w:styleId="Hidden"><w:name w:val="Hidden"/><w:rPr><w:vanish/></w:rPr></w:style>
+<w:style w:type="character" w:styleId="HiddenEntry"><w:name w:val="Hidden Entry"/><w:basedOn w:val="EntryName"/><w:rPr><w:vanish/></w:rPr></w:style>
+</w:styles>`;
+		const run = (text: string, properties = '') =>
+			`<w:r>${properties ? `<w:rPr>${properties}</w:rPr>` : ''}<w:t xml:space="preserve">${text}</w:t></w:r>`;
+		const model = await load({
+			styles,
+			body:
+				// Text hidden through its character style, and through its paragraph style.
+				paragraph(
+					'',
+					'DocNumber',
+					run('DOC-') + run('secret', '<w:rStyle w:val="Hidden"/>') + run('7'),
+				) +
+				paragraph('', 'Secret', run('Hidden title') + run(' shown', '<w:vanish w:val="0"/>')) +
+				// A hidden stretch in the character style is found, and shows nothing; hidden text
+				// outside it ends a stretch (the way to keep a heading out of the header on its own page).
+				paragraph(
+					'',
+					undefined,
+					run('X', '<w:rStyle w:val="EntryName"/><w:vanish/>') +
+						run('Y', '<w:vanish/>') +
+						run('Ash', '<w:rStyle w:val="EntryName"/>'),
+				) +
+				paragraph('', undefined, run('Rowan', '<w:rStyle w:val="HiddenEntry"/>')),
+		});
+		const source = styleRefSource(model);
+		const results = (at: number, style: string) =>
+			source.results(at, parseStyleReference(`STYLEREF "${style}"`)!, styleTarget(model, style)!);
+		expect(results(0, 'Doc Number')).toEqual(['DOC-7']);
+		expect(results(1, 'Secret')).toEqual([' shown']);
+		expect(results(2, 'Entry Name')).toEqual(['', 'Ash']);
+		expect(results(3, 'Hidden Entry')).toEqual(['']);
 	});
 
 	it('reads only the numbers and the delimiters between them with \\n \\t', async () => {

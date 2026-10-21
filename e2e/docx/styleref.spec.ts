@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import { fileInput } from './helpers';
-import { styleRefFixture } from './support/styleref-fixture';
+import { styleRefFixture, styleRefLineBreakFixture } from './support/styleref-fixture';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
 	test(`${framework}: header STYLEREF fields follow the body page by page and are saved`, async ({
@@ -50,5 +50,58 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		// depends on the page and keeps the result it was saved with.
 		expect(header).toContain('<w:t>DOC-0042</w:t>');
 		expect(header).toContain('<w:t>Scope</w:t>');
+		expect(errors).toEqual([]);
+	});
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	test(`${framework}: Update Fields keeps a line break in a body STYLEREF result, written once`, async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on('pageerror', (error) => errors.push(error.message));
+		page.on('dialog', (dialog) => void dialog.accept());
+		await page.goto(`/?framework=${framework}`);
+		await (
+			await fileInput(page)
+		).setInputFiles({
+			name: 'styleref-break.docx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			buffer: Buffer.from(await styleRefLineBreakFixture()),
+		});
+		const editor = page.locator('docx-editor');
+		const paragraphs = editor.locator('.ProseMirror > p');
+		await expect(paragraphs.nth(2)).toContainText('Then old.');
+		// Each paragraph's text, a line break shown as `|`.
+		const shown = () =>
+			paragraphs.evaluateAll((elements) =>
+				elements.map((element) => {
+					const copy = element.cloneNode(true) as HTMLElement;
+					for (const item of copy.querySelectorAll('br')) item.replaceWith('|');
+					return copy.textContent;
+				}),
+			);
+		await editor.getByRole('tab', { name: 'References', exact: true }).click();
+		const update = editor.getByRole('button', { name: 'Update fields', exact: true });
+		await update.click();
+		const expected = [
+			'Chapter 1|Introduction',
+			'See Chapter 1|Introduction.',
+			'Then Chapter 1|Introduction.',
+		];
+		await expect.poll(shown).toEqual(expected);
+		// A second update has nothing to change.
+		await update.click();
+		await expect.poll(shown).toEqual(expected);
+
+		const bytes = await editor.evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const document = await (
+			await JSZip.loadAsync(Buffer.from(bytes))
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(document.match(/<w:br\/>/g)).toHaveLength(3);
+		expect(document).not.toContain('old');
 		expect(errors).toEqual([]);
 	});

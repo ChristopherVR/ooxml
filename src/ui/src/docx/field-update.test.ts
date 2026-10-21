@@ -390,6 +390,59 @@ describe('updateFields', () => {
 		expect(update()).toBe(false);
 	});
 
+	it('brings a CHARFORMAT result with line breaks up to date once', () => {
+		for (const heading of ['\nDOC-5', '\n']) {
+			const view = editor(
+				schema.nodes.paragraph!.create(
+					{ id: 'p0', style: 'DocNumber' },
+					runToInlineNodes({ text: heading }, schema),
+				),
+				paragraph(
+					'p1',
+					(
+						[
+							{ text: '', fieldChar: 'begin' },
+							{ text: '', italic: true, fieldCode: ' STYLEREF "Doc Number" \\* CHARFORMAT ' },
+							{ text: '', fieldChar: 'separate' },
+							{
+								text: heading,
+								bold: true,
+								field: { instr: 'STYLEREF "Doc Number" \\* CHARFORMAT' },
+							},
+							{ text: '', fieldChar: 'end' },
+						] as TextRun[]
+					).flatMap((run) => runToInlineNodes(run, schema)),
+				),
+			);
+			const prior: DocumentModel = {
+				...createDocument(),
+				paragraphStyles: {
+					docDefaults: {},
+					styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+					warnings: [],
+				},
+			};
+			const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+			expect(update(), heading).toBe(true);
+			const result: [string, boolean | undefined, boolean | undefined][] = [];
+			view.state.doc.child(1).forEach((child) => {
+				const run =
+					child.isText || child.type.name === 'hardBreak' ? inlineNodeRun(child) : undefined;
+				if (run?.field) result.push([run.text, run.italic, run.bold]);
+			});
+			expect(result, heading).toEqual(
+				heading === '\n'
+					? [['\n', true, undefined]]
+					: [
+							['\n', true, undefined],
+							['DOC-5', true, undefined],
+						],
+			);
+			expect(update(), heading).toBe(false);
+			view.destroy();
+		}
+	});
+
 	it('clears a body STYLEREF whose paragraph in the style is empty, and fills it again', async () => {
 		const loaded = await loadDocx(
 			await styleRefFixture({
@@ -428,6 +481,275 @@ describe('updateFields', () => {
 		expect(update()).toBe(true);
 		expect(texts(view)).toEqual(['Method', 'Method | Method']);
 		expect(update()).toBe(false);
+	});
+
+	it('keeps a line break in a body STYLEREF result a line break, written once', () => {
+		const complex = (instr: string, result: string) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ` ${instr} ` },
+					{ text: '', fieldChar: 'separate' },
+					{ text: result, field: { instr } },
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create(
+				{ id: 'p0', style: 'Heading1' },
+				runToInlineNodes({ text: 'Chapter 1\nIntroduction' }, schema),
+			),
+			paragraph('p1', [
+				...complex('STYLEREF 1', 'Chapter 1\nIntroduction'),
+				schema.text('|'),
+				...runToInlineNodes(
+					{ text: 'Chapter 1\nIntroduction', field: { instr: ' STYLEREF 1 ', simple: true } },
+					schema,
+				),
+				schema.text('|'),
+				...complex('STYLEREF 1', 'old'),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		// Text as it shows, a line break as `<br>`; a raw `\n` in a text node would show as `\n`.
+		const shown = () => {
+			let out = '';
+			view.state.doc.child(1).forEach((child) => {
+				if (child.isText) out += child.text!;
+				else if (child.type.name === 'hardBreak') out += '<br>';
+			});
+			return out;
+		};
+		expect(update()).toBe(true);
+		expect(shown()).toBe(
+			'Chapter 1<br>Introduction|Chapter 1<br>Introduction|Chapter 1<br>Introduction',
+		);
+		expect(update()).toBe(false);
+		// The breaks are the field's, saved as breaks in its result.
+		const runs = docToModel(view.state.doc, prior).blocks[1] as Paragraph;
+		expect(runs.runs.filter((run) => run.field).map((run) => run.text)).toEqual([
+			'Chapter 1\nIntroduction',
+			'Chapter 1\nIntroduction',
+			'Chapter 1\nIntroduction',
+		]);
+		// An empty heading clears each result whole; the simple field keeps its instruction.
+		view.dispatch(view.state.tr.delete(1, view.state.doc.child(0).nodeSize - 1));
+		expect(update()).toBe(true);
+		expect(shown()).toBe('||');
+		const cleared = (docToModel(view.state.doc, prior).blocks[1] as Paragraph).runs;
+		expect(cleared.filter((run) => run.field)).toEqual([]);
+		expect(
+			cleared.filter((run) => run.fieldCode !== undefined).map((run) => run.fieldCode!.trim()),
+		).toEqual(['STYLEREF 1', 'STYLEREF 1', 'STYLEREF 1']);
+	});
+
+	it('keeps a line break that starts a body STYLEREF result, written once', () => {
+		const complex = (result: string) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ' STYLEREF 1 ' },
+					{ text: '', fieldChar: 'separate' },
+					{ text: result, field: { instr: 'STYLEREF 1' } },
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create(
+				{ id: 'p0', style: 'Heading1' },
+				runToInlineNodes({ text: '\nScope' }, schema),
+			),
+			paragraph('p1', [
+				...complex('\nScope'),
+				schema.text('|'),
+				...complex('old'),
+				schema.text('|'),
+				...runToInlineNodes(
+					{ text: '\nScope', field: { instr: ' STYLEREF 1 ', simple: true } },
+					schema,
+				),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		const shown = () => {
+			let out = '';
+			view.state.doc.child(1).forEach((child) => {
+				if (child.isText) out += child.text!;
+				else if (child.type.name === 'hardBreak') out += '<br>';
+			});
+			return out;
+		};
+		expect(update()).toBe(true);
+		expect(shown()).toBe('<br>Scope|<br>Scope|<br>Scope');
+		expect(update()).toBe(false);
+		// Cleared, each result goes whole; the simple field keeps its instruction.
+		view.dispatch(view.state.tr.delete(1, view.state.doc.child(0).nodeSize - 1));
+		expect(update()).toBe(true);
+		expect(shown()).toBe('||');
+		const cleared = (docToModel(view.state.doc, prior).blocks[1] as Paragraph).runs;
+		expect(
+			cleared.filter((run) => run.fieldCode !== undefined).map((run) => run.fieldCode!.trim()),
+		).toEqual(['STYLEREF 1', 'STYLEREF 1', 'STYLEREF 1']);
+	});
+
+	it('finds a field whose result is only a line break, and updates it again', () => {
+		const complex = (result: string) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ' STYLEREF 1 ' },
+					{ text: '', fieldChar: 'separate' },
+					{ text: result, field: { instr: 'STYLEREF 1' } },
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create(
+				{ id: 'p0', style: 'Heading1' },
+				runToInlineNodes({ text: '\n' }, schema),
+			),
+			paragraph('p1', [
+				...complex('old'),
+				schema.text('|'),
+				...runToInlineNodes(
+					{ text: 'old', field: { instr: ' STYLEREF 1 ', simple: true } },
+					schema,
+				),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		const shown = () => {
+			let out = '';
+			view.state.doc.child(1).forEach((child) => {
+				if (child.isText) out += child.text!;
+				else if (child.type.name === 'hardBreak') out += '<br>';
+			});
+			return out;
+		};
+		expect(update()).toBe(true);
+		expect(shown()).toBe('<br>|<br>');
+		expect(update()).toBe(false);
+		// The heading gets its text again: both fields follow.
+		view.dispatch(view.state.tr.insertText('Scope', 1));
+		expect(update()).toBe(true);
+		expect(shown()).toBe('Scope<br>|Scope<br>');
+		expect(update()).toBe(false);
+		// Back to a line break, then empty: each field keeps its instruction.
+		view.dispatch(view.state.tr.delete(1, 1 + 'Scope'.length));
+		expect(update()).toBe(true);
+		view.dispatch(view.state.tr.delete(1, view.state.doc.child(0).nodeSize - 1));
+		expect(update()).toBe(true);
+		expect(shown()).toBe('|');
+		const cleared = (docToModel(view.state.doc, prior).blocks[1] as Paragraph).runs;
+		expect(
+			cleared.filter((run) => run.fieldCode !== undefined).map((run) => run.fieldCode!.trim()),
+		).toEqual(['STYLEREF 1', 'STYLEREF 1']);
+	});
+
+	it('writes a body STYLEREF result into the text a revision keeps, never into deleted text', () => {
+		const instr = 'STYLEREF "Doc Number"';
+		const result = (deleted: string, inserted?: string) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ` ${instr} ` },
+					{ text: '', fieldChar: 'separate' },
+					{
+						text: deleted,
+						field: { instr },
+						revision: { kind: 'delete', id: '1', author: 'A' },
+					},
+					...(inserted === undefined
+						? []
+						: [
+								{
+									text: inserted,
+									field: { instr },
+									revision: { kind: 'insert', id: '2', author: 'A' },
+								},
+							]),
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-3')]),
+			paragraph('p1', result('DOC-1', 'DOC-2')),
+			paragraph('p2', result('DOC-1')),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		const results = (index: number) => {
+			const out: [string, string | undefined][] = [];
+			view.state.doc.child(index).forEach((child) => {
+				const run = child.isText ? inlineNodeRun(child) : undefined;
+				if (run?.field) out.push([run.text, run.revision?.kind]);
+			});
+			return out;
+		};
+		expect(update()).toBe(true);
+		expect(results(1)).toEqual([
+			['DOC-1', 'delete'],
+			['DOC-3', 'insert'],
+		]);
+		// A result a revision deletes whole stays as it is until the revision is settled.
+		expect(results(2)).toEqual([['DOC-1', 'delete']]);
+		expect(update()).toBe(false);
+	});
+
+	it('keeps a line break in a REF result a line break, written once', () => {
+		const view = editor(
+			paragraph('p0', runToInlineNodes({ text: 'Line one\nLine two' }, schema), ['Target']),
+			paragraph(
+				'p1',
+				runToInlineNodes(
+					{ text: 'Line one\nLine two', field: { instr: 'REF Target', simple: true } },
+					schema,
+				),
+			),
+			paragraph('p2', [field('old', 'REF Target')]),
+		);
+		const shown = (index: number) => {
+			let out = '';
+			view.state.doc.child(index).forEach((child) => {
+				if (child.isText) out += child.text!;
+				else if (child.type.name === 'hardBreak') out += '<br>';
+			});
+			return out;
+		};
+		expect(updateFields(view, pages)).toBe(true);
+		expect([shown(1), shown(2)]).toEqual(['Line one<br>Line two', 'Line one<br>Line two']);
+		expect(updateFields(view, pages)).toBe(false);
 	});
 
 	it('does nothing in a read-only view', () => {

@@ -44,6 +44,23 @@ function newDocument(): XmlDocument {
 	);
 }
 
+/**
+ * `model` with its header and footer STYLEREF results brought up to date, or undefined when none
+ * changes. Word updates those fields as it draws each page, so a saved header should not keep a
+ * stale result; a part the writer cannot rebuild with the new results keeps the ones it has, and
+ * a model the update cannot read is saved as it is: the update never makes a save fail.
+ */
+function headerFooterResults(model: DocumentModel): DocumentModel | undefined {
+	try {
+		const refreshed = refreshStyleRefFields(model);
+		if (refreshed === model) return undefined;
+		assertValidDocumentModel(refreshed);
+		return refreshed;
+	} catch {
+		return undefined;
+	}
+}
+
 export async function saveDocx(
 	model: DocumentModel,
 	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
@@ -64,30 +81,6 @@ export async function saveDocx(
 	const binding = contexts.get(model);
 	if (binding && JSON.stringify(model) === JSON.stringify(binding.base))
 		return new Uint8Array(binding.context.original);
-	// Word updates header and footer STYLEREF fields as it draws each page, so a saved header
-	// should not keep a stale result. A header that cannot be rebuilt keeps the one it has: the
-	// update never makes a save fail that would succeed without it, and a model it cannot read
-	// is saved as it is, so the save reports its own error (an invalid model's typed one).
-	let refreshed = model;
-	try {
-		refreshed = refreshStyleRefFields(model);
-	} catch {
-		// Saved below without the update.
-	}
-	if (refreshed !== model)
-		try {
-			return await writePackage(refreshed, binding, pendingMedia);
-		} catch {
-			// Saved below without the update; that save reports any error of its own.
-		}
-	return writePackage(model, binding, pendingMedia);
-}
-
-async function writePackage(
-	model: DocumentModel,
-	binding: { context: PackageContext; base: DocumentModel } | undefined,
-	pendingMedia: ReadonlyMap<string, PendingMediaPart> | undefined,
-): Promise<Uint8Array> {
 	assertValidDocumentModel(model);
 	model = numberMoveNames(
 		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.context.sourceXml)),
@@ -150,6 +143,7 @@ async function writePackage(
 		binding?.base ?? { ...model, sections: [] },
 		pendingMedia,
 		docPrIds,
+		headerFooterResults(model),
 	);
 	// A new document starts without notes, so every note is created along with its part.
 	await applyNoteEdits(

@@ -10,6 +10,7 @@ import {
 	type DocumentModel,
 	type Paragraph,
 	type StyleRefSource,
+	type TextRun,
 } from 'ooxml-core/docx';
 import { reviewSourceLength } from 'ooxml-core/docx/layout';
 import {
@@ -151,28 +152,137 @@ function emptyStyleRefResults(
 	return results;
 }
 
-/** The result `range` as `text` formatted like the instruction marker `code` (`\* CHARFORMAT`). */
+/** The result `result` as `text` formatted like the instruction marker `code` (`\* CHARFORMAT`). */
 function codeFormattedResult(
-	doc: ProseMirrorNode,
-	range: FieldResultRange,
+	result: FieldResult,
 	code: ProseMirrorNode,
 	text: string,
 ): ProseMirrorNode[] | undefined {
-	const result = inlineNodeRun(doc.nodeAt(range.from)!);
 	const codeRun = inlineNodeRun(code);
-	return result && codeRun
-		? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
+	return codeRun
+		? runToInlineNodes(withFieldCodeFormatting(result.run, codeRun, text), schema)
 		: undefined;
 }
 
-/** Whether every text node of `range` is formatted like the first of `nodes`. */
-function formattedAs(doc: ProseMirrorNode, range: FieldResultRange, nodes: ProseMirrorNode[]) {
-	const marks = nodes[0]?.marks;
+/**
+ * The marks of text formatted like `node`: its own for text, those its run properties give for a
+ * line break, which holds them in `format`.
+ */
+function textMarks(node: ProseMirrorNode): readonly Mark[] {
+	return node.isText
+		? node.marks
+		: runToInlineNodes({ ...inlineNodeRun(node)!, text: ' ' }, schema)[0]!.marks;
+}
+
+/** Whether the text and line breaks of `result` that show are formatted like the first of `nodes`. */
+function formattedAs(doc: ProseMirrorNode, result: FieldResult, nodes: ProseMirrorNode[]) {
+	const marks = nodes[0] && textMarks(nodes[0]);
 	let same = marks !== undefined;
-	doc.nodesBetween(range.from, range.to, (node) => {
-		if (node.isText && marks && !Mark.sameSet(node.marks, marks)) same = false;
-	});
+	for (const part of result.parts)
+		doc.nodesBetween(part.from, part.to, (node) => {
+			if (node.isInline && marks && !Mark.sameSet(textMarks(node), marks)) same = false;
+		});
 	return same;
+}
+
+/** What makes runs parts of one field's result: the field, its identity and its flags. */
+function fieldIdentity(run: TextRun | undefined): string | undefined {
+	return run?.field
+		? JSON.stringify([
+				run.field.instr,
+				run.field.simple === true,
+				run.fieldInstanceId ?? null,
+				run.fieldFlags?.locked ?? null,
+				run.fieldFlags?.dirty ?? null,
+			])
+		: undefined;
+}
+
+/** Whether a revision takes a run's text out of the document: deleted, or moved away. */
+const removed = (run: TextRun | undefined) =>
+	run?.revision?.kind === 'delete' || run?.revision?.kind === 'moveFrom';
+
+/**
+ * A field's whole result, with its line breaks. Text a revision removes is part of the field but
+ * not of its result: `text` is what shows, a break read as `\n` as the model holds it.
+ */
+interface FieldResult extends FieldResultRange {
+	/** The stretches that show, first to last: a new result goes into the first. */
+	parts: { from: number; to: number }[];
+	/** Its first text that shows, else its first line break: how a new result is formatted. */
+	run: TextRun;
+	/** Whether a revision removes some of its text. */
+	removed: boolean;
+}
+
+/** The run of a node of a field's result: text marked with the field, or a line break of it. */
+function resultRun(node: ProseMirrorNode): TextRun | undefined {
+	const holds = node.isText
+		? schema.marks.field!.isInSet(node.marks) !== undefined
+		: node.type.name === 'hardBreak' && String(node.attrs.format ?? '').includes('"field"');
+	const run = holds ? inlineNodeRun(node) : undefined;
+	return run?.field ? run : undefined;
+}
+
+/**
+ * The result of each field in `doc`: its text and the line breaks in it, before, between or after
+ * the text, which the editor holds as `hardBreak` nodes of the field (the model holds them as
+ * `\n` in the text). A result that is only line breaks is a result too; a field whose result a
+ * revision removes whole has none that shows, and is left out: it keeps its text until the
+ * revision is settled.
+ */
+function fieldResults(doc: ProseMirrorNode): FieldResult[] {
+	const spans: { from: number; to: number; identity: string }[] = [];
+	doc.descendants((node, pos) => {
+		if (node.type.name !== 'paragraph') return true;
+		let open: (typeof spans)[number] | undefined;
+		node.forEach((child, offset) => {
+			const identity = fieldIdentity(resultRun(child));
+			const at = pos + 1 + offset;
+			if (identity === undefined) open = undefined;
+			else if (open?.identity === identity) open.to = at + child.nodeSize;
+			else spans.push((open = { from: at, to: at + child.nodeSize, identity }));
+		});
+		return false;
+	});
+	return spans.flatMap(({ from, to }): FieldResult[] => {
+		const parts: FieldResult['parts'] = [];
+		let text = '';
+		let first: ProseMirrorNode | undefined;
+		let shown: ProseMirrorNode | undefined;
+		let gone = false;
+		doc.nodesBetween(from, to, (node, pos) => {
+			if (!node.isInline) return true;
+			if (removed(inlineNodeRun(node))) gone = true;
+			else {
+				const last = parts.at(-1);
+				if (last?.to === pos) last.to = pos + node.nodeSize;
+				else parts.push({ from: pos, to: pos + node.nodeSize });
+				text += node.isText ? node.text! : '\n';
+				shown ??= node;
+				if (node.isText) first ??= node;
+			}
+			return false;
+		});
+		const run = shown && inlineNodeRun(first ?? shown);
+		if (!run) return [];
+		const marks = textMarks(first ?? shown!);
+		const mark = schema.marks.field!.isInSet(marks)!;
+		return [{ from, to, text, mark, marks, parts, run, removed: gone }];
+	});
+}
+
+/** `text` as the result of `field`, formatted as its first run, a line break as `hardBreak`. */
+function resultNodes(field: FieldResult, text: string): ProseMirrorNode[] {
+	return text
+		.split(/(\n)/)
+		.flatMap((piece) =>
+			piece === '\n'
+				? runToInlineNodes({ ...field.run, text: piece }, schema)
+				: piece
+					? [schema.text(piece, field.marks)]
+					: [],
+		);
 }
 
 /** The runs of a model paragraph that hold its editor positions `start` to `end`. */
@@ -239,8 +349,8 @@ export function refreshFieldResults(
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
-	const changes: Array<{ run: FieldResultRange; text: string; formatted?: ProseMirrorNode[] }> = [];
-	for (const run of fieldResultRanges(tr.doc)) {
+	const changes: Array<{ run: FieldResult; text: string; formatted?: ProseMirrorNode[] }> = [];
+	for (const run of fieldResults(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
 		const styleRef = source && parseStyleReference(String(run.mark.attrs.instr ?? ''));
 		if (styleRef) {
@@ -253,7 +363,7 @@ export function refreshFieldResults(
 			// `\* CHARFORMAT`: the result takes the formatting of the field name's first letter, also
 			// when its text is already current.
 			const code = styleRef.charFormat ? fieldNameMarker($from.parent, $from.index()) : undefined;
-			const formatted = code && text ? codeFormattedResult(tr.doc, run, code, text) : undefined;
+			const formatted = code && text ? codeFormattedResult(run, code, text) : undefined;
 			if (
 				text !== undefined &&
 				(text !== run.text || (formatted && !formattedAs(tr.doc, run, formatted)))
@@ -277,12 +387,19 @@ export function refreshFieldResults(
 	const edits = changes.map(({ run, text, formatted }) => ({
 		at: run.from,
 		apply: () => {
-			// An empty result keeps its field: a simple one becomes a complex field with no result.
-			if (!text) {
-				if (!emptySimpleFieldResult(tr, run.from, run.to)) tr.delete(run.from, run.to);
-				return;
+			const [first, ...rest] = run.parts;
+			// The new result goes into the first stretch that shows; text a revision removes stays.
+			for (const part of rest.reverse()) tr.delete(part.from, part.to);
+			if (text) tr.replaceWith(first!.from, first!.to, formatted ?? resultNodes(run, text));
+			// An empty result keeps its field: removed text that stays holds it, or what shows
+			// becomes one letter of its text first, so that a simple field is found as one result to
+			// empty, which keeps its instruction.
+			else if (run.removed) tr.delete(first!.from, first!.to);
+			else {
+				tr.replaceWith(first!.from, first!.to, schema.text('x', run.marks));
+				if (!emptySimpleFieldResult(tr, first!.from, first!.from + 1))
+					tr.delete(first!.from, first!.from + 1);
 			}
-			tr.replaceWith(run.from, run.to, formatted ?? schema.text(text, run.marks));
 		},
 	}));
 	if (source)
