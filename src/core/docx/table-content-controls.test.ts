@@ -384,6 +384,129 @@ describe('row and cell content controls on save', () => {
 		}
 	});
 
+	it('takes a row or cell given another control out of one that holds range markers beside it', async () => {
+		// A row or cell control's content can hold range markers beside its rows or cells
+		// (EG_ContentRowContent, EG_ContentCellContent). They are no rows or cells: what is taken out
+		// takes those on its side along, so no control is left holding only markers.
+		const old = (content: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Old"/><w:id w:val="31"/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		const start = '<w:bookmarkStart w:id="8" w:name="Kept"/>';
+		const end = '<w:bookmarkEnd w:id="8"/>';
+		const fresh = '<w:sdt><w:sdtPr><w:id w:val="33"/></w:sdtPr><w:sdtContent>';
+		const given = async (body: string, r: number, c: number) => {
+			const loaded = await hand(body);
+			tableOf(loaded.model.blocks).rows[r]![c]!.contentControl = {
+				id: '33',
+				level: 'cell',
+				kind: 'richText',
+			};
+			return documentXml(await loaded.save(loaded.model));
+		};
+		// The only cell of the control, between the markers: the control goes, they stay around it.
+		const only = await given(
+			grid(row(`${label('Status')}${old(start + label('Open') + end)}`)),
+			0,
+			1,
+		);
+		expect(only.match(/<w:sdt>/g)).toHaveLength(1);
+		expect(only).toContain(
+			`${label('Status')}${start}${fresh}${label('Open')}</w:sdtContent></w:sdt>${end}</w:tr>`,
+		);
+		// The first cell goes before it with the marker before it, the last after it with the one after.
+		const both = grid(row(old(start + label('A') + label('B') + end)));
+		const first = await given(both, 0, 0);
+		expect(first.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(first).toContain(
+			`<w:tr>${start}${fresh}${label('A')}</w:sdtContent></w:sdt><w:sdt><w:sdtPr><w:alias w:val="Old"/>` +
+				`<w:id w:val="31"/></w:sdtPr><w:sdtContent>${label('B')}${end}</w:sdtContent></w:sdt></w:tr>`,
+		);
+		const last = await given(both, 0, 1);
+		expect(last.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(last).toContain(
+			`<w:tr><w:sdt><w:sdtPr><w:alias w:val="Old"/><w:id w:val="31"/></w:sdtPr><w:sdtContent>` +
+				`${start}${label('A')}</w:sdtContent></w:sdt>${fresh}${label('B')}</w:sdtContent></w:sdt>${end}</w:tr>`,
+		);
+		// A cell given the control of the cell before it joins it, with the markers between them.
+		const joined = await hand(
+			grid(
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="C21"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>${label('A')}` +
+						`</w:sdtContent></w:sdt>${old(start + label('B') + end)}`,
+				),
+			),
+		);
+		const [left, right] = tableOf(joined.model.blocks).rows[0]!;
+		right!.contentControl = { ...left!.contentControl! };
+		const joinedXml = await documentXml(await joined.save(joined.model));
+		expect(joinedXml).toContain(
+			`<w:tr><w:sdt><w:sdtPr><w:alias w:val="C21"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>` +
+				`${label('A')}${start}${label('B')}</w:sdtContent></w:sdt>${end}</w:tr>`,
+		);
+		// A row the same way.
+		const rows = await hand(grid(old(start + row(`${label('A')}${label('B')}`) + end)));
+		tableOf(rows.model.blocks).rowProperties![0]!.contentControl = {
+			id: '33',
+			level: 'row',
+			kind: 'richText',
+		};
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml.match(/<w:sdt>/g)).toHaveLength(1);
+		expect(rowXml).toContain(
+			`</w:tblGrid>${start}${fresh}${row(`${label('A')}${label('B')}`)}</w:sdtContent></w:sdt>${end}</w:tbl>`,
+		);
+	});
+
+	it('writes cells given one control under an id Word cannot read as one control', async () => {
+		// Such an id is not written (a control pasted from another page keeps the one it came with
+		// when the document has none like it), so the cells after the first join it by the model's.
+		for (const id of ['99999999999', 'sdt-gen-9']) {
+			const loaded = await hand(grid(row(`${label('A')}${label('B')}`)));
+			for (const cell of tableOf(loaded.model.blocks).rows[0]!)
+				cell.contentControl = { id, level: 'cell', kind: 'richText', alias: 'Pair' };
+			const xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml.match(/<w:sdt>/g)).toHaveLength(1);
+			expect(xml).toContain(
+				`<w:sdt><w:sdtPr><w:alias w:val="Pair"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}</w:sdtContent></w:sdt>`,
+			);
+		}
+		// One that another w:sdt has is given a new id, which the cells after it join.
+		const taken = await hand(
+			grid(
+				row(`${label('A')}${label('B')}`) +
+					row(
+						`<w:sdt><w:sdtPr><w:id w:val="99999999999"/></w:sdtPr><w:sdtContent>${label('C')}` +
+							`</w:sdtContent></w:sdt>${label('D')}`,
+					),
+			),
+		);
+		for (const cell of tableOf(taken.model.blocks).rows[0]!)
+			cell.contentControl = { id: '99999999999', level: 'cell', kind: 'richText' };
+		const takenXml = await documentXml(await taken.save(taken.model));
+		expect(takenXml.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(takenXml).toMatch(
+			new RegExp(
+				`<w:tr><w:sdt><w:sdtPr><w:id w:val="-?\\d{1,10}"/></w:sdtPr><w:sdtContent>${label('A')}${label('B')}</w:sdtContent>`,
+			),
+		);
+		// A control without an id of its own, as a remote peer could give one, joins none.
+		const loose = await hand(
+			grid(
+				row(
+					`<w:sdt><w:sdtPr><w:alias w:val="None"/></w:sdtPr><w:sdtContent>${label('A')}` +
+						`</w:sdtContent></w:sdt>${label('B')}`,
+				),
+			),
+		);
+		tableOf(loose.model.blocks).rows[0]![1]!.contentControl = {
+			level: 'cell',
+			kind: 'richText',
+			alias: 'Own',
+		} as unknown as ContentControl;
+		const looseXml = await documentXml(await loose.save(loose.model));
+		expect(looseXml.match(/<w:sdt>/g)).toHaveLength(2);
+		expect(looseXml).toContain(`<w:alias w:val="Own"/></w:sdtPr><w:sdtContent>${label('B')}`);
+	});
+
 	it('writes only valid properties for a control the model gives a cell', async () => {
 		// A cell pasted from another page, a remote peer or the model API can hold any values: what
 		// Word cannot read is not written (w:id is optional, so a bad id is left out).

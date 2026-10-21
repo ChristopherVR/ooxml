@@ -5,6 +5,7 @@
 import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
 import type { ContentControl } from '../content-control-model';
+import { rowControlSpans, type RowControlSpan } from './content-control-rows';
 
 /** A control and the document range it covers. */
 export interface ControlSpan {
@@ -107,6 +108,16 @@ export function tableControlSpans(doc: ProseMirrorNode): ControlSpan[] {
 	});
 	return spans;
 }
+
+/**
+ * Every control in `doc`: those `controlSpans` lists, and those around tables and rows, which no
+ * command operates but whose ids and locks count.
+ */
+export const everyControlSpan = (doc: ProseMirrorNode): (ControlSpan | RowControlSpan)[] => [
+	...controlSpans(doc),
+	...tableControlSpans(doc),
+	...rowControlSpans(doc),
+];
 
 /**
  * The innermost control around `pos`. An inline control wins over the block or cell around it,

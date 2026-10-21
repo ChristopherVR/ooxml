@@ -19,13 +19,8 @@ import {
 } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import { freshControlId, type ContentControl } from '../content-control-model';
-import { rowControlOf, rowControlSpans } from './content-control-rows';
-import {
-	controlFromValue,
-	controlOfMark,
-	controlSpans,
-	tableControlSpans,
-} from './content-control-spans';
+import { rowControlOf } from './content-control-rows';
+import { controlFromValue, controlOfMark, everyControlSpan } from './content-control-spans';
 
 type Verbatim = 'sourceXml' | 'endSourceXml';
 const VERBATIM: readonly Verbatim[] = ['sourceXml', 'endSourceXml'];
@@ -42,7 +37,7 @@ const sourcesOf = (
 	});
 
 /** What `node` holds as its control: a paragraph's or table's block control, a row's or a cell's. */
-function nodeControlOf(
+export function nodeControlOf(
 	node: ProseMirrorNode,
 ): { value: unknown; level: ContentControl['level'] } | undefined {
 	switch (node.type.name) {
@@ -110,7 +105,7 @@ export function pastedControlSlice(
 ): Slice {
 	if (!view || plain || view.dragging?.move) return slice;
 	const { doc, selection, storedMarks } = view.state;
-	const spans = [...controlSpans(doc), ...tableControlSpans(doc), ...rowControlSpans(doc)];
+	const spans = everyControlSpan(doc);
 	const inDocument = new Set(spans.map((span) => span.control.id));
 	const held = new Set(spans.flatMap((span) => sourcesOf(span.control)));
 	/** `control` without those of its `fields` that come from elsewhere: the model is written. */
