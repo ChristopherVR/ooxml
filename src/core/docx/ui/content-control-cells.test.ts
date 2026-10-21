@@ -44,6 +44,7 @@ const schema = new Schema({
 			toDOM: () => ['td', 0],
 		},
 		text: { group: 'inline' },
+		hardBreak: { group: 'inline', inline: true, toDOM: () => ['br'] },
 	},
 	marks: markSpecs,
 });
@@ -96,12 +97,17 @@ describe('content controls around table cells in the editor', () => {
 	});
 
 	it('puts a picked entry in the cell and clears its placeholder', () => {
-		const state = stateOf(choice(), [placeholder('Choose an item.'), paragraph('second line')]);
+		const state = stateOf(choice(), [
+			placeholder('Choose an item.'),
+			paragraph('second line', { id: 'c2' }),
+		]);
 		const next = state.apply(chooseListItem(state, '61', 1)!);
 		const cell = cellOf(next);
-		expect(cell.childCount).toBe(1);
+		// The cell keeps its paragraphs, which its table must when it is saved: the first holds the
+		// entry and the other is emptied.
+		expect(cell.childCount).toBe(2);
 		expect(cell.textContent).toBe('Secondary');
-		expect(cell.firstChild!.attrs.id).toBe('c1');
+		expect([cell.firstChild!.attrs.id, cell.lastChild!.attrs.id]).toEqual(['c1', 'c2']);
 		expect(cell.attrs.contentControl.showingPlaceholder).toBeUndefined();
 		expect(stylesIn(cell)).toEqual([]);
 		expect(typeOverPlaceholder(next, controlSpans(next.doc)[0]!.from + 3, 'x')).toBe('blocked');
@@ -336,6 +342,100 @@ describe('content controls around table cells in the editor', () => {
 		expect(cellOf(cleared).textContent).toBe('Enter a number.');
 		expect(cellOf(cleared).attrs.contentControl.showingPlaceholder).toBe(true);
 		expect(stylesIn(cellOf(cleared))).toEqual(['PlaceholderText']);
+	});
+
+	it('operates a cell control in its first paragraph when a table comes before it', () => {
+		// A cell holds paragraphs and tables in any order. What a command replaces, and where the
+		// caret goes, is in its paragraphs, whose text gives the new text its formatting; a table
+		// before them stays as it is.
+		const inner = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', null, [
+					paragraph('Inner', { id: 'n1' }, [schema.marks.bold!.create()]),
+				]),
+			]),
+		]);
+		const { items: _items, ...list } = choice({ placeholderText: 'Enter a number.' });
+		const state = stateOf({ ...list, kind: 'text' }, [inner, placeholder('Enter a number.')]);
+		const span = controlSpans(state.doc).find((found) => found.level === 'cell')!;
+		const start = span.from + 2 + inner.nodeSize;
+		const shape = (at: EditorState) => {
+			const children: string[] = [];
+			cellOf(at).forEach((child) => children.push(`${child.type.name}:${child.textContent}`));
+			return children;
+		};
+		const typed = typeOverPlaceholder(state, start + 2, '4');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const next = state.apply(typed);
+		expect(shape(next)).toEqual(['table:Inner', 'paragraph:4']);
+		expect(next.selection.from).toBe(start + 1);
+		expect(next.doc.nodeAt(start)!.marks.map((mark) => mark.type.name)).toEqual([]);
+		const cleared = next.apply(deleteToPlaceholder(next, 'backward')!);
+		expect(shape(cleared)).toEqual(['table:Inner', 'paragraph:Enter a number.']);
+		expect(cleared.selection.from).toBe(start);
+		const inside = state.apply(state.tr.setSelection(TextSelection.create(state.doc, start + 2)));
+		const pasted = pasteInCell(inside, new Slice(Fragment.from(schema.text('Pasted')), 0, 0));
+		if (pasted === 'blocked' || !pasted) throw new Error('expected a transaction');
+		expect(shape(inside.apply(pasted))).toEqual(['table:Inner', 'paragraph:Pasted']);
+	});
+
+	it('brings a text cell placeholder back when its other paragraphs hold nothing', () => {
+		// Typing over the placeholder empties the cell's other paragraphs, which stay: deleting what
+		// was typed leaves the cell without text, so its placeholder comes back. A line break or a
+		// picture in another paragraph is content the placeholder would replace: deleting stays ordinary.
+		const control: ContentControl = {
+			id: '63',
+			level: 'cell',
+			kind: 'text',
+			showingPlaceholder: true,
+			placeholderText: 'Enter text.',
+		};
+		const state = stateOf(control, [
+			placeholder('Enter text.'),
+			paragraph('second line', { id: 'c2' }),
+		]);
+		const span = controlSpans(state.doc).find((found) => found.level === 'cell')!;
+		const typed = typeOverPlaceholder(state, span.from + 3, 'x');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const next = state.apply(typed);
+		expect(cellOf(next).textContent).toBe('x');
+		expect(cellOf(next).childCount).toBe(2);
+		const restore = deleteToPlaceholder(next, 'backward');
+		expect(restore).toBeDefined();
+		const cleared = next.apply(restore!);
+		expect(cellOf(cleared).textContent).toBe('Enter text.');
+		expect(cellOf(cleared).childCount).toBe(2);
+		expect(cellOf(cleared).attrs.contentControl.showingPlaceholder).toBe(true);
+		const broken = next.apply(
+			next.tr.insert(
+				span.from + 2 + cellOf(next).firstChild!.nodeSize,
+				schema.nodes.hardBreak!.create(),
+			),
+		);
+		expect(cellOf(broken).lastChild!.childCount).toBe(1);
+		expect(deleteToPlaceholder(broken, 'backward')).toBeUndefined();
+	});
+
+	it('deletes in a table in a text cell as ordinary text, its paragraphs empty or not', () => {
+		// A table in the cell stays when its placeholder comes back, so deleting in the table is not
+		// deleting all the control holds.
+		const inner = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', null, [paragraph('Inner', { id: 'n1' })]),
+			]),
+		]);
+		const state = stateOf({ id: '64', level: 'cell', kind: 'text' }, [
+			inner,
+			paragraph('', { id: 'c1' }),
+		]);
+		let end = 0;
+		state.doc.descendants((node, pos) => {
+			if (node.isText && node.text === 'Inner') end = pos + node.nodeSize;
+		});
+		const at = state.apply(state.tr.setSelection(TextSelection.create(state.doc, end)));
+		expect(deleteToPlaceholder(at, 'backward')).toBeUndefined();
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, end - 5, end)));
+		expect(deleteToPlaceholder(all, 'backward')).toBeUndefined();
 	});
 
 	it('keeps the caret in a text cell whose placeholder comes back, not in the next cell', () => {

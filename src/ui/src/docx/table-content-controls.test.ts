@@ -4,7 +4,13 @@ import { DOMParser, DOMSerializer } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { loadDocx } from 'ooxml-core/docx';
-import { chooseListItem, contentControlPlugin, controlSpans } from 'ooxml-core/docx/ui';
+import {
+	chooseDate,
+	chooseListItem,
+	contentControlPlugin,
+	controlSpans,
+	toggleCheckboxControl,
+} from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 import { schema } from './schema';
 
@@ -342,6 +348,76 @@ describe('content controls around table cells in the editor', () => {
 			expect(xml).not.toContain('showingPlcHdr');
 			expect(xml).toContain('<w:t>Secondary</w:t>');
 			expect(xml).not.toContain('PlaceholderText');
+		});
+
+	for (const layout of ['a nested table first', 'two paragraphs'] as const)
+		it(`saves a cell control picked, toggled or dated in a cell holding ${layout}`, async () => {
+			// A table holding a cell control cannot change its structure on save: the cell keeps its
+			// paragraphs and tables, its first paragraph taking the new text and the others emptied.
+			const before =
+				layout === 'two paragraphs'
+					? ''
+					: `<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr>${cell('Inner')}</w:tr></w:tbl>`;
+			const after = layout === 'two paragraphs' ? '<w:p><w:r><w:t>Note</w:t></w:r></w:p>' : '';
+			const control = (id: string, properties: string, run: string) =>
+				`<w:sdt><w:sdtPr><w:id w:val="${id}"/>${properties}</w:sdtPr><w:sdtContent><w:tc>` +
+				`${before}<w:p>${run}</w:p>${after}</w:tc></w:sdtContent></w:sdt>`;
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">` +
+					`<w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/>` +
+					`<w:gridCol w:w="2000"/></w:tblGrid><w:tr>` +
+					control(
+						'71',
+						'<w:showingPlcHdr/><w:dropDownList><w:listItem w:displayText="Primary" w:value="primary"/>' +
+							'<w:listItem w:displayText="Secondary" w:value="secondary"/></w:dropDownList>',
+						'<w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>Choose an item.</w:t></w:r>',
+					) +
+					control(
+						'72',
+						'<w14:checkbox><w14:checked w14:val="0"/><w14:checkedState w14:val="2612" w14:font="MS Gothic"/>' +
+							'<w14:uncheckedState w14:val="2610" w14:font="MS Gothic"/></w14:checkbox>',
+						'<w:r><w:rPr><w:rFonts w:ascii="MS Gothic" w:hAnsi="MS Gothic"/></w:rPr><w:t>☐</w:t></w:r>',
+					) +
+					control(
+						'73',
+						'<w:showingPlcHdr/><w:date><w:dateFormat w:val="d/M/yyyy"/><w:lid w:val="en-GB"/></w:date>',
+						'<w:r><w:t>Pick a date</w:t></w:r>',
+					) +
+					`</w:tr></w:tbl><w:sectPr/></w:body></w:document>`,
+			);
+			const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			const doc = modelToDoc(loaded.model);
+			let state = EditorState.create({ schema, doc });
+			for (const operate of [
+				(at: EditorState) => chooseListItem(at, '71', 1),
+				(at: EditorState) => toggleCheckboxControl(at, '72'),
+				(at: EditorState) => chooseDate(at, '73', new Date(2026, 9, 21)),
+			])
+				state = state.apply(operate(state)!);
+			const shapes = controlSpans(state.doc).map((span) => {
+				const children: string[] = [];
+				state.doc
+					.nodeAt(span.from)!
+					.forEach((child) => children.push(`${child.type.name}:${child.textContent}`));
+				return children;
+			});
+			expect(shapes).toEqual(
+				['Secondary', '☒', '21/10/2026'].map((value) =>
+					layout === 'two paragraphs'
+						? [`paragraph:${value}`, 'paragraph:']
+						: ['table:Inner', `paragraph:${value}`],
+				),
+			);
+			const bytes = await loaded.save(docToModel(state.doc, loaded.model, doc));
+			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+			for (const value of ['Secondary', '☒', '21/10/2026'])
+				expect(xml).toContain(`<w:t>${value}</w:t>`);
+			expect(xml).not.toContain('Note');
+			expect(xml.match(/<w:t>Inner<\/w:t>/g) ?? []).toHaveLength(
+				layout === 'two paragraphs' ? 0 : 3,
+			);
 		});
 
 	it('applies the rules of a cell control to a paste, as to typing', async () => {
