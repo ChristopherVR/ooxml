@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from './index';
-import { parseStyleReference, styleRefSource, styleTarget } from './style-ref';
+import { documentParagraphs, parseStyleReference, styleRefSource, styleTarget } from './style-ref';
+import { refreshStyleRefFields } from './style-ref-fields';
 import { headingNumberingFixture } from './test-support/heading-numbering-fixture';
-import { paragraph, styleRefFixture } from './test-support/style-ref-fixture';
+import { complexField, paragraph, styleRefFixture } from './test-support/style-ref-fixture';
 
 const load = async (parts: Parameters<typeof styleRefFixture>[0]) =>
 	(await loadDocx(await styleRefFixture(parts))).model;
@@ -101,6 +102,24 @@ describe('STYLEREF styles', () => {
 			'Section 2.01:',
 		]);
 		expect(source.results(0, parseStyleReference('STYLEREF 1 \\n \\t')!, target)).toEqual(['2.01']);
+	});
+
+	it('reads a cell and the tables nested in it in reading order', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const field = paragraph('', undefined, complexField('STYLEREF 1', ['old']));
+		const model = await load({
+			body: table(
+				cell(paragraph('Alpha', 'Heading1') + table(cell(paragraph('Beta', 'Heading1'))) + field),
+			),
+		});
+		const text = (item: { runs: { text: string }[] }) => item.runs.map((run) => run.text).join('');
+		expect(documentParagraphs(model.blocks).map(text)).toEqual(['Alpha', 'Beta', 'old']);
+		// The nearest heading before the field is the one in the nested table.
+		const refreshed = documentParagraphs(refreshStyleRefFields(model, { body: true }).blocks);
+		expect(text(refreshed.at(-1)!)).toBe('Beta');
 	});
 
 	it('reads the number of a numbered paragraph with \\n, or its text in a case format', async () => {
