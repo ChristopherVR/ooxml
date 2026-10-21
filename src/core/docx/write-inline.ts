@@ -14,169 +14,16 @@ import {
 } from './write-ranges';
 
 import { createRun } from './write-run';
-import { alternateContentDrawing } from './write-drawing';
-import { isSdt, sdtContent } from './content-control';
 import { createContentControl, resetContentControl } from './write-content-control';
-import type { ContentControl } from './content-control-model';
 import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
 import { writeFieldFlags } from './field-flags';
-import { sameFieldFlags } from './field-lock';
 import { isEquationElement, writeEquation } from './equation';
-import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
-import { isCommentReferenceRun } from './parse-revisions';
-import {
-	convertToDeleteText,
-	isCommentAnchorElement,
-	isRevisionWrapperElement,
-	revisionWrapper,
-} from './write-revisions';
-import {
-	getW,
-	isElement,
-	makeW,
-	named,
-	REL_NS,
-	WORD_NS,
-	type XmlDocument,
-	type XmlElement,
-} from './xml';
-
-/**
- * One modeled run's source element, with the hyperlink or simple field that wrapped it (if any).
- * A simple field without a cached result has a slot with no element.
- */
-export interface InlineSlot {
-	element?: XmlElement;
-	container?: XmlElement;
-}
-
-/** A run's own content is safe when it is plain text, a modeled break, or a lone picture. */
-function runIsSafe(run: XmlElement): boolean {
-	const content = Array.from(run.childNodes).filter(
-		(child): child is XmlElement =>
-			isElement(child) && !named(child, 'rPr') && !isCachedPageBreak(child),
-	);
-	const only = content.length === 1 ? content[0] : undefined;
-	if (only && named(only, 'br') && isModeledBreak(only)) return true;
-	// Note references and a note's own number mark are modeled runs (see block-parser.ts).
-	if (
-		only &&
-		['footnoteReference', 'endnoteReference', 'footnoteRef', 'endnoteRef'].some((name) =>
-			named(only, name),
-		)
-	)
-		return true;
-	// A complex field's marker (without form-field data) or its instruction text are modeled runs.
-	if (only && named(only, 'fldChar') && !only.childNodes.length)
-		return ['begin', 'separate', 'end'].includes(getW(only, 'fldCharType') ?? '');
-	if (content.length && content.every((element) => named(element, 'instrText'))) return true;
-	const kinds = new Set<string>();
-	for (const element of content) {
-		if (element.localName === 'br' && hasSpecialBreak(element)) return false;
-		if (element.localName === 'cr' && element.attributes.length > 0) return false;
-		// A shape or text box Word wrote for old readers too: its `mc:Choice` drawing is the model.
-		if (element.localName === 'AlternateContent') {
-			if (!alternateContentDrawing(element)) return false;
-			kinds.add('drawing');
-			continue;
-		}
-		const allowed = ['t', 'tab', 'br', 'cr', 'noBreakHyphen', 'delText', 'drawing', 'pict'];
-		if (!allowed.includes(element.localName)) return false;
-		kinds.add(element.localName);
-	}
-	// A run is modeled as text or as a picture, never both.
-	return !((kinds.has('drawing') || kinds.has('pict')) && kinds.size > 1);
-}
-
-function runsOf(
-	parent: XmlElement,
-	container: XmlElement | undefined,
-	slots: InlineSlot[],
-): boolean {
-	for (const child of Array.from(parent.childNodes)) {
-		if (!isElement(child)) {
-			if (child.nodeType === 3 && child.textContent?.trim()) return false;
-			continue;
-		}
-		if (isEquationElement(child)) {
-			slots.push({ element: child, ...(container && { container }) });
-		} else if (named(child, 'r')) {
-			if (isCommentReferenceRun(child)) continue;
-			if (!runIsSafe(child)) return false;
-			slots.push({ element: child, ...(container && { container }) });
-		} else if (isRevisionWrapperElement(child) && (!container || isSdt(container))) {
-			if (!runsOf(child, container, slots)) return false;
-		} else if ((named(child, 'hyperlink') || named(child, 'fldSimple')) && !container) {
-			const before = slots.length;
-			if (!runsOf(child, child, slots)) return false;
-			// The parser shows a placeholder for a simple field without a cached result.
-			if (named(child, 'fldSimple') && slots.length === before) slots.push({ container: child });
-		} else if (isCommentAnchorElement(child) && !container) continue;
-		else return false;
-	}
-	return true;
-}
-
-/**
- * Collects the paragraph's modeled runs in the same order the parser produced them. Returns
- * `undefined` when the paragraph holds inline content this editor cannot safely regenerate.
- * `w:pPr` and bookmarks are handled by the caller.
- */
-export function collectInlineSlots(paragraph: XmlElement): InlineSlot[] | undefined {
-	const slots: InlineSlot[] = [];
-	for (const child of Array.from(paragraph.childNodes)) {
-		if (
-			isElement(child) &&
-			(named(child, 'pPr') || named(child, 'bookmarkStart') || named(child, 'bookmarkEnd'))
-		)
-			continue;
-		if (!isElement(child)) {
-			if (child.nodeType === 3 && child.textContent?.trim()) return undefined;
-			continue;
-		}
-		if (isEquationElement(child)) {
-			slots.push({ element: child });
-		} else if (named(child, 'r')) {
-			if (isCommentReferenceRun(child)) continue;
-			if (!runIsSafe(child)) return undefined;
-			slots.push({ element: child });
-		} else if (isRevisionWrapperElement(child)) {
-			if (!runsOf(child, undefined, slots)) return undefined;
-		} else if (isSdt(child)) {
-			const content = sdtContent(child);
-			const before = slots.length;
-			if (content && !runsOf(content, child, slots)) return undefined;
-			if (slots.length === before) slots.push({ container: child });
-		} else if (named(child, 'hyperlink') || named(child, 'fldSimple')) {
-			const before = slots.length;
-			if (!runsOf(child, child, slots)) return undefined;
-			if (named(child, 'fldSimple') && slots.length === before) slots.push({ container: child });
-		} else if (!isCommentAnchorElement(child)) return undefined;
-	}
-	return slots;
-}
-
-/** Top-level paragraph children that `buildInlineContent` output replaces. */
-export function replaceableInlineChildren(paragraph: XmlElement): XmlElement[] {
-	return Array.from(paragraph.childNodes).filter(
-		(child): child is XmlElement =>
-			isElement(child) &&
-			(isEquationElement(child) ||
-				named(child, 'r') ||
-				named(child, 'hyperlink') ||
-				named(child, 'fldSimple') ||
-				isSdt(child) ||
-				isRevisionWrapperElement(child) ||
-				isCommentAnchorElement(child)),
-	);
-}
-
-function sameLink(a: HyperlinkInfo | undefined, b: HyperlinkInfo | undefined): boolean {
-	if (!a && !b) return true;
-	if (!a || !b) return false;
-	return a.href === b.href && a.anchor === b.anchor && a.tooltip === b.tooltip;
-}
+import { containerGroup, containerSources, sameGroup } from './inline-containers';
+import type { PlacedRun } from './inline-markers';
+import type { InlineSlot } from './inline-slots';
+import { convertToDeleteText, revisionWrapper } from './write-revisions';
+import { getW, makeW, REL_NS, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 function setW(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -208,22 +55,43 @@ function runNodes(
 	opens: RangeEdge[],
 	closes: RangeEdge[],
 	allocator?: RelationshipAllocator,
-): XmlElement[] {
+): { nodes: XmlElement[]; placed: PlacedRun } {
 	// Comments open outside moves and close outside them, so ranges nest.
 	const nodes = opens.flatMap((edge) => rangeStartNodes(doc, edge));
 	const node = run.equation
 		? writeEquation(doc, run, base, old)
 		: createRun(doc, run, base, old, allocator);
 	const revision = run.revision;
-	if (revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind)) {
+	const wrapped = revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind);
+	if (wrapped) {
 		if (revision.kind === 'delete') convertToDeleteText(doc, node);
 		nodes.push(revisionWrapper(doc, revision, node));
 	} else nodes.push(node);
 	for (const edge of [...closes].reverse()) nodes.push(...rangeEndNodes(doc, edge));
-	return nodes;
+	const text =
+		!run.equation &&
+		!run.image &&
+		!run.fieldChar &&
+		run.fieldCode === undefined &&
+		!run.noteReference &&
+		!run.noteMark &&
+		!run.noteSeparator &&
+		!run.break;
+	return {
+		nodes,
+		placed: {
+			...(nodes[0] && { first: nodes[0], last: nodes.at(-1)! }),
+			...(text && !wrapped && { splittable: node }),
+		},
+	};
 }
 
-/** Builds the paragraph's ordered top-level inline nodes from the model's flat run list. */
+/**
+ * Builds the paragraph's ordered top-level inline nodes from the model's flat run list, where
+ * each run was written (inside its hyperlink or content control when it has one), and what was
+ * written in place of each source hyperlink, simple field or content control (`containers`: the
+ * elements its runs went into, the control's content for a control).
+ */
 export function buildInlineContent(
 	doc: XmlDocument,
 	runs: TextRun[],
@@ -231,12 +99,20 @@ export function buildInlineContent(
 	slots: InlineSlot[],
 	allocator?: RelationshipAllocator,
 	ranges?: ParagraphRanges,
-): XmlElement[] {
+	sources = containerSources(runs, base, slots),
+): { nodes: XmlElement[]; placed: PlacedRun[]; containers: Map<XmlElement, Set<XmlElement>> } {
 	// Ranges continuing from an earlier paragraph or into a later one open or close there instead.
 	const { opens, closes } = rangeEdges(runs, ranges);
 	const runAt = (at: number) => expectDefined(runs[at], `run ${at}`);
 	const sourceFor = inlineSourceLookup(runs, base);
+	const placed: PlacedRun[] = [];
+	const containers = new Map<XmlElement, Set<XmlElement>>();
 	const nodesFor = (index: number) => {
+		const written = runNodesAt(index);
+		placed[index] = written.placed;
+		return written.nodes;
+	};
+	const runNodesAt = (index: number) => {
 		const run = runAt(index);
 		const sourceIndex = sourceFor(index);
 		const source = sourceIndex === undefined ? undefined : base?.[sourceIndex];
@@ -264,18 +140,20 @@ export function buildInlineContent(
 		}
 		const start = index;
 		while (index < runs.length && sameGroup(containerGroup(runAt(index)), group)) index++;
-		const oldContainers = new Set(slots.slice(start, index).map((slot) => slot?.container));
+		// The source container this group continues (see inline-containers.ts).
+		const source = sources.get(start);
+		const oldContainers = source?.containers ?? new Set<XmlElement | undefined>();
 		const [onlyContainer] = oldContainers;
 		const reusable =
+			source?.same === true &&
 			oldContainers.size === 1 &&
 			onlyContainer !== undefined &&
 			onlyContainer.localName ===
-				(group.kind === 'link' ? 'hyperlink' : group.kind === 'control' ? 'sdt' : 'fldSimple') &&
-			base?.slice(start, index).every((run) => sameGroup(run && containerGroup(run), group)) ===
-				true;
+				(group.kind === 'link' ? 'hyperlink' : group.kind === 'control' ? 'sdt' : 'fldSimple');
 		let container: XmlElement;
 		let target: XmlElement | undefined;
-		if (reusable && group.kind === 'control') {
+		if (reusable && source.clone) container = onlyContainer.cloneNode(false) as XmlElement;
+		else if (reusable && group.kind === 'control') {
 			container = onlyContainer;
 			target = resetContentControl(doc, container, group.control);
 		} else if (reusable) {
@@ -295,47 +173,14 @@ export function buildInlineContent(
 			group.kind === 'simpleField'
 				? takeSimpleFieldCommentEdges(doc, runs, start, index, opens, closes)
 				: { before: [], after: [] };
-		for (let item = start; item < index; item++)
-			for (const node of nodesFor(item)) (target ?? container).appendChild(node);
+		const parent = target ?? container;
+		if (oldContainers.size === 1 && onlyContainer)
+			containers.set(onlyContainer, (containers.get(onlyContainer) ?? new Set()).add(parent));
+		for (let item = start; item < index; item++) {
+			for (const node of nodesFor(item)) parent.appendChild(node);
+			placed[item] = { ...placed[item], parent };
+		}
 		output.push(...edges.before, container, ...edges.after);
 	}
-	return output;
-}
-
-type ContainerGroup =
-	| { kind: 'link'; link: HyperlinkInfo }
-	| { kind: 'control'; control: ContentControl }
-	| {
-			kind: 'simpleField';
-			instr: string;
-			instanceId: string | undefined;
-			fieldFlags: TextRun['fieldFlags'];
-	  };
-
-/** The wrapper a run is written inside: a hyperlink, or a simple field (`w:fldSimple`). */
-function containerGroup(run: TextRun): ContainerGroup | undefined {
-	if (run.contentControl) return { kind: 'control', control: run.contentControl };
-	if (run.link) return { kind: 'link', link: run.link };
-	if (run.field?.simple)
-		return {
-			kind: 'simpleField',
-			instr: run.field.instr,
-			instanceId: run.fieldInstanceId,
-			fieldFlags: run.fieldFlags,
-		};
-	return undefined;
-}
-
-function sameGroup(a: ContainerGroup | undefined, b: ContainerGroup | undefined): boolean {
-	if (!a || !b) return a === b;
-	if (a.kind === 'control' || b.kind === 'control')
-		return a.kind === 'control' && b.kind === 'control' && a.control.id === b.control.id;
-	if (a.kind === 'link' && b.kind === 'link') return sameLink(a.link, b.link);
-	return (
-		a.kind === 'simpleField' &&
-		b.kind === 'simpleField' &&
-		a.instr === b.instr &&
-		a.instanceId === b.instanceId &&
-		sameFieldFlags(a.fieldFlags, b.fieldFlags)
-	);
+	return { nodes: output, placed, containers };
 }

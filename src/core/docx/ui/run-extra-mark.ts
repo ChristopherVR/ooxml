@@ -33,6 +33,8 @@ export const extraRunFields = [
 	'shadingThemeFill',
 	'colorTheme',
 	'fontTheme',
+	'symbol',
+	'positionalTab',
 ] as const satisfies readonly (keyof TextRun)[];
 
 /**

@@ -99,6 +99,14 @@ export * from './page-setup-model';
 export * from './page-size';
 export * from './section-edit';
 export * from './content-control-edit';
+export {
+	formCheckboxChecked,
+	formDropDownIndex,
+	formFieldDisplayText,
+	formFieldOfRun,
+	selectFormDropDownEntry,
+	setFormCheckbox,
+} from './form-fields';
 export { parseContentControl } from './content-control';
 export * from './shape-model';
 export * from './shape-palette';

@@ -1,7 +1,14 @@
 // Enforces content control lock settings and routes typing and deleting into controls.
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
-import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep } from 'prosemirror-transform';
+import {
+	AddMarkStep,
+	AttrStep,
+	RemoveMarkStep,
+	ReplaceAroundStep,
+	ReplaceStep,
+} from 'prosemirror-transform';
 import { isContentControlLocked } from '../content-control-model';
+import { inlineRunProperties } from './inline-run-properties';
 import {
 	CONTROL_EDIT_META,
 	deleteToPlaceholder,
@@ -22,15 +29,27 @@ const isRangeStep = (step: unknown): step is RangeStep =>
 /**
  * Whether a step breaks a lock. `contentLocked` forbids editing what is inside the control (it can
  * still be deleted whole); `sdtLocked` forbids deleting the control (its content stays editable).
+ * Changing a node's attributes (a form field's data, the formatting of a picture) edits that node.
  */
 export function violatesControlLock(tr: Transaction, state: EditorState): boolean {
 	const locked = controlSpans(state.doc).filter((span) => span.control.lock);
-	if (!locked.length) return false;
 	return tr.steps.some((step, index) => {
-		if (!isRangeStep(step)) return false;
+		const before = tr.mapping.slice(0, index);
+		if (step instanceof AttrStep) {
+			// An inline atom keeps its control with its run properties rather than as a mark.
+			const node = tr.docs[index]?.nodeAt(step.pos);
+			if (node && isContentControlLocked(inlineRunProperties(node).contentControl, 'content'))
+				return true;
+			return locked.some(
+				(span) =>
+					isContentControlLocked(span.control, 'content') &&
+					step.pos >= before.map(span.from, 1) &&
+					step.pos < before.map(span.to, -1),
+			);
+		}
+		if (!locked.length || !isRangeStep(step)) return false;
 		const { from, to } = step as { from: number; to: number };
 		const inserts = from === to;
-		const before = tr.mapping.slice(0, index);
 		return locked.some((span) => {
 			const spanFrom = before.map(span.from, 1);
 			const spanTo = before.map(span.to, -1);

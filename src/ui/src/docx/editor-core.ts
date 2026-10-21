@@ -30,7 +30,7 @@ import { DirtyState } from 'ooxml-core/docx/ui';
 import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
 import type { HeadingNavigator } from './heading-navigator';
-import { HEADER_FOOTER_INPUT } from 'ooxml-core/docx/ui';
+import { HEADER_FOOTER_INPUT, isFormsProtected } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
 import { currentSectionIndex } from './section-commands';
@@ -157,7 +157,9 @@ export class EditorCore {
 				this.model = model;
 			},
 			locale: () => this.locale,
-			canEditOutsideBody: () => !this.readOnly && !this.collab.active,
+			// A document protected for forms lets only its body's fields change, as in Word.
+			canEditOutsideBody: () =>
+				!this.readOnly && !this.collab.active && !isFormsProtected(this.model.protection),
 			edited: () => this.markEditedOutsideBody(),
 			reportError: (cause) => dispatchDocumentError(element, cause),
 		};

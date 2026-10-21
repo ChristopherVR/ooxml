@@ -177,3 +177,14 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	color: var(--ink);
 	font-size: 20px;
 }
+
+/* Legacy form fields: Word shades a text field's result, and draws a check box or a drop-down's
+   entry from the field's data on its (otherwise hidden) begin marker. */
+.ProseMirror:not([data-form-shading='off']) span[data-field='FORMTEXT'],
+.ProseMirror:not([data-form-shading='off']) .dve-form-field {
+	background-color: var(--dve-form-field-shading, #d9d9d9);
+}
+.dve-field-marker.dve-form-field {
+	font-size: inherit;
+	cursor: default;
+}

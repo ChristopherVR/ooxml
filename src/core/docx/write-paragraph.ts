@@ -1,6 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph } from './model';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+import { children, first, makeW, named, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+import { opensRange, orderRangeEnds, placeMarkers } from './inline-markers';
+import { moveMarkers, runPositions } from './inline-marker-positions';
+import { restoreAnnotations } from './inline-annotations';
 import { writeParagraphProperties } from './write-paragraph-properties';
 import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
@@ -10,7 +13,10 @@ import { writeNumberingProperties } from './numbering-write';
 import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
 import { paragraphJustification } from './paragraph-alignment';
 import { runHasUnknownProperties } from './write-run-validation';
-import { buildInlineContent, collectInlineSlots, replaceableInlineChildren } from './write-inline';
+import { buildInlineContent } from './write-inline';
+import { containerSources } from './inline-containers';
+import { followContainers } from './inline-container-markers';
+import { collectInlineSlots, replaceableInlineChildren } from './inline-slots';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
@@ -87,8 +93,8 @@ export function writeParagraphImpl(
 	const sameRanges =
 		continuationKey(continuation) === continuationKey(spans?.original.get(paragraph.id));
 	if (base && sameRanges && JSON.stringify(paragraph) === JSON.stringify(base)) return node;
-	const slots = collectInlineSlots(node);
-	if (!slots)
+	const layout = collectInlineSlots(node);
+	if (!layout)
 		throw new Error(
 			`Cannot edit paragraph ${paragraph.id}: it contains inline OOXML that this editor cannot safely relocate. The original DOCX package remains unchanged.`,
 		);
@@ -143,39 +149,78 @@ export function writeParagraphImpl(
 	writeParagraphFormatRevision(doc, pPr, paragraph.formatRevision);
 	writeTabStops(doc, pPr, paragraph, propertyBase);
 	orderParagraphProperties(pPr);
+	const { slots, markers } = layout;
 	rejectUnsafeRunSegmentation(
 		paragraph,
 		base,
 		slots.flatMap((slot) => (slot.element ? [slot.element] : [])),
 	);
-	// Bookmarks are preserved but not repositioned precisely: an edited paragraph's bookmarks move
-	// to its boundaries (starts right after pPr, ends at the close) instead of their exact original
-	// run offsets, which this run-level model does not track.
-	const { starts: bookmarkStarts, ends: bookmarkEnds } = reconcileBookmarks(
+	// Bookmarks, permissions and proofing marks keep their character positions (inline-markers.ts).
+	// Bookmark names removed from the model lose their markers; names added bracket the paragraph.
+	const isBookmark = (element: XmlElement) =>
+		named(element, 'bookmarkStart') || named(element, 'bookmarkEnd');
+	const sourceBookmarks = markers.map((marker) => marker.element).filter(isBookmark);
+	const { starts, ends } = reconcileBookmarks(
 		doc,
-		children(node, 'bookmarkStart'),
-		children(node, 'bookmarkEnd'),
+		sourceBookmarks.filter((element) => named(element, 'bookmarkStart')),
+		sourceBookmarks.filter((element) => named(element, 'bookmarkEnd')),
 		paragraph.bookmarks ?? [],
 		base?.bookmarks ?? [],
 		() => spans?.nextId() ?? '0',
 	);
-	for (const bookmark of [...children(node, 'bookmarkStart'), ...children(node, 'bookmarkEnd')])
-		node.removeChild(bookmark);
+	const source = new Set(sourceBookmarks);
+	const kept = new Set([...starts, ...ends]);
+	const sourcePositions = runPositions(base?.runs ?? []);
+	const read = markers
+		.filter((marker) => !isBookmark(marker.element) || kept.has(marker.element))
+		.map((marker) => {
+			const position = sourcePositions[marker.boundary] ?? 0;
+			const annotation = marker.annotation;
+			return {
+				element: marker.element,
+				position,
+				source: position,
+				opening: annotation ? annotation.edge === 'start' : opensRange(marker.element),
+				...(marker.container && { container: marker.container }),
+				...(annotation && { annotation, exact: true }),
+			};
+		});
+	const end = runPositions(paragraph.runs).at(-1)!;
+	const sources = containerSources(paragraph.runs, base?.runs, slots);
+	const carried = orderRangeEnds(
+		base
+			? followContainers(
+					moveMarkers(base.runs, paragraph.runs, read),
+					sources,
+					base.runs,
+					paragraph.runs,
+				)
+			: read.map((marker) => ({ ...marker, position: marker.opening ? 0 : end })),
+	);
+	for (const marker of markers) marker.element.parentNode?.removeChild(marker.element);
 	for (const oldNode of replaceableInlineChildren(node)) node.removeChild(oldNode);
-	const newNodes = buildInlineContent(doc, paragraph.runs, base?.runs, slots, allocator, ranges);
+	const { nodes, placed, containers } = buildInlineContent(
+		doc,
+		paragraph.runs,
+		base?.runs,
+		slots,
+		allocator,
+		ranges,
+		sources,
+	);
 	let anchor: XmlElement = pPr;
-	for (const bookmark of bookmarkStarts) {
+	for (const bookmark of starts.filter((element) => !source.has(element))) {
 		node.insertBefore(bookmark, anchor.nextSibling);
 		anchor = bookmark;
 	}
-	for (const run of newNodes) {
+	for (const run of nodes) {
 		node.insertBefore(run, anchor.nextSibling);
 		anchor = run;
 	}
-	for (const bookmark of bookmarkEnds) {
-		node.insertBefore(bookmark, anchor.nextSibling);
-		anchor = bookmark;
-	}
+	placeMarkers(node, carried, paragraph.runs, placed, containers);
+	// Smart tags and inline custom XML go back around text the edit left as it was.
+	restoreAnnotations(carried, base?.runs ?? [], paragraph.runs);
+	for (const bookmark of ends.filter((element) => !source.has(element))) node.appendChild(bookmark);
 	if (!pPr.childNodes.length) node.removeChild(pPr);
 	return node;
 }
