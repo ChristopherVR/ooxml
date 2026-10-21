@@ -9,6 +9,18 @@
  * re-deriving the arithmetic in each export handler.
  */
 
+/** `pptx-ui-export-progress` state: the bindings pass their export modal's own values. */
+export interface ExportProgressViewState {
+	open: boolean;
+	/** Translated heading (for example "Export as PDF"). */
+	title: string;
+	/** Percent done, 0-100. */
+	progress: number;
+	/** Translated status line; "Processing..." when absent or empty. */
+	status?: string | undefined;
+	translate?: (key: string, params?: Record<string, string | number>) => string;
+}
+
 /** Reserved tail percentages for the post-capture assembly/save phase. */
 export const EXPORT_ASSEMBLING_PERCENT = 95;
 export const EXPORT_DONE_PERCENT = 100;

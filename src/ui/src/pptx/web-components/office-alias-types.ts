@@ -3,6 +3,7 @@ import type {
 	CompatToastsViewState,
 	DialogFooterIntent,
 	DialogFooterViewState,
+	ExportProgressViewState,
 	PasteOptionsIntent,
 	PasteOptionsViewState,
 	ReadOnlyBannerIntent,
@@ -41,6 +42,11 @@ export interface PptxUiReadOnlyBannerElement extends HTMLElement {
 	state: ReadOnlyBannerViewState;
 }
 
+/** `export-cancel` carries no detail: the host aborts the export and closes the modal. */
+export interface PptxUiExportProgressElement extends HTMLElement {
+	state: ExportProgressViewState;
+}
+
 export type RibbonCommandRequestEvent = CustomEvent<{ id: RibbonControlId }>;
 
 export type ContextMenuRequestEvent = CustomEvent<ContextMenuRequestDetail>;
@@ -58,5 +64,6 @@ declare global {
 		'pptx-ui-dialog-footer': PptxUiDialogFooterElement;
 		'pptx-ui-paste-options': PptxUiPasteOptionsElement;
 		'pptx-ui-read-only-banner': PptxUiReadOnlyBannerElement;
+		'pptx-ui-export-progress': PptxUiExportProgressElement;
 	}
 }
