@@ -7,10 +7,22 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { seqInstruction } from './caption-commands';
 import { insertCaption } from './caption-commands';
 import { runToInlineNodes, inlineNodeRun } from 'ooxml-core/docx/ui';
-import { createDocument, loadDocx, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
+import {
+	createDocument,
+	loadDocx,
+	type DocumentModel,
+	type Paragraph,
+	type TextRun,
+} from 'ooxml-core/docx';
 import { readFile } from 'node:fs/promises';
 import { URL as NodeURL } from 'node:url';
 import { fieldLockFixture } from '../../../core/docx/test-support/field-lock-fixture';
+import {
+	complexField,
+	paragraph as styleParagraph,
+	simpleField,
+	styleRefFixture,
+} from '../../../core/docx/test-support/style-ref-fixture';
 import { updateFields } from './field-update';
 import { docToModel } from './model-adapter';
 import { schema } from './schema';
@@ -297,6 +309,125 @@ describe('updateFields', () => {
 		};
 		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(true);
 		expect(texts(view)).toEqual(['Figure 1', 'Alder', 'Ash, see Ash in Figure 1']);
+	});
+
+	it('formats a CHARFORMAT STYLEREF result like the first letter of its field name', () => {
+		const complex = (instr: string, result: string, code: Partial<TextRun>) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ' ' },
+					{ ...code, text: '', fieldCode: `${instr} ` },
+					{ text: '', fieldChar: 'separate' },
+					{ text: result, bold: true, field: { instr } },
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-5')]),
+			paragraph('p1', [
+				...complex('STYLEREF "Doc Number" \\* CHARFORMAT', 'old', { italic: true }),
+				schema.text('|'),
+				...complex('STYLEREF "Doc Number" \\* MERGEFORMAT', 'old', { italic: true }),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(true);
+		expect(texts(view)).toEqual(['DOC-5', 'DOC-5|DOC-5']);
+		const results: TextRun[] = [];
+		view.state.doc.child(1).forEach((child) => {
+			const run = child.isText ? inlineNodeRun(child) : undefined;
+			if (run?.field) results.push(run);
+		});
+		expect(results.map((run) => [run.text, run.italic, run.bold])).toEqual([
+			['DOC-5', true, undefined],
+			['DOC-5', undefined, true],
+		]);
+		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(false);
+	});
+
+	it('brings a CHARFORMAT result up to date when only its formatting differs', () => {
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-5')]),
+			paragraph(
+				'p1',
+				(
+					[
+						{ text: '', fieldChar: 'begin' },
+						{ text: '', italic: true, fieldCode: ' STYLEREF "Doc Number" \\* CHARFORMAT ' },
+						{ text: '', fieldChar: 'separate' },
+						{ text: 'DOC-5', bold: true, field: { instr: 'STYLEREF "Doc Number" \\* CHARFORMAT' } },
+						{ text: '', fieldChar: 'end' },
+					] as TextRun[]
+				).flatMap((run) => runToInlineNodes(run, schema)),
+			),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		expect(update()).toBe(true);
+		const result: TextRun[] = [];
+		view.state.doc.child(1).forEach((child) => {
+			const run = child.isText ? inlineNodeRun(child) : undefined;
+			if (run?.field) result.push(run);
+		});
+		expect(result.map((run) => [run.text, run.italic, run.bold])).toEqual([
+			['DOC-5', true, undefined],
+		]);
+		expect(update()).toBe(false);
+	});
+
+	it('clears a body STYLEREF whose paragraph in the style is empty, and fills it again', async () => {
+		const loaded = await loadDocx(
+			await styleRefFixture({
+				body:
+					styleParagraph('Scope', 'Heading1') +
+					styleParagraph(
+						'',
+						undefined,
+						`${complexField('STYLEREF 1', ['Scope'])}<w:r><w:t xml:space="preserve"> | </w:t></w:r>${simpleField('STYLEREF 1', 'Scope')}`,
+					),
+			}),
+		);
+		const blocks = loaded.model.blocks as Paragraph[];
+		const view = editor(
+			...blocks.map((block) =>
+				schema.nodes.paragraph!.create(
+					{ id: block.id, ...(block.style ? { style: block.style } : {}) },
+					block.runs.flatMap((run) => runToInlineNodes(run, schema)),
+				),
+			),
+		);
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, loaded.model));
+		view.dispatch(view.state.tr.delete(1, 1 + 'Scope'.length));
+		expect(update()).toBe(true);
+		expect(texts(view)).toEqual(['', ' | ']);
+		// Both fields keep their instruction, saved as fields with an empty result.
+		const saved = await loadDocx(await loaded.save(docToModel(view.state.doc, loaded.model)));
+		const runs = (saved.model.blocks[1] as Paragraph).runs;
+		expect(
+			runs.filter((run) => run.fieldCode !== undefined).map((run) => run.fieldCode!.trim()),
+		).toEqual(['STYLEREF 1', 'STYLEREF 1']);
+		expect(runs.filter((run) => run.field).map((run) => run.text)).toEqual([]);
+		expect(runs.map((run) => run.text).join('')).toBe(' | ');
+		// Typed again, the heading fills both empty results.
+		view.dispatch(view.state.tr.insertText('Method', 1));
+		expect(update()).toBe(true);
+		expect(texts(view)).toEqual(['Method', 'Method | Method']);
+		expect(update()).toBe(false);
 	});
 
 	it('does nothing in a read-only view', () => {

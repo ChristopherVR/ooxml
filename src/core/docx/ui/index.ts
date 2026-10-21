@@ -16,6 +16,7 @@ export * from './dirty-state';
 export * from './field-guard';
 export * from './table-structure-guard';
 export * from './field-results';
+export { emptySimpleFieldResult } from './simple-field-input';
 export * from './header-footer-history';
 export * from './hard-break-command';
 export * from './link-commands';

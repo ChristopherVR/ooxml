@@ -20,6 +20,7 @@ describe('STYLEREF instructions', () => {
 			style: 'Title',
 			last: true,
 			textCase: 'upper',
+			charFormat: true,
 		});
 		expect(parseStyleReference('STYLEREF 1 \\n \\t')).toMatchObject({
 			style: '1',
@@ -128,6 +129,41 @@ describe('STYLEREF styles', () => {
 		]);
 		const refreshed = refreshStyleRefFields(model, { body: true });
 		expect(refreshed.blocks[1]).toBe(model.blocks[1]);
+	});
+
+	it('numbers an unnumbered paragraph in the style 0 with \\n and \\s, as Word does', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const heading = (text: string, numId?: string) =>
+			paragraph(
+				'',
+				undefined,
+				`<w:pPr><w:pStyle w:val="Heading1"/>${numId === undefined ? '' : `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numId}"/></w:numPr>`}</w:pPr><w:r><w:t>${text}</w:t></w:r>`,
+			);
+		const model = await load({
+			body:
+				heading('Scope', '1') +
+				// Numbering taken off one heading, and none on another.
+				heading('Glossary', '0') +
+				heading('Index') +
+				paragraph('', undefined, complexField('STYLEREF 1 \\s', ['1'])) +
+				heading('Notes', '2'),
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Chapter %1"/></w:lvl></w:abstractNum><w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="*"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>`,
+		});
+		const source = styleRefSource(model);
+		const target = styleTarget(model, '1')!;
+		const number = parseStyleReference('STYLEREF 1 \\n')!;
+		const chapter = parseStyleReference('STYLEREF 1 \\s')!;
+		expect(source.results(0, number, target)).toEqual(['Chapter 1']);
+		expect(source.results(0, chapter, target)).toEqual(['1']);
+		// The nearest paragraph in the style is the match, numbered or not: Word shows 0.
+		expect(source.results(1, number, target)).toEqual(['0']);
+		expect(source.results(2, chapter, target)).toEqual(['0']);
+		// What Word shows for a bullet is not documented: the field keeps its saved result.
+		expect(source.results(4, number, target)).toEqual([undefined]);
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		const text = (block: unknown) =>
+			(block as { runs: { text: string }[] }).runs.map((run) => run.text).join('');
+		expect(text(refreshed.blocks[3])).toBe('0');
 	});
 
 	it('reads a cell and the tables nested in it in reading order', async () => {

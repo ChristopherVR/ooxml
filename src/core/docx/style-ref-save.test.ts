@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel } from './index';
-import { expectParagraph } from './test-support/access';
+import { DocxModelValidationError, loadDocx, type DocumentModel } from './index';
+import { expectParagraph, must } from './test-support/access';
 import {
 	complexField,
 	paragraph,
@@ -83,6 +83,77 @@ describe('saving STYLEREF fields', () => {
 		expectParagraph(model.blocks[1]).runs = [{ text: 'More notes' }];
 		const saved = await parts(await loaded.save(model));
 		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
+	});
+
+	it('refreshes a header field in a table nested in a cell', async () => {
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: table(
+				cell(
+					paragraph('Number') +
+						table(
+							cell(paragraph('', undefined, complexField('STYLEREF "Doc Number"', ['DOC-1']))),
+						) +
+						// A field in the cell's own paragraph, beside the nested table.
+						paragraph('', undefined, complexField('STYLEREF "Doc Number"', ['DOC-1'])),
+				),
+			),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-0042'));
+		const header = (await parts(saved)).get('word/header1.xml')!;
+		expect(header).toMatch(
+			/<w:tbl>.*<w:tbl>.*>DOC-0042<\/w:t>.*<\/w:tbl>.*>DOC-0042<\/w:t>.*<\/w:tbl>/s,
+		);
+		expect(header).not.toContain('>DOC-1<');
+		expect(header).toContain('>Number<');
+	});
+
+	it('reports an invalid model with its typed error, not one from the refresh', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const original = await styleRefFixture({
+			body: paragraph(
+				'',
+				undefined,
+				'<w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Scope</w:t></w:r>',
+			),
+			header: paragraph('', undefined, complexField('STYLEREF 1 \\s', ['0'])),
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Chapter %1"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+		});
+		const loaded = await loadDocx(original);
+		const model = structuredClone(loaded.model);
+		const level = must(model.numberingCatalog?.abstractNums['0']?.levels[0], 'level');
+		level.lvlText = 7 as never;
+		const error = await loaded.save(model).then(
+			() => undefined,
+			(caught: unknown) => caught,
+		);
+		expect(error).toBeInstanceOf(DocxModelValidationError);
+		expect((error as Error).message).toContain('lvlText');
+	});
+
+	it('writes a CHARFORMAT header result in the formatting of its field code', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+					'<w:r><w:rPr><w:i/></w:rPr><w:instrText xml:space="preserve"> STYLEREF "Doc Number" \\* CHARFORMAT </w:instrText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+					'<w:r><w:rPr><w:b/></w:rPr><w:t>DOC-1</w:t></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="end"/></w:r>',
+			),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-0042'));
+		const header = (await parts(saved)).get('word/header1.xml')!;
+		expect(header).toMatch(/<w:r><w:rPr><w:i\/><\/w:rPr><w:t[^>]*>DOC-0042<\/w:t><\/w:r>/);
+		expect(header).not.toContain('<w:b/>');
 	});
 
 	it('saves without the refresh when the header cannot be rebuilt', async () => {

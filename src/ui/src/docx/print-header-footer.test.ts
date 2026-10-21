@@ -221,13 +221,26 @@ describe('Print Layout headers, footers and page fields', () => {
 			},
 			sections: [section({ headers: { default: { blocks: [field] } } })],
 		};
-		const pages = ['p1', 'p2'].map((blockId, index) => ({
+		const pages = [
+			['p1', 'Alpha'],
+			['p2', 'Beta'],
+		].map(([blockId, text], index) => ({
 			...page(index, 0, index),
 			columns: [
 				{
 					xPx: 96,
 					widthPx: 624,
-					blocks: [{ kind: 'paragraph' as const, blockId, yPx: 0, heightPx: 20, lines: [] }],
+					blocks: [
+						{
+							kind: 'paragraph' as const,
+							blockId: blockId!,
+							yPx: 0,
+							heightPx: 20,
+							lines: [
+								{ yPx: 0, heightPx: 20, fragments: [], sourceStart: 0, sourceEnd: text!.length },
+							],
+						},
+					],
 				},
 			],
 		}));

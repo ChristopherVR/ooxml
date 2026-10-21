@@ -79,6 +79,7 @@ export {
 	type StyleRefSource,
 	type StyleReference,
 } from './style-ref';
+export { fieldResultRun, withFieldCodeFormatting } from './style-ref-fields';
 export { bodyStyleRefResult, refreshStyleRefFields } from './style-ref-fields';
 export {
 	listFormFields,
