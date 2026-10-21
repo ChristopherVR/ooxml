@@ -7,6 +7,34 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.44.0) - 2026-10-21
+
+### Features
+
+- **opc:** Name the check a zip package failed ([5125361](https://github.com/ChristopherVR/ooxml/commit/5125361f7787c1edf9863ccf85d0666a56610d1b))
+- **xml:** Throw a typed error when a part breaks a parse limit ([40e73f6](https://github.com/ChristopherVR/ooxml/commit/40e73f6e0ddb045ef5a3b960e26cfc07a1fc6d45))
+- **automation:** List and fill Word form fields from document bytes ([548ca2d](https://github.com/ChristopherVR/ooxml/commit/548ca2d53b2828bc69681e154e8bd668cfacf90b))
+
+### Bug Fixes
+
+- **chart:** Scale and draw series with very many points ([778a3e9](https://github.com/ChristopherVR/ooxml/commit/778a3e973b5d948e15ef2d0de6ac70a4243feb5a))
+- **docx:** Add no folder entries to a saved package ([9688c30](https://github.com/ChristopherVR/ooxml/commit/9688c30da93a3a73436a248b59b5a64d71fc7585))
+- **xml:** Keep the line break after the declaration of a part ([9af3e23](https://github.com/ChristopherVR/ooxml/commit/9af3e23b3c33368027123f1363c9d1236cc8230e))
+- **docx:** Keep markers and smart tags in place in a rebuilt paragraph ([8ddce70](https://github.com/ChristopherVR/ooxml/commit/8ddce70d17ba25ff6a1887f91c907ecba70a9b1f))
+- **text:** Keep unchanged words between far-apart edits in a diff ([3cf0b04](https://github.com/ChristopherVR/ooxml/commit/3cf0b0495a5c3c2d339b22c5db2b547c14921fbd))
+- **pptx:** Render weight-named font families at their weight ([7188288](https://github.com/ChristopherVR/ooxml/commit/718828829585145b461742c04e030fe3fbbd2d52))
+- **color:** Require each palette variant to name its step ([70d7d9a](https://github.com/ChristopherVR/ooxml/commit/70d7d9a949e9dc5289bacf33bf63bd9af4c9f258))
+- **color:** Require each palette variant to name its step ([3135862](https://github.com/ChristopherVR/ooxml/commit/3135862978fd352498d977335777555ba519428a))
+- **pptx:** Render flowChart connector presets as shapes, not lines ([08399ae](https://github.com/ChristopherVR/ooxml/commit/08399aea49db3270d6ef9c9c163c0ea3b6f8e23f))
+- **pptx:** Paint picture fills inherited from layout placeholders ([70bf7f9](https://github.com/ChristopherVR/ooxml/commit/70bf7f91beda9ae8e4d70472134222afc873dc68))
+- **vanilla:** Hide the protected view bar without a host css reset ([c321460](https://github.com/ChristopherVR/ooxml/commit/c32146099bdf254ddb26aa39f861bd061d6bef4c))
+
+### Refactor
+
+- **vanilla:** Render Help and Record through the shared section ([d869a39](https://github.com/ChristopherVR/ooxml/commit/d869a3919d2d3b4ad3d4053cf8c3dcfabe21dc96))
+- **vanilla:** Draw the inspector theme colours on the shared grid ([c65dd48](https://github.com/ChristopherVR/ooxml/commit/c65dd48cf5a01e3627a897720f8610ee673ef5be))
+- **vanilla:** Draw the inspector Text Warp on the shared gallery ([816c6c0](https://github.com/ChristopherVR/ooxml/commit/816c6c01439044f15b82a664f35e7f84b8176e96))
+
 ## [3.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.43.0) - 2026-10-21
 
 ### Features

@@ -7,6 +7,85 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.20.0) - 2026-10-21
+
+### Features
+
+- **ui:** Draw and operate content controls around table cells ([70dcd1e](https://github.com/ChristopherVR/ooxml/commit/70dcd1ec8550b8e469ea8f9c94c6104241e7c90f))
+- **docx:** Fill legacy form fields and honour forms protection ([8ab5a99](https://github.com/ChristopherVR/ooxml/commit/8ab5a99954432d51ddf8df92c4d6a7dba619de8e))
+- **docx:** Show the STYLEREF text of each page in Print Layout headers ([b82021a](https://github.com/ChristopherVR/ooxml/commit/b82021a062724fcdf96a45e88423f21b9382f380))
+- **docx:** Update body STYLEREF fields with Update Fields ([985b721](https://github.com/ChristopherVR/ooxml/commit/985b7216deea2cfc274a9294d578c696d39733ee))
+- **ui:** Add shared Help and Record ribbon models for pptx ([415cb6a](https://github.com/ChristopherVR/ooxml/commit/415cb6a2acbad4655daf910e3a78284215f91039))
+- **ui:** Let the colour grid take a product's palette and selection ([81928c1](https://github.com/ChristopherVR/ooxml/commit/81928c17af5f4a6c00d1f2aac8da8514e051ae9f))
+- **ui:** Let the colour grid take a product's palette and selection ([9993199](https://github.com/ChristopherVR/ooxml/commit/99931990b8db4fe7c495d9d7f771e7087d23968f))
+- **ui:** Add a pptx colour grid alias and a deck palette adapter ([a98cb8b](https://github.com/ChristopherVR/ooxml/commit/a98cb8b8a1ab2a4c6dc78b5c7f7d25f519bc6b9a))
+- **ui:** Let the colour grid fit a narrow pane ([8313b65](https://github.com/ChristopherVR/ooxml/commit/8313b65e5c53caab9adaeefa4a39dad1c77930e0))
+- **ui:** Add a compact gallery panel for panes that apply at once ([20a95ad](https://github.com/ChristopherVR/ooxml/commit/20a95ad80844efe617d2e6cdbeffc0d2ba615b2d))
+- **ui:** Add the pptx Text Warp gallery ([3dfd6da](https://github.com/ChristopherVR/ooxml/commit/3dfd6da2c813a87ee984aaef92ccdeba36f184d5))
+
+### Bug Fixes
+
+- **ui:** Refuse an incompatible pptx control before writing the theme ([da3b217](https://github.com/ChristopherVR/ooxml/commit/da3b217b59082268bd58dcd964af88b5e1854222))
+- **ui:** Hide the xlsx ribbon overflow button once its group unfolds ([c6240f0](https://github.com/ChristopherVR/ooxml/commit/c6240f051000c6ea2f6f36f2d1de7560887c333c))
+- **ui:** Keep pptx status bar touch targets at 44px ([31b63f9](https://github.com/ChristopherVR/ooxml/commit/31b63f9f8bba36b9c0721c70506789dd132fcdcb))
+- **ui:** Keep a table cell's content control when the cell is copied ([0bfa4ae](https://github.com/ChristopherVR/ooxml/commit/0bfa4ae5d7a76b8f86654f6de237e96895f1244e))
+- **ui:** Operate the content control that was clicked ([7350c8e](https://github.com/ChristopherVR/ooxml/commit/7350c8efbd22a6cd77e7b25330fad1e75f497c75))
+- **ui:** Save the row controls of a merged table as the editor has them ([bf09c28](https://github.com/ChristopherVR/ooxml/commit/bf09c28e152ac9d52f551ada674a9ceaafec2ada))
+- **docx:** Write a new control's verbatim properties only as properties ([a5db4d4](https://github.com/ChristopherVR/ooxml/commit/a5db4d452204fe08f993e69e4fb4104bdd4aeea6))
+- **docx:** Remove a temporary block control that holds a table ([5270cfa](https://github.com/ChristopherVR/ooxml/commit/5270cfa67fb8b0935588e92e22ba8b298c7549c3))
+- **docx:** Take a content control from pasted HTML only when it is one ([72e8a53](https://github.com/ChristopherVR/ooxml/commit/72e8a5310895e2ea5022921ec768b7c718adc6fa))
+- **docx:** Check pasted cell, row and block controls like inline ones ([5556931](https://github.com/ChristopherVR/ooxml/commit/5556931fcfc309ab3811e21e23468fa1b01d823d))
+- **docx:** Keep a cell control the editor holds none for ([4c5d208](https://github.com/ChristopherVR/ooxml/commit/4c5d2085f0429ee3158e57cdc09aeb6b682ba2da))
+- **docx:** Apply a cell control's rules to a paste ([4a59e85](https://github.com/ChristopherVR/ooxml/commit/4a59e85b592c21601e57b9ee28e537fd1b108245))
+- **docx:** Take and write only values of a control's own kinds ([cd0d434](https://github.com/ChristopherVR/ooxml/commit/cd0d434b0c03f4b691dd412d2ac9fdaf6faddbe1))
+- **docx:** Take no pasted control nested deeper than a control is ([0578920](https://github.com/ChristopherVR/ooxml/commit/057892030a4a39478d50cba97fa1f528bb5857d9))
+- **docx:** Edit paragraphs that hold proofing marks, symbols and smart tags ([8d2b489](https://github.com/ChristopherVR/ooxml/commit/8d2b48976c96322b0be46a5ee1a716d8f500fcb3))
+- **docx:** Honour content control locks around legacy form fields ([1a7e72f](https://github.com/ChristopherVR/ooxml/commit/1a7e72fd20b89022fc197ecce7cd4eab07c99ba2))
+- **docx:** Keep headers, footers and notes read-only under forms protection ([4be8e69](https://github.com/ChristopherVR/ooxml/commit/4be8e69364180135598db377a0e781fe7182909c))
+- **docx:** Place unprotected sections of a protected form as layout does ([23e746c](https://github.com/ChristopherVR/ooxml/commit/23e746c857a46baf3ac2a11f9a610900c2a9212a))
+- **docx:** Let the editor renumber split paragraphs in a protected form ([3e338e5](https://github.com/ChristopherVR/ooxml/commit/3e338e5017a620acad9b0b011e09c5ec91f5dcd3))
+- **docx:** Operate form check boxes and drop-downs from the keyboard ([b0eb45d](https://github.com/ChristopherVR/ooxml/commit/b0eb45dd8f780b0dd82b3d11fc2e5a309c7d6ff9))
+- **docx:** Operate form fields only at the caret the browser shows ([e20eb78](https://github.com/ChristopherVR/ooxml/commit/e20eb78776152161855c90746760720e5315de5b))
+- **docx:** Keep markers at their characters in merged tracked runs ([ddab61b](https://github.com/ChristopherVR/ooxml/commit/ddab61b8e7da6bddb6e5048fd4fccdbe0a986dfd))
+- **docx:** Keep a hyperlink's markup when its whole label is replaced ([57e059d](https://github.com/ChristopherVR/ooxml/commit/57e059d7b3fb4b3515277c81c0a83b4388dc4bc8))
+- **docx:** Find words that hold soft hyphens ([7dc06aa](https://github.com/ChristopherVR/ooxml/commit/7dc06aa7e6771e95779a9752e63720f1b0144fd0))
+- **docx:** Change run boundaries over identical unmodeled properties ([38c2ad8](https://github.com/ChristopherVR/ooxml/commit/38c2ad8e45f833c800f430c9b6ac5e58cd25ab1a))
+- **docx:** Pick the drop-down entry chosen when names repeat ([02389cc](https://github.com/ChristopherVR/ooxml/commit/02389cc4c61e77a918426f84b51748359f5f495b))
+- **docx:** Pick in the drop-down field the list was opened for ([b1625b6](https://github.com/ChristopherVR/ooxml/commit/b1625b6909f3d9945ed4efef35d656f7d2d87281))
+- **docx:** Keep a form field's bookmark around it when the field moves ([42dcb86](https://github.com/ChristopherVR/ooxml/commit/42dcb86ba0f9a2668c22f8463cc02ab4272df847))
+- **docx:** Keep a pasted tab ordinary beside a positional tab ([e31ea3a](https://github.com/ChristopherVR/ooxml/commit/e31ea3a1f8fef35058c6dd239bac8a88f0555cb7))
+- **docx:** Keep a protected form's fields from taking formatting ([e137fb6](https://github.com/ChristopherVR/ooxml/commit/e137fb69fbfee30f6e7661d34208deeb85078cfb))
+- **docx:** Format a CHARFORMAT STYLEREF result like its field name ([8030a2f](https://github.com/ChristopherVR/ooxml/commit/8030a2f04c5e10aa1c9d37ffae987d1796d676fb))
+- **docx:** Count a paragraph box without lines as shown on its page ([3b91863](https://github.com/ChristopherVR/ooxml/commit/3b918630519025cbdf75a136fb672e94eb1bdfc2))
+- **docx:** Clear a body STYLEREF result in Update Fields ([b173820](https://github.com/ChristopherVR/ooxml/commit/b1738206c0606a95963611fad547d8eb466560c8))
+- **docx:** Reformat a CHARFORMAT STYLEREF result whose text is current ([c5687d5](https://github.com/ChristopherVR/ooxml/commit/c5687d5bcc7afdae91d3f1f721e2b22cfa08ef98))
+- **docx:** Keep line breaks in a field result when updating fields ([b6de6e4](https://github.com/ChristopherVR/ooxml/commit/b6de6e45548af97772a4cff70b49f99765794322))
+- **docx:** Keep field results out of text a revision deletes ([c6b59e4](https://github.com/ChristopherVR/ooxml/commit/c6b59e4d16aa87f65e1ea7b5716d162e01e5143d))
+- **docx:** Update fields that read other fields in one Update Fields ([4700386](https://github.com/ChristopherVR/ooxml/commit/47003860f98f36abfdd2d019618d8c06c98e2a4c))
+- **pptx:** Render weight-named font families at their weight ([7188288](https://github.com/ChristopherVR/ooxml/commit/718828829585145b461742c04e030fe3fbbd2d52))
+- **pptx:** Render style-named font families in their style ([5413be6](https://github.com/ChristopherVR/ooxml/commit/5413be6b74a6409c8a2f1454e1a1cf4c4f1b8ba8))
+- **pptx:** Apply named weights and styles to Vue WordArt and bullet fonts ([fe6e687](https://github.com/ChristopherVR/ooxml/commit/fe6e687b27c70831b42b4e5d152cbfe5292774c1))
+- **ui:** Stretch the ribbon section to fill the ribbon row ([09a3996](https://github.com/ChristopherVR/ooxml/commit/09a399638121bdf93f821ef6ac71e31b46e5c0dc))
+- **ui:** Size the colour grid's theme rows to its palette ([cf54101](https://github.com/ChristopherVR/ooxml/commit/cf541015d1015edae897d37298c7c5f10c89cdff))
+- **color:** Require each palette variant to name its step ([70d7d9a](https://github.com/ChristopherVR/ooxml/commit/70d7d9a949e9dc5289bacf33bf63bd9af4c9f258))
+- **ui:** Keep a short palette column in place in the colour grid ([f7b8724](https://github.com/ChristopherVR/ooxml/commit/f7b872425606ba592699a796dc87123d8c8efa38))
+- **ui:** Size the colour grid's theme rows to its palette ([b9b56b5](https://github.com/ChristopherVR/ooxml/commit/b9b56b506d9948d3718d51a65fff874cebfd05b4))
+- **color:** Require each palette variant to name its step ([3135862](https://github.com/ChristopherVR/ooxml/commit/3135862978fd352498d977335777555ba519428a))
+- **ui:** Keep a short palette column in place in the colour grid ([8297a4b](https://github.com/ChristopherVR/ooxml/commit/8297a4b1e694670c9f98b4f74d544e89800b4185))
+- **ui:** Let the pptx ribbon gallery draw as a panel ([b016984](https://github.com/ChristopherVR/ooxml/commit/b0169849e9f1496c660d34d919b8705b98c81686))
+- **docx:** Write a new content control's properties only when valid ([3a8e23a](https://github.com/ChristopherVR/ooxml/commit/3a8e23ac2df41db82357568749240592eab361a5))
+- **docx:** Keep foreign verbatim properties out of pasted controls ([9ee6664](https://github.com/ChristopherVR/ooxml/commit/9ee666419ca8fdcf4bea3a3f58753011057a798f))
+- **docx:** Keep a copied control's binding and check extension types ([19e6e78](https://github.com/ChristopherVR/ooxml/commit/19e6e785a34c94e0e8bf86e92dc4def22e0972fc))
+- **docx:** Take and write only values of a control's own kinds ([cb4b8e1](https://github.com/ChristopherVR/ooxml/commit/cb4b8e148a3666da6abf9175cc3760699a38a4a0))
+- **pptx:** Cover transition direction names the travel, not the edge ([1b8e853](https://github.com/ChristopherVR/ooxml/commit/1b8e853abd84290590fd8402252bd1b47791af62))
+- **pptx:** Morph a picture's transparency change instead of popping it ([cf1defe](https://github.com/ChristopherVR/ooxml/commit/cf1defe0c0a6fe9f41e46496fd1801edf028484b))
+
+### Testing
+
+- **ui:** Keep row content controls when text is typed in their table ([714de26](https://github.com/ChristopherVR/ooxml/commit/714de26613dc4a37985e6fbe4aa23e2920f63e55))
+- **ui:** Keep block controls around a table and in a cell on save ([0702ce5](https://github.com/ChristopherVR/ooxml/commit/0702ce5ed69845836fe57841fbbbd2774da5b810))
+- **ui:** Drop dragged content controls through the editor's handler ([dfdf11c](https://github.com/ChristopherVR/ooxml/commit/dfdf11c5324c4a89bbe6cdb81b34572bdd1eb071))
+
 ## [1.19.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.19.0) - 2026-10-21
 
 ### Features
