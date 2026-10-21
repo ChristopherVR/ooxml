@@ -14,6 +14,7 @@ import {
 	children,
 	elements,
 	getW,
+	importElement,
 	parseXml,
 	WORD_NS,
 	type XmlDocument,
@@ -184,7 +185,7 @@ export function verbatimProperties(
 		return undefined;
 	}
 	return root?.localName === 'sdtPr' && root.namespaceURI === WORD_NS && onlyProperties(root)
-		? (doc.importNode(root, true) as XmlElement)
+		? importElement(doc, root)
 		: undefined;
 }
 
@@ -204,6 +205,6 @@ export function verbatimEndProperties(
 		return undefined;
 	}
 	return root?.localName === 'sdtEndPr' && root.namespaceURI === WORD_NS && propertyShaped(root)
-		? (doc.importNode(root, true) as XmlElement)
+		? importElement(doc, root)
 		: undefined;
 }
