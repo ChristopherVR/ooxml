@@ -32,6 +32,7 @@ import {
 	SheetSelections,
 } from 'ooxml-core/xlsx/ui';
 import type { CalculationMode } from './backstage';
+import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
@@ -61,6 +62,10 @@ export class EditorCore {
 	loading = false;
 	savePassword: string | undefined;
 	shell: ShellHooks | undefined;
+	/** Host callbacks that stand in for dialogs when the editor mounts without application UI. */
+	surfaceActions: SurfaceHostActions = {};
+	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
+	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();
 	readonly commands: CommandRegistry;
 	readonly dialogs: DialogRegistry;
@@ -85,7 +90,10 @@ export class EditorCore {
 	}
 
 	constructor(readonly host: HTMLElement) {
-		this.dirty = new DirtyState((dirty) => emit(host, 'dirty-change', { dirty }));
+		this.dirty = new DirtyState((dirty) => {
+			emit(host, 'dirty-change', { dirty });
+			this.requestRender();
+		});
 		const report = (what: string, error: unknown) => {
 			const message = error instanceof Error ? error.message : String(error);
 			this.shell?.toast(
@@ -118,9 +126,12 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
-		editBridge(this.ctx).onChange(() =>
-			this.host.dispatchEvent(new CustomEvent('editor-state-change')),
-		);
+		editBridge(this.ctx).onChange(() => {
+			const draft = editBridge(this.ctx).state();
+			if (this.editError && (!draft.editing || draft.text !== this.editError.text))
+				this.editError = null;
+			this.host.dispatchEvent(new CustomEvent('editor-state-change'));
+		});
 		this.collab = collaborationFor(this);
 		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
 	}
@@ -160,6 +171,14 @@ export class EditorCore {
 					const key = JSON.stringify(detail);
 					if (key === core.lastSelection) return true;
 					core.lastSelection = key;
+				}
+				if (type === 'validation-error') {
+					const message = (detail as { message?: unknown }).message;
+					core.editError = {
+						message: typeof message === 'string' ? message : '',
+						text: editBridge(core.ctx).state().text,
+					};
+					core.requestRender();
 				}
 				return emitEvent(core.host, type, detail);
 			},

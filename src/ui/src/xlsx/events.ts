@@ -18,6 +18,16 @@ export interface SelectionChangeDetail {
 	active: string;
 }
 
+/** A cell edit that data validation (or the host's commit) refused. */
+export interface ValidationErrorDetail {
+	/** The message shown to the user (the rule's own text, or a generic one). */
+	message: string;
+	title?: string;
+	/** The cell being edited, as A1 text. */
+	ref: string;
+	style?: 'stop' | 'warning' | 'information';
+}
+
 /** Every public event of `<xlsx-editor>` and its detail. All bubble and are composed. */
 export interface XlsxEditorEventMap {
 	/** The workbook was loaded, created or edited. */
@@ -42,6 +52,8 @@ export interface XlsxEditorEventMap {
 	'collaboration-change': XlsxCollaborationState;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	'office-ribbon-add-in': RibbonAddInCommandDetail;
+	/** An in-progress cell edit failed validation; it stays open until corrected or canceled. */
+	'validation-error': ValidationErrorDetail;
 }
 export type XlsxEditorEventName = keyof XlsxEditorEventMap;
 export type XlsxEditorEventDetail<K extends XlsxEditorEventName> = XlsxEditorEventMap[K];
@@ -60,6 +72,7 @@ export const XLSX_EDITOR_EVENTS = [
 	'dirty-change',
 	'collaboration-change',
 	'office-ribbon-add-in',
+	'validation-error',
 ] as const satisfies readonly XlsxEditorEventName[];
 
 /** Events a host can cancel with `preventDefault()`. */

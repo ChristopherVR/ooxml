@@ -150,6 +150,12 @@ export class CellEditor implements EditDriver {
 			);
 			if (!result.ok) {
 				this.#pending = true;
+				ctx.emit('validation-error', {
+					message: ctx.t(result.message),
+					...(result.title ? { title: result.title } : {}),
+					ref: formatAddress(state.address),
+					style: result.style,
+				});
 				void showValidationAlert(ctx, result.style, result.message, result.title).then((answer) => {
 					this.#pending = false;
 					if (answer === 'yes' || answer === 'ok') this.#apply(text, move, false);
