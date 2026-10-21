@@ -363,7 +363,7 @@ export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = 
 	let latest = initial;
 	const effective = (options: SurfaceOptions): EditorOptions => ({
 		...options,
-		readOnly: options.canEdit === false || options.readOnly === true,
+		readOnly: options.canEdit !== true || options.readOnly === true,
 	});
 	const binding = mountEditor(host, effective(initial), true);
 	const { element } = binding;

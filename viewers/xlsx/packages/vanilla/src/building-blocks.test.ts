@@ -8,6 +8,7 @@ afterEach(() => document.body.replaceChildren());
 function compose(options: Parameters<typeof createViewerBuildingBlocks>[0] = {}) {
 	const blocks = createViewerBuildingBlocks({
 		workbook: createWorkbook({ sheets: ['One', 'Two'] }),
+		canEdit: true,
 		...options,
 	});
 	const [toolbar, formula, tabs, canvas] = [1, 2, 3, 4].map(() => {
@@ -160,4 +161,14 @@ it('removes its controls and the engine on dispose', () => {
 	expect(toolbar.children).toHaveLength(0);
 	blocks.destroy();
 	expect(() => blocks.handle.getSelection()).toThrow('not mounted');
+});
+
+it('is read-only until the host passes canEdit: true', async () => {
+	const { blocks } = compose({ canEdit: undefined });
+	expect(blocks.getState().mode).toBe('view');
+	await vi.waitFor(() => expect(blocks.getState().toolbarProps).not.toBeNull());
+	expect(blocks.getState().toolbarProps?.canEdit).toBe(false);
+	blocks.update({ canEdit: true });
+	await vi.waitFor(() => expect(blocks.getState().toolbarProps?.canEdit).toBe(true));
+	expect(blocks.getState().mode).toBe('edit');
 });

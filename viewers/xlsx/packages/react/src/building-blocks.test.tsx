@@ -100,7 +100,7 @@ it('reloads bytes into a replaced canvas without creating a second engine', asyn
 	const bytes = await saveXlsx(model);
 	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
 	function Host(props: { canvasKey: number }) {
-		blocks = useViewerBuildingBlocks({ bytes, handle });
+		blocks = useViewerBuildingBlocks({ bytes, handle, canEdit: true });
 		return createElement(SpreadsheetCanvas, { ...blocks.canvasProps, key: props.canvasKey });
 	}
 	try {
@@ -245,6 +245,7 @@ it('returns dirty, selection, collaboration and editError next to the props, plu
 		blocks = useViewerBuildingBlocks({
 			workbook: model,
 			handle,
+			canEdit: true,
 			...(props.share ? { onOpenShareDialog } : {}),
 		});
 		return createElement(SpreadsheetCanvas, blocks.canvasProps);
@@ -296,7 +297,7 @@ it('reports a validation failure through onValidationError and the formula bar',
 	];
 	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
 	function Host() {
-		blocks = useViewerBuildingBlocks({ workbook: model, onValidationError });
+		blocks = useViewerBuildingBlocks({ workbook: model, onValidationError, canEdit: true });
 		return createElement(
 			'div',
 			null,

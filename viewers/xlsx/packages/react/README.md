@@ -60,7 +60,8 @@ To build your own UI around the grid, use `useViewerBuildingBlocks` with `Spread
 the optional `Toolbar`, `FormulaBar` and `SheetTabs`. The hook returns `canvasProps`,
 `toolbarProps` (state, `enabled` flags and callbacks for formatting, undo, redo, formula entry and
 sheet navigation), `loading`, `error`, `mode`, `dirty`, `selection`, `collaboration` and
-`editError`, and takes host callbacks such as `onOpenShareDialog` and `onValidationError`. No
+`editError`, and takes host callbacks such as `onOpenShareDialog` and `onValidationError`. The
+surface is read-only until you pass `canEdit: true`. No
 title bar, ribbon, backstage or dialog is mounted. See the
 [building blocks guide](https://christophervr.github.io/ooxml/xlsx/building-blocks).
 

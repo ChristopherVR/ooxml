@@ -75,7 +75,7 @@ export async function nativeBuildingBlockContract(framework: string) {
 		await expect(blocks.handle.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/./);
 		await vi.waitFor(() => expect(snapshot().error).not.toBeNull());
 		const bytes = await saveXlsx(createWorkbook({ sheets: ['Replacement'] }));
-		blocks.update({ bytes, onWorkbookError: errors });
+		blocks.update({ bytes, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.sheets[0]?.name).toBe('Replacement'));
 		expect(snapshot().error).toBeNull();
 		expect(snapshot().loading).toBe(false);

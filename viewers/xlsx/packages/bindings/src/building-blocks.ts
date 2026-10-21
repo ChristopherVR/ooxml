@@ -51,7 +51,7 @@ export function createBuildingBlockSession(changed: (state: BuildingBlockState) 
 			toolbarProps,
 			loading: binding?.element.loading ?? false,
 			error,
-			mode: options.canEdit === false || options.readOnly ? 'view' : 'edit',
+			mode: options.canEdit !== true || options.readOnly ? 'view' : 'edit',
 			...derivedBlockState(toolbarProps),
 		});
 	};
@@ -102,7 +102,7 @@ export const emptyBuildingBlockState = (): BuildingBlockState => ({
 	toolbarProps: null,
 	loading: false,
 	error: null,
-	mode: 'edit',
+	mode: 'view',
 	...derivedBlockState(null),
 });
 export interface ToolbarButtonModel {

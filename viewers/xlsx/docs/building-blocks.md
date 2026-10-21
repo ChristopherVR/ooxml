@@ -152,6 +152,11 @@ blocks.getState().toolbarProps?.onBold();
 blocks.destroy();
 ```
 
+The surface is **read-only until the host passes `canEdit: true`**, matching the PowerPoint and
+Visio building blocks (the full `SpreadsheetEditor` stays editable by default). The permission is
+applied before the canvas mounts, so `mode` starts as `'view'` and there is no editable flash.
+`readOnly` still wins over `canEdit: true`.
+
 Every `mount*` returns its disposer. `getState()` returns the same snapshot the hooks do
 (`toolbarProps`, `loading`, `error`, `mode`, `dirty`, `selection`, `collaboration`, `editError`) and
 `handle` is the usual imperative handle. The controls patch their elements in place, so

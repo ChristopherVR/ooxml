@@ -42,7 +42,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 	const effective = () => ({
 		...latest.current,
 		bytes: undefined,
-		readOnly: latest.current.canEdit === false || latest.current.readOnly === true,
+		readOnly: latest.current.canEdit !== true || latest.current.readOnly === true,
 		onWorkbookError: (cause: Error) => {
 			setError(cause);
 			latest.current.onWorkbookError?.(cause);
@@ -109,7 +109,7 @@ export function useViewerBuildingBlocks(options: BuildingBlockOptions = {}) {
 		...derivedBlockState(toolbarProps),
 		loading,
 		error,
-		mode: options.canEdit === false || options.readOnly ? ('view' as const) : ('edit' as const),
+		mode: options.canEdit !== true || options.readOnly ? ('view' as const) : ('edit' as const),
 	};
 }
 export type { SpreadsheetToolbarProps } from 'xlsx-web-component';

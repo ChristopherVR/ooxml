@@ -18,9 +18,11 @@ declare global {
 }
 export async function mountNativeBlocks(
 	host: HTMLElement,
-	initial: EditorOptions,
+	supplied: EditorOptions,
 	framework: string,
 ): Promise<EditorHandle> {
+	// The building blocks are read-only unless the host grants editing; the demo grants it.
+	const initial: BuildingBlockOptions = { canEdit: true, ...supplied };
 	let harness: NativeHarness;
 	if (framework === 'react') {
 		const { createElement, createRef, useState, useEffect } = await import('react');
