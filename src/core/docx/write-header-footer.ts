@@ -15,7 +15,8 @@ import {
 	writeNewRelationships,
 } from './part-relationships';
 import type { DocPrIdAllocator } from './docpr-ids';
-import { buildXml, parseXml } from './xml';
+import type { RelationshipAllocator } from './relationship-allocator';
+import { buildXml, parseXml, type XmlDocument } from './xml';
 import { applyBlocks } from './write';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
@@ -137,15 +138,21 @@ export function sectionLayout(sections: SectionProperties[] | undefined): unknow
 	});
 }
 
-/** Rewrites every header/footer part whose blocks differ from the loaded baseline. */
+/**
+ * Rewrites every header/footer part whose blocks differ from the loaded baseline. `preferred` is
+ * the same model with contents the save would rather write (its fields brought up to date): a
+ * part the writer cannot rebuild from it is written from `model`, whose errors are the save's.
+ */
 export async function applyHeaderFooterEdits(
 	zip: JSZip,
 	model: DocumentModel,
 	base: DocumentModel,
 	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 	docPrIds?: DocPrIdAllocator,
+	preferred?: DocumentModel,
 ): Promise<void> {
 	const next = partContents(model.sections);
+	const better = preferred && partContents(preferred.sections);
 	const previous = partContents(base.sections);
 	const sources = new Map(
 		(model.sections ?? []).flatMap((section) =>
@@ -167,13 +174,29 @@ export async function applyHeaderFooterEdits(
 			previous.get(partName) ??
 			previous.get(sources.get(partName) ?? '') ??
 			(created.has(partName) ? [] : undefined);
-		if (!original || JSON.stringify(original) === JSON.stringify(blocks)) continue;
-		const file = zip.file(partName);
-		if (!file) throw new Error(`Header/footer part ${partName} is missing from the package.`);
-		const doc = parseXml(await file.async('string'));
-		const allocator = await allocatorForPart(zip, partName, doc, docPrIds);
-		applyBlocks(doc, doc.documentElement, blocks, original, allocator, contentWidthTwips);
-		zip.file(partName, buildXml(doc));
-		await writeNewRelationships(zip, partName, allocator.newRelationships, pendingMedia);
+		if (!original) continue;
+		const wanted = better?.get(partName);
+		// The preferred content first; a part the writer cannot rebuild from it is written from
+		// `model`, and only an error of that one is the save's.
+		const choices =
+			wanted && JSON.stringify(wanted) !== JSON.stringify(blocks) ? [wanted, blocks] : [blocks];
+		let built: { doc: XmlDocument; allocator: RelationshipAllocator } | undefined;
+		for (const [index, content] of choices.entries()) {
+			if (JSON.stringify(original) === JSON.stringify(content)) break;
+			const file = zip.file(partName);
+			if (!file) throw new Error(`Header/footer part ${partName} is missing from the package.`);
+			try {
+				const doc = parseXml(await file.async('string'));
+				const allocator = await allocatorForPart(zip, partName, doc, docPrIds);
+				applyBlocks(doc, doc.documentElement, content, original, allocator, contentWidthTwips);
+				built = { doc, allocator };
+				break;
+			} catch (error) {
+				if (index === choices.length - 1) throw error;
+			}
+		}
+		if (!built) continue;
+		zip.file(partName, buildXml(built.doc));
+		await writeNewRelationships(zip, partName, built.allocator.newRelationships, pendingMedia);
 	}
 }

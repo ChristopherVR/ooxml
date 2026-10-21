@@ -171,4 +171,37 @@ describe('saving STYLEREF fields', () => {
 		expect(saved.get('word/document.xml')).toContain('>DOC-2<');
 		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
 	});
+
+	it('refreshes the other parts when one header cannot be rebuilt', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				`${complexField('STYLEREF "Doc Number"', ['DOC-1'])}<w:bdo w:val="rtl"><w:r><w:t>x</w:t></w:r></w:bdo>`,
+			),
+			footer: paragraph('', undefined, simpleField('STYLEREF &quot;Doc Number&quot;', 'DOC-1')),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await parts(await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-2')));
+		expect(saved.get('word/header1.xml')).toBe((await parts(original)).get('word/header1.xml'));
+		expect(saved.get('word/footer1.xml')).toContain('>DOC-2<');
+		expect(saved.get('word/footer1.xml')).not.toContain('DOC-1');
+	});
+
+	it('reports the error of a header edit the writer cannot rebuild', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				`<w:r><w:t>Plan</w:t></w:r><w:bdo w:val="rtl"><w:r><w:t>x</w:t></w:r></w:bdo>${complexField('STYLEREF "Doc Number"', ['DOC-1'])}`,
+			),
+		});
+		const loaded = await loadDocx(original);
+		const model = setText(loaded.model, 'DocNumber', 'DOC-2');
+		const header = expectParagraph(must(model.sections?.[0]?.headers?.default).blocks[0]);
+		header.runs[0] = { ...header.runs[0]!, text: 'Plan B' };
+		await expect(loaded.save(model)).rejects.toThrow(/Cannot edit paragraph/);
+	});
 });
