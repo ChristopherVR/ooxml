@@ -10,6 +10,7 @@ import {
 	patchTableMargins,
 } from './write-table-properties';
 import { placeTableControl } from './write-table-controls';
+import { syncBlockControls } from './write-block-placement';
 import { children, first, isElement, makeW, named, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
@@ -234,7 +235,8 @@ export function writeTable(
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
 			patchCellVerticalAlignment(doc, tc, cell.verticalAlign, source?.model.verticalAlign);
-			const oldParagraphs = flatCellParagraphs(tc).map((entry) => entry.element);
+			const flatParagraphs = flatCellParagraphs(tc);
+			const oldParagraphs = flatParagraphs.map((entry) => entry.element);
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {
 				const index = source?.paragraphs.findIndex((p) => p.id === paragraph.id) ?? -1;
 				return writeParagraph(
@@ -245,6 +247,8 @@ export function writeTable(
 				);
 			});
 			replaceSlots(doc, tc, oldParagraphs, nextParagraphs);
+			// A block control around a cell's paragraphs follows the model as in the body.
+			syncBlockControls(doc, flatParagraphs, cell.paragraphs, nextParagraphs);
 			writeNestedTables(doc, tc, cell, source?.model, writeParagraph, replaceSlots);
 			return tc;
 		});

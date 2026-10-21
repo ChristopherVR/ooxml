@@ -122,6 +122,25 @@ describe('content controls around table cells in the editor', () => {
 		expect(stylesIn(cellOf(cleared))).toEqual(['PlaceholderText']);
 	});
 
+	it('keeps the caret in a text cell whose placeholder comes back, not in the next cell', () => {
+		const control: ContentControl = { id: '62', level: 'cell', kind: 'text' };
+		const cell = schema.node('tableCell', { sourceCellKey: 'c1', contentControl: control }, [
+			paragraph('x', { id: 'c1' }),
+		]);
+		const after = schema.node('tableCell', null, [paragraph('Next')]);
+		const doc = schema.node('doc', null, [
+			schema.node('table', null, [schema.node('tableRow', null, [cell, after])]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		// The caret after the cell's only character (table, row, cell and paragraph open first).
+		const atEnd = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 5)));
+		const restored = atEnd.apply(deleteToPlaceholder(atEnd, 'backward')!);
+		expect(restored.doc.firstChild!.firstChild!.firstChild!.textContent).toBe(
+			'Click or tap here to enter text.',
+		);
+		expect(restored.selection.$from.index(2)).toBe(0);
+	});
+
 	it('removes a temporary cell control with its first edit', () => {
 		const state = stateOf(choice({ temporary: true }), [placeholder('Choose an item.')]);
 		const next = state.apply(chooseListItem(state, '61', 0)!);

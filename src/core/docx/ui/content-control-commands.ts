@@ -82,6 +82,14 @@ export function replaceControlContent(
 		...cell.attrs,
 		contentControl: change.removed ? null : change.control,
 	});
+	// A caret in the cell stays in it: mapped past the replaced content it would land in the next
+	// cell. It goes to the start of a placeholder (typing replaces it), else after the text.
+	const { from, to } = state.selection;
+	if (from > span.from && to < span.to) {
+		const shown = change.control.showingPlaceholder && !change.removed;
+		const start = span.from + 2;
+		tr.setSelection(TextSelection.create(tr.doc, shown ? start : start + (text?.nodeSize ?? 0)));
+	}
 	return tr.setMeta(CONTROL_EDIT_META, true);
 }
 

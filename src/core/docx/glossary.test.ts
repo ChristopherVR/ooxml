@@ -16,7 +16,7 @@ const glossary = (parts: string) =>
 const styled = (value: string) =>
 	`<w:p><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">${value}</w:t></w:r></w:p>`;
 
-async function withGlossary(body: string, parts: string) {
+async function withGlossary(body: string, parts: string, part = glossary(parts)) {
 	const zip = new JSZip();
 	zip.file(
 		'word/document.xml',
@@ -26,7 +26,7 @@ async function withGlossary(body: string, parts: string) {
 		'word/_rels/document.xml.rels',
 		`<Relationships xmlns="${rels}"><Relationship Id="rId9" Type="${office}/glossaryDocument" Target="glossary/document.xml"/></Relationships>`,
 	);
-	zip.file('word/glossary/document.xml', glossary(parts));
+	zip.file('word/glossary/document.xml', part);
 	return zip.generateAsync({ type: 'uint8array' });
 }
 const controls = (blocks: Parameters<typeof forEachContentControl>[0]) => {
@@ -73,6 +73,21 @@ describe('placeholder text from the glossary', () => {
 		const bytes = await withGlossary(cellChoice('4', 'P2'), entry('P2', styled('Choose an item.')));
 		const reopened = await loadDocx(bytes);
 		expect(await reopened.save(reopened.model)).toEqual(bytes);
+	});
+
+	it('opens a document whose glossary cannot be read, with the built-in prompts', async () => {
+		const unreadable = `<!DOCTYPE w:glossaryDocument [<!ENTITY x "y">]>${glossary(entry('P2', styled('Choose an item.')))}`;
+		const { model } = await loadDocx(await withGlossary(cellChoice('2', 'P2'), '', unreadable));
+		expect(controls(model.blocks)[0]).toMatchObject({ placeholder: 'P2' });
+		expect(controls(model.blocks)[0]?.placeholderText).toBeUndefined();
+		expect(model.warnings.some((warning) => /glossary/i.test(warning))).toBe(true);
+	});
+
+	it('leaves the glossary unread when no control takes its placeholder from it', async () => {
+		const { model } = await loadDocx(
+			await withGlossary('<w:p><w:r><w:t>Plain</w:t></w:r></w:p>', '', '<w:glossaryDocument'),
+		);
+		expect(model.warnings.some((warning) => /glossary/i.test(warning))).toBe(false);
 	});
 
 	it('reads the placeholders Word writes for its built-in controls', async () => {

@@ -84,6 +84,19 @@ function cellControlAttributes(control: ContentControl): Record<string, string> 
 	};
 }
 
+/** The content control a copied cell carries (`data-sdt`), as an inline control's span does. */
+function cellControlFromDom(
+	element: HTMLElement | string,
+): { contentControl: ContentControl } | null {
+	const data = typeof element === 'string' ? undefined : element.dataset.sdt;
+	if (!data) return null;
+	try {
+		return { contentControl: JSON.parse(data) as ContentControl };
+	} catch {
+		return null;
+	}
+}
+
 export const schema = new Schema({
 	nodes: {
 		doc: {
@@ -293,7 +306,7 @@ export const schema = new Schema({
 				/** The content control around the cell (`w:tr > w:sdt > w:tc`), as the model reads it. */
 				contentControl: { default: null },
 			},
-			parseDOM: [{ tag: 'td' }, { tag: 'th' }],
+			parseDOM: ['td', 'th'].map((tag) => ({ tag, getAttrs: cellControlFromDom })),
 			toDOM: (node) => [
 				'td',
 				{
