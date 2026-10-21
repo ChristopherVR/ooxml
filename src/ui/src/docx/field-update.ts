@@ -344,8 +344,23 @@ export function refreshFieldResults(
 			.map((label) => label.toLowerCase()),
 	))
 		renumberCaptions(tr, label);
+	// Fields read one another: a REF quotes a caption whose chapter number is a STYLEREF, a
+	// STYLEREF reads a heading that holds a REF. Each pass reads the document as the one before
+	// left it, so one update brings both up to date (a longer chain or a loop stops after three).
+	for (let pass = 0; pass < 3 && refreshPass(tr, pageOf, captionsOnly, model); pass++);
+	return tr;
+}
+
+/** One pass of `refreshFieldResults` over the fields as `tr` has them; whether it changed any. */
+function refreshPass(
+	tr: Transaction,
+	pageOf: ((id: string) => string | undefined) | undefined,
+	captionsOnly: boolean,
+	model: DocumentModel | undefined,
+): boolean {
 	const targets = bookmarkTargets(tr.doc);
-	// STYLEREF reads the document as the captions renumbered above have left it.
+	// STYLEREF reads the document as the captions renumbered above and the passes before have
+	// left it.
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
@@ -407,5 +422,5 @@ export function refreshFieldResults(
 			edits.push({ at, apply: () => void tr.insert(at, nodes) });
 	// Later fields first, so an edit never shifts the positions still to be processed.
 	for (const edit of edits.sort((a, b) => b.at - a.at)) edit.apply();
-	return tr;
+	return edits.length > 0;
 }

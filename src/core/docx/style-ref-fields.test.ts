@@ -248,4 +248,33 @@ describe('refreshing STYLEREF results', () => {
 		});
 		expect(shown(headerParagraph(refreshStyleRefFields(model)))).toBe('DOC-9');
 	});
+
+	it("gives a numbered paragraph's own number to a STYLEREF \\n in it", async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const item = (result: string) =>
+			paragraph(
+				'',
+				'ListNumber',
+				`<w:r><w:t xml:space="preserve">Deny paragraph </w:t></w:r>${complexField('STYLEREF "List Number" \\n', [result])}`,
+			);
+		const model = await load({
+			styles: `<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="ListNumber"><w:name w:val="List Number"/><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:style></w:styles>`,
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+			body:
+				item('1') +
+				item('2') +
+				item('9') +
+				paragraph('', undefined, complexField('STYLEREF "List Number" \\n', ['old'])),
+		});
+		const results = (current: DocumentModel) =>
+			current.blocks.map((block) =>
+				expectParagraph(block)
+					.runs.filter((run) => run.field)
+					.map((run) => run.text)
+					.join(''),
+			);
+		// Its own paragraph is the nearest in the style, as when Word repeats a paragraph's number
+		// in its text; a paragraph out of the style reads the one before it.
+		expect(results(refreshStyleRefFields(model, { body: true }))).toEqual(['1', '2', '3', '3']);
+	});
 });

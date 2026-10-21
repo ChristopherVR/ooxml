@@ -41,6 +41,17 @@ describe('STYLEREF in headers and footers, page by page', () => {
 		expect(each(refs, 3, 'STYLEREF 1 \\l')).toEqual(['Alpha', 'Alpha', 'Gamma']);
 	});
 
+	it('does not take a heading a tracked change deletes whole', async () => {
+		const { pages, refs } = await layout(
+			paragraph('Alpha', 'Heading1') +
+				PAGE_BREAK +
+				'<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:rPr><w:del w:id="9" w:author="A"/></w:rPr></w:pPr><w:del w:id="8" w:author="A"><w:r><w:delText>Beta</w:delText></w:r></w:del></w:p>' +
+				paragraph('Second page'),
+		);
+		expect(pages).toHaveLength(2);
+		expect(each(refs, 2, 'STYLEREF 1')).toEqual(['Alpha', 'Alpha']);
+	});
+
 	it('takes the nearest text after the page when none is on or before it', async () => {
 		const { pages, refs } = await layout(
 			paragraph('Cover') + PAGE_BREAK + paragraph('DOC-7', 'DocNumber'),

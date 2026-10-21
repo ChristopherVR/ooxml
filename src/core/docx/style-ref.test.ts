@@ -115,6 +115,40 @@ describe('STYLEREF styles', () => {
 		expect(source.results(2, reference, styleTarget(model, 'Normal')!)).toEqual(['No style']);
 	});
 
+	it('leaves out a paragraph a tracked change deletes whole, as it does deleted text', async () => {
+		const deleted = (text: string, style: string | undefined, run = '') =>
+			`<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ''}<w:rPr><w:del w:id="9" w:author="A"/></w:rPr></w:pPr><w:del w:id="8" w:author="A"><w:r>${run}<w:delText>${text}</w:delText></w:r></w:del></w:p>`;
+		const model = await load({
+			body:
+				paragraph('Scope', 'Heading1') +
+				deleted('Method', 'Heading1') +
+				paragraph('', undefined, complexField('STYLEREF 1', ['old'])) +
+				// The paragraph mark alone deleted: its text stays, and so does the match.
+				`<w:p><w:pPr><w:pStyle w:val="DocNumber"/><w:rPr><w:del w:id="7" w:author="A"/></w:rPr></w:pPr><w:r><w:t>DOC-2</w:t></w:r></w:p>` +
+				deleted('Ash', undefined, '<w:rPr><w:rStyle w:val="EntryName"/></w:rPr>'),
+			header: paragraph('', undefined, complexField('STYLEREF 1', ['old'])),
+		});
+		const source = styleRefSource(model);
+		const results = (index: number, style: string) =>
+			source.results(
+				index,
+				parseStyleReference(`STYLEREF "${style}"`)!,
+				styleTarget(model, style)!,
+			);
+		expect(results(1, 'heading 1')).toEqual([]);
+		expect(results(3, 'Doc Number')).toEqual(['DOC-2']);
+		expect(results(4, 'Entry Name')).toEqual([]);
+		// The body field reads the heading before the deleted one, and the header takes it on save.
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		const fieldText = (blocks: readonly unknown[], index: number) =>
+			(blocks[index] as { runs: { text: string; field?: unknown }[] }).runs
+				.filter((run) => run.field)
+				.map((run) => run.text)
+				.join('');
+		expect(fieldText(refreshed.blocks, 2)).toBe('Scope');
+		expect(fieldText(refreshed.sections![0]!.headers!.default!.blocks, 0)).toBe('Scope');
+	});
+
 	it('finds hidden text, however it is hidden, and shows nothing for it, as Word does', async () => {
 		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 		const styles = `<w:styles xmlns:w="${w}">

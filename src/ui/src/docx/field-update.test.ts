@@ -752,6 +752,37 @@ describe('updateFields', () => {
 		expect(updateFields(view, pages)).toBe(false);
 	});
 
+	it('brings fields that read other fields up to date in one update', () => {
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'Heading1' }, [
+				schema.text('Chapter '),
+				field('Old', 'REF Title'),
+			]),
+			paragraph('p1', [schema.text('New name')], ['Title']),
+			paragraph('p2', [field('Chapter Old', ' STYLEREF 1 ')]),
+			paragraph('p3', [schema.text('See '), field('Chapter Old', ' STYLEREF 1 ')], ['Quote']),
+			paragraph('p4', [field('See Chapter Old', 'REF Quote')]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} } },
+				warnings: [],
+			},
+		};
+		const update = () => updateFields(view, pages, docToModel(view.state.doc, prior));
+		expect(update()).toBe(true);
+		expect(texts(view)).toEqual([
+			'Chapter New name',
+			'New name',
+			'Chapter New name',
+			'See Chapter New name',
+			'See Chapter New name',
+		]);
+		expect(update()).toBe(false);
+	});
+
 	it('does nothing in a read-only view', () => {
 		const view = editor(paragraph('p0', [field('1', seqInstruction('Figure'))]));
 		view.setProps({ editable: () => false });
