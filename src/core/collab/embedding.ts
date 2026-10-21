@@ -11,6 +11,7 @@ import type { ConnectionStatus, ProviderFactory } from './provider';
 import { type CollabSession, createCollabSession } from './session';
 import { transportProvider } from './transport-provider';
 import { isValidRoomId } from './validation';
+import { type WebrtcOptions, webrtcProvider } from './webrtc-provider';
 import { createWebSocketTransport, roomUrl } from './websocket-transport';
 
 /** Who this window is in the room. */
@@ -26,8 +27,8 @@ export interface CollaborationUser {
 
 /**
  * How an editor joins a shared document. One transport is used, in this order: `session`
- * (host-owned, never destroyed by the editor), `provider`, `serverUrl` (a y-websocket compatible
- * server), else a BroadcastChannel between tabs and windows of this browser. `P` is the product's
+ * (host-owned, never destroyed by the editor), `provider`, `webrtc`, `serverUrl` (a y-websocket
+ * compatible server), else a BroadcastChannel between tabs and windows of this browser. `P` is the product's
  * presence payload, only relevant to a host-made `session`.
  */
 export interface CollaborationOptions<P extends object = object> {
@@ -35,8 +36,12 @@ export interface CollaborationOptions<P extends object = object> {
 	roomId?: string;
 	/** Base URL of a y-websocket compatible server (`wss://host/collab`); the room is appended. */
 	serverUrl?: string;
-	/** A provider factory of your own (WebRTC, or an existing provider through `adaptYjsProvider`). */
+	/** Sent as the `token` query parameter to `serverUrl`, and as the room password over `webrtc`. */
+	authToken?: string;
+	/** A provider factory of your own (any transport, or a provider through `adaptYjsProvider`). */
 	provider?: ProviderFactory;
+	/** Peer-to-peer over the host's `y-webrtc` (see {@link webrtcProvider}); `password` defaults to `authToken`. */
+	webrtc?: WebrtcOptions;
 	/**
 	 * A session the host created, connected and will destroy. Create it with the product's
 	 * presence sanitiser so peers validate each other the same way.
@@ -120,9 +125,15 @@ export function openCollaborationSession<P extends object>(
 	const roomId = options.roomId ?? '';
 	if (!isValidRoomId(roomId)) throw new Error(INVALID_ROOM_MESSAGE);
 	let provider = options.provider;
+	if (!provider && options.webrtc) {
+		const password = options.webrtc.password ?? options.authToken;
+		provider = webrtcProvider({ ...options.webrtc, ...(password ? { password } : {}) });
+	}
 	if (!provider && options.serverUrl)
 		provider = transportProvider({
-			transport: createWebSocketTransport({ url: roomUrl(options.serverUrl, roomId) }),
+			transport: createWebSocketTransport({
+				url: withToken(roomUrl(options.serverUrl, roomId), options.authToken),
+			}),
 		});
 	if (!provider) {
 		if (!canBroadcast()) throw new Error(NO_BROADCAST_MESSAGE);
@@ -145,6 +156,11 @@ export function openCollaborationSession<P extends object>(
 		teardown: true,
 	});
 	return { session, owned: true };
+}
+
+function withToken(url: string, token: string | undefined): string {
+	if (!token) return url;
+	return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`;
 }
 
 /** The {@link CollaborationState} of a joined session, this window first. */

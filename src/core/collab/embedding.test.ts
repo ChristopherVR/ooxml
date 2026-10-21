@@ -74,6 +74,59 @@ describe('openCollaborationSession', () => {
 	});
 });
 
+describe('transports', () => {
+	it('sends the auth token to the server', () => {
+		const urls: string[] = [];
+		class FakeSocket {
+			binaryType = '';
+			readyState = 0;
+			onopen = null;
+			onclose = null;
+			onerror = null;
+			onmessage = null;
+			constructor(url: string) {
+				urls.push(url);
+			}
+			send() {}
+			close() {}
+		}
+		vi.stubGlobal('WebSocket', FakeSocket);
+		const { session } = openCollaborationSession(
+			{ roomId: 'room-1', serverUrl: 'wss://host/collab/', authToken: 'a b' },
+			{ defaultName: 'x', broadcastPrefix: 'test:' },
+		);
+		track(session);
+		expect(urls).toEqual(['wss://host/collab/room-1?token=a%20b']);
+	});
+
+	it('joins over the host WebrtcProvider with the token as password', () => {
+		const made: { roomId: string; options: Record<string, unknown> }[] = [];
+		class FakeWebrtc {
+			connected = false;
+			constructor(roomId: string, _doc: unknown, options: Record<string, unknown>) {
+				made.push({ roomId, options });
+			}
+			on() {}
+			off() {}
+			destroy() {}
+		}
+		const { session } = openCollaborationSession(
+			{
+				roomId: 'room-1',
+				serverUrl: 'wss://ignored',
+				authToken: 'secret',
+				webrtc: { WebrtcProvider: FakeWebrtc, signaling: ['wss://signal'] },
+			},
+			{ defaultName: 'x', broadcastPrefix: 'test:' },
+		);
+		track(session);
+		expect(made).toHaveLength(1);
+		expect(made[0]!.roomId).toBe('room-1');
+		expect(made[0]!.options).toMatchObject({ signaling: ['wss://signal'], password: 'secret' });
+		expect(made[0]!.options.awareness).toBe(session.awareness);
+	});
+});
+
 describe('collaboration state', () => {
 	it('starts off and lists this window first, then peers', () => {
 		expect(COLLABORATION_OFF_STATE).toMatchObject({ active: false, status: 'off', people: [] });
