@@ -12,6 +12,11 @@ const SITE = resolve(ROOT, process.argv[3] ?? 'suite-dist');
 const port = Number(process.argv[2] ?? 8123);
 const base = '/' + (process.argv[4] ?? '').split('/').filter(Boolean).join('/');
 const prefix = base === '/' ? '' : base;
+// Rewrite compiled links too: the docs generate demo iframe and full-screen URLs in JavaScript.
+const localize = (body, type) =>
+	/^(text\/|application\/(json|manifest\+json))/.test(type)
+		? body.toString().replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`)
+		: body;
 const TYPES = {
 	'.html': 'text/html; charset=utf-8',
 	'.js': 'text/javascript; charset=utf-8',
@@ -42,7 +47,7 @@ const server = createServer(async (req, res) => {
 		const type =
 			TYPES[extname(file)] ?? (extname(file) ? 'application/octet-stream' : TYPES['.html']);
 		res.writeHead(200, { 'content-type': type });
-		res.end(body);
+		res.end(localize(body, type));
 	} catch {
 		// Like GitHub Pages, answer a missing path with the site's own 404.html: the one at the
 		// served root, or at the first path segment when the root mirrors a project site (/ooxml/).
@@ -51,7 +56,7 @@ const server = createServer(async (req, res) => {
 			try {
 				const body = await readFile(resolve(dir, '404.html'));
 				res.writeHead(404, { 'content-type': TYPES['.html'] });
-				return res.end(body);
+				return res.end(localize(body, TYPES['.html']));
 			} catch {}
 		}
 		res.writeHead(404).end('Not found');

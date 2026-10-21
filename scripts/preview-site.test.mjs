@@ -15,6 +15,15 @@ for (const prefix of ['', '/ooxml']) {
 		await writeFile(join(dir, 'docx/index.html'), 'Word viewer');
 		await writeFile(join(dir, 'docx/getting-started.html'), 'Word guide');
 		await writeFile(join(dir, 'docx/app.js'), 'export const ready = true;');
+		const links =
+			'<a href="https://christophervr.github.io/ooxml/pptx/demo/?sample=1&locale=en#slide-2">Full screen</a>';
+		const demoRoot = 'const root = "https://christophervr.github.io/ooxml/pptx/";';
+		const external = 'https://github.com/ChristopherVR/ooxml';
+		await writeFile(join(dir, 'docx/links.html'), links + external);
+		await writeFile(join(dir, 'docx/links.js'), demoRoot + external);
+		await writeFile(join(dir, '404.html'), links);
+		const binary = Buffer.from('https://christophervr.github.io/ooxml/');
+		await writeFile(join(dir, 'docx/image.png'), binary);
 		const server = spawn(
 			process.execPath,
 			[fileURLToPath(new URL('./preview-site.mjs', import.meta.url)), '0', dir, prefix],
@@ -64,6 +73,23 @@ for (const prefix of ['', '/ooxml']) {
 			assert.equal(response.status, 200, path);
 			assert.equal(await response.text(), text);
 		}
-		assert.equal((await fetch(origin + prefix + '/missing')).status, 404);
+		for (const [path, source] of [
+			['/docx/links.html', links],
+			['/docx/links.js', demoRoot],
+		]) {
+			const response = await fetch(origin + prefix + path);
+			assert.equal(
+				await response.text(),
+				source.replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`) + external,
+			);
+		}
+		const image = await fetch(origin + prefix + '/docx/image.png');
+		assert.deepEqual(Buffer.from(await image.arrayBuffer()), binary);
+		const missing = await fetch(origin + prefix + '/missing');
+		assert.equal(missing.status, 404);
+		assert.equal(
+			await missing.text(),
+			links.replaceAll('https://christophervr.github.io/ooxml/', `${prefix}/`),
+		);
 	});
 }
