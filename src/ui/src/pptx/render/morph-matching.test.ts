@@ -1157,3 +1157,31 @@ describe('children of two corresponding groups', () => {
 		expect(result.pairs.map((pair) => pair.fromElement.id)).toStrictEqual(['hub-circle']);
 	});
 });
+
+describe('proximity matching of pictures', () => {
+	it('does not pair nearby pictures that paint different images', () => {
+		const from = makeElement({
+			id: 'f',
+			type: 'picture',
+			x: 302,
+			y: 22,
+			width: 675,
+			height: 675,
+			rotation: 45,
+			svgPath: 'ppt/media/wheel.svg',
+		} as Partial<PptxElement> & { id: string; type: 'picture' });
+		const to = makeElement({
+			id: 't',
+			type: 'picture',
+			x: 349,
+			y: 67,
+			width: 706,
+			height: 407,
+			imagePath: 'ppt/media/break.gif',
+		} as Partial<PptxElement> & { id: string; type: 'picture' });
+		const result = matchMorphElementsFull(makeSlide([from]), makeSlide([to]));
+		expect(result.pairs).toHaveLength(0);
+		expect(result.unmatchedFrom).toHaveLength(1);
+		expect(result.unmatchedTo).toHaveLength(1);
+	});
+});
