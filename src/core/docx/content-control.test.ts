@@ -239,4 +239,102 @@ describe('content controls in tables and with unmodeled properties', () => {
 		const reopened = await loadDocx(await loaded.save(loaded.model));
 		expect(controlOf(expectParagraph(reopened.model.blocks[0])).items).toHaveLength(2);
 	});
+
+	it('writes the verbatim properties of a new control only when they are properties', async () => {
+		// A control pasted from another page brings what that page wrote in its data-sdt attribute:
+		// anything but a w:sdtPr there is not written, here a field that would fetch a picture.
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		const field = `<w:fldSimple w:instr="INCLUDEPICTURE &quot;http://example.test/a.png&quot;"><w:r><w:t>x</w:t></w:r></w:fldSimple>`;
+		const control = (sourceXml: string): ContentControl => ({
+			id: '4243',
+			level: 'inline',
+			kind: 'richText',
+			sourceXml,
+		});
+		paragraph.runs.push({
+			text: 'Red',
+			contentControl: control(`<w:p xmlns:w="${WORD_NS}">${field}</w:p>`),
+		});
+		const built = '<w:sdt><w:sdtPr><w:id w:val="4243"/></w:sdtPr><w:sdtContent>';
+		let xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('INCLUDEPICTURE');
+		expect(xml).toContain(built);
+		// A w:sdtPr is taken whole only when it holds properties Word reads and nothing else: each
+		// element where its schema has it, at any depth, Word's extensions only where Word puts them,
+		// no text, no relationship reference, and no id or lock Word does not read. Text that is not
+		// XML is not taken either, rather than failing the save.
+		const W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
+		const W15 = 'http://schemas.microsoft.com/office/word/2012/wordml';
+		const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		const MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+		const sdtPr = (inner: string) =>
+			`<w:sdtPr xmlns:w="${WORD_NS}" xmlns:w15="${W15}" xmlns:r="${REL}" xmlns:x="urn:x" xmlns:mc="${MC}" xmlns:n="http://schemas.microsoft.com/office/word/not-a-word-namespace">${inner}</w:sdtPr>`;
+		for (const sourceXml of [
+			sdtPr(`<w:id w:val="4243"/><w:p>${field}</w:p>`),
+			sdtPr(`<w:rPr><w:b/>${field}</w:rPr><w:id w:val="4243"/>`),
+			sdtPr(`<w:id w:val="4243"/><w:unknownPr/>`),
+			sdtPr(`<w:rPr><w:bogus/></w:rPr><w:id w:val="4243"/>`),
+			sdtPr(`<w:rPr><w:altChunk r:id="rId9"/></w:rPr><w:id w:val="4243"/>`),
+			sdtPr(`<w:id w:val="4243"/><x:anything><x:deep/></x:anything>`),
+			sdtPr(`<w:alias w:val="A"><w15:appearance w15:val="hidden"/></w:alias><w:id w:val="4243"/>`),
+			sdtPr(`<w:id w:val="4243"/><n:thing/>`),
+			sdtPr(`<w:alias w:val="A" x:evil="1"/><w:id w:val="4243"/>`),
+			sdtPr(`<w:alias w:val="A" mc:MustUnderstand="x"/><w:id w:val="4243"/>`),
+			sdtPr(`<w:id w:val="99999999999"/>`),
+			sdtPr(`<w:id w:val="4243"/><w:id w:val="4244"/>`),
+			sdtPr(`<w:id w:val="4243"/><w:text/><w:picture/>`),
+			sdtPr(`<w:id w:val="4243"/><w:lock w:val="everything"/>`),
+			sdtPr(`<w:alias w:val="A"/>text<w:id w:val="4243"/>`),
+			'<w:sdtPr>',
+		]) {
+			paragraph.runs[1]!.contentControl = control(sourceXml);
+			xml = await documentXml(await loaded.save(loaded.model));
+			expect(xml, sourceXml).toContain(built);
+			expect(xml, sourceXml).not.toContain('INCLUDEPICTURE');
+		}
+		// Properties that are what they say are kept as they were, those the model does not hold
+		// and Word's extensions included.
+		paragraph.runs[1]!.contentControl = {
+			...control(
+				`<w:sdtPr xmlns:w="${WORD_NS}" xmlns:w14="${W14}" xmlns:w15="${W15}">` +
+					'<w:rPr><w:rStyle w:val="Strong"/><w14:ligatures w14:val="standard"/></w:rPr>' +
+					'<w:alias w:val="Kept"/><w:id w:val="4243"/><w:lock w:val="unlocked"/>' +
+					'<w:placeholder><w:docPart w:val="DefaultPlaceholder_1"/></w:placeholder>' +
+					'<w15:appearance w15:val="hidden"/></w:sdtPr>',
+			),
+			alias: 'Kept',
+		};
+		expect(await documentXml(await loaded.save(loaded.model))).toMatch(
+			/<w:sdt><w:sdtPr[^>]*><w:rPr><w:rStyle w:val="Strong"\/><w14:ligatures w14:val="standard"\/><\/w:rPr><w:alias w:val="Kept"\/><w:id w:val="4243"\/><w:lock w:val="unlocked"\/><w:placeholder><w:docPart w:val="DefaultPlaceholder_1"\/><\/w:placeholder><w15:appearance w15:val="hidden"\/><\/w:sdtPr><w:sdtContent>/,
+		);
+	});
+
+	it('builds the properties of a new control only from values Word reads', async () => {
+		// A pasted control's kind, id and lock come from another page too: an element named after
+		// an unknown kind, an id that is not a 32-bit integer or a lock Word does not know would make
+		// the document invalid, so they are left out (a control of an unknown kind is rich text).
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		paragraph.runs.push({
+			text: 'Red',
+			contentControl: {
+				id: '99999999999',
+				level: 'inline',
+				kind: 'bogus' as ContentControl['kind'],
+				lock: 'everything' as NonNullable<ContentControl['lock']>,
+			},
+		});
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).toContain('<w:sdt><w:sdtPr/><w:sdtContent>');
+		paragraph.runs[1]!.contentControl = {
+			id: '-12',
+			level: 'inline',
+			kind: 'unknown',
+			lock: 'contentLocked',
+		};
+		expect(await documentXml(await loaded.save(loaded.model))).toContain(
+			'<w:sdt><w:sdtPr><w:id w:val="-12"/><w:lock w:val="contentLocked"/></w:sdtPr><w:sdtContent>',
+		);
+	});
 });

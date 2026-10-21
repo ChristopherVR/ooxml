@@ -3,16 +3,9 @@
 // control, and builds a new control (from its verbatim `w:sdtPr` when it has one).
 import type { ContentControl } from './content-control-model';
 import { parseContentControl, sdtContent } from './content-control';
+import { NAMED_TYPES, validId, validLock, verbatimProperties } from './content-control-values';
 import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
-import {
-	children,
-	first,
-	makeW,
-	parseXml,
-	WORD_NS,
-	type XmlDocument,
-	type XmlElement,
-} from './xml';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 /** `CT_SdtPr` child order; the type element (and everything unknown) follows these. */
 const PROPERTY_ORDER = [
@@ -137,7 +130,8 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	const current = parseContentControl(sdt, control.level);
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
-	if (control.lock !== current.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	const lock = validLock(control.lock);
+	if (lock !== current.lock) setValued(doc, sdtPr, 'lock', lock);
 	if (Boolean(control.showingPlaceholder) !== Boolean(current.showingPlaceholder)) {
 		for (const old of children(sdtPr, 'showingPlcHdr')) sdtPr.removeChild(old);
 		if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
@@ -164,15 +158,18 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 		writeDate(doc, sdtPr, control);
 }
 
-/** Builds the `w:sdtPr` of a control that has no source element. */
+/**
+ * Builds the `w:sdtPr` of a control that has no source element: its verbatim one when it has a
+ * `w:sdtPr`, else one from the model.
+ */
 function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement {
-	if (control.sourceXml)
-		return doc.importNode(parseXml(control.sourceXml).documentElement, true) as XmlElement;
+	const verbatim = verbatimProperties(doc, control.sourceXml);
+	if (verbatim) return verbatim;
 	const sdtPr = makeW(doc, 'sdtPr');
 	if (control.alias !== undefined) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);
-	setValued(doc, sdtPr, 'id', control.id);
-	if (control.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	setValued(doc, sdtPr, 'id', validId(control.id));
+	setValued(doc, sdtPr, 'lock', validLock(control.lock));
 	if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
 	switch (control.kind) {
 		case 'text': {
@@ -193,10 +190,8 @@ function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement 
 			sdtPr.appendChild(makeW(doc, 'date'));
 			writeDate(doc, sdtPr, control);
 			break;
-		case 'richText':
-			break;
 		default:
-			sdtPr.appendChild(makeW(doc, control.kind));
+			if (NAMED_TYPES.has(control.kind)) sdtPr.appendChild(makeW(doc, control.kind));
 	}
 	return sdtPr;
 }

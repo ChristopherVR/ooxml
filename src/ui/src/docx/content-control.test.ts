@@ -145,4 +145,42 @@ describe('content controls in the editor', () => {
 		expect(xml).not.toContain('w:displayText="Green"');
 		view.destroy();
 	});
+
+	it('saves a control pasted from another page without what its properties held', async () => {
+		const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t xml:space="preserve">Pick: </w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({
+				doc: modelToDoc(loaded.model),
+				plugins: [contentControlPlugin(), contentControlViewPlugin()],
+			}),
+		});
+		// The page put a paragraph with a field that fetches a picture where the control's
+		// properties go, and a kind no control has.
+		const span = document.createElement('span');
+		span.dataset.sdt = JSON.stringify({
+			id: '4321',
+			level: 'inline',
+			kind: 'bogus',
+			sourceXml: `<w:p xmlns:w="${W}"><w:fldSimple w:instr='INCLUDEPICTURE "http://example.test/a.png"'/></w:p>`,
+		});
+		span.textContent = 'Pasted';
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		// jsdom has no ClipboardEvent; the paste reads nothing else from the event.
+		view.pasteHTML(`<p>${span.outerHTML}</p>`, new Event('paste') as ClipboardEvent);
+		expect(controlSpans(view.state.doc).map((item) => item.control.id)).toEqual(['4321']);
+		const xml = await savedXml(loaded, view);
+		expect(xml).toContain('<w:t>Pasted</w:t>');
+		expect(xml).not.toContain('INCLUDEPICTURE');
+		expect(xml).not.toContain('w:bogus');
+		view.destroy();
+		host.remove();
+	});
 });
