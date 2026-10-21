@@ -1,8 +1,21 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { dialogByHeading, fileInput, newDocument, openSample } from './helpers';
 import { multiPageDocx } from './print-click-fixture';
 
 test.use({ viewport: { width: 1366, height: 1500 } });
+
+/** Print Layout briefly replaces its pages after editing and undo. Read their next rendered box. */
+async function renderedBox(locator: Locator) {
+	let box!: NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+	await expect
+		.poll(async () => {
+			const next = await locator.boundingBox();
+			if (next) box = next;
+			return next !== null;
+		})
+		.toBe(true);
+	return box;
+}
 
 /** A click anywhere on a Print Layout page puts a visible caret at the nearest text, like Word. */
 async function enterPrint(page: Page) {
@@ -30,7 +43,7 @@ test('blank page: clicks in the margins and empty space place a caret and take t
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = await enterPrint(page);
-	const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+	const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 	const spots: Array<[string, number, number]> = [
 		['bottom blank area', sheet.x + sheet.width / 2, sheet.y + sheet.height * 0.6],
 		['right margin', sheet.x + sheet.width - 8, sheet.y + 200],
@@ -52,8 +65,8 @@ test('sample document: clicks right of a line and below the text land on the nea
 	await openSample(page);
 	const editor = await enterPrint(page);
 	const line = editor.locator('.dve-print-line').first();
-	const box = (await line.boundingBox())!;
-	const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+	const box = await renderedBox(line);
+	const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 	// Right of the end of the first line, inside the page margin.
 	await clickAndType(page, sheet.x + sheet.width - 6, box.y + box.height / 2, 'Z');
 	await expect(editor.locator('.ProseMirror p').first()).toContainText('Z');
@@ -94,7 +107,7 @@ async function typesIntoEditor(page: Page, editor: ReturnType<Page['locator']>, 
 
 test('multi-page: table cells, header area and later pages show a caret', async ({ page }) => {
 	const editor = await openMultiPage(page);
-	const cell = (await editor.locator('.dve-print-line', { hasText: 'Cell A' }).boundingBox())!;
+	const cell = await renderedBox(editor.locator('.dve-print-line', { hasText: 'Cell A' }));
 	for (const [dx, dy] of [
 		[5, 5],
 		[150, 80],
@@ -103,7 +116,7 @@ test('multi-page: table cells, header area and later pages show a caret', async 
 		await expect(editor.locator('.ProseMirror table').first()).toContainText('#');
 		await page.keyboard.press('Control+z');
 	}
-	const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+	const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 	// The header area keeps a visible body caret (double-click edits the header itself).
 	await clickAndType(page, sheet.x + 400, sheet.y + 30, '#');
 	await page.keyboard.press('Control+z');
@@ -116,7 +129,7 @@ test('multi-page: table cells, header area and later pages show a caret', async 
 			return box ? box.y < 900 && box.y + box.height > 400 : false;
 		})
 		.toBe(true);
-	const third = (await thirdPage.boundingBox())!;
+	const third = await renderedBox(thirdPage);
 	await clickAndType(page, third.x + 20, Math.max(third.y, 0) + 300, '#');
 	await expect(editor.locator('.ProseMirror').first()).toContainText('#Page three first');
 });
@@ -125,7 +138,7 @@ test('multi-page: a ribbon command keeps the caret, and one click back shows it'
 	page,
 }) => {
 	const editor = await openMultiPage(page);
-	const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+	const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 	await clickAndType(page, sheet.x + 300, sheet.y + 120, '');
 	await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 	for (const name of ['Bold', 'Align center', 'Grow font']) {
@@ -143,7 +156,7 @@ test('multi-page: Draft view clicks beside the paper and below the text take typ
 	page,
 }) => {
 	const editor = await openMultiPage(page, 'draft');
-	const paper = (await editor.locator('.ProseMirror').first().boundingBox())!;
+	const paper = await renderedBox(editor.locator('.ProseMirror').first());
 	for (const [x, y] of [
 		[paper.x - 20, paper.y + 40],
 		[20, paper.y + 100],
@@ -164,9 +177,9 @@ test.describe('150% zoom at 1366x768', () => {
 		await dialog.getByRole('button', { name: 'OK' }).click();
 		await expect(dialog).toBeHidden();
 		// 816px at 100%: zoom applies once, not once per nested pages container.
-		const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+		const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 		expect(sheet.width).toBeCloseTo(1224, 0);
-		const line = (await editor.locator('.dve-print-line').first().boundingBox())!;
+		const line = await renderedBox(editor.locator('.dve-print-line').first());
 		for (const [x, y] of [
 			[line.x + 5, line.y + 5],
 			[line.x + 300, line.y + 400],
@@ -182,11 +195,11 @@ test.describe('touch at 375x812 with the fit-to-width zoom', () => {
 	test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
 	test('taps on text, below it and in the gutter keep a caret and focus', async ({ page }) => {
 		const editor = await openMultiPage(page);
-		const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+		const sheet = await renderedBox(editor.locator('.dve-print-page').first());
 		// The fit-to-width zoom fills the phone width instead of shrinking the page twice.
 		expect(sheet.width).toBeGreaterThan(300);
 		expect(sheet.width).toBeLessThanOrEqual(375);
-		const line = (await editor.locator('.dve-print-line').first().boundingBox())!;
+		const line = await renderedBox(editor.locator('.dve-print-line').first());
 		for (const [x, y] of [
 			[line.x + 10, line.y + 5],
 			[line.x + 40, line.y + 300],
