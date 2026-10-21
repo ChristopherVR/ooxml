@@ -6,6 +6,7 @@ import { complexField, paragraph, styleRefFixture } from '../test-support/style-
 import { layoutDocumentModel } from './layout';
 import { createFakeMeasurer } from './measure';
 import { pageStyleRefs } from './page-style-refs';
+import type { LayoutLine, LayoutPageBox, LayoutParagraphBox } from './result';
 
 const BREAK = '<w:r><w:br w:type="page"/></w:r>';
 const PAGE_BREAK = `<w:p>${BREAK}</w:p>`;
@@ -97,6 +98,47 @@ describe('STYLEREF in headers and footers, page by page', () => {
 		);
 		expect(pages).toHaveLength(2);
 		expect(each(refs, 2, 'STYLEREF "Doc Number"')).toEqual(['DOC-7', '']);
+	});
+
+	it('counts the whole paragraph of a box without lines as shown on its page', async () => {
+		const { model } = await layout(
+			paragraph('Text') +
+				paragraph('Alpha', 'Heading1') +
+				paragraph('More') +
+				paragraph('Beta', 'Heading1'),
+		);
+		const box = (index: number, lines: LayoutLine[]): LayoutParagraphBox => ({
+			kind: 'paragraph',
+			blockId: model.blocks[index]!.id,
+			yPx: 0,
+			heightPx: 20,
+			lines,
+		});
+		const line = (end: number) => ({
+			yPx: 0,
+			heightPx: 20,
+			fragments: [],
+			sourceStart: 0,
+			sourceEnd: end,
+		});
+		const page = (index: number, blocks: LayoutParagraphBox[]): LayoutPageBox => ({
+			index,
+			sectionIndex: 0,
+			pageInSection: index,
+			widthPx: 816,
+			heightPx: 1056,
+			marginTopPx: 96,
+			marginRightPx: 96,
+			marginBottomPx: 96,
+			marginLeftPx: 96,
+			columns: [{ xPx: 96, widthPx: 624, blocks }],
+		});
+		// The heading's box on the first page has no lines: the page still holds the heading.
+		const refs = pageStyleRefs(model, [
+			page(0, [box(0, [line(4)]), box(1, []), box(2, [line(4)])]),
+			page(1, [box(3, [line(4)])]),
+		]);
+		expect(each(refs, 2, 'STYLEREF 1')).toEqual(['Alpha', 'Beta']);
 	});
 
 	it('fills a header with the results of the page it is drawn on', async () => {

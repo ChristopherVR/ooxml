@@ -26,7 +26,8 @@ type Shown = [start: number, end: number][];
 
 /**
  * The main document's paragraphs each page shows, as `source` indexes top to bottom, with the
- * parts of each that are on the page (a paragraph can run over several pages).
+ * parts of each that are on the page (a paragraph can run over several pages). A box without
+ * lines does not say which part of its paragraph the page holds, so all of it counts.
  */
 function paragraphsByPage(
 	pages: readonly LayoutPageBox[],
@@ -38,6 +39,7 @@ function paragraphsByPage(
 			const at = source.index.get(box.blockId);
 			if (at === undefined) return;
 			const shown = found.get(at) ?? [];
+			if (!box.lines.length) shown.push([0, Number.POSITIVE_INFINITY]);
 			for (const line of box.lines) shown.push([line.sourceStart, line.sourceEnd]);
 			found.set(at, shown);
 		};
