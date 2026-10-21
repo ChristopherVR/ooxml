@@ -54,7 +54,8 @@ async function tiffToPicture(bytes: Uint8Array): Promise<WPictureData | undefine
 	try {
 		const imported = await import('utif');
 		const utif = ('default' in imported ? imported.default : imported) as typeof import('utif');
-		const buffer = bytes.slice().buffer as ArrayBuffer;
+		// A copy through the constructor: slice() on a Node Buffer does not copy, so its buffer is the whole pool.
+		const buffer = new Uint8Array(bytes).buffer;
 		const page = utif.decode(buffer)[0];
 		if (!page) {
 			return undefined;
