@@ -104,6 +104,21 @@ describe('temporary content controls in the editor', () => {
 		expect(next.doc.textContent).toBe('x');
 	});
 
+	it('does not bring a removed temporary control back with the next typed text', () => {
+		// Deleting a selection keeps its marks for what is typed next; a removed control's go.
+		const state = stateOf([{ text: 'x' }, { text: 'Draft', contentControl: temporary() }]);
+		for (const [from, to, text] of [
+			[2, 7, 'xZ'],
+			[3, 5, 'xDZft'],
+		] as const) {
+			const select = state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+			const deleted = select.apply(select.tr.deleteSelection());
+			const typed = deleted.apply(deleted.tr.insertText('Z'));
+			expect(typed.doc.textContent).toBe(text);
+			expect(controlSpans(typed.doc)).toEqual([]);
+		}
+	});
+
 	it('edits a temporary control that cannot be deleted as an ordinary control', () => {
 		const pick = stateOf([
 			{ text: 'See: ' },
