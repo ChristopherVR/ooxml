@@ -35,4 +35,6 @@ export {
 	type CsvWorkbookOptions,
 	type CsvWriteOptions,
 } from './csv';
+export type { CsvColumnFormat, CsvConversions, CsvImportOptions } from './csv-import';
+export type { CsvDateOrder } from './csv-dates';
 export { decodeSpreadsheetText } from './text-decode';
