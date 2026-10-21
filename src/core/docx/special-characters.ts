@@ -12,10 +12,13 @@ import { getW, makeW, named, type XmlDocument, type XmlElement } from './xml';
 export const SOFT_HYPHEN = '\u00AD';
 export const NON_BREAKING_HYPHEN = '\u2011';
 
-/** The character a symbol shows: Word codes symbol-font characters from U+F000 (`F0FE`). */
+/**
+ * The character a symbol shows: Word codes symbol-font characters from U+F000 (`F0FE`). Empty
+ * for a code that is not a character (beyond U+10FFFF, or half of a surrogate pair).
+ */
 export function symbolCharacter(char: string): string {
 	const code = /^[0-9a-f]{1,6}$/i.test(char) ? Number.parseInt(char, 16) : Number.NaN;
-	if (!Number.isInteger(code) || code > 0x10ffff) return '';
+	if (!Number.isInteger(code) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return '';
 	return String.fromCodePoint(code < 0x100 ? 0xf000 + code : code);
 }
 

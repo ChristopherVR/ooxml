@@ -994,6 +994,16 @@ describe('editing paragraphs with smart tags, symbols, positional tabs and speci
 		]);
 	});
 
+	it('reads a symbol whose character is half a surrogate pair as unreadable', async () => {
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('A')}<w:r><w:sym w:font="Wingdings" w:char="D83D"/></w:r></w:p>`,
+		);
+		expect(at(paragraph.runs, 1)).toMatchObject({ text: '' });
+		expect(at(paragraph.runs, 1).symbol).toBeUndefined();
+		at(paragraph.runs, 0).text = 'B';
+		await expect(loaded.save()).rejects.toThrow('cannot safely relocate');
+	});
+
 	it('writes plain text when a symbol is replaced', async () => {
 		const { loaded, paragraph } = await load(
 			`<w:p><w:r><w:sym w:font="Symbol" w:char="F0B7"/></w:r></w:p>`,
