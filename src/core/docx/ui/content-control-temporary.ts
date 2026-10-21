@@ -33,6 +33,11 @@ export function removeControl(tr: Transaction, span: Span): Transaction {
 		if (row) tr.setNodeMarkup(span.from, undefined, { ...row.attrs, properties });
 		return tr;
 	}
+	if (span.level === 'cell') {
+		const cell = tr.doc.nodeAt(span.from);
+		if (cell) tr.setNodeMarkup(span.from, undefined, { ...cell.attrs, contentControl: null });
+		return tr;
+	}
 	tr.doc.nodesBetween(span.from, span.to, (node, pos) => {
 		if (span.level === 'inline') {
 			for (const mark of node.marks)
@@ -40,7 +45,8 @@ export function removeControl(tr: Transaction, span: Span): Transaction {
 					tr.removeMark(pos, pos + node.nodeSize, mark);
 			return true;
 		}
-		if (node.attrs.contentControl?.id === id && 'contentControl' in node.attrs)
+		// Its own paragraphs: not the cell around them, whose control may share its id.
+		if (pos >= span.from && node.type.name === 'paragraph' && node.attrs.contentControl?.id === id)
 			tr.setNodeMarkup(pos, undefined, { ...node.attrs, contentControl: null });
 		return true;
 	});

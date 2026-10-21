@@ -412,6 +412,31 @@ describe('content controls around table cells in the editor', () => {
 		expect(ids).toEqual([null, '67', null]);
 	});
 
+	it('takes a temporary control off only itself when another one shares its id', () => {
+		// Files from other tools repeat ids: here a cell control and a block control in its cell.
+		const cellControl = (temporary: boolean): ContentControl => ({
+			id: '5',
+			level: 'cell',
+			kind: 'richText',
+			...(temporary ? { temporary } : {}),
+		});
+		const blockControl = (temporary: boolean): ContentControl => ({
+			...cellControl(temporary),
+			level: 'block',
+		});
+		for (const temporaryCell of [true, false]) {
+			const state = stateOf(cellControl(temporaryCell), [
+				paragraph('Note', { id: 'c1', contentControl: blockControl(!temporaryCell) }),
+			]);
+			const edited = cellOf(state.apply(state.tr.insertText('!', 16)));
+			expect(edited.textContent).toBe('No!te');
+			expect([
+				edited.attrs.contentControl?.id,
+				edited.firstChild!.attrs.contentControl?.id,
+			]).toEqual(temporaryCell ? [undefined, '5'] : ['5', undefined]);
+		}
+	});
+
 	it('stores new properties on the cell', () => {
 		const state = stateOf(choice(), [placeholder('Choose an item.')]);
 		const span = controlSpans(state.doc)[0]!;
