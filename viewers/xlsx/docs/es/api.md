@@ -61,19 +61,20 @@ Solo propiedades:
 
 Todos los eventos son `CustomEvent` que se propagan (bubble) y atraviesan el límite del shadow DOM (`composed`).
 
-| Evento                 | `detail`                                                                                   | Notas                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| `workbook-change`      | `{ workbook }`                                                                             | Tras una edición, una carga o un libro nuevo.                                     |
-| `workbook-error`       | `{ error, message }`                                                                       | Falló una carga o un guardado.                                                    |
-| `workbook-warning`     | `{ warnings }`                                                                             | Contenido que el cargador leyó pero no pudo modelar.                              |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                   |
-| `ribbon-action`        | `{ id }`                                                                                   | Se ejecutó un comando de la cinta.                                                |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Cancelable**: llame a `preventDefault()` para gestionarlo usted mismo.          |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` es el rango seleccionado y `active` la celda activa.                        |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                                                   |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                                                   |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Se eligió un comando de una pestaña del anfitrión (`ribbonAddIns`).               |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Se inició o detuvo el uso compartido, cambió la conexión o alguien entró o salió. |
+| Evento                 | `detail`                                                                                   | Notas                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                             | Tras una edición, una carga o un libro nuevo.                                                        |
+| `workbook-error`       | `{ error, message }`                                                                       | Falló una carga o un guardado.                                                                       |
+| `workbook-warning`     | `{ warnings }`                                                                             | Contenido que el cargador leyó pero no pudo modelar.                                                 |
+| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                                      |
+| `ribbon-action`        | `{ id }`                                                                                   | Se ejecutó un comando de la cinta.                                                                   |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Cancelable**: llame a `preventDefault()` para gestionarlo usted mismo.                             |
+| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` es el rango seleccionado y `active` la celda activa.                                           |
+| `sheet-change`         | `{ index, name }`                                                                          |                                                                                                      |
+| `dirty-change`         | `{ dirty }`                                                                                |                                                                                                      |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Se eligió un comando de una pestaña del anfitrión (`ribbonAddIns`).                                  |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Se inició o detuvo el uso compartido, cambió la conexión o alguien entró o salió.                    |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                         | Una edición de celda en curso no superó la validación y sigue abierta hasta corregirla o cancelarla. |
 
 ```ts
 editor.addEventListener('file-command', (event) => {
