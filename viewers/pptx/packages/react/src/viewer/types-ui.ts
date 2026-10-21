@@ -1,5 +1,6 @@
 import type {
 	AccountAuthConfig,
+	CollaborationInput,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
@@ -429,7 +430,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * />
 	 * ```
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 
 	/**
 	 * Callback invoked when the user starts a collaboration session from the

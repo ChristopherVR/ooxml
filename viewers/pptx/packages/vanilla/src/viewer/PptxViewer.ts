@@ -140,7 +140,7 @@ import {
 	resolveInitialThemeState,
 } from './theme-locale-prefs';
 import type {
-	CollaborationConfig,
+	CollaborationInput,
 	ConnectionStatus,
 	PptxViewerInstance,
 	PptxViewerOptions,
@@ -2108,7 +2108,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	getRegistry = (): ElementRendererRegistry => this.registry;
 	getHandler = (): PptxHandler | null => this.loading.getHandler();
 
-	startCollaboration(config: CollaborationConfig): Promise<void> {
+	startCollaboration(config: CollaborationInput): Promise<void> {
 		return this.sessions.startCollaboration(config);
 	}
 

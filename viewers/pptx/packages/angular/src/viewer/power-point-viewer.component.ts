@@ -53,6 +53,7 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 	THEME_CATALOG,
+	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
@@ -202,7 +203,7 @@ import { ThemeEditorFieldsComponent } from './theme-editor-fields.component';
 import { ThemeGalleryComponent } from './theme-gallery.component';
 import { resolveBelowRibbonQuickAccess, TitleBarComponent } from './title-bar.component';
 import { mergeHiddenActions } from './toolbar-visibility';
-import type { CollaborationConfig } from './types';
+import type { CollaborationConfig, CollaborationInput } from './types';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 import { ViewerCollabCursorService } from './viewer-collab-cursor.service';
 import { ViewerCollaborationSessionService } from './viewer-collaboration-session.service';
@@ -1543,7 +1544,7 @@ export class PowerPointViewerComponent
 	 */
 	readonly autosaveIntervalMs = input<number | undefined>(undefined);
 	/** Optional real-time collaboration config; when set, connects and shows remote cursors. */
-	readonly collaboration = input<CollaborationConfig | undefined>(undefined);
+	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	/**
 	 * Display name for the local user in collaboration/broadcast sessions and
 	 * presence avatars. Falls back to "You" (cursors/avatars) and "Presenter"
@@ -2715,7 +2716,7 @@ export class PowerPointViewerComponent
 		// tracking those would re-run this effect mid-connect (e.g. when a guest's
 		// placeholder deck loads) and double-join the Yjs room.
 		effect(() => {
-			const config = this.collaboration();
+			const config = resolveCollaborationConfig(this.collaboration());
 			untracked(() => this.session.syncHostConfig(config));
 		});
 

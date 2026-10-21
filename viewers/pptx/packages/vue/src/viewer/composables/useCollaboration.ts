@@ -16,6 +16,7 @@ import {
 	isMixedContentBlocked,
 	registerCollaborationTeardown,
 	resolveTransportForServerUrl,
+	resolveCollaborationConfig,
 	resolveCollaborationShellState,
 	validateRoomId,
 } from 'ooxml-ui/pptx';
@@ -34,6 +35,8 @@ export type {
 } from './collaboration-types';
 
 export function useCollaboration(options: UseCollaborationOptions): UseCollaborationResult {
+	const hostConfig = (): CollaborationConfig | undefined =>
+		resolveCollaborationConfig(toValue(options.collaboration));
 	const status = ref<ConnectionStatus>('disconnected');
 	const connected = computed(() => status.value === 'connected');
 	const active = ref(false);
@@ -44,7 +47,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	const shellState = computed(() =>
 		resolveCollaborationShellState({
 			authorizedCanEdit: toValue(options.canEdit) ?? true,
-			configured: Boolean(toValue(options.collaboration) || activeCollaboration.value),
+			configured: Boolean(hostConfig() || activeCollaboration.value),
 			readOnly: document.readOnly.value,
 			sourcePending: toValue(options.sourcePending) ?? false,
 			sourceError: toValue(options.sourceError) ?? false,
@@ -183,7 +186,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		}
 	}
 	watch(
-		() => toValue(options.collaboration),
+		hostConfig,
 		(config) => {
 			if (config && config !== activeCollaboration.value) {
 				void start(config);

@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	CollaborationTransport,
 	ConnectionStatus,
@@ -48,6 +49,7 @@ export type {
 	AutosaveRecord,
 	AutosaveStatus,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	CollaborationTransport,
 	ConnectionStatus,
@@ -377,7 +379,7 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * shared codec limitation), and a remote update replaces the whole local
 	 * slide array, so a joiner's host-provided media can degrade.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/**
 	 * Prefilled values for the built-in Share/Broadcast dialogs' form fields
 	 * (e.g. a host-generated display name), mirroring the Vue binding's
@@ -506,7 +508,7 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	 * transport is created; connection status arrives via
 	 * {@link PptxViewerCallbacks.onCollaborationStatus}.
 	 */
-	startCollaboration(config: CollaborationConfig): Promise<void>;
+	startCollaboration(config: CollaborationInput): Promise<void>;
 	/** Stop the active collaboration session (no-op when none is running). */
 	stopCollaboration(): void;
 	/** Current collaboration connection status (`'disconnected'` when inactive). */

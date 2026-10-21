@@ -7,6 +7,7 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationLivePatcher,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
@@ -35,7 +36,7 @@ export interface CollaborationControllerDeps {
 
 export interface CollaborationController {
 	/** Connect and begin syncing. Stops any prior session first. */
-	start(config: CollaborationConfig): Promise<void>;
+	start(config: CollaborationInput): Promise<void>;
 	/** Disconnect and tear the session down. */
 	stop(): void;
 	/** Whether a session is currently active. */

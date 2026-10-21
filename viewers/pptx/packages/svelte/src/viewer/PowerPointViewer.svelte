@@ -16,6 +16,7 @@
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
+		resolveCollaborationConfig,
 		resolveViewerRootOptions,
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
@@ -438,7 +439,7 @@
 		/>
 	{/if}
 	{#if showToolbar && vm.chromeVisible && customization.isPanelVisible('statusBar')}
-		<ViewerStatusBar {vm} {showNotes} {hiddenActions} collaboration={props.collaboration} />
+		<ViewerStatusBar {vm} {showNotes} {hiddenActions} collaboration={resolveCollaborationConfig(props.collaboration)} />
 	{/if}
 	<CollaborationChrome
 		{collab}

@@ -55,6 +55,7 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 	shouldConfirmExternalHyperlink,
 	resolveAutosaveIntervalSeconds,
+	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
@@ -201,7 +202,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onLocaleChange,
 			accountAuth,
 			authorName,
-			collaboration,
+			collaboration: collaborationInput,
 			onStartCollaboration,
 			onStopCollaboration,
 			shareDefaults,
@@ -217,6 +218,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			customization,
 			initialSlide,
 		} = props;
+		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.
 		const rootOptions = resolveViewerRootOptions(props);

@@ -1,5 +1,5 @@
 import type {
-	CollaborationConfig,
+	CollaborationInput,
 	CollaborationShellState,
 	ToolbarActionId,
 	ViewportFitOptions,
@@ -15,7 +15,7 @@ import type { AutosaveStatus } from './useAutosave';
 
 export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	/** Optional collaboration, including a host-owned document and presence session. */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/** PPTX content as ArrayBuffer/Uint8Array, or null/undefined while no file is loaded. */
 	content: ArrayBuffer | Uint8Array | null | undefined;
 	/** Whether editing actions are enabled. Defaults to false (view-only). */

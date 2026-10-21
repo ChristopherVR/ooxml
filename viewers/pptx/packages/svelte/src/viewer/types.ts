@@ -2,6 +2,7 @@ import type {
 	AccountAuthConfig,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	CollaborationTransport,
 	PowerPointViewerAPI,
@@ -328,7 +329,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Share/Broadcast toolbar buttons; see `collab/collaboration.svelte.ts` and
 	 * `collab/components/`.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/** Fired when a collaboration session starts (with the resolved config). */
 	onstartcollaboration?: (config: CollaborationConfig) => void;
 	/** Fired when a collaboration session stops. */

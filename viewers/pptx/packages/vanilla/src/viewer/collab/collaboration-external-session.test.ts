@@ -1,3 +1,4 @@
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import type {
 	CollaborationConfig,
 	ExternalCollaborationSession,
@@ -230,6 +231,31 @@ describe('host-owned Vanilla collaboration', () => {
 		expect(collab.isActive()).toBeFalsy();
 		expect(room.destroy).not.toHaveBeenCalled();
 		collab.destroy();
+	});
+
+	it('borrows a shared-contract CollabSession passed as collaboration.session', async () => {
+		const hub = createMemoryHub();
+		const shared = createCollabSession({
+			roomId: 'shared-room',
+			provider: transportProvider({ transport: hub.createTransport('shared-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		const destroy = vi.spyOn(shared.doc, 'destroy');
+		const { collab } = build();
+		await collab.start({ session: shared, user: { name: 'Bo' }, intent: 'join' });
+		expect(collab.isActive()).toBeTruthy();
+		expect(collab.getConfig()).toMatchObject({
+			roomId: 'shared-room',
+			userName: 'Bo',
+			sessionIntent: 'join',
+		});
+		expect(collab.getConfig()?.externalSession?.doc).toBe(shared.doc);
+		collab.stop();
+		expect(collab.isActive()).toBeFalsy();
+		expect(destroy).not.toHaveBeenCalled();
+		collab.destroy();
+		shared.destroy();
 	});
 
 	it('keeps the public viewer read-only through file loading and mode changes', async () => {

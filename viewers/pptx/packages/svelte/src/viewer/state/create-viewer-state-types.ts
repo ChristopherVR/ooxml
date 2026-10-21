@@ -2,6 +2,7 @@ import type {
 	AutosaveDisabledReason,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationShellState,
 	FieldSubstitutionContext,
 	MobileSheetKey,
@@ -49,7 +50,7 @@ export type { CanvasSize };
 export interface CreateViewerStateOptions {
 	inspectorInitiallyOpen?: boolean | undefined;
 	getSource: () => Uint8Array | ArrayBuffer | null | undefined;
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	shareDefaults?: ShareDefaultsInput;
 	/**
 	 * Host `autosave` prop, verbatim. `undefined` means the host said nothing,

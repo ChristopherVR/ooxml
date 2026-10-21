@@ -1,6 +1,7 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationInput,
 	ConnectionStatus,
 	YDocLike,
 	YjsFactories,
@@ -14,6 +15,7 @@ import {
 	observeYDocSlides,
 	readSlidesFromYDoc,
 	registerCollaborationTeardown,
+	resolveCollaborationConfig,
 	resolveTransportForServerUrl,
 	shouldRoomSlidesReplaceLoad,
 	validateRoomId,
@@ -93,7 +95,8 @@ export function createCollaborationController(
 	// retain their grace timer; external sessions only use host readiness.
 	const syncGate = createSyncGate(flushLocal);
 
-	async function start(config: CollaborationConfig): Promise<void> {
+	async function start(input: CollaborationInput): Promise<void> {
+		const config = resolveCollaborationConfig(input) as CollaborationConfig;
 		stop();
 		const token = generation;
 		lastConfig = config;

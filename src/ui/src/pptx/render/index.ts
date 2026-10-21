@@ -816,6 +816,7 @@ export * from './hyperlink-target';
 export * from './collaboration-presence';
 export * from './collaboration-shell-state';
 export * from './collaboration-external-session';
+export * from './collaboration-options';
 export * from './collaboration-external-readiness';
 // Throttled local-presence publisher, shared by every binding's collaboration
 // layer (writes the same nested `presence` awareness field they all read).

@@ -1,4 +1,9 @@
-import type { CollabLoadOrigin, CollaborationConfig, CollaborationTransport } from 'ooxml-ui/pptx';
+import type {
+	CollabLoadOrigin,
+	CollaborationConfig,
+	CollaborationInput,
+	CollaborationTransport,
+} from 'ooxml-ui/pptx';
 import { buildBroadcastViewerUrl, shouldAutoFollowBroadcaster } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 import { computed, ref, watch } from 'vue';
@@ -34,7 +39,7 @@ export interface UseCollaborationWiringInput {
 	canvasWidth: ComputedRef<number>;
 	canvasHeight: ComputedRef<number>;
 	/** Live `props.collaboration`, watched to auto-start/stop a session. */
-	collaborationProp: () => CollaborationConfig | undefined;
+	collaborationProp: () => CollaborationInput | undefined;
 	selectedElementIds: Ref<string[]>;
 	activeSlideIndex: Ref<number>;
 	goTo: (index: number) => void;

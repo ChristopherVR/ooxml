@@ -2,6 +2,7 @@ import type {
 	AccountAuthConfig,
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	PowerPointViewerAPI,
 	RibbonAddInTab,
@@ -119,7 +120,7 @@ export interface PowerPointViewerProps {
 	 * joins a Yjs session (y-websocket or serverless y-webrtc) with live cursors,
 	 * remote selections, follow mode and elected-writer write-back.
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	/** Default values for the Share dialog fields. */
 	shareDefaults?: {
 		roomId?: string;

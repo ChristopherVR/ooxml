@@ -1,7 +1,7 @@
 import type {
 	AutosaveActivation,
 	CollabLoadOrigin,
-	CollaborationConfig,
+	CollaborationInput,
 	ConnectionStatus,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
@@ -58,7 +58,7 @@ export interface SessionControllersDeps {
  * new session capabilities hang off this one indirection module.
  */
 export interface SessionControllers {
-	startCollaboration(config: CollaborationConfig): Promise<void>;
+	startCollaboration(config: CollaborationInput): Promise<void>;
 	stopCollaboration(): void;
 	isCollaborationReadOnly(): boolean;
 	getCollaborationStatus(): ConnectionStatus;

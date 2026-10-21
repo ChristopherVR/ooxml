@@ -1,6 +1,7 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isFeatureEnabled,
+	resolveCollaborationConfig,
 	resolveViewerRootOptions,
 } from 'ooxml-ui/pptx';
 import type { ResolvedCustomization } from 'ooxml-ui/pptx';
@@ -68,7 +69,7 @@ export function toViewerStateOptions(
 			Boolean(getProps().ai) &&
 			isFeatureEnabled(dom.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION, 'ai'),
 		get collaboration() {
-			return getProps().collaboration;
+			return resolveCollaborationConfig(getProps().collaboration);
 		},
 		get shareDefaults() {
 			return getProps().shareDefaults;

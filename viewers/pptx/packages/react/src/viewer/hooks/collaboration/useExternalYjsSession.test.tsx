@@ -1,9 +1,11 @@
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 // @vitest-environment happy-dom
 import type {
 	CollaborationConfig,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 } from 'ooxml-ui/pptx';
+import { resolveCollaborationConfig } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -94,6 +96,27 @@ describe('host-owned collaboration sessions', () => {
 		act(() => window.dispatchEvent(new Event('pagehide')));
 		expect(host.listeners.size).toBe(0);
 		expect(host.doc.isDestroyed).toBeFalsy();
+	});
+
+	it('borrows a shared-contract CollabSession passed as collaboration.session', () => {
+		const hub = createMemoryHub();
+		const shared = createCollabSession({
+			roomId: 'shared-room',
+			provider: transportProvider({ transport: hub.createTransport('shared-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		const input = { session: shared, user: { name: 'Bo' } };
+		const config = resolveCollaborationConfig(input);
+		act(() => root.render(<Probe config={config} />));
+		expect(current?.doc).toBe(shared.doc);
+		expect(current?.config.roomId).toBe('shared-room');
+		expect(current?.config.userName).toBe('Bo');
+		act(() => root.render(<Probe config={resolveCollaborationConfig(input)} />));
+		expect(current?.doc).toBe(shared.doc);
+		act(() => root.render(null));
+		expect(shared.doc.isDestroyed).toBeFalsy();
+		shared.destroy();
 	});
 
 	it('retains one borrowed subscription through StrictMode effect replay', () => {

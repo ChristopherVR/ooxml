@@ -2,6 +2,7 @@ import type {
 	AwarenessLike,
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationLivePatcher,
 	CollaborationRole,
 	CollaborationShellState,
@@ -18,7 +19,7 @@ export type { AwarenessLike, CollaborationConfig, CollaborationRole };
 
 export interface UseCollaborationOptions {
 	/** Optional reactive configuration; replacing or clearing it starts or stops the session. */
-	collaboration?: MaybeRefOrGetter<CollaborationConfig | undefined>;
+	collaboration?: MaybeRefOrGetter<CollaborationInput | undefined>;
 	/** Host authorization, combined with the session's canonical read-only state. */
 	canEdit?: MaybeRefOrGetter<boolean>;
 	/** Whether an actual source file is still loading or failed to load. */
