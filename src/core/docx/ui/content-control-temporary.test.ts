@@ -12,6 +12,7 @@ import {
 import { contentControlPlugin } from './content-control-guard';
 import { controlSpans } from './content-control-spans';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
+import { imageNodeSpec } from './inline-content-schema';
 
 const schema = new Schema({
 	nodes: {
@@ -22,6 +23,7 @@ const schema = new Schema({
 			toDOM: () => ['p', 0],
 		},
 		text: { group: 'inline' },
+		image: imageNodeSpec,
 	},
 	marks: markSpecs,
 });
@@ -75,6 +77,23 @@ describe('temporary content controls in the editor', () => {
 		const block = stateOf([{ text: 'Notes' }], temporary({ level: 'block' }));
 		const edited = block.apply(block.tr.insertText('!', 6));
 		expect(edited.doc.firstChild!.attrs.contentControl).toBeNull();
+	});
+
+	it('removes the control when a picture in it is replaced, and not when its text is formatted', () => {
+		const picture = (partName: string) => schema.node('image', { partName });
+		const paragraph = schema.node('paragraph', { contentControl: temporary({ level: 'block' }) }, [
+			schema.text('Logo '),
+			picture('word/media/image1.png'),
+		]);
+		const state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [paragraph]),
+			plugins: [contentControlPlugin()],
+		});
+		const replaced = state.apply(state.tr.replaceWith(6, 7, picture('word/media/image2.png')));
+		expect(replaced.doc.firstChild!.attrs.contentControl).toBeNull();
+		const bold = state.apply(state.tr.addMark(1, 5, schema.marks.bold!.create()));
+		expect(bold.doc.firstChild!.attrs.contentControl).toMatchObject({ id: '21' });
 	});
 
 	it('removes the text of a temporary control instead of bringing its placeholder back', () => {

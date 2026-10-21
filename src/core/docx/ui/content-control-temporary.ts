@@ -8,8 +8,16 @@ import { CONTROL_EDIT_META } from './content-control-commands';
 import { controlOfMark, controlSpans, type ControlSpan } from './content-control-spans';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
 
+/**
+ * The control's content as its text, with each object as a character and a picture by its parts,
+ * so replacing a picture is an edit too. Formatting is not: it changes no content.
+ */
 const contentOf = (state: EditorState, span: ControlSpan): string =>
-	state.doc.textBetween(span.from, span.to, '\n', '\uFFFC');
+	state.doc.textBetween(span.from, span.to, '\n', (leaf) =>
+		leaf.type.name === 'image'
+			? `\uFFFC${String(leaf.attrs.partName)}\uFFFC${String(leaf.attrs.svgPartName ?? '')}`
+			: '\uFFFC',
+	);
 
 /** Takes the control of `span` off its text, paragraphs or cell; its content stays as it is. */
 export function removeControl(tr: Transaction, span: ControlSpan): Transaction {
