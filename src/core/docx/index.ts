@@ -87,6 +87,8 @@ export {
 	type FormFieldStory,
 	type FormFieldType,
 } from './form-fill-fields';
+export { fillFormFields, type FormFillOptions, type FormFillResult } from './form-fill-write';
+export type { FormFieldValue } from './form-fill-values';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';
 export { DEFAULT_STYLES_XML, defaultStyleCatalogs } from './default-styles';
