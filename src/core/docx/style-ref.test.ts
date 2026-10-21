@@ -33,7 +33,6 @@ describe('STYLEREF instructions', () => {
 			'STYLEREF Title \\p',
 			'STYLEREF Title \\r',
 			'STYLEREF Title \\w',
-			'STYLEREF 1 \\s',
 			'STYLEREF Title \\# "0.00"',
 			'STYLEREF Title \\* Arabic',
 			'STYLEREF Doc Number',
@@ -102,6 +101,9 @@ describe('STYLEREF styles', () => {
 			'Section 2.01:',
 		]);
 		expect(source.results(0, parseStyleReference('STYLEREF 1 \\n \\t')!, target)).toEqual(['2.01']);
+		// Word writes \s for the chapter number of a caption; it reads as \n \t.
+		expect(parseStyleReference('STYLEREF 1 \\s')).toMatchObject({ number: true, numberOnly: true });
+		expect(source.results(0, parseStyleReference('STYLEREF 1 \\s')!, target)).toEqual(['2.01']);
 	});
 
 	it('reads a cell and the tables nested in it in reading order', async () => {

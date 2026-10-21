@@ -20,7 +20,10 @@ export interface StyleReference {
 	last: boolean;
 	/** `\n`: the paragraph number of the matching paragraph instead of its text. */
 	number: boolean;
-	/** `\t` with `\n`: the number without the text around it (`1.01` for `Section 1.01`). */
+	/**
+	 * `\t` with `\n`: the number without the text around it (`1.01` for `Section 1.01`). Word writes
+	 * `\s` for the chapter number of a caption, which reads as `\n \t`.
+	 */
 	numberOnly: boolean;
 	/** `\* Upper`, `Lower`, `FirstCap` or `Caps`. */
 	textCase?: FieldTextCase;
@@ -34,7 +37,7 @@ const FORMATTING = new Set(['mergeformat', 'charformat']);
 
 /**
  * Reads a STYLEREF instruction. Undefined for another field, a STYLEREF without a style, and
- * one with a switch that is not evaluated here (`\p`, `\r`, `\w`, `\s`, number or date pictures,
+ * one with a switch that is not evaluated here (`\p`, `\r`, `\w`, number or date pictures,
  * number formats): such fields keep the result they were saved with.
  */
 export function parseStyleReference(instr: string): StyleReference | undefined {
@@ -54,7 +57,10 @@ export function parseStyleReference(instr: string): StyleReference | undefined {
 		if (token.value === 'l') reference.last = true;
 		else if (token.value === 'n') reference.number = true;
 		else if (token.value === 't') reference.numberOnly = true;
-		else if (token.value === '*') {
+		else if (token.value === 's') {
+			reference.number = true;
+			reference.numberOnly = true;
+		} else if (token.value === '*') {
 			const format = tokens[++index];
 			if (format?.kind !== 'text') return undefined;
 			const name = format.value.toLowerCase();
