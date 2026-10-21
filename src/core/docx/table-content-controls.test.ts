@@ -100,6 +100,27 @@ describe('row and cell content controls on save', () => {
 		);
 	});
 
+	it('takes away a control around several cells or rows once none of them has it', async () => {
+		const wrap = (content: string) =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Group"/><w:id w:val="21"/></w:sdtPr><w:sdtContent>${content}</w:sdtContent></w:sdt>`;
+		const cells = await hand(grid(row(wrap(`${label('Left')}${label('Right')}`))));
+		const pair = tableOf(cells.model.blocks).rows[0]!;
+		expect(pair.map((cell) => cell.contentControl?.id)).toEqual(['21', '21']);
+		for (const cell of pair) delete cell.contentControl;
+		const cellXml = await documentXml(await cells.save(cells.model));
+		expect(cellXml).not.toContain('<w:sdt>');
+		expect(cellXml).toContain(`<w:tr>${label('Left')}${label('Right')}</w:tr>`);
+		const rows = await hand(
+			grid(wrap(row(`${label('A')}${label('B')}`) + row(`${label('C')}${label('D')}`))),
+		);
+		const table = tableOf(rows.model.blocks);
+		expect(table.rowProperties?.map((props) => props.contentControl?.id)).toEqual(['21', '21']);
+		for (const props of table.rowProperties ?? []) delete props.contentControl;
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).not.toContain('<w:sdt>');
+		expect(rowXml).toContain(`</w:tblGrid>${row(`${label('A')}${label('B')}`)}<w:tr>`);
+	});
+
 	it('writes the row and cell controls of a table added to the document', async () => {
 		const loaded = await hand(text('Before'));
 		loaded.model.blocks.push({

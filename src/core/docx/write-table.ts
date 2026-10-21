@@ -9,7 +9,7 @@ import {
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties';
-import { placeTableControl } from './write-table-controls';
+import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
 import { syncBlockControls } from './write-block-placement';
 import { children, first, isElement, makeW, named, type XmlDocument, type XmlElement } from './xml';
 
@@ -256,6 +256,10 @@ export function writeTable(
 		nextCells.forEach((tc, ci) =>
 			placeTableControl(doc, tc, row[ci]?.contentControl, sources[ci]?.model.contentControl),
 		);
+		unwrapDroppedControls(
+			nextCells,
+			row.map((cell) => cell.contentControl),
+		);
 		return tr;
 	});
 	replaceSlots(doc, node, oldRows, nextRows);
@@ -268,6 +272,10 @@ export function writeTable(
 			sourceRow === undefined ? undefined : base?.rowProperties?.[sourceRow]?.contentControl,
 		);
 	});
+	unwrapDroppedControls(
+		nextRows,
+		nextRows.map((_, ri) => table.rowProperties?.[ri]?.contentControl),
+	);
 	const grid = first(node, 'tblGrid');
 	if (
 		structural &&
