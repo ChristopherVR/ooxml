@@ -10,6 +10,7 @@ import {
 	chooseListItem,
 	deleteToPlaceholder,
 	newControlId,
+	pasteInCell,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
 	updateControlProperties,
@@ -419,6 +420,52 @@ describe('content controls around table cells in the editor', () => {
 		const typed = typeOverPlaceholder(state, inline.from, 'A');
 		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
 		expect(cellOf(state.apply(typed)).textContent).toBe('Name: A');
+	});
+
+	it('applies the rules of a cell control to typing and pasting in a block control in it', () => {
+		// `w:tc > w:sdt > w:p` in a cell control: the block control is the innermost, but the cell's
+		// rules still hold for what is typed or pasted in it.
+		const block: ContentControl = { id: '66', level: 'block', kind: 'richText' };
+		const pasted = new Slice(Fragment.from(schema.text('x')), 0, 0);
+		const caretIn = (state: EditorState) => {
+			const at = controlSpans(state.doc).find((span) => span.level === 'cell')!.from + 4;
+			return { at, state: state.apply(state.tr.setSelection(TextSelection.create(state.doc, at))) };
+		};
+		for (const kind of ['dropDownList', 'checkbox'] as const) {
+			const { at, state } = caretIn(
+				stateOf(choice({ kind, showingPlaceholder: false }), [
+					paragraph('Primary', { contentControl: block }),
+				]),
+			);
+			expect(controlAt(controlSpans(state.doc), at)?.control.id).toBe('66');
+			expect(typeOverPlaceholder(state, at, 'x')).toBe('blocked');
+			expect(pasteInCell(state, pasted)).toBe('blocked');
+		}
+		const { items: _items, ...list } = choice();
+		const text: ContentControl = { ...list, kind: 'text' };
+		const { at, state } = caretIn(
+			stateOf(text, [
+				paragraph('Enter a number.', { contentControl: block }, [style('PlaceholderText')]),
+			]),
+		);
+		const typed = typeOverPlaceholder(state, at, '4');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		expect(cellOf(state.apply(typed)).textContent).toBe('4');
+		expect(cellOf(state.apply(typed)).attrs.contentControl.showingPlaceholder).toBeUndefined();
+		const paste = pasteInCell(state, pasted);
+		if (paste === 'blocked' || !paste) throw new Error('expected a transaction');
+		expect(cellOf(state.apply(paste)).textContent).toBe('x');
+		expect(cellOf(state.apply(paste)).attrs.contentControl.showingPlaceholder).toBeUndefined();
+		// Deleting all of its text there brings the cell's placeholder back.
+		const filled = stateOf({ ...text, showingPlaceholder: false }, [
+			paragraph('42', { contentControl: block }),
+		]);
+		const start = controlSpans(filled.doc).find((span) => span.level === 'cell')!.from + 2;
+		const selected = filled.apply(
+			filled.tr.setSelection(TextSelection.create(filled.doc, start, start + 2)),
+		);
+		const cleared = selected.apply(deleteToPlaceholder(selected, 'backward')!);
+		expect(cellOf(cleared).attrs.contentControl.showingPlaceholder).toBe(true);
 	});
 
 	it('removes a temporary cell control with its first edit', () => {

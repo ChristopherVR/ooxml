@@ -229,6 +229,17 @@ export function chooseDate(
 }
 
 /**
+ * The control whose rules hold for what is typed, pasted or deleted at `pos`: the innermost one,
+ * except that a block control in a cell control (`w:tc > w:sdt > w:p`) leaves them to the cell.
+ */
+function inputControlAt(spans: readonly ControlSpan[], pos: number): ControlSpan | undefined {
+	const span = controlAt(spans, pos, true);
+	if (span?.level !== 'block') return span;
+	const cells = spans.filter((other) => other.level === 'cell');
+	return controlAt(cells, pos) ?? span;
+}
+
+/**
  * Typing over a control that shows its placeholder replaces the whole placeholder. Returns
  * `'blocked'` for kinds that take no typed text (checkbox, drop-down list) when the text would
  * land inside them; at their edge the text is typed beside the control instead. `undefined`
@@ -240,7 +251,7 @@ export function typeOverPlaceholder(
 	text: string,
 	to = from,
 ): Transaction | 'blocked' | undefined {
-	const span = controlAt(controlSpans(state.doc), from, true);
+	const span = inputControlAt(controlSpans(state.doc), from);
 	if (span?.level === 'cell') return typeInCell(state, span, text, to);
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
@@ -297,7 +308,7 @@ function withoutPlaceholderStyle(fragment: Fragment): Fragment {
  */
 export function pasteInCell(state: EditorState, slice: Slice): Transaction | 'blocked' | undefined {
 	const { from, to } = state.selection;
-	const span = controlAt(controlSpans(state.doc), from, true);
+	const span = inputControlAt(controlSpans(state.doc), from);
 	if (span?.level !== 'cell' || to > span.to - 1) return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
@@ -323,7 +334,7 @@ export function deleteToPlaceholder(
 	direction: 'backward' | 'forward',
 ): Transaction | undefined {
 	const { selection } = state;
-	const span = controlAt(controlSpans(state.doc), selection.from, true);
+	const span = inputControlAt(controlSpans(state.doc), selection.from);
 	if (!span || span.level === 'block' || span.control.showingPlaceholder) return undefined;
 	if (!editable(state, span) || span.control.kind === 'checkbox') return undefined;
 	if (!replaceable(state, span)) return undefined;
