@@ -78,7 +78,11 @@ export function replaceControlContent(
 		return state.tr.replaceWith(span.from, span.to, text ?? []).setMeta(CONTROL_EDIT_META, true);
 	const cell = state.doc.nodeAt(span.from)!;
 	const first = cell.firstChild?.type.name === 'paragraph' ? cell.firstChild : undefined;
-	const paragraph = (first?.type ?? state.schema.nodes.paragraph!).create(first?.attrs, text);
+	// The paragraph keeps its formatting, not a control around it: that goes with its content.
+	const attrs = first?.attrs.contentControl
+		? { ...first.attrs, contentControl: null }
+		: first?.attrs;
+	const paragraph = (first?.type ?? state.schema.nodes.paragraph!).create(attrs, text);
 	const tr = state.tr.replaceWith(span.from + 1, span.to - 1, paragraph);
 	tr.setNodeMarkup(span.from, undefined, {
 		...cell.attrs,

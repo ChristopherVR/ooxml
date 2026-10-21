@@ -225,6 +225,26 @@ describe('content controls around table cells in the editor', () => {
 		expect(chooseListItem(list, '61', 1)).toBeUndefined();
 	});
 
+	it('takes a control around the replaced paragraph away with its text', () => {
+		// The paragraph's own control is deleted with the content a pick or a toggle replaces, as a
+		// control that may be deleted (here one whose content may not be edited) can be.
+		const notes: ContentControl = {
+			id: '68',
+			level: 'block',
+			kind: 'richText',
+			lock: 'contentLocked',
+		};
+		const content = [paragraph('Fixed text', { id: 'c1', contentControl: notes })];
+		const list = stateOf(choice({ showingPlaceholder: false }), content);
+		const picked = cellOf(list.apply(chooseListItem(list, '61', 1)!));
+		expect(picked.textContent).toBe('Secondary');
+		expect(picked.firstChild!.attrs).toMatchObject({ id: 'c1', contentControl: null });
+		const box = stateOf({ id: '63', level: 'cell', kind: 'checkbox', checked: false }, content);
+		const toggled = cellOf(box.apply(toggleCheckboxControl(box, '63')!));
+		expect(toggled.textContent).toBe('☒');
+		expect(toggled.firstChild!.attrs.contentControl).toBeNull();
+	});
+
 	it('picks in the cell that was operated when two cell controls share an id', () => {
 		const label = schema.node('tableCell', null, [paragraph('Status')]);
 		const prompt = (id: string) => paragraph('Choose an item.', { id }, [style('PlaceholderText')]);
