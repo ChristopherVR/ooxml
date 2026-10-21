@@ -42,7 +42,8 @@ const COLUMNS = 10;
  *
  * `themeNames` renames the ten columns and `variantLabel` names their variants (for a translated
  * product). A product that computes its own swatches sets `palette` instead (one column per
- * colour it can resolve, each with five variants), and one that stores theme references marks
+ * colour it can resolve, each with up to five variants; a missing one leaves its cell empty), and
+ * one that stores theme references marks
  * the current swatch with `selectedTheme`. An empty `standardColors` leaves out Standard Colors.
  * Choosing emits `office-color-pick`
  * `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a
@@ -244,14 +245,17 @@ export class OfficeUiColorGrid extends OfficeElement {
 								: {},
 					)}
 			></button>`;
-		// A row lays out Office's ten columns, or as many as a product's palette has.
+		// A row lays out Office's ten columns, or as many as a product's palette has. A column
+		// short of a variant keeps that cell empty, so every swatch stays in its own column.
 		const cells = (
-			items: readonly ThemePaletteSwatch[],
+			items: readonly (ThemePaletteSwatch | undefined)[],
 			source: OfficeColorSource,
 			columns = COLUMNS,
 		) => {
 			const result = html`<div class="cells" data-cells=${source} style=${`--_columns:${columns}`}
-				>${items.map((item, index) => swatch(item, source, index))}</div
+				>${items.map((item, index) =>
+					item ? swatch(item, source, index) : html`<span></span>`,
+				)}</div
 			>`;
 			row++;
 			return result;
@@ -265,8 +269,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 		const standard = this.standardColors ?? OFFICE_STANDARD_COLORS;
 		const variants = (index: number) =>
 			palette.map((column) => {
-				const item = column.variants[index]!;
-				return name ? { ...item, label: name(column.name, item.variant) } : item;
+				const item = column.variants[index];
+				return item && name ? { ...item, label: name(column.name, item.variant) } : item;
 			});
 		const recent = (this.recentColors ?? [])
 			.map((hex) => normalizePaletteHex(hex))

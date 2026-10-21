@@ -218,6 +218,27 @@ describe('office-ui-color-grid', () => {
 		});
 	});
 
+	it('keeps a short column of a product palette in place instead of failing to draw', () => {
+		// The second column resolves only four variants: its fifth slot stays empty.
+		const [first, second] = buildThemePalette().slice(4, 6);
+		const palette = [first!, { ...second!, variants: second!.variants.slice(0, 4) }];
+		const heard = vi.fn<(pick: OfficeColorPick) => void>();
+		const grid = make((g) => {
+			g.palette = palette;
+		});
+		grid.addEventListener('office-color-pick', (event) =>
+			heard((event as CustomEvent<OfficeColorPick>).detail),
+		);
+		expect(buttons(grid, '[data-source="theme"]')).toHaveLength(11);
+		const lastRow = [...grid.shadowRoot!.querySelectorAll('[data-cells="theme"]')].at(-1)!;
+		expect([...lastRow.children].map((cell) => cell.localName)).toStrictEqual(['button', 'span']);
+		buttons(grid, `[title="${second!.variants[3]!.label}"]`)[0]!.click();
+		expect(heard.mock.calls[0]![0].theme).toStrictEqual({
+			column: 1,
+			variant: second!.variants[3]!.variant,
+		});
+	});
+
 	it('marks the swatch at selectedTheme and no swatch by value', () => {
 		const grid = make((g) => {
 			g.value = '#ff0000';
