@@ -2,13 +2,30 @@ import { createWorkbook, validateSheetName } from '../xlsx/workbook';
 import { loadXlsx } from '../xlsx/read/load';
 import { saveXlsx } from '../xlsx/write/save';
 import { createEditSession } from '../xlsx/edit/session';
-import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address';
+import {
+	parseAddress,
+	parseRange,
+	MAX_COL,
+	MAX_ROW,
+	formatAddress,
+	formatRange,
+} from '../xlsx/address';
 import { forEachCell, getCell } from '../xlsx/cells';
+import { findAll } from '../xlsx/edit/find';
+import type { FindQuery } from '../xlsx/edit/types-clipboard';
+import { cellView, definedNameList, rangeCells, sheetSummaries } from './xlsx-read';
 
+/**
+ * The sheets (index, name, state, used range with its row and column counts, tables), the
+ * active sheet, the defined names, the document properties and the loader warnings. Tables per
+ * sheet and names are capped at 500 each; `tablesOmitted` and `definedNamesOmitted` count the rest.
+ */
 export async function inspectXlsx(bytes: Uint8Array) {
 	const workbook = await loadXlsx(bytes);
 	return {
-		sheets: workbook.sheets.map((sheet, index) => ({ index, name: sheet.name })),
+		sheets: sheetSummaries(workbook),
+		activeSheet: workbook.activeSheet,
+		...definedNameList(workbook),
 		properties: workbook.properties,
 		warnings: workbook.warnings,
 	};
@@ -27,6 +44,10 @@ export async function createXlsx(names: readonly string[]): Promise<Uint8Array> 
 	return saveXlsx(workbook);
 }
 
+/**
+ * The cells of an A1 range (at most 10,000), row by row: value, formula, the text as displayed,
+ * the number format (absent for General) and, for dates and times, the value in ISO 8601.
+ */
 export async function readXlsxRange(bytes: Uint8Array, sheetIndex: number, reference: string) {
 	const workbook = await loadXlsx(bytes);
 	const sheet =
@@ -34,19 +55,7 @@ export async function readXlsxRange(bytes: Uint8Array, sheetIndex: number, refer
 	const range = parseRange(reference);
 	if (!sheet || !range || range.end.col > MAX_COL || range.end.row > MAX_ROW)
 		throw new Error('Invalid sheet or range');
-	const count = (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
-	if (count > 10_000) throw new Error('Read at most 10000 cells per request');
-	const cells = [];
-	for (let row = range.start.row; row <= range.end.row; row++)
-		for (let col = range.start.col; col <= range.end.col; col++) {
-			const cell = getCell(sheet, row, col);
-			cells.push({
-				address: formatAddress({ row, col }),
-				value: cell?.value ?? null,
-				formula: cell?.formula,
-			});
-		}
-	return { cells, warnings: workbook.warnings };
+	return { cells: rangeCells(workbook, sheet, range), warnings: workbook.warnings };
 }
 
 export async function setXlsxCells(
@@ -98,4 +107,93 @@ export async function readXlsxFilledCells(bytes: Uint8Array, { maxCells = 5000 }
 		truncated: sheets.some((s) => s.omitted > 0),
 		warnings: workbook.warnings,
 	};
+}
+
+export interface XlsxFindOptions {
+	/** The sheet to search; every sheet when absent. */
+	sheetIndex?: number;
+	/** An A1 range to search within (needs `sheetIndex`). */
+	range?: string;
+	/** `formulas` (Excel's default) searches what was typed; `values` the text as displayed. */
+	lookIn?: 'formulas' | 'values';
+	matchCase?: boolean;
+	/** The whole cell content must match. */
+	wholeCell?: boolean;
+	/** Excel wildcards: `*` any run, `?` one character, `~` escapes. On by default. */
+	wildcards?: boolean;
+	/** At most this many matches (1 to 1000, default 100); `total` counts them all. */
+	maxResults?: number;
+}
+
+/**
+ * The cells matching `text` the way Excel's Find does, sheet by sheet in row order, each with
+ * its sheet, address and the same view as a range read. Bounded by `maxResults`.
+ */
+export async function findXlsxCells(
+	bytes: Uint8Array,
+	text: string,
+	options: XlsxFindOptions = {},
+) {
+	if (!text) throw new Error('The search text is empty');
+	const max = options.maxResults ?? 100;
+	if (!Number.isSafeInteger(max) || max < 1 || max > 1000)
+		throw new Error('Return between 1 and 1000 matches per request');
+	const workbook = await loadXlsx(bytes);
+	const query: FindQuery = { text, lookIn: options.lookIn ?? 'formulas' };
+	const { sheetIndex } = options;
+	if (sheetIndex !== undefined) {
+		if (!Number.isSafeInteger(sheetIndex) || !workbook.sheets[sheetIndex])
+			throw new Error('Invalid sheet');
+		query.sheet = sheetIndex;
+	}
+	if (options.range !== undefined) {
+		const range = parseRange(options.range);
+		if (sheetIndex === undefined) throw new Error('A range needs a sheetIndex');
+		if (!range) throw new Error('Invalid range');
+		query.range = range;
+	}
+	if (options.matchCase) query.matchCase = true;
+	if (options.wholeCell) query.wholeCell = true;
+	if (options.wildcards === false) query.wildcards = false;
+	const found = findAll(workbook, query);
+	const matches = found.slice(0, max).map((match) => {
+		const sheet = workbook.sheets[match.sheet];
+		return {
+			sheetIndex: match.sheet,
+			sheet: sheet?.name ?? '',
+			address: formatAddress(match),
+			...cellView(workbook, sheet && getCell(sheet, match.row, match.col)),
+		};
+	});
+	return {
+		matches,
+		total: found.length,
+		truncated: found.length > max,
+		warnings: workbook.warnings,
+	};
+}
+
+/**
+ * A table found by name (ignoring case, as Excel does) on any sheet: its sheet, range, header and
+ * totals rows, column names and cells as a range read returns them (at most 10,000 cells).
+ */
+export async function readXlsxTable(bytes: Uint8Array, name: string) {
+	const workbook = await loadXlsx(bytes);
+	const wanted = name.toLowerCase();
+	for (const [sheetIndex, sheet] of workbook.sheets.entries()) {
+		const table = sheet.tables.find((t) => t.displayName.toLowerCase() === wanted);
+		if (!table) continue;
+		return {
+			sheetIndex,
+			sheet: sheet.name,
+			name: table.displayName,
+			range: formatRange(table.range),
+			headerRow: table.headerRow,
+			totalsRow: table.totalsRow,
+			columns: table.columns.map((column) => column.name),
+			cells: rangeCells(workbook, sheet, table.range),
+			warnings: workbook.warnings,
+		};
+	}
+	throw new Error(`No table named ${name}`);
 }
