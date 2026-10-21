@@ -1,8 +1,19 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes content control (`w:sdt`) properties: patches only what the model changed on an existing
 // control, and builds a new control (from its verbatim `w:sdtPr` when it has one).
-import type { ContentControl } from './content-control-model';
-import { parseContentControl, sdtContent } from './content-control';
+import type {
+	ContentControl,
+	ContentControlGlyph,
+	ContentControlListItem,
+} from './content-control-model';
+import { parseContentControl, propertiesKind, sdtContent, typeElements } from './content-control';
+import {
+	NAMED_TYPES,
+	validId,
+	validLock,
+	verbatimEndProperties,
+	verbatimProperties,
+} from './content-control-values';
 import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
@@ -10,7 +21,6 @@ import {
 	getW,
 	makeW,
 	named,
-	parseXml,
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
@@ -69,6 +79,36 @@ function checkboxElement(sdtPr: XmlElement): XmlElement | undefined {
 	);
 }
 
+// A list, a check box or a date pasted from another page holds whatever that page wrote: only
+// values Word reads are written.
+
+/** The entries of a list control that can be written, each with a text display and value. */
+function validItems(items: unknown): ContentControlListItem[] {
+	if (!Array.isArray(items)) return [];
+	return items.flatMap((item: unknown) => {
+		if (!item || typeof item !== 'object') return [];
+		const { display, value } = item as { display?: unknown; value?: unknown };
+		const text = display ?? value;
+		return text === undefined || text === null
+			? []
+			: [{ display: String(text), value: String(value ?? text) }];
+	});
+}
+
+/** A check box glyph Word reads: a code point in four hexadecimal digits (`ST_ShortHexNumber`). */
+function validGlyph(glyph: unknown): ContentControlGlyph | undefined {
+	const { code, font } = (glyph ?? {}) as { code?: unknown; font?: unknown };
+	if (typeof code !== 'string' || !/^[0-9A-Fa-f]{4}$/.test(code)) return undefined;
+	return typeof font === 'string' ? { code, font } : { code };
+}
+
+/** A `w:fullDate`, an `xsd:dateTime`; anything else is not written. */
+const validDate = (value: unknown): string | undefined =>
+	typeof value === 'string' &&
+	/^-?\d{4,}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.test(value)
+		? value
+		: undefined;
+
 function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	let box = checkboxElement(sdtPr);
 	if (!box) {
@@ -84,31 +124,25 @@ function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentCont
 		box!.insertBefore(element, siblings[order] ?? null);
 	};
 	replace('checked', (el) => w14Attribute(el, 'val', control.checked ? '1' : '0'), 0);
-	if (control.checkedGlyph)
-		replace(
-			'checkedState',
-			(el) => {
-				w14Attribute(el, 'val', control.checkedGlyph!.code);
-				if (control.checkedGlyph!.font) w14Attribute(el, 'font', control.checkedGlyph!.font);
-			},
-			1,
-		);
-	if (control.uncheckedGlyph)
-		replace(
-			'uncheckedState',
-			(el) => {
-				w14Attribute(el, 'val', control.uncheckedGlyph!.code);
-				if (control.uncheckedGlyph!.font) w14Attribute(el, 'font', control.uncheckedGlyph!.font);
-			},
-			2,
-		);
+	const states = [validGlyph(control.checkedGlyph), validGlyph(control.uncheckedGlyph)];
+	states.forEach((glyph, index) => {
+		if (glyph)
+			replace(
+				index ? 'uncheckedState' : 'checkedState',
+				(el) => {
+					w14Attribute(el, 'val', glyph.code);
+					if (glyph.font) w14Attribute(el, 'font', glyph.font);
+				},
+				index + 1,
+			);
+	});
 }
 
 function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const list = first(sdtPr, control.kind);
 	if (!list) return;
 	for (const item of children(list, 'listItem')) list.removeChild(item);
-	for (const item of control.items ?? []) {
+	for (const item of validItems(control.items)) {
 		const element = makeW(doc, 'listItem');
 		element.setAttributeNS(WORD_NS, 'w:displayText', item.display);
 		element.setAttributeNS(WORD_NS, 'w:value', item.value);
@@ -119,27 +153,43 @@ function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl
 function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const date = first(sdtPr, 'date');
 	if (!date) return;
-	if (control.fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', control.fullDate);
+	const fullDate = validDate(control.fullDate);
+	if (fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', fullDate);
 	else date.removeAttributeNS(WORD_NS, 'fullDate');
 	const set = (local: string, value: string | undefined, order: number) => {
 		for (const old of children(date, local)) date.removeChild(old);
 		if (value === undefined) return;
 		const element = makeW(doc, local);
-		element.setAttributeNS(WORD_NS, 'w:val', value);
+		element.setAttributeNS(WORD_NS, 'w:val', String(value));
 		date.insertBefore(element, Array.from(date.childNodes)[order] ?? null);
 	};
 	set('dateFormat', control.dateFormat, 0);
 	set('lid', control.dateLocale, 1);
 }
 
+/** Whether the writer writes a type element for `kind`: rich text has none, unknown kinds none. */
+const writesType = (kind: string): boolean =>
+	NAMED_TYPES.has(kind) ||
+	['richText', 'text', 'checkbox', 'dropDownList', 'comboBox', 'date'].includes(kind);
+
 /** Applies every modeled field of `control` that differs from what `sdt`'s own `w:sdtPr` says. */
 export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: ContentControl) {
 	const sdtPr = first(sdt, 'sdtPr');
 	if (!sdtPr) return;
 	const current = parseContentControl(sdt, control.level);
+	// The model can hold another control than this `w:sdt` (a row or cell given another one): its
+	// id and kind are written too, the old kind's element going, so the properties stay one control.
+	if (control.id !== current.id && validId(control.id) !== undefined)
+		setValued(doc, sdtPr, 'id', control.id);
+	if (control.kind !== current.kind && writesType(control.kind)) {
+		for (const old of typeElements(sdtPr)) sdtPr.removeChild(old);
+		const { sourceXml: _source, ...model } = control;
+		for (const type of typeElements(buildProperties(doc, model))) sdtPr.appendChild(type);
+	}
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
-	if (control.lock !== current.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	const lock = validLock(control.lock);
+	if (lock !== current.lock) setValued(doc, sdtPr, 'lock', lock);
 	if (Boolean(control.showingPlaceholder) !== Boolean(current.showingPlaceholder)) {
 		for (const old of children(sdtPr, 'showingPlcHdr')) sdtPr.removeChild(old);
 		if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
@@ -158,7 +208,7 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	}
 	if (
 		(control.kind === 'dropDownList' || control.kind === 'comboBox') &&
-		!same(control.items, current.items)
+		!same(validItems(control.items), current.items)
 	)
 		writeItems(doc, sdtPr, control);
 	if (
@@ -171,39 +221,19 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 }
 
 /**
- * The `w:<local>` element `xml` holds, imported into `doc`; nothing when it holds no XML or another
- * element. A control's verbatim properties come with it when it is copied, also from a page pasted
- * into the editor, so they could hold content, such as a field that fetches a picture when it is
- * updated, which must not reach the saved document.
+ * Builds the `w:sdtPr` of a control that has no source element: its verbatim one when it has a
+ * `w:sdtPr`, else one from the model.
  */
-function verbatimElement(
-	doc: XmlDocument,
-	xml: string | undefined,
-	local: string,
-): XmlElement | undefined {
-	if (!xml) return undefined;
-	let root: XmlElement | null;
-	try {
-		root = parseXml(xml).documentElement;
-	} catch {
-		return undefined;
-	}
-	return root?.localName === local && root.namespaceURI === WORD_NS
-		? (doc.importNode(root, true) as XmlElement)
-		: undefined;
-}
-
-/** Builds the `w:sdtPr` of a control that has no source element. */
 function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement {
-	const verbatim = verbatimElement(doc, control.sourceXml, 'sdtPr');
+	const verbatim = verbatimProperties(doc, control.sourceXml);
 	if (verbatim) return verbatim;
 	const sdtPr = makeW(doc, 'sdtPr');
 	if (control.alias !== undefined) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);
-	setValued(doc, sdtPr, 'id', control.id);
-	if (control.lock) setValued(doc, sdtPr, 'lock', control.lock);
-	if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
+	setValued(doc, sdtPr, 'id', validId(control.id));
+	setValued(doc, sdtPr, 'lock', validLock(control.lock));
 	if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
+	if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
 	switch (control.kind) {
 		case 'text': {
 			const text = makeW(doc, 'text');
@@ -223,10 +253,8 @@ function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement 
 			sdtPr.appendChild(makeW(doc, 'date'));
 			writeDate(doc, sdtPr, control);
 			break;
-		case 'richText':
-			break;
 		default:
-			sdtPr.appendChild(makeW(doc, control.kind));
+			if (NAMED_TYPES.has(control.kind)) sdtPr.appendChild(makeW(doc, control.kind));
 	}
 	return sdtPr;
 }
@@ -237,13 +265,19 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	const sdtPr = buildProperties(doc, control);
+	// Verbatim properties of another kind are another control's: the model's kind wins.
+	const { sourceXml, ...model } = control;
+	const sdtPr = buildProperties(
+		doc,
+		sourceXml && propertiesKind(sourceXml) !== control.kind ? model : control,
+	);
 	// A copy keeps the properties it was copied with, under the new id it was given: ids are
-	// unique in a document (ECMA-376 17.5.2.18). An id read from no `w:id` is not written.
-	if (/^-?\d+$/.test(control.id) && getW(first(sdtPr, 'id'), 'val') !== control.id)
-		setValued(doc, sdtPr, 'id', control.id);
+	// unique in a document (ECMA-376 17.5.2.18). An id Word cannot read, such as one generated for
+	// a control read without `w:id`, is not written, nor the one its properties were copied with.
+	if (getW(first(sdtPr, 'id'), 'val') !== control.id)
+		setValued(doc, sdtPr, 'id', validId(control.id));
 	sdt.appendChild(sdtPr);
-	const end = verbatimElement(doc, control.endSourceXml, 'sdtEndPr');
+	const end = verbatimEndProperties(doc, control.endSourceXml);
 	if (end) sdt.appendChild(end);
 	const content = makeW(doc, 'sdtContent');
 	sdt.appendChild(content);

@@ -16,14 +16,42 @@ export interface ControlSpan {
 	to: number;
 }
 
-export function controlOfMark(mark: Mark | undefined): ContentControl | undefined {
-	if (!mark?.attrs.data) return undefined;
+/**
+ * The control `data` (a `data-sdt` attribute, or an inline control's mark) holds, at `level`. HTML
+ * pasted from another page and remote peers can put anything there: only an object with an id and
+ * a kind is a control.
+ */
+export function controlFromData(
+	data: unknown,
+	level: ContentControl['level'],
+): ContentControl | undefined {
+	if (!data) return undefined;
+	let value: unknown;
 	try {
-		return JSON.parse(String(mark.attrs.data)) as ContentControl;
+		value = JSON.parse(String(data));
 	} catch {
 		return undefined;
 	}
+	return controlFromValue(value, level);
 }
+
+/**
+ * The control `value` is at `level`: itself when it is an object with an id and a kind at that
+ * level, a copy at that level when it is at another, nothing when it is not a control.
+ */
+export function controlFromValue(
+	value: unknown,
+	level: ContentControl['level'],
+): ContentControl | undefined {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+	const { id, kind } = value as { id?: unknown; kind?: unknown };
+	if (typeof id !== 'string' || typeof kind !== 'string') return undefined;
+	const control = value as ContentControl;
+	return control.level === level ? control : { ...control, level };
+}
+
+export const controlOfMark = (mark: Mark | undefined): ContentControl | undefined =>
+	controlFromData(mark?.attrs.data, 'inline');
 
 const markOf = (node: ProseMirrorNode): Mark | undefined =>
 	node.marks.find((mark) => mark.type.name === 'contentControl');

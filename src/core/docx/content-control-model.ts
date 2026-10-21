@@ -87,3 +87,11 @@ export const isContentControlLocked = (
 		? control.lock === 'contentLocked' || control.lock === 'sdtContentLocked'
 		: control.lock === 'sdtLocked' || control.lock === 'sdtContentLocked';
 };
+
+/** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
+export function freshControlId(used: ReadonlySet<string>): string {
+	let id: string;
+	do id = String(Math.floor(Math.random() * (2 ** 31 - 1)) + 1);
+	while (used.has(id));
+	return id;
+}

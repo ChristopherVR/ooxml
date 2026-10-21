@@ -3,6 +3,7 @@ import { isWordHighlightToken, type WordHighlightToken } from '../index';
 import { reviewMarks } from './review-schema';
 import { runPropertiesMark } from './run-extra-mark';
 import { linkMarkSpec } from './inline-content-schema';
+import { controlFromData } from './content-control-spans';
 
 const safeCssValue = (value: unknown): string => String(value ?? '').replace(/[;{}]/g, '');
 
@@ -225,7 +226,11 @@ export const markSpecs = {
 		parseDOM: [
 			{
 				tag: 'span[data-sdt]',
-				getAttrs: (el) => ({ data: (el as HTMLElement).dataset.sdt || '' }),
+				// Only a control is taken from (pasted) HTML; the span's text stays either way.
+				getAttrs: (el) => {
+					const control = controlFromData((el as HTMLElement).dataset.sdt, 'inline');
+					return control ? { data: JSON.stringify(control) } : false;
+				},
 			},
 		],
 		toDOM: (mark) => contentControlDom(String(mark.attrs.data)),

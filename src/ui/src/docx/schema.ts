@@ -8,7 +8,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
-import { markSpecs } from 'ooxml-core/docx/ui';
+import { controlFromData, markSpecs } from 'ooxml-core/docx/ui';
 import { equationNodeSpec } from './equation-schema';
 import type { ContentControl } from 'ooxml-core/docx';
 
@@ -88,13 +88,9 @@ function cellControlAttributes(control: ContentControl): Record<string, string> 
 function cellControlFromDom(
 	element: HTMLElement | string,
 ): { contentControl: ContentControl } | null {
-	const data = typeof element === 'string' ? undefined : element.dataset.sdt;
-	if (!data) return null;
-	try {
-		return { contentControl: JSON.parse(data) as ContentControl };
-	} catch {
-		return null;
-	}
+	const control =
+		typeof element === 'string' ? undefined : controlFromData(element.dataset.sdt, 'cell');
+	return control ? { contentControl: control } : null;
 }
 
 export const schema = new Schema({
