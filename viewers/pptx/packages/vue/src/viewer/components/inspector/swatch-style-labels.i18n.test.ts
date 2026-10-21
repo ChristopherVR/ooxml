@@ -1,11 +1,12 @@
 /**
  * The theme colour grid and the Quick Styles gallery name their swatches through vue-i18n
- * (tooltip and accessible name), not in hard-coded English.
+ * (tooltip and accessible name), not in hard-coded English, and Quick Styles follows a language
+ * change.
  */
 import { mount } from '@vue/test-utils';
 import { translationsDe } from 'pptx-viewer-locales';
 import { describe, expect, it } from 'vitest';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { createI18n } from 'vue-i18n';
 
 import { toVueI18nSyntax, translationsEn } from '../../../i18n';
@@ -51,9 +52,17 @@ describe('swatch and style names follow the locale', () => {
 		wrapper.unmount();
 	});
 
-	it('names Quick Styles presets with the host dictionary', () => {
-		const wrapper = mount(QuickStylesGallery, { global: { plugins: [german()] } });
-		expect(wrapper.find('button').attributes('aria-label')).toBe('Blaue Füllung');
+	it('names Quick Styles presets with the host dictionary, and relabels on a language change', async () => {
+		const i18n = german();
+		const wrapper = mount(QuickStylesGallery, { global: { plugins: [i18n] } });
+		// The tiles are the shared gallery's, inside its element.
+		const tile = () => wrapper.get('pptx-ui-ribbon-gallery [data-gallery-item]');
+		expect(tile().attributes('aria-label')).toBe('Blaue Füllung');
+		expect(tile().attributes('title')).toBe('Blaue Füllung');
+		i18n.global.locale.value = 'en';
+		await nextTick();
+		expect(tile().attributes('aria-label')).toBe('Blue Fill');
+		expect(tile().attributes('title')).toBe('Blue Fill');
 		wrapper.unmount();
 	});
 });
