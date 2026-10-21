@@ -2,7 +2,7 @@ import { closeHistory } from 'prosemirror-history';
 import { Fragment, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { expectDefined } from 'ooxml-core/docx/ui';
+import { expectDefined, insertedTextMarks } from 'ooxml-core/docx/ui';
 
 export interface SearchMatch {
 	from: number;
@@ -248,7 +248,7 @@ function replacementFragment(
 	const lines = replacement.split(/\r\n|\r|\n/);
 	const content: ProseMirrorNode[] = [];
 	lines.forEach((line, index) => {
-		if (line) content.push(schema.text(line, marks));
+		if (line) content.push(schema.text(line, insertedTextMarks(marks, line)));
 		if (index < lines.length - 1)
 			content.push(
 				expectDefined(schema.nodes.hardBreak, 'hardBreak node type').create(null, null, marks),

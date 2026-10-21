@@ -7,6 +7,7 @@ import {
 	contentControlPlugin,
 	fieldGuardPlugin,
 	formFieldGuardPlugin,
+	positionalTabInputPlugin,
 	symbolFontPlugin,
 	tableStructureGuardPlugin,
 } from 'ooxml-core/docx/ui';
@@ -49,6 +50,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		formFieldGuardPlugin(() => host.model().protection),
 		formFieldViewPlugin(() => host.model()),
 		symbolFontPlugin(),
+		positionalTabInputPlugin(),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({
