@@ -333,6 +333,40 @@ describe('content controls around table cells in the editor', () => {
 		expect(chooseListItem(list, '61', 1)).toBeUndefined();
 	});
 
+	it('leaves a cell alone when replacing its content would delete a table or row control that may not be', () => {
+		const fixed = (level: 'row' | 'block'): ContentControl => ({
+			id: '65',
+			level,
+			kind: 'richText',
+			lock: 'sdtLocked',
+		});
+		for (const level of ['row', 'block'] as const) {
+			const nested = schema.node(
+				'table',
+				level === 'block' ? { contentControl: fixed(level) } : null,
+				[
+					schema.node(
+						'tableRow',
+						level === 'row' ? { properties: { contentControl: fixed(level) } } : null,
+						[schema.node('tableCell', null, [paragraph('Inner', { id: 'n1' })])],
+					),
+				],
+			);
+			const text = stateOf({ id: '62', level: 'cell', kind: 'richText' }, [
+				paragraph('Before', { id: 'c1' }),
+				nested,
+				paragraph('After', { id: 'c2' }),
+			]);
+			const span = controlSpans(text.doc)[0]!;
+			const all = text.apply(
+				text.tr.setSelection(TextSelection.create(text.doc, span.from + 2, span.to - 2)),
+			);
+			expect(deleteToPlaceholder(all, 'backward')).toBeUndefined();
+			// The ordinary deletion that runs instead is refused by the lock guard.
+			expect(all.applyTransaction(all.tr.deleteSelection()).state.doc.eq(all.doc)).toBe(true);
+		}
+	});
+
 	it('takes a control around the replaced paragraph away with its text', () => {
 		// The paragraph's own control is deleted with the content a pick or a toggle replaces, as a
 		// control that may be deleted (here one whose content may not be edited) can be.

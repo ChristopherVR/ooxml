@@ -109,10 +109,11 @@ export function replaceControlContent(
 
 /**
  * Whether the content of `span` may be replaced as a whole: not when it holds a control that may
- * not be deleted (`sdtLocked`), since the replacement carries `CONTROL_EDIT_META` past the lock guard.
+ * not be deleted (`sdtLocked`), one around a table or a row of a table in it included, since the
+ * replacement carries `CONTROL_EDIT_META` past the lock guard.
  */
 function replaceable(state: EditorState, span: ControlSpan): boolean {
-	return !controlSpans(state.doc).some(
+	return !everyControlSpan(state.doc).some(
 		(inner) =>
 			inner.from >= span.from &&
 			inner.to <= span.to &&
