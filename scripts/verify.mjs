@@ -107,6 +107,7 @@ if (p.pptx.run) {
 	add('bun run build:packages', 'viewers/pptx');
 	add('bun run typecheck', 'viewers/pptx');
 	add('bun run check:viewer-props', 'viewers/pptx');
+	add('bun run check:tree-shaking', 'viewers/pptx');
 	for (const leg of p.pptx.tests)
 		if (leg === 'react18') add('bun run test:react18', 'viewers/pptx/packages/react');
 		else add('bun run test', `viewers/pptx/packages/${leg}`);
