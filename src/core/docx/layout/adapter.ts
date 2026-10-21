@@ -219,6 +219,7 @@ export function adaptDocumentModel(
 			}),
 			...(color && /^#[0-9a-f]{6}$/i.test(color) ? { color } : {}),
 			...(shaded ? { background: FORM_FIELD_SHADING } : {}),
+			...(run.positionalTab ? { positionalTab: run.positionalTab } : {}),
 			...(formatting.underline ? { underline: true } : {}),
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
 			...(run.break ? { breakAfter: run.break } : {}),

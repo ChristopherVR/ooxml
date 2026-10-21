@@ -7,7 +7,7 @@
  * fallback, so the pipeline keeps compiling as other agents add model
  * fields, and nothing here ever reads `(x as any)`.
  */
-import type { SignedTwips, Twips } from '../index';
+import type { SignedTwips, TextRun, Twips } from '../index';
 
 export interface LayoutRun {
 	text: string;
@@ -42,6 +42,8 @@ export interface LayoutRun {
 	color?: string;
 	/** `#rrggbb` shading behind the run's text, display only (Word's form field shading). */
 	background?: string;
+	/** `w:ptab`: the run's tabs go to a fixed point of the line, whatever the tab stops. */
+	positionalTab?: TextRun['positionalTab'];
 	underline?: boolean;
 	strike?: boolean;
 }

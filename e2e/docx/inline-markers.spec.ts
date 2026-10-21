@@ -59,5 +59,18 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			'<w:sym w:font="Wingdings" w:char="F0FE"/>',
 		]);
 
+		// Print Layout draws the symbol in its font and the text typed after it in the run's, and
+		// the positional tab sends both to the right margin.
+		const editor = page.locator('docx-editor');
+		await editor.getByRole('tab', { name: 'View', exact: true }).click();
+		await editor.getByRole('combobox', { name: 'Layout view', exact: true }).selectOption('print');
+		const line = editor.locator('.dve-print-line[data-block-id="p2"]');
+		await expect(line).toBeVisible();
+		const typed = line.locator('span', { hasText: '!' });
+		await expect(line.locator('span', { hasText: '\uF0FE' })).toHaveCSS('font-family', /Wingdings/);
+		await expect(typed).not.toHaveCSS('font-family', /Wingdings/);
+		const lineBox = (await line.boundingBox())!;
+		const typedBox = (await typed.boundingBox())!;
+		expect(Math.abs(typedBox.x + typedBox.width - (lineBox.x + lineBox.width))).toBeLessThan(6);
 	});
 }

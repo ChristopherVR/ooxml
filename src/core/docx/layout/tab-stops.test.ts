@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { DocumentModel } from '../index';
+import { signedTwips, type DocumentModel } from '../index';
 import { adaptDocumentModel } from './adapter';
-import type { LayoutParagraph } from './input';
+import type { LayoutParagraph, LayoutRun } from './input';
 import type { TextMeasurer } from './measure';
 import { layoutParagraph } from './paragraph-layout';
 import { placeTab } from './tab-stops';
@@ -65,6 +65,102 @@ describe('tab stops', () => {
 			noop,
 		);
 		expect(at(at(decimal.lines, 0).fragments, 1).xPx).toBe(70);
+	});
+
+	it('sends a positional tab to its point on the line, whatever the tab stops and indents', () => {
+		const right = { alignment: 'right', relativeTo: 'margin' } as const;
+		const runs = (tab: LayoutRun['positionalTab'], after = 'Page') => [
+			{ text: 'Title' },
+			{ text: '\t', positionalTab: tab },
+			{ text: after },
+		];
+		const atMargin = layoutParagraph(
+			{
+				kind: 'paragraph',
+				id: 'p',
+				runs: runs({ ...right, leader: 'dot' }),
+				tabStops: [{ posPx: 100, align: 'left' }],
+				indentRightTwips: signedTwips(1440),
+			},
+			300,
+			measurer,
+			noop,
+		);
+		expect(fragmentsOf(atMargin)).toEqual([
+			{ text: 'Title', xPx: 0, widthPx: 50 },
+			{ text: '', xPx: 50, widthPx: 210, leader: 'dot' },
+			{ text: 'Page', xPx: 260, widthPx: 40 },
+		]);
+		const centered = layoutParagraph(
+			{
+				kind: 'paragraph',
+				id: 'p',
+				runs: runs({ alignment: 'center', relativeTo: 'margin' }, 'Mid'),
+			},
+			300,
+			measurer,
+			noop,
+		);
+		expect(at(at(centered.lines, 0).fragments, 2).xPx).toBe(135);
+		const atIndent = layoutParagraph(
+			{
+				kind: 'paragraph',
+				id: 'p',
+				runs: runs({ alignment: 'right', relativeTo: 'indent' }),
+				indentLeftTwips: signedTwips(1440),
+				indentRightTwips: signedTwips(1440),
+			},
+			400,
+			measurer,
+			noop,
+		);
+		// The indents are 96px each, so the text ends at 304px.
+		expect(at(at(atIndent.lines, 0).fragments, 2).xPx).toBe(264);
+	});
+
+	it('carries the positional tab of a run into layout', () => {
+		const positionalTab = { alignment: 'right', relativeTo: 'margin', leader: 'dot' } as const;
+		const model: DocumentModel = {
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'p',
+					runs: [{ text: 'Title' }, { text: '\t', positionalTab }, { text: 'Page' }],
+				},
+			],
+			page: {
+				width: 816,
+				height: 1056,
+				marginTop: 96,
+				marginRight: 96,
+				marginBottom: 96,
+				marginLeft: 96,
+			},
+			warnings: [],
+		};
+		const adapted = at(at(adaptDocumentModel(model).sections, 0).blocks as LayoutParagraph[], 0);
+		expect(at(adapted.runs, 1)).toMatchObject({ text: '\t', positionalTab });
+	});
+
+	it('moves a positional tab to the next line when the line is already past its point', () => {
+		const result = layoutParagraph(
+			{
+				kind: 'paragraph',
+				id: 'p',
+				runs: [
+					{ text: 'A_rather_long_title' },
+					{ text: '\t', positionalTab: { alignment: 'center', relativeTo: 'margin' } },
+					{ text: 'X' },
+				],
+			},
+			300,
+			measurer,
+			noop,
+		);
+		expect(result.lines).toHaveLength(2);
+		expect(at(result.lines, 1).fragments.find((fragment) => fragment.text === 'X')).toMatchObject({
+			xPx: 145,
+		});
 	});
 
 	it('lays out list labels in the hanging indent from the numbering definition', () => {
