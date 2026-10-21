@@ -1,4 +1,5 @@
-import type { SlideShowRibbonGroup } from './ribbon-slide-show-commands';
+import type { RibbonGroupView } from './ribbon-command-view';
+import { ribbonGroupViews, type SlideShowRibbonGroup } from './ribbon-slide-show-commands';
 
 /** Shared presentation metadata; recording operations remain in the bindings. */
 export const RECORD_COMMAND_GROUPS: readonly SlideShowRibbonGroup[] = [
@@ -57,3 +58,8 @@ export const RECORD_COMMAND_GROUPS: readonly SlideShowRibbonGroup[] = [
 		],
 	},
 ];
+
+/** The Record tab for `pptx-ui-ribbon-section`; the bindings keep the recording itself. */
+export function buildRecordRibbon(t: (key: string) => string): RibbonGroupView[] {
+	return ribbonGroupViews(t, RECORD_COMMAND_GROUPS);
+}

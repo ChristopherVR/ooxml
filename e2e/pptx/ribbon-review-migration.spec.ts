@@ -12,7 +12,10 @@ test('Review commands preserve proofing state, focus and native Language workflo
 }, info) => {
 	await loadDeck(page);
 	await ribbonTab(page, 'Review').click();
-	const section = page.locator('pptx-ui-ribbon-section');
+	// Help and Record use the section too, and some bindings keep every tab in the DOM.
+	const section = page.locator('pptx-ui-ribbon-section').filter({
+		has: page.locator('pptx-ui-ribbon-group[data-ribbon-group="review.proofing"]'),
+	});
 	await expect(section.locator('pptx-ui-ribbon-group')).toHaveCount(7);
 	const spelling = section
 		.locator('[data-ribbon-control="review.proofing.spelling"]')
