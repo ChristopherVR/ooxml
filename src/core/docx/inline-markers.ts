@@ -133,13 +133,13 @@ export function orderRangeEnds<
 
 /**
  * Inserts each marker at its character position: between the runs there, or inside a text run,
- * which is split in two. A position inside a run that cannot be split (a tracked change) moves to
- * the run's start for a marker that opens a range, its end for one that closes it. A marker read
- * inside a hyperlink, simple field or content control stays in what was written in its place
- * (`containers` maps each source container to those elements) when a run beside the marker is
- * there, and one read inside a tracked change stays inside the change written for a run beside it
- * that continues it; any other marker goes between the paragraph's children, or between two runs
- * of one container.
+ * which is split in two (inside its tracked change, if it has one; a position inside any other
+ * run moves to its start for a marker that opens a range, its end for one that closes it). A
+ * marker read inside a hyperlink, simple field or content control stays in what was written in
+ * its place (`containers` maps each source container to those elements) when a run beside the
+ * marker is there, and one read inside a tracked change stays inside the change written for a run
+ * beside it that continues it; any other marker goes between the paragraph's children, or between
+ * two runs of one container.
  */
 export function placeMarkers(
 	paragraph: XmlElement,
@@ -201,24 +201,29 @@ export function placeMarkers(
 		const previous = placed[boundary - 1];
 		const next = placed[boundary];
 		const home = marker.container && containers.get(marker.container);
+		// The change written around a run beside the marker that continues the change it was read in.
+		const changed = (run: PlacedRun | undefined) =>
+			marker.revision && run?.revision === marker.revision ? run.wrapper : undefined;
+		const ending = changed(previous);
+		const starting = changed(next);
+		const atStart = (wrapper: XmlElement) => {
+			let anchor = wrapper.firstChild;
+			while (anchor && done.has(anchor)) anchor = anchor.nextSibling;
+			wrapper.insertBefore(marker.element, anchor);
+		};
 		// A smart tag's or custom XML element's edges stay beside the text it wraps, in whatever
-		// container that text is now written: its start before the first run, its end after the last.
+		// container or change that text is now written: its start before the first run, its end
+		// after the last.
 		const side = marker.annotation?.edge;
+		if (side === 'start' && starting) return atStart(starting);
+		if (side === 'end' && ending) return void ending.appendChild(marker.element);
 		if (side === 'start' && next?.first?.parentNode)
 			return void next.first.parentNode.insertBefore(marker.element, next.first);
 		if (side === 'end' && previous?.last) return after(previous.last, marker.element);
 		// Inside a change, the end of the run before the marker is taken first, so that markers at
 		// one position stay together in their order.
-		const changed = (run: PlacedRun | undefined) =>
-			marker.revision && run?.revision === marker.revision ? run.wrapper : undefined;
-		const ending = changed(previous);
 		if (ending) return void ending.appendChild(marker.element);
-		const starting = changed(next);
-		if (starting) {
-			let anchor = starting.firstChild;
-			while (anchor && done.has(anchor)) anchor = anchor.nextSibling;
-			return void starting.insertBefore(marker.element, anchor);
-		}
+		if (starting) return atStart(starting);
 		if (home && previous?.last && previous.parent && home.has(previous.parent))
 			return after(previous.last, marker.element);
 		if (home && next?.first?.parentNode && next.parent && home.has(next.parent))

@@ -2,7 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 import type { EditorView } from 'prosemirror-view';
 import { savedDocument } from './saved-document';
 import { fileInput } from './helpers';
-import { formFieldsFixture, protectedSectionsFixture } from './support/form-fields-fixture';
+import {
+	blankFieldFixture,
+	formFieldsFixture,
+	protectedSectionsFixture,
+} from './support/form-fields-fixture';
 
 async function open(page: Page, framework: string, docx: Promise<Uint8Array>) {
 	await page.goto(`/?framework=${framework}`);
@@ -141,5 +145,26 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			);
 		expect(field('Free')).toContain('<w:checked/>');
 		expect(field('Locked')).not.toContain('<w:checked');
+	});
+
+	test(`${framework}: typing into a blank text field of a protected form replaces its en spaces`, async ({
+		page,
+	}) => {
+		const editor = await open(page, framework, blankFieldFixture());
+		const code = editor.locator('.ProseMirror span[data-field="FORMTEXT"]');
+		expect(await code.evaluate((node) => node.textContent)).toBe('\u2002'.repeat(5));
+		// The editor has focus before the click, so the click only places the caret in the field.
+		await editor.locator('.ProseMirror').evaluate((node: HTMLElement) => node.focus());
+		await code.click();
+		await page.keyboard.type('AB12!');
+		// The first character takes the en spaces' place, and the field holds four at most.
+		await expect(code).toHaveText('AB12');
+		await expect(editor.locator('.ProseMirror > p').first()).toHaveText('Code: AB12 end');
+
+		const { xml } = await savedDocument(page, `${framework}-blank-field.docx`);
+		// What was typed keeps the result's properties, as Word's own result runs had them.
+		expect(xml).toMatch(/<w:rPr[^>]*><w:noProof\/><\/w:rPr><w:t>AB12<\/w:t>/);
+		expect(xml).not.toContain('\u2002');
+		expect(xml).toContain('<w:maxLength w:val="4"/>');
 	});
 }

@@ -83,7 +83,7 @@ function runNodes(
 		nodes,
 		placed: {
 			...(nodes[0] && { first: nodes[0], last: nodes.at(-1)! }),
-			...(text && !wrapped && { splittable: node }),
+			...(text && { splittable: node }),
 			...(wrapper && { wrapper }),
 		},
 	};
@@ -93,7 +93,8 @@ function runNodes(
  * Builds the paragraph's ordered top-level inline nodes from the model's flat run list, where
  * each run was written (inside its hyperlink or content control when it has one), and what was
  * written in place of each source hyperlink, simple field or content control (`containers`: the
- * elements its runs went into, the control's content for a control).
+ * elements its runs went into, the control's content for a control). The runs in `anew` are
+ * written on a new run element, not over the source run at their place (run-segmentation.ts).
  */
 export function buildInlineContent(
 	doc: XmlDocument,
@@ -103,6 +104,7 @@ export function buildInlineContent(
 	allocator?: RelationshipAllocator,
 	ranges?: ParagraphRanges,
 	sources = containerSources(runs, base, slots),
+	anew: ReadonlySet<number> = new Set(),
 ): { nodes: XmlElement[]; placed: PlacedRun[]; containers: Map<XmlElement, Set<XmlElement>> } {
 	// Ranges continuing from an earlier paragraph or into a later one open or close there instead.
 	const { opens, closes } = rangeEdges(runs, ranges);
@@ -125,8 +127,9 @@ export function buildInlineContent(
 	};
 	const runNodesAt = (index: number, sourceIndex: number | undefined) => {
 		const run = runAt(index);
-		const source = sourceIndex === undefined ? undefined : base?.[sourceIndex];
-		const old = sourceIndex === undefined ? undefined : slots[sourceIndex]?.element;
+		const at = anew.has(index) ? undefined : sourceIndex;
+		const source = at === undefined ? undefined : base?.[at];
+		const old = at === undefined ? undefined : slots[at]?.element;
 		return runNodes(
 			doc,
 			run,
