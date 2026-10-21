@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, type Transaction } from 'prosemirror-state';
 import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
 import { setFormCheckbox } from '../form-fields';
 import { contentControlPlugin, violatesControlLock } from './content-control-guard';
@@ -8,6 +8,7 @@ import { markSpecs } from './schema-marks';
 import { fieldMarkerNodeSpec } from './break-note-schema';
 import { appendInlineNode, runToInlineNodes } from './run-adapter';
 import {
+	formFieldBeside,
 	formFieldLocked,
 	formFieldNodeDisplay,
 	formFieldOfNode,
@@ -131,6 +132,26 @@ describe('legacy form fields in the editor', () => {
 		).toBe(false);
 	});
 
+	it('finds the check box or drop-down beside a position, for keys to operate it', () => {
+		const state = stateOf();
+		const box = markerPos(state, 'checkbox');
+		const list = markerPos(state, 'dropDown');
+		// In front of the box, among its hidden markers, and just after it.
+		for (const at of [box, box + 1, box + 2, box + 3])
+			expect(formFieldBeside(state.doc, at)).toBe(box);
+		expect(formFieldBeside(state.doc, box - 1)).toBeUndefined();
+		expect(formFieldBeside(state.doc, list)).toBe(list);
+		// Not a text field, whose result takes typing.
+		const [result] = formTextResults(state.doc);
+		expect(formFieldBeside(state.doc, result!.from)).toBeUndefined();
+		// Between two fields, the one that starts there.
+		const runs: TextRun[] = [...field(approved), ...field(status)];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		expect(formFieldBeside(doc, 4)).toBe(4);
+		expect(formFieldOfNode(doc.nodeAt(4))?.kind).toBe('dropDown');
+	});
+
 	it('finds the result of each text field', () => {
 		const [result] = formTextResults(stateOf().doc);
 		expect(result).toMatchObject({ field: { name: 'Name' }, length: 3 });
@@ -153,6 +174,34 @@ describe('legacy form fields in the editor', () => {
 		const state = EditorState.create({ schema, doc, plugins: [formFieldGuardPlugin(() => forms)] });
 		const [result] = formTextResults(state.doc);
 		expect(state.apply(state.tr.insertText('B', result!.to)).doc.textContent).toBe('Name: Ada');
+	});
+
+	it('keeps a disabled text field read only inside a content control of a protected form', () => {
+		for (const level of ['inline', 'block'] as const) {
+			const control: ContentControl = { id: '8', level, kind: 'richText' };
+			const runs: TextRun[] = [
+				{ text: 'Ref: ' },
+				...field({ ...name, enabled: false }, 'Fixed'),
+				{ text: ' note' },
+			].map((run) => (level === 'inline' ? { ...run, contentControl: control } : run));
+			const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+			const attrs = level === 'block' ? { contentControl: control } : null;
+			const doc = schema.node('doc', null, [schema.node('paragraph', attrs, nodes)]);
+			const forms = { edit: 'forms', enforced: true } as const;
+			const state = EditorState.create({
+				schema,
+				doc,
+				plugins: [formFieldGuardPlugin(() => forms)],
+			});
+			const [result] = formTextResults(state.doc);
+			const text = (tr: Transaction) => state.apply(tr).doc.textContent;
+			// The control's own text can change; the disabled field's result cannot, nor can it go.
+			expect(text(state.tr.insertText('!', state.doc.content.size - 1))).toBe('Ref: Fixed note!');
+			expect(text(state.tr.insertText('B', result!.to))).toBe('Ref: Fixed note');
+			expect(text(state.tr.insertText('B', result!.from + 1))).toBe('Ref: Fixed note');
+			expect(text(state.tr.delete(result!.from, result!.to))).toBe('Ref: Fixed note');
+			expect(text(state.tr.delete(result!.begin, result!.to + 1))).toBe('Ref: Fixed note');
+		}
 	});
 
 	it('follows a text field whose result runs on into the next paragraph', () => {
@@ -191,8 +240,20 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(tr).doc.textContent).toBe(state.doc.textContent);
 	});
 
-	/** A form protected for filling in whose second section (`p1`) is left unprotected. */
-	function sectionedState() {
+	type SectionLayout = { endsAtBlockId: string; formProtection?: false }[];
+
+	/**
+	 * A form protected for filling in, by default with a protected first section (`p0`) and a last
+	 * section (`p1`) the protection leaves unprotected.
+	 */
+	function sectionedState(
+		sections: SectionLayout = [
+			{ endsAtBlockId: 'p0' },
+			{ endsAtBlockId: 'p1', formProtection: false },
+		],
+		texts: Record<string, string> = {},
+		first: TextRun[] = [{ text: 'Name: ' }, ...field(name, 'Ada')],
+	) {
 		const sectioned = new Schema({
 			nodes: {
 				doc: { content: 'paragraph+', attrs: { sections: { default: null } } },
@@ -212,10 +273,11 @@ describe('legacy form fields in the editor', () => {
 				{ id },
 				runs.flatMap((run) => runToInlineNodes(run, sectioned)),
 			);
-		const sections = [{ endsAtBlockId: 'p0' }, { endsAtBlockId: 'p1', formProtection: false }];
+		const extra = Object.entries(texts).map(([id, text]) => paragraph(id, [{ text }]));
 		const doc = sectioned.node('doc', { sections: JSON.stringify(sections) }, [
-			paragraph('p0', [{ text: 'Name: ' }, ...field(name, 'Ada')]),
+			paragraph('p0', first),
 			paragraph('p1', [{ text: 'Notes' }]),
+			...extra,
 		]);
 		return EditorState.create({
 			schema: sectioned,
@@ -240,6 +302,122 @@ describe('legacy form fields in the editor', () => {
 		const aligned = (at: number) => state.apply(state.tr.setNodeAttribute(at, 'align', 'center'));
 		expect(aligned(notes).doc.child(1).attrs.align).toBe('center');
 		expect(aligned(0).doc.child(0).attrs.align).toBeNull();
+	});
+
+	/** The text of each paragraph, after typing `text` at the start of paragraph `index`. */
+	const typedAt = (state: EditorState, index: number, text: string): string[] => {
+		let pos = 0;
+		for (let at = 0; at < index; at++) pos += state.doc.child(at).nodeSize;
+		const typed = state.apply(state.tr.insertText(text, pos + 1));
+		const texts: string[] = [];
+		typed.doc.forEach((node) => texts.push(node.textContent));
+		return texts;
+	};
+
+	it('lets a paragraph added at the end of an unprotected last section be typed into', () => {
+		const state = sectionedState();
+		// Enter at the end of the section's last paragraph: the new paragraph has no id yet.
+		const end = state.doc.content.size - 1;
+		const split = state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }]));
+		expect(split.doc.childCount).toBe(3);
+		expect(typedAt(split, 2, 'More')).toEqual(['Name: Ada', 'Notes', 'More']);
+	});
+
+	it('keeps the last section editable when the block it named is gone', () => {
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0' },
+			{ endsAtBlockId: 'removed', formProtection: false },
+		]);
+		expect(typedAt(state, 1, 'My ')).toEqual(['Name: Ada', 'My Notes']);
+		expect(typedAt(state, 0, 'X')).toEqual(['Name: Ada', 'Notes']);
+	});
+
+	it('gives the blocks of a section whose last block is gone to the next section', () => {
+		const state = sectionedState(
+			[
+				{ endsAtBlockId: 'p0' },
+				{ endsAtBlockId: 'removed' },
+				{ endsAtBlockId: 'p2', formProtection: false },
+			],
+			{ p2: 'Remarks' },
+		);
+		expect(typedAt(state, 1, 'My ')).toEqual(['Name: Ada', 'My Notes', 'Remarks']);
+		expect(typedAt(state, 2, 'Our ')).toEqual(['Name: Ada', 'Notes', 'Our Remarks']);
+	});
+
+	it('refuses an edit that would move text of an unprotected section into a protected one', () => {
+		// The first section is unprotected and ends at `p0`; a split puts its second part in the
+		// next section, as the editor and the saved document place a section break on the first.
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0', formProtection: false },
+			{ endsAtBlockId: 'p1' },
+		]);
+		const end = state.doc.child(0).nodeSize - 1;
+		const atEnd = state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }]));
+		expect(atEnd.doc.childCount).toBe(2);
+		const inside = state.apply(state.tr.split(3));
+		expect(inside.doc.childCount).toBe(2);
+		expect(typedAt(state, 0, 'My ')).toEqual(['My Name: Ada', 'Notes']);
+	});
+
+	it('lets paragraphs split anywhere else in an unprotected section', () => {
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p1', formProtection: false }, { endsAtBlockId: 'p2' }],
+			{ p2: 'Protected' },
+		);
+		// `p0` is in the unprotected section but does not end it.
+		expect(state.apply(state.tr.split(3)).doc.childCount).toBe(4);
+		const start = state.doc.child(0).nodeSize - 1;
+		expect(
+			state.apply(state.tr.split(start, 1, [{ type: state.schema.nodes.paragraph! }])).doc
+				.childCount,
+		).toBe(4);
+	});
+
+	it('lets a disabled text field change in a section the protection leaves unprotected', () => {
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p0', formProtection: false }, { endsAtBlockId: 'p1' }],
+			{},
+			[{ text: 'Name: ' }, ...field({ ...name, enabled: false }, 'Ada')],
+		);
+		const [result] = formTextResults(state.doc);
+		expect(state.apply(state.tr.insertText('B', result!.to)).doc.textContent).toContain('AdaB');
+	});
+
+	it('lets the editor give a paragraph another id unless that moves a section', () => {
+		// The first section, protected, holds `p0` and ends at `p1`; the last is left unprotected.
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p1' }, { endsAtBlockId: 'p2', formProtection: false }],
+			{ p2: 'Free' },
+		);
+		const rename = (index: number, attrs: Record<string, unknown>) => {
+			let pos = 0;
+			for (let at = 0; at < index; at++) pos += state.doc.child(at).nodeSize;
+			const node = state.doc.child(index);
+			return state
+				.apply(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...attrs }))
+				.doc.child(index).attrs;
+		};
+		expect(rename(0, { id: 'p9' })).toMatchObject({ id: 'p9' });
+		expect(rename(0, { id: 'p9', align: 'center' })).toMatchObject({ id: 'p0', align: null });
+		// Renaming the block a protected section ends at would give its text to the next section.
+		expect(rename(1, { id: 'p9' })).toMatchObject({ id: 'p1' });
+		expect(
+			state.apply(state.tr.setNodeAttribute(state.doc.child(0).nodeSize, 'id', 'p9')).doc.child(1)
+				.attrs.id,
+		).toBe('p1');
+	});
+
+	it('lets a split move text between two unprotected sections', () => {
+		const state = sectionedState([
+			{ endsAtBlockId: 'p0', formProtection: false },
+			{ endsAtBlockId: 'p1', formProtection: false },
+		]);
+		const end = state.doc.child(0).nodeSize - 1;
+		expect(
+			state.apply(state.tr.split(end, 1, [{ type: state.schema.nodes.paragraph! }])).doc.childCount,
+		).toBe(3);
+		expect(state.apply(state.tr.split(3)).doc.childCount).toBe(3);
 	});
 
 	it('only lets form fields change in a document protected for forms', () => {

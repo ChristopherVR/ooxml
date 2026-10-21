@@ -20,6 +20,8 @@ import { getW, isElement, named, type XmlElement } from './xml';
 export interface InlineSlot {
 	element?: XmlElement;
 	container?: XmlElement;
+	/** The tracked change (`w:ins`, `w:del`, `w:moveFrom`, `w:moveTo`) the run was read in. */
+	revision?: XmlElement;
 }
 
 /** A run's own content is safe when it is plain text, a modeled break, or a lone picture. */
@@ -87,8 +89,8 @@ function runIsSafe(run: XmlElement): boolean {
 
 /**
  * Collects the slots and markers of `parent`'s children: the paragraph itself, or a container
- * (hyperlink, simple field or control content) or wrapper inside it. Inline content controls are
- * read only at the paragraph's level.
+ * (hyperlink, simple field or control content) or wrapper inside it, within the tracked change
+ * `revision` if any. Inline content controls are read only at the paragraph's level.
  */
 function runsOf(
 	parent: XmlElement,
@@ -96,8 +98,9 @@ function runsOf(
 	slots: InlineSlot[],
 	markers: InlineMarker[],
 	paragraph: XmlElement,
+	revision?: XmlElement,
 ): boolean {
-	const inContainer = container && { container };
+	const inContainer = { ...(container && { container }), ...(revision && { revision }) };
 	for (const child of Array.from(parent.childNodes)) {
 		if (!isElement(child)) {
 			if (child.nodeType === 3 && child.textContent?.trim()) return false;
@@ -121,13 +124,13 @@ function runsOf(
 					element: annotationEdge(child),
 					boundary: slots.length,
 					annotation: { wrapper: child, edge: side },
-					...inContainer,
+					...(container && { container }),
 				});
 			edge('start');
-			if (!runsOf(child, container, slots, markers, paragraph)) return false;
+			if (!runsOf(child, container, slots, markers, paragraph, revision)) return false;
 			edge('end');
 		} else if (isRevisionWrapperElement(child) && (!container || isSdt(container))) {
-			if (!runsOf(child, container, slots, markers, paragraph)) return false;
+			if (!runsOf(child, container, slots, markers, paragraph, child)) return false;
 		} else if (isSdt(child) && parent === paragraph) {
 			const content = sdtContent(child);
 			const before = slots.length;
@@ -135,7 +138,7 @@ function runsOf(
 			if (slots.length === before) slots.push({ container: child });
 		} else if ((named(child, 'hyperlink') || named(child, 'fldSimple')) && !container) {
 			const before = slots.length;
-			if (!runsOf(child, child, slots, markers, paragraph)) return false;
+			if (!runsOf(child, child, slots, markers, paragraph, revision)) return false;
 			// The parser shows a placeholder for a simple field without a cached result.
 			if (named(child, 'fldSimple') && slots.length === before) slots.push({ container: child });
 		} else if (!isCommentAnchorElement(child) || container) return false;

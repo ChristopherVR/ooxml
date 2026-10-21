@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import type { EditorView } from 'prosemirror-view';
 import { savedDocument } from './saved-document';
 import { fileInput } from './helpers';
 import { formFieldsFixture, protectedSectionsFixture } from './support/form-fields-fixture';
@@ -70,6 +71,41 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(name).toHaveText('Grace');
 	});
 
+	test(`${framework}: a protected form's check box and drop-down work from the keyboard`, async ({
+		page,
+	}) => {
+		const editor = await open(page, framework, formFieldsFixture(true));
+		const box = editor.locator('.ProseMirror .dve-form-field[data-form-field="checkbox"]');
+		const status = editor.locator('.ProseMirror .dve-form-field[data-form-field="dropDown"]');
+		// Tab from a label goes to the next cell, the field, as in Word; Space toggles it there.
+		await editor.locator('.ProseMirror td', { hasText: 'Approved' }).click();
+		await expect
+			.poll(() =>
+				editor.evaluate(
+					(element) =>
+						(element as unknown as { view: EditorView }).view.state.selection.$from.parent
+							.textContent,
+				),
+			)
+			.toBe('Approved');
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Space');
+		await expect(box).toHaveText('☒');
+		await page.keyboard.press('Space');
+		await expect(box).toHaveText('☐');
+		await page.keyboard.press('Tab');
+		await page.keyboard.press('Tab');
+		// The list opens on the current entry; the arrows move through it and Enter picks one.
+		await page.keyboard.press('Alt+ArrowDown');
+		await expect(editor.getByRole('option', { name: 'Revised', exact: true })).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('Enter');
+		await expect(status).toHaveText('Withdrawn');
+
+		const { xml } = await savedDocument(page, `${framework}-form-keys.docx`);
+		expect(xml).toContain('<w:result w:val="2"/>');
+	});
+
 	test(`${framework}: a protected form keeps locked fields and leaves unprotected sections editable`, async ({
 		page,
 	}) => {
@@ -90,9 +126,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.keyboard.press('End');
 		await page.keyboard.type(' to add');
 		await expect(notes).toHaveText('Notes to add');
+		// A paragraph added at the end of the last section is in that section too.
+		await page.keyboard.press('Enter');
+		await page.keyboard.type('More notes');
+		await expect(editor.locator('.ProseMirror > p').last()).toHaveText('More notes');
 
 		const { xml } = await savedDocument(page, `${framework}-protected-sections.docx`);
 		expect(xml).toContain('>Notes to add<');
+		expect(xml).toContain('>More notes<');
 		const field = (name: string) =>
 			xml.slice(
 				xml.indexOf(`<w:name w:val="${name}"/>`),

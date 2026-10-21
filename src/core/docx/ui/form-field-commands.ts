@@ -73,6 +73,35 @@ export function selectFormDropDownAt(
 	return next ? withField(state, pos, next) : undefined;
 }
 
+/**
+ * The begin marker of the check box or drop-down form field beside `pos`, for operating it from
+ * the keyboard: `pos` is in front of the field, among its hidden markers or just after it. A field
+ * that starts at `pos` wins over one that ends there.
+ */
+export function formFieldBeside(doc: Node, pos: number): number | undefined {
+	const $pos = doc.resolve(pos);
+	if (!$pos.parent.isTextblock) return undefined;
+	const open: { begin: number; field: FormField | undefined }[] = [];
+	let beside: number | undefined;
+	$pos.parent.forEach((child, offset) => {
+		if (child.type.name !== 'fieldMarker') return;
+		const at = $pos.start() + offset;
+		if (child.attrs.kind === 'begin') open.push({ begin: at, field: formFieldOfNode(child) });
+		else if (child.attrs.kind === 'end') {
+			const top = open.pop();
+			const kind = top?.field?.kind;
+			if (!top || (kind !== 'checkbox' && kind !== 'dropDown')) return;
+			if (
+				pos >= top.begin &&
+				pos <= at + child.nodeSize &&
+				(beside === undefined || pos === top.begin)
+			)
+				beside = top.begin;
+		}
+	});
+	return beside;
+}
+
 /** A text form field's result in the editor document: where it is and the field it belongs to. */
 export interface FormTextResult {
 	field: FormField;

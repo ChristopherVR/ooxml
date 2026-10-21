@@ -41,6 +41,12 @@ const run = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r
 const element = (xml: string, tag: string) =>
 	xml.match(new RegExp(`<w:${tag}\\b[^>]*>[\\s\\S]*?</w:${tag}>`))?.[0] ?? '';
 
+/** Whether some `w:<tag>` element in `xml` holds every needle. */
+const heldBy = (xml: string, tag: string, needles: string[]) =>
+	[...xml.matchAll(new RegExp(`<w:${tag}\\b[^>]*>[\\s\\S]*?</w:${tag}>`, 'g'))].some(([found]) =>
+		needles.every((needle) => found.includes(needle)),
+	);
+
 describe('editing paragraphs that hold position markers', () => {
 	it('keeps spelling and grammar marks where they were', async () => {
 		const { loaded, paragraph } = await load(
@@ -71,6 +77,75 @@ describe('editing paragraphs that hold position markers', () => {
 			'<w:permEnd w:id="4"/>',
 			'> still fixed<',
 		]);
+	});
+
+	it('keeps a wrapper and a range around untouched text between two large edits', async () => {
+		const [before, after] = ['a'.repeat(130), 'b'.repeat(130)];
+		const { loaded, paragraph } = await load(
+			`<w:p>${run(`${before} `)}<w:permStart w:id="4" w:edGrp="everyone"/>` +
+				`<w:customXml w:uri="urn:x" w:element="name">${run('keep')}</w:customXml>` +
+				`<w:permEnd w:id="4"/>${run(` ${after}`)}</w:p>`,
+		);
+		at(paragraph.runs, 0).text = `${'x'.repeat(130)} `;
+		lastOf(paragraph.runs).text = ` ${'y'.repeat(130)}`;
+		const xml = await savedParagraph(loaded);
+		expectInOrder(xml, [
+			`>${'x'.repeat(130)} <`,
+			'<w:permStart w:id="4" w:edGrp="everyone"/>',
+			'<w:customXml w:uri="urn:x" w:element="name">',
+			'>keep<',
+			'</w:customXml>',
+			'<w:permEnd w:id="4"/>',
+			`> ${'y'.repeat(130)}<`,
+		]);
+	});
+
+	it('keeps markers inside the tracked change they were in', async () => {
+		const revision = 'w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins w:id="5" ${revision}><w:permStart w:id="4" w:edGrp="everyone"/>` +
+				`${run('added')}<w:permEnd w:id="4"/></w:ins>` +
+				`<w:del w:id="6" ${revision}><w:bookmarkStart w:id="2" w:name="Gone"/>` +
+				`<w:r><w:delText>old</w:delText></w:r><w:bookmarkEnd w:id="2"/></w:del>` +
+				`<w:ins w:id="7" ${revision}>${run('one')}<w:bookmarkStart w:id="3" w:name="Mid"/>` +
+				`${run('two')}<w:bookmarkEnd w:id="3"/></w:ins>${run(' tail')}</w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		const xml = await savedParagraph(loaded);
+		expect(xml).toContain('>Still fixed <');
+		expect(heldBy(xml, 'ins', ['<w:permStart w:id="4"', '>added<', '<w:permEnd w:id="4"/>'])).toBe(
+			true,
+		);
+		expect(
+			heldBy(xml, 'del', ['<w:bookmarkStart w:id="2"', '>old<', '<w:bookmarkEnd w:id="2"/>']),
+		).toBe(true);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkStart w:id="3"'])).toBe(true);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkEnd w:id="3"/>'])).toBe(true);
+		expectInOrder(xml, [
+			'>one<',
+			'<w:bookmarkStart w:id="3"',
+			'>two<',
+			'<w:bookmarkEnd w:id="3"/>',
+		]);
+	});
+
+	it('keeps an empty range inside a tracked change in order', async () => {
+		const revision = 'w:id="5" w:author="Ann" w:date="2026-01-01T00:00:00Z"';
+		const { loaded, paragraph } = await load(
+			`<w:p>${run('Fixed ')}<w:ins ${revision}>${run('one')}` +
+				`<w:bookmarkStart w:id="8" w:name="Empty"/><w:bookmarkEnd w:id="8"/>${run('two')}</w:ins></w:p>`,
+		);
+		at(paragraph.runs, 0).text = 'Still fixed ';
+		const xml = await savedParagraph(loaded);
+		expectInOrder(xml, [
+			'>one<',
+			'<w:bookmarkStart w:id="8"',
+			'<w:bookmarkEnd w:id="8"/>',
+			'>two<',
+		]);
+		expect(heldBy(xml, 'ins', ['<w:bookmarkStart w:id="8"', '<w:bookmarkEnd w:id="8"/>'])).toBe(
+			true,
+		);
 	});
 
 	it('keeps a bookmark around the run it marks instead of widening it to the paragraph', async () => {

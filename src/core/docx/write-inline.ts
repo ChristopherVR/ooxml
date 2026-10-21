@@ -63,9 +63,11 @@ function runNodes(
 		: createRun(doc, run, base, old, allocator);
 	const revision = run.revision;
 	const wrapped = revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind);
+	let wrapper: XmlElement | undefined;
 	if (wrapped) {
 		if (revision.kind === 'delete') convertToDeleteText(doc, node);
-		nodes.push(revisionWrapper(doc, revision, node));
+		wrapper = revisionWrapper(doc, revision, node);
+		nodes.push(wrapper);
 	} else nodes.push(node);
 	for (const edge of [...closes].reverse()) nodes.push(...rangeEndNodes(doc, edge));
 	const text =
@@ -82,6 +84,7 @@ function runNodes(
 		placed: {
 			...(nodes[0] && { first: nodes[0], last: nodes.at(-1)! }),
 			...(text && !wrapped && { splittable: node }),
+			...(wrapper && { wrapper }),
 		},
 	};
 }
@@ -108,13 +111,20 @@ export function buildInlineContent(
 	const placed: PlacedRun[] = [];
 	const containers = new Map<XmlElement, Set<XmlElement>>();
 	const nodesFor = (index: number) => {
-		const written = runNodesAt(index);
-		placed[index] = written.placed;
+		// The source run is looked up once: picture lookups take their match.
+		const sourceIndex = sourceFor(index);
+		const written = runNodesAt(index, sourceIndex);
+		// A run still in a tracked change of the kind it was read in continues that change.
+		const revision = sourceIndex === undefined ? undefined : slots[sourceIndex]?.revision;
+		const wrapper = written.placed.wrapper;
+		placed[index] =
+			revision && wrapper?.localName === revision.localName
+				? { ...written.placed, revision }
+				: written.placed;
 		return written.nodes;
 	};
-	const runNodesAt = (index: number) => {
+	const runNodesAt = (index: number, sourceIndex: number | undefined) => {
 		const run = runAt(index);
-		const sourceIndex = sourceFor(index);
 		const source = sourceIndex === undefined ? undefined : base?.[sourceIndex];
 		const old = sourceIndex === undefined ? undefined : slots[sourceIndex]?.element;
 		return runNodes(

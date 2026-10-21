@@ -255,9 +255,11 @@ function measureParagraph(
 		const positional = token.kind === 'tab' && paragraph.runs[token.runIndex]?.positionalTab;
 		if (positional) {
 			const { followingPx } = segmentAfter(tokenIndex);
+			// Word aligns to the closer of the indent and the margin: never past the margins, and a
+			// tab to the left margin of an indented paragraph leaves its text at the indent.
 			const [startPx, endPx] =
 				positional.relativeTo === 'indent'
-					? [leftPx, contentWidthPx - rightPx]
+					? [Math.max(leftPx, 0), Math.min(contentWidthPx - rightPx, contentWidthPx)]
 					: [0, contentWidthPx];
 			const placeAt = (positionPx: number) =>
 				placePositionalTab(positionPx, positional, startPx, endPx, followingPx);

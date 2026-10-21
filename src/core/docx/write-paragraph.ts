@@ -182,6 +182,7 @@ export function writeParagraphImpl(
 				source: position,
 				opening: annotation ? annotation.edge === 'start' : opensRange(marker.element),
 				...(marker.container && { container: marker.container }),
+				...(marker.revision && { revision: marker.revision }),
 				...(annotation && { annotation, exact: true }),
 			};
 		});
