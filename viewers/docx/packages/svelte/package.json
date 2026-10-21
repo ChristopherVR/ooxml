@@ -49,6 +49,16 @@
 			"types": "./dist/Toolbar.d.ts",
 			"svelte": "./dist/Toolbar.svelte",
 			"default": "./dist/Toolbar.svelte"
+		},
+		"./PageNavigation": {
+			"types": "./dist/PageNavigation.d.ts",
+			"svelte": "./dist/PageNavigation.svelte",
+			"default": "./dist/PageNavigation.svelte"
+		},
+		"./StatusBar": {
+			"types": "./dist/StatusBar.d.ts",
+			"svelte": "./dist/StatusBar.svelte",
+			"default": "./dist/StatusBar.svelte"
 		}
 	},
 	"publishConfig": {

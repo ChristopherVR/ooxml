@@ -1,6 +1,6 @@
 import * as officeTheme from 'ooxml-ui/theme';
 import { mountEditorSurface, type EditorHandle, type SurfaceOptions } from './index';
-import type { WordToolbarProps } from 'docx-web-component';
+import type { WordNavigationProps, WordStatusProps, WordToolbarProps } from 'docx-web-component';
 export interface BuildingBlockOptions extends SurfaceOptions {
 	bytes?: Uint8Array | ArrayBuffer | undefined;
 }
@@ -10,6 +10,10 @@ export interface CanvasProps {
 }
 export interface BuildingBlockState {
 	toolbarProps: WordToolbarProps | null;
+	/** Page, view mode and page navigation callbacks. Null until the canvas mounts. */
+	navigationProps: WordNavigationProps | null;
+	/** Word count and zoom. Null until the canvas mounts. */
+	statusProps: WordStatusProps | null;
 	loading: boolean;
 	error: Error | null;
 	mode: 'view' | 'edit';
@@ -22,22 +26,45 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 	let lastBytes: BuildingBlockOptions['bytes'];
 	let generation = 0;
 	let currentHost: HTMLElement | null = null;
-	let state: BuildingBlockState = { toolbarProps: null, loading: false, error: null, mode: 'edit' };
+	let lastElement: unknown;
+	let state: BuildingBlockState = {
+		toolbarProps: null,
+		navigationProps: null,
+		statusProps: null,
+		loading: false,
+		error: null,
+		mode: 'edit',
+	};
 	const listeners = new Set<(state: BuildingBlockState) => void>();
 	const publish = (patch: Partial<BuildingBlockState>) => {
-		state = {
+		const next: BuildingBlockState = {
 			...state,
 			...patch,
 			mode: options.canEdit === false || options.readOnly ? 'view' : 'edit',
 		};
+		if (
+			(Object.keys(next) as (keyof BuildingBlockState)[]).every((key) => next[key] === state[key])
+		)
+			return;
+		state = next;
 		for (const listener of listeners) listener(state);
 	};
-	const refresh = () =>
+	// Snapshots of equal data keep their identity, so hosts re-render only on a real change. Their
+	// callbacks read the live editor, so an older snapshot of the same engine stays valid.
+	const stable = <T extends object>(previous: T | null, next: T | null, same: boolean): T | null =>
+		previous && next && same && JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+	const refresh = () => {
+		const element = binding?.element ?? null;
+		const same = lastElement === element;
+		lastElement = element;
 		publish({
-			toolbarProps: binding?.getToolbarProps() ?? null,
+			toolbarProps: stable(state.toolbarProps, binding?.getToolbarProps() ?? null, same),
+			navigationProps: stable(state.navigationProps, binding?.getNavigationProps() ?? null, same),
+			statusProps: stable(state.statusProps, binding?.getStatusProps() ?? null, same),
 			loading: binding?.element.loading ?? false,
 			...(binding?.element.loading ? { error: null } : {}),
 		});
+	};
 	const effective = (): SurfaceOptions => ({
 		...options,
 		onDocumentError: (error) => {
@@ -124,7 +151,7 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 		},
 	};
 }
-export type { WordToolbarProps } from 'docx-web-component';
+export type { WordNavigationProps, WordStatusProps, WordToolbarProps } from 'docx-web-component';
 
 /** Keep optional native controls on the shared Office styles without making old viewer imports fail. */
 export function prepareWordToolbar(host: HTMLElement | null): void {
