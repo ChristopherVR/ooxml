@@ -9,7 +9,7 @@ import type {
 	ContentControlLock,
 } from './content-control-model';
 import { parseOnOff } from './simple-types';
-import { buildXml, first, getW, isElement, named, parseXml, WORD_NS, type XmlElement } from './xml';
+import { buildXml, first, getW, isElement, named, WORD_NS, type XmlElement } from './xml';
 
 import { WORD_2010_NS } from './ligatures';
 export const WORD_2012_NS = 'http://schemas.microsoft.com/office/word/2012/wordml';
@@ -75,15 +75,6 @@ export function parseKind(sdtPr: XmlElement): ContentControlKind {
 	const [type] = typeElements(sdtPr);
 	// `w:richText` is the default type when no other type element is present.
 	return (type && kindOf(type)) ?? 'richText';
-}
-
-/** The kind of control a verbatim `w:sdtPr` (a control's `sourceXml`) is, when it is XML. */
-export function propertiesKind(xml: string): ContentControlKind | undefined {
-	try {
-		return parseKind(parseXml(xml).documentElement);
-	} catch {
-		return undefined;
-	}
 }
 
 let generated = 0;

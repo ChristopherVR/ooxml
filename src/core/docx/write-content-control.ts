@@ -6,7 +6,7 @@ import type {
 	ContentControlGlyph,
 	ContentControlListItem,
 } from './content-control-model';
-import { parseContentControl, propertiesKind, sdtContent, typeElements } from './content-control';
+import { parseContentControl, sdtContent, typeElements } from './content-control';
 import {
 	NAMED_TYPES,
 	validId,
@@ -265,12 +265,9 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	// Verbatim properties of another kind are another control's: the model's kind wins.
-	const { sourceXml, ...model } = control;
-	const sdtPr = buildProperties(
-		doc,
-		sourceXml && propertiesKind(sourceXml) !== control.kind ? model : control,
-	);
+	// Verbatim properties of another kind keep all but their type element, which the patch below
+	// replaces with the model's, as it does for the same control in place: a data binding stays.
+	const sdtPr = buildProperties(doc, control);
 	// A copy keeps the properties it was copied with, under the new id it was given: ids are
 	// unique in a document (ECMA-376 17.5.2.18). An id Word cannot read, such as one generated for
 	// a control read without `w:id`, is not written, nor the one its properties were copied with.

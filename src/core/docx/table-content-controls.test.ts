@@ -249,6 +249,38 @@ describe('row and cell content controls on save', () => {
 		);
 	});
 
+	it('keeps the properties of a control written anew under another kind, but its type', async () => {
+		// A control copied in the document keeps the properties it was copied with; given another
+		// kind, it keeps them as the same control does in place, its type element replaced.
+		const binding =
+			'<w:dataBinding w:xpath="/ns0:kind" w:storeItemID="{11111111-2222-3333-4444-555555555555}"/>';
+		const bound = await hand(
+			grid(
+				row(`${label('Status')}${choice('11', binding)}`) +
+					row(`${label('Again')}${label('Draft')}`),
+			),
+		);
+		const table = tableOf(bound.model.blocks);
+		table.rows[1]![1]!.contentControl = {
+			...table.rows[0]![1]!.contentControl!,
+			id: '98',
+			kind: 'text',
+			showingPlaceholder: false,
+		};
+		const xml = await documentXml(await bound.save(bound.model));
+		const copy = (xml.match(/<w:sdtPr[^>]*>.*?<\/w:sdtPr>/g) ?? []).find((sdtPr) =>
+			sdtPr.includes('<w:id w:val="98"/>'),
+		);
+		expect(copy).toContain('w:xpath="/ns0:kind"');
+		expect(copy).toContain('<w:alias w:val="Choice 11"/>');
+		expect(copy).toContain('<w:text/>');
+		expect(copy).not.toContain('dropDownList');
+		expect(copy).not.toContain('showingPlcHdr');
+		const reopened = tableOf((await loadDocx(await bound.save(bound.model))).model.blocks);
+		expect(reopened.rows[1]![1]!.contentControl).toMatchObject({ id: '98', kind: 'text' });
+		expect(reopened.rows[0]![1]!.contentControl).toMatchObject({ id: '11', kind: 'dropDownList' });
+	});
+
 	it('takes a cell given another control out of a control around several cells', async () => {
 		// A cell given the control of the cell before it joins its w:sdt, and a new control whose id
 		// another w:sdt has, in another row, takes a new one: ids are unique in a document.
