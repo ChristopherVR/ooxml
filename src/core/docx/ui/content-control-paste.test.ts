@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Schema } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../model';
 import { markSpecs } from './schema-marks';
 import { contentControlPlugin } from './content-control-guard';
+import { freshControlId } from './content-control-paste';
 import { controlSpans } from './content-control-spans';
 
 const schema = new Schema({
@@ -120,5 +121,19 @@ describe('content controls pasted in the editor', () => {
 		expect(properties.heightTwips).toBe(400);
 		expect(properties.contentControl.id).not.toBe('66');
 		expect(properties.contentControl.id).toMatch(/^\d+$/);
+	});
+});
+
+describe('freshControlId', () => {
+	it('stays within the signed 32-bit integers Word uses for control ids', () => {
+		const random = vi.spyOn(Math, 'random');
+		try {
+			random.mockReturnValue(1 - 2 ** -53);
+			expect(Number(freshControlId(new Set()))).toBe(2 ** 31 - 1);
+			random.mockReturnValue(0);
+			expect(freshControlId(new Set())).toBe('1');
+		} finally {
+			random.mockRestore();
+		}
 	});
 });

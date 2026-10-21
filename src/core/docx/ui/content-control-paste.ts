@@ -10,10 +10,10 @@ import type { ContentControl } from '../content-control-model';
 import { rowControlOf, rowControlSpans } from './content-control-rows';
 import { controlOfMark, controlSpans } from './content-control-spans';
 
-/** A control id that is not in `used`: Word uses signed 32-bit integers. */
+/** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
 export function freshControlId(used: ReadonlySet<string>): string {
 	let id: string;
-	do id = String(Math.floor(Math.random() * 2 ** 31) + 1);
+	do id = String(Math.floor(Math.random() * (2 ** 31 - 1)) + 1);
 	while (used.has(id));
 	return id;
 }
