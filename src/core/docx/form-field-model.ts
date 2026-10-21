@@ -35,6 +35,6 @@ export interface FormField {
 export interface DocumentProtection {
 	/** `w:edit`: `forms` allows filling form fields and content controls only. */
 	edit: StDocProtect;
-	/** `w:enforcement`: the protection only applies when it is enforced. */
+	/** `w:enforcement`: whether the protection applies; Word enforces it unless it is off. */
 	enforced: boolean;
 }

@@ -236,12 +236,22 @@ describe('document protection and form field shading settings', () => {
 		expect(await warnings('none')).not.toMatch(/protect|limits editing/);
 	});
 
-	it('treats protection without enforcement as off', async () => {
+	it('enforces protection whose enforcement is not given, as Word does', async () => {
 		const { loaded } = await load(
 			`<w:p>${textField}</w:p>`,
 			'<w:documentProtection w:edit="forms"/>',
 		);
-		expect(loaded.model.protection).toEqual({ edit: 'forms', enforced: false });
+		expect(loaded.model.protection).toEqual({ edit: 'forms', enforced: true });
 		expect(loaded.model.formFieldShading).toBeUndefined();
+	});
+
+	it('treats protection whose enforcement is off as off', async () => {
+		for (const off of ['0', 'false', 'off']) {
+			const { loaded } = await load(
+				`<w:p>${textField}</w:p>`,
+				`<w:documentProtection w:edit="forms" w:enforcement="${off}"/>`,
+			);
+			expect(loaded.model.protection).toEqual({ edit: 'forms', enforced: false });
+		}
 	});
 });

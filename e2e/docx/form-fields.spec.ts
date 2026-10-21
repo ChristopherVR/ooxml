@@ -6,6 +6,7 @@ import {
 	blankFieldFixture,
 	formFieldsFixture,
 	protectedSectionsFixture,
+	repeatedEntriesFixture,
 } from './support/form-fields-fixture';
 
 async function open(page: Page, framework: string, docx: Promise<Uint8Array>) {
@@ -166,5 +167,23 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(xml).toMatch(/<w:rPr[^>]*><w:noProof\/><\/w:rPr><w:t>AB12<\/w:t>/);
 		expect(xml).not.toContain('\u2002');
 		expect(xml).toContain('<w:maxLength w:val="4"/>');
+	});
+
+	test(`${framework}: a drop-down that lists one name twice saves the entry picked`, async ({
+		page,
+	}) => {
+		const editor = await open(page, framework, repeatedEntriesFixture());
+		const grade = editor.locator('.ProseMirror .dve-form-field[data-form-field="dropDown"]');
+		await expect(grade).toHaveText('Pass');
+		await grade.click();
+		// The entries of the list the click opened, not the options of the ribbon's menus.
+		const options = editor.locator('.ribbon-list[role="listbox"]').getByRole('option');
+		await expect(options).toHaveText(['Pass', 'Fail', 'Pass']);
+		await expect(options.nth(0)).toHaveAttribute('aria-selected', 'true');
+		await expect(options.nth(2)).toHaveAttribute('aria-selected', 'false');
+		await options.nth(2).click();
+
+		const { xml } = await savedDocument(page, `${framework}-repeated-entries.docx`);
+		expect(xml).toContain('<w:result w:val="2"/>');
 	});
 }

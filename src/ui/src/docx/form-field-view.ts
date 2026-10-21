@@ -1,7 +1,7 @@
 // How the editor operates legacy form fields: a click on a check box toggles it, a click on a
 // drop-down opens its entries, keys do the same beside the field, and Word's form field shading
 // follows the document's setting.
-import type { DocumentModel } from 'ooxml-core/docx';
+import { formDropDownIndex, type DocumentModel } from 'ooxml-core/docx';
 import {
 	formFieldBeside,
 	formFieldLocked,
@@ -33,8 +33,9 @@ function operate(view: EditorView, el: HTMLElement): boolean {
 	}
 	const entries = field.dropDown?.entries ?? [];
 	if (field.kind !== 'dropDown' || !entries.length) return false;
-	openListPopover(el, entries, el.textContent ?? '', false, (entry) => {
-		const tr = selectFormDropDownAt(view.state, pos, entries.indexOf(entry));
+	// Entries can repeat a name, so the list goes by the entry's place, as `w:result` does.
+	openListPopover(el, entries, formDropDownIndex(field) ?? -1, false, (_entry, index) => {
+		const tr = selectFormDropDownAt(view.state, pos, index);
 		if (tr) view.dispatch(tr);
 		view.focus();
 	});

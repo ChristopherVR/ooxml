@@ -51,16 +51,37 @@ export function symbolSegments(run: TextRun): TextRun[] {
 	return segments;
 }
 
-/** The one symbol a run's content shows; `null` when it holds different or unreadable symbols. */
+/**
+ * Whether a symbol's character is one a symbol font's code maps to (U+F000 to U+F0FF), which is
+ * what Word writes for a character inserted from a symbol font, and ordinary text does not hold.
+ */
+const isSymbolFontCharacter = (character: string): boolean => /^[\uF000-\uF0FF]$/.test(character);
+
+/**
+ * The one symbol a run's content shows; `null` when it holds different or unreadable symbols, or
+ * one the run's text could not be told apart from. The model keeps a symbol as its character in
+ * the run's text, written back as `w:sym` wherever it occurs, so that character must be a symbol
+ * font's code that the run's own text does not use (an en dash coded `2013` would also turn the
+ * run's ordinary en dashes into symbols).
+ */
 export function runSymbol(content: readonly XmlElement[]): TextRun['symbol'] | null | undefined {
 	let found: TextRun['symbol'];
 	for (const child of content) {
 		if (!named(child, 'sym')) continue;
 		const symbol = { font: getW(child, 'font') ?? '', char: getW(child, 'char') ?? '' };
-		if (!symbolCharacter(symbol.char)) return null;
+		if (!isSymbolFontCharacter(symbolCharacter(symbol.char))) return null;
 		if (found && (found.font !== symbol.font || found.char !== symbol.char)) return null;
 		found = symbol;
 	}
+	const character = found && symbolCharacter(found.char);
+	if (
+		character &&
+		content.some(
+			(child) =>
+				(named(child, 't') || named(child, 'delText')) && child.textContent?.includes(character),
+		)
+	)
+		return null;
 	return found;
 }
 
