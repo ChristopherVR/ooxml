@@ -1,6 +1,6 @@
 // The calc engine: the public API (full and incremental recalculation, invalidation, ad hoc
 // evaluation) over the recalculation core in engine-core.ts.
-import { cellKey } from '../address';
+import { type CellRange, cellKey } from '../address';
 import { getCell } from '../cells';
 import type { Cell, CellValue, Workbook } from '../model';
 import { FormulaError } from './ast';
@@ -12,7 +12,7 @@ import { rangeHas, sameRange } from './engine-util';
 import { evaluateNode } from './evaluator';
 import type { FormulaNode } from './graph';
 import { implicitIntersection, toMatrix } from './references';
-import { isSpilledCell } from './spill';
+import { clearFootprint, isSpilledCell } from './spill';
 import { type Area, ERR, ErrorSignal, LambdaValue, resetArrayBudget, type Value } from './values';
 
 export {
@@ -26,6 +26,8 @@ class Engine extends EngineStructure implements CalcEngine {
 	private preparation: GraphPreparation | undefined;
 	/** The prepared formulas the first recalculation checks (see `trustsStoredValues`). */
 	private prepared: PreparedFormulas | undefined;
+	/** Stored spills released when the graph was built: their readers must recalculate. */
+	private released: Area[] = [];
 
 	// ---- the graph ----
 
@@ -68,9 +70,33 @@ class Engine extends EngineStructure implements CalcEngine {
 	private finishPreparation(preparation: GraphPreparation): void {
 		this.preparation = undefined;
 		this.built = true;
+		this.adoptStoredSpills(preparation.spills);
 		this.graphChanged();
 		this.reverseIndex = preparation.reverse;
 		this.prepared = preparation.formulas;
+	}
+
+	/**
+	 * Takes the spills a file stored as their anchors' last footprints, so that overwriting an
+	 * anchor or shrinking its result clears the cells it covered before it was ever evaluated here.
+	 * Cells marked for an anchor that holds no formula able to spill are released.
+	 */
+	private adoptStoredSpills(spills: ReadonlyMap<number, ReadonlyMap<number, CellRange>>): void {
+		for (const [s, anchors] of spills)
+			for (const [key, range] of anchors) {
+				const node = this.nodes.get(s)?.get(key);
+				if (node && !node.legacy && !node.arrayRange) {
+					if (!node.spill && !node.blockedSpill) {
+						node.spill = range;
+						this.footprints.add(node);
+					}
+					continue;
+				}
+				const sheet = this.workbook.sheets[s];
+				if (!sheet) continue;
+				clearFootprint(sheet, range, range.start.row, range.start.col);
+				this.released.push({ sheet: s, range });
+			}
 	}
 
 	// ---- recalculation ----
@@ -82,6 +108,7 @@ class Engine extends EngineStructure implements CalcEngine {
 		if (this.needsFull) this.releaseAllSpills();
 		if (!this.built || this.needsFull) this.build();
 		this.needsFull = false;
+		this.released = [];
 		this.structuralSeeds.clear();
 		this.cycles = new Set();
 		this.run(new Set(this.allNodes()), true);
@@ -105,7 +132,8 @@ class Engine extends EngineStructure implements CalcEngine {
 			this.recalculateAll();
 			return;
 		}
-		const changed: Area[] = [];
+		const changed: Area[] = this.released;
+		this.released = [];
 		let structural = false;
 		for (const change of changes) {
 			const sheet = this.workbook.sheets[change.sheet];
