@@ -111,11 +111,12 @@ the collaboration layer. Keep `roomId` to alphanumerics, hyphens, and underscore
 Collaboration is **controlled** by the host app. The viewer's Share dialog reports intent; you flip
 the `collaboration` prop in response.
 
-| Prop                   | Type                                    | Purpose                                                                                       |
-| ---------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `onStartCollaboration` | `(config: CollaborationConfig) => void` | User started a session from the Share dialog - set the `collaboration` prop with this config. |
-| `onStopCollaboration`  | `() => void`                            | User stopped the session - clear the `collaboration` prop.                                    |
-| `shareDefaults`        | `{ roomId?; userName?; serverUrl? }`    | Pre-fills the Share dialog fields; empty if omitted.                                          |
+| Prop                    | Type                                    | Purpose                                                                                                                    |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void` | User started a session from the Share dialog - set the `collaboration` prop with this config.                              |
+| `onStopCollaboration`   | `() => void`                            | User stopped the session - clear the `collaboration` prop.                                                                 |
+| `onCollaborationChange` | `(state: CollaborationState) => void`   | The shared state (`active`, `roomId`, `status`, `synced`, `people`), also for a host-owned session; the off state on stop. |
+| `shareDefaults`         | `{ roomId?; userName?; serverUrl? }`    | Pre-fills the Share dialog fields; empty if omitted.                                                                       |
 
 ```tsx
 function CollaborativeEditor({ content }: { content: Uint8Array }) {

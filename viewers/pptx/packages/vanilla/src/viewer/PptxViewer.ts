@@ -141,6 +141,7 @@ import {
 } from './theme-locale-prefs';
 import type {
 	CollaborationInput,
+	CollaborationState,
 	ConnectionStatus,
 	PptxViewerInstance,
 	PptxViewerOptions,
@@ -2114,6 +2115,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	stopCollaboration = (): void => this.sessions.stopCollaboration();
 	getCollaborationStatus = (): ConnectionStatus => this.sessions.getCollaborationStatus();
+	getCollaborationState = (): CollaborationState => this.sessions.getCollaborationState();
 
 	autosaveNow(): Promise<void> {
 		return this.sessions.autosaveNow();

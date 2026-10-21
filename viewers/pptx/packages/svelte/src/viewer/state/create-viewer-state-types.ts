@@ -2,8 +2,8 @@ import type {
 	AutosaveDisabledReason,
 	CanvasSize,
 	CollaborationConfig,
-	CollaborationInput,
 	CollaborationShellState,
+	CollaborationState,
 	FieldSubstitutionContext,
 	MobileSheetKey,
 	ResolvedCustomization,
@@ -50,7 +50,8 @@ export type { CanvasSize };
 export interface CreateViewerStateOptions {
 	inspectorInitiallyOpen?: boolean | undefined;
 	getSource: () => Uint8Array | ArrayBuffer | null | undefined;
-	collaboration?: CollaborationInput;
+	/** Already normalised by `resolveCollaborationConfig` (see `toViewerStateOptions`). */
+	collaboration?: CollaborationConfig;
 	shareDefaults?: ShareDefaultsInput;
 	/**
 	 * Host `autosave` prop, verbatim. `undefined` means the host said nothing,
@@ -103,6 +104,7 @@ export interface CreateViewerStateOptions {
 	/** Fired when the host toggles AutoSave (title bar / Settings dialog). */
 	onautosavetoggle?: (enabled: boolean) => void;
 	onstartcollaboration?: (config: CollaborationConfig) => void;
+	oncollaborationchange?: (state: CollaborationState) => void;
 	onstopcollaboration?: () => void;
 	/**
 	 * Host override for File > Open > "Browse this device". Without it

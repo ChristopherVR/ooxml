@@ -1,3 +1,4 @@
+import type { CollaborationState } from 'ooxml-core/collab';
 import type {
 	AccountAuthConfig,
 	CollaborationInput,
@@ -444,6 +445,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Share dialog. The host app should clear the `collaboration` prop.
 	 */
 	onStopCollaboration?: () => void;
+
+	/**
+	 * Reports the shared `CollaborationState` (the contract Word, Excel and Visio
+	 * use): called when a session starts or stops (the off state), and when its
+	 * connection status, synced flag or people change. Works for viewer-owned and
+	 * host-owned (`collaboration.session`) sessions; unchanged states are not repeated.
+	 */
+	onCollaborationChange?: (state: CollaborationState) => void;
 
 	/**
 	 * Default values for the Share dialog fields. The host app should provide

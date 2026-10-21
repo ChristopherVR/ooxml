@@ -5,6 +5,7 @@ import type {
 	YDocLike,
 	YjsFactories,
 } from 'ooxml-ui/pptx';
+import type { SyncGate } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	createSyncGate,
@@ -28,6 +29,8 @@ export function useCollaborationDocumentSync(
 	status: { value: ConnectionStatus },
 ) {
 	const readOnly = ref(false);
+	/** True once the first-write gate is open (the first exchange with the room finished). */
+	const synced = ref(false);
 	const livePatcher = createCollaborationLivePatcher();
 	let doc: YDocLike | null = null;
 	let factories: YjsFactories | null = null;
@@ -44,7 +47,17 @@ export function useCollaborationDocumentSync(
 		mergeTemplateElements: buildSaveSlides,
 		getSaveOptions: options.getSaveOptions,
 	});
-	const gate = createSyncGate(flush);
+	const baseGate = createSyncGate(() => {
+		synced.value = true;
+		flush();
+	});
+	const gate: SyncGate = {
+		...baseGate,
+		reset: () => {
+			baseGate.reset();
+			synced.value = false;
+		},
+	};
 
 	function flush(): void {
 		if (!doc || !factories || !config || applyingRemote || !gate.isOpen()) {
@@ -170,6 +183,7 @@ export function useCollaborationDocumentSync(
 	}
 	return {
 		readOnly,
+		synced,
 		livePatcher,
 		gate,
 		begin,

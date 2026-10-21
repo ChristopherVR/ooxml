@@ -53,6 +53,7 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 	THEME_CATALOG,
+	createCollaborationStateReporter,
 	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	viewerPreferencesFromViewProperties,
@@ -60,6 +61,7 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	CollaborationState,
 	ElementUpdate,
 	ElementUpdateOptions,
 	AccountAuthConfig,
@@ -1748,6 +1750,12 @@ export class PowerPointViewerComponent
 	readonly startCollaboration = output<CollaborationConfig>();
 	/** Fired when the collaboration/broadcast session stops. Mirrors React/Vue. */
 	readonly stopCollaboration = output<void>();
+	/**
+	 * Fired with the shared `CollaborationState` when a session starts or stops (the off
+	 * state) and when its status, synced flag or people change. Viewer-owned and host-owned
+	 * (`collaboration.session`) sessions both report; unchanged states are not repeated.
+	 */
+	readonly collaborationChange = output<CollaborationState>();
 	/** Fired each time a presentation finishes loading without an error. */
 	readonly load = output<ViewerLoadDetail>();
 	/** Fired once per distinct load failure, with a human-readable message. */
@@ -2719,6 +2727,12 @@ export class PowerPointViewerComponent
 			const config = resolveCollaborationConfig(this.collaboration());
 			untracked(() => this.session.syncHostConfig(config));
 		});
+
+		// Report the shared CollaborationState, once per real change.
+		const collaborationReporter = createCollaborationStateReporter((state) =>
+			this.collaborationChange.emit(state),
+		);
+		effect(() => collaborationReporter.update(this.collab.state()));
 
 		// Push local slide edits into the shared Y.Doc (reconcile-based; the
 		// service guards against echoing remote-applied changes and against

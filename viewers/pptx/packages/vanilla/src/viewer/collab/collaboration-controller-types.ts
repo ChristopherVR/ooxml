@@ -9,6 +9,7 @@ import type {
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationLivePatcher,
+	CollaborationState,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxHandlerSaveOptions } from 'pptx-viewer-core';
@@ -32,6 +33,8 @@ export interface CollaborationControllerDeps {
 	onReadOnlyChange?: (readOnly: boolean) => void;
 	/** Notified on every connection-status transition. */
 	onStatusChange?: (status: ConnectionStatus) => void;
+	/** Notified with the shared `CollaborationState` whenever it really changes. */
+	onStateChange?: (state: CollaborationState) => void;
 }
 
 export interface CollaborationController {
@@ -45,6 +48,8 @@ export interface CollaborationController {
 	isReadOnly(): boolean;
 	/** Current connection status. */
 	getStatus(): ConnectionStatus;
+	/** The shared `CollaborationState` (the off state when no session is active). */
+	getState(): CollaborationState;
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */
 	setCursor(x: number, y: number, activeSlideIndex?: number): void;
 	/** Publish the local selection; no-op when no session is active. */

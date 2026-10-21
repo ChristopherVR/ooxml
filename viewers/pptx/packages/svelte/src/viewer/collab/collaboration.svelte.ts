@@ -8,12 +8,14 @@
  */
 import type {
 	CollaborationConfig,
+	CollaborationState,
 	CollabLoadOrigin,
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
 import {
+	buildCollaborationState,
 	DEFAULT_CURSOR_COLOR,
 	isMixedContentBlocked,
 	resolveTransportForServerUrl,
@@ -108,6 +110,20 @@ export class CollaborationController {
 	 * Share dialog's active view reads the local user's name/colour from this. */
 	get activeCollaboration(): CollaborationConfig | null {
 		return this.#config;
+	}
+	/** The shared `CollaborationState` a host reads (`oncollaborationchange`), reactive. */
+	get state(): CollaborationState {
+		const config = this.#config;
+		return buildCollaborationState({
+			active: this.#active,
+			roomId: config?.roomId,
+			status: this.status,
+			synced: this.#document.synced,
+			clientId: this.#presence.selfClientId,
+			userName: config?.userName,
+			userColor: config ? (config.userColor ?? DEFAULT_CURSOR_COLOR) : undefined,
+			remoteUsers: this.remotePresences,
+		});
 	}
 	/** Total connected participants (self + remote peers), reactive. */
 	get connectedCount(): number {

@@ -11,6 +11,7 @@ export type {
 	AutosaveStatus,
 	CollaborationConfig,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	ConnectionStatus,
 } from './types';

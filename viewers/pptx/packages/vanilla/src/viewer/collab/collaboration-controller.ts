@@ -36,6 +36,7 @@ import type { CollaborationSession } from './collaboration-session';
 import { createCollaborationSession } from './collaboration-session';
 import { createSlidesSync } from './collaboration-slides-sync';
 import type { SlidesSync } from './collaboration-slides-sync';
+import { createCollaborationStateTracker } from './collaboration-state-tracker';
 import { createWriteBackScheduler } from './collaboration-writeback';
 
 /**
@@ -67,12 +68,14 @@ export function createCollaborationController(
 	let connection: ConnectionWiring | null = null;
 	let loadApplying = false;
 	const livePatcher = createCollaborationLivePatcher();
+	const stateTracker = createCollaborationStateTracker(store, deps.onStateChange);
 
 	function setStatus(next: ConnectionStatus): void {
 		if (next === status) {
 			return;
 		}
 		status = next;
+		stateTracker.patch({ status: next });
 		deps.onStatusChange?.(next);
 	}
 
@@ -93,7 +96,17 @@ export function createCollaborationController(
 	}
 	// Prevent a bootstrap deck from preceding initial sync. Built-in transports
 	// retain their grace timer; external sessions only use host readiness.
-	const syncGate = createSyncGate(flushLocal);
+	const baseGate = createSyncGate(() => {
+		stateTracker.patch({ synced: true });
+		flushLocal();
+	});
+	const syncGate = {
+		...baseGate,
+		reset: () => {
+			baseGate.reset();
+			stateTracker.patch({ synced: false });
+		},
+	};
 
 	async function start(input: CollaborationInput): Promise<void> {
 		const config = resolveCollaborationConfig(input) as CollaborationConfig;
@@ -166,6 +179,7 @@ export function createCollaborationController(
 			});
 
 			active = true;
+			stateTracker.patch({ active: true, config, clientId: created.awareness.clientID ?? null });
 			if (config.externalSession) {
 				externalSync = createExternalSessionSync(config.externalSession, config, {
 					factories: created.factories,
@@ -264,6 +278,7 @@ export function createCollaborationController(
 		yFactories = null;
 		livePatcher.configure(null, null);
 		active = false;
+		stateTracker.patch({ active: false, config: null, clientId: null });
 		editState.setReadOnly(false);
 		setStatus('disconnected');
 	}
@@ -284,6 +299,7 @@ export function createCollaborationController(
 		isActive: () => active,
 		isReadOnly: editState.isReadOnly,
 		getStatus: () => status,
+		getState: stateTracker.get,
 		setCursor: (x, y, activeSlideIndex) => presence?.setCursor(x, y, activeSlideIndex),
 		setSelection: (selectedElementId, activeSlideIndex) =>
 			presence?.setSelection(selectedElementId, activeSlideIndex),
@@ -296,6 +312,7 @@ export function createCollaborationController(
 		destroy: () => {
 			disposeTeardown();
 			stop();
+			stateTracker.dispose();
 		},
 	};
 }

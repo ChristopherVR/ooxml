@@ -119,6 +119,9 @@ export function toViewerStateOptions(
 		get onstartcollaboration() {
 			return getProps().onstartcollaboration;
 		},
+		get oncollaborationchange() {
+			return getProps().oncollaborationchange;
+		},
 		get onstopcollaboration() {
 			return getProps().onstopcollaboration;
 		},

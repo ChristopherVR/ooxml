@@ -5,6 +5,7 @@ import type {
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	ConnectionStatus,
 	PowerPointViewerAPI,
@@ -51,6 +52,7 @@ export type {
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationRole,
+	CollaborationState,
 	CollaborationTransport,
 	ConnectionStatus,
 };
@@ -85,6 +87,13 @@ export interface PptxViewerCallbacks {
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/**
+	 * Fired with the shared `CollaborationState` (the contract Word, Excel and Visio use)
+	 * when a session starts or stops (the off state) and when its status, synced flag or
+	 * people change. Viewer-owned and host-owned (`collaboration.session`) sessions both
+	 * report; unchanged states are not repeated.
+	 */
+	onCollaborationChange?: (state: CollaborationState) => void;
 	/**
 	 * Fired with the serialised `.pptx` bytes after each committed edit. Serialising
 	 * is asynchronous, so a burst of edits can deliver several snapshots in order.
@@ -513,6 +522,8 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	stopCollaboration(): void;
 	/** Current collaboration connection status (`'disconnected'` when inactive). */
 	getCollaborationStatus(): ConnectionStatus;
+	/** The shared `CollaborationState` (the off state when no session is active). */
+	getCollaborationState(): CollaborationState;
 	/** Force an immediate autosave snapshot (no-op when autosave is disabled). */
 	autosaveNow(): Promise<void>;
 	/** Enable or disable recovery autosave without rebuilding the viewer. */

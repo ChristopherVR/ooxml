@@ -75,10 +75,23 @@ fallback. PowerPoint's built-in transports are y-websocket and y-webrtc, selecte
 `openCollaborationSession` and passes it as `session`. A `provider` without a `session` resolves to
 an empty room id, which each binding reports as its existing `error` collaboration status.
 
-PowerPoint does not yet dispatch the shared `collaboration-change` event or expose
-`collaborationState` in every binding. Connection state is reported per binding today (for example
-`onCollaborationStatus` in Vanilla, and the status the framework hooks expose); a uniform state
-event is follow-up work.
+## Reporting the shared state
+
+Every binding reports the same `CollaborationState` Word, Excel and Visio report (`active`, `roomId`,
+`status`, `synced`, `people`, the local person flagged `self`; type from `ooxml-core/collab`, also
+re-exported by each package). It fires when a session starts or stops (the off state, `status: 'off'`)
+and when the status, the synced flag or the people change, for host-owned and viewer-owned sessions
+alike, and never repeats an unchanged state:
+
+| Binding | Notification                                                 |
+| ------- | ------------------------------------------------------------ |
+| React   | `onCollaborationChange` prop                                 |
+| Vue     | `collaboration-change` event                                 |
+| Angular | `collaborationChange` output                                 |
+| Svelte  | `oncollaborationchange` callback prop                        |
+| Vanilla | `onCollaborationChange` option and `getCollaborationState()` |
+
+Vanilla keeps `onCollaborationStatus` and `getCollaborationStatus()` for the raw connection status.
 
 ## Readiness is the host's decision
 

@@ -8,6 +8,7 @@ export type {
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
 export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationState } from 'ooxml-core/collab';
 // ── Vue 3 PowerPoint viewer/editor ──
 export {
 	PowerPointViewer,

@@ -66,8 +66,18 @@ export function useCollaborativeState({
 	return useMemo(
 		() =>
 			config
-				? { status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry }
+				? {
+						status,
+						remoteUsers,
+						broadcastPresence,
+						connectedCount,
+						config,
+						doc,
+						synced,
+						retry,
+						clientId,
+					}
 				: null,
-		[status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry],
+		[status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry, clientId],
 	);
 }

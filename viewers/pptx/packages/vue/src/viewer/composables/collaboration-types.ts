@@ -1,3 +1,4 @@
+import type { CollaborationState } from 'ooxml-core/collab';
 import type {
 	AwarenessLike,
 	CollabLoadOrigin,
@@ -88,6 +89,8 @@ export interface RemotePresence {
 export interface UseCollaborationResult {
 	/** Shared custom-shell permissions, connection status and sanitized presence. */
 	shellState: ComputedRef<CollaborationShellState>;
+	/** The shared `CollaborationState` a host reads (`collaboration-change`). */
+	state: ComputedRef<CollaborationState>;
 	/** The configuration attached by start() or the reactive collaboration option. */
 	activeCollaboration: Ref<CollaborationConfig | null>;
 	status: Ref<import('ooxml-ui/pptx').ConnectionStatus>;

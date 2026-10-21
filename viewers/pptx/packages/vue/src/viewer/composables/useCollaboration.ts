@@ -19,6 +19,7 @@ import {
 	resolveCollaborationConfig,
 	resolveCollaborationShellState,
 	validateRoomId,
+	buildCollaborationState,
 } from 'ooxml-ui/pptx';
 import { computed, onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 
@@ -52,6 +53,18 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 			sourcePending: toValue(options.sourcePending) ?? false,
 			sourceError: toValue(options.sourceError) ?? false,
 			status: status.value,
+			remoteUsers: presence.remoteUsers.value,
+		}),
+	);
+	const state = computed(() =>
+		buildCollaborationState({
+			active: active.value,
+			roomId: activeCollaboration.value?.roomId,
+			status: status.value,
+			synced: document.synced.value,
+			clientId: presence.localClientId.value,
+			userName: activeCollaboration.value?.userName,
+			userColor: options.userColor ?? activeCollaboration.value?.userColor,
 			remoteUsers: presence.remoteUsers.value,
 		}),
 	);
@@ -209,6 +222,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		document.dispose();
 	});
 	return {
+		state,
 		shellState,
 		activeCollaboration,
 		status,

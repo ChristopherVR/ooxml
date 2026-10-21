@@ -359,4 +359,29 @@ describe('host-owned Angular collaboration', () => {
 		expect(room.destroy).not.toHaveBeenCalled();
 		expect(room.awareness.getLocalState()?.presence).toStrictEqual({ userName: 'Host' });
 	});
+
+	it('reports the shared CollaborationState for a host-owned session, then the off state', async () => {
+		const room = host(true);
+		room.update({ status: 'connected', synced: true });
+		const collab = service();
+		expect(collab.state()).toMatchObject({ active: false, status: 'off', people: [] });
+		await collab.connect(config(room.session));
+		expect(collab.state()).toMatchObject({
+			active: true,
+			roomId: 'external-room',
+			status: 'connected',
+			synced: true,
+		});
+		expect(collab.state().people).toStrictEqual([
+			expect.objectContaining({ clientId: room.doc.clientID, name: 'Viewer', self: true }),
+		]);
+		collab.disconnect();
+		expect(collab.state()).toMatchObject({
+			active: false,
+			roomId: undefined,
+			status: 'off',
+			synced: false,
+			people: [],
+		});
+	});
 });

@@ -732,3 +732,38 @@ describe('collaborationController external sessions', () => {
 		}
 	});
 });
+
+describe('collaborationController state (the shared CollaborationState)', () => {
+	it('reports a host-owned session with its people, then the off state on stop', async () => {
+		const host = externalHost([slide('room', [])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => undefined,
+			});
+			expect(collab.state).toMatchObject({ active: false, status: 'off', people: [] });
+			await collab.start({ ...CONFIG, roomId: 'host-room', externalSession: host.session });
+			flushSync();
+			expect(collab.state).toMatchObject({
+				active: true,
+				roomId: 'host-room',
+				status: 'connected',
+				synced: true,
+			});
+			expect(collab.state.people).toStrictEqual([
+				expect.objectContaining({ clientId: host.doc.clientID, name: 'Tester', self: true }),
+			]);
+			collab.stop();
+			expect(collab.state).toMatchObject({
+				active: false,
+				roomId: undefined,
+				status: 'off',
+				synced: false,
+				people: [],
+			});
+		});
+		host.doc.destroy();
+	});
+});

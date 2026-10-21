@@ -3,6 +3,7 @@ import type {
 	CollaborationConfig,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
+	SyncGate,
 	YDocLike,
 	YjsFactories,
 } from 'ooxml-ui/pptx';
@@ -26,7 +27,19 @@ import {
 export class CollaborationDocument {
 	readOnly = $state(false);
 	readonly livePatcher = createCollaborationLivePatcher();
-	readonly gate = createSyncGate(() => this.flush());
+	/** True once the first-write gate is open (the first exchange with the room finished). */
+	synced = $state(false);
+	readonly #baseGate = createSyncGate(() => {
+		this.synced = true;
+		this.flush();
+	});
+	readonly gate: SyncGate = {
+		...this.#baseGate,
+		reset: () => {
+			this.#baseGate.reset();
+			this.synced = false;
+		},
+	};
 	readonly #deps: CollaborationDeps;
 	readonly #setStatus: (status: ConnectionStatus) => void;
 	#doc: YDocLike | null = null;

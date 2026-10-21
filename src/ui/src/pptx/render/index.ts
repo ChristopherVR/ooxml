@@ -1796,3 +1796,6 @@ export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
 export * from './slide-package-clipboard';
 export * from './custom-path-markers';
+
+// The shared `CollaborationState` every binding reports to its host (`collaboration-change`).
+export * from './collaboration-state';

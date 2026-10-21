@@ -142,6 +142,8 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'error' },
 	{ id: 'startCollaboration' },
 	{ id: 'stopCollaboration' },
+	// The shared `CollaborationState` every Office editor reports (`collaboration-change`).
+	{ id: 'collaborationChange' },
 	{ id: 'hyperlinkClick', names: { vue: 'onHyperlinkClick', angular: 'onHyperlinkClick' } },
 	{ id: 'openFile', names: { vue: 'onOpenFile', angular: 'onOpenFile' } },
 	{
@@ -170,6 +172,7 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'presentationChange', absent: onlyIn(['vanilla'], NOT_YET) },
 	{ id: 'autosaveStatus', absent: onlyIn(['vanilla'], NOT_YET) },
 	{ id: 'autosaveRecovery', absent: onlyIn(['vanilla'], NOT_YET) },
+	// Raw connection status only; `collaborationChange` carries the full shared state everywhere.
 	{ id: 'collaborationStatus', absent: onlyIn(['vanilla'], NOT_YET) },
 ];
 
