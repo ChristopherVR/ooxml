@@ -100,6 +100,11 @@ export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimit
 	}
 }
 
+// Parsing turns the CRLF that Office writes after a part's XML declaration into LF (XML
+// end-of-line handling); a document parsed from such a part is written back with its CRLF.
+const CRLF_DECLARATION = /^<\?xml[^>]*\?>\r\n/;
+const crlfDeclarations = new WeakSet<XmlNode>();
+
 /**
  * Parses an XML part into a DOM document. Parse errors throw (warnings do not), a missing root
  * throws, and DTD or entity declarations are rejected outright (no external or expanded entities).
@@ -125,11 +130,14 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 	}
 	if (parseError || !parsed.documentElement)
 		throw new Error(`Invalid ${label} XML: ${parseError || 'missing root element'}`);
+	if (CRLF_DECLARATION.test(xml)) crlfDeclarations.add(parsed);
 	return parsed;
 }
 
-export const buildXml = (node: XmlNode): string =>
-	new XMLSerializer().serializeToString(node as unknown as XmldomNode);
+export const buildXml = (node: XmlNode): string => {
+	const xml = new XMLSerializer().serializeToString(node as unknown as XmldomNode);
+	return crlfDeclarations.has(node) ? xml.replace(/^(<\?xml[^>]*\?>)\n/, '$1\r\n') : xml;
+};
 
 export const isElement = (node: Node): node is XmlElement => node.nodeType === 1;
 export const elements = (parent: ParentNode): XmlElement[] =>
