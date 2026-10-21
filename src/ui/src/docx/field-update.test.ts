@@ -7,7 +7,13 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { seqInstruction } from './caption-commands';
 import { insertCaption } from './caption-commands';
 import { runToInlineNodes, inlineNodeRun } from 'ooxml-core/docx/ui';
-import { createDocument, loadDocx, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
+import {
+	createDocument,
+	loadDocx,
+	type DocumentModel,
+	type Paragraph,
+	type TextRun,
+} from 'ooxml-core/docx';
 import { readFile } from 'node:fs/promises';
 import { URL as NodeURL } from 'node:url';
 import { fieldLockFixture } from '../../../core/docx/test-support/field-lock-fixture';
@@ -297,6 +303,47 @@ describe('updateFields', () => {
 		};
 		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(true);
 		expect(texts(view)).toEqual(['Figure 1', 'Alder', 'Ash, see Ash in Figure 1']);
+	});
+
+	it('formats a CHARFORMAT STYLEREF result like the first letter of its field name', () => {
+		const complex = (instr: string, result: string, code: Partial<TextRun>) =>
+			(
+				[
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: ' ' },
+					{ ...code, text: '', fieldCode: `${instr} ` },
+					{ text: '', fieldChar: 'separate' },
+					{ text: result, bold: true, field: { instr } },
+					{ text: '', fieldChar: 'end' },
+				] as TextRun[]
+			).flatMap((run) => runToInlineNodes(run, schema));
+		const view = editor(
+			schema.nodes.paragraph!.create({ id: 'p0', style: 'DocNumber' }, [schema.text('DOC-5')]),
+			paragraph('p1', [
+				...complex('STYLEREF "Doc Number" \\* CHARFORMAT', 'old', { italic: true }),
+				schema.text('|'),
+				...complex('STYLEREF "Doc Number" \\* MERGEFORMAT', 'old', { italic: true }),
+			]),
+		);
+		const prior: DocumentModel = {
+			...createDocument(),
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { DocNumber: { id: 'DocNumber', name: 'Doc Number', formatting: {} } },
+				warnings: [],
+			},
+		};
+		expect(updateFields(view, pages, docToModel(view.state.doc, prior))).toBe(true);
+		expect(texts(view)).toEqual(['DOC-5', 'DOC-5|DOC-5']);
+		const results: TextRun[] = [];
+		view.state.doc.child(1).forEach((child) => {
+			const run = child.isText ? inlineNodeRun(child) : undefined;
+			if (run?.field) results.push(run);
+		});
+		expect(results.map((run) => [run.text, run.italic, run.bold])).toEqual([
+			['DOC-5', true, undefined],
+			['DOC-5', undefined, true],
+		]);
 	});
 
 	it('does nothing in a read-only view', () => {

@@ -20,6 +20,7 @@ describe('STYLEREF instructions', () => {
 			style: 'Title',
 			last: true,
 			textCase: 'upper',
+			charFormat: true,
 		});
 		expect(parseStyleReference('STYLEREF 1 \\n \\t')).toMatchObject({
 			style: '1',

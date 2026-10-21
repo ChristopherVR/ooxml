@@ -39,6 +39,26 @@ describe('refreshing STYLEREF results', () => {
 		expect(refreshed.blocks).toBe(model.blocks);
 	});
 
+	it('formats a CHARFORMAT result like the first letter of the field name', async () => {
+		const field = (format: string) =>
+			'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+			'<w:r><w:instrText xml:space="preserve"> </w:instrText></w:r>' +
+			`<w:r><w:rPr><w:i/><w:color w:val="C00000"/></w:rPr><w:instrText xml:space="preserve">STYLEREF "Doc Number" \\* ${format} </w:instrText></w:r>` +
+			'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+			'<w:r><w:rPr><w:b/></w:rPr><w:t>DOC-1</w:t></w:r>' +
+			'<w:r><w:fldChar w:fldCharType="end"/></w:r>';
+		const model = await load({
+			body: paragraph('DOC-2', 'DocNumber'),
+			header: paragraph('', undefined, field('CHARFORMAT') + field('MERGEFORMAT')),
+		});
+		const results = headerParagraph(refreshStyleRefFields(model)).runs.filter((run) => run.field);
+		expect(results.map((run) => run.text)).toEqual(['DOC-2', 'DOC-2']);
+		expect(results.map((run) => [run.bold, run.italic, run.color])).toEqual([
+			[undefined, true, '#C00000'],
+			[true, undefined, undefined],
+		]);
+	});
+
 	it('returns the model itself when every result is current', async () => {
 		const model = await load({
 			body: paragraph('DOC-1', 'DocNumber'),

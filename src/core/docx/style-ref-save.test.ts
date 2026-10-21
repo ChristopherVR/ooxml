@@ -136,6 +136,26 @@ describe('saving STYLEREF fields', () => {
 		expect((error as Error).message).toContain('lvlText');
 	});
 
+	it('writes a CHARFORMAT header result in the formatting of its field code', async () => {
+		const original = await styleRefFixture({
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: paragraph(
+				'',
+				undefined,
+				'<w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+					'<w:r><w:rPr><w:i/></w:rPr><w:instrText xml:space="preserve"> STYLEREF "Doc Number" \\* CHARFORMAT </w:instrText></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="separate"/></w:r>' +
+					'<w:r><w:rPr><w:b/></w:rPr><w:t>DOC-1</w:t></w:r>' +
+					'<w:r><w:fldChar w:fldCharType="end"/></w:r>',
+			),
+		});
+		const loaded = await loadDocx(original);
+		const saved = await loaded.save(setText(loaded.model, 'DocNumber', 'DOC-0042'));
+		const header = (await parts(saved)).get('word/header1.xml')!;
+		expect(header).toMatch(/<w:r><w:rPr><w:i\/><\/w:rPr><w:t[^>]*>DOC-0042<\/w:t><\/w:r>/);
+		expect(header).not.toContain('<w:b/>');
+	});
+
 	it('saves without the refresh when the header cannot be rebuilt', async () => {
 		const original = await styleRefFixture({
 			body: paragraph('DOC-1', 'DocNumber'),

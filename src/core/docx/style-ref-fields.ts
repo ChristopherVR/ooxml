@@ -26,6 +26,8 @@ interface FieldResult extends RunSpan {
 	runs: number[];
 	/** The run holding the instruction of a complex field. */
 	code?: number;
+	/** The instruction run holding the first letter of the field name. */
+	name?: number;
 	/** Where a result goes when there is none: just after the `separate` marker. */
 	insertAt: number;
 }
@@ -37,6 +39,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 		begin: number;
 		code: string;
 		codeRun?: number;
+		nameRun?: number;
 		separate?: number;
 		locked: boolean;
 	}[] = [];
@@ -47,6 +50,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 		else if (run.fieldCode !== undefined && top && top.separate === undefined) {
 			top.code += run.fieldCode;
 			top.codeRun ??= index;
+			if (top.nameRun === undefined && /\S/.test(run.fieldCode)) top.nameRun = index;
 		} else if (run.fieldChar === 'separate' && top) top.separate = index;
 		else if (run.fieldChar === 'end' && top) {
 			open.pop();
@@ -65,6 +69,7 @@ function fieldResults(runs: readonly TextRun[]): FieldResult[] {
 				locked: top.locked || results.some((at) => isFieldLocked(runs[at])),
 				runs: results,
 				...(top.codeRun !== undefined ? { code: top.codeRun } : {}),
+				...(top.nameRun !== undefined ? { name: top.nameRun } : {}),
 				insertAt: top.separate + 1,
 			});
 		}
@@ -111,23 +116,63 @@ const STRUCTURE = [
 ] as const;
 
 /**
+ * Run properties that are not character formatting: what a run holds, the revision it is part of,
+ * its comments and its link. A result formatted like the field code keeps its own.
+ */
+const NOT_FORMATTING = [
+	...STRUCTURE,
+	'text',
+	'field',
+	'revision',
+	'formatRevision',
+	'restoredRunPropertiesXml',
+	'commentIds',
+	'link',
+	'contentControl',
+] as const;
+
+/**
+ * `result` with `text`, formatted like the field-code run `code` (Word's `\* CHARFORMAT` takes
+ * the formatting of the first letter of the field name).
+ */
+export function withFieldCodeFormatting(result: TextRun, code: TextRun, text: string): TextRun {
+	const formatted: Partial<TextRun> = { ...code };
+	const own: Partial<TextRun> = {};
+	for (const key of NOT_FORMATTING) {
+		delete formatted[key];
+		if (result[key] !== undefined) Object.assign(own, { [key]: result[key] });
+	}
+	return { ...formatted, ...own, text };
+}
+
+/**
  * The runs with `field`'s result replaced by `text`, or undefined when it already reads `text`.
  * The text goes into the first result run, which keeps its formatting (Word's `\* MERGEFORMAT`),
- * and the other result runs are emptied rather than removed: the writer keeps every run where it
- * was, with any formatting the model does not hold. An empty result gets a run formatted like the
- * instruction.
+ * or with `charFormat` takes that of the first letter of the field name, and the other result
+ * runs are emptied rather than removed: the writer keeps every run where it was, with any
+ * formatting the model does not hold. An empty result gets a run formatted like the instruction.
  */
-function replaceResult(runs: readonly TextRun[], field: FieldResult, text: string) {
+function replaceResult(
+	runs: readonly TextRun[],
+	field: FieldResult,
+	text: string,
+	charFormat: boolean,
+) {
 	if (field.runs.map((at) => runs[at]!.text).join('') === text) return undefined;
 	const next = [...runs];
 	const [first, ...rest] = field.runs;
+	const name = field.name ?? field.code;
 	if (first !== undefined) {
-		next[first] = { ...runs[first]!, text };
+		next[first] =
+			charFormat && name !== undefined
+				? withFieldCodeFormatting(runs[first]!, runs[name]!, text)
+				: { ...runs[first]!, text };
 		for (const at of rest) next[at] = { ...runs[at]!, text: '' };
 		return next;
 	}
-	if (field.code === undefined) return undefined;
-	const formatted: Partial<TextRun> = { ...runs[field.code]! };
+	const code = charFormat ? name : field.code;
+	if (code === undefined) return undefined;
+	const formatted: Partial<TextRun> = { ...runs[code]! };
 	for (const key of STRUCTURE) delete formatted[key];
 	next.splice(field.insertAt, 0, { ...formatted, text, field: { instr: field.instr } });
 	return next;
@@ -148,7 +193,8 @@ function paragraphWithResults(paragraph: Paragraph, evaluate: StyleRefEvaluator)
 	for (const field of fieldResults(runs).sort((a, b) => start(b) - start(a))) {
 		const reference = field.locked ? undefined : parseStyleReference(field.instr);
 		const text = reference && evaluate(reference, paragraph, field);
-		if (text !== undefined) runs = replaceResult(runs, field, text) ?? runs;
+		if (text !== undefined)
+			runs = replaceResult(runs, field, text, reference?.charFormat === true) ?? runs;
 	}
 	return runs === paragraph.runs ? paragraph : { ...paragraph, runs: [...runs] };
 }

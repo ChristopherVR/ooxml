@@ -30,13 +30,13 @@ export interface StyleReference {
 	numberOnly: boolean;
 	/** `\* Upper`, `Lower`, `FirstCap` or `Caps`. */
 	textCase?: FieldTextCase;
+	/**
+	 * `\* CHARFORMAT`: the result takes the formatting of the first letter of the field name in
+	 * the field code. Without it the result keeps the formatting of the previous result (Word's
+	 * `\* MERGEFORMAT`).
+	 */
+	charFormat?: true;
 }
-
-/**
- * `\*` formats that leave the text as it is and only say which formatting the result keeps. The
- * result keeps that of the previous result in both cases (`CHARFORMAT`'s is not applied).
- */
-const FORMATTING = new Set(['mergeformat', 'charformat']);
 
 /**
  * Reads a STYLEREF instruction. Undefined for another field, a STYLEREF without a style, and
@@ -68,7 +68,8 @@ export function parseStyleReference(instr: string): StyleReference | undefined {
 			if (format?.kind !== 'text') return undefined;
 			const name = format.value.toLowerCase();
 			if (isFieldTextCase(name)) reference.textCase = name;
-			else if (!FORMATTING.has(name)) return undefined;
+			else if (name === 'charformat') reference.charFormat = true;
+			else if (name !== 'mergeformat') return undefined;
 		} else return undefined;
 	}
 	return reference;

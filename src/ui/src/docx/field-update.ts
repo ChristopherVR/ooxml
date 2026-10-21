@@ -5,11 +5,17 @@ import {
 	isFieldLocked,
 	parseStyleReference,
 	styleRefSource,
+	withFieldCodeFormatting,
 	type DocumentModel,
 	type Paragraph,
 } from 'ooxml-core/docx';
 import { reviewSourceLength } from 'ooxml-core/docx/layout';
-import { fieldResultRanges, inlineNodeRun, type FieldResultRange } from 'ooxml-core/docx/ui';
+import {
+	fieldResultRanges,
+	inlineNodeRun,
+	runToInlineNodes,
+	type FieldResultRange,
+} from 'ooxml-core/docx/ui';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { renumberCaptions, seqLabelOf } from './caption-commands';
@@ -49,6 +55,26 @@ function captionLabel(paragraph: ProseMirrorNode): string | undefined {
 	return number === undefined
 		? undefined
 		: text.slice(0, text.indexOf(number) + number.length).trim();
+}
+
+/**
+ * The instruction marker holding the first letter of the field name, for the result of a
+ * complex field that starts at child `index` of `paragraph`; undefined for a simple field.
+ */
+function fieldNameMarker(paragraph: ProseMirrorNode, index: number): ProseMirrorNode | undefined {
+	const marker = (at: number) => {
+		const child = paragraph.maybeChild(at);
+		return child?.type.name === 'fieldMarker' ? child : undefined;
+	};
+	if (marker(index - 1)?.attrs.kind !== 'separate') return undefined;
+	let name: ProseMirrorNode | undefined;
+	for (let at = index - 2; at >= 0; at--) {
+		const child = marker(at);
+		if (child?.attrs.kind === 'begin') return name;
+		if (child?.attrs.kind !== 'code') return undefined;
+		if (/\S/.test(String(child.attrs.code ?? ''))) name = child;
+	}
+	return undefined;
 }
 
 /** The runs of a model paragraph that hold its editor positions `start` to `end`. */
@@ -113,7 +139,7 @@ export function refreshFieldResults(
 	const current =
 		model && !captionsOnly && tr.docChanged ? docToModel(tr.doc, model, tr.before) : model;
 	const source = current && !captionsOnly ? styleRefSource(current) : undefined;
-	const changes: Array<{ run: FieldResultRange; text: string }> = [];
+	const changes: Array<{ run: FieldResultRange; text: string; code?: ProseMirrorNode }> = [];
 	for (const run of fieldResultRanges(tr.doc)) {
 		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
 		const styleRef = source && parseStyleReference(String(run.mark.attrs.instr ?? ''));
@@ -124,7 +150,9 @@ export function refreshFieldResults(
 			const field =
 				paragraph && runsAt(paragraph, run.from - $from.start(), run.to - $from.start());
 			const text = paragraph && bodyStyleRefResult(source, styleRef, paragraph, field);
-			if (text && text !== run.text) changes.push({ run, text });
+			// `\* CHARFORMAT`: the result takes the formatting of the field name's first letter.
+			const code = styleRef.charFormat ? fieldNameMarker($from.parent, $from.index()) : undefined;
+			if (text && text !== run.text) changes.push({ run, text, ...(code ? { code } : {}) });
 			continue;
 		}
 		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
@@ -141,7 +169,16 @@ export function refreshFieldResults(
 		if (text && text !== run.text) changes.push({ run, text });
 	}
 	// Later fields first, so replacing one never shifts the positions still to be processed.
-	for (const { run, text } of changes.reverse())
-		tr.replaceWith(run.from, run.to, schema.text(text, run.marks));
+	for (const { run, text, code } of changes.reverse()) {
+		const result = code && inlineNodeRun(tr.doc.nodeAt(run.from)!);
+		const codeRun = code && inlineNodeRun(code);
+		tr.replaceWith(
+			run.from,
+			run.to,
+			result && codeRun
+				? runToInlineNodes(withFieldCodeFormatting(result, codeRun, text), schema)
+				: schema.text(text, run.marks),
+		);
+	}
 	return tr;
 }
