@@ -57,7 +57,7 @@ test('edits a header in place by double-clicking it and saves the header part', 
 	await expect(header).toContainText('Company');
 	await header.dblclick();
 	const headerEditor = header.locator('.dve-header-footer-editor .ProseMirror');
-	await expect(headerEditor).toBeFocused();
+	await waitForEditorFocus(headerEditor);
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Confidential');
 	await page.keyboard.press('Escape');
@@ -215,6 +215,8 @@ test('formats text and inserts a picture inside a header from the ribbon', async
 	await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 	await editor.getByRole('button', { name: 'Bold', exact: true }).click();
 	await expect(headerEditor.locator('strong')).toHaveText('Company');
+	// Bold gives the header editor back the focus the Home tab took.
+	await waitForEditorFocus(headerEditor);
 	await page.keyboard.press('End');
 	// The editor reads the caret End moved only while it has focus, which the ribbon takes next.
 	await waitForEditorFocus(headerEditor);
