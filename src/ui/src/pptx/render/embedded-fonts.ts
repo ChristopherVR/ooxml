@@ -21,7 +21,7 @@ import { detectFontFormat, getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import { isInjectableUrl, resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
 import { selectTrustedEmbeddedFonts } from './embedded-font-trust';
-import { resolveFontWeight } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
 
 export { isInjectableUrl, resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
 export { readFontFileStyle, selectTrustedEmbeddedFonts } from './embedded-font-trust';
@@ -119,7 +119,7 @@ export function resolveFontVariant(
 	// The weight runs in this family ask for (300 for a regular "DM Sans Light"
 	// face, see `resolveFontWeight`), so the face matches exactly.
 	const weight = String(resolveFontWeight(name, font.bold));
-	const style = font.italic ? 'italic' : 'normal';
+	const style = resolveFontItalic(name, font.italic) ? 'italic' : 'normal';
 
 	// Strategy 1: ready-made, validated data URL from the core loader.
 	if (isInjectableUrl(font.dataUrl)) {

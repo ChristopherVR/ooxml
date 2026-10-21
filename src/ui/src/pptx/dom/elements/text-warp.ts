@@ -7,6 +7,7 @@ import {
 	DEFAULT_FONT_FAMILY,
 	fontWeightAttribute,
 	getWarpCssTransform,
+	resolveFontItalic,
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
 	shouldUseSvgWarp,
@@ -144,7 +145,9 @@ function renderGlyphWarp(
 					: DEFAULT_FONT_FAMILY,
 				'font-size': s.fontSize ?? style.fontSize ?? 18,
 				'font-weight': fontWeightAttribute(renderedFamily, s.bold ?? style.bold),
-				'font-style': (s.italic ?? style.italic) ? 'italic' : undefined,
+				'font-style': resolveFontItalic(renderedFamily, s.italic ?? style.italic)
+					? 'italic'
+					: undefined,
 			};
 			if (g.outlinePath) {
 				// The glyph's real outline, already warped point-by-point (see
@@ -244,7 +247,7 @@ function renderPathWarp(
 				: DEFAULT_FONT_FAMILY,
 			'font-size': style.fontSize ?? 18,
 			'font-weight': fontWeightAttribute(style.fontFamily, style.bold),
-			'font-style': style.italic ? 'italic' : undefined,
+			'font-style': resolveFontItalic(style.fontFamily, style.italic) ? 'italic' : undefined,
 		});
 		const textPath = createSvgEl(context.document, 'textPath', {
 			href: `#${id}`,

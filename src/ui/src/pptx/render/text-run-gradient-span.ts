@@ -18,7 +18,7 @@
 
 import type { RunFontSpec } from './text-metric-tracking';
 import type { RunStyle } from './text-run-style';
-import { fontWeightShorthand } from './font-weight-names';
+import { fontStyleShorthand, fontWeightShorthand } from './font-weight-names';
 
 let measureContext: CanvasRenderingContext2D | null | undefined;
 
@@ -52,7 +52,7 @@ function measureWidth(text: string, font: RunFontSpec): number {
 	}
 	const size = font.fontSizePx && font.fontSizePx > 0 ? font.fontSizePx : 16;
 	const family = font.fontFamily || 'sans-serif';
-	ctx.font = `${font.italic ? 'italic ' : ''}${fontWeightShorthand(family, font.bold)}${size}px ${family}`;
+	ctx.font = `${fontStyleShorthand(family, font.italic)}${fontWeightShorthand(family, font.bold)}${size}px ${family}`;
 	return ctx.measureText(text).width;
 }
 

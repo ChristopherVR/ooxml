@@ -157,6 +157,21 @@ describe('tableCellCss', () => {
 			});
 		});
 
+		it('render a cell and its runs in a style-named family italic', () => {
+			const cell = {
+				text: 'x',
+				style: { fontFamily: 'Lato Light Italic' },
+				textRuns: [
+					{ text: 'x', fontFamily: 'Lato Light Italic' },
+					{ text: 'y', fontFamily: 'Lato' },
+				],
+			} as PptxTableCell;
+			const css = tableCellCss(insertedTable(), cell, body);
+			expect(css.fontStyle).toBe('italic');
+			expect(css.fontWeight).toBe(300);
+			expect(cellRunStyle(cell.textRuns![0]!, css).fontStyle).toBe('italic');
+		});
+
 		it('use the substitution chain for a cell family', () => {
 			const cell = { text: 'A', style: { fontFamily: 'DM Sans Medium' } } as PptxTableCell;
 			const css = tableCellCss(insertedTable(), cell, body);

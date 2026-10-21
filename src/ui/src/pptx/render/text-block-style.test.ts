@@ -251,4 +251,11 @@ describe('buildTextBlockStyle', () => {
 		).toBe(700);
 		expect(buildTextBlockStyle(textEl({ fontFamily: 'Archivo Black' })).fontWeight).toBe(400);
 	});
+
+	it('renders a style variant of a Google Fonts family italic', () => {
+		expect(buildTextBlockStyle(textEl({ fontFamily: 'Lato Light Italic' })).fontStyle).toBe(
+			'italic',
+		);
+		expect(buildTextBlockStyle(textEl({ fontFamily: 'Lato Light' })).fontStyle).toBe('normal');
+	});
 });

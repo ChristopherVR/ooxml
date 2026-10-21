@@ -48,7 +48,7 @@ const WEIGHT_TOKENS: ReadonlyMap<string, number> = new Map([
 /** Prefixes that join the next token when the name spells them apart ("Semi Bold"). */
 const WEIGHT_PREFIXES = new Set(['semi', 'demi', 'extra', 'ultra']);
 
-/** Style tokens that may follow the weight ("Light Italic"); ignored here. */
+/** Style tokens that may follow the weight ("Light Italic"). */
 const STYLE_TOKENS = new Set(['italic', 'oblique']);
 
 /** A typeface name split into its family and the weight it names. */
@@ -57,6 +57,8 @@ export interface FontWeightName {
 	family: string;
 	/** CSS weight the trailing tokens name (400 when only a style is named). */
 	weight: number;
+	/** The name ends in "Italic" or "Oblique". */
+	italic: boolean;
 }
 
 /**
@@ -69,11 +71,13 @@ export function parseFontWeightName(name: string): FontWeightName | null {
 	let weight: number | undefined;
 	let consumed = 0;
 	let end = tokens.length;
+	let italic = false;
 	// Optional trailing style token, then at most one weight (possibly split
 	// across two tokens).
 	if (end > 1 && STYLE_TOKENS.has(normaliseToken(tokens[end - 1]))) {
 		end -= 1;
 		consumed += 1;
+		italic = true;
 	}
 	if (end > 1) {
 		const last = normaliseToken(tokens[end - 1]);
@@ -92,7 +96,7 @@ export function parseFontWeightName(name: string): FontWeightName | null {
 	if (consumed === 0 || end < 1) {
 		return null;
 	}
-	return { family: tokens.slice(0, end).join(' '), weight: weight ?? 400 };
+	return { family: tokens.slice(0, end).join(' '), weight: weight ?? 400, italic };
 }
 
 function normaliseToken(token: string): string {
@@ -108,6 +112,8 @@ export interface GoogleFontsFace {
 	 * name is the catalogue family itself.
 	 */
 	weight?: number;
+	/** The typeface name selects the italic faces of `family` ("Lato Light Italic"). */
+	italic?: boolean;
 }
 
 /**
@@ -125,21 +131,34 @@ export function resolveGoogleFontsFace(typeface: string): GoogleFontsFace | null
 		return null;
 	}
 	const base = findGoogleFontsFamily(parsed.family);
-	return base === null ? null : { family: base, weight: parsed.weight };
+	if (base === null) {
+		return null;
+	}
+	return parsed.italic
+		? { family: base, weight: parsed.weight, italic: true }
+		: { family: base, weight: parsed.weight };
+}
+
+/** Weight and style a typeface name implies, when it implies any. */
+interface ImpliedStyle {
+	weight: number;
+	italic: boolean;
 }
 
 /** Per-name cache: this runs once per rendered run. */
-const impliedWeightCache = new Map<string, number | null>();
+const impliedStyleCache = new Map<string, ImpliedStyle | null>();
 
 /**
- * The weight a typeface name implies for its regular face, or `null` when the
- * name implies none we can rely on (see the module comment).
+ * The weight and style a typeface name implies for its regular face, or
+ * `null` when the name implies none we can rely on (see the module comment).
  */
-function impliedWeight(typeface: string): number | null {
-	let cached = impliedWeightCache.get(typeface);
+function impliedStyle(typeface: string): ImpliedStyle | null {
+	let cached = impliedStyleCache.get(typeface);
 	if (cached === undefined) {
-		cached = resolveGoogleFontsFace(typeface)?.weight ?? null;
-		impliedWeightCache.set(typeface, cached);
+		const face = resolveGoogleFontsFace(typeface);
+		cached =
+			face?.weight === undefined ? null : { weight: face.weight, italic: face.italic === true };
+		impliedStyleCache.set(typeface, cached);
 	}
 	return cached;
 }
@@ -168,7 +187,7 @@ export function resolveFontWeight(
 	fontFamily: string | undefined,
 	bold: boolean | undefined,
 ): number {
-	const implied = fontFamily ? impliedWeight(primaryFamily(fontFamily)) : null;
+	const implied = fontFamily ? impliedStyle(primaryFamily(fontFamily))?.weight : undefined;
 	const regular = implied ?? 400;
 	return bold ? Math.max(700, regular) : regular;
 }
@@ -199,4 +218,29 @@ export function fontWeightAttribute(
 		return undefined;
 	}
 	return weight === 700 ? 'bold' : String(weight);
+}
+
+/**
+ * Whether text in `fontFamily` (a typeface name or a resolved CSS
+ * `font-family` list) renders italic: when it is italic itself, or when the
+ * family is a style variant of a Google Fonts family named as its own family
+ * ("Lato Light Italic" is Lato's italic 300 face). The same rule as
+ * {@link resolveFontWeight}, so other names keep their own style.
+ */
+export function resolveFontItalic(
+	fontFamily: string | undefined,
+	italic: boolean | undefined,
+): boolean {
+	if (italic) {
+		return true;
+	}
+	return fontFamily ? impliedStyle(primaryFamily(fontFamily))?.italic === true : false;
+}
+
+/** The style as a canvas/CSS font-shorthand fragment: `italic ` or nothing. */
+export function fontStyleShorthand(
+	fontFamily: string | undefined,
+	italic: boolean | undefined,
+): string {
+	return resolveFontItalic(fontFamily, italic) ? 'italic ' : '';
 }

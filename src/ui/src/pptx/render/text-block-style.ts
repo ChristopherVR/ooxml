@@ -29,7 +29,7 @@ import {
 	HYPERLINK_COLOR,
 } from '../constants';
 import { normalizeHexColor } from './fill-style';
-import { resolveFontWeight } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
 import { isLinkedTextBox } from './linked-text-box-overflow';
 import {
 	buildTextBodyLayoutStyle,
@@ -240,7 +240,7 @@ export function buildTextBlockStyle(
 		? getSubstituteFontFamily(ts.fontFamily, parsePanoseString(ts.latinFontPanose))
 		: DEFAULT_FONT_FAMILY;
 	style.fontWeight = resolveFontWeight(ts?.fontFamily, ts?.bold);
-	style.fontStyle = ts?.italic ? 'italic' : 'normal';
+	style.fontStyle = resolveFontItalic(ts?.fontFamily, ts?.italic) ? 'italic' : 'normal';
 	style.textDecorationLine = decorations.length > 0 ? decorations.join(' ') : 'none';
 	if (!hasTextSegments && ts?.strikethrough && ts?.strikeType === 'dblStrike') {
 		style.textDecorationStyle = 'double';

@@ -1,4 +1,4 @@
-import { resolveFontWeight, selectTrustedEmbeddedFonts } from 'ooxml-ui/pptx';
+import { resolveFontItalic, resolveFontWeight, selectTrustedEmbeddedFonts } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 import { deobfuscateFont, detectFontFormat, getSubstituteFontFamily } from 'pptx-viewer-core';
 import { computed, onScopeDispose, toValue, watch } from 'vue';
@@ -121,7 +121,7 @@ function resolveVariant(font: PptxEmbeddedFont): ResolvedFontVariant | null {
 	}
 
 	const weight = String(resolveFontWeight(name, font.bold));
-	const style = font.italic ? 'italic' : 'normal';
+	const style = resolveFontItalic(name, font.italic) ? 'italic' : 'normal';
 
 	// ── Strategy 1: ready-made, validated data URL from the core loader ──
 	if (isInjectableUrl(font.dataUrl)) {

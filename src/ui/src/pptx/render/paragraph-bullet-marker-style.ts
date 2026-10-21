@@ -10,7 +10,7 @@ import type { TextSegment } from 'ooxml-core/pptx';
 import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import type { ParagraphBulletResult } from './bullet-list';
-import { resolveFontWeight } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
 import type { RunStyle } from './text-run-style';
 
 export function buildBulletMarkerStyle(
@@ -42,13 +42,14 @@ export function buildBulletMarkerStyle(
 	// wider one, so the first line started further in.
 	// The weight follows the family the marker is painted in, so a marker in a
 	// weight variant ("DM Sans Light") is as light as its text.
-	bulletStyle.fontWeight = resolveFontWeight(
+	const markerFamily =
 		typeof bulletStyle.fontFamily === 'string'
 			? bulletStyle.fontFamily
-			: firstSeg?.style?.fontFamily,
-		firstSeg?.style?.bold,
-	);
-	bulletStyle.fontStyle = firstSeg?.style?.italic ? 'italic' : 'normal';
+			: firstSeg?.style?.fontFamily;
+	bulletStyle.fontWeight = resolveFontWeight(markerFamily, firstSeg?.style?.bold);
+	bulletStyle.fontStyle = resolveFontItalic(markerFamily, firstSeg?.style?.italic)
+		? 'italic'
+		: 'normal';
 	// The marker shrinks with the body's autofit scale exactly as its runs do (an
 	// explicit `a:buSzPts` is an absolute size and stays put).
 	const runFontSize = firstSeg?.style?.fontSize;

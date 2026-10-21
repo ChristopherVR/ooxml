@@ -26,7 +26,7 @@ import type { TextStyle } from 'ooxml-core/pptx';
 
 import type { RunFontSpec } from './text-metric-tracking';
 import { decimalAnchorIndex, decimalSeparatorForLanguage } from './text-tab-decimal';
-import { resolveFontWeight } from './font-weight-names';
+import { fontStyleShorthand, resolveFontWeight } from './font-weight-names';
 
 export type TabAlign = 'l' | 'ctr' | 'r' | 'dec';
 export type TabLeader = 'none' | 'dot' | 'hyphen' | 'underscore';
@@ -92,7 +92,7 @@ export function buildTabContext(
 	if (!tabStops || tabStops.length === 0) {
 		return undefined;
 	}
-	const font = `${italic ? 'italic ' : ''}${resolveFontWeight(fontFamily, bold)} ${fontSizePx}px ${fontFamily}`;
+	const font = `${fontStyleShorthand(fontFamily, italic)}${resolveFontWeight(fontFamily, bold)} ${fontSizePx}px ${fontFamily}`;
 	return {
 		tabStops,
 		defaultTabSize: typeof defaultTabSize === 'number' && defaultTabSize > 0 ? defaultTabSize : 0,

@@ -1,34 +1,78 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	fontStyleShorthand,
 	fontWeightAttribute,
 	fontWeightShorthand,
 	parseFontWeightName,
+	resolveFontItalic,
 	resolveFontWeight,
 	resolveGoogleFontsFace,
 } from './font-weight-names';
 
 describe('parseFontWeightName', () => {
 	it('splits a trailing weight off the family', () => {
-		expect(parseFontWeightName('DM Sans Light')).toEqual({ family: 'DM Sans', weight: 300 });
-		expect(parseFontWeightName('Open Sans SemiBold')).toEqual({ family: 'Open Sans', weight: 600 });
+		expect(parseFontWeightName('DM Sans Light')).toEqual({
+			family: 'DM Sans',
+			weight: 300,
+			italic: false,
+		});
+		expect(parseFontWeightName('Open Sans SemiBold')).toEqual({
+			family: 'Open Sans',
+			weight: 600,
+			italic: false,
+		});
 		expect(parseFontWeightName('Montserrat ExtraBold')).toEqual({
 			family: 'Montserrat',
 			weight: 800,
+			italic: false,
 		});
-		expect(parseFontWeightName('Inter Thin')).toEqual({ family: 'Inter', weight: 100 });
-		expect(parseFontWeightName('Roboto Black')).toEqual({ family: 'Roboto', weight: 900 });
+		expect(parseFontWeightName('Inter Thin')).toEqual({
+			family: 'Inter',
+			weight: 100,
+			italic: false,
+		});
+		expect(parseFontWeightName('Roboto Black')).toEqual({
+			family: 'Roboto',
+			weight: 900,
+			italic: false,
+		});
 	});
 
 	it('reads spaced and hyphenated spellings of compound weights', () => {
-		expect(parseFontWeightName('Poppins Semi Bold')).toEqual({ family: 'Poppins', weight: 600 });
-		expect(parseFontWeightName('Poppins Extra-Light')).toEqual({ family: 'Poppins', weight: 200 });
-		expect(parseFontWeightName('Poppins Semi-Bold')).toEqual({ family: 'Poppins', weight: 600 });
+		expect(parseFontWeightName('Poppins Semi Bold')).toEqual({
+			family: 'Poppins',
+			weight: 600,
+			italic: false,
+		});
+		expect(parseFontWeightName('Poppins Extra-Light')).toEqual({
+			family: 'Poppins',
+			weight: 200,
+			italic: false,
+		});
+		expect(parseFontWeightName('Poppins Semi-Bold')).toEqual({
+			family: 'Poppins',
+			weight: 600,
+			italic: false,
+		});
 	});
 
-	it('skips a trailing style token', () => {
-		expect(parseFontWeightName('Lato Light Italic')).toEqual({ family: 'Lato', weight: 300 });
-		expect(parseFontWeightName('Lato Italic')).toEqual({ family: 'Lato', weight: 400 });
+	it('reads a trailing style token', () => {
+		expect(parseFontWeightName('Lato Light Italic')).toEqual({
+			family: 'Lato',
+			weight: 300,
+			italic: true,
+		});
+		expect(parseFontWeightName('Lato Italic')).toEqual({
+			family: 'Lato',
+			weight: 400,
+			italic: true,
+		});
+		expect(parseFontWeightName('Lato Bold Oblique')).toEqual({
+			family: 'Lato',
+			weight: 700,
+			italic: true,
+		});
 	});
 
 	it('returns null for a name without weight or style tokens', () => {
@@ -39,6 +83,19 @@ describe('parseFontWeightName', () => {
 });
 
 describe('resolveGoogleFontsFace', () => {
+	it('serves a style variant from the italic faces of its base family', () => {
+		expect(resolveGoogleFontsFace('Lato Light Italic')).toEqual({
+			family: 'Lato',
+			weight: 300,
+			italic: true,
+		});
+		expect(resolveGoogleFontsFace('Lato Italic')).toEqual({
+			family: 'Lato',
+			weight: 400,
+			italic: true,
+		});
+	});
+
 	it('serves a weight variant from its base family', () => {
 		expect(resolveGoogleFontsFace('DM Sans Light')).toEqual({ family: 'DM Sans', weight: 300 });
 		expect(resolveGoogleFontsFace('dm sans  medium')).toEqual({ family: 'DM Sans', weight: 500 });
@@ -100,5 +157,28 @@ describe('weight serialisation', () => {
 		expect(fontWeightAttribute('DM Sans Light', false)).toBe('300');
 		expect(fontWeightShorthand('"DM Sans Light", sans-serif', false)).toBe('300 ');
 		expect(fontWeightShorthand('DM Sans Black', true)).toBe('900 ');
+	});
+});
+
+describe('resolveFontItalic', () => {
+	it('renders style variants of catalogue families italic', () => {
+		expect(resolveFontItalic('Lato Light Italic', false)).toBe(true);
+		expect(resolveFontItalic('Lato Italic', undefined)).toBe(true);
+		expect(resolveFontItalic('"Lato Light Italic", "Lato", sans-serif', false)).toBe(true);
+		expect(resolveFontWeight('Lato Light Italic', false)).toBe(300);
+	});
+
+	it('keeps the run style for every other family', () => {
+		expect(resolveFontItalic('Lato Light', false)).toBe(false);
+		expect(resolveFontItalic('Lato', true)).toBe(true);
+		// Not a style variant of a family Google serves.
+		expect(resolveFontItalic('Acme Brand Italic', false)).toBe(false);
+		expect(resolveFontItalic(undefined, false)).toBe(false);
+	});
+
+	it('writes the style into a font shorthand', () => {
+		expect(fontStyleShorthand('Lato Light Italic', false)).toBe('italic ');
+		expect(fontStyleShorthand('Lato', true)).toBe('italic ');
+		expect(fontStyleShorthand('Lato', false)).toBe('');
 	});
 });

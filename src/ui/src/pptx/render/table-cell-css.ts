@@ -34,7 +34,7 @@ import type { PptxTableCell, PptxTableData } from 'ooxml-core/pptx';
 import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import { DEFAULT_TEXT_COLOR } from '../constants';
-import { resolveFontWeight } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight } from './font-weight-names';
 import type { TableCellCss, TableStyleContext } from './table-style';
 import {
 	cellStyleToCss,
@@ -131,5 +131,8 @@ export function applyTableCellFontWeight(css: TableCellCss): void {
 	const weight = resolveFontWeight(family, bold);
 	if (weight !== (bold ? 700 : 400)) {
 		css.fontWeight = weight;
+	}
+	if (resolveFontItalic(family, false)) {
+		css.fontStyle = 'italic';
 	}
 }

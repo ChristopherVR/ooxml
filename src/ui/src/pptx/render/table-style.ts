@@ -33,7 +33,7 @@ import { getSubstituteFontFamily } from 'ooxml-core/pptx';
 
 import { screenBorder } from './device-pixel-stroke';
 import { getPatternSvg, normalizeHexColor } from './fill-style';
-import { fontWeightAttribute, resolveFontWeight } from './font-weight-names';
+import { fontWeightAttribute, resolveFontItalic, resolveFontWeight } from './font-weight-names';
 import { cellPaddingCss } from './table-cell-padding';
 import type { CellBorderPosition } from './table-style-borders';
 import { resolveCellBorderCss, resolveStyleDiagonalBorders } from './table-style-borders';
@@ -186,7 +186,7 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 			css.fontWeight = weight;
 		}
 	}
-	if (run.italic) {
+	if (resolveFontItalic(run.fontFamily, run.italic)) {
 		css.fontStyle = 'italic';
 	}
 	const deco: string[] = [];
@@ -399,7 +399,7 @@ export function cellStyleToCss(style?: PptxTableCellStyle): TableCellCss {
 	if (style.bold) {
 		css.fontWeight = fontWeightAttribute(style.fontFamily, true) ?? 'bold';
 	}
-	if (style.italic) {
+	if (resolveFontItalic(style.fontFamily, style.italic)) {
 		css.fontStyle = 'italic';
 	}
 	if (style.underline) {

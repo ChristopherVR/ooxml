@@ -21,6 +21,16 @@ describe('segmentStyleToCss run properties', () => {
 		expect(segmentStyleToCss(seg({ fontFamily: 'Archivo Black' })).fontWeight).toBe('normal');
 	});
 
+	it('renders a style variant of a Google Fonts family italic', () => {
+		const css = segmentStyleToCss(seg({ fontFamily: 'Lato Light Italic' }));
+		expect(css.fontStyle).toBe('italic');
+		expect(css.fontWeight).toBe('300');
+		expect(segmentStyleToCss(seg({ fontFamily: 'Lato Light' })).fontStyle).toBe('normal');
+		// A run inheriting a style-named body font stays italic.
+		const blockFont = { fontFamily: '"Lato Light Italic", "Lato", sans-serif', fontSizePx: 16 };
+		expect(segmentStyleToCss(seg({}), 1, { blockFont }).fontStyle).toBe('italic');
+	});
+
 	it('keeps the body weight on a run that inherits the body font', () => {
 		const blockFont = { fontFamily: '"DM Sans Light", "DM Sans", sans-serif', fontSizePx: 16 };
 		expect(segmentStyleToCss(seg({}), 1, { blockFont }).fontWeight).toBe('300');

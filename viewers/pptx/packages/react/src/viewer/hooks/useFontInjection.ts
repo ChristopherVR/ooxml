@@ -1,6 +1,7 @@
 import {
 	collectReferencedFontFamilies,
 	fetchGoogleWebfontOutlineBytes,
+	resolveFontItalic,
 	resolveFontWeight,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
@@ -108,7 +109,7 @@ export function useFontInjection({ embeddedFonts, slides }: UseFontInjectionInpu
 					return [];
 				}
 				const fontWeight = String(resolveFontWeight(font.name, font.bold));
-				const fontStyleCss = font.italic ? 'italic' : 'normal';
+				const fontStyleCss = resolveFontItalic(font.name, font.italic) ? 'italic' : 'normal';
 				return [
 					`@font-face {
 	font-family: "${font.name}";

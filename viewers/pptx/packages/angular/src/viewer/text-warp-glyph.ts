@@ -1,4 +1,9 @@
-import { buildGlyphEnvelopeBlock, DEFAULT_FONT_FAMILY, resolveFontWeight } from 'ooxml-ui/pptx';
+import {
+	buildGlyphEnvelopeBlock,
+	DEFAULT_FONT_FAMILY,
+	resolveFontItalic,
+	resolveFontWeight,
+} from 'ooxml-ui/pptx';
 import type { EnvelopeGlyphSlice, EnvelopeSegmentInput, WarpParagraph } from 'ooxml-ui/pptx';
 /**
  * True two-curve WordArt envelope descriptor (inflate/deflate/can) for the
@@ -140,7 +145,9 @@ export function buildGlyphWarpDef(
 				transform: p.transform,
 				fill: s.color ?? elementStyle?.color ?? DEFAULT_COLOR,
 				fontWeight: resolveFontWeight(family, s.bold ?? elementStyle?.bold),
-				fontStyle: (s.italic ?? elementStyle?.italic) ? 'italic' : 'normal',
+				fontStyle: resolveFontItalic(family, s.italic ?? elementStyle?.italic)
+					? 'italic'
+					: 'normal',
 				fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
 				fontSize: (s.fontSize ?? elementStyle?.fontSize ?? DEFAULT_FONT_SIZE) as number,
 				slices: p.slices,

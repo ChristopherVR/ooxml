@@ -130,6 +130,16 @@ describe('selectTrustedEmbeddedFonts', () => {
 		expect(selectTrustedEmbeddedFonts([face('DM Sans', 400, { italic: true }, false)])).toEqual([]);
 	});
 
+	it('judges style-named typefaces against the style their name implies', () => {
+		// "Lato Light Italic" keeps its italic file in the regular slot.
+		const named = [face('Lato Light Italic', 300, {}, true)];
+		expect(selectTrustedEmbeddedFonts(named)).toEqual(named);
+		const bold = [face('Lato Light Italic', 700, { bold: true }, true)];
+		expect(selectTrustedEmbeddedFonts(bold)).toEqual(bold);
+		// An upright file under an italic name is the wrong face.
+		expect(selectTrustedEmbeddedFonts([face('Lato Light Italic', 300, {}, false)])).toEqual([]);
+	});
+
 	it('tolerates foundry rounding below a full weight step', () => {
 		const book = [face('Roboto', 350), face('Roboto', 750, { bold: true })];
 		expect(selectTrustedEmbeddedFonts(book)).toEqual(book);
@@ -190,10 +200,29 @@ describe('embedded fonts that do not match their typeface', () => {
 		expect(href).not.toContain('Roboto%20Mono');
 	});
 
+	it('are requested from Google Fonts with the italic faces a style-named family needs', async () => {
+		const href = await resolveGoogleWebfontHref(
+			deckUsing('Lato Light Italic'),
+			[face('Lato Light Italic', 300, {}, false)],
+			() => false,
+		);
+		expect(href).toContain(`family=${encodeURIComponent('Lato:ital,wght@')}`);
+		expect(decodeURIComponent(href ?? '')).toContain('1,300');
+	});
+
 	it('are not parsed for glyph outlines', () => {
 		const cache = new GlyphOutlineFontCache();
 		cache.registerEmbeddedFonts(family('DM Sans', 600));
 		expect(cache.hasAttempted('DM Sans', false, false)).toBe(false);
+	});
+});
+
+describe('embedded style-named faces that match', () => {
+	it('register as italic, the style their text renders in', () => {
+		const result = buildEmbeddedFontStyles([face('Lato Light Italic', 300, {}, true)], () => null);
+		expect(result.fontFaceCss).toContain('"Lato Light Italic"');
+		expect(result.fontFaceCss).toContain('font-style: italic');
+		expect(result.fontFaceCss).toContain('font-weight: 300');
 	});
 });
 

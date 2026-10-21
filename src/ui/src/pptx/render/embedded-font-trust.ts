@@ -28,7 +28,7 @@
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 
 import { resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
-import { resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
 
 /** Weight and style a font file declares about itself. */
 export interface FontFileStyle {
@@ -123,10 +123,13 @@ export function selectTrustedEmbeddedFonts(
 		if (!actual) {
 			continue;
 		}
+		// A style variant named as its own family ("Lato Light Italic") holds an
+		// italic file in its regular slot.
 		const expectedWeight = resolveFontWeight(name, Boolean(font.bold));
+		const expectedItalic = resolveFontItalic(name, font.italic);
 		if (
 			Math.abs(actual.weight - expectedWeight) >= WEIGHT_TOLERANCE ||
-			actual.italic !== Boolean(font.italic)
+			actual.italic !== expectedItalic
 		) {
 			rejected.add(name);
 		}

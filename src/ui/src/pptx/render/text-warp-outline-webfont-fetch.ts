@@ -18,7 +18,7 @@
  * failure (network, parse, no match) resolves to `undefined`; the caller
  * simply keeps the existing affine-transform fallback for that glyph.
  */
-import { resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
+import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
 import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
 
 interface ParsedFontFaceBlock {
@@ -116,7 +116,12 @@ export async function fetchGoogleWebfontOutlineBytes(
 		// A weight variant ("DM Sans Light") is the base family's face at the
 		// weight its name implies, exactly as the text itself renders.
 		const weight = resolveFontWeight(referencedFamily, bold);
-		const block = pickBlock(parseFontFaceBlocks(css), canonical, weight, italic);
+		const block = pickBlock(
+			parseFontFaceBlocks(css),
+			canonical,
+			weight,
+			resolveFontItalic(referencedFamily, italic),
+		);
 		if (!block) {
 			return undefined;
 		}
