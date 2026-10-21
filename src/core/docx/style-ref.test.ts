@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadDocx } from './index';
+import { computeListLabels, loadDocx } from './index';
 import { documentParagraphs, parseStyleReference, styleRefSource, styleTarget } from './style-ref';
 import { refreshStyleRefFields } from './style-ref-fields';
 import { headingNumberingFixture } from './test-support/heading-numbering-fixture';
@@ -164,6 +164,42 @@ describe('STYLEREF styles', () => {
 		const text = (block: unknown) =>
 			(block as { runs: { text: string }[] }).runs.map((run) => run.text).join('');
 		expect(text(refreshed.blocks[3])).toBe('0');
+	});
+
+	it('numbers a heading in a table nested in a cell like the headings around it', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const heading = (text: string) =>
+			paragraph(
+				'',
+				undefined,
+				`<w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>${text}</w:t></w:r>`,
+			);
+		const cell = (inner: string) =>
+			`<w:tc><w:tcPr><w:tcW w:w="4000" w:type="dxa"/></w:tcPr>${inner}</w:tc>`;
+		const table = (inner: string) =>
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr>${inner}</w:tr></w:tbl>`;
+		const model = await load({
+			body:
+				heading('Scope') +
+				table(cell(paragraph('Outer') + table(cell(heading('Inner'))) + paragraph(''))) +
+				paragraph('', undefined, complexField('STYLEREF 1 \\n', ['old'])) +
+				heading('Last'),
+			numbering: `<w:numbering xmlns:w="${w}"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="Chapter %1"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`,
+		});
+		// Word numbers a list in reading order, through the tables nested in a cell.
+		const labels = computeListLabels(model);
+		expect(documentParagraphs(model.blocks).map((p) => labels.get(p.id)?.text ?? null)).toEqual([
+			'Chapter 1',
+			null,
+			'Chapter 2',
+			null,
+			null,
+			'Chapter 3',
+		]);
+		const refreshed = refreshStyleRefFields(model, { body: true });
+		const text = (block: unknown) =>
+			(block as { runs: { text: string }[] }).runs.map((run) => run.text).join('');
+		expect(text(refreshed.blocks[2])).toBe('Chapter 2');
 	});
 
 	it('reads a cell and the tables nested in it in reading order', async () => {
