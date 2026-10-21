@@ -100,6 +100,21 @@ function unprotectedSections(doc: Node): Range[] {
 	return ranges;
 }
 
+/**
+ * Whether a step leaves the unprotected sections where they were, mapped through it: no block
+ * moves into one of them or out of one. Content written at a section's start joins it, and at its
+ * end (but for the last section) the next one, as the sections are placed.
+ */
+function keepsSections(step: Step, before: Node, after: Node): boolean {
+	const map = step.getMap();
+	const end = before.content.size;
+	const mapped = unprotectedSections(before).map((range) => ({
+		from: map.map(range.from, -1),
+		to: map.map(range.to, range.to === end ? 1 : -1),
+	}));
+	return JSON.stringify(mapped) === JSON.stringify(unprotectedSections(after));
+}
+
 const isBlock = (node: Node | null | undefined): node is Node =>
 	node?.type.name === 'paragraph' || node?.type.name === 'table';
 
@@ -183,7 +198,11 @@ export function staysInFormFields(tr: Transaction): boolean {
 			changesFixed ||= touchesFixed(start, end);
 		});
 		if (changesFixed) return false;
-		if (within(fields, from, to)) return true;
+		// A field or control may change wherever it is, but not move blocks between sections:
+		// Enter in a field that ends a protected section would give the rest of its paragraph to
+		// the next section.
+		if (within(fields, from, to))
+			return !sections.length || keepsSections(step, tr.docs[index]!, after);
 		if (!within(sections, from, to)) return false;
 		if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) return true;
 		// What the step wrote has to stay in an unprotected section as well: splitting the paragraph

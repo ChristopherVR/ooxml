@@ -412,6 +412,33 @@ describe('legacy form fields in the editor', () => {
 		expect(typedAt(state, 0, 'My ')).toEqual(['My Name: Ada', 'Notes']);
 	});
 
+	it('refuses an edit in a field that would move protected text into an unprotected section', () => {
+		// The protected first section ends at `p0`, which holds the field and text after it.
+		const state = sectionedState(undefined, {}, [
+			{ text: 'Name: ' },
+			...field(name, 'Ada'),
+			{ text: ' signed' },
+		]);
+		const [result] = formTextResults(state.doc);
+		// Enter in the field would put its second part, and the protected text after the field,
+		// in the next section, which the protection leaves editable.
+		expect(state.apply(state.tr.split(result!.from + 1)).doc.childCount).toBe(2);
+		expect(state.apply(state.tr.insertText('X', result!.from + 1)).doc.textContent).toContain(
+			'AXda',
+		);
+	});
+
+	it('lets a field split its paragraph where no section boundary moves', () => {
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p1' }, { endsAtBlockId: 'p2', formProtection: false }],
+			{ p2: 'Free' },
+		);
+		const [result] = formTextResults(state.doc);
+		// `p0` holds the field and does not end its section, so a line break in the field moves
+		// nothing between sections.
+		expect(state.apply(state.tr.split(result!.from + 1)).doc.childCount).toBe(4);
+	});
+
 	it('lets paragraphs split anywhere else in an unprotected section', () => {
 		const state = sectionedState(
 			[{ endsAtBlockId: 'p1', formProtection: false }, { endsAtBlockId: 'p2' }],
