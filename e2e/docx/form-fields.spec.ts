@@ -70,6 +70,35 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(name).toHaveText('Grace');
 	});
 
+	test(`${framework}: a protected form's check box and drop-down work from the keyboard`, async ({
+		page,
+	}) => {
+		const editor = await open(page, framework, formFieldsFixture(true));
+		const box = editor.locator('.ProseMirror .dve-form-field[data-form-field="checkbox"]');
+		const status = editor.locator('.ProseMirror .dve-form-field[data-form-field="dropDown"]');
+		// The caret beside each field, at the end of its cell, as arrow keys leave it.
+		const besides = async (field: typeof box) => {
+			const cell = editor.locator('.ProseMirror td', { has: field });
+			const size = await cell.boundingBox();
+			await cell.click({ position: { x: size!.width - 4, y: size!.height / 2 } });
+		};
+		await besides(box);
+		await page.keyboard.press('Space');
+		await expect(box).toHaveText('☒');
+		await page.keyboard.press('Space');
+		await expect(box).toHaveText('☐');
+		await besides(status);
+		// The list opens on the current entry; the arrows move through it and Enter picks one.
+		await page.keyboard.press('Alt+ArrowDown');
+		await expect(editor.getByRole('option', { name: 'Revised', exact: true })).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('Enter');
+		await expect(status).toHaveText('Withdrawn');
+
+		const { xml } = await savedDocument(page, `${framework}-form-keys.docx`);
+		expect(xml).toContain('<w:result w:val="2"/>');
+	});
+
 	test(`${framework}: a protected form keeps locked fields and leaves unprotected sections editable`, async ({
 		page,
 	}) => {

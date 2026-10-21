@@ -1,13 +1,16 @@
 // How the editor operates legacy form fields: a click on a check box toggles it, a click on a
-// drop-down opens its entries, and Word's form field shading follows the document's setting.
+// drop-down opens its entries, keys do the same beside the field, and Word's form field shading
+// follows the document's setting.
 import type { DocumentModel } from 'ooxml-core/docx';
 import {
+	formFieldBeside,
 	formFieldLocked,
 	formFieldOfNode,
 	selectFormDropDownAt,
 	toggleFormCheckboxAt,
 } from 'ooxml-core/docx/ui';
-import { Plugin } from 'prosemirror-state';
+import { splitBlock } from 'prosemirror-commands';
+import { Plugin, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { openListPopover } from './ribbon-popover';
 
@@ -38,6 +41,41 @@ function operate(view: EditorView, el: HTMLElement): boolean {
 	return true;
 }
 
+/**
+ * Whether the key has an edit to make at the caret that no guard refuses: Space types a space,
+ * Enter splits the paragraph.
+ */
+function keyEdits(view: EditorView, key: string): boolean {
+	let tr: Transaction | undefined;
+	if (key === ' ') tr = view.state.tr.insertText(' ');
+	else splitBlock(view.state, (split) => (tr = split));
+	return (
+		Boolean(tr) &&
+		view.state.plugins.every(
+			(plugin) => plugin.spec.filterTransaction?.call(plugin, tr!, view.state) ?? true,
+		)
+	);
+}
+
+/**
+ * Operates the check box or drop-down beside the caret from the keyboard. Space or Enter toggles
+ * a check box or opens a drop-down's entries where the key has nothing to type, as in a form
+ * protected for filling in (Word moves to a field and Space toggles it); Alt+Down opens the
+ * entries anywhere.
+ */
+function operateFromKey(view: EditorView, event: KeyboardEvent): boolean {
+	if (event.ctrlKey || event.metaKey || event.shiftKey) return false;
+	const list = event.altKey && event.key === 'ArrowDown';
+	const press = !event.altKey && (event.key === ' ' || event.key === 'Enter');
+	if ((!list && !press) || !view.state.selection.empty) return false;
+	const pos = formFieldBeside(view.state.doc, view.state.selection.from);
+	if (pos === undefined) return false;
+	if (list && formFieldOfNode(view.state.doc.nodeAt(pos))?.kind !== 'dropDown') return false;
+	if (press && keyEdits(view, event.key)) return false;
+	const el = view.nodeDOM(pos);
+	return el instanceof HTMLElement && operate(view, el);
+}
+
 export function formFieldViewPlugin(model: () => DocumentModel): Plugin {
 	return new Plugin({
 		props: {
@@ -49,6 +87,7 @@ export function formFieldViewPlugin(model: () => DocumentModel): Plugin {
 				const el = (event.target as HTMLElement | null)?.closest?.<HTMLElement>('.dve-form-field');
 				return el ? operate(view, el) : false;
 			},
+			handleKeyDown: (view, event) => view.editable && operateFromKey(view, event),
 		},
 	});
 }

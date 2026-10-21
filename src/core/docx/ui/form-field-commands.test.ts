@@ -8,6 +8,7 @@ import { markSpecs } from './schema-marks';
 import { fieldMarkerNodeSpec } from './break-note-schema';
 import { appendInlineNode, runToInlineNodes } from './run-adapter';
 import {
+	formFieldBeside,
 	formFieldLocked,
 	formFieldNodeDisplay,
 	formFieldOfNode,
@@ -129,6 +130,26 @@ describe('legacy form fields in the editor', () => {
 				begin({ ...approved, checkBox: { default: false, checked: true } }),
 			),
 		).toBe(false);
+	});
+
+	it('finds the check box or drop-down beside a position, for keys to operate it', () => {
+		const state = stateOf();
+		const box = markerPos(state, 'checkbox');
+		const list = markerPos(state, 'dropDown');
+		// In front of the box, among its hidden markers, and just after it.
+		for (const at of [box, box + 1, box + 2, box + 3])
+			expect(formFieldBeside(state.doc, at)).toBe(box);
+		expect(formFieldBeside(state.doc, box - 1)).toBeUndefined();
+		expect(formFieldBeside(state.doc, list)).toBe(list);
+		// Not a text field, whose result takes typing.
+		const [result] = formTextResults(state.doc);
+		expect(formFieldBeside(state.doc, result!.from)).toBeUndefined();
+		// Between two fields, the one that starts there.
+		const runs: TextRun[] = [...field(approved), ...field(status)];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		expect(formFieldBeside(doc, 4)).toBe(4);
+		expect(formFieldOfNode(doc.nodeAt(4))?.kind).toBe('dropDown');
 	});
 
 	it('finds the result of each text field', () => {
