@@ -1,5 +1,7 @@
+/* Fill the ribbon row as a group does, so a group's caption keeps its place inside a section. */
 :host {
 	display: inline-flex;
+	align-self: stretch;
 	align-items: stretch;
 }
 ::slotted(*) {
