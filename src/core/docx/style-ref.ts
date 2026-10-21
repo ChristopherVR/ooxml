@@ -11,6 +11,7 @@ import { documentParagraphs } from './cell-blocks';
 import type { DocumentModel, Paragraph, TextRun } from './model';
 import { computeListLabels } from './numbering-format';
 import { resolveNumberingLevel } from './numbering-parse';
+import { resolveRunFormatting } from './run-formatting';
 
 /** The paragraphs a STYLEREF searches; see `cell-blocks.ts`. */
 export { documentParagraphs };
@@ -139,11 +140,20 @@ export interface StyleRefPortion extends RunSpan {
 	text: string | undefined;
 }
 
+/** Whether a run of a paragraph is hidden text (`w:vanish`), set on it or through its styles. */
+type HiddenText = (run: TextRun, paragraph: Paragraph) => boolean;
+
 /**
- * Each stretch of runs in the character style; runs without text do not break one, the runs of
- * `skip` (a field's own) do and are not read.
+ * Each stretch of runs in the character style; runs without text, and text a revision removes,
+ * do not break one, the runs of `skip` (a field's own) do and are not read. Hidden text is text
+ * there: in the style it is found and shows nothing, and out of it it ends a stretch, as in Word.
  */
-function characterPortions(paragraph: Paragraph, id: string, skip?: RunSpan): StyleRefPortion[] {
+function characterPortions(
+	paragraph: Paragraph,
+	id: string,
+	hidden: HiddenText,
+	skip?: RunSpan,
+): StyleRefPortion[] {
 	const portions: StyleRefPortion[] = [];
 	let open: StyleRefPortion | undefined;
 	paragraph.runs.forEach((run, index) => {
@@ -151,10 +161,13 @@ function characterPortions(paragraph: Paragraph, id: string, skip?: RunSpan): St
 			open = undefined;
 			return;
 		}
-		const text = shownText(run);
-		if (!text) return;
-		if (run.style !== id) open = undefined;
-		else if (open) {
+		if (!run.text || run.revision?.kind === 'delete' || run.revision?.kind === 'moveFrom') return;
+		if (run.style !== id) {
+			open = undefined;
+			return;
+		}
+		const text = hidden(run, paragraph) ? '' : run.text;
+		if (open) {
 			open.text += text;
 			open.to = index;
 		} else portions.push((open = { text, from: index, to: index }));
@@ -191,6 +204,12 @@ export interface StyleRefSource {
 /** Reads one document for STYLEREF fields. The model must not change while this is used. */
 export function styleRefSource(model: DocumentModel): StyleRefSource {
 	const paragraphs = documentParagraphs(model.blocks);
+	const hidden: HiddenText = (run, paragraph) =>
+		resolveRunFormatting(run, {
+			runCatalog: model.characterStyles,
+			paragraphCatalog: model.paragraphStyles,
+			paragraphStyleId: paragraph.style,
+		}).vanish === true;
 	const index = new Map(paragraphs.map((paragraph, at) => [paragraph.id, at]));
 	const targets = new Map<string, StyleTarget | undefined>();
 	let labels: ReturnType<typeof computeListLabels> | undefined;
@@ -229,11 +248,19 @@ export function styleRefSource(model: DocumentModel): StyleRefSource {
 		const paragraph = paragraphs[at];
 		if (!paragraph) return [];
 		let found: StyleRefPortion[];
-		if (target.kind === 'character') found = characterPortions(paragraph, target.id, skip);
+		if (target.kind === 'character') found = characterPortions(paragraph, target.id, hidden, skip);
 		else
 			// An empty paragraph in the style is a match too, which shows nothing, as in Word.
 			found = inParagraphStyle(paragraph, target)
-				? [{ text: paragraph.runs.map(shownText).join(''), from: 0, to: paragraph.runs.length - 1 }]
+				? [
+						{
+							text: paragraph.runs
+								.map((run) => (hidden(run, paragraph) ? '' : shownText(run)))
+								.join(''),
+							from: 0,
+							to: paragraph.runs.length - 1,
+						},
+					]
 				: [];
 		if (reference.number && found.length) {
 			const label = number(paragraph, reference.numberOnly);

@@ -234,4 +234,23 @@ describe('saving STYLEREF fields', () => {
 			['DOC-2', 'insert'],
 		]);
 	});
+
+	it('keeps text hidden through its style out of a saved header result', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const original = await styleRefFixture({
+			styles: `<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="DocNumber"><w:name w:val="Doc Number"/></w:style><w:style w:type="character" w:styleId="Hidden"><w:name w:val="Hidden"/><w:rPr><w:vanish/></w:rPr></w:style></w:styles>`,
+			body: paragraph('DOC-1', 'DocNumber'),
+			header: HEADER,
+		});
+		const loaded = await loadDocx(original);
+		const model = structuredClone(loaded.model);
+		expectParagraph(model.blocks[0]).runs = [
+			{ text: 'DOC-' },
+			{ text: 'draft', style: 'Hidden' },
+			{ text: '9' },
+		];
+		const header = (await parts(await loaded.save(model))).get('word/header1.xml')!;
+		expect(header).toContain('>DOC-9<');
+		expect(header).not.toContain('draft');
+	});
 });
