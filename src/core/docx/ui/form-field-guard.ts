@@ -1,6 +1,6 @@
 // Enforces what legacy form fields allow while editing: a text field's maximum length, and a
 // document protected for filling in forms (`w:documentProtection w:edit="forms"`), where only
-// form fields and content controls can change.
+// form fields, content controls and sections left unprotected can change.
 import type { Node } from 'prosemirror-model';
 import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import {
@@ -29,7 +29,31 @@ export function exceedsFormTextLength(tr: Transaction): boolean {
 	});
 }
 
-/** Whether every step of a transaction stays inside a form field or a content control. */
+/** The sections a document protected for forms leaves editable (`w:formProt w:val="0"`). */
+function unprotectedSections(doc: Node): { from: number; to: number }[] {
+	if (typeof doc.attrs.sections !== 'string') return [];
+	const sections = JSON.parse(doc.attrs.sections) as {
+		endsAtBlockId?: string;
+		formProtection?: false;
+	}[];
+	if (!sections.some((section) => section.formProtection === false)) return [];
+	const ranges: { from: number; to: number }[] = [];
+	let index = 0;
+	let start = 0;
+	doc.forEach((node, offset) => {
+		const section = sections[index];
+		if (!section || node.attrs.id !== section.endsAtBlockId) return;
+		if (section.formProtection === false) ranges.push({ from: start, to: offset + node.nodeSize });
+		index++;
+		start = offset + node.nodeSize;
+	});
+	return ranges;
+}
+
+/**
+ * Whether every step of a transaction stays inside a form field, a content control or a section
+ * the protection leaves editable.
+ */
 export function staysInFormFields(tr: Transaction): boolean {
 	const doc = tr.before;
 	const allowed = [
@@ -37,6 +61,7 @@ export function staysInFormFields(tr: Transaction): boolean {
 			.filter(({ field }) => field.enabled !== false)
 			.map(({ from, to }) => ({ from, to })),
 		...controlSpans(doc).map(({ from, to }) => ({ from, to })),
+		...unprotectedSections(doc),
 	];
 	return tr.steps.every((step, index) => {
 		const map = tr.mapping.slice(0, index);

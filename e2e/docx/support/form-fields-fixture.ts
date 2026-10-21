@@ -23,7 +23,10 @@ function formField(name: string, data: string, code: string, result: string | nu
 
 const cell = (content: string) => `<w:tc><w:p>${content}</w:p></w:tc>`;
 
-export async function formFieldsFixture(protect = false): Promise<Uint8Array> {
+const checkBox = '<w:checkBox><w:sizeAuto/><w:default w:val="0"/></w:checkBox>';
+const FORMS_PROTECTION = '<w:documentProtection w:edit="forms" w:enforcement="1"/>';
+
+async function formPackage(settings: string, body: string): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file(
 		'[Content_Types].xml',
@@ -37,18 +40,34 @@ export async function formFieldsFixture(protect = false): Promise<Uint8Array> {
 		'word/_rels/document.xml.rels',
 		`<Relationships xmlns="${rel}"><Relationship Id="rId1" Type="${office}/settings" Target="settings.xml"/></Relationships>`,
 	);
-	zip.file(
-		'word/settings.xml',
-		`<w:settings xmlns:w="${w}">${protect ? '<w:documentProtection w:edit="forms" w:enforcement="1"/>' : ''}</w:settings>`,
-	);
-	zip.file(
-		'word/document.xml',
-		`<w:document xmlns:w="${w}"><w:body>` +
-			`<w:p>${text('Name: ')}${formField('Name', '<w:textInput><w:default w:val="Name"/><w:maxLength w:val="20"/></w:textInput>', 'FORMTEXT', 'Name', 1)}</w:p>` +
-			`<w:tbl><w:tblGrid><w:gridCol w:w="3000"/><w:gridCol w:w="5000"/></w:tblGrid>` +
-			`<w:tr>${cell(text('Approved'))}${cell(formField('Approved', '<w:checkBox><w:sizeAuto/><w:default w:val="0"/></w:checkBox>', 'FORMCHECKBOX', null, 2))}</w:tr>` +
-			`<w:tr>${cell(text('Status'))}${cell(formField('Status', '<w:ddList><w:result w:val="1"/><w:listEntry w:val="New"/><w:listEntry w:val="Revised"/><w:listEntry w:val="Withdrawn"/></w:ddList>', 'FORMDROPDOWN', null, 3))}</w:tr>` +
-			`</w:tbl><w:sectPr/></w:body></w:document>`,
-	);
+	zip.file('word/settings.xml', `<w:settings xmlns:w="${w}">${settings}</w:settings>`);
+	zip.file('word/document.xml', `<w:document xmlns:w="${w}"><w:body>${body}</w:body></w:document>`);
 	return zip.generateAsync({ type: 'uint8array' });
+}
+
+export function formFieldsFixture(protect = false): Promise<Uint8Array> {
+	return formPackage(
+		protect ? FORMS_PROTECTION : '',
+		`<w:p>${text('Name: ')}${formField('Name', '<w:textInput><w:default w:val="Name"/><w:maxLength w:val="20"/></w:textInput>', 'FORMTEXT', 'Name', 1)}</w:p>` +
+			`<w:tbl><w:tblGrid><w:gridCol w:w="3000"/><w:gridCol w:w="5000"/></w:tblGrid>` +
+			`<w:tr>${cell(text('Approved'))}${cell(formField('Approved', checkBox, 'FORMCHECKBOX', null, 2))}</w:tr>` +
+			`<w:tr>${cell(text('Status'))}${cell(formField('Status', '<w:ddList><w:result w:val="1"/><w:listEntry w:val="New"/><w:listEntry w:val="Revised"/><w:listEntry w:val="Withdrawn"/></w:ddList>', 'FORMDROPDOWN', null, 3))}</w:tr>` +
+			`</w:tbl><w:sectPr/>`,
+	);
+}
+
+/**
+ * A form protected for filling in: a check box, one inside a content control that locks its
+ * content, and a last section the protection leaves editable (`w:formProt w:val="0"`).
+ */
+export function protectedSectionsFixture(): Promise<Uint8Array> {
+	return formPackage(
+		FORMS_PROTECTION,
+		`<w:p>${text('Free ')}${formField('Free', checkBox, 'FORMCHECKBOX', null, 1)}</w:p>` +
+			`<w:sdt><w:sdtPr><w:lock w:val="contentLocked"/><w:id w:val="9"/></w:sdtPr><w:sdtContent>` +
+			`<w:p>${text('Locked ')}${formField('Locked', checkBox, 'FORMCHECKBOX', null, 2)}</w:p></w:sdtContent></w:sdt>` +
+			`<w:p><w:pPr><w:sectPr><w:type w:val="continuous"/></w:sectPr></w:pPr>${text('End of form')}</w:p>` +
+			`<w:p>${text('Notes')}</w:p>` +
+			`<w:sectPr><w:type w:val="continuous"/><w:formProt w:val="0"/></w:sectPr>`,
+	);
 }

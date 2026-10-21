@@ -127,6 +127,9 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 		columns: parseColumns(section),
 		...(footnoteColumns !== undefined ? { footnoteColumns } : {}),
 		...(onOffElement(first(section, 'titlePg')) === true ? { titlePage: true } : {}),
+		...(onOffElement(first(section, 'formProt')) === false
+			? { formProtection: false as const }
+			: {}),
 		...(vAlignValue ? { verticalAlign: vAlignValue } : {}),
 		...(pgNum
 			? {

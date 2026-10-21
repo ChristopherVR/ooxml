@@ -191,6 +191,40 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(tr).doc.textContent).toBe(state.doc.textContent);
 	});
 
+	it('lets the sections a protected form leaves unprotected change freely', () => {
+		const sectioned = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+', attrs: { sections: { default: null } } },
+				paragraph: { content: 'inline*', attrs: { id: { default: '' } }, toDOM: () => ['p', 0] },
+				text: { group: 'inline' },
+				fieldMarker: fieldMarkerNodeSpec,
+			},
+			marks: markSpecs,
+		});
+		const paragraph = (id: string, runs: TextRun[]) =>
+			sectioned.node(
+				'paragraph',
+				{ id },
+				runs.flatMap((run) => runToInlineNodes(run, sectioned)),
+			);
+		const sections = [{ endsAtBlockId: 'p0' }, { endsAtBlockId: 'p1', formProtection: false }];
+		const doc = sectioned.node('doc', { sections: JSON.stringify(sections) }, [
+			paragraph('p0', [{ text: 'Name: ' }, ...field(name, 'Ada')]),
+			paragraph('p1', [{ text: 'Notes' }]),
+		]);
+		const state = EditorState.create({
+			schema: sectioned,
+			doc,
+			plugins: [formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
+		});
+		const notes = state.doc.firstChild!.nodeSize + 1;
+		expect(state.apply(state.tr.insertText('My ', notes)).doc.textContent).toContain('My Notes');
+		expect(state.apply(state.tr.insertText('X', 1)).doc.textContent).toBe(state.doc.textContent);
+		// Joining the free section to the protected one before it is refused.
+		const joined = state.apply(state.tr.delete(notes - 2, notes));
+		expect(joined.doc.childCount).toBe(2);
+	});
+
 	it('only lets form fields change in a document protected for forms', () => {
 		const state = stateOf({ edit: 'forms', enforced: true });
 		const [result] = formTextResults(state.doc);

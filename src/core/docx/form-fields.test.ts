@@ -209,6 +209,33 @@ describe('document protection and form field shading settings', () => {
 		expect(loaded.model.formFieldShading).toBe(false);
 	});
 
+	it('reads the sections a document protected for forms leaves unprotected', async () => {
+		const { loaded } = await load(
+			`<w:p><w:pPr><w:sectPr><w:formProt w:val="0"/></w:sectPr></w:pPr>${text('Notes')}</w:p>` +
+				`<w:p>${textField}</w:p>`,
+			'<w:documentProtection w:edit="forms" w:enforcement="1"/>',
+		);
+		expect(loaded.model.sections?.map((section) => section.formProtection)).toEqual([
+			false,
+			undefined,
+		]);
+		expect(loaded.model.warnings.join(' ')).toContain('sections left unprotected');
+		at(expectParagraph(loaded.model.blocks[0]).runs, 0).text = 'More notes';
+		expect(await documentXml(await loaded.save())).toContain('<w:formProt w:val="0"/>');
+	});
+
+	it('warns about restrictions it keeps but does not enforce, and not about none', async () => {
+		const warnings = async (edit: string) =>
+			(
+				await load(
+					`<w:p>${text('A')}</w:p>`,
+					`<w:documentProtection w:edit="${edit}" w:enforcement="1"/>`,
+				)
+			).loaded.model.warnings.join(' ');
+		expect(await warnings('readOnly')).toContain('limits editing to reading');
+		expect(await warnings('none')).not.toMatch(/protect|limits editing/);
+	});
+
 	it('treats protection without enforcement as off', async () => {
 		const { loaded } = await load(
 			`<w:p>${textField}</w:p>`,
