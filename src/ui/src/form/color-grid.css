@@ -1,4 +1,5 @@
-/* Tokens: --office-space-*, --office-border, --office-selected, --office-field-border-focus. */
+/* Tokens: --office-space-*, --office-color-swatch-gap, --office-border, --office-selected,
+   --office-field-border-focus. */
 :host {
 	display: block;
 	color: var(--office-foreground);
@@ -8,10 +9,13 @@
 	display: none;
 }
 .grid {
+	box-sizing: border-box;
 	display: grid;
 	gap: var(--office-space-1);
 	padding: var(--office-space-1);
 	width: max-content;
+	/* In a pane narrower than the grid, the swatches shrink instead of overflowing it. */
+	max-width: 100%;
 }
 .heading {
 	padding: var(--office-space-0) var(--office-space-1);
@@ -21,8 +25,8 @@
 }
 .cells {
 	display: grid;
-	grid-template-columns: repeat(var(--_columns, 10), var(--office-space-4));
-	gap: var(--office-space-1);
+	grid-template-columns: repeat(var(--_columns, 10), minmax(0, var(--office-space-4)));
+	gap: var(--office-color-swatch-gap);
 }
 /* The five variant rows sit flush under one another, as in Office. */
 .variants {
@@ -31,8 +35,8 @@
 }
 .swatch {
 	box-sizing: border-box;
-	width: var(--office-space-4);
-	height: var(--office-space-4);
+	width: 100%;
+	aspect-ratio: 1;
 	padding: 0;
 	border: var(--office-border-width) solid var(--office-border);
 	border-radius: 0;

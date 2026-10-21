@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import {
-	buildThemeColorSwatchGrid,
-	findSelectedThemeSwatch,
-	themeColorSwatchRows,
-	themeSwatchCommit,
-} from 'ooxml-ui/pptx';
+import type { OfficeColorPickEvent, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import { buildThemeColorSwatchGrid, themeColorGridCommit, themeColorGridView } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -13,14 +8,12 @@ import { useI18n } from 'vue-i18n';
 import { injectThemeColorMap } from '../../composables/theme-color-map-context';
 
 /**
- * PowerPoint's "Theme Colors" grid: ten columns (Background 1, Text 1,
- * Background 2, Text 2, Accent 1..6) each with a base swatch and five
- * luminance variants, built from the loaded deck's real theme colours
- * (`ThemeColorMapKey`) rather than a hard-coded Office palette.
+ * PowerPoint's "Theme Colors" grid on the shared `pptx-ui-color-grid`: ten columns (Background 1,
+ * Text 1, Background 2, Text 2, Accent 1..6), each a base swatch over five luminance variants,
+ * built from the loaded deck's theme (`ThemeColorMapKey`) rather than a hard-coded Office palette.
  *
- * Renders nothing (not even the heading) when no deck theme is loaded yet,
- * so callers can render this unconditionally alongside their existing
- * hex/recent-colour controls.
+ * Renders nothing when no deck theme is loaded yet, so callers can render this unconditionally
+ * alongside their existing hex and recent-colour controls.
  */
 const props = defineProps<{
 	disabled?: boolean;
@@ -34,6 +27,9 @@ const emit = defineEmits<{
 	pick: [commit: ThemeColorPickerCommit];
 }>();
 
+// The inspector keeps its own standard and recent rows, so the grid shows only Theme Colors.
+const NO_STANDARD_COLORS: readonly never[] = [];
+
 const { t } = useI18n();
 const themeColorMap = injectThemeColorMap();
 
@@ -42,35 +38,29 @@ const columns = computed(() =>
 		params ? t(key, { ...params }) : t(key),
 	),
 );
-const rows = computed(() => themeColorSwatchRows(columns.value));
-const selected = computed(() =>
-	findSelectedThemeSwatch(columns.value, props.selectedRef, props.selectedHex),
+const view = computed(() =>
+	themeColorGridView(columns.value, props.selectedRef, props.selectedHex),
 );
+const heading = computed(() => t('pptx.colorPicker.themeColors'));
+
+function pick(event: Event): void {
+	const commit = themeColorGridCommit(columns.value, (event as OfficeColorPickEvent).detail);
+	if (commit) {
+		emit('pick', commit);
+	}
+}
 </script>
 
 <template>
-	<div v-if="columns.length > 0" class="pptx-vue-theme-swatch-grid mt-1">
-		<div class="pptx-vue-theme-swatch-grid-heading text-[10px] text-muted-foreground mb-1">
-			{{ t('pptx.colorPicker.themeColors') }}
-		</div>
-		<div class="flex flex-col gap-0.5">
-			<div v-for="(row, rowIndex) in rows" :key="rowIndex" class="flex gap-0.5">
-				<template v-for="(swatch, colIndex) in row" :key="colIndex">
-					<button
-						v-if="swatch"
-						type="button"
-						:disabled="disabled"
-						data-pptx-compact
-						:title="swatch.label"
-						:aria-label="swatch.label"
-						class="h-4 w-4 rounded-sm border transition-transform hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
-						:class="selected === swatch ? 'border-primary ring-1 ring-primary' : 'border-border'"
-						:style="{ backgroundColor: swatch.hex }"
-						@click="emit('pick', themeSwatchCommit(swatch))"
-					/>
-					<div v-else class="h-4 w-4" />
-				</template>
-			</div>
-		</div>
-	</div>
+	<pptx-ui-color-grid
+		v-if="columns.length > 0"
+		class="pptx-vue-theme-swatch-grid mt-1"
+		:palette.prop="view.palette"
+		:selectedTheme.prop="view.selectedTheme"
+		:standardColors.prop="NO_STANDARD_COLORS"
+		:themeHeading.prop="heading"
+		:label.prop="heading"
+		:disabled.prop="disabled"
+		@office-color-pick="pick"
+	/>
 </template>

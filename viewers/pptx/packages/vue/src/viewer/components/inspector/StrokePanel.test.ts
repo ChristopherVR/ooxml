@@ -8,6 +8,7 @@ import { RecentColorsKey } from '../../composables/recent-colors-context';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import StrokePanel from './StrokePanel.vue';
 import { setControlValue } from './test-control-value';
+import { themeSwatch } from './test-theme-swatch';
 
 const OFFICE_THEME = {
 	dk1: '#000000',
@@ -121,7 +122,7 @@ describe('strokePanel', () => {
 			props: { element: shapeEl({}) },
 			global: { provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
 		});
-		const swatch = wrapper.find('button[title="Accent 2"]');
+		const swatch = themeSwatch(wrapper, 'Accent 2');
 		expect(swatch.exists()).toBeTruthy();
 		await swatch.trigger('click');
 		const patch = wrapper.emitted('update')?.at(-1)?.[0] as { shapeStyle: Record<string, unknown> };

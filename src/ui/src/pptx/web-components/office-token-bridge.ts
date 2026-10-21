@@ -15,6 +15,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-switch',
 	'pptx-ui-radio',
 	'pptx-ui-search',
+	'pptx-ui-color-grid',
 	'pptx-ui-select',
 	'pptx-ui-ribbon-toggle',
 	'pptx-ui-dialog-footer',
@@ -147,6 +148,9 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	// File > Options keeps its wide footprint (56rem, a 176px rail) rather than Office's 728px.
 	'pptx-ui-options-dialog': `:host { --office-options-width: min(56rem, calc(100vw - 32px));
 	--office-options-nav-width: 176px; --office-options-height: 540px; --office-z-dialog: 1200; }`,
+	// The inspector's Theme Colors keep the pptx 2px between swatches, so they stay legible in a
+	// half-width field.
+	'pptx-ui-color-grid': `:host { --office-color-swatch-gap: 2px; }`,
 	'pptx-ui-context-menu': `:host { --office-menu-min-width: 180px; --office-danger: var(--pptx-destructive, #f87171);
 	--office-selected: var(--pptx-accent, #33334d); --office-radius-md: var(--pptx-radius, 6px); }`,
 };

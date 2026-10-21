@@ -1518,6 +1518,7 @@ export * from './layout-gallery';
 export * from './color-swatches';
 export * from './theme-color-swatches';
 export * from './theme-color-picker-state';
+export * from './theme-color-grid';
 export * from './theme-color-field-commit';
 
 // PowerPoint-style title bar (AutoSave toggle + quick access + file name +

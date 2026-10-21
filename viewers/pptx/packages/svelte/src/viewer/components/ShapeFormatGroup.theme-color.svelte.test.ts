@@ -3,6 +3,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../editor/editor-state.svelte';
+import { themeSwatch } from './inspector/theme-color-grid.test-support';
 import ShapeFormatGroup from './ShapeFormatGroup.svelte';
 
 /**
@@ -100,7 +101,7 @@ describe('shapeFormatGroup theme colour', () => {
 		trigger?.click();
 		flushSync();
 
-		const swatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatch = themeSwatch(target, 'Accent 2');
 		expect(swatch).not.toBeNull();
 		swatch?.click();
 		flushSync();
@@ -122,7 +123,7 @@ describe('shapeFormatGroup theme colour', () => {
 		trigger?.click();
 		flushSync();
 
-		const swatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatch = themeSwatch(target, 'Accent 2');
 		expect(swatch).not.toBeNull();
 		swatch?.click();
 		flushSync();
@@ -141,7 +142,7 @@ describe('shapeFormatGroup theme colour', () => {
 		);
 		trigger?.click();
 		flushSync();
-		target.querySelector<HTMLButtonElement>('button[title="Accent 2"]')?.click();
+		themeSwatch(target, 'Accent 2')?.click();
 		flushSync();
 		expect((currentEl(editor) as ShapeStyleShape).shapeStyle?.fillColorRef).toStrictEqual({
 			scheme: 'accent2',

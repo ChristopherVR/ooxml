@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
 import TextSection from './TextSection.svelte';
+import { themeSwatch } from './theme-color-grid.test-support';
 
 /**
  * Inspector text colour: `TextSection` shows the deck's real "Theme Colors"
@@ -87,7 +88,7 @@ describe('textSection theme colour', () => {
 		const editor = makeEditor(textEl());
 		const target = mountSection(editor, currentEl(editor));
 
-		const swatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatch = themeSwatch(target, 'Accent 2');
 		expect(swatch).not.toBeNull();
 		swatch?.click();
 		flushSync();
@@ -101,7 +102,7 @@ describe('textSection theme colour', () => {
 		const editor = makeEditor(textEl());
 		const target = mountSection(editor, currentEl(editor));
 
-		const swatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatch = themeSwatch(target, 'Accent 2');
 		swatch?.click();
 		flushSync();
 		expect((currentEl(editor) as TextStyleShape).textStyle?.colorRef).toStrictEqual({

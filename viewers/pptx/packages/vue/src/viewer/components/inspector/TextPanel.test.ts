@@ -6,6 +6,7 @@ import { ref } from 'vue';
 import { RecentColorsKey } from '../../composables/recent-colors-context';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import { setControlValue } from './test-control-value';
+import { themeSwatch } from './test-theme-swatch';
 import TextPanel from './TextPanel.vue';
 
 const OFFICE_THEME = {
@@ -123,7 +124,7 @@ describe('textPanel theme colour picker', () => {
 			props: { element: textEl({ color: '#000000' }) },
 			global: { provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
 		});
-		const accent1 = wrapper.get('button[title="Accent 1"]');
+		const accent1 = themeSwatch(wrapper, 'Accent 1');
 		await accent1.trigger('click');
 		const patch = wrapper.emitted('update')?.[0]?.[0] as Partial<PptxElement>;
 		expect(patch.textStyle).toMatchObject({ color: '#4472c4', colorRef: { scheme: 'accent1' } });

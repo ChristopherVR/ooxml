@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { themeSwatch } from '../theme-color-swatch-grid.test-support';
 import { createTableCellFormatting } from './table-cell-formatting';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -128,16 +129,14 @@ describe('table cell text/fill theme colour grids', () => {
 
 	it('renders one theme-swatch grid for text colour and one for fill colour', () => {
 		const { panel } = mountWithTheme();
-		expect(panel.el.querySelectorAll('.pptxv-theme-swatch-grid')).toHaveLength(2);
+		expect(panel.el.querySelectorAll('pptx-ui-color-grid')).toHaveLength(2);
 	});
 
 	it('clicking the text colour theme grid commits color + colorRef, not backgroundColor', () => {
 		const { panel, setTableCellStyles } = mountWithTheme();
-		const [textGrid] = Array.from(
-			panel.el.querySelectorAll<HTMLElement>('.pptxv-theme-swatch-grid'),
-		);
+		const [textGrid] = Array.from(panel.el.querySelectorAll('pptx-ui-color-grid'));
 
-		textGrid.querySelector<HTMLButtonElement>('button[title="Accent 6"]')!.click();
+		themeSwatch(textGrid, 'Accent 6')!.click();
 		expect(setTableCellStyles).toHaveBeenCalledExactlyOnceWith([{ row: 0, column: 0 }], {
 			color: '#70ad47',
 			colorRef: { scheme: 'accent6' },
@@ -146,11 +145,9 @@ describe('table cell text/fill theme colour grids', () => {
 
 	it('clicking the fill colour theme grid commits backgroundColor + backgroundColorRef', () => {
 		const { panel, setTableCellStyles } = mountWithTheme();
-		const [, fillGrid] = Array.from(
-			panel.el.querySelectorAll<HTMLElement>('.pptxv-theme-swatch-grid'),
-		);
+		const [, fillGrid] = Array.from(panel.el.querySelectorAll('pptx-ui-color-grid'));
 
-		fillGrid.querySelector<HTMLButtonElement>('button[title="Accent 6"]')!.click();
+		themeSwatch(fillGrid, 'Accent 6')!.click();
 		expect(setTableCellStyles).toHaveBeenCalledExactlyOnceWith([{ row: 0, column: 0 }], {
 			backgroundColor: '#70ad47',
 			backgroundColorRef: { scheme: 'accent6' },
@@ -159,11 +156,9 @@ describe('table cell text/fill theme colour grids', () => {
 
 	it("highlights the cell's stored text colour ref", () => {
 		const { panel } = mountWithTheme();
-		const [textGrid] = Array.from(
-			panel.el.querySelectorAll<HTMLElement>('.pptxv-theme-swatch-grid'),
-		);
-		const swatch = textGrid.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!;
-		expect(swatch.classList.contains('is-selected')).toBeTruthy();
+		const [textGrid] = Array.from(panel.el.querySelectorAll('pptx-ui-color-grid'));
+		const swatch = themeSwatch(textGrid, 'Accent 2')!;
+		expect(swatch.getAttribute('aria-checked')).toBe('true');
 	});
 
 	it('the native text colour input clears colorRef', () => {

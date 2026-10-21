@@ -83,7 +83,6 @@ export function TableCellFormattingPanel({
 				<div className='grid grid-cols-2 gap-1.5'>
 					<TableCellColorField
 						label={t('pptx.table.color')}
-						prefix='table-cell-text'
 						value={cs.color}
 						fallback='#000000'
 						selectedRef={cs.colorRef}
@@ -92,7 +91,6 @@ export function TableCellFormattingPanel({
 					/>
 					<TableCellColorField
 						label={t('pptx.table.background')}
-						prefix='table-cell-bg'
 						value={cs.backgroundColor}
 						fallback='#ffffff'
 						selectedRef={cs.backgroundColorRef}

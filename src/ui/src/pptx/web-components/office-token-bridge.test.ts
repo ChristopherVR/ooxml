@@ -9,7 +9,7 @@ function selectors(css: string): string[] {
 }
 
 describe('pptx chrome bridges', () => {
-	it.each(['pptx-ui-title-bar', 'pptx-ui-status-bar'] as const)(
+	it.each(['pptx-ui-title-bar', 'pptx-ui-status-bar', 'pptx-ui-color-grid'] as const)(
 		'%s styles only its host, never the shared element internals',
 		(tag) => {
 			const css = bridgeCss(tag);
@@ -27,6 +27,10 @@ describe('pptx chrome bridges', () => {
 		expect(css).toContain('--office-title-bar-result-selected: var(--_pptx-accent, #33334d);');
 		expect(css).toContain('--pptx-switch-width: 28px;');
 		expect(css).toContain('--pptx-switch-knob-travel: 13px;');
+	});
+
+	it('keeps the pptx 2px between colour swatches', () => {
+		expect(bridgeCss('pptx-ui-color-grid')).toContain('--office-color-swatch-gap: 2px;');
 	});
 
 	it('themes the status bar through the shared tokens and metrics', () => {

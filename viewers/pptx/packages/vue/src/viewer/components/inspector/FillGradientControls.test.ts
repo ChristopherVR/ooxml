@@ -7,6 +7,7 @@ import { ref } from 'vue';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import FillGradientControls from './FillGradientControls.vue';
 import { setControlValue } from './test-control-value';
+import { themeSwatch } from './test-theme-swatch';
 
 const OFFICE_THEME = {
 	dk1: '#000000',
@@ -126,7 +127,7 @@ describe('fillGradientControls theme colour picker', () => {
 			},
 			global: { provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
 		});
-		const accent1 = wrapper.get('button[title="Accent 1"]');
+		const accent1 = themeSwatch(wrapper, 'Accent 1');
 		await accent1.trigger('click');
 		const style = lastPatch(wrapper).shapeStyle;
 		expect(style.fillGradientStops?.[0]).toMatchObject({
