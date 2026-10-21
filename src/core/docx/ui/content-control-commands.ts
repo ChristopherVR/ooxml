@@ -1,5 +1,5 @@
 // Editing commands for content controls: toggling, picking, typing over a placeholder, inserting.
-import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
+import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import {
 	afterEdit,
@@ -275,6 +275,46 @@ function typeInCell(
 	if (!editable(state, span)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));
+}
+
+/** `fragment` without the Placeholder Text style, which pasted plain text takes where it lands. */
+function withoutPlaceholderStyle(fragment: Fragment): Fragment {
+	const nodes: ProseMirrorNode[] = [];
+	fragment.forEach((node) =>
+		nodes.push(
+			node.isText
+				? node.mark(node.marks.filter((mark) => !isPlaceholderStyle(mark)))
+				: node.copy(withoutPlaceholderStyle(node.content)),
+		),
+	);
+	return Fragment.fromArray(nodes);
+}
+
+/**
+ * A paste in a cell control is input, as typing is: a list or check box cell takes none, and a
+ * placeholder is replaced whole, the control no longer showing it. `undefined` means the paste is
+ * not in a cell control, runs on past it, or goes in as an ordinary paste.
+ */
+export function pasteInCell(state: EditorState, slice: Slice): Transaction | 'blocked' | undefined {
+	const { from, to } = state.selection;
+	const span = controlAt(controlSpans(state.doc), from, true);
+	if (span?.level !== 'cell' || to > span.to - 1) return undefined;
+	const { control } = span;
+	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
+	if (!control.showingPlaceholder || !replaceable(state, span)) return undefined;
+	if (!editable(state, span)) return 'blocked';
+	// The placeholder goes and an empty paragraph takes the pasted content, as typed text would.
+	const tr = replaceControlContent(
+		state,
+		span,
+		afterEdit({ control: withValue(control), text: '' }),
+	);
+	const at = TextSelection.create(tr.doc, span.from + 2);
+	return tr
+		.setSelection(at)
+		.replaceSelection(
+			new Slice(withoutPlaceholderStyle(slice.content), slice.openStart, slice.openEnd),
+		);
 }
 
 /** Deleting everything a text control holds brings its placeholder back instead of removing it. */

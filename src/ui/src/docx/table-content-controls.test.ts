@@ -249,6 +249,71 @@ describe('content controls around table cells in the editor', () => {
 			expect(xml).not.toContain('PlaceholderText');
 		});
 
+	it('applies the rules of a cell control to a paste, as to typing', async () => {
+		// Typing over a cell's placeholder replaces it and the control no longer shows one, and a list
+		// or check box cell takes no typing: a paste is input too, as plain text or as HTML.
+		const prompt = (id: string, type: string, text: string) =>
+			`<w:sdt><w:sdtPr><w:id w:val="${id}"/><w:showingPlcHdr/>${type}</w:sdtPr><w:sdtContent>` +
+			`<w:tc><w:p><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>${text}</w:t>` +
+			`</w:r></w:p></w:tc></w:sdtContent></w:sdt>`;
+		const list = '<w:dropDownList><w:listItem w:displayText="A" w:value="a"/></w:dropDownList>';
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${W}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="3000"/>` +
+				`<w:gridCol w:w="3000"/><w:gridCol w:w="3000"/><w:gridCol w:w="3000"/></w:tblGrid><w:tr>` +
+				prompt('81', '<w:text/>', 'Click or tap here to enter text.') +
+				prompt('82', '', 'Click or tap here to enter text.') +
+				prompt('83', list, 'Choose an item.') +
+				prompt(
+					'84',
+					'<w14:checkbox xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"/>',
+					'\u2610',
+				) +
+				`</w:tr></w:tbl><w:sectPr/></w:body></w:document>`,
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const view = new EditorView(host, {
+			state: EditorState.create({ schema, doc, plugins: [contentControlPlugin()] }),
+		});
+		const spanOf = (id: string) =>
+			controlSpans(view.state.doc).find((span) => span.level === 'cell' && span.control.id === id)!;
+		// The caret after the first character of the cell's text.
+		const into = (id: string) =>
+			view.dispatch(
+				view.state.tr.setSelection(TextSelection.create(view.state.doc, spanOf(id).from + 3)),
+			);
+		// The paste reads nothing else from the event.
+		const event = () => new Event('paste') as ClipboardEvent;
+		into('81');
+		view.pasteText('DOC-7', event());
+		into('82');
+		view.pasteHTML('<p><b>Second</b> sheet</p>', event());
+		const filled = (id: string) => view.state.doc.nodeAt(spanOf(id).from)!;
+		expect(filled('81').textContent).toBe('DOC-7');
+		expect(filled('82').textContent).toBe('Second sheet');
+		for (const id of ['81', '82'])
+			expect(spanOf(id).control.showingPlaceholder, id).toBeUndefined();
+		const before = view.state.doc;
+		for (const id of ['83', '84']) {
+			into(id);
+			view.pasteText('Other', event());
+			view.pasteHTML('<p>Other</p>', event());
+		}
+		expect(view.state.doc.eq(before)).toBe(true);
+		const bytes = await loaded.save(docToModel(view.state.doc, loaded.model, doc));
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
+		expect(xml.match(/<w:showingPlcHdr\/>/g)).toHaveLength(2);
+		expect(xml).toContain('<w:id w:val="81"/><w:text/></w:sdtPr>');
+		expect(xml).toContain('<w:t>DOC-7</w:t>');
+		expect(xml).not.toMatch(/PlaceholderText"\/><\/w:rPr><w:t>DOC-7/);
+		view.destroy();
+		host.remove();
+	});
+
 	it('saves an entry picked in a temporary cell control as the cell text alone', async () => {
 		const { xml } = await pick(await form('<w:temporary/>'), 0);
 		expect(xml).not.toContain('<w:sdt');

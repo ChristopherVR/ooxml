@@ -7,6 +7,7 @@ import { isContentControlLocked, type ContentControl } from '../content-control-
 import {
 	CONTROL_EDIT_META,
 	deleteToPlaceholder,
+	pasteInCell,
 	typeOverPlaceholder,
 } from './content-control-commands';
 import { nodeControlOf, otherControlSourcesOf, pastedControlSlice } from './content-control-paste';
@@ -153,6 +154,15 @@ export function contentControlPlugin(): Plugin {
 							copied,
 						)
 					: slice,
+			handlePaste: (view, _event, slice) => {
+				if (!view.editable) return false;
+				const result = pasteInCell(view.state, slice);
+				if (result === 'blocked') return true;
+				if (!result) return false;
+				// As ProseMirror marks its own paste.
+				view.dispatch(result.scrollIntoView().setMeta('paste', true).setMeta('uiEvent', 'paste'));
+				return true;
+			},
 			handleTextInput: (view, from, to, text) => {
 				if (!view.editable) return false;
 				const result = typeOverPlaceholder(view.state, from, text, to);
