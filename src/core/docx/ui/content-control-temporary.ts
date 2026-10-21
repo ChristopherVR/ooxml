@@ -36,6 +36,25 @@ export function removeControl(tr: Transaction, span: ControlSpan): Transaction {
 	return tr;
 }
 
+/**
+ * The spans of the controls an edit would remove, by level and id: a control whose text a nested
+ * control splits, or whose paragraphs a table separates, has several spans and is one control.
+ * Controls that are not temporary, or that may not be deleted, are left out, so a control that
+ * shares an id with a temporary one is never taken for it.
+ */
+function temporaryControls(state: EditorState): Map<string, ControlSpan[]> {
+	const controls = new Map<string, ControlSpan[]>();
+	for (const span of controlSpans(state.doc)) {
+		if (!removedByEdit(span.control)) continue;
+		const key = `${span.level}:${span.control.id}`;
+		controls.set(key, [...(controls.get(key) ?? []), span]);
+	}
+	return controls;
+}
+
+const contentOfAll = (state: EditorState, spans: readonly ControlSpan[]): string =>
+	spans.map((span) => contentOf(state, span)).join('\n');
+
 /** The transaction removing every temporary control whose content `transactions` changed. */
 export function removeEditedTemporaryControls(
 	transactions: readonly Transaction[],
@@ -51,13 +70,14 @@ export function removeEditedTemporaryControls(
 	);
 	if (!local.length || local.length !== transactions.filter((tr) => tr.docChanged).length)
 		return null;
-	const temporary = controlSpans(before.doc).filter((span) => removedByEdit(span.control));
-	if (!temporary.length) return null;
-	const was = new Map(temporary.map((span) => [span.control.id, contentOf(before, span)]));
+	const was = temporaryControls(before);
+	if (!was.size) return null;
 	const tr = after.tr;
-	for (const span of controlSpans(after.doc)) {
-		const content = was.get(span.control.id);
-		if (content !== undefined && content !== contentOf(after, span)) removeControl(tr, span);
+	for (const [key, spans] of temporaryControls(after)) {
+		const old = was.get(key);
+		// Every span of an edited control goes: Word removes the whole control.
+		if (old && contentOfAll(before, old) !== contentOfAll(after, spans))
+			for (const span of spans) removeControl(tr, span);
 	}
 	return tr.docChanged ? tr.setMeta(CONTROL_EDIT_META, true) : null;
 }

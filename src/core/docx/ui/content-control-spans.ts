@@ -30,6 +30,9 @@ const markOf = (node: ProseMirrorNode): Mark | undefined =>
 /** Every inline, block and cell control in document order. */
 export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 	const spans: ControlSpan[] = [];
+	// The last block span: the paragraphs of one block control stay one span when an inline
+	// control in one of them comes between them in this list.
+	let block: ControlSpan | undefined;
 	doc.descendants((node, pos) => {
 		if (node.type.name === 'tableCell' && node.attrs.contentControl)
 			spans.push({
@@ -40,10 +43,11 @@ export function controlSpans(doc: ProseMirrorNode): ControlSpan[] {
 			});
 		if (node.type.name === 'paragraph' && node.attrs.contentControl) {
 			const control = node.attrs.contentControl as ContentControl;
-			const previous = spans.at(-1);
-			if (previous?.level === 'block' && previous.control.id === control.id && previous.to === pos)
-				previous.to = pos + node.nodeSize;
-			else spans.push({ control, level: 'block', from: pos, to: pos + node.nodeSize });
+			if (block?.control.id === control.id && block.to === pos) block.to = pos + node.nodeSize;
+			else {
+				block = { control, level: 'block', from: pos, to: pos + node.nodeSize };
+				spans.push(block);
+			}
 		}
 		if (!node.isInline) return true;
 		const control = controlOfMark(markOf(node));

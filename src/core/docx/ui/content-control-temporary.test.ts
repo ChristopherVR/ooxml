@@ -126,6 +126,47 @@ describe('temporary content controls in the editor', () => {
 		expect(controlSpans(restored.doc)[0]?.control.showingPlaceholder).toBe(true);
 	});
 
+	it("leaves controls that share a temporary control's id alone when it is not edited", () => {
+		// A pasted copy keeps an id in other tools, and some files repeat ids: the copy here is no
+		// longer temporary, and the other two temporary controls hold different text.
+		const state = stateOf([
+			{ text: 'Draft', contentControl: temporary() },
+			{ text: ' and ' },
+			{ text: 'Kept', contentControl: { ...temporary(), temporary: false } },
+			{ text: ' and ' },
+			{ text: 'Second', contentControl: temporary() },
+		]);
+		const next = state.apply(state.tr.insertText('!', 7));
+		expect(next.doc.textContent).toBe('Draft !and Kept and Second');
+		expect(controlSpans(next.doc).map((span) => span.control.id)).toEqual(['21', '21', '21']);
+	});
+
+	it('takes a block control off all of its paragraphs, also around an inline control', () => {
+		const block = temporary({ id: '31', level: 'block' });
+		const box: ContentControl = { id: '32', level: 'inline', kind: 'richText' };
+		const doc = schema.node('doc', null, [
+			schema.node('paragraph', { contentControl: block }, [
+				schema.text('Alpha '),
+				schema.text('box', [schema.marks.contentControl!.create({ data: JSON.stringify(box) })]),
+			]),
+			schema.node('paragraph', { contentControl: block }, [schema.text('Beta')]),
+			schema.node('paragraph', null, [schema.text('Elsewhere')]),
+		]);
+		const state = EditorState.create({ schema, doc, plugins: [contentControlPlugin()] });
+		const blocks = (s: EditorState) => {
+			const controls: unknown[] = [];
+			s.doc.forEach((node) => controls.push(node.attrs.contentControl?.id ?? null));
+			return controls;
+		};
+		// An edit outside the control leaves it whole.
+		const outside = state.apply(state.tr.insertText('!', state.doc.content.size - 1));
+		expect(blocks(outside)).toEqual(['31', '31', null]);
+		// Editing its second paragraph removes it from the first too.
+		const edited = state.apply(state.tr.insertText('!', 14));
+		expect(edited.doc.child(1).textContent).toBe('Be!ta');
+		expect(blocks(edited)).toEqual([null, null, null]);
+	});
+
 	it('leaves a control that cannot be deleted, and edits from elsewhere, as they are', () => {
 		const locked = stateOf([{ text: 'Draft', contentControl: temporary({ lock: 'sdtLocked' }) }]);
 		expect(controlSpans(locked.apply(locked.tr.insertText('s', 6)).doc)).toHaveLength(1);
