@@ -236,6 +236,26 @@ test('an engine change runs every pptx unit leg and the reference project; its t
 	assert.equal(pptx('src/core/xlsx/model.ts').run, false);
 });
 
+test('another format area adds no pptx work, whatever else reaches the viewer', () => {
+	// Each of these reaches pptx without running its engine legs; the docx and xlsx sources next to
+	// them cannot break the viewer, so they must not turn the whole pptx run on.
+	for (const reach of [
+		'src/core/xml/lite.test.ts',
+		'viewers/pptx/docs/guide/installation.md',
+		'e2e/pptx/viewer-basics.spec.ts',
+		'viewers/pptx/packages/cli/src/index.ts',
+	]) {
+		const result = pptx(reach, 'src/core/xlsx/model.ts', 'src/core/docx/model.ts');
+		assert.deepEqual(result, pptx(reach), reach);
+	}
+	// A shared area next to them still reaches every leg, and so does a core file outside any area.
+	assert.equal(pptx('src/core/xlsx/model.ts', 'src/core/xml/lite.ts').tests.length, 11);
+	assert.equal(
+		pptx('viewers/pptx/docs/guide/installation.md', 'src/core/index.ts').tests.length,
+		11,
+	);
+});
+
 test('changed spec files alone run just those specs, in every binding, on few shards', () => {
 	const result = pptx('e2e/pptx/viewer-basics.spec.ts', 'e2e/pptx/smartart-reload.spec.ts');
 	assert.deepEqual(result.tests, []);
