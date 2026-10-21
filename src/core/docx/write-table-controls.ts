@@ -50,12 +50,36 @@ const holdsRowsOrCells = (node: ChildNode | null): boolean =>
 	['tr', 'tc', 'sdt', 'customXml'].some((name) => named(node as XmlElement, name));
 
 /**
+ * Moves the range markers Word can write beside a row or cell control's `w:sdtContent` (MS-OI29500
+ * 2.1.202 and 2.1.204) into it, where they are in reading order: before what it holds, or after.
+ * Its content allows them (EG_ContentRowContent, EG_ContentCellContent), so a row or cell taken out
+ * of the control, or joining it, keeps them around what they held.
+ */
+function markersIntoContent(sdt: XmlElement): void {
+	const content = sdtContent(sdt);
+	if (!content) return;
+	const anchor = content.firstChild;
+	let after = false;
+	for (const child of Array.from(sdt.childNodes)) {
+		if (child === content) {
+			after = true;
+			continue;
+		}
+		const element = child as XmlElement;
+		if (child.nodeType !== 1 || named(element, 'sdtPr') || named(element, 'sdtEndPr')) continue;
+		if (after) content.appendChild(child);
+		else content.insertBefore(child, anchor);
+	}
+}
+
+/**
  * Takes `element` out of `sdt`, which is another control's: at its start or end it moves out beside
  * it, with the range markers on that side, and from its middle it goes after it, the rows or cells
  * after it going to a copy of `sdt` under a new id (ids are unique, ECMA-376 17.5.2.18). Everything
  * keeps its order. An `sdt` left without rows or cells is unwrapped.
  */
 function takeOut(doc: XmlDocument, element: XmlElement, sdt: XmlElement): void {
+	markersIntoContent(sdt);
 	const content = element.parentNode as XmlElement;
 	const parent = sdt.parentNode as XmlElement;
 	const siblings = (from: ChildNode | null, step: 'previousSibling' | 'nextSibling') => {
@@ -126,12 +150,13 @@ export function placeTableControl(
 	}
 	const shared = isSdt(before as XmlElement | null) && sdtContent(before as XmlElement);
 	const { id } = next;
-	// A control without an id of its own (a remote peer can give one) joins none.
-	if (
+	const joins =
 		shared &&
 		typeof id === 'string' &&
-		(createdFor.get(before as XmlElement) ?? idOf(before as XmlElement)) === id
-	) {
+		(createdFor.get(before as XmlElement) ?? idOf(before as XmlElement)) === id;
+	// A control without an id of its own (a remote peer can give one) joins none.
+	if (joins) {
+		markersIntoContent(before as XmlElement);
 		for (const node of [...between, element]) shared.appendChild(node);
 		return;
 	}

@@ -488,6 +488,73 @@ describe('row and cell content controls on save', () => {
 		);
 	});
 
+	it('keeps the range markers beside the content of a row or cell control around what they held', async () => {
+		// Word also writes range markers as children of a row or cell w:sdt, beside its w:sdtContent
+		// (MS-OI29500 2.1.202 and 2.1.204). A row or cell taken out of it, or joining it, keeps them
+		// around what they held.
+		const start = '<w:bookmarkStart w:id="9" w:name="Kept"/>';
+		const end = '<w:bookmarkEnd w:id="9"/>';
+		const beside = (content: string, id = '31') =>
+			`<w:sdt><w:sdtPr><w:alias w:val="Old"/><w:id w:val="${id}"/></w:sdtPr>${start}` +
+			`<w:sdtContent>${content}</w:sdtContent>${end}</w:sdt>`;
+		/** Where each of `parts` is in `xml`, in the order given: all must be found in that order. */
+		const inOrder = (xml: string, parts: string[]) => {
+			const at = parts.map((part) => xml.indexOf(part));
+			expect(at.every((position) => position >= 0)).toBe(true);
+			expect([...at].sort((a, b) => a - b)).toEqual(at);
+		};
+		const given = async (body: string, r: number, c: number) => {
+			const loaded = await hand(body);
+			tableOf(loaded.model.blocks).rows[r]![c]!.contentControl = {
+				id: '33',
+				level: 'cell',
+				kind: 'richText',
+			};
+			return documentXml(await loaded.save(loaded.model));
+		};
+		// The only cell of the control: the control goes, the bookmark still holds the cell.
+		const only = await given(grid(row(`${label('Status')}${beside(label('Open'))}`)), 0, 1);
+		expect(only).not.toContain('w:val="31"');
+		inOrder(only, [label('Status'), start, label('Open'), end, '</w:tr>']);
+		// The first or the last of two cells, and the middle one of three.
+		const pair = grid(row(beside(label('A') + label('B'))));
+		inOrder(await given(pair, 0, 0), [start, label('A'), label('B'), end]);
+		inOrder(await given(pair, 0, 1), [start, label('A'), label('B'), end]);
+		const three = await hand(
+			`<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/>` +
+				`<w:gridCol w:w="2000"/></w:tblGrid>${row(beside(label('A') + label('X') + label('C')))}</w:tbl>`,
+		);
+		tableOf(three.model.blocks).rows[0]![1]!.contentControl = {
+			id: '33',
+			level: 'cell',
+			kind: 'richText',
+		};
+		inOrder(await documentXml(await three.save(three.model)), [
+			start,
+			label('A'),
+			label('X'),
+			label('C'),
+			end,
+		]);
+		// A cell joining the control of the cell before it stays out of that control's bookmark.
+		const joined = await hand(grid(row(`${beside(label('A'), '21')}${label('B')}`)));
+		const [left, right] = tableOf(joined.model.blocks).rows[0]!;
+		right!.contentControl = { ...left!.contentControl! };
+		const joinedXml = await documentXml(await joined.save(joined.model));
+		expect(joinedXml.match(/<w:sdt>/g)).toHaveLength(1);
+		inOrder(joinedXml, [start, label('A'), end, label('B'), '</w:sdtContent>']);
+		// A row the same way.
+		const rows = await hand(grid(beside(row(`${label('A')}${label('B')}`))));
+		tableOf(rows.model.blocks).rowProperties![0]!.contentControl = {
+			id: '33',
+			level: 'row',
+			kind: 'richText',
+		};
+		const rowXml = await documentXml(await rows.save(rows.model));
+		expect(rowXml).not.toContain('w:val="31"');
+		inOrder(rowXml, [start, row(`${label('A')}${label('B')}`), end]);
+	});
+
 	it('writes cells given one control under an id Word cannot read as one control', async () => {
 		// Such an id is not written (a control pasted from another page keeps the one it came with
 		// when the document has none like it), so the cells after the first join it by the model's.
