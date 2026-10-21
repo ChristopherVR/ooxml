@@ -34,24 +34,37 @@ export function releaseSpilledCell(sheet: Worksheet, row: number, col: number): 
 		deleteCell(sheet, row, col);
 }
 
-/** Clears the cells of a spill footprint that still belong to the anchor at (row, col). */
+/**
+ * Clears the cells of a spill footprint that still belong to the anchor at (row, col). Each axis
+ * visits the fewer of the footprint's lines and the stored ones, so a sparse footprint (a spill
+ * stored in a file spans its marked cells) costs what it holds, not its area.
+ */
 export function clearFootprint(
 	sheet: Worksheet,
 	footprint: CellRange,
 	row: number,
 	col: number,
 ): void {
-	for (let r = footprint.start.row; r <= footprint.end.row; r++) {
-		const cells = sheet.rows.get(r);
-		if (!cells) continue;
-		for (let c = footprint.start.col; c <= footprint.end.col; c++) {
-			if (r === row && c === col) continue;
-			const cell = cells.get(c);
-			if (isSpilledCell(cell) && cell.spillAnchor.row === row && cell.spillAnchor.col === col) {
-				releaseSpilledCell(sheet, r, c);
-			}
+	const { start, end } = footprint;
+	const owned: [number, number][] = [];
+	const visit = (r: number, c: number, cell: Cell | undefined): void => {
+		if (c < start.col || c > end.col || (r === row && c === col)) return;
+		if (isSpilledCell(cell) && cell.spillAnchor.row === row && cell.spillAnchor.col === col)
+			owned.push([r, c]);
+	};
+	const visitRow = (r: number, cells: Map<number, Cell>): void => {
+		if (end.col - start.col + 1 <= cells.size)
+			for (let c = start.col; c <= end.col; c++) visit(r, c, cells.get(c));
+		else for (const [c, cell] of cells) visit(r, c, cell);
+	};
+	if (end.row - start.row + 1 <= sheet.rows.size) {
+		for (let r = start.row; r <= end.row; r++) {
+			const cells = sheet.rows.get(r);
+			if (cells) visitRow(r, cells);
 		}
-	}
+	} else
+		for (const [r, cells] of sheet.rows) if (r >= start.row && r <= end.row) visitRow(r, cells);
+	for (const [r, c] of owned) releaseSpilledCell(sheet, r, c);
 }
 
 /** The footprint an array result anchored at (row, col) needs, or undefined beyond the grid. */
