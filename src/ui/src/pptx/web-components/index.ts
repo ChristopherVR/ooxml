@@ -205,12 +205,13 @@ export function registerPptxWebControls(): void {
 	if (typeof window === 'undefined' || !window.customElements) {
 		return;
 	}
-	installOfficeUiTheme(document);
 	const registry = window.customElements;
+	// Refuse an incompatible earlier definition before anything is written to the document.
 	assertWebControlContract(
 		registry,
 		controls.map(([name]) => name),
 	);
+	installOfficeUiTheme(document);
 	if (!document.getElementById('pptx-ui-control-hosts')) {
 		const style = document.createElement('style');
 		style.id = 'pptx-ui-control-hosts';
