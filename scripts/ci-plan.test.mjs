@@ -43,6 +43,24 @@ test('UI typechecks reuse core declarations from the build job', () => {
 	assert.ok(job.indexOf('download-artifact') < job.indexOf('src/ui typecheck'));
 });
 
+test('the viewers and the pptx jobs reuse ooxml-ui from the build job, not after the ui tests', () => {
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = (name) =>
+		workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  \\S)`, 'm'))?.[1] ?? '';
+	const build = job('build');
+	assert.ok(build.indexOf('bun run build') < build.indexOf('bun run --cwd src/ui build'));
+	assert.match(
+		build,
+		/upload-artifact@\S+(?: +#[^\r\n]*)?\s+with:\s+name:\s*ui-dist\s+path:\s*src\/ui\/dist/u,
+	);
+	for (const name of ['viewers', 'pptx-build']) {
+		assert.match(job(name), /needs:\s*\[[^\]]*\bbuild\b[^\]]*\]/u, name);
+		assert.doesNotMatch(job(name), /needs:\s*\[[^\]]*\bui\b|needs\.ui\./u, name);
+	}
+	// The ui job checks the build job's ooxml-ui instead of building its own.
+	assert.doesNotMatch(job('ui'), /src\/ui build|upload-artifact/u);
+});
+
 test('a docs-only change runs nothing', () => {
 	const result = plan(['docs/releasing.md', 'AGENTS.md']);
 	assert.equal(result.full, false);
