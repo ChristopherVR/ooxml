@@ -139,6 +139,17 @@ const workbook = await loadXlsx(bytes, {
 // ('ooxml-core/xlsx/load') takes `limits` too.
 ```
 
+**Compare two versions of a workbook**
+
+```ts
+import { compareWorkbooks, comparisonText, loadXlsx } from 'ooxml-core/xlsx';
+
+const result = compareWorkbooks(await loadXlsx(v1), await loadXlsx(v2));
+console.log(comparisonText(result)); // values, formulas, formats, sheets, names
+```
+
+Cells are matched by address; see [workbook comparison](../../docs/xlsx-compare.md) for the categories and limits.
+
 **Work at the package level**
 
 ```ts

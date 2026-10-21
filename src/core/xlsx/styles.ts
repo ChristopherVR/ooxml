@@ -1,21 +1,9 @@
 import type { Alignment, Border, CellStyle, Fill, Font, Protection, Workbook } from './model';
+import { stableKey } from './stable-key';
 
 /** A stable key for a style, so equal formats share one `cellXfs` entry. */
 export function styleKey(style: CellStyle): string {
-	return JSON.stringify(sortKeys(style));
-}
-
-function sortKeys(value: unknown): unknown {
-	if (Array.isArray(value)) return value.map(sortKeys);
-	if (value && typeof value === 'object') {
-		const out: Record<string, unknown> = {};
-		for (const key of Object.keys(value).sort()) {
-			const entry = (value as Record<string, unknown>)[key];
-			if (entry !== undefined) out[key] = sortKeys(entry);
-		}
-		return out;
-	}
-	return value;
+	return stableKey(style);
 }
 
 /** The style at `styleId`, falling back to the default when the id is out of range. */
