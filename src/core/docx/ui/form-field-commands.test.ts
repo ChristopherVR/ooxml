@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, type Transaction } from 'prosemirror-state';
 import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
 import { setFormCheckbox } from '../form-fields';
 import { contentControlPlugin, violatesControlLock } from './content-control-guard';
@@ -155,6 +155,34 @@ describe('legacy form fields in the editor', () => {
 		expect(state.apply(state.tr.insertText('B', result!.to)).doc.textContent).toBe('Name: Ada');
 	});
 
+	it('keeps a disabled text field read only inside a content control of a protected form', () => {
+		for (const level of ['inline', 'block'] as const) {
+			const control: ContentControl = { id: '8', level, kind: 'richText' };
+			const runs: TextRun[] = [
+				{ text: 'Ref: ' },
+				...field({ ...name, enabled: false }, 'Fixed'),
+				{ text: ' note' },
+			].map((run) => (level === 'inline' ? { ...run, contentControl: control } : run));
+			const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+			const attrs = level === 'block' ? { contentControl: control } : null;
+			const doc = schema.node('doc', null, [schema.node('paragraph', attrs, nodes)]);
+			const forms = { edit: 'forms', enforced: true } as const;
+			const state = EditorState.create({
+				schema,
+				doc,
+				plugins: [formFieldGuardPlugin(() => forms)],
+			});
+			const [result] = formTextResults(state.doc);
+			const text = (tr: Transaction) => state.apply(tr).doc.textContent;
+			// The control's own text can change; the disabled field's result cannot, nor can it go.
+			expect(text(state.tr.insertText('!', state.doc.content.size - 1))).toBe('Ref: Fixed note!');
+			expect(text(state.tr.insertText('B', result!.to))).toBe('Ref: Fixed note');
+			expect(text(state.tr.insertText('B', result!.from + 1))).toBe('Ref: Fixed note');
+			expect(text(state.tr.delete(result!.from, result!.to))).toBe('Ref: Fixed note');
+			expect(text(state.tr.delete(result!.begin, result!.to + 1))).toBe('Ref: Fixed note');
+		}
+	});
+
 	it('follows a text field whose result runs on into the next paragraph', () => {
 		const first = runToInlineNodes({ text: '', fieldChar: 'begin', formField: name }, schema)
 			.concat(runToInlineNodes({ text: '', fieldCode: ' FORMTEXT ' }, schema))
@@ -203,6 +231,7 @@ describe('legacy form fields in the editor', () => {
 			{ endsAtBlockId: 'p1', formProtection: false },
 		],
 		texts: Record<string, string> = {},
+		first: TextRun[] = [{ text: 'Name: ' }, ...field(name, 'Ada')],
 	) {
 		const sectioned = new Schema({
 			nodes: {
@@ -225,7 +254,7 @@ describe('legacy form fields in the editor', () => {
 			);
 		const extra = Object.entries(texts).map(([id, text]) => paragraph(id, [{ text }]));
 		const doc = sectioned.node('doc', { sections: JSON.stringify(sections) }, [
-			paragraph('p0', [{ text: 'Name: ' }, ...field(name, 'Ada')]),
+			paragraph('p0', first),
 			paragraph('p1', [{ text: 'Notes' }]),
 			...extra,
 		]);
@@ -322,6 +351,16 @@ describe('legacy form fields in the editor', () => {
 			state.apply(state.tr.split(start, 1, [{ type: state.schema.nodes.paragraph! }])).doc
 				.childCount,
 		).toBe(4);
+	});
+
+	it('lets a disabled text field change in a section the protection leaves unprotected', () => {
+		const state = sectionedState(
+			[{ endsAtBlockId: 'p0', formProtection: false }, { endsAtBlockId: 'p1' }],
+			{},
+			[{ text: 'Name: ' }, ...field({ ...name, enabled: false }, 'Ada')],
+		);
+		const [result] = formTextResults(state.doc);
+		expect(state.apply(state.tr.insertText('B', result!.to)).doc.textContent).toContain('AdaB');
 	});
 
 	it('lets the editor give a paragraph another id anywhere in a protected form', () => {

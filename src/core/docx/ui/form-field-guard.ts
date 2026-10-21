@@ -110,6 +110,11 @@ export function staysInFormFields(tr: Transaction): boolean {
 		...controlSpans(doc).map(({ from, to }) => ({ from, to })),
 	];
 	const sections = unprotectedSections(doc);
+	// Disabled text fields outside the unprotected sections, from their begin to their end marker.
+	const fixed: Range[] = formTextResults(doc)
+		.filter(({ field }) => field.enabled === false)
+		.map(({ begin, to }) => ({ from: begin, to: to + 1 }))
+		.filter((range) => !sections.some((free) => range.from >= free.from && range.to <= free.to));
 	let sectionsAfter: Range[] | undefined;
 	return tr.steps.every((step, index) => {
 		if (renamesBlock(step, tr.docs[index], tr.docs[index + 1] ?? tr.doc)) return true;
@@ -132,6 +137,14 @@ export function staysInFormFields(tr: Transaction): boolean {
 		)
 			return false;
 		const { from, to } = step as unknown as { from: number; to: number };
+		// A disabled field stays as it is, also inside a content control the user may edit.
+		let changesFixed = false;
+		step.getMap().forEach((start, end) => {
+			changesFixed ||= fixed.some(
+				(range) => start < map.map(range.to, -1) && end > map.map(range.from, 1),
+			);
+		});
+		if (changesFixed) return false;
 		if (within(fields, from, to)) return true;
 		if (!within(sections, from, to)) return false;
 		if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) return true;
