@@ -81,10 +81,11 @@ const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; 
  * More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the
  * chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window
  * and closes on Escape, an outside press or a pick. `mode="panel"` shows labelled sections directly
- * for modal pickers, with arrow/Home/End selection and no dropdown trigger; `compact` keeps its
- * tiles at their preview size without visible labels and lets arrow keys only move focus, for a
- * pane whose pick applies at once. ArrowDown on the trigger opens it and focuses
- * the first tile. Dropdown arrows/Home/End move focus across sections without applying a choice.
+ * for modal pickers, with arrow/Home/End selection and no dropdown trigger; `compact` shows its
+ * tiles without visible labels, sharing the panel's width around previews at their size, and lets
+ * arrow keys only move focus, for a pane whose pick applies at once. ArrowDown on the trigger
+ * opens it and focuses the first tile. Dropdown arrows/Home/End move focus across sections
+ * without applying a choice.
  * A pick emits `office-gallery-pick` `{ gallery, itemId }`.
  *
  * Tiles render in the light DOM beside the host's children (Lit renders the template into the

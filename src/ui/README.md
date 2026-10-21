@@ -110,9 +110,9 @@ It displays labelled preview tiles directly, keeps focus when a pick refreshes t
 selection, and supports arrow, Home and End keys. Panel mode has no dropdown
 trigger or popup; `open` remains false. XLSX uses this mode for chart types while
 PowerPoint continues to use the same component for ribbon galleries. A `compact`
-panel keeps its tiles at their preview size without visible labels, and its arrow
-keys only move focus: PowerPoint's inspector uses it for Text Warp, whose pick
-applies at once.
+panel shows its tiles without visible labels, sharing the panel's width with the
+previews at their size, and its arrow keys only move focus: PowerPoint's inspector
+uses it for Text Warp and Quick Styles, whose picks apply at once.
 
 | Entry               | Contents                                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------------------ |
