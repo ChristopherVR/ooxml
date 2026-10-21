@@ -8,7 +8,12 @@ import { Mapping } from 'prosemirror-transform';
 import { removedByEdit } from '../content-control-edit';
 import { CONTROL_EDIT_META } from './content-control-commands';
 import { rowControlSpans, type RowControlSpan } from './content-control-rows';
-import { controlOfMark, controlSpans, type ControlSpan } from './content-control-spans';
+import {
+	controlOfMark,
+	controlSpans,
+	tableControlSpans,
+	type ControlSpan,
+} from './content-control-spans';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
 
 type Span = ControlSpan | RowControlSpan;
@@ -17,20 +22,25 @@ type Span = ControlSpan | RowControlSpan;
  * The control's content as its text, with each object as a character and a picture by its parts,
  * so replacing a picture is an edit too. Formatting is not: it changes no content.
  */
-const contentOf = (state: EditorState, span: Span): string =>
-	state.doc.textBetween(span.from, span.to, '\n', (leaf) =>
+const contentOf = (state: EditorState, range: { from: number; to: number }): string =>
+	state.doc.textBetween(range.from, range.to, '\n', (leaf) =>
 		leaf.type.name === 'image'
 			? `\uFFFC${String(leaf.attrs.partName)}\uFFFC${String(leaf.attrs.svgPartName ?? '')}`
 			: '\uFFFC',
 	);
 
-/** Takes the control of `span` off its text, paragraphs, cell or row; its content stays as it is. */
+/** Takes the control of `span` off its text, paragraphs, table, cell or row; its content stays. */
 export function removeControl(tr: Transaction, span: Span): Transaction {
 	const { id } = span.control;
 	if (span.level === 'row') {
 		const row = tr.doc.nodeAt(span.from);
 		const { contentControl: _control, ...properties } = row?.attrs.properties ?? {};
 		if (row) tr.setNodeMarkup(span.from, undefined, { ...row.attrs, properties });
+		return tr;
+	}
+	if (span.level === 'cell') {
+		const cell = tr.doc.nodeAt(span.from);
+		if (cell) tr.setNodeMarkup(span.from, undefined, { ...cell.attrs, contentControl: null });
 		return tr;
 	}
 	tr.doc.nodesBetween(span.from, span.to, (node, pos) => {
@@ -40,12 +50,17 @@ export function removeControl(tr: Transaction, span: Span): Transaction {
 					tr.removeMark(pos, pos + node.nodeSize, mark);
 			return true;
 		}
-		if (node.attrs.contentControl?.id === id && 'contentControl' in node.attrs)
+		// Its own paragraphs or table: not a cell around them, nor a paragraph in the table, whose
+		// control may share its id.
+		if (pos < span.from) return true;
+		if (BLOCKS.has(node.type.name) && node.attrs.contentControl?.id === id)
 			tr.setNodeMarkup(pos, undefined, { ...node.attrs, contentControl: null });
-		return true;
+		return false;
 	});
 	return tr;
 }
+
+const BLOCKS = new Set(['paragraph', 'table']);
 
 /** One control and its range: its spans, more than one when it holds what splits them. */
 interface Occurrence {
@@ -94,7 +109,11 @@ function temporaryControls(doc: ProseMirrorNode): Occurrence[] {
 	const inline = spans.filter((span) => span.level === 'inline');
 	const found: Occurrence[] = [];
 	const last = new Map<string, Occurrence>();
-	for (const span of [...spans, ...rowControlSpans(doc)]) {
+	// In document order: the paragraphs and tables of one block control are its spans in turn.
+	const candidates = [...spans, ...tableControlSpans(doc), ...rowControlSpans(doc)].sort(
+		(a, b) => a.from - b.from,
+	);
+	for (const span of candidates) {
 		if (!removedByEdit(span.control)) continue;
 		const key = `${span.level}:${span.control.id}`;
 		const previous = last.get(key);
@@ -109,9 +128,6 @@ function temporaryControls(doc: ProseMirrorNode): Occurrence[] {
 	}
 	return found;
 }
-
-const contentOfAll = (state: EditorState, spans: readonly Span[]): string =>
-	spans.map((span) => contentOf(state, span)).join('\n');
 
 /** The transaction removing every temporary control whose content `transactions` changed. */
 export function removeEditedTemporaryControls(
@@ -134,6 +150,8 @@ export function removeEditedTemporaryControls(
 	for (const transaction of transactions) mapping.appendMapping(transaction.mapping);
 	const now = temporaryControls(after.doc);
 	const removed = new Set<Occurrence>();
+	// The inline controls the edit removed, or whose text it deleted.
+	const dropped = new Set<string>();
 	const tr = after.tr;
 	for (const old of was) {
 		// What the control became: the controls of its level and id where its range went.
@@ -142,8 +160,12 @@ export function removeEditedTemporaryControls(
 		const became = now.filter(
 			(occurrence) => occurrence.key === old.key && occurrence.from <= to && occurrence.to >= from,
 		);
-		const content = became.map((occurrence) => contentOfAll(after, occurrence.spans)).join('\n');
-		if (!became.length || content === contentOfAll(before, old.spans)) continue;
+		const inlineId = old.spans[0]?.level === 'inline' ? old.spans[0].control.id : undefined;
+		if (!became.length && inlineId) dropped.add(inlineId);
+		// Its whole range: what splits its spans (a nested control, a table) is its content too.
+		const content = became.map((occurrence) => contentOf(after, occurrence)).join('\n');
+		if (!became.length || content === contentOf(before, old)) continue;
+		if (inlineId) dropped.add(inlineId);
 		// Every span of an edited control goes: Word removes the whole control.
 		for (const occurrence of became) {
 			if (removed.has(occurrence)) continue;
@@ -151,5 +173,16 @@ export function removeEditedTemporaryControls(
 			for (const span of occurrence.spans) removeControl(tr, span);
 		}
 	}
-	return tr.docChanged ? tr.setMeta(CONTROL_EDIT_META, true) : null;
+	// Deleting a selection keeps its marks for the text typed next. They stay through the removal,
+	// whose steps would clear them, except the mark of a control it took away, which would bring
+	// that control back around the typed text.
+	const stored = after.storedMarks;
+	if (stored) {
+		const kept = stored.filter((mark) => {
+			const control = mark.type.name === 'contentControl' ? controlOfMark(mark) : undefined;
+			return !control || !dropped.has(control.id) || !removedByEdit(control);
+		});
+		if (tr.docChanged || kept.length !== stored.length) tr.setStoredMarks(kept);
+	}
+	return tr.docChanged || tr.storedMarksSet ? tr.setMeta(CONTROL_EDIT_META, true) : null;
 }

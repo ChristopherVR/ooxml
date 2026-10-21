@@ -160,6 +160,45 @@ describe('content controls in the editor', () => {
 		view.destroy();
 	});
 
+	it('keeps the id of a control dragged to a new place, and gives a dragged copy a new one', async () => {
+		// Through the editor's own drop handler, which still holds the drag when it transforms the
+		// dropped slice; only the drop point is given, as there is no layout here. The drag starts
+		// at the control, or a character before it, outside it.
+		for (const [move, before] of [
+			[true, 0],
+			[true, 1],
+			[false, 0],
+			[false, 1],
+		] as const) {
+			const { view, host } = await open();
+			const lists = () =>
+				controlSpans(view.state.doc).filter((span) => span.control.kind === 'dropDownList');
+			const [source] = lists();
+			const { to, control } = source!;
+			const from = source!.from - before;
+			const text = view.state.doc.textBetween(from, to);
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
+			view.dragging = { slice: view.state.selection.content(), move };
+			const target = view.state.doc.child(0).nodeSize - 1;
+			view.posAtCoords = () => ({ pos: target, inside: -1 });
+			const drop = Object.assign(new Event('drop', { bubbles: true, cancelable: true }), {
+				dataTransfer: { files: [], getData: () => '' },
+				clientX: 0,
+				clientY: 0,
+				// The copy modifier of every platform, as the drag had it when it started.
+				altKey: !move,
+				ctrlKey: !move,
+			});
+			view.dom.dispatchEvent(drop);
+			expect(view.state.doc.child(0).textContent).toContain(text);
+			const ids = lists().map((span) => span.control.id);
+			expect(ids).toHaveLength(move ? 1 : 2);
+			expect(ids.filter((id) => id === control.id)).toHaveLength(1);
+			view.destroy();
+			host.remove();
+		}
+	});
+
 	it('edits properties through the control and keeps list values', async () => {
 		const { loaded, view } = await open();
 		const drop = controlSpans(view.state.doc).find((span) => span.control.kind === 'dropDownList')!;

@@ -253,4 +253,38 @@ describe('content controls in tables and with unmodeled properties', () => {
 		const reopened = await loadDocx(await loaded.save(loaded.model));
 		expect(controlOf(expectParagraph(reopened.model.blocks[0])).items).toHaveLength(2);
 	});
+
+	it('writes verbatim properties of a new control only as its properties', async () => {
+		// A control pasted from another page carries what that page wrote: anything but w:sdtPr and
+		// w:sdtEndPr is not written, here fields that would fetch a picture or text when updated.
+		const loaded = await hand(`<w:p><w:r><w:t>Pick: </w:t></w:r></w:p>`);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		const field = (code: string) =>
+			`<w:fldSimple w:instr="${code}"><w:r><w:t>x</w:t></w:r></w:fldSimple>`;
+		paragraph.runs.push({
+			text: 'Red',
+			contentControl: {
+				id: '4243',
+				level: 'inline',
+				kind: 'richText',
+				sourceXml: `<w:p xmlns:w="${WORD_NS}">${field('INCLUDEPICTURE &quot;http://example.test/a.png&quot;')}</w:p>`,
+				endSourceXml: `<w:sdtContent xmlns:w="${WORD_NS}"><w:r>${field('INCLUDETEXT &quot;http://example.test/b&quot;')}</w:r></w:sdtContent>`,
+			},
+		});
+		const xml = await documentXml(await loaded.save(loaded.model));
+		expect(xml).not.toContain('INCLUDE');
+		expect(xml).toContain('<w:sdt><w:sdtPr><w:id w:val="4243"/></w:sdtPr><w:sdtContent>');
+		// Properties that are what they say are kept as they were.
+		paragraph.runs[1]!.contentControl = {
+			id: '4243',
+			level: 'inline',
+			kind: 'richText',
+			alias: 'Kept',
+			sourceXml: `<w:sdtPr xmlns:w="${WORD_NS}"><w:alias w:val="Kept"/><w:id w:val="1"/></w:sdtPr>`,
+			endSourceXml: `<w:sdtEndPr xmlns:w="${WORD_NS}"><w:rPr><w:b/></w:rPr></w:sdtEndPr>`,
+		};
+		expect(await documentXml(await loaded.save(loaded.model))).toMatch(
+			/<w:sdtPr[^>]*><w:alias w:val="Kept"\/><w:id w:val="4243"\/><\/w:sdtPr><w:sdtEndPr[^>]*><w:rPr><w:b\/><\/w:rPr><\/w:sdtEndPr>/,
+		);
+	});
 });

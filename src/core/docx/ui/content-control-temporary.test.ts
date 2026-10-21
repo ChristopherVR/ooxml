@@ -104,6 +104,51 @@ describe('temporary content controls in the editor', () => {
 		expect(next.doc.textContent).toBe('x');
 	});
 
+	it('does not bring a removed temporary control back with the next typed text', () => {
+		// Deleting a selection keeps its marks for what is typed next; a removed control's go.
+		const state = stateOf([{ text: 'x' }, { text: 'Draft', contentControl: temporary() }]);
+		for (const [from, to, text] of [
+			[2, 7, 'xZ'],
+			[3, 5, 'xDZft'],
+		] as const) {
+			const select = state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+			const deleted = select.apply(select.tr.deleteSelection());
+			const typed = deleted.apply(deleted.tr.insertText('Z'));
+			expect(typed.doc.textContent).toBe(text);
+			expect(controlSpans(typed.doc)).toEqual([]);
+		}
+	});
+
+	it('keeps the formatting of deleted text for what is typed next when a temporary control goes', () => {
+		// Text typed over a deleted selection takes its formatting; removing the control the
+		// deletion edited does not change that, and only that control's mark leaves.
+		const marksOf = (state: EditorState) => {
+			const names: string[] = [];
+			state.doc.descendants((node) => {
+				if (node.isText && node.text!.includes('Z'))
+					names.push(...node.marks.map((mark) => mark.type.name));
+			});
+			return names;
+		};
+		const block = stateOf([{ text: 'Draft', bold: true }], temporary({ level: 'block' }));
+		const inline = stateOf([
+			{ text: 'x' },
+			{ text: 'Draft', bold: true, contentControl: temporary() },
+		]);
+		for (const [state, from, to] of [
+			[block, 1, 6],
+			[inline, 3, 5],
+		] as const) {
+			const select = state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+			const deleted = select.apply(select.tr.deleteSelection());
+			expect(controlSpans(deleted.doc)).toEqual([]);
+			expect(deleted.doc.firstChild!.attrs.contentControl).toBeNull();
+			const typed = deleted.apply(deleted.tr.insertText('Z'));
+			expect(marksOf(typed)).toContain('bold');
+			expect(marksOf(typed)).not.toContain('contentControl');
+		}
+	});
+
 	it('edits a temporary control that cannot be deleted as an ordinary control', () => {
 		const pick = stateOf([
 			{ text: 'See: ' },
@@ -191,6 +236,10 @@ describe('temporary content controls in the editor', () => {
 		const edited = state.apply(state.tr.insertText('!', 2));
 		expect(edited.doc.textContent).toBe('O!utinside');
 		expect(controlSpans(edited.doc).map((span) => span.control.id)).toEqual(['22']);
+		// The nested control is part of its content: editing only that removes it too.
+		const inner2 = state.apply(state.tr.insertText('!', 5));
+		expect(inner2.doc.textContent).toBe('Outi!nside');
+		expect(controlSpans(inner2.doc).map((span) => span.control.id)).toEqual(['22']);
 	});
 
 	it('leaves a control that cannot be deleted, and edits from elsewhere, as they are', () => {

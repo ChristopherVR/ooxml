@@ -16,7 +16,13 @@ import {
 } from '../content-control-edit';
 import type { ContentControl, ContentControlKind } from '../content-control-model';
 import { freshControlId } from './content-control-paste';
-import { controlAt, controlSpans, type ControlSpan } from './content-control-spans';
+import { rowControlSpans } from './content-control-rows';
+import {
+	controlAt,
+	controlSpans,
+	tableControlSpans,
+	type ControlSpan,
+} from './content-control-spans';
 
 /** Transactions carrying this meta are the control's own edits and bypass the lock guard. */
 export const CONTROL_EDIT_META = 'dve-content-control';
@@ -78,7 +84,11 @@ export function replaceControlContent(
 		return state.tr.replaceWith(span.from, span.to, text ?? []).setMeta(CONTROL_EDIT_META, true);
 	const cell = state.doc.nodeAt(span.from)!;
 	const first = cell.firstChild?.type.name === 'paragraph' ? cell.firstChild : undefined;
-	const paragraph = (first?.type ?? state.schema.nodes.paragraph!).create(first?.attrs, text);
+	// The paragraph keeps its formatting, not a control around it: that goes with its content.
+	const attrs = first?.attrs.contentControl
+		? { ...first.attrs, contentControl: null }
+		: first?.attrs;
+	const paragraph = (first?.type ?? state.schema.nodes.paragraph!).create(attrs, text);
 	const tr = state.tr.replaceWith(span.from + 1, span.to - 1, paragraph);
 	tr.setNodeMarkup(span.from, undefined, {
 		...cell.attrs,
@@ -210,7 +220,7 @@ export function typeOverPlaceholder(
 	to = from,
 ): Transaction | 'blocked' | undefined {
 	const span = controlAt(controlSpans(state.doc), from, true);
-	if (span?.level === 'cell') return typeInCell(state, span, text);
+	if (span?.level === 'cell') return typeInCell(state, span, text, to);
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') {
@@ -227,15 +237,20 @@ export function typeOverPlaceholder(
 	return tr.setSelection(TextSelection.near(tr.doc.resolve(end)));
 }
 
-/** Typing in a cell control: a list or check box takes no text, a placeholder is replaced whole. */
+/**
+ * Typing in a cell control: a list or check box takes no text, a placeholder is replaced whole. A
+ * selection that runs on past the cell (`to`) is typed over as ordinary text, as it is deleted.
+ */
 function typeInCell(
 	state: EditorState,
 	span: ControlSpan,
 	text: string,
+	to: number,
 ): Transaction | 'blocked' | undefined {
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
-	if (!control.showingPlaceholder || !replaceable(state, span)) return undefined;
+	if (to > span.to - 1 || !control.showingPlaceholder || !replaceable(state, span))
+		return undefined;
 	if (!canEditControlContent(control)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
 	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));
@@ -267,9 +282,18 @@ export function deleteToPlaceholder(
 	return replaceControlContent(state, span, placeholderChange(span.control));
 }
 
-/** A new control id: Word uses signed 32-bit integers. */
+/**
+ * A new control id that no control in `doc` has, rows and tables included: Word uses signed 32-bit
+ * integers.
+ */
 export const newControlId = (doc: ProseMirrorNode): string =>
-	freshControlId(new Set(controlSpans(doc).map((span) => span.control.id)));
+	freshControlId(
+		new Set(
+			[...controlSpans(doc), ...tableControlSpans(doc), ...rowControlSpans(doc)].map(
+				(span) => span.control.id,
+			),
+		),
+	);
 
 export interface NewControlOptions {
 	alias?: string;

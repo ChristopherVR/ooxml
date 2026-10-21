@@ -8,7 +8,7 @@ import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosem
 import type { EditorView } from 'prosemirror-view';
 import type { ContentControl } from '../content-control-model';
 import { rowControlOf, rowControlSpans } from './content-control-rows';
-import { controlOfMark, controlSpans } from './content-control-spans';
+import { controlOfMark, controlSpans, tableControlSpans } from './content-control-spans';
 
 /** A control id that is not in `used`: Word uses signed 32-bit integers, so 1 to 2^31 - 1. */
 export function freshControlId(used: ReadonlySet<string>): string {
@@ -30,7 +30,7 @@ export function pastedControlSlice(
 ): Slice {
 	if (!view || plain || view.dragging?.move) return slice;
 	const { doc, selection, storedMarks } = view.state;
-	const spans = [...controlSpans(doc), ...rowControlSpans(doc)];
+	const spans = [...controlSpans(doc), ...tableControlSpans(doc), ...rowControlSpans(doc)];
 	const inDocument = new Set(spans.map((span) => span.control.id));
 	// The inline controls pasted text joins: those whose mark text typed there would take. A
 	// drag's selection is where it came from, not where it lands, so a dropped copy joins none.
