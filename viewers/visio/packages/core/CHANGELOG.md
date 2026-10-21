@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.5.0) - 2026-10-21
+
+### Features
+
+- **visio:** Add native framework building block integrations ([689e934](https://github.com/ChristopherVR/ooxml/commit/689e9340824a41e32a5024938e16b483e34c4452))
+
 ## [0.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.4.1) - 2026-10-08
 
 ### Documentation

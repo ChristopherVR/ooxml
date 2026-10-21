@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-solid-viewer",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "Solid component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"editor",
@@ -41,7 +41,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@christophervr/xlsx-core": "^0.2.10",
+		"@christophervr/xlsx-core": "^0.3.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},

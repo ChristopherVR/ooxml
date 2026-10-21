@@ -7,6 +7,54 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.19.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.19.0) - 2026-10-21
+
+### Features
+
+- **docx:** Expose composable editor building blocks ([79bf480](https://github.com/ChristopherVR/ooxml/commit/79bf4801d8efb256a3e3e6fa81cca2613e6fd0fd))
+- **xlsx:** Expose composable spreadsheet building blocks ([9aef499](https://github.com/ChristopherVR/ooxml/commit/9aef499f76196be6dd008ae873ac8f0d4caeeb58))
+- **visio:** Expose canvas building blocks and host permissions ([e464a1c](https://github.com/ChristopherVR/ooxml/commit/e464a1c0399434430925e0e59b430b5788f5d8d9))
+- **ui:** Share scoped themes across native building blocks ([fdd349c](https://github.com/ChristopherVR/ooxml/commit/fdd349c470866b73c22722c9967052fd41e851c4))
+- **visio:** Theme native building blocks with shared office tokens ([f86b882](https://github.com/ChristopherVR/ooxml/commit/f86b882e2081540997f14af754805c573b372dc9))
+- **docx:** Inherit shared office themes across editor blocks ([3adb658](https://github.com/ChristopherVR/ooxml/commit/3adb658f212e93a49beec631a618c8802b0c183a))
+- **xlsx:** Share office themes across editor building blocks ([a791ec2](https://github.com/ChristopherVR/ooxml/commit/a791ec2e68956921006c719397803e603286a8c0))
+
+### Bug Fixes
+
+- **pptx:** Avoid morphing unrelated picture artwork ([294db0b](https://github.com/ChristopherVR/ooxml/commit/294db0b90b1a667af15ab6b4beb30901461b5dd4))
+- **ui:** Harden composition lifecycle and consumer checks ([6aa52be](https://github.com/ChristopherVR/ooxml/commit/6aa52be88175ca4f46f6f3b1c223ef06a8f1f915))
+- **ui:** Preserve live formula drafts and runtime compatibility ([3a7d4f1](https://github.com/ChristopherVR/ooxml/commit/3a7d4f184658c4d69b04bbd36bab7afa3896dd9e))
+- **ui:** Retain scoped fonts on standalone native fields ([8e1a824](https://github.com/ChristopherVR/ooxml/commit/8e1a82401db83b3d8e85749ba1cfe9a1a8b69ab1))
+- **ui:** Install scoped themes in embedding shadow roots ([5c4c5d7](https://github.com/ChristopherVR/ooxml/commit/5c4c5d7409e1a68915e679981e4a4e1943ba2e4a))
+- **visio:** Honor themes inside application shadow roots ([a6d7738](https://github.com/ChristopherVR/ooxml/commit/a6d7738d25f03dbbaacbb381fd789775d9cb5c0d))
+- **docx:** Inherit themes inside embedding shadow roots ([874caef](https://github.com/ChristopherVR/ooxml/commit/874caef766ca224a90dd2188e7c5a3beb9b82eb9))
+- **xlsx:** Install scoped themes only when connecting ([638dfd0](https://github.com/ChristopherVR/ooxml/commit/638dfd055896784dac6664e4dddb03edd735746d))
+- **pptx:** Inherit shared office themes across native viewers ([8ae64f7](https://github.com/ChristopherVR/ooxml/commit/8ae64f7f72ea70c323fef9b6c712697c6c54aeb6))
+- **pptx:** Preserve product roles in the office theme bridge ([98e749a](https://github.com/ChristopherVR/ooxml/commit/98e749a9db7942edab244ce85eff1c5b6a1b9f77))
+
+### Refactor
+
+- **ui:** Share legacy product theme compatibility aliases ([49a16c9](https://github.com/ChristopherVR/ooxml/commit/49a16c99e6e7d743fd891433d62bdeb3c346b91b))
+
+### Documentation
+
+- **ui:** Define the shared editor theme contract ([207c055](https://github.com/ChristopherVR/ooxml/commit/207c055d34abd0c17c72fc69ef26aab69cba7f02))
+
+### Testing
+
+- **ui:** Guard legacy theme scope compatibility ([627ff95](https://github.com/ChristopherVR/ooxml/commit/627ff9525568e642dbf1310d052d479771f92be9))
+- **ui:** Preserve shared theme styles between worker tests ([2aa8974](https://github.com/ChristopherVR/ooxml/commit/2aa8974457360e1d8d59fa3a4bcc4af0051764f5))
+- **pptx:** Assert scoped office theme bridge capture ([a66991f](https://github.com/ChristopherVR/ooxml/commit/a66991f26ab79782d6ffa3c48ae7f4057bda9126))
+- **ui:** Rerun setup files in shared workers ([#114](https://github.com/ChristopherVR/ooxml/issues/114)) ([c681768](https://github.com/ChristopherVR/ooxml/commit/c681768ef0b7fe0550e606409a7d3dd626d91d02))
+
+### Dependencies
+
+- **deps:** Update dev tools and fix svelte type checks ([#107](https://github.com/ChristopherVR/ooxml/issues/107)) ([550eac2](https://github.com/ChristopherVR/ooxml/commit/550eac24d469d14245a0ac71789e01c8d5fb50f9))
+
+### Chores
+
+- Integrate latest main before full verification ([3bec814](https://github.com/ChristopherVR/ooxml/commit/3bec814857ae675f31eba14fcec59a3db4e1cb77))
+
 ## [1.18.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.18.3) - 2026-10-20
 
 ### Dependencies

@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@0.3.0) - 2026-10-21
+
+### Features
+
+- **xlsx:** Add native framework building blocks ([9689a65](https://github.com/ChristopherVR/ooxml/commit/9689a6520682e9db18f8cbee78d8434ad114b097))
+
 ## [0.2.10](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@0.2.10) - 2026-10-08
 
 ### Documentation
