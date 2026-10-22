@@ -8,7 +8,9 @@
  * - `?showToolbar=0` / `?showThumbnails=0` turn the chrome or the slide pane off
  *   (`1` / `true` turn them on; any other value is ignored),
  * - `?initialSlide=<n>` opens the deck on zero-based slide `n` (any finite
- *   number; the viewer clamps it into the deck).
+ *   number; the viewer clamps it into the deck),
+ * - `?fitPadding=<px>` sets the per-side fit padding (any finite number of at
+ *   least 0), so a spec can fit the slide flush against the viewport.
  *
  * Only the options present in the query string are returned, so a demo opened
  * without them keeps the binding's own defaults. Kept binding-agnostic on
@@ -22,6 +24,7 @@ export interface DemoRootOptions {
 	showToolbar?: boolean;
 	showThumbnails?: boolean;
 	initialSlide?: number;
+	fitPadding?: number;
 }
 
 function parseFlag(raw: string | null): boolean | undefined {
@@ -52,6 +55,12 @@ export function parseDemoRootOptions(search: string): DemoRootOptions {
 	const initialSlide = rawSlide === null || rawSlide.trim() === '' ? Number.NaN : Number(rawSlide);
 	if (Number.isFinite(initialSlide)) {
 		options.initialSlide = initialSlide;
+	}
+	const rawPadding = params.get('fitPadding');
+	const fitPadding =
+		rawPadding === null || rawPadding.trim() === '' ? Number.NaN : Number(rawPadding);
+	if (Number.isFinite(fitPadding) && fitPadding >= 0) {
+		options.fitPadding = fitPadding;
 	}
 	return options;
 }

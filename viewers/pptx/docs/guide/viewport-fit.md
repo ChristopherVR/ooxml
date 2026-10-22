@@ -31,6 +31,29 @@ saved content, thumbnails, export, presentation mode, or the separate user zoom
 setting. Vanilla preserves its existing mobile CSS padding when `fitPadding`
 is omitted.
 
+## Measurement
+
+Every binding fits to the viewport's fractional client size (its padding box
+without scrollbars, at the precision the browser lays it out), not the
+whole-pixel `clientWidth` and `clientHeight`. A viewport laid out at 801.5px is
+fitted to 801.5px, so with `fitPadding: 0` the slide fills it exactly and never
+extends past it. Borders are taken out at their used width, which keeps its
+fraction under browser zoom (a `1px` border is 1.111px at 90%).
+
+The exact size is used only in a plain context, where nothing transforms or
+CSS-zooms the viewport (browser zoom is fine). There the viewport's bounding
+rect matches its computed `width` and `height`, which are in its own CSS
+pixels. When a CSS `transform` or `zoom` on the viewport or an ancestor scales
+the rect, the slide is also laid out and painted through that scale, and its own
+layout rounding can move its edges by a fraction of a pixel. The fit then
+reserves one pixel instead, so the slide stays inside the viewport and the
+viewport does not scroll. One pixel is also reserved while the viewport shows a
+scrollbar, since the exact size cannot be recovered then.
+
+Later changes are picked up by `ResizeObserver`s on both the content box and the
+border box of the viewport, so a change to the viewport's padding alone also
+refits the slide.
+
 ## Configure your viewer
 
 Give the host a real width and height. A flex child may also need `min-height: 0`

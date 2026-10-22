@@ -4,7 +4,7 @@
  * scrollable viewport background deselects, while bubbled child events do not.
  */
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasFitService } from './canvas-fit.service';
 import { isViewportBackgroundPressTarget } from './slide-canvas-helpers';
@@ -29,6 +29,10 @@ describe('isViewportBackgroundPressTarget', () => {
 });
 
 describe('canvas viewport fit policy', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
 	function setup(width = 960, height = 540) {
 		const viewport = document.createElement('div');
 		Object.defineProperties(viewport, {
@@ -49,6 +53,77 @@ describe('canvas viewport fit policy', () => {
 		});
 		return { service, state };
 	}
+
+	it.each([
+		[801.5, 700],
+		[1200, 451.5],
+	])('fits a %spx x %spx viewport without exceeding it', (width, height) => {
+		// What a browser reports for a box laid out at a fractional size: whole-pixel client and
+		// offset sizes, and the unrounded rect.
+		const viewport = document.createElement('div');
+		Object.defineProperties(viewport, {
+			clientWidth: { get: () => Math.round(width) },
+			clientHeight: { get: () => Math.round(height) },
+			offsetWidth: { get: () => Math.round(width) },
+			offsetHeight: { get: () => Math.round(height) },
+		});
+		viewport.getBoundingClientRect = () => new DOMRect(0, 0, width, height);
+		const service = new CanvasFitService();
+		service.bind({
+			autoFit: () => true,
+			viewportElement: () => viewport,
+			canvasSize: () => ({ width: 960, height: 540 }),
+			fitOptions: () => ({ fitPadding: 0, maxFitScale: null }),
+		});
+		service.recompute();
+		const fit = service.fitScale();
+		expect(960 * fit).toBeLessThanOrEqual(width + 1e-9);
+		expect(540 * fit).toBeLessThanOrEqual(height + 1e-9);
+		expect(fit).toBeCloseTo(Math.min(width / 960, height / 540), 9);
+	});
+
+	it('observes both boxes, so a padding-only change refits', () => {
+		const observers: { box: string | undefined; callback: () => void; disconnected: boolean }[] =
+			[];
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				private readonly entry: (typeof observers)[number];
+				constructor(callback: () => void) {
+					this.entry = { box: undefined, callback, disconnected: false };
+					observers.push(this.entry);
+				}
+				observe(_node: Element, options?: ResizeObserverOptions) {
+					this.entry.box = options?.box;
+				}
+				disconnect() {
+					this.entry.disconnected = true;
+				}
+			},
+		);
+		// A content-box viewport losing its padding: the client size drops, the content box
+		// a default ResizeObserver watches stays put.
+		let size = { width: 1008, height: 588 };
+		const viewport = document.createElement('div');
+		Object.defineProperties(viewport, {
+			clientWidth: { get: () => size.width },
+			clientHeight: { get: () => size.height },
+		});
+		const service = new CanvasFitService();
+		service.bind({
+			autoFit: () => true,
+			viewportElement: () => viewport,
+			canvasSize: () => ({ width: 960, height: 540 }),
+			fitOptions: () => ({ fitPadding: 0, maxFitScale: null }),
+		});
+		const stop = service.observe(viewport);
+		expect(service.fitScale()).toBe(1.05);
+		size = { width: 960, height: 540 };
+		observers.find((observer) => observer.box === 'border-box')!.callback();
+		expect(service.fitScale()).toBe(1);
+		stop();
+		expect(observers.every((observer) => observer.disconnected)).toBeTruthy();
+	});
 
 	it('preserves default padding and supports live padding updates', () => {
 		const { service, state } = setup();

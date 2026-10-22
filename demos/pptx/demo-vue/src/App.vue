@@ -554,6 +554,7 @@ function onZoneClick(e: MouseEvent): void {
 			:show-toolbar="rootOptions.showToolbar"
 			:show-thumbnails="rootOptions.showThumbnails"
 			:initial-slide="rootOptions.initialSlide"
+			:fit-padding="rootOptions.fitPadding"
 			:inspector-initially-open="rootOptions.inspectorInitiallyOpen"
 			:ai="aiConfig"
 			:author-name="collaborationConfig?.userName ?? autoName"

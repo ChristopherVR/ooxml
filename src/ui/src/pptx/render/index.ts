@@ -1736,6 +1736,7 @@ export * from './foreign-object-font-embed';
 export * from './foreign-object-image-embed';
 export * from './foreign-object-svg-document';
 export * from './viewport-fit';
+export * from './viewport-size';
 export type {
 	InlineTextEditSnapshot,
 	InlineListSeed,

@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { calculateViewportFit, editorViewportFitFor, getSlideBackgroundStyle } from 'ooxml-ui/pptx';
-import type { ViewportFitPadding } from 'ooxml-ui/pptx';
+import {
+	calculateViewportFit,
+	editorViewportFitFor,
+	getSlideBackgroundStyle,
+	measureViewportClientSize,
+	observeViewportClientSize,
+} from 'ooxml-ui/pptx';
+import type { ViewportClientSize, ViewportFitPadding } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -104,9 +110,10 @@ defineExpose({
 
 /**
  * Compute and emit fit using the host policy, retaining existing ruler gutters.
- * Emits 1 when the viewport is unmeasured.
+ * Emits 1 when the viewport is unmeasured. `measured` is the viewport's client
+ * size when the caller has just measured it.
  */
-function recomputeFit(): void {
+function recomputeFit(measured?: ViewportClientSize): void {
 	const el = viewportRef.value;
 	const { width, height } = props.canvasSize;
 	if (!el || !width || !height) {
@@ -123,10 +130,13 @@ function recomputeFit(): void {
 	// thickness horizontally, because `margin: auto` splits the slack evenly
 	// and only the left half is the gutter the strip needs.
 	const gutter = props.showRulers ? RULER_THICKNESS : 0;
+	// Fractional, not clientWidth: a whole-pixel size rounds up by up to half a pixel and the
+	// fitted slide would overflow the viewport by that much.
+	const client = measured ?? measureViewportClientSize(el);
 	const fit = calculateViewportFit(
 		{
-			viewportWidth: el.clientWidth,
-			viewportHeight: el.clientHeight,
+			viewportWidth: client.width,
+			viewportHeight: client.height,
 			canvasWidth: width,
 			canvasHeight: height,
 			fitPadding: props.fitPadding,
@@ -134,24 +144,25 @@ function recomputeFit(): void {
 			horizontalGutter: gutter * 2,
 			verticalGutter: gutter,
 		},
-		editorViewportFitFor(el.clientWidth),
+		editorViewportFitFor(client.width),
 	);
 	emit('update:fitScale', fit.scale);
 }
 
-let observer: ResizeObserver | null = null;
+let stopObserving: (() => void) | null = null;
 
 onMounted(() => {
-	recomputeFit();
-	if (typeof ResizeObserver !== 'undefined' && viewportRef.value) {
-		observer = new ResizeObserver(() => recomputeFit());
-		observer.observe(viewportRef.value);
+	if (!viewportRef.value) {
+		recomputeFit();
+		return;
 	}
+	// Measures now, then on every client-size change, padding-only ones included.
+	stopObserving = observeViewportClientSize(viewportRef.value, (client) => recomputeFit(client));
 });
 
 onBeforeUnmount(() => {
-	observer?.disconnect();
-	observer = null;
+	stopObserving?.();
+	stopObserving = null;
 });
 
 // Re-fit when the authored slide size changes (e.g. switching decks), and when
@@ -164,7 +175,7 @@ watch(
 		props.fitPadding,
 		props.maxFitScale,
 	],
-	recomputeFit,
+	() => recomputeFit(),
 	{ deep: true },
 );
 </script>
