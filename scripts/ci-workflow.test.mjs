@@ -23,17 +23,19 @@ test('push plans start at the last green commit, so a newer push may cancel an o
 	assert.doesNotMatch(workflow.replace(planJob, ''), /actions: read/u);
 });
 
-test('browser retries retain failed traces, including when the retry passes', () => {
-	assert.ok(browserJob);
-	const command = browserJob.match(/        run: \|\r?\n([\s\S]*?)(?=^      -)/m)?.[1];
+/** Runs the browser-suite step with a fake `bun` whose attempts behave as `outcomes` says. */
+function runBrowserStep(outcomes) {
+	const command = browserJob.match(
+		/- name: Run the browser suite[\s\S]*?        run: \|\r?\n([\s\S]*?)(?=^      -)/m,
+	)?.[1];
 	assert.ok(command, 'the browser job has a runner command');
 	const script = command.replace(/^          /gm, '');
-	for (const retryStatus of [0, 1]) {
-		const dir = mkdtempSync(join(tmpdir(), 'ooxml-ci-retry-'));
-		try {
-			// Mimic Playwright clearing output before retrying. Use shell functions rather than
-			// executables so this exercises the workflow on Windows and Linux alike.
-			const harness = `
+	const dir = mkdtempSync(join(tmpdir(), 'ooxml-ci-retry-'));
+	try {
+		// Mimic Playwright clearing its output on each run: `crash` leaves no report, `fail` records
+		// failed tests, `pass` succeeds. Shell functions keep this portable to Windows and Linux.
+		const harness = `
+outcomes="${outcomes.join(' ')}"
 attempts=0
 bun() {
   attempts=$((attempts + 1))
@@ -41,41 +43,48 @@ bun() {
   rm -rf test-results playwright-report
   mkdir -p test-results playwright-report
   printf 'trace-%s' "$attempts" > test-results/trace.zip
-  printf 'report-%s' "$attempts" > playwright-report/index.html
-  printf '{"status":"failed","failedTests":["test-id"]}' > test-results/.last-run.json
-  if [ "$attempts" -eq 1 ]; then return 1; fi
-  return ${retryStatus}
+  outcome=$(echo $outcomes | cut -d' ' -f$attempts)
+  case "$outcome" in
+    pass) return 0 ;;
+    fail) printf '{"status":"failed","failedTests":["t"]}' > test-results/.last-run.json; return 1 ;;
+    *) return 1 ;;
+  esac
 }
 sleep() { :; }
 ${script}`;
-			writeFileSync(join(dir, 'run.sh'), harness);
-			const run = spawnSync('bash', ['-e', '-o', 'pipefail', 'run.sh'], {
-				cwd: dir,
-				encoding: 'utf8',
-				env: { ...process.env, PROJECT: 'vue', SHARD: '4', TOTAL: '10', SPECS: '' },
-			});
-			assert.equal(run.status, retryStatus, run.stderr || run.error?.message);
-			assert.equal(
-				readFileSync(join(dir, 'ci-evidence/attempt-1/test-results/trace.zip'), 'utf8'),
-				'trace-1',
-			);
-			assert.equal(
-				readFileSync(join(dir, 'ci-evidence/attempt-1/playwright-report/index.html'), 'utf8'),
-				'report-1',
-			);
-			const commands = readFileSync(join(dir, 'commands.txt'), 'utf8').trim().split('\n');
-			assert.equal(commands.length, 2);
-			assert.ok(!commands[0].includes('--last-failed'));
-			assert.ok(commands[1].includes('--last-failed'));
-			if (retryStatus !== 0)
-				assert.equal(
-					readFileSync(join(dir, 'ci-evidence/attempt-2/test-results/trace.zip'), 'utf8'),
-					'trace-2',
-				);
-		} finally {
-			rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-		}
+		writeFileSync(join(dir, 'run.sh'), harness);
+		const run = spawnSync('bash', ['-e', '-o', 'pipefail', 'run.sh'], {
+			cwd: dir,
+			encoding: 'utf8',
+			env: { ...process.env, PROJECT: 'vue', SHARD: '4', TOTAL: '7', SPECS: '' },
+		});
+		const commands = readFileSync(join(dir, 'commands.txt'), 'utf8').trim().split('\n');
+		const firstTrace = readFileSync(
+			join(dir, 'ci-evidence/attempt-1/test-results/trace.zip'),
+			'utf8',
+		);
+		return { status: run.status, commands, firstTrace, stderr: run.stderr };
+	} finally {
+		rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 	}
+}
+
+test('recorded browser failures fail at once; only a crash runs the shard again', () => {
+	assert.ok(browserJob);
+	const failed = runBrowserStep(['fail', 'pass']);
+	assert.notEqual(failed.status, 0);
+	assert.equal(failed.commands.length, 1);
+	assert.equal(failed.firstTrace, 'trace-1');
+
+	const crashed = runBrowserStep(['crash', 'pass']);
+	assert.equal(crashed.status, 0, crashed.stderr);
+	assert.equal(crashed.commands.length, 2);
+	assert.equal(crashed.firstTrace, 'trace-1');
+
+	const twice = runBrowserStep(['crash', 'crash']);
+	assert.notEqual(twice.status, 0);
+	assert.equal(twice.commands.length, 2);
+	assert.ok(twice.commands.every((command) => command.includes('--shard=4/7')));
 	assert.match(browserJob, /- name: Preserve the report\s+if: always\(\)/u);
 	assert.match(browserJob, /viewers\/pptx\/ci-evidence\//u);
 });

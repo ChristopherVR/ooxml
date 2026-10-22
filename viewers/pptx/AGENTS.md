@@ -249,6 +249,12 @@ binding, at about a fifth of the cost. Run another binding with `--project=<name
   collaboration relay up between runs (Playwright reuses a server that is listening). Restart them
   after rebuilding `ooxml-ui`, core or the angular package, since a running server serves the old
   build. The list lives in `e2e-servers.ts`, which `playwright.config.ts` also uses.
+- `PPTX_E2E_SERVE=preview` serves each demo's built `dist/` with `vite preview` instead of a dev
+  server (CI does this: a react shard went from about 14 to 4 minutes). Build the demos first with
+  `VITE_PPTX_E2E_HANDLE=1 bun run build` in each `demos/pptx/demo-*`; the variable keeps the
+  `window.__pptxViewer` handle that a production build otherwise omits. Only the demos the
+  `--project` list needs are started (React plus the binding; React or no project starts all five).
+  `PPTX_E2E_VITE_FORCE=0` drops `--force` from the dev command.
 - `bun run e2e:changed` runs only the spec files changed against `origin/main`, plus specs that
   import a changed support file. It does not follow a change to product source: for that run the
   affected specs by name (`bun run e2e -- <spec>`), or the project (`bun run verify --browser`).

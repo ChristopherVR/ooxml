@@ -190,7 +190,10 @@ export class AppComponent {
 
 	constructor() {
 		inject(DestroyRef).onDestroy(
-			installDevViewerHandle(() => this.viewerRef(), import.meta.env.DEV),
+			installDevViewerHandle(
+				() => this.viewerRef(),
+				import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1',
+			),
 		);
 		// Mirror the React demo's `useRootTheme`: write the active theme's
 		// `--pptx-*` / `--color-*` custom properties onto `document.documentElement`

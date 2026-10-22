@@ -51,7 +51,10 @@ const app: HTMLElement = appRoot;
 
 const themeKey = readStoredTheme();
 let viewer: PptxViewerInstance | null = null;
-const removeDevViewerHandle = installDevViewerHandle(() => viewer, import.meta.env.DEV);
+const removeDevViewerHandle = installDevViewerHandle(
+	() => viewer,
+	import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1',
+);
 import.meta.hot?.dispose(removeDevViewerHandle);
 let appliedVarKeys: string[] = [];
 
