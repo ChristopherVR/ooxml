@@ -291,7 +291,7 @@ export const translationsFr: Record<TranslationKey, string> = {
 母语使用者和熟练使用者可以按模块贡献，无需一次审阅整套字典：
 
 1. 在 `packages/locales/src/fr`、`src/es`、`src/de` 或 `src/zh-CN` 下选择一个产品区域文件。
-2. 将每个值与 `packages/shared/src/i18n/translations-en.ts` 中相同的键对照。
+2. 将每个值与 `src/ui/src/pptx/i18n/translations-en.ts` 中相同的键对照。
 3. 改进译文，保持点分隔的键名以及全部 `{{token}}` 占位符不变。
 4. 优先使用对应语言的 Microsoft PowerPoint 术语，尤其是 SmartArt、平滑切换、图表和母版视图。
 5. 运行 `bun run --filter 'pptx-viewer-locales' test`、`typecheck` 和 `build`，并在 PR 中说明检查的语言和产品区域。
@@ -306,11 +306,11 @@ export const translationsFr: Record<TranslationKey, string> = {
 
 选择器的接入属于演示代码，字典通过 Bun 工作区从 `packages/locales` 引用：
 
-- **React**：`demos/demo-react/i18n.ts`、`LanguagePicker.tsx`
-- **Vue**：`demos/demo-vue/src/i18n.ts`、`LanguagePicker.vue`
-- **Angular**：`demos/demo-angular/src/i18n.ts`、`language-picker.component.ts`
-- **Vanilla**：`demos/demo-vanilla/src/demo-i18n.ts`、`language-picker.ts`
-- **Svelte**：`demos/demo-svelte/src/demo-i18n.svelte.ts`、`LanguagePicker.svelte`
+- **React**：`demos/pptx/demo-react/i18n.ts`、`LanguagePicker.tsx`
+- **Vue**：`demos/pptx/demo-vue/src/i18n.ts`、`LanguagePicker.vue`
+- **Angular**：`demos/pptx/demo-angular/src/i18n.ts`、`language-picker.component.ts`
+- **Vanilla**：`demos/pptx/demo-vanilla/src/demo-i18n.ts`、`language-picker.ts`
+- **Svelte**：`demos/pptx/demo-svelte/src/demo-i18n.svelte.ts`、`LanguagePicker.svelte`
 
 ## 下一步 {#next-steps}
 

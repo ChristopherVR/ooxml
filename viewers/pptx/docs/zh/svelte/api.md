@@ -127,17 +127,16 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 
 设置 `editable` 时启用，参见[快速上手 > 编辑](/zh/svelte/getting-started#editing)。
 
-| 方法                | 签名                                                           | 说明                                                           |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
-| `undo`              | `() => void`                                                   | 撤销上一次提交的编辑。                                         |
-| `redo`              | `() => void`                                                   | 重做上一次撤销的编辑。                                         |
-| `canUndo`           | `() => boolean`                                                | 是否存在可撤销步骤，返回快照，不具备响应性。                   |
-| `canRedo`           | `() => boolean`                                                | 是否存在可重做步骤。                                           |
-| `deleteSelected`    | `() => void`                                                   | 删除选中元素，未选中时不执行操作。                             |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 将编辑后的幻灯片序列化为字节（`'pptx' \| 'ppsx' \| 'pptm'`）。 |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以指定格式触发浏览器下载。                               |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | 保存并以默认名称下载 `.pptx`。                                 |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | 组装并下载共享包。                                             |
+| 方法             | 签名                                                           | 说明                                                           |
+| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| `undo`           | `() => void`                                                   | 撤销上一次提交的编辑。                                         |
+| `redo`           | `() => void`                                                   | 重做上一次撤销的编辑。                                         |
+| `canUndo`        | `() => boolean`                                                | 是否存在可撤销步骤，返回快照，不具备响应性。                   |
+| `canRedo`        | `() => boolean`                                                | 是否存在可重做步骤。                                           |
+| `deleteSelected` | `() => void`                                                   | 删除选中元素，未选中时不执行操作。                             |
+| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 将编辑后的幻灯片序列化为字节（`'pptx' \| 'ppsx' \| 'pptm'`）。 |
+| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以指定格式触发浏览器下载。                               |
+| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | 保存并以默认名称下载 `.pptx`。                                 |
 
 启用编辑时可使用以下键盘快捷键：`Ctrl` / `Cmd+Z` 撤销，`Ctrl` / `Cmd+Shift+Z` 重做，`Delete` / `Backspace` 删除，`Ctrl` / `Cmd+D` 复制，方向键微移（配合 `Shift` 使用更大步长），`Escape` 取消选择。
 
@@ -153,6 +152,34 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 | `print`            | `(options?: PrintOptions) => Promise<boolean>`    | 打开浏览器打印对话框，支持幻灯片、讲义、备注和大纲。 |
 
 选项结构、处理流程和独立 SVG 导出函数请参见[导出与打印](/zh/svelte/export)。
+
+## 界面自定义 {#ui-customization}
+
+该句柄还带有完整的 `ViewerCustomizationApi`，因此查看器运行时可以随时自定义界面。每次调用都会立即重新渲染受影响的界面。
+
+```ts
+viewer?.hideRibbonTab('draw');
+viewer?.lockSetting('general.userName', 'Ada Lovelace');
+viewer?.hideContextMenuCommand('delete');
+viewer?.remapShortcut('duplicate', 'Mod+Shift+D');
+viewer?.setFeatureEnabled('ai', false);
+viewer?.setPanelVisible('notes', false);
+viewer?.updateCustomization({ hiddenDialogs: ['print'] });
+const current = viewer?.getCustomization();
+```
+
+| 方法                                                                                                 | 作用                                               |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `getCustomization()` / `setCustomization(c)` / `updateCustomization(patch)` / `resetCustomization()` | 读取、替换、合并或清除整个 `ViewerCustomization`。 |
+| `hideRibbonTab` / `showRibbonTab`, `hideToolbarButton` / `showToolbarButton`                         | 功能区选项卡和顶层工具栏按钮。                     |
+| `hideOptionsPage`, `hideOptionsSection`, `hideSetting`（及 `show*`）                                 | 文件 > 选项的页面、分区和设置项。                  |
+| `lockSetting(id, value, hidden?)` / `unlockSetting(id)` / `setSettingDefault(id, value)`             | 固定设置项（只读或隐藏），或设置宿主默认值。       |
+| `hideBackstagePage` / `hideBackstageCard`（及 `show*`）                                              | 文件选项卡的页面和操作卡片。                       |
+| `hideContextMenuCommand` / `hideCanvasContextMenuCommand`（及 `show*`）                              | 元素和空白画布的右键菜单项。                       |
+| `disableShortcut` / `enableShortcut` / `remapShortcut`                                               | 编辑器键盘快捷键。                                 |
+| `setPanelVisible`, `setFeatureEnabled`, `setDialogAvailable`                                         | 面板、功能区域（AI、协作等）和对话框。             |
+
+完整的 ID 参考和用法示例请参见[界面自定义指南](/zh/guide/customization)。
 
 ## 示例：外部控件 {#example-external-controls}
 

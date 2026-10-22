@@ -7,7 +7,7 @@ description: pptx-viewer-core 是不依赖框架的 TypeScript 引擎，在内�
 
 `pptx-viewer-core` 是处理 PowerPoint（`.pptx`）的**框架无关** TypeScript 引擎。它直接在内存中的 OpenXML ZIP 归档上解析、创建、编辑、序列化和转换文稿，无需原生依赖或浏览器 DOM。
 
-`.pptx` 是遵循 [Office Open XML（OOXML）](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/) 规范、包含 XML 文档的 ZIP 归档。本包为其提供完整的类型化 SDK，包含四项运行时依赖：处理 ZIP 的 **jszip**、解析和构建 XML 的 **fast-xml-parser**，以及独立的二进制格式包 **emf-converter** 和 **mtx-decompressor**。
+`.pptx` 是遵循 [Office Open XML（OOXML）](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/) 规范、包含 XML 文档的 ZIP 归档。本包为其提供完整的类型化 SDK。它只有一项运行时依赖 **`ooxml-core`**，引擎位于其 `pptx` 区域，ZIP、XML 和二进制格式库（jszip、fast-xml-parser、emf-converter、mtx-decompressor 等）由它自行引入。
 
 ::: tip 在项目中的位置
 React、Vue 和 Angular 等组件渲染核心引擎生成的数据模型，MCP 工具包则将其能力提供给智能体。参见 [React 组件](/zh/react/)和 [MCP 工具](/zh/packages/mcp)。
@@ -161,7 +161,7 @@ const bytes = await handler.save(data.slides);
 ## 架构速览 {#architecture-at-a-glance}
 
 - **`PptxHandler`** 包装 `PptxHandlerCore`，后者委托给可注入的 `IPptxHandlerRuntime`。测试时可通过 `new PptxHandler({ runtime })` 提供自定义实现。
-- **运行时**由 102 个职责明确的 mixin 模块组成，分别处理主题加载、元素解析、保存等。
+- **运行时**由众多职责明确的 mixin 模块组成，分别处理主题加载、元素解析、保存等。
 - **类型系统**以 `PptxElement` 为中心，包含 `text`、`shape`、`connector`、`image`、`picture`、`table`、`chart`、`smartArt`、`ole`、`media`、`group`、`ink`、`contentPart`、`zoom`、`model3d` 和 `unknown` 共 16 种类型，通过 `element.type` 缩小范围，详见[数据模型](/zh/guide/data-model)。
 - **EMU** 是 OOXML 原生坐标单位：1 英寸 = 914,400 EMU，1 磅 = 12,700 EMU，96 DPI 下 1 像素 = 9,525 EMU。模型同时提供像素 `data.width`/`data.height` 和原始 EMU `widthEmu`/`heightEmu`。
 

@@ -72,17 +72,16 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ## 画布交互 {#canvas-interaction}
 
-| 组合式函数             | 职责                                                           |
-| ---------------------- | -------------------------------------------------------------- |
-| `useContextMenu`       | 右键或长按触发的元素上下文菜单。                               |
-| `useIsMobile`          | 判断设备、视口、手机、平板和方向。                             |
-| `useTouchGestures`     | 双指缩放、平移和长按手势识别。                                 |
-| `useKeyboardInsets`    | 根据移动端屏幕键盘调整布局。                                   |
-| `useKeyboardShortcuts` | 快捷键目录、分组和匹配解析。                                   |
-| `useSheetDismissDrag`  | 移动端底部抽屉滑动关闭。                                       |
-| `useToolbarAutoHide`   | 鼠标空闲时自动隐藏悬浮放映工具栏。                             |
-| `useDebouncedCallback` | 通用的防抖回调工具。                                           |
-| `useSelection`         | 通用的响应式已选 ID 集合辅助函数，支持单选、追加、切换和清空。 |
+| 组合式函数             | 职责                               |
+| ---------------------- | ---------------------------------- |
+| `useContextMenu`       | 右键或长按触发的元素上下文菜单。   |
+| `useIsMobile`          | 判断设备、视口、手机、平板和方向。 |
+| `useTouchGestures`     | 双指缩放、平移和长按手势识别。     |
+| `useKeyboardInsets`    | 根据移动端屏幕键盘调整布局。       |
+| `useKeyboardShortcuts` | 快捷键目录、分组和匹配解析。       |
+| `useSheetDismissDrag`  | 移动端底部抽屉滑动关闭。           |
+| `useToolbarAutoHide`   | 鼠标空闲时自动隐藏悬浮放映工具栏。 |
+| `useDebouncedCallback` | 通用的防抖回调工具。               |
 
 ## 功能区与工具栏 {#ribbon-toolbar}
 

@@ -7,7 +7,21 @@ description: 了解各框架共用的 ViewerTheme、CSS 自定义属性、内置
 
 预览器的工具栏、功能区、对话框和文件后台界面通过 `ViewerTheme` 配置主题。它会将一组 CSS 自定义属性（`--pptx-*`）应用到组件根元素。这与演示文稿自身的 OOXML 配色和字体完全独立：“设计”选项卡的主题库会修改 `.pptx` 文档，而 `ViewerTheme` 只影响应用界面。
 
-主题系统不依赖框架。下文的类型、默认值、预设和工具函数只在内部的 `pptx-viewer-shared` 包中实现一次，再由 `pptx-react-viewer`、`pptx-vue-viewer`、`pptx-angular-viewer`、`pptx-svelte-viewer` 和 `pptx-vanilla-viewer` 以相同方式导出。
+主题系统不依赖框架。下文的类型、默认值、预设和工具函数只在公共的 `ooxml-ui/pptx` API 中实现一次，再由 `pptx-react-viewer`、`pptx-vue-viewer`、`pptx-angular-viewer`、`pptx-svelte-viewer` 和 `pptx-vanilla-viewer` 以相同方式导出。
+
+## 共享的 Office 外观 {#shared-office-appearance}
+
+五个组件都继承与 Word、Excel 和 Visio 相同的 `--office-*` 令牌。在文档根元素或其包含元素上设置 `data-office-theme="light"`、`"dark"` 或 `"auto"`。限定范围的模式会覆盖继承的配色；`auto` 会跟随操作系统的变化。同一范围内的自定义令牌会覆盖所选配色：
+
+```html
+<section data-office-theme="dark" style="--office-accent: #a78bfa; --office-font: Georgia, serif">
+	<!-- Mount a viewer here, without an explicit ViewerTheme palette. -->
+</section>
+```
+
+工具栏、原生界面和 shadow DOM 控件继承最近的范围。常用令牌包括 `--office-background`、`--office-surface`、`--office-foreground`、`--office-border`、`--office-accent`、`--office-ring` 和 `--office-font`。现有的 `ViewerTheme`、`themeToCssVars()` 和 `defaultCssVars()` 输出保持兼容。显式传入的旧版输入仍优先于规范令牌的回退值，包括部分配色以及 `--pptx-switch-width` 等控件尺寸。
+
+界面外观不会修改演示文稿的颜色、字体或文档主题。
 
 ## `ViewerTheme` 结构 {#the-viewertheme-shape}
 
@@ -22,7 +36,7 @@ interface ViewerTheme {
 }
 ```
 
-所有字段均可选，未设置的值回退到内置深色主题。`ViewerThemeColors` 包含 19 个语义化颜色项，沿用 shadcn/ui 的命名习惯。它们接受任意有效的 CSS 颜色字符串，包括十六进制、`rgb()`、`hsl()`、`oklch()` 和命名颜色：
+所有字段均可选，未设置的值会在组件范围内继承共享的 Office 界面令牌。显式的 `ViewerTheme` 颜色和旧版 `--pptx-*` 变量优先。`ViewerThemeColors` 包含 19 个语义化颜色项，沿用 shadcn/ui 的命名习惯。它们接受任意有效的 CSS 颜色字符串，包括十六进制、`rgb()`、`hsl()`、`oklch()` 和命名颜色：
 
 | 颜色项                                 | 用途                         |
 | -------------------------------------- | ---------------------------- |
@@ -43,7 +57,7 @@ interface ViewerTheme {
 `themeToCssVars(theme, omitDefaults = false)` 将 `ViewerTheme` 转换为扁平的 CSS 自定义属性对象 `Record<string, string>`，可直接作为行内样式应用到组件根元素。传入主题后，各组件会在内部调用它；它也作为公共工具函数导出，供自定义工具使用。
 
 - `colors` 中的每个键会变为 `--pptx-<kebab-case-key>`。例如，`primaryForeground: '#fff'` 会输出 `--pptx-primary-foreground: #fff`。
-- 每个颜色还会同步到对应的 Tailwind 语义变量（如 `--color-primary-foreground`）。在 Tailwind CSS v4 宿主中，这样可以覆盖无法读取子元素变量的 `@theme` 声明。
+- 每个颜色还会同步到对应的 Tailwind 语义变量（如 `--color-primary-foreground`）。为兼容 Tailwind CSS v4 宿主。组件使用 `@theme inline`，因此继承的 Office 令牌会在使用它们的组件处解析。
 - `radius` 会生成 `--pptx-radius`，以及派生的 `--radius-sm`、`--radius-md`、`--radius-lg` 和 `--radius-xl`，取值范围从 `calc(r - 4px)` 到 `calc(r + 4px)`。
 - `cssVars` 中的项原样传递。
 - 设置 `omitDefaults: true` 时，跳过与内置默认值相同的项。
@@ -65,12 +79,12 @@ defaultCssVars();
 
 ## 内置主题和预设 {#built-in-themes-and-presets}
 
-| 导出项                                         | 配色                                                                           |
-| ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| `defaultThemeColors` + `defaultRadius`         | 内置深色界面，使用 Tailwind 灰阶、靛蓝主色和 `0.5rem` 圆角。未传入主题时使用。 |
-| `vermilionLightTheme` / `vermilionLightColors` | 温暖的浅色纸张风格，使用与本文档站相同的朱红强调色。                           |
-| `vermilionDarkTheme` / `vermilionDarkColors`   | 较暗的放映室风格，使用相同的强调色。                                           |
-| `vermilionRadius`                              | `'0.375rem'`，两种朱红预设共用的圆角。                                         |
+| 导出项                                         | 配色                                                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `defaultThemeColors` + `defaultRadius`         | 内置深色界面，使用 Tailwind 灰阶、靛蓝主色和 `0.5rem` 圆角。可通过 `defaultCssVars()` 显式获取。 |
+| `vermilionLightTheme` / `vermilionLightColors` | 温暖的浅色纸张风格，使用与本文档站相同的朱红强调色。                                             |
+| `vermilionDarkTheme` / `vermilionDarkColors`   | 较暗的放映室风格，使用相同的强调色。                                                             |
+| `vermilionRadius`                              | `'0.375rem'`，两种朱红预设共用的圆角。                                                           |
 
 两种朱红预设都是完整的 `ViewerTheme` 对象，包含全部 19 个颜色项和圆角，可完整替换默认深色主题。同时还导出原始的 `*Colors` 配色，便于派生其他主题：
 
