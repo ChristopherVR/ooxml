@@ -1,5 +1,6 @@
 import type { AutosaveDisabledReason, CollaborationShellState } from 'ooxml-ui/pptx';
 import {
+	autosaveStatusKind,
 	buildDeckSaveOptions,
 	createCollaborationStateReporter,
 	resolveAutosaveActivation,
@@ -15,6 +16,7 @@ import { AutosaveRecoveryController } from './autosave-recovery.svelte';
 import { AutosaveController } from './autosave.svelte';
 import type { CreateViewerStateOptions } from './create-viewer-state-types';
 import type { PresentationLoader } from './presentation-loader.svelte';
+import { reportOnChange } from './report-on-change.svelte';
 import { sourceBlocksEditing } from './stage-loading';
 import type { ViewerState } from './viewer-state.svelte';
 
@@ -153,6 +155,11 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 	$effect(() => {
 		collaborationReporter.update(collab.state);
 	});
+	// The raw connection status; `oncollaborationchange` carries the full shared state.
+	reportOnChange(
+		() => collab.status,
+		(status) => options.oncollaborationstatus?.(status),
+	);
 	useCollaborationPresenceEffects({
 		collab,
 		getCurrentSlide: () => viewer.current,
@@ -226,6 +233,11 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSeedNonce: () => editor.seedNonce,
 		onSaved: (bytes) => options.onautosave?.(bytes),
 	});
+	// The public lifecycle, not the engine's own status (`disabled` reports as `idle`).
+	reportOnChange(
+		() => autosaveStatusKind(autosaveCtl.status),
+		(status) => options.onautosavestatus?.(status),
+	);
 
 	// "Is there a snapshot from a crashed session?", asked once per loaded deck.
 	// Gated on the HOST prop only: a user who merely switched AutoSave off is
@@ -239,6 +251,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSlideCount: () => loader.slides.length,
 		getLoadCount: () => loader.loadCount,
 		load: (bytes) => loader.load(bytes),
+		onOffered: (record) => options.onautosaverecovery?.(record),
 	});
 
 	return {

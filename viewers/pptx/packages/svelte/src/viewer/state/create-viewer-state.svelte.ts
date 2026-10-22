@@ -138,6 +138,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 				tableStylesDefaultId: loader.tableStylesDefaultId,
 				tableStylesToDelete: loader.tableStylesToDelete,
 			}),
+		onCorePropertiesChange: (updates) => options.onpropertieschange?.(updates),
 		onChange: () => {
 			viewer.setSlideCount(editor.slides.length);
 			options.onchange?.();

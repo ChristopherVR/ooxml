@@ -166,14 +166,14 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 		names: { vanilla: 'onToggleAutosave' },
 		absent: onlyIn(['svelte', 'vanilla', 'react', 'vue'], NOT_YET),
 	},
-	{ id: 'propertiesChange', absent: onlyIn(['angular', 'react', 'vue'], NOT_YET) },
+	{ id: 'propertiesChange', absent: onlyIn(['angular', 'react', 'vue', 'svelte'], NOT_YET) },
 	{ id: 'change', absent: onlyIn(['svelte', 'vanilla', 'react', 'vue'], NOT_YET) },
 	{ id: 'notesUpdate', absent: onlyIn(['svelte', 'react', 'vue'], NOT_YET) },
-	{ id: 'presentationChange', absent: onlyIn(['vanilla', 'react', 'vue'], NOT_YET) },
-	{ id: 'autosaveStatus', absent: onlyIn(['vanilla', 'react', 'vue'], NOT_YET) },
-	{ id: 'autosaveRecovery', absent: onlyIn(['vanilla', 'react', 'vue'], NOT_YET) },
+	{ id: 'presentationChange', absent: onlyIn(['vanilla', 'react', 'vue', 'svelte'], NOT_YET) },
+	{ id: 'autosaveStatus', absent: onlyIn(['vanilla', 'react', 'vue', 'svelte'], NOT_YET) },
+	{ id: 'autosaveRecovery', absent: onlyIn(['vanilla', 'react', 'vue', 'svelte'], NOT_YET) },
 	// Raw connection status only; `collaborationChange` carries the full shared state everywhere.
-	{ id: 'collaborationStatus', absent: onlyIn(['vanilla', 'react', 'vue'], NOT_YET) },
+	{ id: 'collaborationStatus', absent: onlyIn(['vanilla', 'react', 'vue', 'svelte'], NOT_YET) },
 ];
 
 const capitalised = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1);

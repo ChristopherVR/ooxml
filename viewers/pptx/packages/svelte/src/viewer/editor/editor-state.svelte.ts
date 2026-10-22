@@ -114,6 +114,8 @@ export interface EditorStateDeps {
 	 */
 	setHandler?: (handler: PptxHandler, keepPrevious?: boolean, data?: PptxData) => void;
 	onChange?: () => void;
+	/** The host's `onpropertieschange`: the core fields a user edit changed. */
+	onCorePropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
 }
 
 export class EditorState {
@@ -576,12 +578,24 @@ export class EditorState {
 	commitNotes = (notes: string, notesSegments?: TextSegment[]): void =>
 		this.elementOps.commitNotes(notes, notesSegments);
 
+	/**
+	 * Replace the document properties as one undoable edit. `reported` is what the host's
+	 * `onpropertieschange` hears (the dialog's saved core by default); pass `null` for an
+	 * edit that is not a user change to the core properties (app or custom ones, the AI).
+	 */
 	updateDocumentProperties(
 		core: PptxCoreProperties,
 		app: PptxAppProperties,
 		custom: PptxCustomProperty[],
+		reported: Partial<PptxCoreProperties> | null = core,
 	): void {
+		if (!this.editable) {
+			return;
+		}
 		updateEditorDocumentProperties(this, core, app, custom);
+		if (reported) {
+			this.#deps.onCorePropertiesChange?.(reported);
+		}
 	}
 
 	/**

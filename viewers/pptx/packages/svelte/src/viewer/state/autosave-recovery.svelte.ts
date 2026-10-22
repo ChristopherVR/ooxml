@@ -44,6 +44,8 @@ export interface AutosaveRecoveryDeps {
 	getLoadCount: () => number;
 	/** The loader's own load path, the same one the backstage recent list uses. */
 	load: (bytes: Uint8Array) => Promise<void> | void;
+	/** The host's `onautosaverecovery`: called with the record when a snapshot is offered. */
+	onOffered?: (record: AutosaveRecord) => void;
 }
 
 export class AutosaveRecoveryController {
@@ -94,6 +96,9 @@ export class AutosaveRecoveryController {
 		}
 		this.prompt = offer?.prompt ?? null;
 		this.#record = offer?.record ?? null;
+		if (offer) {
+			this.#deps.onOffered?.(offer.record);
+		}
 	}
 
 	/** Take the snapshot and load its bytes in place without deleting it. */

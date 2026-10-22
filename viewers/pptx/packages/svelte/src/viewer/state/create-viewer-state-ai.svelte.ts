@@ -118,7 +118,7 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 		setDocumentProperties: (core, app, custom) => {
 			deps.setEditable(true);
 			editor.editable = true;
-			editor.updateDocumentProperties(core, app, custom);
+			editor.updateDocumentProperties(core, app, custom, null);
 		},
 		// Not undo-tracked, mirroring the manual View > Grid/Guides/Snap toggle
 		// and the table style DEFINITION editor (both live outside
