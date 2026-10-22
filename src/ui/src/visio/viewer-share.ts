@@ -85,7 +85,11 @@ export class ViewerShare {
 	}
 	get state(): CollaborationState {
 		const joined = this.#joined;
-		return joined ? joined.collab.collaborationStateOf(joined.session) : NOT_SHARING;
+		if (!joined) return NOT_SHARING;
+		const state = joined.collab.collaborationStateOf(joined.session);
+		const writeBack = joined.writeBack.state;
+		// Only the window that writes back reports it.
+		return writeBack && joined.session.role === 'owner' ? { ...state, writeBack } : state;
 	}
 	/** Declarative sharing: while set, the drawing is shared; null leaves the room. */
 	want(options: VisioCollaborationOptions | null): void {
@@ -181,6 +185,7 @@ export class ViewerShare {
 			this.controller,
 			options,
 			() => session.role === 'owner' && session.canWrite(),
+			() => this.#changed(),
 		);
 		// A viewer role is read-only: its edits are never published, so they are not offered either.
 		const readOnly = session.role === 'viewer' && this.controller.canEdit;

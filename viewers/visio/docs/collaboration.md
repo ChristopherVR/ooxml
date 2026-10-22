@@ -29,7 +29,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **Roles**: `role: 'viewer'` makes the viewer read-only while it is in the room (`canEdit` is restored when it leaves). The role is advisory; a server must enforce it.
 - **Events**: `collaboration-change` carries a `CollaborationState` when sharing starts or stops and when the connection status, first sync or people change. A failed join is reported as `document-error`. File > Share uses the same controller, so starting from the panel reports state and the event too.
 - **Bindings**: every binding forwards a `collaboration` prop (React, Vue, Solid, Svelte, vanilla `mountViewer`/`update`, Angular `[collaboration]`) and relays `collaboration-change` (`events['collaboration-change']`, Vue `@collaboration-change`, Angular `(collaborationChange)`). Unmounting leaves the room.
-- **Types**: `VisioCollaborationOptions` (the shared options plus `onWriteBack` and `writeBackDebounceMs`) and `VisioCollaborationState` are exported from `ooxml-ui/visio`, and every binding's `collaboration` prop is typed with the same options.
+- **Types**: `VisioCollaborationOptions` (the shared options plus `onWriteBack`, `writeBackDebounceMs` and `writeBackRetry`) and `VisioCollaborationState` are exported from `ooxml-ui/visio`, and every binding's `collaboration` prop is typed with the same options.
 
 ## Server and peer-to-peer: auth token and WebRTC
 
@@ -89,12 +89,16 @@ viewer.collaboration = {
 };
 ```
 
-Only the window whose role is `owner` writes, so collaborators never race each other to save. The callback fires after the drawing has been quiet for the debounce, following local and remote changes, and once more when the owner leaves the room if a save is pending. It never fires for `collaborator` or `viewer`. This is not a durable-storage acknowledgement: the viewer cannot tell whether your callback stored the bytes, does not retry, and a window closed before the debounce ends loses a pending save (leaving through `stopCollaboration()` or unmounting flushes it). The same options shape as PowerPoint's `onWriteBack`.
+Only the window whose role is `owner` writes, so collaborators never race each other to save. The callback fires after the drawing has been quiet for the debounce, following local and remote changes, and once more when the owner leaves the room if a save is pending. It never fires for `collaborator` or `viewer`. The same options shape as PowerPoint's `onWriteBack`, on the same scheduler (`createWriteBackScheduler` of `ooxml-core/collab`).
+
+Return a promise from `onWriteBack` to acknowledge storage: one write is in flight at a time, changes made meanwhile become one follow-up write, and a rejection is retried when you set `writeBackRetry` (`{ attempts, baseDelayMs?, maxDelayMs? }`, exponential backoff, `attempts` counts the first try; default no retry). A plain return counts as acknowledged at once. The owner's `collaborationState.writeBack` (also in `collaboration-change`) reports `{ status: 'idle' | 'pending' | 'saving' | 'saved' | 'failed', lastSavedAt?, error? }`; other roles do not report it. `saved` means your callback resolved, nothing more.
+
+A pending save is flushed when the viewer leaves the room, on `pagehide` and when the page turns hidden. Browsers do not wait for asynchronous work when a page unloads, so a write that needs a network round trip can still be lost on close. A host whose `write` must survive a close should send the bytes with `navigator.sendBeacon(url, bytes)` or `fetch(url, { method: 'PUT', body: bytes, keepalive: true })`, which the browser completes after the page is gone (keepalive bodies are capped at about 64 KiB, so a large document may still not make it).
 
 ## What exists today
 
 - A live session built on `ooxml-core/collab` (Yjs) over a `BroadcastChannel`, so windows and tabs of the same browser can share a drawing.
-- Pages, shapes and connectors are shared item by item (`ooxml-core/visio/collab`); every other part of the package (masters, styles, theme, data, media, document settings) is shared whole, last write wins per part. The collab runtime loads only when sharing starts.
+- Pages, shapes (down to cells, rows and sections), connectors, masters and pictures are shared item by item (`ooxml-core/visio/collab`); every other part of the package (styles, theme, data, document settings) is shared whole, last write wins per part. The collab runtime loads only when sharing starts.
 - Concurrent edits to different shapes both survive; two edits of one shape resolve to one value on every window; a deleted shape or page wins over a concurrent edit of it; shapes given the same id by two windows at once are renumbered the same way everywhere.
 - Undo and redo (Ctrl+Z, the ribbon) act on this window's own edits only and never revert a collaborator's. Remote changes are applied outside your undo history, and the history starts when you join.
 - Collaborators appear through the shared `ooxml-ui` presence element.
@@ -131,23 +135,24 @@ The panel uses a `BroadcastChannel`, which connects windows, tabs and frames of 
 
 ## What is and is not supported
 
-| Supported                                                     | Not supported                                                                |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Same-browser sessions over BroadcastChannel, built on Yjs     | A hosted server: bring your own y-websocket server, provider or session      |
-| Per-shape and per-page merging, deletes win, local-only undo  | Merging inside one shape: two edits of the same shape keep one whole shape   |
-| Collaborators shown with the shared presence element          | Comments; roles are advisory (a server must enforce them)                    |
-| File > Share and the `collaboration` property as entry points | Cursors across different pages (only the shared page is drawn)               |
-| Live cursors and selections of collaborators on the same page | Presence from a host `session` made without `sanitizeVisioPresence`          |
-| Owner write-back (`onWriteBack`, debounced, flushed on leave) | A storage acknowledgement, retry or durability guarantee for write-back      |
-| `authToken` for a server and `webrtc` (your `WebrtcProvider`) | A bundled y-webrtc or signaling server; token validation (your server's job) |
+| Supported                                                                               | Not supported                                                                |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Same-browser sessions over BroadcastChannel, built on Yjs                               | A hosted server: bring your own y-websocket server, provider or session      |
+| Per-shape and per-page merging, deletes win, local-only undo                            | Merging inside one shape: two edits of the same shape keep one whole shape   |
+| Collaborators shown with the shared presence element                                    | Comments; roles are advisory (a server must enforce them)                    |
+| File > Share and the `collaboration` property as entry points                           | Cursors across different pages (only the shared page is drawn)               |
+| Live cursors and selections of collaborators on the same page                           | Presence from a host `session` made without `sanitizeVisioPresence`          |
+| Owner write-back: debounced, promise ack, retry, status, flushed on leave and page hide | A guarantee that an asynchronous write finishes when the page closes         |
+| `authToken` for a server and `webrtc` (your `WebrtcProvider`)                           | A bundled y-webrtc or signaling server; token validation (your server's job) |
 
 ### Limits of shape-level merging
 
-- A shape is one shared entry (its XML). Two people editing different properties of the same shape at once keep only one version of that shape.
-- Page parts are split by text, so shapes round-trip exactly as the editor wrote them. A page part that cannot be split (no usable `Shapes` list) falls back to sharing its shapes as part of the page shell, last write wins.
-- Parts other than pages (masters, document settings, styles, theme, data, media) merge per part, last write wins. Masters or media added by two people at the same moment can overwrite each other. The window state and thumbnail stay local.
-- When two windows add shapes with the same id at once, one is renumbered. Formulas in other shapes that name the renumbered shape (`Sheet.n!...`) are not rewritten.
-- A glue (connect) removed by one person and re-made identically by another keeps the re-made one.
-- Undo history is per window, starts at join, and is not kept across a reconnect. The rebuild applies the room's whole package, so a very large drawing is re-read on every remote change.
+- Two people editing different properties of the same shape (a move and a text or fill change, different cells, rows or sections) both keep their change. Two people editing the same cell, or the same text, end with one value, the same in every window. Whole master edits and whole `Text` or `Data` children are one unit each.
+- Page parts are split by text, so cells round-trip exactly as the editor wrote them (whitespace between elements is dropped). A page part that cannot be split (no usable `Shapes` list) falls back to sharing its shapes as part of the page shell, last write wins.
+- Masters and media merge per item: masters added by two people at once both stay, and pictures are keyed by content, so identical pictures are stored once and different pictures that share a file name both stay (one is renamed). Styles, theme, document settings, data and the content types part still merge per part, last write wins. The window state and thumbnail stay local.
+- When two windows add shapes with the same id at once, one is renumbered, and the `Sheet.n!...` formulas of that shape, of the shapes inside it and of the shapes its author added in the same step follow. Formulas in shapes added later or by other people that name the old number are not rewritten, and the new number can change if more shapes are added at the same time. Masters renumber the same way for the shapes added with them.
+- A glue (connect) removed by one person and re-made identically by another keeps the re-made one. Pictures of removed media stay in the room (not garbage-collected). A cell, master or picture one person deletes while another edits it keeps the edit; a deleted shape or page always wins.
+- A room written by another schema version of the collaboration format (an older or newer build) is refused: the window reports an error and neither reads from nor writes to that room. Upgrade every window of a room together.
+- Undo history is per window, starts at join, and is not kept across a reconnect. Remote changes that arrive together are applied with one rebuild, and a change that leaves the drawing as it is applies nothing, but each rebuild still re-reads the room's whole package (there is no incremental parsing), so a very large drawing is re-read on every batch of remote changes.
 
 The evidence is recorded in the [capability ledger](/parity) under "Collaboration and comments".
