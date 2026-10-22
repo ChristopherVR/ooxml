@@ -2,8 +2,7 @@
 
 OpenTeams has no hosted service. The workspace runs either with **no server** (`mode: 'local'`,
 tabs of one browser only) or against **a server you run** that honours three small contracts. The
-reference implementation, `openteams-server`, does all three in one Node process of about 300
-lines; any other server that speaks the same contracts works just as well.
+reference implementation, `openteams-server`, does all three in one Node process; any other server that speaks the same contracts works just as well.
 
 ::: danger No end-to-end encryption
 Chat travels as Yjs updates through your server, which stores the room document and every uploaded
@@ -30,6 +29,8 @@ It is configured through the environment; the only flag is `--insecure` (see `TE
 | `TEAMS_TOKEN`   | none        | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                 |
 | `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one. |
 | `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                             |
+
+The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` and `insecure`.
 
 Or embed it:
 
@@ -71,6 +72,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | Downloads it as an attachment (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).           |
 | `POST /files/link/<workspace>/<name>` | Returns `{ url }`: a link signed for that one file, valid for five minutes, so the token never appears in a URL.        |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                           |
+| `POST /auth/session`                  | Signs a session for `{ user, credential }` (rate limited). See "Accounts and sessions" in the server's README.          |
+| `POST /auth/check`, `/auth/signout`   | Check a `{ session }` (204 or 401); sign out, which revokes the user's sessions.                                        |
+| `POST /auth/revoke`                   | Operator revocation of `{ user }` with `TEAMS_ADMIN_TOKEN`; a 404 without an admin token.                               |
 
 Room names must match `^[\w-]{1,128}$` and workspace ids in file paths `^[\w-]{1,64}$`; file names
 are sanitised to letters, digits, `.`, `-`, `_`, spaces and parentheses, and capped at 120
@@ -121,16 +125,20 @@ short-lived ones. The [deployment guide](/deploy#calls-across-nats-turn) has a c
 Be clear about these before you put people on it:
 
 - **No end-to-end encryption.** It stores and can read every message and file.
-- **No user accounts.** `TEAMS_TOKEN` is one shared secret for everybody, stored in the browser. It
-  keeps strangers out of a small team's server; it is not per-user authentication. Author and role
-  checks in the client can be bypassed by a hostile client, so the server is the trust boundary:
-  put your own authentication in front (a proxy that checks a session) for real use.
+- **Accounts are optional and small.** With `users` (or `TEAMS_USERS_FILE`) or an `authenticate`
+  hook the server signs sessions (`POST /auth/session`), takes the user id from the session and can
+  revoke it. Without them `TEAMS_TOKEN` is one shared secret for everybody, stored in the browser,
+  and user ids are claims. There is no password reset, account management, SSO or per-team access
+  control. Author and role checks in the client can be bypassed by a hostile client, so the server
+  is the trust boundary: use `authenticate` with your identity provider and `authorizeSync` for
+  per-room permissions.
 - **No TLS of its own.** Run it behind a reverse proxy that terminates TLS and upgrades
   WebSockets; browsers refuse `ws://` from an `https://` page.
 - **One process, rooms in memory.** It does not scale horizontally. A room is unloaded 30 seconds
   after its last socket closes.
 - **One snapshot per room, no compaction.** The document grows with history and is never pruned.
-- **Plain file storage.** No listing, no deletion, no per-workspace quota; uploading a file with an
-  existing name replaces it. Files are capped at 25 MB each.
+- **Plain file storage.** No listing and no deletion; there is one total quota for the files directory
+  (`TEAMS_FILES_QUOTA_MB`), not one per workspace. An upload never overwrites a file: a taken name
+  is stored under a new one. Files are capped at 25 MB each.
 - **Rate limiting covers only `/auth/session`** (per address and user, in memory); sockets and
   messages have the abuse limits in the README, and there is no media server: calls are peer to peer (mesh).

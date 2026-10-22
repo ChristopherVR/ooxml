@@ -33,15 +33,15 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Features and limitations
 
-|                           |                                                                                                                                                                                                                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Channels and chat**     | Channels, posts with replies, reactions, author-only edit and delete, search and unread counts, in one Yjs document that merges concurrent edits. Everything a peer sends is re-validated and rendered as text, never markup.                                                                    |
-| **Presence**              | Who is online, typing, and a status you set (available, busy, do not disturb, be right back, away, offline), a status message and automatic away when idle. Advisory and unauthenticated, like any Yjs awareness.                                                                                |
-| **Calls**                 | Meetings in a channel over WebRTC: pre-join screen, audio, video, screen share and raise hand. Full mesh with a signaling relay, no media server: honest up to about a dozen people. TURN for strict NATs is yours to run.                                                                       |
-| **Files in conversation** | Attachments go to your server's `/files` endpoint or your own `uploadFile` function and are posted as links; Word, Excel, PowerPoint and Visio files are recognised so a host can open them. Without a file server, files are shared by name only.                                               |
-| **Server**                | Bring your own. The reference `openteams-server` (one Node process, about 300 lines) does sync, signaling and file storage with an optional shared token, an origin allowlist and short-lived signed download links.                                                                             |
-| **Local mode**            | `mode: 'local'` needs no server: tabs of one browser share chat, presence and calls over `BroadcastChannel`. The live demos run this way.                                                                                                                                                        |
-| **Not supported**         | No end-to-end encryption (your server can read chat and files). No user accounts in the reference server (one shared token); authorization is the server's job. No 1:1 chats, notifications, calendar, recording, background blur or live captions. No localization yet: the UI is English only. |
+|                           |                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Channels and chat**     | Channels, posts with replies, 1:1 and group chats, reactions, author-only edit and delete, search and unread counts, in one Yjs document that merges concurrent edits. Everything a peer sends is re-validated and rendered as text, never markup.                                                                                                                                                                                              |
+| **Presence**              | Who is online, typing, and a status you set (available, busy, do not disturb, be right back, away, offline), a status message and automatic away when idle. Advisory and unauthenticated, like any Yjs awareness.                                                                                                                                                                                                                               |
+| **Calls**                 | Meetings in a channel over WebRTC: pre-join screen, audio, video, screen share and raise hand. Full mesh with a signaling relay, no media server: honest up to about a dozen people. TURN for strict NATs is yours to run.                                                                                                                                                                                                                      |
+| **Files in conversation** | Attachments go to your server's `/files` endpoint or your own `uploadFile` function and are posted as links; Word, Excel, PowerPoint and Visio files are recognised so a host can open them. Without a file server, files are shared by name only.                                                                                                                                                                                              |
+| **Server**                | Bring your own. The reference `openteams-server` (one Node process) does sync, signaling and file storage with an optional shared token, optional accounts with signed sessions, an origin allowlist, per-room permissions (`authorizeSync`) and short-lived signed download links.                                                                                                                                                             |
+| **Local mode**            | `mode: 'local'` needs no server: tabs of one browser share chat, presence and calls over `BroadcastChannel`. The live demos run this way.                                                                                                                                                                                                                                                                                                       |
+| **Not supported**         | No end-to-end encryption (your server can read chat and files). Accounts in the reference server are optional and minimal (no SSO, password reset or team and channel access control); without them there is one shared token and user ids are claims, and authorization is the server's job. Notifications are in-page only (no push or email). No recording, background blur or live captions. Markdown is a subset (no full CommonMark/GFM). |
 
 ## How it works
 
@@ -138,7 +138,7 @@ npx openteams-server
 TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 ```
 
-It is configured by environment only (`PORT`, `HOST`, `TEAMS_TOKEN`, `TEAMS_ORIGINS`, `TEAMS_DATA`) and serves `ws /sync/<room>`, `ws /signal/<room>`, `POST|GET /files/<workspace>/<name>`, `POST /files/link/<workspace>/<name>` and `GET /health`. Put it behind TLS. See [bring your own server](https://christophervr.github.io/ooxml/teams/server) for the contracts and what it does not do, and [docs/deploy.md](docs/deploy.md) for TLS, tokens, TURN and Docker.
+It is configured by environment (`PORT`, `HOST`, `TEAMS_TOKEN`, `TEAMS_ORIGINS`, `TEAMS_DATA`, and about fifteen more for accounts and limits; see [server/README.md](server/README.md)) and serves `ws /sync/<room>`, `ws /signal/<room>`, `POST|GET /files/<workspace>/<name>`, `POST /files/link/<workspace>/<name>` and `GET /health`. Put it behind TLS. See [bring your own server](https://christophervr.github.io/ooxml/teams/server) for the contracts and what it does not do, and [docs/deploy.md](docs/deploy.md) for TLS, tokens, TURN and Docker.
 
 ## Packages
 
@@ -154,37 +154,38 @@ Seven packages are published on npm, each versioned independently. The names are
 | `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none            |
 | `openteams-server`         | The reference server and its `openteams-server` command (`server`).    | none (Node 22+) |
 
-The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, the `<teams-app>` element, inlined into every binding at build time) and the demos.
+The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, the re-export of `<teams-app>` and its bind layer, inlined into every binding at build time) and the demos.
 
 ```
-packages/web-component   <teams-app> (Lit: teams-app.ts + teams-app.css), the controller, the raw store
+packages/web-component   re-exports ooxml-ui/teams and holds the prop and event binding (bind.ts)
 packages/{react,vue,solid,svelte,angular,vanilla}   thin bindings: a component AND raw hooks each
-server/                  reference BYO server: Yjs sync + signaling relay + file storage (~300 lines)
-demos/{vanilla,react}    run against your local ooxml checkout, hot reload
+server/                  reference BYO server: Yjs sync + signaling relay + file storage + accounts
 docs/                    the VitePress site and the GitHub Pages build (separate install)
 ```
 
+`<teams-app>` itself (Lit: `teams-app.ts` + `teams-app.css`, the controller) is `src/ui/src/teams/app` at the repository root, shipped as `ooxml-ui/teams`. The demos are `demos/teams/*` and the browser tests `e2e/teams/`, both at the repository root.
+
 ## Development
 
-Needs Node 22+ and Bun. With the [`ooxml`](https://github.com/ChristopherVR/ooxml) repository checked out next to this one (`../ooxml-core`), the demos and tests use its source; without it they use the published `ooxml-core` and `ooxml-ui`.
+Needs Node 22+ and Bun. This folder is `viewers/teams` of the [`ooxml`](https://github.com/ChristopherVR/ooxml) repository; run `bun install` at the repository root, then the commands below here. The demos and tests use the source of `ooxml-core` and `ooxml-ui` in the same tree.
 
 ```bash
 bun install
 bun run dev            # reference server :8787, vanilla demo :5173, React demo :5174
 bun run typecheck      # strict; the web component and all six bindings (.svelte files excepted)
 bun run test           # vitest (jsdom) then the server's node:test suite
-bun run test:scripts   # release planner, publish guards, publish:local, commit and changelog checks
+bun run test:scripts   # this folder's script tests (published-reference and workspace-package checks)
 bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
 bun run check:published && bun run pack:smoke
 bun install --cwd docs && bun run build:pages   # the docs site and both demos, as deployed
 bun run docs:dev       # the docs site with hot reload
 ```
 
-Open `http://127.0.0.1:5173/?name=Ada` and, in another tab, `...?name=Bob`: two people in one workspace. `?local=1` runs without the server. `TEAMS_USE_DIST=1` makes the demos use the built packages (`bun run build:packages` first) and the published ooxml packages instead of any source. Cameras and microphones need `localhost` or HTTPS.
+Open `http://127.0.0.1:5173/?name=Ada` and, in another tab, `...?name=Bob`: two people in one workspace. `?local=1` runs without the server. `TEAMS_USE_DIST=1` makes the demos use the built packages (`bun run build:packages` first) instead of the source. Cameras and microphones need `localhost` or HTTPS.
 
 ## Releasing
 
-Releases are automated from Conventional Commits: each package has its own version and tag (`<npm-name>@<version>`), and the hourly release workflow plans, tags and publishes through npm trusted publishing. See [docs/releasing.md](docs/releasing.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Releases are automated from Conventional Commits: each package has its own version and tag (`<npm-name>@<version>`), and the repository root's hourly release workflow plans, tags and publishes through npm trusted publishing. See [docs/releasing.md](docs/releasing.md) and the root [docs/releasing.md](../../docs/releasing.md).
 
 ## Documentation
 

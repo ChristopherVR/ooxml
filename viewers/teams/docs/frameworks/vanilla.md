@@ -55,5 +55,5 @@ const stop = teams.subscribe(() => render(teams.getState()));
 teams.send({ text: 'hello' });
 ```
 
-The [vanilla demo](/demo/){target="_self"} is `demos/vanilla`: one `<teams-app>` mounted with
+The [vanilla demo](/demo/){target="_self"} is `demos/teams/vanilla` at the repository root: one `<teams-app>` mounted with
 `mountTeams` and a few lines of setup.

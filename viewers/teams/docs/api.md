@@ -80,7 +80,7 @@ Both Files views offer upload, blank Excel workbook creation and search. Uploads
 and new workbooks target the selected channel, which is named beside the controls.
 They need configured storage; failures can be retried in the original channel.
 Same-name files use separate storage URLs. Uploads accept up to 20 files of 32 MiB
-each; the UI reports activity but does not offer byte progress or cancellation.
+each (the reference server's own cap is 25 MB per file unless you raise `maxFileBytes`); the UI reports activity but does not offer byte progress or cancellation.
 
 ```ts
 await teams.uploadFiles(channelId, files);

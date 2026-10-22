@@ -41,8 +41,7 @@ Faites ensuite pointer l’application vers `wss://teams.example.com/sync` et
 
 **Le jeton est un secret partagé** conservé dans le navigateur : il tient les inconnus à l’écart du
 serveur d’une petite équipe, ce n’est pas une authentification par utilisateur. Pour de vrais
-comptes, placez votre propre authentification devant (un proxy qui vérifie une session, ou
-remplacez `tokenOk` par une vérification de jeton) et conservez les trois mêmes contrats.
+comptes, donnez au serveur `users` (ou `TEAMS_USERS_FILE`) ou une fonction `authenticate` pour votre fournisseur d’identité, et définissez `TEAMS_SESSION_SECRET` pour que les sessions survivent aux redémarrages (voir "Accounts and sessions" dans le README du serveur). Les trois contrats restent les mêmes.
 
 ## Modèle de sécurité
 
@@ -104,12 +103,15 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/index.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
+  server/rate-limit.mjs server/chat-access.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data
 VOLUME /data
 EXPOSE 8787
-CMD ["node", "index.mjs"]
+CMD ["node", "bin.mjs"]
 ```
+
+Construisez-le depuis `viewers/teams`. Il copie chaque module que le point d’entrée importe (les `files` de `server/package.json`) ; ne copier que `index.mjs` échoue avec un module manquant. La recette a été vérifiée en exécutant ces fichiers avec `npm install --omit=dev` sous Node ; l’image elle-même n’a pas été construite.
 
 Lancez-le avec `TEAMS_TOKEN` et `TEAMS_ORIGINS` définis, derrière votre proxy TLS.
 
