@@ -357,8 +357,10 @@ export function lastCommitTimes(root) {
 	return times;
 }
 
-/** Per docs site: English pages missing from, or newer than, each locale. */
-export function checkTranslations(root, docRoot, files, times) {
+/** Per docs site: English pages missing from, or newer than, each locale. `scope[locale]` lists
+ * globs (relative to the docs root) a locale is meant to cover; missing pages outside it are not
+ * listed. Missing pages are informational; a translation older than its English page is a warning. */
+export function checkTranslations(root, docRoot, files, times, scope = {}) {
 	const pages = files.filter((f) => f.startsWith(`${docRoot}/`) && f.endsWith('.md'));
 	const english = [];
 	const locales = new Set();
@@ -372,17 +374,19 @@ export function checkTranslations(root, docRoot, files, times) {
 	for (const locale of [...locales].sort()) {
 		const missing = [];
 		const stale = [];
+		const wanted = (scope[locale] ?? []).map(globToRegExp);
+		const inScope = english.filter((rel) => wanted.length === 0 || wanted.some((r) => r.test(rel)));
 		for (const rel of english) {
 			const tr = `${docRoot}/${locale}/${rel}`;
 			if (!pages.includes(tr)) {
-				missing.push(rel);
+				if (inScope.includes(rel)) missing.push(rel);
 				continue;
 			}
 			const en = times.get(`${docRoot}/${rel}`);
 			const loc = times.get(tr);
 			if (en !== undefined && loc !== undefined && en > loc) stale.push(rel);
 		}
-		result.push({ docRoot, locale, total: english.length, missing, stale });
+		result.push({ docRoot, locale, total: inScope.length, missing, stale });
 	}
 	return result;
 }
@@ -413,7 +417,20 @@ export function runChecks({ root, files, config, times }) {
 		);
 		errors.push(...s.errors);
 		warnings.push(...s.warnings);
-		if (times) translations.push(...checkTranslations(root, site, md, times));
+		if (times)
+			translations.push(
+				...checkTranslations(root, site, md, times, config.translationScope?.[site]),
+			);
+	}
+	for (const t of translations) {
+		for (const rel of t.stale) {
+			warnings.push({
+				file: `${t.docRoot}/${t.locale}/${rel}`,
+				line: 1,
+				check: 'lag',
+				message: 'Translation is older than the English page',
+			});
+		}
 	}
 	return { errors, warnings, translations };
 }
@@ -437,21 +454,14 @@ export function renderReport({ errors, warnings, translations }) {
 	out += section('Pages in no sidebar', by(warnings, 'orphan'));
 	out += section('Dead anchors', by(warnings, 'anchor'));
 	out += section('Stale terms (warnings)', by(warnings, 'term'));
+	out += section('Translations older than the English page', by(warnings, 'lag'));
 	if (translations.length > 0) {
 		out +=
-			'### Translation lag\n\n| Site | Locale | English pages | Missing | Older than English |\n| --- | --- | ---: | ---: | ---: |\n';
+			'### Translation coverage\n\nMissing pages are informational and never open the issue; older translations are the warnings above.\n\n| Site | Locale | English pages in scope | Missing (info) | Older than English |\n| --- | --- | ---: | ---: | ---: |\n';
 		for (const t of translations) {
 			out += `| ${t.docRoot} | ${t.locale} | ${t.total} | ${t.missing.length} | ${t.stale.length} |\n`;
 		}
 		out += '\n';
-		for (const t of translations) {
-			if (t.stale.length === 0) continue;
-			const shown = t.stale
-				.slice(0, 25)
-				.map((p) => `\`${p}\``)
-				.join(', ');
-			out += `<details><summary>${t.docRoot} ${t.locale}: older than English</summary>\n\n${shown}${t.stale.length > 25 ? `, and ${t.stale.length - 25} more` : ''}\n\n</details>\n\n`;
-		}
 	}
 	return out;
 }

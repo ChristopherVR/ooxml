@@ -51,5 +51,13 @@
 		"files": ["PROVENANCE.md", "viewers/*/docs/research/**", "viewers/*/docs/suite-provenance.md"],
 		"patterns": ["^apps/(?:word|excel|powerpoint|visio|teams)$"]
 	},
-	"$pathIgnoreComment": "Inline-code paths not checked: files that record history on purpose, and output folders of a build (suite-dist/apps/word)."
+	"$pathIgnoreComment": "Inline-code paths not checked: files that record history on purpose, and output folders of a build (suite-dist/apps/word).",
+	"translationScope": {
+		"viewers/pptx/docs": {
+			"fr": ["guide/**", "user/**"],
+			"es": ["guide/**", "user/**"],
+			"de": ["guide/**", "user/**"]
+		}
+	},
+	"$translationScopeComment": "Per docs site and locale, the English pages (globs relative to the docs root) a locale is meant to cover. Missing pages outside the scope are not counted; translations that exist are always checked for lag. Without an entry a locale is expected to cover every page, and missing pages are still informational only."
 }

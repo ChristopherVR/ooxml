@@ -208,3 +208,51 @@ test('runChecks combines the checks and the report separates errors from warning
 	assert.match(report, /3 error\(s\), 0 warning\(s\)/);
 	assert.match(report, /### Dead links \(1\)/);
 });
+
+test('a locale coverage scope hides missing pages outside it, and lag still counts', () => {
+	const files = [
+		'viewers/p/docs/guide/a.md',
+		'viewers/p/docs/api/b.md',
+		'viewers/p/docs/fr/guide/a.md',
+	];
+	const times = new Map([
+		['viewers/p/docs/guide/a.md', 200],
+		['viewers/p/docs/fr/guide/a.md', 100],
+	]);
+	const [fr] = checkTranslations('.', 'viewers/p/docs', files, times, { fr: ['guide/**'] });
+	assert.equal(fr.total, 1);
+	assert.deepEqual(fr.missing, []);
+	assert.deepEqual(fr.stale, ['guide/a.md']);
+	const [all] = checkTranslations('.', 'viewers/p/docs', files, times);
+	assert.deepEqual(all.missing, ['api/b.md']);
+});
+
+test('missing translations are informational; an older translation is a warning', () => {
+	const cfg = "sidebar: [{ link: '/a' }, { link: '/b' }]";
+	const root = fixture({
+		'viewers/p/docs/a.md': '',
+		'viewers/p/docs/b.md': '',
+		'viewers/p/docs/zh/a.md': '',
+		'viewers/p/docs/.vitepress/config.ts': cfg,
+	});
+	const files = [
+		'viewers/p/docs/.vitepress/config.ts',
+		'viewers/p/docs/a.md',
+		'viewers/p/docs/b.md',
+		'viewers/p/docs/zh/a.md',
+	];
+	const base = { root, files, config: { rules: [] } };
+	const missingOnly = runChecks({ ...base, times: new Map() });
+	assert.equal(missingOnly.errors.length + missingOnly.warnings.length, 0);
+	assert.equal(missingOnly.translations[0].missing.length, 1);
+	assert.match(renderReport(missingOnly), /0 error\(s\), 0 warning\(s\)/);
+	const lag = runChecks({
+		...base,
+		times: new Map([
+			['viewers/p/docs/a.md', 2],
+			['viewers/p/docs/zh/a.md', 1],
+		]),
+	});
+	assert.equal(lag.warnings.length, 1);
+	assert.ok(lag.warnings.some((w) => w.check === 'lag' && w.file === 'viewers/p/docs/zh/a.md'));
+});
