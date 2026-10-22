@@ -116,7 +116,9 @@ export function withoutHiddenEntries<E extends { separatorBefore?: boolean }>(
 		separator ||= entry.separatorBefore === true;
 		if (hidden(entry)) continue;
 		const starts = separator && kept.length > 0;
-		kept.push(entry.separatorBefore === starts ? entry : { ...entry, separatorBefore: starts });
+		kept.push(
+			(entry.separatorBefore === true) === starts ? entry : { ...entry, separatorBefore: starts },
+		);
 		separator = false;
 	}
 	return kept;
