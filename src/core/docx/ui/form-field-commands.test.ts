@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { Schema } from 'prosemirror-model';
+import { Fragment, Schema, Slice } from 'prosemirror-model';
 import { history, redo, undo } from 'prosemirror-history';
-import { EditorState, type Transaction } from 'prosemirror-state';
+import { EditorState, TextSelection, type Transaction } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import type { ContentControl, DocumentProtection, FormField, TextRun } from '../model';
 import { setFormCheckbox } from '../form-fields';
 import { contentControlPlugin, violatesControlLock } from './content-control-guard';
@@ -18,7 +19,10 @@ import {
 	selectFormDropDownAt,
 	toggleFormCheckboxAt,
 } from './form-field-commands';
+import { fieldGuardPlugin } from './field-guard';
 import { formFieldGuardPlugin } from './form-field-guard';
+import { pasteIntoFormText } from './form-text-paste';
+import { trackChangesPlugin } from './track-changes-mode';
 import { sameRuns } from './run-compare';
 
 const schema = new Schema({
@@ -549,6 +553,200 @@ describe('legacy form fields in the editor', () => {
 		expect(isChecked()).toBe(false);
 		redo(state, (tr) => (state = state.apply(tr)));
 		expect(isChecked()).toBe(true);
+	});
+
+	it('keeps the formatting of a text field value fixed in a document protected for forms', () => {
+		let state = EditorState.create({
+			schema,
+			doc: stateOf().doc,
+			plugins: [
+				history(),
+				fieldGuardPlugin(),
+				formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true })),
+			],
+		});
+		const [result] = formTextResults(state.doc);
+		const bold = schema.marks.bold!.create();
+		// Bold, a font and a highlight on part of the value, and taking off what the value holds.
+		for (const mark of [
+			bold,
+			schema.marks.font!.create({ family: 'Courier New' }),
+			schema.marks.highlight!.create({ color: 'yellow' }),
+		]) {
+			const tr = state.tr.addMark(result!.from, result!.from + 2, mark);
+			expect(tr.docChanged).toBe(true);
+			expect(state.apply(tr).doc.eq(state.doc)).toBe(true);
+		}
+		const marked = state.apply(state.tr.addMark(result!.from, result!.to, bold));
+		expect(marked.doc.eq(state.doc)).toBe(true);
+		// Typing into it still goes through, and the typed text is marked as the field's result;
+		// undoing and redoing the typing does too.
+		state = state.apply(state.tr.insertText('B', result!.to));
+		expect(state.doc.textContent).toContain('AdaB');
+		const typed = formTextResults(state.doc)[0]!;
+		let inResult = true;
+		state.doc.nodesBetween(typed.from, typed.to, (node) => {
+			if (node.isText) inResult &&= Boolean(schema.marks.field!.isInSet(node.marks));
+		});
+		expect(inResult).toBe(true);
+		undo(state, (tr) => (state = state.apply(tr)));
+		expect(state.doc.textContent).not.toContain('AdaB');
+		redo(state, (tr) => (state = state.apply(tr)));
+		expect(state.doc.textContent).toContain('AdaB');
+	});
+
+	it('tracks a deletion in a protected text field value with Track Changes on', () => {
+		const state = EditorState.create({
+			schema,
+			doc: stateOf().doc,
+			plugins: [
+				fieldGuardPlugin(),
+				trackChangesPlugin(
+					() => 'Ada',
+					() => true,
+				),
+				formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true })),
+			],
+		});
+		const [result] = formTextResults(state.doc);
+		const next = state.apply(state.tr.delete(result!.from + 1, result!.from + 2));
+		// The deleted letter stays, marked as deleted, rather than going untracked.
+		expect(next.doc.textContent).toContain('Ada');
+		const deleted = next.doc.nodeAt(result!.from + 1);
+		expect(deleted?.marks.some((mark) => mark.type.name === 'deletion')).toBe(true);
+	});
+
+	it('keeps formatting from coming into a protected text field value with text', () => {
+		const state = stateOf({ edit: 'forms', enforced: true });
+		const [result] = formTextResults(state.doc);
+		const bold = schema.marks.bold!.create();
+		// Bold with no selection, as Ctrl+B at the caret: it would format the text typed next.
+		const caret = state.apply(
+			state.tr.setSelection(TextSelection.create(state.doc, result!.from + 1)),
+		);
+		const stored = caret.apply(caret.tr.addStoredMark(bold));
+		expect(stored.storedMarks).toBeNull();
+		const typed = stored.apply(stored.tr.insertText('X'));
+		expect(typed.doc.textContent).toContain('AXda');
+		expect(typed.doc.rangeHasMark(result!.from, result!.to + 1, schema.marks.bold!)).toBe(false);
+		// Text written into the value with formatting of its own, as a drop writes it, is refused;
+		// the same text in the value's own formatting goes in (within the field's maximum length).
+		const dropped = state.tr.replaceWith(result!.to, result!.to, schema.text('Bo', [bold]));
+		expect(state.apply(dropped).doc.eq(state.doc)).toBe(true);
+		const plain = state.apply(state.tr.replaceWith(result!.to, result!.to, schema.text('Bo')));
+		expect(plain.doc.textContent).toContain('AdaBo');
+		// Outside the protection, and in an unprotected form, formatting goes in as before.
+		const open = stateOf({ edit: 'forms', enforced: false });
+		const [openResult] = formTextResults(open.doc);
+		const openCaret = open.apply(
+			open.tr.setSelection(TextSelection.create(open.doc, openResult!.from + 1)),
+		);
+		const openStored = openCaret.apply(openCaret.tr.addStoredMark(bold)).storedMarks;
+		expect(bold.isInSet(openStored ?? [])).toBeTruthy();
+	});
+
+	it('lets a protected text field value with formatting of its own be typed into and cleared', () => {
+		const field: FormField = { kind: 'text', name: 'Title' };
+		const runs: TextRun[] = [
+			{ text: 'Title: ' },
+			{ text: '', fieldChar: 'begin', formField: field },
+			{ text: '', fieldCode: ' FORMTEXT ' },
+			{ text: '', fieldChar: 'separate' },
+			{ text: 'Ada', field: { instr: 'FORMTEXT' }, bold: true },
+			{ text: '', fieldChar: 'end' },
+		];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		const protectedState = EditorState.create({
+			schema,
+			doc,
+			plugins: [formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
+		});
+		const [result] = formTextResults(protectedState.doc);
+		const bold = schema.marks.bold!;
+		const isBold = (state: EditorState) =>
+			state.doc.rangeHasMark(result!.from, result!.from + 1, bold);
+		// Text typed at the value's start takes the value's formatting, as the browser writes it.
+		const start = protectedState.doc.nodeAt(result!.from)!.marks;
+		const typedAtStart = protectedState.apply(
+			protectedState.tr.replaceWith(result!.from, result!.from, schema.text('X', start)),
+		);
+		expect(typedAtStart.doc.textContent).toContain('XAda');
+		// Typing over a selected letter keeps the letter's formatting.
+		const over = protectedState.apply(
+			protectedState.tr.insertText('Z', result!.from, result!.from + 1),
+		);
+		expect(over.doc.textContent).toContain('Zda');
+		expect(isBold(over)).toBe(true);
+		// Deleting the whole value keeps its formatting for the text typed next, as ProseMirror does.
+		let state = protectedState.apply(
+			protectedState.tr.setSelection(
+				TextSelection.create(protectedState.doc, result!.from, result!.to),
+			),
+		);
+		state = state.apply(state.tr.deleteSelection());
+		expect(state.doc.textContent).not.toContain('Ada');
+		state = state.apply(state.tr.insertText('Y'));
+		expect(state.doc.textContent).toContain('Title: Y');
+		expect(isBold(state)).toBe(true);
+	});
+
+	it('pastes into a protected text field value in the formatting typing there gets', () => {
+		const title: FormField = { kind: 'text', name: 'Title' };
+		const runs: TextRun[] = [
+			{ text: 'Title: ' },
+			{ text: '', fieldChar: 'begin', formField: title },
+			{ text: '', fieldCode: ' FORMTEXT ' },
+			{ text: '', fieldChar: 'separate' },
+			{ text: 'Ada', field: { instr: 'FORMTEXT' }, bold: true },
+			{ text: '', fieldChar: 'end' },
+			{ text: ' Name: ' },
+			...field(name, 'Bob'),
+		];
+		const nodes = runs.flatMap((run) => runToInlineNodes(run, schema));
+		const doc = schema.node('doc', null, [schema.node('paragraph', null, nodes)]);
+		let state = EditorState.create({
+			schema,
+			doc,
+			plugins: [formFieldGuardPlugin(() => ({ edit: 'forms', enforced: true }))],
+		});
+		const view = {
+			get state() {
+				return state;
+			},
+			dispatch: (tr: Transaction) => (state = state.apply(tr)),
+		} as unknown as EditorView;
+		const [titleValue] = formTextResults(state.doc);
+		const bold = schema.marks.bold!;
+		const text = (value: string) => new Slice(Fragment.from(schema.text(value)), 0, 0);
+		const select = (from: number, to = from) =>
+			(state = state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to))));
+		// A paste of nothing the editor reads leaves a selected value alone.
+		select(titleValue!.from, titleValue!.from + 2);
+		expect(pasteIntoFormText(view, Slice.empty, [])).toBe(false);
+		expect(state.doc.textContent).toContain('Title: Ada');
+		// At the value's start, after its separator, a paste takes the value's own formatting.
+		select(titleValue!.from);
+		expect(pasteIntoFormText(view, text('X'), [])).toBe(true);
+		expect(state.doc.textContent).toContain('XAda');
+		expect(state.doc.rangeHasMark(titleValue!.from, titleValue!.from + 1, bold)).toBe(true);
+		// Once the value is deleted, a paste takes the formatting the deletion kept, as typing does.
+		const [cleared] = formTextResults(state.doc);
+		select(cleared!.from, cleared!.to);
+		state = state.apply(state.tr.deleteSelection());
+		expect(pasteIntoFormText(view, text('Yo'), [])).toBe(true);
+		const [refilled] = formTextResults(state.doc);
+		expect(state.doc.textBetween(refilled!.from, refilled!.to)).toBe('Yo');
+		expect(state.doc.rangeHasMark(refilled!.from, refilled!.to, bold)).toBe(true);
+		// The marks a deletion keeps are for its caret: bold written into another value is refused.
+		const [, other] = formTextResults(state.doc);
+		select(refilled!.from, refilled!.to);
+		state = state.apply(state.tr.deleteSelection());
+		const before = state.doc;
+		state = state.apply(
+			state.tr.replaceWith(other!.to, other!.to, schema.text('Bo', [bold.create()])),
+		);
+		expect(state.doc.eq(before)).toBe(true);
 	});
 
 	it('only lets form fields change in a document protected for forms', () => {
