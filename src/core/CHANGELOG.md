@@ -7,6 +7,38 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.24.0) - 2026-10-22
+
+### Features
+
+- **visio:** Resolve shared formula references by shape key ([2626b3c](https://github.com/ChristopherVR/ooxml/commit/2626b3c9dc0614787aaa7005eaa1a37494e1b759))
+- **embedding:** Add the embedding area for host integration contracts ([0c4d714](https://github.com/ChristopherVR/ooxml/commit/0c4d714f4ca093fd3597e56c3c59203ae420e3a6))
+- **embedding:** Add the host-owned document storage contract ([fd56d0c](https://github.com/ChristopherVR/ooxml/commit/fd56d0c6e58f06c6a153f22d7a40ff99ec593fa7))
+- **visio:** Add file-command and host-owned storage to the viewer ([0c8e284](https://github.com/ChristopherVR/ooxml/commit/0c8e284015fe1cc1b895c840900482ba12f8cda4))
+- **embedding:** Add the shared customization contract ([be5155d](https://github.com/ChristopherVR/ooxml/commit/be5155d20cc191cd2dd95189d53130e5979d71a7))
+- **docx:** Take the shared customization contract in <docx-editor> ([65f05d3](https://github.com/ChristopherVR/ooxml/commit/65f05d3d70cc28e6633f300fb4758aca7ba34184))
+- **visio:** Take the shared customization contract in <visio-viewer> ([3a6bb30](https://github.com/ChristopherVR/ooxml/commit/3a6bb305b8ac04f0942b40e8cdfbd887093c6112))
+- **xlsx:** Take the shared customization contract in <xlsx-editor> ([f96a544](https://github.com/ChristopherVR/ooxml/commit/f96a5449a6a36fba59997197b484ddefb4f2d8e8))
+- **embedding:** Tidy menu separators around hidden entries ([c4e6101](https://github.com/ChristopherVR/ooxml/commit/c4e6101b620e8ef9bc1c71387203232833015cf0))
+- **xlsx:** Offer host menu commands on header and sheet-tab menus ([ebef1b8](https://github.com/ChristopherVR/ooxml/commit/ebef1b8a1102c568b1a7a89ab5c3390f7887aa82))
+- **visio:** Accept readOnly as the inverse of canEdit ([fbc325b](https://github.com/ChristopherVR/ooxml/commit/fbc325be8c9c12a7c2e4a3affd7af2428ba4ed49))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+- **automation:** Run the document tools against open editors ([6a45ebc](https://github.com/ChristopherVR/ooxml/commit/6a45ebc3651a21739b5e18e7758395c866656198))
+
+### Bug Fixes
+
+- **xlsx:** Hide context-menu entries whose action is hidden ([f28dbf8](https://github.com/ChristopherVR/ooxml/commit/f28dbf85271455c1151587d475794b4cf167c2e6))
+- **xlsx:** Use the shared menu separator rule and test the locks ([9f07a35](https://github.com/ChristopherVR/ooxml/commit/9f07a35cd83bd6ae64bc9300f9c7220879b29a91))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+### Performance
+
+- **visio:** Reuse document-level data across page reads ([2f228f2](https://github.com/ChristopherVR/ooxml/commit/2f228f210bb39a02644033a30e78f09524d09948))
+
 ## [1.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.23.0) - 2026-10-22
 
 ### Features

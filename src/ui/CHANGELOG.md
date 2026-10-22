@@ -7,6 +7,64 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.23.0) - 2026-10-22
+
+### Features
+
+- **visio:** Add file-command and host-owned storage to the viewer ([0c8e284](https://github.com/ChristopherVR/ooxml/commit/0c8e284015fe1cc1b895c840900482ba12f8cda4))
+- **docx:** Route save and open through host-owned storage ([ec27cd2](https://github.com/ChristopherVR/ooxml/commit/ec27cd28c4f594446e08b60ab05db2b64b72c683))
+- **xlsx:** Route save and open through host-owned storage ([ef768a6](https://github.com/ChristopherVR/ooxml/commit/ef768a684f558275071be347d68406503aef8c23))
+- **pptx:** Route saves and recovery through host-owned storage ([4ad5655](https://github.com/ChristopherVR/ooxml/commit/4ad565525269ef0284114efad6d5e4a7bed756e4))
+- **ui:** Host regions, file tab pages and menu commands for every editor ([f2b24f1](https://github.com/ChristopherVR/ooxml/commit/f2b24f1ddb929b299a1a8b5d6fa887ca45921941))
+- **docx:** Take the shared customization contract in <docx-editor> ([65f05d3](https://github.com/ChristopherVR/ooxml/commit/65f05d3d70cc28e6633f300fb4758aca7ba34184))
+- **visio:** Take the shared customization contract in <visio-viewer> ([3a6bb30](https://github.com/ChristopherVR/ooxml/commit/3a6bb305b8ac04f0942b40e8cdfbd887093c6112))
+- **xlsx:** Take the shared customization contract in <xlsx-editor> ([f96a544](https://github.com/ChristopherVR/ooxml/commit/f96a5449a6a36fba59997197b484ddefb4f2d8e8))
+- **embedding:** Tidy menu separators around hidden entries ([c4e6101](https://github.com/ChristopherVR/ooxml/commit/c4e6101b620e8ef9bc1c71387203232833015cf0))
+- **xlsx:** Offer host menu commands on header and sheet-tab menus ([ebef1b8](https://github.com/ChristopherVR/ooxml/commit/ebef1b8a1102c568b1a7a89ab5c3390f7887aa82))
+- **visio:** Accept readOnly as the inverse of canEdit ([fbc325b](https://github.com/ChristopherVR/ooxml/commit/fbc325be8c9c12a7c2e4a3affd7af2428ba4ed49))
+- **pptx:** Add readOnly to the five viewer bindings ([4aadd67](https://github.com/ChristopherVR/ooxml/commit/4aadd678969d4b2d4811d86880b91c79ba7ca3b6))
+- **pptx:** Add a shared autosave status kind for host events ([4b1f7fb](https://github.com/ChristopherVR/ooxml/commit/4b1f7fb0ed84b5ab309a155039a1f0a23f197bb2))
+- **pptx:** Report the missing host events from the react viewer ([2ba8c58](https://github.com/ChristopherVR/ooxml/commit/2ba8c58d45446cf912eab5d3c4c026a55fd50a3e))
+- **pptx:** Report the missing host events from the vue viewer ([37167d2](https://github.com/ChristopherVR/ooxml/commit/37167d234b435780fcfe63bd4733a413ff84f11a))
+- **pptx:** Report the missing host events from the svelte viewer ([08bdc7d](https://github.com/ChristopherVR/ooxml/commit/08bdc7dc04ef235c86670df8747022f3718f38cb))
+- **pptx:** Report the missing host events from the angular viewer ([94b9de4](https://github.com/ChristopherVR/ooxml/commit/94b9de473167c68e3b678636f6453af237d7029c))
+- **pptx:** Report the missing host events from the vanilla viewer ([d6590fd](https://github.com/ChristopherVR/ooxml/commit/d6590fd6f61ca77f92a6b49001445eb434c548b0))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+
+### Bug Fixes
+
+- **pptx:** Scope the viewer stylesheet reset to the viewer roots ([c390b2b](https://github.com/ChristopherVR/ooxml/commit/c390b2ba2f0ec7811c3554b9989346c6e8cd927d))
+- **visio:** Keep autorecover until a host save succeeds ([02dab92](https://github.com/ChristopherVR/ooxml/commit/02dab92d60fed753538b1363baa5ece11488577f))
+- **docx:** Keep edits made during a host save unsaved ([019bc7b](https://github.com/ChristopherVR/ooxml/commit/019bc7b33bade1dd16565507866d309be2479684))
+- **xlsx:** Keep edits made during a host save unsaved ([03f2a86](https://github.com/ChristopherVR/ooxml/commit/03f2a863bc262fad1fab8a3fc5713702f769bf95))
+- **pptx:** Report host save failures and use host recovery everywhere ([8e982c8](https://github.com/ChristopherVR/ooxml/commit/8e982c8576f656d10200a45cc1708a5ac8e14ed6))
+- **xlsx:** Hide context-menu entries whose action is hidden ([f28dbf8](https://github.com/ChristopherVR/ooxml/commit/f28dbf85271455c1151587d475794b4cf167c2e6))
+- **visio:** Hide Quick Access Save and tidy menus under capabilities ([f33e6b9](https://github.com/ChristopherVR/ooxml/commit/f33e6b9d766de0ae995d651714b1fb5fe2652059))
+- **docx:** Keep capability-hidden commands out of Customize Ribbon ([845285f](https://github.com/ChristopherVR/ooxml/commit/845285f35873cb6f72ddcd662227f0644b877c27))
+- **xlsx:** Keep a viewer role read-only when the host clears readOnly ([fe3a56b](https://github.com/ChristopherVR/ooxml/commit/fe3a56be1d0100543bb170627b99a966d4912b52))
+- **docx:** Make a viewer collaboration role go through readOnly ([d2fd1a8](https://github.com/ChristopherVR/ooxml/commit/d2fd1a8dd63fc5a760ebf45b5203d569287e0d27))
+- **docx:** Report read-only with the lock and host switch ([735fb0d](https://github.com/ChristopherVR/ooxml/commit/735fb0d78ff18dc71eeeb83db2a76f26e423ba30))
+- **xlsx:** Report read-only with the lock and host switch ([782adb9](https://github.com/ChristopherVR/ooxml/commit/782adb95a4c8ad4dded13d73e8a5fa5aee2c8666))
+- **xlsx:** Keep context menu groups apart when an entry is hidden ([8364768](https://github.com/ChristopherVR/ooxml/commit/8364768bb879abda5cb7b14462ab956012df6fa4))
+- **docx:** Honour find: false in Ctrl+F and the shortcut help ([f38d2fa](https://github.com/ChristopherVR/ooxml/commit/f38d2fae33cad0444e201ab99635d56a985c9b26))
+- **xlsx:** Use the shared menu separator rule and test the locks ([9f07a35](https://github.com/ChristopherVR/ooxml/commit/9f07a35cd83bd6ae64bc9300f9c7220879b29a91))
+- **visio:** Keep capability-hidden commands out of Tell me ([c5d6bb9](https://github.com/ChristopherVR/ooxml/commit/c5d6bb99ca9d21adba12f30e5546bccd9cf10fff))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Integrate the pptx binding events into host storage ([08272a2](https://github.com/ChristopherVR/ooxml/commit/08272a298c8b249aa0bf143b689ff01f66663309))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+### Performance
+
+- **visio:** Keep the parse worker alive between page reads ([50638ff](https://github.com/ChristopherVR/ooxml/commit/50638ffcdc4789c390147d6d32b7365345e47964))
+- **ui:** Re-export pptx text helpers from core by name ([b120642](https://github.com/ChristopherVR/ooxml/commit/b12064294a367faf44da377c55d1255b2fa75729))
+
+### Refactor
+
+- **pptx:** Base the customization types on the shared contract ([60b71d3](https://github.com/ChristopherVR/ooxml/commit/60b71d3727de83a3c25c6bb7e5badba70d1037a6))
+
 ## [Unreleased]
 
 ### Documentation

@@ -1,6 +1,6 @@
 {
 	"name": "visio-vue-viewer",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Local-first Visio viewer for vue",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {

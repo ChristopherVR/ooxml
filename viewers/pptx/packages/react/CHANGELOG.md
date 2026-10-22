@@ -7,6 +7,39 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.47.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.47.0) - 2026-10-22
+
+### Features
+
+- **react:** Ship a canvas-only stylesheet as canvas.css ([34ef433](https://github.com/ChristopherVR/ooxml/commit/34ef433e6136bce3ca15b5d7024d867123d8af91))
+- **pptx:** Route saves and recovery through host-owned storage ([4ad5655](https://github.com/ChristopherVR/ooxml/commit/4ad565525269ef0284114efad6d5e4a7bed756e4))
+- **pptx:** Add readOnly to the five viewer bindings ([4aadd67](https://github.com/ChristopherVR/ooxml/commit/4aadd678969d4b2d4811d86880b91c79ba7ca3b6))
+- **pptx:** Report the missing host events from the react viewer ([2ba8c58](https://github.com/ChristopherVR/ooxml/commit/2ba8c58d45446cf912eab5d3c4c026a55fd50a3e))
+- **pptx:** Report inspector and AI property edits, emit vue dirty-change ([83d879d](https://github.com/ChristopherVR/ooxml/commit/83d879d4e27dec236e32af86064afebac21c6af9))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+- **automation:** Run the document tools against open editors ([6a45ebc](https://github.com/ChristopherVR/ooxml/commit/6a45ebc3651a21739b5e18e7758395c866656198))
+
+### Bug Fixes
+
+- **pptx:** Scope the viewer stylesheet reset to the viewer roots ([c390b2b](https://github.com/ChristopherVR/ooxml/commit/c390b2ba2f0ec7811c3554b9989346c6e8cd927d))
+- **pptx:** Fit the react slide before its first paint ([#164](https://github.com/ChristopherVR/ooxml/issues/164)) ([a8eed20](https://github.com/ChristopherVR/ooxml/commit/a8eed2004fbfe69d79f9ceaab785b09fe0fbb8f2))
+- **pptx:** Report host save failures and use host recovery everywhere ([8e982c8](https://github.com/ChristopherVR/ooxml/commit/8e982c8576f656d10200a45cc1708a5ac8e14ed6))
+- **pptx:** Align cache maintenance tests with the shared sweeps ([a13ff2d](https://github.com/ChristopherVR/ooxml/commit/a13ff2d5f487599fe43a37a503436bd069375479))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Integrate the pptx binding events into host storage ([08272a2](https://github.com/ChristopherVR/ooxml/commit/08272a298c8b249aa0bf143b689ff01f66663309))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+### Performance
+
+- **react:** Let hosts tree-shake unused components from the bundle ([5959b25](https://github.com/ChristopherVR/ooxml/commit/5959b2586753af02bafb10e9520b373293551935))
+
+### Testing
+
+- **react:** Compare canvas.css sources as posix paths ([3fc535c](https://github.com/ChristopherVR/ooxml/commit/3fc535c1513d848ed548fcf6bd0d986325ae2be4))
+
 ## [Unreleased]
 
 ### Documentation
