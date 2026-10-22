@@ -5,6 +5,7 @@
     "": {
       "name": "@christophervr/ooxml-core",
       "devDependencies": {
+        "esbuild": "^0.28.2",
         "oxfmt": "^0.73.0",
         "oxlint": "^1.88.0",
       },
