@@ -76,19 +76,23 @@ working. The tradeoffs are listed in [Limitations](/guide/limitations).
 
 ## Key exports
 
-| Export                                       | Kind     | Purpose                                                                                    |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `createPptxViewer`                           | function | Factory: mount a viewer into a container. See [Getting Started](/vanilla/getting-started). |
-| `PptxViewerOptions`, `PptxViewerCallbacks`   | type     | Options and event callbacks. See [Options & Callbacks](/vanilla/options).                  |
-| `PptxViewerInstance`                         | type     | The returned handle. See [Viewer Instance API](/vanilla/api).                              |
-| `PptxViewerSource`                           | type     | `ArrayBuffer \| Uint8Array \| Blob \| string` (URL).                                       |
-| `ElementRenderer`, `ElementRendererRegistry` | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
-| `createDefaultRegistry`                      | function | The default renderer registry (all built-in renderers pre-registered).                     |
-| `getViewerCss`                               | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
-| `ViewerTheme`, `ViewerThemeColors`           | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
-| `vermilionLightTheme`, `vermilionDarkTheme`  | const    | Built-in vermilion light/dark presets.                                                     |
-| `themeToCssVars`, `defaultCssVars`           | function | Convert a theme to `--pptx-*` CSS vars.                                                    |
-| `PptxHandler`, `PptxSlide`, `PptxElement`    | type     | Core types re-exported for the `getHandler()` escape hatch.                                |
+| Export                                                           | Kind     | Purpose                                                                                    |
+| ---------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `createPptxViewer`                                               | function | Factory: mount a viewer into a container. See [Getting Started](/vanilla/getting-started). |
+| `PptxViewerOptions`, `PptxViewerCallbacks`                       | type     | Options and event callbacks. See [Options & Callbacks](/vanilla/options).                  |
+| `PptxViewerInstance`                                             | type     | The returned handle. See [Viewer Instance API](/vanilla/api).                              |
+| `PptxViewerSource`                                               | type     | `ArrayBuffer \| Uint8Array \| Blob \| string` (URL).                                       |
+| `ElementRenderer`, `ElementRendererRegistry`                     | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
+| `createDefaultRegistry`                                          | function | The default renderer registry (all built-in renderers pre-registered).                     |
+| `getViewerCss`                                                   | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
+| `ViewerTheme`, `ViewerThemeColors`                               | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
+| `vermilionLightTheme`, `vermilionDarkTheme`                      | const    | Built-in vermilion light/dark presets.                                                     |
+| `themeToCssVars`, `defaultCssVars`                               | function | Convert a theme to `--pptx-*` CSS vars.                                                    |
+| `PptxHandler`, `PptxSlide`, `PptxElement`                        | type     | Core types re-exported for the `getHandler()` escape hatch.                                |
+| `AccountAuthConfig`, `ToolbarActionId`                           | type     | Types for the `accountAuth` and `hiddenActions` options.                                   |
+| `rememberSessionDeck`, `restoreSessionDeck`, `forgetSessionDeck` | function | Reopen the deck after a refresh.                                                           |
+| `renderToCanvas`                                                 | function | The `html2canvas-pro` wrapper the built-in export uses.                                    |
+| `PptxAiConfig`, `PptxAiConnection`, ...                          | type     | Types for the optional `ai` option.                                                        |
 
 ## Next steps
 

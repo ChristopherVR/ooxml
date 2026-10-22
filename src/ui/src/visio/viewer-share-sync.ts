@@ -74,8 +74,9 @@ export function controllerEditor(controller: ViewerController): DrawingEditor {
 }
 
 /**
- * Shape-level sync of one drawing over a shared session (`ooxml-core/visio/collab`): pages, shapes
- * and connectors merge per item; every other part is shared whole. Undo and redo act on this
+ * Property-level sync of one drawing over a shared session (`ooxml-core/visio/collab`): pages,
+ * shapes (per cell, row and section), connectors, masters and media merge per item; styles, theme
+ * and document settings are shared whole. Undo and redo act on this
  * window's own edits. It borrows the session; the caller owns its lifetime.
  */
 export class DrawingSync {

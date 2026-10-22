@@ -1,5 +1,9 @@
 import type { CollaborationConfig, CollaborationState, ConnectionStatus } from 'ooxml-ui/pptx';
-import { buildCollaborationState, createCollaborationStateReporter } from 'ooxml-ui/pptx';
+import {
+	buildCollaborationState,
+	createCollaborationStateReporter,
+	writeBackReport,
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 
@@ -10,6 +14,8 @@ interface TrackedSession {
 	status: ConnectionStatus;
 	synced: boolean;
 	clientId: number | null;
+	/** The write-back status, as the scheduler reports it (the owner only reports it). */
+	writeBack?: CollaborationState['writeBack'] | undefined;
 }
 
 export interface CollaborationStateTracker {
@@ -42,6 +48,7 @@ export function createCollaborationStateTracker(
 			userName: tracked.config?.userName,
 			userColor: tracked.config?.userColor,
 			remoteUsers: store.get().remotePresences,
+			writeBack: writeBackReport(tracked.config, tracked.writeBack),
 		});
 	const reporter = createCollaborationStateReporter((state) => onChange?.(state));
 	const refresh = (): void => reporter.update(compute());

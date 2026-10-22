@@ -43,9 +43,11 @@ import { currentDemoCustomization } from '../shared/demo-customization';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
+import { sameBrowserRoom } from '../shared/same-browser-collaboration';
 import { useDemoAiConfig } from './ai-config';
 import { HostOwnedDemoApp } from './HostOwnedDemo';
 import i18nInstance from './i18n'; // Initialises i18next before any component renders
+import { SameBrowserDemoApp } from './SameBrowserDemo';
 
 import './app.css';
 import '../shared/dropzone.css';
@@ -1099,5 +1101,13 @@ if (rootEl) {
 	if (hot) {
 		hot.data.root = root;
 	}
-	root.render(externalSessionRequested() ? <HostOwnedDemoApp /> : <App />);
+	root.render(
+		externalSessionRequested() ? (
+			<HostOwnedDemoApp />
+		) : sameBrowserRoom() ? (
+			<SameBrowserDemoApp />
+		) : (
+			<App />
+		),
+	);
 }

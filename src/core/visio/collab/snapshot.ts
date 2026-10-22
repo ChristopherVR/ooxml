@@ -1,27 +1,32 @@
-// Splits a local VSDX into the keyed pieces the shared drawing holds: pages, the shapes and
-// connects of each page, and every other part verbatim. Page parts are split by text span, so the
-// shape XML is exactly what the editor wrote.
-import JSZip from 'jszip';
+// Splits a local VSDX into the keyed pieces the shared drawing holds: pages, the shapes (one
+// entry per shape, nested shapes included) with their cells, the connects of each page, masters,
+// media and every other part verbatim. Parts are split by text span, so the XML a peer shares is
+// exactly what the editor wrote.
 import type { DrawingKeys } from './keys';
-import {
-	CONTENT_TYPES,
-	decoder,
-	dirName,
-	encoder,
-	isLocalOnlyPart,
-	parseRelationships,
-	relsPathOf,
-	resolveTarget,
-	stripPageOverrides,
-} from './package';
+import { relsPathOf } from './package';
+import { type Piece, splitShape } from './pieces';
 import { attrOf, scanContainer } from './scan';
 import type { ConnectEntry } from './schema';
-import { CONNECTS_MARK, REL_MARK, SHAPES_MARK } from './schema';
+import { CONNECTS_MARK, SHAPES_MARK } from './schema';
+import { readLayout, readLocalItems, readZip, withMark, zipText } from './snapshot-io';
+import { snapshotMasters, snapshotRest } from './snapshot-parts';
+
+export {
+	type Layout,
+	type LocalItem,
+	readLayout,
+	readLocalItems,
+	readZip,
+	zipText,
+} from './snapshot-io';
 
 export interface ShapeSnapshot {
 	key: string;
 	id: string;
-	xml: string;
+	/** Key of the shape this one is nested in. */
+	parent?: string;
+	open: string;
+	pieces: Piece[];
 }
 export interface ConnectSnapshot {
 	key: string;
@@ -35,14 +40,35 @@ export interface PageSnapshot {
 	shell: string;
 	rels?: string;
 	path: string;
+	/** Every shape of the page, parents before the shapes nested in them. */
 	shapes: ShapeSnapshot[];
 	connects: ConnectSnapshot[];
+}
+export interface MasterSnapshot {
+	key: string;
+	id: string;
+	xml: string;
+	path: string;
+	part: Uint8Array;
+	rels?: string;
+}
+export interface MediaSnapshot {
+	path: string;
+	hash: string;
+	ct: string;
+	d: boolean;
+	data: Uint8Array;
 }
 export interface DrawingSnapshot {
 	pagesPath: string;
 	pagesOpen: string;
 	pagesClose: string;
 	pages: PageSnapshot[];
+	mastersPath?: string;
+	mastersOpen?: string;
+	mastersClose?: string;
+	masters: MasterSnapshot[];
+	media: MediaSnapshot[];
 	parts: Map<string, Uint8Array>;
 }
 
@@ -76,63 +102,25 @@ function splitList(text: string, name: string, mark: string, child: string) {
 	return { text: text.slice(0, box.openEnd) + mark + text.slice(box.closeStart), items };
 }
 
-export const readZip = (bytes: Uint8Array): Promise<JSZip> => JSZip.loadAsync(bytes);
-export const zipText = async (zip: JSZip, path: string): Promise<string | undefined> =>
-	zip.file(path)?.async('string');
-
-export interface Layout {
-	documentPath: string;
-	pagesPath: string;
-}
-
-/** The document and pages parts of a package, through its relationships. */
-export async function readLayout(zip: JSZip): Promise<Layout | undefined> {
-	const root = parseRelationships(await zipText(zip, '_rels/.rels')).find((r) =>
-		r.type.endsWith('/document'),
-	);
-	if (!root) return undefined;
-	const documentPath = resolveTarget('', root.target);
-	const rels = parseRelationships(await zipText(zip, relsPathOf(documentPath)));
-	const pages = rels.find((r) => r.type.endsWith('/pages'));
-	return pages
-		? { documentPath, pagesPath: resolveTarget(dirName(documentPath), pages.target) }
-		: undefined;
-}
-
-export interface LocalPage {
-	id: string;
-	text: string;
-	path: string;
-	rel: { start: number; end: number };
-}
-
-/** The `Page` elements of a pages part with the part each one points to. */
-export async function readLocalPages(zip: JSZip, layout: Layout, pagesXml: string) {
-	const box = scanContainer(pagesXml, 'Pages');
-	if (!box) return undefined;
-	const rels = new Map(
-		parseRelationships(await zipText(zip, relsPathOf(layout.pagesPath))).map((r) => [r.id, r]),
-	);
-	const pages: LocalPage[] = [];
-	for (const span of box.children) {
-		if (span.name !== 'Page') continue;
-		const text = pagesXml.slice(span.start, span.end);
-		const inner = scanContainer(text, 'Page');
-		const relSpan = inner?.children.find((c) => c.name === 'Rel');
-		if (!inner || !relSpan) return undefined;
-		const relTag = text.slice(relSpan.start, relSpan.openEnd);
-		const rid = /\s(?:\w+:)?id\s*=\s*(["'])([^"']+)\1/.exec(relTag)?.[2];
-		const target = rid ? rels.get(rid)?.target : undefined;
-		const id = attrOf(text.slice(0, inner.openEnd), 'ID');
-		if (target === undefined || id === undefined) return undefined;
-		pages.push({
-			id,
-			text,
-			path: resolveTarget(dirName(layout.pagesPath), target),
-			rel: { start: relSpan.start, end: relSpan.end },
-		});
-	}
-	return { box, pages };
+function flatten(
+	xml: string,
+	parent: string | undefined,
+	page: string,
+	keys: DrawingKeys,
+	out: ShapeSnapshot[],
+): void {
+	const split = splitShape(xml);
+	const id = split ? attrOf(split.open, 'ID') : undefined;
+	if (!split || id === undefined) return;
+	const key = keys.shapeKey(page, id);
+	out.push({
+		key,
+		id,
+		...(parent !== undefined ? { parent } : {}),
+		open: split.open,
+		pieces: split.pieces,
+	});
+	for (const nested of split.nested) flatten(nested, key, page, keys, out);
 }
 
 export async function snapshotDrawing(
@@ -144,31 +132,23 @@ export async function snapshotDrawing(
 	const layout = await readLayout(zip);
 	if (!layout) throw new Error('The package has no Visio pages part.');
 	const pagesXml = (await zipText(zip, layout.pagesPath)) ?? '';
-	const local = await readLocalPages(zip, layout, pagesXml);
+	const local = await readLocalItems(zip, layout.pagesPath, pagesXml, 'Pages', 'Page');
 	if (!local) throw new Error('The pages part cannot be split into pages.');
 	const derived = new Set([layout.pagesPath, relsPathOf(layout.pagesPath)]);
-	const idToKey = new Map(local.pages.map((p) => [p.id, keys.pageKey(p.id)]));
+	const idToKey = new Map(local.items.map((p) => [p.id, keys.pageKey(p.id)]));
 	const pages: PageSnapshot[] = [];
-	for (const page of local.pages) {
+	for (const page of local.items) {
 		const key = idToKey.get(page.id)!;
 		derived.add(page.path).add(relsPathOf(page.path));
 		const head = page.text.slice(0, scanContainer(page.text, 'Page')!.openEnd);
 		const backId = attrOf(head, 'BackPage');
-		const xml = page.text.slice(0, page.rel.start) + REL_MARK + page.text.slice(page.rel.end);
 		const content = (await zipText(zip, page.path)) ?? '';
 		const rels = await zipText(zip, relsPathOf(page.path));
 		const shapesSplit = splitList(content, 'Shapes', SHAPES_MARK, 'Shape');
 		const connectsSplit = splitList(shapesSplit.text, 'Connects', CONNECTS_MARK, 'Connect');
-		const owner = new Map<string, string>();
 		const shapes: ShapeSnapshot[] = [];
-		for (const text of shapesSplit.items) {
-			const ids = shapeIds(text);
-			const id = ids[0];
-			if (id === undefined) continue;
-			const shapeKey = keys.shapeKey(key, id);
-			for (const nested of ids) owner.set(nested, shapeKey);
-			shapes.push({ key: shapeKey, id, xml: text });
-		}
+		for (const text of shapesSplit.items) flatten(text, undefined, key, keys, shapes);
+		const owner = new Map(shapes.map((s) => [s.id, s.key]));
 		const connects: ConnectSnapshot[] = [];
 		for (const text of connectsSplit.items) {
 			const a = (name: string) => attrOf(text, name) ?? '';
@@ -192,7 +172,7 @@ export async function snapshotDrawing(
 			key,
 			id: page.id,
 			...(backId !== undefined && idToKey.has(backId) ? { back: idToKey.get(backId)! } : {}),
-			xml,
+			xml: withMark(page),
 			shell: connectsSplit.text,
 			...(rels !== undefined ? { rels } : {}),
 			path: page.path,
@@ -200,23 +180,23 @@ export async function snapshotDrawing(
 			connects,
 		});
 	}
-	const parts = new Map<string, Uint8Array>();
-	let total = 0;
-	const limit = options.maxPartBytes ?? DEFAULT_MAX_PART_BYTES;
-	for (const path of Object.keys(zip.files)) {
-		const file = zip.files[path]!;
-		if (file.dir || derived.has(path) || isLocalOnlyPart(path)) continue;
-		let data = await file.async('uint8array');
-		if (path === CONTENT_TYPES) data = encoder.encode(stripPageOverrides(decoder.decode(data)));
-		total += data.length;
-		if (total > limit) throw new Error('The package parts exceed the shared size limit.');
-		parts.set(path, data);
-	}
+
+	const { masters, mastersOpen, mastersClose } = await snapshotMasters(zip, layout, keys, derived);
+	const { parts, media } = await snapshotRest(
+		zip,
+		derived,
+		options.maxPartBytes ?? DEFAULT_MAX_PART_BYTES,
+	);
 	return {
 		pagesPath: layout.pagesPath,
 		pagesOpen: pagesXml.slice(0, local.box.openEnd),
 		pagesClose: pagesXml.slice(local.box.closeStart),
 		pages,
+		...(mastersOpen !== undefined && mastersClose !== undefined && layout.mastersPath
+			? { mastersPath: layout.mastersPath, mastersOpen, mastersClose }
+			: {}),
+		masters,
+		media,
 		parts,
 	};
 }

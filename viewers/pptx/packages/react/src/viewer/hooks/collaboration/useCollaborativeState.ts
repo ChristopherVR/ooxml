@@ -1,5 +1,6 @@
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import { sanitizeColor } from 'ooxml-ui/pptx';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 /**
  * useCollaborativeState: Composes the Yjs provider and presence tracking
@@ -63,6 +64,9 @@ export function useCollaborativeState({
 		canvasHeight,
 	});
 
+	// The owner's write-back status, reported by the document sync.
+	const [writeBack, reportWriteBack] = useState<CollaborationWriteBackState | undefined>();
+
 	// Total connected = remote users + local (if connected)
 	const connectedCount = status === 'connected' ? remoteUsers.length + 1 : remoteUsers.length;
 
@@ -82,8 +86,21 @@ export function useCollaborativeState({
 						synced,
 						retry,
 						clientId,
+						writeBack,
+						reportWriteBack,
 					}
 				: null,
-		[status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry, clientId],
+		[
+			status,
+			remoteUsers,
+			broadcastPresence,
+			connectedCount,
+			config,
+			doc,
+			synced,
+			retry,
+			clientId,
+			writeBack,
+		],
 	);
 }

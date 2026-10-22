@@ -35,12 +35,12 @@ async function save(): Promise<void> {
 ## Interface
 
 `PowerPointViewerExpose` extends the shared `PowerPointViewerAPI` contract (defined in
-`pptx-viewer-shared`) plus `getContent`. All three framework bindings (React, Vue, Angular) expose
+`ooxml-ui/pptx`) plus `getContent`. All five framework bindings (React, Vue, Angular, Svelte, vanilla) expose
 the same API surface; React reaches it through `forwardRef` + `PowerPointViewerHandle`, Vue through
 `defineExpose`, Angular through public component methods.
 
 ```ts
-import type { ViewerMode, PowerPointViewerAPI } from 'pptx-viewer-shared';
+import type { ViewerMode, PowerPointViewerAPI } from 'pptx-vue-viewer';
 import type { PowerPointViewerExpose } from 'pptx-vue-viewer';
 ```
 

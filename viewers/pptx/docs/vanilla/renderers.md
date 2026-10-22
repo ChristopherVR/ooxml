@@ -87,7 +87,7 @@ const myRenderer: ElementRenderer = (element, zIndex, context) => {
 The contract (documented on `ElementRenderer` in the source):
 
 - **Position absolutely** within the stage from the element's `x` / `y` / `width` / `height`
-  (unscaled canvas px). The built-in renderers do this with the shared `getContainerStyle`
+  (unscaled canvas px). The built-in renderers do this with the shared `getContainerStyle` (from `ooxml-ui/pptx`)
   helper, which also handles rotation and flips. The stage scales via a CSS transform; do not
   scale yourself.
 - Set `dataset.elementId = element.id` on the root node.

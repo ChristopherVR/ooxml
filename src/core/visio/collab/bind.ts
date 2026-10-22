@@ -11,7 +11,7 @@ import type { CollabSession } from '../../collab/session';
 import { composeDrawing } from './compose';
 import { DrawingKeys } from './keys';
 import { readSharedDrawing } from './read';
-import { isSharedDrawingEmpty, sharedDrawing, sharedTypes } from './schema';
+import { SchemaVersionError, isSharedDrawingEmpty, sharedDrawing, sharedTypes } from './schema';
 import { snapshotDrawing } from './snapshot';
 import { writeSharedDrawing } from './write';
 
@@ -46,6 +46,12 @@ export interface DrawingBindingOptions {
 	onError?: (error: unknown) => void;
 	/** Part of every key this peer mints; defaults to the Yjs client id. */
 	keyTag?: string;
+	/**
+	 * Runs `run` once after the current burst of remote transactions (default: a zero-delay timer).
+	 * Remote changes that arrive before it runs share one rebuild. `idle()` waits for it, so a test
+	 * that injects a manual scheduler must call `run` before awaiting `idle()`.
+	 */
+	schedule?: (run: () => void) => void;
 }
 
 export interface DrawingBinding {
@@ -85,6 +91,14 @@ export function bindDrawingSession(
 	let settled = false;
 	let localDirty = false;
 	let remoteDirty = false;
+	let incompatible = false;
+	let queued = false;
+	let queuedDone: Promise<void> | undefined;
+	const schedule =
+		options.schedule ??
+		((run: () => void) => {
+			setTimeout(run, 0);
+		});
 	let running: Promise<void> | undefined;
 	const report = (error: unknown): void => options.onError?.(error);
 
@@ -107,6 +121,8 @@ export function bindDrawingSession(
 		const resolved = readSharedDrawing(shared);
 		if (!resolved) return;
 		const version = editor.version();
+		// Nothing the room holds changed the drawing this editor already shows.
+		if (keys.applied?.signature === resolved.signature && keys.applied.version === version) return;
 		const composed = await composeDrawing(resolved, editor.exportBytes(), keys);
 		if (disposed) return;
 		if (editor.busy() || editor.version() !== version) {
@@ -121,9 +137,10 @@ export function bindDrawingSession(
 			return;
 		}
 		composed.commit();
+		keys.applied = { signature: composed.signature, version: editor.version() };
 	};
 
-	const blocked = (): boolean => disposed || !settled || editor.busy();
+	const blocked = (): boolean => disposed || incompatible || !settled || editor.busy();
 	const pending = (): boolean =>
 		!blocked() && ((localDirty && host.canWrite()) || (remoteDirty && !localDirty));
 
@@ -138,6 +155,8 @@ export function bindDrawingSession(
 					await rebuild();
 				}
 			} catch (error) {
+				// A room with another schema version is left alone: no writes, no rebuilds.
+				if (error instanceof SchemaVersionError) incompatible = true;
 				report(error);
 			}
 		}
@@ -166,6 +185,19 @@ export function bindDrawingSession(
 		pump();
 	};
 
+	const queueRemote = (): void => {
+		if (queued) return;
+		queued = true;
+		queuedDone = new Promise<void>((resolve) =>
+			schedule(() => {
+				queued = false;
+				remoteDirty = true;
+				resolve();
+				pump();
+			}),
+		);
+	};
+
 	const afterTransaction = (transaction: Y.Transaction): void => {
 		if (disposed) return;
 		const origin = transaction.origin;
@@ -176,8 +208,7 @@ export function bindDrawingSession(
 			if (!isSharedDrawingEmpty(shared)) settle();
 			return;
 		}
-		remoteDirty = true;
-		pump();
+		queueRemote();
 	};
 	doc.on('afterTransaction', afterTransaction);
 
@@ -197,7 +228,10 @@ export function bindDrawingSession(
 	if (host.synced || host.canWrite()) settle();
 
 	const idle = async (): Promise<void> => {
-		while (running) await running;
+		while (running || queued) {
+			if (queued) await queuedDone;
+			if (running) await running;
+		}
 	};
 	const replay = async (kind: 'undo' | 'redo'): Promise<boolean> => {
 		await idle();

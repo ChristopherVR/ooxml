@@ -16,6 +16,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	buildCollaborationState,
+	writeBackReport,
 	DEFAULT_CURSOR_COLOR,
 	isMixedContentBlocked,
 	needsOwnedSession,
@@ -127,6 +128,7 @@ export class CollaborationController {
 			userName: config?.userName,
 			userColor: config ? (config.userColor ?? DEFAULT_CURSOR_COLOR) : undefined,
 			remoteUsers: this.remotePresences,
+			writeBack: writeBackReport(config, this.#document.writeBack),
 		});
 	}
 	/** Total connected participants (self + remote peers), reactive. */

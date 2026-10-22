@@ -1,136 +1,149 @@
 // Writes a local drawing into the shared maps, touching only what the person changed. Each entry
 // is compared with the content this peer last wrote or applied (its baseline), so a collaborator's
 // change that has not been applied here yet is never overwritten by a stale local copy. Items the
-// peer knew about and no longer has become tombstones, which win over a concurrent edit of the same
-// item. Run it inside one transaction.
+// peer knew about and no longer has are removed: pages and shapes become tombstones, which win
+// over a concurrent edit of the same item; cells, masters and media are simply deleted, so a
+// concurrent edit of one of those survives. Run it inside one transaction.
+import type * as Y from 'yjs';
+import { bodyContent, bodyId, connectId, pageContent, pageId } from './baseline';
 import type { DrawingKeys } from './keys';
 import { assignPositions } from './order';
-import { canon, fingerprint, toBase64 } from './package';
-import type { DrawingSnapshot } from './snapshot';
 import {
+	type BodyEntry,
 	type PageEntry,
 	SCHEMA_VERSION,
 	type SharedDrawing,
+	assertSchemaVersion,
 	bodyEntry,
 	pageEntry,
 	setIfChanged,
-	shapeEntry,
 } from './schema';
+import type { DrawingSnapshot } from './snapshot';
+import { syncMasters, syncMedia, syncParts } from './write-parts';
+import { type WriteContext, syncEntry, syncShapes } from './write-shapes';
 
-export const pageId = (key: string): string => `p:${key}`;
-export const bodyId = (key: string): string => `b:${key}`;
-export const shapeId = (page: string, key: string): string => `s:${page}/${key}`;
-export const connectId = (key: string): string => `c:${key}`;
-/** Baseline text of a page entry (its position excluded) and of a body. */
-export const pageContent = (e: { id: string; back?: string | undefined; xml: string }): string =>
-	JSON.stringify([e.id, e.back ?? null, canon(e.xml)]);
-export const bodyContent = (e: { shell: string; rels?: string | undefined }): string =>
-	JSON.stringify([canon(e.shell), e.rels ?? null]);
+export { bodyId, connectId, pageContent, bodyContent, pageId };
 
-/** Writes `snapshot` into `shared`; returns the number of entries changed. */
+function removePage(shared: SharedDrawing, name: string): void {
+	shared.dead.set(name, true);
+	for (const map of [shared.pages, shared.bodies]) map.delete(name);
+	for (const map of [shared.shapes, shared.cells, shared.connects])
+		for (const key of [...map.keys()]) if (key.startsWith(`${name}/`)) map.delete(key);
+}
+
+/** Writes `snapshot` into `shared`; returns the number of entries changed. Throws on another schema version. */
 export function writeSharedDrawing(
 	shared: SharedDrawing,
 	snapshot: DrawingSnapshot,
 	keys: DrawingKeys,
 ): number {
+	assertSchemaVersion(shared);
 	let writes = 0;
-	const set = (map: SharedDrawing['meta'], key: string, value: unknown): void => {
+	const write = (map: Y.Map<unknown>, key: string, value: unknown): void => {
 		if (setIfChanged(map, key, value)) writes++;
 	};
-	set(shared.meta, 'v', SCHEMA_VERSION);
-	set(shared.meta, 'pagesPath', snapshot.pagesPath);
-	set(shared.meta, 'pagesOpen', snapshot.pagesOpen);
-	set(shared.meta, 'pagesClose', snapshot.pagesClose);
-
 	const now = new Map<string, string>();
-	/** Whether the local content differs from what this peer last synced (or from the room). */
-	const changed = (id: string, content: string, room: string | undefined): boolean => {
-		const base = keys.known.get(id);
-		return base === undefined ? room !== content : base !== content;
-	};
+	const ctx: WriteContext = { shared, keys, now, batch: keys.batch(), write };
+	write(shared.meta, 'v', SCHEMA_VERSION);
+	write(shared.meta, 'pagesPath', snapshot.pagesPath);
+	write(shared.meta, 'pagesOpen', snapshot.pagesOpen);
+	write(shared.meta, 'pagesClose', snapshot.pagesClose);
+	if (snapshot.mastersPath !== undefined) {
+		write(shared.meta, 'mastersPath', snapshot.mastersPath);
+		write(shared.meta, 'mastersOpen', snapshot.mastersOpen);
+		write(shared.meta, 'mastersClose', snapshot.mastersClose);
+	}
+
 	const pagePos = assignPositions(
 		snapshot.pages.map((p) => p.key),
 		(key) => pageEntry(shared.pages.get(key))?.pos,
 	);
 	for (const page of snapshot.pages) {
 		const room = pageEntry(shared.pages.get(page.key));
-		const content = pageContent(page);
-		now.set(pageId(page.key), content);
-		const own = changed(pageId(page.key), content, room && pageContent(room));
-		const source: Pick<PageEntry, 'id' | 'back' | 'xml'> = own || !room ? page : room;
-		set(shared.pages, page.key, {
-			pos: pagePos.get(page.key)!,
-			id: source.id,
-			...(source.back !== undefined ? { back: source.back } : {}),
-			xml: source.xml,
-		});
-		const roomBody = bodyEntry(shared.bodies.get(page.key));
-		const bodyText = bodyContent(page);
-		now.set(bodyId(page.key), bodyText);
-		const ownBody = changed(bodyId(page.key), bodyText, roomBody && bodyContent(roomBody));
-		const body = ownBody || !roomBody ? page : roomBody;
-		set(shared.bodies, page.key, {
-			shell: body.shell,
-			...(body.rels !== undefined ? { rels: body.rels } : {}),
-		});
-		const shapePos = assignPositions(
-			page.shapes.map((s) => s.key),
-			(key) => shapeEntry(shared.shapes.get(`${page.key}/${key}`))?.pos,
+		syncEntry<PageEntry>(
+			ctx,
+			shared.pages,
+			page.key,
+			pageId(page.key),
+			pageContent(page),
+			room,
+			() => pageContent(room!),
+			() => ({
+				pos: pagePos.get(page.key)!,
+				id: page.id,
+				...(page.back !== undefined ? { back: page.back } : {}),
+				xml: page.xml,
+			}),
 		);
-		for (const shape of page.shapes) {
-			const id = shapeId(page.key, shape.key);
-			const roomShape = shapeEntry(shared.shapes.get(`${page.key}/${shape.key}`));
-			const text = canon(shape.xml);
-			now.set(id, text);
-			const xml =
-				changed(id, text, roomShape && canon(roomShape.xml)) || !roomShape
-					? shape.xml
-					: roomShape.xml;
-			set(shared.shapes, `${page.key}/${shape.key}`, { pos: shapePos.get(shape.key)!, xml });
-		}
+		const roomBody = bodyEntry(shared.bodies.get(page.key));
+		syncEntry<BodyEntry>(
+			ctx,
+			shared.bodies,
+			page.key,
+			bodyId(page.key),
+			bodyContent(page),
+			roomBody,
+			() => bodyContent(roomBody!),
+			() => ({ shell: page.shell, ...(page.rels !== undefined ? { rels: page.rels } : {}) }),
+			true,
+		);
+		syncShapes(ctx, page);
 		for (const connect of page.connects) {
 			now.set(connectId(connect.key), '');
 			if (!keys.known.has(connectId(connect.key)) || !shared.connects.has(connect.key))
-				set(shared.connects, connect.key, connect.entry);
+				write(shared.connects, connect.key, connect.entry);
 		}
 	}
+	syncMasters(ctx, snapshot);
+	syncMedia(ctx, snapshot);
 
 	for (const id of keys.known.keys()) {
 		if (now.has(id)) continue;
 		const name = id.slice(2);
-		if (id.startsWith('p:')) {
-			shared.dead.set(name, true);
-			for (const map of [shared.pages, shared.bodies]) map.delete(name);
-			for (const map of [shared.shapes, shared.connects])
-				for (const key of [...map.keys()]) if (key.startsWith(`${name}/`)) map.delete(key);
-			keys.forgetPage(name);
-			writes++;
-		} else if (id.startsWith('s:')) {
-			const slash = name.indexOf('/');
-			const page = name.slice(0, slash);
-			if (!now.has(pageId(page))) continue;
-			shared.dead.set(name, true);
-			shared.shapes.delete(name);
-			keys.forgetShape(page, name.slice(slash + 1));
-			writes++;
-		} else if (id.startsWith('c:') && shared.connects.has(name)) {
-			shared.connects.delete(name);
-			writes++;
+		switch (id.slice(0, 2)) {
+			case 'p:':
+				removePage(shared, name);
+				keys.forgetPage(name);
+				writes++;
+				break;
+			case 's:': {
+				const slash = name.indexOf('/');
+				const page = name.slice(0, slash);
+				if (!now.has(pageId(page))) break;
+				shared.dead.set(name, true);
+				shared.shapes.delete(name);
+				keys.forgetShape(page, name.slice(slash + 1));
+				writes++;
+				break;
+			}
+			case 'f:':
+				if (shared.cells.has(name)) {
+					shared.cells.delete(name);
+					writes++;
+				}
+				break;
+			case 'c:':
+				if (shared.connects.has(name)) {
+					shared.connects.delete(name);
+					writes++;
+				}
+				break;
+			case 'm:':
+				if (shared.masters.has(name)) {
+					shared.masters.delete(name);
+					writes++;
+				}
+				keys.forgetMaster(name);
+				break;
+			case 'i:':
+				if (shared.media.has(name)) {
+					shared.media.delete(name);
+					writes++;
+				}
+				break;
 		}
 	}
 	keys.known = now;
-
-	for (const [path, data] of snapshot.parts) {
-		const print = fingerprint(data);
-		if (keys.partPrints.get(path) === print) continue;
-		set(shared.parts, path, toBase64(data));
-		keys.partPrints.set(path, print);
-	}
-	for (const path of [...keys.partPrints.keys()])
-		if (!snapshot.parts.has(path)) {
-			shared.parts.delete(path);
-			keys.partPrints.delete(path);
-			writes++;
-		}
+	writes += syncParts(ctx, snapshot);
 	return writes;
 }

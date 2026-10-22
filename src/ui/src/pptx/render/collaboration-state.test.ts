@@ -5,6 +5,7 @@ import {
 	COLLABORATION_OFF,
 	collaborationStatesEqual,
 	createCollaborationStateReporter,
+	writeBackReport,
 } from './collaboration-state';
 
 const remote = { clientId: 2, userName: 'Ada', userColor: '#ef4444' };
@@ -109,5 +110,43 @@ describe('collaborationStatesEqual and the reporter', () => {
 		reporter.update(COLLABORATION_OFF);
 		expect(report).toHaveBeenCalledTimes(2);
 		expect(reporter.current()).toBe(COLLABORATION_OFF);
+	});
+});
+
+describe('write-back in the collaboration state', () => {
+	const owner = { role: 'owner', onWriteBack: () => {} };
+	const base = {
+		active: true,
+		roomId: 'r',
+		status: 'connected' as const,
+		synced: true,
+		remoteUsers: [],
+	};
+
+	it('is reported only for an owner with onWriteBack, idle until the scheduler speaks', () => {
+		expect(writeBackReport(owner, undefined)).toEqual({ status: 'idle' });
+		expect(writeBackReport(owner, { status: 'saved', lastSavedAt: 5 })).toEqual({
+			status: 'saved',
+			lastSavedAt: 5,
+		});
+		expect(writeBackReport({ role: 'collaborator', onWriteBack: () => {} }, undefined)).toBe(
+			undefined,
+		);
+		expect(writeBackReport({ role: 'owner' }, undefined)).toBe(undefined);
+		expect(writeBackReport(null, undefined)).toBe(undefined);
+	});
+
+	it('flows into the built state and counts as a change', () => {
+		const a = buildCollaborationState({ ...base, writeBack: { status: 'saving' } });
+		expect(a.writeBack).toEqual({ status: 'saving' });
+		expect(buildCollaborationState(base).writeBack).toBeUndefined();
+		const b = buildCollaborationState({ ...base, writeBack: { status: 'saved', lastSavedAt: 1 } });
+		expect(collaborationStatesEqual(a, b)).toBe(false);
+		expect(
+			collaborationStatesEqual(
+				a,
+				buildCollaborationState({ ...base, writeBack: { status: 'saving' } }),
+			),
+		).toBe(true);
 	});
 });

@@ -1,5 +1,9 @@
 import type { CollaborationState } from 'ooxml-core/collab';
-import { buildCollaborationState, createCollaborationStateReporter } from 'ooxml-ui/pptx';
+import {
+	buildCollaborationState,
+	createCollaborationStateReporter,
+	writeBackReport,
+} from 'ooxml-ui/pptx';
 import { useEffect, useMemo, useRef } from 'react';
 
 import type { CollaborationContextValue } from './types';
@@ -24,6 +28,7 @@ export function useCollaborationStateReport(
 	const clientId = collab?.clientId;
 	const remoteUsers = collab?.remoteUsers;
 	const config = collab?.config;
+	const writeBack = collab?.writeBack;
 	useEffect(() => {
 		reporter.update(
 			buildCollaborationState({
@@ -35,7 +40,8 @@ export function useCollaborationStateReport(
 				userName: config?.userName,
 				userColor: config?.userColor,
 				remoteUsers: remoteUsers ?? [],
+				writeBack: writeBackReport(config, writeBack),
 			}),
 		);
-	}, [reporter, status, synced, clientId, remoteUsers, config]);
+	}, [reporter, status, synced, clientId, remoteUsers, config, writeBack]);
 }

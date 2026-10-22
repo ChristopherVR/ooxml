@@ -155,17 +155,16 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 
 Active when `editable` is set (see [Getting Started > Editing](/svelte/getting-started#editing)).
 
-| Method              | Signature                                                      | Description                                                          |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `undo`              | `() => void`                                                   | Undo the last committed edit.                                        |
-| `redo`              | `() => void`                                                   | Redo the last undone edit.                                           |
-| `canUndo`           | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).          |
-| `canRedo`           | `() => boolean`                                                | Whether a redo step is available.                                    |
-| `deleteSelected`    | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).        |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm'`). |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.               |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                           |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | Assemble and download the sharing package.                           |
+| Method           | Signature                                                      | Description                                                          |
+| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `undo`           | `() => void`                                                   | Undo the last committed edit.                                        |
+| `redo`           | `() => void`                                                   | Redo the last undone edit.                                           |
+| `canUndo`        | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).          |
+| `canRedo`        | `() => boolean`                                                | Whether a redo step is available.                                    |
+| `deleteSelected` | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).        |
+| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm'`). |
+| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.               |
+| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                           |
 
 Keyboard shortcuts, active whenever editing is enabled: `Ctrl`/`Cmd+Z` undo,
 `Ctrl`/`Cmd+Shift+Z` redo, `Delete`/`Backspace` delete, `Ctrl`/`Cmd+D` duplicate, arrow keys

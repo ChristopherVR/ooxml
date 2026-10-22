@@ -24,6 +24,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	buildCollaborationState,
+	writeBackReport,
 	createCollaborationLivePatcher,
 	isMixedContentBlocked,
 	needsOwnedSession,
@@ -78,7 +79,10 @@ export class CollaborationService {
 
 	// One handle owns viewer wiring, but external transport resources stay borrowed.
 	private session: ActiveSession | null = null;
-	private readonly writeBack = new WriteBackScheduler();
+	private readonly writeBackState = signal<CollaborationState['writeBack']>(undefined);
+	private readonly writeBack = new WriteBackScheduler(() =>
+		this.writeBackState.set(this.writeBack.getState()),
+	);
 	/** Granular local<->doc slide sync (gate + echo dedupe + broadcast/adopt). */
 	private readonly slideSync = new SlideSyncEngine();
 	/** The first exchange with the room finished (the first-write gate is open). */
@@ -98,6 +102,7 @@ export class CollaborationService {
 			userName: config?.userName,
 			userColor: config?.userColor,
 			remoteUsers: this.presence(),
+			writeBack: writeBackReport(config, this.writeBackState()),
 		});
 	});
 
@@ -257,6 +262,7 @@ export class CollaborationService {
 		this.connectToken += 1;
 		this.slideSync.reset();
 		this.writeBack.cancel();
+		this.writeBackState.set(undefined);
 		if (this.session) {
 			this.session.dispose();
 			this.session = null;

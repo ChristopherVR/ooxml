@@ -20,11 +20,13 @@ import { currentDemoCustomization } from '../../shared/demo-customization';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
+import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { buildViewerAiConfig } from './ai-config';
 import { buildRoomConfig, readRoomFromUrl, resolveAutoName } from './collab';
 import { getLanguage, onLanguageChange, t, viewerMessages } from './demo-i18n';
 import { createDropzone } from './dropzone';
 import { mountHostOwnedDemo } from './host-owned-demo';
+import { mountSameBrowserDemo } from './same-browser-demo';
 import { readStoredTheme, themes } from './themes';
 
 import './styles.css';
@@ -239,6 +241,10 @@ const joinRoom = readRoomFromUrl();
 const wantSample = new URLSearchParams(window.location.search).get('sample') === '1';
 if (externalSessionRequested()) {
 	void mountHostOwnedDemo(app).catch((error: unknown) => {
+		app.textContent = String(error);
+	});
+} else if (sameBrowserRoom()) {
+	void mountSameBrowserDemo(app).catch((error: unknown) => {
 		app.textContent = String(error);
 	});
 } else if (audienceSession) {

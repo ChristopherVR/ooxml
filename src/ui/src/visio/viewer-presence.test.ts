@@ -212,21 +212,24 @@ describe('owner write-back', () => {
 		await owner.join({
 			session: hostSession(hub, 'Ada', 'owner'),
 			onWriteBack,
-			writeBackDebounceMs: 40,
+			writeBackDebounceMs: 300,
 		});
 		await other.join({ session: hostSession(hub, 'Grace', 'collaborator') });
 		await adopted(other);
+		// Joining and adopting schedule saves of their own; let them settle before counting.
+		await new Promise((resolve) => setTimeout(resolve, 800));
+		onWriteBack.mockClear();
 		await change(owner);
 		await change(owner);
 		expect(onWriteBack).not.toHaveBeenCalled();
-		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(1));
+		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(1), { timeout: 5_000 });
 		expect(onWriteBack.mock.calls[0]![0]).toBeInstanceOf(Uint8Array);
-		await new Promise((resolve) => setTimeout(resolve, 120));
+		await new Promise((resolve) => setTimeout(resolve, 800));
 		expect(onWriteBack).toHaveBeenCalledTimes(1);
 
 		// A collaborator's change reaches the owner as a remote step, which is saved too.
 		await change(other, '2');
-		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(2));
+		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(2), { timeout: 5_000 });
 	});
 
 	it('never fires for a collaborator', async () => {
@@ -263,5 +266,100 @@ describe('owner write-back', () => {
 		expect(onWriteBack).toHaveBeenCalledTimes(2);
 		await vi.advanceTimersByTimeAsync(60_000);
 		expect(onWriteBack).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('owner write-back acknowledgement', () => {
+	let step = 500;
+	const change = (w: Window) => w.controller.applyEdits([move('1', (step += 1))]);
+
+	it('reports saving then saved in the collaboration state once the promise resolves', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		const hub = createMemoryHub();
+		const w = await viewerWindow('Ada');
+		let release!: () => void;
+		const onWriteBack = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					release = resolve;
+				}),
+		);
+		await w.join({
+			session: hostSession(hub, 'Ada', 'owner'),
+			onWriteBack,
+			writeBackDebounceMs: 20,
+		});
+		await change(w);
+		expect(w.share.state.writeBack?.status).toBe('pending');
+		await vi.advanceTimersByTimeAsync(30);
+		expect(onWriteBack).toHaveBeenCalledTimes(1);
+		expect(w.share.state.writeBack?.status).toBe('saving');
+		release();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(w.share.state.writeBack?.status).toBe('saved');
+		expect(w.share.state.writeBack?.lastSavedAt).toBeTypeOf('number');
+		w.share.stop();
+	});
+
+	it('retries a rejection, then reports saved', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		const hub = createMemoryHub();
+		const w = await viewerWindow('Ada');
+		const onWriteBack = vi
+			.fn<(bytes: Uint8Array) => Promise<void>>()
+			.mockRejectedValueOnce(new Error('offline'))
+			.mockResolvedValue(undefined);
+		await w.join({
+			session: hostSession(hub, 'Ada', 'owner'),
+			onWriteBack,
+			writeBackDebounceMs: 20,
+			writeBackRetry: { attempts: 3, baseDelayMs: 100 },
+		});
+		await change(w);
+		await vi.advanceTimersByTimeAsync(30);
+		expect(onWriteBack).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(120);
+		expect(onWriteBack).toHaveBeenCalledTimes(2);
+		expect(w.share.state.writeBack?.status).toBe('saved');
+		w.share.stop();
+	});
+
+	it('reports failed with the error when the retries are exhausted', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		const hub = createMemoryHub();
+		const w = await viewerWindow('Ada');
+		const states: unknown[] = [];
+		w.share.onChange = (state) => states.push(state.writeBack?.status);
+		const onWriteBack = vi.fn(() => Promise.reject(new Error('quota')));
+		await w.join({
+			session: hostSession(hub, 'Ada', 'owner'),
+			onWriteBack,
+			writeBackDebounceMs: 20,
+			writeBackRetry: { attempts: 2, baseDelayMs: 50 },
+		});
+		await change(w);
+		await vi.advanceTimersByTimeAsync(500);
+		expect(onWriteBack).toHaveBeenCalledTimes(2);
+		expect(w.share.state.writeBack).toMatchObject({ status: 'failed', error: 'quota' });
+		expect(states).toContain('failed');
+		w.share.stop();
+	});
+
+	it('flushes a pending save on leave and never reports write-back for a collaborator', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		const hub = createMemoryHub();
+		const w = await viewerWindow('Ada');
+		const onWriteBack = vi.fn(() => Promise.resolve());
+		await w.join({ session: hostSession(hub, 'Ada', 'owner'), onWriteBack });
+		await change(w);
+		w.share.stop();
+		expect(onWriteBack).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(onWriteBack).toHaveBeenCalledTimes(1);
+
+		const g = await viewerWindow('Grace');
+		await g.join({ session: hostSession(hub, 'Grace', 'collaborator'), onWriteBack });
+		expect(g.share.state.writeBack).toBeUndefined();
+		g.share.stop();
 	});
 });

@@ -88,6 +88,7 @@ export function createCollaborationController(
 		getYDoc: () => currentYDoc,
 		getHandler: deps.getHandler,
 		getSaveOptions: deps.getSaveOptions,
+		onWriteBackStatus: () => stateTracker.patch({ writeBack: writeBack.getState() }),
 	});
 
 	const slidesSync: SlidesSync = createSlidesSync(store, (config) => {

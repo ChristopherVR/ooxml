@@ -37,8 +37,8 @@ function Editor({ content }: { content: Uint8Array }) {
 ## Interface
 
 `PowerPointViewerHandle` extends `FileViewerHandle` and implements the shared
-`PowerPointViewerAPI` contract (defined in `pptx-viewer-shared`). All three framework
-bindings (React, Vue, Angular) expose the same API surface.
+`PowerPointViewerAPI` contract (defined in `ooxml-ui/pptx`). All five framework
+bindings (React, Vue, Angular, Svelte, vanilla) expose the same API surface.
 
 ```ts
 import type { ViewerMode, PowerPointViewerAPI } from 'pptx-react-viewer';

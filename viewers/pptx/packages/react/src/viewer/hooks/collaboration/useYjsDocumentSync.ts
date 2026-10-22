@@ -1,3 +1,4 @@
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
@@ -28,7 +29,12 @@ export interface UseYjsDocumentSyncInput {
 	isSynced?: boolean;
 	config?: Pick<
 		CollaborationConfig,
-		'role' | 'onWriteBack' | 'writeBackDebounceMs' | 'externalSession' | 'sessionIntent'
+		| 'role'
+		| 'onWriteBack'
+		| 'writeBackDebounceMs'
+		| 'writeBackRetry'
+		| 'externalSession'
+		| 'sessionIntent'
 	>;
 	getSourceBytes?: () => Uint8Array | null;
 	getSaveOptions?: () => PptxHandlerSaveOptions;
@@ -37,6 +43,8 @@ export interface UseYjsDocumentSyncInput {
 	/** External readiness owns this channel together with full-deck writes. */
 	livePatcher?: CollaborationLivePatcher;
 	onReadOnlyChange?: (readOnly: boolean) => void;
+	/** Receives the owner's write-back status (undefined when the session ends). */
+	onWriteBackStatus?: (state: CollaborationWriteBackState | undefined) => void;
 }
 
 export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {

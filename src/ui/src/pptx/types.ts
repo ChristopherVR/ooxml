@@ -7,7 +7,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
  * framework-specific prop/event/handle types on top of these.
  */
 
-import type { ProviderFactory, WebrtcOptions } from 'ooxml-core/collab';
+import type { ProviderFactory, WebrtcOptions, WriteBackRetry } from 'ooxml-core/collab';
 import type { ExternalCollaborationSession } from './render/collaboration-external-session';
 import type { ElementUpdate, ElementUpdateOptions } from './render/element-update-batch';
 
@@ -286,12 +286,21 @@ export interface CollaborationConfig {
 	 * callback so the host can persist the snapshot. Only one writer (the owner)
 	 * does this; other collaborators never trigger write-back, eliminating the
 	 * last-save-wins problem.
+	 *
+	 * Return a promise to acknowledge durable storage: the viewer reports `saving`, `saved` or
+	 * `failed` in `collaborationState.writeBack` and retries a rejection as `writeBackRetry`
+	 * says. A plain return counts as acknowledged at once. A pending write-back is flushed on
+	 * `pagehide` and when the page is hidden, but browsers do not wait for asynchronous work
+	 * then: a write that needs a network round trip should use `navigator.sendBeacon` or
+	 * `fetch(url, { keepalive: true })` to survive a close.
 	 */
-	onWriteBack?: (bytes: Uint8Array) => void;
+	onWriteBack?: (bytes: Uint8Array) => void | Promise<void>;
 	/**
 	 * Debounce delay (ms) between the last Y.Doc change and the write-back
 	 * invocation. Defaults to 5000 ms. Set to 0 to write back on every change
 	 * (not recommended for large documents).
 	 */
 	writeBackDebounceMs?: number;
+	/** Retries of a rejected `onWriteBack` with exponential backoff. Default: none. */
+	writeBackRetry?: WriteBackRetry;
 }
