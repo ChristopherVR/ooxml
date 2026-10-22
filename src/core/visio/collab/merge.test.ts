@@ -172,11 +172,11 @@ describe('schema version', () => {
 	it('stamps the room with the current version', async () => {
 		const { a } = await pair();
 		expect(a.shared.meta.get('v')).toBe(SCHEMA_VERSION);
-		expect(SCHEMA_VERSION).toBe(3);
+		expect(SCHEMA_VERSION).toBe(4);
 	});
 
 	it('refuses to read or write a room of another version', async () => {
-		for (const v of [2, 4]) {
+		for (const v of [2, 3, 5]) {
 			const { a } = await pair();
 			a.shared.meta.set('v', v);
 			expect(() => readSharedDrawing(a.shared)).toThrow(/schema version/);

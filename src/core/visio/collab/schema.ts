@@ -1,4 +1,4 @@
-// The shared drawing schema, version 3. Top-level Yjs maps (top-level types never lose data when
+// The shared drawing schema, version 4. Top-level Yjs maps (top-level types never lose data when
 // two peers initialise a room at once, unlike nested maps created concurrently). Every entry is a
 // plain JSON record replaced atomically per key:
 //   visio:meta      v, pagesPath, pagesOpen, pagesClose (the `Pages` part around the page list),
@@ -8,7 +8,8 @@
 //   visio:shapes    `${page key}/${shape key}` -> ShapeEntry { pos, parent?, open, b? }
 //                   (one `Shape` opening tag; nested shapes are entries naming their parent)
 //   visio:cells     `${page key}/${shape key}/${piece path}` -> PieceEntry { pos, xml | open }
-//                   (a Cell, Section, Row or other child of one shape, see pieces.ts)
+//                   (a Cell, Section, Row or other child of one shape, see pieces.ts; a cell whose
+//                   formula names shapes also holds `r`, the id and key of each)
 //   visio:connects  `${page key}/${hash}` -> ConnectEntry                  (one `Connect`)
 //   visio:dead      page key | `${page key}/${shape key}` -> true           (tombstones: delete wins)
 //   visio:masters   master key -> MasterEntry { pos, id, xml, part, rels?, b? } (one master; `part` is
@@ -25,8 +26,9 @@
 // agree. `b` is the write batch that created or last rewrote an entry: ids a peer wrote in one
 // batch share one numbering, which is what lets a renumbering reach the references of its batch.
 //
-// Version 3 changed what a master entry's `part` holds and added `visio:renum`; there is no
-// migration from version 2.
+// Version 3 changed what a master entry's `part` holds and added `visio:renum`. Version 4 added
+// `r` to cell entries (the shapes a formula names, by key) and made the renumbering records
+// claim the id a shape keeps (`i: [id, id]`); there is no migration from version 2 or 3.
 //
 // Version rule: `meta.v` must equal SCHEMA_VERSION for a peer to read or write the room. A peer
 // that finds any other version (older or newer) refuses with a SchemaVersionError and stays
@@ -35,7 +37,7 @@
 import * as Y from 'yjs';
 import type { PieceEntry } from './pieces';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** The room was written by a peer with another schema version. */
 export class SchemaVersionError extends Error {
@@ -241,7 +243,18 @@ export function cellEntry(value: unknown): CellEntry | undefined {
 	const xml = str(value.xml);
 	const open = str(value.open);
 	if (pos === undefined || (xml === undefined && open === undefined)) return undefined;
-	return { pos, ...opt('xml', xml), ...opt('open', xml === undefined ? open : undefined) };
+	const r =
+		Array.isArray(value.r) &&
+		value.r.length % 2 === 0 &&
+		value.r.every((v) => typeof v === 'string')
+			? (value.r as string[])
+			: undefined;
+	return {
+		pos,
+		...opt('xml', xml),
+		...opt('open', xml === undefined ? open : undefined),
+		...(r && r.length ? { r } : {}),
+	};
 }
 export function masterEntry(value: unknown): MasterEntry | undefined {
 	if (!isRecord(value)) return undefined;

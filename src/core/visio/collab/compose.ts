@@ -4,7 +4,7 @@
 // this peer's part names. Parts that stay local (the window state and the thumbnail) are kept from
 // the local package. Page parts that did not change since the last rebuild are not serialised
 // again (the cache in `keys.cache`); the package itself is still zipped and parsed whole.
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import {
 	bodyContent,
 	bodyId,
@@ -42,6 +42,7 @@ import type { ResolvedDrawing, ResolvedMaster, ResolvedPage, ResolvedShape } fro
 import { attrOf, escapeAttr, scanContainer } from './scan';
 import { CONNECTS_MARK, SHAPES_MARK } from './schema';
 import { readZip, zipText } from './snapshot';
+import { writeStoredZip } from './zip-store';
 
 export interface ComposeOptions {
 	/** Refuse shared parts that decode to more than this many bytes in total. */
@@ -232,12 +233,17 @@ export async function composeDrawing(
 	}
 	files.set(CONTENT_TYPES, encoder.encode(contentTypes));
 
-	const zip = new JSZip();
+	// Stored entries: unchanged parts keep their checksum between rebuilds (see zip-store.ts).
 	const names = [...files.keys()].sort((a, b) =>
 		a === CONTENT_TYPES ? -1 : b === CONTENT_TYPES ? 1 : 0,
 	);
-	for (const name of names) zip.file(name, files.get(name)!, { createFolders: false });
-	const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
+	const bytes = writeStoredZip(
+		names.map((name) => {
+			const data = files.get(name)!;
+			return [name, typeof data === 'string' ? encoder.encode(data) : data] as const;
+		}),
+		keys.cache.crcs,
+	);
 
 	const commit = (): void => {
 		// This peer now knows exactly what the room held.

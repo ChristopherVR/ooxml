@@ -24,6 +24,22 @@ function splitList(text: string, name: string, mark: string, child: string) {
 	return { text: text.slice(0, box.openEnd) + mark + text.slice(box.closeStart), items };
 }
 
+/** Pairs of id and shape key for the `Sheet.<id>` references in the F attribute of a cell. */
+function formulaRefs(text: string, owner: ReadonlyMap<string, string>): string[] {
+	const out: string[] = [];
+	const seen = new Set<string>();
+	for (const f of text.matchAll(/\sF\s*=\s*("[^"]*"|'[^']*')/g))
+		for (const m of f[1]!.matchAll(/Sheet\.(\d+)(?!\d)/g)) {
+			const id = m[1]!;
+			const key = owner.get(id);
+			if (key !== undefined && !seen.has(id)) {
+				seen.add(id);
+				out.push(id, key);
+			}
+		}
+	return out;
+}
+
 function flatten(
 	xml: string,
 	parent: string | undefined,
@@ -56,6 +72,12 @@ export function splitContents(
 	const shapes: ShapeSnapshot[] = [];
 	for (const text of shapesSplit.items) flatten(text, undefined, scope, keys, shapes);
 	const owner = new Map(shapes.map((s) => [s.id, s.key]));
+	for (const shape of shapes)
+		for (const piece of shape.pieces)
+			if (piece.kind === 'leaf') {
+				const refs = formulaRefs(piece.text, owner);
+				if (refs.length) piece.refs = refs;
+			}
 	const connects: ConnectSnapshot[] = [];
 	for (const text of connectsSplit.items) {
 		const a = (name: string) => attrOf(text, name) ?? '';

@@ -24,6 +24,8 @@ export class DrawingKeys {
 	readonly cache = {
 		pageParts: new Map<string, { sig: string; bytes: Uint8Array }>(),
 		parts: new Map<string, { b64: string; data: Uint8Array }>(),
+		/** CRC-32 of the bytes of each stored part, by identity (see zip-store.ts). */
+		crcs: new WeakMap<Uint8Array, number>(),
 	};
 	/**
 	 * What was last applied to the editor: the drawing signature, the editor version it produced,

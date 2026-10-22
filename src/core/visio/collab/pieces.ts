@@ -20,6 +20,8 @@ export interface Piece {
 	/** A container (section, row) keeps its opening tag; a leaf its whole element. */
 	kind: 'open' | 'leaf';
 	text: string;
+	/** See {@link PieceEntry.r}; set by the snapshot, which knows the page's ids and keys. */
+	refs?: string[];
 }
 
 export interface SplitShape {
@@ -118,6 +120,11 @@ export interface PieceEntry {
 	xml?: string;
 	/** Opening tag of a container. */
 	open?: string;
+	/**
+	 * For a cell whose formula names shapes (`Sheet.<id>`): pairs of referenced id and the key of the
+	 * shape that id meant to the author, flattened (`[id, key, id, key]`). Not part of the content.
+	 */
+	r?: string[];
 }
 
 /** Builds the element: `open`, the pieces under `parent` in position order, then `tail`. */

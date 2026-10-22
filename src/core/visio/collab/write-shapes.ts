@@ -114,6 +114,7 @@ export function syncShapes(
 			const local = (): PieceEntry => ({
 				pos: piecePos.get(piece.path)!,
 				...(piece.kind === 'leaf' ? { xml: piece.text } : { open: piece.text }),
+				...(piece.refs ? { r: piece.refs } : {}),
 			});
 			syncEntry<CellEntry>(
 				ctx,

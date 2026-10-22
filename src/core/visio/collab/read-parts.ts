@@ -13,7 +13,7 @@
 // both paths, so no relationship target of a peer is left dangling.
 import { type DeclaredType, relativeTarget, resolveTarget } from './package';
 import { masterScope } from './baseline';
-import { type Fixup, assignIds, fixedId } from './read-ids';
+import { type Fixup, assignIds, fixedId, renumRecord } from './read-ids';
 import { setAttr } from './read-shapes';
 import { attrOf } from './scan';
 import {
@@ -56,7 +56,7 @@ export function resolveMasters(
 		const entry = masterEntry(value);
 		if (entry) alive.push({ key, entry });
 	}
-	const { ids, fresh } = assignIds(
+	const { ids, fresh, claims } = assignIds(
 		alive.map(({ key, entry }) => ({
 			key,
 			id: entry.id,
@@ -72,11 +72,10 @@ export function resolveMasters(
 			map.set(change.from, change.to);
 			remap.set(b, map);
 		}
-		fixups.push({
-			map: 'renum',
-			key: masterScope(key),
-			value: { ...renum.get(masterScope(key)), i: [change.from, change.to] },
-		});
+	}
+	for (const { key, entry } of [...alive].sort((a, b) => compare(a.key, b.key))) {
+		const value = renumRecord(renum, masterScope(key), entry, fresh.get(key), claims.has(key));
+		if (value) fixups.push({ map: 'renum', key: masterScope(key), value });
 	}
 	alive.sort((a, b) => a.entry.pos - b.entry.pos || compare(a.key, b.key));
 	return {

@@ -6,7 +6,7 @@ import { masterScope } from './baseline';
 import { byPosition } from './order';
 import { dirName } from './package';
 import type { PieceEntry } from './pieces';
-import { type Fixup, assignIds, compare, fixedId, readRenum } from './read-ids';
+import { type Fixup, assignIds, compare, fixedId, readRenum, renumRecord } from './read-ids';
 import {
 	type ResolvedConnect,
 	connectSignature,
@@ -113,19 +113,21 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 	const renum = readRenum(shared);
 	// Page ids: unique, a persisted renumbering first, then the lowest key keeps its id.
 	const fixups: Fixup[] = [];
-	const { ids: pageIds, fresh: freshPages } = assignIds(
+	const {
+		ids: pageIds,
+		fresh: freshPages,
+		claims: pageClaims,
+	} = assignIds(
 		alive.map((p) => ({
 			key: p.key,
 			id: p.entry.id,
 			fixed: fixedId(renum, p.key, p.entry.id),
 		})),
 	);
-	for (const [key, change] of [...freshPages].sort((a, b) => compare(a[0], b[0])))
-		fixups.push({
-			map: 'renum',
-			key,
-			value: { ...renum.get(key), i: [change.from, change.to] },
-		});
+	for (const p of [...alive].sort((a, b) => compare(a.key, b.key))) {
+		const value = renumRecord(renum, p.key, p.entry, freshPages.get(p.key), pageClaims.has(p.key));
+		if (value) fixups.push({ map: 'renum', key: p.key, value });
+	}
 	const shapesByPage = new Map<string, Map<string, ShapeEntry>>();
 	for (const [full, value] of shared.shapes) {
 		const parts = split(full, 1);

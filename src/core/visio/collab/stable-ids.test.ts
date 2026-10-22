@@ -63,7 +63,7 @@ describe('persisted renumbering of shapes', () => {
 		await convergeStable(a, b);
 		expect([...(await ids(a))].sort()).toEqual([...(await ids(b))].sort());
 		expect(new Set(await ids(a)).size).toBe(4);
-		expect(a.shared.renum.size).toBe(1);
+		expect(a.shared.renum.size).toBe(2);
 		expect(JSON.stringify([...a.shared.renum])).toBe(JSON.stringify([...b.shared.renum]));
 		// Nothing left to fix: the ids come from the room, not from the read.
 		expect(readSharedDrawing(a.shared)!.fixups).toEqual([]);
@@ -204,8 +204,8 @@ describe('the fix-up in live sessions', () => {
 			(await p.side.model()).pages[0]!.shapes.map((s) => `${s.id}@${s.transform[4]}`).sort();
 		expect(await shapes(a)).toEqual(await shapes(b));
 		expect(new Set((await shapes(a)).map((s) => s.split('@')[0])).size).toBe(3);
-		expect(a.session.doc.getMap('visio:renum').size).toBe(1);
-		expect(b.session.doc.getMap('visio:renum').size).toBe(1);
+		expect(a.session.doc.getMap('visio:renum').size).toBe(2);
+		expect(b.session.doc.getMap('visio:renum').size).toBe(2);
 		// Each user's history holds their own add only: the fix-up is not in it.
 		expect(a.binding.canUndo()).toBe(true);
 		expect(b.binding.canUndo()).toBe(true);

@@ -6,14 +6,13 @@
 // is persisted keeps it; the others are visited in key order, and one whose id is already taken
 // takes the next number above the page's largest id and keeps its key. A peer that can write then
 // persists the result (fixups.ts), so the id no longer depends on what is added later.
-// `Sheet.<old>` in the F attribute of a cell is rewritten to the new id in (a) the renumbered
-// shape and every shape nested in it, and (b) every shape written in the same batch as the
-// renumbered one (`b`), whose author numbered them together. It is not rewritten in other
-// shapes: a reference written after its author had adopted the new id cannot be told from a
-// reference to the shape that kept the old id. Masters renumbered the same way rewrite `Master`
-// on the shapes of their batch.
+// `Sheet.<n>` in the F attribute of a cell is resolved by shape key, not by number: the entry
+// records which shape each referenced id meant to its author (`r`, see pieces.ts), and the reader
+// writes the final id of that shape. The room is never rewritten, so the author's entry (and their
+// undo of it) is untouched, and the result is a function of the room alone. Masters renumbered in
+// a batch rewrite `Master` on the shapes of their batch.
 import { buildShape, type PieceEntry } from './pieces';
-import { type Fixup, assignIds, compare, fixedId } from './read-ids';
+import { type Fixup, assignIds, compare, fixedId, renumRecord } from './read-ids';
 import { attrOf } from './scan';
 import { type RenumEntry, type ShapeEntry } from './schema';
 
@@ -46,6 +45,19 @@ export function renumberFormulas(xml: string, remap: ReadonlyMap<string, string>
 }
 
 /** Rewrites the ids in `remap` on `Shape` tags and in `Sheet.<n>` references of one shape. */
+/** The final id of each shape a cell entry names in its `r` (id, key pairs); keys that are gone are skipped. */
+function referenced(
+	r: readonly string[],
+	finalId: ReadonlyMap<string, string>,
+): Map<string, string> {
+	const out = new Map<string, string>();
+	for (let i = 0; i + 1 < r.length; i += 2) {
+		const next = finalId.get(r[i + 1]!);
+		if (next !== undefined) out.set(r[i]!, next);
+	}
+	return out;
+}
+
 export function renumberShape(xml: string, remap: ReadonlyMap<string, string>): string {
 	if (!remap.size) return xml;
 	return xml
@@ -98,32 +110,16 @@ export function resolveShapes(input: ShapeInput): {
 	};
 	const live = [...raw.keys()].filter((k) => valid(k)).sort(compare);
 
-	const { ids: finalId, fresh: renumbered } = assignIds(
+	const {
+		ids: finalId,
+		fresh: renumbered,
+		claims,
+	} = assignIds(
 		live.map((key) => {
 			const { id } = raw.get(key)!;
 			return { key, id, fixed: fixedId(input.renum, key, id) };
 		}),
 	);
-	const batchRemap = new Map<string, Map<string, string>>();
-	for (const [key, change] of renumbered) {
-		const b = raw.get(key)!.entry.b;
-		if (b === undefined) continue;
-		const map = batchRemap.get(b) ?? new Map<string, string>();
-		map.set(change.from, change.to);
-		batchRemap.set(b, map);
-	}
-	const remapFor = (key: string): Map<string, string> => {
-		const out = new Map(batchRemap.get(raw.get(key)!.entry.b ?? '') ?? []);
-		const chain: string[] = [];
-		for (let k: string | undefined = key; k !== undefined; k = raw.get(k)?.entry.parent)
-			chain.unshift(k);
-		for (const k of chain) {
-			const change = renumbered.get(k);
-			if (change) out.set(change.from, change.to);
-		}
-		return out;
-	};
-
 	const children = new Map<string, string[]>();
 	for (const key of live) {
 		const parent = raw.get(key)!.entry.parent ?? '';
@@ -137,15 +133,16 @@ export function resolveShapes(input: ShapeInput): {
 	const render = (key: string): string => {
 		const { entry } = raw.get(key)!;
 		const id = finalId.get(key)!;
-		const remap = remapFor(key);
 		let open = setAttr(entry.open, 'ID', id);
-		const record: RenumEntry = { ...input.renum.get(key) };
-		let dirty = false;
-		const change = renumbered.get(key);
-		if (change) {
-			record.i = [change.from, change.to];
-			dirty = true;
-		}
+		const idRecord = renumRecord(
+			input.renum,
+			`${input.scope}/${key}`,
+			{ id: raw.get(key)!.id },
+			renumbered.get(key),
+			claims.has(key),
+		);
+		const record: RenumEntry = { ...(idRecord ?? input.renum.get(key)) };
+		let dirty = idRecord !== undefined;
 		const master = attrOf(open, 'Master');
 		const persisted = record.m && record.m[0] === master ? record.m[1] : undefined;
 		const batched =
@@ -159,13 +156,9 @@ export function resolveShapes(input: ShapeInput): {
 		if (dirty) fixups.push({ map: 'renum', key: `${input.scope}/${key}`, value: record });
 		const entries = new Map<string, PieceEntry>();
 		for (const [path, piece] of input.cells.get(key) ?? []) {
-			const leaf = piece.xml !== undefined && /(^|\/)c\/[^/]*$/.test(path);
-			const xml = leaf ? renumberFormulas(piece.xml!, remap) : undefined;
-			if (xml !== undefined && xml !== piece.xml) {
-				const value = { ...piece, xml };
-				entries.set(path, value);
-				fixups.push({ map: 'cells', key: `${input.scope}/${key}/${path}`, value });
-			} else entries.set(path, piece);
+			const leaf = piece.xml !== undefined && piece.r !== undefined;
+			const xml = leaf ? renumberFormulas(piece.xml!, referenced(piece.r!, finalId)) : undefined;
+			entries.set(path, xml !== undefined && xml !== piece.xml ? { ...piece, xml } : piece);
 		}
 		shapes.push({
 			key,
