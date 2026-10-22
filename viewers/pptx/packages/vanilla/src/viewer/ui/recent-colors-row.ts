@@ -1,15 +1,18 @@
+import type { OfficeColorPickEvent, PptxUiColorGridElement } from 'ooxml-ui/pptx';
+import { recentColorsGridView, registerPptxWebControls } from 'ooxml-ui/pptx';
+
 import type { Translator } from '../i18n';
-import { createEl } from '../render';
 
 /**
  * B6: the reusable "Recent colours" (`p:clrMru`) swatch row, shown under a
- * colour input (fill, stroke, text) in the property inspector.
+ * colour input (fill, stroke, text) in the property inspector, drawn by the
+ * shared `pptx-ui-color-grid` with only its Recent Colors section
+ * (`recentColorsGridView`).
  *
- * Row contract (asserted by the cross-binding e2e spec): a single container
- * carrying `data-testid="pptx-color-recent"` and an `aria-label` matching the
- * visible label text, one `<button type="button">` per colour (most-recent
- * first) with `title="<hex>"` / `aria-label="Recent <hex>"`, and the whole
- * row hidden while the list is empty.
+ * Row contract (asserted by the cross-binding e2e spec): the grid carries
+ * `data-testid="pptx-color-recent"` and an `aria-label` matching its visible
+ * heading, one swatch per colour (most-recent first) named
+ * "Recent <hex>", and the whole row hidden while the list is empty.
  */
 export interface RecentColorsRowHandle {
 	el: HTMLElement;
@@ -24,47 +27,33 @@ export function createRecentColorsRow(
 	t: Translator,
 	onSelect: (hex: string) => void,
 ): RecentColorsRowHandle {
-	const label = t('pptx.colorPicker.recentColors');
-
-	const el = createEl(doc, 'div', 'pptxv-recent-colors');
+	registerPptxWebControls();
+	const el = doc.createElement('pptx-ui-color-grid') as PptxUiColorGridElement;
+	el.className = 'pptxv-recent-colors';
 	el.dataset.testid = 'pptx-color-recent';
-	el.setAttribute('aria-label', label);
-	el.hidden = true;
+	el.addEventListener('office-color-pick', (event) =>
+		onSelect((event as OfficeColorPickEvent).detail.color),
+	);
 
-	const labelEl = createEl(doc, 'div', 'pptxv-recent-colors-label');
-	labelEl.textContent = label;
-	el.appendChild(labelEl);
-
-	const grid = createEl(doc, 'div', 'pptxv-swatch-grid pptxv-recent-colors-grid');
-	el.appendChild(grid);
-
-	let disabled = false;
-	const buttons: HTMLButtonElement[] = [];
+	const show = (colors: readonly string[]): void => {
+		const view = recentColorsGridView(colors, t);
+		el.palette = view.palette;
+		el.standardColors = view.standardColors;
+		el.recentColors = view.recentColors;
+		el.recentHeading = view.recentHeading;
+		el.recentLabel = view.recentLabel;
+		el.label = view.label;
+		el.hidden = colors.length === 0;
+	};
+	show([]);
 
 	return {
 		el,
 		setColors(colors) {
-			grid.replaceChildren();
-			buttons.length = 0;
-			for (const hex of colors ?? []) {
-				const btn = createEl(doc, 'button', 'pptxv-swatch');
-				btn.type = 'button';
-				btn.setAttribute('data-pptx-compact', '');
-				btn.style.backgroundColor = hex;
-				btn.title = hex;
-				btn.setAttribute('aria-label', `Recent ${hex}`);
-				btn.disabled = disabled;
-				btn.addEventListener('click', () => onSelect(hex));
-				grid.appendChild(btn);
-				buttons.push(btn);
-			}
-			el.hidden = colors.length === 0;
+			show(colors ?? []);
 		},
-		setDisabled(next) {
-			disabled = next;
-			for (const btn of buttons) {
-				btn.disabled = next;
-			}
+		setDisabled(disabled) {
+			el.disabled = disabled;
 		},
 	};
 }

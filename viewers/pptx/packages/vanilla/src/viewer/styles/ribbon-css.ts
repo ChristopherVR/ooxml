@@ -276,26 +276,9 @@ export const RIBBON_CSS = `
 .pptxv-dropdown-item:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 .pptxv-dropdown-item.is-selected { font-weight: 600; color: var(--pptx-primary); }
 
-/* B6: "Recent colours" row (ui/recent-colors-row.ts) under the property
-   inspector's colour inputs. */
-.pptxv-recent-colors[hidden] { display: none; }
-.pptxv-recent-colors-label {
-	margin-bottom: 4px;
-	color: var(--pptx-muted-foreground);
-	font-size: 10px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-}
-.pptxv-swatch-grid { display: grid; grid-template-columns: repeat(5, 20px); gap: 4px; margin-bottom: 6px; }
-.pptxv-swatch {
-	width: 20px;
-	height: 20px;
-	padding: 0;
-	border: 1px solid var(--pptx-border);
-	border-radius: 50%;
-	cursor: pointer;
-}
-.pptxv-swatch:hover { transform: scale(1.15); }
+/* B6: "Recent colours" row (ui/recent-colors-row.ts, the shared colour grid) under the
+   property inspector's colour inputs. */
+.pptxv-recent-colors { margin-top: 4px; }
 
 /* ── Find & Replace docked panel ─────────────────────────────────────── */
 .pptxv-findreplace {
