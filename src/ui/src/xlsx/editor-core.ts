@@ -48,7 +48,10 @@ export class EditorCore {
 	workbook: Workbook | undefined;
 	session: EditSession | undefined;
 	activeSheet = 0;
+	/** Effective: the host's `readOnly` or a collaboration `viewer` role. */
 	readOnly = false;
+	#hostReadOnly = false;
+	#roleReadOnly = false;
 	locale: EditorLocale = 'en';
 	authorName = DEFAULT_AUTHOR_NAME;
 	fileName = DEFAULT_FILE_NAME;
@@ -365,7 +368,20 @@ export class EditorCore {
 		this.notifyModel({ kind: 'locale' });
 	}
 
+	/** The host's switch. Turning it off never lifts a collaboration `viewer` role. */
 	setReadOnly(readOnly: boolean): boolean {
+		this.#hostReadOnly = readOnly;
+		return this.#applyReadOnly();
+	}
+
+	/** Set by sharing while the role is `viewer`; independent of the host's switch. */
+	setRoleReadOnly(locked: boolean): boolean {
+		this.#roleReadOnly = locked;
+		return this.#applyReadOnly();
+	}
+
+	#applyReadOnly(): boolean {
+		const readOnly = this.#hostReadOnly || this.#roleReadOnly;
 		if (readOnly === this.readOnly) return false;
 		this.readOnly = readOnly;
 		if (readOnly && this.gridController?.isEditing()) this.gridController.cancelEdit();
