@@ -109,7 +109,11 @@ export interface RibbonFileHandlers {
 	 * Documents" (0-50), read fresh whenever the Recent list loads.
 	 */
 	getRecentPresentationsCount(): number;
+	/** The host `storage` option: Recent and Account read its recovery store when it has one. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	save(): void;
+	/** Save As > PowerPoint Presentation (.pptx); falls back to {@link save}. */
+	saveAsPptx?(): void;
 	saveAsPpsx(): void;
 	saveAsPptm(): void;
 	saveAsPpt(): void;

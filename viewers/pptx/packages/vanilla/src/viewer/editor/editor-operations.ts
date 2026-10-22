@@ -62,6 +62,8 @@ export interface EditorOpsDeps {
 	getHandler(): PptxHandler | null;
 	/** Host `onChange` callback: fired after every committed mutation. */
 	onChange?: () => void;
+	/** Host `onNotesUpdate` callback: the new text after a speaker-notes edit lands. */
+	onNotesUpdate?: (notes: string) => void;
 	/** Fired whenever canUndo/canRedo may have changed (toolbar refresh). */
 	onHistoryChange(): void;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
@@ -366,6 +368,7 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 				slides: updateSlideNotes(state.slides, state.currentSlide, notes, notesSegments),
 			});
 			commitChange();
+			deps.onNotesUpdate?.(notes);
 		},
 
 		setHandoutSlidesPerPage(count) {

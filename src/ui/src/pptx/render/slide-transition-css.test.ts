@@ -130,7 +130,7 @@ describe('getSlideTransitionAnimations', () => {
 	it('covers with diagonal support', () => {
 		const result = getSlideTransitionAnimations('cover', 400, 'rd');
 		expect(result.outgoing).toBe('none');
-		expect(result.incoming).toContain('pptx-tr-cover-from-rd');
+		expect(result.incoming).toContain('pptx-tr-cover-from-lu');
 	});
 
 	it('uncovers by moving the outgoing layer (incoming static, on top)', () => {
@@ -442,7 +442,7 @@ describe('resolveSlideTransition', () => {
 
 	it('forwards direction and orient', () => {
 		const transition: PptxSlideTransition = { type: 'cover', direction: 'lu' };
-		expect(resolveSlideTransition(transition).incoming).toContain('pptx-tr-cover-from-lu');
+		expect(resolveSlideTransition(transition).incoming).toContain('pptx-tr-cover-from-rd');
 	});
 
 	it('forwards pattern (shred), not just direction', () => {

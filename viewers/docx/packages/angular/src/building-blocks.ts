@@ -1,5 +1,6 @@
 import {
 	Component,
+	Directive,
 	DestroyRef,
 	ElementRef,
 	EventEmitter,
@@ -19,13 +20,23 @@ import {
 	prepareWordToolbar,
 	type BuildingBlockOptions,
 	type CanvasProps,
+	type WordNavigationProps,
+	type WordStatusProps,
 	type WordToolbarProps,
 } from '../../bindings/src/building-blocks';
+import {
+	navigationControls,
+	statusControls,
+	toolbarControls,
+	type ControlGroup,
+} from '../../bindings/src/controls';
 import type { PageChangeDetail } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
 export type {
 	BuildingBlockOptions,
 	CanvasProps,
+	WordNavigationProps,
+	WordStatusProps,
 	WordToolbarProps,
 } from '../../bindings/src/building-blocks';
 /** Provide per editor, so Angular owns the composition's state and lifetime. */
@@ -34,6 +45,8 @@ export class ViewerBuildingBlocks {
 	private readonly session = createBuildingBlockSession();
 	private readonly state = signal(this.session.state);
 	readonly toolbarProps = computed(() => this.state().toolbarProps);
+	readonly navigationProps = computed(() => this.state().navigationProps);
+	readonly statusProps = computed(() => this.state().statusProps);
 	readonly loading = computed(() => this.state().loading);
 	readonly error = computed(() => this.state().error);
 	readonly mode = computed(() => this.state().mode);
@@ -110,49 +123,79 @@ export class DocumentCanvasComponent implements AfterViewInit, OnChanges, OnDest
 		this.mounted = undefined;
 	}
 }
-@Component({
-	selector: 'word-toolbar',
-	standalone: true,
-	template: ` <div role="toolbar">
-		<button
-			type="button"
-			[disabled]="!toolbarProps.canEdit"
-			[attr.aria-pressed]="toolbarProps.bold === null ? 'mixed' : toolbarProps.bold"
-			(mousedown)="$event.preventDefault()"
-			(click)="toolbarProps.onBold()"
-		>
-			{{ toolbarProps.labels['Bold'] }}
-		</button>
-		<button
-			type="button"
-			[disabled]="!toolbarProps.canEdit"
-			[attr.aria-pressed]="toolbarProps.italic === null ? 'mixed' : toolbarProps.italic"
-			(mousedown)="$event.preventDefault()"
-			(click)="toolbarProps.onItalic()"
-		>
-			{{ toolbarProps.labels['Italic'] }}
-		</button>
-		<button
-			type="button"
-			[disabled]="!toolbarProps.canEdit"
-			[attr.aria-pressed]="toolbarProps.underline === null ? 'mixed' : toolbarProps.underline"
-			(mousedown)="$event.preventDefault()"
-			(click)="toolbarProps.onUnderline()"
-		>
-			{{ toolbarProps.labels['Underline'] }}
-		</button>
-		<button type="button" [disabled]="!toolbarProps.canUndo" (click)="toolbarProps.onUndo()">
-			{{ toolbarProps.labels['Undo'] }}
-		</button>
-		<button type="button" [disabled]="!toolbarProps.canRedo" (click)="toolbarProps.onRedo()">
-			{{ toolbarProps.labels['Redo'] }}
-		</button>
-	</div>`,
-})
-export class ToolbarComponent implements AfterViewInit {
-	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-	ngAfterViewInit() {
-		prepareWordToolbar(this.host.nativeElement.querySelector<HTMLElement>('[role="toolbar"]'));
+const CONTROLS_TEMPLATE = `<div [attr.role]="role">
+	@for (group of groups; track $index) {
+		<span role="group">
+			@for (control of group; track control.id) {
+				@switch (control.kind) {
+					@case ('text') {
+						<span role="status">{{ $any(control).text }}</span>
+					}
+					@case ('select') {
+						<select
+							[attr.aria-label]="control.label"
+							[disabled]="control.disabled"
+							[value]="$any(control).value"
+							(change)="$any(control).change($any($event.target).value)"
+						>
+							@for (option of $any(control).options; track option.value) {
+								<option [value]="option.value" [selected]="option.value === $any(control).value">
+									{{ option.label }}
+								</option>
+							}
+						</select>
+					}
+					@default {
+						<button
+							type="button"
+							[attr.aria-label]="control.label"
+							[disabled]="control.disabled"
+							[attr.aria-pressed]="control.kind === 'toggle' ? $any(control).pressed : null"
+							(mousedown)="$event.preventDefault()"
+							(click)="$any(control).run()"
+						>
+							{{ control.label }}
+						</button>
+					}
+				}
+			}
+		</span>
 	}
+</div>`;
+/** Draws control groups from props; nodes are tracked by control id so focus survives updates. */
+@Directive()
+abstract class ControlsComponent implements AfterViewInit {
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	protected abstract readonly role: string;
+	protected abstract get groups(): readonly ControlGroup[];
+	ngAfterViewInit() {
+		prepareWordToolbar(this.host.nativeElement.querySelector<HTMLElement>('div'));
+	}
+}
+/** Optional controls: history, font, formatting, alignment, lists and enabled host workflows. */
+@Component({ selector: 'word-toolbar', standalone: true, template: CONTROLS_TEMPLATE })
+export class ToolbarComponent extends ControlsComponent {
 	@Input({ required: true }) toolbarProps!: WordToolbarProps;
+	protected readonly role = 'toolbar';
+	protected get groups() {
+		return toolbarControls(this.toolbarProps);
+	}
+}
+/** Optional page navigation for `navigationProps`. Pages exist in Print Layout only. */
+@Component({ selector: 'word-page-navigation', standalone: true, template: CONTROLS_TEMPLATE })
+export class PageNavigationComponent extends ControlsComponent {
+	@Input({ required: true }) navigationProps!: WordNavigationProps;
+	protected readonly role = 'group';
+	protected get groups() {
+		return navigationControls(this.navigationProps);
+	}
+}
+/** Optional word count and zoom for `statusProps`. */
+@Component({ selector: 'word-status-bar', standalone: true, template: CONTROLS_TEMPLATE })
+export class StatusBarComponent extends ControlsComponent {
+	@Input({ required: true }) statusProps!: WordStatusProps;
+	protected readonly role = 'group';
+	protected get groups() {
+		return statusControls(this.statusProps);
+	}
 }

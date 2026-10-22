@@ -80,6 +80,20 @@ function stubNetwork(): void {
 	vi.stubGlobal('fetch', vi.fn());
 }
 
+/** A data URL for a minimal TrueType file whose OS/2 table declares `weight`. */
+function ttfDataUrl(weight: number, italic = false): string {
+	const bytes = new Uint8Array(12 + 16 + 96);
+	const view = new DataView(bytes.buffer);
+	view.setUint32(0, 0x00010000);
+	view.setUint16(4, 1);
+	[...'OS/2'].forEach((char, i) => view.setUint8(12 + i, char.charCodeAt(0)));
+	view.setUint32(20, 28);
+	view.setUint32(24, 96);
+	view.setUint16(28 + 4, weight);
+	view.setUint16(28 + 62, italic ? 0x1 : 0x40);
+	return `data:font/ttf;base64,${btoa(String.fromCharCode(...bytes))}`;
+}
+
 describe('useFontInjection google webfonts fallback', () => {
 	it('retains the loaded stylesheet without mutations during slide edits', async () => {
 		stubNetwork();
@@ -156,5 +170,40 @@ describe('useFontInjection google webfonts fallback', () => {
 		stubNetwork();
 		render([slide(textEl('Some Local Font'))], []);
 		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).toBeNull());
+	});
+
+	it('requests a weight variant from Google instead of embedded files of another weight', async () => {
+		stubNetwork();
+		// Every slot of "DM Sans Light" holds DM Sans files; the regular one is SemiBold.
+		const fonts: PptxEmbeddedFont[] = [
+			{ name: 'DM Sans Light', dataUrl: ttfDataUrl(600) },
+			{ name: 'DM Sans Light', dataUrl: ttfDataUrl(700), bold: true },
+			{ name: 'Roboto Mono', dataUrl: ttfDataUrl(400) },
+		];
+		render([slide(textEl('DM Sans Light'), textEl('Roboto Mono'))], fonts);
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		const href = document.getElementById(LINK_ID)?.getAttribute('href') ?? '';
+		expect(href).toContain(`family=${encodeURIComponent('DM Sans:ital,wght@0,300;0,400;0,700')}`);
+		expect(href).not.toContain('Roboto');
+		const css = document.getElementById('pptx-embedded-fonts')?.textContent ?? '';
+		expect(css).not.toContain('DM Sans Light');
+		expect(css).toContain('font-family: "Roboto Mono"');
+	});
+
+	it('registers matching embedded weight variants at their weight', async () => {
+		stubNetwork();
+		render(
+			[slide(textEl('DM Sans Light'))],
+			[
+				{ name: 'DM Sans Light', dataUrl: ttfDataUrl(300) },
+				{ name: 'DM Sans Light', dataUrl: ttfDataUrl(700), bold: true },
+			],
+		);
+		await act(async () => {
+			await Promise.resolve();
+		});
+		const css = document.getElementById('pptx-embedded-fonts')?.textContent ?? '';
+		expect([...css.matchAll(/font-weight: (\d+)/g)].map((m) => m[1])).toStrictEqual(['300', '700']);
+		expect(document.getElementById(LINK_ID)).toBeNull();
 	});
 });

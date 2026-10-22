@@ -51,10 +51,14 @@ test('File > Share keeps two windows of this browser on the same drawing', async
 	await adaViewer.locator('#shapes-stencils [data-master="rectangle"]').click();
 	await expect(adaViewer.locator('svg.paper [data-shape-id="2"]')).toHaveCount(1);
 	await expect(graceViewer.locator('svg.paper [data-shape-id="2"]')).toHaveCount(1);
-	// ...as an undoable step there.
-	await graceViewer.locator('.qat').getByRole('button', { name: 'Undo', exact: true }).click();
-	await expect(graceViewer.locator('svg.paper [data-shape-id="2"]')).toHaveCount(0);
+	// Undo acts on a window's own edits: it never reverts a collaborator's work...
+	await expect(
+		graceViewer.locator('.qat').getByRole('button', { name: 'Undo', exact: true }),
+	).toBeDisabled();
+	// ...so the author undoes it, and the undo arrives in the other window.
+	await adaViewer.locator('.qat').getByRole('button', { name: 'Undo', exact: true }).click();
 	await expect(adaViewer.locator('svg.paper [data-shape-id="2"]')).toHaveCount(0);
+	await expect(graceViewer.locator('svg.paper [data-shape-id="2"]')).toHaveCount(0);
 });
 
 test('File > Options and Account edit one local profile', async ({ page }) => {

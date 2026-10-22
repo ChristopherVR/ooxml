@@ -15,14 +15,18 @@ import React from 'react';
 
 import { ACTION_BUTTON_PRESETS } from '../../constants/action-buttons';
 
-const GLYPH_BY_SHAPE: Record<string, string | undefined> = Object.fromEntries(
-	ACTION_BUTTON_PRESETS.map((p) => [p.shapeType, p.iconPath]),
-);
+const GLYPH_BY_SHAPE: Record<string, string | undefined> = /* @__PURE__ */ buildGlyphByShape();
 
-// PowerPoint maps "ForwardOrNext"/"BackOrPrevious" to the same glyph as the
-// non-Or variants; alias the iconPath so both shapeTypes render identically.
-GLYPH_BY_SHAPE['actionButtonForwardOrNext'] = GLYPH_BY_SHAPE['actionButtonForwardNext'];
-GLYPH_BY_SHAPE['actionButtonBackOrPrevious'] = GLYPH_BY_SHAPE['actionButtonBackPrevious'];
+function buildGlyphByShape(): Record<string, string | undefined> {
+	const glyphs: Record<string, string | undefined> = Object.fromEntries(
+		ACTION_BUTTON_PRESETS.map((p) => [p.shapeType, p.iconPath]),
+	);
+	// PowerPoint maps "ForwardOrNext"/"BackOrPrevious" to the same glyph as the
+	// non-Or variants; alias the iconPath so both shapeTypes render identically.
+	glyphs['actionButtonForwardOrNext'] = glyphs['actionButtonForwardNext'];
+	glyphs['actionButtonBackOrPrevious'] = glyphs['actionButtonBackPrevious'];
+	return glyphs;
+}
 
 /** True when an element is one of the 14 OOXML built-in action-button shapes. */
 export function isActionButtonShape(shapeType: string | undefined): boolean {

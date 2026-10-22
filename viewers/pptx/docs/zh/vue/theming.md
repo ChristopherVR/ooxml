@@ -91,7 +91,7 @@ React 和 Angular 包分别从 `pptx-react-viewer` 和 `pptx-angular-viewer` 导
 import type { ViewerTheme, ViewerThemeColors } from 'pptx-vue-viewer';
 ```
 
-两个类型都定义在 `pptx-viewer-shared`，并由 `pptx-vue-viewer`（通过 `./theme`）重新导出，因此各绑定的定义完全一致。每个字段均可选，未设置的值回退为深色主题默认值。每个颜色键映射到 `--pptx-<kebab-key>` CSS 自定义属性。
+两个类型都定义在 `ooxml-ui/pptx`，并由 `pptx-vue-viewer`（通过 `./theme`）重新导出，因此各绑定的定义完全一致。每个字段均可选，未设置的值回退为深色主题默认值。每个颜色键映射到 `--pptx-<kebab-key>` CSS 自定义属性。
 
 ```ts
 interface ViewerTheme {

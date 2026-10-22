@@ -7,6 +7,46 @@ import { listKindOf } from './list-commands';
 import { translate } from './localization';
 import { undo, redo } from 'prosemirror-history';
 import { wordYjsPluginKey, wordYjsUndo, wordYjsRedo } from 'ooxml-core/docx/ui';
+import { wordHostActionProps } from './building-blocks-actions';
+
+export type WordAlignment = 'left' | 'center' | 'right' | 'justify';
+/** The list kinds a control can apply; `remove` takes a paragraph out of its list. */
+export type WordListChoice = 'bullet' | 'number';
+/** The list the selection is in: a kind a control can apply, `other` for custom lists, or none. */
+export type WordListState = WordListChoice | 'other' | null;
+
+const ALIGNMENTS: Record<string, WordAlignment> = {
+	left: 'left',
+	start: 'left',
+	center: 'center',
+	right: 'right',
+	end: 'right',
+	justify: 'justify',
+	both: 'justify',
+};
+
+const TOOLBAR_LABELS = [
+	'Bold',
+	'Italic',
+	'Underline',
+	'Undo',
+	'Redo',
+	'Font',
+	'Font size',
+	'Align left',
+	'Align center',
+	'Align right',
+	'Justify',
+	'Bulleted list',
+	'Numbered list',
+	'Insert link',
+	'Find',
+	'Insert picture',
+] as const;
+
+function listState(kind: ReturnType<typeof listKindOf>): WordListState {
+	return kind === 'decimal' ? 'number' : kind;
+}
 
 /** A snapshot of the current editor selection, with commands bound to the same editor. */
 export function wordToolbarProps(core: EditorCore) {
@@ -31,7 +71,7 @@ export function wordToolbarProps(core: EditorCore) {
 			const font = effectiveFont(state, text, paragraph);
 			add('fontFamily', font.family);
 			add('fontSize', font.size);
-			add('alignment', String(paragraph.attrs.align ?? 'left'));
+			add('alignment', ALIGNMENTS[String(paragraph.attrs.align ?? 'left')] ?? 'left');
 		};
 		if (state.selection.empty)
 			sample(
@@ -56,24 +96,19 @@ export function wordToolbarProps(core: EditorCore) {
 	const shared = state && wordYjsPluginKey.getState(state);
 	return {
 		labels: Object.fromEntries(
-			(['Bold', 'Italic', 'Underline', 'Undo', 'Redo'] as const).map((label) => [
-				label,
-				translate(core.locale, label),
-			]),
+			TOOLBAR_LABELS.map((label) => [label, translate(core.locale, label)]),
 		),
 		canEdit,
-		list: (state ? listKindOf(state.selection.$from.parent, core.model.numberingCatalog) : null) as
-			| 'bullet'
-			| 'decimal'
-			| 'other'
-			| null,
+		list: listState(
+			state ? listKindOf(state.selection.$from.parent, core.model.numberingCatalog) : null,
+		),
 		selection: state ? { from: state.selection.from, to: state.selection.to } : null,
 		bold: value<boolean>('bold', false),
 		italic: value<boolean>('italic', false),
 		underline: value<boolean>('underline', false),
 		fontFamily: value<string>('fontFamily', 'Calibri'),
 		fontSize: value<number>('fontSize', 11),
-		alignment: value<string>('alignment', 'left'),
+		alignment: value<WordAlignment>('alignment', 'left'),
 		canUndo: Boolean(canEdit && state && (shared ? wordYjsUndo : undo)(state)),
 		canRedo: Boolean(canEdit && state && (shared ? wordYjsRedo : redo)(state)),
 		onBold: () => run({ type: 'format', key: 'bold' }),
@@ -81,11 +116,11 @@ export function wordToolbarProps(core: EditorCore) {
 		onUnderline: () => run({ type: 'format', key: 'underline' }),
 		onFontFamilyChange: (family: string) => run({ type: 'font', key: 'family', value: family }),
 		onFontSizeChange: (size: number) => run({ type: 'font', key: 'size', value: String(size) }),
-		onAlignmentChange: (alignment: 'left' | 'center' | 'right' | 'justify') =>
-			run({ type: 'align', value: alignment }),
-		onListChange: (kind: 'bullet' | 'number' | 'remove') => run({ type: 'list', key: kind }),
+		onAlignmentChange: (alignment: WordAlignment) => run({ type: 'align', value: alignment }),
+		onListChange: (kind: WordListChoice | 'remove') => run({ type: 'list', key: kind }),
 		onUndo: () => run({ type: 'history', key: 'undo' }),
 		onRedo: () => run({ type: 'history', key: 'redo' }),
+		...wordHostActionProps(core),
 	};
 }
 export type WordToolbarProps = ReturnType<typeof wordToolbarProps>;

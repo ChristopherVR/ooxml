@@ -4,7 +4,11 @@ export const sidebar: DefaultTheme.Sidebar = {
 	'/zh/architecture/': [
 		{
 			text: '架构参考',
-			items: [{ text: 'OpenXML 符合性', link: '/zh/architecture/openxml-conformance' }],
+			items: [
+				{ text: 'OpenXML 符合性', link: '/zh/architecture/openxml-conformance' },
+				{ text: '架构说明', link: '/zh/guide/architecture' },
+				{ text: '已知限制', link: '/zh/guide/limitations' },
+			],
 		},
 	],
 	'/zh/guide/': [
@@ -25,8 +29,15 @@ export const sidebar: DefaultTheme.Sidebar = {
 				{ text: '架构说明', link: '/zh/guide/architecture' },
 				{ text: 'PptxData 数据模型', link: '/zh/guide/data-model' },
 				{ text: '主题', link: '/zh/guide/theming' },
-				{ text: '界面自定义（英文）', link: '/guide/customization' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: '视口适配', link: '/zh/guide/viewport-fit' },
+				{ text: '幻灯片链接', link: '/zh/guide/slide-links' },
+				{ text: '批量更新元素', link: '/zh/guide/element-update-batches' },
+				{ text: '功能区对标（开始到设计）', link: '/zh/guide/ribbon-parity' },
+				{ text: '功能区对标（其他选项卡）', link: '/zh/guide/ribbon-parity-other-tabs' },
+				{ text: '共享界面迁移记录', link: '/zh/guide/ui-migration' },
+				{ text: '宿主托管的协作', link: '/zh/guide/host-owned-collaboration' },
+				{ text: '在应用内审阅', link: '/zh/guide/review-workflow' },
 				{ text: '本地化（i18n）', link: '/zh/guide/localization' },
 				{ text: '智能助手', link: '/zh/guide/ai-assistant' },
 				{ text: '账户与登录', link: '/zh/guide/account' },
@@ -95,6 +106,7 @@ export const sidebar: DefaultTheme.Sidebar = {
 			text: '定制',
 			items: [
 				{ text: '主题', link: '/zh/react/theming' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: 'Hook', link: '/zh/react/hooks' },
 				{ text: '完整 Hook 参考', link: '/zh/react/hooks-reference' },
 				{ text: '导出', link: '/zh/react/export' },
@@ -117,6 +129,7 @@ export const sidebar: DefaultTheme.Sidebar = {
 			text: '定制',
 			items: [
 				{ text: '主题', link: '/zh/vue/theming' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: '组合式函数', link: '/zh/vue/composables' },
 				{ text: '完整组合式函数参考', link: '/zh/vue/composables-reference' },
 				{ text: '导出', link: '/zh/vue/export' },
@@ -139,6 +152,7 @@ export const sidebar: DefaultTheme.Sidebar = {
 			text: '定制',
 			items: [
 				{ text: '主题', link: '/zh/angular/theming' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: '服务', link: '/zh/angular/services' },
 				{ text: '完整服务参考', link: '/zh/angular/services-reference' },
 				{ text: '导出', link: '/zh/angular/export' },
@@ -161,6 +175,7 @@ export const sidebar: DefaultTheme.Sidebar = {
 			text: '定制',
 			items: [
 				{ text: '主题', link: '/zh/vanilla/theming' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: '元素渲染器', link: '/zh/vanilla/renderers' },
 			],
 		},
@@ -180,6 +195,7 @@ export const sidebar: DefaultTheme.Sidebar = {
 			text: '定制',
 			items: [
 				{ text: '主题', link: '/zh/svelte/theming' },
+				{ text: '界面自定义', link: '/zh/guide/customization' },
 				{ text: '导出与打印', link: '/zh/svelte/export' },
 				{ text: '实时协作', link: '/zh/svelte/collaboration' },
 				{ text: '本地化', link: '/zh/svelte/i18n' },

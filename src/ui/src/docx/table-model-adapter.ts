@@ -3,8 +3,14 @@
 // id, because vertical-merge continuation cells and nested-table previews have no 1:1 visible
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { cellSourceBlocks } from 'ooxml-core/docx';
-import type { Paragraph, Table, TableCell, TableStyleCatalog } from 'ooxml-core/docx';
+import { cellSourceBlocks, removedByEdit } from 'ooxml-core/docx';
+import type {
+	ContentControl,
+	Paragraph,
+	Table,
+	TableCell,
+	TableStyleCatalog,
+} from 'ooxml-core/docx';
 import { schema } from './schema';
 import { resolveCellVisuals } from 'ooxml-core/docx/ui';
 
@@ -76,6 +82,7 @@ export function tableNode(
 						borders: visuals.borders ? JSON.stringify(visuals.borders) : null,
 						directBorders: cell.borders ? JSON.stringify(cell.borders) : null,
 						margins: cell.margins ? JSON.stringify(cell.margins) : null,
+						contentControl: cell.contentControl ?? null,
 					},
 					children,
 				),
@@ -102,10 +109,31 @@ export function tableNode(
 			indentTwips: block.indentTwips ?? null,
 			borders: block.borders ? JSON.stringify(block.borders) : null,
 			cellMargins: block.cellMargins ? JSON.stringify(block.cellMargins) : null,
+			contentControl: block.contentControl ?? null,
 		},
 		rows,
 	);
 }
+
+/**
+ * The control around a table or a cell as the editor holds it (picked values, cleared
+ * placeholders): a temporary one is gone after an edit. The editor takes no other control off a
+ * table or a cell, so one the node lacks (a document shared with an editor that kept none there)
+ * stays as `prior` had it, and its `w:sdt` is never unwrapped.
+ */
+function heldControl(
+	node: ProseMirrorNode,
+	prior: ContentControl | undefined,
+): { contentControl?: ContentControl } {
+	const control = (node.attrs.contentControl as ContentControl | null) ?? prior;
+	return control && (node.attrs.contentControl || !removedByEdit(control))
+		? { contentControl: structuredClone(control) }
+		: {};
+}
+
+/** The block control around a table as the editor holds it. */
+export const tableControl = (node: ProseMirrorNode, prior?: Table): Pick<Table, 'contentControl'> =>
+	heldControl(node, prior?.contentControl);
 
 /** Reads editable formatting from nodes rather than a stale prior model. */
 export function tableFormattingFromNode(node: ProseMirrorNode): {
@@ -147,6 +175,7 @@ export function convertSimpleTable(
 				borders: _borders,
 				margins: _margins,
 				verticalAlign: _verticalAlign,
+				contentControl: _control,
 				...properties
 			} = source ?? { paragraphs: [] };
 			const direct = typeof cell.attrs.directBorders === 'string' ? cell.attrs.directBorders : null;
@@ -159,6 +188,7 @@ export function convertSimpleTable(
 				...(typeof cell.attrs.margins === 'string'
 					? { margins: JSON.parse(cell.attrs.margins) as NonNullable<TableCell['margins']> }
 					: {}),
+				...heldControl(cell, source?.contentControl),
 				paragraphs,
 			});
 			if (cell.attrs.shadingEdited) {
@@ -182,8 +212,20 @@ export function convertMergedTable(
 	convertParagraph: (paragraph: ProseMirrorNode) => Paragraph,
 ): Table {
 	const updated = structuredClone(prior);
+	delete updated.contentControl;
+	Object.assign(updated, tableControl(node, prior));
 	const cellByKey = new Map<string, TableCell>();
 	for (const row of updated.rows) for (const cell of row) cellByKey.set(cellKey(cell), cell);
+	// A row's control as the editor holds it (a temporary one goes after an edit); the rows of a
+	// merged table stay as they were, one node per row.
+	node.forEach((row, _offset, index) => {
+		const properties = updated.rowProperties?.[index];
+		if (!properties) return;
+		delete properties.contentControl;
+		const own = row.attrs.properties as NonNullable<Table['rowProperties']>[number] | null;
+		const control = own?.contentControl;
+		if (control) properties.contentControl = structuredClone(control);
+	});
 	node.forEach((row) =>
 		row.forEach((cellNode) => {
 			const target = cellByKey.get(String(cellNode.attrs.sourceCellKey || ''));
@@ -195,6 +237,9 @@ export function convertMergedTable(
 				else if (child.type.name === 'table') nested.push(child);
 			});
 			if (paragraphs.length) target.paragraphs = paragraphs;
+			const control = target.contentControl;
+			delete target.contentControl;
+			Object.assign(target, heldControl(cellNode, control));
 			let index = 0;
 			if (target.sourceBlocks)
 				target.sourceBlocks = target.sourceBlocks.map((block) => {

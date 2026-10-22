@@ -33,7 +33,7 @@ export interface ChartFormatCommands {
 	reset: () => void;
 }
 
-export const ChartFormatContext = createContext<ChartFormatCommands | null>(null);
+export const ChartFormatContext = /* @__PURE__ */ createContext<ChartFormatCommands | null>(null);
 
 export function useChartFormatContext(): ChartFormatCommands | null {
 	return useContext(ChartFormatContext);

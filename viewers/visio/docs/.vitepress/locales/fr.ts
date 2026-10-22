@@ -30,7 +30,7 @@ export const fr = {
 				text: 'Guide',
 				link: '/fr/getting-started',
 				activeMatch:
-					'/fr/(getting-started|architecture|api|collaboration)|/(getting-started|architecture|bindings|api|theming|collaboration|demos|frameworks)',
+					'/fr/(getting-started|architecture|api|collaboration)|/(getting-started|architecture|bindings|api|theming|building-blocks|collaboration|demos|frameworks)',
 			},
 			{
 				text: 'OOXML Office',
@@ -60,7 +60,10 @@ export const fr = {
 			},
 			{
 				text: 'Utiliser le visualiseur',
-				items: [{ text: 'Collaboration (partage)', link: '/fr/collaboration' }],
+				items: [
+					{ text: 'Blocs de construction', link: '/building-blocks' },
+					{ text: 'Collaboration (partage)', link: '/fr/collaboration' },
+				],
 			},
 			{
 				text: 'Guides par framework',

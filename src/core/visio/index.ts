@@ -16,6 +16,7 @@ export {
 } from './edit-shape-data-commands';
 export { visioLinkedRowNames } from './edit-data';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
+export type { VisioDocumentCache } from './document-level';
 export { readVisioStencil, type VisioStencilFile } from './stencil-file';
 export {
 	visioPrintTileCount,
@@ -23,6 +24,7 @@ export {
 	type VisioPrintTileCountResult,
 } from './print-count';
 export { loadVisio } from './load';
+export { mergeVisioPages, parseVsdxPages } from './parse-incremental';
 export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy';
 export { VisioPackageError, type VisioPackageLimits } from './package';
 export {

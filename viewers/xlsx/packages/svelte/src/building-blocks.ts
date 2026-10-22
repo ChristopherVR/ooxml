@@ -10,7 +10,7 @@ export type {
 	BuildingBlockState,
 	SpreadsheetToolbarProps,
 } from '../../bindings/src/building-blocks';
-export { toolbarButtons, selectReference } from '../../bindings/src/building-blocks';
+export { toolbarModel, selectReference } from '../../bindings/src/building-blocks';
 /** Create during component initialization; use $blocks for state and $effect(() => blocks.update(options)). */
 export function createViewerBuildingBlocks(initial: BuildingBlockOptions = {}) {
 	const store = writable(emptyBuildingBlockState());

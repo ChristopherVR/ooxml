@@ -1,14 +1,26 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes content control (`w:sdt`) properties: patches only what the model changed on an existing
 // control, and builds a new control (from its verbatim `w:sdtPr` when it has one).
-import type { ContentControl } from './content-control-model';
-import { parseContentControl, sdtContent } from './content-control';
+import type {
+	ContentControl,
+	ContentControlGlyph,
+	ContentControlListItem,
+} from './content-control-model';
+import { parseContentControl, sdtContent, typeElements } from './content-control';
+import {
+	NAMED_TYPES,
+	validId,
+	validLock,
+	verbatimEndProperties,
+	verbatimProperties,
+} from './content-control-values';
 import { declareIgnorableExtension, WORD_2010_NS } from './ligatures';
 import {
 	children,
 	first,
+	getW,
 	makeW,
-	parseXml,
+	named,
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
@@ -41,7 +53,8 @@ function place(sdtPr: XmlElement, element: XmlElement): void {
 
 function setValued(doc: XmlDocument, sdtPr: XmlElement, local: string, value: string | undefined) {
 	for (const existing of children(sdtPr, local)) sdtPr.removeChild(existing);
-	if (value === undefined) return;
+	// Only text is written: a model from elsewhere can hold anything.
+	if (typeof value !== 'string') return;
 	const element = makeW(doc, local);
 	element.setAttributeNS(WORD_NS, 'w:val', value);
 	place(sdtPr, element);
@@ -67,6 +80,43 @@ function checkboxElement(sdtPr: XmlElement): XmlElement | undefined {
 	);
 }
 
+// A list, a check box or a date pasted from another page holds whatever that page wrote: only
+// values Word reads are written.
+
+/** A list entry's display or value as text: text, or a number; anything else is none. */
+const entryText = (value: unknown): string | undefined =>
+	typeof value === 'string'
+		? value
+		: typeof value === 'number' && Number.isFinite(value)
+			? String(value)
+			: undefined;
+
+/** The entries of a list control that can be written, each with a text display and value. */
+function validItems(items: unknown): ContentControlListItem[] {
+	if (!Array.isArray(items)) return [];
+	return items.flatMap((item: unknown) => {
+		if (!item || typeof item !== 'object') return [];
+		const { display, value } = item as { display?: unknown; value?: unknown };
+		const [shown, entry] = [entryText(display), entryText(value)];
+		const text = shown ?? entry;
+		return text === undefined ? [] : [{ display: text, value: entry ?? text }];
+	});
+}
+
+/** A check box glyph Word reads: a code point in four hexadecimal digits (`ST_ShortHexNumber`). */
+function validGlyph(glyph: unknown): ContentControlGlyph | undefined {
+	const { code, font } = (glyph ?? {}) as { code?: unknown; font?: unknown };
+	if (typeof code !== 'string' || !/^[0-9A-Fa-f]{4}$/.test(code)) return undefined;
+	return typeof font === 'string' ? { code, font } : { code };
+}
+
+/** A `w:fullDate`, an `xsd:dateTime`; anything else is not written. */
+const validDate = (value: unknown): string | undefined =>
+	typeof value === 'string' &&
+	/^-?\d{4,}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.test(value)
+		? value
+		: undefined;
+
 function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	let box = checkboxElement(sdtPr);
 	if (!box) {
@@ -82,31 +132,25 @@ function writeCheckbox(doc: XmlDocument, sdtPr: XmlElement, control: ContentCont
 		box!.insertBefore(element, siblings[order] ?? null);
 	};
 	replace('checked', (el) => w14Attribute(el, 'val', control.checked ? '1' : '0'), 0);
-	if (control.checkedGlyph)
-		replace(
-			'checkedState',
-			(el) => {
-				w14Attribute(el, 'val', control.checkedGlyph!.code);
-				if (control.checkedGlyph!.font) w14Attribute(el, 'font', control.checkedGlyph!.font);
-			},
-			1,
-		);
-	if (control.uncheckedGlyph)
-		replace(
-			'uncheckedState',
-			(el) => {
-				w14Attribute(el, 'val', control.uncheckedGlyph!.code);
-				if (control.uncheckedGlyph!.font) w14Attribute(el, 'font', control.uncheckedGlyph!.font);
-			},
-			2,
-		);
+	const states = [validGlyph(control.checkedGlyph), validGlyph(control.uncheckedGlyph)];
+	states.forEach((glyph, index) => {
+		if (glyph)
+			replace(
+				index ? 'uncheckedState' : 'checkedState',
+				(el) => {
+					w14Attribute(el, 'val', glyph.code);
+					if (glyph.font) w14Attribute(el, 'font', glyph.font);
+				},
+				index + 1,
+			);
+	});
 }
 
 function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const list = first(sdtPr, control.kind);
 	if (!list) return;
 	for (const item of children(list, 'listItem')) list.removeChild(item);
-	for (const item of control.items ?? []) {
+	for (const item of validItems(control.items)) {
 		const element = makeW(doc, 'listItem');
 		element.setAttributeNS(WORD_NS, 'w:displayText', item.display);
 		element.setAttributeNS(WORD_NS, 'w:value', item.value);
@@ -117,11 +161,15 @@ function writeItems(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl
 function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl): void {
 	const date = first(sdtPr, 'date');
 	if (!date) return;
-	if (control.fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', control.fullDate);
+	// A date another program wrote in its own form stays as read; a new one is an xsd:dateTime.
+	const existing = date.getAttributeNS(WORD_NS, 'fullDate') || undefined;
+	const fullDate =
+		validDate(control.fullDate) ?? (control.fullDate === existing ? existing : undefined);
+	if (fullDate) date.setAttributeNS(WORD_NS, 'w:fullDate', fullDate);
 	else date.removeAttributeNS(WORD_NS, 'fullDate');
 	const set = (local: string, value: string | undefined, order: number) => {
 		for (const old of children(date, local)) date.removeChild(old);
-		if (value === undefined) return;
+		if (typeof value !== 'string') return;
 		const element = makeW(doc, local);
 		element.setAttributeNS(WORD_NS, 'w:val', value);
 		date.insertBefore(element, Array.from(date.childNodes)[order] ?? null);
@@ -130,17 +178,36 @@ function writeDate(doc: XmlDocument, sdtPr: XmlElement, control: ContentControl)
 	set('lid', control.dateLocale, 1);
 }
 
+/** Whether the writer writes a type element for `kind`: rich text has none, unknown kinds none. */
+const writesType = (kind: string): boolean =>
+	NAMED_TYPES.has(kind) ||
+	['richText', 'text', 'checkbox', 'dropDownList', 'comboBox', 'date'].includes(kind);
+
 /** Applies every modeled field of `control` that differs from what `sdt`'s own `w:sdtPr` says. */
 export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: ContentControl) {
 	const sdtPr = first(sdt, 'sdtPr');
 	if (!sdtPr) return;
 	const current = parseContentControl(sdt, control.level);
+	// The model can hold another control than this `w:sdt` (a row or cell given another one): its
+	// id and kind are written too, the old kind's element going, so the properties stay one control.
+	if (control.id !== current.id && validId(control.id) !== undefined)
+		setValued(doc, sdtPr, 'id', control.id);
+	if (control.kind !== current.kind && writesType(control.kind)) {
+		for (const old of typeElements(sdtPr)) sdtPr.removeChild(old);
+		const { sourceXml: _source, ...model } = control;
+		for (const type of typeElements(buildProperties(doc, model))) sdtPr.appendChild(type);
+	}
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
-	if (control.lock !== current.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	const lock = validLock(control.lock);
+	if (lock !== current.lock) setValued(doc, sdtPr, 'lock', lock);
 	if (Boolean(control.showingPlaceholder) !== Boolean(current.showingPlaceholder)) {
 		for (const old of children(sdtPr, 'showingPlcHdr')) sdtPr.removeChild(old);
 		if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
+	}
+	if (Boolean(control.temporary) !== Boolean(current.temporary)) {
+		for (const old of children(sdtPr, 'temporary')) sdtPr.removeChild(old);
+		if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
 	}
 	if (control.kind === 'checkbox') {
 		if (
@@ -152,7 +219,7 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	}
 	if (
 		(control.kind === 'dropDownList' || control.kind === 'comboBox') &&
-		!same(control.items, current.items)
+		!same(validItems(control.items), current.items)
 	)
 		writeItems(doc, sdtPr, control);
 	if (
@@ -164,16 +231,20 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 		writeDate(doc, sdtPr, control);
 }
 
-/** Builds the `w:sdtPr` of a control that has no source element. */
+/**
+ * Builds the `w:sdtPr` of a control that has no source element: its verbatim one when it has a
+ * `w:sdtPr`, else one from the model.
+ */
 function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement {
-	if (control.sourceXml)
-		return doc.importNode(parseXml(control.sourceXml).documentElement, true) as XmlElement;
+	const verbatim = verbatimProperties(doc, control.sourceXml);
+	if (verbatim) return verbatim;
 	const sdtPr = makeW(doc, 'sdtPr');
 	if (control.alias !== undefined) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== undefined) setValued(doc, sdtPr, 'tag', control.tag);
-	setValued(doc, sdtPr, 'id', control.id);
-	if (control.lock) setValued(doc, sdtPr, 'lock', control.lock);
+	setValued(doc, sdtPr, 'id', validId(control.id));
+	setValued(doc, sdtPr, 'lock', validLock(control.lock));
 	if (control.showingPlaceholder) place(sdtPr, makeW(doc, 'showingPlcHdr'));
+	if (control.temporary) place(sdtPr, makeW(doc, 'temporary'));
 	switch (control.kind) {
 		case 'text': {
 			const text = makeW(doc, 'text');
@@ -193,10 +264,8 @@ function buildProperties(doc: XmlDocument, control: ContentControl): XmlElement 
 			sdtPr.appendChild(makeW(doc, 'date'));
 			writeDate(doc, sdtPr, control);
 			break;
-		case 'richText':
-			break;
 		default:
-			sdtPr.appendChild(makeW(doc, control.kind));
+			if (NAMED_TYPES.has(control.kind)) sdtPr.appendChild(makeW(doc, control.kind));
 	}
 	return sdtPr;
 }
@@ -207,11 +276,40 @@ export function createContentControl(
 	control: ContentControl,
 ): { sdt: XmlElement; content: XmlElement } {
 	const sdt = makeW(doc, 'sdt');
-	sdt.appendChild(buildProperties(doc, control));
+	// Verbatim properties of another kind keep all but their type element, which the patch below
+	// replaces with the model's, as it does for the same control in place: a data binding stays.
+	const sdtPr = buildProperties(doc, control);
+	// A copy keeps the properties it was copied with, under the new id it was given: ids are
+	// unique in a document (ECMA-376 17.5.2.18). An id Word cannot read, such as one generated for
+	// a control read without `w:id`, is not written, nor the one its properties were copied with.
+	if (getW(first(sdtPr, 'id'), 'val') !== control.id)
+		setValued(doc, sdtPr, 'id', validId(control.id));
+	sdt.appendChild(sdtPr);
+	const end = verbatimEndProperties(doc, control.endSourceXml);
+	if (end) sdt.appendChild(end);
 	const content = makeW(doc, 'sdtContent');
 	sdt.appendChild(content);
 	patchContentControl(doc, sdt, control);
 	return { sdt, content };
+}
+
+/**
+ * Replaces a `w:sdt` by its content: the control goes, what it held stays where it was, and so do
+ * the range markers (bookmarks, comment, custom XML and move ranges) that Word writes beside the
+ * content of a row or cell control (MS-OI29500 2.1.202, 2.1.204), before or after it as they were.
+ */
+export function unwrapContentControl(sdt: XmlElement): void {
+	const parent = sdt.parentNode;
+	if (!parent) return;
+	for (const child of Array.from(sdt.childNodes)) {
+		if (child.nodeType !== 1) continue;
+		const element = child as XmlElement;
+		if (named(element, 'sdtContent'))
+			for (const inner of Array.from(element.childNodes)) parent.insertBefore(inner, sdt);
+		else if (!named(element, 'sdtPr') && !named(element, 'sdtEndPr'))
+			parent.insertBefore(element, sdt);
+	}
+	parent.removeChild(sdt);
 }
 
 /** Removes the children of a reused `w:sdt`'s content and returns it, ready for new runs. */

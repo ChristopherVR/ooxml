@@ -1,7 +1,15 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { orderChildren, RPR_ORDER } from './element-order';
 import type { TextRun } from './model';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import {
+	children,
+	first,
+	importElement,
+	makeW,
+	type XmlDocument,
+	type XmlElement,
+	WORD_NS,
+} from './xml';
 import { setExtendedRunProperties } from './write-run-extra';
 import { fractionToThemeByte } from './theme-color';
 import { createImageRun } from './write-drawing';
@@ -10,6 +18,13 @@ import { writeRunFormatRevision } from './write-revisions';
 import { parseRunPropertiesSnapshot } from './restore-run-format';
 import { parseDirectRunProperties, runPropertyChanged } from './run-properties';
 import { writeFieldFlags } from './field-flags';
+import { writeFormFieldData } from './form-fields';
+import {
+	NON_BREAKING_HYPHEN,
+	SOFT_HYPHEN,
+	specialCharacterElement,
+	symbolCharacter,
+} from './special-characters';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -238,6 +253,31 @@ function setRunProperties(
 	if (!props.childNodes.length) runNode.removeChild(props);
 }
 
+/** A run's text as ordinary stretches and the single characters Word stores as elements. */
+function textPieces(run: TextRun): string[] {
+	const symbol = run.symbol && symbolCharacter(run.symbol.char);
+	const special = new Set([
+		'\n',
+		'\t',
+		SOFT_HYPHEN,
+		NON_BREAKING_HYPHEN,
+		...(symbol ? [symbol] : []),
+	]);
+	const pieces: string[] = [];
+	let text = '';
+	for (const character of run.text) {
+		if (!special.has(character)) {
+			text += character;
+			continue;
+		}
+		if (text) pieces.push(text);
+		pieces.push(character);
+		text = '';
+	}
+	if (text) pieces.push(text);
+	return pieces;
+}
+
 export function createRun(
 	doc: XmlDocument,
 	run: TextRun,
@@ -258,11 +298,13 @@ export function createRun(
 		const restored = parseRunPropertiesSnapshot(propertiesXml);
 		const props = first(node, 'rPr');
 		if (props) node.removeChild(props);
-		node.insertBefore(doc.importNode(restored, true), node.firstChild);
+		node.insertBefore(importElement(doc, restored), node.firstChild);
 		base = { text: run.text, ...parseDirectRunProperties(restored) };
 	}
 	setRunProperties(doc, node, run, base);
 	if (run.image) return node;
+	// A form field's own data element, kept so an unchanged field is written back byte for byte.
+	const formData = run.formField ? first(first(node, 'fldChar'), 'ffData') : undefined;
 	for (const child of Array.from(node.childNodes))
 		if (child.nodeType !== 1 || (child as XmlElement).localName !== 'rPr') node.removeChild(child);
 	if (run.break) {
@@ -275,6 +317,8 @@ export function createRun(
 		const marker = makeW(doc, 'fldChar');
 		setAttribute(marker, 'fldCharType', run.fieldChar);
 		writeFieldFlags(marker, run.fieldFlags);
+		if (run.fieldChar === 'begin' && run.formField)
+			marker.appendChild(writeFormFieldData(doc, run.formField, formData));
 		node.appendChild(marker);
 		return node;
 	}
@@ -302,9 +346,13 @@ export function createRun(
 		node.appendChild(reference);
 		return node;
 	}
-	for (const piece of run.text.split(/(\n|\t)/)) {
-		if (piece === '\n') node.appendChild(makeW(doc, 'br'));
-		else if (piece === '\t') node.appendChild(makeW(doc, 'tab'));
+	for (const piece of textPieces(run)) {
+		const special =
+			piece === '\n'
+				? makeW(doc, 'br')
+				: (specialCharacterElement(doc, run, piece) ??
+					(piece === '\t' ? makeW(doc, 'tab') : undefined));
+		if (special) node.appendChild(special);
 		else if (piece) {
 			const text = makeW(doc, 't');
 			if (/^\s|\s$/.test(piece))

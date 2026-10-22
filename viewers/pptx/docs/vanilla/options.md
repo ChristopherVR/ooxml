@@ -40,17 +40,19 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 
 ## Chrome & initial state
 
-| Option                    | Type                | Default | Description                                                                                                                                                                                   |
-| ------------------------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`            | `number`            | `0`     | Zero-based slide to show after load (clamped).                                                                                                                                                |
-| `showToolbar`             | `boolean`           | `true`  | Show the navigation/zoom/fullscreen toolbar.                                                                                                                                                  |
-| `showThumbnails`          | `boolean`           | `true`  | Show the thumbnail sidebar.                                                                                                                                                                   |
-| `showCompatibilityToasts` | `boolean`           | `true`  | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                        |
-| `showFormatToolbar`       | `boolean`           | `true`  | Build the editing format toolbar row (bold/fill/insert/z-order). The row is only _visible_ while editing is enabled.                                                                          |
-| `showInspector`           | `boolean`           | `true`  | Build the property inspector panel (position/size/fill/line). Only _visible_ while editing is enabled.                                                                                        |
-| `hiddenActions`           | `ToolbarActionId[]` | -       | Individually hide toolbar buttons and/or ribbon tabs; see below.                                                                                                                              |
-| `editable`                | `boolean`           | `false` | Enable editing: click to select, drag/resize/rotate, inline text editing, keyboard shortcuts, undo/redo, and the toolbar Save button. Toggle later via [`setEditable`](/vanilla/api#editing). |
-| `readOnly`                | `boolean`           | -       | Legacy flag superseded by `editable`; kept so existing option objects stay type-valid. It has no effect.                                                                                      |
+| Option                    | Type                | Default    | Description                                                                                                                                                                                   |
+| ------------------------- | ------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`            | `0`        | Zero-based slide to show after load (clamped).                                                                                                                                                |
+| `showToolbar`             | `boolean`           | `true`     | Show the navigation/zoom/fullscreen toolbar.                                                                                                                                                  |
+| `showThumbnails`          | `boolean`           | `true`     | Show the thumbnail sidebar.                                                                                                                                                                   |
+| `showCompatibilityToasts` | `boolean`           | `true`     | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                        |
+| `showFormatToolbar`       | `boolean`           | `true`     | Build the editing format toolbar row (bold/fill/insert/z-order). The row is only _visible_ while editing is enabled.                                                                          |
+| `showInspector`           | `boolean`           | `true`     | Build the property inspector panel (position/size/fill/line). Only _visible_ while editing is enabled.                                                                                        |
+| `hiddenActions`           | `ToolbarActionId[]` | -          | Individually hide toolbar buttons and/or ribbon tabs; see below.                                                                                                                              |
+| `editable`                | `boolean`           | `false`    | Enable editing: click to select, drag/resize/rotate, inline text editing, keyboard shortcuts, undo/redo, and the toolbar Save button. Toggle later via [`setEditable`](/vanilla/api#editing). |
+| `readOnly`                | `boolean`           | -          | Legacy flag superseded by `editable`; kept so existing option objects stay type-valid. It has no effect.                                                                                      |
+| `inspectorInitiallyOpen`  | `boolean`           | -          | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                                                       |
+| `rulerUnit`               | `RulerUnit`         | `'inches'` | Unit system for the View > Rulers tick labels (`'centimetres'` labels identically across bindings).                                                                                           |
 
 ### `hiddenActions`
 
@@ -91,6 +93,11 @@ Every id, the rules and recipes are in the
 | ------------------ | ------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`            | `ViewerTheme`                   | -                       | Viewer chrome theme (shared `ViewerTheme`: colors, radius, CSS vars). See [Theming](/vanilla/theming).                                                          |
 | `locale`           | `string`                        | `'en'`                  | UI locale. Dictionaries come from `messages`; English is built in.                                                                                              |
+| `defaultLocale`    | `string`                        | -                       | Initial locale for File > Options > Language. Wins over a persisted choice and over `locale`; later user picks still apply.                                     |
+| `defaultThemeKey`  | `string`                        | -                       | Initial key into `availableThemes` (or the built-in catalog) for File > Options > Appearance. Wins over a persisted choice.                                     |
+| `onThemeChange`    | `(key: string) => void`         | -                       | Host callback for theme picks; see [Callbacks](#callbacks).                                                                                                     |
+| `onLocaleChange`   | `(code: string) => void`        | -                       | Host callback for language picks; see [Callbacks](#callbacks).                                                                                                  |
+| `authorName`       | `string`                        | -                       | Author for comments and the broadcast presenter. Falls back to Options > General > "User name", then a generic label.                                           |
 | `messages`         | `TranslationMessages`           | -                       | Per-locale `pptx.*` message dictionaries. English falls back to the built-in shared dictionary; other locales fall back to English.                             |
 | `availableThemes`  | `readonly ThemeCatalogEntry[]`  | shared theme catalog    | Theme choices offered by File > Options > Appearance (default/light/vermilion light/vermilion dark), also highlighted in the Design tab's quick-access gallery. |
 | `availableLocales` | `readonly LocaleCatalogEntry[]` | registered dictionaries | Language choices offered by File > Options > Language. Defaults to every locale with a registered `messages` dictionary plus `'en'`.                            |
@@ -106,23 +113,25 @@ dictionary of dotted `pptx.*` keys. Theme and locale can be changed later via
 
 ## Extension
 
-| Option                                                                     | Type                      | Default                   | Description                                                                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------- | ------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `registry`                                                                 | `ElementRendererRegistry` | `createDefaultRegistry()` | Custom element-renderer registry; pass your own (or mutate the default via `getRegistry()`) to add or override element renderers. See [Element Renderers](/vanilla/renderers).                                                                               |
-| `smartArt3D`                                                               | `boolean`                 | `false`                   | Opt-in WebGL SmartArt renderer: renders `smartArt` elements as an extruded Three.js scene. `three` is an optional peer dependency, lazily imported only when `true`; if unavailable, the SVG renderer is used. Set once at construction (no runtime setter). |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                 | `false`                   | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene.                                                                      |
-| `ai`                                                                       | `PptxAiConfig`            | -                         | Enables the optional AI assistant. Its SDK peer loads only when the panel is opened; omit this option to leave the assistant unavailable.                                                                                                                    |
+| Option                                                                     | Type                        | Default                   | Description                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------- | --------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `registry`                                                                 | `ElementRendererRegistry`   | `createDefaultRegistry()` | Custom element-renderer registry; pass your own (or mutate the default via `getRegistry()`) to add or override element renderers. See [Element Renderers](/vanilla/renderers).                                                                               |
+| `smartArt3D`                                                               | `boolean`                   | `false`                   | Opt-in WebGL SmartArt renderer: renders `smartArt` elements as an extruded Three.js scene. `three` is an optional peer dependency, lazily imported only when `true`; if unavailable, the SVG renderer is used. Set once at construction (no runtime setter). |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                   | `false`                   | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene.                                                                      |
+| `ai`                                                                       | `PptxAiConfig`              | -                         | Enables the optional AI assistant. Its SDK peer loads only when the panel is opened; omit this option to leave the assistant unavailable.                                                                                                                    |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[]` | -                         | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. `setRibbonAddIns` on the instance changes them live.                                                                      |
 
 ## Autosave
 
 Debounced crash-recovery snapshots in a shared IndexedDB store. Autosave never replaces the user's
 real Save; it is a safety net offered back on the next start.
 
-| Option               | Type      | Default                | Description                                                                                                      |
-| -------------------- | --------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave; the toolbar shows a small status pill. A policy ceiling over the title-bar toggle; see below. |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                 |
-| `autosaveFilePath`   | `string`  | `'presentation.pptx'`  | IndexedDB recovery key for autosave.                                                                             |
+| Option               | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave; the toolbar shows a small status pill. A policy ceiling over the title-bar toggle; see below.                                 |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
+| `autosaveFilePath`   | `string`          | `'presentation.pptx'`  | IndexedDB recovery key for autosave.                                                                                                             |
 
 Runtime control lives on the instance: [`autosaveNow` / `setAutosaveEnabled` /
 `isAutosaveEnabled`](/vanilla/api#autosave).
@@ -161,10 +170,10 @@ already taken delivery of (for example when the host itself restored it through
 
 ## Collaboration
 
-| Option          | Type                  | Default | Description                                                                                                                                                                        |
-| --------------- | --------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `collaboration` | `CollaborationConfig` | -       | Start a real-time collaboration session immediately (Yjs over y-websocket or serverless y-webrtc). A `role: 'viewer'` config forces read-only.                                     |
-| `shareDefaults` | `ShareDefaults`       | -       | Prefilled values for the built-in Share/Broadcast dialog form fields (`{ roomId?, userName?, serverUrl? }`); the broadcast dialog uses `userName` as the presenter's display name. |
+| Option          | Type                 | Default | Description                                                                                                                                                                                                           |
+| --------------- | -------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collaboration` | `CollaborationInput` | -       | Start a real-time collaboration session immediately (Yjs over y-websocket or serverless y-webrtc): the legacy `CollaborationConfig` or the shared `CollaborationOptions`. A `role: 'viewer'` config forces read-only. |
+| `shareDefaults` | `ShareDefaults`      | -       | Prefilled values for the built-in Share/Broadcast dialog form fields (`{ roomId?, userName?, serverUrl? }`); the broadcast dialog uses `userName` as the presenter's display name.                                    |
 
 Sessions can also be started or stopped later with
 [`startCollaboration` / `stopCollaboration`](/vanilla/api#collaboration).
@@ -174,27 +183,56 @@ Media/OLE/3D/ink binary payloads are not carried over the wire (a shared codec l
 remote update replaces the whole local slide array, so a joiner's host-provided media can degrade.
 :::
 
+## Your own provider, or sharing in one browser
+
+Besides `CollaborationConfig`, the `collaboration` option takes the shared contract of Word, Excel and Visio (`CollaborationOptions` from `ooxml-core/collab`). Two forms need no host-owned `session`; the viewer opens the session itself and destroys it when collaboration stops:
+
+```ts
+createPptxViewer(el, {
+	collaboration: { roomId: 'deck-review', provider, user: { name: 'Ada' }, intent: 'join' },
+});
+// Same browser only:
+createPptxViewer(el, { collaboration: { roomId: 'deck-review', user: { name: 'Ada' } } });
+```
+
+- `provider` (a `ProviderFactory`, for example `transportProvider` or an existing provider through `adaptYjsProvider`) wins over `serverUrl`.
+- With no `session`, `provider`, `serverUrl` or `transport`, the room is shared between tabs and windows of this browser over a BroadcastChannel (`ooxml-pptx:<roomId>`), with no server.
+- Precedence is `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. A legacy `CollaborationConfig` with `serverUrl` keeps y-websocket; one with `transport: 'webrtc'` or a blank `serverUrl` keeps the serverless y-webrtc transport.
+- `intent: 'join'` never seeds an empty room with the local deck. The session is writable once it syncs (or after the grace period for a lone peer); a `role: 'viewer'` stays read-only.
+- The state reports `status: 'connecting'` while the session opens and `error` for an invalid room or an unavailable BroadcastChannel.
+
 ## Callbacks
 
 `PptxViewerOptions` extends `PptxViewerCallbacks` - there is no framework event system, so events
 are plain callback options:
 
-| Callback                | Signature                                                        | Description                                                                                                                                                                                                               |
-| ----------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onLoad`                | `(info: { slideCount: number; canvasSize: CanvasSize }) => void` | Fired after a presentation loads successfully.                                                                                                                                                                            |
-| `onError`               | `(message: string, error: unknown) => void`                      | Fired when a load fails (message is already localised/best-effort).                                                                                                                                                       |
-| `onSlideChange`         | `(index: number) => void`                                        | Fired when the active slide changes (zero-based index).                                                                                                                                                                   |
-| `onZoomChange`          | `(scale: number) => void`                                        | Fired when the effective zoom scale changes (1 = 100%).                                                                                                                                                                   |
-| `onPresentationChange`  | `(presenting: boolean) => void`                                  | Fired when presentation (fullscreen) mode is entered or exited.                                                                                                                                                           |
-| `onChange`              | `() => void`                                                     | Fired after any document mutation (move, resize, edit, undo, ...).                                                                                                                                                        |
-| `onDirtyChange`         | `(dirty: boolean) => void`                                       | Fired when the unsaved-edits flag flips (a save resets it).                                                                                                                                                               |
-| `onSelectionChange`     | `(elementId: string \| null) => void`                            | Fired when the selected element changes (`null` = no selection).                                                                                                                                                          |
-| `onAutosaveStatus`      | `(status: AutosaveStatus) => void`                               | Fired on every autosave lifecycle transition (`'idle' \| 'saving' \| 'saved' \| 'error'`).                                                                                                                                |
-| `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                               | Offered a recovery snapshot found on start; the host decides whether to restore it (see below).                                                                                                                           |
-| `onCollaborationStatus` | `(status: ConnectionStatus) => void`                             | Fired on every collaboration connection-status transition (`'disconnected' \| 'connecting' \| 'connected' \| 'error'`).                                                                                                   |
-| `onThemeChange`         | `(key: string) => void`                                          | Fired when a theme is selected via File > Options > Appearance (or a `setTheme` call matching a catalog entry). When supplied, the host owns persistence; otherwise the viewer uses `localStorage` (`pptx-viewer-prefs`). |
-| `onLocaleChange`        | `(code: string) => void`                                         | Fired when a language is selected via File > Options > Language (or any `setLocale` call). Same persistence rule as `onThemeChange`.                                                                                      |
-| `onToggleAutosave`      | `(enabled: boolean) => void`                                     | Fired when the title-bar AutoSave control enables or disables recovery autosave.                                                                                                                                          |
+| Callback                | Signature                                                        | Description                                                                                                                                                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onLoad`                | `(info: { slideCount: number; canvasSize: CanvasSize }) => void` | Fired after a presentation loads successfully.                                                                                                                                                                                                         |
+| `onError`               | `(message: string, error: unknown) => void`                      | Fired when a load fails (message is already localised/best-effort).                                                                                                                                                                                    |
+| `onSlideChange`         | `(index: number) => void`                                        | Fired when the active slide changes (zero-based index).                                                                                                                                                                                                |
+| `onZoomChange`          | `(scale: number) => void`                                        | Fired when the effective zoom scale changes (1 = 100%).                                                                                                                                                                                                |
+| `onPresentationChange`  | `(presenting: boolean) => void`                                  | Fired when presentation (fullscreen) mode is entered or exited.                                                                                                                                                                                        |
+| `onChange`              | `() => void`                                                     | Fired after any document mutation (move, resize, edit, undo, ...).                                                                                                                                                                                     |
+| `onDirtyChange`         | `(dirty: boolean) => void`                                       | Fired when the unsaved-edits flag flips (a save resets it).                                                                                                                                                                                            |
+| `onSelectionChange`     | `(elementId: string \| null) => void`                            | Fired when the selected element changes (`null` = no selection).                                                                                                                                                                                       |
+| `onAutosave`            | `(content: Uint8Array) => void`                                  | Fired with the serialised `.pptx` bytes after each recovery autosave snapshot is written.                                                                                                                                                              |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`                 | Fired with the changed fields when the user (or the AI assistant) changes the document properties.                                                                                                                                                     |
+| `onNotesUpdate`         | `(notes: string) => void`                                        | Fired with the new speaker-notes text after a notes edit.                                                                                                                                                                                              |
+| `onAutosaveStatus`      | `(status: AutosaveStatus) => void`                               | Fired on every autosave lifecycle transition (`'idle' \| 'saving' \| 'saved' \| 'error'`).                                                                                                                                                             |
+| `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                               | Offered a recovery snapshot found on start; the host decides whether to restore it (see below).                                                                                                                                                        |
+| `onCollaborationStatus` | `(status: ConnectionStatus) => void`                             | Fired on every collaboration connection-status transition (`'disconnected' \| 'connecting' \| 'connected' \| 'error'`).                                                                                                                                |
+| `onCollaborationChange` | `(state: CollaborationState) => void`                            | Fired with the shared state (`active`, `roomId`, `status`, `synced`, `people`) when a session starts or stops (the off state) and when status, synced or people change, also for a host-owned session. `getCollaborationState()` returns it on demand. |
+| `onThemeChange`         | `(key: string) => void`                                          | Fired when a theme is selected via File > Options > Appearance (or a `setTheme` call matching a catalog entry). When supplied, the host owns persistence; otherwise the viewer uses `localStorage` (`pptx-viewer-prefs`).                              |
+| `onLocaleChange`        | `(code: string) => void`                                         | Fired when a language is selected via File > Options > Language (or any `setLocale` call). Same persistence rule as `onThemeChange`.                                                                                                                   |
+| `onToggleAutosave`      | `(enabled: boolean) => void`                                     | Fired when the title-bar AutoSave control enables or disables recovery autosave.                                                                                                                                                                       |
+| `onContentChange`       | `(content: Uint8Array) => void`                                  | Fired with the serialised `.pptx` bytes after each committed edit. Serialising is asynchronous, so a burst of edits can deliver several snapshots in order.                                                                                            |
+| `onModeChange`          | `(mode: ViewerMode) => void`                                     | Fired when the viewer mode changes (`'preview'`, `'edit'`, `'present'`, `'master'`).                                                                                                                                                                   |
+| `onSlideCountChange`    | `(count: number) => void`                                        | Fired when the total slide count changes (slide added, deleted or a deck loaded).                                                                                                                                                                      |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void`                          | Fired when the user starts a session from the Share or Broadcast dialog.                                                                                                                                                                               |
+| `onStopCollaboration`   | `() => void`                                                     | Fired when the user stops a session from the Share or Broadcast dialog.                                                                                                                                                                                |
+| `onOpenFile`            | `() => void`                                                     | Host override for File > Open: the built-in picker is bypassed and the host supplies the deck through `loadFile`.                                                                                                                                      |
+| `onHyperlinkClick`      | `HyperlinkClickHandler`                                          | Fired before following a link; return `false` to cancel the default action.                                                                                                                                                                            |
 
 `AutosaveRecord` is `{ key: string; data: Uint8Array; timestamp: number; size: number }`; a typical
 recovery flow is `viewer.loadFile(record.data)`.
@@ -211,9 +249,20 @@ interface PptxViewerCallbacks {
 	onChange?: () => void;
 	onDirtyChange?: (dirty: boolean) => void;
 	onSelectionChange?: (elementId: string | null) => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
 	onAutosaveStatus?: (status: AutosaveStatus) => void;
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	onCollaborationChange?: (state: CollaborationState) => void;
+	onContentChange?: (content: Uint8Array) => void;
+	onModeChange?: (mode: ViewerMode) => void;
+	onSlideCountChange?: (count: number) => void;
+	onStartCollaboration?: (config: CollaborationConfig) => void;
+	onStopCollaboration?: () => void;
+	onOpenFile?: () => void;
+	onHyperlinkClick?: HyperlinkClickHandler;
 }
 
 interface PptxViewerOptions extends PptxViewerCallbacks {
@@ -222,6 +271,9 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	theme?: ViewerTheme;
 	fileName?: string;
 	locale?: string;
+	defaultLocale?: string;
+	defaultThemeKey?: string;
+	authorName?: string;
 	messages?: TranslationMessages;
 	availableThemes?: readonly ThemeCatalogEntry[];
 	availableLocales?: readonly LocaleCatalogEntry[];
@@ -236,6 +288,10 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	showCompatibilityToasts?: boolean;
 	showFormatToolbar?: boolean;
 	showInspector?: boolean;
+	inspectorInitiallyOpen?: boolean;
+	rulerUnit?: RulerUnit;
+	customization?: ViewerCustomization;
+	ribbonAddIns?: readonly RibbonAddInTab[];
 	hiddenActions?: ToolbarActionId[];
 	registry?: ElementRendererRegistry;
 	smartArt3D?: boolean;
@@ -249,7 +305,7 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	onToggleAutosave?: (enabled: boolean) => void;
 	autosaveIntervalMs?: number;
 	autosaveFilePath?: string;
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	shareDefaults?: ShareDefaults;
 }
 ```

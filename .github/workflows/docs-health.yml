@@ -1,0 +1,80 @@
+name: Docs health
+
+# Runs scripts/check-docs.mjs weekly and keeps one issue labelled `docs-health` listing what it
+# found: dead relative links, repository paths that no longer exist, stale terms, dead VitePress
+# sidebar links (errors), and orphan pages, dead anchors and translation lag (warnings). External
+# links are checked separately by links.yml. Weekly rather than per PR: it is a drift report, and
+# the same script runs locally with `bun run docs:check`.
+on:
+  schedule:
+    - cron: '23 6 * * 1' # weekly
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Translation lag compares each page's last commit, so it needs the whole history.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check the documentation
+        id: check
+        run: |
+          mkdir -p docs-health
+          status=0
+          node scripts/check-docs.mjs --out docs-health/report.md || status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          cat docs-health/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the docs-health issue up to date
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          EXIT_CODE: ${{ steps.check.outputs.exit_code }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const report = fs.readFileSync('docs-health/report.md', 'utf8');
+            // Errors exit non-zero; warnings alone still deserve the issue.
+            const findings = process.env.EXIT_CODE !== '0' || !/^## .*\n\n0 error\(s\), 0 warning\(s\)/.test(report);
+            const [existing] = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo,
+              labels: 'docs-health',
+              state: 'open',
+              per_page: 100,
+            });
+            if (findings) {
+              // An issue body holds at most 65,536 characters.
+              const head = `The weekly documentation check found drift. Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nReproduce locally with \`bun run docs:check\`.\n\n`;
+              const body = head + report.slice(0, 60_000 - head.length);
+              if (existing) {
+                await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+              } else {
+                await github.rest.issues.create({
+                  ...context.repo,
+                  title: 'Documentation has drifted from the code',
+                  labels: ['docs-health', 'documentation'],
+                  body,
+                });
+              }
+            } else if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: existing.number,
+                body: 'The latest documentation check found nothing.',
+              });
+              await github.rest.issues.update({
+                ...context.repo,
+                issue_number: existing.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+            }

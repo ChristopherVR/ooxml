@@ -34,6 +34,7 @@ import type {
 import { AccountPageComponent } from './account-page.component';
 import { BackstageNavIconComponent } from './backstage-nav-icon.component';
 import { injectResolvedCustomization } from './viewer-customization.service';
+import { ViewerFileIOService } from './viewer-file-io.service';
 import { ViewerRegionHostComponent } from './viewer-region-host.component';
 import { ViewerRegionService } from './viewer-region.service';
 
@@ -109,6 +110,8 @@ export class RibbonFileSectionComponent {
 	readonly openFile = output<void>();
 	readonly openRecentFile = output<string>();
 	readonly save = output<void>();
+	/** The Save As > PowerPoint Presentation (.pptx) card (Save itself is {@link save}). */
+	readonly savePptx = output<void>();
 	readonly savePpsx = output<void>();
 	readonly savePptm = output<void>();
 	readonly savePpt = output<void>();
@@ -142,6 +145,8 @@ export class RibbonFileSectionComponent {
 	protected readonly templates = BACKSTAGE_TEMPLATES;
 	private readonly customization = injectResolvedCustomization();
 	private readonly regions = inject(ViewerRegionService, { optional: true });
+	/** The viewer's file IO, for the host `storage` its Recent list reads (absent standalone). */
+	private readonly fileIO = inject(ViewerFileIOService, { optional: true });
 	/** Built-in pages (customised) then the host's `backstage.extraPages`. */
 	private readonly navEntries = computed<BackstageNavEntry[]>(() =>
 		backstageNavEntries(
@@ -217,7 +222,13 @@ export class RibbonFileSectionComponent {
 
 	constructor() {
 		void (async () =>
-			this.recent.set(await listBackstageRecentFiles(this.t, this.recentPresentationsCount())))();
+			this.recent.set(
+				await listBackstageRecentFiles(
+					this.t,
+					this.recentPresentationsCount(),
+					this.fileIO?.storage(),
+				),
+			))();
 	}
 
 	protected date(timestamp: number): string {
@@ -268,7 +279,7 @@ export class RibbonFileSectionComponent {
 			embedFonts: this.openFontEmbedding,
 			signatures: this.signatures,
 			versionHistory: this.openVersionHistory,
-			saveAsPptx: this.save,
+			saveAsPptx: this.savePptx,
 			saveAsPpsx: this.savePpsx,
 			saveAsPptm: this.savePptm,
 			saveAsPpt: this.savePpt,

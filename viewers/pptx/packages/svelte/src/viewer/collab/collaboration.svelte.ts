@@ -8,14 +8,19 @@
  */
 import type {
 	CollaborationConfig,
+	CollaborationState,
 	CollabLoadOrigin,
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
 import {
+	buildCollaborationState,
+	writeBackReport,
 	DEFAULT_CURSOR_COLOR,
 	isMixedContentBlocked,
+	needsOwnedSession,
+	openOwnedCollaboration,
 	resolveTransportForServerUrl,
 	validateRoomId,
 } from 'ooxml-ui/pptx';
@@ -53,6 +58,8 @@ export class CollaborationController {
 	#startedByEffect = false;
 	#startToken = 0;
 	#restoreExternalPresence: (() => void) | null = null;
+	/** Destroys the session this controller opened itself (a provider or same-browser room). */
+	#releaseOwned: (() => void) | null = null;
 	#connectTimer: ReturnType<typeof setTimeout> | null = null;
 	readonly #document: CollaborationDocument;
 	readonly #presence: CollaborationPresence;
@@ -108,6 +115,21 @@ export class CollaborationController {
 	 * Share dialog's active view reads the local user's name/colour from this. */
 	get activeCollaboration(): CollaborationConfig | null {
 		return this.#config;
+	}
+	/** The shared `CollaborationState` a host reads (`oncollaborationchange`), reactive. */
+	get state(): CollaborationState {
+		const config = this.#config;
+		return buildCollaborationState({
+			active: this.#active,
+			roomId: config?.roomId,
+			status: this.status,
+			synced: this.#document.synced,
+			clientId: this.#presence.selfClientId,
+			userName: config?.userName,
+			userColor: config ? (config.userColor ?? DEFAULT_CURSOR_COLOR) : undefined,
+			remoteUsers: this.remotePresences,
+			writeBack: writeBackReport(config, this.#document.writeBack),
+		});
 	}
 	/** Total connected participants (self + remote peers), reactive. */
 	get connectedCount(): number {
@@ -175,17 +197,37 @@ export class CollaborationController {
 		await this.#run(config);
 	}
 
-	async #run(config: CollaborationConfig): Promise<void> {
+	async #run(requested: CollaborationConfig): Promise<void> {
 		this.stop();
 		const token = ++this.#startToken;
-		this.#config = config;
-		this.#document.begin(config);
+		this.#config = requested;
+		this.#document.begin(requested);
+		let config = requested;
 		try {
-			validateRoomId(config.roomId);
+			validateRoomId(requested.roomId);
 		} catch {
 			this.stop();
 			this.status = 'error';
 			return;
+		}
+		if (needsOwnedSession(requested)) {
+			this.status = 'connecting';
+			const owned = openOwnedCollaboration(requested);
+			this.#releaseOwned = owned.release;
+			try {
+				const prepared = await owned.ready;
+				if (token !== this.#startToken || !prepared) {
+					return;
+				}
+				config = prepared;
+				this.#document.begin(config);
+			} catch {
+				if (token === this.#startToken) {
+					this.stop();
+					this.status = 'error';
+				}
+				return;
+			}
 		}
 		const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
 		// Mixed-content only affects a ws:// socket from an https page.
@@ -285,6 +327,8 @@ export class CollaborationController {
 		this.#presence.stop();
 		this.#restoreExternalPresence?.();
 		this.#restoreExternalPresence = null;
+		this.#releaseOwned?.();
+		this.#releaseOwned = null;
 		this.#session?.destroy();
 		this.#session = null;
 		this.#provider = null;

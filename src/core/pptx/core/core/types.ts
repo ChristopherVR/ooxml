@@ -107,6 +107,18 @@ export class ZipBombError extends Error {
 /** Output format for the save pipeline. */
 export type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
 
+/**
+ * Rasterises SVG bytes to PNG for a `.ppt` save (the binary format has no SVG
+ * picture). `sizeFor` maps the SVG's intrinsic size in pixels (0 when it
+ * declares none) to the raster size the writer wants. Resolve `undefined`
+ * when the SVG cannot be rasterised; the writer then writes a placeholder
+ * with a warning. `ooxml-core/pptx/node` exports one for Node.js.
+ */
+export type PptxSvgRasterizer = (
+	svg: Uint8Array,
+	sizeFor: (intrinsicWidth: number, intrinsicHeight: number) => { width: number; height: number },
+) => Promise<Uint8Array | undefined>;
+
 export interface PptxHandlerSaveOptions {
 	headerFooter?: PptxHeaderFooter;
 	presentationProperties?: PptxPresentationProperties;
@@ -219,6 +231,15 @@ export interface PptxHandlerSaveOptions {
 	 * already-produced package.
 	 */
 	pptPassword?: string;
+	/**
+	 * Rasteriser for SVG pictures with no raster fallback in a `'ppt'`-format
+	 * save; ignored for every other {@link outputFormat}. When omitted the
+	 * writer uses the DOM's own SVG renderer, and in a runtime without one
+	 * (Node.js) writes a placeholder with a `ppt-image-format-unsupported`
+	 * warning. In Node.js pass `rasterizeSvgInNode` from
+	 * `ooxml-core/pptx/node` (it needs the optional Node canvas peer).
+	 */
+	rasterizeSvg?: PptxSvgRasterizer;
 	/**
 	 * Embedded fonts to write back (or add) to the saved PPTX.
 	 *

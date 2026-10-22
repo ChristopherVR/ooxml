@@ -103,6 +103,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	return (
 		<div
 			role='toolbar'
+			data-pptx-scope=''
 			data-pptx-chrome='ribbon'
 			aria-label={t('pptx.toolbar.presentationToolbarAria')}
 			className='relative z-20 border-b border-border bg-secondary/50 overflow-visible'
@@ -205,6 +206,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							onExportVideo={p.onExportVideo}
 							onExportGif={p.onExportGif}
 							onExportJson={p.onExportJson}
+							onSave={p.onSave}
 							onSaveAsPptx={p.onSaveAsPptx}
 							onSaveAsPpsx={p.onSaveAsPpsx}
 							onSaveAsPptm={p.onSaveAsPptm}

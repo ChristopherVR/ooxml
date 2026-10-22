@@ -29,6 +29,7 @@ export type RibbonGalleryPreviewEvent = CustomEvent<{ gallery: string; itemId: s
 /** The preview stopped (`gallery-preview-end`): leave, close or pick. */
 export type RibbonGalleryPreviewEndEvent = CustomEvent<{ gallery: string }>;
 export interface PptxUiRibbonGalleryElement extends HTMLElement {
+	/** The dropdown or More button; a panel (`mode="panel"`) has none. */
 	readonly trigger: HTMLButtonElement;
 	readonly popup: HTMLElement;
 	descriptor: RibbonGalleryDescriptor | undefined;
@@ -194,8 +195,10 @@ export function definePptxRibbonGallery(registry: CustomElementRegistry): void {
 				this.#descriptor ? officeGalleryState(this.#descriptor, this.#t) : undefined,
 			);
 			// The shared element mounts its view only once connected; pptx hosts (vanilla builds
-			// the whole ribbon detached) populate and query galleries before insertion.
-			const view = this.trigger.parentElement;
+			// the whole ribbon detached) populate and query galleries before insertion. A panel
+			// (`mode="panel"`) has no trigger: its root is the tile panel itself.
+			const trigger = this.trigger as HTMLButtonElement | null;
+			const view = trigger ? trigger.parentElement : this.querySelector('.gallery-panel');
 			if (this.#descriptor && !this.isConnected && view && view.parentElement !== this) {
 				this.append(view);
 			}

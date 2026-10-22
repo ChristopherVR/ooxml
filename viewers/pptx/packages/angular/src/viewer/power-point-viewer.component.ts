@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	autosaveStatusKind,
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
 	attachViewerHyperlinks,
@@ -29,11 +30,12 @@ import {
 	elementPictureFilename,
 	endAudienceDisplay,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
-	listAutosaveSnapshots,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
 	observeElementHeight,
 	readBackstageRecentFile,
+	SAVE_FAILED_TOAST,
+	saveFailureMessage,
 	readStoredViewerPrefs,
 	findCanvasElementNode,
 	recoverySnapshotIntent,
@@ -41,7 +43,6 @@ import {
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveAuthoredSlideRange,
-	resolveExpiredAutosaveSnapshots,
 	resolveInitialSlideIndex,
 	resolveThemeCatalogEntry,
 	resolveViewerRootOptions,
@@ -53,12 +54,18 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 	THEME_CATALOG,
+	createCollaborationStateReporter,
+	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	AutosaveRecord,
+	CollaborationState,
+	DocumentStorage,
+	ConnectionStatus,
 	ElementUpdate,
 	ElementUpdateOptions,
 	AccountAuthConfig,
@@ -71,6 +78,7 @@ import type {
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerMode,
 	ViewerQuickAccessOptions,
@@ -174,6 +182,7 @@ import { RecentColorsService } from './recent-colors.service';
 import { RehearseTimingsComponent } from './rehearse-timings.component';
 import { RemoteSelectionOverlayComponent } from './remote-selection-overlay.component';
 import { Rendering3DService } from './rendering-3d.service';
+import { reportOnChange } from './report-on-change';
 import { ReviewCommentsNavigationService } from './review-comments-navigation.service';
 import { RibbonAddInsService } from './ribbon-add-ins.service';
 import {
@@ -202,7 +211,7 @@ import { ThemeEditorFieldsComponent } from './theme-editor-fields.component';
 import { ThemeGalleryComponent } from './theme-gallery.component';
 import { resolveBelowRibbonQuickAccess, TitleBarComponent } from './title-bar.component';
 import { mergeHiddenActions } from './toolbar-visibility';
-import type { CollaborationConfig } from './types';
+import type { CollaborationConfig, CollaborationInput } from './types';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 import { ViewerCollabCursorService } from './viewer-collab-cursor.service';
 import { ViewerCollaborationSessionService } from './viewer-collaboration-session.service';
@@ -253,6 +262,8 @@ const noopClose = (): void => undefined;
 @Component({
 	selector: 'pptx-viewer',
 	standalone: true,
+	// The scoped Tailwind reset of the viewer stylesheet applies inside this element only.
+	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [...POWER_POINT_VIEWER_PROVIDERS],
 	imports: [
@@ -399,7 +410,7 @@ const noopClose = (): void => undefined;
 							[hiddenActions]="effectiveHiddenActions()"
 							[quickAccess]="customizationService.quickAccess(viewerOpts.options().quickAccess)"
 							(toggleAutosave)="toggleAutosave()"
-							(save)="fileIO.saveAsPptx()"
+							(save)="fileIO.save()"
 							(undo)="editor.undo()"
 							(redo)="editor.redo()"
 							(quickCommand)="onQuickAccessCommand($event)"
@@ -449,7 +460,8 @@ const noopClose = (): void => undefined;
 						(openFile)="fileIO.openFile()"
 						(openRecentFile)="onOpenRecentFile($event)"
 						(createPresentation)="onCreatePresentation($event)"
-						(save)="fileIO.saveAsPptx()"
+						(save)="fileIO.save()"
+						(savePptx)="fileIO.saveAsPptx()"
 						(savePpsx)="fileIO.saveAsPpsx()"
 						(savePptm)="fileIO.saveAsPptm()"
 						(savePpt)="fileIO.saveAsPpt()"
@@ -547,7 +559,7 @@ const noopClose = (): void => undefined;
 						(undo)="editor.undo()"
 						(redo)="editor.redo()"
 						(share)="session.showShare.set(true)"
-						(save)="fileIO.saveAsPptx()"
+						(save)="fileIO.save()"
 						(present)="presentationMode.present()"
 					/>
 				}
@@ -1235,9 +1247,9 @@ const noopClose = (): void => undefined;
 			     action-button clicks. The offer is deferred, not dropped. -->
 			<pptx-autosave-recovery-dialog
 				[prompt]="visibleRecoveryPrompt()"
-				[discarding]="autosaveRecovery.discarding()"
-				(restore)="autosaveRecovery.restore()"
-				(discard)="autosaveRecovery.discard()"
+				[discarding]="recoveryOffer.discarding()"
+				(restore)="recoveryOffer.restore()"
+				(discard)="recoveryOffer.discard()"
 			/>
 
 			@if (canEdit() && customizationService.dialogAvailable('hyperlink')) {
@@ -1465,6 +1477,8 @@ export class PowerPointViewerComponent
 	});
 	/** Whether editing actions are enabled (host input; see {@link canEdit}). */
 	readonly canEditInput = input<boolean>(false, { alias: 'canEdit' });
+	/** Makes the deck read-only; true wins over `canEdit`, false only lifts this restriction. */
+	readonly readOnlyInput = input<boolean>(false, { alias: 'readOnly' });
 	/** Fired before following a link; return false to cancel its default action. */
 	readonly onHyperlinkClick = input<import('ooxml-ui/pptx').HyperlinkClickHandler>();
 	/** Optional class applied to the root element. */
@@ -1542,8 +1556,16 @@ export class PowerPointViewerComponent
 	 * "Save AutoRecover information every N minutes" (two minutes by default).
 	 */
 	readonly autosaveIntervalMs = input<number | undefined>(undefined);
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	readonly storage = input<DocumentStorage | undefined>(undefined);
 	/** Optional real-time collaboration config; when set, connects and shows remote cursors. */
-	readonly collaboration = input<CollaborationConfig | undefined>(undefined);
+	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	/**
 	 * Display name for the local user in collaboration/broadcast sessions and
 	 * presence avatars. Falls back to "You" (cursors/avatars) and "Presenter"
@@ -1733,6 +1755,32 @@ export class PowerPointViewerComponent
 	readonly propertiesChange = output<Partial<PptxCoreProperties>>();
 	/** Fired when the viewer mode changes (preview, edit, present, master). */
 	readonly modeChange = output<ViewerMode>();
+	/**
+	 * Fired after any committed document edit (move, resize, text, undo, redo, ...). Named
+	 * `documentChange` rather than `change`: an output called `change` would also receive the
+	 * native `change` events of the inputs inside the viewer.
+	 */
+	readonly documentChange = output<void>();
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	readonly presentationChange = output<boolean>();
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	readonly notesUpdate = output<string>();
+	/**
+	 * Fired with the serialised deck each time a recovery autosave snapshot is written. Named
+	 * `autosaved` because the `autosave` input already owns that name on this component.
+	 */
+	readonly autosaved = output<Uint8Array>();
+	/** Fired when the user enables or disables autosave (title bar or File > Options). */
+	readonly autosaveToggle = output<boolean>();
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	readonly autosaveStatus = output<ViewerAutosaveStatus>();
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	readonly autosaveRecovery = output<AutosaveRecord>();
+	/** Fired on every collaboration connection-status transition. */
+	readonly collaborationStatus = output<ConnectionStatus>();
 	/** Fired when the zoom level changes. */
 	readonly zoomChange = output<number>();
 	/** Fired when element selection changes. */
@@ -1747,6 +1795,12 @@ export class PowerPointViewerComponent
 	readonly startCollaboration = output<CollaborationConfig>();
 	/** Fired when the collaboration/broadcast session stops. Mirrors React/Vue. */
 	readonly stopCollaboration = output<void>();
+	/**
+	 * Fired with the shared `CollaborationState` when a session starts or stops (the off
+	 * state) and when its status, synced flag or people change. Viewer-owned and host-owned
+	 * (`collaboration.session`) sessions both report; unchanged states are not repeated.
+	 */
+	readonly collaborationChange = output<CollaborationState>();
 	/** Fired each time a presentation finishes loading without an error. */
 	readonly load = output<ViewerLoadDetail>();
 	/** Fired once per distinct load failure, with a human-readable message. */
@@ -1786,7 +1840,7 @@ export class PowerPointViewerComponent
 	protected readonly collab = inject(CollaborationService);
 	protected readonly accessibility = inject(AccessibilityService);
 	protected readonly autosave = inject(AutosaveService);
-	protected readonly autosaveRecovery = inject(AutosaveRecoveryService);
+	protected readonly recoveryOffer = inject(AutosaveRecoveryService);
 	protected readonly print = inject(PrintService);
 	protected readonly mobile = inject(IsMobileService);
 	private readonly rendering3D = inject(Rendering3DService);
@@ -1898,6 +1952,7 @@ export class PowerPointViewerComponent
 	protected readonly hasEditPermission = computed(
 		() =>
 			this.canEditInput() &&
+			!this.readOnlyInput() &&
 			this.customizationService.editingAllowed() &&
 			(!this.viewerOpts.options().trust.openInProtectedView || this.protectedViewDismissed()) &&
 			!this.loadNotices.lockActive(),
@@ -1911,6 +1966,7 @@ export class PowerPointViewerComponent
 	protected readonly protectedViewActive = computed(
 		() =>
 			this.canEditInput() &&
+			!this.readOnlyInput() &&
 			this.customizationService.editingAllowed() &&
 			this.viewerOpts.options().trust.openInProtectedView &&
 			!this.protectedViewDismissed(),
@@ -2096,7 +2152,7 @@ export class PowerPointViewerComponent
 
 	/** The recovery offer, or null while a slide show is running. */
 	protected readonly visibleRecoveryPrompt = computed(() => {
-		const prompt = this.autosaveRecovery.prompt();
+		const prompt = this.recoveryOffer.prompt();
 		return shouldShowAutosaveRecoveryPrompt({
 			prompt,
 			presenting: this.presentationMode.presenting(),
@@ -2338,6 +2394,9 @@ export class PowerPointViewerComponent
 		setCoreProperties: (props) => {
 			this.loader.coreProperties.set(props);
 			this.editor.dirty.set(true);
+			if (props) {
+				this.propertiesChange.emit(props);
+			}
 		},
 		setAppProperties: (props) => {
 			this.loader.appProperties.set(props);
@@ -2715,9 +2774,15 @@ export class PowerPointViewerComponent
 		// tracking those would re-run this effect mid-connect (e.g. when a guest's
 		// placeholder deck loads) and double-join the Yjs room.
 		effect(() => {
-			const config = this.collaboration();
+			const config = resolveCollaborationConfig(this.collaboration());
 			untracked(() => this.session.syncHostConfig(config));
 		});
+
+		// Report the shared CollaborationState, once per real change.
+		const collaborationReporter = createCollaborationStateReporter((state) =>
+			this.collaborationChange.emit(state),
+		);
+		effect(() => collaborationReporter.update(this.collab.state()));
 
 		// Push local slide edits into the shared Y.Doc (reconcile-based; the
 		// service guards against echoing remote-applied changes and against
@@ -2941,11 +3006,18 @@ export class PowerPointViewerComponent
 				password: this.dialogs.presentationPassword(),
 				passwordProtected: this.dialogs.isPasswordProtected(),
 			}),
+			storage: () => this.storage(),
+			fileName: () => this.fileName(),
+			// A failed Save / Save As: the host's `error` output, and the save-failed notice.
+			onSaveError: (saveError) => {
+				this.error.emit(saveFailureMessage(saveError));
+				this.loadNotices.notify(SAVE_FAILED_TOAST);
+			},
 			afterSuccessfulSave: (format) => {
 				this.viewerOpts.playFeedback();
 				const filePath = this.filePath();
 				if (format === 'pptx' && filePath && this.viewerOpts.shouldDiscardAutosaveOnSave()) {
-					void deleteAutosaveSnapshot(filePath).catch(() => {
+					void deleteAutosaveSnapshot(filePath, this.storage()).catch(() => {
 						// Saving succeeded; recovery cleanup is best-effort here.
 					});
 				}
@@ -2985,15 +3057,11 @@ export class PowerPointViewerComponent
 
 		// File > Options > Save > "cache retention": a one-time sweep per mount is
 		// enough, since a fresh snapshot only ever lands with a fresh timestamp.
-		void (async () => {
-			try {
-				const snapshots = await listAutosaveSnapshots();
-				const expired = resolveExpiredAutosaveSnapshots(snapshots, this.viewerOpts.options());
-				await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-			} catch {
-				// Best-effort background maintenance; a blocked IndexedDB skips it.
-			}
-		})();
+		// With a host recovery store it sweeps that store, only when it lists its copies.
+		this.viewerOpts.bindStorage(() => this.storage());
+		void this.viewerOpts.pruneExpiredCache().catch(() => {
+			// Best-effort background maintenance; a blocked store skips it.
+		});
 
 		// File > Options > Save > "clear cache on close": also cover the viewer
 		// being destroyed without a page unload (the `beforeunload` listener
@@ -3014,6 +3082,7 @@ export class PowerPointViewerComponent
 			activeSlide: () => this.activeSlide(),
 			activeSlideIndex: () => this.activeSlideIndex(),
 			activeTemplateElements: () => this.activeTemplateElements(),
+			notesUpdated: (notes) => this.notesUpdate.emit(notes),
 		});
 		effect(() => {
 			if (!this.canEdit()) {
@@ -3064,14 +3133,16 @@ export class PowerPointViewerComponent
 		// Offer a crash-recovery snapshot back once the deck has loaded. Angular
 		// wrote snapshots and never looked for one again, so the feature was
 		// invisible to the user; the decision and the copy are the shared ones.
-		this.autosaveRecovery.bind({
+		this.recoveryOffer.bind({
 			filePath: () => this.filePath(),
 			fileName: () => this.fileName(),
+			storage: () => this.storage(),
 			loading: () => this.loader.loading(),
 			error: () => this.loader.error(),
 			slideCount: () => this.displaySlidesMut().length,
 			autosaveAllowed: () => this.autosaveInput() !== false,
 			restore: (bytes) => this.fileIO.contentOverride.set(bytes),
+			offered: (record) => this.autosaveRecovery.emit(record),
 		});
 
 		// Hand the autosave engine the reactive accessors it reads (enabled toggle,
@@ -3081,8 +3152,10 @@ export class PowerPointViewerComponent
 			enabled: () => this.autosaveActivation().active,
 			disabledReason: () => this.autosaveActivation().reason,
 			filePath: () => this.filePath(),
+			storage: () => this.storage(),
 			isDirty: () => this.editor.dirty(),
 			serialize: () => this.serializeForAutosave(),
+			saved: (data) => this.autosaved.emit(data),
 			// Host input first (an explicit policy), else Options > Save > "Save
 			// AutoRecover information every N minutes", else the shared 120s.
 			intervalMs: () =>
@@ -3102,6 +3175,23 @@ export class PowerPointViewerComponent
 				this.dialogs.isPasswordProtected(),
 			],
 		});
+
+		// Host events that describe a transition. Registered last so they see the settled
+		// state (including preferences hydrated from the stored options), not the initial one.
+		reportOnChange(
+			() => this.editor.editRevision(),
+			() => this.documentChange.emit(),
+		);
+		reportOnChange(
+			() => this.presentationMode.presenting(),
+			(presenting) => this.presentationChange.emit(presenting),
+		);
+		reportOnChange(this.autosaveEnabled, (enabled) => this.autosaveToggle.emit(enabled));
+		reportOnChange(
+			() => autosaveStatusKind(this.autosave.status()),
+			(status) => this.autosaveStatus.emit(status),
+		);
+		reportOnChange(this.collab.status, (status) => this.collaborationStatus.emit(status));
 	}
 
 	/**
@@ -3426,7 +3516,7 @@ export class PowerPointViewerComponent
 
 	protected onOpenRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key);
+			const bytes = await readBackstageRecentFile(key, this.storage());
 			if (bytes) {
 				this.fileIO.contentOverride.set(bytes);
 			}

@@ -17,6 +17,8 @@ export interface TitleBar {
 	setFileName(name: string): void;
 	setSaveState(state: SaveState): void;
 	setReadOnly(readOnly: boolean): void;
+	/** Quick Access commands (`save`) a host capability removed. */
+	setHiddenCommands(ids: Iterable<string>): void;
 	/** Redraws every label after the editor locale changed. */
 	relocalize(): void;
 }
@@ -72,7 +74,12 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 	const element = document.createElement('office-ui-title-bar') as TitleBarElement;
 	element.className = 'dve-titlebar';
 
-	const model = { fileName: '', saveState: 'saved' as SaveState, readOnly: false };
+	const model = {
+		fileName: '',
+		saveState: 'saved' as SaveState,
+		readOnly: false,
+		hidden: new Set<string>() as ReadonlySet<string>,
+	};
 	/** The "Tell me" matches of the last query, by the id the bar reports back. */
 	let found = new Map<string, HTMLElement>();
 
@@ -97,7 +104,7 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 					quick('save', 'save', 'Save'),
 					quick('undo', 'undo', 'Undo', model.readOnly),
 					quick('redo', 'redo', 'Redo', model.readOnly),
-				],
+				].filter((item) => !model.hidden.has(item.id)),
 			},
 			search: {
 				placeholder: prompt,
@@ -148,6 +155,10 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 		},
 		setReadOnly(readOnly) {
 			model.readOnly = readOnly;
+			render();
+		},
+		setHiddenCommands(ids) {
+			model.hidden = new Set(ids);
 			render();
 		},
 		relocalize: render,

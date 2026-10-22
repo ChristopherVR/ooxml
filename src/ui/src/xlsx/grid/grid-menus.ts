@@ -3,6 +3,7 @@
 import { MAX_COL, MAX_ROW, rangeContains, validationAt } from 'ooxml-core/xlsx';
 import { cellMenu, columnHeaderMenu, openContextMenu, rowHeaderMenu } from '../context-menu/index';
 import type { GridView } from './grid-view';
+import { hostMenu } from '../customization';
 
 export type MenuKind = 'cell' | 'row' | 'col';
 
@@ -68,7 +69,11 @@ export function openGridMenu(
 			hasList: rule?.type === 'list',
 		});
 	}
-	openContextMenu(ctx, entries, x, y, { restoreFocus: refocus });
+	const menu = kind === 'col' ? 'column' : kind;
+	openContextMenu(ctx, entries, x, y, {
+		restoreFocus: refocus,
+		...hostMenu(ctx, menu, view.sheetIndex()),
+	});
 }
 
 /** Opens the menu for the active cell's position (keyboard). */

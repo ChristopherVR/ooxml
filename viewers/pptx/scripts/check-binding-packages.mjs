@@ -1,6 +1,8 @@
 /**
  * Install the npm-packed UI bindings without workspace links and import each
- * public entry from an isolated Node consumer. Run after all package builds.
+ * public entry from an isolated Node consumer, then bundle every browser entry
+ * of the bindings for the browser and fail if one reaches a Node-only module.
+ * Run after all package builds.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -9,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
 import { toPublishManifest, readWorkspacePackages } from './publish-manifest.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -191,6 +194,14 @@ for (const { name, entry } of ${JSON.stringify(cjsBindings.map(({ name, entry })
 `,
 	);
 	run(process.execPath, ['consumer.cjs'], consumer);
+
+	// A web host bundles the same packages for the browser, with no Node fallbacks. The core and
+	// UI packages get the same check in their own package smoke tests.
+	const browserEntries = await assertNoNodeOnlyModules({
+		root: consumer,
+		packages: packages.map(({ name }) => name),
+	});
+	console.log(`[binding-pack] ${browserEntries} browser entries reach no Node-only module`);
 } finally {
 	rmSync(temporary, { recursive: true, force: true });
 }

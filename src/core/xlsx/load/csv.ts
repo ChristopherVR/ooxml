@@ -3,9 +3,10 @@
 // detection between comma, semicolon and tab.
 import { usedRange } from '../cells';
 import type { Cell, Workbook } from '../model';
-import { formatValue, parseCellInput, type ParsedInput } from '../numfmt/index';
+import { formatValue } from '../numfmt/index';
 import { styleAt, internStyle } from '../styles';
 import { createWorkbook } from '../workbook';
+import { createFieldReader, type CsvImportOptions } from './csv-import';
 
 export interface CsvOptions {
 	/** Field delimiter; detected from the text when omitted. */
@@ -123,7 +124,7 @@ export function sheetNameFromFileName(fileName: string | undefined): string {
 	return trimmed && trimmed.toLowerCase() !== 'history' ? trimmed : 'Sheet1';
 }
 
-export interface CsvWorkbookOptions extends CsvOptions {
+export interface CsvWorkbookOptions extends CsvOptions, CsvImportOptions {
 	sheetName?: string;
 	/**
 	 * Treat fields starting with `=` as formulas, as Excel does when it opens a CSV. Off by
@@ -134,15 +135,19 @@ export interface CsvWorkbookOptions extends CsvOptions {
 }
 
 /**
- * A one-sheet workbook from CSV text. Each field goes through `parseCellInput`, so numbers,
- * dates, percentages, booleans and errors become typed cells as Excel opens them; `=` fields
- * become formulas only with `formulas: true` and are text otherwise.
+ * A one-sheet workbook from CSV text. Each field of a General column goes through
+ * `parseCellInput`, so numbers, dates, percentages, booleans and errors become typed cells as
+ * Excel opens them; `=` fields become formulas only with `formulas: true` and are text otherwise.
+ * The {@link CsvImportOptions} turn single conversions off, set column formats (text, a date
+ * order, skip) and the number separators; conversions that change data are reported in
+ * `workbook.warnings`. Throws `RangeError` for invalid options.
  */
 export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): Workbook {
 	const workbook = createWorkbook({ sheets: [options.sheetName ?? 'Sheet1'] });
 	workbook.format = 'csv';
 	const sheet = workbook.sheets[0];
 	if (!sheet) return workbook;
+	const reader = createFieldReader(options, workbook.date1904);
 	const base = styleAt(workbook, 0);
 	const formats = new Map<string, number>();
 	const rows = parseCsv(
@@ -150,10 +155,11 @@ export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): W
 		options.delimiter === undefined ? {} : { delimiter: options.delimiter },
 	);
 	rows.forEach((fields, row) => {
-		fields.forEach((field, col) => {
+		fields.forEach((field, source) => {
 			if (field === '') return;
-			const parsed: ParsedInput =
-				!options.formulas && field.startsWith('=') ? { value: field } : parseCellInput(field);
+			const col = reader.target(source);
+			if (col < 0) return;
+			const parsed = reader.read(field, row, source);
 			const cell: Cell = { value: parsed.value };
 			if (parsed.formula !== undefined) cell.formula = parsed.formula;
 			if (parsed.numFmt && parsed.numFmt !== 'General') {
@@ -172,6 +178,7 @@ export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): W
 			cells.set(col, cell);
 		});
 	});
+	workbook.warnings.push(...reader.warnings());
 	return workbook;
 }
 

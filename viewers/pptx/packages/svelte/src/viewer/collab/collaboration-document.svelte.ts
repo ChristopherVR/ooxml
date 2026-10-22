@@ -1,8 +1,10 @@
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
+	SyncGate,
 	YDocLike,
 	YjsFactories,
 } from 'ooxml-ui/pptx';
@@ -26,7 +28,21 @@ import {
 export class CollaborationDocument {
 	readOnly = $state(false);
 	readonly livePatcher = createCollaborationLivePatcher();
-	readonly gate = createSyncGate(() => this.flush());
+	/** True once the first-write gate is open (the first exchange with the room finished). */
+	synced = $state(false);
+	/** The owner's write-back status, as the scheduler reports it (reactive). */
+	writeBack = $state<CollaborationWriteBackState | undefined>(undefined);
+	readonly #baseGate = createSyncGate(() => {
+		this.synced = true;
+		this.flush();
+	});
+	readonly gate: SyncGate = {
+		...this.#baseGate,
+		reset: () => {
+			this.#baseGate.reset();
+			this.synced = false;
+		},
+	};
 	readonly #deps: CollaborationDeps;
 	readonly #setStatus: (status: ConnectionStatus) => void;
 	#doc: YDocLike | null = null;
@@ -40,6 +56,9 @@ export class CollaborationDocument {
 		getYDoc: () => this.#doc,
 		getSourceBytes: () => this.#deps.getSourceBytes?.() ?? null,
 		getSaveOptions: () => this.#deps.getSaveOptions?.(),
+		onWriteBackStatus: () => {
+			this.writeBack = this.#writeBack.getState();
+		},
 	});
 	constructor(deps: CollaborationDeps, setStatus: (status: ConnectionStatus) => void) {
 		this.#deps = deps;
@@ -146,6 +165,7 @@ export class CollaborationDocument {
 		this.#unobserve?.();
 		this.#unobserve = null;
 		this.#writeBack.cancel();
+		this.writeBack = undefined;
 		this.gate.reset();
 		this.livePatcher.configure(null, null);
 		this.#doc = null;

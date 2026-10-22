@@ -61,7 +61,7 @@ const customization: ViewerCustomization = {
 ```
 
 The object, its types, its id catalogues and the helper methods are identical
-in all five bindings. The logic lives once in the internal shared package, so a
+in all five bindings. The logic lives once in `ooxml-ui/pptx` (`src/ui/src/pptx/render/customization/`), so a
 customisation that works in React works the same way in Svelte.
 
 [[toc]]
@@ -537,7 +537,7 @@ any framework, including a different one from the viewer's binding:
 ::: code-group
 
 ```tsx [React]
-import type { ViewerRegionMount } from 'pptx-react-viewer';
+import type { ViewerRegionMount } from 'ooxml-ui/pptx';
 import { createRoot } from 'react-dom/client';
 
 const settings: ViewerRegionMount = (container, context) => {
@@ -553,7 +553,7 @@ const settings: ViewerRegionMount = (container, context) => {
 ```
 
 ```ts [Vue]
-import type { ViewerRegionContext, ViewerRegionMount } from 'pptx-vue-viewer';
+import type { ViewerRegionContext, ViewerRegionMount } from 'ooxml-ui/pptx';
 import { createApp, shallowRef } from 'vue';
 
 const settings: ViewerRegionMount = (container, context) => {
@@ -588,7 +588,7 @@ function settingsRegion(app: ApplicationRef, injector: EnvironmentInjector): Vie
 ```
 
 ```ts [Svelte]
-import type { ViewerRegionMount } from 'pptx-svelte-viewer';
+import type { ViewerRegionMount } from 'ooxml-ui/pptx';
 // settings-region.svelte.ts (runes need a .svelte.ts module)
 import { mount, unmount } from 'svelte';
 
@@ -600,7 +600,7 @@ const settings: ViewerRegionMount = (container, context) => {
 ```
 
 ```ts [Vanilla]
-import type { ViewerRegionMount, ViewerSettingsRegionContext } from 'pptx-vanilla-viewer';
+import type { ViewerRegionMount, ViewerSettingsRegionContext } from 'ooxml-ui/pptx';
 
 const settings: ViewerRegionMount = (container, context) => {
 	// `dialog.options` receives the settings model on top of the base context.
@@ -827,7 +827,7 @@ Every id list is exported as a runtime array, alongside the types:
 `BACKSTAGE_CARD_IDS`, `ELEMENT_CONTEXT_MENU_COMMAND_IDS`,
 `CANVAS_CONTEXT_MENU_COMMAND_IDS`, `EDITOR_SHORTCUT_ACTION_IDS`,
 `VIEWER_PANEL_IDS`, `VIEWER_FEATURE_IDS`, `VIEWER_DIALOG_IDS`,
-`VIEWER_EXPORT_FORMAT_IDS`, `VIEWER_CAPABILITY_IDS` and `VIEWER_REGION_IDS`. Render checkboxes from them, store the resulting
+`VIEWER_EXPORT_FORMAT_IDS`. `VIEWER_CAPABILITY_IDS` and `VIEWER_REGION_IDS` are exported from `ooxml-ui/pptx`. Render checkboxes from them, store the resulting
 object per tenant, and feed it back through `setCustomization`.
 
 ## What is not customisable yet

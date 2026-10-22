@@ -141,3 +141,115 @@ it('does not let retained callbacks edit the workbook after the canvas is remove
 	expect(props.onFormulaInput('detached input')).toBe(false);
 	expect(editor.dirty).toBe(false);
 });
+
+it('reports every control as enabled for an editable workbook and none for host dialogs', () => {
+	const editor = mount();
+	const { enabled } = editor.getToolbarProps();
+	expect(enabled).toMatchObject({
+		bold: true,
+		italic: true,
+		underline: true,
+		fontFamily: true,
+		fontSize: true,
+		alignment: true,
+		numberFormat: true,
+		openShareDialog: false,
+		settings: false,
+		formatCells: false,
+		findReplace: false,
+		insertFunction: false,
+		validationAlert: false,
+	});
+	editor.readOnly = true;
+	const locked = editor.getToolbarProps().enabled;
+	expect([locked.bold, locked.alignment, locked.fontSize, locked.numberFormat]).toEqual([
+		false,
+		false,
+		false,
+		false,
+	]);
+});
+
+it('offers font, size, alignment and number format choices and sets them', async () => {
+	const editor = mount();
+	const props = editor.getToolbarProps();
+	expect(props.options.fontFamilies.length).toBeGreaterThan(3);
+	expect(props.options.fontSizes).toContain(11);
+	expect(props.options.alignments.map((a) => a.value)).toEqual(['left', 'center', 'right']);
+	expect(props.options.numberFormats.length).toBeGreaterThan(3);
+	expect(await props.onAlignmentChange('center')).toBe(true);
+	expect(await props.onFontSizeChange(18)).toBe(true);
+	expect(await props.onFontFamilyChange('Arial')).toBe(true);
+	const after = editor.getToolbarProps();
+	expect([after.alignment, after.fontSize, after.fontFamily]).toEqual(['center', 18, 'Arial']);
+});
+
+it('routes dialog workflows to host callbacks and never mounts library dialogs', async () => {
+	const editor = mount();
+	const onOpenShareDialog = vi.fn();
+	const onOpenFormatCells = vi.fn();
+	expect(await editor.getToolbarProps().onOpenShareDialog()).toBe(false);
+	editor.share();
+	expect(onOpenShareDialog).not.toHaveBeenCalled();
+	editor.surfaceActions = { onOpenShareDialog, onOpenFormatCells };
+	editor.select('B2');
+	const props = editor.getToolbarProps();
+	expect(props.enabled).toMatchObject({
+		openShareDialog: true,
+		formatCells: true,
+		findReplace: false,
+	});
+	editor.share();
+	expect(onOpenShareDialog).toHaveBeenCalledWith({
+		sheet: 0,
+		sheetName: 'First',
+		selection: 'B2',
+		activeCell: 'B2',
+	});
+	expect(await props.onOpenFormatCells()).toBe(true);
+	expect(onOpenFormatCells).toHaveBeenCalledTimes(1);
+	expect(await props.onOpenFindReplace()).toBe(false);
+	editor.readOnly = true;
+	expect(await editor.getToolbarProps().onOpenFormatCells()).toBe(false);
+	expect(editor.getToolbarProps().enabled.openShareDialog).toBe(true);
+	expect(editor.shadowRoot!.querySelector('[role="dialog"], office-ui-backstage')).toBeNull();
+});
+
+it('surfaces a refused edit as validation-error and a reactive editError', () => {
+	const editor = mount();
+	const seen: string[] = [];
+	editor.addEventListener('validation-error', (event) => seen.push(event.detail.message));
+	const props = editor.getToolbarProps();
+	props.onFormulaInput('rejected');
+	valid = false;
+	expect(props.commitEdit()).toBe(false);
+	expect(seen).toEqual(['The current cell edit failed validation.']);
+	expect(editor.getToolbarProps().editError).toBe('The current cell edit failed validation.');
+	// A second refusal of the same draft reports once.
+	expect(props.commitEdit()).toBe(false);
+	expect(seen).toHaveLength(1);
+	props.onFormulaInput('corrected');
+	expect(editor.getToolbarProps().editError).toBeNull();
+	props.onFormulaInput('rejected again');
+	expect(props.commitEdit()).toBe(false);
+	expect(editor.getToolbarProps().editError).not.toBeNull();
+	props.onCancelEdit();
+	expect(editor.getToolbarProps().editError).toBeNull();
+});
+
+it('reports dirty and collaboration state in the props', async () => {
+	const editor = mount();
+	expect(editor.getToolbarProps()).toMatchObject({
+		dirty: false,
+		collaboration: { active: false, status: 'off' },
+	});
+	await editor.getToolbarProps().onBold();
+	expect(editor.getToolbarProps().dirty).toBe(true);
+	let notified = 0;
+	const stop = editor.subscribeEditorState(() => notified++);
+	editor.markClean();
+	await Promise.resolve();
+	expect(editor.getToolbarProps().dirty).toBe(false);
+	expect(notified).toBeGreaterThan(0);
+	stop();
+});

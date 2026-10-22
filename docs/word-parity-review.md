@@ -74,8 +74,8 @@ Core and UI regressions also cover simultaneous first insertions in empty
 paragraphs, formatting, page settings, recovery, loaded opaque parts and new
 picture bytes. This is bounded evidence, not a complete M365 comparison. The
 matching loaded package remains necessary for styles, notes and
-existing assets. Editing outside the body and structural table commands remain
-disabled; canonical multi-author saving, authorization and persistence remain
+existing assets. The limits of editing outside the body and of structural table commands changed
+after 2026-10-15; `viewers/docx/docs/collaboration.md` is the current reference. Canonical multi-author saving, authorization and persistence remain
 host responsibilities. See `viewers/docx/docs/collaboration.md` for the API and
 limitations.
 

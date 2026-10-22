@@ -83,6 +83,11 @@ export interface SectionProperties {
 	footnoteColumns?: number;
 	/** `w:titlePg`: the section's first page uses distinct first-page headers/footers. */
 	titlePage?: boolean;
+	/**
+	 * `w:formProt w:val="0"`: the section stays editable while the document is protected for
+	 * filling in forms (Word protects every other section). Read only.
+	 */
+	formProtection?: false;
 	verticalAlign?: StVerticalJc;
 	pageNumbering?: SectionPageNumbering;
 	/** `w:lnNumType` is present (line numbers are on for this section). */

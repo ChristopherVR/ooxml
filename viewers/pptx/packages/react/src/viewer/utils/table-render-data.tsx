@@ -201,7 +201,11 @@ export function renderTableFromTableData(
 													}}
 												/>
 											) : (
-												renderTableCellContent(cell, cell.text || '\u00a0')
+												renderTableCellContent(
+													cell,
+													cell.text || '\u00a0',
+													cellCss(cell, rowIndex, cellIndex),
+												)
 											)}
 										</td>
 									);

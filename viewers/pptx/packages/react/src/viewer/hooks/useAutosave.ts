@@ -4,7 +4,7 @@ import {
 	saveAutosaveSnapshot,
 	shouldWriteAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveSnapshotMark } from 'ooxml-ui/pptx';
+import type { AutosaveSnapshotMark, DocumentStorage } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------
@@ -45,6 +45,8 @@ export interface UseAutosaveInput {
 	 * `resolveAutosaveActivation`, NOT the raw title-bar toggle.
 	 */
 	enabled?: boolean;
+	/** Host storage; its recovery methods replace IndexedDB when it has them. */
+	storage?: DocumentStorage;
 	/**
 	 * The values a snapshot is built from, read fresh on each tick.
 	 *
@@ -56,6 +58,8 @@ export interface UseAutosaveInput {
 	 * whenever it is unsure. Omit it and every tick writes, as before.
 	 */
 	getChangeSources?: () => readonly unknown[];
+	/** Called with the serialised deck after each snapshot is written (the host's `onAutosave`). */
+	onSaved?: ((data: Uint8Array) => void) | undefined;
 }
 
 export interface UseAutosaveResult {
@@ -86,10 +90,16 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 	const isDirtyRef = useRef(isDirty);
 	const filePathRef = useRef(filePath);
 	const serializeRef = useRef(serializeSlides);
+	const storageRef = useRef(input.storage);
+	storageRef.current = input.storage;
 	const isSavingRef = useRef(false);
 	const changeSourcesRef = useRef(getChangeSources);
 	const lastSnapshotRef = useRef<AutosaveSnapshotMark | undefined>(undefined);
+	const onSavedRef = useRef(input.onSaved);
 
+	useEffect(() => {
+		onSavedRef.current = input.onSaved;
+	}, [input.onSaved]);
 	useEffect(() => {
 		isDirtyRef.current = isDirty;
 	}, [isDirty]);
@@ -137,12 +147,13 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 				return;
 			}
 
-			await saveAutosaveSnapshot(path, data);
+			await saveAutosaveSnapshot(path, data, storageRef.current);
 			// Mark AFTER the write, and from the sources read before it, so an
 			// edit made while serialising is not mistaken for one already
 			// captured: the next tick sees a different reference and writes.
 			lastSnapshotRef.current = autosaveSnapshotMark(path, sources);
 			setAutosaveStatus({ state: 'saved', timestamp: Date.now() });
+			onSavedRef.current?.(data);
 		} catch (err) {
 			setAutosaveStatus({
 				state: 'error',

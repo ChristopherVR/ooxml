@@ -35,7 +35,11 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Input() zoom?: number;
 	@Input() showToolbar?: boolean;
 	@Input() canEdit?: boolean;
+	@Input() readOnly?: boolean;
 	@Input() ribbonAddIns?: ViewerProperties['ribbonAddIns'];
+	@Input() collaboration?: ViewerProperties['collaboration'];
+	@Input() storage?: ViewerProperties['storage'];
+	@Input() customization?: ViewerProperties['customization'];
 	@Input() events?: ViewerCallbacks;
 	@Output() documentLoad = new EventEmitter<ViewerEvents['document-load']>();
 	@Output() documentChange = new EventEmitter<ViewerEvents['document-change']>();
@@ -45,6 +49,9 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Output() shapeSelect = new EventEmitter<ViewerEvents['shape-select']>();
 	@Output() selectionChange = new EventEmitter<ViewerEvents['selection-change']>();
 	@Output() ribbonAddIn = new EventEmitter<ViewerEvents['office-ribbon-add-in']>();
+	@Output() collaborationChange = new EventEmitter<ViewerEvents['collaboration-change']>();
+	/** Notification only: to cancel a File command, return false from `events['file-command']`. */
+	@Output() fileCommand = new EventEmitter<ViewerEvents['file-command']>();
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding: MountedViewer | undefined;
 	private readonly handle = viewerHandle(() => this.binding);
@@ -61,6 +68,8 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 		'shape-select': this.shapeSelect,
 		'selection-change': this.selectionChange,
 		'office-ribbon-add-in': this.ribbonAddIn,
+		'collaboration-change': this.collaborationChange,
+		'file-command': this.fileCommand,
 	} satisfies { [K in keyof ViewerEvents]: EventEmitter<ViewerEvents[K]> };
 	private options() {
 		return withEventEmitter(this, (name, value) => {

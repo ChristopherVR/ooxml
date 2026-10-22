@@ -27,6 +27,7 @@ it('owns default DI events and preserves the engine when canvas props are recrea
 	try {
 		component.changeDetectorRef.detectChanges();
 		const blocks = component.instance.blocks;
+		blocks.update({ canEdit: true });
 		const engine = blocks.handle.element;
 		engine.documentModel = createDocument();
 		const changed = vi.fn();

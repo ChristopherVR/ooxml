@@ -5,7 +5,7 @@ description: pptx-angular-viewer 是 Angular 独立组件，支持在浏览器�
 
 # Angular 查看器概览 {#angular-viewer-overview}
 
-`pptx-angular-viewer` 是用于渲染和编辑 `.pptx` 文件的 **Angular 19 至 22** 独立组件（`<pptx-viewer>`）。它基于 [`pptx-viewer-core`](/zh/core/)，包含功能区工具栏、检查器面板、幻灯片画布、动画引擎、放映模式、实时协作和导出。它是 `pptx-react-viewer` 和 `pptx-vue-viewer` 的 Angular 对应实现，通过内部 `pptx-viewer-shared` 包与两者共享不依赖框架的逻辑。
+`pptx-angular-viewer` 是用于渲染和编辑 `.pptx` 文件的 **Angular 19 至 22** 独立组件（`<pptx-viewer>`）。它基于 [`pptx-viewer-core`](/zh/core/)，包含功能区工具栏、检查器面板、幻灯片画布、动画引擎、放映模式、实时协作和导出。它是 `pptx-react-viewer` 和 `pptx-vue-viewer` 的 Angular 对应实现，通过公开的 `ooxml-ui/pptx` API 与两者共享不依赖框架的逻辑。
 
 ![各绑定使用相同的编辑器界面，包括功能区、幻灯片缩略图、画布和检查器](/docs-shots/editor.jpg)
 

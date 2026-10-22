@@ -44,12 +44,48 @@ export async function nativeBuildingBlockContract(framework: string) {
 		await vi.waitFor(() => expect(snapshot().mode).toBe('view'));
 		expect(await retained.onItalic()).toBe(false);
 		expect(editor.readOnly).toBe(true);
+		const onOpenShareDialog = vi.fn();
 		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.canEdit).toBe(true));
+		expect(snapshot().toolbarProps?.enabled.openShareDialog).toBe(false);
+		blocks.handle.share();
+		expect(onOpenShareDialog).not.toHaveBeenCalled();
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors, onOpenShareDialog });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.openShareDialog).toBe(true));
+		blocks.handle.share();
+		expect(onOpenShareDialog).toHaveBeenCalledTimes(1);
+		expect(host.querySelector('office-ui-backstage')).toBeNull();
+		// The library toolbar renders every control the props support.
+		for (const label of ['Font', 'Font Size', 'Number Format'])
+			expect(host.querySelector(`select[aria-label="${label}"]`), label).not.toBeNull();
+		const center = [...host.querySelectorAll('button')].find(
+			(button) => button.textContent?.trim() === 'Center',
+		)!;
+		center.click();
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.alignment).toBe('center'));
+		await vi.waitFor(() => expect(center.getAttribute('aria-pressed')).toBe('true'));
+		const size = host.querySelector<HTMLSelectElement>('select[aria-label="Font Size"]')!;
+		size.value = '18';
+		size.dispatchEvent(new Event('change', { bubbles: true }));
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.fontSize).toBe(18));
+		expect(snapshot().dirty).toBe(true);
+		expect(snapshot().editError).toBeNull();
+		// The host owns the data-validation alert: no callback means no alert and no flag.
+		expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(false);
+		const onOpenValidationAlert = vi.fn();
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors, onOpenValidationAlert });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(true));
+		expect(
+			host.querySelector('xlsx-editor')!.shadowRoot!.querySelector('[role="alertdialog"]'),
+		).toBeNull();
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(false));
+		expect(snapshot().collaboration.active).toBe(false);
+		expect(snapshot().selection).toBe('A1');
 		await expect(blocks.handle.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/./);
 		await vi.waitFor(() => expect(snapshot().error).not.toBeNull());
 		const bytes = await saveXlsx(createWorkbook({ sheets: ['Replacement'] }));
-		blocks.update({ bytes, onWorkbookError: errors });
+		blocks.update({ bytes, canEdit: true, onWorkbookError: errors });
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.sheets[0]?.name).toBe('Replacement'));
 		expect(snapshot().error).toBeNull();
 		expect(snapshot().loading).toBe(false);

@@ -8,8 +8,17 @@ import {
 export type {
 	BuildingBlockOptions,
 	CanvasProps,
+	WordNavigationProps,
+	WordStatusProps,
 	WordToolbarProps,
 } from '../../bindings/src/building-blocks';
+export {
+	navigationControls,
+	statusControls,
+	toolbarControls,
+	type Control,
+	type ControlGroup,
+} from '../../bindings/src/controls';
 /** Call during component initialization. Pass a store for reactive options. */
 export function createViewerBuildingBlocks(
 	options: BuildingBlockOptions | Readable<BuildingBlockOptions> = {},
@@ -28,6 +37,8 @@ export function createViewerBuildingBlocks(
 		canvasProps: session.canvasProps,
 		handle: session.handle,
 		toolbarProps: derived(state, (value) => value.toolbarProps),
+		navigationProps: derived(state, (value) => value.navigationProps),
+		statusProps: derived(state, (value) => value.statusProps),
 		loading: derived(state, (value) => value.loading),
 		error: derived(state, (value) => value.error),
 		mode: derived(state, (value) => value.mode),

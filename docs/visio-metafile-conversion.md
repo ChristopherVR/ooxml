@@ -2,7 +2,7 @@
 
 `parseVsdx` remains converter-free by default. Its optional `metafileConverter` callback is a trusted package injection, not a document-supplied function. Hosts must supply it only inside a disposable worker whose parent enforces a hard deadline and cancellation. A Promise timeout within the same worker cannot interrupt synchronous converter work.
 
-The private viewer injects the released `emf-converter` browser package in its parser worker. The UI owns a 15-second deadline for the entire document and terminates that worker on timeout, cancellation, success, or failure. The non-worker fallback never injects a converter.
+The Visio editor (`src/ui/src/visio/parse-worker.ts`, `worker-parser.ts`) injects the released `emf-converter` browser package in its parser worker. The UI owns a 15-second deadline for the entire document and terminates that worker on timeout, cancellation, success, or failure. The non-worker fallback never injects a converter.
 
 ## Admission and retention
 

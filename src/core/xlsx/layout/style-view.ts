@@ -17,6 +17,20 @@ export function mergeFont(base: Font, font: Font | undefined): Font {
 	return out;
 }
 
+/**
+ * The font a cell format paints with: a cell font is a complete spec, and the default style's
+ * font (`defaultFont`, style 0) only fills a missing name (with its theme scheme) or size.
+ */
+export function cellFont(font: Font, defaultFont: Font): Font {
+	const out = { ...font };
+	if (!out.name && !out.scheme) {
+		if (defaultFont.name) out.name = defaultFont.name;
+		if (defaultFont.scheme) out.scheme = defaultFont.scheme;
+	}
+	if (!out.size && defaultFont.size) out.size = defaultFont.size;
+	return out;
+}
+
 /** A font ready to paint. Theme fonts (`scheme`) resolve through the workbook theme. */
 export function fontView(font: Font, theme: ThemePalette): FontView {
 	const family =

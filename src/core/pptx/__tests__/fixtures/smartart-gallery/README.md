@@ -1,7 +1,7 @@
 # SmartArt gallery ground-truth corpus
 
 229 `.pptx` fixtures, one SmartArt diagram each, generated via PowerPoint COM
-automation (`scripts/make-smartart-gallery.ps1`) covering all 176 built-in
+automation (`viewers/pptx/scripts/make-smartart-gallery.ps1`) covering all 176 built-in
 SmartArt layouts this PowerPoint install reports through
 `Application.SmartArtLayouts` (the classic 2016-era
 List/Process/Cycle/Hierarchy/Relationship/Matrix/Pyramid/Picture galleries,
@@ -30,7 +30,7 @@ one `fallback-nN.pptx` (N flat nodes, N shrinking from 4 down to 1 until
 PowerPoint accepts it), so every layout has at least one fixture. See
 `manifest.json` for the exact `{file, layoutName, category, dataset}` list,
 and `baseline.json` for a point-in-time interpreter-vs-cached-drawing
-measurement per fixture (regenerate with `scripts/gen-smartart-gallery-
+measurement per fixture (regenerate with `src/core/scripts/pptx/gen-smartart-gallery-
 baseline.ts`; `smartart-gallery-ground-truth.test.ts` does NOT consult it -
 that test is a real acceptance gate against the cached drawing directly, not
 a regression-only ratchet against this file).
@@ -43,8 +43,8 @@ special-casing.
 ## Regenerating
 
 ```powershell
-pwsh -File scripts/make-smartart-gallery.ps1
-bun run scripts/gen-smartart-gallery-baseline.ts
+pwsh -File viewers/pptx/scripts/make-smartart-gallery.ps1
+bun run src/core/scripts/pptx/gen-smartart-gallery-baseline.ts
 ```
 
 Requires a local PowerPoint install (COM automation, Windows only) for the
@@ -101,7 +101,7 @@ the interpreter found and fixed six real, previously-unknown bugs:
 **`smartart-gallery-ground-truth.test.ts` still fails for 116 of the 229
 fixtures against the full acceptance gate** (same shape count, preset, font
 size, and geometry within 1% of bounding size). Measured via
-`bun run scripts/gen-smartart-gallery-baseline.ts` (re-measured 2026-09-25,
+`bun run src/core/scripts/pptx/gen-smartart-gallery-baseline.ts` (re-measured 2026-09-25,
 after the eleventh wave at the end of this section): 228/229 fixtures have
 matching text-bearing shape counts; 143 are within 1% geometry deviation, 181
 within 5%, 191 within 10%, and 226 within 50%; 224 match every preset, 129
@@ -116,7 +116,7 @@ closed by the ninth wave below).
 (one arranger chosen for the whole diagram) AND a per-point DiagramML engine
 (`smartart-engine/`, executes each layoutDef `layoutNode`'s own
 algorithm/constraints per data point), trying the second only when the first
-declines. `scripts/measure-smartart-engine-vs-legacy.ts` runs both
+declines. `src/core/scripts/pptx/measure-smartart-engine-vs-legacy.ts` runs both
 independently against every fixture (bypassing that fallback order) to find
 `layoutDefinition.uniqueId`s where the engine is strictly more accurate on
 EVERY dataset of that layout with no shape-set loss versus legacy;
@@ -380,7 +380,7 @@ the longest label wrapping to two fitting lines at 34pt).
 An eleventh wave (2026-09-25, later) closed three of those, each step
 re-measured with `gen-smartart-gallery-baseline.ts --compare` (no fixture left
 the 1% band) and `measure-smartart-engine-vs-legacy.ts` (allowlist 131 -> 143,
-rewritten by `scripts/update-smartart-allowlist.ts`):
+rewritten by `src/core/scripts/pptx/update-smartart-allowlist.ts`):
 
 - Text-driven sizing: the node owning a `primFontSz` rule searches whole
   points until every text fits its (grown) box, with font-relative lengths

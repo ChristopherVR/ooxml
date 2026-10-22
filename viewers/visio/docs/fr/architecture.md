@@ -2,16 +2,10 @@
 
 ## Responsabilités {#ownership}
 
-- `ooxml-core/visio` dans le dépôt frère `ooxml` : accueil des paquets, XML, modèle, héritage, géométrie en cache, diagnostics structurés. Aucune interface de visualiseur n'y a sa place.
-- `src/controller.ts` : état du document et de la vue, sélection, événements, comportement « le dernier chargement l'emporte » et orchestration transactionnelle de l'édition.
-- `src/document-history.ts` : historique d'édition borné adossé à la source et état d'export de copie VSDX. La mutation du XML et du paquet reste dans le cœur et s'exécute dans un worker dédié.
-- `src/document-text-search.ts` : correspondance littérale bornée sur le texte visible normalisé des formes, avec des résultats immuables limités à chaque page. Le contrôleur partagé gère la navigation et les contrôles de réentrance.
-- `src/render-svg.ts` et `src/render-text.ts` : présentation SVG et avertissements de rendu.
-- `src/export-svg.ts` : sérialisation statique et bornée de la page courante par le même moteur de rendu SVG, avec ressources raster intégrées et métadonnées de compatibilité.
-- `src/print-snapshot.ts` : artefacts de pages sélectionnées sans effet de bord, budgets agrégés et diagnostics préservés. Il ne crée pas de cadres d'impression et n'implémente aucune politique d'imprimante.
-- `src/viewer-element.ts` : surface navigateur partagée.
-- `src/contract.ts` et `src/binding.ts` : propriétés, événements, cycle de vie mount/update/load/fit/exportSvg/destroy côté client uniquement. Une mise à jour réentrante plus récente remplace le reste du correctif plus ancien.
-- Wrappers de frameworks : cycle de vie du framework et transmission des événements et propriétés uniquement. Aucun fork d'analyseur, de rendu ou de géométrie par framework.
+- `src/core/visio` (le point d'entrée `ooxml-core/visio`) : accueil des paquets, XML, modèle, héritage, géométrie en cache, évaluation de ShapeSheet, commandes d'édition, correspondance de collaboration (`ooxml-core/visio/collab`) et diagnostics structurés. Aucune interface de visualiseur n'y a sa place. Le contrat de vue sans DOM se trouve aussi dans le cœur, dans `src/core/visio/ui` : `contract.ts` (propriétés et événements), `document-history.ts` (historique d'édition borné adossé à la source et état d'export de copie VSDX ; la mutation du XML et du paquet passe par un worker dédié), `document-text-search.ts` (correspondance littérale bornée sur le texte visible normalisé des formes, avec des résultats immuables par page), les types d'options de collaboration et de présence, et les autres plans d'édition et de vue sans DOM.
+- `src/ui/src/visio` (publié sous `ooxml-ui/visio`) : le visualiseur pour navigateur. `controller.ts` gère l'état du document et de la vue, la sélection, les événements, le comportement « le dernier chargement l'emporte » et l'édition transactionnelle ; `viewer-element.ts` est la surface partagée `<visio-viewer>` ; `binding.ts` est le cycle de vie mount/update/load/fit/exportSvg/destroy côté client uniquement (une mise à jour réentrante plus récente remplace le reste du correctif plus ancien) ; `render-svg.ts` et `render-text.ts` assurent la présentation SVG et les avertissements de rendu ; `export-svg.ts` est la sérialisation statique et bornée de la page courante par le même moteur de rendu SVG ; `print-snapshot.ts` produit des artefacts de pages sélectionnées sans effet de bord, avec budgets agrégés (il ne crée pas de cadres d'impression et n'implémente aucune politique d'imprimante) ; les blocs de construction sont les fichiers `building-blocks-*.ts`.
+- `viewers/visio/src/index.ts` : une réexportation de `ooxml-ui/visio`.
+- `viewers/visio/packages/bindings/src` (privé) et `packages/{react,vue,angular,svelte,solid,vanilla}` : cycle de vie du framework, transmission des événements et propriétés, et compositions natives des blocs de construction. Aucun fork d'analyseur, de rendu ou de géométrie par framework.
 
 ## Limites {#boundaries}
 
@@ -31,7 +25,7 @@ L'élément personnalisé du navigateur utilise un worker d'analyse dédié, ave
 
 Les métafichiers améliorés (EMF) intégrés font l'objet de diagnostics de compatibilité bornés au niveau des enregistrements. Le vérificateur rejette les formats, styles et états de mappage non pris en charge, ainsi que l'amplification de ressources, avant toute conversion. Il n'exécute ni les données WMF intégrées, ni les polices, images, scripts ou références externes. Le worker d'analyse jetable ne convertit qu'un sous-ensemble étroit admis de lignes, rectangles, ellipses et objets stock, via le paquet de conversion publié, avec des budgets par document et une échéance stricte gérée par le parent. L'analyse directe du cœur reste limitée à l'inspection, sauf si un convertisseur de confiance est explicitement fourni dans un hôte isolé. Les cinq médias EMF réels inspectés précédemment restent tous non pris en charge ; l'admission structurelle seule ne promet ni rendu ni fidélité à Visio.
 
-Le cœur sans interface contient un assainisseur de vecteurs neutres et un validateur de transport testés. Le worker d'analyse utilise le convertisseur publié pour un sous-ensemble borné de primitives EMF, partagé par le rendu en direct, l'export SVG et le rendu d'impression immuable. Le repli d'analyse hors worker reste sans convertisseur. Les tests de découpe générés à partir de chemins seuls concordent avec le backend SVG Skia local ; le backend librsvg installé ignore les intersections imbriquées de clip-path. Les comparaisons dans le navigateur et avec Visio natif restent nécessaires. Consultez [l'examen détaillé de l'adoption](research/emf-adoption-review.md).
+Le cœur sans interface contient un assainisseur de vecteurs neutres et un validateur de transport testés. Le worker d'analyse utilise le convertisseur pour un sous-ensemble borné de primitives EMF, partagé par le rendu en direct, l'export SVG et le rendu d'impression immuable. Le repli d'analyse hors worker reste sans convertisseur. Les tests de découpe générés à partir de chemins seuls concordent avec le backend SVG Skia local ; le backend librsvg installé ignore les intersections imbriquées de clip-path. Les comparaisons dans le navigateur et avec Visio natif restent nécessaires. Consultez [l'examen détaillé de l'adoption](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/research/emf-adoption-review.md).
 
 ## Vérification {#verification}
 
@@ -41,8 +35,6 @@ Les tests unitaires et de fixtures du cœur établissent les cas d'analyse et de
 
 Build Vite statique multipage : accueil, guide, registre des capacités, architecture et un terrain de jeu séparé. Les liens sont relatifs et les ressources locales. Aucune police ni aucun script tiers. Aucun bundle d'analyseur sur la page d'accueil.
 
-La conception de la documentation s'inspire de la [référence pptx-viewer](https://github.com/ChristopherVR/pptx-viewer). L'examen approfondi se trouve dans `research/pptx-pages-design-review.md`.
-
 ## Publication {#publication}
 
-Sept paquets npm exposent l'API Visio sans interface et le visualiseur partagé avec six adaptateurs de frameworks natifs. Ils dépendent de `ooxml-core/visio` publié. Des versions horaires fondées sur les commits conventionnels construisent et vérifient les artefacts empaquetés avant la publication de confiance npm. GitHub Pages déploie la documentation et la démo après les vérifications.
+Huit paquets npm exposent l'API Visio sans interface, le visualiseur partagé avec six adaptateurs de frameworks natifs et les outils MCP. Ils dépendent de `ooxml-core` et `ooxml-ui`, qui se trouvent dans ce dépôt et sont publiés avec eux (voir [Versions](/releasing)). La construction Pages du dépôt déploie la documentation et les démos sous `/ooxml/visio/`.

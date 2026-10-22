@@ -1,5 +1,5 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index';
-import { elements, parseXml, relAttr, type XmlElement } from '../../xml/index';
+import { elements, relAttr, type XmlElement } from '../../xml/index';
 import { parseRange } from '../address';
 import type { DifferentialStyle, Hyperlink, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
@@ -7,6 +7,7 @@ import { mergeComments, parseLegacyComments, parseThreadedComments } from './com
 import { readConditionalFormats, readDataValidations } from './conditional';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
+import { parseDataXml } from './limits';
 import type { SourceIndex } from './package';
 import { readSheetData, type CellContext } from './sheet-data';
 import { splitSheetData } from './sheet-data-source';
@@ -29,6 +30,8 @@ export interface SheetContext extends CellContext {
 	source: SourceIndex;
 	dxfs: readonly DifferentialStyle[];
 	persons: ReadonlyMap<string, string>;
+	/** `XlsxLoadLimits.maxXmlElements`; left out, `parseDataXml` applies the default. */
+	maxXmlElements?: number;
 }
 
 /**
@@ -145,7 +148,11 @@ export function parseWorksheet(
 		return sheet;
 	}
 	const split = splitSheetData(xml);
-	const root = parseXml(split?.xml ?? xml, { label: 'XLSX worksheet' }).documentElement;
+	const root = parseDataXml(
+		split?.xml ?? xml,
+		'XLSX worksheet',
+		ctx.maxXmlElements,
+	).documentElement;
 	const byName = new Map<string, XmlElement>();
 	const cfBlocks: XmlElement[] = [];
 	for (const node of elements(root)) {

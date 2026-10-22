@@ -129,10 +129,48 @@ larger than a small closed team.
 **The dev default is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
 claimed id, so it adds nothing over the old behaviour.
 
+## Per-room permissions
+
+Hosts that keep their own permission model (a review queue, a CRM record, a project) decide per
+sync socket with `authorizeSync`. It runs after the token, origin and session checks, may be
+async, and returns `'write'`, `'read'`, `{ access, principal }` or a falsy value to refuse (403).
+A read-only socket receives the document and shares presence, but the server drops its document
+updates. The principal (by default the session user, or the claimed `user`) names the socket for
+`closeSync`:
+
+```js
+import { createServer } from 'node:http';
+import { createTeamsServer } from 'openteams-server';
+
+const teams = createTeamsServer({
+	// Verify your own short-lived ticket; never trust a query parameter on its own.
+	authorizeSync: async ({ room, url }) => {
+		const ticket = await myTickets.verify(url.searchParams.get('ticket'));
+		if (!ticket || ticket.room !== room) return null;
+		return { access: ticket.canEdit ? 'write' : 'read', principal: ticket.account };
+	},
+});
+
+// Serve the sockets from your own origin instead of teams.listen():
+const app = createServer(myHandler);
+app.on('upgrade', (req, socket, head) => {
+	if (req.url?.startsWith('/sync/')) teams.handleUpgrade(req, socket, head);
+});
+
+// After you change someone's access, drop their sockets so they reconnect and are asked again.
+teams.closeSync('deck-42', 'ben'); // close code 4403 by default
+```
+
+`syncPrincipals(room)` lists who is connected and `isSyncRoomEmpty(room)` tells whether a room
+has content yet (to decide which participant seeds it). The hook covers sync rooms only; signaling
+rooms still use the token. A verdict applies for the socket's lifetime: changing access does not
+affect open sockets until you close them. `demos/pptx/demo-host-review` in the ooxml repository
+uses all of this for collaborative PowerPoint review.
+
 ## Security model
 
-- **One shared token opens every room and every file.** There are no per-user or per-room
-  permissions. Treat the token like a team password.
+- **One shared token opens every room and every file.** Per-room permissions exist only
+  when you pass `authorizeSync` (above). Treat the token like a team password.
 - **All members of a room trust each other** (the workspace room, and each private chat's room). The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles.
 - **Private chats have their own rooms.** A room named `chat-<16 hex>-<chat id>` admits a socket

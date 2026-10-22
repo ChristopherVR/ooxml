@@ -1,20 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
-import { TEXT_WARP_PRESETS, warpPreviewPath } from 'ooxml-ui/pptx';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	CUSTOM_ELEMENTS_SCHEMA,
+	computed,
+	inject,
+	input,
+	output,
+} from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
+import { buildTextWarpGallery, TEXT_WARP_PRESETS, textWarpStyle } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTextWarpPreset, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
+
+import { homeLanguage, ngxTranslate } from './ribbon-home-lang';
 
 export function textWarpPatch(
 	element: PptxElement,
 	value: PptxTextWarpPreset,
 ): Partial<PptxElement> {
 	const current = (element as PptxElement & { textStyle?: TextStyle }).textStyle;
-	return {
-		textStyle: {
-			...current,
-			textWarpPreset: value === 'textNoShape' ? undefined : value,
-		},
-	} as Partial<PptxElement>;
+	return { textStyle: { ...current, ...textWarpStyle(value) } } as Partial<PptxElement>;
 }
 
 @Component({
@@ -22,27 +28,21 @@ export function textWarpPatch(
 	standalone: true,
 	imports: [TranslatePipe],
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
 		@if (supported()) {
 			<details class="panel">
 				<summary>
 					{{ 'pptx.textWarp.title' | translate }} <span>{{ currentLabel() | translate }}</span>
 				</summary>
-				<div class="gallery">
-					@for (preset of presets; track preset.value) {
-						<button
-							type="button"
-							[class.active]="preset.value === current()"
-							[title]="preset.labelKey | translate"
-							[attr.aria-label]="preset.labelKey | translate"
-							(click)="select(preset.value)"
-						>
-							<svg viewBox="0 0 40 20" aria-hidden="true">
-								<path [attr.d]="preview(preset.value)" />
-							</svg>
-						</button>
-					}
-				</div>
+				<pptx-ui-ribbon-gallery
+					class="gallery"
+					mode="panel"
+					compact
+					[descriptor]="descriptor()"
+					[translateLabel]="translator()"
+					(gallery-pick)="onPick($event)"
+				/>
 			</details>
 		}
 	`,
@@ -66,39 +66,17 @@ export function textWarpPatch(
 			text-transform: none;
 		}
 		.gallery {
-			display: grid;
-			grid-template-columns: repeat(5, minmax(0, 1fr));
-			gap: 4px;
 			margin-top: 8px;
-		}
-		button {
-			height: 30px;
-			padding: 3px;
-			border: 1px solid var(--pptx-inspector-border, #444);
-			border-radius: 3px;
-			background: var(--pptx-inspector-input-bg, #2d2d2d);
-			color: inherit;
-			cursor: pointer;
-		}
-		button.active {
-			border-color: var(--pptx-primary, #2563eb);
-			background: color-mix(in srgb, var(--pptx-primary, #2563eb) 30%, transparent);
-		}
-		svg {
-			width: 100%;
-			height: 20px;
-		}
-		path {
-			fill: none;
-			stroke: currentColor;
-			stroke-width: 1.5;
 		}
 	`,
 })
 export class TextWarpGalleryComponent {
+	private readonly translation = inject(TranslateService, { optional: true });
+	/** Read so a language switch re-labels the tiles. */
+	private readonly language = homeLanguage(this.translation);
+
 	readonly element = input.required<PptxElement>();
 	readonly patch = output<Partial<PptxElement>>();
-	protected readonly presets = TEXT_WARP_PRESETS;
 	protected readonly supported = computed(() => hasTextProperties(this.element()));
 	protected readonly current = computed<PptxTextWarpPreset>(() =>
 		hasTextProperties(this.element())
@@ -108,13 +86,19 @@ export class TextWarpGalleryComponent {
 	);
 	protected readonly currentLabel = computed(
 		() =>
-			this.presets.find((preset) => preset.value === this.current())?.labelKey ?? this.current(),
+			TEXT_WARP_PRESETS.find((preset) => preset.value === this.current())?.labelKey ??
+			this.current(),
 	);
+	protected readonly descriptor = computed(() => buildTextWarpGallery(this.current()));
+	protected readonly translator = computed(() => {
+		this.language();
+		return ngxTranslate(this.translation);
+	});
 
-	protected preview(value: PptxTextWarpPreset): string {
-		return warpPreviewPath(value);
-	}
-	protected select(value: PptxTextWarpPreset): void {
-		this.patch.emit(textWarpPatch(this.element(), value));
+	protected onPick(event: Event): void {
+		const { itemId } = (event as RibbonGalleryPickEvent).detail;
+		if (textWarpStyle(itemId)) {
+			this.patch.emit(textWarpPatch(this.element(), itemId as PptxTextWarpPreset));
+		}
 	}
 }

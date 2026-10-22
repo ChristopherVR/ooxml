@@ -1,7 +1,7 @@
 import { EditorHistory } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { computed, shallowRef } from 'vue';
+import { computed, nextTick, shallowRef } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
 import type { TemplateElementMap } from './template-editing';
@@ -102,6 +102,11 @@ export interface UseEditorHistoryOptions {
 	 * Without it the stage pointed past the end of the deck and drew nothing.
 	 */
 	activeSlideIndex?: Ref<number>;
+	/**
+	 * Called once per tick after an edit is recorded, undone or redone: the host's `change`
+	 * event. Deferred a tick so a listener reads the committed deck, not the one before it.
+	 */
+	onChange?: () => void;
 }
 
 /**
@@ -176,9 +181,22 @@ export function useEditorHistory(
 		return stack.redoLabel || undefined;
 	});
 
+	let changePending = false;
+	const notifyChange = (): void => {
+		if (!options?.onChange || changePending) {
+			return;
+		}
+		changePending = true;
+		void nextTick(() => {
+			changePending = false;
+			options.onChange?.();
+		});
+	};
+
 	const pushHistory = (label = ''): void => {
 		stack.record(snapshot(), label);
 		bump();
+		notifyChange();
 	};
 
 	const undo = (): void => {
@@ -188,6 +206,7 @@ export function useEditorHistory(
 		}
 		restore(result.snapshot);
 		bump();
+		notifyChange();
 	};
 
 	const redo = (): void => {
@@ -197,6 +216,7 @@ export function useEditorHistory(
 		}
 		restore(result.snapshot);
 		bump();
+		notifyChange();
 	};
 
 	const clearHistory = (): void => {

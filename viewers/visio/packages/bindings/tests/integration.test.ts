@@ -14,6 +14,7 @@ import { VisioViewerComponent } from '../src/angular';
 import { VisioViewer as SolidViewer } from '../src/solid';
 import SvelteHarness from './IntegrationHarness.svelte';
 import { demoDocument } from 'ooxml-core/visio/ui';
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import { mountViewer } from '../src/vanilla';
 import {
 	eventKeys,
@@ -132,8 +133,20 @@ const mounts: Record<string, NativeMount> = {
 					get canEdit() {
 						return props().canEdit;
 					},
+					get readOnly() {
+						return props().readOnly;
+					},
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
+					},
+					get collaboration() {
+						return props().collaboration;
+					},
+					get storage() {
+						return props().storage;
+					},
+					get customization() {
+						return props().customization;
 					},
 					get events() {
 						return props().events;
@@ -180,6 +193,14 @@ const payloads: ViewerEvents = {
 	'shape-select': { id: 'shape-7', name: 'Example' },
 	'selection-change': Object.freeze([{ id: 'shape-7', name: 'Example' }]),
 	'office-ribbon-add-in': { tab: 'reports', command: 'export' },
+	'collaboration-change': {
+		active: false,
+		roomId: undefined,
+		status: 'off',
+		synced: false,
+		people: [],
+	},
+	'file-command': { command: 'save' },
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
@@ -199,6 +220,42 @@ describe('native adapters against the real shared custom element', () => {
 				host.remove();
 			}
 		});
+		it(`${framework}: readOnly is the inverse of canEdit and wins when both are set`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+			try {
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
+				await mounted.update({ readOnly: true, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(true);
+				expect(mounted.handle.element.readOnly).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: false });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		// The vanilla binding takes explicit patches: an omitted property is left alone by design.
+		(framework === 'vanilla' ? it.skip : it)(
+			`${framework}: dropping readOnly resets it to false`,
+			async () => {
+				const host = document.createElement('div');
+				document.body.append(host);
+				const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+				try {
+					expect(mounted.handle.controller.canEdit).toBe(false);
+					await mounted.update({ document: demoDocument });
+					expect(mounted.handle.controller.canEdit).toBe(true);
+				} finally {
+					await mounted.destroy();
+					host.remove();
+				}
+			},
+		);
 		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);
@@ -330,6 +387,97 @@ describe('native adapters against the real shared custom element', () => {
 			expect(panel()).toBeNull();
 			await mounted.destroy();
 			host.remove();
+		});
+		it(`${framework}: forwards collaboration, relays collaboration-change and leaves on unmount`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const session = createCollabSession({
+				roomId: 'bind-room',
+				provider: transportProvider({ transport: createMemoryHub().createTransport('bind-room') }),
+				user: { name: 'Ada' },
+				heartbeatMs: 0,
+				syncGraceMs: 0,
+			});
+			const destroy = vi.spyOn(session, 'destroy');
+			const onChange = vi.fn();
+			const events: ViewerCallbacks = { 'collaboration-change': onChange };
+			const options = { session };
+			const mounted = await mountNative(host, { document: null, collaboration: options, events });
+			const element = mounted.handle.element;
+			try {
+				expect(element.collaboration).toBe(options);
+				await vi.waitFor(() => expect(element.collaborationState.active).toBe(true));
+				expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ active: true }));
+				await mounted.update({ document: null, collaboration: null, events });
+				expect(element.collaboration).toBeNull();
+				expect(element.collaborationState.active).toBe(false);
+				expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ active: false }));
+				await mounted.update({ document: null, collaboration: options, events });
+				expect(element.collaboration).toBe(options);
+				await vi.waitFor(() => expect(element.collaborationState.active).toBe(true));
+				await mounted.destroy();
+				expect(element.collaborationState.active).toBe(false);
+				expect(element.collaboration).toBeNull();
+				// A session the host made outlives the viewer.
+				expect(destroy).not.toHaveBeenCalled();
+			} finally {
+				session.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards storage and lets the file-command callback cancel`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const storage = { save: async () => undefined };
+			const onFileCommand = vi.fn(() => false);
+			const events: ViewerCallbacks = { 'file-command': onFileCommand };
+			const mounted = await mountNative(host, { document: null, storage, events });
+			const element = mounted.handle.element;
+			try {
+				expect(element.storage).toBe(storage);
+				const command = new CustomEvent('file-command', {
+					detail: { command: 'save' },
+					cancelable: true,
+				});
+				element.dispatchEvent(command);
+				expect(onFileCommand).toHaveBeenCalledWith({ command: 'save' });
+				expect(command.defaultPrevented).toBe(true);
+				await mounted.update({ document: null, storage: null, events });
+				expect(element.storage).toBeNull();
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards customization and restores the defaults without it`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const customization = {
+				capabilities: { edit: false, print: false },
+				backstage: { extraPages: [{ id: 'about', label: 'About', render: 'acme-about' }] },
+			};
+			const mounted = await mountNative(host, { document: demoDocument, customization });
+			const element = mounted.handle.element;
+			const nav = () =>
+				(
+					element.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & {
+						items: { id: string }[];
+					}
+				).items.map((item) => item.id);
+			try {
+				expect(element.customization).toBe(customization);
+				expect(element.canEdit).toBe(false);
+				expect(nav()).toContain('host.about');
+				expect(nav()).not.toContain('print');
+				await mounted.update({ document: demoDocument, customization: null });
+				expect(element.customization).toBeNull();
+				expect(element.canEdit).toBe(true);
+				expect(nav()).toContain('print');
+				expect(nav()).not.toContain('host.about');
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
 		});
 		it(`${framework}: properties, complete event map, real load rejection, disposal`, async () => {
 			const host = document.createElement('div');

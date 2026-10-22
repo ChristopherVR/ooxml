@@ -124,6 +124,8 @@ export interface ChromeCallbackDeps {
 	 * loads.
 	 */
 	getRecentPresentationsCount(): number;
+	/** The host `storage` option: Recent and Account read its recovery store when it has one. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/**
 	 * Store reads the ribbon needs WHILE IT IS BEING BUILT, which is before the
 	 * editor exists: the Transitions tab seeds its draft from the active slide
@@ -229,7 +231,9 @@ export function buildChromeCallbacks(
 			openPasswordProtection: () => deps.openPasswordProtection(),
 			openVersionHistory: () => deps.openVersionHistory(),
 			getRecentPresentationsCount: () => deps.getRecentPresentationsCount(),
+			getStorage: () => deps.getStorage?.(),
 			save: () => deps.save(),
+			saveAsPptx: () => void deps.downloadAs('pptx'),
 			saveAsPpsx: () => void deps.downloadAs('ppsx'),
 			saveAsPptm: () => void deps.downloadAs('pptm'),
 			saveAsPpt: () => void deps.downloadAs('ppt'),

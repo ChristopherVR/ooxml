@@ -15,3 +15,10 @@ export type {
 	RibbonAddInGroup,
 	RibbonAddInTab,
 } from './common';
+export { createViewerBuildingBlocks, type VanillaBuildingBlocks } from './vanilla-building-blocks';
+export type {
+	BuildingBlockOptions,
+	BuildingBlockHostCallbacks,
+	DiagramToolbarProps,
+	ToolbarGroupId,
+} from './vanilla-building-blocks';

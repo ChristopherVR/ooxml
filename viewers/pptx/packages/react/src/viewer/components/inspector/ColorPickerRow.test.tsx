@@ -35,6 +35,12 @@ const OFFICE_THEME = {
 let container: HTMLDivElement;
 let root: Root;
 
+/** A Theme Colors swatch of the shared grid, by its label. */
+const themeSwatch = (title: string) =>
+	container
+		.querySelector('pptx-ui-color-grid')
+		?.shadowRoot?.querySelector<HTMLButtonElement>(`button[title="${title}"]`) ?? null;
+
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
@@ -122,7 +128,7 @@ describe('colorPickerRow theme colours (W3-G2)', () => {
 		act(() => {
 			root.render(<ThemeHarness onChange={(c, r) => calls.push([c, r])} />);
 		});
-		const swatch = container.querySelector('button[title="Accent 2"]') as HTMLButtonElement;
+		const swatch = themeSwatch('Accent 2')!;
 		expect(swatch).not.toBeNull();
 		act(() => swatch.click());
 		expect(calls).toStrictEqual([['#ed7d31', { scheme: 'accent2' }]]);
@@ -143,7 +149,7 @@ describe('colorPickerRow theme colours (W3-G2)', () => {
 		act(() => {
 			root.render(<ThemeHarness onChange={() => {}} selectedRef={{ scheme: 'accent2' }} />);
 		});
-		const swatch = container.querySelector('button[title="Accent 2"]') as HTMLElement;
-		expect(swatch.className).toContain('border-primary');
+		expect(themeSwatch('Accent 2')?.getAttribute('aria-checked')).toBe('true');
+		expect(themeSwatch('Accent 1')?.getAttribute('aria-checked')).toBe('false');
 	});
 });

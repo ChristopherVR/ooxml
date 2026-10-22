@@ -8,7 +8,9 @@ const executablePath = resolveChromiumExecutable(chromium.executablePath());
 export default defineConfig({
 	testDir: '../../e2e/xlsx',
 	fullyParallel: false,
-	workers: 1,
+	// CI's runners have 4 vCPUs: two workers about halve the suite and stay green, while four
+	// saturate the CPU and the chart raster specs, which loop over dozens of fixtures, time out.
+	workers: 2,
 	use: {
 		baseURL: origin,
 		headless: true,

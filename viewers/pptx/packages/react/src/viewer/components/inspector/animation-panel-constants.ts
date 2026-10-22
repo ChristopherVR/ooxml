@@ -38,13 +38,13 @@ export const SELECT_CLS =
 // Preset groups
 // ==========================================================================
 
-export const ENTRANCE_PRESETS = ANIMATION_PRESET_OPTIONS.filter(
+export const ENTRANCE_PRESETS = /* @__PURE__ */ ANIMATION_PRESET_OPTIONS.filter(
 	(o) => o.value === 'fadeIn' || o.value === 'flyIn' || o.value === 'zoomIn',
 );
-export const EXIT_PRESETS = ANIMATION_PRESET_OPTIONS.filter(
+export const EXIT_PRESETS = /* @__PURE__ */ ANIMATION_PRESET_OPTIONS.filter(
 	(o) => o.value === 'fadeOut' || o.value === 'flyOut' || o.value === 'zoomOut',
 );
-export const EMPHASIS_PRESETS = ANIMATION_PRESET_OPTIONS.filter(
+export const EMPHASIS_PRESETS = /* @__PURE__ */ ANIMATION_PRESET_OPTIONS.filter(
 	(o) =>
 		o.value === 'spin' ||
 		o.value === 'pulse' ||

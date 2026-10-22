@@ -80,21 +80,26 @@ describe('table cell inspector styles', () => {
 		}
 
 		const classes = [cell.el, fill.el, structure.el].flatMap(renderedClasses);
-		expect(classes).toContain('pptxv-theme-swatch-grid-swatch');
+		// The theme grids are among what is checked: the shared element, under the host's class.
+		expect(cell.el.querySelectorAll('pptx-ui-color-grid.pptxv-theme-swatch-grid')).toHaveLength(2);
+		expect(classes).toContain('pptxv-theme-swatch-grid');
 		const missing = classes.filter((name) => !hasRuleFor(css, name));
 		expect(missing).toStrictEqual([]);
 	});
 
-	it('gives each theme swatch a size, so the grid is not empty', () => {
+	it('shows the theme grid as the shared element, spaced under its field', () => {
 		const grid = createThemeColorSwatchGrid(document, identity, () => {});
 		grid.setThemeColorMap(THEME);
 		mount(grid.el);
 
-		const swatch = grid.el.querySelector<HTMLElement>('.pptxv-theme-swatch-grid-swatch')!;
-		const row = grid.el.querySelector<HTMLElement>('.pptxv-theme-swatch-grid-row')!;
-		expect(getComputedStyle(swatch).width).toBe('16px');
-		expect(getComputedStyle(swatch).height).toBe('16px');
-		expect(getComputedStyle(row).display).toBe('flex');
+		// The shared grid draws and sizes its own swatches; the stylesheet only spaces it.
+		expect(grid.el.localName).toBe('pptx-ui-color-grid');
+		expect(grid.el.shadowRoot!.querySelectorAll('button.swatch')).toHaveLength(60);
+		expect(getComputedStyle(grid.el).marginTop).toBe('4px');
+		expect(getComputedStyle(grid.el).display).not.toBe('none');
+
+		grid.setThemeColorMap(undefined);
+		expect(getComputedStyle(grid.el).display).toBe('none');
 	});
 
 	it('lays the cell fields out as rows instead of one run of inline text', () => {
@@ -104,5 +109,10 @@ describe('table cell inspector styles', () => {
 
 		expect(getComputedStyle(cell.el).display).toBe('grid');
 		expect(getComputedStyle(cell.el.querySelector('label')!).display).toBe('flex');
+		// Each theme grid is a row of its own, straight under its colour field.
+		for (const grid of cell.el.querySelectorAll('pptx-ui-color-grid')) {
+			expect(grid.parentElement).toBe(cell.el);
+			expect(grid.previousElementSibling?.querySelector('input[type="color"]')).not.toBeNull();
+		}
 	});
 });

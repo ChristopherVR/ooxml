@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {
+	clickInEditor,
 	openSample,
 	newDocument,
 	fileInput,
@@ -27,7 +28,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const editor = page.locator('docx-editor');
 		const text = editor.locator('.ProseMirror');
 		await expect(text).toContainText('Document title');
-		await text.locator('p').last().click();
+		await clickInEditor(text.locator('p').last());
 		await page.keyboard.press('End');
 		await page.keyboard.type(' Browser contract.');
 		await expect(saveStateLabel(page)).toHaveText('Unsaved changes');
@@ -71,7 +72,7 @@ test('imports and saves legacy DOC as DOC and exports visible text as DOCX', asy
 	const download = await pending;
 	expect(await readFile((await download.path())!)).toEqual(original);
 	const editable = page.locator('docx-editor .ProseMirror');
-	await editable.locator('p').first().click();
+	await clickInEditor(editable.locator('p').first());
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Legacy edit.');
 	const editedDownload = page.waitForEvent('download');
@@ -124,7 +125,7 @@ test('ribbon edits preserve font properties and save table and page settings', a
 	await editor.getByRole('button', { name: 'Undo', exact: true }).click();
 	await expect(editor.getByLabel('Document page', { exact: true })).toHaveCSS('width', '816px');
 	await editor.getByRole('button', { name: 'Redo', exact: true }).click();
-	await surface.click();
+	await clickInEditor(surface);
 	await page.keyboard.press('Control+End');
 	await page.keyboard.press('Enter');
 	await insertTableOfSize(page);

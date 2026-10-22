@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { newDocument } from './helpers';
+import { editorSelectionText, newDocument, waitForEditorFocus } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native Word tabs, split commands and adaptive Styles`, async ({ page }) => {
@@ -65,11 +65,12 @@ test('styled underline ranges sharing a semantic mark retain their own line styl
 		'double',
 	);
 	await body.focus();
+	await waitForEditorFocus(body);
 	await page.keyboard.press('Control+Home');
 	// Native selectionchange must reach the editor before the next ribbon command.
 	for (let index = 0; index < 4; index++)
 		await page.keyboard.press('Shift+ArrowRight', { delay: 20 });
-	await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('left');
+	await expect.poll(() => editorSelectionText(editor)).toBe('left');
 	await styles.selectOption('wave');
 	await expect(body.locator('[data-run-props] > span').filter({ hasText: 'left' })).toHaveCSS(
 		'text-decoration-style',

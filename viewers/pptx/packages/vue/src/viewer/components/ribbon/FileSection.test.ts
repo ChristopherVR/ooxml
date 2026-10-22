@@ -95,3 +95,19 @@ describe('fileSection under UI customization', () => {
 		expect(navLabels(wrapper)).not.toContain('Options');
 	});
 });
+
+describe('fileSection with host-owned storage', () => {
+	it('runs onSave from the Save nav item, not the Save As .pptx handler', async () => {
+		const calls: string[] = [];
+		const wrapper = mount(FileSection, {
+			props: {
+				...BASE_PROPS,
+				onSave: () => calls.push('save'),
+				onSaveAsPptx: () => calls.push('saveAs'),
+			},
+		});
+		const save = wrapper.findAll('nav button').find((btn) => btn.text().trim() === 'Save');
+		await save!.trigger('click');
+		expect(calls).toStrictEqual(['save']);
+	});
+});

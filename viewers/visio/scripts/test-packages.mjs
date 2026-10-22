@@ -143,7 +143,12 @@ for (const name of ${JSON.stringify(names)}) {
 `,
 );
 // Angular's compiler is a host concern for JIT applications, not a bundled viewer dependency.
-runNpm(['install', '--ignore-scripts', '--no-save', '@angular/compiler@^21'], {
+// @angular/core pins its compiler peer to its own version, so match the core the adapter's peer
+// range resolved to rather than a fixed major.
+const angularCore = JSON.parse(
+	readFileSync(resolve(consumer, 'node_modules/@angular/core/package.json')),
+);
+runNpm(['install', '--ignore-scripts', '--no-save', `@angular/compiler@${angularCore.version}`], {
 	cwd: consumer,
 	stdio: 'inherit',
 });

@@ -16,7 +16,9 @@ import { useMemo } from 'react';
 import { useViewerOptionsContext } from '../components/viewer-options-context';
 
 /** Every ribbon-tab id the shared catalogue knows about (for the guard below). */
-const KNOWN_TAB_IDS = new Set<string>(TOOLBAR_TABS.map((tab) => tab.id));
+const KNOWN_TAB_IDS = /* @__PURE__ */ new Set<string>(
+	/* @__PURE__ */ TOOLBAR_TABS.map((tab) => tab.id),
+);
 
 export interface ToolbarVisibility {
 	/** True when `id` is present in the host's `hiddenActions` list. */

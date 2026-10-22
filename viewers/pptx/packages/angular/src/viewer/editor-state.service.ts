@@ -76,6 +76,34 @@ interface EditorSnapshot {
 	headerFooter: PptxHeaderFooter;
 }
 
+/** An undo stack that tells its owner each time an edit is recorded, undone or redone. */
+class NotifyingEditorHistory extends EditorHistory<EditorSnapshot> {
+	constructor(private readonly onCommit: () => void) {
+		super();
+	}
+
+	override record(snapshot: EditorSnapshot, label: string): void {
+		super.record(snapshot, label);
+		this.onCommit();
+	}
+
+	override undo(current: EditorSnapshot): ReturnType<EditorHistory<EditorSnapshot>['undo']> {
+		const result = super.undo(current);
+		if (result) {
+			this.onCommit();
+		}
+		return result;
+	}
+
+	override redo(current: EditorSnapshot): ReturnType<EditorHistory<EditorSnapshot>['redo']> {
+		const result = super.redo(current);
+		if (result) {
+			this.onCommit();
+		}
+		return result;
+	}
+}
+
 @Injectable()
 export class EditorStateService {
 	private readonly loader: LoadContentService | null = (() => {
@@ -99,7 +127,14 @@ export class EditorStateService {
 			return null;
 		}
 	})();
-	private readonly history = new EditorHistory<EditorSnapshot>();
+	/**
+	 * Counts committed edits (recorded, undone or redone), never loads. The viewer component
+	 * reports it to the host as `documentChange`.
+	 */
+	readonly editRevision = signal(0);
+	private readonly history = new NotifyingEditorHistory(() =>
+		this.editRevision.update((revision) => revision + 1),
+	);
 
 	/**
 	 * Apply File > Options > Advanced > "Maximum number of undos" at runtime.

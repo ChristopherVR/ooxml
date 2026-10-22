@@ -1,8 +1,10 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
 import type { WordYjsOptions } from 'ooxml-core/docx/ui';
-import { renderDocument } from './editor-render';
+import { joinYjs } from './collaboration-room';
+import type { DocxCollaborationState } from './collaboration-types';
 import { yjsPresenceProfile } from './yjs-presence';
 import { saveDocx } from 'ooxml-core/docx';
 import { schema } from './schema';
@@ -17,7 +19,16 @@ import {
 } from 'ooxml-core/docx/ui';
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
+import type { WordCustomization } from './customization';
+import { setWordCustomization } from './customization-apply';
 import { wordToolbarProps, type WordToolbarProps } from './building-blocks';
+import {
+	wordNavigationProps,
+	wordStatusProps,
+	type WordNavigationProps,
+	type WordStatusProps,
+} from './building-blocks-status';
+import type { SurfaceHostActions } from './building-blocks-actions';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -39,6 +50,37 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	getToolbarProps(): WordToolbarProps {
 		return wordToolbarProps(this.core);
 	}
+	/** Page, view mode and navigation callbacks for custom page controls. */
+	getNavigationProps(): WordNavigationProps {
+		return wordNavigationProps(this.core);
+	}
+	/** Word count and zoom for custom status controls. */
+	getStatusProps(): WordStatusProps {
+		return wordStatusProps(this.core);
+	}
+	/**
+	 * Host-owned dialogs for surface mode: `onOpenHyperlinkDialog`, `onOpenFindReplace` and
+	 * `onOpenImagePicker`. A workflow without its callback is reported as not enabled.
+	 */
+	get surfaceActions(): SurfaceHostActions {
+		return this.core.surfaceActions;
+	}
+	set surfaceActions(value: SurfaceHostActions) {
+		this.core.surfaceActions = { ...value };
+		if (this.core.view) this.core.refreshControls();
+	}
+	/**
+	 * Host-owned storage. When set, File > Save and Save As hand the saved bytes to
+	 * `storage.save()` instead of downloading them, and File > Open asks `storage.open()` (when it
+	 * has one) instead of showing the file picker. The cancelable `file-command` event still fires
+	 * first; a host that prevents it handles the command itself.
+	 */
+	get storage(): DocumentStorage | undefined {
+		return this.core.storage;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.core.storage = value ?? undefined;
+	}
 	get loading(): boolean {
 		return this.core.loading;
 	}
@@ -53,21 +95,19 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 
 	/** Join a synchronized Yjs room after loading its matching source package. */
 	startYjsCollaboration(session: CollabSession, options: WordYjsOptions): void {
-		const { core } = this;
-		if (!core.view) throw new Error('Mount and load the document before starting collaboration.');
-		core.collab.startYjs(session, core.view.state.doc, {
-			...options,
-			initialMedia: new Map([...(options.initialMedia ?? []), ...core.inserts.pendingMedia]),
-			initialComments: options.initialComments ?? core.model.comments ?? [],
-		});
-		core.loadGeneration++;
-		core.detachedState = undefined;
-		renderDocument(core);
+		joinYjs(this.core, session, options);
+	}
+
+	/** Who is in the room, and whether it is synced; the off state when not sharing. */
+	get collaborationState(): DocxCollaborationState {
+		return this.core.room.state();
 	}
 
 	reconnectCollaboration(): void {
-		if (!this.core.collab.yjs) throw new Error('No Yjs collaboration session.');
-		this.core.collab.yjs.reconnect();
+		const { core } = this;
+		const session = core.collab.yjs?.session ?? core.room.pendingSession;
+		if (!session) throw new Error('No Yjs collaboration session.');
+		session.reconnect();
 	}
 
 	resyncCollaboration(): boolean {
@@ -154,6 +194,19 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		if (next.length === current.length && next.every((id, index) => id === current[index])) return;
 		this.core.viewOptions.hiddenActions = next;
 		applyViewOptions(this.core);
+	}
+
+	/**
+	 * The host customisation (`WordCustomization`): `capabilities` (removing every UI path to
+	 * what is switched off), `backstage.extraPages` (host File tab pages) and
+	 * `contextMenu.extraCommands` (host context-menu commands). The object is applied when its
+	 * identity changes, so keep it stable; `null` restores the defaults.
+	 */
+	get customization(): WordCustomization | null {
+		return this.core.viewOptions.customizationInput;
+	}
+	set customization(value: WordCustomization | null | undefined) {
+		setWordCustomization(this.core, value ?? null);
 	}
 
 	/** True after an edit until the document is saved through File > Save, `download()`, loaded or `markClean()`. */

@@ -102,6 +102,39 @@ describe('shared ribbon gallery', () => {
 	});
 });
 
+describe('shared ribbon gallery panel mode', () => {
+	const shape = {
+		id: 'shape',
+		type: 'shape' as const,
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 60,
+		shapeType: 'rect',
+	};
+
+	it.each([
+		['connected', true],
+		['built detached', false],
+	])('lays its tiles out in place when %s, and emits a pick', (_name, connectFirst) => {
+		const gallery = document.createElement('pptx-ui-ribbon-gallery');
+		gallery.setAttribute('mode', 'panel');
+		if (connectFirst) document.body.append(gallery);
+		gallery.descriptor = buildRibbonGallery('shapeStyles', { element: shape });
+		if (!connectFirst) document.body.append(gallery);
+		const pick = vi.fn();
+		gallery.addEventListener('gallery-pick', pick);
+		const tiles = gallery.querySelectorAll<HTMLButtonElement>('.gallery-panel [data-gallery-item]');
+		expect(tiles.length).toBeGreaterThan(6);
+		expect(gallery.querySelector('.trigger')).toBeNull();
+		tiles[1]!.click();
+		expect(pick.mock.calls[0][0].detail).toStrictEqual({
+			gallery: 'shapeStyles',
+			itemId: tiles[1]!.dataset.galleryItem,
+		});
+	});
+});
+
 describe('shared ribbon gallery command mode', () => {
 	const element = {
 		id: 'sa',

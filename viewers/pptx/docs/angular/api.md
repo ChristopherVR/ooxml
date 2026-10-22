@@ -44,7 +44,7 @@ Either way you get the same component instance and the same methods.
 
 The methods below implement the same `PowerPointViewerAPI` contract (defined in
 `ooxml-ui/pptx`) that React's `PowerPointViewerHandle` and Vue's `defineExpose` surface also
-implement - all three framework bindings expose an equivalent API surface, just through each
+implement - all five framework bindings expose an equivalent API surface, just through each
 framework's own idiom (React `forwardRef` handle, Vue `defineExpose`, Angular public methods).
 
 ```ts

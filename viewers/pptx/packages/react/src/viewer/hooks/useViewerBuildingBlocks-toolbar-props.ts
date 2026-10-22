@@ -241,6 +241,7 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 			s.setIsDirty(true);
 		},
 		onOpenShareDialog,
+		onSave: exportHandlers.handleSave,
 		onSaveAsPptx: exportHandlers.handleSaveAsPptx,
 		onSaveAsPpsx: exportHandlers.handleSaveAsPpsx,
 		onSaveAsPptm: exportHandlers.handleSaveAsPptm,

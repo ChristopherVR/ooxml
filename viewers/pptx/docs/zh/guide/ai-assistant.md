@@ -89,9 +89,9 @@ const ai: PptxAiConfig = {
 
 ```ts
 import { openai } from '@ai-sdk/openai';
-// A backend route (framework-agnostic helpers from the shared package)
+// A backend route (framework-agnostic helpers from `ooxml-ui/pptx/ai`)
 import { streamText } from 'ai';
-import { buildPptxAiTools, buildPptxAiSystemPrompt } from 'pptx-viewer-shared/ai';
+import { buildPptxAiTools, buildPptxAiSystemPrompt } from 'ooxml-ui/pptx/ai';
 
 export async function POST(request: Request) {
 	const { messages } = await request.json();

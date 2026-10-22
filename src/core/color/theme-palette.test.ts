@@ -9,11 +9,23 @@ import {
 	themePaletteVariantLuminance,
 	themePaletteVariantsForLuminance,
 } from './theme-palette';
+import type { ThemePaletteColumn } from './theme-palette';
 
 const names = (l: number) =>
 	themePaletteVariantsForLuminance(l).map((variant) => `${variant.kind}${variant.percent}`);
 
 describe('theme palette', () => {
+	it('requires each variant of a palette column to say which step it is', () => {
+		const column: ThemePaletteColumn = {
+			name: 'Accent 1',
+			base: { hex: '#4472c4', label: 'Accent 1' },
+			// @ts-expect-error A variant without its lighter or darker step would mark and pick as the base.
+			variants: [{ hex: '#dae3f3', label: 'Accent 1, Lighter 80%' }],
+		};
+		expect(buildThemePalette()[4]!.variants.every((variant) => variant.variant)).toBeTruthy();
+		expect(column.variants).toHaveLength(1);
+	});
+
 	it('picks the five variants from the base luminance, as Office does', () => {
 		expect(names(0)).toEqual(['lighter50', 'lighter35', 'lighter25', 'lighter15', 'lighter5']);
 		expect(names(0.2)).toEqual(['lighter90', 'lighter75', 'lighter50', 'lighter25', 'lighter10']);

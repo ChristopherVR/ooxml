@@ -13,6 +13,42 @@ import { createPptxViewer, type PptxViewerInstance } from 'pptx-vanilla-viewer';
 const viewer: PptxViewerInstance = createPptxViewer(host, { source });
 ```
 
+## 自定义外壳协作 {#custom-shell-collaboration}
+
+`createStore(createInitialViewerState())`、`renderSlideStage`、`loadPresentation` 和 `createCollaborationShell` 是公开的根导出，供自行负责界面外壳的应用使用。该外壳复用现有的协作控制器，而不是另起一个 provider。
+
+```ts
+import {
+	createCollaborationShell,
+	createInitialViewerState,
+	createStore,
+} from 'pptx-vanilla-viewer';
+
+const store = createStore(createInitialViewerState());
+const shell = createCollaborationShell({
+	document,
+	store,
+	getHandler: () => loadedPresentation?.handler ?? null,
+	getCanEdit: () => hostCanEdit,
+	getSourcePending: () => store.get().loading,
+	getScale: () => zoom,
+	getSaveOptions: () => currentSaveOptions,
+});
+await shell.setConfig(collaboration);
+// Begin the load AFTER attaching the session, before replacing the store's slides.
+shell.controller.beginContentLoad('bootstrap');
+// Load the source package and update the store here.
+shell.controller.notifyContentLoaded('bootstrap');
+```
+
+`getState()` 暴露有效的 `canEdit`、连接 `status`、`remoteUsers` 和 `connectedCount`。请把宿主原始的权限传给 `getCanEdit`，不要传有效的 `store.editable` 值。仅宿主层面的权限、加载或缩放发生变化后，请调用 `refresh()`；store 或会话的变化会自动刷新。把 `cursorOverlay.el` 和 `selectionOverlay.el` 挂载到缩放后的舞台旁边。`destroy()` 只移除外壳自己的资源，借用的文档、awareness 和 provider 保持不变。
+
+这种较底层的组合方式并不提供全部内置编辑操作。选择、导航、手势和历史由宿主负责。原生富文本编辑可通过 `openInlineEditor`、`canInlineEditElement` 和 `buildInlineTextCommitPatch` 使用。对于确实归该幻灯片所有的元素，请把 `{ patcher: shell.controller.livePatcher, slideId }` 作为编辑器的 `collaboration` 选项传入。替换之后，请用 `session.checkModel` 检查当前模型。保存必须使用其规范的 `readList()` 结果，并拒绝未完成的原生输入或输入法组合；不要回退使用旧的模型文本。导出的 `overlayInlineTextSnapshot` 会在不提交模型的前提下叠加该快照。
+
+请遵守 `canInteractWithElement` 的锁定和有效的编辑门控。失去权限时，只把仍然有效的会话中的 `readAccepted()` 保留到本地模型，然后取消编辑器，不产生历史记录，也不产生新的共享写入。原生输入未完成时，`commit()` 可能会延后，因此强制销毁时必须调用 `cancel()`。替换源或卸载时，请释放已加载的 handler，并对其 blob URL 调用 `revokeBlobUrls`。
+
+Vanilla 的宿主自管示例仅使用公开导出，提供了可运行的范例。关于持久化边界，请参见[会话指南](/zh/guide/host-owned-collaboration)。
+
 ## 加载 {#loading}
 
 | 方法                     | 签名                                                         | 说明                                                               |
@@ -97,13 +133,12 @@ type ViewerMode = 'preview' | 'edit' | 'present' | 'master';
 
 ## 保存与下载 {#saving-downloads}
 
-| 方法                | 签名                                                           | 说明                                                                          |
-| ------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 序列化演示文稿，包括编辑后的内容，默认格式为 `'pptx'`，并清除未保存修改标记。 |
-| `getContent`        | `() => Promise<Uint8Array>`                                    | `save()` 的别名，返回序列化的 `.pptx` 字节，是共享 API 中的名称。             |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以支持的 OpenXML 格式触发浏览器下载。                                   |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | 调用 `save()` 并触发浏览器下载，默认文件名为 `presentation.pptx`。            |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | 将当前演示文稿和使用说明打包为可分享的 ZIP 并下载。                           |
+| 方法           | 签名                                                           | 说明                                                                          |
+| -------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 序列化演示文稿，包括编辑后的内容，默认格式为 `'pptx'`，并清除未保存修改标记。 |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | `save()` 的别名，返回序列化的 `.pptx` 字节，是共享 API 中的名称。             |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以支持的 OpenXML 格式触发浏览器下载。                                   |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | 调用 `save()` 并触发浏览器下载，默认文件名为 `presentation.pptx`。            |
 
 ```ts
 type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm';
@@ -281,11 +316,11 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 
 ## 实时协作 {#collaboration}
 
-| 方法                     | 签名                                             | 说明                                                                                                |
-| ------------------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `startCollaboration`     | `(config: CollaborationConfig) => Promise<void>` | 启动或重新启动实时会话，传输创建后解析 Promise。状态通过 `onCollaborationStatus` 传递。             |
-| `stopCollaboration`      | `() => void`                                     | 停止当前会话，没有活动会话时不执行操作。                                                            |
-| `getCollaborationStatus` | `() => ConnectionStatus`                         | 当前状态：`'disconnected' \| 'connecting' \| 'connected' \| 'error'`，未激活时为 `'disconnected'`。 |
+| 方法                     | 签名                                            | 说明                                                                                                |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `startCollaboration`     | `(config: CollaborationInput) => Promise<void>` | 启动或重新启动实时会话，传输创建后解析 Promise。状态通过 `onCollaborationStatus` 传递。             |
+| `stopCollaboration`      | `() => void`                                    | 停止当前会话，没有活动会话时不执行操作。                                                            |
+| `getCollaborationStatus` | `() => ConnectionStatus`                        | 当前状态：`'disconnected' \| 'connecting' \| 'connected' \| 'error'`，未激活时为 `'disconnected'`。 |
 
 `CollaborationConfig` 及通信格式注意事项请参见[选项](/zh/vanilla/options#collaboration)。
 
@@ -317,7 +352,7 @@ if (handler) {
 
 ### `pptx-vanilla-viewer/internals`：幻灯片过渡辅助函数 {#pptx-vanilla-viewer-internals-slide-transition-helpers}
 
-`pptx-viewer-shared`（所有绑定共用的框架无关逻辑）是一个私有的、未发布的工作区包：它从不发布到 npm，因此该 monorepo 之外的代码无法直接 `import` 它。宿主如果搭建了自己的放映界面，仍然需要用到过渡解析器/关键帧和 DOM 级叠加层驱动函数，因此它们改从 `pptx-vanilla-viewer/internals` 子路径重新导出：
+所有绑定共用的框架无关逻辑位于 `ooxml-ui/pptx`；私有的 `pptx-viewer-shared` 包只是它的兼容外观。宿主如果搭建了自己的放映界面，仍然需要用到过渡解析器/关键帧和 DOM 级叠加层驱动函数，因此它们改从 `pptx-vanilla-viewer/internals` 子路径重新导出：
 
 ```ts
 import {
@@ -331,6 +366,34 @@ import {
 `resolveSlideTransition` 将 `PptxSlideTransition` 映射为退出层/进入层的 CSS `animation` 简写属性；`resolveTransitionDurationMs` 计算其有效时长（毫秒），会考虑手动设置的时长、旧版 `spd` 取值和 PowerPoint 自身的默认值；`SLIDE_TRANSITION_KEYFRAMES`（别名 `SLIDE_TRANSITION_KEYFRAMES_CSS`）是这些动画名称所引用的 `@keyframes` 代码块。`playTransitionOverlay` 是 Vanilla 绑定中对应其他绑定过渡叠加层组件的 DOM 驱动实现（这里没有组件模型可供渲染）：它会堆叠退出层/进入层的舞台快照并直接驱动 CSS 动画。同时导出的还有：`getSlideTransitionAnimations`、`getCinematicTransitionAnimations`、`getP14TransitionAnimations`、`CINEMATIC_TRANSITION_KEYFRAMES` / `P14_TRANSITION_KEYFRAMES_ALL`、`resolveDirection` / `resolveDirection8` / `resolveOrientation` / `resolveWheelSpokeCount`，以及辅助常量（`RANDOM_ELIGIBLE_TYPES`、`INSTANT`、`DEFAULT_TRANSITION_DURATION_MS`、`DEFAULT_MORPH_DURATION_MS`、`TRANSITION_SPEED_DURATION_MS`、`EASE`、`WHEEL_SPOKE_COUNTS`）。
 
 和其他绑定的 `internals` 入口一样，这里**不受语义化版本兼容保证约束**：只有当公开的 `pptx-vanilla-viewer` API 确实无法满足需求时才使用，并在依赖它时锁定精确版本。
+
+## 界面自定义 {#ui-customization}
+
+句柄还带有完整的 `ViewerCustomizationApi`，因此可以在查看器运行时自定义界面。每次调用都会立即重新渲染受影响的界面。
+
+```ts
+viewer.hideRibbonTab('draw');
+viewer.lockSetting('general.userName', 'Ada Lovelace');
+viewer.hideContextMenuCommand('delete');
+viewer.remapShortcut('duplicate', 'Mod+Shift+D');
+viewer.setFeatureEnabled('ai', false);
+viewer.setPanelVisible('notes', false);
+viewer.updateCustomization({ hiddenDialogs: ['print'] });
+const current = viewer.getCustomization();
+```
+
+| 方法                                                                                                 | 作用                                               |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `getCustomization()` / `setCustomization(c)` / `updateCustomization(patch)` / `resetCustomization()` | 读取、替换、合并或清除整个 `ViewerCustomization`。 |
+| `hideRibbonTab` / `showRibbonTab`, `hideToolbarButton` / `showToolbarButton`                         | 功能区选项卡和顶层工具栏按钮。                     |
+| `hideOptionsPage`, `hideOptionsSection`, `hideSetting`（及 `show*`）                                 | 文件 > 选项的页面、分区和设置。                    |
+| `lockSetting(id, value, hidden?)` / `unlockSetting(id)` / `setSettingDefault(id, value)`             | 固定设置（只读或隐藏），或设置宿主默认值。         |
+| `hideBackstagePage` / `hideBackstageCard`（及 `show*`）                                              | 文件选项卡的页面和操作卡片。                       |
+| `hideContextMenuCommand` / `hideCanvasContextMenuCommand`（及 `show*`）                              | 元素和空白画布的右键菜单项。                       |
+| `disableShortcut` / `enableShortcut` / `remapShortcut`                                               | 编辑器键盘快捷键。                                 |
+| `setPanelVisible`, `setFeatureEnabled`, `setDialogAvailable`                                         | 面板、功能区域（AI、协作等）和对话框。             |
+
+完整的 ID 参考和示例请参见[界面自定义指南](/zh/guide/customization)。
 
 ## 销毁 {#teardown}
 

@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid'])
+for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'])
 	test(`${framework}: a theme scope inside an application shadow root reaches native blocks`, async ({
 		page,
 	}) => {
 		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto(`/native-blocks.html?framework=${framework}&shadow`);
-		await expect(page.locator('output')).toHaveText('edit:1');
+		await expect(page.locator('output')).toHaveText('view:1');
 		const toolbar = page.locator('[data-office-block="toolbar"]');
 		await expect(toolbar).toHaveCSS('color', 'rgb(249, 250, 251)');
 		const canvas = page.locator('[part="canvas"]');

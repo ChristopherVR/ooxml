@@ -113,6 +113,22 @@ describe('office-ui-gallery', () => {
 		gallery.querySelector<HTMLButtonElement>('[data-gallery-item="style2"]')!.click();
 		expect(picked).toHaveBeenCalledTimes(4);
 	});
+	it('draws a compact panel with unlabelled tiles whose arrow keys only move focus', () => {
+		const gallery = mount();
+		gallery.setAttribute('mode', 'panel');
+		gallery.setAttribute('compact', '');
+		expect(gallery.querySelector('.tile-label')).toBeNull();
+		const tile = gallery.querySelector<HTMLButtonElement>('[data-gallery-item="style0"]')!;
+		expect(tile.getAttribute('aria-label')).toBe('Style 0');
+		const picked = vi.fn();
+		gallery.addEventListener('office-gallery-pick', picked);
+		tile.focus();
+		tile.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		expect(document.activeElement?.getAttribute('data-gallery-item')).toBe('style1');
+		expect(picked).not.toHaveBeenCalled();
+		(document.activeElement as HTMLButtonElement).click();
+		expect(picked).toHaveBeenCalledOnce();
+	});
 	it('stamps the popup hook on the closed placeholder', () => {
 		const gallery = mount();
 		expect(gallery.contains(gallery.popup)).toBe(false);

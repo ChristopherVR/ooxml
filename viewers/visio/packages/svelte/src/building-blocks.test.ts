@@ -24,7 +24,9 @@ it('Svelte stores drive native controls, reactive options and lifecycle cleanup'
 	expect(canvas.shadowRoot!.querySelector('[part="canvas"]')).not.toBeNull();
 	get(blocks.toolbarProps).onZoomChange(2);
 	await tick();
-	expect(host.querySelector('output')!.textContent).toBe('edit:2');
+	// Granted, but no editable drawing is open yet: the effective mode is 'view'.
+	expect(blocks.controller.canEdit).toBe(true);
+	expect(host.querySelector('output')!.textContent).toBe('view:2');
 	options.set({ canEdit: false });
 	await tick();
 	expect(get(blocks.mode)).toBe('view');

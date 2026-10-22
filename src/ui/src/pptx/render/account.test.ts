@@ -87,8 +87,8 @@ describe('clearAllLocalViewerData', () => {
 
 		await clearAllLocalViewerData();
 
-		expect(mockDelete).toHaveBeenCalledWith('a');
-		expect(mockDelete).toHaveBeenCalledWith('b');
+		expect(mockDelete).toHaveBeenCalledWith('a', undefined);
+		expect(mockDelete).toHaveBeenCalledWith('b', undefined);
 		expect(mockClearPrefs).toHaveBeenCalledOnce();
 	});
 });

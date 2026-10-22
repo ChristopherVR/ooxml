@@ -75,7 +75,10 @@ describe('Solid editor adapter', () => {
 		});
 		const editor = host.querySelector('xlsx-editor') as XlsxEditorElement;
 		editor.readOnly = true;
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenCalledWith(
+			true,
+			expect.objectContaining({ readOnly: true }),
+		);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onRibbonCustomize).toHaveBeenCalledWith(['italic']);
 		setAuthor('Grace');

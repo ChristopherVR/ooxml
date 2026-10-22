@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { fileInput, waitForEditorFocus } from './helpers';
 
 test.use({ viewport: { width: 1366, height: 1500 } });
 
@@ -57,6 +57,7 @@ test('clicking a footnote on the page edits it in place, Escape returns to the b
 	const box = (await text.boundingBox())!;
 	await page.mouse.click(box.x + box.width - 1, box.y + box.height / 2);
 	await expect(noteEditor(editor)).toBeVisible();
+	await waitForEditorFocus(noteEditor(editor));
 	await page.keyboard.press('End');
 	await page.keyboard.type(' edited');
 	await expect(noteEditor(editor)).toContainText('Footnote source edited');
@@ -102,6 +103,7 @@ test('an endnote at the end of the document is editable on its page', async ({ p
 	const box = (await line.boundingBox())!;
 	await page.mouse.click(box.x + box.width - 1, box.y + box.height / 2);
 	await expect(noteEditor(editor)).toBeVisible();
+	await waitForEditorFocus(noteEditor(editor));
 	await page.keyboard.press('End');
 	await page.keyboard.type('!');
 	await expect(noteEditor(editor)).toContainText('Endnote source!');
@@ -139,6 +141,7 @@ test('a note edit is saved into the note part and undone with the note editor', 
 		.last()
 		.boundingBox())!;
 	await page.mouse.click(box.x + box.width - 1, box.y + box.height / 2);
+	await waitForEditorFocus(noteEditor(editor));
 	await page.keyboard.press('End');
 	await page.keyboard.type(' saved');
 	await page.keyboard.press('Escape');

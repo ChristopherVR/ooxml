@@ -149,6 +149,14 @@ Import the bundled stylesheet once at your app's entry point (or in your global 
 import 'pptx-angular-viewer/styles'; // or 'pptx-angular-viewer/styles.css'
 ```
 
+The stylesheet's base reset (Tailwind's preflight) is scoped to the viewer: it applies only inside
+the viewer's root, a canvas viewport and any element carrying `data-pptx-scope` (the viewer adds it
+to the dialogs and menus it renders outside its root), so your page keeps its own headings, lists,
+margins and images. If you render one of the exported pieces on its own, outside the viewer, put it
+inside an element with the `data-pptx-scope` attribute to give it the same reset. Put the attribute
+on an ordinary element such as a `div`, never on a `pptx-ui-*` control: the outermost scope starts
+from the page's base text, which would override the control's own text styles.
+
 See [Theming](/angular/theming) for how to customise colours on top of the base stylesheet.
 
 ## Next steps

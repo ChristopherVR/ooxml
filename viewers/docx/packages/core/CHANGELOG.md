@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@0.3.0) - 2026-10-22
+
+### Features
+
+- **docx:** Add navigation, status and full toolbar blocks to bindings ([d3ff60f](https://github.com/ChristopherVR/ooxml/commit/d3ff60f9c90291d11d7ff59b8ffcea96dc9bc464))
+
 ## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@0.2.0) - 2026-10-21
 
 ### Features

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { fileInput, reveal, dialogByHeading } from './helpers';
+import { clickInEditor, fileInput, reveal, dialogByHeading } from './helpers';
 test('native footnote columns render, edit as one history step and save/reopen', async ({
 	page,
 }) => {
@@ -109,7 +109,7 @@ for (const mode of [12, 14])
 		await verify();
 		await layout.selectOption('draft');
 		const body = editor.locator('.ProseMirror').first();
-		await body.click();
+		await clickInEditor(body);
 		await page.keyboard.press('Control+Home');
 		await page.keyboard.type('Prefix ');
 		await expect(body).toContainText('Prefix Left');

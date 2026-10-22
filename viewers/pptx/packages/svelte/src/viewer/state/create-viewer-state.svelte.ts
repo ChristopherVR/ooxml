@@ -4,11 +4,11 @@ import {
 	buildFieldSubstitutionContext,
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
-	listAutosaveSnapshots,
 	resolve3DRenderingFlags,
-	resolveExpiredAutosaveSnapshots,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
+	SAVE_FAILED_TOAST,
+	saveFailureMessage,
 	tableStyleSaveOptions,
 } from 'ooxml-ui/pptx';
 import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
@@ -40,6 +40,7 @@ import { provideRenderContext, renderContextSourceFor } from './render-context';
 import { provideRendering3DFlags } from './rendering-3d-flags-context';
 import { provideTableCellSelection } from './table-cell-selection-context';
 import { ViewerState } from './viewer-state.svelte';
+import { provideViewerStorage } from './viewer-storage-context';
 
 /**
  * Builds every reactive controller the ribbon, toolbar, and slide canvas
@@ -138,6 +139,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 				tableStylesDefaultId: loader.tableStylesDefaultId,
 				tableStylesToDelete: loader.tableStylesToDelete,
 			}),
+		onCorePropertiesChange: (updates) => options.onpropertieschange?.(updates),
 		onChange: () => {
 			viewer.setSlideCount(editor.slides.length);
 			options.onchange?.();
@@ -306,7 +308,8 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		onnotesupdate: options.onnotesupdate,
 	});
 
-	const rawEditingApi = createEditingApi(editor);
+	provideViewerStorage(() => options.getStorage?.());
+	const rawEditingApi = createEditingApi(editor, () => options.getStorage?.());
 	// Options > Accessibility > "feedback with sound", and Options > Save >
 	// "keep the last AutoRecover version": once a `.pptx` Save/Save-As download
 	// actually lands, play the completion cue and, unless the user asked to
@@ -316,10 +319,15 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		editorUi.optionsState.playFeedback();
 		const filePath = options.getFilePath();
 		if (format === 'pptx' && filePath && editorUi.optionsState.shouldDiscardAutosaveOnSave) {
-			void deleteAutosaveSnapshot(filePath).catch(() => {
+			void deleteAutosaveSnapshot(filePath, options.getStorage?.()).catch(() => {
 				// Saving succeeded; recovery cleanup is best-effort here.
 			});
 		}
+	};
+	const reportSaveFailure = (format: PptxSaveFormat, error: unknown): void => {
+		console.error(`[PowerPointViewer] Save as .${format} failed:`, error);
+		options.onerror?.(saveFailureMessage(error));
+		editorUi.compatToasts.notify(SAVE_FAILED_TOAST);
 	};
 	const editingApi = {
 		...rawEditingApi,
@@ -328,12 +336,24 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 			afterSuccessfulSave(format ?? 'pptx');
 			return bytes;
 		},
+		// A failed Save / Save As (serialising, or the host's storage rejected) is reported to the
+		// host's `onerror` and shown as the save-failed notice; it never rejects into the chrome.
 		downloadAs: async (format: PptxSaveFormat, fileName?: string) => {
-			await rawEditingApi.downloadAs(format, fileName);
+			try {
+				await rawEditingApi.downloadAs(format, fileName);
+			} catch (error) {
+				reportSaveFailure(format, error);
+				return;
+			}
 			afterSuccessfulSave(format);
 		},
 		downloadPptx: async (fileName?: string) => {
-			await rawEditingApi.downloadPptx(fileName);
+			try {
+				await rawEditingApi.downloadPptx(fileName);
+			} catch (error) {
+				reportSaveFailure('pptx', error);
+				return;
+			}
 			afterSuccessfulSave('pptx');
 		},
 	};
@@ -355,15 +375,11 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 
 	// File > Options > Save > "cache retention": a one-time sweep per mount is
 	// enough, since a fresh snapshot only ever lands with a fresh timestamp.
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			const expired = resolveExpiredAutosaveSnapshots(snapshots, editorUi.optionsState.options);
-			await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-		} catch {
-			// Best-effort background maintenance; a blocked IndexedDB skips it.
-		}
-	})();
+	// With a host recovery store it sweeps that store, only when it lists its copies.
+	editorUi.optionsState.bindStorage(() => options.getStorage?.());
+	void editorUi.optionsState.pruneExpiredCache().catch(() => {
+		// Best-effort background maintenance; a blocked store skips it.
+	});
 
 	// File > Options > Save > "clear cache on close": wipe recovery snapshots
 	// when the tab closes/navigates away, and when this viewer is destroyed.

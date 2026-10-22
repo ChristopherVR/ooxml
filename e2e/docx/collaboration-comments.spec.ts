@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import { clickInEditor, editorSelectionText } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: independent concurrent picture comments export and undo without reviving peer deletions`, async ({
@@ -22,7 +23,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		for (const peer of [a, b])
 			await expect(peer.locator('.ProseMirror')).toContainText('Shared document');
 		await expect(page.locator('#collaboration-status')).toContainText('Synced');
-		await a.locator('.ProseMirror').click();
+		await clickInEditor(a.locator('.ProseMirror'));
 		await page.keyboard.press('Control+End');
 		const picture = Buffer.from(
 			await page.evaluate(() => {
@@ -114,17 +115,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const b = page.locator('#peer-b docx-editor');
 		await expect(a.locator('.ProseMirror')).toContainText('Shared document');
 		await expect(b.locator('.ProseMirror')).toContainText('Shared document');
-		// The peers can still be settling their first sync when the text appears, and
-		// a document update that lands around these keystrokes drops the selection,
-		// which leaves Add comment disabled. Select until the selection is there.
-		// This narrows the race, it does not close it: an update can still land
-		// after the check.
-		await expect(async () => {
-			await a.locator('.ProseMirror').click();
-			await page.keyboard.press('Control+Home');
-			await page.keyboard.press('Control+Shift+ArrowRight');
-			expect(await page.evaluate(() => getSelection()?.toString())).not.toBe('');
-		}).toPass();
+		// Both editors show the document before the demo joins them to the Yjs room, and joining
+		// replaces each editor's state, which drops a selection made before it (and leaves Add
+		// comment disabled). The status reads Synced once both have joined.
+		await expect(page.locator('#collaboration-status')).toContainText('Synced');
+		await clickInEditor(a.locator('.ProseMirror'));
+		await page.keyboard.press('Control+Home');
+		await page.keyboard.press('Control+Shift+ArrowRight');
+		await expect.poll(() => editorSelectionText(a)).not.toBe('');
 		await a.locator('office-ui-ribbon-actions [part="comments"]').click();
 		const paneA = a.locator('.dve-comments-panel');
 		await paneA.getByRole('textbox', { name: 'New comment', exact: true }).fill('Shared review');

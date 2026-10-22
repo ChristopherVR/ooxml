@@ -1,5 +1,17 @@
 export { DocxEditorElement, registerDocxEditor } from './component';
-export type { WordToolbarProps } from './building-blocks';
+export type {
+	WordAlignment,
+	WordListChoice,
+	WordListState,
+	WordToolbarProps,
+} from './building-blocks';
+export type { WordNavigationProps, WordStatusProps } from './building-blocks-status';
+export type {
+	FindReplaceRequest,
+	HyperlinkRequest,
+	ImagePickerRequest,
+	SurfaceHostActions,
+} from './building-blocks-actions';
 export { DOCX_EDITOR_EVENTS } from './events';
 export type { RibbonAction } from './ribbon';
 export {
@@ -22,6 +34,11 @@ export type {
 	AuthorityResult,
 } from 'ooxml-core/docx/ui';
 export type { CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
+export type {
+	DocxCollaborationOptions,
+	DocxCollaborationState,
+	DocxCollaborator,
+} from './collaboration-types';
 export type { WordYjsOptions } from 'ooxml-core/docx/ui';
 export { createCollaborationAuthority } from './collaboration-model';
 export { PresenceClient, PRESENCE_PALETTE } from './presence';
@@ -41,3 +58,13 @@ export {
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
+export type {
+	WordBackstagePage,
+	WordCustomization,
+	WordMenuCommand,
+	WordMenuContext,
+	WordRegionContext,
+	WordRegionRenderer,
+} from './customization';
+export { WORD_CAPABILITY_IDS } from 'ooxml-core/docx/ui';
+export type { WordCapabilities, WordCapabilityId } from 'ooxml-core/docx/ui';

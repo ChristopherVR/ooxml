@@ -7,6 +7,7 @@ import {
 	CONSUMERS,
 	PPTX_BINDINGS,
 	PPTX_E2E_SHARDS,
+	VIEWER_BROWSER_SHARDS,
 	VIEWERS,
 	consumersOfArea,
 	onBasePlan,
@@ -15,6 +16,14 @@ import {
 	shardsFor,
 	viewersOfArea,
 } from './ci-plan.mjs';
+import { pushBase } from './ci-base.mjs';
+import {
+	CORE_SHIPPING,
+	classifyCoreManifest,
+	classifyLock,
+	parseLock,
+	refineManifests,
+} from './ci-manifests.mjs';
 
 const viewers = (result) => result.viewers.map((viewer) => viewer.name);
 const ALL_VIEWERS = Object.keys(VIEWERS);
@@ -41,6 +50,24 @@ test('UI typechecks reuse core declarations from the build job', () => {
 		/download-artifact@\S+(?: +#[^\r\n]*)?\s+with:\s+name:\s*core-dist\s+path:\s*src\/core\/dist/u,
 	);
 	assert.ok(job.indexOf('download-artifact') < job.indexOf('src/ui typecheck'));
+});
+
+test('the viewers and the pptx jobs reuse ooxml-ui from the build job, not after the ui tests', () => {
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = (name) =>
+		workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  \\S)`, 'm'))?.[1] ?? '';
+	const build = job('build');
+	assert.ok(build.indexOf('bun run build') < build.indexOf('bun run --cwd src/ui build'));
+	assert.match(
+		build,
+		/upload-artifact@\S+(?: +#[^\r\n]*)?\s+with:\s+name:\s*ui-dist\s+path:\s*src\/ui\/dist/u,
+	);
+	for (const name of ['viewers', 'pptx-build']) {
+		assert.match(job(name), /needs:\s*\[[^\]]*\bbuild\b[^\]]*\]/u, name);
+		assert.doesNotMatch(job(name), /needs:\s*\[[^\]]*\bui\b|needs\.ui\./u, name);
+	}
+	// The ui job checks the build job's ooxml-ui instead of building its own.
+	assert.doesNotMatch(job('ui'), /src\/ui build|upload-artifact/u);
 });
 
 test('a docs-only change runs nothing', () => {
@@ -202,7 +229,10 @@ test('a pptx binding change tests that package and runs only its own browser pro
 	const result = pptx('viewers/pptx/packages/vue/src/viewer/components/TableRenderer.vue');
 	assert.deepEqual(result.tests, ['vue']);
 	assert.deepEqual(result.e2e.projects, ['vue']);
-	assert.equal(result.e2e.total, PPTX_E2E_SHARDS);
+	assert.deepEqual(
+		result.e2e.matrix.map((entry) => entry.total),
+		Array(PPTX_E2E_SHARDS.vue).fill(PPTX_E2E_SHARDS.vue),
+	);
 	assert.equal(result.e2e.specs, '');
 	assert.equal(result.packaged, true);
 });
@@ -236,11 +266,34 @@ test('an engine change runs every pptx unit leg and the reference project; its t
 	assert.equal(pptx('src/core/xlsx/model.ts').run, false);
 });
 
+test('another format area adds no pptx work, whatever else reaches the viewer', () => {
+	// Each of these reaches pptx without running its engine legs; the docx and xlsx sources next to
+	// them cannot break the viewer, so they must not turn the whole pptx run on.
+	for (const reach of [
+		'src/core/xml/lite.test.ts',
+		'viewers/pptx/docs/guide/installation.md',
+		'e2e/pptx/viewer-basics.spec.ts',
+		'viewers/pptx/packages/cli/src/index.ts',
+	]) {
+		const result = pptx(reach, 'src/core/xlsx/model.ts', 'src/core/docx/model.ts');
+		assert.deepEqual(result, pptx(reach), reach);
+	}
+	// A shared area next to them still reaches every leg, and so does a core file outside any area.
+	assert.equal(pptx('src/core/xlsx/model.ts', 'src/core/xml/lite.ts').tests.length, 11);
+	assert.equal(
+		pptx('viewers/pptx/docs/guide/installation.md', 'src/core/index.ts').tests.length,
+		11,
+	);
+});
+
 test('changed spec files alone run just those specs, in every binding, on few shards', () => {
 	const result = pptx('e2e/pptx/viewer-basics.spec.ts', 'e2e/pptx/smartart-reload.spec.ts');
 	assert.deepEqual(result.tests, []);
 	assert.deepEqual(result.e2e.projects, PPTX_BINDINGS);
-	assert.equal(result.e2e.total, 1);
+	assert.deepEqual(
+		result.e2e.matrix,
+		PPTX_BINDINGS.map((project) => ({ project, shard: 1, total: 1 })),
+	);
 	assert.equal(result.e2e.specs, 'smartart-reload.spec.ts viewer-basics.spec.ts');
 });
 
@@ -257,7 +310,7 @@ test('suite-wide pptx files and CI configuration run the whole browser suite', (
 	]) {
 		const result = pptx(file);
 		assert.deepEqual(result.e2e.projects, PPTX_BINDINGS, file);
-		assert.equal(result.e2e.total, PPTX_E2E_SHARDS, file);
+		assert.equal(result.e2e.matrix.length, 14 + 4 * 7, file);
 		assert.equal(result.e2e.specs, '', file);
 	}
 });
@@ -267,25 +320,32 @@ const verifyOf = (name, ...files) =>
 		.viewers.find((viewer) => viewer.name === name)
 		?.verify.split('\n') ?? [];
 
+const browserOf = (name, ...files) =>
+	plan(files, { testFiles: 1 })
+		.viewerBrowser.filter((entry) => entry.name === name)
+		.flatMap((entry) => entry.verify.split('\n'));
+
 test('a demo change runs only its viewer typecheck and browser tests', () => {
 	const result = plan(['demos/docx/demo-vanilla/main.ts'], { testFiles: 1 });
 	assert.deepEqual(viewers(result), ['docx']);
-	assert.deepEqual(verifyOf('docx', 'demos/docx/demo-vanilla/main.ts'), [
-		'bun run typecheck',
-		'bun x playwright install --with-deps chromium',
-		'bun run test:browser',
+	assert.deepEqual(verifyOf('docx', 'demos/docx/demo-vanilla/main.ts'), ['bun run typecheck']);
+	assert.deepEqual(browserOf('docx', 'demos/docx/demo-vanilla/main.ts'), [
+		'bun run test:browser -- --shard=1/2',
+		'bun run test:browser -- --shard=2/2',
 	]);
 	assert.equal(result.checks.core, false);
 	assert.equal(result.pptx.run, false);
 });
 
 test('changed spec files alone run only those specs; support code runs the whole suite', () => {
+	assert.deepEqual(browserOf('docx', 'e2e/docx/editor.spec.ts'), [
+		'bun run test:browser -- editor.spec.ts',
+	]);
+	assert.equal(browserOf('docx', 'e2e/docx/helpers.ts').length, 2);
+	// visio's test:browser also tests the packages, so it is never narrowed to specs
 	assert.ok(
-		verifyOf('docx', 'e2e/docx/editor.spec.ts').includes('bun run test:browser -- editor.spec.ts'),
+		browserOf('visio', 'e2e/visio/viewer.spec.ts').some((c) => c.includes('native-blocks')),
 	);
-	assert.ok(verifyOf('docx', 'e2e/docx/helpers.ts').includes('bun run test:browser'));
-	// visio's test:browser also tests the packages, so it is never narrowed
-	assert.ok(verifyOf('visio', 'e2e/visio/viewer.spec.ts').includes('bun run test:browser'));
 });
 
 test('a viewer test file, its MCP server and its docs run only what they can break', () => {
@@ -356,4 +416,245 @@ test('a run on the base tests the core sources the branch changed, with vitest r
 	const none = onBasePlan(plan(viewerOnly), viewerOnly);
 	assert.equal(none.test.run, false);
 	assert.deepEqual(none.test.shards, []);
+});
+
+const lock = (workspaces, packages = '"left-pad": ["left-pad@1.0.0", "", {}, "sha"],') => `{
+  "lockfileVersion": 1,
+  "workspaces": {
+    ${workspaces}
+  },
+  "packages": {
+    ${packages}
+  },
+}`;
+const ws = (path, deps) => `"${path}": { "name": "x", "dependencies": { ${deps} }, },`;
+const reader = (before, after) => (path, side) => (side === 'base' ? before[path] : after[path]);
+
+test('a lockfile with trailing commas parses, commas inside strings survive', () => {
+	assert.deepEqual(parseLock('{"a": ["x,}", 1,], "b": {"c": 2,},}'), {
+		a: ['x,}', 1],
+		b: { c: 2 },
+	});
+	assert.throws(() => parseLock('{"a": '));
+});
+
+test('a lock change confined to placeable workspaces plans as their manifests', () => {
+	const before = lock(ws('demos/pptx/demo-host-review', '"a": "^1.0.0"'));
+	const after = lock(ws('demos/pptx/demo-host-review', '"a": "^1.1.0"'));
+	assert.deepEqual(classifyLock(before, after), { workspaces: ['demos/pptx/demo-host-review'] });
+	const refined = refineManifests(
+		['bun.lock', 'demos/pptx/demo-host-review/package.json'],
+		reader({ 'bun.lock': before }, { 'bun.lock': after }),
+	);
+	assert.deepEqual(refined.files.sort(), ['demos/pptx/demo-host-review/package.json']);
+	assert.equal(refined.deps, false);
+	const result = plan(refined.files);
+	assert.equal(result.full, false);
+	assert.deepEqual(result.pptx.e2e.projects, []);
+	assert.equal(plan(['bun.lock']).full, true);
+});
+
+test('a lock change to resolved packages, the root workspace or an unplaceable one runs everything', () => {
+	const base = lock(ws('viewers/docx/packages/react', '"a": "^1"'));
+	const resolved = lock(
+		ws('viewers/docx/packages/react', '"a": "^1"'),
+		'"left-pad": ["left-pad@1.0.1", "", {}, "sha2"],',
+	);
+	assert.deepEqual(classifyLock(base, resolved), { everything: true });
+	assert.deepEqual(classifyLock(base, lock(ws('', '"a": "^1"'))), { everything: true });
+	assert.deepEqual(classifyLock(base, lock(ws('apps/office-suite', '"a": "^1"'))), {
+		everything: true,
+	});
+	assert.deepEqual(classifyLock(base, '{ not json'), { everything: true });
+	assert.deepEqual(classifyLock(undefined, base), { everything: true });
+	const refined = refineManifests(
+		['bun.lock'],
+		reader({ 'bun.lock': base }, { 'bun.lock': resolved }),
+	);
+	assert.deepEqual(refined, { files: ['bun.lock'], deps: true });
+});
+
+test('a core manifest change is inert, a shipping change or everything', () => {
+	const manifest = (extra) =>
+		JSON.stringify({
+			name: 'ooxml-core',
+			version: '1.0.0',
+			exports: { '.': './a.js' },
+			dependencies: { a: '1' },
+			scripts: { build: 'x' },
+			...extra,
+		});
+	assert.equal(classifyCoreManifest(manifest({}), manifest({ version: '1.0.1' })).kind, 'inert');
+	assert.equal(
+		classifyCoreManifest(manifest({}), manifest({ exports: { '.': './a.js', './b': './b.js' } }))
+			.kind,
+		'shipping',
+	);
+	assert.deepEqual(classifyCoreManifest(manifest({}), manifest({ dependencies: { a: '2' } })), {
+		kind: 'everything',
+		deps: true,
+	});
+	assert.deepEqual(classifyCoreManifest(manifest({}), manifest({ scripts: { build: 'y' } })), {
+		kind: 'everything',
+		deps: false,
+	});
+	assert.equal(classifyCoreManifest(manifest({}), '{').kind, 'everything');
+	const read = (a, b) => reader({ 'src/core/package.json': a }, { 'src/core/package.json': b });
+	assert.deepEqual(
+		refineManifests(['src/core/package.json'], read(manifest({}), manifest({ version: '2.0.0' })))
+			.files,
+		[],
+	);
+	const shipping = refineManifests(
+		['src/core/package.json'],
+		read(manifest({}), manifest({ files: ['dist'] })),
+	);
+	assert.deepEqual(shipping.files, [CORE_SHIPPING]);
+	const planned = plan(shipping.files);
+	assert.equal(planned.full, false);
+	assert.equal(planned.build, true);
+	assert.equal(planned.checks.core, true);
+	assert.equal(planned.typecheck.strict, true);
+	assert.equal(planned.test.run, true);
+	assert.equal(planned.test.mode, 'changed');
+	assert.deepEqual(viewers(planned), []);
+	assert.equal(planned.pptx.run, false);
+	assert.equal(plan(['src/core/package.json']).full, true);
+});
+
+test('a configuration full run uses the reference project, a dependency or nightly run all five', () => {
+	const config = plan(['src/core/tsconfig.json'], { reference: true });
+	assert.equal(config.full, true);
+	assert.deepEqual(config.pptx.e2e.projects, ['react']);
+	assert.equal(config.pptx.e2e.matrix.length, PPTX_E2E_SHARDS.react);
+	assert.match(config.pptx.e2e.reason, /reference only/u);
+	const deps = plan(['bun.lock']);
+	assert.deepEqual(deps.pptx.e2e.projects, PPTX_BINDINGS);
+	assert.match(deps.pptx.e2e.reason, /all bindings/u);
+	const nightly = plan([], { full: true });
+	assert.equal(nightly.pptx.e2e.projects.length, PPTX_BINDINGS.length);
+	// A binding's own change on top of a config change still runs that binding.
+	const both = plan(['src/core/tsconfig.json', 'demos/pptx/demo-vue/main.ts'], {
+		reference: true,
+	});
+	assert.deepEqual(both.pptx.e2e.projects, ['react', 'vue']);
+	assert.equal(plan(['viewers/pptx/packages/vue/src/a.ts']).pptx.e2e.reason, '');
+});
+
+const commits = ['head', 'c3', 'c2', 'c1', 'c0'];
+const git =
+	() =>
+	(...args) => {
+		if (args[0] === 'rev-parse') return 'head';
+		if (args[0] === 'rev-list') return commits.join('\n');
+		if (args[0] === 'merge-base') {
+			const [, , candidate, ref] = args;
+			if (commits.indexOf(candidate) >= commits.indexOf(ref)) return '';
+			throw new Error('not an ancestor');
+		}
+		throw new Error(args.join(' '));
+	};
+const runs =
+	(...shas) =>
+	async () => ({
+		workflow_runs: shas.map((sha) => ({ head_sha: sha, conclusion: 'success', event: 'push' })),
+	});
+const lookup = (before, fetchJson, token = 't') =>
+	pushBase({ before, repo: 'o/r', token, exec: git(), fetchJson });
+
+test('a push plans from the newest green ancestor when it is older than the event base', async () => {
+	assert.deepEqual(await lookup('c3', runs('c1', 'c0')), { base: 'c1', source: 'green' });
+	// The event's own base is the green commit, or older than it: keep it.
+	assert.deepEqual(await lookup('c1', runs('c1')), { base: 'c1', source: 'before' });
+	assert.deepEqual(await lookup('c1', runs('c3')), { base: 'c1', source: 'before' });
+	// HEAD's own run is not a base, and nothing green means a full run.
+	assert.deepEqual(await lookup('c3', runs('head')), { base: '', source: 'none' });
+});
+
+test('a failed lookup, a missing token or non-success runs fall back safely', async () => {
+	const fail = async () => {
+		throw new Error('503');
+	};
+	assert.deepEqual(await lookup('c3', fail), { base: '', source: 'error' });
+	assert.deepEqual(await lookup('c3', runs('c0'), ''), { base: '', source: 'error' });
+	const other = async () => ({
+		workflow_runs: [
+			{ head_sha: 'c0', conclusion: 'failure', event: 'push' },
+			{ head_sha: 'c1', conclusion: 'success', event: 'pull_request' },
+		],
+	});
+	assert.deepEqual(await lookup('c3', other), { base: '', source: 'none' });
+});
+
+test('a full pptx run gives react more shards than the other bindings', () => {
+	const { matrix } = pptx('e2e/pptx/global-setup.ts').e2e;
+	for (const project of PPTX_BINDINGS) {
+		const entries = matrix.filter((entry) => entry.project === project);
+		assert.equal(entries.length, PPTX_E2E_SHARDS[project], project);
+		assert.deepEqual(
+			entries.map((entry) => [entry.shard, entry.total]),
+			entries.map((_, i) => [i + 1, PPTX_E2E_SHARDS[project]]),
+			project,
+		);
+	}
+	assert.ok(PPTX_E2E_SHARDS.react > PPTX_E2E_SHARDS.vue);
+});
+
+test('viewer browser suites run in their own sharded entries, not in the viewers list', () => {
+	const result = plan([], { full: true });
+	for (const viewer of result.viewers)
+		assert.doesNotMatch(viewer.verify, /test:browser|playwright/u, viewer.name);
+	for (const name of Object.keys(VIEWER_BROWSER_SHARDS)) {
+		const entries = result.viewerBrowser.filter((entry) => entry.name === name);
+		assert.equal(entries.length, VIEWER_BROWSER_SHARDS[name], name);
+		entries.forEach((entry, i) => {
+			assert.equal(entry.shard, i + 1);
+			assert.equal(entry.total, VIEWER_BROWSER_SHARDS[name]);
+			assert.equal(entry.dir, `viewers/${name}`);
+			if (entry.total > 1)
+				assert.match(entry.verify, new RegExp(`--shard=${i + 1}/${entry.total}`, 'u'));
+			else assert.doesNotMatch(entry.verify, /--shard/u);
+			assert.doesNotMatch(entry.verify, /playwright install/u);
+		});
+	}
+});
+
+test('visio shards the main Playwright run and keeps the chained runs on shard one', () => {
+	const entries = plan([], { full: true }).viewerBrowser.filter((entry) => entry.name === 'visio');
+	assert.match(entries[0].verify, /build:packages/u);
+	assert.match(entries[0].verify, /native-blocks/u);
+	assert.match(entries[0].verify, /test-packages-browser/u);
+	assert.doesNotMatch(entries[1].verify, /native-blocks|build:packages|test-packages-browser/u);
+	assert.match(entries[1].verify, /playwright test --shard=2\/2/u);
+});
+
+test("visio's browser chain matches its test:browser script", () => {
+	const manifest = new URL('../viewers/visio/package.json', import.meta.url);
+	const script = JSON.parse(readFileSync(manifest, 'utf8')).scripts['test:browser'];
+	const { sharded, rest } = VIEWERS.visio.browserChain;
+	const chain = [sharded, ...rest].map((command) => command.replace(/^bun x /u, ''));
+	assert.deepEqual(script.split(' && '), chain);
+});
+
+test('changed specs narrow a viewer browser run to one unsharded entry', () => {
+	const result = plan(['e2e/docx/editing.spec.ts']);
+	assert.deepEqual(
+		result.viewerBrowser.map(({ name, shard, total }) => ({ name, shard, total })),
+		[{ name: 'docx', shard: 1, total: 1 }],
+	);
+	assert.match(result.viewerBrowser[0].verify, /test:browser -- editing\.spec\.ts$/mu);
+});
+
+test('the browser jobs cache Playwright browsers and ci-success waits on the new jobs', () => {
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = (name) =>
+		workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  \\S)`, 'm'))?.[1] ?? '';
+	for (const name of ['pptx-e2e', 'pptx-e2e-packaged', 'viewer-browser']) {
+		assert.match(job(name), /path: ~\/\.cache\/ms-playwright/u, name);
+		assert.match(job(name), /hashFiles\('bun\.lock'\)/u, name);
+	}
+	assert.match(job('ui-test'), /--shard=\$\{\{ matrix\.shard \}\}\/3/u);
+	const needs = /^  ci-success:[\s\S]*?needs:\s*\[([^\]]*)\]/m.exec(workflow)?.[1] ?? '';
+	for (const name of ['ui', 'ui-test', 'viewers', 'viewer-browser'])
+		assert.match(needs, new RegExp(`\\b${name}\\b`, 'u'), name);
 });

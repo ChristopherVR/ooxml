@@ -10,6 +10,7 @@
  */
 import React from 'react';
 
+import { withDisplayName } from '../../utils/display-name';
 import type { Tick } from './ruler-utils';
 import { RULER_THICKNESS, RULER_FONT_SIZE } from './ruler-utils';
 
@@ -99,9 +100,10 @@ function HorizontalRulerView({ ticks, widthPx, highlight }: HorizontalRulerProps
 	);
 }
 
-export const HorizontalRuler = React.memo(HorizontalRulerView);
-
-HorizontalRuler.displayName = 'HorizontalRuler';
+export const HorizontalRuler = /* @__PURE__ */ withDisplayName(
+	/* @__PURE__ */ React.memo(HorizontalRulerView),
+	'HorizontalRuler',
+);
 
 /* ------------------------------------------------------------------ */
 /*  VerticalRuler                                                     */
@@ -172,6 +174,7 @@ function VerticalRulerView({ ticks, heightPx, highlight }: VerticalRulerProps) {
 	);
 }
 
-export const VerticalRuler = React.memo(VerticalRulerView);
-
-VerticalRuler.displayName = 'VerticalRuler';
+export const VerticalRuler = /* @__PURE__ */ withDisplayName(
+	/* @__PURE__ */ React.memo(VerticalRulerView),
+	'VerticalRuler',
+);

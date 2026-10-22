@@ -3,7 +3,7 @@
  * demo. `playwright.config.ts` builds its `webServer` list from this, and the same list backs
  * the warm-server commands, so the two cannot disagree on ports.
  *
- * Starting five Vite servers (each with `--force`, so a cold dependency optimize) is minutes of
+ * Starting five Vite servers (each with `--force`, so a cold dependency optimize; CI turns it off) is minutes of
  * every local run. Keep them up between runs instead:
  *
  *   bun e2e-servers.ts start     # start whatever is not listening, wait until ready
@@ -41,9 +41,92 @@ export interface E2eServer {
 	url?: string;
 }
 
-/** Ports and demos mirror `demos/pptx/demo-*` (react 4173, angular 4174, vue 4175, vanilla 4176, svelte 4177). */
+const DEMO_NAMES = ['react', 'vue', 'angular', 'vanilla', 'svelte'] as const;
+
+/**
+ * The bindings a run has to serve. `explicit` is the `--project` list of the run (`undefined` for
+ * none, which means every project of the config). The reference binding is always needed: every
+ * other project's parity specs compare it against React, and React's own project (and a run with
+ * no explicit project) sweeps all five demos. A single other binding therefore needs React, itself
+ * and nothing else, which spares CI three cold demo servers per shard.
+ */
+export function neededBindings(
+	explicit: readonly string[] | undefined = selectedProjects(),
+): readonly string[] {
+	if (!explicit || explicit.length === 0) {
+		return DEMO_NAMES;
+	}
+	const bindings = new Set<string>(['react']);
+	for (const project of explicit) {
+		const binding = project.replace(/-headless$/, '');
+		if (binding === 'react' || !(DEMO_NAMES as readonly string[]).includes(binding)) {
+			return DEMO_NAMES;
+		}
+		bindings.add(binding);
+	}
+	return DEMO_NAMES.filter((name) => bindings.has(name));
+}
+
+/**
+ * The `--project` values of this process, or of the main process when this is a worker (it
+ * hands them over in `PPTX_E2E_PROJECTS`, since workers are forked without the CLI flags).
+ */
+export function selectedProjects(
+	argv: readonly string[] = process.argv,
+): readonly string[] | undefined {
+	const found: string[] = [];
+	argv.forEach((arg, at) => {
+		const inline = /^(?:--project|-p)=(.+)$/.exec(arg);
+		if (inline?.[1]) {
+			found.push(inline[1]);
+		} else if ((arg === '--project' || arg === '-p') && argv[at + 1]) {
+			found.push(argv[at + 1] as string);
+		}
+	});
+	if (found.length > 0) {
+		process.env.PPTX_E2E_PROJECTS = found.join(',');
+		return found;
+	}
+	const inherited = process.env.PPTX_E2E_PROJECTS;
+	return inherited ? inherited.split(',') : undefined;
+}
+
+/**
+ * `PPTX_E2E_SERVE=preview` serves each demo's built `dist/` with `vite preview` instead of a dev
+ * server: no cold dependency optimisation and no unbundled module waterfall, which is most of a CI
+ * shard's time. The demos must be built first (`bun run build` in each `demos/pptx/demo-*`).
+ * `PPTX_E2E_VITE_FORCE=1` keeps `--force` on the dev command (CI leaves it off: the install is
+ * fresh, so there is no stale cache to bust).
+ */
+const serveMode = (): 'dev' | 'preview' =>
+	process.env.PPTX_E2E_SERVE === 'preview' ? 'preview' : 'dev';
+
+function demoCommand(port: number): string {
+	if (serveMode() === 'preview') {
+		return `npx vite preview --port ${port} --strictPort`;
+	}
+	const force = process.env.PPTX_E2E_VITE_FORCE === '0' ? '' : ' --force';
+	return `npx vite${force} --port ${port} --strictPort`;
+}
+
+function assertBuilt(name: string): void {
+	if (
+		serveMode() === 'preview' &&
+		!existsSync(join(__dirname, '../../demos/pptx', `demo-${name}`, 'dist', 'index.html'))
+	) {
+		throw new Error(
+			`PPTX_E2E_SERVE=preview needs the ${name} demo built: run "bun run build" in demos/pptx/demo-${name}.`,
+		);
+	}
+}
+
+/**
+ * Ports and demos mirror `demos/pptx/demo-*` (react 4173, angular 4174, vue 4175, vanilla 4176,
+ * svelte 4177). `bindings` narrows the list to the demos a run needs; the relay is always first.
+ */
 export function e2eServers(
 	offset = Number(process.env.PPTX_E2E_PORT_OFFSET ?? 0),
+	bindings: readonly string[] = neededBindings(),
 ): readonly E2eServer[] {
 	const demos: [string, number][] = [
 		['react', 4173],
@@ -60,13 +143,18 @@ export function e2eServers(
 			command: 'bun ../../demos/pptx/demo-react/collab-server.mjs',
 			env: { PORT: String(1234 + offset) },
 		},
-		...demos.map(([name, base]) => ({
-			name,
-			port: base + offset,
-			cwd: `../../demos/pptx/demo-${name}`,
-			command: `npx vite --force --port ${base + offset} --strictPort`,
-			url: `http://localhost:${base + offset}`,
-		})),
+		...demos
+			.filter(([name]) => bindings.includes(name))
+			.map(([name, base]) => {
+				assertBuilt(name);
+				return {
+					name,
+					port: base + offset,
+					cwd: `../../demos/pptx/demo-${name}`,
+					command: demoCommand(base + offset),
+					url: `http://localhost:${base + offset}`,
+				};
+			}),
 	];
 }
 

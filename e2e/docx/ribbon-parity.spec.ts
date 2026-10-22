@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { insertTableOfSize, newDocument, reveal, saveButton } from './helpers';
+import { clickInEditor, insertTableOfSize, newDocument, reveal, saveButton } from './helpers';
 
 test.describe('Word-style ribbon', () => {
 	test.beforeEach(async ({ page }) => {
@@ -232,7 +232,7 @@ test.describe('Word-style ribbon', () => {
 		await page.keyboard.type('Body text');
 		await editor.locator('[role="tab"][data-tab="insert"]').click();
 		await editor.getByRole('combobox', { name: 'Page number' }).selectOption('bottom:right');
-		await editor.locator('.ProseMirror').first().click();
+		await clickInEditor(editor.locator('.ProseMirror').first());
 		await page.keyboard.press('End');
 		await page.keyboard.type(' more');
 		await editor.getByRole('button', { name: 'Undo', exact: true }).click();

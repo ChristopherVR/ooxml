@@ -51,7 +51,10 @@ import { themes } from './themes';
 const viewerRef = shallowRef<PowerPointViewerExpose>();
 let removeDevViewerHandle: (() => void) | undefined;
 onMounted(() => {
-	removeDevViewerHandle = installDevViewerHandle(() => viewerRef.value, import.meta.env.DEV);
+	removeDevViewerHandle = installDevViewerHandle(
+		() => viewerRef.value,
+		import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1',
+	);
 });
 onBeforeUnmount(() => removeDevViewerHandle?.());
 
@@ -554,6 +557,7 @@ function onZoneClick(e: MouseEvent): void {
 			:show-toolbar="rootOptions.showToolbar"
 			:show-thumbnails="rootOptions.showThumbnails"
 			:initial-slide="rootOptions.initialSlide"
+			:fit-padding="rootOptions.fitPadding"
 			:inspector-initially-open="rootOptions.inspectorInitiallyOpen"
 			:ai="aiConfig"
 			:author-name="collaborationConfig?.userName ?? autoName"

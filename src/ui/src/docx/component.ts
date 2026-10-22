@@ -1,8 +1,6 @@
 import { installOfficeUiThemeFor } from '../theme';
 import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
-import { docToModel } from './model-adapter';
-import { schema } from './schema';
 import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
@@ -16,6 +14,8 @@ import {
 	type EditorTheme,
 	type EditorThemeMode,
 } from 'ooxml-core/docx/ui';
+import type { DocxCollaborationOptions } from './collaboration-types';
+import { leaveYjs } from './collaboration-room';
 import { EditorCore, type LoadedDocument } from './editor-core';
 import { buildShell, type ShellApi } from './editor-shell';
 import { renderDocument } from './editor-render';
@@ -95,6 +95,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	attributeChangedCallback(name: string, _old: string | null, value: string | null) {
+		if (name === 'read-only' && this.core.reflectingReadOnly) return;
 		if (isDocxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 
@@ -168,28 +169,46 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.replaceDocument(value || createDocument());
 		this.core.shell.chrome?.setSaveState('saved');
 		if (this.isConnected) renderDocument(this.core);
+		this.core.room.resume();
 	}
 
 	get readOnly() {
 		return this.core.readOnly;
 	}
+	/** True when the document cannot be edited: this switch, a `viewer` role or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
 		this.core.readOnly = Boolean(value);
-		this.core.view?.setProps({ editable: () => this.core.canEditBody() });
-		if (this.core.readOnly)
-			this.core.parts.closeHeaderFooter(this.core.shell.canvas, this.core.shell.paper);
-		this.core.refreshControls();
-		reflectAttribute(this, 'read-only', this.core.readOnly);
+		this.core.applyReadOnly();
+	}
+
+	/**
+	 * Shares the loaded document in a room while set; `null` leaves (see
+	 * `DocxCollaborationOptions`). A document loaded later is shared too: the editor leaves
+	 * before it is replaced and rejoins after. With `intent: 'join'` an empty room is never seeded.
+	 * Race: with the default `create`, two windows that open one empty room at the same moment both
+	 * seed it and the room holds both bodies, so give exactly one window `create` and the others
+	 * `join`. A room name is also the Word `documentId`: nothing verifies that every window
+	 * loaded the same source package. A viewer `user.role` blocks local edits (advisory).
+	 * Leaving keeps the content; a session the editor opened is destroyed, a host `session` is not.
+	 */
+	get collaboration(): DocxCollaborationOptions | null {
+		return this.core.room.wanted ?? null;
+	}
+	set collaboration(value: DocxCollaborationOptions | null | undefined) {
+		this.core.room.want(value ?? undefined);
 	}
 
 	connectedCallback() {
 		installOfficeUiThemeFor(this);
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
+		this.core.room.resume();
 	}
 
 	disconnectedCallback() {
 		const { core } = this;
+		core.shell.surfaceNavigation?.();
+		delete core.shell.surfaceNavigation;
 		core.shell.printStoryEditing?.();
 		core.shell.printNoteEditing?.();
 		core.shell.printFloats?.destroy();
@@ -197,10 +216,12 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.shell.printEditing?.destroy();
 		delete core.shell.printEditing;
 		core.collab.presence?.leave();
+		if (!core.collab.yjs) core.room.suspend();
 		core.detachedState = core.view?.state;
 		core.view?.destroy();
 		core.view = undefined;
 		core.imageMedia.release();
+		core.shell.chrome?.backstage.destroy();
 	}
 
 	async load(input: Uint8Array | ArrayBuffer): Promise<void> {
@@ -224,6 +245,7 @@ export class DocxEditorElement extends DocxEditorApi {
 			if (generation === core.loadGeneration) {
 				core.loading = false;
 				core.refreshControls();
+				core.room.resume();
 			}
 		}
 	}
@@ -232,6 +254,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.assertDocumentReplaceable();
 		this.replaceDocument(session.model, session);
 		if (this.isConnected) renderDocument(this.core);
+		this.core.room.resume();
 	}
 
 	/** Join only after loading the authority's matching document snapshot and version. */
@@ -265,19 +288,12 @@ export class DocxEditorElement extends DocxEditorApi {
 			throw new Error(
 				'Acknowledge pending collaboration edits before stopping, or explicitly discard the queue.',
 			);
-		if (core.collab.yjs) {
-			core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
-			if (core.collab.yjs.sharedComments)
-				core.model = { ...core.model, comments: core.collab.yjs.comments.all() };
-			for (const [name, part] of core.collab.yjs.media.all())
-				core.inserts.pendingMedia.set(name, part);
-		}
-		core.collab.stop();
-		core.detachedState = undefined;
-		if (this.isConnected) renderDocument(core);
+		core.room.stop();
+		leaveYjs(core);
 	}
 
 	private assertDocumentReplaceable() {
+		this.core.room.suspend();
 		if (this.core.collab.active)
 			throw new Error('Stop collaboration before replacing the document.');
 	}

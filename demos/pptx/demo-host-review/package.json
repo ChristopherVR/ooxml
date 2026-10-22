@@ -1,0 +1,35 @@
+{
+	"name": "pptx-host-review-demo",
+	"private": true,
+	"description": "Example host application: several people review a presentation inside a business system that owns accounts, permissions, the collaboration session and the AI key.",
+	"type": "module",
+	"scripts": {
+		"start": "bun server/index.ts",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@ai-sdk/openai-compatible": "^3.0.70",
+		"ai": "^7.0.142",
+		"emf-converter": "4.21.0",
+		"fast-xml-parser": "^5.11.2",
+		"jszip": "^3.10.2",
+		"ooxml-ui": "workspace:*",
+		"openteams-server": "workspace:*",
+		"pptx-vanilla-viewer": "workspace:*",
+		"pptx-viewer-core": "workspace:*",
+		"pptx-viewer-locales": "workspace:*",
+		"vite": "^8.3.4",
+		"y-protocols": "^1.0.7",
+		"y-websocket": "^3.1.0",
+		"yjs": "^13.6.33"
+	},
+	"devDependencies": {
+		"@types/node": "^26.6.5",
+		"@types/ws": "^8.18.2",
+		"pptx-viewer-shared": "workspace:*",
+		"typescript": "^7.0.2",
+		"vitest": "^5.0.5",
+		"ws": "^8.22.0"
+	}
+}

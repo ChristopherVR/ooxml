@@ -9,7 +9,9 @@
  * and binds this engine to the live doc for the duration of a session.
  */
 
+import { signal } from '@angular/core';
 import type { CollabLoadOrigin, YDocLike, YjsFactories, YTransactionLike } from 'ooxml-ui/pptx';
+import type { SyncGate } from 'ooxml-ui/pptx';
 import {
 	createSyncGate,
 	LOCAL_SYNC_ORIGIN,
@@ -41,7 +43,23 @@ export class SlideSyncEngine {
 	 * gate, so a late joiner never seeds its placeholder deck into a room whose
 	 * real content has not arrived yet.
 	 */
-	readonly gate = createSyncGate(() => this.#flushPending());
+	readonly gate: SyncGate = this.#reportingGate();
+	/** True while the first-write gate is open (the first exchange with the room finished). */
+	readonly synced = signal(false);
+
+	#reportingGate(): SyncGate {
+		const base = createSyncGate(() => {
+			this.synced.set(true);
+			this.#flushPending();
+		});
+		return {
+			...base,
+			reset: () => {
+				base.reset();
+				this.synced.set(false);
+			},
+		};
+	}
 
 	#binding: SlideSyncBinding | null = null;
 	#lastSynced = '';

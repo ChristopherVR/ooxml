@@ -1,11 +1,11 @@
 ---
 title: MCP 与工具
-description: pptx-viewer-mcp 基于 pptx-viewer-core，提供 67 个纯 PPTX 操作工具、Zod 输入模式、MCP 服务器和 Y.Doc 协作编解码器。
+description: pptx-viewer-mcp 基于 pptx-viewer-core，提供 73 个 PPTX 操作工具、Zod 输入模式、MCP 服务器和 Y.Doc 协作编解码器。
 ---
 
 # MCP 与工具 {#mcp-tools}
 
-`pptx-viewer-mcp`（源码位于 `packages/tools`）为 AI 智能体和协作运行时驱动 PPTX 编辑提供工具：**67 个纯工具函数**、每个工具输入的 **Zod 模式**、一个 **MCP 服务器**，以及 **Y.Doc 协作编解码器**。它完全基于 [`pptx-viewer-core`](/zh/core/) 构建。
+`pptx-viewer-mcp`（源码位于 `packages/tools`）为 AI 智能体和协作运行时驱动 PPTX 编辑提供工具：**73 个工具函数**、每个工具输入的 **Zod 模式**、一个 **MCP 服务器**，以及 **Y.Doc 协作编解码器**。它完全基于 [`pptx-viewer-core`](/zh/core/) 构建。
 
 ::: tip 适用位置
 工具接受核心引擎生成的 [`PptxData` 模型](/zh/guide/data-model)，将其作为普通内存数据修改，再交还给调用方。工具本身不引入文件 I/O 或框架依赖；由你或所提供的 MCP 服务器、执行流程决定如何加载和持久化。
@@ -25,14 +25,14 @@ npm install yjs
 
 | 入口                      | 内容                                                                                                        |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `pptx-viewer-mcp`         | 67 个工具函数、提供程序类型和执行流程（`loadPresentation`、`savePresentation`、`executeToolWithContext`）。 |
+| `pptx-viewer-mcp`         | 73 个工具函数、提供程序类型和执行流程（`loadPresentation`、`savePresentation`、`executeToolWithContext`）。 |
 | `pptx-viewer-mcp/schemas` | 每个工具输入的 Zod 模式。                                                                                   |
 | `pptx-viewer-mcp/codec`   | `PptxCodec`，Y.Doc 与 PPTX 字节之间的编解码器。                                                             |
 | `pptx-viewer-mcp/mcp`     | `createServer()`，以编程方式创建 MCP 服务器的工厂函数。                                                     |
 
-## 67 个工具函数 {#the-67-tool-functions}
+## 73 个工具函数 {#the-73-tool-functions}
 
-每个工具都是**纯函数**：接收 `ToolContext`，返回 `ToolResult`，不执行文件 I/O。按职责分组如下：
+每个工具都是**纯函数**：接收 `ToolContext`，返回 `ToolResult`，不执行文件 I/O。下表按职责列出前 67 个，表后接着列出 6 个嵌入对象工具：
 
 | 分组             | 数量 | 工具                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -48,6 +48,8 @@ npm install yjs
 | **元数据与属性** | 4    | `getMetadata`, `updateMetadata`, `getPresentationProperties`, `updatePresentationProperties`                                                                                                                                                                                                                            |
 | **验证与修复**   | 3    | `runAccessibilityCheck`, `validatePresentation`, `repairPresentation`                                                                                                                                                                                                                                                   |
 | **转换与导出**   | 5    | `convertToMarkdown`, `exportToSvg`, `exportSlideSvg`, `exportToJson`, `importFromJson`                                                                                                                                                                                                                                  |
+
+**嵌入对象（6 个）：**`getOleContent`、`setOleSheetCell`、`setOleDocumentParagraph`、`setOleDeckSlideTitle`、`replaceOleFile`、`setOleObjectName`。在 MCP 服务器上，它们分别是 `ole_get_content`、`ole_set_sheet_cell`、`ole_set_document_paragraph`、`ole_set_deck_slide_title`、`ole_replace_file` 和 `ole_set_object_name`。它们读取和编辑嵌入 OLE 对象（工作簿、文档或演示文稿）的内容，或替换其文件。分组表列出的是函数名；MCP 名称是对应的 snake_case 形式（表中的 `setElementLockT` 对应 `set_element_lock`，`addChartSeriesT` 对应 `add_chart_series`，依此类推）。
 
 组件包还导出 `mergePresentationT` 和 `diffPresentationsT`，用于合并和比较流程。这两个是普通函数，不会注册到 MCP 服务器。
 
@@ -126,7 +128,7 @@ console.log(result.elements);
 }
 ```
 
-全局安装（`npm i -g pptx-viewer-mcp`）后，也会安装名为 **`pptx-tools`** 的可执行命令。全部 67 个工具都以 **snake_case** 名称通过 stdio 暴露，例如 `get_slide`、`add_slide`、`batch_update_elements`、`convert_to_markdown`。每个 MCP 工具接受 `filePath` 参数，服务器在内部处理加载和保存。
+全局安装（`npm i -g pptx-viewer-mcp`）后，也会安装名为 **`pptx-tools`** 的可执行命令。全部 73 个工具都以 **snake_case** 名称通过 stdio 暴露，例如 `get_slide`、`add_slide`、`batch_update_elements`、`convert_to_markdown`。每个 MCP 工具接受 `filePath` 参数，服务器在内部处理加载和保存。
 
 如需通过代码嵌入服务器，而非使用 CLI，可以使用 `/mcp` 入口的工厂函数：
 
@@ -134,7 +136,7 @@ console.log(result.elements);
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer } from 'pptx-viewer-mcp/mcp';
 
-const server = createServer(); // McpServer with all 67 tools registered
+const server = createServer(); // McpServer with all 73 tools registered
 await server.connect(new StdioServerTransport());
 ```
 
@@ -162,10 +164,10 @@ const filesystem: FileSystemProvider = {
 const execCtx: ExecutionContext = { filesystem };
 
 const result = await executeToolWithContext('deck.pptx', execCtx, (ctx) =>
-	replaceText(ctx, { find: 'Draft', replace: 'Final', caseSensitive: false }),
+	replaceText(ctx, { query: 'Draft', replacement: 'Final', caseSensitive: false }),
 );
 
-console.log(result.replacements, result.savedToDisk);
+console.log(result.replacementCount, result.savedToDisk);
 ```
 
 设置 `execCtx.collaboration` 后，流程在运行工具之前将当前 Y.Doc 状态**转换回数据**，让工具看到尚未保存的编辑；保存后再将数据**重新写入**房间，让远程参与者无需重新加载文件即可收到变化。

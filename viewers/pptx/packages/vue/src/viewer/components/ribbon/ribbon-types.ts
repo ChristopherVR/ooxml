@@ -279,6 +279,8 @@ export interface RibbonProps {
 	/** Serialise the deck to pptx-viewer-json and download it (Export page card). */
 	onExportJson: () => void;
 	onOpenShareDialog?: () => void;
+	/** File > Save (backstage Save item): reported to host storage as `save`, not Save As. */
+	onSave?: () => void;
 	onSaveAsPptx: () => void;
 	onSaveAsPpsx: () => void;
 	onSaveAsPptm: () => void;

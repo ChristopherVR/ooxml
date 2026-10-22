@@ -30,6 +30,7 @@ export function buildFragments(
 			...(leader ? { leader } : {}),
 			...(run?.script ? { script: run.script } : {}),
 			...(run?.color ? { color: run.color } : {}),
+			...(run?.background ? { background: run.background } : {}),
 			...(run?.underline ? { underline: true } : {}),
 			...(run?.strike ? { strike: true } : {}),
 			...(token.kind === 'object' && run?.object ? { object: run.object } : {}),

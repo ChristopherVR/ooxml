@@ -35,13 +35,13 @@ Lo mismo funciona entre pestañas reales, en cualquier emparejamiento: abre [la 
 
 ## Qué se admite y qué no
 
-| Admitido                                                                       | No admitido                                                                                       |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Chat, respuestas y reacciones concurrentes fusionados por un CRDT de Yjs       | Cifrado de extremo a extremo: tu servidor puede leer y almacenar todo                             |
-| Presencia e indicadores de escritura                                           | Identidad autenticada: los nombres son declaraciones y el servidor de referencia no tiene cuentas |
-| Colaboración en el mismo navegador sin servidor (modo local, como arriba)      | Colaboración entre máquinas distintas sin un servidor que ejecutes tú                             |
-| Colaboración entre máquinas mediante tu propio servidor de sincronización      | Un servicio alojado: no se ofrece ninguno, y las demos de Pages no tienen servidor detrás         |
-| Llamadas con audio, vídeo, pantalla compartida y levantar la mano (malla, ~12) | Llamadas de tamaño webinar, grabación, notificaciones                                             |
+| Admitido                                                                       | No admitido                                                                                                               |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Chat, respuestas y reacciones concurrentes fusionados por un CRDT de Yjs       | Cifrado de extremo a extremo: tu servidor puede leer y almacenar todo                                                     |
+| Presencia e indicadores de escritura                                           | Control de acceso por equipo y SSO; la identidad es una declaración salvo que actives las cuentas opcionales del servidor |
+| Colaboración en el mismo navegador sin servidor (modo local, como arriba)      | Colaboración entre máquinas distintas sin un servidor que ejecutes tú                                                     |
+| Colaboración entre máquinas mediante tu propio servidor de sincronización      | Un servicio alojado: no se ofrece ninguno, y las demos de Pages no tienen servidor detrás                                 |
+| Llamadas con audio, vídeo, pantalla compartida y levantar la mano (malla, ~12) | Llamadas de tamaño webinar, grabación, notificaciones                                                                     |
 
 ## Entre máquinas
 

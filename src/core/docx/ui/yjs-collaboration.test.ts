@@ -197,6 +197,22 @@ describe('Word room bootstrap', () => {
 		expect(() => bind(a!, initial, true)).toThrow(/initial provider synchronization/);
 		expect(a!.doc.getXmlFragment('docx:body').length).toBe(0);
 	});
+	it('lets a creator seed an unsynced room only once its write gate opened', () => {
+		const [a] = pair(false);
+		const initial = schema.node('doc', null, [schema.node('paragraph', null, [schema.text('Hi')])]);
+		const options = { documentId: 'package-id', initializeIfEmpty: true, seedWithoutSync: true };
+		expect(() => new WordYjsCollaboration(a!, initial, options)).toThrow(
+			/initial provider synchronization/,
+		);
+		a!.gate.open();
+		expect(
+			() => new WordYjsCollaboration(a!, initial, { ...options, initializeIfEmpty: false }),
+		).toThrow(/initial provider synchronization/);
+		const binding = new WordYjsCollaboration(a!, initial, options);
+		bindings.push(binding);
+		expect(a!.synced).toBe(false);
+		expect(a!.doc.getXmlFragment('docx:body').length).toBeGreaterThan(0);
+	});
 	it('creates a shared empty text container without adding initial content to local undo', () => {
 		const [a, b] = pair();
 		const initial = schema.node('doc', null, [schema.node('paragraph')]);

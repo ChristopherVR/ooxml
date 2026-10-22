@@ -17,6 +17,7 @@ import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
+import { useViewerStorage } from '../viewer-storage-context';
 import { ViewerRegion, useRegionRenderer } from '../ViewerRegion';
 import { WebSearch } from '../WebControls';
 import { AccountPage } from './AccountPage';
@@ -42,9 +43,10 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	const [recent, setRecent] = useState<BackstageRecentFile[]>([]);
 	const { isHidden } = useToolbarVisibility(p.hiddenActions);
 	const exportHidden = isHidden('export');
+	const storage = useViewerStorage();
 	useEffect(() => {
-		void listBackstageRecentFiles(t, p.recentPresentationsCount).then(setRecent);
-	}, [t, p.recentPresentationsCount]);
+		void listBackstageRecentFiles(t, p.recentPresentationsCount, storage).then(setRecent);
+	}, [t, p.recentPresentationsCount, storage]);
 	const visibleRecent = useMemo(() => {
 		const q = query.trim().toLowerCase();
 		return q
@@ -103,7 +105,7 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 									item.id === 'close'
 										? p.onClose()
 										: item.id === 'save'
-											? run(p.onSaveAsPptx)
+											? run(p.onSave ?? p.onSaveAsPptx)
 											: setRequestedPage(item.id)
 								}
 								className={`${BACKSTAGE_NAV_CLASSES.row} ${page === item.id ? BACKSTAGE_NAV_CLASSES.active : BACKSTAGE_NAV_CLASSES.inactive}`}

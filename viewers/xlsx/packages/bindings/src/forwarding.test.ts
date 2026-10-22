@@ -82,8 +82,23 @@ describe('prop forwarding', () => {
 		const binding = mountEditor(newHost(), { onReadOnlyChange, onRibbonCustomize });
 		emit(binding.element, 'readonly-change', { readOnly: true });
 		emit(binding.element, 'ribbon-customize', { hiddenActions: ['bold'] });
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenCalledWith(
+			true,
+			expect.objectContaining({ readOnly: true }),
+		);
 		expect(onRibbonCustomize).toHaveBeenCalledWith(['bold']);
+		binding.destroy();
+	});
+
+	it('passes the lock and the host switch so a parent can mirror only the host', () => {
+		const onReadOnlyChange = vi.fn();
+		const binding = mountEditor(newHost(), { onReadOnlyChange });
+		emit(binding.element, 'readonly-change', { readOnly: true, locked: true, hostReadOnly: false });
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, {
+			readOnly: true,
+			locked: true,
+			hostReadOnly: false,
+		});
 		binding.destroy();
 	});
 
@@ -91,7 +106,10 @@ describe('prop forwarding', () => {
 		const onReadOnlyChange = vi.fn();
 		const binding = mountEditor(newHost(), { onReadOnlyChange });
 		binding.element.readOnly = true;
-		expect(onReadOnlyChange).toHaveBeenLastCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenLastCalledWith(
+			true,
+			expect.objectContaining({ readOnly: true }),
+		);
 		binding.destroy();
 	});
 });

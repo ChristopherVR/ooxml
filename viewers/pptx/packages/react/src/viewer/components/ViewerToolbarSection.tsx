@@ -564,7 +564,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					redoLabel={history.redoLabel}
 					onUndo={history.handleUndo}
 					onRedo={history.handleRedo}
-					onSave={exportHandlers.handleSaveAsPptx}
+					onSave={exportHandlers.handleSave}
 					findReplaceOpen={findReplace.findReplaceOpen}
 					onToggleFindReplace={() => findReplace.setFindReplaceOpen(!findReplace.findReplaceOpen)}
 					onCommandSearch={handleCommandSearch}
@@ -690,6 +690,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					s.setIsDirty(true);
 				}}
 				onOpenShareDialog={onOpenShareDialog}
+				onSave={exportHandlers.handleSave}
 				onSaveAsPptx={exportHandlers.handleSaveAsPptx}
 				onSaveAsPpsx={exportHandlers.handleSaveAsPpsx}
 				onSaveAsPptm={exportHandlers.handleSaveAsPptm}

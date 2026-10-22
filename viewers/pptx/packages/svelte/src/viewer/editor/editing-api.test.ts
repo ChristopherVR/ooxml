@@ -54,3 +54,30 @@ describe('createEditingApi.downloadAs', () => {
 		}
 	});
 });
+
+describe('createEditingApi with host-owned storage', () => {
+	it('hands downloadPptx and downloadAs to storage.save instead of downloading', async () => {
+		const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+		const save = vi.fn(async () => undefined);
+		try {
+			const api = createEditingApi(stubEditor(), () => ({ save }));
+			await api.downloadPptx('report.ppt');
+			await api.downloadAs('ppsx', 'report.ppt');
+			expect(save.mock.calls.map(([, meta]) => meta)).toEqual([
+				{
+					fileName: 'report.pptx',
+					mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+					reason: 'save',
+				},
+				{
+					fileName: 'report.ppsx',
+					mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+					reason: 'saveAs',
+				},
+			]);
+			expect(clickSpy).not.toHaveBeenCalled();
+		} finally {
+			clickSpy.mockRestore();
+		}
+	});
+});

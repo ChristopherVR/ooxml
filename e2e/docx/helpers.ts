@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import type { EditorView } from 'prosemirror-view';
 
 /** Browser-contract helpers for the demo host and the editor's built-in Word chrome. */
 const editor = (page: Page) => page.locator('docx-editor');
@@ -71,6 +72,51 @@ export async function insertTableOfSize(page: Page, rows = 2, columns = 2) {
 		.locator(`.table-picker [role="gridcell"][data-rows="${rows}"][data-columns="${columns}"]`)
 		.click();
 }
+
+/**
+ * Resolves once the timers the page has started so far have run. A ProseMirror view that gains
+ * focus checks 20 ms later whether the browser's selection still matches its own and puts its own
+ * back if not. A page runs its timers in the order they fall due, so a longer one started now runs
+ * after that check.
+ */
+const editorTimersRun = (page: Page) =>
+	page.evaluate(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+
+/**
+ * Clicks into an editor's text before pressing keys, as a person does. When the click is what
+ * focuses the editor, ProseMirror's check after focus can run, on a busy machine, after the next
+ * key moved the caret (Home, End, Control+Home) and put the click's caret back. So the editor that
+ * holds `target` is focused first and its check allowed to run; the click then only moves the caret.
+ */
+export async function clickInEditor(target: Locator, options?: Parameters<Locator['click']>[0]) {
+	await target.evaluate((node) =>
+		node.closest<HTMLElement>('.ProseMirror')?.focus({ preventScroll: true }),
+	);
+	await editorTimersRun(target.page());
+	await target.click(options);
+	await editorTimersRun(target.page());
+}
+
+/**
+ * Waits until `editor`, a ProseMirror element that takes focus by itself (a header, footer or note
+ * opened by a double click), has focus and has run its check of the caret, so that the next key
+ * that moves the caret is not undone.
+ */
+export async function waitForEditorFocus(editor: Locator) {
+	await expect(editor).toBeFocused();
+	await editorTimersRun(editor.page());
+}
+
+/**
+ * The text of the editor's own selection, the one its commands read. The browser's selection
+ * reaches it through an asynchronous selectionchange, which the editor ignores once focus has left
+ * it, so a test waits for this before a step that moves focus to the ribbon or a pane.
+ */
+export const editorSelectionText = (editor: Locator) =>
+	editor.evaluate((element) => {
+		const { state } = (element as unknown as { view: EditorView }).view;
+		return state.doc.textBetween(state.selection.from, state.selection.to);
+	});
 
 /**
  * A narrow ribbon folds groups into dropdown buttons, as Word does. Opens whichever of them holds

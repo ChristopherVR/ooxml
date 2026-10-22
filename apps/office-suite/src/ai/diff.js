@@ -56,6 +56,39 @@ export function describeChanges(changes, files) {
 	});
 }
 
+/**
+ * The cells a spreadsheet edit changes beyond those typed into, from `reviewSpreadsheet`: formulas
+ * the workbook recalculates and spilled ranges. Empty when there are none.
+ */
+export function effectsView({ effects, more }) {
+	const box = document.createElement('div');
+	box.className = 'ai-effects';
+	if (!effects.length && !more) return box;
+	const total = effects.length + more;
+	box.append(
+		Object.assign(document.createElement('p'), {
+			textContent: `Also changes ${more ? `more than ${effects.length}` : total} other cell${total === 1 ? '' : 's'}, recalculated by the workbook:`,
+		}),
+	);
+	const table = box.appendChild(document.createElement('table'));
+	table.className = 'ai-cell-diff';
+	table.innerHTML = '<thead><tr><th>Cell</th><th>Now</th><th>After</th></tr></thead>';
+	const body = table.appendChild(document.createElement('tbody'));
+	const sheets = new Set(effects.map((effect) => effect.where)).size;
+	for (const effect of effects) {
+		const row = body.appendChild(document.createElement('tr'));
+		row.appendChild(document.createElement('td')).textContent =
+			sheets > 1 ? `${effect.where}!${effect.address}` : effect.address;
+		row
+			.appendChild(document.createElement('td'))
+			.append(Object.assign(document.createElement('del'), { textContent: effect.before }));
+		row
+			.appendChild(document.createElement('td'))
+			.append(Object.assign(document.createElement('ins'), { textContent: effect.after }));
+	}
+	return box;
+}
+
 const tokens = (text) => String(text).match(/\s+|[^\s]+/gu) ?? [];
 
 /** A fragment showing `before` turned into `after`, with removed and added words marked. */

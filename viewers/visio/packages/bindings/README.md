@@ -25,14 +25,16 @@ All adapters accept the same properties:
 - `pageIndex`: zero-based page index
 - `zoom`: scale, where `1` means 100%
 - `showToolbar`: toolbar visibility
+- `canEdit`: editing permission. The full viewer defaults to editable; `false` makes it read-only (selection, search, zoom and export keep working). The building blocks default to read-only instead, see [building blocks](../../docs/building-blocks.md)
 - `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](../../docs/api.md#ribbon-add-in-tabs))
+- `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](../../docs/collaboration.md))
 - `events`: typed callback map using literal event names
 
-The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change` and `office-ribbon-add-in`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
+The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
 
 Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
 
-The imperative `ViewerHandle` exposes `element`, `controller`, `load(bytesOrBlob)` and `fit()`. Editing methods include `applyEdits(edits)`, `replacePlainText(pageId, shapeId, text)`, `duplicateSelection()`, `copySelection()`, `cutSelection()`, `pasteSelection()`, `undo()`, `redo()`, `cancelEdit()` and `exportVsdx()`. Clipboard preparation state is available at `controller.state.clipboard` through each native reactive subscription; clipboard methods require a browser user gesture and support the bounded viewer shape format. They forward to the same source-backed worker-isolated implementation. `ViewerEditState` and `VsdxExportResult` are shared exported types; state is available at `controller.state.edit`. Angular exposes the native `documentChange` output; every adapter supports the `document-change` callback map. Read access and operations through a framework handle fail clearly before mounting or after unmounting. A retained controller or element is also disposed when the owner unmounts. Vanilla returns the full shared binding with `update()` and idempotent `destroy()`.
+`document-change` carries `{ document, dirty, kind }` where kind is `edit`, `undo`, `redo`, `remote` (a collaborator's change) or `save` (after `markClean()`). The imperative `ViewerHandle` exposes `element`, `controller`, `load(bytesOrBlob)` and `fit()`. Editing methods include `applyEdits(edits)`, `replacePlainText(pageId, shapeId, text)`, `duplicateSelection()`, `copySelection()`, `cutSelection()`, `pasteSelection()`, `undo()`, `redo()`, `cancelEdit()` and `exportVsdx()`. After the host has saved the exported bytes it calls `controller.markClean()`. Collaboration is driven through the property; `element.collaborationState`, `element.reconnectCollaboration()` and `element.stopCollaboration()` are on the handle's `element`. Clipboard preparation state is available at `controller.state.clipboard` through each native reactive subscription; clipboard methods require a browser user gesture and support the bounded viewer shape format. They forward to the same source-backed worker-isolated implementation. `ViewerEditState` and `VsdxExportResult` are shared exported types; state is available at `controller.state.edit`. Angular exposes the native `documentChange` output; every adapter supports the `document-change` callback map. Read access and operations through a framework handle fail clearly before mounting or after unmounting. A retained controller or element is also disposed when the owner unmounts. Vanilla returns the full shared binding with `update()` and idempotent `destroy()`.
 
 The editor itself mounts on the client. Separate Node tests verify all six entry points import without browser globals; React, Vue, Svelte and Solid also render empty native hosts on the server. React and Vue have tests hydrating their actual server markup before mounting the shared element. Angular server rendering and Solid/Svelte hydration remain unverified, as does cross-document mounting. These checks use the installed versions and do not imply full SSR-framework integration coverage.
 
@@ -57,7 +59,7 @@ Angular exposes native inputs and outputs. Add the standalone component to the a
 <visio-viewer-host [document]="diagram" (documentError)="reportError($event)" />
 ```
 
-Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect` and `selectionChange`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
+Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn` and `collaborationChange`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
 
 For large immutable document models, use Vue `shallowRef`/`markRaw` and Svelte `$state.raw` rather than deeply proxying a newly constructed options object on every update. Rewrapping a document in a new reactive proxy changes its identity and requests an external replacement. In-place mutation is not supported.
 
@@ -110,14 +112,13 @@ All six handles provide `selectShapes(targets)`, `selectAll()` and `clearSelecti
 
 ## Checks
 
-Install this private package's development dependencies separately from the root:
+Install the workspace once from the repository root (`bun install`), then run the checks from `viewers/visio`:
 
 ```sh
-npm ci --prefix packages/bindings --ignore-scripts
-npm --prefix packages/bindings run check
+bun run check:bindings   # runs `bun run --cwd packages/bindings check`
 ```
 
-The root viewer and the sibling `ooxml-core/visio` must first be resolvable according to the root setup instructions. This package does not replace or fork the parser.
+`ooxml-core` and `ooxml-ui` resolve to the workspace packages in this repository. This package does not replace or fork the parser.
 
 Checks include TypeScript, `svelte-check`, native runtime lifecycle tests and real-element integration:
 
@@ -137,4 +138,4 @@ The focused lifecycle tests mock only the shared mount to isolate framework wiri
 
 ## Editing scope
 
-Editing is experimental and source-backed. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. `applyEdits()` forwards atomic geometry, text, formatting and ordering commands to the shared core. Plain-text replacement rejects master-linked text, rich text and fields; other commands have their own admission rules. Signed packages and macro content remain unsupported. The shared Home ribbon supports multi-selection formatting, alignment/distribution and deletion. History is bounded. Native Visio save/reopen evidence covers specific formatting and arrangement captures, not general fidelity; see `docs/verification.md` and `docs/parity.md` for current limits. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo` or `redo`. Unrelated framework rerenders must not replace an edited model with stale props.
+Editing is experimental and source-backed. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. `applyEdits()` forwards atomic geometry, text, formatting and ordering commands to the shared core. Plain-text replacement rejects master-linked text, rich text and fields; other commands have their own admission rules. Signed packages and macro content remain unsupported. The shared Home ribbon supports multi-selection formatting, alignment/distribution and deletion. History is bounded. Native Visio save/reopen evidence covers specific formatting and arrangement captures, not general fidelity; see `docs/verification.md` and `docs/parity.md` for current limits. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo`, `redo`, `remote` or `save`. Unrelated framework rerenders must not replace an edited model with stale props.

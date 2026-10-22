@@ -117,7 +117,7 @@ throws):
 
 - **`local`**: no server. Tabs of one browser share chat and calls over `BroadcastChannel`.
 - **`server`**: your server. Any server that honours these three contracts works; the reference
-  implementation is `viewers/teams/server/index.mjs` (about 300 lines, Node and `ws`).
+  implementation is `viewers/teams/server/index.mjs` (Node and `ws`, with the account, rate-limit and guard modules beside it).
 
 ### Server contract
 
@@ -168,8 +168,9 @@ session reaches `expiresAt` or when the connection stays down and `checkTeamsSes
 The profile menu shows `Signed in as <id>` and Sign out (`signOutTeamsSession`, which revokes the
 user's sessions on the server). A server without accounts, a local workspace and a host that passes
 its own `sessionToken` never see the screen. Events `teams-signed-in`, `teams-session-ended` and
-`teams-signed-out` bubble from the element. The Teams UI has no translation layer yet, so the
-sign-in strings are English, grouped in `sign-in-strings.ts` for a later translation.
+`teams-signed-out` bubble from the element. The sign-in screen goes through the Teams
+dictionaries (`signIn.*` keys, see Languages); `sign-in-strings.ts` only maps a failure reason to its
+translated message.
 
 ### STUN and TURN
 

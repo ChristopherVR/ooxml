@@ -1,5 +1,6 @@
 import type {
 	CollaborationConfig,
+	DocumentStorage,
 	ExternalCollaborationSnapshot,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
@@ -46,6 +47,8 @@ interface HarnessProps {
 	getCollaboration?: () => CollaborationConfig | undefined;
 	getEditable?: () => boolean;
 	getSource?: () => Uint8Array | undefined;
+	onerror?: (message: string) => void;
+	storage?: DocumentStorage;
 }
 
 function renderHarness(props: HarnessProps = {}): ViewerStateBag {
@@ -363,5 +366,20 @@ describe('autosave activation', () => {
 
 		expect(state.autosaveActive).toBeFalsy();
 		expect(state.autosaveDisabledReason).toBe('no_file_path');
+	});
+});
+
+describe('createViewerState save failures (host-owned storage)', () => {
+	it('reports a failed File > Save to onerror and the save-failed notice, without rejecting', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const onerror = vi.fn();
+		const state = renderHarness({
+			onerror,
+			storage: { save: () => Promise.reject(new Error('offline')) },
+		});
+		await expect(state.downloadPptx()).resolves.toBeUndefined();
+		expect(onerror).toHaveBeenCalledWith(expect.stringMatching(/^Save failed/));
+		expect(state.compatToasts.visibleToasts.map((toast) => toast.id)).toContain('save-failed');
+		vi.restoreAllMocks();
 	});
 });

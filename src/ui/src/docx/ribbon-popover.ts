@@ -85,31 +85,35 @@ export function openSwatchPopover(
 }
 
 /**
- * Opens a scrolling list of `items` under a combo box, with `current` marked and scrolled into view.
- * Up/Down move through the entries, Enter chooses, Escape closes. `preview` sets each entry in its
- * own font face.
+ * Opens a scrolling list of `items` under a combo box, with `current` (an entry, or its index when
+ * entries can repeat) marked and scrolled into view. Up/Down move through the entries, Enter
+ * chooses, Escape closes. `preview` sets each entry in its own font face. `choose` gets the entry
+ * and its index.
  */
 export function openListPopover(
 	anchor: HTMLElement,
 	items: readonly string[],
-	current: string,
+	current: string | number,
 	preview: boolean,
-	choose: (value: string) => void,
+	choose: (value: string, index: number) => void,
 ): void {
 	const pop = document.createElement('div');
 	pop.className = 'ribbon-popover ribbon-list';
 	pop.setAttribute('role', 'listbox');
-	const buttons = items.map((value) => {
+	const buttons = items.map((value, index) => {
 		const item = document.createElement('button');
 		item.type = 'button';
 		item.setAttribute('role', 'option');
 		item.textContent = value;
-		item.setAttribute('aria-selected', String(value === current));
+		item.setAttribute(
+			'aria-selected',
+			String(typeof current === 'number' ? index === current : value === current),
+		);
 		if (preview) item.style.fontFamily = `"${value}", sans-serif`;
 		item.addEventListener('mousedown', (event) => event.preventDefault());
 		item.addEventListener('click', () => {
 			close?.();
-			choose(value);
+			choose(value, index);
 		});
 		item.addEventListener('keydown', (event) => {
 			const at = buttons.indexOf(item);

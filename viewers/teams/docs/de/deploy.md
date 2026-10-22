@@ -38,14 +38,13 @@ teams.example.com {
 Verweisen Sie die App dann auf `wss://teams.example.com/sync` und `wss://teams.example.com/signal`.
 
 **Das Token ist ein gemeinsames Geheimnis**, das im Browser gespeichert wird: Es hält Fremde vom Server eines kleinen Teams fern,
-es ist keine Authentifizierung pro Benutzer. Für echte Konten schalten Sie Ihre eigene Authentifizierung davor (ein Proxy,
-der eine Sitzung prüft, oder ersetzen Sie `tokenOk` durch eine Token-Prüfung) und behalten dieselben drei
-Verträge bei.
+es ist keine Authentifizierung pro Benutzer. Für echte Konten geben Sie dem Server `users` (oder `TEAMS_USERS_FILE`) oder eine
+`authenticate`-Funktion für Ihren Identitätsanbieter und setzen `TEAMS_SESSION_SECRET`, damit Sitzungen Neustarts überstehen
+(siehe "Accounts and sessions" in der README des Servers). Die drei Verträge bleiben dieselben.
 
 ## Sicherheitsmodell
 
-- **Ein gemeinsames Token öffnet jeden Raum und jede Datei.** Es gibt keine Rechte pro Benutzer oder
-  Raum. Behandeln Sie das Token wie ein Team-Passwort.
+- **Ein gemeinsames Token öffnet jeden Raum und jede Datei.** Identität pro Benutzer gibt es nur mit aktivierten Konten und Rechte pro Raum nur mit `authorizeSync`. Behandeln Sie das Token wie ein Team-Passwort.
 - **Alle Mitglieder eines Raums vertrauen einander.** Der Server bewegt nur Yjs-Bytes, daher kann jedes
   Mitglied Nachrichten anderer bearbeiten oder löschen und Autoren-IDs und Rollen fälschen. Laden Sie
   nur Personen ein, denen Sie den ganzen Raum anvertrauen.
@@ -101,12 +100,15 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/index.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
+  server/rate-limit.mjs server/chat-access.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data
 VOLUME /data
 EXPOSE 8787
-CMD ["node", "index.mjs"]
+CMD ["node", "bin.mjs"]
 ```
+
+Bauen Sie es in `viewers/teams`. Es kopiert jedes Modul, das der Einstiegspunkt importiert (die `files` aus `server/package.json`); nur `index.mjs` zu kopieren scheitert mit einem fehlenden Modul. Das Rezept wurde durch Ausführen dieser Dateien mit `npm install --omit=dev` unter Node geprüft, das Image selbst wurde nicht gebaut.
 
 Starten Sie ihn mit gesetzten `TEAMS_TOKEN` und `TEAMS_ORIGINS`, hinter Ihrem TLS-Proxy.
 

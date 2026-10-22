@@ -327,11 +327,11 @@ The [React](https://christophervr.github.io/ooxml/pptx/demo/), [Vue](https://chr
 
 The picker wiring is demo code; the dictionaries are referenced from `packages/locales` through the Bun workspace:
 
-- **React**: `demos/demo-react/i18n.ts`, `LanguagePicker.tsx`
-- **Vue**: `demos/demo-vue/src/i18n.ts`, `LanguagePicker.vue`
-- **Angular**: `demos/demo-angular/src/i18n.ts`, `language-picker.component.ts`
-- **Vanilla**: `demos/demo-vanilla/src/demo-i18n.ts`, `language-picker.ts`
-- **Svelte**: `demos/demo-svelte/src/demo-i18n.svelte.ts`, `LanguagePicker.svelte`
+- **React**: `demos/pptx/demo-react/i18n.ts`, `LanguagePicker.tsx`
+- **Vue**: `demos/pptx/demo-vue/src/i18n.ts`, `LanguagePicker.vue`
+- **Angular**: `demos/pptx/demo-angular/src/i18n.ts`, `language-picker.component.ts`
+- **Vanilla**: `demos/pptx/demo-vanilla/src/demo-i18n.ts`, `language-picker.ts`
+- **Svelte**: `demos/pptx/demo-svelte/src/demo-i18n.svelte.ts`, `LanguagePicker.svelte`
 
 ## Next steps
 

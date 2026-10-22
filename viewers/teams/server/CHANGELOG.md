@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.4.0) - 2026-10-21
+
+### Features
+
+- **server:** Add per-room sync permissions for host applications ([d28fe46](https://github.com/ChristopherVR/ooxml/commit/d28fe46a899c9c8a7a858e87c75346a74308a532))
+
+### Testing
+
+- **teams:** Stop the password hash test failing on a random salt ([e9d36c9](https://github.com/ChristopherVR/ooxml/commit/e9d36c98fc2793d775f072c88cfc2f66cb173f29))
+
 ## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.3.0) - 2026-10-16
 
 ### Features

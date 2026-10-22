@@ -1,11 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { PptxSvgRasterizer } from '../../core/types';
 import { rasterizeSvg, svgRasterSize } from './svg-rasterize';
-import { rasterizeSvgInNode } from './svg-rasterize-node';
-
-vi.mock(import('./svg-rasterize-node'), () => ({
-	rasterizeSvgInNode: vi.fn(async () => new Uint8Array([9, 9])),
-}));
 
 const SVG = new TextEncoder().encode(
 	'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="60"/>',
@@ -49,23 +45,51 @@ function stubBrowserCanvas(): { size: { width: number; height: number } } {
 
 afterEach(() => {
 	vi.unstubAllGlobals();
-	vi.mocked(rasterizeSvgInNode).mockClear();
 });
 
 describe('rasterizeSvg', () => {
-	it("uses the browser's own canvas when there is a DOM, never the Node canvas package", async () => {
+	it("uses the browser's own canvas when there is a DOM and no rasteriser", async () => {
 		const drawn = stubBrowserCanvas();
 		const picture = await rasterizeSvg(SVG, 10, 10);
 		expect(picture).toStrictEqual({ extension: 'png', bytes: DOM_PNG });
 		expect(drawn.size).toStrictEqual({ width: 200, height: 120 });
-		expect(rasterizeSvgInNode).not.toHaveBeenCalled();
 	});
 
-	it('falls back to the Node canvas package only without a DOM', async () => {
-		vi.stubGlobal('document', undefined);
-		const picture = await rasterizeSvg(SVG, 10, 10);
+	it('uses the given rasteriser instead of the DOM, sizing it like PowerPoint', async () => {
+		const drawn = stubBrowserCanvas();
+		const sizes: Array<{ width: number; height: number }> = [];
+		const rasterize = vi.fn<PptxSvgRasterizer>(async (svg, sizeFor) => {
+			expect(svg).toBe(SVG);
+			sizes.push(sizeFor(100, 60), sizeFor(0, 0), sizeFor(4096, 1024));
+			return new Uint8Array([9, 9]);
+		});
+		const picture = await rasterizeSvg(SVG, 50, 40, rasterize);
 		expect(picture).toStrictEqual({ extension: 'png', bytes: new Uint8Array([9, 9]) });
-		expect(rasterizeSvgInNode).toHaveBeenCalledOnce();
+		expect(rasterize).toHaveBeenCalledOnce();
+		// Twice the intrinsic size, the fallback size when it declares none, at most 2048 px.
+		expect(sizes).toStrictEqual([
+			{ width: 200, height: 120 },
+			{ width: 100, height: 80 },
+			{ width: 2048, height: 512 },
+		]);
+		expect(drawn.size).toStrictEqual({ width: 0, height: 0 });
+	});
+
+	it('returns nothing without a DOM and without a rasteriser', async () => {
+		vi.stubGlobal('document', undefined);
+		expect(await rasterizeSvg(SVG, 10, 10)).toBeUndefined();
+	});
+
+	it('returns nothing when the rasteriser gives up or throws', async () => {
+		vi.stubGlobal('document', undefined);
+		expect(await rasterizeSvg(SVG, 10, 10, async () => undefined)).toBeUndefined();
+		const throwing = () => {
+			throw new Error('no canvas');
+		};
+		expect(await rasterizeSvg(SVG, 10, 10, throwing)).toBeUndefined();
+		expect(
+			await rasterizeSvg(SVG, 10, 10, async () => Promise.reject(new Error('x'))),
+		).toBeUndefined();
 	});
 });
 

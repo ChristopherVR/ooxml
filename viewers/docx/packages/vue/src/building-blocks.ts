@@ -15,11 +15,22 @@ import {
 	prepareWordToolbar,
 	type BuildingBlockOptions,
 	type CanvasProps,
+	type WordNavigationProps,
+	type WordStatusProps,
 	type WordToolbarProps,
 } from '../../bindings/src/building-blocks';
+import {
+	navigationControls,
+	statusControls,
+	toolbarControls,
+	type Control,
+	type ControlGroup,
+} from '../../bindings/src/controls';
 export type {
 	BuildingBlockOptions,
 	CanvasProps,
+	WordNavigationProps,
+	WordStatusProps,
 	WordToolbarProps,
 } from '../../bindings/src/building-blocks';
 export function useViewerBuildingBlocks(options: MaybeRefOrGetter<BuildingBlockOptions> = {}) {
@@ -37,6 +48,8 @@ export function useViewerBuildingBlocks(options: MaybeRefOrGetter<BuildingBlockO
 		canvasProps: session.canvasProps,
 		handle: session.handle,
 		toolbarProps: computed(() => state.value.toolbarProps),
+		navigationProps: computed(() => state.value.navigationProps),
+		statusProps: computed(() => state.value.statusProps),
 		loading: computed(() => state.value.loading),
 		error: computed(() => state.value.error),
 		mode: computed(() => state.value.mode),
@@ -65,43 +78,61 @@ export const DocumentCanvas = defineComponent({
 		return () => h('div', { ...attrs, ref: attach });
 	},
 });
+function renderControl(control: Control) {
+	if (control.kind === 'text') return h('span', { key: control.id, role: 'status' }, control.text);
+	if (control.kind === 'select')
+		return h(
+			'select',
+			{
+				key: control.id,
+				'aria-label': control.label,
+				disabled: control.disabled,
+				value: control.value,
+				onChange: (event: Event) => control.change((event.target as HTMLSelectElement).value),
+			},
+			control.options.map((option) =>
+				h('option', { key: option.value, value: option.value }, option.label),
+			),
+		);
+	return h(
+		'button',
+		{
+			key: control.id,
+			type: 'button',
+			'aria-label': control.label,
+			disabled: control.disabled,
+			...(control.kind === 'toggle' ? { 'aria-pressed': control.pressed } : {}),
+			onMousedown: (event: MouseEvent) => event.preventDefault(),
+			onClick: control.run,
+		},
+		control.label,
+	);
+}
+/** Keyed nodes, so a control keeps its focus while the formatting state changes. */
+function renderControls(role: string, groups: readonly ControlGroup[]) {
+	return h(
+		'div',
+		{ role, ref: (host: unknown) => prepareWordToolbar(host as HTMLElement | null) },
+		groups.map((group, index) =>
+			h('span', { key: index, role: 'group' }, group.map(renderControl)),
+		),
+	);
+}
+/** Optional controls: history, font, formatting, alignment, lists and enabled host workflows. */
 export const Toolbar = defineComponent({
 	name: 'WordToolbar',
 	props: { toolbarProps: { type: Object as PropType<WordToolbarProps>, required: true } },
-	setup(props) {
-		return () =>
-			h(
-				'div',
-				{ role: 'toolbar', ref: (host: unknown) => prepareWordToolbar(host as HTMLElement | null) },
-				[
-					['Bold', props.toolbarProps.bold, props.toolbarProps.onBold, !props.toolbarProps.canEdit],
-					[
-						'Italic',
-						props.toolbarProps.italic,
-						props.toolbarProps.onItalic,
-						!props.toolbarProps.canEdit,
-					],
-					[
-						'Underline',
-						props.toolbarProps.underline,
-						props.toolbarProps.onUnderline,
-						!props.toolbarProps.canEdit,
-					],
-					['Undo', false, props.toolbarProps.onUndo, !props.toolbarProps.canUndo],
-					['Redo', false, props.toolbarProps.onRedo, !props.toolbarProps.canRedo],
-				].map(([label, pressed, run, disabled]) =>
-					h(
-						'button',
-						{
-							type: 'button',
-							disabled,
-							'aria-pressed': pressed === null ? 'mixed' : pressed,
-							onMousedown: (event: MouseEvent) => event.preventDefault(),
-							onClick: run,
-						},
-						props.toolbarProps.labels[String(label)] ?? String(label),
-					),
-				),
-			);
-	},
+	setup: (props) => () => renderControls('toolbar', toolbarControls(props.toolbarProps)),
+});
+/** Optional page navigation for `navigationProps`. Pages exist in Print Layout only. */
+export const PageNavigation = defineComponent({
+	name: 'WordPageNavigation',
+	props: { navigationProps: { type: Object as PropType<WordNavigationProps>, required: true } },
+	setup: (props) => () => renderControls('group', navigationControls(props.navigationProps)),
+});
+/** Optional word count and zoom for `statusProps`. */
+export const StatusBar = defineComponent({
+	name: 'WordStatusBar',
+	props: { statusProps: { type: Object as PropType<WordStatusProps>, required: true } },
+	setup: (props) => () => renderControls('group', statusControls(props.statusProps)),
 });

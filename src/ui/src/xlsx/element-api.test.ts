@@ -253,7 +253,7 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.readOnly).toBe(true);
 		expect(element.hasAttribute('read-only')).toBe(true);
 		expect(of('readonly-change')).toEqual([
-			{ type: 'readonly-change', detail: { readOnly: true } },
+			{ type: 'readonly-change', detail: { readOnly: true, locked: false, hostReadOnly: true } },
 		]);
 		element.focusGrid();
 		expect(element.shadowRoot!.activeElement).not.toBeNull();

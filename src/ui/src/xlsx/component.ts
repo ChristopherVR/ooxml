@@ -18,7 +18,7 @@ import { XlsxEditorApi } from './element-api';
 import { buildSurface } from './surface-shell';
 import type { XlsxEditorEventMap } from './events';
 import type { XlsxCollaborationOptions } from './collaboration-types';
-import type { EditorLocale, EditorLocaleInput } from 'ooxml-core/xlsx/ui';
+import type { EditorLocale, EditorLocaleInput, ExcelCustomization } from 'ooxml-core/xlsx/ui';
 import {
 	applyThemeColors,
 	normalizeThemeMode,
@@ -95,6 +95,8 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 	disconnectedCallback(): void {
+		// Host File tab pages unmount with the editor; showing one again remounts it.
+		this.shell?.backstage.destroy();
 		if (this.disposeSurface) {
 			this.disposeSurface();
 			this.disposeSurface = undefined;
@@ -113,9 +115,22 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	get readOnly(): boolean {
 		return this.core.readOnly;
 	}
+	/** True when the workbook cannot be edited: this switch, a `viewer` role or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
 		this.core.setReadOnly(Boolean(value));
-		reflectAttribute(this, 'read-only', this.core.readOnly);
+		reflectAttribute(this, 'read-only', this.core.hostReadOnly);
+	}
+
+	/**
+	 * The host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Applied when the object identity changes, so keep it stable;
+	 * `null` restores the defaults.
+	 */
+	get customization(): ExcelCustomization | null {
+		return this.core.customizationInput;
+	}
+	set customization(value: ExcelCustomization | null | undefined) {
+		if (this.core.setCustomization(value ?? null)) this.shell?.backstage.applyCustomization();
 	}
 
 	/** Shown in the title bar and used by Save and Download. Default `Book1.xlsx`. */

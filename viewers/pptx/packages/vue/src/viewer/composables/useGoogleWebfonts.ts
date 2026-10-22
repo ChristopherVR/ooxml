@@ -3,6 +3,7 @@ import {
 	fetchGoogleWebfontOutlineBytes,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
+	selectTrustedEmbeddedFonts,
 	syncGoogleWebfontStylesheet,
 } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
@@ -76,7 +77,7 @@ export function useGoogleWebfonts(
 		const referenced = collectReferencedFontFamilies(slidesValue);
 		const candidates = selectGoogleWebfontFamilies(
 			referenced,
-			embeddedFontsValue.map((font) => font.name),
+			selectTrustedEmbeddedFonts(embeddedFontsValue).map((font) => font.name),
 		);
 		if (candidates.length === 0) {
 			return;

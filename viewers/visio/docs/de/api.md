@@ -30,6 +30,20 @@ sodass ein anderer Renderer denselben Zustand und dieselben Ereignisse
 abonnieren kann. `renderPage` ist der Port des SVG-Renderers. Die
 Modulzuständigkeiten stehen in der [Architektur](/de/architecture).
 
+## Eigenschaften und Ereignisse {#properties-and-events}
+
+Jedes Binding akzeptiert dieselben Eigenschaften und meldet dieselben Ereignisse (der Vertrag sind `ViewerProperties` und `ViewerEvents` in `ooxml-ui/visio`; die [Bindings](/bindings) listen die nativen Formen auf).
+
+| Oberfläche    | Vertrag                                                                                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+
+- `canEdit` (boolean) ist die Bearbeitungsberechtigung. Der vollständige Viewer ist standardmäßig bearbeitbar, und `canEdit: false` macht ihn schreibgeschützt; die [Bausteine](/building-blocks) sind schreibgeschützt, bis der Host `true` übergibt. Eine Zeichnung ohne Paket-Bytes (ein als `document` übergebenes Modell, eine ältere `.vsd`) ist unabhängig von `canEdit` schreibgeschützt.
+- `document-change` liefert `{ document, dirty, kind }`. `kind` ist `edit`, `undo` oder `redo` für Änderungen dieses Fensters, `remote`, wenn die Änderung eines Mitwirkenden angewendet wurde, und `save` nach `markClean()`.
+- `markClean()` (auf `viewer.controller` und auf den Bausteinen) erklärt den aktuellen Inhalt für gespeichert. Ein Host, der `exportVsdx()` selbst speichert, ruft es danach auf: `edit.dirty` wird `false`, ein `document-change` der Art `save` wird ausgelöst, und spätere Bearbeitungen und Rückgängig-Schritte werden ab diesem Punkt gemessen. Bei einer Zeichnung, die nicht zurückgespeichert werden kann, bewirkt es nichts.
+- `collaboration` (`VisioCollaborationOptions | null`) teilt die geöffnete Zeichnung in einem Raum, solange sie gesetzt ist. `collaboration-change` liefert einen `CollaborationState`, wenn das Teilen beginnt oder endet und sich Status, Synchronisierung oder Teilnehmer ändern. Am Element (`viewer.element` eines Handles) liest `collaborationState` den aktuellen Zustand, und `reconnectCollaboration()` und `stopCollaboration()` wirken darauf. Siehe [Zusammenarbeit](/de/collaboration).
+
 ## Formen auswählen {#select-shapes}
 
 Jedes eingehängte bzw. native Handle stellt `selectShapes(targets)`,
@@ -212,6 +226,26 @@ wird mit den Editoren für Word, Excel und PowerPoint geteilt. Eine
 Registerkarte darf nicht die ID einer eingebauten Registerkarte verwenden
 (`home`, `insert`, `design`, `data`, `process`, `review`, `view`, `help`).
 
+## Anpassung {#customization}
+
+`customization` nimmt ein `VisioCustomization`-Objekt entgegen, den gemeinsamen Vertrag von `ooxml-core/embedding`, den auch die anderen Editoren verwenden. Jedes Binding reicht es als Prop bzw. Input `customization` weiter. Es wird angewendet, wenn sich die Objektidentität ändert; halten Sie es daher stabil. `null` stellt die Standardwerte wieder her.
+
+```ts
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+```
+
+- `capabilities`: `false` entfernt jeden Weg zur Funktion (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`): Menüband, Seiten im Datei-Register, Menüs und Tastenkürzel. `hiddenActions` bleibt unverändert; beide werden vereinigt.
+- `backstage.extraPages`: Host-Seiten `{ id, label, group?, order?, render }` im Datei-Register, nach den eingebauten Seiten ihrer Gruppe. `render` ist eine Mount-Funktion, ein Custom-Element-Tag oder `{ element, properties }` und erhält einen `VisioRegionContext`.
+- `contextMenu.extraCommands`: Host-Befehle `{ id, label, icon?, group?, when?, disabled?, onSelect }` oberhalb (`top`, Standard) oder unterhalb (`bottom`) der eingebauten Einträge. `onSelect` läuft nach dem Schließen des Menüs mit einem `VisioMenuContext`. Beschriftungen werden unverändert angezeigt (lokalisieren Sie sie selbst).
+
+`edit: false` ist eine eigene Schreibsperre neben dem schreibgeschützten Schalter des Hosts und einer Zusammenarbeitsrolle `viewer`: Keine hebt eine andere auf. Capabilities sind eine UI-Richtlinie, kein Dokumentschutz. Das Ersetzen von Bereichen (Optionsdialog, Bereiche) wird für Visio noch nicht angeboten. Alle Produkte im Überblick: [Einbettungsleitfaden](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
+
 ## Statischer SVG-Export {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` und das `exportSvg()` jedes
@@ -301,7 +335,7 @@ gemeinsamen Textsteuerelemente, oder Sie rufen `replacePlainText(pageId, shapeId
 an einem beliebigen eingehängten bzw. nativen Handle auf. `undo()` und `redo()`
 nutzen den begrenzten Dokumentverlauf; `cancelEdit()` bricht ausstehende Arbeit
 ab. Alle sechs Adapter leiten dieselben Methoden und das Ereignis
-`document-change` weiter, dessen Detail `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`
+`document-change` weiter, dessen Detail `{ document, dirty, kind }` (kind `edit`, `undo` oder `redo` sowie `remote` und `save`; siehe oben)
 lautet. Prüfen Sie `controller.state.edit` auf Quellverfügbarkeit, Beschäftigt-
 und Geändert-Status, Verfügbarkeit von Rückgängig/Wiederholen, Kürzung des
 Verlaufs, Fehler und Diagnosen.

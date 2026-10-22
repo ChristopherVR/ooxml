@@ -87,7 +87,9 @@ export default defineConfig({
 	// `bun run e2e:local-only`) and via the pre-push hook
 	// (.husky/pre-push, scripts/pre-push-local-e2e.mjs).
 	grepInvert: isCI ? /@local-only/ : undefined,
-	retries: isCI ? 2 : 0,
+	// One retry: a flaky test gets a second chance, a broken one is not run three times. The CI step
+	// does not re-run a shard Playwright reported failures for either.
+	retries: isCI ? 1 : 0,
 	reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
 	use: {
 		trace: 'retain-on-failure',

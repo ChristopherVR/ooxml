@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
+	DocumentStorage,
 } from 'ooxml-ui/pptx';
 import {
 	acceptAutosaveRecovery,
@@ -55,9 +56,13 @@ export interface AutosaveSessionDeps {
 	filePath: string;
 	/** Public document name rendered in the recovery message. */
 	fileName?: string;
+	/** Host `storage` option: recovery snapshots go to its recovery methods when it has them. */
+	getStorage?: () => DocumentStorage | undefined;
 	/** Protect-Presentation state, forwarded to the shared save decision. */
 	getSaveIntent(): DeckSaveIntent;
 	onStatus(status: AutosaveStatus): void;
+	/** The host's `onAutosave` hook: the bytes of each snapshot written. */
+	onSaved?: (bytes: Uint8Array) => void;
 	/** The host's `onAutosaveRecovery` hook; the prompt is additional, not a replacement. */
 	onRecovery?: (record: AutosaveRecord) => void;
 	/** Load restored bytes through the viewer's normal load path. */
@@ -114,7 +119,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 				deps.doc,
 				deps.getTranslator(),
 				offer.prompt,
-				() => discardAutosaveRecovery(offer.record),
+				() => discardAutosaveRecovery(offer.record, deps.getStorage?.()),
 			);
 			if (choice === 'restore') {
 				acknowledgeAutosaveRecovery(offer.record);
@@ -161,6 +166,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 		getHandler: deps.getHandler,
 		filePath: deps.filePath,
 		fileName: deps.fileName,
+		...(deps.getStorage ? { getStorage: deps.getStorage } : {}),
 		getIntervalMs: () =>
 			resolveAutosaveIntervalMs({
 				hostIntervalMs: deps.hostIntervalMs,
@@ -168,6 +174,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 			}),
 		getSaveIntent: deps.getSaveIntent,
 		onStatus: deps.onStatus,
+		...(deps.onSaved ? { onSaved: deps.onSaved } : {}),
 		getActivation: activation,
 		// The ceiling alone: a user who merely switched the toggle off should
 		// still be asked about work a crash left behind.

@@ -69,7 +69,8 @@
 		"check:published-types": "node scripts/check-published-shared-refs.mjs",
 		"test:core-package": "node scripts/check-core-package.mjs",
 		"test:binding-packages": "node scripts/check-binding-packages.mjs",
-		"check:viewer-props": "bun scripts/check-viewer-props.mjs"
+		"check:viewer-props": "bun scripts/check-viewer-props.mjs",
+		"check:tree-shaking": "node --test scripts/check-tree-shaking.test.mjs && node scripts/check-tree-shaking.mjs"
 	},
 	"dependencies": {
 		"@ai-sdk/openai-compatible": "^3.0.70",

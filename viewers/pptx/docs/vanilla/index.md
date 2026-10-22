@@ -8,8 +8,8 @@ description: pptx-vanilla-viewer is a zero-framework PowerPoint viewer for the b
 `pptx-vanilla-viewer` is a **zero-framework** PowerPoint viewer: it renders `.pptx` slides in the
 browser with plain DOM and has no dependency on React, Vue, or Angular. Calling the factory
 function `createPptxViewer(container, options)` returns a viewer instance with an imperative API.
-The parsing engine ([`pptx-viewer-core`](/core/)) and the shared render logic
-(`pptx-viewer-shared`) are bundled in, so the package is self-contained.
+The parsing engine ([`pptx-viewer-core`](/core/)) is bundled in; the shared render logic
+(`ooxml-ui/pptx`) is installed as a dependency.
 
 The live [vanilla demo](https://christophervr.github.io/ooxml/pptx/demo-vanilla/) is this
 package running without a framework.
@@ -38,9 +38,10 @@ For a precise list of what the underlying parser supports, and what is approxima
 npm i pptx-vanilla-viewer
 ```
 
-The core engine (`pptx-viewer-core`) and shared render layer are **bundled in**, and the engine's
-runtime dependencies (`jszip`, `fast-xml-parser`) install automatically. There are no framework
-peer dependencies.
+The core engine wrapper (`pptx-viewer-core`) is **bundled in**. The shared render layer
+(`ooxml-ui/pptx`), the engine (`ooxml-core`) and their runtime dependencies (including `jszip` and
+`fast-xml-parser`) are regular dependencies and install automatically. There are no framework peer
+dependencies; `yjs` (collaboration) and `ai` (assistant) are optional peers.
 
 ## Quick example
 
@@ -76,19 +77,23 @@ working. The tradeoffs are listed in [Limitations](/guide/limitations).
 
 ## Key exports
 
-| Export                                       | Kind     | Purpose                                                                                    |
-| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `createPptxViewer`                           | function | Factory: mount a viewer into a container. See [Getting Started](/vanilla/getting-started). |
-| `PptxViewerOptions`, `PptxViewerCallbacks`   | type     | Options and event callbacks. See [Options & Callbacks](/vanilla/options).                  |
-| `PptxViewerInstance`                         | type     | The returned handle. See [Viewer Instance API](/vanilla/api).                              |
-| `PptxViewerSource`                           | type     | `ArrayBuffer \| Uint8Array \| Blob \| string` (URL).                                       |
-| `ElementRenderer`, `ElementRendererRegistry` | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
-| `createDefaultRegistry`                      | function | The default renderer registry (all built-in renderers pre-registered).                     |
-| `getViewerCss`                               | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
-| `ViewerTheme`, `ViewerThemeColors`           | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
-| `vermilionLightTheme`, `vermilionDarkTheme`  | const    | Built-in vermilion light/dark presets.                                                     |
-| `themeToCssVars`, `defaultCssVars`           | function | Convert a theme to `--pptx-*` CSS vars.                                                    |
-| `PptxHandler`, `PptxSlide`, `PptxElement`    | type     | Core types re-exported for the `getHandler()` escape hatch.                                |
+| Export                                                           | Kind     | Purpose                                                                                    |
+| ---------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `createPptxViewer`                                               | function | Factory: mount a viewer into a container. See [Getting Started](/vanilla/getting-started). |
+| `PptxViewerOptions`, `PptxViewerCallbacks`                       | type     | Options and event callbacks. See [Options & Callbacks](/vanilla/options).                  |
+| `PptxViewerInstance`                                             | type     | The returned handle. See [Viewer Instance API](/vanilla/api).                              |
+| `PptxViewerSource`                                               | type     | `ArrayBuffer \| Uint8Array \| Blob \| string` (URL).                                       |
+| `ElementRenderer`, `ElementRendererRegistry`                     | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
+| `createDefaultRegistry`                                          | function | The default renderer registry (all built-in renderers pre-registered).                     |
+| `getViewerCss`                                                   | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
+| `ViewerTheme`, `ViewerThemeColors`                               | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
+| `vermilionLightTheme`, `vermilionDarkTheme`                      | const    | Built-in vermilion light/dark presets.                                                     |
+| `themeToCssVars`, `defaultCssVars`                               | function | Convert a theme to `--pptx-*` CSS vars.                                                    |
+| `PptxHandler`, `PptxSlide`, `PptxElement`                        | type     | Core types re-exported for the `getHandler()` escape hatch.                                |
+| `AccountAuthConfig`, `ToolbarActionId`                           | type     | Types for the `accountAuth` and `hiddenActions` options.                                   |
+| `rememberSessionDeck`, `restoreSessionDeck`, `forgetSessionDeck` | function | Reopen the deck after a refresh.                                                           |
+| `renderToCanvas`                                                 | function | The `html2canvas-pro` wrapper the built-in export uses.                                    |
+| `PptxAiConfig`, `PptxAiConnection`, ...                          | type     | Types for the optional `ai` option.                                                        |
 
 ## Next steps
 

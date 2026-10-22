@@ -27,7 +27,7 @@ description: 了解 pptx-viewer 在浏览器、Node.js 和 Web Worker 中的支�
 
 PowerPoint 的“运行程序”动作设置可以解析，并在加载和保存过程中完整保留原始程序路径或命令。编辑时，也可以像其他动作一样在“动作设置”对话框中查看和修改。浏览器无法执行的是桌面 PowerPoint 在放映时所做的事：启动本地可执行程序。Web 平台出于安全设计，没有提供让网页启动任意本地程序的 API。
 
-放映过程中点击带有“运行程序”动作的形状时，会显示一条不阻塞操作的提示，列出解析后的完整命令，并提供一键复制按钮。命令包含作者输入的路径及参数；OOXML 将它们保存为一个不透明字符串，没有独立字段可供拆分。演讲者可以查看 PowerPoint 原本要执行的命令，再自行决定是否在浏览器外启动。此次点击仍被视为已处理，不会同时切换到下一页，与其他动作类型一致。五个组件共用同一个判断函数（`packages/shared/src/render/presentation-action.ts` 中的 `runProgram` 意图，以及 `packages/shared/src/render/run-program-notice.ts`），`e2e/run-program-notice.spec.ts` 会在五个演示应用中检查提示、复制按钮及点击事件的消费行为。
+放映过程中点击带有“运行程序”动作的形状时，会显示一条不阻塞操作的提示，列出解析后的完整命令，并提供一键复制按钮。命令包含作者输入的路径及参数；OOXML 将它们保存为一个不透明字符串，没有独立字段可供拆分。演讲者可以查看 PowerPoint 原本要执行的命令，再自行决定是否在浏览器外启动。此次点击仍被视为已处理，不会同时切换到下一页，与其他动作类型一致。五个组件共用同一个判断函数（`src/ui/src/pptx/render/presentation-action.ts` 中的 `runProgram` 意图，以及 `src/ui/src/pptx/render/run-program-notice.ts`），`e2e/pptx/run-program-notice.spec.ts` 会在五个演示应用中检查提示、复制按钮及点击事件的消费行为。
 
 实现过程中还修复了两个问题。最初 React 将提示渲染为放映时调用 `requestFullscreen()` 的元素的兄弟节点，而系统级全屏元素的顶层会盖住其外部内容，不受 CSS `z-index` 影响，导致复制按钮可见却无法点击。现在提示通过放映舞台自身的浮层插槽渲染，与其他放映界面元素放在一起。此外，不符合 URI 格式的目标字符串（例如 `notepad.exe C:\temp\notes.txt`）在保存时未被识别为外部关系目标，导致 `ppaction://program`、`hlinkfile` 和 `hlinkpres` 的 `TargetMode="External"` 校验失败。保存流程现在会为这三种动作强制设置 `External`。
 

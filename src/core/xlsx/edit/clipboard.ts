@@ -8,7 +8,7 @@ import {
 	rangesIntersect,
 } from '../address';
 import { deleteCell, forEachCellInRange, usedRange } from '../cells';
-import type { Workbook } from '../model';
+import type { CellStyle, Workbook } from '../model';
 import { internStyle, styleAt } from '../styles';
 import { toHtml } from './clipboard-html';
 import { parseHtmlTable } from './clipboard-html-parse';
@@ -62,10 +62,19 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 	const data: (ClipboardCell | null)[][] = Array.from({ length: rows }, () =>
 		Array.from({ length: cols }, () => null),
 	);
+	// Cells with the same format share one copy of it: a payload's styles are read, never changed,
+	// so a large copy clones each format once, and a paste (which keys its interning on the style
+	// object) interns each once.
+	const styles = new Map<number, CellStyle>();
+	const styleCopy = (id: number | undefined): CellStyle => {
+		let style = styles.get(id ?? 0);
+		if (!style) styles.set(id ?? 0, (style = structuredClone(styleAt(workbook, id))));
+		return style;
+	};
 	forEachCellInRange(sheet, clipped, (cell, row, col) => {
 		const clip: ClipboardCell = {
 			value: cell.value,
-			style: structuredClone(styleAt(workbook, cell.styleId)),
+			style: styleCopy(cell.styleId),
 			text: displayText(workbook, cell),
 		};
 		if (cell.formula !== undefined) clip.formula = cell.formula;

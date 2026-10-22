@@ -48,6 +48,58 @@ host also installs its chosen provider and awareness implementation. Deduplicate
 Yjs if your dependency tree contains multiple versions: types from separate runtime
 copies cannot safely be mixed.
 
+## Using the shared collaboration contract
+
+Word, Excel and Visio take one `collaboration` option shape from `ooxml-core/collab`
+(`CollaborationOptions`: `roomId`, `serverUrl`, `provider`, `session`, `user`, `intent`). PowerPoint accepts
+the same shape in its `collaboration` prop alongside its own `CollaborationConfig`, so a host
+embedding several products can hand them all one session:
+
+```ts
+import { createCollabSession, transportProvider } from 'ooxml-core/collab';
+
+const session = createCollabSession({ roomId, provider: transportProvider({ transport }), user });
+// <PowerPointViewer collaboration={{ session, user: { name: 'Ada' }, intent: 'join' }} />
+```
+
+- `session` is borrowed: it becomes the `externalSession`, and the viewer never destroys it. The
+  host creates, connects and destroys it. `roomId` defaults to the session's room.
+- `user.name`, `color`, `avatar` and `role` map to `userName`, `userColor`, `userAvatar` and
+  `role`; `intent` maps to `sessionIntent`. Explicit legacy fields win when both are set.
+- Every binding runs the same `resolveCollaborationConfig` (from `ooxml-ui/pptx`) where it reads the
+  prop, so they behave identically. A legacy `CollaborationConfig` is returned unchanged.
+
+Without a `session`, the same options also cover the cases a host does not want to build a session for:
+
+```ts
+// Your own transport: the viewer opens and destroys the session around it.
+collaboration = { roomId, provider: transportProvider({ transport }), user: { name: 'Ada' } };
+// No server: tabs and windows of this browser share over a BroadcastChannel.
+collaboration = { roomId, user: { name: 'Ada' } };
+```
+
+The transport is chosen in the shared order: `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. For `provider` and the BroadcastChannel room the viewer calls `openCollaborationSession` (the `ooxml-core/collab` runtime is imported only then, sharing the one Yjs copy), presents the session through the same borrowed-session path a host `session` takes, and destroys it on stop, unmount or when the config changes. The session is writable once it syncs, or after the grace period for a lone peer on a mesh; `intent: 'join'` still waits for the room's deck, and `role: 'viewer'` stays read-only. The state reports `connecting` while the session opens and `error` for an invalid room name or a browser without BroadcastChannel.
+
+A legacy `CollaborationConfig` keeps its transports: `serverUrl` selects y-websocket, and `transport: 'webrtc'` or a blank `serverUrl` selects serverless y-webrtc (which also syncs same-browser tabs). Only shared-contract input that names no `serverUrl` or `transport` uses the BroadcastChannel room. The viewer's presence and the session's identity heartbeat share the awareness `presence` field; the viewer keeps its slide and cursor payload across heartbeats, so remote cursors keep showing.
+
+## Reporting the shared state
+
+Every binding reports the same `CollaborationState` Word, Excel and Visio report (`active`, `roomId`,
+`status`, `synced`, `people`, the local person flagged `self`; type from `ooxml-core/collab`, also
+re-exported by each package). It fires when a session starts or stops (the off state, `status: 'off'`)
+and when the status, the synced flag or the people change, for host-owned and viewer-owned sessions
+alike, and never repeats an unchanged state:
+
+| Binding | Notification                                                 |
+| ------- | ------------------------------------------------------------ |
+| React   | `onCollaborationChange` prop                                 |
+| Vue     | `collaboration-change` event                                 |
+| Angular | `collaborationChange` output                                 |
+| Svelte  | `oncollaborationchange` callback prop                        |
+| Vanilla | `onCollaborationChange` option and `getCollaborationState()` |
+
+Vanilla keeps `onCollaborationStatus` and `getCollaborationStatus()` for the raw connection status.
+
 ## Readiness is the host's decision
 
 `getSnapshot()` returns `{ status, synced }`. Status is `connecting`, `connected`,
@@ -83,9 +135,9 @@ are preserved. Use one active slide-presence writer per awareness instance.
 The host may persist Yjs updates directly. Alternatively, designate one participant
 with `role: 'owner'` and `onWriteBack(bytes)` to receive debounced PPTX snapshots, using
 the same source PPTX and save options as the editor. Pending and in-flight snapshots
-are cancelled if the session leaves or the host revokes readiness. This callback is
-not a durable storage acknowledgment; retries, errors and writer election remain host
-responsibilities. An active session with `role: 'viewer'` makes the editor read-only
+are cancelled if the session leaves or the host revokes readiness. Writer election remains the host's
+responsibility. Return a promise from `onWriteBack` to acknowledge storage: the viewer reports `saving`, `saved` or `failed` in `collaborationState.writeBack` (owners only), serialises writes (one in flight, later changes coalesce into one follow-up) and retries a rejection as `writeBackRetry` (`{ attempts, baseDelayMs?, maxDelayMs? }`) says; a plain return counts as acknowledged at once. A pending write-back is flushed on `pagehide` and when the page turns hidden. Browsers do not wait for asynchronous work when a page unloads, so a write that needs a network round trip can still be lost on close. A host whose `write` must survive a close should send the bytes with `navigator.sendBeacon(url, bytes)` or `fetch(url, { method: 'PUT', body: bytes, keepalive: true })`, which the browser completes after the page is gone (keepalive bodies are capped at about 64 KiB, so a large document may still not make it).
+An active session with `role: 'viewer'` makes the editor read-only
 and blocks publication, for both built-in and host-owned collaboration. The server
 must enforce access control independently.
 
@@ -127,3 +179,7 @@ you check remote cursors and selection outlines at different scales.
 See [React hooks](/react/hooks), [Vue collaboration](/vue/collaboration),
 [Angular collaboration](/angular/collaboration), [Svelte collaboration](/svelte/collaboration)
 and [Vanilla custom shells](/vanilla/api#custom-shell-collaboration) for each composition.
+
+For a complete application around this option (accounts, permission-checked relay, live access
+changes, owner versions and a gated AI route), see
+[Review inside your application](/guide/review-workflow).

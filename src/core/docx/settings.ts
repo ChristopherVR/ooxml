@@ -1,7 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { onOffElement } from './simple-types';
+import { onOffElement, parseOnOff } from './simple-types';
+import { isStDocProtect } from './generated/wml-simple-types';
+import type { DocumentProtection } from './form-field-model';
 import type JSZip from 'jszip';
-import { buildXml, children, makeW, parseXml, type XmlElement, WORD_NS } from './xml';
+import { buildXml, children, getW, makeW, parseXml, type XmlElement, WORD_NS } from './xml';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const SETTINGS_PATH = 'word/settings.xml';
@@ -119,6 +121,33 @@ export function parseTrackChangesSetting(xml: string): boolean {
 	return (
 		onOffElement(children(root, 'trackRevisions')[0] ?? children(root, 'trackChanges')[0]) === true
 	);
+}
+
+/**
+ * `w:documentProtection` (what a user may change, and whether it is enforced) and
+ * `w:doNotShadeFormData`. Both are read only: saving leaves settings.xml's elements as they are.
+ */
+export function parseFormSettings(xml: string): {
+	protection?: DocumentProtection;
+	formFieldShading?: false;
+} {
+	const root = parseXml(xml).documentElement as XmlElement | null;
+	if (!root) return {};
+	const protect = children(root, 'documentProtection')[0];
+	const edit = protect && getW(protect, 'edit');
+	return {
+		...(protect && {
+			protection: {
+				edit: isStDocProtect(edit) ? edit : 'none',
+				// Word enforces the protection unless `w:enforcement` turns it off ([MS-OE376]
+				// 2.1.410), where ECMA-376 would ignore it when the attribute is missing.
+				enforced: parseOnOff(getW(protect, 'enforcement')) !== false,
+			},
+		}),
+		...(onOffElement(children(root, 'doNotShadeFormData')[0]) && {
+			formFieldShading: false as const,
+		}),
+	};
 }
 
 /** Word's negative flags disable individual revision kinds while text tracking stays enabled. */

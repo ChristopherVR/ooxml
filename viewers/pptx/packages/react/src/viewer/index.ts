@@ -49,6 +49,7 @@ export {
 	useYjsProvider,
 } from './hooks/collaboration';
 export { CollaborationProvider } from './components/collaboration';
+export type { CollaborationState } from 'ooxml-core/collab';
 export type {
 	UserPresence,
 	CollaborationConfig,

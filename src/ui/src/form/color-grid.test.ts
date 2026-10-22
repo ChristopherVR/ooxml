@@ -1,3 +1,4 @@
+import { buildThemePalette } from 'ooxml-core/color';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { OfficeColorPick, OfficeUiColorGrid } from '../controls';
 import { registerOfficeUi } from '../index';
@@ -170,6 +171,96 @@ describe('office-ui-color-grid', () => {
 			},
 			{ color: '#654321', source: 'extra', label: 'Variant Accent 2', index: 1 },
 		]);
+	});
+
+	it('shows a product palette as it is given, with the columns it has', () => {
+		// Two columns whose swatches the product computed itself (rounded, not truncated).
+		const palette = buildThemePalette()
+			.slice(4, 6)
+			.map((column, index) => ({
+				...column,
+				name: `Column ${index}`,
+				variants: column.variants.map((variant, row) => ({
+					...variant,
+					hex: `#0${index}${row}0${index}${row}`,
+					label: `Column ${index} variant ${row}`,
+				})),
+			}));
+		const heard = vi.fn<(pick: OfficeColorPick) => void>();
+		const grid = make((g) => {
+			g.palette = palette;
+			g.variantLabel = () => 'not used';
+		});
+		grid.addEventListener('office-color-pick', (event) =>
+			heard((event as CustomEvent<OfficeColorPick>).detail),
+		);
+		const theme = buttons(grid, '[data-source="theme"]');
+		expect(theme).toHaveLength(12);
+		// Each theme row lays out the palette's two columns, not ten with eight empty.
+		const rows = [...grid.shadowRoot!.querySelectorAll<HTMLElement>('[data-cells="theme"]')];
+		expect(rows.map((row) => row.style.getPropertyValue('--_columns'))).toStrictEqual(
+			Array(6).fill('2'),
+		);
+		expect(
+			[...grid.shadowRoot!.querySelectorAll<HTMLElement>('[data-cells="standard"]')].map((row) =>
+				row.style.getPropertyValue('--_columns'),
+			),
+		).toStrictEqual(['10']);
+		expect(theme.map((button) => button.dataset.color)).toContain('#014014');
+		const variant = buttons(grid, '[data-color="#014014"]')[0]!;
+		expect(variant.getAttribute('aria-label')).toBe('Column 1 variant 4');
+		variant.click();
+		expect(heard).toHaveBeenCalledWith({
+			color: '#014014',
+			source: 'theme',
+			label: 'Column 1 variant 4',
+			theme: { column: 1, variant: palette[1]!.variants[4]!.variant },
+		});
+	});
+
+	it('keeps a short column of a product palette in place instead of failing to draw', () => {
+		// The second column resolves only four variants: its fifth slot stays empty.
+		const [first, second] = buildThemePalette().slice(4, 6);
+		const palette = [first!, { ...second!, variants: second!.variants.slice(0, 4) }];
+		const heard = vi.fn<(pick: OfficeColorPick) => void>();
+		const grid = make((g) => {
+			g.palette = palette;
+		});
+		grid.addEventListener('office-color-pick', (event) =>
+			heard((event as CustomEvent<OfficeColorPick>).detail),
+		);
+		expect(buttons(grid, '[data-source="theme"]')).toHaveLength(11);
+		const lastRow = [...grid.shadowRoot!.querySelectorAll('[data-cells="theme"]')].at(-1)!;
+		expect([...lastRow.children].map((cell) => cell.localName)).toStrictEqual(['button', 'span']);
+		buttons(grid, `[title="${second!.variants[3]!.label}"]`)[0]!.click();
+		expect(heard.mock.calls[0]![0].theme).toStrictEqual({
+			column: 1,
+			variant: second!.variants[3]!.variant,
+		});
+	});
+
+	it('marks the swatch at selectedTheme and no swatch by value', () => {
+		const grid = make((g) => {
+			g.value = '#ff0000';
+			g.selectedTheme = { column: 4, variant: { kind: 'lighter', percent: 80 } };
+		});
+		const marked = buttons(grid, '[aria-checked="true"]');
+		expect(marked).toHaveLength(1);
+		expect(marked[0]!.getAttribute('aria-label')).toBe('Accent 1, Lighter 80%');
+		grid.selectedTheme = { column: 4 };
+		return grid.updateComplete.then(() => {
+			expect(buttons(grid, '[aria-checked="true"]').map((b) => b.title)).toEqual(['Accent 1']);
+		});
+	});
+
+	it('leaves out Standard Colors when the product has none', () => {
+		const grid = make((g) => {
+			g.standardColors = [];
+		});
+		expect(
+			[...grid.shadowRoot!.querySelectorAll('.heading')].map((heading) => heading.textContent),
+		).toEqual(['Theme Colors']);
+		expect(buttons(grid, '[data-source="standard"]')).toHaveLength(0);
 	});
 
 	it('does nothing while disabled', () => {

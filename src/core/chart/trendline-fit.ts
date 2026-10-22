@@ -3,6 +3,7 @@
 // equation text and R-squared. A painter maps the samples to pixels. Category charts fit against
 // the category positions 1..n (as Excel does); scatter charts against the series' own x values.
 import type { ChartTrendlineKind } from './model-analysis';
+import { extentOf } from './extent';
 import { computeLinearRegression, computeRSquared, fitPolynomial } from './regression';
 import {
 	formatExponentialEquation,
@@ -162,8 +163,9 @@ export function fitChartTrendline(
 	}
 	const model = fitModel(options, xVals, yVals);
 	if (!model) return noFit();
-	const startX = Math.min(...xVals) - (options.backward ?? 0);
-	const endX = Math.max(...xVals) + (options.forward ?? 0);
+	const xRange = extentOf(xVals);
+	const startX = xRange.min - (options.backward ?? 0);
+	const endX = xRange.max + (options.forward ?? 0);
 	const steps = Math.max(Math.ceil((endX - startX) * 4), 20);
 	const points: ChartTrendlinePoint[] = [];
 	for (let step = 0; step <= steps; step++) {

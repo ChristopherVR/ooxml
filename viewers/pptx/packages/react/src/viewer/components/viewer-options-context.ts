@@ -9,8 +9,11 @@ import { createContext, useContext } from 'react';
  * consumers fall back to the shared defaults when rendered standalone
  * (unit tests, storybook-style harnesses).
  */
-export const ViewerOptionsContext = createContext<ViewerOptions>(DEFAULT_VIEWER_OPTIONS);
-export const ViewerOptionsStoreContext = createContext<ViewerOptionsStore | null>(null);
+export const ViewerOptionsContext =
+	/* @__PURE__ */ createContext<ViewerOptions>(DEFAULT_VIEWER_OPTIONS);
+export const ViewerOptionsStoreContext = /* @__PURE__ */ createContext<ViewerOptionsStore | null>(
+	null,
+);
 
 /** Read the current File > Options snapshot (defaults when unprovided). */
 export function useViewerOptionsContext(): ViewerOptions {

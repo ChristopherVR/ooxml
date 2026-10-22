@@ -9,17 +9,16 @@ description: 从查看器导出 PNG、PDF、GIF、WebM 视频和 SVG，以及独
 
 ## 支持的格式 {#supported-formats}
 
-| 格式           | 处理流程                                                                                                         | 输出文件                   |
-| -------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| PNG            | `renderToCanvas`（html2canvas-pro，缩放比例为 2）→ `canvas.toBlob('image/png')`；也支持复制到剪贴板              | `slide-<n>.png`            |
-| PDF            | jsPDF：逐张幻灯片画布 → JPEG 图像帧（质量 0.92）→ A4 页面，方向随宽高比确定                                      | `presentation.pdf`         |
-| GIF            | 共享的纯 JavaScript GIF89a 编码器，每张幻灯片 2000 毫秒，帧最长边限制为 1920 像素                                | `presentation.gif`         |
-| 视频（WebM）   | 对画布捕获流使用 `MediaRecorder`（默认 30 fps、5 Mbps），每张幻灯片 3000 毫秒                                    | `presentation.webm`        |
-| SVG            | 通过 `ExportService.exportSlideToSvg` / `exportAllSlidesToSvg` 使用核心 `SvgExporter`，输出矢量图，无需捕获 DOM  | 每页一个 SVG               |
-| 打印           | `PrintService`：幻灯片以矢量 SVG 打印，大纲使用 HTML，备注和讲义使用栅格化截图                                   | 打印窗口                   |
-| JSON           | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                                            | `presentation.json`        |
-| 共享包         | `ViewerFileIOService.packageForSharing()`：将序列化后的 `.pptx` 和 README 打包为 ZIP                             | `presentation-package.zip` |
-| PPTX/PPSX/PPTM | `ViewerFileIOService.saveAs(format)` → `PptxHandler.save()` → `Uint8Array`，另存为时使用对应格式的正确 MIME 类型 | `presentation.<format>`    |
+| 格式           | 处理流程                                                                                                         | 输出文件                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| PNG            | `renderToCanvas`（html2canvas-pro，缩放比例为 2）→ `canvas.toBlob('image/png')`；也支持复制到剪贴板              | `slide-<n>.png`         |
+| PDF            | jsPDF：逐张幻灯片画布 → JPEG 图像帧（质量 0.92）→ A4 页面，方向随宽高比确定                                      | `presentation.pdf`      |
+| GIF            | 共享的纯 JavaScript GIF89a 编码器，每张幻灯片 2000 毫秒，帧最长边限制为 1920 像素                                | `presentation.gif`      |
+| 视频（WebM）   | 对画布捕获流使用 `MediaRecorder`（默认 30 fps、5 Mbps），每张幻灯片 3000 毫秒                                    | `presentation.webm`     |
+| SVG            | 通过 `ExportService.exportSlideToSvg` / `exportAllSlidesToSvg` 使用核心 `SvgExporter`，输出矢量图，无需捕获 DOM  | 每页一个 SVG            |
+| 打印           | `PrintService`：幻灯片以矢量 SVG 打印，大纲使用 HTML，备注和讲义使用栅格化截图                                   | 打印窗口                |
+| JSON           | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                                            | `presentation.json`     |
+| PPTX/PPSX/PPTM | `ViewerFileIOService.saveAs(format)` → `PptxHandler.save()` → `Uint8Array`，另存为时使用对应格式的正确 MIME 类型 | `presentation.<format>` |
 
 ::: info JPEG
 没有独立的 JPEG 导出；JPEG（质量 0.92）仅用于压缩导出 PDF 中的幻灯片图像帧。
@@ -55,7 +54,7 @@ function renderToCanvas(
 ): Promise<HTMLCanvasElement>;
 ```
 
-它基于 `html2canvas-pro`，在 `onclone` 阶段运行与 React 和 Vue 共享的 CSS 预处理流程，来自 `pptx-viewer-shared`，在构建时内联。它将不支持的颜色函数转换为 `rgb()` 或十六进制，并将 html2canvas-pro 无法渲染的 `backdrop-filter`、`mix-blend-mode` 和 CSS 三维变换展平处理。
+它基于 `html2canvas-pro`，在 `onclone` 阶段运行与 React 和 Vue 共享的 CSS 预处理流程，来自公开的 `ooxml-ui/pptx` API。它将不支持的颜色函数转换为 `rgb()` 或十六进制，并将 html2canvas-pro 无法渲染的 `backdrop-filter`、`mix-blend-mode` 和 CSS 三维变换展平处理。
 
 ## `ExportService` {#exportservice}
 

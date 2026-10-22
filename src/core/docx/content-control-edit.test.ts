@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+	afterEdit,
 	canDeleteControl,
 	canEditControlContent,
 	checkboxState,
 	controlDate,
+	placeholderTextOf,
 	selectListItem,
 	setControlDate,
 	toggleCheckbox,
@@ -58,6 +60,45 @@ describe('content control editing', () => {
 		expect(controlDate(change.control)?.getDate()).toBe(5);
 	});
 
+	it('removes a temporary control once its content is edited, as Word does', () => {
+		const list: ContentControl = {
+			id: '4',
+			level: 'cell',
+			kind: 'dropDownList',
+			temporary: true,
+			showingPlaceholder: true,
+			items: [{ display: 'Primary', value: 'primary' }],
+		};
+		expect(selectListItem(list, 0)).toMatchObject({ text: 'Primary', removed: true });
+		expect(toggleCheckbox({ ...base, temporary: true }).removed).toBe(true);
+		const date = setControlDate(
+			{ id: '5', level: 'inline', kind: 'date', temporary: true },
+			new Date(),
+		);
+		expect(date.removed).toBe(true);
+		expect(afterEdit({ control: list, text: 'typed' }).removed).toBe(true);
+		const { temporary: _temporary, ...kept } = list;
+		expect(selectListItem(kept, 0)!.removed).toBeUndefined();
+		expect(toggleCheckbox(base).removed).toBeUndefined();
+	});
+
+	it('keeps a temporary control whose lock forbids deleting it', () => {
+		const locked: ContentControl = {
+			id: '6',
+			level: 'inline',
+			kind: 'dropDownList',
+			temporary: true,
+			lock: 'sdtLocked',
+			items: [{ display: 'Primary', value: 'primary' }],
+		};
+		expect(selectListItem(locked, 0)!.removed).toBeUndefined();
+		expect(toggleCheckbox({ ...base, temporary: true, lock: 'sdtLocked' }).removed).toBeUndefined();
+		const both = { ...locked, lock: 'sdtContentLocked' as const };
+		expect(afterEdit({ control: both, text: 'typed' }).removed).toBeUndefined();
+		const removable = { ...locked, lock: 'contentLocked' as const };
+		expect(afterEdit({ control: removable, text: 'typed' }).removed).toBe(true);
+	});
+
 	it('reports what the lock setting allows', () => {
 		expect(canEditControlContent({ ...base, lock: 'contentLocked' })).toBe(false);
 		expect(canDeleteControl({ ...base, lock: 'contentLocked' })).toBe(true);
@@ -65,5 +106,11 @@ describe('content control editing', () => {
 		expect(canEditControlContent({ ...base, lock: 'sdtLocked' })).toBe(true);
 		expect(canEditControlContent({ ...base, lock: 'sdtContentLocked' })).toBe(false);
 		expect(canDeleteControl(undefined)).toBe(true);
+	});
+
+	it('uses the default placeholder when the glossary entry has no text', () => {
+		const empty: ContentControl = { id: '7', level: 'inline', kind: 'text', placeholderText: '' };
+		expect(placeholderTextOf(empty)).toBe('Click or tap here to enter text.');
+		expect(placeholderTextOf({ ...empty, placeholderText: 'Enter a name.' })).toBe('Enter a name.');
 	});
 });

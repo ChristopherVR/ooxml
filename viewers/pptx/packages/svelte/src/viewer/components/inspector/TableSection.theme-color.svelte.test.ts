@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
 import TableSection from './TableSection.svelte';
+import { themeSwatches } from './theme-color-grid.test-support';
 
 /**
  * Table cell text/fill colour: `TableCellSection` (mounted here via its
@@ -111,7 +112,7 @@ describe('tableCellSection theme colour', () => {
 		const editor = makeEditor(tableEl());
 		const target = mountSection(editor, currentEl(editor));
 
-		const swatches = target.querySelectorAll<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatches = themeSwatches(target, 'Accent 2');
 		expect(swatches.length).toBeGreaterThanOrEqual(2);
 		swatches[0]?.click();
 		flushSync();
@@ -125,7 +126,7 @@ describe('tableCellSection theme colour', () => {
 		const editor = makeEditor(tableEl());
 		const target = mountSection(editor, currentEl(editor));
 
-		const swatches = target.querySelectorAll<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatches = themeSwatches(target, 'Accent 2');
 		expect(swatches.length).toBeGreaterThanOrEqual(2);
 		swatches[1]?.click();
 		flushSync();
@@ -141,7 +142,7 @@ describe('tableCellSection theme colour', () => {
 		const editor = makeEditor(el);
 		const target = mountSection(editor, currentEl(editor));
 
-		const swatch = target.querySelectorAll<HTMLButtonElement>('button[title="Accent 2"]')[0];
+		const swatch = themeSwatches(target, 'Accent 2')[0];
 		swatch?.click();
 		flushSync();
 		expect(cellStyle(editor).colorRef).toStrictEqual({ scheme: 'accent2' });

@@ -26,6 +26,7 @@ import {
 import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 
 import { PPTX_ANGULAR_VIEWER_VERSION } from '../internal/version';
+import { ViewerFileIOService } from './viewer-file-io.service';
 
 @Component({
 	selector: 'pptx-account-page',
@@ -40,6 +41,8 @@ export class AccountPageComponent {
 	readonly accountAuth = input<AccountAuthConfig | undefined>(undefined);
 
 	private readonly translate = inject(TranslateService);
+	/** The viewer's file IO, for the host `storage` (absent when rendered standalone). */
+	private readonly fileIO = inject(ViewerFileIOService, { optional: true });
 
 	protected readonly swatches = AVATAR_COLOR_SWATCHES;
 	protected readonly version = PPTX_ANGULAR_VIEWER_VERSION;
@@ -60,7 +63,7 @@ export class AccountPageComponent {
 	}
 
 	private async refreshUsage(): Promise<void> {
-		this.usage.set(await getLocalStorageUsageSummary());
+		this.usage.set(await getLocalStorageUsageSummary(this.fileIO?.storage()));
 	}
 
 	protected updateName(name: string): void {
@@ -78,7 +81,7 @@ export class AccountPageComponent {
 		if (!confirmed) {
 			return;
 		}
-		await clearAllLocalViewerData();
+		await clearAllLocalViewerData(this.fileIO?.storage());
 		this.profile.set(DEFAULT_VIEWER_PROFILE);
 		this.cleared.set(true);
 		await this.refreshUsage();

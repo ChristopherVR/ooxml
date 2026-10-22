@@ -816,6 +816,8 @@ export * from './hyperlink-target';
 export * from './collaboration-presence';
 export * from './collaboration-shell-state';
 export * from './collaboration-external-session';
+export * from './collaboration-options';
+export * from './collaboration-owned-session';
 export * from './collaboration-external-readiness';
 // Throttled local-presence publisher, shared by every binding's collaboration
 // layer (writes the same nested `presence` awareness field they all read).
@@ -1113,6 +1115,9 @@ export * from './embedded-fonts';
 // injection stay per-binding).
 export * from './google-webfonts';
 export * from './google-webfonts-link';
+// Weight variants named as their own family ("DM Sans Light"): the Google
+// Fonts face that serves them and the CSS weight their text renders at.
+export * from './font-weight-names';
 // Pure slide text search: per-element/-slide text collection + case-insensitive
 // substring search with match counts and context snippets.
 export * from './slide-search';
@@ -1515,6 +1520,7 @@ export * from './layout-gallery';
 export * from './color-swatches';
 export * from './theme-color-swatches';
 export * from './theme-color-picker-state';
+export * from './theme-color-grid';
 export * from './theme-color-field-commit';
 
 // PowerPoint-style title bar (AutoSave toggle + quick access + file name +
@@ -1533,6 +1539,8 @@ export * from './zoom-return-navigation';
 export * from './zoom-step';
 export * from './command-search';
 export * from './autosave-store';
+// Recovery-snapshot housekeeping (clear, retention) against IndexedDB or the host's store.
+export * from './autosave-maintenance';
 export * from './autosave-tick';
 // Who wins when the host's `autosave` prop and the user's AutoSave toggle
 // disagree (the prop is a ceiling, the toggle a preference inside it), plus the
@@ -1728,6 +1736,7 @@ export * from './foreign-object-font-embed';
 export * from './foreign-object-image-embed';
 export * from './foreign-object-svg-document';
 export * from './viewport-fit';
+export * from './viewport-size';
 export type {
 	InlineTextEditSnapshot,
 	InlineListSeed,
@@ -1791,3 +1800,8 @@ export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
 export * from './slide-package-clipboard';
 export * from './custom-path-markers';
+
+// The shared `CollaborationState` every binding reports to its host (`collaboration-change`).
+export * from './collaboration-state';
+// The payload the host-facing `autosaveStatus` event reports in every binding.
+export * from './viewer-event-payloads';

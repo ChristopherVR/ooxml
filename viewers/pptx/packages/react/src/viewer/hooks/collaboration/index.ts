@@ -21,6 +21,9 @@ export type { UseYjsProviderInput, UseYjsProviderResult } from './useYjsProvider
 export { usePresenceTracking } from './usePresenceTracking';
 export type { UsePresenceTrackingInput, UsePresenceTrackingResult } from './usePresenceTracking';
 
+export { useOwnedCollaboration } from './useOwnedCollaboration';
+export type { OwnedCollaboration } from './useOwnedCollaboration';
+
 export { useCollaborativeState } from './useCollaborativeState';
 export type { UseCollaborativeStateInput } from './useCollaborativeState';
 

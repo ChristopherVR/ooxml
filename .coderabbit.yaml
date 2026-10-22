@@ -1,8 +1,9 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 #
-# CodeRabbit (https://coderabbit.ai) reviews pull requests here: free for public repositories, it
-# needs only its GitHub App installed. It reviews, it does not gate: CI (`ci-success`) stays the
-# required check, and its comments are suggestions to weigh, not rules.
+# CodeRabbit is switched off: its summaries and nitpicks were noise even on the chill profile, and
+# Codex reviews pull requests instead. Automatic reviews and replies are disabled here so the app
+# stays quiet while it is still installed; once it is uninstalled this file can be deleted (deleting
+# it first would put the app back on its noisier defaults).
 language: en-GB
 tone_instructions: 'Be direct and brief. Explain the concrete failure a finding causes. No praise.'
 
@@ -32,7 +33,7 @@ reviews:
     autofix:
       enabled: false
   auto_review:
-    enabled: true
+    enabled: false
     drafts: false
     base_branches: ['main']
     # The release flow and Dependabot open these; CI and dependency review cover them.
@@ -96,4 +97,4 @@ reviews:
       enabled: false
 
 chat:
-  auto_reply: true
+  auto_reply: false

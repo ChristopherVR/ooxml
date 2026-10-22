@@ -24,7 +24,12 @@
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
 import { ShieldAlert } from 'lucide-vue-next';
-import { createSlidePackageClipboard } from 'ooxml-ui/pptx';
+import {
+	autosaveStatusKind,
+	createCollaborationStateReporter,
+	createSlidePackageClipboard,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	attachViewerHyperlinks,
@@ -34,9 +39,9 @@ import {
 	canInteractWithElement,
 	computeGridSpacingPx,
 	createBackstagePresentation,
-	deleteAutosaveSnapshot,
+	clearAutosaveSnapshots,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
-	listAutosaveSnapshots,
+	pruneExpiredAutosaveSnapshots,
 	MAX_ZOOM_SCALE,
 	MIN_ZOOM_SCALE,
 	observeElementHeight,
@@ -45,7 +50,8 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	resolveAutosaveIntervalSeconds,
-	resolveExpiredAutosaveSnapshots,
+	saveFailureMessage,
+	SAVE_FAILED_TOAST,
 	resolveHistoryDepth,
 	resolveAuthoredSlideRange,
 	resolveImageResolutionScale,
@@ -205,11 +211,17 @@ import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
+import { ViewerStorageKey } from './composables/viewer-storage';
 import { provideZoomTargetLookup, toZoomTargetInfo } from './composables/zoom-target';
 import type { PowerPointViewerEmits, PowerPointViewerExpose, PowerPointViewerProps } from './types';
 
 const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	canEdit: false,
+	readOnly: false,
+	// Left undefined on purpose: an omitted `autosave` PERMITS autosave (only an explicit `false`
+	// vetoes it), but Vue would cast the absent boolean to `false` and veto it for every host that
+	// said nothing.
+	autosave: undefined,
 	smartArt3D: false,
 	surfaceChart3D: false,
 	barChart3D: false,
@@ -248,7 +260,9 @@ provide(RibbonAddInsKey, () => props.ribbonAddIns);
 const source = useContentSource({
 	content: () => props.content,
 	onOpenFile: () => props.onOpenFile,
+	storage: () => props.storage,
 });
+provide(ViewerStorageKey, () => props.storage);
 const activeContent = source.activeContent;
 
 // Bumped each time the load pipeline finishes applying a parsed deck; the
@@ -383,6 +397,7 @@ const canEditEffective = computed(
 	() =>
 		editingRequested.value &&
 		props.canEdit &&
+		!props.readOnly &&
 		isEditingAllowed(customization.resolved.value) &&
 		!collaborationReadOnly.value &&
 		!protectedViewActive.value &&
@@ -521,6 +536,7 @@ const {
 const history = useEditorHistory(slides, templateElementsBySlideId, {
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
 	activeSlideIndex,
+	onChange: () => emit('change'),
 });
 // File > Options > Advanced > "Maximum number of undos", re-applied whenever
 // it changes mid-session (not just at construction).
@@ -828,9 +844,14 @@ const exporter = useExportWiring({
 	// once a Save-As download actually completes.
 	getOptions: () => viewerOptions.value,
 	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
+	storage: () => props.storage,
+	// A failed Save / Save As: the host's `error` event, and the save-failed notice for the user.
+	onSaveError: (saveError) => {
+		emit('error', saveFailureMessage(saveError));
+		compatToasts.notify(SAVE_FAILED_TOAST);
+	},
 });
-const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, downloadAs, onExportPdf } =
-	exporter;
+const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExportPdf } = exporter;
 
 // Print renders vector slides; notes and handouts are rasterised.
 const printer = usePrint({
@@ -869,6 +890,7 @@ const {
 	activeSlide,
 	pushHistory: history.pushHistory,
 	selectedElements,
+	onNotesChanged: (notes) => emit('notes-update', notes),
 });
 
 // -- Align / distribute / group ----------------------------------------
@@ -1046,6 +1068,7 @@ const {
 	// used whenever the host did not state a cadence of its own.
 	optionsIntervalSeconds: () => resolveAutosaveIntervalSeconds(viewerOptions.value),
 	snapshotName: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
+	storage: () => props.storage,
 	getRecoverySnapshot,
 	emitAutosave: (bytes) => emit('autosave', bytes),
 	captureVersion: (label, at) => versionHistoryWiring.versionHistory.capture(label, at),
@@ -1057,10 +1080,12 @@ const {
 const autosaveRecovery = useAutosaveRecovery({
 	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
 	fileName: () => props.fileName,
+	storage: () => props.storage,
 	loading,
 	error,
 	slideCount: () => slides.value.length,
 	autosaveAllowed: () => props.autosave !== false,
+	onOffered: (record) => emit('autosave-recovery', record),
 	onRestore: (bytes) => {
 		source.internalContent.value = bytes;
 	},
@@ -1081,6 +1106,7 @@ const deckActions = useInspectorDeckActions({
 	markDirty: () => {
 		autosave.isDirty.value = true;
 	},
+	onCorePropertiesChanged: (updates) => emit('properties-change', updates),
 	pushHistory: history.pushHistory,
 	// Mirror React's refreshContentAfterThemeChange: re-serialise and reload so
 	// slide colours re-resolve against the newly-applied theme. These bytes go
@@ -1162,7 +1188,7 @@ const collaboration = useCollaborationWiring({
 			tableStylesToDelete: deck.tableStylesToDelete.value,
 			embedFonts: fontEmbedding.embedFontsEnabled.value,
 		}),
-	initialUserColor: props.collaboration?.userColor,
+	initialUserColor: resolveCollaborationConfig(props.collaboration)?.userColor,
 	canvasWidth: computed(() => canvasSize.value.width),
 	canvasHeight: computed(() => canvasSize.value.height),
 	collaborationProp: () => props.collaboration,
@@ -1185,6 +1211,15 @@ watch(
 	},
 	{ immediate: true, flush: 'sync' },
 );
+
+// The shared CollaborationState, for viewer-owned and host-owned sessions alike.
+const collaborationReporter = createCollaborationStateReporter((state) =>
+	emit('collaboration-change', state),
+);
+watch(collaboration.collab.state, (state) => collaborationReporter.update(state), {
+	immediate: true,
+	flush: 'sync',
+});
 
 // -- Panels and dialogs owned by their own composables ------------------
 const signatureWorkflow = useSignatureWorkflow({ signatures, isDirty: autosave.isDirty });
@@ -1216,6 +1251,7 @@ const documentProperties = useDocumentPropertiesDialog({
 	coreProperties,
 	customProperties,
 	appProperties,
+	onCorePropertiesChanged: (updates) => emit('properties-change', updates),
 });
 const headerFooterDialog = useHeaderFooterDialog({ headerFooter });
 const versionHistoryWiring = useVersionHistoryWiring({
@@ -1394,6 +1430,10 @@ const { ribbonMode, ribbonUpdateTextStyle, ribbonMoveToEdge } = ribbonActions;
 watch(ribbonMode, (mode) => {
 	emit('mode-change', mode);
 });
+watch(
+	() => ribbonMode.value === 'present',
+	(presenting) => emit('presentation-change', presenting),
+);
 
 // -- Keyboard shortcuts ------------------------------------------------
 // A config-driven registry (mirrors React `useKeyboardShortcuts`) replaces the
@@ -1543,30 +1583,41 @@ const { showSettings } = useViewerSettingsDialog({
 	viewerOptions,
 });
 
+// The unsaved-changes flag, reported like the other bindings (including its initial value).
+watch(
+	() => autosave.isDirty.value,
+	(dirty) => emit('dirty-change', dirty),
+	{ immediate: true },
+);
+// The user's AutoSave preference changed (title bar, File > Options). Registered after the
+// settings dialog above, which hydrates the preference from the stored options on setup: that
+// is not a change the host should hear about.
+watch(autosaveEnabled, (enabled) => emit('autosave-toggle', enabled));
+// The public lifecycle, not the engine's own status (`disabled` reports as `idle`).
+watch(
+	() => autosaveStatusKind(autosave.status.value),
+	(status) => emit('autosave-status', status),
+);
+// The raw connection status; `collaboration-change` carries the full shared state.
+watch(
+	() => collaboration.collab.status.value,
+	(status) => emit('collaboration-status', status),
+);
+
 /** File > Options > Save > "Delete cached files". */
 function onOptionsClearCache(): void {
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-		} catch {
-			// Browser lifecycle cleanup cannot report an IndexedDB failure.
-		}
-	})();
+	// With a host recovery store this sweeps it only when it lists its copies.
+	void clearAutosaveSnapshots(props.storage).catch(() => {
+		// Browser lifecycle cleanup cannot report a storage failure.
+	});
 }
 
 // File > Options > Save > "cache retention": a one-time sweep per mount is
 // enough, since a fresh snapshot only ever lands with a fresh timestamp.
 onMounted(() => {
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			const expired = resolveExpiredAutosaveSnapshots(snapshots, viewerOptions.value);
-			await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-		} catch {
-			// Best-effort background maintenance; a blocked IndexedDB skips it.
-		}
-	})();
+	void pruneExpiredAutosaveSnapshots(viewerOptions.value, props.storage).catch(() => {
+		// Best-effort background maintenance; a blocked store skips it.
+	});
 });
 
 // File > Options > Save > "clear cache on close": wipe recovery snapshots
@@ -1651,6 +1702,7 @@ provideRibbonGalleryHost({
 	applyTheme: applyAiTheme,
 });
 const aiBridge = useAiBridge({
+	onCorePropertiesChanged: (properties) => emit('properties-change', properties),
 	slides,
 	activeSlideIndex,
 	canvasSize,
@@ -1910,6 +1962,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 		ref="viewerRootRef"
 		class="pptx-vue-viewer"
 		data-pptx-theme-root
+		data-pptx-scope
 		data-pptx-editor-chrome
 		:class="[props.class, { 'pptx-vue-reduced-motion': reducedMotion }, ...optionRootClasses]"
 		:style="themeStyle"
@@ -2010,7 +2063,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:can-redo="history.canRedo.value"
 					:on-undo="history.undo"
 					:on-redo="history.redo"
-					:on-save="() => void downloadAs('pptx')"
+					:on-save="() => void exporter.save()"
 					:find-replace-open="findOpen"
 					:on-toggle-find-replace="() => (findOpen = !findOpen)"
 					:on-command-search="handleCommandSearch"

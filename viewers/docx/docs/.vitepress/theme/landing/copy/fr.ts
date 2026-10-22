@@ -71,8 +71,8 @@ export const fr: LandingCopy = {
 		link: { text: 'Feuille de route de la prise en charge', href: '/parity-roadmap' },
 		roadmapTitle: 'Note de feuille de route',
 		roadmapCopy:
-			'La logique OOXML partagée est en cours de déplacement vers le paquet privé ooxml-core, afin que ce dépôt puisse ne contenir plus que l’interface. Cette migration est en cours et n’est pas une fonctionnalité livrée.',
-		roadmapLink: { text: 'Le plan d’ooxml-core', href: '/ooxml-core-plan' },
+			'La logique des documents Word vit dans le paquet partagé ooxml-core ; l’éditeur lui-même est dans ooxml-ui. Ces paquets documentent l’interface et les adaptateurs de frameworks.',
+		roadmapLink: { text: 'Architecture', href: '/fr/architecture' },
 	},
 	quickstart: {
 		kicker: 'Prise en main',

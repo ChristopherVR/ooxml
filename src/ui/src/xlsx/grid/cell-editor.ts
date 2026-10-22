@@ -9,7 +9,8 @@ import {
 	type CellAddress,
 	type CellRange,
 } from 'ooxml-core/xlsx';
-import { showValidationAlert } from './alert';
+import { requestValidationAlert } from './alert-route';
+import type { AlertAnswer } from './alert';
 import { cssFont } from 'ooxml-core/xlsx/ui';
 import { h, place } from './dom';
 import {
@@ -150,12 +151,29 @@ export class CellEditor implements EditDriver {
 			);
 			if (!result.ok) {
 				this.#pending = true;
-				void showValidationAlert(ctx, result.style, result.message, result.title).then((answer) => {
+				ctx.emit('validation-error', {
+					message: ctx.t(result.message),
+					...(result.title ? { title: result.title } : {}),
+					ref: formatAddress(state.address),
+					style: result.style,
+				});
+				const settle = (answer: AlertAnswer) => {
 					this.#pending = false;
 					if (answer === 'yes' || answer === 'ok') this.#apply(text, move, false);
 					else if (answer === 'cancel') this.cancel();
 					else this.focus();
+				};
+				const answer = requestValidationAlert(ctx, {
+					style: result.style,
+					message: result.message,
+					title: result.title,
+					ref: formatAddress(state.address),
+					sheet: state.sheet,
+					sheetName: session.workbook.sheets[state.sheet]?.name ?? '',
+					value: text,
 				});
+				if (typeof answer === 'string') settle(answer);
+				else void answer.then(settle);
 				return false;
 			}
 		}

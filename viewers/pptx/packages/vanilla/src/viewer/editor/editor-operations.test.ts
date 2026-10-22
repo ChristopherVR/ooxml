@@ -29,6 +29,28 @@ describe('createEditorOps commitNotes', () => {
 		expect(store.get().slides[0].notes).toBe('old notes');
 	});
 
+	it('reports the new notes text to the host (onNotesUpdate), only when it changed', () => {
+		const store = createStore({
+			...createInitialViewerState(),
+			slides: [buildSlide('a', 'old notes')],
+			currentSlide: 0,
+			editable: true,
+		});
+		const onNotesUpdate = vi.fn();
+		const ops = createEditorOps({
+			store,
+			getHandler: () => null,
+			onHistoryChange: vi.fn(),
+			onNotesUpdate,
+		});
+
+		ops.commitNotes('old notes');
+		expect(onNotesUpdate).not.toHaveBeenCalled();
+
+		ops.commitNotes('new notes');
+		expect(onNotesUpdate).toHaveBeenCalledExactlyOnceWith('new notes');
+	});
+
 	it('is a no-op when the viewer is not editable (view-only mode)', () => {
 		const store = createStore({
 			...createInitialViewerState(),

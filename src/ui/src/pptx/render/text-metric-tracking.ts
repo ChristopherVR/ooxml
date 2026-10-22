@@ -34,6 +34,7 @@
  */
 
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
+import { fontStyleShorthand, fontWeightShorthand } from './font-weight-names';
 
 /** The font a run actually renders with, after substitution and autofit. */
 export interface RunFontSpec {
@@ -97,7 +98,7 @@ function getMeasureContext(): CanvasRenderingContext2D | null {
 function toCanvasFont(font: RunFontSpec): string {
 	const size = font.fontSizePx && font.fontSizePx > 0 ? font.fontSizePx : DEFAULT_TEXT_FONT_SIZE;
 	const family = font.fontFamily || DEFAULT_FONT_FAMILY;
-	return `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${size}px ${family}`;
+	return `${fontStyleShorthand(family, font.italic)}${fontWeightShorthand(family, font.bold)}${size}px ${family}`;
 }
 
 /**

@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.2.2](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.2.2) - 2026-10-22
+
+### Testing
+
+- **xlsx:** Run the reviewed-edit tools end to end over mcp ([9f66379](https://github.com/ChristopherVR/ooxml/commit/9f66379b96ec2708d032294d1ef2f8557e24f284))
+
+## [0.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.2.1) - 2026-10-22
+
+### Refactor
+
+- **mcp:** Register every format's tools through core automation ([9a28bfa](https://github.com/ChristopherVR/ooxml/commit/9a28bfa684167472fff27f04a371c37d494a5fd5))
+
 ## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.2.0) - 2026-10-21
 
 ### Features

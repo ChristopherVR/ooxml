@@ -228,6 +228,8 @@ viewport rather than the whole 540 px host.
 
 `useViewerBuildingBlocks` accepts the same `content` / `canEdit` / `filePath` / `hiddenActions` / `onDirtyChange`-style inputs as `PowerPointViewer`, plus `onOpenSettings` / `onOpenHeaderFooter` / `onOpenShareDialog` callbacks (fired by the corresponding toolbar buttons) since this composition doesn't render those dialogs itself. It's an additive alternative, not a replacement: dialogs, presentation-mode overlays, mobile chrome, resizable side panels, and real-time collaboration are all part of `PowerPointViewer` and are out of scope for these building blocks. Reach for `PowerPointViewer` when you need the full editor; reach for `useViewerBuildingBlocks` when you're assembling your own chrome around just the toolbar and canvas.
 
+The bundled stylesheet's base reset (Tailwind's preflight) applies only inside the viewer root, a canvas viewport and elements with a `data-pptx-scope` attribute, so your page's own headings, lists and margins stay as they are. `SlideCanvas` and `Toolbar` carry the scope themselves; give any other element of a composed shell that uses the viewer's classes an ancestor with `data-pptx-scope`. A canvas-only shell can import `pptx-react-viewer/canvas.css` instead of `pptx-react-viewer/styles`.
+
 ---
 
 ## Styling & theming
@@ -236,6 +238,7 @@ The viewer's UI references **CSS custom properties** (`--pptx-*`, the shadcn/ui 
 
 - **Tailwind CSS v4 project**: the viewer classes resolve through your existing Tailwind tokens. No extra CSS import needed.
 - **No Tailwind**: import the bundled stylesheet once at your app entry: `import 'pptx-react-viewer/styles';`
+- **Canvas only**: a host that renders just `SlideCanvas` (see [Composing a custom viewer shell](#composing-a-custom-viewer-shell)) can import `pptx-react-viewer/canvas.css` instead: the same tokens and reset with only the utilities the canvas uses (about 46 KB, 8 KB gzipped, against 112 KB, 16 KB gzipped).
 - **CSS custom properties**: define the `--pptx-*` properties yourself for full control.
 
 Override specific values with the `theme` prop:
@@ -264,7 +267,7 @@ The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and radi
 
 ## Localization (i18n)
 
-UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`. Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demo/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
+UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`. Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demos/pptx/demo-react/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
 
 ## How it's built
 
@@ -273,7 +276,7 @@ You only need the `<PowerPointViewer>` component; everything else is internal. B
 A small curated set of those hooks is exported from `pptx-react-viewer/viewer` with a stable API; the complete set (80+) is also importable from `pptx-react-viewer/internals` for advanced integrations. The `internals` subpath is **not covered by semver**: prefer the stable root exports. See the [Hooks reference](https://christophervr.github.io/ooxml/pptx/react/hooks-reference) for the full list.
 
 The bulk of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
-transitions, and more) actually lives in `pptx-viewer-shared`, an internal package that is
+transitions, and more) actually lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is
 **never published to npm**. If you need one of those framework-neutral helpers directly, for
 example the slide-transition resolver/keyframes (`resolveSlideTransition`,
 `resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) or the `PresentationTransitionOverlay`

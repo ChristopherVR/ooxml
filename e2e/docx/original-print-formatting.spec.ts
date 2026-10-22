@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
-import { fileInput } from './helpers';
+import { fileInput, fileNameLabel } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 const fixture = (area: string, name: string, suffix: string) =>
@@ -22,6 +22,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await page.goto(`/?framework=${framework}`);
 			const input = await fileInput(page);
 			await input.setInputFiles(fixture(area, name, 'before'));
+			// The editor shows a blank document until the file has loaded, then shows its name.
+			await expect(fileNameLabel(page)).toHaveText(`${name}-before.docx`);
 			const editor = page.locator('docx-editor');
 			await editor.getByRole('tab', { name: 'View', exact: true }).click();
 			const layout = editor.getByRole('combobox', { name: 'Layout view', exact: true });
@@ -33,6 +35,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				columns.evaluateAll((elements) => elements.map((element) => element.innerHTML));
 			const before = await appearance();
 			await input.setInputFiles(fixture(area, name, 'tracked'));
+			await expect(fileNameLabel(page)).toHaveText(`${name}-tracked.docx`);
 			await expect.poll(appearance).not.toEqual(before);
 			const current = await appearance();
 			const source = await editor.evaluate(

@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The public methods of `<xlsx-editor>` (load, newWorkbook, save, saveBytes, download, markClean,
  * select, getSelection, setActiveSheet, collaboration, share, undo, redo, focusGrid). The properties and lifecycle are
@@ -9,6 +10,7 @@ import { downloadBytes, saveExtension, withExtension } from './file-commands';
 import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
 import { spreadsheetToolbarProps, type SpreadsheetToolbarProps } from './building-blocks';
+import type { SurfaceHostActions } from './surface-actions';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (
@@ -20,6 +22,30 @@ export class XlsxEditorApi extends HTMLElementBase {
 	surfaceOnly = false;
 	getToolbarProps(): SpreadsheetToolbarProps {
 		return spreadsheetToolbarProps(this.core);
+	}
+	/**
+	 * Host callbacks that stand in for dialogs when `surfaceOnly` is set. A workflow without a
+	 * callback is reported as not enabled in `getToolbarProps().enabled`.
+	 */
+	get surfaceActions(): SurfaceHostActions {
+		return this.core.surfaceActions;
+	}
+	set surfaceActions(value: SurfaceHostActions | undefined) {
+		this.core.surfaceActions = { ...(value ?? {}) };
+		this.core.requestRender();
+	}
+	/**
+	 * Host-owned storage. When set, File > Save and Save As hand the saved workbook to
+	 * `storage.save()` instead of downloading it, and File > Open asks `storage.open()` (when it has
+	 * one) instead of showing the file picker. The cancelable `file-command` event still fires
+	 * first; a host that prevents it handles the command itself. Export and Save as CSV still
+	 * download.
+	 */
+	get storage(): DocumentStorage | undefined {
+		return this.core.storage;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.core.storage = value ?? undefined;
 	}
 	get loading(): boolean {
 		return this.core.loading;
@@ -122,9 +148,14 @@ export class XlsxEditorApi extends HTMLElementBase {
 		return this.core.collab.state();
 	}
 
-	/** Opens File > Share, where the user starts or stops sharing and sees who is in the room. */
+	/**
+	 * Opens File > Share, where the user starts or stops sharing and sees who is in the room. Without
+	 * application UI (`surfaceOnly`) it calls the host's `onOpenShareDialog` instead, and does
+	 * nothing when there is none (`getToolbarProps().enabled.openShareDialog` tells which).
+	 */
 	share(): void {
-		this.openShare?.();
+		if (this.surfaceOnly) void this.getToolbarProps().onOpenShareDialog();
+		else this.openShare?.();
 	}
 
 	/** Undo the last edit; while shared, only this window's edits are undone. */

@@ -3,6 +3,7 @@ import type { Paragraph, Revision } from './model';
 import {
 	children,
 	first,
+	importElement,
 	makeW,
 	type XmlDocument,
 	type XmlElement,
@@ -97,7 +98,7 @@ function writeFormatRevision(
 	const change = original ?? makeW(doc, `${local}Change`);
 	removeChildren(change, local);
 	writeRevisionMetadata(change, revision);
-	change.appendChild(doc.importNode(previous, true));
+	change.appendChild(importElement(doc, previous));
 	props.appendChild(change);
 }
 export function revisionWrapper(

@@ -45,7 +45,8 @@
 
 import type { PptxEmbeddedFont, PptxSlide } from 'ooxml-core/pptx';
 
-import { findGoogleFontsFamily } from './google-fonts-lookup';
+import { selectTrustedEmbeddedFonts } from './embedded-font-trust';
+import { resolveGoogleFontsFace } from './font-weight-names';
 import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
 import { collectFontsFromElement } from './used-fonts';
 
@@ -162,8 +163,14 @@ export function isFontFamilyInstalledLocally(family: string): boolean {
  * alphanumeric/space characters"). A space encodes to `%20`, which is what
  * the API expects.
  */
-export function buildGoogleFontsFragment(family: string): string {
-	return `${family}:${GOOGLE_WEBFONT_AXIS}`;
+export function buildGoogleFontsFragment(family: string, weights?: Iterable<number>): string {
+	const sorted = [...new Set([400, 700, ...(weights ?? [])])].sort((a, b) => a - b);
+	if (sorted.length === 2) {
+		return `${family}:${GOOGLE_WEBFONT_AXIS}`;
+	}
+	// The API wants the tuples sorted: every upright weight, then every italic.
+	const tuples = [0, 1].flatMap((ital) => sorted.map((weight) => `${ital},${weight}`));
+	return `${family}:ital,wght@${tuples.join(';')}`;
 }
 
 /**
@@ -209,32 +216,43 @@ export function resetGoogleWebfontSessionCache(): void {
  * substitute is requested instead, so the deck still gets a matching-metrics
  * face even though the exact one is unavailable. Families that resolve to
  * the same canonical/substitute family (e.g. "Aptos" and "Calibri" both
- * resolving to "Carlito") only produce one fragment. Unmatched families are
- * dropped without any network request.
+ * resolving to "Carlito") only produce one fragment. A weight variant named
+ * as its own family ("DM Sans Light") requests its base family ("DM Sans")
+ * with the weight it names added to the axis, and runs in it render at that
+ * weight (see `font-weight-names.ts`). Unmatched families are dropped without
+ * any network request.
  */
 export function matchGoogleWebfontFragments(families: readonly string[]): string[] {
-	const fragments: string[] = [];
-	const requested = new Set<string>();
+	// Insertion order is the order fragments are emitted in.
+	const weightsByFamily = new Map<string, Set<number>>();
 	for (const family of families) {
-		const canonical =
-			findGoogleFontsFamily(family) ?? findMetricCompatibleGoogleFontsFamily(family);
+		const face = resolveGoogleFontsFace(family);
+		const canonical = face?.family ?? findMetricCompatibleGoogleFontsFamily(family);
 		if (canonical === null) {
 			continue;
 		}
 		resolvedFamilies.add(family);
-		if (!requested.has(canonical)) {
-			requested.add(canonical);
-			fragments.push(buildGoogleFontsFragment(canonical));
+		let weights = weightsByFamily.get(canonical);
+		if (!weights) {
+			weights = new Set();
+			weightsByFamily.set(canonical, weights);
+		}
+		if (face?.weight !== undefined) {
+			// The regular face, and the face bold runs in this family ask for.
+			weights.add(face.weight);
+			weights.add(Math.max(700, face.weight));
 		}
 	}
-	return fragments;
+	return [...weightsByFamily].map(([family, weights]) => buildGoogleFontsFragment(family, weights));
 }
 
 /**
  * One-stop helper the bindings call from their reactive wiring: resolve the
  * href for a loaded deck's slides + embedded fonts (`null` when no stylesheet
  * is needed). Families available locally are used as-is; the rest are matched
- * against the bundled catalogue. The local-install check is skipped for
+ * against the bundled catalogue. An embedded family only counts as available
+ * when its files match it (see {@link selectTrustedEmbeddedFonts}); one whose
+ * embedded files are the wrong weight is requested from the catalogue too. The local-install check is skipped for
  * families the session already resolved (see `resolvedFamilies`).
  *
  * Async only so the bindings' `.then` wiring is the same whether resolution
@@ -252,7 +270,7 @@ export async function resolveGoogleWebfontHref(
 	const referenced = collectReferencedFontFamilies(slides);
 	const candidates = selectGoogleWebfontFamilies(
 		referenced,
-		embeddedFonts.map((font) => font.name),
+		selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
 		(family) => !resolvedFamilies.has(family) && isLocallyInstalled(family),
 	);
 	return buildGoogleFontsHref(matchGoogleWebfontFragments(candidates), googleFontsBaseUrl);

@@ -47,7 +47,6 @@ export function TableStyleEditorFields({
 					</label>
 				</div>
 				<ThemeColorSwatchGrid
-					prefix='table-style-fill'
 					disabled={!canEdit}
 					selectedRef={descriptor.fill.color.ref}
 					selectedHex={descriptor.fill.color.hex}
@@ -83,7 +82,6 @@ export function TableStyleEditorFields({
 							/>
 						</label>
 						<ThemeColorSwatchGrid
-							prefix='table-style-text'
 							disabled={!canEdit}
 							selectedRef={descriptor.text.color.ref}
 							selectedHex={descriptor.text.color.hex}

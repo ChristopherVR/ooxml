@@ -120,7 +120,22 @@ describe('useRecoveryDetection', () => {
 			'deck.pptx',
 			expect.any(Number),
 			'Quarterly review.pptx',
+			undefined,
 		);
+	});
+
+	it('reports the offered record to the host (onAutosaveRecovery)', async () => {
+		probeMock.mockResolvedValue(offer());
+		const onOffered = vi.fn();
+		await mount({ ...base, onRestore: vi.fn(), onOffered });
+		expect(onOffered).toHaveBeenCalledExactlyOnceWith(offer().record);
+	});
+
+	it('does not report anything when there is no snapshot', async () => {
+		probeMock.mockResolvedValue(null);
+		const onOffered = vi.fn();
+		await mount({ ...base, onRestore: vi.fn(), onOffered });
+		expect(onOffered).not.toHaveBeenCalled();
 	});
 
 	it('offers nothing when the store has no snapshot for this deck', async () => {
@@ -151,6 +166,7 @@ describe('useRecoveryDetection', () => {
 		});
 		expect(discardMock).toHaveBeenCalledWith(
 			expect.objectContaining({ key: 'deck.pptx', timestamp: PROMPT.timestamp }),
+			undefined,
 		);
 		expect(onRestore).not.toHaveBeenCalled();
 		expect(current().prompt).toBeNull();

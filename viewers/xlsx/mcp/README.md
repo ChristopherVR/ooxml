@@ -10,9 +10,9 @@
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; **[Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme)** &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
-Repository-owned MCP schemas and server wiring. All document loading, editing,
-calculation and serialization delegate to `ooxml-core/automation`.
-Requires `ooxml-core` 0.11.0 or later, installed as a dependency.
+A thin MCP wrapper: the tools themselves (names, schemas, bounds and operations) are
+`xlsxTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from
+`ooxml-core/automation/node`. Requires `ooxml-core` 1.22.0 or later, installed as a dependency.
 
 ## Install
 
@@ -40,8 +40,11 @@ validation. Unsupported features and preservation limitations are returned by co
 
 ## Features
 
-Workbook inspection, creation, bounded range reading and cell edits with recalculation.
-All document algorithms live in OOXML core. Importing the package does not start stdio.
+Workbook inspection, then bounded reads (a range, the filled cells up to a cap, a table, Find
+matches), creation and cell edits with recalculation. Edits can be reviewed first:
+`xlsx_propose_edits` returns the diff of a list of edits without saving, and `xlsx_apply_proposal`
+applies that proposal once approved, refusing if the workbook changed in between. All document
+algorithms live in OOXML core. Importing the package does not start stdio.
 
 ## Limitations
 

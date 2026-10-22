@@ -19,6 +19,12 @@ describe('help shared commands', () => {
 				},
 			});
 			try {
+				// The shared section builds the group, as in the other four bindings.
+				expect(
+					target.querySelector(
+						'pptx-ui-ribbon-section > pptx-ui-ribbon-group[data-ribbon-group="help.help"]',
+					),
+				).not.toBeNull();
 				const commands = [...target.querySelectorAll('pptx-ui-ribbon-command')];
 				expect(
 					commands.map((command) => command.getAttribute('data-ribbon-control')),

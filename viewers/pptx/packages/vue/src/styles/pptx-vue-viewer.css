@@ -12,7 +12,17 @@
  * to the root element via the `theme` prop.
  */
 
-@import 'tailwindcss';
+/*
+ * Tailwind without its global preflight: the theme and utilities layers as
+ * `@import 'tailwindcss'` declares them, and in the base layer the preflight
+ * scoped to the viewer's own roots (generated in ooxml-ui, shared by every
+ * binding), so a host page that loads this file keeps its own headings, lists,
+ * margins and images.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import '../../../../../../src/ui/src/pptx/theme/viewer-preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
 
 @source "../viewer/**/*.vue";
 @source "../viewer/**/*.ts";

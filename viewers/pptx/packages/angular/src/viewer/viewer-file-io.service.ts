@@ -17,8 +17,13 @@
  */
 
 import { inject, Injectable, signal } from '@angular/core';
-import type { DeckSaveIntent } from 'ooxml-ui/pptx';
-import { exportDeckJson, openPptxFile } from 'ooxml-ui/pptx';
+import type { DeckSaveIntent, DocumentSaveReason, DocumentStorage } from 'ooxml-ui/pptx';
+import {
+	deliverSavedPresentation,
+	exportDeckJson,
+	openPptxFile,
+	savedPresentationFileName,
+} from 'ooxml-ui/pptx';
 import type { PptxSaveFormat, PptxSection, PptxSlide } from 'pptx-viewer-core';
 
 import { ExportService } from './export.service';
@@ -47,6 +52,12 @@ interface FileIOHost {
 	 * actually completes.
 	 */
 	readonly afterSuccessfulSave: (format: PptxSaveFormat) => void;
+	/** Host `storage` input: when set, Save / Save As go to `storage.save()`, not a download. */
+	readonly storage?: () => DocumentStorage | undefined;
+	/** Host `fileName` input: the stem the saved copy is named after. */
+	readonly fileName?: () => string | undefined;
+	/** A Save / Save As failed (serialising, or the host's storage rejected). */
+	readonly onSaveError?: (error: unknown) => void;
 }
 
 @Injectable()
@@ -115,7 +126,30 @@ export class ViewerFileIOService {
 	 * Surfaced on the mobile toolbar so saving is reachable without the desktop
 	 * ribbon's File tab.
 	 */
-	async saveAs(format: PptxSaveFormat): Promise<void> {
+	/** The host `storage` input, for chrome that lists recovery copies (Recent, Account). */
+	storage(): DocumentStorage | undefined {
+		return this.host?.storage?.();
+	}
+
+	/** File > Save: `.pptx`, reported to host storage as `save`. */
+	async save(): Promise<void> {
+		await this.saveAs('pptx', 'save');
+	}
+
+	/**
+	 * Write `format` (`reason` is the command that ran: Save As unless given). A failure is
+	 * reported through `onSaveError` and never rejects, so template handlers cannot leak it.
+	 */
+	async saveAs(format: PptxSaveFormat, reason: DocumentSaveReason = 'saveAs'): Promise<void> {
+		try {
+			await this.writeSave(format, reason);
+		} catch (error) {
+			console.error(`[PowerPointViewer] Save as .${format} failed:`, error);
+			this.requireHost().onSaveError?.(error);
+		}
+	}
+
+	private async writeSave(format: PptxSaveFormat, reason: DocumentSaveReason): Promise<void> {
 		const host = this.requireHost();
 		const intent = host.saveIntent();
 		const slides = buildSaveSlides(host.slides(), host.templateElementsBySlideId());
@@ -123,7 +157,14 @@ export class ViewerFileIOService {
 			? await this.loader.saveSlides(slides, format, host.sections(), intent)
 			: await this.loader.saveSlides(this.loader.slides(), format, undefined, intent);
 		host.emitContentChange(bytes);
-		this.exportSvc.savePresentation(bytes, `presentation.${format}`, format);
+		const fileName = savedPresentationFileName(host.fileName?.(), format);
+		const storage = host.storage?.();
+		if (storage) {
+			// The host keeps the file; a rejection propagates and skips the recovery cleanup.
+			await deliverSavedPresentation({ storage, bytes, format, fileName, reason });
+		} else {
+			this.exportSvc.savePresentation(bytes, fileName, format);
+		}
 		host.afterSuccessfulSave(format);
 	}
 

@@ -260,20 +260,20 @@ The viewers also include an optional built-in [AI assistant](https://christopher
 | [`pptx-viewer-mcp`](packages/tools/README.md)          | MCP server, CLI and tool functions for AI agents.                                |
 | [`@christophervr/pptx-viewer`](packages/cli/README.md) | Interactive `npx` installer and scaffolder.                                      |
 
-Internal, bundled into each binding and never installed directly: [`pptx-viewer-shared`](packages/shared/README.md) (framework-neutral viewer logic) and [`pptx-viewer-locales`](packages/locales/README.md) (translations).
+Internal and never installed directly: [`pptx-viewer-shared`](packages/shared/README.md) (a compatibility facade; the framework-neutral renderer lives in `ooxml-ui/pptx`) and [`pptx-viewer-locales`](packages/locales/README.md) (translations).
 
 ## How it works
 
 ```
 pptx-react-viewer   ┐
 pptx-vue-viewer     │
-pptx-angular-viewer ├── pptx-viewer-shared ── pptx-viewer-core ──┬── emf-converter
-pptx-svelte-viewer  │   (viewer logic)        (file format)      └── mtx-decompressor
+pptx-angular-viewer ├── ooxml-ui/pptx ── pptx-viewer-core ── ooxml-core/pptx ──┬── emf-converter
+pptx-svelte-viewer  │   (viewer logic)   (thin re-export)    (file format)       └── mtx-decompressor
 pptx-vanilla-viewer ┘
 ```
 
 - **Core** owns the file format: the load and save pipelines, a typed `PptxData` model (a discriminated union of 16 element types), theme inheritance (element, placeholder, layout, master, theme), the geometry engine, encryption and converters.
-- **Shared** holds everything a viewer needs that is not framework code: style and colour resolution, text layout, chart maths, connector routing, animation and Morph engines, export preparation.
+- **Shared** (`ooxml-ui/pptx`) holds everything a viewer needs that is not framework code: style and colour resolution, text layout, chart maths, connector routing, animation and Morph engines, export preparation.
 - **Bindings** are thin view layers that map the shared descriptors onto JSX, SFC templates, Angular templates, Svelte runes or plain DOM. That is why all five render identically and ship the same features.
 
 Read the [architecture guide](https://christophervr.github.io/ooxml/pptx/guide/architecture) for the deep dive.

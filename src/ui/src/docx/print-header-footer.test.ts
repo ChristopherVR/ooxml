@@ -192,6 +192,66 @@ describe('Print Layout headers, footers and page fields', () => {
 		decoratePages(model, [page(0, 0, 0)], sheets, new Date(2026, 8, 7));
 		expect(at(sheets, 0).querySelector('.dve-print-header')?.textContent).toBe('2026-09-07');
 	});
+
+	it('shows in each page header the STYLEREF text of that page, keeping the saved result', () => {
+		const heading = (id: string, text: string): Paragraph => ({
+			type: 'paragraph',
+			id,
+			style: 'Heading1',
+			runs: [{ text }],
+		});
+		const field: Paragraph = {
+			type: 'paragraph',
+			id: 'h1',
+			runs: [
+				{ text: '', fieldChar: 'begin' },
+				{ text: '', fieldCode: ' STYLEREF "Heading 1" ' },
+				{ text: '', fieldChar: 'separate' },
+				{ text: 'Saved', field: { instr: 'STYLEREF "Heading 1"' } },
+				{ text: '', fieldChar: 'end' },
+			],
+		};
+		const model: DocumentModel = {
+			...createDocument(),
+			blocks: [heading('p1', 'Alpha'), heading('p2', 'Beta')],
+			paragraphStyles: {
+				docDefaults: {},
+				styles: { Heading1: { id: 'Heading1', name: 'heading 1', formatting: {} } },
+				warnings: [],
+			},
+			sections: [section({ headers: { default: { blocks: [field] } } })],
+		};
+		const pages = [
+			['p1', 'Alpha'],
+			['p2', 'Beta'],
+		].map(([blockId, text], index) => ({
+			...page(index, 0, index),
+			columns: [
+				{
+					xPx: 96,
+					widthPx: 624,
+					blocks: [
+						{
+							kind: 'paragraph' as const,
+							blockId: blockId!,
+							yPx: 0,
+							heightPx: 20,
+							lines: [
+								{ yPx: 0, heightPx: 20, fragments: [], sourceStart: 0, sourceEnd: text!.length },
+							],
+						},
+					],
+				},
+			],
+		}));
+		const sheets = pages.map(() => document.createElement('div'));
+		decoratePages(model, pages, sheets);
+		expect(sheets.map((sheet) => sheet.querySelector('.dve-print-header')?.textContent)).toEqual([
+			'Alpha',
+			'Beta',
+		]);
+		expect(field.runs[3]!.text).toBe('Saved');
+	});
 });
 
 describe('Print Layout header and footer pictures', () => {

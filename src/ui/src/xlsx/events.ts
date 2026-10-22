@@ -1,14 +1,16 @@
+import type {
+	ExcelFileCommand,
+	FileCommandDetail as SharedFileCommandDetail,
+} from 'ooxml-core/embedding';
 import type { RibbonAddInCommandDetail } from 'ooxml-core/ribbon';
 import type { Workbook } from 'ooxml-core/xlsx';
 import type { XlsxCollaborationState } from './collaboration-types';
 
-export type FileCommand = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'exportCsv' | 'print';
+/** The File commands this editor announces (the shared `ooxml-core/embedding` type). */
+export type FileCommand = ExcelFileCommand;
 
-export interface FileCommandDetail {
-	command: FileCommand;
-	/** Save As: the name the user chose. */
-	fileName?: string;
-}
+/** The detail of `file-command`; the shared `ooxml-core/embedding` shape. */
+export type FileCommandDetail = SharedFileCommandDetail<FileCommand>;
 
 export interface SelectionChangeDetail {
 	sheet: number;
@@ -16,6 +18,16 @@ export interface SelectionChangeDetail {
 	ref: string;
 	/** The active cell (`B2`). */
 	active: string;
+}
+
+/** A cell edit that data validation (or the host's commit) refused. */
+export interface ValidationErrorDetail {
+	/** The message shown to the user (the rule's own text, or a generic one). */
+	message: string;
+	title?: string;
+	/** The cell being edited, as A1 text. */
+	ref: string;
+	style?: 'stop' | 'warning' | 'information';
 }
 
 /** Every public event of `<xlsx-editor>` and its detail. All bubble and are composed. */
@@ -26,8 +38,13 @@ export interface XlsxEditorEventMap {
 	'workbook-error': { error: Error; message: string };
 	/** Non-fatal notes from the loader (unsupported features, compatibility). */
 	'workbook-warning': { warnings: string[] };
-	/** The user toggled Editing / Viewing, or the host changed `readOnly`. */
-	'readonly-change': { readOnly: boolean };
+	/**
+	 * The user toggled Editing / Viewing, the host changed `readOnly`, or a collaboration role
+	 * changed. `readOnly` is the effective value, `locked` says a `viewer` role holds it, and
+	 * `hostReadOnly` is the host's own switch: a controlled parent mirrors only that one, never
+	 * `readOnly`, so a role lock is not written into the host's setting.
+	 */
+	'readonly-change': { readOnly: boolean; locked: boolean; hostReadOnly: boolean };
 	/** A command ran from the ribbon, a menu, Tell me or a shortcut. */
 	'ribbon-action': { id: string };
 	/** The user changed which ribbon commands are shown (File > Options > Customize Ribbon). */
@@ -42,6 +59,8 @@ export interface XlsxEditorEventMap {
 	'collaboration-change': XlsxCollaborationState;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	'office-ribbon-add-in': RibbonAddInCommandDetail;
+	/** An in-progress cell edit failed validation; it stays open until corrected or canceled. */
+	'validation-error': ValidationErrorDetail;
 }
 export type XlsxEditorEventName = keyof XlsxEditorEventMap;
 export type XlsxEditorEventDetail<K extends XlsxEditorEventName> = XlsxEditorEventMap[K];
@@ -60,6 +79,7 @@ export const XLSX_EDITOR_EVENTS = [
 	'dirty-change',
 	'collaboration-change',
 	'office-ribbon-add-in',
+	'validation-error',
 ] as const satisfies readonly XlsxEditorEventName[];
 
 /** Events a host can cancel with `preventDefault()`. */

@@ -34,6 +34,7 @@ export const de = {
 					{ text: 'Die Live-Demos', link: '/demos' },
 					{ text: 'Architektur', link: '/de/architecture' },
 					{ text: 'Framework-Bindings', link: '/bindings' },
+					{ text: 'Bausteine', link: '/building-blocks' },
 					{ text: 'Modelleinheiten', link: '/model-units' },
 				],
 			},
@@ -67,8 +68,6 @@ export const de = {
 				items: [
 					{ text: 'Roadmap zur Unterstützung', link: '/parity-roadmap' },
 					{ text: 'Offene Arbeiten', link: '/outstanding-work' },
-					{ text: 'Plan für ooxml-core', link: '/ooxml-core-plan' },
-					{ text: 'Gemeinsamer Formatcode', link: '/reuse-audit' },
 					{ text: 'Paket-Releases', link: '/releasing' },
 				],
 			},

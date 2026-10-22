@@ -1,11 +1,16 @@
 // The OOXML-dash → CSS-border-style map is framework-agnostic and lives in
 // `pptx-viewer-shared`; re-exported here so this module's public surface
 // (and colocated tests) keep importing `ooxmlDashToCssBorderStyle` unchanged.
-import type { CellParagraphBlock, CellTextRun as SharedCellTextRun } from 'ooxml-ui/pptx';
+import type {
+	CellParagraphBlock,
+	CellTextRun as SharedCellTextRun,
+	TableCellCss,
+} from 'ooxml-ui/pptx';
 import {
 	cellParagraphBlocks,
 	cellRunStyle as cellRunCss,
 	cellStyleToCss,
+	fontWeightAttribute,
 	ooxmlDashToCssBorderStyle,
 } from 'ooxml-ui/pptx';
 /**
@@ -23,6 +28,7 @@ import {
  * with plain vitest without TestBed or the Angular compiler.
  */
 import type { PptxTableCell, PptxTableCellStyle, PptxTableRow } from 'pptx-viewer-core';
+import { getSubstituteFontFamily } from 'pptx-viewer-core';
 
 import type { StyleMap } from './element-style';
 
@@ -138,7 +144,7 @@ export function cellRunStyle(style: PptxTableCellStyle | undefined): StyleMap {
 		map['font-size'] = `${style.fontSize}pt`;
 	}
 	if (style.bold) {
-		map['font-weight'] = 'bold';
+		map['font-weight'] = fontWeightAttribute(style.fontFamily, true) ?? 'bold';
 	}
 	if (style.italic) {
 		map['font-style'] = 'italic';
@@ -150,7 +156,8 @@ export function cellRunStyle(style: PptxTableCellStyle | undefined): StyleMap {
 		map['text-decoration'] = 'underline';
 	}
 	if (style.fontFamily) {
-		map['font-family'] = style.fontFamily;
+		// The substitution chain, as the shared cell and run styles use.
+		map['font-family'] = getSubstituteFontFamily(style.fontFamily);
 	}
 	return map;
 }
@@ -173,10 +180,11 @@ export function cellRunStyle(style: PptxTableCellStyle | undefined): StyleMap {
 export function buildCellParagraphs(
 	cell: PptxTableCell,
 	blocks: CellParagraphBlock[] | undefined = cellParagraphBlocks(cell),
+	cellCss?: TableCellCss,
 ): CellParagraph[] {
 	const cellStyle = cellRunStyle(cell.style);
 	if (blocks) {
-		return blocks.map((block) => block.runs.map((run) => paragraphRun(run, cellStyle)));
+		return blocks.map((block) => block.runs.map((run) => paragraphRun(run, cellStyle, cellCss)));
 	}
 	const runs = cell.textRuns;
 	if (runs && runs.length > 0) {
@@ -186,7 +194,7 @@ export function buildCellParagraphs(
 				paragraphs.push([]);
 				continue;
 			}
-			paragraphs[paragraphs.length - 1].push(paragraphRun(run, cellStyle));
+			paragraphs[paragraphs.length - 1].push(paragraphRun(run, cellStyle, cellCss));
 		}
 		return paragraphs;
 	}
@@ -199,13 +207,20 @@ export function buildCellParagraphs(
 }
 
 /** One parsed run as a template run: a `<br>` marker or a styled span. */
-function paragraphRun(run: SharedCellTextRun, cellStyle: StyleMap): CellTextRun {
+function paragraphRun(
+	run: SharedCellTextRun,
+	cellStyle: StyleMap,
+	cellCss: TableCellCss | undefined,
+): CellTextRun {
 	if (run.isLineBreak) {
 		return { text: '', style: {}, isLineBreak: true };
 	}
 	// The cell-level style is the base (alignment-independent font defaults);
 	// the run's own properties win over it.
-	return { text: run.text, style: { ...cellStyle, ...cssObjectToStyleMap(cellRunCss(run)) } };
+	return {
+		text: run.text,
+		style: { ...cellStyle, ...cssObjectToStyleMap(cellRunCss(run, cellCss)) },
+	};
 }
 
 /**
