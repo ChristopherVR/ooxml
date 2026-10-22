@@ -69,16 +69,24 @@ ${script}`;
 	}
 }
 
-test('recorded browser failures fail at once; only a crash runs the shard again', () => {
+test('recorded browser failures run again alone; a crash runs the shard again', () => {
 	assert.ok(browserJob);
-	const failed = runBrowserStep(['fail', 'pass']);
+	const flaky = runBrowserStep(['fail', 'pass']);
+	assert.equal(flaky.status, 0, flaky.stderr);
+	assert.equal(flaky.commands.length, 2);
+	assert.doesNotMatch(flaky.commands[0], /--last-failed/u);
+	assert.match(flaky.commands[1], /--last-failed/u);
+	assert.equal(flaky.firstTrace, 'trace-1');
+
+	const failed = runBrowserStep(['fail', 'fail']);
 	assert.notEqual(failed.status, 0);
-	assert.equal(failed.commands.length, 1);
-	assert.equal(failed.firstTrace, 'trace-1');
+	assert.equal(failed.commands.length, 2);
+	assert.match(failed.commands[1], /--last-failed/u);
 
 	const crashed = runBrowserStep(['crash', 'pass']);
 	assert.equal(crashed.status, 0, crashed.stderr);
 	assert.equal(crashed.commands.length, 2);
+	assert.doesNotMatch(crashed.commands[1], /--last-failed/u);
 	assert.equal(crashed.firstTrace, 'trace-1');
 
 	const twice = runBrowserStep(['crash', 'crash']);

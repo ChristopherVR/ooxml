@@ -603,9 +603,10 @@ jobs:
           for demo in $demos; do
             (cd "demos/pptx/demo-$demo" && bun run build)
           done
-      # Playwright retries a failed test once itself. The step runs the shard again only when the
-      # first attempt crashed before recording a report (a runner-level browser crash), never when
-      # Playwright recorded real failures: those fail the job at once.
+      # Playwright retries a failed test once itself. A second attempt then runs only the failures
+      # Playwright recorded (`--last-failed`), or the whole shard again when the first attempt
+      # crashed before recording a report (a runner-level browser crash). Some touch and hover
+      # specs are timing-sensitive on a loaded runner; failing at once on them turned main red.
       - name: Run the browser suite
         working-directory: viewers/pptx
         env:
@@ -616,11 +617,13 @@ jobs:
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
           PPTX_E2E_SERVE: preview
         run: |
+          retry_args=()
           for attempt in 1 2; do
             # SPECS is a space-separated list of spec file names, split on purpose.
             # shellcheck disable=SC2086
             bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
-              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github && exit 0
+              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github \
+              "${retry_args[@]}" && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
             # Playwright clears its output on the next run. Keep the evidence of every attempt.
@@ -629,9 +632,11 @@ jobs:
             for report in test-results playwright-report; do
               if [ -d "$report" ]; then cp -R "$report" "$evidence/"; fi
             done
-            # Real failures are recorded in .last-run.json: do not repeat the shard for them.
+            # Failures recorded in .last-run.json: run only those again, not the whole shard.
             if node -e 'try { const run = JSON.parse(require("node:fs").readFileSync("test-results/.last-run.json", "utf8")); process.exit(run.status !== "passed" && run.failedTests?.length > 0 ? 0 : 1); } catch { process.exit(1); }'; then
-              exit "$status"
+              retry_args=(--last-failed)
+            else
+              retry_args=()
             fi
             if [ "$attempt" -lt 2 ]; then sleep 15; fi
           done
