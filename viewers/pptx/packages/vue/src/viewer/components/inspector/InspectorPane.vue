@@ -190,7 +190,7 @@ function relay(patch: Partial<PptxElement>): void {
 		</InspectorSectionCard>
 
 		<InspectorSectionCard v-if="isShape" :title="t('pptx.inspector.effects')">
-			<EffectsPanel :element="element" @update="relay" />
+			<EffectsPanel :element="element" :can-edit="props.canEdit" @update="relay" />
 		</InspectorSectionCard>
 
 		<InspectorSectionCard
