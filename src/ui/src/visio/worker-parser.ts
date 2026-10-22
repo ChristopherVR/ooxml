@@ -2,11 +2,18 @@ import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { loadVisio, type VisioDocument } from 'ooxml-core/visio';
 export type CancellableParser = ((bytes: Uint8Array | ArrayBuffer) => Promise<VisioDocument>) & {
 	cancel?: () => void;
+	/**
+	 * Reads only the pages `pageIds`: the document lists just those pages and leaves out what is
+	 * not per page (see `ParseVsdxOptions.pages`). Merge it with `mergeVisioPages`.
+	 */
+	pages?: (bytes: Uint8Array | ArrayBuffer, pageIds: readonly string[]) => Promise<VisioDocument>;
 };
+/** What a parse worker receives: the package, or the package and the pages to read. */
+export type ParseWorkerRequest = ArrayBuffer | { bytes: ArrayBuffer; pages: string[] };
 export interface WorkerLike {
 	onmessage: ((event: MessageEvent) => void) | null;
 	onerror: ((event: ErrorEvent) => void) | null;
-	postMessage(message: ArrayBuffer, transfer: Transferable[]): void;
+	postMessage(message: ParseWorkerRequest, transfer: Transferable[]): void;
 	terminate(): void;
 }
 export type WorkerFactory = () => WorkerLike;
@@ -18,7 +25,10 @@ export function createWorkerParser(factory?: WorkerFactory, timeoutMs = 15_000):
 		factory ??
 		(() => new Worker(new URL('./parse-worker.js', import.meta.url), { type: 'module' }));
 	let cancel: (() => void) | undefined;
-	const parse: CancellableParser = (bytes) => {
+	const run = (
+		bytes: Uint8Array | ArrayBuffer,
+		pages: readonly string[] | undefined,
+	): Promise<VisioDocument> => {
 		cancel?.();
 		if (bytes.byteLength > MAX_INPUT_BYTES)
 			return Promise.reject(new Error('This viewer accepts files up to 32 MiB.'));
@@ -66,12 +76,16 @@ export function createWorkerParser(factory?: WorkerFactory, timeoutMs = 15_000):
 			try {
 				const copy =
 					bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
-				worker.postMessage(copy.buffer, [copy.buffer]);
+				worker.postMessage(pages ? { bytes: copy.buffer, pages: [...pages] } : copy.buffer, [
+					copy.buffer,
+				]);
 			} catch (cause) {
 				finish(cause instanceof Error ? cause : new Error(String(cause)));
 			}
 		});
 	};
+	const parse: CancellableParser = (bytes) => run(bytes, undefined);
+	parse.pages = (bytes, pageIds) => run(bytes, pageIds);
 	parse.cancel = () => cancel?.();
 	return parse;
 }

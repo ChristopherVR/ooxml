@@ -16,6 +16,7 @@ import type { VisioCalloutStyle, VisioContainerStyle } from 'ooxml-core/visio';
 import {
 	loadVisio,
 	createVsdx,
+	mergeVisioPages,
 	type CreateVsdxOptions,
 	deserializeVisioClipboard,
 	type VisioDocument,
@@ -126,6 +127,11 @@ interface ReplacementMutation {
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
+/** What differs between the open drawing and a shared package, when only page content does. */
+export interface RemoteSourceChange {
+	/** Ids of the pages whose content changed. */
+	readonly pages: readonly string[];
+}
 /** Undo and redo of a shared drawing: they act on the local user's edits only. */
 export interface SharedHistory {
 	undo(): Promise<boolean>;
@@ -951,8 +957,32 @@ export class ViewerController {
 	 * Adopt a package from a shared session as one undoable history step. Emits `document-change`
 	 * with kind `remote`, which a session must not publish back.
 	 */
-	async applyRemoteSource(bytes: Uint8Array): Promise<void> {
-		return this.#mutate('remote', undefined, bytes);
+	async applyRemoteSource(bytes: Uint8Array, change?: RemoteSourceChange): Promise<void> {
+		return this.#mutate('remote', undefined, bytes, undefined, false, undefined, undefined, change);
+	}
+	/**
+	 * Reads a shared package. With `change` (only the content of these pages differs from the open
+	 * drawing) and a parser that can read pages, just those pages are read and spliced into the
+	 * open document; anything else, or a merge that cannot match a whole read, reads the whole
+	 * package.
+	 */
+	async #parseRemote(
+		bytes: Uint8Array,
+		change: RemoteSourceChange | undefined,
+	): Promise<VisioDocument> {
+		const previous = this.#state.document;
+		const pages = this.parser.pages;
+		if (change && pages && previous?.format === 'vsdx') {
+			try {
+				const partial = await pages(Uint8Array.from(bytes), change.pages);
+				const merged = mergeVisioPages(previous, partial, change.pages);
+				if (merged) return merged;
+			} catch (cause) {
+				// A cancelled read stays cancelled; any other failure is retried on the whole package.
+				if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
+			}
+		}
+		return this.parser(Uint8Array.from(bytes));
 	}
 	async redo(): Promise<void> {
 		if (this.#sharedHistory) {
@@ -1151,6 +1181,7 @@ export class ViewerController {
 		strictSelectionIntent = false,
 		creation?: CreationContext,
 		replacement?: ReplacementMutation,
+		remoteChange?: RemoteSourceChange,
 	): Promise<void> {
 		this.#assertAlive();
 		if (kind !== 'remote' && !this.canEdit) throw new Error('The drawing is read-only.');
@@ -1207,7 +1238,7 @@ export class ViewerController {
 			} else if (kind === 'remote') {
 				if (remote!.byteLength > MAX_INPUT_BYTES)
 					throw new Error('The shared VSDX exceeds 32 MiB.');
-				document = await this.parser(Uint8Array.from(remote!));
+				document = await this.#parseRemote(remote!, remoteChange);
 			} else document = await this.parser(Uint8Array.from(target!.bytes));
 			assertCurrent();
 			assertViewableDocument(document);

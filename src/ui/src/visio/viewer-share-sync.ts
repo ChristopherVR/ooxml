@@ -29,11 +29,11 @@ export function controllerEditor(controller: ViewerController): DrawingEditor {
 				return undefined;
 			}
 		},
-		async applyRemote(bytes) {
+		async applyRemote(bytes, change) {
 			const { document, edit } = controller.state;
 			applying = true;
 			try {
-				if (document && edit.sourceAvailable) await controller.applyRemoteSource(bytes);
+				if (document && edit.sourceAvailable) await controller.applyRemoteSource(bytes, change);
 				else await controller.load(bytes);
 			} finally {
 				applying = false;
