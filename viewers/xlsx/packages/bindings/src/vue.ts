@@ -37,7 +37,7 @@ export const SpreadsheetEditor = defineComponent({
 		themeColors: Object as PropType<XlsxThemeColors>,
 		collaboration: Object as PropType<XlsxCollaborationOptions | null>,
 	} satisfies Record<EditorPropKey, unknown>,
-	emits: [...EDITOR_EVENT_NAMES, 'ready'],
+	emits: [...EDITOR_EVENT_NAMES, 'update:readOnly', 'ready'],
 	setup(props, { emit, expose }) {
 		const host = ref<HTMLElement>();
 		let binding: EditorBinding | undefined;
@@ -48,7 +48,11 @@ export const SpreadsheetEditor = defineComponent({
 				'workbook-error': (error: Error) => emit('workbook-error', error),
 				'selection-change': (detail) => emit('selection-change', detail),
 				'dirty-change': (dirty: boolean) => emit('dirty-change', dirty),
-				'readonly-change': (readOnly: boolean) => emit('readonly-change', readOnly),
+				'readonly-change': (readOnly, detail) => {
+					emit('readonly-change', readOnly, detail);
+					// `v-model:readOnly` mirrors the host's switch only, never a role lock.
+					if (detail.hostReadOnly !== props.readOnly) emit('update:readOnly', detail.hostReadOnly);
+				},
 				'file-command': (event) => emit('file-command', event),
 				'workbook-warning': (warnings) => emit('workbook-warning', warnings),
 				'ribbon-action': (detail) => emit('ribbon-action', detail),

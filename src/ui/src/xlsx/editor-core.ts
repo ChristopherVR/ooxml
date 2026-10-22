@@ -52,6 +52,7 @@ export class EditorCore {
 	readOnly = false;
 	#hostReadOnly = false;
 	#roleReadOnly = false;
+	#reportedHost = false;
 	locale: EditorLocale = 'en';
 	authorName = DEFAULT_AUTHOR_NAME;
 	fileName = DEFAULT_FILE_NAME;
@@ -382,11 +383,21 @@ export class EditorCore {
 
 	#applyReadOnly(): boolean {
 		const readOnly = this.#hostReadOnly || this.#roleReadOnly;
-		if (readOnly === this.readOnly) return false;
+		const changed = readOnly !== this.readOnly;
+		// A host change under a role lock leaves the effective value alone but is still reported,
+		// so a controlled parent only ever mirrors `hostReadOnly`.
+		if (!changed && this.#hostReadOnly === this.#reportedHost) return false;
+		this.#reportedHost = this.#hostReadOnly;
 		this.readOnly = readOnly;
-		if (readOnly && this.gridController?.isEditing()) this.gridController.cancelEdit();
-		this.notifyModel({ kind: 'readonly', readOnly });
-		emit(this.host, 'readonly-change', { readOnly });
-		return true;
+		if (changed) {
+			if (readOnly && this.gridController?.isEditing()) this.gridController.cancelEdit();
+			this.notifyModel({ kind: 'readonly', readOnly });
+		}
+		emit(this.host, 'readonly-change', {
+			readOnly,
+			locked: this.#roleReadOnly,
+			hostReadOnly: this.#hostReadOnly,
+		});
+		return changed;
 	}
 }

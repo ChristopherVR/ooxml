@@ -60,7 +60,7 @@ describe('React editor adapter', () => {
 		render();
 		const editor = container.querySelector('xlsx-editor') as XlsxEditorElement;
 		editor.readOnly = true;
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, expect.objectContaining({ readOnly: true }));
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onRibbonCustomize).toHaveBeenCalledWith(['italic']);
 		editor.hiddenActions = ['italic'];

@@ -49,7 +49,10 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Output() workbookError = new EventEmitter<Error>();
 	@Output() selectionChange = new EventEmitter<SelectionChangeDetail>();
 	@Output() dirtyChange = new EventEmitter<boolean>();
-	/** Pairs with `readOnly` for `[(readOnly)]` two-way binding. */
+	/**
+	 * Pairs with `readOnly` for `[(readOnly)]` two-way binding. It carries the host's own switch and
+	 * fires only when that changes, so a collaboration `viewer` role lock is never written back.
+	 */
 	@Output() readOnlyChange = new EventEmitter<boolean>();
 	/** Cancelable: call `preventDefault()` on the emitted event to take a File command over. */
 	@Output() fileCommand = new EventEmitter<CustomEvent<FileCommandDetail>>();
@@ -71,7 +74,9 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 				'workbook-error': (error) => this.workbookError.emit(error),
 				'selection-change': (detail) => this.selectionChange.emit(detail),
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
-				'readonly-change': (readOnly) => this.readOnlyChange.emit(readOnly),
+				'readonly-change': (_readOnly, detail) => {
+					if (detail.hostReadOnly !== this.readOnly) this.readOnlyChange.emit(detail.hostReadOnly);
+				},
 				'file-command': (event) => this.fileCommand.emit(event),
 				'workbook-warning': (warnings) => this.workbookWarning.emit(warnings),
 				'ribbon-action': (detail) => this.ribbonAction.emit(detail),
