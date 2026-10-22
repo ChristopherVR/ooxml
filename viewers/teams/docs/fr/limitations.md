@@ -13,8 +13,7 @@ OpenTeams n’est pas Microsoft Teams, n’est pas affilié à Microsoft et ne p
 - des discussions 1:1 et de groupe, chacune dans sa propre salle que seuls ses membres peuvent rejoindre ;
 - un fil d’activité et des notifications dans l’application (message, notification du navigateur tant que l’onglet est ouvert, son) ;
 - un calendrier avec réunions, répétitions, rappels et export `.ics` ;
-- la présence : qui est en ligne, qui écrit, et une disponibilité que vous définissez (disponible,
-  occupé, absent) ;
+- la présence : qui est en ligne, qui écrit, et un statut que vous définissez (disponible, occupé, ne pas déranger, de retour bientôt, absent, hors ligne) avec une heure de réinitialisation facultative, un message de statut et le passage automatique en absent en cas d’inactivité ;
 - des réunions dans un canal : audio, vidéo, partage d’écran et main levée, avec un écran de
   pré-connexion ;
 - des fichiers partagés dans la conversation sous forme de liens, les fichiers Word, Excel,

@@ -12,7 +12,7 @@ Es implementiert:
 - 1:1- und Gruppenchats, jeweils in einem eigenen Raum, dem nur die Mitglieder beitreten können;
 - einen Aktivitäts-Feed und Benachrichtigungen in der App (Hinweis, Browser-Benachrichtigung bei geöffnetem Tab, Ton);
 - einen Kalender mit Besprechungen, Wiederholungen, Erinnerungen und `.ics`-Export;
-- Präsenz: wer online ist, wer tippt, und eine Verfügbarkeit, die Sie selbst setzen (verfügbar, beschäftigt, abwesend);
+- Präsenz: wer online ist, wer tippt, und einen Status, den Sie selbst setzen (verfügbar, beschäftigt, nicht stören, gleich zurück, abwesend, offline) mit optionaler Rücksetzzeit, eine Statusnachricht und automatisch abwesend bei Inaktivität;
 - Besprechungen in einem Kanal: Audio, Video, Bildschirmfreigabe und Handheben, mit einem Bildschirm vor dem Beitritt;
 - Dateien, die in der Unterhaltung als Links geteilt werden, wobei Word-, Excel-, PowerPoint- und Visio-Dateien
   am Namen erkannt werden.

@@ -32,6 +32,8 @@ Il se configure uniquement par l’environnement ; la commande n’accepte aucun
 | `TEAMS_ORIGINS` | aucune            | `Origin` autorisées pour les sockets et les fichiers, séparées par des virgules. Sans valeur : toute origine avec un jeton, loopback uniquement sans jeton. |
 | `TEAMS_DATA`    | `./data`          | Répertoire de données : instantanés `rooms/<room>.bin` et `files/<workspace>/`.                                                                             |
 
+Le serveur lit d’autres variables pour les comptes (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) et pour les limites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Le [guide de déploiement](/fr/deploy) liste les limites ; le README du serveur est la référence complète. Les options correspondantes de `createTeamsServer` sont `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` et `insecure`.
+
 Ou l’intégrer :
 
 ```js
@@ -72,6 +74,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | La télécharge en pièce jointe (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                              |
 | `POST /files/link/<workspace>/<name>` | Renvoie `{ url }` : un lien signé pour ce seul fichier, valable cinq minutes, de sorte que le jeton n’apparaisse jamais dans une URL.      |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                              |
+| `POST /auth/session`                  | Signe une session pour `{ user, credential }` (avec limitation de débit). Voir "Accounts and sessions" dans le README du serveur.          |
+| `POST /auth/check`, `/auth/signout`   | Vérifie une `{ session }` (204 ou 401) ; déconnexion, qui révoque les sessions de l’utilisateur.                                           |
+| `POST /auth/revoke`                   | Révocation par l’opérateur de `{ user }` avec `TEAMS_ADMIN_TOKEN` ; un 404 sans jeton d’administration.                                    |
 
 Les noms de salle doivent correspondre à `^[\w-]{1,128}$` et les identifiants d’espace de travail
 dans les chemins de fichiers à `^[\w-]{1,64}$` ; les noms de fichiers sont assainis pour ne garder

@@ -19,7 +19,7 @@ npx openteams-server                    # listens on 127.0.0.1:8787
 TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 ```
 
-Er wird ausschließlich über die Umgebung konfiguriert; der Befehl kennt keine Optionen.
+Er wird über die Umgebung konfiguriert; der Befehl kennt keine Optionen.
 
 | Variable        | Standard    | Bedeutung                                                                                                               |
 | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -28,6 +28,8 @@ Er wird ausschließlich über die Umgebung konfiguriert; der Befehl kennt keine 
 | `TEAMS_TOKEN`   | keiner      | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`.                         |
 | `TEAMS_ORIGINS` | keine       | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Ohne Angabe: jede Origin mit Token, ohne Token nur Loopback. |
 | `TEAMS_DATA`    | `./data`    | Datenverzeichnis: `rooms/<room>.bin`-Snapshots und `files/<workspace>/`.                                                |
+
+Der Server liest weitere Variablen für Konten (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) und für Limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Die Limits stehen im [Bereitstellungsleitfaden](/de/deploy); die README des Servers ist die vollständige Referenz. Die entsprechenden Optionen von `createTeamsServer` sind `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` und `insecure`.
 
 Oder binden Sie ihn ein:
 
@@ -69,6 +71,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | Lädt ihn als Anhang herunter (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                              |
 | `POST /files/link/<workspace>/<name>` | Liefert `{ url }`: einen für genau diese Datei signierten Link, fünf Minuten gültig, sodass das Token nie in einer URL erscheint.         |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                             |
+| `POST /auth/session`                  | Signiert eine Sitzung für `{ user, credential }` (mit Ratenbegrenzung). Siehe "Accounts and sessions" in der README des Servers.          |
+| `POST /auth/check`, `/auth/signout`   | Prüfen einer `{ session }` (204 oder 401); Abmelden, was die Sitzungen des Benutzers widerruft.                                           |
+| `POST /auth/revoke`                   | Widerruf durch den Betreiber für `{ user }` mit `TEAMS_ADMIN_TOKEN`; ohne Admin-Token ein 404.                                            |
 
 Raumnamen müssen `^[\w-]{1,128}$` entsprechen und Workspace-IDs in Dateipfaden `^[\w-]{1,64}$`; Dateinamen
 werden auf Buchstaben, Ziffern, `.`, `-`, `_`, Leerzeichen und Klammern bereinigt und auf 120

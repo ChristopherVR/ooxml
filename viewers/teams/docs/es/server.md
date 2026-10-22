@@ -25,6 +25,8 @@ Se configura únicamente mediante el entorno; el comando no admite indicadores.
 | `TEAMS_ORIGINS` | ninguno           | `Origin` permitidos, separados por comas, para sockets y archivos. Sin valor: cualquier origen con token, solo loopback sin token. |
 | `TEAMS_DATA`    | `./data`          | Directorio de datos: instantáneas `rooms/<room>.bin` y `files/<workspace>/`.                                                       |
 
+El servidor lee más variables para las cuentas (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) y para los límites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). La [guía de despliegue](/es/deploy) lista los límites; el README del servidor es la referencia completa. Las opciones correspondientes de `createTeamsServer` son `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` e `insecure`.
+
 O incrústalo:
 
 ```js
@@ -65,6 +67,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | Lo descarga como adjunto (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                   |
 | `POST /files/link/<workspace>/<name>` | Devuelve `{ url }`: un enlace firmado para ese único archivo, válido durante cinco minutos, de modo que el token nunca aparece en una URL. |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                              |
+| `POST /auth/session`                  | Firma una sesión para `{ user, credential }` (con límite de frecuencia). Consulta "Accounts and sessions" en el README del servidor.       |
+| `POST /auth/check`, `/auth/signout`   | Comprueba una `{ session }` (204 o 401); cierra sesión, lo que revoca las sesiones del usuario.                                            |
+| `POST /auth/revoke`                   | Revocación por el operador de `{ user }` con `TEAMS_ADMIN_TOKEN`; un 404 sin token de administrador.                                       |
 
 Los nombres de sala deben cumplir `^[\w-]{1,128}$` y los ids de espacio de trabajo en las rutas de archivos `^[\w-]{1,64}$`; los nombres de archivo se depuran a letras, dígitos, `.`, `-`, `_`, espacios y paréntesis, y se limitan a 120 caracteres.
 
