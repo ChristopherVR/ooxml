@@ -1,6 +1,6 @@
 {
 	"name": "visio-core",
-	"version": "0.5.0",
+	"version": "1.0.0",
 	"description": "Visio document API powered by ooxml-core",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {

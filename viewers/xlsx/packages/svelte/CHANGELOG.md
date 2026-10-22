@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-svelte-viewer@1.0.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Complete the building-block toolbar and add vanilla ([af8114f](https://github.com/ChristopherVR/ooxml/commit/af8114ff92e023858cd5a6d2a9922d6dbb2ee111))
+- **xlsx:** Make the building blocks read-only unless canEdit is true ([efe6158](https://github.com/ChristopherVR/ooxml/commit/efe6158de251e1e34694335292755cfec96d640b))
+
 ## [0.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-svelte-viewer@0.7.0) - 2026-10-21
 
 ### Features

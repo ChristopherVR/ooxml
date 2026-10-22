@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.45.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.45.0) - 2026-10-22
+
+### Features
+
+- **automation:** Define word, excel and visio tools once in core ([bed1839](https://github.com/ChristopherVR/ooxml/commit/bed18392fec1f07fa9a0c1eabf8a7c1bb25b0387))
+- **pptx:** Report the shared collaboration state from every binding ([62752ef](https://github.com/ChristopherVR/ooxml/commit/62752efd7b2f9df8372db485cd23c2a6ed5f15ee))
+- **react:** Open useViewerBuildingBlocks on an initial slide ([#158](https://github.com/ChristopherVR/ooxml/issues/158)) ([b750d32](https://github.com/ChristopherVR/ooxml/commit/b750d321ecd556c5c0813eec29c45506227c0597))
+- **automation:** Propose xlsx edits as a reviewable diff ([0e13837](https://github.com/ChristopherVR/ooxml/commit/0e13837c6fdf0766e21aa8a31ef69737df8ab203))
+- **automation:** Add xlsx_propose_edits and xlsx_apply_proposal tools ([8c7500d](https://github.com/ChristopherVR/ooxml/commit/8c7500df317f1cffa3016705369e52b0a5ad0218))
+- **pptx:** Define the powerpoint tools as shared automation tools ([88acafd](https://github.com/ChristopherVR/ooxml/commit/88acafd82419de2cefbebd4b91b935c378f8c772))
+- **pptx:** Connect through a provider, webrtc or same-browser room ([4ae5288](https://github.com/ChristopherVR/ooxml/commit/4ae528882a33ec93730f30bf642589a00b6edf06))
+
+### Bug Fixes
+
+- **pptx:** Render flowChart connector presets as shapes, not lines ([978593a](https://github.com/ChristopherVR/ooxml/commit/978593a0d0067d97105fd98b8d640dc929ec9f2b))
+- **pptx:** Paint picture fills inherited from layout placeholders ([71b8196](https://github.com/ChristopherVR/ooxml/commit/71b81964ca4b19ef9cc143fa970479614426bd9d))
+
 ## [4.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.44.0) - 2026-10-21
 
 ### Features

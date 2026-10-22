@@ -1,6 +1,6 @@
 {
 	"name": "docx-viewer-mcp",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Headless DOCX MCP tools backed only by OOXML core",
 	"homepage": "https://christophervr.github.io/ooxml/docx/",
 	"bugs": {

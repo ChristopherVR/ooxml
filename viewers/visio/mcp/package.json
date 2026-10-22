@@ -1,6 +1,6 @@
 {
 	"name": "visio-viewer-mcp",
-	"version": "0.4.0",
+	"version": "1.0.0",
 	"description": "Headless VISIO MCP tools backed only by OOXML core",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {

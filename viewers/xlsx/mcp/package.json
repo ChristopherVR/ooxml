@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-viewer-mcp",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Headless XLSX MCP tools backed only by OOXML core",
 	"homepage": "https://christophervr.github.io/ooxml/xlsx/",
 	"bugs": {

@@ -7,6 +7,26 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.21.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.21.0) - 2026-10-22
+
+### Features
+
+- **pptx:** Report the shared collaboration state from every binding ([62752ef](https://github.com/ChristopherVR/ooxml/commit/62752efd7b2f9df8372db485cd23c2a6ed5f15ee))
+- **ui:** Complete the docx surface building blocks ([e3b34f9](https://github.com/ChristopherVR/ooxml/commit/e3b34f96dcaacd740ab7f7272b5567a6e287f392))
+- **xlsx:** Report validation, host dialogs and state in surface props ([11ce627](https://github.com/ChristopherVR/ooxml/commit/11ce6271694e47c6fccd3d40040a44d1ae8ca4c9))
+- **ui:** Give the standalone visio canvas the full viewer's editing ([672522f](https://github.com/ChristopherVR/ooxml/commit/672522ffd012adf4bf6526aadc5c3bfdfbcca95e))
+- **pptx:** Connect through a provider, webrtc or same-browser room ([4ae5288](https://github.com/ChristopherVR/ooxml/commit/4ae528882a33ec93730f30bf642589a00b6edf06))
+- **visio:** Merge collaboration per shape, with cursors and write-back ([3d1564c](https://github.com/ChristopherVR/ooxml/commit/3d1564caa98d86b97bd7a384bd9d11fe533435f7))
+
+### Bug Fixes
+
+- **pptx:** Cover transition direction names the travel, not the edge ([e9a53d3](https://github.com/ChristopherVR/ooxml/commit/e9a53d3ae5fe409b035b4c37929605eccad2e373))
+- **pptx:** Do not morph-pair pictures that paint different images ([87f9a03](https://github.com/ChristopherVR/ooxml/commit/87f9a03d162803de7189e812a0455e5ac3fb7398))
+- **pptx:** Morph a picture's transparency change instead of popping it ([16485be](https://github.com/ChristopherVR/ooxml/commit/16485be1649e09a4c5d81f12fddc401805dd6389))
+- **pptx:** Do not morph-pair pictures that paint different images ([a60887d](https://github.com/ChristopherVR/ooxml/commit/a60887d1bda1af1d067a0adfa2b9673a6eae62d3))
+- **xlsx:** Name the share opener like the other building blocks ([1346849](https://github.com/ChristopherVR/ooxml/commit/1346849e085724ef8a4810cf540f8d802fd47cee))
+- **docx:** Name the toolbar openers apart from the host options ([d5bc691](https://github.com/ChristopherVR/ooxml/commit/d5bc691e2aaa946147e55edf590a61f64c7a671a))
+
 ## [1.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.20.0) - 2026-10-21
 
 ### Features

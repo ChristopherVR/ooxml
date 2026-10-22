@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-react-viewer@1.0.0) - 2026-10-22
+
+### Features
+
+- **docx:** Take the shared collaboration contract in <docx-editor> ([58e5caa](https://github.com/ChristopherVR/ooxml/commit/58e5caa1103f2129b32976cf1def24ebd031cad9))
+- **docx:** Add navigation, status and full toolbar blocks to bindings ([d3ff60f](https://github.com/ChristopherVR/ooxml/commit/d3ff60f9c90291d11d7ff59b8ffcea96dc9bc464))
+- **docx:** Make the building blocks read-only unless canEdit is true ([f4f4227](https://github.com/ChristopherVR/ooxml/commit/f4f4227e43b8b6f9463f0b81fc23a925cb62dc01))
+
+### Bug Fixes
+
+- **docx:** Name the toolbar openers apart from the host options ([d5bc691](https://github.com/ChristopherVR/ooxml/commit/d5bc691e2aaa946147e55edf590a61f64c7a671a))
+
+### Documentation
+
+- **docx:** Document the building blocks and list them in the sidebar ([4b98e67](https://github.com/ChristopherVR/ooxml/commit/4b98e671c708d3e5ea286bd4797e29d88bfe1303))
+- Align the building-block pages with the code ([37ab0f6](https://github.com/ChristopherVR/ooxml/commit/37ab0f6b89ff2a9a9ec14ace28bf320af01ff03a))
+
 ## [0.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-react-viewer@0.6.0) - 2026-10-21
 
 ### Features

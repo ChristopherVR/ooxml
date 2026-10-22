@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@1.0.0) - 2026-10-22
+
+### Features
+
+- **visio:** Take the shared collaboration contract in <visio-viewer> ([63ad160](https://github.com/ChristopherVR/ooxml/commit/63ad160c8ff5dc043695756f1bb9572fb19c2a4a))
+- **visio:** Complete the building blocks in every framework ([0a69177](https://github.com/ChristopherVR/ooxml/commit/0a6917719b5040587c0a37dfe3b37a875b7d2a05))
+
+### Bug Fixes
+
+- **visio:** Ship the toolbar controls with the svelte package ([709fafa](https://github.com/ChristopherVR/ooxml/commit/709fafa524945526e613472143abf41054131332))
+
 ## [0.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@0.8.0) - 2026-10-21
 
 ### Features

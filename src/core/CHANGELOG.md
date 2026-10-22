@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.22.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.22.0) - 2026-10-22
+
+### Features
+
+- **automation:** Define word, excel and visio tools once in core ([bed1839](https://github.com/ChristopherVR/ooxml/commit/bed18392fec1f07fa9a0c1eabf8a7c1bb25b0387))
+- **automation:** Propose xlsx edits as a reviewable diff ([0e13837](https://github.com/ChristopherVR/ooxml/commit/0e13837c6fdf0766e21aa8a31ef69737df8ab203))
+- **automation:** Add xlsx_propose_edits and xlsx_apply_proposal tools ([8c7500d](https://github.com/ChristopherVR/ooxml/commit/8c7500df317f1cffa3016705369e52b0a5ad0218))
+- **xlsx:** Report validation, host dialogs and state in surface props ([11ce627](https://github.com/ChristopherVR/ooxml/commit/11ce6271694e47c6fccd3d40040a44d1ae8ca4c9))
+- **visio:** Let a host mark the edit history saved ([3af10a5](https://github.com/ChristopherVR/ooxml/commit/3af10a574fa5b842faaa450c6865de45e340ece4))
+- **pptx:** Define the powerpoint tools as shared automation tools ([88acafd](https://github.com/ChristopherVR/ooxml/commit/88acafd82419de2cefbebd4b91b935c378f8c772))
+- **collab:** Add auth token and webrtc to the embedding contract ([395e429](https://github.com/ChristopherVR/ooxml/commit/395e42961152f5725bf75bd2f0bd424f5e6f6f70))
+- **visio:** Merge collaboration per shape, with cursors and write-back ([3d1564c](https://github.com/ChristopherVR/ooxml/commit/3d1564caa98d86b97bd7a384bd9d11fe533435f7))
+
+### Bug Fixes
+
+- **pptx:** Render flowChart connector presets as shapes, not lines ([978593a](https://github.com/ChristopherVR/ooxml/commit/978593a0d0067d97105fd98b8d640dc929ec9f2b))
+- **pptx:** Paint picture fills inherited from layout placeholders ([71b8196](https://github.com/ChristopherVR/ooxml/commit/71b81964ca4b19ef9cc143fa970479614426bd9d))
+
 ## [1.21.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.21.0) - 2026-10-21
 
 ### Features
