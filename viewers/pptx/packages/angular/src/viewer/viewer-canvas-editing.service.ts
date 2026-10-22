@@ -50,6 +50,8 @@ interface CanvasEditingHost {
 	readonly activeSlideIndex: () => number;
 	/** Inherited template (master/layout) elements for the active slide, when editTemplateMode is on. */
 	readonly activeTemplateElements: () => readonly PptxElement[];
+	/** Called with the new notes text after the user edits the speaker notes (`notesUpdate`). */
+	readonly notesUpdated?: (notes: string) => void;
 }
 
 @Injectable()
@@ -396,6 +398,7 @@ export class ViewerCanvasEditingService {
 				? {}
 				: { notesSegments: segments.length > 0 ? segments : undefined }),
 		});
+		this.requireHost().notesUpdated?.(notes);
 	}
 
 	// ── Selection pane handlers ────────────────────────────────────────────────

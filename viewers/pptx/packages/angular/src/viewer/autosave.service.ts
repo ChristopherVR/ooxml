@@ -69,6 +69,8 @@ export interface AutosaveHost {
 	 * this is the same trigger. Omit it and every tick writes, as before.
 	 */
 	readonly changeSources?: () => readonly unknown[];
+	/** Called with the serialised deck after each snapshot is written (the host's `autosaved`). */
+	readonly saved?: (data: Uint8Array) => void;
 }
 
 @Injectable()
@@ -165,6 +167,7 @@ export class AutosaveService {
 			// made while serialising is not mistaken for one already captured.
 			this.lastSnapshot = autosaveSnapshotMark(filePath, sources);
 			this.status.set({ state: 'saved', timestamp: Date.now() });
+			host.saved?.(data);
 		} catch (err) {
 			this.status.set({
 				state: 'error',
