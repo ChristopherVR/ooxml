@@ -1,8 +1,9 @@
-import { TEXT_WARP_PRESETS } from 'ooxml-ui/pptx';
+import { buildTextWarpGallery, registerPptxWebControls, textWarpStyle } from 'ooxml-ui/pptx';
+import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 import type { TextStyle } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
-import { createInspectorSelect, createInspectorCheckbox } from './controls-extra';
+import { createInspectorCheckbox } from './controls-extra';
 import type { InspectorHandlers, InspectorState } from './types';
 
 export interface TextEffectsControls {
@@ -15,6 +16,7 @@ export function createTextEffectsControls(
 	t: Translator,
 	handlers: InspectorHandlers,
 ): TextEffectsControls {
+	registerPptxWebControls();
 	const el = doc.createElement('div');
 	el.className = 'pptxv-inspector-text-effects';
 	let state: InspectorState | null = null;
@@ -22,7 +24,7 @@ export function createTextEffectsControls(
 		handlers.setTextStyle(patch, state?.selectedTextRange);
 	const applyBody = (patch: Partial<TextStyle>): void => handlers.setTextStyle(patch);
 	// The control is named explicitly: a wrapping `<label>` lends its whole text
-	// content, which for a `<select>` includes every option.
+	// content, which takes in an embedded number field's value too.
 	const field = (labelText: string, input: HTMLElement): void => {
 		const label = doc.createElement('label');
 		label.textContent = labelText;
@@ -69,23 +71,26 @@ export function createTextEffectsControls(
 	const reflection = toggle(t('pptx.textEffects.reflection'), 'textReflection');
 	const strike = toggle(t('pptx.textFormatting.strikethrough'), 'strikethrough');
 	const highlight = color(t('pptx.text.highlightColor'), 'highlightColor');
-	const warp = createInspectorSelect(doc);
-	for (const preset of TEXT_WARP_PRESETS) {
-		const option = doc.createElement('option');
-		option.value = preset.value;
-		option.textContent = t(preset.labelKey);
-		warp.appendChild(option);
-	}
-	warp.addEventListener('change', () =>
-		applyBody({ textWarpPreset: warp.value === 'textNoShape' ? undefined : warp.value }),
-	);
-	field(t('pptx.textEffects.transform'), warp);
+	// Transform: the shared Text Warp gallery, one tile per preset. Captioned by a
+	// legend, not a `<label>`: clicking a label's text would press its first tile
+	// (No Transform) and clear the warp.
+	const warpField = doc.createElement('fieldset');
+	const warpCaption = doc.createElement('legend');
+	warpCaption.textContent = t('pptx.textEffects.transform');
+	const warp = doc.createElement('pptx-ui-ribbon-gallery');
+	warp.setAttribute('mode', 'panel');
+	warp.setAttribute('compact', '');
+	warp.translateLabel = (key, params) => t(key, params ? { ...params } : undefined);
+	warp.addEventListener('gallery-pick', (event) => {
+		const style = textWarpStyle((event as RibbonGalleryPickEvent).detail.itemId);
+		if (style) {
+			applyBody(style);
+		}
+	});
+	warpField.append(warpCaption, warp);
+	el.appendChild(warpField);
 	const warpAdjust = number(t('pptx.textEffects.adjustment'), 'textWarpAdj', 0, true);
-	const inputs = Array.from(
-		el.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
-			'input,pptx-ui-select,pptx-ui-checkbox',
-		),
-	);
+	const inputs = Array.from(el.querySelectorAll<HTMLInputElement>('input,pptx-ui-checkbox'));
 
 	return {
 		el,
@@ -105,7 +110,8 @@ export function createTextEffectsControls(
 			reflection.checked = Boolean(style.textReflection);
 			strike.checked = Boolean(style.strikethrough);
 			highlight.value = style.highlightColor ?? '#ffff00';
-			warp.value = style.textWarpPreset ?? 'textNoShape';
+			warp.descriptor = buildTextWarpGallery(style.textWarpPreset, !next.canText);
+			warp.disabled = !next.canText;
 			warpAdjust.value = String(style.textWarpAdj ?? 50000);
 			for (const input of inputs) {
 				input.disabled = !next.canText;

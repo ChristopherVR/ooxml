@@ -13,6 +13,8 @@ export class CollaborationSession {
 	yjs?: WordYjsCollaboration | undefined;
 	presence?: EditorPresence | undefined;
 	ids?: ((kind: string) => string) | undefined;
+	/** Called after a Yjs binding starts (with its session) or stops (undefined). */
+	onYjsChange?: ((session: CollabSession | undefined) => void) | undefined;
 	private sendScheduled = false;
 
 	constructor(
@@ -39,15 +41,18 @@ export class CollaborationSession {
 			color: session.identity.userColor,
 		});
 		this.ids = createCollaborationIdGenerator(String(session.clientId));
+		this.onYjsChange?.(session);
 	}
 
 	stop(): void {
+		const hadYjs = Boolean(this.yjs);
 		this.yjs?.destroy();
 		this.yjs = undefined;
 		this.client = undefined;
 		this.presence?.leave();
 		this.presence = undefined;
 		this.ids = undefined;
+		if (hadYjs) this.onYjsChange?.(undefined);
 	}
 
 	/** Coalesces pending steps into one `collaboration-send` event per microtask. */

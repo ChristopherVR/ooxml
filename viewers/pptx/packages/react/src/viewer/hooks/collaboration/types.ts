@@ -6,6 +6,7 @@
  * @module collaboration/types
  */
 
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import type { CollaborationConfig, CollaborationRole, CollaborationTransport } from 'ooxml-ui/pptx';
 import type { Doc as YDoc } from 'yjs';
 
@@ -104,4 +105,10 @@ export interface CollaborationContextValue {
 	synced: boolean;
 	/** Manually retry the WebSocket connection after a timeout or error. */
 	retry: () => void;
+	/** The local awareness client id, once the session has one. */
+	clientId?: number | null;
+	/** The owner's write-back status, as the document sync last reported it. */
+	writeBack?: CollaborationWriteBackState | undefined;
+	/** Called by the document sync with the write-back status (undefined clears it). */
+	reportWriteBack?: (state: CollaborationWriteBackState | undefined) => void;
 }

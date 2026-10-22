@@ -137,11 +137,11 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 ## Ejecútalo desde el código fuente
 
-Requiere Node 22+ y Bun. Con el repositorio [`ooxml`](https://github.com/ChristopherVR/ooxml) clonado junto a este (`../ooxml-core`), las demos y las pruebas usan su código fuente; sin él, usan los paquetes publicados `ooxml-core` y `ooxml-ui`.
+Requiere Node 22+ y Bun. Esta carpeta es `viewers/teams` del repositorio [`ooxml`](https://github.com/ChristopherVR/ooxml): ejecuta `bun install` en la raíz del repositorio y luego los comandos siguientes aquí. Las demos (`demos/teams/*` en la raíz) y las pruebas usan el código fuente de `ooxml-core` y `ooxml-ui` del mismo árbol.
 
 ```bash
-bun install
-bun run dev        # server on :8787, vanilla demo on :5173, React demo on :5174
+bun install        # en la raíz del repositorio
+bun run dev        # en viewers/teams: servidor :8787, demo vanilla :5173, demo React :5174
 ```
 
-Abre `http://127.0.0.1:5173/?name=Ada` y, en otra pestaña, `...?name=Bob`: dos personas en un mismo espacio de trabajo. `?local=1` funciona sin el servidor. `TEAMS_USE_DIST=1` hace que las demos usen los paquetes compilados (antes, `bun run build:packages`) y los paquetes ooxml publicados en lugar de cualquier código fuente. Las cámaras y los micrófonos requieren `localhost` o HTTPS.
+Abre `http://127.0.0.1:5173/?name=Ada` y, en otra pestaña, `...?name=Bob`: dos personas en un mismo espacio de trabajo. `?local=1` funciona sin el servidor. `TEAMS_USE_DIST=1` hace que las demos usen los paquetes compilados (antes, `bun run build:packages`) en lugar del código fuente. `TEAMS_DEMOS=vanilla,vue` elige las demos que inicia `bun run dev`. Las cámaras y los micrófonos requieren `localhost` o HTTPS.

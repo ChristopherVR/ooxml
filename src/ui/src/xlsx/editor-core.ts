@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The editor's state and the `EditorContext` every UI module receives: the workbook and its edit
  * session, the active sheet and selection, the command and dialog registries, and the public
@@ -32,9 +33,17 @@ import {
 	SheetSelections,
 } from 'ooxml-core/xlsx/ui';
 import type { CalculationMode } from './backstage';
+import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
+import type { ExcelCustomization } from 'ooxml-core/xlsx/ui';
+import {
+	EMPTY_EXCEL_CUSTOMIZATION,
+	provideCustomization,
+	resolveExcelCustomization,
+	type ResolvedExcelCustomization,
+} from './customization';
 
 /** What the shell exposes back to the core (filled in when the element connects). */
 export interface ShellHooks {
@@ -47,7 +56,17 @@ export class EditorCore {
 	workbook: Workbook | undefined;
 	session: EditSession | undefined;
 	activeSheet = 0;
+	/**
+	 * Effective: the host's `readOnly`, a collaboration `viewer` role, or `capabilities.edit` off.
+	 * Each lock is kept on its own, so lifting one never lifts another.
+	 */
 	readOnly = false;
+	#hostReadOnly = false;
+	#roleReadOnly = false;
+	#reportedHost = false;
+	/** The host's `customization` object, as given, and its resolution. */
+	customizationInput: ExcelCustomization | null = null;
+	customization: ResolvedExcelCustomization = EMPTY_EXCEL_CUSTOMIZATION;
 	locale: EditorLocale = 'en';
 	authorName = DEFAULT_AUTHOR_NAME;
 	fileName = DEFAULT_FILE_NAME;
@@ -61,6 +80,12 @@ export class EditorCore {
 	loading = false;
 	savePassword: string | undefined;
 	shell: ShellHooks | undefined;
+	/** Host callbacks that stand in for dialogs when the editor mounts without application UI. */
+	surfaceActions: SurfaceHostActions = {};
+	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
+	storage: DocumentStorage | undefined = undefined;
+	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
+	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();
 	readonly commands: CommandRegistry;
 	readonly dialogs: DialogRegistry;
@@ -85,7 +110,10 @@ export class EditorCore {
 	}
 
 	constructor(readonly host: HTMLElement) {
-		this.dirty = new DirtyState((dirty) => emit(host, 'dirty-change', { dirty }));
+		this.dirty = new DirtyState((dirty) => {
+			emit(host, 'dirty-change', { dirty });
+			this.requestRender();
+		});
 		const report = (what: string, error: unknown) => {
 			const message = error instanceof Error ? error.message : String(error);
 			this.shell?.toast(
@@ -100,7 +128,7 @@ export class EditorCore {
 		};
 		this.commands = createCommandRegistry(() => this.ctx, {
 			onError: (id, error) => report(this.commands.get(id)?.label ?? id, error),
-			isHidden: (id) => this.hiddenActions.includes(id),
+			isHidden: (id) => this.isHidden(id),
 		});
 		this.dialogs = createDialogRegistry(
 			() => this.ctx,
@@ -118,9 +146,13 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
-		editBridge(this.ctx).onChange(() =>
-			this.host.dispatchEvent(new CustomEvent('editor-state-change')),
-		);
+		provideCustomization(this.ctx, () => this.customization);
+		editBridge(this.ctx).onChange(() => {
+			const draft = editBridge(this.ctx).state();
+			if (this.editError && (!draft.editing || draft.text !== this.editError.text))
+				this.editError = null;
+			this.host.dispatchEvent(new CustomEvent('editor-state-change'));
+		});
 		this.collab = collaborationFor(this);
 		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
 	}
@@ -160,6 +192,14 @@ export class EditorCore {
 					const key = JSON.stringify(detail);
 					if (key === core.lastSelection) return true;
 					core.lastSelection = key;
+				}
+				if (type === 'validation-error') {
+					const message = (detail as { message?: unknown }).message;
+					core.editError = {
+						message: typeof message === 'string' ? message : '',
+						text: editBridge(core.ctx).state().text,
+					};
+					core.requestRender();
 				}
 				return emitEvent(core.host, type, detail);
 			},
@@ -346,12 +386,56 @@ export class EditorCore {
 		this.notifyModel({ kind: 'locale' });
 	}
 
-	setReadOnly(readOnly: boolean): boolean {
-		if (readOnly === this.readOnly) return false;
-		this.readOnly = readOnly;
-		if (readOnly && this.gridController?.isEditing()) this.gridController.cancelEdit();
-		this.notifyModel({ kind: 'readonly', readOnly });
-		emit(this.host, 'readonly-change', { readOnly });
+	/** True for a command the host hid: `hiddenActions`, or a disabled capability's. */
+	isHidden(id: string): boolean {
+		return this.hiddenActions.includes(id) || this.customization.commands.has(id);
+	}
+
+	/** Replaces the customisation; false when it is the same object. */
+	setCustomization(value: ExcelCustomization | null): boolean {
+		if (value === this.customizationInput) return false;
+		this.customizationInput = value;
+		this.customization = resolveExcelCustomization(value);
+		// `capabilities.edit` is a lock of its own: the host's switch is left as it was.
+		this.#applyReadOnly();
+		this.requestRender();
 		return true;
+	}
+
+	/** The host's switch, as the host set it (the `read-only` attribute reflects it). */
+	get hostReadOnly(): boolean {
+		return this.#hostReadOnly;
+	}
+
+	/** The host's switch. Turning it off never lifts a `viewer` role or `capabilities.edit`. */
+	setReadOnly(readOnly: boolean): boolean {
+		this.#hostReadOnly = readOnly;
+		return this.#applyReadOnly();
+	}
+
+	/** Set by sharing while the role is `viewer`; independent of the host's switch. */
+	setRoleReadOnly(locked: boolean): boolean {
+		this.#roleReadOnly = locked;
+		return this.#applyReadOnly();
+	}
+
+	#applyReadOnly(): boolean {
+		const readOnly = this.#hostReadOnly || this.#roleReadOnly || !this.customization.canEdit;
+		const changed = readOnly !== this.readOnly;
+		// A host change under a role lock leaves the effective value alone but is still reported,
+		// so a controlled parent only ever mirrors `hostReadOnly`.
+		if (!changed && this.#hostReadOnly === this.#reportedHost) return false;
+		this.#reportedHost = this.#hostReadOnly;
+		this.readOnly = readOnly;
+		if (changed) {
+			if (readOnly && this.gridController?.isEditing()) this.gridController.cancelEdit();
+			this.notifyModel({ kind: 'readonly', readOnly });
+		}
+		emit(this.host, 'readonly-change', {
+			readOnly,
+			locked: this.#roleReadOnly,
+			hostReadOnly: this.#hostReadOnly,
+		});
+		return changed;
 	}
 }

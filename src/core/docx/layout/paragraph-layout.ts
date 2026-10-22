@@ -3,7 +3,7 @@ import type { BreakToken } from './text-breaks';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, twipsToPx } from './units';
-import { placeTab } from './tab-stops';
+import { placePositionalTab, placeTab } from './tab-stops';
 import {
 	fontOf,
 	runTextWidth,
@@ -108,6 +108,8 @@ function measureParagraph(
 
 	let placed: PlacedToken[] = [];
 	let lineWidthPx = 0;
+	// How far a line holding a positional tab relative to the margins may reach: to the margin.
+	let marginReachPx = 0;
 	let tokenCursor = startToken;
 	let firstToken = startToken;
 
@@ -222,6 +224,7 @@ function measureParagraph(
 		if (forcedByBreak === 'column') columnBreakAfterLine.add(lineIndex);
 		placed = [];
 		lineWidthPx = 0;
+		marginReachPx = 0;
 	}
 
 	for (const [tokenIndex, token] of tokens.entries()) {
@@ -249,7 +252,30 @@ function measureParagraph(
 						: 0
 				: 0;
 		const advance = width * (1 - markerFactor);
-		if (token.kind === 'tab') {
+		const positional = token.kind === 'tab' && paragraph.runs[token.runIndex]?.positionalTab;
+		if (positional) {
+			const { followingPx } = segmentAfter(tokenIndex);
+			// Word aligns to the closer of the indent and the margin: never past the margins, and a
+			// tab to the left margin of an indented paragraph leaves its text at the indent.
+			const [startPx, endPx] =
+				positional.relativeTo === 'indent'
+					? [Math.max(leftPx, 0), Math.min(contentWidthPx - rightPx, contentWidthPx)]
+					: [0, contentWidthPx];
+			const placeAt = (positionPx: number) =>
+				placePositionalTab(positionPx, positional, startPx, endPx, followingPx);
+			let tab = placeAt(lineStart(lines.length) + lineWidthPx);
+			if (!tab && placed.length) {
+				// The line is past the tab's point: the tab goes to that point on the next line.
+				tokenCursor = tokenIndex;
+				flushLine(false, undefined);
+				tokenCursor = tokenIndex + 1;
+				tab = placeAt(lineStart(lines.length));
+			}
+			width = tab?.widthPx ?? 0;
+			leader = tab?.leader === 'none' ? undefined : tab?.leader;
+			if (positional.relativeTo === 'margin')
+				marginReachPx = contentWidthPx - lineStart(lines.length);
+		} else if (token.kind === 'tab') {
 			const { followingPx, beforeDecimalPx } = segmentAfter(tokenIndex);
 			const tab = placeTab(
 				lineStart(lines.length) + lineWidthPx,
@@ -262,7 +288,7 @@ function measureParagraph(
 			leader = tab.leader === 'none' ? undefined : tab.leader;
 		}
 		const lineIndex = lines.length;
-		const limit = availableWidth(lineIndex);
+		const limit = Math.max(availableWidth(lineIndex), marginReachPx);
 		// A pending trailing space only ever gets counted once it turns out to be
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be

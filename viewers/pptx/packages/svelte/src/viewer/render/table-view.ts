@@ -168,8 +168,8 @@ function buildCellView(
 			{ rowIndex, cellIndex, rowCount, columnCount },
 			context,
 		),
-		runs: buildRunViews(cell),
-		paragraphBlocks: buildParagraphViews(cell),
+		runs: buildRunViews(cell, style),
+		paragraphBlocks: buildParagraphViews(cell, style),
 		text: cell.text || ' ',
 	};
 }
@@ -178,27 +178,30 @@ function buildCellView(
  * Rich per-run cell content when the cell carries `CellTextRun[]` (duck-typed
  * extension, matching the other bindings); `null` for plain-text cells.
  */
-function buildRunViews(cell: PptxTableCell): TableRunView[] | null {
+function buildRunViews(cell: PptxTableCell, cellCss: TableCellCss): TableRunView[] | null {
 	const richCell = cell as PptxTableCell & { textRuns?: CellTextRun[] };
 	const textRuns = richCell.textRuns;
 	if (!textRuns || textRuns.length === 0) {
 		return null;
 	}
-	return textRuns.map(runView);
+	return textRuns.map((run, i) => runView(run, i, cellCss));
 }
 
-function runView(run: CellTextRun, i: number): TableRunView {
+function runView(run: CellTextRun, i: number, cellCss: TableCellCss): TableRunView {
 	return {
 		key: `run${i}`,
 		isParagraphBreak: run.isParagraphBreak === true,
 		isLineBreak: run.isLineBreak === true,
 		text: run.text,
-		style: styleToString({ position: 'relative', ...cellRunStyle(run) }),
+		style: styleToString({ position: 'relative', ...cellRunStyle(run, cellCss) }),
 	};
 }
 
 /** Paragraph blocks for a cell whose paragraphs set their own layout; `null` otherwise. */
-function buildParagraphViews(cell: PptxTableCell): TableParagraphView[] | null {
+function buildParagraphViews(
+	cell: PptxTableCell,
+	cellCss: TableCellCss,
+): TableParagraphView[] | null {
 	const blocks = cellParagraphBlocks(cell);
 	if (!blocks) {
 		return null;
@@ -206,6 +209,6 @@ function buildParagraphViews(cell: PptxTableCell): TableParagraphView[] | null {
 	return blocks.map((block, i) => ({
 		key: `para${i}`,
 		style: styleToString({ display: 'block', ...block.css }),
-		runs: block.runs.map(runView),
+		runs: block.runs.map((run, ri) => runView(run, ri, cellCss)),
 	}));
 }

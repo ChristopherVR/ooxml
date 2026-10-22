@@ -155,17 +155,16 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 
 Active when `editable` is set (see [Getting Started > Editing](/svelte/getting-started#editing)).
 
-| Method              | Signature                                                      | Description                                                          |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `undo`              | `() => void`                                                   | Undo the last committed edit.                                        |
-| `redo`              | `() => void`                                                   | Redo the last undone edit.                                           |
-| `canUndo`           | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).          |
-| `canRedo`           | `() => boolean`                                                | Whether a redo step is available.                                    |
-| `deleteSelected`    | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).        |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm'`). |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.               |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                           |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | Assemble and download the sharing package.                           |
+| Method           | Signature                                                      | Description                                                          |
+| ---------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `undo`           | `() => void`                                                   | Undo the last committed edit.                                        |
+| `redo`           | `() => void`                                                   | Redo the last undone edit.                                           |
+| `canUndo`        | `() => boolean`                                                | Whether an undo step is available (snapshot; not reactive).          |
+| `canRedo`        | `() => boolean`                                                | Whether a redo step is available.                                    |
+| `deleteSelected` | `() => void`                                                   | Delete the selected element (no-op when nothing is selected).        |
+| `save`           | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the edited slides to bytes (`'pptx' \| 'ppsx' \| 'pptm'`). |
+| `downloadAs`     | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + trigger a browser download in the given format.               |
+| `downloadPptx`   | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` (default name).                           |
 
 Keyboard shortcuts, active whenever editing is enabled: `Ctrl`/`Cmd+Z` undo,
 `Ctrl`/`Cmd+Shift+Z` redo, `Delete`/`Backspace` delete, `Ctrl`/`Cmd+D` duplicate, arrow keys
@@ -255,9 +254,8 @@ needed for typical embedding.
 
 ### `pptx-svelte-viewer/internals`: slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot `import`
-from it directly. A host embedding its own presentation surface (a custom stage, outside the full
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation surface (a custom stage, outside the full
 `PowerPointViewer`) still needs the transition resolver/keyframes and overlay component, so they
 are re-exported from the `pptx-svelte-viewer/internals` subpath instead:
 

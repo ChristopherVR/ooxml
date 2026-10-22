@@ -72,25 +72,28 @@ interface CollaborationConfig {
 	/** Session role - defaults to 'collaborator'. */
 	role?: CollaborationRole;
 	/** Elected-writer persistence: the 'owner' peer receives debounced PPTX snapshots. */
-	onWriteBack?: (bytes: Uint8Array) => void;
+	onWriteBack?: (bytes: Uint8Array) => void | Promise<void>;
 	/** Debounce (ms) between the last change and onWriteBack. Default 5000. */
 	writeBackDebounceMs?: number;
+	/** Retries of a rejected onWriteBack, exponential backoff. Default: none. */
+	writeBackRetry?: { attempts: number; baseDelayMs?: number; maxDelayMs?: number };
 }
 ```
 
-| Field                 | Type                     | Required | Notes                                                                                           |
-| --------------------- | ------------------------ | -------- | ----------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                 | yes      | Sanitized; restrict to alphanumeric / `-` / `_`.                                                |
-| `serverUrl`           | `string`                 | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                               |
-| `transport`           | `CollaborationTransport` | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                         |
-| `signaling`           | `string[]`               | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                    |
-| `userName`            | `string`                 | yes      | Local user's display name; also used as comment/annotation author when `authorName` is unset.   |
-| `userAvatar`          | `string`                 | no       | Validated avatar URL.                                                                           |
-| `userColor`           | `string`                 | no       | Hex colour for the user's cursor ring.                                                          |
-| `authToken`           | `string`                 | no       | WebSocket handshake param / webrtc room password.                                               |
-| `role`                | `CollaborationRole`      | no       | `'owner'`, `'collaborator'` (default), or `'viewer'`.                                           |
-| `onWriteBack`         | `(bytes) => void`        | no       | Only fires for the `'owner'` peer: debounced serialized PPTX snapshots for durable persistence. |
-| `writeBackDebounceMs` | `number`                 | no       | Default 5000 ms.                                                                                |
+| Field                 | Type                                                              | Required | Notes                                                                                                                                                           |
+| --------------------- | ----------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                                                          | yes      | Sanitized; restrict to alphanumeric / `-` / `_`.                                                                                                                |
+| `serverUrl`           | `string`                                                          | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                                                                                               |
+| `transport`           | `CollaborationTransport`                                          | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                                                                                         |
+| `signaling`           | `string[]`                                                        | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                                                                                    |
+| `userName`            | `string`                                                          | yes      | Local user's display name; also used as comment/annotation author when `authorName` is unset.                                                                   |
+| `userAvatar`          | `string`                                                          | no       | Validated avatar URL.                                                                                                                                           |
+| `userColor`           | `string`                                                          | no       | Hex colour for the user's cursor ring.                                                                                                                          |
+| `authToken`           | `string`                                                          | no       | WebSocket handshake param / webrtc room password.                                                                                                               |
+| `role`                | `CollaborationRole`                                               | no       | `'owner'`, `'collaborator'` (default), or `'viewer'`.                                                                                                           |
+| `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | no       | Only fires for the `'owner'` peer: debounced serialized PPTX snapshots. A returned promise is the acknowledgement; status is in `collaborationState.writeBack`. |
+| `writeBackDebounceMs` | `number`                                                          | no       | Default 5000 ms.                                                                                                                                                |
+| `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | no       | Retries of a rejected `onWriteBack` with exponential backoff. Default: none.                                                                                    |
 
 ### Serverless peer-to-peer mode
 
@@ -106,16 +109,36 @@ Room ids, user names, avatar URLs, cursor positions, and presence data pass thro
 the collaboration layer. Keep `roomId` to alphanumerics, hyphens, and underscores to avoid surprises.
 :::
 
+## Your own provider, or sharing in one browser
+
+Besides `CollaborationConfig`, the `collaboration` option takes the shared contract of Word, Excel and Visio (`CollaborationOptions` from `ooxml-core/collab`). Two forms need no host-owned `session`; the viewer opens the session itself and destroys it when collaboration stops:
+
+```tsx
+<PowerPointViewer
+	content={bytes}
+	collaboration={{ roomId: 'deck-review', provider, user: { name: 'Ada' }, intent: 'join' }}
+/>
+// Same browser only:
+<PowerPointViewer content={bytes} collaboration={{ roomId: 'deck-review', user: { name: 'Ada' } }} />
+```
+
+- `provider` (a `ProviderFactory`, for example `transportProvider` or an existing provider through `adaptYjsProvider`) wins over `serverUrl`.
+- With no `session`, `provider`, `serverUrl` or `transport`, the room is shared between tabs and windows of this browser over a BroadcastChannel (`ooxml-pptx:<roomId>`), with no server.
+- Precedence is `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. A legacy `CollaborationConfig` with `serverUrl` keeps y-websocket; one with `transport: 'webrtc'` or a blank `serverUrl` keeps the serverless y-webrtc transport.
+- `intent: 'join'` never seeds an empty room with the local deck. The session is writable once it syncs (or after the grace period for a lone peer); a `role: 'viewer'` stays read-only.
+- The state reports `status: 'connecting'` while the session opens and `error` for an invalid room or an unavailable BroadcastChannel.
+
 ## Controlling sessions: Share dialog props
 
 Collaboration is **controlled** by the host app. The viewer's Share dialog reports intent; you flip
 the `collaboration` prop in response.
 
-| Prop                   | Type                                    | Purpose                                                                                       |
-| ---------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `onStartCollaboration` | `(config: CollaborationConfig) => void` | User started a session from the Share dialog - set the `collaboration` prop with this config. |
-| `onStopCollaboration`  | `() => void`                            | User stopped the session - clear the `collaboration` prop.                                    |
-| `shareDefaults`        | `{ roomId?; userName?; serverUrl? }`    | Pre-fills the Share dialog fields; empty if omitted.                                          |
+| Prop                    | Type                                    | Purpose                                                                                                                    |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void` | User started a session from the Share dialog - set the `collaboration` prop with this config.                              |
+| `onStopCollaboration`   | `() => void`                            | User stopped the session - clear the `collaboration` prop.                                                                 |
+| `onCollaborationChange` | `(state: CollaborationState) => void`   | The shared state (`active`, `roomId`, `status`, `synced`, `people`), also for a host-owned session; the off state on stop. |
+| `shareDefaults`         | `{ roomId?; userName?; serverUrl? }`    | Pre-fills the Share dialog fields; empty if omitted.                                                                       |
 
 ```tsx
 function CollaborativeEditor({ content }: { content: Uint8Array }) {
@@ -176,9 +199,9 @@ See [Hooks › Collaboration hooks](/react/hooks#collaboration-hooks) for the ho
 ## Server side
 
 With the default `websocket` transport you need a running `y-websocket`-compatible relay reachable
-at `serverUrl`. Two production-shaped reference servers ship in `demos/`:
+at `serverUrl`. Two production-shaped reference servers ship in `demos/pptx/`:
 
-- **`demos/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
+- **`demos/pptx/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
   `yjs` / `y-protocols` / `lib0`). Auth has two modes, both validated at the websocket handshake
   (401 before upgrade):
 
@@ -193,10 +216,10 @@ at `serverUrl`. Two production-shaped reference servers ship in `demos/`:
   disconnect) and restored on the next join, so documents survive server restarts.
 
   ```bash
-  COLLAB_AUTH_JWT_SECRET=change-me bun demos/collab-server.example.mjs
+  COLLAB_AUTH_JWT_SECRET=change-me bun demos/pptx/collab-server.example.mjs
   ```
 
-- **`demos/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
+- **`demos/pptx/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
   (SQLite persistence via `@hocuspocus/extension-sqlite`, plus its extension ecosystem for Redis
   scaling, webhooks, database stores). Note that plain y-websocket clients never trigger
   Hocuspocus' `onAuthenticate`; the example validates the `?token=` request parameter in

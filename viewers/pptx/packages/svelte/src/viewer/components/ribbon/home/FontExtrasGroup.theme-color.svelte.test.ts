@@ -3,6 +3,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../../editor/editor-state.svelte';
+import { themeSwatch } from '../../inspector/theme-color-grid.test-support';
 import FontExtrasGroup from './FontExtrasGroup.svelte';
 
 /**
@@ -103,7 +104,7 @@ describe('fontExtrasGroup theme font colour (W3-G2)', () => {
 		trigger?.click();
 		flushSync();
 
-		const swatch = target.querySelector<HTMLButtonElement>('button[title="Accent 2"]');
+		const swatch = themeSwatch(target, 'Accent 2');
 		expect(swatch).not.toBeNull();
 		swatch?.click();
 		flushSync();

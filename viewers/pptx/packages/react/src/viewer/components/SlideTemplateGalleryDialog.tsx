@@ -54,6 +54,7 @@ export function SlideTemplateGalleryDialog({
 		<>
 			<button
 				type='button'
+				data-pptx-scope=''
 				style={{ zIndex: 1200 }}
 				className='fixed inset-0 bg-black/50'
 				onClick={onClose}
@@ -61,6 +62,7 @@ export function SlideTemplateGalleryDialog({
 			/>
 
 			<div
+				data-pptx-scope=''
 				style={{ zIndex: 1201 }}
 				className='fixed inset-0 flex items-center justify-center pointer-events-none'
 			>

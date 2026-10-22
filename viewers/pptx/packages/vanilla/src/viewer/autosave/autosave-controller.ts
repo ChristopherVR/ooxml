@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
+	DocumentStorage,
 } from 'ooxml-ui/pptx';
 import {
 	nextAutosaveDelayMs,
@@ -62,6 +63,8 @@ export interface AutosaveControllerDeps {
 	filePath: string;
 	/** Public document name rendered in the recovery message. */
 	fileName?: string;
+	/** Host `storage` option: recovery snapshots go to its recovery methods when it has them. */
+	getStorage?: () => DocumentStorage | undefined;
 	/**
 	 * The resolved cadence in ms, read EVERY time the timer is armed so a
 	 * File > Options > Save change applies without rebuilding the viewer.
@@ -76,6 +79,8 @@ export interface AutosaveControllerDeps {
 	getSaveIntent?: () => DeckSaveIntent;
 	/** Surface status transitions (toolbar indicator + optional host callback). */
 	onStatus?: (status: AutosaveStatus) => void;
+	/** The serialised bytes of each snapshot written, for the host's `onAutosave` hook. */
+	onSaved?: (bytes: Uint8Array) => void;
 	/** The raw record, for the host's `onAutosaveRecovery` hook. */
 	onRecovery?: (record: AutosaveRecord) => void;
 	/** The shared prompt descriptor + record, for the viewer's own dialog. */
@@ -151,7 +156,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 				undefined,
 				recoverySnapshotIntent(deps.getSaveIntent?.()),
 			);
-			await saveAutosaveSnapshot(deps.filePath, bytes);
+			await saveAutosaveSnapshot(deps.filePath, bytes, deps.getStorage?.());
 			// The snapshot landed, so the ceiling restarts from the next edit. The
 			// editor's own `dirty` flag is deliberately left alone: a recovery blob
 			// is not the user's Save.
@@ -159,6 +164,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			if (!disposed && isActive()) {
 				setStatus('saved');
 			}
+			deps.onSaved?.(bytes);
 		} catch {
 			if (!disposed && isActive()) {
 				setStatus('error');
@@ -201,13 +207,15 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			return;
 		}
 		recoveryChecked = true;
-		void probeAutosaveRecovery(deps.filePath, Date.now(), deps.fileName).then((offer) => {
-			if (offer && !disposed) {
-				deps.onRecovery?.(offer.record);
-				deps.onRecoveryOffer?.(offer);
-			}
-			return offer;
-		});
+		void probeAutosaveRecovery(deps.filePath, Date.now(), deps.fileName, deps.getStorage?.()).then(
+			(offer) => {
+				if (offer && !disposed) {
+					deps.onRecovery?.(offer.record);
+					deps.onRecoveryOffer?.(offer);
+				}
+				return offer;
+			},
+		);
 	};
 
 	/** Apply an activation flip (host prop, user toggle, or edit-ability). */

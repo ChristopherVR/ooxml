@@ -7,7 +7,7 @@ import {
 	textFontSizePxToPt,
 	textStylePatch,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxTextWarpPreset, TextStyle } from 'pptx-viewer-core';
+import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -29,14 +29,20 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
  * `ops.updateElement(id, patch)`.
  *
  * Only text-bearing elements (`hasTextProperties`) expose editable controls;
- * other element types show a muted note instead.
+ * other element types show a muted note instead. The Text Warp gallery comes
+ * last, after the formatting, as in React's `TextAdvancedSections`.
  */
 type AlignValue = NonNullable<TextStyle['align']>;
 type VAlignValue = NonNullable<TextStyle['vAlign']>;
 
-const props = defineProps<{
-	element: PptxElement;
-}>();
+const props = withDefaults(
+	defineProps<{
+		element: PptxElement;
+		/** Read-only decks keep the Text Warp tiles visible but unpickable. */
+		canEdit?: boolean;
+	}>(),
+	{ canEdit: true },
+);
 
 const emit = defineEmits<{
 	update: [patch: Partial<PptxElement>];
@@ -144,8 +150,8 @@ function setVAlign(value: VAlignValue): void {
 	patchTextStyle({ vAlign: value });
 }
 
-function onWarpSelect(preset: PptxTextWarpPreset | undefined): void {
-	patchTextStyle({ textWarpPreset: preset });
+function onWarpSelect(style: Pick<TextStyle, 'textWarpPreset'>): void {
+	patchTextStyle(style);
 }
 
 function onTextEffectPatch(patch: Partial<TextStyle>): void {
@@ -295,6 +301,8 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 					</button>
 				</div>
 			</div>
+
+			<TextWarpGallery :ts="textStyle" :disabled="!props.canEdit" @select="onWarpSelect" />
 		</div>
 	</div>
 </template>

@@ -2,8 +2,9 @@ name: CI
 
 # What runs is decided by scripts/ci-plan.mjs from the files the change touched: a docs edit runs
 # nothing, a docx change tests the affected files on as many runners as they need and checks only
-# docx-viewer, and a dependency or CI-config change (or the nightly run) runs everything. Pushes to
-# main are never cancelled by a later push: every commit gets its own verdict.
+# docx-viewer, and a dependency or CI-config change (or the nightly run) runs everything. A push to
+# main plans from the newest ancestor whose CI run succeeded, not from the previous push, so a newer
+# push may cancel an older run: its plan covers every commit nobody has verified yet.
 on:
   push:
     branches: [main]
@@ -40,10 +41,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
-  # PR plans include the whole branch, so a newer update supersedes them. Push plans cover only
-  # that push: cancelling one would leave its changes unchecked by the next incremental plan.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event_name == 'push' && 'push-main' || github.run_id }}
+  # PR plans include the whole branch, so a newer update supersedes them. Push plans start at the
+  # newest green commit (scripts/ci-base.mjs), so they include everything an earlier, cancelled push
+  # would have checked: cancelling one leaves nothing unchecked. A cancelled run is not green, so
+  # the next plan reaches back past it, and a failed lookup plans a full run rather than guess. The nightly and manual runs keep a group of their own.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
   BUN_VERSION: 1.4.2
@@ -52,6 +55,10 @@ env:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Reads which earlier CI runs succeeded, to pick the base of a push plan.
+      actions: read
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
       # The commit the other jobs check out: empty (the event's own) unless a run on the base.
@@ -79,7 +86,9 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.base }}
           SCOPE: ${{ inputs.scope || 'full' }}
           ON_BASE: ${{ inputs.on_base || false }}
-        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE" --on-base "$ON_BASE"
+          GITHUB_TOKEN: ${{ github.token }}
+        # `--green-base` (pushes only) widens BASE to the newest successful ancestor commit.
+        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE" --on-base "$ON_BASE" --green-base true
 
   lint:
     needs: plan
@@ -213,11 +222,45 @@ jobs:
           name: core-dist
           path: src/core/dist
           retention-days: 1
+      # ooxml-ui builds against the core's `dist`, so it is built here as well: the viewers and the
+      # pptx jobs need only the two builds, and start when this job ends instead of after the ui
+      # job's unit tests.
+      - if: fromJSON(needs.plan.outputs.plan).ui
+        run: bun run --cwd src/ui build
+      - if: fromJSON(needs.plan.outputs.plan).ui
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ui-dist
+          path: src/ui/dist
+          retention-days: 1
 
-  # The UI is typed and packed against the core's built output (`dist`), so it reuses the build job's.
+  # ooxml-ui's unit tests, in three shards (the suite took about nine minutes on one runner; Vitest
+  # shards the files of all its projects together).
+  ui-test:
+    name: ui test (${{ matrix.shard }}/3)
+    needs: [plan, build]
+    if: fromJSON(needs.plan.outputs.plan).checks.ui
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - run: bun run --cwd src/ui test --shard=${{ matrix.shard }}/3
+
+  # ooxml-ui's package checks. The package is packed from the build job's core and ui output
+  # (`dist`), the same build the viewers run on; it does not wait for the tests.
   ui:
     needs: [plan, build]
-    if: fromJSON(needs.plan.outputs.plan).ui
+    if: fromJSON(needs.plan.outputs.plan).checks.ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -228,24 +271,18 @@ jobs:
         with:
           name: core-dist
           path: src/core/dist
-      - if: fromJSON(needs.plan.outputs.plan).checks.ui
-        run: bun run --cwd src/ui test
-      - run: bun run --cwd src/ui build
-      - if: fromJSON(needs.plan.outputs.plan).checks.ui
-        run: bun run --cwd src/ui test:package
-      - if: fromJSON(needs.plan.outputs.plan).checks.ui
-        run: node scripts/check-package-types.mjs src/ui --esm-only
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
-          retention-days: 1
+      - run: bun run --cwd src/ui test:package
+      - run: node scripts/check-package-types.mjs src/ui --esm-only
 
   # The size of every published entry point. On a PR, bundle-size-comment.yml compares it with the
   # newest measurement from main and comments; on main it is that baseline. Informational: it is
   # not part of ci-success.
   bundle-size:
-    needs: [plan, build, ui]
+    needs: [plan, build]
     if: |
       !cancelled() && needs.build.result == 'success' &&
       (github.event_name == 'pull_request' || github.event_name == 'push')
@@ -262,9 +299,9 @@ jobs:
         with:
           name: core-dist
           path: src/core/dist
-      # The ui job is skipped when nothing reaches ooxml-ui; the comparison then leaves it out.
+      # ooxml-ui is built only when the plan needs it (`ui`); without it the comparison leaves it out.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        if: needs.ui.result == 'success'
+        if: fromJSON(needs.plan.outputs.plan).ui
         with:
           name: ui-dist
           path: src/ui/dist
@@ -301,13 +338,13 @@ jobs:
 
   # The viewers that live in this repository (viewers/<name>), each verified the way it was when it
   # was a repository of its own. They resolve ooxml-ui to the workspace copy through its dist, so
-  # they run on the core and ui built above. scripts/ci-plan.mjs picks the viewers a change can
-  # affect and the commands for each.
+  # they run on the core and ui from the build job, without waiting for the ui job's tests.
+  # scripts/ci-plan.mjs picks the viewers a change can affect and the commands for each.
   viewers:
     name: viewer (${{ matrix.name }})
-    needs: [plan, build, ui]
+    needs: [plan, build]
     if: |
-      !cancelled() && needs.build.result == 'success' && needs.ui.result == 'success' &&
+      !cancelled() && needs.build.result == 'success' &&
       toJSON(fromJSON(needs.plan.outputs.plan).viewers) != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -347,6 +384,67 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The viewers' Playwright suites, one job per shard (docx, xlsx and visio in two, teams in one;
+  # a run narrowed to changed specs is one shard). The other check groups run in `viewers`.
+  viewer-browser:
+    name: viewer browser (${{ matrix.name }} ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [plan, build]
+    if: |
+      !cancelled() && needs.build.result == 'success' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).viewerBrowser) != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).viewerBrowser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ matrix.dir }}
+        run: bun x playwright install --with-deps chromium
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: ${{ matrix.dir }}
+        run: bun x playwright install-deps chromium
+      - name: Run the browser suite
+        working-directory: ${{ matrix.dir }}
+        env:
+          VERIFY: ${{ matrix.verify }}
+        run: |
+          while IFS= read -r command; do
+            echo "::group::$command"
+            bash -e -o pipefail -c "$command"
+            echo "::endgroup::"
+          done <<< "$VERIFY"
+      - name: Preserve browser test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: browser-test-results-${{ matrix.name }}-${{ matrix.shard }}
+          path: ${{ matrix.dir }}/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   # The PowerPoint viewer has more to check than the viewers job's ceiling fits: a ~20-minute unit
   # suite and a browser suite worth hours of runner time. So it gets its own jobs, laid out the way
   # pptx-viewer ran them: one build whose output the others download, a unit job per package, the
@@ -354,9 +452,9 @@ jobs:
   # scripts/ci-plan.mjs).
   pptx-build:
     name: pptx build and checks
-    needs: [plan, build, ui]
+    needs: [plan, build]
     if: |
-      !cancelled() && needs.build.result == 'success' && needs.ui.result == 'success' &&
+      !cancelled() && needs.build.result == 'success' &&
       fromJSON(needs.plan.outputs.plan).pptx.run
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -381,6 +479,7 @@ jobs:
           bun run e2e:contract
           bun run check:viewer-props
           bun run test:binding-packages
+          bun run check:tree-shaking
       # The browser suite regenerates its fixture decks through the core's save pipeline, so a
       # core change that alters a save must commit the refreshed decks, or every later run
       # rewrites them and leaves the working tree dirty.
@@ -441,7 +540,7 @@ jobs:
           esac
 
   pptx-e2e:
-    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }})
+    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.total }})
     needs: [plan, pptx-build]
     # The frameworks the change reaches (pptxPlan): its own binding, the parity reference (react)
     # for shared or engine code, all five for dependencies, CI and the nightly; or, when only spec
@@ -456,8 +555,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.projects }}
-        shard: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.shards }}
+        include: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -475,45 +573,69 @@ jobs:
         with:
           name: pptx-dist
           path: viewers/pptx/packages
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
         run: bun x playwright install --with-deps chromium
-      # Two attempts, as pptx-viewer ran it: a runner-level browser crash should not fail the run.
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: viewers/pptx
+        run: bun x playwright install-deps chromium
+      # The demos are served from their production build (`vite preview`): no cold dependency
+      # optimisation and no unbundled module waterfall per shard. Only the demos the project drives
+      # are built: React plus the project's own binding (React's project sweeps all five).
+      # VITE_PPTX_E2E_HANDLE keeps the `window.__pptxViewer` handle that some specs use, which a
+      # production build otherwise leaves out.
+      - name: Build the demos
+        env:
+          PROJECT: ${{ matrix.project }}
+          VITE_PPTX_E2E_HANDLE: '1'
+        run: |
+          demos="react vue angular vanilla svelte"
+          if [ "$PROJECT" != react ]; then demos="react $PROJECT"; fi
+          for demo in $demos; do
+            (cd "demos/pptx/demo-$demo" && bun run build)
+          done
+      # Playwright retries a failed test once itself. The step runs the shard again only when the
+      # first attempt crashed before recording a report (a runner-level browser crash), never when
+      # Playwright recorded real failures: those fail the job at once.
       - name: Run the browser suite
         working-directory: viewers/pptx
         env:
           PROJECT: ${{ matrix.project }}
           SHARD: ${{ matrix.shard }}
-          TOTAL: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }}
+          TOTAL: ${{ matrix.total }}
           # The changed spec files when only specs changed; empty runs every spec.
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
+          PPTX_E2E_SERVE: preview
         run: |
-          retry_args=()
           for attempt in 1 2; do
             # SPECS is a space-separated list of spec file names, split on purpose.
             # shellcheck disable=SC2086
             bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
-              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github \
-              "${retry_args[@]}" && exit 0
+              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
-            # Playwright clears its output on the next run. Keep the original traces even when
-            # the retry passes, so a flaky test or runner crash can still be investigated.
+            # Playwright clears its output on the next run. Keep the evidence of every attempt.
             evidence="ci-evidence/attempt-$attempt"
             mkdir -p "$evidence"
             for report in test-results playwright-report; do
               if [ -d "$report" ]; then cp -R "$report" "$evidence/"; fi
             done
-            # Avoid repeating a whole shard when Playwright recorded the failures.
-            # A crash before that report exists still retries the complete shard.
+            # Real failures are recorded in .last-run.json: do not repeat the shard for them.
             if node -e 'try { const run = JSON.parse(require("node:fs").readFileSync("test-results/.last-run.json", "utf8")); process.exit(run.status !== "passed" && run.failedTests?.length > 0 ? 0 : 1); } catch { process.exit(1); }'; then
-              retry_args=(--last-failed)
-            else
-              retry_args=()
+              exit "$status"
             fi
             if [ "$attempt" -lt 2 ]; then sleep 15; fi
           done
-          exit $status
+          exit "$status"
       - name: Preserve the report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -556,9 +678,21 @@ jobs:
           for demo in react vue angular vanilla svelte; do
             (cd "demos/pptx/demo-$demo" && bun run build)
           done
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
         run: bun x playwright install --with-deps chromium
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: viewers/pptx
+        run: bun x playwright install-deps chromium
       - name: Run the packaged-build smoke
         working-directory: viewers/pptx
         run: bun run e2e:packaged -- --workers=2 --reporter=list,html,github
@@ -578,9 +712,9 @@ jobs:
   # reasons must not block this repository.
   consumers:
     name: external viewer (${{ matrix.name }})
-    needs: [plan, build, ui]
+    needs: [plan, build]
     if: |
-      !cancelled() && needs.build.result != 'failure' && needs.ui.result != 'failure' &&
+      !cancelled() && needs.build.result != 'failure' &&
       toJSON(fromJSON(needs.plan.outputs.plan).consumers) != '[]'
     runs-on: ubuntu-latest
     strategy:
@@ -644,9 +778,11 @@ jobs:
         test,
         build,
         ui,
+        ui-test,
         scripts,
         mcp,
         viewers,
+        viewer-browser,
         pptx-build,
         pptx-test,
         pptx-e2e,

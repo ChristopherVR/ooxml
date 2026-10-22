@@ -127,7 +127,7 @@ How they connect:
 | How a correctly parsed element is drawn, laid out, hit-tested, animated or exported; any UI decision 2+ bindings need | `src/ui/src/pptx/render/`                                                   |
 | Template/JSX wiring, framework reactivity, binding-only chrome                                                        | `packages/{react,vue,angular,svelte,vanilla}/src/` (all five)               |
 | UI strings                                                                                                            | `src/ui/src/pptx/i18n/` + `packages/locales/src/<locale>/`                  |
-| AI/MCP tool functions                                                                                                 | `packages/tools/src/`                                                       |
+| MCP tool definitions (names, schemas, the tool functions) and their registration                                      | `src/core/pptx/automation/` at the root (`catalogue/` for the MCP list)     |
 | Tool schemas and DOM-free document operations                                                                         | `src/core/pptx/automation/schemas/` and `src/core/pptx/editor/` at the root |
 | A demo app, or a browser test and its fixtures                                                                        | `demos/pptx/demo-*` / `e2e/pptx/` at the root                               |
 
@@ -237,7 +237,7 @@ Files that need more are found by content, so a new test needs no registration:
 `scripts/vitest-dom-hygiene.setup.ts` removes the `document`/`window` listeners a file leaves and
 clears the body, because the DOM is shared too. Tests must still clean up what they change (module
 state, globals, timers): the next file in the worker sees it. `packages/react`'s React 18 leg
-(`vitest.react18.config.ts`) is unchanged and still isolates per file.
+(`vitest.react18.config.ts`) uses the same isolation projects, with the React 18 aliases applied to each.
 
 **Browser tests run React only by default** when not in CI. React is the parity reference: its
 parity specs drive all five demos and diff them against it, so one project still checks every
@@ -249,6 +249,12 @@ binding, at about a fifth of the cost. Run another binding with `--project=<name
   collaboration relay up between runs (Playwright reuses a server that is listening). Restart them
   after rebuilding `ooxml-ui`, core or the angular package, since a running server serves the old
   build. The list lives in `e2e-servers.ts`, which `playwright.config.ts` also uses.
+- `PPTX_E2E_SERVE=preview` serves each demo's built `dist/` with `vite preview` instead of a dev
+  server (CI does this: a react shard went from about 14 to 4 minutes). Build the demos first with
+  `VITE_PPTX_E2E_HANDLE=1 bun run build` in each `demos/pptx/demo-*`; the variable keeps the
+  `window.__pptxViewer` handle that a production build otherwise omits. Only the demos the
+  `--project` list needs are started (React plus the binding; React or no project starts all five).
+  `PPTX_E2E_VITE_FORCE=0` drops `--force` from the dev command.
 - `bun run e2e:changed` runs only the spec files changed against `origin/main`, plus specs that
   import a changed support file. It does not follow a change to product source: for that run the
   affected specs by name (`bun run e2e -- <spec>`), or the project (`bun run verify --browser`).
@@ -259,7 +265,7 @@ binding, at about a fifth of the cost. Run another binding with `--project=<name
 ### `@local-only` e2e tests and the pre-push hook
 
 A few e2e specs do real-time video capture and reliably crash the hosted CI
-runner rather than just failing (see `e2e/export-raster-tiling.spec.ts`), so
+runner rather than just failing (see `e2e/pptx/export-raster-tiling.spec.ts`), so
 they carry the Playwright tag `@local-only` and are excluded from CI via
 `grepInvert` in `playwright.config.ts`. Run them with `bun run
 e2e:local-only` before pushing a change to export or video code. The

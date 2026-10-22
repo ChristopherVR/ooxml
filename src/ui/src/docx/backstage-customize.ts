@@ -14,6 +14,8 @@ export function renderCustomizeRibbon(
 ): void {
 	const ribbon = handlers.ribbon();
 	const hidden = new Set(handlers.hiddenActions());
+	// A control a host capability removed is not the user's to bring back, so it is not listed.
+	const policy = new Set<string>(handlers.customization().hiddenActions);
 	const seen = new Set<string>();
 	const boxes: Array<{ id: string; input: HTMLInputElement }> = [];
 	const commit = () =>
@@ -35,7 +37,7 @@ export function renderCustomizeRibbon(
 				'button[aria-label]:not(.ribbon-launcher):not(.ribbon-overflow-button):not(.style-tile), select[aria-label], input[aria-label]',
 			)) {
 				const id = ribbonControlId(control);
-				if (!id || seen.has(id)) continue;
+				if (!id || seen.has(id) || policy.has(id)) continue;
 				seen.add(id);
 				const row = document.createElement('label');
 				row.className = 'dve-customize-row';

@@ -19,7 +19,6 @@ description: 从查看器导出 PNG、PDF、GIF、WebM 视频和 SVG，另存为
 | 复制为图片     | 栅格化当前幻灯片 → `ClipboardItem({'image/png'})` → 系统剪贴板                              | -                       |
 | 打印           | `usePrint`：幻灯片（矢量 SVG 文档）、大纲（HTML）、备注或讲义（栅格化）、打印窗口           | 打印窗口                |
 | JSON           | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                       | `<name>.json`           |
-| 共享包         | 使用 JSZip 打包序列化后的 `.pptx` 和自动生成的 README                                       | `<name>-package.zip`    |
 | PPTX/PPSX/PPTM | `saveAs(format)` → `PptxHandler.save()` → `Uint8Array`（另存为）                            | `presentation.<format>` |
 
 `<name>` 为去除扩展名后的 `fileName` 属性，默认是 `presentation`。
@@ -92,13 +91,13 @@ function downloadActiveSlideSvg() {
 
 其余接口可以通过 `pptx-vue-viewer/internals` 使用。这些内部构建模块**不受**语义化版本兼容承诺保障，请优先使用稳定的根入口导出：
 
-| 组合式函数          | 返回值                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                                       |
-| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }`，两个导出方法均返回解析为编码后 `Blob` 的 Promise                            |
-| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                                                   |
-| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }`                       |
-| `useExportWiring`   | 查看器自身使用的完整接线逻辑：`rasterizeSlide`、`onExportPng/Pdf/Gif/Webm()`、`downloadAs(format)`、`packageForSharing()`、`onCopySlideAsImage()` |
+| 组合式函数          | 返回值                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                 |
+| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }`，两个导出方法均返回解析为编码后 `Blob` 的 Promise      |
+| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                             |
+| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }` |
+| `useExportWiring`   | 查看器自身使用的完整接线逻辑：`rasterizeSlide`、`onExportPng/Pdf/Gif/Webm()`、`downloadAs(format)`、`onCopySlideAsImage()`  |
 
 `useExport`、`useMediaExport` 和 `usePrint` 使用依赖注入：接受你的 `slides` / `slideCount` ref，以及自行提供的 `rasterizeSlide: (index: number) => Promise<HTMLCanvasElement>`，因此可以驱动任意自行渲染的舞台。
 

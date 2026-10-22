@@ -3,7 +3,7 @@
 OpenTeams n’a pas de service hébergé. L’espace de travail fonctionne soit **sans serveur**
 (`mode: 'local'`, uniquement entre les onglets d’un même navigateur), soit avec **un serveur que
 vous exploitez** et qui respecte trois petits contrats. L’implémentation de référence,
-`openteams-server`, remplit les trois dans un seul processus Node d’environ 300 lignes ; tout autre
+`openteams-server`, remplit les trois dans un seul processus Node ; tout autre
 serveur qui parle les mêmes contrats fonctionne tout aussi bien.
 
 ::: danger Pas de chiffrement de bout en bout
@@ -31,6 +31,8 @@ Il se configure uniquement par l’environnement ; la commande n’accepte aucun
 | `TEAMS_TOKEN`   | aucune            | Si définie, les sockets la reçoivent via `?token=` et les requêtes de fichiers via `Authorization: Bearer`.                                                 |
 | `TEAMS_ORIGINS` | aucune            | `Origin` autorisées pour les sockets et les fichiers, séparées par des virgules. Sans valeur : toute origine avec un jeton, loopback uniquement sans jeton. |
 | `TEAMS_DATA`    | `./data`          | Répertoire de données : instantanés `rooms/<room>.bin` et `files/<workspace>/`.                                                                             |
+
+Le serveur lit d’autres variables pour les comptes (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) et pour les limites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Le [guide de déploiement](/fr/deploy) liste les limites ; le README du serveur est la référence complète. Les options correspondantes de `createTeamsServer` sont `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` et `insecure`.
 
 Ou l’intégrer :
 
@@ -72,6 +74,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | La télécharge en pièce jointe (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                              |
 | `POST /files/link/<workspace>/<name>` | Renvoie `{ url }` : un lien signé pour ce seul fichier, valable cinq minutes, de sorte que le jeton n’apparaisse jamais dans une URL.      |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                              |
+| `POST /auth/session`                  | Signe une session pour `{ user, credential }` (avec limitation de débit). Voir "Accounts and sessions" dans le README du serveur.          |
+| `POST /auth/check`, `/auth/signout`   | Vérifie une `{ session }` (204 ou 401) ; déconnexion, qui révoque les sessions de l’utilisateur.                                           |
+| `POST /auth/revoke`                   | Révocation par l’opérateur de `{ user }` avec `TEAMS_ADMIN_TOKEN` ; un 404 sans jeton d’administration.                                    |
 
 Les noms de salle doivent correspondre à `^[\w-]{1,128}$` et les identifiants d’espace de travail
 dans les chemins de fichiers à `^[\w-]{1,64}$` ; les noms de fichiers sont assainis pour ne garder
@@ -123,11 +128,7 @@ coturn.
 Soyez au clair sur ces points avant d’y faire venir des personnes :
 
 - **Pas de chiffrement de bout en bout.** Il stocke et peut lire chaque message et chaque fichier.
-- **Pas de comptes utilisateur.** `TEAMS_TOKEN` est un secret unique partagé par tous, conservé dans
-  le navigateur. Il tient les inconnus à l’écart du serveur d’une petite équipe ; ce n’est pas une
-  authentification par utilisateur. Les contrôles d’auteur et de rôle dans le client peuvent être
-  contournés par un client hostile, donc le serveur est la frontière de confiance : placez votre
-  propre authentification devant (un proxy qui vérifie une session) pour un usage réel.
+- **Comptes facultatifs et modestes.** Avec `users` (ou `TEAMS_USERS_FILE`) ou une fonction `authenticate`, le serveur signe des sessions (`POST /auth/session`), prend l’identifiant d’utilisateur dans la session et peut la révoquer. Sans eux, `TEAMS_TOKEN` est un secret unique partagé par tous, conservé dans le navigateur, et les identifiants d’utilisateur sont des déclarations. Il n’y a ni réinitialisation de mot de passe, ni gestion de comptes, ni SSO, ni contrôle d’accès par équipe. Les contrôles d’auteur et de rôle dans le client peuvent être contournés par un client hostile, le serveur est donc la frontière de confiance : utilisez `authenticate` avec votre fournisseur d’identité et `authorizeSync` pour des droits par salle.
 - **Pas de TLS propre.** Exécutez-le derrière un proxy inverse qui termine TLS et met à niveau les
   WebSockets ; les navigateurs refusent `ws://` depuis une page `https://`.
 - **Un seul processus, salles en mémoire.** Il ne passe pas à l’échelle horizontalement. Une salle

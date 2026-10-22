@@ -8,18 +8,19 @@ puissiez décider avant de vous y fier.
 OpenTeams n’est pas Microsoft Teams, n’est pas affilié à Microsoft et ne prétend à aucune
 équivalence fonctionnelle. Il implémente :
 
-- des canaux, des messages avec réponses, des réactions, la modification et la suppression
+- des canaux, des messages avec réponses et volets de fils, des réactions, la modification et la suppression
   réservées à l’auteur, la recherche et des compteurs de non-lus ;
-- la présence : qui est en ligne, qui écrit, et une disponibilité que vous définissez (disponible,
-  occupé, absent) ;
+- des discussions 1:1 et de groupe, chacune dans sa propre salle que seuls ses membres peuvent rejoindre ;
+- un fil d’activité et des notifications dans l’application (message, notification du navigateur tant que l’onglet est ouvert, son) ;
+- un calendrier avec réunions, répétitions, rappels et export `.ics` ;
+- la présence : qui est en ligne, qui écrit, et un statut que vous définissez (disponible, occupé, ne pas déranger, de retour bientôt, absent, hors ligne) avec une heure de réinitialisation facultative, un message de statut et le passage automatique en absent en cas d’inactivité ;
 - des réunions dans un canal : audio, vidéo, partage d’écran et main levée, avec un écran de
   pré-connexion ;
 - des fichiers partagés dans la conversation sous forme de liens, les fichiers Word, Excel,
   PowerPoint et Visio étant reconnus par leur nom.
 
-Il n’implémente **pas** de discussions 1:1 ou de groupe en dehors des canaux, de fils de discussion
-dans des volets séparés, de notifications, de calendrier, d’enregistrement, de flou d’arrière-plan
-ni de sous-titres en direct.
+Il n’implémente **pas** l’enregistrement, le flou d’arrière-plan, les sous-titres en direct, les notifications push ou par e-mail
+(les notifications ne fonctionnent que lorsque l’application est ouverte), les invitations hors de l’espace de travail ni les réponses (RSVP).
 
 ## Espace de contenu
 
@@ -27,7 +28,7 @@ Word s’affiche en lecture seule ; Excel permet l’édition locale et l’enre
 copies dans le canal lorsque le stockage est configuré ; Visio utilise sa visionneuse existante.
 Il n’y a ni co-édition, ni écrasement, ni réenregistrement versionné. PowerPoint nécessite une page
 de visionneuse intégrée configurée par l’hôte. Les intégrations manquantes sont signalées dans le
-volet. La lecture de texte est limitée à 2 Mio et celle des fichiers Office natifs à 32 Mio.
+volet. La lecture de texte est limitée à 2 Mio et celle des fichiers Office natifs à 32 Mio. L’interface existe en anglais, allemand, espagnol, français et chinois simplifié (propriété `locale`) ; le texte écrit par les personnes n’est jamais traduit.
 
 Les vues Fichiers permettent l’envoi direct, la création d’un classeur Excel vierge et la recherche
 dans les métadonnées lorsque le stockage est configuré. Les envois affichent un état d’occupation et
@@ -36,9 +37,9 @@ des objets de stockage non référencés ; le serveur de référence n’a pas d
 ces objets. Les dossiers, l’indexation du contenu des documents, l’historique des versions de
 fichiers et les permissions de fichiers authentifiées ne sont pas implémentés.
 
-Markdown prend en charge les titres, les puces, les citations, le code délimité, l’emphase de base
-et les liens web. Il n’implémente pas encore CommonMark/GFM complet, les tableaux, les listes de
-tâches, les structures imbriquées ni les liens relatifs. Le HTML brut est affiché comme du texte.
+Markdown prend en charge les titres, les puces, les citations, le code délimité, l’emphase de base,
+les liens web, les listes de tâches plates, les tableaux de premier niveau et les liens web relatifs au fichier. Il n’implémente pas CommonMark/GFM complet,
+les structures imbriquées ni les liens de référence. Le HTML brut est affiché comme du texte.
 
 Les sites web et les pièces jointes HTML utilisent un bac à sable sans permission de même origine,
 de fenêtre contextuelle ni de navigation de niveau supérieur. Certains sites bloquent l’intégration
@@ -56,9 +57,7 @@ une autorisation côté serveur pour devenir applicables.
   déchiffrer).
 - **L’autorisation est l’affaire du serveur.** Les contrôles d’auteur et de rôle s’exécutent dans
   le client ; un client hostile peut écrire tout ce que le serveur accepte.
-- **Le serveur de référence n’a pas de comptes utilisateur.** Son jeton est un secret unique
-  partagé, conservé dans le navigateur, et non une authentification par utilisateur. Voir [ce que
-  le serveur de référence ne fait pas](/fr/server#ce-que-le-serveur-de-reference-ne-fait-pas).
+- **Les comptes sont facultatifs.** Le serveur de référence peut signer des sessions pour des utilisateurs configurés (ou votre fonction `authenticate`) et prendre l’identifiant d’utilisateur dans la session, et `authorizeSync` peut décider de l’accès par salle. Sans eux, son jeton est un secret unique partagé, conservé dans le navigateur, et non une authentification par utilisateur, et les identifiants d’utilisateur sont des déclarations. Il n’y a ni SSO, ni réinitialisation de mot de passe, ni contrôle d’accès par équipe et par canal. Voir [ce que le serveur de référence ne fait pas](/fr/server#ce-que-le-serveur-de-reference-ne-fait-pas).
 - **La présence est indicative et non authentifiée**, comme toute awareness Yjs : un client peut
   revendiquer n’importe quel nom.
 - Tout ce qu’envoie un pair est revalidé à la relecture et affiché comme du texte, jamais comme du

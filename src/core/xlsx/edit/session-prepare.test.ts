@@ -85,6 +85,29 @@ describe('prepareCalculation', () => {
 		expect([at(wb, 4, 1), at(wb, 4, 2), at(wb, 0, 2)]).toEqual([40, 41, 11]);
 	});
 
+	it('trusts stored values when a large write replaces the only formula that may spill', () => {
+		const build = () => {
+			const wb = opened();
+			const sum = getCell(wb.sheets[1]!, 0, 0)!;
+			delete sum.legacyFormula;
+			sum.dynamicArray = true;
+			return wb;
+		};
+		const block = Array.from({ length: 300 }, (_, r) => Array.from({ length: 4 }, () => r));
+		// The write covers Sheet2!A1: the stored results stand (B5 keeps its stale -1).
+		const replaced = build();
+		const session = createEditSession(replaced);
+		session.prepareCalculation({ timeRemaining: () => Infinity });
+		session.setRangeValues(1, { row: 0, col: 0 }, block);
+		expect([at(replaced, 4, 1), at(replaced, 0, 0, 1)]).toEqual([-1, 0]);
+		// A write elsewhere leaves it in place: everything is calculated again (B5 = 40).
+		const kept = build();
+		const other = createEditSession(kept);
+		other.prepareCalculation({ timeRemaining: () => Infinity });
+		other.setRangeValues(1, { row: 1, col: 0 }, block);
+		expect(at(kept, 4, 1)).toBe(40);
+	});
+
 	it('is a no-op when edits do not recalculate', () => {
 		const manual = opened();
 		manual.calcMode = 'manual';

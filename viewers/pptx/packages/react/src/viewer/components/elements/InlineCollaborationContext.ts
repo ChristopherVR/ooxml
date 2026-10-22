@@ -13,6 +13,6 @@ export interface InlineCollaborationContextValue {
 	registerReader?: (elementId: string, read: () => InlineListReadResult) => () => void;
 }
 
-export const InlineCollaborationContext = createContext<
+export const InlineCollaborationContext = /* @__PURE__ */ createContext<
 	InlineCollaborationContextValue | undefined
 >(undefined);

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, reveal, saveButton } from './helpers';
+import { clickInEditor, newDocument, reveal, saveButton } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: header insertion, typing and body edits share undo and redo`, async ({
@@ -33,7 +33,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(nested).toHaveText('');
 		await page.keyboard.press('Control+y');
 		await expect(nested).toHaveText('Company');
-		await surface.click();
+		await clickInEditor(surface);
 		await page.keyboard.press('End');
 		await page.keyboard.type(' edited');
 		await page.keyboard.press('Control+z');

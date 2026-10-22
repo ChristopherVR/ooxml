@@ -40,13 +40,12 @@ const GLYPH_COMPONENTS: Record<ShapePresetGlyph, React.ElementType> = {
 	triangle: LuTriangle,
 };
 
-export const SHAPE_PRESETS: (ShapePreset & { i18nKey: string })[] = SHAPE_PRESET_DEFS.map(
-	(def) => ({
+export const SHAPE_PRESETS: (ShapePreset & { i18nKey: string })[] =
+	/* @__PURE__ */ SHAPE_PRESET_DEFS.map((def) => ({
 		type: def.type,
 		label: def.label,
 		i18nKey: def.i18nKey,
 		icon: React.createElement(GLYPH_COMPONENTS[def.glyph], {
 			className: def.glyphClass ? `w-3.5 h-3.5 ${def.glyphClass}` : 'w-3.5 h-3.5',
 		}),
-	}),
-);
+	}));

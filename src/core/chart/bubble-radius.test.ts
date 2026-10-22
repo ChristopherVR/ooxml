@@ -35,3 +35,11 @@ describe('bubble envelope', () => {
 		expect(medianBubbleRadius(400, 200)).toBe(8);
 	});
 });
+
+describe('bubble envelope over many points', () => {
+	it('measures more bubbles than a call can pass as arguments', () => {
+		const sizes = Array.from({ length: 200_000 }, (_, i) => i % 50);
+		sizes[90_000] = -75;
+		expect(maxBubbleSize(sizes)).toBe(75);
+	});
+});

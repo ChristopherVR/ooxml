@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-`ooxml-core` is a single package. Security fixes target the **latest release**; there are no long-lived security branches. Upgrade to the latest version before reporting a suspected vulnerability, in case it has been fixed.
+This repository publishes `ooxml-core`, `ooxml-ui`, `ooxml-mcp` and the viewer packages under `viewers/`. Security fixes target the **latest release**; there are no long-lived security branches. Upgrade to the latest version before reporting a suspected vulnerability, in case it has been fixed.
 
 The package parses untrusted Office files (OOXML packages, XML parts, embedded media and metafiles, encrypted packages) and can write them back. Reports about how it handles hostile input are especially welcome: XML entity or DTD handling, zip bombs and path traversal in package parts, unbounded recursion or memory growth, unsafe hyperlink or URL schemes, and weaknesses in the encryption or signature code paths.
 
@@ -18,4 +18,4 @@ You will get an acknowledgement as soon as the maintainer can respond, and updat
 
 ## Scope
 
-In scope: the code in this repository and the published package. Out of scope: vulnerabilities in the viewer applications' UI code (report those in `docx-viewer` or `pptx-viewer`), and in third-party dependencies (report those upstream; we will update once a fix exists).
+In scope: the code in this repository (including `src/ui` and `viewers/`) and the packages published from it. Out of scope: vulnerabilities in third-party dependencies (report those upstream; we will update once a fix exists).

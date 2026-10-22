@@ -77,6 +77,6 @@ en cada párrafo.
 
 La parte de estilos original se conserva al guardar el documento cargado. Todavía no se
 admite crear ni editar definiciones de estilo, estilos de carácter, formato de fragmento
-heredado ni la resolución de temas. Se rechaza la exportación de un paquete nuevo con un
-catálogo de estilos; use Guardar sobre el documento cargado para conservar sus
+heredado ni la resolución de temas. Se rechaza la exportación de un paquete nuevo cuyo
+catálogo de estilos difiere de los valores predeterminados integrados; use Guardar sobre el documento cargado para conservar sus
 definiciones de estilo originales.

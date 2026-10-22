@@ -16,7 +16,7 @@ test('routes both native Record intents once and cleans up on unmount', () => {
 	act(() =>
 		root.render(<RecordSection onRecordFromBeginning={beginning} onRecordFromCurrent={current} />),
 	);
-	expect(target.querySelectorAll('pptx-ui-ribbon-group')).toHaveLength(4);
+	expect(target.querySelectorAll('pptx-ui-ribbon-section > pptx-ui-ribbon-group')).toHaveLength(4);
 	expect(target.querySelectorAll('pptx-ui-ribbon-command[disabled]')).toHaveLength(4);
 	const hosts = ['record.record.fromBeginning', 'record.record.fromCurrent'].map((id) =>
 		target.querySelector(`[data-ribbon-control="${id}"]`)!,

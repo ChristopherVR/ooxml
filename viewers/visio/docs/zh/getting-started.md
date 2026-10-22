@@ -13,7 +13,7 @@
 3. 切换页面、调整缩放、适应页面并选择形状。
 4. 查看兼容性说明。请将重要文件与其在 Microsoft Visio 中的渲染效果进行对比。
 
-不会上传任何文档。这些控件支持搜索、显示图层、实验性的纯文本编辑、有限的撤销/重做、SVG 导出以及明确的 VSDX 副本下载。打印快照仅作为 API 层面的准备工作，不提供打印对话框。通用绘图、PDF 导出以及大多数旧版二进制 `.vsd` 功能不在此版本范围内。
+不会上传任何文档。这些控件支持搜索、显示图层、实验性的纯文本编辑、有限的撤销/重做、SVG 导出以及明确的 VSDX 副本下载。打印快照仅作为 API 层面的准备工作。“文件 > 导出”可以创建由图片页面组成的 PDF，但矢量或可选择文本的 PDF、通用绘图以及大多数旧版二进制 `.vsd` 功能不在此版本范围内。
 
 同一演示环境的其他框架版本列在[演示页面](/demos)中。
 
@@ -80,13 +80,13 @@ viewer.destroy();
 
 ## 运行开发工作区 {#run-the-development-workspace}
 
-请使用 Node.js 22.12 或更高版本。常规构建会从 npm 安装已发布的 `ooxml-core/visio` API。
+查看器属于 `ooxml` 单体仓库，这是一个 Bun 工作区。在仓库根目录运行一次 `bun install` 即可；`ooxml-core`（`src/core/visio`）和 `ooxml-ui`（`src/ui/src/visio`）会解析为同一检出中的包，无需任何链接步骤。
 
 ```bash
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run check
-npm run dev
+bun install
+cd viewers/visio
+bun run check
+bun run dev
 ```
 
 使用 Vite 打印的本地 URL。这会启动开发服务器，不会发布站点。
@@ -111,14 +111,16 @@ npm run dev
 
 ## 属性与事件 {#properties-and-events}
 
-| 接口     | 当前约定                                                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `ribbonAddIns`                                                                                 |
-| 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` |
-| 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`         |
+| 接口     | 当前约定                                                                                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+
+`canEdit` 是编辑权限（查看器默认可编辑；`false` 表示只读），`collaboration` 在房间中共享已打开的图纸，`document-change` 的 `kind` 取值为 `edit`、`undo`、`redo`、`remote` 或 `save`。宿主保存 `exportVsdx()` 返回的字节后，调用 `controller.markClean()` 清除“已更改”标记。若要用查看器的各个部件组合自己的界面，请参阅[构建模块](/building-blocks)；若要共享图纸，请参阅[协作](/zh/collaboration)。
 
 请在宿主元素存在之后再挂载，并在框架视图卸载时调用 `destroy()`。重复销毁是安全的。部分更新会保持未提供的属性不变。完整参考见[查看器 API](/zh/api)。
 
 ## 采用前的验证 {#verification-before-adoption}
 
-在查看器检出目录中运行 `npm run check` 和 `npm run test:browser`。核心解析器测试属于同级引擎。这些检查只能证明其所断言的行为，并不能证明与 Microsoft Visio 在视觉上一致。
+在 `viewers/visio` 中运行 `bun run check` 和 `bun run test:browser`。核心解析器测试与引擎一起位于 `src/core/visio`（在仓库根目录用 `bun run test` 运行）。这些检查只能证明其所断言的行为，并不能证明与 Microsoft Visio 在视觉上一致。

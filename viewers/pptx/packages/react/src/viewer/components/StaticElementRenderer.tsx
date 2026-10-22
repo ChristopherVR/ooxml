@@ -17,6 +17,7 @@ import {
 	isEditableTextElement,
 	renderVectorShape,
 } from '../utils';
+import { withDisplayName } from '../utils/display-name';
 import { renderBody } from './elements/ElementBody';
 import { ShapeEffectOverlay } from './elements/ShapeEffectOverlay';
 import type { StaticElementRendererProps } from './static-element-renderer-types';
@@ -88,7 +89,7 @@ function StaticElementRendererImpl({
 			data-pptx-action={isActionable ? 'click' : undefined}
 			className={getStaticElementWrapperClassName(
 				element,
-				{ isImage, letsTextOverflow, isCallout },
+				{ isImage, letsTextOverflow, isCallout, strokeWidth },
 				positioned,
 				isActionable,
 			)}
@@ -240,5 +241,7 @@ function StaticElementRendererImpl({
  * state must not re-render the whole subtree. The recursion above references
  * this memoized export so nested group children stay memoized too.
  */
-export const StaticElementRenderer = React.memo(StaticElementRendererImpl);
-StaticElementRenderer.displayName = 'StaticElementRenderer';
+export const StaticElementRenderer = /* @__PURE__ */ withDisplayName(
+	/* @__PURE__ */ React.memo(StaticElementRendererImpl),
+	'StaticElementRenderer',
+);

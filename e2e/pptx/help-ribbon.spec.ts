@@ -16,6 +16,10 @@ test('Help ribbon retains settings, shortcuts and accessibility commands', async
 	);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const group = toolbar.locator('pptx-ui-ribbon-group[data-ribbon-group="help.help"]');
+	// Every binding renders the tab through the shared section.
+	await expect(
+		toolbar.locator('pptx-ui-ribbon-section > pptx-ui-ribbon-group[data-ribbon-group="help.help"]'),
+	).toHaveCount(1);
 	await expect(group.locator('pptx-ui-ribbon-command')).toHaveCount(3);
 	expect(
 		await group

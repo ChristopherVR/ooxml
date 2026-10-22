@@ -8,6 +8,7 @@ import {
 	openLanding,
 	part,
 	sheetTabs,
+	statusBar,
 	typeInActiveCell,
 } from './helpers';
 
@@ -22,6 +23,26 @@ test('a .csv file opens through the landing file input', async ({ page }) => {
 	});
 	await expect(grid(page)).toContainText('Grace');
 	await expect(sheetTabs(page)).toContainText('people');
+});
+
+test('a .csv whose part numbers lose leading zeros reports it as a compatibility note', async ({
+	page,
+}) => {
+	await openLanding(page);
+	await (
+		await landingFileInput(page)
+	).setInputFiles({
+		name: 'parts.csv',
+		mimeType: 'text/csv',
+		buffer: Buffer.from('Part,Qty\n00123,4\n00456,7\n'),
+	});
+	await expect(grid(page)).toContainText('456');
+	const notes = statusBar(page).locator('[data-id="notes"]');
+	await expect(notes).toHaveText('1 compatibility note');
+	await notes.click();
+	await expect(page.locator('.xve-compatibility-notes li')).toContainText([
+		'Column A: 2 values lost their leading zeros when converted to numbers (first: A2).',
+	]);
 });
 
 test('a downloaded .xlsx reopens with its edits (save round trip)', async ({ page }) => {

@@ -26,6 +26,21 @@ export const DEFAULT_XML_LIMITS: Readonly<Required<XmlParseLimits>> = {
 	maxNodes: 5_000_000,
 };
 
+/** Thrown when an XML part breaks one of its {@link XmlParseLimits}. */
+export class XmlLimitError extends Error {
+	readonly code = 'xml-limit';
+	/** The limit that was exceeded. */
+	readonly limit: keyof XmlParseLimits;
+	/** Its value: the largest depth or element count allowed. */
+	readonly maximum: number;
+	constructor(message: string, limit: keyof XmlParseLimits, maximum: number) {
+		super(message);
+		this.name = 'XmlLimitError';
+		this.limit = limit;
+		this.maximum = maximum;
+	}
+}
+
 // Tags (with quoted attribute values) give: group 1 `/` for end tags, group 2 the name, group 3
 // `/` for empty-element tags. Comments, CDATA and processing instructions are skipped whole with
 // `indexOf` (see MARKUP_SKIPS), so their text never counts as markup and no scan is quadratic.
@@ -39,7 +54,8 @@ const MARKUP_SKIPS: readonly (readonly [open: string, close: string])[] = [
 ];
 
 /**
- * Linear pre-scan of the markup: throws when nesting depth or the element count exceeds `limits`.
+ * Linear pre-scan of the markup: throws an {@link XmlLimitError} when nesting depth or the
+ * element count exceeds `limits`.
  * It does not check well-formedness; the DOM parser still does that afterwards.
  */
 export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimits = {}): void {
@@ -69,11 +85,25 @@ export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimit
 			continue;
 		}
 		nodes++;
-		if (nodes > maxNodes) throw new Error(`${label} XML exceeds the limit of ${maxNodes} elements`);
+		if (nodes > maxNodes)
+			throw new XmlLimitError(
+				`${label} XML exceeds the limit of ${maxNodes} elements`,
+				'maxNodes',
+				maxNodes,
+			);
 		if (!selfClosing && ++depth > maxDepth)
-			throw new Error(`${label} XML exceeds the nesting depth limit of ${maxDepth}`);
+			throw new XmlLimitError(
+				`${label} XML exceeds the nesting depth limit of ${maxDepth}`,
+				'maxDepth',
+				maxDepth,
+			);
 	}
 }
+
+// Parsing turns the CRLF that Office writes after a part's XML declaration into LF (XML
+// end-of-line handling); a document parsed from such a part is written back with its CRLF.
+const CRLF_DECLARATION = /^<\?xml[^>]*\?>\r\n/;
+const crlfDeclarations = new WeakSet<XmlNode>();
 
 /**
  * Parses an XML part into a DOM document. Parse errors throw (warnings do not), a missing root
@@ -100,11 +130,14 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 	}
 	if (parseError || !parsed.documentElement)
 		throw new Error(`Invalid ${label} XML: ${parseError || 'missing root element'}`);
+	if (CRLF_DECLARATION.test(xml)) crlfDeclarations.add(parsed);
 	return parsed;
 }
 
-export const buildXml = (node: XmlNode): string =>
-	new XMLSerializer().serializeToString(node as unknown as XmldomNode);
+export const buildXml = (node: XmlNode): string => {
+	const xml = new XMLSerializer().serializeToString(node as unknown as XmldomNode);
+	return crlfDeclarations.has(node) ? xml.replace(/^(<\?xml[^>]*\?>)\n/, '$1\r\n') : xml;
+};
 
 export const isElement = (node: Node): node is XmlElement => node.nodeType === 1;
 export const elements = (parent: ParentNode): XmlElement[] =>

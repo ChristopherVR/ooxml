@@ -1,3 +1,4 @@
+import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import type {
 	AwarenessLike,
 	CollaborationConfig,
@@ -6,7 +7,11 @@ import type {
 	YDocLike,
 	YjsFactories,
 } from 'ooxml-ui/pptx';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import {
+	readSlidesFromYDoc,
+	reconcileSlidesInYDoc,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { PptxHandler } from 'pptx-viewer-core';
 import { flushSync } from 'svelte';
@@ -14,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { EditorState } from '../editor/editor-state.svelte';
+import { toViewerStateOptions } from '../state/viewer-state-options';
 import type { CollabSession, CollabSessionFactory } from './collaboration-session';
 import * as sessionModule from './collaboration-session';
 import { CollaborationController } from './collaboration.svelte';
@@ -434,6 +440,97 @@ describe('collaborationController external sessions', () => {
 		host.doc.destroy();
 	});
 
+	it('borrows a shared-contract CollabSession passed as collaboration.session', async () => {
+		const hub = createMemoryHub();
+		const shared = createCollabSession({
+			roomId: 'shared-room',
+			provider: transportProvider({ transport: hub.createTransport('shared-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		const props = { collaboration: { session: shared, user: { name: 'Bo' } } };
+		const options = toViewerStateOptions(() => props as never, {
+			t: (key) => key,
+			getRootEl: () => undefined,
+			getStageHolderEl: () => undefined,
+			getViewportWidth: () => 960,
+			getViewportHeight: () => 540,
+			getMasterScale: () => 1,
+		});
+		const config = options.collaboration as CollaborationConfig;
+		expect(options.collaboration).toBe(config);
+		expect(config).toMatchObject({ roomId: 'shared-room', userName: 'Bo' });
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => config,
+			});
+			await collab.start(config);
+			expect(collab.active).toBeTruthy();
+			collab.stop();
+			expect(collab.active).toBeFalsy();
+			expect(shared.doc.isDestroyed).toBeFalsy();
+		});
+		shared.destroy();
+	});
+
+	it('connects a provider-only config to the provider room and destroys it on stop', async () => {
+		const hub = createMemoryHub();
+		const host = createCollabSession({
+			roomId: 'owned-room',
+			provider: transportProvider({ transport: hub.createTransport('owned-room') }),
+			user: { name: 'Host' },
+			heartbeatMs: 0,
+		});
+		const config = resolveCollaborationConfig({
+			roomId: 'owned-room',
+			provider: transportProvider({ transport: hub.createTransport('owned-room') }),
+			user: { name: 'Ada' },
+			intent: 'join',
+		})!;
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => config,
+			});
+			const starting = collab.start(config);
+			expect(collab.status).toBe('connecting');
+			await starting;
+			flushSync();
+			expect(collab.active).toBeTruthy();
+			expect(collab.state).toMatchObject({ active: true, roomId: 'owned-room' });
+			expect(host.peers()).toHaveLength(1);
+			collab.stop();
+			expect(collab.active).toBeFalsy();
+			expect(host.peers()).toHaveLength(0);
+			expect(host.doc.isDestroyed).toBeFalsy();
+		});
+		host.destroy();
+	});
+
+	it('shares between windows without a server and opens nothing when stopped while pending', async () => {
+		const config = resolveCollaborationConfig({ roomId: 'tabs', user: { name: 'Tab' } })!;
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => config,
+			});
+			await collab.start(config);
+			expect(collab.status).toBe('connected');
+			const pending = collab.start(config);
+			collab.stop();
+			await pending;
+			expect(collab.active).toBeFalsy();
+			expect(collab.status).toBe('disconnected');
+		});
+	});
+
 	it('keeps editing disabled and ignores partial room content until synced', async () => {
 		const host = externalHost([slide('partial', [])], { status: 'connected', synced: false });
 		await inRoot(async () => {
@@ -692,5 +789,73 @@ describe('collaborationController external sessions', () => {
 			createSession.mockRestore();
 			host.doc.destroy();
 		}
+	});
+});
+
+describe('collaborationController state (the shared CollaborationState)', () => {
+	it('reports a host-owned session with its people, then the off state on stop', async () => {
+		const host = externalHost([slide('room', [])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => undefined,
+			});
+			expect(collab.state).toMatchObject({ active: false, status: 'off', people: [] });
+			await collab.start({ ...CONFIG, roomId: 'host-room', externalSession: host.session });
+			flushSync();
+			expect(collab.state).toMatchObject({
+				active: true,
+				roomId: 'host-room',
+				status: 'connected',
+				synced: true,
+			});
+			expect(collab.state.people).toStrictEqual([
+				expect.objectContaining({ clientId: host.doc.clientID, name: 'Tester', self: true }),
+			]);
+			collab.stop();
+			expect(collab.state).toMatchObject({
+				active: false,
+				roomId: undefined,
+				status: 'off',
+				synced: false,
+				people: [],
+			});
+		});
+		host.doc.destroy();
+	});
+
+	it('reports a write-back status for an owner with onWriteBack only', async () => {
+		const host = externalHost([slide('room', [])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => undefined,
+			});
+			await collab.start({
+				...CONFIG,
+				roomId: 'host-room',
+				role: 'owner',
+				onWriteBack: () => {},
+				externalSession: host.session,
+			});
+			flushSync();
+			expect(collab.state.writeBack).toStrictEqual({ status: 'pending' });
+			collab.stop();
+			await collab.start({
+				...CONFIG,
+				roomId: 'host-room',
+				role: 'collaborator',
+				onWriteBack: () => {},
+				externalSession: host.session,
+			});
+			flushSync();
+			expect(collab.state.writeBack).toBeUndefined();
+			collab.stop();
+		});
+		host.doc.destroy();
 	});
 });

@@ -49,6 +49,7 @@ export const zh = {
 					{ text: '在线演示', link: '/demos' },
 					{ text: '架构', link: '/zh/architecture' },
 					{ text: '框架绑定', link: '/bindings' },
+					{ text: '构建块', link: '/building-blocks' },
 					{ text: '模型单位', link: '/model-units' },
 				],
 			},
@@ -82,8 +83,6 @@ export const zh = {
 				items: [
 					{ text: '支持路线图', link: '/parity-roadmap' },
 					{ text: '待完成工作', link: '/outstanding-work' },
-					{ text: 'ooxml-core 计划', link: '/ooxml-core-plan' },
-					{ text: '共享格式代码', link: '/reuse-audit' },
 					{ text: '软件包发布', link: '/releasing' },
 				],
 			},

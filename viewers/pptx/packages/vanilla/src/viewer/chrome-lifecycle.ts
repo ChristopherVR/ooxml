@@ -4,6 +4,7 @@ import {
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isEditingAllowed,
 	isFeatureEnabled,
+	measureViewportClientSize,
 	readRibbonTransitionDraft,
 	resolveViewerRootOptions,
 	safeOpenUrl,
@@ -58,7 +59,10 @@ export interface ChromeLifecycle {
 	detachTouchGestures: () => void;
 	/** Remove the presenting click-to-advance listener. */
 	detachPresentationClick: () => void;
+	/** Refits the slide when the viewport's content box changes size. */
 	resizeObserver: ResizeObserver | null;
+	/** Stop refitting the slide on viewport client-size changes (both observers). */
+	stopObservingViewport: () => void;
 	appliedThemeVars: string[];
 }
 
@@ -577,15 +581,33 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	});
 	presentationRef.current = presentation;
 
+	// Every client-size change, padding-only ones included: the content box misses a padding
+	// change, so the border box is observed too, and a size both report re-renders once. The
+	// stage renders on its own after mount, so only later changes re-render it.
+	let lastSize = measureViewportClientSize(chrome.viewport);
+	const refit = () => {
+		const size = measureViewportClientSize(chrome.viewport);
+		if (size.width === lastSize.width && size.height === lastSize.height) {
+			return;
+		}
+		lastSize = size;
+		renderer.invalidateViewportSize();
+		if (store.get().zoom === 'fit') {
+			renderer.renderStage();
+		}
+	};
 	let resizeObserver: ResizeObserver | null = null;
+	let borderBoxObserver: ResizeObserver | null = null;
 	if (typeof ResizeObserver !== 'undefined') {
-		resizeObserver = new ResizeObserver(() => {
-			if (store.get().zoom === 'fit') {
-				renderer.renderStage();
-			}
-		});
+		resizeObserver = new ResizeObserver(refit);
 		resizeObserver.observe(chrome.viewport);
+		borderBoxObserver = new ResizeObserver(refit);
+		borderBoxObserver.observe(chrome.viewport, { box: 'border-box' });
 	}
+	const stopObservingViewport = () => {
+		resizeObserver?.disconnect();
+		borderBoxObserver?.disconnect();
+	};
 
 	return {
 		chrome,
@@ -594,6 +616,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		detachTouchGestures,
 		detachPresentationClick,
 		resizeObserver,
+		stopObservingViewport,
 		appliedThemeVars,
 	};
 }
@@ -608,7 +631,7 @@ export function unmountChrome(
 	lifecycle.detachKeyboard();
 	lifecycle.detachPresentationClick();
 	lifecycle.detachTouchGestures();
-	lifecycle.resizeObserver?.disconnect();
+	lifecycle.stopObservingViewport();
 	lifecycle.presentation.dispose();
 	// The ribbon registered window/document listeners (group overflow): without this a destroyed
 	// viewer stays reachable from them, pinning the whole ribbon for the life of the page.
@@ -766,6 +789,8 @@ export interface ChromeHost {
 	 * Documents" (0-50), read fresh whenever the Recent list loads.
 	 */
 	getRecentPresentationsCount(): number;
+	/** The host `storage` option: Recent and Account read its recovery store when it has one. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/**
 	 * The deck's parsed `ppt/tableStyles.xml` map, for the table properties
 	 * panel's "Edit style...".
@@ -860,6 +885,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		openVersionHistory: () => host.openVersionHistory(),
 		getChartFollowDataPoint: () => host.getChartFollowDataPoint(),
 		getRecentPresentationsCount: () => host.getRecentPresentationsCount(),
+		getStorage: () => host.getStorage?.(),
 		getTableStyleMap: () => host.getTableStyleMap(),
 		getThemeColorMap: () => host.getThemeColorMap(),
 		getSlides: () => host.store.get().slides,

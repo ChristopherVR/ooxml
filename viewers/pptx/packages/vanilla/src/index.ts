@@ -46,6 +46,7 @@ export type {
 	CollabLoadOrigin,
 	CollaborationLivePatcher,
 	CollaborationShellState,
+	CollaborationState,
 	RemoteCursor,
 	SanitizedPresence,
 	InlineTextEditSnapshot,

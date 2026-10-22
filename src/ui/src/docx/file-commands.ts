@@ -5,35 +5,25 @@
  * print). `share` (the tab row's Share button) has no default: starting a session needs the host's
  * transport and authority (`startCollaboration`), so only a host that handles it does anything.
  */
+import {
+	fileCommandDetail,
+	type FileCommandDetail as SharedFileCommandDetail,
+	type WordFileCommand,
+} from 'ooxml-core/embedding';
 import { emit } from './events';
 
-export type FileCommand =
-	| 'new'
-	| 'open'
-	| 'save'
-	| 'saveAs'
-	| 'export'
-	| 'exportText'
-	| 'print'
-	| 'share';
+/** The File commands this editor announces (the shared `ooxml-core/embedding` type). */
+export type FileCommand = WordFileCommand;
 
-export interface FileCommandDetail {
-	command: FileCommand;
-	/** Save As: the name the user chose. */
-	fileName?: string;
-}
+/** The detail of `file-command`; the shared `ooxml-core/embedding` shape. */
+export type FileCommandDetail = SharedFileCommandDetail<FileCommand>;
 
 export function announceFileCommand(
 	host: HTMLElement,
 	command: FileCommand,
 	fileName?: string,
 ): boolean {
-	return emit(
-		host,
-		'file-command',
-		{ command, ...(fileName === undefined ? {} : { fileName }) },
-		{ cancelable: true },
-	);
+	return emit(host, 'file-command', fileCommandDetail(command, fileName), { cancelable: true });
 }
 
 const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';

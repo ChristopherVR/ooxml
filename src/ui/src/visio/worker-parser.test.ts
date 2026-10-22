@@ -66,3 +66,47 @@ it('times out a stalled converter worker and ignores late completion before a fr
 	expect(first.terminate).toHaveBeenCalledOnce();
 	expect(second.terminate).toHaveBeenCalledOnce();
 });
+
+describe('the worker kept between page reads', () => {
+	const ok = (worker: WorkerLike) =>
+		worker.onmessage?.({ data: { ok: true, document: demoDocument } } as MessageEvent);
+
+	it('serves the next page read and is released by a whole read', async () => {
+		const first = fake(),
+			second = fake();
+		const factory = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
+		const parser = createWorkerParser(factory);
+		const one = parser.pages!(new Uint8Array([1]), ['5']);
+		ok(first);
+		await one;
+		expect(first.terminate).not.toHaveBeenCalled();
+		const two = parser.pages!(new Uint8Array([2]), ['5']);
+		expect(factory).toHaveBeenCalledTimes(1);
+		expect(first.postMessage).toHaveBeenCalledTimes(2);
+		ok(first);
+		await two;
+		const whole = parser(new Uint8Array([3]));
+		expect(first.terminate).toHaveBeenCalledOnce();
+		expect(factory).toHaveBeenCalledTimes(2);
+		ok(second);
+		await whole;
+		expect(second.terminate).toHaveBeenCalledOnce();
+	});
+
+	it('is ended by a failure and by dispose', async () => {
+		const first = fake(),
+			second = fake();
+		const factory = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
+		const parser = createWorkerParser(factory);
+		const failed = parser.pages!(new Uint8Array([1]), ['5']);
+		first.onerror?.({ message: 'bad' } as ErrorEvent);
+		await expect(failed).rejects.toThrow('bad');
+		expect(first.terminate).toHaveBeenCalledOnce();
+		const next = parser.pages!(new Uint8Array([1]), ['5']);
+		expect(factory).toHaveBeenCalledTimes(2);
+		ok(second);
+		await next;
+		parser.dispose?.();
+		expect(second.terminate).toHaveBeenCalledOnce();
+	});
+});

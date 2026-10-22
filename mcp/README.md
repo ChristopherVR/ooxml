@@ -10,7 +10,7 @@
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): **[Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app)** &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
-Combined MCP view of the format tools owned by the viewer repositories.
+Combined MCP view of the standalone format packages in `viewers/*` (`viewers/pptx/packages/tools` for PowerPoint).
 No schemas, document algorithms or mutations are duplicated here.
 
 Install `ooxml-mcp` and the format packages you want to expose:
@@ -39,8 +39,10 @@ Other tools use format prefixes (`docx_`, `xlsx_`, `visio_`).
 
 ## Features
 
-Composes the actual Word, Excel, Visio and PowerPoint tool registrations. The viewer
-packages own schemas and registration; OOXML core owns document algorithms.
+Composes the actual Word, Excel, Visio and PowerPoint tool registrations. The tool
+definitions (names, schemas, bounds, operations) are headless code in OOXML core
+(`src/core/automation/tools/` and `src/core/pptx/automation/catalogue/`); each viewer package
+only registers them, and core owns the document algorithms.
 
 ## Limitations
 

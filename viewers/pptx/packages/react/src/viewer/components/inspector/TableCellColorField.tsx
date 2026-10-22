@@ -22,7 +22,6 @@ import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
  */
 export function TableCellColorField({
 	label,
-	prefix,
 	value,
 	fallback,
 	selectedRef,
@@ -30,8 +29,6 @@ export function TableCellColorField({
 	onCommit,
 }: {
 	label: string;
-	/** Unique key prefix for the theme grid's React list keys. */
-	prefix: string;
 	value: string | undefined;
 	fallback: string;
 	selectedRef: PptxThemeColorRef | undefined;
@@ -50,7 +47,6 @@ export function TableCellColorField({
 				onCommit={(next) => onCommit(next, undefined)}
 			/>
 			<ThemeColorSwatchGrid
-				prefix={prefix}
 				disabled={disabled}
 				selectedRef={selectedRef}
 				selectedHex={hex}

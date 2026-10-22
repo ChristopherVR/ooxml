@@ -57,6 +57,21 @@ const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
 const MESSAGE_QUERY_AWARENESS = 3;
 const ROOM = /^[\w-]{1,128}$/u;
+
+/**
+ * What `authorizeSync` returns: `'write'`, `'read'`, `{ access, principal? }`, or a falsy value
+ * to refuse. A principal (default: the session or claimed user) names the socket for `closeSync`.
+ * @typedef {'write' | 'read' | { access: 'write' | 'read', principal?: string } | null | undefined | false} SyncVerdict
+ */
+
+/** Normalise an `authorizeSync` verdict; null refuses the socket. */
+export function syncGrant(verdict, user) {
+	const access = typeof verdict === 'string' ? verdict : verdict?.access;
+	if (access !== 'write' && access !== 'read') return null;
+	const principal =
+		typeof verdict === 'object' && typeof verdict.principal === 'string' ? verdict.principal : user;
+	return { access, principal: principal ?? null };
+}
 const WS_OPEN = 1;
 const SERVER_OWNER = Symbol('server');
 
@@ -76,6 +91,8 @@ const unlinkQuiet = (path) => {
  *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
  *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number,
+ *   authorizeSync?: (request: { room: string, user: string | null, url: URL,
+ *   headers: Record<string, string | string[] | undefined> }) => SyncVerdict | Promise<SyncVerdict>,
  *   log?: (m: string) => void }} [options]
  */
 export function createTeamsServer(options = {}) {
@@ -97,6 +114,8 @@ export function createTeamsServer(options = {}) {
 		log = () => {},
 	} = options;
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
+	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
+	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;
 	// Real accounts exist: sockets must carry a session. Otherwise identity is a claim (dev default).
 	const authRequired = typeof authenticate === 'function';
 	if (users) {
@@ -250,6 +269,8 @@ export function createTeamsServer(options = {}) {
 			owners: new Map([[awareness.clientID, SERVER_OWNER]]),
 			/** socket -> the user it joined as (chat rooms only) */
 			users: new Map(),
+			/** socket -> { access, principal } from `authorizeSync` (absent: full access) */
+			grants: new Map(),
 			bytes,
 			timer: null,
 			idle: null,
@@ -293,6 +314,7 @@ export function createTeamsServer(options = {}) {
 	function leaveSync(name, room, ws) {
 		const owned = room.conns.get(ws);
 		room.users.delete(ws);
+		room.grants.delete(ws);
 		room.conns.delete(ws);
 		for (const [id, owner] of room.owners) if (owner === ws) room.owners.delete(id);
 		if (owned?.size) awarenessProtocol.removeAwarenessStates(room.awareness, [...owned], null);
@@ -309,8 +331,10 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	function handleSync(ws, name, admission) {
+	function handleSync(ws, name, admission, grant) {
 		const room = getRoom(name);
+		if (grant) room.grants.set(ws, grant);
+		const readOnly = grant?.access === 'read';
 		if (admission) {
 			// A new chat room starts with the members its first socket listed.
 			if (admission.seed.length > 0 && roomMembers(room.doc).size === 0)
@@ -328,6 +352,9 @@ export function createTeamsServer(options = {}) {
 				const decoder = decoding.createDecoder(new Uint8Array(data));
 				const type = decoding.readVarUint(decoder);
 				if (type === MESSAGE_SYNC) {
+					// A read-only socket may ask for the document (step 1), never change it.
+					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
+						return;
 					if (room.bytes + data.byteLength > limits.maxDocBytes) {
 						// The running total over-counts (merged and deleted content shrinks); measure once.
 						room.bytes = Y.encodeStateAsUpdate(room.doc).length;
@@ -734,8 +761,29 @@ export function createTeamsServer(options = {}) {
 			(!rooms.has(name) && rooms.size >= limits.maxRooms)
 		)
 			return reject(socket, '503 Service Unavailable');
-		perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
-		const wss = m[1] === 'sync' ? syncWss : signalWss;
+		const admit = (grant) => {
+			if (socket.destroyed) return;
+			perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
+			upgradeSocket(req, socket, head, m[1], name, admission, sessionUser, ip, grant);
+		};
+		if (m[1] !== 'sync' || !authorizeSync) return admit(null);
+		const user = sessionUser ?? url.searchParams.get('user');
+		Promise.resolve()
+			.then(() => authorizeSync({ room: name, user, url, headers: req.headers }))
+			.then(
+				(verdict) => {
+					const grant = syncGrant(verdict, user);
+					if (!grant) return reject(socket, '403 Forbidden');
+					return admit(grant);
+				},
+				(error) => {
+					log(`sync ${name}: authorizeSync failed (${error?.message ?? error})`);
+					reject(socket, '500 Internal Server Error');
+				},
+			);
+	}
+	function upgradeSocket(req, socket, head, kind, name, admission, sessionUser, ip, grant) {
+		const wss = kind === 'sync' ? syncWss : signalWss;
 		wss.handleUpgrade(req, socket, head, (ws) => {
 			if (sessionUser !== null) {
 				sessionSockets.set(ws, sessionUser);
@@ -747,15 +795,15 @@ export function createTeamsServer(options = {}) {
 				else perIp.set(ip, left);
 			});
 			try {
-				if (m[1] === 'sync') handleSync(ws, name, admission);
+				if (kind === 'sync') handleSync(ws, name, admission, grant);
 				else handleSignal(ws, name);
 			} catch (error) {
-				log(`${m[1]} ${name}: setup failed (${error.message})`);
+				log(`${kind} ${name}: setup failed (${error.message})`);
 				ws.terminate();
 			}
 		});
 	}
-	http.on('upgrade', (req, socket, head) => {
+	const upgrade = (req, socket, head) => {
 		socket.on('error', () => socket.destroy());
 		try {
 			onUpgrade(req, socket, head);
@@ -763,10 +811,52 @@ export function createTeamsServer(options = {}) {
 			log(`upgrade failed (${error.message})`);
 			socket.destroy();
 		}
-	});
+	};
+	http.on('upgrade', upgrade);
 
 	return {
 		http,
+		/**
+		 * Handle a `/sync/<room>` or `/signal/<room>` upgrade that arrived on another HTTP server,
+		 * so a host can serve these sockets from its own origin. Other paths are refused.
+		 */
+		handleUpgrade: upgrade,
+		/**
+		 * Close the sync sockets of `room` (only those whose `authorizeSync` principal is
+		 * `principal`, when given) so they reconnect and are authorised again. Returns the count.
+		 */
+		closeSync(room, principal, code = 4403, reason = 'access changed') {
+			const live = syncRooms.get(room);
+			let closed = 0;
+			for (const ws of live?.conns.keys() ?? []) {
+				if (principal !== undefined && live.grants.get(ws)?.principal !== principal) continue;
+				ws.close(code, reason);
+				closed++;
+			}
+			return closed;
+		},
+		/** The distinct `authorizeSync` principals of the sockets open in a sync room. */
+		syncPrincipals(room) {
+			const grants = [...(syncRooms.get(room)?.grants.values() ?? [])];
+			return [...new Set(grants.map((grant) => grant.principal).filter(Boolean))];
+		},
+		/** Whether a sync room holds no document content yet, live or persisted. */
+		isSyncRoomEmpty(room) {
+			const live = syncRooms.get(room);
+			if (live) return live.doc.store.clients.size === 0;
+			if (!ROOM.test(room)) return true;
+			const file = snapshotPath(room);
+			if (!existsSync(file)) return true;
+			const doc = new Y.Doc();
+			try {
+				Y.applyUpdate(doc, readFileSync(file));
+				return doc.store.clients.size === 0;
+			} catch {
+				return true;
+			} finally {
+				doc.destroy();
+			}
+		},
 		accounts: authRequired,
 		/** Invalidate every session issued for `user` and drop their open sockets. */
 		revokeSessions,

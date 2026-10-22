@@ -25,6 +25,8 @@ Se configura únicamente mediante el entorno; el comando no admite indicadores.
 | `TEAMS_ORIGINS` | ninguno           | `Origin` permitidos, separados por comas, para sockets y archivos. Sin valor: cualquier origen con token, solo loopback sin token. |
 | `TEAMS_DATA`    | `./data`          | Directorio de datos: instantáneas `rooms/<room>.bin` y `files/<workspace>/`.                                                       |
 
+El servidor lee más variables para las cuentas (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) y para los límites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). La [guía de despliegue](/es/deploy) lista los límites; el README del servidor es la referencia completa. Las opciones correspondientes de `createTeamsServer` son `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` e `insecure`.
+
 O incrústalo:
 
 ```js
@@ -65,6 +67,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | Lo descarga como adjunto (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                   |
 | `POST /files/link/<workspace>/<name>` | Devuelve `{ url }`: un enlace firmado para ese único archivo, válido durante cinco minutos, de modo que el token nunca aparece en una URL. |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                              |
+| `POST /auth/session`                  | Firma una sesión para `{ user, credential }` (con límite de frecuencia). Consulta "Accounts and sessions" en el README del servidor.       |
+| `POST /auth/check`, `/auth/signout`   | Comprueba una `{ session }` (204 o 401); cierra sesión, lo que revoca las sesiones del usuario.                                            |
+| `POST /auth/revoke`                   | Revocación por el operador de `{ user }` con `TEAMS_ADMIN_TOKEN`; un 404 sin token de administrador.                                       |
 
 Los nombres de sala deben cumplir `^[\w-]{1,128}$` y los ids de espacio de trabajo en las rutas de archivos `^[\w-]{1,64}$`; los nombres de archivo se depuran a letras, dígitos, `.`, `-`, `_`, espacios y paréntesis, y se limitan a 120 caracteres.
 
@@ -95,7 +100,7 @@ Ambos sockets reciben `?token=<token>` cuando hay un token configurado, porque u
 Ten esto claro antes de poner personas en él:
 
 - **Sin cifrado de extremo a extremo.** Almacena y puede leer todos los mensajes y archivos.
-- **Sin cuentas de usuario.** `TEAMS_TOKEN` es un único secreto compartido para todos, almacenado en el navegador. Mantiene fuera a los extraños del servidor de un equipo pequeño; no es autenticación por usuario. Las comprobaciones de autor y de rol en el cliente pueden ser eludidas por un cliente hostil, así que el servidor es la frontera de confianza: para un uso real, coloca delante tu propia autenticación (un proxy que compruebe una sesión).
+- **Cuentas opcionales y pequeñas.** Con `users` (o `TEAMS_USERS_FILE`) o una función `authenticate`, el servidor firma sesiones (`POST /auth/session`), toma el id de usuario de la sesión y puede revocarla. Sin ellas, `TEAMS_TOKEN` es un único secreto compartido para todos, almacenado en el navegador, y los ids de usuario son declaraciones. No hay restablecimiento de contraseñas, gestión de cuentas, SSO ni control de acceso por equipo. Las comprobaciones de autor y de rol en el cliente pueden eludirse con un cliente hostil, así que el servidor es el límite de confianza: usa `authenticate` con tu proveedor de identidad y `authorizeSync` para permisos por sala.
 - **Sin TLS propio.** Ejecútalo detrás de un proxy inverso que termine TLS y actualice las conexiones a WebSocket; los navegadores rechazan `ws://` desde una página `https://`.
 - **Un proceso, salas en memoria.** No escala horizontalmente. Una sala se descarga 30 segundos después de que se cierre su último socket.
 - **Una instantánea por sala, sin compactación.** El documento crece con el historial y nunca se poda.

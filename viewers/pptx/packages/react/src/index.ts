@@ -24,6 +24,7 @@ export type {
 
 // ── Shared API types ──
 export type { CollaborationContextValue } from './viewer/hooks/collaboration/types';
+export type { CollaborationState } from 'ooxml-core/collab';
 export type { ViewerMode, PowerPointViewerAPI } from 'ooxml-ui/pptx';
 export type {
 	CollaborationConfig,

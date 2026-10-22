@@ -30,6 +30,12 @@ describe('parseXml', () => {
 		expect(buildXml(doc)).toBe(DOC);
 	});
 
+	it('writes a part back with the line break its source had after the declaration', () => {
+		const declaration = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+		for (const gap of ['\r\n', '\n', ''])
+			expect(buildXml(parseXml(`${declaration}${gap}${DOC}`))).toBe(`${declaration}${gap}${DOC}`);
+	});
+
 	it('rejects DTD and entity declarations before parsing', () => {
 		expect(() => parseXml('<!DOCTYPE a [<!ENTITY x "y">]><a>&x;</a>')).toThrow(
 			'OOXML XML with DTD or entity declarations is not supported',

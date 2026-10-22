@@ -134,7 +134,11 @@ export class InsertController {
 				} else if (action.key === 'fields') {
 					// Word's Update Field refreshes everything: captions and references first, then
 					// the tables built from them (headings, then each figure label).
-					let changed = updateFields(view, (id) => blockPageNumbers(this.host.model()).get(id));
+					let changed = updateFields(
+						view,
+						(id) => blockPageNumbers(this.host.model()).get(id),
+						this.host.model(),
+					);
 					for (const label of [undefined, 'Figure', 'Table', 'Equation'])
 						changed = updateTableOfContents(view, this.host.model(), undefined, label) || changed;
 					if (!changed) this.host.reportError(new Error('No fields needed updating.'));
@@ -254,21 +258,28 @@ export class InsertController {
 	private async insertSelectedPicture(): Promise<void> {
 		const file = this.pictureInput.files?.[0];
 		this.pictureInput.value = '';
+		if (file) await this.insertPictureFile(file);
+	}
+
+	/** Stages `file` and inserts it at the selection; false when it could not be inserted. */
+	async insertPictureFile(file: File): Promise<boolean> {
 		const view = this.host.view();
-		if (!file || !view?.editable) return;
+		if (!view?.editable) return false;
 		try {
 			const staged = await stagePicture(file, this.host.contentWidth(), this.host.newMediaPartName);
-			if (this.host.view() !== view || !view.editable) return;
+			if (this.host.view() !== view || !view.editable) return false;
 			this.host.stageMedia?.(staged.image.partName, staged.media);
 			if (staged.svg && staged.image.svgPartName)
 				this.host.stageMedia?.(staged.image.svgPartName, staged.svg);
 			this.pendingMedia.set(staged.image.partName, staged.media);
 			if (staged.svg && staged.image.svgPartName)
 				this.pendingMedia.set(staged.image.svgPartName, staged.svg);
-			insertPicture(view, staged.image);
+			const inserted = insertPicture(view, staged.image);
 			focusView(view);
+			return inserted;
 		} catch (cause) {
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
+			return false;
 		}
 	}
 }

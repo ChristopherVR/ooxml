@@ -27,7 +27,7 @@ The Teams-specific tokens are prefixed `--office-teams-` (brand, rail, panel, bu
 
 ## Following the docs site theme
 
-This site keeps the visitor's appearance choice in `localStorage` under the VitePress key `vitepress-theme-appearance` (`light`, `dark` or `auto`). All the viewer sites share the `christophervr.github.io` origin, and the demo apps in this repository (`demos/theme-sync.ts`) apply it at start-up and on the `storage` event, so toggling the theme on this site restyles an embedded demo without a reload:
+This site keeps the visitor's appearance choice in `localStorage` under the VitePress key `vitepress-theme-appearance` (`light`, `dark` or `auto`). All the viewer sites share the `christophervr.github.io` origin, and the demo apps in this repository (`demos/teams/theme-sync.ts` at the repository root) apply it at start-up and on the `storage` event, so toggling the theme on this site restyles an embedded demo without a reload:
 
 ```ts
 const key = 'vitepress-theme-appearance';

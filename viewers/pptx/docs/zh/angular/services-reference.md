@@ -66,17 +66,17 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 为经过筛选的 `chart-*-options` 组件提供支持，参见[公开服务](/zh/angular/services)。
 
-| 导出项                          | 职责                                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `chart-advanced-helpers` 的导出 | 高级图表配置辅助函数。                                                                         |
-| `chart-combo-stock` 的导出      | 组合图和股价图类型辅助函数。                                                                   |
-| `chart-data-helpers` 的导出     | 图表系列和分类数据编辑辅助函数。                                                               |
-| `chart-editor-styles` 的导出    | 图表编辑器面板共享的样式常量。                                                                 |
-| `chart-event-helpers` 的导出    | 图表交互和事件辅助函数。                                                                       |
-| `chart-overlays` 的导出         | 图表叠加内容的渲染辅助函数，包括数据标签、趋势线和误差线。                                     |
-| `chart-renderer-helpers` 的导出 | 图表视图模型辅助函数，是 `pptx-viewer-shared` 的轻量适配层，包含图表调色板 `DEFAULT_PALETTE`。 |
-| `chart-surface-treemap` 的导出  | 曲面图和树状图布局辅助函数。                                                                   |
-| `chart-waterfall-map` 的导出    | 瀑布图和地图布局辅助函数。                                                                     |
+| 导出项                          | 职责                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `chart-advanced-helpers` 的导出 | 高级图表配置辅助函数。                                                                    |
+| `chart-combo-stock` 的导出      | 组合图和股价图类型辅助函数。                                                              |
+| `chart-data-helpers` 的导出     | 图表系列和分类数据编辑辅助函数。                                                          |
+| `chart-editor-styles` 的导出    | 图表编辑器面板共享的样式常量。                                                            |
+| `chart-event-helpers` 的导出    | 图表交互和事件辅助函数。                                                                  |
+| `chart-overlays` 的导出         | 图表叠加内容的渲染辅助函数，包括数据标签、趋势线和误差线。                                |
+| `chart-renderer-helpers` 的导出 | 图表视图模型辅助函数，是 `ooxml-ui/pptx` 的轻量适配层，包含图表调色板 `DEFAULT_PALETTE`。 |
+| `chart-surface-treemap` 的导出  | 曲面图和树状图布局辅助函数。                                                              |
+| `chart-waterfall-map` 的导出    | 瀑布图和地图布局辅助函数。                                                                |
 
 ## SmartArt 内部接口 {#smartart-internals}
 
@@ -142,7 +142,7 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 ### 幻灯片过渡辅助函数 {#slide-transition-helpers}
 
-`pptx-viewer-shared`（所有绑定共用的框架无关逻辑）是一个私有的、未发布的工作区包，因此搭建自己放映舞台的宿主无法直接 `import` 它。与本页其余内容不同，以下符号是通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 导出的，而不只是 `internals`：ng-packagr 会把这个库编译成单一入口文件，因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
+框架无关的渲染器以 `ooxml-ui/pptx` 发布，宿主可以直接导入。Angular 同样通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 重新导出这些辅助函数，而不只是 `internals`：ng-packagr 会把这个库编译成单一入口文件，因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
 
 | 导出项                                                                                                                            | 职责                                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

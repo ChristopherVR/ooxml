@@ -72,17 +72,16 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ## 画布交互 {#canvas-interaction}
 
-| 组合式函数             | 职责                                                           |
-| ---------------------- | -------------------------------------------------------------- |
-| `useContextMenu`       | 右键或长按触发的元素上下文菜单。                               |
-| `useIsMobile`          | 判断设备、视口、手机、平板和方向。                             |
-| `useTouchGestures`     | 双指缩放、平移和长按手势识别。                                 |
-| `useKeyboardInsets`    | 根据移动端屏幕键盘调整布局。                                   |
-| `useKeyboardShortcuts` | 快捷键目录、分组和匹配解析。                                   |
-| `useSheetDismissDrag`  | 移动端底部抽屉滑动关闭。                                       |
-| `useToolbarAutoHide`   | 鼠标空闲时自动隐藏悬浮放映工具栏。                             |
-| `useDebouncedCallback` | 通用的防抖回调工具。                                           |
-| `useSelection`         | 通用的响应式已选 ID 集合辅助函数，支持单选、追加、切换和清空。 |
+| 组合式函数             | 职责                               |
+| ---------------------- | ---------------------------------- |
+| `useContextMenu`       | 右键或长按触发的元素上下文菜单。   |
+| `useIsMobile`          | 判断设备、视口、手机、平板和方向。 |
+| `useTouchGestures`     | 双指缩放、平移和长按手势识别。     |
+| `useKeyboardInsets`    | 根据移动端屏幕键盘调整布局。       |
+| `useKeyboardShortcuts` | 快捷键目录、分组和匹配解析。       |
+| `useSheetDismissDrag`  | 移动端底部抽屉滑动关闭。           |
+| `useToolbarAutoHide`   | 鼠标空闲时自动隐藏悬浮放映工具栏。 |
+| `useDebouncedCallback` | 通用的防抖回调工具。               |
 
 ## 功能区与工具栏 {#ribbon-toolbar}
 
@@ -134,7 +133,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ### 幻灯片过渡辅助函数 {#slide-transition-helpers}
 
-`pptx-viewer-shared`（所有绑定共用的框架无关逻辑）是一个私有的、未发布的工作区包：它从不发布到 npm，因此该 monorepo 之外的代码无法直接 `import` 它。宿主如果搭建了自己的放映舞台，仍然需要用到过渡解析器和关键帧，因此这里改为重新导出整套接口（源自 `./viewer/composables/slide-transition-css`）：
+所有绑定共用的框架无关逻辑位于 `ooxml-ui/pptx`；私有的 `pptx-viewer-shared` 包只是它的兼容外观。宿主如果搭建了自己的放映舞台，仍然需要用到过渡解析器和关键帧，因此这里改为重新导出整套接口（源自 `./viewer/composables/slide-transition-css`）：
 
 | 导出项                                                                                                                                                          | 职责                                                                                          |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |

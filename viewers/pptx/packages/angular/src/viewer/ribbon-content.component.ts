@@ -76,6 +76,7 @@ import type { RibbonTab } from './ribbon-types';
 					(openFile)="openFile.emit()"
 					(openRecentFile)="openRecentFile.emit($event)"
 					(save)="save.emit()"
+					(savePptx)="savePptx.emit()"
 					(savePpsx)="savePpsx.emit()"
 					(savePptm)="savePptm.emit()"
 					(savePpt)="savePpt.emit()"
@@ -216,6 +217,7 @@ export class RibbonContentComponent {
 	readonly openRecentFile = output<string>();
 	readonly createPresentation = output<string>();
 	readonly save = output<void>();
+	readonly savePptx = output<void>();
 	readonly savePpsx = output<void>();
 	readonly savePptm = output<void>();
 	readonly savePpt = output<void>();

@@ -26,16 +26,37 @@ await editor.load(bytes, 'Budget.xlsx');
 
 Propriétés uniquement :
 
-| Propriété            | Type                                     | Remarques                                                                                                |
-| -------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `themeColors`        | `Partial<Record<...>>`                   | Surcharges de jetons appliquées sous forme de propriétés personnalisées `--xve-*` ([thèmes](/theming)).  |
-| `hiddenActions`      | `string[]`                               | Contrôles du ruban à masquer par identifiant stable.                                                     |
-| `ribbonAddIns`       | `RibbonAddInTab[]`                       | Onglets que l’hôte ajoute après ceux intégrés ([liaisons](/bindings#ribbon-add-in-tabs)).                |
-| `workbook`           | `Workbook \| null`                       | Obtient le classeur ouvert, ou en définit un pour le remplacer.                                          |
-| `dirty`              | `boolean` (lecture seule)                | Modifications non enregistrées.                                                                          |
-| `activeSheet`        | `number`                                 | Indice, à partir de zéro, de la feuille visible.                                                         |
-| `collaboration`      | `XlsxCollaborationOptions \| null`       | Partage le classeur ouvert dans une salle tant qu’elle est définie ([collaboration](/fr/collaboration)). |
-| `collaborationState` | `XlsxCollaborationState` (lecture seule) | Indique si le partage est actif, l’état de la connexion et qui est dans la salle.                        |
+| Propriété            | Type                                     | Remarques                                                                                                                  |
+| -------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `themeColors`        | `Partial<Record<...>>`                   | Surcharges de jetons appliquées sous forme de propriétés personnalisées `--xve-*` ([thèmes](/theming)).                    |
+| `hiddenActions`      | `string[]`                               | Contrôles du ruban, éléments de la barre de titre et entrées de menu contextuel à masquer par identifiant stable.          |
+| `ribbonAddIns`       | `RibbonAddInTab[]`                       | Onglets que l’hôte ajoute après ceux intégrés ([liaisons](/bindings#ribbon-add-in-tabs)).                                  |
+| `customization`      | `ExcelCustomization \| null`             | Capacités, pages de l’hôte dans l’onglet Fichier et commandes de menu de l’hôte (voir [Personnalisation](#customization)). |
+| `workbook`           | `Workbook \| null`                       | Obtient le classeur ouvert, ou en définit un pour le remplacer.                                                            |
+| `dirty`              | `boolean` (lecture seule)                | Modifications non enregistrées.                                                                                            |
+| `activeSheet`        | `number`                                 | Indice, à partir de zéro, de la feuille visible.                                                                           |
+| `collaboration`      | `XlsxCollaborationOptions \| null`       | Partage le classeur ouvert dans une salle tant qu’elle est définie ([collaboration](/fr/collaboration)).                   |
+| `collaborationState` | `XlsxCollaborationState` (lecture seule) | Indique si le partage est actif, l’état de la connexion et qui est dans la salle.                                          |
+
+## Personnalisation {#customization}
+
+`customization` accepte un objet `ExcelCustomization`, le contrat partagé de `ooxml-core/embedding` que les autres éditeurs utilisent aussi. Chaque liaison le transmet comme prop ou entrée `customization`. Il est appliqué quand l’identité de l’objet change ; gardez-le donc stable. `null` rétablit les valeurs par défaut.
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send range', onSelect: ({ ref }) => send(ref) }],
+	},
+};
+```
+
+- `capabilities` : `false` supprime tous les chemins vers la capacité (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`) : ruban, pages de l’onglet Fichier, menus et raccourcis. `hiddenActions` est inchangé ; les deux sont réunis.
+- `backstage.extraPages` : pages de l’hôte `{ id, label, group?, order?, render }` dans l’onglet Fichier, après les pages intégrées de leur groupe. `render` est une fonction de montage, une balise d’élément personnalisé ou `{ element, properties }` et reçoit un `ExcelRegionContext`.
+- `contextMenu.extraCommands` : commandes de l’hôte `{ id, label, icon?, group?, when?, disabled?, onSelect }` au-dessus (`top`, par défaut) ou au-dessous (`bottom`) des entrées intégrées. `onSelect` s’exécute après la fermeture du menu avec un `ExcelMenuContext`. Les libellés sont affichés tels quels (localisez-les vous-même).
+
+`edit: false` est un verrouillage en lecture seule à part entière, à côté de l’interrupteur de lecture seule de l’hôte et d’un rôle de collaboration `viewer` : aucun ne lève un autre. Les capacités sont une politique d’interface, pas une protection du document. Le remplacement de régions (boîte d’options, volets) n’est pas encore proposé pour Excel. Tous les produits réunis : [guide d’intégration](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
 ## Méthodes
 
@@ -61,19 +82,20 @@ Propriétés uniquement :
 
 Tous les événements sont des `CustomEvent` qui remontent et traversent la frontière du shadow DOM (`composed`).
 
-| Événement              | `detail`                                                                                   | Remarques                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `workbook-change`      | `{ workbook }`                                                                             | Après une modification, un chargement ou un nouveau classeur.                                  |
-| `workbook-error`       | `{ error, message }`                                                                       | Un chargement ou un enregistrement a échoué.                                                   |
-| `workbook-warning`     | `{ warnings }`                                                                             | Contenu lu par le chargeur mais qu’il n’a pas pu modéliser.                                    |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                                |
-| `ribbon-action`        | `{ id }`                                                                                   | Une commande du ruban s’est exécutée.                                                          |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Annulable** : `preventDefault()` pour la gérer vous-même.                                    |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` est la plage sélectionnée, `active` la cellule active.                                   |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                                                                |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                                                                |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Une commande d’un onglet de l’hôte (`ribbonAddIns`) a été choisie.                             |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Le partage a démarré ou s’est arrêté, la connexion a changé, ou quelqu’un est arrivé ou parti. |
+| Événement              | `detail`                                                                                   | Remarques                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                             | Après une modification, un chargement ou un nouveau classeur.                                                       |
+| `workbook-error`       | `{ error, message }`                                                                       | Un chargement ou un enregistrement a échoué.                                                                        |
+| `workbook-warning`     | `{ warnings }`                                                                             | Contenu lu par le chargeur mais qu’il n’a pas pu modéliser.                                                         |
+| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                                                     |
+| `ribbon-action`        | `{ id }`                                                                                   | Une commande du ruban s’est exécutée.                                                                               |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Annulable** : `preventDefault()` pour la gérer vous-même.                                                         |
+| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` est la plage sélectionnée, `active` la cellule active.                                                        |
+| `sheet-change`         | `{ index, name }`                                                                          |                                                                                                                     |
+| `dirty-change`         | `{ dirty }`                                                                                |                                                                                                                     |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Une commande d’un onglet de l’hôte (`ribbonAddIns`) a été choisie.                                                  |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Le partage a démarré ou s’est arrêté, la connexion a changé, ou quelqu’un est arrivé ou parti.                      |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                         | Une modification de cellule en cours n’a pas passé la validation et reste ouverte jusqu’à correction ou annulation. |
 
 ```ts
 editor.addEventListener('file-command', (event) => {

@@ -56,6 +56,10 @@ dependencies; document and layout algorithms live in OOXML core.
 The root exports the Svelte component; JavaScript helpers and model exports are
 under `docx-svelte-viewer/runtime`.
 
+## Custom editor UI
+
+To render only the controls you use, with your own design system, use the building blocks. `createViewerBuildingBlocks` returns canvas props for the `documentCanvas` action and flat toolbar, navigation and status props for the optional `Toolbar`, `PageNavigation` and `StatusBar` components. The surface is read-only until you pass `canEdit: true`; a read-only surface still allows selection, keyboard navigation and copy. Hosts that relied on the former editable default must now pass `canEdit: true`. See [Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
+
 ## Limitations
 
 This is an early editor. It does not establish Microsoft Word layout parity or

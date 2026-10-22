@@ -41,6 +41,20 @@ function countFontFaceRules(css: string): number {
 	return (css.match(/@font-face/gu) ?? []).length;
 }
 
+/** A data URL for a minimal TrueType file whose OS/2 table declares `weight`. */
+function ttfDataUrl(weight: number): string {
+	const bytes = new Uint8Array(12 + 16 + 96);
+	const view = new DataView(bytes.buffer);
+	view.setUint32(0, 0x00010000);
+	view.setUint16(4, 1);
+	[...'OS/2'].forEach((char, i) => view.setUint8(12 + i, char.charCodeAt(0)));
+	view.setUint32(20, 28);
+	view.setUint32(24, 96);
+	view.setUint16(28 + 4, weight);
+	view.setUint16(28 + 62, 0x40);
+	return `data:font/ttf;base64,${btoa(String.fromCharCode(...bytes))}`;
+}
+
 describe('useEmbeddedFonts', () => {
 	it('builds two @font-face rules for a font with regular + bold variants', async () => {
 		const fonts: PptxEmbeddedFont[] = [
@@ -138,6 +152,35 @@ describe('useEmbeddedFonts', () => {
 		await nextTick();
 		expect(result.fontFaceCss.value).toBe('');
 		expect(document.getElementById('pptx-vue-embedded-fonts')).toBeNull();
+		stop();
+	});
+
+	it('leaves a Google Fonts typeface whose files are another weight unregistered', async () => {
+		const fonts: PptxEmbeddedFont[] = [
+			makeFont({ name: 'DM Sans Light', dataUrl: ttfDataUrl(600) }),
+			makeFont({ name: 'DM Sans Light', dataUrl: ttfDataUrl(700), bold: true }),
+			makeFont({ name: 'Roboto Mono', dataUrl: ttfDataUrl(400) }),
+		];
+		const { result, stop } = withScope(() => useEmbeddedFonts(ref(fonts)));
+		await nextTick();
+		const css = result.fontFaceCss.value;
+		expect(css).not.toContain('DM Sans Light');
+		expect(countFontFaceRules(css)).toBe(1);
+		// Still listed: the deck embeds it.
+		const listed = result.fontFamilies.value.some((family) => family.startsWith('"DM Sans Light"'));
+		expect(listed).toBeTruthy();
+		stop();
+	});
+
+	it('registers a matching weight variant at its weight', async () => {
+		const fonts: PptxEmbeddedFont[] = [
+			makeFont({ name: 'DM Sans Light', dataUrl: ttfDataUrl(300) }),
+			makeFont({ name: 'DM Sans Light', dataUrl: ttfDataUrl(700), bold: true }),
+		];
+		const { result, stop } = withScope(() => useEmbeddedFonts(ref(fonts)));
+		await nextTick();
+		const weights = [...result.fontFaceCss.value.matchAll(/font-weight: (\d+)/gu)].map((m) => m[1]);
+		expect(weights).toStrictEqual(['300', '700']);
 		stop();
 	});
 });

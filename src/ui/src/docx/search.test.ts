@@ -68,6 +68,26 @@ describe('SearchController', () => {
 		expect(findTextMatches(doc, 'café', true)).toHaveLength(0);
 	});
 
+	it('finds words that hold soft hyphens, which show only where a line breaks, and replaces them whole', () => {
+		const shy = '\u00AD';
+		const doc = schema.node(
+			'doc',
+			null,
+			paragraph('soft', schema.text(`Hyphen${shy}ation and hyphen${shy} and ${shy}hyphen`)),
+		);
+		expect(findTextMatches(doc, 'hyphenation')).toEqual([{ from: 1, to: 13 }]);
+		// A soft hyphen at either end of a match is not part of it.
+		expect(findTextMatches(doc, 'hyphen').map(({ from, to }) => to - from)).toEqual([6, 6, 6]);
+		expect(findTextMatches(doc, `hyphen${shy}ation`)).toHaveLength(1);
+		expect(findTextMatches(doc, shy)).toHaveLength(0);
+		const view = makeView(doc);
+		const search = new SearchController(() => view);
+		search.search('hyphenation');
+		expect(search.replaceAll('splitting')).toBe(1);
+		expect(view.state.doc.textContent).toBe(`splitting and hyphen${shy} and ${shy}hyphen`);
+		view.destroy();
+	});
+
 	it('does not match across paragraphs, cells, or hard breaks', () => {
 		const lineOne = paragraph('one', schema.text('foo'), schema.text('bar', [bold]));
 		const lineTwo = paragraph(

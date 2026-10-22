@@ -1,15 +1,15 @@
-# Contributing to ooxml-core
+# Contributing to ooxml
 
-Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first. Found a security problem? Do **not** open a public issue: see [SECURITY.md](SECURITY.md). Questions and early ideas belong in [Discussions](https://github.com/ChristopherVR/ooxml/discussions) (Q&A and Ideas); issues are for bugs and agreed feature requests.
+Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first. Found a security problem? Do **not** open a public issue: see [SECURITY.md](SECURITY.md). Questions and early ideas belong in [Discussions](https://github.com/ChristopherVR/ooxml/discussions) (Q&A and Ideas), or in the Discord server (see [docs/discord.md](docs/discord.md)); issues are for bugs and agreed feature requests.
 
 ## What belongs here
 
-This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`), organised as **areas** under `src/core/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
+This repository publishes `ooxml-core`, `ooxml-ui`, `ooxml-mcp` and the viewer packages. `ooxml-core` holds all the logic behind the Office products, organised as **areas** under `src/core/<area>/`, each a subpath export (`ooxml-core/xml`). The DOM-only `ooxml-ui` (`src/ui`) holds the shared elements and the product editors (`ooxml-ui/<product>`). The viewers (`viewers/pptx`, `docx`, `xlsx`, `visio`, `teams`) keep only framework bindings, docs sites and standalone MCP packages, with their demos in `demos/` and browser tests in `e2e/`.
 
-- Shared modern OOXML (units, colour, geometry, XML, OPC, and later DrawingML, charts, diagrams) goes in its own area.
-- Format-specific code goes in `docx`, `pptx` or `xlsx`.
+- Shared modern OOXML (units, colour, geometry, XML, OPC, DrawingML, charts, diagrams, maths, collaboration) goes in its own area.
+- Format-specific code goes in `docx`, `pptx`, `xlsx` or `visio`.
 - Legacy binary formats (DOC, XLS, PPT, the compound-file container) belong in [`ole2`](https://github.com/ChristopherVR/ole2), not here. Modern OOXML never goes into `ole2`.
-- UI (components, ribbons, dialogs, styling) belongs in the viewer repositories.
+- UI (components, ribbons, dialogs, styling) belongs in `src/ui` (`src/ui/src/<product>/` for a product editor); framework bindings, demos and browser tests belong in `viewers/<product>`, `demos/` and `e2e/`.
 - Do not add a second package; add an area. Read [AGENTS.md](AGENTS.md) for the full working agreements.
 
 ## Getting set up
@@ -26,7 +26,7 @@ bun run build
 bun run test:package   # packs the build and imports every entry point from a clean install
 ```
 
-The pptx tests read real decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of the pptx-viewer end-to-end decks under `fixtures/e2e`; everything needed is in this repository.
+The pptx tests read real decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of the PowerPoint end-to-end decks (`e2e/pptx/fixtures`) under `fixtures/e2e`; everything needed is in this repository.
 
 ## Code rules
 
@@ -34,7 +34,7 @@ The pptx tests read real decks from `src/core/pptx/__tests__/fixtures`, includin
 - Keep modules under about 300 lines. Tests live next to the code (`*.test.ts`).
 - Add a regression test for every parsing, preservation, round-trip or editing change. Real-file fixtures beat hand-built XML.
 - Unsupported features must be reported, never silently dropped, and nothing may claim Office parity or lossless export without evidence.
-- When moving code in from another repository, add an entry to [PROVENANCE.md](PROVENANCE.md) (source, path, commit, what changed).
+- When moving code in from another repository or area, add an entry to [PROVENANCE.md](PROVENANCE.md) (source, path, commit, what changed).
 - Formatting is `oxfmt` (`bun run fmt`); the project uses tabs and single quotes.
 
 ## Commit conventions
@@ -50,7 +50,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 ```
 
 - **type**: `feat` (minor bump); `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `style`, `chore`, `revert` (patch bump). A `!` after the type/scope, or a `BREAKING CHANGE:` footer, bumps major.
-- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `ci`, `deps`, `docs`.
+- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `xlsx`, `visio`, `drawingml`, `chart`, `math`, `text`, `i18n`, `ribbon`, `teams`, `automation`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
 Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/core/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `src/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
@@ -69,7 +69,8 @@ The release workflow writes `chore(release): bump versions and update changelogs
     (`scripts/bundle-size.mjs`, posted by `.github/workflows/bundle-size-comment.yml`);
   - a **pkg.pr.new** comment with install URLs for preview builds of both packages, so a viewer or
     app can try the change before it is released (`.github/workflows/preview-packages.yml`);
-  - a review from **CodeRabbit** (`.coderabbit.yaml`): suggestions, not a required check.
+  - a review from **Codex** (its GitHub app; comment `@codex review` to rerun it): suggestions, not a
+    required check.
 - `ci-success` also requires no em-dash in the lines you add
   (`scripts/check-em-dashes.mjs`), and the packed packages' types must resolve under NodeNext and
   bundlers (`scripts/check-package-types.mjs`, Are the Types Wrong).
@@ -92,3 +93,12 @@ The release workflow writes `chore(release): bump versions and update changelogs
 ## License
 
 By contributing you agree that your contributions are licensed under the [Apache License 2.0](LICENSE).
+
+## Documentation health
+
+`links.yml` checks external links. `.github/workflows/docs-health.yml` runs `scripts/check-docs.mjs` weekly (no network) and keeps one `docs-health` issue up to date. Run it yourself with `bun run docs:check` (it writes `docs-health.md`; add `--warn-only` to `node scripts/check-docs.mjs` to never fail). It checks every tracked Markdown file except changelogs:
+
+- **Errors:** relative links and images that do not resolve (VitePress `/guide/foo` links resolve against `viewers/<product>/docs`), repository paths in inline code that do not exist (`src/...`, `docs/...`, `viewers/...` and so on; globs and `<placeholders>` are allowed), stale terms, and VitePress sidebar or nav `link:` values with no page.
+- **Warnings:** `#anchor` fragments with no heading, English docs pages in no sidebar, and translations older than their English page. English pages missing from a locale are listed as counts only and never open the issue; `translationScope` in the config limits which pages a locale is meant to cover.
+
+Stale-term rules, routes generated at build time (framework demos, per-package release pages) and paths to skip live in `scripts/check-docs.config.json`. Prefer fixing the document; add an `allow` entry only when the old term is there on purpose (rename history, provenance), or end a line with `em-dash: intended`.

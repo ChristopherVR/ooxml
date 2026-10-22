@@ -107,4 +107,4 @@ function LazyThumbnailInner({
 	);
 }
 
-export const LazyThumbnail = React.memo(LazyThumbnailInner);
+export const LazyThumbnail = /* @__PURE__ */ React.memo(LazyThumbnailInner);

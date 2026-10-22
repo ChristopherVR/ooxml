@@ -165,6 +165,7 @@
 			fileName={props.fileName}
 			onclose={() => (activeTab = 'home')}
 			oncreatepresentation={(templateId) => props.editor.setSlides(createBackstagePresentation(templateId))}
+			onsavefile={props.onsavefile}
 			ondownload={props.ondownload}
 			ondownloadppsx={props.ondownloadppsx}
 			ondownloadpptm={props.ondownloadpptm}

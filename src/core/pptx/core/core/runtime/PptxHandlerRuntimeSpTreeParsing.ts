@@ -367,7 +367,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						slidePath,
 					);
 				}
-				return this.parseShape(node, `${idPrefix}shape-${indexInType}`, slidePath);
+				const parsed = this.parseShape(node, `${idPrefix}shape-${indexInType}`, slidePath);
+				await this.resolveInheritedFillImage(parsed, node as XmlObject, slidePath);
+				return parsed;
 			}
 			case 'p:pic':
 				return this.parsePicture(node, `${idPrefix}pic-${indexInType}`, slidePath);

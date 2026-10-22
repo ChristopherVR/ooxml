@@ -2,6 +2,7 @@
  * Workbook I/O for the element: load (xlsx, xlsm, xls, csv through the core's `loadWorkbook`),
  * new, save, download, and the default handlers of the File commands.
  */
+import { documentSaveMeta, saveToStorage, type DocumentSaveReason } from 'ooxml-core/embedding';
 import { createWorkbook, type Workbook } from 'ooxml-core/xlsx';
 import { createTemplateWorkbook, formatNotes, type TemplateId } from './backstage';
 import type { EditorCore } from './editor-core';
@@ -139,16 +140,41 @@ export async function saveBlob(core: EditorCore): Promise<Blob> {
 	);
 }
 
-/** Saves to a download named after the workbook; .xls and .csv sources become .xlsx (Excel's notice). */
-async function saveDownload(core: EditorCore, chrome?: FileChrome): Promise<void> {
+/** Editors with a save pending; a Save or Save As meanwhile is ignored, not queued. */
+const saving = new WeakSet<EditorCore>();
+
+/** True while `core` has a save pending. */
+export const isSaving = (core: EditorCore): boolean => saving.has(core);
+
+/**
+ * Saves to the host's storage when there is one, else to a download named after the workbook;
+ * .xls and .csv sources become .xlsx (Excel's notice). An edit made while the save runs keeps the
+ * workbook dirty: the saved bytes do not contain it.
+ */
+async function saveDownload(
+	core: EditorCore,
+	chrome?: FileChrome,
+	reason: DocumentSaveReason = 'save',
+): Promise<void> {
 	const source = core.workbook?.format;
-	const name = withExtension(core.fileName, saveExtension(core.fileName));
+	let name = withExtension(core.fileName, saveExtension(core.fileName));
+	// A host that removed Save (`save: false`) never gets `storage.save`: Save As then downloads.
+	const storage = core.customization.commands.has('file.save') ? undefined : core.storage;
+	let edited = false;
+	const changed = () => (edited = true);
+	saving.add(core);
 	chrome?.setSaveState('saving');
 	try {
-		downloadBytes(core.host.ownerDocument, await saveBytes(core, 'xlsx'), name);
+		const bytes = await saveBytes(core, 'xlsx');
+		core.host.addEventListener('workbook-change', changed);
+		if (storage) name = await saveToStorage(storage, bytes, documentSaveMeta(name, reason));
+		else downloadBytes(core.host.ownerDocument, bytes, name);
 	} catch (error) {
 		chrome?.setSaveState('dirty');
 		throw error;
+	} finally {
+		core.host.removeEventListener('workbook-change', changed);
+		saving.delete(core);
 	}
 	if (name !== core.fileName) {
 		core.fileName = name;
@@ -162,14 +188,26 @@ async function saveDownload(core: EditorCore, chrome?: FileChrome): Promise<void
 				'info',
 			);
 	}
+	if (edited) return chrome?.setSaveState('dirty');
 	core.dirty.set(false);
-	chrome?.setSaveState('saved-local');
+	chrome?.setSaveState(storage ? 'saved' : 'saved-local');
 }
 
 export interface FileCommandOptions {
 	chrome?: FileChrome;
 	openBackstage?(page: 'saveAs'): void;
 }
+
+/** The command id (`hiddenActions` / capability id) of each File command. */
+const FILE_COMMAND_IDS: Record<FileCommand, string> = {
+	new: 'file.new',
+	open: 'file.open',
+	save: 'file.save',
+	saveAs: 'file.save-as',
+	export: 'file.export',
+	exportCsv: 'file.export-csv',
+	print: 'file.print',
+};
 
 /** Runs a File command unless a host cancels the `file-command` event to handle it itself. */
 export async function runFileCommand(
@@ -178,6 +216,10 @@ export async function runFileCommand(
 	fileName: string | undefined,
 	options: FileCommandOptions = {},
 ): Promise<void> {
+	// A command a host capability removed (`save: false` and so on) never runs from any entry
+	// point: no `file-command`, no `storage` call.
+	if (core.customization.commands.has(FILE_COMMAND_IDS[command])) return;
+	if ((command === 'save' || command === 'saveAs') && saving.has(core)) return;
 	if (!announceFileCommand(core.host, command, fileName)) return;
 	const { chrome } = options;
 	const t = core.ctx.t;
@@ -198,7 +240,12 @@ export async function runFileCommand(
 					!confirm(t('Discard unsaved changes and open another workbook?'))
 				)
 					return;
-				const file = await pickFile(core.host.shadowRoot ?? core.host);
+				const storage = core.storage;
+				const file = storage?.open
+					? await storage
+							.open()
+							.then((opened) => opened && { bytes: opened.bytes, name: opened.fileName })
+					: await pickFile(core.host.shadowRoot ?? core.host);
 				if (file) await loadInto(core, file.bytes, file.name, chrome);
 				return;
 			}
@@ -209,7 +256,7 @@ export async function runFileCommand(
 				if (!name) return options.openBackstage?.('saveAs');
 				core.fileName = withExtension(name, saveExtension(name));
 				chrome?.fileNameChanged();
-				return await saveDownload(core, chrome);
+				return await saveDownload(core, chrome, 'saveAs');
 			}
 			case 'export':
 				return downloadBytes(

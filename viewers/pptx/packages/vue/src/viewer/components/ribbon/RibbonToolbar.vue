@@ -125,6 +125,7 @@ onBeforeUnmount(() => detachOverflow?.());
 <template>
 	<div
 		role="toolbar"
+		data-pptx-scope
 		data-pptx-chrome="ribbon"
 		:aria-label="t('pptx.toolbar.presentationToolbarAria')"
 		class="relative z-20 border-b border-border bg-secondary/50 overflow-visible"
@@ -178,6 +179,7 @@ onBeforeUnmount(() => detachOverflow?.());
 					:on-export-video="props.onExportVideo"
 					:on-export-gif="props.onExportGif"
 					:on-export-json="props.onExportJson"
+					:on-save="props.onSave"
 					:on-save-as-pptx="props.onSaveAsPptx"
 					:on-save-as-ppsx="props.onSaveAsPpsx"
 					:on-save-as-pptm="props.onSaveAsPptm"

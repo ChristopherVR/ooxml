@@ -14,6 +14,8 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pushBase } from './ci-base.mjs';
+import { SHIPPING_AREA, gitReader, refineManifests } from './ci-manifests.mjs';
 
 export const MAX_SHARDS = 6;
 /** Test files one shard should take before another runner is worth its start-up cost. */
@@ -23,7 +25,7 @@ const ZERO_SHA = /^0+$/;
 /** A copy of a viewer's standalone MCP server, installed on its own from the registry as a user would. */
 const STANDALONE_MCP =
 	'tmp=$(mktemp -d) && node ../../scripts/copy-mcp-sources.mjs mcp "$tmp" && (cd "$tmp" && npm install --ignore-scripts --no-package-lock && npm test)';
-const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
+export const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
 
 /**
  * The viewers that live in this repository under `viewers/<name>`, and the commands that verify
@@ -53,6 +55,7 @@ export const VIEWERS = {
 			'bun run e2e:contract',
 			'bun run check:viewer-props',
 			'bun run test:binding-packages',
+			'bun run check:tree-shaking',
 		],
 	},
 	docx: {
@@ -63,7 +66,7 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
@@ -82,7 +85,7 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
@@ -107,7 +110,7 @@ export const VIEWERS = {
 			],
 			docs: ['bun run test:docs'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build',
 				'bun run test:worker',
@@ -119,6 +122,15 @@ export const VIEWERS = {
 		// Its `test:browser` also loads the built packages in a browser, through the consumer
 		// project `test:packages` writes (`.package-build/consumer.txt`), so both run first.
 		before: { browser: ['bun run build:packages', 'bun run test:packages'] },
+		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
+		// `browserShardCommands` shards the first and leaves the other two on shard 1.
+		browserChain: {
+			sharded: 'bun x playwright test',
+			rest: [
+				'bun x playwright test --config native-blocks.playwright.config.ts',
+				'node scripts/test-packages-browser.mjs',
+			],
+		},
 	},
 	teams: {
 		name: 'teams',
@@ -127,7 +139,7 @@ export const VIEWERS = {
 			types: ['bun run typecheck'],
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke'],
 		},
 		// The demos resolve the framework packages through their built dist.
@@ -150,7 +162,7 @@ const ALL_CONSUMERS = Object.keys(CONSUMERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
-	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
+	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
@@ -162,13 +174,15 @@ const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.g
 const viewerOfFile = (file) => /^(?:viewers|demos|e2e)\/([^/]+)\//.exec(file)?.[1];
 
 /** The area a format owns: only its own viewer can break. */
-const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [] };
+// `SHIPPING_AREA` is a change to the core's shipped manifest fields: it breaks no viewer's checks.
+const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [], [SHIPPING_AREA]: [] };
 const AREA_VIEWERS = {
 	docx: ['docx'],
 	xlsx: ['xlsx'],
 	visio: ['visio'],
 	teams: ['teams'],
 	pptx: ['pptx'],
+	[SHIPPING_AREA]: [],
 };
 
 /** Which external viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
@@ -209,11 +223,19 @@ export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
 /**
  * The Playwright project a cross-binding change runs. React is the parity reference: its parity
  * specs drive all five demos and diff them against it. The other four run for their own changes,
- * and all five on the nightly and on changes to dependencies or CI.
+ * and all five on the nightly, manual full runs and changes to dependencies. A configuration or CI
+ * change on a push or pull request runs the reference alone.
  */
 const PPTX_REFERENCE_PROJECT = 'react';
-/** Shards per Playwright project for a full run of the suite (pptx-viewer settled on ten). */
-export const PPTX_E2E_SHARDS = 10;
+/**
+ * Shards per Playwright project for a full run of the suite. React also runs 34 cross-binding
+ * parity specs that drive all five demos, so at ten shards each react shard took 20 to 25
+ * minutes while the other four took about 12. Fourteen react shards bring it to roughly the
+ * others' length; seven each is enough for the rest.
+ */
+export const PPTX_E2E_SHARDS = { react: 14, vue: 7, angular: 7, vanilla: 7, svelte: 7 };
+/** Shard ceiling when only changed specs run. */
+const PPTX_SPEC_SHARDS_MAX = 10;
 /** Changed spec files one shard takes when only specs changed. */
 const PPTX_SPECS_PER_SHARD = 5;
 
@@ -243,11 +265,11 @@ const isTestFile = (path) => /(\.test\.[cm]?[jt]sx?|\/__tests__\/)/.test(path);
  * to spec files alone runs just those specs. Configuration, fixtures and support code the whole
  * suite depends on run all of it.
  */
-export function pptxPlan(files, { everything, reaches }) {
+export function pptxPlan(files, { everything, reaches, reference = false }) {
 	const none = {
 		run: false,
 		tests: [],
-		e2e: { projects: [], shards: [], total: 0, specs: '' },
+		e2e: { projects: [], matrix: [], specs: '', reason: '' },
 		packaged: false,
 	};
 	if (!reaches) return none;
@@ -255,14 +277,23 @@ export function pptxPlan(files, { everything, reaches }) {
 	const projects = new Set();
 	const specs = new Set();
 	let allLegs = everything;
-	let allProjects = everything;
+	// A full run for a configuration change (not the nightly, not a dependency change) needs only
+	// the parity reference: its specs drive all five demos.
+	const referenceOnly = everything && reference;
+	let allProjects = everything && !referenceOnly;
+	if (referenceOnly) projects.add(PPTX_REFERENCE_PROJECT);
 	let packaged = everything;
 	for (const file of files) {
 		if (file.startsWith('src/core/') || file.startsWith('src/ui/')) {
 			// The engine or the shared elements: every package's tests, the parity reference's browser
-			// run. Their own tests, and the other products' editors in ooxml-ui, change nothing the
-			// viewer runs.
-			if (isTestFile(file) || (UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/')))
+			// run. Their own tests, the other formats' core areas and the other products' editors in
+			// ooxml-ui change nothing the viewer runs (as in `viewerGroups`), also when another file
+			// reaches the viewer.
+			if (
+				isTestFile(file) ||
+				(file.startsWith('src/core/') && !viewersOfArea(file.split('/')[2]).includes('pptx')) ||
+				(UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/'))
+			)
 				continue;
 			allLegs = true;
 			projects.add(PPTX_REFERENCE_PROJECT);
@@ -305,12 +336,16 @@ export function pptxPlan(files, { everything, reaches }) {
 	}
 	const tests = allLegs ? PPTX_LEGS : PPTX_LEGS.filter((leg) => legs.has(leg));
 	let projectList = allProjects ? PPTX_BINDINGS : PPTX_BINDINGS.filter((p) => projects.has(p));
-	let total = projectList.length > 0 ? PPTX_E2E_SHARDS : 0;
+	// Each project takes its own full-suite shard count.
+	let counts = Object.fromEntries(
+		projectList.map((project) => [project, PPTX_E2E_SHARDS[project]]),
+	);
 	let specFilter = '';
 	if (projectList.length === 0 && specs.size > 0) {
 		// Only specs changed: run just those, in every binding, on as few shards as they need.
 		projectList = PPTX_BINDINGS;
-		total = Math.min(PPTX_E2E_SHARDS, Math.ceil(specs.size / PPTX_SPECS_PER_SHARD));
+		const total = Math.min(PPTX_SPEC_SHARDS_MAX, Math.ceil(specs.size / PPTX_SPECS_PER_SHARD));
+		counts = Object.fromEntries(projectList.map((project) => [project, total]));
 		specFilter = [...specs].sort().join(' ');
 	}
 	const run = tests.length > 0 || projectList.length > 0 || packaged;
@@ -319,9 +354,20 @@ export function pptxPlan(files, { everything, reaches }) {
 		tests,
 		e2e: {
 			projects: projectList,
-			shards: Array.from({ length: total }, (_, i) => i + 1),
-			total,
+			// One entry per (project, shard), each carrying its project's shard count.
+			matrix: projectList.flatMap((project) =>
+				Array.from({ length: counts[project] }, (_, i) => ({
+					project,
+					shard: i + 1,
+					total: counts[project],
+				})),
+			),
 			specs: specFilter,
+			reason: referenceOnly
+				? 'reference only: configuration change'
+				: everything
+					? 'all bindings: dependency change, nightly or manual run'
+					: '',
 		},
 		packaged,
 	};
@@ -407,18 +453,58 @@ export function viewerGroups(name, files, { everything }) {
 	};
 }
 
-/** The commands for the groups a change reaches, in order, each once. */
-function verifyCommands(name, { groups, specs }) {
+/**
+ * Playwright shards per viewer for a whole-suite run, from the measured job times (visio 19.5
+ * minutes, docx 15, xlsx 14, teams 6, browser group included). A run narrowed to changed specs
+ * is one shard.
+ */
+export const VIEWER_BROWSER_SHARDS = { docx: 2, xlsx: 2, visio: 2, teams: 1 };
+
+/** The commands of a viewer's browser shard `shard` of `total`, and its unsharded form. */
+function browserShardCommands(viewer, specs, shard, total) {
+	const before = viewer.before?.browser ?? [];
+	const narrowed = specs.size > 0 && viewer.specFilter ? ` ${[...specs].sort().join(' ')}` : '';
+	const flag = total > 1 ? ` --shard=${shard}/${total}` : '';
+	if (viewer.browserChain) {
+		const { sharded, rest } = viewer.browserChain;
+		return {
+			before: shard === 1 ? before : [],
+			test: [`${sharded}${flag}`, ...(shard === 1 ? rest : [])],
+		};
+	}
+	return {
+		before,
+		test: [`bun run test:browser${narrowed || flag ? ' --' : ''}${narrowed}${flag}`],
+	};
+}
+
+/** The browser jobs of viewer `name` for a change: one entry per Playwright shard. */
+function browserEntries(name, { groups, specs }) {
+	if (!groups.has('browser')) return [];
+	const viewer = VIEWERS[name];
+	const total = specs.size > 0 && viewer.specFilter ? 1 : (VIEWER_BROWSER_SHARDS[name] ?? 1);
+	return Array.from({ length: total }, (_, i) => {
+		const { before, test } = browserShardCommands(viewer, specs, i + 1, total);
+		return {
+			name,
+			dir: viewer.dir,
+			shard: i + 1,
+			total,
+			verify: [...before, ...test].join('\n'),
+			// The whole suite in one run, for `verify.mjs --browser` (it runs shard 1 only).
+			local: [...(viewer.before?.browser ?? []), ...viewer.groups.browser].join('\n'),
+		};
+	});
+}
+
+/** The commands for the groups a change reaches, in order, each once (browser has its own jobs). */
+function verifyCommands(name, { groups }) {
 	const viewer = VIEWERS[name];
 	const commands = [];
 	for (const group of GROUP_ORDER) {
-		if (!groups.has(group)) continue;
+		if (!groups.has(group) || group === 'browser') continue;
 		for (const command of [...(viewer.before?.[group] ?? []), ...viewer.groups[group]]) {
-			const narrowed =
-				command === 'bun run test:browser' && specs.size > 0 && viewer.specFilter
-					? `bun run test:browser -- ${[...specs].sort().join(' ')}`
-					: command;
-			if (!commands.includes(narrowed)) commands.push(narrowed);
+			if (!commands.includes(command)) commands.push(command);
 		}
 	}
 	return commands;
@@ -429,7 +515,7 @@ function verifyCommands(name, { groups, specs }) {
  * `testFiles` is the number of test files `vitest --changed` selected, or undefined when it has not
  * been counted (the planner then reports a placeholder and the workflow counts).
  */
-export function plan(changed, { full = false, testFiles } = {}) {
+export function plan(changed, { full = false, testFiles, reference = false } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
 	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
@@ -452,12 +538,15 @@ export function plan(changed, { full = false, testFiles } = {}) {
 
 	// A viewer runs the check groups the change reaches (viewerGroups): its own files, the shared
 	// UI, a core area it reads (not the core's tests), its product editor in ooxml-ui, or everything.
-	const viewerList = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs)
-		.map((key) => ({
-			...VIEWERS[key],
-			verify: verifyCommands(key, viewerGroups(key, live, { everything })),
-		}))
+	const viewerKeys = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs);
+	const reached = Object.fromEntries(
+		viewerKeys.map((key) => [key, viewerGroups(key, live, { everything })]),
+	);
+	const viewerList = viewerKeys
+		.map((key) => ({ ...VIEWERS[key], verify: verifyCommands(key, reached[key]) }))
 		.filter((viewer) => viewer.verify.length > 0);
+	// The browser group runs in its own sharded jobs (`viewer-browser`).
+	const viewerBrowser = viewerKeys.flatMap((key) => browserEntries(key, reached[key]));
 	// pptx is reached by its own files, the core areas it reads and the shared (non-product) UI.
 	const pptxReached =
 		everything ||
@@ -468,7 +557,7 @@ export function plan(changed, { full = false, testFiles } = {}) {
 				(file.startsWith('src/ui/') && !UI_PRODUCT.test(file)) ||
 				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
 		);
-	const pptx = pptxPlan(live, { everything, reaches: pptxReached });
+	const pptx = pptxPlan(live, { everything, reaches: pptxReached, reference });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
 
@@ -489,12 +578,15 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		// the core and the UI built. Only a change to the core or the UI also re-checks them (the
 		// package smoke tests, the core/UI boundary and the UI's own tests); a viewer-only change just
 		// builds them.
-		ui: everything || ui || coreCode || viewerList.length > 0 || pptx.run,
-		build: everything || coreCode || ui || viewerList.length > 0 || pptx.run,
+		ui:
+			everything || ui || coreCode || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
+		build:
+			everything || coreCode || ui || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
 		mcp: everything || mcp,
 		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
+		viewerBrowser,
 		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
 		pptx,
 		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
@@ -561,26 +653,37 @@ function existsAt(ref, file) {
 	}
 }
 
-function main() {
+async function main() {
 	const args = process.argv.slice(2);
 	const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 	const event = value('--event') ?? 'push';
-	const base = value('--base');
+	let base = value('--base');
 	const scope = value('--scope');
 	const onBase = value('--on-base') === 'true';
 	if (onBase && (event !== 'workflow_dispatch' || scope !== 'changed' || !base))
 		throw new Error('A run on the base needs a manual run with scope "changed" and a base commit.');
+	// A push plans from the newest green ancestor (see ci-base.mjs) when the workflow asks for it.
+	let baseSource = '';
+	if (event === 'push' && value('--green-base') === 'true')
+		({ base, source: baseSource } = await pushBase({ before: base }));
 	let changed = plannedFiles(event, base, scope);
 	if (onBase && changed === undefined) throw new Error(`Cannot diff against the base ${base}.`);
 	if (onBase) changed = changed.filter((file) => file && existsAt(base, file));
+	// bun.lock and src/core/package.json are classified by what changed in them (ci-manifests.mjs).
+	let deps = true;
+	if (changed !== undefined && !onBase)
+		({ files: changed, deps } = refineManifests(changed, gitReader(base)));
 	const full = changed === undefined;
-	let result = plan(changed ?? [], { full });
+	// A configuration change on a push or pull request needs one Playwright project, not five.
+	const reference = !full && !deps && (event === 'push' || event === 'pull_request');
+	let result = plan(changed ?? [], { full, reference });
 	if (!result.full && result.test.run) {
 		const count = countTestFiles(base);
 		result = { ...result, test: { ...result.test, shards: shardsFor(count, false), files: count } };
 	}
 	if (onBase && !result.full) result = onBasePlan(result, changed);
 	result.base = full ? '' : base;
+	result.baseSource = baseSource;
 	// The commit every job checks out: the base for a baseline run, otherwise the event's own.
 	result.ref = onBase ? git('rev-parse', `${base}^{commit}`) : '';
 	console.log(JSON.stringify(result, null, 2));
@@ -593,4 +696,8 @@ ref=${result.ref}
 		);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]))
+	main().catch((error) => {
+		console.error(error);
+		process.exitCode = 1;
+	});

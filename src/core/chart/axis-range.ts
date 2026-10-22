@@ -1,6 +1,7 @@
 // Axis ranges and ticks extracted from the PowerPoint renderer.
 import { computeAxisValueRange, computeAxisStackedValueRange } from './axis-range-auto';
 import type { ChartAxisOptions, ChartAxisRange, ChartAxisSeries } from './axis-range-types';
+import { extentOf } from './extent';
 type ValueRange = ChartAxisRange;
 
 /** Compute a logarithmic range snapped to powers of the requested base. */
@@ -14,8 +15,7 @@ export function computeLogValueRange(
 	if (allValues.length === 0) {
 		return { min: 1, max: logBase, span: 1, logScale: true, logBase };
 	}
-	const dataMin = Math.min(...allValues);
-	const dataMax = Math.max(...allValues);
+	const { min: dataMin, max: dataMax } = extentOf(allValues);
 	const logMin = Math.floor(Math.log(dataMin) / Math.log(logBase));
 	const logMax = Math.ceil(Math.log(dataMax) / Math.log(logBase));
 	const min = logBase ** logMin;

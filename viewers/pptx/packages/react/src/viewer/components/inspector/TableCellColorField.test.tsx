@@ -32,6 +32,12 @@ const OFFICE_THEME = {
 let container: HTMLDivElement;
 let root: Root;
 
+/** A Theme Colors swatch of the shared grid, by its label. */
+const themeSwatch = (title: string) =>
+	container
+		.querySelector('pptx-ui-color-grid')
+		?.shadowRoot?.querySelector<HTMLButtonElement>(`button[title="${title}"]`) ?? null;
+
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
@@ -51,7 +57,6 @@ describe('tableCellColorField', () => {
 				<ThemeColorMapProvider value={OFFICE_THEME}>
 					<TableCellColorField
 						label='Background'
-						prefix='table-cell-bg'
 						value='#ffffff'
 						fallback='#ffffff'
 						selectedRef={undefined}
@@ -61,7 +66,7 @@ describe('tableCellColorField', () => {
 				</ThemeColorMapProvider>,
 			);
 		});
-		const accent1 = container.querySelector('button[title="Accent 1"]') as HTMLElement;
+		const accent1 = themeSwatch('Accent 1')!;
 		expect(accent1).not.toBeNull();
 		act(() => accent1.click());
 		expect(committed).toStrictEqual(['#4472c4', { scheme: 'accent1' }]);
@@ -74,7 +79,6 @@ describe('tableCellColorField', () => {
 				<ThemeColorMapProvider value={OFFICE_THEME}>
 					<TableCellColorField
 						label='Background'
-						prefix='table-cell-bg'
 						value='#4472c4'
 						fallback='#ffffff'
 						selectedRef={{ scheme: 'accent1' }}

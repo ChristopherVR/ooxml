@@ -18,7 +18,7 @@ description: 了解 pptx-viewer 的加载和保存流程、mixin 组合运行时
                                |
                                v
 +---------------------------------------------------------------+
-|            Shared rendering layer (pptx-viewer-shared)        |
+|             Shared rendering layer (ooxml-ui/pptx)            |
 |     geometry, styles, gradients, charts, connectors, text     |
 +------------------------------+--------------------------------+
                                |
@@ -33,30 +33,32 @@ description: 了解 pptx-viewer 的加载和保存流程、mixin 组合运行时
 
 ## 框架组件 {#framework-bindings}
 
-各框架组件是较薄的视图层，将 `pptx-viewer-shared` 预先计算的渲染数据转换为对应框架的模板或调用：JSX、Vue SFC、Angular 组件、Svelte 5 runes，以及 Vanilla 版本的原生 DOM 调用。幻灯片使用 HTML/SVG 和 CSS transform 缩放，提供清晰的文本、原生无障碍能力和完整的 DOM 交互。
+各框架组件是较薄的视图层，将 `ooxml-ui/pptx` 预先计算的渲染数据转换为对应框架的模板或调用：JSX、Vue SFC、Angular 组件、Svelte 5 runes，以及 Vanilla 版本的原生 DOM 调用。幻灯片使用 HTML/SVG 和 CSS transform 缩放，提供清晰的文本、原生无障碍能力和完整的 DOM 交互。
 
 每个组件均提供顶层的预览和编辑入口，通过框架惯用的方式协调状态、编辑、加载、导出和放映模式：React 使用 hooks，Vue 使用组合式函数，Angular 使用服务，Svelte 使用 runes，原生 JavaScript 则提供工厂函数和命令式实例 API。五个组件共用相同的共享层，因此渲染输出保持一致。
 
-## 共享渲染层（`pptx-viewer-shared`） {#shared-rendering-layer-pptx-viewer-shared}
+## 共享渲染层（`ooxml-ui/pptx`） {#shared-rendering-layer-pptx-viewer-shared}
 
-大部分预览逻辑不依赖框架，均位于 `packages/shared/src/`。仅 `render/` 目录就包含约 250 个职责明确的模块，例如：
+共享渲染逻辑位于仓库根目录的 `src/ui/src/pptx/`，并通过 `ooxml-ui/pptx` 发布。不依赖 DOM 的文档操作位于 `src/core/pptx/editor/`，工具 schema 位于 `src/core/pptx/automation/schemas/`。渲染层包括：
 
-- **连接线路由**：在障碍物图上运行 A* 路由算法（`connector-router-astar.ts`、`connector-router-graph.ts`），并负责路径构建和重新路由。
+- **连接线路由**：在障碍物图上运行 A* 路由算法（`connector-router-astar.ts`、`connector-router-graph.ts`，现位于共享的 `ooxml-core/geometry` 区域），并负责路径构建和重新路由。
 - **图表计算**：坐标轴范围、分类定位、笛卡尔坐标和极坐标绘图构建器、箱线图统计，以及组合图和股票图的组合逻辑（`chart-*` 系列模块）。
 - **动画和平滑切换引擎**：构建和播放时间线（`animation-timeline-*.ts`），以及平滑切换中的匹配和几何插值（`morph-matching.ts`、`morph-geometry-interp.ts`、`morph-text.ts`）。
 - **文本和样式解析**：项目符号编号、填充和渐变样式、图片效果滤镜，以及禁则换行样式。
-- **数学公式**：OMML 到 MathML、LaTeX 到 OMML 的转换器（`omml-to-mathml.ts`、`latex-to-omml.ts`）。
+- **数学公式**：OMML 到 MathML、LaTeX 到 OMML 的转换器（`omml-to-mathml.ts`、`latex-to-omml.ts`，现位于共享的 `ooxml-core/math` 区域）。
 - **编辑行为**：历史记录、剪贴板、对齐参考线、格式刷、查找替换、协作同步和在线状态。
 
 同级目录还包括 `export/`、`i18n/`、`loader/`、`theme/`，以及可选的 `smartart-3d/` 渲染器。
 
-::: info 内部包
-`pptx-viewer-shared` 是私有包，不发布到 npm。构建时，它的源码会被打包进各个组件；Angular 采用复制源码后随组件构建的方式。这样可以让 React、Vue、Angular、Svelte 和原生 JavaScript 保持功能一致，同时避免重复实现逻辑，对外仍只需为每个框架安装一个包。
+::: info 共享的公共包
+每个组件都将 `ooxml-ui` 声明为运行时依赖，并导入其中的 PowerPoint 入口。Angular 使用同一套公共 API，不再复制源码。私有的 `pptx-viewer-shared` 包仅作为兼容外观保留，不包含任何实现。
 :::
 
 ## 核心引擎（`pptx-viewer-core`） {#core-engine-pptx-viewer-core}
 
 核心包完全不依赖框架，可以在浏览器、Node.js、Web Worker 或 Serverless 函数等 JavaScript 环境中运行。公共入口是 `PptxHandler`。
+
+> **代码所在位置。** 引擎是共享公共包 `ooxml-core` 的 `pptx` 区域（`src/core/pptx/`，子路径为 `/pptx`、`/pptx/converter`、`/pptx/cli`、`/pptx/signature-node`）；查看器目录只保留各框架的适配层。`pptx-viewer-core` 是一个精简的包，以不变的公共 API 重新导出这些子路径，因此下文所有以 `src/core/pptx/` 开头的路径都相对于 monorepo 根目录。引擎仍使用自己的 `fast-xml-parser` 对象模型，并以宽松的 TypeScript 选项编译；把它的 XML 模型与共享的 `xml` 区域统一，并收紧这些选项，是迁移的后续步骤。颜色基础类型、预设形状几何和 EMU 常量与其他 Office 区域共享（`color`、`geometry`、`units`）。
 
 ### 外观接口与 mixin 组合运行时 {#the-facade-and-the-mixin-composed-runtime}
 
@@ -65,12 +67,12 @@ description: 了解 pptx-viewer 的加载和保存流程、mixin 组合运行时
 ```
 PptxHandler                    static factories (create / createBlank)
   └─ PptxHandlerCore           thin facade: load / save / export / encryption
-       └─ IPptxHandlerRuntime  the actual engine, assembled from ~98 mixin modules
+       └─ IPptxHandlerRuntime  the actual engine, assembled from many mixin modules
 ```
 
-- **`PptxHandler`**（`ooxml-core/src/pptx/core/PptxHandler.ts`）添加静态的 `create()` 和 `createBlank()` 构建器入口。
+- **`PptxHandler`**（`src/core/pptx/core/PptxHandler.ts`）添加静态的 `create()` 和 `createBlank()` 构建器入口。
 - **`PptxHandlerCore`** 将解析、序列化和 XML 操作委托给注入的 `IPptxHandlerRuntime`。可以通过构造函数依赖 `runtime` 或 `runtimeFactory` 替换运行时，供测试和其他宿主环境切换实现。
-- **`PptxHandlerRuntime`** 并非集中在一个文件中的单个类，而是由 `ooxml-core/src/pptx/core/core/runtime/` 下约 **98 个职责单一的模块**组合而成。每个模块以 `PptxHandlerRuntime<Concern>.ts` 命名，例如 `PptxHandlerRuntimeChartParsing.ts`、`PptxHandlerRuntimeThemeLoading.ts`、`PptxHandlerRuntimeSaveElementWriter.ts` 和 `PptxHandlerRuntimeSmartArtParsing.ts`。
+- **`PptxHandlerRuntime`** 并非集中在一个文件中的单个类，而是由 `src/core/pptx/core/core/runtime/` 下的许多**职责单一的模块**组合而成。每个模块以 `PptxHandlerRuntime<Concern>.ts` 命名，例如 `PptxHandlerRuntimeChartParsing.ts`、`PptxHandlerRuntimeThemeLoading.ts`、`PptxHandlerRuntimeSaveElementWriter.ts` 和 `PptxHandlerRuntimeSmartArtParsing.ts`。
 
 每个模块声明一个类，继承前一个模块导出的类，形成逐层叠加能力的线性继承链：
 
@@ -165,7 +167,7 @@ Element  ->  Placeholder  ->  Layout  ->  Master  ->  Theme
 
 ### 几何引擎 {#geometry-engine}
 
-`ooxml-core/src/pptx/core/geometry/` （以及共享的 `ooxml-core/src/geometry/` 预设形状表）将 DrawingML 几何转换为可渲染路径：
+`src/core/pptx/core/geometry/`（以及共享的 `src/core/geometry/` 预设形状表）将 DrawingML 几何转换为可渲染路径：
 
 - **预设形状**：按类别组织 ECMA-376 预设形状，例如 `preset-shape-definitions-arrows.ts`、`-flowchart.ts`、`-action-buttons.ts` 和 `-callouts`，并使用规范中的辅助公式描述。
 - **辅助公式计算**（`guide-formula-eval.ts` 等）：实现 ECMA-376 公式语言（`*/`、`+-`、`pin`、`at2`、`cos` 等），使形状几何能够正确响应调整值，也就是 PowerPoint 中可拖动的黄色菱形控点。
@@ -175,19 +177,19 @@ Element  ->  Placeholder  ->  Layout  ->  Master  ->  Theme
 
 ### 转换器 {#converter}
 
-`ooxml-core/src/pptx/converter/` 通过注册表模式实现 PPTX 到 Markdown 的转换。每种元素类型的处理器（例如 `shape-element-processor`、`table-element-processor`、`ole-element-processor`）按 `type` 注册，再由 `PptxMarkdownConverter` 逐元素分派。同一目录还包含 SVG 导出器，以及公式使用的 OMML 到 LaTeX 转换器。
+`src/core/pptx/converter/` 通过注册表模式实现 PPTX 到 Markdown 的转换。每种元素类型的处理器（例如 `shape-element-processor`、`table-element-processor`、`ole-element-processor`）按 `type` 注册，再由 `PptxMarkdownConverter` 逐元素分派。同一目录还包含 SVG 导出器，以及公式使用的 OMML 到 LaTeX 转换器。
 
 ## 关键设计选择 {#key-design-decisions}
 
 | 设计                           | 原因                                                                                                                               |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **基于 CSS 渲染，而非 Canvas** | 提供缩放后清晰的文本、原生无障碍能力、DOM 交互和标准 CSS 样式。                                                                    |
-| **通过 mixin 组合引擎**        | 约 98 个职责单一的小模块将各项能力隔离，便于测试。新增能力和元素类型通过新 mixin 实现，避免文件持续增大。                          |
+| **通过 mixin 组合引擎**        | 许多职责单一的小模块将各项能力隔离，便于测试。新增能力和元素类型通过新 mixin 实现，避免文件持续增大。                              |
 | **使用可辨识联合类型表示元素** | TypeScript 通过 `type` 字段缩小到正确的元素类型，无需类型断言即可保证类型安全。                                                    |
 | **遵循主题解析链**             | 元素、占位符、版式、母版、主题的继承关系与 PowerPoint 一致。                                                                       |
 | **内部使用 EMU 单位**          | 每英寸为 914,400 EMU；96 DPI 下每像素为 9,525 EMU。解析后的元素使用像素，便于布局计算；需要保证往返保存精度的地方保留精确 EMU 值。 |
 | **透传式保存**                 | 只重写编辑过的部分，其余内容原样保留，因此未知标记和厂商扩展不会丢失。                                                             |
-| **共享逻辑，保持组件层精简**   | 不依赖框架的预览逻辑只在 `pptx-viewer-shared` 中实现一次，各框架仅负责视图层，便于五个组件保持一致。                               |
+| **共享逻辑，保持组件层精简**   | 不依赖框架的预览逻辑只在 `ooxml-ui/pptx` 中实现一次，各框架仅负责视图层，便于五个组件保持一致。                                    |
 
 ## 相关阅读 {#related-reading}
 

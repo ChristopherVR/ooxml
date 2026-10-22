@@ -5,10 +5,11 @@ import { EditorView } from 'prosemirror-view';
 import { createContextMenu } from './context-menu';
 import type { RibbonAction } from './ribbon-action';
 import { schema } from './schema';
+import { EMPTY_WORD_CUSTOMIZATION, resolveWordCustomization } from './customization';
 
 afterEach(() => document.body.replaceChildren());
 
-function setup() {
+function setup(customization = EMPTY_WORD_CUSTOMIZATION) {
 	const frame = document.createElement('div');
 	const canvas = document.createElement('div');
 	document.body.append(frame, canvas);
@@ -28,6 +29,7 @@ function setup() {
 		locale: () => 'en',
 		run,
 		warn: vi.fn(),
+		customization: () => customization,
 	});
 	return { frame, menu, run, focusDocument };
 }
@@ -67,5 +69,39 @@ describe('context menu', () => {
 			?.dispatchEvent(new CustomEvent('office-menu-close', { detail: { reason: 'outside' } }));
 		expect(menu.isOpen).toBe(false);
 		expect(focusDocument).not.toHaveBeenCalled();
+	});
+
+	it('adds host commands around the built-in rows and removes capability entries', () => {
+		const onSelect = vi.fn();
+		const { frame, menu, run } = setup(
+			resolveWordCustomization({
+				capabilities: { copy: false, comment: false },
+				contextMenu: {
+					extraCommands: [
+						{ id: 'send', label: 'Send to chat', onSelect },
+						{ id: 'off', label: 'Unavailable', group: 'bottom', disabled: true, onSelect },
+						{ id: 'never', label: 'Never', when: (context) => context.inTable, onSelect },
+					],
+				},
+			}),
+		);
+		menu.open(10, 20);
+		const element = frame.querySelector('office-ui-context-menu') as unknown as HTMLElement & {
+			state: { items: { id: string; separatorBefore?: boolean; disabled?: boolean }[] };
+		};
+		const ids = element.state.items.map((item) => item.id);
+		expect(ids[0]).toBe('host:send');
+		expect(ids.at(-1)).toBe('host:off');
+		expect(ids).not.toContain('copy');
+		expect(ids).not.toContain('cut');
+		expect(ids).not.toContain('comment-add');
+		expect(ids).not.toContain('host:never');
+		expect(element.state.items[1]).toMatchObject({ id: 'paste', separatorBefore: true });
+		element.dispatchEvent(new CustomEvent('office-menu-request', { detail: { id: 'host:send' } }));
+		expect(menu.isOpen).toBe(false);
+		expect(onSelect).toHaveBeenCalledWith(
+			expect.objectContaining({ selectedText: 'el', from: 2, to: 4, readOnly: false }),
+		);
+		expect(run).not.toHaveBeenCalled();
 	});
 });

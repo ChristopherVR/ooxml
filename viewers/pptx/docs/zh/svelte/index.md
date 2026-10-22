@@ -79,19 +79,23 @@ import 'pptx-svelte-viewer/styles.css';
 
 ## 主要导出 {#key-exports}
 
-| 导出项                                                       | 类型 | 用途                                                                                  |
-| ------------------------------------------------------------ | ---- | ------------------------------------------------------------------------------------- |
-| `PowerPointViewer`                                           | 组件 | 查看器和编辑器组件。参见[快速上手](/zh/svelte/getting-started)。                      |
-| `PowerPointViewerProps`, `ViewerLoadDetail`                  | 类型 | 属性和回调载荷。参见[组件属性](/zh/svelte/props)。                                    |
-| `PowerPointViewerApi`                                        | 类型 | 通过 `bind:this` 访问的命令式接口。参见[实例 API](/zh/svelte/api)。                   |
-| `ViewerTheme`, `ViewerThemeColors`                           | 类型 | 主题配置类型。参见[主题](/zh/svelte/theming)。                                        |
-| `vermilionLightTheme`, `vermilionDarkTheme`                  | 常量 | 内置的朱红色亮色和深色预设。                                                          |
-| `themeToCssVars`, `defaultCssVars`                           | 函数 | 将主题转换为 `--pptx-*` CSS 变量。                                                    |
-| `registerTranslations`                                       | 函数 | 注册语言字典。参见[本地化](/zh/svelte/i18n)。                                         |
-| `exportSlideToSvg`, `exportAllSlidesToSvg`, ...              | 函数 | 独立 SVG 导出辅助函数。参见[导出与打印](/zh/svelte/export#svg-standalone-functions)。 |
-| `CollaborationConfig`, `CollaborationRole`                   | 类型 | 实时协同编辑配置。参见[实时协作](/zh/svelte/collaboration)。                          |
-| `getAutosaveSnapshot`, `listAutosaveSnapshots`, ...          | 函数 | 供宿主驱动恢复流程的 IndexedDB 恢复存储辅助函数。                                     |
-| `ExportPdfOptions`, `ExportGifOptions`, `ExportVideoOptions` | 类型 | 命令式导出方法的选项。参见[导出与打印](/zh/svelte/export)。                           |
+| 导出项                                                             | 类型 | 用途                                                                                       |
+| ------------------------------------------------------------------ | ---- | ------------------------------------------------------------------------------------------ |
+| `PowerPointViewer`                                                 | 组件 | 查看器和编辑器组件。参见[快速上手](/zh/svelte/getting-started)。                           |
+| `PowerPointViewerProps`, `ViewerLoadDetail`                        | 类型 | 属性和回调载荷。参见[组件属性](/zh/svelte/props)。                                         |
+| `PowerPointViewerApi`                                              | 类型 | 通过 `bind:this` 访问的命令式接口。参见[实例 API](/zh/svelte/api)。                        |
+| `ViewerTheme`, `ViewerThemeColors`                                 | 类型 | 主题配置类型。参见[主题](/zh/svelte/theming)。                                             |
+| `vermilionLightTheme`, `vermilionDarkTheme`                        | 常量 | 内置的朱红色亮色和深色预设。                                                               |
+| `themeToCssVars`, `defaultCssVars`                                 | 函数 | 将主题转换为 `--pptx-*` CSS 变量。                                                         |
+| `registerTranslations`                                             | 函数 | 注册语言字典。参见[本地化](/zh/svelte/i18n)。                                              |
+| `exportSlideToSvg`, `exportAllSlidesToSvg`, ...                    | 函数 | 独立 SVG 导出辅助函数。参见[导出与打印](/zh/svelte/export#svg-standalone-functions)。      |
+| `CollaborationConfig`, `CollaborationRole`                         | 类型 | 实时协同编辑配置。参见[实时协作](/zh/svelte/collaboration)。                               |
+| `CollaborationTransport`, `CollaborationState`, `ConnectionStatus` | 类型 | 协同编辑的传输方式、共享状态和连接状态类型。                                               |
+| `AutosaveRecord`, `AutosaveStatus`                                 | 类型 | 恢复快照记录和自动保存生命周期状态。                                                       |
+| `loadPresentationDeck`, `SessionDeck`                              | 函数 | 会话恢复辅助函数（`rememberSessionDeck`、`restoreSessionDeck` 等）及其返回的演示文稿类型。 |
+| `PptxAiConfig`, `PptxAiConnection`, ...                            | 类型 | 可选 `ai` 属性的类型。                                                                     |
+| `getAutosaveSnapshot`, `listAutosaveSnapshots`, ...                | 函数 | 供宿主驱动恢复流程的 IndexedDB 恢复存储辅助函数。                                          |
+| `ExportPdfOptions`, `ExportGifOptions`, `ExportVideoOptions`       | 类型 | 命令式导出方法的选项。参见[导出与打印](/zh/svelte/export)。                                |
 
 ## 渲染方式：CSS 与 DOM {#rendering-philosophy-css-not-canvas}
 

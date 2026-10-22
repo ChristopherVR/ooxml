@@ -49,7 +49,7 @@ export function MobileToolbar(props: ToolbarProps): React.ReactElement {
 		undo: onUndo,
 		redo: onRedo,
 		ai: () => props.onToggleAiPanel?.(),
-		save: onSaveAsPptx,
+		save: props.onSave ?? onSaveAsPptx,
 		present: () => onSetMode('present'),
 		share: () => props.onOpenShareDialog?.(),
 	};

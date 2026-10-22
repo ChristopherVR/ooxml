@@ -27,7 +27,7 @@ const MIN_DIM = 4;
  * Renders a shape element to a PNG data-URL using canvas.
  *
  * Works in both browser (HTMLCanvasElement) and server-side
- * environments (@napi-rs/canvas polyfills document.createElement).
+ * environments (a Node canvas package that polyfills document.createElement).
  */
 export function renderShapeToDataUrl(input: ShapeRenderInput): string | null {
 	const style = input.shapeStyle;

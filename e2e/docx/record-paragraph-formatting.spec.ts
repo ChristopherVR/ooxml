@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 const fixture = fileURLToPath(
@@ -24,7 +24,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(body).toContainText('Paragraph');
 		await editor.getByRole('tab', { name: 'Review', exact: true }).click();
 		await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
-		await body.click();
+		await clickInEditor(body);
 		await page.keyboard.press('Control+Home');
 		await page.keyboard.press('Control+e');
 		const revision = body.locator('p.dve-revision-format-markup');

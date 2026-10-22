@@ -105,9 +105,12 @@ it('Angular host signals update the DI composition through its native factory', 
 	const component = createComponent(Host, { environmentInjector: app.injector });
 	app.attachView(component.hostView);
 	component.changeDetectorRef.detectChanges();
-	expect(component.instance.blocks.mode()).toBe('edit');
+	// Permission is granted, but no editable drawing is open, so the effective mode stays 'view'.
+	expect(component.instance.blocks.controller.canEdit).toBe(true);
+	expect(component.instance.blocks.mode()).toBe('view');
 	component.instance.allowed.set(false);
 	component.changeDetectorRef.detectChanges();
+	expect(component.instance.blocks.controller.canEdit).toBe(false);
 	expect(component.instance.blocks.mode()).toBe('view');
 	const destroy = vi.spyOn(component.instance.blocks.controller, 'destroy');
 	app.detachView(component.hostView);

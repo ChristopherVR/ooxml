@@ -16,14 +16,19 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import type {
 	CollabLoadOrigin,
+	CollaborationState,
 	CollaborationConfig,
 	CollaborationLivePatcher,
 	CollaborationRole,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import {
+	buildCollaborationState,
+	writeBackReport,
 	createCollaborationLivePatcher,
 	isMixedContentBlocked,
+	needsOwnedSession,
+	openOwnedCollaboration,
 	registerCollaborationTeardown,
 	resolveTransportForServerUrl,
 	validateRoomId,
@@ -74,9 +79,32 @@ export class CollaborationService {
 
 	// One handle owns viewer wiring, but external transport resources stay borrowed.
 	private session: ActiveSession | null = null;
-	private readonly writeBack = new WriteBackScheduler();
+	private readonly writeBackState = signal<CollaborationState['writeBack']>(undefined);
+	private readonly writeBack = new WriteBackScheduler(() =>
+		this.writeBackState.set(this.writeBack.getState()),
+	);
 	/** Granular local<->doc slide sync (gate + echo dedupe + broadcast/adopt). */
 	private readonly slideSync = new SlideSyncEngine();
+	/** The first exchange with the room finished (the first-write gate is open). */
+	readonly synced = this.slideSync.synced;
+	/** The local awareness client id of the active session, or null. */
+	readonly clientId = signal<number | null>(null);
+	private readonly activeConfig = signal<CollaborationConfig | null>(null);
+	/** The shared `CollaborationState` a host reads (`collaborationChange`). */
+	readonly state = computed<CollaborationState>(() => {
+		const config = this.activeConfig();
+		return buildCollaborationState({
+			active: this.active(),
+			roomId: config?.roomId,
+			status: this.status(),
+			synced: this.synced(),
+			clientId: this.clientId(),
+			userName: config?.userName,
+			userColor: config?.userColor,
+			remoteUsers: this.presence(),
+			writeBack: writeBackReport(config, this.writeBackState()),
+		});
+	});
 
 	private onRemoteSlides: ((slides: PptxSlide[]) => void) | null = null;
 	private canvasWidth = DEFAULT_CANVAS_BOUND;
@@ -86,6 +114,8 @@ export class CollaborationService {
 	private getSaveOptions: (() => PptxHandlerSaveOptions) | null = null;
 	private currentConfig: CollaborationConfig | null = null;
 	private lastConfig: CollaborationConfig | null = null;
+	/** Destroys the session this service opened itself (a provider or same-browser room). */
+	private releaseOwned: (() => void) | null = null;
 	private lastOptions: ConnectOptions = {};
 	/**
 	 * Reentrancy token for connect: every connect/disconnect invalidates pending
@@ -114,16 +144,38 @@ export class CollaborationService {
 		});
 	}
 
-	async connect(config: CollaborationConfig, options: ConnectOptions = {}): Promise<void> {
+	async connect(requested: CollaborationConfig, options: ConnectOptions = {}): Promise<void> {
 		this.disconnect();
 		const token = ++this.connectToken;
-		this.lastConfig = config;
+		this.lastConfig = requested;
 		this.lastOptions = options;
 		try {
-			validateRoomId(config.roomId);
+			validateRoomId(requested.roomId);
 		} catch {
 			this.status.set('error');
 			return;
+		}
+
+		// A `provider` or a same-browser room needs a session this service opens (and destroys
+		// in disconnect()); it then runs through the borrowed-session path below.
+		let config = requested;
+		if (needsOwnedSession(requested)) {
+			this.status.set('connecting');
+			const owned = openOwnedCollaboration(requested);
+			this.releaseOwned = owned.release;
+			try {
+				const prepared = await owned.ready;
+				if (token !== this.connectToken || !prepared) {
+					return;
+				}
+				config = prepared;
+			} catch {
+				if (token === this.connectToken) {
+					this.disconnect();
+					this.status.set('error');
+				}
+				return;
+			}
 		}
 
 		// Blank server URLs select webrtc consistently with Share/Broadcast
@@ -147,7 +199,8 @@ export class CollaborationService {
 		this.getSourceBytes = options.getSourceBytes ?? null;
 		this.getTemplateElements = options.getTemplateElements ?? null;
 		this.getSaveOptions = options.getSaveOptions ?? null;
-		this.currentConfig = config;
+		this.currentConfig = requested;
+		this.activeConfig.set(requested);
 		this.activeRole.set(config.role);
 		this.readOnly.set(Boolean(config.externalSession) || config.role === 'viewer');
 
@@ -179,6 +232,7 @@ export class CollaborationService {
 				return;
 			}
 			this.session = session;
+			this.clientId.set(session.selfId);
 			this.active.set(true);
 			this.refreshPresence();
 			// Readiness can seed/adopt synchronously before this.session exists.
@@ -208,13 +262,18 @@ export class CollaborationService {
 		this.connectToken += 1;
 		this.slideSync.reset();
 		this.writeBack.cancel();
+		this.writeBackState.set(undefined);
 		if (this.session) {
 			this.session.dispose();
 			this.session = null;
 		}
+		this.releaseOwned?.();
+		this.releaseOwned = null;
 		this.livePatcher.configure(null, null);
 		this.onRemoteSlides = null;
 		this.currentConfig = null;
+		this.activeConfig.set(null);
+		this.clientId.set(null);
 
 		this.status.set('disconnected');
 		this.active.set(false);

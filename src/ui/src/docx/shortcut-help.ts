@@ -30,11 +30,18 @@ export function editorShortcutRows(
 	return [...rows].map(([label, keys]) => ({ label, keys: keys.join(' / ') }));
 }
 
-export function shortcutRows(registry: ShortcutRegistry, mac: boolean): ShortcutRow[] {
-	const general = registry.shortcuts.map((shortcut) => ({
-		label: shortcut.label,
-		keys: registry.keysFor(shortcut.id, mac).join(' / '),
-	}));
+/** The rows of the shortcut help; `disabled` (shortcuts a host capability turned off) are left out. */
+export function shortcutRows(
+	registry: ShortcutRegistry,
+	mac: boolean,
+	disabled: ReadonlySet<string> = new Set(),
+): ShortcutRow[] {
+	const general = registry.shortcuts
+		.filter((shortcut) => !disabled.has(shortcut.id))
+		.map((shortcut) => ({
+			label: shortcut.label,
+			keys: registry.keysFor(shortcut.id, mac).join(' / '),
+		}));
 	return [...general, ...editorShortcutRows(mac)].filter((row) => row.keys);
 }
 

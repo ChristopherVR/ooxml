@@ -9,6 +9,7 @@ import {
 	type PasteRequest,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { customizationOf } from './customization';
 
 export interface ClipboardHost {
 	ctx: EditorContext;
@@ -109,6 +110,11 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 	};
 
 	const onCopy = (event: ClipboardEvent) => {
+		// `capabilities.copy` off: nothing leaves the workbook, not even through the browser.
+		if (customizationOf(ctx).commands.has(event.type === 'cut' ? 'edit.cut' : 'edit.copy')) {
+			event.preventDefault();
+			return;
+		}
 		if (host.isEditing()) return;
 		const payload = pendingNative ?? copy(event.type === 'cut');
 		pendingNative = undefined;

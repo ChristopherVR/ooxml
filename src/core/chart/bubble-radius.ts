@@ -3,6 +3,7 @@
  * chart's `c:bubbleScale`, `c:sizeRepresents` and `c:showNegBubbles`. Moved from the PowerPoint
  * renderer (`chart-view-model-points.ts`) so the shared SVG painter sizes bubbles identically.
  */
+import { extentOf } from './extent';
 
 /** `c:bubbleScale` / `c:sizeRepresents` inputs to {@link computeBubbleRadius}. */
 export interface BubbleRadiusOptions {
@@ -43,7 +44,7 @@ export function computeBubbleRadius(
 
 /** The size every bubble of the chart is measured against: the largest magnitude, at least 1. */
 export function maxBubbleSize(sizes: readonly number[]): number {
-	return sizes.length > 0 ? Math.max(1, ...sizes.map(Math.abs)) : 1;
+	return Math.max(1, extentOf(sizes.map(Math.abs)).max);
 }
 
 /** The median bubble radius for a plot area (4% of its shorter side). */

@@ -103,6 +103,15 @@ describe('buildGoogleFontsFragment', () => {
 			'ADLaM Display:ital,wght@0,400;0,700;1,400;1,700',
 		);
 	});
+
+	it('adds extra weights as sorted upright and italic tuples', () => {
+		expect(buildGoogleFontsFragment('DM Sans', [600, 300, 700])).toBe(
+			'DM Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700',
+		);
+		expect(buildGoogleFontsFragment('DM Sans', [700, 400])).toBe(
+			'DM Sans:ital,wght@0,400;0,700;1,400;1,700',
+		);
+	});
 });
 
 describe('buildGoogleFontsHref', () => {
@@ -201,6 +210,20 @@ describe('matchGoogleWebfontFragments', () => {
 		]);
 	});
 
+	it('requests a weight variant from its base family, with the weights the deck uses', () => {
+		expect(
+			matchGoogleWebfontFragments(['DM Sans Light', 'DM Sans', 'DM Sans Medium', 'DM Sans Black']),
+		).toStrictEqual([
+			'DM Sans:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400;1,500;1,700;1,900',
+		]);
+	});
+
+	it('keeps the universal axis for catalogue families named with a weight word', () => {
+		expect(matchGoogleWebfontFragments(['Archivo Black'])).toStrictEqual([
+			'Archivo Black:ital,wght@0,400;0,700;1,400;1,700',
+		]);
+	});
+
 	it('dedupes two families that resolve to the same clone into one fragment', () => {
 		// Aptos and Calibri both resolve to Carlito; the request should not
 		// ask Google Fonts for the same family twice.
@@ -223,6 +246,16 @@ describe('resolveGoogleWebfontHref', () => {
 		await expect(
 			resolveGoogleWebfontHref([slide(textEl('Totally Unknown Face'))], []),
 		).resolves.toBeNull();
+	});
+
+	it('requests an embedded family whose files do not match it', async () => {
+		// The embedded entry has no readable file, so it is trusted; see
+		// `embedded-font-trust.test.ts` for the files that are not.
+		await expect(
+			resolveGoogleWebfontHref([slide(textEl('DM Sans Light'))], [{ name: 'DM Sans Light' }]),
+		).resolves.toBeNull();
+		const href = await resolveGoogleWebfontHref([slide(textEl('DM Sans Light'))], [], () => false);
+		expect(href).toContain(`family=${encodeURIComponent('DM Sans:ital,wght@0,300;0,400;0,700')}`);
 	});
 
 	it('resolves an unembedded Office font to its metric-compatible clone', async () => {

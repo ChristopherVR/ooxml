@@ -1,6 +1,7 @@
 /** UI adapters only: parsing, editing and serialization stay in the existing engines. */
 import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { editorColors, applyOfficeTheme } from './theme-tokens.js';
+import { setEditorReadOnly } from './editor-read-only.js';
 export function preloadEditor(kind) {
 	const loaders = {
 		pptx: () => import('pptx-vanilla-viewer'),
@@ -10,6 +11,9 @@ export function preloadEditor(kind) {
 	};
 	return loaders[kind]?.();
 }
+/** File commands the suite handles itself, for every editor (Visio raises only these). */
+export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open']);
+
 export async function mountEditor(host, doc, changed, command) {
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
@@ -91,8 +95,10 @@ export async function mountEditor(host, doc, changed, command) {
 			}
 		});
 	}
+	// Word, Excel and Visio announce New, Open and Save as the cancelable `file-command` event
+	// (`ooxml-core/embedding`); the suite takes them over so files stay in its profile storage.
 	element.addEventListener('file-command', (event) => {
-		if (['save', 'new', 'open'].includes(event.detail.command)) {
+		if (SUITE_FILE_COMMANDS.has(event.detail.command)) {
 			event.preventDefault();
 			command(event.detail.command);
 		}
@@ -112,10 +118,9 @@ export async function mountEditor(host, doc, changed, command) {
 		focus: () => {
 			if (doc.kind === 'xlsx') element.focusGrid();
 		},
-		// Visio has no read-only switch; edits made while reviewing are discarded with the preview.
-		readOnly: (on) => {
-			if (doc.kind !== 'vsdx') element.readOnly = on;
-		},
+		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
+		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.
+		readOnly: (on) => setEditorReadOnly(element, doc.kind, on),
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {
 			if (change.type === 'cells') {

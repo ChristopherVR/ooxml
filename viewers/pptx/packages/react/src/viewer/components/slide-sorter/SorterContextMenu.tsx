@@ -1,6 +1,6 @@
 import { buildSlideSorterContextMenuEntries, slideSorterContextMenuLabel } from 'ooxml-ui/pptx';
 import type { SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
-import React from 'react';
+import React, { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuClipboardPaste, LuCopy, LuCopyPlus, LuEye, LuEyeOff, LuTrash2 } from 'react-icons/lu';
 
@@ -111,7 +111,7 @@ export function SorterContextMenu({
 				style={{ left: menuX, top: menuY }}
 			>
 				{entries.map((entry) => (
-					<span key={entry.id}>
+					<Fragment key={entry.id}>
 						{entry.separatorBefore && <ContextMenuSeparator />}
 						<button
 							type='button'
@@ -125,7 +125,7 @@ export function SorterContextMenu({
 							{icons[entry.id]}
 							{slideSorterContextMenuLabel(t(entry.labelKey), entry, selectedCount)}
 						</button>
-					</span>
+					</Fragment>
 				))}
 			</div>
 		</>

@@ -1,15 +1,18 @@
 import type {
 	CanvasSize,
+	DocumentSaveReason,
+	DocumentStorage,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
 	ViewerOptions,
 } from 'ooxml-ui/pptx';
 import {
 	deleteAutosaveSnapshot,
-	downloadBlob,
+	deliverSavedPresentation,
 	exportDeckJson,
 	playFeedbackSound,
 	rasterResultToPngBlob,
+	savedPresentationFileName,
 	shouldDiscardAutosaveOnSuccessfulSave,
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSaveFormat, PptxSlide } from 'pptx-viewer-core';
@@ -53,6 +56,10 @@ export interface UseExportWiringInput {
 	getOptions?: () => ViewerOptions;
 	/** IndexedDB key for this deck's AutoRecover snapshot, read at the same time. */
 	filePath?: () => string | undefined;
+	/** Host `storage` prop: Save / Save As go to `storage.save()` instead of a download. */
+	storage?: () => DocumentStorage | undefined;
+	/** A Save / Save As failed (serialising, or the host's storage rejected). */
+	onSaveError?: (error: unknown) => void;
 }
 
 export interface UseExportWiringResult {
@@ -76,7 +83,10 @@ export interface UseExportWiringResult {
 	onExportGif: () => void;
 	onExportWebm: () => void;
 	onExportJson: () => void;
-	downloadAs: (format: PptxSaveFormat) => Promise<void>;
+	/** Save As `format` (`reason` is the command; Save As unless given). */
+	downloadAs: (format: PptxSaveFormat, reason?: DocumentSaveReason) => Promise<void>;
+	/** File > Save: `.pptx`, reported to host storage as `save`. */
+	save: () => Promise<void>;
 	onCopySlideAsImage: () => Promise<void>;
 }
 
@@ -144,18 +154,24 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		}
 	}
 
-	/** Serialise to a chosen OpenXML format and trigger a browser download. */
-	async function downloadAs(format: PptxSaveFormat): Promise<void> {
+	/**
+	 * Serialise to a chosen OpenXML format and hand it to the host's `storage`,
+	 * else trigger a browser download (the shared helper picks the MIME type).
+	 */
+	async function downloadAs(
+		format: PptxSaveFormat,
+		reason: DocumentSaveReason = 'saveAs',
+	): Promise<void> {
+		const storage = input.storage?.();
 		try {
 			const bytes = await saveAs(format);
-			// Legacy binary `.ppt` is an OLE2 compound file, not a ZIP: its own MIME
-			// type, not the OOXML package one every other format shares.
-			const mimeType =
-				format === 'ppt'
-					? 'application/vnd.ms-powerpoint'
-					: 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-			const blob = new Blob([bytes as unknown as BlobPart], { type: mimeType });
-			downloadBlob(blob, `presentation.${format}`);
+			await deliverSavedPresentation({
+				storage,
+				bytes,
+				format,
+				fileName: savedPresentationFileName(input.fileName?.(), format),
+				reason,
+			});
 			// Options > Accessibility > "feedback with sound", and Options > Save >
 			// "keep the last AutoRecover version": once a `.pptx` save lands, the
 			// crash-recovery snapshot for this file is stale (the real file already
@@ -165,14 +181,19 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 				playFeedbackSound(options);
 				const filePath = input.filePath?.();
 				if (format === 'pptx' && filePath && shouldDiscardAutosaveOnSuccessfulSave(options)) {
-					void deleteAutosaveSnapshot(filePath).catch(() => {
+					void deleteAutosaveSnapshot(filePath, storage).catch(() => {
 						// Saving succeeded; recovery cleanup is best-effort here.
 					});
 				}
 			}
 		} catch (err) {
 			console.error(`[PowerPointViewer] Save as .${format} failed:`, err);
+			input.onSaveError?.(err);
 		}
+	}
+
+	function save(): Promise<void> {
+		return downloadAs('pptx', 'save');
 	}
 
 	/** Copy the active slide to the clipboard as a PNG image (File menu). */
@@ -204,6 +225,7 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		onExportWebm,
 		onExportJson,
 		downloadAs,
+		save,
 		onCopySlideAsImage,
 	};
 }

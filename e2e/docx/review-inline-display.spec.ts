@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument } from './helpers';
+import { clickInEditor, newDocument } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
 	test(`${framework}: review modes filter inline objects and retain their revision history`, async ({
@@ -71,7 +71,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				await editor.evaluate((element) => (element as DocxEditorElement).documentModel),
 			).toEqual(source);
 		}
-		await body.click({ position: { x: 10, y: 10 } });
+		await clickInEditor(body, { position: { x: 10, y: 10 } });
 		await page.keyboard.press('Control+End');
 		await page.keyboard.type('!');
 		const next = await editor.evaluate((element) => (element as DocxEditorElement).documentModel);

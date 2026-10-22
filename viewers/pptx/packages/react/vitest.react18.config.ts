@@ -24,6 +24,8 @@ import path from 'path';
 
 import { defineConfig } from 'vitest/config';
 
+import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
+
 /** Resolve React 18 entry points from the react-compat workspace package. */
 const require18 = createRequire(
 	path.resolve(import.meta.dirname, '../react-compat/resolve-anchor.cjs'),
@@ -71,6 +73,19 @@ export default defineConfig({
 			{ find: /^@ai-sdk\/react$/u, replacement: require18.resolve('@ai-sdk/react') },
 			{ find: /^react-icons\//u, replacement: `${pkgDir18('react-icons')}/` },
 			{ find: /^pptx-viewer-core$/u, replacement: src('../core/src/index.ts') },
+			// Same non-React subpaths as vitest.config.ts; without them a test importing the
+			// locales (or a core subpath) fails to resolve under this config only.
+			{ find: /^pptx-viewer-core\/chart$/u, replacement: src('../core/src/chart/index.ts') },
+			{ find: /^pptx-viewer-core\/text$/u, replacement: src('../core/src/text/index.ts') },
+			{ find: /^pptx-viewer-core\/geometry$/u, replacement: src('../core/src/geometry/index.ts') },
+			{ find: /^pptx-viewer-core\/color$/u, replacement: src('../core/src/color/index.ts') },
+			{ find: /^pptx-viewer-core\/ui$/u, replacement: src('../core/src/ui/index.ts') },
+			{
+				find: /^pptx-viewer-core\/smartart-layouts$/u,
+				replacement: src('../core/src/smartart-layouts/index.ts'),
+			},
+			{ find: /^pptx-viewer-core\/math$/u, replacement: src('../core/src/math/index.ts') },
+			{ find: /^pptx-viewer-locales$/u, replacement: src('../locales/src/index.ts') },
 			{
 				find: /^ooxml-ui\/pptx\/i18n$/u,
 				replacement: src('../../../../src/ui/src/pptx/i18n/index.ts'),
@@ -84,7 +99,11 @@ export default defineConfig({
 	},
 	test: {
 		globals: true,
-		include: ['src/**/*.test.{ts,tsx}'],
+		// Shared workers and fresh-module projects, the same split as the default run (see
+		// scripts/vitest-isolation.mjs). Each project extends this config, so the aliases above,
+		// the setup file and `env` apply to every project.
+		maxWorkers: 4,
+		projects: isolationProjects('react', import.meta.dirname, 'node'),
 		// Same shared web controls (`pptx-ui-checkbox`, ...) as the default run.
 		setupFiles: ['./web-controls.test-setup.ts'],
 		// Asserted by src/__tests__/react-version-compat.test.tsx: without it a

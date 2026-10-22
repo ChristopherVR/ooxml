@@ -100,6 +100,31 @@ describe('wordArtText', () => {
 		expect(text.attributes('font-size')).toBe('32');
 	});
 
+	it('renders a weight or style variant named as its own family as its name implies', () => {
+		const wrapper = mount(WordArtText, {
+			props: {
+				element: warpedText({
+					textStyle: {
+						textWarpPreset: 'textArchUp',
+						fontSize: 32,
+						fontFamily: 'Lato Light Italic',
+					},
+					textSegments: [
+						{ text: 'Hel', style: {} },
+						{ text: 'lo', style: { fontFamily: 'DM Sans Medium' } },
+					],
+				} as Partial<PptxElement>),
+				zIndex: 0,
+			},
+		});
+		const text = wrapper.find('text');
+		expect(text.attributes('font-weight')).toBe('300');
+		expect(text.attributes('font-style')).toBe('italic');
+		const spans = wrapper.findAll('tspan');
+		expect(spans.map((span) => span.attributes('font-weight'))).toStrictEqual(['300', '500']);
+		expect(spans.map((span) => span.attributes('font-style'))).toStrictEqual(['italic', 'normal']);
+	});
+
 	it('renders nothing for a non-warped preset', () => {
 		const wrapper = mount(WordArtText, {
 			props: {

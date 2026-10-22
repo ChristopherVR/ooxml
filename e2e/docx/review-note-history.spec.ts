@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument } from './helpers';
+import { newDocument, waitForEditorFocus } from './helpers';
 
 const fixture = fileURLToPath(
 	new URL(
@@ -73,6 +73,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await endnote.dblclick();
 		const active = endnote.locator('.ProseMirror');
 		await expect(active).toContainText('Endnote text');
+		// fill selects the note's text itself, which the editor's check after focus could undo.
+		await waitForEditorFocus(active);
 		await active.fill('Updated endnote');
 		await active.press('Escape');
 		await editor.getByRole('tab', { name: 'Review', exact: true }).click();

@@ -18,7 +18,8 @@ import {
 import {
 	createBuildingBlockSession,
 	emptyBuildingBlockState,
-	toolbarButtons,
+	toolbarModel,
+	type ToolbarItemModel,
 	selectReference,
 	type BuildingBlockOptions,
 	type SpreadsheetToolbarProps,
@@ -45,6 +46,10 @@ export class SpreadsheetBuildingBlocks {
 	readonly loading = computed(() => this.state().loading);
 	readonly error = computed(() => this.state().error);
 	readonly mode = computed(() => this.state().mode);
+	readonly dirty = computed(() => this.state().dirty);
+	readonly selection = computed(() => this.state().selection);
+	readonly collaboration = computed(() => this.state().collaboration);
+	readonly editError = computed(() => this.state().editError);
 	readonly handle = this.session.handle;
 	readonly canvasProps = { mount: (host: HTMLElement | null) => this.session.mount(host) };
 	constructor() {
@@ -100,16 +105,30 @@ export class SpreadsheetCanvasComponent implements AfterViewInit, OnDestroy, OnC
 	selector: 'spreadsheet-toolbar',
 	standalone: true,
 	template: `<div role="toolbar">
-		@for (button of buttons(); track button.label) {
-			<button
-				type="button"
-				[disabled]="button.disabled"
-				[attr.aria-pressed]="button.pressed === null ? 'mixed' : button.pressed"
-				(mousedown)="$event.preventDefault()"
-				(click)="button.run()"
-			>
-				{{ button.label }}
-			</button>
+		@for (item of items(); track item.id) {
+			@if (item.kind === 'select') {
+				<select
+					[attr.aria-label]="item.label"
+					[disabled]="item.disabled"
+					(change)="pick(item, $event)"
+				>
+					@for (option of item.options; track option.value) {
+						<option [value]="option.value" [selected]="option.value === item.value">
+							{{ option.label }}
+						</option>
+					}
+				</select>
+			} @else {
+				<button
+					type="button"
+					[disabled]="item.disabled"
+					[attr.aria-pressed]="item.pressed === null ? 'mixed' : item.pressed"
+					(mousedown)="$event.preventDefault()"
+					(click)="item.run()"
+				>
+					{{ item.label }}
+				</button>
+			}
 		}
 	</div>`,
 })
@@ -119,8 +138,11 @@ export class ToolbarComponent implements AfterViewInit {
 		prepareBlock(this.themeHost.nativeElement, 'toolbar');
 	}
 	@Input({ required: true }) toolbarProps!: SpreadsheetToolbarProps;
-	buttons() {
-		return toolbarButtons(this.toolbarProps);
+	items(): ToolbarItemModel[] {
+		return toolbarModel(this.toolbarProps);
+	}
+	pick(item: ToolbarItemModel, event: Event) {
+		if (item.kind === 'select') void item.change((event.target as HTMLSelectElement).value);
 	}
 }
 @Component({
@@ -138,11 +160,14 @@ export class ToolbarComponent implements AfterViewInit {
 			[attr.aria-label]="toolbarProps.labels['Formula Bar']"
 			[value]="toolbarProps.formula"
 			[readOnly]="!toolbarProps.canEdit"
-			[attr.aria-invalid]="invalid"
+			[attr.aria-invalid]="invalid || toolbarProps.editError !== null"
 			(input)="draft($event)"
 			(keydown.enter)="commit($event)"
 			(keydown.escape)="cancel($event)"
 		/>
+		@if (toolbarProps.editError !== null) {
+			<span role="alert">{{ toolbarProps.editError }}</span>
+		}
 	</div>`,
 })
 export class FormulaBarComponent implements AfterViewInit {

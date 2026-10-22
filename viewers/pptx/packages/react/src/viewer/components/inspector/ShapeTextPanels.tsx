@@ -133,7 +133,6 @@ export function ShapeTextPanels({
 						</label>
 						<div className='col-span-2'>
 							<ThemeColorSwatchGrid
-								prefix='text-color'
 								disabled={!canEdit}
 								selectedRef={selectedElement.textStyle?.colorRef}
 								selectedHex={selectedElement.textStyle?.color}

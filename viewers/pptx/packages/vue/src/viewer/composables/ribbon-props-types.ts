@@ -163,6 +163,8 @@ export interface UseRibbonPropsActionsInput {
 	onExportGif: () => void;
 	onExportJson: () => void;
 	downloadAs: (format: PptxSaveFormat) => Promise<void>;
+	/** File > Save: `.pptx`, reported to host storage as `save`. */
+	save: () => Promise<void>;
 	onCopySlideAsImage: () => Promise<void>;
 	openPrintDialog: () => void;
 	ribbonUpdateTextStyle: RibbonProps['onUpdateTextStyle'];

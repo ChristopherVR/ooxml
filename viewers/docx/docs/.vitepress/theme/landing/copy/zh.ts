@@ -70,8 +70,8 @@ export const zh: LandingCopy = {
 		link: { text: '支持路线图', href: '/parity-roadmap' },
 		roadmapTitle: '路线图说明',
 		roadmapCopy:
-			'共享的 OOXML 逻辑正在迁移到私有的 ooxml-core 包，使本仓库最终只保留界面部分。该迁移正在进行中，尚不是已发布的功能。',
-		roadmapLink: { text: 'ooxml-core 计划', href: '/ooxml-core-plan' },
+			'Word 文档逻辑位于共享的 ooxml-core 包中；编辑器本身位于 ooxml-ui。这些软件包提供界面和框架绑定。',
+		roadmapLink: { text: '架构', href: '/zh/architecture' },
 	},
 	quickstart: {
 		kicker: '快速开始',

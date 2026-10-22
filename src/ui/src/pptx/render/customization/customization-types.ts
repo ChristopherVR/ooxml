@@ -39,6 +39,7 @@ import type {
 	ViewerRegionRenderer,
 } from './customization-regions';
 import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
+import type { EditorCapabilities, EditorCapabilityId } from 'ooxml-core/embedding';
 
 /** Keys of an options group whose value is a primitive (not an array). */
 type PrimitiveKeys<T> = {
@@ -210,16 +211,11 @@ export type ViewerDialogId =
  * not hand the bytes to the browser.
  */
 export type ViewerCapabilityId =
-	| 'edit'
-	| 'export'
-	| 'print'
-	| 'share'
-	| 'copy'
-	| 'present'
-	| 'comment';
+	| Extract<EditorCapabilityId, 'edit' | 'export' | 'print' | 'share' | 'copy' | 'comment'>
+	| 'present';
 
 /** Per-capability switches; see `ViewerCapabilityId`. */
-export type ViewerCapabilities = Partial<Record<ViewerCapabilityId, boolean>>;
+export type ViewerCapabilities = EditorCapabilities<ViewerCapabilityId>;
 
 /**
  * Regions the host fills with its own UI. A replaced region keeps its place

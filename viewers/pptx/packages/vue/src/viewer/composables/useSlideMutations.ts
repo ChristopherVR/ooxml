@@ -18,6 +18,8 @@ export interface UseSlideMutationsInput {
 	activeSlide: ComputedRef<PptxSlide | undefined>;
 	pushHistory: () => void;
 	selectedElements: ComputedRef<PptxElement[]>;
+	/** The host's `notes-update` event: called with the new notes text after the edit lands. */
+	onNotesChanged?: (notes: string) => void;
 }
 
 /**
@@ -46,6 +48,7 @@ export function useSlideMutations(input: UseSlideMutationsInput) {
 				: { notesSegments: segments.length > 0 ? segments : undefined }),
 		};
 		slides.value = nextSlides;
+		input.onNotesChanged?.(notes);
 	}
 
 	/** Toggle the hidden flag on the slide at `index` (from the rail context menu). */

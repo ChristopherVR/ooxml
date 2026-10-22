@@ -2,7 +2,13 @@
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { createDocument, type DocumentModel } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
-import { DOCX_EDITOR_EVENTS, emit, on, type DocxEditorEventMap } from './events';
+import {
+	DOCX_EDITOR_EVENTS,
+	emit,
+	on,
+	type DocxEditorEventMap,
+	type ReadOnlyChangeDetail,
+} from './events';
 import type { FileCommandDetail } from './file-commands';
 import type { RibbonAction } from './ribbon';
 import { at } from './test-support';
@@ -58,6 +64,7 @@ describe('typed event contract', () => {
 			'dirty-change': true,
 			'presence-send': true,
 			'collaboration-send': true,
+			'collaboration-change': true,
 			'office-ribbon-add-in': true,
 		};
 		expect([...DOCX_EDITOR_EVENTS].sort()).toEqual(Object.keys(complete).sort());
@@ -73,7 +80,7 @@ describe('typed event contract', () => {
 			expectTypeOf(event.detail).toEqualTypeOf<Error>();
 		});
 		editor.addEventListener('readonly-change', (event) => {
-			expectTypeOf(event.detail).toEqualTypeOf<boolean>();
+			expectTypeOf(event.detail).toEqualTypeOf<ReadOnlyChangeDetail>();
 		});
 		editor.addEventListener('ribbon-action', (event) => {
 			expectTypeOf(event.detail).toEqualTypeOf<RibbonAction>();

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 
 const FIXTURE = fileURLToPath(new URL('./support/smartart.docx', import.meta.url));
 const DIAGRAM_PARTS = ['data', 'layout', 'quickStyle', 'colors', 'drawing'].flatMap((stem) =>
@@ -113,7 +113,7 @@ test('saving an unedited SmartArt document returns the original bytes', async ({
 
 test('editing other text keeps the diagram parts and markup intact', async ({ page }) => {
 	const editor = await openFixture(page);
-	await editor.locator('.ProseMirror p', { hasText: 'End of document.' }).click();
+	await clickInEditor(editor.locator('.ProseMirror p', { hasText: 'End of document.' }));
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Edited.');
 	await expect(editor.locator('.ProseMirror')).toContainText('End of document. Edited.');

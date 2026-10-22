@@ -89,6 +89,34 @@ V3-Räume führen in ihrer Word-Identitätszuordnung die Kommentarfähigkeit `in
 
 Probieren Sie die [Yjs-Demo mit zwei Peers](/demo/collaboration.html?mode=yjs){target="_self"}. Ihre Aktionen Pause delivery, Reconnect providers und Resync providers üben die Wiederherstellung im Arbeitsspeicher. Sie bietet weder Produktionsnetzwerk noch dauerhafte Speicherung.
 
+## Die Eigenschaft `collaboration`
+
+Für den Normalfall akzeptiert `<docx-editor>` denselben deklarativen Einbettungsvertrag wie die Editoren von Excel, PowerPoint und Visio (`CollaborationOptions` in `ooxml-core/collab`; die Word-Aliase sind `DocxCollaborationOptions` und `DocxCollaborationState`). Sie ist eine dünne Schicht über dem oben beschriebenen Yjs-Modus, sodass Sie weder eine Sitzung erstellen noch auf sie warten noch selbst eine `documentId` wählen müssen:
+
+```ts
+editor.collaboration = {
+	roomId: 'q3-report',
+	serverUrl: 'wss://example.com/collab',
+	user: { name: 'Ada' },
+	intent: 'create',
+};
+editor.addEventListener('collaboration-change', (event) => render(event.detail)); // { active, roomId, status, synced, people }
+editor.collaboration = null; // or editor.stopCollaboration()
+```
+
+- Als Transport dient das erste von `session` (Ihre eigene, vom Editor nie zerstört), `provider`, `serverUrl`, sonst ein BroadcastChannel zwischen Tabs eines Browsers. Eine Sitzung, die der Editor selbst öffnet, wird beim Verlassen zerstört.
+- `user.name` ist standardmäßig `reviewAuthor`; eine `user.role` von `viewer` blockiert lokale Änderungen (beratend, wie oben).
+- `collaborationState` und `collaboration-change` melden jedes Yjs-Binding, auch eines, das mit `startYjsCollaboration` gestartet wurde. `reconnectCollaboration()` startet die Verbindung neu. Fehler kommen als `document-error`.
+- `stopCollaboration()` ohne Argument setzt auch die Eigenschaft zurück. Das Argument `discardPending` des Autoritätsmodus bleibt unverändert.
+- Beim Laden oder Ersetzen des Dokuments verlässt der Editor zuerst den Raum und tritt danach wieder bei (die imperative API wirft weiterhin "Stop collaboration before replacing the document."). Der Beitritt wartet, bis ein Dokument eingebunden und nicht im Ladevorgang ist.
+
+Ehrliche Grenzen:
+
+- Der Raumname ist die Word-`documentId`. Nichts prüft, ob jedes Fenster dasselbe Quellpaket geladen hat; das bleibt Ihr Vertrag.
+- **Zwei Ersteller konkurrieren.** Mit dem Standard `intent: 'create'` befüllt ein Fenster einen leeren Raum. Öffnen mehrere Fenster einen leeren Raum gleichzeitig, befüllt ihn jedes, und der Raum enthält am Ende beide Textkörper. Geben Sie genau einem Fenster `create` und den übrigen `intent: 'join'`; dieses befüllt nie und meldet `document-error`, wenn der Raum nach der Synchronisierung noch leer ist.
+- Ein Ersteller wartet auf den ersten Austausch mit dem Raum oder auf das Öffnen des Schreib-Gates (einige Sekunden), wenn er allein in einem serverlosen Mesh ist; im zweiten Fall befüllt er, ohne den Raum gesehen zu haben, sodass ein langsamer Server, dessen Inhalt später eintrifft, doppelt befüllt wird. Verwenden Sie in diesem Fall einen Server oder `join`.
+- Nach dem Verlassen und erneuten Beitreten rund um ein Laden behält eine vom Host verwaltete `session` den früheren Inhalt des Raums, der Vorrang vor dem neu geladenen Dokument hat; eine vom Editor verwaltete Sitzung beginnt neu.
+
 ## Protokoll
 
 Die Web Component stellt `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration` und `stopCollaboration` bereit. Hosts können mit `createCollaborationAuthority(model, options)` die Referenzautorität im Arbeitsspeicher mit demselben Schema und derselben Modellkonvertierung wie der Editor erzeugen.

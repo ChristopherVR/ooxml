@@ -1,5 +1,11 @@
 import type { RibbonElement } from './ribbon-tab-api';
 import { saveDocx, type DocumentModel } from 'ooxml-core/docx';
+import {
+	documentSaveMeta,
+	saveToStorage,
+	type DocumentSaveReason,
+	type DocumentStorage,
+} from 'ooxml-core/embedding';
 import { createBackstage, type Backstage } from './backstage';
 import type { BackstageOptions, BackstageOptionKey } from './backstage-options';
 import {
@@ -13,6 +19,7 @@ import { documentStats, plainText } from 'ooxml-core/docx';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
+import type { ResolvedWordCustomization, WordRegionContext } from './customization';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -27,6 +34,8 @@ export interface ChromeHost {
 	newDocument(): void;
 	load(bytes: Uint8Array): Promise<void>;
 	save(): Promise<Uint8Array>;
+	/** Host-owned storage for Save and Open, when the host set one. */
+	storage?(): DocumentStorage | undefined;
 	print(): void;
 	history(key: 'undo' | 'redo'): void;
 	toggleComments(): void;
@@ -42,6 +51,10 @@ export interface ChromeHost {
 	setOption(key: BackstageOptionKey, value: string): void;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
+	/** The resolved host customisation (`customization` property). */
+	customization(): ResolvedWordCustomization;
+	/** The context of a host region (a File tab page). */
+	regionContext(region: string): WordRegionContext;
 }
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
@@ -96,6 +109,8 @@ export class EditorChrome {
 			ribbon: () => host.ribbon(),
 			hiddenActions: () => host.hiddenActions(),
 			setHiddenActions: (ids) => host.setHiddenActions(ids),
+			customization: () => host.customization(),
+			regionContext: (region) => host.regionContext(region),
 		});
 		this.statusBar = createStatusBar({
 			setViewMode: (mode) => host.setViewMode(mode),
@@ -172,6 +187,14 @@ export class EditorChrome {
 		this.ribbonActions.setSharing(this.host.collaborating());
 	}
 
+	/** Re-applies the host customisation to the File tab, title bar and ribbon actions. */
+	applyCustomization(): void {
+		const resolved = this.host.customization();
+		this.backstage.refresh();
+		this.titleBar.setHiddenCommands(resolved.fileCommands);
+		this.ribbonActions.element.noShare = resolved.fileCommands.has('share');
+	}
+
 	closeBackstage(): void {
 		this.backstage.close();
 		this.ribbon?.focusFile?.();
@@ -179,10 +202,14 @@ export class EditorChrome {
 
 	/** Runs a file command unless a host cancels the `file-command` event to handle it itself. */
 	async run(command: FileCommand, fileName?: string): Promise<void> {
+		// A command a host capability removed never runs, whichever entry point reached it.
+		if (this.host.customization().fileCommands.has(command)) return;
+		// One save at a time: Save or Save As while a save is pending is ignored, not queued.
+		if ((command === 'save' || command === 'saveAs') && this.saving) return;
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
 		try {
 			if (command === 'new') this.newDocument();
-			else if (command === 'open') this.fileInput.click();
+			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
 			// Sharing needs the host's transport and authority, so there is no browser default.
 			else if (command === 'share') return;
@@ -194,20 +221,64 @@ export class EditorChrome {
 				// The bytes are in the format the document was opened in, so the extension follows it.
 				const extension = this._fileName.split('.').pop()?.toLowerCase() === 'doc' ? 'doc' : 'docx';
 				this.fileName = withExtension(name, extension);
-				await this.run('save');
-			} else if (command === 'save') {
-				this.setSaveState('saving');
-				downloadBytes(await this.host.save(), this._fileName);
-				this.setSaveState('saved-local');
-			} else if (command === 'export')
+				// Save As then saves, announced as its own `save` so a host that takes over Save sees it.
+				// A host that removed Save (`save: false`) gets neither that event nor `storage.save`:
+				// Save As then only downloads, as an export.
+				if (this.host.customization().fileCommands.has('save'))
+					await this.saveDocument('saveAs', false);
+				else if (announceFileCommand(this.host.element, 'save')) await this.saveDocument('saveAs');
+			} else if (command === 'save') await this.saveDocument('save');
+			else if (command === 'export')
 				downloadBytes(
 					await saveDocx(structuredClone(this.host.model())),
 					withExtension(this._fileName, 'docx'),
 				);
 		} catch (cause) {
-			if (command === 'save') this.setSaveState('dirty');
+			if (command === 'save' || command === 'saveAs') this.setSaveState('dirty');
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
 		}
+	}
+
+	/** True while a save is pending. */
+	saving = false;
+
+	/**
+	 * Saves to the host's storage when there is one, else downloads a copy. An edit made while the
+	 * save runs keeps the document dirty: the saved bytes do not contain it.
+	 */
+	private async saveDocument(reason: DocumentSaveReason, useStorage = true): Promise<void> {
+		const element = this.host.element;
+		let edited = false;
+		const changed = () => (edited = true);
+		this.saving = true;
+		this.setSaveState('saving');
+		element.addEventListener('document-change', changed);
+		try {
+			const bytes = await this.host.save();
+			const storage = useStorage ? this.host.storage?.() : undefined;
+			if (storage)
+				this.fileName = await saveToStorage(
+					storage,
+					bytes,
+					documentSaveMeta(this._fileName, reason),
+				);
+			else downloadBytes(bytes, this._fileName);
+			this.setSaveState(edited ? 'dirty' : storage ? 'saved' : 'saved-local');
+		} finally {
+			element.removeEventListener('document-change', changed);
+			this.saving = false;
+		}
+	}
+
+	/** Opens from the host's storage when it can open, else shows the file picker. */
+	private async open(): Promise<void> {
+		const storage = this.host.storage?.();
+		if (!storage?.open) return this.fileInput.click();
+		const file = await storage.open();
+		if (!file) return;
+		await this.host.load(file.bytes);
+		this.fileName = file.fileName;
+		this.setSaveState('saved');
 	}
 
 	private newDocument(): void {

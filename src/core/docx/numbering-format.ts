@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog } from './model';
+import type { DocumentModel, Paragraph, ParagraphStyleCatalog } from './model';
+import { documentParagraphs } from './cell-blocks';
 import type {
 	NumberingCatalog,
 	NumberingLevelDefinition,
@@ -73,15 +74,6 @@ export function resolveParagraphNumbering(
 		}
 	}
 	return inherited;
-}
-
-function flattenParagraphs(blocks: Block[]): Paragraph[] {
-	const result: Paragraph[] = [];
-	for (const block of blocks) {
-		if (block.type === 'paragraph') result.push(block);
-		else for (const row of block.rows) for (const cell of row) result.push(...cell.paragraphs);
-	}
-	return result;
 }
 
 class NumberingCounters {
@@ -179,7 +171,7 @@ export function computeListLabels(model: DocumentModel): Map<string, ParagraphLi
 	const labels = new Map<string, ParagraphListLabel>();
 	if (!catalog) return labels;
 	const counters = new NumberingCounters();
-	for (const paragraph of flattenParagraphs(model.blocks)) {
+	for (const paragraph of documentParagraphs(model.blocks)) {
 		const numbering = resolveParagraphNumbering(paragraph, model.paragraphStyles, catalog);
 		if (!numbering) continue;
 		const numId = String(numbering.numId);

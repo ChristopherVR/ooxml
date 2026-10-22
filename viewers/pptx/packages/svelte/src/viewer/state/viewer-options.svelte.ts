@@ -1,4 +1,5 @@
 import type {
+	DocumentStorage,
 	PrintSettings,
 	ToolbarTabId,
 	ViewerOptionPrimitive,
@@ -11,13 +12,12 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	applyPreferenceToOptions,
+	clearAutosaveSnapshots,
 	createViewerOptionsStore,
-	deleteAutosaveSnapshot,
-	listAutosaveSnapshots,
 	playFeedbackSound,
 	resolveAutosaveIntervalSeconds,
 	resolveDefaultPrintSettings,
-	resolveExpiredAutosaveSnapshots,
+	pruneExpiredAutosaveSnapshots,
 	resolveHistoryDepth,
 	resolveOptionRootClasses,
 	resolveScreenTip,
@@ -155,10 +155,20 @@ export class ViewerOptionsState {
 		return resolveAutosaveIntervalSeconds(this.options);
 	}
 
-	/** Options > Save > "Delete cached files": drop all recovery snapshots. */
+	/** The viewer's host `storage` prop (see {@link bindStorage}); none means IndexedDB. */
+	#storage: () => DocumentStorage | undefined = () => undefined;
+
+	/** Wire the host `storage` prop, so the cache sweeps run against the host's recovery store. */
+	bindStorage(storage: () => DocumentStorage | undefined): void {
+		this.#storage = storage;
+	}
+
+	/**
+	 * Options > Save > "Delete cached files": drop all recovery snapshots (IndexedDB, or the
+	 * host's recovery store when it lists its copies; otherwise retention is the host's job).
+	 */
 	async clearCache(): Promise<void> {
-		const snapshots = await listAutosaveSnapshots();
-		await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
+		await clearAutosaveSnapshots(this.#storage());
 	}
 
 	/**
@@ -178,9 +188,7 @@ export class ViewerOptionsState {
 
 	/** Options > Save > "cache retention": prune snapshots older than N days. */
 	async pruneExpiredCache(): Promise<void> {
-		const snapshots = await listAutosaveSnapshots();
-		const expired = resolveExpiredAutosaveSnapshots(snapshots, this.options);
-		await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
+		await pruneExpiredAutosaveSnapshots(this.options, this.#storage());
 	}
 
 	dispose(): void {

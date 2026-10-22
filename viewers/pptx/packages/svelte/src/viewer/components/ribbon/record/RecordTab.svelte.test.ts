@@ -44,6 +44,10 @@ describe('recordTab', () => {
 	it('offers the camera/manage/help placeholders React ships, all disabled', () => {
 		const { target } = mountTab();
 
+		expect(target.querySelectorAll('pptx-ui-ribbon-section > pptx-ui-ribbon-group')).toHaveLength(
+			4,
+		);
+
 		for (const name of ['Cameo', 'Clear', 'Reset to Cameo', 'Learn More']) {
 			const button = byName(target, name);
 			expect(button, `${name} is missing from the Record tab`).toBeDefined();

@@ -37,10 +37,11 @@ The viewer's built-in autosave timer periodically serializes the document to Ind
 
 ## Autosave {#autosave-policy}
 
-| Input                | Type                   | Default                | Description                                                                  |
-| -------------------- | ---------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `autosave`           | `boolean \| undefined` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.    |
-| `autosaveIntervalMs` | `number \| undefined`  | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting. |
+| Input                | Type                           | Default                | Description                                                                                                                                      |
+| -------------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean \| undefined`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number \| undefined`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage \| undefined` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 The rule is the same in **all five bindings** and lives in one shared decision function,
 `resolveAutosaveActivation`:
@@ -85,18 +86,29 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Events (`@Output()`s)
 
-| Output               | Payload                       | Description                                                                                                |
-| -------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `dirtyChange`        | `boolean`                     | Fires when the unsaved-changes flag toggles.                                                               |
-| `contentChange`      | `Uint8Array`                  | Fires with the re-serialized document bytes whenever [`getContent()`](/angular/api) materialises the deck. |
-| `activeSlideChange`  | `number`                      | Fires when the active slide changes.                                                                       |
-| `modeChange`         | `string`                      | Fires when the viewer mode changes: `'preview'`, `'edit'`, `'present'`, or `'master'`.                     |
-| `zoomChange`         | `number`                      | Fires when the zoom level changes.                                                                         |
-| `selectionChange`    | `string[]`                    | Fires when element selection changes.                                                                      |
-| `slideCountChange`   | `number`                      | Fires when the total slide count changes (slide added/deleted).                                            |
-| `propertiesChange`   | `Partial<PptxCoreProperties>` | Fires when the user edits document properties (title, author, ...) in the Info dialog.                     |
-| `startCollaboration` | `CollaborationConfig`         | Fires when a session starts from the Share/Broadcast dialog. Set the `collaboration` input in response.    |
-| `stopCollaboration`  | `void`                        | Fires when the session stops from the Share/Broadcast dialog. Clear the `collaboration` input in response. |
+| Output                | Payload                                    | Description                                                                                                                                                                      |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dirtyChange`         | `boolean`                                  | Fires when the unsaved-changes flag toggles.                                                                                                                                     |
+| `contentChange`       | `Uint8Array`                               | Fires with the re-serialized document bytes whenever [`getContent()`](/angular/api) materialises the deck.                                                                       |
+| `activeSlideChange`   | `number`                                   | Fires when the active slide changes.                                                                                                                                             |
+| `modeChange`          | `string`                                   | Fires when the viewer mode changes: `'preview'`, `'edit'`, `'present'`, or `'master'`.                                                                                           |
+| `zoomChange`          | `number`                                   | Fires when the zoom level changes.                                                                                                                                               |
+| `selectionChange`     | `string[]`                                 | Fires when element selection changes.                                                                                                                                            |
+| `slideCountChange`    | `number`                                   | Fires when the total slide count changes (slide added/deleted).                                                                                                                  |
+| `propertiesChange`    | `Partial<PptxCoreProperties>`              | Fires when the user (or the AI assistant) changes document properties (Info dialog, inspector).                                                                                  |
+| `documentChange`      | `void`                                     | Fires after any committed document edit (move, resize, text, undo, redo, ...). Not named `change`: that would also catch the native `change` events of inputs inside the viewer. |
+| `autosaved`           | `Uint8Array`                               | Fires with the serialised deck each time a recovery autosave snapshot is written. Not named `autosave`: the `autosave` input owns that name.                                     |
+| `autosaveToggle`      | `boolean`                                  | Fires when the user enables or disables autosave (title bar or File > Options).                                                                                                  |
+| `autosaveStatus`      | `'idle' \| 'saving' \| 'saved' \| 'error'` | Fires on every autosave lifecycle transition.                                                                                                                                    |
+| `autosaveRecovery`    | `AutosaveRecord`                           | Fires when a recovery snapshot left by a previous session is found. The built-in recovery prompt is shown as well.                                                               |
+| `notesUpdate`         | `string`                                   | Fires with the new speaker-notes text after a notes edit.                                                                                                                        |
+| `presentationChange`  | `boolean`                                  | Fires when presentation (slide show) mode is entered or left.                                                                                                                    |
+| `collaborationStatus` | `ConnectionStatus`                         | Fires on every collaboration connection-status transition.                                                                                                                       |
+| `startCollaboration`  | `CollaborationConfig`                      | Fires when a session starts from the Share/Broadcast dialog. Set the `collaboration` input in response.                                                                          |
+| `stopCollaboration`   | `void`                                     | Fires when the session stops from the Share/Broadcast dialog. Clear the `collaboration` input in response.                                                                       |
+| `collaborationChange` | `CollaborationState`                       | Fires when a session starts or stops, and when its status, synced flag or people change.                                                                                         |
+| `load`                | `ViewerLoadDetail`                         | Fires each time a presentation finishes loading without an error (`slideCount`, `canvasSize`).                                                                                   |
+| `error`               | `string`                                   | Fires once per distinct load failure, with a human-readable message.                                                                                                             |
 
 ::: info
 `contentChange` delivers a `Uint8Array`, not a boolean. To pull content on demand instead, call
@@ -105,14 +117,19 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Presentation / authoring
 
-| Input                                                                      | Type                        | Default | Description                                                                                                                                                                             |
-| -------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `authorName`                                                               | `string \| undefined`       | -       | Display name used as the author for comments/annotations and as the broadcast owner's name. Falls back to `collaboration.userName` or `'You'`/`'Presenter'`.                            |
-| `class`                                                                    | `string`                    | `''`    | Optional class name applied to the viewer's root element.                                                                                                                               |
-| `smartArt3D`                                                               | `boolean`                   | `false` | Opt in to the Three.js SmartArt renderer (extruded 3D blocks on WebGL). Requires the optional `three` peer; falls back to SVG without it.                                               |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                   | `false` | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene. |
-| `ai`                                                                       | `PptxAiConfig`              | -       | Enables the optional AI assistant. Its SDK peer loads only when the panel is opened; omit this input to leave the assistant unavailable.                                                |
-| `onOpenFile`                                                               | `(() => void) \| undefined` | -       | Host override for the File ▸ Open action: bypasses the built-in native file picker; the host then supplies a new `content` value instead.                                               |
+| Input                                                                      | Type                                     | Default | Description                                                                                                                                                                             |
+| -------------------------------------------------------------------------- | ---------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authorName`                                                               | `string \| undefined`                    | -       | Display name used as the author for comments/annotations and as the broadcast owner's name. Falls back to `collaboration.userName` or `'You'`/`'Presenter'`.                            |
+| `class`                                                                    | `string`                                 | `''`    | Optional class name applied to the viewer's root element.                                                                                                                               |
+| `smartArt3D`                                                               | `boolean`                                | `false` | Opt in to the Three.js SmartArt renderer (extruded 3D blocks on WebGL). Requires the optional `three` peer; falls back to SVG without it.                                               |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                                | `false` | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene. |
+| `ai`                                                                       | `PptxAiConfig`                           | -       | Enables the optional AI assistant. Its SDK peer loads only when the panel is opened; omit this input to leave the assistant unavailable.                                                |
+| `onOpenFile`                                                               | `(() => void) \| undefined`              | -       | Host override for the File ▸ Open action: bypasses the built-in native file picker; the host then supplies a new `content` value instead.                                               |
+| `onHyperlinkClick`                                                         | `HyperlinkClickHandler`                  | -       | Function input (not an output). Called before following a link; return `false` to cancel the default action.                                                                            |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[] \| undefined` | -       | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. Desktop ribbon only.                                 |
+| `inspectorInitiallyOpen`                                                   | `boolean \| undefined`                   | -       | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                                                 |
+| `fonts`                                                                    | `ViewerFontSource[]`                     | `[]`    | Licensed font sources supplied by the host. No fonts are bundled.                                                                                                                       |
+| `hiddenActions`                                                            | `ToolbarActionId[]`                      | `[]`    | Individual toolbar buttons and/or ribbon tabs to hide. Unioned with `customization`.                                                                                                    |
 
 ## Theming
 
@@ -126,6 +143,18 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
   [theme]="{ colors: { primary: '#6366f1', background: '#0f172a' }, radius: '0.75rem' }"
 />
 ```
+
+### Theme, language and account
+
+| Input              | Type                                         | Description                                                                                           |
+| ------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `defaultThemeKey`  | `string \| undefined`                        | Initial theme key for File > Options > Theme.                                                         |
+| `availableThemes`  | `readonly ThemeCatalogEntry[] \| undefined`  | Theme choices offered by File > Options.                                                              |
+| `onThemeChange`    | `((key: string) => void) \| undefined`       | Function input. Called when the user picks a theme; the host then owns persisting the choice.         |
+| `defaultLocale`    | `string \| undefined`                        | Initial locale code for File > Options > Language.                                                    |
+| `availableLocales` | `readonly LocaleCatalogEntry[] \| undefined` | Locale choices offered by File > Options > Language.                                                  |
+| `onLocaleChange`   | `((code: string) => void) \| undefined`      | Function input. Called when the user picks a language; the host then owns applying and persisting it. |
+| `accountAuth`      | `AccountAuthConfig \| undefined`             | Hook point for File > Account's sign-in section; disabled by default.                                 |
 
 ## UI customization {#ui-customization}
 
@@ -147,10 +176,10 @@ Every id, the rules and recipes are in the
 These inputs enable and control real-time co-editing. See [Collaboration](/angular/collaboration)
 for the full flow and the `CollaborationConfig` shape.
 
-| Input           | Type                                                                      | Default | Description                                                                                                                                            |
-| --------------- | ------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `collaboration` | `CollaborationConfig \| undefined`                                        | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Requires the `yjs` peer plus `y-websocket` or `y-webrtc`. |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string } \| undefined` | -       | Default values for the Share/Broadcast dialog fields. If omitted, the fields start empty (userName falls back to `authorName`).                        |
+| Input           | Type                                                                      | Default | Description                                                                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collaboration` | `CollaborationInput \| undefined`                                         | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Takes the legacy `CollaborationConfig` or the shared `CollaborationOptions`. Requires the `yjs` peer plus `y-websocket` or `y-webrtc`. |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string } \| undefined` | -       | Default values for the Share/Broadcast dialog fields. If omitted, the fields start empty (userName falls back to `authorName`).                                                                                                     |
 
 ::: info
 `collaboration` is controlled, same as React/Vue. The viewer does not start a session on its own -
@@ -172,7 +201,7 @@ class PowerPointViewerComponent {
 	readonly theme = input<ViewerTheme | undefined>(undefined);
 	readonly filePath = input<string | undefined>(undefined);
 	readonly fileName = input<string | undefined>(undefined);
-	readonly collaboration = input<CollaborationConfig | undefined>(undefined);
+	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	readonly authorName = input<string>();
 	readonly shareDefaults = input<
 		{ roomId?: string; userName?: string; serverUrl?: string } | undefined
@@ -185,18 +214,39 @@ class PowerPointViewerComponent {
 	readonly areaChart3D = input<boolean>(false);
 	readonly pieChart3D = input<boolean>(false);
 	readonly ai = input<PptxAiConfig | undefined>(undefined);
+	readonly onHyperlinkClick = input<HyperlinkClickHandler>();
+	readonly ribbonAddIns = input<readonly RibbonAddInTab[] | undefined>(undefined);
+	readonly inspectorInitiallyOpen = input<boolean | undefined>(undefined);
+	readonly defaultThemeKey = input<string | undefined>(undefined);
+	readonly availableThemes = input<readonly ThemeCatalogEntry[] | undefined>(undefined);
+	readonly onThemeChange = input<((key: string) => void) | undefined>(undefined);
+	readonly defaultLocale = input<string | undefined>(undefined);
+	readonly availableLocales = input<readonly LocaleCatalogEntry[] | undefined>(undefined);
+	readonly onLocaleChange = input<((code: string) => void) | undefined>(undefined);
+	readonly accountAuth = input<AccountAuthConfig | undefined>(undefined);
 
 	// Outputs
 	readonly activeSlideChange = output<number>();
 	readonly dirtyChange = output<boolean>();
 	readonly contentChange = output<Uint8Array>();
 	readonly propertiesChange = output<Partial<PptxCoreProperties>>();
+	readonly documentChange = output<void>();
+	readonly autosaved = output<Uint8Array>();
+	readonly autosaveToggle = output<boolean>();
+	readonly autosaveStatus = output<'idle' | 'saving' | 'saved' | 'error'>();
+	readonly autosaveRecovery = output<AutosaveRecord>();
+	readonly notesUpdate = output<string>();
+	readonly presentationChange = output<boolean>();
+	readonly collaborationStatus = output<ConnectionStatus>();
 	readonly modeChange = output<string>();
 	readonly zoomChange = output<number>();
 	readonly selectionChange = output<string[]>();
 	readonly slideCountChange = output<number>();
 	readonly startCollaboration = output<CollaborationConfig>();
 	readonly stopCollaboration = output<void>();
+	readonly collaborationChange = output<CollaborationState>();
+	readonly load = output<ViewerLoadDetail>();
+	readonly error = output<string>();
 }
 ```
 

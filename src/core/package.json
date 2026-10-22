@@ -1,6 +1,6 @@
 {
 	"name": "ooxml-core",
-	"version": "1.20.0",
+	"version": "1.24.1",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"keywords": [
 		"charts",
@@ -83,6 +83,11 @@
 			"types": "./dist/ribbon/index.d.ts",
 			"import": "./dist/ribbon/index.mjs",
 			"require": "./dist/ribbon/index.cjs"
+		},
+		"./embedding": {
+			"types": "./dist/embedding/index.d.ts",
+			"import": "./dist/embedding/index.mjs",
+			"require": "./dist/embedding/index.cjs"
 		},
 		"./diagram": {
 			"types": "./dist/diagram/index.d.ts",
@@ -189,6 +194,11 @@
 			"import": "./dist/pptx/signature-node/index.mjs",
 			"require": "./dist/pptx/signature-node/index.cjs"
 		},
+		"./pptx/node": {
+			"types": "./dist/pptx/node/index.d.ts",
+			"import": "./dist/pptx/node/index.mjs",
+			"require": "./dist/pptx/node/index.cjs"
+		},
 		"./pptx/smartart-layouts": {
 			"types": "./dist/pptx/smartart-layouts/index.d.ts",
 			"import": "./dist/pptx/smartart-layouts/index.mjs",
@@ -223,6 +233,11 @@
 			"types": "./dist/docx/ui/index.d.ts",
 			"import": "./dist/docx/ui/index.mjs",
 			"require": "./dist/docx/ui/index.cjs"
+		},
+		"./visio/collab": {
+			"types": "./dist/visio/collab/index.d.ts",
+			"import": "./dist/visio/collab/index.mjs",
+			"require": "./dist/visio/collab/index.cjs"
 		},
 		"./visio/ui": {
 			"types": "./dist/visio/ui/index.d.ts",

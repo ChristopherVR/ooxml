@@ -44,16 +44,37 @@ function glyph(element: XmlElement | undefined): ContentControlGlyph | undefined
 	return { code, ...(font ? { font } : {}) };
 }
 
-function parseKind(sdtPr: XmlElement): ContentControlKind {
-	for (const child of Array.from(sdtPr.childNodes).filter(isElement)) {
-		if (child.namespaceURI === WORD_NS && TYPE_ELEMENTS[child.localName])
-			return TYPE_ELEMENTS[child.localName]!;
-		if (child.namespaceURI === WORD_2010_NS && child.localName === 'checkbox') return 'checkbox';
-		if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSection')
-			return 'repeatingSection';
-	}
+/** The kind of control a child of `w:sdtPr` makes it, if it is a type element. */
+function kindOf(child: XmlElement): ContentControlKind | undefined {
+	if (child.namespaceURI === WORD_NS)
+		return Object.hasOwn(TYPE_ELEMENTS, child.localName)
+			? TYPE_ELEMENTS[child.localName]
+			: undefined;
+	if (child.namespaceURI === WORD_2010_NS && child.localName === 'checkbox') return 'checkbox';
+	if (child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSection')
+		return 'repeatingSection';
+	return undefined;
+}
+
+/**
+ * The type elements of a `w:sdtPr`, one at most in a valid file: also `w:richText`, which the
+ * default type need not be written as, an entity picker and a repeating section's item.
+ */
+export const typeElements = (sdtPr: XmlElement): XmlElement[] =>
+	Array.from(sdtPr.childNodes)
+		.filter(isElement)
+		.filter(
+			(child) =>
+				kindOf(child) !== undefined ||
+				(child.namespaceURI === WORD_NS && child.localName === 'richText') ||
+				(child.namespaceURI === WORD_2010_NS && child.localName === 'entityPicker') ||
+				(child.namespaceURI === WORD_2012_NS && child.localName === 'repeatingSectionItem'),
+		);
+
+export function parseKind(sdtPr: XmlElement): ContentControlKind {
+	const [type] = typeElements(sdtPr);
 	// `w:richText` is the default type when no other type element is present.
-	return 'richText';
+	return (type && kindOf(type)) ?? 'richText';
 }
 
 let generated = 0;
@@ -78,7 +99,10 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 	const showing = first(sdtPr, 'showingPlcHdr');
 	if (showing) control.showingPlaceholder = parseOnOff(getW(showing, 'val')) ?? true;
 	if (first(sdtPr, 'dataBinding')) control.dataBound = true;
-	if (first(sdtPr, 'temporary')) control.temporary = true;
+	const temporary = first(sdtPr, 'temporary');
+	if (temporary && (parseOnOff(getW(temporary, 'val')) ?? true)) control.temporary = true;
+	const placeholder = getW(first(first(sdtPr, 'placeholder'), 'docPart'), 'val');
+	if (placeholder) control.placeholder = placeholder;
 	if (kind === 'text') {
 		const multi = parseOnOff(getW(first(sdtPr, 'text'), 'multiLine'));
 		if (multi) control.multiLine = true;
@@ -112,5 +136,7 @@ export function parseContentControl(sdt: XmlElement, level: ContentControlLevel)
 		if (lid) control.dateLocale = lid;
 	}
 	control.sourceXml = buildXml(sdtPr);
+	const end = first(sdt, 'sdtEndPr');
+	if (end) control.endSourceXml = buildXml(end);
 	return control;
 }

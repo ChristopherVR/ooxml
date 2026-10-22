@@ -105,3 +105,23 @@ describe('save-as page .ppt card', () => {
 		expect(closes).toBe(1);
 	});
 });
+
+describe('save vs save as (host-owned storage reasons)', () => {
+	it('fires savePptx from the .pptx Save As card and save from the Save nav item', () => {
+		const file = createFileSection();
+		const internals = file as unknown as FileSectionInternals & {
+			selectPage: (id: string) => void;
+		};
+		const fired: string[] = [];
+		file.save.subscribe(() => fired.push('save'));
+		file.savePptx.subscribe(() => fired.push('savePptx'));
+		internals.page.set('saveAs');
+		const card = internals
+			.actions()
+			.find((action) => action.event === (file.savePptx as unknown as { emit: () => void }));
+		expect(card).toBeDefined();
+		internals.run(card!.event);
+		internals.selectPage('save');
+		expect(fired).toStrictEqual(['savePptx', 'save']);
+	});
+});

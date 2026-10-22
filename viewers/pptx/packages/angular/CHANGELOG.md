@@ -7,6 +7,101 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.47.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.47.1) - 2026-10-22
+
+### Bug Fixes
+
+- **ui:** Fit the pptx slide to sub-pixel viewport sizes ([#165](https://github.com/ChristopherVR/ooxml/issues/165)) ([d09a71d](https://github.com/ChristopherVR/ooxml/commit/d09a71d1e478eebc28edec2af309e7f4b0a69dbb))
+- **pptx:** Inject the .ppt svg rasteriser and move it to pptx/node ([be73b10](https://github.com/ChristopherVR/ooxml/commit/be73b10464c4629ebffa86d631b086e46a42fbe3))
+
+## [4.47.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.47.0) - 2026-10-22
+
+### Features
+
+- **pptx:** Route saves and recovery through host-owned storage ([4ad5655](https://github.com/ChristopherVR/ooxml/commit/4ad565525269ef0284114efad6d5e4a7bed756e4))
+- **pptx:** Add readOnly to the five viewer bindings ([4aadd67](https://github.com/ChristopherVR/ooxml/commit/4aadd678969d4b2d4811d86880b91c79ba7ca3b6))
+- **pptx:** Report the missing host events from the angular viewer ([94b9de4](https://github.com/ChristopherVR/ooxml/commit/94b9de473167c68e3b678636f6453af237d7029c))
+- **pptx:** Report inspector and AI property edits, emit vue dirty-change ([83d879d](https://github.com/ChristopherVR/ooxml/commit/83d879d4e27dec236e32af86064afebac21c6af9))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+- **automation:** Run the document tools against open editors ([6a45ebc](https://github.com/ChristopherVR/ooxml/commit/6a45ebc3651a21739b5e18e7758395c866656198))
+
+### Bug Fixes
+
+- **pptx:** Scope the viewer stylesheet reset to the viewer roots ([c390b2b](https://github.com/ChristopherVR/ooxml/commit/c390b2ba2f0ec7811c3554b9989346c6e8cd927d))
+- **pptx:** Report host save failures and use host recovery everywhere ([8e982c8](https://github.com/ChristopherVR/ooxml/commit/8e982c8576f656d10200a45cc1708a5ac8e14ed6))
+- **pptx:** Align cache maintenance tests with the shared sweeps ([a13ff2d](https://github.com/ChristopherVR/ooxml/commit/a13ff2d5f487599fe43a37a503436bd069375479))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Integrate the pptx binding events into host storage ([08272a2](https://github.com/ChristopherVR/ooxml/commit/08272a298c8b249aa0bf143b689ff01f66663309))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+## [Unreleased]
+
+### Documentation
+
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+
+## [4.46.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.46.0) - 2026-10-22
+
+### Features
+
+- **pptx:** Confirm owner write-back and report its status ([2cb779f](https://github.com/ChristopherVR/ooxml/commit/2cb779f606c7d8d0778c11be830433fc93f728c3))
+
+### Documentation
+
+- **pptx:** Sync english docs with the monorepo layout and apis ([4b89444](https://github.com/ChristopherVR/ooxml/commit/4b89444ac835ae6ed61ef1f6f7a3fc0d23aac7f5))
+- **pptx:** Fix demo paths and shared facade wording in package readmes ([4caf3d2](https://github.com/ChristopherVR/ooxml/commit/4caf3d2471527b484f1e1b6b2d3f5add11a92048))
+
+## [4.45.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.45.0) - 2026-10-22
+
+### Features
+
+- **automation:** Define word, excel and visio tools once in core ([bed1839](https://github.com/ChristopherVR/ooxml/commit/bed18392fec1f07fa9a0c1eabf8a7c1bb25b0387))
+- **pptx:** Report the shared collaboration state from every binding ([62752ef](https://github.com/ChristopherVR/ooxml/commit/62752efd7b2f9df8372db485cd23c2a6ed5f15ee))
+- **automation:** Propose xlsx edits as a reviewable diff ([0e13837](https://github.com/ChristopherVR/ooxml/commit/0e13837c6fdf0766e21aa8a31ef69737df8ab203))
+- **automation:** Add xlsx_propose_edits and xlsx_apply_proposal tools ([8c7500d](https://github.com/ChristopherVR/ooxml/commit/8c7500df317f1cffa3016705369e52b0a5ad0218))
+- **pptx:** Define the powerpoint tools as shared automation tools ([88acafd](https://github.com/ChristopherVR/ooxml/commit/88acafd82419de2cefbebd4b91b935c378f8c772))
+- **pptx:** Connect through a provider, webrtc or same-browser room ([4ae5288](https://github.com/ChristopherVR/ooxml/commit/4ae528882a33ec93730f30bf642589a00b6edf06))
+
+### Bug Fixes
+
+- **pptx:** Render flowChart connector presets as shapes, not lines ([978593a](https://github.com/ChristopherVR/ooxml/commit/978593a0d0067d97105fd98b8d640dc929ec9f2b))
+- **pptx:** Paint picture fills inherited from layout placeholders ([71b8196](https://github.com/ChristopherVR/ooxml/commit/71b81964ca4b19ef9cc143fa970479614426bd9d))
+
+## [4.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.44.0) - 2026-10-21
+
+### Features
+
+- **opc:** Name the check a zip package failed ([5125361](https://github.com/ChristopherVR/ooxml/commit/5125361f7787c1edf9863ccf85d0666a56610d1b))
+- **xml:** Throw a typed error when a part breaks a parse limit ([40e73f6](https://github.com/ChristopherVR/ooxml/commit/40e73f6e0ddb045ef5a3b960e26cfc07a1fc6d45))
+- **automation:** List and fill Word form fields from document bytes ([548ca2d](https://github.com/ChristopherVR/ooxml/commit/548ca2d53b2828bc69681e154e8bd668cfacf90b))
+
+### Bug Fixes
+
+- **chart:** Scale and draw series with very many points ([778a3e9](https://github.com/ChristopherVR/ooxml/commit/778a3e973b5d948e15ef2d0de6ac70a4243feb5a))
+- **docx:** Add no folder entries to a saved package ([9688c30](https://github.com/ChristopherVR/ooxml/commit/9688c30da93a3a73436a248b59b5a64d71fc7585))
+- **xml:** Keep the line break after the declaration of a part ([9af3e23](https://github.com/ChristopherVR/ooxml/commit/9af3e23b3c33368027123f1363c9d1236cc8230e))
+- **docx:** Keep markers and smart tags in place in a rebuilt paragraph ([8ddce70](https://github.com/ChristopherVR/ooxml/commit/8ddce70d17ba25ff6a1887f91c907ecba70a9b1f))
+- **text:** Keep unchanged words between far-apart edits in a diff ([3cf0b04](https://github.com/ChristopherVR/ooxml/commit/3cf0b0495a5c3c2d339b22c5db2b547c14921fbd))
+- **pptx:** Render weight-named font families at their weight ([7188288](https://github.com/ChristopherVR/ooxml/commit/718828829585145b461742c04e030fe3fbbd2d52))
+- **pptx:** Render style-named font families in their style ([5413be6](https://github.com/ChristopherVR/ooxml/commit/5413be6b74a6409c8a2f1454e1a1cf4c4f1b8ba8))
+- **color:** Require each palette variant to name its step ([70d7d9a](https://github.com/ChristopherVR/ooxml/commit/70d7d9a949e9dc5289bacf33bf63bd9af4c9f258))
+- **color:** Require each palette variant to name its step ([3135862](https://github.com/ChristopherVR/ooxml/commit/3135862978fd352498d977335777555ba519428a))
+- **pptx:** Render flowChart connector presets as shapes, not lines ([08399ae](https://github.com/ChristopherVR/ooxml/commit/08399aea49db3270d6ef9c9c163c0ea3b6f8e23f))
+- **pptx:** Paint picture fills inherited from layout placeholders ([70bf7f9](https://github.com/ChristopherVR/ooxml/commit/70bf7f91beda9ae8e4d70472134222afc873dc68))
+
+### Refactor
+
+- **angular:** Render Help and Record through the shared section ([a2041ed](https://github.com/ChristopherVR/ooxml/commit/a2041ed15f7debf8e19f242d03e7e01ad1d5998a))
+- **angular:** Draw the inspector theme colours on the shared grid ([04328e8](https://github.com/ChristopherVR/ooxml/commit/04328e8ed660758b1ed8873d642dcbc31cf8ebfa))
+- **angular:** Draw the inspector Text Warp on the shared gallery ([8b38906](https://github.com/ChristopherVR/ooxml/commit/8b389068bf06c42edf8fec3e5cdbacb4dbedfc05))
+
+### Testing
+
+- **pptx:** Follow the cover direction fix in react and angular ([bb9f936](https://github.com/ChristopherVR/ooxml/commit/bb9f93638997cb8cef29f2eb4488e9b4e8f2a14f))
+
 ## [4.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.43.0) - 2026-10-21
 
 ### Features

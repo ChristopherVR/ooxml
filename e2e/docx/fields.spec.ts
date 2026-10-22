@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { fileInput, fileNameLabel, newDocument, saveButton } from './helpers';
+import {
+	editorSelectionText,
+	fileInput,
+	fileNameLabel,
+	newDocument,
+	saveButton,
+	waitForEditorFocus,
+} from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import type { EditorView } from 'prosemirror-view';
 import type { TextSelection } from 'prosemirror-state';
@@ -92,6 +99,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				await expect
 					.poll(() => page.evaluate(() => window.getSelection()?.toString()), { timeout: 1000 })
 					.toBe('n');
+				await expect.poll(() => editorSelectionText(editor), { timeout: 1000 }).toBe('n');
 			}).toPass();
 			await editor.locator('office-ui-ribbon-actions [part="comments"]').click();
 			const pane = editor.locator('.dve-comments-panel');
@@ -146,6 +154,9 @@ test('edits text around and inside a complex field and saves the field intact', 
 	await expect(body).toContainText('Author: Ann wrote this.');
 	await expect(body).toHaveAttribute('contenteditable', 'true');
 
+	// The double click would also focus the editor, whose check after focus can undo the End below.
+	await body.focus();
+	await waitForEditorFocus(body);
 	await editor.locator('[data-field="AUTHOR"]').dblclick();
 	// Windows word selection includes the trailing space, crossing the hidden field end marker.
 	await page.keyboard.type('Bea');
@@ -240,6 +251,9 @@ test('records cut and paste under Track Changes as a tracked move and saves it',
 	await page.keyboard.type('Gamma');
 	await editor.getByRole('tab', { name: 'Review', exact: true }).click();
 	await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
+	// The double click would also focus the editor, whose check after focus can undo its selection.
+	await body.focus();
+	await waitForEditorFocus(body);
 	// Select "Beta" and cut it, then paste it at the end of "Gamma".
 	await body
 		.locator('p')

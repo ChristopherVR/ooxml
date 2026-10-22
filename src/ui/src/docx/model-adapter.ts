@@ -25,6 +25,7 @@ import { appendInlineNode, runToInlineNodes, type NoteNumberLookup } from './run
 import {
 	convertMergedTable,
 	convertSimpleTable,
+	tableControl,
 	tableNode,
 	tableFormattingFromNode,
 } from './table-model-adapter';
@@ -252,6 +253,7 @@ export function docToModel(
 						? {
 								...prior,
 								structureEditable: undefined,
+								contentControl: undefined,
 							}
 						: tableBordersFromNode(node.attrs.borders)),
 					type: 'table',
@@ -259,6 +261,7 @@ export function docToModel(
 					rows: convertSimpleTable(node, asParagraph, prior),
 					...tableFormattingFromNode(node),
 					...(node.attrs.structureEditable === false ? { structureEditable: false } : {}),
+					...tableControl(node, prior),
 				} as Table);
 		}
 	});

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openSample } from './helpers';
+import { clickInEditor, openSample, waitForEditorFocus } from './helpers';
 type DocxEditorElement = HTMLElementTagNameMap['docx-editor'];
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -24,8 +24,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			),
 		).toHaveCount(0);
 		const text = surface.locator('.ProseMirror');
-		await text.locator('p').last().click();
+		await clickInEditor(text.locator('p').last());
 		await page.keyboard.press('End');
+		// The editor reads the caret End moved only while it has focus, which the button takes next.
+		await waitForEditorFocus(text);
 		await page.getByRole('button', { name: 'Custom bold' }).click();
 		await page.keyboard.type(' Composed text.');
 		await expect(text.locator('strong').filter({ hasText: 'Composed text.' })).toHaveCount(1);

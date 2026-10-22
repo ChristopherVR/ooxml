@@ -97,6 +97,20 @@ the host's edit permission and readiness; a connected transport alone does not g
 permission to edit. `CollaborationContextValue` is available from the package root
 when the host needs to name the returned state type.
 
+### Opening on a slide
+
+`useViewerBuildingBlocks` takes the same `initialSlide` option as `PowerPointViewer`: the
+zero-based slide shown after each load, clamped into the deck. It is applied in the render that
+first shows the loaded deck, so a custom shell never shows slide 1 first and does not need to
+call `goTo()` after load or hide the canvas until it lands.
+
+```tsx
+const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
+```
+
+Changing `initialSlide` later applies to the next load, not the open deck; use the handle's
+`goTo(index)` to move the current slide.
+
 ### `useThemeSwitching`
 
 Switches the loaded **document's** PowerPoint theme (the OOXML color/font scheme, not the viewer

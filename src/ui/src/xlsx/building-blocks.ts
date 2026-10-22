@@ -6,7 +6,33 @@ import {
 	selectionFormatting,
 	style,
 	editBridge,
+	FONT_NAMES,
+	FONT_SIZES,
+	numberFormatOptions,
 } from 'ooxml-core/xlsx/ui';
+import type { SurfaceActionContext, SurfaceActionName } from './surface-actions';
+
+const LABELS = [
+	'Bold',
+	'Italic',
+	'Underline',
+	'Undo',
+	'Redo',
+	'Formula Bar',
+	'Name Box',
+	'Sheet',
+	'Font',
+	'Font Size',
+	'Number Format',
+	'Align Left',
+	'Center',
+	'Align Right',
+];
+const ALIGNMENTS = [
+	{ value: 'left', label: 'Align Left' },
+	{ value: 'center', label: 'Center' },
+	{ value: 'right', label: 'Align Right' },
+] as const satisfies readonly { value: HorizontalAlignment; label: string }[];
 
 /** Commands always re-read permission and commit cell input before changing their target. */
 export function spreadsheetToolbarProps(core: EditorCore) {
@@ -22,13 +48,48 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 		core.requestRender();
 		return true;
 	};
-	const commit = (): boolean =>
-		core.host.isConnected && (!ctx.grid()?.isEditing() || ctx.grid()!.commitEdit());
+	/** Commits the cell edit in progress; a refusal is reported as `validation-error`. */
+	const commit = (): boolean => {
+		if (!core.host.isConnected) return false;
+		const grid = ctx.grid();
+		if (!grid?.isEditing() || grid.commitEdit()) return true;
+		if (!core.editError)
+			ctx.emit('validation-error', {
+				message: ctx.t('The current cell edit failed validation.'),
+				ref: activeRef(core.selection.get()),
+			});
+		return false;
+	};
 	const run = async (id: string, arg?: unknown): Promise<boolean> => {
 		if (core.loading || !commit()) return false;
 		return core.commands.run(id, arg);
 	};
 	const canEdit = Boolean(core.host.isConnected && core.session && !core.readOnly && !core.loading);
+	const actionContext = (): SurfaceActionContext => {
+		const current = core.selection.get();
+		return {
+			sheet: core.activeSheet,
+			sheetName: core.workbook?.sheets[core.activeSheet]?.name ?? '',
+			selection: selectionRef(current),
+			activeCell: activeRef(current),
+		};
+	};
+	const hostAction = (name: SurfaceActionName, needsEdit: boolean) => ({
+		enabled: Boolean(core.host.isConnected && core.surfaceActions[name] && (!needsEdit || canEdit)),
+		run: async (): Promise<boolean> => {
+			const callback = core.surfaceActions[name];
+			if (!callback || (needsEdit && !canEdit) || core.loading || !commit()) return false;
+			callback(actionContext());
+			return true;
+		},
+	});
+	const share = hostAction('onOpenShareDialog', false);
+	const settings = hostAction('onOpenSettings', false);
+	const formatCells = hostAction('onOpenFormatCells', true);
+	const findReplace = hostAction('onOpenFindReplace', false);
+	const insertFunction = hostAction('onOpenInsertFunction', true);
+	const canUndo = core.commands.isEnabled('edit.undo');
+	const canRedo = core.commands.isEnabled('edit.redo');
 	return {
 		enabled: {
 			bold: core.commands.isEnabled('home.bold'),
@@ -36,15 +97,34 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 			underline: core.commands.isEnabled('home.underline'),
 			fontFamily: core.commands.isEnabled('home.font-name'),
 			fontSize: core.commands.isEnabled('home.font-size'),
+			alignment: core.commands.isEnabled('home.align-left'),
 			numberFormat: core.commands.isEnabled('home.number-format'),
+			undo: canUndo,
+			redo: canRedo,
+			openShareDialog: share.enabled,
+			settings: settings.enabled,
+			formatCells: formatCells.enabled,
+			findReplace: findReplace.enabled,
+			insertFunction: insertFunction.enabled,
+			/** The host owns the validation alert; false means a refused edit just stays open (Retry). */
+			validationAlert: Boolean(core.host.isConnected && core.surfaceActions.onOpenValidationAlert),
 		},
 		...selectionFormatting(core.workbook, core.activeSheet, selection.ranges),
-		labels: Object.fromEntries(
-			['Bold', 'Italic', 'Underline', 'Undo', 'Redo', 'Formula Bar', 'Name Box', 'Sheet'].map(
-				(label) => [label, ctx.t(label)],
-			),
-		),
+		labels: Object.fromEntries(LABELS.map((label) => [label, ctx.t(label)])),
+		/** The choices a font, size, alignment or number format control can offer. */
+		options: {
+			fontFamilies: [...FONT_NAMES] as string[],
+			fontSizes: [...FONT_SIZES] as number[],
+			alignments: ALIGNMENTS.map((a) => ({ value: a.value, label: ctx.t(a.label) })),
+			numberFormats: numberFormatOptions(ctx),
+		},
 		canEdit,
+		/** Unsaved changes since the last load, save or `markClean()`. */
+		dirty: core.dirty.dirty,
+		/** Sharing state: whether a room is joined, who is in it and how the connection is. */
+		collaboration: core.collab.state(),
+		/** The validation message of the cell edit in progress, or null. Cleared as the draft changes. */
+		editError: core.editError?.message ?? null,
 		selection: selectionRef(selection),
 		activeCell: activeRef(selection),
 		activeSheet: core.activeSheet,
@@ -57,8 +137,8 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 				index,
 				state: sheet.state,
 			})) ?? [],
-		canUndo: core.commands.isEnabled('edit.undo'),
-		canRedo: core.commands.isEnabled('edit.redo'),
+		canUndo,
+		canRedo,
 		formula: draft.editing
 			? draft.text
 			: core.workbook
@@ -78,6 +158,11 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 		},
 		onUndo: () => run('edit.undo'),
 		onRedo: () => run('edit.redo'),
+		onOpenShareDialog: share.run,
+		onOpenSettings: settings.run,
+		onOpenFormatCells: formatCells.run,
+		onOpenFindReplace: findReplace.run,
+		onOpenInsertFunction: insertFunction.run,
 		onSelect: (ref: string): boolean => {
 			if (!commit()) return false;
 			(core.host as HTMLElement & { select(ref: string): void }).select(ref);

@@ -8,7 +8,9 @@ const executablePath = resolveChromiumExecutable(chromium.executablePath());
 export default defineConfig({
 	testDir: '../../e2e/docx',
 	fullyParallel: false,
-	workers: 1,
+	// CI's runners have 4 vCPUs: two workers about halve the suite. Its timing-sensitive specs wait
+	// for the editor to settle, so they stay green when the CPU is shared.
+	workers: 2,
 	use: {
 		baseURL: origin,
 		headless: true,

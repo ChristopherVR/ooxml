@@ -20,9 +20,11 @@
 	} from 'ooxml-ui/pptx';
 	import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
+	import { useViewerStorage } from '../../../state/viewer-storage-context';
 
 	const { accountAuth }: { accountAuth?: AccountAuthConfig } = $props();
 	const t = useTranslator();
+	const storage = useViewerStorage();
 
 	// This global is injected at build time from this package's own
 	// `package.json` version (see `vite.config.ts`); the `typeof` guard keeps
@@ -35,7 +37,7 @@
 	let cleared = $state(false);
 
 	async function refreshUsage(): Promise<void> {
-		usage = await getLocalStorageUsageSummary();
+		usage = await getLocalStorageUsageSummary(storage());
 	}
 	onMount(() => {
 		void refreshUsage();
@@ -59,7 +61,7 @@
 		if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
 			return;
 		}
-		await clearAllLocalViewerData();
+		await clearAllLocalViewerData(storage());
 		cleared = true;
 		profile = { ...DEFAULT_VIEWER_PROFILE };
 		await refreshUsage();

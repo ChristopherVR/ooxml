@@ -1,5 +1,6 @@
 // How the editor shows and operates content controls: the active outline, a click on a check box,
-// and the list and calendar popups of drop-down, combo box and date picker controls.
+// and the list and calendar popups of drop-down, combo box and date picker controls, inline or
+// around a table cell.
 import { Plugin } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
@@ -25,6 +26,19 @@ function controlOfElement(
 	}
 }
 
+/**
+ * Where the control drawn as `el` starts in the document: controls can share an id (a file from
+ * another tool may repeat one), and the commands act on the control around this position.
+ */
+function positionOf(view: EditorView, el: HTMLElement): number | undefined {
+	if (!el.isConnected) return undefined;
+	try {
+		return view.posAtDOM(el, 0);
+	} catch {
+		return undefined;
+	}
+}
+
 /** Opens the popup the control's kind calls for. Returns whether a popup (or toggle) took the click. */
 function operate(
 	view: EditorView,
@@ -34,7 +48,7 @@ function operate(
 ): boolean {
 	if (!canEditControlContent(control)) return control.kind === 'checkbox';
 	if (control.kind === 'checkbox') {
-		const tr = toggleCheckboxControl(view.state, control.id);
+		const tr = toggleCheckboxControl(view.state, control.id, positionOf(view, el));
 		if (tr) view.dispatch(tr);
 		return true;
 	}
@@ -47,7 +61,10 @@ function operate(
 		const items = control.items.map((item) => item.display);
 		openListPopover(el, items, el.textContent ?? '', false, (display) => {
 			const index = items.indexOf(display);
-			const tr = index >= 0 ? chooseListItem(view.state, control.id, index) : undefined;
+			const tr =
+				index >= 0
+					? chooseListItem(view.state, control.id, index, positionOf(view, el))
+					: undefined;
 			if (tr) view.dispatch(tr);
 			view.focus();
 		});
@@ -55,7 +72,7 @@ function operate(
 	}
 	if (control.kind === 'date') {
 		openCalendarPopover(el, controlDate(control), control.dateLocale ?? 'en-US', (date) => {
-			const tr = chooseDate(view.state, control.id, date);
+			const tr = chooseDate(view.state, control.id, date, positionOf(view, el));
 			if (tr) view.dispatch(tr);
 			view.focus();
 		});
@@ -73,6 +90,10 @@ export function contentControlViewPlugin(): Plugin {
 				if (active.level === 'inline')
 					return DecorationSet.create(state.doc, [
 						Decoration.inline(active.from, active.to, { class: 'dve-sdt-active' }),
+					]);
+				if (active.level === 'cell')
+					return DecorationSet.create(state.doc, [
+						Decoration.node(active.from, active.to, { class: 'dve-sdt-active' }),
 					]);
 				const decorations: Decoration[] = [];
 				state.doc.nodesBetween(active.from, active.to, (node, pos) => {

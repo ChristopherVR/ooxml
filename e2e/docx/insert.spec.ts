@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton, dialogByHeading } from './helpers';
+import { clickInEditor, newDocument, saveButton, dialogByHeading } from './helpers';
 
 test('inserts a picture and a hyperlink from the ribbon and saves both to DOCX', async ({
 	page,
@@ -35,7 +35,7 @@ test('inserts a picture and a hyperlink from the ribbon and saves both to DOCX',
 	await expect(picture).toHaveAttribute('src', /^blob:/);
 	await expect(picture).toHaveAttribute('alt', 'dot');
 
-	await surface.locator('p').first().click();
+	await clickInEditor(surface.locator('p').first());
 	await page.keyboard.press('Home');
 	await page.keyboard.press('Shift+End');
 	await page.keyboard.press('Control+k');

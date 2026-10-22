@@ -30,9 +30,13 @@ Node.js 22+. On Windows, the root test runner also needs Bash (for example, Git 
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
-cd pptx-viewer
+cd ooxml
 
 bun install
+bun run build                # ooxml-core, built first
+bun run --cwd src/ui build   # ooxml-ui, which the bindings and demos read from dist
+cd viewers/pptx
+
 bun run build      # foundations, bindings, installer, and React demo
 bun run test
 bun run typecheck        # needs built packages; on a clean checkout use typecheck:fresh
@@ -40,7 +44,7 @@ bun run lint
 bun run fmt:check
 ```
 
-The root build runs `core -> shared -> locales -> tools -> react -> vue -> angular -> vanilla -> svelte -> cli -> React demo`. Vue, Angular, Vanilla, and Svelte demo production builds are separate scripts in their demo packages. `emf-converter` and `mtx-decompressor` are external npm dependencies.
+The viewer build (`bun run build` in `viewers/pptx`) runs `core -> shared -> locales -> tools -> react -> vue -> angular -> vanilla -> svelte -> cli -> React demo`. Vue, Angular, Vanilla, and Svelte demo production builds are separate scripts in their demo packages. `emf-converter` and `mtx-decompressor` are external npm dependencies.
 
 External contributors work on a fork: fork ChristopherVR/ooxml, branch off
 `main`, and open a PR back to `ChristopherVR/ooxml:main`. (Maintainers with
@@ -75,8 +79,9 @@ A new ribbon control, dialog, inspector panel, context-menu entry, keyboard
 shortcut, gesture, or on-canvas affordance is not "done" when it works in React.
 The expected shape of the change is:
 
-1. **Logic goes in `pptx-viewer-shared` first**
-   (`packages/shared/src/render/...`). Geometry, style/colour resolution, text
+1. **Logic goes in the shared layer first** (`src/ui/src/pptx/render/...` at the
+   repository root, published as `ooxml-ui/pptx`; document logic goes in
+   `src/core/pptx/`). Geometry, style/colour resolution, text
    and paragraph building, chart maths, connector routing, animation, export
    data, state machines, command definitions: none of that is
    framework-specific.
@@ -90,7 +95,7 @@ The expected shape of the change is:
 
 Reimplementing the same pure helper five times will be sent back. If you find
 yourself copy-pasting logic from `packages/react` into `packages/vue`, that
-logic belongs in `packages/shared`.
+logic belongs in `src/ui/src/pptx/render/`.
 
 ### If you are fixing a UI bug
 
@@ -116,8 +121,8 @@ the drift.
 
 | Change                                           | Where the logic lives | Bindings to touch       | Tests required                                          |
 | ------------------------------------------------ | --------------------- | ----------------------- | ------------------------------------------------------- |
-| New UI feature (control, dialog, panel, gesture) | `pptx-viewer-shared`  | **All five**            | Unit per binding + shared unit + e2e spec               |
-| UI fix reproducible in >1 binding                | `pptx-viewer-shared`  | **All affected**        | Regression test per affected binding (+ e2e)            |
+| New UI feature (control, dialog, panel, gesture) | `src/ui/src/pptx`     | **All five**            | Unit per binding + shared unit + e2e spec               |
+| UI fix reproducible in >1 binding                | `src/ui/src/pptx`     | **All affected**        | Regression test per affected binding (+ e2e)            |
 | UI fix genuinely specific to one framework       | That binding          | Just that one           | Regression test in that binding; PR says why            |
 | Parsing / serialization / geometry               | `pptx-viewer-core`    | None (bindings inherit) | Unit in `ooxml-core` (pptx area), round-trip if on save |
 | Docs, README, examples                           | n/a                   | n/a                     | Documentation build and relevant example checks         |
@@ -129,7 +134,7 @@ does not open is almost never framework-specific.
 
 ### i18n
 
-Adding an English key to `packages/shared/src/i18n/translations-en.ts` requires
+Adding an English key to `src/ui/src/pptx/i18n/translations-en.ts` (and its `translations-en-*.ts` siblings) requires
 matching entries under `packages/locales/src/{de,es,fr,zh-CN}/`.
 `packages/locales/src/locales.test.ts` fails the test suite if any locale is missing
 a canonical key. Never hardcode a user-visible string: route it through
@@ -142,7 +147,7 @@ a canonical key. Never hardcode a user-visible string: route it through
 ```
 packages/
   core/      pptx-viewer-core     Parse, edit, serialize PPTX (framework-agnostic)
-  shared/    pptx-viewer-shared   Framework-agnostic viewer logic (PRIVATE, bundled into each binding)
+  shared/    pptx-viewer-shared   Compatibility facade (PRIVATE); owns no logic, which lives in src/ui/src/pptx
   locales/   pptx-viewer-locales  de/es/fr/zh-CN dictionaries (PRIVATE)
   react/     pptx-react-viewer    React binding
   vue/       pptx-vue-viewer      Vue 3 binding
@@ -157,16 +162,17 @@ Rules of thumb:
 
 - **PPTX in / PPTX out** goes in `core`. Anything about the OpenXML file itself:
   parsing, theme resolution, geometry presets, serialization, round-trip.
-- **How the deck behaves** goes in `shared`. Anything a viewer needs but that
+- **How the deck behaves** goes in the shared UI layer (`src/ui/src/pptx`). Anything a viewer needs but that
   does not care which framework renders it.
 - **How the deck looks in this framework** goes in the binding, and should be
   thin. A component that declares its own interfaces or does non-trivial
   computation is a smell: move that into a shared module or a composable.
 
-`pptx-viewer-shared` is **private and never published**. It is inlined into each
-binding at build time (Angular vendors its source into
-`src/internal/shared-src`). Adding a new export from `shared` requires
-`bun run build` in `packages/shared` before the React and Angular demos will see
+`pptx-viewer-shared` is **private and never published**, and it is only a
+compatibility facade over `ooxml-ui/pptx`. The framework-independent renderer
+and web components live in `src/ui/src/pptx` at the repository root; document
+logic lives in `src/core/pptx`. After changing either, run `bun run build` in
+that package (`src/ui` or `src/core`) before the demos that read `dist` will see
 it.
 
 ---
@@ -255,8 +261,8 @@ bun run e2e:local-only   # playwright test --grep @local-only --workers=1
 
 Run them yourself before pushing a change to export-video-related paths (the
 shared export pipeline, each binding's export code, or the tagged spec itself):
-the `.husky/pre-push` hook that used to run them in the pptx-viewer repository
-is not installed here, so nothing else covers CI's blind spot.
+the `.husky/pre-push` hook in `viewers/pptx` is inert in this monorepo (see the
+root `AGENTS.md`), so nothing else covers CI's blind spot.
 
 Do not add `@local-only` to a test unless it is genuinely unrunnable on the
 hosted runner, not merely slow; a normal slow test belongs in the regular
@@ -291,13 +297,13 @@ a file.
 The demos do **not** all resolve packages the same way, and the difference
 decides whether your edit is live on reload or needs a build first.
 
-| Specifier                     | react      | vue        | angular      | vanilla    | svelte     |
-| ----------------------------- | ---------- | ---------- | ------------ | ---------- | ---------- |
-| the binding (`pptx-*-viewer`) | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-core`            | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-shared`          | **`dist`** | source     | **vendored** | source     | source     |
-| `pptx-viewer-locales`         | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-mcp`             | **`dist`** | **`dist`** | **`dist`**   | **`dist`** | **`dist`** |
+| Specifier                     | react      | vue        | angular    | vanilla    | svelte     |
+| ----------------------------- | ---------- | ---------- | ---------- | ---------- | ---------- |
+| the binding (`pptx-*-viewer`) | source     | source     | **`dist`** | source     | source     |
+| `pptx-viewer-core`            | source     | source     | **`dist`** | source     | source     |
+| `ooxml-ui/pptx`               | **`dist`** | source     | **`dist`** | source     | source     |
+| `pptx-viewer-locales`         | source     | source     | **`dist`** | source     | source     |
+| `pptx-viewer-mcp`             | **`dist`** | **`dist`** | **`dist`** | **`dist`** | **`dist`** |
 
 Anything marked `dist` resolves to built output, so **source edits are invisible
 until you build that package**:
@@ -305,16 +311,16 @@ until you build that package**:
 - **Angular** reads `packages/angular/dist` (ng-packagr). Editing
   `packages/angular/src` changes nothing on screen until you run `bun run build`
   in `packages/angular`. Core also resolves to built output in this demo: run
-  `bun run --filter pptx-viewer-core build` after core changes. Shared source is
-  vendored during the Angular build, so shared edits require rebuilding Angular. This is the most common way to waste an hour concluding
+  `bun run --filter pptx-viewer-core build` after core changes. Shared UI edits
+  need a build in `src/ui` at the repository root first. This is the most common way to waste an hour concluding
   "my change does not work in Angular".
 - **`pptx-viewer-mcp`** is aliased by no demo but is imported by
-  `packages/shared/src/ai/tools/mcp-registry.ts`, so a stale
+  `src/ui/src/pptx/ai/tools/mcp-registry.ts`, so a stale
   `packages/tools/dist` **breaks all five demos at once** with
   `Module "path" has been externalized for browser compatibility`. The giveaway
   is a demo that renders only its version footer. Fix with `bun run build` in
   `packages/tools`.
-- After adding a **new export to `shared`**, build `packages/shared` once or the
+- After adding a **new export to `ooxml-ui/pptx`**, build `src/ui` once or the
   React and Angular demos will not see it.
 
 Two more traps:

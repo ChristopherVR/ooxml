@@ -20,7 +20,7 @@ interface ChartPartSelectionContextValue {
 	setSelection: (selection: ChartPartSelection | null) => void;
 }
 
-const ChartPartSelectionContext = createContext<ChartPartSelectionContextValue>({
+const ChartPartSelectionContext = /* @__PURE__ */ createContext<ChartPartSelectionContextValue>({
 	selection: null,
 	setSelection: () => {},
 });

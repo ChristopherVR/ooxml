@@ -162,15 +162,17 @@ export function getSlideTransitionAnimations(
 
 		case 'cover': {
 			const dir = resolveDirection8(direction, 'left');
+			// `p:cover/@dir` is the direction of TRAVEL (UI "From Right" is stored as
+			// dir="l"), so the incoming slide starts at the opposite edge.
 			const coverMap: Record<ResolvedDirection8, string> = {
-				left: `pptx-tr-cover-from-left ${dur} ${EASE} forwards`,
-				right: `pptx-tr-cover-from-right ${dur} ${EASE} forwards`,
-				up: `pptx-tr-cover-from-top ${dur} ${EASE} forwards`,
-				down: `pptx-tr-cover-from-bottom ${dur} ${EASE} forwards`,
-				lu: `pptx-tr-cover-from-lu ${dur} ${EASE} forwards`,
-				ld: `pptx-tr-cover-from-ld ${dur} ${EASE} forwards`,
-				ru: `pptx-tr-cover-from-ru ${dur} ${EASE} forwards`,
-				rd: `pptx-tr-cover-from-rd ${dur} ${EASE} forwards`,
+				left: `pptx-tr-cover-from-right ${dur} ${EASE} forwards`,
+				right: `pptx-tr-cover-from-left ${dur} ${EASE} forwards`,
+				up: `pptx-tr-cover-from-bottom ${dur} ${EASE} forwards`,
+				down: `pptx-tr-cover-from-top ${dur} ${EASE} forwards`,
+				lu: `pptx-tr-cover-from-rd ${dur} ${EASE} forwards`,
+				ld: `pptx-tr-cover-from-ru ${dur} ${EASE} forwards`,
+				ru: `pptx-tr-cover-from-ld ${dur} ${EASE} forwards`,
+				rd: `pptx-tr-cover-from-lu ${dur} ${EASE} forwards`,
 			};
 			return {
 				outgoing: 'none',

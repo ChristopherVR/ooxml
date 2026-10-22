@@ -14,4 +14,5 @@ export * from './picture-color-gallery';
 export * from './picture-corrections-gallery';
 export { smartArtLayoutSwitchPatch, switchSmartArtLayoutData } from './smartart-gallery-patch';
 export { tableLayoutCells } from './table-layout-ops';
+export { buildTextWarpGallery, textWarpStyle } from './text-warp-gallery';
 export type { TableCursorState, TableLayoutCell } from './table-layout-ops';

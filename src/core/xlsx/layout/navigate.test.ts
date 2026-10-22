@@ -104,4 +104,14 @@ describe('navigate Ctrl+arrows (Excel jump semantics)', () => {
 		expect(navigate(f, at(0, 0), 'ctrlDown')).toEqual(at(3, 0));
 		expect(navigate(f, at(3, 0), 'ctrlDown')).toEqual(at(MAX_ROW, 0));
 	});
+
+	it('jumps to a column with more filled cells than a call takes arguments', () => {
+		// About 125,000 is the most arguments a call takes in Node. Rows 1 to 200,000 are filled, the
+		// lower half first, so the nearest cell in either direction sits mid-column.
+		const big = createWorksheet('S', 1);
+		for (let r = 100_001; r <= 200_000; r++) putCell(big, r, 0, { value: r });
+		for (let r = 1; r <= 100_000; r++) putCell(big, r, 0, { value: r });
+		expect(navigate(big, at(0, 0), 'ctrlDown')).toEqual(at(1, 0));
+		expect(navigate(big, at(300_000, 0), 'ctrlUp')).toEqual(at(200_000, 0));
+	});
 });

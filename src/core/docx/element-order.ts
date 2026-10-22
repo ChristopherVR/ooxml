@@ -51,14 +51,21 @@ export const RPR_ORDER = [
 ];
 
 /**
- * Sorts an element's children into `order`. Elements outside the list (extensions) keep their
- * position relative to the known element before them. Nothing moves when already in order.
+ * Sorts an element's children into `order`. An entry that lists several names is a choice group
+ * whose members may come in any order, so they keep theirs. Elements outside the list
+ * (extensions) keep their position relative to the known element before them. Nothing moves when
+ * already in order.
  */
-export function orderChildren(parent: XmlElement, order: readonly string[]): void {
+export function orderChildren(
+	parent: XmlElement,
+	order: readonly (string | readonly string[])[],
+): void {
 	const elements = Array.from(parent.childNodes).filter(isElement);
+	const rankOf = (name: string) =>
+		order.findIndex((entry) => (typeof entry === 'string' ? entry === name : entry.includes(name)));
 	let previousRank = -1;
 	const ranked = elements.map((element, index) => {
-		const rank = element.namespaceURI === WORD_NS ? order.indexOf(element.localName ?? '') : -1;
+		const rank = element.namespaceURI === WORD_NS ? rankOf(element.localName ?? '') : -1;
 		if (rank >= 0) previousRank = rank;
 		return { element, index, rank: rank >= 0 ? rank : previousRank + 0.5 };
 	});
@@ -67,10 +74,12 @@ export function orderChildren(parent: XmlElement, order: readonly string[]): voi
 	for (const { element } of sorted) parent.appendChild(element);
 }
 
-/** `CT_SectPr` child order (ECMA-376 §17.6.17); header/footer references come first. */
+/**
+ * `CT_SectPr` child order (ECMA-376 §17.6.17). Header and footer references come first, as one
+ * choice group (`EG_HdrFtrReferences`): Word interleaves them, the first-page pair last.
+ */
 export const SECTPR_ORDER = [
-	'headerReference',
-	'footerReference',
+	['headerReference', 'footerReference'],
 	'footnotePr',
 	'endnotePr',
 	'type',

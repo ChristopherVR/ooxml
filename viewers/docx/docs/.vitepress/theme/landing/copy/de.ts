@@ -71,8 +71,8 @@ export const de: LandingCopy = {
 		link: { text: 'Roadmap zur Unterstützung', href: '/parity-roadmap' },
 		roadmapTitle: 'Hinweis zur Roadmap',
 		roadmapCopy:
-			'Gemeinsame OOXML-Logik wird in das private Paket ooxml-core verlagert, sodass dieses Repository am Ende nur noch die Oberfläche enthalten kann. Diese Migration läuft und ist keine ausgelieferte Funktion.',
-		roadmapLink: { text: 'Der Plan für ooxml-core', href: '/ooxml-core-plan' },
+			'Die Logik für Word-Dokumente liegt im gemeinsamen Paket ooxml-core; der Editor selbst steckt in ooxml-ui. Diese Pakete dokumentieren die Oberfläche und die Framework-Bindings.',
+		roadmapLink: { text: 'Architektur', href: '/de/architecture' },
 	},
 	quickstart: {
 		kicker: 'Erste Schritte',

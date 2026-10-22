@@ -30,6 +30,8 @@ export type RibbonGalleryId =
 	| 'shapeStyles'
 	| 'shapeEffects'
 	| 'wordArtStyles'
+	/** The inspector's Text Warp (WordArt Transform) picker. */
+	| 'textWarp'
 	| 'pictureStyles'
 	| 'pictureCorrections'
 	| 'pictureColor'

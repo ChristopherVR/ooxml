@@ -1,18 +1,25 @@
-# Compose a Word editor
+# Building blocks
 
-`docx-react-viewer` exports `useViewerBuildingBlocks`, `DocumentCanvas` and an optional
-`Toolbar`. They use WordEditor's existing editor, layout, history and serialization engine.
+`docx-react-viewer` exports `useViewerBuildingBlocks`, `DocumentCanvas` and optional
+`Toolbar`, `PageNavigation` and `StatusBar` components. They use WordEditor's existing editor,
+layout, history and serialization engine, and follow the shape of the PowerPoint
+`useViewerBuildingBlocks`: the hook returns props, the host renders what it wants.
 
 ```tsx
 import { DocumentCanvas, Toolbar, useViewerBuildingBlocks } from 'docx-react-viewer';
 
 function EmbeddedWord({ documentModel, canEdit, handle }) {
-	const { canvasProps, toolbarProps, loading, error } = useViewerBuildingBlocks({
-		documentModel,
-		canEdit,
-		handle,
-		onDirtyChange: (dirty) => console.log(dirty),
-	});
+	const { canvasProps, toolbarProps, navigationProps, statusProps, loading, error } =
+		useViewerBuildingBlocks({
+			documentModel,
+			canEdit,
+			handle,
+			onDirtyChange: (dirty) => console.log(dirty),
+			// Host-owned dialogs: omit one and its action reports as not enabled.
+			onOpenHyperlinkDialog: (request) => openMyLinkDialog(request),
+			onOpenFindReplace: (request) => openMyFindBar(request),
+			onOpenImagePicker: (request) => openMyFilePicker(request),
+		});
 	return (
 		<>
 			{toolbarProps && (
@@ -21,27 +28,114 @@ function EmbeddedWord({ documentModel, canEdit, handle }) {
 				</button>
 			)}
 			<DocumentCanvas {...canvasProps} />
+			{statusProps && <span>{statusProps.wordText}</span>}
 			{error && <p role="alert">{error.message}</p>}
 		</>
 	);
 }
 ```
 
-Render the canvas even while loading. `toolbarProps` is null until it mounts. It exposes
-selection, bold/italic/underline (null for mixed values), font family/size, alignment,
-list state, undo/redo availability and direct `on*` callbacks. `Toolbar` consumes the same
-props when library controls are wanted. Give the canvas container a height.
+Render the canvas even while loading. The props are null until it mounts. Give the canvas
+container a height.
 
-Use `bytes` to load a file, or the existing handle's `load`, `save`, `download`, `markClean`
-and `dirty`. Saving does not mark a document clean until the host confirms persistence.
-`canEdit={false}` or `readOnly` blocks editing while selection and viewing remain available.
+## What the hook returns
+
+| Field                      | Contents                                                           |
+| -------------------------- | ------------------------------------------------------------------ |
+| `canvasProps`              | Spread onto `DocumentCanvas`. Mounts and releases the editor.      |
+| `toolbarProps`             | Selection and formatting state plus editing callbacks (below).     |
+| `navigationProps`          | Page, page count, view mode and page navigation callbacks.         |
+| `statusProps`              | Word count and zoom with callbacks.                                |
+| `loading`, `error`, `mode` | Load state, the last load or document error, `'view'` or `'edit'`. |
+
+### toolbarProps
+
+State: `selection` (`{ from, to }`), `bold`, `italic`, `underline` (`null` when the selection
+mixes values), `fontFamily`, `fontSize` (`null` when mixed), `alignment`
+(`'left' | 'center' | 'right' | 'justify'` or `null`), `list`
+(`'bullet' | 'number' | 'other' | null`), `canEdit`, `canUndo`, `canRedo` and translated `labels`.
+
+Callbacks, each returning `false` when the action is not allowed (read-only or still loading):
+`onBold`, `onItalic`, `onUnderline`, `onFontFamilyChange(family)`, `onFontSizeChange(points)`,
+`onAlignmentChange(alignment)`, `onListChange('bullet' | 'number' | 'remove')`, `onUndo`, `onRedo`.
+The `list` state and `onListChange` use the same `'bullet' | 'number'` values.
+
+### navigationProps
+
+`page`, `pageCount`, `pageText` ("Page 2 of 5"), `pagesAvailable`, `canGoPrevious`, `canGoNext`,
+`viewMode` (`'draft' | 'print'`) and the callbacks `onGoToPage(n)`, `onPreviousPage`,
+`onNextPage` and `onViewModeChange(mode)`. Pages exist in Print Layout only: in Draft,
+`pagesAvailable` is false and the page callbacks return `false`. Switch with
+`onViewModeChange('print')`.
+
+### statusProps
+
+`words`, `wordText` ("42 words"), `zoom` (percent), `minZoom`, `maxZoom` and the callbacks
+`onZoomChange(percent)`, `onZoomIn` and `onZoomOut`. Scrolling updates `navigationProps` as well.
+
+## Host dialogs
+
+A surface mounts no dialog of its own. These workflows are the host's, named like the
+PowerPoint `onOpen...` callbacks. Pass them as options; `toolbarProps` then carries a matching
+`open...` opener (`openHyperlinkDialog`, `openFindReplace`, `openImagePicker`), a `can...` flag and `hostWorkflows` (which callbacks were supplied).
+
+| Option                  | Request object                                                                   | Enabled while                 |
+| ----------------------- | -------------------------------------------------------------------------------- | ----------------------------- |
+| `onOpenHyperlinkDialog` | `{ href, text, apply(href, text?), remove() }` for the link at the selection     | editable                      |
+| `onOpenFindReplace`     | `{ search, findNext, findPrevious, replaceOne, replaceAll, status, canReplace }` | loaded (read-only keeps find) |
+| `onOpenImagePicker`     | `{ insert(file) }`: the host picks a file and hands it back                      | editable                      |
+
+With a callback omitted, `canInsertLink`, `canFindReplace` or `canInsertPicture` is false and the
+opener returns `false`. Requests re-check permission when used, so a dialog left open across a
+switch to read-only cannot edit.
+
+## Library components
+
+`Toolbar` draws undo and redo, font family and size, bold, italic, underline, four alignments,
+bulleted and numbered lists, and a button for each host workflow you supplied. `PageNavigation`
+draws previous page, "Page n of m", next page and the Draft or Print Layout switch.
+`StatusBar` draws the word count and a zoom select. All are optional and props-driven; each
+control has a stable node, so keyboard focus survives formatting updates. They use the shared
+Office styles. Custom controls never need them.
+
+```tsx
+{
+	toolbarProps && <Toolbar {...toolbarProps} />;
+}
+{
+	navigationProps && <PageNavigation {...navigationProps} />;
+}
+{
+	statusProps && <StatusBar {...statusProps} />;
+}
+```
+
+## Read-only surfaces
+
+The surface is **read-only until the host passes `canEdit: true`**, matching the PowerPoint and
+Visio building blocks (the full `WordEditor` stays editable by default). The permission is applied
+before the canvas mounts, so `mode` starts as `'view'` and there is no editable flash. `readOnly`
+still wins over `canEdit: true`. While read-only, every editing callback returns `false` and
+the document cannot change. The reader can still focus the surface, select text with the mouse or
+keyboard (arrows, Shift+arrows, Home, End, Ctrl+A), copy, and read the selection from
+`toolbarProps.selection`. Keyboard shortcuts that belong to the application (find, save, print)
+are not installed on a surface; wire them to your own controls.
+
+**Migrating a host.** Building blocks used to be editable by default. A host that relied on that
+must now pass `canEdit: true` (in the options object or, for a native adapter, the reactive
+options); without it the surface opens read-only and every editing callback returns `false`.
+
+## Lifecycle
+
+Use `bytes` to load a file, or the handle's `load`, `save`, `download`, `markClean` and
+`dirty`. Saving does not mark a document clean until the host confirms persistence.
 The canvas mounts no title bar, ribbon, backstage, status bar or application dialogs.
-Hosts own optional dialogs and file/settings/sharing flows.
 
-Every framework package also exports `mountEditorSurface(host, options)`. Its binding exposes
-`getToolbarProps()` and `subscribe(listener)`, plus the existing editor handle and
-`update`/`destroy`. This is the framework-neutral equivalent for native lifecycle adapters:
-subscribe to selection/format changes, wire controls directly, and destroy on unmount.
+Every framework package also exports `mountEditorSurface(host, options)` for native lifecycle
+adapters. Its binding exposes `getToolbarProps()`, `getNavigationProps()`, `getStatusProps()` and
+`subscribe(listener)`, plus the editor handle, `update` and `destroy`. Surface options exclude the
+ribbon-only options (`showToolbar`, `showThumbnails`, `hiddenActions`, `ribbonAddIns`,
+`onRibbonAddIn`), so a TypeScript host cannot pass one that would be ignored.
 
 The composition API requires the matching `ooxml-ui` runtime, released with these additions.
 Existing full-viewer imports remain compatible with the previous published runtime. An older
@@ -49,8 +143,12 @@ runtime rejects a composition request explicitly instead of mounting application
 
 ## Native framework composition
 
-Framework adapters live in their own framework package. They share only the engine lifetime
-helper. Their state uses the framework's normal reactive primitives and their canvas components
+Framework adapters live in their own framework package. They share the engine lifetime
+helper and the control descriptors (`bindings/src/controls.ts`) the optional components draw.
+Every adapter exposes `toolbarProps`, `navigationProps`, `statusProps`, `loading`, `error`,
+`mode` and `canvasProps`, plus the editor `handle` (React takes a `handle` ref as an option instead of returning one), and the components `Toolbar`, `PageNavigation` and
+`StatusBar` (Angular: `ToolbarComponent`, `PageNavigationComponent`, `StatusBarComponent`; Svelte:
+`docx-svelte-viewer/Toolbar`, `/PageNavigation`, `/StatusBar`). Their state uses the framework's normal reactive primitives and their canvas components
 mount the existing Word document surface.
 
 ### Vue
@@ -165,6 +263,33 @@ The factory tracks its options accessor in an effect and returns signal accessor
 Optional toolbar controls keep their DOM nodes while formatting state changes, so keyboard
 focus is preserved. All adapters accept `bytes` reactively, clear failed loads when a new
 model or load arrives, and keep their handle stable across canvas replacement.
+
+### Vanilla
+
+`docx-vanilla-viewer` exports the shared session as `createViewerBuildingBlocks(options)`
+(`canvasProps`, `handle`, `state`, `subscribe`, `update`, `destroy`) and mount helpers that
+return a disposer: `mountDocumentCanvas(host, blocks)`, `mountToolbar(host, blocks)`,
+`mountPageNavigation(host, blocks)` and `mountStatusBar(host, blocks)`.
+
+```ts
+import {
+	createViewerBuildingBlocks,
+	mountDocumentCanvas,
+	mountToolbar,
+	mountStatusBar,
+} from 'docx-vanilla-viewer';
+
+const blocks = createViewerBuildingBlocks({ documentModel, canEdit: true });
+const stops = [
+	mountDocumentCanvas(document.querySelector('#page')!, blocks),
+	mountToolbar(document.querySelector('#tools')!, blocks),
+	mountStatusBar(document.querySelector('#status')!, blocks),
+];
+blocks.subscribe((state) => console.log(state.toolbarProps?.bold)); // your own controls
+// later
+stops.forEach((stop) => stop());
+blocks.destroy();
+```
 
 ## Shared styling
 

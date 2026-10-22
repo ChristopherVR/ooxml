@@ -1,5 +1,6 @@
 import type { ChartMarkerSeriesView } from './chart-view-markers';
 import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
+import { extentOf } from '../extent';
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
 import { stockView, type StockView } from './chart-view-stock';
@@ -242,7 +243,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 			s.xValues = s.values.map((_, k) => (numeric ? toNumber(cats[k] ?? null) : k + 1));
 		});
 		const xs = series.flatMap((s) => s.xValues ?? []).filter((x): x is number => x !== null);
-		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
+		const range = extentOf(xs);
+		model.xAxis = xs.length ? niceScale(range.min, range.max) : niceScale(0, 1);
 	}
 	if (type === 'stock') model.stock = stockView(chart.stock, ctx);
 	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);

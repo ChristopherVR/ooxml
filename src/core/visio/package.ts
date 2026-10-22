@@ -43,6 +43,7 @@ export class VisioPackage {
 	>();
 	private readonly byteCache = new Map<string, Promise<Uint8Array>>();
 	private readonly decodedNames = new Map<string, string>();
+	private noted: Set<string> | undefined;
 	private totalOutput = 0;
 	private totalXmlNodes = 0;
 	private constructor(
@@ -95,7 +96,27 @@ export class VisioPackage {
 		}
 	}
 
+	/**
+	 * Starts noting every part this package is asked about (read, listed in a relationship, or
+	 * checked for). The returned function stops noting and gives each part with a print of its
+	 * declared CRC-32 and size (empty when absent), which is what {@link printOf} compares.
+	 */
+	record(): () => [string, string][] {
+		const noted = new Set<string>();
+		this.noted = noted;
+		return () => {
+			if (this.noted === noted) this.noted = undefined;
+			return [...noted].sort().map((path) => [path, this.printOf(path)]);
+		};
+	}
+	/** The declared CRC-32 and size of a part, or an empty string when the package lacks it. */
+	printOf(path: string): string {
+		const entry = this.entries.get(path);
+		return entry && !entry.directory ? `${entry.crc}:${entry.size}` : '';
+	}
+
 	has(path: string): boolean {
+		this.noted?.add(path);
 		return this.entries.get(path)?.directory === false;
 	}
 	paths(): string[] {
@@ -106,6 +127,7 @@ export class VisioPackage {
 
 	async readXml(path: string, expectedRoot?: string): Promise<Element> {
 		this.check();
+		this.noted?.add(path);
 		safePath(path);
 		let pending = this.cache.get(path);
 		if (!pending) {
@@ -122,6 +144,7 @@ export class VisioPackage {
 	/** Validated declared size, so resource-specific limits can reject before inflation. */
 	getPartByteLength(path: string): number {
 		this.check();
+		this.noted?.add(path);
 		safePath(path);
 		const entry = this.entries.get(path);
 		if (!entry || entry.directory) fail('MISSING_PART', `Missing package part: ${path}`);
@@ -130,6 +153,7 @@ export class VisioPackage {
 	/** Shared package-owned bytes. Treat the returned buffer as immutable. */
 	async readBytes(path: string): Promise<Uint8Array> {
 		this.check();
+		this.noted?.add(path);
 		safePath(path);
 		let pending = this.byteCache.get(path);
 		if (!pending) {
@@ -247,6 +271,10 @@ export class VisioPackage {
 
 	async relationships(sourcePart: string): Promise<Map<string, VisioPackageRelationship>> {
 		this.check();
+		if (this.noted && sourcePart) {
+			const slash = sourcePart.lastIndexOf('/');
+			this.noted.add(`${sourcePart.slice(0, slash + 1)}_rels/${sourcePart.slice(slash + 1)}.rels`);
+		} else this.noted?.add('_rels/.rels');
 		let pending = this.relationshipCache.get(sourcePart);
 		if (!pending) {
 			pending = this.loadRelationships(sourcePart);
@@ -286,6 +314,7 @@ export class VisioPackage {
 			const actual = mode === 'Internal' ? this.decodedNames.get(resolved) : undefined;
 			if (mode === 'Internal' && !actual)
 				fail('INVALID_RELATIONSHIP', `Missing relationship target: ${resolved}`);
+			if (actual) this.noted?.add(actual);
 			result.set(id, { id, type, target: actual ?? resolved, mode });
 		}
 		return result;

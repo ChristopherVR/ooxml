@@ -59,6 +59,9 @@ export interface VisioMetadataOptions {
 export interface VisioMetadataBudget {
 	consumeRow(): void;
 	retain(value: string): string;
+	/** What has been consumed so far, to be put back with {@link restore}. */
+	state(): [rows: number, characters: number];
+	restore(state: readonly [number, number]): void;
 }
 /** Share one budget across every page and inherited shape in a document. */
 export function createMetadataBudget(options: VisioMetadataOptions = {}): VisioMetadataBudget {
@@ -79,6 +82,10 @@ export function createMetadataBudget(options: VisioMetadataOptions = {}): VisioM
 			if (characters > maxCharacters)
 				throw new VisioPackageError('METADATA_LIMIT', 'Shape metadata character budget exceeded.');
 			return value;
+		},
+		state: () => [rows, characters],
+		restore(state) {
+			[rows, characters] = state;
 		},
 	};
 }

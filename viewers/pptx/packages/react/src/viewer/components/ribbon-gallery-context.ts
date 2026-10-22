@@ -26,7 +26,8 @@ export interface RibbonGalleryCommands {
 	endPreview?: () => void;
 }
 
-export const RibbonGalleryCommandsContext = createContext<RibbonGalleryCommands | null>(null);
+export const RibbonGalleryCommandsContext =
+	/* @__PURE__ */ createContext<RibbonGalleryCommands | null>(null);
 
 export function useRibbonGalleryCommands(): RibbonGalleryCommands | null {
 	return useContext(RibbonGalleryCommandsContext);

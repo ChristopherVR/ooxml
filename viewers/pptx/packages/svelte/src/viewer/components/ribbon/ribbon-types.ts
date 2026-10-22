@@ -45,6 +45,9 @@ export interface RibbonProps {
 	onundo: () => void;
 	onredo: () => void;
 	onsave: () => void;
+	/** File > Save (backstage Save item); falls back to {@link ondownload}. */
+	onsavefile?: () => void;
+	/** Save As > PowerPoint Presentation (.pptx). */
 	ondownload: () => void;
 	ondownloadppsx: () => void;
 	ondownloadpptm: () => void;

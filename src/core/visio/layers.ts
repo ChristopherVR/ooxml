@@ -7,6 +7,9 @@ import { color, type Resources } from './style';
 export interface LayerBudget {
 	consumeCharacters(count: number): void;
 	consumeMemberships(count: number): void;
+	/** What has been consumed so far, to be put back with {@link restore}. */
+	state(): [memberships: number, characters: number];
+	restore(state: readonly [number, number]): void;
 }
 /** Share across pages and inherited instances to bound normalization work and arrays. */
 export function createLayerBudget(): LayerBudget {
@@ -25,6 +28,10 @@ export function createLayerBudget(): LayerBudget {
 			memberships += count;
 			if (memberships > 100_000)
 				throw new VisioPackageError('METADATA_LIMIT', 'Layer membership budget exceeded.');
+		},
+		state: () => [memberships, characters],
+		restore(state) {
+			[memberships, characters] = state;
 		},
 	};
 }

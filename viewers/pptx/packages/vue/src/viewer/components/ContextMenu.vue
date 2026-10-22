@@ -114,11 +114,17 @@ function onRequest(event: Event): void {
 
 <template>
 	<Teleport to="body" :disabled="presentation">
-		<pptx-ui-context-menu
-			v-if="open && rows.length > 0"
-			:state.prop="state"
-			@menu-request="onRequest"
-			@menu-close="emit('close')"
-		/>
+		<!--
+			The scope marker sits on a box-less wrapper, never on the menu itself: a scope root on
+			the page takes the viewer's base text, which would override the typography the menu's
+			own `:host` styles set.
+		-->
+		<div v-if="open && rows.length > 0" class="contents" data-pptx-scope>
+			<pptx-ui-context-menu
+				:state.prop="state"
+				@menu-request="onRequest"
+				@menu-close="emit('close')"
+			/>
+		</div>
 	</Teleport>
 </template>

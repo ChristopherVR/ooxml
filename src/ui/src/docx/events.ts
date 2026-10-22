@@ -1,10 +1,18 @@
 import type { DocumentModel } from 'ooxml-core/docx';
 import type { RibbonAddInCommandDetail } from 'ooxml-core/ribbon';
 import type { StepBatch } from 'ooxml-core/docx/ui';
+import type { DocxCollaborationState } from './collaboration-types';
 import type { FileCommandDetail } from './file-commands';
 import type { PageChangeDetail } from './page-sync';
 import type { PresenceMessage } from './presence';
 import type { RibbonAction } from './ribbon';
+
+/** The detail of `readonly-change`. */
+export interface ReadOnlyChangeDetail {
+	readOnly: boolean;
+	locked: boolean;
+	hostReadOnly: boolean;
+}
 
 /** Every CustomEvent the `<docx-editor>` element (and its controllers) dispatches, with its detail. */
 export interface DocxEditorEventMap {
@@ -14,8 +22,13 @@ export interface DocxEditorEventMap {
 	'document-error': CustomEvent<Error>;
 	/** Non-fatal notice, for example that a print layout could not be produced faithfully. */
 	'document-warning': CustomEvent<string>;
-	/** The user toggled read-only from the editor chrome. */
-	'readonly-change': CustomEvent<boolean>;
+	/**
+	 * Read-only changed: the user toggled it from the editor chrome, the host's switch changed or a
+	 * collaboration role did. `readOnly` is the effective value, `locked` says a `viewer` role holds
+	 * it, and `hostReadOnly` is the host's own switch. A controlled parent mirrors only
+	 * `hostReadOnly`, so a role lock is never written into the host's setting.
+	 */
+	'readonly-change': CustomEvent<ReadOnlyChangeDetail>;
 	/** A ribbon control was activated. Bubbles from inside the shadow tree. */
 	'ribbon-action': CustomEvent<RibbonAction>;
 	/** The user changed which ribbon commands are shown (File > Customize Ribbon); persist the ids if you want them kept. */
@@ -30,6 +43,8 @@ export interface DocxEditorEventMap {
 	'presence-send': CustomEvent<PresenceMessage>;
 	/** Local steps are pending; transport the batch to the collaboration authority. */
 	'collaboration-send': CustomEvent<StepBatch>;
+	/** Sharing started, stopped, reconnected, synced or the people in the room changed. */
+	'collaboration-change': CustomEvent<DocxCollaborationState>;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	'office-ribbon-add-in': CustomEvent<RibbonAddInCommandDetail>;
 }
@@ -52,6 +67,7 @@ export const DOCX_EDITOR_EVENTS = [
 	'dirty-change',
 	'presence-send',
 	'collaboration-send',
+	'collaboration-change',
 	'office-ribbon-add-in',
 ] as const satisfies readonly DocxEditorEventName[];
 

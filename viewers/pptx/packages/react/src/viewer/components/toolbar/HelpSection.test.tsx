@@ -44,6 +44,12 @@ describe('help shared command adapter', () => {
 				'help.help.keyboardShortcuts',
 				'help.help.accessibility',
 			]);
+			// The shared section builds the group, as in the other four bindings.
+			expect(
+				container.querySelector(
+					'pptx-ui-ribbon-section > pptx-ui-ribbon-group[data-ribbon-group="help.help"]',
+				),
+			).not.toBeNull();
 			click('options');
 			click('keyboardShortcuts');
 			click('accessibility');
