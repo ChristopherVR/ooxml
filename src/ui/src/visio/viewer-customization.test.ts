@@ -126,3 +126,29 @@ describe('<visio-viewer> customization', () => {
 		viewer.destroy();
 	});
 });
+
+describe('<visio-viewer> customization menus and Quick Access', () => {
+	it('tidies the shape menu separators around hidden entries', () => {
+		const { viewer, root } = mount({ capabilities: { copy: false, comment: false } });
+		const shape = root.querySelector<SVGGElement>('svg.paper [data-shape-id="s1"]')!;
+		shape.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 30, clientY: 40 }));
+		const menu = root.querySelector<HTMLElement>('[data-context-menu="shape"]')!;
+		const shown = [...menu.children].filter((node) => !(node as HTMLElement).hidden);
+		const separator = (node: Element | undefined) => node?.localName === 'office-ui-menu-separator';
+		expect(separator(shown[0])).toBe(false);
+		expect(separator(shown.at(-1))).toBe(false);
+		expect(shown.some((node, i) => separator(node) && separator(shown[i + 1]))).toBe(false);
+		viewer.destroy();
+	});
+
+	it('drops Quick Access Save when save is off', () => {
+		const { viewer, root } = mount({ capabilities: { save: false } });
+		const bar = root.querySelector('office-ui-title-bar') as HTMLElement & {
+			state: { quickAccess: { items: { id: string }[] } };
+		};
+		expect(bar.state.quickAccess.items.map((item) => item.id)).toEqual(['undo', 'redo']);
+		viewer.update({ customization: null });
+		expect(bar.state.quickAccess.items.map((item) => item.id)).toContain('save');
+		viewer.destroy();
+	});
+});

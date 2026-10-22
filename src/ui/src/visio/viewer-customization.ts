@@ -18,7 +18,7 @@ import {
 	type VisioMenuCommand,
 	type VisioMenuContext,
 } from 'ooxml-core/visio/ui';
-import { syncHostMenuChildren } from '../embedding/host-menu';
+import { syncHostMenuChildren, tidyMenuSeparators } from '../embedding/host-menu';
 import type { ViewerController } from './controller';
 import type { VisioRibbonAction } from './ribbon-action';
 
@@ -128,7 +128,10 @@ export class ViewerCustomizationState {
 	}
 }
 
-/** Adds the host commands to the shape or page menu, just before it opens. */
+/**
+ * Adds the host commands to the shape or page menu just before it opens, and tidies the
+ * separators that capability-hidden entries left.
+ */
 export function syncVisioHostMenu(
 	menu: HTMLElement,
 	target: 'shape' | 'page',
@@ -144,4 +147,16 @@ export function syncVisioHostMenu(
 		shapes: target === 'shape' ? [...state.selectedShapes] : [],
 	};
 	syncHostMenuChildren(menu, resolved.menuCommands, context);
+	tidyMenuSeparators(menu);
+}
+
+/**
+ * The Quick Access Toolbar commands to show: the File > Options choices, less the ones a
+ * disabled capability removes (Save with `save`), as Word drops its Quick Access Save.
+ */
+export function quickAccessShown<T extends object>(
+	behaviour: T,
+	resolved: ResolvedVisioCustomization,
+): T & { 'qat-save'?: boolean } {
+	return resolved.commands.has('download') ? { ...behaviour, 'qat-save': false } : behaviour;
 }

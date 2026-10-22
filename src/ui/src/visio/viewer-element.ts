@@ -33,6 +33,7 @@ import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import {
 	applyVisioCommandVisibility,
+	quickAccessShown,
 	syncVisioHostMenu,
 	ViewerCustomizationState,
 	visioActionBlocked,
@@ -99,6 +100,13 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.canEdit = this.#custom.canEdit;
 		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
 		this.#backstage.refreshCustomization();
+		renderTitleBar(
+			this.#titleBar,
+			this.controller.state,
+			this.#fileName,
+			this.#profile.profile,
+			quickAccessShown(this.#behaviour, this.#custom.resolved),
+		);
 	}
 	readonly #custom = new ViewerCustomizationState();
 	/**
@@ -300,7 +308,7 @@ export class VisioViewerElement extends BaseElement {
 				this.controller.state,
 				this.#fileName,
 				this.#profile.profile,
-				this.#behaviour,
+				quickAccessShown(this.#behaviour, this.#custom.resolved),
 			);
 		this.#profile = new ViewerProfile(
 			this.#root,
@@ -696,7 +704,7 @@ export class VisioViewerElement extends BaseElement {
 				this.controller.state,
 				this.#fileName,
 				this.#profile.profile,
-				behaviour,
+				quickAccessShown(behaviour, this.#custom.resolved),
 			);
 	}
 	/**
@@ -880,7 +888,13 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
-		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile, this.#behaviour);
+		renderTitleBar(
+			this.#titleBar,
+			state,
+			this.#fileName,
+			this.#profile.profile,
+			quickAccessShown(this.#behaviour, this.#custom.resolved),
+		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);
