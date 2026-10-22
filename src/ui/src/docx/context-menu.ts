@@ -13,6 +13,7 @@ import { removeLink } from './link-commands';
 import { translate, type EditorLocale } from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { withHostMenuItems } from '../embedding/host-menu';
+import { withoutHiddenEntries } from 'ooxml-core/embedding';
 import type { ResolvedWordCustomization, WordMenuContext } from './customization';
 
 /** `items` without the `hidden` ids; a removed group start passes its separator on. */
@@ -20,15 +21,7 @@ export function withoutMenuItems(
 	items: readonly MenuItem[],
 	hidden: ReadonlySet<string>,
 ): MenuItem[] {
-	const kept: MenuItem[] = [];
-	let separator = false;
-	for (const item of items) {
-		separator ||= item.separatorBefore;
-		if (hidden.has(item.id)) continue;
-		kept.push({ ...item, separatorBefore: separator && kept.length > 0 });
-		separator = false;
-	}
-	return kept;
+	return withoutHiddenEntries(items, (item) => hidden.has(item.id));
 }
 
 /** The snapshot a host command receives. */
