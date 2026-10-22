@@ -38,3 +38,22 @@ it is `true`; they are not full editors and take no `readOnly`.
 
 `customization.capabilities.edit` in PowerPoint is a third, independent restriction (a host policy
 ceiling); like the role, it can only take editing away.
+
+### Mirroring `readOnly` from the editor
+
+Word and Excel emit `readonly-change` whenever read-only changes: the user toggled Editing or
+Viewing, the host changed `readOnly`, or a collaboration role was joined or left. The detail is
+`{ readOnly, locked, hostReadOnly }`:
+
+- `readOnly` is the effective value (the host's switch or a `viewer` role).
+- `locked` is true while a `viewer` role holds the editor read-only.
+- `hostReadOnly` is the host's own switch.
+
+A parent that keeps `readOnly` in its own state must store `hostReadOnly`, never `readOnly`;
+otherwise a role lock would be written into the host's setting and leaving the room would not
+restore it. The two-way channels do this for you: Angular's `[(readOnly)]` (`readOnlyChange`) and
+Vue's `v-model:readOnly` (`update:readOnly`) carry the host switch only and stay quiet when only a
+role lock changed. The callbacks (`onReadOnlyChange`, Vue's `readonly-change`) receive the
+effective value first and the detail second. Word's `readonly-change` detail was a boolean before
+and is now this object. Visio and PowerPoint have no read-only change event, so nothing there can
+write a role lock back.
