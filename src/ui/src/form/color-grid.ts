@@ -44,7 +44,9 @@ const COLUMNS = 10;
  * product). A product that computes its own swatches sets `palette` instead (one column per
  * colour it can resolve, each with up to five variants; a missing one leaves its cell empty), and
  * one that stores theme references marks
- * the current swatch with `selectedTheme`. An empty `standardColors` leaves out Standard Colors.
+ * the current swatch with `selectedTheme`. An empty `palette` leaves out Theme Colors and an empty
+ * `standardColors` leaves out Standard Colors, so a product can show Recent Colors on their own;
+ * `recentLabel` names those swatches (their hex by default).
  * Choosing emits `office-color-pick`
  * `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a
  * product can save a theme reference instead of the colour); the More Colors command emits
@@ -63,6 +65,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 		extraColors: { attribute: false },
 		standardColors: { attribute: false },
 		recentColors: { attribute: false },
+		recentLabel: { attribute: false },
 		value: { type: String },
 		label: { type: String },
 		noneLabel: { attribute: 'none-label', type: String },
@@ -87,6 +90,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 	declare extraColors: readonly ThemePaletteSwatch[];
 	declare standardColors: readonly ThemePaletteSwatch[];
 	declare recentColors: readonly string[];
+	/** Names a Recent Colors swatch from its hex (`#RRGGBB`); the hex itself when unset. */
+	declare recentLabel: ((hex: string) => string) | null;
 	declare value: string | null;
 	declare label: string | null;
 	declare noneLabel: string | null;
@@ -107,6 +112,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 		this.extraColors = [];
 		this.standardColors = OFFICE_STANDARD_COLORS;
 		this.recentColors = [];
+		this.recentLabel = null;
 		this.value = null;
 		this.label = null;
 		this.noneLabel = null;
@@ -276,7 +282,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 			.map((hex) => normalizePaletteHex(hex))
 			.filter((hex): hex is string => !!hex)
 			.slice(0, COLUMNS)
-			.map((hex) => ({ hex, label: hex.toUpperCase() }));
+			.map((hex) => ({ hex, label: this.recentLabel?.(hex.toUpperCase()) ?? hex.toUpperCase() }));
 		const automatic = this.automaticLabel;
 		const none = this.noneLabel;
 		const more = this.moreLabel;
@@ -292,17 +298,21 @@ export class OfficeUiColorGrid extends OfficeElement {
 					? command(none, 'none', value === 'none', () => this.pick('none', 'none', none))
 					: nothing
 			}
-			<div class="heading">${this.themeHeading}</div>
-			${cells(
-				palette.map((column) => column.base),
-				'theme',
-				palette.length || COLUMNS,
-			)}
-			<div class="variants"
-				>${[0, 1, 2, 3, 4].map((index) =>
-					cells(variants(index), 'theme', palette.length || COLUMNS),
-				)}</div
-			>
+			${
+				palette.length
+					? html`<div class="heading">${this.themeHeading}</div>
+							${cells(
+								palette.map((column) => column.base),
+								'theme',
+								palette.length,
+							)}
+							<div class="variants"
+								>${[0, 1, 2, 3, 4].map((index) =>
+									cells(variants(index), 'theme', palette.length),
+								)}</div
+							>`
+					: nothing
+			}
 			${extra.length ? cells(extra, 'extra') : nothing}
 			${
 				standard.length

@@ -263,6 +263,37 @@ describe('office-ui-color-grid', () => {
 		expect(buttons(grid, '[data-source="standard"]')).toHaveLength(0);
 	});
 
+	it('shows only Recent Colors for an empty palette, each named by recentLabel', () => {
+		const grid = make((el) => {
+			el.palette = [];
+			el.standardColors = [];
+			el.recentColors = ['#FF0000', '#0000ff'];
+			el.recentHeading = 'Zuletzt verwendete Farben';
+			el.recentLabel = (hex) => `Zuletzt ${hex}`;
+		});
+		expect(
+			[...grid.shadowRoot!.querySelectorAll('.heading')].map((heading) => heading.textContent),
+		).toEqual(['Zuletzt verwendete Farben']);
+		expect(
+			buttons(grid).map((button) => [
+				button.dataset.source,
+				button.dataset.color,
+				button.getAttribute('aria-label'),
+			]),
+		).toEqual([
+			['recent', '#ff0000', 'Zuletzt #FF0000'],
+			['recent', '#0000ff', 'Zuletzt #0000FF'],
+		]);
+		const picked = vi.fn();
+		grid.addEventListener('office-color-pick', (event) => picked(event.detail));
+		buttons(grid)[1]!.click();
+		expect(picked).toHaveBeenCalledWith({
+			color: '#0000ff',
+			source: 'recent',
+			label: 'Zuletzt #0000FF',
+		});
+	});
+
 	it('does nothing while disabled', () => {
 		const grid = make((el) => {
 			el.disabled = true;
