@@ -69,6 +69,8 @@ The package exports the typed event map (`DocxEditorEventMap`) and the runtime l
   stays dirty.
 - File > Open calls `storage.open()` when the storage has one and opens the `{ bytes, fileName }`
   it resolves with (`undefined` means the user canceled). Without `open` the file picker is used.
+- One save runs at a time: Save while a save is pending is ignored, not queued. An edit made while
+  the host save runs keeps the document dirty, since the saved bytes do not contain it.
 - `file-command` still fires first. A host that calls `preventDefault()` handles the command
   itself and `storage` is not called. Save As announces `saveAs` and then `save`.
 

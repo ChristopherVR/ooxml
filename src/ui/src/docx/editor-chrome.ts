@@ -187,6 +187,8 @@ export class EditorChrome {
 
 	/** Runs a file command unless a host cancels the `file-command` event to handle it itself. */
 	async run(command: FileCommand, fileName?: string): Promise<void> {
+		// One save at a time: Save or Save As while a save is pending is ignored, not queued.
+		if ((command === 'save' || command === 'saveAs') && this.saving) return;
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
 		try {
 			if (command === 'new') this.newDocument();
@@ -217,17 +219,35 @@ export class EditorChrome {
 	}
 
 	/** Saves to the host's storage when there is one, else downloads a copy. */
+	/** True while a save is pending. */
+	saving = false;
+
+	/**
+	 * Saves to the host's storage when there is one, else downloads a copy. An edit made while the
+	 * save runs keeps the document dirty: the saved bytes do not contain it.
+	 */
 	private async saveDocument(reason: DocumentSaveReason): Promise<void> {
+		const element = this.host.element;
+		let edited = false;
+		const changed = () => (edited = true);
+		this.saving = true;
 		this.setSaveState('saving');
-		const bytes = await this.host.save();
-		const storage = this.host.storage?.();
-		if (storage) {
-			this.fileName = await saveToStorage(storage, bytes, documentSaveMeta(this._fileName, reason));
-			this.setSaveState('saved');
-			return;
+		element.addEventListener('document-change', changed);
+		try {
+			const bytes = await this.host.save();
+			const storage = this.host.storage?.();
+			if (storage)
+				this.fileName = await saveToStorage(
+					storage,
+					bytes,
+					documentSaveMeta(this._fileName, reason),
+				);
+			else downloadBytes(bytes, this._fileName);
+			this.setSaveState(edited ? 'dirty' : storage ? 'saved' : 'saved-local');
+		} finally {
+			element.removeEventListener('document-change', changed);
+			this.saving = false;
 		}
-		downloadBytes(bytes, this._fileName);
-		this.setSaveState('saved-local');
 	}
 
 	/** Opens from the host's storage when it can open, else shows the file picker. */

@@ -84,6 +84,28 @@ describe('<docx-editor> host-owned storage', () => {
 		expect(editor.dirty).toBe(true);
 	});
 
+	it('ignores a second Save while one is pending and stays dirty after a concurrent edit', async () => {
+		const editor = mount();
+		let resolve!: () => void;
+		const save = vi.fn(() => new Promise<void>((done) => (resolve = done)));
+		editor.storage = { save };
+		const first = chrome(editor).run('save');
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+		await chrome(editor).run('save');
+		expect(save).toHaveBeenCalledTimes(1);
+		const view = (editor as unknown as { view: import('prosemirror-view').EditorView }).view;
+		view.dispatch(view.state.tr.insertText('!', 1));
+		resolve();
+		await first;
+		expect(editor.dirty).toBe(true);
+		// Once settled, Save runs again and a quiet save marks the document saved.
+		const again = chrome(editor).run('save');
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+		resolve();
+		await again;
+		expect(editor.dirty).toBe(false);
+	});
+
 	it('opens through storage.open instead of the file picker', async () => {
 		const editor = mount();
 		const bytes = await saveDocx(createDocument());
