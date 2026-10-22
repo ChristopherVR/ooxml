@@ -41,8 +41,10 @@ validation. Unsupported features and preservation limitations are returned by co
 ## Features
 
 Workbook inspection, then bounded reads (a range, the filled cells up to a cap, a table, Find
-matches), creation and cell edits with recalculation. All
-document algorithms live in OOXML core. Importing the package does not start stdio.
+matches), creation and cell edits with recalculation. Edits can be reviewed first:
+`xlsx_propose_edits` returns the diff of a list of edits without saving, and `xlsx_apply_proposal`
+applies that proposal once approved, refusing if the workbook changed in between. All document
+algorithms live in OOXML core. Importing the package does not start stdio.
 
 ## Limitations
 
