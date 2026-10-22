@@ -49,7 +49,7 @@ re-emit its events as callbacks.
   `ooxml-core/automation` and `/automation/node`. The combined `ooxml-mcp`
   server imports this package's `registerTools`; never duplicate document logic here.
 
-- Published packages (the same model as docx-viewer and pptx-viewer):
+- Published packages (the same model as the other viewers in this repository):
   `@christophervr/xlsx-core` and one self-contained editor package per
   framework (`@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer`,
   `xlsx-angular-viewer`, `xlsx-svelte-viewer`, `xlsx-solid-viewer`,
@@ -75,8 +75,9 @@ re-emit its events as callbacks.
 - The browser text measurer (column auto-fit, overflow) stays in
   `packages/web-component` and is injected into the core's layout functions; it
   is the one piece of layout that needs a DOM.
-- Unsupported workbook features must be reported honestly (for example pivot
-  tables and sparklines are preserved but not shown, charts are display-only).
+- Unsupported workbook features must be reported honestly (for example pivots from
+  external or OLAP sources and Power Query are preserved but not shown or refreshed, sparkline style
+  galleries and grouping are missing, charts are display-only; `docs/features.md` has the full table).
   Never claim Excel parity or lossless export.
 - Bun, TypeScript strict mode (with `exactOptionalPropertyTypes` and
   `noUncheckedIndexedAccess`, no `any`), Vitest (tests next to the code) and
@@ -102,7 +103,7 @@ re-emit its events as callbacks.
 | `packages/vanilla`       | `xlsx-vanilla-viewer`              | yes       | Plain `<xlsx-editor>` registration and `mountEditor`.                         |
 
 `demos/xlsx/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
-editor through that framework's adapter (`demos/xlsx/demo-vanilla/framework.ts`), and
+editor through that framework's adapter (`demos/xlsx/demo-vanilla/framework.ts` at the repository root), and
 the browser tests run against its production build.
 
 ## Where things live
@@ -111,19 +112,21 @@ Repositories are named by their GitHub name under `ChristopherVR/`. Where each
 one is checked out on a given machine is local knowledge: keep it in an
 untracked `CLAUDE.local.md` (git-ignored), never in this file.
 
-| Repository           | npm package                                     | Owns                                                                                                                     |
-| -------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `xlsx-viewer` (this) | `@christophervr/xlsx-core`, the six `*-viewer`s | Excel UI: the `<xlsx-editor>` web component, six bindings, demos, browser tests and the docs site.                       |
-| `ooxml`              | `ooxml-core`, `ooxml-ui`                        | **All OOXML logic** by area (`xlsx`, `docx`, `pptx`, `xml`, `opc`, `collab`, ...) and the shared `office-ui-*` elements. |
-| `docx-viewer`        | `docx-core`, `docx-*-viewer`                    | Word UI over `ooxml-core/docx`; the structure this repository mirrors.                                                   |
-| `pptx-viewer`        | `pptx-*-viewer`, `pptx-viewer-core`             | PowerPoint UI over `ooxml-core/pptx`.                                                                                    |
-| `ole2`               | `@christophervr/ole2`                           | Legacy binary formats (XLS, DOC, PPT, CFB, RC4/MD4), inlined into `ooxml-core`.                                          |
+This directory is `viewers/xlsx` inside the `ooxml` monorepo (`ChristopherVR/ooxml`). The core and
+the shared UI are in the same repository, and the viewers resolve them through the Bun workspace.
 
-This repository depends on the **published** `ooxml-core` and `ooxml-ui`. To
-try a core change before it is released, build the `ooxml` checkout
-(`bun run build`), point `packages/core` (and whichever package needs it) at it
-with a `file:` dependency, run `bun install --force`, and restore the version
-ranges before committing.
+| Location                       | npm package                                     | Owns                                                                                                              |
+| ------------------------------ | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `viewers/xlsx` (this)          | `@christophervr/xlsx-core`, the six `*-viewer`s | Excel UI bindings: the `<xlsx-editor>` web component package, six bindings, browser-test setup and the docs site. |
+| `src/core`                     | `ooxml-core`                                    | **All OOXML logic** by area (`xlsx`, `docx`, `pptx`, `xml`, `opc`, `collab`, ...).                                |
+| `src/ui`                       | `ooxml-ui`                                      | The shared `office-ui-*` elements and the Excel editor DOM code (`src/ui/src/xlsx`).                              |
+| `demos/xlsx`, `e2e/xlsx`       | none (private)                                  | The demo app and the Playwright specs, at the repository root.                                                    |
+| `viewers/docx`, `viewers/pptx` | `docx-*-viewer`, `pptx-*-viewer`                | The Word and PowerPoint viewers, in the same repository.                                                          |
+| `ole2`                         | `@christophervr/ole2`                           | Legacy binary formats (XLS, DOC, PPT, CFB, RC4/MD4), inlined into `ooxml-core`. A separate repository.            |
+
+A change that needs both the core and this viewer lands in one push: the workspace links
+`ooxml-core` and `ooxml-ui` (`*` or `workspace:*` ranges), so there is nothing to publish or `file:`-link
+first. The release flow rewrites the ranges to the versions released with them.
 
 ### Where does my change go?
 
@@ -142,8 +145,8 @@ ranges before committing.
 ### GitHub Pages
 
 `https://christophervr.github.io/ooxml/xlsx/` is the docs site (VitePress in
-`docs/`), deployed by `.github/workflows/docs.yml` on pushes to `main` that touch
-`docs/`, `demos/`, `packages/` or the build. `scripts/build-pages.mjs` also
+`docs/`), deployed by the repository's `.github/workflows/pages.yml` on pushes to `main` that touch
+`viewers/`, `demos/`, `e2e/`, `src/core/`, `src/ui/`, `site/` or the Pages build scripts. `scripts/build-pages.mjs` also
 builds the demo once per framework at `/demo/` (React), `/demo-vue/`,
 `/demo-angular/`, `/demo-vanilla/`, `/demo-svelte/` and `/demo-solid/`. The
 Office-suite launcher at `https://christophervr.github.io/ooxml/` embeds those
@@ -153,29 +156,29 @@ VitePress `vitepress-theme-appearance` key in `localStorage`.
 ## Commands
 
 ```bash
-bun install
+# bun install runs once at the repository root
 bun run typecheck        # tsc + svelte-check
 bun run test             # vitest (unit and binding contract tests)
 bun run test:browser     # Playwright against the built demo (PLAYWRIGHT_PORT, default 4180)
-bun run test:scripts     # release planner, publish guards, commit checks
+bun run test:scripts     # publish guards (check-published-refs) and the viewer script tests
 bun run demo             # demo dev server (add ?framework=react|vue|angular|svelte|solid)
 bun run build            # production build of the demo
 bun run build:packages   # build the seven publishable packages into packages/*/dist
 bun run check:published  # tarballs import only allowed packages
 bun run pack:smoke       # pack, install into a clean consumer, load .xlsx and .xls through every package
 bun run check:shared     # @christophervr/xlsx-core stays a logic-free re-export; package classification
-bun run release:plan     # dry-run the release planner
 bun run fmt              # oxfmt (tabs, single quotes, width 100)
 ```
 
-The docs site installs separately: `cd docs && bun install && bun run docs:build`.
+The docs site is built with `bun install --cwd docs && bun run --cwd docs docs:build`. The release
+planner runs from the repository root (`bun run release:plan`).
 
 ## Releasing
 
-Releases are automated from conventional commits, exactly like docx-viewer,
-pptx-viewer and `ooxml`; `docs/releasing.md` has the whole flow.
+Releases are automated from conventional commits, through the repository's root flow (`docs/releasing.md` at the root);
+`viewers/xlsx/docs/releasing.md` points to it.
 
-- `scripts/release-plan.mjs` versions each published package from the commits
+- The root `scripts/release-plan.mjs` (with `scripts/viewer-packages.mjs`) versions each published package from the commits
   since its own `<npm-name>@<version>` tag (for example
   `@christophervr/xlsx-core@0.1.0` or `xlsx-vue-viewer@0.1.0`). A change in
   `web-component` or `bindings` releases all six framework packages; an
