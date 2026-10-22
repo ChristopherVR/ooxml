@@ -123,5 +123,6 @@ export const translations = {
 	'pptx.strokeOptions.joinMiter': '斜接',
 	'pptx.strokeOptions.joinRound': '圆头',
 	'pptx.colorPicker.recentColors': '最近的颜色',
+	'pptx.colorPicker.recentColor': '最近使用的颜色 {{hex}}',
 	'pptx.colorPicker.customColors': '自定义颜色',
 } as const;

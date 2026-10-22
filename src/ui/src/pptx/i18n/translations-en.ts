@@ -4165,6 +4165,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.comments.mentionPlaceholder': 'Type @ to mention someone',
 	'pptx.comments.mentionSuggestions': 'People',
 	'pptx.colorPicker.recentColors': 'Recent Colors',
+	'pptx.colorPicker.recentColor': 'Recent {{hex}}',
 	'pptx.colorPicker.customColors': 'Custom Colors',
 	'pptx.hyperlink.actionCustomShow': 'Custom show',
 	'pptx.hyperlink.customShowLabel': 'Custom show',
