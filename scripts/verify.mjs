@@ -18,7 +18,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { changedSince, plan } from './ci-plan.mjs';
+import { PLAYWRIGHT_INSTALL, changedSince, plan } from './ci-plan.mjs';
 import { argumentBatches, FORMATTER_CHECK } from './verify-arguments.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -103,6 +103,13 @@ if (p.mcp) add('bun run test:mcp');
 for (const viewer of p.viewers)
 	for (const cmd of viewer.verify.split('\n'))
 		if ((browser || !BROWSER.test(cmd)) && (full || !SLOW.test(cmd))) add(cmd, viewer.dir);
+// The browser suites are separate, sharded CI entries; locally one run covers the whole suite.
+if (browser) {
+	for (const entry of p.viewerBrowser.filter((item) => item.shard === 1)) {
+		add(PLAYWRIGHT_INSTALL, entry.dir);
+		for (const cmd of entry.local.split('\n')) add(cmd, entry.dir);
+	}
+}
 if (p.pptx.run) {
 	add('bun run build:packages', 'viewers/pptx');
 	add('bun run typecheck', 'viewers/pptx');

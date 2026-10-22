@@ -23,7 +23,7 @@ const ZERO_SHA = /^0+$/;
 /** A copy of a viewer's standalone MCP server, installed on its own from the registry as a user would. */
 const STANDALONE_MCP =
 	'tmp=$(mktemp -d) && node ../../scripts/copy-mcp-sources.mjs mcp "$tmp" && (cd "$tmp" && npm install --ignore-scripts --no-package-lock && npm test)';
-const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
+export const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
 
 /**
  * The viewers that live in this repository under `viewers/<name>`, and the commands that verify
@@ -64,7 +64,7 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
@@ -83,7 +83,7 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
@@ -108,7 +108,7 @@ export const VIEWERS = {
 			],
 			docs: ['bun run test:docs'],
 			mcp: [STANDALONE_MCP],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build',
 				'bun run test:worker',
@@ -120,6 +120,15 @@ export const VIEWERS = {
 		// Its `test:browser` also loads the built packages in a browser, through the consumer
 		// project `test:packages` writes (`.package-build/consumer.txt`), so both run first.
 		before: { browser: ['bun run build:packages', 'bun run test:packages'] },
+		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
+		// `browserShardCommands` shards the first and leaves the other two on shard 1.
+		browserChain: {
+			sharded: 'bun x playwright test',
+			rest: [
+				'bun x playwright test --config native-blocks.playwright.config.ts',
+				'node scripts/test-packages-browser.mjs',
+			],
+		},
 	},
 	teams: {
 		name: 'teams',
@@ -128,7 +137,7 @@ export const VIEWERS = {
 			types: ['bun run typecheck'],
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
-			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			browser: ['bun run test:browser'],
 			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke'],
 		},
 		// The demos resolve the framework packages through their built dist.
@@ -213,8 +222,15 @@ export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
  * and all five on the nightly and on changes to dependencies or CI.
  */
 const PPTX_REFERENCE_PROJECT = 'react';
-/** Shards per Playwright project for a full run of the suite (pptx-viewer settled on ten). */
-export const PPTX_E2E_SHARDS = 10;
+/**
+ * Shards per Playwright project for a full run of the suite. React also runs 34 cross-binding
+ * parity specs that drive all five demos, so at ten shards each react shard took 20 to 25
+ * minutes while the other four took about 12. Fourteen react shards bring it to roughly the
+ * others' length; seven each is enough for the rest.
+ */
+export const PPTX_E2E_SHARDS = { react: 14, vue: 7, angular: 7, vanilla: 7, svelte: 7 };
+/** Shard ceiling when only changed specs run. */
+const PPTX_SPEC_SHARDS_MAX = 10;
 /** Changed spec files one shard takes when only specs changed. */
 const PPTX_SPECS_PER_SHARD = 5;
 
@@ -248,7 +264,7 @@ export function pptxPlan(files, { everything, reaches }) {
 	const none = {
 		run: false,
 		tests: [],
-		e2e: { projects: [], shards: [], total: 0, specs: '' },
+		e2e: { projects: [], matrix: [], specs: '' },
 		packaged: false,
 	};
 	if (!reaches) return none;
@@ -311,12 +327,16 @@ export function pptxPlan(files, { everything, reaches }) {
 	}
 	const tests = allLegs ? PPTX_LEGS : PPTX_LEGS.filter((leg) => legs.has(leg));
 	let projectList = allProjects ? PPTX_BINDINGS : PPTX_BINDINGS.filter((p) => projects.has(p));
-	let total = projectList.length > 0 ? PPTX_E2E_SHARDS : 0;
+	// Each project takes its own full-suite shard count.
+	let counts = Object.fromEntries(
+		projectList.map((project) => [project, PPTX_E2E_SHARDS[project]]),
+	);
 	let specFilter = '';
 	if (projectList.length === 0 && specs.size > 0) {
 		// Only specs changed: run just those, in every binding, on as few shards as they need.
 		projectList = PPTX_BINDINGS;
-		total = Math.min(PPTX_E2E_SHARDS, Math.ceil(specs.size / PPTX_SPECS_PER_SHARD));
+		const total = Math.min(PPTX_SPEC_SHARDS_MAX, Math.ceil(specs.size / PPTX_SPECS_PER_SHARD));
+		counts = Object.fromEntries(projectList.map((project) => [project, total]));
 		specFilter = [...specs].sort().join(' ');
 	}
 	const run = tests.length > 0 || projectList.length > 0 || packaged;
@@ -325,8 +345,14 @@ export function pptxPlan(files, { everything, reaches }) {
 		tests,
 		e2e: {
 			projects: projectList,
-			shards: Array.from({ length: total }, (_, i) => i + 1),
-			total,
+			// One entry per (project, shard), each carrying its project's shard count.
+			matrix: projectList.flatMap((project) =>
+				Array.from({ length: counts[project] }, (_, i) => ({
+					project,
+					shard: i + 1,
+					total: counts[project],
+				})),
+			),
 			specs: specFilter,
 		},
 		packaged,
@@ -413,18 +439,58 @@ export function viewerGroups(name, files, { everything }) {
 	};
 }
 
-/** The commands for the groups a change reaches, in order, each once. */
-function verifyCommands(name, { groups, specs }) {
+/**
+ * Playwright shards per viewer for a whole-suite run, from the measured job times (visio 19.5
+ * minutes, docx 15, xlsx 14, teams 6, browser group included). A run narrowed to changed specs
+ * is one shard.
+ */
+export const VIEWER_BROWSER_SHARDS = { docx: 2, xlsx: 2, visio: 2, teams: 1 };
+
+/** The commands of a viewer's browser shard `shard` of `total`, and its unsharded form. */
+function browserShardCommands(viewer, specs, shard, total) {
+	const before = viewer.before?.browser ?? [];
+	const narrowed = specs.size > 0 && viewer.specFilter ? ` ${[...specs].sort().join(' ')}` : '';
+	const flag = total > 1 ? ` --shard=${shard}/${total}` : '';
+	if (viewer.browserChain) {
+		const { sharded, rest } = viewer.browserChain;
+		return {
+			before: shard === 1 ? before : [],
+			test: [`${sharded}${flag}`, ...(shard === 1 ? rest : [])],
+		};
+	}
+	return {
+		before,
+		test: [`bun run test:browser${narrowed || flag ? ' --' : ''}${narrowed}${flag}`],
+	};
+}
+
+/** The browser jobs of viewer `name` for a change: one entry per Playwright shard. */
+function browserEntries(name, { groups, specs }) {
+	if (!groups.has('browser')) return [];
+	const viewer = VIEWERS[name];
+	const total = specs.size > 0 && viewer.specFilter ? 1 : (VIEWER_BROWSER_SHARDS[name] ?? 1);
+	return Array.from({ length: total }, (_, i) => {
+		const { before, test } = browserShardCommands(viewer, specs, i + 1, total);
+		return {
+			name,
+			dir: viewer.dir,
+			shard: i + 1,
+			total,
+			verify: [...before, ...test].join('\n'),
+			// The whole suite in one run, for `verify.mjs --browser` (it runs shard 1 only).
+			local: [...(viewer.before?.browser ?? []), ...viewer.groups.browser].join('\n'),
+		};
+	});
+}
+
+/** The commands for the groups a change reaches, in order, each once (browser has its own jobs). */
+function verifyCommands(name, { groups }) {
 	const viewer = VIEWERS[name];
 	const commands = [];
 	for (const group of GROUP_ORDER) {
-		if (!groups.has(group)) continue;
+		if (!groups.has(group) || group === 'browser') continue;
 		for (const command of [...(viewer.before?.[group] ?? []), ...viewer.groups[group]]) {
-			const narrowed =
-				command === 'bun run test:browser' && specs.size > 0 && viewer.specFilter
-					? `bun run test:browser -- ${[...specs].sort().join(' ')}`
-					: command;
-			if (!commands.includes(narrowed)) commands.push(narrowed);
+			if (!commands.includes(command)) commands.push(command);
 		}
 	}
 	return commands;
@@ -458,12 +524,15 @@ export function plan(changed, { full = false, testFiles } = {}) {
 
 	// A viewer runs the check groups the change reaches (viewerGroups): its own files, the shared
 	// UI, a core area it reads (not the core's tests), its product editor in ooxml-ui, or everything.
-	const viewerList = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs)
-		.map((key) => ({
-			...VIEWERS[key],
-			verify: verifyCommands(key, viewerGroups(key, live, { everything })),
-		}))
+	const viewerKeys = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs);
+	const reached = Object.fromEntries(
+		viewerKeys.map((key) => [key, viewerGroups(key, live, { everything })]),
+	);
+	const viewerList = viewerKeys
+		.map((key) => ({ ...VIEWERS[key], verify: verifyCommands(key, reached[key]) }))
 		.filter((viewer) => viewer.verify.length > 0);
+	// The browser group runs in its own sharded jobs (`viewer-browser`).
+	const viewerBrowser = viewerKeys.flatMap((key) => browserEntries(key, reached[key]));
 	// pptx is reached by its own files, the core areas it reads and the shared (non-product) UI.
 	const pptxReached =
 		everything ||
@@ -495,12 +564,15 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		// the core and the UI built. Only a change to the core or the UI also re-checks them (the
 		// package smoke tests, the core/UI boundary and the UI's own tests); a viewer-only change just
 		// builds them.
-		ui: everything || ui || coreCode || viewerList.length > 0 || pptx.run,
-		build: everything || coreCode || ui || viewerList.length > 0 || pptx.run,
+		ui:
+			everything || ui || coreCode || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
+		build:
+			everything || coreCode || ui || viewerList.length > 0 || viewerBrowser.length > 0 || pptx.run,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
 		mcp: everything || mcp,
 		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
+		viewerBrowser,
 		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
 		pptx,
 		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
