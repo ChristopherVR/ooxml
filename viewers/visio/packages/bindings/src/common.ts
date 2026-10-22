@@ -209,9 +209,10 @@ export function withEventEmitter(
 	const callbacks: ViewerCallbacks = {};
 	for (const name of eventKeys) {
 		Object.assign(callbacks, {
+			// The host's own callback decides a cancelable event: `false` cancels it.
 			[name]: (value: unknown) => {
 				try {
-					(props.events?.[name] as ((value: unknown) => void) | undefined)?.(value);
+					return (props.events?.[name] as ((value: unknown) => unknown) | undefined)?.(value);
 				} finally {
 					emit(name, value);
 				}

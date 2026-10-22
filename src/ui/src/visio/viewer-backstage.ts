@@ -1,6 +1,8 @@
 import type { ViewerState } from './controller';
+import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
+import { openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { wireNewDrawing } from './viewer-new-drawing';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
@@ -20,6 +22,12 @@ export interface BackstageHost {
 	noteCount(): number;
 	/** File > Print > Page Setup. */
 	pageSetup?(): void;
+	/** Announces the cancelable `file-command` event; false when the host handles the command. */
+	fileCommand?(command: VisioFileCommand): boolean;
+	/** Host-owned storage for Save and Open (the element's `storage`), when set. */
+	storage?(): DocumentStorage | undefined;
+	/** The drawing was saved to host storage under `fileName`. */
+	savedToStorage?(fileName: string): void;
 }
 
 /**
@@ -64,7 +72,9 @@ export class ViewerBackstage {
 		const options = { signal: events.signal };
 		this.#newDrawing = wireNewDrawing(
 			this.host.root,
-			() => this.host.createBlankDrawing(),
+			async () => {
+				if (this.#announce('new')) await this.host.createBlankDrawing();
+			},
 			() => !!(this.#state?.loading || this.#state?.edit.busy),
 			this.host.announce,
 		);
@@ -128,8 +138,25 @@ export class ViewerBackstage {
 			this.#urls.clear();
 		};
 	}
+	#announce(command: VisioFileCommand): boolean {
+		return this.host.fileCommand?.(command) ?? true;
+	}
+	#open(): void {
+		if (!this.#announce('open')) return;
+		const storage = this.host.storage?.();
+		if (!storage?.open) return this.#input.click();
+		openFromStorage(storage, this.host.root.ownerDocument)
+			.then((file) => {
+				if (!file) return;
+				this.hide();
+				return this.host.load(file);
+			})
+			.catch((error: unknown) =>
+				this.host.announce(error instanceof Error ? error.message : String(error)),
+			);
+	}
 	#run(action: string): void {
-		if (action === 'open') this.#input.click();
+		if (action === 'open') this.#open();
 		else if (action === 'new-blank') this.#newDrawing?.run();
 		else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
@@ -166,6 +193,9 @@ export class ViewerBackstage {
 	}
 	#download(): void {
 		if (!this.#state?.edit.sourceAvailable) return;
+		if (!this.#announce('save')) return;
+		const storage = this.host.storage?.();
+		if (storage) return void this.#saveToStorage(storage);
 		try {
 			const result = this.host.exportVsdx();
 			this.#save(
@@ -174,6 +204,17 @@ export class ViewerBackstage {
 			);
 			this.hide();
 			this.host.announce('Downloaded a copy of the drawing.');
+		} catch (error) {
+			this.host.announce(error instanceof Error ? error.message : String(error));
+		}
+	}
+	async #saveToStorage(storage: DocumentStorage): Promise<void> {
+		try {
+			const { bytes } = this.host.exportVsdx();
+			this.hide();
+			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName());
+			this.host.savedToStorage?.(name);
+			this.host.announce('Saved the drawing.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}

@@ -1,5 +1,6 @@
 import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/index';
 import type { CollaborationState } from '../../collab/index';
+import type { DocumentStorage, FileCommandDetail, VisioFileCommand } from '../../embedding/index';
 import type { VisioCollaborationOptions } from './collab-options';
 import type { VisioDocument } from '../index';
 
@@ -13,6 +14,12 @@ export interface ViewerProperties {
 	ribbonAddIns: readonly RibbonAddInTab[];
 	/** Shares the open drawing in a room while set; null leaves it (the shared embedding contract). */
 	collaboration: VisioCollaborationOptions | null;
+	/**
+	 * Host-owned storage: File > Save hands the drawing to `storage.save()` instead of downloading
+	 * a copy, File > Open asks `storage.open()` when it has one, and AutoRecover keeps its copies
+	 * through the storage's recovery methods instead of IndexedDB. null restores the defaults.
+	 */
+	storage: DocumentStorage | null;
 }
 /** A page-scoped shape identity. Omitted pageId means the currently displayed page. */
 export interface VisioShapeSelection {
@@ -37,7 +44,16 @@ export interface ViewerEvents {
 	'office-ribbon-add-in': RibbonAddInCommandDetail;
 	/** Sharing started, stopped or its status, sync or people changed. */
 	'collaboration-change': CollaborationState;
+	/**
+	 * Cancelable: New, Open and Save announce themselves first. Call `preventDefault()` on the
+	 * event (or return `false` from the binding callback) to handle the command yourself.
+	 */
+	'file-command': FileCommandDetail<VisioFileCommand>;
 }
+/**
+ * Binding callbacks. A `file-command` callback that returns `false` cancels the command (a
+ * function returning a boolean is assignable to these void-returning types).
+ */
 export type ViewerCallbacks = {
 	[K in keyof ViewerEvents]?: (detail: ViewerEvents[K]) => void;
 };
@@ -49,6 +65,7 @@ export const propertyKeys = [
 	'showToolbar',
 	'ribbonAddIns',
 	'collaboration',
+	'storage',
 ] as const satisfies readonly (keyof ViewerProperties)[];
 export const eventKeys = [
 	'document-load',
@@ -60,6 +77,7 @@ export const eventKeys = [
 	'selection-change',
 	'office-ribbon-add-in',
 	'collaboration-change',
+	'file-command',
 ] as const satisfies readonly (keyof ViewerEvents)[];
 // Adding a contract member must also update the inventories used by every adapter.
 const allProperties: Record<

@@ -33,7 +33,13 @@ import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
 import { ViewerLivePreview } from './viewer-live-preview';
-import { ViewerAutoRecover, indexedDbRecoveryStore } from './viewer-autorecover';
+import {
+	ViewerAutoRecover,
+	indexedDbRecoveryStore,
+	storageRecoveryStore,
+} from './viewer-autorecover';
+import type { DocumentStorage } from 'ooxml-core/embedding';
+import { announceFileCommand } from './viewer-file-commands';
 import { RecoverDialog } from './viewer-recover-dialog';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
@@ -86,6 +92,19 @@ export class VisioViewerElement extends BaseElement {
 	set collaboration(value: VisioCollaborationOptions | null | undefined) {
 		this.#share.want(value ?? null);
 	}
+	/**
+	 * Host-owned storage (`ooxml-core/embedding`). When set, File > Save and the Quick Access Save
+	 * hand the drawing to `storage.save()` and mark it saved instead of downloading a copy, File >
+	 * Open asks `storage.open()` when it has one, and AutoRecover keeps its copies through the
+	 * storage's recovery methods (when it has all three) instead of IndexedDB. The cancelable
+	 * `file-command` event still fires first.
+	 */
+	get storage(): DocumentStorage | null {
+		return this.#storage ?? null;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.#storage = value ?? undefined;
+	}
 	/** What `collaboration-change` last reported. */
 	get collaborationState(): VisioCollaborationState {
 		return this.#share.state;
@@ -121,6 +140,7 @@ export class VisioViewerElement extends BaseElement {
 	#pointer: ViewerPointerGestures;
 	#sizePosition: ViewerSizePosition;
 	#fileName = '';
+	#storage: DocumentStorage | undefined;
 	#loadToken = 0;
 	#findBar: FindBar;
 	#replace: ViewerReplace;
@@ -179,10 +199,11 @@ export class VisioViewerElement extends BaseElement {
 			this.#status.textContent = message;
 		};
 		const recoverDialog = new RecoverDialog(this.#root, say, () => this.#locale());
+		const browserStore = indexedDbRecoveryStore();
 		this.#recover = new ViewerAutoRecover(
 			this.controller,
 			() => this.#fileName,
-			indexedDbRecoveryStore(),
+			() => storageRecoveryStore(this.#storage) ?? browserStore,
 			(offer) => recoverDialog.show(offer),
 		);
 		this.#mini = new ViewerMiniToolbar(this.#root, this.#toolbar);
@@ -338,6 +359,15 @@ export class VisioViewerElement extends BaseElement {
 			noteCount: () => this.#notes.children.length,
 			pageSetup: () =>
 				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
+			fileCommand: (command) => announceFileCommand(this, command),
+			storage: () => this.#storage,
+			savedToStorage: (name) => {
+				this.#fileName = name;
+				// The host stored it: the drawing is saved, not just copied.
+				if (!this.controller.state.edit.busy && !this.controller.state.loading)
+					this.controller.markClean();
+				this.#render(this.controller.state);
+			},
 		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));

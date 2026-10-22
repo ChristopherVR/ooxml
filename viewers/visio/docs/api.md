@@ -186,6 +186,35 @@ shared with the Word, Excel and PowerPoint editors. A tab cannot take the id of
 a built-in tab (`home`, `insert`, `design`, `data`, `process`, `review`, `view`,
 `help`).
 
+## Host-owned storage and file commands
+
+New, Open and Save (the backstage, the Quick Access Toolbar and Ctrl+N) first raise the
+cancelable `file-command` event with `{ command: 'new' | 'open' | 'save' }`, the same contract as
+Word and Excel. Call `preventDefault()` on the DOM event, or return `false` from the binding
+callback `events['file-command']`, to handle the command yourself; the viewer then does nothing.
+The Angular `(fileCommand)` output only reports the command, so an Angular host cancels through
+the `events` input.
+
+`storage` (a property of the element and a prop of every binding) takes a `DocumentStorage` from
+`ooxml-core/embedding`. When it is set:
+
+- Save hands the drawing to `storage.save(bytes, meta)` instead of downloading a copy. `meta` is
+  `{ fileName, mimeType: 'application/vnd.ms-visio.drawing', reason: 'save' }`, the name being the
+  drawing's own as a `.vsdx`. Once it resolves the drawing is marked saved; a `{ fileName }` it
+  resolves with becomes the drawing's name.
+- Open calls `storage.open()` when the storage has one, instead of the file picker.
+- AutoRecover keeps its copies through `readRecovery`, `writeRecovery` and `clearRecovery`
+  (keyed by the file name) instead of the viewer's IndexedDB database, when the storage provides
+  all three. A copy is offered back when a drawing of that name opens and cleared when it is
+  saved.
+
+```tsx
+<VisioViewer
+	storage={{ save: (bytes, { fileName }) => myDrive.put(fileName, bytes) }}
+	events={{ 'file-command': ({ command }) => command !== 'new' }}
+/>
+```
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's

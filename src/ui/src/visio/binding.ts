@@ -47,8 +47,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 	let callbacks: ViewerCallbacks = {};
 	const listeners = eventKeys.map((name) => {
 		const listener = (event: Event): void => {
-			const callback = callbacks[name] as ((detail: unknown) => void) | undefined;
-			callback?.((event as CustomEvent).detail);
+			const callback = callbacks[name] as ((detail: unknown) => unknown) | undefined;
+			// Returning false from a callback cancels a cancelable event (`file-command`).
+			if (callback?.((event as CustomEvent).detail) === false && event.cancelable)
+				event.preventDefault();
 		};
 		element.addEventListener(name, listener);
 		return { name, listener };
@@ -77,6 +79,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 				element.ribbonAddIns = options.ribbonAddIns;
 			else if (key === 'collaboration' && options.collaboration !== undefined)
 				element.collaboration = options.collaboration;
+			else if (key === 'storage' && options.storage !== undefined)
+				element.storage = options.storage;
 		}
 	}
 	update(initial);

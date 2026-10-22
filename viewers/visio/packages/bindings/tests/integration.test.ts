@@ -139,6 +139,9 @@ const mounts: Record<string, NativeMount> = {
 					get collaboration() {
 						return props().collaboration;
 					},
+					get storage() {
+						return props().storage;
+					},
 					get events() {
 						return props().events;
 					},
@@ -191,6 +194,7 @@ const payloads: ViewerEvents = {
 		synced: false,
 		people: [],
 	},
+	'file-command': { command: 'save' },
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
@@ -376,6 +380,30 @@ describe('native adapters against the real shared custom element', () => {
 				expect(destroy).not.toHaveBeenCalled();
 			} finally {
 				session.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards storage and lets the file-command callback cancel`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const storage = { save: async () => undefined };
+			const onFileCommand = vi.fn(() => false);
+			const events: ViewerCallbacks = { 'file-command': onFileCommand };
+			const mounted = await mountNative(host, { document: null, storage, events });
+			const element = mounted.handle.element;
+			try {
+				expect(element.storage).toBe(storage);
+				const command = new CustomEvent('file-command', {
+					detail: { command: 'save' },
+					cancelable: true,
+				});
+				element.dispatchEvent(command);
+				expect(onFileCommand).toHaveBeenCalledWith({ command: 'save' });
+				expect(command.defaultPrevented).toBe(true);
+				await mounted.update({ document: null, storage: null, events });
+				expect(element.storage).toBeNull();
+			} finally {
+				await mounted.destroy();
 				host.remove();
 			}
 		});
