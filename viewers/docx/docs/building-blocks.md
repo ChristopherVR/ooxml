@@ -121,6 +121,10 @@ keyboard (arrows, Shift+arrows, Home, End, Ctrl+A), copy, and read the selection
 `toolbarProps.selection`. Keyboard shortcuts that belong to the application (find, save, print)
 are not installed on a surface; wire them to your own controls.
 
+**Migrating a host.** Building blocks used to be editable by default. A host that relied on that
+must now pass `canEdit: true` (in the options object or, for a native adapter, the reactive
+options); without it the surface opens read-only and every editing callback returns `false`.
+
 ## Lifecycle
 
 Use `bytes` to load a file, or the handle's `load`, `save`, `download`, `markClean` and
