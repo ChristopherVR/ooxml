@@ -1,0 +1,63 @@
+{
+	"$comment": "Stale-term rules for scripts/check-docs.mjs. A rule is { id, pattern, flags?, message, allow?, severity? }; allow lists files (globs: * within a folder, ** across folders) that may keep the term on purpose. A line ending in 'em-dash: intended' is skipped by every rule.",
+	"generatedRoutes": ["^/demo(?:-[a-z]+)?(?:/|$)", "^/releases/[a-z]+$"],
+	"rules": [
+		{
+			"id": "old-core-scope",
+			"pattern": "@christophervr/ooxml-core",
+			"message": "The package is the unscoped `ooxml-core` now.",
+			"allow": ["AGENTS.md", "PROVENANCE.md"]
+		},
+		{
+			"id": "old-ui-scope",
+			"pattern": "@christophervr/office-ui",
+			"message": "The package is the unscoped `ooxml-ui` now.",
+			"allow": ["AGENTS.md", "PROVENANCE.md"]
+		},
+		{
+			"id": "cd-pptx-viewer",
+			"pattern": "cd pptx-viewer(?![-\\w])",
+			"message": "There is no `pptx-viewer` checkout to enter; the viewer lives in `viewers/pptx` of this repository.",
+			"allow": []
+		},
+		{
+			"id": "file-link-advice",
+			"pattern": "file:\\.\\./",
+			"message": "Viewers are workspace members; do not advise `file:../` links to a sibling checkout.",
+			"allow": []
+		},
+		{
+			"id": "separate-viewer-repo",
+			"pattern": "ChristopherVR/(?:pptx|docx|xlsx|visio|teams)-viewer(?![-\\w])(?!/(?:commit|blob|tree)/)|\\b(?:docx|xlsx|visio|teams)-viewer (?:repository|repo)\\b",
+			"message": "The viewers live in `viewers/<product>` of this repository, not in a separate repository.",
+			"allow": [
+				"AGENTS.md",
+				"PROVENANCE.md",
+				"docs/linked-changes.md",
+				"viewers/*/docs/research/**",
+				"viewers/*/docs/suite-provenance.md",
+				"viewers/*/scripts/RELEASE-PROVENANCE.md"
+			]
+		},
+		{
+			"id": "em-dash",
+			"pattern": "\\u2014",
+			"message": "No em-dashes in docs (AGENTS.md style rule); use a colon, comma, semicolon, parentheses or a spaced hyphen.",
+			"allow": []
+		}
+	],
+	"$generatedRoutesComment": "Site-absolute routes the docs build generates (framework demos copied in by the Pages build, per-package release pages written by sync-changelogs.mjs); they are not tracked files.",
+	"pathIgnore": {
+		"files": ["PROVENANCE.md", "viewers/*/docs/research/**", "viewers/*/docs/suite-provenance.md"],
+		"patterns": ["^apps/(?:word|excel|powerpoint|visio|teams)$"]
+	},
+	"$pathIgnoreComment": "Inline-code paths not checked: files that record history on purpose, and output folders of a build (suite-dist/apps/word).",
+	"translationScope": {
+		"viewers/pptx/docs": {
+			"fr": ["guide/**", "user/**"],
+			"es": ["guide/**", "user/**"],
+			"de": ["guide/**", "user/**"]
+		}
+	},
+	"$translationScopeComment": "Per docs site and locale, the English pages (globs relative to the docs root) a locale is meant to cover. Missing pages outside the scope are not counted; translations that exist are always checked for lag. Without an entry a locale is expected to cover every page, and missing pages are still informational only."
+}

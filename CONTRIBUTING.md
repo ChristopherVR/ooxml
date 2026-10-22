@@ -93,3 +93,12 @@ The release workflow writes `chore(release): bump versions and update changelogs
 ## License
 
 By contributing you agree that your contributions are licensed under the [Apache License 2.0](LICENSE).
+
+## Documentation health
+
+`links.yml` checks external links. `.github/workflows/docs-health.yml` runs `scripts/check-docs.mjs` weekly (no network) and keeps one `docs-health` issue up to date. Run it yourself with `bun run docs:check` (it writes `docs-health.md`; add `--warn-only` to `node scripts/check-docs.mjs` to never fail). It checks every tracked Markdown file except changelogs:
+
+- **Errors:** relative links and images that do not resolve (VitePress `/guide/foo` links resolve against `viewers/<product>/docs`), repository paths in inline code that do not exist (`src/...`, `docs/...`, `viewers/...` and so on; globs and `<placeholders>` are allowed), stale terms, and VitePress sidebar or nav `link:` values with no page.
+- **Warnings:** `#anchor` fragments with no heading, English docs pages in no sidebar, and translations older than their English page. English pages missing from a locale are listed as counts only and never open the issue; `translationScope` in the config limits which pages a locale is meant to cover.
+
+Stale-term rules, routes generated at build time (framework demos, per-package release pages) and paths to skip live in `scripts/check-docs.config.json`. Prefer fixing the document; add an `allow` entry only when the old term is there on purpose (rename history, provenance), or end a line with `em-dash: intended`.
