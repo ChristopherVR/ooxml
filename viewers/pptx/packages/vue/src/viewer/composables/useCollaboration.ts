@@ -14,6 +14,8 @@ import {
 	CONNECTION_TIMEOUT_MS,
 	createSnapshotTextPositions,
 	isMixedContentBlocked,
+	needsOwnedSession,
+	openOwnedCollaboration,
 	registerCollaborationTeardown,
 	resolveTransportForServerUrl,
 	resolveCollaborationConfig,
@@ -76,18 +78,33 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	let restoreExternalPresence: (() => void) | null = null;
 	let connectTimer: ReturnType<typeof setTimeout> | null = null;
 	let lastConfig: CollaborationConfig | null = null;
+	// Releases the session this composable opened itself (a provider or same-browser room).
+	let releaseOwned: (() => void) | null = null;
 	let startToken = 0;
 
-	async function start(config: CollaborationConfig): Promise<void> {
+	async function start(requested: CollaborationConfig): Promise<void> {
 		stop();
 		const token = ++startToken;
-		lastConfig = config;
-		activeCollaboration.value = config;
-		activeRole.value = config.role;
-		document.begin(config);
-		const external = config.externalSession;
+		lastConfig = requested;
+		// The host's config stays the identity of the running session (the watcher compares it).
+		activeCollaboration.value = requested;
+		activeRole.value = requested.role;
+		document.begin(requested);
+		let config = requested;
 		try {
-			validateRoomId(config.roomId);
+			validateRoomId(requested.roomId);
+			if (needsOwnedSession(requested)) {
+				status.value = 'connecting';
+				const owned = openOwnedCollaboration(requested);
+				releaseOwned = owned.release;
+				const prepared = await owned.ready;
+				if (token !== startToken || !prepared) {
+					return;
+				}
+				config = prepared;
+				document.begin(config);
+			}
+			const external = config.externalSession;
 			const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
 			if (!external && transport === 'websocket' && isMixedContentBlocked(config.serverUrl)) {
 				throw new Error('Mixed-content connection blocked');
@@ -184,6 +201,8 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		presence.stop();
 		restoreExternalPresence?.();
 		restoreExternalPresence = null;
+		releaseOwned?.();
+		releaseOwned = null;
 		provider?.destroy();
 		ydoc?.destroy();
 		provider = null;

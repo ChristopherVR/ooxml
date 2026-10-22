@@ -67,11 +67,10 @@ describe('resolveCollaborationConfig', () => {
 		session.destroy();
 	});
 
-	it('resolves a provider without a session to an invalid room so bindings report an error', () => {
-		const config = resolveCollaborationConfig({
-			roomId: 'ok',
-			provider: (() => {}) as never,
-		} as never)!;
-		expect(config.roomId).toBe('');
+	it('carries a provider without a session so the binding opens the session itself', () => {
+		const provider = (() => {}) as never;
+		const config = resolveCollaborationConfig({ roomId: 'ok', provider } as never)!;
+		expect(config).toMatchObject({ roomId: 'ok', serverUrl: '', provider });
+		expect(config.externalSession).toBeUndefined();
 	});
 });

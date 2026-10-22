@@ -9,16 +9,23 @@ import type {
 /**
  * What a host may set as `collaboration`: PowerPoint's own {@link CollaborationConfig}, or the
  * shared `CollaborationOptions` contract Word, Excel and Visio take (`session`, `user`,
- * `intent`). `provider` is not part of the PowerPoint input: its transports are built in, so a
- * host with its own transport creates a session (`openCollaborationSession` from
- * `ooxml-core/collab`) and passes it as `session`.
+ * `intent`, `provider`, `webrtc`). Without a `session`, a `provider`, `webrtc` or a room with neither `serverUrl` nor
+ * `transport: 'webrtc'` is opened by the viewer itself (see `openOwnedCollaboration`).
  */
-export type CollaborationInput =
-	| CollaborationConfig
-	| (Omit<CollaborationOptions, 'provider'> & { provider?: never });
+export type CollaborationInput = CollaborationConfig | CollaborationOptions;
 
 const externalSessions = new WeakMap<object, ExternalCollaborationSession>();
 const resolved = new WeakMap<object, CollaborationConfig>();
+const sameBrowserRooms = new WeakSet<object>();
+
+/**
+ * Whether `config` came from shared-contract input that names no server, transport or provider:
+ * a room shared between windows of this browser over a BroadcastChannel. A legacy config with a
+ * blank `serverUrl` is not one: that keeps meaning the serverless WebRTC transport.
+ */
+export function isSameBrowserRoom(config: CollaborationConfig): boolean {
+	return sameBrowserRooms.has(config);
+}
 
 /**
  * A host `CollabSession` as the borrowed session the bindings observe. One object per session
@@ -59,9 +66,8 @@ export function externalSessionFromCollabSession(
  * Normalise the `collaboration` a host passed into a {@link CollaborationConfig}. Every binding
  * calls this at the one place it reads the prop. A legacy config returns as is (same object);
  * shared-contract input maps `session` to a stable `externalSession`, `user` to the user fields
- * (explicit legacy fields win) and `intent` to `sessionIntent`. A `provider` without a `session`
- * is unsupported and resolves to an empty room id, which every binding reports as the existing
- * `error` status.
+ * (explicit legacy fields win) and `intent` to `sessionIntent`. A `provider` is carried on the
+ * config; `needsOwnedSession` then tells the binding to open the session when it starts.
  */
 export function resolveCollaborationConfig(
 	input: CollaborationInput | null | undefined,
@@ -71,18 +77,16 @@ export function resolveCollaborationConfig(
 		session?: CollabSession<object>;
 		user?: CollaborationOptions['user'];
 		intent?: 'create' | 'join';
-		provider?: unknown;
 	};
-	if (!raw.session && !raw.user && !raw.intent && !raw.provider) {
+	if (!raw.session && !raw.user && !raw.intent && !raw.provider && !raw.webrtc) {
 		return input as CollaborationConfig;
 	}
 	const cached = resolved.get(input);
 	if (cached) return cached;
-	const { session, user, intent, provider, ...legacy } = raw;
-	const unsupported = Boolean(provider) && !session && !legacy.externalSession;
+	const { session, user, intent, ...legacy } = raw;
 	const config: CollaborationConfig = {
 		...legacy,
-		roomId: unsupported ? '' : (legacy.roomId ?? session?.roomId ?? ''),
+		roomId: legacy.roomId ?? session?.roomId ?? '',
 		serverUrl: legacy.serverUrl ?? '',
 		userName: legacy.userName ?? user?.name ?? session?.identity.userName ?? '',
 	};
@@ -96,6 +100,15 @@ export function resolveCollaborationConfig(
 	if (sessionIntent) config.sessionIntent = sessionIntent;
 	if (session && !legacy.externalSession) {
 		config.externalSession = externalSessionFromCollabSession(session);
+	}
+	if (
+		raw.serverUrl === undefined &&
+		!raw.transport &&
+		!raw.provider &&
+		!raw.webrtc &&
+		!config.externalSession
+	) {
+		sameBrowserRooms.add(config);
 	}
 	resolved.set(input, config);
 	return config;

@@ -15,6 +15,7 @@ import { useMemo } from 'react';
  */
 import type { CollaborationConfig, CollaborationContextValue } from './types';
 import { useCollaborationSession } from './useCollaborationSession';
+import { useOwnedCollaboration } from './useOwnedCollaboration';
 import { usePresenceTracking } from './usePresenceTracking';
 
 // ---------------------------------------------------------------------------
@@ -38,13 +39,18 @@ export interface UseCollaborativeStateInput {
 // ---------------------------------------------------------------------------
 
 export function useCollaborativeState({
-	config,
+	config: requested,
 	canvasWidth,
 	canvasHeight,
 }: UseCollaborativeStateInput): CollaborationContextValue | null {
+	// A `provider` or same-browser room is opened here as a session the viewer owns.
+	const ownedSession = useOwnedCollaboration(requested);
+	const config = ownedSession.config;
 	const userColor = sanitizeColor(config?.userColor, '#6366f1');
 
-	const { status, awareness, doc, clientId, synced, retry } = useCollaborationSession({ config });
+	const session = useCollaborationSession({ config: ownedSession.holding ? undefined : config });
+	const { awareness, doc, clientId, synced, retry } = session;
+	const status = ownedSession.status ?? session.status;
 
 	const { remoteUsers, broadcastPresence } = usePresenceTracking({
 		awareness,

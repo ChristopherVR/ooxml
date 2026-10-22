@@ -12,7 +12,9 @@ import {
 	DEFAULT_CURSOR_COLOR,
 	isMixedContentBlocked,
 	LOCAL_SYNC_ORIGIN,
+	needsOwnedSession,
 	observeYDocSlides,
+	openOwnedCollaboration,
 	readSlidesFromYDoc,
 	registerCollaborationTeardown,
 	resolveCollaborationConfig,
@@ -63,6 +65,9 @@ export function createCollaborationController(
 	let presence: PresenceController | null = null;
 	const editState = createCollaborationEditState(deps);
 	let lastConfig: CollaborationConfig | null = null;
+	let lastInput: CollaborationInput | null = null;
+	// Releases the session this controller opened itself (provider or same-browser sharing).
+	let releaseOwned: (() => void) | null = null;
 	let unobserveSlides: (() => void) | null = null;
 	let unsubscribeStore: (() => void) | null = null;
 	let connection: ConnectionWiring | null = null;
@@ -109,15 +114,37 @@ export function createCollaborationController(
 	};
 
 	async function start(input: CollaborationInput): Promise<void> {
-		const config = resolveCollaborationConfig(input) as CollaborationConfig;
+		const requested = resolveCollaborationConfig(input) as CollaborationConfig;
 		stop();
 		const token = generation;
-		lastConfig = config;
+		lastInput = input;
+		lastConfig = requested;
+		let config = requested;
 		try {
-			validateRoomId(config.roomId);
+			validateRoomId(requested.roomId);
 		} catch {
 			setStatus('error');
 			return;
+		}
+		if (needsOwnedSession(requested)) {
+			// A provider or same-browser room: open the session, released again by stop().
+			const owned = openOwnedCollaboration(requested);
+			releaseOwned = owned.release;
+			setStatus('connecting');
+			try {
+				const prepared = await owned.ready;
+				if (token !== generation || !prepared) {
+					return;
+				}
+				config = prepared;
+				lastConfig = prepared;
+			} catch {
+				if (token === generation) {
+					stop();
+					setStatus('error');
+				}
+				return;
+			}
 		}
 		const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
 		// Mixed-content only affects a ws:// socket from an https page.
@@ -274,6 +301,8 @@ export function createCollaborationController(
 		presence = null;
 		session?.dispose();
 		session = null;
+		releaseOwned?.();
+		releaseOwned = null;
 		currentYDoc = null;
 		yFactories = null;
 		livePatcher.configure(null, null);
@@ -287,8 +316,8 @@ export function createCollaborationController(
 		leaveOnBeforeUnload: () => !lastConfig?.externalSession,
 		leave: stop,
 		rejoin: () => {
-			if (lastConfig) {
-				void start(lastConfig);
+			if (lastInput) {
+				void start(lastInput);
 			}
 		},
 	});

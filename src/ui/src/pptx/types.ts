@@ -7,6 +7,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
  * framework-specific prop/event/handle types on top of these.
  */
 
+import type { ProviderFactory, WebrtcOptions } from 'ooxml-core/collab';
 import type { ExternalCollaborationSession } from './render/collaboration-external-session';
 import type { ElementUpdate, ElementUpdateOptions } from './render/element-update-batch';
 
@@ -222,7 +223,9 @@ export type CollaborationSessionIntent = 'create' | 'join';
  * shared `CollaborationOptions` contract (`session`, `user`, `intent`) that Word, Excel
  * and Visio take; see `CollaborationInput` and `resolveCollaborationConfig`. A host
  * `CollabSession` from `ooxml-core/collab` is borrowed (never destroyed) and becomes
- * `externalSession`. `provider` and the BroadcastChannel fallback are not supported here.
+ * `externalSession`. A `provider`, or a room with neither `serverUrl` nor `transport: 'webrtc'`
+ * (a BroadcastChannel between windows of this browser), is opened by the viewer as a session it
+ * owns and destroys; see `openOwnedCollaboration`.
  */
 export interface CollaborationConfig {
 	/** Unique identifier for the collaboration room (alphanumeric, hyphens, underscores). */
@@ -241,6 +244,17 @@ export interface CollaborationConfig {
 	 * these resources. Keep this object stable and report readiness via subscribe.
 	 */
 	externalSession?: ExternalCollaborationSession;
+	/**
+	 * A provider factory of your own (the shared `CollaborationOptions.provider`). Wins over
+	 * `serverUrl`; the viewer creates and destroys the session around it.
+	 */
+	provider?: ProviderFactory;
+	/**
+	 * Peer-to-peer over the host's own `y-webrtc` class (the shared `CollaborationOptions.webrtc`).
+	 * After `provider`, before `serverUrl`; the viewer creates and destroys the session around it,
+	 * with `authToken` as the room password unless `webrtc.password` is set.
+	 */
+	webrtc?: WebrtcOptions;
 	/**
 	 * WebRTC signaling server URLs (only used when `transport` is `'webrtc'`).
 	 * Defaults to y-webrtc's built-in public signaling list. Same-browser tabs

@@ -112,6 +112,27 @@ the collaboration layer (`collaboration-helpers.ts`). Keep `roomId` to alphanume
 underscores to avoid surprises.
 :::
 
+## Your own provider, or sharing in one browser
+
+Besides `CollaborationConfig`, the `collaboration` option takes the shared contract of Word, Excel and Visio (`CollaborationOptions` from `ooxml-core/collab`). Two forms need no host-owned `session`; the viewer opens the session itself and destroys it when collaboration stops:
+
+```ts
+// provider created by the host
+collaboration = { roomId: 'deck-review', provider, user: { name: 'Ada' }, intent: 'join' as const };
+// Same browser only:
+collaboration = { roomId: 'deck-review', user: { name: 'Ada' } };
+```
+
+```html
+<pptx-power-point-viewer [content]="bytes" [collaboration]="collaboration" />
+```
+
+- `provider` (a `ProviderFactory`, for example `transportProvider` or an existing provider through `adaptYjsProvider`) wins over `serverUrl`.
+- With no `session`, `provider`, `serverUrl` or `transport`, the room is shared between tabs and windows of this browser over a BroadcastChannel (`ooxml-pptx:<roomId>`), with no server.
+- Precedence is `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. A legacy `CollaborationConfig` with `serverUrl` keeps y-websocket; one with `transport: 'webrtc'` or a blank `serverUrl` keeps the serverless y-webrtc transport.
+- `intent: 'join'` never seeds an empty room with the local deck. The session is writable once it syncs (or after the grace period for a lone peer); a `role: 'viewer'` stays read-only.
+- The state reports `status: 'connecting'` while the session opens and `error` for an invalid room or an unavailable BroadcastChannel.
+
 ## Controlling sessions: Share/Broadcast dialog events
 
 Collaboration is **controlled** by the host app, same as React/Vue. The viewer's Share and Broadcast

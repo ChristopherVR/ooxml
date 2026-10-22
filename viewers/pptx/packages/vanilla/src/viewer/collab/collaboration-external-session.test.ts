@@ -5,7 +5,11 @@ import type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 } from 'ooxml-ui/pptx';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import {
+	readSlidesFromYDoc,
+	reconcileSlidesInYDoc,
+	resolveCollaborationConfig,
+} from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -506,6 +510,66 @@ describe('host-owned Vanilla collaboration', () => {
 		expect(collab.isActive()).toBeFalsy();
 		expect(room.destroy).not.toHaveBeenCalled();
 		expect(room.awareness.getLocalState()?.presence).toStrictEqual({ userName: 'Host' });
+		collab.destroy();
+	});
+});
+
+describe('viewer-owned Vanilla collaboration', () => {
+	function hostSession(hub: ReturnType<typeof createMemoryHub>, roomId: string) {
+		return createCollabSession({
+			roomId,
+			provider: transportProvider({ transport: hub.createTransport(roomId) }),
+			user: { name: 'Host' },
+			heartbeatMs: 0,
+		});
+	}
+
+	it('joins the provider room, converges on its deck and destroys the session on stop', async () => {
+		const hub = createMemoryHub();
+		const peer = hostSession(hub, 'owned-room');
+		reconcileSlidesInYDoc([slide('remote')], peer.doc, factories, 'host');
+		const { collab, store } = build();
+		const input = resolveCollaborationConfig({
+			roomId: 'owned-room',
+			provider: transportProvider({ transport: hub.createTransport('owned-room') }),
+			user: { name: 'Ada' },
+			intent: 'join',
+		})!;
+		const pending = collab.start(input);
+		expect(collab.getStatus()).toBe('connecting');
+		await pending;
+		expect(collab.isActive()).toBeTruthy();
+		await vi.waitFor(() =>
+			expect(store.get().slides.map((item) => item.id)).toStrictEqual(['remote']),
+		);
+		expect(collab.getState()).toMatchObject({ active: true, roomId: 'owned-room' });
+		expect(peer.peers()).toHaveLength(1);
+		collab.stop();
+		expect(collab.isActive()).toBeFalsy();
+		expect(peer.peers()).toHaveLength(0);
+		expect(peer.doc.isDestroyed).toBeFalsy();
+		collab.destroy();
+		peer.destroy();
+	});
+
+	it('shares between windows without a server and opens nothing when stopped while pending', async () => {
+		const input = resolveCollaborationConfig({ roomId: 'tabs', user: { name: 'Tab' } })!;
+		const { collab } = build();
+		await collab.start(input);
+		expect(collab.isActive()).toBeTruthy();
+		expect(collab.getStatus()).toBe('connected');
+		const pending = collab.start(input);
+		collab.stop();
+		await pending;
+		expect(collab.isActive()).toBeFalsy();
+		expect(collab.getStatus()).toBe('disconnected');
+		collab.destroy();
+	});
+
+	it('reports an invalid provider room as an error', async () => {
+		const { collab } = build();
+		await collab.start(resolveCollaborationConfig({ roomId: '', provider: (() => {}) as never })!);
+		expect(collab.getStatus()).toBe('error');
 		collab.destroy();
 	});
 });

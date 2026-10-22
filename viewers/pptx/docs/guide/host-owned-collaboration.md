@@ -51,7 +51,7 @@ copies cannot safely be mixed.
 ## Using the shared collaboration contract
 
 Word, Excel and Visio take one `collaboration` option shape from `ooxml-core/collab`
-(`CollaborationOptions`: `roomId`, `serverUrl`, `session`, `user`, `intent`). PowerPoint accepts
+(`CollaborationOptions`: `roomId`, `serverUrl`, `provider`, `session`, `user`, `intent`). PowerPoint accepts
 the same shape in its `collaboration` prop alongside its own `CollaborationConfig`, so a host
 embedding several products can hand them all one session:
 
@@ -69,11 +69,18 @@ const session = createCollabSession({ roomId, provider: transportProvider({ tran
 - Every binding runs the same `resolveCollaborationConfig` (from `ooxml-ui/pptx`) where it reads the
   prop, so they behave identically. A legacy `CollaborationConfig` is returned unchanged.
 
-Not supported, honestly: `provider` (a `ProviderFactory`) and the no-`serverUrl` BroadcastChannel
-fallback. PowerPoint's built-in transports are y-websocket and y-webrtc, selected by
-`serverUrl`/`transport`. A host with its own transport creates a session with
-`openCollaborationSession` and passes it as `session`. A `provider` without a `session` resolves to
-an empty room id, which each binding reports as its existing `error` collaboration status.
+Without a `session`, the same options also cover the cases a host does not want to build a session for:
+
+```ts
+// Your own transport: the viewer opens and destroys the session around it.
+collaboration = { roomId, provider: transportProvider({ transport }), user: { name: 'Ada' } };
+// No server: tabs and windows of this browser share over a BroadcastChannel.
+collaboration = { roomId, user: { name: 'Ada' } };
+```
+
+The transport is chosen in the shared order: `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. For `provider` and the BroadcastChannel room the viewer calls `openCollaborationSession` (the `ooxml-core/collab` runtime is imported only then, sharing the one Yjs copy), presents the session through the same borrowed-session path a host `session` takes, and destroys it on stop, unmount or when the config changes. The session is writable once it syncs, or after the grace period for a lone peer on a mesh; `intent: 'join'` still waits for the room's deck, and `role: 'viewer'` stays read-only. The state reports `connecting` while the session opens and `error` for an invalid room name or a browser without BroadcastChannel.
+
+A legacy `CollaborationConfig` keeps its transports: `serverUrl` selects y-websocket, and `transport: 'webrtc'` or a blank `serverUrl` selects serverless y-webrtc (which also syncs same-browser tabs). Only shared-contract input that names no `serverUrl` or `transport` uses the BroadcastChannel room. The viewer's presence and the session's identity heartbeat share the awareness `presence` field; the viewer keeps its slide and cursor payload across heartbeats, so remote cursors keep showing.
 
 ## Reporting the shared state
 

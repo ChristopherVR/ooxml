@@ -174,6 +174,24 @@ Media/OLE/3D/ink binary payloads are not carried over the wire (a shared codec l
 remote update replaces the whole local slide array, so a joiner's host-provided media can degrade.
 :::
 
+## Your own provider, or sharing in one browser
+
+Besides `CollaborationConfig`, the `collaboration` option takes the shared contract of Word, Excel and Visio (`CollaborationOptions` from `ooxml-core/collab`). Two forms need no host-owned `session`; the viewer opens the session itself and destroys it when collaboration stops:
+
+```ts
+createPptxViewer(el, {
+	collaboration: { roomId: 'deck-review', provider, user: { name: 'Ada' }, intent: 'join' },
+});
+// Same browser only:
+createPptxViewer(el, { collaboration: { roomId: 'deck-review', user: { name: 'Ada' } } });
+```
+
+- `provider` (a `ProviderFactory`, for example `transportProvider` or an existing provider through `adaptYjsProvider`) wins over `serverUrl`.
+- With no `session`, `provider`, `serverUrl` or `transport`, the room is shared between tabs and windows of this browser over a BroadcastChannel (`ooxml-pptx:<roomId>`), with no server.
+- Precedence is `session` (borrowed, never destroyed) > `provider` > `serverUrl` > BroadcastChannel. A legacy `CollaborationConfig` with `serverUrl` keeps y-websocket; one with `transport: 'webrtc'` or a blank `serverUrl` keeps the serverless y-webrtc transport.
+- `intent: 'join'` never seeds an empty room with the local deck. The session is writable once it syncs (or after the grace period for a lone peer); a `role: 'viewer'` stays read-only.
+- The state reports `status: 'connecting'` while the session opens and `error` for an invalid room or an unavailable BroadcastChannel.
+
 ## Callbacks
 
 `PptxViewerOptions` extends `PptxViewerCallbacks` - there is no framework event system, so events

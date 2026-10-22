@@ -233,3 +233,66 @@ describe('host-owned collaboration sessions', () => {
 		expect(host.awareness.getLocalState()?.presence).toStrictEqual({ hostPresence: true });
 	});
 });
+
+describe('viewer-owned collaboration sessions', () => {
+	const settle = () =>
+		act(async () => void (await new Promise((resolve) => setTimeout(resolve, 20))));
+
+	it('connects a provider-only config to the provider room and destroys it on stop', async () => {
+		const hub = createMemoryHub();
+		const host = createCollabSession({
+			roomId: 'owned-room',
+			provider: transportProvider({ transport: hub.createTransport('owned-room') }),
+			user: { name: 'Host' },
+			heartbeatMs: 0,
+		});
+		const input = {
+			roomId: 'owned-room',
+			provider: transportProvider({ transport: hub.createTransport('owned-room') }),
+			user: { name: 'Ada' },
+			intent: 'join' as const,
+		};
+		act(() => root.render(<Probe config={resolveCollaborationConfig(input)} />));
+		expect(current?.status).toBe('connecting');
+		await settle();
+		expect(current?.config.externalSession).toBeDefined();
+		expect(current?.config.roomId).toBe('owned-room');
+		expect(current?.status).toBe('connected');
+		host.doc.getMap('shared').set('k', 'v');
+		expect(current?.doc?.getMap('shared').get('k')).toBe('v');
+		const awareness = current!.config.externalSession!.awareness;
+		act(() => root.render(<Probe />));
+		expect(awareness.getLocalState()).toBeNull();
+		expect(host.awareness.getLocalState()).not.toBeNull();
+		host.destroy();
+	});
+
+	it('shares between windows of this browser without any server', async () => {
+		act(() =>
+			root.render(
+				<Probe config={resolveCollaborationConfig({ roomId: 'tabs', user: { name: 'Tab' } })} />,
+			),
+		);
+		await settle();
+		expect(current?.config.externalSession).toBeDefined();
+		expect(current?.status).toBe('connected');
+	});
+
+	it('reports an error for an invalid room and opens nothing when stopped while pending', async () => {
+		act(() =>
+			root.render(
+				<Probe config={resolveCollaborationConfig({ roomId: '', user: { name: 'A' } })} />,
+			),
+		);
+		await settle();
+		expect(current?.status).toBe('error');
+		act(() =>
+			root.render(
+				<Probe config={resolveCollaborationConfig({ roomId: 'pending', user: { name: 'A' } })} />,
+			),
+		);
+		act(() => root.render(<Probe />));
+		await settle();
+		expect(current).toBeNull();
+	});
+});

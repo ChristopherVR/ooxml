@@ -385,3 +385,68 @@ describe('host-owned Angular collaboration', () => {
 		});
 	});
 });
+
+describe('viewer-owned Angular collaboration', () => {
+	/** A provider factory the host owns the transport of; the viewer only joins and leaves. */
+	function fakeProvider() {
+		const destroy = vi.fn();
+		const disconnect = vi.fn();
+		const rooms: string[] = [];
+		const provider = (context: { roomId: string }) => {
+			rooms.push(context.roomId);
+			return {
+				status: 'connected' as const,
+				synced: true,
+				connect: () => undefined,
+				disconnect,
+				destroy,
+				on: () => () => undefined,
+			};
+		};
+		return { provider: provider as never, destroy, disconnect, rooms };
+	}
+
+	it('connects a provider-only config through the provider and destroys the session on disconnect', async () => {
+		const fake = fakeProvider();
+		const resolved = resolveCollaborationConfig({
+			roomId: 'owned-room',
+			provider: fake.provider,
+			user: { name: 'Ada' },
+			intent: 'join',
+		})!;
+		const collab = service();
+		const pending = collab.connect(resolved);
+		expect(collab.status()).toBe('connecting');
+		await pending;
+		expect(fake.rooms).toStrictEqual(['owned-room']);
+		expect(collab.active()).toBeTruthy();
+		expect(collab.state()).toMatchObject({ active: true, roomId: 'owned-room' });
+		expect(fake.destroy).not.toHaveBeenCalled();
+		collab.disconnect();
+		expect(collab.active()).toBeFalsy();
+		expect(fake.destroy).toHaveBeenCalledOnce();
+	});
+
+	it('shares between windows without a server and opens nothing when stopped while pending', async () => {
+		const resolved = resolveCollaborationConfig({ roomId: 'tabs', user: { name: 'Tab' } })!;
+		const collab = service();
+		await collab.connect(resolved);
+		expect(collab.active()).toBeTruthy();
+		const pending = collab.connect(resolved);
+		collab.disconnect();
+		await pending;
+		expect(collab.active()).toBeFalsy();
+		expect(collab.status()).toBe('disconnected');
+	});
+
+	it('releases a provider session that is stopped before it finishes opening', async () => {
+		const fake = fakeProvider();
+		const resolved = resolveCollaborationConfig({ roomId: 'late', provider: fake.provider })!;
+		const collab = service();
+		const pending = collab.connect(resolved);
+		collab.disconnect();
+		await pending;
+		expect(fake.rooms).toStrictEqual([]);
+		expect(collab.active()).toBeFalsy();
+	});
+});
