@@ -12,6 +12,7 @@ import {
 import type { Workbook } from '@christophervr/xlsx-core';
 import type {
 	EditorThemeMode,
+	FileCommandDetail,
 	RibbonAddInCommandDetail,
 	RibbonAddInTab,
 	SelectionChangeDetail,
@@ -50,7 +51,12 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Output() dirtyChange = new EventEmitter<boolean>();
 	/** Pairs with `readOnly` for `[(readOnly)]` two-way binding. */
 	@Output() readOnlyChange = new EventEmitter<boolean>();
+	/** Cancelable: call `preventDefault()` on the emitted event to take a File command over. */
+	@Output() fileCommand = new EventEmitter<CustomEvent<FileCommandDetail>>();
+	@Output() workbookWarning = new EventEmitter<string[]>();
+	@Output() ribbonAction = new EventEmitter<{ id: string }>();
 	@Output() ribbonCustomize = new EventEmitter<string[]>();
+	@Output() sheetChange = new EventEmitter<{ index: number; name: string }>();
 	@Output() ribbonAddIn = new EventEmitter<RibbonAddInCommandDetail>();
 	@Output() collaborationChange = new EventEmitter<XlsxCollaborationState>();
 	@Output() ready = new EventEmitter<XlsxEditorElement>();
@@ -66,7 +72,11 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 				'selection-change': (detail) => this.selectionChange.emit(detail),
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
 				'readonly-change': (readOnly) => this.readOnlyChange.emit(readOnly),
+				'file-command': (event) => this.fileCommand.emit(event),
+				'workbook-warning': (warnings) => this.workbookWarning.emit(warnings),
+				'ribbon-action': (detail) => this.ribbonAction.emit(detail),
 				'ribbon-customize': (hiddenActions) => this.ribbonCustomize.emit(hiddenActions),
+				'sheet-change': (detail) => this.sheetChange.emit(detail),
 				'office-ribbon-add-in': (detail) => this.ribbonAddIn.emit(detail),
 				'collaboration-change': (state) => this.collaborationChange.emit(state),
 				ready: (element) => this.ready.emit(element),

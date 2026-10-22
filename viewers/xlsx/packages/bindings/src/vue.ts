@@ -49,7 +49,11 @@ export const SpreadsheetEditor = defineComponent({
 				'selection-change': (detail) => emit('selection-change', detail),
 				'dirty-change': (dirty: boolean) => emit('dirty-change', dirty),
 				'readonly-change': (readOnly: boolean) => emit('readonly-change', readOnly),
+				'file-command': (event) => emit('file-command', event),
+				'workbook-warning': (warnings) => emit('workbook-warning', warnings),
+				'ribbon-action': (detail) => emit('ribbon-action', detail),
 				'ribbon-customize': (hiddenActions: string[]) => emit('ribbon-customize', hiddenActions),
+				'sheet-change': (detail) => emit('sheet-change', detail),
 				'office-ribbon-add-in': (detail: RibbonAddInCommandDetail) =>
 					emit('office-ribbon-add-in', detail),
 				'collaboration-change': (state: XlsxCollaborationState) =>
