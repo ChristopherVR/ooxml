@@ -89,6 +89,34 @@ V3 房间在其 Word 标识映射中带有 `inline-relative-v1` 批注能力。�
 
 试试 [Yjs 双端演示](/demo/collaboration.html?mode=yjs){target="_self"}。其中的“暂停投递”“重新连接提供方”和“重新同步提供方”操作用于演练内存中的恢复流程。它不提供生产环境的网络，也不提供持久存储。
 
+## `collaboration` 属性
+
+对于常见场景，`<docx-editor>` 接受与 Excel、PowerPoint 和 Visio 编辑器相同的声明式嵌入约定（`ooxml-core/collab` 中的 `CollaborationOptions`；Word 的别名是 `DocxCollaborationOptions` 和 `DocxCollaborationState`）。它是上文 Yjs 模式之上的一层薄封装，因此您无需自行创建会话、等待会话或选择 `documentId`：
+
+```ts
+editor.collaboration = {
+	roomId: 'q3-report',
+	serverUrl: 'wss://example.com/collab',
+	user: { name: 'Ada' },
+	intent: 'create',
+};
+editor.addEventListener('collaboration-change', (event) => render(event.detail)); // { active, roomId, status, synced, people }
+editor.collaboration = null; // or editor.stopCollaboration()
+```
+
+- 传输方式取下列第一个可用项：`session`（您自己的会话，编辑器绝不会销毁）、`provider`、`serverUrl`，否则使用同一浏览器各标签页之间的 BroadcastChannel。由编辑器自己打开的会话在离开时会被销毁。
+- `user.name` 默认为 `reviewAuthor`；`user.role` 为 `viewer` 时会阻止本地编辑（仅作提示，同上）。
+- `collaborationState` 和 `collaboration-change` 会报告任何 Yjs 绑定，包括用 `startYjsCollaboration` 启动的绑定。`reconnectCollaboration()` 会重启连接。失败以 `document-error` 的形式到达。
+- 不带参数的 `stopCollaboration()` 也会清除该属性。权威模式的 `discardPending` 参数保持不变。
+- 加载或替换文档时，会先离开房间，之后再重新加入（命令式 API 仍会抛出 "Stop collaboration before replacing the document."）。加入操作会等到文档已挂载且不在加载中。
+
+诚实的限制：
+
+- 房间名就是 Word 的 `documentId`。没有任何机制检查每个窗口是否加载了同一个源包；这仍是您的约定。
+- **两个创建者会竞争。** 使用默认的 `intent: 'create'` 时，窗口会初始化一个空房间。若多个窗口同时打开同一个空房间，各自都会初始化，房间最终会包含两份正文。请只给一个窗口 `create`，其余使用 `intent: 'join'`；后者从不初始化，若同步后房间仍为空则报告 `document-error`。
+- 创建者会等待与房间的首次交换，或在无服务器网状网络中孤身一人时等待写入闸门打开（数秒）；在后一种情况下，它在未见到房间内容的情况下就进行初始化，因此内容稍后才到达的慢速服务器会被初始化两次。在意这一点时请使用服务器或 `join`。
+- 在围绕加载的离开与重新加入之后，由宿主持有的 `session` 会保留房间先前的内容，该内容优先于新加载的文档；由编辑器持有的会话则从头开始。
+
 ## 协议
 
 该 Web Component 暴露了 `startCollaboration`、`getPendingCollaboration`、`receiveCollaboration` 和 `stopCollaboration`。宿主可以使用 `createCollaborationAuthority(model, options)` 创建内存中的参考权威端，它与编辑器使用相同的模式和模型转换。

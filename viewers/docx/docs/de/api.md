@@ -4,20 +4,21 @@ Jeder Framework-Adapter umhüllt dasselbe Custom Element `<docx-editor>`. Die Ad
 
 ## Attribute und Eigenschaften
 
-| Eigenschaft      | Attribut          | Beschreibung                                                                                             |
-| ---------------- | ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `documentModel`  |                   | Das angezeigte `DocumentModel`. Eine Zuweisung ist ein externer Austausch, kein Bearbeitungsereignis.    |
-| `readOnly`       | `read-only`       | Blockiert lokale Änderungen. Stapel der Zusammenarbeit von anderen Teilnehmern werden weiter angewendet. |
-| `locale`         | `locale`          | Oberflächensprache: `en`, `fr`, `de`, `es` oder `zh-CN`. Dokumentinhalte werden nie übersetzt.           |
-| `fileName`       | `file-name`       | Name des geöffneten Dokuments (Standard `Document1.docx`).                                               |
-| `reviewAuthor`   | `review-author`   | Autor, der bei nachverfolgten Änderungen und Kommentaren erfasst wird (Standard `Author`).               |
-| `theme`          | `theme`           | `light`, `dark` oder `auto`. Siehe [Theming](/theming).                                                  |
-| `themeColors`    |                   | Teilweise Token-Überschreibungen, angewendet als benutzerdefinierte Eigenschaften `--dve-*`.             |
-| `showThumbnails` | `show-thumbnails` | Linke Leiste mit Seitenminiaturen (nur Drucklayout).                                                     |
-| `showToolbar`    | `show-toolbar`    | `false` blendet das Menüband aus; Titelleiste und Statusleiste bleiben.                                  |
-| `hiddenActions`  |                   | Auszublendende Menübandbefehle nach stabiler ID; siehe die Tabelle unter [Bindings](/bindings).          |
-| `ribbonAddIns`   |                   | Register, die der Host nach den eingebauten hinzufügt; siehe [Bindings](/bindings#ribbon-add-in-tabs).   |
-| `dirty` (lesen)  |                   | True nach einer Änderung, false nach Speichern, Laden oder `markClean()`.                                |
+| Eigenschaft      | Attribut          | Beschreibung                                                                                                                                  |
+| ---------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `documentModel`  |                   | Das angezeigte `DocumentModel`. Eine Zuweisung ist ein externer Austausch, kein Bearbeitungsereignis.                                         |
+| `readOnly`       | `read-only`       | Blockiert lokale Änderungen. Stapel der Zusammenarbeit von anderen Teilnehmern werden weiter angewendet.                                      |
+| `locale`         | `locale`          | Oberflächensprache: `en`, `fr`, `de`, `es` oder `zh-CN`. Dokumentinhalte werden nie übersetzt.                                                |
+| `fileName`       | `file-name`       | Name des geöffneten Dokuments (Standard `Document1.docx`).                                                                                    |
+| `reviewAuthor`   | `review-author`   | Autor, der bei nachverfolgten Änderungen und Kommentaren erfasst wird (Standard `Author`).                                                    |
+| `theme`          | `theme`           | `light`, `dark` oder `auto`. Siehe [Theming](/theming).                                                                                       |
+| `themeColors`    |                   | Teilweise Token-Überschreibungen, angewendet als benutzerdefinierte Eigenschaften `--dve-*`.                                                  |
+| `showThumbnails` | `show-thumbnails` | Linke Leiste mit Seitenminiaturen (nur Drucklayout).                                                                                          |
+| `showToolbar`    | `show-toolbar`    | `false` blendet das Menüband aus; Titelleiste und Statusleiste bleiben.                                                                       |
+| `hiddenActions`  |                   | Auszublendende Menübandbefehle nach stabiler ID; siehe die Tabelle unter [Bindings](/bindings).                                               |
+| `ribbonAddIns`   |                   | Register, die der Host nach den eingebauten hinzufügt; siehe [Bindings](/bindings#ribbon-add-in-tabs).                                        |
+| `collaboration`  |                   | Deklarative Zusammenarbeit (`DocxCollaborationOptions` oder `null`); siehe [Zusammenarbeit](/de/collaboration#die-eigenschaft-collaboration). |
+| `dirty` (lesen)  |                   | True nach einer Änderung, false nach Speichern, Laden oder `markClean()`.                                                                     |
 
 ## Methoden
 
@@ -40,19 +41,20 @@ Jeder Framework-Adapter umhüllt dasselbe Custom Element `<docx-editor>`. Die Ad
 
 Alle Ereignisse sind bubbling und composed und überschreiten daher die Shadow-Grenze.
 
-| Ereignis               | Detail                | Bedeutung                                                                                    |
-| ---------------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`       | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                    |
-| `document-error`       | `Error`               | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                          |
-| `document-warning`     | `string`              | Nicht schwerwiegender Hinweis.                                                               |
-| `readonly-change`      | `boolean`             | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.            |
-| `file-command`         | `{ command }`         | Abbrechbar. `command` ist `new`, `open`, `save`, `export`, `print` oder `share`.             |
-| `dirty-change`         | `boolean`             | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                  |
-| `page-change`          | `{ page, pageCount }` | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).       |
-| `ribbon-action`        | `RibbonAction`        | Ein Menübandsteuerelement wurde aktiviert.                                                   |
-| `ribbon-customize`     | `readonly string[]`   | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf. |
-| `office-ribbon-add-in` | `{ tab, command }`    | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                              |
-| `presence-send`        | `PresenceMessage`     | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                  |
-| `collaboration-send`   | `StepBatch`           | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                             |
+| Ereignis               | Detail                   | Bedeutung                                                                                    |
+| ---------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`          | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                    |
+| `document-error`       | `Error`                  | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                          |
+| `document-warning`     | `string`                 | Nicht schwerwiegender Hinweis.                                                               |
+| `readonly-change`      | `boolean`                | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.            |
+| `file-command`         | `{ command }`            | Abbrechbar. `command` ist `new`, `open`, `save`, `export`, `print` oder `share`.             |
+| `dirty-change`         | `boolean`                | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                  |
+| `page-change`          | `{ page, pageCount }`    | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).       |
+| `ribbon-action`        | `RibbonAction`           | Ein Menübandsteuerelement wurde aktiviert.                                                   |
+| `ribbon-customize`     | `readonly string[]`      | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf. |
+| `office-ribbon-add-in` | `{ tab, command }`       | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                              |
+| `presence-send`        | `PresenceMessage`        | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                  |
+| `collaboration-send`   | `StepBatch`              | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                             |
+| `collaboration-change` | `DocxCollaborationState` | Der Zusammenarbeitsstatus hat sich geändert: `{ active, roomId, status, synced, people }`.   |
 
 Das Paket exportiert die typisierte Ereigniszuordnung (`DocxEditorEventMap`) und die Laufzeitliste `DOCX_EDITOR_EVENTS`.

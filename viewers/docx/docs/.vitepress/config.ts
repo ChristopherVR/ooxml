@@ -109,8 +109,6 @@ export default defineConfig({
 				items: [
 					{ text: 'Support roadmap', link: '/parity-roadmap' },
 					{ text: 'Outstanding work', link: '/outstanding-work' },
-					{ text: 'ooxml-core plan', link: '/ooxml-core-plan' },
-					{ text: 'Shared format code', link: '/reuse-audit' },
 					{ text: 'Package releases', link: '/releasing' },
 				],
 			},

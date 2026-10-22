@@ -176,6 +176,34 @@ Pruebe la [demo Yjs de dos pares](/demo/collaboration.html?mode=yjs){target="_se
 Sus acciones Pause delivery, Reconnect providers y Resync providers ejercitan la
 recuperación en memoria. No ofrece red de producción ni almacenamiento duradero.
 
+## La propiedad `collaboration`
+
+Para el caso habitual, `<docx-editor>` acepta el mismo contrato de integración declarativo que los editores de Excel, PowerPoint y Visio (`CollaborationOptions` en `ooxml-core/collab`; los alias de Word son `DocxCollaborationOptions` y `DocxCollaborationState`). Es una capa fina sobre el modo Yjs descrito arriba, de modo que no tiene que crear una sesión, esperarla ni elegir un `documentId`:
+
+```ts
+editor.collaboration = {
+	roomId: 'q3-report',
+	serverUrl: 'wss://example.com/collab',
+	user: { name: 'Ada' },
+	intent: 'create',
+};
+editor.addEventListener('collaboration-change', (event) => render(event.detail)); // { active, roomId, status, synced, people }
+editor.collaboration = null; // or editor.stopCollaboration()
+```
+
+- El transporte es el primero de `session` (la suya, que el editor nunca destruye), `provider`, `serverUrl`; si no, un BroadcastChannel entre pestañas de un mismo navegador. Una sesión que abre el propio editor se destruye al salir.
+- `user.name` toma por defecto `reviewAuthor`; un `user.role` de `viewer` bloquea las ediciones locales (de forma orientativa, como arriba).
+- `collaborationState` y `collaboration-change` informan de cualquier enlace Yjs, incluido uno iniciado con `startYjsCollaboration`. `reconnectCollaboration()` reinicia la conexión. Los fallos llegan como `document-error`.
+- `stopCollaboration()` sin argumento también borra la propiedad. El argumento `discardPending` del modo de autoridad no cambia.
+- Al cargar o reemplazar el documento, el editor sale primero de la sala y se vuelve a unir después (la API imperativa sigue lanzando "Stop collaboration before replacing the document."). La unión espera a que haya un documento montado y no se esté cargando.
+
+Límites honestos:
+
+- El nombre de la sala es el `documentId` de Word. Nada comprueba que todas las ventanas hayan cargado el mismo paquete de origen; eso sigue siendo su contrato.
+- **Dos creadores compiten.** Con el valor por defecto `intent: 'create'`, una ventana inicializa una sala vacía. Si varias ventanas abren una sala vacía a la vez, cada una la inicializa y la sala acaba con ambos cuerpos. Dé `create` a exactamente una ventana e `intent: 'join'` a las demás; esta nunca inicializa y notifica `document-error` si la sala sigue vacía tras sincronizar.
+- Un creador espera el primer intercambio con la sala o a que se abra la puerta de escritura (unos segundos) cuando está solo en una malla sin servidor; en ese segundo caso inicializa sin haber visto la sala, de modo que un servidor lento cuyo contenido llega después se inicializa dos veces. Use un servidor o `join` cuando eso importe.
+- Tras salir y volver a unirse en torno a una carga, una `session` propiedad del host conserva el contenido anterior de la sala, que prevalece sobre el documento recién cargado; una sesión propiedad del editor empieza de nuevo.
+
 ## Protocolo
 
 El componente web expone `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration` y `stopCollaboration`. Los hosts pueden usar `createCollaborationAuthority(model, options)` para crear la autoridad de referencia en memoria con el mismo esquema y la misma conversión de modelo que el editor.
