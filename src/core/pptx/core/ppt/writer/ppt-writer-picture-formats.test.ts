@@ -10,6 +10,10 @@
  * (TIFF), EMF, WMF, PNG (the SVG, rasterised). The constants below are
  * copied from it.
  *
+ * Node.js has no DOM to rasterise the SVG with, so these saves pass the
+ * Node rasteriser from the Node-only `pptx/node` entry (`@napi-rs/canvas`),
+ * as a Node host does; the last tests cover a custom one and none.
+ *
  * @module ppt/writer/ppt-writer-picture-formats.test
  */
 import { readFileSync } from 'node:fs';
@@ -18,7 +22,10 @@ import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { rasterizeSvgInNode } from '../../../node';
 import { PptxHandler } from '../../PptxHandler';
+import type { PptxHandlerSaveOptions, PptxSvgRasterizer } from '../../core/types';
+import { encodeCompressedPng } from '../../utils/png-encoder-compressed';
 import { zlibInflate } from '../../utils/inflate';
 import { parseOle2 } from '../../utils/ole2-parser-read';
 import { OA } from '../record-types';
@@ -71,18 +78,20 @@ function metafileHeader(blip: Blip): number[] {
 }
 
 describe('.ppt export of picture formats (vs PowerPoint 97-2003 SaveAs)', () => {
-	async function exportFixture(): Promise<{ blips: Blip[]; warnings: string[] }> {
+	async function exportFixture(
+		options: PptxHandlerSaveOptions = { rasterizeSvg: rasterizeSvgInNode },
+	): Promise<{ blips: Blip[]; warnings: string[] }> {
 		const handler = new PptxHandler();
 		const data = await handler.load(new Uint8Array(readFileSync(FIXTURE)));
-		const ppt = await handler.save(data.slides, { outputFormat: 'ppt' });
+		const ppt = await handler.save(data.slides, { ...options, outputFormat: 'ppt' });
 		const warnings = handler.getCompatibilityWarnings().map((w) => w.code);
 		return { blips: readBlips(ppt), warnings };
 	}
 
 	it('embeds every raster and metafile picture a loaded deck carries only by part path', async () => {
 		const { blips, warnings } = await exportFixture();
-		// The fallback-less SVG is rasterised in Node too (through the optional
-		// @napi-rs/canvas peer), so nothing degrades to a placeholder.
+		// The fallback-less SVG is rasterised in Node too (through the Node
+		// rasteriser and the optional canvas peer), so nothing degrades to a placeholder.
 		expect(blips.map((b) => b.recType)).toStrictEqual([
 			OA.BlipPng,
 			OA.BlipPng,
@@ -137,7 +146,10 @@ describe('.ppt export of picture formats (vs PowerPoint 97-2003 SaveAs)', () => 
 		const source = await JSZip.loadAsync(readFileSync(FIXTURE));
 		const handler = new PptxHandler();
 		const data = await handler.load(new Uint8Array(readFileSync(FIXTURE)));
-		const ppt = await handler.save(data.slides, { outputFormat: 'ppt' });
+		const ppt = await handler.save(data.slides, {
+			outputFormat: 'ppt',
+			rasterizeSvg: rasterizeSvgInNode,
+		});
 		const reloaded = new PptxHandler();
 		const back = await reloaded.load(ppt.slice().buffer as ArrayBuffer);
 		const resaved = await JSZip.loadAsync(await reloaded.save(back.slides));
@@ -160,5 +172,33 @@ describe('.ppt export of picture formats (vs PowerPoint 97-2003 SaveAs)', () => 
 			const view = new DataView(png.buffer, png.byteOffset + 16, 8);
 			expect([view.getUint32(0), view.getUint32(4)]).toStrictEqual([64, 48]);
 		}
+	});
+
+	it("embeds what the save's own rasteriser returns for the fallback-less SVG", async () => {
+		const png = encodeCompressedPng(2, 1, new Uint8Array([255, 0, 0, 255, 0, 0, 255, 255]));
+		const sizes: Array<{ width: number; height: number }> = [];
+		const rasterizeSvg = async (...[svg, sizeFor]: Parameters<PptxSvgRasterizer>) => {
+			expect(new TextDecoder().decode(svg)).toContain('<svg');
+			sizes.push(sizeFor(100, 60));
+			return png;
+		};
+		const { blips, warnings } = await exportFixture({ rasterizeSvg });
+		expect(sizes).toStrictEqual([{ width: 200, height: 120 }]);
+		expect(blips).toHaveLength(6);
+		expect(hex(blips[5]!.data.subarray(17))).toBe(hex(png));
+		expect(warnings).not.toContain('ppt-image-format-unsupported');
+	});
+
+	it('writes a placeholder with a warning for the SVG when Node has no rasteriser', async () => {
+		const { blips, warnings } = await exportFixture({});
+		// The five raster and metafile pictures are kept; the SVG has nothing to embed.
+		expect(blips.map((b) => b.recType)).toStrictEqual([
+			OA.BlipPng,
+			OA.BlipPng,
+			OA.BlipPng,
+			OA.BlipEmf,
+			OA.BlipWmf,
+		]);
+		expect(warnings.filter((code) => code === 'ppt-image-format-unsupported')).toHaveLength(1);
 	});
 });

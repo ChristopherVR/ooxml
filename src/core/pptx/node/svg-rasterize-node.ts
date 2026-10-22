@@ -3,10 +3,15 @@
  * `@napi-rs/canvas` peer (the same Node canvas backend `emf-converter`
  * already falls back to), whose `loadImage` decodes SVG with Skia's SVG
  * module. Returns `undefined` when the package is not installed, so the
- * caller keeps degrading to a placeholder with a warning.
+ * writer keeps degrading to a placeholder with a warning.
  *
- * @module ppt/writer/svg-rasterize-node
+ * Only the Node-only `ooxml-core/pptx/node` entry reaches this module: the
+ * engine never imports it, so browser bundles never see the package.
+ *
+ * @module pptx/node/svg-rasterize-node
  */
+
+import type { PptxSvgRasterizer } from '../core/core/types';
 
 /** The slice of `@napi-rs/canvas` this module uses. */
 interface NodeCanvasImage {
@@ -25,13 +30,6 @@ interface NodeCanvasModule {
 	loadImage(source: Uint8Array): Promise<NodeCanvasImage>;
 }
 
-/**
- * Module specifier built at runtime: esbuild folds a plain string constant
- * into `import('@napi-rs/canvas')` and then tries to bundle the Node-only
- * package (and `fs`, `path`, ...) into every browser build that inlines core.
- */
-const NODE_CANVAS_SPECIFIER = ['@napi-rs', 'canvas'].join('/');
-
 let nodeCanvas: Promise<NodeCanvasModule | undefined> | undefined;
 
 function isNodeCanvasModule(value: unknown): value is NodeCanvasModule {
@@ -41,14 +39,8 @@ function isNodeCanvasModule(value: unknown): value is NodeCanvasModule {
 
 function loadNodeCanvas(): Promise<NodeCanvasModule | undefined> {
 	nodeCanvas ??= (async () => {
-		const runtime = (globalThis as { process?: { versions?: { node?: string } } }).process;
-		if (!runtime?.versions?.node) {
-			return undefined;
-		}
 		try {
-			const imported: unknown = await import(
-				/* webpackIgnore: true */ /* @vite-ignore */ NODE_CANVAS_SPECIFIER
-			);
+			const imported: unknown = await import('@napi-rs/canvas');
 			const withDefault = imported as { default?: unknown };
 			if (isNodeCanvasModule(imported)) {
 				return imported;
@@ -63,14 +55,12 @@ function loadNodeCanvas(): Promise<NodeCanvasModule | undefined> {
 
 /**
  * Rasterise SVG bytes to PNG through `@napi-rs/canvas`, sized by `sizeFor`
- * from the SVG's intrinsic size (0 when it declares none).
+ * from the SVG's intrinsic size (0 when it declares none). Pass it as
+ * `rasterizeSvg` to a `.ppt` save.
  *
  * @returns PNG bytes, or `undefined` without the package or on a bad SVG.
  */
-export async function rasterizeSvgInNode(
-	svg: Uint8Array,
-	sizeFor: (intrinsicW: number, intrinsicH: number) => { width: number; height: number },
-): Promise<Uint8Array | undefined> {
+export const rasterizeSvgInNode: PptxSvgRasterizer = async (svg, sizeFor) => {
 	const canvasModule = await loadNodeCanvas();
 	if (!canvasModule) {
 		return undefined;
@@ -84,4 +74,4 @@ export async function rasterizeSvgInNode(
 	} catch {
 		return undefined;
 	}
-}
+};

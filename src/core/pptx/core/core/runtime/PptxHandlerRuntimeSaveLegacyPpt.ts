@@ -123,7 +123,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Serialise `slides` to a legacy binary PowerPoint 97-2003 (`.ppt`) file.
 	 *
 	 * @param slides - The (possibly mutated) live slide array.
-	 * @param options - Only `pptPassword` is consulted; every OOXML-specific
+	 * @param options - `pptPassword` and `rasterizeSvg` (the `.ppt`-only
+	 *   options), `customShows` and `slideMasters`; every OOXML-specific
 	 *   option (conformance, embedded fonts, table styles, ...) has no binary
 	 *   `.ppt` counterpart and is ignored.
 	 * @param saveAsPptx - Serialises the same slides as a Transitional `.pptx`
@@ -143,8 +144,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const deckMasters = pptxBytes ? await buildDeckMasterRoundTripsFromPptx(pptxBytes) : undefined;
 		this.compatibilityService.resetWarnings();
 		const resolvedMedia = await this.resolveAudioMediaBytes(slides);
-		const resolvedPictures = await resolvePictureSources(slides, async (path) =>
-			this.zip.file(path)?.async('uint8array'),
+		const resolvedPictures = await resolvePictureSources(
+			slides,
+			async (path) => this.zip.file(path)?.async('uint8array'),
+			{ rasterizeSvg: options?.rasterizeSvg },
 		);
 		const deck = convertDeckToWriteModel(
 			slides,

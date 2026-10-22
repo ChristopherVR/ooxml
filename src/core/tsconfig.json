@@ -24,6 +24,7 @@
 		"pptx/core/**",
 		"pptx/editor/**",
 		"pptx/index.ts",
+		"pptx/node/**",
 		"pptx/signature-node/**",
 		"pptx/smartart-layouts/**",
 		"scripts/**",
