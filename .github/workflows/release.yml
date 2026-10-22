@@ -711,3 +711,40 @@ jobs:
           else
             node scripts/sign-release-assets.mjs --plan release-plan.json
           fi
+
+  # Tells the Discord server what shipped: one message per release run (not one per package), with
+  # the notes of the core, ui and mcp packages and whether npm publishing succeeded. Best effort by
+  # design: it never gates anything, and it is skipped when DISCORD_WEBHOOK_RELEASES is not set
+  # (forks). Set it with `node scripts/discord-webhook.mjs releases`, see docs/discord.md.
+  announce-discord:
+    name: announce on Discord
+    needs: [release, publish, verify-published]
+    if: always() && !cancelled() && inputs.tag == '' && needs.release.outputs.any_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # gh release view reads the release bodies
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.release.outputs.release_sha }}
+          persist-credentials: false
+
+      - name: Download release plan
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-plan-${{ github.run_id }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - name: Post the release summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_RELEASES }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          status=failure
+          if [ "$PUBLISH_RESULT" = "success" ]; then status=success; fi
+          node scripts/announce-discord.mjs --plan release-plan.json --status "$status" --run-url "$RUN_URL"
