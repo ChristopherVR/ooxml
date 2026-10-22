@@ -19,7 +19,7 @@
  * honoured, as a host would, and every call in `IMPORT_TIME_EFFECTS` has to survive it.
  */
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { rollup } from 'rollup';
@@ -124,13 +124,15 @@ async function loadedChunks(distDir, code, hasSideEffects) {
 					if (source.startsWith('.') && importer) {
 						return resolve(dirname(importer), source);
 					}
-					if (source.startsWith('/')) {
+					if (isAbsolute(source)) {
 						return source;
 					}
 					return { id: source, external: true };
 				},
 				load(id) {
-					return id === entryId ? code.replaceAll('<dist>', distDir) : undefined;
+					return id === entryId
+						? code.replaceAll('<dist>', distDir.replaceAll('\\', '/'))
+						: undefined;
 				},
 			},
 		],

@@ -31,7 +31,8 @@ function dist(files) {
 	for (const [name, source] of Object.entries(files)) {
 		writeFileSync(join(dir, name), source);
 	}
-	return dir;
+	// Forward slashes so the path survives inside the bundled entry's string literals on Windows.
+	return dir.replaceAll('\\', '/');
 }
 
 const editor = `function Editor() { return ${JSON.stringify('x'.repeat(5000))}; }`;
