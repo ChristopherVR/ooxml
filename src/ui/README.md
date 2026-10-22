@@ -352,9 +352,10 @@ event detail (`approximatedGeometries`, `approximatedFills`, `flattened3d`); not
 ## Scope
 
 Only what every Office product needs lives here. Product-specific ribbon content (PowerPoint
-slides, transitions, animations; Word styles and review) lives in the product's own subpath (`src/ui/src/<product>/`), not in the shared entries. See
-`docs/ooxml-ui-plan.md` in the repository for what moves when, and how the `pptx-ui-*` tags
-become aliases of `office-ui-*`.
+slides, transitions, animations; Word styles and review) lives in the product's own subpath (`src/ui/src/<product>/`), not in the shared entries. The
+`pptx-ui-*` tags are thin subclasses of the `office-ui-*` elements; `docs/ooxml-ui-plan.md` in the
+repository keeps the decisions that still apply (layout, style rules, the tag aliases and the
+token map).
 
 ## Development
 
@@ -395,7 +396,7 @@ expansion budget. Set `reading: true` on a slide stage for accessible reading
 content and native media controls without editing overlays.
 
 [Core and UI source](https://github.com/ChristopherVR/ooxml) |
-[Shared UI plan](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)
+[Shared UI decisions](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)
 
 ## License
 

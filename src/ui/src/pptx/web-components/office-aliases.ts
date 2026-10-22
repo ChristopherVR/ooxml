@@ -39,7 +39,7 @@ import { RIBBON_ICON_PATHS } from './ribbon-icons';
  * subclass of the shared element, registered under the published pptx name so bindings, tests
  * and hosts keep the same attributes, properties, events and test ids. Differences are translated
  * here, never in callers: event names and test ids through the shared elements' static fields,
- * i18n keys and positioning through the `state` setter. See `docs/ooxml-ui-plan.md` in ooxml.
+ * i18n keys and positioning through the `state` setter. The alias decision is recorded in `docs/ooxml-ui-plan.md` (pptx tags).
  */
 
 type Ctor = CustomElementConstructor;
