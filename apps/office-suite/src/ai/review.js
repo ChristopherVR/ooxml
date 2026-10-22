@@ -6,8 +6,8 @@
  * or undone before the kept ones are applied as one saved, undoable version.
  */
 import { badge, escape, task } from '../ui.js';
-import { prepareChanges } from '../ai-operations.js';
-import { wordDiff } from './diff.js';
+import { prepareChanges, reviewSpreadsheet } from '../ai-operations.js';
+import { effectsView, wordDiff } from './diff.js';
 
 const el = (tag, className, text) =>
 	Object.assign(document.createElement(tag), {
@@ -30,6 +30,9 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 	session.node.querySelector('.review-panel')?.remove();
 	const word = ref.kind === 'docx';
 	const kept = items.map(() => true);
+	// A spreadsheet shows what else the kept changes recalculate, and applies that reviewed proposal.
+	const effects = el('div');
+	const proposals = {};
 
 	/** The editor shows the document with the kept changes (Word: all of them, as redlines). */
 	async function preview() {
@@ -44,7 +47,15 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 			).bytes;
 		} else {
 			const chosen = items.filter((_, i) => kept[i]).map(({ change }) => change);
-			bytes = chosen.length ? (await prepareChanges(chosen, [original]))[0].bytes : original.bytes;
+			if (ref.kind === 'xlsx') {
+				const review = await reviewSpreadsheet(chosen, original);
+				delete proposals[ref.id];
+				if (review.proposal) proposals[ref.id] = review.proposal;
+				effects.replaceChildren(effectsView(review));
+			}
+			bytes = chosen.length
+				? (await prepareChanges(chosen, [original], proposals))[0].bytes
+				: original.bytes;
 		}
 		await sessions.reload({ ...original, bytes });
 		session.editor.readOnly?.(!word);
@@ -120,7 +131,7 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 		leave.onclick = () => finish();
 		actions.append(leave);
 	}
-	panel.append(head, help, list, actions);
+	panel.append(head, help, list, effects, actions);
 
 	function finish() {
 		session.editor.readOnly?.(false);
@@ -137,6 +148,7 @@ export async function reviewInDocument({ ref, items, store, sessions, open, refr
 				const [next] = await prepareChanges(
 					chosen.map(({ change }) => change),
 					[original],
+					proposals,
 				);
 				await store.commit([{ document: next, expected: original.revision }], 'Assistant edits');
 				await sessions.reload(next);
