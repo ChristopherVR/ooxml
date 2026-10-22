@@ -628,6 +628,14 @@ test('visio shards the main Playwright run and keeps the chained runs on shard o
 	assert.match(entries[1].verify, /playwright test --shard=2\/2/u);
 });
 
+test("visio's browser chain matches its test:browser script", () => {
+	const manifest = new URL('../viewers/visio/package.json', import.meta.url);
+	const script = JSON.parse(readFileSync(manifest, 'utf8')).scripts['test:browser'];
+	const { sharded, rest } = VIEWERS.visio.browserChain;
+	const chain = [sharded, ...rest].map((command) => command.replace(/^bun x /u, ''));
+	assert.deepEqual(script.split(' && '), chain);
+});
+
 test('changed specs narrow a viewer browser run to one unsharded entry', () => {
 	const result = plan(['e2e/docx/editing.spec.ts']);
 	assert.deepEqual(
