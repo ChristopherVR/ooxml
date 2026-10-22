@@ -919,7 +919,14 @@ function App() {
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const viewerRef = useRef<PowerPointViewerHandle>(null);
-	useEffect(() => installDevViewerHandle(() => viewerRef.current, import.meta.env.DEV), []);
+	useEffect(
+		() =>
+			installDevViewerHandle(
+				() => viewerRef.current,
+				import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1',
+			),
+		[],
+	);
 
 	/** Open the native picker from the explicit Browse control. */
 	const openFilePicker = useCallback(() => {

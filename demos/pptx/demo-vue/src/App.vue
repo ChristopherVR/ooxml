@@ -51,7 +51,10 @@ import { themes } from './themes';
 const viewerRef = shallowRef<PowerPointViewerExpose>();
 let removeDevViewerHandle: (() => void) | undefined;
 onMounted(() => {
-	removeDevViewerHandle = installDevViewerHandle(() => viewerRef.value, import.meta.env.DEV);
+	removeDevViewerHandle = installDevViewerHandle(
+		() => viewerRef.value,
+		import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1',
+	);
 });
 onBeforeUnmount(() => removeDevViewerHandle?.());
 
