@@ -12,14 +12,20 @@
  * with a retained serializer provide it through `serialize`; other bindings
  * use the source-byte reload path below.
  */
+import {
+	createWriteBackScheduler as createCoreWriteBackScheduler,
+	DEFAULT_WRITE_BACK_DEBOUNCE_MS,
+	flushWriteBackOnPageClose,
+	writeBackStateOf,
+	type CollaborationWriteBackState,
+	type WriteBackScheduler as CoreWriteBackScheduler,
+} from 'ooxml-core/collab';
 import { PptxHandler } from 'ooxml-core/pptx';
 import type { PptxElement, PptxHandlerSaveOptions, PptxSlide } from 'ooxml-core/pptx';
 
 import type { CollaborationConfig } from '../types';
 import type { YDocLike } from './collaboration-sync';
 import { readSlidesFromYDoc } from './collaboration-sync';
-
-const DEFAULT_DEBOUNCE_MS = 5_000;
 
 export interface WriteBackDeps {
 	/** The live Y.Doc, or null when disconnected. */
@@ -53,11 +59,13 @@ export interface WriteBackDeps {
 	 * not wired it yet, which reproduces the pre-existing (options-less) save.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions | undefined;
+	/** Called whenever the write-back status changed; read it with `getState()`. */
+	onWriteBackStatus?: () => void;
 }
 
 export type WriteBackConfig = Pick<
 	CollaborationConfig,
-	'role' | 'onWriteBack' | 'writeBackDebounceMs' | 'externalSession'
+	'role' | 'onWriteBack' | 'writeBackDebounceMs' | 'writeBackRetry' | 'externalSession'
 >;
 
 export interface WriteBackScheduler {
@@ -65,89 +73,145 @@ export interface WriteBackScheduler {
 	schedule: (config: WriteBackConfig) => void;
 	/** Cancel any pending write-back. */
 	cancel: () => void;
+	/** Write a pending change now; resolves once the host acknowledged it. */
+	flush: () => Promise<void>;
+	/** The status for the collaboration state; undefined until a write-back was scheduled. */
+	getState: () => CollaborationWriteBackState | undefined;
 }
 
+/**
+ * The PowerPoint write-back: the shared `createWriteBackScheduler` of `ooxml-core/collab` (debounce,
+ * one write in flight, promise acknowledgement, retry, status) with PowerPoint's serialisation,
+ * the owner and session-readiness gates, and a flush on `pagehide` and when the page is hidden
+ * (registered while a change is waiting; browsers do not wait for async work on unload).
+ */
 export function createWriteBackScheduler(deps: WriteBackDeps): WriteBackScheduler {
-	let timer: ReturnType<typeof setTimeout> | null = null;
-	let generation = 0;
+	let core: CoreWriteBackScheduler | null = null;
+	let coreKey = '';
+	let current: WriteBackConfig | null = null;
 	let unsubscribe: (() => void) | null = null;
+	let detachPageClose: (() => void) | null = null;
 
-	function cancel(): void {
-		generation++;
+	const isReady = (): boolean => current?.externalSession?.getSnapshot().synced ?? true;
+	const detachSession = (): void => {
 		unsubscribe?.();
 		unsubscribe = null;
-		if (timer !== null) {
-			clearTimeout(timer);
-			timer = null;
+	};
+
+	function serialize(isCurrentWrite: () => boolean): Promise<Uint8Array | null> {
+		const ydoc = deps.getYDoc();
+		const isCurrent = (): boolean => isCurrentWrite() && isReady() && deps.getYDoc() === ydoc;
+		if (!ydoc || !current?.onWriteBack || !isReady()) return Promise.resolve(null);
+		return serializeDoc(ydoc, isCurrent);
+	}
+
+	async function serializeDoc(
+		ydoc: YDocLike,
+		isCurrent: () => boolean,
+	): Promise<Uint8Array | null> {
+		if (deps.serialize) {
+			try {
+				const bytes = await deps.serialize(isCurrent);
+				return bytes && isCurrent() ? bytes : null;
+			} catch (error) {
+				// A serializer that gave up because the session changed is not a failed save.
+				if (!isCurrent()) return null;
+				throw error;
+			}
 		}
+		const sourceBytes = deps.getSourceBytes?.();
+		if (!sourceBytes) return null;
+		const handler = new PptxHandler();
+		await handler.load(sourceBytes.buffer as ArrayBuffer);
+		if (!isCurrent()) return null;
+		const slides = readSlidesFromYDoc(ydoc);
+		const merged = deps.mergeTemplateElements
+			? deps.mergeTemplateElements(slides, deps.getTemplateElements?.() ?? {})
+			: slides;
+		const bytes = await handler.save(merged, deps.getSaveOptions?.());
+		return isCurrent() ? bytes : null;
+	}
+
+	function coreFor(config: WriteBackConfig): CoreWriteBackScheduler {
+		const retry = config.writeBackRetry;
+		const key = [
+			config.writeBackDebounceMs,
+			retry?.attempts,
+			retry?.baseDelayMs,
+			retry?.maxDelayMs,
+		].join('|');
+		if (core && key === coreKey) return core;
+		core?.dispose();
+		coreKey = key;
+		core = createCoreWriteBackScheduler({
+			debounceMs: config.writeBackDebounceMs ?? DEFAULT_WRITE_BACK_DEBOUNCE_MS,
+			...(retry ? { retry } : {}),
+			serialize: ({ isCurrent }) => serialize(isCurrent),
+			// Read at write time, so a host callback changed meanwhile is the one called.
+			write: (bytes) => current?.onWriteBack?.(bytes),
+			onStatus: (state) => {
+				if (state.status === 'saved' || state.status === 'failed' || state.status === 'idle') {
+					detachSession();
+				}
+				deps.onWriteBackStatus?.();
+			},
+		});
+		return core;
+	}
+
+	/**
+	 * Stopping or suspending the session: an owner's unsaved change is written once more first
+	 * (as Visio does on leave), unless the session already lost its readiness, so a half-synced
+	 * document is never written. The session's document is read as it was when cancel was called.
+	 */
+	function cancel(): void {
+		const config = current;
+		const ydoc = deps.getYDoc();
+		const final =
+			core?.dirty && ydoc && config?.onWriteBack && config.role === 'owner' && isReady()
+				? { ydoc, onWriteBack: config.onWriteBack }
+				: null;
+		if (final) {
+			void serializeDoc(final.ydoc, () => true)
+				.then((bytes) => (bytes ? final.onWriteBack(bytes) : undefined))
+				.catch(() => {});
+		}
+		core?.cancel();
+		detachSession();
+		detachPageClose?.();
+		detachPageClose = null;
 	}
 
 	function schedule(config: WriteBackConfig): void {
-		const isReady = (): boolean => config.externalSession?.getSnapshot().synced ?? true;
 		if (!config.onWriteBack || config.role !== 'owner' || !deps.getYDoc()) {
 			return;
 		}
-		cancel();
+		current = config;
+		const scheduler = coreFor(config);
+		detachSession();
 		if (!isReady()) {
+			scheduler.cancel();
 			return;
 		}
-		const token = generation;
 		if (config.externalSession) {
 			const detach = config.externalSession.subscribe(() => {
-				if (!isReady()) {
-					cancel();
-				}
+				if (!isReady()) scheduler.cancel();
 			});
 			// A host may synchronously notify during subscription.
-			if (token !== generation || !isReady()) {
+			if (!isReady()) {
 				detach();
 				return;
 			}
 			unsubscribe = detach;
 		}
-		const debounceMs = config.writeBackDebounceMs ?? DEFAULT_DEBOUNCE_MS;
-		timer = setTimeout(async () => {
-			timer = null;
-			const ydoc = deps.getYDoc();
-			const isCurrent = (): boolean => token === generation && isReady() && deps.getYDoc() === ydoc;
-			try {
-				if (!ydoc || !config.onWriteBack || !isReady()) {
-					return;
-				}
-				if (deps.serialize) {
-					const bytes = await deps.serialize(isCurrent);
-					if (bytes && isCurrent()) {
-						await config.onWriteBack(bytes);
-					}
-					return;
-				}
-				const sourceBytes = deps.getSourceBytes?.();
-				if (!sourceBytes) {
-					return;
-				}
-				const handler = new PptxHandler();
-				await handler.load(sourceBytes.buffer as ArrayBuffer);
-				if (!isCurrent()) {
-					return;
-				}
-				const slides = readSlidesFromYDoc(ydoc);
-				const merged = deps.mergeTemplateElements
-					? deps.mergeTemplateElements(slides, deps.getTemplateElements?.() ?? {})
-					: slides;
-				const bytes = await handler.save(merged, deps.getSaveOptions?.());
-				if (isCurrent()) {
-					await config.onWriteBack(bytes);
-				}
-			} catch {
-				/* non-fatal */
-			} finally {
-				if (token === generation) {
-					unsubscribe?.();
-					unsubscribe = null;
-				}
-			}
-		}, debounceMs);
+		detachPageClose ??= flushWriteBackOnPageClose(scheduler);
+		scheduler.schedule();
 	}
 
-	return { schedule, cancel };
+	return {
+		schedule,
+		cancel,
+		flush: () => core?.flush() ?? Promise.resolve(),
+		getState: () => (core ? writeBackStateOf(core.state) : undefined),
+	};
 }
