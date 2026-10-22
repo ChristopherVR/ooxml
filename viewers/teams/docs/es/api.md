@@ -55,7 +55,7 @@ await teams.saveFileCopy(channelId, file);
 
 ## Creación, subida y búsqueda de archivos
 
-Ambas vistas de archivos ofrecen subida, creación de un libro de Excel en blanco y búsqueda. Las subidas y los libros nuevos tienen como destino el canal seleccionado, que aparece nombrado junto a los controles. Necesitan almacenamiento configurado; los fallos pueden reintentarse en el canal original. Los archivos con el mismo nombre usan URL de almacenamiento separadas. Las subidas aceptan hasta 20 archivos de 32 MiB cada uno; la interfaz informa de la actividad pero no ofrece progreso en bytes ni cancelación.
+Ambas vistas de archivos ofrecen subida, creación de un libro de Excel en blanco y búsqueda. Las subidas y los libros nuevos tienen como destino el canal seleccionado, que aparece nombrado junto a los controles. Necesitan almacenamiento configurado; los fallos pueden reintentarse en el canal original. Los archivos con el mismo nombre usan URL de almacenamiento separadas. Las subidas aceptan hasta 20 archivos de 32 MiB cada uno (el límite propio del servidor de referencia es de 25 MB por archivo salvo que aumente `maxFileBytes`); la interfaz informa de la actividad pero no ofrece progreso en bytes ni cancelación.
 
 ```ts
 await teams.uploadFiles(channelId, files);

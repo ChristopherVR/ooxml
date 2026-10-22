@@ -133,11 +133,11 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 ## 从源码运行
 
-需要 Node 22+ 和 Bun。如果在本仓库旁边检出了 [`ooxml`](https://github.com/ChristopherVR/ooxml) 仓库（`../ooxml-core`），演示和测试会使用其源码；否则使用已发布的 `ooxml-core` 和 `ooxml-ui`。
+需要 Node 22+ 和 Bun。本文件夹是 [`ooxml`](https://github.com/ChristopherVR/ooxml) 仓库的 `viewers/teams`：先在仓库根目录运行 `bun install`，再在此处运行下面的命令。演示（根目录下的 `demos/teams/*`）和测试使用同一棵树中 `ooxml-core` 和 `ooxml-ui` 的源码。
 
 ```bash
-bun install
-bun run dev        # server on :8787, vanilla demo on :5173, React demo on :5174
+bun install        # 在仓库根目录
+bun run dev        # 在 viewers/teams 中：服务器 :8787，vanilla 演示 :5173，React 演示 :5174
 ```
 
-打开 `http://127.0.0.1:5173/?name=Ada`，并在另一个标签页打开 `...?name=Bob`：两个人处于同一个工作空间。`?local=1` 表示不使用服务器运行。`TEAMS_USE_DIST=1` 会让演示使用已构建的包（需先执行 `bun run build:packages`）和已发布的 ooxml 包，而不是任何源码。摄像头和麦克风需要 `localhost` 或 HTTPS。
+打开 `http://127.0.0.1:5173/?name=Ada`，并在另一个标签页打开 `...?name=Bob`：两个人处于同一个工作空间。`?local=1` 表示不使用服务器运行。`TEAMS_USE_DIST=1` 会让演示使用已构建的包（需先执行 `bun run build:packages`），而不是源码。`TEAMS_DEMOS=vanilla,vue` 用于选择 `bun run dev` 启动的演示。摄像头和麦克风需要 `localhost` 或 HTTPS。
