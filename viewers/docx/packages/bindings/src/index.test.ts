@@ -84,8 +84,13 @@ describe('shared option keys', () => {
 		const options = eventOptions({
 			'document-change': change,
 			'document-error': undefined,
+			'document-warning': undefined,
 			'page-change': undefined,
 			'dirty-change': undefined,
+			'file-command': undefined,
+			'readonly-change': undefined,
+			'ribbon-action': undefined,
+			'ribbon-customize': undefined,
 			'office-ribbon-add-in': undefined,
 			'collaboration-change': undefined,
 		});
