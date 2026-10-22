@@ -118,17 +118,16 @@ The viewers in `viewers/` are released by this repository's own flow, so nothing
 breaking change here breaks the in-repo viewers' CI at once; make it deliberately and note it in the
 commit.
 
-The viewers depend on the **published** version of this package, but never wait for a release
-to work on them. From this checkout, `node scripts/link-local.mjs <viewer dir>` builds core and ui and
-points the viewer's manifests at them (`file:`), then `bun install --force` there; the same command
-with `--restore` puts the ranges back (the original ranges are kept in `.ooxml-link.json`). Restore
-before committing: `check:published` and the sync workflow both reject `file:` ranges. A viewer
-change may rely on something not released yet only if it also works on the last release (register
-what you need yourself, as docx does for the title bar's search field). Commits to another repository
-follow that repository's own `AGENTS.md`.
-
-A change that needs both this package and a viewer lands here first, is released, and only then
-lands in the viewer; see `docs/linked-changes.md` for the order and how to link the two pull requests.
+The viewers resolve this package to the workspace: their `ooxml-core` and `ooxml-ui` ranges are
+`*` or `workspace:*` (a few pptx packages still pin a caret range, which Bun links while the local
+version satisfies it; move them to `workspace:*` when you touch them). The release flow publishes
+the packages in dependency order and rewrites each workspace range to a caret range on the version
+released with it, so **a change that needs both the core and a viewer lands in one push** and is
+released together; nothing waits for a core release. CI's standalone MCP check installs the local
+core as a tarball (`scripts/copy-mcp-sources.mjs`) and everything else from npm, as a user would.
+`node scripts/link-local.mjs` and `docs/linked-changes.md` describe the order for a repository
+outside this one, which does depend on the published core. Commits to another repository follow
+that repository's own `AGENTS.md`.
 
 ### Where does my change go?
 

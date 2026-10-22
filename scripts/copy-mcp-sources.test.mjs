@@ -43,3 +43,28 @@ test('standalone MCP copies preserve sources and tests without workspace depende
 		rmSync(root, { recursive: true, force: true });
 	}
 });
+
+test('a workspace sibling is installed from a tarball of the local package', () => {
+	const root = mkdtempSync(join(tmpdir(), 'mcp-copy-'));
+	try {
+		const source = join(root, 'source');
+		const target = join(root, 'consumer');
+		mkdirSync(source);
+		writeFileSync(
+			join(source, 'package.json'),
+			JSON.stringify({ dependencies: { 'ooxml-mcp': 'workspace:*', zod: '^4.0.0' } }),
+		);
+		execFileSync(process.execPath, [
+			fileURLToPath(new URL('./copy-mcp-sources.mjs', import.meta.url)),
+			source,
+			target,
+		]);
+		const { dependencies } = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8'));
+		assert.match(dependencies['ooxml-mcp'], /^file:\.\/\.workspace\/ooxml-mcp-[\d.]+\.tgz$/);
+		assert.equal(dependencies.zod, '^4.0.0');
+		const tarball = dependencies['ooxml-mcp'].slice('file:./'.length);
+		assert.equal(existsSync(join(target, tarball)), true);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});

@@ -1,7 +1,9 @@
-# Changes that span `ooxml` and a viewer
+# Changes that span `ooxml` and an outside repository
 
-A feature or fix often needs the model or logic here first and the viewer (or its binding) second.
-The viewers depend on the **published** `ooxml-core` and `ooxml-ui`, so the order matters.
+**The viewers under `viewers/` do not follow this.** They resolve the core and `ooxml-ui` to the
+workspace and are released by this repository's flow together with them, so a change that needs
+the core and a viewer lands in one push (see `AGENTS.md`). This page is for a repository outside
+this one that depends on the **published** `ooxml-core` and `ooxml-ui`, where the order matters.
 
 ## The order
 
