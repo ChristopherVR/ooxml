@@ -1,5 +1,5 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { isPanelVisible } from 'ooxml-ui/pptx';
+import { isPanelVisible, visibleTemplateElements } from 'ooxml-ui/pptx';
 import {
 	buildFieldSubstitutionContext,
 	isPresentationAdvanceClick,
@@ -462,7 +462,19 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 									<PresentationTransitionOverlay
 										key={`${presentation.transitionOverlay.outgoingSlideIndex}-${presentation.transitionOverlay.incomingSlideIndex}`}
 										outgoingSlide={slides[presentation.transitionOverlay.outgoingSlideIndex]}
-										templateElements={templateElements}
+										// Each slide behind its OWN layout: the active slide's
+										// template is the incoming one's, and painting the leaving
+										// slide over it dropped a layout background the moment
+										// the transition began (issue #141).
+										templateElements={[
+											...visibleTemplateElements(
+												slides[presentation.transitionOverlay.outgoingSlideIndex],
+												s.templateElementsBySlideId[
+													slides[presentation.transitionOverlay.outgoingSlideIndex].id
+												] ?? [],
+											),
+										]}
+										incomingTemplateElements={templateElements}
 										canvasSize={canvasSize}
 										transition={presentation.transitionOverlay.transition}
 										durationMs={presentation.transitionOverlay.durationMs}

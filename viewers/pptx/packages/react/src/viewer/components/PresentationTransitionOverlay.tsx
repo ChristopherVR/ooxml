@@ -64,6 +64,13 @@ export interface PresentationTransitionOverlayProps {
 	 * transition ignores it.
 	 */
 	incomingSlide?: PptxSlide;
+	/**
+	 * Template/master elements that belong to the INCOMING slide, painted
+	 * behind it in the arriving layer. Defaults to `templateElements`, which is
+	 * only right when both slides share a layout: a slide whose layout carries a
+	 * full-slide picture otherwise lost it the moment a cover began (issue #141).
+	 */
+	incomingTemplateElements?: PptxElement[];
 	/** Called when the transition animation completes. */
 	onComplete: () => void;
 }
@@ -81,6 +88,7 @@ export function PresentationTransitionOverlay({
 	scale: stageScale,
 	morphPlan,
 	incomingSlide,
+	incomingTemplateElements = templateElements,
 	onComplete,
 }: PresentationTransitionOverlayProps): React.ReactElement | null {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -207,7 +215,7 @@ export function PresentationTransitionOverlay({
 				<FragmentedTransitionLayer
 					layer={fragmented.incoming}
 					slide={incomingSlide}
-					templateElements={templateElements}
+					templateElements={incomingTemplateElements}
 					canvasSize={canvasSize}
 					scale={scale}
 					zIndex={animations.outgoingOnTop ? 0 : 10}
@@ -234,7 +242,7 @@ export function PresentationTransitionOverlay({
 					>
 						<SlideLayer
 							slide={incomingSlide}
-							templateElements={templateElements}
+							templateElements={incomingTemplateElements}
 							canvasSize={canvasSize}
 						/>
 					</div>
