@@ -14,7 +14,10 @@
  */
 import type { Options as Html2CanvasOptions } from 'html2canvas-pro';
 import { _testing } from 'ooxml-ui/pptx/export/canvas-color-fix';
-import { prepareHtml2CanvasClone } from 'ooxml-ui/pptx/export/html2canvas-clone';
+import {
+	html2canvasCaptureScope,
+	prepareHtml2CanvasClone,
+} from 'ooxml-ui/pptx/export/html2canvas-clone';
 
 export { _testing };
 
@@ -39,6 +42,8 @@ export async function renderToCanvas(
 
 	return html2canvasPro(element, {
 		...options,
+		// Clone only the captured element's branch: html2canvas would copy the whole page.
+		ignoreElements: html2canvasCaptureScope(element, options.ignoreElements),
 		onclone: async (doc: Document, clonedEl: HTMLElement) => {
 			await prepareHtml2CanvasClone(element, doc, clonedEl);
 
