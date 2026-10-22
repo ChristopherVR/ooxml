@@ -106,7 +106,6 @@ export * from './viewer/table-renderer-helpers';
 // building blocks it composes for its own template.
 export { RibbonAnimationsSectionComponent } from './viewer/ribbon-animations-section.component';
 export { RibbonArrangeSectionComponent } from './viewer/ribbon-arrange-section.component';
-export { RibbonColorPopoverComponent } from './viewer/ribbon-color-popover.component';
 export { RibbonDesignSectionComponent } from './viewer/ribbon-design-section.component';
 export { RibbonDrawingGroupComponent } from './viewer/ribbon-drawing-group.component';
 export { RibbonDrawSectionComponent } from './viewer/ribbon-draw-section.component';

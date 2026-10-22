@@ -5,8 +5,7 @@
  * `onColorCommit` is a plain method taking a style-key pair and a
  * `ThemeColorPickerCommit`, tested directly (no TestBed, see
  * `vitest.config.ts`); the template wiring that reaches it (which field
- * passes which key pair) is pinned as a source-text guard, the technique
- * `ribbon-color-popover.component.test.ts` established for this package.
+ * passes which key pair) is pinned as a source-text guard (`componentSource`).
  */
 import { Injector, runInInjectionContext } from '@angular/core';
 import type { TablePptxElement } from 'pptx-viewer-core';
