@@ -11,6 +11,10 @@
  * `locator.tap()` (which aims at the box centre) misses. We tap the cell's
  * on-screen left portion via `touchscreen` at a clamped point instead.
  *
+ * The double-tap goes through `support/touch.ts`, which stamps both taps as a
+ * person makes them: with `touchscreen.tap()` twice, a loaded runner delivered
+ * them past the 300-500ms double-tap windows the bindings use.
+ *
  * Run: bunx playwright test mobile-table.spec
  */
 import { resolve } from 'node:path';
@@ -20,6 +24,7 @@ import { test, expect, devices } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { doubleTap } from './support/touch';
 
 test.use({ ...devices['Pixel 7'] });
 
@@ -92,9 +97,7 @@ test('double-tapping a table cell opens an editor and accepts input', async ({ p
 	const pt = await cellPoint(page, 'Starter');
 	expect(pt).not.toBeNull();
 	// Double-tap to enter cell edit (select, then edit).
-	await page.touchscreen.tap(pt!.x, pt!.y);
-	await page.waitForTimeout(80);
-	await page.touchscreen.tap(pt!.x, pt!.y);
+	await doubleTap(page, pt!.x, pt!.y);
 
 	const input = page.locator('td input[type="text"]');
 	await expect(input).toBeVisible();
@@ -131,9 +134,7 @@ test('committing a cell edit by tapping away keeps the typed value', async ({ pa
 
 	const starter = await cellPoint(page, 'Starter');
 	expect(starter).not.toBeNull();
-	await page.touchscreen.tap(starter!.x, starter!.y);
-	await page.waitForTimeout(80);
-	await page.touchscreen.tap(starter!.x, starter!.y);
+	await doubleTap(page, starter!.x, starter!.y);
 
 	const input = page.locator('td input[type="text"]');
 	await expect(input).toBeVisible();
