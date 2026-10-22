@@ -18,8 +18,8 @@
  *   natively, as PowerPoint does.
  * - The source is a TIFF, whose decoder (`utif`) loads asynchronously; it is
  *   re-encoded to PNG, matching PowerPoint's own 97-2003 SaveAs.
- * - The picture is an SVG with no raster fallback, rasterised in a browser
- *   (`svg-rasterize.ts`).
+ * - The picture is an SVG with no raster fallback, rasterised through the
+ *   save's `rasterizeSvg` hook or, without one, the DOM (`svg-rasterize.ts`).
  *
  * Every other picture takes the synchronous path, so an edited inline
  * payload of the part's own format still wins, exactly as on `.pptx` save.
@@ -27,6 +27,7 @@
  * @module ppt/writer/picture-resolve
  */
 
+import type { PptxSvgRasterizer } from '../../core/types';
 import type { PptxElement, PptxSlide } from '../../types';
 import { encodeCompressedPng } from '../../utils/png-encoder-compressed';
 import { bytesToPicture, sniffImageFormat } from './picture-encode';
@@ -41,6 +42,12 @@ export type PartReader = (path: string) => Promise<Uint8Array | undefined>;
 
 /** Pictures resolved ahead of conversion, keyed by the live element. */
 export type ResolvedPictures = Map<PptxElement, WPictureData>;
+
+/** How {@link resolvePictureSources} turns pictures it cannot embed as they are into rasters. */
+export interface ResolvePictureOptions {
+	/** Rasterises an SVG with no raster fallback; without it the DOM's own renderer is used. */
+	rasterizeSvg?: PptxSvgRasterizer;
+}
 
 /** Decode a TIFF's first page to PNG through `utif` (DOM-free), or `undefined`. */
 async function tiffToPicture(bytes: Uint8Array): Promise<WPictureData | undefined> {
@@ -86,13 +93,17 @@ function pathFormat(path: string): string | undefined {
 }
 
 /** Bytes -> picture, including the async TIFF and SVG paths. */
-async function toPicture(bytes: Uint8Array, el: PptxElement): Promise<WPictureData | undefined> {
+async function toPicture(
+	bytes: Uint8Array,
+	el: PptxElement,
+	options: ResolvePictureOptions,
+): Promise<WPictureData | undefined> {
 	const format = sniffImageFormat(bytes);
 	if (format === 'tiff') {
 		return tiffToPicture(bytes);
 	}
 	if (format === 'svg') {
-		return rasterizeSvg(bytes, el.width || 1, el.height || 1);
+		return rasterizeSvg(bytes, el.width || 1, el.height || 1, options.rasterizeSvg);
 	}
 	return bytesToPicture(bytes);
 }
@@ -102,6 +113,7 @@ async function resolveOne(
 	el: PptxElement,
 	source: PictureSource,
 	readPart: PartReader,
+	options: ResolvePictureOptions,
 ): Promise<WPictureData | undefined> {
 	const inline = decodeBase64DataUrl(source.inline);
 	const inlineFormat = inline ? sniffImageFormat(inline) : undefined;
@@ -109,10 +121,12 @@ async function resolveOne(
 	// An inline payload of the part's own format (or with no part) is the edited
 	// source of truth, as on `.pptx` save; only TIFF/SVG still need the async path.
 	if (inline && (!partFormat || partFormat === inlineFormat)) {
-		return inlineFormat === 'tiff' || inlineFormat === 'svg' ? toPicture(inline, el) : undefined;
+		return inlineFormat === 'tiff' || inlineFormat === 'svg'
+			? toPicture(inline, el, options)
+			: undefined;
 	}
 	const part = source.partPath ? await readPart(source.partPath) : undefined;
-	const fromPart = part ? await toPicture(part, el) : undefined;
+	const fromPart = part ? await toPicture(part, el, options) : undefined;
 	if (fromPart) {
 		return fromPart;
 	}
@@ -120,13 +134,13 @@ async function resolveOne(
 		return undefined; // e.g. an SVG part with a PNG inline fallback: the sync path embeds it
 	}
 	const fetched = await fetchBlobUrl(source.inline);
-	const fromFetch = fetched ? await toPicture(fetched, el) : undefined;
+	const fromFetch = fetched ? await toPicture(fetched, el, options) : undefined;
 	if (fromFetch || !source.svgPath) {
 		return fromFetch;
 	}
 	// Last resort: an SVG picture with no raster fallback at all.
 	const svg = await readPart(source.svgPath);
-	return svg ? rasterizeSvg(svg, el.width || 1, el.height || 1) : undefined;
+	return svg ? rasterizeSvg(svg, el.width || 1, el.height || 1, options.rasterizeSvg) : undefined;
 }
 
 /**
@@ -136,6 +150,7 @@ async function resolveOne(
 export async function resolvePictureSources(
 	slides: PptxSlide[],
 	readPart: PartReader,
+	options: ResolvePictureOptions = {},
 ): Promise<ResolvedPictures> {
 	const pending: Array<[PptxElement, PictureSource]> = [];
 	const walk = (elements: PptxElement[]): void => {
@@ -154,7 +169,7 @@ export async function resolvePictureSources(
 	const resolved: ResolvedPictures = new Map();
 	await Promise.all(
 		pending.map(async ([el, source]) => {
-			const picture = await resolveOne(el, source, readPart);
+			const picture = await resolveOne(el, source, readPart, options);
 			if (picture) {
 				resolved.set(el, picture);
 			}

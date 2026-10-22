@@ -14,7 +14,7 @@ export {
 } from './master-roundtrip-writer';
 export type { DeckMasterRoundTrips } from './master-roundtrip-writer';
 export { resolvePictureSources } from './picture-resolve';
-export type { PartReader, ResolvedPictures } from './picture-resolve';
+export type { PartReader, ResolvePictureOptions, ResolvedPictures } from './picture-resolve';
 export { buildPptFile } from './write-ppt';
 export type { BuildPptOptions } from './write-ppt';
 export type {

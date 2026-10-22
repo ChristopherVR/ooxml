@@ -8,15 +8,17 @@
  * `.svg`, then SaveAs `.pptx`, leaves a bare `<a:blip>` holding only the
  * `svgBlip` extension), and its own 97-2003 SaveAs then rasterises the SVG
  * to a PNG at twice the SVG's intrinsic size. This does the same through
- * the DOM's own SVG renderer in a browser, and through the optional
- * `@napi-rs/canvas` peer in Node.js (`svg-rasterize-node.ts`). Only in a
- * runtime with neither does it return `undefined`, where the caller
- * degrades to a placeholder with a warning.
+ * the caller's rasteriser when the save passes one
+ * (`PptxHandlerSaveOptions.rasterizeSvg`; Node.js hosts pass the one the
+ * Node-only `pptx/node` entry exports), otherwise through the DOM's own SVG
+ * renderer. With neither it returns `undefined`, where the caller degrades
+ * to a placeholder with a warning. This module never loads a Node-only
+ * package, so browser bundles of the engine stay free of them.
  *
  * @module ppt/writer/svg-rasterize
  */
 
-import { rasterizeSvgInNode } from './svg-rasterize-node';
+import type { PptxSvgRasterizer } from '../../core/types';
 import type { WPictureData } from './write-model';
 
 /** Longest edge, in pixels, a rasterised SVG is clamped to. */
@@ -92,18 +94,28 @@ async function rasterizeSvgInDom(
 
 /**
  * Rasterise SVG bytes to PNG, at twice the SVG's intrinsic size (or the
- * given fallback size when it declares none), or `undefined` in a runtime
- * with neither a DOM nor `@napi-rs/canvas`.
+ * given fallback size when it declares none). `rasterize`, when given,
+ * replaces the built-in DOM rasteriser. Returns `undefined` when the
+ * rasteriser fails (returns nothing or throws), or with no rasteriser and
+ * no DOM.
  */
 export async function rasterizeSvg(
 	svg: Uint8Array,
 	fallbackWidthPx: number,
 	fallbackHeightPx: number,
+	rasterize?: PptxSvgRasterizer,
 ): Promise<WPictureData | undefined> {
-	const png = hasDomRasteriser()
-		? await rasterizeSvgInDom(svg, fallbackWidthPx, fallbackHeightPx)
-		: await rasterizeSvgInNode(svg, (w, h) =>
-				svgRasterSize(w, h, fallbackWidthPx, fallbackHeightPx),
-			);
+	let png: Uint8Array | undefined;
+	if (rasterize) {
+		const sizeFor = (w: number, h: number) =>
+			svgRasterSize(w, h, fallbackWidthPx, fallbackHeightPx);
+		try {
+			png = await rasterize(svg, sizeFor);
+		} catch {
+			png = undefined;
+		}
+	} else if (hasDomRasteriser()) {
+		png = await rasterizeSvgInDom(svg, fallbackWidthPx, fallbackHeightPx);
+	}
 	return png ? { extension: 'png', bytes: png } : undefined;
 }

@@ -194,6 +194,11 @@
 			"import": "./dist/pptx/signature-node/index.mjs",
 			"require": "./dist/pptx/signature-node/index.cjs"
 		},
+		"./pptx/node": {
+			"types": "./dist/pptx/node/index.d.ts",
+			"import": "./dist/pptx/node/index.mjs",
+			"require": "./dist/pptx/node/index.cjs"
+		},
 		"./pptx/smartart-layouts": {
 			"types": "./dist/pptx/smartart-layouts/index.d.ts",
 			"import": "./dist/pptx/smartart-layouts/index.mjs",
