@@ -37,6 +37,8 @@ export interface UseRecoveryDetectionInput {
 	 * an earlier configuration left behind. Defaults to true.
 	 */
 	autosaveAllowed?: boolean;
+	/** Called with the stored record when a recovery snapshot is offered (the host's `onAutosaveRecovery`). */
+	onOffered?: ((record: AutosaveRecord) => void) | undefined;
 	/** Load the recovered bytes into the viewer. */
 	onRestore?: (bytes: Uint8Array) => void;
 	/** Legacy behaviour: also open the Version History panel when one is found. */
@@ -67,6 +69,10 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 	const [discarding, setDiscarding] = useState(false);
 
 	const onRestore = input.onRestore;
+	const onOfferedRef = useRef(input.onOffered);
+	useEffect(() => {
+		onOfferedRef.current = input.onOffered;
+	}, [input.onOffered]);
 	const openVersionHistory = input.openVersionHistory;
 
 	useEffect(() => {
@@ -91,6 +97,7 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 			}
 			recordRef.current = offer.record;
 			setPrompt(offer.prompt);
+			onOfferedRef.current?.(offer.record);
 			openVersionHistory?.();
 		})();
 	}, [filePath, fileName, loading, error, slideCount, autosaveAllowed, openVersionHistory]);

@@ -37,6 +37,10 @@ export interface UsePropertyHandlersInput {
 	setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
 	ops: ElementOperations;
 	history: EditorHistoryResult;
+	/** The host's `onPropertiesChange`: the fields a document-properties edit changed. */
+	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
+	/** The host's `onNotesUpdate`: the new speaker-notes text of the active slide. */
+	onNotesUpdate?: ((notes: string) => void) | undefined;
 }
 
 export interface PropertyHandlersResult {
@@ -73,6 +77,8 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 		setIsDirty,
 		ops,
 		history,
+		onPropertiesChange,
+		onNotesUpdate,
 	} = input;
 
 	const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -92,6 +98,7 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 			),
 		);
 		history.markDirty();
+		onNotesUpdate?.(text);
 	};
 
 	const handleUpdateSlide = (updates: Partial<PptxSlide>) => {
@@ -109,6 +116,7 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 	const handleUpdateCoreProperties = (updates: Partial<PptxCoreProperties>) => {
 		setCoreProperties((prev) => ({ ...prev, ...updates }));
 		history.markDirty();
+		onPropertiesChange?.(updates);
 	};
 
 	const handleUpdateAppProperties = (updates: Partial<PptxAppProperties>) => {

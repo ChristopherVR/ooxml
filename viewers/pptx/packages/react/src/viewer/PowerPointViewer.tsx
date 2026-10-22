@@ -22,6 +22,7 @@ import type {
 	SlidePackageClipboard,
 	CollabLoadOrigin,
 	CollaborationLivePatcher,
+	ConnectionStatus,
 	DeckSaveState,
 	RibbonAddInTab,
 	ViewerAddinStatus,
@@ -138,6 +139,7 @@ import { usePresentationSetup } from './hooks/usePresentationSetup';
 import { useReadOnlyRecommendationState } from './hooks/useReadOnlyRecommendationState';
 import { useRecentColorsSync } from './hooks/useRecentColorsSync';
 import { useReducedMotion } from './hooks/useReducedMotion';
+import { useReportOnChange } from './hooks/useReportOnChange';
 import { useResizablePanels } from './hooks/useResizablePanels';
 import { useRibbonGalleryCommands } from './hooks/useRibbonGalleryCommands';
 import { useRunProgramNoticesState } from './hooks/useRunProgramNoticesState';
@@ -207,6 +209,15 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onStartCollaboration,
 			onStopCollaboration,
 			onCollaborationChange,
+			onCollaborationStatus,
+			onAutosave,
+			onAutosaveToggle,
+			onAutosaveStatus,
+			onAutosaveRecovery,
+			onChange,
+			onPropertiesChange,
+			onNotesUpdate,
+			onPresentationChange,
 			shareDefaults,
 			smartArt3D = false,
 			surfaceChart3D = false,
@@ -425,6 +436,14 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		// which folds in the host's `autosave` prop (a ceiling the preference
 		// cannot exceed), the file path, and edit permission.
 		const [autosaveEnabled, setAutosaveEnabled] = useState(true);
+		const autosaveToggleCallback = useRef(onAutosaveToggle);
+		useEffect(() => {
+			autosaveToggleCallback.current = onAutosaveToggle;
+		}, [onAutosaveToggle]);
+		const autosaveEnabledRef = useRef(autosaveEnabled);
+		useEffect(() => {
+			autosaveEnabledRef.current = autosaveEnabled;
+		}, [autosaveEnabled]);
 		const autosaveActivation = resolveAutosaveActivation({
 			hostAutosave,
 			userEnabled: autosaveEnabled,
@@ -534,6 +553,9 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 				switch (key) {
 					case 'autoSave':
 						setAutosaveEnabled(value);
+						if (value !== autosaveEnabledRef.current) {
+							autosaveToggleCallback.current?.(value);
+						}
 						break;
 					case 'spellCheck':
 						state.setSpellCheckEnabled(value);
@@ -679,8 +701,13 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		// host's `onDirtyChange` and `useAutosave` (which does nothing at all
 		// while the document reads clean).
 		const { setIsDirty } = state;
+		const onChangeCallback = useRef(onChange);
+		useEffect(() => {
+			onChangeCallback.current = onChange;
+		}, [onChange]);
 		const markDocumentDirty = useCallback(() => {
 			setIsDirty(true);
+			onChangeCallback.current?.();
 		}, [setIsDirty]);
 
 		const history = useEditorHistory({
@@ -1001,6 +1028,12 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onZoomChange,
 			onSelectionChange,
 			onSlideCountChange,
+			onAutosave,
+			onAutosaveStatus,
+			onAutosaveRecovery,
+			onPropertiesChange,
+			onNotesUpdate,
+			onPresentationChange,
 			customizationApi: custom.api,
 			customization: customizationResolved,
 		});
@@ -1348,7 +1381,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 											// Inert when the host passed `autosave={false}`: a preference
 											// cannot exceed the policy, so the switch must not move.
 											if (autosaveActivation.toggleAvailable) {
-												setAutosaveEnabled((p) => !p);
+												setAutosaveEnabled(!autosaveEnabled);
+												onAutosaveToggle?.(!autosaveEnabled);
 											}
 										}}
 										hiddenActions={hiddenActions}
@@ -1739,7 +1773,10 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 											canvasWidth={canvasSize.width}
 											canvasHeight={canvasSize.height}
 										>
-											<CollaborationStateReporter onChange={onCollaborationChange} />
+											<CollaborationStateReporter
+												onChange={onCollaborationChange}
+												onStatus={onCollaborationStatus}
+											/>
 											<CollaborationDocumentSync
 												slides={galleryDeckStyle.held()?.slides ?? slides}
 												templateElementsBySlideId={
@@ -1829,10 +1866,14 @@ function CollaborationStatusStrip() {
  */
 function CollaborationStateReporter({
 	onChange,
+	onStatus,
 }: {
 	onChange: PowerPointViewerProps['onCollaborationChange'];
+	onStatus: PowerPointViewerProps['onCollaborationStatus'];
 }) {
-	useCollaborationStateReport(useCollaboration(), onChange);
+	const collab = useCollaboration();
+	useCollaborationStateReport(collab, onChange);
+	useReportOnChange<ConnectionStatus>(collab?.status ?? 'disconnected', onStatus, 'disconnected');
 	return null;
 }
 

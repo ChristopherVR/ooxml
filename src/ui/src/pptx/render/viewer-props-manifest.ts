@@ -157,23 +157,23 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 	{
 		id: 'autosave',
 		absent: onlyIn(
-			['vue', 'svelte'],
+			['vue', 'svelte', 'react'],
 			'the autosave snapshot is delivered by vue and svelte only (vanilla reports status and recovery)',
 		),
 	},
 	{
 		id: 'autosaveToggle',
 		names: { vanilla: 'onToggleAutosave' },
-		absent: onlyIn(['svelte', 'vanilla'], NOT_YET),
+		absent: onlyIn(['svelte', 'vanilla', 'react'], NOT_YET),
 	},
-	{ id: 'propertiesChange', absent: onlyIn(['angular'], NOT_YET) },
-	{ id: 'change', absent: onlyIn(['svelte', 'vanilla'], NOT_YET) },
-	{ id: 'notesUpdate', absent: onlyIn(['svelte'], NOT_YET) },
-	{ id: 'presentationChange', absent: onlyIn(['vanilla'], NOT_YET) },
-	{ id: 'autosaveStatus', absent: onlyIn(['vanilla'], NOT_YET) },
-	{ id: 'autosaveRecovery', absent: onlyIn(['vanilla'], NOT_YET) },
+	{ id: 'propertiesChange', absent: onlyIn(['angular', 'react'], NOT_YET) },
+	{ id: 'change', absent: onlyIn(['svelte', 'vanilla', 'react'], NOT_YET) },
+	{ id: 'notesUpdate', absent: onlyIn(['svelte', 'react'], NOT_YET) },
+	{ id: 'presentationChange', absent: onlyIn(['vanilla', 'react'], NOT_YET) },
+	{ id: 'autosaveStatus', absent: onlyIn(['vanilla', 'react'], NOT_YET) },
+	{ id: 'autosaveRecovery', absent: onlyIn(['vanilla', 'react'], NOT_YET) },
 	// Raw connection status only; `collaborationChange` carries the full shared state everywhere.
-	{ id: 'collaborationStatus', absent: onlyIn(['vanilla'], NOT_YET) },
+	{ id: 'collaborationStatus', absent: onlyIn(['vanilla', 'react'], NOT_YET) },
 ];
 
 const capitalised = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1);
