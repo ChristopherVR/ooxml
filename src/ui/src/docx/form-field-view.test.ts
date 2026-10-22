@@ -65,7 +65,10 @@ const checked = (view: EditorView) =>
 	Boolean(formFieldOfNode(view.state.doc.nodeAt(markerOf(view, 'checkbox')))?.checkBox?.checked);
 
 describe('legacy form fields from the keyboard', () => {
-	afterEach(() => document.body.replaceChildren());
+	afterEach(() => {
+		document.body.replaceChildren();
+		vi.unstubAllGlobals();
+	});
 
 	it('toggles a check box with Space or Enter beside it in a protected form', () => {
 		const { view, editor } = mount();
@@ -225,6 +228,59 @@ describe('legacy form fields from the keyboard', () => {
 		const zip = await JSZip.loadAsync(await editor.saveBytes());
 		const xml = await zip.file('word/document.xml')!.async('string');
 		expect(xml).toContain('<w:name w:val="Approved"/>');
+		expect(xml).not.toContain('<w:b/>');
+	});
+
+	it('keeps the value of a protected form text field unformatted, while it takes text', async () => {
+		const model = createDocument();
+		model.blocks = [
+			{
+				type: 'paragraph',
+				id: 'p1',
+				runs: [
+					{ text: 'Name ' },
+					{ text: '', fieldChar: 'begin', formField: { kind: 'text', name: 'Name' } },
+					{ text: '', fieldCode: ' FORMTEXT ' },
+					{ text: '', fieldChar: 'separate' },
+					{ text: 'Ada', field: { instr: 'FORMTEXT' } },
+					{ text: '', fieldChar: 'end' },
+				],
+			},
+		];
+		model.protection = { edit: 'forms', enforced: true };
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		editor.documentModel = model;
+		document.body.append(editor);
+		const view = (editor as unknown as { view: EditorView }).view;
+		let start = -1;
+		view.state.doc.descendants((node, pos) => {
+			if (node.isText && node.text!.includes('Ada')) start = pos + node.text!.indexOf('Ada');
+		});
+		expect(start).toBeGreaterThan(0);
+		// "Ad" selected, then Ctrl+B, as a person formats part of the value.
+		view.dispatch(
+			view.state.tr.setSelection(TextSelection.create(view.state.doc, start, start + 2)),
+		);
+		const before = view.state.doc;
+		view.someProp('handleKeyDown', (handle) =>
+			handle(view, new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true })),
+		);
+		expect(view.state.doc.eq(before)).toBe(true);
+		// Ctrl+B with no selection does not format the text typed next either.
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, start + 3)));
+		view.someProp('handleKeyDown', (handle) =>
+			handle(view, new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true })),
+		);
+		// The field still takes text, typed or pasted, in its own formatting.
+		view.dispatch(view.state.tr.insertText('X'));
+		expect(view.state.doc.textContent).toContain('AdaX');
+		vi.stubGlobal('ClipboardEvent', Event);
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, start + 4)));
+		expect(view.pasteHTML('<b>Bold</b>', new Event('paste') as ClipboardEvent)).toBe(true);
+		expect(view.state.doc.textContent).toContain('AdaXBold');
+		const zip = await JSZip.loadAsync(await editor.saveBytes());
+		const xml = await zip.file('word/document.xml')!.async('string');
+		expect(xml).toContain('AdaXBold');
 		expect(xml).not.toContain('<w:b/>');
 	});
 

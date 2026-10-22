@@ -338,3 +338,31 @@ describe('chart area outer shadow and glow on the chart container', () => {
 		expect(getShapeVisualStyle(chart(undefined), true, '#fff', 0, '#000')).toStrictEqual({});
 	});
 });
+
+const MARKER_STROKE = { strokeColor: '#ffffff', strokeWidth: 4 };
+
+/** Stroked clip must reach past the geometry edge by half the line width (issue #144). */
+describe('react getShapeVisualStyle: centred outline is not clipped to half width', () => {
+	it('widens the clip of a solid stroked preset and leaves an unstroked one exact', () => {
+		const make = (shapeStyle: Record<string, unknown>): PptxElement =>
+			({
+				id: 'm',
+				type: 'shape',
+				shapeType: 'flowChartOffpageConnector',
+				x: 0,
+				y: 0,
+				width: 15,
+				height: 26,
+				shapeStyle,
+			}) as unknown as PptxElement;
+		const clipOf = (style: Record<string, unknown>): string =>
+			String(style['clipPath'] ?? style['clip-path'] ?? '');
+		const stroked = clipOf(getShapeVisualStyle(make(MARKER_STROKE), true, '#fc4c02', 4, '#ffffff'));
+		const bare = clipOf(
+			getShapeVisualStyle(make({ strokeWidth: 0 }), true, '#fc4c02', 0, '#ffffff'),
+		);
+		expect(bare).toContain('path(');
+		expect(stroked.length).toBeGreaterThan(bare.length);
+		expect(stroked.startsWith(bare.slice(0, bare.length - 2))).toBe(true);
+	});
+});

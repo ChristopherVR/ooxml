@@ -1,21 +1,22 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { CanvasSize } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { StyleMap } from './element-style';
-import type { MorphCrossfadeGroupSlides } from './presentation-transition-overlay-morph';
+import type {
+	MorphCrossfadeGroupSlides,
+	MorphOverlayLayerSlide,
+} from './presentation-transition-overlay-morph';
 import { SlideCanvasComponent } from './slide-canvas.component';
 
 /**
- * The two morph-only layers `PresentationTransitionOverlayComponent` paints
- * ABOVE its outgoing/incoming pair, split out to keep that file under the
- * project's per-file LOC budget:
+ * The morph-only layers `PresentationTransitionOverlayComponent` paints,
+ * split out to keep that file under the project's per-file LOC budget:
  *
- *  - the **lifted** layer: arriving shapes a ghost above them would
- *    otherwise hide for the whole morph, painted here so they dissolve in
- *    where a viewer can see them (issue #146). Their copy on the incoming
- *    layer is held invisible by the plan, so nothing composites twice.
+ *  - the **overlay layers**: the plan's ghosts and lifted arrivals, one layer
+ *    per run in the plan's single back-to-front order (issue #141). A lifted
+ *    run holds arriving shapes a ghost would otherwise hide for the whole
+ *    morph (issue #146); their copy on the live stage is held invisible.
  *  - the **crossfade groups**: pairs the overlay paints BOTH halves of, each
  *    as one isolated group so the halves are SUMMED rather than stacked
  *    (issue #161).
@@ -37,19 +38,20 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 		}
 	`,
 	template: `
-		<!-- The arriving shapes that dissolve in ABOVE a departing one. They are on
-		     the live stage below this overlay, where the departing layer hides them
-		     for the whole morph, so they are painted again here. -->
-		@if (liftedSlide(); as lifted) {
+		<!-- Ghosts and lifted arrivals, one layer per run of the plan's single
+		     back-to-front order. Every layer is background-free, or its slide fill
+		     would cover the morph beneath it. -->
+		@for (layer of overlayLayers(); track layer.key) {
 			<div
 				class="pptx-ng-transition-layer"
-				data-pptx-transition-layer="lifted"
-				data-pptx-morph-lifted="true"
-				[ngStyle]="{ 'z-index': '41' }"
+				[attr.data-pptx-transition-layer]="layer.side === 'outgoing' ? 'outgoing' : 'lifted'"
+				[attr.data-pptx-morph-outgoing]="layer.side === 'outgoing' ? 'true' : null"
+				[attr.data-pptx-morph-lifted]="layer.side === 'incoming' ? 'true' : null"
+				[ngStyle]="layer.style"
 			>
 				<div [ngStyle]="slideBoxStyle()">
 					<pptx-slide-canvas
-						[slide]="lifted"
+						[slide]="layer.slide"
 						[canvasSize]="canvasSize()"
 						[mediaDataUrls]="mediaDataUrls()"
 						[zoom]="zoom()"
@@ -106,7 +108,7 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 	`,
 })
 export class MorphExtraLayersComponent {
-	readonly liftedSlide = input<PptxSlide | undefined>(undefined);
+	readonly overlayLayers = input<readonly MorphOverlayLayerSlide[]>([]);
 	readonly crossfadeGroups = input<readonly MorphCrossfadeGroupSlides[]>([]);
 	readonly canvasSize = input.required<CanvasSize>();
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());

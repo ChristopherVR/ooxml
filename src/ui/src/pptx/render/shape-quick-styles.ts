@@ -1,8 +1,11 @@
 /**
  * Pre-defined shape quick-style presets (inspired by PowerPoint's Shape Styles
- * gallery). Framework-free pure data, consumed by every binding's Quick Styles
- * gallery (React / Vue / Angular).
+ * gallery). Framework-free pure data, drawn by the inspector's Quick Styles
+ * gallery (`ribbon-galleries/quick-styles-gallery`) in every binding. Colours
+ * are `#RRGGBB` with any transparency in its own field, as the model stores
+ * them: the writer copies a colour into `a:srgbClr/@val` as it is.
  */
+import { colorWithOpacity } from 'ooxml-core/color';
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 import { translateOr, type Translate } from 'ooxml-core/i18n';
@@ -36,7 +39,7 @@ export function quickStyleSwatchCss(quickStyle: ShapeQuickStyle): QuickStyleSwat
 	return {
 		background: style.fillGradient || style.fillColor || 'transparent',
 		boxShadow: style.shadowColor
-			? `${style.shadowOffsetX ?? 2}px ${style.shadowOffsetY ?? 2}px ${style.shadowBlur ?? 4}px ${style.shadowColor}`
+			? `${style.shadowOffsetX ?? 2}px ${style.shadowOffsetY ?? 2}px ${style.shadowBlur ?? 4}px ${colorWithOpacity(style.shadowColor, style.shadowOpacity)}`
 			: undefined,
 		border: style.strokeColor
 			? `${style.strokeWidth ?? 1}px solid ${style.strokeColor}`
@@ -148,7 +151,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillMode: 'solid',
 			fillColor: '#4472C4',
 			strokeWidth: 0,
-			shadowColor: 'rgba(0,0,0,0.35)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.35,
 			shadowBlur: 6,
 			shadowOffsetX: 2,
 			shadowOffsetY: 2,
@@ -161,7 +165,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillMode: 'solid',
 			fillColor: '#ED7D31',
 			strokeWidth: 0,
-			shadowColor: 'rgba(0,0,0,0.35)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.35,
 			shadowBlur: 6,
 			shadowOffsetX: 2,
 			shadowOffsetY: 2,
@@ -174,7 +179,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillMode: 'solid',
 			fillColor: '#2F5597',
 			strokeWidth: 0,
-			shadowColor: 'rgba(0,0,0,0.4)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.4,
 			shadowBlur: 8,
 			shadowOffsetX: 3,
 			shadowOffsetY: 3,
@@ -187,7 +193,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillMode: 'solid',
 			fillColor: '#C55A11',
 			strokeWidth: 0,
-			shadowColor: 'rgba(0,0,0,0.4)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.4,
 			shadowBlur: 8,
 			shadowOffsetX: 3,
 			shadowOffsetY: 3,
@@ -200,7 +207,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillMode: 'solid',
 			fillColor: '#548235',
 			strokeWidth: 0,
-			shadowColor: 'rgba(0,0,0,0.4)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.4,
 			shadowBlur: 8,
 			shadowOffsetX: 3,
 			shadowOffsetY: 3,
@@ -214,7 +222,8 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 			fillColor: '#FFFFFF',
 			strokeColor: '#D9D9D9',
 			strokeWidth: 1,
-			shadowColor: 'rgba(0,0,0,0.2)',
+			shadowColor: '#000000',
+			shadowOpacity: 0.2,
 			shadowBlur: 4,
 			shadowOffsetX: 1,
 			shadowOffsetY: 1,

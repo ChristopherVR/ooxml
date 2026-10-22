@@ -50,8 +50,11 @@ describe('swatch and style names follow the locale', () => {
 			() => document.createElement('section'),
 			{ setShapeStyle: vi.fn() },
 		);
-		const first = gallery.el.querySelector<HTMLButtonElement>('button')!;
+		const first = gallery.el.querySelector<HTMLButtonElement>('[data-gallery-item]')!;
 		expect(first.title).toBe('Blaue Füllung');
 		expect(first.getAttribute('aria-label')).toBe('Blaue Füllung');
+		expect(
+			gallery.el.querySelector('.gallery-panel[role="group"]')?.getAttribute('aria-label'),
+		).toBe('Schnelle Stile');
 	});
 });

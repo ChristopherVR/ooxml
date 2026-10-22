@@ -25,6 +25,8 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { getRoundRectRadiusPx, getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { getResolvedShapeClipPath, isIdentityRectClip } from './shape-geometry';
+import { outsetClipPathForStroke } from './stroke-clip-outset';
+import { straddlingStrokeWidth } from './stroke-outline';
 import { isStrokeOnlyPresetElement } from './stroke-only-preset';
 import { isArrowedCustomPath } from './custom-path-markers';
 
@@ -97,7 +99,16 @@ export function resolveShapeGeometry(element: PptxElement): ShapeGeometryDecisio
 	// spills visibly (as PowerPoint does) instead of being sliced.
 	const clipPath = isIdentityRectClip(element) ? undefined : getResolvedShapeClipPath(element);
 	if (clipPath) {
-		return { kind: 'clipPath', clipPath };
+		// The outline is a child of the clipped box and is centred on the edge,
+		// so an exact clip would remove its outer half.
+		const stroke = straddlingStrokeWidth(element);
+		return {
+			kind: 'clipPath',
+			clipPath:
+				stroke > 0
+					? outsetClipPathForStroke(clipPath, stroke, element.width, element.height)
+					: clipPath,
+		};
 	}
 
 	if (shapeType === 'line') {

@@ -7,18 +7,19 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 	inject,
 } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	buildQuickStylesGallery,
 	clampShapeAdjustmentValue,
 	DEFAULT_ROUND_RECT_ADJUSTMENT,
+	quickStyleShapeStyle,
 	SHAPE_ADJUSTMENT_MAX,
 	SHAPE_ADJUSTMENT_MIN,
 	SHAPE_PRESET_DEFS,
-	SHAPE_QUICK_STYLES,
-	shapeQuickStyleLabel,
+	shapeQuickStylePatch,
 } from 'ooxml-ui/pptx';
-import type { ShapeQuickStyle } from 'ooxml-ui/pptx';
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 
 import { homeLanguage, ngxTranslate } from './ribbon-home-lang';
@@ -53,6 +54,7 @@ export function shapeTypePatch(element: PptxElement, shapeType: string): Partial
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-shape-authoring-panel',
 	standalone: true,
+	imports: [TranslatePipe],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		@if (supported()) {
@@ -94,21 +96,16 @@ export function shapeTypePatch(element: PptxElement, shapeType: string): Partial
 						/>
 					</label>
 				}
+				<!-- A div, not a label: a label would hand a click on its caption to the first tile. -->
 				<div class="field">
-					<span>Quick styles</span>
-					<div class="gallery">
-						@for (style of quickStyles; track style.name) {
-							<button
-								type="button"
-								[title]="quickStyleLabel(style)"
-								[attr.aria-label]="quickStyleLabel(style)"
-								[style.background]="style.style.fillColor ?? 'transparent'"
-								[style.border-color]="style.style.strokeColor ?? null"
-								[style.box-shadow]="shadow(style.style)"
-								(click)="applyStyle(style.style)"
-							></button>
-						}
-					</div>
+					<span>{{ 'pptx.shape.quickStyles' | translate }}</span>
+					<pptx-ui-ribbon-gallery
+						mode="panel"
+						compact
+						[descriptor]="quickStyles"
+						[translateLabel]="translator()"
+						(gallery-pick)="onQuickStyle($event)"
+					/>
 				</div>
 			</section>
 		}
@@ -138,26 +135,9 @@ export function shapeTypePatch(element: PptxElement, shapeType: string): Partial
 			width: 100%;
 			accent-color: var(--pptx-primary, #2563eb);
 		}
-		.gallery {
-			display: grid;
-			grid-template-columns: repeat(6, minmax(0, 1fr));
-			gap: 4px;
-		}
-		.gallery button {
-			height: 28px;
-			border: 1px solid var(--pptx-inspector-border, #555);
-			border-radius: 3px;
-			cursor: pointer;
-		}
-		/* Each preset is a discrete, individually-named action button (not a
-		   colour swatch), so it gets the shared WCAG touch target below the
-		   mobile breakpoint (768px, MOBILE_BREAKPOINT /
-		   getDensePanelTouchTargetPx in pptx-viewer-shared) rather than an
-		   exemption - CLAUDE.md Rule 2. */
+		/* The Shape type select gets the WCAG touch target below the mobile
+		   breakpoint (768px); the Quick Styles gallery sizes its own tiles. */
 		@media (max-width: 767px) {
-			.gallery button {
-				height: 44px;
-			}
 			select {
 				min-height: 44px;
 			}
@@ -168,14 +148,15 @@ export class ShapeAuthoringPanelComponent {
 	readonly element = input.required<PptxElement>();
 	readonly patch = output<Partial<PptxElement>>();
 	protected readonly presets = SHAPE_PRESET_DEFS.filter((preset) => preset.type !== 'connector');
-	protected readonly quickStyles = SHAPE_QUICK_STYLES;
+	/** The shared Quick Styles gallery: one tile per shape style preset. */
+	protected readonly quickStyles = buildQuickStylesGallery();
 	private readonly translation = inject(TranslateService, { optional: true });
 	/** Read so a language switch re-labels the presets. */
 	private readonly language = homeLanguage(this.translation);
-	protected quickStyleLabel(style: ShapeQuickStyle): string {
+	protected readonly translator = computed(() => {
 		this.language();
-		return shapeQuickStyleLabel(style, ngxTranslate(this.translation));
-	}
+		return ngxTranslate(this.translation);
+	});
 	protected readonly adjustmentMin = SHAPE_ADJUSTMENT_MIN;
 	protected readonly adjustmentMax = SHAPE_ADJUSTMENT_MAX;
 	protected readonly supported = computed(() => ['shape', 'text'].includes(this.element().type));
@@ -212,15 +193,11 @@ export class ShapeAuthoringPanelComponent {
 			},
 		} as Partial<PptxElement>);
 	}
-	protected applyStyle(style: Partial<ShapeStyle>): void {
-		const current = hasShapeProperties(this.element())
-			? (this.element() as PptxElement & { shapeStyle?: ShapeStyle }).shapeStyle
-			: undefined;
-		this.patch.emit({ shapeStyle: { ...current, ...style } } as Partial<PptxElement>);
-	}
-	protected shadow(style: Partial<ShapeStyle>): string | null {
-		return style.shadowColor
-			? `${style.shadowOffsetX ?? 2}px ${style.shadowOffsetY ?? 2}px ${style.shadowBlur ?? 4}px ${style.shadowColor}`
-			: null;
+	/** A Quick Styles pick merges the preset over the shape's own style. */
+	protected onQuickStyle(event: Event): void {
+		const style = quickStyleShapeStyle((event as RibbonGalleryPickEvent).detail.itemId);
+		if (style) {
+			this.patch.emit(shapeQuickStylePatch(this.element(), style));
+		}
 	}
 }

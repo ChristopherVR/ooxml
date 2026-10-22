@@ -13,6 +13,7 @@ import {
 	replaceControlContent,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
+	updateControlProperties,
 } from './content-control-commands';
 import { contentControlPlugin, violatesControlLock } from './content-control-guard';
 import { controlAt, controlSpans } from './content-control-spans';
@@ -311,6 +312,54 @@ describe('content control locks', () => {
 		// Formatting all of its text keeps it.
 		const bold = state.tr.addMark(span.from, span.to, schema.marks.bold!.create());
 		expect(violatesControlLock(bold, state)).toBe(false);
+	});
+
+	it('holds an undo to a lock that a change outside the history gave the control meanwhile', () => {
+		// Undoing a pick puts back the control's text with the control as it was, without the lock a
+		// change outside the history (a remote one) gave it since. That is the same control, whose
+		// content the lock now keeps: the undo stays out, and the lock stays.
+		const list = control({
+			id: '13',
+			kind: 'dropDownList',
+			items: [
+				{ display: 'Red', value: 'r' },
+				{ display: 'Blue', value: 'b' },
+			],
+		});
+		let state = EditorState.create({
+			schema,
+			doc: stateOf([{ text: 'Red', contentControl: list }]).doc,
+			plugins: [history(), contentControlPlugin()],
+		});
+		state = state.apply(closeHistory(chooseListItem(state, '13', 1)!));
+		expect(text(state)).toBe('Blue');
+		const picked = controlSpans(state.doc)[0]!;
+		const lock = updateControlProperties(state, picked, {
+			...picked.control,
+			lock: 'contentLocked',
+		});
+		state = state.apply(lock.setMeta('addToHistory', false));
+		undo(state, (tr) => {
+			state = state.apply(tr);
+		});
+		expect(text(state)).toBe('Blue');
+		expect(controlSpans(state.doc)[0]!.control.lock).toBe('contentLocked');
+		// Text that a step puts in place of all of a locked control's text under another control of
+		// its id, one without the lock, changes that control: refused, whichever the lock.
+		for (const kept of ['contentLocked', 'sdtLocked'] as const) {
+			const held = control({ id: '14', lock: kept });
+			const at = stateOf([{ text: 'Kept', contentControl: held }]);
+			const whole = controlSpans(at.doc)[0]!;
+			const { lock: _lock, ...open } = held;
+			const other = schema.text('Other', [
+				schema.marks.contentControl!.create({ data: JSON.stringify(open) }),
+			]);
+			expect(violatesControlLock(at.tr.replaceWith(whole.from, whole.to, other), at)).toBe(true);
+			// Deleting it is as before: a content lock allows it, a lock against deleting it does not.
+			expect(violatesControlLock(at.tr.delete(whole.from, whole.to), at)).toBe(
+				kept === 'sdtLocked',
+			);
+		}
 	});
 
 	it('a content-locked block refuses typing anywhere in it, its ends included', () => {

@@ -20,6 +20,7 @@ import { PICTURE_ARTISTIC_EFFECTS_GALLERY } from './picture-artistic-gallery';
 import { PICTURE_COLOR_GALLERY } from './picture-color-gallery';
 import { PICTURE_CORRECTIONS_GALLERY } from './picture-corrections-gallery';
 import { PICTURE_STYLES_GALLERY } from './picture-styles-gallery';
+import { QUICK_STYLES_GALLERY } from './quick-styles-gallery';
 import { SHAPE_EFFECTS_GALLERY } from './shape-effects-gallery';
 import { applyShapeStylesItem, buildShapeStylesGallery } from './shape-styles-gallery';
 import { SMARTART_COLORS_GALLERY } from './smartart-colors-gallery';
@@ -43,6 +44,7 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	shapeEffects: SHAPE_EFFECTS_GALLERY,
 	wordArtStyles: WORDART_STYLES_GALLERY,
 	textWarp: TEXT_WARP_GALLERY,
+	quickStyles: QUICK_STYLES_GALLERY,
 	pictureStyles: PICTURE_STYLES_GALLERY,
 	pictureCorrections: PICTURE_CORRECTIONS_GALLERY,
 	pictureColor: PICTURE_COLOR_GALLERY,

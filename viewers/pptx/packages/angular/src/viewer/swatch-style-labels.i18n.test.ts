@@ -1,19 +1,30 @@
 /**
  * The theme colour grid and the shape panel's quick styles name their swatches through
- * ngx-translate (tooltip and accessible name), not in hard-coded English. No TestBed (see
- * `vitest.config.ts`): the components are built in an injection context with stubbed services.
+ * ngx-translate (tooltip and accessible name), not in hard-coded English, and the quick styles
+ * follow a language change. The grid is built in an injection context with stubbed services; the
+ * shape panel is mounted with TestBed, since the shared gallery draws its tiles once rendered.
  */
 import { Injector, runInInjectionContext, signal } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import type { ShapeQuickStyle, ThemeColorSwatchColumn } from 'ooxml-ui/pptx';
-import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import type { ThemeColorSwatchColumn } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import { translationsDe } from 'pptx-viewer-locales';
 import { Subject } from 'rxjs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
 import { LoadContentService } from './load-content.service';
 import { ShapeAuthoringPanelComponent } from './shape-authoring-panel.component';
 import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.component';
+
+beforeAll(() => {
+	TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+	registerPptxWebControls();
+});
+afterEach(() => TestBed.resetTestingModule());
 
 const OFFICE_THEME = {
 	dk1: '#000000',
@@ -68,10 +79,33 @@ describe('swatch and style names follow the locale', () => {
 		expect(grid.heading()).toBe('Designfarben');
 	});
 
-	it('names quick style presets with the host dictionary', () => {
-		const panel = inject(() => new ShapeAuthoringPanelComponent()) as unknown as {
-			quickStyleLabel(style: ShapeQuickStyle): string;
-		};
-		expect(panel.quickStyleLabel(SHAPE_QUICK_STYLES[0]!)).toBe('Blaue Füllung');
+	it('names quick style presets with the host dictionary, and relabels them on a switch', () => {
+		TestBed.configureTestingModule({
+			imports: [ShapeAuthoringPanelComponent],
+			providers: [provideTranslateService({ fallbackLang: 'en' })],
+		});
+		// The Vitest JIT build does not wire signal inputs: declare the input, hand it a signal.
+		TestBed.overrideComponent(ShapeAuthoringPanelComponent, { add: { inputs: ['element'] } });
+		const translate = TestBed.inject(TranslateService);
+		translate.setTranslation('en', translationsEn);
+		translate.setTranslation('de', translationsDe);
+		translate.use('de');
+		const fixture = TestBed.createComponent(ShapeAuthoringPanelComponent);
+		fixture.componentRef.setInput(
+			'element',
+			signal({ id: 'box', type: 'shape', x: 0, y: 0, width: 80, height: 40 } as PptxElement),
+		);
+		fixture.detectChanges();
+		const tile = () =>
+			(fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+				'[data-gallery-item]',
+			)!;
+		expect(tile().getAttribute('aria-label')).toBe('Blaue Füllung');
+		expect(tile().title).toBe('Blaue Füllung');
+
+		translate.use('en');
+		fixture.detectChanges();
+		expect(tile().getAttribute('aria-label')).toBe('Blue Fill');
+		expect(tile().title).toBe('Blue Fill');
 	});
 });

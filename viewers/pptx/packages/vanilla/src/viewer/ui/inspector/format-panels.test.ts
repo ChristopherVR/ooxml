@@ -1,3 +1,4 @@
+import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
 import type { PptxChartData, MediaPptxElement, TextStyle } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -19,28 +20,68 @@ function state(overrides: Partial<InspectorState> = {}): InspectorState {
 }
 
 describe('quick styles gallery', () => {
-	it('applies a shared preset style on click', () => {
+	function build() {
 		const setShapeStyle = vi.fn();
 		const gallery = createQuickStylesGallery(document, createTranslator(), sectionFactory(), {
 			setShapeStyle,
 		});
+		const tiles = () => [...gallery.el.querySelectorAll<HTMLButtonElement>('[data-gallery-item]')];
+		return { gallery, setShapeStyle, tiles };
+	}
+
+	it('draws every preset in order on the shared compact gallery panel', () => {
+		const { gallery, tiles } = build();
 		gallery.update(state({ canShape: true }));
 
-		const buttons = gallery.el.querySelectorAll<HTMLButtonElement>('.pptxv-quick-style');
-		expect(buttons.length).toBeGreaterThan(6);
-		buttons[0].click();
-
-		expect(setShapeStyle).toHaveBeenCalledWith(
-			expect.objectContaining({ fillMode: 'solid', fillColor: expect.any(String) }),
+		const element = gallery.el.querySelector('pptx-ui-ribbon-gallery')!;
+		expect(element.getAttribute('mode')).toBe('panel');
+		expect(element.hasAttribute('compact')).toBeTruthy();
+		expect(element.descriptor?.id).toBe('quickStyles');
+		expect(tiles().map((tile) => tile.getAttribute('aria-label'))).toStrictEqual(
+			SHAPE_QUICK_STYLES.map((preset) => preset.name),
 		);
+		expect(tiles()[0]!.querySelector('svg')).not.toBeNull();
 	});
 
-	it('hides itself for a selection that cannot take a shape style', () => {
-		const gallery = createQuickStylesGallery(document, createTranslator(), sectionFactory(), {
-			setShapeStyle: vi.fn(),
-		});
+	it("hands the picked preset's style to setShapeStyle", () => {
+		const { gallery, setShapeStyle, tiles } = build();
+		gallery.update(state({ canShape: true }));
+
+		tiles()[0]!.click();
+		tiles()[12]!.click();
+
+		expect(setShapeStyle.mock.calls).toStrictEqual([
+			[SHAPE_QUICK_STYLES[0]!.style],
+			[SHAPE_QUICK_STYLES[12]!.style],
+		]);
+	});
+
+	it('keeps its tiles, and its picks, once the detached inspector is inserted', () => {
+		const { gallery, setShapeStyle, tiles } = build();
+		gallery.update(state({ canShape: true }));
+		document.body.append(gallery.el);
+		try {
+			expect(tiles()).toHaveLength(SHAPE_QUICK_STYLES.length);
+			tiles()[6]!.click();
+			expect(setShapeStyle.mock.calls).toStrictEqual([[SHAPE_QUICK_STYLES[6]!.style]]);
+		} finally {
+			gallery.el.remove();
+		}
+	});
+
+	it('hides and disables itself for a selection that cannot take a shape style', () => {
+		const { gallery, setShapeStyle, tiles } = build();
 		gallery.update(state({ canShape: false }));
+
 		expect(gallery.el.hidden).toBeTruthy();
+		expect(tiles()).toHaveLength(SHAPE_QUICK_STYLES.length);
+		expect(tiles().every((tile) => tile.disabled)).toBeTruthy();
+		tiles()[0]!.click();
+		expect(setShapeStyle).not.toHaveBeenCalled();
+
+		gallery.update(state({ canShape: true }));
+		expect(gallery.el.hidden).toBeFalsy();
+		expect(tiles().some((tile) => tile.disabled)).toBeFalsy();
 	});
 });
 

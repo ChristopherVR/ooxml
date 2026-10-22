@@ -10,6 +10,7 @@ import {
 	chooseListItem,
 	deleteToPlaceholder,
 	newControlId,
+	pasteInCell,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
 	updateControlProperties,
@@ -43,6 +44,7 @@ const schema = new Schema({
 			toDOM: () => ['td', 0],
 		},
 		text: { group: 'inline' },
+		hardBreak: { group: 'inline', inline: true, toDOM: () => ['br'] },
 	},
 	marks: markSpecs,
 });
@@ -95,12 +97,17 @@ describe('content controls around table cells in the editor', () => {
 	});
 
 	it('puts a picked entry in the cell and clears its placeholder', () => {
-		const state = stateOf(choice(), [placeholder('Choose an item.'), paragraph('second line')]);
+		const state = stateOf(choice(), [
+			placeholder('Choose an item.'),
+			paragraph('second line', { id: 'c2' }),
+		]);
 		const next = state.apply(chooseListItem(state, '61', 1)!);
 		const cell = cellOf(next);
-		expect(cell.childCount).toBe(1);
+		// The cell keeps its paragraphs, which its table must when it is saved: the first holds the
+		// entry and the other is emptied.
+		expect(cell.childCount).toBe(2);
 		expect(cell.textContent).toBe('Secondary');
-		expect(cell.firstChild!.attrs.id).toBe('c1');
+		expect([cell.firstChild!.attrs.id, cell.lastChild!.attrs.id]).toEqual(['c1', 'c2']);
 		expect(cell.attrs.contentControl.showingPlaceholder).toBeUndefined();
 		expect(stylesIn(cell)).toEqual([]);
 		expect(typeOverPlaceholder(next, controlSpans(next.doc)[0]!.from + 3, 'x')).toBe('blocked');
@@ -337,6 +344,100 @@ describe('content controls around table cells in the editor', () => {
 		expect(stylesIn(cellOf(cleared))).toEqual(['PlaceholderText']);
 	});
 
+	it('operates a cell control in its first paragraph when a table comes before it', () => {
+		// A cell holds paragraphs and tables in any order. What a command replaces, and where the
+		// caret goes, is in its paragraphs, whose text gives the new text its formatting; a table
+		// before them stays as it is.
+		const inner = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', null, [
+					paragraph('Inner', { id: 'n1' }, [schema.marks.bold!.create()]),
+				]),
+			]),
+		]);
+		const { items: _items, ...list } = choice({ placeholderText: 'Enter a number.' });
+		const state = stateOf({ ...list, kind: 'text' }, [inner, placeholder('Enter a number.')]);
+		const span = controlSpans(state.doc).find((found) => found.level === 'cell')!;
+		const start = span.from + 2 + inner.nodeSize;
+		const shape = (at: EditorState) => {
+			const children: string[] = [];
+			cellOf(at).forEach((child) => children.push(`${child.type.name}:${child.textContent}`));
+			return children;
+		};
+		const typed = typeOverPlaceholder(state, start + 2, '4');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const next = state.apply(typed);
+		expect(shape(next)).toEqual(['table:Inner', 'paragraph:4']);
+		expect(next.selection.from).toBe(start + 1);
+		expect(next.doc.nodeAt(start)!.marks.map((mark) => mark.type.name)).toEqual([]);
+		const cleared = next.apply(deleteToPlaceholder(next, 'backward')!);
+		expect(shape(cleared)).toEqual(['table:Inner', 'paragraph:Enter a number.']);
+		expect(cleared.selection.from).toBe(start);
+		const inside = state.apply(state.tr.setSelection(TextSelection.create(state.doc, start + 2)));
+		const pasted = pasteInCell(inside, new Slice(Fragment.from(schema.text('Pasted')), 0, 0));
+		if (pasted === 'blocked' || !pasted) throw new Error('expected a transaction');
+		expect(shape(inside.apply(pasted))).toEqual(['table:Inner', 'paragraph:Pasted']);
+	});
+
+	it('brings a text cell placeholder back when its other paragraphs hold nothing', () => {
+		// Typing over the placeholder empties the cell's other paragraphs, which stay: deleting what
+		// was typed leaves the cell without text, so its placeholder comes back. A line break or a
+		// picture in another paragraph is content the placeholder would replace: deleting stays ordinary.
+		const control: ContentControl = {
+			id: '63',
+			level: 'cell',
+			kind: 'text',
+			showingPlaceholder: true,
+			placeholderText: 'Enter text.',
+		};
+		const state = stateOf(control, [
+			placeholder('Enter text.'),
+			paragraph('second line', { id: 'c2' }),
+		]);
+		const span = controlSpans(state.doc).find((found) => found.level === 'cell')!;
+		const typed = typeOverPlaceholder(state, span.from + 3, 'x');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const next = state.apply(typed);
+		expect(cellOf(next).textContent).toBe('x');
+		expect(cellOf(next).childCount).toBe(2);
+		const restore = deleteToPlaceholder(next, 'backward');
+		expect(restore).toBeDefined();
+		const cleared = next.apply(restore!);
+		expect(cellOf(cleared).textContent).toBe('Enter text.');
+		expect(cellOf(cleared).childCount).toBe(2);
+		expect(cellOf(cleared).attrs.contentControl.showingPlaceholder).toBe(true);
+		const broken = next.apply(
+			next.tr.insert(
+				span.from + 2 + cellOf(next).firstChild!.nodeSize,
+				schema.nodes.hardBreak!.create(),
+			),
+		);
+		expect(cellOf(broken).lastChild!.childCount).toBe(1);
+		expect(deleteToPlaceholder(broken, 'backward')).toBeUndefined();
+	});
+
+	it('deletes in a table in a text cell as ordinary text, its paragraphs empty or not', () => {
+		// A table in the cell stays when its placeholder comes back, so deleting in the table is not
+		// deleting all the control holds.
+		const inner = schema.node('table', null, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', null, [paragraph('Inner', { id: 'n1' })]),
+			]),
+		]);
+		const state = stateOf({ id: '64', level: 'cell', kind: 'text' }, [
+			inner,
+			paragraph('', { id: 'c1' }),
+		]);
+		let end = 0;
+		state.doc.descendants((node, pos) => {
+			if (node.isText && node.text === 'Inner') end = pos + node.nodeSize;
+		});
+		const at = state.apply(state.tr.setSelection(TextSelection.create(state.doc, end)));
+		expect(deleteToPlaceholder(at, 'backward')).toBeUndefined();
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, end - 5, end)));
+		expect(deleteToPlaceholder(all, 'backward')).toBeUndefined();
+	});
+
 	it('keeps the caret in a text cell whose placeholder comes back, not in the next cell', () => {
 		const control: ContentControl = { id: '62', level: 'cell', kind: 'text' };
 		const cell = schema.node('tableCell', { sourceCellKey: 'c1', contentControl: control }, [
@@ -419,6 +520,52 @@ describe('content controls around table cells in the editor', () => {
 		const typed = typeOverPlaceholder(state, inline.from, 'A');
 		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
 		expect(cellOf(state.apply(typed)).textContent).toBe('Name: A');
+	});
+
+	it('applies the rules of a cell control to typing and pasting in a block control in it', () => {
+		// `w:tc > w:sdt > w:p` in a cell control: the block control is the innermost, but the cell's
+		// rules still hold for what is typed or pasted in it.
+		const block: ContentControl = { id: '66', level: 'block', kind: 'richText' };
+		const pasted = new Slice(Fragment.from(schema.text('x')), 0, 0);
+		const caretIn = (state: EditorState) => {
+			const at = controlSpans(state.doc).find((span) => span.level === 'cell')!.from + 4;
+			return { at, state: state.apply(state.tr.setSelection(TextSelection.create(state.doc, at))) };
+		};
+		for (const kind of ['dropDownList', 'checkbox'] as const) {
+			const { at, state } = caretIn(
+				stateOf(choice({ kind, showingPlaceholder: false }), [
+					paragraph('Primary', { contentControl: block }),
+				]),
+			);
+			expect(controlAt(controlSpans(state.doc), at)?.control.id).toBe('66');
+			expect(typeOverPlaceholder(state, at, 'x')).toBe('blocked');
+			expect(pasteInCell(state, pasted)).toBe('blocked');
+		}
+		const { items: _items, ...list } = choice();
+		const text: ContentControl = { ...list, kind: 'text' };
+		const { at, state } = caretIn(
+			stateOf(text, [
+				paragraph('Enter a number.', { contentControl: block }, [style('PlaceholderText')]),
+			]),
+		);
+		const typed = typeOverPlaceholder(state, at, '4');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		expect(cellOf(state.apply(typed)).textContent).toBe('4');
+		expect(cellOf(state.apply(typed)).attrs.contentControl.showingPlaceholder).toBeUndefined();
+		const paste = pasteInCell(state, pasted);
+		if (paste === 'blocked' || !paste) throw new Error('expected a transaction');
+		expect(cellOf(state.apply(paste)).textContent).toBe('x');
+		expect(cellOf(state.apply(paste)).attrs.contentControl.showingPlaceholder).toBeUndefined();
+		// Deleting all of its text there brings the cell's placeholder back.
+		const filled = stateOf({ ...text, showingPlaceholder: false }, [
+			paragraph('42', { contentControl: block }),
+		]);
+		const start = controlSpans(filled.doc).find((span) => span.level === 'cell')!.from + 2;
+		const selected = filled.apply(
+			filled.tr.setSelection(TextSelection.create(filled.doc, start, start + 2)),
+		);
+		const cleared = selected.apply(deleteToPlaceholder(selected, 'backward')!);
+		expect(cellOf(cleared).attrs.contentControl.showingPlaceholder).toBe(true);
 	});
 
 	it('removes a temporary cell control with its first edit', () => {
@@ -941,6 +1088,166 @@ describe('content controls around table cells in the editor', () => {
 			state.tr.setNodeMarkup(0, undefined, state.doc.firstChild!.attrs);
 		expect(violatesControlLock(properties(locked), locked)).toBe(true);
 		expect(violatesControlLock(properties(fixed), fixed)).toBe(false);
+	});
+
+	it('applies the locks of a control around several blocks, rows or cells to all of them', () => {
+		// One w:sdt around paragraphs and a table, two rows or two cells is one control: deleting
+		// one of what it holds edits its content (a content lock refuses that) and leaves the
+		// control (one that may not be deleted allows it); deleting all of it deletes the control.
+		const control = (level: ContentControl['level'], lock: ContentControl['lock']) =>
+			({ id: '77', level, kind: 'richText', lock }) as ContentControl;
+		const cellOfText = (text: string, attrs: Record<string, unknown> = {}) =>
+			schema.node('tableCell', attrs, [paragraph(text)]);
+		const states = (lock: ContentControl['lock']) => ({
+			blocks: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					paragraph('Before'),
+					paragraph('Lead', { contentControl: control('block', lock) }),
+					schema.node('table', { contentControl: control('block', lock) }, [
+						schema.node('tableRow', null, [cellOfText('Cell')]),
+					]),
+					paragraph('Tail', { contentControl: control('block', lock) }),
+					paragraph('After'),
+				]),
+			}),
+			rows: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					schema.node('table', null, [
+						schema.node('tableRow', { properties: { contentControl: control('row', lock) } }, [
+							cellOfText('A'),
+						]),
+						schema.node('tableRow', { properties: { contentControl: control('row', lock) } }, [
+							cellOfText('B'),
+						]),
+					]),
+					paragraph('After'),
+				]),
+			}),
+			cells: EditorState.create({
+				schema,
+				doc: schema.node('doc', null, [
+					schema.node('table', null, [
+						schema.node('tableRow', null, [
+							cellOfText('A', { contentControl: control('cell', lock) }),
+							cellOfText('B', { contentControl: control('cell', lock) }),
+						]),
+					]),
+					paragraph('After'),
+				]),
+			}),
+		});
+		/** The ranges of one of the nodes `state`'s control holds, and of all of them. */
+		const ranges = (name: 'blocks' | 'rows' | 'cells', state: EditorState) => {
+			const doc = state.doc;
+			if (name === 'blocks') {
+				const lead = doc.child(0).nodeSize;
+				const table = lead + doc.child(1).nodeSize;
+				const tail = table + doc.child(2).nodeSize;
+				return { one: [table, tail], all: [lead, tail + doc.child(3).nodeSize] };
+			}
+			// All of the rows or cells: the table they are in.
+			const table = doc.firstChild!;
+			const first = name === 'rows' ? table.firstChild! : table.firstChild!.firstChild!;
+			const start = name === 'rows' ? 1 : 2;
+			return { one: [start, start + first.nodeSize], all: [0, table.nodeSize] };
+		};
+		for (const name of ['blocks', 'rows', 'cells'] as const) {
+			for (const lock of ['sdtLocked', 'contentLocked'] as const) {
+				const state = states(lock)[name];
+				const { one, all } = ranges(name, state);
+				const removes = (range: number[]) =>
+					violatesControlLock(state.tr.delete(range[0]!, range[1]!), state);
+				expect([name, lock, removes(one)]).toEqual([name, lock, lock === 'contentLocked']);
+				expect([name, lock, removes(all)]).toEqual([name, lock, lock === 'sdtLocked']);
+			}
+		}
+	});
+
+	it('applies the locks of a control that a step over all of it puts back with other content', () => {
+		// A step over a whole control whose new content holds that control again (a table rebuilt
+		// with another row, sorted paragraphs, a cell put in place of the cell) leaves the control
+		// and edits its content: a content lock refuses it, one that may not be deleted allows it.
+		// Putting the node back without the control deletes the control, as before.
+		const cellOfText = (text: string, attrs: Record<string, unknown> = {}) =>
+			schema.node('tableCell', attrs, [paragraph(text)]);
+		const rowOf = (cells: ProseMirrorNode[], attrs: Record<string, unknown> = {}) =>
+			schema.node('tableRow', attrs, cells);
+		type Held = ContentControl | null;
+		/** The node holding the control at each level, and the blocks around it. */
+		const levels = {
+			cell: {
+				holder: (held: Held, text: string) => cellOfText(text, { contentControl: held }),
+				around: (node: ProseMirrorNode) =>
+					schema.node('table', null, [rowOf([cellOfText('Label'), node])]),
+			},
+			row: {
+				holder: (held: Held, text: string) =>
+					rowOf([cellOfText(text)], { properties: held && { contentControl: held } }),
+				around: (node: ProseMirrorNode) =>
+					schema.node('table', null, [rowOf([cellOfText('Label')]), node]),
+			},
+			block: {
+				holder: (held: Held, text: string) => paragraph(text, { contentControl: held }),
+				around: (node: ProseMirrorNode) => node,
+			},
+			table: {
+				holder: (held: Held, text: string) =>
+					schema.node('table', { contentControl: held }, [
+						rowOf([cellOfText('Fixed')]),
+						...(text === 'Fixed' ? [] : [rowOf([cellOfText(text)])]),
+					]),
+				around: (node: ProseMirrorNode) => node,
+			},
+		};
+		for (const [name, { holder, around }] of Object.entries(levels))
+			for (const lock of ['contentLocked', 'sdtLocked'] as const) {
+				const level = name === 'table' ? 'block' : (name as ContentControl['level']);
+				const held: ContentControl = { id: '78', level, kind: 'richText', lock };
+				const node = holder(held, 'Fixed');
+				const state = EditorState.create({
+					schema,
+					doc: schema.node('doc', null, [paragraph('Before'), around(node)]),
+				});
+				let from = -1;
+				state.doc.descendants((child, pos) => {
+					if (child === node) from = pos;
+				});
+				const to = from + node.nodeSize;
+				const putBack = state.tr.replaceWith(from, to, holder(held, 'Changed'));
+				const removed = state.tr.replaceWith(from, to, holder(null, 'Changed'));
+				expect([name, lock, violatesControlLock(putBack, state)]).toEqual([
+					name,
+					lock,
+					lock === 'contentLocked',
+				]);
+				expect([name, lock, violatesControlLock(removed, state)]).toEqual([
+					name,
+					lock,
+					lock === 'sdtLocked',
+				]);
+				// Putting it back as another control of its id, without its lock, changes it: refused.
+				const { lock: _lock, ...open } = held;
+				const changed = state.tr.replaceWith(from, to, holder(open, 'Changed'));
+				expect([name, lock, violatesControlLock(changed, state)]).toEqual([name, lock, true]);
+			}
+		// Controls without an id are not one control: replacing a cell control that has none with a
+		// cell holding another follows the locks of the control it replaces, as deleting it does.
+		const crafted = { level: 'cell', kind: 'richText', lock: 'contentLocked' } as ContentControl;
+		const cell = schema.node('tableCell', { contentControl: crafted }, [paragraph('Fixed')]);
+		const state = EditorState.create({
+			schema,
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [schema.node('tableRow', null, [cell])]),
+			]),
+		});
+		const other = schema.node('tableCell', { contentControl: { ...crafted, kind: 'text' } }, [
+			paragraph('Other'),
+		]);
+		expect(violatesControlLock(state.tr.replaceWith(2, 2 + cell.nodeSize, other), state)).toBe(
+			false,
+		);
 	});
 
 	it('stores new properties on the cell', () => {

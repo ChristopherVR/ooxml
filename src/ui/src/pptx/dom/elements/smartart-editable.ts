@@ -1,9 +1,11 @@
 import type { SmartArtPptxElement } from 'ooxml-core/pptx';
 import {
 	canDrillDown,
+	isForwardedEditLayerEvent,
 	measureSvgViewportRect,
 	findSmartArtNodeText,
 	resolvePalette,
+	SMARTART_3D_EDIT_LAYER_ATTRIBUTE,
 } from '../../index';
 
 import { createEl } from '../dom';
@@ -37,6 +39,11 @@ export function enableSmartArtEditing(
 	// Grace period so the pointer can cross the gap from a node to its swatches.
 	let hideTimer: ReturnType<typeof setTimeout> | undefined;
 	const cancelHide = (): void => clearTimeout(hideTimer);
+	// In a 3D edit layer the hovered node is found by geometry and forwarded; the browser's own
+	// over / out of a node group follow its painted label instead (smartart-3d-edit-layer.ts).
+	const ignoredHover = (event: Event): boolean =>
+		chrome.closest(`[${SMARTART_3D_EDIT_LAYER_ATTRIBUTE}]`) !== null &&
+		!isForwardedEditLayerEvent(event);
 
 	const closeEditor = (input = editor): void => {
 		if (!input || input !== editor) {
@@ -107,6 +114,9 @@ export function enableSmartArtEditing(
 	});
 
 	chrome.addEventListener('mouseover', (event) => {
+		if (ignoredHover(event)) {
+			return;
+		}
 		const target = nodeTarget(event.target);
 		const nodeId = target?.dataset.smartartNodeId;
 		if (!target || !nodeId || !context.onSmartArtNodeFillChange || editor) {
@@ -164,6 +174,9 @@ export function enableSmartArtEditing(
 	});
 
 	chrome.addEventListener('mouseout', (event) => {
+		if (ignoredHover(event)) {
+			return;
+		}
 		const target = nodeTarget(event.target);
 		const to = event.relatedTarget;
 		// Moving within the node or onto its swatches keeps them.

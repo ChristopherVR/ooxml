@@ -1,11 +1,8 @@
-import { isActionHidden, registerPptxWebControls, resolveStatusBarSave } from 'ooxml-ui/pptx';
-import type { StatusBarRequestEvent, StatusBarViewState, ToolbarActionId } from 'ooxml-ui/pptx';
+import { dispatchStatusBarIntent, registerPptxWebControls, statusBarState } from 'ooxml-ui/pptx';
+import type { StatusBarAutosave, ToolbarActionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { RibbonNavState } from './ribbon/ribbon-types';
-
-/** Autosave lifecycle states pushed into the save-state text. */
-export type StatusBarSaveKind = 'idle' | 'saving' | 'saved' | 'error';
 
 export interface StatusBarHandlers {
 	toggleNotes(): void;
@@ -23,8 +20,8 @@ export interface StatusBar {
 	/** Reflect the slide counter and zoom percent. */
 	update(state: RibbonNavState): void;
 	setNotesExpanded(expanded: boolean): void;
-	/** Push an autosave status label ('' = idle; falls back to All saved/dirty). */
-	setSaveStatus(label: string, kind: StatusBarSaveKind): void;
+	/** Reflect the autosave engine (undefined when it is off); the dirty flag is the fallback. */
+	setAutosave(autosave: StatusBarAutosave | undefined): void;
 	/** Reflect the unsaved-changes flag in the idle save-state text. */
 	setDirty(dirty: boolean): void;
 	/** Reflect presentation state so the Normal / Slide Show buttons show the
@@ -56,44 +53,38 @@ export function createStatusBar(
 		collaborationSlot.slot = 'collaboration';
 		el.append(collaborationSlot);
 	}
-	const showZoom = !isActionHidden('zoom', hiddenActions);
 	let dirty = false;
-	let pushedLabel = '';
-	let pushedKind: StatusBarSaveKind = 'idle';
+	let autosave: StatusBarAutosave | undefined;
 	let nav = { current: 0, total: 0, zoomPercent: 100 };
 	let notesExpanded = false;
 	let presenting = false;
 
 	const sync = (): void => {
-		const save = resolveStatusBarSave(t, undefined, dirty);
-		const state: StatusBarViewState = {
+		el.state = statusBarState({
 			slideCount: nav.total,
 			activeSlideIndex: nav.current,
-			saveText: pushedLabel.length > 0 ? pushedLabel : save.text,
-			saveKind: pushedKind === 'saving' || pushedKind === 'error' ? pushedKind : 'idle',
-			zoomPercent: showZoom ? nav.zoomPercent : undefined,
-			showNotes: !isActionHidden('notes', hiddenActions),
+			dirty,
+			autosave,
+			zoomPercent: nav.zoomPercent,
 			notesExpanded,
-			showSlideShow: !isActionHidden('fullscreen', hiddenActions),
 			// The slide-sorter overlay is modal and self-dismissing, so it is not
 			// tracked as a persistent active view.
 			viewMode: presenting ? 'slideShow' : 'normal',
+			hiddenActions,
 			translate: t,
-		};
-		el.state = state;
+		});
 	};
-	const intents = {
-		notes: handlers.toggleNotes,
-		normal: handlers.normalView,
-		sorter: handlers.openSlideSorter,
-		slideShow: handlers.togglePresentation,
-		zoomOut: handlers.zoomOut,
-		zoomFit: handlers.zoomToFit,
-		zoomIn: handlers.zoomIn,
-	};
-	el.addEventListener('status-request', (event) => {
-		intents[(event as StatusBarRequestEvent).detail.id]();
-	});
+	el.addEventListener('status-request', (event) =>
+		dispatchStatusBarIntent(event, {
+			notes: handlers.toggleNotes,
+			normal: handlers.normalView,
+			sorter: handlers.openSlideSorter,
+			slideShow: handlers.togglePresentation,
+			zoomOut: handlers.zoomOut,
+			zoomFit: handlers.zoomToFit,
+			zoomIn: handlers.zoomIn,
+		}),
+	);
 	sync();
 
 	return {
@@ -106,9 +97,8 @@ export function createStatusBar(
 			notesExpanded = expanded;
 			sync();
 		},
-		setSaveStatus(label, kind) {
-			pushedLabel = label;
-			pushedKind = kind;
+		setAutosave(next) {
+			autosave = next;
 			sync();
 		},
 		setDirty(isDirty) {
