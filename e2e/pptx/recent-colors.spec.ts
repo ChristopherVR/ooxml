@@ -79,6 +79,40 @@ async function pickColor(input: Locator, hex: string): Promise<void> {
 	}, hex);
 }
 
+/**
+ * Drag through the OS picker: one `input` event per shade passed, and no
+ * `change`, which a real picker only fires once the pick settles. Each shade is
+ * its own task, like the ticks of a real drag.
+ */
+async function dragColor(input: Locator, shades: readonly string[]): Promise<void> {
+	for (const shade of shades) {
+		await input.evaluate((element, value) => {
+			const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+			setter?.call(element, value);
+			element.dispatchEvent(new Event('input', { bubbles: true }));
+		}, shade);
+	}
+}
+
+/** The picker settles on `hex`: the one `change` a drag ends with. */
+async function settleColor(input: Locator, hex: string): Promise<void> {
+	await input.evaluate((element, value) => {
+		const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+		setter?.call(element, value);
+		element.dispatchEvent(new Event('change', { bubbles: true }));
+	}, hex);
+}
+
+/** Two frames, so every binding has rendered whatever the last events changed. */
+async function nextFrames(page: Page): Promise<void> {
+	await page.evaluate(
+		() =>
+			new Promise<void>((resolve) => {
+				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+			}),
+	);
+}
+
 async function selectSourceShape(page: Page): Promise<void> {
 	const source = page.locator('[data-pptx-element="true"]').filter({ hasText: 'SOURCE' });
 	await source.waitFor();
@@ -131,5 +165,27 @@ test.describe('recent colours', () => {
 		// recent pick and the row reorders rather than growing a duplicate.
 		await recentRows(page).first().locator(`button[title="${RED}" i]`).click();
 		await expect.poll(async () => rowColors(recentRows(page).first())).toStrictEqual([RED, BLUE]);
+	});
+
+	test('dragging through the fill picker adds nothing until the pick settles, then only that colour', async ({
+		page,
+	}) => {
+		await loadDeck(page, DECK);
+		await selectSourceShape(page);
+
+		// The shades a drag passes on its way: none of them is a pick.
+		const settled = '#cc0000';
+		await dragColor(colorInputs(page).first(), ['#330000', '#660000', '#990000', settled]);
+		await nextFrames(page);
+		await expect(recentRows(page)).toHaveCount(0);
+
+		// The picker settles where the drag ended: that one colour is the pick.
+		await settleColor(colorInputs(page).first(), settled);
+		await expect.poll(() => recentRows(page).count()).toBeGreaterThanOrEqual(1);
+		const rows = recentRows(page);
+		const count = await rows.count();
+		for (let index = 0; index < count; index += 1) {
+			expect(await rowColors(rows.nth(index))).toStrictEqual([settled]);
+		}
 	});
 });
