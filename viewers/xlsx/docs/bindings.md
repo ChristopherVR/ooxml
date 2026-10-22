@@ -16,7 +16,7 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 | `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                                               |
 | `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                                             |
 | `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                                           |
-| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls to hide, by stable id.                                                                                  |
+| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.                                        |
 | `ribbonAddIns`   | `RibbonAddInTab[]`            | none         | Tabs the host adds after the built-in ones; see [Ribbon add-in tabs](#ribbon-add-in-tabs).                              |
 | `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                               |
 | `collaboration`  | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration). |
