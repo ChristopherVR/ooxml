@@ -23,19 +23,25 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 
 ## Callbacks and events
 
-| Callback (React, Solid, vanilla) | Vue event              | Angular output        | Svelte prop             | Payload                     |
-| -------------------------------- | ---------------------- | --------------------- | ----------------------- | --------------------------- |
-| `onWorkbookChange`               | `workbook-change`      | `workbookChange`      | `onworkbookchange`      | `Workbook`                  |
-| `onWorkbookError`                | `workbook-error`       | `workbookError`       | `onworkbookerror`       | `Error`                     |
-| `onSelectionChange`              | `selection-change`     | `selectionChange`     | `onselectionchange`     | `{ sheet, ref, active }`    |
-| `onDirtyChange`                  | `dirty-change`         | `dirtyChange`         | `ondirtychange`         | `boolean`                   |
-| `onReadOnlyChange`               | `readonly-change`      | `readOnlyChange`      | `onreadonlychange`      | `boolean`                   |
-| `onRibbonCustomize`              | `ribbon-customize`     | `ribbonCustomize`     | `onribboncustomize`     | `string[]` (hidden actions) |
-| `onRibbonAddIn`                  | `office-ribbon-add-in` | `ribbonAddIn`         | `onribbonaddin`         | `{ tab, command }`          |
-| `onCollaborationChange`          | `collaboration-change` | `collaborationChange` | `oncollaborationchange` | `XlsxCollaborationState`    |
-| `onReady`                        | `ready`                | `ready`               | `onready`               | the `<xlsx-editor>` element |
+| Callback (React, Solid, vanilla) | Vue event              | Angular output        | Svelte prop             | Payload                                      |
+| -------------------------------- | ---------------------- | --------------------- | ----------------------- | -------------------------------------------- |
+| `onWorkbookChange`               | `workbook-change`      | `workbookChange`      | `onworkbookchange`      | `Workbook`                                   |
+| `onWorkbookError`                | `workbook-error`       | `workbookError`       | `onworkbookerror`       | `Error`                                      |
+| `onSelectionChange`              | `selection-change`     | `selectionChange`     | `onselectionchange`     | `{ sheet, ref, active }`                     |
+| `onDirtyChange`                  | `dirty-change`         | `dirtyChange`         | `ondirtychange`         | `boolean`                                    |
+| `onReadOnlyChange`               | `readonly-change`      | `readOnlyChange`      | `onreadonlychange`      | `boolean`                                    |
+| `onFileCommand`                  | `file-command`         | `fileCommand`         | `onfilecommand`         | `CustomEvent<FileCommandDetail>`, cancelable |
+| `onWorkbookWarning`              | `workbook-warning`     | `workbookWarning`     | `onworkbookwarning`     | `string[]`                                   |
+| `onRibbonAction`                 | `ribbon-action`        | `ribbonAction`        | `onribbonaction`        | `{ id }`                                     |
+| `onRibbonCustomize`              | `ribbon-customize`     | `ribbonCustomize`     | `onribboncustomize`     | `string[]` (hidden actions)                  |
+| `onSheetChange`                  | `sheet-change`         | `sheetChange`         | `onsheetchange`         | `{ index, name }`                            |
+| `onRibbonAddIn`                  | `office-ribbon-add-in` | `ribbonAddIn`         | `onribbonaddin`         | `{ tab, command }`                           |
+| `onCollaborationChange`          | `collaboration-change` | `collaborationChange` | `oncollaborationchange` | `XlsxCollaborationState`                     |
+| `onReady`                        | `ready`                | `ready`               | `onready`               | the `<xlsx-editor>` element                  |
 
-Load failures (corrupt, encrypted or unsupported files) reach `onWorkbookError`; a failed `src` fetch does too. A `src` fetch still in flight is dropped when new `bytes` or a new `workbook` arrive, or `src` is cleared or changed. The element's other events (`workbook-warning`, `file-command`, `sheet-change`, `ribbon-action`) are listened to on the element itself, see the [element API](/api).
+Load failures (corrupt, encrypted or unsupported files) reach `onWorkbookError`; a failed `src` fetch does too. A `src` fetch still in flight is dropped when new `bytes` or a new `workbook` arrive, or `src` is cleared or changed.
+
+`onFileCommand` receives the cancelable `file-command` event itself, not its detail: call `event.preventDefault()` to take a File command (New, Open, Save, Save As, Export, Export CSV, Print) over, and read `event.detail.command` to see which one. Vue, Angular and Svelte emit or call back with the same event object. Every other callback receives its payload directly. See the [element API](/api).
 
 Every prop is forwarded only when its value changes (`hiddenActions` and `themeColors` are compared by value), so a parent re-render never undoes what the user changed inside the editor: Editing / Viewing, File > Options theme or language, or Customize Ribbon. A controlled parent keeps its state in step through `onReadOnlyChange` and `onRibbonCustomize` (in Angular, `[(readOnly)]`).
 

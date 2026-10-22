@@ -56,3 +56,5 @@ All events bubble and are composed, so they cross the shadow boundary.
 | `collaboration-send`   | `StepBatch`           | Local steps are pending; transport them to the authority.                     |
 
 The package exports the typed event map (`DocxEditorEventMap`) and the runtime list `DOCX_EDITOR_EVENTS`.
+
+The framework bindings forward the props `fileName`, `reviewAuthor` and `themeColors`, and the events `file-command`, `document-warning`, `readonly-change`, `ribbon-action` and `ribbon-customize`, under their framework names (for example `onFileCommand`, `fileCommand` and `onfilecommand`). The table is in [framework bindings](/bindings#binding-props-and-events).

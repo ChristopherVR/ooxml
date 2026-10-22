@@ -76,6 +76,8 @@ All events are `CustomEvent`s that bubble and cross the shadow boundary (`compos
 | `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Sharing started or stopped, the connection changed, or someone joined or left.        |
 | `validation-error`     | `{ message, title?, ref, style? }`                                                         | A cell edit in progress failed validation and stays open until corrected or canceled. |
 
+The framework bindings forward `file-command`, `workbook-warning`, `ribbon-action` and `sheet-change` as well (for example `onFileCommand`, `fileCommand` and `onfilecommand`); see [framework bindings](/bindings#callbacks-and-events).
+
 ```ts
 editor.addEventListener('file-command', (event) => {
 	if (event.detail.command === 'save') {
