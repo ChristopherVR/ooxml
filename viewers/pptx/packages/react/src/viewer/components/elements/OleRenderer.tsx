@@ -1,8 +1,8 @@
 import { formatBytes, isBrowserOpenableMime, openUrlInNewTab } from 'ooxml-ui/pptx';
 import type { OlePptxElement } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import {
 	getOleAriaLabel,
 	getOleDisplayName,

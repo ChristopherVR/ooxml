@@ -2,7 +2,8 @@ import type { FreeformToolKind } from 'ooxml-ui/pptx';
 import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'ooxml-ui/pptx';
 import type { ShapePptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useReducer, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface FreeformToolOverlayProps {
 	/** The armed tool: Freeform: Shape or Curve. */

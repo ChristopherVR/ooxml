@@ -4,8 +4,8 @@ import type { PptxElement } from 'pptx-viewer-core';
  * (shadow + highlight) plus quick-apply presets.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
 import { DUOTONE_PRESETS } from '../../utils/duotone-effects';
 import { useRecentColors } from './RecentColorsContext';

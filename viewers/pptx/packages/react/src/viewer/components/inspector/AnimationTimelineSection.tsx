@@ -1,7 +1,6 @@
 import { animationEffectLabel } from 'ooxml-ui/pptx';
 import type { PptxElementAnimation } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuChevronDown,
 	LuChevronUp,
@@ -10,6 +9,7 @@ import {
 	LuRotateCw,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import type { AnimationHandlers } from './useAnimationHandlers';
 

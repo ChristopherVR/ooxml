@@ -8,7 +8,9 @@ import { PresentationSubtitleBar } from '../PresentationSubtitleBar';
 import { ViewerOptionsContext, ViewerOptionsStoreContext } from '../viewer-options-context';
 import { SubtitleSettingsControl } from './SubtitleSettingsControl';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 describe('subtitle settings adapter', () => {
 	it('owns preference commits, applies recognition language and cleans up native listeners', () => {

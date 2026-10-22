@@ -14,12 +14,12 @@ import {
  * @module BroadcastDialog
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuCast, LuCheck, LuCopy, LuUsers, LuWifi, LuWifiOff } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
 import type { CollaborationConfig } from '../hooks/collaboration/types';
 import { useModalFocus } from '../hooks/useModalFocus';
+import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
 import { DialogFooter } from './DialogFooter';
 import { ViewerRegion, useRegionRenderer } from './ViewerRegion';

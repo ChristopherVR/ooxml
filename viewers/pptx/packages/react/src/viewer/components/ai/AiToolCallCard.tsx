@@ -8,7 +8,6 @@
 import type { ToolActivityIcon } from 'ooxml-ui/pptx/ai';
 import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
 import type { ComponentType } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuChartColumn,
 	LuCheck,
@@ -29,6 +28,7 @@ import {
 	LuWrench,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import type { RenderableToolPart } from './ai-message-parts';
 

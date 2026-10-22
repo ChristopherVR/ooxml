@@ -13,10 +13,10 @@
  * propagation so a tap on it never falls through to the slide tap-advance.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuX } from 'react-icons/lu';
 
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTranslation } from '../i18n/use-translation';
 
 export interface PresentationTouchControlsProps {
 	/** Zero-based index of the current presentation slide. */

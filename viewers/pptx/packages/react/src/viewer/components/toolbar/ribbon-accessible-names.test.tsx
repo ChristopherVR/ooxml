@@ -21,7 +21,7 @@ import { createRoot } from 'react-dom/client';
  */
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			const entry = translationsEn[key];

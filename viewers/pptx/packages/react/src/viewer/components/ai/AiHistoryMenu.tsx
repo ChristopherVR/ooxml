@@ -6,9 +6,9 @@
  */
 import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPlus } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { AiHistoryList } from './AiHistoryList';
 
 export interface AiHistoryMenuProps {

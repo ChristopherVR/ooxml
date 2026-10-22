@@ -1,8 +1,8 @@
 import { buildHelpRibbon, isDialogAvailable } from 'ooxml-ui/pptx';
 import type { RibbonControlId } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { WebRibbonSection } from './WebRibbonSection';
 

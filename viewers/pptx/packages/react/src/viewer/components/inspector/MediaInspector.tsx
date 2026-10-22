@@ -9,8 +9,9 @@ import {
 import type { MediaTrimRangeError } from 'ooxml-ui/pptx';
 import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 import React, { useState, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuClock, LuScissors } from 'react-icons/lu';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Style constants (matching InspectorPane)

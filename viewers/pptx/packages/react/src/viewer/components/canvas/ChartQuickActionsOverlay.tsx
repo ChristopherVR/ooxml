@@ -8,9 +8,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { ChartPptxElement, PptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuFilter, LuPaintbrush, LuPlus } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { CARD, HEADING } from '../inspector/chart-panel-constants';
 import { WebCheckbox } from '../WebControls';
 

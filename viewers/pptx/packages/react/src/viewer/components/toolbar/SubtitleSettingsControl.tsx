@@ -6,8 +6,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxUiSubtitleSettingsElement, SubtitleSettingsChangeEvent } from 'ooxml-ui/pptx';
 import React, { useContext, useEffect, useRef, useSyncExternalStore } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { ViewerOptionsStoreContext } from '../viewer-options-context';
 
 /** Native lifecycle and preference ownership only; shared owns trigger and dialog. */

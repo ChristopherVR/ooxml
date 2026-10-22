@@ -1,8 +1,8 @@
 import { buildNotesPrintHtml, resolveNotesSegments } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxTextStyleLevels } from 'pptx-viewer-core';
 import React, { useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { DialogFooter } from '../DialogFooter';
 import { renderRichNotesSegments } from './notes-html';
 import { segmentsToPlainText } from './notes-utils';

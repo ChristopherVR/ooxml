@@ -1,8 +1,8 @@
 import { inspectorNumber } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import {
 	FILL_MODE_OPTIONS,

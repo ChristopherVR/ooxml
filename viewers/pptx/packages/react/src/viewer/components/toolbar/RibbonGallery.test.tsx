@@ -17,7 +17,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ToolbarProps } from './toolbar-types';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, params?: Record<string, unknown>) =>
 			params && typeof params.name === 'string' ? `${key}:${params.name}` : key,

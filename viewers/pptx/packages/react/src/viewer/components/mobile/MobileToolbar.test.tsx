@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ToolbarProps } from '../toolbar/toolbar-types';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => translationsEn[key] ?? key }),
 }));
 vi.mock<typeof import('./MobileMenuSheet')>(import('./MobileMenuSheet'), () => ({

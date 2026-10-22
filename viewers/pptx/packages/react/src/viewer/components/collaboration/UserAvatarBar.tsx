@@ -8,9 +8,9 @@
  * @module collaboration/UserAvatarBar
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { UserPresence, ConnectionStatus } from '../../hooks/collaboration/types';
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Helpers

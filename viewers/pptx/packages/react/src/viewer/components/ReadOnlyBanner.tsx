@@ -4,9 +4,9 @@ import type {
 	ReadOnlyBannerPasswordError,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
-import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';
+import { useTranslation } from '../i18n/use-translation';
 
 /**
  * ReadOnlyBanner: shown above the canvas (under the ribbon/toolbar) when a

@@ -8,7 +8,9 @@ import type { ToolbarSection } from '../../types';
 import { RibbonAddInsContext, RibbonAddInSection, useRibbonAddInTabs } from './ribbon-add-ins';
 import { RibbonTabBar } from './RibbonTabBar';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 const reports = (run: () => void, label = 'Reports'): RibbonAddInTab => ({
 	id: 'reports',

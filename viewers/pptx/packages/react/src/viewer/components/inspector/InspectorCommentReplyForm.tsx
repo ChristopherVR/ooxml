@@ -1,8 +1,8 @@
 import type { PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuReply } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { CommentMentionTextarea } from './CommentMentionTextarea';
 
 /** The inline reply box `InspectorCommentRow` shows under a comment being replied to. */

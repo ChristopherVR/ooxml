@@ -8,8 +8,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useReducer, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { EditPointsMenu } from './EditPointsMenu';
 
 export interface EditPointsOverlayProps {

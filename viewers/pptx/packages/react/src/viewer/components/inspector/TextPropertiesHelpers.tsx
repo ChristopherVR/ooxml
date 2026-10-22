@@ -1,7 +1,6 @@
 import { TEXT_BOX_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle, UnderlineStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuBold,
 	LuItalic,
@@ -13,6 +12,7 @@ import {
 	LuAlignJustify,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { ListMode } from '../../utils';
 import { normalizeHexColor } from '../../utils';
 import { WebSelect, WebCheckbox } from '../WebControls';

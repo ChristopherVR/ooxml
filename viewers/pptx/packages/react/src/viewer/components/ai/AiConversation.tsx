@@ -7,13 +7,13 @@
  */
 import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuHistory, LuMessageSquarePlus, LuTrash2, LuTriangleAlert } from 'react-icons/lu';
 
 import type { UseChatFn } from '../../hooks/ai/useAiConversation';
 import { useAiConversation } from '../../hooks/ai/useAiConversation';
 import { useAiHistory } from '../../hooks/ai/useAiHistory';
 import type { AiPanelController } from '../../hooks/ai/useAiPanelController';
+import { useTranslation } from '../../i18n/use-translation';
 import { AiComposer } from './AiComposer';
 import { AiFocusBar } from './AiFocusBar';
 import { AiHistoryMenu } from './AiHistoryMenu';

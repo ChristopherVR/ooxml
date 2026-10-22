@@ -11,8 +11,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { safePrompt } from '../utils/dom-helpers';
 
 /**

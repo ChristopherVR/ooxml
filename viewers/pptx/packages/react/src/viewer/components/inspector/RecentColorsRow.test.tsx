@@ -14,7 +14,7 @@ import { RecentColorsProvider } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 
 // The English dictionary, so the assertions read the names a user sees.
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, params?: Record<string, string>) =>
 			(translationsEn[key] ?? key).replace(

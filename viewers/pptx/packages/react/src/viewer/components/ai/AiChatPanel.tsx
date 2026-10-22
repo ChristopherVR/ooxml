@@ -11,13 +11,13 @@
  */
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuLoaderCircle, LuSparkles, LuTriangleAlert, LuX } from 'react-icons/lu';
 
 import { deckIdFromBridge } from '../../hooks/ai/ai-deck-id';
 import { useAiChat } from '../../hooks/ai/useAiChat';
 import type { UseChatFn } from '../../hooks/ai/useAiConversation';
 import type { AiPanelController } from '../../hooks/ai/useAiPanelController';
+import { useTranslation } from '../../i18n/use-translation';
 import { AiConversation } from './AiConversation';
 
 export interface AiChatPanelProps {

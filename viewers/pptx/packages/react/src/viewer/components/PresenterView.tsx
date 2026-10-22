@@ -22,9 +22,9 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * own keydown listener to avoid double-handling.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { SlideAdvanceTrigger } from '../hooks/presentation-mode/types';
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { PresenterSlideFrame } from './presentation/PresenterSlideFrame';
 import { PresentationAudienceEffects } from './PresentationAudienceEffects';

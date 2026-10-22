@@ -2,8 +2,8 @@ import { arrangeAlignAction, arrangeHomeControls, arrangePainterHomeControls } f
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { groupAttr } from './PowerPointRibbonControls';
 import { ShapeArrangeExtras } from './ShapeArrangeExtras';
 import { WebHomeControls } from './WebHomeControls';

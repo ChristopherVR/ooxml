@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { DialogFooter } from './DialogFooter';
 import type { HyperlinkTargetType, HyperlinkActionVerb } from './hyperlink-edit-types';

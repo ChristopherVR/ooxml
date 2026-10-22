@@ -17,12 +17,12 @@ import {
 	shouldStickyActionRow,
 } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useModalDismissDrag } from '../hooks';
 import type { CollaborationConfig } from '../hooks/collaboration/types';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useModalFocus } from '../hooks/useModalFocus';
+import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
 import { DialogFooter } from './DialogFooter';
 import { ActiveSessionView } from './ShareDialogActiveView';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../i18n/use-translation';
 
 /**
  * Black "End of slide show" screen shown after advancing past the last

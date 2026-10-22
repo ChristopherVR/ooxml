@@ -1,7 +1,7 @@
 import type { PptxChartDataPoint, PptxChartSeries, PptxChartType } from 'pptx-viewer-core';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import { CARD, EXPLOSION_SUPPORTED_TYPES, HEADING, INPUT } from './chart-panel-constants';
 import { useRecentColorCommit } from './useRecentColorCommit';

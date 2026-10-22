@@ -12,9 +12,9 @@ import { describe, it, expect, vi } from 'vitest';
 
 import type { ToolbarProps } from './toolbar-types';
 
-// Mock react-i18next since some sub-components use useTranslation
+// Mock the viewer translation hook, since some sub-components use useTranslation
 // oxlint-disable-next-line prefer-ending-with-an-expect
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			const translations: Record<string, string | ((o: Record<string, unknown>) => string)> = {

@@ -6,9 +6,9 @@ import type {
 	PptxSlide,
 } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuMessageSquare, LuType } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn, getElementLabel } from '../../utils';
 import { CommentMentionTextarea } from './CommentMentionTextarea';
 import { InspectorCommentRow } from './InspectorCommentRow';

@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { TabRowActionsProps } from './TabRowActions';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			const translations: Record<string, string> = {

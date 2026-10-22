@@ -6,7 +6,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React, { useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface MotionPathOverlayProps {
 	/** Element the path is anchored to; its centre is the path origin. */

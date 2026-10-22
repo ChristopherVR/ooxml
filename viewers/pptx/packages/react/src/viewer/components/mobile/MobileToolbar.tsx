@@ -4,10 +4,10 @@ import type {
 	PptxUiMobileToolbarElement,
 } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useWebControl } from '../../hooks/useWebControl';
+import { useTranslation } from '../../i18n/use-translation';
 import type { ToolbarProps } from '../toolbar/toolbar-types';
 import { MobileInsertSheet } from './MobileInsertSheet';
 import { MobileMenuSheet } from './MobileMenuSheet';

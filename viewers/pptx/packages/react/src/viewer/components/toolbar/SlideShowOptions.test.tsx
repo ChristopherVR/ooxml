@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlideShowOptions } from './SlideShowOptions';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 let container: HTMLDivElement;
 let root: Root;
 beforeEach(() => {

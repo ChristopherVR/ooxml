@@ -1,8 +1,8 @@
 import type { ToolbarTabId, ViewerOptions } from 'ooxml-ui/pptx';
 import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { WebCheckbox } from '../WebControls';
 

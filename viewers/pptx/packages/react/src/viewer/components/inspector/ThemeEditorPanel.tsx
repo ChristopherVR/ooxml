@@ -6,7 +6,8 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxTheme } from 'pptx-viewer-core';
 import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface ThemeEditorPanelProps {
 	theme: PptxTheme | undefined;

@@ -19,7 +19,7 @@ import type { Mock } from 'vitest';
 
 import { SelectionPane } from './SelectionPane';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => translationsEn[key] ?? key }),
 }));
 

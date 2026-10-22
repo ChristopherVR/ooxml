@@ -6,9 +6,9 @@ import {
 	resolveScreenTip,
 } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { TOOLBAR_SECTIONS } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import type { ToolbarSection } from '../../types';
 import { cn } from '../../utils';
 import { useViewerOptionsContext } from '../viewer-options-context';

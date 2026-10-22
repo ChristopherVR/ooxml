@@ -1,9 +1,9 @@
 import { observeElementHeight } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useSheetDismissDrag } from '../hooks/useSheetDismissDrag';
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { renderRichNotesSegments } from './notes/notes-html';
 import { EXPANDED_MAX_HEIGHT } from './notes/notes-utils';

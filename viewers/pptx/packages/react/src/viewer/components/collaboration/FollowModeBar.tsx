@@ -12,9 +12,9 @@
  * @module collaboration/FollowModeBar
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { UserPresence } from '../../hooks/collaboration/types';
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -14,8 +14,8 @@ import {
  */
 import type { PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import React, { useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface CommentMentionTextareaProps {

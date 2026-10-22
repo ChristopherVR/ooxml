@@ -5,9 +5,9 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * visibility toggles, rename-on-double-click, and drag-to-reorder.
  */
 import React, { useState, useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuEye, LuEyeOff, LuGripVertical } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { getElementDisplayName } from './selection-pane-utils';
 

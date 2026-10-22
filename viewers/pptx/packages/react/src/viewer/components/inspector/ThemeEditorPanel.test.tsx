@@ -6,7 +6,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeEditorPanel } from './ThemeEditorPanel';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 const container = document.createElement('div');
 const root = createRoot(container);
 afterEach(() => act(() => root.render(null)));

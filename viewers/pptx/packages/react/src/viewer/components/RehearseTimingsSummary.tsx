@@ -5,8 +5,8 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * Save / Discard actions.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { DialogFooter } from './DialogFooter';
 import { SlideThumbnail } from './SlideThumbnail';

@@ -6,11 +6,11 @@
  */
 import { getDensePanelTouchTargetPx, resolveDefaultPrintSettings } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPrinter, LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { PrintPreview, NotesPagePreview } from './print';
 import type {

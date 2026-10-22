@@ -1,7 +1,7 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_FILL_COLOR } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor, sanitizeGradientStops } from '../../utils';
 import { FILL_MODE_OPTIONS } from './fill-stroke-options';
 import { FillAdvancedControls } from './FillAdvancedControls';

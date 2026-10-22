@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AiUiMessage } from './ai-message-parts';
 
 // oxlint-disable-next-line prefer-ending-with-an-expect
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string) => translationsEn[key] ?? key,
 	}),

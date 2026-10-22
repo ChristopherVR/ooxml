@@ -8,7 +8,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ReviewSection } from './ReviewSection';
 import type { ReviewSectionProps } from './ReviewSection';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 registerPptxWebControls();
 const cleanups: (() => void)[] = [];
 afterEach(() => {

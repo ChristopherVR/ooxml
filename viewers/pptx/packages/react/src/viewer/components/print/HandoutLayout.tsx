@@ -5,8 +5,8 @@
  * The 3-per-page layout includes ruled note lines on the right.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { HandoutSlidesPerPage, HandoutPage } from '../../utils/handout-layout-utils';
 import {
 	computeHandoutLayout,

@@ -1,7 +1,7 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuLock, LuX, LuInfo } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 
 // ---------------------------------------------------------------------------

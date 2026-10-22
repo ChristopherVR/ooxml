@@ -8,8 +8,8 @@
 import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
 import { PASTE_SPECIAL_OPTIONS } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { WebRadio } from './WebControls';
 

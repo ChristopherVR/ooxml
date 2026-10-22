@@ -7,8 +7,8 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * and ruled lines on the bottom half representing the notes area.
  */
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { computeAllNotesPages, getNotesPrintableArea } from '../../utils/notes-page-layout-utils';
 
 // ---------------------------------------------------------------------------

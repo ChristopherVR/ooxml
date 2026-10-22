@@ -1,9 +1,9 @@
 import { MIN_TOUCH_TARGET_PX } from 'ooxml-ui/pptx';
 import React, { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useModalFocus } from '../../hooks/useModalFocus';
 import { useSheetDismissDrag } from '../../hooks/useSheetDismissDrag';
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface MobileSheetProps {

@@ -7,9 +7,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuMinus, LuPlus } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import {
 	clampNotesFontSize,

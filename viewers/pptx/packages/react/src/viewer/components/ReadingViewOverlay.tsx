@@ -20,9 +20,9 @@ import {
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { ReadingViewStage } from './reading-view/ReadingViewStage';
 import { useReadingView } from './reading-view/useReadingView';

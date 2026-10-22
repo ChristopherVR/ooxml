@@ -27,7 +27,7 @@ const OFFICE_THEME = {
 	tx2: '#44546A',
 };
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, fallback?: unknown) => (typeof fallback === 'string' ? fallback : key),
 	}),

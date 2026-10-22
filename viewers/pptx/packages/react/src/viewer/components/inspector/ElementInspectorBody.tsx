@@ -11,9 +11,9 @@ import type {
 } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuLock, LuLockOpen } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { TableCellEditorState } from '../../types';
 import { ActionSettingsPanel } from './ActionSettingsPanel';
 import { ChartDataPanel } from './ChartDataPanel';

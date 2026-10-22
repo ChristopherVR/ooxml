@@ -7,8 +7,8 @@ import {
 	surfaceWireframePatch,
 } from 'ooxml-ui/pptx';
 import type { PptxBar3DShape, PptxChartData } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import { CARD, HEADING, INPUT } from './chart-panel-constants';
 

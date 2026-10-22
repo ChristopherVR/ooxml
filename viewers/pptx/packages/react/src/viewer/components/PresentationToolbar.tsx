@@ -17,10 +17,10 @@ import type {
 	PresentToolbarIntent,
 } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { PresentationTool } from '../hooks/usePresentationAnnotations';
 import { useWebControl } from '../hooks/useWebControl';
+import { useTranslation } from '../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Props

@@ -11,9 +11,9 @@ import {
 import type { ParsedTableStyleMap, PptxElement, TablePptxElement } from 'pptx-viewer-core';
 import { updateMergeAttrsInRawXml } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { TABLE_STYLE_PRESETS } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import type { TableCellEditorState } from '../../types';
 import { WebCheckbox } from '../WebControls';
 import { HEADING, CARD, INPUT, BTN } from './inspector-pane-constants';

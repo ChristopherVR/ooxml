@@ -4,8 +4,8 @@ import type {
 	PptxUiChartFormatPaneElement,
 } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useChartFormatContext } from '../chart-format-context';
 
 /**

@@ -14,7 +14,6 @@ import type { PptxAction, PptxElement, PptxElementAnimation, PptxSlide } from 'p
  * find/replace panel, and presentation annotation / toolbar overlays.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import {
 	FindReplacePanel,
@@ -37,6 +36,7 @@ import type { TableOperationHandlers } from '../hooks/useTableOperations';
 import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
 import type { ViewerState } from '../hooks/useViewerState';
 import type { UseZoomViewportResult } from '../hooks/useZoomViewport';
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize, TableCellEditorState } from '../types';
 import type { ViewerMode } from '../types-core';
 import { safeOpenUrl, isPpactionUrl, parsePpactionUrl } from '../utils/hyperlink-security';

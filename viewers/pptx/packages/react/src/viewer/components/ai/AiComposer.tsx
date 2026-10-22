@@ -4,9 +4,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuSend, LuSquare } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface AiComposerProps {

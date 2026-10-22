@@ -1,8 +1,8 @@
 import type { MediaPptxElement, MediaBookmark, PptxElement } from 'pptx-viewer-core';
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPlus, LuTrash2, LuBookmark } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect, WebCheckbox } from '../WebControls';
 import {
 	CARD,

@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InspectorPaneProps } from './inspector/inspector-pane-types';
 import { InspectorPane } from './InspectorPane';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, fallback?: unknown) => (typeof fallback === 'string' ? fallback : key),
 	}),

@@ -11,8 +11,8 @@ import type {
 	SmartArtStyle,
 } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { resolveSmartArtDataPalette } from '../../utils/smartart-helpers';
 import { HEADING, CARD } from './inspector-pane-constants';
 import { useRecentColors } from './RecentColorsContext';

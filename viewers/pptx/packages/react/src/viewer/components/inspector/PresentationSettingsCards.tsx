@@ -6,8 +6,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxPresentationProperties, PptxThemeOption } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { CARD, HEADING, INPUT, BTN } from './inspector-pane-constants';

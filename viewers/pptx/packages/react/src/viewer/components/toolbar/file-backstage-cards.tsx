@@ -1,7 +1,6 @@
 import { backstageCardsFor, customizeBackstageCards } from 'ooxml-ui/pptx';
 import type { BackstageCardId, BackstagePage } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';
 import {
 	LuBox,
@@ -22,6 +21,7 @@ import {
 	LuVideo,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { BackstageAction } from './file-backstage-parts';
 import type { FileSectionProps } from './file-backstage-parts';

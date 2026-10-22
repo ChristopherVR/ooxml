@@ -8,8 +8,8 @@ import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
  * binding (Vue, Angular, Svelte, Vanilla).
  */
 import type { PptxComment } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { CanvasSize } from '../../types';
 
 /* ------------------------------------------------------------------ */

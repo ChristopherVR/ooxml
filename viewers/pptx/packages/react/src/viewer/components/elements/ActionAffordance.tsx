@@ -20,7 +20,8 @@ import type { ElementActionAffordance } from 'ooxml-ui/pptx';
  */
 import type { PptxElement } from 'pptx-viewer-core';
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 /**
  * Resolve what this element's action affordances should say and whether to draw

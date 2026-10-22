@@ -6,7 +6,6 @@ import type {
 	PptxSlide,
 } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuCheck,
 	LuChevronDown,
@@ -17,6 +16,7 @@ import {
 	LuType,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn, formatCommentTimestamp, getElementLabel } from '../../utils';
 import { CommentBody } from './CommentBody';
 import { InspectorCommentReplyForm } from './InspectorCommentReplyForm';

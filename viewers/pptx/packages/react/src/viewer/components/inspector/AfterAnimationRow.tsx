@@ -1,7 +1,7 @@
 import type { PptxAfterAnimationAction } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import { AFTER_ANIMATION_OPTIONS, SELECT_CLS } from './animation-panel-constants';
 import { useRecentColorCommit } from './useRecentColorCommit';

@@ -1,7 +1,7 @@
 import type { PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { CommentItem, AddCommentForm } from './CommentsTabHelpers';
 import type { CommentsTabProps } from './CommentsTabHelpers';
 

@@ -12,7 +12,7 @@ import type { TitleBarProps } from './TitleBar';
 import { TitleBar } from './TitleBar';
 import { TitleBarElement } from './TitleBarElement';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			const fallback = translationsEn[key];

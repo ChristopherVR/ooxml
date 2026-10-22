@@ -7,9 +7,9 @@ import type {
 	MasterViewTab,
 } from 'pptx-viewer-core';
 import React, { useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPanelLeftClose } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { cn } from '../utils';
 import { HandoutMasterPanel } from './HandoutMasterPanel';

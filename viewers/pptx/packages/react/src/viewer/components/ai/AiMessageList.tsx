@@ -5,9 +5,9 @@
  */
 import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuBot, LuSparkles, LuUser } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import type { AiUiMessage } from './ai-message-parts';
 import { toRenderableParts } from './ai-message-parts';

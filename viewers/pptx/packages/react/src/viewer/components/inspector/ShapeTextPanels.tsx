@@ -7,9 +7,9 @@ import {
 import type { PptxElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { SHAPE_PRESETS } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor, sanitizeGradientStops } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { AccessibilityTextSection } from './AccessibilityTextSection';

@@ -1,7 +1,8 @@
 import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx';
 import React, { useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuUpload } from 'react-icons/lu';
+
+import { useTranslation } from '../i18n/use-translation';
 
 export interface SettingsCustomFontsSectionProps {
 	/** Mirrors `general.enableCustomFontUpload`; the picker stays inert when off. */

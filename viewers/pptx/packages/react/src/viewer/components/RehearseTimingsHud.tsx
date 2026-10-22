@@ -3,8 +3,9 @@
  * Displays per-slide time, total elapsed time, and a pause button.
  */
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPause, LuPlay } from 'react-icons/lu';
+
+import { useTranslation } from '../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Helpers

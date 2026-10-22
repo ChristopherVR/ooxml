@@ -1,9 +1,9 @@
 import { dispatchStatusBarIntent, statusBarState, statusBarViewMode } from 'ooxml-ui/pptx';
 import type { PptxUiStatusBarElement } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { AutosaveStatus } from '../hooks/useAutosave';
+import { useTranslation } from '../i18n/use-translation';
 
 export interface StatusBarProps {
 	slideCount: number;

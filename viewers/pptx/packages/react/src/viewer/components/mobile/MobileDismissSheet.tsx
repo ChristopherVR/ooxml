@@ -1,7 +1,7 @@
 import type React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useSheetDismissDrag } from '../../hooks/useSheetDismissDrag';
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface MobileDismissSheetProps {
 	/** Dismiss callback: fired by the backdrop tap or a swipe past the threshold. */

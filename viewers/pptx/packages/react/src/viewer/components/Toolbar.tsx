@@ -1,8 +1,8 @@
 import { attachRibbonOverflow, homeLaunchers, isPanelVisible } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useToolbarVisibility } from '../hooks/useToolbarVisibility';
+import { useTranslation } from '../i18n/use-translation';
 import type { ToolbarSection } from '../types';
 import { cn } from '../utils';
 import { MobileToolbar } from './mobile/MobileToolbar';

@@ -15,9 +15,9 @@ import {
 	replaceOleFile,
 } from 'pptx-viewer-core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { OleDeckEditor, OleDocumentEditor, OleSheetGridEditor } from './OleEditorDialogTabs';
 

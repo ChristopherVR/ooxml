@@ -9,11 +9,11 @@
 import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import React, { useCallback, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
 import { useModalFocus } from '../hooks/useModalFocus';
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { DialogFooter } from './DialogFooter';
 import { SlideTemplatePreview } from './SlideTemplatePreview';

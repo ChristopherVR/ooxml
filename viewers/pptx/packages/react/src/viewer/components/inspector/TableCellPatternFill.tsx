@@ -1,8 +1,8 @@
 import { FILL_PATTERN_LABEL_KEYS, schemaLabel } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import { LBL, PATTERN_OPTIONS, SEL } from './table-cell-advanced-fill-constants';
 import { useRecentColorCommit } from './useRecentColorCommit';

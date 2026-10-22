@@ -1,9 +1,9 @@
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import { createChatHistoryStore } from 'ooxml-ui/pptx/ai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuBug, LuDownload } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { AiLogFormat } from '../utils/ai-log-export';
 import { exportAiChatLogs } from '../utils/ai-log-export';
 import { WebCheckbox } from './WebControls';

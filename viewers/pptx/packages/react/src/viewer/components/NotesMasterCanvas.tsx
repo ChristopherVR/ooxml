@@ -1,8 +1,8 @@
 import { resolveNotesSchematicBodyFontSizePx } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxNotesMaster } from 'pptx-viewer-core';
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 
 // ---------------------------------------------------------------------------

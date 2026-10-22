@@ -6,9 +6,9 @@ import type {
 } from 'ooxml-ui/pptx';
 import { presenterConsoleAction, presenterConsoleViewState } from 'ooxml-ui/pptx';
 import type { ReactElement } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';
+import { useTranslation } from '../i18n/use-translation';
 
 export interface PresenterConsoleToolbarProps {
 	snapshot: PresentationSnapshot;

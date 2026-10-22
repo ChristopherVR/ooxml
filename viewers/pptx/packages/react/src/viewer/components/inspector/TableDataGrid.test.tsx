@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TableDataGrid } from './TableDataGrid';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, vars?: Record<string, unknown>) =>
 			vars ? `${key}:${Object.values(vars).join(',')}` : key,

@@ -1,8 +1,8 @@
 import { imageResetPatch, imageResetState } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { WebCheckbox } from '../WebControls';
 import { ArtisticEffectsGallery } from './ArtisticEffectsGallery';

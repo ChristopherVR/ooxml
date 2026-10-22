@@ -2,8 +2,8 @@ import { buildSummaryZoomView, resolveZoomNavigationTarget } from 'ooxml-ui/pptx
 import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { ZoomPptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { renderImg } from './ImageRenderer';
 
 /** Props for the ZoomElementRenderer component. */

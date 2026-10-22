@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX, LuUpload } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { BUILT_IN_THEMES } from './theme-gallery-data';
 import type { ThemeDefinition, ThemeGalleryProps } from './theme-gallery-types';
 import { ThemeThumbnail } from './ThemeThumbnail';

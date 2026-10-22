@@ -2,9 +2,9 @@ import type { ToolbarActionId, RibbonControlId } from 'ooxml-ui/pptx';
 import { SLIDE_SHOW_COMMAND_GROUPS } from 'ooxml-ui/pptx';
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
+import { useTranslation } from '../../i18n/use-translation';
 import type { ViewerMode } from '../../types';
 import { CustomShowsControls } from './CustomShowsControls';
 import type { CustomShowsControlsProps } from './CustomShowsControls';

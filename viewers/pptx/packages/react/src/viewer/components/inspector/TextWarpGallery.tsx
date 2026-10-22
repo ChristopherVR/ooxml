@@ -7,7 +7,8 @@ import {
 import type { PptxUiRibbonGalleryElement, RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 import type { TextStyle } from 'pptx-viewer-core';
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 // The warp preset catalogue + preview-path generator now live in
 // `ooxml-ui/pptx` (shared by every binding). Re-export them here to preserve
