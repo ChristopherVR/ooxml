@@ -486,7 +486,24 @@ jobs:
       - name: Install Chromium
         working-directory: viewers/pptx
         run: bun x playwright install --with-deps chromium
-      # Two attempts, as pptx-viewer ran it: a runner-level browser crash should not fail the run.
+      # The demos are served from their production build (`vite preview`): no cold dependency
+      # optimisation and no unbundled module waterfall per shard. Only the demos the project drives
+      # are built: React plus the project's own binding (React's project sweeps all five).
+      # VITE_PPTX_E2E_HANDLE keeps the `window.__pptxViewer` handle that some specs use, which a
+      # production build otherwise leaves out.
+      - name: Build the demos
+        env:
+          PROJECT: ${{ matrix.project }}
+          VITE_PPTX_E2E_HANDLE: '1'
+        run: |
+          demos="react vue angular vanilla svelte"
+          if [ "$PROJECT" != react ]; then demos="react $PROJECT"; fi
+          for demo in $demos; do
+            (cd "demos/pptx/demo-$demo" && bun run build)
+          done
+      # Playwright retries a failed test once itself. The step runs the shard again only when the
+      # first attempt crashed before recording a report (a runner-level browser crash), never when
+      # Playwright recorded real failures: those fail the job at once.
       - name: Run the browser suite
         working-directory: viewers/pptx
         env:
@@ -495,33 +512,28 @@ jobs:
           TOTAL: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }}
           # The changed spec files when only specs changed; empty runs every spec.
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
+          PPTX_E2E_SERVE: preview
         run: |
-          retry_args=()
           for attempt in 1 2; do
             # SPECS is a space-separated list of spec file names, split on purpose.
             # shellcheck disable=SC2086
             bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
-              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github \
-              "${retry_args[@]}" && exit 0
+              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
-            # Playwright clears its output on the next run. Keep the original traces even when
-            # the retry passes, so a flaky test or runner crash can still be investigated.
+            # Playwright clears its output on the next run. Keep the evidence of every attempt.
             evidence="ci-evidence/attempt-$attempt"
             mkdir -p "$evidence"
             for report in test-results playwright-report; do
               if [ -d "$report" ]; then cp -R "$report" "$evidence/"; fi
             done
-            # Avoid repeating a whole shard when Playwright recorded the failures.
-            # A crash before that report exists still retries the complete shard.
+            # Real failures are recorded in .last-run.json: do not repeat the shard for them.
             if node -e 'try { const run = JSON.parse(require("node:fs").readFileSync("test-results/.last-run.json", "utf8")); process.exit(run.status !== "passed" && run.failedTests?.length > 0 ? 0 : 1); } catch { process.exit(1); }'; then
-              retry_args=(--last-failed)
-            else
-              retry_args=()
+              exit "$status"
             fi
             if [ "$attempt" -lt 2 ]; then sleep 15; fi
           done
-          exit $status
+          exit "$status"
       - name: Preserve the report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
