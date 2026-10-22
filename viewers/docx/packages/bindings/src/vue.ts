@@ -3,6 +3,7 @@ import type { DocumentModel } from 'docx-core';
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
+	EditorTheme,
 	EditorThemeMode,
 	RibbonActionInput,
 	RibbonAddInTab,
@@ -21,6 +22,9 @@ export const WordEditor = defineComponent({
 	props: {
 		documentModel: Object as PropType<DocumentModel>,
 		readOnly: Boolean,
+		fileName: String,
+		reviewAuthor: String,
+		themeColors: Object as PropType<Partial<EditorTheme>>,
 		locale: String,
 		theme: String as PropType<EditorThemeMode>,
 		showThumbnails: Boolean,
@@ -40,6 +44,11 @@ export const WordEditor = defineComponent({
 				'document-error': (error) => emit('document-error', error),
 				'page-change': (detail) => emit('page-change', detail),
 				'dirty-change': (dirty) => emit('dirty-change', dirty),
+				'file-command': (event) => emit('file-command', event),
+				'document-warning': (message) => emit('document-warning', message),
+				'readonly-change': (readOnly) => emit('readonly-change', readOnly),
+				'ribbon-action': (detail) => emit('ribbon-action', detail),
+				'ribbon-customize': (ids) => emit('ribbon-customize', ids),
 				'office-ribbon-add-in': (detail) => emit('office-ribbon-add-in', detail),
 				'collaboration-change': (state: DocxCollaborationState) =>
 					emit('collaboration-change', state),

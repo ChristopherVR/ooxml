@@ -2,6 +2,7 @@ import {
 	defineXlsxEditor,
 	type EditorLocaleInput,
 	type EditorThemeMode,
+	type FileCommandDetail,
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
 	type SelectionChangeDetail,
@@ -59,8 +60,19 @@ export interface EditorEventOptions {
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
 	/** The user toggled Editing / Viewing (or `readOnly` changed); lets a controlled parent sync. */
 	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
+	/**
+	 * A File command (new, open, save, saveAs, export, exportCsv, print) is about to run. The event is
+	 * cancelable: call `event.preventDefault()` to take the command over yourself.
+	 */
+	onFileCommand?: ((event: CustomEvent<FileCommandDetail>) => void) | undefined;
+	/** Non-fatal notes from the loader (unsupported features, compatibility). */
+	onWorkbookWarning?: ((warnings: string[]) => void) | undefined;
+	/** A command ran from the ribbon, a menu, Tell me or a shortcut. */
+	onRibbonAction?: ((detail: { id: string }) => void) | undefined;
 	/** The user changed the shown ribbon commands (File > Options > Customize Ribbon). */
 	onRibbonCustomize?: ((hiddenActions: string[]) => void) | undefined;
+	/** The active sheet changed. */
+	onSheetChange?: ((detail: { index: number; name: string }) => void) | undefined;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	onRibbonAddIn?: ((detail: RibbonAddInCommandDetail) => void) | undefined;
 	/** Sharing started or stopped, the connection changed, or someone joined or left. */
@@ -100,7 +112,11 @@ export const EDITOR_EVENT_NAMES = [
 	'selection-change',
 	'dirty-change',
 	'readonly-change',
+	'file-command',
+	'workbook-warning',
+	'ribbon-action',
 	'ribbon-customize',
+	'sheet-change',
 	'office-ribbon-add-in',
 	'collaboration-change',
 ] as const satisfies readonly XlsxEditorEventName[];
@@ -112,7 +128,11 @@ export interface EditorEventHandlers {
 	'selection-change': EditorEventOptions['onSelectionChange'];
 	'dirty-change': EditorEventOptions['onDirtyChange'];
 	'readonly-change': EditorEventOptions['onReadOnlyChange'];
+	'file-command': EditorEventOptions['onFileCommand'];
+	'workbook-warning': EditorEventOptions['onWorkbookWarning'];
+	'ribbon-action': EditorEventOptions['onRibbonAction'];
 	'ribbon-customize': EditorEventOptions['onRibbonCustomize'];
+	'sheet-change': EditorEventOptions['onSheetChange'];
 	'office-ribbon-add-in': EditorEventOptions['onRibbonAddIn'];
 	'collaboration-change': EditorEventOptions['onCollaborationChange'];
 	ready?: EditorEventOptions['onReady'];
@@ -135,7 +155,11 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onSelectionChange: handlers['selection-change'],
 		onDirtyChange: handlers['dirty-change'],
 		onReadOnlyChange: handlers['readonly-change'],
+		onFileCommand: handlers['file-command'],
+		onWorkbookWarning: handlers['workbook-warning'],
+		onRibbonAction: handlers['ribbon-action'],
 		onRibbonCustomize: handlers['ribbon-customize'],
+		onSheetChange: handlers['sheet-change'],
 		onRibbonAddIn: handlers['office-ribbon-add-in'],
 		onCollaborationChange: handlers['collaboration-change'],
 		onReady: handlers.ready,
@@ -232,7 +256,12 @@ export function mountEditor(
 		'selection-change': (event) => options.onSelectionChange?.(event.detail),
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail.dirty),
 		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly),
+		// Cancelable: the handler gets the event itself, so a host can call preventDefault().
+		'file-command': (event) => options.onFileCommand?.(event),
+		'workbook-warning': (event) => options.onWorkbookWarning?.([...event.detail.warnings]),
+		'ribbon-action': (event) => options.onRibbonAction?.(event.detail),
 		'ribbon-customize': (event) => options.onRibbonCustomize?.([...event.detail.hiddenActions]),
+		'sheet-change': (event) => options.onSheetChange?.(event.detail),
 		'office-ribbon-add-in': (event) => options.onRibbonAddIn?.(event.detail),
 		'collaboration-change': (event) => options.onCollaborationChange?.(event.detail),
 	};
