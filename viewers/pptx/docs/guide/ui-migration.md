@@ -317,8 +317,6 @@ Native on purpose, with the technical reason:
 - The canvas context-menu and thumbnail-rail layout galleries
   (`LayoutGalleryMenu` in React, Vue, Svelte and Angular, `ViewerMainContent`,
   `ViewerEditDialogs`): context menus are reserved for #393.
-- The edit toolbar's own text-format group in Svelte (`FontExtrasGroup`,
-  `FontFamilySelect`, `ShapeFormatGroup`); it is not part of the Home ribbon.
 
 `e2e/pptx/ribbon-home-migration.spec.ts` covers ids, selection and clipboard gating,
 real copy/paste/cut with undo and redo, the Format Painter, customization,
