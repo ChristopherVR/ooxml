@@ -8,7 +8,7 @@ import { useSlideMutations } from './useSlideMutations';
 
 const SHAPE = { type: 'shape', id: 'sp1', x: 0, y: 0, width: 100, height: 40 } as PptxElement;
 
-function setup() {
+function setup(onNotesChanged?: (notes: string) => void) {
 	const slides = ref<PptxSlide[]>([{ id: 's1', elements: [SHAPE] } as unknown as PptxSlide]);
 	const activeSlideIndex = ref(0);
 	const pushHistory = vi.fn();
@@ -18,6 +18,7 @@ function setup() {
 		activeSlide: computed(() => slides.value[activeSlideIndex.value]),
 		pushHistory,
 		selectedElements: computed(() => [SHAPE]),
+		...(onNotesChanged ? { onNotesChanged } : {}),
 	});
 	return { slides, mutations, pushHistory };
 }
@@ -28,6 +29,18 @@ function setup() {
  * buckets write. That mix-up is invisible until save time, where it emits a
  * preset name no renderer knows.
  */
+describe('useSlideMutations onNotesUpdate', () => {
+	it('reports the new notes text to the host after the edit lands', () => {
+		const onNotesChanged = vi.fn();
+		const { slides, mutations } = setup(onNotesChanged);
+
+		mutations.onNotesUpdate('Say hello');
+
+		expect(slides.value[0].notes).toBe('Say hello');
+		expect(onNotesChanged).toHaveBeenCalledExactlyOnceWith('Say hello');
+	});
+});
+
 describe('useSlideMutations onAddAnimation', () => {
 	it('stores a motion path as geometry, not as a preset name', () => {
 		const { slides, mutations, pushHistory } = setup();

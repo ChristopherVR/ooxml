@@ -34,6 +34,8 @@ export interface UseAutosaveRecoveryOptions {
 	 * snapshot; a host that forbade the feature is not.
 	 */
 	autosaveAllowed: () => boolean;
+	/** The host's `autosave-recovery` event: called with the record when a snapshot is offered. */
+	onOffered?: (record: AutosaveRecord) => void;
 	/** Load the recovered bytes into the viewer. */
 	onRestore: (bytes: Uint8Array) => void;
 }
@@ -77,6 +79,7 @@ export function useAutosaveRecovery(
 					if (offer) {
 						record = offer.record;
 						prompt.value = offer.prompt;
+						options.onOffered?.(offer.record);
 					}
 					return offer;
 				},
