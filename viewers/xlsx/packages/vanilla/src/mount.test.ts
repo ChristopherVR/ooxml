@@ -15,7 +15,11 @@ describe('xlsx-vanilla-viewer mountEditor', () => {
 		const element = binding.element;
 		element.readOnly = true;
 		element.locale = 'fr';
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, {
+			readOnly: true,
+			locked: false,
+			hostReadOnly: true,
+		});
 		element.dispatchEvent(
 			new CustomEvent('ribbon-customize', { detail: { hiddenActions: ['bold'] }, bubbles: true }),
 		);
