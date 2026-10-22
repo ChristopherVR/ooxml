@@ -29,7 +29,7 @@ Properties only:
 | Property             | Type                                 | Notes                                                                                  |
 | -------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
 | `themeColors`        | `Partial<Record<...>>`               | Token overrides applied as `--xve-*` custom properties ([theming](/theming)).          |
-| `hiddenActions`      | `string[]`                           | Ribbon controls to hide by stable id.                                                  |
+| `hiddenActions`      | `string[]`                           | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.       |
 | `ribbonAddIns`       | `RibbonAddInTab[]`                   | Tabs the host adds after the built-in ones ([bindings](/bindings#ribbon-add-in-tabs)). |
 | `workbook`           | `Workbook \| null`                   | Get the open workbook, or set one to replace it.                                       |
 | `dirty`              | `boolean` (read only)                | Unsaved edits.                                                                         |

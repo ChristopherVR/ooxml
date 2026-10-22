@@ -6,6 +6,7 @@ import { defineContextMenu } from '../../controls';
 import type { OfficeMenuItem, OfficeMenuState } from '../../controls';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { MenuEntry } from 'ooxml-core/xlsx/ui';
+import { visibleMenuEntries } from './hidden';
 
 export interface ContextMenuHandle {
 	close(): void;
@@ -33,12 +34,18 @@ function entryDisabled(ctx: EditorContext, entry: MenuEntry): boolean {
 
 export function openContextMenu(
 	ctx: EditorContext,
-	entries: MenuEntry[],
+	all: readonly MenuEntry[],
 	x: number,
 	y: number,
 	options: OpenMenuOptions = {},
 ): ContextMenuHandle {
 	openMenus.get(ctx)?.close();
+	// Entries whose action the host hid are not offered, so they cannot run from the menu either.
+	const entries = visibleMenuEntries(all, (id) => ctx.commands.isHidden(id));
+	if (entries.length === 0) {
+		options.restoreFocus?.();
+		return { close: () => {}, element: ctx.host.ownerDocument.createElement('div') };
+	}
 	defineContextMenu();
 	const doc = ctx.host.ownerDocument;
 	const win = doc.defaultView;
