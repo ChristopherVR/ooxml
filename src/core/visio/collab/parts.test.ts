@@ -3,81 +3,7 @@ import type JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { createVsdx, editVsdx } from '../index';
 import { type DocPeer, converge, joinFrom, seedPeer } from './test-support/doc-peers';
-
-const NS = 'http://schemas.microsoft.com/office/visio/2012/main';
-const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-const MASTER_REL = 'http://schemas.microsoft.com/visio/2010/relationships/master';
-const MASTERS_REL = 'http://schemas.microsoft.com/visio/2010/relationships/masters';
-const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
-
-interface Added {
-	id: string;
-	unique: string;
-	shapeId: string;
-	media: { path: string; bytes: number[]; ext: string; type: string };
-}
-
-/** Adds the first or a further master with a picture and a shape that uses it, as one local edit. */
-async function addMaster(zip: JSZip, added: Added): Promise<void> {
-	const text = async (path: string) => (await zip.file(path)?.async('string')) ?? '';
-	const dirRels = 'visio/masters/_rels/masters.xml.rels';
-	const hasList = zip.file('visio/masters/masters.xml') !== null;
-	const file = `visio/masters/master${added.id}.xml`;
-	const entry = `<Master ID="${added.id}" NameU="M${added.id}" UniqueID="${added.unique}"><PageSheet/><Rel xmlns:r="${R}" r:id="rIdM${added.id}"/></Master>`;
-	if (hasList) {
-		const list = await text('visio/masters/masters.xml');
-		zip.file('visio/masters/masters.xml', list.replace('</Masters>', `${entry}</Masters>`));
-		zip.file(
-			dirRels,
-			(await text(dirRels)).replace(
-				'</Relationships>',
-				`<Relationship Id="rIdM${added.id}" Type="${MASTER_REL}" Target="master${added.id}.xml"/></Relationships>`,
-			),
-		);
-	} else {
-		zip.file('visio/masters/masters.xml', `<Masters xmlns="${NS}">${entry}</Masters>`);
-		zip.file(
-			dirRels,
-			`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdM${added.id}" Type="${MASTER_REL}" Target="master${added.id}.xml"/></Relationships>`,
-		);
-		zip.file(
-			'visio/_rels/document.xml.rels',
-			(await text('visio/_rels/document.xml.rels')).replace(
-				'</Relationships>',
-				`<Relationship Id="rIdMasters" Type="${MASTERS_REL}" Target="masters/masters.xml"/></Relationships>`,
-			),
-		);
-	}
-	zip.file(file, `<MasterContents xmlns="${NS}"><Shapes/></MasterContents>`);
-	zip.file(
-		`visio/masters/_rels/master${added.id}.xml.rels`,
-		`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdImg" Type="${IMAGE_REL}" Target="../media/${added.media.path}"/></Relationships>`,
-	);
-	zip.file(`visio/media/${added.media.path}`, new Uint8Array(added.media.bytes));
-	let types = await text('[Content_Types].xml');
-	if (!hasList)
-		types = types.replace(
-			'</Types>',
-			'<Override PartName="/visio/masters/masters.xml" ContentType="application/vnd.ms-visio.masters+xml"/></Types>',
-		);
-	types = types.replace(
-		'</Types>',
-		`<Override PartName="/${file}" ContentType="application/vnd.ms-visio.master+xml"/>` +
-			(types.includes(`Extension="${added.media.ext}"`)
-				? ''
-				: `<Default Extension="${added.media.ext}" ContentType="${added.media.type}"/>`) +
-			'</Types>',
-	);
-	zip.file('[Content_Types].xml', types);
-	const page = await text('visio/pages/page1.xml');
-	zip.file(
-		'visio/pages/page1.xml',
-		page.replace(
-			/<\/Shapes>/,
-			`<Shape ID="${added.shapeId}" Type="Shape" Master="${added.id}"><Cell N="PinX" V="1"/></Shape></Shapes>`,
-		),
-	);
-}
+import { type Added, addMaster } from './test-support/masters';
 
 const mastersOf = async (peer: DocPeer) => {
 	const list = (await peer.text('visio/masters/masters.xml')) ?? '';
@@ -181,7 +107,7 @@ describe('masters added concurrently', () => {
 
 	it('stores identical pictures once and keeps the same path', async () => {
 		const { a, b } = await pair();
-		const same = { ...first.media };
+		const same = { ...first.media! };
 		await a.patch((zip) => addMaster(zip, { ...first, media: same }));
 		await b.patch((zip) => addMaster(zip, { ...second, media: same }));
 		await converge(a, b);

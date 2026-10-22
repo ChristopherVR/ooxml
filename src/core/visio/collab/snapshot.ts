@@ -4,10 +4,10 @@
 // exactly what the editor wrote.
 import type { DrawingKeys } from './keys';
 import { relsPathOf } from './package';
-import { type Piece, splitShape } from './pieces';
+import type { Piece } from './pieces';
 import { attrOf, scanContainer } from './scan';
 import type { ConnectEntry } from './schema';
-import { CONNECTS_MARK, SHAPES_MARK } from './schema';
+import { splitContents } from './snapshot-contents';
 import { readLayout, readLocalItems, readZip, withMark, zipText } from './snapshot-io';
 import { snapshotMasters, snapshotRest } from './snapshot-parts';
 
@@ -49,8 +49,12 @@ export interface MasterSnapshot {
 	id: string;
 	xml: string;
 	path: string;
+	/** The master part with its shapes and connects replaced by markers. */
 	part: Uint8Array;
 	rels?: string;
+	/** Every shape of the master's content, parents before the shapes nested in them. */
+	shapes: ShapeSnapshot[];
+	connects: ConnectSnapshot[];
 }
 export interface MediaSnapshot {
 	path: string;
@@ -85,44 +89,6 @@ export function shapeIds(xml: string): string[] {
 	return [...xml.matchAll(SHAPE_ID)].map((m) => m[2]!);
 }
 
-/** Replaces the inner content of the first `name` element by `mark`; returns its children. */
-function splitList(text: string, name: string, mark: string, child: string) {
-	const box = scanContainer(text, name);
-	if (!box) return { text, items: [] as string[] };
-	const items = box.children.filter((c) => c.name === child).map((c) => text.slice(c.start, c.end));
-	if (box.selfClosing) {
-		const tag = text.slice(box.start, box.end);
-		const qualified = /^<([^\s/>]+)/.exec(tag)?.[1] ?? name;
-		const open = tag.replace(/\s*\/>$/, '>');
-		return {
-			text: text.slice(0, box.start) + open + mark + `</${qualified}>` + text.slice(box.end),
-			items,
-		};
-	}
-	return { text: text.slice(0, box.openEnd) + mark + text.slice(box.closeStart), items };
-}
-
-function flatten(
-	xml: string,
-	parent: string | undefined,
-	page: string,
-	keys: DrawingKeys,
-	out: ShapeSnapshot[],
-): void {
-	const split = splitShape(xml);
-	const id = split ? attrOf(split.open, 'ID') : undefined;
-	if (!split || id === undefined) return;
-	const key = keys.shapeKey(page, id);
-	out.push({
-		key,
-		id,
-		...(parent !== undefined ? { parent } : {}),
-		open: split.open,
-		pieces: split.pieces,
-	});
-	for (const nested of split.nested) flatten(nested, key, page, keys, out);
-}
-
 export async function snapshotDrawing(
 	bytes: Uint8Array,
 	keys: DrawingKeys,
@@ -144,36 +110,14 @@ export async function snapshotDrawing(
 		const backId = attrOf(head, 'BackPage');
 		const content = (await zipText(zip, page.path)) ?? '';
 		const rels = await zipText(zip, relsPathOf(page.path));
-		const shapesSplit = splitList(content, 'Shapes', SHAPES_MARK, 'Shape');
-		const connectsSplit = splitList(shapesSplit.text, 'Connects', CONNECTS_MARK, 'Connect');
-		const shapes: ShapeSnapshot[] = [];
-		for (const text of shapesSplit.items) flatten(text, undefined, key, keys, shapes);
-		const owner = new Map(shapes.map((s) => [s.id, s.key]));
-		const connects: ConnectSnapshot[] = [];
-		for (const text of connectsSplit.items) {
-			const a = (name: string) => attrOf(text, name) ?? '';
-			const entry: ConnectEntry = {
-				fk: owner.get(a('FromSheet')) ?? '',
-				fi: a('FromSheet'),
-				tk: owner.get(a('ToSheet')) ?? '',
-				ti: a('ToSheet'),
-				fc: a('FromCell'),
-				tc: a('ToCell'),
-				fp: a('FromPart'),
-				tp: a('ToPart'),
-			};
-			connects.push({
-				key: `${key}/${entry.fk}.${entry.fi}.${entry.fc}.${entry.fp}>${entry.tk}.${entry.ti}.${entry.tc}.${entry.tp}`,
-				entry,
-			});
-		}
+		const { shell, shapes, connects } = splitContents(content, key, keys);
 		keys.pagePaths.set(key, page.path);
 		pages.push({
 			key,
 			id: page.id,
 			...(backId !== undefined && idToKey.has(backId) ? { back: idToKey.get(backId)! } : {}),
 			xml: withMark(page),
-			shell: connectsSplit.text,
+			shell,
 			...(rels !== undefined ? { rels } : {}),
 			path: page.path,
 			shapes,

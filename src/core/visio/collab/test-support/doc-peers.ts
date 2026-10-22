@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import * as Y from 'yjs';
 import { type VisioEdit, editVsdx, parseVsdx } from '../../index';
 import { composeDrawing } from '../compose';
+import { applyFixups } from '../fixups';
 import { DrawingKeys } from '../keys';
 import { readSharedDrawing } from '../read';
 import { sharedDrawing } from '../schema';
@@ -44,6 +45,12 @@ export class DocPeer {
 		this.bytes = composed.bytes;
 		composed.commit();
 	}
+	/** Persists the renumbered ids the room implies, as a peer that can write does after a rebuild. */
+	fixup(): number {
+		const resolved = readSharedDrawing(this.shared);
+		if (!resolved) return 0;
+		return this.doc.transact(() => applyFixups(this.shared, resolved.fixups), 'fixup') ?? 0;
+	}
 	model = () => parseVsdx(this.bytes);
 	async text(path: string): Promise<string | undefined> {
 		return (await JSZip.loadAsync(this.bytes)).file(path)?.async('string');
@@ -82,4 +89,14 @@ export function exchange(...peers: DocPeer[]): void {
 export async function converge(...peers: DocPeer[]): Promise<void> {
 	exchange(...peers);
 	for (const peer of peers) await peer.materialise();
+}
+
+/**
+ * Like {@link converge}, then every peer persists the renumbered ids at the same time (both write
+ * the same fix-up concurrently) and the peers rebuild from the exchanged result.
+ */
+export async function convergeStable(...peers: DocPeer[]): Promise<void> {
+	await converge(...peers);
+	for (const peer of peers) peer.fixup();
+	await converge(...peers);
 }

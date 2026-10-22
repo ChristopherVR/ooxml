@@ -4,6 +4,8 @@
 import { canon } from './package';
 import { pieceContent } from './pieces';
 
+/** The scope (the role a page key plays) of the shapes inside master `key`'s content. */
+export const masterScope = (key: string): string => `m~${key}`;
 export const pageId = (key: string): string => `p:${key}`;
 export const bodyId = (key: string): string => `b:${key}`;
 export const shapeId = (page: string, key: string): string => `s:${page}/${key}`;

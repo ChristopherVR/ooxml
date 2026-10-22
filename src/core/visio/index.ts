@@ -23,6 +23,7 @@ export {
 	type VisioPrintTileCountResult,
 } from './print-count';
 export { loadVisio } from './load';
+export { mergeVisioPages, parseVsdxPages } from './parse-incremental';
 export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy';
 export { VisioPackageError, type VisioPackageLimits } from './package';
 export {

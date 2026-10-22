@@ -2,11 +2,20 @@
 // their shared order, and ids that two peers minted concurrently made unique (see read-shapes.ts
 // for the shape rules, read-parts.ts for masters and media). Pages collide on `Page/@ID` the same
 // way: the lowest key keeps its id and `BackPage` follows. Every peer computes the same result.
+import { masterScope } from './baseline';
 import { byPosition } from './order';
 import { dirName } from './package';
 import type { PieceEntry } from './pieces';
+import { type Fixup, assignIds, compare, fixedId, readRenum } from './read-ids';
 import {
-	type ResolvedMaster,
+	type ResolvedConnect,
+	connectSignature,
+	hashTexts,
+	resolveConnects,
+	split,
+} from './read-util';
+import {
+	type MasterBase,
 	type ResolvedMedia,
 	renameTargets,
 	resolveMasters,
@@ -24,19 +33,21 @@ import {
 	connectEntry,
 	isSharedDrawingEmpty,
 	pageEntry,
+	type RenumEntry,
 	shapeEntry,
 	str,
 } from './schema';
 
 export { renumberShape } from './read-shapes';
-export type { ResolvedMaster, ResolvedMedia, ResolvedShape };
+export type { ResolvedMedia, ResolvedShape };
+export type { Fixup, ResolvedConnect };
 
-export interface ResolvedConnect {
-	key: string;
-	entry: ConnectEntry;
-	/** Final ids the connect refers to. */
-	from: string;
-	to: string;
+export interface ResolvedMaster extends MasterBase {
+	/** The shapes inside the master's content, parents before the shapes nested in them. */
+	shapes: ResolvedShape[];
+	/** The XML of the top-level shape list. */
+	shapesXml: string;
+	connects: ResolvedConnect[];
 }
 export interface ResolvedPage {
 	key: string;
@@ -53,6 +64,8 @@ export interface ResolvedPage {
 	connects: ResolvedConnect[];
 	/** Changes whenever the page part would. */
 	signature: string;
+	/** Changes whenever the page's shapes, connects or part shell do (not its entry in the page list). */
+	contentSignature: string;
 }
 export interface ResolvedDrawing {
 	pagesPath: string;
@@ -68,40 +81,15 @@ export interface ResolvedDrawing {
 	parts: Map<string, string>;
 	/** Changes whenever the rebuilt package would. */
 	signature: string;
+	/**
+	 * Changes whenever anything but the content of the pages does: the page list (keys, ids, order,
+	 * entries), masters, media and the shared parts. While it stays the same, only the pages whose
+	 * `contentSignature` changed differ.
+	 */
+	baseSignature: string;
+	/** Writes that persist the renumberings above, see fixups.ts. Empty once ids are stable. */
+	fixups: Fixup[];
 }
-
-const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-const numeric = (id: string): number => (/^\d+$/.test(id) ? Number(id) : 0);
-
-/** A 64-bit FNV-style hash of the strings, as hex: a change detector, not a security measure. */
-export function hashTexts(texts: Iterable<string>): string {
-	let a = 0x811c9dc5;
-	let b = 0x01000193 ^ 0x9e3779b9;
-	for (const text of texts) {
-		for (let i = 0; i < text.length; i++) {
-			const c = text.charCodeAt(i);
-			a = Math.imul(a ^ c, 0x01000193);
-			b = Math.imul(b + c, 0x85ebca6b) ^ (b >>> 13);
-		}
-		a = Math.imul(a ^ 0xff, 0x01000193);
-		b = Math.imul(b ^ 0xff, 0xc2b2ae35);
-	}
-	return `${(a >>> 0).toString(16)}${(b >>> 0).toString(16)}`;
-}
-
-/** Splits `key` at its first `depth` slashes; the last part keeps any further slashes. */
-const split = (key: string, depth: number): string[] | undefined => {
-	const out: string[] = [];
-	let from = 0;
-	for (let i = 0; i < depth; i++) {
-		const slash = key.indexOf('/', from);
-		if (slash < 0) return undefined;
-		out.push(key.slice(from, slash));
-		from = slash + 1;
-	}
-	out.push(key.slice(from));
-	return out;
-};
 
 /**
  * The drawing the room holds, or undefined while it is empty. Throws a SchemaVersionError when
@@ -122,16 +110,22 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 			const body = bodyEntry(shared.bodies.get(key));
 			return entry && body ? [{ key, pos: entry.pos, entry, body }] : [];
 		});
-	// Page ids: unique, lowest key keeps its id.
-	const pageIds = new Map<string, string>();
-	const taken = new Set<string>();
-	let maxPage = Math.max(0, ...alive.map((p) => numeric(p.entry.id)));
-	for (const page of [...alive].sort((a, b) => compare(a.key, b.key))) {
-		let id = page.entry.id;
-		if (taken.has(id)) id = String(++maxPage);
-		taken.add(id);
-		pageIds.set(page.key, id);
-	}
+	const renum = readRenum(shared);
+	// Page ids: unique, a persisted renumbering first, then the lowest key keeps its id.
+	const fixups: Fixup[] = [];
+	const { ids: pageIds, fresh: freshPages } = assignIds(
+		alive.map((p) => ({
+			key: p.key,
+			id: p.entry.id,
+			fixed: fixedId(renum, p.key, p.entry.id),
+		})),
+	);
+	for (const [key, change] of [...freshPages].sort((a, b) => compare(a[0], b[0])))
+		fixups.push({
+			map: 'renum',
+			key,
+			value: { ...renum.get(key), i: [change.from, change.to] },
+		});
 	const shapesByPage = new Map<string, Map<string, ShapeEntry>>();
 	for (const [full, value] of shared.shapes) {
 		const parts = split(full, 1);
@@ -154,6 +148,14 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 		shapes.set(shape, cells);
 		cellsByPage.set(page, shapes);
 	}
+	const renumByScope = new Map<string, Map<string, RenumEntry>>();
+	for (const [full, entry] of renum) {
+		const parts = split(full, 1);
+		if (!parts) continue;
+		const map = renumByScope.get(parts[0]!) ?? new Map<string, RenumEntry>();
+		map.set(parts[1]!, entry);
+		renumByScope.set(parts[0]!, map);
+	}
 	const connectsByPage = new Map<string, { key: string; entry: ConnectEntry }[]>();
 	for (const [full, value] of shared.connects) {
 		const entry = connectEntry(value);
@@ -163,7 +165,8 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 		list.push({ key: full, entry });
 		connectsByPage.set(full.slice(0, slash), list);
 	}
-	const { masters, remap: masterRemap } = resolveMasters(shared);
+	const { masters, remap: masterRemap, fixups: masterFixups } = resolveMasters(shared, renum);
+	fixups.push(...masterFixups);
 	const { media, renames } = resolveMedia(shared);
 	const mastersPath = str(shared.meta.get('mastersPath'));
 	const mastersOpen = str(shared.meta.get('mastersOpen'));
@@ -174,19 +177,14 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 	for (const page of byPosition(alive)) {
 		const finalId = pageIds.get(page.key)!;
 		const resolved = resolveShapes({
+			scope: page.key,
 			shapes: shapesByPage.get(page.key) ?? new Map(),
 			cells: cellsByPage.get(page.key) ?? new Map(),
+			renum: renumByScope.get(page.key) ?? new Map(),
 			masterRemap,
 		});
-		const byKey = new Map(resolved.shapes.map((s) => [s.key, s]));
-		const connects: ResolvedConnect[] = [];
-		for (const item of (connectsByPage.get(page.key) ?? []).sort((a, b) => compare(a.key, b.key))) {
-			const { entry } = item;
-			const from = entry.fk ? byKey.get(entry.fk) : undefined;
-			const to = entry.tk ? byKey.get(entry.tk) : undefined;
-			if ((entry.fk && !from) || (entry.tk && !to)) continue;
-			connects.push({ key: item.key, entry, from: from?.id ?? entry.fi, to: to?.id ?? entry.ti });
-		}
+		fixups.push(...resolved.fixups);
+		const connects = resolveConnects(connectsByPage.get(page.key), resolved.shapes);
 		let xml = page.entry.xml;
 		const open = /^<[^>]*>/.exec(xml)?.[0];
 		if (open) {
@@ -200,6 +198,12 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 			rename && page.body.rels !== undefined
 				? { ...page.body, rels: renameTargets(page.body.rels, pagesDir, rename) }
 				: page.body;
+		const contentSignature = hashTexts([
+			body.shell,
+			body.rels ?? '\0',
+			resolved.xml,
+			...connectSignature(connects),
+		]);
 		pages.push({
 			key: page.key,
 			id: finalId,
@@ -209,36 +213,58 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 			shapes: resolved.shapes,
 			shapesXml: resolved.xml,
 			connects,
-			signature: hashTexts([
-				xml,
-				body.shell,
-				body.rels ?? '\0',
-				resolved.xml,
-				...connects.flatMap((c) => [c.from, c.to, c.entry.fc, c.entry.tc, c.entry.fp, c.entry.tp]),
-			]),
+			signature: hashTexts([xml, contentSignature]),
+			contentSignature,
 		});
 	}
 	const mastersDir = mastersPath !== undefined ? dirName(mastersPath) : pagesDir;
-	const finalMasters = masters.map((m) => {
+	const finalMasters: ResolvedMaster[] = masters.map((m) => {
 		const batch = (shared.masters.get(m.key) as { b?: unknown } | undefined)?.b;
 		const rename = typeof batch === 'string' ? renames.get(batch) : undefined;
-		return rename && m.rels !== undefined
-			? { ...m, rels: renameTargets(m.rels, mastersDir, rename) }
-			: m;
+		const scope = masterScope(m.key);
+		const resolved = resolveShapes({
+			scope,
+			shapes: shapesByPage.get(scope) ?? new Map(),
+			cells: cellsByPage.get(scope) ?? new Map(),
+			renum: renumByScope.get(scope) ?? new Map(),
+			masterRemap: new Map(),
+		});
+		fixups.push(...resolved.fixups);
+		return {
+			...m,
+			...(rename && m.rels !== undefined
+				? { rels: renameTargets(m.rels, mastersDir, rename) }
+				: {}),
+			shapes: resolved.shapes,
+			shapesXml: resolved.xml,
+			connects: resolveConnects(connectsByPage.get(scope), resolved.shapes),
+		};
 	});
 	const parts = new Map<string, string>();
 	for (const [path, value] of shared.parts) if (typeof value === 'string') parts.set(path, value);
-	const signature = hashTexts([
+	const baseSignature = hashTexts([
 		pagesPath,
 		pagesOpen,
 		pagesClose,
 		mastersPath ?? '',
 		mastersOpen ?? '',
 		mastersClose ?? '',
-		...pages.map((p) => `${p.key}:${p.signature}`),
-		...finalMasters.flatMap((m) => [m.key, m.id, m.xml, m.part, m.rels ?? '\0']),
+		...pages.map((p) => `${p.key}:${p.id}:${p.xml}`),
+		...finalMasters.flatMap((m) => [
+			m.key,
+			m.id,
+			m.xml,
+			m.part,
+			m.rels ?? '\0',
+			m.shapesXml,
+			...connectSignature(m.connects),
+		]),
 		...media.flatMap((m) => [m.path, m.hash, m.declared.type, String(m.declared.byDefault)]),
 		...[...parts].flatMap(([path, data]) => [path, data]),
+	]);
+	const signature = hashTexts([
+		baseSignature,
+		...pages.map((p) => `${p.key}:${p.contentSignature}`),
 	]);
 	return {
 		pagesPath,
@@ -252,5 +278,7 @@ export function readSharedDrawing(shared: SharedDrawing): ResolvedDrawing | unde
 		media,
 		parts,
 		signature,
+		baseSignature,
+		fixups,
 	};
 }

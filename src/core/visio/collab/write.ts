@@ -5,7 +5,15 @@
 // over a concurrent edit of the same item; cells, masters and media are simply deleted, so a
 // concurrent edit of one of those survives. Run it inside one transaction.
 import type * as Y from 'yjs';
-import { bodyContent, bodyId, connectId, pageContent, pageId } from './baseline';
+import {
+	bodyContent,
+	bodyId,
+	connectId,
+	masterId,
+	masterScope,
+	pageContent,
+	pageId,
+} from './baseline';
 import type { DrawingKeys } from './keys';
 import { assignPositions } from './order';
 import {
@@ -20,15 +28,21 @@ import {
 } from './schema';
 import type { DrawingSnapshot } from './snapshot';
 import { syncMasters, syncMedia, syncParts } from './write-parts';
-import { type WriteContext, syncEntry, syncShapes } from './write-shapes';
+import { type WriteContext, syncConnects, syncEntry, syncShapes } from './write-shapes';
 
 export { bodyId, connectId, pageContent, bodyContent, pageId };
+
+/** Removes the shapes, cells, connects and renumberings of a page or master scope. */
+function removeScope(shared: SharedDrawing, name: string): void {
+	shared.renum.delete(name);
+	for (const map of [shared.shapes, shared.cells, shared.connects, shared.renum])
+		for (const key of [...map.keys()]) if (key.startsWith(`${name}/`)) map.delete(key);
+}
 
 function removePage(shared: SharedDrawing, name: string): void {
 	shared.dead.set(name, true);
 	for (const map of [shared.pages, shared.bodies]) map.delete(name);
-	for (const map of [shared.shapes, shared.cells, shared.connects])
-		for (const key of [...map.keys()]) if (key.startsWith(`${name}/`)) map.delete(key);
+	removeScope(shared, name);
 }
 
 /** Writes `snapshot` into `shared`; returns the number of entries changed. Throws on another schema version. */
@@ -88,11 +102,7 @@ export function writeSharedDrawing(
 			true,
 		);
 		syncShapes(ctx, page);
-		for (const connect of page.connects) {
-			now.set(connectId(connect.key), '');
-			if (!keys.known.has(connectId(connect.key)) || !shared.connects.has(connect.key))
-				write(shared.connects, connect.key, connect.entry);
-		}
+		syncConnects(ctx, page.connects);
 	}
 	syncMasters(ctx, snapshot);
 	syncMedia(ctx, snapshot);
@@ -109,7 +119,8 @@ export function writeSharedDrawing(
 			case 's:': {
 				const slash = name.indexOf('/');
 				const page = name.slice(0, slash);
-				if (!now.has(pageId(page))) break;
+				if (!now.has(page.startsWith(masterScope('')) ? masterId(page.slice(2)) : pageId(page)))
+					break;
 				shared.dead.set(name, true);
 				shared.shapes.delete(name);
 				keys.forgetShape(page, name.slice(slash + 1));
@@ -131,6 +142,7 @@ export function writeSharedDrawing(
 			case 'm:':
 				if (shared.masters.has(name)) {
 					shared.masters.delete(name);
+					removeScope(shared, masterScope(name));
 					writes++;
 				}
 				keys.forgetMaster(name);

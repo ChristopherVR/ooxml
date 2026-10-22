@@ -7,6 +7,7 @@ import { transportProvider } from '../../../collab/transport-provider';
 import { type VisioEdit, editVsdx, parseVsdx } from '../../index';
 import {
 	type DrawingBinding,
+	type DrawingChange,
 	type DrawingBindingOptions,
 	type DrawingEditor,
 	bindDrawingSession,
@@ -24,14 +25,17 @@ export function makeEditor(initial: Uint8Array | undefined) {
 	let version = 0;
 	let working = false;
 	let applied = 0;
+	/** The `change` handed to each `applyRemote` (undefined: the whole package). */
+	const changes: (DrawingChange | undefined)[] = [];
 	const local = new Set<() => void>();
 	const idle = new Set<() => void>();
 	const editor: DrawingEditor = {
 		exportBytes: () => bytes,
-		applyRemote: async (next) => {
+		applyRemote: async (next, change) => {
 			bytes = next;
 			version++;
 			applied++;
+			changes.push(change);
 		},
 		onLocalChange: (listener) => {
 			local.add(listener);
@@ -54,6 +58,7 @@ export function makeEditor(initial: Uint8Array | undefined) {
 		get applied() {
 			return applied;
 		},
+		changes,
 		get bytes() {
 			return bytes!;
 		},

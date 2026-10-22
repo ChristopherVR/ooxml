@@ -1,11 +1,11 @@
 // Writes the non-page parts: masters (one entry each), media (one entry per content hash and path,
 // the bytes stored once per hash) and every other part whole.
-import { masterContent, masterId, mediaId } from './baseline';
+import { masterContent, masterId, masterScope, mediaId } from './baseline';
 import { assignPositions } from './order';
 import { fingerprint, fromBase64, toBase64 } from './package';
 import { type MasterEntry, masterEntry, mediaEntry } from './schema';
 import type { DrawingSnapshot } from './snapshot';
-import { type WriteContext, syncEntry } from './write-shapes';
+import { type WriteContext, syncConnects, syncEntry, syncShapes } from './write-shapes';
 
 export const mediaKey = (hash: string, path: string): string => `${hash}|${path}`;
 
@@ -38,6 +38,8 @@ export function syncMasters(ctx: WriteContext, snapshot: DrawingSnapshot): void 
 			}),
 			true,
 		);
+		syncShapes(ctx, { key: masterScope(master.key), shapes: master.shapes });
+		syncConnects(ctx, master.connects);
 	}
 }
 

@@ -63,6 +63,13 @@ export interface ParseVsdxOptions {
 	 * packages stay refused.
 	 */
 	stencil?: boolean;
+	/**
+	 * Read only the pages with these ids (every other page is skipped after its id is checked).
+	 * The result lists just those pages and leaves out what is not per page (comments, data
+	 * recordsets, stencil windows, background validation); {@link mergeVisioPages} splices it into
+	 * the document read earlier from a package in which only those page parts changed.
+	 */
+	pages?: readonly string[];
 }
 
 const STENCIL_MAIN_TYPES = new Set([
@@ -264,6 +271,7 @@ export async function parseVsdx(
 	const pages: VisioPage[] = [],
 		pageIds = new Set<string>();
 	const comments: VisioComment[] = [];
+	const only = options.pages ? new Set(options.pages) : undefined;
 	const pageNodes = pagesPart ? children(await visioXml(pkg, pagesPart, 'Pages'), 'Page') : [];
 	const foreground = pageNodes.filter((page) => !yes(attribute(page, 'Background')));
 	const fieldProperties = await readVisioFieldProperties(pkg);
@@ -273,6 +281,7 @@ export async function parseVsdx(
 		if (!id || pageIds.has(id))
 			throw new VisioPackageError('INVALID_PAGE_ID', 'Page IDs must be present and unique.');
 		pageIds.add(id);
+		if (only && !only.has(id)) continue;
 		const part = await indexedPart(pkg, pagesPart!, page, 'page');
 		const root = await visioXml(pkg, part, 'PageContents');
 		const localReport: Report = (code, message, extra) =>
@@ -393,16 +402,16 @@ export async function parseVsdx(
 		});
 	}
 	checkTime();
-	validateBackgrounds(pages, report);
+	if (!only) validateBackgrounds(pages, report);
 	try {
-		comments.push(...(await readVisioComments(pkg, documentPart, report)));
+		if (!only) comments.push(...(await readVisioComments(pkg, documentPart, report)));
 	} catch (error) {
 		if (!(error instanceof VisioPackageError) || error.code === 'LIMIT_RUNTIME') throw error;
 		report('invalid-comments', 'The comments part could not be read; comments are not shown.');
 	}
 	let dataRecordsets: VisioDataRecordset[] = [];
 	try {
-		dataRecordsets = await readDataRecordsets(pkg, documentPart, checkTime);
+		if (!only) dataRecordsets = await readDataRecordsets(pkg, documentPart, checkTime);
 	} catch (error) {
 		if (error instanceof VisioPackageError && error.code === 'LIMIT_RUNTIME') throw error;
 		report(
@@ -410,7 +419,7 @@ export async function parseVsdx(
 			`Saved external data could not be read and is preserved unchanged: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	}
-	const stencils = await readVisioStencilWindows(pkg, documentPart);
+	const stencils = only ? [] : await readVisioStencilWindows(pkg, documentPart);
 	report(
 		'cached-values-only',
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',

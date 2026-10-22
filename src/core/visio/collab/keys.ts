@@ -1,3 +1,4 @@
+import { masterScope } from './baseline';
 // The stable identity of pages, shapes and masters across peers. A local page, shape or master id
 // maps to a shared key; keys are minted by the peer that adds the item (never reused, so two peers
 // adding "shape 12" at once get two keys) or, while seeding an empty room, derived from the
@@ -24,8 +25,13 @@ export class DrawingKeys {
 		pageParts: new Map<string, { sig: string; bytes: Uint8Array }>(),
 		parts: new Map<string, { b64: string; data: Uint8Array }>(),
 	};
-	/** Signature of the drawing last applied to the editor, and the editor version it produced. */
-	applied: { signature: string; version: number } | undefined;
+	/**
+	 * What was last applied to the editor: the drawing signature, the editor version it produced,
+	 * the signature of everything but page content and the content signature of each page.
+	 */
+	applied:
+		| { signature: string; version: number; base: string; pages: ReadonlyMap<string, string> }
+		| undefined;
 
 	constructor(private readonly tag: string) {}
 
@@ -75,6 +81,7 @@ export class DrawingKeys {
 	}
 	forgetMaster(key: string): void {
 		for (const [id, k] of this.#masters) if (k === key) this.#masters.delete(id);
+		this.#shapes.delete(masterScope(key));
 		this.masterPaths.delete(key);
 	}
 	/** Replaces the id-to-key tables with those of a freshly composed package. */

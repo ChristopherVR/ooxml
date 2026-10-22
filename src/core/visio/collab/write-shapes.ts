@@ -2,7 +2,7 @@
 // entry per cell, section, row and other child, so edits to different properties of one shape are
 // different entries.
 import * as Y from 'yjs';
-import { cellId, entryContent, shapeId, shellContent } from './baseline';
+import { cellId, connectId, entryContent, shapeId, shellContent } from './baseline';
 import type { DrawingKeys } from './keys';
 import { assignPositions } from './order';
 import type { PieceEntry } from './pieces';
@@ -13,7 +13,7 @@ import {
 	cellEntry,
 	shapeEntry,
 } from './schema';
-import type { PageSnapshot } from './snapshot';
+import type { ConnectSnapshot, ShapeSnapshot } from './snapshot';
 
 export interface WriteContext {
 	shared: SharedDrawing;
@@ -66,7 +66,20 @@ function groupPositions(
 	return out;
 }
 
-export function syncShapes(ctx: WriteContext, page: PageSnapshot): void {
+/** Writes the connects of a page or master that the room does not hold (or that are new here). */
+export function syncConnects(ctx: WriteContext, connects: readonly ConnectSnapshot[]): void {
+	for (const connect of connects) {
+		ctx.now.set(connectId(connect.key), '');
+		if (!ctx.keys.known.has(connectId(connect.key)) || !ctx.shared.connects.has(connect.key))
+			ctx.write(ctx.shared.connects, connect.key, connect.entry);
+	}
+}
+
+/** Writes the shapes of a page, or of a master's content (`page.key` is then its scope). */
+export function syncShapes(
+	ctx: WriteContext,
+	page: { key: string; shapes: readonly ShapeSnapshot[] },
+): void {
 	const { shared } = ctx;
 	const shapePos = groupPositions(
 		page.shapes.map((s) => ({ key: s.key, group: s.parent ?? '' })),

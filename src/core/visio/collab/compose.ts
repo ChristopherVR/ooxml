@@ -13,6 +13,7 @@ import {
 	entryContent,
 	masterContent,
 	masterId,
+	masterScope,
 	mediaId,
 	pageContent,
 	pageId,
@@ -37,7 +38,7 @@ import {
 	withOverrides,
 	withPageOverrides,
 } from './package';
-import type { ResolvedDrawing, ResolvedPage } from './read';
+import type { ResolvedDrawing, ResolvedMaster, ResolvedPage, ResolvedShape } from './read';
 import { attrOf, escapeAttr, scanContainer } from './scan';
 import { CONNECTS_MARK, SHAPES_MARK } from './schema';
 import { readZip, zipText } from './snapshot';
@@ -65,23 +66,50 @@ function connectXml(item: ResolvedPage['connects'][number]): string {
 		.join(' ')}/>`;
 }
 
-/** The page part with its shapes and connects filled in. */
-export function pagePartXml(page: ResolvedPage): string {
-	let shell = page.body.shell;
-	const root = scanContainer(shell, 'PageContents');
-	if (page.shapes.length && !shell.includes(SHAPES_MARK) && root && !root.selfClosing)
+/** A content part (`PageContents`, `MasterContents`) with its shapes and connects filled in. */
+function contentsXml(
+	shell: string,
+	root: string,
+	shapesXml: string,
+	hasShapes: boolean,
+	connects: ResolvedPage['connects'],
+): string {
+	const outer = scanContainer(shell, root);
+	if (hasShapes && !shell.includes(SHAPES_MARK) && outer && !outer.selfClosing)
 		shell =
-			shell.slice(0, root.openEnd) + `<Shapes>${SHAPES_MARK}</Shapes>` + shell.slice(root.openEnd);
-	const root2 = scanContainer(shell, 'PageContents');
-	if (page.connects.length && !shell.includes(CONNECTS_MARK) && root2 && !root2.selfClosing)
+			shell.slice(0, outer.openEnd) +
+			`<Shapes>${SHAPES_MARK}</Shapes>` +
+			shell.slice(outer.openEnd);
+	const outer2 = scanContainer(shell, root);
+	if (connects.length && !shell.includes(CONNECTS_MARK) && outer2 && !outer2.selfClosing)
 		shell =
-			shell.slice(0, root2.closeStart) +
+			shell.slice(0, outer2.closeStart) +
 			`<Connects>${CONNECTS_MARK}</Connects>` +
-			shell.slice(root2.closeStart);
+			shell.slice(outer2.closeStart);
 	return shell
-		.replace(SHAPES_MARK, () => page.shapesXml)
-		.replace(CONNECTS_MARK, () => page.connects.map(connectXml).join(''));
+		.replace(SHAPES_MARK, () => shapesXml)
+		.replace(CONNECTS_MARK, () => connects.map(connectXml).join(''));
 }
+
+/** The page part with its shapes and connects filled in. */
+export const pagePartXml = (page: ResolvedPage): string =>
+	contentsXml(
+		page.body.shell,
+		'PageContents',
+		page.shapesXml,
+		page.shapes.length > 0,
+		page.connects,
+	);
+
+/** The master part with its shapes and connects filled in. */
+export const masterPartXml = (master: ResolvedMaster): string =>
+	contentsXml(
+		decoder.decode(fromBase64(master.part)),
+		'MasterContents',
+		master.shapesXml,
+		master.shapes.length > 0,
+		master.connects,
+	);
 
 export interface ComposedDrawing {
 	bytes: Uint8Array;
@@ -192,7 +220,7 @@ export async function composeDrawing(
 			items: drawing.masters.map((m) => ({
 				key: m.key,
 				xml: m.xml,
-				part: fromBase64(m.part),
+				part: encoder.encode(masterPartXml(m)),
 				...(m.rels !== undefined ? { rels: m.rels } : {}),
 			})),
 			known: keys.masterPaths,
@@ -217,6 +245,19 @@ export async function composeDrawing(
 		const shapeIds = new Map<string, Map<string, string>>();
 		const masterIds = new Map<string, string>();
 		const known = new Map<string, string>();
+		const recordShapes = (
+			scope: string,
+			shapes: readonly ResolvedShape[],
+			connects: ResolvedPage['connects'],
+		): void => {
+			shapeIds.set(scope, new Map(shapes.map((s) => [s.id, s.key])));
+			for (const shape of shapes) {
+				known.set(shapeId(scope, shape.key), shellContent(shape));
+				for (const [path, entry] of shape.entries)
+					known.set(cellId(scope, shape.key, path), entryContent(entry));
+			}
+			for (const connect of connects) known.set(connectId(connect.key), '');
+		};
 		keys.pagePaths.clear();
 		keys.masterPaths.clear();
 		keys.mediaKeys.clear();
@@ -225,16 +266,11 @@ export async function composeDrawing(
 			keys.pagePaths.set(page.key, pagePaths.get(page.key)!);
 			known.set(pageId(page.key), pageContent(page));
 			known.set(bodyId(page.key), bodyContent(page.body));
-			shapeIds.set(page.key, new Map(page.shapes.map((s) => [s.id, s.key])));
-			for (const shape of page.shapes) {
-				known.set(shapeId(page.key, shape.key), shellContent(shape));
-				for (const [path, entry] of shape.entries)
-					known.set(cellId(page.key, shape.key, path), entryContent(entry));
-			}
-			for (const connect of page.connects) known.set(connectId(connect.key), '');
+			recordShapes(page.key, page.shapes, page.connects);
 		}
 		for (const master of drawing.masters) {
 			masterIds.set(master.id, master.key);
+			recordShapes(masterScope(master.key), master.shapes, master.connects);
 			const path = masterPaths.get(master.key);
 			if (path) keys.masterPaths.set(master.key, path);
 			known.set(

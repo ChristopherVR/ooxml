@@ -1,5 +1,6 @@
 // Snapshot of the masters, the media and every other part of a local package.
 import type JSZip from 'jszip';
+import { masterScope } from './baseline';
 import type { DrawingKeys } from './keys';
 import {
 	CONTENT_TYPES,
@@ -14,6 +15,7 @@ import {
 	relsPathOf,
 	stripOverrides,
 } from './package';
+import { splitContents } from './snapshot-contents';
 import type { Layout } from './snapshot-io';
 import { readLocalItems, withMark, zipText } from './snapshot-io';
 import type { MasterSnapshot, MediaSnapshot } from './snapshot';
@@ -35,19 +37,22 @@ export async function snapshotMasters(
 			mastersOpen = listXml.slice(0, list.box.openEnd);
 			mastersClose = listXml.slice(list.box.closeStart);
 			for (const item of list.items) {
-				const part = zip.file(item.path);
-				if (!part) continue;
+				const content = await zipText(zip, item.path);
+				if (content === undefined) continue;
 				derived.add(item.path).add(relsPathOf(item.path));
 				const key = keys.masterKey(item.id);
 				keys.masterPaths.set(key, item.path);
 				const rels = await zipText(zip, relsPathOf(item.path));
+				const { shell, shapes, connects } = splitContents(content, masterScope(key), keys);
 				masters.push({
 					key,
 					id: item.id,
 					xml: withMark(item),
 					path: item.path,
-					part: await part.async('uint8array'),
+					part: encoder.encode(shell),
 					...(rels !== undefined ? { rels } : {}),
+					shapes,
+					connects,
 				});
 			}
 		}

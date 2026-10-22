@@ -2,8 +2,10 @@
 // siblings in their shared order, ids that two peers minted concurrently made unique, and the XML
 // of each top-level shape rebuilt from its shell and cell entries in a fixed order.
 //
-// Id rule (deterministic, so every peer renumbers alike): shapes are visited in key order; a shape
-// whose id is already taken takes the next number above the page's largest id and keeps its key.
+// Id rule (deterministic, so every peer renumbers alike, see read-ids.ts): a shape whose renumbering
+// is persisted keeps it; the others are visited in key order, and one whose id is already taken
+// takes the next number above the page's largest id and keeps its key. A peer that can write then
+// persists the result (fixups.ts), so the id no longer depends on what is added later.
 // `Sheet.<old>` in the F attribute of a cell is rewritten to the new id in (a) the renumbered
 // shape and every shape nested in it, and (b) every shape written in the same batch as the
 // renumbered one (`b`), whose author numbered them together. It is not rewritten in other
@@ -11,8 +13,9 @@
 // reference to the shape that kept the old id. Masters renumbered the same way rewrite `Master`
 // on the shapes of their batch.
 import { buildShape, type PieceEntry } from './pieces';
+import { type Fixup, assignIds, compare, fixedId } from './read-ids';
 import { attrOf } from './scan';
-import type { ShapeEntry } from './schema';
+import { type RenumEntry, type ShapeEntry } from './schema';
 
 export interface ResolvedShape {
 	key: string;
@@ -22,9 +25,6 @@ export interface ResolvedShape {
 	open: string;
 	entries: Map<string, PieceEntry>;
 }
-
-const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-const numeric = (id: string): number => (/^\d+$/.test(id) ? Number(id) : 0);
 
 export function setAttr(open: string, name: string, value: string): string {
 	return open.replace(
@@ -62,16 +62,24 @@ export function renumberShape(xml: string, remap: ReadonlyMap<string, string>): 
 }
 
 export interface ShapeInput {
+	/** The page key, or the master scope, the shapes belong to (the prefix of their room keys). */
+	scope: string;
 	/** `shapeKey` -> entry, for one page. */
 	shapes: Map<string, ShapeEntry>;
 	/** `shapeKey` -> `path` -> entry. */
 	cells: Map<string, Map<string, PieceEntry>>;
+	/** Persisted renumberings by shape key. */
+	renum: ReadonlyMap<string, RenumEntry>;
 	/** Masters renumbered in a batch: batch -> old id -> new id. */
 	masterRemap: ReadonlyMap<string, ReadonlyMap<string, string>>;
 }
 
-/** The shapes of a page in document order (parents first) and the XML of the top-level list. */
-export function resolveShapes(input: ShapeInput): { shapes: ResolvedShape[]; xml: string } {
+/** The shapes of a page in document order (parents first), the XML of the top-level list and the fix-ups. */
+export function resolveShapes(input: ShapeInput): {
+	shapes: ResolvedShape[];
+	xml: string;
+	fixups: Fixup[];
+} {
 	const raw = new Map<string, { entry: ShapeEntry; id: string }>();
 	for (const [key, entry] of input.shapes) {
 		const id = attrOf(entry.open, 'ID');
@@ -90,20 +98,12 @@ export function resolveShapes(input: ShapeInput): { shapes: ResolvedShape[]; xml
 	};
 	const live = [...raw.keys()].filter((k) => valid(k)).sort(compare);
 
-	let max = Math.max(0, ...live.map((k) => numeric(raw.get(k)!.id)));
-	const used = new Set<string>();
-	const finalId = new Map<string, string>();
-	const renumbered = new Map<string, { from: string; to: string }>();
-	for (const key of live) {
-		const { id } = raw.get(key)!;
-		let next = id;
-		if (used.has(id)) {
-			next = String(++max);
-			renumbered.set(key, { from: id, to: next });
-		}
-		used.add(next);
-		finalId.set(key, next);
-	}
+	const { ids: finalId, fresh: renumbered } = assignIds(
+		live.map((key) => {
+			const { id } = raw.get(key)!;
+			return { key, id, fixed: fixedId(input.renum, key, id) };
+		}),
+	);
 	const batchRemap = new Map<string, Map<string, string>>();
 	for (const [key, change] of renumbered) {
 		const b = raw.get(key)!.entry.b;
@@ -133,19 +133,39 @@ export function resolveShapes(input: ShapeInput): { shapes: ResolvedShape[]; xml
 		keys.sort((a, b) => raw.get(a)!.entry.pos - raw.get(b)!.entry.pos || compare(a, b));
 
 	const shapes: ResolvedShape[] = [];
+	const fixups: Fixup[] = [];
 	const render = (key: string): string => {
 		const { entry } = raw.get(key)!;
 		const id = finalId.get(key)!;
 		const remap = remapFor(key);
 		let open = setAttr(entry.open, 'ID', id);
+		const record: RenumEntry = { ...input.renum.get(key) };
+		let dirty = false;
+		const change = renumbered.get(key);
+		if (change) {
+			record.i = [change.from, change.to];
+			dirty = true;
+		}
 		const master = attrOf(open, 'Master');
-		const next =
+		const persisted = record.m && record.m[0] === master ? record.m[1] : undefined;
+		const batched =
 			master !== undefined ? input.masterRemap.get(entry.b ?? '')?.get(master) : undefined;
+		const next = persisted ?? batched;
 		if (next !== undefined) open = setAttr(open, 'Master', next);
+		if (persisted === undefined && batched !== undefined) {
+			record.m = [master!, batched];
+			dirty = true;
+		}
+		if (dirty) fixups.push({ map: 'renum', key: `${input.scope}/${key}`, value: record });
 		const entries = new Map<string, PieceEntry>();
 		for (const [path, piece] of input.cells.get(key) ?? []) {
 			const leaf = piece.xml !== undefined && /(^|\/)c\/[^/]*$/.test(path);
-			entries.set(path, leaf ? { ...piece, xml: renumberFormulas(piece.xml!, remap) } : piece);
+			const xml = leaf ? renumberFormulas(piece.xml!, remap) : undefined;
+			if (xml !== undefined && xml !== piece.xml) {
+				const value = { ...piece, xml };
+				entries.set(path, value);
+				fixups.push({ map: 'cells', key: `${input.scope}/${key}/${path}`, value });
+			} else entries.set(path, piece);
 		}
 		shapes.push({
 			key,
@@ -162,5 +182,5 @@ export function resolveShapes(input: ShapeInput): { shapes: ResolvedShape[]; xml
 	const xml = sortSiblings(children.get('') ?? [])
 		.map(render)
 		.join('');
-	return { shapes, xml };
+	return { shapes, xml, fixups };
 }

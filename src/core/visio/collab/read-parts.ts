@@ -1,9 +1,10 @@
 // Resolves masters and media from the shared maps.
 //
-// Masters: one entry each; ids that two peers chose concurrently are made unique in key order
-// (the lowest key keeps its id). A renumbered master rewrites `Master` on the shapes written in
-// the same batch (see read-shapes.ts); shapes of other batches that name the old id are not
-// rewritten, and `Master` attributes inside master parts are never rewritten.
+// Masters: one entry each (the shapes inside a master's content are shape and cell entries, see
+// read.ts); ids that two peers chose concurrently are made unique like shape ids (read-ids.ts).
+// A renumbered master rewrites `Master` on the shapes written in the same batch (see
+// read-shapes.ts); shapes of other batches that name the old id are not rewritten, and `Master`
+// attributes inside master parts are never rewritten.
 //
 // Media: one entry per content hash and path. Identical bytes at one path are one entry. Different
 // bytes at one path (two peers added different pictures under one name) keep the lowest key at the
@@ -11,17 +12,26 @@
 // bodies and masters written in the same batch follow. Identical bytes at different paths stay at
 // both paths, so no relationship target of a peer is left dangling.
 import { type DeclaredType, relativeTarget, resolveTarget } from './package';
+import { masterScope } from './baseline';
+import { type Fixup, assignIds, fixedId } from './read-ids';
 import { setAttr } from './read-shapes';
 import { attrOf } from './scan';
-import { type MasterEntry, type SharedDrawing, masterEntry, mediaEntry, str } from './schema';
+import {
+	type MasterEntry,
+	type RenumEntry,
+	type SharedDrawing,
+	masterEntry,
+	mediaEntry,
+	str,
+} from './schema';
 
-export interface ResolvedMaster {
+export interface MasterBase {
 	key: string;
 	/** Final id. */
 	id: string;
 	/** The `Master` element with `Rel` as a marker and `ID` final. */
 	xml: string;
-	/** Base64 of the master part. */
+	/** Base64 of the master part with its shapes and connects replaced by markers. */
 	part: string;
 	rels?: string;
 }
@@ -36,33 +46,37 @@ export interface ResolvedMedia {
 }
 
 const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-const numeric = (id: string): number => (/^\d+$/.test(id) ? Number(id) : 0);
 
-export function resolveMasters(shared: SharedDrawing): {
-	masters: ResolvedMaster[];
-	remap: Map<string, Map<string, string>>;
-} {
+export function resolveMasters(
+	shared: SharedDrawing,
+	renum: ReadonlyMap<string, RenumEntry>,
+): { masters: MasterBase[]; remap: Map<string, Map<string, string>>; fixups: Fixup[] } {
 	const alive: { key: string; entry: MasterEntry }[] = [];
 	for (const [key, value] of shared.masters) {
 		const entry = masterEntry(value);
 		if (entry) alive.push({ key, entry });
 	}
-	let max = Math.max(0, ...alive.map((m) => numeric(m.entry.id)));
-	const used = new Set<string>();
-	const ids = new Map<string, string>();
+	const { ids, fresh } = assignIds(
+		alive.map(({ key, entry }) => ({
+			key,
+			id: entry.id,
+			fixed: fixedId(renum, masterScope(key), entry.id),
+		})),
+	);
 	const remap = new Map<string, Map<string, string>>();
-	for (const { key, entry } of [...alive].sort((a, b) => compare(a.key, b.key))) {
-		let id = entry.id;
-		if (used.has(id)) {
-			id = String(++max);
-			if (entry.b !== undefined) {
-				const map = remap.get(entry.b) ?? new Map<string, string>();
-				map.set(entry.id, id);
-				remap.set(entry.b, map);
-			}
+	const fixups: Fixup[] = [];
+	for (const [key, change] of [...fresh].sort((a, b) => compare(a[0], b[0]))) {
+		const b = alive.find((m) => m.key === key)!.entry.b;
+		if (b !== undefined) {
+			const map = remap.get(b) ?? new Map<string, string>();
+			map.set(change.from, change.to);
+			remap.set(b, map);
 		}
-		used.add(id);
-		ids.set(key, id);
+		fixups.push({
+			map: 'renum',
+			key: masterScope(key),
+			value: { ...renum.get(masterScope(key)), i: [change.from, change.to] },
+		});
 	}
 	alive.sort((a, b) => a.entry.pos - b.entry.pos || compare(a.key, b.key));
 	return {
@@ -78,6 +92,7 @@ export function resolveMasters(shared: SharedDrawing): {
 			};
 		}),
 		remap,
+		fixups,
 	};
 }
 

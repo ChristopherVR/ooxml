@@ -3,14 +3,17 @@
 // binding that keeps an editor and a shared drawing in step. See docs/collab-area.md.
 export {
 	VISIO_EDIT_ORIGIN,
+	VISIO_FIXUP_ORIGIN,
 	VISIO_SYNC_ORIGIN,
 	bindDrawingSession,
 	type DrawingBinding,
 	type DrawingBindingOptions,
+	type DrawingChange,
 	type DrawingCollabHost,
 	type DrawingEditor,
 } from './bind';
 export { composeDrawing, type ComposedDrawing } from './compose';
+export { applyFixups } from './fixups';
 export { DrawingKeys } from './keys';
 export {
 	readSharedDrawing,
@@ -29,6 +32,7 @@ export {
 	META,
 	PAGES,
 	PARTS,
+	RENUM,
 	SCHEMA_VERSION,
 	SHAPES,
 	SchemaVersionError,

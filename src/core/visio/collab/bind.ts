@@ -9,6 +9,7 @@
 import * as Y from 'yjs';
 import type { CollabSession } from '../../collab/session';
 import { composeDrawing } from './compose';
+import { applyFixups } from './fixups';
 import { DrawingKeys } from './keys';
 import { readSharedDrawing } from './read';
 import { SchemaVersionError, isSharedDrawingEmpty, sharedDrawing, sharedTypes } from './schema';
@@ -19,13 +20,26 @@ import { writeSharedDrawing } from './write';
 export const VISIO_EDIT_ORIGIN: unique symbol = Symbol('ooxml-core:visio:edit');
 /** Origin of seeding writes, which are not undoable. */
 export const VISIO_SYNC_ORIGIN: unique symbol = Symbol('ooxml-core:visio:sync');
+/** Origin of the fix-ups that persist renumbered ids: not a local edit, so never in an undo history. */
+export const VISIO_FIXUP_ORIGIN: unique symbol = Symbol('ooxml-core:visio:fixup');
+
+/** What differs between the drawing last applied and the next one, when only page content does. */
+export interface DrawingChange {
+	/** Ids (`Page/@ID` in the package handed over) of the pages whose content changed. */
+	pages: string[];
+}
 
 /** What the binding needs from the editor that shows the drawing. DOM-free. */
 export interface DrawingEditor {
 	/** The package of the open drawing, or undefined when none can be read now. */
 	exportBytes(): Uint8Array | undefined;
-	/** Replaces the open drawing with `bytes` as a step outside the local undo history. */
-	applyRemote(bytes: Uint8Array): Promise<void>;
+	/**
+	 * Replaces the open drawing with `bytes` as a step outside the local undo history. `change`
+	 * is given only when the open drawing is exactly the one last applied and just the content of
+	 * these pages differs (same page list, masters, styles, theme, media and other parts): the
+	 * editor may then read only those pages. Without it, read the whole package.
+	 */
+	applyRemote(bytes: Uint8Array, change?: DrawingChange): Promise<void>;
 	/** Called after the person edited or loaded a drawing (never for `applyRemote`). */
 	onLocalChange(listener: () => void): () => void;
 	/** Called whenever the editor may have stopped being busy. */
@@ -120,9 +134,22 @@ export function bindDrawingSession(
 	const rebuild = async (): Promise<void> => {
 		const resolved = readSharedDrawing(shared);
 		if (!resolved) return;
+		// Persist renumbered ids (what every peer computes alike); the drawing itself is unchanged.
+		if (resolved.fixups.length && host.canWrite())
+			doc.transact(() => applyFixups(shared, resolved.fixups), VISIO_FIXUP_ORIGIN);
 		const version = editor.version();
 		// Nothing the room holds changed the drawing this editor already shows.
 		if (keys.applied?.signature === resolved.signature && keys.applied.version === version) return;
+		// Only page content differs from what the editor shows: let it read just those pages.
+		const before = keys.applied;
+		const change: DrawingChange | undefined =
+			before && before.version === version && before.base === resolved.baseSignature
+				? {
+						pages: resolved.pages
+							.filter((page) => before.pages.get(page.key) !== page.contentSignature)
+							.map((page) => page.id),
+					}
+				: undefined;
 		const composed = await composeDrawing(resolved, editor.exportBytes(), keys);
 		if (disposed) return;
 		if (editor.busy() || editor.version() !== version) {
@@ -130,14 +157,19 @@ export function bindDrawingSession(
 			return;
 		}
 		try {
-			await editor.applyRemote(composed.bytes);
+			await editor.applyRemote(composed.bytes, change);
 		} catch (error) {
 			if (editor.busy()) remoteDirty = true;
 			else report(error);
 			return;
 		}
 		composed.commit();
-		keys.applied = { signature: composed.signature, version: editor.version() };
+		keys.applied = {
+			signature: composed.signature,
+			version: editor.version(),
+			base: resolved.baseSignature,
+			pages: new Map(resolved.pages.map((page) => [page.key, page.contentSignature])),
+		};
 	};
 
 	const blocked = (): boolean => disposed || incompatible || !settled || editor.busy();
@@ -201,7 +233,12 @@ export function bindDrawingSession(
 	const afterTransaction = (transaction: Y.Transaction): void => {
 		if (disposed) return;
 		const origin = transaction.origin;
-		if (origin === VISIO_EDIT_ORIGIN || origin === VISIO_SYNC_ORIGIN) return;
+		if (
+			origin === VISIO_EDIT_ORIGIN ||
+			origin === VISIO_SYNC_ORIGIN ||
+			origin === VISIO_FIXUP_ORIGIN
+		)
+			return;
 		const changed = transaction.changed as Map<unknown, unknown>;
 		if (!types.some((type) => changed.has(type))) return;
 		if (!settled) {
