@@ -11,8 +11,9 @@ file and never fork the two (the viewer repositories drifted that way once).
   schemas, bounds, operations) are headless definitions in `src/core/automation/tools/`, and a
   package registers them with `registerAutomationTools` from `ooxml-core/automation/node`, so the
   MCP servers, the suite's assistant and a host backend run the same code (`docs/mcp.md`).
-  PowerPoint document-tool schemas live with their operations in `src/core/pptx/automation`. The
-  combined server composes the registrations without duplicating tools; all format logic stays in core.
+  PowerPoint is no different: its definitions are `pptxTools` in `src/core/pptx/automation/catalogue/`,
+  registered the same way. The combined server composes the registrations without duplicating
+  tools; all format logic stays in core.
 
 - The repository root is a private Bun workspace root (scripts, CI, docs, `site/`); the library is the workspace package `src/core` (manifest, tsconfigs, bundler configs and build scripts live there) and `src/ui` is `ooxml-ui`. The root `bun run` scripts delegate to `src/core`.
 - This repository is the **single published package `ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.

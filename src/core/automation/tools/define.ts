@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
 	UNTRUSTED_NOTE,
 	type AutomationCreateTool,
+	type AutomationEditResult,
 	type AutomationEditTool,
 	type AutomationFormat,
 	type AutomationReadTool,
@@ -69,12 +70,15 @@ export function createTool<S extends z.ZodRawShape>(
 
 export function editTool<S extends z.ZodRawShape>(
 	definition: Definition<S> & {
-		run(bytes: Uint8Array, params: Params<S>): Promise<{ bytes: Uint8Array }>;
+		run(bytes: Uint8Array, params: Params<S>): Promise<AutomationEditResult>;
+		/** The report can carry document text (a list action), so it gets the untrusted note. */
+		returnsText?: boolean;
 	},
 ): AutomationEditTool {
 	const { parse, tool } = base(definition, 'edit');
 	return {
 		...tool,
+		description: definition.description + (definition.returnsText ? UNTRUSTED_NOTE : ''),
 		kind: 'edit',
 		run: async (bytes, params) => definition.run(bytes, parse(params)),
 	};

@@ -4,7 +4,8 @@ import { randomUUID } from 'node:crypto';
 import type { AutomationTool } from './tools/types';
 
 export interface ByteEditResult {
-	bytes: Uint8Array;
+	/** Absent when the edit changed nothing. */
+	bytes?: Uint8Array | undefined;
 }
 
 /** Local filesystem boundary used by the repository-owned MCP adapters. */
@@ -138,6 +139,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 				return { filePath: await rel(path), saved: true };
 			});
 		},
+		/** Edit a file; an edit that returns no bytes changed nothing and writes nothing. */
 		async edit<T extends ByteEditResult>(
 			file: string,
 			extensions: readonly string[],
@@ -150,6 +152,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 				throw new Error('Save-as must keep the source file extension');
 			return serial(path, async () => {
 				const { bytes, ...result } = await edit(await read(path));
+				if (!bytes) return { ...result, filePath: await rel(path), saved: false };
 				await write(output, bytes, output === path);
 				return { ...result, filePath: await rel(output), saved: true };
 			});

@@ -24,7 +24,7 @@ export async function loadPresentation(
 			if (codec) {
 				const currentBytes = await codec.dehydrate(room.ydoc);
 				const handler = new PptxHandler();
-				const pptxData = await handler.load(currentBytes.buffer as ArrayBuffer);
+				const pptxData = await handler.load(arrayBufferOf(currentBytes));
 				return { pptxData, rawBytes };
 			}
 		}
@@ -32,8 +32,33 @@ export async function loadPresentation(
 
 	// Fallback: parse from raw bytes on disk
 	const handler = new PptxHandler();
-	const pptxData = await handler.load(rawBytes.buffer as ArrayBuffer);
+	const pptxData = await handler.load(arrayBufferOf(rawBytes));
 	return { pptxData, rawBytes };
+}
+
+/** The bytes as a standalone ArrayBuffer (a view into a pooled buffer must not leak the rest). */
+export function arrayBufferOf(bytes: Uint8Array): ArrayBuffer {
+	return bytes.slice().buffer as ArrayBuffer;
+}
+
+/**
+ * Saves a deck a tool changed, loading the original first so package parts the model does not
+ * hold (relationships, custom XML, media) are kept.
+ */
+export async function saveDeckBytes(
+	result: Pick<ToolResult, 'pptxData' | 'saveOptions'>,
+	original: Uint8Array,
+): Promise<Uint8Array> {
+	const handler = new PptxHandler();
+	await handler.load(arrayBufferOf(original));
+	return handler.save(result.pptxData.slides, {
+		headerFooter: result.pptxData.headerFooter,
+		// `pptxData.tableStyleMap` carries any in-memory table-style edits a tool made (e.g.
+		// `set_table_style_section`, `create_table_style`); without forwarding it here those edits
+		// were silently dropped on save even though the core save pipeline supports them.
+		tableStyles: result.pptxData.tableStyleMap,
+		...result.saveOptions,
+	});
 }
 
 /**
@@ -46,18 +71,10 @@ export async function savePresentation(
 	execCtx: ExecutionContext,
 	tableStyleSaveOptions?: TableStyleSaveOptions,
 ): Promise<{ savedToDisk: boolean; routedThroughCollaboration: boolean }> {
-	// Serialize to bytes (re-load original to preserve package relationships)
-	const handler = new PptxHandler();
-	await handler.load(rawBytes.buffer as ArrayBuffer);
-	const outputBytes = await handler.save(pptxData.slides, {
-		headerFooter: pptxData.headerFooter,
-		// `pptxData.tableStyleMap` carries any in-memory table-style edits a
-		// tool made (e.g. `set_table_style_section`, `create_table_style`);
-		// without forwarding it here those edits were silently dropped on
-		// save even though the core save pipeline already supports them.
-		tableStyles: pptxData.tableStyleMap,
-		...tableStyleSaveOptions,
-	});
+	const outputBytes = await saveDeckBytes(
+		{ pptxData, ...(tableStyleSaveOptions && { saveOptions: tableStyleSaveOptions }) },
+		rawBytes,
+	);
 
 	// Collaboration mode: hydrate Y.Doc so peers receive the change
 	if (execCtx.collaboration) {
