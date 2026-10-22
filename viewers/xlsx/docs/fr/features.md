@@ -70,7 +70,7 @@ les contrôles de création de position restent incomplets.
 Les graphiques en surface ne sont pas dessinés : ils s’affichent sous la forme d’un cadre étiqueté et sont conservés à l’enregistrement (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). La création de styles de graphique n’est pas prise en charge : les définitions
 de style importées sont conservées et rendues, mais ne peuvent être ni créées ni modifiées
 (`src/core/xlsx/model.ts`, `styleDefinition`). Le rendu et la mise en forme
-ci-dessus sont couverts par les tests de graphiques du cœur et par `docs/xlsx-parity-review.md`
+ci-dessus sont couverts par les tests de graphiques du cœur et par `docs/xlsx-parity-status.md`
 dans le dépôt ooxml.
 Les comparaisons avec Excel natif vérifient des chemins précis de modification et d’export. La mesure exacte du texte des graphiques, le retour à la ligne, le placement et la fidélité matricielle restent incomplets, tout comme
 de nombreux contrôles d’axes, d’étiquettes et d’effets, les familles de graphiques avancées et l’interface native complète.

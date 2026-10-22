@@ -70,7 +70,7 @@ Steuerelemente zur Positionierung sind weiterhin unvollständig.
 Oberflächendiagramme werden nicht gezeichnet: Sie erscheinen als beschrifteter Rahmen und werden beim Speichern erhalten (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). Das Erstellen von Diagrammformatvorlagen wird nicht unterstützt: Importierte Formatdefinitionen
 werden beibehalten und gerendert, können aber nicht erstellt oder bearbeitet werden
 (`src/core/xlsx/model.ts`, `styleDefinition`). Das oben beschriebene Rendering und die Formatierung
-sind durch die Diagrammtests des Cores und durch `docs/xlsx-parity-review.md`
+sind durch die Diagrammtests des Cores und durch `docs/xlsx-parity-status.md`
 im Repository ooxml abgedeckt.
 Vergleiche mit nativem Excel prüfen bestimmte Bearbeitungs- und Exportpfade. Die exakte Textmessung in Diagrammen,
 der Umbruch, die Platzierung und die Rastertreue sind weiterhin unvollständig, ebenso viele

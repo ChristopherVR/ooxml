@@ -75,7 +75,7 @@ Surface charts are not drawn: they render as a labelled frame and are
 preserved on save (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). Chart-style authoring is not supported: imported style
 definitions are kept and rendered, but cannot be created or edited
 (`src/core/xlsx/model.ts`, `styleDefinition`). The rendering and formatting
-above are covered by the core chart tests and by `docs/xlsx-parity-review.md`
+above are covered by the core chart tests and by `docs/xlsx-parity-status.md`
 in the ooxml repository.
 Native Excel comparisons verify specific edit/export paths. Exact chart text
 measurement, wrapping, placement and raster fidelity remain incomplete, as do

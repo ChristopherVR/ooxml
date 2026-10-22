@@ -70,7 +70,7 @@ los controles de creación de posiciones siguen incompletos.
 Los gráficos de superficie no se dibujan: se representan como un marco con etiqueta y se conservan al guardar (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). La creación de estilos de gráfico no está admitida: las definiciones
 de estilo importadas se conservan y se representan, pero no se pueden crear ni editar
 (`src/core/xlsx/model.ts`, `styleDefinition`). La representación y el formato
-anteriores están cubiertos por las pruebas de gráficos del núcleo y por `docs/xlsx-parity-review.md`
+anteriores están cubiertos por las pruebas de gráficos del núcleo y por `docs/xlsx-parity-status.md`
 en el repositorio ooxml.
 Las comparaciones con Excel nativo verifican rutas concretas de edición y exportación. La medición exacta del texto del gráfico,
 el ajuste, la ubicación y la fidelidad de trama siguen incompletos, al igual que
