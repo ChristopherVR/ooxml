@@ -1,14 +1,19 @@
 <script setup lang="ts">
 /**
- * RecentColorsRow: the "Recent colours" swatch row shown under a colour
- * picker once at least one colour has been used (`p:clrMru`, seeded and kept
- * by `useRecentColors`). Presentational only: clicking a swatch just emits
- * `pick`, the host applies it exactly like a picked-from-the-native-picker
- * colour (which folds it back to the front of the list too).
+ * RecentColorsRow: the "Recent colours" row shown under a colour picker once
+ * at least one colour has been used (`p:clrMru`, seeded and kept by
+ * `useRecentColors`), drawn by the shared `pptx-ui-color-grid` with only its
+ * Recent Colors section (`recentColorsGridView`). Presentational only:
+ * clicking a swatch just emits `pick`, the host applies it exactly like a
+ * picked-from-the-native-picker colour (which folds it back to the front of
+ * the list too).
  */
+import type { OfficeColorPickEvent } from 'ooxml-ui/pptx';
+import { recentColorsGridView } from 'ooxml-ui/pptx';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-defineProps<{
+const props = defineProps<{
 	colors: string[];
 	disabled?: boolean;
 }>();
@@ -18,29 +23,23 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const view = computed(() =>
+	recentColorsGridView(props.colors, (key, params) => (params ? t(key, { ...params }) : t(key))),
+);
 </script>
 
 <template>
-	<div v-if="colors.length > 0" class="pptx-vue-recent-colors flex flex-col gap-1">
-		<span class="pptx-vue-recent-colors__label text-[10px] text-muted-foreground">{{
-			t('pptx.colorPicker.recentColors')
-		}}</span>
-		<div
-			class="flex flex-wrap gap-1"
-			data-testid="pptx-color-recent"
-			:aria-label="t('pptx.colorPicker.recentColors')"
-		>
-			<button
-				v-for="hex in colors"
-				:key="hex"
-				type="button"
-				class="pptx-vue-recent-colors__swatch h-5 w-5 rounded border border-border"
-				:style="{ backgroundColor: hex }"
-				:title="hex"
-				:aria-label="`Recent ${hex}`"
-				:disabled="disabled"
-				@click="emit('pick', hex)"
-			/>
-		</div>
-	</div>
+	<pptx-ui-color-grid
+		v-if="colors.length > 0"
+		class="pptx-vue-recent-colors mt-1"
+		data-testid="pptx-color-recent"
+		:palette.prop="view.palette"
+		:standardColors.prop="view.standardColors"
+		:recentColors.prop="view.recentColors"
+		:recentHeading.prop="view.recentHeading"
+		:recentLabel.prop="view.recentLabel"
+		:label.prop="view.label"
+		:disabled.prop="disabled"
+		@office-color-pick="emit('pick', ($event as OfficeColorPickEvent).detail.color)"
+	/>
 </template>
