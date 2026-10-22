@@ -110,13 +110,13 @@ function downloadActiveSlideSvg() {
 Everything else is reachable via `pptx-vue-viewer/internals` (internal building blocks, **not**
 covered by semver; prefer the stable root exports):
 
-| Composable          | Returns                                                                                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                                                 |
-| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }` (both resolve to the encoded `Blob`)                                                   |
-| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                                                             |
-| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }`                                 |
-| `useExportWiring`   | The full wiring the viewer itself uses: `rasterizeSlide`, `onExportPng/Pdf/Gif/Webm()`, `downloadAs(format)`, `packageForSharing()`, `onCopySlideAsImage()` |
+| Composable          | Returns                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                          |
+| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }` (both resolve to the encoded `Blob`)                            |
+| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                                      |
+| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }`          |
+| `useExportWiring`   | The full wiring the viewer itself uses: `rasterizeSlide`, `onExportPng/Pdf/Gif/Webm()`, `downloadAs(format)`, `onCopySlideAsImage()` |
 
 `useExport`, `useMediaExport`, and `usePrint` are dependency-injected: they take your `slides` /
 `slideCount` refs and a `rasterizeSlide: (index: number) => Promise<HTMLCanvasElement>` you supply,

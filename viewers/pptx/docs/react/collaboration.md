@@ -198,9 +198,9 @@ See [Hooks › Collaboration hooks](/react/hooks#collaboration-hooks) for the ho
 ## Server side
 
 With the default `websocket` transport you need a running `y-websocket`-compatible relay reachable
-at `serverUrl`. Two production-shaped reference servers ship in `demos/`:
+at `serverUrl`. Two production-shaped reference servers ship in `demos/pptx/`:
 
-- **`demos/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
+- **`demos/pptx/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
   `yjs` / `y-protocols` / `lib0`). Auth has two modes, both validated at the websocket handshake
   (401 before upgrade):
 
@@ -215,10 +215,10 @@ at `serverUrl`. Two production-shaped reference servers ship in `demos/`:
   disconnect) and restored on the next join, so documents survive server restarts.
 
   ```bash
-  COLLAB_AUTH_JWT_SECRET=change-me bun demos/collab-server.example.mjs
+  COLLAB_AUTH_JWT_SECRET=change-me bun demos/pptx/collab-server.example.mjs
   ```
 
-- **`demos/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
+- **`demos/pptx/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
   (SQLite persistence via `@hocuspocus/extension-sqlite`, plus its extension ecosystem for Redis
   scaling, webhooks, database stores). Note that plain y-websocket clients never trigger
   Hocuspocus' `onAuthenticate`; the example validates the `?token=` request parameter in

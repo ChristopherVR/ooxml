@@ -11,17 +11,16 @@ through the core serializer.
 
 ## Supported formats
 
-| Format          | Pipeline                                                                                                      | Output file                |
-| --------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| PNG             | `renderToCanvas` (html2canvas-pro, scale 2) → `canvas.toBlob('image/png')`; also copy-to-clipboard            | `slide-<n>.png`            |
-| PDF             | jsPDF: per-slide canvases → JPEG frames (quality 0.92) → A4 pages (orientation follows the aspect ratio)      | `presentation.pdf`         |
-| GIF             | Shared pure-JS GIF89a encoder, 2000 ms per slide, frames clamped to a 1920 px longest side                    | `presentation.gif`         |
-| Video (WebM)    | `MediaRecorder` over a canvas capture stream (30 fps, 5 Mbps default), 3000 ms per slide                      | `presentation.webm`        |
-| SVG             | Core `SvgExporter` via `ExportService.exportSlideToSvg` / `exportAllSlidesToSvg` (vector, no DOM capture)     | per-slide SVG              |
-| Print           | `PrintService`: slides print as vector SVG, outline as HTML, notes/handouts from rasterised captures          | print window               |
-| JSON            | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity           | `presentation.json`        |
-| Package (share) | `ViewerFileIOService.packageForSharing()`: ZIP bundle of the serialized `.pptx` plus a README                 | `presentation-package.zip` |
-| PPTX/PPSX/PPTM  | `ViewerFileIOService.saveAs(format)` → `PptxHandler.save()` → `Uint8Array` (Save As, correct MIME per format) | `presentation.<format>`    |
+| Format         | Pipeline                                                                                                      | Output file             |
+| -------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| PNG            | `renderToCanvas` (html2canvas-pro, scale 2) → `canvas.toBlob('image/png')`; also copy-to-clipboard            | `slide-<n>.png`         |
+| PDF            | jsPDF: per-slide canvases → JPEG frames (quality 0.92) → A4 pages (orientation follows the aspect ratio)      | `presentation.pdf`      |
+| GIF            | Shared pure-JS GIF89a encoder, 2000 ms per slide, frames clamped to a 1920 px longest side                    | `presentation.gif`      |
+| Video (WebM)   | `MediaRecorder` over a canvas capture stream (30 fps, 5 Mbps default), 3000 ms per slide                      | `presentation.webm`     |
+| SVG            | Core `SvgExporter` via `ExportService.exportSlideToSvg` / `exportAllSlidesToSvg` (vector, no DOM capture)     | per-slide SVG           |
+| Print          | `PrintService`: slides print as vector SVG, outline as HTML, notes/handouts from rasterised captures          | print window            |
+| JSON           | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity           | `presentation.json`     |
+| PPTX/PPSX/PPTM | `ViewerFileIOService.saveAs(format)` → `PptxHandler.save()` → `Uint8Array` (Save As, correct MIME per format) | `presentation.<format>` |
 
 ::: info JPEG
 There is no standalone JPEG export; JPEG (quality 0.92) is only used to compress slide frames

@@ -195,9 +195,9 @@ underscores to avoid surprises.
 
 With the default `websocket` transport you need a `y-websocket`-compatible relay reachable at
 `serverUrl`. Because the wire format is shared across bindings, the repository's reference
-servers work unchanged: `demos/collab-server.example.mjs` (zero-dependency Bun relay with JWT
+servers work unchanged: `demos/pptx/collab-server.example.mjs` (zero-dependency Bun relay with JWT
 or token-allowlist auth and per-room persistence) and
-`demos/collab-server-hocuspocus.example.mjs` (the same contract on Node/Hocuspocus with SQLite
+`demos/pptx/collab-server-hocuspocus.example.mjs` (the same contract on Node/Hocuspocus with SQLite
 persistence). See [the Vue collaboration page](/vue/collaboration#server-side) for the full
 server setup and auth details; everything there applies to this binding as-is.
 

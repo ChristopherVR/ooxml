@@ -269,7 +269,7 @@ elements, and `shell.activeSlideIndex()`. Both overlays use unscaled slide
 coordinates; the canvas applies zoom once. `getStageElement()` supplies the actual
 scaled slide origin without depending on internal CSS selectors.
 
-See `demos/demo-angular/src/host-owned-headless-editor.component.ts` for a runnable
+See `demos/pptx/demo-angular/src/host-owned-headless-editor.component.ts` for a runnable
 custom shell with text and shape editing, save, zoom, and both presence overlays.
 The [host-owned collaboration contract](/guide/host-owned-collaboration) and its
 same-textbox concurrency limitations apply equally to custom and full-viewer UI.
@@ -298,10 +298,10 @@ the full set of lower-level collaboration building blocks (`LocalPresencePublish
 ## Server side
 
 With the default `websocket` transport you need a running `y-websocket`-compatible relay reachable
-at `serverUrl`. Two production-shaped reference servers ship in `demos/` and are shared across all
+at `serverUrl`. Two production-shaped reference servers ship in `demos/pptx/` and are shared across all
 five bindings (React, Vue, Angular, Svelte and vanilla all speak the same sync schema):
 
-- **`demos/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
+- **`demos/pptx/collab-server.example.mjs`** - zero-dependency Bun server (uses the repo's existing
   `yjs` / `y-protocols` / `lib0`). Auth has two modes, both validated at the websocket handshake
   (401 before upgrade):
 
@@ -314,10 +314,10 @@ five bindings (React, Vue, Angular, Svelte and vanilla all speak the same sync s
   snapshotted to `COLLAB_DATA_DIR` and restored on the next join, so documents survive restarts.
 
   ```bash
-  COLLAB_AUTH_JWT_SECRET=change-me bun demos/collab-server.example.mjs
+  COLLAB_AUTH_JWT_SECRET=change-me bun demos/pptx/collab-server.example.mjs
   ```
 
-- **`demos/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
+- **`demos/pptx/collab-server-hocuspocus.example.mjs`** - the same contract on a Node/Hocuspocus stack
   (SQLite persistence via `@hocuspocus/extension-sqlite`).
 
 Both validate the token every binding sends: `authToken` in `CollaborationConfig` becomes the

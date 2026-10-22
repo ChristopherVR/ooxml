@@ -79,17 +79,16 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ## Canvas interaction
 
-| Composable             | Concern                                                                 |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `useContextMenu`       | Right-click / long-press element context menu.                          |
-| `useIsMobile`          | Device/viewport classification (mobile/tablet/orientation).             |
-| `useTouchGestures`     | Pinch-zoom, pan, and long-press gesture recognition.                    |
-| `useKeyboardInsets`    | Adjusts layout for the on-screen keyboard (mobile).                     |
-| `useKeyboardShortcuts` | Hotkey catalog, grouping, and match resolution.                         |
-| `useSheetDismissDrag`  | Swipe-to-dismiss for bottom sheets (mobile).                            |
-| `useToolbarAutoHide`   | Mouse-idle auto-hide for the floating presentation toolbar.             |
-| `useDebouncedCallback` | Generic debounced-callback utility.                                     |
-| `useSelection`         | Generic reactive selected-id-set helper (single/additive/toggle/clear). |
+| Composable             | Concern                                                     |
+| ---------------------- | ----------------------------------------------------------- |
+| `useContextMenu`       | Right-click / long-press element context menu.              |
+| `useIsMobile`          | Device/viewport classification (mobile/tablet/orientation). |
+| `useTouchGestures`     | Pinch-zoom, pan, and long-press gesture recognition.        |
+| `useKeyboardInsets`    | Adjusts layout for the on-screen keyboard (mobile).         |
+| `useKeyboardShortcuts` | Hotkey catalog, grouping, and match resolution.             |
+| `useSheetDismissDrag`  | Swipe-to-dismiss for bottom sheets (mobile).                |
+| `useToolbarAutoHide`   | Mouse-idle auto-hide for the floating presentation toolbar. |
+| `useDebouncedCallback` | Generic debounced-callback utility.                         |
 
 ## Ribbon / toolbar
 

@@ -24,19 +24,22 @@ events are **callback props** (`onload`, not `@load`), and the content prop is n
 
 ## Chrome and behaviour
 
-| Prop                                                                       | Type                | Default | Description                                                                                                                                                                             |
-| -------------------------------------------------------------------------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`                                                             | `number`            | `0`     | Slide shown after load (0-based, clamped).                                                                                                                                              |
-| `showThumbnails`                                                           | `boolean`           | `true`  | Show the thumbnail sidebar.                                                                                                                                                             |
-| `showCompatibilityToasts`                                                  | `boolean`           | `true`  | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                  |
-| `showToolbar`                                                              | `boolean`           | `true`  | Show the navigation/zoom toolbar (and, when `editable`, the ribbon).                                                                                                                    |
-| `showNotes`                                                                | `boolean`           | `true`  | Show the speaker-notes panel and its toolbar toggle. Pass `onnotesupdate` to make the panel editable; omit it for read-only notes.                                                      |
-| `hiddenActions`                                                            | `ToolbarActionId[]` | -       | Toolbar buttons and/or ribbon tabs to hide (see [values below](#hiddenactions-values)).                                                                                                 |
-| `fileName`                                                                 | `string`            | -       | Display name shown in the desktop title bar.                                                                                                                                            |
-| `smartArt3D`                                                               | `boolean`           | `false` | Opt in to the Three.js (WebGL) SmartArt renderer. Requires the optional `three` dependency; falls back to SVG when it is unavailable or the WebGL mount fails.                          |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`           | `false` | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene. |
-| `ai`                                                                       | `PptxAiConfig`      | -       | Enables the optional AI assistant. Its SDK peers load only when the panel is opened; omit this prop to leave the assistant unavailable.                                                 |
-| `editable`                                                                 | `boolean`           | `false` | Enable in-place editing: select, drag, resize/rotate handles, double-click text editing, keyboard shortcuts, undo/redo, save/download.                                                  |
+| Prop                                                                       | Type                        | Default | Description                                                                                                                                                                             |
+| -------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`                                                             | `number`                    | `0`     | Slide shown after load (0-based, clamped).                                                                                                                                              |
+| `showThumbnails`                                                           | `boolean`                   | `true`  | Show the thumbnail sidebar.                                                                                                                                                             |
+| `showCompatibilityToasts`                                                  | `boolean`                   | `true`  | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                  |
+| `showToolbar`                                                              | `boolean`                   | `true`  | Show the navigation/zoom toolbar (and, when `editable`, the ribbon).                                                                                                                    |
+| `authorName`                                                               | `string`                    | -       | Display name used as the author for comments and as the broadcast presenter. Falls back to Options > General > "User name", then a generic label.                                       |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[]` | -       | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. Desktop ribbon only.                                 |
+| `inspectorInitiallyOpen`                                                   | `boolean`                   | -       | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                                                 |
+| `showNotes`                                                                | `boolean`                   | `true`  | Show the speaker-notes panel and its toolbar toggle. Pass `onnotesupdate` to make the panel editable; omit it for read-only notes. _Deprecated: use `customization.hiddenPanels`._      |
+| `hiddenActions`                                                            | `ToolbarActionId[]`         | -       | Toolbar buttons and/or ribbon tabs to hide (see [values below](#hiddenactions-values)).                                                                                                 |
+| `fileName`                                                                 | `string`                    | -       | Display name shown in the desktop title bar.                                                                                                                                            |
+| `smartArt3D`                                                               | `boolean`                   | `false` | Opt in to the Three.js (WebGL) SmartArt renderer. Requires the optional `three` dependency; falls back to SVG when it is unavailable or the WebGL mount fails.                          |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                   | `false` | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds. Each falls back to SVG when `three` is unavailable or the chart cannot render as a WebGL scene. |
+| `ai`                                                                       | `PptxAiConfig`              | -       | Enables the optional AI assistant. Its SDK peers load only when the panel is opened; omit this prop to leave the assistant unavailable.                                                 |
+| `editable`                                                                 | `boolean`                   | `false` | Enable in-place editing: select, drag, resize/rotate handles, double-click text editing, keyboard shortcuts, undo/redo, save/download.                                                  |
 
 ### `hiddenActions` values {#hiddenactions-values}
 
@@ -136,33 +139,35 @@ Every id, the rules and recipes are in the
 
 See [Collaboration](/svelte/collaboration) for the config shape and transports.
 
-| Prop            | Type                                                         | Default | Description                                                                                      |
-| --------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------ |
-| `collaboration` | `CollaborationConfig`                                        | -       | When set, connects to the room and syncs edits in real time. Clearing it tears the session down. |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Prefilled values for the built-in Share dialog (Broadcast reuses `serverUrl`).                   |
+| Prop            | Type                                                         | Default | Description                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `collaboration` | `CollaborationInput`                                         | -       | When set, connects to the room and syncs edits in real time (the legacy `CollaborationConfig` or the shared `CollaborationOptions`). Clearing it tears the session down. |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Prefilled values for the built-in Share dialog (Broadcast reuses `serverUrl`).                                                                                           |
 
 ## Event callbacks
 
-| Prop                   | Signature                               | Fired when                                                                                                   |
-| ---------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `onload`               | `(detail: ViewerLoadDetail) => void`    | A presentation finishes loading (`{ slideCount, canvasSize }`).                                              |
-| `onerror`              | `(message: string) => void`             | A load fails (message is human-readable).                                                                    |
-| `onslidechange`        | `(index: number) => void`               | The active slide changes (0-based).                                                                          |
-| `onchange`             | `() => void`                            | After every committed editing mutation (move / resize / rotate / delete / duplicate / nudge / text / notes). |
-| `ondirtychange`        | `(dirty: boolean) => void`              | The unsaved-edits flag flips.                                                                                |
-| `oncontentchange`      | `(content: Uint8Array) => void`         | The serialized document bytes change.                                                                        |
-| `onmodechange`         | `(mode: string) => void`                | The viewer mode changes (`'preview' \| 'edit' \| 'present' \| 'master'`).                                    |
-| `onzoomchange`         | `(zoom: number) => void`                | The zoom level changes (1 = 100%).                                                                           |
-| `onselectionchange`    | `(elementIds: string[]) => void`        | The element selection changes.                                                                               |
-| `onslidecountchange`   | `(count: number) => void`               | The total slide count changes.                                                                               |
-| `onnotesupdate`        | `(notes: string) => void`               | The user commits a speaker-notes edit (`change` / `blur`). Omit to render the notes panel read-only.         |
-| `onopenfile`           | `() => void`                            | Host override for the File > Open action.                                                                    |
-| `onautosave`           | `(bytes: Uint8Array) => void`           | After each successful autosave snapshot.                                                                     |
-| `onautosavetoggle`     | `(enabled: boolean) => void`            | The desktop title bar toggles AutoSave.                                                                      |
-| `onstartcollaboration` | `(config: CollaborationConfig) => void` | The user starts a session from the Share/Broadcast dialog.                                                   |
-| `onstopcollaboration`  | `() => void`                            | The user stops the collaboration session.                                                                    |
-| `onThemeChange`        | `(themeKey: string) => void`            | The user picks a theme (note the camelCase name; it belongs to the Options-picker group above).              |
-| `onLocaleChange`       | `(locale: string) => void`              | The user picks a language (camelCase, Options-picker group).                                                 |
+| Prop                    | Signature                               | Fired when                                                                                                   |
+| ----------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `onload`                | `(detail: ViewerLoadDetail) => void`    | A presentation finishes loading (`{ slideCount, canvasSize }`).                                              |
+| `onerror`               | `(message: string) => void`             | A load fails (message is human-readable).                                                                    |
+| `onslidechange`         | `(index: number) => void`               | The active slide changes (0-based).                                                                          |
+| `onchange`              | `() => void`                            | After every committed editing mutation (move / resize / rotate / delete / duplicate / nudge / text / notes). |
+| `ondirtychange`         | `(dirty: boolean) => void`              | The unsaved-edits flag flips.                                                                                |
+| `oncontentchange`       | `(content: Uint8Array) => void`         | The serialized document bytes change.                                                                        |
+| `onmodechange`          | `(mode: string) => void`                | The viewer mode changes (`'preview' \| 'edit' \| 'present' \| 'master'`).                                    |
+| `onzoomchange`          | `(zoom: number) => void`                | The zoom level changes (1 = 100%).                                                                           |
+| `onselectionchange`     | `(elementIds: string[]) => void`        | The element selection changes.                                                                               |
+| `onslidecountchange`    | `(count: number) => void`               | The total slide count changes.                                                                               |
+| `onnotesupdate`         | `(notes: string) => void`               | The user commits a speaker-notes edit (`change` / `blur`). Omit to render the notes panel read-only.         |
+| `onopenfile`            | `() => void`                            | Host override for the File > Open action.                                                                    |
+| `onautosave`            | `(bytes: Uint8Array) => void`           | After each successful autosave snapshot.                                                                     |
+| `onautosavetoggle`      | `(enabled: boolean) => void`            | The desktop title bar toggles AutoSave.                                                                      |
+| `onstartcollaboration`  | `(config: CollaborationConfig) => void` | The user starts a session from the Share/Broadcast dialog.                                                   |
+| `onstopcollaboration`   | `() => void`                            | The user stops the collaboration session.                                                                    |
+| `oncollaborationchange` | `(state: CollaborationState) => void`   | A session starts or stops, or its status, synced flag or people change.                                      |
+| `onhyperlinkclick`      | `HyperlinkClickHandler`                 | Before a link is followed; return `false` to cancel the default action.                                      |
+| `onThemeChange`         | `(themeKey: string) => void`            | The user picks a theme (note the camelCase name; it belongs to the Options-picker group above).              |
+| `onLocaleChange`        | `(locale: string) => void`              | The user picks a language (camelCase, Options-picker group).                                                 |
 
 ## Payload types
 

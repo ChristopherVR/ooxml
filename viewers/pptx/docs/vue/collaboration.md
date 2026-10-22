@@ -74,8 +74,8 @@ shows the complete wiring without rendering `PowerPointViewer`.
 
 `PowerPointViewer` supports real-time, multi-user editing built on **Yjs** (a CRDT) with either a
 WebSocket transport (`y-websocket`, needs a server) or a serverless peer-to-peer transport
-(`y-webrtc`). The `CollaborationConfig` type and wire format are shared with the React and Angular
-bindings (defined once in `pptx-viewer-shared`), so all three interoperate in the same room. When
+(`y-webrtc`). The `CollaborationConfig` type and wire format are shared with the other
+bindings (defined once in `ooxml-ui/pptx`), so all five interoperate in the same room. When
 enabled, it adds granular CRDT document sync (per slide / element), live remote cursors, selection
 highlights, user presence, and follow mode. In single-user mode none of this is loaded.
 
@@ -271,7 +271,7 @@ With the default `websocket` transport you need a running `y-websocket`-compatib
 at `serverUrl`. The same reference servers used by the React and Angular demos work here too, since
 the wire format is shared:
 
-- **`demos/collab-server.example.mjs`**, zero-dependency Bun server (uses the repo's existing `yjs` /
+- **`demos/pptx/collab-server.example.mjs`**, zero-dependency Bun server (uses the repo's existing `yjs` /
   `y-protocols` / `lib0`). Auth has two modes, both validated at the websocket handshake (401 before
   upgrade): a JWT mode (production, `COLLAB_AUTH_JWT_SECRET`, short-lived HS256 tokens with `exp`,
   `room`, `sub`, `role` claims enforced server-side) and an allowlist mode
@@ -280,10 +280,10 @@ the wire format is shared:
   on the next join.
 
   ```bash
-  COLLAB_AUTH_JWT_SECRET=change-me bun demos/collab-server.example.mjs
+  COLLAB_AUTH_JWT_SECRET=change-me bun demos/pptx/collab-server.example.mjs
   ```
 
-- **`demos/collab-server-hocuspocus.example.mjs`**, the same contract on a Node/Hocuspocus stack
+- **`demos/pptx/collab-server-hocuspocus.example.mjs`**, the same contract on a Node/Hocuspocus stack
   (SQLite persistence via `@hocuspocus/extension-sqlite`).
 
 Both validate the token every binding sends: `authToken` in `CollaborationConfig` becomes the
