@@ -48,6 +48,7 @@
 		"gen:docx-schema-types": "bun run --cwd src/core gen:docx-schema-types",
 		"fmt": "oxfmt '!viewers/**'",
 		"fmt:check": "oxfmt --check '!viewers/**'",
+		"docs:check": "node scripts/check-docs.mjs --out docs-health.md",
 		"test:scripts": "node --test 'scripts/*.test.mjs'",
 		"verify": "node scripts/verify.mjs",
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
