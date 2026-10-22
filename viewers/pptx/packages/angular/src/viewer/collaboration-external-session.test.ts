@@ -386,6 +386,20 @@ describe('host-owned Angular collaboration', () => {
 	});
 });
 
+describe('write-back status in the Angular collaboration state', () => {
+	it('is reported for an owner with onWriteBack only', async () => {
+		const room = host(true);
+		room.update({ status: 'connected', synced: true });
+		const collab = service();
+		await collab.connect({ ...config(room.session), role: 'owner', onWriteBack: () => {} });
+		expect(collab.state().writeBack).toStrictEqual({ status: 'pending' });
+		collab.disconnect();
+		await collab.connect({ ...config(room.session), role: 'collaborator', onWriteBack: () => {} });
+		expect(collab.state().writeBack).toBeUndefined();
+		collab.disconnect();
+	});
+});
+
 describe('viewer-owned Angular collaboration', () => {
 	/** A provider factory the host owns the transport of; the viewer only joins and leaves. */
 	function fakeProvider() {

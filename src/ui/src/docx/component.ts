@@ -21,7 +21,6 @@ import { buildShell, type ShellApi } from './editor-shell';
 import { renderDocument } from './editor-render';
 import { registerSmartArt } from './smartart-node-view';
 import { DocxEditorApi } from './element-api';
-import { applyReadOnly } from './customization-apply';
 import { emit, type DocxEditorEventMap } from './events';
 import {
 	DEFAULT_FILE_NAME,
@@ -96,6 +95,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	attributeChangedCallback(name: string, _old: string | null, value: string | null) {
+		if (name === 'read-only' && this.core.reflectingReadOnly) return;
 		if (isDocxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 
@@ -175,10 +175,10 @@ export class DocxEditorElement extends DocxEditorApi {
 	get readOnly() {
 		return this.core.readOnly;
 	}
-	/** True when the document cannot be edited: this property, or `capabilities.edit` off. */
+	/** True when the document cannot be edited: this switch, a `viewer` role or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
-		this.core.requestedReadOnly = Boolean(value);
-		applyReadOnly(this.core);
+		this.core.readOnly = Boolean(value);
+		this.core.applyReadOnly();
 	}
 
 	/**

@@ -57,6 +57,7 @@ export function useCollaborationDocumentSync(input: CollaborationDocumentSyncInp
 		livePatcher: state.livePatcher,
 		getSourceBytes,
 		getSaveOptions,
+		...(collaboration?.reportWriteBack ? { onWriteBackStatus: collaboration.reportWriteBack } : {}),
 	});
 	const initialized = useCollaborationLivePatch({
 		patcher: state.livePatcher,

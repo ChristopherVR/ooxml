@@ -45,7 +45,7 @@ export function applyAttribute(
 	if (name === 'locale') {
 		if (normalizeEditorLocale(value ?? 'en') !== target.locale) target.locale = value ?? 'en';
 	} else if (name === 'read-only') {
-		if ((value !== null) !== target.readOnly) target.readOnly = value !== null;
+		target.readOnly = value !== null;
 	} else if (name === 'file-name') {
 		const next = value ?? DEFAULT_FILE_NAME;
 		if (next !== target.fileName) target.fileName = next;

@@ -65,8 +65,18 @@ export interface EditorEventOptions {
 	onWorkbookError?: ((error: Error) => void) | undefined;
 	onSelectionChange?: ((detail: SelectionChangeDetail) => void) | undefined;
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
-	/** The user toggled Editing / Viewing (or `readOnly` changed); lets a controlled parent sync. */
-	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
+	/**
+	 * The user toggled Editing / Viewing, `readOnly` changed or a collaboration role changed.
+	 * `readOnly` is the effective value. A controlled parent that mirrors the switch must store
+	 * `detail.hostReadOnly`, never `readOnly`, or a `viewer` role lock would be written into the
+	 * host's setting.
+	 */
+	onReadOnlyChange?:
+		| ((
+				readOnly: boolean,
+				detail: { readOnly: boolean; locked: boolean; hostReadOnly: boolean },
+		  ) => void)
+		| undefined;
 	/**
 	 * A File command (new, open, save, saveAs, export, exportCsv, print) is about to run. The event is
 	 * cancelable: call `event.preventDefault()` to take the command over yourself.
@@ -263,7 +273,7 @@ export function mountEditor(
 		'workbook-error': (event) => options.onWorkbookError?.(event.detail.error),
 		'selection-change': (event) => options.onSelectionChange?.(event.detail),
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail.dirty),
-		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly),
+		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly, event.detail),
 		// Cancelable: the handler gets the event itself, so a host can call preventDefault().
 		'file-command': (event) => options.onFileCommand?.(event),
 		'workbook-warning': (event) => options.onWorkbookWarning?.([...event.detail.warnings]),

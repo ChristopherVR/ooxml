@@ -206,6 +206,19 @@ describe('host regions in the svelte viewer', () => {
 	});
 });
 
+describe('readOnly', () => {
+	it('is the inverse of editable: true wins and false only lifts its own lock', async () => {
+		const readOnly = await mountViewer({}, { readOnly: true });
+		expect(readOnly.target.querySelector('[data-pptx-inspector]')).toBeNull();
+		cleanup?.();
+		const lifted = await mountViewer({}, { readOnly: false });
+		expect(lifted.target.querySelector('[data-pptx-inspector]')).not.toBeNull();
+		cleanup?.();
+		const stillView = await mountViewer({}, { readOnly: false, editable: false });
+		expect(stillView.target.querySelector('[data-pptx-inspector]')).toBeNull();
+	});
+});
+
 describe('hidden panels and dialogs gate their render', () => {
 	function reviewTab(hidden: boolean): HTMLElement {
 		const target = document.createElement('div');

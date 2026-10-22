@@ -1,4 +1,4 @@
-import type { CollaborationState } from 'ooxml-core/collab';
+import type { CollaborationState, CollaborationWriteBackState } from 'ooxml-core/collab';
 
 import { assignUserColor, type ConnectionStatus } from './collaboration-presence';
 
@@ -18,6 +18,20 @@ export interface CollaborationStateInput {
 	userColor?: string | undefined;
 	/** Remote presences, as each binding sanitises them for cursors and avatars. */
 	remoteUsers: readonly { clientId: number; userName: string; userColor: string }[];
+	/** The owner's write-back status; see {@link writeBackReport}. Omitted for everyone else. */
+	writeBack?: CollaborationWriteBackState | undefined;
+}
+
+/**
+ * The write-back status to report: only the window that writes back (role `owner` with an
+ * `onWriteBack`) reports one, `idle` until the scheduler has something to say.
+ */
+export function writeBackReport(
+	config: { role?: string | undefined; onWriteBack?: unknown } | null | undefined,
+	state: CollaborationWriteBackState | undefined,
+): CollaborationWriteBackState | undefined {
+	if (!config?.onWriteBack || config.role !== 'owner') return undefined;
+	return state ?? { status: 'idle' };
 }
 
 /** The state of an editor that is not sharing. One frozen object, so `===` tells it apart. */
@@ -56,6 +70,7 @@ export function buildCollaborationState(input: CollaborationStateInput): Collabo
 		status: input.status,
 		synced: input.synced,
 		people,
+		...(input.writeBack ? { writeBack: input.writeBack } : {}),
 	};
 }
 
@@ -67,7 +82,10 @@ export function collaborationStatesEqual(a: CollaborationState, b: Collaboration
 		a.roomId !== b.roomId ||
 		a.status !== b.status ||
 		a.synced !== b.synced ||
-		a.people.length !== b.people.length
+		a.people.length !== b.people.length ||
+		a.writeBack?.status !== b.writeBack?.status ||
+		a.writeBack?.lastSavedAt !== b.writeBack?.lastSavedAt ||
+		a.writeBack?.error !== b.writeBack?.error
 	) {
 		return false;
 	}

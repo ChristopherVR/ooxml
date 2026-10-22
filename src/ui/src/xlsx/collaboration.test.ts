@@ -61,6 +61,30 @@ const value = (side: ReturnType<typeof editor>, row: number, col: number) =>
 	getCell(side.core.workbook!.sheets[0]!, row, col)?.value;
 
 describe('<xlsx-editor> collaboration', () => {
+	it('a viewer role stays read-only whatever the host sets, and leaving restores the host', async () => {
+		const hub = createMemoryHub();
+		const a = editor();
+		const viewer = createCollabSession<XlsxPresence>({
+			roomId: 'book',
+			provider: transportProvider({ transport: hub.createTransport('book') }),
+			user: { name: 'Vera', color: '#2563eb', role: 'viewer' },
+			initialPresence: {},
+			sanitizePayload: sanitizeXlsxPresence,
+			heartbeatMs: 0,
+			syncGraceMs: 0,
+		});
+		sessions.push(viewer);
+		await a.element.startCollaboration({ session: viewer });
+		await wait();
+		expect(a.element.readOnly).toBe(true);
+		a.element.readOnly = false;
+		expect(a.element.readOnly).toBe(true);
+		a.element.stopCollaboration();
+		expect(a.element.readOnly).toBe(false);
+		a.element.readOnly = true;
+		expect(a.element.readOnly).toBe(true);
+	});
+
 	it('adopts the room and carries edits both ways', async () => {
 		const { a, b } = await pair();
 		expect(value(b, 0, 0)).toBe('seed');

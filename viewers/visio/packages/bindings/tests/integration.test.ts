@@ -133,6 +133,9 @@ const mounts: Record<string, NativeMount> = {
 					get canEdit() {
 						return props().canEdit;
 					},
+					get readOnly() {
+						return props().readOnly;
+					},
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
 					},
@@ -213,6 +216,42 @@ describe('native adapters against the real shared custom element', () => {
 				host.remove();
 			}
 		});
+		it(`${framework}: readOnly is the inverse of canEdit and wins when both are set`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+			try {
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
+				await mounted.update({ readOnly: true, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(true);
+				expect(mounted.handle.element.readOnly).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: false });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		// The vanilla binding takes explicit patches: an omitted property is left alone by design.
+		(framework === 'vanilla' ? it.skip : it)(
+			`${framework}: dropping readOnly resets it to false`,
+			async () => {
+				const host = document.createElement('div');
+				document.body.append(host);
+				const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+				try {
+					expect(mounted.handle.controller.canEdit).toBe(false);
+					await mounted.update({ document: demoDocument });
+					expect(mounted.handle.controller.canEdit).toBe(true);
+				} finally {
+					await mounted.destroy();
+					host.remove();
+				}
+			},
+		);
 		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

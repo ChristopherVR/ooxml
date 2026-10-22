@@ -51,8 +51,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		locale: () => core.locale,
 		readOnly: () => core.readOnly,
 		setReadOnly: (readOnly) => {
-			api.setReadOnly(readOnly);
-			emit(element, 'readonly-change', readOnly);
+			core.reportReadOnly(() => api.setReadOnly(readOnly));
 		},
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),

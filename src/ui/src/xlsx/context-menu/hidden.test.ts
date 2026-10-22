@@ -47,6 +47,19 @@ describe('visibleMenuEntries', () => {
 		expect(visible[0]?.separatorBefore).toBe(false);
 	});
 
+	it('moves a hidden entry separator to the next kept entry so groups stay apart', () => {
+		const entries: MenuEntry[] = [
+			{ id: 'a', label: 'A', command: 'edit.cut' },
+			{ id: 'b1', label: 'B1', command: 'edit.copy', separatorBefore: true },
+			{ id: 'b2', label: 'B2', command: 'edit.paste' },
+		];
+		const visible = visibleMenuEntries(entries, hiddenIn(['edit.copy']));
+		expect(visible.map((entry) => [entry.id, Boolean(entry.separatorBefore)])).toEqual([
+			['a', false],
+			['b2', true],
+		]);
+	});
+
 	it('keeps the separator before a group that still follows a visible entry', () => {
 		const entries: MenuEntry[] = [
 			{ id: 'cut', label: 'Cut', command: 'edit.cut' },

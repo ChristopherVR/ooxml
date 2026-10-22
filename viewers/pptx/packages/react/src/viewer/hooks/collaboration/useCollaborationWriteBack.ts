@@ -1,4 +1,4 @@
-import { createWriteBackScheduler } from 'ooxml-ui/pptx';
+import { createWriteBackScheduler, writeBackReport } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { buildSaveSlides } from '../../utils/template-editing';
@@ -6,28 +6,39 @@ import type { UseYjsDocumentSyncInput } from './useYjsDocumentSync';
 
 type Input = Pick<
 	UseYjsDocumentSyncInput,
-	'doc' | 'config' | 'getSourceBytes' | 'getSaveOptions' | 'templateElementsBySlideId'
+	| 'doc'
+	| 'config'
+	| 'getSourceBytes'
+	| 'getSaveOptions'
+	| 'templateElementsBySlideId'
+	| 'onWriteBackStatus'
 >;
 
 /** Keep framework lifecycle local and durable serialization in shared. */
 export function useCollaborationWriteBack(input: Input): () => void {
 	const latest = useRef(input);
 	latest.current = input;
-	const scheduler = useMemo(
-		() =>
-			createWriteBackScheduler({
-				getYDoc: () => latest.current.doc,
-				getSourceBytes: () => latest.current.getSourceBytes?.() ?? null,
-				getSaveOptions: () => latest.current.getSaveOptions?.(),
-				getTemplateElements: () => latest.current.templateElementsBySlideId,
-				mergeTemplateElements: buildSaveSlides,
-			}),
-		[latest],
-	);
+	const scheduler = useMemo(() => {
+		const created = createWriteBackScheduler({
+			getYDoc: () => latest.current.doc,
+			getSourceBytes: () => latest.current.getSourceBytes?.() ?? null,
+			getSaveOptions: () => latest.current.getSaveOptions?.(),
+			getTemplateElements: () => latest.current.templateElementsBySlideId,
+			mergeTemplateElements: buildSaveSlides,
+			onWriteBackStatus: () =>
+				latest.current.onWriteBackStatus?.(
+					writeBackReport(latest.current.config, created.getState()),
+				),
+		});
+		return created;
+	}, [latest]);
 	const hasWriteBack = Boolean(input.config?.onWriteBack);
 	/* oxlint-disable react/exhaustive-effect-dependencies -- session identity cancels in-flight saves */
 	useEffect(
-		() => () => scheduler.cancel(),
+		() => () => {
+			scheduler.cancel();
+			latest.current.onWriteBackStatus?.(undefined);
+		},
 		[scheduler, input.doc, input.config?.role, hasWriteBack, input.config?.externalSession],
 	);
 	/* oxlint-enable react/exhaustive-effect-dependencies */
@@ -47,7 +58,7 @@ export function useCollaborationWriteBack(input: Input): () => void {
 								current.config?.role === 'owner' &&
 								current.config.externalSession === session
 							) {
-								current.config.onWriteBack?.(bytes);
+								return current.config.onWriteBack?.(bytes);
 							}
 						}
 					: undefined,

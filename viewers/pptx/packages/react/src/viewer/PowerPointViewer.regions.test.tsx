@@ -225,6 +225,32 @@ describe('powerPointViewer capabilities', () => {
 	});
 });
 
+describe('powerPointViewer readOnly', () => {
+	it('is the inverse of canEdit: true wins and false only lifts its own lock', async () => {
+		const bytes = await sampleDeck();
+		const ref = createRef<ViewerHandle>();
+		const render = async (readOnly: boolean, canEdit = true) => {
+			await act(async () => {
+				root.render(
+					<PowerPointViewer ref={ref} content={bytes} canEdit={canEdit} readOnly={readOnly} />,
+				);
+			});
+			await tick();
+		};
+		await render(true);
+		for (let attempt = 0; attempt < 80 && (ref.current?.getSlideCount() ?? 0) === 0; attempt += 1) {
+			await tick();
+		}
+		expect(ref.current!.addElement(SHAPE)).toBeUndefined();
+		await render(false);
+		await act(async () => {
+			expect(ref.current!.addElement(SHAPE)).toBeDefined();
+		});
+		await render(false, false);
+		expect(ref.current!.addElement(SHAPE)).toBeUndefined();
+	});
+});
+
 describe('powerPointViewer hidden panels and dialogs', () => {
 	it('never renders the selection pane or the hyperlink dialog the host hid', async () => {
 		const ref = await mount({

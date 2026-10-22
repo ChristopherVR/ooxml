@@ -62,6 +62,8 @@ describe('shared adapter: file commands', () => {
 	});
 });
 
+const DETAIL = { readOnly: true, locked: false, hostReadOnly: true };
+
 describe('shared adapter: forwarded element events', () => {
 	it('forwards warnings, read-only toggles, ribbon actions and ribbon customisation', () => {
 		const onDocumentWarning = vi.fn();
@@ -76,17 +78,28 @@ describe('shared adapter: forwarded element events', () => {
 		});
 		const action = { type: 'bold' };
 		binding.element.dispatchEvent(new CustomEvent('document-warning', { detail: 'Print issue' }));
-		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: true }));
+		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: DETAIL }));
 		binding.element.dispatchEvent(new CustomEvent('ribbon-action', { detail: action }));
 		binding.element.dispatchEvent(new CustomEvent('ribbon-customize', { detail: ['bold'] }));
 		expect(onDocumentWarning).toHaveBeenCalledWith('Print issue');
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, DETAIL);
 		expect(onRibbonAction).toHaveBeenCalledWith(action);
 		expect(onRibbonCustomize).toHaveBeenCalledWith(['bold']);
 		binding.destroy();
-		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: false }));
+		binding.element.dispatchEvent(
+			new CustomEvent('readonly-change', { detail: { ...DETAIL, readOnly: false } }),
+		);
 		binding.element.dispatchEvent(new CustomEvent('file-command', { detail: { command: 'new' } }));
 		expect(onReadOnlyChange).toHaveBeenCalledTimes(1);
+	});
+
+	it('passes the lock and the host switch so a parent can mirror only the host', () => {
+		const onReadOnlyChange = vi.fn();
+		const binding = mountEditor(host(), { onReadOnlyChange });
+		const locked = { readOnly: true, locked: true, hostReadOnly: false };
+		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: locked }));
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, locked);
+		binding.destroy();
 	});
 
 	it('lists the new events and props in the shared contract', () => {
@@ -111,8 +124,8 @@ describe('shared adapter: readOnly follows only its own changes', () => {
 		const binding = mountEditor(host, { readOnly: false, onReadOnlyChange });
 		// The user switches to Viewing; the editor reports it and the parent does not sync.
 		binding.element.readOnly = true;
-		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: true }));
-		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: DETAIL }));
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true, DETAIL);
 		binding.update({ readOnly: false, onReadOnlyChange });
 		expect(binding.element.readOnly).toBe(true);
 		// A changed prop is still applied.

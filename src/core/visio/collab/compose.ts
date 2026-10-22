@@ -1,30 +1,48 @@
-// Rebuilds a VSDX from the resolved shared drawing: the shared parts verbatim, a pages part and
-// page parts spliced from the shared pages and shapes, and the content types and page
-// relationships regenerated for this peer's part names. Parts that stay local (the window state and
-// the thumbnail) are kept from the local package.
+// Rebuilds a VSDX from the resolved shared drawing: the shared parts verbatim, media from their
+// blobs, a pages part and page parts spliced from the shared pages and shapes, a masters part and
+// master parts from the master entries, and the content types and relationships regenerated for
+// this peer's part names. Parts that stay local (the window state and the thumbnail) are kept from
+// the local package. Page parts that did not change since the last rebuild are not serialised
+// again (the cache in `keys.cache`); the package itself is still zipped and parsed whole.
 import JSZip from 'jszip';
+import {
+	bodyContent,
+	bodyId,
+	cellId,
+	connectId,
+	entryContent,
+	masterContent,
+	masterId,
+	mediaId,
+	pageContent,
+	pageId,
+	shapeId,
+	shellContent,
+} from './baseline';
+import { type ListItem, placeList } from './compose-lists';
 import type { DrawingKeys } from './keys';
 import {
 	CONTENT_TYPES,
+	MASTER_CONTENT_TYPE,
+	MASTER_TYPE,
 	PAGE_TYPE,
-	REL_NS,
 	decoder,
 	dirName,
 	encoder,
-	fromBase64,
+	ensureType,
 	fingerprint,
-	canon,
+	fromBase64,
 	isLocalOnlyPart,
 	parseRelationships,
-	resolveTarget,
 	relsPathOf,
+	resolveTarget,
+	withOverrides,
 	withPageOverrides,
 } from './package';
 import type { ResolvedDrawing, ResolvedPage } from './read';
 import { attrOf, escapeAttr, scanContainer } from './scan';
-import { CONNECTS_MARK, REL_MARK, SHAPES_MARK } from './schema';
+import { CONNECTS_MARK, SHAPES_MARK } from './schema';
 import { readZip, zipText } from './snapshot';
-import { bodyContent, bodyId, connectId, pageContent, pageId, shapeId } from './write';
 
 export interface ComposeOptions {
 	/** Refuse shared parts that decode to more than this many bytes in total. */
@@ -63,16 +81,14 @@ export function pagePartXml(page: ResolvedPage): string {
 			`<Connects>${CONNECTS_MARK}</Connects>` +
 			shell.slice(root2.closeStart);
 	return shell
-		.replace(SHAPES_MARK, () => page.shapes.map((s) => s.xml).join(''))
+		.replace(SHAPES_MARK, () => page.shapesXml)
 		.replace(CONNECTS_MARK, () => page.connects.map(connectXml).join(''));
-}
-
-function relTarget(pagesDir: string, path: string): string {
-	return pagesDir && path.startsWith(`${pagesDir}/`) ? path.slice(pagesDir.length + 1) : `/${path}`;
 }
 
 export interface ComposedDrawing {
 	bytes: Uint8Array;
+	/** The resolved drawing's signature: equal signatures build equal packages. */
+	signature: string;
 	/** Records what the room held as this peer's baseline; call it once the editor adopted `bytes`. */
 	commit: () => void;
 }
@@ -88,13 +104,22 @@ export async function composeDrawing(
 	const prints = new Map<string, string>();
 	let total = 0;
 	const limit = options.maxPartBytes ?? 48 * 1024 * 1024;
-	for (const [path, b64] of drawing.parts) {
-		const data = fromBase64(b64);
+	const cache = keys.cache.parts;
+	const decode = (path: string, b64: string): Uint8Array => {
+		const hit = cache.get(path);
+		const data = hit && hit.b64 === b64 ? hit.data : fromBase64(b64);
+		if (!hit || hit.b64 !== b64) cache.set(path, { b64, data });
 		total += data.length;
 		if (total > limit) throw new Error('The shared parts exceed the size limit.');
+		return data;
+	};
+	for (const [path, b64] of drawing.parts) {
+		const data = decode(path, b64);
 		files.set(path, data);
 		prints.set(path, fingerprint(data));
 	}
+	for (const path of [...cache.keys()])
+		if (!drawing.parts.has(path) && !path.startsWith('media:')) cache.delete(path);
 	if (localZip)
 		for (const path of Object.keys(localZip.files)) {
 			const file = localZip.files[path]!;
@@ -105,6 +130,10 @@ export async function composeDrawing(
 		files.get(CONTENT_TYPES) !== undefined
 			? decoder.decode(files.get(CONTENT_TYPES) as Uint8Array)
 			: ((localZip && (await zipText(localZip, CONTENT_TYPES))) ?? DEFAULT_CONTENT_TYPES);
+	for (const item of drawing.media) {
+		files.set(item.path, decode(`media:${item.path}`, item.data));
+		contentTypes = ensureType(contentTypes, item.path, item.declared);
+	}
 
 	// A part that stays local and that this peer does not have (a joiner's first package) must not
 	// stay referenced.
@@ -126,72 +155,56 @@ export async function composeDrawing(
 		if (next !== text) files.set(path, encoder.encode(next));
 	}
 
-	// Part names: a page keeps the part it has locally, a new page gets the next free name.
-	const pagesDir = dirName(drawing.pagesPath);
-	const taken = new Set<string>([
-		...files.keys(),
-		drawing.pagesPath,
-		relsPathOf(drawing.pagesPath),
-	]);
-	const paths = new Map<string, string>();
-	for (const page of drawing.pages) {
-		const known = keys.pagePaths.get(page.key);
-		if (known && !taken.has(known) && localZip?.file(known)) {
-			paths.set(page.key, known);
-			taken.add(known);
-		}
+	const taken = new Set<string>(files.keys());
+	const pageCache = keys.cache.pageParts;
+	const pageItems: ListItem[] = drawing.pages.map((page) => {
+		const hit = pageCache.get(page.key);
+		const bytes = hit && hit.sig === page.signature ? hit.bytes : encoder.encode(pagePartXml(page));
+		pageCache.set(page.key, { sig: page.signature, bytes });
+		return {
+			key: page.key,
+			xml: page.xml,
+			part: bytes,
+			...(page.body.rels !== undefined ? { rels: page.body.rels } : {}),
+		};
+	});
+	for (const key of [...pageCache.keys()])
+		if (!drawing.pages.some((p) => p.key === key)) pageCache.delete(key);
+	const pagePaths = await placeList({
+		listPath: drawing.pagesPath,
+		open: drawing.pagesOpen,
+		close: drawing.pagesClose,
+		relType: PAGE_TYPE,
+		stem: 'page',
+		items: pageItems,
+		known: keys.pagePaths,
+		files,
+		taken,
+		localZip,
+	});
+	contentTypes = withPageOverrides(contentTypes, [...pagePaths.values()]);
+	let masterPaths = new Map<string, string>();
+	if (drawing.mastersPath !== undefined) {
+		masterPaths = await placeList({
+			listPath: drawing.mastersPath,
+			open: drawing.mastersOpen ?? '<Masters>',
+			close: drawing.mastersClose ?? '</Masters>',
+			relType: MASTER_TYPE,
+			stem: 'master',
+			items: drawing.masters.map((m) => ({
+				key: m.key,
+				xml: m.xml,
+				part: fromBase64(m.part),
+				...(m.rels !== undefined ? { rels: m.rels } : {}),
+			})),
+			known: keys.masterPaths,
+			files,
+			taken,
+			localZip,
+		});
+		contentTypes = withOverrides(contentTypes, MASTER_CONTENT_TYPE, [...masterPaths.values()]);
 	}
-	let counter = 0;
-	for (const page of drawing.pages) {
-		if (paths.has(page.key)) continue;
-		let path: string;
-		do path = `${pagesDir ? `${pagesDir}/` : ''}page${++counter}.xml`;
-		while (taken.has(path) || localZip?.file(path));
-		paths.set(page.key, path);
-		taken.add(path);
-	}
-
-	const others = parseRelationships(
-		localZip ? await zipText(localZip, relsPathOf(drawing.pagesPath)) : undefined,
-	).filter((r) => r.type !== PAGE_TYPE);
-	const usedIds = new Set(others.map((r) => r.id));
-	let nextRel = 0;
-	const pageRels: string[] = [];
-	const pageXml: string[] = [];
-	for (const page of drawing.pages) {
-		const path = paths.get(page.key)!;
-		let id: string;
-		do id = `rId${++nextRel}`;
-		while (usedIds.has(id));
-		usedIds.add(id);
-		pageRels.push(
-			`<Relationship Id="${id}" Type="${PAGE_TYPE}" Target="${escapeAttr(relTarget(pagesDir, path))}"/>`,
-		);
-		const rel = `<Rel xmlns:r="${REL_NS}" r:id="${id}"/>`;
-		pageXml.push(
-			page.xml.includes(REL_MARK)
-				? page.xml.replace(REL_MARK, () => rel)
-				: page.xml.slice(0, page.xml.lastIndexOf('</')) +
-						rel +
-						page.xml.slice(page.xml.lastIndexOf('</')),
-		);
-		files.set(path, encoder.encode(pagePartXml(page)));
-		if (page.body.rels !== undefined) files.set(relsPathOf(path), encoder.encode(page.body.rels));
-	}
-	files.set(
-		drawing.pagesPath,
-		encoder.encode(drawing.pagesOpen + pageXml.join('') + drawing.pagesClose),
-	);
-	files.set(
-		relsPathOf(drawing.pagesPath),
-		encoder.encode(
-			'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-				others.map((r) => r.text).join('') +
-				pageRels.join('') +
-				'</Relationships>',
-		),
-	);
-	files.set(CONTENT_TYPES, encoder.encode(withPageOverrides(contentTypes, [...paths.values()])));
+	files.set(CONTENT_TYPES, encoder.encode(contentTypes));
 
 	const zip = new JSZip();
 	const names = [...files.keys()].sort((a, b) =>
@@ -201,24 +214,44 @@ export async function composeDrawing(
 	const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
 
 	const commit = (): void => {
-		// This peer now knows exactly what the room holds.
+		// This peer now knows exactly what the room held.
 		const pageIds = new Map<string, string>();
 		const shapeIds = new Map<string, Map<string, string>>();
+		const masterIds = new Map<string, string>();
 		const known = new Map<string, string>();
 		keys.pagePaths.clear();
+		keys.masterPaths.clear();
+		keys.mediaKeys.clear();
 		for (const page of drawing.pages) {
 			pageIds.set(page.id, page.key);
-			keys.pagePaths.set(page.key, paths.get(page.key)!);
+			keys.pagePaths.set(page.key, pagePaths.get(page.key)!);
 			known.set(pageId(page.key), pageContent(page));
 			known.set(bodyId(page.key), bodyContent(page.body));
 			shapeIds.set(page.key, new Map(page.shapes.map((s) => [s.id, s.key])));
-			for (const shape of page.shapes) known.set(shapeId(page.key, shape.key), canon(shape.xml));
+			for (const shape of page.shapes) {
+				known.set(shapeId(page.key, shape.key), shellContent(shape));
+				for (const [path, entry] of shape.entries)
+					known.set(cellId(page.key, shape.key, path), entryContent(entry));
+			}
 			for (const connect of page.connects) known.set(connectId(connect.key), '');
 		}
-		keys.reset(pageIds, shapeIds);
+		for (const master of drawing.masters) {
+			masterIds.set(master.id, master.key);
+			const path = masterPaths.get(master.key);
+			if (path) keys.masterPaths.set(master.key, path);
+			known.set(
+				masterId(master.key),
+				masterContent({ ...master, print: fingerprint(fromBase64(master.part)) }),
+			);
+		}
+		for (const item of drawing.media) {
+			known.set(mediaId(item.key), '');
+			keys.mediaKeys.set(item.path, item.key);
+		}
+		keys.reset(pageIds, shapeIds, masterIds);
 		keys.known = known;
 		keys.partPrints.clear();
 		for (const [path, print] of prints) keys.partPrints.set(path, print);
 	};
-	return { bytes, commit };
+	return { bytes, signature: drawing.signature, commit };
 }

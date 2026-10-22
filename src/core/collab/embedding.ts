@@ -13,6 +13,7 @@ import { transportProvider } from './transport-provider';
 import { isValidRoomId } from './validation';
 import { type WebrtcOptions, webrtcProvider } from './webrtc-provider';
 import { createWebSocketTransport, roomUrl } from './websocket-transport';
+import type { CollaborationWriteBackState } from './write-back';
 
 /** Who this window is in the room. */
 export interface CollaborationUser {
@@ -72,6 +73,12 @@ export interface CollaborationState {
 	/** The first exchange with the room finished. */
 	synced: boolean;
 	people: Collaborator[];
+	/**
+	 * The owner's write-back (`onWriteBack`), present only in the window that writes back. `saved`
+	 * means the host's callback returned (or its promise resolved): the host's acknowledgement and
+	 * nothing more.
+	 */
+	writeBack?: CollaborationWriteBackState;
 }
 
 /** The event every editor element dispatches, with a {@link CollaborationState} detail. */

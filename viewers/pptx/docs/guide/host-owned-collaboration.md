@@ -135,9 +135,9 @@ are preserved. Use one active slide-presence writer per awareness instance.
 The host may persist Yjs updates directly. Alternatively, designate one participant
 with `role: 'owner'` and `onWriteBack(bytes)` to receive debounced PPTX snapshots, using
 the same source PPTX and save options as the editor. Pending and in-flight snapshots
-are cancelled if the session leaves or the host revokes readiness. This callback is
-not a durable storage acknowledgment; retries, errors and writer election remain host
-responsibilities. An active session with `role: 'viewer'` makes the editor read-only
+are cancelled if the session leaves or the host revokes readiness. Writer election remains the host's
+responsibility. Return a promise from `onWriteBack` to acknowledge storage: the viewer reports `saving`, `saved` or `failed` in `collaborationState.writeBack` (owners only), serialises writes (one in flight, later changes coalesce into one follow-up) and retries a rejection as `writeBackRetry` (`{ attempts, baseDelayMs?, maxDelayMs? }`) says; a plain return counts as acknowledged at once. A pending write-back is flushed on `pagehide` and when the page turns hidden. Browsers do not wait for asynchronous work when a page unloads, so a write that needs a network round trip can still be lost on close. A host whose `write` must survive a close should send the bytes with `navigator.sendBeacon(url, bytes)` or `fetch(url, { method: 'PUT', body: bytes, keepalive: true })`, which the browser completes after the page is gone (keepalive bodies are capped at about 64 KiB, so a large document may still not make it).
+An active session with `role: 'viewer'` makes the editor read-only
 and blocks publication, for both built-in and host-owned collaboration. The server
 must enforce access control independently.
 

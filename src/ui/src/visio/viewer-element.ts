@@ -78,13 +78,12 @@ const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 ) as typeof HTMLElement;
 export class VisioViewerElement extends BaseElement {
-	/** False while the drawing cannot be edited: this property, or `capabilities.edit` off. */
+	/** False while the drawing cannot be edited: `canEdit`, `readOnly`, a `viewer` role or `capabilities.edit`. */
 	get canEdit(): boolean {
 		return this.controller.canEdit;
 	}
 	set canEdit(value: boolean) {
-		this.#custom.requestedCanEdit = Boolean(value);
-		this.controller.canEdit = this.#custom.canEdit;
+		this.controller.canEdit = value;
 	}
 	/**
 	 * The host customisation (`VisioCustomization`): `capabilities`, `backstage.extraPages` and
@@ -97,7 +96,7 @@ export class VisioViewerElement extends BaseElement {
 	set customization(value: VisioCustomization | null | undefined) {
 		this.#assertAlive();
 		if (!this.#custom.set(value ?? null)) return;
-		this.controller.canEdit = this.#custom.canEdit;
+		this.controller.setCapabilityReadOnly(!this.#custom.resolved.canEdit);
 		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
 		this.#backstage.refreshCustomization();
 		renderTitleBar(
@@ -109,6 +108,16 @@ export class VisioViewerElement extends BaseElement {
 		);
 	}
 	readonly #custom = new ViewerCustomizationState();
+	/**
+	 * The inverse of `canEdit`: true makes the drawing read-only and wins over `canEdit`. A
+	 * collaboration `viewer` role also reads as read-only, and turning this off never lifts it.
+	 */
+	get readOnly(): boolean {
+		return this.controller.readOnly;
+	}
+	set readOnly(value: boolean) {
+		this.controller.readOnly = value;
+	}
 	/**
 	 * Shares the open drawing in a room (the shared embedding contract of `ooxml-core/collab`):
 	 * while set, the drawing is shared and one loaded later rejoins; null leaves the room.

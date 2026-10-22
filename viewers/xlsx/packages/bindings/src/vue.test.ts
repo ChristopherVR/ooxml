@@ -53,6 +53,7 @@ describe('Vue editor adapter', () => {
 		document.body.append(container);
 		const tick = ref(0);
 		const onReadOnly = vi.fn();
+		const onUpdate = vi.fn();
 		const onCustomize = vi.fn();
 		const app = createApp({
 			render: () =>
@@ -62,13 +63,17 @@ describe('Vue editor adapter', () => {
 					'data-tick': tick.value,
 					themeColors: { primary: '#123456' },
 					'onReadonly-change': onReadOnly,
+					'onUpdate:readOnly': onUpdate,
 					'onRibbon-customize': onCustomize,
 				}),
 		});
 		app.mount(container);
 		const editor = container.querySelector('xlsx-editor') as XlsxEditorElement;
 		editor.readOnly = true;
-		expect(onReadOnly).toHaveBeenCalledWith(true);
+		expect(onReadOnly).toHaveBeenCalledWith(true, expect.objectContaining({ readOnly: true }));
+		expect(onUpdate).toHaveBeenCalledWith(true);
+		emit(editor, 'readonly-change', { readOnly: true, locked: true, hostReadOnly: false });
+		expect(onUpdate).toHaveBeenCalledTimes(1);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onCustomize).toHaveBeenCalledWith(['italic']);
 		tick.value++;

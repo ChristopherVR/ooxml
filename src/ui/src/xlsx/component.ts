@@ -115,11 +115,10 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	get readOnly(): boolean {
 		return this.core.readOnly;
 	}
-	/** True when the workbook cannot be edited: this property, or `capabilities.edit` off. */
+	/** True when the workbook cannot be edited: this switch, a `viewer` role or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
-		this.core.requestedReadOnly = Boolean(value);
-		this.core.setReadOnly(this.core.requestedReadOnly || !this.core.customization.canEdit);
-		reflectAttribute(this, 'read-only', this.core.requestedReadOnly);
+		this.core.setReadOnly(Boolean(value));
+		reflectAttribute(this, 'read-only', this.core.hostReadOnly);
 	}
 
 	/**

@@ -109,16 +109,10 @@ export function applyVisioCommandVisibility(
 	}
 }
 
-/** The element's customisation: the host object, its resolution and the requested `canEdit`. */
+/** The element's customisation: the host object and its resolution. */
 export class ViewerCustomizationState {
 	input: VisioCustomization | null = null;
 	resolved: ResolvedVisioCustomization = EMPTY_VISIO_CUSTOMIZATION;
-	/** The `canEdit` property as the host set it. */
-	requestedCanEdit = true;
-	/** Effective: the property, unless `capabilities.edit` is off. */
-	get canEdit(): boolean {
-		return this.requestedCanEdit && this.resolved.canEdit;
-	}
 	/** Replaces the customisation; false when it is the same object. */
 	set(value: VisioCustomization | null): boolean {
 		if (value === this.input) return false;

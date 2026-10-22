@@ -22,10 +22,21 @@ export function visibleMenuEntries(
 	entries: readonly MenuEntry[],
 	isHidden: (command: string) => boolean,
 ): MenuEntry[] {
-	const kept = entries.filter((entry) => {
+	const kept: MenuEntry[] = [];
+	// A hidden entry's separator moves to the next entry that is kept, so two groups never merge.
+	let carry = false;
+	for (const entry of entries) {
 		const command = menuEntryCommand(entry);
-		return command === undefined || !isHidden(command);
-	});
+		if (command !== undefined && isHidden(command)) {
+			carry ||= Boolean(entry.separatorBefore);
+			continue;
+		}
+		const separatorBefore = kept.length > 0 && Boolean(entry.separatorBefore || carry);
+		carry = false;
+		kept.push(
+			separatorBefore === Boolean(entry.separatorBefore) ? entry : { ...entry, separatorBefore },
+		);
+	}
 	return kept.map((entry, index) =>
 		index === 0 && entry.separatorBefore ? { ...entry, separatorBefore: false } : entry,
 	);
