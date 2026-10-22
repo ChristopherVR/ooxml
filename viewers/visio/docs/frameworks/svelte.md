@@ -18,4 +18,4 @@ npm install visio-svelte-viewer svelte
 
 Callbacks go through the `events` prop. The component exports `load`, `fit` and `getHandle`. Use `$state.raw` for large immutable documents.
 
-The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). [Try the Svelte 5 demo](/demo-svelte/){target="_self"}.
+The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). To compose your own UI from the viewer's parts instead, see the [building blocks](/building-blocks); to share a drawing, see [collaboration](/collaboration). [Try the Svelte 5 demo](/demo-svelte/){target="_self"}.

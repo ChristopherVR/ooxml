@@ -36,9 +36,9 @@ Add `?share=<session>` to any demo URL to join a File > Share session on load. T
 ## Run them locally
 
 ```bash
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run dev
+bun install            # once, at the repository root
+cd viewers/visio
+bun run dev
 ```
 
-`npm run docs:build` builds the documentation and all demos exactly as the Pages workflow does.
+The demo sources live in `demos/visio/` at the repository root (`demo` is the shared vanilla playground, `demo-react`, `demo-vue`, `demo-angular`, `demo-svelte` and `demo-solid` mount the same workspace). The viewer's scripts and Vite config build and serve them. `bun run docs:build` builds the documentation and all demos exactly as the repository's Pages build does (`node scripts/build-pages.mjs` at the root builds every viewer's site).

@@ -28,6 +28,34 @@ browser-only. `ViewerController` is DOM-free, so another renderer can subscribe
 to the same state/events. `renderPage` is the SVG renderer port. See
 [architecture](architecture.md) for the module ownership.
 
+## Properties and events
+
+Every binding accepts the same properties and reports the same events (the contract is
+`ViewerProperties` and `ViewerEvents` in `ooxml-ui/visio`; [bindings](bindings.md) lists the native
+forms).
+
+| Surface    | Contract                                                                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+
+- `canEdit` (boolean) is the editing permission. The full viewer is editable by default and
+  `canEdit: false` makes it read-only; the [building blocks](building-blocks.md) are read-only until
+  the host passes `true`. A drawing without package bytes (a model passed as `document`, a legacy
+  `.vsd`) is read-only whatever `canEdit` says.
+- `document-change` carries `{ document, dirty, kind }`. `kind` is `edit`, `undo` or `redo` for this
+  window's own changes, `remote` when a collaborator's change was applied, and `save` after
+  `markClean()`.
+- `markClean()` (on `viewer.controller`, and on the building blocks) declares the current content
+  saved. A host that persists `exportVsdx()` itself calls it afterwards: `edit.dirty` becomes
+  `false`, a `document-change` of kind `save` is emitted, and later edits and undo steps are
+  measured from that point. It does nothing for a drawing that cannot be saved back.
+- `collaboration` (`VisioCollaborationOptions | null`) shares the open drawing in a room while it is
+  set. `collaboration-change` carries a `CollaborationState` when sharing starts or stops and when
+  its status, sync or people change. On the element (`viewer.element` of a handle),
+  `collaborationState` reads the current state, and `reconnectCollaboration()` and
+  `stopCollaboration()` act on it. See [collaboration](collaboration.md).
+
 ## Select shapes
 
 Every mounted/native handle exposes `selectShapes(targets)`, `selectAll()` and
@@ -262,7 +290,7 @@ After `load(bytesOrBlob)`, select a local shape and use the shared text controls
 or call `replacePlainText(pageId, shapeId, text)` on any mounted/native handle.
 `undo()` and `redo()` use bounded document history; `cancelEdit()` cancels
 pending work. All six adapters forward the same methods and `document-change`
-event, whose detail is `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`.
+event, whose detail is `{ document, dirty, kind }` (kind `edit`, `undo` or `redo`, plus `remote` and `save`; see above).
 Inspect `controller.state.edit` for source availability, busy/dirty status,
 undo/redo availability, history truncation, errors and diagnostics.
 

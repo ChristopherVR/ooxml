@@ -2,6 +2,8 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+Entries that cite commits or CI runs of `ChristopherVR/visio-viewer` refer to the former standalone repository, whose history is now part of `viewers/visio` in this repository.
+
 ## Rich-text ranges and fixed drawing-page dimensions, 2026-10-09
 
 The core replacement planner now retains character formatting for replacements

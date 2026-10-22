@@ -28,6 +28,20 @@ solo ocurren en el navegador. `ViewerController` no depende del DOM, de modo que
 al mismo estado y a los mismos eventos. `renderPage` es el puerto del renderizador SVG. Consulte la
 [arquitectura](/es/architecture) para ver la responsabilidad de cada módulo.
 
+## Propiedades y eventos {#properties-and-events}
+
+Todos los bindings aceptan las mismas propiedades y notifican los mismos eventos (el contrato son `ViewerProperties` y `ViewerEvents` en `ooxml-ui/visio`; [bindings](/bindings) lista las formas nativas).
+
+| Superficie  | Contrato                                                                                                                                                               |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Propiedades | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Eventos     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+
+- `canEdit` (booleano) es el permiso de edición. El visor completo es editable por defecto y `canEdit: false` lo deja en solo lectura; los [bloques de construcción](/building-blocks) son de solo lectura hasta que el anfitrión pase `true`. Un dibujo sin bytes de paquete (un modelo pasado como `document`, un `.vsd` heredado) es de solo lectura sea cual sea `canEdit`.
+- `document-change` entrega `{ document, dirty, kind }`. `kind` es `edit`, `undo` o `redo` para los cambios de esta ventana, `remote` cuando se aplicó el cambio de un colaborador y `save` tras `markClean()`.
+- `markClean()` (en `viewer.controller` y en los bloques de construcción) declara guardado el contenido actual. Un anfitrión que guarda `exportVsdx()` por su cuenta lo llama después: `edit.dirty` pasa a `false`, se emite un `document-change` de tipo `save`, y las ediciones y pasos de deshacer posteriores se miden desde ese punto. No hace nada con un dibujo que no se puede guardar de vuelta.
+- `collaboration` (`VisioCollaborationOptions | null`) comparte el dibujo abierto en una sala mientras esté definida. `collaboration-change` entrega un `CollaborationState` cuando el uso compartido empieza o termina y cuando cambian el estado, la sincronización o las personas. En el elemento (`viewer.element` de un handle), `collaborationState` lee el estado actual, y `reconnectCollaboration()` y `stopCollaboration()` actúan sobre él. Véase [Colaboración](/es/collaboration).
+
 ## Seleccionar formas {#select-shapes}
 
 Todo manejador montado o nativo expone `selectShapes(targets)`, `selectAll()` y
@@ -262,7 +276,7 @@ Tras `load(bytesOrBlob)`, seleccione una forma local y use los controles de text
 o llame a `replacePlainText(pageId, shapeId, text)` en cualquier manejador montado o nativo.
 `undo()` y `redo()` usan el historial acotado del documento; `cancelEdit()` cancela
 el trabajo pendiente. Los seis adaptadores reenvían los mismos métodos y el mismo evento
-`document-change`, cuyo detalle es `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`.
+`document-change`, cuyo detalle es `{ document, dirty, kind }` (kind `edit`, `undo` o `redo`, más `remote` y `save`; véase arriba).
 Inspeccione `controller.state.edit` para conocer la disponibilidad del origen, el estado de ocupado o modificado,
 la disponibilidad de deshacer y rehacer, el truncamiento del historial, los errores y los diagnósticos.
 

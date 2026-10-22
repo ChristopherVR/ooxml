@@ -53,16 +53,20 @@ export function Diagram() {
 
 The shared properties are `document` (a parsed `VisioDocument`, or `null` to clear),
 `pageIndex` (zero-based), `zoom` (`1` means 100%), `showToolbar`, `ribbonAddIns` (tabs the host adds
-after Help) and `events`.
-The callback map uses `document-load`, `document-change`, `document-error`,
-`page-change`, `zoom-change` and `shape-select`. File loading uses the imperative
+after Help), `canEdit` (editing permission; the viewer is editable unless you pass `false`),
+`collaboration` (shares the open drawing in a room while set; `null` leaves it) and `events`.
+The callback map uses `document-load`, `document-change` (`{ document, dirty, kind }` with kind
+`edit`, `undo`, `redo`, `remote` or `save`), `document-error`, `page-change`, `zoom-change`,
+`shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. File loading uses the imperative
 `load(File | Blob | Uint8Array | ArrayBuffer)` handle; `document` is not a file URL.
 Provide a height for the viewer host. Mount and load files in the browser.
 
 The handle supports `fit()`, `replacePlainText(pageId, shapeId, text)`,
 `applyEdits(edits)`, `undo()`, `redo()` and `exportVsdx()`.
 `exportVsdx()` returns `{ bytes, dirty, diagnostics }`; saving or downloading those
-bytes is the application's responsibility. Load original bytes through `load()`
+bytes is the application's responsibility, and `handle.controller.markClean()` declares them saved.
+Sharing state is on the handle's element: `collaborationState`, `reconnectCollaboration()` and
+`stopCollaboration()`. Load original bytes through `load()`
 to enable source-backed editing and export. Handles are usable after mount.
 
 Every viewer package includes the same browser UI and re-exports the
@@ -86,7 +90,7 @@ Files stay in the browser unless your application sends them elsewhere.
 
 ## Documentation
 
-[Viewer guide](https://christophervr.github.io/ooxml/visio/docs/) |
+[Viewer guide](https://christophervr.github.io/ooxml/visio/) |
 [Demo](https://christophervr.github.io/ooxml/visio/demo/) |
 [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
 

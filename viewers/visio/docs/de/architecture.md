@@ -2,16 +2,10 @@
 
 ## Zuständigkeiten {#ownership}
 
-- `ooxml-core/visio` im Schwester-Repository `ooxml`: Paketaufnahme, XML, Modell, Vererbung, zwischengespeicherte Geometrie, strukturierte Diagnosen. Hier gehört keine Viewer-Oberfläche hin.
-- `src/controller.ts`: Dokument- und Ansichtszustand, Auswahl, Ereignisse, das Verhalten „der zuletzt gestartete Ladevorgang gewinnt“ und die transaktionale Orchestrierung der Bearbeitung.
-- `src/document-history.ts`: begrenzter, quellbasierter Bearbeitungsverlauf und Zustand des VSDX-Kopie-Exports. Die XML- und Paketmutation bleibt im Kern und läuft über einen dedizierten Worker.
-- `src/document-text-search.ts`: begrenzter Abgleich von Literaltext über normalisierten sichtbaren Formtext, mit unveränderlichen seitenbezogenen Ergebnissen. Der gemeinsame Controller übernimmt die Navigation und die Prüfungen auf Reentranz.
-- `src/render-svg.ts` und `src/render-text.ts`: SVG-Darstellung und Render-Warnungen.
-- `src/export-svg.ts`: begrenzte, statische Serialisierung der aktuellen Seite über denselben SVG-Renderer, mit eingebetteten Rasterressourcen und Kompatibilitätsmetadaten.
-- `src/print-snapshot.ts`: seiteneffektfreie Artefakte der gewählten Seiten, aggregierte Budgets und erhaltene Diagnosen. Es erzeugt keine Druck-Frames und setzt keine Druckerrichtlinien um.
-- `src/viewer-element.ts`: gemeinsame Browser-Oberfläche.
-- `src/contract.ts` und `src/binding.ts`: Eigenschaften, Ereignisse und der nur im Client laufende Lebenszyklus mount/update/load/fit/exportSvg/destroy. Neuere, reentrante Updates verdrängen den verbleibenden älteren Patch.
-- Framework-Wrapper: nur Framework-Lebenszyklus sowie Weiterleitung von Ereignissen und Eigenschaften. Keine Parser-, Rendering- oder Geometrie-Abspaltung pro Framework.
+- `src/core/visio` (der Einstiegspunkt `ooxml-core/visio`): Paketaufnahme, XML, Modell, Vererbung, zwischengespeicherte Geometrie, ShapeSheet-Auswertung, Bearbeitungsbefehle, Collaboration-Zuordnung (`ooxml-core/visio/collab`) und strukturierte Diagnosen. Hier gehört keine Viewer-Oberfläche hin. Der DOM-freie Ansichtsvertrag liegt ebenfalls im Kern, in `src/core/visio/ui`: `contract.ts` (Eigenschaften und Ereignisse), `document-history.ts` (begrenzter, quellbasierter Bearbeitungsverlauf und Zustand des VSDX-Kopie-Exports; die XML- und Paketmutation läuft über einen dedizierten Worker), `document-text-search.ts` (begrenzter Abgleich von Literaltext über normalisierten sichtbaren Formtext mit unveränderlichen seitenbezogenen Ergebnissen), die Typen der Collaboration-Optionen und Präsenz sowie die übrigen DOM-freien Bearbeitungs- und Ansichtspläne.
+- `src/ui/src/visio` (veröffentlicht als `ooxml-ui/visio`): der Browser-Viewer. `controller.ts` verwaltet Dokument- und Ansichtszustand, Auswahl, Ereignisse, das Verhalten „der zuletzt gestartete Ladevorgang gewinnt“ und die transaktionale Bearbeitung; `viewer-element.ts` ist die gemeinsame Oberfläche `<visio-viewer>`; `binding.ts` ist der nur im Client laufende Lebenszyklus mount/update/load/fit/exportSvg/destroy (neuere, reentrante Updates verdrängen den verbleibenden älteren Patch); `render-svg.ts` und `render-text.ts` sind SVG-Darstellung und Render-Warnungen; `export-svg.ts` ist die begrenzte, statische Serialisierung der aktuellen Seite über denselben SVG-Renderer; `print-snapshot.ts` liefert seiteneffektfreie Artefakte der gewählten Seiten mit aggregierten Budgets (es erzeugt keine Druck-Frames und setzt keine Druckerrichtlinien um); die Bausteine sind `building-blocks-*.ts`.
+- `viewers/visio/src/index.ts`: ein Re-Export von `ooxml-ui/visio`.
+- `viewers/visio/packages/bindings/src` (privat) und `packages/{react,vue,angular,svelte,solid,vanilla}`: Framework-Lebenszyklus, Weiterleitung von Ereignissen und Eigenschaften sowie die nativen Baustein-Kompositionen. Keine Parser-, Rendering- oder Geometrie-Abspaltung pro Framework.
 
 ## Grenzen {#boundaries}
 
@@ -31,7 +25,7 @@ Das benutzerdefinierte Browser-Element nutzt einen dedizierten Parsing-Worker mi
 
 Eingebettete Enhanced Metafiles erhalten begrenzte Kompatibilitätsdiagnosen auf Datensatzebene. Die Prüfung lehnt nicht unterstützte Formate, Stile, Abbildungszustände und Ressourcenverstärkung ab, bevor eine Konvertierung stattfindet. Sie führt weder eingebettete WMF-Daten noch Schriften, Bilder, Skripte oder externe Verweise aus. Der Wegwerf-Parser-Worker konvertiert über das veröffentlichte Konverter-Paket nur eine schmale zugelassene Teilmenge aus Linien, Rechtecken, Ellipsen und Stock-Objekten, mit Dokumentbudgets und einer vom übergeordneten Kontext verantworteten harten Frist. Das direkte Parsen im Kern bleibt reine Inspektion, solange nicht ausdrücklich ein vertrauenswürdiger Konverter in einem isolierten Host bereitgestellt wird. Alle fünf zuvor untersuchten echten EMF-Medienteile bleiben nicht unterstützt; die strukturelle Zulassung allein verspricht weder Rendering noch Visio-Treue.
 
-Der headless Kern enthält einen getesteten neutralen Vektor-Sanitizer und Transportvalidator. Der Parser-Worker nutzt den veröffentlichten Konverter für eine begrenzte Teilmenge primitiver EMF-Elemente, die sich Live-Ansicht, SVG-Export und unveränderliches Druck-Rendering teilen. Der Parser-Fallback ohne Worker bleibt konverterfrei. Generierte Tests für reines Pfad-Clipping stimmen mit dem lokalen Skia-SVG-Backend überein; das installierte librsvg-Backend ignoriert verschachtelte Schnittmengen von clip-path. Vergleiche im Browser und mit nativem Visio sind weiterhin erforderlich. Siehe [die ausführliche Prüfung der Übernahme](research/emf-adoption-review.md).
+Der headless Kern enthält einen getesteten neutralen Vektor-Sanitizer und Transportvalidator. Der Parser-Worker nutzt den Konverter für eine begrenzte Teilmenge primitiver EMF-Elemente, die sich Live-Ansicht, SVG-Export und unveränderliches Druck-Rendering teilen. Der Parser-Fallback ohne Worker bleibt konverterfrei. Generierte Tests für reines Pfad-Clipping stimmen mit dem lokalen Skia-SVG-Backend überein; das installierte librsvg-Backend ignoriert verschachtelte Schnittmengen von clip-path. Vergleiche im Browser und mit nativem Visio sind weiterhin erforderlich. Siehe [die ausführliche Prüfung der Übernahme](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/research/emf-adoption-review.md).
 
 ## Verifikation {#verification}
 
@@ -41,8 +35,6 @@ Unit- und Fixture-Tests des Kerns belegen die jeweils geprüften Parse- und Mode
 
 Statischer mehrseitiger Vite-Build: Startseite, Leitfaden, Funktionsverzeichnis, Architektur und ein separates Playground. Links sind relativ und Assets lokal. Keine Schriften oder Skripte von Drittanbietern. Kein Parser-Bundle auf der Startseite.
 
-Das Dokumentationsdesign orientiert sich an der [pptx-viewer-Referenz](https://github.com/ChristopherVR/pptx-viewer). Die ausführliche Prüfung steht in `research/pptx-pages-design-review.md`.
-
 ## Veröffentlichung {#publication}
 
-Sieben npm-Pakete stellen die headless Visio-API und den gemeinsamen Viewer mit sechs nativen Framework-Adaptern bereit. Sie hängen vom veröffentlichten `ooxml-core/visio` ab. Stündliche Releases auf Basis von Conventional Commits bauen und verifizieren gepackte Artefakte, bevor sie per npm Trusted Publishing veröffentlicht werden. GitHub Pages stellt die Dokumentation und die Demo nach den Prüfungen bereit.
+Acht npm-Pakete stellen die headless Visio-API, den gemeinsamen Viewer mit sechs nativen Framework-Adaptern und die MCP-Werkzeuge bereit. Sie hängen von `ooxml-core` und `ooxml-ui` ab, die in diesem Repository liegen und mit ihnen zusammen veröffentlicht werden (siehe [Versionen](/releasing)). Der Pages-Build des Repositorys stellt die Dokumentation und die Demos unter `/ooxml/visio/` bereit.
