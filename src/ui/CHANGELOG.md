@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [Unreleased]
+
+### Documentation
+
+- Fix stale paths, counts and provenance in area docs ([95ad5db](https://github.com/ChristopherVR/ooxml/commit/95ad5db34b977df09e9a563b6ac72305cddd8ae7))
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+- **ui:** Describe the ui decisions page as it is now ([c37c73a](https://github.com/ChristopherVR/ooxml/commit/c37c73afb4c4bf6bce8b637c524d76184b44689c))
+
+## [1.22.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.22.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Let hosts own the data-validation alert in building blocks ([fcbe367](https://github.com/ChristopherVR/ooxml/commit/fcbe367f5cfe366cc425796e3fdff9c31aa99e25))
+- **visio:** Expose the text and connector tools on the standalone canvas ([8b5b094](https://github.com/ChristopherVR/ooxml/commit/8b5b09450f875c000415cee721fe1a6c74bd8ccf))
+- **visio:** Confirm owner write-back and report its status ([ef58158](https://github.com/ChristopherVR/ooxml/commit/ef5815875434f3ce62ef0f743a16c568e8a25e45))
+- **pptx:** Confirm owner write-back and report its status ([2cb779f](https://github.com/ChristopherVR/ooxml/commit/2cb779f606c7d8d0778c11be830433fc93f728c3))
+
 ## [1.21.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.21.0) - 2026-10-22
 
 ### Features

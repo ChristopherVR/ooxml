@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [Unreleased]
+
+### Documentation
+
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+
+## [4.46.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.46.0) - 2026-10-22
+
+### Features
+
+- **pptx:** Confirm owner write-back and report its status ([2cb779f](https://github.com/ChristopherVR/ooxml/commit/2cb779f606c7d8d0778c11be830433fc93f728c3))
+
+### Documentation
+
+- **pptx:** Sync english docs with the monorepo layout and apis ([4b89444](https://github.com/ChristopherVR/ooxml/commit/4b89444ac835ae6ed61ef1f6f7a3fc0d23aac7f5))
+- **pptx:** Fix demo paths and shared facade wording in package readmes ([4caf3d2](https://github.com/ChristopherVR/ooxml/commit/4caf3d2471527b484f1e1b6b2d3f5add11a92048))
+
 ## [4.45.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.45.0) - 2026-10-22
 
 ### Features

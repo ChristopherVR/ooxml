@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.23.0) - 2026-10-22
+
+### Features
+
+- **collab:** Add a confirmable write-back scheduler ([0bc822e](https://github.com/ChristopherVR/ooxml/commit/0bc822ec620c55f7a0394ca8d685a60df31483a4))
+- **visio:** Merge collaboration per cell, master and media ([46dabbc](https://github.com/ChristopherVR/ooxml/commit/46dabbc72a2ca7a0dbab0d4fda6b1bd6d4bb031e))
+- **visio:** Confirm owner write-back and report its status ([ef58158](https://github.com/ChristopherVR/ooxml/commit/ef5815875434f3ce62ef0f743a16c568e8a25e45))
+
+### Bug Fixes
+
+- **visio:** Drop unused collab imports and type the merge spec's viewer ([74857ee](https://github.com/ChristopherVR/ooxml/commit/74857ee1d74b501d0ec0b681025e2a6879483890))
+
+### Documentation
+
+- Fix stale paths, counts and provenance in area docs ([95ad5db](https://github.com/ChristopherVR/ooxml/commit/95ad5db34b977df09e9a563b6ac72305cddd8ae7))
+- Point script, e2e and plan references at real paths ([eec05e2](https://github.com/ChristopherVR/ooxml/commit/eec05e293e6149c0ecf2dd3c863694721949294a))
+
 ## [1.22.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.22.0) - 2026-10-22
 
 ### Features

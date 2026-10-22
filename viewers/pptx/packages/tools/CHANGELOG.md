@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.8.9](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.9) - 2026-10-22
+
+### Documentation
+
+- **pptx:** Sync english docs with the monorepo layout and apis ([4b89444](https://github.com/ChristopherVR/ooxml/commit/4b89444ac835ae6ed61ef1f6f7a3fc0d23aac7f5))
+
 ## [2.8.8](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.8) - 2026-10-22
 
 ### Refactor

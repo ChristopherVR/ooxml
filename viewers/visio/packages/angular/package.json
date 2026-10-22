@@ -1,6 +1,6 @@
 {
 	"name": "visio-angular-viewer",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Local-first Visio viewer for angular",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {
@@ -33,7 +33,7 @@
 		"emf-converter": "4.21.0",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"visio-core": "^1.0.0"
+		"visio-core": "^1.0.1"
 	},
 	"devDependencies": {
 		"@angular/compiler": "^22.2.3",

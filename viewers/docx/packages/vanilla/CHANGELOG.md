@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.0.1) - 2026-10-22
+
+### Documentation
+
+- **docx:** Add canEdit notes and reconcile the work trackers ([cf5fbff](https://github.com/ChristopherVR/ooxml/commit/cf5fbffd26822f78b327104f00d0ded6f13a9ef0))
+
 ## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.0.0) - 2026-10-22
 
 ### Features

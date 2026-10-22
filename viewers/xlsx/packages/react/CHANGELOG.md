@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-react-viewer@1.1.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Let hosts own the data-validation alert in building blocks ([fcbe367](https://github.com/ChristopherVR/ooxml/commit/fcbe367f5cfe366cc425796e3fdff9c31aa99e25))
+
 ## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-react-viewer@1.0.0) - 2026-10-22
 
 ### Features
