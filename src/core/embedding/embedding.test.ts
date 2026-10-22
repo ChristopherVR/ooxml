@@ -14,6 +14,7 @@ import {
 	sameRegionContext,
 	sameRenderer,
 	withHostMenuCommands,
+	withoutHiddenEntries,
 	type EditorCapabilities,
 	type HostBackstagePage,
 	type HostMenuCommand,
@@ -181,5 +182,41 @@ describe('regions', () => {
 		expect(
 			sameRegionContext({ ...base, run: 1 }, { ...base, run: 2 }, new Set(['run', 'close'])),
 		).toBe(true);
+	});
+});
+
+describe('withoutHiddenEntries', () => {
+	type Entry = { id: string; separatorBefore?: boolean };
+	const ids = (entries: Entry[]) => entries.map((e) => `${e.separatorBefore ? '|' : ''}${e.id}`);
+	const menu: Entry[] = [
+		{ id: 'cut' },
+		{ id: 'copy' },
+		{ id: 'link', separatorBefore: true },
+		{ id: 'unlink' },
+		{ id: 'comment', separatorBefore: true },
+	];
+	const without = (...hide: string[]) =>
+		ids(withoutHiddenEntries(menu, (entry) => hide.includes(entry.id)));
+
+	it('keeps the groups when nothing is hidden', () => {
+		expect(without()).toEqual(['cut', 'copy', '|link', 'unlink', '|comment']);
+	});
+
+	it('moves the separator of a hidden group start to the next kept entry', () => {
+		expect(without('link')).toEqual(['cut', 'copy', '|unlink', '|comment']);
+	});
+
+	it('drops a whole hidden group without doubling separators', () => {
+		expect(without('link', 'unlink')).toEqual(['cut', 'copy', '|comment']);
+	});
+
+	it('never starts the menu with a separator', () => {
+		expect(without('cut', 'copy')).toEqual(['link', 'unlink', '|comment']);
+		expect(without('cut', 'copy', 'link', 'unlink')).toEqual(['comment']);
+	});
+
+	it('leaves no trailing separator and does not change the input', () => {
+		expect(without('comment')).toEqual(['cut', 'copy', '|link', 'unlink']);
+		expect(menu[2]).toEqual({ id: 'link', separatorBefore: true });
 	});
 });

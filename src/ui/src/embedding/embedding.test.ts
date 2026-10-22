@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { HostBackstagePage, HostRegionRenderer } from 'ooxml-core/embedding';
 import { createHostBackstagePages } from './host-backstage';
-import { withHostMenuItems } from './host-menu';
+import { tidyMenuSeparators, withHostMenuItems } from './host-menu';
 import { HOST_REGION_ATTRIBUTE, HostRegionHost } from './region-host';
 
 afterEach(() => {
@@ -155,5 +155,43 @@ describe('withHostMenuItems', () => {
 		expect(run).not.toHaveBeenCalled();
 		expect(menu.run('host:send')).toBe(true);
 		expect(run).toHaveBeenCalledWith({ cell: 'A1' });
+	});
+});
+
+describe('tidyMenuSeparators', () => {
+	const build = (spec: string) => {
+		const menu = document.createElement('div');
+		for (const token of spec.split(' ')) {
+			const node = document.createElement(
+				token === '|' ? 'office-ui-menu-separator' : 'office-ui-menu-item',
+			);
+			if (token !== '|') node.setAttribute('command', token.replace('!', ''));
+			node.hidden = token.startsWith('!');
+			menu.append(node);
+		}
+		return menu;
+	};
+	const visible = (menu: HTMLElement) =>
+		[...menu.children]
+			.filter((node) => !(node as HTMLElement).hidden)
+			.map((node) => node.getAttribute('command') ?? '|')
+			.join(' ');
+
+	it('keeps one separator between groups, none at the ends', () => {
+		const menu = build('!cut !copy | link !unlink | | comment |');
+		tidyMenuSeparators(menu);
+		expect(visible(menu)).toBe('link | comment');
+	});
+
+	it('passes a hidden group start separator on, and restores separators when rows return', () => {
+		const menu = build('cut | !link unlink');
+		tidyMenuSeparators(menu);
+		expect(visible(menu)).toBe('cut | unlink');
+		for (const row of menu.querySelectorAll<HTMLElement>('[command]')) row.hidden = true;
+		tidyMenuSeparators(menu);
+		expect(visible(menu)).toBe('');
+		for (const row of menu.querySelectorAll<HTMLElement>('[command]')) row.hidden = false;
+		tidyMenuSeparators(menu);
+		expect(visible(menu)).toBe('cut | link unlink');
 	});
 });

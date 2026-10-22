@@ -8,6 +8,7 @@ import {
 	isHostMenuEntry,
 	resolveHostMenuCommands,
 	withHostMenuCommands,
+	withoutHiddenEntries,
 	type HostMenuCommand,
 	type HostMenuEntry,
 } from 'ooxml-core/embedding';
@@ -103,4 +104,52 @@ export function syncHostMenuChildren<C>(
 	if (top.length) menu.prepend(...top.map(item), ...(builtIn ? [separator()] : []));
 	if (bottom.length)
 		menu.append(...(builtIn || top.length ? [separator()] : []), ...bottom.map(item));
+}
+
+/** Marks a separator `tidyMenuSeparators` hid, so it never shows one the product hid itself. */
+const TIDY_HIDDEN = 'data-separator-tidy';
+
+/**
+ * Hides the separators of a self-managed `<office-ui-context-menu>` that its hidden rows left
+ * dangling, by the rule of `withoutHiddenEntries`: each kept row that starts a group shows one
+ * separator before it, and none shows at the top, at the bottom or twice in a row. Call it after
+ * rows were hidden or shown (and after `syncHostMenuChildren`).
+ */
+export function tidyMenuSeparators(menu: HTMLElement): void {
+	const isSeparator = (node: Element) => node.localName === 'office-ui-menu-separator';
+	const separators: HTMLElement[] = [];
+	const rows: Array<{ row: HTMLElement; before: HTMLElement[]; separatorBefore: boolean }> = [];
+	let pending: HTMLElement[] = [];
+	for (const child of menu.children) {
+		if (!(child instanceof HTMLElement)) continue;
+		if (isSeparator(child)) {
+			if (child.hidden && !child.hasAttribute(TIDY_HIDDEN)) continue;
+			separators.push(child);
+			pending.push(child);
+			continue;
+		}
+		rows.push({ row: child, before: pending, separatorBefore: pending.length > 0 });
+		pending = [];
+	}
+	// Which kept rows start a group, by the shared rule; each shows the last separator before it.
+	const starts = new Map(
+		withoutHiddenEntries(rows, (entry) => entry.row.hidden !== false).map((entry) => [
+			entry.row,
+			entry.separatorBefore,
+		]),
+	);
+	const shown = new Set<HTMLElement>();
+	let carried: HTMLElement[] = [];
+	for (const entry of rows) {
+		carried = [...carried, ...entry.before];
+		if (!starts.has(entry.row)) continue;
+		const separator = carried.at(-1);
+		if (starts.get(entry.row) && separator) shown.add(separator);
+		carried = [];
+	}
+	for (const separator of separators) {
+		const hide = !shown.has(separator);
+		separator.hidden = hide;
+		separator.toggleAttribute(TIDY_HIDDEN, hide);
+	}
 }

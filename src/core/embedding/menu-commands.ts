@@ -99,3 +99,25 @@ export function withHostMenuCommands<E extends { id: string; separatorBefore?: b
 	if (first && top.length + middle.length > 0) first.separatorBefore = true;
 	return [...top, ...middle, ...bottom];
 }
+
+/**
+ * A menu without its hidden entries, with its groups intact: a hidden entry that starts a group
+ * (`separatorBefore`) passes the separator on to the next kept entry, and the first kept entry
+ * never starts with one. So hiding entries never merges two groups, never doubles a separator
+ * and never leaves one at the top. `entries` is not changed.
+ */
+export function withoutHiddenEntries<E extends { separatorBefore?: boolean }>(
+	entries: readonly E[],
+	hidden: (entry: E) => boolean,
+): E[] {
+	const kept: E[] = [];
+	let separator = false;
+	for (const entry of entries) {
+		separator ||= entry.separatorBefore === true;
+		if (hidden(entry)) continue;
+		const starts = separator && kept.length > 0;
+		kept.push(entry.separatorBefore === starts ? entry : { ...entry, separatorBefore: starts });
+		separator = false;
+	}
+	return kept;
+}
