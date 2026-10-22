@@ -157,6 +157,17 @@ test.describe('export formats', () => {
 							range: [bar?.getAttribute('aria-valuemin'), bar?.getAttribute('aria-valuemax')],
 							barNamed: Boolean(bar?.getAttribute('aria-labelledby')),
 							cancel: root.querySelector('button')?.textContent,
+							// Painted above the File backstage the export starts from: the centre of the box
+							// hits the modal, at the stacking order the old modals had.
+							zIndex: getComputedStyle(host).zIndex,
+							onTop: (() => {
+								const box = dialog.getBoundingClientRect();
+								const hit = document.elementFromPoint(
+									box.x + box.width / 2,
+									box.y + box.height / 2,
+								);
+								return hit === host;
+							})(),
 							// Mounted inside the viewer, so it takes the viewer's theme variables.
 							themed: (() => {
 								const viewport = document.querySelector('[data-pptx-viewport]');
@@ -186,6 +197,8 @@ test.describe('export formats', () => {
 				range: ['0', '100'],
 				barNamed: true,
 				cancel: 'Cancel',
+				zIndex: '1200',
+				onTop: true,
 				themed: true,
 			};
 			return JSON.stringify(value) === JSON.stringify(expected)
