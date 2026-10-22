@@ -29,7 +29,7 @@ import { preprocessCssForCapture } from './css-preprocessing';
  * `original` is the live element handed to html2canvas; `doc` and `clonedEl`
  * are what its `onclone` callback receives. Order matters:
  *
- * 0. The cloned element keeps the live element's layout size (see
+ * 0. The cloned element keeps the live element's layout width (see
  *    `html2canvasCaptureScope`).
  * 1. 3D views settle on the live tree, then each cloned view is replaced by an
  *    `<img>` of its canvas plus its DOM overlay. This runs first, while the
@@ -64,6 +64,14 @@ function composedParent(node: Node): Node | null {
 
 const STYLE_SOURCES = 'style, link[rel~="stylesheet"]';
 
+/** Whether a style sheet sits in `node` or in a node one of its slots shows. */
+function holdsStyleSource(node: Element): boolean {
+	if (node.matches(STYLE_SOURCES) || node.querySelector(STYLE_SOURCES)) return true;
+	return [...node.querySelectorAll('slot')].some((slot) =>
+		slot.assignedElements().some((assigned) => holdsStyleSource(assigned)),
+	);
+}
+
 /**
  * The `ignoreElements` every binding hands html2canvas-pro.
  *
@@ -72,9 +80,11 @@ const STYLE_SOURCES = 'style, link[rel~="stylesheet"]';
  * capture (seconds, all on the main thread), and nothing outside the captured element is painted.
  * This keeps the captured element's subtree (through shadow roots and slots), the chain of its
  * ancestors, whose styles it inherits, and every style sheet with the path to it (the clone lays
- * ordinary elements out again from those rules, fonts included); it skips every other branch. The
- * clone is laid out without those neighbours, so `prepareHtml2CanvasClone` keeps the captured
- * element at its live size. `ignore`, a caller's own predicate, still applies.
+ * ordinary elements out again from those rules, fonts included). The other children of each
+ * ancestor stay as empty shells, so sibling selectors and their own sizes still apply; only their
+ * contents are skipped. A shell left without its contents can be narrower than it was, so
+ * `prepareHtml2CanvasClone` keeps the captured element at its live width. `ignore`, a caller's own
+ * predicate, still applies.
  */
 export function html2canvasCaptureScope(
 	captured: Element,
@@ -94,32 +104,27 @@ export function html2canvasCaptureScope(
 	return (node) => {
 		if (ignore?.(node)) return true;
 		if (ancestors.has(node) || inside(node)) return false;
-		return !(
-			node.closest('head') ||
-			node.matches(STYLE_SOURCES) ||
-			node.querySelector(STYLE_SOURCES)
-		);
+		const parent = composedParent(node);
+		if (parent && ancestors.has(parent)) return false;
+		return !(node.closest('head') || holdsStyleSource(node));
 	};
 }
 
 /**
- * Keep the cloned capture at the live element's layout size. Scoped by `html2canvasCaptureScope`,
- * its ancestors are laid out without their other children, which could otherwise resize it (a grid
- * column, a flex share). The offset size is the layout box, before any transform.
+ * Keep the cloned capture at the live element's layout width. Scoped by `html2canvasCaptureScope`,
+ * its ancestors' other children are empty shells, which could narrow a column it takes its width
+ * from. Only the width: a fixed height would change how percentage heights inside an auto-height
+ * element resolve. The offset width is the layout box, before any transform.
  */
 export function pinCapturedSize(original: HTMLElement, clonedEl: HTMLElement): void {
-	const { offsetWidth: width, offsetHeight: height } = original;
-	if (width <= 0 || height <= 0) return;
+	const width = original.offsetWidth;
+	if (width <= 0) return;
 	const display = original.ownerDocument.defaultView?.getComputedStyle(original).display;
 	if (display === 'inline' || display === 'contents') return;
 	Object.assign(clonedEl.style, {
 		boxSizing: 'border-box',
 		width: `${width}px`,
-		height: `${height}px`,
 		minWidth: '0',
-		minHeight: '0',
 		maxWidth: 'none',
-		maxHeight: 'none',
-		flex: 'none',
 	});
 }

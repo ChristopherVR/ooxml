@@ -134,12 +134,15 @@ describe('html2canvasCaptureScope', () => {
 		return { at, host };
 	}
 
-	it('clones the captured branch and the style sheets with their path, and skips the rest', () => {
+	it("clones the captured branch, shells of its ancestors' other children and the style sheets", () => {
 		const { at, host } = page();
 		const kept = cloned(html2canvasCaptureScope(at('.stage')));
+		// Shells keep sibling selectors (.rail + .viewport) and their own sizes; contents are skipped.
 		for (const selector of [
 			'head style',
+			'.ribbon',
 			'.viewer',
+			'.rail',
 			'.viewport',
 			'.stage',
 			'.shape a span',
@@ -150,9 +153,21 @@ describe('html2canvasCaptureScope', () => {
 			expect([selector, kept.has(at(selector))]).toStrictEqual([selector, true]);
 		}
 		expect(kept.has(host.shadowRoot!.querySelector('text')!)).toBeTruthy();
-		for (const selector of ['.ribbon', '.rail', '.inspector input']) {
+		for (const selector of ['.ribbon button', '.rail img', '.inspector input']) {
 			expect([selector, kept.has(at(selector))]).toStrictEqual([selector, false]);
 		}
+	});
+
+	it('keeps a style sheet a slot shows, with the wrapper around that slot', () => {
+		const { at } = page();
+		const host = document.createElement('div');
+		host.attachShadow({ mode: 'open' }).innerHTML =
+			'<div class="css"><div class="deep"><slot name="css"></slot></div></div><div class="content"><slot></slot></div>';
+		host.innerHTML = '<style slot="css">.x {}</style><div class="target"></div>';
+		at('.viewport').append(host);
+		const kept = cloned(html2canvasCaptureScope(host.querySelector('.target')!));
+		expect(kept.has(host.shadowRoot!.querySelector('.css')!)).toBeTruthy();
+		expect(kept.has(host.shadowRoot!.querySelector('.deep')!)).toBeTruthy();
 	});
 
 	it('walks up through a link around the captured element', () => {
@@ -165,7 +180,7 @@ describe('html2canvasCaptureScope', () => {
 		const { at, host } = page();
 		const inner = host.shadowRoot!.querySelector('svg')!;
 		const kept = cloned(html2canvasCaptureScope(inner));
-		expect([kept.has(host), kept.has(inner), kept.has(at('.shape'))]).toStrictEqual([
+		expect([kept.has(host), kept.has(inner), kept.has(at('.shape a'))]).toStrictEqual([
 			true,
 			true,
 			false,
@@ -191,7 +206,7 @@ describe('html2canvasCaptureScope', () => {
 });
 
 describe('pinCapturedSize', () => {
-	it('keeps the clone at the live layout size, and leaves an element with no box alone', () => {
+	it('keeps the clone at the live layout width only, and leaves an element with no box alone', () => {
 		const original = document.createElement('div');
 		Object.defineProperties(original, {
 			offsetWidth: { value: 960 },
@@ -200,12 +215,12 @@ describe('pinCapturedSize', () => {
 		document.body.append(original);
 		const clone = document.createElement('div');
 		pinCapturedSize(original, clone);
-		expect([
-			clone.style.width,
-			clone.style.height,
-			clone.style.flexGrow,
-			clone.style.flexShrink,
-		]).toStrictEqual(['960px', '540px', '0', '0']);
+		// No height: a fixed one would change how percentage heights inside resolve.
+		expect([clone.style.width, clone.style.maxWidth, clone.style.height]).toStrictEqual([
+			'960px',
+			'none',
+			'',
+		]);
 		const unsized = document.createElement('div');
 		pinCapturedSize(document.createElement('div'), unsized);
 		expect(unsized.getAttribute('style')).toBeNull();
