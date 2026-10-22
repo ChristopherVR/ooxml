@@ -237,7 +237,7 @@ Files that need more are found by content, so a new test needs no registration:
 `scripts/vitest-dom-hygiene.setup.ts` removes the `document`/`window` listeners a file leaves and
 clears the body, because the DOM is shared too. Tests must still clean up what they change (module
 state, globals, timers): the next file in the worker sees it. `packages/react`'s React 18 leg
-(`vitest.react18.config.ts`) is unchanged and still isolates per file.
+(`vitest.react18.config.ts`) uses the same isolation projects, with the React 18 aliases applied to each.
 
 **Browser tests run React only by default** when not in CI. React is the parity reference: its
 parity specs drive all five demos and diff them against it, so one project still checks every
