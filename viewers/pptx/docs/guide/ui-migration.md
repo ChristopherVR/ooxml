@@ -853,9 +853,6 @@ unit tests cover state mapping, event routing, gating, slots and the below-ribbo
 placement for each binding. Before and after screenshots are in
 `docs/public/assets/ui-migration/title-bar-before` and `title-bar-after`.
 
-shell, presentation toolbars, title bar and quick access, and compatibility
-toasts. This is why the issue stays open.
-
 ## Context menus (#393)
 
 `pptx-ui-context-menu` is one controlled shared element behind the element,

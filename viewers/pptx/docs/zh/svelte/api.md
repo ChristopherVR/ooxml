@@ -216,7 +216,7 @@ const current = viewer?.getCustomization();
 
 ### `pptx-svelte-viewer/internals`：幻灯片过渡辅助函数 {#pptx-svelte-viewer-internals-slide-transition-helpers}
 
-`pptx-viewer-shared`（所有绑定共用的框架无关逻辑）是一个私有的、未发布的工作区包：它从不发布到 npm，因此该 monorepo 之外的代码无法直接 `import` 它。宿主如果搭建了自己的放映界面（自定义舞台，而非完整的 `PowerPointViewer`），仍然需要用到过渡解析器/关键帧和叠加层组件，因此它们改从 `pptx-svelte-viewer/internals` 子路径重新导出：
+所有绑定共用的框架无关逻辑位于 `ooxml-ui/pptx`；私有的 `pptx-viewer-shared` 包只是它的兼容外观。宿主如果搭建了自己的放映界面（自定义舞台，而非完整的 `PowerPointViewer`），仍然需要用到过渡解析器/关键帧和叠加层组件，因此它们改从 `pptx-svelte-viewer/internals` 子路径重新导出：
 
 ```ts
 import {

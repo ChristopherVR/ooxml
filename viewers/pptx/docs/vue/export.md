@@ -11,18 +11,17 @@ driven, no DOM capture); PPTX goes through the core serializer.
 
 ## Supported formats
 
-| Format          | Pipeline                                                                                                 | Output file             |
-| --------------- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
-| PNG             | `html2canvas-pro` rasterisation (scale 2, fixed) → `canvas.toDataURL('image/png')`                       | `<name>-slide-<n>.png`  |
-| PDF             | `jspdf` (lazy-loaded) + per-slide PNG captures → multi-page PDF (one slide per page, page = canvas size) | `<name>.pdf`            |
-| GIF             | Shared pure-JS GIF89a encoder (lazy-loaded), 2000 ms per slide by default                                | `<name>.gif`            |
-| WebM            | `MediaRecorder` over a canvas capture stream (30 fps, 5 Mbps default), 3000 ms per slide by default      | `<name>.webm`           |
-| SVG             | Core `SvgExporter`: **stable** package-root functions (see below)                                        | per-slide SVG markup    |
-| Copy as image   | Rasterise the active slide → `ClipboardItem({'image/png'})` → system clipboard                           | -                       |
-| Print           | `usePrint`: slides (vector SVG document), outline (HTML), notes/handouts (rasterised), print window      | print window            |
-| JSON            | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity      | `<name>.json`           |
-| Package (share) | JSZip bundle of the serialized `.pptx` plus a generated README                                           | `<name>-package.zip`    |
-| PPTX/PPSX/PPTM  | `saveAs(format)` → `PptxHandler.save()` → `Uint8Array` (Save As)                                         | `presentation.<format>` |
+| Format         | Pipeline                                                                                                 | Output file             |
+| -------------- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
+| PNG            | `html2canvas-pro` rasterisation (scale 2, fixed) → `canvas.toDataURL('image/png')`                       | `<name>-slide-<n>.png`  |
+| PDF            | `jspdf` (lazy-loaded) + per-slide PNG captures → multi-page PDF (one slide per page, page = canvas size) | `<name>.pdf`            |
+| GIF            | Shared pure-JS GIF89a encoder (lazy-loaded), 2000 ms per slide by default                                | `<name>.gif`            |
+| WebM           | `MediaRecorder` over a canvas capture stream (30 fps, 5 Mbps default), 3000 ms per slide by default      | `<name>.webm`           |
+| SVG            | Core `SvgExporter`: **stable** package-root functions (see below)                                        | per-slide SVG markup    |
+| Copy as image  | Rasterise the active slide → `ClipboardItem({'image/png'})` → system clipboard                           | -                       |
+| Print          | `usePrint`: slides (vector SVG document), outline (HTML), notes/handouts (rasterised), print window      | print window            |
+| JSON           | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity      | `<name>.json`           |
+| PPTX/PPSX/PPTM | `saveAs(format)` → `PptxHandler.save()` → `Uint8Array` (Save As)                                         | `presentation.<format>` |
 
 `<name>` is the `fileName` prop with its extension stripped, defaulting to `presentation`.
 

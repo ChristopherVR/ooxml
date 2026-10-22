@@ -1,6 +1,6 @@
 ---
 title: Exportation
-description: Enregistrez vos modifications en .pptx, exportez en PDF, PNG, GIF et vidéo, préparez un package de partage et imprimez des documents et des pages de notes.
+description: Enregistrez vos modifications en .pptx, exportez en PDF, PNG, GIF et vidéo, et imprimez des documents et des pages de notes.
 ---
 
 # Exportation
@@ -14,12 +14,11 @@ Tout ce que vous exportez est généré dans votre navigateur et téléchargé s
 1. Cliquez sur l'onglet **Fichier**.
 2. Cliquez sur **Enregistrer** pour télécharger la présentation en fichier `.pptx`, ou ouvrez **Enregistrer sous** pour tous les formats :
 
-| Option Enregistrer sous                 | Ce que vous obtenez                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Présentation PowerPoint**             | Un fichier `.pptx` modifiable avec toutes vos modifications.                                                 |
-| **Diaporama PowerPoint**                | Un fichier `.ppsx` qui s'ouvre directement en diaporama.                                                     |
-| **Présentation activée par des macros** | Un fichier `.pptm` qui préserve les macros VBA. Affiché uniquement si le fichier ouvert contient des macros. |
-| **Package de partage**                  | Un lot `.zip` contenant le `.pptx` et un fichier readme.                                                     |
+| Option Enregistrer sous                       | Ce que vous obtenez                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Présentation PowerPoint**                   | Un fichier `.pptx` modifiable avec toutes vos modifications.                                                 |
+| **Diaporama PowerPoint**                      | Un fichier `.ppsx` qui s'ouvre directement en diaporama.                                                     |
+| **Présentation prenant en charge les macros** | Un fichier `.pptm` qui préserve les macros VBA. Affiché uniquement si le fichier ouvert contient des macros. |
 
 Le bouton **Enregistrer** de la barre de titre fait la même chose que **Fichier > Enregistrer**. Les fichiers enregistrés conservent vos modifications lors de l'aller-retour : éléments ajoutés et modifiés, ordre des diapositives, notes, sections, etc.
 
@@ -31,14 +30,14 @@ Comme l'application s'exécute dans un navigateur, **Ctrl+S** déclenche la boî
 
 Ouvrez **Fichier > Exporter** :
 
-| Option                               | Ce que vous obtenez                                                                | Portée               |
-| ------------------------------------ | ---------------------------------------------------------------------------------- | -------------------- |
-| **Créer un PDF**                     | Un PDF d'une page par diapositive, capturé en haute résolution.                    | Présentation entière |
-| **Exporter la diapositive en cours** | Une image PNG de la diapositive en cours.                                          | Diapositive en cours |
-| **Créer une vidéo**                  | Une vidéo `.webm` qui parcourt la présentation, quelques secondes par diapositive. | Présentation entière |
-| **Créer un GIF animé**               | Un GIF compact en boucle de la présentation.                                       | Présentation entière |
-| **Exporter en JSON**                 | Un document JSON portable qui se réimporte avec une fidélité complète.             | Présentation entière |
-| **Copier en tant qu'image**          | Copie la diapositive en cours dans le presse-papiers sous forme d'image.           | Diapositive en cours |
+| Option                             | Ce que vous obtenez                                                                | Portée               |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | -------------------- |
+| **Créer un PDF**                   | Un PDF d'une page par diapositive, capturé en haute résolution.                    | Présentation entière |
+| **Exporter la diapositive active** | Une image PNG de la diapositive en cours.                                          | Diapositive en cours |
+| **Créer une vidéo**                | Une vidéo `.webm` qui parcourt la présentation, quelques secondes par diapositive. | Présentation entière |
+| **Créer un GIF animé**             | Un GIF compact en boucle de la présentation.                                       | Présentation entière |
+| **Exporter en JSON**               | Un document JSON portable qui se réimporte avec une fidélité complète.             | Présentation entière |
+| **Copier comme image**             | Copie la diapositive en cours dans le presse-papiers sous forme d'image.           | Diapositive en cours |
 
 Pour les formats de présentation entière, une boîte de dialogue de progression montre chaque diapositive en cours de capture, avec un bouton **Annuler** si vous changez d'avis. Le fichier terminé est téléchargé automatiquement.
 

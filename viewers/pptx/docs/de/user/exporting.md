@@ -1,6 +1,6 @@
 ---
 title: Exportieren
-description: Bearbeitungen als .pptx zurückspeichern, PDF, PNG, GIF und Video exportieren, zum Teilen verpacken und Handzettel und Notizenseiten drucken.
+description: Bearbeitungen als .pptx zurückspeichern, PDF, PNG, GIF und Video exportieren und Handzettel und Notizenseiten drucken.
 ---
 
 # Exportieren
@@ -19,7 +19,6 @@ Alles, was Sie exportieren, wird in Ihrem Browser erzeugt und auf Ihr Gerät her
 | **PowerPoint-Präsentation**           | Eine bearbeitbare `.pptx`-Datei mit allen Ihren Änderungen.                                             |
 | **PowerPoint-Bildschirmpräsentation** | Eine `.ppsx`-Datei, die direkt als Bildschirmpräsentation startet.                                      |
 | **Präsentation mit Makros**           | Eine `.pptm`-Datei, die VBA-Makros erhält. Wird nur angezeigt, wenn die geöffnete Datei Makros enthält. |
-| **Package for Sharing**               | Ein `.zip`-Bündel mit der `.pptx` und einer Readme.                                                     |
 
 Die Schaltfläche **Speichern** in der Titelleiste tut dasselbe wie **Datei > Speichern**. Gespeicherte Dateien übernehmen Ihre Änderungen im Round-Trip: hinzugefügte und geänderte Elemente, Folienreihenfolge, Notizen, Abschnitte und so weiter.
 

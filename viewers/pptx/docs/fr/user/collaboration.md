@@ -33,7 +33,7 @@ Ouvrez un lien de partage qu'on vous a envoyé, ou rejoignez manuellement :
 1. Cliquez sur **Partager** et passez à l'onglet **Rejoindre une session**.
 2. Collez le lien d'invitation, ou saisissez l'identifiant de la salle, dans **Lien d'invitation ou identifiant de salle**.
 3. Saisissez votre nom d'affichage et, si la session en utilise un, l'adresse du serveur de collaboration.
-4. Cliquez sur **Rejoindre la session**.
+4. Cliquez sur **Rejoindre une session**.
 
 ## Indicateurs de présence
 

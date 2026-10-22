@@ -139,7 +139,7 @@ Haga clic con el botón derecho en una tabla para ver los comandos de filas y co
 - **Agregar una diapositiva** - haga clic en **Agregar diapositiva** en la parte inferior del panel de diapositivas, o use **Inicio > Nueva diapositiva**. La flecha junto a Nueva diapositiva abre una galería de los diseños del patrón de la diapositiva actual, cada uno dibujado con su ilustración real y sus marcos de marcador de posición en lugar de listado por nombre. El botón **Diseño** abre la misma galería para cambiar el diseño de la diapositiva actual, con el diseño que usa ahora resaltado con un contorno. Al cambiar de diseño, su contenido pasa a los marcadores de posición correspondientes; lo que el nuevo diseño no tenga dónde alojar permanece en la diapositiva como contenido independiente en lugar de descartarse.
 - **Reordenar** - arrastre las miniaturas en el panel de diapositivas, o arrastre las tarjetas en el [clasificador de diapositivas](/es/user/viewing#el-clasificador-de-diapositivas).
 - **Duplicar, ocultar o eliminar** - abra el clasificador de diapositivas, haga clic con el botón derecho en una o más diapositivas y elija **Duplicar**, **Ocultar diapositivas** / **Mostrar diapositivas** o **Eliminar**. Copiar y pegar diapositivas completas también funciona allí (**Ctrl+C** / **Ctrl+V**).
-- **Secciones** - use **Inicio > Sección** o haga clic con el botón derecho en una miniatura y elija **Agregar sección antes** para agrupar diapositivas bajo encabezados con nombre. Haga clic con el botón derecho en el encabezado de una sección para **Cambiar nombre**, **Eliminar** o **Mover**la.
+- **Secciones** - use **Inicio > Sección** o haga clic con el botón derecho en una miniatura y elija **Añadir sección antes** para agrupar diapositivas bajo encabezados con nombre. Haga clic con el botón derecho en el encabezado de una sección para **Cambiar nombre**, **Eliminar** o **Mover**la.
 - **Restablecer** - **Inicio > Restablecer** restaura las posiciones de los marcadores de posición de la diapositiva actual desde su diseño.
 
 ## Añadir una fuente que el visualizador no tiene
@@ -150,7 +150,7 @@ de la presentación. Si tiene el archivo de la fuente, puede entregárselo al vi
 sesión actual:
 
 1. Abra **Archivo > Opciones > General** y busque la sección **Fuentes**.
-2. Active **Permitirme añadir archivos de fuentes a esta sesión**. El ajuste está desactivado
+2. Active **Permitirme añadir archivos de fuente a esta sesión**. El ajuste está desactivado
    por defecto, por lo que el selector de archivos permanece deshabilitado hasta que lo active.
 3. Haga clic en **Añadir archivo de fuente** y elija un archivo `.ttf`, `.otf`, `.woff` o `.woff2`.
 

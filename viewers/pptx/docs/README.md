@@ -32,11 +32,13 @@ then return to the root and run `bun run docs:dev`. Output goes to
 | OpenXML inventory                 | `architecture/openxml-conformance.md`                                   | Schema data, parsing/saving code, and conformance tests               |
 | Animation research                | `../../../src/ui/src/pptx/render/animation-ppt-formula-ground-truth.md` | Formula evaluator, playback integration, and regression tests         |
 
-French, Spanish, and German guides cover a subset of the English site.
-Simplified Chinese (`zh/`) covers the landing page, developer and user guides,
-core and all five binding API references, MCP tools, the OpenXML conformance
-reference, and the release overview. Generated historical release notes remain
-in their original language and are linked from the Chinese release overview.
+French, Spanish, and German translate the landing page and part of the `guide/` and
+`user/` sections (not the binding, core or architecture references). Simplified Chinese
+(`zh/`) translates nearly every English page: the landing page, developer and user guides,
+core and all five binding API references, MCP tools, the OpenXML conformance reference and
+the release overview. Maintainer-only pages such as this one are not translated. Generated
+historical release notes remain in their original language and are linked from the Chinese
+release overview.
 UI dictionaries in `packages/locales` are a separate system; adding a UI locale
 does not automatically translate this site.
 

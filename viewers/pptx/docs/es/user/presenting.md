@@ -14,11 +14,11 @@ Desde la pestaña **Presentación con diapositivas**:
 1. Haga clic en **Desde el principio** para empezar en la diapositiva 1, o en **Desde la diapositiva actual** para empezar donde está.
 2. La diapositiva se expande para llenar la pantalla y los elementos de edición desaparecen.
 
-También puede hacer clic en el botón **Presentar** de la fila superior de la barra de herramientas, o en el botón **Presentación con diapositivas** de la barra de estado. La flecha junto a **Presentar** abre un menú con **Vista del presentador**, **Ensayar intervalos**, **Configurar presentación con diapositivas**, **Presentar en línea** y un interruptor de **Subtítulos**.
+También puede hacer clic en el botón **Presentar** de la fila superior de la barra de herramientas, o en el botón **Presentación con diapositivas** de la barra de estado. La flecha junto a **Presentar** abre un menú con **Vista del presentador**, **Ensayar intervalos**, **Configurar presentación**, **Presente en línea** y un interruptor de **Subtítulos**.
 
 ![Slideshow mode fullscreen](/user-guide/presenting-slideshow.jpg)
 
-**Configurar presentación con diapositivas** controla opciones de reproducción como **Usar intervalos** (avance automático con los intervalos de diapositiva guardados) y repetir la presentación en bucle hasta que pulse Escape.
+**Configurar presentación** controla opciones de reproducción como **Usar tiempos, si están presentes** (avance automático con los intervalos de diapositiva guardados) y repetir la presentación en bucle hasta que pulse Escape.
 
 ## Controlar la presentación
 
@@ -56,7 +56,7 @@ Las **animaciones** se reproducen según sus desencadenadores:
 - **Al hacer clic** - cada clic o tecla de avance reproduce el siguiente paso de animación; la diapositiva solo cambia cuando se han reproducido todos los pasos.
 - **Con la anterior** / **Después de la anterior** - estos pasos se encadenan automáticamente tras el que los precede.
 
-Las diapositivas con intervalos guardados avanzan automáticamente cuando **Usar intervalos** está activado en Configurar presentación con diapositivas. Los elementos con desencadenadores de desplazamiento o clic (incluidos los botones de acción y los hipervínculos) responden durante la presentación.
+Las diapositivas con intervalos guardados avanzan automáticamente cuando **Usar tiempos, si están presentes** está activado en Configurar presentación. Los elementos con desencadenadores de desplazamiento o clic (incluidos los botones de acción y los hipervínculos) responden durante la presentación.
 
 ::: warning Notas de fidelidad
 Las transiciones y animaciones son aproximaciones del comportamiento de PowerPoint. Morph interpola la posición, el tamaño, la opacidad, la rotación y el color de los elementos coincidentes, y también transforma entre geometrías de forma distintas: cuando un elemento coincidente cambia de tipo de forma (o de contorno dirigido por ajustes) entre las dos diapositivas, su contorno se resuelve en un polígono y se interpola vértice a vértice hacia el contorno de la forma de destino, en lugar de fundirse. Consulte [Limitaciones](/es/guide/limitations) para otras aproximaciones de transiciones y animaciones.
@@ -107,18 +107,18 @@ Las anotaciones se conservan por diapositiva: pase a otra diapositiva y vuelva, 
 
 ![Annotation drawn on a slide](/user-guide/presenting-annotation.jpg)
 
-Cuando termina una presentación que tiene tinta, un cuadro de diálogo **¿Conservar las anotaciones?** pregunta si desea conservar los dibujos (se convierten en elementos de tinta en las diapositivas) o descartarlos.
+Cuando termina una presentación que tiene tinta, un cuadro de diálogo **¿Mantener anotaciones?** pregunta si desea conservar los dibujos (se convierten en elementos de tinta en las diapositivas) o descartarlos.
 
 ## Ensayar con intervalos
 
 1. Haga clic en **Presentación con diapositivas > Ensayar intervalos**. La presentación comienza con un pequeño panel de temporizador que muestra el **Tiempo de diapositiva** y el **Tiempo total**; un botón **Pausa** detiene el reloj mientras hace un descanso.
 2. Practique su charla, avanzando como lo haría normalmente. Se registra el tiempo que dedica a cada diapositiva.
-3. Pulse **Escape** (o avance más allá de la última diapositiva). Un resumen de **Intervalos del ensayo** lista cada diapositiva con su tiempo y su total.
-4. Haga clic en **Guardar intervalos** para almacenar los tiempos por diapositiva (usados para el avance automático cuando **Usar intervalos** está activado), o en **Descartar**.
+3. Pulse **Escape** (o avance más allá de la última diapositiva). Un resumen de **Horarios de ensayo** lista cada diapositiva con su tiempo y su total.
+4. Haga clic en **Guardar horarios** para almacenar los tiempos por diapositiva (usados para el avance automático cuando **Usar tiempos, si están presentes** está activado), o en **Desechar**.
 
 ## Presentar a espectadores remotos
 
-**Presentación con diapositivas > Difundir** (también **Presentar en línea** en el menú Presentar) inicia una sesión unidireccional en la que los espectadores siguen sus diapositivas en vivo desde un enlace. Consulte [Colaboración](/es/user/collaboration#difundir-una-presentacion).
+**Presentación con diapositivas > Difundir** (también **Presente en línea** en el menú Presentar) inicia una sesión unidireccional en la que los espectadores siguen sus diapositivas en vivo desde un enlace. Consulte [Colaboración](/es/user/collaboration#difundir-una-presentacion).
 
 ## Salir
 

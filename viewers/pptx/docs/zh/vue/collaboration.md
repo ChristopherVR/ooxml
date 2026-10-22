@@ -113,19 +113,20 @@ interface CollaborationConfig {
 }
 ```
 
-| 字段                  | 类型                               | 必填 | 说明                                                                                                                    |
-| --------------------- | ---------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                           | 是   | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                                                                          |
-| `serverUrl`           | `string`                           | 是   | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                         |
-| `transport`           | `CollaborationTransport`           | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                      |
-| `signaling`           | `string[]`                         | 否   | y-webrtc 信令 URL，默认使用其公共列表。                                                                                 |
-| `userName`            | `string`                           | 是   | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。                                                          |
-| `userAvatar`          | `string`                           | 否   | 经过校验的头像 URL。                                                                                                    |
-| `userColor`           | `string`                           | 否   | 用户光标环的十六进制颜色。                                                                                              |
-| `authToken`           | `string`                           | 否   | WebSocket 握手参数或 WebRTC 房间密码。                                                                                  |
-| `role`                | `CollaborationRole`                | 否   | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                                                                      |
-| `onWriteBack`         | `(bytes) => void \| Promise<void>` | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认信号；状态见 `collaborationState.writeBack`。 |
-| `writeBackDebounceMs` | `number`                           | 否   | 默认 5000 ms。                                                                                                          |
+| 字段                  | 类型                                                              | 必填 | 说明                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                                                          | 是   | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                                                                          |
+| `serverUrl`           | `string`                                                          | 是   | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                         |
+| `transport`           | `CollaborationTransport`                                          | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                      |
+| `signaling`           | `string[]`                                                        | 否   | y-webrtc 信令 URL，默认使用其公共列表。                                                                                 |
+| `userName`            | `string`                                                          | 是   | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。                                                          |
+| `userAvatar`          | `string`                                                          | 否   | 经过校验的头像 URL。                                                                                                    |
+| `userColor`           | `string`                                                          | 否   | 用户光标环的十六进制颜色。                                                                                              |
+| `authToken`           | `string`                                                          | 否   | WebSocket 握手参数或 WebRTC 房间密码。                                                                                  |
+| `role`                | `CollaborationRole`                                               | 否   | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                                                                      |
+| `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认信号；状态见 `collaborationState.writeBack`。 |
+| `writeBackDebounceMs` | `number`                                                          | 否   | 默认 5000 ms。                                                                                                          |
+| `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | 否   | 对被拒绝的 `onWriteBack` 做指数退避重试。默认不重试。                                                                   |
 
 ### 无需文档服务器的点对点模式 {#serverless-peer-to-peer-mode}
 

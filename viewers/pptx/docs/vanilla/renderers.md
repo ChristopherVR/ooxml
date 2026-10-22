@@ -189,7 +189,7 @@ thumbnails both do).
 
 - Re-render happens automatically on navigation, zoom, theme, and locale changes; registry
   changes apply from the next render (navigate or call `goToSlide(getCurrentSlide())` to force).
-- Reuse `pptx-viewer-shared` helpers rather than reimplementing geometry/style math; the
+- Reuse the `ooxml-ui/pptx` helpers rather than reimplementing geometry/style math; the
   built-in renderers in
   [`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx/packages/vanilla/src/viewer/render/elements)
   are the reference implementations, and their `README.md` documents the house contract.

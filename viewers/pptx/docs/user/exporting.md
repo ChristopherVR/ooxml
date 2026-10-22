@@ -1,6 +1,6 @@
 ---
 title: Exporting
-description: Save your edits back to .pptx, export PDF, PNG, GIF, and video, package for sharing, and print handouts and notes pages.
+description: Save your edits back to .pptx, export PDF, PNG, GIF, and video, and print handouts and notes pages.
 ---
 
 # Exporting
@@ -19,7 +19,6 @@ Everything you export is generated in your browser and downloaded to your device
 | **PowerPoint Presentation**    | An editable `.pptx` file with all your changes.                                            |
 | **PowerPoint Show**            | A `.ppsx` file that opens directly into a slideshow.                                       |
 | **Macro-Enabled Presentation** | A `.pptm` file that preserves VBA macros. Shown only when the opened file contains macros. |
-| **Package for Sharing**        | A `.zip` bundle containing the `.pptx` plus a readme.                                      |
 
 The **Save** button in the title bar does the same as **File > Save**. Saved files round-trip your edits: added and changed elements, slide order, notes, sections, and so on.
 

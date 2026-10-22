@@ -19,7 +19,6 @@ description: 从 React 组件导出 PNG、PDF、GIF、WebM、SVG 和备注 PDF�
 | SVG            | 核心 `SvgExporter`，矢量格式，也用于矢量打印                                                                     | 每页一个 SVG             |
 | 打印           | 倍率 3 的位图捕获和 HTML 打印文档，支持幻灯片、备注、讲义和大纲，或使用矢量 SVG 打印文档                         | 打印窗口                 |
 | JSON           | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                                            | `presentation.json`      |
-| 共享包         | 使用 JSZip 打包序列化后的 `.pptx` 和生成的 `README.txt`                                                          | `<name>-package.zip`     |
 | PPTX/PPSX/PPTM | `PptxHandler.save()`，设置密码时为 `saveEncrypted()`，生成用于另存为的 `Uint8Array`                              | `presentation.<ext>`     |
 
 ::: info JPEG

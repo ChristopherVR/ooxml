@@ -11,18 +11,17 @@ driven, resolution independent); PPTX goes through the core serializer.
 
 ## Supported formats
 
-| Format          | Pipeline                                                                                                               | Output file              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| PNG             | `renderToCanvas` (html2canvas-pro, scale 2) → `canvas.toBlob('image/png')`; also copy-to-clipboard via `ClipboardItem` | `slide-<n>.png`          |
-| PDF (slides)    | Per-slide canvases (scale 2) → JPEG frames (quality 0.92) → pure PDF byte builder (no jspdf), one A4 page per slide    | `presentation.pdf`       |
-| PDF (notes)     | Same capture + notes-page layout builder                                                                               | `presentation-notes.pdf` |
-| GIF             | Per-slide canvases (scale 0.5) → shared pure-JS GIF89a encoder, 2000 ms per slide                                      | `presentation.gif`       |
-| Video (WebM)    | Per-slide canvases (scale 1) → canvas `captureStream` + `MediaRecorder` (30 fps, 5 Mbps), 3000 ms per slide            | `presentation.webm`      |
-| SVG             | Core `SvgExporter` (vector; also drives the vector print path)                                                         | per-slide SVG            |
-| Print           | Raster capture at scale 3 + HTML print document (slides / notes / handouts / outline), or vector SVG print document    | print window             |
-| JSON            | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity                    | `presentation.json`      |
-| Package (share) | JSZip bundle of the serialized `.pptx` plus a generated `README.txt`                                                   | `<name>-package.zip`     |
-| PPTX/PPSX/PPTM  | `PptxHandler.save()` (or `saveEncrypted()` when a password is set) → `Uint8Array` (Save As)                            | `presentation.<ext>`     |
+| Format         | Pipeline                                                                                                               | Output file              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| PNG            | `renderToCanvas` (html2canvas-pro, scale 2) → `canvas.toBlob('image/png')`; also copy-to-clipboard via `ClipboardItem` | `slide-<n>.png`          |
+| PDF (slides)   | Per-slide canvases (scale 2) → JPEG frames (quality 0.92) → pure PDF byte builder (no jspdf), one A4 page per slide    | `presentation.pdf`       |
+| PDF (notes)    | Same capture + notes-page layout builder                                                                               | `presentation-notes.pdf` |
+| GIF            | Per-slide canvases (scale 0.5) → shared pure-JS GIF89a encoder, 2000 ms per slide                                      | `presentation.gif`       |
+| Video (WebM)   | Per-slide canvases (scale 1) → canvas `captureStream` + `MediaRecorder` (30 fps, 5 Mbps), 3000 ms per slide            | `presentation.webm`      |
+| SVG            | Core `SvgExporter` (vector; also drives the vector print path)                                                         | per-slide SVG            |
+| Print          | Raster capture at scale 3 + HTML print document (slides / notes / handouts / outline), or vector SVG print document    | print window             |
+| JSON           | `exportToJson` (core model serializer): a portable JSON document that re-imports with full fidelity                    | `presentation.json`      |
+| PPTX/PPSX/PPTM | `PptxHandler.save()` (or `saveEncrypted()` when a password is set) → `Uint8Array` (Save As)                            | `presentation.<ext>`     |
 
 ::: info JPEG
 There is no standalone JPEG export. JPEG encoding (quality 0.92) is used internally to compress

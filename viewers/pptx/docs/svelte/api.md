@@ -254,9 +254,8 @@ needed for typical embedding.
 
 ### `pptx-svelte-viewer/internals`: slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot `import`
-from it directly. A host embedding its own presentation surface (a custom stage, outside the full
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation surface (a custom stage, outside the full
 `PowerPointViewer`) still needs the transition resolver/keyframes and overlay component, so they
 are re-exported from the `pptx-svelte-viewer/internals` subpath instead:
 

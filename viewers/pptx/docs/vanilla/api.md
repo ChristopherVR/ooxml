@@ -426,9 +426,8 @@ if (handler) {
 
 ### `pptx-vanilla-viewer/internals`: slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot `import`
-from it directly. A host embedding its own presentation surface still needs the transition
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation surface still needs the transition
 resolver/keyframes and the DOM-level overlay driver, so they are re-exported from the
 `pptx-vanilla-viewer/internals` subpath instead:
 

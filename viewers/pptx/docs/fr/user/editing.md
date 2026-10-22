@@ -38,7 +38,7 @@ Avec un élément sélectionné :
 Pour un placement exact, ouvrez l'onglet **Propriétés** de l'inspecteur. La carte **Élément** comporte les champs **X**, **Y**, **L** et **H**, ainsi qu'un commutateur de verrouillage qui protège l'élément contre les glissements accidentels.
 
 ::: tip Règles, grille et repères
-Activez **Règles**, **Grille**, **Repères** et **Aimanter à la grille** depuis le groupe Afficher de l'onglet **Affichage**. Faites glisser un repère pour le repositionner ; double-cliquez sur un repère pour le supprimer.
+Activez **Règles**, **Grille**, **Repères** et **Aligner sur la grille** depuis le groupe Afficher de l'onglet **Affichage**. Faites glisser un repère pour le repositionner ; double-cliquez sur un repère pour le supprimer.
 :::
 
 ## Modifier le texte
@@ -132,7 +132,7 @@ Faites un clic droit sur un tableau pour accéder aux commandes de lignes et de 
 - **Ordre d'empilement** - faites un clic droit sur un élément et choisissez **Avancer**, **Reculer**, **Premier plan** ou **Arrière-plan**. Les mêmes commandes se trouvent dans le groupe Dessin de l'onglet Accueil sous **Organiser**, et sous forme de boutons de calques dans l'inspecteur.
 - **Aligner et répartir** - avec au moins deux éléments sélectionnés, utilisez les boutons d'alignement de l'onglet Accueil (gauche, centre, droite, haut, milieu, bas) et **Répartir** horizontalement ou verticalement.
 - **Grouper / Dissocier** - faites un clic droit sur une sélection multiple et choisissez **Grouper** pour que les éléments se déplacent et se redimensionnent ensemble ; **Dissocier** les sépare de nouveau.
-- **Retourner** - utilisez **Retourner H** / **Retourner V** pour mettre la sélection en miroir.
+- **Retourner** - utilisez **Retourn. H** / **Retourn. V** pour mettre la sélection en miroir.
 
 ## Gérer les diapositives
 
@@ -150,7 +150,7 @@ peut changer l'aspect de la présentation. Si vous avez le fichier de la police,
 pouvez le confier à la visionneuse pour la session en cours :
 
 1. Ouvrez **Fichier > Options > Général** et repérez la section **Polices**.
-2. Activez **Me laisser ajouter des fichiers de police à cette session**. Le paramètre
+2. Activez **M’autoriser à ajouter des fichiers de police à cette session**. Le paramètre
    est désactivé par défaut ; le sélecteur de fichiers reste donc inactif tant que vous
    ne l'activez pas.
 3. Cliquez sur **Ajouter un fichier de police** et choisissez un fichier `.ttf`, `.otf`,

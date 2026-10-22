@@ -18,7 +18,7 @@ description: Wie pptx-viewer aufgebaut ist - die Lade- und Speicherpipelines, di
                                |
                                v
 +---------------------------------------------------------------+
-|            Shared rendering layer (ooxml-ui/pptx)        |
+|             Shared rendering layer (ooxml-ui/pptx)            |
 |     geometry, styles, gradients, charts, connectors, text     |
 +------------------------------+--------------------------------+
                                |

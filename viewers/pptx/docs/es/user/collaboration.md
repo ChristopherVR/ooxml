@@ -30,10 +30,10 @@ Para terminar la sesión, abra de nuevo el cuadro de diálogo y haga clic en **D
 
 Abra un enlace para compartir que alguien le haya enviado, o únase manualmente:
 
-1. Haga clic en **Compartir** y cambie a la pestaña **Unirse a sesión**.
+1. Haga clic en **Compartir** y cambie a la pestaña **Unirse a una sesión**.
 2. Pegue el enlace de invitación, o introduzca el ID de la sala, en **Enlace de invitación o ID de sala**.
 3. Introduzca su nombre para mostrar y, si la sesión usa uno, la dirección del servidor de colaboración.
-4. Haga clic en **Unirse a la sesión**.
+4. Haga clic en **Unirse a una sesión**.
 
 ## Indicadores de presencia
 
@@ -72,11 +72,11 @@ Cuando la aplicación se sirve por `https`, la dirección del servidor debe usar
 
 Difundir es una colaboración unidireccional: usted presenta, los espectadores siguen.
 
-1. Haga clic en **Presentación con diapositivas > Difundir** (o **Presentar en línea** en el menú Presentar). Se abre el cuadro de diálogo **Difundir presentación con diapositivas**.
-2. Compruebe el nombre de **Sesión de difusión** rellenado de antemano y su **Nombre del presentador**, y defina o borre el **Servidor de colaboración** como antes.
-3. Haga clic en **Iniciar difusión**. La aplicación entra en modo de presentación y el cuadro de diálogo muestra un **Enlace de espectador** con **Copiar URL**.
+1. Haga clic en **Presentación con diapositivas > Difundir** (o **Presente en línea** en el menú Presentar). Se abre el cuadro de diálogo **Transmitir presentación**.
+2. Compruebe el nombre de **Sesión de transmisión** rellenado de antemano y su **Nombre del presentador**, y defina o borre el **Servidor de colaboración** como antes.
+3. Haga clic en **Iniciar transmisión**. La aplicación entra en modo de presentación y el cuadro de diálogo muestra un **Enlace del espectador** con **Copiar URL**.
 4. Comparta el enlace de espectador. Quienes lo abran verán avanzar sus diapositivas en tiempo real; el cuadro de diálogo cuenta a sus espectadores.
-5. Haga clic en **Detener difusión** cuando termine.
+5. Haga clic en **Detener transmisión** cuando termine.
 
 ## Los comentarios funcionan junto con la edición en vivo
 

@@ -18,7 +18,7 @@ description: 了解 pptx-viewer 的加载和保存流程、mixin 组合运行时
                                |
                                v
 +---------------------------------------------------------------+
-|            Shared rendering layer (ooxml-ui/pptx)        |
+|             Shared rendering layer (ooxml-ui/pptx)            |
 |     geometry, styles, gradients, charts, connectors, text     |
 +------------------------------+--------------------------------+
                                |

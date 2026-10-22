@@ -66,17 +66,17 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 为经过筛选的 `chart-*-options` 组件提供支持，参见[公开服务](/zh/angular/services)。
 
-| 导出项                          | 职责                                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `chart-advanced-helpers` 的导出 | 高级图表配置辅助函数。                                                                         |
-| `chart-combo-stock` 的导出      | 组合图和股价图类型辅助函数。                                                                   |
-| `chart-data-helpers` 的导出     | 图表系列和分类数据编辑辅助函数。                                                               |
-| `chart-editor-styles` 的导出    | 图表编辑器面板共享的样式常量。                                                                 |
-| `chart-event-helpers` 的导出    | 图表交互和事件辅助函数。                                                                       |
-| `chart-overlays` 的导出         | 图表叠加内容的渲染辅助函数，包括数据标签、趋势线和误差线。                                     |
-| `chart-renderer-helpers` 的导出 | 图表视图模型辅助函数，是 `pptx-viewer-shared` 的轻量适配层，包含图表调色板 `DEFAULT_PALETTE`。 |
-| `chart-surface-treemap` 的导出  | 曲面图和树状图布局辅助函数。                                                                   |
-| `chart-waterfall-map` 的导出    | 瀑布图和地图布局辅助函数。                                                                     |
+| 导出项                          | 职责                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `chart-advanced-helpers` 的导出 | 高级图表配置辅助函数。                                                                    |
+| `chart-combo-stock` 的导出      | 组合图和股价图类型辅助函数。                                                              |
+| `chart-data-helpers` 的导出     | 图表系列和分类数据编辑辅助函数。                                                          |
+| `chart-editor-styles` 的导出    | 图表编辑器面板共享的样式常量。                                                            |
+| `chart-event-helpers` 的导出    | 图表交互和事件辅助函数。                                                                  |
+| `chart-overlays` 的导出         | 图表叠加内容的渲染辅助函数，包括数据标签、趋势线和误差线。                                |
+| `chart-renderer-helpers` 的导出 | 图表视图模型辅助函数，是 `ooxml-ui/pptx` 的轻量适配层，包含图表调色板 `DEFAULT_PALETTE`。 |
+| `chart-surface-treemap` 的导出  | 曲面图和树状图布局辅助函数。                                                              |
+| `chart-waterfall-map` 的导出    | 瀑布图和地图布局辅助函数。                                                                |
 
 ## SmartArt 内部接口 {#smartart-internals}
 

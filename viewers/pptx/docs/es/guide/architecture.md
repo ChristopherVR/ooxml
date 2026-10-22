@@ -18,7 +18,7 @@ description: Cómo está estructurado pptx-viewer - las canalizaciones de carga 
                                |
                                v
 +---------------------------------------------------------------+
-|            Shared rendering layer (ooxml-ui/pptx)        |
+|             Shared rendering layer (ooxml-ui/pptx)            |
 |     geometry, styles, gradients, charts, connectors, text     |
 +------------------------------+--------------------------------+
                                |

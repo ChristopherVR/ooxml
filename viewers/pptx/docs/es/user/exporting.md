@@ -1,6 +1,6 @@
 ---
 title: Exportar
-description: Guarde sus ediciones de nuevo en .pptx, exporte PDF, PNG, GIF y video, empaquete para compartir e imprima documentos para el público y páginas de notas.
+description: Guarde sus ediciones de nuevo en .pptx, exporte PDF, PNG, GIF y video, e imprima documentos para el público y páginas de notas.
 ---
 
 # Exportar
@@ -19,7 +19,6 @@ Todo lo que exporta se genera en su navegador y se descarga en su dispositivo; n
 | **Presentación de PowerPoint**                  | Un archivo `.pptx` editable con todos sus cambios.                                                         |
 | **Presentación con diapositivas de PowerPoint** | Un archivo `.ppsx` que se abre directamente en una presentación con diapositivas.                          |
 | **Presentación habilitada para macros**         | Un archivo `.pptm` que conserva las macros VBA. Solo se muestra cuando el archivo abierto contiene macros. |
-| **Empaquetar para compartir**                   | Un paquete `.zip` con el `.pptx` y un archivo léame.                                                       |
 
 El botón **Guardar** de la barra de título hace lo mismo que **Archivo > Guardar**. Los archivos guardados conservan sus ediciones en el viaje de ida y vuelta: elementos añadidos y modificados, orden de las diapositivas, notas, secciones, etc.
 
@@ -35,7 +34,7 @@ Abra **Archivo > Exportar**:
 | ------------------------------- | ---------------------------------------------------------------------------- | --------------------- |
 | **Crear PDF**                   | Un PDF con una página por diapositiva, capturado en alta resolución.         | Presentación completa |
 | **Exportar diapositiva actual** | Una imagen PNG de la diapositiva actual.                                     | Diapositiva actual    |
-| **Crear un video**              | Un video `.webm` que recorre la presentación, unos segundos por diapositiva. | Presentación completa |
+| **Crear un vídeo**              | Un video `.webm` que recorre la presentación, unos segundos por diapositiva. | Presentación completa |
 | **Crear un GIF animado**        | Un GIF compacto en bucle de la presentación.                                 | Presentación completa |
 | **Exportar como JSON**          | Un documento JSON portátil que se vuelve a importar con total fidelidad.     | Presentación completa |
 | **Copiar como imagen**          | Copia la diapositiva actual en el portapapeles como imagen.                  | Diapositiva actual    |

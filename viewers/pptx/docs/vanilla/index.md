@@ -8,8 +8,8 @@ description: pptx-vanilla-viewer is a zero-framework PowerPoint viewer for the b
 `pptx-vanilla-viewer` is a **zero-framework** PowerPoint viewer: it renders `.pptx` slides in the
 browser with plain DOM and has no dependency on React, Vue, or Angular. Calling the factory
 function `createPptxViewer(container, options)` returns a viewer instance with an imperative API.
-The parsing engine ([`pptx-viewer-core`](/core/)) and the shared render logic
-(`pptx-viewer-shared`) are bundled in, so the package is self-contained.
+The parsing engine ([`pptx-viewer-core`](/core/)) is bundled in; the shared render logic
+(`ooxml-ui/pptx`) is installed as a dependency.
 
 The live [vanilla demo](https://christophervr.github.io/ooxml/pptx/demo-vanilla/) is this
 package running without a framework.
@@ -38,9 +38,10 @@ For a precise list of what the underlying parser supports, and what is approxima
 npm i pptx-vanilla-viewer
 ```
 
-The core engine (`pptx-viewer-core`) and shared render layer are **bundled in**, and the engine's
-runtime dependencies (`jszip`, `fast-xml-parser`) install automatically. There are no framework
-peer dependencies.
+The core engine wrapper (`pptx-viewer-core`) is **bundled in**. The shared render layer
+(`ooxml-ui/pptx`), the engine (`ooxml-core`) and their runtime dependencies (including `jszip` and
+`fast-xml-parser`) are regular dependencies and install automatically. There are no framework peer
+dependencies; `yjs` (collaboration) and `ai` (assistant) are optional peers.
 
 ## Quick example
 

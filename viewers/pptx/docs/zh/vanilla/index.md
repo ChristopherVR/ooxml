@@ -5,7 +5,7 @@ description: pptx-vanilla-viewer 是无需框架的浏览器 PowerPoint 查看�
 
 # 原生 JavaScript 查看器概览 {#vanilla-js-viewer-overview}
 
-`pptx-vanilla-viewer` 是**不依赖框架**的 PowerPoint 查看器，使用普通 DOM 在浏览器中渲染 `.pptx` 幻灯片，不依赖 React、Vue 或 Angular。调用工厂函数 `createPptxViewer(container, options)`，会返回具有命令式 API 的查看器实例。解析引擎（[`pptx-viewer-core`](/zh/core/)）和共享渲染逻辑（`pptx-viewer-shared`）已经打包在内，因此该包可以独立使用。
+`pptx-vanilla-viewer` 是**不依赖框架**的 PowerPoint 查看器，使用普通 DOM 在浏览器中渲染 `.pptx` 幻灯片，不依赖 React、Vue 或 Angular。调用工厂函数 `createPptxViewer(container, options)`，会返回具有命令式 API 的查看器实例。解析引擎（[`pptx-viewer-core`](/zh/core/)）已经打包在内；共享渲染逻辑（`ooxml-ui/pptx`）作为依赖安装。
 
 在线[原生 JavaScript 演示](https://christophervr.github.io/ooxml/pptx/demo-vanilla/)展示了此包在没有框架时的运行效果。
 
@@ -32,7 +32,7 @@ description: pptx-vanilla-viewer 是无需框架的浏览器 PowerPoint 查看�
 npm i pptx-vanilla-viewer
 ```
 
-核心引擎（`pptx-viewer-core`）和共享渲染层已经**打包在内**，引擎运行时依赖（`jszip`、`fast-xml-parser`）自动安装。没有框架 peer 依赖。
+核心引擎封装（`pptx-viewer-core`）已经**打包在内**。共享渲染层（`ooxml-ui/pptx`）、引擎（`ooxml-core`）及其运行时依赖（包括 `jszip` 和 `fast-xml-parser`）都是普通依赖，会自动安装。没有框架 peer 依赖；`yjs`（协作）和 `ai`（助手）是可选 peer。
 
 ## 简单示例 {#quick-example}
 

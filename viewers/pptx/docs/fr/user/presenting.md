@@ -14,11 +14,11 @@ Depuis l'onglet **Diaporama** :
 1. Cliquez sur **Depuis le début** pour commencer à la diapositive 1, ou sur **À partir de la diapositive actuelle** pour commencer là où vous êtes.
 2. La diapositive s'agrandit pour remplir l'écran et l'interface d'édition disparaît.
 
-Vous pouvez aussi cliquer sur le bouton **Présenter** de la rangée supérieure de la barre d'outils, ou sur le bouton **Diaporama** de la barre d'état. La flèche à côté de **Présenter** ouvre un menu avec **Vue du présentateur**, **Enregistrer les minutages**, **Paramètres du diaporama**, **Présenter en ligne** et un commutateur **Sous-titres**.
+Vous pouvez aussi cliquer sur le bouton **Présenter** de la rangée supérieure de la barre d'outils, ou sur le bouton **Diaporama** de la barre d'état. La flèche à côté de **Présenter** ouvre un menu avec **Vue du présentateur**, **Vérifier le minutage**, **Paramétrer le diaporama**, **Présenter en ligne** et un commutateur **Sous-titres**.
 
 ![Mode diaporama en plein écran](/user-guide/presenting-slideshow.jpg)
 
-**Paramètres du diaporama** contrôle des options de lecture comme **Utiliser les minutages** (avance automatique selon les minutages enregistrés des diapositives) et la lecture en boucle du diaporama jusqu'à ce que vous appuyiez sur Échap.
+**Paramétrer le diaporama** contrôle des options de lecture comme **Utilisation des timings, le cas échéant** (avance automatique selon les minutages enregistrés des diapositives) et la lecture en boucle du diaporama jusqu'à ce que vous appuyiez sur Échap.
 
 ## Contrôler le diaporama
 
@@ -56,7 +56,7 @@ Les **animations** se jouent selon leurs déclencheurs :
 - **Au clic** - chaque clic ou touche d'avance joue l'étape d'animation suivante ; la diapositive ne change qu'une fois toutes les étapes jouées.
 - **Avec la précédente** / **Après la précédente** - ces étapes s'enchaînent automatiquement après celle qui les précède.
 
-Les diapositives dotées de minutages enregistrés avancent automatiquement lorsque **Utiliser les minutages** est activé dans Paramètres du diaporama. Les éléments avec des déclencheurs au survol ou au clic (y compris les boutons d'action et les liens hypertexte) réagissent pendant le diaporama.
+Les diapositives dotées de minutages enregistrés avancent automatiquement lorsque **Utilisation des timings, le cas échéant** est activé dans Paramétrer le diaporama. Les éléments avec des déclencheurs au survol ou au clic (y compris les boutons d'action et les liens hypertexte) réagissent pendant le diaporama.
 
 ::: warning Notes sur la fidélité
 Les transitions et animations sont des approximations du comportement de PowerPoint. Morphe interpole la position, la taille, l'opacité, la rotation et la couleur des éléments correspondants, et assure aussi un morphe entre des géométries de forme différentes : lorsqu'un élément apparié change de type de forme (ou de contour piloté par des ajustements) entre les deux diapositives, son contour est converti en polygone et interpolé sommet par sommet vers le contour de la forme cible, au lieu d'un fondu enchaîné. Voir [Limitations](/fr/guide/limitations) pour les autres approximations de transitions et d'animations.
@@ -111,10 +111,10 @@ Lorsque vous terminez un diaporama qui comporte de l'encre, une boîte de dialog
 
 ## Répéter avec les minutages
 
-1. Cliquez sur **Diaporama > Enregistrer les minutages**. Le diaporama démarre avec un petit panneau de minuterie indiquant **Durée de la diapositive** et **Durée totale** ; un bouton **Pause** arrête le chronomètre pendant une interruption.
+1. Cliquez sur **Diaporama > Vérifier le minutage**. Le diaporama démarre avec un petit panneau de minuterie indiquant **Temps de diapositive** et **Durée totale** ; un bouton **Pause** arrête le chronomètre pendant une interruption.
 2. Répétez votre exposé en avançant comme vous le feriez normalement. Le temps passé sur chaque diapositive est enregistré.
-3. Appuyez sur **Échap** (ou avancez au-delà de la dernière diapositive). Un récapitulatif **Minutages de la répétition** liste chaque diapositive avec sa durée et votre total.
-4. Cliquez sur **Enregistrer les minutages** pour conserver les durées par diapositive (utilisées pour l'avance automatique lorsque **Utiliser les minutages** est activé), ou sur **Abandonner**.
+3. Appuyez sur **Échap** (ou avancez au-delà de la dernière diapositive). Un récapitulatif **Horaires des répétitions** liste chaque diapositive avec sa durée et votre total.
+4. Cliquez sur **Enregistrer les horaires** pour conserver les durées par diapositive (utilisées pour l'avance automatique lorsque **Utilisation des timings, le cas échéant** est activé), ou sur **Jeter**.
 
 ## Présenter à des spectateurs distants
 

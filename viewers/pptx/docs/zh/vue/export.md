@@ -19,7 +19,6 @@ description: 从查看器导出 PNG、PDF、GIF、WebM 视频和 SVG，另存为
 | 复制为图片     | 栅格化当前幻灯片 → `ClipboardItem({'image/png'})` → 系统剪贴板                              | -                       |
 | 打印           | `usePrint`：幻灯片（矢量 SVG 文档）、大纲（HTML）、备注或讲义（栅格化）、打印窗口           | 打印窗口                |
 | JSON           | 核心模型序列化器 `exportToJson`，生成可完整重新导入的可移植 JSON 文档                       | `<name>.json`           |
-| 共享包         | 使用 JSZip 打包序列化后的 `.pptx` 和自动生成的 README                                       | `<name>-package.zip`    |
 | PPTX/PPSX/PPTM | `saveAs(format)` → `PptxHandler.save()` → `Uint8Array`（另存为）                            | `presentation.<format>` |
 
 `<name>` 为去除扩展名后的 `fileName` 属性，默认是 `presentation`。
