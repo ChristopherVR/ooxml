@@ -4,7 +4,7 @@ Format-neutral real-time collaboration on Yjs. It owns the logic that has nothin
 
 ## What moved here, what stayed
 
-Sources: `pptx-viewer/packages/shared/src/render/collaboration-*.ts` (Yjs) and `docx-viewer/packages/web-component/src/{collaboration,presence,editor-presence}.ts` (`prosemirror-collab`). Per-module provenance is in `PROVENANCE.md`.
+The format-neutral parts were generalised from the PowerPoint Yjs collaboration modules and the Word `prosemirror-collab` presence code, which were in the separate viewer repositories at the time. Per-module provenance is in `PROVENANCE.md`.
 
 Moved (generalised, DOM-free):
 
@@ -17,10 +17,11 @@ Moved (generalised, DOM-free):
 - Docx-side ordering rules without ProseMirror: version classification, idempotent retries, sequence tracking, bounded caches.
 - New: update codec with defensive application, typed emitter, `Transport` and `SyncProvider` interfaces, the y-websocket-compatible transport provider, in-memory and WebSocket transports, y-websocket/y-webrtc adapter, session object, `DocumentAdapter`/`bindDocument`.
 
-Stayed in the viewers (not format-neutral or not DOM-free):
+Not format-neutral, so they live with their product (all in this repository):
 
-- pptx-viewer: the slide/element to Y.Map schema (`collaboration-sync.ts`, `-reconcile`, `-live-patch*`, `-text-*` codec, merge and session modules, `-writeback`), the inline editor and its DOM (`-inline-*`), `-shell-state`, `-presence-projector` and the legacy flat `mapAwarenessCursors`. These become the pptx adapter in the `pptx` area when PowerPoint migrates.
-- docx-viewer: the `prosemirror-collab` client and authority (`CollaborationClient`, `CollaborationAuthority`, step batches), the presence plugin and decorations, and the paragraph-id repair transaction. They depend on ProseMirror steps. Word is on an authority/step protocol, PowerPoint on a CRDT; this area does not unify the two engines, it shares everything around them (see "Adoption").
+- PowerPoint: the slide/element to Y.Map schema and its DOM-free sync (`collaboration-sync.ts`, `-reconcile`, `-live-patch*`, the `-text-*` codec, merge and session modules, `-assets`, `-departure`, `-load-origin`) are in `src/core/pptx/editor/render/`, with the field schema in `src/core/pptx/core/types/collaboration-field-schema.ts`. The editor-side modules (the inline editor and its DOM, `-shell-state`, `-presence-projector`, `-writeback`, `collaboration-options.ts` and `collaboration-owned-session.ts`) are in `src/ui/src/pptx/render/`.
+- Word: the `prosemirror-collab` client and authority (`CollaborationClient`, `CollaborationAuthority`, step batches), the identity and protocol modules and the Yjs variant (`yjs-collaboration.ts`) are in `src/core/docx/ui/collaboration*.ts`. They depend on ProseMirror steps. Word is on an authority/step protocol, PowerPoint on a CRDT; this area does not unify the two engines, it shares everything around them (see "Who uses what").
+- Excel and Visio map their models to Yjs in their own areas (`ooxml-core/xlsx/collab`, `ooxml-core/visio/collab`, below).
 
 ## API
 
@@ -57,7 +58,7 @@ import {
 
 **Product seam**: `DocumentAdapter<TModel>` (`isEmpty`, `read`, `write(doc, model, LOCAL_ORIGIN)`, `observe`) and `bindDocument(session, adapter, { getLocalModel, onRemoteModel })`, which seeds an empty room once writes are allowed, adopts a non-empty one, skips echoes of its own writes and gates `push(model)` / `handleLoad(origin, model)` (bootstrap loads lose to the room, user loads are published).
 
-`packageAdapter({ name?, maxBytes? })` is a ready-made `DocumentAdapter<{ bytes, revision }>` that shares the whole saved package (VSDX, DOCX, PPTX, XLSX). It suits products whose edits produce a new package rather than a mergeable model. It never merges: the last package written wins, and packages above `maxBytes` (32 MiB by default) are refused.
+`packageAdapter({ name?, maxBytes? })` is a ready-made `DocumentAdapter<{ bytes, revision }>` that shares the whole saved package (VSDX, DOCX, PPTX, XLSX). It is the fallback for products whose edits produce a new package and have no mergeable mapping (Excel and Visio have their own adapters, below). It never merges: the last package written wins, and packages above `maxBytes` (32 MiB by default) are refused.
 
 ## Write-back scheduler (`createWriteBackScheduler`)
 
@@ -89,7 +90,7 @@ A host embedding more than one product integrates collaboration once (issue #152
 - `openCollaborationSession(options, defaults)` is what an editor calls: it returns the host's session (`owned: false`) or opens one it owns, with the product's broadcast prefix, presence sanitiser and default user name. `collaborationStateOf(session)` and `onCollaborationStateChange(session, listener)` derive the reported state.
 - `toExternalSession(session)` presents a `CollabSession` as the borrowed `ExternalSession` (doc, awareness, stable `getSnapshot`, `subscribe`) that viewers taking host-owned Yjs resources observe; `synced` is the session's write gate.
 
-The document engine behind the contract still differs per product (Excel merges cell by cell, Word maps its document to Yjs, Visio shares the whole package with the last write winning, PowerPoint keeps its slide schema), so what merges concurrently differs too; each product's docs state its limits. A host session must be created with the product's presence sanitiser (for example `sanitizeXlsxPresence`), so one session cannot be passed to two different products.
+The document engine behind the contract still differs per product (Excel merges cell by cell, Word maps its document to Yjs, Visio shares a drawing property by property and keeps only masters, styles, theme and similar parts last-write-wins, PowerPoint keeps its slide schema), so what merges concurrently differs too; each product's docs state its limits. A host session must be created with the product's presence sanitiser (for example `sanitizeXlsxPresence`), so one session cannot be passed to two different products.
 
 ## Honest limits
 
@@ -99,13 +100,18 @@ The document engine behind the contract still differs per product (Excel merges 
 - Asset entries are not garbage-collected when their owner is deleted.
 - No Word layout, document or PowerPoint model parity is claimed: this area only moves bytes and presence.
 
-## Adoption (next wave)
+## Who uses what
 
-**pptx-viewer** (Yjs already): replace `collaboration-presence`, `-presence-publisher`, `-departure`, `-teardown`, `-sync-gate`, `-load-origin`, `-broadcast-follow`, `-assets` and `-external-session` with imports from `/collab` (assets: `createAssetSync({ mapName: 'pptx:assets', fields: { mediaData: '_mdRef', posterFrameData: '_pfdRef', oleEmbeddedData: '_oedRef', previewImageData: '_pidRef', modelData: '_moRef' } })` keeps documents wire-compatible; pass `LEGACY_PPTX_LEAVE_MESSAGE` / `LEGACY_PPTX_DEPARTURE_CHANNEL` to keep the old embedder contract). Replace the per-binding `WebsocketProvider` wiring with `createCollabSession` plus `transportProvider(createWebSocketTransport(...))`, or `adaptYjsProvider(...)` while y-websocket/y-webrtc stay. Wrap the slide schema/reconcile code as a `DocumentAdapter<PptxSlide[]>` and use `bindDocument` instead of the readiness code. Presence keeps its wire shape through `deriveCanvasPresence`.
+The viewers are workspace members of this repository and import `ooxml-core/collab` directly; there is no separate adoption step.
 
-**docx-viewer** (`prosemirror-collab`): keep the step client/authority; import `isValidId`, `validateDisplayName`, `CURSOR_PALETTE`/identity helpers, `classifyVersion`, `IdempotencyCache`, `SequenceTracker`, `BoundedMap`, `freezeDeep`, `createIdGenerator(clientId, 'dve')` from `/collab` and delete the local copies. Cursor sharing can move to a `createCollabSession<{ anchor: number; head: number }>` presence channel (awareness instead of the hand-rolled `PresenceMessage`) once the host transport is a `Transport`; document content stays on step batches until Word chooses to model its document as Yjs. Do not change viewer repos before the package is published and `OOXML_CORE_REF` is bumped.
+| Product    | Document engine                                                              | Where                                             |
+| ---------- | ---------------------------------------------------------------------------- | ------------------------------------------------- |
+| PowerPoint | Yjs slide schema, `createAssetSync`, shared presence and lifecycle helpers   | `src/core/pptx/editor/render/`, `src/ui/src/pptx` |
+| Word       | `prosemirror-collab` steps, shared identity, ordering and validation helpers | `src/core/docx/ui/collaboration*.ts`              |
+| Excel      | `ooxml-core/xlsx/collab` (field by field)                                    | `src/core/xlsx/collab/`, `src/ui/src/xlsx`        |
+| Visio      | `ooxml-core/visio/collab` (property by property)                             | `src/core/visio/collab/`, `src/ui/src/visio`      |
 
-Both viewers keep only UI: cursor and selection rendering, the Share dialog, status chips and remote-selection decorations.
+The viewers keep only UI: cursor and selection rendering, the Share dialog, status chips and remote-selection decorations.
 
 ## xlsx adapter (`ooxml-core/xlsx/collab`)
 

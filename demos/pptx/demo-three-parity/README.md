@@ -1,6 +1,6 @@
 # 3D parity harness and programme status
 
-`bun run demo:three-parity` (port 4178) shows every slide of a PowerPoint
+`bun run demo:three-parity` from `viewers/pptx` (port 4178) shows every slide of a PowerPoint
 ground-truth deck next to our `<pptx-three-view>` rendering of it, on a
 CSS-scaled slide stage (so zoom-aware sizing is exercised too).
 
@@ -10,7 +10,7 @@ select). Pass `--port` to `npx vite` to run several copies side by side.
 
 ## Ground truth
 
-`e2e/fixtures/three-d-parity/`:
+`e2e/pptx/fixtures/three-d-parity/`:
 
 - `three-d-charts.pptx`: 17 slides, one PowerPoint-default 3D chart each
   (3-D clustered/stacked/100%/standard column, clustered/stacked bar,
@@ -23,12 +23,12 @@ select). Pass `--port` to `npx vite` to run several copies side by side.
 - `gt/*.webp`: PowerPoint's own COM slide export at 960x540 (all chart slides;
   SmartArt styles 1, 6, 7, 8, 10, 12, 13, 14 per layout).
 
-Regenerate with `scripts/make-three-d-parity-charts.ps1` /
-`scripts/make-three-d-parity-smartart.ps1` (needs local PowerPoint + Excel).
+Regenerate with `viewers/pptx/scripts/make-three-d-parity-charts.ps1` /
+`viewers/pptx/scripts/make-three-d-parity-smartart.ps1` (needs local PowerPoint + Excel).
 
 ## Architecture
 
-- `packages/shared/src/three-view/`: `<pptx-three-view>` custom element
+- `src/ui/src/pptx/three-view/` (`ooxml-ui/pptx`): `<pptx-three-view>` custom element
   (the pattern of PR #352, shared web components). It owns lazy `three`
   loading, zoom-aware sizing, visibility, disposal, a slotted 2D fallback and
   select/drag/state events. A single page-wide `WebGLRenderer`
@@ -38,9 +38,8 @@ Regenerate with `scripts/make-three-d-parity-charts.ps1` /
   blanked the main slide.
 - Scene modules plug in through `scene-registry.ts`:
   `render/chart-3d-view-scene.ts` (charts) and `smartart-3d/view-scene.ts`
-  (SmartArt). They take `three` from the mount context and never import it at
-  runtime: shared is bundled with `splitting: false`, so anything reachable
-  from the main barrel ends up in `dist/index.mjs`
+  (SmartArt), both under `src/ui/src/pptx`. They take `three` from the mount
+  context and never import it at runtime, so it stays out of the main bundle
   (`three-view/no-runtime-three-import.test.ts` guards this).
 - Spec builders every binding calls: `buildChart3DSpecForElement(element)`,
   `buildSmartArt3DSpecForElement(element, { spatial? })`.
@@ -97,7 +96,7 @@ Regenerate with `scripts/make-three-d-parity-charts.ps1` /
 All five bindings (React, Vue, Angular, Svelte, Vanilla) render 3D charts and
 3D SmartArt through `<pptx-three-view>`; the per-kind WebGL wrappers, their
 per-binding flag contexts/services and the old
-`pptx-viewer-shared/smartart-3d` scene runtime are gone. Each binding has one
+old `smartart-3d` scene runtime in the viewer's shared package are gone. Each binding has one
 thin wrapper (`ThreeView.tsx`, `ThreeView.ts`, `three-view.component.ts`,
 `ThreeView.svelte`, `render/elements/three-view.ts`), one flags carrier, and
 routes a 3D mark's select/drag through the shared `applyChart3DSelect` /
