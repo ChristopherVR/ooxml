@@ -6,13 +6,13 @@
 			"id": "old-core-scope",
 			"pattern": "@christophervr/ooxml-core",
 			"message": "The package is the unscoped `ooxml-core` now.",
-			"allow": ["AGENTS.md", "PROVENANCE.md"]
+			"allow": ["AGENTS.md", "PROVENANCE.md", "docs/releasing.md"]
 		},
 		{
 			"id": "old-ui-scope",
 			"pattern": "@christophervr/office-ui",
 			"message": "The package is the unscoped `ooxml-ui` now.",
-			"allow": ["AGENTS.md", "PROVENANCE.md"]
+			"allow": ["AGENTS.md", "PROVENANCE.md", "docs/releasing.md"]
 		},
 		{
 			"id": "cd-pptx-viewer",
@@ -34,6 +34,7 @@
 				"AGENTS.md",
 				"PROVENANCE.md",
 				"docs/linked-changes.md",
+				"viewers/pptx/AGENTS.md",
 				"viewers/*/docs/research/**",
 				"viewers/*/docs/suite-provenance.md",
 				"viewers/*/scripts/RELEASE-PROVENANCE.md"
@@ -49,7 +50,7 @@
 	"$generatedRoutesComment": "Site-absolute routes the docs build generates (framework demos copied in by the Pages build, per-package release pages written by sync-changelogs.mjs); they are not tracked files.",
 	"pathIgnore": {
 		"files": ["PROVENANCE.md", "viewers/*/docs/research/**", "viewers/*/docs/suite-provenance.md"],
-		"patterns": ["^apps/(?:word|excel|powerpoint|visio|teams)$"]
+		"patterns": ["^apps/(?:word|excel|powerpoint|visio|teams)$", "^src/app/app[.]ts$"]
 	},
 	"$pathIgnoreComment": "Inline-code paths not checked: files that record history on purpose, and output folders of a build (suite-dist/apps/word).",
 	"translationScope": {

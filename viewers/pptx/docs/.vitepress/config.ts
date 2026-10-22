@@ -15,6 +15,7 @@ export default defineConfig({
 
 	lastUpdated: true,
 	cleanUrls: true,
+	srcExclude: ['README.md'],
 	ignoreDeadLinks: true,
 
 	// Code blocks render on a dark card in both color modes (same as the
