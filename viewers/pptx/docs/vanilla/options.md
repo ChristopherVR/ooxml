@@ -126,11 +126,12 @@ dictionary of dotted `pptx.*` keys. Theme and locale can be changed later via
 Debounced crash-recovery snapshots in a shared IndexedDB store. Autosave never replaces the user's
 real Save; it is a safety net offered back on the next start.
 
-| Option               | Type      | Default                | Description                                                                                                      |
-| -------------------- | --------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave; the toolbar shows a small status pill. A policy ceiling over the title-bar toggle; see below. |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                 |
-| `autosaveFilePath`   | `string`  | `'presentation.pptx'`  | IndexedDB recovery key for autosave.                                                                             |
+| Option               | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave; the toolbar shows a small status pill. A policy ceiling over the title-bar toggle; see below.                                 |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
+| `autosaveFilePath`   | `string`          | `'presentation.pptx'`  | IndexedDB recovery key for autosave.                                                                                                             |
 
 Runtime control lives on the instance: [`autosaveNow` / `setAutosaveEnabled` /
 `isAutosaveEnabled`](/vanilla/api#autosave).
@@ -215,6 +216,9 @@ are plain callback options:
 | `onChange`              | `() => void`                                                     | Fired after any document mutation (move, resize, edit, undo, ...).                                                                                                                                                                                     |
 | `onDirtyChange`         | `(dirty: boolean) => void`                                       | Fired when the unsaved-edits flag flips (a save resets it).                                                                                                                                                                                            |
 | `onSelectionChange`     | `(elementId: string \| null) => void`                            | Fired when the selected element changes (`null` = no selection).                                                                                                                                                                                       |
+| `onAutosave`            | `(content: Uint8Array) => void`                                  | Fired with the serialised `.pptx` bytes after each recovery autosave snapshot is written.                                                                                                                                                              |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`                 | Fired with the changed fields when the user (or the AI assistant) changes the document properties.                                                                                                                                                     |
+| `onNotesUpdate`         | `(notes: string) => void`                                        | Fired with the new speaker-notes text after a notes edit.                                                                                                                                                                                              |
 | `onAutosaveStatus`      | `(status: AutosaveStatus) => void`                               | Fired on every autosave lifecycle transition (`'idle' \| 'saving' \| 'saved' \| 'error'`).                                                                                                                                                             |
 | `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                               | Offered a recovery snapshot found on start; the host decides whether to restore it (see below).                                                                                                                                                        |
 | `onCollaborationStatus` | `(status: ConnectionStatus) => void`                             | Fired on every collaboration connection-status transition (`'disconnected' \| 'connecting' \| 'connected' \| 'error'`).                                                                                                                                |
@@ -245,6 +249,9 @@ interface PptxViewerCallbacks {
 	onChange?: () => void;
 	onDirtyChange?: (dirty: boolean) => void;
 	onSelectionChange?: (elementId: string | null) => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
 	onAutosaveStatus?: (status: AutosaveStatus) => void;
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	onCollaborationStatus?: (status: ConnectionStatus) => void;

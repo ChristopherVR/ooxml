@@ -3,12 +3,17 @@
   type Props = EditorProps & {
     ondocumentchange?: EditorEventHandlers['document-change'];
     ondocumenterror?: EditorEventHandlers['document-error'];
+    ondocumentwarning?: EditorEventHandlers['document-warning'];
     onpagechange?: EditorEventHandlers['page-change'];
     ondirtychange?: EditorEventHandlers['dirty-change'];
+    onfilecommand?: EditorEventHandlers['file-command'];
+    onreadonlychange?: EditorEventHandlers['readonly-change'];
+    onribbonaction?: EditorEventHandlers['ribbon-action'];
+    onribboncustomize?: EditorEventHandlers['ribbon-customize'];
     onribbonaddin?: EditorEventHandlers['office-ribbon-add-in'];
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
   };
-  let { documentModel, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }: Props = $props();
+  let { documentModel, fileName, reviewAuthor, themeColors, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, customization, storage, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }: Props = $props();
   let binding: EditorBinding | undefined;
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
   let mountedElement = $state.raw<EditorHandle['element'] | undefined>();
@@ -17,7 +22,7 @@
   const dirty = $derived(dirtyState);
   function attach(host: HTMLElement, options: Props) {
     const normalized = (value: Props) => ({ ...pickEditorProps(value),
-      ...eventOptions({ 'document-change': value.ondocumentchange, 'document-error': value.ondocumenterror, 'page-change': value.onpagechange, 'dirty-change': value.ondirtychange, 'office-ribbon-add-in': value.onribbonaddin, 'collaboration-change': value.oncollaborationchange }) });
+      ...eventOptions({ 'document-change': value.ondocumentchange, 'document-error': value.ondocumenterror, 'document-warning': value.ondocumentwarning, 'page-change': value.onpagechange, 'dirty-change': value.ondirtychange, 'file-command': value.onfilecommand, 'readonly-change': value.onreadonlychange, 'ribbon-action': value.onribbonaction, 'ribbon-customize': value.onribboncustomize, 'office-ribbon-add-in': value.onribbonaddin, 'collaboration-change': value.oncollaborationchange }) });
     const handlers = (value: Props) => normalized({ ...value, ondirtychange: (next: boolean) => { dirtyState = next; value.ondirtychange?.(next); } });
     binding = mountEditor(host, handlers(options));
     mountedElement = binding.element;
@@ -32,4 +37,4 @@
   export function isDirty() { return binding?.dirty ?? false; }
   export { element, dirty };
 </script>
-<div use:attach={{ documentModel, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }}></div>
+<div use:attach={{ documentModel, fileName, reviewAuthor, themeColors, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, customization, storage, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }}></div>

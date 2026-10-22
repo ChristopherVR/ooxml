@@ -181,4 +181,14 @@ describe('shortcut help listing', () => {
 			{ label: 'Bold', keys: 'Ctrl+B' },
 		]);
 	});
+
+	it('leaves out the shortcuts a host capability turned off', () => {
+		const registry = createShortcutRegistry(actions());
+		const labels = shortcutRows(registry, false, new Set(['find', 'print'])).map(
+			(row) => row.label,
+		);
+		expect(labels).not.toContain('shortcut.find');
+		expect(labels).not.toContain('shortcut.print');
+		expect(labels).toContain('shortcut.save');
+	});
 });

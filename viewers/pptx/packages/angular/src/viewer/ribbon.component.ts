@@ -143,6 +143,7 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 					(openRecentFile)="openRecentFile.emit($event)"
 					(createPresentation)="createPresentation.emit($event)"
 					(save)="save.emit()"
+					(savePptx)="savePptx.emit()"
 					(savePpsx)="savePpsx.emit()"
 					(savePptm)="savePptm.emit()"
 					(savePpt)="savePpt.emit()"
@@ -306,6 +307,7 @@ export class RibbonComponent {
 	readonly createPresentation = output<string>();
 	/** Emitted when the user clicks "Save" in the File tab (saves as .pptx). */
 	readonly save = output<void>();
+	readonly savePptx = output<void>();
 	readonly savePpsx = output<void>();
 	readonly savePptm = output<void>();
 	readonly savePpt = output<void>();

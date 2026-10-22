@@ -3,7 +3,7 @@ import {
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveDisabledReason } from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason, DocumentStorage } from 'ooxml-ui/pptx';
 /**
  * useAutosaveWiring: the title-bar AutoSave toggle plus the debounced save
  * engine behind it.
@@ -50,6 +50,8 @@ export interface UseAutosaveWiringOptions {
 	optionsIntervalSeconds?: () => number | undefined;
 	/** Label the recovery snapshot is stored under (file path, else file name). */
 	snapshotName: () => string;
+	/** Host `storage` prop: snapshots go to its recovery methods when it has them. */
+	storage?: () => DocumentStorage | undefined;
 	/**
 	 * Serialise the current deck for crash recovery. Must be the plaintext
 	 * (`recovery-snapshot`) serialisation, NOT `getContent`: an encrypted
@@ -121,7 +123,7 @@ export function useAutosaveWiring(options: UseAutosaveWiringOptions): UseAutosav
 			// Open's "Recent" list have something real to report. Recovery reads
 			// these bytes back with no password, so they are deliberately a plain
 			// ZIP even when the deck is protected.
-			void saveAutosaveSnapshot(options.snapshotName(), bytes);
+			void saveAutosaveSnapshot(options.snapshotName(), bytes, options.storage?.());
 		},
 	});
 

@@ -110,7 +110,27 @@ describe('autosaveRecoveryService', () => {
 			'deck.pptx',
 			expect.any(Number),
 			'Quarterly review.pptx',
+			undefined,
 		);
+	});
+
+	it('reports the offered record to the host (autosaveRecovery)', async () => {
+		probeMock.mockResolvedValue(offer());
+		const { service, flush } = harness();
+		const offered = vi.fn();
+		service.bind({
+			filePath: () => 'deck.pptx',
+			fileName: () => 'Quarterly review.pptx',
+			loading: () => false,
+			error: () => null,
+			slideCount: () => 3,
+			autosaveAllowed: () => true,
+			restore: vi.fn(),
+			offered,
+		});
+		flush();
+		await Promise.resolve();
+		expect(offered).toHaveBeenCalledExactlyOnceWith(RECORD);
 	});
 
 	it('hands the recovered bytes to the viewer on restore, then closes', async () => {
@@ -129,7 +149,10 @@ describe('autosaveRecoveryService', () => {
 		const { service, restore } = bind();
 		await Promise.resolve();
 		service.discard();
-		expect(discardMock).toHaveBeenCalledWith(expect.objectContaining({ key: 'deck.pptx' }));
+		expect(discardMock).toHaveBeenCalledWith(
+			expect.objectContaining({ key: 'deck.pptx' }),
+			undefined,
+		);
 		expect(restore).not.toHaveBeenCalled();
 		await vi.waitFor(() => expect(service.prompt()).toBeNull());
 	});

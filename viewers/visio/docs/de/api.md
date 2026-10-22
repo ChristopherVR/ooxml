@@ -226,6 +226,26 @@ wird mit den Editoren für Word, Excel und PowerPoint geteilt. Eine
 Registerkarte darf nicht die ID einer eingebauten Registerkarte verwenden
 (`home`, `insert`, `design`, `data`, `process`, `review`, `view`, `help`).
 
+## Anpassung {#customization}
+
+`customization` nimmt ein `VisioCustomization`-Objekt entgegen, den gemeinsamen Vertrag von `ooxml-core/embedding`, den auch die anderen Editoren verwenden. Jedes Binding reicht es als Prop bzw. Input `customization` weiter. Es wird angewendet, wenn sich die Objektidentität ändert; halten Sie es daher stabil. `null` stellt die Standardwerte wieder her.
+
+```ts
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+```
+
+- `capabilities`: `false` entfernt jeden Weg zur Funktion (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`): Menüband, Seiten im Datei-Register, Menüs und Tastenkürzel. `hiddenActions` bleibt unverändert; beide werden vereinigt.
+- `backstage.extraPages`: Host-Seiten `{ id, label, group?, order?, render }` im Datei-Register, nach den eingebauten Seiten ihrer Gruppe. `render` ist eine Mount-Funktion, ein Custom-Element-Tag oder `{ element, properties }` und erhält einen `VisioRegionContext`.
+- `contextMenu.extraCommands`: Host-Befehle `{ id, label, icon?, group?, when?, disabled?, onSelect }` oberhalb (`top`, Standard) oder unterhalb (`bottom`) der eingebauten Einträge. `onSelect` läuft nach dem Schließen des Menüs mit einem `VisioMenuContext`. Beschriftungen werden unverändert angezeigt (lokalisieren Sie sie selbst).
+
+`edit: false` ist eine eigene Schreibsperre neben dem schreibgeschützten Schalter des Hosts und einer Zusammenarbeitsrolle `viewer`: Keine hebt eine andere auf. Capabilities sind eine UI-Richtlinie, kein Dokumentschutz. Das Ersetzen von Bereichen (Optionsdialog, Bereiche) wird für Visio noch nicht angeboten. Alle Produkte im Überblick: [Einbettungsleitfaden](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
+
 ## Statischer SVG-Export {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` und das `exportSvg()` jedes

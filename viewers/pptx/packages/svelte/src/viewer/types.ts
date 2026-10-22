@@ -1,15 +1,19 @@
 import type {
 	AccountAuthConfig,
+	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationRole,
 	CollaborationState,
 	CollaborationTransport,
+	DocumentStorage,
+	ConnectionStatus,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
@@ -18,7 +22,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import type { PptxSaveFormat } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxSaveFormat } from 'pptx-viewer-core';
 
 import type {
 	ExportGifOptions,
@@ -236,6 +240,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * the toolbar. Default false (read-only viewer).
 	 */
 	editable?: boolean;
+	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
 	/** Optional class name applied to the root element. */
 	class?: string;
 	/** Optional display name shown in the desktop title bar. */
@@ -319,8 +329,29 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * @default 120000 (Options > Save, "every 2 minutes")
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Fired with the serialized `.pptx` bytes after each successful autosave. */
 	onautosave?: (bytes: Uint8Array) => void;
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	onautosavestatus?: (status: ViewerAutosaveStatus) => void;
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	onautosaverecovery?: (record: AutosaveRecord) => void;
+	/** Fired with the changed fields when the user edits the document properties. */
+	onpropertieschange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	onpresentationchange?: (presenting: boolean) => void;
+	/** Fired on every collaboration connection-status transition. */
+	oncollaborationstatus?: (status: ConnectionStatus) => void;
 	/**
 	 * Real-time collaboration configuration. When provided, the viewer connects
 	 * to the room (y-websocket or serverless y-webrtc), publishes local edits

@@ -13,6 +13,7 @@ import {
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
 	createPresenterShowGuard,
+	clearAutosaveSnapshots,
 	createSlidePackageClipboard,
 	DEFAULT_VIEWER_OPTIONS,
 	deleteAutosaveSnapshot,
@@ -23,7 +24,6 @@ import {
 	isEditingAllowed,
 	isPanelVisible,
 	isPresentationSessionMessage,
-	listAutosaveSnapshots,
 	loadPresentationDeck,
 	makeSlideId,
 	mayLeaveSlideShow,
@@ -34,6 +34,7 @@ import {
 	prepareElementForInsertion,
 	PRESENTATION_CHANNEL_NAME,
 	PRESENTATION_MESSAGE_ORIGIN,
+	pruneExpiredAutosaveSnapshots,
 	readBackstageRecentFile,
 	readStoredViewerPrefs,
 	reflowSmartArtData,
@@ -41,12 +42,12 @@ import {
 	resolveAudienceScreenPlacement,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
-	resolveExpiredAutosaveSnapshots,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
 	selectGoogleWebfontFamilies,
 	selectTrustedEmbeddedFonts,
+	saveFailureMessage,
 	shouldClearAutosaveCacheOnClose,
 	shouldCommitSmartArtNodeText,
 	shouldConfirmExternalHyperlink,
@@ -57,9 +58,11 @@ import {
 	subtitleSettingsFromOptions,
 	swapPresentationWindows,
 	THEME_CATALOG,
+	withSaveFailureToast,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	DocumentStorage,
 	SlidePackageClipboard,
 	SlidePasteRequest,
 	ElementUpdate,
@@ -217,6 +220,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private webfontsToken = 0;
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
 	private requestedEditable = false;
+	private requestedReadOnly = false;
 	private annotations!: PresentationAnnotationsHost;
 	private parityWorkflows!: ParityWorkflows;
 	private aiChat: AiChatMount | null = null;
@@ -248,8 +252,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.options = options;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
-		// The legacy `readOnly` flag is AND-ed in: it can only take editing away.
-		this.requestedEditable = (options.editable ?? false) && !options.readOnly;
+		// `readOnly` is AND-ed in: it can only take editing away.
+		this.requestedEditable = options.editable ?? false;
+		this.requestedReadOnly = Boolean(options.readOnly);
 		const storedPrefs = readStoredViewerPrefs();
 		this.availableThemes = options.availableThemes ?? THEME_CATALOG;
 		this.availableLocales = resolveAvailableLocales(options);
@@ -428,6 +433,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTranslator: () => this.t,
 			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
+			getStorage: () => this.options.storage,
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler) => this.loading.setHandler(handler),
 			getUserName: () =>
@@ -438,6 +444,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				options.onChange?.();
 				this.emitContentChange();
 			},
+			onNotesUpdate: (notes) => options.onNotesUpdate?.(notes),
 			onCursorMove: (x, y) => this.sessions.setCollaborationCursor(x, y),
 			onInlineTextInput: (elementId, text) =>
 				this.sessions.publishCollaborationInlineText(elementId, text),
@@ -761,7 +768,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// File > Options > Save > "Automatically delete files older than N days":
 		// a one-time sweep on mount is enough since new snapshots only ever land
 		// with a fresh timestamp; no periodic timer is needed to keep it honest.
-		void this.pruneExpiredAutosaveSnapshots();
+		void this.pruneExpiredCache();
 		this.renderer.renderAll();
 		this.setupAiChat();
 
@@ -905,6 +912,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getHandler: () => this.loading.getHandler(),
 			applyThemeUpdates: (updates) => this.applyAiThemeUpdates(updates),
 			getFocusedTargets: () => controller.getEffectiveTargets(),
+			onCorePropertiesChanged: (properties) => this.options.onPropertiesChange?.(properties),
 		});
 		this.aiChat = mountAiChat({
 			doc: this.doc,
@@ -960,7 +968,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	openRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key);
+			const bytes = await readBackstageRecentFile(key, this.options.storage);
 			if (bytes) {
 				await this.loadFile(bytes);
 			}
@@ -1292,7 +1300,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			app: state.appProperties,
 			custom: state.customProperties,
 			editable: state.editable,
-			onSave: (core, app, custom) => this.editor.updateDocumentProperties(core, app, custom),
+			onSave: (core, app, custom) => {
+				this.editor.updateDocumentProperties(core, app, custom);
+				if (state.editable) {
+					this.options.onPropertiesChange?.(core);
+				}
+			},
 			owner: this.getDialogRegions(),
 		});
 	}
@@ -1349,6 +1362,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	openVersionHistory(): void {
 		openVersionHistoryPanel(this.doc, this.lifecycle.chrome.root, this.t, {
 			filePath: this.autosaveFilePath(),
+			storage: this.options.storage,
 			// A prior local AutoRecover snapshot of the SAME document, not a new
 			// file being opened, so Protected View does not apply.
 			onRestore: (bytes) => this.loadFile(bytes, { skipProtectedView: true }),
@@ -1767,6 +1781,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.applyEditable(this.effectiveEditable());
 	}
 
+	/** Makes the deck read-only (true wins over `editable`) or lifts that restriction. */
+	setReadOnly(readOnly: boolean): void {
+		this.requestedReadOnly = readOnly;
+		this.applyEditable(this.effectiveEditable());
+	}
+
 	/**
 	 * The edit state the viewer actually runs in: what the host asked for (the
 	 * `editable` option and `readOnly` flag, `setEditable`), AND-ed with a
@@ -1775,6 +1795,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private effectiveEditable(): boolean {
 		return (
 			this.requestedEditable &&
+			!this.requestedReadOnly &&
 			!this.sessions?.isCollaborationReadOnly() &&
 			isEditingAllowed(this.customization.getResolved())
 		);
@@ -1996,6 +2017,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * controller exists (same pre-construction timing note as
 	 * `getQuickAccessOptions`).
 	 */
+	/** The host `storage` option (chrome reads Recent and Account usage through it). */
+	getStorage(): DocumentStorage | undefined {
+		return this.options.storage;
+	}
+
 	getRecentPresentationsCount(): number {
 		const controller = this.optionsController as ViewerOptionsController | undefined;
 		return (
@@ -2013,14 +2039,36 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return bytes;
 	}
 
+	/**
+	 * Save As `format` (host storage sees `saveAs`). A failure (serialising, or the host's storage
+	 * rejected) is reported through `onError` and the save-failed notice, and never rejects.
+	 */
 	async downloadAs(format: PptxSaveFormat, fileName?: string): Promise<void> {
-		await this.editor.downloadAs(format, fileName);
+		try {
+			await this.editor.downloadAs(format, fileName);
+		} catch (error) {
+			this.reportSaveFailure(format, error);
+			return;
+		}
 		this.afterSuccessfulSave(format);
 	}
 
+	/** File > Save as `.pptx` (host storage sees `save`); failures are reported as in {@link downloadAs}. */
 	async downloadPptx(fileName?: string): Promise<void> {
-		await this.editor.downloadPptx(fileName);
+		try {
+			await this.editor.downloadPptx(fileName);
+		} catch (error) {
+			this.reportSaveFailure('pptx', error);
+			return;
+		}
 		this.afterSuccessfulSave('pptx');
+	}
+
+	/** A failed Save / Save As: the host's `onError`, and the save-failed notice for the user. */
+	private reportSaveFailure(format: PptxSaveFormat, error: unknown): void {
+		console.error(`[PptxViewer] Save as .${format} failed:`, error);
+		this.options.onError?.(saveFailureMessage(error), error);
+		this.store.set({ compatToasts: withSaveFailureToast(this.store.get().compatToasts) });
 	}
 
 	/**
@@ -2035,7 +2083,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			format === 'pptx' &&
 			shouldDiscardAutosaveOnSuccessfulSave(this.optionsController.getOptions())
 		) {
-			void deleteAutosaveSnapshot(this.autosaveFilePath()).catch(() => {
+			void deleteAutosaveSnapshot(this.autosaveFilePath(), this.options.storage).catch(() => {
 				// Saving succeeded; recovery cleanup is best-effort here.
 			});
 		}
@@ -2064,17 +2112,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	/** File > Options > Save > "cache retention": a one-time sweep on mount. */
-	private async pruneExpiredAutosaveSnapshots(): Promise<void> {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			const expired = resolveExpiredAutosaveSnapshots(
-				snapshots,
-				this.optionsController.getOptions(),
-			);
-			await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-		} catch {
-			// Best-effort background maintenance; a blocked IndexedDB just skips it.
-		}
+	private async pruneExpiredCache(): Promise<void> {
+		// With a host recovery store it sweeps that store, only when it lists its copies.
+		await pruneExpiredAutosaveSnapshots(
+			this.optionsController.getOptions(),
+			this.options.storage,
+		).catch(() => {
+			// Best-effort background maintenance; a blocked store just skips it.
+		});
 	}
 
 	deleteSelected = (): void => this.editor.deleteSelected();
@@ -2186,14 +2231,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** File > Options > Save > "Delete cached files": drop recovery snapshots. */
 	private clearOptionsCache(): void {
-		void (async () => {
-			try {
-				const snapshots = await listAutosaveSnapshots();
-				await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-			} catch {
-				// Browser lifecycle cleanup cannot report an IndexedDB failure.
-			}
-		})();
+		void clearAutosaveSnapshots(this.options.storage).catch(() => {
+			// Browser lifecycle cleanup cannot report a storage failure.
+		});
 	}
 
 	/**

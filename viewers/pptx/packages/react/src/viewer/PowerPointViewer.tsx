@@ -22,6 +22,7 @@ import type {
 	SlidePackageClipboard,
 	CollabLoadOrigin,
 	CollaborationLivePatcher,
+	ConnectionStatus,
 	DeckSaveState,
 	RibbonAddInTab,
 	ViewerAddinStatus,
@@ -42,6 +43,8 @@ import {
 	playFeedbackSound,
 	RIBBON_SCOPE_ATTR,
 	readBackstageRecentFile,
+	saveFailureMessage,
+	withSaveFailureToast,
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
 	resolveAutosaveActivation,
@@ -59,6 +62,7 @@ import {
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
+import type { DocumentSaveReason } from 'ooxml-ui/pptx';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
@@ -111,6 +115,7 @@ import { ShapeFormatContext } from './components/shape-format-context';
 import { AccountAuthContext } from './components/toolbar/account-auth-context';
 import { RibbonAddInsContext } from './components/toolbar/ribbon-add-ins';
 import { ViewerCustomizationContext } from './components/viewer-customization-context';
+import { ViewerStorageContext } from './components/viewer-storage-context';
 import { ViewerDialogGroup } from './components/ViewerDialogGroup';
 import { ViewerMainContent } from './components/ViewerMainContent';
 import { ViewerOptionsProvider } from './components/ViewerOptionsProvider';
@@ -138,6 +143,7 @@ import { usePresentationSetup } from './hooks/usePresentationSetup';
 import { useReadOnlyRecommendationState } from './hooks/useReadOnlyRecommendationState';
 import { useRecentColorsSync } from './hooks/useRecentColorsSync';
 import { useReducedMotion } from './hooks/useReducedMotion';
+import { useReportOnChange } from './hooks/useReportOnChange';
 import { useResizablePanels } from './hooks/useResizablePanels';
 import { useRibbonGalleryCommands } from './hooks/useRibbonGalleryCommands';
 import { useRunProgramNoticesState } from './hooks/useRunProgramNoticesState';
@@ -177,9 +183,11 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			fonts = [],
 			filePath,
 			fileName,
-			canEdit: hostCanEdit = false,
+			canEdit: canEditProp = false,
+			readOnly = false,
 			autosave: hostAutosave,
 			autosaveIntervalMs: hostAutosaveIntervalMs,
+			storage,
 			onContentChange,
 			onDirtyChange,
 			onActiveSlideChange,
@@ -203,6 +211,15 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			onStartCollaboration,
 			onStopCollaboration,
 			onCollaborationChange,
+			onCollaborationStatus,
+			onAutosave,
+			onAutosaveToggle,
+			onAutosaveStatus,
+			onAutosaveRecovery,
+			onChange,
+			onPropertiesChange,
+			onNotesUpdate,
+			onPresentationChange,
 			shareDefaults,
 			smartArt3D = false,
 			surfaceChart3D = false,
@@ -216,6 +233,8 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			customization,
 			initialSlide,
 		} = props;
+		// `readOnly` takes editing away from a host that also allows it.
+		const hostCanEdit = canEditProp && !readOnly;
 		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.
@@ -348,15 +367,18 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 				}
 			})();
 		}, [hostOpenFile]);
-		const handleOpenRecentFile = useCallback((key: string) => {
-			void (async () => {
-				const bytes = await readBackstageRecentFile(key);
-				if (bytes) {
-					setLoadOrigin('user');
-					setContent(bytes);
-				}
-			})();
-		}, []);
+		const handleOpenRecentFile = useCallback(
+			(key: string) => {
+				void (async () => {
+					const bytes = await readBackstageRecentFile(key, storage);
+					if (bytes) {
+						setLoadOrigin('user');
+						setContent(bytes);
+					}
+				})();
+			},
+			[storage],
+		);
 
 		// ── File > Options store ─────────────────────────────────────
 		// Declared here (rather than alongside the legacy ViewerSettings sync
@@ -421,6 +443,14 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 		// which folds in the host's `autosave` prop (a ceiling the preference
 		// cannot exceed), the file path, and edit permission.
 		const [autosaveEnabled, setAutosaveEnabled] = useState(true);
+		const autosaveToggleCallback = useRef(onAutosaveToggle);
+		useEffect(() => {
+			autosaveToggleCallback.current = onAutosaveToggle;
+		}, [onAutosaveToggle]);
+		const autosaveEnabledRef = useRef(autosaveEnabled);
+		useEffect(() => {
+			autosaveEnabledRef.current = autosaveEnabled;
+		}, [autosaveEnabled]);
 		const autosaveActivation = resolveAutosaveActivation({
 			hostAutosave,
 			userEnabled: autosaveEnabled,
@@ -530,6 +560,9 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 				switch (key) {
 					case 'autoSave':
 						setAutosaveEnabled(value);
+						if (value !== autosaveEnabledRef.current) {
+							autosaveToggleCallback.current?.(value);
+						}
 						break;
 					case 'spellCheck':
 						state.setSpellCheckEnabled(value);
@@ -606,7 +639,7 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 				optionsStore.setOptions(next);
 			}
 		}, [settings, optionsStore]);
-		const handleClearOptionsCache = useAutosaveCacheMaintenance(viewerOptions);
+		const handleClearOptionsCache = useAutosaveCacheMaintenance(viewerOptions, storage);
 
 		// ── Mobile / responsive ─────────────────────────────────────
 		const mobile = useIsMobile();
@@ -675,8 +708,13 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 		// host's `onDirtyChange` and `useAutosave` (which does nothing at all
 		// while the document reads clean).
 		const { setIsDirty } = state;
+		const onChangeCallback = useRef(onChange);
+		useEffect(() => {
+			onChangeCallback.current = onChange;
+		}, [onChange]);
 		const markDocumentDirty = useCallback(() => {
 			setIsDirty(true);
+			onChangeCallback.current?.();
 		}, [setIsDirty]);
 
 		const history = useEditorHistory({
@@ -951,6 +989,12 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			content,
 			filePath,
 			fileName,
+			storage,
+			// A failed Save / Save As: the host's `onError`, and the save-failed notice for the user.
+			onSaveError: (saveError) => {
+				onError?.(saveFailureMessage(saveError));
+				compatToastsState.setToasts(withSaveFailureToast);
+			},
 			autosaveEnabled: autosaveActivation.active,
 			autosaveAllowed: hostAutosave !== false,
 			// Host prop first (an explicit policy), else File > Options > Save >
@@ -997,6 +1041,12 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			onZoomChange,
 			onSelectionChange,
 			onSlideCountChange,
+			onAutosave,
+			onAutosaveStatus,
+			onAutosaveRecovery,
+			onPropertiesChange,
+			onNotesUpdate,
+			onPresentationChange,
 			customizationApi: custom.api,
 			customization: customizationResolved,
 		});
@@ -1098,23 +1148,31 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			const afterSuccessfulSave = (format: PptxSaveFormat): void => {
 				playFeedbackSound(viewerOptions);
 				if (format === 'pptx' && filePath && shouldDiscardAutosaveOnSuccessfulSave(viewerOptions)) {
-					void deleteAutosaveSnapshot(filePath).catch(() => {
+					void deleteAutosaveSnapshot(filePath, storage).catch(() => {
 						// Saving succeeded; recovery cleanup is best-effort here.
 					});
 				}
 			};
-			const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<void> => {
-				await rawExportHandlers.handleSaveAsFormat(format);
+			const handleSaveAsFormat = async (
+				format: PptxSaveFormat,
+				reason: DocumentSaveReason = 'saveAs',
+			): Promise<boolean> => {
+				// A failed save (or host storage rejection) must not discard the recovery copy.
+				if ((await rawExportHandlers.handleSaveAsFormat(format, reason)) === false) {
+					return false;
+				}
 				afterSuccessfulSave(format);
+				return true;
 			};
 			return {
 				...rawExportHandlers,
 				handleSaveAsFormat,
+				handleSave: () => void handleSaveAsFormat('pptx', 'save'),
 				handleSaveAsPptx: () => void handleSaveAsFormat('pptx'),
 				handleSaveAsPpsx: () => void handleSaveAsFormat('ppsx'),
 				handleSaveAsPptm: () => void handleSaveAsFormat('pptm'),
 			};
-		}, [rawExportHandlers, viewerOptions, filePath]);
+		}, [rawExportHandlers, viewerOptions, filePath, storage]);
 
 		// Route keyboard/end-of-show exits (Escape, the timed advance past the
 		// last slide) through the same keep/discard-ink-annotations dialog as the
@@ -1205,7 +1263,12 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			setSections: state.setSections,
 			setPresentationProperties: state.setPresentationProperties,
 			setCustomProperties: state.setCustomProperties,
-			setCoreProperties: state.setCoreProperties,
+			setCoreProperties: (properties) => {
+				state.setCoreProperties(properties);
+				if (properties) {
+					onPropertiesChange?.(properties);
+				}
+			},
 			setAppProperties: state.setAppProperties,
 			setViewProperties: state.setViewProperties,
 			setTableStyleMap: state.setTableStyleMap,
@@ -1344,7 +1407,8 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 											// Inert when the host passed `autosave={false}`: a preference
 											// cannot exceed the policy, so the switch must not move.
 											if (autosaveActivation.toggleAvailable) {
-												setAutosaveEnabled((p) => !p);
+												setAutosaveEnabled(!autosaveEnabled);
+												onAutosaveToggle?.(!autosaveEnabled);
 											}
 										}}
 										hiddenActions={hiddenActions}
@@ -1725,70 +1789,75 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			// the user changed in the Options dialog.
 			<ViewerOptionsProvider options={viewerOptions} store={optionsStore}>
 				<ViewerCustomizationContext.Provider value={customizationResolved}>
-					<ViewerRegionBaseContext.Provider value={regionBase}>
-						<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
-							<AccountAuthContext.Provider value={accountAuth}>
-								<Rendering3DFlagsContext.Provider value={effective3D}>
-									<ViewerThemeProvider theme={effectiveTheme}>
-										<CollaborationProvider
-											config={collaboration}
-											canvasWidth={canvasSize.width}
-											canvasHeight={canvasSize.height}
-										>
-											<CollaborationStateReporter onChange={onCollaborationChange} />
-											<CollaborationDocumentSync
-												slides={galleryDeckStyle.held()?.slides ?? slides}
-												templateElementsBySlideId={
-													galleryDeckStyle.held()?.templateElementsBySlideId ??
-													templateElementsBySlideId
-												}
-												setSlides={state.setSlides}
-												content={content}
-												loadVersion={loadVersion}
-												loadOrigin={loadOrigin}
-												livePatcher={state.livePatcher}
-												onReadOnlyChange={setCollaborationReadOnly}
-												deckSaveState={{
-													headerFooter: state.headerFooter,
-													presentationProperties: state.presentationProperties,
-													viewProperties: state.viewProperties,
-													customShows: state.customShows,
-													sections: state.sections,
-													coreProperties: state.coreProperties,
-													appProperties: state.appProperties,
-													customProperties: state.customProperties,
-													tagCollections: state.tagCollections,
-													slideMasters: state.slideMasters,
-													notesMaster: state.notesMaster,
-													handoutMaster: state.handoutMaster,
-													slideSize: resolveSlideSizeSelection({
-														current: state.slideSizeEmu,
-														canvas: canvasSize,
-													}).size,
-													tableStyleMap: state.tableStyleMap,
-													tableStylesDefaultId: state.tableStylesDefaultId,
-													tableStylesToDelete: state.tableStylesToDelete,
-													embedFonts: dialogs.embedFontsEnabled,
-												}}
-											/>
-											<CollaborationFollowLayer
-												activeSlideIndex={activeSlideIndex}
-												setActiveSlideIndex={state.setActiveSlideIndex}
-												slideCount={slides.length}
-											/>
-											<ShapeFormatContext.Provider value={shapeFormat}>
-												<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-													<ChartFormatContext.Provider value={chartFormat}>
-														{viewerContent}
-													</ChartFormatContext.Provider>
-												</RibbonGalleryCommandsContext.Provider>
-											</ShapeFormatContext.Provider>
-										</CollaborationProvider>
-									</ViewerThemeProvider>
-								</Rendering3DFlagsContext.Provider>
-							</AccountAuthContext.Provider>
-						</RibbonAddInsContext.Provider>
-					</ViewerRegionBaseContext.Provider>
+					<ViewerStorageContext.Provider value={storage}>
+						<ViewerRegionBaseContext.Provider value={regionBase}>
+							<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
+								<AccountAuthContext.Provider value={accountAuth}>
+									<Rendering3DFlagsContext.Provider value={effective3D}>
+										<ViewerThemeProvider theme={effectiveTheme}>
+											<CollaborationProvider
+												config={collaboration}
+												canvasWidth={canvasSize.width}
+												canvasHeight={canvasSize.height}
+											>
+												<CollaborationStateReporter
+													onChange={onCollaborationChange}
+													onStatus={onCollaborationStatus}
+												/>
+												<CollaborationDocumentSync
+													slides={galleryDeckStyle.held()?.slides ?? slides}
+													templateElementsBySlideId={
+														galleryDeckStyle.held()?.templateElementsBySlideId ??
+														templateElementsBySlideId
+													}
+													setSlides={state.setSlides}
+													content={content}
+													loadVersion={loadVersion}
+													loadOrigin={loadOrigin}
+													livePatcher={state.livePatcher}
+													onReadOnlyChange={setCollaborationReadOnly}
+													deckSaveState={{
+														headerFooter: state.headerFooter,
+														presentationProperties: state.presentationProperties,
+														viewProperties: state.viewProperties,
+														customShows: state.customShows,
+														sections: state.sections,
+														coreProperties: state.coreProperties,
+														appProperties: state.appProperties,
+														customProperties: state.customProperties,
+														tagCollections: state.tagCollections,
+														slideMasters: state.slideMasters,
+														notesMaster: state.notesMaster,
+														handoutMaster: state.handoutMaster,
+														slideSize: resolveSlideSizeSelection({
+															current: state.slideSizeEmu,
+															canvas: canvasSize,
+														}).size,
+														tableStyleMap: state.tableStyleMap,
+														tableStylesDefaultId: state.tableStylesDefaultId,
+														tableStylesToDelete: state.tableStylesToDelete,
+														embedFonts: dialogs.embedFontsEnabled,
+													}}
+												/>
+												<CollaborationFollowLayer
+													activeSlideIndex={activeSlideIndex}
+													setActiveSlideIndex={state.setActiveSlideIndex}
+													slideCount={slides.length}
+												/>
+												<ShapeFormatContext.Provider value={shapeFormat}>
+													<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
+														<ChartFormatContext.Provider value={chartFormat}>
+															{viewerContent}
+														</ChartFormatContext.Provider>
+													</RibbonGalleryCommandsContext.Provider>
+												</ShapeFormatContext.Provider>
+											</CollaborationProvider>
+										</ViewerThemeProvider>
+									</Rendering3DFlagsContext.Provider>
+								</AccountAuthContext.Provider>
+							</RibbonAddInsContext.Provider>
+						</ViewerRegionBaseContext.Provider>
+					</ViewerStorageContext.Provider>
 				</ViewerCustomizationContext.Provider>
 			</ViewerOptionsProvider>
 		);
@@ -1837,10 +1906,14 @@ function CollaborationStatusStrip() {
  */
 function CollaborationStateReporter({
 	onChange,
+	onStatus,
 }: {
 	onChange: PowerPointViewerProps['onCollaborationChange'];
+	onStatus: PowerPointViewerProps['onCollaborationStatus'];
 }) {
-	useCollaborationStateReport(useCollaboration(), onChange);
+	const collab = useCollaboration();
+	useCollaborationStateReport(collab, onChange);
+	useReportOnChange<ConnectionStatus>(collab?.status ?? 'disconnected', onStatus, 'disconnected');
 	return null;
 }
 

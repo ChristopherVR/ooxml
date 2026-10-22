@@ -1,5 +1,8 @@
 import type { PptxSlide } from 'ooxml-core/pptx';
 
+import type { DocumentStorage } from 'ooxml-core/embedding';
+
+import { hostRecoveryStore } from './autosave-host-store';
 import { getAutosaveSnapshot, listAutosaveSnapshots } from './autosave-store';
 import { rememberSessionDeck } from './session-restore';
 import { createBlankSlide } from './slide-operations';
@@ -204,12 +207,13 @@ function splitFilePath(
 export async function listBackstageRecentFiles(
 	translate?: BackstageTranslate,
 	limit?: number,
+	storage?: DocumentStorage | null,
 ): Promise<BackstageRecentFile[]> {
-	if (typeof indexedDB === 'undefined') {
+	if (!hostRecoveryStore(storage) && typeof indexedDB === 'undefined') {
 		return [];
 	}
 	try {
-		const snapshots = await listAutosaveSnapshots();
+		const snapshots = await listAutosaveSnapshots(storage);
 		const sorted = snapshots
 			.map((snapshot) => ({ ...snapshot, ...splitFilePath(snapshot.key, translate) }))
 			.sort((a, b) => b.timestamp - a.timestamp);
@@ -226,11 +230,14 @@ export async function listBackstageRecentFiles(
  * this browser tab: the viewer swaps it in without telling the host, so a host
  * that restores on load would otherwise reopen the deck it handed in.
  */
-export async function readBackstageRecentFile(key: string): Promise<Uint8Array | undefined> {
-	if (typeof indexedDB === 'undefined') {
+export async function readBackstageRecentFile(
+	key: string,
+	storage?: DocumentStorage | null,
+): Promise<Uint8Array | undefined> {
+	if (!hostRecoveryStore(storage) && typeof indexedDB === 'undefined') {
 		return undefined;
 	}
-	const data = (await getAutosaveSnapshot(key))?.data;
+	const data = (await getAutosaveSnapshot(key, storage))?.data;
 	if (data) {
 		void rememberSessionDeck(key, data);
 	}

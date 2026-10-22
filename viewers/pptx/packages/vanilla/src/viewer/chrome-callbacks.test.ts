@@ -46,10 +46,12 @@ describe('buildChromeCallbacks', () => {
 		const downloadAs = vi.fn(() => Promise.resolve());
 		const callbacks = buildChromeCallbacks(buildDeps({ downloadAs }));
 
+		callbacks.ribbonHandlers.file.saveAsPptx?.();
 		callbacks.ribbonHandlers.file.saveAsPpsx();
 		callbacks.ribbonHandlers.file.saveAsPptm();
 		callbacks.ribbonHandlers.file.saveAsPpt();
 
-		expect(downloadAs.mock.calls).toStrictEqual([['ppsx'], ['pptm'], ['ppt']]);
+		// Save As .pptx is Save As too (the host's storage sees `saveAs`); File > Save is `save()`.
+		expect(downloadAs.mock.calls).toStrictEqual([['pptx'], ['ppsx'], ['pptm'], ['ppt']]);
 	});
 });

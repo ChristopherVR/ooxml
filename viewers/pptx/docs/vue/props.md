@@ -60,21 +60,29 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Events
 
-| Event                   | Payload                       | Description                                                                                    |
-| ----------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `@dirty-change`         | `isDirty: boolean`            | Fired when the unsaved-changes flag flips.                                                     |
-| `@content-change`       | `content: Uint8Array`         | Fired with the re-serialised document bytes when content changes.                              |
-| `@autosave`             | `content: Uint8Array`         | Fired with the re-serialised bytes on each autosave cycle; see [Autosave](#autosave).          |
-| `@active-slide-change`  | `slideIndex: number`          | Fired when the active slide changes.                                                           |
-| `@zoom-change`          | `zoom: number`                | Fired when the zoom level changes.                                                             |
-| `@slide-count-change`   | `count: number`               | Fired when the total slide count changes (slide added/deleted).                                |
-| `@selection-change`     | `elementIds: string[]`        | Fired when element selection changes.                                                          |
-| `@mode-change`          | `mode: string`                | Fired when the viewer mode changes (e.g. edit to present).                                     |
-| `@start-collaboration`  | `config: CollaborationConfig` | Fired when the user starts a session from the Share dialog.                                    |
-| `@collaboration-change` | `state: CollaborationState`   | Fired when a session starts or stops, and when its status, synced flag or people change.       |
-| `@load`                 | `detail: ViewerLoadDetail`    | Fired each time a presentation finishes loading without an error (`slideCount`, `canvasSize`). |
-| `@error`                | `message: string`             | Fired once per distinct load failure, with a human-readable message.                           |
-| `@stop-collaboration`   | -                             | Fired when the user stops a session from the Share dialog.                                     |
+| Event                   | Payload                                    | Description                                                                                    |
+| ----------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `@dirty-change`         | `isDirty: boolean`                         | Fired when the unsaved-changes flag flips.                                                     |
+| `@content-change`       | `content: Uint8Array`                      | Fired with the re-serialised document bytes when content changes.                              |
+| `@autosave`             | `content: Uint8Array`                      | Fired with the re-serialised bytes on each autosave cycle; see [Autosave](#autosave).          |
+| `@active-slide-change`  | `slideIndex: number`                       | Fired when the active slide changes.                                                           |
+| `@zoom-change`          | `zoom: number`                             | Fired when the zoom level changes.                                                             |
+| `@slide-count-change`   | `count: number`                            | Fired when the total slide count changes (slide added/deleted).                                |
+| `@selection-change`     | `elementIds: string[]`                     | Fired when element selection changes.                                                          |
+| `@mode-change`          | `mode: string`                             | Fired when the viewer mode changes (e.g. edit to present).                                     |
+| `@change`               | -                                          | Fired after any committed document edit (move, resize, text, undo, redo, ...).                 |
+| `@autosave-toggle`      | `enabled: boolean`                         | Fired when the user enables or disables autosave (title bar or File > Options).                |
+| `@autosave-status`      | `'idle' \| 'saving' \| 'saved' \| 'error'` | Fired on every autosave lifecycle transition.                                                  |
+| `@autosave-recovery`    | `record: AutosaveRecord`                   | Fired when a recovery snapshot left by a previous session is found.                            |
+| `@properties-change`    | `updates: Partial<PptxCoreProperties>`     | Fired when the user (or the AI assistant) changes the document properties.                     |
+| `@notes-update`         | `notes: string`                            | Fired with the new speaker-notes text after a notes edit.                                      |
+| `@presentation-change`  | `presenting: boolean`                      | Fired when presentation (slide show) mode is entered or left.                                  |
+| `@collaboration-status` | `status: ConnectionStatus`                 | Fired on every collaboration connection-status transition.                                     |
+| `@start-collaboration`  | `config: CollaborationConfig`              | Fired when the user starts a session from the Share dialog.                                    |
+| `@collaboration-change` | `state: CollaborationState`                | Fired when a session starts or stops, and when its status, synced flag or people change.       |
+| `@load`                 | `detail: ViewerLoadDetail`                 | Fired each time a presentation finishes loading without an error (`slideCount`, `canvasSize`). |
+| `@error`                | `message: string`                          | Fired once per distinct load failure, with a human-readable message.                           |
+| `@stop-collaboration`   | -                                          | Fired when the user stops a session from the Share dialog.                                     |
 
 `content` and `autosave` share one signature (`Uint8Array` payload) in the underlying
 `PowerPointViewerEmits` type, as do `active-slide-change`, `zoom-change`, and `slide-count-change`
@@ -204,6 +212,14 @@ interface PowerPointViewerProps {
 interface PowerPointViewerEmits {
 	(e: 'dirty-change', isDirty: boolean): void;
 	(e: 'content-change' | 'autosave', content: Uint8Array): void;
+	(e: 'change'): void;
+	(e: 'autosave-toggle', enabled: boolean): void;
+	(e: 'autosave-status', status: 'idle' | 'saving' | 'saved' | 'error'): void;
+	(e: 'autosave-recovery', record: AutosaveRecord): void;
+	(e: 'properties-change', updates: Partial<PptxCoreProperties>): void;
+	(e: 'notes-update', notes: string): void;
+	(e: 'presentation-change', presenting: boolean): void;
+	(e: 'collaboration-status', status: ConnectionStatus): void;
 	(e: 'active-slide-change' | 'zoom-change' | 'slide-count-change', value: number): void;
 	(e: 'mode-change', mode: string): void;
 	(e: 'selection-change', elementIds: string[]): void;
@@ -220,10 +236,11 @@ interface PowerPointViewerEmits {
 `pptx-vue-viewer` debounces slide changes, writes a crash-recovery snapshot to the shared IndexedDB
 store, and hands the serialised bytes back to the host via `@autosave`.
 
-| Prop                 | Type      | Default                | Description                                                                      |
-| -------------------- | --------- | ---------------------- | -------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.        |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting. |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ### Who decides: the `autosave` prop or the AutoSave toggle? {#autosave-policy}
 

@@ -1,13 +1,17 @@
 import type { CollaborationState } from 'ooxml-core/collab';
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
+	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationRole,
+	ConnectionStatus,
 	PowerPointViewerAPI,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
@@ -15,6 +19,7 @@ import type {
 	ViewportFitPadding,
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxCoreProperties } from 'pptx-viewer-core';
 
 import type { LocaleCatalogEntry } from '../i18n';
 import type { ThemeCatalogEntry, ViewerTheme } from '../theme';
@@ -73,6 +78,12 @@ export interface PowerPointViewerProps {
 	fileName?: string;
 	/** Whether editing actions are enabled. */
 	canEdit?: boolean;
+	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
 	/** Fired before following a link; return false to cancel its default action. */
 	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/**
@@ -100,6 +111,14 @@ export interface PowerPointViewerProps {
 	 * were brought onto one rule.
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Optional class name applied to the root element. */
 	class?: string;
 	/**
@@ -345,6 +364,25 @@ export interface PowerPointViewerEmits {
 	(e: 'load', detail: ViewerLoadDetail): void;
 	/** Fired once per distinct load failure, with a human-readable message. */
 	(e: 'error', message: string): void;
+	/** Fired when the user enables or disables autosave (title bar or File > Options). */
+	(e: 'autosave-toggle', enabled: boolean): void;
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	(e: 'autosave-status', status: ViewerAutosaveStatus): void;
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	(e: 'autosave-recovery', record: AutosaveRecord): void;
+	/** Fired after any committed document edit (move, resize, text, undo, redo, ...). */
+	(e: 'change'): void;
+	/** Fired with the changed fields when the user edits the document properties. */
+	(e: 'properties-change', updates: Partial<PptxCoreProperties>): void;
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	(e: 'notes-update', notes: string): void;
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	(e: 'presentation-change', presenting: boolean): void;
+	/** Fired on every collaboration connection-status transition. */
+	(e: 'collaboration-status', status: ConnectionStatus): void;
 }
 
 /**

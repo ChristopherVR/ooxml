@@ -2,6 +2,7 @@ import {
 	defineXlsxEditor,
 	type EditorLocaleInput,
 	type EditorThemeMode,
+	type FileCommandDetail,
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
 	type SelectionChangeDetail,
@@ -13,8 +14,10 @@ import {
 	type XlsxEditorEventDetail,
 	type XlsxEditorEventName,
 	type XlsxThemeColors,
+	type ExcelCustomization,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import { createPropTracker, createSrcLoader, sameList, sameThemeColors } from './forwarding';
 
 /** Editor state a framework passes down as props. */
@@ -50,6 +53,17 @@ export interface EditorProps {
 	 * colour); forwarded when a new object is passed, and `undefined` or `null` leaves the room.
 	 */
 	collaboration?: XlsxCollaborationOptions | null | undefined;
+	/**
+	 * Host-owned storage: File > Save and Save As go to `storage.save()` instead of a download, and
+	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
+	 */
+	storage?: DocumentStorage | null | undefined;
+	/**
+	 * Host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
+	 * it); `null` or omitted restores the defaults.
+	 */
+	customization?: ExcelCustomization | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -57,10 +71,31 @@ export interface EditorEventOptions {
 	onWorkbookError?: ((error: Error) => void) | undefined;
 	onSelectionChange?: ((detail: SelectionChangeDetail) => void) | undefined;
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
-	/** The user toggled Editing / Viewing (or `readOnly` changed); lets a controlled parent sync. */
-	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
+	/**
+	 * The user toggled Editing / Viewing, `readOnly` changed or a collaboration role changed.
+	 * `readOnly` is the effective value. A controlled parent that mirrors the switch must store
+	 * `detail.hostReadOnly`, never `readOnly`, or a `viewer` role lock would be written into the
+	 * host's setting.
+	 */
+	onReadOnlyChange?:
+		| ((
+				readOnly: boolean,
+				detail: { readOnly: boolean; locked: boolean; hostReadOnly: boolean },
+		  ) => void)
+		| undefined;
+	/**
+	 * A File command (new, open, save, saveAs, export, exportCsv, print) is about to run. The event is
+	 * cancelable: call `event.preventDefault()` to take the command over yourself.
+	 */
+	onFileCommand?: ((event: CustomEvent<FileCommandDetail>) => void) | undefined;
+	/** Non-fatal notes from the loader (unsupported features, compatibility). */
+	onWorkbookWarning?: ((warnings: string[]) => void) | undefined;
+	/** A command ran from the ribbon, a menu, Tell me or a shortcut. */
+	onRibbonAction?: ((detail: { id: string }) => void) | undefined;
 	/** The user changed the shown ribbon commands (File > Options > Customize Ribbon). */
 	onRibbonCustomize?: ((hiddenActions: string[]) => void) | undefined;
+	/** The active sheet changed. */
+	onSheetChange?: ((detail: { index: number; name: string }) => void) | undefined;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	onRibbonAddIn?: ((detail: RibbonAddInCommandDetail) => void) | undefined;
 	/** Sharing started or stopped, the connection changed, or someone joined or left. */
@@ -86,6 +121,8 @@ export const EDITOR_PROP_KEYS = [
 	'ribbonAddIns',
 	'themeColors',
 	'collaboration',
+	'storage',
+	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -100,7 +137,11 @@ export const EDITOR_EVENT_NAMES = [
 	'selection-change',
 	'dirty-change',
 	'readonly-change',
+	'file-command',
+	'workbook-warning',
+	'ribbon-action',
 	'ribbon-customize',
+	'sheet-change',
 	'office-ribbon-add-in',
 	'collaboration-change',
 ] as const satisfies readonly XlsxEditorEventName[];
@@ -112,7 +153,11 @@ export interface EditorEventHandlers {
 	'selection-change': EditorEventOptions['onSelectionChange'];
 	'dirty-change': EditorEventOptions['onDirtyChange'];
 	'readonly-change': EditorEventOptions['onReadOnlyChange'];
+	'file-command': EditorEventOptions['onFileCommand'];
+	'workbook-warning': EditorEventOptions['onWorkbookWarning'];
+	'ribbon-action': EditorEventOptions['onRibbonAction'];
 	'ribbon-customize': EditorEventOptions['onRibbonCustomize'];
+	'sheet-change': EditorEventOptions['onSheetChange'];
 	'office-ribbon-add-in': EditorEventOptions['onRibbonAddIn'];
 	'collaboration-change': EditorEventOptions['onCollaborationChange'];
 	ready?: EditorEventOptions['onReady'];
@@ -135,7 +180,11 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onSelectionChange: handlers['selection-change'],
 		onDirtyChange: handlers['dirty-change'],
 		onReadOnlyChange: handlers['readonly-change'],
+		onFileCommand: handlers['file-command'],
+		onWorkbookWarning: handlers['workbook-warning'],
+		onRibbonAction: handlers['ribbon-action'],
 		onRibbonCustomize: handlers['ribbon-customize'],
+		onSheetChange: handlers['sheet-change'],
 		onRibbonAddIn: handlers['office-ribbon-add-in'],
 		onCollaborationChange: handlers['collaboration-change'],
 		onReady: handlers.ready,
@@ -231,8 +280,13 @@ export function mountEditor(
 		'workbook-error': (event) => options.onWorkbookError?.(event.detail.error),
 		'selection-change': (event) => options.onSelectionChange?.(event.detail),
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail.dirty),
-		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly),
+		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly, event.detail),
+		// Cancelable: the handler gets the event itself, so a host can call preventDefault().
+		'file-command': (event) => options.onFileCommand?.(event),
+		'workbook-warning': (event) => options.onWorkbookWarning?.([...event.detail.warnings]),
+		'ribbon-action': (event) => options.onRibbonAction?.(event.detail),
 		'ribbon-customize': (event) => options.onRibbonCustomize?.([...event.detail.hiddenActions]),
+		'sheet-change': (event) => options.onSheetChange?.(event.detail),
 		'office-ribbon-add-in': (event) => options.onRibbonAddIn?.(event.detail),
 		'collaboration-change': (event) => options.onCollaborationChange?.(event.detail),
 	};
@@ -264,6 +318,8 @@ export function mountEditor(
 			// The element keeps panels whose look is unchanged, so a fresh array per render is cheap.
 			if (changed('ribbonAddIns', next.ribbonAddIns))
 				element.ribbonAddIns = next.ribbonAddIns ?? [];
+			if (changed('storage', next.storage ?? undefined))
+				element.storage = next.storage ?? undefined;
 			if (changed('themeColors', next.themeColors, sameThemeColors))
 				element.themeColors = { ...next.themeColors };
 			// The element renames itself on File > Open; only forward a name the parent changed.
@@ -272,6 +328,8 @@ export function mountEditor(
 			// After `fileName`, before the workbook: a workbook opened below joins the room.
 			if (changed('collaboration', next.collaboration ?? null))
 				element.collaboration = next.collaboration ?? null;
+			if (changed('customization', next.customization ?? null))
+				element.customization = next.customization ?? null;
 			if (next.workbook && next.workbook !== lastInput && next.workbook !== lastEmitted) {
 				src.cancel();
 				element.workbook = next.workbook;

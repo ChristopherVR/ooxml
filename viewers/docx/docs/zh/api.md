@@ -18,7 +18,30 @@
 | `hiddenActions`  |                   | 要按稳定 ID 隐藏的功能区控件；参见[绑定](/bindings)中的表格。                                          |
 | `ribbonAddIns`   |                   | 宿主在内置选项卡之后添加的选项卡；参见[绑定](/bindings#ribbon-add-in-tabs)。                           |
 | `collaboration`  |                   | 声明式协作（`DocxCollaborationOptions` 或 `null`）；参见[协作](/zh/collaboration#collaboration-属性)。 |
+| `customization`  |                   | 能力（capabilities）、宿主的“文件”选项卡页面和宿主菜单命令（参见[自定义](#customization)）。           |
 | `dirty`（只读）  |                   | 编辑后为 true，保存、加载或 `markClean()` 之后为 false。                                               |
+
+## 自定义 {#customization}
+
+`customization` 接受一个 `WordCustomization` 对象，即 `ooxml-core/embedding` 的共享约定，其他编辑器也使用它。每个绑定都将其作为 `customization` prop 或输入转发。对象标识变化时才会应用，因此请保持其稳定；`null` 恢复默认值。
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [
+			{ id: 'send', label: 'Send to chat', onSelect: ({ selectedText }) => send(selectedText) },
+		],
+	},
+};
+```
+
+- `capabilities`：`false` 会移除通往该能力（`edit`, `print`, `export`, `save`, `open`, `share`, `copy`, `comment`, `review`, `find`, `settings`）的所有入口：功能区、“文件”选项卡页面、菜单和快捷键。`hiddenActions` 不变，两者取并集。
+- `backstage.extraPages`：宿主在“文件”选项卡中添加的页面 `{ id, label, group?, order?, render }`，位于其分组的内置页面之后。`render` 是挂载函数、自定义元素标签或 `{ element, properties }`，并会收到一个 `WordRegionContext`。
+- `contextMenu.extraCommands`：宿主命令 `{ id, label, icon?, group?, when?, disabled?, onSelect }`，位于内置项之上（`top`，默认）或之下（`bottom`）。`onSelect` 在菜单关闭后运行，并收到一个 `WordMenuContext`。标签按原样显示（请自行本地化）。
+
+`edit: false` 是独立的只读锁，与宿主的只读开关和协作角色 `viewer` 并存：彼此互不解除。能力是界面策略，而不是文档保护。Word 暂不提供区域替换（选项对话框、窗格）。各产品汇总：[嵌入指南](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md)。
 
 ## 方法
 

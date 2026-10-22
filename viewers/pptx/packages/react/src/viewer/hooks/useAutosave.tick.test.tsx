@@ -157,3 +157,31 @@ describe('autosave timer redundancy', () => {
 		expect(harness.serialize).toHaveBeenCalledTimes(2);
 	});
 });
+
+describe('host-owned storage', () => {
+	it('passes the storage prop to the snapshot write', async () => {
+		const storage = {
+			save: async () => undefined,
+			readRecovery: async () => undefined,
+			writeRecovery: async () => {},
+			clearRecovery: async () => {},
+		};
+		function Host(): null {
+			useAutosave({
+				isDirty: true,
+				filePath: 'deck.pptx',
+				serializeSlides: async () => new Uint8Array([1]),
+				intervalSeconds: INTERVAL_SECONDS,
+				storage,
+			});
+			return null;
+		}
+		act(() => {
+			root.render(<Host />);
+		});
+		await act(async () => {
+			await vi.advanceTimersByTimeAsync(INTERVAL_SECONDS * 1000);
+		});
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', expect.any(Uint8Array), storage);
+	});
+});

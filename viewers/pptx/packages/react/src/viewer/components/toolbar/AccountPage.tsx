@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { LuHardDrive, LuInfo, LuLogIn, LuUser } from 'react-icons/lu';
 
 import { cn } from '../../utils';
+import { useViewerStorage } from '../viewer-storage-context';
 import { AccountAuthContext } from './account-auth-context';
 
 const cardClass = 'border border-border bg-card p-6 text-card-foreground';
@@ -25,6 +26,7 @@ const cardClass = 'border border-border bg-card p-6 text-card-foreground';
 export function AccountPage(): React.ReactElement {
 	const { t } = useTranslation();
 	const accountAuth = useContext(AccountAuthContext);
+	const storage = useViewerStorage();
 
 	const [profile, setProfile] = useState<ViewerProfile>(
 		() => readStoredViewerPrefs().profile ?? DEFAULT_VIEWER_PROFILE,
@@ -38,15 +40,16 @@ export function AccountPage(): React.ReactElement {
 	const [usage, setUsage] = useState<LocalStorageUsageSummary | null>(null);
 	const [cleared, setCleared] = useState(false);
 	const refreshUsage = () => {
-		void getLocalStorageUsageSummary().then(setUsage);
+		void getLocalStorageUsageSummary(storage).then(setUsage);
 	};
-	useEffect(refreshUsage, []);
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- refreshUsage reads the current storage
+	useEffect(refreshUsage, [storage]);
 
 	const handleClear = () => {
 		if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
 			return;
 		}
-		void clearAllLocalViewerData().then(() => {
+		void clearAllLocalViewerData(storage).then(() => {
 			setCleared(true);
 			refreshUsage();
 			setTimeout(() => setCleared(false), 4000);

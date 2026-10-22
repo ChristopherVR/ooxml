@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
@@ -18,6 +19,8 @@ import {
 } from 'ooxml-core/docx/ui';
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
+import type { WordCustomization } from './customization';
+import { setWordCustomization } from './customization-apply';
 import { wordToolbarProps, type WordToolbarProps } from './building-blocks';
 import {
 	wordNavigationProps,
@@ -65,6 +68,18 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	set surfaceActions(value: SurfaceHostActions) {
 		this.core.surfaceActions = { ...value };
 		if (this.core.view) this.core.refreshControls();
+	}
+	/**
+	 * Host-owned storage. When set, File > Save and Save As hand the saved bytes to
+	 * `storage.save()` instead of downloading them, and File > Open asks `storage.open()` (when it
+	 * has one) instead of showing the file picker. The cancelable `file-command` event still fires
+	 * first; a host that prevents it handles the command itself.
+	 */
+	get storage(): DocumentStorage | undefined {
+		return this.core.storage;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.core.storage = value ?? undefined;
 	}
 	get loading(): boolean {
 		return this.core.loading;
@@ -179,6 +194,19 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		if (next.length === current.length && next.every((id, index) => id === current[index])) return;
 		this.core.viewOptions.hiddenActions = next;
 		applyViewOptions(this.core);
+	}
+
+	/**
+	 * The host customisation (`WordCustomization`): `capabilities` (removing every UI path to
+	 * what is switched off), `backstage.extraPages` (host File tab pages) and
+	 * `contextMenu.extraCommands` (host context-menu commands). The object is applied when its
+	 * identity changes, so keep it stable; `null` restores the defaults.
+	 */
+	get customization(): WordCustomization | null {
+		return this.core.viewOptions.customizationInput;
+	}
+	set customization(value: WordCustomization | null | undefined) {
+		setWordCustomization(this.core, value ?? null);
 	}
 
 	/** True after an edit until the document is saved through File > Save, `download()`, loaded or `markClean()`. */

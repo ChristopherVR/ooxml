@@ -214,6 +214,72 @@ shared with the Word, Excel and PowerPoint editors. A tab cannot take the id of
 a built-in tab (`home`, `insert`, `design`, `data`, `process`, `review`, `view`,
 `help`).
 
+## Customization
+
+`customization` takes one `VisioCustomization` object, the shared contract of
+`ooxml-core/embedding` that Word, Excel and PowerPoint take too. It is a
+property of the element and a prop (input) of every framework binding:
+
+```tsx
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: {
+		extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }],
+	},
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+
+<VisioViewer customization={customization} />;
+```
+
+| Field                       | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `capabilities`              | `false` removes every path to the capability (`VISIO_CAPABILITY_IDS`): `edit` (read-only whatever `canEdit` says), `open` (New, Open), `save` (Save, Save As), `export`, `print`, `share`, `settings` (Options), `copy` (Cut, Copy and their keys), `comment` (New Comment, Add Comment) and `find` (Find, Replace). File tab pages, ribbon and menu commands are hidden and the matching actions are refused.                           |
+| `backstage.extraPages`      | Host File tab pages `{ id, label, group?, order?, render }` after the built-in pages of their group. `render` is a mount function `(container, context) => cleanup \| { update, destroy }`, a custom element tag or `{ element, properties }`; it mounts the first time the page is shown, receives a `VisioRegionContext` (`viewer`, `locale`, `canEdit`, `pageIndex`, `pageCount`, `close`) and is torn down when the page is removed. |
+| `contextMenu.extraCommands` | Host commands `{ id, label, icon?, group?, when?, disabled?, onSelect }` in the shape and page menus, above (`top`, default) or below (`bottom`) the built-in entries. `onSelect` receives a `VisioMenuContext` (`target`, `pageIndex`, `pageId`, `shapes`). Labels are shown as given.                                                                                                                                                  |
+
+The object is applied when its identity changes, so keep it stable. As with the
+other props, leaving it out of a partial update keeps the current value; pass
+`null` to restore the defaults. `edit: false` is a lock of its own beside `canEdit`, `readOnly` and a collaboration `viewer` role: none of them lifts another, and leaving a room keeps it. Capabilities are UI policy, not document
+protection. Replacing built-in regions (the Options dialog, the panes) is not
+offered for Visio yet. All products side by side are mapped in the [embedding guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
+
+## Host-owned storage and file commands
+
+New, Open and Save (the backstage, the Quick Access Toolbar and Ctrl+N) first raise the
+cancelable `file-command` event with `{ command: 'new' | 'open' | 'save' }`, the same contract as
+Word and Excel. Call `preventDefault()` on the DOM event, or return `false` from the binding
+callback `events['file-command']`, to handle the command yourself; the viewer then does nothing.
+The Angular `(fileCommand)` output only reports the command, so an Angular host cancels through
+the `events` input.
+
+`storage` (a property of the element and a prop of every binding) takes a `DocumentStorage` from
+`ooxml-core/embedding`. When it is set:
+
+- Save hands the drawing to `storage.save(bytes, meta)` instead of downloading a copy. `meta` is
+  `{ fileName, mimeType: 'application/vnd.ms-visio.drawing', reason: 'save' }`, the name being the
+  drawing's own as a `.vsdx`. Once it resolves the drawing is marked saved; a `{ fileName }` it
+  resolves with becomes the drawing's name.
+  A rejection is reported as `document-error` and the drawing stays dirty with its AutoRecover
+  copy. One save runs at a time (a Save while one is pending is ignored), and an edit made while
+  the host save runs keeps the drawing dirty and its AutoRecover copy.
+- A command a capability removed (`save: false`, `open: false`) raises no `file-command` and
+  never reaches `storage`.
+- Open calls `storage.open()` when the storage has one, instead of the file picker.
+- AutoRecover keeps its copies through `readRecovery`, `writeRecovery` and `clearRecovery`
+  (keyed by the file name) instead of the viewer's IndexedDB database, when the storage provides
+  all three. A copy is offered back when a drawing of that name opens and cleared when it is
+  saved.
+
+```tsx
+<VisioViewer
+	storage={{ save: (bytes, { fileName }) => myDrive.put(fileName, bytes) }}
+	events={{ 'file-command': ({ command }) => command !== 'new' }}
+/>
+```
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's

@@ -200,6 +200,7 @@ export function createInspectorDeckActions(deps: InspectorDeckDeps): InspectorDe
 				{ ...(editor.coreProperties ?? {}), ...patch },
 				{ ...(editor.appProperties ?? {}) },
 				editor.customProperties,
+				patch,
 			);
 		},
 		updateAppProperties(patch: Partial<PptxAppProperties>): void {
@@ -207,6 +208,7 @@ export function createInspectorDeckActions(deps: InspectorDeckDeps): InspectorDe
 				{ ...(editor.coreProperties ?? {}) },
 				{ ...(editor.appProperties ?? {}), ...patch },
 				editor.customProperties,
+				null,
 			);
 		},
 		updateCustomProperties(next: PptxCustomProperty[]): void {
@@ -214,6 +216,7 @@ export function createInspectorDeckActions(deps: InspectorDeckDeps): InspectorDe
 				{ ...(editor.coreProperties ?? {}) },
 				{ ...(editor.appProperties ?? {}) },
 				next,
+				null,
 			);
 		},
 		setTemplateBackground(path: string, backgroundColor: string): void {

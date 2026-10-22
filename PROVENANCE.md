@@ -2420,3 +2420,12 @@ New code, written for this repository. `src/core/automation/tools/` (`docx-tools
 the existing headless operations in `src/core/automation`; no tool code was copied from the
 standalone MCP packages, which now only register these definitions (commit `bed18392f`). The
 PowerPoint tools are the ones recorded in "PowerPoint headless automation" above.
+
+## Shared embedding customization contract (2026-10-22)
+
+Source: ChristopherVR/ooxml, `origin/main` at `3588b3349` before these commits (an in-repo move).
+
+- `src/core/embedding/` (`capabilities.ts`, `backstage.ts`, `menu-commands.ts`, `regions.ts`, `customization.ts`) is extracted from `src/ui/src/pptx/render/customization/`: the capability switches of `customization-types.ts`, `HostBackstagePage` and the region renderer types of `customization-regions.ts`, `HostMenuCommand`, `HostMenuEntry` and `withHostMenuCommands` of `host-menu-commands.ts`, the host-page placement of `backstageNavEntries` (`customization-surfaces.ts`), and `sameRenderer` / `sameRegionContext`. What changed: the types are generic over the product's capability ids, region container and context, and menu context; host pages gained an optional `order`, host commands optional `when` and `icon`; `sameRegionContext` compares every array field by value and takes the callback keys as a parameter. The PowerPoint names are kept as aliases of the shared ones, so its public API is unchanged.
+- `src/ui/src/embedding/region-host.ts` (`HostRegionHost`) is `ViewerRegionHost` of `customization-regions.ts` made generic over the context, with the region attribute, callback keys and log label as options; `ViewerRegionHost` is now a subclass with PowerPoint's `data-pptx-region` attribute and settings callbacks.
+
+New code (not moved): the pure helpers `isCapabilityEnabled`, `disabledCapabilities`, `capabilityHiddenActions`, `mergeHiddenActions` and `acceptedHostBackstagePages`; `createHostBackstagePages`, `withHostMenuItems` and `syncHostMenuChildren` in `src/ui/src/embedding/`; and the Word, Excel and Visio bindings of the contract (`src/core/docx/ui/customization.ts`, `src/core/xlsx/ui/customization.ts`, `src/core/visio/ui/customization.ts` and their `src/ui/src/<product>` appliers).

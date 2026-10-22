@@ -25,6 +25,8 @@ function ribbonCommands(root: ShadowRoot): OfficeSearchCommand[] {
 		const label = node.getAttribute('label');
 		// Add-in tabs belong to the host: their ids are not this viewer's commands.
 		if (!label || seen.has(id) || node.closest('[data-add-in]')) continue;
+		// A command a host capability removed is not offered here either.
+		if (node.closest('[data-capability-hidden]')) continue;
 		seen.add(id);
 		const disabled = node.hasAttribute('disabled') || node.hasAttribute('main-disabled');
 		commands.push({

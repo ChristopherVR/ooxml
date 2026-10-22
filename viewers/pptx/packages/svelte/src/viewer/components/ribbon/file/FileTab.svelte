@@ -24,15 +24,17 @@
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import { useViewerOptions } from '../../../state/viewer-options-context';
+	import { useViewerStorage } from '../../../state/viewer-storage-context';
 	import type { ExportUiState } from '../../../export/export-ui.svelte';
 	import AccountPage from './AccountPage.svelte';
 	import BackstageAction from './BackstageAction.svelte';
 	import BackstageNavIcon from './BackstageNavIcon.svelte';
 	import ViewerRegion from '../../ViewerRegion.svelte';
 
-	const { fileName, onclose, oncreatepresentation, ondownload, ondownloadppsx, ondownloadpptm, ondownloadppt, hasMacros, onopenfile, onopenrecent, exportUi, onproperties, onfonts, onsignatures, onprotect, onversionhistory, onshare, onprint, onsettings, accountAuth, hiddenActions }: { fileName?: string; onclose: () => void; oncreatepresentation: (templateId: string) => void; ondownload: () => void; ondownloadppsx: () => void; ondownloadpptm: () => void; ondownloadppt: () => void; hasMacros: boolean; onopenfile?: () => void; onopenrecent?: (key: string) => void; exportUi?: ExportUiState; onproperties?: () => void; onfonts?: () => void; onsignatures?: () => void; onprotect?: () => void; onversionhistory?: () => void; onshare?: () => void; onprint?: () => void; onsettings?: () => void; accountAuth?: AccountAuthConfig; hiddenActions?: readonly ToolbarActionId[] } = $props();
+	const { fileName, onclose, oncreatepresentation, onsavefile, ondownload, ondownloadppsx, ondownloadpptm, ondownloadppt, hasMacros, onopenfile, onopenrecent, exportUi, onproperties, onfonts, onsignatures, onprotect, onversionhistory, onshare, onprint, onsettings, accountAuth, hiddenActions }: { fileName?: string; onclose: () => void; oncreatepresentation: (templateId: string) => void; onsavefile?: () => void; ondownload: () => void; ondownloadppsx: () => void; ondownloadpptm: () => void; ondownloadppt: () => void; hasMacros: boolean; onopenfile?: () => void; onopenrecent?: (key: string) => void; exportUi?: ExportUiState; onproperties?: () => void; onfonts?: () => void; onsignatures?: () => void; onprotect?: () => void; onversionhistory?: () => void; onshare?: () => void; onprint?: () => void; onsettings?: () => void; accountAuth?: AccountAuthConfig; hiddenActions?: readonly ToolbarActionId[] } = $props();
 	const t = useTranslator();
 	const viewerOptions = useViewerOptions();
+	const storage = useViewerStorage();
 	const customization = useViewerCustomization();
 	// The nav rail after the host's customisation, with the legacy `hiddenActions`
 	// gates on top (`export` drops the Export page, like React's FileSection).
@@ -47,14 +49,14 @@
 	// eslint-disable-next-line prefer-const
 	let query = $state('');
 	let recent = $state<BackstageRecentFile[]>([]);
-	onMount(() => { void listBackstageRecentFiles(t, viewerOptions.options.advanced.recentPresentationsCount).then((items) => (recent = items)); });
+	onMount(() => { void listBackstageRecentFiles(t, viewerOptions.options.advanced.recentPresentationsCount, storage()).then((items) => (recent = items)); });
 	const visibleRecent = $derived.by(() => { const q = query.trim().toLowerCase(); return q ? recent.filter((file) => `${file.name} ${file.location}`.toLowerCase().includes(q)) : recent; });
 	const title = $derived(hostEntry ? nav.find((item) => item.id === pageId)?.label ?? '' : t(BACKSTAGE_NAV.find((item) => item.id === page)?.labelKey ?? 'pptx.backstage.nav.home'));
 	function run(action?: () => void): void { action?.(); if (action) {onclose();} }
 	const CARD_ICONS: Record<BackstageCardId, Component> = { protect: LockKeyhole, inspect: Info, embedFonts: Type, signatures: BadgeCheck, versionHistory: Clock3, saveAsPptx: FileText, saveAsPpsx: Presentation, saveAsPptm: FileCode2, saveAsPpt: Database, pdf: FileText, png: Image, video: Video, gif: Images, json: FileJson, copyImage: Copy, print: Printer, share: Share2 };
 	const cardHandlers = $derived<Record<BackstageCardId, (() => void) | undefined>>({ protect: onprotect, inspect: onproperties, embedFonts: onfonts, signatures: onsignatures, versionHistory: onversionhistory, saveAsPptx: ondownload, saveAsPpsx: ondownloadppsx, saveAsPptm: ondownloadpptm, saveAsPpt: ondownloadppt, pdf: () => void exportUi?.runPdf(), png: () => exportUi?.runPng(), video: () => void exportUi?.runVideo(), gif: () => void exportUi?.runGif(), json: () => void exportUi?.runJson(), copyImage: () => exportUi?.runCopyImage(), print: onprint, share: onshare });
 	const cards = $derived(customizeBackstageCards(backstageCardsFor(page), customization.resolved).filter((card) => (card.id !== 'saveAsPptm' || hasMacros) && !(card.id === 'share' && isActionHidden('share', hiddenActions))));
-	function select(id: string): void { if (id === 'close') {onclose();} else if (id === 'save') {run(ondownload);} else if (id === 'options' && onsettings) {run(onsettings);} else {requestedPage = id;} }
+	function select(id: string): void { if (id === 'close') {onclose();} else if (id === 'save') {run(onsavefile ?? ondownload);} else if (id === 'options' && onsettings) {run(onsettings);} else {requestedPage = id;} }
 	const navLabel = (item: (typeof nav)[number]): string => (item.host ? item.label : t(item.labelKey ?? ''));
 </script>
 

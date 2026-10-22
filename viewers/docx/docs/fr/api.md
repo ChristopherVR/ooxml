@@ -18,7 +18,30 @@ Chaque adaptateur de framework encapsule le même élément personnalisé `<docx
 | `hiddenActions`   |                   | Commandes du ruban à masquer par identifiant stable ; voir le tableau dans les [adaptateurs](/bindings).                               |
 | `ribbonAddIns`    |                   | Onglets ajoutés par l'hôte après les onglets intégrés ; voir les [adaptateurs](/bindings#ribbon-add-in-tabs).                          |
 | `collaboration`   |                   | Collaboration déclarative (`DocxCollaborationOptions` ou `null`) ; voir [collaboration](/fr/collaboration#la-propriete-collaboration). |
+| `customization`   |                   | Capacités, pages de l’hôte dans l’onglet Fichier et commandes de menu de l’hôte (voir [Personnalisation](#customization)).             |
 | `dirty` (lecture) |                   | Vrai après une modification, faux après un enregistrement, un chargement ou `markClean()`.                                             |
+
+## Personnalisation {#customization}
+
+`customization` accepte un objet `WordCustomization`, le contrat partagé de `ooxml-core/embedding` que les autres éditeurs utilisent aussi. Chaque liaison le transmet comme prop ou entrée `customization`. Il est appliqué quand l’identité de l’objet change ; gardez-le donc stable. `null` rétablit les valeurs par défaut.
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [
+			{ id: 'send', label: 'Send to chat', onSelect: ({ selectedText }) => send(selectedText) },
+		],
+	},
+};
+```
+
+- `capabilities` : `false` supprime tous les chemins vers la capacité (`edit`, `print`, `export`, `save`, `open`, `share`, `copy`, `comment`, `review`, `find`, `settings`) : ruban, pages de l’onglet Fichier, menus et raccourcis. `hiddenActions` est inchangé ; les deux sont réunis.
+- `backstage.extraPages` : pages de l’hôte `{ id, label, group?, order?, render }` dans l’onglet Fichier, après les pages intégrées de leur groupe. `render` est une fonction de montage, une balise d’élément personnalisé ou `{ element, properties }` et reçoit un `WordRegionContext`.
+- `contextMenu.extraCommands` : commandes de l’hôte `{ id, label, icon?, group?, when?, disabled?, onSelect }` au-dessus (`top`, par défaut) ou au-dessous (`bottom`) des entrées intégrées. `onSelect` s’exécute après la fermeture du menu avec un `WordMenuContext`. Les libellés sont affichés tels quels (localisez-les vous-même).
+
+`edit: false` est un verrouillage en lecture seule à part entière, à côté de l’interrupteur de lecture seule de l’hôte et d’un rôle de collaboration `viewer` : aucun ne lève un autre. Les capacités sont une politique d’interface, pas une protection du document. Le remplacement de régions (boîte d’options, volets) n’est pas encore proposé pour Word. Tous les produits réunis : [guide d’intégration](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
 ## Méthodes
 

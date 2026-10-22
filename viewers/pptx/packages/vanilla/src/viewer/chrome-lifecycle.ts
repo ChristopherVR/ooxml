@@ -766,6 +766,8 @@ export interface ChromeHost {
 	 * Documents" (0-50), read fresh whenever the Recent list loads.
 	 */
 	getRecentPresentationsCount(): number;
+	/** The host `storage` option: Recent and Account read its recovery store when it has one. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/**
 	 * The deck's parsed `ppt/tableStyles.xml` map, for the table properties
 	 * panel's "Edit style...".
@@ -860,6 +862,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		openVersionHistory: () => host.openVersionHistory(),
 		getChartFollowDataPoint: () => host.getChartFollowDataPoint(),
 		getRecentPresentationsCount: () => host.getRecentPresentationsCount(),
+		getStorage: () => host.getStorage?.(),
 		getTableStyleMap: () => host.getTableStyleMap(),
 		getThemeColorMap: () => host.getThemeColorMap(),
 		getSlides: () => host.store.get().slides,

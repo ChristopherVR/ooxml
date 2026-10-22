@@ -25,6 +25,7 @@ import { documentWordCount } from 'ooxml-core/docx/ui';
 import { PageNavigator } from './page-navigator';
 import { HeadingNavigator } from './heading-navigator';
 import { applyViewOptions } from './view-options';
+import { wordRegionContext } from './customization-apply';
 import { attachEditorInteractions } from './editor-interactions';
 import { attachCanvasClick } from './canvas-click';
 
@@ -50,12 +51,12 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		locale: () => core.locale,
 		readOnly: () => core.readOnly,
 		setReadOnly: (readOnly) => {
-			api.setReadOnly(readOnly);
-			emit(element, 'readonly-change', readOnly);
+			core.reportReadOnly(() => api.setReadOnly(readOnly));
 		},
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
+		storage: () => core.storage,
 		saveStateChanged: (state) => {
 			if (state !== 'saving') core.dirtyState.set(state === 'dirty');
 		},
@@ -99,6 +100,8 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 			host().hiddenActions = ids as RibbonActionId[];
 			emit(element, 'ribbon-customize', host().hiddenActions);
 		},
+		customization: () => core.viewOptions.customization,
+		regionContext: (region) => wordRegionContext(core, region),
 		reportError: (error) => dispatchDocumentError(element, error),
 	});
 }
@@ -235,6 +238,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	// After the toolbar is registered: the File tab label is localized through the shell.
 	chrome.setLocale(core.locale);
 	applyViewOptions(core);
+	chrome.applyCustomization();
 	attachEditorInteractions(core, frame);
 	element.setAttribute('role', 'region');
 	applyShellLabels(element, paper, core.locale);

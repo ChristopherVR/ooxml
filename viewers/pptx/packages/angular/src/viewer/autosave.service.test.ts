@@ -110,6 +110,26 @@ describe('autosave timer redundancy', () => {
 		};
 	}
 
+	it('hands the written snapshot bytes to the host (autosaved)', async () => {
+		const saved = vi.fn();
+		const bytes = new Uint8Array([4, 5, 6]);
+		const { autosave, flushEffects } = harness();
+		autosave.bind({
+			enabled: () => true,
+			filePath: () => 'deck.pptx',
+			isDirty: () => true,
+			serialize: async () => bytes,
+			intervalMs: () => 10_000,
+			saved,
+		});
+		flushEffects();
+
+		await vi.advanceTimersByTimeAsync(10_000);
+
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', bytes, undefined);
+		expect(saved).toHaveBeenCalledExactlyOnceWith(bytes);
+	});
+
 	it('writes the first snapshot, then skips ticks that change nothing', async () => {
 		const slides = [{ id: 'slide1' }];
 		const bound = bind(true);
@@ -242,6 +262,10 @@ describe('a ribbon New Slide on a freshly loaded deck', () => {
 
 		await vi.advanceTimersByTimeAsync(2000);
 		expect(serialize).toHaveBeenCalledOnce();
-		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith(
+			'deck.pptx',
+			new Uint8Array([1, 2, 3]),
+			undefined,
+		);
 	});
 });

@@ -24,7 +24,7 @@ import { useAiBridge } from './useAiBridge';
  * only touching a ref whose field actually changed, snapshotting history once
  * for the undoable slides/canvas fields.
  */
-function makeBridge() {
+function makeBridge(extra: { onCorePropertiesChanged?: (p: PptxCoreProperties) => void } = {}) {
 	// Mirror production wiring (useLoadContent): object/array state is shallowRef
 	// so `.value` is a raw (structuredClone-friendly) value, canvasSize is a ref.
 	const slides = shallowRef<PptxSlide[]>([{ id: 's1', elements: [] } as unknown as PptxSlide]);
@@ -63,6 +63,7 @@ function makeBridge() {
 		goTo: vi.fn(),
 		setSelection: vi.fn(),
 		applyThemeUpdates: vi.fn(),
+		...extra,
 	});
 
 	return {
@@ -104,6 +105,20 @@ describe('useAiBridge deck-data seam', () => {
 		expect(h.canvasSize.value).toStrictEqual({ width: 1280, height: 720 });
 		expect(h.pushHistory).toHaveBeenCalledOnce();
 		expect(h.markDirty).toHaveBeenCalledOnce();
+	});
+
+	it('reports an AI core-properties edit to the host, and only when it changed', () => {
+		const onCorePropertiesChanged = vi.fn();
+		const h = makeBridge({ onCorePropertiesChanged });
+
+		h.bridge.applyDeckData?.((data) => data, 'noop');
+		expect(onCorePropertiesChanged).not.toHaveBeenCalled();
+
+		h.bridge.applyDeckData?.(
+			(data) => ({ ...data, coreProperties: { title: 'Renamed' } as PptxCoreProperties }),
+			'metadata',
+		);
+		expect(onCorePropertiesChanged).toHaveBeenCalledExactlyOnceWith({ title: 'Renamed' });
 	});
 
 	it('applyDeckData fans out metadata and only touches changed fields', () => {

@@ -33,8 +33,6 @@ interface Joined {
 	/** The owner's debounced save; inert for every other role. */
 	writeBack: ViewerWriteBack;
 	stops: (() => void)[];
-	/** The viewer was editable before a viewer role made it read-only. */
-	restoreCanEdit: boolean;
 }
 
 /**
@@ -188,8 +186,7 @@ export class ViewerShare {
 			() => this.#changed(),
 		);
 		// A viewer role is read-only: its edits are never published, so they are not offered either.
-		const readOnly = session.role === 'viewer' && this.controller.canEdit;
-		if (readOnly) this.controller.canEdit = false;
+		this.controller.setRoleReadOnly(session.role === 'viewer');
 		this.#joined = {
 			collab,
 			session,
@@ -197,7 +194,6 @@ export class ViewerShare {
 			sync,
 			presence,
 			writeBack,
-			restoreCanEdit: readOnly,
 			stops: [
 				session.on('peers', () => this.#changed()),
 				session.on('synced', () => this.#changed()),
@@ -223,7 +219,7 @@ export class ViewerShare {
 		joined.sync.dispose();
 		// A session the host passed in stays alive; one this viewer made is destroyed.
 		if (joined.owned) joined.session.destroy();
-		if (joined.restoreCanEdit) this.controller.canEdit = true;
+		this.controller.setRoleReadOnly(false);
 		this.#say('Not sharing.');
 		this.#changed();
 	}

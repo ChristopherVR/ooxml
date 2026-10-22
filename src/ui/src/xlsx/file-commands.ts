@@ -3,6 +3,7 @@
  * as a cancelable `file-command` event so hosts can take over file I/O; when no host cancels it the
  * editor runs a browser-only default (file picker, download, print).
  */
+import { fileCommandDetail } from 'ooxml-core/embedding';
 import { emit, type FileCommand } from './events';
 
 export const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -22,7 +23,7 @@ export function announceFileCommand(
 	command: FileCommand,
 	fileName?: string,
 ): boolean {
-	return emit(host, 'file-command', { command, ...(fileName === undefined ? {} : { fileName }) });
+	return emit(host, 'file-command', fileCommandDetail(command, fileName));
 }
 
 export const extensionOf = (fileName: string): string =>

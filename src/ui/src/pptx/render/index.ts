@@ -1539,6 +1539,8 @@ export * from './zoom-return-navigation';
 export * from './zoom-step';
 export * from './command-search';
 export * from './autosave-store';
+// Recovery-snapshot housekeeping (clear, retention) against IndexedDB or the host's store.
+export * from './autosave-maintenance';
 export * from './autosave-tick';
 // Who wins when the host's `autosave` prop and the user's AutoSave toggle
 // disagree (the prop is a ceiling, the toggle a preference inside it), plus the
@@ -1800,3 +1802,5 @@ export * from './custom-path-markers';
 
 // The shared `CollaborationState` every binding reports to its host (`collaboration-change`).
 export * from './collaboration-state';
+// The payload the host-facing `autosaveStatus` event reports in every binding.
+export * from './viewer-event-payloads';

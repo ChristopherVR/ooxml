@@ -61,6 +61,9 @@ describe('Angular editor adapter', () => {
 		const editor = hostElement.querySelector('xlsx-editor') as XlsxEditorElement;
 		editor.readOnly = true;
 		expect(onReadOnly).toHaveBeenCalledWith(true);
+		// A role lock leaves the host's switch alone, so the two-way output stays quiet.
+		emit(editor, 'readonly-change', { readOnly: true, locked: true, hostReadOnly: false });
+		expect(onReadOnly).toHaveBeenCalledTimes(1);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onCustomize).toHaveBeenCalledWith(['italic']);
 		ref.setInput('authorName', 'Grace');

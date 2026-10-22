@@ -23,13 +23,14 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## Content
 
-| Prop                 | Type         | Default                | Description                                                                                                 |
-| -------------------- | ------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `content`            | `Uint8Array` | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                   |
-| `filePath`           | `string`     | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.             |
-| `fileName`           | `string`     | generic label          | Display name of the open document, shown in the title bar (for example `quarterly-review.pptx`).            |
-| `autosave`           | `boolean`    | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy). |
-| `autosaveIntervalMs` | `number`     | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content`            | `Uint8Array`      | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                                                        |
+| `filePath`           | `string`          | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.                                                  |
+| `fileName`           | `string`          | generic label          | Display name of the open document, shown in the title bar (for example `quarterly-review.pptx`).                                                 |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy).                                      |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ::: warning `content` type
 The prop is a `Uint8Array`, not an `ArrayBuffer`. See [Getting Started](/react/getting-started) for
@@ -66,16 +67,25 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Callbacks
 
-| Prop                  | Type                             | Default | Description                                                                                                                         |
-| --------------------- | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `onDirtyChange`       | `(isDirty: boolean) => void`     | -       | Called when the unsaved-changes flag flips.                                                                                         |
-| `onContentChange`     | `(content: Uint8Array) => void`  | -       | Called with the re-serialized document bytes when content changes.                                                                  |
-| `onActiveSlideChange` | `(slideIndex: number) => void`   | -       | Called when the active slide changes.                                                                                               |
-| `onModeChange`        | `(mode: ViewerMode) => void`     | -       | Called when the viewer mode changes (e.g. edit to present).                                                                         |
-| `onZoomChange`        | `(zoom: number) => void`         | -       | Called when the zoom level changes.                                                                                                 |
-| `onSelectionChange`   | `(elementIds: string[]) => void` | -       | Called when element selection changes.                                                                                              |
-| `onSlideCountChange`  | `(count: number) => void`        | -       | Called when the total slide count changes (slide added/deleted).                                                                    |
-| `onOpenFile`          | `() => void`                     | -       | Host override for the File > Open action: bypasses the built-in file picker; the host then supplies a new `content` buffer instead. |
+| Prop                    | Type                                                         | Default | Description                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `onDirtyChange`         | `(isDirty: boolean) => void`                                 | -       | Called when the unsaved-changes flag flips.                                                                                         |
+| `onContentChange`       | `(content: Uint8Array) => void`                              | -       | Called with the re-serialized document bytes when content changes.                                                                  |
+| `onActiveSlideChange`   | `(slideIndex: number) => void`                               | -       | Called when the active slide changes.                                                                                               |
+| `onModeChange`          | `(mode: ViewerMode) => void`                                 | -       | Called when the viewer mode changes (e.g. edit to present).                                                                         |
+| `onZoomChange`          | `(zoom: number) => void`                                     | -       | Called when the zoom level changes.                                                                                                 |
+| `onSelectionChange`     | `(elementIds: string[]) => void`                             | -       | Called when element selection changes.                                                                                              |
+| `onSlideCountChange`    | `(count: number) => void`                                    | -       | Called when the total slide count changes (slide added/deleted).                                                                    |
+| `onChange`              | `() => void`                                                 | -       | Called after any committed document edit (move, resize, text, undo, redo, ...).                                                     |
+| `onAutosave`            | `(content: Uint8Array) => void`                              | -       | Called with the serialised deck each time a recovery autosave snapshot is written.                                                  |
+| `onAutosaveToggle`      | `(enabled: boolean) => void`                                 | -       | Called when the user enables or disables autosave (title bar or File > Options).                                                    |
+| `onAutosaveStatus`      | `(status: 'idle' \| 'saving' \| 'saved' \| 'error') => void` | -       | Called on every autosave lifecycle transition.                                                                                      |
+| `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                           | -       | Called when a recovery snapshot left by a previous session is found. The built-in recovery prompt is shown as well.                 |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`             | -       | Called when the user (or the AI assistant) changes the document properties.                                                         |
+| `onNotesUpdate`         | `(notes: string) => void`                                    | -       | Called with the new speaker-notes text after a notes edit.                                                                          |
+| `onPresentationChange`  | `(presenting: boolean) => void`                              | -       | Called when presentation (slide show) mode is entered or left.                                                                      |
+| `onCollaborationStatus` | `(status: ConnectionStatus) => void`                         | -       | Called on every collaboration connection-status transition.                                                                         |
+| `onOpenFile`            | `() => void`                                                 | -       | Host override for the File > Open action: bypasses the built-in file picker; the host then supplies a new `content` buffer instead. |
 
 ::: info
 `onContentChange` delivers a `Uint8Array` (the serialized document), not a boolean. To pull content
@@ -176,6 +186,15 @@ interface PowerPointViewerProps {
 	onDirtyChange?: (isDirty: boolean) => void;
 	onContentChange?: (content: Uint8Array) => void;
 	onActiveSlideChange?: (slideIndex: number) => void;
+	onChange?: () => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onAutosaveToggle?: (enabled: boolean) => void;
+	onAutosaveStatus?: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+	onAutosaveRecovery?: (record: AutosaveRecord) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
+	onPresentationChange?: (presenting: boolean) => void;
+	onCollaborationStatus?: (status: ConnectionStatus) => void;
 	onOpenFile?: () => void;
 	onLoad?: (detail: ViewerLoadDetail) => void;
 	onError?: (message: string) => void;

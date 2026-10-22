@@ -18,7 +18,30 @@ Todos los adaptadores de framework envuelven el mismo elemento personalizado `<d
 | `hiddenActions`   |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                         |
 | `ribbonAddIns`    |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                                  |
 | `collaboration`   |                   | Colaboración declarativa (`DocxCollaborationOptions` o `null`); consulte [colaboración](/es/collaboration#la-propiedad-collaboration). |
+| `customization`   |                   | Capacidades, páginas del host en la pestaña Archivo y comandos de menú del host (consulte [Personalización](#customization)).          |
 | `dirty` (lectura) |                   | Verdadero tras una edición; falso tras guardar, cargar o llamar a `markClean()`.                                                       |
+
+## Personalización {#customization}
+
+`customization` acepta un objeto `WordCustomization`, el contrato compartido de `ooxml-core/embedding` que también usan los demás editores. Cada adaptador lo reenvía como la prop o entrada `customization`. Se aplica cuando cambia la identidad del objeto, así que manténgalo estable; `null` restaura los valores predeterminados.
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [
+			{ id: 'send', label: 'Send to chat', onSelect: ({ selectedText }) => send(selectedText) },
+		],
+	},
+};
+```
+
+- `capabilities`: `false` elimina todas las vías a la capacidad (`edit`, `print`, `export`, `save`, `open`, `share`, `copy`, `comment`, `review`, `find`, `settings`): cinta, páginas de la pestaña Archivo, menús y atajos. `hiddenActions` no cambia; ambos se combinan.
+- `backstage.extraPages`: páginas del host `{ id, label, group?, order?, render }` en la pestaña Archivo, tras las páginas integradas de su grupo. `render` es una función de montaje, una etiqueta de elemento personalizado o `{ element, properties }` y recibe un `WordRegionContext`.
+- `contextMenu.extraCommands`: comandos del host `{ id, label, icon?, group?, when?, disabled?, onSelect }` encima (`top`, predeterminado) o debajo (`bottom`) de las entradas integradas. `onSelect` se ejecuta tras cerrarse el menú con un `WordMenuContext`. Las etiquetas se muestran tal cual (localícelas usted mismo).
+
+`edit: false` es un bloqueo de solo lectura propio, junto al interruptor de solo lectura del host y un rol de colaboración `viewer`: ninguno anula a otro. Las capacidades son una política de interfaz, no protección del documento. El reemplazo de regiones (cuadro de opciones, paneles) aún no se ofrece para Word. Todos los productos juntos: [guía de integración](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
 ## Métodos
 

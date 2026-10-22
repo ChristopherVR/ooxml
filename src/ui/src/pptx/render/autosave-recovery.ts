@@ -16,6 +16,9 @@
  * @module render/autosave-recovery
  */
 
+import type { DocumentStorage } from 'ooxml-core/embedding';
+
+import { hostRecoveryStore } from './autosave-host-store';
 import { getAcknowledgedAutosaveRecoveryTimestamp } from './autosave-recovery-acknowledgement';
 import {
 	deleteAutosaveSnapshot,
@@ -212,18 +215,20 @@ export interface AutosaveRecoveryOffer {
 /**
  * Look up the snapshot for `filePath` and decide whether to offer it.
  *
- * Never throws: a blocked or missing IndexedDB is "nothing to recover".
+ * Never throws: a blocked or missing IndexedDB (or a failing host recovery
+ * store, when `storage` provides one) is "nothing to recover".
  */
 export async function probeAutosaveRecovery(
 	filePath: string,
 	now: number = Date.now(),
 	displayName?: string,
+	storage?: DocumentStorage | null,
 ): Promise<AutosaveRecoveryOffer | null> {
-	if (typeof indexedDB === 'undefined') {
+	if (!hostRecoveryStore(storage) && typeof indexedDB === 'undefined') {
 		return null;
 	}
 	try {
-		const record = await getAutosaveSnapshot(filePath);
+		const record = await getAutosaveSnapshot(filePath, storage);
 		// What this page autosaved a moment ago is its own work, not something to recover: a deck
 		// that loads in two steps, or one that autosaves before its first probe settles, would
 		// otherwise be offered back to itself.
@@ -260,9 +265,12 @@ export function acceptAutosaveRecovery(record: AutosaveRecord): Uint8Array {
  * "Discard" that leaves the file behind would ask again in the next tab, and
  * the editor's own autosave writes a fresh one the moment they edit anything.
  */
-export async function discardAutosaveRecovery(record: {
-	key: string;
-	timestamp: number;
-}): Promise<void> {
-	await deleteAutosaveSnapshot(record.key);
+export async function discardAutosaveRecovery(
+	record: {
+		key: string;
+		timestamp: number;
+	},
+	storage?: DocumentStorage | null,
+): Promise<void> {
+	await deleteAutosaveSnapshot(record.key, storage);
 }

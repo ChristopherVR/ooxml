@@ -84,6 +84,11 @@
 			"import": "./dist/ribbon/index.mjs",
 			"require": "./dist/ribbon/index.cjs"
 		},
+		"./embedding": {
+			"types": "./dist/embedding/index.d.ts",
+			"import": "./dist/embedding/index.mjs",
+			"require": "./dist/embedding/index.cjs"
+		},
 		"./diagram": {
 			"types": "./dist/diagram/index.d.ts",
 			"import": "./dist/diagram/index.mjs",

@@ -200,6 +200,26 @@ comparte con los editores de Word, Excel y PowerPoint. Una pestaña no puede usa
 una pestaña integrada (`home`, `insert`, `design`, `data`, `process`, `review`, `view`,
 `help`).
 
+## Personalización {#customization}
+
+`customization` acepta un objeto `VisioCustomization`, el contrato compartido de `ooxml-core/embedding` que también usan los demás editores. Cada adaptador lo reenvía como la prop o entrada `customization`. Se aplica cuando cambia la identidad del objeto, así que manténgalo estable; `null` restaura los valores predeterminados.
+
+```ts
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+```
+
+- `capabilities`: `false` elimina todas las vías a la capacidad (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`): cinta, páginas de la pestaña Archivo, menús y atajos. `hiddenActions` no cambia; ambos se combinan.
+- `backstage.extraPages`: páginas del host `{ id, label, group?, order?, render }` en la pestaña Archivo, tras las páginas integradas de su grupo. `render` es una función de montaje, una etiqueta de elemento personalizado o `{ element, properties }` y recibe un `VisioRegionContext`.
+- `contextMenu.extraCommands`: comandos del host `{ id, label, icon?, group?, when?, disabled?, onSelect }` encima (`top`, predeterminado) o debajo (`bottom`) de las entradas integradas. `onSelect` se ejecuta tras cerrarse el menú con un `VisioMenuContext`. Las etiquetas se muestran tal cual (localícelas usted mismo).
+
+`edit: false` es un bloqueo de solo lectura propio, junto al interruptor de solo lectura del host y un rol de colaboración `viewer`: ninguno anula a otro. Las capacidades son una política de interfaz, no protección del documento. El reemplazo de regiones (cuadro de opciones, paneles) aún no se ofrece para Visio. Todos los productos juntos: [guía de integración](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
+
 ## Exportación SVG estática {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` y el `exportSvg()` de cada manejador montado o nativo

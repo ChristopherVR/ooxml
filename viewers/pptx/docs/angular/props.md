@@ -37,10 +37,11 @@ The viewer's built-in autosave timer periodically serializes the document to Ind
 
 ## Autosave {#autosave-policy}
 
-| Input                | Type                   | Default                | Description                                                                  |
-| -------------------- | ---------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `autosave`           | `boolean \| undefined` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.    |
-| `autosaveIntervalMs` | `number \| undefined`  | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting. |
+| Input                | Type                           | Default                | Description                                                                                                                                      |
+| -------------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean \| undefined`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number \| undefined`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage \| undefined` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 The rule is the same in **all five bindings** and lives in one shared decision function,
 `resolveAutosaveActivation`:
@@ -85,21 +86,29 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Events (`@Output()`s)
 
-| Output                | Payload                       | Description                                                                                                |
-| --------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `dirtyChange`         | `boolean`                     | Fires when the unsaved-changes flag toggles.                                                               |
-| `contentChange`       | `Uint8Array`                  | Fires with the re-serialized document bytes whenever [`getContent()`](/angular/api) materialises the deck. |
-| `activeSlideChange`   | `number`                      | Fires when the active slide changes.                                                                       |
-| `modeChange`          | `string`                      | Fires when the viewer mode changes: `'preview'`, `'edit'`, `'present'`, or `'master'`.                     |
-| `zoomChange`          | `number`                      | Fires when the zoom level changes.                                                                         |
-| `selectionChange`     | `string[]`                    | Fires when element selection changes.                                                                      |
-| `slideCountChange`    | `number`                      | Fires when the total slide count changes (slide added/deleted).                                            |
-| `propertiesChange`    | `Partial<PptxCoreProperties>` | Fires when the user edits document properties (title, author, ...) in the Info dialog.                     |
-| `startCollaboration`  | `CollaborationConfig`         | Fires when a session starts from the Share/Broadcast dialog. Set the `collaboration` input in response.    |
-| `stopCollaboration`   | `void`                        | Fires when the session stops from the Share/Broadcast dialog. Clear the `collaboration` input in response. |
-| `collaborationChange` | `CollaborationState`          | Fires when a session starts or stops, and when its status, synced flag or people change.                   |
-| `load`                | `ViewerLoadDetail`            | Fires each time a presentation finishes loading without an error (`slideCount`, `canvasSize`).             |
-| `error`               | `string`                      | Fires once per distinct load failure, with a human-readable message.                                       |
+| Output                | Payload                                    | Description                                                                                                                                                                      |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dirtyChange`         | `boolean`                                  | Fires when the unsaved-changes flag toggles.                                                                                                                                     |
+| `contentChange`       | `Uint8Array`                               | Fires with the re-serialized document bytes whenever [`getContent()`](/angular/api) materialises the deck.                                                                       |
+| `activeSlideChange`   | `number`                                   | Fires when the active slide changes.                                                                                                                                             |
+| `modeChange`          | `string`                                   | Fires when the viewer mode changes: `'preview'`, `'edit'`, `'present'`, or `'master'`.                                                                                           |
+| `zoomChange`          | `number`                                   | Fires when the zoom level changes.                                                                                                                                               |
+| `selectionChange`     | `string[]`                                 | Fires when element selection changes.                                                                                                                                            |
+| `slideCountChange`    | `number`                                   | Fires when the total slide count changes (slide added/deleted).                                                                                                                  |
+| `propertiesChange`    | `Partial<PptxCoreProperties>`              | Fires when the user (or the AI assistant) changes document properties (Info dialog, inspector).                                                                                  |
+| `documentChange`      | `void`                                     | Fires after any committed document edit (move, resize, text, undo, redo, ...). Not named `change`: that would also catch the native `change` events of inputs inside the viewer. |
+| `autosaved`           | `Uint8Array`                               | Fires with the serialised deck each time a recovery autosave snapshot is written. Not named `autosave`: the `autosave` input owns that name.                                     |
+| `autosaveToggle`      | `boolean`                                  | Fires when the user enables or disables autosave (title bar or File > Options).                                                                                                  |
+| `autosaveStatus`      | `'idle' \| 'saving' \| 'saved' \| 'error'` | Fires on every autosave lifecycle transition.                                                                                                                                    |
+| `autosaveRecovery`    | `AutosaveRecord`                           | Fires when a recovery snapshot left by a previous session is found. The built-in recovery prompt is shown as well.                                                               |
+| `notesUpdate`         | `string`                                   | Fires with the new speaker-notes text after a notes edit.                                                                                                                        |
+| `presentationChange`  | `boolean`                                  | Fires when presentation (slide show) mode is entered or left.                                                                                                                    |
+| `collaborationStatus` | `ConnectionStatus`                         | Fires on every collaboration connection-status transition.                                                                                                                       |
+| `startCollaboration`  | `CollaborationConfig`                      | Fires when a session starts from the Share/Broadcast dialog. Set the `collaboration` input in response.                                                                          |
+| `stopCollaboration`   | `void`                                     | Fires when the session stops from the Share/Broadcast dialog. Clear the `collaboration` input in response.                                                                       |
+| `collaborationChange` | `CollaborationState`                       | Fires when a session starts or stops, and when its status, synced flag or people change.                                                                                         |
+| `load`                | `ViewerLoadDetail`                         | Fires each time a presentation finishes loading without an error (`slideCount`, `canvasSize`).                                                                                   |
+| `error`               | `string`                                   | Fires once per distinct load failure, with a human-readable message.                                                                                                             |
 
 ::: info
 `contentChange` delivers a `Uint8Array`, not a boolean. To pull content on demand instead, call
@@ -221,6 +230,14 @@ class PowerPointViewerComponent {
 	readonly dirtyChange = output<boolean>();
 	readonly contentChange = output<Uint8Array>();
 	readonly propertiesChange = output<Partial<PptxCoreProperties>>();
+	readonly documentChange = output<void>();
+	readonly autosaved = output<Uint8Array>();
+	readonly autosaveToggle = output<boolean>();
+	readonly autosaveStatus = output<'idle' | 'saving' | 'saved' | 'error'>();
+	readonly autosaveRecovery = output<AutosaveRecord>();
+	readonly notesUpdate = output<string>();
+	readonly presentationChange = output<boolean>();
+	readonly collaborationStatus = output<ConnectionStatus>();
 	readonly modeChange = output<string>();
 	readonly zoomChange = output<number>();
 	readonly selectionChange = output<string[]>();

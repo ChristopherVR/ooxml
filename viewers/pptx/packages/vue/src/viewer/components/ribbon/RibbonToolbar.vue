@@ -179,6 +179,7 @@ onBeforeUnmount(() => detachOverflow?.());
 					:on-export-video="props.onExportVideo"
 					:on-export-gif="props.onExportGif"
 					:on-export-json="props.onExportJson"
+					:on-save="props.onSave"
 					:on-save-as-pptx="props.onSaveAsPptx"
 					:on-save-as-ppsx="props.onSaveAsPpsx"
 					:on-save-as-pptm="props.onSaveAsPptm"

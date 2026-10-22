@@ -102,6 +102,26 @@ Vue 使用 `:ribbon-add-ins` 并发出 `office-ribbon-add-in`；Angular 使用 `
 
 命令会先运行其 `run` 回调，然后触发该事件。省略该 prop 会保留当前的选项卡；传入空数组会移除它们。再次传入相等的描述符（框架在每次渲染时都会这样做）会保留面板，只替换回调。该描述符（`RibbonAddInTab`，来自 `ooxml-core/ribbon`，同时由 `ooxml-ui` 和每个框架包导出）与 Word、Excel 和 PowerPoint 编辑器共用。选项卡不能使用内置选项卡的 id（`home`、`insert`、`design`、`data`、`process`、`review`、`view`、`help`）。
 
+## 自定义 {#customization}
+
+`customization` 接受一个 `VisioCustomization` 对象，即 `ooxml-core/embedding` 的共享约定，其他编辑器也使用它。每个绑定都将其作为 `customization` prop 或输入转发。对象标识变化时才会应用，因此请保持其稳定；`null` 恢复默认值。
+
+```ts
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+```
+
+- `capabilities`：`false` 会移除通往该能力（`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`）的所有入口：功能区、“文件”选项卡页面、菜单和快捷键。`hiddenActions` 不变，两者取并集。
+- `backstage.extraPages`：宿主在“文件”选项卡中添加的页面 `{ id, label, group?, order?, render }`，位于其分组的内置页面之后。`render` 是挂载函数、自定义元素标签或 `{ element, properties }`，并会收到一个 `VisioRegionContext`。
+- `contextMenu.extraCommands`：宿主命令 `{ id, label, icon?, group?, when?, disabled?, onSelect }`，位于内置项之上（`top`，默认）或之下（`bottom`）。`onSelect` 在菜单关闭后运行，并收到一个 `VisioMenuContext`。标签按原样显示（请自行本地化）。
+
+`edit: false` 是独立的只读锁，与宿主的只读开关和协作角色 `viewer` 并存：彼此互不解除。能力是界面策略，而不是文档保护。Visio 暂不提供区域替换（选项对话框、窗格）。各产品汇总：[嵌入指南](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md)。
+
 ## 静态 SVG 导出 {#static-svg-export}
 
 `exportPageSvg(model, pageIndex, { maxBytes })` 以及每个已挂载的/原生句柄的 `exportSvg()` 都会返回当前页面的快照，而不改变文档、选择或视口。导出包括受支持的背景、嵌入的栅格资源，以及位于 SVG 描述/元数据中的可见兼容性说明。SVG 导出没有远程资源，也没有自动下载。演示仅在明确按下按钮后才会下载。

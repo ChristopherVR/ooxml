@@ -45,7 +45,10 @@ describe('Svelte editor adapter', () => {
 		flushSync();
 		const editor = target.querySelector('xlsx-editor') as XlsxEditorElement;
 		editor.readOnly = true;
-		expect(onreadonlychange).toHaveBeenCalledWith(true);
+		expect(onreadonlychange).toHaveBeenCalledWith(
+			true,
+			expect.objectContaining({ readOnly: true }),
+		);
 		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
 		expect(onribboncustomize).toHaveBeenCalledWith(['italic']);
 		props.authorName = 'Grace';

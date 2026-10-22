@@ -1,6 +1,7 @@
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
+	DocumentStorage,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationInput,
@@ -22,7 +23,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import type { PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
 
 import type { AutosaveStatus } from './autosave';
 import type { ShareDefaults } from './collab/share-helpers';
@@ -63,7 +64,7 @@ export interface PptxViewerCallbacks {
 	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/** Fired after a presentation loads successfully. */
 	onLoad?: (info: { slideCount: number; canvasSize: CanvasSize }) => void;
-	/** Fired when a load fails (message is already localised/best-effort). */
+	/** Fired when a load fails, and for each failed Save / Save As (message is best-effort). */
 	onError?: (message: string, error: unknown) => void;
 	/** Fired when the active slide changes (zero-based index). */
 	onSlideChange?: (index: number) => void;
@@ -87,6 +88,12 @@ export interface PptxViewerCallbacks {
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/** Fired with the serialised `.pptx` bytes after each recovery autosave snapshot is written. */
+	onAutosave?: (content: Uint8Array) => void;
+	/** Fired with the changed fields when the user saves the document properties dialog. */
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	onNotesUpdate?: (notes: string) => void;
 	/**
 	 * Fired with the shared `CollaborationState` (the contract Word, Excel and Visio use)
 	 * when a session starts or stops (the off state) and when its status, synced flag or
@@ -192,10 +199,10 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 */
 	editable?: boolean;
 	/**
-	 * Legacy flag superseded by {@link editable}; kept so existing option
-	 * objects stay type-valid.
-	 *
-	 * @deprecated Use {@link editable} (or `customization.capabilities.edit`) instead.
+	 * Makes the deck read-only (default `false`). It is the inverse of {@link editable}: true
+	 * wins over it, false only lifts this restriction, so editing still needs `editable` and is
+	 * never granted over a collaboration `viewer` role or `capabilities.edit`. Toggle later
+	 * via `setReadOnly`.
 	 */
 	readOnly?: boolean;
 	/** Show the toolbar (default `true`). */
@@ -368,6 +375,14 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * snapshot once per interval instead of deferring one forever.
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Original file path, used as the IndexedDB recovery key (defaults to fileName, or 'presentation.pptx' for an unnamed deck). */
 	filePath?: string;
 	/**
@@ -447,6 +462,8 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	exitPresentation(): Promise<void>;
 	/** Enable or disable editing at runtime (disabling clears the selection). */
 	setEditable(editable: boolean): void;
+	/** Make the deck read-only (true wins over `editable`) or lift that restriction at runtime. */
+	setReadOnly(readOnly: boolean): void;
 	/** Enable or disable editing inherited layout/master elements. */
 	setEditTemplateMode(enabled: boolean): void;
 	/** Undo the last edit (no-op when the undo stack is empty). */

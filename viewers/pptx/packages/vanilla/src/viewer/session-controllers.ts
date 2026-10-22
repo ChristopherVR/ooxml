@@ -145,6 +145,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			options.fileName,
 		),
 		fileName: options.fileName,
+		getStorage: () => options.storage,
 		// Threaded through only so the snapshot uses the shared save decision;
 		// a recovery snapshot stays plaintext whatever the protection state is.
 		getSaveIntent: () => ({
@@ -158,6 +159,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			deps.getChrome().titleBar?.setAutosaveState(status);
 			options.onAutosaveStatus?.(status);
 		},
+		onSaved: (bytes) => options.onAutosave?.(bytes),
 		onRecovery: (record) => options.onAutosaveRecovery?.(record),
 		loadFile: (bytes) => deps.loadFile(bytes),
 	});

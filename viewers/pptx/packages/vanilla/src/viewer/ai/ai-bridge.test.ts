@@ -1,4 +1,4 @@
-import type { PptxElement, PptxSection, PptxSlide } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxElement, PptxSection, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditorController } from '../editor';
@@ -47,7 +47,7 @@ function fakeEditor(store: Store<ViewerState>) {
 	return { editor, calls };
 }
 
-function setup() {
+function setup(onCorePropertiesChanged?: (properties: PptxCoreProperties) => void) {
 	const store = createStore({
 		...createInitialViewerState(),
 		editable: true,
@@ -62,6 +62,7 @@ function setup() {
 		ensureEditable: vi.fn(),
 		getHandler: () => null,
 		applyThemeUpdates: vi.fn(),
+		...(onCorePropertiesChanged ? { onCorePropertiesChanged } : {}),
 	});
 	return { store, bridge, calls };
 }
@@ -104,6 +105,17 @@ describe('vanilla AI bridge deck seam', () => {
 		bridge.applyDeckData?.((data) => ({ ...data, coreProperties: { title: 'Deck' } }), 'Set title');
 		expect(calls.updateDocumentProperties).toHaveBeenCalledOnce();
 		expect(store.get().coreProperties?.title).toBe('Deck');
+	});
+
+	it('reports an AI core-properties edit to the host, and only when it changed', () => {
+		const onCorePropertiesChanged = vi.fn();
+		const { bridge } = setup(onCorePropertiesChanged);
+
+		bridge.applyDeckData?.((data) => data, 'noop');
+		expect(onCorePropertiesChanged).not.toHaveBeenCalled();
+
+		bridge.applyDeckData?.((data) => ({ ...data, coreProperties: { title: 'Deck' } }), 'Set title');
+		expect(onCorePropertiesChanged).toHaveBeenCalledExactlyOnceWith({ title: 'Deck' });
 	});
 
 	it('updateElement routes through the shared applyElementUpdate: text restyles every run', () => {
