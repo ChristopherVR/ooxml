@@ -3,14 +3,20 @@ import { connections, indexedPart, related, validateBackgrounds, visioXml } from
 import { prepareImages } from './prepare-images';
 import type { VisioImageOptions } from './media';
 import { createLayerBudget, indexLayers, pageLayers } from './layers';
-import { loadVisioThemes } from './theme';
 import { visioPageTheme } from './page-theme';
 import type { Resources } from './style';
 import { elements } from '../xml/index';
-import type { VisioDocument, VisioPage } from './model';
+import type { VisioDocument, VisioMaster, VisioPage } from './model';
 import { diagnosticCollector } from './diagnostics';
+import {
+	type DocumentLevel,
+	type VisioDocumentCache,
+	cacheMatches,
+	optionsKey,
+	readDocumentLevel,
+} from './document-level';
 import { readVisioAnnotations, readVisioComments, type VisioComment } from './comments';
-import { metadata, metadataAttributes } from './metadata';
+import { metadata } from './metadata';
 import {
 	alternativeTextMetadata,
 	createMetadataBudget,
@@ -21,10 +27,9 @@ import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './pack
 import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
 import { readVisioPageSetup } from './page-setup';
-import { createVisioPrintSettingsReader } from './print-settings';
 import { readVisioPageLayout } from './page-layout';
 import { readVisioSnapGlue } from './snap-glue';
-import { styleSheet, type StyleRecord } from './style-inheritance';
+import { styleSheet } from './style-inheritance';
 import {
 	attribute,
 	child,
@@ -34,10 +39,9 @@ import {
 	readSheet,
 	reportCachedErrors,
 	yes,
-	type RawShape,
 	type Report,
 } from './sheet';
-import { listVisioMasters, type MasterRecord } from './master-list';
+import { listVisioMasters } from './master-list';
 import { readVisioStencilWindows } from './stencil-windows';
 import { readVisioFieldProperties } from './text-field-context';
 import { visioWallClock } from './text-fields';
@@ -70,6 +74,12 @@ export interface ParseVsdxOptions {
 	 * the document read earlier from a package in which only those page parts changed.
 	 */
 	pages?: readonly string[];
+	/**
+	 * Reuse the styles, themes and masters of an earlier read of this drawing when none of the
+	 * parts they were read from changed (see {@link VisioDocumentCache}). The result is the one a
+	 * read without it gives.
+	 */
+	documentCache?: VisioDocumentCache;
 }
 
 const STENCIL_MAIN_TYPES = new Set([
@@ -137,71 +147,18 @@ export async function parseVsdx(
 				);
 		}
 	}
-	const documentRoot = await visioXml(pkg, documentPart, 'VisioDocument');
-	const resources: Resources = {
-		colors: new Map<string, string>(),
-		fonts: new Map<string, string>(),
-		themes: await loadVisioThemes(pkg, documentPart, report),
-	};
-	for (const color of children(child(documentRoot, 'Colors'), 'ColorEntry'))
-		resources.colors.set(attribute(color, 'IX') ?? '', attribute(color, 'RGB') ?? '');
-	const faceNames = children(child(documentRoot, 'FaceNames'), 'FaceName');
-	if (faceNames.length > 10000)
-		throw new VisioPackageError(
-			'METADATA_LIMIT',
-			'Document font count exceeds its metadata limit.',
-		);
-	let fontCharacters = 0;
-	faceNames.forEach((font, index) => {
-		checkTime();
-		fontCharacters += (attribute(font, 'Name') ?? attribute(font, 'NameU') ?? 'Arial').length;
-		if (fontCharacters > 1_000_000)
-			throw new VisioPackageError(
-				'METADATA_LIMIT',
-				'Document fonts exceed aggregate metadata limits.',
-			);
-		resources.fonts.set(
-			metadata(attribute(font, 'ID') ?? String(index), 256, 'Font ID'),
-			metadata(attribute(font, 'Name') ?? attribute(font, 'NameU') ?? 'Arial', 1024, 'Font name'),
-		);
-	});
-	const styles = new Map<string, StyleRecord>();
-	for (const style of children(child(documentRoot, 'StyleSheets'), 'StyleSheet'))
-		styles.set(metadata(attribute(style, 'ID') ?? '', 256, 'Style ID'), {
-			sheet: readSheet(style),
-			attributes: metadataAttributes(style),
-		});
-	const rootStyle = styles.get('0');
-	if (rootStyle?.attributes.get('NameU') === 'No Style') resources.rootSheet = rootStyle.sheet;
-	const printStyleGroups = children(documentRoot, 'StyleSheets');
-	const readPrintSettings = createVisioPrintSettingsReader(
-		children(documentRoot, 'DocumentSheet'),
-		printStyleGroups.length === 1
-			? children(printStyleGroups[0], 'StyleSheet').filter((node) => attribute(node, 'ID') === '0')
-			: [],
-	);
-	const masters = new Map<string, RawShape[]>();
-	const masterRecords: MasterRecord[] = [];
-	const mastersPart = await related(pkg, documentPart, 'masters', false);
-	if (mastersPart) {
-		for (const master of children(await visioXml(pkg, mastersPart, 'Masters'), 'Master')) {
-			const part = await indexedPart(pkg, mastersPart, master, 'master');
-			const id = metadata(attribute(master, 'ID') ?? '', 256, 'Master ID');
-			if (!id || masters.has(id))
-				throw new VisioPackageError('INVALID_MASTER_ID', 'Master IDs must be present and unique.');
-			const masterShapes = readShapes(await visioXml(pkg, part, 'MasterContents'));
-			await prepareImages(
-				masterShapes,
-				pkg,
-				part,
-				report,
-				options.images,
-				options.metafileConverter,
-			);
-			masters.set(id, masterShapes);
-			masterRecords.push({ id, node: master, shapes: masterShapes });
-		}
-	}
+	const cache = options.documentCache;
+	const cached = cacheMatches(cache?.entry, pkg, options) ? cache!.entry : undefined;
+	const stopRecording = cache && !cached ? pkg.record() : undefined;
+	let level: DocumentLevel;
+	if (cached) {
+		level = cached.level;
+		for (const args of level.reports) report(...args);
+	} else level = await readDocumentLevel(pkg, documentPart, options, checkTime, report);
+	const { documentRoot, styles, readPrintSettings, masters, masterRecords } = level;
+	const resources: Resources = { ...level.resources };
+	delete resources.pageCells;
+	delete resources.fieldContext;
 	let geometryCount = 0,
 		textCount = 0,
 		expansionCount = 0,
@@ -261,10 +218,46 @@ export async function parseVsdx(
 				throw new VisioPackageError('TEXT_LIMIT', 'Text character limit exceeded.');
 		},
 	};
-	const documentMasters = listVisioMasters(masterRecords, context, {
-		metadataBudget: createMetadataBudget(options.metadata),
-		layerBudget: createLayerBudget(),
-	});
+	let documentMasters: VisioMaster[];
+	if (cached) {
+		const { counters } = cached.listed;
+		curveWork = counters.curveWork;
+		geometryCount = counters.geometry;
+		textCount = counters.text;
+		expansionCount = counters.expansion;
+		textRuns = counters.textRuns;
+		paragraphCount = counters.paragraphs;
+		context.shapeCount = counters.shapes;
+		context.metadataBudget.restore(counters.metadata);
+		context.layerBudget.restore(counters.layers);
+		documentMasters = cached.listed.documentMasters;
+	} else {
+		documentMasters = listVisioMasters(masterRecords, context, {
+			metadataBudget: createMetadataBudget(options.metadata),
+			layerBudget: createLayerBudget(),
+		});
+		if (cache && stopRecording)
+			cache.entry = {
+				options: optionsKey(options),
+				converter: options.metafileConverter,
+				reads: stopRecording(),
+				level: { ...level, resources: { ...resources } },
+				listed: {
+					documentMasters,
+					counters: {
+						curveWork,
+						geometry: geometryCount,
+						text: textCount,
+						expansion: expansionCount,
+						textRuns,
+						paragraphs: paragraphCount,
+						shapes: context.shapeCount,
+						metadata: context.metadataBudget.state(),
+						layers: context.layerBudget.state(),
+					},
+				},
+			};
+	}
 	const pagesPart = await related(pkg, documentPart, 'pages', !options.stencil);
 	if (!pagesPart && !options.stencil)
 		throw new VisioPackageError('INVALID_DOCUMENT', 'Missing Visio pages part.');
