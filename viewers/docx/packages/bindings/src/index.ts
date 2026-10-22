@@ -221,7 +221,10 @@ export function mountEditor(
 			if (destroyed) return;
 			options = next;
 			element.locale = next.locale ?? 'en';
-			element.readOnly = next.readOnly ?? false;
+			// Forwarded only when the prop changes: a parent that does not sync `readOnly` from
+			// `onReadOnlyChange` must not revert the user's Editing / Viewing toggle on re-render.
+			if (changedProp('readOnly', next.readOnly ?? false))
+				element.readOnly = next.readOnly ?? false;
 			// Optional values are forwarded only when the parent sets or changes them, so a re-render
 			// never undoes a rename or review author the user chose inside the editor.
 			if (next.fileName !== undefined && changedProp('fileName', next.fileName))

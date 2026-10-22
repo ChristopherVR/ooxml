@@ -103,6 +103,27 @@ describe('shared adapter: forwarded element events', () => {
 	});
 });
 
+describe('shared adapter: readOnly follows only its own changes', () => {
+	it('keeps the Viewing toggle the user made when the parent re-renders with a stale value', () => {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const onReadOnlyChange = vi.fn();
+		const binding = mountEditor(host, { readOnly: false, onReadOnlyChange });
+		// The user switches to Viewing; the editor reports it and the parent does not sync.
+		binding.element.readOnly = true;
+		binding.element.dispatchEvent(new CustomEvent('readonly-change', { detail: true }));
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		binding.update({ readOnly: false, onReadOnlyChange });
+		expect(binding.element.readOnly).toBe(true);
+		// A changed prop is still applied.
+		binding.update({ readOnly: true, onReadOnlyChange });
+		expect(binding.element.readOnly).toBe(true);
+		binding.update({ readOnly: false, onReadOnlyChange });
+		expect(binding.element.readOnly).toBe(false);
+		binding.destroy();
+	});
+});
+
 describe('shared adapter: fileName, reviewAuthor and themeColors', () => {
 	it('forwards them and keeps a rename made inside the editor on unrelated updates', () => {
 		const binding = mountEditor(host(), {
