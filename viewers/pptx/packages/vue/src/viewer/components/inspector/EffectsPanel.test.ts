@@ -1,5 +1,6 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import { mount } from '@vue/test-utils';
+import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -78,16 +79,25 @@ describe('effectsPanel', () => {
 		expect(patch.shapeStyle?.glowColor).toBe('#ffff00');
 	});
 
-	it('applies a Quick Styles preset merged onto the current shapeStyle', async () => {
+	it('applies a Quick Styles preset merged onto the current shapeStyle', () => {
 		const wrapper = mount(EffectsPanel, {
 			// `fillOpacity` is not set by any SHAPE_QUICK_STYLES preset, so its
 			// survival in the patch is what proves this is a MERGE, not a replace.
-			props: { element: shape({ shapeStyle: { fillOpacity: 0.42 } }) },
+			props: { element: shape({ shapeStyle: { fillOpacity: 0.42, strokeWidth: 7 } }) },
 		});
-		const swatch = wrapper.find('.pptx-vue-quickstyles-swatch');
-		expect(swatch.exists()).toBeTruthy();
-		await swatch.trigger('click');
-		const patch = lastPatch(wrapper) as { shapeStyle?: { fillOpacity?: number } };
-		expect(patch.shapeStyle?.fillOpacity).toBe(0.42);
+		// The tiles are the shared gallery's (`pptx-ui-ribbon-gallery`), keyed by preset.
+		wrapper.get<HTMLButtonElement>('[data-gallery-item="blueFill"]').element.click();
+		expect(lastPatch(wrapper)).toStrictEqual({
+			shapeStyle: { fillOpacity: 0.42, ...SHAPE_QUICK_STYLES[0]!.style },
+		});
+	});
+
+	it('keeps the Quick Styles tiles unpickable when the deck is read-only', () => {
+		const wrapper = mount(EffectsPanel, { props: { element: shape(), canEdit: false } });
+		const tiles = wrapper.findAll<HTMLButtonElement>('[data-gallery-item]');
+		expect(tiles).toHaveLength(SHAPE_QUICK_STYLES.length);
+		expect(tiles.every((tile) => tile.element.disabled)).toBeTruthy();
+		tiles[0]!.element.click();
+		expect(wrapper.emitted('update')).toBeUndefined();
 	});
 });

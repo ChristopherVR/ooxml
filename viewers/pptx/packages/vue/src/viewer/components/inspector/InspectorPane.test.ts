@@ -125,3 +125,32 @@ describe('inspectorPane text warp', () => {
 		expect(wrapper.emitted('update')).toBeUndefined();
 	});
 });
+
+describe('inspectorPane quick styles', () => {
+	function quickStyleTile(wrapper: ReturnType<typeof mount>, preset: string): HTMLButtonElement {
+		return wrapper.get<HTMLButtonElement>(`[data-gallery-item="${preset}"]`).element;
+	}
+
+	it('relays a Quick Styles pick on an editable deck as a merged shape style patch', () => {
+		const wrapper = mount(InspectorPane, {
+			props: { element: shape({ shapeStyle: { fillOpacity: 0.5 } }), canEdit: true },
+		});
+		quickStyleTile(wrapper, 'blueOutline').click();
+		expect(wrapper.emitted('update')?.[0]?.[0]).toStrictEqual({
+			shapeStyle: {
+				fillOpacity: 0.5,
+				fillMode: 'none',
+				fillColor: 'transparent',
+				strokeColor: '#4472C4',
+				strokeWidth: 2,
+			},
+		});
+	});
+
+	it('locks the Quick Styles tiles of a read-only deck', () => {
+		const wrapper = mount(InspectorPane, { props: { element: shape(), canEdit: false } });
+		expect(quickStyleTile(wrapper, 'blueOutline').disabled).toBeTruthy();
+		quickStyleTile(wrapper, 'blueOutline').click();
+		expect(wrapper.emitted('update')).toBeUndefined();
+	});
+});

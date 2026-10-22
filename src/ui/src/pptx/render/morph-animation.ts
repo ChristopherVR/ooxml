@@ -31,6 +31,7 @@ import {
 	morphImageCropChanged,
 } from './morph-image-crop';
 import { matchMorphElementsFull } from './morph-matching';
+import { ghostMorphPairsHiddenByGhosts } from './morph-overlay-layers';
 import type { MorphBox } from './morph-overlay-order';
 import { boxesOverlap, travelledBox } from './morph-overlay-order';
 import { tokenizeText } from './morph-text';
@@ -274,6 +275,7 @@ export function isInertMorphPair(fromElement: PptxElement, toElement: PptxElemen
 export function resolveMorphGhostIds(
 	outgoingElements: PptxElement[],
 	pairs: MorphPair[],
+	incomingElements?: readonly PptxElement[],
 ): Set<string> {
 	const counterparts = new Map(pairs.map((pair) => [pair.fromElement.id, pair.toElement]));
 	const painted = new Set<string>();
@@ -291,7 +293,19 @@ export function resolveMorphGhostIds(
 			paintedBoxes.push(box);
 		}
 	}
-	return painted;
+	if (incomingElements === undefined) {
+		return painted;
+	}
+	// The overlay sits above the WHOLE stage, so a pair left to the stage is
+	// also hidden by an opaque ghost the incoming slide stacks below it (issue
+	// #141's climbing column picture). Those pairs need ghosts of their own.
+	return ghostMorphPairsHiddenByGhosts(
+		painted,
+		outgoingElements,
+		incomingElements,
+		pairs,
+		(pair) => !morphPairNeedsCrossfade(pair.fromElement, pair.toElement),
+	);
 }
 
 /**
@@ -935,7 +949,11 @@ export function generateFullMorphTransition(
 	// above it is an invisible shape, and a ghost with a visible element under it
 	// is a double exposure.
 	const flattenedFrom = flattenMorphElements(fromSlide.elements, toSlide.elements);
-	const ghostIds = resolveMorphGhostIds(flattenedFrom, matchResult.pairs);
+	const ghostIds = resolveMorphGhostIds(
+		flattenedFrom,
+		matchResult.pairs,
+		flattenMorphElements(toSlide.elements, fromSlide.elements),
+	);
 
 	// Stage-journeyed pairs whose stacking ORDER flips between the slides get a
 	// z-index journey in the stage's own z space, so the pass-behind happens

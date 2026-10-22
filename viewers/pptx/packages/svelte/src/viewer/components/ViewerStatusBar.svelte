@@ -49,6 +49,7 @@
 	zoomPercent={vm.effectivePercent}
 	isDirty={editor.dirty}
 	autosaveStatus={vm.autosaveActive ? autosaveCtl.status : undefined}
+	lastSavedAt={autosaveCtl.lastSavedAt}
 	showNotes={showNotes && loader.slides.length > 0 && !isActionHidden('notes', hiddenActions)}
 	hideZoom={isActionHidden('zoom', hiddenActions)}
 	hideFullscreen={isActionHidden('fullscreen', hiddenActions)}

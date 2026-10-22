@@ -161,6 +161,12 @@
 	min-height: var(--office-target-size-touch);
 	padding: var(--office-space-1);
 }
+/* A compact panel's tiles share its width, so a row of touch-size tiles never runs past a narrow
+   pane; the preview keeps its size in the middle. */
+[data-office-gallery][mode='panel'][compact] .tile {
+	width: 100% !important;
+	min-width: 0;
+}
 [data-office-gallery][mode='panel'] .tile-label {
 	font-size: var(--office-font-size-xs);
 }

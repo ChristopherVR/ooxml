@@ -115,6 +115,53 @@ function discAndWording(): { from: PptxSlide; to: PptxSlide } {
 }
 
 /**
+ * Issue #141's slides 4 to 5: a departing picture keeps the unchanged
+ * backdrop's ghost painted, a full-slide picture fades in above the backdrop,
+ * and the title travels ABOVE that picture on the incoming slide.
+ */
+function veiledTitle(): { from: PptxSlide; to: PptxSlide } {
+	const picture = (id: string, name: string, imagePath: string): unknown => ({
+		id,
+		name,
+		type: 'picture',
+		x: 0,
+		y: 0,
+		width: 1280,
+		height: 720,
+		imagePath,
+		imageData: `data:${imagePath}`,
+	});
+	const title = (id: string, x: number): unknown => ({
+		id,
+		name: 'Title',
+		type: 'text',
+		x,
+		y: 160,
+		width: 490,
+		height: 100,
+		text: 'Our Services',
+	});
+	return {
+		from: {
+			id: 'out',
+			elements: [
+				picture('out-gone', 'Leaving', 'ppt/media/leaving.png'),
+				picture('out-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+				title('out-title', 690),
+			],
+		} as unknown as PptxSlide,
+		to: {
+			id: 'in',
+			elements: [
+				picture('in-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+				picture('in-veil', 'Veil', 'ppt/media/veil.png'),
+				title('in-title', 110),
+			],
+		} as unknown as PptxSlide,
+	};
+}
+
+/**
  * The same panel with its wording REPLACED rather than arriving: a matched pair
  * the overlay paints both halves of, which is what has to be blended additively
  * (issue #161). `shapeId` is the identity that pairs two text boxes saying
@@ -205,15 +252,18 @@ describe('playTransitionOverlay', () => {
 	});
 
 	it('paints no slide background on the morph departing layer', () => {
-		const { outgoing, incoming, cancel } = play(
+		const { incoming, cancel } = play(
 			{ type: 'morph', durationMs: 800 } as PptxSlideTransition,
 			true,
 		);
-		expect(stageWrap.querySelector('[data-pptx-morph-outgoing]')).not.toBeNull();
+		const ghostStage = stageWrap.querySelector<HTMLElement>(
+			'[data-pptx-morph-outgoing] .pptxv-stage',
+		);
+		expect(ghostStage).not.toBeNull();
 		// The departing snapshot only carries the morphing shapes and sits ABOVE
 		// the incoming slide, so it has to be see-through. Its own (always opaque)
 		// slide background otherwise covered the whole morph with a flat slab.
-		expect(outgoing.style.backgroundColor).toBe('transparent');
+		expect(ghostStage!.style.backgroundColor).toBe('transparent');
 		// The incoming layer is a real surface and keeps its background.
 		expect(incoming.style.backgroundColor).toBe('rgb(255, 255, 255)');
 		cancel();
@@ -275,6 +325,40 @@ describe('playTransitionOverlay', () => {
 		cancel();
 	});
 
+	// Regression (issue #141): every lifted arrival used to be painted above
+	// every ghost, so a full-slide picture fading in veiled the title travelling
+	// ABOVE it on the incoming slide, which then snapped bright at the end.
+	it('stacks a travelling title ghost above a lifted picture arriving under it', () => {
+		const { from, to } = veiledTitle();
+		const cancel = playTransitionOverlay({
+			doc,
+			stageWrap,
+			outgoing: buildStage(doc, ['out-gone', 'out-backdrop', 'out-title']),
+			incoming: buildStage(doc, ['in-backdrop', 'in-veil', 'in-title']),
+			transition: { type: 'morph', durationMs: 800 } as PptxSlideTransition,
+			outgoingSlide: from,
+			incomingSlide: to,
+			onDone: vi.fn(),
+		});
+
+		const layers = [
+			...stageWrap.querySelectorAll<HTMLElement>(
+				'[data-pptx-morph-outgoing], [data-pptx-morph-lifted]',
+			),
+		].map((layer) => ({
+			z: Number(layer.style.zIndex),
+			ids: [...layer.querySelectorAll<HTMLElement>('[data-element-id]')].map(
+				(node) => node.dataset.elementId,
+			),
+		}));
+		const zOf = (id: string): number => layers.find((layer) => layer.ids.includes(id))!.z;
+		expect(zOf('out-backdrop')).toBeLessThan(zOf('in-veil'));
+		expect(zOf('in-veil')).toBeLessThan(zOf('out-title'));
+		// The whole snapshot is never painted: only the runs the plan names.
+		expect(stageWrap.querySelectorAll('[data-pptx-transition-layer="outgoing"]')).toHaveLength(2);
+		cancel();
+	});
+
 	// Regression (issue #161): two fades stacked as ordinary layers composite
 	// source-over, leaving the ink the halves SHARE at 0.75 of full strength
 	// halfway through - measured 34.6/255 too dark on the wheel deck, which
@@ -297,8 +381,8 @@ describe('playTransitionOverlay', () => {
 		const group = stageWrap.querySelector<HTMLElement>('[data-pptx-morph-crossfade="in-wording"]');
 		expect(group, 'the pair must be rendered as its own group').not.toBeNull();
 		expect(group!.style.isolation).toBe('isolate');
-		// Above the ghost layer (2) and the lifted layer (3).
-		expect(group!.style.zIndex).toBe('4');
+		// Above the one ghost layer (2).
+		expect(group!.style.zIndex).toBe('3');
 		const halves = [...group!.querySelectorAll<HTMLElement>('.pptxv-transition-layer')];
 		expect(halves).toHaveLength(2);
 		for (const half of halves) {
@@ -415,10 +499,11 @@ describe('playTransitionOverlay', () => {
 			onDone: vi.fn(),
 		});
 
-		expect(outgoing.querySelector('[data-element-id="out-group"]')).not.toBeNull();
-		expect(outgoing.querySelector('[data-element-id="out-disc"]')).not.toBeNull();
+		const ghosts = stageWrap.querySelector<HTMLElement>('[data-pptx-morph-outgoing]');
+		expect(ghosts!.querySelector('[data-element-id="out-group"]')).not.toBeNull();
+		expect(ghosts!.querySelector('[data-element-id="out-disc"]')).not.toBeNull();
 		// Anything the plan did not name still goes.
-		expect(outgoing.querySelector('[data-element-id="out-stray"]')).toBeNull();
+		expect(ghosts!.querySelector('[data-element-id="out-stray"]')).toBeNull();
 		cancel();
 	});
 

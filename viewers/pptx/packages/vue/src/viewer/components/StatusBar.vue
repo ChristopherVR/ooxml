@@ -6,13 +6,12 @@
  * cluster live in the shared view. This component maps viewer state onto the
  * element's controlled state and re-emits its typed intents.
  */
-import { resolveStatusBarSave, statusBarViewMode } from 'ooxml-ui/pptx';
-import type { StatusBarRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
+import { dispatchStatusBarIntent, statusBarState, statusBarViewMode } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import type { AutosaveStatus } from '../composables/useAutosave';
-import { useToolbarVisibility } from '../composables/useToolbarVisibility';
 import { useRegion } from '../composables/useViewerRegions';
 import ViewerRegion from './ViewerRegion.vue';
 
@@ -42,7 +41,6 @@ const region = useRegion('statusBar');
 const regionContext = computed(() => region.context(() => undefined));
 
 const slots = useSlots();
-const { isHidden } = useToolbarVisibility(() => props.hiddenActions);
 
 const emit = defineEmits<{
 	'zoom-in': [];
@@ -53,52 +51,33 @@ const emit = defineEmits<{
 	'toggle-slide-sorter': [];
 }>();
 
-const state = computed(() => {
-	const save = resolveStatusBarSave(
-		t,
-		props.autosaveStatus
-			? { state: props.autosaveStatus, timestamp: props.lastSavedAt ?? undefined }
-			: undefined,
-		props.isDirty,
-	);
-	return {
+const state = computed(() =>
+	statusBarState({
 		slideCount: props.slideCount,
 		activeSlideIndex: props.activeSlideIndex,
-		saveText: save.text,
-		saveKind: save.kind,
-		zoomPercent:
-			props.scale !== undefined && !isHidden('zoom') ? (props.scale ?? 1) * 100 : undefined,
-		showNotes: props.showNotes === true && !isHidden('notes'),
-		notesExpanded: props.isNotesExpanded === true,
-		showSlideShow: !isHidden('fullscreen'),
+		dirty: props.isDirty,
+		autosave: props.autosaveStatus
+			? { state: props.autosaveStatus, timestamp: props.lastSavedAt ?? undefined }
+			: undefined,
+		zoomPercent: props.scale === undefined ? undefined : props.scale * 100,
+		notesExpanded: props.isNotesExpanded,
 		viewMode: statusBarViewMode(props.mode),
+		handles: { notes: props.showNotes === true },
+		hiddenActions: props.hiddenActions,
 		translate: t,
-	};
-});
+	}),
+);
 
 function request(event: Event): void {
-	switch ((event as StatusBarRequestEvent).detail.id) {
-		case 'notes':
-			emit('toggle-notes');
-			break;
-		case 'normal':
-			emit('set-mode', 'edit');
-			break;
-		case 'sorter':
-			emit('toggle-slide-sorter');
-			break;
-		case 'slideShow':
-			emit('set-mode', 'present');
-			break;
-		case 'zoomOut':
-			emit('zoom-out');
-			break;
-		case 'zoomFit':
-			emit('zoom-to-fit');
-			break;
-		case 'zoomIn':
-			emit('zoom-in');
-	}
+	dispatchStatusBarIntent(event, {
+		notes: () => emit('toggle-notes'),
+		normal: () => emit('set-mode', 'edit'),
+		sorter: () => emit('toggle-slide-sorter'),
+		slideShow: () => emit('set-mode', 'present'),
+		zoomOut: () => emit('zoom-out'),
+		zoomFit: () => emit('zoom-to-fit'),
+		zoomIn: () => emit('zoom-in'),
+	});
 }
 </script>
 

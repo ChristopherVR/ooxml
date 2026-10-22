@@ -292,6 +292,25 @@ function needsCenteredStrokeOverlay(
 }
 
 /**
+ * The width of a centred, solid outline that straddles a clipped shape's edge,
+ * or `0` when the shape has none (inset, dashed, absent, or not a closed shape).
+ * The geometry cascade widens the shape's clip by this much; a dashed line is
+ * excluded because fill would show through its gaps in the widened band.
+ */
+export function straddlingStrokeWidth(element: PptxElement): number {
+	if (!hasShapeProperties(element)) {
+		return 0;
+	}
+	const style = element.shapeStyle;
+	const width = Math.max(0, style?.strokeWidth ?? 0);
+	if (!needsCenteredStrokeOverlay(element, style, width)) {
+		return 0;
+	}
+	const dash = normalizeStrokeDashType(style?.strokeDash);
+	return !dash || dash === 'solid' ? width : 0;
+}
+
+/**
  * Resolve the SVG overlay that paints an element's outline, or `undefined` when
  * the binding's CSS border is correct and cheaper (a closed shape whose line is
  * explicitly inset, `a:ln/@algn="in"`).

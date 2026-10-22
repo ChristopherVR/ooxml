@@ -9,11 +9,14 @@ import {
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
 import type { StyleMap } from './element-style';
-import type { MorphCrossfadeGroupSlides } from './presentation-transition-overlay-morph';
+import type {
+	MorphCrossfadeGroupSlides,
+	MorphOverlayLayerSlide,
+} from './presentation-transition-overlay-morph';
 import {
 	classicIncomingLayerSlide,
 	morphCrossfadeGroupSlides,
-	morphLiftedSlide,
+	morphOverlayLayerSlides,
 	withTemplateElements,
 } from './presentation-transition-overlay-morph';
 import {
@@ -137,24 +140,20 @@ export function createTransitionOverlayState(inputs: {
 	 */
 	const isMorph = computed<boolean>(() => morphPlan() !== undefined);
 
-	/** The slide rendered in the animated layer (outgoing + its template). */
-	const layerSlide = computed<PptxSlide>(() => {
-		const slide = inputs.outgoingSlide();
-		const plan = morphPlan();
-		if (plan) {
-			return { ...slide, elements: [...plan.outgoingElements] };
-		}
-		return withTemplateElements(slide, inputs.templateElements());
-	});
+	/**
+	 * The slide rendered in the animated layer (outgoing + its template). A
+	 * morph paints its ghosts in {@link overlayLayers} instead.
+	 */
+	const layerSlide = computed<PptxSlide>(() =>
+		withTemplateElements(inputs.outgoingSlide(), inputs.templateElements()),
+	);
 
 	/**
-	 * The arriving shapes the morph has to paint over its own ghosts, or
-	 * `undefined` when there are none (issue #146). They sit on the live stage
-	 * below this overlay, where the departing layer would hide them for the whole
-	 * transition; the plan holds that copy invisible and hands them here instead.
+	 * A morph's ghosts and lifted arrivals, one stacked layer per run of the
+	 * plan's single back-to-front order (issues #141 and #146).
 	 */
-	const liftedSlide = computed<PptxSlide | undefined>(() =>
-		morphLiftedSlide(morphPlan(), inputs.incomingSlide()),
+	const overlayLayers = computed<MorphOverlayLayerSlide[]>(() =>
+		morphOverlayLayerSlides(morphPlan(), inputs.outgoingSlide(), inputs.incomingSlide()),
 	);
 
 	/**
@@ -228,7 +227,7 @@ export function createTransitionOverlayState(inputs: {
 		morphPlan,
 		isMorph,
 		layerSlide,
-		liftedSlide,
+		overlayLayers,
 		crossfadeGroups,
 		layerStyle,
 		incomingLayerSlide,

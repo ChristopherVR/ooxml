@@ -448,6 +448,52 @@ describe('renderSmartArtElement (opt-in 3D)', () => {
 		expect(node.querySelector('pptx-three-view')).toBeNull();
 	});
 
+	it('keeps the fill swatches of a 3D node while the pointer crosses its label', () => {
+		vi.useFakeTimers();
+		try {
+			const node = renderSmartArtElement(
+				drawingShapesElement(),
+				0,
+				makeContext(true, {
+					interactive: true,
+					onSmartArtNodeTextChange: vi.fn(),
+					onSmartArtNodeFillChange: vi.fn(),
+				}),
+			) as HTMLElement;
+			document.body.appendChild(node);
+			const layer = node.querySelector<HTMLElement>('[data-smartart-3d-edit-layer]')!;
+			const group = layer.querySelector<SVGGElement>('[data-smartart-node-id="n1"]')!;
+			Object.assign(group, {
+				getBBox: () => ({ x: 10, y: 20, width: 80, height: 30 }),
+				getCTM: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
+				getBoundingClientRect: () =>
+					({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect,
+			});
+			const swatches = () => layer.querySelector('.pptxv-smartart-node-swatches');
+			const move = (x: number) =>
+				layer.dispatchEvent(
+					new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: 50 }),
+				);
+
+			// The browser's own over / out of the group follow its painted label: not the hover.
+			group.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+			expect(swatches()).toBeNull();
+			move(50);
+			expect(swatches()).not.toBeNull();
+			group.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+			vi.advanceTimersByTime(500);
+			expect(swatches()).not.toBeNull();
+
+			// Off the node by geometry: the routed leave hides them after the grace period.
+			move(500);
+			vi.advanceTimersByTime(500);
+			expect(swatches()).toBeNull();
+			node.remove();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('threads the active font-style emphasis into the view', () => {
 		const element = nodesOnlyElement();
 		const presentationStates = new Map([

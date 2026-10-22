@@ -65,6 +65,7 @@ const ELEMENT_FOR: Record<RibbonGalleryId, PptxElement | null> = {
 	shapeStyles: textShape,
 	shapeEffects: textShape,
 	wordArtStyles: textShape,
+	quickStyles: textShape,
 	pictureStyles: picture,
 	pictureCorrections: picture,
 	pictureColor: picture,

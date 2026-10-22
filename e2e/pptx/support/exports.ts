@@ -61,14 +61,20 @@ export function exportCard(page: Page, title: RegExp): Locator {
 	return backstage(page).getByRole('button', { name: title }).first();
 }
 
-/** Click a card and capture the download it produces. */
+/**
+ * Click a card and capture the download it produces.
+ *
+ * The click shares the download's budget: after dispatching it, Playwright runs a script in the
+ * page, which waits while a raster capture holds the main thread (the html2canvas fallback can
+ * for seconds on a loaded runner), so the default action timeout failed the click itself.
+ */
 export async function downloadViaCard(
 	page: Page,
 	title: RegExp,
 	timeoutMs: number = EXPORT_DOWNLOAD_TIMEOUT_MS,
 ): Promise<Download> {
 	const downloadPromise = page.waitForEvent('download', { timeout: timeoutMs });
-	await exportCard(page, title).click();
+	await exportCard(page, title).click({ timeout: timeoutMs });
 	return downloadPromise;
 }
 

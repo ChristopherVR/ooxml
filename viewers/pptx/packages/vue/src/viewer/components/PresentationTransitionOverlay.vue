@@ -99,29 +99,24 @@ const fragmented = computed<FragmentedTransitionDescriptor | undefined>(() =>
  * gliding onto its counterpart (dissolving into it when its appearance changed)
  * or fading out in place when it has none. See `use-morph-transition-overlay.ts`.
  */
-const { morphPlan, morphOutgoingSlide, morphLiftedSlide, morphCrossfadeGroups, morphCss } =
-	useMorphTransitionOverlay({
+const { morphPlan, morphOverlayLayers, morphCrossfadeGroups, morphCss } = useMorphTransitionOverlay(
+	{
 		transition: () => props.transition,
 		outgoingSlide: () => props.outgoingSlide,
 		incomingSlide: () => props.incomingSlide,
 		durationMs: () => durationMs.value,
-	});
+	},
+);
 
 const outgoingZIndex = computed(() => (animations.value.outgoingOnTop ? 2 : 1));
 const incomingZIndex = computed(() => (animations.value.outgoingOnTop ? 1 : 2));
 
+// A morph paints its ghosts in `MorphExtraLayers` instead, so this layer is
+// only ever the plain transitions' outgoing snapshot.
 const outgoingLayerStyle = computed<CSSProperties>(() => ({
-	zIndex: morphPlan.value ? 2 : outgoingZIndex.value,
-	// Morph animates each shape individually; a layer-wide animation on top of
-	// that would drag the whole slide and cancel the effect.
-	animation: morphPlan.value
-		? undefined
-		: animations.value.outgoing !== 'none'
-			? animations.value.outgoing
-			: undefined,
+	zIndex: outgoingZIndex.value,
+	animation: animations.value.outgoing !== 'none' ? animations.value.outgoing : undefined,
 }));
-
-const liftedLayerStyle = computed<CSSProperties>(() => ({ zIndex: 3 }));
 
 const incomingLayerStyle = computed<CSSProperties>(() => ({
 	zIndex: morphPlan.value ? 1 : incomingZIndex.value,
@@ -194,22 +189,19 @@ onBeforeUnmount(clearTimer);
 		<component :is="'style'">{{ SLIDE_TRANSITION_KEYFRAMES_CSS }}</component>
 		<component :is="'style'" v-if="morphPlan">{{ morphCss }}</component>
 
-		<!-- Outgoing (old) slide snapshot. During a morph this carries only the
-		     shapes with no incoming counterpart, so the ones that persist stay
-		     visible on the incoming layer while they travel - and it must stay
-		     BACKGROUND-FREE, or the departing layer's opaque slide fill covers the
-		     morph underneath it for the whole transition. -->
+		<!-- Outgoing (old) slide snapshot. A morph paints its ghosts in the
+		     stacked layers of `MorphExtraLayers` instead. -->
 		<div
+			v-if="!morphPlan"
 			class="pptx-vue-transition-layer"
 			data-pptx-transition-layer="outgoing"
-			:data-pptx-morph-outgoing="morphPlan ? 'true' : undefined"
 			:data-pptx-transition-fragments="
-				!morphPlan && fragmented?.outgoing ? fragmented.outgoing.keyframesName : undefined
+				fragmented?.outgoing ? fragmented.outgoing.keyframesName : undefined
 			"
 			:style="outgoingLayerStyle"
 		>
 			<FragmentedTransitionLayer
-				v-if="!morphPlan && fragmented?.outgoing"
+				v-if="fragmented?.outgoing"
 				:layer="fragmented.outgoing"
 				:slide="outgoingSlide"
 				:canvas-size="canvasSize"
@@ -219,12 +211,10 @@ onBeforeUnmount(clearTimer);
 			/>
 			<SlideStage
 				v-else
-				:slide="morphPlan ? morphOutgoingSlide : outgoingSlide"
+				:slide="outgoingSlide"
 				:canvas-size="canvasSize"
 				:media-data-urls="mediaDataUrls"
 				:scale="scale"
-				:preserve-element-ids="Boolean(morphPlan)"
-				:transparent-background="Boolean(morphPlan)"
 			/>
 		</div>
 
@@ -257,11 +247,10 @@ onBeforeUnmount(clearTimer);
 			/>
 		</div>
 
-		<!-- The two morph-only extra layers (arriving-above-departing "lifted"
-		     shapes, and same-pair crossfade groups) - see `MorphExtraLayers.vue`. -->
+		<!-- The morph's own layers (ghosts and lifted arrivals in one stacking
+		     order, then same-pair crossfade groups) - see `MorphExtraLayers.vue`. -->
 		<MorphExtraLayers
-			:lifted-slide="morphLiftedSlide"
-			:lifted-layer-style="liftedLayerStyle"
+			:overlay-layers="morphOverlayLayers"
 			:crossfade-groups="morphCrossfadeGroups"
 			:canvas-size="canvasSize"
 			:media-data-urls="mediaDataUrls"

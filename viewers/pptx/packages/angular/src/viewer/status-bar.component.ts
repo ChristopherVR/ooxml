@@ -20,13 +20,8 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
-import { isActionHidden, resolveStatusBarSave } from 'ooxml-ui/pptx';
-import type {
-	StatusBarControlId,
-	StatusBarRequestEvent,
-	StatusBarViewState,
-	ToolbarActionId,
-} from 'ooxml-ui/pptx';
+import { dispatchStatusBarIntent, statusBarState } from 'ooxml-ui/pptx';
+import type { StatusBarIntentHandlers, StatusBarViewState, ToolbarActionId } from 'ooxml-ui/pptx';
 import { map, merge, startWith } from 'rxjs';
 
 import type { AutosaveStatus } from './autosave.service';
@@ -77,7 +72,7 @@ export class StatusBarComponent {
 		{ initialValue: 0 },
 	);
 
-	private readonly intents: Record<StatusBarControlId, () => void> = {
+	private readonly intents: StatusBarIntentHandlers = {
 		notes: () => this.toggleNotes.emit(),
 		normal: () => this.normalView.emit(),
 		sorter: () => this.openSorter.emit(),
@@ -89,26 +84,20 @@ export class StatusBarComponent {
 
 	protected view(): StatusBarViewState {
 		this.translations();
-		const t = (key: string, params?: Record<string, string | number>): string =>
-			this.translate.instant(key, params);
-		const hidden = (id: ToolbarActionId) => isActionHidden(id, this.hiddenActions());
-		const save = resolveStatusBarSave(t, this.autosaveStatus(), this.dirty());
-		return {
+		return statusBarState({
 			slideCount: this.slideCount(),
 			activeSlideIndex: this.slideIndex(),
-			saveText: save.text,
-			saveKind: save.kind,
-			zoomPercent: hidden('zoom') ? undefined : this.zoomPercent(),
-			showNotes: !hidden('notes'),
+			dirty: this.dirty(),
+			autosave: this.autosaveStatus(),
+			zoomPercent: this.zoomPercent(),
 			notesExpanded: this.notesOpen(),
-			showSlideShow: !hidden('fullscreen'),
-			// "Normal" is active when neither the sorter nor the slideshow is showing.
 			viewMode: this.presenting() ? 'slideShow' : this.sorterActive() ? 'sorter' : 'normal',
-			translate: t,
-		};
+			hiddenActions: this.hiddenActions(),
+			translate: (key, params) => this.translate.instant(key, params),
+		});
 	}
 
 	protected request(event: Event): void {
-		this.intents[(event as StatusBarRequestEvent).detail.id]();
+		dispatchStatusBarIntent(event, this.intents);
 	}
 }

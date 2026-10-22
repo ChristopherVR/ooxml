@@ -1,6 +1,7 @@
 /**
  * The theme colour grid and the Quick Styles gallery name their swatches through the provided
- * translator (tooltip and accessible name), not in hard-coded English.
+ * translator (tooltip and accessible name), not in hard-coded English, and Quick Styles follows a
+ * language change.
  */
 import type { PptxElement } from 'pptx-viewer-core';
 import { translationsDe } from 'pptx-viewer-locales';
@@ -42,13 +43,17 @@ afterEach(() => {
 	cleanup = undefined;
 });
 
-function render(component: Parameters<typeof mount>[0], props: Record<string, unknown>) {
+function render(
+	component: Parameters<typeof mount>[0],
+	props: Record<string, unknown>,
+	translator: Translator = german,
+) {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
 	const instance = mount(component, {
 		target,
 		props,
-		context: new Map([[I18N_CONTEXT_KEY, german]]),
+		context: new Map([[I18N_CONTEXT_KEY, translator]]),
 	});
 	flushSync();
 	cleanup = () => {
@@ -69,7 +74,7 @@ describe('swatch and style names follow the locale', () => {
 		expect(shadow.querySelector('.heading')!.textContent).toBe('Designfarben');
 	});
 
-	it('names Quick Styles presets with the host dictionary', () => {
+	it('names Quick Styles presets with the host dictionary, and relabels on a language change', () => {
 		const el = {
 			type: 'shape',
 			id: 's1',
@@ -82,8 +87,18 @@ describe('swatch and style names follow the locale', () => {
 		} as PptxElement;
 		const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
 		editor.setSlides([{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [el] }]);
-		const target = render(QuickStylesGallery, { editor, el });
-		const first = target.querySelector('.pptx-svelte-quick-styles-grid button')!;
-		expect(first.getAttribute('aria-label')).toBe('Blaue Füllung');
+		// The viewer's translator reads its locale state on every call; this one does the same.
+		const locale = $state({ current: 'de' });
+		const t: Translator = (key, params) =>
+			locale.current === 'de' ? german(key, params) : translate('en', key, params);
+		const target = render(QuickStylesGallery, { editor, el }, t);
+		// The tiles are the shared gallery's, inside its element.
+		const first = () => target.querySelector('pptx-ui-ribbon-gallery [data-gallery-item]')!;
+		expect(first().getAttribute('aria-label')).toBe('Blaue Füllung');
+		expect(first().getAttribute('title')).toBe('Blaue Füllung');
+		locale.current = 'en';
+		flushSync();
+		expect(first().getAttribute('aria-label')).toBe('Blue Fill');
+		expect(first().getAttribute('title')).toBe('Blue Fill');
 	});
 });

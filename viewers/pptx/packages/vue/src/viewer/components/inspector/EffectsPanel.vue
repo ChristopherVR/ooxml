@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shapeQuickStylePatch } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -27,9 +28,14 @@ import QuickStylesGallery from './QuickStylesGallery.vue';
  * Shadow/glow/reflection/soft-edge controls only apply to shape-like elements
  * (core `hasShapeProperties`). For other elements a muted note is shown.
  */
-const props = defineProps<{
-	element: PptxElement;
-}>();
+const props = withDefaults(
+	defineProps<{
+		element: PptxElement;
+		/** Read-only decks keep the Quick Styles tiles visible but unpickable. */
+		canEdit?: boolean;
+	}>(),
+	{ canEdit: true },
+);
 
 const emit = defineEmits<{
 	update: [patch: Partial<PptxElement>];
@@ -41,15 +47,11 @@ const isShapeLike = computed(() => hasShapeProperties(props.element));
 
 /**
  * Apply a Quick Styles gallery preset (a `Partial<ShapeStyle>` of unrelated
- * fields, e.g. fill/outline) on top of the CURRENT shapeStyle. Unlike the
- * shadow/glow/reflection/soft-edge sections, a preset is not itself a shared
- * decision function, just a plain merge, so it stays local.
+ * fields, e.g. fill/outline) on top of the CURRENT shapeStyle, through the
+ * shared `shapeQuickStylePatch` merge.
  */
 function onQuickStyleSelect(preset: Partial<ShapeStyle>): void {
-	const base: ShapeStyle = hasShapeProperties(props.element)
-		? (props.element.shapeStyle ?? {})
-		: {};
-	emit('update', { shapeStyle: { ...base, ...preset } } as Partial<PptxElement>);
+	emit('update', shapeQuickStylePatch(props.element, preset));
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +86,7 @@ function onOpacity(value: string): void {
 		</label>
 
 		<template v-if="isShapeLike">
-			<QuickStylesGallery @select="onQuickStyleSelect" />
+			<QuickStylesGallery :disabled="!props.canEdit" @select="onQuickStyleSelect" />
 			<EffectsShadowSection :element="element" @update="(patch) => emit('update', patch)" />
 			<EffectsGlowReflectionSection :element="element" @update="(patch) => emit('update', patch)" />
 		</template>

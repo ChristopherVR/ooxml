@@ -1,14 +1,9 @@
-import {
-	getDensePanelTouchTargetPx,
-	quickStyleSwatchCss,
-	shapeQuickStyleLabel,
-} from 'ooxml-ui/pptx';
+import { buildQuickStylesGallery, quickStyleShapeStyle } from 'ooxml-ui/pptx';
+import type { PptxUiRibbonGalleryElement, RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SHAPE_QUICK_STYLES } from '../../constants';
-import { useIsMobile } from '../../hooks/useIsMobile';
 import { LBL } from './FillStrokeHelpers';
 
 // ---------------------------------------------------------------------------
@@ -23,33 +18,44 @@ export interface QuickStylesGalleryProps {
 // Component
 // ---------------------------------------------------------------------------
 
+const QUICK_STYLES = buildQuickStylesGallery();
+
+/**
+ * The inspector's Quick Styles: the shared gallery (`pptx-ui-ribbon-gallery`, a compact panel)
+ * over the shape style presets. A pick hands the preset's style to `onUpdateShapeStyle`, which
+ * merges it over the shape's own.
+ */
 export function QuickStylesGallery({
 	onUpdateShapeStyle,
 }: QuickStylesGalleryProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { viewportWidth } = useIsMobile();
-	// Each preset is a dense-gallery swatch (a colour/style preview, same
-	// category as the theme-colour grid), but unlike those it is a genuinely
-	// discrete, individually-named action button, so it still gets the WCAG
-	// touch target below the mobile breakpoint from the shared decision
-	// function rather than an exemption, per CLAUDE.md Rule 2.
-	const swatchMinHeight = getDensePanelTouchTargetPx(viewportWidth);
+	const ref = useRef<PptxUiRibbonGalleryElement>(null);
+	useLayoutEffect(() => {
+		const gallery = ref.current;
+		if (gallery) {
+			gallery.descriptor = QUICK_STYLES;
+			gallery.translateLabel = t;
+		}
+	}, [t]);
+	useEffect(() => {
+		const gallery = ref.current;
+		if (!gallery) {
+			return;
+		}
+		const pick = (event: Event) => {
+			const style = quickStyleShapeStyle((event as RibbonGalleryPickEvent).detail.itemId);
+			if (style) {
+				onUpdateShapeStyle(style);
+			}
+		};
+		gallery.addEventListener('gallery-pick', pick);
+		return () => gallery.removeEventListener('gallery-pick', pick);
+	}, [onUpdateShapeStyle]);
+
 	return (
 		<div className='flex flex-col gap-1'>
 			<span className={LBL}>{t('pptx.shape.quickStyles')}</span>
-			<div className='grid grid-cols-6 gap-1'>
-				{SHAPE_QUICK_STYLES.map((qs, idx) => (
-					<button
-						key={idx}
-						type='button'
-						title={shapeQuickStyleLabel(qs, (key) => t(key))}
-						aria-label={shapeQuickStyleLabel(qs, (key) => t(key))}
-						className='w-full rounded border border-border hover:border-primary transition-colors'
-						style={{ ...quickStyleSwatchCss(qs), minHeight: swatchMinHeight }}
-						onClick={() => onUpdateShapeStyle(qs.style)}
-					/>
-				))}
-			</div>
+			<pptx-ui-ribbon-gallery ref={ref} mode='panel' compact />
 		</div>
 	);
 }

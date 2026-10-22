@@ -41,24 +41,39 @@ export function useMorphTransitionOverlay(options: {
 			: undefined,
 	);
 
-	/** The outgoing slide's shapes, rendered as the morph's departing layer. */
-	const morphOutgoingSlide = $derived(
-		morphPlan && options.outgoingSlide()
-			? { ...(options.outgoingSlide() as PptxSlide), elements: morphPlan.outgoingElements }
-			: undefined,
-	);
-
 	/**
-	 * The arriving shapes a ghost above them would otherwise hide for the whole
-	 * morph, painted in their own layer over the departing one (issue #146).
-	 * Their copy on the incoming layer is held invisible by the plan, so the
-	 * two never composite with each other.
+	 * The ghosts and lifted arrivals, one stacked layer per run of the plan's
+	 * `overlayLayers`, back to front above the incoming layer (z-index 1).
+	 *
+	 * A ghost run renders against the outgoing slide inside a
+	 * `data-pptx-morph-outgoing` scope; a lifted run (arriving shapes a ghost
+	 * would otherwise hide, issue #146) against the incoming slide inside a
+	 * `data-pptx-morph-lifted` one, its copy on the incoming layer held
+	 * invisible by the plan. One shared order, rather than every ghost under
+	 * every lifted shape, is what keeps a full-slide picture fading in from
+	 * veiling the title travelling above it (issue #141).
 	 */
-	const morphLiftedSlide = $derived(
-		morphPlan && options.incomingSlide() && morphPlan.overlayIncomingElements.length > 0
-			? { ...(options.incomingSlide() as PptxSlide), elements: morphPlan.overlayIncomingElements }
-			: undefined,
-	);
+	const morphOverlayLayers = $derived.by(() => {
+		const outgoing = options.outgoingSlide();
+		const incoming = options.incomingSlide();
+		if (!morphPlan || !outgoing) {
+			return [];
+		}
+		return morphPlan.overlayLayers.flatMap((layer, index) => {
+			const slide = layer.side === 'outgoing' ? outgoing : incoming;
+			if (!slide) {
+				return [];
+			}
+			return [
+				{
+					key: `${layer.side}-${layer.elements[0]?.id ?? index}`,
+					side: layer.side,
+					style: `z-index: ${MORPH_LAYER_Z_BASE + index};`,
+					slide: { ...slide, elements: [...layer.elements] } as PptxSlide,
+				},
+			];
+		});
+	});
 
 	/** One half of a grouped pair: blends additively, and carries the dissolve. */
 	function halfStyle(animation: string | undefined): string {
@@ -83,8 +98,10 @@ export function useMorphTransitionOverlay(options: {
 		return morphPlan.crossfadeGroups.map((group, index) => ({
 			key: group.incoming.id,
 			// `isolation` makes the group a stacking context, so it carries its
-			// own z-index to stay above the ghosts its halves came from.
-			style: `${MORPH_CROSSFADE_GROUP_CSS_TEXT} z-index: ${4 + index};`,
+			// own z-index to stay above every overlay layer.
+			style: `${MORPH_CROSSFADE_GROUP_CSS_TEXT} z-index: ${
+				MORPH_LAYER_Z_BASE + morphPlan.overlayLayers.length + index
+			};`,
 			// The dissolve rides these WRAPPERS, not the elements: a pair
 			// dissolving in place never moves, and an animation on the small
 			// element box gives it a compositing layer whose raster snaps to
@@ -111,11 +128,8 @@ export function useMorphTransitionOverlay(options: {
 		get morphPlan() {
 			return morphPlan;
 		},
-		get morphOutgoingSlide() {
-			return morphOutgoingSlide;
-		},
-		get morphLiftedSlide() {
-			return morphLiftedSlide;
+		get morphOverlayLayers() {
+			return morphOverlayLayers;
 		},
 		get morphCrossfadeGroups() {
 			return morphCrossfadeGroups;
@@ -125,6 +139,14 @@ export function useMorphTransitionOverlay(options: {
 		},
 	};
 }
+
+/** The z-index of the first overlay layer, just above the incoming layer (1). */
+const MORPH_LAYER_Z_BASE = 2;
+
+/** One entry of {@link useMorphTransitionOverlay}'s `morphOverlayLayers`. */
+export type MorphOverlayLayerView = ReturnType<
+	typeof useMorphTransitionOverlay
+>['morphOverlayLayers'][number];
 
 /** One entry of {@link useMorphTransitionOverlay}'s `morphCrossfadeGroups`. */
 export type MorphCrossfadeGroupView = ReturnType<

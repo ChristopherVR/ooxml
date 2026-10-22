@@ -1,38 +1,13 @@
 /**
  * Styles for the inspector's format panels that have no React-equivalent
- * chrome elsewhere in this stylesheet: the Quick Styles gallery, the 3D-text
- * fields, the chart data grid, the table data grid, the media trim timeline,
- * the slide-transition direction picker, the Tags list and the theme editor
- * card.
+ * chrome elsewhere in this stylesheet: the 3D-text fields, the chart data
+ * grid, the table data grid, the media trim timeline, the slide-transition
+ * direction picker, the Tags list and the theme editor card.
  *
  * Kept in its own module so `editor-css.ts` (already the largest chrome sheet)
  * stays inside the project's file-size budget.
  */
 export const INSPECTOR_FORMAT_CSS = `
-/* ── Quick Styles gallery ────────────────────────────────────────────── */
-.pptxv-quick-styles {
-	display: grid;
-	grid-template-columns: repeat(6, minmax(0, 1fr));
-	gap: 4px;
-}
-.pptxv-quick-style {
-	height: 26px;
-	min-width: 0;
-	padding: 0;
-	border: 1px solid var(--pptx-border);
-	border-radius: var(--pptx-radius);
-	cursor: pointer;
-}
-.pptxv-quick-style:hover:not(:disabled) { outline: 2px solid var(--pptx-primary); outline-offset: -1px; }
-.pptxv-quick-style:disabled { opacity: 0.5; cursor: default; }
-/* Each preset is a discrete, individually-named action button (not a colour
-   swatch), so it gets the shared WCAG touch target below the mobile
-   breakpoint (768px, MOBILE_BREAKPOINT / getDensePanelTouchTargetPx in
-   pptx-viewer-shared) rather than an exemption - CLAUDE.md Rule 2. */
-@media (max-width: 767px) {
-	.pptxv-quick-style { height: 44px !important; min-width: 44px !important; }
-}
-
 /* ── 3D text ─────────────────────────────────────────────────────────── */
 .pptxv-text3d-options { display: grid; gap: 6px; }
 .pptxv-text3d-options[hidden] { display: none; }
@@ -373,8 +348,8 @@ export const INSPECTOR_FORMAT_CSS = `
 	   (chart-filtered-series-section.ts, connector-arrow-controls.ts,
 	   table-cell-formatting.ts, shape-effects-controls.ts) carry no class of
 	   their own on the control either; same fix, through each section's own
-	   container class. Buttons get !important (css.ts's baseline, see the
-	   .pptxv-quick-style rule above); selects/inputs do not need it. */
+	   container class. Buttons get !important (they must beat css.ts's
+	   baseline button rules); selects/inputs do not need it. */
 	.pptxv-chart-filters select, .pptxv-chart-filters input,
 	.pptxv-inspector-connector-arrows select, .pptxv-inspector-connector-arrows input,
 	.pptxv-inspector-table-cell select, .pptxv-inspector-table-cell input,

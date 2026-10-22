@@ -1,10 +1,17 @@
 import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
-import type { PptxElement } from 'pptx-viewer-core';
+import type { PptxUiRibbonGalleryElement } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
 import QuickStylesGallery from './QuickStylesGallery.svelte';
+
+/**
+ * Quick Styles draws its presets on the shared gallery (`pptx-ui-ribbon-gallery`, a compact
+ * panel), so these read the tiles the element draws in its light DOM rather than any markup of
+ * this binding.
+ */
 
 let cleanup: (() => void) | undefined;
 afterEach(() => {
@@ -21,11 +28,18 @@ function shapeEl(): PptxElement {
 		width: 100,
 		height: 50,
 		shapeType: 'rect',
-		shapeStyle: { strokeWidth: 7 },
+		// `fillOpacity` is set by no preset, so its survival proves a merge, not a replace.
+		shapeStyle: { strokeWidth: 7, fillOpacity: 0.42 },
 	} as PptxElement;
 }
 
-function mountGallery(editable = true): { target: HTMLElement; editor: EditorState } {
+interface Harness {
+	target: HTMLElement;
+	editor: EditorState;
+	gallery: PptxUiRibbonGalleryElement;
+}
+
+function mountGallery(editable = true): Harness {
 	const el = shapeEl();
 	const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
 	editor.editable = editable;
@@ -39,39 +53,63 @@ function mountGallery(editable = true): { target: HTMLElement; editor: EditorSta
 		unmount(instance);
 		target.remove();
 	};
-	return { target, editor };
+	const gallery = target.querySelector('pptx-ui-ribbon-gallery');
+	if (!gallery) {
+		throw new Error('no Quick Styles gallery');
+	}
+	return { target, editor, gallery };
+}
+
+function tiles(gallery: HTMLElement): HTMLButtonElement[] {
+	return Array.from(gallery.querySelectorAll<HTMLButtonElement>('[data-gallery-item]'));
+}
+
+function shapeStyleOf(editor: EditorState): ShapeStyle | undefined {
+	return (editor.slides[0]?.elements?.[0] as { shapeStyle?: ShapeStyle } | undefined)?.shapeStyle;
 }
 
 describe('quickStylesGallery', () => {
-	it('renders one accessibly named swatch per shared preset', () => {
-		const { target } = mountGallery();
-		const buttons = Array.from(
-			target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-quick-styles-grid button'),
-		);
+	it('renders one accessibly named tile per shared preset on the compact panel', () => {
+		const { target, gallery } = mountGallery();
 
-		expect(buttons).toHaveLength(SHAPE_QUICK_STYLES.length);
-		expect(buttons[0].getAttribute('aria-label')).toBe(SHAPE_QUICK_STYLES[0].name);
+		expect(gallery.getAttribute('mode')).toBe('panel');
+		expect(gallery.hasAttribute('compact')).toBeTruthy();
+		expect(gallery.descriptor?.id).toBe('quickStyles');
+		expect(gallery.querySelector('.gallery-panel[role="group"]')?.getAttribute('aria-label')).toBe(
+			'Quick Styles',
+		);
+		const names = SHAPE_QUICK_STYLES.map((preset) => preset.name);
+		expect(names).toHaveLength(18);
+		expect(tiles(gallery).map((tile) => tile.getAttribute('aria-label'))).toStrictEqual(names);
+		expect(tiles(gallery).map((tile) => tile.title)).toStrictEqual(names);
+		// The caption is a plain span inside the wrapper the inspector looks for.
+		const caption = target.querySelector('.pptx-svelte-quick-styles > span');
+		expect(caption?.textContent).toBe('Quick Styles');
+		expect(target.querySelector('label')).toBeNull();
 	});
 
 	it('merges the preset over the existing shape style rather than replacing it', () => {
-		const { target, editor } = mountGallery();
+		const { gallery, editor } = mountGallery();
+		const preset = SHAPE_QUICK_STYLES[6]!;
 
-		target.querySelector<HTMLButtonElement>('.pptx-svelte-quick-styles-grid button')?.click();
+		tiles(gallery)[6]?.click();
 		flushSync();
 
-		const applied = editor.slides[0]?.elements?.[0] as { shapeStyle?: Record<string, unknown> };
-		expect(applied.shapeStyle?.fillColor).toBe(SHAPE_QUICK_STYLES[0].style.fillColor);
-		// The preset sets strokeWidth 1, so the merge is observable via fillMode
-		// while the untouched-by-preset fields survive.
-		expect(applied.shapeStyle?.fillMode).toBe('solid');
+		expect(shapeStyleOf(editor)).toStrictEqual({ fillOpacity: 0.42, ...preset.style });
 	});
 
-	it('disables every swatch in a read-only viewer', () => {
-		const { target } = mountGallery(false);
-		const buttons = Array.from(
-			target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-quick-styles-grid button'),
-		);
+	it('disables every tile in a read-only viewer, and enables them once editable', () => {
+		const { gallery, editor } = mountGallery(false);
 
-		expect(buttons.every((button) => button.disabled)).toBeTruthy();
+		expect(gallery.disabled).toBeTruthy();
+		expect(tiles(gallery)).toHaveLength(SHAPE_QUICK_STYLES.length);
+		expect(tiles(gallery).every((tile) => tile.disabled)).toBeTruthy();
+		tiles(gallery)[0]?.click();
+		flushSync();
+		expect(shapeStyleOf(editor)).toStrictEqual({ strokeWidth: 7, fillOpacity: 0.42 });
+
+		editor.editable = true;
+		flushSync();
+		expect(tiles(gallery).some((tile) => tile.disabled)).toBeFalsy();
 	});
 });
