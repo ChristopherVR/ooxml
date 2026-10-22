@@ -13,7 +13,7 @@ Dies ist eine öffentliche Beta. Werten Sie ein erfolgreich geöffnetes Dokument
 3. Wechseln Sie die Seiten, passen Sie den Zoom an, lassen Sie die Seite einpassen und wählen Sie eine Form aus.
 4. Lesen Sie die Kompatibilitätshinweise. Vergleichen Sie wichtige Dateien mit ihrer Darstellung in Microsoft Visio.
 
-Es wird kein Dokument hochgeladen. Die Steuerelemente unterstützen Suche, Anzeigeebenen, experimentelle Nur-Text-Bearbeitung, begrenztes Rückgängig/Wiederholen, SVG-Export und ausdrückliche Downloads von VSDX-Kopien. Druck-Snapshots sind nur eine API-Vorbereitung; es gibt keinen Druckdialog. Allgemeines Zeichnen, PDF-Export und die meisten Funktionen des älteren binären `.vsd`-Formats liegen außerhalb dieses Builds.
+Es wird kein Dokument hochgeladen. Die Steuerelemente unterstützen Suche, Anzeigeebenen, experimentelle Nur-Text-Bearbeitung, begrenztes Rückgängig/Wiederholen, SVG-Export und ausdrückliche Downloads von VSDX-Kopien. Druck-Snapshots sind nur eine API-Vorbereitung. Datei > Exportieren kann ein PDF aus Bildseiten erzeugen, aber vektorbasiertes oder textauswählbares PDF, allgemeines Zeichnen und die meisten Funktionen des älteren binären `.vsd`-Formats liegen außerhalb dieses Builds.
 
 Die Builds desselben Playgrounds für die anderen Frameworks sind auf [der Seite der Demos](/demos) aufgeführt.
 
@@ -80,13 +80,13 @@ viewer.destroy();
 
 ## Den Entwicklungs-Workspace ausführen {#run-the-development-workspace}
 
-Verwenden Sie Node.js 22.12 oder neuer. Normale Builds installieren die veröffentlichte `ooxml-core/visio`-API von npm.
+Der Viewer gehört zum `ooxml`-Monorepo, einem Bun-Workspace. Installieren Sie einmal im Repository-Stamm mit `bun install`; `ooxml-core` (`src/core/visio`) und `ooxml-ui` (`src/ui/src/visio`) werden zu den Paketen im selben Checkout aufgelöst, ein Verknüpfungsschritt ist nicht nötig.
 
 ```bash
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run check
-npm run dev
+bun install
+cd viewers/visio
+bun run check
+bun run dev
 ```
 
 Verwenden Sie die von Vite ausgegebene lokale URL. Dies startet einen Entwicklungsserver; die Website wird dadurch nicht veröffentlicht.
@@ -111,14 +111,16 @@ Unterstützte Hintergrundinhalte und validierte Rasterbilder werden eingebettet.
 
 ## Eigenschaften und Ereignisse {#properties-and-events}
 
-| Oberfläche    | Aktueller Vertrag                                                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `ribbonAddIns`                                                                                 |
-| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` |
-| Lebenszyklus  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`         |
+| Oberfläche    | Aktueller Vertrag                                                                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Lebenszyklus  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+
+`canEdit` ist die Bearbeitungsberechtigung (der Viewer ist standardmäßig bearbeitbar; `false` macht ihn schreibgeschützt), `collaboration` teilt die geöffnete Zeichnung in einem Raum, und `document-change` meldet `kind` als `edit`, `undo`, `redo`, `remote` oder `save`. Nachdem der Host die Bytes aus `exportVsdx()` gespeichert hat, löscht `controller.markClean()` das Änderungskennzeichen. Eigene Oberflächen aus den Teilen des Viewers bauen Sie mit den [Bausteinen](/building-blocks); zum Teilen einer Zeichnung siehe [Zusammenarbeit](/de/collaboration).
 
 Hängen Sie den Viewer ein, nachdem der Host existiert, und rufen Sie `destroy()` auf, wenn die Framework-Ansicht ausgehängt wird. Mehrfaches Zerstören ist unbedenklich. Teilaktualisierungen lassen ausgelassene Eigenschaften unverändert. Die vollständige Referenz ist die [Viewer-API](/de/api).
 
 ## Verifikation vor dem Einsatz {#verification-before-adoption}
 
-Führen Sie `npm run check` und `npm run test:browser` im Viewer-Checkout aus. Die Parser-Tests des Kerns gehören zur Schwester-Engine. Diese Prüfungen belegen nur das, was sie ausdrücklich prüfen; sie belegen keine visuelle Übereinstimmung mit Microsoft Visio.
+Führen Sie `bun run check` und `bun run test:browser` in `viewers/visio` aus. Die Parser-Tests des Kerns liegen bei der Engine in `src/core/visio` (ausführen mit `bun run test` im Repository-Stamm). Diese Prüfungen belegen nur das, was sie ausdrücklich prüfen; sie belegen keine visuelle Übereinstimmung mit Microsoft Visio.

@@ -27,4 +27,4 @@ export class Diagram {
 
 Outputs are `documentLoad`, `documentError`, `pageChange`, `zoomChange` and `shapeSelect`; `documentChange` reports edits. The complete `events` callback map is also accepted as an input.
 
-The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). [Try the Angular demo](/demo-angular/){target="_self"}.
+The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). To compose your own UI from the viewer's parts instead, see the [building blocks](/building-blocks); to share a drawing, see [collaboration](/collaboration). [Try the Angular demo](/demo-angular/){target="_self"}.

@@ -40,7 +40,7 @@ For headless MCP access, use `visio-viewer-mcp`.
 
 ## Documentation
 
-[Viewer guide](https://christophervr.github.io/ooxml/visio/docs/) |
+[Viewer guide](https://christophervr.github.io/ooxml/visio/) |
 [Core source](https://github.com/ChristopherVR/ooxml)
 
 ## License

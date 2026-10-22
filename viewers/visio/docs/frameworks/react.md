@@ -25,4 +25,4 @@ export function Diagram({ diagram }: { diagram: VisioDocument }) {
 
 A forwarded `ref` exposes the `ViewerHandle`. React `className` and `style` style the host, which needs a height.
 
-The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). [Try the React demo](/demo-react/){target="_self"}.
+The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). To compose your own UI from the viewer's parts instead, see the [building blocks](/building-blocks); to share a drawing, see [collaboration](/collaboration). [Try the React demo](/demo-react/){target="_self"}.
