@@ -140,9 +140,16 @@ export async function saveBlob(core: EditorCore): Promise<Blob> {
 	);
 }
 
+/** Editors with a save pending; a Save or Save As meanwhile is ignored, not queued. */
+const saving = new WeakSet<EditorCore>();
+
+/** True while `core` has a save pending. */
+export const isSaving = (core: EditorCore): boolean => saving.has(core);
+
 /**
  * Saves to the host's storage when there is one, else to a download named after the workbook;
- * .xls and .csv sources become .xlsx (Excel's notice).
+ * .xls and .csv sources become .xlsx (Excel's notice). An edit made while the save runs keeps the
+ * workbook dirty: the saved bytes do not contain it.
  */
 async function saveDownload(
 	core: EditorCore,
@@ -152,14 +159,21 @@ async function saveDownload(
 	const source = core.workbook?.format;
 	let name = withExtension(core.fileName, saveExtension(core.fileName));
 	const storage = core.storage;
+	let edited = false;
+	const changed = () => (edited = true);
+	saving.add(core);
 	chrome?.setSaveState('saving');
 	try {
 		const bytes = await saveBytes(core, 'xlsx');
+		core.host.addEventListener('workbook-change', changed);
 		if (storage) name = await saveToStorage(storage, bytes, documentSaveMeta(name, reason));
 		else downloadBytes(core.host.ownerDocument, bytes, name);
 	} catch (error) {
 		chrome?.setSaveState('dirty');
 		throw error;
+	} finally {
+		core.host.removeEventListener('workbook-change', changed);
+		saving.delete(core);
 	}
 	if (name !== core.fileName) {
 		core.fileName = name;
@@ -173,6 +187,7 @@ async function saveDownload(
 				'info',
 			);
 	}
+	if (edited) return chrome?.setSaveState('dirty');
 	core.dirty.set(false);
 	chrome?.setSaveState(storage ? 'saved' : 'saved-local');
 }
@@ -189,6 +204,7 @@ export async function runFileCommand(
 	fileName: string | undefined,
 	options: FileCommandOptions = {},
 ): Promise<void> {
+	if ((command === 'save' || command === 'saveAs') && saving.has(core)) return;
 	if (!announceFileCommand(core.host, command, fileName)) return;
 	const { chrome } = options;
 	const t = core.ctx.t;

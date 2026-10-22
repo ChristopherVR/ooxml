@@ -84,6 +84,29 @@ describe('<xlsx-editor> host-owned storage', () => {
 		expect(core.dirty.dirty).toBe(true);
 	});
 
+	it('ignores a second Save while one is pending and stays dirty after a concurrent edit', async () => {
+		const { core } = shellFixture();
+		let resolve!: () => void;
+		const save = vi.fn(() => new Promise<void>((done) => (resolve = done)));
+		core.storage = { save };
+		core.dirty.set(true);
+		const ui = chrome();
+		const first = runFileCommand(core, 'save', undefined, { chrome: ui });
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+		await runFileCommand(core, 'save', undefined, { chrome: ui });
+		expect(save).toHaveBeenCalledTimes(1);
+		core.ctx.session()!.setCellInput(0, 0, 0, '5');
+		resolve();
+		await first;
+		expect(core.dirty.dirty).toBe(true);
+		expect(ui.setSaveState.mock.calls.at(-1)?.[0]).toBe('dirty');
+		const again = runFileCommand(core, 'save', undefined, { chrome: ui });
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+		resolve();
+		await again;
+		expect(core.dirty.dirty).toBe(false);
+	});
+
 	it('opens through storage.open instead of the file picker', async () => {
 		const { core } = shellFixture();
 		const bytes = await saveWorkbook(createWorkbook({ sheets: ['Data'] }), 'xlsx');

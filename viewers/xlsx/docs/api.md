@@ -100,6 +100,8 @@ editor.addEventListener('file-command', (event) => {
   reported as `workbook-error` and the workbook stays dirty.
 - File > Open calls `storage.open()` when the storage has one and opens the `{ bytes, fileName }`
   it resolves with (`undefined` means the user canceled). Without `open` the file picker is used.
+- One save runs at a time: Save while a save is pending is ignored, not queued. An edit made while
+  the host save runs keeps the workbook dirty, since the saved bytes do not contain it.
 - `file-command` still fires first; a host that calls `preventDefault()` handles the command
   itself and `storage` is not called.
 
