@@ -10,7 +10,7 @@
 	 * assert on it right after `mount()` returns.
 	 */
 	import { onDestroy } from 'svelte';
-	import type { CollaborationConfig, ViewportFitOptions } from 'ooxml-ui/pptx';
+	import type { CollaborationConfig, DocumentStorage, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 	import { createViewerState } from './create-viewer-state.svelte';
 	import type { ViewerStateBag } from './create-viewer-state-types';
@@ -25,6 +25,7 @@
 		onautosavetoggle,
 		oncontentchange,
 		onerror,
+		storage,
 		viewport,
 		fitOptions,
 		getCollaboration,
@@ -45,6 +46,7 @@
 		onautosavetoggle?: (enabled: boolean) => void;
 		oncontentchange?: (content: Uint8Array) => void;
 		onerror?: (message: string) => void;
+		storage?: DocumentStorage;
 		viewport?: { width: number; height: number };
 		fitOptions?: ViewportFitOptions;
 		getCollaboration?: () => CollaborationConfig | undefined;
@@ -57,6 +59,7 @@
 		get collaboration() { return getCollaboration?.(); },
 		getAutosave: () => autosave,
 		getFilePath: () => filePath,
+		getStorage: () => storage,
 		getAuthorName: () => authorName,
 		getInitialSlide: () => 0,
 		t: (key: string) => key,

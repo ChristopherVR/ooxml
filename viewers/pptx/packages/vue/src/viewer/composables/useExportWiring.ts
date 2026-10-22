@@ -1,5 +1,6 @@
 import type {
 	CanvasSize,
+	DocumentSaveReason,
 	DocumentStorage,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
@@ -57,6 +58,8 @@ export interface UseExportWiringInput {
 	filePath?: () => string | undefined;
 	/** Host `storage` prop: Save / Save As go to `storage.save()` instead of a download. */
 	storage?: () => DocumentStorage | undefined;
+	/** A Save / Save As failed (serialising, or the host's storage rejected). */
+	onSaveError?: (error: unknown) => void;
 }
 
 export interface UseExportWiringResult {
@@ -80,7 +83,10 @@ export interface UseExportWiringResult {
 	onExportGif: () => void;
 	onExportWebm: () => void;
 	onExportJson: () => void;
-	downloadAs: (format: PptxSaveFormat) => Promise<void>;
+	/** Save As `format` (`reason` is the command; Save As unless given). */
+	downloadAs: (format: PptxSaveFormat, reason?: DocumentSaveReason) => Promise<void>;
+	/** File > Save: `.pptx`, reported to host storage as `save`. */
+	save: () => Promise<void>;
 	onCopySlideAsImage: () => Promise<void>;
 }
 
@@ -152,7 +158,10 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 	 * Serialise to a chosen OpenXML format and hand it to the host's `storage`,
 	 * else trigger a browser download (the shared helper picks the MIME type).
 	 */
-	async function downloadAs(format: PptxSaveFormat): Promise<void> {
+	async function downloadAs(
+		format: PptxSaveFormat,
+		reason: DocumentSaveReason = 'saveAs',
+	): Promise<void> {
 		const storage = input.storage?.();
 		try {
 			const bytes = await saveAs(format);
@@ -161,6 +170,7 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 				bytes,
 				format,
 				fileName: savedPresentationFileName(input.fileName?.(), format),
+				reason,
 			});
 			// Options > Accessibility > "feedback with sound", and Options > Save >
 			// "keep the last AutoRecover version": once a `.pptx` save lands, the
@@ -178,7 +188,12 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 			}
 		} catch (err) {
 			console.error(`[PowerPointViewer] Save as .${format} failed:`, err);
+			input.onSaveError?.(err);
 		}
+	}
+
+	function save(): Promise<void> {
+		return downloadAs('pptx', 'save');
 	}
 
 	/** Copy the active slide to the clipboard as a PNG image (File menu). */
@@ -210,6 +225,7 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		onExportWebm,
 		onExportJson,
 		downloadAs,
+		save,
 		onCopySlideAsImage,
 	};
 }

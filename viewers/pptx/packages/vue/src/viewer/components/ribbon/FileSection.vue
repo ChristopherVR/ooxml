@@ -23,6 +23,7 @@ import { useI18n } from 'vue-i18n';
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';
 import { useResolvedCustomization } from '../../composables/useViewerCustomization';
 import { useRegion, useRegionBase } from '../../composables/useViewerRegions';
+import { useViewerStorage } from '../../composables/viewer-storage';
 import ViewerRegion from '../ViewerRegion.vue';
 import AccountPage from './AccountPage.vue';
 import { buildFileSectionActions } from './file-section-actions';
@@ -34,9 +35,10 @@ const { t } = useI18n();
 const page = ref<string>('home');
 const query = ref('');
 const recent = ref<BackstageRecentFile[]>([]);
+const storage = useViewerStorage();
 onMounted(
 	() =>
-		void listBackstageRecentFiles(t, props.recentPresentationsCount).then(
+		void listBackstageRecentFiles(t, props.recentPresentationsCount, storage()).then(
 			(items) => (recent.value = items),
 		),
 );
@@ -107,7 +109,7 @@ function selectPage(id: string): void {
 		return props.onClose();
 	}
 	if (id === 'save') {
-		return run(props.onSaveAsPptx);
+		return run(props.onSave ?? props.onSaveAsPptx);
 	}
 	if (id === 'options' && props.onOpenSettings) {
 		return run(props.onOpenSettings);

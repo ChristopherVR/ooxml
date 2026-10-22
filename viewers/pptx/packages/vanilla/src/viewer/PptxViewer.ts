@@ -13,6 +13,7 @@ import {
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
 	createPresenterShowGuard,
+	clearAutosaveSnapshots,
 	createSlidePackageClipboard,
 	DEFAULT_VIEWER_OPTIONS,
 	deleteAutosaveSnapshot,
@@ -23,7 +24,6 @@ import {
 	isEditingAllowed,
 	isPanelVisible,
 	isPresentationSessionMessage,
-	listAutosaveSnapshots,
 	loadPresentationDeck,
 	makeSlideId,
 	mayLeaveSlideShow,
@@ -34,6 +34,7 @@ import {
 	prepareElementForInsertion,
 	PRESENTATION_CHANNEL_NAME,
 	PRESENTATION_MESSAGE_ORIGIN,
+	pruneExpiredAutosaveSnapshots,
 	readBackstageRecentFile,
 	readStoredViewerPrefs,
 	reflowSmartArtData,
@@ -41,12 +42,12 @@ import {
 	resolveAudienceScreenPlacement,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
-	resolveExpiredAutosaveSnapshots,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
 	selectGoogleWebfontFamilies,
 	selectTrustedEmbeddedFonts,
+	saveFailureMessage,
 	shouldClearAutosaveCacheOnClose,
 	shouldCommitSmartArtNodeText,
 	shouldConfirmExternalHyperlink,
@@ -57,9 +58,11 @@ import {
 	subtitleSettingsFromOptions,
 	swapPresentationWindows,
 	THEME_CATALOG,
+	withSaveFailureToast,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	DocumentStorage,
 	SlidePackageClipboard,
 	SlidePasteRequest,
 	ElementUpdate,
@@ -762,7 +765,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// File > Options > Save > "Automatically delete files older than N days":
 		// a one-time sweep on mount is enough since new snapshots only ever land
 		// with a fresh timestamp; no periodic timer is needed to keep it honest.
-		void this.pruneExpiredAutosaveSnapshots();
+		void this.pruneExpiredCache();
 		this.renderer.renderAll();
 		this.setupAiChat();
 
@@ -961,7 +964,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	openRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key);
+			const bytes = await readBackstageRecentFile(key, this.options.storage);
 			if (bytes) {
 				await this.loadFile(bytes);
 			}
@@ -1998,6 +2001,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * controller exists (same pre-construction timing note as
 	 * `getQuickAccessOptions`).
 	 */
+	/** The host `storage` option (chrome reads Recent and Account usage through it). */
+	getStorage(): DocumentStorage | undefined {
+		return this.options.storage;
+	}
+
 	getRecentPresentationsCount(): number {
 		const controller = this.optionsController as ViewerOptionsController | undefined;
 		return (
@@ -2015,14 +2023,36 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return bytes;
 	}
 
+	/**
+	 * Save As `format` (host storage sees `saveAs`). A failure (serialising, or the host's storage
+	 * rejected) is reported through `onError` and the save-failed notice, and never rejects.
+	 */
 	async downloadAs(format: PptxSaveFormat, fileName?: string): Promise<void> {
-		await this.editor.downloadAs(format, fileName);
+		try {
+			await this.editor.downloadAs(format, fileName);
+		} catch (error) {
+			this.reportSaveFailure(format, error);
+			return;
+		}
 		this.afterSuccessfulSave(format);
 	}
 
+	/** File > Save as `.pptx` (host storage sees `save`); failures are reported as in {@link downloadAs}. */
 	async downloadPptx(fileName?: string): Promise<void> {
-		await this.editor.downloadPptx(fileName);
+		try {
+			await this.editor.downloadPptx(fileName);
+		} catch (error) {
+			this.reportSaveFailure('pptx', error);
+			return;
+		}
 		this.afterSuccessfulSave('pptx');
+	}
+
+	/** A failed Save / Save As: the host's `onError`, and the save-failed notice for the user. */
+	private reportSaveFailure(format: PptxSaveFormat, error: unknown): void {
+		console.error(`[PptxViewer] Save as .${format} failed:`, error);
+		this.options.onError?.(saveFailureMessage(error), error);
+		this.store.set({ compatToasts: withSaveFailureToast(this.store.get().compatToasts) });
 	}
 
 	/**
@@ -2066,17 +2096,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	/** File > Options > Save > "cache retention": a one-time sweep on mount. */
-	private async pruneExpiredAutosaveSnapshots(): Promise<void> {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			const expired = resolveExpiredAutosaveSnapshots(
-				snapshots,
-				this.optionsController.getOptions(),
-			);
-			await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-		} catch {
-			// Best-effort background maintenance; a blocked IndexedDB just skips it.
-		}
+	private async pruneExpiredCache(): Promise<void> {
+		// With a host recovery store it sweeps that store, only when it lists its copies.
+		await pruneExpiredAutosaveSnapshots(
+			this.optionsController.getOptions(),
+			this.options.storage,
+		).catch(() => {
+			// Best-effort background maintenance; a blocked store just skips it.
+		});
 	}
 
 	deleteSelected = (): void => this.editor.deleteSelected();
@@ -2188,14 +2215,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** File > Options > Save > "Delete cached files": drop recovery snapshots. */
 	private clearOptionsCache(): void {
-		void (async () => {
-			try {
-				const snapshots = await listAutosaveSnapshots();
-				await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-			} catch {
-				// Browser lifecycle cleanup cannot report an IndexedDB failure.
-			}
-		})();
+		void clearAutosaveSnapshots(this.options.storage).catch(() => {
+			// Browser lifecycle cleanup cannot report a storage failure.
+		});
 	}
 
 	/**

@@ -8,7 +8,7 @@ import {
 	resolveProfileInitial,
 	saveViewerProfile,
 } from 'ooxml-ui/pptx';
-import type { AccountAuthConfig, ViewerProfile } from 'ooxml-ui/pptx';
+import type { AccountAuthConfig, DocumentStorage, ViewerProfile } from 'ooxml-ui/pptx';
 
 import { version as vanillaViewerVersion } from '../../../../../package.json';
 import type { Translator } from '../../../i18n';
@@ -25,6 +25,8 @@ export function renderAccountPage(
 	t: Translator,
 	main: HTMLElement,
 	accountAuth: AccountAuthConfig | undefined,
+	/** The host `storage` option: usage and Clear read its recovery store when it has one. */
+	storage?: DocumentStorage,
 ): void {
 	const root = createEl(doc, 'div', 'pptxv-account');
 	main.appendChild(root);
@@ -39,7 +41,7 @@ export function renderAccountPage(
 
 	const storageSection = createEl(doc, 'section', 'pptxv-account-section');
 	root.appendChild(storageSection);
-	renderStorageSection(doc, t, storageSection);
+	renderStorageSection(doc, t, storageSection, storage);
 
 	root.appendChild(renderAboutSection(doc, t));
 
@@ -115,7 +117,12 @@ function renderProfileSection(
 	return section;
 }
 
-function renderStorageSection(doc: Document, t: Translator, section: HTMLElement): void {
+function renderStorageSection(
+	doc: Document,
+	t: Translator,
+	section: HTMLElement,
+	storage: DocumentStorage | undefined,
+): void {
 	const heading = doc.createElement('h2');
 	heading.textContent = t('pptx.account.storage.title');
 	section.appendChild(heading);
@@ -140,7 +147,7 @@ function renderStorageSection(doc: Document, t: Translator, section: HTMLElement
 	section.appendChild(notice);
 
 	async function refresh(): Promise<void> {
-		const summary = await getLocalStorageUsageSummary();
+		const summary = await getLocalStorageUsageSummary(storage);
 		usageText.textContent =
 			summary.presentationCount > 0
 				? t('pptx.account.storage.usage', {
@@ -156,7 +163,7 @@ function renderStorageSection(doc: Document, t: Translator, section: HTMLElement
 			return;
 		}
 		void (async () => {
-			await clearAllLocalViewerData();
+			await clearAllLocalViewerData(storage);
 			notice.hidden = false;
 			notice.textContent = t('pptx.account.storage.clearedNotice');
 			await refresh();

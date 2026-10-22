@@ -31,11 +31,15 @@ Without `storage` the viewer downloads the saved file. With it, Save and every S
 - `meta.fileName` is the source stem plus the extension of the format written
   (`savedPresentationFileName`), so `report.ppt` saves as `report.pptx`.
 - `meta.mimeType` follows the format (`.ppt` is the OLE2 type, `.ppsx` and `.pptm` have their own).
-- `meta.reason` is `'save'` for a `.pptx` save and `'saveAs'` for any other format; the viewer's
-  Save button and backstage do not otherwise tell the two apart.
+- `meta.reason` is the command that ran: `'save'` for File > Save (the title bar, the backstage
+  Save item, the mobile toolbar and Vanilla/Svelte `downloadPptx()`), `'saveAs'` for every Save As
+  entry, including Save As > PowerPoint Presentation (.pptx).
 
-A rejected `save()` is treated as a failed save: the AutoRecover copy is kept (it is only discarded
-after a save succeeds and Options > Save asks for it), and the error is logged.
+A failed save (the host's `save()` rejected, or serialising failed) is reported the same way in
+all five bindings: the binding's `error` event (`onError`, `@error`, `(error)`, `onerror`) receives
+`Save failed: <reason>`, the user sees the "Save failed" notice in the viewer's notice stack, and
+the AutoRecover copy is kept (it is only discarded after a save succeeds and Options > Save asks
+for it). The save methods resolve rather than reject.
 
 The bytes are the same ones `getContent()` returns, so a password-protected deck is handed over
 encrypted.
@@ -46,13 +50,14 @@ Recovery autosave (the `autosave` and `autosaveIntervalMs` props, keyed by `file
 writes to the library's own IndexedDB database. When `storage` provides `readRecovery`,
 `writeRecovery` and `clearRecovery`, every recovery path uses them instead: the autosave writer,
 the recovery prompt shown on load (and its Discard), the cleanup after a successful save, Version
-History, and `restoreSessionDeck(storage)`. The entry id is the `filePath` key; `savedAt` is a
-millisecond timestamp. A storage that provides only some of the three methods is ignored for
-recovery, and IndexedDB stays in use.
+History, File > Open > Recent, Account > Storage & Privacy and `restoreSessionDeck(storage)`. The
+entry id is the `filePath` key; `savedAt` is a millisecond timestamp. A storage that provides only
+some of the three methods is ignored for recovery, and IndexedDB stays in use.
 
-Not routed through `storage`: File > Open > Recent and Account > Storage & Privacy describe the
-browser's own local data and keep reading IndexedDB, and the expiry sweep of old IndexedDB
-snapshots still runs on that database only (a host keeps its own retention).
+Listing (Recent, Account usage, Version History) needs `listRecovery`; without it those lists are
+empty. The housekeeping of Options > Save ("Delete cached files", "clear cache on close" and the
+"cache retention" sweep) clears the host's copies only when it provides `listRecovery`. Without it
+the viewer leaves the host's copies alone, and retention is the host's job.
 
 ## No `file-command` event
 

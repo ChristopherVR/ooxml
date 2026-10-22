@@ -66,6 +66,8 @@ export interface UseViewerIntegrationInput {
 	autosaveEnabled: boolean;
 	/** Host `storage` prop: Save goes to it, and so do recovery snapshots when it keeps them. */
 	storage?: DocumentStorage;
+	/** A Save / Save As failed: report it to the host and the user. */
+	onSaveError?: (error: unknown) => void;
 	/**
 	 * Whether the host permits autosave at all. Only the recovery prompt needs
 	 * this separately from `autosaveEnabled`: a user who merely switched the
@@ -281,6 +283,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		canvasSize,
 		filePath,
 		storage,
+		onSaveError: input.onSaveError,
 		history,
 		ops: editorOps.ops,
 		zoom,

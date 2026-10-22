@@ -120,8 +120,20 @@ export class LoadNoticesService {
 	readonly toasts = computed<CompatibilityWarningToast[]>(() => {
 		const deckWarnings = this.loader?.parsedData()?.warnings ?? [];
 		const slideWarnings = (this.loader?.slides() ?? []).flatMap((slide) => slide.warnings ?? []);
-		return compatibilityWarningToasts([...deckWarnings, ...slideWarnings]);
+		return [...this.notices(), ...compatibilityWarningToasts([...deckWarnings, ...slideWarnings])];
 	});
+	/** Notices outside the load diagnostics (a failed Save); see {@link notify}. */
+	private readonly notices = signal<CompatibilityWarningToast[]>([]);
+
+	/** Show a notice (a failed Save) in the toast stack; shown again if it was dismissed. */
+	notify(toast: CompatibilityWarningToast): void {
+		this.notices.update((list) => [toast, ...list.filter((entry) => entry.id !== toast.id)]);
+		this.dismissedToastIds.update((ids) => {
+			const next = new Set(ids);
+			next.delete(toast.id);
+			return next;
+		});
+	}
 	private readonly dismissedToastIds = signal<ReadonlySet<string>>(new Set());
 	/** {@link toasts} with per-toast / dismiss-all dismissals applied. */
 	readonly visibleToasts = computed(() =>
@@ -148,5 +160,6 @@ export class LoadNoticesService {
 		this.passwordError.set(null);
 		this.checkingPassword.set(false);
 		this.dismissedToastIds.set(new Set());
+		this.notices.set([]);
 	}
 }

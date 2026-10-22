@@ -844,10 +844,19 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 				bytes,
 				format,
 				fileName: savedPresentationFileName(fileName, format),
+				reason: 'saveAs',
 			});
 		},
+		// File > Save: `.pptx`, reported to the host's storage as `save` (Save As is `downloadAs`).
 		async downloadPptx(fileName) {
-			await this.downloadAs('pptx', fileName);
+			const bytes = await ops.save('pptx');
+			await deliverSavedPresentation({
+				storage: deps.getStorage?.(),
+				bytes,
+				format: 'pptx',
+				fileName: savedPresentationFileName(fileName),
+				reason: 'save',
+			});
 		},
 		destroy() {
 			unsubscribe();

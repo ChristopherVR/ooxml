@@ -136,7 +136,7 @@ describe('save As goes through the one serialiser', () => {
 });
 
 describe('host-owned storage', () => {
-	it('hands Save to storage.save instead of downloading', async () => {
+	it('hands Save to storage.save as `save`, and Save As .pptx as `saveAs`', async () => {
 		const bytes = new Uint8Array([0x50, 0x4b]);
 		const save = vi.fn(async () => undefined);
 		const downloads = recordDownloads();
@@ -144,28 +144,34 @@ describe('host-owned storage', () => {
 
 		let saved: boolean | void = undefined;
 		await act(async () => {
+			api?.handleSave();
 			saved = await api?.handleSaveAsFormat('pptx');
 		});
 
 		expect(saved).toBe(true);
 		expect(downloads).toStrictEqual([]);
-		expect(save).toHaveBeenCalledExactlyOnceWith(bytes, {
+		expect(save).toHaveBeenNthCalledWith(1, bytes, {
 			fileName: 'deck.pptx',
 			mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 			reason: 'save',
 		});
+		expect(save.mock.calls[1]![1]).toMatchObject({ reason: 'saveAs' });
 	});
 
-	it('reports a failed host save as not saved', async () => {
+	it('reports a failed host save through onSaveError and as not saved', async () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const failure = new Error('offline');
+		const onSaveError = vi.fn();
 		mount({
 			...baseInput(() => Promise.resolve(new Uint8Array([1]))),
-			storage: { save: () => Promise.reject(new Error('offline')) },
+			storage: { save: () => Promise.reject(failure) },
+			onSaveError,
 		});
 		let saved: boolean | void = undefined;
 		await act(async () => {
 			saved = await api?.handleSaveAsFormat('pptx');
 		});
 		expect(saved).toBe(false);
+		expect(onSaveError).toHaveBeenCalledWith(failure);
 	});
 });

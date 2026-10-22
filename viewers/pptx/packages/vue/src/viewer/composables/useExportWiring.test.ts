@@ -18,7 +18,8 @@ const { useExportWiring } = await import('./useExportWiring');
 
 const bytes = new Uint8Array([0x50, 0x4b]);
 
-function wiring(storage?: DocumentStorage, fileName = 'deck.pptx') {
+function wiring(storage?: DocumentStorage, onSaveError?: (error: unknown) => void) {
+	const fileName = 'deck.pptx';
 	const scope = effectScope();
 	const result = scope.run(() =>
 		useExportWiring({
@@ -31,6 +32,7 @@ function wiring(storage?: DocumentStorage, fileName = 'deck.pptx') {
 			fileName: () => fileName,
 			getDeckData: () => ({}) as PptxData,
 			storage: () => storage,
+			...(onSaveError ? { onSaveError } : {}),
 		}),
 	)!;
 	return { ...result, stop: () => scope.stop() };
@@ -42,11 +44,14 @@ afterEach(() => {
 });
 
 describe('useExportWiring downloadAs', () => {
-	it('hands the save to storage.save instead of downloading', async () => {
+	it('hands Save to storage.save as `save`, and Save As .pptx as `saveAs`', async () => {
 		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click');
 		const save = vi.fn(async () => undefined);
-		const { downloadAs, stop } = wiring({ save });
+		const { downloadAs, save: saveFile, stop } = wiring({ save });
+		await saveFile();
 		await downloadAs('pptx');
+		expect(save.mock.calls[1]![1]).toMatchObject({ reason: 'saveAs' });
+		save.mock.calls.pop();
 		expect(save).toHaveBeenCalledExactlyOnceWith(bytes, {
 			fileName: 'deck.pptx',
 			mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -69,6 +74,16 @@ describe('useExportWiring downloadAs', () => {
 		await downloadAs('ppt');
 		expect(names).toStrictEqual(['deck.ppt']);
 		expect(createObjectURL.mock.calls[0]![0].type).toBe('application/vnd.ms-powerpoint');
+		stop();
+	});
+
+	it('reports a failed host save through onSaveError', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const failure = new Error('offline');
+		const onSaveError = vi.fn();
+		const { save, stop } = wiring({ save: () => Promise.reject(failure) }, onSaveError);
+		await save();
+		expect(onSaveError).toHaveBeenCalledWith(failure);
 		stop();
 	});
 });

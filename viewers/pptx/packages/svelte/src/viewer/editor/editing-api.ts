@@ -13,7 +13,9 @@ export interface EditingApi {
 	deleteSelected(): void;
 	getSelectedElementId(): string | null;
 	save(format?: PptxSaveFormat): Promise<Uint8Array>;
+	/** Save As `format` (reported to host storage as `saveAs`). */
 	downloadAs(format: PptxSaveFormat, fileName?: string): Promise<void>;
+	/** File > Save as `.pptx` (reported to host storage as `save`). */
 	downloadPptx(fileName?: string): Promise<void>;
 }
 
@@ -46,6 +48,7 @@ export function createEditingApi(
 				bytes,
 				format,
 				fileName: savedPresentationFileName(fileName, format),
+				reason: 'saveAs',
 			});
 		},
 		downloadPptx: async (fileName) => {
@@ -55,6 +58,7 @@ export function createEditingApi(
 				bytes,
 				format: 'pptx',
 				fileName: savedPresentationFileName(fileName),
+				reason: 'save',
 			});
 		},
 	};

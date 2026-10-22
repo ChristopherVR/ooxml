@@ -1,39 +1,36 @@
-import type { ViewerOptions } from 'ooxml-ui/pptx';
+import type { DocumentStorage, ViewerOptions } from 'ooxml-ui/pptx';
 import {
-	deleteAutosaveSnapshot,
-	listAutosaveSnapshots,
-	resolveExpiredAutosaveSnapshots,
+	clearAutosaveSnapshots,
+	pruneExpiredAutosaveSnapshots,
 	shouldClearAutosaveCacheOnClose,
 } from 'ooxml-ui/pptx';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 // Keep this callback outside the viewer's render scope: browser listeners must
 // not retain a render's full slide state through a shared lexical context.
-function handleClearOptionsCache(): void {
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-		} catch {
-			// Browser lifecycle cleanup cannot report an IndexedDB failure.
-		}
-	})();
+function clearOptionsCache(storage: DocumentStorage | undefined): void {
+	void clearAutosaveSnapshots(storage).catch(() => {
+		// Browser lifecycle cleanup cannot report a storage failure.
+	});
 }
 
-/** Full-viewer cache maintenance, separate from the headless options store. */
-export function useAutosaveCacheMaintenance(viewerOptions: ViewerOptions): () => void {
+/**
+ * Full-viewer cache maintenance, separate from the headless options store. With a host
+ * recovery store (`storage`), the sweeps run against it only when it lists its copies;
+ * otherwise retention is the host's job (see the shared `autosave-maintenance`).
+ */
+export function useAutosaveCacheMaintenance(
+	viewerOptions: ViewerOptions,
+	storage?: DocumentStorage,
+): () => void {
+	const storageRef = useRef(storage);
+	storageRef.current = storage;
 	// File > Options > Save > "cache retention": a one-time sweep per mount is
 	// enough, since a fresh snapshot only ever lands with a fresh timestamp.
 	useEffect(() => {
-		void (async () => {
-			try {
-				const snapshots = await listAutosaveSnapshots();
-				const expired = resolveExpiredAutosaveSnapshots(snapshots, viewerOptions);
-				await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-			} catch {
-				// Best-effort background maintenance; a blocked IndexedDB skips it.
-			}
-		})();
+		void pruneExpiredAutosaveSnapshots(viewerOptions, storageRef.current).catch(() => {
+			// Best-effort background maintenance; a blocked store skips it.
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps -- one sweep per mount, not per option edit
 	}, []);
 
@@ -42,7 +39,7 @@ export function useAutosaveCacheMaintenance(viewerOptions: ViewerOptions): () =>
 	useEffect(() => {
 		const clearIfRequested = (): void => {
 			if (shouldClearAutosaveCacheOnClose(viewerOptions)) {
-				handleClearOptionsCache();
+				clearOptionsCache(storageRef.current);
 			}
 		};
 		window.addEventListener('beforeunload', clearIfRequested);
@@ -52,5 +49,5 @@ export function useAutosaveCacheMaintenance(viewerOptions: ViewerOptions): () =>
 		};
 	}, [viewerOptions]);
 
-	return handleClearOptionsCache;
+	return useCallback(() => clearOptionsCache(storageRef.current), []);
 }

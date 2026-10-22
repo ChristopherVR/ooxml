@@ -18,13 +18,12 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
 	applyAutoCorrect,
+	clearAutosaveSnapshots,
 	createViewerOptionsStore,
-	deleteAutosaveSnapshot,
-	listAutosaveSnapshots,
 	playFeedbackSound,
 	resolveAutosaveIntervalSeconds,
 	resolveDefaultPrintSettings,
-	resolveExpiredAutosaveSnapshots,
+	pruneExpiredAutosaveSnapshots,
 	resolveHistoryDepth,
 	resolveImageResolutionScale,
 	resolveOptionRootClasses,
@@ -35,6 +34,7 @@ import {
 	shouldOpenInProtectedView,
 } from 'ooxml-ui/pptx';
 import type {
+	DocumentStorage,
 	PrintSettings,
 	ToolbarTabId,
 	ViewerOptionPrimitive,
@@ -45,6 +45,14 @@ import type {
 
 @Injectable()
 export class ViewerOptionsService {
+	/** The viewer's host `storage` input (see {@link bindStorage}); none means IndexedDB. */
+	private storage: () => DocumentStorage | undefined = () => undefined;
+
+	/** Wire the host `storage` input, so the cache sweeps run against the host's recovery store. */
+	bindStorage(storage: () => DocumentStorage | undefined): void {
+		this.storage = storage;
+	}
+
 	/**
 	 * Optional: `inject()` needs an active injection context, which plain
 	 * `new ViewerOptionsService()` (used by the colocated unit tests) does not
@@ -184,12 +192,11 @@ export class ViewerOptionsService {
 
 	/**
 	 * Options > Save > "Delete cached files": purge every autosave recovery
-	 * snapshot from the shared IndexedDB store. Resolves with the purge count.
+	 * snapshot (IndexedDB, or the host's recovery store when it lists its
+	 * copies; otherwise retention is the host's job). Resolves with the count.
 	 */
 	async clearCache(): Promise<number> {
-		const snapshots = await listAutosaveSnapshots();
-		await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-		return snapshots.length;
+		return clearAutosaveSnapshots(this.storage());
 	}
 
 	/**
@@ -209,8 +216,6 @@ export class ViewerOptionsService {
 
 	/** Options > Save > "cache retention": prune snapshots older than N days. */
 	async pruneExpiredCache(): Promise<void> {
-		const snapshots = await listAutosaveSnapshots();
-		const expired = resolveExpiredAutosaveSnapshots(snapshots, this.options());
-		await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
+		await pruneExpiredAutosaveSnapshots(this.options(), this.storage());
 	}
 }

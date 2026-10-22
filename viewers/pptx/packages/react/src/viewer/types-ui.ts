@@ -296,7 +296,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * and canvas size.
 	 */
 	onLoad?: (detail: ViewerLoadDetail) => void;
-	/** Fired once per distinct load failure, with a human-readable message. */
+	/** Fired once per distinct load failure, and for each failed Save / Save As, with a human-readable message. */
 	onError?: (message: string) => void;
 	/**
 	 * Host override for the File ▸ Open action. When provided, the built-in

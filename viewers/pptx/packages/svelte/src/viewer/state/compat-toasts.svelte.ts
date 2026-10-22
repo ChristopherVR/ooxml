@@ -19,6 +19,8 @@ const VISIBLE_TOAST_LIMIT = 5;
 export class CompatToastsState {
 	#dismissedIds = $state<Set<string>>(new Set());
 	#allDismissed = $state(false);
+	/** Notices outside the load diagnostics (a failed Save); see {@link notify}. */
+	#notices = $state<CompatibilityWarningToast[]>([]);
 	#getWarnings: () => readonly PptxCompatibilityWarning[];
 
 	constructor(deps: { getWarnings(): readonly PptxCompatibilityWarning[] }) {
@@ -26,7 +28,7 @@ export class CompatToastsState {
 	}
 
 	#allToasts(): CompatibilityWarningToast[] {
-		return compatibilityWarningToasts(this.#getWarnings());
+		return [...this.#notices, ...compatibilityWarningToasts(this.#getWarnings())];
 	}
 
 	#activeToasts(): CompatibilityWarningToast[] {
@@ -53,9 +55,22 @@ export class CompatToastsState {
 		this.#allDismissed = true;
 	}
 
-	/** Clear the dismissal state for a newly loaded document. */
+	/** Clear the dismissal state (and any notice) for a newly loaded document. */
 	reset(): void {
 		this.#dismissedIds = new Set();
+		this.#allDismissed = false;
+		this.#notices = [];
+	}
+
+	/** Show a notice (a failed Save) in the stack; shown again if it was dismissed. */
+	notify(toast: CompatibilityWarningToast): void {
+		// "Dismiss all" stays in force for what was already shown; only the new notice appears.
+		const dismissed = this.#allDismissed
+			? new Set(this.#allToasts().map((entry) => entry.id))
+			: new Set(this.#dismissedIds);
+		this.#notices = [toast, ...this.#notices.filter((entry) => entry.id !== toast.id)];
+		dismissed.delete(toast.id);
+		this.#dismissedIds = dismissed;
 		this.#allDismissed = false;
 	}
 }

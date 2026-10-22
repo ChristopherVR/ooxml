@@ -64,7 +64,7 @@ export interface PptxViewerCallbacks {
 	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/** Fired after a presentation loads successfully. */
 	onLoad?: (info: { slideCount: number; canvasSize: CanvasSize }) => void;
-	/** Fired when a load fails (message is already localised/best-effort). */
+	/** Fired when a load fails, and for each failed Save / Save As (message is best-effort). */
 	onError?: (message: string, error: unknown) => void;
 	/** Fired when the active slide changes (zero-based index). */
 	onSlideChange?: (index: number) => void;

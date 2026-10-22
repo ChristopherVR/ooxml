@@ -32,6 +32,8 @@ export interface UseIOHandlersInput {
 	filePath: string | undefined;
 	/** Host `storage` prop, forwarded to the Save / Save As handlers. */
 	storage?: DocumentStorage | undefined;
+	/** Reports a failed Save / Save As to the host and the user. */
+	onSaveError?: ((error: unknown) => void) | undefined;
 	history: EditorHistoryResult;
 	ops: ElementOperations;
 	zoom: {
@@ -84,6 +86,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		canvasSize,
 		filePath,
 		storage,
+		onSaveError,
 		history,
 		ops,
 		zoom,
@@ -103,6 +106,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		activeSlideIndex,
 		filePath,
 		storage,
+		onSaveError,
 		canvasStageRef: zoom.canvasStageRef,
 		setActiveSlideIndex: state.setActiveSlideIndex,
 		serializeSlides,

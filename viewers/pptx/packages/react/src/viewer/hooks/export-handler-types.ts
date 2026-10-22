@@ -1,4 +1,4 @@
-import type { DocumentStorage, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { DocumentSaveReason, DocumentStorage, SlideSizeEmu } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -31,6 +31,8 @@ export interface UseExportHandlersInput {
 	filePath: string | undefined;
 	/** Host `storage` prop: Save / Save As go to `storage.save()` instead of a download. */
 	storage?: DocumentStorage | undefined;
+	/** A Save / Save As failed (serialising, or the host's storage rejected). */
+	onSaveError?: ((error: unknown) => void) | undefined;
 	canvasStageRef: RefObject<HTMLDivElement | null>;
 	setActiveSlideIndex: Dispatch<SetStateAction<number>>;
 	/**
@@ -84,8 +86,16 @@ export interface ExportHandlersResult {
 	handleExportVideo: () => Promise<void>;
 	handleExportGif: () => Promise<void>;
 	handleExportJson: () => void;
-	/** Resolves false when nothing was saved (no deck yet, or the save or the host's storage failed). */
-	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<boolean | void>;
+	/**
+	 * Writes `format`. `reason` is the command that ran (Save As by default); resolves false when
+	 * nothing was saved (no deck yet, or the save or the host's storage failed).
+	 */
+	handleSaveAsFormat: (
+		format: PptxSaveFormat,
+		reason?: DocumentSaveReason,
+	) => Promise<boolean | void>;
+	/** File > Save: writes `.pptx`, reported to host storage as `save`. */
+	handleSave: () => void;
 	handleSaveAsPptx: () => void;
 	handleSaveAsPpsx: () => void;
 	handleSaveAsPptm: () => void;

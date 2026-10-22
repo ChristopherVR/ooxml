@@ -42,6 +42,8 @@ import {
 	playFeedbackSound,
 	RIBBON_SCOPE_ATTR,
 	readBackstageRecentFile,
+	saveFailureMessage,
+	withSaveFailureToast,
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
 	resolveAutosaveActivation,
@@ -59,6 +61,7 @@ import {
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
+import type { DocumentSaveReason } from 'ooxml-ui/pptx';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
@@ -111,6 +114,7 @@ import { ShapeFormatContext } from './components/shape-format-context';
 import { AccountAuthContext } from './components/toolbar/account-auth-context';
 import { RibbonAddInsContext } from './components/toolbar/ribbon-add-ins';
 import { ViewerCustomizationContext } from './components/viewer-customization-context';
+import { ViewerStorageContext } from './components/viewer-storage-context';
 import { ViewerDialogGroup } from './components/ViewerDialogGroup';
 import { ViewerMainContent } from './components/ViewerMainContent';
 import { ViewerOptionsProvider } from './components/ViewerOptionsProvider';
@@ -353,15 +357,18 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 				}
 			})();
 		}, [hostOpenFile]);
-		const handleOpenRecentFile = useCallback((key: string) => {
-			void (async () => {
-				const bytes = await readBackstageRecentFile(key);
-				if (bytes) {
-					setLoadOrigin('user');
-					setContent(bytes);
-				}
-			})();
-		}, []);
+		const handleOpenRecentFile = useCallback(
+			(key: string) => {
+				void (async () => {
+					const bytes = await readBackstageRecentFile(key, storage);
+					if (bytes) {
+						setLoadOrigin('user');
+						setContent(bytes);
+					}
+				})();
+			},
+			[storage],
+		);
 
 		// ── File > Options store ─────────────────────────────────────
 		// Declared here (rather than alongside the legacy ViewerSettings sync
@@ -611,7 +618,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 				optionsStore.setOptions(next);
 			}
 		}, [settings, optionsStore]);
-		const handleClearOptionsCache = useAutosaveCacheMaintenance(viewerOptions);
+		const handleClearOptionsCache = useAutosaveCacheMaintenance(viewerOptions, storage);
 
 		// ── Mobile / responsive ─────────────────────────────────────
 		const mobile = useIsMobile();
@@ -957,6 +964,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			filePath,
 			fileName,
 			storage,
+			// A failed Save / Save As: the host's `onError`, and the save-failed notice for the user.
+			onSaveError: (saveError) => {
+				onError?.(saveFailureMessage(saveError));
+				compatToastsState.setToasts(withSaveFailureToast);
+			},
 			autosaveEnabled: autosaveActivation.active,
 			autosaveAllowed: hostAutosave !== false,
 			// Host prop first (an explicit policy), else File > Options > Save >
@@ -1109,9 +1121,12 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 					});
 				}
 			};
-			const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<boolean> => {
+			const handleSaveAsFormat = async (
+				format: PptxSaveFormat,
+				reason: DocumentSaveReason = 'saveAs',
+			): Promise<boolean> => {
 				// A failed save (or host storage rejection) must not discard the recovery copy.
-				if ((await rawExportHandlers.handleSaveAsFormat(format)) === false) {
+				if ((await rawExportHandlers.handleSaveAsFormat(format, reason)) === false) {
 					return false;
 				}
 				afterSuccessfulSave(format);
@@ -1120,6 +1135,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			return {
 				...rawExportHandlers,
 				handleSaveAsFormat,
+				handleSave: () => void handleSaveAsFormat('pptx', 'save'),
 				handleSaveAsPptx: () => void handleSaveAsFormat('pptx'),
 				handleSaveAsPpsx: () => void handleSaveAsFormat('ppsx'),
 				handleSaveAsPptm: () => void handleSaveAsFormat('pptm'),
@@ -1735,70 +1751,72 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			// the user changed in the Options dialog.
 			<ViewerOptionsProvider options={viewerOptions} store={optionsStore}>
 				<ViewerCustomizationContext.Provider value={customizationResolved}>
-					<ViewerRegionBaseContext.Provider value={regionBase}>
-						<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
-							<AccountAuthContext.Provider value={accountAuth}>
-								<Rendering3DFlagsContext.Provider value={effective3D}>
-									<ViewerThemeProvider theme={effectiveTheme}>
-										<CollaborationProvider
-											config={collaboration}
-											canvasWidth={canvasSize.width}
-											canvasHeight={canvasSize.height}
-										>
-											<CollaborationStateReporter onChange={onCollaborationChange} />
-											<CollaborationDocumentSync
-												slides={galleryDeckStyle.held()?.slides ?? slides}
-												templateElementsBySlideId={
-													galleryDeckStyle.held()?.templateElementsBySlideId ??
-													templateElementsBySlideId
-												}
-												setSlides={state.setSlides}
-												content={content}
-												loadVersion={loadVersion}
-												loadOrigin={loadOrigin}
-												livePatcher={state.livePatcher}
-												onReadOnlyChange={setCollaborationReadOnly}
-												deckSaveState={{
-													headerFooter: state.headerFooter,
-													presentationProperties: state.presentationProperties,
-													viewProperties: state.viewProperties,
-													customShows: state.customShows,
-													sections: state.sections,
-													coreProperties: state.coreProperties,
-													appProperties: state.appProperties,
-													customProperties: state.customProperties,
-													tagCollections: state.tagCollections,
-													slideMasters: state.slideMasters,
-													notesMaster: state.notesMaster,
-													handoutMaster: state.handoutMaster,
-													slideSize: resolveSlideSizeSelection({
-														current: state.slideSizeEmu,
-														canvas: canvasSize,
-													}).size,
-													tableStyleMap: state.tableStyleMap,
-													tableStylesDefaultId: state.tableStylesDefaultId,
-													tableStylesToDelete: state.tableStylesToDelete,
-													embedFonts: dialogs.embedFontsEnabled,
-												}}
-											/>
-											<CollaborationFollowLayer
-												activeSlideIndex={activeSlideIndex}
-												setActiveSlideIndex={state.setActiveSlideIndex}
-												slideCount={slides.length}
-											/>
-											<ShapeFormatContext.Provider value={shapeFormat}>
-												<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-													<ChartFormatContext.Provider value={chartFormat}>
-														{viewerContent}
-													</ChartFormatContext.Provider>
-												</RibbonGalleryCommandsContext.Provider>
-											</ShapeFormatContext.Provider>
-										</CollaborationProvider>
-									</ViewerThemeProvider>
-								</Rendering3DFlagsContext.Provider>
-							</AccountAuthContext.Provider>
-						</RibbonAddInsContext.Provider>
-					</ViewerRegionBaseContext.Provider>
+					<ViewerStorageContext.Provider value={storage}>
+						<ViewerRegionBaseContext.Provider value={regionBase}>
+							<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
+								<AccountAuthContext.Provider value={accountAuth}>
+									<Rendering3DFlagsContext.Provider value={effective3D}>
+										<ViewerThemeProvider theme={effectiveTheme}>
+											<CollaborationProvider
+												config={collaboration}
+												canvasWidth={canvasSize.width}
+												canvasHeight={canvasSize.height}
+											>
+												<CollaborationStateReporter onChange={onCollaborationChange} />
+												<CollaborationDocumentSync
+													slides={galleryDeckStyle.held()?.slides ?? slides}
+													templateElementsBySlideId={
+														galleryDeckStyle.held()?.templateElementsBySlideId ??
+														templateElementsBySlideId
+													}
+													setSlides={state.setSlides}
+													content={content}
+													loadVersion={loadVersion}
+													loadOrigin={loadOrigin}
+													livePatcher={state.livePatcher}
+													onReadOnlyChange={setCollaborationReadOnly}
+													deckSaveState={{
+														headerFooter: state.headerFooter,
+														presentationProperties: state.presentationProperties,
+														viewProperties: state.viewProperties,
+														customShows: state.customShows,
+														sections: state.sections,
+														coreProperties: state.coreProperties,
+														appProperties: state.appProperties,
+														customProperties: state.customProperties,
+														tagCollections: state.tagCollections,
+														slideMasters: state.slideMasters,
+														notesMaster: state.notesMaster,
+														handoutMaster: state.handoutMaster,
+														slideSize: resolveSlideSizeSelection({
+															current: state.slideSizeEmu,
+															canvas: canvasSize,
+														}).size,
+														tableStyleMap: state.tableStyleMap,
+														tableStylesDefaultId: state.tableStylesDefaultId,
+														tableStylesToDelete: state.tableStylesToDelete,
+														embedFonts: dialogs.embedFontsEnabled,
+													}}
+												/>
+												<CollaborationFollowLayer
+													activeSlideIndex={activeSlideIndex}
+													setActiveSlideIndex={state.setActiveSlideIndex}
+													slideCount={slides.length}
+												/>
+												<ShapeFormatContext.Provider value={shapeFormat}>
+													<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
+														<ChartFormatContext.Provider value={chartFormat}>
+															{viewerContent}
+														</ChartFormatContext.Provider>
+													</RibbonGalleryCommandsContext.Provider>
+												</ShapeFormatContext.Provider>
+											</CollaborationProvider>
+										</ViewerThemeProvider>
+									</Rendering3DFlagsContext.Provider>
+								</AccountAuthContext.Provider>
+							</RibbonAddInsContext.Provider>
+						</ViewerRegionBaseContext.Provider>
+					</ViewerStorageContext.Provider>
 				</ViewerCustomizationContext.Provider>
 			</ViewerOptionsProvider>
 		);

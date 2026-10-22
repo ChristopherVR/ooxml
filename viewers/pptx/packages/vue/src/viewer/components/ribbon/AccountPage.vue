@@ -24,6 +24,7 @@ import { useI18n } from 'vue-i18n';
 
 import { PPTX_VUE_VIEWER_VERSION } from '../../../version';
 import { useAccountAuth } from '../../composables/account-auth';
+import { useViewerStorage } from '../../composables/viewer-storage';
 
 const { t } = useI18n();
 
@@ -50,12 +51,14 @@ function selectAvatarColor(color: string): void {
 }
 
 // ── Storage & Privacy ─────────────────────────────────────────────────
+// The host's recovery store when the viewer's `storage` has one, else IndexedDB.
+const storage = useViewerStorage();
 const presentationCount = ref(0);
 const totalBytes = ref(0);
 const cleared = ref(false);
 
 async function refreshUsage(): Promise<void> {
-	const summary = await getLocalStorageUsageSummary();
+	const summary = await getLocalStorageUsageSummary(storage());
 	presentationCount.value = summary.presentationCount;
 	totalBytes.value = summary.totalBytes;
 }
@@ -64,7 +67,7 @@ async function clearLocalData(): Promise<void> {
 	if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
 		return;
 	}
-	await clearAllLocalViewerData();
+	await clearAllLocalViewerData(storage());
 	cleared.value = true;
 	await refreshUsage();
 }

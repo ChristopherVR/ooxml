@@ -11,9 +11,10 @@ import {
 	type DocumentStorage,
 } from 'ooxml-core/embedding';
 
+import type { CompatibilityWarningToast } from '../render/compatibility-warning-toasts';
 import { downloadBlob } from './download-helpers';
 
-export type { DocumentStorage } from 'ooxml-core/embedding';
+export type { DocumentSaveMeta, DocumentSaveReason, DocumentStorage } from 'ooxml-core/embedding';
 
 /** The formats a viewer saves (`SavedPresentationFormat` of the render layer). */
 export type PresentationSaveFormat = 'pptx' | 'ppsx' | 'pptm' | 'ppt';
@@ -33,11 +34,8 @@ export interface DeliverSavedPresentationInput {
 	format: PresentationSaveFormat;
 	/** The name to save under, normally `savedPresentationFileName(source, format)`. */
 	fileName: string;
-	/**
-	 * File > Save or Save As. Defaults by format: a plain `.pptx` save is `save`, writing any
-	 * other format is `saveAs` (the viewers' Save buttons write `.pptx`).
-	 */
-	reason?: DocumentSaveReason;
+	/** The command that saved: File > Save (`save`) or a Save As entry (`saveAs`), whatever the format. */
+	reason: DocumentSaveReason;
 }
 
 /**
@@ -51,12 +49,32 @@ export async function deliverSavedPresentation(
 	const { storage, bytes, format, fileName } = input;
 	const mimeType = presentationSaveMimeType(format);
 	if (storage) {
-		return saveToStorage(
-			storage,
-			bytes,
-			documentSaveMeta(fileName, input.reason ?? (format === 'pptx' ? 'save' : 'saveAs'), mimeType),
-		);
+		return saveToStorage(storage, bytes, documentSaveMeta(fileName, input.reason, mimeType));
 	}
 	downloadBlob(new Blob([bytes as BlobPart], { type: mimeType }), fileName);
 	return fileName;
+}
+
+/** Toast code of a failed Save / Save As (the host's storage rejected, or serialising failed). */
+export const SAVE_FAILED_TOAST_CODE = 'SAVE_FAILED';
+
+/** The notice every binding shows when a Save / Save As fails, in its compatibility toast stack. */
+export const SAVE_FAILED_TOAST: CompatibilityWarningToast = {
+	id: 'save-failed',
+	code: SAVE_FAILED_TOAST_CODE,
+	severity: 'warning',
+	messageKey: 'pptx.autosave.saveFailed',
+};
+
+/** The message a binding reports to the host's `error` event for a failed save. */
+export function saveFailureMessage(error: unknown): string {
+	const detail = error instanceof Error ? error.message : String(error);
+	return detail ? `Save failed: ${detail}` : 'Save failed';
+}
+
+/** `toasts` with the save-failure notice first (once), for a binding's toast stack. */
+export function withSaveFailureToast(
+	toasts: readonly CompatibilityWarningToast[],
+): CompatibilityWarningToast[] {
+	return [SAVE_FAILED_TOAST, ...toasts.filter((toast) => toast.id !== SAVE_FAILED_TOAST.id)];
 }

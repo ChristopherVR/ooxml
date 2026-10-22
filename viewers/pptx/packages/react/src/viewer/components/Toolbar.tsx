@@ -205,6 +205,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							onExportVideo={p.onExportVideo}
 							onExportGif={p.onExportGif}
 							onExportJson={p.onExportJson}
+							onSave={p.onSave}
 							onSaveAsPptx={p.onSaveAsPptx}
 							onSaveAsPpsx={p.onSaveAsPpsx}
 							onSaveAsPptm={p.onSaveAsPptm}

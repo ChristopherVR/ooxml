@@ -84,7 +84,7 @@ export function createFileActionGrid(
 		embedFonts: handlers.openFontEmbedding,
 		signatures: handlers.openDigitalSignatures,
 		versionHistory: handlers.openVersionHistory,
-		saveAsPptx: handlers.save,
+		saveAsPptx: handlers.saveAsPptx ?? handlers.save,
 		saveAsPpsx: handlers.saveAsPpsx,
 		saveAsPptm: handlers.saveAsPptm,
 		saveAsPpt: handlers.saveAsPpt,

@@ -79,7 +79,11 @@ export function createFileTab(
 	let query = '';
 	let recent: BackstageRecentFile[] = [];
 	void (async () => {
-		recent = await listBackstageRecentFiles(t, handlers.getRecentPresentationsCount());
+		recent = await listBackstageRecentFiles(
+			t,
+			handlers.getRecentPresentationsCount(),
+			handlers.getStorage?.(),
+		);
 		const list = main.querySelector<HTMLElement>('.pptxv-bs-recent');
 		if (list) {
 			renderRecentItems(list);
@@ -295,7 +299,7 @@ export function createFileTab(
 			renderOptionsCard();
 		}
 		if (page === 'account') {
-			renderAccountPage(doc, t, main, accountAuth);
+			renderAccountPage(doc, t, main, accountAuth, handlers.getStorage?.());
 		}
 		const footer = doc.createElement('footer');
 		footer.textContent = `${t('pptx.backstage.untitled')} · ${t('pptx.backstage.savedToBrowser')}`;

@@ -29,11 +29,12 @@ import {
 	elementPictureFilename,
 	endAudienceDisplay,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
-	listAutosaveSnapshots,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
 	observeElementHeight,
 	readBackstageRecentFile,
+	SAVE_FAILED_TOAST,
+	saveFailureMessage,
 	readStoredViewerPrefs,
 	findCanvasElementNode,
 	recoverySnapshotIntent,
@@ -41,7 +42,6 @@ import {
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveAuthoredSlideRange,
-	resolveExpiredAutosaveSnapshots,
 	resolveInitialSlideIndex,
 	resolveThemeCatalogEntry,
 	resolveViewerRootOptions,
@@ -403,7 +403,7 @@ const noopClose = (): void => undefined;
 							[hiddenActions]="effectiveHiddenActions()"
 							[quickAccess]="customizationService.quickAccess(viewerOpts.options().quickAccess)"
 							(toggleAutosave)="toggleAutosave()"
-							(save)="fileIO.saveAsPptx()"
+							(save)="fileIO.save()"
 							(undo)="editor.undo()"
 							(redo)="editor.redo()"
 							(quickCommand)="onQuickAccessCommand($event)"
@@ -453,7 +453,8 @@ const noopClose = (): void => undefined;
 						(openFile)="fileIO.openFile()"
 						(openRecentFile)="onOpenRecentFile($event)"
 						(createPresentation)="onCreatePresentation($event)"
-						(save)="fileIO.saveAsPptx()"
+						(save)="fileIO.save()"
+						(savePptx)="fileIO.saveAsPptx()"
 						(savePpsx)="fileIO.saveAsPpsx()"
 						(savePptm)="fileIO.saveAsPptm()"
 						(savePpt)="fileIO.saveAsPpt()"
@@ -551,7 +552,7 @@ const noopClose = (): void => undefined;
 						(undo)="editor.undo()"
 						(redo)="editor.redo()"
 						(share)="session.showShare.set(true)"
-						(save)="fileIO.saveAsPptx()"
+						(save)="fileIO.save()"
 						(present)="presentationMode.present()"
 					/>
 				}
@@ -2967,6 +2968,11 @@ export class PowerPointViewerComponent
 			}),
 			storage: () => this.storage(),
 			fileName: () => this.fileName(),
+			// A failed Save / Save As: the host's `error` output, and the save-failed notice.
+			onSaveError: (saveError) => {
+				this.error.emit(saveFailureMessage(saveError));
+				this.loadNotices.notify(SAVE_FAILED_TOAST);
+			},
 			afterSuccessfulSave: (format) => {
 				this.viewerOpts.playFeedback();
 				const filePath = this.filePath();
@@ -3011,15 +3017,11 @@ export class PowerPointViewerComponent
 
 		// File > Options > Save > "cache retention": a one-time sweep per mount is
 		// enough, since a fresh snapshot only ever lands with a fresh timestamp.
-		void (async () => {
-			try {
-				const snapshots = await listAutosaveSnapshots();
-				const expired = resolveExpiredAutosaveSnapshots(snapshots, this.viewerOpts.options());
-				await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-			} catch {
-				// Best-effort background maintenance; a blocked IndexedDB skips it.
-			}
-		})();
+		// With a host recovery store it sweeps that store, only when it lists its copies.
+		this.viewerOpts.bindStorage(() => this.storage());
+		void this.viewerOpts.pruneExpiredCache().catch(() => {
+			// Best-effort background maintenance; a blocked store skips it.
+		});
 
 		// File > Options > Save > "clear cache on close": also cover the viewer
 		// being destroyed without a page unload (the `beforeunload` listener
@@ -3454,7 +3456,7 @@ export class PowerPointViewerComponent
 
 	protected onOpenRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key);
+			const bytes = await readBackstageRecentFile(key, this.storage());
 			if (bytes) {
 				this.fileIO.contentOverride.set(bytes);
 			}

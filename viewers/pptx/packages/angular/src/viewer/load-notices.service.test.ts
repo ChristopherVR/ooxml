@@ -151,3 +151,18 @@ describe('loadNoticesService', () => {
 		});
 	});
 });
+
+describe('loadNoticesService notify (failed Save)', () => {
+	it('shows the save-failed notice first, again after a dismissal, until the next load', async () => {
+		const { SAVE_FAILED_TOAST } = await import('ooxml-ui/pptx');
+		const service = createService(undefined);
+		service.notify(SAVE_FAILED_TOAST);
+		expect(service.visibleToasts().map((toast) => toast.id)).toStrictEqual(['save-failed']);
+		service.dismissToast('save-failed');
+		expect(service.visibleToasts()).toStrictEqual([]);
+		service.notify(SAVE_FAILED_TOAST);
+		expect(service.visibleToasts().map((toast) => toast.id)).toStrictEqual(['save-failed']);
+		service.resetForLoad();
+		expect(service.visibleToasts()).toStrictEqual([]);
+	});
+});

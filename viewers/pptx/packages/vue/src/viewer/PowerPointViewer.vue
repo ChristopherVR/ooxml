@@ -38,9 +38,9 @@ import {
 	canInteractWithElement,
 	computeGridSpacingPx,
 	createBackstagePresentation,
-	deleteAutosaveSnapshot,
+	clearAutosaveSnapshots,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
-	listAutosaveSnapshots,
+	pruneExpiredAutosaveSnapshots,
 	MAX_ZOOM_SCALE,
 	MIN_ZOOM_SCALE,
 	observeElementHeight,
@@ -49,7 +49,8 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	resolveAutosaveIntervalSeconds,
-	resolveExpiredAutosaveSnapshots,
+	saveFailureMessage,
+	SAVE_FAILED_TOAST,
 	resolveHistoryDepth,
 	resolveAuthoredSlideRange,
 	resolveImageResolutionScale,
@@ -209,6 +210,7 @@ import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
+import { ViewerStorageKey } from './composables/viewer-storage';
 import { provideZoomTargetLookup, toZoomTargetInfo } from './composables/zoom-target';
 import type { PowerPointViewerEmits, PowerPointViewerExpose, PowerPointViewerProps } from './types';
 
@@ -252,7 +254,9 @@ provide(RibbonAddInsKey, () => props.ribbonAddIns);
 const source = useContentSource({
 	content: () => props.content,
 	onOpenFile: () => props.onOpenFile,
+	storage: () => props.storage,
 });
+provide(ViewerStorageKey, () => props.storage);
 const activeContent = source.activeContent;
 
 // Bumped each time the load pipeline finishes applying a parsed deck; the
@@ -833,9 +837,13 @@ const exporter = useExportWiring({
 	getOptions: () => viewerOptions.value,
 	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
 	storage: () => props.storage,
+	// A failed Save / Save As: the host's `error` event, and the save-failed notice for the user.
+	onSaveError: (saveError) => {
+		emit('error', saveFailureMessage(saveError));
+		compatToasts.notify(SAVE_FAILED_TOAST);
+	},
 });
-const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, downloadAs, onExportPdf } =
-	exporter;
+const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExportPdf } = exporter;
 
 // Print renders vector slides; notes and handouts are rasterised.
 const printer = usePrint({
@@ -1561,28 +1569,18 @@ const { showSettings } = useViewerSettingsDialog({
 
 /** File > Options > Save > "Delete cached files". */
 function onOptionsClearCache(): void {
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			await Promise.all(snapshots.map((entry) => deleteAutosaveSnapshot(entry.key)));
-		} catch {
-			// Browser lifecycle cleanup cannot report an IndexedDB failure.
-		}
-	})();
+	// With a host recovery store this sweeps it only when it lists its copies.
+	void clearAutosaveSnapshots(props.storage).catch(() => {
+		// Browser lifecycle cleanup cannot report a storage failure.
+	});
 }
 
 // File > Options > Save > "cache retention": a one-time sweep per mount is
 // enough, since a fresh snapshot only ever lands with a fresh timestamp.
 onMounted(() => {
-	void (async () => {
-		try {
-			const snapshots = await listAutosaveSnapshots();
-			const expired = resolveExpiredAutosaveSnapshots(snapshots, viewerOptions.value);
-			await Promise.all(expired.map((key) => deleteAutosaveSnapshot(key)));
-		} catch {
-			// Best-effort background maintenance; a blocked IndexedDB skips it.
-		}
-	})();
+	void pruneExpiredAutosaveSnapshots(viewerOptions.value, props.storage).catch(() => {
+		// Best-effort background maintenance; a blocked store skips it.
+	});
 });
 
 // File > Options > Save > "clear cache on close": wipe recovery snapshots
@@ -2026,7 +2024,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:can-redo="history.canRedo.value"
 					:on-undo="history.undo"
 					:on-redo="history.redo"
-					:on-save="() => void downloadAs('pptx')"
+					:on-save="() => void exporter.save()"
 					:find-replace-open="findOpen"
 					:on-toggle-find-replace="() => (findOpen = !findOpen)"
 					:on-command-search="handleCommandSearch"

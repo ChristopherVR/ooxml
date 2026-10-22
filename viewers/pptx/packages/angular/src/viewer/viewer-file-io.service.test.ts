@@ -16,6 +16,7 @@ const bytes = new Uint8Array([0x50, 0x4b]);
 function harness(storage: DocumentStorage | undefined) {
 	const savePresentation = vi.fn();
 	const afterSuccessfulSave = vi.fn();
+	const onSaveError = vi.fn();
 	const injector = Injector.create({
 		providers: [
 			{ provide: LoadContentService, useValue: { saveSlides: vi.fn(async () => bytes) } },
@@ -34,10 +35,11 @@ function harness(storage: DocumentStorage | undefined) {
 		emitContentChange: () => {},
 		saveIntent: () => ({}),
 		afterSuccessfulSave,
+		onSaveError,
 		storage: () => storage,
 		fileName: () => 'Quarterly.pptx',
 	});
-	return { service, savePresentation, afterSuccessfulSave };
+	return { service, savePresentation, afterSuccessfulSave, onSaveError };
 }
 
 describe('ViewerFileIOService host storage', () => {
@@ -48,18 +50,33 @@ describe('ViewerFileIOService host storage', () => {
 		expect(save).toHaveBeenCalledExactlyOnceWith(bytes, {
 			fileName: 'Quarterly.pptx',
 			mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-			reason: 'save',
+			reason: 'saveAs',
 		});
 		expect(savePresentation).not.toHaveBeenCalled();
 		expect(afterSuccessfulSave).toHaveBeenCalledWith('pptx');
 	});
 
-	it('does not run the recovery cleanup when the host save fails', async () => {
-		const { service, afterSuccessfulSave } = harness({
-			save: () => Promise.reject(new Error('offline')),
+	it('reports a failed host save and skips the recovery cleanup', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const failure = new Error('offline');
+		const { service, afterSuccessfulSave, onSaveError } = harness({
+			save: () => Promise.reject(failure),
 		});
-		await expect(service.saveAs('pptx')).rejects.toThrow('offline');
+		await expect(service.saveAs('pptx')).resolves.toBeUndefined();
+		expect(onSaveError).toHaveBeenCalledWith(failure);
 		expect(afterSuccessfulSave).not.toHaveBeenCalled();
+		vi.restoreAllMocks();
+	});
+
+	it('reports Save as save and Save As .pptx as saveAs', async () => {
+		const save = vi.fn(async () => undefined);
+		const { service } = harness({ save });
+		await service.save();
+		await service.saveAs('pptx');
+		expect(save.mock.calls.map(([, meta]) => (meta as { reason: string }).reason)).toEqual([
+			'save',
+			'saveAs',
+		]);
 	});
 
 	it('downloads under the host file name without a storage', async () => {
