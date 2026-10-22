@@ -5,6 +5,7 @@ import { createRibbon } from './ribbon';
 import { createBackstage, type BackstageHandlers } from './backstage';
 import { documentStats } from 'ooxml-core/docx';
 import { localizeElement } from './localization';
+import { EMPTY_WORD_CUSTOMIZATION } from './customization';
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -30,6 +31,15 @@ function setup(overrides: Partial<BackstageHandlers> = {}) {
 		ribbon: () => undefined,
 		hiddenActions: () => [],
 		setHiddenActions: () => {},
+		customization: () => EMPTY_WORD_CUSTOMIZATION,
+		regionContext: (region) => ({
+			region,
+			editor: document.body,
+			fileName: 'Report.docx',
+			locale: 'en',
+			canEdit: true,
+			close: () => undefined,
+		}),
 		...overrides,
 	};
 	const backstage = createBackstage(handlers);

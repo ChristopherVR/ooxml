@@ -4,20 +4,55 @@ Every framework adapter wraps the same `<docx-editor>` custom element. The adapt
 
 ## Attributes and properties
 
-| Property         | Attribute         | Description                                                                                  |
-| ---------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| `documentModel`  |                   | The `DocumentModel` shown. Assigning it is an external replacement, not an edit event.       |
-| `readOnly`       | `read-only`       | Blocks local edits. Remote collaboration batches still apply.                                |
-| `locale`         | `locale`          | Interface language: `en`, `fr`, `de`, `es` or `zh-CN`. Document content is never translated. |
-| `fileName`       | `file-name`       | Name of the open document (default `Document1.docx`).                                        |
-| `reviewAuthor`   | `review-author`   | Author recorded on tracked changes and comments (default `Author`).                          |
-| `theme`          | `theme`           | `light`, `dark` or `auto`. See [theming](/theming).                                          |
-| `themeColors`    |                   | Partial token overrides applied as `--dve-*` custom properties.                              |
-| `showThumbnails` | `show-thumbnails` | Left rail of page thumbnails (Print Layout only).                                            |
-| `showToolbar`    | `show-toolbar`    | `false` hides the ribbon; the title bar and status bar remain.                               |
-| `hiddenActions`  |                   | Ribbon controls to hide by stable id; see the table in [bindings](/bindings).                |
-| `ribbonAddIns`   |                   | Tabs the host adds after the built-in ones; see [bindings](/bindings#ribbon-add-in-tabs).    |
-| `dirty` (read)   |                   | True after an edit, false after save, load or `markClean()`.                                 |
+| Property         | Attribute         | Description                                                                                    |
+| ---------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
+| `documentModel`  |                   | The `DocumentModel` shown. Assigning it is an external replacement, not an edit event.         |
+| `readOnly`       | `read-only`       | Blocks local edits. Remote collaboration batches still apply.                                  |
+| `locale`         | `locale`          | Interface language: `en`, `fr`, `de`, `es` or `zh-CN`. Document content is never translated.   |
+| `fileName`       | `file-name`       | Name of the open document (default `Document1.docx`).                                          |
+| `reviewAuthor`   | `review-author`   | Author recorded on tracked changes and comments (default `Author`).                            |
+| `theme`          | `theme`           | `light`, `dark` or `auto`. See [theming](/theming).                                            |
+| `themeColors`    |                   | Partial token overrides applied as `--dve-*` custom properties.                                |
+| `showThumbnails` | `show-thumbnails` | Left rail of page thumbnails (Print Layout only).                                              |
+| `showToolbar`    | `show-toolbar`    | `false` hides the ribbon; the title bar and status bar remain.                                 |
+| `hiddenActions`  |                   | Ribbon controls to hide by stable id; see the table in [bindings](/bindings).                  |
+| `ribbonAddIns`   |                   | Tabs the host adds after the built-in ones; see [bindings](/bindings#ribbon-add-in-tabs).      |
+| `customization`  |                   | Capabilities, host File tab pages and host menu commands; see [Customization](#customization). |
+| `dirty` (read)   |                   | True after an edit, false after save, load or `markClean()`.                                   |
+
+## Customization
+
+`customization` takes one `WordCustomization` object (the shared contract of `ooxml-core/embedding`, also used by Excel, PowerPoint and Visio). Every binding forwards it as the `customization` prop or input. It is applied when the object identity changes, so keep it stable; `null` restores the defaults.
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: {
+		extraPages: [
+			{
+				id: 'policies',
+				label: 'Policies',
+				render: (container, context) => {
+					container.textContent = `Policies for ${context.fileName}`;
+				},
+			},
+		],
+	},
+	contextMenu: {
+		extraCommands: [
+			{ id: 'send', label: 'Send to chat', onSelect: ({ selectedText }) => send(selectedText) },
+		],
+	},
+};
+```
+
+| Field                       | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `capabilities`              | `false` removes every path to the capability (`WORD_CAPABILITY_IDS`): `edit` (read-only whatever `readOnly` says), `print`, `export` (Save As, Export), `save`, `open` (New, Open), `share`, `copy` (Copy, Cut, their keys), `comment`, `review` (tracking, accept, reject), `find`, `settings` (File > Options). Ribbon controls, File tab pages, Quick Access Save, context-menu entries, shortcuts and `file-command` all follow. `hiddenActions` is unchanged; the two are unioned. |
+| `backstage.extraPages`      | Host File tab pages `{ id, label, group?, order?, render }` after the built-in pages of their group (`footer`: next to Options). `render` is a mount function `(container, context) => cleanup \| { update, destroy }`, a custom element tag, or `{ element, properties }`. The body mounts the first time the page is shown, receives a `WordRegionContext` (`editor`, `fileName`, `locale`, `canEdit`, `close`) and is torn down when the page is removed or the editor disconnects.  |
+| `contextMenu.extraCommands` | Host commands `{ id, label, icon?, group?, when?, disabled?, onSelect }` above (`top`, default) or below (`bottom`) the built-in entries. `onSelect` runs after the menu closes, with a `WordMenuContext` (`selectedText`, `from`, `to`, `readOnly`, `inTable`, `onLink`). Labels are shown as given (localise them yourself).                                                                                                                                                          |
+
+Capabilities are UI policy, not document protection. Region replacement (the Options dialog, panes) is not offered for Word yet.
 
 ## Methods
 

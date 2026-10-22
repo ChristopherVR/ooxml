@@ -75,7 +75,10 @@ export class EditorCore {
 	loaded?: LoadedDocument | undefined;
 	loadGeneration = 0;
 	loading = false;
+	/** Effective: the `readOnly` property, or `capabilities.edit` off (`applyReadOnly`). */
 	readOnly = false;
+	/** The element's `readOnly` property as the host set it. */
+	requestedReadOnly = false;
 	/** Set before mounting to render only the document surface. */
 	surfaceOnly = false;
 	/** Host-owned workflows for surface mode (link, find and replace, picture picker). */

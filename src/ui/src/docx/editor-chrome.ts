@@ -13,6 +13,7 @@ import { documentStats, plainText } from 'ooxml-core/docx';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
+import type { ResolvedWordCustomization, WordRegionContext } from './customization';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -42,6 +43,10 @@ export interface ChromeHost {
 	setOption(key: BackstageOptionKey, value: string): void;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
+	/** The resolved host customisation (`customization` property). */
+	customization(): ResolvedWordCustomization;
+	/** The context of a host region (a File tab page). */
+	regionContext(region: string): WordRegionContext;
 }
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
@@ -96,6 +101,8 @@ export class EditorChrome {
 			ribbon: () => host.ribbon(),
 			hiddenActions: () => host.hiddenActions(),
 			setHiddenActions: (ids) => host.setHiddenActions(ids),
+			customization: () => host.customization(),
+			regionContext: (region) => host.regionContext(region),
 		});
 		this.statusBar = createStatusBar({
 			setViewMode: (mode) => host.setViewMode(mode),
@@ -172,6 +179,14 @@ export class EditorChrome {
 		this.ribbonActions.setSharing(this.host.collaborating());
 	}
 
+	/** Re-applies the host customisation to the File tab, title bar and ribbon actions. */
+	applyCustomization(): void {
+		const resolved = this.host.customization();
+		this.backstage.refresh();
+		this.titleBar.setHiddenCommands(resolved.fileCommands);
+		this.ribbonActions.element.noShare = resolved.fileCommands.has('share');
+	}
+
 	closeBackstage(): void {
 		this.backstage.close();
 		this.ribbon?.focusFile?.();
@@ -179,6 +194,8 @@ export class EditorChrome {
 
 	/** Runs a file command unless a host cancels the `file-command` event to handle it itself. */
 	async run(command: FileCommand, fileName?: string): Promise<void> {
+		// A command a host capability removed never runs, whichever entry point reached it.
+		if (this.host.customization().fileCommands.has(command)) return;
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
 		try {
 			if (command === 'new') this.newDocument();

@@ -21,6 +21,7 @@ import type {
 	RibbonActionInput,
 	RibbonAddInCommandDetail,
 	RibbonAddInTab,
+	WordCustomization,
 } from 'docx-web-component';
 import { eventOptions, mountEditor, pickEditorProps, type EditorBinding } from './index';
 @Component({ selector: 'word-editor', standalone: true, template: '' })
@@ -37,6 +38,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() hiddenActions: readonly RibbonActionInput[] = [];
 	@Input() ribbonAddIns?: readonly RibbonAddInTab[];
 	@Input() collaboration?: DocxCollaborationOptions | null;
+	@Input() customization?: WordCustomization | null;
 	@Output() documentChange = new EventEmitter<DocumentModel>();
 	@Output() documentError = new EventEmitter<Error>();
 	@Output() documentWarning = new EventEmitter<string>();

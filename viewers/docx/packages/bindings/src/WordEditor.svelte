@@ -13,7 +13,7 @@
     onribbonaddin?: EditorEventHandlers['office-ribbon-add-in'];
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
   };
-  let { documentModel, fileName, reviewAuthor, themeColors, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }: Props = $props();
+  let { documentModel, fileName, reviewAuthor, themeColors, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, customization, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }: Props = $props();
   let binding: EditorBinding | undefined;
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
   let mountedElement = $state.raw<EditorHandle['element'] | undefined>();
@@ -37,4 +37,4 @@
   export function isDirty() { return binding?.dirty ?? false; }
   export { element, dirty };
 </script>
-<div use:attach={{ documentModel, fileName, reviewAuthor, themeColors, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }}></div>
+<div use:attach={{ documentModel, fileName, reviewAuthor, themeColors, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, customization, ondocumentchange, ondocumenterror, ondocumentwarning, onpagechange, ondirtychange, onfilecommand, onreadonlychange, onribbonaction, onribboncustomize, onribbonaddin, oncollaborationchange }}></div>

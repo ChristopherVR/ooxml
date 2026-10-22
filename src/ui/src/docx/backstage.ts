@@ -15,6 +15,8 @@ import {
 	type PageContext,
 } from './backstage-pages';
 import { createWordOptions } from './backstage-options';
+import { createHostBackstagePages } from '../embedding/host-backstage';
+import type { WordRegionContext } from './customization';
 
 export type { BackstageHandlers } from './backstage-pages';
 /** The File view's pages; `options` and `customize` open the Options dialog instead. */
@@ -39,6 +41,13 @@ export interface Backstage {
 	readonly isOpen: boolean;
 	/** Retranslates the navigation after the editor locale changed, and redraws the open page. */
 	relocalize(): void;
+	/**
+	 * Re-applies the host customisation: hides the pages disabled capabilities remove, places
+	 * the host pages (`backstage.extraPages`) and delivers a fresh context to mounted ones.
+	 */
+	refresh(): void;
+	/** Tears the host pages down. */
+	destroy(): void;
 }
 
 type BackstageElement = HTMLElement & {
@@ -93,6 +102,13 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		element.append(page);
 	}
 
+	const hostPages = createHostBackstagePages<WordRegionContext>(element, {
+		context: (region) => handlers.regionContext(region),
+		pageClass: 'dve-backstage-content',
+		label: '[docx-editor]',
+	});
+	const hidden = (id: string) => handlers.customization().backstagePages.has(id as never);
+
 	let current: ContentPage = 'info';
 	const options = createWordOptions(handlers, t);
 	const draw = (page: ContentPage) => {
@@ -112,16 +128,20 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		const locale = normalizeEditorLocale(element.dataset.editorLocale);
 		element.setAttribute('label', translate(locale, 'File'));
 		element.setAttribute('back-label', translate(locale, 'Back to document'));
-		element.items = NAV.map(({ id, label, footer }) => ({
-			id,
-			label: t(label),
-			...(footer ? { group: 'footer' as const } : {}),
-		}));
+		hostPages.setPages(handlers.customization().extraPages);
+		element.items = hostPages.items(
+			NAV.filter(({ id }) => !hidden(id)).map(({ id, label, footer }) => ({
+				id,
+				label: t(label),
+				...(footer ? { group: 'footer' as const } : {}),
+			})),
+		);
 	};
 	localize();
 
 	element.addEventListener('office-backstage-select', (event) => {
 		const { id } = (event as CustomEvent<{ id: string }>).detail;
+		if (hostPages.show(id)) return;
 		if (id === 'save') {
 			event.preventDefault();
 			handlers.close();
@@ -140,7 +160,8 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 	return {
 		element,
 		optionsDialog: options.element,
-		open(page = 'home') {
+		open(requested = 'home') {
+			const page = hidden(requested === 'customize' ? 'options' : requested) ? 'home' : requested;
 			if (page === 'options' || page === 'customize') {
 				showOptions(page === 'customize' ? 'ribbon' : undefined);
 				return;
@@ -160,6 +181,13 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 			localize();
 			options.relocalize();
 			if (element.open) draw(current);
+		},
+		refresh() {
+			localize();
+			hostPages.refresh();
+		},
+		destroy() {
+			hostPages.destroy();
 		},
 	};
 }

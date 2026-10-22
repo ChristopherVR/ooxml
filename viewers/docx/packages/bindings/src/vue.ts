@@ -7,6 +7,7 @@ import type {
 	EditorThemeMode,
 	RibbonActionInput,
 	RibbonAddInTab,
+	WordCustomization,
 } from 'docx-web-component';
 import {
 	EDITOR_EVENT_NAMES,
@@ -32,6 +33,7 @@ export const WordEditor = defineComponent({
 		hiddenActions: Array as PropType<readonly RibbonActionInput[]>,
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		collaboration: Object as PropType<DocxCollaborationOptions | null>,
+		customization: Object as PropType<WordCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES],
 	setup(props, { emit, expose }) {

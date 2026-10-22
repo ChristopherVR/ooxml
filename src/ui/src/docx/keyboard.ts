@@ -23,6 +23,8 @@ export interface KeyEventLike {
 export interface ShortcutContext {
 	readOnly: boolean;
 	mac: boolean;
+	/** Shortcuts a host capability turned off; they are swallowed (`blocked`), never run. */
+	disabled?: ReadonlySet<string>;
 }
 
 export type ShortcutId =
@@ -195,6 +197,7 @@ export function createShortcutRegistry(actions: ShortcutActions): ShortcutRegist
 	];
 	const attempt = (shortcut: Shortcut, context: ShortcutContext): DispatchResult => {
 		if (shortcut.editing && context.readOnly) return 'blocked';
+		if (context.disabled?.has(shortcut.id)) return 'blocked';
 		return shortcut.run() === false ? 'ignored' : 'ran';
 	};
 	const shown = (shortcut: Shortcut, mac: boolean) =>

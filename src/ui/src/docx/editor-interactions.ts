@@ -53,7 +53,20 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		locale: () => core.locale,
 		run: (action) => routeRibbonAction(core, action),
 		warn: (message) => emit(element, 'document-warning', message),
+		customization: () => core.viewOptions.customization,
 	});
+	// `copy: false`: the capture phase reaches the host before the editing surface, so neither
+	// the editor nor the browser copies.
+	for (const type of ['copy', 'cut'] as const)
+		element.addEventListener(
+			type,
+			(event) => {
+				if (!core.viewOptions.customization.blockCopy) return;
+				event.preventDefault();
+				event.stopPropagation();
+			},
+			true,
+		);
 
 	const regionElement = (region: Region): HTMLElement | undefined =>
 		region === 'ribbon'
@@ -170,5 +183,9 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 	};
 	const mac = () => isMacPlatform();
 	const registry = createShortcutRegistry(actions);
-	installKeyboard(element, registry, () => ({ readOnly: core.readOnly, mac: mac() }));
+	installKeyboard(element, registry, () => ({
+		readOnly: core.readOnly,
+		mac: mac(),
+		disabled: core.viewOptions.customization.shortcuts,
+	}));
 }

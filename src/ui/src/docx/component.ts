@@ -21,6 +21,7 @@ import { buildShell, type ShellApi } from './editor-shell';
 import { renderDocument } from './editor-render';
 import { registerSmartArt } from './smartart-node-view';
 import { DocxEditorApi } from './element-api';
+import { applyReadOnly } from './customization-apply';
 import { emit, type DocxEditorEventMap } from './events';
 import {
 	DEFAULT_FILE_NAME,
@@ -174,13 +175,10 @@ export class DocxEditorElement extends DocxEditorApi {
 	get readOnly() {
 		return this.core.readOnly;
 	}
+	/** True when the document cannot be edited: this property, or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
-		this.core.readOnly = Boolean(value);
-		this.core.view?.setProps({ editable: () => this.core.canEditBody() });
-		if (this.core.readOnly)
-			this.core.parts.closeHeaderFooter(this.core.shell.canvas, this.core.shell.paper);
-		this.core.refreshControls();
-		reflectAttribute(this, 'read-only', this.core.readOnly);
+		this.core.requestedReadOnly = Boolean(value);
+		applyReadOnly(this.core);
 	}
 
 	/**
@@ -223,6 +221,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.view?.destroy();
 		core.view = undefined;
 		core.imageMedia.release();
+		core.shell.chrome?.backstage.destroy();
 	}
 
 	async load(input: Uint8Array | ArrayBuffer): Promise<void> {
