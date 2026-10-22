@@ -28,6 +28,7 @@ import { PartsController } from './parts-controller';
 import { PageController } from './page-controller';
 import { InsertController } from './insert-controller';
 import { emit } from './events';
+import { reflectAttribute } from './editor-attributes';
 import { DirtyState } from 'ooxml-core/docx/ui';
 import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
@@ -75,7 +76,30 @@ export class EditorCore {
 	loaded?: LoadedDocument | undefined;
 	loadGeneration = 0;
 	loading = false;
-	readOnly = false;
+	/** The host's `readOnly` switch. A collaboration `viewer` role locks the editor on top of it. */
+	hostReadOnly = false;
+	private shownReadOnly = false;
+	/** Effective: the host's switch or a `viewer` role. Assigning sets the host's switch only. */
+	get readOnly(): boolean {
+		return this.hostReadOnly || this.collab.yjs?.session.role === 'viewer';
+	}
+	set readOnly(value: boolean) {
+		this.hostReadOnly = value;
+	}
+	/** Applies the effective value to the view, controls and attribute. */
+	applyReadOnly(): void {
+		this.view?.setProps({ editable: () => this.canEditBody() });
+		if (this.readOnly) this.parts.closeHeaderFooter(this.shell.canvas, this.shell.paper);
+		this.refreshControls();
+		reflectAttribute(this.element, 'read-only', this.hostReadOnly);
+		this.shownReadOnly = this.readOnly;
+	}
+	/** Joining or leaving a room can change the role lock: apply it and report a change. */
+	roleChanged(): void {
+		const before = this.shownReadOnly;
+		this.applyReadOnly();
+		if (this.readOnly !== before) emit(this.element, 'readonly-change', this.readOnly);
+	}
 	/** Set before mounting to render only the document surface. */
 	surfaceOnly = false;
 	/** Host-owned workflows for surface mode (link, find and replace, picture picker). */

@@ -163,6 +163,29 @@ describe('docx-editor collaboration property', () => {
 		expect(b.collaborationState.active).toBe(false);
 	});
 
+	it('a viewer role is read-only like readOnly: the host cannot lift it and leaving restores it', async () => {
+		const hub = createMemoryHub();
+		const owner = mount();
+		owner.collaboration = { session: hostSession(hub, 'Ada') };
+		await wait();
+		const a = mount();
+		const events: boolean[] = [];
+		a.addEventListener('readonly-change', (event) =>
+			events.push((event as CustomEvent<boolean>).detail),
+		);
+		a.collaboration = { session: hostSession(hub, 'Vic', 'viewer'), intent: 'join' };
+		await wait();
+		expect(a.readOnly).toBe(true);
+		expect(events).toEqual([true]);
+		a.readOnly = false;
+		expect(a.readOnly).toBe(true);
+		a.stopCollaboration();
+		expect(a.readOnly).toBe(false);
+		expect(events).toEqual([true, false]);
+		a.readOnly = true;
+		expect(a.readOnly).toBe(true);
+	});
+
 	it('a viewer role blocks local edits', async () => {
 		const hub = createMemoryHub();
 		const a = mount();

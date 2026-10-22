@@ -214,6 +214,7 @@ export function joinYjs(core: EditorCore, session: CollabSession, options: WordY
 	core.loadGeneration++;
 	core.detachedState = undefined;
 	renderDocument(core);
+	core.roleChanged();
 }
 
 /** Detaches the Yjs binding, keeping its current content, comments and new picture parts. */
@@ -227,6 +228,7 @@ export function leaveYjs(core: EditorCore): void {
 	core.collab.stop();
 	core.detachedState = undefined;
 	if (core.element.isConnected) renderDocument(core);
+	core.roleChanged();
 }
 
 /** The controller of one editor, reporting through its events and error channel. */
