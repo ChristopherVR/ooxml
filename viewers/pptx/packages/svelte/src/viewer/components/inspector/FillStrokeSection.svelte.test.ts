@@ -139,7 +139,9 @@ describe('fillStrokeSection', () => {
 
 		const row = target.querySelector('[data-testid="pptx-color-recent"]');
 		expect(row).not.toBeNull();
-		const swatch = row!.querySelector<HTMLButtonElement>('.pptx-svelte-recent-colors-swatch');
+		const swatch = row!.shadowRoot?.querySelector<HTMLButtonElement>(
+			'button[data-source="recent"]',
+		);
 		swatch?.click();
 		flushSync();
 
