@@ -305,6 +305,79 @@ describe('presentationTransitionOverlay', () => {
 		expect(html).toMatch(/animation:\s*pptx-morph-fadein-/u);
 	});
 
+	// Regression (issue #141): every lifted arrival used to be painted above
+	// every ghost, so a full-slide picture fading in veiled the title travelling
+	// ABOVE it on the incoming slide, which then snapped bright at the end.
+	it('stacks a travelling title ghost above a lifted picture arriving under it', () => {
+		const picture = (id: string, name: string, imagePath: string): PptxElement =>
+			({
+				id,
+				name,
+				type: 'picture',
+				x: 0,
+				y: 0,
+				width: 960,
+				height: 540,
+				imagePath,
+				imageData: PIXEL,
+			}) as unknown as PptxElement;
+		const title = (id: string, x: number): PptxElement =>
+			({
+				id,
+				name: 'Title',
+				type: 'text',
+				x,
+				y: 160,
+				width: 400,
+				height: 100,
+				text: 'Our Services',
+			}) as unknown as PptxElement;
+		const outgoing = {
+			id: 'out',
+			elements: [
+				picture('out-gone', 'Leaving', 'ppt/media/leaving.png'),
+				picture('out-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+				title('out-title', 520),
+			],
+		} as PptxSlide;
+		const incoming = {
+			id: 'in',
+			elements: [
+				picture('in-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+				picture('in-veil', 'Veil', 'ppt/media/veil.png'),
+				title('in-title', 80),
+			],
+		} as PptxSlide;
+		const plan = buildMorphTransitionPlan(outgoing, incoming, 800)!;
+
+		const html = renderToStaticMarkup(
+			<PresentationTransitionOverlay
+				outgoingSlide={outgoing}
+				templateElements={[]}
+				canvasSize={{ width: 960, height: 540 }}
+				transition={{ type: 'morph', durationMs: 800 }}
+				durationMs={800}
+				morphPlan={plan}
+				incomingSlide={incoming}
+				onComplete={vi.fn()}
+			/>,
+		);
+
+		// Each wrapper's first z-index is its element's own; the overlay numbers
+		// them in the plan's single order, back to front.
+		const zOf = (attribute: string, id: string): number => {
+			const start = html.indexOf(`${attribute}="${id}"`);
+			expect(start, `${id} must be painted`).toBeGreaterThan(-1);
+			return Number(/z-index:(\d+)/u.exec(html.slice(start))?.[1]);
+		};
+		expect(zOf('data-pptx-morph-outgoing', 'out-backdrop')).toBeLessThan(
+			zOf('data-pptx-morph-lifted', 'in-veil'),
+		);
+		expect(zOf('data-pptx-morph-lifted', 'in-veil')).toBeLessThan(
+			zOf('data-pptx-morph-outgoing', 'out-title'),
+		);
+	});
+
 	// Regression (issue #161): the two halves of a dissolve stacked as ordinary
 	// layers composite source-over, which leaves the ink they SHARE at 0.75 of
 	// full strength halfway through - measured 34.6/255 too dark on the wheel

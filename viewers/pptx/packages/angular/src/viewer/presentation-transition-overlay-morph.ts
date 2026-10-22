@@ -55,24 +55,52 @@ export function classicIncomingLayerSlide(
 	return withTemplateElements(incomingSlide, templateElements);
 }
 
+/** The z-index of the morph's first overlay layer, as the ghost layer had. */
+const MORPH_LAYER_Z_BASE = 40;
+
+/** One run of the morph overlay, as the slide that paints it. */
+export interface MorphOverlayLayerSlide {
+	key: string;
+	side: 'outgoing' | 'incoming';
+	style: StyleMap;
+	slide: PptxSlide;
+}
+
 /**
- * The slide the overlay paints ABOVE its ghosts, or `undefined` when a morph
- * has nothing to lift.
+ * The ghosts and lifted arrivals of a morph, one stacked layer per run of the
+ * plan's `overlayLayers`, back to front.
  *
- * A shape arriving inside a shape that persists is drawn on the live stage,
- * UNDER this overlay, so the persisting shape's opaque ghost hides it for the
- * whole transition (issue #146). `buildMorphTransitionPlan` names those few and
- * holds their stage copy invisible; this wraps them as a slide the component's
- * own `pptx-slide-canvas` can render.
+ * A ghost run renders against the outgoing slide inside a
+ * `data-pptx-morph-outgoing` scope. A lifted run holds shapes arriving inside
+ * one that persists, which the live stage draws UNDER this overlay where the
+ * persisting shape's opaque ghost would hide them (issue #146); it renders
+ * against the incoming slide inside a `data-pptx-morph-lifted` scope, and the
+ * plan holds their stage copy invisible. One shared order, rather than every
+ * ghost under every lifted shape, keeps a full-slide picture fading in from
+ * veiling the title travelling above it (issue #141).
  */
-export function morphLiftedSlide(
+export function morphOverlayLayerSlides(
 	plan: MorphTransitionPlan | undefined,
+	outgoingSlide: PptxSlide | undefined,
 	incomingSlide: PptxSlide | undefined,
-): PptxSlide | undefined {
-	if (!plan || !incomingSlide || plan.overlayIncomingElements.length === 0) {
-		return undefined;
+): MorphOverlayLayerSlide[] {
+	if (!plan || !outgoingSlide) {
+		return [];
 	}
-	return { ...incomingSlide, elements: [...plan.overlayIncomingElements] };
+	return plan.overlayLayers.flatMap((layer, index) => {
+		const slide = layer.side === 'outgoing' ? outgoingSlide : incomingSlide;
+		if (!slide) {
+			return [];
+		}
+		return [
+			{
+				key: `${layer.side}-${layer.elements[0]?.id ?? index}`,
+				side: layer.side,
+				style: { 'z-index': String(MORPH_LAYER_Z_BASE + index) },
+				slide: { ...slide, elements: [...layer.elements] },
+			},
+		];
+	});
 }
 
 /** One cross-dissolving pair, as the two single-element slides that paint it. */
@@ -121,9 +149,8 @@ export function morphCrossfadeGroupSlides(
 		style: {
 			...MORPH_CROSSFADE_GROUP_STYLE,
 			// `isolation` makes the group a stacking context, so it carries a
-			// z-index of its own to stay above the ghost layer (40) and the lifted
-			// layer (41) its halves came from.
-			'z-index': String(42 + index),
+			// z-index of its own to stay above every overlay layer.
+			'z-index': String(MORPH_LAYER_Z_BASE + plan.overlayLayers.length + index),
 		},
 		outgoingStyle: half(group.outgoingAnimation),
 		incomingStyle: half(group.incomingAnimation),

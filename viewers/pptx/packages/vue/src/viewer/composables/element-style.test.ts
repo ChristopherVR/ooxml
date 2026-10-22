@@ -417,3 +417,29 @@ describe('chart area outer shadow and glow on the chart container', () => {
 		expect(getShapeFillStrokeStyle(chart(undefined))).toStrictEqual({});
 	});
 });
+
+const MARKER_STROKE = { strokeColor: '#ffffff', strokeWidth: 4 };
+
+/** Stroked clip must reach past the geometry edge by half the line width (issue #144). */
+describe('vue getShapeFillStrokeStyle: centred outline is not clipped to half width', () => {
+	it('widens the clip of a solid stroked preset and leaves an unstroked one exact', () => {
+		const make = (shapeStyle: Record<string, unknown>): PptxElement =>
+			({
+				id: 'm',
+				type: 'shape',
+				shapeType: 'flowChartOffpageConnector',
+				x: 0,
+				y: 0,
+				width: 15,
+				height: 26,
+				shapeStyle,
+			}) as unknown as PptxElement;
+		const clipOf = (style: Record<string, unknown>): string =>
+			String(style['clipPath'] ?? style['clip-path'] ?? '');
+		const stroked = clipOf(getShapeFillStrokeStyle(make(MARKER_STROKE)));
+		const bare = clipOf(getShapeFillStrokeStyle(make({ strokeWidth: 0 })));
+		expect(bare).toContain('path(');
+		expect(stroked.length).toBeGreaterThan(bare.length);
+		expect(stroked.startsWith(bare.slice(0, bare.length - 2))).toBe(true);
+	});
+});

@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test';
 
 import { zoomInButton, zoomOutButton, stageWidth } from './support/chrome';
-import { loadDeck, slideStage, zoomFitButton } from './support/deck';
+import { loadDeck, openRibbonTab, slideStage, zoomFitButton } from './support/deck';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -93,4 +93,19 @@ test.describe('touch status bar', () => {
 		await page.emulateMedia({ forcedColors: 'active' });
 		await expect(normal).toBeVisible();
 	});
+});
+
+test('the save state follows autosave once an edit has been saved', async ({ page }) => {
+	// The demos autosave every 2s. Every binding's bar reads the autosave state through the
+	// shared rule, so after an edit it says when the deck was last saved, not just "unsaved".
+	await loadDeck(page);
+	await slideStage(page).waitFor();
+	const save = bar(page).getByText(/saved|unsaved/iu);
+	await expect(save).toHaveText(/^all saved$/iu);
+	await openRibbonTab(page, 'Home');
+	await page
+		.getByRole('button', { name: /new slide/iu })
+		.first()
+		.click();
+	await expect(save).toHaveText(/^saved (just now|\d+ min ago)$/iu, { timeout: 30_000 });
 });

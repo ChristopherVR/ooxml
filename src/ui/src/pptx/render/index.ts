@@ -883,6 +883,7 @@ export * from './morph-matching';
 export * from './morph-flatten';
 // One merged z-order over both slides, so the transition overlay knows which
 // arriving shapes it would otherwise hide behind a ghost.
+export * from './morph-overlay-layers';
 export * from './morph-overlay-order';
 export * from './morph-text';
 // "Same slot, new wording": the pair PowerPoint dissolves where it stands

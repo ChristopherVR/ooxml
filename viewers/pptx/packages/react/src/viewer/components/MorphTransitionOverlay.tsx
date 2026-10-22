@@ -14,7 +14,7 @@ import {
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_STYLE,
 } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { CanvasSize } from '../types';
@@ -38,6 +38,21 @@ export interface MorphTransitionOverlayProps {
 	 * has to land on whichever root actually renders, morph or not.
 	 */
 	containerRef?: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * The plan's overlay layers flattened to one back-to-front list, each shape
+ * numbered by its place in it. Lifted runs are skipped without an incoming
+ * slide to render them against.
+ */
+function overlayEntries(
+	plan: MorphTransitionPlan,
+	incomingSlide: PptxSlide | undefined,
+): { element: PptxElement; side: 'outgoing' | 'incoming'; zIndex: number }[] {
+	return plan.overlayLayers
+		.filter((layer) => layer.side === 'outgoing' || incomingSlide !== undefined)
+		.flatMap((layer) => layer.elements.map((element) => ({ element, side: layer.side })))
+		.map((entry, zIndex) => ({ ...entry, zIndex }));
 }
 
 export function MorphTransitionOverlay({
@@ -77,47 +92,52 @@ export function MorphTransitionOverlay({
 						position: 'relative',
 					}}
 				>
-					{morphPlan.outgoingElements.map((element, index) => (
-						<div
-							key={element.id}
-							data-pptx-morph-outgoing={element.id}
-							style={{ position: 'absolute', inset: 0 }}
-						>
-							{/* The animation rides the element's own positioned container:
-							    ghost keyframes are element-local (they restate the static
-							    rotation/flips and pivot on the element centre), so a
-							    slide-sized wrapper would pivot them around the slide
-							    centre and double-apply the static transform. */}
-							<StaticElementRenderer
-								element={element}
-								activeSlide={outgoingSlide}
-								allSlides={[outgoingSlide]}
-								zIndex={index}
-								animation={morphPlan.outgoingAnimations.get(element.id)}
-								imageAnimation={morphPlan.outgoingImageAnimations.get(element.id)}
-							/>
-						</div>
-					))}
-					{/* The arriving shapes a ghost above them would otherwise hide for
-					    the whole morph, painted here instead so they dissolve in where
-					    a viewer can see them (issue #146). Their copy on the live stage
-					    is held invisible by the plan, so nothing composites twice. */}
-					{incomingSlide &&
-						morphPlan.overlayIncomingElements.map((element, index) => (
+					{/* Ghosts and lifted arrivals in the plan's ONE stacking order
+					    (`overlayLayers`), numbered back to front. Painting every ghost
+					    below every lifted arrival let a full-slide picture fading in
+					    veil the title travelling above it (issue #141). A lifted
+					    arrival is an incoming shape a ghost would otherwise hide for
+					    the whole morph (issue #146); its copy on the live stage is held
+					    invisible by the plan, so nothing composites twice. */}
+					{overlayEntries(morphPlan, incomingSlide).map(({ element, side, zIndex }) =>
+						side === 'outgoing' ? (
 							<div
 								key={element.id}
-								data-pptx-morph-lifted={element.id}
+								data-pptx-morph-outgoing={element.id}
 								style={{ position: 'absolute', inset: 0 }}
 							>
+								{/* The animation rides the element's own positioned container:
+								    ghost keyframes are element-local (they restate the static
+								    rotation/flips and pivot on the element centre), so a
+								    slide-sized wrapper would pivot them around the slide
+								    centre and double-apply the static transform. */}
 								<StaticElementRenderer
 									element={element}
-									activeSlide={incomingSlide}
-									allSlides={[incomingSlide]}
-									zIndex={morphPlan.outgoingElements.length + index}
-									animation={morphPlan.overlayIncomingAnimations.get(element.id)}
+									activeSlide={outgoingSlide}
+									allSlides={[outgoingSlide]}
+									zIndex={zIndex}
+									animation={morphPlan.outgoingAnimations.get(element.id)}
+									imageAnimation={morphPlan.outgoingImageAnimations.get(element.id)}
 								/>
 							</div>
-						))}
+						) : (
+							incomingSlide && (
+								<div
+									key={element.id}
+									data-pptx-morph-lifted={element.id}
+									style={{ position: 'absolute', inset: 0 }}
+								>
+									<StaticElementRenderer
+										element={element}
+										activeSlide={incomingSlide}
+										allSlides={[incomingSlide]}
+										zIndex={zIndex}
+										animation={morphPlan.overlayIncomingAnimations.get(element.id)}
+									/>
+								</div>
+							)
+						),
+					)}
 					{/* Pairs the overlay paints both halves of, summed inside their own
 					    isolated group instead of stacked: two source-over fades dip the
 					    ink they share toward the backdrop, which bites chunks out of

@@ -48,6 +48,15 @@ describe('statusBar adapter', () => {
 		expect(root.querySelector('[data-item="save"]')!.textContent).toBe('Unsaved changes');
 	});
 
+	it('shows when autosave last saved, and falls back to the dirty flag without a time', () => {
+		const lastSavedAt = Date.now() - 3 * 60_000;
+		const saved = open({ autosaveStatus: 'saved', lastSavedAt, isDirty: true });
+		expect(saved.root.querySelector('[data-item="save"]')!.textContent).toBe('Saved 3 min ago');
+		cleanup?.();
+		const unknown = open({ autosaveStatus: 'saved', isDirty: true });
+		expect(unknown.root.querySelector('[data-item="save"]')!.textContent).toBe('Unsaved changes');
+	});
+
 	it('routes every control to its callback', () => {
 		const { button, handlers } = open({ showNotes: true });
 		for (const name of [

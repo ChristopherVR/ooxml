@@ -47,6 +47,50 @@ export function keepOnlyElements(stage: HTMLElement, ids: readonly string[]): HT
 	return stage;
 }
 
+/** The z-index of the first morph overlay layer, just above the incoming layer (1). */
+const MORPH_LAYER_Z_BASE = 2;
+
+/**
+ * The ghosts and lifted arrivals of a morph, one stacked layer per run of the
+ * plan's `overlayLayers`, back to front.
+ *
+ * A ghost run is a copy of the outgoing snapshot inside a
+ * `data-pptx-morph-outgoing` scope; a lifted run (arriving shapes a ghost would
+ * otherwise hide, issue #146) a copy of the incoming one inside a
+ * `data-pptx-morph-lifted` scope, its copy on the incoming layer held invisible
+ * by the plan. One shared order, rather than every ghost under every lifted
+ * shape, keeps a full-slide picture fading in from veiling the title
+ * travelling above it (issue #141).
+ *
+ * `outgoing`/`incoming` are cloned, never modified.
+ */
+export function buildMorphOverlayLayers(
+	doc: Document,
+	outgoing: HTMLElement,
+	incoming: HTMLElement,
+	morphPlan: MorphTransitionPlan | undefined,
+): HTMLElement[] {
+	return (morphPlan?.overlayLayers ?? []).map((run, index) => {
+		const source = run.side === 'outgoing' ? outgoing : incoming;
+		const layer = buildLayer(
+			doc,
+			keepOnlyElements(
+				source.cloneNode(true) as HTMLElement,
+				run.elements.map((element) => element.id),
+			),
+			MORPH_LAYER_Z_BASE + index,
+			'none',
+			run.side === 'outgoing' ? 'outgoing' : 'lifted',
+		);
+		if (run.side === 'outgoing') {
+			layer.dataset.pptxMorphOutgoing = 'true';
+		} else {
+			layer.dataset.pptxMorphLifted = 'true';
+		}
+		return layer;
+	});
+}
+
 /**
  * A pair the overlay paints BOTH halves of, one isolated group per pair, so
  * the two are summed rather than stacked: two source-over fades leave the
@@ -65,13 +109,16 @@ export function buildMorphCrossfadeGroups(
 	incoming: HTMLElement,
 	morphPlan: MorphTransitionPlan | undefined,
 ): HTMLElement[] {
-	return (morphPlan?.crossfadeGroups ?? []).map((group, index) => {
+	if (!morphPlan) {
+		return [];
+	}
+	return morphPlan.crossfadeGroups.map((group, index) => {
 		const wrapper = doc.createElement('div');
 		wrapper.dataset.pptxMorphCrossfade = group.incoming.id;
 		wrapper.style.cssText = MORPH_CROSSFADE_GROUP_CSS_TEXT;
 		// `isolation` makes the wrapper a stacking context, so it needs a z-index
-		// of its own to stay above the ghosts its halves came from.
-		wrapper.style.zIndex = String(4 + index);
+		// of its own to stay above every overlay layer.
+		wrapper.style.zIndex = String(MORPH_LAYER_Z_BASE + morphPlan.overlayLayers.length + index);
 		// The dissolve rides these WRAPPERS, not the elements: a pair dissolving in
 		// place never moves, and an animation on the small element box gives it a
 		// compositing layer whose raster snaps to whole device pixels, painting the

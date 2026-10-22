@@ -277,3 +277,24 @@ describe('chart area outer shadow and glow on the chart container', () => {
 		expect(getShapeFillStrokeStyle(chart(undefined))).toStrictEqual({});
 	});
 });
+
+describe('getShapeFillStrokeStyle: centred outline on a clipped preset (issue #144)', () => {
+	const marker = (shapeStyle: Record<string, unknown>): PptxElement =>
+		({
+			id: 'm',
+			type: 'shape',
+			shapeType: 'flowChartOffpageConnector',
+			x: 0,
+			y: 0,
+			width: 15,
+			height: 26,
+			shapeStyle,
+		}) as unknown as PptxElement;
+
+	it('widens the clip so the outer half of the line is not cut off', () => {
+		const stroked = getShapeFillStrokeStyle(marker({ strokeColor: '#ffffff', strokeWidth: 4 }));
+		const bare = getShapeFillStrokeStyle(marker({ strokeWidth: 0 }));
+		expect(String(bare['clipPath'])).toContain('path(');
+		expect(String(stroked['clipPath']).length).toBeGreaterThan(String(bare['clipPath']).length);
+	});
+});

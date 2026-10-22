@@ -66,8 +66,18 @@ test('dragging and resizing a shape on the page change its saved geometry', asyn
 	await page.mouse.up();
 	await expect.poll(async () => Math.round((await rect(float(editor))).x - before.x)).toBe(50);
 	expect(Math.round((await rect(float(editor))).y - before.y)).toBe(30);
-	// An edge handle changes one dimension only (no aspect lock on shapes).
-	const handle = await rect(frame(editor).locator('[data-float-handle="e"]'));
+	// An edge handle changes one dimension only (no aspect lock on shapes). The selection frame
+	// follows the moved shape a frame later: grab the handle once it sits on the shape's right
+	// edge, or the press lands where it was and nothing resizes.
+	const eastHandle = frame(editor).locator('[data-float-handle="e"]');
+	await expect
+		.poll(async () => {
+			const shape = await rect(float(editor));
+			const grip = await rect(eastHandle);
+			return Math.abs(grip.x + grip.width / 2 - (shape.x + shape.width)) <= grip.width;
+		})
+		.toBe(true);
+	const handle = await rect(eastHandle);
 	const hx = handle.x + handle.width / 2;
 	const hy = handle.y + handle.height / 2;
 	await page.mouse.move(hx, hy);

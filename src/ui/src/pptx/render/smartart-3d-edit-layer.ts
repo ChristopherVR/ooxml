@@ -114,6 +114,22 @@ export function smartArtNodeAtPoint(root: ParentNode, x: number, y: number): Ele
 /** UI the layer hosts itself (editor, swatches): events on it are not routed to a node. */
 const LAYER_UI_SELECTOR = 'textarea, input, button, select, [role="group"]';
 
+/** Marks an edit layer whose node hover {@link routeEditLayerPointerToNodes} routes. */
+export const SMARTART_3D_EDIT_LAYER_ATTRIBUTE = 'data-smartart-3d-edit-layer';
+
+const forwardedEvents = new WeakSet<Event>();
+
+/**
+ * Whether `event` is one {@link routeEditLayerPointerToNodes} forwarded to a node. Inside a
+ * routed layer only these say which node the pointer is over: the browser's own `mouseover` /
+ * `mouseout` of a node group fire as the pointer crosses the group's painted parts (its label),
+ * while the pointer stays over the node's fill, so a handler acting on them hides the fill
+ * swatches the moment the pointer leaves the label.
+ */
+export function isForwardedEditLayerEvent(event: Event): boolean {
+	return forwardedEvents.has(event);
+}
+
 /**
  * Route a 3D edit layer's pointer input to the node under the pointer, found by
  * geometry (`smartArtNodeAtPoint`) instead of by event target.
@@ -133,15 +149,15 @@ export function routeEditLayerPointerToNodes(layer: Element): () => void {
 		forwarding = true;
 		try {
 			for (const type of types) {
-				node.dispatchEvent(
-					new MouseEvent(type, {
-						// enter / leave do not bubble, as for a real pointer.
-						bubbles: type !== 'mouseenter' && type !== 'mouseleave',
-						cancelable: true,
-						clientX: source?.clientX ?? 0,
-						clientY: source?.clientY ?? 0,
-					}),
-				);
+				const event = new MouseEvent(type, {
+					// enter / leave do not bubble, as for a real pointer.
+					bubbles: type !== 'mouseenter' && type !== 'mouseleave',
+					cancelable: true,
+					clientX: source?.clientX ?? 0,
+					clientY: source?.clientY ?? 0,
+				});
+				forwardedEvents.add(event);
+				node.dispatchEvent(event);
 			}
 		} finally {
 			forwarding = false;

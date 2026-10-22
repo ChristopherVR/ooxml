@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { PptxSlide } from 'pptx-viewer-core';
-import type { CSSProperties } from 'vue';
-
-import type { MorphCrossfadeGroupView } from '../composables/use-morph-transition-overlay';
+import type {
+	MorphCrossfadeGroupView,
+	MorphOverlayLayerView,
+} from '../composables/use-morph-transition-overlay';
 import type { CanvasSize } from '../types';
 import SlideStage from './SlideStage.vue';
 
 /**
- * The two morph-only layers `PresentationTransitionOverlay.vue` paints ABOVE
- * its outgoing/incoming pair, split out to keep that file under the
- * project's per-file LOC budget:
+ * The morph-only layers `PresentationTransitionOverlay.vue` paints ABOVE its
+ * incoming layer, split out to keep that file under the project's per-file
+ * LOC budget:
  *
- *  - the **lifted** layer: arriving shapes a ghost above them would
- *    otherwise hide for the whole morph, painted here so they dissolve in
- *    where a viewer can see them (issue #146). Their copy on the incoming
- *    layer is held invisible by the plan, so nothing composites twice.
+ *  - the **overlay layers**: the plan's ghosts and lifted arrivals, one layer
+ *    per run in the plan's single back-to-front order (issue #141). A ghost
+ *    run is BACKGROUND-FREE, or its slide fill would cover the morph beneath
+ *    it; a lifted run holds arriving shapes a ghost would otherwise hide
+ *    (issue #146), their copy on the incoming layer held invisible.
  *  - the **crossfade groups**: pairs the overlay paints BOTH halves of, each
  *    as one isolated group so the halves are SUMMED rather than stacked
  *    (issue #161).
  */
 defineProps<{
-	liftedSlide: PptxSlide | undefined;
-	liftedLayerStyle: CSSProperties;
+	overlayLayers: readonly MorphOverlayLayerView[];
 	crossfadeGroups: readonly MorphCrossfadeGroupView[];
 	canvasSize: CanvasSize;
 	mediaDataUrls: Map<string, string>;
@@ -31,14 +31,16 @@ defineProps<{
 
 <template>
 	<div
-		v-if="liftedSlide"
+		v-for="layer in overlayLayers"
+		:key="layer.key"
 		class="pptx-vue-transition-layer"
-		data-pptx-transition-layer="lifted"
-		data-pptx-morph-lifted="true"
-		:style="liftedLayerStyle"
+		:data-pptx-transition-layer="layer.side === 'outgoing' ? 'outgoing' : 'lifted'"
+		:data-pptx-morph-outgoing="layer.side === 'outgoing' ? 'true' : undefined"
+		:data-pptx-morph-lifted="layer.side === 'incoming' ? 'true' : undefined"
+		:style="layer.style"
 	>
 		<SlideStage
-			:slide="liftedSlide"
+			:slide="layer.slide"
 			:canvas-size="canvasSize"
 			:media-data-urls="mediaDataUrls"
 			:scale="scale"

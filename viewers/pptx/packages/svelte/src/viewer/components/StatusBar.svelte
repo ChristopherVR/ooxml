@@ -5,8 +5,7 @@
 	 * typed intents to the callbacks. Kept independent from the top toolbar so
 	 * read-only viewers retain PowerPoint's navigation and zoom chrome.
 	 */
-	import { resolveStatusBarSave } from 'ooxml-ui/pptx';
-	import type { StatusBarRequestEvent, StatusBarViewState } from 'ooxml-ui/pptx';
+	import { dispatchStatusBarIntent, statusBarState } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
 	import type { AutosaveStatus } from '../state/autosave.svelte';
@@ -17,6 +16,7 @@
 		zoomPercent,
 		isDirty,
 		autosaveStatus,
+		lastSavedAt,
 		showNotes = false,
 		notesExpanded = false,
 		isFullscreen = false,
@@ -37,6 +37,8 @@
 		zoomPercent: number;
 		isDirty: boolean;
 		autosaveStatus?: AutosaveStatus;
+		/** Epoch ms of the last successful autosave, for "Saved n minutes ago". */
+		lastSavedAt?: number | null;
 		showNotes?: boolean;
 		notesExpanded?: boolean;
 		isFullscreen?: boolean;
@@ -56,25 +58,24 @@
 	} = $props();
 
 	const t = useTranslator();
-	const save = $derived(
-		resolveStatusBarSave(t, autosaveStatus ? { state: autosaveStatus } : undefined, isDirty),
+	const state = $derived(
+		statusBarState({
+			slideCount: total,
+			activeSlideIndex: current,
+			dirty: isDirty,
+			autosave: autosaveStatus
+				? { state: autosaveStatus, timestamp: lastSavedAt ?? undefined }
+				: undefined,
+			zoomPercent: hideZoom ? undefined : zoomPercent,
+			notesExpanded,
+			// "Normal" is active whenever neither the slide sorter nor the slideshow is up.
+			viewMode: isFullscreen ? 'slideShow' : slideSorterActive ? 'sorter' : 'normal',
+			handles: { notes: showNotes, sorter: Boolean(onslidesorter), slideShow: !hideFullscreen },
+			translate: t,
+		}),
 	);
-	// "Normal" is active whenever neither the slide sorter nor the slideshow is up.
-	const state = $derived<StatusBarViewState>({
-		slideCount: total,
-		activeSlideIndex: current,
-		saveText: save.text,
-		saveKind: save.kind,
-		zoomPercent: hideZoom ? undefined : zoomPercent,
-		showNotes,
-		notesExpanded,
-		showSorter: Boolean(onslidesorter),
-		showSlideShow: !hideFullscreen,
-		viewMode: isFullscreen ? 'slideShow' : slideSorterActive ? 'sorter' : 'normal',
-		translate: t,
-	});
-	function request(event: StatusBarRequestEvent): void {
-		const handlers = {
+	function request(event: Event): void {
+		dispatchStatusBarIntent(event, {
 			notes: onnotestoggle,
 			normal: onnormal,
 			sorter: onslidesorter,
@@ -82,8 +83,7 @@
 			zoomOut: onzoomout,
 			zoomFit: onzoomfit,
 			zoomIn: onzoomin,
-		};
-		handlers[event.detail.id]?.();
+		});
 	}
 </script>
 
