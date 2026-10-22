@@ -7,16 +7,10 @@ import type { EditorState, Transaction } from 'prosemirror-state';
 import { Mapping } from 'prosemirror-transform';
 import { removedByEdit } from '../content-control-edit';
 import { CONTROL_EDIT_META } from './content-control-commands';
-import { rowControlSpans, type RowControlSpan } from './content-control-rows';
-import {
-	controlOfMark,
-	controlSpans,
-	tableControlSpans,
-	type ControlSpan,
-} from './content-control-spans';
+import { controlOccurrences, type Occurrence, type Span } from './content-control-occurrences';
+import { rowControlSpans } from './content-control-rows';
+import { controlOfMark, controlSpans, tableControlSpans } from './content-control-spans';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
-
-type Span = ControlSpan | RowControlSpan;
 
 /**
  * The control's content as its text, with each object as a character and a picture by its parts,
@@ -62,44 +56,6 @@ export function removeControl(tr: Transaction, span: Span): Transaction {
 
 const BLOCKS = new Set(['paragraph', 'table']);
 
-/** One control and its range: its spans, more than one when it holds what splits them. */
-interface Occurrence {
-	key: string;
-	spans: Span[];
-	from: number;
-	to: number;
-}
-
-/**
- * Whether `span` goes on with the control of its level and id that ends at `end`: right after
- * it, or past only what splits one control, other inline controls in its text (a nested control)
- * and, among its paragraphs, blocks other than paragraphs (a table) and paragraphs of another
- * control (a nested block control).
- */
-function continues(
-	doc: ProseMirrorNode,
-	inline: readonly Span[],
-	end: number,
-	span: Span,
-): boolean {
-	if (span.from === end) return true;
-	if (span.level === 'inline') {
-		let at = end;
-		for (const other of inline) if (other.from === at && other.to <= span.from) at = other.to;
-		return at === span.from;
-	}
-	if (span.level !== 'block') return false;
-	const $end = doc.resolve(end);
-	if (doc.resolve(span.from).parent !== $end.parent) return false;
-	let split = true;
-	$end.parent.forEach((node, offset) => {
-		const pos = $end.start() + offset;
-		if (pos < end || pos >= span.from || node.type.name !== 'paragraph') return;
-		if (!node.attrs.contentControl) split = false;
-	});
-	return split;
-}
-
 /**
  * The temporary controls of `doc` an edit would remove. Controls that are not temporary, or that
  * may not be deleted, are left out, so a control that shares an id with one is never taken for it.
@@ -107,26 +63,13 @@ function continues(
 function temporaryControls(doc: ProseMirrorNode): Occurrence[] {
 	const spans = controlSpans(doc);
 	const inline = spans.filter((span) => span.level === 'inline');
-	const found: Occurrence[] = [];
-	const last = new Map<string, Occurrence>();
 	// In document order: the paragraphs and tables of one block control are its spans in turn.
-	const candidates = [...spans, ...tableControlSpans(doc), ...rowControlSpans(doc)].sort(
-		(a, b) => a.from - b.from,
+	const candidates = [...spans, ...tableControlSpans(doc), ...rowControlSpans(doc)];
+	return controlOccurrences(
+		doc,
+		candidates.filter((span) => removedByEdit(span.control)),
+		inline,
 	);
-	for (const span of candidates) {
-		if (!removedByEdit(span.control)) continue;
-		const key = `${span.level}:${span.control.id}`;
-		const previous = last.get(key);
-		if (previous && continues(doc, inline, previous.to, span)) {
-			previous.spans.push(span);
-			previous.to = span.to;
-			continue;
-		}
-		const occurrence = { key, spans: [span], from: span.from, to: span.to };
-		found.push(occurrence);
-		last.set(key, occurrence);
-	}
-	return found;
 }
 
 /** The transaction removing every temporary control whose content `transactions` changed. */

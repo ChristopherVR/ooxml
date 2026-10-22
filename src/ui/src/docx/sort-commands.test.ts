@@ -2,6 +2,7 @@
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { describe, expect, it } from 'vitest';
+import { contentControlPlugin } from 'ooxml-core/docx/ui';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
 import { sortParagraphs } from './sort-commands';
@@ -78,6 +79,31 @@ describe('sortParagraphs', () => {
 		all(view);
 		expect(sortParagraphs(view, 'ascending')).toBe(false);
 	});
+
+	for (const lock of ['contentLocked', 'sdtLocked'] as const)
+		it(`applies the ${lock} lock of a block control around the sorted paragraphs`, () => {
+			// Sorting puts the control's own paragraphs back in another order: the control stays and
+			// its content changes, which a content lock refuses and one that may not be deleted allows.
+			const control = { id: '81', level: 'block', kind: 'richText', lock };
+			const doc = schema.node('doc', null, [
+				schema.nodes.paragraph!.create({ id: 'p0' }, schema.text('z')),
+				...['b', 'a'].map((text, index) =>
+					schema.nodes.paragraph!.create(
+						{ id: `p${index + 1}`, contentControl: control },
+						schema.text(text),
+					),
+				),
+			]);
+			const view = new EditorView(document.createElement('div'), {
+				state: EditorState.create({ doc, schema, plugins: [contentControlPlugin()] }),
+			});
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 4, 7)));
+			sortParagraphs(view, 'ascending');
+			expect(texts(view)).toEqual(lock === 'contentLocked' ? ['z', 'b', 'a'] : ['z', 'a', 'b']);
+			const held: unknown[] = [];
+			view.state.doc.forEach((node) => held.push(node.attrs.contentControl?.id ?? null));
+			expect(held).toEqual([null, '81', '81']);
+		});
 
 	it('is reachable from the Sort menu', () => {
 		const ribbon = createRibbon();

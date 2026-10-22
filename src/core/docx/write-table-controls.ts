@@ -1,7 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Keeps the content controls around table rows and cells in step with the model: an edited control
 // is patched in place, a control the model dropped from every row or cell it holds is unwrapped
-// (they stay), and a control the model added wraps its row or cell in a new `w:sdt`.
+// (they stay), a row or cell it dropped from a control kept on others leaves that control, and a
+// control the model added wraps its row or cell in a new `w:sdt`.
 import type { ContentControl } from './content-control-model';
 import { isSdt, sdtContent } from './content-control';
 import {
@@ -50,12 +51,36 @@ const holdsRowsOrCells = (node: ChildNode | null): boolean =>
 	['tr', 'tc', 'sdt', 'customXml'].some((name) => named(node as XmlElement, name));
 
 /**
+ * Moves the range markers Word can write beside a row or cell control's `w:sdtContent` (MS-OI29500
+ * 2.1.202 and 2.1.204) into it, where they are in reading order: before what it holds, or after.
+ * Its content allows them (EG_ContentRowContent, EG_ContentCellContent), so a row or cell taken out
+ * of the control, or joining it, keeps them around what they held.
+ */
+function markersIntoContent(sdt: XmlElement): void {
+	const content = sdtContent(sdt);
+	if (!content) return;
+	const anchor = content.firstChild;
+	let after = false;
+	for (const child of Array.from(sdt.childNodes)) {
+		if (child === content) {
+			after = true;
+			continue;
+		}
+		const element = child as XmlElement;
+		if (child.nodeType !== 1 || named(element, 'sdtPr') || named(element, 'sdtEndPr')) continue;
+		if (after) content.appendChild(child);
+		else content.insertBefore(child, anchor);
+	}
+}
+
+/**
  * Takes `element` out of `sdt`, which is another control's: at its start or end it moves out beside
  * it, with the range markers on that side, and from its middle it goes after it, the rows or cells
  * after it going to a copy of `sdt` under a new id (ids are unique, ECMA-376 17.5.2.18). Everything
  * keeps its order. An `sdt` left without rows or cells is unwrapped.
  */
 function takeOut(doc: XmlDocument, element: XmlElement, sdt: XmlElement): void {
+	markersIntoContent(sdt);
 	const content = element.parentNode as XmlElement;
 	const parent = sdt.parentNode as XmlElement;
 	const siblings = (from: ChildNode | null, step: 'previousSibling' | 'nextSibling') => {
@@ -126,12 +151,13 @@ export function placeTableControl(
 	}
 	const shared = isSdt(before as XmlElement | null) && sdtContent(before as XmlElement);
 	const { id } = next;
-	// A control without an id of its own (a remote peer can give one) joins none.
-	if (
+	const joins =
 		shared &&
 		typeof id === 'string' &&
-		(createdFor.get(before as XmlElement) ?? idOf(before as XmlElement)) === id
-	) {
+		(createdFor.get(before as XmlElement) ?? idOf(before as XmlElement)) === id;
+	// A control without an id of its own (a remote peer can give one) joins none.
+	if (joins) {
+		markersIntoContent(before as XmlElement);
 		for (const node of [...between, element]) shared.appendChild(node);
 		return;
 	}
@@ -148,7 +174,8 @@ export function placeTableControl(
 /**
  * Unwraps each `w:sdt` around `elements` (the rows of a table or the cells of a row, in place)
  * that the model takes off every one of them it holds: `next` is each element's control. The
- * rows or cells stay; a control the model keeps on any of them stays around all of them.
+ * rows or cells stay. One the model keeps on some of them stays around those: a row or cell it
+ * gives no control is taken out of it, as one given another control is.
  */
 export function unwrapDroppedControls(
 	elements: readonly XmlElement[],
@@ -160,4 +187,8 @@ export function unwrapDroppedControls(
 		if (sdt) kept.set(sdt, Boolean(kept.get(sdt)) || next[index] !== undefined);
 	});
 	for (const [sdt, keep] of kept) if (!keep) unwrapContentControl(sdt);
+	elements.forEach((element, index) => {
+		const sdt = next[index] === undefined ? enclosingSdt(element) : undefined;
+		if (sdt) takeOut(element.ownerDocument as XmlDocument, element, sdt);
+	});
 }

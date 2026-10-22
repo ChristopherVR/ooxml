@@ -33,15 +33,84 @@ const PLACEHOLDER_STYLE = 'PlaceholderText';
 const isPlaceholderStyle = (mark: Mark) =>
 	mark.type.name === 'characterStyle' && mark.attrs.id === PLACEHOLDER_STYLE;
 
-/** The first text of a control: its formatting carries over to the content that replaces it. */
+/**
+ * The first text of a control: its formatting carries over to the content that replaces it. A
+ * cell's text is in its paragraphs, not in a table in it, which the replacement leaves as it is.
+ */
 function firstText(state: EditorState, span: ControlSpan): ProseMirrorNode | null {
 	if (span.level === 'inline') return state.doc.nodeAt(span.from);
 	let found: ProseMirrorNode | null = null;
-	state.doc.nodesBetween(span.from, span.to, (node) => {
+	state.doc.nodesBetween(span.from, span.to, (node, pos) => {
 		if (!found && node.isText) found = node;
+		return !found && !(span.level === 'cell' && node.type.name === 'table' && pos > span.from);
+	});
+	return found;
+}
+
+/** Whether `doc` holds no inline content (text, a break, a picture) between `from` and `to`. */
+function holdsNothing(doc: ProseMirrorNode, from: number, to: number): boolean {
+	let nothing = true;
+	if (from < to)
+		doc.nodesBetween(from, to, (node) => {
+			if (node.isInline) nothing = false;
+			return nothing;
+		});
+	return nothing;
+}
+
+/** Whether a table in the cell at `cell` holds part of `from` to `to`. */
+function touchesTable(doc: ProseMirrorNode, cell: number, from: number, to: number): boolean {
+	let found = false;
+	doc.nodesBetween(from, to, (node, pos) => {
+		found ||= node.type.name === 'table' && pos > cell;
 		return !found;
 	});
 	return found;
+}
+
+/**
+ * Where the text of the cell at `pos` runs: from inside its first paragraph to the end of its
+ * last. A table can come before or after them.
+ */
+function cellText(doc: ProseMirrorNode, pos: number): { from: number; to: number } {
+	const cell = doc.nodeAt(pos)!;
+	const text = { from: pos + 2, to: pos + cell.nodeSize - 2 };
+	let first = true;
+	cell.forEach((child, offset) => {
+		if (child.type.name !== 'paragraph') return;
+		if (first) text.from = pos + 2 + offset;
+		text.to = pos + offset + child.nodeSize;
+		first = false;
+	});
+	return text;
+}
+
+/**
+ * The content of a cell control's cell once it holds `text`. A table holding a cell control keeps
+ * its structure when it is saved, so the cell keeps its paragraphs and the tables in it: its first
+ * paragraph holds the text and the others are emptied. Each keeps its formatting, not a control
+ * around it: that goes with its content.
+ */
+function cellContent(
+	state: EditorState,
+	cell: ProseMirrorNode,
+	text: ProseMirrorNode | null,
+): Fragment {
+	const nodes: ProseMirrorNode[] = [];
+	let placed = false;
+	cell.forEach((child) => {
+		if (child.type.name !== 'paragraph') {
+			nodes.push(child);
+			return;
+		}
+		const attrs = child.attrs.contentControl
+			? { ...child.attrs, contentControl: null }
+			: child.attrs;
+		nodes.push(child.type.create(attrs, placed ? null : text));
+		placed = true;
+	});
+	if (!placed) nodes.push(state.schema.nodes.paragraph!.create(null, text));
+	return Fragment.fromArray(nodes);
 }
 
 function contentMarks(state: EditorState, span: ControlSpan, change: ControlChange): Mark[] {
@@ -78,7 +147,7 @@ const placeholderChange = (control: ContentControl): ControlChange => ({
 
 /**
  * Replaces a control's content (and its state) as one edit. An inline control's text is replaced;
- * a cell control's cell keeps one paragraph, its first, holding the new text.
+ * a cell control's cell holds the new text in its first paragraph (`cellContent`).
  */
 export function replaceControlContent(
 	state: EditorState,
@@ -95,13 +164,7 @@ export function replaceControlContent(
 	if (span.level !== 'cell')
 		return state.tr.replaceWith(span.from, span.to, text ?? []).setMeta(CONTROL_EDIT_META, true);
 	const cell = state.doc.nodeAt(span.from)!;
-	const first = cell.firstChild?.type.name === 'paragraph' ? cell.firstChild : undefined;
-	// The paragraph keeps its formatting, not a control around it: that goes with its content.
-	const attrs = first?.attrs.contentControl
-		? { ...first.attrs, contentControl: null }
-		: first?.attrs;
-	const paragraph = (first?.type ?? state.schema.nodes.paragraph!).create(attrs, text);
-	const tr = state.tr.replaceWith(span.from + 1, span.to - 1, paragraph);
+	const tr = state.tr.replaceWith(span.from + 1, span.to - 1, cellContent(state, cell, text));
 	tr.setNodeMarkup(span.from, undefined, {
 		...cell.attrs,
 		contentControl: change.removed ? null : change.control,
@@ -111,7 +174,7 @@ export function replaceControlContent(
 	const { from, to } = state.selection;
 	if (from > span.from && to < span.to) {
 		const shown = change.control.showingPlaceholder && !change.removed;
-		const start = span.from + 2;
+		const start = cellText(tr.doc, span.from).from;
 		tr.setSelection(TextSelection.create(tr.doc, shown ? start : start + (text?.nodeSize ?? 0)));
 	}
 	return tr.setMeta(CONTROL_EDIT_META, true);
@@ -229,6 +292,17 @@ export function chooseDate(
 }
 
 /**
+ * The control whose rules hold for what is typed, pasted or deleted at `pos`: the innermost one,
+ * except that a block control in a cell control (`w:tc > w:sdt > w:p`) leaves them to the cell.
+ */
+function inputControlAt(spans: readonly ControlSpan[], pos: number): ControlSpan | undefined {
+	const span = controlAt(spans, pos, true);
+	if (span?.level !== 'block') return span;
+	const cells = spans.filter((other) => other.level === 'cell');
+	return controlAt(cells, pos) ?? span;
+}
+
+/**
  * Typing over a control that shows its placeholder replaces the whole placeholder. Returns
  * `'blocked'` for kinds that take no typed text (checkbox, drop-down list) when the text would
  * land inside them; at their edge the text is typed beside the control instead. `undefined`
@@ -240,7 +314,7 @@ export function typeOverPlaceholder(
 	text: string,
 	to = from,
 ): Transaction | 'blocked' | undefined {
-	const span = controlAt(controlSpans(state.doc), from, true);
+	const span = inputControlAt(controlSpans(state.doc), from);
 	if (span?.level === 'cell') return typeInCell(state, span, text, to);
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
@@ -274,7 +348,9 @@ function typeInCell(
 		return undefined;
 	if (!editable(state, span)) return 'blocked';
 	const tr = replaceControlContent(state, span, afterEdit({ control: withValue(control), text }));
-	return tr.setSelection(TextSelection.create(tr.doc, span.from + 2 + text.length));
+	return tr.setSelection(
+		TextSelection.create(tr.doc, cellText(tr.doc, span.from).from + text.length),
+	);
 }
 
 /** `fragment` without the Placeholder Text style, which pasted plain text takes where it lands. */
@@ -297,7 +373,7 @@ function withoutPlaceholderStyle(fragment: Fragment): Fragment {
  */
 export function pasteInCell(state: EditorState, slice: Slice): Transaction | 'blocked' | undefined {
 	const { from, to } = state.selection;
-	const span = controlAt(controlSpans(state.doc), from, true);
+	const span = inputControlAt(controlSpans(state.doc), from);
 	if (span?.level !== 'cell' || to > span.to - 1) return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') return 'blocked';
@@ -309,7 +385,7 @@ export function pasteInCell(state: EditorState, slice: Slice): Transaction | 'bl
 		span,
 		afterEdit({ control: withValue(control), text: '' }),
 	);
-	const at = TextSelection.create(tr.doc, span.from + 2);
+	const at = TextSelection.create(tr.doc, cellText(tr.doc, span.from).from);
 	return tr
 		.setSelection(at)
 		.replaceSelection(
@@ -323,7 +399,7 @@ export function deleteToPlaceholder(
 	direction: 'backward' | 'forward',
 ): Transaction | undefined {
 	const { selection } = state;
-	const span = controlAt(controlSpans(state.doc), selection.from, true);
+	const span = inputControlAt(controlSpans(state.doc), selection.from);
 	if (!span || span.level === 'block' || span.control.showingPlaceholder) return undefined;
 	if (!editable(state, span) || span.control.kind === 'checkbox') return undefined;
 	if (!replaceable(state, span)) return undefined;
@@ -334,12 +410,17 @@ export function deleteToPlaceholder(
 			? [selection.from - 1, selection.from]
 			: [selection.from, selection.from + 1]
 		: [selection.from, selection.to];
-	// A cell's text runs from inside its first paragraph to the end of its last. A selection that
-	// covers it and goes on past the control is deleted as ordinary text, all of it.
+	// The deletion takes all the control holds when nothing inline stays before or after it in the
+	// control's text (`cellText` for a cell, whose other paragraphs can be empty). A selection that
+	// covers that text and goes on past the control is deleted as ordinary text, all of it.
 	const cell = span.level === 'cell';
-	const inner = cell ? { from: span.from + 2, to: span.to - 2 } : span;
+	const inner = cell ? cellText(state.doc, span.from) : span;
 	const outer = cell ? { from: span.from + 1, to: span.to - 1 } : span;
-	if (from > inner.from || to < inner.to || from < outer.from || to > outer.to) return undefined;
+	if (from < outer.from || to > outer.to) return undefined;
+	// A table in a cell stays when its placeholder comes back: deleting in one is ordinary deleting.
+	if (cell && touchesTable(state.doc, span.from, from, to)) return undefined;
+	if (!holdsNothing(state.doc, inner.from, from) || !holdsNothing(state.doc, to, inner.to))
+		return undefined;
 	return replaceControlContent(state, span, placeholderChange(span.control));
 }
 
