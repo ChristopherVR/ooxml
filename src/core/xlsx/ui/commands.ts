@@ -31,6 +31,8 @@ export interface CommandRegistry {
 	/** False when the command is missing or disabled; emits 'ribbon-action'. */
 	run(id: string, arg?: unknown): Promise<boolean>;
 	isEnabled(id: string): boolean;
+	/** True when the host hid the command (`hiddenActions`); hidden commands never run. */
+	isHidden(id: string): boolean;
 }
 
 export interface CommandRegistryOptions {
@@ -45,9 +47,10 @@ export function createCommandRegistry(
 	options: CommandRegistryOptions = {},
 ): CommandRegistry {
 	const commands = new Map<string, Command>();
+	const isHidden = (id: string): boolean => options.isHidden?.(id) ?? false;
 	const isEnabled = (id: string): boolean => {
 		const command = commands.get(id);
-		if (!command || options.isHidden?.(id)) return false;
+		if (!command || isHidden(id)) return false;
 		const ctx = context();
 		if (command.editing && ctx.readOnly()) return false;
 		try {
@@ -66,6 +69,7 @@ export function createCommandRegistry(
 		get: (id) => commands.get(id),
 		list: () => [...commands.values()],
 		isEnabled,
+		isHidden,
 		async run(id, arg) {
 			const command = commands.get(id);
 			if (!command || !isEnabled(id)) return false;
