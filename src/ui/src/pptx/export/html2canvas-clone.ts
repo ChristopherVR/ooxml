@@ -29,6 +29,8 @@ import { preprocessCssForCapture } from './css-preprocessing';
  * `original` is the live element handed to html2canvas; `doc` and `clonedEl`
  * are what its `onclone` callback receives. Order matters:
  *
+ * 0. The cloned element keeps the live element's layout size (see
+ *    `html2canvasCaptureScope`).
  * 1. 3D views settle on the live tree, then each cloned view is replaced by an
  *    `<img>` of its canvas plus its DOM overlay. This runs first, while the
  *    live and cloned trees still pair up in document order.
@@ -43,29 +45,36 @@ export async function prepareHtml2CanvasClone(
 	clonedEl: HTMLElement,
 ): Promise<void> {
 	await settleThreeViews(original);
+	pinCapturedSize(original, clonedEl);
 	snapshotThreeViewsIntoClone(original, clonedEl);
 	prepareExportClone(clonedEl);
 	await normalizeColorsForCapture(doc, clonedEl);
 	preprocessCssForCapture(clonedEl);
 }
 
-/** One step up the composed tree: a node's parent, or the host of the shadow root it sits in. */
+/** One step up the flattened tree html2canvas clones: a slotted node's slot, a parent, or a host. */
 function composedParent(node: Node): Node | null {
+	const slot = (node as Element | Text).assignedSlot;
+	if (slot) return slot;
 	const parent = node.parentNode;
-	return parent && 'host' in parent ? (parent as ShadowRoot).host : parent;
+	return parent?.nodeType === 11 && (parent as ShadowRoot).host
+		? (parent as ShadowRoot).host
+		: parent;
 }
+
+const STYLE_SOURCES = 'style, link[rel~="stylesheet"]';
 
 /**
  * The `ignoreElements` every binding hands html2canvas-pro.
  *
- * html2canvas-pro clones the whole document, every element and open shadow root with its computed
- * style copied, before it paints the one element it captures. Under a viewer with its chrome
- * mounted that clone is most of a capture (seconds, all on the main thread), and nothing outside
- * the captured element is painted. This keeps the captured element's subtree (through shadow
- * roots), the chain of its ancestors, whose styles it inherits, and the head and style sheets the
- * clone's fonts and rules come from; it skips every other branch. Each cloned element keeps its own
- * computed size, so leaving out its neighbours does not move or resize what is painted. `ignore`, a
- * caller's own predicate, still applies.
+ * html2canvas-pro clones the whole document, every element and open shadow root, before it paints
+ * the one element it captures. Under a viewer with its chrome mounted that clone is most of a
+ * capture (seconds, all on the main thread), and nothing outside the captured element is painted.
+ * This keeps the captured element's subtree (through shadow roots and slots), the chain of its
+ * ancestors, whose styles it inherits, and every style sheet with the path to it (the clone lays
+ * ordinary elements out again from those rules, fonts included); it skips every other branch. The
+ * clone is laid out without those neighbours, so `prepareHtml2CanvasClone` keeps the captured
+ * element at its live size. `ignore`, a caller's own predicate, still applies.
  */
 export function html2canvasCaptureScope(
 	captured: Element,
@@ -85,6 +94,32 @@ export function html2canvasCaptureScope(
 	return (node) => {
 		if (ignore?.(node)) return true;
 		if (ancestors.has(node) || inside(node)) return false;
-		return !(node.closest('head') || node.localName === 'style' || node.localName === 'link');
+		return !(
+			node.closest('head') ||
+			node.matches(STYLE_SOURCES) ||
+			node.querySelector(STYLE_SOURCES)
+		);
 	};
+}
+
+/**
+ * Keep the cloned capture at the live element's layout size. Scoped by `html2canvasCaptureScope`,
+ * its ancestors are laid out without their other children, which could otherwise resize it (a grid
+ * column, a flex share). The offset size is the layout box, before any transform.
+ */
+export function pinCapturedSize(original: HTMLElement, clonedEl: HTMLElement): void {
+	const { offsetWidth: width, offsetHeight: height } = original;
+	if (width <= 0 || height <= 0) return;
+	const display = original.ownerDocument.defaultView?.getComputedStyle(original).display;
+	if (display === 'inline' || display === 'contents') return;
+	Object.assign(clonedEl.style, {
+		boxSizing: 'border-box',
+		width: `${width}px`,
+		height: `${height}px`,
+		minWidth: '0',
+		minHeight: '0',
+		maxWidth: 'none',
+		maxHeight: 'none',
+		flex: 'none',
+	});
 }

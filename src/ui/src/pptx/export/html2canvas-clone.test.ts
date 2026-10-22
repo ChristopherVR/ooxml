@@ -14,7 +14,11 @@ import { describe, expect, it } from 'vitest';
 
 import { THREE_VIEW_MARKER_ATTR } from '../three-view/element';
 import { THREE_VIEW_SNAPSHOT_ATTR } from '../three-view/export-snapshot';
-import { html2canvasCaptureScope, prepareHtml2CanvasClone } from './html2canvas-clone';
+import {
+	html2canvasCaptureScope,
+	pinCapturedSize,
+	prepareHtml2CanvasClone,
+} from './html2canvas-clone';
 
 const PIXELS = 'data:image/png;base64,chart';
 
@@ -96,6 +100,22 @@ describe('prepareHtml2CanvasClone', () => {
 	});
 });
 
+/** The elements html2canvas-pro would clone: it visits a child only when its parent is kept. */
+function cloned(skip: (node: Element) => boolean): Set<Element> {
+	const kept = new Set<Element>();
+	const visit = (node: Element) => {
+		kept.add(node);
+		const children = [...(node.shadowRoot?.children ?? []), ...node.children].flatMap((child) =>
+			child.localName === 'slot'
+				? [child, ...(child as HTMLSlotElement).assignedElements()]
+				: [child],
+		);
+		for (const child of children) if (!skip(child)) visit(child);
+	};
+	visit(document.documentElement);
+	return kept;
+}
+
 describe('html2canvasCaptureScope', () => {
 	function page() {
 		document.head.innerHTML =
@@ -104,7 +124,7 @@ describe('html2canvasCaptureScope', () => {
 			<div class="ribbon"><button>Home</button></div>
 			<main class="viewer">
 				<aside class="rail"><img alt="slide 1"></aside>
-				<div class="viewport"><div class="stage"><div class="shape"><span>Title</span></div><span class="host"></span></div></div>
+				<div class="viewport"><div class="stage"><div class="shape"><a href="https://example.com/"><span>Linked</span></a></div><span class="host"></span></div></div>
 				<aside class="inspector"><style>.x {}</style><input></aside>
 			</main>
 			<link rel="stylesheet" href="viewer.css">`;
@@ -114,44 +134,52 @@ describe('html2canvasCaptureScope', () => {
 		return { at, host };
 	}
 
-	it('keeps the captured branch and the style sources, and skips every other branch', () => {
+	it('clones the captured branch and the style sheets with their path, and skips the rest', () => {
 		const { at, host } = page();
-		const skip = html2canvasCaptureScope(at('.stage'));
-		for (const kept of [
-			'html',
-			'head',
+		const kept = cloned(html2canvasCaptureScope(at('.stage')));
+		for (const selector of [
 			'head style',
-			'body',
 			'.viewer',
 			'.viewport',
 			'.stage',
-			'.shape',
-			'.shape span',
-			'link',
+			'.shape a span',
+			'body > link',
+			'.inspector',
 			'.inspector style',
 		]) {
-			expect([kept, skip(at(kept))]).toStrictEqual([kept, false]);
+			expect([selector, kept.has(at(selector))]).toStrictEqual([selector, true]);
 		}
-		expect(skip(host.shadowRoot!.querySelector('text')!)).toBeFalsy();
-		for (const skipped of [
-			'.ribbon',
-			'.ribbon button',
-			'.rail',
-			'.inspector',
-			'.inspector input',
-		]) {
-			expect([skipped, skip(at(skipped))]).toStrictEqual([skipped, true]);
+		expect(kept.has(host.shadowRoot!.querySelector('text')!)).toBeTruthy();
+		for (const selector of ['.ribbon', '.rail', '.inspector input']) {
+			expect([selector, kept.has(at(selector))]).toStrictEqual([selector, false]);
 		}
 	});
 
-	it('follows a captured element inside a shadow root up through its host', () => {
+	it('walks up through a link around the captured element', () => {
+		const { at } = page();
+		const linked = at('.shape a span');
+		expect(cloned(html2canvasCaptureScope(linked)).has(linked)).toBeTruthy();
+	});
+
+	it('follows a captured element inside a shadow root and through a slot', () => {
 		const { at, host } = page();
 		const inner = host.shadowRoot!.querySelector('svg')!;
-		const skip = html2canvasCaptureScope(inner);
-		expect(skip(host)).toBeFalsy();
-		expect(skip(at('.stage'))).toBeFalsy();
-		expect(skip(at('.shape'))).toBeTruthy();
-		expect(skip(inner.querySelector('text')!)).toBeFalsy();
+		const kept = cloned(html2canvasCaptureScope(inner));
+		expect([kept.has(host), kept.has(inner), kept.has(at('.shape'))]).toStrictEqual([
+			true,
+			true,
+			false,
+		]);
+
+		const framed = document.createElement('div');
+		framed.attachShadow({ mode: 'open' }).innerHTML = '<div class="frame"><slot></slot></div>';
+		const slotted = document.createElement('div');
+		framed.append(slotted);
+		at('.viewport').append(framed);
+		// The slot's wrapper inside the shadow root is what places it: without it, nothing renders.
+		const slottedKept = cloned(html2canvasCaptureScope(slotted));
+		expect(slottedKept.has(framed.shadowRoot!.querySelector('.frame')!)).toBeTruthy();
+		expect(slottedKept.has(slotted)).toBeTruthy();
 	});
 
 	it("still applies the caller's own predicate", () => {
@@ -159,5 +187,27 @@ describe('html2canvasCaptureScope', () => {
 		const skip = html2canvasCaptureScope(at('.stage'), (node) => node.classList.contains('shape'));
 		expect(skip(at('.shape'))).toBeTruthy();
 		expect(skip(at('.stage'))).toBeFalsy();
+	});
+});
+
+describe('pinCapturedSize', () => {
+	it('keeps the clone at the live layout size, and leaves an element with no box alone', () => {
+		const original = document.createElement('div');
+		Object.defineProperties(original, {
+			offsetWidth: { value: 960 },
+			offsetHeight: { value: 540 },
+		});
+		document.body.append(original);
+		const clone = document.createElement('div');
+		pinCapturedSize(original, clone);
+		expect([
+			clone.style.width,
+			clone.style.height,
+			clone.style.flexGrow,
+			clone.style.flexShrink,
+		]).toStrictEqual(['960px', '540px', '0', '0']);
+		const unsized = document.createElement('div');
+		pinCapturedSize(document.createElement('div'), unsized);
+		expect(unsized.getAttribute('style')).toBeNull();
 	});
 });
