@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { sampleSettled } from './demo-page';
 
 // A shared drawing merges per shape property: two windows that change DIFFERENT properties of the
@@ -25,19 +26,21 @@ async function openPair(context: import('@playwright/test').BrowserContext, room
 
 /** The shape `wanted` (default: the first with text) of the first page; null while it is absent. */
 function probe(page: Page, wanted?: string): Promise<Probe | null> {
-	return page.locator('visio-viewer').evaluate((element: any, id: string | undefined) => {
-		const drawing = element.document.pages[0];
-		const shape = id
-			? drawing.shapes.find((s: { id: string }) => s.id === id)
-			: drawing.shapes.find((s: { text?: { plainText?: string } }) => s.text?.plainText);
-		if (!shape) return null;
-		return {
-			pageId: drawing.id,
-			shapeId: shape.id,
-			text: shape.text?.plainText ?? '',
-			transform: JSON.stringify(shape.transform),
-		};
-	}, wanted);
+	return page
+		.locator('visio-viewer')
+		.evaluate((element: VisioViewerElement, id: string | undefined) => {
+			const drawing = element.document!.pages[0]!;
+			const shape = id
+				? drawing.shapes.find((s: { id: string }) => s.id === id)
+				: drawing.shapes.find((s: { text?: { plainText?: string } }) => s.text?.plainText);
+			if (!shape) return null;
+			return {
+				pageId: drawing.id,
+				shapeId: shape.id,
+				text: shape.text?.plainText ?? '',
+				transform: JSON.stringify(shape.transform),
+			};
+		}, wanted);
 }
 
 test('concurrent edits to different properties of one shape both survive', async ({ context }) => {
@@ -52,7 +55,7 @@ test('concurrent edits to different properties of one shape both survive', async
 		a
 			.locator('visio-viewer')
 			.evaluate(
-				(element: any, target: Probe) =>
+				(element: VisioViewerElement, target: Probe) =>
 					element.applyEdits([
 						{ type: 'move-shape', pageId: target.pageId, shapeId: target.shapeId, x: 6, y: 5 },
 					]),
@@ -61,7 +64,7 @@ test('concurrent edits to different properties of one shape both survive', async
 		b
 			.locator('visio-viewer')
 			.evaluate(
-				(element: any, target: Probe) =>
+				(element: VisioViewerElement, target: Probe) =>
 					element.replacePlainText(target.pageId, target.shapeId, 'Edited in the other window'),
 				before,
 			),
@@ -94,7 +97,7 @@ test('a collaborator selection shows as an outline and a cursor in the other win
 	await a
 		.locator('visio-viewer')
 		.evaluate(
-			(element: any, shape: Probe) =>
+			(element: VisioViewerElement, shape: Probe) =>
 				element.selectShapes([{ id: shape.shapeId, name: '', pageId: shape.pageId }]),
 			target,
 		);
@@ -114,6 +117,8 @@ test('a collaborator selection shows as an outline and a cursor in the other win
 	});
 
 	// Clearing the selection removes the outline.
-	await a.locator('visio-viewer').evaluate((element: any) => element.clearSelection());
+	await a
+		.locator('visio-viewer')
+		.evaluate((element: VisioViewerElement) => element.clearSelection());
 	await expect(outline).toHaveCount(0, { timeout: 30_000 });
 });

@@ -12,7 +12,7 @@
 // on the shapes of their batch.
 import { buildShape, type PieceEntry } from './pieces';
 import { attrOf } from './scan';
-import { type ShapeEntry, shapeEntry } from './schema';
+import type { ShapeEntry } from './schema';
 
 export interface ResolvedShape {
 	key: string;
