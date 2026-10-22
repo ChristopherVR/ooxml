@@ -216,7 +216,7 @@ The object is applied when its identity changes, so keep it stable. As with the
 other props, leaving it out of a partial update keeps the current value; pass
 `null` to restore the defaults. `edit: false` is a lock of its own beside `canEdit`, `readOnly` and a collaboration `viewer` role: none of them lifts another, and leaving a room keeps it. Capabilities are UI policy, not document
 protection. Replacing built-in regions (the Options dialog, the panes) is not
-offered for Visio yet.
+offered for Visio yet. All products side by side are mapped in the [embedding guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/embedding.md).
 
 ## Host-owned storage and file commands
 
