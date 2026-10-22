@@ -18,6 +18,13 @@ test('xlsx MCP discovery, input validation and tool errors', async () => {
 		const { tools } = await client.listTools();
 		assert.ok(tools.length >= 2);
 		assert.ok(tools.every((tool) => tool.name.startsWith('xlsx_')));
+		for (const name of [
+			'xlsx_read_range',
+			'xlsx_read_filled_cells',
+			'xlsx_find',
+			'xlsx_read_table',
+		])
+			assert.equal(tools.find((tool) => tool.name === name)?.annotations.readOnlyHint, true, name);
 		const inspect = tools.find((tool) => tool.name === 'xlsx_inspect');
 		assert.equal(inspect.annotations.readOnlyHint, true);
 		const missing = await client.callTool({
@@ -42,6 +49,16 @@ test('xlsx MCP discovery, input validation and tool errors', async () => {
 			arguments: { filePath: 'new.xlsx' },
 		});
 		assert.ok(!inspected.isError);
+		const filled = await client.callTool({
+			name: 'xlsx_read_filled_cells',
+			arguments: { filePath: 'new.xlsx', maxCells: 10 },
+		});
+		assert.equal(JSON.parse(filled.content[0].text).truncated, false);
+		const unbounded = await client.callTool({
+			name: 'xlsx_read_filled_cells',
+			arguments: { filePath: 'new.xlsx', maxCells: 1000000 },
+		});
+		assert.equal(unbounded.isError, true);
 	} finally {
 		await client.close();
 		await server.close();

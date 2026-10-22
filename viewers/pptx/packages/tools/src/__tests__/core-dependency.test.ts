@@ -8,8 +8,8 @@ import { PptxHandler } from '../index';
 const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
 
 describe('canonical core dependency', () => {
-	it('declares an installable core automation release', () => {
-		expect(manifest.dependencies['ooxml-core']).toMatch(/^\^1\.\d+\.\d+$/u);
+	it('tracks the workspace core, which publishing pins to a caret range', () => {
+		expect(manifest.dependencies['ooxml-core']).toBe('workspace:*');
 	});
 
 	it('does not install the viewer facade and a second document engine', () => {

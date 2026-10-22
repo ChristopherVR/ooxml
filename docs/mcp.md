@@ -84,14 +84,12 @@ kept out of `ooxml-core/automation` so that entry never pulls in the PowerPoint 
 PowerPoint assistant in `ooxml-ui` runs the same core tool functions and schemas on the open,
 in-memory deck rather than on bytes.
 
-Release core first (the automation entry requires 0.11.0 or later), then the new
-standalone packages and the PowerPoint version with registration (2.6.0+), then
-the combined package. These are independent conventional-commit releases.
-The new packages ship JavaScript source and declarations, so no build is required.
-After that core release, refresh the PowerPoint workspace lockfile with `bun install`
-before landing its dependency bumps. Its current registry lock cannot resolve the
-new automation entry before that release. Temporary local core links are for
-verification only and must not be committed.
+Every MCP package declares `ooxml-core` (and the combined server its viewer packages) as
+`workspace:*`, so the workspace always tests them against the core in this checkout. Publishing
+rewrites each to `^<version on disk>` in the packed manifest, and a package waits for a sibling
+released in the same run to reach npm, so a tool change in core and the packages that register it
+land in one commit and one release. The standalone packages ship JavaScript source and
+declarations (the PowerPoint one is built), so no other step is needed.
 Tests are excluded from npm tarballs. Install a standalone package's dependencies
 and run `npm test` inside its `mcp/` directory to exercise protocol contracts.
 Core round-trip, edit and filesystem tests live in `src/core/automation/`.

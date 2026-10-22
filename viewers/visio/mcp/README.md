@@ -10,9 +10,9 @@
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; **[Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme)** &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
-Repository-owned MCP schemas and server wiring. All document loading, editing
-and serialization delegate to `ooxml-core/automation`.
-Requires `ooxml-core` 0.11.0 or later. It is installed as a dependency.
+A thin MCP wrapper: the tools themselves (names, schemas, bounds and operations) are
+`visioTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from
+`ooxml-core/automation/node`. Requires `ooxml-core` 1.22.0 or later, installed as a dependency.
 
 ## Install
 
