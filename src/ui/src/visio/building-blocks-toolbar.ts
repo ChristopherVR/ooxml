@@ -2,7 +2,7 @@ import { editErrorMessage, isEditCancellation, visioSelectionIsOnPage } from 'oo
 import { canEditDiagram, type ViewerController, type ViewerState } from './controller';
 import { canvasServices } from './canvas-services';
 import { deleteDiagramSelection } from './canvas-keys';
-import { DIAGRAM_DRAW_TOOLS, type DiagramTool } from './diagram-tool';
+import { DIAGRAM_TOOLS, type DiagramTool } from './diagram-tool';
 import { normalizeVisioLocale, translateRibbonText } from './ribbon-locale';
 
 /** Every label a custom toolbar may show; each has an entry in every Visio locale. */
@@ -31,6 +31,8 @@ export const DIAGRAM_TOOLBAR_LABEL_KEYS = [
 	'Freeform',
 	'Arc',
 	'Pencil',
+	'Text',
+	'Connector',
 	'Open',
 	'Page Setup',
 	'Options',
@@ -77,6 +79,8 @@ const TOOL_LABELS: Readonly<Record<DiagramTool, DiagramToolbarLabelKey>> = {
 	freeform: 'Freeform',
 	arc: 'Arc',
 	pencil: 'Pencil',
+	text: 'Text',
+	connector: 'Connector',
 };
 export function diagramToolbarProps(
 	controller: ViewerController,
@@ -100,7 +104,7 @@ export function diagramToolbarProps(
 		});
 	const clipboard = (operation: 'copy' | 'cut' | 'paste') =>
 		call(() => canvasServices(controller)?.clipboard(operation) ?? Promise.resolve());
-	const tools: DiagramToolSummary[] = (['pointer', ...DIAGRAM_DRAW_TOOLS] as const).map((id) => ({
+	const tools: DiagramToolSummary[] = (['pointer', ...DIAGRAM_TOOLS] as const).map((id) => ({
 		id,
 		label: labels[TOOL_LABELS[id]],
 		active: state.tool === id,

@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { editVsdx, parseVsdx, type VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller';
 import { diagramToolbarProps, mountDiagramCanvas, mountDiagramShapes } from './building-blocks';
-import { DIAGRAM_DRAW_TOOLS } from './diagram-tool';
+import { DIAGRAM_TOOLS } from './diagram-tool';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
 
 afterEach(() => {
@@ -126,6 +126,54 @@ it('draws a shape with the selected tool and rejects drawing while read-only', a
 	}
 });
 
+it('creates a text box with the text tool and a connector with the connector tool, only when editing', async () => {
+	const ui = await surface(true);
+	try {
+		ui.controller.setTool('text');
+		expect(ui.controller.state.tool).toBe('text');
+		ui.pointer('pointerdown', 100, 100);
+		ui.pointer('pointermove', 140, 120);
+		ui.pointer('pointerup', 140, 120);
+		const draft = await vi.waitFor(() => {
+			const input = ui.viewport.querySelector<HTMLTextAreaElement>('[data-text-draft] textarea');
+			expect(input).not.toBeNull();
+			return input!;
+		});
+		draft.value = 'Hello';
+		draft.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }),
+		);
+		await vi.waitFor(() => expect(ui.edits).toHaveLength(1));
+		expect(ui.edits[0]![0]).toMatchObject({ type: 'create-text-box' });
+		ui.controller.setTool('connector');
+		ui.pointer('pointerdown', 200, 200);
+		ui.pointer('pointermove', 260, 240);
+		ui.pointer('pointerup', 260, 240);
+		await vi.waitFor(() => expect(ui.edits).toHaveLength(2));
+		expect(ui.edits[1]![0]).toMatchObject({ type: 'create-line', route: 'right-angle' });
+		// Escape abandons the tool and returns to the pointer.
+		ui.viewport.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(ui.controller.state.tool).toBe('pointer');
+	} finally {
+		ui.dispose();
+	}
+	const readOnly = await surface(false);
+	try {
+		for (const tool of ['text', 'connector'] as const) {
+			readOnly.controller.setTool(tool);
+			expect(readOnly.controller.state.tool).toBe('pointer');
+			readOnly.pointer('pointerdown', 100, 100);
+			readOnly.pointer('pointermove', 140, 120);
+			readOnly.pointer('pointerup', 140, 120);
+		}
+		await Promise.resolve();
+		expect(readOnly.edits).toEqual([]);
+		expect(readOnly.viewport.querySelector('[data-text-draft]')).toBeNull();
+	} finally {
+		readOnly.dispose();
+	}
+});
+
 it('offers resize and rotate handles and inline text only when editing is allowed', async () => {
 	const editable = await surface(true);
 	try {
@@ -221,7 +269,7 @@ it('reports search state, tools and host dialog availability as flat props', asy
 		const open = vi.fn();
 		const props = diagramToolbarProps(ui.controller, () => {}, 'de', { onOpenSettings: open });
 		expect(props.search).toMatchObject({ query: 'Movable', resultCount: 1 });
-		expect(props.tools.map((tool) => tool.id)).toEqual(['pointer', ...DIAGRAM_DRAW_TOOLS]);
+		expect(props.tools.map((tool) => tool.id)).toEqual(['pointer', ...DIAGRAM_TOOLS]);
 		expect(props.labels.Undo).toBe('Rückgängig');
 		expect(props.labels.Delete).toBe('Löschen');
 		expect(props.canOpenSettings).toBe(true);

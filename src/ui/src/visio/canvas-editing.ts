@@ -5,7 +5,9 @@ import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { ViewerResizeHandles } from './viewer-resize-handles';
 import { ViewerRotationHandle } from './viewer-rotation-handle';
 import { ShapeDrawTool } from './viewer-draw-tool';
-import type { DiagramDrawTool } from './diagram-tool';
+import { ViewerTextTool } from './viewer-text-tool';
+import { ViewerConnectorTool } from './viewer-connector-tool';
+import type { DiagramTool } from './diagram-tool';
 
 export interface CanvasEditingOptions {
 	/** Whether the pointer tool is the active one: handles and gestures stand down otherwise. */
@@ -13,8 +15,11 @@ export interface CanvasEditingOptions {
 	announce(message: string): void;
 	snap?: ConstructorParameters<typeof ViewerPointerGestures>[2]['snap'];
 	clearSnap?: ConstructorParameters<typeof ViewerPointerGestures>[2]['clearSnap'];
-	/** Present only where the draw tool lives outside this wiring (the full viewer's commands). */
-	drawTool?: () => DiagramDrawTool | undefined;
+	/**
+	 * The active tool, present only where the tools live in this wiring (the standalone canvas).
+	 * The full viewer owns its tools in its commands and leaves this out.
+	 */
+	tool?: () => DiagramTool;
 }
 
 /**
@@ -38,9 +43,26 @@ export function createCanvasEditing(
 	const rotation = new ViewerRotationHandle(viewport, controller, gesture);
 	const resize = new ViewerResizeHandles(viewport, controller, gesture);
 	const edit = new ViewerInlineText(viewport, controller, options.announce);
-	const draw = options.drawTool
+	const current = options.tool;
+	const draw = current
 		? new ShapeDrawTool(viewport, controller, {
-				tool: options.drawTool,
+				tool: () => {
+					const tool = current();
+					return tool === 'pointer' || tool === 'text' || tool === 'connector' ? undefined : tool;
+				},
+				announce: options.announce,
+			})
+		: undefined;
+	const text = current
+		? new ViewerTextTool(viewport, controller, {
+				active: () => current() === 'text',
+				announce: options.announce,
+				revealEdit: () => {},
+			})
+		: undefined;
+	const connector = current
+		? new ViewerConnectorTool(viewport, controller, {
+				active: () => current() === 'connector',
 				announce: options.announce,
 			})
 		: undefined;
@@ -51,6 +73,14 @@ export function createCanvasEditing(
 		resize,
 		edit,
 		draw,
+		text,
+		connector,
+		/** Stop any gesture in progress, as when the tool changes or Escape is pressed. */
+		cancelTools(): void {
+			draw?.cancel();
+			text?.cancel();
+			connector?.cancel();
+		},
 		/** Redraw the selection handles after a state or tool change. */
 		renderHandles(state: ViewerState): void {
 			lineEndpoints.render(state);
@@ -60,6 +90,8 @@ export function createCanvasEditing(
 		render(state: ViewerState): void {
 			pointer.render(state);
 			draw?.render(state);
+			text?.render(state);
+			connector?.render(state);
 			edit.render(state);
 			this.renderHandles(state);
 		},
@@ -71,6 +103,8 @@ export function createCanvasEditing(
 				resize.wire(),
 				edit.wire(),
 				...(draw ? [draw.wire()] : []),
+				...(text ? [text.wire()] : []),
+				...(connector ? [connector.wire()] : []),
 			];
 			return () => {
 				for (const stop of stops) stop();

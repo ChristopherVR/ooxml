@@ -21,7 +21,14 @@ export type {
 	DiagramToolSummary,
 } from './building-blocks-toolbar';
 export { mountDiagramShapes } from './building-blocks-shapes';
-export { DIAGRAM_DRAW_TOOLS, type DiagramTool, type DiagramDrawTool } from './diagram-tool';
+export {
+	DIAGRAM_DRAW_TOOLS,
+	DIAGRAM_OBJECT_TOOLS,
+	DIAGRAM_TOOLS,
+	type DiagramTool,
+	type DiagramDrawTool,
+	type DiagramObjectTool,
+} from './diagram-tool';
 
 export function fitDiagramCanvas(
 	host: HTMLElement,
@@ -85,10 +92,7 @@ export function mountDiagramCanvas(host: HTMLElement, controller: ViewerControll
 	const editing = createCanvasEditing(viewport, controller, {
 		pointerActive,
 		announce,
-		drawTool: () => {
-			const tool = controller.state.tool;
-			return tool === 'pointer' ? undefined : tool;
-		},
+		tool: () => controller.state.tool,
 	});
 	const clipboard = new ViewerClipboard(root, controller, announce, () => {});
 	const report = (error: unknown) => {
@@ -111,7 +115,11 @@ export function mountDiagramCanvas(host: HTMLElement, controller: ViewerControll
 	);
 	const offKeys = wireCanvasKeys(viewport, controller, editing, announce);
 	const offEditing = editing.wire();
+	let lastTool = controller.state.tool;
 	const render = () => {
+		// A tool change abandons the gesture of the previous tool, as in the full viewer.
+		if (controller.state.tool !== lastTool) editing.cancelTools();
+		lastTool = controller.state.tool;
 		canvas.render(controller.state);
 		editing.render(controller.state);
 	};

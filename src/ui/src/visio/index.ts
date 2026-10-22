@@ -7,6 +7,8 @@ export {
 	diagramToolbarProps,
 	diagramMode,
 	DIAGRAM_DRAW_TOOLS,
+	DIAGRAM_OBJECT_TOOLS,
+	DIAGRAM_TOOLS,
 	type DiagramToolbarProps,
 	type DiagramToolbarLabels,
 	type DiagramToolbarHostCallbacks,
@@ -14,6 +16,7 @@ export {
 	type DiagramToolSummary,
 	type DiagramTool,
 	type DiagramDrawTool,
+	type DiagramObjectTool,
 } from './building-blocks';
 export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';

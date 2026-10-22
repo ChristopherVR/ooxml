@@ -43,7 +43,7 @@ export function wireCanvasKeys(
 		const state = controller.state;
 		const control = event.ctrlKey || event.metaKey;
 		if (event.key === 'Escape' && state.tool !== 'pointer') {
-			editing.draw?.cancel();
+			editing.cancelTools();
 			controller.setTool('pointer');
 		} else if ((event.key === 'Delete' || event.key === 'Backspace') && !control) {
 			if (!state.selectedShapes.length) return;
