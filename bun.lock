@@ -414,16 +414,16 @@
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.32.1",
-        "ooxml-core": "*",
+        "ooxml-core": "workspace:*",
       },
       "devDependencies": {
         "zod": "^4.6.7",
       },
       "peerDependencies": {
-        "docx-viewer-mcp": "^0.2.0",
-        "pptx-viewer-mcp": ">=2.6.0 <3",
-        "visio-viewer-mcp": "^0.4.0",
-        "xlsx-viewer-mcp": "^0.2.0",
+        "docx-viewer-mcp": "workspace:*",
+        "pptx-viewer-mcp": "workspace:*",
+        "visio-viewer-mcp": "workspace:*",
+        "xlsx-viewer-mcp": "workspace:*",
       },
       "optionalPeers": [
         "docx-viewer-mcp",
