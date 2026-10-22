@@ -2,7 +2,7 @@
 
 ## Run the demo from source
 
-You need [Bun](https://bun.sh/) 1.3 and Node.js 24.
+You need [Bun](https://bun.sh/) 1.4 and Node.js 24.
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
