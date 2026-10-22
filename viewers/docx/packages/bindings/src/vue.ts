@@ -33,7 +33,7 @@ export const WordEditor = defineComponent({
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		collaboration: Object as PropType<DocxCollaborationOptions | null>,
 	} satisfies Record<EditorPropKey, unknown>,
-	emits: [...EDITOR_EVENT_NAMES],
+	emits: [...EDITOR_EVENT_NAMES, 'update:readOnly'],
 	setup(props, { emit, expose }) {
 		const host = ref<HTMLElement>();
 		let binding: EditorBinding | undefined;
@@ -46,7 +46,11 @@ export const WordEditor = defineComponent({
 				'dirty-change': (dirty) => emit('dirty-change', dirty),
 				'file-command': (event) => emit('file-command', event),
 				'document-warning': (message) => emit('document-warning', message),
-				'readonly-change': (readOnly) => emit('readonly-change', readOnly),
+				'readonly-change': (readOnly, detail) => {
+					emit('readonly-change', readOnly, detail);
+					// `v-model:readOnly` mirrors the host's switch only, never a role lock.
+					if (detail.hostReadOnly !== props.readOnly) emit('update:readOnly', detail.hostReadOnly);
+				},
 				'ribbon-action': (detail) => emit('ribbon-action', detail),
 				'ribbon-customize': (ids) => emit('ribbon-customize', ids),
 				'office-ribbon-add-in': (detail) => emit('office-ribbon-add-in', detail),

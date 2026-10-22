@@ -169,19 +169,30 @@ describe('docx-editor collaboration property', () => {
 		owner.collaboration = { session: hostSession(hub, 'Ada') };
 		await wait();
 		const a = mount();
-		const events: boolean[] = [];
+		const events: { readOnly: boolean; locked: boolean; hostReadOnly: boolean }[] = [];
 		a.addEventListener('readonly-change', (event) =>
-			events.push((event as CustomEvent<boolean>).detail),
+			events.push((event as CustomEvent<(typeof events)[number]>).detail),
 		);
 		a.collaboration = { session: hostSession(hub, 'Vic', 'viewer'), intent: 'join' };
 		await wait();
 		expect(a.readOnly).toBe(true);
-		expect(events).toEqual([true]);
+		expect(events).toEqual([{ readOnly: true, locked: true, hostReadOnly: false }]);
 		a.readOnly = false;
 		expect(a.readOnly).toBe(true);
+		// The File-menu toggle reports the effective value only when it changed, plus the host switch.
+		const shell = (
+			a as unknown as { core: { shell: { chrome: { host: { setReadOnly(v: boolean): void } } } } }
+		).core.shell.chrome.host;
+		events.length = 0;
+		shell.setReadOnly(true);
+		expect(events).toEqual([{ readOnly: true, locked: true, hostReadOnly: true }]);
+		shell.setReadOnly(true);
+		expect(events).toHaveLength(1);
+		shell.setReadOnly(false);
+		events.length = 0;
 		a.stopCollaboration();
 		expect(a.readOnly).toBe(false);
-		expect(events).toEqual([true, false]);
+		expect(events).toEqual([{ readOnly: false, locked: false, hostReadOnly: false }]);
 		a.readOnly = true;
 		expect(a.readOnly).toBe(true);
 	});

@@ -61,7 +61,10 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 				'page-change': (detail) => this.pageChange.emit(detail),
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
 				'file-command': (event) => this.fileCommand.emit(event),
-				'readonly-change': (readOnly) => this.readOnlyChange.emit(readOnly),
+				'readonly-change': (_readOnly, detail) => {
+					// Two-way binding mirrors the host's switch only, never a role lock.
+					if (detail.hostReadOnly !== this.readOnly) this.readOnlyChange.emit(detail.hostReadOnly);
+				},
 				'ribbon-action': (detail) => this.ribbonAction.emit(detail),
 				'ribbon-customize': (ids) => this.ribbonCustomize.emit(ids),
 				'office-ribbon-add-in': (detail) => this.ribbonAddIn.emit(detail),

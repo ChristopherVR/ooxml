@@ -95,6 +95,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	attributeChangedCallback(name: string, _old: string | null, value: string | null) {
+		if (name === 'read-only' && this.core.reflectingReadOnly) return;
 		if (isDocxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 

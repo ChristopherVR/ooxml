@@ -65,8 +65,18 @@ export interface EditorEventOptions {
 	onFileCommand?: ((event: CustomEvent<FileCommandDetail>) => void) | undefined;
 	/** A non-fatal notice, such as a print layout that could not be produced faithfully. */
 	onDocumentWarning?: ((message: string) => void) | undefined;
-	/** The user toggled Editing / Viewing (the `readOnly` prop follows it when the parent syncs). */
-	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
+	/**
+	 * The user toggled Editing / Viewing, `readOnly` changed or a collaboration role changed.
+	 * `readOnly` is the effective value. A parent that syncs the `readOnly` prop from this callback
+	 * must store `detail.hostReadOnly`, never `readOnly`, or a `viewer` role lock would be
+	 * written into the host's setting.
+	 */
+	onReadOnlyChange?:
+		| ((
+				readOnly: boolean,
+				detail: { readOnly: boolean; locked: boolean; hostReadOnly: boolean },
+		  ) => void)
+		| undefined;
 	/** A ribbon control was activated. */
 	onRibbonAction?: ((detail: RibbonAction) => void) | undefined;
 	/** The user changed which ribbon commands are shown (File > Customize Ribbon); persist the ids. */
@@ -120,7 +130,9 @@ export type EditorEventName = (typeof EDITOR_EVENT_NAMES)[number];
  */
 type EditorEventHandler<K extends EditorEventName> = K extends 'file-command'
 	? (event: CustomEvent<DocxEditorEventDetail<K>>) => void
-	: (detail: DocxEditorEventDetail<K>) => void;
+	: K extends 'readonly-change'
+		? (readOnly: boolean, detail: DocxEditorEventDetail<K>) => void
+		: (detail: DocxEditorEventDetail<K>) => void;
 /** One handler per bound event; a missing key is a compile error in every adapter. */
 export type EditorEventHandlers = {
 	[K in EditorEventName]: EditorEventHandler<K> | undefined;
@@ -200,7 +212,7 @@ export function mountEditor(
 		'document-warning': (event) => options.onDocumentWarning?.(event.detail),
 		'page-change': (event) => options.onPageChange?.(event.detail),
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail),
-		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail),
+		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly, event.detail),
 		'file-command': (event) => options.onFileCommand?.(event),
 		'ribbon-action': (event) => options.onRibbonAction?.(event.detail),
 		'ribbon-customize': (event) => options.onRibbonCustomize?.(event.detail),
