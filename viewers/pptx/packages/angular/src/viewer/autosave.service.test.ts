@@ -126,7 +126,7 @@ describe('autosave timer redundancy', () => {
 
 		await vi.advanceTimersByTimeAsync(10_000);
 
-		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', bytes);
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', bytes, undefined);
 		expect(saved).toHaveBeenCalledExactlyOnceWith(bytes);
 	});
 

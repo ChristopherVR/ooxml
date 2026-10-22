@@ -57,7 +57,8 @@ describe('useAutosave onSaved', () => {
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(1100);
 		});
-		expect(saveMock).toHaveBeenCalledWith('deck.pptx', bytes);
+		// The third argument is the host storage (none here).
+		expect(saveMock).toHaveBeenCalledWith('deck.pptx', bytes, undefined);
 		expect(onSaved).toHaveBeenCalledExactlyOnceWith(bytes);
 	});
 });

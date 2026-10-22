@@ -49,5 +49,9 @@ export function useAutosaveCacheMaintenance(
 		};
 	}, [viewerOptions]);
 
-	return useCallback(() => clearOptionsCache(storageRef.current), []);
+	const clearHostCache = useCallback(() => clearOptionsCache(storageRef.current), []);
+	// Without a host store the callback is one module-level function, stable across mounts.
+	return storage ? clearHostCache : clearBrowserCache;
 }
+
+const clearBrowserCache = (): void => clearOptionsCache(undefined);
