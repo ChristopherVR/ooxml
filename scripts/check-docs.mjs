@@ -379,18 +379,24 @@ export function checkSidebars(root, docRoot, files, generated = []) {
 	return { errors, warnings };
 }
 
-/** Newest commit time per file, from one pass over the history. */
-export function lastCommitTimes(root) {
+/** Newest commit time per file, from one pass over the history. `ignore` lists formatting-only
+ * changes ({ commit: full hash, files: [paths] }) that do not count for those files. */
+export function lastCommitTimes(root, ignore = []) {
+	const skip = new Set(ignore.flatMap((e) => e.files.map((f) => `${e.commit} ${f}`)));
 	const times = new Map();
 	const out = execFileSync(
 		'git',
-		['log', '--format=@%ct', '--name-only', '--no-renames', '--', '*.md'],
+		['log', '--format=@%H %ct', '--name-only', '--no-renames', '--', '*.md'],
 		{ cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 },
 	);
 	let t = 0;
+	let hash = '';
 	for (const line of out.split('\n')) {
-		if (line.startsWith('@')) t = Number(line.slice(1));
-		else if (line && !times.has(line)) times.set(line, t);
+		if (line.startsWith('@')) {
+			const [h, time] = line.slice(1).split(' ');
+			hash = h;
+			t = Number(time);
+		} else if (line && !times.has(line) && !skip.has(`${hash} ${line}`)) times.set(line, t);
 	}
 	return times;
 }
@@ -527,7 +533,7 @@ function main() {
 	files = files.filter((f) => existsSync(join(root, f)));
 	let times;
 	try {
-		times = lastCommitTimes(root);
+		times = lastCommitTimes(root, config.lagIgnoreCommits);
 	} catch {
 		times = undefined;
 	}

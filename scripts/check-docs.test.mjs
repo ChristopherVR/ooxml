@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -11,6 +12,7 @@ import {
 	checkTerms,
 	checkTranslations,
 	globToRegExp,
+	lastCommitTimes,
 	renderReport,
 	runChecks,
 } from './check-docs.mjs';
@@ -292,4 +294,27 @@ test('missing translations are informational; an older translation is a warning'
 	});
 	assert.equal(lag.warnings.length, 1);
 	assert.ok(lag.warnings.some((w) => w.check === 'lag' && w.file === 'viewers/p/docs/zh/a.md'));
+});
+
+test('commits on the lag ignore list do not count for the files they name', () => {
+	const root = fixture({ 'a.md': 'one\n', 'b.md': 'one\n' });
+	const git = (args, date) =>
+		execFileSync('git', args, {
+			cwd: root,
+			encoding: 'utf8',
+			env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
+		});
+	const commit = (date) => {
+		git(['add', '-A'], date);
+		git(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', date], date);
+	};
+	git(['init', '-q']);
+	commit('2026-01-01T00:00:00Z');
+	writeFileSync(join(root, 'a.md'), 'two\n');
+	writeFileSync(join(root, 'b.md'), 'two\n');
+	commit('2026-02-01T00:00:00Z');
+	const second = git(['rev-parse', 'HEAD']).trim();
+	const times = lastCommitTimes(root, [{ commit: second, files: ['a.md'] }]);
+	assert.equal(times.get('a.md'), Date.parse('2026-01-01T00:00:00Z') / 1000);
+	assert.equal(times.get('b.md'), Date.parse('2026-02-01T00:00:00Z') / 1000);
 });
