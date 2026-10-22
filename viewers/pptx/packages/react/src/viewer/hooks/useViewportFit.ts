@@ -4,10 +4,17 @@ import {
 	resolveViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { ViewportFitOptions } from 'ooxml-ui/pptx';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
 import type { CanvasSize } from '../types';
+
+/**
+ * Measure before paint in the browser, so the first painted frame is already fitted instead
+ * of showing the authored size for a frame. Neither effect runs on a server; `useEffect` there
+ * keeps React 18 from warning about a layout effect during server rendering.
+ */
+const useBeforePaintEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** Keep measured fit and available selection area on the same host layout policy. */
 export function useViewportFit(
@@ -30,7 +37,7 @@ export function useViewportFit(
 
 	// Preserve the stock decorative allowance unless the host supplies one.
 	// Rulers and the host's actual toolbar/sidebar footprint are separate layout.
-	useEffect(() => {
+	useBeforePaintEffect(() => {
 		if (viewportNode === null) {
 			return;
 		}
@@ -56,6 +63,7 @@ export function useViewportFit(
 		const attach = () => {
 			const element = viewportNode ?? viewportRef.current;
 			if (!element) {
+				// Only an object-ref caller can get here: its node is assigned after this commit.
 				raf = requestAnimationFrame(attach);
 				return;
 			}
