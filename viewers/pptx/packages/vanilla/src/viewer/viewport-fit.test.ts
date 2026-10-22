@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { fitViewerViewport } from './viewport-fit';
+import type { ViewportMeasureCache } from './viewport-fit';
 
 /** A viewport reporting what a browser does for a box laid out at a fractional size. */
 function laidOut(width: number, height: number): HTMLElement {
@@ -36,6 +37,35 @@ describe('fitViewerViewport', () => {
 		expect(canvas.width * fit).toBeLessThanOrEqual(width + 1e-9);
 		expect(canvas.height * fit).toBeLessThanOrEqual(height + 1e-9);
 		expect(fit).toBeCloseTo(Math.min(width / canvas.width, height / canvas.height), 9);
+	});
+
+	it('measures a cached viewport once until the cache is cleared or the padding changes', () => {
+		const viewport = laidOut(801.5, 700);
+		let reads = 0;
+		const rect = viewport.getBoundingClientRect;
+		viewport.getBoundingClientRect = () => {
+			reads++;
+			return rect();
+		};
+		const cache: ViewportMeasureCache = {};
+		const options = { fitPadding: 0, maxFitScale: null };
+		const first = fitViewerViewport(viewport, canvas, options, false, cache);
+		expect(fitViewerViewport(viewport, canvas, options, false, cache)).toBe(first);
+		expect(reads).toBe(1);
+
+		cache.client = undefined;
+		fitViewerViewport(viewport, canvas, options, false, cache);
+		expect(reads).toBe(2);
+
+		fitViewerViewport(viewport, canvas, { fitPadding: 12, maxFitScale: null }, false, cache);
+		expect(viewport.style.padding).toBe('12px');
+		expect(reads).toBe(3);
+
+		// A rebuilt chrome's new viewport gets its padding written and is measured afresh.
+		const rebuilt = laidOut(1200, 451.5);
+		fitViewerViewport(rebuilt, canvas, { fitPadding: 12, maxFitScale: null }, false, cache);
+		expect(rebuilt.style.padding).toBe('12px');
+		expect(cache.viewport).toBe(rebuilt);
 	});
 
 	it('fits the presentation stage, which has no padding, inside a fractional viewport', () => {

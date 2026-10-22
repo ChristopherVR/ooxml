@@ -591,6 +591,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			return;
 		}
 		lastSize = size;
+		renderer.invalidateViewportSize();
 		if (store.get().zoom === 'fit') {
 			renderer.renderStage();
 		}
