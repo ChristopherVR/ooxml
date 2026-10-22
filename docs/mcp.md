@@ -20,7 +20,9 @@ raw shape as `input`, and JSON Schema from `jsonSchema()`) and `run`, a function
 bytes that validates its parameters itself. Reads never return bytes; edits return the new bytes
 with a report (warnings, results). No parameter is a file path: where the bytes come from is the
 caller's business. So the MCP servers, the suite's assistant and a host's own backend call the
-same code and get the same validation and bounds.
+same code and get the same validation and bounds. A host that has an editor open on screen can
+run the same tools against it with `createLiveToolHost` (see `docs/embedding.md`, "Letting your
+assistant drive the open editor").
 
 `ooxml-core/automation/node` adds the local filesystem: `runAutomationFileTool(files, tool,
 params)` runs a tool on a file confined to a root (reads never write, creates never overwrite,

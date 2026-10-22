@@ -8,18 +8,19 @@ page is the map across products.
 
 ## What do you want to control?
 
-| You want to                                   | Word                         | Excel                        | PowerPoint                                                 | Visio                            |
-| --------------------------------------------- | ---------------------------- | ---------------------------- | ---------------------------------------------------------- | -------------------------------- |
-| Take features away (print, export, copy, ...) | `customization.capabilities` | `customization.capabilities` | `customization.capabilities`                               | `customization.capabilities`     |
-| Make the document read-only                   | `readOnly`                   | `readOnly`                   | `readOnly` (plus `canEdit` or `editable` to allow editing) | `readOnly` (or `canEdit: false`) |
-| Add a File tab page                           | `backstage.extraPages`       | `backstage.extraPages`       | `backstage.extraPages`                                     | `backstage.extraPages`           |
-| Add right-click commands                      | `contextMenu.extraCommands`  | `contextMenu.extraCommands`  | `contextMenu.extraElementCommands`, `extraCanvasCommands`  | `contextMenu.extraCommands`      |
-| Replace a pane, dialog body or File page      | not offered                  | not offered                  | `customization.regions`                                    | not offered                      |
-| Hide individual ribbon controls               | `hiddenActions`              | `hiddenActions`              | `customization.ribbon.*`, `hiddenActions`                  | `hiddenActions`                  |
-| Add your own ribbon tab                       | `ribbonAddIns`               | `ribbonAddIns`               | `ribbonAddIns`                                             | `ribbonAddIns`                   |
-| Own where files are saved and opened          | `storage`, `file-command`    | `storage`, `file-command`    | `storage`, `onOpenFile`                                    | `storage`, `file-command`        |
-| Share a live document                         | `collaboration`              | `collaboration`              | `collaboration`                                            | `collaboration`                  |
-| Compose only some parts of the UI             | building blocks              | building blocks              | building blocks                                            | building blocks                  |
+| You want to                                            | Word                         | Excel                        | PowerPoint                                                 | Visio                            |
+| ------------------------------------------------------ | ---------------------------- | ---------------------------- | ---------------------------------------------------------- | -------------------------------- |
+| Take features away (print, export, copy, ...)          | `customization.capabilities` | `customization.capabilities` | `customization.capabilities`                               | `customization.capabilities`     |
+| Make the document read-only                            | `readOnly`                   | `readOnly`                   | `readOnly` (plus `canEdit` or `editable` to allow editing) | `readOnly` (or `canEdit: false`) |
+| Add a File tab page                                    | `backstage.extraPages`       | `backstage.extraPages`       | `backstage.extraPages`                                     | `backstage.extraPages`           |
+| Add right-click commands                               | `contextMenu.extraCommands`  | `contextMenu.extraCommands`  | `contextMenu.extraElementCommands`, `extraCanvasCommands`  | `contextMenu.extraCommands`      |
+| Replace a pane, dialog body or File page               | not offered                  | not offered                  | `customization.regions`                                    | not offered                      |
+| Hide individual ribbon controls                        | `hiddenActions`              | `hiddenActions`              | `customization.ribbon.*`, `hiddenActions`                  | `hiddenActions`                  |
+| Add your own ribbon tab                                | `ribbonAddIns`               | `ribbonAddIns`               | `ribbonAddIns`                                             | `ribbonAddIns`                   |
+| Own where files are saved and opened                   | `storage`, `file-command`    | `storage`, `file-command`    | `storage`, `onOpenFile`                                    | `storage`, `file-command`        |
+| Share a live document                                  | `collaboration`              | `collaboration`              | `collaboration`                                            | `collaboration`                  |
+| Let your own assistant read and edit the open document | live tools                   | live tools                   | live tools                                                 | live tools                       |
+| Compose only some parts of the UI                      | building blocks              | building blocks              | building blocks                                            | building blocks                  |
 
 Teams (`<teams-app>`) is a workspace, not a document editor: it has no `customization`, capabilities
 or ribbon. It is configured through its server configuration and the `createTeamsClient` store (see
@@ -303,6 +304,47 @@ editor.collaboration = {
 	user: { name: 'Ada', color: '#2b6cb0', role: 'editor' },
 };
 ```
+
+## Letting your assistant drive the open editor
+
+A host's own assistant (a chat panel, an agent behind your backend) can read and edit a document
+that is open on screen with the same tools the MCP servers and the suite's assistant use. Register
+each mounted editor with a `LiveToolHost` from `ooxml-core/automation`, then call tools by name:
+
+```ts
+import { automationTools, createLiveToolHost, liveEditorFromElement } from 'ooxml-core/automation';
+import { pptxTools } from 'ooxml-core/pptx/automation';
+
+const host = createLiveToolHost([...Object.values(automationTools).flat(), ...pptxTools], {
+	// Optional: show a diff from `before` and `after` and return false to discard the edit.
+	review: async ({ tool, before, after }) => confirmWithUser(tool, before, after),
+});
+const forget = host.register('budget', liveEditorFromElement('xlsx', sheetElement, 'Budget.xlsx'));
+
+host.describe(); // function-calling specs for the open formats, each requiring a `target`
+await host.call('xlsx_set_cells', {
+	target: 'budget',
+	params: { sheetIndex: 0, cells: [{ address: 'B2', input: '=SUM(B3:B9)' }] },
+});
+```
+
+- **Every call names its document.** `target` is required and there is no "current document", so one
+  assistant can work across several open editors without editing the wrong one. `host.targets()`
+  lists what is registered, with each document's format and read-only state, for the model's prompt.
+- **Reads see unsaved work.** A read runs on what the editor would save now, so it includes edits the
+  user has not saved.
+- **Edits respect the editor.** A read-only editor is never edited. An edit is refused (nothing is
+  loaded) when the user changed the document while the tool or your `review` ran, and edits to one
+  document run one at a time. `review` is where a host asks the user to accept a change.
+- **Create tools are not offered**: they have no document to target. Build the file with the tool
+  and open it as a new document yourself.
+- **Not a transaction.** The tools work on bytes, so an accepted edit is loaded back as a document
+  load. Expect the editor to behave as after opening the file (its selection and undo history are not
+  carried over); applying tool edits in place is not implemented.
+- Like capabilities, this is a client-side convenience, not access control: enforce what an agent
+  may change on your server.
+
+For a headless backend with no editor on screen, use the tools on bytes directly (`docs/mcp.md`).
 
 ## Building blocks vs the full editor
 
