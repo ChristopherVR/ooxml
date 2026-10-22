@@ -2,7 +2,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { EditorCore } from './editor-core';
 import { defineXlsxEditor, type ExcelCustomization, type XlsxEditorElement } from './index';
-import { customizationOf, resolveExcelCustomization } from './customization';
+import { customizationOf, hostMenu, resolveExcelCustomization } from './customization';
 import { openContextMenu } from './context-menu/index';
 
 beforeAll(() => defineXlsxEditor());
@@ -97,7 +97,14 @@ describe('<xlsx-editor> customization', () => {
 		const { ctx } = core(element);
 		const commands = customizationOf(ctx).menuCommands;
 		expect(commands.map((command) => command.id)).toEqual(['send']);
-		const context = { sheet: 0, sheetName: 'Sheet1', ref: 'A1', active: 'A1', readOnly: false };
+		const context = {
+			menu: 'cell' as const,
+			sheet: 0,
+			sheetName: 'Sheet1',
+			ref: 'A1',
+			active: 'A1',
+			readOnly: false,
+		};
 		const menu = openContextMenu(ctx, [], 0, 0, { host: { commands, context } });
 		const { state } = menu.element as HTMLElement & { state: { items: { id: string }[] } };
 		expect(state.items.map((item) => item.id)).toEqual(['host:send']);
@@ -106,5 +113,21 @@ describe('<xlsx-editor> customization', () => {
 		);
 		expect(onSelect).toHaveBeenCalledWith(context);
 		expect(menu.element.isConnected).toBe(false);
+	});
+
+	it('offers the host commands on the header and sheet-tab menus, saying which menu', () => {
+		const element = mount({
+			contextMenu: { extraCommands: [{ id: 'send', label: 'Send', onSelect: () => {} }] },
+		});
+		const { ctx } = core(element);
+		for (const menu of ['row', 'column', 'sheetTab'] as const)
+			expect(hostMenu(ctx, menu, 0).host?.context).toMatchObject({
+				menu,
+				sheet: 0,
+				sheetName: 'Sheet1',
+				readOnly: false,
+			});
+		element.customization = null;
+		expect(hostMenu(ctx, 'row', 0)).toEqual({});
 	});
 });

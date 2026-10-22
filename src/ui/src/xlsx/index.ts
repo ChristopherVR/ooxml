@@ -79,6 +79,7 @@ export type {
 	ExcelCustomization,
 	ExcelMenuCommand,
 	ExcelMenuContext,
+	ExcelMenuKind,
 	ExcelRegionContext,
 	ExcelRegionRenderer,
 } from 'ooxml-core/xlsx/ui';

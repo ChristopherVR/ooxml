@@ -70,12 +70,20 @@ export interface ExcelRegionContext extends HostRegionContextBase {
 	readonly activeSheet: number;
 }
 
-/** What a host context-menu command of `<xlsx-editor>` receives: the cell menu's selection. */
+/** Which menu a host command was offered in. */
+export type ExcelMenuKind = 'cell' | 'row' | 'column' | 'sheetTab';
+
+/** What a host context-menu command of `<xlsx-editor>` receives: the menu and its selection. */
 export interface ExcelMenuContext {
+	/** The cell area, a row or column header, or a sheet tab. */
+	readonly menu: ExcelMenuKind;
 	/** The zero-based index of the sheet. */
 	readonly sheet: number;
 	readonly sheetName: string;
-	/** The selected range in A1 notation (`A1:B4`; several ranges are comma separated). */
+	/**
+	 * The selected range in A1 notation (`A1:B4`; several ranges are comma separated). On the
+	 * sheet-tab menu, the selection of the sheet the menu opened on once it is active.
+	 */
 	readonly ref: string;
 	/** The active cell in A1 notation. */
 	readonly active: string;

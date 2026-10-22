@@ -18,6 +18,10 @@ import {
 	type ExcelCapabilityId,
 	type ExcelCustomization,
 	type ExcelMenuCommand,
+	type ExcelMenuContext,
+	type ExcelMenuKind,
+	activeRef,
+	selectionRef,
 } from 'ooxml-core/xlsx/ui';
 
 /** A customisation resolved into what each render site asks. */
@@ -61,4 +65,27 @@ export function provideCustomization(
 /** The customisation of the editor `ctx` belongs to. */
 export function customizationOf(ctx: EditorContext): ResolvedExcelCustomization {
 	return registry.get(ctx)?.() ?? EMPTY_EXCEL_CUSTOMIZATION;
+}
+
+/**
+ * The `host` option of `openContextMenu` for one menu: the editor's host commands with the
+ * context of this opening, or nothing when the host added none.
+ */
+export function hostMenu(
+	ctx: EditorContext,
+	menu: ExcelMenuKind,
+	sheet: number,
+): { host?: { commands: readonly ExcelMenuCommand[]; context: ExcelMenuContext } } {
+	const commands = customizationOf(ctx).menuCommands;
+	if (!commands.length) return {};
+	const selection = ctx.selection.get();
+	const context: ExcelMenuContext = {
+		menu,
+		sheet,
+		sheetName: ctx.workbook()?.sheets[sheet]?.name ?? '',
+		ref: selectionRef(selection),
+		active: activeRef(selection),
+		readOnly: ctx.readOnly(),
+	};
+	return { host: { commands, context } };
 }

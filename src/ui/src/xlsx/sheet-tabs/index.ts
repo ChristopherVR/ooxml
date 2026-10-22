@@ -9,6 +9,7 @@ import { wireTabDrag } from './drag';
 import { startRename, type RenameHandle } from './rename';
 import { renderTabs, sheetOf, tabFor, visibleSheetIndices } from './render';
 import { TABS_CSS } from './styles';
+import { hostMenu } from '../customization';
 
 export { dropTarget, slotAt } from './drag';
 export { visibleSheetIndices } from './render';
@@ -101,7 +102,10 @@ export function mountSheetTabs(ctx: EditorContext, container: HTMLElement): () =
 			},
 			{ rename: () => rename(sheet) },
 		);
-		openContextMenu(ctx, entries, x, y, { restoreFocus: () => tabFor(strip, sheet)?.focus() });
+		openContextMenu(ctx, entries, x, y, {
+			restoreFocus: () => tabFor(strip, sheet)?.focus(),
+			...hostMenu(ctx, 'sheetTab', sheet),
+		});
 	};
 
 	strip.addEventListener('click', (event) => {
