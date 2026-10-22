@@ -72,25 +72,27 @@ interface CollaborationConfig {
 	/** Session role - defaults to 'collaborator'. */
 	role?: CollaborationRole;
 	/** Elected-writer persistence: the 'owner' peer receives debounced PPTX snapshots. */
-	onWriteBack?: (bytes: Uint8Array) => void;
+	onWriteBack?: (bytes: Uint8Array) => void | Promise<void>;
 	/** Debounce (ms) between the last change and onWriteBack. Default 5000. */
 	writeBackDebounceMs?: number;
+	/** Retries of a rejected onWriteBack, exponential backoff. Default: none. */
+	writeBackRetry?: { attempts: number; baseDelayMs?: number; maxDelayMs?: number };
 }
 ```
 
-| Field                 | Type                     | Required | Notes                                                                                           |
-| --------------------- | ------------------------ | -------- | ----------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                 | yes      | Sanitized; restrict to alphanumeric / `-` / `_`.                                                |
-| `serverUrl`           | `string`                 | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                               |
-| `transport`           | `CollaborationTransport` | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                         |
-| `signaling`           | `string[]`               | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                    |
-| `userName`            | `string`                 | yes      | Local user's display name; also used as comment/annotation author when `authorName` is unset.   |
-| `userAvatar`          | `string`                 | no       | Validated avatar URL.                                                                           |
-| `userColor`           | `string`                 | no       | Hex colour for the user's cursor ring.                                                          |
-| `authToken`           | `string`                 | no       | WebSocket handshake param / webrtc room password.                                               |
-| `role`                | `CollaborationRole`      | no       | `'owner'`, `'collaborator'` (default), or `'viewer'`.                                           |
-| `onWriteBack`         | `(bytes) => void`        | no       | Only fires for the `'owner'` peer: debounced serialized PPTX snapshots for durable persistence. |
-| `writeBackDebounceMs` | `number`                 | no       | Default 5000 ms.                                                                                |
+| Field                 | Type                     | Required       | Notes                                                                                         |
+| --------------------- | ------------------------ | -------------- | --------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                 | yes            | Sanitized; restrict to alphanumeric / `-` / `_`.                                              |
+| `serverUrl`           | `string`                 | yes            | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                             |
+| `transport`           | `CollaborationTransport` | no             | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                       |
+| `signaling`           | `string[]`               | no             | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                  |
+| `userName`            | `string`                 | yes            | Local user's display name; also used as comment/annotation author when `authorName` is unset. |
+| `userAvatar`          | `string`                 | no             | Validated avatar URL.                                                                         |
+| `userColor`           | `string`                 | no             | Hex colour for the user's cursor ring.                                                        |
+| `authToken`           | `string`                 | no             | WebSocket handshake param / webrtc room password.                                             |
+| `role`                | `CollaborationRole`      | no             | `'owner'`, `'collaborator'` (default), or `'viewer'`.                                         |
+| `onWriteBack`         | `(bytes) => void         | Promise<void>` | no                                                                                            | Only fires for the `'owner'` peer: debounced serialized PPTX snapshots. A returned promise is the acknowledgement; status is in `collaborationState.writeBack`. |
+| `writeBackDebounceMs` | `number`                 | no             | Default 5000 ms.                                                                              |
 
 ### Serverless peer-to-peer mode
 

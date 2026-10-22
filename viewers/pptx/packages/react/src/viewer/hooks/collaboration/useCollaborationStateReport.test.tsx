@@ -59,6 +59,24 @@ function Probe({
 	return null;
 }
 
+function WriteBackProbe({
+	config,
+	onChange,
+	status,
+}: {
+	config: CollaborationConfig;
+	onChange: (state: CollaborationState) => void;
+	status?: 'saving' | 'saved';
+}) {
+	const collab = useCollaborativeState({ config, canvasWidth: 960, canvasHeight: 540 });
+	useCollaborationStateReport(collab, onChange);
+	const report = collab?.reportWriteBack;
+	React.useEffect(() => {
+		if (status) report?.({ status });
+	}, [report, status]);
+	return null;
+}
+
 beforeEach(() => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	container = document.createElement('div');
@@ -122,5 +140,30 @@ describe('onCollaborationChange reporting', () => {
 			status: 'off',
 			people: [],
 		});
+	});
+	it('reports the owner write-back status, and none for a collaborator', () => {
+		const host = createSession();
+		host.update({ status: 'connected', synced: true });
+		const onChange = vi.fn<(state: CollaborationState) => void>();
+		const owner: CollaborationConfig = {
+			roomId: 'host-room',
+			serverUrl: '',
+			userName: 'Alice',
+			role: 'owner',
+			onWriteBack: () => {},
+			externalSession: host.session,
+		};
+		act(() => root.render(<WriteBackProbe config={owner} onChange={onChange} />));
+		expect(onChange.mock.calls.at(-1)?.[0].writeBack).toEqual({ status: 'idle' });
+		act(() => root.render(<WriteBackProbe config={owner} onChange={onChange} status='saving' />));
+		expect(onChange.mock.calls.at(-1)?.[0].writeBack).toEqual({ status: 'saving' });
+		act(() => root.render(<WriteBackProbe config={owner} onChange={onChange} status='saved' />));
+		expect(onChange.mock.calls.at(-1)?.[0].writeBack).toEqual({ status: 'saved' });
+		act(() =>
+			root.render(
+				<WriteBackProbe config={{ ...owner, role: 'collaborator' }} onChange={onChange} />,
+			),
+		);
+		expect(onChange.mock.calls.at(-1)?.[0].writeBack).toBeUndefined();
 	});
 });

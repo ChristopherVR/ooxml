@@ -19,6 +19,8 @@ import {
 } from 'ooxml-core/docx/ui';
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
+import type { WordCustomization } from './customization';
+import { setWordCustomization } from './customization-apply';
 import { wordToolbarProps, type WordToolbarProps } from './building-blocks';
 import {
 	wordNavigationProps,
@@ -192,6 +194,19 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		if (next.length === current.length && next.every((id, index) => id === current[index])) return;
 		this.core.viewOptions.hiddenActions = next;
 		applyViewOptions(this.core);
+	}
+
+	/**
+	 * The host customisation (`WordCustomization`): `capabilities` (removing every UI path to
+	 * what is switched off), `backstage.extraPages` (host File tab pages) and
+	 * `contextMenu.extraCommands` (host context-menu commands). The object is applied when its
+	 * identity changes, so keep it stable; `null` restores the defaults.
+	 */
+	get customization(): WordCustomization | null {
+		return this.core.viewOptions.customizationInput;
+	}
+	set customization(value: WordCustomization | null | undefined) {
+		setWordCustomization(this.core, value ?? null);
 	}
 
 	/** True after an edit until the document is saved through File > Save, `download()`, loaded or `markClean()`. */

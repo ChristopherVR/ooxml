@@ -1,6 +1,7 @@
 /** UI adapters only: parsing, editing and serialization stay in the existing engines. */
 import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { editorColors, applyOfficeTheme } from './theme-tokens.js';
+import { setEditorReadOnly } from './editor-read-only.js';
 export function preloadEditor(kind) {
 	const loaders = {
 		pptx: () => import('pptx-vanilla-viewer'),
@@ -117,10 +118,9 @@ export async function mountEditor(host, doc, changed, command) {
 		focus: () => {
 			if (doc.kind === 'xlsx') element.focusGrid();
 		},
-		// Visio has no read-only switch; edits made while reviewing are discarded with the preview.
-		readOnly: (on) => {
-			if (doc.kind !== 'vsdx') element.readOnly = on;
-		},
+		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
+		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.
+		readOnly: (on) => setEditorReadOnly(element, doc.kind, on),
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {
 			if (change.type === 'cells') {

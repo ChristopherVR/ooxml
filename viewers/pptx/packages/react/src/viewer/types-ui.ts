@@ -309,6 +309,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	/** Whether editing actions are enabled */
 	canEdit?: boolean;
 	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
+	/**
 	 * Recovery autosave: after an edit the deck is re-serialised (always as a
 	 * plain, unencrypted package, because recovery has no password) and stashed
 	 * in the shared IndexedDB store keyed by {@link filePath}. It is a crash-

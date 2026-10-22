@@ -56,6 +56,8 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'filePath' },
 	{ id: 'fileName' },
 	{ id: 'canEdit', names: EDITABLE_NAMES },
+	// The inverse of the edit switch in every binding: true wins over it (see docs/embedding.md).
+	{ id: 'readOnly' },
 	{ id: 'autosave' },
 	{ id: 'autosaveIntervalMs' },
 	// Host-owned storage (`ooxml-core/embedding`): Save goes to `storage.save`, recovery copies
@@ -106,10 +108,6 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{
 		id: 'showNotes',
 		absent: onlyIn(['svelte'], 'deprecated svelte-only flag; use customization.hiddenPanels'),
-	},
-	{
-		id: 'readOnly',
-		absent: onlyIn(['vanilla'], 'deprecated vanilla-only flag; use editable'),
 	},
 	{
 		id: 'showInspector',

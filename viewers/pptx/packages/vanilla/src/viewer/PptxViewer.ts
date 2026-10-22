@@ -220,6 +220,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private webfontsToken = 0;
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
 	private requestedEditable = false;
+	private requestedReadOnly = false;
 	private annotations!: PresentationAnnotationsHost;
 	private parityWorkflows!: ParityWorkflows;
 	private aiChat: AiChatMount | null = null;
@@ -251,8 +252,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.options = options;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
-		// The legacy `readOnly` flag is AND-ed in: it can only take editing away.
-		this.requestedEditable = (options.editable ?? false) && !options.readOnly;
+		// `readOnly` is AND-ed in: it can only take editing away.
+		this.requestedEditable = options.editable ?? false;
+		this.requestedReadOnly = Boolean(options.readOnly);
 		const storedPrefs = readStoredViewerPrefs();
 		this.availableThemes = options.availableThemes ?? THEME_CATALOG;
 		this.availableLocales = resolveAvailableLocales(options);
@@ -1772,6 +1774,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.applyEditable(this.effectiveEditable());
 	}
 
+	/** Makes the deck read-only (true wins over `editable`) or lifts that restriction. */
+	setReadOnly(readOnly: boolean): void {
+		this.requestedReadOnly = readOnly;
+		this.applyEditable(this.effectiveEditable());
+	}
+
 	/**
 	 * The edit state the viewer actually runs in: what the host asked for (the
 	 * `editable` option and `readOnly` flag, `setEditable`), AND-ed with a
@@ -1780,6 +1788,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private effectiveEditable(): boolean {
 		return (
 			this.requestedEditable &&
+			!this.requestedReadOnly &&
 			!this.sessions?.isCollaborationReadOnly() &&
 			isEditingAllowed(this.customization.getResolved())
 		);

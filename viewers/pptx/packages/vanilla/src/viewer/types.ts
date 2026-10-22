@@ -193,10 +193,10 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 */
 	editable?: boolean;
 	/**
-	 * Legacy flag superseded by {@link editable}; kept so existing option
-	 * objects stay type-valid.
-	 *
-	 * @deprecated Use {@link editable} (or `customization.capabilities.edit`) instead.
+	 * Makes the deck read-only (default `false`). It is the inverse of {@link editable}: true
+	 * wins over it, false only lifts this restriction, so editing still needs `editable` and is
+	 * never granted over a collaboration `viewer` role or `capabilities.edit`. Toggle later
+	 * via `setReadOnly`.
 	 */
 	readOnly?: boolean;
 	/** Show the toolbar (default `true`). */
@@ -456,6 +456,8 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	exitPresentation(): Promise<void>;
 	/** Enable or disable editing at runtime (disabling clears the selection). */
 	setEditable(editable: boolean): void;
+	/** Make the deck read-only (true wins over `editable`) or lift that restriction at runtime. */
+	setReadOnly(readOnly: boolean): void;
 	/** Enable or disable editing inherited layout/master elements. */
 	setEditTemplateMode(enabled: boolean): void;
 	/** Undo the last edit (no-op when the undo stack is empty). */

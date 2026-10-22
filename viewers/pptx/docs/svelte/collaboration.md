@@ -95,20 +95,21 @@ tears the session down. A `viewer` role makes the local user read-only.
 
 ## `CollaborationConfig`
 
-| Field                 | Type                          | Required | Notes                                                                                                     |
-| --------------------- | ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                      | yes      | Room identifier; keep to alphanumerics, hyphens, underscores.                                             |
-| `serverUrl`           | `string`                      | yes      | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                                         |
-| `transport`           | `'websocket' \| 'webrtc'`     | no       | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                                   |
-| `signaling`           | `string[]`                    | no       | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                              |
-| `userName`            | `string`                      | yes      | Local user's display name.                                                                                |
-| `userAvatar`          | `string`                      | no       | Avatar URL for the local user.                                                                            |
-| `userColor`           | `string`                      | no       | Hex colour for the user's cursor/presence indicator.                                                      |
-| `authToken`           | `string`                      | no       | Sent with the WebSocket handshake / used as the webrtc room password.                                     |
-| `role`                | `CollaborationRole`           | no       | `'owner'`, `'collaborator'` (default), or `'viewer'` (read-only).                                         |
-| `sessionIntent`       | `'create' \| 'join'`          | no       | Whether this client created or joined the room; hosts can use it to avoid publishing local bytes on join. |
-| `onWriteBack`         | `(bytes: Uint8Array) => void` | no       | Elected-writer persistence: only the `'owner'` peer receives debounced serialized PPTX snapshots.         |
-| `writeBackDebounceMs` | `number`                      | no       | Debounce between the last change and `onWriteBack`. Default 5000 ms.                                      |
+| Field                 | Type                                      | Required       | Notes                                                                                                     |
+| --------------------- | ----------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                                  | yes            | Room identifier; keep to alphanumerics, hyphens, underscores.                                             |
+| `serverUrl`           | `string`                                  | yes            | `y-websocket` server URL; may be `''` when `transport: 'webrtc'`.                                         |
+| `transport`           | `'websocket' \| 'webrtc'`                 | no             | `'websocket'` (default) or `'webrtc'` (serverless P2P).                                                   |
+| `signaling`           | `string[]`                                | no             | y-webrtc signaling URLs; defaults to y-webrtc's public list.                                              |
+| `userName`            | `string`                                  | yes            | Local user's display name.                                                                                |
+| `userAvatar`          | `string`                                  | no             | Avatar URL for the local user.                                                                            |
+| `userColor`           | `string`                                  | no             | Hex colour for the user's cursor/presence indicator.                                                      |
+| `authToken`           | `string`                                  | no             | Sent with the WebSocket handshake / used as the webrtc room password.                                     |
+| `role`                | `CollaborationRole`                       | no             | `'owner'`, `'collaborator'` (default), or `'viewer'` (read-only).                                         |
+| `sessionIntent`       | `'create' \| 'join'`                      | no             | Whether this client created or joined the room; hosts can use it to avoid publishing local bytes on join. |
+| `onWriteBack`         | `(bytes: Uint8Array) => void              | Promise<void>` | no                                                                                                        | Elected-writer persistence: only the `'owner'` peer receives debounced PPTX snapshots; a returned promise is the acknowledgement (status in `collaborationState.writeBack`). |
+| `writeBackDebounceMs` | `number`                                  | no             | Debounce between the last change and `onWriteBack`. Default 5000 ms.                                      |
+| `writeBackRetry`      | `{ attempts; baseDelayMs?; maxDelayMs? }` | no             | Retries of a rejected `onWriteBack` with exponential backoff. Default: none.                              |
 
 ### Serverless peer-to-peer mode
 

@@ -47,8 +47,9 @@ export function applyAttribute(
 			if (normalizeEditorLocale(value ?? 'en') !== target.locale) target.locale = value ?? 'en';
 			return;
 		case 'read-only':
-			if ((value !== null && value !== 'false') !== target.readOnly)
-				target.readOnly = value !== null && value !== 'false';
+			// Always forwarded: `readOnly` reads the effective value, which a role or a capability can
+			// hold true while the host's own switch (what the attribute carries) differs.
+			target.readOnly = value !== null && value !== 'false';
 			return;
 		case 'file-name': {
 			const next = value || DEFAULT_FILE_NAME;

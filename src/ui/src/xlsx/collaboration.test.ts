@@ -61,6 +61,72 @@ const value = (side: ReturnType<typeof editor>, row: number, col: number) =>
 	getCell(side.core.workbook!.sheets[0]!, row, col)?.value;
 
 describe('<xlsx-editor> collaboration', () => {
+	it('a viewer role stays read-only whatever the host sets, and leaving restores the host', async () => {
+		const hub = createMemoryHub();
+		const a = editor();
+		const viewer = createCollabSession<XlsxPresence>({
+			roomId: 'book',
+			provider: transportProvider({ transport: hub.createTransport('book') }),
+			user: { name: 'Vera', color: '#2563eb', role: 'viewer' },
+			initialPresence: {},
+			sanitizePayload: sanitizeXlsxPresence,
+			heartbeatMs: 0,
+			syncGraceMs: 0,
+		});
+		sessions.push(viewer);
+		await a.element.startCollaboration({ session: viewer });
+		await wait();
+		expect(a.element.readOnly).toBe(true);
+		a.element.readOnly = false;
+		expect(a.element.readOnly).toBe(true);
+		a.element.stopCollaboration();
+		expect(a.element.readOnly).toBe(false);
+		a.element.readOnly = true;
+		expect(a.element.readOnly).toBe(true);
+	});
+
+	it('a customization never lifts a viewer role, and leaving keeps edit: false', async () => {
+		const hub = createMemoryHub();
+		const a = editor();
+		const viewer = createCollabSession<XlsxPresence>({
+			roomId: 'book',
+			provider: transportProvider({ transport: hub.createTransport('book') }),
+			user: { name: 'Vera', color: '#2563eb', role: 'viewer' },
+			initialPresence: {},
+			sanitizePayload: sanitizeXlsxPresence,
+			heartbeatMs: 0,
+			syncGraceMs: 0,
+		});
+		sessions.push(viewer);
+		await a.element.startCollaboration({ session: viewer });
+		await wait();
+		a.element.customization = { capabilities: { print: false } };
+		a.element.customization = null;
+		expect(a.element.readOnly).toBe(true);
+		a.element.customization = { capabilities: { edit: false } };
+		a.element.stopCollaboration();
+		expect(a.element.readOnly).toBe(true);
+		a.element.readOnly = false;
+		expect(a.element.readOnly).toBe(true);
+		const events: unknown[] = [];
+		a.element.addEventListener('readonly-change', (event) =>
+			events.push((event as CustomEvent).detail),
+		);
+		a.element.customization = null;
+		expect(a.element.readOnly).toBe(false);
+		expect(events).toEqual([{ readOnly: false, locked: false, hostReadOnly: false }]);
+	});
+
+	it('keeps a read-only attribute set under edit: false', () => {
+		const a = editor();
+		a.element.customization = { capabilities: { edit: false } };
+		a.element.setAttribute('read-only', '');
+		a.element.customization = null;
+		expect(a.element.readOnly).toBe(true);
+		a.element.removeAttribute('read-only');
+		expect(a.element.readOnly).toBe(false);
+	});
+
 	it('adopts the room and carries edits both ways', async () => {
 		const { a, b } = await pair();
 		expect(value(b, 0, 0)).toBe('seed');

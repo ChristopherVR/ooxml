@@ -26,7 +26,10 @@ export function renderDocument(core: EditorCore): void {
 				reviewAuthor: () => core.reviewAuthor,
 				reviewDisplayMode: () => core.reviewDisplayMode,
 				insertNote: (kind) => core.parts.insertNote(kind, canvas, paper),
-				showSearch: () => core.shell.searchPanel?.open(),
+				// ProseMirror's Mod-f reaches here before the shortcut registry: honour `find: false`.
+				showSearch: () => {
+					if (!core.viewOptions.customization.shortcuts.has('find')) core.shell.searchPanel?.open();
+				},
 				extraPlugins: core.inserts.plugins(),
 				yjs: Boolean(yjs),
 				revisionIds: core.collab.ids,

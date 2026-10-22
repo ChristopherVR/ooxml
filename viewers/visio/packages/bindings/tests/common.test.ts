@@ -15,6 +15,7 @@ describe('complete shared adapter contract', () => {
 	it('copies every property, keeps null and false, omits undefined and clears removed callbacks', () => {
 		const props: ViewerProps = {
 			canEdit: false,
+			readOnly: true,
 			document: null,
 			pageIndex: 0,
 			zoom: 2,
@@ -22,6 +23,7 @@ describe('complete shared adapter contract', () => {
 			ribbonAddIns: [],
 			collaboration: null,
 			storage: null,
+			customization: null,
 			events: { 'zoom-change': vi.fn() },
 		};
 		expect(Object.keys(viewerOptions(props)).sort()).toEqual([...propertyKeys, 'events'].sort());

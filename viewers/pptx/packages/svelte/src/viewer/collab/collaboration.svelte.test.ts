@@ -825,4 +825,37 @@ describe('collaborationController state (the shared CollaborationState)', () => 
 		});
 		host.doc.destroy();
 	});
+
+	it('reports a write-back status for an owner with onWriteBack only', async () => {
+		const host = externalHost([slide('room', [])]);
+		await inRoot(async () => {
+			const editor = makeEditor([slide('bootstrap', [])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (slides) => editor.applyRemoteSlides(slides),
+				getConfig: () => undefined,
+			});
+			await collab.start({
+				...CONFIG,
+				roomId: 'host-room',
+				role: 'owner',
+				onWriteBack: () => {},
+				externalSession: host.session,
+			});
+			flushSync();
+			expect(collab.state.writeBack).toStrictEqual({ status: 'pending' });
+			collab.stop();
+			await collab.start({
+				...CONFIG,
+				roomId: 'host-room',
+				role: 'collaborator',
+				onWriteBack: () => {},
+				externalSession: host.session,
+			});
+			flushSync();
+			expect(collab.state.writeBack).toBeUndefined();
+			collab.stop();
+		});
+		host.doc.destroy();
+	});
 });

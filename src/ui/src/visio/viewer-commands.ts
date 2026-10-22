@@ -41,6 +41,8 @@ import { ViewerTextFeatures } from './viewer-text-features';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
+	/** True when a host capability refuses the action (`customization.capabilities`). */
+	blocked?(action: VisioRibbonAction): boolean;
 	root: ShadowRoot;
 	viewport: HTMLElement;
 	rulers: Rulers;
@@ -288,6 +290,7 @@ export class ViewerCommands {
 	}
 	/** Run one typed action, exactly as a ribbon control or shortcut would. */
 	run(action: VisioRibbonAction): void {
+		if (this.host.blocked?.(action)) return;
 		routeRibbonAction(this.#targets, action);
 	}
 	wire(): () => void {

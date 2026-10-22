@@ -406,6 +406,23 @@ describe('createPptxViewer', () => {
 		expect(editableTextarea?.readOnly).toBeFalsy();
 	});
 
+	it('readOnly is the inverse of editable: true wins and false only lifts its own lock', () => {
+		const notes = (container: HTMLElement) =>
+			container.querySelector<HTMLTextAreaElement>('.pptxv-notes-textarea')?.readOnly;
+		const { container: locked } = mount({ editable: true, readOnly: true });
+		expect(notes(locked)).toBeTruthy();
+		const { container, viewer } = mount({ editable: true, readOnly: true });
+		viewer.setReadOnly(false);
+		expect(notes(container)).toBeFalsy();
+		viewer.setReadOnly(true);
+		expect(notes(container)).toBeTruthy();
+		viewer.setReadOnly(false);
+		viewer.setEditable(false);
+		expect(notes(container)).toBeTruthy();
+		viewer.setEditable(true);
+		expect(notes(container)).toBeFalsy();
+	});
+
 	it('uses the presentation settings and collaboration dialog for ribbon workflows', () => {
 		const { viewer } = mount({ editable: true });
 		const concrete = viewer as PptxViewer;

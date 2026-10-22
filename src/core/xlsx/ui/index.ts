@@ -1,5 +1,6 @@
 export * from './backstage/templates';
 export * from './commands';
+export * from './customization';
 export * from './commands/alignment';
 export * from './commands/cells';
 export * from './commands/cf-presets';

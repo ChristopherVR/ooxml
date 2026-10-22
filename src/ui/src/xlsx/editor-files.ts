@@ -158,7 +158,8 @@ async function saveDownload(
 ): Promise<void> {
 	const source = core.workbook?.format;
 	let name = withExtension(core.fileName, saveExtension(core.fileName));
-	const storage = core.storage;
+	// A host that removed Save (`save: false`) never gets `storage.save`: Save As then downloads.
+	const storage = core.customization.commands.has('file.save') ? undefined : core.storage;
 	let edited = false;
 	const changed = () => (edited = true);
 	saving.add(core);
@@ -197,6 +198,17 @@ export interface FileCommandOptions {
 	openBackstage?(page: 'saveAs'): void;
 }
 
+/** The command id (`hiddenActions` / capability id) of each File command. */
+const FILE_COMMAND_IDS: Record<FileCommand, string> = {
+	new: 'file.new',
+	open: 'file.open',
+	save: 'file.save',
+	saveAs: 'file.save-as',
+	export: 'file.export',
+	exportCsv: 'file.export-csv',
+	print: 'file.print',
+};
+
 /** Runs a File command unless a host cancels the `file-command` event to handle it itself. */
 export async function runFileCommand(
 	core: EditorCore,
@@ -204,6 +216,9 @@ export async function runFileCommand(
 	fileName: string | undefined,
 	options: FileCommandOptions = {},
 ): Promise<void> {
+	// A command a host capability removed (`save: false` and so on) never runs from any entry
+	// point: no `file-command`, no `storage` call.
+	if (core.customization.commands.has(FILE_COMMAND_IDS[command])) return;
 	if ((command === 'save' || command === 'saveAs') && saving.has(core)) return;
 	if (!announceFileCommand(core.host, command, fileName)) return;
 	const { chrome } = options;

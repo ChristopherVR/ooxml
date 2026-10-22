@@ -185,7 +185,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			fonts = [],
 			filePath,
 			fileName,
-			canEdit: hostCanEdit = false,
+			canEdit: canEditProp = false,
+			readOnly = false,
 			autosave: hostAutosave,
 			autosaveIntervalMs: hostAutosaveIntervalMs,
 			storage,
@@ -225,6 +226,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			customization,
 			initialSlide,
 		} = props;
+		// `readOnly` takes editing away from a host that also allows it.
+		const hostCanEdit = canEditProp && !readOnly;
 		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.

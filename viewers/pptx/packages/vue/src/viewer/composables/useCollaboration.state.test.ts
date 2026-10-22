@@ -65,4 +65,42 @@ describe('useCollaboration state (the shared CollaborationState)', () => {
 			people: [],
 		});
 	});
+
+	it('reports a write-back status for an owner with onWriteBack only', async () => {
+		const hub = createMemoryHub();
+		const session = createCollabSession({
+			roomId: 'wb-room',
+			provider: transportProvider({ transport: hub.createTransport('wb-room') }),
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+		});
+		cleanup.push(() => session.destroy());
+		const collaboration = shallowRef<Record<string, unknown> | undefined>({
+			session,
+			user: { name: 'Ada', role: 'owner' },
+			onWriteBack: () => {},
+		});
+		const scope = effectScope();
+		cleanup.push(() => scope.stop());
+		const collab = scope.run(() =>
+			useCollaboration({
+				collaboration,
+				slides: ref([]),
+				onRemoteSlides: () => {},
+				loadVersion: ref(0),
+				getLoadOrigin: () => 'bootstrap',
+			} as never),
+		)!;
+		await nextTick();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(collab.state.value.writeBack).toEqual({ status: 'idle' });
+		collaboration.value = {
+			session,
+			user: { name: 'Ada', role: 'collaborator' },
+			onWriteBack: () => {},
+		};
+		await nextTick();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(collab.state.value.writeBack).toBeUndefined();
+	});
 });

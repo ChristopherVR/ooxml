@@ -1470,6 +1470,8 @@ export class PowerPointViewerComponent
 	});
 	/** Whether editing actions are enabled (host input; see {@link canEdit}). */
 	readonly canEditInput = input<boolean>(false, { alias: 'canEdit' });
+	/** Makes the deck read-only; true wins over `canEdit`, false only lifts this restriction. */
+	readonly readOnlyInput = input<boolean>(false, { alias: 'readOnly' });
 	/** Fired before following a link; return false to cancel its default action. */
 	readonly onHyperlinkClick = input<import('ooxml-ui/pptx').HyperlinkClickHandler>();
 	/** Optional class applied to the root element. */
@@ -1917,6 +1919,7 @@ export class PowerPointViewerComponent
 	protected readonly hasEditPermission = computed(
 		() =>
 			this.canEditInput() &&
+			!this.readOnlyInput() &&
 			this.customizationService.editingAllowed() &&
 			(!this.viewerOpts.options().trust.openInProtectedView || this.protectedViewDismissed()) &&
 			!this.loadNotices.lockActive(),
@@ -1930,6 +1933,7 @@ export class PowerPointViewerComponent
 	protected readonly protectedViewActive = computed(
 		() =>
 			this.canEditInput() &&
+			!this.readOnlyInput() &&
 			this.customizationService.editingAllowed() &&
 			this.viewerOpts.options().trust.openInProtectedView &&
 			!this.protectedViewDismissed(),

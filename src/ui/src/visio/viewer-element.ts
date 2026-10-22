@@ -31,6 +31,14 @@ import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import {
+	applyVisioCommandVisibility,
+	quickAccessShown,
+	syncVisioHostMenu,
+	ViewerCustomizationState,
+	visioActionBlocked,
+} from './viewer-customization';
+import type { VisioCustomization } from 'ooxml-core/visio/ui';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
 import { ViewerLivePreview } from './viewer-live-preview';
 import {
@@ -76,11 +84,45 @@ const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 ) as typeof HTMLElement;
 export class VisioViewerElement extends BaseElement {
+	/** False while the drawing cannot be edited: `canEdit`, `readOnly`, a `viewer` role or `capabilities.edit`. */
 	get canEdit(): boolean {
 		return this.controller.canEdit;
 	}
 	set canEdit(value: boolean) {
 		this.controller.canEdit = value;
+	}
+	/**
+	 * The host customisation (`VisioCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Applied when the object identity changes; null restores the
+	 * defaults.
+	 */
+	get customization(): VisioCustomization | null {
+		return this.#custom.input;
+	}
+	set customization(value: VisioCustomization | null | undefined) {
+		this.#assertAlive();
+		if (!this.#custom.set(value ?? null)) return;
+		this.controller.setCapabilityReadOnly(!this.#custom.resolved.canEdit);
+		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
+		this.#backstage.refreshCustomization();
+		renderTitleBar(
+			this.#titleBar,
+			this.controller.state,
+			this.#fileName,
+			this.#profile.profile,
+			quickAccessShown(this.#behaviour, this.#custom.resolved),
+		);
+	}
+	readonly #custom = new ViewerCustomizationState();
+	/**
+	 * The inverse of `canEdit`: true makes the drawing read-only and wins over `canEdit`. A
+	 * collaboration `viewer` role also reads as read-only, and turning this off never lifts it.
+	 */
+	get readOnly(): boolean {
+		return this.controller.readOnly;
+	}
+	set readOnly(value: boolean) {
+		this.controller.readOnly = value;
 	}
 	/**
 	 * Shares the open drawing in a room (the shared embedding contract of `ooxml-core/collab`):
@@ -259,6 +301,7 @@ export class VisioViewerElement extends BaseElement {
 		});
 		this.#presentation = new ViewerPresentation(this.#root, this.controller);
 		this.#commands = new ViewerCommands({
+			blocked: (action) => visioActionBlocked(this.#custom.resolved, action),
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
@@ -295,7 +338,7 @@ export class VisioViewerElement extends BaseElement {
 				this.controller.state,
 				this.#fileName,
 				this.#profile.profile,
-				this.#behaviour,
+				quickAccessShown(this.#behaviour, this.#custom.resolved),
 			);
 		this.#profile = new ViewerProfile(
 			this.#root,
@@ -374,6 +417,16 @@ export class VisioViewerElement extends BaseElement {
 				this.dispatchEvent(
 					new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),
 				),
+			customization: () => this.#custom.resolved,
+			regionContext: (region) => ({
+				region,
+				viewer: this,
+				locale: this.#locale(),
+				canEdit: this.controller.canEdit,
+				pageIndex: this.controller.state.pageIndex,
+				pageCount: this.controller.state.document?.pages.length ?? 0,
+				close: () => this.#backstage.hide(),
+			}),
 		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));
@@ -696,7 +749,7 @@ export class VisioViewerElement extends BaseElement {
 				this.controller.state,
 				this.#fileName,
 				this.#profile.profile,
-				behaviour,
+				quickAccessShown(behaviour, this.#custom.resolved),
 			);
 	}
 	/**
@@ -756,8 +809,12 @@ export class VisioViewerElement extends BaseElement {
 		const disposeMini = this.#mini.wire(this.#viewport);
 		const disposePreview = this.#livePreview.wire();
 		const disposeRecover = this.#recover.wire(this.ownerDocument);
-		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
-			this.#mini.showAt(x, y),
+		const disposeMenus = wireContextMenus(
+			this.#root,
+			this.#viewport,
+			this.controller,
+			(x, y) => this.#mini.showAt(x, y),
+			(menu, target) => syncVisioHostMenu(menu, target, this.#custom.resolved, this.controller),
 		);
 		const disposeTellMe = wireTellMe(this.#root);
 		const disposeGalleries = wireInlineGalleries(this, this.#root);
@@ -876,7 +933,13 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
-		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile, this.#behaviour);
+		renderTitleBar(
+			this.#titleBar,
+			state,
+			this.#fileName,
+			this.#profile.profile,
+			quickAccessShown(this.#behaviour, this.#custom.resolved),
+		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);

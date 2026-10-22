@@ -6,6 +6,8 @@ import { ribbonIcon } from '../ribbon/icons';
 import type { SaveState } from '../title-bar';
 import type { TemplateId } from 'ooxml-core/xlsx/ui';
 import type { ShareHost } from './pages-share';
+import type { ExcelRegionContext } from 'ooxml-core/xlsx/ui';
+import type { ResolvedExcelCustomization } from '../customization';
 
 export type CalculationMode = 'automatic' | 'manual';
 /** Iterative calculation: maximum iterations and maximum change; undefined when off. */
@@ -37,6 +39,10 @@ export interface BackstageHost {
 	setHiddenActions(ids: string[]): void;
 	/** File > Share; without it the page only shows its title. */
 	share?: ShareHost;
+	/** The host customisation: removed pages and host pages (`backstage.extraPages`). */
+	customization?(): ResolvedExcelCustomization;
+	/** The context of a host File tab page. */
+	regionContext?(region: string): ExcelRegionContext;
 }
 
 export interface PageContext {

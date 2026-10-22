@@ -206,8 +206,14 @@ describe('the collaboration contract on the share controller', () => {
 		await new Promise((r) => setTimeout(r, 30));
 		expect(session.doc.getMap('visio:pages').size).toBe(0);
 		expect(a.controller.canEdit).toBe(false);
+		// The host turning edit switches on never lifts the role's lock.
+		a.controller.canEdit = true;
+		a.controller.readOnly = false;
+		expect(a.controller.canEdit).toBe(false);
 		a.share.stop();
 		expect(a.controller.canEdit).toBe(true);
+		a.controller.readOnly = true;
+		expect(a.controller.canEdit).toBe(false);
 		session.destroy();
 	});
 

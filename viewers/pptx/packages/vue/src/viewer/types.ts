@@ -74,6 +74,12 @@ export interface PowerPointViewerProps {
 	fileName?: string;
 	/** Whether editing actions are enabled. */
 	canEdit?: boolean;
+	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
 	/** Fired before following a link; return false to cancel its default action. */
 	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/**

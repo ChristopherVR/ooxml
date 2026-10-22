@@ -61,7 +61,7 @@ export function toViewerStateOptions(
 		getLineChart3D: () => getProps().lineChart3D ?? false,
 		getAreaChart3D: () => getProps().areaChart3D ?? false,
 		getPieChart3D: () => getProps().pieChart3D ?? false,
-		getEditable: () => getProps().editable ?? false,
+		getEditable: () => (getProps().editable ?? false) && !getProps().readOnly,
 		getFitPadding: () => getProps().fitPadding,
 		getMaxFitScale: () => getProps().maxFitScale,
 		getFileName: () => getProps().fileName,

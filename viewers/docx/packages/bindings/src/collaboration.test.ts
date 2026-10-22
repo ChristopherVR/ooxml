@@ -123,7 +123,9 @@ describe('collaboration in every binding', () => {
 		expect(() => compile(source, { filename: 'WordEditor.svelte' })).not.toThrow();
 		expect(source).toMatch(/collaboration,[^}]*oncollaborationchange/);
 		expect(source).toContain("'collaboration-change': value.oncollaborationchange");
-		expect(source).toContain('ribbonAddIns, collaboration, storage, ondocumentchange');
+		expect(source).toMatch(
+			/ribbonAddIns, collaboration, (customization, )?(storage, )?ondocumentchange/,
+		);
 		expect(source).toContain('onribbonaddin, oncollaborationchange }}');
 	});
 

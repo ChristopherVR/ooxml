@@ -38,8 +38,13 @@ export interface XlsxEditorEventMap {
 	'workbook-error': { error: Error; message: string };
 	/** Non-fatal notes from the loader (unsupported features, compatibility). */
 	'workbook-warning': { warnings: string[] };
-	/** The user toggled Editing / Viewing, or the host changed `readOnly`. */
-	'readonly-change': { readOnly: boolean };
+	/**
+	 * The user toggled Editing / Viewing, the host changed `readOnly`, or a collaboration role
+	 * changed. `readOnly` is the effective value, `locked` says a `viewer` role holds it, and
+	 * `hostReadOnly` is the host's own switch: a controlled parent mirrors only that one, never
+	 * `readOnly`, so a role lock is not written into the host's setting.
+	 */
+	'readonly-change': { readOnly: boolean; locked: boolean; hostReadOnly: boolean };
 	/** A command ran from the ribbon, a menu, Tell me or a shortcut. */
 	'ribbon-action': { id: string };
 	/** The user changed which ribbon commands are shown (File > Options > Customize Ribbon). */

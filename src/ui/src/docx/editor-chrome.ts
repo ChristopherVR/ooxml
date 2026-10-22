@@ -19,6 +19,7 @@ import { documentStats, plainText } from 'ooxml-core/docx';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
+import type { ResolvedWordCustomization, WordRegionContext } from './customization';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -50,6 +51,10 @@ export interface ChromeHost {
 	setOption(key: BackstageOptionKey, value: string): void;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
+	/** The resolved host customisation (`customization` property). */
+	customization(): ResolvedWordCustomization;
+	/** The context of a host region (a File tab page). */
+	regionContext(region: string): WordRegionContext;
 }
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
@@ -104,6 +109,8 @@ export class EditorChrome {
 			ribbon: () => host.ribbon(),
 			hiddenActions: () => host.hiddenActions(),
 			setHiddenActions: (ids) => host.setHiddenActions(ids),
+			customization: () => host.customization(),
+			regionContext: (region) => host.regionContext(region),
 		});
 		this.statusBar = createStatusBar({
 			setViewMode: (mode) => host.setViewMode(mode),
@@ -180,6 +187,14 @@ export class EditorChrome {
 		this.ribbonActions.setSharing(this.host.collaborating());
 	}
 
+	/** Re-applies the host customisation to the File tab, title bar and ribbon actions. */
+	applyCustomization(): void {
+		const resolved = this.host.customization();
+		this.backstage.refresh();
+		this.titleBar.setHiddenCommands(resolved.fileCommands);
+		this.ribbonActions.element.noShare = resolved.fileCommands.has('share');
+	}
+
 	closeBackstage(): void {
 		this.backstage.close();
 		this.ribbon?.focusFile?.();
@@ -187,6 +202,8 @@ export class EditorChrome {
 
 	/** Runs a file command unless a host cancels the `file-command` event to handle it itself. */
 	async run(command: FileCommand, fileName?: string): Promise<void> {
+		// A command a host capability removed never runs, whichever entry point reached it.
+		if (this.host.customization().fileCommands.has(command)) return;
 		// One save at a time: Save or Save As while a save is pending is ignored, not queued.
 		if ((command === 'save' || command === 'saveAs') && this.saving) return;
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
@@ -205,7 +222,11 @@ export class EditorChrome {
 				const extension = this._fileName.split('.').pop()?.toLowerCase() === 'doc' ? 'doc' : 'docx';
 				this.fileName = withExtension(name, extension);
 				// Save As then saves, announced as its own `save` so a host that takes over Save sees it.
-				if (announceFileCommand(this.host.element, 'save')) await this.saveDocument('saveAs');
+				// A host that removed Save (`save: false`) gets neither that event nor `storage.save`:
+				// Save As then only downloads, as an export.
+				if (this.host.customization().fileCommands.has('save'))
+					await this.saveDocument('saveAs', false);
+				else if (announceFileCommand(this.host.element, 'save')) await this.saveDocument('saveAs');
 			} else if (command === 'save') await this.saveDocument('save');
 			else if (command === 'export')
 				downloadBytes(
@@ -218,7 +239,6 @@ export class EditorChrome {
 		}
 	}
 
-	/** Saves to the host's storage when there is one, else downloads a copy. */
 	/** True while a save is pending. */
 	saving = false;
 
@@ -226,7 +246,7 @@ export class EditorChrome {
 	 * Saves to the host's storage when there is one, else downloads a copy. An edit made while the
 	 * save runs keeps the document dirty: the saved bytes do not contain it.
 	 */
-	private async saveDocument(reason: DocumentSaveReason): Promise<void> {
+	private async saveDocument(reason: DocumentSaveReason, useStorage = true): Promise<void> {
 		const element = this.host.element;
 		let edited = false;
 		const changed = () => (edited = true);
@@ -235,7 +255,7 @@ export class EditorChrome {
 		element.addEventListener('document-change', changed);
 		try {
 			const bytes = await this.host.save();
-			const storage = this.host.storage?.();
+			const storage = useStorage ? this.host.storage?.() : undefined;
 			if (storage)
 				this.fileName = await saveToStorage(
 					storage,

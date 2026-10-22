@@ -166,3 +166,31 @@ tabs. A tab cannot take the id of a built-in tab, and its commands never reach
 the editor's own command handling. The same descriptor (`RibbonAddInTab`, from
 `ooxml-core/ribbon`, re-exported by every framework package) works in the Word,
 Excel, PowerPoint and Visio editors. No add-in tab ships with the editor.
+
+## Binding props and events
+
+Every framework adapter forwards the same element props and re-emits the same events, so the
+names below mean one thing in every binding. The event names are the element's (`file-command`);
+each framework spells them in its own idiom.
+
+| Element prop   | React / Solid / Vanilla | Vue prop       | Angular input  | Svelte prop    |
+| -------------- | ----------------------- | -------------- | -------------- | -------------- |
+| `fileName`     | `fileName`              | `fileName`     | `fileName`     | `fileName`     |
+| `reviewAuthor` | `reviewAuthor`          | `reviewAuthor` | `reviewAuthor` | `reviewAuthor` |
+| `themeColors`  | `themeColors`           | `themeColors`  | `themeColors`  | `themeColors`  |
+
+`fileName`, `reviewAuthor` and `themeColors` are forwarded when the prop is set or changes, so a
+rename made by File > Open is not reverted by a re-render that passes the old name.
+
+| Element event      | React / Solid / Vanilla option | Vue event          | Angular output    | Svelte callback     |
+| ------------------ | ------------------------------ | ------------------ | ----------------- | ------------------- |
+| `file-command`     | `onFileCommand(event)`         | `file-command`     | `fileCommand`     | `onfilecommand`     |
+| `document-warning` | `onDocumentWarning(message)`   | `document-warning` | `documentWarning` | `ondocumentwarning` |
+| `readonly-change`  | `onReadOnlyChange(readOnly)`   | `readonly-change`  | `readOnlyChange`  | `onreadonlychange`  |
+| `ribbon-action`    | `onRibbonAction(detail)`       | `ribbon-action`    | `ribbonAction`    | `onribbonaction`    |
+| `ribbon-customize` | `onRibbonCustomize(ids)`       | `ribbon-customize` | `ribbonCustomize` | `onribboncustomize` |
+
+`file-command` is the one cancelable event, so its handler receives the event itself rather than
+its detail. Call `event.preventDefault()` to take a File command over (Save, Open, New and so on);
+`event.detail.command` says which one. The Vue, Angular and Svelte handlers receive the same
+`CustomEvent` object. The other events pass their detail directly.

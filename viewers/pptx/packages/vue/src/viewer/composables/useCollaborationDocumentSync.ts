@@ -1,3 +1,4 @@
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import type {
 	CollaborationConfig,
 	ConnectionStatus,
@@ -31,6 +32,8 @@ export function useCollaborationDocumentSync(
 	const readOnly = ref(false);
 	/** True once the first-write gate is open (the first exchange with the room finished). */
 	const synced = ref(false);
+	/** The owner's write-back status, as the scheduler reports it. */
+	const writeBackState = ref<CollaborationWriteBackState | undefined>(undefined);
 	const livePatcher = createCollaborationLivePatcher();
 	let doc: YDocLike | null = null;
 	let factories: YjsFactories | null = null;
@@ -46,6 +49,9 @@ export function useCollaborationDocumentSync(
 		getTemplateElements: options.getTemplateElements,
 		mergeTemplateElements: buildSaveSlides,
 		getSaveOptions: options.getSaveOptions,
+		onWriteBackStatus: () => {
+			writeBackState.value = writeBack.getState();
+		},
 	});
 	const baseGate = createSyncGate(() => {
 		synced.value = true;
@@ -173,6 +179,7 @@ export function useCollaborationDocumentSync(
 		unobserve = null;
 		gate.reset();
 		writeBack.cancel();
+		writeBackState.value = undefined;
 		livePatcher.configure(null, null);
 		doc = null;
 		factories = null;
@@ -184,6 +191,7 @@ export function useCollaborationDocumentSync(
 	return {
 		readOnly,
 		synced,
+		writeBackState,
 		livePatcher,
 		gate,
 		begin,

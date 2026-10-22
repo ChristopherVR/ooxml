@@ -216,6 +216,7 @@ import type { PowerPointViewerEmits, PowerPointViewerExpose, PowerPointViewerPro
 
 const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	canEdit: false,
+	readOnly: false,
 	smartArt3D: false,
 	surfaceChart3D: false,
 	barChart3D: false,
@@ -391,6 +392,7 @@ const canEditEffective = computed(
 	() =>
 		editingRequested.value &&
 		props.canEdit &&
+		!props.readOnly &&
 		isEditingAllowed(customization.resolved.value) &&
 		!collaborationReadOnly.value &&
 		!protectedViewActive.value &&

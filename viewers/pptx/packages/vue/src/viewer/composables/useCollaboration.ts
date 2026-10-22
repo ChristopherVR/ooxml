@@ -22,6 +22,7 @@ import {
 	resolveCollaborationShellState,
 	validateRoomId,
 	buildCollaborationState,
+	writeBackReport,
 } from 'ooxml-ui/pptx';
 import { computed, onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 
@@ -68,6 +69,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 			userName: activeCollaboration.value?.userName,
 			userColor: options.userColor ?? activeCollaboration.value?.userColor,
 			remoteUsers: presence.remoteUsers.value,
+			writeBack: writeBackReport(activeCollaboration.value, document.writeBackState.value),
 		}),
 	);
 	const connectedCount = computed(

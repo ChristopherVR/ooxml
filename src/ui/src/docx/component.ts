@@ -95,6 +95,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 
 	attributeChangedCallback(name: string, _old: string | null, value: string | null) {
+		if (name === 'read-only' && this.core.reflectingReadOnly) return;
 		if (isDocxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 
@@ -174,13 +175,10 @@ export class DocxEditorElement extends DocxEditorApi {
 	get readOnly() {
 		return this.core.readOnly;
 	}
+	/** True when the document cannot be edited: this switch, a `viewer` role or `capabilities.edit` off. */
 	set readOnly(value: boolean) {
 		this.core.readOnly = Boolean(value);
-		this.core.view?.setProps({ editable: () => this.core.canEditBody() });
-		if (this.core.readOnly)
-			this.core.parts.closeHeaderFooter(this.core.shell.canvas, this.core.shell.paper);
-		this.core.refreshControls();
-		reflectAttribute(this, 'read-only', this.core.readOnly);
+		this.core.applyReadOnly();
 	}
 
 	/**
@@ -223,6 +221,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.view?.destroy();
 		core.view = undefined;
 		core.imageMedia.release();
+		core.shell.chrome?.backstage.destroy();
 	}
 
 	async load(input: Uint8Array | ArrayBuffer): Promise<void> {

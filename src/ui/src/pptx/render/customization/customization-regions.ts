@@ -21,6 +21,17 @@ import type { PowerPointViewerAPI, ViewerMode } from '../../types';
 import type { BackstagePage } from '../backstage';
 import type { ViewerOptionPrimitive, ViewerOptions } from '../options/viewer-options';
 import type { OptionsSettingId } from './customization-types';
+import {
+	sameRegionContext as sameHostRegionContext,
+	sameRenderer as sameHostRenderer,
+	type HostBackstagePage as CoreHostBackstagePage,
+	type HostBackstageRegionId,
+	type HostRegionElement,
+	type HostRegionMount,
+	type HostRegionMountResult,
+	type HostRegionRenderer,
+} from 'ooxml-core/embedding';
+import { HostRegionHost } from '../../../embedding/region-host';
 
 /** Docked panels a host can replace (the whole panel, keeping its slot). */
 export type ViewerPanelRegionId = 'inspector' | 'slidesPane' | 'notes' | 'statusBar';
@@ -43,7 +54,7 @@ export type ViewerBackstageRegionId = `backstage.${BackstagePage}`;
 export type ViewerRegionId = ViewerPanelRegionId | ViewerDialogRegionId | ViewerBackstageRegionId;
 
 /** The region id a host File tab page (`backstage.extraPages`) is mounted under. */
-export type HostBackstageRegionId = `backstage.host.${string}`;
+export type { HostBackstageRegionId };
 
 /**
  * What a host renderer receives. It is rebuilt whenever any field changes and
@@ -87,140 +98,45 @@ export interface ViewerSettingsRegionContext extends ViewerRegionContext {
 }
 
 /** What a mount function may return to receive updates and teardown. */
-export interface ViewerRegionMountResult {
-	/** Called with the new context whenever it changes. */
-	update?(context: ViewerRegionContext): void;
-	/** Called once when the region unmounts. */
-	destroy?(): void;
-}
+export type ViewerRegionMountResult = HostRegionMountResult<ViewerRegionContext>;
 
 /** Fill `container` for one region. Return a cleanup function or a handle. */
-export type ViewerRegionMount = (
-	container: HTMLElement,
-	context: ViewerRegionContext,
-) => void | (() => void) | ViewerRegionMountResult;
+export type ViewerRegionMount = HostRegionMount<HTMLElement, ViewerRegionContext>;
 
 /** A custom element to create in the region (registered by the host). */
-export interface ViewerRegionElement {
-	/** The tag name, for example `my-settings-view`. */
-	element: string;
-	/** Properties assigned to the element once, before it is attached. */
-	properties?: Readonly<Record<string, unknown>>;
-}
+export type ViewerRegionElement = HostRegionElement;
 
 /** Any of the renderer forms a region accepts. A string is a tag name. */
-export type ViewerRegionRenderer = ViewerRegionMount | ViewerRegionElement | string;
+export type ViewerRegionRenderer = HostRegionRenderer<HTMLElement, ViewerRegionContext>;
 
-/** A host page added to the File tab, after the built-in pages of its group. */
-export interface HostBackstagePage {
-	/** Unique among host pages; the region id is `backstage.host.<id>`. */
-	id: string;
-	/** The navigation label (the host localises it). */
-	label: string;
-	/** `footer` places it next to Account and Options; default `main`. */
-	group?: 'main' | 'footer';
-	render: ViewerRegionRenderer;
-}
+/**
+ * A host page added to the File tab, after the built-in pages of its group (the shared
+ * `HostBackstagePage` of `ooxml-core/embedding`, with PowerPoint's region renderer).
+ */
+export type HostBackstagePage = CoreHostBackstagePage<ViewerRegionRenderer>;
 
 /** Attribute every region container carries, for host CSS and tests. */
 export const VIEWER_REGION_ATTRIBUTE = 'data-pptx-region';
 
+/** Context fields that are callbacks, never compared (`close` is always one). */
+const CALLBACK_KEYS: ReadonlySet<string> = new Set(['close', 'setOption', 'resetOptions']);
+
 /**
- * Mounts one region renderer into one container and keeps it current.
+ * Mounts one region renderer into one container and keeps it current: the shared
+ * `HostRegionHost` of `ooxml-ui` with PowerPoint's region attribute and settings callbacks.
  *
  * A binding creates one host per container (on mount), calls `render` with the
  * current renderer and context on every change, and `destroy` on unmount.
  * `render` remounts only when the renderer itself changes; a new context goes
  * to `update` / the `context` property, and only when a field changed.
  */
-export class ViewerRegionHost {
-	readonly #container: HTMLElement;
-	#renderer: ViewerRegionRenderer | undefined;
-	#context: ViewerRegionContext | undefined;
-	#result: ViewerRegionMountResult | undefined;
-	#element: (HTMLElement & { context?: ViewerRegionContext }) | undefined;
-	/** The latest context as the binding passed it, callbacks included. */
-	#latest: ViewerRegionContext | undefined;
-
+export class ViewerRegionHost extends HostRegionHost<ViewerRegionContext> {
 	constructor(container: HTMLElement) {
-		this.#container = container;
-	}
-
-	/** Mount `renderer`, or deliver a changed `context` to the mounted one. */
-	render(renderer: ViewerRegionRenderer, latest: ViewerRegionContext): void {
-		this.#latest = latest;
-		const context = this.#stable(latest);
-		this.#container.setAttribute(VIEWER_REGION_ATTRIBUTE, context.region);
-		if (!sameRenderer(renderer, this.#renderer)) {
-			this.#unmount();
-			this.#renderer = renderer;
-			this.#context = context;
-			this.#mount(renderer, context);
-			return;
-		}
-		if (this.#context && sameRegionContext(this.#context, context)) {
-			return;
-		}
-		this.#context = context;
-		if (this.#element) {
-			this.#element.context = context;
-		} else {
-			guard(() => this.#result?.update?.(context));
-		}
-	}
-
-	/** Tear the renderer down and empty the container. */
-	destroy(): void {
-		this.#unmount();
-		this.#renderer = undefined;
-		this.#context = undefined;
-		this.#latest = undefined;
-	}
-
-	/**
-	 * `context` with its callbacks swapped for stable ones that call the
-	 * latest binding callback, so a renderer that kept an older context never
-	 * calls a stale closure (callback identity is not a context change).
-	 */
-	#stable(context: ViewerRegionContext): ViewerRegionContext {
-		const latest = (): Record<string, unknown> =>
-			(this.#latest ?? context) as unknown as Record<string, unknown>;
-		const call =
-			(key: string) =>
-			(...args: unknown[]): void =>
-				(latest()[key] as ((...a: unknown[]) => void) | undefined)?.(...args);
-		const stable: Record<string, unknown> = { ...context, close: call('close') };
-		for (const key of CALLBACK_KEYS) {
-			if (key !== 'close' && key in context) {
-				stable[key] = call(key);
-			}
-		}
-		return stable as unknown as ViewerRegionContext;
-	}
-
-	#mount(renderer: ViewerRegionRenderer, context: ViewerRegionContext): void {
-		if (typeof renderer === 'function') {
-			const result = guard(() => renderer(this.#container, context));
-			this.#result = typeof result === 'function' ? { destroy: result } : (result ?? undefined);
-			return;
-		}
-		const spec = typeof renderer === 'string' ? { element: renderer } : renderer;
-		const element = guard(() => this.#container.ownerDocument.createElement(spec.element));
-		if (!element) {
-			return;
-		}
-		Object.assign(element, spec.properties);
-		this.#element = element as HTMLElement & { context?: ViewerRegionContext };
-		this.#element.context = context;
-		this.#container.append(element);
-	}
-
-	#unmount(): void {
-		const result = this.#result;
-		this.#result = undefined;
-		guard(() => result?.destroy?.());
-		this.#element?.remove();
-		this.#element = undefined;
+		super(container, {
+			attribute: VIEWER_REGION_ATTRIBUTE,
+			callbackKeys: CALLBACK_KEYS,
+			label: '[pptx-viewer]',
+		});
 	}
 }
 
@@ -233,60 +149,10 @@ export function sameRenderer(
 	a: ViewerRegionRenderer | undefined,
 	b: ViewerRegionRenderer | undefined,
 ): boolean {
-	if (a === b) {
-		return true;
-	}
-	if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || a.element !== b.element) {
-		return false;
-	}
-	const left = a.properties ?? {};
-	const right = b.properties ?? {};
-	const keys = Object.keys(left);
-	return (
-		keys.length === Object.keys(right).length &&
-		keys.every((key) => Object.is(left[key], right[key]))
-	);
+	return sameHostRenderer(a, b);
 }
-
-/** Context fields that are callbacks, never compared (see `#stable`). */
-const CALLBACK_KEYS: ReadonlySet<string> = new Set(['close', 'setOption', 'resetOptions']);
 
 /** Shallow equality over the context fields (the selection compared by value). */
 export function sameRegionContext(a: ViewerRegionContext, b: ViewerRegionContext): boolean {
-	const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-	for (const key of keys) {
-		const left = (a as unknown as Record<string, unknown>)[key];
-		const right = (b as unknown as Record<string, unknown>)[key];
-		if (key === 'selectedElementIds') {
-			if (!sameIds(left as readonly string[], right as readonly string[])) {
-				return false;
-			}
-		} else if (CALLBACK_KEYS.has(key)) {
-			// Callbacks are recreated on every render; their identity is not a change.
-			continue;
-		} else if (!Object.is(left, right)) {
-			return false;
-		}
-	}
-	return true;
-}
-
-function sameIds(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
-	if (a === b) {
-		return true;
-	}
-	if (!a || !b || a.length !== b.length) {
-		return false;
-	}
-	return a.every((id, index) => id === b[index]);
-}
-
-/** A host renderer must never take the viewer down with it. */
-function guard<T>(run: () => T): T | undefined {
-	try {
-		return run();
-	} catch (error) {
-		console.error('[pptx-viewer] A host region renderer threw:', error);
-		return undefined;
-	}
+	return sameHostRegionContext(a, b, CALLBACK_KEYS);
 }

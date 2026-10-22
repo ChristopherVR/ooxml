@@ -29,13 +29,36 @@ Properties only:
 | Property             | Type                                 | Notes                                                                                  |
 | -------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
 | `themeColors`        | `Partial<Record<...>>`               | Token overrides applied as `--xve-*` custom properties ([theming](/theming)).          |
-| `hiddenActions`      | `string[]`                           | Ribbon controls to hide by stable id.                                                  |
+| `hiddenActions`      | `string[]`                           | Ribbon controls, title-bar items and context-menu entries to hide, by stable id.       |
 | `ribbonAddIns`       | `RibbonAddInTab[]`                   | Tabs the host adds after the built-in ones ([bindings](/bindings#ribbon-add-in-tabs)). |
 | `workbook`           | `Workbook \| null`                   | Get the open workbook, or set one to replace it.                                       |
 | `dirty`              | `boolean` (read only)                | Unsaved edits.                                                                         |
 | `activeSheet`        | `number`                             | Zero-based index of the visible sheet.                                                 |
 | `collaboration`      | `XlsxCollaborationOptions \| null`   | Shares the open workbook in a room while set ([collaboration](/collaboration)).        |
 | `collaborationState` | `XlsxCollaborationState` (read only) | Whether sharing, the connection status and who is in the room.                         |
+| `customization`      | `ExcelCustomization \| null`         | Capabilities, host File tab pages and host menu commands ([below](#customization)).    |
+
+## Customization
+
+`customization` takes one `ExcelCustomization` object, the shared contract of `ooxml-core/embedding` that Word, PowerPoint and Visio take too. Every binding forwards it as the `customization` prop or input. It is applied when the object identity changes, so keep it stable; `null` restores the defaults.
+
+```ts
+editor.customization = {
+	capabilities: { print: false, export: false, copy: false },
+	backstage: { extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }] },
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send range', onSelect: ({ ref }) => send(ref) }],
+	},
+};
+```
+
+| Field                       | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `capabilities`              | `false` removes every path to the capability (`EXCEL_CAPABILITY_IDS`): `edit` (read-only whatever `readOnly` says), `open` (New, Open), `save`, `export` (Save As, Export), `print`, `share`, `settings` (Options), `copy` (Copy, Cut), `comment` (New and Delete Comment) and `find` (Find, Replace). The commands are hidden through the same registry as `hiddenActions` (ribbon, Tell me, context menus, shortcuts, title bar) and refuse to run, and their File tab pages go. `hiddenActions` is unchanged; the two are unioned. |
+| `backstage.extraPages`      | Host File tab pages `{ id, label, group?, order?, render }` after the built-in pages of their group. `render` is a mount function `(container, context) => cleanup \| { update, destroy }`, a custom element tag or `{ element, properties }`; it mounts the first time the page is shown, receives an `ExcelRegionContext` (`editor`, `fileName`, `locale`, `canEdit`, `activeSheet`, `close`) and is torn down when the page is removed or the editor disconnects.                                                                  |
+| `contextMenu.extraCommands` | Host commands `{ id, label, icon?, group?, when?, disabled?, onSelect }` in the cell, row header, column header and sheet-tab menus, above (`top`, default) or below (`bottom`) the built-in entries. `onSelect` runs after the menu closes with an `ExcelMenuContext` (`menu`: `cell`, `row`, `column` or `sheetTab`; `sheet`, `sheetName`, `ref`, `active`, `readOnly`); use `when` to offer a command in some menus only. Labels are shown as given.                                                                               |
+
+`edit: false` is a read-only lock of its own beside the host's `readOnly` and a collaboration `viewer` role: none of them lifts another, and leaving a room keeps it. `readonly-change` reports it in `readOnly` with `locked: false` (only a `viewer` role sets `locked`) and leaves `hostReadOnly` alone, so a binding that mirrors `hostReadOnly` never writes the capability back. Capabilities are UI policy, not workbook protection. Region replacement (the Options dialog, panes) is not offered for Excel yet.
 
 ## Methods
 
@@ -75,6 +98,8 @@ All events are `CustomEvent`s that bubble and cross the shadow boundary (`compos
 | `office-ribbon-add-in` | `{ tab, command }`                                                                         | A command of a host tab (`ribbonAddIns`) was chosen.                                  |
 | `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Sharing started or stopped, the connection changed, or someone joined or left.        |
 | `validation-error`     | `{ message, title?, ref, style? }`                                                         | A cell edit in progress failed validation and stays open until corrected or canceled. |
+
+The framework bindings forward `file-command`, `workbook-warning`, `ribbon-action` and `sheet-change` as well (for example `onFileCommand`, `fileCommand` and `onfilecommand`); see [framework bindings](/bindings#callbacks-and-events).
 
 ```ts
 editor.addEventListener('file-command', (event) => {

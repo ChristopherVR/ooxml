@@ -73,6 +73,9 @@ export function mountFrameworkViewer(
 				if (snapshot[key] !== undefined && (snapshot[key] !== previous[key] || touchedByOlderCall))
 					Object.assign(patch, { [key]: snapshot[key] });
 			}
+			// A host that stops passing readOnly is no longer restricting: reset it, as false would.
+			if (snapshot.readOnly === undefined && previous.readOnly !== undefined)
+				Object.assign(patch, { readOnly: false });
 			// Nested updates compare against committed inputs, never an older patch's pending values.
 			// They must also restore unchanged inputs touched by an older call still in progress.
 			// A failed or superseded call leaves the latest successful snapshot intact.

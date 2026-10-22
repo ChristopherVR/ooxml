@@ -22,6 +22,7 @@ import type {
 import type { ResolvedCustomization } from './customization-resolve';
 import type { OptionsPageId, OptionsSectionId, OptionsSettingId } from './customization-types';
 import { withHostMenuCommands } from './host-menu-commands';
+import { hostBackstageItemId, placeHostBackstagePages } from 'ooxml-core/embedding';
 import type {
 	HostElementMenuContext,
 	HostCanvasMenuContext,
@@ -206,26 +207,12 @@ export function backstageNavEntries<
 	const entries: BackstageNavEntry[] = customizeBackstageNav(items, resolved).map((item) => ({
 		...item,
 	}));
-	const seen = new Set<string>();
-	for (const page of resolved.hostBackstagePages) {
-		if (seen.has(page.id)) {
-			continue;
-		}
-		seen.add(page.id);
-		const group = page.group ?? 'main';
-		const entry: BackstageNavEntry = {
-			id: `host.${page.id}`,
-			label: page.label,
-			group,
-			host: page,
-		};
-		let at = entries.length;
-		while (at > 0 && (entries[at - 1]?.group ?? 'main') !== group) {
-			at--;
-		}
-		entries.splice(at === 0 ? entries.length : at, 0, entry);
-	}
-	return entries;
+	return placeHostBackstagePages(entries, resolved.hostBackstagePages, (page) => ({
+		id: hostBackstageItemId(page.id),
+		label: page.label,
+		group: page.group ?? 'main',
+		host: page,
+	}));
 }
 
 /** Filter a page's action cards down to the ones the host kept. */

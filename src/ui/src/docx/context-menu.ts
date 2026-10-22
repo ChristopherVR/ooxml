@@ -12,6 +12,31 @@ import { computeMenuItems, menuStateFromView, type MenuItem } from './context-me
 import { removeLink } from './link-commands';
 import { translate, type EditorLocale } from './localization';
 import type { RibbonAction } from './ribbon-action';
+import { withHostMenuItems } from '../embedding/host-menu';
+import { withoutHiddenEntries } from 'ooxml-core/embedding';
+import type { ResolvedWordCustomization, WordMenuContext } from './customization';
+
+/** `items` without the `hidden` ids; a removed group start passes its separator on. */
+export function withoutMenuItems(
+	items: readonly MenuItem[],
+	hidden: ReadonlySet<string>,
+): MenuItem[] {
+	return withoutHiddenEntries(items, (item) => hidden.has(item.id));
+}
+
+/** The snapshot a host command receives. */
+function menuContext(view: EditorView, readOnly: boolean): WordMenuContext {
+	const { from, to } = view.state.selection;
+	const state = menuStateFromView(view, readOnly);
+	return {
+		selectedText: view.state.doc.textBetween(from, to, '\n'),
+		from,
+		to,
+		readOnly: state.readOnly,
+		inTable: state.inTable,
+		onLink: state.onLink,
+	};
+}
 
 export interface ContextMenuHost {
 	/** Element the menu is appended to (inside the shadow root, so theme tokens apply). */
@@ -25,6 +50,8 @@ export interface ContextMenuHost {
 	locale(): EditorLocale;
 	run(action: RibbonAction): void;
 	warn(message: string): void;
+	/** The host customisation: entries capabilities remove and host commands to add. */
+	customization(): ResolvedWordCustomization;
 }
 
 export interface ContextMenu {
@@ -96,7 +123,16 @@ export function createContextMenu(host: ContextMenuHost): ContextMenu {
 		close(false);
 		defineContextMenu();
 		const locale = host.locale();
-		const items = computeMenuItems(menuStateFromView(view, host.readOnly()));
+		const resolved = host.customization();
+		const items = withoutMenuItems(
+			computeMenuItems(menuStateFromView(view, host.readOnly())),
+			resolved.menuItems,
+		);
+		const extra = withHostMenuItems(
+			rows(items, locale),
+			resolved.menuCommands,
+			menuContext(view, host.readOnly()),
+		);
 		const element = document.createElement('office-ui-context-menu') as HTMLElement & {
 			state: OfficeMenuState;
 		};
@@ -104,11 +140,16 @@ export function createContextMenu(host: ContextMenuHost): ContextMenu {
 			x,
 			y,
 			label: translate(locale, 'menu.context'),
-			items: rows(items, locale),
+			items: extra.items,
 		};
 		element.state = state;
 		element.addEventListener('office-menu-request', (event) => {
 			const id = (event as CustomEvent<{ id: string }>).detail.id;
+			if (id.startsWith('host:')) {
+				close();
+				extra.run(id);
+				return;
+			}
 			const item = items.find((candidate) => candidate.id === id);
 			const current = host.view();
 			if (!item || !current) return;

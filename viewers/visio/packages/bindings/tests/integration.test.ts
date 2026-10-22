@@ -133,6 +133,9 @@ const mounts: Record<string, NativeMount> = {
 					get canEdit() {
 						return props().canEdit;
 					},
+					get readOnly() {
+						return props().readOnly;
+					},
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
 					},
@@ -141,6 +144,9 @@ const mounts: Record<string, NativeMount> = {
 					},
 					get storage() {
 						return props().storage;
+					},
+					get customization() {
+						return props().customization;
 					},
 					get events() {
 						return props().events;
@@ -214,6 +220,42 @@ describe('native adapters against the real shared custom element', () => {
 				host.remove();
 			}
 		});
+		it(`${framework}: readOnly is the inverse of canEdit and wins when both are set`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+			try {
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
+				await mounted.update({ readOnly: true, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(true);
+				expect(mounted.handle.element.readOnly).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: false });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		// The vanilla binding takes explicit patches: an omitted property is left alone by design.
+		(framework === 'vanilla' ? it.skip : it)(
+			`${framework}: dropping readOnly resets it to false`,
+			async () => {
+				const host = document.createElement('div');
+				document.body.append(host);
+				const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+				try {
+					expect(mounted.handle.controller.canEdit).toBe(false);
+					await mounted.update({ document: demoDocument });
+					expect(mounted.handle.controller.canEdit).toBe(true);
+				} finally {
+					await mounted.destroy();
+					host.remove();
+				}
+			},
+		);
 		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);
@@ -402,6 +444,36 @@ describe('native adapters against the real shared custom element', () => {
 				expect(command.defaultPrevented).toBe(true);
 				await mounted.update({ document: null, storage: null, events });
 				expect(element.storage).toBeNull();
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards customization and restores the defaults without it`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const customization = {
+				capabilities: { edit: false, print: false },
+				backstage: { extraPages: [{ id: 'about', label: 'About', render: 'acme-about' }] },
+			};
+			const mounted = await mountNative(host, { document: demoDocument, customization });
+			const element = mounted.handle.element;
+			const nav = () =>
+				(
+					element.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & {
+						items: { id: string }[];
+					}
+				).items.map((item) => item.id);
+			try {
+				expect(element.customization).toBe(customization);
+				expect(element.canEdit).toBe(false);
+				expect(nav()).toContain('host.about');
+				expect(nav()).not.toContain('print');
+				await mounted.update({ document: demoDocument, customization: null });
+				expect(element.customization).toBeNull();
+				expect(element.canEdit).toBe(true);
+				expect(nav()).toContain('print');
+				expect(nav()).not.toContain('host.about');
 			} finally {
 				await mounted.destroy();
 				host.remove();

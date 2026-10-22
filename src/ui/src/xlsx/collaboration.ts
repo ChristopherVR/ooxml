@@ -30,7 +30,8 @@ export interface CollaborationHost {
 	error(error: Error): void;
 	/** Announces `collaboration-change` and refreshes the title bar. */
 	changed(state: XlsxCollaborationState): void;
-	setReadOnly(readOnly: boolean): void;
+	/** Locks the editor while the session role is `viewer`; independent of the host's `readOnly`. */
+	setRoleReadOnly(locked: boolean): void;
 }
 
 interface Active {
@@ -154,7 +155,7 @@ export class XlsxCollaboration {
 				if (change.external) this.#notify();
 			}),
 		);
-		if (session.role === 'viewer') this.host.setReadOnly(true);
+		this.host.setRoleReadOnly(session.role === 'viewer');
 		publish(this.host.selection.get());
 		this.#changed();
 	}
@@ -177,6 +178,7 @@ export class XlsxCollaboration {
 		for (const stop of active.stop) stop();
 		active.binding.dispose();
 		if (active.owned) active.session.destroy();
+		this.host.setRoleReadOnly(false);
 		this.#changed();
 	}
 
@@ -260,7 +262,7 @@ export function collaborationFor(core: EditorCore): XlsxCollaboration {
 			emit(host, 'collaboration-change', state);
 			core.requestRender();
 		},
-		setReadOnly: (readOnly) => core.setReadOnly(readOnly),
+		setRoleReadOnly: (locked) => core.setRoleReadOnly(locked),
 	});
 }
 

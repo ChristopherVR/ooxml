@@ -119,7 +119,11 @@ describe('shared option keys', () => {
 			'selection-change': undefined,
 			'dirty-change': undefined,
 			'readonly-change': undefined,
+			'file-command': undefined,
+			'workbook-warning': undefined,
+			'ribbon-action': undefined,
 			'ribbon-customize': undefined,
+			'sheet-change': undefined,
 			'office-ribbon-add-in': undefined,
 			'collaboration-change': undefined,
 		});

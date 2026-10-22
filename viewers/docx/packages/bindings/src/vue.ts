@@ -4,9 +4,11 @@ import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
+	EditorTheme,
 	EditorThemeMode,
 	RibbonActionInput,
 	RibbonAddInTab,
+	WordCustomization,
 } from 'docx-web-component';
 import {
 	EDITOR_EVENT_NAMES,
@@ -22,6 +24,9 @@ export const WordEditor = defineComponent({
 	props: {
 		documentModel: Object as PropType<DocumentModel>,
 		readOnly: Boolean,
+		fileName: String,
+		reviewAuthor: String,
+		themeColors: Object as PropType<Partial<EditorTheme>>,
 		locale: String,
 		theme: String as PropType<EditorThemeMode>,
 		showThumbnails: Boolean,
@@ -30,8 +35,9 @@ export const WordEditor = defineComponent({
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		collaboration: Object as PropType<DocxCollaborationOptions | null>,
 		storage: Object as PropType<DocumentStorage | null>,
+		customization: Object as PropType<WordCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
-	emits: [...EDITOR_EVENT_NAMES],
+	emits: [...EDITOR_EVENT_NAMES, 'update:readOnly'],
 	setup(props, { emit, expose }) {
 		const host = ref<HTMLElement>();
 		let binding: EditorBinding | undefined;
@@ -42,6 +48,15 @@ export const WordEditor = defineComponent({
 				'document-error': (error) => emit('document-error', error),
 				'page-change': (detail) => emit('page-change', detail),
 				'dirty-change': (dirty) => emit('dirty-change', dirty),
+				'file-command': (event) => emit('file-command', event),
+				'document-warning': (message) => emit('document-warning', message),
+				'readonly-change': (readOnly, detail) => {
+					emit('readonly-change', readOnly, detail);
+					// `v-model:readOnly` mirrors the host's switch only, never a role lock.
+					if (detail.hostReadOnly !== props.readOnly) emit('update:readOnly', detail.hostReadOnly);
+				},
+				'ribbon-action': (detail) => emit('ribbon-action', detail),
+				'ribbon-customize': (ids) => emit('ribbon-customize', ids),
 				'office-ribbon-add-in': (detail) => emit('office-ribbon-add-in', detail),
 				'collaboration-change': (state: DocxCollaborationState) =>
 					emit('collaboration-change', state),

@@ -68,6 +68,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 			if (destroyed || revision !== updateRevision) break;
 			if (!(key in options)) continue;
 			if (key === 'canEdit' && options.canEdit !== undefined) element.canEdit = options.canEdit;
+			else if (key === 'readOnly' && options.readOnly !== undefined)
+				element.readOnly = options.readOnly;
 			else if (key === 'document' && options.document !== undefined) {
 				if (element.document !== options.document) element.document = options.document;
 			} else if (key === 'pageIndex' && options.pageIndex !== undefined)
@@ -81,6 +83,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 				element.collaboration = options.collaboration;
 			else if (key === 'storage' && options.storage !== undefined)
 				element.storage = options.storage;
+			else if (key === 'customization' && options.customization !== undefined)
+				element.customization = options.customization;
 		}
 	}
 	update(initial);

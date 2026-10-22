@@ -8,6 +8,7 @@ export * from './base';
 export * from './controls';
 export * from './glyph';
 export * from './icons';
+export * from './embedding/index';
 export * from './ribbon/add-in-tabs';
 export * from './presence';
 export * from './smartart';

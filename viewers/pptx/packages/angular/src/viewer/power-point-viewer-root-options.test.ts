@@ -25,6 +25,20 @@ function gateBefore(marker: string): string {
 	return source.slice(open, source.indexOf(') {', open) + 1).replace(/\s+/gu, ' ');
 }
 
+describe('powerPointViewerComponent readOnly input', () => {
+	it('is the inverse of canEdit and gates both the edit permission and the Protected View banner', () => {
+		expect(source).toContain(
+			"readonly readOnlyInput = input<boolean>(false, { alias: 'readOnly' });",
+		);
+		expect(source).toMatch(
+			/hasEditPermission = computed\(\s*\(\) =>\s*this\.canEditInput\(\) &&\s*!this\.readOnlyInput\(\) &&/u,
+		);
+		expect(source).toMatch(
+			/protectedViewActive = computed\(\s*\(\) =>\s*this\.canEditInput\(\) &&\s*!this\.readOnlyInput\(\) &&/u,
+		);
+	});
+});
+
 describe('powerPointViewerComponent root display inputs', () => {
 	it('declares the root inputs undefaulted so the shared defaults apply', () => {
 		expect(source).toContain('readonly initialSlide = input<number | undefined>(undefined);');

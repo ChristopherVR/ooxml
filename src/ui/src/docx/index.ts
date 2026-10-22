@@ -58,3 +58,13 @@ export {
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
+export type {
+	WordBackstagePage,
+	WordCustomization,
+	WordMenuCommand,
+	WordMenuContext,
+	WordRegionContext,
+	WordRegionRenderer,
+} from './customization';
+export { WORD_CAPABILITY_IDS } from 'ooxml-core/docx/ui';
+export type { WordCapabilities, WordCapabilityId } from 'ooxml-core/docx/ui';

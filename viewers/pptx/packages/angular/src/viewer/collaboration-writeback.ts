@@ -9,7 +9,9 @@
  */
 
 import { createWriteBackScheduler, readSlidesFromYDoc } from 'ooxml-ui/pptx';
-import type { CollaborationConfig, YDocLike } from 'ooxml-ui/pptx';
+import type { CollaborationConfig, CollaborationState, YDocLike } from 'ooxml-ui/pptx';
+
+type CollaborationWriteBackState = NonNullable<CollaborationState['writeBack']>;
 import { PptxHandler } from 'pptx-viewer-core';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
@@ -53,7 +55,16 @@ export class WriteBackScheduler {
 	private readonly scheduler = createWriteBackScheduler({
 		getYDoc: () => this.ydoc,
 		serialize: (isCurrent) => this.serialize?.(isCurrent) ?? null,
+		onWriteBackStatus: () => this.onStatus?.(),
 	});
+
+	/** @param onStatus Called whenever the write-back status changed. */
+	constructor(private readonly onStatus?: () => void) {}
+
+	/** The write-back status for the collaboration state. */
+	getState(): CollaborationWriteBackState | undefined {
+		return this.scheduler.getState();
+	}
 
 	schedule(
 		config: CollaborationConfig | null,
@@ -65,7 +76,6 @@ export class WriteBackScheduler {
 		if (!config?.onWriteBack || config.role !== 'owner' || !ydoc) {
 			return;
 		}
-		this.cancel();
 		this.ydoc = ydoc;
 		this.serialize = async (isCurrent) => {
 			const bytes = getSourceBytes?.();

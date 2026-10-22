@@ -6,16 +6,21 @@ import {
 	type DocxEditorEventDetail,
 	type DocxEditorEventName,
 	type EditorLocaleInput,
+	type EditorTheme,
 	type EditorThemeMode,
+	type FileCommandDetail,
 	type PageChangeDetail,
 	normalizeRibbonActions,
+	type RibbonAction,
 	type RibbonActionInput,
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
 	type SurfaceHostActions,
+	type WordCustomization,
 } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
 import type { DocumentStorage } from 'ooxml-core/embedding';
+import { createPropTracker, sameThemeColors } from './forwarding';
 
 /** Editor state a framework passes down as props. */
 export interface EditorProps {
@@ -26,6 +31,15 @@ export interface EditorProps {
 	locale?: EditorLocaleInput | undefined;
 	/** `light`, `dark`, or `auto` (default) to follow the OS color scheme. */
 	theme?: EditorThemeMode | undefined;
+	/**
+	 * Name shown in the title bar and used by Save and Download (default `Document1.docx`). Forwarded
+	 * when the prop changes, so File > Open can rename the document without being reverted.
+	 */
+	fileName?: string | undefined;
+	/** Author recorded on tracked changes and comments. Default `Author`. Forwarded when it changes. */
+	reviewAuthor?: string | undefined;
+	/** Token overrides applied as `--dve-*` custom properties. Forwarded when its values change. */
+	themeColors?: Partial<EditorTheme> | undefined;
 	/** Left rail of page thumbnails (needs Print Layout). Default false. */
 	showThumbnails?: boolean | undefined;
 	/** Ribbon visibility. Default true. */
@@ -44,6 +58,12 @@ export interface EditorProps {
 	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
 	 */
 	storage?: DocumentStorage | null | undefined;
+	/**
+	 * Host customisation (`WordCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
+	 * it); `null` or omitted restores the defaults.
+	 */
+	customization?: WordCustomization | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -51,6 +71,29 @@ export interface EditorEventOptions {
 	onDocumentError?: ((error: Error) => void) | undefined;
 	onPageChange?: ((detail: PageChangeDetail) => void) | undefined;
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
+	/**
+	 * A File command (new, open, save, saveAs, export, exportText, print, share) is about to run. The
+	 * event is cancelable: call `event.preventDefault()` to take the command over yourself.
+	 */
+	onFileCommand?: ((event: CustomEvent<FileCommandDetail>) => void) | undefined;
+	/** A non-fatal notice, such as a print layout that could not be produced faithfully. */
+	onDocumentWarning?: ((message: string) => void) | undefined;
+	/**
+	 * The user toggled Editing / Viewing, `readOnly` changed or a collaboration role changed.
+	 * `readOnly` is the effective value. A parent that syncs the `readOnly` prop from this callback
+	 * must store `detail.hostReadOnly`, never `readOnly`, or a `viewer` role lock would be
+	 * written into the host's setting.
+	 */
+	onReadOnlyChange?:
+		| ((
+				readOnly: boolean,
+				detail: { readOnly: boolean; locked: boolean; hostReadOnly: boolean },
+		  ) => void)
+		| undefined;
+	/** A ribbon control was activated. */
+	onRibbonAction?: ((detail: RibbonAction) => void) | undefined;
+	/** The user changed which ribbon commands are shown (File > Customize Ribbon); persist the ids. */
+	onRibbonCustomize?: ((ids: readonly string[]) => void) | undefined;
 	/** A command of a host tab (`ribbonAddIns`) was chosen. */
 	onRibbonAddIn?: ((detail: RibbonAddInCommandDetail) => void) | undefined;
 	/** Sharing started, stopped, reconnected or the people in the room changed. */
@@ -62,6 +105,9 @@ export interface EditorOptions extends EditorProps, EditorEventOptions {}
 export const EDITOR_PROP_KEYS = [
 	'documentModel',
 	'readOnly',
+	'fileName',
+	'reviewAuthor',
+	'themeColors',
 	'locale',
 	'theme',
 	'showThumbnails',
@@ -70,6 +116,7 @@ export const EDITOR_PROP_KEYS = [
 	'ribbonAddIns',
 	'collaboration',
 	'storage',
+	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -81,15 +128,33 @@ void propKeysAreComplete;
 export const EDITOR_EVENT_NAMES = [
 	'document-change',
 	'document-error',
+	'document-warning',
 	'page-change',
 	'dirty-change',
+	'readonly-change',
+	'file-command',
+	'ribbon-action',
+	'ribbon-customize',
 	'office-ribbon-add-in',
 	'collaboration-change',
 ] as const satisfies readonly DocxEditorEventName[];
 export type EditorEventName = (typeof EDITOR_EVENT_NAMES)[number];
+/**
+ * Handler for one bound event. `file-command` is cancelable, so its handler receives the event
+ * itself (its `detail` is the command); every other handler receives the unwrapped detail.
+ */
+type EditorEventHandler<K extends EditorEventName> = K extends 'file-command'
+	? (event: CustomEvent<DocxEditorEventDetail<K>>) => void
+	: K extends 'readonly-change'
+		? (readOnly: boolean, detail: DocxEditorEventDetail<K>) => void
+		: (detail: DocxEditorEventDetail<K>) => void;
 /** One handler per bound event; a missing key is a compile error in every adapter. */
 export type EditorEventHandlers = {
-	[K in EditorEventName]: ((detail: DocxEditorEventDetail<K>) => void) | undefined;
+	[K in EditorEventName]: EditorEventHandler<K> | undefined;
+};
+/** The DOM listener for each bound event, which re-emits it to the current options. */
+type EditorListeners = {
+	[K in EditorEventName]: (event: CustomEvent<DocxEditorEventDetail<K>>) => void;
 };
 
 function sameList(a: readonly string[], b: readonly string[]): boolean {
@@ -111,6 +176,11 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onDocumentError: handlers['document-error'],
 		onPageChange: handlers['page-change'],
 		onDirtyChange: handlers['dirty-change'],
+		onFileCommand: handlers['file-command'],
+		onDocumentWarning: handlers['document-warning'],
+		onReadOnlyChange: handlers['readonly-change'],
+		onRibbonAction: handlers['ribbon-action'],
+		onRibbonCustomize: handlers['ribbon-customize'],
 		onRibbonAddIn: handlers['office-ribbon-add-in'],
 		onCollaborationChange: handlers['collaboration-change'],
 	};
@@ -147,30 +217,52 @@ export function mountEditor(
 	let lastAddIns: readonly RibbonAddInTab[] | undefined;
 	let lastCollaboration: DocxCollaborationOptions | null = null;
 	let destroyed = false;
-	const changed = (event: CustomEvent<DocumentModel>) => {
-		lastEmitted = event.detail;
-		options.onDocumentChange?.(lastEmitted);
+	const changedProp = createPropTracker<EditorPropKey>();
+	const listeners: EditorListeners = {
+		'document-change': (event) => {
+			lastEmitted = event.detail;
+			options.onDocumentChange?.(lastEmitted);
+		},
+		'document-error': (event) => options.onDocumentError?.(event.detail),
+		'document-warning': (event) => options.onDocumentWarning?.(event.detail),
+		'page-change': (event) => options.onPageChange?.(event.detail),
+		'dirty-change': (event) => options.onDirtyChange?.(event.detail),
+		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly, event.detail),
+		'file-command': (event) => options.onFileCommand?.(event),
+		'ribbon-action': (event) => options.onRibbonAction?.(event.detail),
+		'ribbon-customize': (event) => options.onRibbonCustomize?.(event.detail),
+		'office-ribbon-add-in': (event) => options.onRibbonAddIn?.(event.detail),
+		'collaboration-change': (event) => options.onCollaborationChange?.(event.detail),
 	};
-	const failed = (event: CustomEvent<Error>) => options.onDocumentError?.(event.detail);
-	const paged = (event: CustomEvent<PageChangeDetail>) => options.onPageChange?.(event.detail);
-	const dirtied = (event: CustomEvent<boolean>) => options.onDirtyChange?.(event.detail);
-	const addIn = (event: CustomEvent<RibbonAddInCommandDetail>) =>
-		options.onRibbonAddIn?.(event.detail);
-	const collaborated = (event: CustomEvent<DocxCollaborationState>) =>
-		options.onCollaborationChange?.(event.detail);
-	element.addEventListener('document-change', changed);
-	element.addEventListener('document-error', failed);
-	element.addEventListener('page-change', paged);
-	element.addEventListener('dirty-change', dirtied);
-	element.addEventListener('office-ribbon-add-in', addIn);
-	element.addEventListener('collaboration-change', collaborated);
+	const listen = (add: boolean, names: readonly EditorEventName[] = EDITOR_EVENT_NAMES) => {
+		for (const name of names) {
+			const listener = listeners[name] as EventListener;
+			if (add) element.addEventListener(name, listener);
+			else element.removeEventListener(name, listener);
+		}
+	};
+	listen(true);
 	const binding: EditorBinding = {
 		element,
 		update(next) {
 			if (destroyed) return;
 			options = next;
 			element.locale = next.locale ?? 'en';
-			element.readOnly = next.readOnly ?? false;
+			// Forwarded only when the prop changes: a parent that does not sync `readOnly` from
+			// `onReadOnlyChange` must not revert the user's Editing / Viewing toggle on re-render.
+			if (changedProp('readOnly', next.readOnly ?? false))
+				element.readOnly = next.readOnly ?? false;
+			// Optional values are forwarded only when the parent sets or changes them, so a re-render
+			// never undoes a rename or review author the user chose inside the editor.
+			if (next.fileName !== undefined && changedProp('fileName', next.fileName))
+				element.fileName = next.fileName;
+			if (next.reviewAuthor !== undefined && changedProp('reviewAuthor', next.reviewAuthor))
+				element.reviewAuthor = next.reviewAuthor;
+			if (
+				next.themeColors !== undefined &&
+				changedProp('themeColors', next.themeColors, sameThemeColors)
+			)
+				element.themeColors = { ...next.themeColors };
 			element.theme = next.theme ?? 'auto';
 			element.showThumbnails = next.showThumbnails ?? false;
 			element.showToolbar = next.showToolbar ?? true;
@@ -179,7 +271,10 @@ export function mountEditor(
 			// The element keeps panels whose look is unchanged, so a fresh array per render is cheap.
 			if (next.ribbonAddIns !== lastAddIns) element.ribbonAddIns = next.ribbonAddIns ?? [];
 			lastAddIns = next.ribbonAddIns;
-			element.storage = next.storage ?? undefined;
+			// Before the read-only state is read back: `capabilities.edit` makes the editor read-only.
+			if (changedProp('customization', next.customization ?? null))
+				element.customization = next.customization ?? null;
+			if (changedProp('storage', next.storage ?? null)) element.storage = next.storage ?? undefined;
 			// Before the document model: a document opened below joins the room.
 			if ((next.collaboration ?? null) !== lastCollaboration) {
 				lastCollaboration = next.collaboration ?? null;
@@ -204,15 +299,15 @@ export function mountEditor(
 		destroy() {
 			if (destroyed) return;
 			destroyed = true;
-			element.removeEventListener('document-change', changed);
-			element.removeEventListener('document-error', failed);
-			element.removeEventListener('page-change', paged);
-			element.removeEventListener('dirty-change', dirtied);
-			element.removeEventListener('office-ribbon-add-in', addIn);
+			// The collaboration listener stays until the room is left, so its "stopped" change reaches the host.
+			listen(
+				false,
+				EDITOR_EVENT_NAMES.filter((name) => name !== 'collaboration-change'),
+			);
 			// Leave a room this binding joined: an unmounted editor must not keep editing the shared
 			// document. A session the host started itself (startYjsCollaboration) stays the host's.
 			if (lastCollaboration) element.stopCollaboration();
-			element.removeEventListener('collaboration-change', collaborated);
+			listen(false, ['collaboration-change']);
 			element.remove();
 		},
 	};

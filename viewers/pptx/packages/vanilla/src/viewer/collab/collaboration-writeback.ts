@@ -1,4 +1,5 @@
-import type { CollaborationConfig, YDocLike } from 'ooxml-ui/pptx';
+import type { YDocLike } from 'ooxml-ui/pptx';
+import type { WriteBackScheduler } from 'ooxml-ui/pptx';
 import {
 	createWriteBackScheduler as createSharedWriteBackScheduler,
 	readSlidesFromYDoc,
@@ -25,16 +26,16 @@ export interface WriteBackDeps {
 	 * dropped every session-level edit outside `slides`.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions;
+	/** Called whenever the write-back status changed. */
+	onWriteBackStatus?: () => void;
 }
 
-export interface WriteBackScheduler {
-	schedule: (config: CollaborationConfig) => void;
-	cancel: () => void;
-}
+export type { WriteBackScheduler };
 
 export function createWriteBackScheduler(deps: WriteBackDeps): WriteBackScheduler {
 	return createSharedWriteBackScheduler({
 		getYDoc: deps.getYDoc,
+		...(deps.onWriteBackStatus ? { onWriteBackStatus: deps.onWriteBackStatus } : {}),
 		serialize: () => {
 			const ydoc = deps.getYDoc();
 			const handler = deps.getHandler();

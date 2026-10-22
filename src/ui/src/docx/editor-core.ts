@@ -29,6 +29,7 @@ import { PartsController } from './parts-controller';
 import { PageController } from './page-controller';
 import { InsertController } from './insert-controller';
 import { emit } from './events';
+import { reflectAttribute } from './editor-attributes';
 import { DirtyState } from 'ooxml-core/docx/ui';
 import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
@@ -76,7 +77,59 @@ export class EditorCore {
 	loaded?: LoadedDocument | undefined;
 	loadGeneration = 0;
 	loading = false;
-	readOnly = false;
+	/** The host's `readOnly` switch. A collaboration `viewer` role locks the editor on top of it. */
+	hostReadOnly = false;
+	/** True while `applyReadOnly` writes the `read-only` attribute. */
+	reflectingReadOnly = false;
+	private shownReadOnly = false;
+	private shownHostReadOnly = false;
+	/**
+	 * Effective: the host's switch, a `viewer` role, or `capabilities.edit` off. Assigning sets
+	 * the host's switch only, so nothing that assigns it can lift the other two.
+	 */
+	get readOnly(): boolean {
+		return this.hostReadOnly || this.roleLocked || !this.viewOptions.customization.canEdit;
+	}
+	set readOnly(value: boolean) {
+		this.hostReadOnly = value;
+	}
+	/** Applies the effective value to the view, controls and attribute. */
+	applyReadOnly(): void {
+		this.view?.setProps({ editable: () => this.canEditBody() });
+		if (this.readOnly) this.parts.closeHeaderFooter(this.shell.canvas, this.shell.paper);
+		this.refreshControls();
+		// Reflecting the attribute re-enters attributeChangedCallback; that echo must not apply again.
+		this.reflectingReadOnly = true;
+		try {
+			reflectAttribute(this.element, 'read-only', this.hostReadOnly);
+		} finally {
+			this.reflectingReadOnly = false;
+		}
+		this.shownReadOnly = this.readOnly;
+		this.shownHostReadOnly = this.hostReadOnly;
+	}
+	/** True while a collaboration `viewer` role holds the editor read-only. */
+	get roleLocked(): boolean {
+		return this.collab.yjs?.session.role === 'viewer';
+	}
+	/** Applies the effective value, then reports it when it or the host's switch changed. */
+	reportReadOnly(change?: () => void): void {
+		const wasReadOnly = this.shownReadOnly;
+		const wasHost = this.shownHostReadOnly;
+		change?.();
+		this.applyReadOnly();
+		const readOnly = this.readOnly;
+		if (readOnly === wasReadOnly && this.hostReadOnly === wasHost) return;
+		emit(this.element, 'readonly-change', {
+			readOnly,
+			locked: this.roleLocked,
+			hostReadOnly: this.hostReadOnly,
+		});
+	}
+	/** Joining or leaving a room can change the role lock: apply it and report a change. */
+	roleChanged(): void {
+		this.reportReadOnly();
+	}
 	/** Set before mounting to render only the document surface. */
 	surfaceOnly = false;
 	/** Host-owned workflows for surface mode (link, find and replace, picture picker). */

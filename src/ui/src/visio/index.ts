@@ -23,6 +23,17 @@ export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-cap
 export { mountViewer, type MountedViewer } from './binding';
 export type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element';
+export { VISIO_CAPABILITY_IDS } from 'ooxml-core/visio/ui';
+export type {
+	VisioBackstagePage,
+	VisioCapabilities,
+	VisioCapabilityId,
+	VisioCustomization,
+	VisioMenuCommand,
+	VisioMenuContext,
+	VisioRegionContext,
+	VisioRegionRenderer,
+} from 'ooxml-core/visio/ui';
 export { renderPage, type RenderResult, type RenderOptions } from './render-svg';
 export {
 	exportPageSvg,
