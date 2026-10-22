@@ -236,6 +236,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * the toolbar. Default false (read-only viewer).
 	 */
 	editable?: boolean;
+	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
 	/** Optional class name applied to the root element. */
 	class?: string;
 	/** Optional display name shown in the desktop title bar. */
