@@ -89,6 +89,8 @@ export interface EditorControllerDeps {
 	transformCommittedText?: (text: string) => string;
 	/** Host `onChange` callback: fired after every committed mutation. */
 	onChange?: () => void;
+	/** Host `onNotesUpdate` callback: the new text after a speaker-notes edit lands. */
+	onNotesUpdate?: (notes: string) => void;
 	/** Notified with slide-space coordinates on stage pointer move (collaboration cursor broadcast). */
 	onCursorMove?: (x: number, y: number) => void;
 	/** Mirror in-progress inline-editor text to collaborators (live preview). */
@@ -190,6 +192,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		store,
 		getHandler: deps.getHandler,
 		onChange: deps.onChange,
+		onNotesUpdate: deps.onNotesUpdate,
 		onHistoryChange: () => updateToolbar(),
 		transformCommittedText: deps.transformCommittedText,
 		getPendingInlineTextEdit: () => interactions.readPendingInlineTextEdit?.(),

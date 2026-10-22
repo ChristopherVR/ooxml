@@ -438,6 +438,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				options.onChange?.();
 				this.emitContentChange();
 			},
+			onNotesUpdate: (notes) => options.onNotesUpdate?.(notes),
 			onCursorMove: (x, y) => this.sessions.setCollaborationCursor(x, y),
 			onInlineTextInput: (elementId, text) =>
 				this.sessions.publishCollaborationInlineText(elementId, text),
@@ -1292,7 +1293,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			app: state.appProperties,
 			custom: state.customProperties,
 			editable: state.editable,
-			onSave: (core, app, custom) => this.editor.updateDocumentProperties(core, app, custom),
+			onSave: (core, app, custom) => {
+				this.editor.updateDocumentProperties(core, app, custom);
+				if (state.editable) {
+					this.options.onPropertiesChange?.(core);
+				}
+			},
 			owner: this.getDialogRegions(),
 		});
 	}

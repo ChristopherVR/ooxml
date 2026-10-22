@@ -44,7 +44,6 @@ const SOURCE_NAMES = { svelte: 'source', vanilla: 'source' } as const;
 const EDITABLE_NAMES = { svelte: 'editable', vanilla: 'editable' } as const;
 const CLASS_NAMES = { vue: 'class', angular: 'class', svelte: 'class' } as const;
 
-const NOT_YET = 'not exposed by the other bindings yet';
 const BINDING_ONLY = 'binding-only option with no equivalent in the other bindings yet';
 
 /** Props, inputs and options. Callbacks are events (see {@link VIEWER_EVENTS}). */
@@ -154,46 +153,19 @@ export const VIEWER_EVENTS: readonly ViewerSurfaceEntry[] = [
 		id: 'localeChange',
 		names: { vue: 'onLocaleChange', angular: 'onLocaleChange', svelte: 'onLocaleChange' },
 	},
-	{
-		id: 'autosave',
-		// The `autosave` input already owns that name on the Angular component.
-		names: { angular: 'autosaved' },
-		absent: onlyIn(
-			['vue', 'svelte', 'react', 'angular'],
-			'the autosave snapshot is delivered by vue and svelte only (vanilla reports status and recovery)',
-		),
-	},
-	{
-		id: 'autosaveToggle',
-		names: { vanilla: 'onToggleAutosave' },
-		absent: onlyIn(['svelte', 'vanilla', 'react', 'vue', 'angular'], NOT_YET),
-	},
-	{ id: 'propertiesChange', absent: onlyIn(['angular', 'react', 'vue', 'svelte'], NOT_YET) },
-	// Angular: an output named `change` would also receive the native `change` events of the
-	// inputs inside the viewer.
-	{
-		id: 'change',
-		names: { angular: 'documentChange' },
-		absent: onlyIn(['svelte', 'vanilla', 'react', 'vue', 'angular'], NOT_YET),
-	},
-	{ id: 'notesUpdate', absent: onlyIn(['svelte', 'react', 'vue', 'angular'], NOT_YET) },
-	{
-		id: 'presentationChange',
-		absent: onlyIn(['vanilla', 'react', 'vue', 'svelte', 'angular'], NOT_YET),
-	},
-	{
-		id: 'autosaveStatus',
-		absent: onlyIn(['vanilla', 'react', 'vue', 'svelte', 'angular'], NOT_YET),
-	},
-	{
-		id: 'autosaveRecovery',
-		absent: onlyIn(['vanilla', 'react', 'vue', 'svelte', 'angular'], NOT_YET),
-	},
+	// The host-facing autosave and edit events, in every binding. Two Angular outputs are spelled
+	// differently on purpose: `autosave` is an input there, and an output named `change` would
+	// also receive the native `change` events of the inputs inside the viewer.
+	{ id: 'autosave', names: { angular: 'autosaved' } },
+	{ id: 'autosaveToggle', names: { vanilla: 'onToggleAutosave' } },
+	{ id: 'propertiesChange' },
+	{ id: 'change', names: { angular: 'documentChange' } },
+	{ id: 'notesUpdate' },
+	{ id: 'presentationChange' },
+	{ id: 'autosaveStatus' },
+	{ id: 'autosaveRecovery' },
 	// Raw connection status only; `collaborationChange` carries the full shared state everywhere.
-	{
-		id: 'collaborationStatus',
-		absent: onlyIn(['vanilla', 'react', 'vue', 'svelte', 'angular'], NOT_YET),
-	},
+	{ id: 'collaborationStatus' },
 ];
 
 const capitalised = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1);

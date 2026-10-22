@@ -158,6 +158,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			deps.getChrome().titleBar?.setAutosaveState(status);
 			options.onAutosaveStatus?.(status);
 		},
+		onSaved: (bytes) => options.onAutosave?.(bytes),
 		onRecovery: (record) => options.onAutosaveRecovery?.(record),
 		loadFile: (bytes) => deps.loadFile(bytes),
 	});

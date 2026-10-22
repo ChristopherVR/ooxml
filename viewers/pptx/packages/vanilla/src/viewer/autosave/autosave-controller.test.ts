@@ -77,6 +77,24 @@ describe('createAutosaveController', () => {
 		controller.destroy();
 	});
 
+	it('hands the written snapshot bytes to the host (onAutosave)', async () => {
+		const { handler } = makeHandler(new Uint8Array([9, 8, 7]));
+		const onSaved = vi.fn();
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getIntervalMs: () => 2000,
+			onSaved,
+		});
+
+		store.set({ slides: [makeSlide('a')], dirty: true });
+		await vi.advanceTimersByTimeAsync(2000);
+
+		expect(onSaved).toHaveBeenCalledExactlyOnceWith(new Uint8Array([9, 8, 7]));
+		controller.destroy();
+	});
+
 	/**
 	 * The recovery blob is a crash-safety net, not the user's Save: it must never
 	 * make the editor look saved, or the next real close would discard the work.

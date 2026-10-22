@@ -76,6 +76,8 @@ export interface AutosaveControllerDeps {
 	getSaveIntent?: () => DeckSaveIntent;
 	/** Surface status transitions (toolbar indicator + optional host callback). */
 	onStatus?: (status: AutosaveStatus) => void;
+	/** The serialised bytes of each snapshot written, for the host's `onAutosave` hook. */
+	onSaved?: (bytes: Uint8Array) => void;
 	/** The raw record, for the host's `onAutosaveRecovery` hook. */
 	onRecovery?: (record: AutosaveRecord) => void;
 	/** The shared prompt descriptor + record, for the viewer's own dialog. */
@@ -159,6 +161,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			if (!disposed && isActive()) {
 				setStatus('saved');
 			}
+			deps.onSaved?.(bytes);
 		} catch {
 			if (!disposed && isActive()) {
 				setStatus('error');
