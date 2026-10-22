@@ -1,5 +1,6 @@
 // Package-level helpers of the Visio mapping: relationships, part paths, the parts that stay local,
 // base64 and a cheap fingerprint.
+import { sha256 } from '../../digest/sha256';
 import { buildXml, parseXml } from '../../xml/index';
 import { attrOf } from './scan';
 
@@ -65,13 +66,82 @@ export function stripPageOverrides(xml: string): string {
 }
 
 /** Adds an override for each page part, replacing any it already declares. */
-export function withPageOverrides(xml: string, pagePaths: readonly string[]): string {
-	const clean = stripPageOverrides(xml);
-	const add = pagePaths
-		.map((path) => `<Override PartName="/${path}" ContentType="${PAGE_CONTENT_TYPE}"/>`)
+export const withPageOverrides = (xml: string, pagePaths: readonly string[]): string =>
+	withOverrides(stripPageOverrides(xml), PAGE_CONTENT_TYPE, pagePaths);
+
+export const MASTER_TYPE = 'http://schemas.microsoft.com/visio/2010/relationships/master';
+export const MASTER_CONTENT_TYPE = 'application/vnd.ms-visio.master+xml';
+
+/** Appends an override of `contentType` for each of `paths`. */
+export function withOverrides(xml: string, contentType: string, paths: readonly string[]): string {
+	const add = paths
+		.map((path) => `<Override PartName="/${path}" ContentType="${contentType}"/>`)
 		.join('');
-	const close = clean.lastIndexOf('</');
-	return close < 0 ? clean : clean.slice(0, close) + add + clean.slice(close);
+	const close = xml.lastIndexOf('</');
+	return close < 0 ? xml : xml.slice(0, close) + add + xml.slice(close);
+}
+
+/** Removes the overrides of `types` and of the given part names. */
+export function stripOverrides(
+	xml: string,
+	types: readonly string[],
+	parts: ReadonlySet<string> = new Set(),
+): string {
+	return xml.replace(/<(?:\w+:)?Override\b[^>]*>/g, (tag) => {
+		const type = attrOf(tag, 'ContentType');
+		const name = attrOf(tag, 'PartName');
+		return (type !== undefined && types.includes(type)) ||
+			(name !== undefined && parts.has(name.replace(/^\//, '')))
+			? ''
+			: tag;
+	});
+}
+
+export interface DeclaredType {
+	type: string;
+	/** True when it comes from a `Default` extension entry rather than an `Override`. */
+	byDefault: boolean;
+}
+/** The content type the types part declares for `path`. */
+export function declaredType(xml: string, path: string): DeclaredType | undefined {
+	for (const tag of xml.matchAll(/<(?:\w+:)?Override\b[^>]*>/g)) {
+		const name = attrOf(tag[0], 'PartName');
+		const type = attrOf(tag[0], 'ContentType');
+		if (name === `/${path}` && type !== undefined) return { type, byDefault: false };
+	}
+	const ext = /\.([^./]+)$/.exec(path)?.[1]?.toLowerCase();
+	if (ext === undefined) return undefined;
+	for (const tag of xml.matchAll(/<(?:\w+:)?Default\b[^>]*>/g)) {
+		const e = attrOf(tag[0], 'Extension');
+		const type = attrOf(tag[0], 'ContentType');
+		if (e?.toLowerCase() === ext && type !== undefined) return { type, byDefault: true };
+	}
+	return undefined;
+}
+
+/** Declares `declared` for `path` unless the types part already covers it. */
+export function ensureType(xml: string, path: string, declared: DeclaredType): string {
+	if (declaredType(xml, path)) return xml;
+	const close = xml.lastIndexOf('</');
+	if (close < 0) return xml;
+	const ext = /\.([^./]+)$/.exec(path)?.[1];
+	const tag =
+		declared.byDefault && ext
+			? `<Default Extension="${ext}" ContentType="${declared.type}"/>`
+			: `<Override PartName="/${path}" ContentType="${declared.type}"/>`;
+	return xml.slice(0, close) + tag + xml.slice(close);
+}
+
+/** True for a package part directly inside a `media` folder. */
+export const isMediaPart = (path: string): boolean => /(^|\/)media\/[^/]+$/i.test(path);
+
+/** Relative target from the directory `dir` to the part `path`. */
+export function relativeTarget(dir: string, path: string): string {
+	const from = dir ? dir.split('/') : [];
+	const to = path.split('/');
+	let i = 0;
+	while (i < from.length && i < to.length - 1 && from[i] === to[i]) i++;
+	return [...from.slice(i).map(() => '..'), ...to.slice(i)].join('/');
 }
 
 export function toBase64(bytes: Uint8Array): string {
@@ -115,4 +185,11 @@ export function canon(xml: string): string {
 	if (canonCache.size > 4000) canonCache.clear();
 	canonCache.set(xml, result);
 	return result;
+}
+
+/** SHA-256 of `bytes` as lower-case hex: the identity of a media part. */
+export function contentHash(bytes: Uint8Array): string {
+	let out = '';
+	for (const byte of sha256(bytes)) out += byte.toString(16).padStart(2, '0');
+	return out;
 }
