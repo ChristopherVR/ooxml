@@ -133,6 +133,9 @@ const mounts: Record<string, NativeMount> = {
 					get canEdit() {
 						return props().canEdit;
 					},
+					get readOnly() {
+						return props().readOnly;
+					},
 					get ribbonAddIns() {
 						return props().ribbonAddIns;
 					},
@@ -205,6 +208,25 @@ describe('native adapters against the real shared custom element', () => {
 				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
 				await mounted.update({ canEdit: true });
 				expect(mounted.handle.controller.canEdit).toBe(true);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: readOnly is the inverse of canEdit and wins when both are set`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+			try {
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await expect(mounted.handle.applyEdits([])).rejects.toThrow('read-only');
+				await mounted.update({ readOnly: true, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: true });
+				expect(mounted.handle.controller.canEdit).toBe(true);
+				expect(mounted.handle.element.readOnly).toBe(false);
+				await mounted.update({ readOnly: false, canEdit: false });
+				expect(mounted.handle.controller.canEdit).toBe(false);
 			} finally {
 				await mounted.destroy();
 				host.remove();

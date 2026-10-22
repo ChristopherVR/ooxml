@@ -77,6 +77,16 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.canEdit = value;
 	}
 	/**
+	 * The inverse of `canEdit`: true makes the drawing read-only and wins over `canEdit`. A
+	 * collaboration `viewer` role also reads as read-only, and turning this off never lifts it.
+	 */
+	get readOnly(): boolean {
+		return this.controller.readOnly;
+	}
+	set readOnly(value: boolean) {
+		this.controller.readOnly = value;
+	}
+	/**
 	 * Shares the open drawing in a room (the shared embedding contract of `ooxml-core/collab`):
 	 * while set, the drawing is shared and one loaded later rejoins; null leaves the room.
 	 */

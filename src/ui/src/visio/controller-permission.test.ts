@@ -55,3 +55,30 @@ it('rejects an in-flight local edit when the host revokes permission', async () 
 	expect(controller.canEdit).toBe(false);
 	controller.destroy();
 });
+
+it('readOnly, canEdit and a viewer role each restrict and none lifts another', async () => {
+	const controller = new ViewerController(
+		async () => structuredClone(demoDocument),
+		() => {},
+		vi.fn() as never,
+	);
+	await controller.load(new Uint8Array([1]));
+	expect(controller.readOnly).toBe(false);
+	controller.readOnly = true;
+	expect(controller.canEdit).toBe(false);
+	controller.canEdit = true;
+	expect(controller.canEdit).toBe(false);
+	controller.readOnly = false;
+	expect(controller.canEdit).toBe(true);
+	controller.setRoleReadOnly(true);
+	controller.canEdit = true;
+	controller.readOnly = false;
+	expect(controller.readOnly).toBe(true);
+	controller.setRoleReadOnly(false);
+	expect(controller.canEdit).toBe(true);
+	controller.canEdit = false;
+	controller.setRoleReadOnly(true);
+	controller.setRoleReadOnly(false);
+	expect(controller.canEdit).toBe(false);
+	controller.destroy();
+});

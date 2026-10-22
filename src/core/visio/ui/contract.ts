@@ -4,7 +4,10 @@ import type { VisioCollaborationOptions } from './collab-options';
 import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
+	/** The inverse of `readOnly`; false makes the drawing read-only. Default true. */
 	canEdit?: boolean;
+	/** Makes the drawing read-only (default false). True wins over `canEdit`. */
+	readOnly?: boolean;
 	document: VisioDocument | null;
 	pageIndex: number;
 	zoom: number;
@@ -43,6 +46,7 @@ export type ViewerCallbacks = {
 };
 export const propertyKeys = [
 	'canEdit',
+	'readOnly',
 	'document',
 	'pageIndex',
 	'zoom',

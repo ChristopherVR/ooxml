@@ -221,17 +221,42 @@ export class ViewerController {
 		if (!this.#notify(() => listener(this.#state))) this.#subscribers.delete(listener);
 		return () => this.#subscribers.delete(listener);
 	}
+	/**
+	 * Whether editing is allowed: the host's `canEdit` and `readOnly` switches and a collaboration
+	 * `viewer` role all have to permit it, so none of them can undo another.
+	 */
 	get canEdit(): boolean {
 		return this.#state.canEdit;
 	}
 	set canEdit(value: boolean) {
+		this.#hostCanEdit = Boolean(value);
+		this.#applyEditPermission();
+	}
+	/** The inverse of `canEdit`. True wins over `canEdit`; false only lifts its own restriction. */
+	get readOnly(): boolean {
+		return !this.#state.canEdit;
+	}
+	set readOnly(value: boolean) {
+		this.#hostReadOnly = Boolean(value);
+		this.#applyEditPermission();
+	}
+	/** Set by sharing while the collaboration role is `viewer`; independent of the host switches. */
+	setRoleReadOnly(locked: boolean): void {
+		this.#roleReadOnly = locked;
+		this.#applyEditPermission();
+	}
+	#hostCanEdit = true;
+	#hostReadOnly = false;
+	#roleReadOnly = false;
+	#applyEditPermission(): void {
 		this.#assertAlive();
-		if (Boolean(value) === this.#state.canEdit) return;
+		const value = this.#hostCanEdit && !this.#hostReadOnly && !this.#roleReadOnly;
+		if (value === this.#state.canEdit) return;
 		if (!value) {
 			this.cancelEdit();
 			this.cancelPreview();
 		}
-		this.#change({ canEdit: Boolean(value) });
+		this.#change({ canEdit: value });
 	}
 	/** Pick the canvas tool. A drawing tool needs edit permission and a source-backed drawing. */
 	setTool(tool: DiagramTool): void {
