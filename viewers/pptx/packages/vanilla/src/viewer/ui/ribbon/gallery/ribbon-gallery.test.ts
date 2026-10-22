@@ -59,6 +59,32 @@ describe('ribbon gallery (vanilla)', () => {
 		expect(gallery.trigger.disabled).toBeFalsy();
 	});
 
+	it('puts off building its tiles while out of sight, and builds them once it shows', () => {
+		const hub = createRibbonGalleryHub(vi.fn());
+		const gallery = createRibbonGallery(
+			document,
+			createTranslator(),
+			{ gallery: 'shapeStyles', control: 'home.drawing.quickStyles', mode: 'dropdown' },
+			hub,
+		);
+		// On a tab that is not showing.
+		const pane = document.createElement('div');
+		pane.hidden = true;
+		pane.append(gallery.el);
+		document.body.append(pane);
+		const el = gallery.el as HTMLElement & { descriptor?: unknown; disabled?: boolean };
+		const before = el.descriptor;
+		hub.sync(context(shape()), true);
+		expect(el.descriptor).toBe(before);
+		expect(el.disabled).toBeFalsy();
+		pane.hidden = false;
+		hub.reveal();
+		const built = el.descriptor;
+		expect(built).not.toBe(before);
+		hub.reveal();
+		expect(el.descriptor).toBe(built);
+	});
+
 	it('is disabled with no selection or when not editable', () => {
 		const t = createTranslator();
 		const hub = createRibbonGalleryHub(vi.fn());

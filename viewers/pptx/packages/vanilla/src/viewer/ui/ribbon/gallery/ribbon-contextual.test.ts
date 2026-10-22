@@ -74,6 +74,8 @@ function selection(element: PptxElement | undefined): RibbonSelectionState {
 
 function mount() {
 	const ribbon = createRibbon(document, createTranslator(), handlers());
+	// In the document, as in a viewer: a gallery builds its tiles once it is shown.
+	document.body.append(ribbon.el);
 	ribbon.setEditState({ editable: true, canUndo: false, canRedo: false });
 	ribbon.setEditable(true);
 	return ribbon;
@@ -105,6 +107,25 @@ describe('ribbon contextual tabs (vanilla)', () => {
 			),
 		).toHaveLength(6);
 		expect(tab!.getAttribute('aria-selected')).toBe('true');
+	});
+
+	it('builds a gallery on a hidden tab only once that tab is shown', () => {
+		const ribbon = mount();
+		try {
+			const tiles = () =>
+				ribbon.el.querySelectorAll(
+					'[data-ribbon-control="shapeFormat.shapeStyles.gallery"] .strip [data-gallery-item]',
+				);
+			ribbon.updateSelection(shape(), selection(shape()));
+			expect(tiles()).toHaveLength(0);
+			ribbon.el
+				.querySelector<HTMLButtonElement>('[data-ribbon-contextual-tab="shapeFormat"]')!
+				.click();
+			expect(tiles()).toHaveLength(6);
+		} finally {
+			ribbon.destroy();
+			ribbon.el.remove();
+		}
 	});
 
 	it('drops the contextual tab and falls back to Home on deselect', () => {
@@ -147,6 +168,10 @@ describe('ribbon contextual tabs (vanilla)', () => {
 				'[data-ribbon-control="home.paragraph.numbering"] [data-ribbon-gallery="numbering"]',
 			),
 		).not.toBeNull();
+		// A tab's galleries draw once it shows.
+		[...ribbon.el.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+			.find((tab) => tab.textContent?.trim() === 'Design')!
+			.click();
 		const variants = ribbon.el.querySelector('[data-ribbon-group="design.variants"]')!;
 		expect(variants.querySelector('[data-ribbon-gallery="themeColors"]')).not.toBeNull();
 		expect(variants.querySelector('[data-ribbon-gallery="themeFonts"]')).not.toBeNull();
