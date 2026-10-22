@@ -4,7 +4,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { WebSelect } from '../WebControls';
-import { useRecentColors } from './RecentColorsContext';
 import {
 	FILL_MODE_OPTIONS,
 	GRADIENT_TYPE_OPTIONS,
@@ -14,6 +13,7 @@ import {
 	SEL,
 } from './table-cell-advanced-fill-constants';
 import { TableCellPatternFill } from './TableCellPatternFill';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -144,7 +144,7 @@ function GradientControls({
 	onUpdateCellStyle,
 }: TableCellAdvancedFillProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const stops = cellStyle.gradientFillStops ?? [];
 	const gradType = cellStyle.gradientFillType ?? 'linear';
 
@@ -212,10 +212,8 @@ function GradientControls({
 						disabled={!canEdit}
 						className='h-6 w-6 rounded border border-border cursor-pointer'
 						value={stop.color}
-						onChange={(e) => {
-							updateStop(idx, { color: e.target.value });
-							pushColor(e.target.value);
-						}}
+						ref={commitRecentColor}
+						onChange={(e) => updateStop(idx, { color: e.target.value })}
 					/>
 					<input
 						type='number'

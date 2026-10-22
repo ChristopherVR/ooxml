@@ -10,7 +10,8 @@
  * for every picker: `ColorPickerRow` and `DebouncedColorInput` both read
  * `pushColor` from here directly, so a colour picked ANYWHERE in the
  * inspector (fill, stroke, text, background, table cell, chart series, ...)
- * feeds the same MRU list, seeded once from the loaded deck.
+ * feeds the same MRU list, seeded once from the loaded deck. A native colour
+ * input pushes through `useRecentColorCommit`, once per committed pick.
  */
 import { createContext, useContext } from 'react';
 

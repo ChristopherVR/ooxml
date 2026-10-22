@@ -11,6 +11,7 @@ import type { GradientStop } from './FillStrokeHelpers';
 import { useRecentColors } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // SelectRow
@@ -61,9 +62,10 @@ export function SelectRow({
  * not a prop: every caller used to have to thread its own `recentColors`
  * array down from the loaded deck, and one of the two calls (the fill
  * colour's own row) simply never did, so its row silently rendered nothing.
- * Every commit here (typed colour, theme swatch, standard swatch, recent
- * swatch, eyedropper) also pushes the resolved hex back into that same
- * shared list.
+ * Every commit here (theme swatch, standard swatch, recent swatch,
+ * eyedropper, and the native picker once it settles on a colour) also pushes
+ * the resolved hex back into that same shared list; a drag through the native
+ * picker applies live but adds only the colour it ends on.
  *
  * Clicking a {@link ThemeColorSwatchGrid} swatch commits BOTH the resolved
  * hex and its `PptxThemeColorRef`, so the colour keeps following the theme
@@ -89,6 +91,7 @@ export function ColorPickerRow({
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const commit = (color: string, ref?: PptxThemeColorRef): void => {
 		onChange(color, ref);
 		pushColor(color);
@@ -108,7 +111,8 @@ export function ColorPickerRow({
 					type='color'
 					value={value}
 					disabled={disabled}
-					onChange={(e) => commit(e.target.value)}
+					ref={commitRecentColor}
+					onChange={(e) => onChange(e.target.value)}
 					className={`h-8 flex-1 ${SEL} px-1 ${DIS}`}
 				/>
 				<button
@@ -185,6 +189,7 @@ export function GradientStopRow({
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const patchStop = (patch: Partial<GradientStop>): void => {
 		const next = allStops.map((s, i) => (i === index ? { ...s, ...patch } : s));
 		onUpdate(next);
@@ -195,11 +200,10 @@ export function GradientStopRow({
 				<input
 					type='color'
 					value={normalizeHexColor(stop.color, '#3b82f6')}
-					onChange={(e) => {
-						const hex = normalizeHexColor(e.target.value, '#3b82f6');
-						patchStop({ color: hex, colorRef: undefined });
-						pushColor(hex);
-					}}
+					ref={commitRecentColor}
+					onChange={(e) =>
+						patchStop({ color: normalizeHexColor(e.target.value, '#3b82f6'), colorRef: undefined })
+					}
 					className='h-7 w-10 rounded border border-border bg-muted'
 				/>
 				<input
