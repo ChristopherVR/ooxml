@@ -335,8 +335,13 @@ export function checkSidebars(root, docRoot, files, generated = []) {
 			!f.includes('/theme/'),
 	);
 	const reached = new Set();
+	// Pages a site keeps out of its build on purpose (VitePress `srcExclude`) are not orphans.
+	const excluded = [];
 	for (const cfg of configs) {
 		const text = readFileSync(join(root, cfg), 'utf8');
+		for (const block of text.matchAll(/\bsrcExclude:\s*\[([^\]]*)\]/g)) {
+			for (const g of block[1].matchAll(/(['"`])([^'"`]+)\1/g)) excluded.push(globToRegExp(g[2]));
+		}
 		text.split(/\r?\n/).forEach((line, i) => {
 			for (const m of line.matchAll(/\blink:\s*(['"`])([^'"`]*)\1/g)) {
 				const target = m[2].split('#')[0];
@@ -361,6 +366,7 @@ export function checkSidebars(root, docRoot, files, generated = []) {
 		if (LOCALE.test(first) && rel.includes('/')) continue;
 		if (first.startsWith('.') || first === 'public' || rel === 'index.md' || rel === 'README.md')
 			continue;
+		if (excluded.some((re) => re.test(rel))) continue;
 		if (!reached.has(page) && !reached.has(page.replace(/\.md$/, ''))) {
 			warnings.push({
 				file: page,

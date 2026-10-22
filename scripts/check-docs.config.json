@@ -37,7 +37,8 @@
 				"viewers/pptx/AGENTS.md",
 				"viewers/*/docs/research/**",
 				"viewers/*/docs/suite-provenance.md",
-				"viewers/*/scripts/RELEASE-PROVENANCE.md"
+				"viewers/*/scripts/RELEASE-PROVENANCE.md",
+				"viewers/visio/docs/verification.md"
 			]
 		},
 		{

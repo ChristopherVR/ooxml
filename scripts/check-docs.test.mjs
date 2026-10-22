@@ -192,6 +192,26 @@ test('sidebar links must exist; English pages in no sidebar are warnings', () =>
 	);
 });
 
+test('pages a site excludes from its build are not orphans', () => {
+	const root = fixture({
+		'viewers/p/docs/index.md': '',
+		'viewers/p/docs/research/note.md': '',
+		'viewers/p/docs/guide/orphan.md': '',
+		'viewers/p/docs/.vitepress/config.ts': "srcExclude: ['**/node_modules/**', 'research/**'],",
+	});
+	const files = [
+		'viewers/p/docs/index.md',
+		'viewers/p/docs/research/note.md',
+		'viewers/p/docs/guide/orphan.md',
+		'viewers/p/docs/.vitepress/config.ts',
+	];
+	const { warnings } = checkSidebars(root, 'viewers/p/docs', files);
+	assert.deepEqual(
+		warnings.map((w) => w.file),
+		['viewers/p/docs/guide/orphan.md'],
+	);
+});
+
 test('translation lag counts missing and older locale pages', () => {
 	const files = [
 		'viewers/p/docs/a.md',
