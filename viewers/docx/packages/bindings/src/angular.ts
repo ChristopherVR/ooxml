@@ -10,6 +10,7 @@ import {
 	type OnDestroy,
 } from '@angular/core';
 import type { DocumentModel } from 'docx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
@@ -31,6 +32,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() hiddenActions: readonly RibbonActionInput[] = [];
 	@Input() ribbonAddIns?: readonly RibbonAddInTab[];
 	@Input() collaboration?: DocxCollaborationOptions | null;
+	@Input() storage?: DocumentStorage | null;
 	@Output() documentChange = new EventEmitter<DocumentModel>();
 	@Output() documentError = new EventEmitter<Error>();
 	@Output() pageChange = new EventEmitter<PageChangeDetail>();

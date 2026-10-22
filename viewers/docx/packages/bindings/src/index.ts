@@ -15,6 +15,7 @@ import {
 	type SurfaceHostActions,
 } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 
 /** Editor state a framework passes down as props. */
 export interface EditorProps {
@@ -38,6 +39,11 @@ export interface EditorProps {
 	 * Forwarded only when the object changes, so pass a stable object, not a new literal per render.
 	 */
 	collaboration?: DocxCollaborationOptions | null | undefined;
+	/**
+	 * Host-owned storage: File > Save and Save As go to `storage.save()` instead of a download, and
+	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
+	 */
+	storage?: DocumentStorage | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -63,6 +69,7 @@ export const EDITOR_PROP_KEYS = [
 	'hiddenActions',
 	'ribbonAddIns',
 	'collaboration',
+	'storage',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -172,6 +179,7 @@ export function mountEditor(
 			// The element keeps panels whose look is unchanged, so a fresh array per render is cheap.
 			if (next.ribbonAddIns !== lastAddIns) element.ribbonAddIns = next.ribbonAddIns ?? [];
 			lastAddIns = next.ribbonAddIns;
+			element.storage = next.storage ?? undefined;
 			// Before the document model: a document opened below joins the room.
 			if ((next.collaboration ?? null) !== lastCollaboration) {
 				lastCollaboration = next.collaboration ?? null;

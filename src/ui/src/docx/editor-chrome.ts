@@ -1,5 +1,11 @@
 import type { RibbonElement } from './ribbon-tab-api';
 import { saveDocx, type DocumentModel } from 'ooxml-core/docx';
+import {
+	documentSaveMeta,
+	saveToStorage,
+	type DocumentSaveReason,
+	type DocumentStorage,
+} from 'ooxml-core/embedding';
 import { createBackstage, type Backstage } from './backstage';
 import type { BackstageOptions, BackstageOptionKey } from './backstage-options';
 import {
@@ -27,6 +33,8 @@ export interface ChromeHost {
 	newDocument(): void;
 	load(bytes: Uint8Array): Promise<void>;
 	save(): Promise<Uint8Array>;
+	/** Host-owned storage for Save and Open, when the host set one. */
+	storage?(): DocumentStorage | undefined;
 	print(): void;
 	history(key: 'undo' | 'redo'): void;
 	toggleComments(): void;
@@ -182,7 +190,7 @@ export class EditorChrome {
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
 		try {
 			if (command === 'new') this.newDocument();
-			else if (command === 'open') this.fileInput.click();
+			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
 			// Sharing needs the host's transport and authority, so there is no browser default.
 			else if (command === 'share') return;
@@ -194,20 +202,43 @@ export class EditorChrome {
 				// The bytes are in the format the document was opened in, so the extension follows it.
 				const extension = this._fileName.split('.').pop()?.toLowerCase() === 'doc' ? 'doc' : 'docx';
 				this.fileName = withExtension(name, extension);
-				await this.run('save');
-			} else if (command === 'save') {
-				this.setSaveState('saving');
-				downloadBytes(await this.host.save(), this._fileName);
-				this.setSaveState('saved-local');
-			} else if (command === 'export')
+				// Save As then saves, announced as its own `save` so a host that takes over Save sees it.
+				if (announceFileCommand(this.host.element, 'save')) await this.saveDocument('saveAs');
+			} else if (command === 'save') await this.saveDocument('save');
+			else if (command === 'export')
 				downloadBytes(
 					await saveDocx(structuredClone(this.host.model())),
 					withExtension(this._fileName, 'docx'),
 				);
 		} catch (cause) {
-			if (command === 'save') this.setSaveState('dirty');
+			if (command === 'save' || command === 'saveAs') this.setSaveState('dirty');
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
 		}
+	}
+
+	/** Saves to the host's storage when there is one, else downloads a copy. */
+	private async saveDocument(reason: DocumentSaveReason): Promise<void> {
+		this.setSaveState('saving');
+		const bytes = await this.host.save();
+		const storage = this.host.storage?.();
+		if (storage) {
+			this.fileName = await saveToStorage(storage, bytes, documentSaveMeta(this._fileName, reason));
+			this.setSaveState('saved');
+			return;
+		}
+		downloadBytes(bytes, this._fileName);
+		this.setSaveState('saved-local');
+	}
+
+	/** Opens from the host's storage when it can open, else shows the file picker. */
+	private async open(): Promise<void> {
+		const storage = this.host.storage?.();
+		if (!storage?.open) return this.fileInput.click();
+		const file = await storage.open();
+		if (!file) return;
+		await this.host.load(file.bytes);
+		this.fileName = file.fileName;
+		this.setSaveState('saved');
 	}
 
 	private newDocument(): void {

@@ -8,7 +8,7 @@
     onribbonaddin?: EditorEventHandlers['office-ribbon-add-in'];
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
   };
-  let { documentModel, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }: Props = $props();
+  let { documentModel, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ribbonAddIns, collaboration, storage, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }: Props = $props();
   let binding: EditorBinding | undefined;
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
   let mountedElement = $state.raw<EditorHandle['element'] | undefined>();
@@ -32,4 +32,4 @@
   export function isDirty() { return binding?.dirty ?? false; }
   export { element, dirty };
 </script>
-<div use:attach={{ documentModel, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }}></div>
+<div use:attach={{ documentModel, readOnly, locale, theme, showThumbnails, showToolbar, hiddenActions, ribbonAddIns, collaboration, storage, ondocumentchange, ondocumenterror, onpagechange, ondirtychange, onribbonaddin, oncollaborationchange }}></div>

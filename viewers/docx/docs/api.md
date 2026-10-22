@@ -40,19 +40,49 @@ Every framework adapter wraps the same `<docx-editor>` custom element. The adapt
 
 All events bubble and are composed, so they cross the shadow boundary.
 
-| Event                  | Detail                | Meaning                                                                       |
-| ---------------------- | --------------------- | ----------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`       | The document changed through editing or review actions.                       |
-| `document-error`       | `Error`               | Loading, saving, printing or an edit failed.                                  |
-| `document-warning`     | `string`              | Non-fatal notice.                                                             |
-| `readonly-change`      | `boolean`             | The user toggled Editing/Viewing in the chrome.                               |
-| `file-command`         | `{ command }`         | Cancelable. `command` is `new`, `open`, `save`, `export`, `print` or `share`. |
-| `dirty-change`         | `boolean`             | Unsaved-changes state flipped.                                                |
-| `page-change`          | `{ page, pageCount }` | Print Layout page or page count changed (approximate pagination).             |
-| `ribbon-action`        | `RibbonAction`        | A ribbon control was activated.                                               |
-| `ribbon-customize`     | `readonly string[]`   | The user changed which ribbon commands are shown; persist the ids if wanted.  |
-| `office-ribbon-add-in` | `{ tab, command }`    | A command of a host tab (`ribbonAddIns`) was chosen.                          |
-| `presence-send`        | `PresenceMessage`     | Local presence changed; transport it to other clients.                        |
-| `collaboration-send`   | `StepBatch`           | Local steps are pending; transport them to the authority.                     |
+| Event                  | Detail                   | Meaning                                                                                               |
+| ---------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`          | The document changed through editing or review actions.                                               |
+| `document-error`       | `Error`                  | Loading, saving, printing or an edit failed.                                                          |
+| `document-warning`     | `string`                 | Non-fatal notice.                                                                                     |
+| `readonly-change`      | `boolean`                | The user toggled Editing/Viewing in the chrome.                                                       |
+| `file-command`         | `{ command, fileName? }` | Cancelable. `command` is `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` or `share`. |
+| `dirty-change`         | `boolean`                | Unsaved-changes state flipped.                                                                        |
+| `page-change`          | `{ page, pageCount }`    | Print Layout page or page count changed (approximate pagination).                                     |
+| `ribbon-action`        | `RibbonAction`           | A ribbon control was activated.                                                                       |
+| `ribbon-customize`     | `readonly string[]`      | The user changed which ribbon commands are shown; persist the ids if wanted.                          |
+| `office-ribbon-add-in` | `{ tab, command }`       | A command of a host tab (`ribbonAddIns`) was chosen.                                                  |
+| `presence-send`        | `PresenceMessage`        | Local presence changed; transport it to other clients.                                                |
+| `collaboration-send`   | `StepBatch`              | Local steps are pending; transport them to the authority.                                             |
 
 The package exports the typed event map (`DocxEditorEventMap`) and the runtime list `DOCX_EDITOR_EVENTS`.
+
+## Host-owned storage
+
+`storage` (a property of the element and a prop of every binding) takes a `DocumentStorage` from
+`ooxml-core/embedding`. When it is set:
+
+- File > Save, Save As and Ctrl+S hand the saved bytes to `storage.save(bytes, meta)` instead of
+  downloading them. `meta` is `{ fileName, mimeType, reason }`, with `reason` `'save'` or
+  `'saveAs'`. Once it resolves the document is marked saved; if it resolves with `{ fileName }`
+  the title bar takes that name. A rejection is reported as `document-error` and the document
+  stays dirty.
+- File > Open calls `storage.open()` when the storage has one and opens the `{ bytes, fileName }`
+  it resolves with (`undefined` means the user canceled). Without `open` the file picker is used.
+- `file-command` still fires first. A host that calls `preventDefault()` handles the command
+  itself and `storage` is not called. Save As announces `saveAs` and then `save`.
+
+Export, Export as text and Print still use the browser. Word has no AutoRecover, so the recovery
+methods of `DocumentStorage` are not used.
+
+```ts
+editor.storage = {
+	async save(bytes, { fileName, mimeType }) {
+		await fetch(`/files/${encodeURIComponent(fileName)}`, {
+			method: 'PUT',
+			headers: { 'content-type': mimeType },
+			body: bytes,
+		});
+	},
+};
+```

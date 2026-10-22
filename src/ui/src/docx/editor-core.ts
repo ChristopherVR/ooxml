@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type { SurfaceHostActions } from './building-blocks-actions';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { FormatDialogs } from './format-dialogs';
@@ -80,6 +81,8 @@ export class EditorCore {
 	surfaceOnly = false;
 	/** Host-owned workflows for surface mode (link, find and replace, picture picker). */
 	surfaceActions: SurfaceHostActions = {};
+	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
+	storage: DocumentStorage | undefined = undefined;
 	locale: EditorLocale = 'en';
 	reviewAuthor = 'Author';
 	theme: EditorThemeMode = 'auto';

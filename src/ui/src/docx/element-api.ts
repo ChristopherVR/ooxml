@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
@@ -65,6 +66,18 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	set surfaceActions(value: SurfaceHostActions) {
 		this.core.surfaceActions = { ...value };
 		if (this.core.view) this.core.refreshControls();
+	}
+	/**
+	 * Host-owned storage. When set, File > Save and Save As hand the saved bytes to
+	 * `storage.save()` instead of downloading them, and File > Open asks `storage.open()` (when it
+	 * has one) instead of showing the file picker. The cancelable `file-command` event still fires
+	 * first; a host that prevents it handles the command itself.
+	 */
+	get storage(): DocumentStorage | undefined {
+		return this.core.storage;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.core.storage = value ?? undefined;
 	}
 	get loading(): boolean {
 		return this.core.loading;

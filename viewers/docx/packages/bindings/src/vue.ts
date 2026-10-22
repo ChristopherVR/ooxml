@@ -1,5 +1,6 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
 import type { DocumentModel } from 'docx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
@@ -28,6 +29,7 @@ export const WordEditor = defineComponent({
 		hiddenActions: Array as PropType<readonly RibbonActionInput[]>,
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		collaboration: Object as PropType<DocxCollaborationOptions | null>,
+		storage: Object as PropType<DocumentStorage | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES],
 	setup(props, { emit, expose }) {

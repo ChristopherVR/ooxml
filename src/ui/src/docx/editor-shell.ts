@@ -56,6 +56,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
+		storage: () => core.storage,
 		saveStateChanged: (state) => {
 			if (state !== 'saving') core.dirtyState.set(state === 'dirty');
 		},
