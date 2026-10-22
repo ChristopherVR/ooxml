@@ -135,7 +135,7 @@ test('stale terms come from rules, honour allow-lists and the intended marker', 
 		},
 		{ id: 'dash', pattern: '\\u2014', message: 'dash' },
 	];
-	const dash = '—';
+	const dash = String.fromCharCode(0x2014);
 	assert.equal(checkTerms('docs/a.md', 'use @old/core', rules).length, 1);
 	assert.equal(checkTerms('AGENTS.md', 'use @old/core', rules).length, 0);
 	assert.equal(checkTerms('viewers/x/docs/deep/a.md', 'use @old/core', rules).length, 0);
