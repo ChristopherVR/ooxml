@@ -99,15 +99,16 @@ for (const [name, entry] of Object.entries(frameworks)) {
 	for (const helper of ['loadDocument', 'detectDocumentFormat', 'registerDocxEditor', 'normalizeEditorLocale', 'createDocument'])
 		assert.equal(typeof entry[helper], 'function', name + ' must export ' + helper);
 }
-for (const key of ['useViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar']) assert.equal(typeof react[key], 'function', key);
+for (const key of ['useViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar', 'PageNavigation', 'StatusBar']) assert.equal(typeof react[key], 'function', key);
 assert.equal(typeof vue.useViewerBuildingBlocks, 'function');
-for (const key of ['DocumentCanvas', 'Toolbar']) assert(vue[key], 'vue ' + key);
-for (const key of ['createViewerBuildingBlocks', 'ViewerBuildingBlocks', 'DocumentCanvasComponent', 'ToolbarComponent']) assert.equal(typeof angular[key], 'function', 'angular ' + key);
-for (const key of ['createViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar']) assert.equal(typeof solid[key], 'function', 'solid ' + key);
+for (const key of ['DocumentCanvas', 'Toolbar', 'PageNavigation', 'StatusBar']) assert(vue[key], 'vue ' + key);
+for (const key of ['createViewerBuildingBlocks', 'ViewerBuildingBlocks', 'DocumentCanvasComponent', 'ToolbarComponent', 'PageNavigationComponent', 'StatusBarComponent']) assert.equal(typeof angular[key], 'function', 'angular ' + key);
+for (const key of ['createViewerBuildingBlocks', 'DocumentCanvas', 'Toolbar', 'PageNavigation', 'StatusBar']) assert.equal(typeof solid[key], 'function', 'solid ' + key);
 for (const key of ['createViewerBuildingBlocks', 'documentCanvas']) assert.equal(typeof svelte[key], 'function', 'svelte ' + key);
 for (const [name, entry] of Object.entries(frameworks))
 	assert.equal(typeof entry.mountEditorSurface, 'function', name + ' must export mountEditorSurface');
 assert.equal(typeof vanilla.mountEditor, 'function');
+for (const key of ['createViewerBuildingBlocks', 'mountDocumentCanvas', 'mountToolbar', 'mountPageNavigation', 'mountStatusBar']) assert.equal(typeof vanilla[key], 'function', 'vanilla ' + key);
 assert.equal(typeof svelte.mountEditor, 'function');
 
 const model = core.createDocument();
@@ -179,7 +180,7 @@ async function checkSvelte(inspected, installed) {
 		'utf8',
 	);
 	compile(source, { filename: 'WordEditor.svelte', generate: 'client' });
-	for (const name of ['DocumentCanvas', 'Toolbar']) {
+	for (const name of ['DocumentCanvas', 'Toolbar', 'PageNavigation', 'StatusBar']) {
 		assert.equal(manifest.exports['./' + name].svelte, './dist/' + name + '.svelte');
 		const block = await readFile(path.join(inspected, 'svelte', 'dist', name + '.svelte'), 'utf8');
 		compile(block, { filename: name + '.svelte', generate: 'client' });

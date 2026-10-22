@@ -12,6 +12,7 @@ import {
 	type RibbonActionInput,
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
+	type SurfaceHostActions,
 } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
 
@@ -231,20 +232,51 @@ const handleKeysAreComplete: Exclude<keyof EditorHandle, EditorHandleKey> extend
 	: never = true;
 void handleKeysAreComplete;
 
-/** Framework-neutral composition API, shared by every adapter. Choose before mount. */
-export interface SurfaceOptions extends EditorOptions {
+/** Ribbon and chrome options that a surface, which draws none, would silently ignore. */
+type RibbonOnlyOption =
+	| 'showToolbar'
+	| 'showThumbnails'
+	| 'hiddenActions'
+	| 'ribbonAddIns'
+	| 'onRibbonAddIn';
+/**
+ * Framework-neutral composition API, shared by every adapter. Choose before mount. Ribbon-only
+ * options are not part of it. The `onOpen...` callbacks are the host's own dialogs: a workflow
+ * without its callback reports as not enabled.
+ */
+export interface SurfaceOptions extends Omit<EditorOptions, RibbonOnlyOption>, SurfaceHostActions {
 	canEdit?: boolean | undefined;
 }
 export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = {}) {
 	const effective = (options: SurfaceOptions): EditorOptions => ({
 		...options,
-		readOnly: options.canEdit === false || options.readOnly === true,
+		readOnly: options.canEdit !== true || options.readOnly === true,
+	});
+	const actions = (options: SurfaceOptions): SurfaceHostActions => ({
+		...(options.onOpenHyperlinkDialog && { onOpenHyperlinkDialog: options.onOpenHyperlinkDialog }),
+		...(options.onOpenFindReplace && { onOpenFindReplace: options.onOpenFindReplace }),
+		...(options.onOpenImagePicker && { onOpenImagePicker: options.onOpenImagePicker }),
 	});
 	const binding = mountEditor(host, effective(initial), true);
 	const update = binding.update;
+	const applyActions = (options: SurfaceOptions) => {
+		const next = actions(options);
+		const current = binding.element.surfaceActions;
+		const keys = new Set([
+			...Object.keys(current),
+			...Object.keys(next),
+		] as (keyof SurfaceHostActions)[]);
+		if ([...keys].some((key) => current[key] !== next[key])) binding.element.surfaceActions = next;
+	};
+	applyActions(initial);
 	return Object.assign(binding, {
-		update: (options: SurfaceOptions) => update(effective(options)),
+		update: (options: SurfaceOptions) => {
+			update(effective(options));
+			applyActions(options);
+		},
 		getToolbarProps: () => binding.element.getToolbarProps(),
+		getNavigationProps: () => binding.element.getNavigationProps(),
+		getStatusProps: () => binding.element.getStatusProps(),
 		subscribe: (listener: () => void) => binding.element.subscribeEditorState(listener),
 	});
 }

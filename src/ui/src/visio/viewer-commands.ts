@@ -1,5 +1,6 @@
 import type { VisioGridSteps } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
+import { planDeleteSelection } from './viewer-delete';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -7,8 +8,6 @@ import {
 	visioQuarterTurnCommand,
 	visioRotationShape,
 	visioSelectionIsOnPage,
-	visioWithCalloutLeaders,
-	visioWithDataGraphics,
 } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
@@ -427,32 +426,9 @@ export class ViewerCommands {
 	#delete(): void {
 		const state = this.host.controller.state;
 		if (this.#tool === 'connection-point' && this.#points.deleteSelected()) return;
-		const shapes = state.selectedShapes;
-		const page = state.document?.pages[state.pageIndex];
-		const pageId = page?.id;
-		if (
-			!shapes.length ||
-			pageId === undefined ||
-			!this.#canEdit(state) ||
-			shapes.some((shape) => shape.pageId && shape.pageId !== pageId)
-		)
-			return;
-		void this.#edit(
-			() =>
-				this.host.controller.applyEdits(
-					// Keep generated graphics and callout leaders with their deleted owners.
-					visioWithCalloutLeaders(
-						page!,
-						visioWithDataGraphics(
-							page!,
-							shapes.map((shape) => shape.id),
-						),
-					).map((shapeId) => ({ type: 'delete-shape', pageId, shapeId })),
-				),
-			shapes.length === 1
-				? `Deleted ${shapes[0]!.name || `shape ${shapes[0]!.id}`}.`
-				: `Deleted ${shapes.length} shapes.`,
-		);
+		const plan = planDeleteSelection(state);
+		if (!plan || !this.#canEdit(state)) return;
+		void this.#edit(() => this.host.controller.applyEdits(plan.edits), plan.message);
 	}
 	#insertPage(): void {
 		const state = this.host.controller.state;

@@ -55,7 +55,7 @@ export default defineConfig({
 				text: 'Guide',
 				link: '/getting-started',
 				activeMatch:
-					'/(getting-started|architecture|bindings|model-units|api|theming|editing|collaboration|demos|frameworks)',
+					'/(getting-started|architecture|bindings|building-blocks|model-units|api|theming|editing|collaboration|demos|frameworks)',
 			},
 			{
 				text: 'OOXML Office',
@@ -75,6 +75,7 @@ export default defineConfig({
 					{ text: 'The live demos', link: '/demos' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Framework bindings', link: '/bindings' },
+					{ text: 'Building blocks', link: '/building-blocks' },
 					{ text: 'Model units', link: '/model-units' },
 				],
 			},

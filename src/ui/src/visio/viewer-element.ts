@@ -28,7 +28,7 @@ import { createShapesStrip, createShapesWindow } from './shapes-window';
 import { createBackstage, type BackstagePage } from './backstage';
 import type { CreateVsdxOptions } from 'ooxml-core/visio';
 import { ViewerBackstage } from './viewer-backstage';
-import { ViewerPointerGestures } from './viewer-pointer-gestures';
+import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
@@ -47,14 +47,15 @@ import { ViewerShare } from './viewer-share';
 import type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 import { wireStencil } from './viewer-stencil';
 import { createRulers, type Rulers } from './viewer-ruler';
-import { ViewerInlineText } from './viewer-inline-text';
+import type { ViewerInlineText } from './viewer-inline-text';
+import { createCanvasEditing } from './canvas-editing';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome';
 import { ViewerCanvas } from './viewer-canvas';
 import { ViewerCommands } from './viewer-commands';
 import { ViewerPresentation } from './viewer-presentation';
-import { ViewerLineEndpoints } from './viewer-line-endpoints';
-import { ViewerRotationHandle } from './viewer-rotation-handle';
-import { ViewerResizeHandles } from './viewer-resize-handles';
+import type { ViewerLineEndpoints } from './viewer-line-endpoints';
+import type { ViewerRotationHandle } from './viewer-rotation-handle';
+import type { ViewerResizeHandles } from './viewer-resize-handles';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
@@ -198,10 +199,23 @@ export class VisioViewerElement extends BaseElement {
 				this.#render(this.controller.state);
 			},
 		);
-		this.#edit = new ViewerInlineText(this.#viewport, this.controller, (message) => {
+		const announce = (message: string): void => {
 			this.#announcement = message;
 			this.#status.textContent = message;
+		};
+		// The same gestures the standalone building-block canvas uses; here the ribbon owns the tool.
+		const editing = createCanvasEditing(this.#viewport, this.controller, {
+			pointerActive: () => this.#commands.tool === 'pointer',
+			announce,
+			snap: (page, ids, delta) =>
+				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep),
+			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
 		});
+		this.#edit = editing.edit;
+		this.#pointer = editing.pointer;
+		this.#lineEndpoints = editing.lineEndpoints;
+		this.#rotationHandle = editing.rotation;
+		this.#resizeHandles = editing.resize;
 		// Selecting text in the editor shows the Mini Toolbar over it; collapsing the selection hides it.
 		this.#edit.onSelection = (at) => (at ? this.#mini.showAt(at.x, at.y) : this.#mini.hide());
 		this.#notes = this.#root.querySelector('.backstage-notes ul')!;
@@ -278,37 +292,6 @@ export class VisioViewerElement extends BaseElement {
 				this.#applyBehaviour();
 			},
 		);
-		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
-			active: () => this.#commands.tool === 'pointer',
-			announce: (message) => {
-				this.#announcement = message;
-				this.#status.textContent = message;
-			},
-			snap: (page, ids, delta) =>
-				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep),
-			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
-		});
-		this.#lineEndpoints = new ViewerLineEndpoints(this.#viewport, this.controller, {
-			active: () => this.#commands.tool === 'pointer',
-			announce: (message) => {
-				this.#announcement = message;
-				this.#status.textContent = message;
-			},
-		});
-		this.#rotationHandle = new ViewerRotationHandle(this.#viewport, this.controller, {
-			active: () => this.#commands.tool === 'pointer',
-			announce: (message) => {
-				this.#announcement = message;
-				this.#status.textContent = message;
-			},
-		});
-		this.#resizeHandles = new ViewerResizeHandles(this.#viewport, this.controller, {
-			active: () => this.#commands.tool === 'pointer',
-			announce: (message) => {
-				this.#announcement = message;
-				this.#status.textContent = message;
-			},
-		});
 		this.#share = new ViewerShare(this.#root, this.controller, () => this.#profile.profile);
 		this.#share.onChange = (detail) =>
 			this.dispatchEvent(

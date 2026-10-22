@@ -57,7 +57,7 @@ export default defineConfig({
 				text: 'Guide',
 				link: '/getting-started',
 				activeMatch:
-					'/(getting-started|architecture|bindings|api|theming|collaboration|demos|frameworks)',
+					'/(getting-started|architecture|bindings|api|theming|building-blocks|collaboration|demos|frameworks)',
 			},
 			{
 				text: 'OOXML Office',
@@ -88,7 +88,10 @@ export default defineConfig({
 			},
 			{
 				text: 'Using the Viewer',
-				items: [{ text: 'Collaboration (sharing)', link: '/collaboration' }],
+				items: [
+					{ text: 'Building blocks', link: '/building-blocks' },
+					{ text: 'Collaboration (sharing)', link: '/collaboration' },
+				],
 			},
 			{
 				text: 'Framework Guides',

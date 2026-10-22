@@ -1,8 +1,11 @@
-# Compose a spreadsheet editor
+# Building blocks
 
-`@christophervr/xlsx-react-viewer` exports `useViewerBuildingBlocks`, `SpreadsheetCanvas`
-and optional `Toolbar`, `FormulaBar` and `SheetTabs` components. All use the existing workbook
-session, grid, formulas, validation, protection and history.
+Every framework package (`@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer`, `xlsx-angular-viewer`,
+`xlsx-svelte-viewer`, `xlsx-solid-viewer` and `xlsx-vanilla-viewer`) exports a building-block
+hook or factory (`useViewerBuildingBlocks`, `createViewerBuildingBlocks`), a `SpreadsheetCanvas`
+and optional `Toolbar`, `FormulaBar` and `SheetTabs` controls. All use the existing workbook
+session, grid, formulas, validation, protection and history; there is no second state store.
+The shape follows the PowerPoint viewer's `useViewerBuildingBlocks`.
 
 ```tsx
 import {
@@ -29,7 +32,10 @@ function EmbeddedSheet({ workbook, canEdit, handle }) {
 }
 ```
 
-Render the canvas while loading; `toolbarProps` is null until mount. Give its container a
+The hook also returns `mode` (`'view'` or `'edit'`) and reactive `dirty`, `selection` (A1 text),
+`collaboration` (who is in the room and the connection state) and `editError` (see
+[Validation failures](#validation-failures)). Render the canvas while loading; `toolbarProps`
+is null until mount. Give its container a
 height. The canvas mounts only the grid. File, settings, sharing, title bar, ribbon, status
 bar, formula bar and sheet tabs are absent unless the host supplies separate controls.
 
@@ -38,6 +44,13 @@ bar, formula bar and sheet tabs are absent unless the host supplies separate con
 `onFontSizeChange`, `onNumberFormatChange`, `onAlignmentChange`, `onUndo` and `onRedo`
 to custom controls. Formatting fields are null for mixed values. Formatting inspection is
 bounded to 4096 cells: larger selections return null and `formattingComplete=false`.
+
+`enabled` has one flag per callback: `bold`, `italic`, `underline`, `fontFamily`, `fontSize`,
+`alignment`, `numberFormat`, `undo`, `redo` and the host workflows `share`, `settings`,
+`formatCells`, `findReplace` and `insertFunction`. `canUndo` and `canRedo` repeat the undo and
+redo flags. `options` lists the choices a custom font, size, alignment or number format control
+can offer (`fontFamilies`, `fontSizes`, `alignments`, `numberFormats`), and `labels` holds the
+localized control names.
 
 `onSelect`, `onSheetChange`, `onFormulaChange` and `commitEdit` return false when cell validation
 blocks the action. Formatting callbacks return a `Promise<boolean>`. They commit an active
@@ -59,11 +72,101 @@ The composition API requires the matching `ooxml-ui` runtime, released with thes
 Existing full-viewer imports remain compatible with the previous published runtime. An older
 runtime rejects a composition request explicitly instead of mounting application UI by accident.
 
+## Host callbacks for dialogs
+
+The application opens dialogs for sharing, settings, Format Cells, Find and Replace and Insert
+Function. A surface never mounts them. Pass a callback instead, as PowerPoint's building
+blocks do (`onOpenSettings`, `onOpenShareDialog`), and open your own UI:
+
+```ts
+useViewerBuildingBlocks({
+	workbook,
+	onOpenShareDialog: ({ activeCell }) => openMyShareDialog(activeCell),
+	onOpenFormatCells: ({ selection }) => openMyFormatPanel(selection),
+});
+```
+
+The available callbacks are `onOpenShareDialog`, `onOpenSettings`, `onOpenFormatCells`,
+`onOpenFindReplace` and `onOpenInsertFunction`. Each receives `{ sheet, sheetName, selection,
+activeCell }`. `toolbarProps` exposes the matching `onOpenShareDialog`, `onOpenSettings`,
+`onOpenFormatCells`, `onOpenFindReplace` and `onOpenInsertFunction` (they commit an in-progress
+edit first and return a `Promise<boolean>`), and `enabled.openShareDialog` and the like are true only when
+the callback was given (the formatting and insert ones also need edit permission). `handle.share()`
+calls `onOpenShareDialog`; without one it does nothing, and `enabled.openShareDialog` is false. A
+workflow without a callback is unreachable, never silently mounted. Hosts that want the
+bundled dialogs render the full `SpreadsheetEditor` instead.
+
+## Validation failures
+
+A cell edit in progress must be committed before formatting, navigation or saving. When data
+validation refuses it, the callbacks return `false`, the edit stays open and the failure is
+surfaced three ways:
+
+- `onValidationError({ message, title?, ref, style? })` in the options (the element dispatches
+  a `validation-error` event with the same detail);
+- the reactive `editError` string (also `toolbarProps.editError`), null again once the draft is
+  changed, corrected or canceled;
+- the optional `FormulaBar` sets `aria-invalid` and renders the message in a `role="alert"` span.
+
+Stop-style rules also show the grid's own Retry / Cancel alert inside the canvas, since that
+is part of the grid. Custom controls should show `editError` and let the user correct the
+draft with `onFormulaInput` or discard it with `onCancelEdit`.
+
+## Optional Toolbar
+
+The library `Toolbar` renders every control the props support, so it can replace a hand-built
+one: undo, redo, font family, font size, bold, italic, underline, left / center / right
+alignment and number format. Buttons expose `aria-pressed` (`mixed` for a mixed selection),
+selects show a blank value for mixed formatting, and all controls honour `enabled`. Buttons do
+not take focus, so the grid keeps its selection while you format. The Toolbar does not render
+the dialog workflows above; connect `onOpenShareDialog` and the other `onOpen*` callbacks to your own
+controls. `toolbarModel(toolbarProps)` (exported by `xlsx-vanilla-viewer` and the Svelte runtime) returns
+the same control list for custom renderers.
+
+## Collaboration
+
+Real-time co-editing works on a surface: pass `collaboration` (a room id, server URL, provider or
+session) in the options, and the hook returns the reactive `collaboration` state (`active`,
+`roomId`, `status`, `synced`, `people`). `onUndo` and `onRedo` undo only this window's edits while
+shared. Leaving or unmounting leaves the room. The title bar's presence list belongs to the
+application, so a host renders `collaboration.people` itself.
+
+## Vanilla
+
+`xlsx-vanilla-viewer` exports `createViewerBuildingBlocks(options)`, built on the same session as
+the other frameworks:
+
+```ts
+import { createViewerBuildingBlocks } from 'xlsx-vanilla-viewer';
+
+const blocks = createViewerBuildingBlocks({ workbook, canEdit: true });
+const stops = [
+	blocks.mountToolbar(toolbarHost),
+	blocks.mountFormulaBar(formulaHost),
+	blocks.mountSheetTabs(tabsHost),
+	blocks.mountCanvas(canvasHost),
+];
+blocks.subscribe((state) => render(state.dirty, state.editError, state.toolbarProps));
+blocks.update({ workbook, canEdit: false });
+blocks.getState().toolbarProps?.onBold();
+blocks.destroy();
+```
+
+The surface is **read-only until the host passes `canEdit: true`**, matching the PowerPoint and
+Visio building blocks (the full `SpreadsheetEditor` stays editable by default). The permission is
+applied before the canvas mounts, so `mode` starts as `'view'` and there is no editable flash.
+`readOnly` still wins over `canEdit: true`.
+
+Every `mount*` returns its disposer. `getState()` returns the same snapshot the hooks do
+(`toolbarProps`, `loading`, `error`, `mode`, `dirty`, `selection`, `collaboration`, `editError`) and
+`handle` is the usual imperative handle. The controls patch their elements in place, so
+focus and drafts survive updates.
+
 ## Native framework composition
 
 Framework code is shipped from each framework's package. All adapters own one existing grid
 engine and expose the same `EditorHandle`; their native reactive snapshots expose
-`toolbarProps`, `loading`, `error` and `mode`. Optional native controls receive a
+`toolbarProps`, `loading`, `error`, `mode`, `dirty`, `selection`, `collaboration` and `editError`. Optional native controls receive a
 `toolbarProps` prop/input. Custom controls call that same snapshot's actions.
 
 ### Vue

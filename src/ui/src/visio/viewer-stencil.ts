@@ -30,6 +30,24 @@ export function wireStencil(
 	controller: ViewerController,
 	announce: (message: string) => void,
 ): () => void {
+	const stencil = wireStencilPane(pane, controller, announce);
+	const detach = stencil.attach(viewport);
+	return () => {
+		detach();
+		stencil.dispose();
+	};
+}
+
+/**
+ * The Shapes window without a fixed page: `attach` makes a canvas the one masters are dropped on
+ * (and placed by), so a pane mounted on its own can follow whichever canvas is mounted.
+ */
+export function wireStencilPane(
+	pane: HTMLElement,
+	controller: ViewerController,
+	announce: (message: string) => void,
+): { attach(viewport: HTMLElement): () => void; dispose(): void } {
+	let viewport: HTMLElement | undefined;
 	const Abort = pane.ownerDocument.defaultView?.AbortController ?? AbortController;
 	const events = new Abort();
 	const options = { signal: events.signal };
@@ -84,7 +102,7 @@ export function wireStencil(
 			announce(refusal ? `${master.name}: ${refusal}` : 'Open a .vsdx file to add shapes.');
 			return queue;
 		}
-		const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
+		const svg = viewport?.querySelector<SVGSVGElement>('svg.paper');
 		const point = centre && svg ? pagePoint(svg, page, centre) : undefined;
 		queue = queue.then(async () => {
 			try {
@@ -123,7 +141,7 @@ export function wireStencil(
 			announce('Open a .vsdx file to add shapes.');
 			return queue;
 		}
-		const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
+		const svg = viewport?.querySelector<SVGSVGElement>('svg.paper');
 		const point = centre && svg ? pagePoint(svg, page, centre) : undefined;
 		queue = queue.then(async () => {
 			try {
@@ -177,27 +195,38 @@ export function wireStencil(
 		},
 		options,
 	);
-	viewport.addEventListener(
-		'dragover',
-		(event) => {
-			if (!event.dataTransfer?.types.includes(MASTER_MIME) || !editable()) return;
-			event.preventDefault();
-			event.dataTransfer.dropEffect = 'copy';
+	return {
+		attach(target) {
+			const detach = new Abort();
+			viewport = target;
+			target.addEventListener(
+				'dragover',
+				(event) => {
+					if (!event.dataTransfer?.types.includes(MASTER_MIME) || !editable()) return;
+					event.preventDefault();
+					event.dataTransfer.dropEffect = 'copy';
+				},
+				{ signal: detach.signal },
+			);
+			target.addEventListener(
+				'drop',
+				(event) => {
+					const id = event.dataTransfer?.getData(MASTER_MIME);
+					if (!id) return;
+					event.preventDefault();
+					void add(id, event);
+				},
+				{ signal: detach.signal },
+			);
+
+			return () => {
+				detach.abort();
+				if (viewport === target) viewport = undefined;
+			};
 		},
-		options,
-	);
-	viewport.addEventListener(
-		'drop',
-		(event) => {
-			const id = event.dataTransfer?.getData(MASTER_MIME);
-			if (!id) return;
-			event.preventDefault();
-			void add(id, event);
+		dispose() {
+			unfollow();
+			events.abort();
 		},
-		options,
-	);
-	return () => {
-		unfollow();
-		events.abort();
 	};
 }

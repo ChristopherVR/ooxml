@@ -70,7 +70,7 @@ it('reloads bytes into a replaced canvas without creating a second engine', asyn
 	const bytes = await saveDocx(model);
 	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
 	function Host(props: { canvasKey: number }) {
-		blocks = useViewerBuildingBlocks({ bytes, handle });
+		blocks = useViewerBuildingBlocks({ bytes, handle, canEdit: true });
 		return createElement(DocumentCanvas, { ...blocks.canvasProps, key: props.canvasKey });
 	}
 	try {
@@ -99,7 +99,7 @@ it('routes identical toolbar snapshots to the new canvas engine after a keyed re
 	const model = createDocument();
 	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
 	function Host({ canvasKey }: { canvasKey: number }) {
-		blocks = useViewerBuildingBlocks({ documentModel: model });
+		blocks = useViewerBuildingBlocks({ documentModel: model, canEdit: true });
 		return createElement(DocumentCanvas, { ...blocks.canvasProps, key: canvasKey });
 	}
 	try {

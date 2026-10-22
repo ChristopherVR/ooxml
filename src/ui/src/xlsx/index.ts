@@ -7,6 +7,7 @@ export {
 	type FileCommand,
 	type FileCommandDetail,
 	type SelectionChangeDetail,
+	type ValidationErrorDetail,
 	type XlsxEditorEventDetail,
 	type XlsxEditorEventMap,
 	type XlsxEditorEventName,
@@ -61,3 +62,8 @@ export {
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
 export type { SpreadsheetToolbarProps } from './building-blocks';
+export type {
+	SurfaceActionContext,
+	SurfaceActionName,
+	SurfaceHostActions,
+} from './surface-actions';

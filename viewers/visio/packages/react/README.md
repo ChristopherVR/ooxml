@@ -69,6 +69,14 @@ Every viewer package includes the same browser UI and re-exports the
 `visio-core` document API. Parsing and editing belong to `ooxml-core/visio`;
 framework bindings only manage lifecycle, properties and events.
 
+## Compose your own UI
+
+To build a custom diagram UI instead of mounting the whole viewer, use the building blocks: `useViewerBuildingBlocks`,
+`DiagramCanvas`, `Toolbar`, `PageNavigation`, `Inspector` and `ShapesPane`. The hook returns flat `toolbarProps` (page, zoom, selection, search, enabled flags and
+callbacks), `mode`, `loading`/`error` and `markClean()`; hosts pass `canEdit` (read-only until
+`true`) and optional `onOpenSettings`/`onOpenShareDialog`/`onOpenPageSetup`/`onOpenFile` callbacks for
+dialogs they own. See [composable building blocks](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/building-blocks.md).
+
 ## Limitations
 
 Rendering and editing are beta features. Supported text and geometry edits are

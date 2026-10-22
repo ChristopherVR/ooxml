@@ -61,19 +61,20 @@ await editor.load(bytes, 'Budget.xlsx');
 
 所有事件都是会冒泡并穿越 shadow 边界（`composed`）的 `CustomEvent`。
 
-| 事件                   | `detail`                                                                                   | 说明                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| `workbook-change`      | `{ workbook }`                                                                             | 编辑、加载或新建工作簿之后。                     |
-| `workbook-error`       | `{ error, message }`                                                                       | 加载或保存失败。                                 |
-| `workbook-warning`     | `{ warnings }`                                                                             | 加载器读取到但无法建模的内容。                   |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                  |
-| `ribbon-action`        | `{ id }`                                                                                   | 执行了一个功能区命令。                           |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **可取消**：调用 `preventDefault()` 以自行处理。 |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` 为所选区域，`active` 为活动单元格。        |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                  |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                  |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | 选择了宿主选项卡（`ribbonAddIns`）的一个命令。   |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | 共享开始或停止、连接变化，或有人加入或离开。     |
+| 事件                   | `detail`                                                                                   | 说明                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                             | 编辑、加载或新建工作簿之后。                         |
+| `workbook-error`       | `{ error, message }`                                                                       | 加载或保存失败。                                     |
+| `workbook-warning`     | `{ warnings }`                                                                             | 加载器读取到但无法建模的内容。                       |
+| `readonly-change`      | `{ readOnly }`                                                                             |                                                      |
+| `ribbon-action`        | `{ id }`                                                                                   | 执行了一个功能区命令。                               |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **可取消**：调用 `preventDefault()` 以自行处理。     |
+| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` 为所选区域，`active` 为活动单元格。            |
+| `sheet-change`         | `{ index, name }`                                                                          |                                                      |
+| `dirty-change`         | `{ dirty }`                                                                                |                                                      |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                         | 选择了宿主选项卡（`ribbonAddIns`）的一个命令。       |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | 共享开始或停止、连接变化，或有人加入或离开。         |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                         | 单元格编辑未通过校验，保持打开状态，直到更正或取消。 |
 
 ```ts
 editor.addEventListener('file-command', (event) => {

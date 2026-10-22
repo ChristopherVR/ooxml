@@ -61,19 +61,20 @@ Propriétés uniquement :
 
 Tous les événements sont des `CustomEvent` qui remontent et traversent la frontière du shadow DOM (`composed`).
 
-| Événement              | `detail`                                                                                   | Remarques                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `workbook-change`      | `{ workbook }`                                                                             | Après une modification, un chargement ou un nouveau classeur.                                  |
-| `workbook-error`       | `{ error, message }`                                                                       | Un chargement ou un enregistrement a échoué.                                                   |
-| `workbook-warning`     | `{ warnings }`                                                                             | Contenu lu par le chargeur mais qu’il n’a pas pu modéliser.                                    |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                                |
-| `ribbon-action`        | `{ id }`                                                                                   | Une commande du ruban s’est exécutée.                                                          |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Annulable** : `preventDefault()` pour la gérer vous-même.                                    |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` est la plage sélectionnée, `active` la cellule active.                                   |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                                                                |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                                                                |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Une commande d’un onglet de l’hôte (`ribbonAddIns`) a été choisie.                             |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Le partage a démarré ou s’est arrêté, la connexion a changé, ou quelqu’un est arrivé ou parti. |
+| Événement              | `detail`                                                                                   | Remarques                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                             | Après une modification, un chargement ou un nouveau classeur.                                                       |
+| `workbook-error`       | `{ error, message }`                                                                       | Un chargement ou un enregistrement a échoué.                                                                        |
+| `workbook-warning`     | `{ warnings }`                                                                             | Contenu lu par le chargeur mais qu’il n’a pas pu modéliser.                                                         |
+| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                                                     |
+| `ribbon-action`        | `{ id }`                                                                                   | Une commande du ruban s’est exécutée.                                                                               |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Annulable** : `preventDefault()` pour la gérer vous-même.                                                         |
+| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` est la plage sélectionnée, `active` la cellule active.                                                        |
+| `sheet-change`         | `{ index, name }`                                                                          |                                                                                                                     |
+| `dirty-change`         | `{ dirty }`                                                                                |                                                                                                                     |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                         | Une commande d’un onglet de l’hôte (`ribbonAddIns`) a été choisie.                                                  |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Le partage a démarré ou s’est arrêté, la connexion a changé, ou quelqu’un est arrivé ou parti.                      |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                         | Une modification de cellule en cours n’a pas passé la validation et reste ouverte jusqu’à correction ou annulation. |
 
 ```ts
 editor.addEventListener('file-command', (event) => {

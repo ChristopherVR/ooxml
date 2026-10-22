@@ -48,6 +48,9 @@ Importing a package never starts a stdio transport; each CLI does so explicitly.
   10,000 cells, default 2,000, with per-sheet totals and omitted counts), `xlsx_find` (at most
   1,000 matches plus the total) and `xlsx_read_table` (at most 10,000 cells); then
   `xlsx_create` and `xlsx_set_cells` (at most 10,000 inputs, recalculated by the core).
+  `xlsx_propose_edits` (read-only: the diff of a list of edits and a sealed proposal) and
+  `xlsx_apply_proposal` (applies an approved proposal to the unchanged file), see
+  `docs/agent-edit-review.md`.
 - Visio: `visio_inspect` (binary image payloads omitted) and `visio_edit`, an atomic batch of
   the supported text and conservative geometry edits.
 

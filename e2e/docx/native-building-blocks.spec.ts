@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { NativeHarness } from '../../demos/docx/demo-vanilla/building-blocks-types';
 import { clickInEditor } from './helpers';
-for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native Word composition reacts, persists and disposes`, async ({ page }) => {
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));

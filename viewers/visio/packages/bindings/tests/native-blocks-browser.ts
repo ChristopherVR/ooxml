@@ -12,12 +12,15 @@ import { writable } from 'svelte/store';
 import * as vue from '../../vue/src/building-blocks';
 import * as solid from '../../solid/src/building-blocks';
 import * as angular from '../../angular/src/building-blocks';
+import { createViewerBuildingBlocks as vanillaBlocks } from '../src/vanilla-building-blocks';
 import SvelteHarness from '../../svelte/src/BuildingBlocksHarness.svelte';
 import type { BuildingBlockOptions, ViewerController } from '../src/building-blocks';
 let controller!: ViewerController;
 let update!: (options: BuildingBlockOptions) => void;
 let dispose!: () => void;
-let options: BuildingBlockOptions = {};
+/** The host grants editing up front; the harness' Read only button revokes it. */
+const initialOptions: BuildingBlockOptions = { canEdit: true };
+let options: BuildingBlockOptions = initialOptions;
 const root = document.querySelector<HTMLElement>('#app')!;
 const framework = new URLSearchParams(location.search).get('framework');
 if (new URLSearchParams(location.search).has('shadow')) {
@@ -35,9 +38,10 @@ if (new URLSearchParams(location.search).has('shadow')) {
 		angular.ToolbarComponent,
 		angular.PageNavigationComponent,
 		angular.InspectorComponent,
+		angular.ShapesPaneComponent,
 	],
 	providers: [angular.ViewerBuildingBlocks],
-	template: `<visio-diagram-canvas /><visio-diagram-toolbar /><visio-page-navigation /><visio-diagram-inspector /><output
+	template: `<visio-diagram-canvas /><visio-diagram-toolbar /><visio-page-navigation /><visio-diagram-inspector /><visio-shapes-pane /><output
 			>{{ blocks.mode() }}:{{ blocks.toolbarProps().zoom }}</output
 		>`,
 })
@@ -47,7 +51,7 @@ class AngularHost {
 if (framework === 'react') {
 	const rootHandle = createRoot(root);
 	function ReactHost() {
-		const [source, setSource] = useState<BuildingBlockOptions>({});
+		const [source, setSource] = useState<BuildingBlockOptions>(initialOptions);
 		update = setSource;
 		const blocks = react.useViewerBuildingBlocks(source);
 		controller = blocks.inspectorProps.controller;
@@ -58,13 +62,14 @@ if (framework === 'react') {
 			createElement(react.Toolbar, blocks.toolbarProps),
 			createElement(react.PageNavigation, blocks.toolbarProps),
 			createElement(react.Inspector, blocks.inspectorProps),
+			createElement(react.ShapesPane, blocks.shapesProps),
 			createElement('output', null, `${blocks.mode}:${blocks.toolbarProps.zoom}`),
 		);
 	}
 	rootHandle.render(createElement(ReactHost));
 	dispose = () => rootHandle.unmount();
 } else if (framework === 'vue') {
-	const source = shallowRef<BuildingBlockOptions>({});
+	const source = shallowRef<BuildingBlockOptions>(initialOptions);
 	update = (value) => {
 		source.value = value;
 	};
@@ -79,6 +84,7 @@ if (framework === 'react') {
 						h(vue.Toolbar, { toolbarProps: blocks.toolbarProps.value }),
 						h(vue.PageNavigation, { toolbarProps: blocks.toolbarProps.value }),
 						h(vue.Inspector, blocks.inspectorProps),
+						h(vue.ShapesPane, blocks.shapesProps.value),
 						h('output', `${blocks.mode.value}:${blocks.toolbarProps.value.zoom}`),
 					]);
 			},
@@ -87,7 +93,7 @@ if (framework === 'react') {
 	app.mount(root);
 	dispose = () => app.unmount();
 } else if (framework === 'solid') {
-	const [source, setSource] = createSignal<BuildingBlockOptions>({});
+	const [source, setSource] = createSignal<BuildingBlockOptions>(initialOptions);
 	update = (value) => setSource(value);
 	dispose = render(() => {
 		const blocks = solid.createViewerBuildingBlocks(source);
@@ -102,6 +108,7 @@ if (framework === 'react') {
 			solidComponent(solid.Toolbar, props) as Node,
 			solidComponent(solid.PageNavigation, props) as Node,
 			solidComponent(solid.Inspector, blocks.inspectorProps) as Node,
+			solidComponent(solid.ShapesPane, blocks.shapesProps) as Node,
 		);
 		const output = document.createElement('output');
 		section.append(output);
@@ -111,7 +118,7 @@ if (framework === 'react') {
 		return section;
 	}, root);
 } else if (framework === 'svelte') {
-	const source = writable<BuildingBlockOptions>({});
+	const source = writable<BuildingBlockOptions>(initialOptions);
 	update = (value) => source.set(value);
 	const component = mount(SvelteHarness, {
 		target: root,
@@ -128,6 +135,33 @@ if (framework === 'react') {
 	});
 	dispose = () => {
 		void unmount(component);
+	};
+} else if (framework === 'vanilla') {
+	const blocks = vanillaBlocks(initialOptions);
+	controller = blocks.controller;
+	update = (value) => blocks.update(value);
+	const section = document.createElement('section');
+	const part = (tag: string) => section.appendChild(document.createElement(tag));
+	const toolbar = part('div');
+	const pages = part('select') as HTMLSelectElement;
+	const surface = part('div');
+	const inspector = part('div');
+	const shapes = part('div');
+	const output = part('output');
+	root.append(section);
+	blocks.mountCanvas(surface);
+	blocks.mountToolbar(toolbar);
+	blocks.mountPageNavigation(pages);
+	blocks.mountInspector(inspector);
+	blocks.mountShapes(shapes);
+	const show = () => {
+		output.textContent = `${blocks.mode}:${blocks.toolbarProps.zoom}`;
+	};
+	blocks.subscribe(show);
+	show();
+	dispose = () => {
+		blocks.destroy();
+		section.remove();
 	};
 } else {
 	const app = await createApplication({ providers: [provideZonelessChangeDetection()] });

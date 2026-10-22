@@ -37,6 +37,17 @@ export function Editor() {
 Mount in the browser and give the host a height. Use one editor package per
 application: each registers the same editor custom element.
 
+## Custom editor UI
+
+To render only the controls you use, with your own design system, use the building blocks:
+`useViewerBuildingBlocks` returns `canvasProps` for `DocumentCanvas` plus flat `toolbarProps`,
+`navigationProps` and `statusProps` (selection and formatting state, enabled flags and callbacks).
+Optional `Toolbar`, `PageNavigation` and `StatusBar` components consume the same props, and
+`onOpenHyperlinkDialog`, `onOpenFindReplace` and `onOpenImagePicker` hand those workflows to your own
+dialogs. The surface is read-only until you pass `canEdit: true`; a read-only surface still
+allows selection, keyboard navigation and copy. See
+[Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
+
 ## Features
 
 | Feature    | Description                                                                     |

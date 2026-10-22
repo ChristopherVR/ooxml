@@ -61,19 +61,20 @@ Properties only:
 
 All events are `CustomEvent`s that bubble and cross the shadow boundary (`composed`).
 
-| Event                  | `detail`                                                                                   | Notes                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `workbook-change`      | `{ workbook }`                                                                             | After an edit, a load or a new workbook.                                       |
-| `workbook-error`       | `{ error, message }`                                                                       | A load or save failed.                                                         |
-| `workbook-warning`     | `{ warnings }`                                                                             | Content the loader read but could not model.                                   |
-| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                |
-| `ribbon-action`        | `{ id }`                                                                                   | A ribbon command ran.                                                          |
-| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Cancelable**: `preventDefault()` to handle it yourself.                      |
-| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` is the selected range, `active` the active cell.                         |
-| `sheet-change`         | `{ index, name }`                                                                          |                                                                                |
-| `dirty-change`         | `{ dirty }`                                                                                |                                                                                |
-| `office-ribbon-add-in` | `{ tab, command }`                                                                         | A command of a host tab (`ribbonAddIns`) was chosen.                           |
-| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Sharing started or stopped, the connection changed, or someone joined or left. |
+| Event                  | `detail`                                                                                   | Notes                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `workbook-change`      | `{ workbook }`                                                                             | After an edit, a load or a new workbook.                                              |
+| `workbook-error`       | `{ error, message }`                                                                       | A load or save failed.                                                                |
+| `workbook-warning`     | `{ warnings }`                                                                             | Content the loader read but could not model.                                          |
+| `readonly-change`      | `{ readOnly }`                                                                             |                                                                                       |
+| `ribbon-action`        | `{ id }`                                                                                   | A ribbon command ran.                                                                 |
+| `file-command`         | `{ command: 'new' \| 'open' \| 'save' \| 'saveAs' \| 'export' \| 'exportCsv' \| 'print' }` | **Cancelable**: `preventDefault()` to handle it yourself.                             |
+| `selection-change`     | `{ sheet, ref, active }`                                                                   | `ref` is the selected range, `active` the active cell.                                |
+| `sheet-change`         | `{ index, name }`                                                                          |                                                                                       |
+| `dirty-change`         | `{ dirty }`                                                                                |                                                                                       |
+| `office-ribbon-add-in` | `{ tab, command }`                                                                         | A command of a host tab (`ribbonAddIns`) was chosen.                                  |
+| `collaboration-change` | `{ active, roomId, status, synced, people }`                                               | Sharing started or stopped, the connection changed, or someone joined or left.        |
+| `validation-error`     | `{ message, title?, ref, style? }`                                                         | A cell edit in progress failed validation and stays open until corrected or canceled. |
 
 ```ts
 editor.addEventListener('file-command', (event) => {

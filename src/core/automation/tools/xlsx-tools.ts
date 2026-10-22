@@ -9,11 +9,92 @@ import {
 	setXlsxCells,
 	type XlsxFindOptions,
 } from '../xlsx';
+import { XLSX_EDIT_LIMITS, type XlsxEdit } from '../xlsx-edits';
+import { applyXlsxProposal, proposeXlsxEdits, type XlsxReview } from '../xlsx-proposal';
 import { createTool, editTool, id, index, readTool } from './define';
 import type { AutomationTool } from './types';
 
 const format = 'xlsx';
 const readable = ['.xlsx', '.xlsm'];
+
+const sheet = index;
+const range = id;
+const count = z.number().int().min(1);
+const cellInputs = z
+	.array(z.strictObject({ address: id, input: z.string().max(32_767) }))
+	.min(1)
+	.max(10_000);
+/** The edits of a proposal (`XlsxEdit`); `applyXlsxEdits` checks them again in core. */
+const xlsxEdit = z.discriminatedUnion('op', [
+	z.strictObject({ op: z.literal('setCells'), sheet, cells: cellInputs }),
+	z.strictObject({
+		op: z.literal('clear'),
+		sheet,
+		range,
+		what: z.enum(['all', 'contents', 'formats', 'comments', 'hyperlinks']).optional(),
+	}),
+	z.strictObject({
+		op: z.literal('format'),
+		sheet,
+		range,
+		style: z
+			.strictObject({
+				numFmt: z.string().max(255).optional(),
+				font: z.record(z.string(), z.unknown()).optional(),
+				fill: z.record(z.string(), z.unknown()).optional(),
+				border: z.record(z.string(), z.unknown()).optional(),
+				alignment: z.record(z.string(), z.unknown()).optional(),
+				protection: z.record(z.string(), z.unknown()).optional(),
+			})
+			.describe('A style patch: numFmt, font, fill, border, alignment, protection'),
+	}),
+	z.strictObject({
+		op: z.literal('merge'),
+		sheet,
+		range,
+		mode: z.enum(['merge', 'center', 'across']).optional(),
+	}),
+	z.strictObject({ op: z.literal('unmerge'), sheet, range }),
+	z.strictObject({
+		op: z.enum(['insertRows', 'deleteRows']),
+		sheet,
+		row: z.number().int().min(1).describe('Row number, from 1'),
+		count,
+	}),
+	z.strictObject({
+		op: z.enum(['insertColumns', 'deleteColumns']),
+		sheet,
+		column: z
+			.string()
+			.regex(/^[A-Za-z]{1,3}$/)
+			.describe('Column letters'),
+		count,
+	}),
+	z.strictObject({ op: z.literal('addSheet'), name: id.optional(), at: index.optional() }),
+	z.strictObject({ op: z.literal('renameSheet'), sheet, name: id }),
+	z.strictObject({ op: z.literal('deleteSheet'), sheet }),
+	z.strictObject({
+		op: z.literal('setName'),
+		name: id,
+		formula: z.string().min(1).max(8192),
+		sheet: sheet.optional(),
+	}),
+	z.strictObject({ op: z.literal('deleteName'), name: id, sheet: sheet.optional() }),
+]);
+const edits = z.array(xlsxEdit).min(1).max(XLSX_EDIT_LIMITS.edits);
+const maxDifferences = z.number().int().min(1).max(1000).optional();
+
+/** The text report and counts of a review, without the per-cell styles of the full comparison. */
+function reviewResult(review: XlsxReview) {
+	const { comparison, report, warnings } = review;
+	return {
+		report,
+		differences: comparison.count,
+		truncated: comparison.truncated,
+		notCompared: comparison.notCompared,
+		warnings,
+	};
+}
 
 /**
  * Spreadsheet tools, reads first. Every read is bounded so a large workbook cannot flood the
@@ -109,5 +190,43 @@ export const xlsxTools: readonly AutomationTool[] = [
 				.max(10_000),
 		},
 		run: (bytes, p) => setXlsxCells(bytes, p.sheetIndex, p.cells),
+	}),
+	readTool({
+		name: 'xlsx_propose_edits',
+		description:
+			'Propose edits without saving: returns what they would change (a text diff of cells, sheets, names, merges, tables, validation and conditional formats) and a proposal to pass unchanged to xlsx_apply_proposal once the user approves. Edits run in order; sheets are indexes from 0, rows numbered from 1, columns letters.',
+		format,
+		extensions: readable,
+		input: { edits, maxDifferences },
+		run: async (bytes, p) => {
+			const review = await proposeXlsxEdits(
+				bytes,
+				p.edits as XlsxEdit[],
+				p.maxDifferences !== undefined ? { maxDifferences: p.maxDifferences } : {},
+			);
+			return { proposal: review.proposal, ...reviewResult(review) };
+		},
+	}),
+	editTool({
+		name: 'xlsx_apply_proposal',
+		description:
+			'Apply a proposal from xlsx_propose_edits after the user approved its diff. Refused, changing nothing, if the workbook changed since the proposal was made or the proposal was altered.',
+		format,
+		extensions: readable,
+		input: {
+			proposal: z.strictObject({
+				format: z.literal('xlsx'),
+				base: z.string().regex(/^[0-9a-f]{64}$/),
+				edits,
+				id: z.string().regex(/^[0-9a-f]{64}$/),
+			}),
+		},
+		run: async (bytes, p) => {
+			const applied = await applyXlsxProposal(bytes, {
+				...p.proposal,
+				edits: p.proposal.edits as XlsxEdit[],
+			});
+			return { bytes: applied.bytes, ...reviewResult(applied) };
+		},
 	}),
 ];

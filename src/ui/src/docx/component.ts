@@ -209,6 +209,8 @@ export class DocxEditorElement extends DocxEditorApi {
 
 	disconnectedCallback() {
 		const { core } = this;
+		core.shell.surfaceNavigation?.();
+		delete core.shell.surfaceNavigation;
 		core.shell.printStoryEditing?.();
 		core.shell.printNoteEditing?.();
 		core.shell.printFloats?.destroy();

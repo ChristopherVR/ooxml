@@ -5,6 +5,8 @@ import {
 	type RibbonAddInCommandDetail,
 	type RibbonAddInTab,
 	type SelectionChangeDetail,
+	type SurfaceHostActions,
+	type ValidationErrorDetail,
 	type XlsxCollaborationOptions,
 	type XlsxCollaborationState,
 	type XlsxEditorElement,
@@ -342,20 +344,54 @@ const handleKeysAreComplete: Exclude<keyof EditorHandle, EditorHandleKey> extend
 	: never = true;
 void handleKeysAreComplete;
 
+/** Host callbacks that stand in for the dialogs the application opens (see `SurfaceHostActions`). */
+const SURFACE_ACTION_KEYS = [
+	'onOpenShareDialog',
+	'onOpenSettings',
+	'onOpenFormatCells',
+	'onOpenFindReplace',
+	'onOpenInsertFunction',
+] as const satisfies readonly (keyof SurfaceHostActions)[];
+
 /** Framework-neutral composition API, shared by every adapter. Choose before mount. */
-export interface SurfaceOptions extends EditorOptions {
+export interface SurfaceOptions extends EditorOptions, SurfaceHostActions {
 	canEdit?: boolean | undefined;
+	/** A cell edit in progress failed validation before formatting, navigation or saving. */
+	onValidationError?: ((detail: ValidationErrorDetail) => void) | undefined;
 }
 export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = {}) {
+	let latest = initial;
 	const effective = (options: SurfaceOptions): EditorOptions => ({
 		...options,
-		readOnly: options.canEdit === false || options.readOnly === true,
+		readOnly: options.canEdit !== true || options.readOnly === true,
 	});
 	const binding = mountEditor(host, effective(initial), true);
+	const { element } = binding;
 	const update = binding.update;
+	const destroy = binding.destroy;
+	let forwarded: SurfaceHostActions = {};
+	const forwardActions = (options: SurfaceOptions) => {
+		if (SURFACE_ACTION_KEYS.every((key) => forwarded[key] === options[key])) return;
+		const next: SurfaceHostActions = {};
+		for (const key of SURFACE_ACTION_KEYS) next[key] = options[key];
+		forwarded = next;
+		element.surfaceActions = next;
+	};
+	const onInvalid = (event: CustomEvent<ValidationErrorDetail>) =>
+		latest.onValidationError?.(event.detail);
+	element.addEventListener('validation-error', onInvalid);
+	forwardActions(initial);
 	return Object.assign(binding, {
-		update: (options: SurfaceOptions) => update(effective(options)),
-		getToolbarProps: () => binding.element.getToolbarProps(),
-		subscribe: (listener: () => void) => binding.element.subscribeEditorState(listener),
+		update: (options: SurfaceOptions) => {
+			latest = options;
+			forwardActions(options);
+			update(effective(options));
+		},
+		destroy: () => {
+			element.removeEventListener('validation-error', onInvalid);
+			destroy();
+		},
+		getToolbarProps: () => element.getToolbarProps(),
+		subscribe: (listener: () => void) => element.subscribeEditorState(listener),
 	});
 }

@@ -20,6 +20,7 @@ import { ReviewController } from './review-controller';
 import { EditorChrome } from './editor-chrome';
 import { dispatchDocumentError } from './editor-host';
 import { routeRibbonAction } from './ribbon-router';
+import { attachSurfaceNavigation } from './surface-navigation';
 import { documentWordCount } from 'ooxml-core/docx/ui';
 import { PageNavigator } from './page-navigator';
 import { HeadingNavigator } from './heading-navigator';
@@ -107,6 +108,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	const { element, shell } = core;
 	if (shell.paper) {
 		attachPrintEditing(core);
+		if (core.surfaceOnly) attachSurface(core);
 		return;
 	}
 	element.classList.add('dve-host');
@@ -155,6 +157,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		Object.assign(shell, { canvas, paper });
 		attachPrintEditing(core);
 		attachCanvasClick(core);
+		attachSurface(core);
 		applyShellLabels(element, paper, core.locale);
 		return;
 	}
@@ -245,6 +248,11 @@ export function applyRibbonAddIns(core: EditorCore): void {
 	syncRibbonAddIns(toolbar, core.ribbonAddIns, { panelClass: 'ribbon-panel' });
 	// Equal tabs keep their panels; only new panels change what fits.
 	if (toolbar.querySelector('[data-add-in]') !== before) refitRibbon(toolbar);
+}
+
+/** Read-only navigation for the surface; reconnection binds it again. */
+function attachSurface(core: EditorCore): void {
+	core.shell.surfaceNavigation ??= attachSurfaceNavigation(core);
 }
 
 /** A disconnected editor releases input listeners; reconnection binds the retained shell again. */

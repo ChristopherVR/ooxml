@@ -9,6 +9,7 @@ import { downloadBytes, saveExtension, withExtension } from './file-commands';
 import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
 import { spreadsheetToolbarProps, type SpreadsheetToolbarProps } from './building-blocks';
+import type { SurfaceHostActions } from './surface-actions';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (
@@ -20,6 +21,17 @@ export class XlsxEditorApi extends HTMLElementBase {
 	surfaceOnly = false;
 	getToolbarProps(): SpreadsheetToolbarProps {
 		return spreadsheetToolbarProps(this.core);
+	}
+	/**
+	 * Host callbacks that stand in for dialogs when `surfaceOnly` is set. A workflow without a
+	 * callback is reported as not enabled in `getToolbarProps().enabled`.
+	 */
+	get surfaceActions(): SurfaceHostActions {
+		return this.core.surfaceActions;
+	}
+	set surfaceActions(value: SurfaceHostActions | undefined) {
+		this.core.surfaceActions = { ...(value ?? {}) };
+		this.core.requestRender();
 	}
 	get loading(): boolean {
 		return this.core.loading;
@@ -122,9 +134,14 @@ export class XlsxEditorApi extends HTMLElementBase {
 		return this.core.collab.state();
 	}
 
-	/** Opens File > Share, where the user starts or stops sharing and sees who is in the room. */
+	/**
+	 * Opens File > Share, where the user starts or stops sharing and sees who is in the room. Without
+	 * application UI (`surfaceOnly`) it calls the host's `onOpenShareDialog` instead, and does
+	 * nothing when there is none (`getToolbarProps().enabled.openShareDialog` tells which).
+	 */
 	share(): void {
-		this.openShare?.();
+		if (this.surfaceOnly) void this.getToolbarProps().onOpenShareDialog();
+		else this.openShare?.();
 	}
 
 	/** Undo the last edit; while shared, only this window's edits are undone. */

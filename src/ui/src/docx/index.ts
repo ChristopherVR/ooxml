@@ -1,5 +1,17 @@
 export { DocxEditorElement, registerDocxEditor } from './component';
-export type { WordToolbarProps } from './building-blocks';
+export type {
+	WordAlignment,
+	WordListChoice,
+	WordListState,
+	WordToolbarProps,
+} from './building-blocks';
+export type { WordNavigationProps, WordStatusProps } from './building-blocks-status';
+export type {
+	FindReplaceRequest,
+	HyperlinkRequest,
+	ImagePickerRequest,
+	SurfaceHostActions,
+} from './building-blocks-actions';
 export { DOCX_EDITOR_EVENTS } from './events';
 export type { RibbonAction } from './ribbon';
 export {

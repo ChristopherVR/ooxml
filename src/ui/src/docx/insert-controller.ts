@@ -258,21 +258,28 @@ export class InsertController {
 	private async insertSelectedPicture(): Promise<void> {
 		const file = this.pictureInput.files?.[0];
 		this.pictureInput.value = '';
+		if (file) await this.insertPictureFile(file);
+	}
+
+	/** Stages `file` and inserts it at the selection; false when it could not be inserted. */
+	async insertPictureFile(file: File): Promise<boolean> {
 		const view = this.host.view();
-		if (!file || !view?.editable) return;
+		if (!view?.editable) return false;
 		try {
 			const staged = await stagePicture(file, this.host.contentWidth(), this.host.newMediaPartName);
-			if (this.host.view() !== view || !view.editable) return;
+			if (this.host.view() !== view || !view.editable) return false;
 			this.host.stageMedia?.(staged.image.partName, staged.media);
 			if (staged.svg && staged.image.svgPartName)
 				this.host.stageMedia?.(staged.image.svgPartName, staged.svg);
 			this.pendingMedia.set(staged.image.partName, staged.media);
 			if (staged.svg && staged.image.svgPartName)
 				this.pendingMedia.set(staged.image.svgPartName, staged.svg);
-			insertPicture(view, staged.image);
+			const inserted = insertPicture(view, staged.image);
 			focusView(view);
+			return inserted;
 		} catch (cause) {
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
+			return false;
 		}
 	}
 }

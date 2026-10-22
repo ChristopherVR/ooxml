@@ -123,7 +123,7 @@ async function writeSvelteComponent(distDir) {
 	if (component === source)
 		throw new Error("WordEditor.svelte no longer imports from './index'; update this step");
 	await writeFile(path.join(distDir, 'WordEditor.svelte'), component);
-	for (const name of ['DocumentCanvas', 'Toolbar']) {
+	for (const name of ['DocumentCanvas', 'Toolbar', 'PageNavigation', 'StatusBar', 'Controls']) {
 		const blockSource = await readFile(path.join(packagesDir, `svelte/src/${name}.svelte`), 'utf8');
 		await writeFile(
 			path.join(distDir, `${name}.svelte`),
@@ -138,6 +138,18 @@ async function writeSvelteComponent(distDir) {
 		path.join(distDir, 'Toolbar.d.ts'),
 		"import type { Component } from 'svelte';\nimport type { WordToolbarProps } from './runtime';\ndeclare const Toolbar: Component<{ toolbarProps: WordToolbarProps }>;\nexport default Toolbar;\n",
 	);
+	for (const [name, type, prop] of [
+		['PageNavigation', 'WordNavigationProps', 'navigationProps'],
+		['StatusBar', 'WordStatusProps', 'statusProps'],
+	])
+		await writeFile(
+			path.join(distDir, name + '.d.ts'),
+			`import type { Component } from 'svelte';
+import type { ${type} } from './runtime';
+declare const ${name}: Component<{ ${prop}: ${type} }>;
+export default ${name};
+`,
+		);
 	await writeFile(
 		path.join(distDir, 'index.d.ts'),
 		[

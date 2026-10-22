@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { NativeHarness } from '../../demos/xlsx/demo-vanilla/native-building-blocks';
-for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
+for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla']) {
 	test(`${framework}: native composed controls retain drafts, permission and saved edits`, async ({
 		page,
 	}) => {
@@ -105,6 +105,10 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 		await expect(formula).toHaveAttribute('aria-invalid', 'true');
 		const alert = page.locator('xlsx-editor').getByRole('alertdialog');
 		await expect(alert).toBeVisible();
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().editError))
+			.toBeTruthy();
+		await expect(page.locator('span[role="alert"]')).toBeVisible();
 		const blocked = await page.evaluate(async () => {
 			const p = window.xlsxNativeBlocks.snapshot().toolbarProps!;
 			return { format: await p.onBold(), sheet: p.onSheetChange(1), selection: p.onSelect('B2') };
@@ -114,6 +118,9 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 		await formula.fill('2');
 		await formula.press('Enter');
 		await expect(formula).toHaveAttribute('aria-invalid', 'false');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().editError))
+			.toBeNull();
 		await expect
 			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.editing))
 			.toBe(false);
@@ -127,6 +134,55 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 			b.handle.select('A1');
 		});
 		await expect(formula).toHaveValue('2');
+		expect(errors).toEqual([]);
+	});
+
+	test(`${framework}: library toolbar controls format, and dialogs go to host callbacks`, async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on('pageerror', (e) => errors.push(e.message));
+		await page.goto(`/?framework=${framework}&blocks=1`);
+		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
+		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
+		await page.getByRole('button', { name: 'Center', exact: true }).click();
+		await expect(page.getByRole('button', { name: 'Center', exact: true })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await page.getByRole('combobox', { name: 'Font Size', exact: true }).selectOption('18');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.fontSize))
+			.toBe(18);
+		await page.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Arial');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.fontFamily))
+			.toBe('Arial');
+		expect(await page.evaluate(() => window.xlsxNativeBlocks.snapshot().dirty)).toBe(true);
+		// Sharing is a host workflow here: not enabled, and a silent no-op, until the host provides it.
+		expect(
+			await page.evaluate(
+				() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.openShareDialog,
+			),
+		).toBe(false);
+		await page.evaluate(() => {
+			const b = window.xlsxNativeBlocks;
+			const calls: string[] = [];
+			(window as unknown as { shareCalls: string[] }).shareCalls = calls;
+			b.update({ onOpenShareDialog: (context) => calls.push(context.activeCell) });
+		});
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.openShareDialog,
+				),
+			)
+			.toBe(true);
+		await page.evaluate(() => window.xlsxNativeBlocks.handle.share());
+		expect(
+			await page.evaluate(() => (window as unknown as { shareCalls: string[] }).shareCalls),
+		).toEqual(['A1']);
+		await expect(page.locator('xlsx-editor').locator('office-ui-backstage')).toHaveCount(0);
 		expect(errors).toEqual([]);
 	});
 }
