@@ -232,6 +232,23 @@ describe('native adapters against the real shared custom element', () => {
 				host.remove();
 			}
 		});
+		// The vanilla binding takes explicit patches: an omitted property is left alone by design.
+		(framework === 'vanilla' ? it.skip : it)(
+			`${framework}: dropping readOnly resets it to false`,
+			async () => {
+				const host = document.createElement('div');
+				document.body.append(host);
+				const mounted = await mountNative(host, { document: demoDocument, readOnly: true });
+				try {
+					expect(mounted.handle.controller.canEdit).toBe(false);
+					await mounted.update({ document: demoDocument });
+					expect(mounted.handle.controller.canEdit).toBe(true);
+				} finally {
+					await mounted.destroy();
+					host.remove();
+				}
+			},
+		);
 		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);
