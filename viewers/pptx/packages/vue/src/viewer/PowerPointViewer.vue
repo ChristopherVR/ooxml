@@ -1570,6 +1570,8 @@ const { showSettings } = useViewerSettingsDialog({
 	viewerOptions,
 });
 
+// The unsaved-changes flag, reported like the other bindings (including its initial value).
+watch(() => autosave.isDirty.value, (dirty) => emit('dirty-change', dirty), { immediate: true });
 // The user's AutoSave preference changed (title bar, File > Options). Registered after the
 // settings dialog above, which hydrates the preference from the stored options on setup: that
 // is not a change the host should hear about.
@@ -1693,6 +1695,7 @@ provideRibbonGalleryHost({
 	applyTheme: applyAiTheme,
 });
 const aiBridge = useAiBridge({
+	onCorePropertiesChanged: (properties) => emit('properties-change', properties),
 	slides,
 	activeSlideIndex,
 	canvasSize,

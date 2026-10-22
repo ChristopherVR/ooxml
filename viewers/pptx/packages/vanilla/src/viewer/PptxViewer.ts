@@ -906,6 +906,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getHandler: () => this.loading.getHandler(),
 			applyThemeUpdates: (updates) => this.applyAiThemeUpdates(updates),
 			getFocusedTargets: () => controller.getEffectiveTargets(),
+			onCorePropertiesChanged: (properties) => this.options.onPropertiesChange?.(properties),
 		});
 		this.aiChat = mountAiChat({
 			doc: this.doc,

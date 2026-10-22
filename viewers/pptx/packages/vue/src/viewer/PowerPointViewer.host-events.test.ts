@@ -63,6 +63,14 @@ describe('host events through the mounted component', () => {
 		expect(wrapper.emitted('change')?.length).toBeGreaterThan(0);
 	});
 
+	it('emits dirty-change when an edit raises the unsaved-changes flag', async () => {
+		const { wrapper, viewer } = await mountLoaded();
+		expect(wrapper.emitted('dirty-change')?.at(-1)).toStrictEqual([false]);
+		viewer.addSlide();
+		await flushPromises();
+		expect(wrapper.emitted('dirty-change')?.at(-1)).toStrictEqual([true]);
+	});
+
 	it('emits presentation-change when the slide show starts and stops', async () => {
 		const { wrapper, viewer } = await mountLoaded();
 		expect(wrapper.emitted('presentation-change')).toBeUndefined();

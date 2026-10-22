@@ -2378,6 +2378,9 @@ export class PowerPointViewerComponent
 		setCoreProperties: (props) => {
 			this.loader.coreProperties.set(props);
 			this.editor.dirty.set(true);
+			if (props) {
+				this.propertiesChange.emit(props);
+			}
 		},
 		setAppProperties: (props) => {
 			this.loader.appProperties.set(props);

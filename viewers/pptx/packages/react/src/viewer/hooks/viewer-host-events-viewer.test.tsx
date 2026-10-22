@@ -4,11 +4,13 @@
  * mounted `PowerPointViewer`: `onChange` after a committed edit and `onPresentationChange` when
  * the slide show starts and stops.
  */
+import type { ExternalCollaborationSession } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Doc } from 'yjs';
 
 // oxlint-disable-next-line prefer-ending-with-an-expect
 vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
@@ -118,5 +120,111 @@ describe('host events through a mounted viewer', () => {
 			(ref.current as ViewerHandle).setMode('edit');
 		});
 		expect(onPresentationChange).toHaveBeenLastCalledWith(false);
+	});
+
+	it('fires onAutosaveToggle with the new preference, unless the host forbade autosave', async () => {
+		const onAutosaveToggle = vi.fn();
+		const ref = createRef<ViewerHandle>();
+		const content = await sampleDeck();
+		await act(async () => {
+			root.render(
+				<PowerPointViewer
+					ref={ref}
+					content={content}
+					filePath='events.pptx'
+					canEdit
+					onAutosaveToggle={onAutosaveToggle}
+				/>,
+			);
+		});
+		await loaded(ref);
+		const titleBar = container.querySelector('pptx-ui-title-bar');
+		expect(titleBar).not.toBeNull();
+		await act(async () => {
+			titleBar!.dispatchEvent(new CustomEvent('toggle-autosave', { bubbles: true }));
+		});
+		expect(onAutosaveToggle).toHaveBeenLastCalledWith(false);
+		await act(async () => {
+			titleBar!.dispatchEvent(new CustomEvent('toggle-autosave', { bubbles: true }));
+		});
+		expect(onAutosaveToggle).toHaveBeenLastCalledWith(true);
+		expect(onAutosaveToggle).toHaveBeenCalledTimes(2);
+	});
+
+	it('stays silent for the autosave switch when the host passed autosave={false}', async () => {
+		const onAutosaveToggle = vi.fn();
+		const ref = createRef<ViewerHandle>();
+		const content = await sampleDeck();
+		await act(async () => {
+			root.render(
+				<PowerPointViewer
+					ref={ref}
+					content={content}
+					filePath='events.pptx'
+					canEdit
+					autosave={false}
+					onAutosaveToggle={onAutosaveToggle}
+				/>,
+			);
+		});
+		await loaded(ref);
+		await act(async () => {
+			container
+				.querySelector('pptx-ui-title-bar')!
+				.dispatchEvent(new CustomEvent('toggle-autosave', { bubbles: true }));
+		});
+		expect(onAutosaveToggle).not.toHaveBeenCalled();
+	});
+
+	it('fires onCollaborationStatus on each connection-status transition', async () => {
+		const doc = new Doc();
+		let status: 'connecting' | 'connected' = 'connecting';
+		const listeners = new Set<() => void>();
+		const externalSession: ExternalCollaborationSession = {
+			doc,
+			awareness: {
+				clientID: doc.clientID,
+				getLocalState: () => null,
+				setLocalState: () => {},
+				setLocalStateField: () => {},
+				getStates: () => new Map(),
+				on: () => {},
+				off: () => {},
+			},
+			getSnapshot: () => ({ status, synced: true }),
+			subscribe: (listener) => {
+				listeners.add(listener);
+				return () => {
+					listeners.delete(listener);
+				};
+			},
+		};
+		const onCollaborationStatus = vi.fn();
+		const ref = createRef<ViewerHandle>();
+		const content = await sampleDeck();
+		await act(async () => {
+			root.render(
+				<PowerPointViewer
+					ref={ref}
+					content={content}
+					filePath='events.pptx'
+					canEdit
+					collaboration={{
+						roomId: 'external',
+						serverUrl: '',
+						userName: 'Reader',
+						role: 'collaborator',
+						externalSession,
+					}}
+					onCollaborationStatus={onCollaborationStatus}
+				/>,
+			);
+		});
+		await loaded(ref);
+		status = 'connected';
+		await act(async () => {
+			listeners.forEach((listener) => listener());
+		});
+		expect(onCollaborationStatus.mock.calls.map((call) => call[0])).toContain('connected');
 	});
 });

@@ -1242,7 +1242,12 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			setSections: state.setSections,
 			setPresentationProperties: state.setPresentationProperties,
 			setCustomProperties: state.setCustomProperties,
-			setCoreProperties: state.setCoreProperties,
+			setCoreProperties: (properties) => {
+				state.setCoreProperties(properties);
+				if (properties) {
+					onPropertiesChange?.(properties);
+				}
+			},
 			setAppProperties: state.setAppProperties,
 			setViewProperties: state.setViewProperties,
 			setTableStyleMap: state.setTableStyleMap,
