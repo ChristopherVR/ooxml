@@ -32,22 +32,23 @@ function host(): HTMLElement {
 	return element;
 }
 const editorIn = (root: ParentNode) => root.querySelector('docx-editor') as DocxEditorElement;
-/** What the element shows for `kiosk`: read-only, no Print page, the host page in the nav. */
-function expectKiosk(editor: DocxEditorElement): void {
-	expect(editor.customization).toBe(kiosk);
-	expect(editor.readOnly).toBe(true);
+/** What the element shows: its customisation, read-only state and File tab entries. */
+function shown(editor: DocxEditorElement) {
 	const nav = (
 		editor.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & {
 			items: { id: string }[];
 		}
 	).items.map((item) => item.id);
-	expect(nav).not.toContain('print');
-	expect(nav).toContain('host.about');
+	return {
+		customization: editor.customization,
+		readOnly: editor.readOnly,
+		print: nav.includes('print'),
+		hostPage: nav.includes('host.about'),
+	};
 }
-function expectDefault(editor: DocxEditorElement): void {
-	expect(editor.customization).toBeNull();
-	expect(editor.readOnly).toBe(false);
-}
+/** `kiosk` applied: read-only, no Print page, the host page in the nav. */
+const KIOSK = { customization: kiosk, readOnly: true, print: false, hostPage: true };
+const DEFAULT = { customization: null, readOnly: false, print: true, hostPage: false };
 
 describe('customization through every binding', () => {
 	it('is part of the shared contract', () => {
@@ -56,11 +57,11 @@ describe('customization through every binding', () => {
 
 	it('Vanilla: forwards the object, and leaving it out restores the defaults', () => {
 		const binding = mountEditor(host(), { customization: kiosk });
-		expectKiosk(binding.element);
+		expect(shown(binding.element)).toEqual(KIOSK);
 		binding.update({ customization: kiosk });
-		expectKiosk(binding.element);
+		expect(shown(binding.element)).toEqual(KIOSK);
 		binding.update({});
-		expectDefault(binding.element);
+		expect(shown(binding.element)).toEqual(DEFAULT);
 		binding.destroy();
 	});
 
@@ -71,9 +72,9 @@ describe('customization through every binding', () => {
 			act(() => root.render(createElement(ReactEditor, { customization })));
 		renderWith(kiosk);
 		const editor = editorIn(container);
-		expectKiosk(editor);
+		expect(shown(editor)).toEqual(KIOSK);
 		renderWith(undefined);
-		expectDefault(editor);
+		expect(shown(editor)).toEqual(DEFAULT);
 		act(() => root.unmount());
 	});
 
@@ -85,10 +86,10 @@ describe('customization through every binding', () => {
 		});
 		app.mount(container);
 		const editor = editorIn(container);
-		expectKiosk(editor);
+		expect(shown(editor)).toEqual(KIOSK);
 		current.value = undefined;
 		await nextTick();
-		expectDefault(editor);
+		expect(shown(editor)).toEqual(DEFAULT);
 		app.unmount();
 	});
 
@@ -109,9 +110,9 @@ describe('customization through every binding', () => {
 			);
 		});
 		const editor = editorIn(container);
-		expectKiosk(editor);
+		expect(shown(editor)).toEqual(KIOSK);
 		setCurrent(undefined);
-		expectDefault(editor);
+		expect(shown(editor)).toEqual(DEFAULT);
 		dispose();
 	});
 
@@ -127,10 +128,10 @@ describe('customization through every binding', () => {
 		app.attachView(component.hostView);
 		component.changeDetectorRef.detectChanges();
 		const editor = editorIn(hostElement);
-		expectKiosk(editor);
+		expect(shown(editor)).toEqual(KIOSK);
 		component.setInput('customization', null);
 		component.changeDetectorRef.detectChanges();
-		expectDefault(editor);
+		expect(shown(editor)).toEqual(DEFAULT);
 		component.destroy();
 		app.destroy();
 	});
