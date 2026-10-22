@@ -1,7 +1,7 @@
 # Discord integration
 
-The project's Discord server is wired to this repository so the community sees what is happening
-without watching GitHub. Nothing here is required to build, test or release the package: every
+The project's [Discord server](https://discord.gg/haE8xpMET9) is wired to this repository so the
+community sees what is happening without watching GitHub. Nothing here is required to build, test or release the package: every
 Discord step is skipped when its webhook is not configured (forks, new clones).
 
 ## What posts where

@@ -19,6 +19,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**Development**](#development) &nbsp;&middot;&nbsp;
 [**Roadmap**](../docs/roadmap.md) &nbsp;&middot;&nbsp;
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
+[**Discord**](https://discord.gg/haE8xpMET9) &nbsp;&middot;&nbsp;
 [**Contributing**](../CONTRIBUTING.md)
 
 <table>
@@ -230,6 +231,7 @@ The working agreements are in [AGENTS.md](../AGENTS.md), and [PROVENANCE.md](../
 - **Questions and usage help:** ask in [Discussions, Q&A](https://github.com/ChristopherVR/ooxml/discussions/categories/q-a) and mark the answer that solved it.
 - **Ideas:** talk them through in [Ideas](https://github.com/ChristopherVR/ooxml/discussions/categories/ideas); agreed ones become feature requests.
 - **Built something?** Share it in [Show and tell](https://github.com/ChristopherVR/ooxml/discussions/categories/show-and-tell).
+- **Chat:** join the [Discord server](https://discord.gg/haE8xpMET9) to talk with other users and follow pull requests, releases and CI alerts as they happen.
 - **Bugs and fidelity gaps:** open an [issue](https://github.com/ChristopherVR/ooxml/issues/new/choose), ideally with a sample file.
 - **Security problems:** report them privately, see [SECURITY.md](../SECURITY.md).
 
