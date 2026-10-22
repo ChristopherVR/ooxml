@@ -1,14 +1,16 @@
+import type {
+	ExcelFileCommand,
+	FileCommandDetail as SharedFileCommandDetail,
+} from 'ooxml-core/embedding';
 import type { RibbonAddInCommandDetail } from 'ooxml-core/ribbon';
 import type { Workbook } from 'ooxml-core/xlsx';
 import type { XlsxCollaborationState } from './collaboration-types';
 
-export type FileCommand = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'exportCsv' | 'print';
+/** The File commands this editor announces (the shared `ooxml-core/embedding` type). */
+export type FileCommand = ExcelFileCommand;
 
-export interface FileCommandDetail {
-	command: FileCommand;
-	/** Save As: the name the user chose. */
-	fileName?: string;
-}
+/** The detail of `file-command`; the shared `ooxml-core/embedding` shape. */
+export type FileCommandDetail = SharedFileCommandDetail<FileCommand>;
 
 export interface SelectionChangeDetail {
 	sheet: number;

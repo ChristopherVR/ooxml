@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The public methods of `<xlsx-editor>` (load, newWorkbook, save, saveBytes, download, markClean,
  * select, getSelection, setActiveSheet, collaboration, share, undo, redo, focusGrid). The properties and lifecycle are
@@ -32,6 +33,19 @@ export class XlsxEditorApi extends HTMLElementBase {
 	set surfaceActions(value: SurfaceHostActions | undefined) {
 		this.core.surfaceActions = { ...(value ?? {}) };
 		this.core.requestRender();
+	}
+	/**
+	 * Host-owned storage. When set, File > Save and Save As hand the saved workbook to
+	 * `storage.save()` instead of downloading it, and File > Open asks `storage.open()` (when it has
+	 * one) instead of showing the file picker. The cancelable `file-command` event still fires
+	 * first; a host that prevents it handles the command itself. Export and Save as CSV still
+	 * download.
+	 */
+	get storage(): DocumentStorage | undefined {
+		return this.core.storage;
+	}
+	set storage(value: DocumentStorage | null | undefined) {
+		this.core.storage = value ?? undefined;
 	}
 	get loading(): boolean {
 		return this.core.loading;

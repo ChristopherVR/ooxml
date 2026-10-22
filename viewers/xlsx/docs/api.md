@@ -88,6 +88,31 @@ editor.addEventListener('file-command', (event) => {
 });
 ```
 
+## Host-owned storage
+
+`storage` (a property of the element and a prop of every binding) takes a `DocumentStorage` from
+`ooxml-core/embedding`. When it is set:
+
+- File > Save, Save As and Ctrl+S hand the saved workbook to `storage.save(bytes, meta)` instead of
+  downloading it. `meta` is `{ fileName, mimeType, reason }`, with `reason` `'save'` or `'saveAs'`;
+  `.xls` and `.csv` sources are saved as `.xlsx`, as a download is. Once it resolves the workbook
+  is marked clean; if it resolves with `{ fileName }` the title bar takes that name. A rejection is
+  reported as `workbook-error` and the workbook stays dirty.
+- File > Open calls `storage.open()` when the storage has one and opens the `{ bytes, fileName }`
+  it resolves with (`undefined` means the user canceled). Without `open` the file picker is used.
+- `file-command` still fires first; a host that calls `preventDefault()` handles the command
+  itself and `storage` is not called.
+
+Export, Save as CSV and Print still download or print in the browser. Excel has no AutoRecover,
+so the recovery methods of `DocumentStorage` are not used.
+
+```ts
+editor.storage = {
+	save: (bytes, { fileName }) => myDrive.put(fileName, bytes),
+	open: () => myDrive.pick(), // resolves { bytes, fileName } or undefined
+};
+```
+
 ## Shadow parts
 
 The element exposes its regions as CSS shadow parts, for styling with `xlsx-editor::part(grid)` and for tests: `ribbon`, `name-box`, `formula-bar`, `grid`, `sheet-tabs` and `status-bar`.

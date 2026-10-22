@@ -1,5 +1,6 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
 import type { Workbook } from '@christophervr/xlsx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	EditorThemeMode,
 	RibbonAddInCommandDetail,
@@ -36,6 +37,7 @@ export const SpreadsheetEditor = defineComponent({
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		themeColors: Object as PropType<XlsxThemeColors>,
 		collaboration: Object as PropType<XlsxCollaborationOptions | null>,
+		storage: Object as PropType<DocumentStorage | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES, 'ready'],
 	setup(props, { emit, expose }) {

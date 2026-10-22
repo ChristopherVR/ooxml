@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The editor's state and the `EditorContext` every UI module receives: the workbook and its edit
  * session, the active sheet and selection, the command and dialog registries, and the public
@@ -64,6 +65,8 @@ export class EditorCore {
 	shell: ShellHooks | undefined;
 	/** Host callbacks that stand in for dialogs when the editor mounts without application UI. */
 	surfaceActions: SurfaceHostActions = {};
+	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
+	storage: DocumentStorage | undefined = undefined;
 	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
 	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();

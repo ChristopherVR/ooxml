@@ -15,6 +15,7 @@ import {
 	type XlsxThemeColors,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
+import type { DocumentStorage } from 'ooxml-core/embedding';
 import { createPropTracker, createSrcLoader, sameList, sameThemeColors } from './forwarding';
 
 /** Editor state a framework passes down as props. */
@@ -50,6 +51,11 @@ export interface EditorProps {
 	 * colour); forwarded when a new object is passed, and `undefined` or `null` leaves the room.
 	 */
 	collaboration?: XlsxCollaborationOptions | null | undefined;
+	/**
+	 * Host-owned storage: File > Save and Save As go to `storage.save()` instead of a download, and
+	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
+	 */
+	storage?: DocumentStorage | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -86,6 +92,7 @@ export const EDITOR_PROP_KEYS = [
 	'ribbonAddIns',
 	'themeColors',
 	'collaboration',
+	'storage',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -264,6 +271,8 @@ export function mountEditor(
 			// The element keeps panels whose look is unchanged, so a fresh array per render is cheap.
 			if (changed('ribbonAddIns', next.ribbonAddIns))
 				element.ribbonAddIns = next.ribbonAddIns ?? [];
+			if (changed('storage', next.storage ?? undefined))
+				element.storage = next.storage ?? undefined;
 			if (changed('themeColors', next.themeColors, sameThemeColors))
 				element.themeColors = { ...next.themeColors };
 			// The element renames itself on File > Open; only forward a name the parent changed.

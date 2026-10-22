@@ -2,6 +2,7 @@
  * Workbook I/O for the element: load (xlsx, xlsm, xls, csv through the core's `loadWorkbook`),
  * new, save, download, and the default handlers of the File commands.
  */
+import { documentSaveMeta, saveToStorage, type DocumentSaveReason } from 'ooxml-core/embedding';
 import { createWorkbook, type Workbook } from 'ooxml-core/xlsx';
 import { createTemplateWorkbook, formatNotes, type TemplateId } from './backstage';
 import type { EditorCore } from './editor-core';
@@ -139,13 +140,23 @@ export async function saveBlob(core: EditorCore): Promise<Blob> {
 	);
 }
 
-/** Saves to a download named after the workbook; .xls and .csv sources become .xlsx (Excel's notice). */
-async function saveDownload(core: EditorCore, chrome?: FileChrome): Promise<void> {
+/**
+ * Saves to the host's storage when there is one, else to a download named after the workbook;
+ * .xls and .csv sources become .xlsx (Excel's notice).
+ */
+async function saveDownload(
+	core: EditorCore,
+	chrome?: FileChrome,
+	reason: DocumentSaveReason = 'save',
+): Promise<void> {
 	const source = core.workbook?.format;
-	const name = withExtension(core.fileName, saveExtension(core.fileName));
+	let name = withExtension(core.fileName, saveExtension(core.fileName));
+	const storage = core.storage;
 	chrome?.setSaveState('saving');
 	try {
-		downloadBytes(core.host.ownerDocument, await saveBytes(core, 'xlsx'), name);
+		const bytes = await saveBytes(core, 'xlsx');
+		if (storage) name = await saveToStorage(storage, bytes, documentSaveMeta(name, reason));
+		else downloadBytes(core.host.ownerDocument, bytes, name);
 	} catch (error) {
 		chrome?.setSaveState('dirty');
 		throw error;
@@ -163,7 +174,7 @@ async function saveDownload(core: EditorCore, chrome?: FileChrome): Promise<void
 			);
 	}
 	core.dirty.set(false);
-	chrome?.setSaveState('saved-local');
+	chrome?.setSaveState(storage ? 'saved' : 'saved-local');
 }
 
 export interface FileCommandOptions {
@@ -198,7 +209,12 @@ export async function runFileCommand(
 					!confirm(t('Discard unsaved changes and open another workbook?'))
 				)
 					return;
-				const file = await pickFile(core.host.shadowRoot ?? core.host);
+				const storage = core.storage;
+				const file = storage?.open
+					? await storage
+							.open()
+							.then((opened) => opened && { bytes: opened.bytes, name: opened.fileName })
+					: await pickFile(core.host.shadowRoot ?? core.host);
 				if (file) await loadInto(core, file.bytes, file.name, chrome);
 				return;
 			}
@@ -209,7 +225,7 @@ export async function runFileCommand(
 				if (!name) return options.openBackstage?.('saveAs');
 				core.fileName = withExtension(name, saveExtension(name));
 				chrome?.fileNameChanged();
-				return await saveDownload(core, chrome);
+				return await saveDownload(core, chrome, 'saveAs');
 			}
 			case 'export':
 				return downloadBytes(
