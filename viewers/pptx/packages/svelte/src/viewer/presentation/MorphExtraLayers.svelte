@@ -1,33 +1,34 @@
 <script lang="ts">
 	/**
-	 * The two morph-only layers `PresentationTransitionOverlay.svelte` paints
-	 * ABOVE its outgoing/incoming pair, split out to keep that file under the
-	 * project's per-file LOC budget:
+	 * The morph-only layers `PresentationTransitionOverlay.svelte` paints ABOVE
+	 * its incoming layer, split out to keep that file under the project's
+	 * per-file LOC budget:
 	 *
-	 *  - the **lifted** layer: arriving shapes a ghost above them would
-	 *    otherwise hide for the whole morph, painted here so they dissolve in
-	 *    where a viewer can see them (issue #146). Their copy on the incoming
-	 *    layer is held invisible by the plan, so nothing composites twice.
+	 *  - the **overlay layers**: the plan's ghosts and lifted arrivals, one
+	 *    layer per run in the plan's single back-to-front order (issue #141).
+	 *    Every layer is BACKGROUND-FREE, or its slide fill would cover the morph
+	 *    beneath it; a lifted run holds arriving shapes a ghost would otherwise
+	 *    hide (issue #146), their copy on the incoming layer held invisible.
 	 *  - the **crossfade groups**: pairs the overlay paints BOTH halves of, each
 	 *    as one isolated group so the halves are SUMMED rather than stacked
 	 *    (issue #161).
 	 */
-	import type { PptxSlide } from 'pptx-viewer-core';
 	import type { CanvasSize } from 'ooxml-ui/pptx';
 
-	import type { MorphCrossfadeGroupView } from './use-morph-transition-overlay.svelte';
+	import type {
+		MorphCrossfadeGroupView,
+		MorphOverlayLayerView,
+	} from './use-morph-transition-overlay.svelte';
 	import SlideStage from '../components/SlideStage.svelte';
 
 	const {
-		liftedSlide,
-		liftedStyle,
+		overlayLayers,
 		crossfadeGroups,
 		canvasSize,
 		mediaDataUrls,
 		scale = 1,
 	}: {
-		liftedSlide: PptxSlide | undefined;
-		liftedStyle: string;
+		overlayLayers: readonly MorphOverlayLayerView[];
 		crossfadeGroups: readonly MorphCrossfadeGroupView[];
 		canvasSize: CanvasSize;
 		mediaDataUrls: Map<string, string>;
@@ -35,16 +36,17 @@
 	} = $props();
 </script>
 
-{#if liftedSlide}
+{#each overlayLayers as layer (layer.key)}
 	<div
 		class="pptx-svelte-transition-layer"
-		data-pptx-transition-layer="lifted"
-		data-pptx-morph-lifted="true"
-		style={liftedStyle}
+		data-pptx-transition-layer={layer.side === 'outgoing' ? 'outgoing' : 'lifted'}
+		data-pptx-morph-outgoing={layer.side === 'outgoing' ? 'true' : undefined}
+		data-pptx-morph-lifted={layer.side === 'incoming' ? 'true' : undefined}
+		style={layer.style}
 	>
-		<SlideStage slide={liftedSlide} {canvasSize} {mediaDataUrls} {scale} transparentBackground />
+		<SlideStage slide={layer.slide} {canvasSize} {mediaDataUrls} {scale} transparentBackground />
 	</div>
-{/if}
+{/each}
 {#each crossfadeGroups as group (group.key)}
 	<div data-pptx-morph-crossfade={group.key} style={group.style}>
 		<div

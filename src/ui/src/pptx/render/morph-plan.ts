@@ -50,6 +50,8 @@ import { resolveMorphCrossfadeGroups } from './morph-crossfade-group';
 import type { MorphCrossfadeGroup } from './morph-crossfade-group';
 import { flattenMorphElements } from './morph-flatten';
 import { matchMorphElementsFull } from './morph-matching';
+import { resolveMorphOverlayLayers } from './morph-overlay-layers';
+import type { MorphOverlayLayer } from './morph-overlay-layers';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
 import type { MorphMode } from './morph-types';
 
@@ -163,6 +165,21 @@ export interface MorphTransitionPlan {
 	 * would hide the incoming slide's own arrivals. See `resolveMorphGhostIds`.
 	 */
 	outgoingElements: PptxElement[];
+	/**
+	 * {@link MorphTransitionPlan.outgoingElements} and
+	 * {@link MorphTransitionPlan.overlayIncomingElements} together, in the ONE
+	 * back-to-front order the overlay must paint them in, as runs of
+	 * consecutive same-slide shapes (see `morph-overlay-layers`).
+	 *
+	 * A binding renders each run as its own stacked layer, in this order: an
+	 * `'outgoing'` run against the outgoing slide inside a
+	 * `data-pptx-morph-outgoing` scope, an `'incoming'` run against the incoming
+	 * slide inside a `data-pptx-morph-lifted` scope. Painting every ghost below
+	 * every lifted arrival instead let a full-slide picture fading in veil the
+	 * title travelling above it (issue #141).
+	 * {@link MorphTransitionPlan.crossfadeGroups} still go above all of these.
+	 */
+	overlayLayers: MorphOverlayLayer[];
 	/** Animation duration in ms, echoed for convenience. */
 	durationMs: number;
 }
@@ -250,7 +267,8 @@ export function buildMorphTransitionPlan(
 	// - and leave the group itself without an animation.
 	const flattenedOutgoing = flattenMorphElements(fromSlide.elements, toSlide.elements);
 	const outgoingIds = new Set(flattenedOutgoing.map((element) => element.id));
-	const ghostIds = resolveMorphGhostIds(flattenedOutgoing, match.pairs);
+	const flattenedIncoming = flattenMorphElements(toSlide.elements, fromSlide.elements);
+	const ghostIds = resolveMorphGhostIds(flattenedOutgoing, match.pairs, flattenedIncoming);
 
 	const incomingAnimations = new Map<string, string>();
 	const outgoingAnimations = new Map<string, string>();
@@ -316,7 +334,6 @@ export function buildMorphTransitionPlan(
 	// Only a ghost that KEEPS its opacity counts. One that dissolves is out of
 	// the way inside the first quarter, long before an arrival begins to appear,
 	// so it hides nothing worth moving an animation for.
-	const flattenedIncoming = flattenMorphElements(toSlide.elements, fromSlide.elements);
 	const holdingGhostIds = new Set(
 		match.pairs
 			.filter(
@@ -380,6 +397,13 @@ export function buildMorphTransitionPlan(
 	const overlayIncomingElements = flattenedIncoming.filter(
 		(element) => overlayIncomingAnimations.has(element.id) && !groupedIncomingIds.has(element.id),
 	);
+	const overlayLayers = resolveMorphOverlayLayers(
+		outgoingElements,
+		overlayIncomingElements,
+		flattenedOutgoing,
+		flattenedIncoming,
+		match.pairs,
+	);
 
 	return {
 		keyframesCss: keyframes.join('\n'),
@@ -390,6 +414,7 @@ export function buildMorphTransitionPlan(
 		overlayIncomingAnimations,
 		outgoingElements,
 		overlayIncomingElements,
+		overlayLayers,
 		crossfadeGroups,
 		durationMs,
 	};
