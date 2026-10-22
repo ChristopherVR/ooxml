@@ -30,10 +30,10 @@ import {
 import type { PptxSlide, PptxData } from 'pptx-viewer-core';
 import { useState } from 'react';
 import type { RefObject } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { PrintSettings } from '../components/print-dialog-types';
 import { useViewerOptionsContext } from '../components/viewer-options-context';
+import { useTranslation } from '../i18n/use-translation';
 import { captureAllSlidesAsPngDataUrls } from '../utils/export';
 import { exportAllSlidesToSvg } from '../utils/export-svg';
 import { buildPrintDocument } from '../utils/svg-print-serializer';

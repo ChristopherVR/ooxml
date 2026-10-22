@@ -7,7 +7,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { ViewerCustomizationContext } from '../viewer-customization-context';
 import { HelpSection } from './HelpSection';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 describe('help shared command adapter', () => {
 	it('routes all commands once, replaces callbacks and retains the Settings fallback', () => {

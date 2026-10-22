@@ -1,9 +1,9 @@
 import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { INSPECTOR_TABS } from './inspector-pane-constants';
 import type { InspectorTab } from './inspector-pane-types';

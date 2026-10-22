@@ -63,12 +63,9 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason } from 'ooxml-ui/pptx';
-import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import {
 	THEME_CATALOG,
@@ -157,6 +154,8 @@ import { useViewerOptions } from './hooks/useViewerOptions';
 import { useViewerState } from './hooks/useViewerState';
 import { useViewPreferencesSync } from './hooks/useViewPreferencesSync';
 import { useZoomViewport } from './hooks/useZoomViewport';
+import { ViewerI18nRoot, useViewerLocaleControls } from './i18n/root';
+import { useTranslation } from './i18n/use-translation';
 import type { PowerPointViewerProps, PowerPointViewerHandle } from './types';
 import { cn } from './utils';
 import { withDisplayName } from './utils/display-name';
@@ -171,13 +170,36 @@ export { getAnimationInitialStyle } from './utils/animation';
 /** Stable empty list, so a viewer without host tabs never re-renders its ribbon for them. */
 const NO_RIBBON_ADD_INS: readonly RibbonAddInTab[] = [];
 
-/** The viewer component before its display name is set; see {@link PowerPointViewer}. */
+/**
+ * The viewer component before its display name is set; see {@link PowerPointViewer}. It only
+ * resolves the language: hooks read context from above the component that calls them, so the
+ * translation state is provided here and every hook of the body below already translates.
+ */
 const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 	PowerPointViewerHandle,
 	PowerPointViewerProps
 >(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the forwardRef component its displayName
 	function PowerPointViewer(props, ref) {
+		return (
+			<ViewerI18nRoot
+				defaultLocale={props.defaultLocale}
+				availableLocales={props.availableLocales}
+				onLocaleChange={props.onLocaleChange}
+			>
+				<PowerPointViewerBody {...props} ref={ref} />
+			</ViewerI18nRoot>
+		);
+	},
+);
+
+/** Everything below the language root: state, hooks and the editor chrome. */
+const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
+	PowerPointViewerHandle,
+	PowerPointViewerProps
+>(
+	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the forwardRef component its displayName
+	function PowerPointViewerBody(props, ref) {
 		const {
 			content: incomingContent,
 			fonts = [],
@@ -202,9 +224,6 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			defaultThemeKey,
 			availableThemes,
 			onThemeChange,
-			defaultLocale,
-			availableLocales,
-			onLocaleChange,
 			accountAuth,
 			authorName,
 			collaboration: collaborationInput,
@@ -288,54 +307,15 @@ const PowerPointViewerComponent = /* @__PURE__ */ forwardRef<
 			);
 		}, []);
 
-		// ── Locale catalog (File > Options > Language) ─────────────────
-		// This package never bundles an i18n instance: the host initialises
-		// `react-i18next` and this component only calls `changeLanguage` on it.
-		const { t, i18n } = useTranslation();
-		const [localeCode, setLocaleCode] = useState<string>(
-			() => defaultLocale ?? readStoredViewerPrefs().localeCode ?? 'en',
-		);
-		// A persisted non-English choice needs to actually take effect on
-		// reload; only applies it ourselves when the host hasn't taken over
-		// locale handling via `onLocaleChange`.
-		useEffect(() => {
-			if (localeCode !== 'en' && !onLocaleChange) {
-				void i18n.changeLanguage(localeCode);
-			}
-			// Intentionally run once on mount: subsequent changes flow through
-			// handleLocaleChange below, not this effect.
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, []);
-		const resolvedLocales = useMemo<LocaleCatalogEntry[]>(() => {
-			if (availableLocales) {
-				return availableLocales;
-			}
-			// Introspect what the host's i18n instance actually has dictionaries
-			// for, rather than assuming every LOCALE_CATALOG entry is wired up.
-			const registeredCodes = i18n.options.resources
-				? Object.keys(i18n.options.resources)
-				: (i18n.languages ?? ['en']);
-			return registeredCodes.map(
-				(code) =>
-					LOCALE_CATALOG.find((entry) => entry.code === code) ?? {
-						code,
-						label: code,
-						nativeLabel: code,
-					},
-			);
-		}, [availableLocales, i18n]);
-		const handleLocaleChange = useCallback(
-			(code: string) => {
-				setLocaleCode(code);
-				if (onLocaleChange) {
-					onLocaleChange(code);
-				} else {
-					void i18n.changeLanguage(code);
-					writeStoredViewerPrefs({ localeCode: code });
-				}
-			},
-			[onLocaleChange, i18n],
-		);
+		// ── Locale (File > Options > Language) ─────────────────────────
+		// Resolved by `ViewerI18nRoot` above this component (the host's react-i18next
+		// instance, `defaultLocale`, the stored choice and `onLocaleChange`).
+		const { t } = useTranslation();
+		const {
+			localeCode,
+			locales: resolvedLocales,
+			selectLocale: handleLocaleChange,
+		} = useViewerLocaleControls();
 
 		// Local content state -- synced from incoming prop but may diverge during editing.
 		const [content, setContent] = useState<ArrayBuffer | Uint8Array | null>(incomingContent);

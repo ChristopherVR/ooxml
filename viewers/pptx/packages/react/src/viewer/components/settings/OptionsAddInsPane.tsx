@@ -1,8 +1,8 @@
 import type { ViewerAddinRow, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import { resolveViewerAddinRows } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface OptionsAddInsPaneProps {

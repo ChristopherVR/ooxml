@@ -14,8 +14,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
 import type { PptxChartData } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { BTN, CARD, HEADING, INPUT } from './chart-panel-constants';
 import type { ChartUserShapeRowBoxPatch } from './ChartUserShapePositionFields';
 import { ChartUserShapePositionFields } from './ChartUserShapePositionFields';

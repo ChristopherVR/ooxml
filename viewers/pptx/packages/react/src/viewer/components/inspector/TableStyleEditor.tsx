@@ -12,8 +12,8 @@ import {
 	normalizeTableStyleGuid,
 } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { BTN, CARD, HEADING } from './inspector-pane-constants';
 import { TableStyleEditorFields } from './TableStyleEditorFields';
 import { useThemeColorMap } from './ThemeColorMapContext';

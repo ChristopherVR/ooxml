@@ -2,9 +2,9 @@ import { slideClipboardLabels, sorterPasteInsertAt } from 'ooxml-ui/pptx';
 import type { PptxUiSlideClipboardElement } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuMinus, LuPlus } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { SectionBlock } from './slide-sorter/SectionBlock';
 import { SlideCard } from './slide-sorter/SlideCard';
 import { SorterContextMenu } from './slide-sorter/SorterContextMenu';

@@ -11,9 +11,9 @@ import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'ooxml-u
  * exactly two tables.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 import { LuCrosshair, LuGitMerge, LuPin, LuPinOff, LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface AiFocusBarProps {

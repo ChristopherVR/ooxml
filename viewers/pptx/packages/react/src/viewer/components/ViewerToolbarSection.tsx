@@ -24,7 +24,6 @@ import type {
  * and hidden file-input elements.
  */
 import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Toolbar, SignatureStatusBadge } from '.';
 import { createReviewCommentsHost } from '../hooks/createReviewCommentsHost';
@@ -39,6 +38,7 @@ import type { PropertyHandlersResult } from '../hooks/usePropertyHandlers';
 import { scopeLayoutOptionsToActiveSlide } from '../hooks/useScopedLayoutOptions';
 import type { SlideManagementHandlers } from '../hooks/useSlideManagement';
 import type { ViewerDialogsResult } from '../hooks/useViewerDialogs';
+import { useTranslation } from '../i18n/use-translation';
 import type { SupportedShapeType, ViewerMode } from '../types';
 import type { ElementClipboardPayload } from '../types-core';
 import type { DrawingTool, TableCellEditorState, ToolbarSection } from '../types-ui';

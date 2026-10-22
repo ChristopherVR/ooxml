@@ -6,8 +6,8 @@ import type { PptxPresentationProperties } from 'pptx-viewer-core';
  * loop, narration, animation, and subtitles.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { WebCheckbox } from './WebControls';
 
 // ---------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPanelLeft, LuPanelRight, LuSettings, LuSparkles } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { useCollaboration, UserAvatarBar } from '../collaboration';
 import { useViewerCustomizationContext } from '../viewer-customization-context';

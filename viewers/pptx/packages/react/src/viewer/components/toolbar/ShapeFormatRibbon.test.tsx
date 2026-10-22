@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PictureCropController } from '../../hooks/usePictureCropMode';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => `t:${key}` }),
 }));
 

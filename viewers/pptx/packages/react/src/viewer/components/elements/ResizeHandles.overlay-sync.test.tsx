@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { syncSelectionHandleOverlay } from '../../utils/selection-handle-overlay';
 import { ResizeHandles } from './ResizeHandles';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: vi.fn().mockReturnValue({ t: (key: string) => key }),
 }));
 

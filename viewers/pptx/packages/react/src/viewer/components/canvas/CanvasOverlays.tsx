@@ -3,8 +3,7 @@
  *
  * Extracted to keep the main SlideCanvas file under 300 lines.
  */
-import { useTranslation } from 'react-i18next';
-
+import { useTranslation } from '../../i18n/use-translation';
 import type { MarqueeSelectionState } from '../../types';
 
 /* ------------------------------------------------------------------ */

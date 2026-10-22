@@ -12,10 +12,10 @@ import type {
 	ViewerRegionId,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
+import { useTranslation } from '../../i18n/use-translation';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { useViewerStorage } from '../viewer-storage-context';
 import { ViewerRegion, useRegionRenderer } from '../ViewerRegion';

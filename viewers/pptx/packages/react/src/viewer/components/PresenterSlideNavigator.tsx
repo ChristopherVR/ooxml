@@ -1,8 +1,8 @@
 import { PRESENTER_CONSOLE_CLASSES, PRESENTER_NAVIGATOR_LABEL_KEYS } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { ReactElement } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { ScaledSlidePreview } from './ScaledSlidePreview';
 

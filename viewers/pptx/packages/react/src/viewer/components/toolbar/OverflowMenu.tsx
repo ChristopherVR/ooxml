@@ -1,9 +1,9 @@
 import { isDialogAvailable } from 'ooxml-ui/pptx';
 import type { BackstageCardId } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuEllipsis } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { ic, OV } from './toolbar-constants';

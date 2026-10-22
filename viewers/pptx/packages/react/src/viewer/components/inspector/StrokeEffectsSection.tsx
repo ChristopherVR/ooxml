@@ -1,9 +1,9 @@
 import { SHAPE_EFFECT_SECTIONS, SHAPE_LINE_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_STROKE_COLOR } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
 import { RNG, DIS, LBL } from './FillStrokeHelpers';
 import { ColorPickerRow } from './FillStrokeSubComponents';

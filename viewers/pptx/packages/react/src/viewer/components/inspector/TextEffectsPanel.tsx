@@ -1,7 +1,7 @@
 import type { TextStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
 import { WebCheckbox } from '../WebControls';
 import { INPUT_CLS, COLOR_CLS } from './TextPropertiesHelpers';

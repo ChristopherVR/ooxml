@@ -1,8 +1,8 @@
 import type { ShapeStyle, ConnectorArrowType } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { CONNECTOR_ARROW_OPTIONS, ARROW_SIZE_OPTIONS } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect } from '../WebControls';
 import { SELECT_CLS } from './element-properties-constants';
 

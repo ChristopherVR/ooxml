@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuLock, LuShieldCheck, LuX, LuEye, LuEyeOff } from 'react-icons/lu';
 
 import { useModalFocus } from '../hooks/useModalFocus';
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 
 // ---------------------------------------------------------------------------

@@ -6,8 +6,8 @@ import type {
 import { buildThemeColorSwatchGrid, themeColorGridCommit, themeColorGridView } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useThemeColorMap } from './ThemeColorMapContext';
 
 export interface ThemeColorSwatchGridProps {

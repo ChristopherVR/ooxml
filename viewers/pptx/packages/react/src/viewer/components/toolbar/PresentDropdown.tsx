@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuCaptions,
 	LuCheck,
@@ -11,6 +10,7 @@ import {
 	LuSettings,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 
 export interface PresentDropdownProps {

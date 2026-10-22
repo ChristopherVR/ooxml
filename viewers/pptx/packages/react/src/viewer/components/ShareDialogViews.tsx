@@ -1,8 +1,8 @@
 import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
-import { useTranslation } from 'react-i18next';
 import { LuWifiOff } from 'react-icons/lu';
 
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTranslation } from '../i18n/use-translation';
 
 /** Form for configuring a new collaboration session. */
 export function StartSessionForm({

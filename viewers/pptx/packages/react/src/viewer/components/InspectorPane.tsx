@@ -1,7 +1,7 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useSheetDismissDrag } from '../hooks/useSheetDismissDrag';
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { AnimationPanel } from './inspector/AnimationPanel';
 import { ElementInspectorBody } from './inspector/ElementInspectorBody';

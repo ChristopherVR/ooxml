@@ -1,6 +1,7 @@
 import { buildDirectionGrid, TRANSITION_DIR_ARROWS } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Constants

@@ -25,7 +25,7 @@ vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	attachRotateHandlePlacement: vi.fn(() => vi.fn()),
 }));
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: vi.fn().mockReturnValue({ t: (key: string) => key }),
 }));
 

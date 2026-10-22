@@ -6,9 +6,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
+import { useTranslation } from '../../i18n/use-translation';
 import { useCollaboration } from '../collaboration';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 

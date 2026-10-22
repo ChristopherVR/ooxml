@@ -8,8 +8,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { ReviewCommentsHost, RibbonControlId } from 'ooxml-ui/pptx';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebRibbonSection } from './WebRibbonSection';
 
 export interface ReviewSectionProps {

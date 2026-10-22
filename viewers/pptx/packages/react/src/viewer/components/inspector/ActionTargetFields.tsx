@@ -9,8 +9,8 @@ import { toSlideIndex } from 'ooxml-ui/pptx';
  */
 import type { ElementActionType } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { WebSelect, WebCheckbox } from '../WebControls';
 import type { ActionTargetPatch } from './ActionSettingsPanel';

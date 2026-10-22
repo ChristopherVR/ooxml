@@ -6,8 +6,8 @@ import type { PptxPresentationProperties, PptxCustomShow } from 'pptx-viewer-cor
  * all slides, a range, or a custom show.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { WebSelect, WebRadio } from './WebControls';
 
 // ---------------------------------------------------------------------------

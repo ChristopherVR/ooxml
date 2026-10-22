@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { renderMediaElement } from './media-render';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

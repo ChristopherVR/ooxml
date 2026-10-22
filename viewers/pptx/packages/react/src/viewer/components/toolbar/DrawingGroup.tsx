@@ -10,8 +10,8 @@ import {
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { SupportedShapeType } from '../../types-core';
 import { useRecentColors } from '../inspector/RecentColorsContext';
 import { useThemeColorMap } from '../inspector/ThemeColorMapContext';

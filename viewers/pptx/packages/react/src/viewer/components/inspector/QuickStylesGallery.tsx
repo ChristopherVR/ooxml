@@ -2,8 +2,8 @@ import { buildQuickStylesGallery, quickStyleShapeStyle } from 'ooxml-ui/pptx';
 import type { PptxUiRibbonGalleryElement, RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { LBL } from './FillStrokeHelpers';
 
 // ---------------------------------------------------------------------------

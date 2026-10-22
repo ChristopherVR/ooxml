@@ -5,8 +5,8 @@ import type {
 	InspectorSectionDescriptor,
 } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { COL2, LBL, NUM, RNG, SEL } from './FillStrokeHelpers';
 import { useRecentColorCommit } from './useRecentColorCommit';

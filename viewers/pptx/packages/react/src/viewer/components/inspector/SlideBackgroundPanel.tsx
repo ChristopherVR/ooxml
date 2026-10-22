@@ -5,9 +5,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import React, { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor } from '../../utils';
 import { WebCheckbox } from '../WebControls';
 import { DebouncedColorInput } from './DebouncedColorInput';

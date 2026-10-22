@@ -1,7 +1,7 @@
 import { editingHomeControls } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { groupAttr } from './PowerPointRibbonControls';
 import { sep } from './toolbar-constants';
 import { WebHomeControls } from './WebHomeControls';

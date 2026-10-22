@@ -1,6 +1,5 @@
 import { describeElementChange } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuCheck,
 	LuChevronDown,
@@ -12,6 +11,7 @@ import {
 	LuX,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { cn } from '../utils';
 import type { SlideDiff, ElementChange } from '../utils/compare';

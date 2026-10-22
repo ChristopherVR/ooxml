@@ -9,8 +9,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { imgSrc } from '../elements/ImageRenderer';
 
 export interface PictureCropOverlayProps {

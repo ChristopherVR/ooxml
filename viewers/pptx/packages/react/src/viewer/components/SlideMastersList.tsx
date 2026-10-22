@@ -1,8 +1,8 @@
 import { masterViewPseudoSlide } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import React, { useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { cn } from '../utils';
 import { SlideThumbnail } from './SlideThumbnail';

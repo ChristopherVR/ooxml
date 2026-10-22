@@ -1,8 +1,8 @@
 import type { MediaPptxElement, MediaMetadata, PptxElement } from 'pptx-viewer-core';
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPlay, LuPause, LuInfo } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { MediaInspector } from './MediaInspector';
 import { MediaPlaybackBookmarks } from './MediaPlaybackBookmarks';
 import {

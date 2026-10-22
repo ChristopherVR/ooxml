@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BUILT_IN_THEMES, ThemeGallery } from './ThemeGallery';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

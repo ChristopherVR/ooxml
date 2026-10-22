@@ -27,9 +27,9 @@ import {
 	TRANSITION_VALID_DIRECTIONS,
 } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { SLIDE_TRANSITION_OPTIONS } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect, WebCheckbox } from '../WebControls';
 import { DirectionPicker } from './DirectionPicker';
 import { TransitionPreview } from './TransitionPreview';

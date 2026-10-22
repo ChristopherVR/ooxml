@@ -25,9 +25,9 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * this component registers no key listener (matching `PresenterView`).
  */
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { renderNotesSegments } from './presenter-view-utils';
 import { ScaledSlidePreview } from './ScaledSlidePreview';

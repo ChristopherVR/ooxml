@@ -6,8 +6,8 @@
  * to give users a visual feel for their selected layout.
  */
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { HandoutSlidesPerPage } from '../../utils/handout-layout-utils';
 import {
 	computeHandoutLayout,

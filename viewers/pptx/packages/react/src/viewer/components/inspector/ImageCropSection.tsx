@@ -13,8 +13,8 @@ import { cropResetPatch, cropResetState } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { clampCropValue } from '../../utils';
 import { BTN_CLS } from './element-properties-constants';
 

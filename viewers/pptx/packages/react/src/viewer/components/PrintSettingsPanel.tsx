@@ -1,8 +1,8 @@
 /** PrintSettingsPanel: Settings form for the print dialog. */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuFileText, LuGrid2X2, LuStickyNote, LuList } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type {
 	PrintWhat,
 	PrintOrientation,

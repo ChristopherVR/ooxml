@@ -12,11 +12,11 @@ import { describe, it, expect, vi } from 'vitest';
 import type { ConnectionStatus, UserPresence } from '../../hooks/collaboration/types';
 
 // ---------------------------------------------------------------------------
-// Mock react-i18next before importing components
+// Mock the viewer translation hook before importing components
 // ---------------------------------------------------------------------------
 
 // oxlint-disable-next-line prefer-ending-with-an-expect
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			const translations: Record<string, string | ((o: Record<string, unknown>) => string)> = {

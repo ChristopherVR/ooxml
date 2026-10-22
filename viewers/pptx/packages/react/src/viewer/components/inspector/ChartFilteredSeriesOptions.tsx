@@ -1,7 +1,7 @@
 import type { PptxChartData } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { BTN, CARD, HEADING } from './chart-panel-constants';
 
 // ---------------------------------------------------------------------------

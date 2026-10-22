@@ -6,8 +6,8 @@ import type { PptxPresentationProperties, PptxCustomShow } from 'pptx-viewer-cor
  * advance mode, loop, narration, animation, subtitles).
  */
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { ShowOptionsFieldset } from './ShowOptionsFieldset';
 import { ShowSlidesFieldset } from './ShowSlidesFieldset';

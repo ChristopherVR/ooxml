@@ -5,7 +5,9 @@ import { expect, test, vi } from 'vitest';
 
 import { RecordSection } from './RecordSection';
 
-vi.mock(import('react-i18next'), () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock(import('../../i18n/use-translation'), () => ({
+	useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 test('routes both native Record intents once and cleans up on unmount', () => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;

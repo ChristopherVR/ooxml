@@ -1,7 +1,7 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { SHORTCUT_REFERENCE_ITEMS } from '../constants';
+import { useTranslation } from '../i18n/use-translation';
 
 interface ShortcutPanelProps {
 	isOpen: boolean;

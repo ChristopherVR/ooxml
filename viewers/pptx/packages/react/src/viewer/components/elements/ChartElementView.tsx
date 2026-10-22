@@ -19,8 +19,8 @@ import React, {
 	useState,
 	useSyncExternalStore,
 } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { renderChartElement } from '../../utils';
 import { formatAxisValue } from '../../utils/chart-helpers';
 import { buildReactChartViewModel } from '../../utils/chart-view-model-render';

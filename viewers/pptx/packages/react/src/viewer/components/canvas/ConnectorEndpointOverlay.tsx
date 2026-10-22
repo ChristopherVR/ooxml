@@ -21,7 +21,8 @@ import type { ConnectorEndpointKind } from 'ooxml-ui/pptx';
  */
 import type { ConnectorPptxElement, PptxElement } from 'pptx-viewer-core';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 interface ConnectorEndpointOverlayProps {
 	connector: PptxElement;

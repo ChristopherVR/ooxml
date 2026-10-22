@@ -25,9 +25,9 @@ import {
  */
 import type { PptxSlide } from 'pptx-viewer-core';
 import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { useOutlineView } from './outline-view/useOutlineView';
 

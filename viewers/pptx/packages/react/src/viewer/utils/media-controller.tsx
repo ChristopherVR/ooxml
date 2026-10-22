@@ -6,7 +6,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { MediaPptxElement } from 'pptx-viewer-core';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // PresentationMediaController: manages trim, fade, volume at runtime

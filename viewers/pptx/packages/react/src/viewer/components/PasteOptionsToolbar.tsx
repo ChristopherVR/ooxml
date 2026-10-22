@@ -14,9 +14,9 @@ import type {
 	PptxUiPasteOptionsElement,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';
+import { useTranslation } from '../i18n/use-translation';
 
 export interface PasteOptionsToolbarProps {
 	/** The just-pasted element's id, used to find its mounted DOM node. */

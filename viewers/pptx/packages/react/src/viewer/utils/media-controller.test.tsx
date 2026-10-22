@@ -19,7 +19,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PresentationMediaController } from './media-controller';
 import { hasPersistentAudio, stopAllPersistentAudio } from './media-persistent-audio';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

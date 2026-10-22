@@ -1,9 +1,9 @@
 import { buildSlideSorterContextMenuEntries, slideSorterContextMenuLabel } from 'ooxml-ui/pptx';
 import type { SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
 import React, { Fragment } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuClipboardPaste, LuCopy, LuCopyPlus, LuEye, LuEyeOff, LuTrash2 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { SlideSectionGroup } from '../../types';
 import { ContextMenuSeparator } from '../context-menu-parts';
 

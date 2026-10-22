@@ -6,9 +6,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxTagCollection } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuChevronDown, LuChevronRight, LuTrash2 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { HEADING, CARD, INPUT, BTN } from './inspector-pane-constants';
 

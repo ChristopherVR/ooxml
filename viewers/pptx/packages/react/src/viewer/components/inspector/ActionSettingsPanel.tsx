@@ -13,8 +13,8 @@ import { canCommitActionType, ELEMENT_ACTION_TYPE_OPTIONS, resolveActionType } f
 import type { PptxElement, PptxSlide, ElementAction, ElementActionType } from 'pptx-viewer-core';
 import { pptxActionToElementAction, elementActionToPptxAction } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { ActionTargetFields } from './ActionTargetFields';

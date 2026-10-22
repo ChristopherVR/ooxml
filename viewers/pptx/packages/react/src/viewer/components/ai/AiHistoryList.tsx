@@ -3,9 +3,9 @@
  * Purely presentational; each row resumes on click and exposes a delete button.
  */
 import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
-import { useTranslation } from 'react-i18next';
 import { LuMessageSquare, LuTrash2 } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { relativeTime } from './ai-relative-time';
 

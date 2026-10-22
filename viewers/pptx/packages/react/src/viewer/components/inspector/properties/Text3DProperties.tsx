@@ -7,8 +7,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { TextStyle, Text3DStyle, BevelPresetType, MaterialPresetType } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../../i18n/use-translation';
 import { normalizeHexColor } from '../../../utils';
 import { WebSelect, WebCheckbox } from '../../WebControls';
 import { useRecentColorCommit } from '../useRecentColorCommit';

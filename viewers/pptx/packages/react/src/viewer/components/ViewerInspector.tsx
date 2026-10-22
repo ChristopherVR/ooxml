@@ -24,9 +24,9 @@ import type {
 	TextStyle,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 
 import type { UseCommentsResult } from '../hooks/useComments-helpers';
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize, ViewerMode, TableCellEditorState } from '../types';
 import type { InspectorTab } from './inspector/inspector-pane-types';
 import { InspectorPane } from './InspectorPane';

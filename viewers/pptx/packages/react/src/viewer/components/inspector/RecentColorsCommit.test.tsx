@@ -41,7 +41,7 @@ import { TableCellPatternFill } from './TableCellPatternFill';
 import { TextEffectsPanel } from './TextEffectsPanel';
 import { AdvancedTextFormatting } from './TextPropertiesHelpers';
 
-vi.mock(import('react-i18next'), async (importOriginal) => ({
+vi.mock(import('../../i18n/use-translation'), async (importOriginal) => ({
 	...(await importOriginal()),
 	useTranslation: (() => ({ t: (key: string) => key })) as never,
 }));

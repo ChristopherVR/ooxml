@@ -6,8 +6,8 @@ import type {
 	RibbonGalleryPreviewEvent,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useRibbonGalleryCommands } from '../ribbon-gallery-context';
 
 export interface RibbonGalleryProps {

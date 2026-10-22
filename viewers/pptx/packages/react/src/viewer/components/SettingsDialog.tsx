@@ -17,8 +17,8 @@ import {
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { OptionsAddInsPane } from './settings/OptionsAddInsPane';
 import { OptionsQuickAccessPane } from './settings/OptionsQuickAccessPane';
 import { OptionsRibbonPane } from './settings/OptionsRibbonPane';

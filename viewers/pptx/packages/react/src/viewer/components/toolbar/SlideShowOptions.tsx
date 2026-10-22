@@ -2,7 +2,8 @@ import { SLIDE_SHOW_OPTIONS } from 'ooxml-ui/pptx';
 import type { PptxUiSlideShowOptionsElement, SlideShowOptionsChangeEvent } from 'ooxml-ui/pptx';
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 /** React 18 and 19 adapter for structured properties and the native domain event. */
 export function SlideShowOptions({

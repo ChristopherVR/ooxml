@@ -1,8 +1,8 @@
 import type { EditPointsCommandId, EditPointsMenuView } from 'ooxml-ui/pptx';
 import { Fragment } from 'react';
 import type React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { ContextMenuItem, ContextMenuSeparator } from '../context-menu-parts';
 
 export interface EditPointsMenuProps {

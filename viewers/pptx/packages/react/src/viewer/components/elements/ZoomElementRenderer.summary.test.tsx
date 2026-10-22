@@ -8,7 +8,7 @@ import { ZoomElementRenderer } from './ZoomElementRenderer';
 // The real English dictionary, not a key-echoing stub: the badge and the tile
 // captions come from `pptx.zoom.*` keys now, so a stub would let this spec pass
 // against text no user ever sees.
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, params?: Record<string, string>) => {
 			const text = translationsEn[key];

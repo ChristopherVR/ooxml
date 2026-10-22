@@ -1,6 +1,5 @@
 import { findReplacementAvailability } from 'ooxml-ui/pptx';
 import React, { useRef, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
 	LuSearch,
 	LuReplace,
@@ -10,6 +9,7 @@ import {
 	LuCaseSensitive,
 } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { WebCheckbox } from './WebControls';
 
 export interface FindReplacePanelProps {

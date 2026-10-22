@@ -1,8 +1,8 @@
 import type { RibbonHomeIntent } from 'ooxml-ui/pptx';
 import { chartSelectionHomeControls, dispatchChartSelectionRequest } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useChartFormatContext } from '../chart-format-context';
 import { WebHomeControls } from './WebHomeControls';
 

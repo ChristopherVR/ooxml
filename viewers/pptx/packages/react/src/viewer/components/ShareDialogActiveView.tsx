@@ -1,8 +1,8 @@
 import { buildActiveSessionUsers, buildCollaborationShareUrl } from 'ooxml-ui/pptx';
-import { useTranslation } from 'react-i18next';
 import { LuCheck, LuCopy, LuUsers, LuWifi, LuWifiOff } from 'react-icons/lu';
 
 import type { CollaborationConfig } from '../hooks/collaboration/types';
+import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
 import { useViewerOptionsContext } from './viewer-options-context';
 

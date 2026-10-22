@@ -1,8 +1,8 @@
 import { isSeriesUsingSecondaryAxis, seriesColorClearState } from 'ooxml-ui/pptx';
 import type { PptxChartData } from 'pptx-viewer-core';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebCheckbox } from '../WebControls';
 import { CARD, HEADING } from './chart-panel-constants';
 import { DebouncedColorInput } from './DebouncedColorInput';

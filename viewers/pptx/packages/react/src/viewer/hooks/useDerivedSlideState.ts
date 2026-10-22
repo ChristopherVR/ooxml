@@ -18,9 +18,9 @@ import type {
  * the four most expensive `useMemo` blocks in one place.
  */
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_SECTION_GROUP_ID, GRID_SIZE, UNGROUPED_SECTION_ID } from '../constants';
+import { useTranslation } from '../i18n/use-translation';
 import type { SlideSectionGroup } from '../types';
 import type { ViewerMode } from '../types-core';
 

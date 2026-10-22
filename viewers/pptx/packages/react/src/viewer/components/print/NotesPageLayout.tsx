@@ -6,8 +6,8 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * speaker notes text below: the standard PowerPoint "Notes Page" print layout.
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { NotesPageData } from '../../utils/notes-page-layout-utils';
 import { computeAllNotesPages, getNotesPrintableArea } from '../../utils/notes-page-layout-utils';
 

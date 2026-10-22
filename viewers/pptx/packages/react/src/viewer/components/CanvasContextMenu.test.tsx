@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ViewerCustomizationContext } from './viewer-customization-context';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

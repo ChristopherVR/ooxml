@@ -1,14 +1,8 @@
 import type { ProposalView } from 'ooxml-ui/pptx/ai';
 import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
-/**
- * AiProposalCard: a single staged, not-yet-applied change the assistant is
- * suggesting. Reads like a human suggestion: a clear title, a plain-language
- * description of what will happen, and friendly Apply / Discard buttons. The
- * full description is shown (never truncated); long lists scroll rather than
- * clip. The accept/reject callbacks route through the proposal store.
- */
-import { useTranslation } from 'react-i18next';
 import { LuCheck, LuX } from 'react-icons/lu';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface AiProposalCardProps {
 	proposal: ProposalView;
@@ -16,6 +10,13 @@ export interface AiProposalCardProps {
 	onReject: (id: string) => void;
 }
 
+/**
+ * AiProposalCard: a single staged, not-yet-applied change the assistant is
+ * suggesting. Reads like a human suggestion: a clear title, a plain-language
+ * description of what will happen, and friendly Apply / Discard buttons. The
+ * full description is shown (never truncated); long lists scroll rather than
+ * clip. The accept/reject callbacks route through the proposal store.
+ */
 export function AiProposalCard({ proposal, onAccept, onReject }: AiProposalCardProps) {
 	const { t } = useTranslation();
 	const lines = proposal.summary.map(humanizeDiffLine);

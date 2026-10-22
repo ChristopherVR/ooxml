@@ -14,8 +14,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { SlideSizeEmu, SlideSizeOrientation, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { CanvasSize } from '../../types';
 import { WebSelect } from '../WebControls';
 import { CARD, HEADING, INPUT } from './inspector-pane-constants';

@@ -36,8 +36,8 @@ import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
  * render `PowerPointViewer` instead.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { buildCanvasProps } from './useViewerBuildingBlocks-canvas-props';
 import { buildToolbarProps } from './useViewerBuildingBlocks-toolbar-props';
 import type {

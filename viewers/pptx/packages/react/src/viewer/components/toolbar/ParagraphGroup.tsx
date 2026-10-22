@@ -9,8 +9,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { TextStyle } from 'pptx-viewer-core';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { useRibbonGalleryCommands } from '../ribbon-gallery-context';
 import { groupAttr } from './PowerPointRibbonControls';
 import { WebHomeControls } from './WebHomeControls';

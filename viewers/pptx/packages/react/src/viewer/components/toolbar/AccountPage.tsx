@@ -10,9 +10,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 import React, { useContext, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuHardDrive, LuInfo, LuLogIn, LuUser } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { useViewerStorage } from '../viewer-storage-context';
 import { AccountAuthContext } from './account-auth-context';

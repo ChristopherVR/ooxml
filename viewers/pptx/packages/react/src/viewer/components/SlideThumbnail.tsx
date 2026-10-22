@@ -1,9 +1,9 @@
 import { buildPreviewElements, deviceStrokeStageStyle, editorThumbnailHeight } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { SLIDE_NAV_THUMBNAIL_WIDTH, SLIDE_TRANSITION_OPTIONS } from '../constants';
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { getReactSlideBackgroundStyle } from '../utils/slide-background-style';
 import type { TableStyleContext } from '../utils/table-band-style';

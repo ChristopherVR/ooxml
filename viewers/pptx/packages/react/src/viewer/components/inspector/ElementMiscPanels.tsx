@@ -2,8 +2,8 @@ import { buildOleObjectNamePatch, canInteractWithElement } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle, OlePptxElement, GroupPptxElement } from 'pptx-viewer-core';
 import { getOleObjectTypeLabel } from 'pptx-viewer-core';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { OleEditorDialog } from '../OleEditorDialog';
 import { ConnectorArrowsSection } from './ConnectorArrowsSection';

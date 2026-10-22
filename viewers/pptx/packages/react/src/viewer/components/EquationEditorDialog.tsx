@@ -5,11 +5,11 @@ import {
 	sanitizeMathMl,
 } from 'ooxml-ui/pptx';
 import React, { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
 import { useModalFocus } from '../hooks/useModalFocus';
+import { useTranslation } from '../i18n/use-translation';
 import { cn } from '../utils';
 import { convertLatexToOmml, convertOmmlToLatex } from '../utils/latex-to-omml';
 import { DialogFooter } from './DialogFooter';

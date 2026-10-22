@@ -18,7 +18,7 @@ vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	playAnimationRibbonPreview,
 }));
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

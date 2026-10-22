@@ -7,9 +7,9 @@
  */
 import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuHistory } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 
 export interface AutosaveRecoveryDialogProps {

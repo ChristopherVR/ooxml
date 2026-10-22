@@ -4,7 +4,8 @@ import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
  * image adjustments.  Maps to `a:alphaModFix` and `a:biLevel` in OOXML.
  */
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Props

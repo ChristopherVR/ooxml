@@ -1,8 +1,8 @@
 import type { MobileBarIntent, PptxUiMobileBarElement } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../../hooks/useWebControl';
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface MobileBottomBarProps {
 	/** Total number of slides in the presentation; every action disables at 0. */

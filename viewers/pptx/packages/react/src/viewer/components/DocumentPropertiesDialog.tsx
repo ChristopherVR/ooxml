@@ -1,9 +1,9 @@
 import type { PptxAppProperties, PptxCoreProperties, PptxCustomProperty } from 'pptx-viewer-core';
 import React, { useState, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuFileText, LuX } from 'react-icons/lu';
 
 import { useModalDismissDrag } from '../hooks';
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { DocumentPropertiesCustomTab } from './DocumentPropertiesCustomTab';
 import { DocumentPropertiesStatisticsTab } from './DocumentPropertiesStatisticsTab';

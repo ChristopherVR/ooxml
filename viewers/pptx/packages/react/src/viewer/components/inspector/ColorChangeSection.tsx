@@ -1,6 +1,6 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
 import { WebCheckbox } from '../WebControls';
 import { DebouncedColorInput } from './DebouncedColorInput';

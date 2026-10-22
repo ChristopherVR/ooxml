@@ -7,8 +7,8 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { WebSelect, WebCheckbox } from '../WebControls';
 import { BTN, HEADING, INPUT } from './inspector-pane-constants';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';

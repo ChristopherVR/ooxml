@@ -1,8 +1,8 @@
 import { scanAvailableFontFamilies } from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuType, LuX, LuCheck, LuLoader } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { WebCheckbox } from './WebControls';
 

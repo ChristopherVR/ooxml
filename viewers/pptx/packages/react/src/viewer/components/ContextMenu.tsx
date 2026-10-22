@@ -4,8 +4,8 @@ import {
 	customizeContextMenuEntries,
 } from 'ooxml-ui/pptx';
 import type React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import { useChartFormatContext } from './chart-format-context';
 import { contextMenuContext, contextMenuHandlers } from './context-menu-dispatch';
 import type { ContextMenuProps } from './context-menu-types';

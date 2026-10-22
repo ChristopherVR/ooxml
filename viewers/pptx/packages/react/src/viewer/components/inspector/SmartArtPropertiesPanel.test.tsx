@@ -12,8 +12,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-// Mock react-i18next: return the key so assertions are stable.
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+// Mock the viewer translation hook: return the key so assertions are stable.
+vi.mock<typeof import('../../i18n/use-translation')>(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

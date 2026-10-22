@@ -4,8 +4,9 @@
  * with an Undo control that restores the captured previous values.
  */
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPalette, LuUndo2 } from 'react-icons/lu';
+
+import { useTranslation } from '../../i18n/use-translation';
 
 export interface AiAppliedThemeCardProps {
 	summary: string;

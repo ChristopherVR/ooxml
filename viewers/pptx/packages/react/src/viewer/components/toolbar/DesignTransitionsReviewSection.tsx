@@ -5,9 +5,9 @@ import {
 	FIXED_TAB_GALLERIES,
 } from 'ooxml-ui/pptx';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPalette, LuType } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { RibbonGallery } from './RibbonGallery';
 import { WebRibbonCommand, WebRibbonGroup } from './WebRibbonControls';
 

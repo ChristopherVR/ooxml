@@ -7,9 +7,9 @@
  * @module collaboration/CollaborationStatusIndicator
  */
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { ConnectionStatus } from '../../hooks/collaboration/types';
+import { useTranslation } from '../../i18n/use-translation';
 
 // ---------------------------------------------------------------------------
 // Props

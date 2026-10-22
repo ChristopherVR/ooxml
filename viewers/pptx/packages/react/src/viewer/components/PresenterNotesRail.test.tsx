@@ -20,7 +20,7 @@ import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string) => translationsEn[key] ?? key,
 	}),

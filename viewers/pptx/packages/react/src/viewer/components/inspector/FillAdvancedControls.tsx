@@ -1,8 +1,8 @@
 import type { ShapeStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_FILL_COLOR } from '../../constants';
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor } from '../../utils';
 import { getPatternSvg } from '../../utils/color';
 import {

@@ -17,7 +17,7 @@ import { ElementRenderer } from './ElementRenderer';
 import type { ElementRendererProps } from './elements/element-renderer-types';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => translationsEn[key] ?? key }),
 }));
 

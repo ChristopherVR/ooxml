@@ -1,9 +1,9 @@
 import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPipette } from 'react-icons/lu';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { normalizeHexColor, openNativeEyeDropper } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { SEL, RNG, SWATCH, DIS, LBL, COL2 } from './FillStrokeHelpers';

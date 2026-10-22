@@ -5,9 +5,9 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxHeaderFooter } from 'pptx-viewer-core';
 import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuCalendarDays, LuClock, LuFileText, LuHash, LuText, LuX } from 'react-icons/lu';
 
+import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
 import { WebCheckbox } from './WebControls';
 

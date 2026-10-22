@@ -18,7 +18,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { UseCommentsResult } from '../hooks/useComments-helpers';
 import { ViewerInspector } from './ViewerInspector';
 
-vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
+vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => translationsEn[key] ?? key }),
 }));
 

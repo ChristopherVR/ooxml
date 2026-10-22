@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * live in the shared `pptx-ui-ribbon-transitions` view, so they are mounted and
  * clicked for real instead of rendered to static markup.
  */
-vi.mock(import('react-i18next'), () => ({
+vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 

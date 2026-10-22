@@ -1,8 +1,8 @@
 import type { ChartDataSheetChangeEvent, PptxUiChartDataSheetElement } from 'ooxml-ui/pptx';
 import type { PptxChartData } from 'pptx-viewer-core';
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { CARD } from './chart-panel-constants';
 
 export interface ChartDataSheetProps {

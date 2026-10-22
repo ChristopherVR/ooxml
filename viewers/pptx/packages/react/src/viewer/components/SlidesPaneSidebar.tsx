@@ -1,10 +1,10 @@
 import { editorThumbnailWidth, SLIDE_VIRTUALIZATION_THRESHOLD } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPlus } from 'react-icons/lu';
 
 import { DEFAULT_SECTION_GROUP_ID } from '../constants';
 import { useVirtualizedSlides } from '../hooks/useVirtualizedSlides';
+import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
 import { SectionContextMenu } from './slides-pane/SectionContextMenu';
 import { SectionHeader } from './slides-pane/SectionHeader';

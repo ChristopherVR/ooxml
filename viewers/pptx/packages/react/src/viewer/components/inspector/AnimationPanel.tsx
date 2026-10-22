@@ -6,10 +6,10 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { LuPlay } from 'react-icons/lu';
 
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useTranslation } from '../../i18n/use-translation';
 import { cn, getElementLabel } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { AfterAnimationRow } from './AfterAnimationRow';

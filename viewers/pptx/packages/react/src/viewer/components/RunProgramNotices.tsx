@@ -1,6 +1,7 @@
 import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { canUseClipboard, runProgramNoticeStackStyle } from 'ooxml-ui/pptx';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../i18n/use-translation';
 
 /**
  * RunProgramNotices: the toast stack shown during a running show for

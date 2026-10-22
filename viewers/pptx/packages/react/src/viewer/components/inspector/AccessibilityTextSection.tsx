@@ -1,8 +1,8 @@
 import { getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
 import { CARD, HEADING, INPUT } from './inspector-pane-constants';
 

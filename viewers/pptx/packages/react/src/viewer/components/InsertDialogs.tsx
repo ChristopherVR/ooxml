@@ -8,7 +8,8 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { SmartArtLayout } from 'pptx-viewer-core';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import { useTranslation } from '../i18n/use-translation';
 
 /**
  * React 18 and 19 adapter for the shared Insert SmartArt and Insert Chart dialogs

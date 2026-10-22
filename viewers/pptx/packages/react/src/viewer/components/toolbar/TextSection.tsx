@@ -2,8 +2,8 @@ import { textFontSizePtToPx } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../../i18n/use-translation';
 import type { TableCellEditorState } from '../../types';
 import type { ChangeCaseMode } from '../../utils/text-case-transform';
 import { extractFontInfo } from './font-info';

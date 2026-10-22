@@ -4,9 +4,9 @@
  * progress bar semantics, focus and the look; the host owns cancelling the export.
  */
 import type { PptxUiExportProgressElement } from 'ooxml-ui/pptx';
-import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';
+import { useTranslation } from '../i18n/use-translation';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

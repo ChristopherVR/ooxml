@@ -4,8 +4,8 @@ import {
 	customizeCanvasContextMenuEntries,
 } from 'ooxml-ui/pptx';
 import type React from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useTranslation } from '../i18n/use-translation';
 import {
 	canvasContextMenuContext,
 	canvasContextMenuHandlers,
