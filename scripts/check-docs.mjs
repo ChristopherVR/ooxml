@@ -96,6 +96,33 @@ export function anchorsOf(text) {
 	return found;
 }
 
+/**
+ * Ids declared by the theme components of a docs site (`.vitepress/theme/**.vue`). A home page with
+ * a layout component (`layout: LandingHome`) has its sections there, not in Markdown headings.
+ */
+function themeIds(root, docRoot) {
+	const ids = new Set();
+	const walk = (dir) => {
+		let entries;
+		try {
+			entries = readdirSync(join(root, dir), { withFileTypes: true });
+		} catch {
+			return;
+		}
+		for (const e of entries) {
+			const rel = `${dir}/${e.name}`;
+			if (e.isDirectory()) walk(rel);
+			else if (e.name.endsWith('.vue')) {
+				for (const m of readFileSync(join(root, rel), 'utf8').matchAll(/\bid="([^"{}]+)"/g)) {
+					ids.add(m[1]);
+				}
+			}
+		}
+	};
+	walk(`${docRoot}/.vitepress/theme`);
+	return ids;
+}
+
 /** `viewers/<p>/docs` for a file inside a viewer docs site, else null. */
 export function docRootOf(file) {
 	const m = /^(viewers\/[^/]+\/docs)\//.exec(file);
@@ -189,6 +216,10 @@ export function checkLinks(root, file, text, anchorCache, generated = []) {
 				let set = anchorCache.get(hit);
 				if (!set) {
 					set = anchorsOf(readFileSync(join(root, hit), 'utf8'));
+					const dr = docRootOf(hit);
+					if (dr && /^layout:\s*\S/m.test(readFileSync(join(root, hit), 'utf8').slice(0, 400))) {
+						for (const id of themeIds(root, dr)) set.add(id);
+					}
 					anchorCache.set(hit, set);
 				}
 				if (!set.has(decodeURI(fragment))) {
@@ -328,7 +359,8 @@ export function checkSidebars(root, docRoot, files, generated = []) {
 		const rel = page.slice(docRoot.length + 1);
 		const first = rel.split('/')[0];
 		if (LOCALE.test(first) && rel.includes('/')) continue;
-		if (first.startsWith('.') || first === 'public' || rel === 'index.md') continue;
+		if (first.startsWith('.') || first === 'public' || rel === 'index.md' || rel === 'README.md')
+			continue;
 		if (!reached.has(page) && !reached.has(page.replace(/\.md$/, ''))) {
 			warnings.push({
 				file: page,

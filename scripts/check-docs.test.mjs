@@ -89,6 +89,23 @@ test('anchors follow GitHub and VitePress slugs and are warnings', () => {
 	assert.equal(warnings[0].check, 'anchor');
 });
 
+test('a layout home page also owns the ids of its theme components', () => {
+	const root = fixture({
+		'viewers/x/docs/index.md': '---\nlayout: LandingHome\n---\n',
+		'viewers/x/docs/.vitepress/theme/Live.vue':
+			'<template><section id="live-demo"></section></template>',
+		'viewers/x/docs/demos.md': 'x',
+	});
+	const { warnings } = checkLinks(
+		root,
+		'viewers/x/docs/demos.md',
+		'[ok](/#live-demo) [bad](/#nope)',
+		new Map(),
+	);
+	assert.equal(warnings.length, 1);
+	assert.match(warnings[0].message, /nope/);
+});
+
 test('inline-code repository paths must exist; globs, placeholders and build output pass', () => {
 	const root = fixture({
 		'src/core/xml/index.ts': '',
