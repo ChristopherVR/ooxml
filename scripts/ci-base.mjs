@@ -36,9 +36,8 @@ export async function successfulRunShas({ repo, token, fetchJson }) {
 }
 
 /**
- * The base a push should plan from: `{ base, source }`. Source is `before` (the event's own base,
- * also when the lookup failed), `green` (an older green ancestor) or `none` (no green commit within
- * the search window: the base is empty, which plans a full run). `exec` runs git and
+ * The base a push should plan from: `{ base, source }`. Source is `before` (the event's own base, only when the lookup succeeded), `green` (an older green ancestor) `none` (no green commit within the
+ * window) or `error` (lookup failed or no token); the last two give an empty base, a full run. `exec` runs git and
  * `fetchJson(url, headers)` calls the API; both are injectable.
  */
 export async function pushBase({
@@ -67,6 +66,7 @@ export async function pushBase({
 		}
 		return older ? { base: found, source: 'green' } : { base: before, source: 'before' };
 	} catch {
-		return { base: before, source: 'before' };
+		// Cancelled pushes rely on this plan covering them: never guess, run everything.
+		return { base: '', source: 'error' };
 	}
 }

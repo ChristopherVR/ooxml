@@ -561,8 +561,8 @@ test('a failed lookup, a missing token or non-success runs fall back safely', as
 	const fail = async () => {
 		throw new Error('503');
 	};
-	assert.deepEqual(await lookup('c3', fail), { base: 'c3', source: 'before' });
-	assert.deepEqual(await lookup('c3', runs('c0'), ''), { base: 'c3', source: 'before' });
+	assert.deepEqual(await lookup('c3', fail), { base: '', source: 'error' });
+	assert.deepEqual(await lookup('c3', runs('c0'), ''), { base: '', source: 'error' });
 	const other = async () => ({
 		workflow_runs: [
 			{ head_sha: 'c0', conclusion: 'failure', event: 'push' },

@@ -45,7 +45,7 @@ concurrency:
   # PR plans include the whole branch, so a newer update supersedes them. Push plans start at the
   # newest green commit (scripts/ci-base.mjs), so they include everything an earlier, cancelled push
   # would have checked: cancelling one leaves nothing unchecked. A cancelled run is not green, so
-  # the next plan reaches back past it. The nightly and manual runs keep a group of their own.
+  # the next plan reaches back past it, and a failed lookup plans a full run rather than guess. The nightly and manual runs keep a group of their own.
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
