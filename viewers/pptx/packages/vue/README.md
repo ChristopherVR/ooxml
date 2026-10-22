@@ -292,7 +292,7 @@ props. The `internals` subpath is not covered by semver; prefer the stable
 root exports, and pin your version when relying on `internals`.
 
 Most of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
-transitions, and more) actually lives in `pptx-viewer-shared`, an internal package that is
+transitions, and more) actually lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is
 **never published to npm**. If you need one of those framework-neutral helpers directly, for
 example the slide-transition resolver/keyframes (`resolveSlideTransition`,
 `resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) or the `PresentationTransitionOverlay`
