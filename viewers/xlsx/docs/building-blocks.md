@@ -108,9 +108,33 @@ surfaced three ways:
   changed, corrected or canceled;
 - the optional `FormulaBar` sets `aria-invalid` and renders the message in a `role="alert"` span.
 
-Stop-style rules also show the grid's own Retry / Cancel alert inside the canvas, since that
-is part of the grid. Custom controls should show `editError` and let the user correct the
-draft with `onFormulaInput` or discard it with `onCancelEdit`.
+### The data-validation alert
+
+The building blocks never draw the grid's Retry / Cancel alert. Excel's three alert styles are
+the host's to show through `onOpenValidationAlert(request)` (also accepted in `surfaceActions`
+and by every framework adapter). The request carries `{ ref, sheet, sheetName, value, style,
+title, message }`, where `value` is the text the user entered, and the methods that match
+Excel's buttons:
+
+| `style`       | Excel buttons     | Methods                                      |
+| ------------- | ----------------- | -------------------------------------------- |
+| `stop`        | Retry / Cancel    | `retry()`, `cancel()`                        |
+| `warning`     | Yes / No / Cancel | `accept()` (Yes), `retry()` (No), `cancel()` |
+| `information` | OK / Cancel       | `accept()` (OK), `cancel()`                  |
+
+`retry()` keeps the editor open with the draft, `cancel()` restores the old value and `accept()`
+commits the value anyway, exactly like the bundled buttons. Resolve a request once; later calls
+are ignored. Until it is resolved the cell editor ignores further commits, so always resolve it
+(a callback that throws counts as `retry()`). `onValidationError` and `editError` still report
+the failure.
+
+Without the callback nothing is mounted: every style acts like Retry, the edit stays open and
+the failure is reported through `onValidationError` / `editError`.
+`toolbarProps.enabled.validationAlert` is true only when the host supplied the callback. The
+full `SpreadsheetEditor` and `<xlsx-editor>` keep their built-in alert.
+
+Custom controls should also show `editError` and let the user correct the draft with
+`onFormulaInput` or discard it with `onCancelEdit`.
 
 ## Optional Toolbar
 

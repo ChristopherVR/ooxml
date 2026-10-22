@@ -66,4 +66,8 @@ export type {
 	SurfaceActionContext,
 	SurfaceActionName,
 	SurfaceHostActions,
+	ValidationAlertRequest,
+	StopValidationAlert,
+	WarningValidationAlert,
+	InformationValidationAlert,
 } from './surface-actions';

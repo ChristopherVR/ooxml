@@ -158,6 +158,7 @@ it('reports every control as enabled for an editable workbook and none for host 
 		formatCells: false,
 		findReplace: false,
 		insertFunction: false,
+		validationAlert: false,
 	});
 	editor.readOnly = true;
 	const locked = editor.getToolbarProps().enabled;

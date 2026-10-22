@@ -106,6 +106,8 @@ export function spreadsheetToolbarProps(core: EditorCore) {
 			formatCells: formatCells.enabled,
 			findReplace: findReplace.enabled,
 			insertFunction: insertFunction.enabled,
+			/** The host owns the validation alert; false means a refused edit just stays open (Retry). */
+			validationAlert: Boolean(core.host.isConnected && core.surfaceActions.onOpenValidationAlert),
 		},
 		...selectionFormatting(core.workbook, core.activeSheet, selection.ranges),
 		labels: Object.fromEntries(LABELS.map((label) => [label, ctx.t(label)])),

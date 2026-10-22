@@ -351,6 +351,7 @@ const SURFACE_ACTION_KEYS = [
 	'onOpenFormatCells',
 	'onOpenFindReplace',
 	'onOpenInsertFunction',
+	'onOpenValidationAlert',
 ] as const satisfies readonly (keyof SurfaceHostActions)[];
 
 /** Framework-neutral composition API, shared by every adapter. Choose before mount. */
@@ -373,7 +374,7 @@ export function mountEditorSurface(host: HTMLElement, initial: SurfaceOptions = 
 	const forwardActions = (options: SurfaceOptions) => {
 		if (SURFACE_ACTION_KEYS.every((key) => forwarded[key] === options[key])) return;
 		const next: SurfaceHostActions = {};
-		for (const key of SURFACE_ACTION_KEYS) next[key] = options[key];
+		for (const key of SURFACE_ACTION_KEYS) (next as Record<string, unknown>)[key] = options[key];
 		forwarded = next;
 		element.surfaceActions = next;
 	};

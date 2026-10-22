@@ -103,8 +103,13 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		await formula.fill('9');
 		await formula.press('Enter');
 		await expect(formula).toHaveAttribute('aria-invalid', 'true');
-		const alert = page.locator('xlsx-editor').getByRole('alertdialog');
-		await expect(alert).toBeVisible();
+		// No host callback: the surface draws no alert and the refused edit stays open (Retry).
+		await expect(page.locator('xlsx-editor').getByRole('alertdialog')).toHaveCount(0);
+		expect(
+			await page.evaluate(
+				() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.validationAlert,
+			),
+		).toBe(false);
 		await expect
 			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().editError))
 			.toBeTruthy();
@@ -114,7 +119,6 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 			return { format: await p.onBold(), sheet: p.onSheetChange(1), selection: p.onSelect('B2') };
 		});
 		expect(blocked).toEqual({ format: false, sheet: false, selection: false });
-		await alert.getByRole('button', { name: 'Retry', exact: true }).click();
 		await formula.fill('2');
 		await formula.press('Enter');
 		await expect(formula).toHaveAttribute('aria-invalid', 'false');
@@ -134,6 +138,89 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 			b.handle.select('A1');
 		});
 		await expect(formula).toHaveValue('2');
+		expect(errors).toEqual([]);
+	});
+
+	test(`${framework}: the host owns the data-validation alert in the surface`, async ({ page }) => {
+		const errors: string[] = [];
+		page.on('pageerror', (e) => errors.push(e.message));
+		await page.goto(`/?framework=${framework}&blocks=1`);
+		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
+		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
+		await page.evaluate(() => {
+			const w = window as unknown as { alerts: unknown[]; pending: unknown };
+			w.alerts = [];
+			const element = window.xlsxNativeBlocks.handle.element;
+			const book = element.workbook!;
+			book.sheets[0]!.dataValidations = [
+				{
+					ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
+					type: 'whole',
+					operator: 'between',
+					formula1: '1',
+					formula2: '2',
+					showErrorMessage: true,
+					errorStyle: 'warning',
+					error: 'Use 1 or 2',
+				},
+			];
+			window.xlsxNativeBlocks.update({
+				canEdit: true,
+				onOpenValidationAlert: (request) => {
+					w.pending = request;
+					w.alerts.push({ style: request.style, ref: request.ref, value: request.value });
+				},
+			});
+			element.workbook = { ...book };
+			element.select('A1');
+		});
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => window.xlsxNativeBlocks.snapshot().toolbarProps?.enabled.validationAlert,
+				),
+			)
+			.toBe(true);
+		const formula = page.getByRole('textbox', { name: 'Formula Bar', exact: true });
+		const resolve = (method: string) =>
+			page.evaluate(
+				(name) => (window as unknown as { pending: Record<string, () => void> }).pending[name]!(),
+				method,
+			);
+		await formula.fill('9');
+		await formula.press('Enter');
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { alerts: unknown[] }).alerts))
+			.toEqual([{ style: 'warning', ref: 'A1', value: '9' }]);
+		await expect(page.locator('xlsx-editor').getByRole('alertdialog')).toHaveCount(0);
+		// No: keep the draft.
+		await resolve('retry');
+		await expect(formula).toHaveValue('9');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.editing))
+			.toBe(true);
+		// Yes: commit the value.
+		await formula.press('Enter');
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { alerts: unknown[] }).alerts.length))
+			.toBe(2);
+		await resolve('accept');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.editing))
+			.toBe(false);
+		await page.evaluate(() => window.xlsxNativeBlocks.handle.select('A1'));
+		await expect(formula).toHaveValue('9');
+		// Cancel restores the old value.
+		await formula.fill('7');
+		await formula.press('Enter');
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { alerts: unknown[] }).alerts.length))
+			.toBe(3);
+		await resolve('cancel');
+		await expect
+			.poll(() => page.evaluate(() => window.xlsxNativeBlocks.snapshot().toolbarProps?.editing))
+			.toBe(false);
+		await expect(formula).toHaveValue('9');
 		expect(errors).toEqual([]);
 	});
 

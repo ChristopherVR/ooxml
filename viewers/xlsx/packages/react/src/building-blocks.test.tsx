@@ -327,3 +327,54 @@ it('reports a validation failure through onValidationError and the formula bar',
 		await act(async () => root.unmount());
 	}
 });
+
+it('hands the validation alert to the host callback and resolves it', async () => {
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const onOpenValidationAlert = vi.fn();
+	const model = createWorkbook();
+	model.sheets[0]!.dataValidations = [
+		{
+			ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
+			type: 'whole',
+			operator: 'between',
+			formula1: '1',
+			formula2: '2',
+			showErrorMessage: true,
+			errorStyle: 'stop',
+		},
+	];
+	let blocks!: ReturnType<typeof useViewerBuildingBlocks>;
+	function Host() {
+		blocks = useViewerBuildingBlocks({ workbook: model, onOpenValidationAlert, canEdit: true });
+		return createElement(
+			'div',
+			null,
+			createElement(SpreadsheetCanvas, blocks.canvasProps),
+			blocks.toolbarProps ? createElement(FormulaBar, blocks.toolbarProps) : null,
+		);
+	}
+	try {
+		await act(async () => root.render(createElement(Host)));
+		expect(blocks.toolbarProps!.enabled.validationAlert).toBe(true);
+		await act(async () => {
+			blocks.toolbarProps!.onFormulaInput('9');
+		});
+		await act(async () => {
+			expect(blocks.toolbarProps!.onFormulaChange('9')).toBe(false);
+		});
+		expect(onOpenValidationAlert).toHaveBeenCalledTimes(1);
+		const request = onOpenValidationAlert.mock.calls[0]![0];
+		expect(request).toMatchObject({ style: 'stop', ref: 'A1', value: '9' });
+		expect(
+			host.querySelector('xlsx-editor')!.shadowRoot!.querySelector('[role="alertdialog"]'),
+		).toBeNull();
+		await act(async () => request.cancel());
+		await act(async () => request.retry());
+		expect(blocks.toolbarProps!.editing).toBe(false);
+	} finally {
+		await act(async () => root.unmount());
+	}
+});

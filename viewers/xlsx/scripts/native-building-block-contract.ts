@@ -70,6 +70,16 @@ export async function nativeBuildingBlockContract(framework: string) {
 		await vi.waitFor(() => expect(snapshot().toolbarProps?.fontSize).toBe(18));
 		expect(snapshot().dirty).toBe(true);
 		expect(snapshot().editError).toBeNull();
+		// The host owns the data-validation alert: no callback means no alert and no flag.
+		expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(false);
+		const onOpenValidationAlert = vi.fn();
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors, onOpenValidationAlert });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(true));
+		expect(
+			host.querySelector('xlsx-editor')!.shadowRoot!.querySelector('[role="alertdialog"]'),
+		).toBeNull();
+		blocks.update({ workbook, canEdit: true, onWorkbookError: errors });
+		await vi.waitFor(() => expect(snapshot().toolbarProps?.enabled.validationAlert).toBe(false));
 		expect(snapshot().collaboration.active).toBe(false);
 		expect(snapshot().selection).toBe('A1');
 		await expect(blocks.handle.load(new Uint8Array([0x50, 0x4b, 3, 4]))).rejects.toThrow(/./);

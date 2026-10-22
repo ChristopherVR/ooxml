@@ -154,6 +154,42 @@ it('reports validation failures and clears them when the draft is canceled', asy
 	blocks.destroy();
 });
 
+it('hands the validation alert to the host instead of drawing one', async () => {
+	const workbook = createWorkbook();
+	workbook.sheets[0]!.dataValidations = [
+		{
+			ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
+			type: 'whole',
+			operator: 'between',
+			formula1: '1',
+			formula2: '2',
+			showErrorMessage: true,
+			errorStyle: 'warning',
+			error: 'One or two',
+		},
+	];
+	const onOpenValidationAlert = vi.fn();
+	const { blocks, formula, canvas } = compose({ workbook, onOpenValidationAlert });
+	await vi.waitFor(() =>
+		expect(blocks.getState().toolbarProps?.enabled.validationAlert).toBe(true),
+	);
+	const input = formula.querySelectorAll('input')[1]!;
+	input.value = '9';
+	input.dispatchEvent(new Event('input', { bubbles: true }));
+	input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+	expect(onOpenValidationAlert).toHaveBeenCalledTimes(1);
+	const request = onOpenValidationAlert.mock.calls[0]![0];
+	expect(request).toMatchObject({ style: 'warning', ref: 'A1', value: '9', message: 'One or two' });
+	expect(
+		canvas.querySelector('xlsx-editor')!.shadowRoot!.querySelector('[role="alertdialog"]'),
+	).toBeNull();
+	request.retry();
+	request.accept();
+	await Promise.resolve();
+	expect(blocks.getState().toolbarProps?.editing).toBe(true);
+	blocks.destroy();
+});
+
 it('removes its controls and the engine on dispose', () => {
 	const { blocks, toolbar, canvas, stops } = compose();
 	for (const stop of stops) stop();
