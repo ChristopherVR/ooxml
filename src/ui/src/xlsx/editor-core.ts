@@ -36,6 +36,13 @@ import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
+import type { ExcelCustomization } from 'ooxml-core/xlsx/ui';
+import {
+	EMPTY_EXCEL_CUSTOMIZATION,
+	provideCustomization,
+	resolveExcelCustomization,
+	type ResolvedExcelCustomization,
+} from './customization';
 
 /** What the shell exposes back to the core (filled in when the element connects). */
 export interface ShellHooks {
@@ -48,7 +55,13 @@ export class EditorCore {
 	workbook: Workbook | undefined;
 	session: EditSession | undefined;
 	activeSheet = 0;
+	/** Effective: the `readOnly` property, or `capabilities.edit` off. */
 	readOnly = false;
+	/** The element's `readOnly` property as the host set it. */
+	requestedReadOnly = false;
+	/** The host's `customization` object, as given, and its resolution. */
+	customizationInput: ExcelCustomization | null = null;
+	customization: ResolvedExcelCustomization = EMPTY_EXCEL_CUSTOMIZATION;
 	locale: EditorLocale = 'en';
 	authorName = DEFAULT_AUTHOR_NAME;
 	fileName = DEFAULT_FILE_NAME;
@@ -108,7 +121,7 @@ export class EditorCore {
 		};
 		this.commands = createCommandRegistry(() => this.ctx, {
 			onError: (id, error) => report(this.commands.get(id)?.label ?? id, error),
-			isHidden: (id) => this.hiddenActions.includes(id),
+			isHidden: (id) => this.isHidden(id),
 		});
 		this.dialogs = createDialogRegistry(
 			() => this.ctx,
@@ -126,6 +139,7 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
+		provideCustomization(this.ctx, () => this.customization);
 		editBridge(this.ctx).onChange(() => {
 			const draft = editBridge(this.ctx).state();
 			if (this.editError && (!draft.editing || draft.text !== this.editError.text))
@@ -363,6 +377,21 @@ export class EditorCore {
 		this.locale = next;
 		this.shell?.relocalize();
 		this.notifyModel({ kind: 'locale' });
+	}
+
+	/** True for a command the host hid: `hiddenActions`, or a disabled capability's. */
+	isHidden(id: string): boolean {
+		return this.hiddenActions.includes(id) || this.customization.commands.has(id);
+	}
+
+	/** Replaces the customisation; false when it is the same object. */
+	setCustomization(value: ExcelCustomization | null): boolean {
+		if (value === this.customizationInput) return false;
+		this.customizationInput = value;
+		this.customization = resolveExcelCustomization(value);
+		this.setReadOnly(this.requestedReadOnly || !this.customization.canEdit);
+		this.requestRender();
+		return true;
 	}
 
 	setReadOnly(readOnly: boolean): boolean {

@@ -15,7 +15,7 @@
     oncollaborationchange?: EditorEventHandlers['collaboration-change'];
     onready?: EditorEventHandlers['ready'];
   };
-  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', showToolbar = true, showFormulaBar = true, hiddenActions = [], ribbonAddIns, themeColors, collaboration, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }: Props = $props();
+  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', showToolbar = true, showFormulaBar = true, hiddenActions = [], ribbonAddIns, themeColors, collaboration, customization, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }: Props = $props();
   let binding: EditorBinding | undefined;
   const handle = deferredHandle(() => binding);
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
@@ -48,4 +48,4 @@
   export function getElement() { return binding?.element; }
   export { element, dirty };
 </script>
-<div use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, showToolbar, showFormulaBar, hiddenActions, ribbonAddIns, themeColors, collaboration, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }}></div>
+<div use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, showToolbar, showFormulaBar, hiddenActions, ribbonAddIns, themeColors, collaboration, customization, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onfilecommand, onworkbookwarning, onribbonaction, onribboncustomize, onsheetchange, onribbonaddin, oncollaborationchange, onready }}></div>

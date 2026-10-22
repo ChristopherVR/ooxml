@@ -20,6 +20,7 @@ import type {
 	XlsxCollaborationState,
 	XlsxEditorElement,
 	XlsxThemeColors,
+	ExcelCustomization,
 } from 'xlsx-web-component';
 import {
 	deferredHandle,
@@ -45,6 +46,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Input() ribbonAddIns?: readonly RibbonAddInTab[];
 	@Input() themeColors?: XlsxThemeColors;
 	@Input() collaboration?: XlsxCollaborationOptions | null;
+	@Input() customization?: ExcelCustomization | null;
 	@Output() workbookChange = new EventEmitter<Workbook>();
 	@Output() workbookError = new EventEmitter<Error>();
 	@Output() selectionChange = new EventEmitter<SelectionChangeDetail>();

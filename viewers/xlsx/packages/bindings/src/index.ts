@@ -14,6 +14,7 @@ import {
 	type XlsxEditorEventDetail,
 	type XlsxEditorEventName,
 	type XlsxThemeColors,
+	type ExcelCustomization,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
 import { createPropTracker, createSrcLoader, sameList, sameThemeColors } from './forwarding';
@@ -51,6 +52,12 @@ export interface EditorProps {
 	 * colour); forwarded when a new object is passed, and `undefined` or `null` leaves the room.
 	 */
 	collaboration?: XlsxCollaborationOptions | null | undefined;
+	/**
+	 * Host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
+	 * it); `null` or omitted restores the defaults.
+	 */
+	customization?: ExcelCustomization | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -98,6 +105,7 @@ export const EDITOR_PROP_KEYS = [
 	'ribbonAddIns',
 	'themeColors',
 	'collaboration',
+	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -301,6 +309,8 @@ export function mountEditor(
 			// After `fileName`, before the workbook: a workbook opened below joins the room.
 			if (changed('collaboration', next.collaboration ?? null))
 				element.collaboration = next.collaboration ?? null;
+			if (changed('customization', next.customization ?? null))
+				element.customization = next.customization ?? null;
 			if (next.workbook && next.workbook !== lastInput && next.workbook !== lastEmitted) {
 				src.cancel();
 				element.workbook = next.workbook;

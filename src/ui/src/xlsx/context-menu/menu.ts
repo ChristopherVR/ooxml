@@ -7,6 +7,8 @@ import type { OfficeMenuItem, OfficeMenuState } from '../../controls';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 import { visibleMenuEntries } from './hidden';
+import type { ExcelMenuCommand, ExcelMenuContext } from 'ooxml-core/xlsx/ui';
+import { withHostMenuItems } from '../../embedding/host-menu';
 
 export interface ContextMenuHandle {
 	close(): void;
@@ -17,6 +19,8 @@ export interface OpenMenuOptions {
 	onClose?: () => void;
 	/** Called after an item ran or the menu was dismissed with Escape/Tab. */
 	restoreFocus?: () => void;
+	/** Host commands (`contextMenu.extraCommands`) and the context they run with. */
+	host?: { commands: readonly ExcelMenuCommand[]; context: ExcelMenuContext };
 }
 
 const openMenus = new WeakMap<EditorContext, ContextMenuHandle>();
@@ -42,7 +46,7 @@ export function openContextMenu(
 	openMenus.get(ctx)?.close();
 	// Entries whose action the host hid are not offered, so they cannot run from the menu either.
 	const entries = visibleMenuEntries(all, (id) => ctx.commands.isHidden(id));
-	if (entries.length === 0) {
+	if (entries.length === 0 && !options.host?.commands.length) {
 		options.restoreFocus?.();
 		return { close: () => {}, element: ctx.host.ownerDocument.createElement('div') };
 	}
@@ -74,9 +78,17 @@ export function openContextMenu(
 		...(entry.checked === undefined ? {} : { checked: entry.checked }),
 		...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
 	}));
-	element.state = { x, y, label: ctx.t('Context menu'), items: rows };
+	const extra = options.host
+		? withHostMenuItems(rows, options.host.commands, options.host.context)
+		: { items: rows, run: () => false };
+	element.state = { x, y, label: ctx.t('Context menu'), items: extra.items };
 	element.addEventListener('office-menu-request', (event) => {
 		const id = (event as CustomEvent<{ id: string }>).detail.id;
+		if (id.startsWith('host:')) {
+			close(true);
+			extra.run(id);
+			return;
+		}
 		const entry = entries.find((candidate) => candidate.id === id);
 		if (!entry) return;
 		close(true);

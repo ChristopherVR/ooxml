@@ -71,3 +71,14 @@ export type {
 	WarningValidationAlert,
 	InformationValidationAlert,
 } from './surface-actions';
+export { EXCEL_CAPABILITY_IDS } from 'ooxml-core/xlsx/ui';
+export type {
+	ExcelBackstagePage,
+	ExcelCapabilities,
+	ExcelCapabilityId,
+	ExcelCustomization,
+	ExcelMenuCommand,
+	ExcelMenuContext,
+	ExcelRegionContext,
+	ExcelRegionRenderer,
+} from 'ooxml-core/xlsx/ui';

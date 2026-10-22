@@ -8,6 +8,7 @@ import type {
 	XlsxCollaborationState,
 	XlsxEditorElement,
 	XlsxThemeColors,
+	ExcelCustomization,
 } from 'xlsx-web-component';
 import {
 	EDITOR_EVENT_NAMES,
@@ -36,6 +37,7 @@ export const SpreadsheetEditor = defineComponent({
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		themeColors: Object as PropType<XlsxThemeColors>,
 		collaboration: Object as PropType<XlsxCollaborationOptions | null>,
+		customization: Object as PropType<ExcelCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES, 'ready'],
 	setup(props, { emit, expose }) {
