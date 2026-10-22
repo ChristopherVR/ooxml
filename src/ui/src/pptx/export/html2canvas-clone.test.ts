@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 
 import { THREE_VIEW_MARKER_ATTR } from '../three-view/element';
 import { THREE_VIEW_SNAPSHOT_ATTR } from '../three-view/export-snapshot';
-import { prepareHtml2CanvasClone } from './html2canvas-clone';
+import { html2canvasCaptureScope, prepareHtml2CanvasClone } from './html2canvas-clone';
 
 const PIXELS = 'data:image/png;base64,chart';
 
@@ -93,5 +93,71 @@ describe('prepareHtml2CanvasClone', () => {
 		expect(clonedEl.querySelector(`img[${THREE_VIEW_SNAPSHOT_ATTR}]`)).toBeNull();
 		expect(clonedEl.querySelector('.fallback-2d')).not.toBeNull();
 		live.remove();
+	});
+});
+
+describe('html2canvasCaptureScope', () => {
+	function page() {
+		document.head.innerHTML =
+			'<style>@font-face { font-family: Deck; src: url(deck.woff2); }</style>';
+		document.body.innerHTML = `
+			<div class="ribbon"><button>Home</button></div>
+			<main class="viewer">
+				<aside class="rail"><img alt="slide 1"></aside>
+				<div class="viewport"><div class="stage"><div class="shape"><span>Title</span></div><span class="host"></span></div></div>
+				<aside class="inspector"><style>.x {}</style><input></aside>
+			</main>
+			<link rel="stylesheet" href="viewer.css">`;
+		const at = <T extends Element>(selector: string) => document.querySelector<T>(selector)!;
+		const host = at('.host');
+		host.attachShadow({ mode: 'open' }).innerHTML = '<svg><text>3D</text></svg>';
+		return { at, host };
+	}
+
+	it('keeps the captured branch and the style sources, and skips every other branch', () => {
+		const { at, host } = page();
+		const skip = html2canvasCaptureScope(at('.stage'));
+		for (const kept of [
+			'html',
+			'head',
+			'head style',
+			'body',
+			'.viewer',
+			'.viewport',
+			'.stage',
+			'.shape',
+			'.shape span',
+			'link',
+			'.inspector style',
+		]) {
+			expect([kept, skip(at(kept))]).toStrictEqual([kept, false]);
+		}
+		expect(skip(host.shadowRoot!.querySelector('text')!)).toBeFalsy();
+		for (const skipped of [
+			'.ribbon',
+			'.ribbon button',
+			'.rail',
+			'.inspector',
+			'.inspector input',
+		]) {
+			expect([skipped, skip(at(skipped))]).toStrictEqual([skipped, true]);
+		}
+	});
+
+	it('follows a captured element inside a shadow root up through its host', () => {
+		const { at, host } = page();
+		const inner = host.shadowRoot!.querySelector('svg')!;
+		const skip = html2canvasCaptureScope(inner);
+		expect(skip(host)).toBeFalsy();
+		expect(skip(at('.stage'))).toBeFalsy();
+		expect(skip(at('.shape'))).toBeTruthy();
+		expect(skip(inner.querySelector('text')!)).toBeFalsy();
+	});
+
+	it("still applies the caller's own predicate", () => {
+		const { at } = page();
+		const skip = html2canvasCaptureScope(at('.stage'), (node) => node.classList.contains('shape'));
+		expect(skip(at('.shape'))).toBeTruthy();
+		expect(skip(at('.stage'))).toBeFalsy();
 	});
 });
