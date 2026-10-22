@@ -82,3 +82,22 @@ it('readOnly, canEdit and a viewer role each restrict and none lifts another', a
 	expect(controller.canEdit).toBe(false);
 	controller.destroy();
 });
+
+it('capabilities.edit is a lock of its own: no other switch lifts it, and it lifts no other', async () => {
+	const controller = new ViewerController(
+		async () => structuredClone(demoDocument),
+		() => {},
+		vi.fn() as never,
+	);
+	controller.setCapabilityReadOnly(true);
+	controller.canEdit = true;
+	controller.readOnly = false;
+	controller.setRoleReadOnly(false);
+	expect(controller.canEdit).toBe(false);
+	controller.setRoleReadOnly(true);
+	controller.setCapabilityReadOnly(false);
+	expect(controller.canEdit).toBe(false);
+	controller.setRoleReadOnly(false);
+	expect(controller.canEdit).toBe(true);
+	controller.destroy();
+});

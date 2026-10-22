@@ -152,3 +152,49 @@ describe('<visio-viewer> customization menus and Quick Access', () => {
 		viewer.destroy();
 	});
 });
+
+describe('<visio-viewer> customization and the other read-only locks', () => {
+	it('a customization or canEdit never lifts a viewer role, and leaving keeps edit: false', () => {
+		const { viewer } = mount();
+		const element = viewer.element;
+		// What sharing does while the role is `viewer` (viewer-share.ts).
+		element.controller.setRoleReadOnly(true);
+		element.customization = { capabilities: { print: false } };
+		element.customization = null;
+		element.canEdit = true;
+		expect(element.canEdit).toBe(false);
+		element.customization = { capabilities: { edit: false } };
+		// Leaving the room.
+		element.controller.setRoleReadOnly(false);
+		expect(element.canEdit).toBe(false);
+		element.readOnly = false;
+		element.canEdit = true;
+		expect(element.canEdit).toBe(false);
+		element.customization = null;
+		expect(element.canEdit).toBe(true);
+		viewer.destroy();
+	});
+});
+
+describe('<visio-viewer> customization after the ribbon is built', () => {
+	it('keeps capability-hidden commands out of Tell me, and brings them back', () => {
+		const { viewer, root } = mount({ capabilities: { copy: false } });
+		const search = root.querySelector<HTMLElement & { commands: { id: string }[] }>('.tell-me')!;
+		const focus = () =>
+			search.dispatchEvent(new FocusEvent('focusin', { bubbles: true, composed: true }));
+		focus();
+		expect(search.commands.map((command) => command.id)).not.toContain('copy');
+		expect(search.commands.map((command) => command.id)).toContain('paste');
+		viewer.update({ customization: null });
+		focus();
+		expect(search.commands.map((command) => command.id)).toContain('copy');
+		viewer.destroy();
+	});
+
+	it('keeps commands hidden when the ribbon is relocalized', () => {
+		const { viewer, root } = mount({ capabilities: { copy: false } });
+		viewer.element.setAttribute('locale', 'fr');
+		expect(root.querySelector<HTMLElement>('[command="copy"]')!.hidden).toBe(true);
+		viewer.destroy();
+	});
+});
