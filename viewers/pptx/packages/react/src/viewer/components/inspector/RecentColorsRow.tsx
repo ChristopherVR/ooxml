@@ -1,4 +1,6 @@
-import React from 'react';
+import type { OfficeColorPickEvent, PptxUiColorGridElement } from 'ooxml-ui/pptx';
+import { recentColorsGridView } from 'ooxml-ui/pptx';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRecentColors } from './RecentColorsContext';
@@ -8,61 +10,60 @@ import { useRecentColors } from './RecentColorsContext';
 // ---------------------------------------------------------------------------
 
 /**
- * The "Recent colours" row shared by every colour picker in the inspector
- * and the ribbon: sourced from {@link useRecentColors} (context), so every
- * caller renders the SAME list rather than re-deriving it. Extracted out of
- * `ColorPickerRow` (which still uses it) so pickers that are not built on
- * `ColorPickerRow`'s full swatch/eyedropper layout - the text colour field,
- * the ribbon's font-colour menu, the shape fill/outline popovers - can
- * render the identical row without copy-pasting its markup.
+ * The "Recent colours" row shared by every colour picker in the inspector: the
+ * shared `pptx-ui-color-grid` showing only Recent Colors
+ * ({@link recentColorsGridView}), sourced from {@link useRecentColors}
+ * (context), so every caller renders the SAME list rather than re-deriving it.
  *
- * Renders nothing (not even a `hidden` wrapper) while the list is empty, so
- * a caller can render it unconditionally. Clicking a swatch both calls
- * `onCommit` (the picker's own apply path) AND pushes the colour back to the
- * front of the shared list itself, so every caller gets the row's full
- * contract for free without also having to remember to push.
+ * Renders nothing while the list is empty, so a caller can render it
+ * unconditionally. Clicking a swatch both calls `onCommit` (the picker's own
+ * apply path) AND pushes the colour back to the front of the shared list
+ * itself, so every caller gets the row's full contract for free without also
+ * having to remember to push.
  */
 export function RecentColorsRow({
-	prefix,
 	disabled,
 	onCommit,
 }: {
-	/** Prefix for each swatch button's React key, unique per picker instance. */
-	prefix: string;
 	disabled?: boolean;
 	/** Applies the picked colour through the picker's own commit path. */
 	onCommit: (color: string) => void;
 }): React.ReactElement | null {
 	const { t } = useTranslation();
 	const { recentColors, pushColor } = useRecentColors();
+	const shown = recentColors.length > 0;
+	const ref = useRef<PptxUiColorGridElement>(null);
+	useLayoutEffect(() => {
+		const grid = ref.current;
+		if (!grid) {
+			return;
+		}
+		const view = recentColorsGridView(recentColors, (key, params) => t(key, params));
+		grid.palette = view.palette;
+		grid.standardColors = view.standardColors;
+		grid.recentColors = view.recentColors;
+		grid.recentHeading = view.recentHeading;
+		grid.recentLabel = view.recentLabel;
+		grid.label = view.label;
+		grid.disabled = Boolean(disabled);
+	}, [recentColors, disabled, t]);
+	// The grid only exists while there is a recent colour, so the listener attaches once shown.
+	useEffect(() => {
+		const grid = ref.current;
+		if (!shown || !grid) {
+			return;
+		}
+		const pick = (event: Event) => {
+			const { color } = (event as OfficeColorPickEvent).detail;
+			onCommit(color);
+			pushColor(color);
+		};
+		grid.addEventListener('office-color-pick', pick);
+		return () => grid.removeEventListener('office-color-pick', pick);
+	}, [shown, onCommit, pushColor]);
 
-	if (recentColors.length === 0) {
+	if (!shown) {
 		return null;
 	}
-
-	return (
-		<div
-			data-testid='pptx-color-recent'
-			aria-label={t('pptx.colorPicker.recentColors')}
-			className='mt-1 flex flex-wrap items-center gap-1'
-		>
-			<span className='text-[9px] text-muted-foreground'>{t('pptx.colorPicker.recentColors')}</span>
-			{recentColors.map((c) => (
-				<button
-					key={`${prefix}-recent-${c}`}
-					type='button'
-					data-pptx-compact
-					className='h-4 w-4 rounded border border-primary'
-					style={{ backgroundColor: c }}
-					title={c}
-					aria-label={`Recent ${c}`}
-					disabled={disabled}
-					onClick={() => {
-						onCommit(c);
-						pushColor(c);
-					}}
-				/>
-			))}
-		</div>
-	);
+	return <pptx-ui-color-grid ref={ref} data-testid='pptx-color-recent' className='mt-1' />;
 }

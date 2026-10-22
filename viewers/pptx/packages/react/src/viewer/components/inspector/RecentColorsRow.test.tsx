@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 /**
- * B6 (wave-4): recent colours. `RecentColorsRow` is the row extracted out of
- * `ColorPickerRow` so pickers that are not built on its swatch/eyedropper
- * layout (text colour, ribbon font-colour menu, shape fill/outline
- * popovers) can render the identical row.
+ * B6 (wave-4): recent colours. `RecentColorsRow` is the row every inspector
+ * colour picker shows under itself, drawn by the shared `pptx-ui-color-grid`
+ * with only its Recent Colors section.
  */
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -13,12 +13,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecentColorsProvider } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 
+// The English dictionary, so the assertions read the names a user sees.
 vi.mock(import('react-i18next'), () => ({
-	useTranslation: () => ({ t: (key: string) => key }),
+	useTranslation: () => ({
+		t: (key: string, params?: Record<string, string>) =>
+			(translationsEn[key] ?? key).replace(
+				/\{\{(\w+)\}\}/gu,
+				(_, name: string) => params?.[name] ?? '',
+			),
+	}),
 }));
 
 let container: HTMLDivElement;
 let root: Root;
+
+const row = () => container.querySelector('[data-testid="pptx-color-recent"]');
+const swatches = () => [
+	...(row()?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button[data-source="recent"]') ?? []),
+];
 
 beforeEach(() => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -32,62 +44,61 @@ afterEach(() => {
 	container.remove();
 });
 
+function mount(
+	recentColors: string[],
+	props: { disabled?: boolean } = {},
+	pushColor = vi.fn(),
+	onCommit = vi.fn(),
+) {
+	act(() => {
+		root.render(
+			<RecentColorsProvider value={{ recentColors, pushColor }}>
+				<RecentColorsRow {...props} onCommit={onCommit} />
+			</RecentColorsProvider>,
+		);
+	});
+	return { onCommit, pushColor };
+}
+
 describe('recentColorsRow (wave-4 B6)', () => {
 	it('renders nothing while the list is empty', () => {
-		act(() => {
-			root.render(
-				<RecentColorsProvider value={{ recentColors: [], pushColor: () => {} }}>
-					<RecentColorsRow prefix='p' onCommit={() => {}} />
-				</RecentColorsProvider>,
-			);
-		});
-		expect(container.querySelector('[data-testid="pptx-color-recent"]')).toBeNull();
+		mount([]);
+		expect(row()).toBeNull();
 	});
 
-	it('renders one swatch per recent colour, most-recent first', () => {
-		act(() => {
-			root.render(
-				<RecentColorsProvider value={{ recentColors: ['#112233', '#445566'], pushColor: () => {} }}>
-					<RecentColorsRow prefix='p' onCommit={() => {}} />
-				</RecentColorsProvider>,
-			);
-		});
-		const row = container.querySelector('[data-testid="pptx-color-recent"]')!;
-		const swatches = row.querySelectorAll('button[data-pptx-compact]');
-		expect(swatches).toHaveLength(2);
-		expect((swatches[0] as HTMLElement).title).toBe('#112233');
-		expect((swatches[0] as HTMLElement).getAttribute('aria-label')).toBe('Recent #112233');
+	it('is the shared grid with only Recent Colors, one named swatch per colour', () => {
+		mount(['#112233', '#445566']);
+		expect(row()?.localName).toBe('pptx-ui-color-grid');
+		expect(row()?.getAttribute('aria-label')).toBe('Recent Colors');
+		expect(
+			[...row()!.shadowRoot!.querySelectorAll('.heading')].map((heading) => heading.textContent),
+		).toStrictEqual(['Recent Colors']);
+		expect(swatches().map((swatch) => swatch.getAttribute('aria-label'))).toStrictEqual([
+			'Recent #112233',
+			'Recent #445566',
+		]);
+		expect(row()!.shadowRoot!.querySelectorAll('button')).toHaveLength(2);
 	});
 
 	it('clicking a swatch commits the colour AND pushes it', () => {
-		const onCommit = vi.fn();
+		const { onCommit, pushColor } = mount(['#112233']);
+		act(() => swatches()[0]!.click());
+		expect(onCommit).toHaveBeenCalledWith('#112233');
+		expect(pushColor).toHaveBeenCalledWith('#112233');
+	});
+
+	it('still commits after the list fills from empty, with the same callbacks', () => {
 		const pushColor = vi.fn();
-		act(() => {
-			root.render(
-				<RecentColorsProvider value={{ recentColors: ['#112233'], pushColor }}>
-					<RecentColorsRow prefix='p' onCommit={onCommit} />
-				</RecentColorsProvider>,
-			);
-		});
-		const swatch = container.querySelector(
-			'[data-testid="pptx-color-recent"] button[data-pptx-compact]',
-		) as HTMLButtonElement;
-		act(() => swatch.click());
+		const onCommit = vi.fn();
+		mount([], {}, pushColor, onCommit);
+		mount(['#112233'], {}, pushColor, onCommit);
+		act(() => swatches()[0]!.click());
 		expect(onCommit).toHaveBeenCalledWith('#112233');
 		expect(pushColor).toHaveBeenCalledWith('#112233');
 	});
 
 	it('disables every swatch when disabled is set', () => {
-		act(() => {
-			root.render(
-				<RecentColorsProvider value={{ recentColors: ['#112233'], pushColor: () => {} }}>
-					<RecentColorsRow prefix='p' disabled onCommit={() => {}} />
-				</RecentColorsProvider>,
-			);
-		});
-		const swatch = container.querySelector(
-			'[data-testid="pptx-color-recent"] button[data-pptx-compact]',
-		) as HTMLButtonElement;
-		expect(swatch.disabled).toBeTruthy();
+		mount(['#112233'], { disabled: true });
+		expect(swatches()[0]!.disabled).toBeTruthy();
 	});
 });

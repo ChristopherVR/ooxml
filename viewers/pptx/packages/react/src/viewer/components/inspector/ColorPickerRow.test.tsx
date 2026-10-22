@@ -41,6 +41,13 @@ const themeSwatch = (title: string) =>
 		.querySelector('pptx-ui-color-grid')
 		?.shadowRoot?.querySelector<HTMLButtonElement>(`button[title="${title}"]`) ?? null;
 
+/** The Recent Colors swatches, inside the shared colour grid's shadow root. */
+const recentSwatches = () => [
+	...(container
+		.querySelector('[data-testid="pptx-color-recent"]')
+		?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button[data-source="recent"]') ?? []),
+];
+
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
@@ -71,7 +78,7 @@ describe('colorPickerRow recent colours (wave-4 B6)', () => {
 		});
 		const row = container.querySelector('[data-testid="pptx-color-recent"]');
 		expect(row).not.toBeNull();
-		expect(row!.querySelectorAll('button[data-pptx-compact]')).toHaveLength(2);
+		expect(recentSwatches()).toHaveLength(2);
 	});
 
 	it('renders no recent-colours row when the list is empty', () => {
@@ -94,9 +101,7 @@ describe('colorPickerRow recent colours (wave-4 B6)', () => {
 			nativeSetter.call(input, '#ff0000');
 			input.dispatchEvent(new Event('change', { bubbles: true }));
 		});
-		const row = container.querySelector('[data-testid="pptx-color-recent"]');
-		const first = row!.querySelectorAll('button[data-pptx-compact]')[0] as HTMLElement;
-		expect(first.title).toBe('#ff0000');
+		expect(recentSwatches()[0]?.dataset.color).toBe('#ff0000');
 	});
 });
 

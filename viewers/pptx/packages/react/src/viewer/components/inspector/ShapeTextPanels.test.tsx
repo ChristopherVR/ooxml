@@ -28,11 +28,20 @@ const OFFICE_THEME = {
 };
 
 vi.mock(import('react-i18next'), () => ({
-	useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
+	useTranslation: () => ({
+		t: (key: string, fallback?: unknown) => (typeof fallback === 'string' ? fallback : key),
+	}),
 }));
 
 let container: HTMLDivElement;
 let root: Root;
+
+/** The text card's Recent Colors swatches, inside the shared colour grid's shadow root. */
+const recentSwatches = () => [
+	...(container
+		.querySelector('[data-pptx-text-card] [data-testid="pptx-color-recent"]')
+		?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button[data-source="recent"]') ?? []),
+];
 
 beforeEach(() => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -114,7 +123,7 @@ describe('shapeTextPanels', () => {
 		});
 		const row = container.querySelector('[data-pptx-text-card] [data-testid="pptx-color-recent"]');
 		expect(row).not.toBeNull();
-		expect(row!.querySelectorAll('button[data-pptx-compact]')).toHaveLength(1);
+		expect(recentSwatches()).toHaveLength(1);
 	});
 
 	it('renders no row while the recent-colours list is empty', () => {
@@ -150,10 +159,7 @@ describe('shapeTextPanels', () => {
 				</RecentColorsProvider>,
 			);
 		});
-		const swatch = container.querySelector(
-			'[data-pptx-text-card] [data-testid="pptx-color-recent"] button[data-pptx-compact]',
-		) as HTMLButtonElement;
-		act(() => swatch.click());
+		act(() => recentSwatches()[0]!.click());
 		expect(onUpdateTextStyle).toHaveBeenCalledWith({ color: '#112233' });
 		expect(pushColor).toHaveBeenCalledWith('#112233');
 	});
@@ -205,10 +211,7 @@ describe('shapeTextPanels', () => {
 				</ThemeColorMapProvider>,
 			);
 		});
-		const swatch = container.querySelector(
-			'[data-pptx-text-card] [data-testid="pptx-color-recent"] button[data-pptx-compact]',
-		) as HTMLButtonElement;
-		act(() => swatch.click());
+		act(() => recentSwatches()[0]!.click());
 		expect(onUpdateTextStyle).toHaveBeenCalledWith({ color: '#112233', colorRef: undefined });
 	});
 
