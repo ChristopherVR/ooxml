@@ -4,7 +4,7 @@ import {
 	saveAutosaveSnapshot,
 	shouldWriteAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveSnapshotMark } from 'ooxml-ui/pptx';
+import type { AutosaveSnapshotMark, DocumentStorage } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------
@@ -45,6 +45,8 @@ export interface UseAutosaveInput {
 	 * `resolveAutosaveActivation`, NOT the raw title-bar toggle.
 	 */
 	enabled?: boolean;
+	/** Host storage; its recovery methods replace IndexedDB when it has them. */
+	storage?: DocumentStorage;
 	/**
 	 * The values a snapshot is built from, read fresh on each tick.
 	 *
@@ -86,6 +88,8 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 	const isDirtyRef = useRef(isDirty);
 	const filePathRef = useRef(filePath);
 	const serializeRef = useRef(serializeSlides);
+	const storageRef = useRef(input.storage);
+	storageRef.current = input.storage;
 	const isSavingRef = useRef(false);
 	const changeSourcesRef = useRef(getChangeSources);
 	const lastSnapshotRef = useRef<AutosaveSnapshotMark | undefined>(undefined);
@@ -137,7 +141,7 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 				return;
 			}
 
-			await saveAutosaveSnapshot(path, data);
+			await saveAutosaveSnapshot(path, data, storageRef.current);
 			// Mark AFTER the write, and from the sources read before it, so an
 			// edit made while serialising is not mistaken for one already
 			// captured: the next tick sees a different reference and writes.

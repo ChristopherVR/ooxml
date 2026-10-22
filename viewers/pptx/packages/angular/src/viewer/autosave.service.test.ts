@@ -242,6 +242,10 @@ describe('a ribbon New Slide on a freshly loaded deck', () => {
 
 		await vi.advanceTimersByTimeAsync(2000);
 		expect(serialize).toHaveBeenCalledOnce();
-		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith(
+			'deck.pptx',
+			new Uint8Array([1, 2, 3]),
+			undefined,
+		);
 	});
 });

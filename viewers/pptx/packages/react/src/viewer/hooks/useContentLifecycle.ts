@@ -1,4 +1,8 @@
-import type { CompatibilityWarningToast, ReadOnlyRecommendation } from 'ooxml-ui/pptx';
+import type {
+	CompatibilityWarningToast,
+	DocumentStorage,
+	ReadOnlyRecommendation,
+} from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxModifyVerifier, PptxSlide } from 'pptx-viewer-core';
 /**
  * useContentLifecycle: Composes content loading, font injection,
@@ -36,6 +40,8 @@ export interface UseContentLifecycleInput {
 	 * Options > Save AutoRecover cadence > 120s default).
 	 */
 	autosaveIntervalMs?: number;
+	/** Host `storage` prop: recovery snapshots go to its recovery methods when it has them. */
+	storage?: DocumentStorage;
 	/**
 	 * File > Fonts > "Embed fonts in the file". Forwarded to `useSerialize`, so
 	 * turning it off actually strips the embedded font data on the next save.
@@ -93,6 +99,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		filePath,
 		autosaveEnabled = true,
 		autosaveIntervalMs,
+		storage,
 		embedFonts = true,
 		slides,
 		state,
@@ -222,6 +229,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 	const { autosaveStatus } = useAutosave({
 		isDirty: state.isDirty,
 		filePath,
+		storage,
 		serializeSlides: serializeForRecovery,
 		enabled: autosaveEnabled,
 		...(autosaveIntervalMs === undefined ? {} : { intervalMs: autosaveIntervalMs }),

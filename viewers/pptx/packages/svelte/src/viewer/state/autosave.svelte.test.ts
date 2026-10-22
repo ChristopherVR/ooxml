@@ -91,7 +91,11 @@ describe('autosaveController', () => {
 
 		await vi.advanceTimersByTimeAsync(1000);
 
-		expect(saveSnapshot).toHaveBeenCalledExactlyOnceWith('deck.pptx', expect.any(Uint8Array));
+		expect(saveSnapshot).toHaveBeenCalledExactlyOnceWith(
+			'deck.pptx',
+			expect.any(Uint8Array),
+			undefined,
+		);
 		expect(h.save).toHaveBeenCalledOnce();
 		expect(h.onSaved).toHaveBeenCalledWith(expect.any(Uint8Array));
 		expect(h.ctl.status).toBe('saved');
@@ -267,7 +271,11 @@ describe('autosaveController', () => {
 		expect(h.ctl.isDirty).toBeTruthy();
 		await vi.advanceTimersByTimeAsync(1000);
 
-		expect(saveSnapshot).toHaveBeenCalledExactlyOnceWith('deck.pptx', expect.any(Uint8Array));
+		expect(saveSnapshot).toHaveBeenCalledExactlyOnceWith(
+			'deck.pptx',
+			expect.any(Uint8Array),
+			undefined,
+		);
 		h.dispose();
 	});
 

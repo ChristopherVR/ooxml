@@ -23,7 +23,7 @@ import {
 	saveAutosaveSnapshot,
 	shouldWriteAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveDisabledReason, AutosaveSnapshotMark } from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason, AutosaveSnapshotMark, DocumentStorage } from 'ooxml-ui/pptx';
 
 /** Lifecycle status of the autosave engine (mirrors React's `AutosaveStatus`). */
 export type AutosaveStatus =
@@ -45,6 +45,8 @@ export interface AutosaveHost {
 	readonly filePath: () => string | undefined;
 	/** Whether the deck has unsaved edits. */
 	readonly isDirty: () => boolean;
+	/** Host `storage` input: recovery snapshots go to its recovery methods when it has them. */
+	readonly storage?: () => DocumentStorage | undefined;
 	/** Serialise the current edited deck to `.pptx` bytes (null skips the write). */
 	readonly serialize: () => Promise<Uint8Array | null>;
 	/**
@@ -160,7 +162,7 @@ export class AutosaveService {
 				this.status.set({ state: 'idle' });
 				return;
 			}
-			await saveAutosaveSnapshot(filePath, data);
+			await saveAutosaveSnapshot(filePath, data, host.storage?.());
 			// Marked AFTER the write, from the sources read before it, so an edit
 			// made while serialising is not mistaken for one already captured.
 			this.lastSnapshot = autosaveSnapshotMark(filePath, sources);

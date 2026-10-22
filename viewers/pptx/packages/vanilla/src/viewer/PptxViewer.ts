@@ -428,6 +428,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTranslator: () => this.t,
 			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
+			getStorage: () => this.options.storage,
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler) => this.loading.setHandler(handler),
 			getUserName: () =>
@@ -1349,6 +1350,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	openVersionHistory(): void {
 		openVersionHistoryPanel(this.doc, this.lifecycle.chrome.root, this.t, {
 			filePath: this.autosaveFilePath(),
+			storage: this.options.storage,
 			// A prior local AutoRecover snapshot of the SAME document, not a new
 			// file being opened, so Protected View does not apply.
 			onRestore: (bytes) => this.loadFile(bytes, { skipProtectedView: true }),
@@ -2035,7 +2037,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			format === 'pptx' &&
 			shouldDiscardAutosaveOnSuccessfulSave(this.optionsController.getOptions())
 		) {
-			void deleteAutosaveSnapshot(this.autosaveFilePath()).catch(() => {
+			void deleteAutosaveSnapshot(this.autosaveFilePath(), this.options.storage).catch(() => {
 				// Saving succeeded; recovery cleanup is best-effort here.
 			});
 		}

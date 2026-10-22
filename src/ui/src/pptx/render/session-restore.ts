@@ -21,6 +21,8 @@
  * thrown error in the host.
  */
 
+import type { DocumentStorage } from 'ooxml-core/embedding';
+
 import { acknowledgeAutosaveRecovery } from './autosave-recovery-acknowledgement';
 import { getAutosaveSnapshot } from './autosave-store';
 import { secureRandomToken } from './secure-random';
@@ -252,15 +254,18 @@ export async function forgetSessionDeck(): Promise<void> {
  * The deck to reopen on load: this tab's remembered bytes, upgraded to a newer
  * autosave snapshot of the same file when the viewer wrote one after they were
  * remembered. Without that upgrade a refresh mid-edit would silently roll the
- * presentation back to the state it was opened in.
+ * presentation back to the state it was opened in. Pass the viewer's `storage`
+ * when the host keeps the recovery copies.
  */
-export async function restoreSessionDeck(): Promise<SessionDeck | null> {
+export async function restoreSessionDeck(
+	storage?: DocumentStorage | null,
+): Promise<SessionDeck | null> {
 	const deck = await loadSessionDeck();
 	if (!deck?.fileName) {
 		return deck;
 	}
 	try {
-		const snapshot = await getAutosaveSnapshot(deck.fileName);
+		const snapshot = await getAutosaveSnapshot(deck.fileName, storage);
 		const bytes = snapshot ? toBytes(snapshot.data) : null;
 		if (snapshot && bytes && bytes.byteLength > 0 && snapshot.timestamp > deck.timestamp) {
 			acknowledgeAutosaveRecovery(snapshot);

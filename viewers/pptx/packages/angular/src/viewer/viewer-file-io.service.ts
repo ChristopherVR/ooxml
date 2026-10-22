@@ -17,8 +17,13 @@
  */
 
 import { inject, Injectable, signal } from '@angular/core';
-import type { DeckSaveIntent } from 'ooxml-ui/pptx';
-import { exportDeckJson, openPptxFile } from 'ooxml-ui/pptx';
+import type { DeckSaveIntent, DocumentStorage } from 'ooxml-ui/pptx';
+import {
+	deliverSavedPresentation,
+	exportDeckJson,
+	openPptxFile,
+	savedPresentationFileName,
+} from 'ooxml-ui/pptx';
 import type { PptxSaveFormat, PptxSection, PptxSlide } from 'pptx-viewer-core';
 
 import { ExportService } from './export.service';
@@ -47,6 +52,10 @@ interface FileIOHost {
 	 * actually completes.
 	 */
 	readonly afterSuccessfulSave: (format: PptxSaveFormat) => void;
+	/** Host `storage` input: when set, Save / Save As go to `storage.save()`, not a download. */
+	readonly storage?: () => DocumentStorage | undefined;
+	/** Host `fileName` input: the stem the saved copy is named after. */
+	readonly fileName?: () => string | undefined;
 }
 
 @Injectable()
@@ -123,7 +132,14 @@ export class ViewerFileIOService {
 			? await this.loader.saveSlides(slides, format, host.sections(), intent)
 			: await this.loader.saveSlides(this.loader.slides(), format, undefined, intent);
 		host.emitContentChange(bytes);
-		this.exportSvc.savePresentation(bytes, `presentation.${format}`, format);
+		const fileName = savedPresentationFileName(host.fileName?.(), format);
+		const storage = host.storage?.();
+		if (storage) {
+			// The host keeps the file; a rejection propagates and skips the recovery cleanup.
+			await deliverSavedPresentation({ storage, bytes, format, fileName });
+		} else {
+			this.exportSvc.savePresentation(bytes, fileName, format);
+		}
 		host.afterSuccessfulSave(format);
 	}
 

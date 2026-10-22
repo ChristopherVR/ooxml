@@ -183,10 +183,11 @@ interface PowerPointViewerEmits {
 `pptx-vue-viewer` debounces slide changes, writes a crash-recovery snapshot to the shared IndexedDB
 store, and hands the serialised bytes back to the host via `@autosave`.
 
-| Prop                 | Type      | Default                | Description                                                                      |
-| -------------------- | --------- | ---------------------- | -------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.        |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting. |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ### Who decides: the `autosave` prop or the AutoSave toggle? {#autosave-policy}
 

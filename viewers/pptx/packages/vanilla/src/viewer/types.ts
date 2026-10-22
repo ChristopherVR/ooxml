@@ -1,6 +1,7 @@
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
+	DocumentStorage,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationInput,
@@ -368,6 +369,14 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * snapshot once per interval instead of deferring one forever.
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Original file path, used as the IndexedDB recovery key (defaults to fileName, or 'presentation.pptx' for an unnamed deck). */
 	filePath?: string;
 	/**

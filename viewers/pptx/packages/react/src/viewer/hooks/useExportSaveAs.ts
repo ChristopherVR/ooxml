@@ -1,6 +1,6 @@
-import type { SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { DocumentStorage, SlideSizeEmu } from 'ooxml-ui/pptx';
 import {
-	downloadBlob,
+	deliverSavedPresentation,
 	exportDeckJson,
 	resolveSlideSizeSelection,
 	savedPresentationFileName,
@@ -43,6 +43,8 @@ export interface UseExportSaveAsInput {
 	/** Separated master/layout (template) elements, merged back at save time. */
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	filePath: string | undefined;
+	/** Host `storage` prop: when set, the saved bytes go to `storage.save()`, not a download. */
+	storage?: DocumentStorage | undefined;
 	/** `useSerialize`'s callback: the one place save options are assembled. */
 	serializeSlides: SerializeSlides;
 	/** Presentation-level state, carried into the deck-JSON export document. */
@@ -66,7 +68,8 @@ export interface UseExportSaveAsInput {
 
 export interface ExportSaveAsResult {
 	handleExportJson: () => void;
-	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<void>;
+	/** Resolves false when nothing was saved (no deck yet, or the save or the host's storage failed). */
+	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<boolean | void>;
 	handleSaveAsPptx: () => void;
 	handleSaveAsPpsx: () => void;
 	handleSaveAsPptm: () => void;
@@ -78,6 +81,7 @@ export function useExportSaveAs(input: UseExportSaveAsInput): ExportSaveAsResult
 		slides,
 		templateElementsBySlideId,
 		filePath,
+		storage,
 		serializeSlides,
 		headerFooter,
 		presentationProperties,
@@ -94,7 +98,7 @@ export function useExportSaveAs(input: UseExportSaveAsInput): ExportSaveAsResult
 		slideSizeEmu,
 	} = input;
 
-	const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<void> => {
+	const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<boolean> => {
 		// One shared decision for "what should the saved copy be called": the
 		// source stem plus the extension of the format actually being written.
 		// A `.ppt` source therefore saves as `.pptx`, as it does in PowerPoint.
@@ -103,18 +107,15 @@ export function useExportSaveAs(input: UseExportSaveAsInput): ExportSaveAsResult
 			const data = await serializeSlides(format);
 			if (!data) {
 				// No handler loaded yet: nothing to write.
-				return;
+				return false;
 			}
-			// Legacy binary `.ppt` is an OLE2 compound file, not a ZIP: its own
-			// MIME type, not the OOXML package one every other format shares.
-			const mimeType =
-				format === 'ppt'
-					? 'application/vnd.ms-powerpoint'
-					: 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-			const blob = new Blob([data as BlobPart], { type: mimeType });
-			downloadBlob(blob, downloadName);
+			// The host's storage when the viewer has one, else a download; the shared
+			// helper also picks the MIME type (`.ppt` is OLE2, not the OOXML package).
+			await deliverSavedPresentation({ storage, bytes: data, format, fileName: downloadName });
+			return true;
 		} catch (err) {
 			console.error(`[PowerPointViewer] Save as .${format} failed:`, err);
+			return false;
 		}
 	};
 

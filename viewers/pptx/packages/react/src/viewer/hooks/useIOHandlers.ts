@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxHandler } from 'pptx-viewer-core';
 /**
  * useIOHandlers: Composes export, print, theme, and property-handler hooks
@@ -29,6 +30,8 @@ export interface UseIOHandlersInput {
 	activeSlideIndex: number;
 	canvasSize: CanvasSize;
 	filePath: string | undefined;
+	/** Host `storage` prop, forwarded to the Save / Save As handlers. */
+	storage?: DocumentStorage | undefined;
 	history: EditorHistoryResult;
 	ops: ElementOperations;
 	zoom: {
@@ -80,6 +83,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		activeSlideIndex,
 		canvasSize,
 		filePath,
+		storage,
 		history,
 		ops,
 		zoom,
@@ -98,6 +102,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		activeSlide: slides[activeSlideIndex],
 		activeSlideIndex,
 		filePath,
+		storage,
 		canvasStageRef: zoom.canvasStageRef,
 		setActiveSlideIndex: state.setActiveSlideIndex,
 		serializeSlides,

@@ -79,11 +79,12 @@ Similarly, a user-picked language always wins over the `locale` prop for the ses
 
 See [Getting Started > Autosave](/svelte/getting-started#autosave) for the full flow.
 
-| Prop                 | Type      | Default                | Description                                                                                                                   |
-| -------------------- | --------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave to the shared IndexedDB store (requires `filePath`). A policy ceiling over the title-bar toggle; see below. |
-| `filePath`           | `string`  | -                      | IndexedDB record key (typically the open file's name/path). Autosave is inert without one.                                    |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                              |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave to the shared IndexedDB store (requires `filePath`). A policy ceiling over the title-bar toggle; see below.                    |
+| `filePath`           | `string`          | -                      | IndexedDB record key (typically the open file's name/path). Autosave is inert without one.                                                       |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ### Who decides: the `autosave` prop or the AutoSave toggle? {#autosave-policy}
 

@@ -1,4 +1,4 @@
-import type { SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { DocumentStorage, SlideSizeEmu } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -29,6 +29,8 @@ export interface UseExportHandlersInput {
 	activeSlide: PptxSlide | undefined;
 	activeSlideIndex: number;
 	filePath: string | undefined;
+	/** Host `storage` prop: Save / Save As go to `storage.save()` instead of a download. */
+	storage?: DocumentStorage | undefined;
 	canvasStageRef: RefObject<HTMLDivElement | null>;
 	setActiveSlideIndex: Dispatch<SetStateAction<number>>;
 	/**
@@ -82,7 +84,8 @@ export interface ExportHandlersResult {
 	handleExportVideo: () => Promise<void>;
 	handleExportGif: () => Promise<void>;
 	handleExportJson: () => void;
-	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<void>;
+	/** Resolves false when nothing was saved (no deck yet, or the save or the host's storage failed). */
+	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<boolean | void>;
 	handleSaveAsPptx: () => void;
 	handleSaveAsPpsx: () => void;
 	handleSaveAsPptm: () => void;

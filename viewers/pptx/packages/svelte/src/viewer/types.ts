@@ -6,6 +6,7 @@ import type {
 	CollaborationRole,
 	CollaborationState,
 	CollaborationTransport,
+	DocumentStorage,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
@@ -319,6 +320,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * @default 120000 (Options > Save, "every 2 minutes")
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Fired with the serialized `.pptx` bytes after each successful autosave. */
 	onautosave?: (bytes: Uint8Array) => void;
 	/**

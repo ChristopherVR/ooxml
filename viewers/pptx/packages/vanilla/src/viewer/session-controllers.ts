@@ -145,6 +145,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			options.fileName,
 		),
 		fileName: options.fileName,
+		getStorage: () => options.storage,
 		// Threaded through only so the snapshot uses the shared save decision;
 		// a recovery snapshot stays plaintext whatever the protection state is.
 		getSaveIntent: () => ({

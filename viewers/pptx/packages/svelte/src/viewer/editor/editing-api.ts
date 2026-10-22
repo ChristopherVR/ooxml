@@ -1,14 +1,8 @@
-import { downloadBlob, savedPresentationFileName } from 'ooxml-ui/pptx';
+import { deliverSavedPresentation, savedPresentationFileName } from 'ooxml-ui/pptx';
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type { PptxSaveFormat } from 'pptx-viewer-core';
 
 import type { EditorState } from './editor-state.svelte';
-
-const PRESENTATION_MIME: Record<PptxSaveFormat, string> = {
-	pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-	ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-	pptm: 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-	ppt: 'application/vnd.ms-powerpoint',
-};
 
 /** The imperative editing API exposed on the `PowerPointViewer` instance. */
 export interface EditingApi {
@@ -29,7 +23,10 @@ export interface EditingApi {
  * one-line bindings (Svelte requires the component's own `export`s for its
  * instance API, but the bodies can live elsewhere).
  */
-export function createEditingApi(editor: EditorState): EditingApi {
+export function createEditingApi(
+	editor: EditorState,
+	getStorage: () => DocumentStorage | undefined = () => undefined,
+): EditingApi {
 	return {
 		undo: () => editor.undo(),
 		redo: () => editor.redo(),
@@ -40,20 +37,25 @@ export function createEditingApi(editor: EditorState): EditingApi {
 		save: (format) => editor.save(format),
 		// Every name below goes through the shared save-name decision, so a host
 		// that passes the deck it opened (`report.ppt`) gets `report.pptx` back
-		// rather than a `.ppt` whose bytes are an OpenXML package.
+		// rather than a `.ppt` whose bytes are an OpenXML package. With a host
+		// `storage` the bytes go to `storage.save()` instead of a download.
 		downloadAs: async (format, fileName) => {
 			const bytes = await editor.save(format);
-			downloadBlob(
-				new Blob([bytes as unknown as BlobPart], { type: PRESENTATION_MIME[format] }),
-				savedPresentationFileName(fileName, format),
-			);
+			await deliverSavedPresentation({
+				storage: getStorage(),
+				bytes,
+				format,
+				fileName: savedPresentationFileName(fileName, format),
+			});
 		},
 		downloadPptx: async (fileName) => {
 			const bytes = await editor.save('pptx');
-			downloadBlob(
-				new Blob([bytes as unknown as BlobPart], { type: PRESENTATION_MIME.pptx }),
-				savedPresentationFileName(fileName),
-			);
+			await deliverSavedPresentation({
+				storage: getStorage(),
+				bytes,
+				format: 'pptx',
+				fileName: savedPresentationFileName(fileName),
+			});
 		},
 	};
 }

@@ -208,6 +208,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 				optionsIntervalSeconds: deps.getOptionsIntervalSeconds?.(),
 			}),
 		getFilePath: options.getFilePath,
+		getStorage: options.getStorage,
 		getSlides: () => editor.committedRenderedSlides,
 		getPreviewHeld: () => editor.deckStyleHeld,
 		getDocumentKey: () => [editor.slides, editor.templateElementsBySlideId],
@@ -233,6 +234,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 	const autosaveRecovery = new AutosaveRecoveryController({
 		getFilePath: options.getFilePath,
 		getFileName: options.getFileName,
+		getStorage: options.getStorage,
 		getAutosaveAllowed: () => options.getAutosave() !== false,
 		getLoading: () => loader.loading,
 		getError: () => loader.error,

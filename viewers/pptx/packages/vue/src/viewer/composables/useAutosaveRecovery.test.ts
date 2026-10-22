@@ -73,6 +73,7 @@ describe('useAutosaveRecovery', () => {
 			'internal-key',
 			expect.any(Number),
 			'Quarterly review.pptx',
+			undefined,
 		);
 		expect(harness.recovery.prompt.value?.messageParams.file).toBe('Quarterly review.pptx');
 		harness.stop();

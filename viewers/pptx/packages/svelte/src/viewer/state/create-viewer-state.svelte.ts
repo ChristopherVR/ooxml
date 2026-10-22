@@ -306,7 +306,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		onnotesupdate: options.onnotesupdate,
 	});
 
-	const rawEditingApi = createEditingApi(editor);
+	const rawEditingApi = createEditingApi(editor, () => options.getStorage?.());
 	// Options > Accessibility > "feedback with sound", and Options > Save >
 	// "keep the last AutoRecover version": once a `.pptx` Save/Save-As download
 	// actually lands, play the completion cue and, unless the user asked to
@@ -316,7 +316,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		editorUi.optionsState.playFeedback();
 		const filePath = options.getFilePath();
 		if (format === 'pptx' && filePath && editorUi.optionsState.shouldDiscardAutosaveOnSave) {
-			void deleteAutosaveSnapshot(filePath).catch(() => {
+			void deleteAutosaveSnapshot(filePath, options.getStorage?.()).catch(() => {
 				// Saving succeeded; recovery cleanup is best-effort here.
 			});
 		}

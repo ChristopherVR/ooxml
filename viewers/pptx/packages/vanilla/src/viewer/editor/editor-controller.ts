@@ -1,7 +1,7 @@
 import {
 	armEditorKeyboard,
 	cycleSelectableElement,
-	downloadBlob,
+	deliverSavedPresentation,
 	isDialogAvailable,
 	mapCustomizedEditorKey,
 	mapInlineTextFormatKey,
@@ -81,6 +81,8 @@ export interface EditorControllerDeps {
 	getScale(): number;
 	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	getHandler(): PptxHandler | null;
+	/** Host `storage` option: Save / Save As go to `storage.save()` instead of a download. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/** Adopt a handler produced by an in-session mutation (Slide Master view CRUD). */
 	setHandler(handler: PptxHandler): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
@@ -157,13 +159,6 @@ export interface EditorController {
 	downloadPptx(fileName?: string): Promise<void>;
 	destroy(): void;
 }
-
-const PRESENTATION_MIME: Record<PptxSaveFormat, string> = {
-	pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-	ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-	pptm: 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-	ppt: 'application/vnd.ms-powerpoint',
-};
 
 export function createEditorController(deps: EditorControllerDeps): EditorController {
 	const { doc, store } = deps;
@@ -840,13 +835,16 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		save: (format) => ops.save(format),
 		// Every name below goes through the shared save-name decision, so a host
 		// that passes the deck it opened (`report.ppt`) gets `report.pptx` back
-		// rather than a `.ppt` whose bytes are an OpenXML package.
+		// rather than a `.ppt` whose bytes are an OpenXML package. With a host
+		// `storage` the bytes go to `storage.save()` instead of a download.
 		async downloadAs(format, fileName) {
 			const bytes = await ops.save(format);
-			downloadBlob(
-				new Blob([bytes as unknown as BlobPart], { type: PRESENTATION_MIME[format] }),
-				savedPresentationFileName(fileName, format),
-			);
+			await deliverSavedPresentation({
+				storage: deps.getStorage?.(),
+				bytes,
+				format,
+				fileName: savedPresentationFileName(fileName, format),
+			});
 		},
 		async downloadPptx(fileName) {
 			await this.downloadAs('pptx', fileName);

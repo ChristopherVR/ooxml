@@ -4,6 +4,7 @@ import type {
 	CollaborationConfig,
 	CollaborationShellState,
 	CollaborationState,
+	DocumentStorage,
 	FieldSubstitutionContext,
 	MobileSheetKey,
 	ResolvedCustomization,
@@ -62,6 +63,8 @@ export interface CreateViewerStateOptions {
 	getAutosave: () => boolean | undefined;
 	autosaveIntervalMs?: number;
 	getFilePath: () => string | undefined;
+	/** Host `storage` prop: Save goes to `storage.save()`; recovery copies to its recovery methods. */
+	getStorage?: () => DocumentStorage | undefined;
 	/** Host `authorName` prop: comment/reply author and the broadcast presenter name. */
 	getAuthorName?: () => string | undefined;
 	getInitialSlide: () => number;

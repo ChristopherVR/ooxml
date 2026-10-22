@@ -23,12 +23,13 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## Content
 
-| Prop                 | Type         | Default                | Description                                                                                                 |
-| -------------------- | ------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `content`            | `Uint8Array` | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                   |
-| `filePath`           | `string`     | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.             |
-| `autosave`           | `boolean`    | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy). |
-| `autosaveIntervalMs` | `number`     | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content`            | `Uint8Array`      | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                                                        |
+| `filePath`           | `string`          | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.                                                  |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy).                                      |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ::: warning `content` type
 The prop is a `Uint8Array`, not an `ArrayBuffer`. See [Getting Started](/react/getting-started) for

@@ -20,7 +20,7 @@ import {
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
 
 /** Live host accessors the recovery probe reads (all reactive). */
 export interface AutosaveRecoveryHost {
@@ -28,6 +28,8 @@ export interface AutosaveRecoveryHost {
 	readonly filePath: () => string | undefined;
 	/** Public document name rendered in the recovery message. */
 	readonly fileName: () => string | undefined;
+	/** Host `storage` input: recovery snapshots go to its recovery methods when it has them. */
+	readonly storage?: () => DocumentStorage | undefined;
 	/** True while the load pipeline is running. */
 	readonly loading: () => boolean;
 	/** Load error, if any. */
@@ -81,15 +83,18 @@ export class AutosaveRecoveryService {
 					return;
 				}
 				this.checked = true;
-				void probeAutosaveRecovery(filePath as string, Date.now(), host.fileName()).then(
-					(offer) => {
-						if (offer && !this.destroyed) {
-							this.record = offer.record;
-							this.prompt.set(offer.prompt);
-						}
-						return offer;
-					},
-				);
+				void probeAutosaveRecovery(
+					filePath as string,
+					Date.now(),
+					host.fileName(),
+					host.storage?.(),
+				).then((offer) => {
+					if (offer && !this.destroyed) {
+						this.record = offer.record;
+						this.prompt.set(offer.prompt);
+					}
+					return offer;
+				});
 			},
 			{ injector: this.injector },
 		);
@@ -124,7 +129,7 @@ export class AutosaveRecoveryService {
 		this.discarding.set(true);
 		void (async () => {
 			try {
-				await discardAutosaveRecovery(found);
+				await discardAutosaveRecovery(found, this.host?.storage?.());
 				this.record = null;
 				this.prompt.set(null);
 			} catch {

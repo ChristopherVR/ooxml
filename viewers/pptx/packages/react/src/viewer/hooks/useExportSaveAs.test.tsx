@@ -134,3 +134,38 @@ describe('save As goes through the one serialiser', () => {
 		expect(downloads).toStrictEqual([]);
 	});
 });
+
+describe('host-owned storage', () => {
+	it('hands Save to storage.save instead of downloading', async () => {
+		const bytes = new Uint8Array([0x50, 0x4b]);
+		const save = vi.fn(async () => undefined);
+		const downloads = recordDownloads();
+		mount({ ...baseInput(() => Promise.resolve(bytes)), storage: { save } });
+
+		let saved: boolean | void = undefined;
+		await act(async () => {
+			saved = await api?.handleSaveAsFormat('pptx');
+		});
+
+		expect(saved).toBe(true);
+		expect(downloads).toStrictEqual([]);
+		expect(save).toHaveBeenCalledExactlyOnceWith(bytes, {
+			fileName: 'deck.pptx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+			reason: 'save',
+		});
+	});
+
+	it('reports a failed host save as not saved', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		mount({
+			...baseInput(() => Promise.resolve(new Uint8Array([1]))),
+			storage: { save: () => Promise.reject(new Error('offline')) },
+		});
+		let saved: boolean | void = undefined;
+		await act(async () => {
+			saved = await api?.handleSaveAsFormat('pptx');
+		});
+		expect(saved).toBe(false);
+	});
+});

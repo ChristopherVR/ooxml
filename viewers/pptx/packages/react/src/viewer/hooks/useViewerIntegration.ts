@@ -1,3 +1,4 @@
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
@@ -63,6 +64,8 @@ export interface UseViewerIntegrationInput {
 	 * verdict (host `autosave` prop as a ceiling, title-bar toggle inside it).
 	 */
 	autosaveEnabled: boolean;
+	/** Host `storage` prop: Save goes to it, and so do recovery snapshots when it keeps them. */
+	storage?: DocumentStorage;
 	/**
 	 * Whether the host permits autosave at all. Only the recovery prompt needs
 	 * this separately from `autosaveEnabled`: a user who merely switched the
@@ -177,6 +180,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		content,
 		filePath,
 		fileName,
+		storage,
 		autosaveEnabled,
 		autosaveAllowed = true,
 		autosaveIntervalMs,
@@ -247,6 +251,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		{
 			content,
 			filePath,
+			storage,
 			autosaveEnabled,
 			autosaveIntervalMs,
 			// The File > Fonts toggle, finally reaching a save call.
@@ -275,6 +280,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		activeSlideIndex,
 		canvasSize,
 		filePath,
+		storage,
 		history,
 		ops: editorOps.ops,
 		zoom,
@@ -316,6 +322,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		error,
 		slideCount: slides.length,
 		autosaveAllowed,
+		storage,
 		onRestore: setContent,
 	});
 

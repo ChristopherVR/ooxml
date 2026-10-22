@@ -1,4 +1,4 @@
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
 import {
 	acceptAutosaveRecovery,
 	acknowledgeAutosaveRecovery,
@@ -30,6 +30,8 @@ export interface AutosaveRecoveryDeps {
 	getFilePath: () => string | undefined;
 	/** Public document name rendered in the recovery message. */
 	getFileName?: () => string | undefined;
+	/** Host `storage` prop: recovery snapshots go to its recovery methods when it has them. */
+	getStorage?: () => DocumentStorage | undefined;
 	/**
 	 * Whether recovery snapshots are permitted at all, which is the HOST prop
 	 * (`autosave !== false`) and not the user's toggle: someone who merely
@@ -86,7 +88,12 @@ export class AutosaveRecoveryController {
 	}
 
 	async #probe(filePath: string, loadCount: number): Promise<void> {
-		const offer = await probeAutosaveRecovery(filePath, Date.now(), this.#deps.getFileName?.());
+		const offer = await probeAutosaveRecovery(
+			filePath,
+			Date.now(),
+			this.#deps.getFileName?.(),
+			this.#deps.getStorage?.(),
+		);
 		// A newer load landed while IndexedDB was answering: its own probe owns
 		// the prompt, so drop this (now stale) answer instead of overwriting it.
 		if (this.#checkedLoadCount !== loadCount) {
@@ -135,7 +142,7 @@ export class AutosaveRecoveryController {
 		this.#actionPending = true;
 		this.discarding = true;
 		try {
-			await discardAutosaveRecovery(record);
+			await discardAutosaveRecovery(record, this.#deps.getStorage?.());
 			this.dismiss();
 		} catch {
 			// Leave the prompt open so a failed discard can be retried.

@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
+	DocumentStorage,
 } from 'ooxml-ui/pptx';
 import {
 	nextAutosaveDelayMs,
@@ -62,6 +63,8 @@ export interface AutosaveControllerDeps {
 	filePath: string;
 	/** Public document name rendered in the recovery message. */
 	fileName?: string;
+	/** Host `storage` option: recovery snapshots go to its recovery methods when it has them. */
+	getStorage?: () => DocumentStorage | undefined;
 	/**
 	 * The resolved cadence in ms, read EVERY time the timer is armed so a
 	 * File > Options > Save change applies without rebuilding the viewer.
@@ -151,7 +154,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 				undefined,
 				recoverySnapshotIntent(deps.getSaveIntent?.()),
 			);
-			await saveAutosaveSnapshot(deps.filePath, bytes);
+			await saveAutosaveSnapshot(deps.filePath, bytes, deps.getStorage?.());
 			// The snapshot landed, so the ceiling restarts from the next edit. The
 			// editor's own `dirty` flag is deliberately left alone: a recovery blob
 			// is not the user's Save.
@@ -201,13 +204,15 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			return;
 		}
 		recoveryChecked = true;
-		void probeAutosaveRecovery(deps.filePath, Date.now(), deps.fileName).then((offer) => {
-			if (offer && !disposed) {
-				deps.onRecovery?.(offer.record);
-				deps.onRecoveryOffer?.(offer);
-			}
-			return offer;
-		});
+		void probeAutosaveRecovery(deps.filePath, Date.now(), deps.fileName, deps.getStorage?.()).then(
+			(offer) => {
+				if (offer && !disposed) {
+					deps.onRecovery?.(offer.record);
+					deps.onRecoveryOffer?.(offer);
+				}
+				return offer;
+			},
+		);
 	};
 
 	/** Apply an activation flip (host prop, user toggle, or edit-ability). */

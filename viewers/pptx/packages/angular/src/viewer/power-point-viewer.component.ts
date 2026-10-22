@@ -62,6 +62,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	CollaborationState,
+	DocumentStorage,
 	ElementUpdate,
 	ElementUpdateOptions,
 	AccountAuthConfig,
@@ -1545,6 +1546,14 @@ export class PowerPointViewerComponent
 	 * "Save AutoRecover information every N minutes" (two minutes by default).
 	 */
 	readonly autosaveIntervalMs = input<number | undefined>(undefined);
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	readonly storage = input<DocumentStorage | undefined>(undefined);
 	/** Optional real-time collaboration config; when set, connects and shows remote cursors. */
 	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	/**
@@ -2956,11 +2965,13 @@ export class PowerPointViewerComponent
 				password: this.dialogs.presentationPassword(),
 				passwordProtected: this.dialogs.isPasswordProtected(),
 			}),
+			storage: () => this.storage(),
+			fileName: () => this.fileName(),
 			afterSuccessfulSave: (format) => {
 				this.viewerOpts.playFeedback();
 				const filePath = this.filePath();
 				if (format === 'pptx' && filePath && this.viewerOpts.shouldDiscardAutosaveOnSave()) {
-					void deleteAutosaveSnapshot(filePath).catch(() => {
+					void deleteAutosaveSnapshot(filePath, this.storage()).catch(() => {
 						// Saving succeeded; recovery cleanup is best-effort here.
 					});
 				}
@@ -3082,6 +3093,7 @@ export class PowerPointViewerComponent
 		this.autosaveRecovery.bind({
 			filePath: () => this.filePath(),
 			fileName: () => this.fileName(),
+			storage: () => this.storage(),
 			loading: () => this.loader.loading(),
 			error: () => this.loader.error(),
 			slideCount: () => this.displaySlidesMut().length,
@@ -3096,6 +3108,7 @@ export class PowerPointViewerComponent
 			enabled: () => this.autosaveActivation().active,
 			disabledReason: () => this.autosaveActivation().reason,
 			filePath: () => this.filePath(),
+			storage: () => this.storage(),
 			isDirty: () => this.editor.dirty(),
 			serialize: () => this.serializeForAutosave(),
 			// Host input first (an explicit policy), else Options > Save > "Save

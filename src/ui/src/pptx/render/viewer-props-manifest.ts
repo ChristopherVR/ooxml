@@ -58,6 +58,9 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'canEdit', names: EDITABLE_NAMES },
 	{ id: 'autosave' },
 	{ id: 'autosaveIntervalMs' },
+	// Host-owned storage (`ooxml-core/embedding`): Save goes to `storage.save`, recovery copies
+	// to its recovery methods instead of IndexedDB.
+	{ id: 'storage' },
 	{
 		id: 'className',
 		names: CLASS_NAMES,

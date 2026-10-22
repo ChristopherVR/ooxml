@@ -1,4 +1,5 @@
 import type { CollaborationState } from 'ooxml-core/collab';
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	CanvasSize,
@@ -100,6 +101,14 @@ export interface PowerPointViewerProps {
 	 * were brought onto one rule.
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
 	/** Optional class name applied to the root element. */
 	class?: string;
 	/**

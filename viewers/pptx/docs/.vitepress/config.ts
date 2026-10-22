@@ -142,6 +142,7 @@ export default defineConfig({
 						{ text: 'Viewport Fitting', link: '/guide/viewport-fit' },
 						{ text: 'Ribbon parity (other tabs)', link: '/guide/ribbon-parity-other-tabs' },
 						{ text: 'Host-owned Collaboration', link: '/guide/host-owned-collaboration' },
+						{ text: 'Host-owned Storage', link: '/guide/host-owned-storage' },
 						{ text: 'Review Inside Your Application', link: '/guide/review-workflow' },
 						{ text: 'Localization (i18n)', link: '/guide/localization' },
 						{ text: 'AI Assistant', link: '/guide/ai-assistant' },

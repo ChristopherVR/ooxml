@@ -4,10 +4,10 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
 	import { deleteAutosaveSnapshot, formatBackstageSize, formatRelativeTime, formatVersionTimestamp, getAutosaveSnapshot } from 'ooxml-ui/pptx';
-import type { AutosaveRecord } from 'ooxml-ui/pptx';
+import type { AutosaveRecord, DocumentStorage } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
-	const { filePath, onclose, onrestore }: { filePath?: string; onclose: () => void; onrestore: (data: Uint8Array) => void | Promise<void> } = $props();
+	const { filePath, storage, onclose, onrestore }: { filePath?: string; storage?: DocumentStorage; onclose: () => void; onrestore: (data: Uint8Array) => void | Promise<void> } = $props();
 	const t = useTranslator();
 	let version = $state<AutosaveRecord>();
 	let loading = $state(true);
@@ -15,7 +15,7 @@ import type { AutosaveRecord } from 'ooxml-ui/pptx';
 
 	$effect(() => {
 		loading = true;
-		void (filePath ? getAutosaveSnapshot(filePath) : Promise.resolve(undefined)).then((record) => {
+		void (filePath ? getAutosaveSnapshot(filePath, storage) : Promise.resolve(undefined)).then((record) => {
 			version = record;
 			loading = false;
 			return record;
@@ -37,7 +37,7 @@ import type { AutosaveRecord } from 'ooxml-ui/pptx';
 		if (!version) {return;}
 		busy = true;
 		try {
-			await deleteAutosaveSnapshot(version.key);
+			await deleteAutosaveSnapshot(version.key, storage);
 			version = undefined;
 		} catch {
 			// Keep the entry visible so deletion can be retried.

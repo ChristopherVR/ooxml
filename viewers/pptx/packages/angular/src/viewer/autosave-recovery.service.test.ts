@@ -110,6 +110,7 @@ describe('autosaveRecoveryService', () => {
 			'deck.pptx',
 			expect.any(Number),
 			'Quarterly review.pptx',
+			undefined,
 		);
 	});
 
@@ -129,7 +130,10 @@ describe('autosaveRecoveryService', () => {
 		const { service, restore } = bind();
 		await Promise.resolve();
 		service.discard();
-		expect(discardMock).toHaveBeenCalledWith(expect.objectContaining({ key: 'deck.pptx' }));
+		expect(discardMock).toHaveBeenCalledWith(
+			expect.objectContaining({ key: 'deck.pptx' }),
+			undefined,
+		);
 		expect(restore).not.toHaveBeenCalled();
 		await vi.waitFor(() => expect(service.prompt()).toBeNull());
 	});

@@ -120,6 +120,7 @@ describe('useRecoveryDetection', () => {
 			'deck.pptx',
 			expect.any(Number),
 			'Quarterly review.pptx',
+			undefined,
 		);
 	});
 
@@ -151,6 +152,7 @@ describe('useRecoveryDetection', () => {
 		});
 		expect(discardMock).toHaveBeenCalledWith(
 			expect.objectContaining({ key: 'deck.pptx', timestamp: PROMPT.timestamp }),
+			undefined,
 		);
 		expect(onRestore).not.toHaveBeenCalled();
 		expect(current().prompt).toBeNull();

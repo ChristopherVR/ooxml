@@ -832,6 +832,7 @@ const exporter = useExportWiring({
 	// once a Save-As download actually completes.
 	getOptions: () => viewerOptions.value,
 	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
+	storage: () => props.storage,
 });
 const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, downloadAs, onExportPdf } =
 	exporter;
@@ -1050,6 +1051,7 @@ const {
 	// used whenever the host did not state a cadence of its own.
 	optionsIntervalSeconds: () => resolveAutosaveIntervalSeconds(viewerOptions.value),
 	snapshotName: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
+	storage: () => props.storage,
 	getRecoverySnapshot,
 	emitAutosave: (bytes) => emit('autosave', bytes),
 	captureVersion: (label, at) => versionHistoryWiring.versionHistory.capture(label, at),
@@ -1061,6 +1063,7 @@ const {
 const autosaveRecovery = useAutosaveRecovery({
 	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
 	fileName: () => props.fileName,
+	storage: () => props.storage,
 	loading,
 	error,
 	slideCount: () => slides.value.length,

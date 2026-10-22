@@ -184,6 +184,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			canEdit: hostCanEdit = false,
 			autosave: hostAutosave,
 			autosaveIntervalMs: hostAutosaveIntervalMs,
+			storage,
 			onContentChange,
 			onDirtyChange,
 			onActiveSlideChange,
@@ -955,6 +956,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			content,
 			filePath,
 			fileName,
+			storage,
 			autosaveEnabled: autosaveActivation.active,
 			autosaveAllowed: hostAutosave !== false,
 			// Host prop first (an explicit policy), else File > Options > Save >
@@ -1102,14 +1104,18 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			const afterSuccessfulSave = (format: PptxSaveFormat): void => {
 				playFeedbackSound(viewerOptions);
 				if (format === 'pptx' && filePath && shouldDiscardAutosaveOnSuccessfulSave(viewerOptions)) {
-					void deleteAutosaveSnapshot(filePath).catch(() => {
+					void deleteAutosaveSnapshot(filePath, storage).catch(() => {
 						// Saving succeeded; recovery cleanup is best-effort here.
 					});
 				}
 			};
-			const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<void> => {
-				await rawExportHandlers.handleSaveAsFormat(format);
+			const handleSaveAsFormat = async (format: PptxSaveFormat): Promise<boolean> => {
+				// A failed save (or host storage rejection) must not discard the recovery copy.
+				if ((await rawExportHandlers.handleSaveAsFormat(format)) === false) {
+					return false;
+				}
 				afterSuccessfulSave(format);
+				return true;
 			};
 			return {
 				...rawExportHandlers,
@@ -1118,7 +1124,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 				handleSaveAsPpsx: () => void handleSaveAsFormat('ppsx'),
 				handleSaveAsPptm: () => void handleSaveAsFormat('pptm'),
 			};
-		}, [rawExportHandlers, viewerOptions, filePath]);
+		}, [rawExportHandlers, viewerOptions, filePath, storage]);
 
 		// Route keyboard/end-of-show exits (Escape, the timed advance past the
 		// last slide) through the same keep/discard-ink-annotations dialog as the

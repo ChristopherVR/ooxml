@@ -37,10 +37,11 @@ The viewer's built-in autosave timer periodically serializes the document to Ind
 
 ## Autosave {#autosave-policy}
 
-| Input                | Type                   | Default                | Description                                                                  |
-| -------------------- | ---------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `autosave`           | `boolean \| undefined` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.    |
-| `autosaveIntervalMs` | `number \| undefined`  | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting. |
+| Input                | Type                           | Default                | Description                                                                                                                                      |
+| -------------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean \| undefined`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number \| undefined`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage \| undefined` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 The rule is the same in **all five bindings** and lives in one shared decision function,
 `resolveAutosaveActivation`:

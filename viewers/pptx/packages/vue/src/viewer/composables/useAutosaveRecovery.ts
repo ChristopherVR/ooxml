@@ -13,7 +13,7 @@ import {
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 
@@ -22,6 +22,8 @@ export interface UseAutosaveRecoveryOptions {
 	filePath: () => string | undefined;
 	/** Public document name rendered in the recovery message. */
 	fileName: () => string | undefined;
+	/** Host `storage` prop: the snapshot is read from its recovery methods when it has them. */
+	storage?: () => DocumentStorage | undefined;
 	/** True while the load pipeline is running. */
 	loading: Ref<boolean>;
 	/** Load error, if any. */
@@ -72,15 +74,18 @@ export function useAutosaveRecovery(
 				return;
 			}
 			checked = true;
-			void probeAutosaveRecovery(filePath as string, Date.now(), options.fileName()).then(
-				(offer) => {
-					if (offer) {
-						record = offer.record;
-						prompt.value = offer.prompt;
-					}
-					return offer;
-				},
-			);
+			void probeAutosaveRecovery(
+				filePath as string,
+				Date.now(),
+				options.fileName(),
+				options.storage?.(),
+			).then((offer) => {
+				if (offer) {
+					record = offer.record;
+					prompt.value = offer.prompt;
+				}
+				return offer;
+			});
 		},
 		{ immediate: true },
 	);
@@ -111,7 +116,7 @@ export function useAutosaveRecovery(
 		actionPending = true;
 		discarding.value = true;
 		try {
-			await discardAutosaveRecovery(found);
+			await discardAutosaveRecovery(found, options.storage?.());
 			record = null;
 			prompt.value = null;
 		} catch {
