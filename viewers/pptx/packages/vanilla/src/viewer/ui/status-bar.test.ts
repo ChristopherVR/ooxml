@@ -92,16 +92,18 @@ describe('createStatusBar', () => {
 		expect(button('pptx.statusBar.slideShow').getAttribute('aria-pressed')).toBe('true');
 	});
 
-	it('shows pushed autosave labels, then falls back to the dirty/saved text', () => {
+	it('shows the autosave state, then falls back to the dirty/saved text', () => {
 		const { bar, root } = open();
 		const save = root.querySelector('[data-item="save"]')!;
 		expect(save.textContent).toBe(t('pptx.statusBar.allSaved'));
 		bar.setDirty(true);
 		expect(save.textContent).toBe(t('pptx.statusBar.unsavedChanges'));
-		bar.setSaveStatus('Saving...', 'saving');
-		expect(save.textContent).toBe('Saving...');
+		bar.setAutosave({ state: 'saving' });
+		expect(save.textContent).toBe(t('pptx.autosave.saving'));
 		expect(save.classList.contains('saving')).toBeTruthy();
-		bar.setSaveStatus('', 'idle');
+		bar.setAutosave({ state: 'saved', timestamp: Date.now() - 3 * 60_000 });
+		expect(save.textContent).toBe('Saved 3 min ago');
+		bar.setAutosave({ state: 'idle' });
 		expect(save.textContent).toBe(t('pptx.statusBar.unsavedChanges'));
 	});
 

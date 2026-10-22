@@ -1,5 +1,5 @@
-import { resolveStatusBarSave, statusBarViewMode } from 'ooxml-ui/pptx';
-import type { PptxUiStatusBarElement, StatusBarRequestEvent } from 'ooxml-ui/pptx';
+import { dispatchStatusBarIntent, statusBarState, statusBarViewMode } from 'ooxml-ui/pptx';
+import type { PptxUiStatusBarElement } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -45,56 +45,43 @@ export interface StatusBarProps {
 export function StatusBar(p: StatusBarProps): React.ReactElement {
 	const { t } = useTranslation();
 	const ref = useRef<PptxUiStatusBarElement>(null);
-	const save = resolveStatusBarSave(t, p.autosaveStatus, p.isDirty);
 	useEffect(() => {
 		const host = ref.current;
 		if (!host) {
 			return;
 		}
-		host.state = {
+		host.state = statusBarState({
 			slideCount: p.slideCount,
 			activeSlideIndex: p.activeSlideIndex,
-			saveText: save.text,
-			saveKind: save.kind,
-			zoomPercent: p.scale !== undefined && !p.hideZoomControls ? (p.scale ?? 1) * 100 : undefined,
-			showNotes: Boolean(p.onToggleNotes) && !p.hideNotesToggle,
-			notesExpanded: p.isNotesExpanded === true,
-			showViewModes: Boolean(p.onSetMode),
-			showSorter: Boolean(p.onToggleSlideSorter),
-			showSlideShow: !p.hideFullscreenToggle,
+			dirty: p.isDirty,
+			autosave: p.autosaveStatus,
+			zoomPercent: p.scale !== undefined && !p.hideZoomControls ? p.scale * 100 : undefined,
+			notesExpanded: p.isNotesExpanded,
 			viewMode: statusBarViewMode(p.mode),
+			handles: {
+				notes: Boolean(p.onToggleNotes) && !p.hideNotesToggle,
+				viewModes: Boolean(p.onSetMode),
+				sorter: Boolean(p.onToggleSlideSorter),
+				slideShow: !p.hideFullscreenToggle,
+			},
 			translate: t,
-		};
-	}, [p, save.text, save.kind, t]);
+		});
+	}, [p, t]);
 	useEffect(() => {
 		const host = ref.current;
 		if (!host) {
 			return;
 		}
-		const request = (event: Event) => {
-			switch ((event as StatusBarRequestEvent).detail.id) {
-				case 'notes':
-					p.onToggleNotes?.();
-					break;
-				case 'normal':
-					p.onSetMode?.('edit');
-					break;
-				case 'sorter':
-					p.onToggleSlideSorter?.();
-					break;
-				case 'slideShow':
-					p.onSetMode?.('present');
-					break;
-				case 'zoomOut':
-					p.onZoomOut?.();
-					break;
-				case 'zoomFit':
-					p.onZoomToFit?.();
-					break;
-				case 'zoomIn':
-					p.onZoomIn?.();
-			}
-		};
+		const request = (event: Event) =>
+			dispatchStatusBarIntent(event, {
+				notes: p.onToggleNotes,
+				normal: () => p.onSetMode?.('edit'),
+				sorter: p.onToggleSlideSorter,
+				slideShow: () => p.onSetMode?.('present'),
+				zoomOut: p.onZoomOut,
+				zoomFit: p.onZoomToFit,
+				zoomIn: p.onZoomIn,
+			});
 		host.addEventListener('status-request', request);
 		return () => host.removeEventListener('status-request', request);
 	}, [p]);
