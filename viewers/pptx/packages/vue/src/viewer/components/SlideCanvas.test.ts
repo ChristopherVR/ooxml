@@ -123,6 +123,64 @@ describe('slideCanvas viewport fit policy', () => {
 		wrapper.unmount();
 	});
 
+	it.each([
+		[801.5, 700],
+		[1200, 451.5],
+	])('fits a %spx x %spx viewport without exceeding it', async (width, height) => {
+		// What a browser reports for a box laid out at a fractional size: whole-pixel client and
+		// offset sizes, and the unrounded rect.
+		vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(Math.round(width));
+		vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(Math.round(height));
+		vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(Math.round(width));
+		vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(Math.round(height));
+		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+			new DOMRect(0, 0, width, height),
+		);
+		const wrapper = mount(SlideCanvas, {
+			props: {
+				slide: makeSlide({}),
+				canvasSize,
+				mediaDataUrls: new Map<string, string>(),
+				fitPadding: 0,
+				maxFitScale: null,
+			},
+		});
+		const fit = wrapper.emitted('update:fitScale')!.at(-1)![0] as number;
+		expect(canvasSize.width * fit).toBeLessThanOrEqual(width + 1e-9);
+		expect(canvasSize.height * fit).toBeLessThanOrEqual(height + 1e-9);
+		expect(fit).toBeCloseTo(Math.min(width / canvasSize.width, height / canvasSize.height), 9);
+		wrapper.unmount();
+	});
+
+	it('refits on a padding-only change, which only the border box shows', async () => {
+		const observers: { box: string | undefined; callback: () => void }[] = [];
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				private readonly callback: () => void;
+				constructor(callback: () => void) {
+					this.callback = callback;
+				}
+				observe(_node: Element, options?: ResizeObserverOptions) {
+					observers.push({ box: options?.box, callback: this.callback });
+				}
+				disconnect() {}
+			},
+		);
+		// A content-box viewport losing its padding: the client size drops, the content box
+		// a default ResizeObserver watches stays put.
+		const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1008);
+		const height = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(588);
+		const wrapper = mountCanvas(makeSlide({}));
+		await wrapper.setProps({ fitPadding: 0, maxFitScale: null });
+		expect(wrapper.emitted('update:fitScale')!.at(-1)![0]).toBe(1.05);
+		width.mockReturnValue(960);
+		height.mockReturnValue(540);
+		observers.find((observer) => observer.box === 'border-box')!.callback();
+		expect(wrapper.emitted('update:fitScale')!.at(-1)![0]).toBe(1);
+		wrapper.unmount();
+	});
+
 	it('remeasures fit on resize without altering authored canvas dimensions', async () => {
 		let resize = () => {};
 		vi.stubGlobal(

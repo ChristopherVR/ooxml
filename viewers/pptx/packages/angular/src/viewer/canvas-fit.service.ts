@@ -16,8 +16,13 @@
  */
 
 import { Injectable, signal } from '@angular/core';
-import { calculateViewportFit, editorViewportFitFor } from 'ooxml-ui/pptx';
-import type { CanvasSize, ViewportFitOptions } from 'ooxml-ui/pptx';
+import {
+	calculateViewportFit,
+	editorViewportFitFor,
+	measureViewportClientSize,
+	observeViewportClientSize,
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, ViewportClientSize, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 /** Live host accessors the fit computation needs. */
 interface CanvasFitHost {
@@ -44,11 +49,20 @@ export class CanvasFitService {
 	}
 
 	/**
+	 * Recompute now and on every client-size change of `viewport`, padding-only ones included.
+	 * Returns the disposer.
+	 */
+	observe(viewport: HTMLElement): () => void {
+		return observeViewportClientSize(viewport, (client) => this.recompute(client));
+	}
+
+	/**
 	 * Recompute {@link fitScale} from the current viewport size. Call after the
 	 * view renders and whenever the viewport or slide size may have changed
-	 * (ResizeObserver, `canvasSize` change).
+	 * (ResizeObserver, `canvasSize` change). `measured` is the viewport's client
+	 * size when the caller has just measured it.
 	 */
-	recompute(): void {
+	recompute(measured?: ViewportClientSize): void {
 		if (!this.host) {
 			return;
 		}
@@ -64,15 +78,18 @@ export class CanvasFitService {
 			this.fitScale.set(1);
 			return;
 		}
+		// Fractional, not clientWidth: a whole-pixel size rounds up by up to half a pixel and the
+		// fitted slide would overflow the viewport by that much.
+		const client = measured ?? measureViewportClientSize(el);
 		const fit = calculateViewportFit(
 			{
-				viewportWidth: el.clientWidth,
-				viewportHeight: el.clientHeight,
+				viewportWidth: client.width,
+				viewportHeight: client.height,
 				canvasWidth: size.width,
 				canvasHeight: size.height,
 				...this.host.fitOptions?.(),
 			},
-			editorViewportFitFor(el.clientWidth),
+			editorViewportFitFor(client.width),
 		);
 		this.fitScale.set(fit.scale);
 	}

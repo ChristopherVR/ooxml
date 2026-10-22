@@ -177,7 +177,7 @@ function openViewer(
 		shareDefaults: { userName },
 		// `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 		customization: currentDemoCustomization() as ViewerCustomization | undefined,
-		// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`
+		// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`, `?fitPadding=<px>`
 		// (demos/shared/demo-root-options.ts), for e2e.
 		...currentDemoRootOptions(),
 		onError: (message, error) => {

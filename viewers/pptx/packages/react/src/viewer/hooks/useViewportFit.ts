@@ -1,6 +1,7 @@
 import {
 	calculateViewportFit,
 	editorViewportFitFor,
+	observeViewportClientSize,
 	resolveViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { ViewportFitOptions } from 'ooxml-ui/pptx';
@@ -41,18 +42,18 @@ export function useViewportFit(
 		if (viewportNode === null) {
 			return;
 		}
-		let observer: ResizeObserver | null = null;
+		let stopObserving: (() => void) | null = null;
 		let raf = 0;
-		const measure = (element: HTMLElement) => {
+		const measure = (client: { width: number; height: number }) => {
 			const { availableWidth: width, availableHeight: height } = calculateViewportFit({
-				viewportWidth: element.clientWidth,
-				viewportHeight: element.clientHeight,
+				viewportWidth: client.width,
+				viewportHeight: client.height,
 				canvasWidth: canvasSize.width,
 				canvasHeight: canvasSize.height,
 				// The host's padding when it gave one, else the width-aware editor default.
 				...resolveViewportFitOptions(
 					{ fitPadding: hostPadding },
-					editorViewportFitFor(element.clientWidth),
+					editorViewportFitFor(client.width),
 				),
 			});
 			// A hidden or not-yet-sized viewport must not reset a valid measurement.
@@ -67,14 +68,14 @@ export function useViewportFit(
 				raf = requestAnimationFrame(attach);
 				return;
 			}
-			observer = new ResizeObserver(() => measure(element));
-			observer.observe(element);
-			measure(element);
+			// The fractional client size, not the whole-pixel clientWidth (which rounds up by up
+			// to half a pixel), reported now and on every change, padding-only ones included.
+			stopObserving = observeViewportClientSize(element, measure);
 		};
 		attach();
 		return () => {
 			cancelAnimationFrame(raf);
-			observer?.disconnect();
+			stopObserving?.();
 		};
 	}, [viewportRef, viewportNode, canvasSize.width, canvasSize.height, hostPadding]);
 
