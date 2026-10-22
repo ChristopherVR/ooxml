@@ -202,6 +202,9 @@ the `events` input.
   `{ fileName, mimeType: 'application/vnd.ms-visio.drawing', reason: 'save' }`, the name being the
   drawing's own as a `.vsdx`. Once it resolves the drawing is marked saved; a `{ fileName }` it
   resolves with becomes the drawing's name.
+  A rejection is reported as `document-error` and the drawing stays dirty with its AutoRecover
+  copy. One save runs at a time (a Save while one is pending is ignored), and an edit made while
+  the host save runs keeps the drawing dirty and its AutoRecover copy.
 - Open calls `storage.open()` when the storage has one, instead of the file picker.
 - AutoRecover keeps its copies through `readRecovery`, `writeRecovery` and `clearRecovery`
   (keyed by the file name) instead of the viewer's IndexedDB database, when the storage provides

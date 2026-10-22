@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseVsdx } from 'ooxml-core/visio';
+import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import type {
 	DocumentRecoveryEntry,
@@ -144,6 +144,97 @@ describe('<visio-viewer> file-command and host-owned storage', () => {
 		});
 		await viewer.load(new File([new Uint8Array(bytes)], 'Plan.vsdx'));
 		await vi.waitFor(() => expect(readRecovery).toHaveBeenCalledWith('Plan.vsdx'));
+		viewer.destroy();
+	});
+});
+
+describe('<visio-viewer> host saves that fail or race edits', () => {
+	const rectangle = (shapeId: string) => ({
+		type: 'create-rectangle' as const,
+		pageId: '1',
+		shapeId,
+		x: 2,
+		y: 2,
+		width: 1,
+		height: 1,
+	});
+	async function editable(storage: DocumentStorage) {
+		const { viewer, root } = await setup({ storage });
+		type Edit = (bytes: Uint8Array, commands: Parameters<typeof editVsdx>[1]) => Promise<unknown>;
+		vi.spyOn(viewer.controller as unknown as { editor: Edit }, 'editor').mockImplementation(
+			async (bytes, commands) => {
+				const result = await editVsdx(bytes, commands);
+				return { ...result, document: await parseVsdx(result.bytes) };
+			},
+		);
+		await viewer.load(new File([new Uint8Array(await createVsdxFixture())], 'Plan.vsdx'));
+		await viewer.applyEdits([rectangle('20')]);
+		expect(viewer.controller.state.edit.dirty).toBe(true);
+		viewer.element.openBackstage('save-as');
+		return { viewer, root };
+	}
+	const deferred = () => {
+		let settle!: { resolve: () => void; reject: (error: Error) => void };
+		const promise = new Promise<void>((resolve, reject) => (settle = { resolve, reject }));
+		return { promise, ...settle };
+	};
+
+	it('keeps the drawing dirty and its recovery copy when the host save fails', async () => {
+		const clearRecovery = vi.fn(async () => undefined);
+		const errors: unknown[] = [];
+		const { viewer, root } = await editable({
+			save: () => Promise.reject(new Error('offline')),
+			readRecovery: async () => undefined,
+			writeRecovery: async () => undefined,
+			clearRecovery,
+		});
+		viewer.element.addEventListener('document-error', (event) =>
+			errors.push((event as CustomEvent).detail),
+		);
+		clickSave(root);
+		await vi.waitFor(() => expect(errors).toHaveLength(1));
+		expect((errors[0] as Error).message).toBe('offline');
+		expect(clearRecovery).not.toHaveBeenCalled();
+		expect(viewer.controller.state.edit.dirty).toBe(true);
+		viewer.destroy();
+	});
+
+	it('marks the drawing saved and clears recovery only after the host save succeeds', async () => {
+		const pending = deferred();
+		const clearRecovery = vi.fn(async () => undefined);
+		const save = vi.fn(() => pending.promise);
+		const { viewer, root } = await editable({
+			save,
+			readRecovery: async () => undefined,
+			writeRecovery: async () => undefined,
+			clearRecovery,
+		});
+		clickSave(root);
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+		expect(clearRecovery).not.toHaveBeenCalled();
+		// A second Save while the first is pending is ignored.
+		clickSave(root);
+		expect(save).toHaveBeenCalledTimes(1);
+		pending.resolve();
+		await vi.waitFor(() => expect(viewer.controller.state.edit.dirty).toBe(false));
+		expect(clearRecovery).toHaveBeenCalledWith('Plan.vsdx');
+		viewer.destroy();
+	});
+
+	it('stays dirty when the drawing is edited while the host save runs', async () => {
+		const pending = deferred();
+		const save = vi.fn(() => pending.promise);
+		const { viewer, root } = await editable({ save });
+		clickSave(root);
+		await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+		await viewer.applyEdits([rectangle('21')]);
+		pending.resolve();
+		await vi.waitFor(() =>
+			expect(viewer.element.shadowRoot!.querySelector('[data-status]')!.textContent).toBe(
+				'Saved the drawing.',
+			),
+		);
+		expect(viewer.controller.state.edit.dirty).toBe(true);
 		viewer.destroy();
 	});
 });

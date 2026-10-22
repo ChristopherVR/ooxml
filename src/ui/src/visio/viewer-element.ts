@@ -328,12 +328,9 @@ export class VisioViewerElement extends BaseElement {
 			fileName: () => this.#fileName,
 			load: (source) => this.load(source),
 			createBlankDrawing: () => this.createBlankDrawing(),
-			exportVsdx: () => {
-				const saved = this.controller.exportVsdx();
-				// File > Save made a copy as a file: the AutoRecover copy has done its job.
-				this.#recover.saved();
-				return saved;
-			},
+			exportVsdx: () => this.controller.exportVsdx(),
+			// A downloaded copy exists as a file: the AutoRecover copy has done its job.
+			downloaded: () => this.#recover.saved(),
 			exportSvg: () => this.exportSvg(),
 			exportPicture: async (format) => {
 				const { document: model, pageIndex } = this.controller.state;
@@ -361,13 +358,22 @@ export class VisioViewerElement extends BaseElement {
 				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
 			fileCommand: (command) => announceFileCommand(this, command),
 			storage: () => this.#storage,
-			savedToStorage: (name) => {
+			revision: () => this.controller.state.document,
+			savedToStorage: (name, revision) => {
 				this.#fileName = name;
-				// The host stored it: the drawing is saved, not just copied.
-				if (!this.controller.state.edit.busy && !this.controller.state.loading)
+				const { state } = this.controller;
+				// The host stored it: the drawing is saved, unless it was edited while the save ran.
+				// Then it stays dirty and keeps its AutoRecover copy, which may hold the newer edits.
+				if (state.document === revision && !state.edit.busy && !state.loading) {
 					this.controller.markClean();
+					this.#recover.saved();
+				}
 				this.#render(this.controller.state);
 			},
+			saveFailed: (error) =>
+				this.dispatchEvent(
+					new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),
+				),
 		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));

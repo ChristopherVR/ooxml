@@ -26,8 +26,14 @@ export interface BackstageHost {
 	fileCommand?(command: VisioFileCommand): boolean;
 	/** Host-owned storage for Save and Open (the element's `storage`), when set. */
 	storage?(): DocumentStorage | undefined;
-	/** The drawing was saved to host storage under `fileName`. */
-	savedToStorage?(fileName: string): void;
+	/** What the drawing is now; compared after an awaited save to see whether it changed. */
+	revision?(): unknown;
+	/** The drawing (as it was at `revision`) was saved to host storage under `fileName`. */
+	savedToStorage?(fileName: string, revision: unknown): void;
+	/** A host save failed (reported as `document-error`). */
+	saveFailed?(error: Error): void;
+	/** A copy was downloaded: the AutoRecover copy has done its job. */
+	downloaded?(): void;
 }
 
 /**
@@ -49,6 +55,7 @@ export class ViewerBackstage {
 	#state: ViewerState | undefined;
 	#items = '';
 	#urls = new Set<string>();
+	#saving = false;
 	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
 	constructor(private readonly host: BackstageHost) {
 		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
@@ -192,7 +199,8 @@ export class ViewerBackstage {
 		this.#download();
 	}
 	#download(): void {
-		if (!this.#state?.edit.sourceAvailable) return;
+		// One save at a time: a Save while a host save is pending is ignored, not queued.
+		if (!this.#state?.edit.sourceAvailable || this.#saving) return;
 		if (!this.#announce('save')) return;
 		const storage = this.host.storage?.();
 		if (storage) return void this.#saveToStorage(storage);
@@ -202,21 +210,32 @@ export class ViewerBackstage {
 				new Blob([new Uint8Array(result.bytes)], { type: 'application/vnd.ms-visio.drawing' }),
 				`${this.#base()}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`,
 			);
+			this.host.downloaded?.();
 			this.hide();
 			this.host.announce('Downloaded a copy of the drawing.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
 	}
+	/** True while a host save is pending. */
+	get saving(): boolean {
+		return this.#saving;
+	}
 	async #saveToStorage(storage: DocumentStorage): Promise<void> {
+		this.#saving = true;
 		try {
+			const revision = this.host.revision?.();
 			const { bytes } = this.host.exportVsdx();
 			this.hide();
 			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName());
-			this.host.savedToStorage?.(name);
+			this.host.savedToStorage?.(name, revision);
 			this.host.announce('Saved the drawing.');
-		} catch (error) {
-			this.host.announce(error instanceof Error ? error.message : String(error));
+		} catch (cause) {
+			const error = cause instanceof Error ? cause : new Error(String(cause));
+			this.host.saveFailed?.(error);
+			this.host.announce(error.message);
+		} finally {
+			this.#saving = false;
 		}
 	}
 	#exportSvg(): void {
