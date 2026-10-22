@@ -1,13 +1,16 @@
 // Packs the built UI package AND the core package, installs both tarballs into a clean project
 // and imports every entry point the way a consumer would: once under plain Node (SSR: must import
 // and register as a no-op) and once inside a jsdom window (elements actually register).
-// Run after `bun run build` in src/core and in src/ui.
+// Then bundles every browser entry of both packages for the browser and fails if one reaches a
+// Node-only module. Run after `bun run build` in src/core and in src/ui.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
 
 const uiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const coreRoot = path.resolve(uiRoot, '..', 'core');
@@ -135,6 +138,14 @@ console.log('dom registration ok: ' + ui.OFFICE_UI_TAGS.length + ' tags');
 	);
 	console.log(run('node', ['ssr.mjs'], work).trim());
 	console.log(run('node', ['dom.mjs'], work).trim());
+
+	// A web host bundles both packages for the browser, with no Node fallbacks.
+	const coreName = JSON.parse(await readFile(path.join(coreRoot, 'package.json'), 'utf8')).name;
+	const browserEntries = await assertNoNodeOnlyModules({
+		root: work,
+		packages: [coreName, manifest.name],
+	});
+	console.log(`${browserEntries} browser entries reach no Node-only module`);
 } finally {
 	await rm(work, { recursive: true, force: true });
 }
