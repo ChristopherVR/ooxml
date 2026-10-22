@@ -20,6 +20,7 @@ const { CANVAS_ENTRIES, selectSources, canvasEntry, utilityClasses } = canvasCss
 const stylesDir = import.meta.dirname;
 const packageDir = path.resolve(stylesDir, '../..');
 const uiSource = path.resolve(packageDir, '../../../../src/ui/src');
+const posix = (file: string): string => file.replaceAll('\\', '/');
 
 describe('canvas.css sources', () => {
 	it('starts from SlideCanvas and the building-blocks hook', () => {
@@ -48,9 +49,9 @@ describe('canvas.css sources', () => {
 			},
 		};
 		expect(selectSources(metafile, { packageDir, uiSource })).toStrictEqual([
-			path.join(uiSource, 'pptx/render/table-style.ts'),
-			path.join(packageDir, 'src/viewer/components/SlideCanvas.tsx'),
-			path.join(packageDir, 'src/viewer/components/elements/ChartRenderer.tsx'),
+			posix(path.join(uiSource, 'pptx/render/table-style.ts')),
+			posix(path.join(packageDir, 'src/viewer/components/SlideCanvas.tsx')),
+			posix(path.join(packageDir, 'src/viewer/components/elements/ChartRenderer.tsx')),
 		]);
 	});
 
