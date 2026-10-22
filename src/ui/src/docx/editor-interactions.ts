@@ -170,7 +170,10 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		},
 		help: () => {
 			menu.close(false);
-			help.open(shortcutRows(registry, mac()), core.locale);
+			help.open(
+				shortcutRows(registry, mac(), core.viewOptions.customization.shortcuts),
+				core.locale,
+			);
 		},
 		escape: () => {
 			if (escapeOwned) return false;

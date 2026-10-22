@@ -52,7 +52,7 @@ editor.customization = {
 | `backstage.extraPages`      | Host File tab pages `{ id, label, group?, order?, render }` after the built-in pages of their group (`footer`: next to Options). `render` is a mount function `(container, context) => cleanup \| { update, destroy }`, a custom element tag, or `{ element, properties }`. The body mounts the first time the page is shown, receives a `WordRegionContext` (`editor`, `fileName`, `locale`, `canEdit`, `close`) and is torn down when the page is removed or the editor disconnects.  |
 | `contextMenu.extraCommands` | Host commands `{ id, label, icon?, group?, when?, disabled?, onSelect }` above (`top`, default) or below (`bottom`) the built-in entries. `onSelect` runs after the menu closes, with a `WordMenuContext` (`selectedText`, `from`, `to`, `readOnly`, `inTable`, `onLink`). Labels are shown as given (localise them yourself).                                                                                                                                                          |
 
-Capabilities are UI policy, not document protection. Region replacement (the Options dialog, panes) is not offered for Word yet.
+`edit: false` is a read-only lock of its own beside the host's `readOnly` and a collaboration `viewer` role: none of them lifts another, and leaving a room keeps it. `readonly-change` reports it in `readOnly` with `locked: false` (only a `viewer` role sets `locked`) and leaves `hostReadOnly` alone, so a binding that mirrors `hostReadOnly` never writes the capability back. Capabilities are UI policy, not document protection. Region replacement (the Options dialog, panes) is not offered for Word yet.
 
 ## Methods
 

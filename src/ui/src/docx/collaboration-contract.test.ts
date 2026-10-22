@@ -197,6 +197,34 @@ describe('docx-editor collaboration property', () => {
 		expect(a.readOnly).toBe(true);
 	});
 
+	it('a customization never lifts a viewer role, and leaving keeps edit: false', async () => {
+		const hub = createMemoryHub();
+		const owner = mount();
+		owner.collaboration = { session: hostSession(hub, 'Ada') };
+		await wait();
+		const a = mount();
+		const events: { readOnly: boolean; locked: boolean; hostReadOnly: boolean }[] = [];
+		a.addEventListener('readonly-change', (event) =>
+			events.push((event as CustomEvent<(typeof events)[number]>).detail),
+		);
+		a.collaboration = { session: hostSession(hub, 'Vic', 'viewer'), intent: 'join' };
+		await wait();
+		a.customization = { capabilities: { print: false } };
+		a.customization = null;
+		expect(a.readOnly).toBe(true);
+		a.customization = { capabilities: { edit: false } };
+		events.length = 0;
+		a.stopCollaboration();
+		expect(a.readOnly).toBe(true);
+		a.readOnly = false;
+		expect(a.readOnly).toBe(true);
+		events.length = 0;
+		a.customization = null;
+		expect(a.readOnly).toBe(false);
+		// The capability is reported in the effective value, never as the host's switch.
+		expect(events).toEqual([{ readOnly: false, locked: false, hostReadOnly: false }]);
+	});
+
 	it('a viewer role blocks local edits', async () => {
 		const hub = createMemoryHub();
 		const a = mount();

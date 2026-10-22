@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DocxEditorElement, registerDocxEditor, type WordCustomization } from './index';
 import { resolveWordCustomization } from './customization';
+import type { EditorView } from 'prosemirror-view';
 
 registerDocxEditor();
 afterEach(() => document.body.replaceChildren());
@@ -164,5 +165,31 @@ describe('<docx-editor> customization', () => {
 		expect(destroy).toHaveBeenCalledTimes(1);
 		expect(backstage(editor).querySelector('[data-backstage-page^="host."]')).toBeNull();
 		expect(navIds(editor)).not.toContain('host.policies');
+	});
+
+	it('Ctrl+F in the document does not open Find when find is off', () => {
+		const editor = mount({ capabilities: { find: false } });
+		const { core } = editor as unknown as {
+			core: { view: EditorView; shell: { searchPanel: { open(): void } } };
+		};
+		const open = vi.spyOn(core.shell.searchPanel, 'open');
+		const press = () =>
+			core.view.dom.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, bubbles: true, cancelable: true }),
+			);
+		press();
+		expect(open).not.toHaveBeenCalled();
+		editor.customization = null;
+		press();
+		expect(open).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps a read-only attribute set under edit: false', () => {
+		const editor = mount({ capabilities: { edit: false } });
+		editor.setAttribute('read-only', '');
+		editor.customization = null;
+		expect(editor.readOnly).toBe(true);
+		editor.removeAttribute('read-only');
+		expect(editor.readOnly).toBe(false);
 	});
 });
