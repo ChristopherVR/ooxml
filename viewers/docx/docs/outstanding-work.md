@@ -1,10 +1,10 @@
 # Outstanding parity work
 
 Status reviewed on 2026-10-03. Reviewed 2026-10-15 for footnote continuation, nested-table layout,
-Update Fields, chart painting and editable Print Layout pages. The original six workstreams below are historical
-foundations; later sections record the subsequent features and their limits. The
-[parity roadmap](/parity-roadmap) gives the current baseline, next priorities and
-evidence required for Word equivalence. No full Word parity is claimed; model
+Update Fields, chart painting and editable Print Layout pages. This page is the per-feature detail: what each area supports and where its limits are
+(the original six workstreams below are historical foundations). The live list of next
+priorities, the baseline and the evidence required for Word equivalence is kept only in the
+[parity roadmap](/parity-roadmap). No full Word parity is claimed; model
 warnings identify unsupported imported content.
 
 ## Merged workstreams
@@ -493,5 +493,5 @@ Still not at parity:
 
 ### Engineering follow-ups
 
-- Modules over the 300-line guideline (non-test, non-data): `web-component/src/ribbon-tabs.ts` (~490, the tab definitions), `ribbon-home.ts`, `backstage-pages.ts`, `model-adapter.ts` and a few files just over 300; the locale tables and generated schema types are data.
+- Modules over the 300-line guideline (non-test, non-data): `src/ui/src/docx/ribbon-tabs.ts` (~560, the tab definitions), `ribbon-home.ts` (~370), `model-adapter.ts` (~350) and a few files just over 300; the locale tables and generated schema types are data.
 - `ssr.test.ts` can time out (5 s) when the whole suite runs under load; it passes alone.

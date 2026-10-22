@@ -35,13 +35,13 @@ Dasselbe funktioniert über echte Tabs hinweg, in jeder Kombination: Öffnen Sie
 
 ## Was unterstützt wird und was nicht
 
-| Unterstützt                                                                 | Nicht unterstützt                                                                            |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Gleichzeitiger Chat, Antworten und Reaktionen, per Yjs-CRDT zusammengeführt | Ende-zu-Ende-Verschlüsselung: Ihr Server kann alles lesen und speichern                      |
-| Präsenz und Tippanzeigen                                                    | Authentifizierte Identität: Namen sind Behauptungen, und der Referenzserver hat keine Konten |
-| Zusammenarbeit im selben Browser ohne Server (lokaler Modus, wie oben)      | Zusammenarbeit zwischen verschiedenen Rechnern ohne einen Server, den Sie betreiben          |
-| Rechnerübergreifende Zusammenarbeit über Ihren eigenen Sync-Server          | Ein gehosteter Dienst: Es gibt keinen, und die Pages-Demos haben keinen Server dahinter      |
-| Anrufe mit Audio, Video, Bildschirmfreigabe und Handheben (Mesh, ~12)       | Anrufe in Webinar-Größe, Aufzeichnung, Benachrichtigungen                                    |
+| Unterstützt                                                                 | Nicht unterstützt                                                                                                                     |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Gleichzeitiger Chat, Antworten und Reaktionen, per Yjs-CRDT zusammengeführt | Ende-zu-Ende-Verschlüsselung: Ihr Server kann alles lesen und speichern                                                               |
+| Präsenz und Tippanzeigen                                                    | Zugriffssteuerung pro Team und SSO; die Identität ist eine Behauptung, solange Sie die optionalen Konten des Servers nicht aktivieren |
+| Zusammenarbeit im selben Browser ohne Server (lokaler Modus, wie oben)      | Zusammenarbeit zwischen verschiedenen Rechnern ohne einen Server, den Sie betreiben                                                   |
+| Rechnerübergreifende Zusammenarbeit über Ihren eigenen Sync-Server          | Ein gehosteter Dienst: Es gibt keinen, und die Pages-Demos haben keinen Server dahinter                                               |
+| Anrufe mit Audio, Video, Bildschirmfreigabe und Handheben (Mesh, ~12)       | Anrufe in Webinar-Größe, Aufzeichnung, Push-Benachrichtigungen                                                                        |
 
 ## Über Rechner hinweg
 

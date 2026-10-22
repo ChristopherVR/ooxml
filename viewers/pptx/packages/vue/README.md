@@ -280,7 +280,7 @@ status, sanitized remote users and connected count. Use it for both custom contr
 and their edit handlers. The public `/viewer` entry also exports `InlineTextEditor`
 and `useInlineEditing` for reusing the native inline editing behavior.
 See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/vue/collaboration#custom-host-chrome)
-and `demos/demo-vue/src/HostOwnedHeadlessEditor.vue` for complete wiring.
+and `demos/pptx/demo-vue/src/HostOwnedHeadlessEditor.vue` for complete wiring.
 
 `<PowerPointViewer>` bundles the slide canvas, ribbon, inspector, and every
 dialog into one component. If you only want a subset, for example your own
@@ -292,7 +292,7 @@ props. The `internals` subpath is not covered by semver; prefer the stable
 root exports, and pin your version when relying on `internals`.
 
 Most of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
-transitions, and more) actually lives in `pptx-viewer-shared`, an internal package that is
+transitions, and more) actually lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is
 **never published to npm**. If you need one of those framework-neutral helpers directly, for
 example the slide-transition resolver/keyframes (`resolveSlideTransition`,
 `resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) or the `PresentationTransitionOverlay`

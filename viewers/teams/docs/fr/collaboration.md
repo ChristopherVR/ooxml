@@ -35,13 +35,13 @@ Cela fonctionne de même entre de vrais onglets, quelle que soit l’association
 
 ## Ce qui est pris en charge et ce qui ne l’est pas
 
-| Pris en charge                                                             | Non pris en charge                                                                                    |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Discussions, réponses et réactions concurrentes fusionnées par un CRDT Yjs | Chiffrement de bout en bout : votre serveur peut tout lire et tout stocker                            |
-| Présence et indicateurs de saisie                                          | Identité authentifiée : les noms sont des déclarations, et le serveur de référence n’a pas de comptes |
-| Collaboration dans un même navigateur sans serveur (mode local, ci-dessus) | Collaboration entre machines différentes sans un serveur que vous exploitez                           |
-| Collaboration entre machines via votre propre serveur de synchronisation   | Un service hébergé : aucun n’est fourni, et les démos Pages n’ont aucun serveur derrière              |
-| Appels avec audio, vidéo, partage d’écran et main levée (maillage, ~12)    | Appels de la taille d’un webinaire, enregistrement, notifications                                     |
+| Pris en charge                                                             | Non pris en charge                                                                                                          |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Discussions, réponses et réactions concurrentes fusionnées par un CRDT Yjs | Chiffrement de bout en bout : votre serveur peut tout lire et tout stocker                                                  |
+| Présence et indicateurs de saisie                                          | Contrôle d’accès par équipe et SSO ; l’identité est une déclaration sauf si vous activez les comptes facultatifs du serveur |
+| Collaboration dans un même navigateur sans serveur (mode local, ci-dessus) | Collaboration entre machines différentes sans un serveur que vous exploitez                                                 |
+| Collaboration entre machines via votre propre serveur de synchronisation   | Un service hébergé : aucun n’est fourni, et les démos Pages n’ont aucun serveur derrière                                    |
+| Appels avec audio, vidéo, partage d’écran et main levée (maillage, ~12)    | Appels de la taille d’un webinaire, enregistrement, notifications                                                           |
 
 ## Entre machines
 

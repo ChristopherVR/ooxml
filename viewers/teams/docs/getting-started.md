@@ -156,16 +156,18 @@ include `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMes
 
 ## Run it from source
 
-Needs Node 22+ and Bun. With the [`ooxml`](https://github.com/ChristopherVR/ooxml) repository
-checked out next to this one (`../ooxml-core`), the demos and tests use its source; without it they
-use the published `ooxml-core` and `ooxml-ui`.
+Needs Node 22+ and Bun. This folder is `viewers/teams` of the
+[`ooxml`](https://github.com/ChristopherVR/ooxml) repository: run `bun install` at the repository
+root, then the commands below here. The demos (`demos/teams/*` at the root) and tests use the
+source of `ooxml-core` and `ooxml-ui` in the same tree.
 
 ```bash
-bun install
-bun run dev        # server on :8787, vanilla demo on :5173, React demo on :5174
+bun install        # at the repository root
+bun run dev        # in viewers/teams: server :8787, vanilla demo :5173, React demo :5174
 ```
 
 Open `http://127.0.0.1:5173/?name=Ada` and, in another tab, `...?name=Bob`: two people in one
 workspace. `?local=1` runs without the server. `TEAMS_USE_DIST=1` makes the demos use the built
-packages (`bun run build:packages` first) and the published ooxml packages instead of any source.
+packages (`bun run build:packages` first) instead of the source. `TEAMS_DEMOS=vanilla,vue` picks
+the demos `bun run dev` starts.
 Cameras and microphones need `localhost` or HTTPS.

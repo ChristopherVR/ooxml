@@ -142,13 +142,12 @@ The default iframe surface is immune to popup blockers. A custom `window.open`-b
 
 ## Saving the document
 
-| Method              | Signature                                                      | Description                                           |
-| ------------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) slides via the core handler.   |
-| `getContent`        | `() => Promise<Uint8Array>`                                    | Alias of `save()` from the shared viewer contract.    |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + browser download in `pptx`, `ppsx`, or `pptm`. |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` with a default name.       |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | Assemble and download the sharing package.            |
+| Method         | Signature                                                      | Description                                           |
+| -------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) slides via the core handler.   |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()` from the shared viewer contract.    |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save + browser download in `pptx`, `ppsx`, or `pptm`. |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | Save + download as `.pptx` with a default name.       |
 
 ## SVG: standalone functions {#svg-standalone-functions}
 

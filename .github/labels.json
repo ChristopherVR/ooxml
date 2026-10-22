@@ -180,6 +180,11 @@
 		"description": "Dead links found by the weekly link check"
 	},
 	{
+		"name": "docs-health",
+		"color": "fbca04",
+		"description": "Documentation drift found by the weekly docs check"
+	},
+	{
 		"name": "size: XS",
 		"color": "3cbf00",
 		"description": "Fewer than 10 changed lines"

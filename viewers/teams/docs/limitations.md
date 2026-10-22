@@ -8,15 +8,18 @@ before you rely on it.
 OpenTeams is not Microsoft Teams, is not affiliated with Microsoft and makes no claim of feature
 parity. It implements:
 
-- channels, posts with replies, reactions, author-only edit and delete, search and unread counts;
+- channels, posts with replies and thread panes, reactions, author-only edit and delete, search and unread counts;
+- 1:1 and group chats, each in its own room that only its members can join;
+- an Activity feed and in-page notifications (a toast, a browser notification while the tab is open, a sound);
+- a calendar with meetings, repeats, reminders and `.ics` export;
 - presence: who is online, typing, a status you set (available, busy, do not disturb, be right back, away, offline) with an optional reset time, a status message and automatic away when idle;
 - pinned messages shown in a bar at the top of the channel (any member can pin or unpin);
 - meetings in a channel: audio, video, screen share and raise hand, with a pre-join screen;
 - files shared in the conversation as links, with Word, Excel, PowerPoint and Visio files
   recognised by name.
 
-It does **not** implement 1:1 or group chats outside channels, threads as separate panes,
-notifications, a calendar, recording, background blur or live captions.
+It does **not** implement recording, background blur, live captions, push or email notifications
+(notifications work only while the app is open), invitations outside the workspace or RSVP.
 
 ## Content workspace
 
@@ -24,7 +27,9 @@ Word previews read-only; Excel offers local editing and saving new channel copie
 when storage is configured; Visio uses its existing viewer.
 There is no coediting, overwrite or versioned save-back. PowerPoint needs a
 host-configured embedded viewer page. Missing integrations are reported in the pane.
-Text reads are limited to 2 MiB and native Office reads to 32 MiB.
+Text reads are limited to 2 MiB and native Office reads to 32 MiB. The interface is available in
+English, German, Spanish, French and Simplified Chinese (the `locale` prop); text people wrote is
+never translated.
 
 Files views support direct upload, blank Excel creation and metadata search when
 storage is configured. Uploads show a busy state and allow retry, with no byte
@@ -34,8 +39,8 @@ content indexing, file version history and authenticated file permissions are
 not implemented.
 
 Markdown supports headings, bullets, quotes, fenced code, basic emphasis and web
-links. It does not yet implement full CommonMark/GFM, tables, task lists, nested
-structures or relative links. Raw HTML is displayed as text.
+links, flat task lists, top-level pipe tables and file-relative web links. It does not
+implement full CommonMark/GFM, nested structures or reference links. Raw HTML is displayed as text.
 
 Websites and HTML attachments use a sandbox without same-origin, popup or top
 navigation permission. Some sites block embedding or require permissions this
@@ -51,8 +56,11 @@ in the client and require server authorization to become enforceable.
   TURN relay cannot decrypt it).
 - **Authorization is the server's job.** Author and role checks run in the client; a hostile
   client can write anything the server accepts.
-- **The reference server has no user accounts.** Its token is one shared secret stored in the
-  browser, not per-user authentication. See [what the reference server does not do](/server#what-the-reference-server-does-not-do).
+- **Accounts are optional.** The reference server can sign sessions for configured users (or your
+  `authenticate` hook) and take the user id from the session, and `authorizeSync` can decide access
+  per room. Without them its token is one shared secret stored in the browser, not per-user
+  authentication, and user ids are claims. There is no SSO, password reset or team and channel
+  access control. See [what the reference server does not do](/server#what-the-reference-server-does-not-do).
 - **Presence is advisory and unauthenticated**, like any Yjs awareness: a client can claim any
   name.
 - Everything a peer sends is re-validated when read back and rendered as text, never as markup.

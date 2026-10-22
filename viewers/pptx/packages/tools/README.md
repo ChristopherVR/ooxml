@@ -136,10 +136,10 @@ const filesystem: FileSystemProvider = {
 };
 
 const result = await executeToolWithContext('deck.pptx', { filesystem }, (ctx) =>
-	replaceText(ctx, { find: 'Draft', replace: 'Final', caseSensitive: false }),
+	replaceText(ctx, { query: 'Draft', replacement: 'Final', caseSensitive: false }),
 );
 
-console.log(result.replacements, result.savedToDisk);
+console.log(result.replacementCount, result.savedToDisk);
 ```
 
 When you supply `collaboration` on the `ExecutionContext`, the tool reads the current shared (Y.Doc) state before running and writes the result back into it after saving, so other people in the session see the change without reloading the file.

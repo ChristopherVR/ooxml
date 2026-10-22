@@ -25,4 +25,4 @@ for React, Vue, Angular, Svelte and Vanilla.
 
 The captures come from the same neutral locators in all five bindings (test ids,
 roles and accessible names), so a before and an after of one family are directly
-comparable. The matching browser spec is `e2e/chrome-controls-migration.spec.ts`.
+comparable. The matching browser spec is `e2e/pptx/chrome-controls-migration.spec.ts`.

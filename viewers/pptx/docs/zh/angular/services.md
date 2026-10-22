@@ -40,6 +40,8 @@ export class HeadlessDeckComponent {
 
 ## 编排服务（内部架构） {#orchestration-services-internal-architecture}
 
+`ViewerCollaborationShellService` 是自定义编辑器受支持的例外：将它与 `POWER_POINT_VIEWER_PROVIDERS` 一起提供，并绑定宿主的内容、协作配置、权限和舞台访问器。它会替你接好现有服务，并提供实际生效的 `canEdit` 和规范化的会话状态。参见[自定义协作界面](/zh/angular/collaboration#building-custom-collaboration-ui)。
+
 这些服务说明了查看器的组装方式。此表用于理解架构，并非 API 兼容性约定。
 
 | 服务                                                                                                  | 职责                                                                                               |
@@ -119,12 +121,13 @@ const bytes = await this.loader.saveSlides(editor.snapshot());
 
 用于构建自定义协作界面或自行驱动同步。参见[实时协作](/zh/angular/collaboration)。
 
-| 导出项                                        | 用途                                                                                                                                                                                                                                                     |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CollaborationService`                        | 通过 `connect(config, options?)` / `disconnect()` / `retry()` 管理 Yjs 会话；提供 `status`、`presence`、`cursors`、`connectedCount` 信号，以及 `broadcastSlides`、`setCursor`、`setSelection`、`setActiveSlide`、`followUser` 方法。销毁时自动断开连接。 |
-| `CollaborationCursorsComponent`               | 在幻灯片画布上渲染远程光标。                                                                                                                                                                                                                             |
-| `RemoteSelectionOverlayComponent`（内部接口） | 渲染远程用户的元素选区高亮。                                                                                                                                                                                                                             |
-| `collaboration-helpers` 的导出                | `validateRoomId`、`sanitizeUserName`、`derivePresenceList`、`assignUserColor` 等。                                                                                                                                                                       |
+| 导出项                            | 用途                                                                                                                                                                                                                                                     |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CollaborationService`            | 通过 `connect(config, options?)` / `disconnect()` / `retry()` 管理 Yjs 会话；提供 `status`、`presence`、`cursors`、`connectedCount` 信号，以及 `broadcastSlides`、`setCursor`、`setSelection`、`setActiveSlide`、`followUser` 方法。销毁时自动断开连接。 |
+| `ViewerCollaborationShellService` | 在现有服务之上受支持的自定义外壳组合：实际生效的权限和会话信号、来源接管、编辑、在线状态以及实时模型保存。                                                                                                                                               |
+| `CollaborationCursorsComponent`   | 在幻灯片画布上渲染远程光标。                                                                                                                                                                                                                             |
+| `RemoteSelectionOverlayComponent` | 在缩放后的画布内渲染远程用户的元素选区高亮。                                                                                                                                                                                                             |
+| `collaboration-helpers` 的导出    | `validateRoomId`、`sanitizeUserName`、`derivePresenceList`、`assignUserColor` 等。                                                                                                                                                                       |
 
 ```ts
 const collab = inject(CollaborationService);

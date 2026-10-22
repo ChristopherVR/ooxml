@@ -58,6 +58,9 @@ of unsupported OOXML properties or objects.
 
 ## Next implementation priorities
 
+This is the one live list of open work. [Outstanding work](/outstanding-work) records the
+detail and limits of each feature already built.
+
 1. **Editable pages and reliable layout.** Establish stable page/line/run mappings
    for caret placement, selections, scrolling, keyboard movement and IME before
    adding editing directly to pages. Improve footnote continuation, per-column

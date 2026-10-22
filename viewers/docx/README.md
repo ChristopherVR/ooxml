@@ -168,7 +168,7 @@ Seven packages are published on npm, each versioned independently:
 
 Each `*-viewer` package is self-contained: the editor, layout engine, document loading and the legacy `.doc` reader come from `ooxml-core` (`/docx/layout`, `/docx/load`, which inlines the shared ole2 codecs). A package depends on `docx-core`, `ooxml-core`, `ooxml-ui` (the shared web components that draw SmartArt; installed for you, never imported by your code), the ProseMirror libraries and its framework peer, so `@christophervr/ole2` does not need to be published or installed. DOCX and legacy `.doc` files are both opened by every editor package.
 
-The workspace also holds **private** packages that are never published and are inlined into each editor package at build time: `web-component` (the shared `<docx-editor>`, including the browser text measurer behind Print Layout) and `bindings` (framework lifecycle and event adapters). The pagination engine, document loading and collaboration helpers are in `ooxml-core`. Shared OOXML logic is moving into the public `ooxml-core`, leaving this repository with only the UI; that migration is in progress, not a shipped feature.
+The workspace also holds **private** packages that are never published and are inlined into each editor package at build time: `web-component` (a re-export of the shared `<docx-editor>`, including the browser text measurer behind Print Layout) and `bindings` (framework lifecycle and event adapters). The pagination engine, document loading and collaboration helpers are in `ooxml-core`. The `<docx-editor>` element itself lives in `ooxml-ui/docx` (`src/ui/src/docx`), which `web-component` re-exports; the document logic is in `ooxml-core`.
 
 ## SmartArt
 
@@ -189,11 +189,11 @@ bun run fmt:check       # oxfmt
 bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 ```
 
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE` selects an explicit Chromium and `PLAYWRIGHT_PORT` (default 4180) the preview port. Publishing is not enabled yet; see the [release policy](docs/releasing.md).
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` selects an explicit Chromium and `PLAYWRIGHT_PORT` (default 4180) the preview port. The packages are published to npm by the repository's shared release flow; see [releasing](docs/releasing.md).
 
 ## Documentation
 
-[Architecture](docs/architecture.md) &middot; [Framework bindings](docs/bindings.md) &middot; [Editing text](docs/editing.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Support roadmap](docs/parity-roadmap.md) &middot; [Outstanding work](docs/outstanding-work.md) &middot; [ooxml-core plan](docs/ooxml-core-plan.md) &middot; [Reuse audit](docs/reuse-audit.md)
+[Architecture](docs/architecture.md) &middot; [Framework bindings](docs/bindings.md) &middot; [Editing text](docs/editing.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Support roadmap](docs/parity-roadmap.md) &middot; [Outstanding work](docs/outstanding-work.md)
 
 ## License
 

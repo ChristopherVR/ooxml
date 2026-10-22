@@ -4,21 +4,22 @@ Todos los adaptadores de framework envuelven el mismo elemento personalizado `<d
 
 ## Atributos y propiedades
 
-| Propiedad         | Atributo          | Descripción                                                                                                                   |
-| ----------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `documentModel`   |                   | El `DocumentModel` mostrado. Asignarlo es una sustitución externa, no un evento de edición.                                   |
-| `readOnly`        | `read-only`       | Bloquea las ediciones locales. Los lotes de colaboración remotos se siguen aplicando.                                         |
-| `locale`          | `locale`          | Idioma de la interfaz: `en`, `fr`, `de`, `es` o `zh-CN`. El contenido del documento nunca se traduce.                         |
-| `fileName`        | `file-name`       | Nombre del documento abierto (por defecto `Document1.docx`).                                                                  |
-| `reviewAuthor`    | `review-author`   | Autor registrado en los cambios con seguimiento y en los comentarios (por defecto `Author`).                                  |
-| `theme`           | `theme`           | `light`, `dark` o `auto`. Consulte [temas](/theming).                                                                         |
-| `themeColors`     |                   | Sustituciones parciales de tokens, aplicadas como propiedades personalizadas `--dve-*`.                                       |
-| `showThumbnails`  | `show-thumbnails` | Panel izquierdo de miniaturas de página (solo en Diseño de impresión).                                                        |
-| `showToolbar`     | `show-toolbar`    | `false` oculta la cinta de opciones; la barra de título y la barra de estado permanecen.                                      |
-| `hiddenActions`   |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                |
-| `ribbonAddIns`    |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                         |
-| `customization`   |                   | Capacidades, páginas del host en la pestaña Archivo y comandos de menú del host (consulte [Personalización](#customization)). |
-| `dirty` (lectura) |                   | Verdadero tras una edición; falso tras guardar, cargar o llamar a `markClean()`.                                              |
+| Propiedad         | Atributo          | Descripción                                                                                                                            |
+| ----------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `documentModel`   |                   | El `DocumentModel` mostrado. Asignarlo es una sustitución externa, no un evento de edición.                                            |
+| `readOnly`        | `read-only`       | Bloquea las ediciones locales. Los lotes de colaboración remotos se siguen aplicando.                                                  |
+| `locale`          | `locale`          | Idioma de la interfaz: `en`, `fr`, `de`, `es` o `zh-CN`. El contenido del documento nunca se traduce.                                  |
+| `fileName`        | `file-name`       | Nombre del documento abierto (por defecto `Document1.docx`).                                                                           |
+| `reviewAuthor`    | `review-author`   | Autor registrado en los cambios con seguimiento y en los comentarios (por defecto `Author`).                                           |
+| `theme`           | `theme`           | `light`, `dark` o `auto`. Consulte [temas](/theming).                                                                                  |
+| `themeColors`     |                   | Sustituciones parciales de tokens, aplicadas como propiedades personalizadas `--dve-*`.                                                |
+| `showThumbnails`  | `show-thumbnails` | Panel izquierdo de miniaturas de página (solo en Diseño de impresión).                                                                 |
+| `showToolbar`     | `show-toolbar`    | `false` oculta la cinta de opciones; la barra de título y la barra de estado permanecen.                                               |
+| `hiddenActions`   |                   | Controles de la cinta que se ocultan por identificador estable; consulte la tabla en [adaptadores](/bindings).                         |
+| `ribbonAddIns`    |                   | Pestañas que el host añade tras las integradas; consulte [adaptadores](/bindings#ribbon-add-in-tabs).                                  |
+| `collaboration`   |                   | Colaboración declarativa (`DocxCollaborationOptions` o `null`); consulte [colaboración](/es/collaboration#la-propiedad-collaboration). |
+| `customization`   |                   | Capacidades, páginas del host en la pestaña Archivo y comandos de menú del host (consulte [Personalización](#customization)).          |
+| `dirty` (lectura) |                   | Verdadero tras una edición; falso tras guardar, cargar o llamar a `markClean()`.                                                       |
 
 ## Personalización {#customization}
 
@@ -63,19 +64,20 @@ editor.customization = {
 
 Todos los eventos burbujean y son compuestos, por lo que atraviesan el límite del shadow DOM.
 
-| Evento                 | Detalle               | Significado                                                                                    |
-| ---------------------- | --------------------- | ---------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`       | El documento cambió mediante acciones de edición o de revisión.                                |
-| `document-error`       | `Error`               | Falló la carga, el guardado, la impresión o una edición.                                       |
-| `document-warning`     | `string`              | Aviso no fatal.                                                                                |
-| `readonly-change`      | `boolean`             | El usuario alternó Edición/Visualización en la interfaz.                                       |
-| `file-command`         | `{ command }`         | Cancelable. `command` es `new`, `open`, `save`, `export`, `print` o `share`.                   |
-| `dirty-change`         | `boolean`             | Cambió el estado de cambios sin guardar.                                                       |
-| `page-change`          | `{ page, pageCount }` | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).        |
-| `ribbon-action`        | `RibbonAction`        | Se activó un control de la cinta.                                                              |
-| `ribbon-customize`     | `readonly string[]`   | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea. |
-| `office-ribbon-add-in` | `{ tab, command }`    | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                 |
-| `presence-send`        | `PresenceMessage`     | Cambió la presencia local; transpórtela a los demás clientes.                                  |
-| `collaboration-send`   | `StepBatch`           | Hay pasos locales pendientes; transpórtelos a la autoridad.                                    |
+| Evento                 | Detalle                  | Significado                                                                                    |
+| ---------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`          | El documento cambió mediante acciones de edición o de revisión.                                |
+| `document-error`       | `Error`                  | Falló la carga, el guardado, la impresión o una edición.                                       |
+| `document-warning`     | `string`                 | Aviso no fatal.                                                                                |
+| `readonly-change`      | `boolean`                | El usuario alternó Edición/Visualización en la interfaz.                                       |
+| `file-command`         | `{ command }`            | Cancelable. `command` es `new`, `open`, `save`, `export`, `print` o `share`.                   |
+| `dirty-change`         | `boolean`                | Cambió el estado de cambios sin guardar.                                                       |
+| `page-change`          | `{ page, pageCount }`    | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).        |
+| `ribbon-action`        | `RibbonAction`           | Se activó un control de la cinta.                                                              |
+| `ribbon-customize`     | `readonly string[]`      | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea. |
+| `office-ribbon-add-in` | `{ tab, command }`       | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                 |
+| `presence-send`        | `PresenceMessage`        | Cambió la presencia local; transpórtela a los demás clientes.                                  |
+| `collaboration-send`   | `StepBatch`              | Hay pasos locales pendientes; transpórtelos a la autoridad.                                    |
+| `collaboration-change` | `DocxCollaborationState` | Cambió el estado de la colaboración: `{ active, roomId, status, synced, people }`.             |
 
 El paquete exporta el mapa de eventos tipado (`DocxEditorEventMap`) y la lista en tiempo de ejecución `DOCX_EDITOR_EVENTS`.

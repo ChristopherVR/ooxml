@@ -8,14 +8,17 @@ vor dem Einsatz entscheiden können.
 OpenTeams ist nicht Microsoft Teams, steht in keiner Verbindung zu Microsoft und erhebt keinen Anspruch auf Funktionsgleichheit.
 Es implementiert:
 
-- Kanäle, Beiträge mit Antworten, Reaktionen, Bearbeiten und Löschen nur durch den Autor, Suche und Zähler für Ungelesenes;
-- Präsenz: wer online ist, wer tippt, und eine Verfügbarkeit, die Sie selbst setzen (verfügbar, beschäftigt, abwesend);
+- Kanäle, Beiträge mit Antworten und Thread-Bereichen, Reaktionen, Bearbeiten und Löschen nur durch den Autor, Suche und Zähler für Ungelesenes;
+- 1:1- und Gruppenchats, jeweils in einem eigenen Raum, dem nur die Mitglieder beitreten können;
+- einen Aktivitäts-Feed und Benachrichtigungen in der App (Hinweis, Browser-Benachrichtigung bei geöffnetem Tab, Ton);
+- einen Kalender mit Besprechungen, Wiederholungen, Erinnerungen und `.ics`-Export;
+- Präsenz: wer online ist, wer tippt, und einen Status, den Sie selbst setzen (verfügbar, beschäftigt, nicht stören, gleich zurück, abwesend, offline) mit optionaler Rücksetzzeit, eine Statusnachricht und automatisch abwesend bei Inaktivität;
 - Besprechungen in einem Kanal: Audio, Video, Bildschirmfreigabe und Handheben, mit einem Bildschirm vor dem Beitritt;
 - Dateien, die in der Unterhaltung als Links geteilt werden, wobei Word-, Excel-, PowerPoint- und Visio-Dateien
   am Namen erkannt werden.
 
-Es implementiert **nicht** 1:1- oder Gruppenchats außerhalb von Kanälen, Threads als eigene Bereiche,
-Benachrichtigungen, einen Kalender, Aufzeichnung, Hintergrundunschärfe oder Live-Untertitel.
+Es implementiert **nicht** Aufzeichnung, Hintergrundunschärfe, Live-Untertitel, Push- oder E-Mail-Benachrichtigungen
+(Benachrichtigungen funktionieren nur bei geöffneter App), Einladungen außerhalb des Arbeitsbereichs oder Zusagen (RSVP).
 
 ## Inhaltsbereich
 
@@ -23,7 +26,7 @@ Word zeigt eine schreibgeschützte Vorschau; Excel bietet lokales Bearbeiten und
 wenn Speicher konfiguriert ist; Visio nutzt den vorhandenen Viewer.
 Es gibt kein gemeinsames Bearbeiten, kein Überschreiben und kein versioniertes Zurückspeichern. PowerPoint benötigt eine
 vom Host konfigurierte eingebettete Viewer-Seite. Fehlende Integrationen werden im Bereich gemeldet.
-Textlesevorgänge sind auf 2 MiB und native Office-Lesevorgänge auf 32 MiB begrenzt.
+Textlesevorgänge sind auf 2 MiB und native Office-Lesevorgänge auf 32 MiB begrenzt. Die Oberfläche gibt es auf Englisch, Deutsch, Spanisch, Französisch und in vereinfachtem Chinesisch (Eigenschaft `locale`); von Personen geschriebener Text wird nie übersetzt.
 
 Die Dateiansichten unterstützen direktes Hochladen, das Anlegen leerer Excel-Dateien und die Metadatensuche, wenn
 Speicher konfiguriert ist. Uploads zeigen einen Beschäftigt-Zustand und erlauben Wiederholen, ohne Byte-
@@ -32,9 +35,8 @@ der Referenzserver hat keinen Bereinigungsvertrag für diese Objekte. Ordner, In
 inhalts, Dateiversionsverlauf und authentifizierte Dateiberechtigungen sind
 nicht implementiert.
 
-Markdown unterstützt Überschriften, Aufzählungen, Zitate, umzäunten Code, einfache Hervorhebungen und Web-
-Links. Es implementiert noch nicht das vollständige CommonMark/GFM, Tabellen, Aufgabenlisten, verschachtelte
-Strukturen oder relative Links. Rohes HTML wird als Text angezeigt.
+Markdown unterstützt Überschriften, Aufzählungen, Zitate, umzäunten Code, einfache Hervorhebung, Web-Links, flache Aufgabenlisten, Tabellen auf oberster Ebene und dateirelative Web-Links. Es implementiert nicht das vollständige
+CommonMark/GFM, verschachtelte Strukturen oder Referenzlinks. Rohes HTML wird als Text angezeigt.
 
 Websites und HTML-Anhänge nutzen eine Sandbox ohne Same-Origin-, Popup- oder Top-Navigations-
 Berechtigung. Manche Websites blockieren das Einbetten oder verlangen Berechtigungen, die diese
@@ -50,8 +52,7 @@ im Client und benötigen eine Serverautorisierung, um durchsetzbar zu werden.
   TURN-Relay kann sie nicht entschlüsseln).
 - **Autorisierung ist Aufgabe des Servers.** Autor- und Rollenprüfungen laufen im Client; ein feindlicher
   Client kann alles schreiben, was der Server akzeptiert.
-- **Der Referenzserver hat keine Benutzerkonten.** Sein Token ist ein gemeinsames Geheimnis, im
-  Browser gespeichert, keine Authentifizierung pro Benutzer. Siehe [was der Referenzserver nicht kann](/de/server#was-der-referenzserver-nicht-kann).
+- **Konten sind optional.** Der Referenzserver kann Sitzungen für konfigurierte Benutzer (oder Ihre `authenticate`-Funktion) signieren und die Benutzer-ID aus der Sitzung übernehmen; `authorizeSync` kann den Zugriff pro Raum entscheiden. Ohne sie ist sein Token ein gemeinsames Geheimnis im Browser, keine Authentifizierung pro Benutzer, und Benutzer-IDs sind Behauptungen. Es gibt kein SSO, kein Zurücksetzen von Passwörtern und keine Zugriffssteuerung für Teams und Kanäle. Siehe [was der Referenzserver nicht kann](/de/server#was-der-referenzserver-nicht-kann).
 - **Präsenz ist beratend und nicht authentifiziert**, wie jede Yjs-Awareness: Ein Client kann jeden
   Namen angeben.
 - Alles, was ein Teilnehmer sendet, wird beim Zurücklesen erneut validiert und als Text dargestellt, nie als Markup.

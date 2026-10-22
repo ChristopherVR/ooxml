@@ -13,7 +13,7 @@ Il s'agit d'une version bêta publique. Ne considérez pas l'ouverture réussie 
 3. Changez de page, ajustez le zoom, ajustez la page à la fenêtre et sélectionnez une forme.
 4. Consultez les notes de compatibilité. Comparez les fichiers importants avec leur rendu dans Microsoft Visio.
 
-Aucun document n'est envoyé. Les commandes permettent la recherche, l'affichage des calques, l'édition expérimentale de texte brut, l'annulation/rétablissement bornés, l'export SVG et le téléchargement explicite de copies VSDX. Les instantanés d'impression ne sont qu'une préparation disponible par l'API ; il n'y a pas de boîte de dialogue d'impression. Le dessin général, l'export PDF et la plupart des fonctionnalités des anciens fichiers binaires `.vsd` ne font pas partie de cette version.
+Aucun document n'est envoyé. Les commandes permettent la recherche, l'affichage des calques, l'édition expérimentale de texte brut, l'annulation/rétablissement bornés, l'export SVG et le téléchargement explicite de copies VSDX. Les instantanés d'impression ne sont qu'une préparation disponible par l'API. Fichier > Exporter peut créer un PDF de pages-images, mais le PDF vectoriel ou à texte sélectionnable, le dessin général et la plupart des fonctionnalités des anciens fichiers binaires `.vsd` ne font pas partie de cette version.
 
 Les autres versions du même terrain de jeu pour chaque framework sont répertoriées sur [la page des démos](/demos).
 
@@ -80,13 +80,13 @@ viewer.destroy();
 
 ## Lancer l'espace de développement {#run-the-development-workspace}
 
-Utilisez Node.js 22.12 ou une version plus récente. Les builds normaux installent depuis npm l'API `ooxml-core/visio` publiée.
+Le visualiseur fait partie du monorepo `ooxml`, un espace de travail Bun. Installez une fois à la racine du dépôt avec `bun install` ; `ooxml-core` (`src/core/visio`) et `ooxml-ui` (`src/ui/src/visio`) pointent vers les paquets du même dépôt, aucune étape de liaison n'est nécessaire.
 
 ```bash
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run check
-npm run dev
+bun install
+cd viewers/visio
+bun run check
+bun run dev
 ```
 
 Utilisez l'URL locale affichée par Vite. Cette commande démarre un serveur de développement ; elle ne publie pas le site.
@@ -111,14 +111,16 @@ Le contenu d'arrière-plan pris en charge et les images raster validées sont in
 
 ## Propriétés et événements {#properties-and-events}
 
-| Surface      | Contrat actuel                                                                                                                                 |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propriétés   | `document`, `pageIndex`, `zoom`, `showToolbar`, `ribbonAddIns`                                                                                 |
-| Événements   | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` |
-| Cycle de vie | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`         |
+| Surface      | Contrat actuel                                                                                                                                                         |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Propriétés   | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Événements   | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Cycle de vie | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+
+`canEdit` est l'autorisation de modification (le visualiseur est modifiable par défaut ; `false` le met en lecture seule), `collaboration` partage le dessin ouvert dans une salle, et `document-change` indique `kind` : `edit`, `undo`, `redo`, `remote` ou `save`. Une fois les octets de `exportVsdx()` enregistrés par l'hôte, `controller.markClean()` efface l'indicateur de modification. Pour composer votre propre interface à partir des éléments du visualiseur, voir les [blocs de construction](/building-blocks) ; pour partager un dessin, voir [Collaboration](/fr/collaboration).
 
 Montez le visualiseur une fois l'hôte disponible et appelez `destroy()` lorsque la vue du framework est démontée. Détruire plusieurs fois est sans danger. Les mises à jour partielles laissent inchangées les propriétés omises. La référence complète est l'[API du visualiseur](/fr/api).
 
 ## Vérification avant adoption {#verification-before-adoption}
 
-Exécutez `npm run check` et `npm run test:browser` dans la copie du visualiseur. Les tests de l'analyseur du cœur relèvent du moteur frère. Ces vérifications n'établissent que les comportements qu'elles affirment ; elles n'établissent pas la parité visuelle avec Microsoft Visio.
+Exécutez `bun run check` et `bun run test:browser` dans `viewers/visio`. Les tests de l'analyseur du cœur se trouvent avec le moteur dans `src/core/visio` (à lancer avec `bun run test` à la racine du dépôt). Ces vérifications n'établissent que les comportements qu'elles affirment ; elles n'établissent pas la parité visuelle avec Microsoft Visio.

@@ -24,6 +24,7 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 | -------------------- | ------------ | --------------------- | ---------------------------------------------------------------------------------------------- |
 | `content`            | `Uint8Array` | 必填                  | 原始 `.pptx` 字节。`ArrayBuffer` 需通过 `new Uint8Array(buf)` 包装。                           |
 | `filePath`           | `string`     | -                     | 原始文件路径或名称，用作自动保存恢复的键，并显示在标题栏。                                     |
+| `fileName`           | `string`     | 通用标签              | 打开文档的显示名称，显示在标题栏，例如 `quarterly-review.pptx`。                               |
 | `autosave`           | `boolean`    | `true`                | 控制恢复快照的自动保存，是标题栏开关之上的宿主策略上限，详见[自动保存策略](#autosave-policy)。 |
 | `autosaveIntervalMs` | `number`     | “文件 > 选项”中的间隔 | 恢复快照的保存间隔。显式值优先于用户的自动恢复设置。                                           |
 
@@ -99,36 +100,69 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 />
 ```
 
+## 界面自定义 {#ui-customization}
+
+| 属性            | 类型                  | 默认值 | 说明                                                                                                                                                                                                                                                       |
+| --------------- | --------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customization` | `ViewerCustomization` | -      | 隐藏、锁定或重映射界面外壳的任意部分：功能区选项卡和按钮、文件 > 选项的页面、分区和设置（锁定值、设置默认值）、文件选项卡页面和卡片、右键菜单项、编辑器快捷键、面板、功能（AI、协作）和对话框。与 `hiddenActions` 取并集。传入新对象会替换整个自定义配置。 |
+
+```tsx
+<PowerPointViewer
+	content={bytes}
+	canEdit
+	customization={{ ribbon: { hiddenTabs: ['draw'] }, disabledFeatures: ['ai'] }}
+/>
+```
+
+同样的辅助方法（`hideRibbonTab`、`lockSetting`、`remapShortcut` 等）可在组件 `ref` 上调用，以便在运行时修改，详见 [API 页面](/zh/react/handle#ui-customization)。所有 id、规则和用法见[界面自定义指南](/zh/guide/customization)。
+
 ## 协作 {#collaboration}
 
 以下属性启用和控制实时共同编辑。完整流程和 `CollaborationConfig` 结构见[协作](/zh/react/collaboration)。
 
-| 属性                   | 类型                                                         | 默认值 | 说明                                                                                 |
-| ---------------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ |
-| `collaboration`        | `CollaborationConfig`                                        | -      | 提供后启用远程光标、在线状态和 Yjs CRDT 同步，需要 `yjs` 和 `y-websocket` 同级依赖。 |
-| `onStartCollaboration` | `(config: CollaborationConfig) => void`                      | -      | 用户从共享对话框创建会话时调用，宿主应使用返回配置设置 `collaboration`。             |
-| `onStopCollaboration`  | `() => void`                                                 | -      | 用户从共享对话框停止会话时调用，宿主应清空 `collaboration`。                         |
-| `shareDefaults`        | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 共享对话框字段的默认值，省略时为空。                                                 |
+| 属性                    | 类型                                                         | 默认值 | 说明                                                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collaboration`         | `CollaborationInput`                                         | -      | 提供后启用远程光标、在线状态和 Yjs CRDT 同步。接受旧版 `CollaborationConfig`，或共享的 `CollaborationOptions`（session、user、intent、provider、webrtc）。需要 `yjs` 同级依赖，使用组件自有传输时还需要 `y-websocket` 或 `y-webrtc`。 |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void`                      | -      | 用户从共享对话框创建会话时调用，宿主应使用返回配置设置 `collaboration`。                                                                                                                                                              |
+| `onStopCollaboration`   | `() => void`                                                 | -      | 用户从共享对话框停止会话时调用，宿主应清空 `collaboration`。                                                                                                                                                                          |
+| `onCollaborationChange` | `(state: CollaborationState) => void`                        | -      | 会话启动或停止，以及其状态、同步标记或参与者变化时，报告共享的 `CollaborationState`。                                                                                                                                                 |
+| `shareDefaults`         | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 共享对话框字段的默认值，省略时为空。                                                                                                                                                                                                  |
 
 ::: info 说明
 `collaboration` 是受控属性，组件不会自行启动会话。请在 `onStartCollaboration` 中设置，在 `onStopCollaboration` 中清空。
 :::
 
+## 事件、hooks 与宿主扩展 {#events-hooks-and-host-extensions}
+
+| 属性                     | 类型                                 | 说明                                                                                                                    |
+| ------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `onLoad`                 | `(detail: ViewerLoadDetail) => void` | 每次演示文稿无错误加载完成时触发，附带幻灯片数量和画布尺寸。                                                            |
+| `onError`                | `(message: string) => void`          | 每种不同的加载失败触发一次，附带可读消息。                                                                              |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`              | 跟随链接之前触发；返回 `false` 可取消默认操作。                                                                         |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]`          | 宿主在帮助之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分派冒泡的 `office-ribbon-add-in` 事件。仅限桌面功能区。 |
+| `inspectorInitiallyOpen` | `boolean`                            | 属性面板的初始可见性；省略时保持桌面和移动端默认值。                                                                    |
+
 ## 接口示意 {#interface-sketch}
 
 ::: info 节选
-下面只展示常用成员，并非完整类型。`PowerPointViewerProps` 还包含 `ai`、`accountAuth`、`hiddenActions`、`fonts`、`fileName`、`availableThemes`、`defaultThemeKey`、`onThemeChange`、`availableLocales`、`defaultLocale`、`onLocaleChange`、`onModeChange`、`onSelectionChange`、`onSlideCountChange` 和 `onZoomChange`。完整列表以包内 `.d.ts` 或 `packages/react/src/viewer/types-ui.ts` 为准。
+下面只展示常用成员，并非完整类型。`PowerPointViewerProps` 还包含 `ai`、`accountAuth`、`hiddenActions`、`fonts`、`availableThemes`、`defaultThemeKey`、`onThemeChange`、`availableLocales`、`defaultLocale`、`onLocaleChange`、`onModeChange`、`onSelectionChange`、`onSlideCountChange` 和 `onZoomChange`；上方表格涵盖 `fileName`、`onLoad`、`onError`、`onHyperlinkClick`、`ribbonAddIns` 和 `inspectorInitiallyOpen`。完整列表以包内 `.d.ts` 或 `packages/react/src/viewer/types-ui.ts` 为准。
 :::
 
 ```ts
 interface PowerPointViewerProps {
 	content: Uint8Array;
 	filePath?: string;
+	fileName?: string;
 
 	onDirtyChange?: (isDirty: boolean) => void;
 	onContentChange?: (content: Uint8Array) => void;
 	onActiveSlideChange?: (slideIndex: number) => void;
 	onOpenFile?: () => void;
+	onLoad?: (detail: ViewerLoadDetail) => void;
+	onError?: (message: string) => void;
+	onHyperlinkClick?: HyperlinkClickHandler;
+	ribbonAddIns?: readonly RibbonAddInTab[];
+	inspectorInitiallyOpen?: boolean;
 
 	canEdit?: boolean;
 	initialSlide?: number;
@@ -147,9 +181,10 @@ interface PowerPointViewerProps {
 
 	theme?: ViewerTheme;
 
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	onStartCollaboration?: (config: CollaborationConfig) => void;
 	onStopCollaboration?: () => void;
+	onCollaborationChange?: (state: CollaborationState) => void;
 	shareDefaults?: {
 		roomId?: string;
 		userName?: string;
@@ -183,7 +218,7 @@ interface PowerPointViewerProps {
 
 ### 恢复工具函数（共享包） {#recovery-helpers-shared-package}
 
-`pptx-viewer-shared` 导出用于自定义恢复流程的底层工具：
+`pptx-react-viewer` 不重新导出自动保存存储。相关工具函数来自 `ooxml-ui/pptx`（该包的依赖项），可用于构建自定义恢复流程：
 
 ```ts
 import {
@@ -191,7 +226,7 @@ import {
 	listAutosaveSnapshots,
 	deleteAutosaveSnapshot,
 	saveAutosaveSnapshot,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // List all stored snapshots (without the heavy data blob)
 const snapshots = await listAutosaveSnapshots();
@@ -210,7 +245,7 @@ await deleteAutosaveSnapshot('report.pptx');
 
 ### 刷新后重新打开文稿 {#session-restore}
 
-恢复快照用于找回标签页崩溃时的编辑，而更常见的普通**刷新**有专门的工具函数。每个组件都重新导出 `rememberSessionDeck` 和 `restoreSessionDeck`，也可从 `pptx-viewer-shared` 获取。它们按**浏览器标签页**记住当前打开的文稿，并在下次加载时返回：
+恢复快照用于找回标签页崩溃时的编辑，而更常见的普通**刷新**有专门的工具函数。每个组件都重新导出 `rememberSessionDeck` 和 `restoreSessionDeck`，也可从 `ooxml-ui/pptx` 获取。它们按**浏览器标签页**记住当前打开的文稿，并在下次加载时返回：
 
 ```ts
 import { rememberSessionDeck, restoreSessionDeck } from 'pptx-react-viewer';
@@ -236,8 +271,8 @@ if (deck) {
 ### 示例：页面重载时恢复 {#example-recovery-on-page-reload}
 
 ```tsx
+import { getAutosaveSnapshot } from 'ooxml-ui/pptx';
 import { PowerPointViewer } from 'pptx-react-viewer';
-import { getAutosaveSnapshot } from 'pptx-viewer-shared';
 import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'my-app-last-file';

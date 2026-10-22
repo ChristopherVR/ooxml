@@ -3,6 +3,7 @@
 This page records an audit of the Home, Insert, Draw and Design tabs against Microsoft PowerPoint
 (Microsoft 365, Windows, 144 DPI, window 1440 CSS px wide) and what was changed. It does not claim
 pixel parity: icons, tooltips and several galleries still differ, and the gap table says which.
+It is a point-in-time audit (October 2026): the "Not fixed" rows are findings from then, not a live status.
 
 Evidence lives in `/assets/ribbon-parity/<tab>/`:
 
@@ -114,10 +115,10 @@ Severity: H = obvious at a glance, M = noticeable, L = detail.
 
 ## Tests
 
-- `e2e/ribbon-parity-home-insert.spec.ts` (all five bindings): group order and captions per tab, large and
+- `e2e/pptx/ribbon-parity-home-insert.spec.ts` (all five bindings): group order and captions per tab, large and
   small command structure, two-row Font and Paragraph, 11px captions, Insert galleries, Draw tiles,
   Design stacking. Home runs at 1920px because the Home groups collapse below that.
-- Unit: `ribbon-overflow.test.ts`, group, command and Home view tests in `packages/shared`, plus each
+- Unit: `ribbon-overflow.test.ts`, group, command and Home view tests in `src/ui/src/pptx`, plus each
   binding's Insert and Font tests.
 - Updated specs that encoded the old look: `editor-first-screen-parity`, `ribbon-compact-layout`,
   `ribbon-insert-migration`, `insert-chart-bar-category-labels`, `ribbon-home-migration` and
@@ -131,6 +132,6 @@ Severity: H = obvious at a glance, M = noticeable, L = detail.
   `[data-pptx-chrome]` on the content hook to win.
 - React and Angular read shared UI from its built `dist`: rebuild
   (`bun run --cwd src/ui build`, `bun run --filter pptx-angular-viewer build`), then restart
-  the Angular demo after clearing `demos/demo-angular/node_modules/.vite`.
+  the Angular demo after clearing `demos/pptx/demo-angular/node_modules/.vite`.
 - Collapse is opt-in per group id prefix; extend `COLLAPSING_GROUPS` when the other tabs get their pass, and
   update `ribbon-compact-layout` for Transitions.

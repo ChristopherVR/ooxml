@@ -38,7 +38,7 @@ export class EditorComponent {
 
 ## 各绑定共享的接口约定 {#contract-shared-across-bindings}
 
-下面的方法实现了同一个 `PowerPointViewerAPI` 约定（定义于 `pptx-viewer-shared`），React 的 `PowerPointViewerHandle` 和 Vue 的 `defineExpose` 接口也实现它。三种框架绑定提供等效 API，只是分别采用框架自身的惯例：React 的 `forwardRef` 句柄、Vue 的 `defineExpose` 和 Angular 的公开方法。
+下面的方法实现了同一个 `PowerPointViewerAPI` 约定（定义于 `ooxml-ui/pptx`），React 的 `PowerPointViewerHandle` 和 Vue 的 `defineExpose` 接口也实现它。全部五种框架绑定都提供等效的 API，只是分别采用框架自身的惯例：React 的 `forwardRef` 句柄、Vue 的 `defineExpose` 和 Angular 的公开方法。
 
 ```ts
 import type { PowerPointViewerAPI, ViewerMode } from 'pptx-angular-viewer';
@@ -169,6 +169,34 @@ const image = await createImageElementFromFile(file, canvasSize, signal);
 | `getSelectedElementIds` | `() => string[]`          | 获取当前选中的元素 ID。 |
 | `selectElements`        | `(ids: string[]) => void` | 按 ID 选择元素。        |
 | `clearSelection`        | `() => void`              | 清空选择。              |
+
+## 界面定制 {#ui-customization}
+
+该句柄还携带完整的 `ViewerCustomizationApi`，因此可以在查看器运行时定制界面外观。每次调用都会立即重新渲染受影响的界面。
+
+```ts
+this.viewer()?.hideRibbonTab('draw');
+this.viewer()?.lockSetting('general.userName', 'Ada Lovelace');
+this.viewer()?.hideContextMenuCommand('delete');
+this.viewer()?.remapShortcut('duplicate', 'Mod+Shift+D');
+this.viewer()?.setFeatureEnabled('ai', false);
+this.viewer()?.setPanelVisible('notes', false);
+this.viewer()?.updateCustomization({ hiddenDialogs: ['print'] });
+const current = this.viewer()?.getCustomization();
+```
+
+| 方法                                                                                                 | 作用                                               |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `getCustomization()` / `setCustomization(c)` / `updateCustomization(patch)` / `resetCustomization()` | 读取、替换、合并或清除整个 `ViewerCustomization`。 |
+| `hideRibbonTab` / `showRibbonTab`, `hideToolbarButton` / `showToolbarButton`                         | 功能区选项卡和顶层工具栏按钮。                     |
+| `hideOptionsPage`, `hideOptionsSection`, `hideSetting`（及 `show*`）                                 | 文件 > 选项的页面、分区和设置。                    |
+| `lockSetting(id, value, hidden?)` / `unlockSetting(id)` / `setSettingDefault(id, value)`             | 固定设置（只读或隐藏），或设置宿主默认值。         |
+| `hideBackstagePage` / `hideBackstageCard`（及 `show*`）                                              | 文件选项卡的页面和操作卡片。                       |
+| `hideContextMenuCommand` / `hideCanvasContextMenuCommand`（及 `show*`）                              | 元素和空白画布的右键菜单项。                       |
+| `disableShortcut` / `enableShortcut` / `remapShortcut`                                               | 编辑器键盘快捷键。                                 |
+| `setPanelVisible`, `setFeatureEnabled`, `setDialogAvailable`                                         | 面板、功能区域（AI、协作等）和对话框。             |
+
+完整的 ID 参考和用法示例见[界面定制指南](/zh/guide/customization)。
 
 ## 示例：外部控件 {#example-external-controls}
 

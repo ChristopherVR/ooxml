@@ -13,7 +13,7 @@ This is a public beta. Do not use a successful file open as evidence that every 
 3. Switch pages, adjust zoom, fit the page and select a shape.
 4. Review compatibility notes. Compare important files with their Microsoft Visio rendering.
 
-No document upload is performed. The controls support search, display layers, experimental plain-text editing, bounded undo/redo, SVG export and explicit VSDX-copy downloads. Print snapshots are API-only preparation; there is no print dialog. General drawing, PDF export and most legacy binary `.vsd` features are outside this build.
+No document upload is performed. The controls support search, display layers, experimental plain-text editing, bounded undo/redo, SVG export and explicit VSDX-copy downloads. Print snapshots are API-only preparation. File > Export can create a picture-page PDF, but vector or text-selectable PDF output, general drawing and most legacy binary `.vsd` features are outside this build.
 
 The other framework builds of the same playground are listed on [the demos page](/demos).
 
@@ -80,13 +80,13 @@ viewer.destroy();
 
 ## Run the development workspace
 
-Use Node.js 22.12 or newer. Normal builds install the released `ooxml-core/visio` API from npm.
+The viewer is part of the `ooxml` monorepo, a Bun workspace. Install once at the repository root with `bun install`; `ooxml-core` (`src/core/visio`) and `ooxml-ui` (`src/ui/src/visio`) resolve to the packages in the same checkout, so no linking step is needed.
 
 ```bash
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run check
-npm run dev
+bun install
+cd viewers/visio
+bun run check
+bun run dev
 ```
 
 Use the local URL printed by Vite. This starts a development server; it does not publish the site.
@@ -111,14 +111,16 @@ Supported background content and validated raster images are embedded. Fonts are
 
 ## Properties and events
 
-| Surface    | Current contract                                                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `ribbonAddIns`                                                                                 |
-| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` |
-| Lifecycle  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`         |
+| Surface    | Current contract                                                                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Lifecycle  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+
+`canEdit` is the editing permission (editable by default in the viewer; `false` is read-only), `collaboration` shares the open drawing in a room, and `document-change` reports `kind` `edit`, `undo`, `redo`, `remote` or `save`. After the host has persisted the bytes from `exportVsdx()`, `controller.markClean()` clears the dirty flag. To compose your own UI from the viewer's parts see the [building blocks](/building-blocks), and to share a drawing see [collaboration](/collaboration).
 
 Mount after the host exists and call `destroy()` when the framework view unmounts. Repeated destruction is safe. Partial updates leave omitted properties unchanged. The full reference is the [viewer API](/api).
 
 ## Verification before adoption
 
-Run `npm run check` and `npm run test:browser` in the viewer checkout. Core parser tests belong to the sibling engine. These checks establish only their asserted behavior; they do not establish Microsoft Visio visual parity.
+Run `bun run check` and `bun run test:browser` in `viewers/visio`. Core parser tests live with the engine in `src/core/visio` (run them with the repository's `bun run test`). These checks establish only their asserted behavior; they do not establish Microsoft Visio visual parity.

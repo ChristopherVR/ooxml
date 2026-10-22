@@ -15,6 +15,7 @@ export default defineConfig({
 
 	lastUpdated: true,
 	cleanUrls: true,
+	srcExclude: ['README.md'],
 	ignoreDeadLinks: true,
 
 	// Code blocks render on a dark card in both color modes (same as the
@@ -35,7 +36,7 @@ export default defineConfig({
 			link: '/fr/',
 			themeConfig: {
 				nav: [
-					{ text: 'Guide', link: '/fr/guide/', activeMatch: '/(fr/guide|fr/user|user)/' },
+					{ text: 'Guide', link: '/fr/guide/', activeMatch: '/(fr/guide|fr/user)/' },
 					{
 						text: 'OOXML Office',
 						link: 'https://christophervr.github.io/ooxml/',
@@ -44,6 +45,37 @@ export default defineConfig({
 					},
 					{ text: 'Versions', link: '/releases/', activeMatch: '/releases/' },
 				],
+				sidebar: {
+					'/fr/guide/': [
+						{
+							text: 'Pour commencer',
+							items: [
+								{ text: 'Apercu de la documentation', link: '/fr/guide/' },
+								{ text: "Qu'est-ce que pptx-viewer ?", link: '/fr/guide/introduction' },
+								{ text: 'Installation', link: '/fr/guide/installation' },
+								{ text: 'Demarrage rapide', link: '/fr/guide/quick-start' },
+								{ text: 'Architecture', link: '/fr/guide/architecture' },
+								{ text: 'Le modele PptxData', link: '/fr/guide/data-model' },
+								{ text: 'Localisation (i18n)', link: '/fr/guide/localization' },
+								{ text: 'Limitations', link: '/fr/guide/limitations' },
+							],
+						},
+					],
+					'/fr/user/': [
+						{
+							text: 'Guide utilisateur',
+							items: [
+								{ text: 'Apercu', link: '/fr/user/' },
+								{ text: 'Visualisation', link: '/fr/user/viewing' },
+								{ text: 'Edition', link: '/fr/user/editing' },
+								{ text: 'Presentation', link: '/fr/user/presenting' },
+								{ text: 'Exportation', link: '/fr/user/exporting' },
+								{ text: 'Collaboration', link: '/fr/user/collaboration' },
+								{ text: 'Raccourcis clavier', link: '/fr/user/shortcuts' },
+							],
+						},
+					],
+				},
 			},
 		},
 		es: {
@@ -52,7 +84,7 @@ export default defineConfig({
 			link: '/es/',
 			themeConfig: {
 				nav: [
-					{ text: 'Guía', link: '/es/guide/', activeMatch: '/(es/guide|user)/' },
+					{ text: 'Guía', link: '/es/guide/', activeMatch: '/(es/guide|es/user)/' },
 					{
 						text: 'OOXML Office',
 						link: 'https://christophervr.github.io/ooxml/',
@@ -61,6 +93,37 @@ export default defineConfig({
 					},
 					{ text: 'Versiones', link: '/releases/', activeMatch: '/releases/' },
 				],
+				sidebar: {
+					'/es/guide/': [
+						{
+							text: 'Empezar',
+							items: [
+								{ text: 'Resumen de la documentación', link: '/es/guide/' },
+								{ text: '¿Qué es pptx-viewer?', link: '/es/guide/introduction' },
+								{ text: 'Instalación', link: '/es/guide/installation' },
+								{ text: 'Inicio rápido', link: '/es/guide/quick-start' },
+								{ text: 'Arquitectura', link: '/es/guide/architecture' },
+								{ text: 'El modelo PptxData', link: '/es/guide/data-model' },
+								{ text: 'Localización (i18n)', link: '/es/guide/localization' },
+								{ text: 'Limitaciones', link: '/es/guide/limitations' },
+							],
+						},
+					],
+					'/es/user/': [
+						{
+							text: 'Guía de usuario',
+							items: [
+								{ text: 'Resumen', link: '/es/user/' },
+								{ text: 'Visualización', link: '/es/user/viewing' },
+								{ text: 'Edición', link: '/es/user/editing' },
+								{ text: 'Presentación', link: '/es/user/presenting' },
+								{ text: 'Exportación', link: '/es/user/exporting' },
+								{ text: 'Colaboración', link: '/es/user/collaboration' },
+								{ text: 'Atajos de teclado', link: '/es/user/shortcuts' },
+							],
+						},
+					],
+				},
 			},
 		},
 		de: {
@@ -69,7 +132,7 @@ export default defineConfig({
 			link: '/de/',
 			themeConfig: {
 				nav: [
-					{ text: 'Leitfaden', link: '/de/guide/', activeMatch: '/(de/guide|user)/' },
+					{ text: 'Leitfaden', link: '/de/guide/', activeMatch: '/(de/guide|de/user)/' },
 					{
 						text: 'OOXML Office',
 						link: 'https://christophervr.github.io/ooxml/',
@@ -78,6 +141,37 @@ export default defineConfig({
 					},
 					{ text: 'Versionen', link: '/releases/', activeMatch: '/releases/' },
 				],
+				sidebar: {
+					'/de/guide/': [
+						{
+							text: 'Erste Schritte',
+							items: [
+								{ text: 'Dokumentationsübersicht', link: '/de/guide/' },
+								{ text: 'Was ist pptx-viewer?', link: '/de/guide/introduction' },
+								{ text: 'Installation', link: '/de/guide/installation' },
+								{ text: 'Schnellstart', link: '/de/guide/quick-start' },
+								{ text: 'Architektur', link: '/de/guide/architecture' },
+								{ text: 'Das PptxData-Modell', link: '/de/guide/data-model' },
+								{ text: 'Lokalisierung (i18n)', link: '/de/guide/localization' },
+								{ text: 'Einschränkungen', link: '/de/guide/limitations' },
+							],
+						},
+					],
+					'/de/user/': [
+						{
+							text: 'Benutzerhandbuch',
+							items: [
+								{ text: 'Übersicht', link: '/de/user/' },
+								{ text: 'Ansehen', link: '/de/user/viewing' },
+								{ text: 'Bearbeiten', link: '/de/user/editing' },
+								{ text: 'Präsentieren', link: '/de/user/presenting' },
+								{ text: 'Exportieren', link: '/de/user/exporting' },
+								{ text: 'Zusammenarbeit', link: '/de/user/collaboration' },
+								{ text: 'Tastenkürzel', link: '/de/user/shortcuts' },
+							],
+						},
+					],
+				},
 			},
 		},
 		zh,
@@ -140,7 +234,11 @@ export default defineConfig({
 						{ text: 'Theming', link: '/guide/theming' },
 						{ text: 'UI Customization', link: '/guide/customization' },
 						{ text: 'Viewport Fitting', link: '/guide/viewport-fit' },
+						{ text: 'Slide Links', link: '/guide/slide-links' },
+						{ text: 'Element Update Batches', link: '/guide/element-update-batches' },
+						{ text: 'Ribbon parity (Home to Design)', link: '/guide/ribbon-parity' },
 						{ text: 'Ribbon parity (other tabs)', link: '/guide/ribbon-parity-other-tabs' },
+						{ text: 'Shared UI migration log', link: '/guide/ui-migration' },
 						{ text: 'Host-owned Collaboration', link: '/guide/host-owned-collaboration' },
 						{ text: 'Host-owned Storage', link: '/guide/host-owned-storage' },
 						{ text: 'Review Inside Your Application', link: '/guide/review-workflow' },
@@ -149,6 +247,18 @@ export default defineConfig({
 						{ text: 'Account & Sign-in', link: '/guide/account' },
 						{ text: 'Visual Effect Fidelity', link: '/guide/visual-effects' },
 						{ text: 'Runtime Environments', link: '/guide/runtime-environments' },
+						{ text: 'Limitations', link: '/guide/limitations' },
+						{ text: 'OpenXML Conformance', link: '/architecture/openxml-conformance' },
+					],
+				},
+			],
+
+			'/architecture/': [
+				{
+					text: 'Architecture',
+					items: [
+						{ text: 'OpenXML Conformance', link: '/architecture/openxml-conformance' },
+						{ text: 'Architecture Guide', link: '/guide/architecture' },
 						{ text: 'Limitations', link: '/guide/limitations' },
 					],
 				},

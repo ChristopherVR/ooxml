@@ -33,8 +33,6 @@ import {
 	fingerprint,
 	fromBase64,
 	isLocalOnlyPart,
-	parseRelationships,
-	relsPathOf,
 	resolveTarget,
 	withOverrides,
 	withPageOverrides,

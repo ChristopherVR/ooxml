@@ -50,3 +50,6 @@ desktop/src-tauri/gen/
 *.pfx
 .npmrc
 .netrc
+
+# Report written by bun run docs:check
+/docs-health.md

@@ -59,6 +59,10 @@ are available from the package. For an imperative browser integration,
 `destroy`. ProseMirror, `docx-core`, `ooxml-core` and `ooxml-ui` are regular
 dependencies; document and layout algorithms live in OOXML core.
 
+## Custom editor UI
+
+To render only the controls you use, with your own design system, use the building blocks. `createViewerBuildingBlocks` returns a session that `mountDocumentCanvas`, `mountToolbar` and `mountPageNavigation` render into your own host elements. The surface is read-only until you pass `canEdit: true`; a read-only surface still allows selection, keyboard navigation and copy. Hosts that relied on the former editable default must now pass `canEdit: true`. See [Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
+
 ## Limitations
 
 This is an early editor. It does not establish Microsoft Word layout parity or

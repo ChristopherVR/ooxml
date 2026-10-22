@@ -162,16 +162,17 @@ styles côte à côte.
 
 ## Exécuter depuis les sources
 
-Nécessite Node 22+ et Bun. Si le dépôt [`ooxml`](https://github.com/ChristopherVR/ooxml) est
-extrait à côté de celui-ci (`../ooxml-core`), les démos et les tests utilisent ses sources ; sinon,
-ils utilisent les paquets publiés `ooxml-core` et `ooxml-ui`.
+Nécessite Node 22+ et Bun. Ce dossier est `viewers/teams` du dépôt
+[`ooxml`](https://github.com/ChristopherVR/ooxml) : exécutez `bun install` à la racine du dépôt, puis les
+commandes ci-dessous ici. Les démos (`demos/teams/*` à la racine) et les tests utilisent les sources de
+`ooxml-core` et `ooxml-ui` du même arbre.
 
 ```bash
-bun install
-bun run dev        # server on :8787, vanilla demo on :5173, React demo on :5174
+bun install        # à la racine du dépôt
+bun run dev        # dans viewers/teams : serveur :8787, démo vanilla :5173, démo React :5174
 ```
 
 Ouvrez `http://127.0.0.1:5173/?name=Ada` puis, dans un autre onglet, `...?name=Bob` : deux
 personnes dans un même espace de travail. `?local=1` s’exécute sans le serveur. `TEAMS_USE_DIST=1`
-fait utiliser aux démos les paquets construits (`bun run build:packages` d’abord) et les paquets
-ooxml publiés plutôt que les sources. Les caméras et les microphones exigent `localhost` ou HTTPS.
+fait utiliser aux démos les paquets construits (`bun run build:packages` d’abord) plutôt que les sources.
+`TEAMS_DEMOS=vanilla,vue` choisit les démos que lance `bun run dev`. Les caméras et les microphones exigent `localhost` ou HTTPS.

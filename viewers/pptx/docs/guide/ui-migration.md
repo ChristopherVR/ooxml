@@ -28,46 +28,34 @@ focus. Secondary inline placements use the same view without automatic focus.
 
 The property/event/lifecycle contract is documented in
 `src/ui/src/pptx/web-components/README.md`. The neutral browser spec is
-`e2e/theme-editor-migration.spec.ts`; it checks docking, focus, draft dismissal,
+`e2e/pptx/theme-editor-migration.spec.ts`; it checks docking, focus, draft dismissal,
 Reset, Apply, saved theme XML, narrow actions and forced colors. Adapter unit
 tests cover native callbacks, disabled state and React 18/19 compatibility.
 
-## Incremental ribbon rollout (#363)
+## Ribbon rollout (#363)
 
-The integrated Slide Show, Help and Record batches establish the command/group
-contract and five-binding adapters. Future tab batches must record comparable
-baselines before implementation, preserve public customization ids, replace
-duplicate view/CSS and verify their own native actions. Generic buttons should
-be extracted only when their contract differs from a ribbon command. The
-milestone and focused tab issues carry the remaining inventory; slide-content
-rendering remains a separate architecture decision.
+Every planned ribbon family has been delivered in all five bindings. The sections below
+record each one, in the order they landed.
 
-The completed foundation issues are #346 (search), #347 (File spacing), #348
-(checkboxes) and #349 (app-owned selects). Slide Show (#360/#361), the lifecycle
-contract (#362), Help (#366), Record (#367) and Subtitle Settings (#365) are
-integrated. Theme-editor parity is delivered in #364. These completion records
-do not claim that the remaining UI inventory has already migrated.
+| Family                                       | Issue | Status                                      |
+| -------------------------------------------- | ----- | ------------------------------------------- |
+| Home                                         | #373  | Delivered, see "Home"                       |
+| Insert                                       | #374  | Delivered, see "Insert"                     |
+| Transitions                                  | #377  | Delivered, see "Transitions"                |
+| Animations                                   | #378  | Delivered, see "Animations"                 |
+| Distinct non-ribbon buttons and icon-buttons | #386  | Delivered, see "Non-ribbon families (#386)" |
 
-| Planned family                               | Issue | Owner         |
-| -------------------------------------------- | ----- | ------------- |
-| Home (delivered, see below)                  | #373  | ChristopherVR |
-| Insert                                       | #374  | ChristopherVR |
-| Insert (delivered, see below)                | #374  | ChristopherVR |
-| Transitions                                  | #377  | ChristopherVR |
-| Animations                                   | #378  | ChristopherVR |
-| Distinct non-ribbon buttons and icon-buttons | #386  | ChristopherVR |
-
-These are native children of #363 in the Thin UI adapters milestone. Each has
-its own baseline, shared/native boundary and validation requirements. Their
-`ui:planned` status means implementation is still outstanding; contributors
-should claim a bounded family before starting to avoid overlapping changes.
+The Slide Show, Help and Record batches established the command/group contract and the
+five-binding adapters; later tabs reused them. Slide-content rendering stays a separate
+architecture decision. This page is a historical evidence log: it records what was
+measured when each batch landed, not a list of outstanding work.
 
 ## Design, Review and contextual galleries
 
 Design (#376), Review (#379), Shape Format (#381), Picture Format (#382),
 Table Design (#383), Chart Design (#384) and SmartArt Design (#385) now use
 shared groups, commands and gallery views in all five bindings. The main UI
-rework tracker (#342) remains open for the remaining families above.
+rework tracker (#342) covers the control primitives and tokens described later on this page.
 
 Design command metadata controls availability and open state. Review uses
 seven canonical groups and a keyed section view that preserves command focus
@@ -105,7 +93,7 @@ disable drawing intents. Theme tokens, forced colors and coarse-pointer
 targets follow the shared control contract. Comparable screenshots are
 `<binding>-draw.png` in the baseline and after directories.
 
-`e2e/ribbon-draw-migration.spec.ts` covers keyboard tool activation, native
+`e2e/pptx/ribbon-draw-migration.spec.ts` covers keyboard tool activation, native
 ink creation, undo/redo, InkML save/reload, customization, tokens, touch
 targets and dismissal. Saved InkML verifies width and color; rendered paths
 or pressure circles verify the reloaded stroke. Existing highlighter and
@@ -134,7 +122,7 @@ Handout Master, Notes Master, Zoom and Macros remain disabled placeholders.
 Boundary: the full-window Outline, Reading and Slide Sorter views are native
 overlays and are not part of this change. Eyedropper active state is only
 reflected where the host exposes it (React, Vue and Angular).
-`e2e/ribbon-view-migration.spec.ts` covers ids, keyboard and pointer toggles,
+`e2e/pptx/ribbon-view-migration.spec.ts` covers ids, keyboard and pointer toggles,
 native ruler effects, Outline/Normal switching, template state, preference
 persistence, customization, touch targets, theme tokens and forced colors.
 Comparable screenshots are `<binding>-view.png` in the baseline and after
@@ -160,7 +148,7 @@ Effect Options catalogue id still has no control in any binding. Boundary:
 the Vanilla and Angular hosts do not track inspector open state, so their
 Inspector command never shows as pressed.
 
-`e2e/ribbon-transitions-migration.spec.ts` covers ids, keyboard activation,
+`e2e/pptx/ribbon-transitions-migration.spec.ts` covers ids, keyboard activation,
 applying a preset, duration, a timed advance and a stock sound to the deck,
 undo/redo, save and reload, Apply to All across slides, the stage Preview,
 customization, touch targets, theme tokens, focus and forced colors.
@@ -191,7 +179,7 @@ placeholders; Vanilla's panel commands still toggle the inspector.
 
 Public customization ids are unchanged. Boundary: the Svelte and Vanilla
 play-order timeline rows and the inspector Animation panel are native and not
-part of this change. `e2e/ribbon-animations-migration.spec.ts` covers ids, a real
+part of this change. `e2e/pptx/ribbon-animations-migration.spec.ts` covers ids, a real
 effect added through the gallery, the deck-level animation pane, undo/redo,
 save and reload, customization, touch targets, focus, theme tokens and forced
 colors. Comparable screenshots are `<binding>-animations.png` in the baseline
@@ -223,7 +211,7 @@ format picker), as before. Group order now follows PowerPoint (Text Box moved
 into the Text group) and each group has a caption (new `pptx.insert.group*` keys in
 English, German, Spanish, French and Simplified Chinese).
 
-`e2e/ribbon-insert-migration.spec.ts` covers ids, keyboard and pointer
+`e2e/pptx/ribbon-insert-migration.spec.ts` covers ids, keyboard and pointer
 insertion of a text box, shape and table with undo/redo and a save/reload round
 trip, the Chart/Action/Field menus, Freeform pressed state, Link selection
 gating, the native SmartArt/Equation dialogs and image file chooser,
@@ -287,7 +275,7 @@ Locale: Vue and Svelte derive the shared `translate` with
 `homeSnapshotTranslator` over every family they render, inside the reactive
 state, so a runtime language change re-translates the strips; React and Angular
 re-apply on `i18n`/`TranslateService` change and Vanilla rebuilds its chrome.
-Unit tests per binding and `e2e/editor-controls-localization.spec.ts` cover it.
+Unit tests per binding and `e2e/pptx/editor-controls-localization.spec.ts` cover it.
 
 ### Decision per control
 
@@ -332,7 +320,7 @@ Native on purpose, with the technical reason:
 - The edit toolbar's own text-format group in Svelte (`FontExtrasGroup`,
   `FontFamilySelect`, `ShapeFormatGroup`); it is not part of the Home ribbon.
 
-`e2e/ribbon-home-migration.spec.ts` covers ids, selection and clipboard gating,
+`e2e/pptx/ribbon-home-migration.spec.ts` covers ids, selection and clipboard gating,
 real copy/paste/cut with undo and redo, the Format Painter, customization,
 touch targets, theme tokens and forced colors across all five bindings, and
 now the font, colour, paragraph, Select, Shape Fill/Outline, outline width,
@@ -411,7 +399,7 @@ Behaviour changed so all five bindings now agree:
   omit the whole bar on phones, and Svelte and Vanilla hide the host with CSS;
   those remain host-owned and unchanged.
 
-`e2e/status-bar-migration.spec.ts` covers the counter, names, pressed state, the
+`e2e/pptx/status-bar-migration.spec.ts` covers the counter, names, pressed state, the
 zoom effect on the stage, keyboard activation, the slide sorter, panel
 customization, touch targets, theme tokens and forced colors on all five
 bindings. `chrome-shell-parity.spec.ts` now measures the bar through its shadow
@@ -470,7 +458,7 @@ Evidence: `/assets/ui-migration/primitives-before/` and
 `-file-menu`, `-options` and `-inspector`. The unit checks are
 `control-primitives.test.ts` (token coverage, search, checkbox and select
 states) and `modal-focus.test.ts`; the browser contract is
-`e2e/ui-primitives-consistency.spec.ts`, run in all five bindings alongside the
+`e2e/pptx/ui-primitives-consistency.spec.ts`, run in all five bindings alongside the
 existing `search-field-focus`, `backstage-nav-spacing` and `web-controls` specs.
 
 ### Dialog and panel controls
@@ -507,9 +495,9 @@ replaced the option under the pointer and dropped the click.
 The guard is `src/ui/src/pptx/web-components/native-controls.test.ts`, which
 scans every binding source (and the shared web components) for a native `<select>`
 or `<input type="checkbox">` and fails unless the file is listed with a technical
-reason (the list is empty). `e2e/dialog-controls.spec.ts` opens Print, Hyperlink,
+reason (the list is empty). `e2e/pptx/dialog-controls.spec.ts` opens Print, Hyperlink,
 Set Up Show, Custom Shows and Document Properties in every binding and fails if
-the page shows either native control; `e2e/ui-primitives-consistency.spec.ts`
+the page shows either native control; `e2e/pptx/ui-primitives-consistency.spec.ts`
 covers the PageUp/PageDown behaviour.
 
 Before and after captures, per binding, are in
@@ -536,7 +524,7 @@ radio groups now.
 
 Roving tabindex with arrows, Home and End and the single tab stop per group are
 unit-tested in `control-primitives.test.ts` and checked in all five bindings by
-`e2e/dialog-controls.spec.ts` (Set Up Show). `ui-primitives-consistency`
+`e2e/pptx/dialog-controls.spec.ts` (Set Up Show). `ui-primitives-consistency`
 asserts the 16px size, round shape and focus ring, including forced colours.
 
 `pptx-ui-switch` is the AutoSave toggle in `pptx-ui-title-bar`. It keeps the
@@ -655,7 +643,7 @@ props, callbacks and test classes (`.pptx-vue-notes-toolbar`,
 | Svelte  | [Before](/assets/ui-migration/notes-toolbar/svelte-before.png)  | [After](/assets/ui-migration/notes-toolbar/svelte-after.png)  |
 | Vanilla | [Before](/assets/ui-migration/notes-toolbar/vanilla-before.png) | [After](/assets/ui-migration/notes-toolbar/vanilla-after.png) |
 
-`e2e/notes-toolbar-migration.spec.ts` covers the button order and names, real
+`e2e/pptx/notes-toolbar-migration.spec.ts` covers the button order and names, real
 Bold, bullet and indent edits that survive a slide change, the link popover with
 no `window.prompt`, Escape and empty-URL handling, roving focus, the disabled
 plain mode, Print, theme tokens, forced colors and 44px touch targets on all
@@ -734,10 +722,10 @@ All five adapters support Ctrl/Cmd toggles, Shift ranges, select-all, selection
 counts in the menu, multi-slide copy/paste, and thumbnail zoom. Click selects;
 double-click opens a slide. Escape collapses a multi-selection before closing.
 Paste duplicates the copied source slides in deck order, matching the existing
-React behavior. `e2e/slide-sorter-selection.spec.ts` runs this contract against
+React behavior. `e2e/pptx/slide-sorter-selection.spec.ts` runs this contract against
 each binding. Section colours, collapse and drag state stay native.
 
-`e2e/slide-rail-menus-parity.spec.ts` drives all five bindings through the Add
+`e2e/pptx/slide-rail-menus-parity.spec.ts` drives all five bindings through the Add
 Slide footer (flat and sectioned), the section menu (commands, role, no inline
 buttons), inline rename without a prompt, Move Up/Down gating and reordering, and
 the sorter menu (commands, Copy then Paste, Hide then Show).
@@ -788,7 +776,7 @@ The labels are the existing keys, already translated in German, Spanish, French
 and Simplified Chinese; no new key was needed. Svelte's Replace and Reset
 Picture labels now use `pptx.image.replaceImage` and `pptx.image.resetImage`.
 
-`e2e/inspector-reset-actions.spec.ts` (fixture `inspector-reset-actions.pptx`)
+`e2e/pptx/inspector-reset-actions.spec.ts` (fixture `inspector-reset-actions.pptx`)
 checks the five actions, their gating and undo on all five bindings.
 
 ### Title bar and quick access (#394)
@@ -856,7 +844,7 @@ today every tooltip reads plain "Undo" and "Redo"). Svelte also passes the autos
 disabled reason, so a host `autosave: false` or a missing file path shows the same status
 text everywhere. `review.language` has no action in any binding.
 
-`e2e/title-bar-migration.spec.ts` covers the names, order, AutoSave switch, roving
+`e2e/pptx/title-bar-migration.spec.ts` covers the names, order, AutoSave switch, roving
 focus and tab order, search results, panel customization, narrow widths, theme
 tokens, touch targets and forced colors on all five bindings.
 `chrome-shell-parity.spec.ts` now measures the bar through its shadow root and compares
@@ -864,9 +852,6 @@ the command-search rows across bindings. Adapter
 unit tests cover state mapping, event routing, gating, slots and the below-ribbon
 placement for each binding. Before and after screenshots are in
 `docs/public/assets/ui-migration/title-bar-before` and `title-bar-after`.
-
-shell, presentation toolbars, title bar and quick access, and compatibility
-toasts. This is why the issue stays open.
 
 ## Context menus (#393)
 
@@ -945,14 +930,14 @@ menu: `/assets/ui-migration/context-menu/before/<binding>-<menu>.png` and
 `/after/` for `element`, `canvas`, `slide-rail` and `presentation` (for example
 `react-element.png`).
 
-`e2e/context-menu-migration.spec.ts` runs once per binding and covers markers and
+`e2e/pptx/context-menu-migration.spec.ts` runs once per binding and covers markers and
 roles, the first-row focus, arrows, Home, End and type-ahead, Enter activation,
 Escape and outside dismissal with clean reopen, the canvas toggles, the thumbnail
 menu, the slide-show menu above the overlay with grouped sections, clamping at the
 bottom-right corner, theme tokens, forced colors and 44px touch rows. The existing
 `context-menu-parity`, `canvas-context-menu-parity`, `slides-pane-parity`,
 `host-context-menu-commands` and `edit-points` specs read the menus through the
-shared element's shadow root (`e2e/support/context-menu.ts`). Shared unit tests
+shared element's shadow root (`e2e/pptx/support/context-menu.ts`). Shared unit tests
 cover the element contract, the row mappers and each binding's adapter.
 
 ## Non-ribbon families (#386)
@@ -1029,7 +1014,7 @@ migrated family in every binding; shared tests cover the elements, their styles
 (44px targets, forced colors, tokens), the shadow-aware focus trap and the
 slot-state rules.
 
-`e2e/chrome-controls-migration.spec.ts` runs on all five bindings and covers the
+`e2e/pptx/chrome-controls-migration.spec.ts` runs on all five bindings and covers the
 read-only banner (names, password focus, wrong and correct password, 44px), the
 compatibility toasts (dismiss one and all, tokens, forced colors, 44px), the paste
 options strip (four formats, choose, dismiss by key), the dialog footer (keyboard
@@ -1101,7 +1086,7 @@ Legend: **M** migrated, **N** kept native, **-** the binding has no such dialog.
 
 Tests: shared (`chrome-controls`) covers the new action fields; each binding's
 adapter and dialog tests find footer buttons through the open shadow root
-(`dialog-footer.test-support`); `e2e/dialog-footers-migration.spec.ts` opens nine
+(`dialog-footer.test-support`); `e2e/pptx/dialog-footers-migration.spec.ts` opens nine
 dialogs in every binding and checks the footer element, the primary action last,
 Escape (which leaves the footer intact) and Enter on a focused Cancel. Escape itself is the shell's and is not uniform: React Print, Hyperlink, Set Up Slide Show and Document Properties, the same Svelte dialogs, and the Vanilla Document Properties and Password dialogs have no Escape handler (pre-existing, unchanged by this work, tracked as a follow-up). Before and after captures are in
 `docs/public/assets/ui-migration/dialog-footers/`.

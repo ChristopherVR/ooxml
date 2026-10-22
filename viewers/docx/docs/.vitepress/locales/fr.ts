@@ -49,6 +49,7 @@ export const fr = {
 					{ text: 'Les démos en direct', link: '/demos' },
 					{ text: 'Architecture', link: '/fr/architecture' },
 					{ text: 'Adaptateurs de frameworks', link: '/bindings' },
+					{ text: 'Blocs de construction', link: '/building-blocks' },
 					{ text: 'Unités du modèle', link: '/model-units' },
 				],
 			},
@@ -82,8 +83,6 @@ export const fr = {
 				items: [
 					{ text: 'Feuille de route de la prise en charge', link: '/parity-roadmap' },
 					{ text: 'Travaux restants', link: '/outstanding-work' },
-					{ text: 'Plan d’ooxml-core', link: '/ooxml-core-plan' },
-					{ text: 'Code de format partagé', link: '/reuse-audit' },
 					{ text: 'Publication des paquets', link: '/releasing' },
 				],
 			},

@@ -25,6 +25,8 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | `TEAMS_ORIGINS` | 无          | 以逗号分隔的、允许访问套接字和文件的 `Origin`。未设置时：有令牌则允许任意来源，无令牌则仅允许回环地址。 |
 | `TEAMS_DATA`    | `./data`    | 数据目录：`rooms/<room>.bin` 快照和 `files/<workspace>/`。                                              |
 
+服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes` 和 `insecure`。
+
 也可以将其嵌入：
 
 ```js
@@ -65,6 +67,9 @@ const config = {
 | `GET /files/<workspace>/<name>`       | 以附件形式下载（`Content-Disposition: attachment`、`Referrer-Policy: no-referrer`、`nosniff`）。          |
 | `POST /files/link/<workspace>/<name>` | 返回 `{ url }`：仅针对该文件签名的链接，有效期五分钟，因此令牌不会出现在 URL 中。                         |
 | `GET /health`                         | `{ ok, rooms, calls, auth }`。                                                                            |
+| `POST /auth/session`                  | 为 `{ user, credential }` 签发会话（有速率限制）。参见服务器 README 中的 "Accounts and sessions"。        |
+| `POST /auth/check`, `/auth/signout`   | 检查 `{ session }`（204 或 401）；登出，会撤销该用户的会话。                                              |
+| `POST /auth/revoke`                   | 运营者使用 `TEAMS_ADMIN_TOKEN` 撤销 `{ user }`；没有管理员令牌时为 404。                                  |
 
 房间名必须匹配 `^[\w-]{1,128}$`，文件路径中的工作空间 id 必须匹配 `^[\w-]{1,64}$`；文件名会被清理为仅含字母、数字、`.`、`-`、`_`、空格和括号，并截断为 120 个字符。
 
@@ -95,7 +100,7 @@ const config = {
 在让人们使用它之前，请先弄清楚以下几点：
 
 - **无端到端加密。** 它存储并且可以读取每一条消息和每一个文件。
-- **无用户账户。** `TEAMS_TOKEN` 是所有人共用的一个密钥，保存在浏览器中。它可以把陌生人挡在小团队的服务器之外，但并不是按用户的身份验证。客户端中的作者和角色检查可以被恶意客户端绕过，因此服务器才是信任边界：实际使用时请在前面放置你自己的身份验证（检查会话的代理）。
+- **账户是可选且精简的。** 使用 `users`（或 `TEAMS_USERS_FILE`）或 `authenticate` 函数时，服务器会签发会话（`POST /auth/session`）、从会话中获取用户 ID，并可以撤销会话。没有它们时，`TEAMS_TOKEN` 是所有人共用的一个密钥，保存在浏览器中，用户 ID 只是声明。没有密码重置、账户管理、SSO，也没有按团队的访问控制。客户端中的作者和角色检查可以被恶意客户端绕过，因此服务器是信任边界：请使用 `authenticate` 接入你的身份提供方，并用 `authorizeSync` 实现按房间的权限。
 - **自身不提供 TLS。** 请在终止 TLS 并升级 WebSocket 的反向代理之后运行它；浏览器会拒绝 `https://` 页面发起的 `ws://` 连接。
 - **单进程，房间驻留内存。** 它不支持水平扩展。房间在其最后一个套接字关闭 30 秒后被卸载。
 - **每个房间一个快照，不做压缩。** 文档会随历史增长，且从不修剪。

@@ -11,15 +11,15 @@ Delete any section that genuinely does not apply.
 
 ## Needed by
 
-<!-- If a viewer repository is waiting for this, link its PR or issue:
-Needed by: ChristopherVR/pptx-viewer#123. Land this first, release it, then the viewer; see
-docs/linked-changes.md. Delete if none. -->
+<!-- If a repository outside this one is waiting for this, link its PR or issue; see
+docs/linked-changes.md. The viewers in viewers/ are part of this repository: change them in the
+same PR. Delete if none. -->
 
 ## Type of change
 
 - [ ] Bug fix (non-breaking)
 - [ ] New feature (non-breaking)
-- [ ] Breaking change (viewers adopt releases automatically; say what breaks)
+- [ ] Breaking change (it breaks the in-repo viewers' CI at once, so update them in the same PR; say what breaks)
 - [ ] Docs / tooling / CI only
 
 ## Area

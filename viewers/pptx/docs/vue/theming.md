@@ -103,7 +103,7 @@ The React and Angular packages export the same five symbols from `pptx-react-vie
 import type { ViewerTheme, ViewerThemeColors } from 'pptx-vue-viewer';
 ```
 
-Both types live in `pptx-viewer-shared` and are re-exported from `pptx-vue-viewer` (via `./theme`)
+Both types live in `ooxml-ui/pptx` and are re-exported from `pptx-vue-viewer` (via `./theme`)
 so the definition is identical across bindings. Every field is optional; unset values fall back to
 the dark-theme defaults. Each color key maps to a `--pptx-<kebab-key>` CSS custom property.
 

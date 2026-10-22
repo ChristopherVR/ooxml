@@ -20,6 +20,20 @@ viewer.destroy(); // idempotent; later commands reject
 
 导入该模块对 SSR 是安全的；挂载和元素注册仅限浏览器。`ViewerController` 不依赖 DOM，因此其他渲染器可以订阅相同的状态和事件。`renderPage` 是 SVG 渲染器端口。模块的职责归属见[架构](/zh/architecture)。
 
+## 属性与事件 {#properties-and-events}
+
+每个绑定都接受相同的属性并报告相同的事件（约定为 `ooxml-ui/visio` 中的 `ViewerProperties` 和 `ViewerEvents`；[绑定](/bindings)列出了各框架的原生形式）。
+
+| 接口 | 约定                                                                                                                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 属性 | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
+| 事件 | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+
+- `canEdit`（布尔值）是编辑权限。完整查看器默认可编辑，`canEdit: false` 使其只读；[构建模块](/building-blocks)在宿主传入 `true` 之前是只读的。没有包字节的图纸（作为 `document` 传入的模型、旧版 `.vsd`）无论 `canEdit` 取何值都是只读的。
+- `document-change` 携带 `{ document, dirty, kind }`。`kind` 对本窗口自己的更改为 `edit`、`undo` 或 `redo`，应用协作者的更改时为 `remote`，`markClean()` 之后为 `save`。
+- `markClean()`（位于 `viewer.controller` 和构建模块上）声明当前内容已保存。自行保存 `exportVsdx()` 结果的宿主在保存后调用它：`edit.dirty` 变为 `false`，触发一次 `kind` 为 `save` 的 `document-change`，之后的编辑和撤销步骤以该点为基准计算。对无法回存的图纸，它不执行任何操作。
+- `collaboration`（`VisioCollaborationOptions | null`）在设置期间于房间中共享已打开的图纸。共享开始或结束，以及状态、同步或参与者发生变化时，`collaboration-change` 会携带一个 `CollaborationState`。在元素上（句柄的 `viewer.element`），`collaborationState` 读取当前状态，`reconnectCollaboration()` 和 `stopCollaboration()` 对其起作用。参见[协作](/zh/collaboration)。
+
 ## 选择形状 {#select-shapes}
 
 每个已挂载的/原生的句柄都提供 `selectShapes(targets)`、`selectAll()` 和 `clearSelection()`。目标的形式为 `{ id, name, pageId? }`；省略 `pageId` 表示当前页面。`controller.state.selectedShapes` 是有序的不可变数组，其第一项为主选形状 `selectedShape`。现有的 `shape-select` 事件报告该主选项；`selection-change` 报告完整数组。这些状态可通过各框架原生的 hook、composable、signal 或 store 获得。Vue 会发出 `selection-change`；Angular 提供 `selectionChange`；六个适配器都接受 `events['selection-change']`。
@@ -132,7 +146,7 @@ UTF-8 的上限为 16 MiB；调用方可以降低它。保守的预检可能会�
 
 ## 实验性本地纯文本编辑 {#experimental-local-plain-text-editing}
 
-在 `load(bytesOrBlob)` 之后，选择一个本地形状并使用共享的文本控件，或者在任何已挂载的/原生句柄上调用 `replacePlainText(pageId, shapeId, text)`。`undo()` 和 `redo()` 使用有上限的文档历史；`cancelEdit()` 会取消待处理的工作。六个适配器都转发相同的方法和 `document-change` 事件，其 detail 为 `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`。检查 `controller.state.edit` 可了解源是否可用、忙碌/脏状态、撤销/重做是否可用、历史是否被截断、错误和诊断信息。
+在 `load(bytesOrBlob)` 之后，选择一个本地形状并使用共享的文本控件，或者在任何已挂载的/原生句柄上调用 `replacePlainText(pageId, shapeId, text)`。`undo()` 和 `redo()` 使用有上限的文档历史；`cancelEdit()` 会取消待处理的工作。六个适配器都转发相同的方法和 `document-change` 事件，其 detail 为 `{ document, dirty, kind }`（kind 为 `edit`、`undo` 或 `redo`，另有 `remote` 和 `save`；见上文）。检查 `controller.state.edit` 可了解源是否可用、忙碌/脏状态、撤销/重做是否可用、历史是否被截断、错误和诊断信息。
 
 由查看器加载或创建的、以源为依据的 VSDX 文档可以被编辑，或导出为 VSDX。二进制 VSD v11 导入通过 ooxml-core 使用已发布的 ole2 编解码器：受支持的显式页面/形状变换、移动/线条几何和纯文本会以带有诊断说明的回退样式进行预览。原始的旧版字节会被私下保留；旧版源的编辑、撤销/重做和 VSDX 导出均被禁用。更早的二进制版本、组/母版、复杂几何、模具、模板和启用宏的格式仍不受支持。通过 `document` 赋值的模型不提供可编辑的包字节。核心验证会拒绝与母版关联的形状、富文本、字段、已签名的包以及启用宏的内容。XML/包的编辑在隔离的 Worker 中运行；框架包装器不实现格式逻辑。纯文本编辑会拒绝受影响的或未知的、依赖文本的公式缓存，而不是让它们过期，并遵守有效的 `LockTextEdit` 保护。VSDX 的逻辑文本不包括其存储的末尾段落标记，同时保留有意的末尾 LF 字符和空白段落。旧版 VSD 的文本语义保持不变。富文本内容编辑仍不受支持。
 

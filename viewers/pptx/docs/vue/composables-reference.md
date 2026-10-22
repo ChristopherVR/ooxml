@@ -79,17 +79,16 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ## Canvas interaction
 
-| Composable             | Concern                                                                 |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `useContextMenu`       | Right-click / long-press element context menu.                          |
-| `useIsMobile`          | Device/viewport classification (mobile/tablet/orientation).             |
-| `useTouchGestures`     | Pinch-zoom, pan, and long-press gesture recognition.                    |
-| `useKeyboardInsets`    | Adjusts layout for the on-screen keyboard (mobile).                     |
-| `useKeyboardShortcuts` | Hotkey catalog, grouping, and match resolution.                         |
-| `useSheetDismissDrag`  | Swipe-to-dismiss for bottom sheets (mobile).                            |
-| `useToolbarAutoHide`   | Mouse-idle auto-hide for the floating presentation toolbar.             |
-| `useDebouncedCallback` | Generic debounced-callback utility.                                     |
-| `useSelection`         | Generic reactive selected-id-set helper (single/additive/toggle/clear). |
+| Composable             | Concern                                                     |
+| ---------------------- | ----------------------------------------------------------- |
+| `useContextMenu`       | Right-click / long-press element context menu.              |
+| `useIsMobile`          | Device/viewport classification (mobile/tablet/orientation). |
+| `useTouchGestures`     | Pinch-zoom, pan, and long-press gesture recognition.        |
+| `useKeyboardInsets`    | Adjusts layout for the on-screen keyboard (mobile).         |
+| `useKeyboardShortcuts` | Hotkey catalog, grouping, and match resolution.             |
+| `useSheetDismissDrag`  | Swipe-to-dismiss for bottom sheets (mobile).                |
+| `useToolbarAutoHide`   | Mouse-idle auto-hide for the floating presentation toolbar. |
+| `useDebouncedCallback` | Generic debounced-callback utility.                         |
 
 ## Ribbon / toolbar
 
@@ -141,9 +140,8 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 
 ### Slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot `import`
-from it directly. A host embedding its own presentation stage still needs the transition
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation stage still needs the transition
 resolver/keyframes, so the whole surface is re-exported here (from
 `./viewer/composables/slide-transition-css`) instead:
 

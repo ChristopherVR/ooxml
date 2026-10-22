@@ -109,9 +109,8 @@ import { useViewerState, useEditorHistory } from 'pptx-react-viewer/internals';
 
 ## Slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot
-`import` from it directly. A host embedding its own presentation stage (a custom `SlideStage`
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation stage (a custom `SlideStage`
 instead of the full `PowerPointViewer`) still needs the transition resolver/keyframes, so the
 whole surface is re-exported here instead:
 

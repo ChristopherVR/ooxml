@@ -83,7 +83,7 @@ Les deux vues Fichiers proposent l’envoi, la création d’un classeur Excel v
 Les envois et les nouveaux classeurs ciblent le canal sélectionné, nommé à côté des commandes. Ils
 exigent un stockage configuré ; les échecs peuvent être réessayés dans le canal d’origine. Les
 fichiers de même nom utilisent des URL de stockage distinctes. Les envois acceptent jusqu’à 20
-fichiers de 32 Mio chacun ; l’interface signale l’activité mais n’offre ni progression en octets ni
+fichiers de 32 Mio chacun (le plafond propre au serveur de référence est de 25 Mo par fichier, sauf si vous relevez `maxFileBytes`) ; l’interface signale l’activité mais n’offre ni progression en octets ni
 annulation.
 
 ```ts

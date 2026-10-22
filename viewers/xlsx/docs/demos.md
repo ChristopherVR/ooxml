@@ -21,7 +21,7 @@ The home page embeds them with a framework switcher: [open the live demo section
 
 ## Collaboration
 
-There is no collaboration demo for Excel because co-authoring is not implemented for spreadsheets. See [collaboration](/collaboration) for what works today (single editor, `readOnly` viewers).
+The demo has no separate collaboration page: co-editing is built into the editor. Choose **File > Share**, type a session name and start sharing; another window or tab of the same browser that shares under the same name joins it. See [collaboration](/collaboration) for the room options and what is and is not shared.
 
 ## Embedded here
 

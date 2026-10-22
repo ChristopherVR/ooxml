@@ -259,7 +259,7 @@ binding, at about a fifth of the cost. Run another binding with `--project=<name
 ### `@local-only` e2e tests and the pre-push hook
 
 A few e2e specs do real-time video capture and reliably crash the hosted CI
-runner rather than just failing (see `e2e/export-raster-tiling.spec.ts`), so
+runner rather than just failing (see `e2e/pptx/export-raster-tiling.spec.ts`), so
 they carry the Playwright tag `@local-only` and are excluded from CI via
 `grepInvert` in `playwright.config.ts`. Run them with `bun run
 e2e:local-only` before pushing a change to export or video code. The

@@ -104,12 +104,19 @@ Later edits and undo steps are measured from that saved point.
 Every framework package re-exports `ooxml-ui/visio`, so `mountDiagramCanvas(host, controller)`,
 `mountDiagramInspector(host, controller)`, `mountDiagramShapes(host, controller, { locale? })`,
 `diagramToolbarProps(controller, fit, locale?, hostCallbacks?)` and `fitDiagramCanvas` are available
-from any of them; they need an `ooxml-ui` runtime that contains them. Subscribe through the existing
-controller and call the returned disposers on unmount. No second state store is introduced.
+from any of them. Subscribe through the existing controller and call the returned disposers on
+unmount. No second state store is introduced.
 
-The composition API requires the matching `ooxml-ui` runtime, released with these additions.
-Existing full-viewer imports remain compatible with the previous published runtime. An older
-runtime rejects a composition request explicitly instead of mounting application UI by accident.
+The viewer packages and `ooxml-ui` are released together, and each viewer package depends on the
+`ooxml-ui` version it was released with, so the composition API is always present. A host that
+mixes versions by hand gets an explicit error from an older `ooxml-ui` instead of application UI
+being mounted by accident.
+
+## Collaboration
+
+The building blocks take no `collaboration` option: sharing a drawing in a room is a property of the
+full `<visio-viewer>` (see [collaboration](/collaboration)). A custom UI can offer its own sharing
+entry through `onOpenShareDialog`.
 
 ## Native framework composition
 

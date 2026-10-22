@@ -167,13 +167,12 @@ duplicate, arrow keys nudge 1px (`Shift`+arrow for 10px), `Escape` deselect.
 
 ## Saving & downloads
 
-| Method              | Signature                                                      | Description                                                                      |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag. |
-| `getContent`        | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).               |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported OpenXML format.               |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).          |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | Bundle the current presentation and usage notes in a shareable ZIP download.     |
+| Method         | Signature                                                      | Description                                                                      |
+| -------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag. |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).               |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported OpenXML format.               |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).          |
 
 ```ts
 type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm';
@@ -388,11 +387,11 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 
 ## Collaboration {#collaboration}
 
-| Method                   | Signature                                        | Description                                                                                                                 |
-| ------------------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `startCollaboration`     | `(config: CollaborationConfig) => Promise<void>` | Start (or restart) a real-time session; resolves once the transport is created. Status arrives via `onCollaborationStatus`. |
-| `stopCollaboration`      | `() => void`                                     | Stop the active session (no-op when none is running).                                                                       |
-| `getCollaborationStatus` | `() => ConnectionStatus`                         | Current status: `'disconnected' \| 'connecting' \| 'connected' \| 'error'` (`'disconnected'` when inactive).                |
+| Method                   | Signature                                       | Description                                                                                                                 |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `startCollaboration`     | `(config: CollaborationInput) => Promise<void>` | Start (or restart) a real-time session; resolves once the transport is created. Status arrives via `onCollaborationStatus`. |
+| `stopCollaboration`      | `() => void`                                    | Stop the active session (no-op when none is running).                                                                       |
+| `getCollaborationStatus` | `() => ConnectionStatus`                        | Current status: `'disconnected' \| 'connecting' \| 'connected' \| 'error'` (`'disconnected'` when inactive).                |
 
 See [Options](/vanilla/options#collaboration) for `CollaborationConfig` and the wire-format caveat.
 
@@ -427,9 +426,8 @@ if (handler) {
 
 ### `pptx-vanilla-viewer/internals`: slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package: it is never on npm, so code outside this monorepo cannot `import`
-from it directly. A host embedding its own presentation surface still needs the transition
+The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private
+`pptx-viewer-shared` package is only its compatibility facade. A host embedding its own presentation surface still needs the transition
 resolver/keyframes and the DOM-level overlay driver, so they are re-exported from the
 `pptx-vanilla-viewer/internals` subpath instead:
 

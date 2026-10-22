@@ -1,6 +1,6 @@
 # Shared Web Controls
 
-`pptx-viewer-shared` registers these custom elements once in a browser. React,
+`ooxml-ui/pptx` registers these custom elements once in a browser. React,
 Vue, Angular, Svelte, and Vanilla use the same implementation and the existing
 viewer CSS variables for their colors.
 
@@ -330,7 +330,7 @@ Opening focuses the name; Escape and Close return focus to the opener. The
 optional `inline` attribute supports secondary inspector/gallery placement
 without docking or automatic focus. Native adapters must discard dismissed
 instances so reopening starts from the loaded theme. See
-`e2e/theme-editor-migration.spec.ts` for the five-binding integration contract.
+`e2e/pptx/theme-editor-migration.spec.ts` for the five-binding integration contract.
 
 ## Ribbon galleries and Design commands
 

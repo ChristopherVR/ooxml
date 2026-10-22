@@ -75,17 +75,17 @@ each service's own `bind()` handoff of host accessors.
 
 Back the curated `chart-*-options` components ([Services › Public services](/angular/services)).
 
-| Export                           | Concern                                                                                                          |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `chart-advanced-helpers` exports | Advanced chart configuration helpers.                                                                            |
-| `chart-combo-stock` exports      | Combo and stock chart type helpers.                                                                              |
-| `chart-data-helpers` exports     | Chart series/category data editing helpers.                                                                      |
-| `chart-editor-styles` exports    | Shared style constants for the chart editor panels.                                                              |
-| `chart-event-helpers` exports    | Chart interaction/event helpers.                                                                                 |
-| `chart-overlays` exports         | Chart overlay (data labels, trendlines, error bars) rendering helpers.                                           |
-| `chart-renderer-helpers` exports | Chart view-model helpers (thin shim over `pptx-viewer-shared`), including `DEFAULT_PALETTE` (the chart palette). |
-| `chart-surface-treemap` exports  | Surface and treemap chart layout helpers.                                                                        |
-| `chart-waterfall-map` exports    | Waterfall and map chart layout helpers.                                                                          |
+| Export                           | Concern                                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `chart-advanced-helpers` exports | Advanced chart configuration helpers.                                                                       |
+| `chart-combo-stock` exports      | Combo and stock chart type helpers.                                                                         |
+| `chart-data-helpers` exports     | Chart series/category data editing helpers.                                                                 |
+| `chart-editor-styles` exports    | Shared style constants for the chart editor panels.                                                         |
+| `chart-event-helpers` exports    | Chart interaction/event helpers.                                                                            |
+| `chart-overlays` exports         | Chart overlay (data labels, trendlines, error bars) rendering helpers.                                      |
+| `chart-renderer-helpers` exports | Chart view-model helpers (thin shim over `ooxml-ui/pptx`), including `DEFAULT_PALETTE` (the chart palette). |
+| `chart-surface-treemap` exports  | Surface and treemap chart layout helpers.                                                                   |
+| `chart-waterfall-map` exports    | Waterfall and map chart layout helpers.                                                                     |
 
 ## SmartArt internals
 

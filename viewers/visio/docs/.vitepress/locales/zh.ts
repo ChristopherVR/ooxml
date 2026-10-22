@@ -30,7 +30,7 @@ export const zh = {
 				text: '指南',
 				link: '/zh/getting-started',
 				activeMatch:
-					'/(zh/(getting-started|architecture|api|collaboration)|(getting-started|architecture|bindings|api|theming|collaboration|demos|frameworks))',
+					'/(zh/(getting-started|architecture|api|collaboration)|(getting-started|architecture|bindings|api|theming|building-blocks|collaboration|demos|frameworks))',
 			},
 			{
 				text: 'OOXML Office',
@@ -60,7 +60,10 @@ export const zh = {
 			},
 			{
 				text: '使用查看器',
-				items: [{ text: '协作（共享）', link: '/zh/collaboration' }],
+				items: [
+					{ text: '构建模块', link: '/building-blocks' },
+					{ text: '协作（共享）', link: '/zh/collaboration' },
+				],
 			},
 			{
 				text: '框架指南',

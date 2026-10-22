@@ -156,16 +156,16 @@ gehören `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMe
 
 ## Aus dem Quellcode starten
 
-Erfordert Node 22+ und Bun. Wenn das Repository [`ooxml`](https://github.com/ChristopherVR/ooxml)
-neben diesem ausgecheckt ist (`../ooxml-core`), verwenden Demos und Tests dessen Quellcode; andernfalls
-nutzen sie die veröffentlichten Pakete `ooxml-core` und `ooxml-ui`.
+Erfordert Node 22+ und Bun. Dieser Ordner ist `viewers/teams` des Repositorys
+[`ooxml`](https://github.com/ChristopherVR/ooxml): Führen Sie `bun install` im Repository-Root aus, dann
+die folgenden Befehle hier. Die Demos (`demos/teams/*` im Root) und Tests verwenden den Quellcode von
+`ooxml-core` und `ooxml-ui` im selben Baum.
 
 ```bash
-bun install
-bun run dev        # server on :8787, vanilla demo on :5173, React demo on :5174
+bun install        # im Repository-Root
+bun run dev        # in viewers/teams: Server :8787, Vanilla-Demo :5173, React-Demo :5174
 ```
 
 Öffnen Sie `http://127.0.0.1:5173/?name=Ada` und in einem anderen Tab `...?name=Bob`: zwei Personen in einem
-Arbeitsbereich. `?local=1` läuft ohne den Server. `TEAMS_USE_DIST=1` lässt die Demos die gebauten
-Pakete verwenden (zuvor `bun run build:packages`) und die veröffentlichten ooxml-Pakete statt jeglichen Quellcodes.
+Arbeitsbereich. `?local=1` läuft ohne den Server. `TEAMS_USE_DIST=1` lässt die Demos die gebauten Pakete verwenden (zuvor `bun run build:packages`) statt des Quellcodes. Mit `TEAMS_DEMOS=vanilla,vue` wählen Sie die Demos, die `bun run dev` startet.
 Kameras und Mikrofone erfordern `localhost` oder HTTPS.
