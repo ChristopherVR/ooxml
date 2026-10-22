@@ -2,6 +2,7 @@ import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/inde
 import type { CollaborationState } from '../../collab/index';
 import type { VisioCollaborationOptions } from './collab-options';
 import type { VisioDocument } from '../index';
+import type { VisioCustomization } from './customization';
 
 export interface ViewerProperties {
 	canEdit?: boolean;
@@ -13,6 +14,11 @@ export interface ViewerProperties {
 	ribbonAddIns: readonly RibbonAddInTab[];
 	/** Shares the open drawing in a room while set; null leaves it (the shared embedding contract). */
 	collaboration: VisioCollaborationOptions | null;
+	/**
+	 * Capabilities, host File tab pages and host menu commands (the shared embedding contract of
+	 * `ooxml-core/embedding`); null restores the defaults.
+	 */
+	customization: VisioCustomization | null;
 }
 /** A page-scoped shape identity. Omitted pageId means the currently displayed page. */
 export interface VisioShapeSelection {
@@ -49,6 +55,7 @@ export const propertyKeys = [
 	'showToolbar',
 	'ribbonAddIns',
 	'collaboration',
+	'customization',
 ] as const satisfies readonly (keyof ViewerProperties)[];
 export const eventKeys = [
 	'document-load',

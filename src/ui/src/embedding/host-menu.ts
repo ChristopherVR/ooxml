@@ -6,6 +6,7 @@
  */
 import {
 	isHostMenuEntry,
+	resolveHostMenuCommands,
 	withHostMenuCommands,
 	type HostMenuCommand,
 	type HostMenuEntry,
@@ -50,4 +51,56 @@ export function withHostMenuItems<C>(
 			return true;
 		},
 	};
+}
+
+/** Marks the children `syncHostMenuChildren` added, so the next call replaces them. */
+const HOST_CHILD = 'data-host-command';
+const hostRuns = new WeakMap<HTMLElement, Map<string, HostMenuEntry>>();
+
+/** The host rows of `menu`, run by id when the menu reports a chosen row. */
+function listen(menu: HTMLElement): Map<string, HostMenuEntry> {
+	const runs = new Map<string, HostMenuEntry>();
+	hostRuns.set(menu, runs);
+	menu.addEventListener('office-command', (event) => {
+		const id = (event as CustomEvent<{ command?: string }>).detail?.command;
+		if (id) runs.get(id)?.onSelect();
+	});
+	return runs;
+}
+
+/**
+ * Host commands in a self-managed `<office-ui-context-menu>` (one whose rows are
+ * `office-ui-menu-item` children): call it just before the menu opens. It replaces the host rows
+ * of the previous opening, puts the `top` group (and a separator) first and the `bottom` group
+ * last, and runs a chosen host row's command with this opening's `context`.
+ */
+export function syncHostMenuChildren<C>(
+	menu: HTMLElement,
+	commands: readonly HostMenuCommand<C>[] | null | undefined,
+	context: C,
+): void {
+	for (const child of [...menu.querySelectorAll(`:scope > [${HOST_CHILD}]`)]) child.remove();
+	const doc = menu.ownerDocument;
+	const { top, bottom } = resolveHostMenuCommands(commands, context);
+	const runs = hostRuns.get(menu) ?? listen(menu);
+	runs.clear();
+	const item = (entry: HostMenuEntry): HTMLElement => {
+		runs.set(entry.id, entry);
+		const row = doc.createElement('office-ui-menu-item');
+		row.setAttribute(HOST_CHILD, '');
+		row.setAttribute('command', entry.id);
+		row.setAttribute('label', entry.label);
+		if (entry.icon) row.setAttribute('icon', entry.icon);
+		if (entry.disabled) row.setAttribute('disabled', '');
+		return row;
+	};
+	const separator = (): HTMLElement => {
+		const rule = doc.createElement('office-ui-menu-separator');
+		rule.setAttribute(HOST_CHILD, '');
+		return rule;
+	};
+	const builtIn = menu.children.length > 0;
+	if (top.length) menu.prepend(...top.map(item), ...(builtIn ? [separator()] : []));
+	if (bottom.length)
+		menu.append(...(builtIn || top.length ? [separator()] : []), ...bottom.map(item));
 }

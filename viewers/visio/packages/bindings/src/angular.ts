@@ -37,6 +37,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Input() canEdit?: boolean;
 	@Input() ribbonAddIns?: ViewerProperties['ribbonAddIns'];
 	@Input() collaboration?: ViewerProperties['collaboration'];
+	@Input() customization?: ViewerProperties['customization'];
 	@Input() events?: ViewerCallbacks;
 	@Output() documentLoad = new EventEmitter<ViewerEvents['document-load']>();
 	@Output() documentChange = new EventEmitter<ViewerEvents['document-change']>();

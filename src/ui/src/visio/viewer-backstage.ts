@@ -2,6 +2,9 @@ import type { ViewerState } from './controller';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
 import { wireNewDrawing } from './viewer-new-drawing';
+import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
+import type { VisioRegionContext } from 'ooxml-core/visio/ui';
+import { EMPTY_VISIO_CUSTOMIZATION, type ResolvedVisioCustomization } from './viewer-customization';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {
@@ -20,6 +23,10 @@ export interface BackstageHost {
 	noteCount(): number;
 	/** File > Print > Page Setup. */
 	pageSetup?(): void;
+	/** The host customisation: removed pages and commands, and host pages. */
+	customization?(): ResolvedVisioCustomization;
+	/** The context of a host File tab page. */
+	regionContext?(region: string): VisioRegionContext;
 }
 
 /**
@@ -42,13 +49,28 @@ export class ViewerBackstage {
 	#items = '';
 	#urls = new Set<string>();
 	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
+	readonly #hostPages: HostBackstagePages<VisioRegionContext>;
 	constructor(private readonly host: BackstageHost) {
 		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
+		this.#hostPages = createHostBackstagePages<VisioRegionContext>(this.#root, {
+			context: (region) => host.regionContext!(region),
+			pageClass: 'backstage-page',
+			label: '[visio-viewer]',
+		});
 		this.#ribbon = host.root.querySelector<Ribbon>('office-ui-ribbon')!;
 		this.#input = this.#root.querySelector('.backstage-file-input')!;
 	}
 	get open(): boolean {
 		return this.#root.open;
+	}
+	#custom(): ResolvedVisioCustomization {
+		return this.host.customization?.() ?? EMPTY_VISIO_CUSTOMIZATION;
+	}
+	/** Re-applies the host customisation: hidden pages, host pages and their contexts. */
+	refreshCustomization(): void {
+		this.#hostPages.setPages(this.#custom().extraPages);
+		this.#hostPages.refresh();
+		if (this.#state) this.render(this.#state);
 	}
 	show(page: BackstagePage = 'info'): void {
 		this.#ribbon.setAttribute('file-expanded', 'true');
@@ -77,6 +99,7 @@ export class ViewerBackstage {
 			'office-backstage-select',
 			(event) => {
 				const id = (event as CustomEvent<{ id: string }>).detail.id;
+				if (this.#hostPages.show(id)) return;
 				if (id === 'save') this.#download();
 				else if (id === 'close') this.#close();
 				else if (id === 'options') {
@@ -123,12 +146,14 @@ export class ViewerBackstage {
 		);
 		return () => {
 			this.#newDrawing?.dispose();
+			this.#hostPages.destroy();
 			events.abort();
 			for (const url of this.#urls) URL.revokeObjectURL(url);
 			this.#urls.clear();
 		};
 	}
 	#run(action: string): void {
+		if (this.#custom().commands.has(action)) return;
 		if (action === 'open') this.#input.click();
 		else if (action === 'new-blank') this.#newDrawing?.run();
 		else if (action === 'download') this.#download();
@@ -165,7 +190,7 @@ export class ViewerBackstage {
 		this.#download();
 	}
 	#download(): void {
-		if (!this.#state?.edit.sourceAvailable) return;
+		if (!this.#state?.edit.sourceAvailable || this.#custom().commands.has('download')) return;
 		try {
 			const result = this.host.exportVsdx();
 			this.#save(
@@ -291,10 +316,13 @@ export class ViewerBackstage {
 			setup.title = setup.disabled ? 'Open a .vsdx file to change the page setup.' : '';
 		}
 		// Rebuild the navigation only when Save or Close change, so focus stays put.
-		const items = backstageItems({
-			save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
-			close: { disabled: !state.document },
-		});
+		const hidden = this.#custom().backstagePages;
+		const items = this.#hostPages.items(
+			backstageItems({
+				save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
+				close: { disabled: !state.document },
+			}).filter((item) => !hidden.has(item.id)),
+		);
 		const key = JSON.stringify(items);
 		if (key !== this.#items) {
 			this.#items = key;

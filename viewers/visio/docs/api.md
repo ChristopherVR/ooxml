@@ -186,6 +186,38 @@ shared with the Word, Excel and PowerPoint editors. A tab cannot take the id of
 a built-in tab (`home`, `insert`, `design`, `data`, `process`, `review`, `view`,
 `help`).
 
+## Customization
+
+`customization` takes one `VisioCustomization` object, the shared contract of
+`ooxml-core/embedding` that Word, Excel and PowerPoint take too. It is a
+property of the element and a prop (input) of every framework binding:
+
+```tsx
+const customization = {
+	capabilities: { export: false, print: false, copy: false },
+	backstage: {
+		extraPages: [{ id: 'policies', label: 'Policies', render: 'acme-policies' }],
+	},
+	contextMenu: {
+		extraCommands: [{ id: 'send', label: 'Send to chat', onSelect: ({ shapes }) => send(shapes) }],
+	},
+};
+
+<VisioViewer customization={customization} />;
+```
+
+| Field                       | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `capabilities`              | `false` removes every path to the capability (`VISIO_CAPABILITY_IDS`): `edit` (read-only whatever `canEdit` says), `open` (New, Open), `save` (Save, Save As), `export`, `print`, `share`, `settings` (Options), `copy` (Cut, Copy and their keys), `comment` (New Comment, Add Comment) and `find` (Find, Replace). File tab pages, ribbon and menu commands are hidden and the matching actions are refused.                           |
+| `backstage.extraPages`      | Host File tab pages `{ id, label, group?, order?, render }` after the built-in pages of their group. `render` is a mount function `(container, context) => cleanup \| { update, destroy }`, a custom element tag or `{ element, properties }`; it mounts the first time the page is shown, receives a `VisioRegionContext` (`viewer`, `locale`, `canEdit`, `pageIndex`, `pageCount`, `close`) and is torn down when the page is removed. |
+| `contextMenu.extraCommands` | Host commands `{ id, label, icon?, group?, when?, disabled?, onSelect }` in the shape and page menus, above (`top`, default) or below (`bottom`) the built-in entries. `onSelect` receives a `VisioMenuContext` (`target`, `pageIndex`, `pageId`, `shapes`). Labels are shown as given.                                                                                                                                                  |
+
+The object is applied when its identity changes, so keep it stable. As with the
+other props, leaving it out of a partial update keeps the current value; pass
+`null` to restore the defaults. Capabilities are UI policy, not document
+protection. Replacing built-in regions (the Options dialog, the panes) is not
+offered for Visio yet.
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's

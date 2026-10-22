@@ -31,6 +31,13 @@ import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import {
+	applyVisioCommandVisibility,
+	syncVisioHostMenu,
+	ViewerCustomizationState,
+	visioActionBlocked,
+} from './viewer-customization';
+import type { VisioCustomization } from 'ooxml-core/visio/ui';
 import { ViewerMiniToolbar } from './viewer-mini-toolbar';
 import { ViewerLivePreview } from './viewer-live-preview';
 import { ViewerAutoRecover, indexedDbRecoveryStore } from './viewer-autorecover';
@@ -70,12 +77,30 @@ const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 ) as typeof HTMLElement;
 export class VisioViewerElement extends BaseElement {
+	/** False while the drawing cannot be edited: this property, or `capabilities.edit` off. */
 	get canEdit(): boolean {
 		return this.controller.canEdit;
 	}
 	set canEdit(value: boolean) {
-		this.controller.canEdit = value;
+		this.#custom.requestedCanEdit = Boolean(value);
+		this.controller.canEdit = this.#custom.canEdit;
 	}
+	/**
+	 * The host customisation (`VisioCustomization`): `capabilities`, `backstage.extraPages` and
+	 * `contextMenu.extraCommands`. Applied when the object identity changes; null restores the
+	 * defaults.
+	 */
+	get customization(): VisioCustomization | null {
+		return this.#custom.input;
+	}
+	set customization(value: VisioCustomization | null | undefined) {
+		this.#assertAlive();
+		if (!this.#custom.set(value ?? null)) return;
+		this.controller.canEdit = this.#custom.canEdit;
+		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
+		this.#backstage.refreshCustomization();
+	}
+	readonly #custom = new ViewerCustomizationState();
 	/**
 	 * Shares the open drawing in a room (the shared embedding contract of `ooxml-core/collab`):
 	 * while set, the drawing is shared and one loaded later rejoins; null leaves the room.
@@ -238,6 +263,7 @@ export class VisioViewerElement extends BaseElement {
 		});
 		this.#presentation = new ViewerPresentation(this.#root, this.controller);
 		this.#commands = new ViewerCommands({
+			blocked: (action) => visioActionBlocked(this.#custom.resolved, action),
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
@@ -338,6 +364,16 @@ export class VisioViewerElement extends BaseElement {
 			noteCount: () => this.#notes.children.length,
 			pageSetup: () =>
 				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
+			customization: () => this.#custom.resolved,
+			regionContext: (region) => ({
+				region,
+				viewer: this,
+				locale: this.#locale(),
+				canEdit: this.controller.canEdit,
+				pageIndex: this.controller.state.pageIndex,
+				pageCount: this.controller.state.document?.pages.length ?? 0,
+				close: () => this.#backstage.hide(),
+			}),
 		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));
@@ -720,8 +756,12 @@ export class VisioViewerElement extends BaseElement {
 		const disposeMini = this.#mini.wire(this.#viewport);
 		const disposePreview = this.#livePreview.wire();
 		const disposeRecover = this.#recover.wire(this.ownerDocument);
-		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller, (x, y) =>
-			this.#mini.showAt(x, y),
+		const disposeMenus = wireContextMenus(
+			this.#root,
+			this.#viewport,
+			this.controller,
+			(x, y) => this.#mini.showAt(x, y),
+			(menu, target) => syncVisioHostMenu(menu, target, this.#custom.resolved, this.controller),
 		);
 		const disposeTellMe = wireTellMe(this.#root);
 		const disposeGalleries = wireInlineGalleries(this, this.#root);

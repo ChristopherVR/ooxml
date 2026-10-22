@@ -139,6 +139,9 @@ const mounts: Record<string, NativeMount> = {
 					get collaboration() {
 						return props().collaboration;
 					},
+					get customization() {
+						return props().customization;
+					},
 					get events() {
 						return props().events;
 					},
@@ -376,6 +379,36 @@ describe('native adapters against the real shared custom element', () => {
 				expect(destroy).not.toHaveBeenCalled();
 			} finally {
 				session.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards customization and restores the defaults without it`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const customization = {
+				capabilities: { edit: false, print: false },
+				backstage: { extraPages: [{ id: 'about', label: 'About', render: 'acme-about' }] },
+			};
+			const mounted = await mountNative(host, { document: demoDocument, customization });
+			const element = mounted.handle.element;
+			const nav = () =>
+				(
+					element.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & {
+						items: { id: string }[];
+					}
+				).items.map((item) => item.id);
+			try {
+				expect(element.customization).toBe(customization);
+				expect(element.canEdit).toBe(false);
+				expect(nav()).toContain('host.about');
+				expect(nav()).not.toContain('print');
+				await mounted.update({ document: demoDocument, customization: null });
+				expect(element.customization).toBeNull();
+				expect(element.canEdit).toBe(true);
+				expect(nav()).toContain('print');
+				expect(nav()).not.toContain('host.about');
+			} finally {
+				await mounted.destroy();
 				host.remove();
 			}
 		});

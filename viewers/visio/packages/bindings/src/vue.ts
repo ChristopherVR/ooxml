@@ -41,6 +41,10 @@ export const VisioViewer = defineComponent({
 			type: Object as PropType<ViewerProperties['collaboration']>,
 			default: undefined,
 		},
+		customization: {
+			type: Object as PropType<ViewerProperties['customization']>,
+			default: undefined,
+		},
 		events: Object as PropType<ViewerCallbacks>,
 	} satisfies Record<keyof ViewerProperties | 'events', unknown>,
 	emits: [...eventKeys],
