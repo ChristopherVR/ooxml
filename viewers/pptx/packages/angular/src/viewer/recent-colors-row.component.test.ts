@@ -1,73 +1,94 @@
 /**
  * recent-colors-row.component.test.ts: the reusable "Recent colours" row
- * (wave-4 B6) that the inspector's fill/stroke/text colour pickers all mount.
- *
- * No Angular TestBed (see `vitest.config.ts`): the component takes no
- * injected dependencies, so it is instantiated directly and inputs are
- * stubbed as signals, matching the rest of this package's convention.
+ * (wave-4 B6) under the inspector's fill, stroke and text colour pickers,
+ * drawn by the shared `pptx-ui-color-grid` with only Recent Colors.
  */
-import { Injector, runInInjectionContext, signal } from '@angular/core';
-import type { InputSignal, OutputEmitterRef } from '@angular/core';
-import { describe, expect, it, vi } from 'vitest';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { componentSource } from './component-source.test-support';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
 import { RecentColorsRowComponent } from './recent-colors-row.component';
 
-const source = componentSource(import.meta.dirname, 'recent-colors-row.component.ts');
+beforeAll(() => {
+	TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+	registerPptxWebControls();
+});
+afterEach(() => TestBed.resetTestingModule());
 
-function createRow(
-	colors: readonly string[],
-	disabled = false,
-): { row: RecentColorsRowComponent; picked: string[] } {
-	const row = runInInjectionContext(
-		Injector.create({ providers: [] }),
-		() => new RecentColorsRowComponent(),
-	);
-	Object.assign(row, {
-		colors: signal(colors) as unknown as InputSignal<readonly string[]>,
-		disabled: signal(disabled) as unknown as InputSignal<boolean>,
+function mount(inputs: Record<string, unknown>) {
+	TestBed.configureTestingModule({
+		imports: [RecentColorsRowComponent],
+		providers: [provideTranslateService({ fallbackLang: 'en' })],
 	});
+	// The Vitest JIT build does not wire signal inputs, so declare them and hand each
+	// field a plain signal.
+	TestBed.overrideComponent(RecentColorsRowComponent, {
+		add: { inputs: Object.keys(inputs) },
+	});
+	const translate = TestBed.inject(TranslateService);
+	translate.setTranslation('en', {
+		'pptx.colorPicker.recentColors': 'Recent Colors',
+		'pptx.colorPicker.recentColor': 'Recent {{hex}}',
+	});
+	translate.setTranslation('de', {
+		'pptx.colorPicker.recentColors': 'Zuletzt verwendete Farben',
+		'pptx.colorPicker.recentColor': 'Zuletzt verwendete Farbe {{hex}}',
+	});
+	translate.use('en');
+	const fixture = TestBed.createComponent(RecentColorsRowComponent);
+	for (const [name, value] of Object.entries(inputs)) {
+		fixture.componentRef.setInput(name, signal(value));
+	}
+	fixture.detectChanges();
+	const row = () =>
+		(fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+			'[data-testid="pptx-color-recent"]',
+		);
+	const swatches = () => [
+		...(row()?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? []),
+	];
 	const picked: string[] = [];
-	vi.spyOn(row.pick as OutputEmitterRef<string>, 'emit').mockImplementation((value) => {
-		picked.push(value);
-	});
-	return { row, picked };
+	fixture.componentInstance.pick.subscribe((hex) => picked.push(hex));
+	return { fixture, translate, row, swatches, picked };
 }
 
 describe('recentColorsRowComponent', () => {
-	it('emits pick when a swatch is clicked', () => {
-		const { row, picked } = createRow(['#112233', '#445566']);
-		row.pick.emit('#445566');
+	it('renders nothing while the list is empty', () => {
+		expect(mount({ colors: [] }).row()).toBeNull();
+	});
+
+	it('is the shared grid with only Recent Colors, one named swatch per colour', () => {
+		const { row, swatches } = mount({ colors: ['#112233', '#445566'] });
+		expect(row()?.localName).toBe('pptx-ui-color-grid');
+		expect(row()?.getAttribute('aria-label')).toBe('Recent Colors');
+		expect(
+			[...row()!.shadowRoot!.querySelectorAll('.heading')].map((heading) => heading.textContent),
+		).toStrictEqual(['Recent Colors']);
+		expect(swatches().map((swatch) => swatch.getAttribute('aria-label'))).toStrictEqual([
+			'Recent #112233',
+			'Recent #445566',
+		]);
+	});
+
+	it('emits the picked colour', () => {
+		const { swatches, picked } = mount({ colors: ['#112233', '#445566'] });
+		swatches()[1]!.click();
 		expect(picked).toStrictEqual(['#445566']);
 	});
 
-	it('exposes the seeded colours, most-recent-first, unchanged', () => {
-		const { row } = createRow(['#ff0000', '#00ff00']);
-		expect(row.colors()).toStrictEqual(['#ff0000', '#00ff00']);
-	});
-});
-
-describe('recent colours row template contract', () => {
-	it('renders the row container with the shared testid + aria-label', () => {
-		expect(source).toContain('data-testid="pptx-color-recent"');
-		expect(source).toContain('[attr.aria-label]="\'pptx.colorPicker.recentColors\' | translate"');
-		const labelMatches = (source.match(/'pptx\.colorPicker\.recentColors' \| translate/gu) ?? [])
-			.length;
-		expect(labelMatches).toBe(2);
+	it('disables every swatch while the picker is disabled', () => {
+		const { swatches } = mount({ colors: ['#112233'], disabled: true });
+		expect(swatches().every((swatch) => swatch.disabled)).toBeTruthy();
 	});
 
-	it('hides the row while the list is empty', () => {
-		expect(source).toContain('@if (colors().length > 0) {');
-	});
-
-	it('gives each swatch a title, a "Recent <hex>" aria-label, and disables it when the picker is disabled', () => {
-		expect(source).toContain('[title]="c"');
-		expect(source).toContain('[attr.aria-label]="\'Recent \' + c"');
-		expect(source).toContain('[disabled]="disabled()"');
-	});
-
-	it('emits pick on click, and swallows mousedown so the row does not steal focus', () => {
-		expect(source).toContain('(click)="pick.emit(c)"');
-		expect(source).toContain('(mousedown)="$event.preventDefault()"');
+	it('follows a language switch', () => {
+		const { fixture, translate, row, swatches } = mount({ colors: ['#112233'] });
+		translate.use('de');
+		fixture.detectChanges();
+		expect(row()?.getAttribute('aria-label')).toBe('Zuletzt verwendete Farben');
+		expect(swatches()[0]!.getAttribute('aria-label')).toBe('Zuletzt verwendete Farbe #112233');
 	});
 });
