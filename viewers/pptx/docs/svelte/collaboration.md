@@ -54,7 +54,7 @@ without rendering `PowerPointViewer`.
 
 `<PowerPointViewer>` supports real-time, multi-user editing built on **Yjs** (a CRDT) with
 either a WebSocket transport (`y-websocket`, needs a server) or a serverless peer-to-peer
-transport (`y-webrtc`). The `CollaborationConfig` type and wire format are shared with the
+transport (`y-webrtc`). The `CollaborationConfig` type and wire format are shared with
 the other four bindings (React, Vue, Angular and vanilla; defined once in `ooxml-ui/pptx`), so all five bindings
 interoperate in the same room. When enabled, the viewer connects to the room, publishes local
 edits granularly (per slide / element), applies remote peers' edits, and renders live remote
