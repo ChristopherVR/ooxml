@@ -39,7 +39,7 @@ const RECORD = {
 	size: 4096,
 };
 
-async function setup() {
+async function setup(onOffered?: (record: typeof RECORD) => void) {
 	const scope = effectScope();
 	const onRestore = vi.fn();
 	let recovery!: ReturnType<typeof useAutosaveRecovery>;
@@ -51,6 +51,7 @@ async function setup() {
 			error: ref(null),
 			slideCount: () => 3,
 			autosaveAllowed: () => true,
+			...(onOffered ? { onOffered } : {}),
 			onRestore,
 		});
 	});
@@ -64,6 +65,23 @@ describe('useAutosaveRecovery', () => {
 		probeMock.mockReset().mockResolvedValue({ prompt: PROMPT, record: RECORD });
 		discardMock.mockReset().mockResolvedValue(undefined);
 		acknowledgeMock.mockReset();
+	});
+
+	it('reports the offered record to the host (autosave-recovery)', async () => {
+		const onOffered = vi.fn();
+		const harness = await setup(onOffered);
+
+		expect(onOffered).toHaveBeenCalledExactlyOnceWith(RECORD);
+		harness.stop();
+	});
+
+	it('reports nothing when no snapshot is found', async () => {
+		probeMock.mockResolvedValue(null);
+		const onOffered = vi.fn();
+		const harness = await setup(onOffered);
+
+		expect(onOffered).not.toHaveBeenCalled();
+		harness.stop();
 	});
 
 	it('keeps the storage key private and passes the public file name to the probe', async () => {

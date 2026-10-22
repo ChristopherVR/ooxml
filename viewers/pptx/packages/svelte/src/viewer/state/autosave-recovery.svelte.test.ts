@@ -60,7 +60,14 @@ interface Harness {
 	dispose: () => void;
 }
 
-function setup(opts: { filePath?: string; fileName?: string; allowed?: boolean } = {}): Harness {
+function setup(
+	opts: {
+		filePath?: string;
+		fileName?: string;
+		allowed?: boolean;
+		onOffered?: (record: AutosaveRecord) => void;
+	} = {},
+): Harness {
 	const loader = new FakeLoader();
 	const load = vi.fn(async () => {
 		loader.loadCount += 1;
@@ -76,6 +83,7 @@ function setup(opts: { filePath?: string; fileName?: string; allowed?: boolean }
 			getSlideCount: () => loader.slideCount,
 			getLoadCount: () => loader.loadCount,
 			load,
+			...(opts.onOffered ? { onOffered: opts.onOffered } : {}),
 		});
 	});
 	flushSync();
@@ -113,6 +121,25 @@ describe('autosaveRecoveryController', () => {
 			ageKey: 'pptx.autosave.oneMinAgo',
 			messageParams: { file: 'deck.pptx', size: '4 KB' },
 		});
+		h.dispose();
+	});
+
+	it('reports the offered record to the host (onautosaverecovery)', async () => {
+		const data = seedSnapshot();
+		const onOffered = vi.fn();
+		const h = setup({ onOffered });
+
+		await vi.waitFor(() => expect(onOffered).toHaveBeenCalledOnce());
+
+		expect(onOffered).toHaveBeenCalledWith(expect.objectContaining({ key: 'deck.pptx', data }));
+		h.dispose();
+	});
+
+	it('reports nothing to the host when there is no snapshot', async () => {
+		const onOffered = vi.fn();
+		const h = setup({ onOffered });
+		await vi.waitFor(() => expect(h.load).not.toHaveBeenCalled());
+		expect(onOffered).not.toHaveBeenCalled();
 		h.dispose();
 	});
 

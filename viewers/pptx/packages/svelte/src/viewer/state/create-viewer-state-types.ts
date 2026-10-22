@@ -1,17 +1,20 @@
 import type {
 	AutosaveDisabledReason,
+	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationShellState,
 	CollaborationState,
 	DocumentStorage,
+	ConnectionStatus,
 	FieldSubstitutionContext,
 	MobileSheetKey,
 	ResolvedCustomization,
+	ViewerAutosaveStatus,
 	ViewerMode,
 	ViewportFitPadding,
 } from 'ooxml-ui/pptx';
-import type { PptxSaveFormat, TextSegment } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxSaveFormat, TextSegment } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n/translator';
 import type { CollaborationController, CollaborationDialogsState } from '../collab';
@@ -106,6 +109,11 @@ export interface CreateViewerStateOptions {
 	onautosave?: (bytes: Uint8Array) => void;
 	/** Fired when the host toggles AutoSave (title bar / Settings dialog). */
 	onautosavetoggle?: (enabled: boolean) => void;
+	onautosavestatus?: (status: ViewerAutosaveStatus) => void;
+	onautosaverecovery?: (record: AutosaveRecord) => void;
+	onpropertieschange?: (updates: Partial<PptxCoreProperties>) => void;
+	onpresentationchange?: (presenting: boolean) => void;
+	oncollaborationstatus?: (status: ConnectionStatus) => void;
 	onstartcollaboration?: (config: CollaborationConfig) => void;
 	oncollaborationchange?: (state: CollaborationState) => void;
 	onstopcollaboration?: () => void;

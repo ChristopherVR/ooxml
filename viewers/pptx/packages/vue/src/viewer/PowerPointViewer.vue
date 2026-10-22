@@ -25,6 +25,7 @@
  */
 import { ShieldAlert } from 'lucide-vue-next';
 import {
+	autosaveStatusKind,
 	createCollaborationStateReporter,
 	createSlidePackageClipboard,
 	resolveCollaborationConfig,
@@ -217,6 +218,10 @@ import type { PowerPointViewerEmits, PowerPointViewerExpose, PowerPointViewerPro
 const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	canEdit: false,
 	readOnly: false,
+	// Left undefined on purpose: an omitted `autosave` PERMITS autosave (only an explicit `false`
+	// vetoes it), but Vue would cast the absent boolean to `false` and veto it for every host that
+	// said nothing.
+	autosave: undefined,
 	smartArt3D: false,
 	surfaceChart3D: false,
 	barChart3D: false,
@@ -531,6 +536,7 @@ const {
 const history = useEditorHistory(slides, templateElementsBySlideId, {
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
 	activeSlideIndex,
+	onChange: () => emit('change'),
 });
 // File > Options > Advanced > "Maximum number of undos", re-applied whenever
 // it changes mid-session (not just at construction).
@@ -884,6 +890,7 @@ const {
 	activeSlide,
 	pushHistory: history.pushHistory,
 	selectedElements,
+	onNotesChanged: (notes) => emit('notes-update', notes),
 });
 
 // -- Align / distribute / group ----------------------------------------
@@ -1078,6 +1085,7 @@ const autosaveRecovery = useAutosaveRecovery({
 	error,
 	slideCount: () => slides.value.length,
 	autosaveAllowed: () => props.autosave !== false,
+	onOffered: (record) => emit('autosave-recovery', record),
 	onRestore: (bytes) => {
 		source.internalContent.value = bytes;
 	},
@@ -1098,6 +1106,7 @@ const deckActions = useInspectorDeckActions({
 	markDirty: () => {
 		autosave.isDirty.value = true;
 	},
+	onCorePropertiesChanged: (updates) => emit('properties-change', updates),
 	pushHistory: history.pushHistory,
 	// Mirror React's refreshContentAfterThemeChange: re-serialise and reload so
 	// slide colours re-resolve against the newly-applied theme. These bytes go
@@ -1242,6 +1251,7 @@ const documentProperties = useDocumentPropertiesDialog({
 	coreProperties,
 	customProperties,
 	appProperties,
+	onCorePropertiesChanged: (updates) => emit('properties-change', updates),
 });
 const headerFooterDialog = useHeaderFooterDialog({ headerFooter });
 const versionHistoryWiring = useVersionHistoryWiring({
@@ -1420,6 +1430,10 @@ const { ribbonMode, ribbonUpdateTextStyle, ribbonMoveToEdge } = ribbonActions;
 watch(ribbonMode, (mode) => {
 	emit('mode-change', mode);
 });
+watch(
+	() => ribbonMode.value === 'present',
+	(presenting) => emit('presentation-change', presenting),
+);
 
 // -- Keyboard shortcuts ------------------------------------------------
 // A config-driven registry (mirrors React `useKeyboardShortcuts`) replaces the
@@ -1569,6 +1583,27 @@ const { showSettings } = useViewerSettingsDialog({
 	viewerOptions,
 });
 
+// The unsaved-changes flag, reported like the other bindings (including its initial value).
+watch(
+	() => autosave.isDirty.value,
+	(dirty) => emit('dirty-change', dirty),
+	{ immediate: true },
+);
+// The user's AutoSave preference changed (title bar, File > Options). Registered after the
+// settings dialog above, which hydrates the preference from the stored options on setup: that
+// is not a change the host should hear about.
+watch(autosaveEnabled, (enabled) => emit('autosave-toggle', enabled));
+// The public lifecycle, not the engine's own status (`disabled` reports as `idle`).
+watch(
+	() => autosaveStatusKind(autosave.status.value),
+	(status) => emit('autosave-status', status),
+);
+// The raw connection status; `collaboration-change` carries the full shared state.
+watch(
+	() => collaboration.collab.status.value,
+	(status) => emit('collaboration-status', status),
+);
+
 /** File > Options > Save > "Delete cached files". */
 function onOptionsClearCache(): void {
 	// With a host recovery store this sweeps it only when it lists its copies.
@@ -1667,6 +1702,7 @@ provideRibbonGalleryHost({
 	applyTheme: applyAiTheme,
 });
 const aiBridge = useAiBridge({
+	onCorePropertiesChanged: (properties) => emit('properties-change', properties),
 	slides,
 	activeSlideIndex,
 	canvasSize,

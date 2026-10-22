@@ -23,7 +23,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import type { PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
 
 import type { AutosaveStatus } from './autosave';
 import type { ShareDefaults } from './collab/share-helpers';
@@ -88,6 +88,12 @@ export interface PptxViewerCallbacks {
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	/** Fired on every collaboration connection-status transition. */
 	onCollaborationStatus?: (status: ConnectionStatus) => void;
+	/** Fired with the serialised `.pptx` bytes after each recovery autosave snapshot is written. */
+	onAutosave?: (content: Uint8Array) => void;
+	/** Fired with the changed fields when the user saves the document properties dialog. */
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	onNotesUpdate?: (notes: string) => void;
 	/**
 	 * Fired with the shared `CollaborationState` (the contract Word, Excel and Visio use)
 	 * when a session starts or stops (the off state) and when its status, synced flag or

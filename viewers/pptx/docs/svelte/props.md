@@ -144,26 +144,31 @@ See [Collaboration](/svelte/collaboration) for the config shape and transports.
 
 ## Event callbacks
 
-| Prop                   | Signature                               | Fired when                                                                                                   |
-| ---------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `onload`               | `(detail: ViewerLoadDetail) => void`    | A presentation finishes loading (`{ slideCount, canvasSize }`).                                              |
-| `onerror`              | `(message: string) => void`             | A load fails (message is human-readable).                                                                    |
-| `onslidechange`        | `(index: number) => void`               | The active slide changes (0-based).                                                                          |
-| `onchange`             | `() => void`                            | After every committed editing mutation (move / resize / rotate / delete / duplicate / nudge / text / notes). |
-| `ondirtychange`        | `(dirty: boolean) => void`              | The unsaved-edits flag flips.                                                                                |
-| `oncontentchange`      | `(content: Uint8Array) => void`         | The serialized document bytes change.                                                                        |
-| `onmodechange`         | `(mode: string) => void`                | The viewer mode changes (`'preview' \| 'edit' \| 'present' \| 'master'`).                                    |
-| `onzoomchange`         | `(zoom: number) => void`                | The zoom level changes (1 = 100%).                                                                           |
-| `onselectionchange`    | `(elementIds: string[]) => void`        | The element selection changes.                                                                               |
-| `onslidecountchange`   | `(count: number) => void`               | The total slide count changes.                                                                               |
-| `onnotesupdate`        | `(notes: string) => void`               | The user commits a speaker-notes edit (`change` / `blur`). Omit to render the notes panel read-only.         |
-| `onopenfile`           | `() => void`                            | Host override for the File > Open action.                                                                    |
-| `onautosave`           | `(bytes: Uint8Array) => void`           | After each successful autosave snapshot.                                                                     |
-| `onautosavetoggle`     | `(enabled: boolean) => void`            | The desktop title bar toggles AutoSave.                                                                      |
-| `onstartcollaboration` | `(config: CollaborationConfig) => void` | The user starts a session from the Share/Broadcast dialog.                                                   |
-| `onstopcollaboration`  | `() => void`                            | The user stops the collaboration session.                                                                    |
-| `onThemeChange`        | `(themeKey: string) => void`            | The user picks a theme (note the camelCase name; it belongs to the Options-picker group above).              |
-| `onLocaleChange`       | `(locale: string) => void`              | The user picks a language (camelCase, Options-picker group).                                                 |
+| Prop                    | Signature                                                    | Fired when                                                                                                   |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `onload`                | `(detail: ViewerLoadDetail) => void`                         | A presentation finishes loading (`{ slideCount, canvasSize }`).                                              |
+| `onerror`               | `(message: string) => void`                                  | A load fails (message is human-readable).                                                                    |
+| `onslidechange`         | `(index: number) => void`                                    | The active slide changes (0-based).                                                                          |
+| `onchange`              | `() => void`                                                 | After every committed editing mutation (move / resize / rotate / delete / duplicate / nudge / text / notes). |
+| `ondirtychange`         | `(dirty: boolean) => void`                                   | The unsaved-edits flag flips.                                                                                |
+| `oncontentchange`       | `(content: Uint8Array) => void`                              | The serialized document bytes change.                                                                        |
+| `onmodechange`          | `(mode: string) => void`                                     | The viewer mode changes (`'preview' \| 'edit' \| 'present' \| 'master'`).                                    |
+| `onzoomchange`          | `(zoom: number) => void`                                     | The zoom level changes (1 = 100%).                                                                           |
+| `onselectionchange`     | `(elementIds: string[]) => void`                             | The element selection changes.                                                                               |
+| `onslidecountchange`    | `(count: number) => void`                                    | The total slide count changes.                                                                               |
+| `onnotesupdate`         | `(notes: string) => void`                                    | The user commits a speaker-notes edit (`change` / `blur`). Omit to render the notes panel read-only.         |
+| `onopenfile`            | `() => void`                                                 | Host override for the File > Open action.                                                                    |
+| `onautosave`            | `(bytes: Uint8Array) => void`                                | After each successful autosave snapshot.                                                                     |
+| `onautosavetoggle`      | `(enabled: boolean) => void`                                 | The desktop title bar toggles AutoSave.                                                                      |
+| `onautosavestatus`      | `(status: 'idle' \| 'saving' \| 'saved' \| 'error') => void` | Every autosave lifecycle transition.                                                                         |
+| `onautosaverecovery`    | `(record: AutosaveRecord) => void`                           | A recovery snapshot left by a previous session is found. The built-in recovery prompt is shown as well.      |
+| `onpropertieschange`    | `(updates: Partial<PptxCoreProperties>) => void`             | The user (or the AI assistant) changes the document properties.                                              |
+| `onpresentationchange`  | `(presenting: boolean) => void`                              | Presentation (slide show) mode is entered or left.                                                           |
+| `oncollaborationstatus` | `(status: ConnectionStatus) => void`                         | Every collaboration connection-status transition.                                                            |
+| `onstartcollaboration`  | `(config: CollaborationConfig) => void`                      | The user starts a session from the Share/Broadcast dialog.                                                   |
+| `onstopcollaboration`   | `() => void`                                                 | The user stops the collaboration session.                                                                    |
+| `onThemeChange`         | `(themeKey: string) => void`                                 | The user picks a theme (note the camelCase name; it belongs to the Options-picker group above).              |
+| `onLocaleChange`        | `(locale: string) => void`                                   | The user picks a language (camelCase, Options-picker group).                                                 |
 
 ## Payload types
 

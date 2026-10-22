@@ -114,6 +114,25 @@ describe('autosaveRecoveryService', () => {
 		);
 	});
 
+	it('reports the offered record to the host (autosaveRecovery)', async () => {
+		probeMock.mockResolvedValue(offer());
+		const { service, flush } = harness();
+		const offered = vi.fn();
+		service.bind({
+			filePath: () => 'deck.pptx',
+			fileName: () => 'Quarterly review.pptx',
+			loading: () => false,
+			error: () => null,
+			slideCount: () => 3,
+			autosaveAllowed: () => true,
+			restore: vi.fn(),
+			offered,
+		});
+		flush();
+		await Promise.resolve();
+		expect(offered).toHaveBeenCalledExactlyOnceWith(RECORD);
+	});
+
 	it('hands the recovered bytes to the viewer on restore, then closes', async () => {
 		probeMock.mockResolvedValue(offer());
 		const { service, restore } = bind();

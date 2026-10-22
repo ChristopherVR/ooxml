@@ -1,5 +1,6 @@
 import type {
 	AccountAuthConfig,
+	AutosaveRecord,
 	CanvasSize,
 	CollaborationConfig,
 	CollaborationInput,
@@ -7,10 +8,12 @@ import type {
 	CollaborationState,
 	CollaborationTransport,
 	DocumentStorage,
+	ConnectionStatus,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
@@ -19,7 +22,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import type { PptxSaveFormat } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxSaveFormat } from 'pptx-viewer-core';
 
 import type {
 	ExportGifOptions,
@@ -336,6 +339,19 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	storage?: DocumentStorage;
 	/** Fired with the serialized `.pptx` bytes after each successful autosave. */
 	onautosave?: (bytes: Uint8Array) => void;
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	onautosavestatus?: (status: ViewerAutosaveStatus) => void;
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	onautosaverecovery?: (record: AutosaveRecord) => void;
+	/** Fired with the changed fields when the user edits the document properties. */
+	onpropertieschange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	onpresentationchange?: (presenting: boolean) => void;
+	/** Fired on every collaboration connection-status transition. */
+	oncollaborationstatus?: (status: ConnectionStatus) => void;
 	/**
 	 * Real-time collaboration configuration. When provided, the viewer connects
 	 * to the room (y-websocket or serverless y-webrtc), publishes local edits

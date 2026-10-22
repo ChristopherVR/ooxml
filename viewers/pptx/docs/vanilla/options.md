@@ -208,6 +208,9 @@ are plain callback options:
 | `onChange`              | `() => void`                                                     | Fired after any document mutation (move, resize, edit, undo, ...).                                                                                                                                                                                     |
 | `onDirtyChange`         | `(dirty: boolean) => void`                                       | Fired when the unsaved-edits flag flips (a save resets it).                                                                                                                                                                                            |
 | `onSelectionChange`     | `(elementId: string \| null) => void`                            | Fired when the selected element changes (`null` = no selection).                                                                                                                                                                                       |
+| `onAutosave`            | `(content: Uint8Array) => void`                                  | Fired with the serialised `.pptx` bytes after each recovery autosave snapshot is written.                                                                                                                                                              |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`                 | Fired with the changed fields when the user (or the AI assistant) changes the document properties.                                                                                                                                                     |
+| `onNotesUpdate`         | `(notes: string) => void`                                        | Fired with the new speaker-notes text after a notes edit.                                                                                                                                                                                              |
 | `onAutosaveStatus`      | `(status: AutosaveStatus) => void`                               | Fired on every autosave lifecycle transition (`'idle' \| 'saving' \| 'saved' \| 'error'`).                                                                                                                                                             |
 | `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                               | Offered a recovery snapshot found on start; the host decides whether to restore it (see below).                                                                                                                                                        |
 | `onCollaborationStatus` | `(status: ConnectionStatus) => void`                             | Fired on every collaboration connection-status transition (`'disconnected' \| 'connecting' \| 'connected' \| 'error'`).                                                                                                                                |
@@ -231,6 +234,9 @@ interface PptxViewerCallbacks {
 	onChange?: () => void;
 	onDirtyChange?: (dirty: boolean) => void;
 	onSelectionChange?: (elementId: string | null) => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
 	onAutosaveStatus?: (status: AutosaveStatus) => void;
 	onAutosaveRecovery?: (record: AutosaveRecord) => void;
 	onCollaborationStatus?: (status: ConnectionStatus) => void;

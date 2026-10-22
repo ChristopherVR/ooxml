@@ -42,6 +42,8 @@ export interface UseContentLifecycleInput {
 	autosaveIntervalMs?: number;
 	/** Host `storage` prop: recovery snapshots go to its recovery methods when it has them. */
 	storage?: DocumentStorage;
+	/** The host's `onAutosave`: called with the bytes of each recovery snapshot written. */
+	onAutosave?: ((data: Uint8Array) => void) | undefined;
 	/**
 	 * File > Fonts > "Embed fonts in the file". Forwarded to `useSerialize`, so
 	 * turning it off actually strips the embedded font data on the next save.
@@ -237,6 +239,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		// so a poll that finds all of them unchanged can skip re-serializing a
 		// deck it has already snapshotted. The two refs are read by `.current`
 		// because an inline edit in progress lives there and nowhere else yet.
+		onSaved: input.onAutosave,
 		getChangeSources: () => [
 			slides,
 			state.templateElementsBySlideId,

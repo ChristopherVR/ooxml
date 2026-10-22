@@ -1,19 +1,28 @@
 import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
+	AutosaveRecord,
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
 	ResolvedCustomization,
 	PowerPointViewerAPI,
+	ViewerAutosaveStatus,
 	ViewerCustomizationApi,
 	ViewerMode,
 } from 'ooxml-ui/pptx';
 import {
+	autosaveStatusKind,
 	clampZoomScale,
 	createCustomizationController,
 	prepareElementForInsertion,
 	slideSpaceElement,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxHandler, PptxModifyVerifier, PptxSlide } from 'pptx-viewer-core';
+import type {
+	PptxCoreProperties,
+	PptxElement,
+	PptxHandler,
+	PptxModifyVerifier,
+	PptxSlide,
+} from 'pptx-viewer-core';
 /**
  * useViewerIntegration: Wires pointer handling, content lifecycle,
  * I/O, annotations, recovery, imperative handle, parent callbacks,
@@ -37,6 +46,7 @@ import { usePointerHandlers } from './usePointerHandlers';
 import type { PresentationSetupResult } from './usePresentationSetup';
 import { useRecoveryDetection } from './useRecoveryDetection';
 import type { UseRecoveryDetectionResult } from './useRecoveryDetection';
+import { useReportOnChange } from './useReportOnChange';
 import type { ViewerState } from './useViewerState';
 import type { UseZoomViewportResult } from './useZoomViewport';
 import type { ViewerDialogsResult } from './viewer-dialog-types';
@@ -126,6 +136,18 @@ export interface UseViewerIntegrationInput {
 	onZoomChange: ((zoom: number) => void) | undefined;
 	onSelectionChange: ((ids: string[]) => void) | undefined;
 	onSlideCountChange: ((count: number) => void) | undefined;
+	/** The host's `onAutosave`: bytes of each recovery snapshot written. */
+	onAutosave?: ((content: Uint8Array) => void) | undefined;
+	/** The host's `onAutosaveStatus`: every autosave lifecycle transition. */
+	onAutosaveStatus?: ((status: ViewerAutosaveStatus) => void) | undefined;
+	/** The host's `onAutosaveRecovery`: a recovery snapshot was offered. */
+	onAutosaveRecovery?: ((record: AutosaveRecord) => void) | undefined;
+	/** The host's `onPropertiesChange`: a document-properties edit. */
+	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
+	/** The host's `onNotesUpdate`: a speaker-notes edit. */
+	onNotesUpdate?: ((notes: string) => void) | undefined;
+	/** The host's `onPresentationChange`: slide show mode entered or left. */
+	onPresentationChange?: ((presenting: boolean) => void) | undefined;
 	/** Host UI customisation helpers, spread onto the imperative handle. */
 	customizationApi?: ViewerCustomizationApi;
 	/** Resolved host UI customisation, read by the keyboard shortcuts. */
@@ -212,6 +234,12 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		onZoomChange,
 		onSelectionChange,
 		onSlideCountChange,
+		onAutosave,
+		onAutosaveStatus,
+		onAutosaveRecovery,
+		onPropertiesChange,
+		onNotesUpdate,
+		onPresentationChange,
 	} = input;
 
 	// ── Global pointer handlers for drag / resize / adjustment ────
@@ -256,6 +284,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 			storage,
 			autosaveEnabled,
 			autosaveIntervalMs,
+			onAutosave,
 			// The File > Fonts toggle, finally reaching a save call.
 			embedFonts: dialogs.embedFontsEnabled,
 			slides,
@@ -292,6 +321,8 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		serializeForRecovery,
 		setContent,
 		onContentChange,
+		onPropertiesChange,
+		onNotesUpdate,
 		imageExportScale,
 		imageResolutionScale,
 	});
@@ -326,6 +357,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		slideCount: slides.length,
 		autosaveAllowed,
 		storage,
+		onOffered: onAutosaveRecovery,
 		onRestore: setContent,
 	});
 
@@ -573,6 +605,10 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 			onSlideCountChange(slides.length);
 		}
 	}, [slides.length, onSlideCountChange]);
+
+	// The public lifecycle, not the engine's own status object. `disabled` reports as `idle`.
+	useReportOnChange(autosaveStatusKind(autosaveStatus), onAutosaveStatus);
+	useReportOnChange(mode === 'present', onPresentationChange);
 
 	// ── Keyboard shortcuts ────────────────────────────────────────
 	useKeyboardShortcutWiring({

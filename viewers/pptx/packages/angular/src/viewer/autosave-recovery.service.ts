@@ -44,6 +44,8 @@ export interface AutosaveRecoveryHost {
 	readonly autosaveAllowed: () => boolean;
 	/** Load the recovered bytes into the viewer. */
 	readonly restore: (bytes: Uint8Array) => void;
+	/** Called with the stored record when a snapshot is offered (the host's `autosaveRecovery`). */
+	readonly offered?: (record: AutosaveRecord) => void;
 }
 
 @Injectable()
@@ -92,6 +94,7 @@ export class AutosaveRecoveryService {
 					if (offer && !this.destroyed) {
 						this.record = offer.record;
 						this.prompt.set(offer.prompt);
+						host.offered?.(offer.record);
 					}
 					return offer;
 				});

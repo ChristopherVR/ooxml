@@ -2,11 +2,14 @@ import type { CollaborationState } from 'ooxml-core/collab';
 import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
+	AutosaveRecord,
 	CollaborationInput,
+	ConnectionStatus,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
@@ -17,6 +20,7 @@ import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type {
 	ConnectorArrowType,
 	PptxAnimationPreset,
+	PptxCoreProperties,
 	PptxElementAnimation,
 	PptxSlideTransition,
 	StrokeDashType,
@@ -344,6 +348,27 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * when it provides them.
 	 */
 	storage?: DocumentStorage;
+	/** Fired with the serialised deck each time a recovery autosave snapshot is written. */
+	onAutosave?: (content: Uint8Array) => void;
+	/** Fired when the user enables or disables autosave (title bar or File > Options). */
+	onAutosaveToggle?: (enabled: boolean) => void;
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	onAutosaveStatus?: (status: ViewerAutosaveStatus) => void;
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	onAutosaveRecovery?: (record: AutosaveRecord) => void;
+	/** Fired after any committed document edit (move, resize, text, undo, redo, ...). */
+	onChange?: () => void;
+	/** Fired with the changed fields when the user saves the document properties dialog. */
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	onNotesUpdate?: (notes: string) => void;
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	onPresentationChange?: (presenting: boolean) => void;
+	/** Fired on every collaboration connection-status transition. */
+	onCollaborationStatus?: (status: ConnectionStatus) => void;
 	/** Optional class name */
 	className?: string;
 

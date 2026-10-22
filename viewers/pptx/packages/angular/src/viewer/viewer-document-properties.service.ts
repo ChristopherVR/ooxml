@@ -71,6 +71,11 @@ export class ViewerDocumentPropertiesService {
 		this.showProperties.set(false);
 	}
 
+	/** Report a core-properties edit made elsewhere (the inspector card) to the host. */
+	notifyCoreChange(patch: Partial<PptxCoreProperties>): void {
+		this.host?.emitPropertiesChange(patch);
+	}
+
 	/** Apply a hyperlink edit to the selected element (one history entry). */
 	onHyperlinkSave(patch: Partial<PptxElement>): void {
 		const host = this.requireHost();

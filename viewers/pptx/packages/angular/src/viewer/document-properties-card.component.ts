@@ -14,6 +14,7 @@ import type { PptxAppProperties, PptxCoreProperties, PptxCustomProperty } from '
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { LoadContentService } from './load-content.service';
+import { ViewerDocumentPropertiesService } from './viewer-document-properties.service';
 
 @Component({
 	selector: 'pptx-document-properties-card',
@@ -119,6 +120,7 @@ export class DocumentPropertiesCardComponent {
 
 	private readonly loader = inject(LoadContentService);
 	private readonly editor = inject(EditorStateService);
+	private readonly docProperties = inject(ViewerDocumentPropertiesService, { optional: true });
 
 	protected readonly core = this.loader.coreProperties;
 	protected readonly app = this.loader.appProperties;
@@ -135,6 +137,7 @@ export class DocumentPropertiesCardComponent {
 			[key]: value,
 		}));
 		this.markDirty();
+		this.docProperties?.notifyCoreChange({ [key]: value });
 	}
 
 	protected onAppChange(event: Event, key: 'company' | 'application'): void {

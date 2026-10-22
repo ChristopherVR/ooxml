@@ -61,6 +61,8 @@ export interface AutosaveSessionDeps {
 	/** Protect-Presentation state, forwarded to the shared save decision. */
 	getSaveIntent(): DeckSaveIntent;
 	onStatus(status: AutosaveStatus): void;
+	/** The host's `onAutosave` hook: the bytes of each snapshot written. */
+	onSaved?: (bytes: Uint8Array) => void;
 	/** The host's `onAutosaveRecovery` hook; the prompt is additional, not a replacement. */
 	onRecovery?: (record: AutosaveRecord) => void;
 	/** Load restored bytes through the viewer's normal load path. */
@@ -172,6 +174,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 			}),
 		getSaveIntent: deps.getSaveIntent,
 		onStatus: deps.onStatus,
+		...(deps.onSaved ? { onSaved: deps.onSaved } : {}),
 		getActivation: activation,
 		// The ceiling alone: a user who merely switched the toggle off should
 		// still be asked about work a crash left behind.

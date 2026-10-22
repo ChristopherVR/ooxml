@@ -1,5 +1,5 @@
 import type { DocumentStorage } from 'ooxml-ui/pptx';
-import type { PptxSlide, PptxHandler } from 'pptx-viewer-core';
+import type { PptxCoreProperties, PptxSlide, PptxHandler } from 'pptx-viewer-core';
 /**
  * useIOHandlers: Composes export, print, theme, and property-handler hooks
  * into a single grouped return value for the orchestrator component.
@@ -53,6 +53,10 @@ export interface UseIOHandlersInput {
 	serializeForRecovery: () => Promise<Uint8Array | null>;
 	setContent: React.Dispatch<React.SetStateAction<ArrayBuffer | Uint8Array | null>>;
 	onContentChange: ((content: Uint8Array) => void) | undefined;
+	/** The host's `onPropertiesChange` (document-properties edits). */
+	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
+	/** The host's `onNotesUpdate` (speaker-notes edits). */
+	onNotesUpdate?: ((notes: string) => void) | undefined;
 	/** File > Options > Advanced > "Image Size and Quality" raster-scale multiplier. */
 	imageExportScale?: number;
 	/**
@@ -95,6 +99,8 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		serializeForRecovery,
 		setContent,
 		onContentChange,
+		onPropertiesChange,
+		onNotesUpdate,
 		imageExportScale,
 		imageResolutionScale,
 	} = input;
@@ -173,6 +179,8 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		setIsDirty: state.setIsDirty,
 		ops,
 		history,
+		onPropertiesChange,
+		onNotesUpdate,
 	});
 
 	return { exportHandlers, printHandlers, themeHandlers, propertyHandlers };

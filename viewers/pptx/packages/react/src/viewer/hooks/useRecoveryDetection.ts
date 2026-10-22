@@ -39,6 +39,8 @@ export interface UseRecoveryDetectionInput {
 	autosaveAllowed?: boolean;
 	/** Host storage; the snapshot is read from its recovery methods when it has them. */
 	storage?: DocumentStorage;
+	/** Called with the stored record when a recovery snapshot is offered (the host's `onAutosaveRecovery`). */
+	onOffered?: ((record: AutosaveRecord) => void) | undefined;
 	/** Load the recovered bytes into the viewer. */
 	onRestore?: (bytes: Uint8Array) => void;
 	/** Legacy behaviour: also open the Version History panel when one is found. */
@@ -71,6 +73,10 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 	const onRestore = input.onRestore;
 	const storageRef = useRef(input.storage);
 	storageRef.current = input.storage;
+	const onOfferedRef = useRef(input.onOffered);
+	useEffect(() => {
+		onOfferedRef.current = input.onOffered;
+	}, [input.onOffered]);
 	const openVersionHistory = input.openVersionHistory;
 
 	useEffect(() => {
@@ -100,6 +106,7 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 			}
 			recordRef.current = offer.record;
 			setPrompt(offer.prompt);
+			onOfferedRef.current?.(offer.record);
 			openVersionHistory?.();
 		})();
 	}, [filePath, fileName, loading, error, slideCount, autosaveAllowed, openVersionHistory]);

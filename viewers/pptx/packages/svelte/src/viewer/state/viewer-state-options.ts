@@ -117,6 +117,21 @@ export function toViewerStateOptions(
 		get onautosavetoggle() {
 			return getProps().onautosavetoggle;
 		},
+		get onautosavestatus() {
+			return getProps().onautosavestatus;
+		},
+		get onautosaverecovery() {
+			return getProps().onautosaverecovery;
+		},
+		get onpropertieschange() {
+			return getProps().onpropertieschange;
+		},
+		get onpresentationchange() {
+			return getProps().onpresentationchange;
+		},
+		get oncollaborationstatus() {
+			return getProps().oncollaborationstatus;
+		},
 		get onstartcollaboration() {
 			return getProps().onstartcollaboration;
 		},

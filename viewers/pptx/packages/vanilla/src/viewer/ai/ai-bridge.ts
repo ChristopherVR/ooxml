@@ -19,7 +19,13 @@ import type {
 	PptxAiSlidesUpdater,
 } from 'ooxml-ui/pptx/ai';
 import { applyElementUpdate, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
-import type { PptxData, PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import type {
+	PptxCoreProperties,
+	PptxData,
+	PptxHandler,
+	PptxSlide,
+	PptxTheme,
+} from 'pptx-viewer-core';
 
 import type { EditorController } from '../editor';
 import type { Store, ViewerState } from '../state';
@@ -45,6 +51,8 @@ export interface VanillaAiBridgeDeps {
 	 * so the context builder scopes the model to what the user is pointing at.
 	 */
 	getFocusedTargets?(): PptxAiFocusedTarget[];
+	/** Called with the core properties when an AI edit changed them (the host's `onPropertiesChange`). */
+	onCorePropertiesChanged?(properties: PptxCoreProperties): void;
 	/** Optional host notification sink (status line / toast / console). */
 	notify?(message: string, level?: PptxAiNotifyLevel): void;
 }
@@ -158,6 +166,9 @@ export function createVanillaAiBridge(deps: VanillaAiBridgeDeps): PptxAiBridge {
 				differs(before.customProperties, nextCustom)
 			) {
 				editor.updateDocumentProperties(nextCore ?? {}, nextApp ?? {}, nextCustom);
+				if (differs(before.coreProperties, nextCore) && nextCore) {
+					deps.onCorePropertiesChanged?.(nextCore);
+				}
 			}
 			if (differs(before.viewProperties, after.viewProperties)) {
 				// Not undo-tracked, mirroring the manual View > Grid/Guides/Snap

@@ -58,6 +58,8 @@ export interface UseAutosaveInput {
 	 * whenever it is unsure. Omit it and every tick writes, as before.
 	 */
 	getChangeSources?: () => readonly unknown[];
+	/** Called with the serialised deck after each snapshot is written (the host's `onAutosave`). */
+	onSaved?: ((data: Uint8Array) => void) | undefined;
 }
 
 export interface UseAutosaveResult {
@@ -93,7 +95,11 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 	const isSavingRef = useRef(false);
 	const changeSourcesRef = useRef(getChangeSources);
 	const lastSnapshotRef = useRef<AutosaveSnapshotMark | undefined>(undefined);
+	const onSavedRef = useRef(input.onSaved);
 
+	useEffect(() => {
+		onSavedRef.current = input.onSaved;
+	}, [input.onSaved]);
 	useEffect(() => {
 		isDirtyRef.current = isDirty;
 	}, [isDirty]);
@@ -147,6 +153,7 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 			// captured: the next tick sees a different reference and writes.
 			lastSnapshotRef.current = autosaveSnapshotMark(path, sources);
 			setAutosaveStatus({ state: 'saved', timestamp: Date.now() });
+			onSavedRef.current?.(data);
 		} catch (err) {
 			setAutosaveStatus({
 				state: 'error',

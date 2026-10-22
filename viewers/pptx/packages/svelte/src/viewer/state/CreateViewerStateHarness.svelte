@@ -10,7 +10,14 @@
 	 * assert on it right after `mount()` returns.
 	 */
 	import { onDestroy } from 'svelte';
-	import type { CollaborationConfig, DocumentStorage, ViewportFitOptions } from 'ooxml-ui/pptx';
+	import type {
+		CollaborationConfig,
+		DocumentStorage,
+		ConnectionStatus,
+		ViewerAutosaveStatus,
+		ViewportFitOptions,
+	} from 'ooxml-ui/pptx';
+	import type { PptxCoreProperties } from 'pptx-viewer-core';
 
 	import { createViewerState } from './create-viewer-state.svelte';
 	import type { ViewerStateBag } from './create-viewer-state-types';
@@ -26,6 +33,10 @@
 		oncontentchange,
 		onerror,
 		storage,
+		onpropertieschange,
+		onpresentationchange,
+		onautosavestatus,
+		oncollaborationstatus,
 		viewport,
 		fitOptions,
 		getCollaboration,
@@ -47,6 +58,10 @@
 		oncontentchange?: (content: Uint8Array) => void;
 		onerror?: (message: string) => void;
 		storage?: DocumentStorage;
+		onpropertieschange?: (updates: Partial<PptxCoreProperties>) => void;
+		onpresentationchange?: (presenting: boolean) => void;
+		onautosavestatus?: (status: ViewerAutosaveStatus) => void;
+		oncollaborationstatus?: (status: ConnectionStatus) => void;
 		viewport?: { width: number; height: number };
 		fitOptions?: ViewportFitOptions;
 		getCollaboration?: () => CollaborationConfig | undefined;
@@ -77,6 +92,10 @@
 		get onerror() {
 			return onerror;
 		},
+		onpropertieschange: (updates) => onpropertieschange?.(updates),
+		onpresentationchange: (presenting) => onpresentationchange?.(presenting),
+		onautosavestatus: (status) => onautosavestatus?.(status),
+		oncollaborationstatus: (status) => oncollaborationstatus?.(status),
 		getStageHolderEl: () => undefined,
 		getRootEl: () => undefined,
 		getViewportWidth: () => viewport?.width ?? 0,

@@ -39,6 +39,8 @@ export interface UseInspectorDeckActionsInput {
 	customProperties: ShallowRef<PptxCustomProperty[]>;
 	tagCollections: ShallowRef<PptxTagCollection[]>;
 	markDirty: () => void;
+	/** The host's `properties-change` event: the core fields an inspector edit changed. */
+	onCorePropertiesChanged?: (updates: Partial<PptxCoreProperties>) => void;
 	/** Snapshot `slides` onto the undo stack before a rescale mutates it. */
 	pushHistory: () => void;
 	/**
@@ -180,6 +182,7 @@ export function useInspectorDeckActions(
 	function updateCoreProperties(patch: Partial<PptxCoreProperties>): void {
 		coreProperties.value = { ...(coreProperties.value ?? {}), ...patch };
 		markDirty();
+		input.onCorePropertiesChanged?.(patch);
 	}
 
 	function updateAppProperties(patch: Partial<PptxAppProperties>): void {

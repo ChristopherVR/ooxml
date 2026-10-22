@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	autosaveStatusKind,
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
 	attachViewerHyperlinks,
@@ -61,8 +62,10 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	AutosaveRecord,
 	CollaborationState,
 	DocumentStorage,
+	ConnectionStatus,
 	ElementUpdate,
 	ElementUpdateOptions,
 	AccountAuthConfig,
@@ -75,6 +78,7 @@ import type {
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerMode,
 	ViewerQuickAccessOptions,
@@ -178,6 +182,7 @@ import { RecentColorsService } from './recent-colors.service';
 import { RehearseTimingsComponent } from './rehearse-timings.component';
 import { RemoteSelectionOverlayComponent } from './remote-selection-overlay.component';
 import { Rendering3DService } from './rendering-3d.service';
+import { reportOnChange } from './report-on-change';
 import { ReviewCommentsNavigationService } from './review-comments-navigation.service';
 import { RibbonAddInsService } from './ribbon-add-ins.service';
 import {
@@ -1240,9 +1245,9 @@ const noopClose = (): void => undefined;
 			     action-button clicks. The offer is deferred, not dropped. -->
 			<pptx-autosave-recovery-dialog
 				[prompt]="visibleRecoveryPrompt()"
-				[discarding]="autosaveRecovery.discarding()"
-				(restore)="autosaveRecovery.restore()"
-				(discard)="autosaveRecovery.discard()"
+				[discarding]="recoveryOffer.discarding()"
+				(restore)="recoveryOffer.restore()"
+				(discard)="recoveryOffer.discard()"
 			/>
 
 			@if (canEdit() && customizationService.dialogAvailable('hyperlink')) {
@@ -1748,6 +1753,32 @@ export class PowerPointViewerComponent
 	readonly propertiesChange = output<Partial<PptxCoreProperties>>();
 	/** Fired when the viewer mode changes (preview, edit, present, master). */
 	readonly modeChange = output<ViewerMode>();
+	/**
+	 * Fired after any committed document edit (move, resize, text, undo, redo, ...). Named
+	 * `documentChange` rather than `change`: an output called `change` would also receive the
+	 * native `change` events of the inputs inside the viewer.
+	 */
+	readonly documentChange = output<void>();
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	readonly presentationChange = output<boolean>();
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	readonly notesUpdate = output<string>();
+	/**
+	 * Fired with the serialised deck each time a recovery autosave snapshot is written. Named
+	 * `autosaved` because the `autosave` input already owns that name on this component.
+	 */
+	readonly autosaved = output<Uint8Array>();
+	/** Fired when the user enables or disables autosave (title bar or File > Options). */
+	readonly autosaveToggle = output<boolean>();
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	readonly autosaveStatus = output<ViewerAutosaveStatus>();
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	readonly autosaveRecovery = output<AutosaveRecord>();
+	/** Fired on every collaboration connection-status transition. */
+	readonly collaborationStatus = output<ConnectionStatus>();
 	/** Fired when the zoom level changes. */
 	readonly zoomChange = output<number>();
 	/** Fired when element selection changes. */
@@ -1807,7 +1838,7 @@ export class PowerPointViewerComponent
 	protected readonly collab = inject(CollaborationService);
 	protected readonly accessibility = inject(AccessibilityService);
 	protected readonly autosave = inject(AutosaveService);
-	protected readonly autosaveRecovery = inject(AutosaveRecoveryService);
+	protected readonly recoveryOffer = inject(AutosaveRecoveryService);
 	protected readonly print = inject(PrintService);
 	protected readonly mobile = inject(IsMobileService);
 	private readonly rendering3D = inject(Rendering3DService);
@@ -2119,7 +2150,7 @@ export class PowerPointViewerComponent
 
 	/** The recovery offer, or null while a slide show is running. */
 	protected readonly visibleRecoveryPrompt = computed(() => {
-		const prompt = this.autosaveRecovery.prompt();
+		const prompt = this.recoveryOffer.prompt();
 		return shouldShowAutosaveRecoveryPrompt({
 			prompt,
 			presenting: this.presentationMode.presenting(),
@@ -2361,6 +2392,9 @@ export class PowerPointViewerComponent
 		setCoreProperties: (props) => {
 			this.loader.coreProperties.set(props);
 			this.editor.dirty.set(true);
+			if (props) {
+				this.propertiesChange.emit(props);
+			}
 		},
 		setAppProperties: (props) => {
 			this.loader.appProperties.set(props);
@@ -3046,6 +3080,7 @@ export class PowerPointViewerComponent
 			activeSlide: () => this.activeSlide(),
 			activeSlideIndex: () => this.activeSlideIndex(),
 			activeTemplateElements: () => this.activeTemplateElements(),
+			notesUpdated: (notes) => this.notesUpdate.emit(notes),
 		});
 		effect(() => {
 			if (!this.canEdit()) {
@@ -3096,7 +3131,7 @@ export class PowerPointViewerComponent
 		// Offer a crash-recovery snapshot back once the deck has loaded. Angular
 		// wrote snapshots and never looked for one again, so the feature was
 		// invisible to the user; the decision and the copy are the shared ones.
-		this.autosaveRecovery.bind({
+		this.recoveryOffer.bind({
 			filePath: () => this.filePath(),
 			fileName: () => this.fileName(),
 			storage: () => this.storage(),
@@ -3105,6 +3140,7 @@ export class PowerPointViewerComponent
 			slideCount: () => this.displaySlidesMut().length,
 			autosaveAllowed: () => this.autosaveInput() !== false,
 			restore: (bytes) => this.fileIO.contentOverride.set(bytes),
+			offered: (record) => this.autosaveRecovery.emit(record),
 		});
 
 		// Hand the autosave engine the reactive accessors it reads (enabled toggle,
@@ -3117,6 +3153,7 @@ export class PowerPointViewerComponent
 			storage: () => this.storage(),
 			isDirty: () => this.editor.dirty(),
 			serialize: () => this.serializeForAutosave(),
+			saved: (data) => this.autosaved.emit(data),
 			// Host input first (an explicit policy), else Options > Save > "Save
 			// AutoRecover information every N minutes", else the shared 120s.
 			intervalMs: () =>
@@ -3136,6 +3173,23 @@ export class PowerPointViewerComponent
 				this.dialogs.isPasswordProtected(),
 			],
 		});
+
+		// Host events that describe a transition. Registered last so they see the settled
+		// state (including preferences hydrated from the stored options), not the initial one.
+		reportOnChange(
+			() => this.editor.editRevision(),
+			() => this.documentChange.emit(),
+		);
+		reportOnChange(
+			() => this.presentationMode.presenting(),
+			(presenting) => this.presentationChange.emit(presenting),
+		);
+		reportOnChange(this.autosaveEnabled, (enabled) => this.autosaveToggle.emit(enabled));
+		reportOnChange(
+			() => autosaveStatusKind(this.autosave.status()),
+			(status) => this.autosaveStatus.emit(status),
+		);
+		reportOnChange(this.collab.status, (status) => this.collaborationStatus.emit(status));
 	}
 
 	/**

@@ -124,6 +124,20 @@ describe('useRecoveryDetection', () => {
 		);
 	});
 
+	it('reports the offered record to the host (onAutosaveRecovery)', async () => {
+		probeMock.mockResolvedValue(offer());
+		const onOffered = vi.fn();
+		await mount({ ...base, onRestore: vi.fn(), onOffered });
+		expect(onOffered).toHaveBeenCalledExactlyOnceWith(offer().record);
+	});
+
+	it('does not report anything when there is no snapshot', async () => {
+		probeMock.mockResolvedValue(null);
+		const onOffered = vi.fn();
+		await mount({ ...base, onRestore: vi.fn(), onOffered });
+		expect(onOffered).not.toHaveBeenCalled();
+	});
+
 	it('offers nothing when the store has no snapshot for this deck', async () => {
 		probeMock.mockResolvedValue(null);
 		const current = await mount({ ...base, onRestore: vi.fn() });

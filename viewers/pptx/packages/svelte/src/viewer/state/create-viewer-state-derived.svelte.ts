@@ -6,6 +6,7 @@ import type { EditorState } from '../editor/editor-state.svelte';
 import type { CreateViewerStateOptions } from './create-viewer-state-types';
 import { fitScale } from './navigation';
 import type { PresentationLoader } from './presentation-loader.svelte';
+import { reportOnChange } from './report-on-change.svelte';
 import type { ViewerState } from './viewer-state.svelte';
 
 export interface ViewerDerivedDeps {
@@ -94,6 +95,10 @@ export function useViewerDerived(deps: ViewerDerivedDeps): ViewerDerived {
 
 	$effect(() => options.ondirtychange?.(editor.dirty));
 	$effect(() => options.onmodechange?.(viewerMode));
+	reportOnChange(
+		() => viewerMode === 'present',
+		(presenting) => options.onpresentationchange?.(presenting),
+	);
 	$effect(() => options.onzoomchange?.(effectivePercent / 100));
 	$effect(() => options.onselectionchange?.([...editor.selection.ids]));
 	$effect(() => options.onslidecountchange?.(displaySlides.length));
