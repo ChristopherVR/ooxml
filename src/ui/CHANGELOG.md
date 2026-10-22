@@ -7,6 +7,25 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.24.0) - 2026-10-22
+
+### Features
+
+- **ui:** Move the pptx inspector Quick Styles onto the shared gallery ([#168](https://github.com/ChristopherVR/ooxml/issues/168)) ([978fdbd](https://github.com/ChristopherVR/ooxml/commit/978fdbdb82335f24a0496ba1bf1152a7018cee63))
+- **ui:** Build the pptx status bar state in one place ([#169](https://github.com/ChristopherVR/ooxml/issues/169)) ([0af0608](https://github.com/ChristopherVR/ooxml/commit/0af06085a54134ef3679d66f3319c50d8527a960))
+
+### Bug Fixes
+
+- **docx:** Follow-up fixes for content controls in table cells ([#166](https://github.com/ChristopherVR/ooxml/issues/166)) ([47b0e0f](https://github.com/ChristopherVR/ooxml/commit/47b0e0ffde6a022b40969936acb9c734de4cb8cc))
+- **docx:** Keep a protected form's text field values unformatted ([#167](https://github.com/ChristopherVR/ooxml/issues/167)) ([cb21dff](https://github.com/ChristopherVR/ooxml/commit/cb21dff2988184e192b30192b807ff037a1e894e))
+- **ui:** Keep 3d smartart fill swatches while crossing a node label ([1099185](https://github.com/ChristopherVR/ooxml/commit/1099185aa0c1b7f1a0b4600ec0863ba879e2be40))
+- **pptx:** Keep the outer half of centred outlines on clipped shapes ([df3ca02](https://github.com/ChristopherVR/ooxml/commit/df3ca028919989f55a8a5fdc3c3cb8996c09987e))
+- **ui:** Paint the morph overlay in one stacking order ([9f5a11f](https://github.com/ChristopherVR/ooxml/commit/9f5a11fa15c3c31eb06551decda93b96b7841b94))
+
+### Testing
+
+- **pptx:** Cover the stroked clip widening in every binding ([0c29435](https://github.com/ChristopherVR/ooxml/commit/0c2943500ac3026066aa699d26ed758bca2891bd))
+
 ## [1.23.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.23.1) - 2026-10-22
 
 ### Bug Fixes

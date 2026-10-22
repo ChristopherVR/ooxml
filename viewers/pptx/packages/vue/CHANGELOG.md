@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.48.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.48.0) - 2026-10-22
+
+### Features
+
+- **ui:** Move the pptx inspector Quick Styles onto the shared gallery ([#168](https://github.com/ChristopherVR/ooxml/issues/168)) ([978fdbd](https://github.com/ChristopherVR/ooxml/commit/978fdbdb82335f24a0496ba1bf1152a7018cee63))
+- **ui:** Build the pptx status bar state in one place ([#169](https://github.com/ChristopherVR/ooxml/issues/169)) ([0af0608](https://github.com/ChristopherVR/ooxml/commit/0af06085a54134ef3679d66f3319c50d8527a960))
+
+### Bug Fixes
+
+- **ui:** Paint the morph overlay in one stacking order ([9f5a11f](https://github.com/ChristopherVR/ooxml/commit/9f5a11fa15c3c31eb06551decda93b96b7841b94))
+
+### Testing
+
+- **pptx:** Cover the stroked clip widening in every binding ([0c29435](https://github.com/ChristopherVR/ooxml/commit/0c2943500ac3026066aa699d26ed758bca2891bd))
+
 ## [4.47.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.47.1) - 2026-10-22
 
 ### Bug Fixes
