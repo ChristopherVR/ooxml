@@ -51,7 +51,8 @@ export function parseTsv(text: string): string[][] {
 	}
 	row.push(field);
 	rows.push(row);
-	const width = Math.max(...rows.map((r) => r.length));
+	let width = 0;
+	for (const r of rows) width = Math.max(width, r.length);
 	for (const r of rows) while (r.length < width) r.push('');
 	return rows;
 }

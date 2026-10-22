@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { fileInput, fileNameLabel, newDocument, saveButton } from './helpers';
+import {
+	clickInEditor,
+	fileInput,
+	fileNameLabel,
+	newDocument,
+	saveButton,
+	waitForEditorFocus,
+} from './helpers';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -50,7 +57,7 @@ test('edits a header in place by double-clicking it and saves the header part', 
 	await expect(header).toContainText('Company');
 	await header.dblclick();
 	const headerEditor = header.locator('.dve-header-footer-editor .ProseMirror');
-	await expect(headerEditor).toBeFocused();
+	await waitForEditorFocus(headerEditor);
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Confidential');
 	await page.keyboard.press('Escape');
@@ -107,14 +114,14 @@ test('edits footnote text and the paragraph holding its reference', async ({ pag
 	const note = editor.locator('.dve-notes li[data-docx-note-id="1"]');
 	await expect(note).toContainText('Source');
 	await note.dblclick();
-	await expect(note.locator('.dve-header-footer-editor .ProseMirror')).toBeFocused();
+	await waitForEditorFocus(note.locator('.dve-header-footer-editor .ProseMirror'));
 	await page.keyboard.press('End');
 	await page.keyboard.type(': annual report');
 	await page.keyboard.press('Escape');
 	await expect(note).toContainText('Source: annual report');
 
 	const body = editor.locator('.dve-paper .ProseMirror p').first();
-	await body.click();
+	await clickInEditor(body);
 	await page.keyboard.press('Home');
 	await page.keyboard.type('Strong ');
 
@@ -149,7 +156,7 @@ test('inserts footnotes in a new document, numbers them in order and saves them'
 	await page.keyboard.type('Later source');
 	await page.keyboard.press('Escape');
 
-	await surface.locator('p').first().click();
+	await clickInEditor(surface.locator('p').first());
 	await page.keyboard.press('Home');
 	await page.keyboard.type('First claim');
 	await editor.getByRole('button', { name: 'Insert footnote', exact: true }).click();
@@ -203,12 +210,16 @@ test('formats text and inserts a picture inside a header from the ribbon', async
 	const header = editor.locator('.dve-header .dve-header-footer-slot');
 	await header.dblclick();
 	const headerEditor = header.locator('.dve-header-footer-editor .ProseMirror');
-	await expect(headerEditor).toBeFocused();
+	await waitForEditorFocus(headerEditor);
 	await page.keyboard.press('Control+a');
 	await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 	await editor.getByRole('button', { name: 'Bold', exact: true }).click();
 	await expect(headerEditor.locator('strong')).toHaveText('Company');
+	// Bold gives the header editor back the focus the Home tab took.
+	await waitForEditorFocus(headerEditor);
 	await page.keyboard.press('End');
+	// The editor reads the caret End moved only while it has focus, which the ribbon takes next.
+	await waitForEditorFocus(headerEditor);
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const chooser = page.waitForEvent('filechooser');
 	await editor.getByRole('button', { name: 'Insert picture', exact: true }).click();

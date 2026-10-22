@@ -315,8 +315,9 @@
 	color: var(--muted);
 }
 
-/* Collapsed groups: a narrow ribbon folds its rightmost groups into one dropdown each. */
-.ribbon-group > .ribbon-overflow-button {
+/* Collapsed groups: a narrow ribbon folds its rightmost groups into one dropdown each. An
+   unfolded group keeps its button, hidden by a rule that must outrank `button.ribbon-large`. */
+.ribbon-group:not([data-collapsed]) > .ribbon-overflow-button {
 	display: none;
 }
 .ribbon-group[data-collapsed] {

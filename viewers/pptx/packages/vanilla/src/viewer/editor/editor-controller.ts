@@ -1,7 +1,7 @@
 import {
 	armEditorKeyboard,
 	cycleSelectableElement,
-	downloadBlob,
+	deliverSavedPresentation,
 	isDialogAvailable,
 	mapCustomizedEditorKey,
 	mapInlineTextFormatKey,
@@ -81,6 +81,8 @@ export interface EditorControllerDeps {
 	getScale(): number;
 	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	getHandler(): PptxHandler | null;
+	/** Host `storage` option: Save / Save As go to `storage.save()` instead of a download. */
+	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/** Adopt a handler produced by an in-session mutation (Slide Master view CRUD). */
 	setHandler(handler: PptxHandler): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
@@ -89,6 +91,8 @@ export interface EditorControllerDeps {
 	transformCommittedText?: (text: string) => string;
 	/** Host `onChange` callback: fired after every committed mutation. */
 	onChange?: () => void;
+	/** Host `onNotesUpdate` callback: the new text after a speaker-notes edit lands. */
+	onNotesUpdate?: (notes: string) => void;
 	/** Notified with slide-space coordinates on stage pointer move (collaboration cursor broadcast). */
 	onCursorMove?: (x: number, y: number) => void;
 	/** Mirror in-progress inline-editor text to collaborators (live preview). */
@@ -158,13 +162,6 @@ export interface EditorController {
 	destroy(): void;
 }
 
-const PRESENTATION_MIME: Record<PptxSaveFormat, string> = {
-	pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-	ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-	pptm: 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-	ppt: 'application/vnd.ms-powerpoint',
-};
-
 export function createEditorController(deps: EditorControllerDeps): EditorController {
 	const { doc, store } = deps;
 	let overlay: SelectionOverlay | null = null;
@@ -190,6 +187,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		store,
 		getHandler: deps.getHandler,
 		onChange: deps.onChange,
+		onNotesUpdate: deps.onNotesUpdate,
 		onHistoryChange: () => updateToolbar(),
 		transformCommittedText: deps.transformCommittedText,
 		getPendingInlineTextEdit: () => interactions.readPendingInlineTextEdit?.(),
@@ -840,16 +838,28 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		save: (format) => ops.save(format),
 		// Every name below goes through the shared save-name decision, so a host
 		// that passes the deck it opened (`report.ppt`) gets `report.pptx` back
-		// rather than a `.ppt` whose bytes are an OpenXML package.
+		// rather than a `.ppt` whose bytes are an OpenXML package. With a host
+		// `storage` the bytes go to `storage.save()` instead of a download.
 		async downloadAs(format, fileName) {
 			const bytes = await ops.save(format);
-			downloadBlob(
-				new Blob([bytes as unknown as BlobPart], { type: PRESENTATION_MIME[format] }),
-				savedPresentationFileName(fileName, format),
-			);
+			await deliverSavedPresentation({
+				storage: deps.getStorage?.(),
+				bytes,
+				format,
+				fileName: savedPresentationFileName(fileName, format),
+				reason: 'saveAs',
+			});
 		},
+		// File > Save: `.pptx`, reported to the host's storage as `save` (Save As is `downloadAs`).
 		async downloadPptx(fileName) {
-			await this.downloadAs('pptx', fileName);
+			const bytes = await ops.save('pptx');
+			await deliverSavedPresentation({
+				storage: deps.getStorage?.(),
+				bytes,
+				format: 'pptx',
+				fileName: savedPresentationFileName(fileName),
+				reason: 'save',
+			});
 		},
 		destroy() {
 			unsubscribe();

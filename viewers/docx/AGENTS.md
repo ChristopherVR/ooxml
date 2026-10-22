@@ -1,41 +1,45 @@
 # AGENTS.md
 
-Guidance for coding agents (Claude Code, Codex, and others) working in this
-repository. This file is canonical: `CLAUDE.md` only imports it, so edit this
-file and never fork the two (the viewer repositories drifted that way once).
+Guidance for coding agents (Claude Code, Codex, and others) working in the Word
+viewer, `viewers/docx` in the `ooxml` repository. The repository's root
+`AGENTS.md` applies as well and wins on anything repository-wide (releases,
+`bun run verify`, branching, commits). This file is canonical for the viewer:
+`CLAUDE.md` only imports it, so edit this file and never fork the two.
 
-## READ FIRST: this repository is UI only
+## READ FIRST: this viewer is UI only
 
-All Word logic lives in the `docx` area of the published `ooxml-core` package
-(source in the `ChristopherVR/ooxml` repository): the document model, parser,
-serializer, editing commands, layout (`ooxml-core/docx/layout`), document
-loading and the legacy `.doc` reader (`ooxml-core/docx/load`) and
-collaboration (`ooxml-core/collab`). This repository holds the **UI**: the
-`<docx-editor>` web component, six framework bindings, ribbon and dialog views,
-styling, demos, browser tests and the docs site.
+All Word logic lives in the `docx` area of `ooxml-core` (`src/core/docx` at the
+repository root): the document model, parser, serializer, editing commands,
+layout (`ooxml-core/docx/layout`), document loading and the legacy `.doc` reader
+(`ooxml-core/docx/load`) and collaboration (`ooxml-core/collab`). The
+`<docx-editor>` element itself, with the ribbon, dialogs and panels, lives in
+`ooxml-ui/docx` (`src/ui/src/docx`). This directory holds the **framework
+bindings**, the published package shells, demos' build wiring, browser tests and
+the docs site. The packages here resolve `ooxml-core` and `ooxml-ui` to the
+workspace (`"*"` ranges), so a change to the core or the UI is visible here at
+once and ships in the same push.
 
 Before writing code, decide where it belongs (see
 [Where does my change go?](#where-does-my-change-go)). Never add, copy or fork
-logic here that belongs in the core; if the core lacks something, change it
-there, release it, and bump the range here.
+logic here that belongs in the core or the UI package.
 
 ### One editor, six thin bindings
 
-There is **one** editor: the `<docx-editor>` web component, which lives in `ooxml-ui/docx` (ooxml repository, `src/ui/src/docx`); `packages/web-component` only re-exports it. The
+There is **one** editor: the `<docx-editor>` web component, which lives in `ooxml-ui/docx` (`src/ui/src/docx`); `packages/web-component` only re-exports it. The
 bindings in `packages/bindings` (`react.tsx`, `vue.ts`, `angular.ts`, `solid.ts`,
 `WordEditor.svelte`, and the framework-neutral `index.ts` that Vanilla and the
 others build on) are lifecycle and event adapters only: they create
 the element, forward props and options, and re-emit its events.
 
 - A behaviour bug (ribbon, dialog, editing, rendering, keyboard) is fixed in
-  `web-component`, once, and reaches all six bindings automatically.
+  `src/ui/src/docx`, once, and reaches all six bindings automatically.
 - A binding-only bug is almost always prop, event or lifecycle wiring. When you
   fix one, grep the other adapters in `packages/bindings/src` for the same
   pattern and fix them in the same change; the binding contract tests in
   `packages/bindings/src/*.test.ts` and `packages/vanilla/src/index.test.ts`
   should cover all of them.
 - Never put editor logic in an adapter. If two adapters need the same helper, it
-  goes in `packages/bindings/src/common.ts` (or the web component).
+  goes in `packages/bindings/src/common.ts` (or the editor in `src/ui/src/docx`).
 
 ## Working agreements
 
@@ -44,7 +48,7 @@ the element, forward props and options, and re-emit its events.
   `ooxml-core/automation` and `/automation/node`. The combined `ooxml-mcp`
   server imports this package's `registerTools`; never duplicate document logic here.
 
-- Published packages (the same model as pptx-viewer): `docx-core` and one
+- Published packages: `docx-core` and one
   self-contained `docx-<framework>-viewer` per framework (react, vue, angular,
   svelte, solid, vanilla; vanilla also owns the plain `<docx-editor>` entry and
   `mountEditor`). Every framework package re-exports the model API
@@ -60,23 +64,26 @@ the element, forward props and options, and re-emit its events.
   dependency of every framework package, never bundled. Its element tag names
   keep the `office-ui-` prefix. Generic chrome is drawn by it: the context menu,
   status bar and zoom slider, title bar, File view (backstage) and the modal
-  shell of every format dialog (`dialog-shell.ts`), plus SmartArt. This
-  repository holds only the docx content inside them (dialog fields, File pages,
-  ribbon commands) and feeds them translated state. The shared elements read
-  `--office-*` tokens; `styles/office-bridge.css` maps the editor's `--dve-*`
-  theme onto them, so never hard-code colours for them here. A generic element
-  that is missing something (a translatable label, a tooltip) gets an additive
-  option in `ooxml`, not a copy here.
-- Still hand-built here, pending a move to `ooxml-ui`: the Word ribbon (native
-  controls and its own overflow folding), the indent ruler (draggable markers;
-  the shared ruler is decorative) and the comments panel. Move one only when
-  `ooxml-ui` can carry its behaviour without a test-visible regression.
+  shell of every format dialog (`dialog-shell.ts`), plus SmartArt. The docx
+  content inside them (dialog fields, File pages, ribbon commands) lives with
+  the editor in `src/ui/src/docx` and is fed translated state. The shared
+  elements read `--office-*` tokens; the editor's `--dve-*` theme is mapped onto
+  them by the theme bridge in `src/ui/src` (`theme-bridge.ts`,
+  `building-block-styles.ts`), so never hard-code colours for them. A generic
+  element that is missing something (a translatable label, a tooltip) gets an
+  additive option in `src/ui`, not a copy.
+- Still hand-built in `src/ui/src/docx`, pending a move to shared `ooxml-ui`
+  controls: the Word ribbon (native controls and its own overflow folding, see
+  `ribbon-tabs.ts` and `ribbon-home.ts`), the indent ruler (`ruler.ts`;
+  draggable markers; the shared ruler is decorative) and the comments panel
+  (`comments-panel.ts`). Move one only when `ooxml-ui` can carry its behaviour
+  without a test-visible regression.
 - `ole2` (legacy compound-file codecs) reaches this repository only through
   `ooxml-core/docx/load`, which inlines it. Never add `@christophervr/ole2` or an
   internal package to a manifest here, and never fork its code.
 - The browser `createCanvasMeasurer` stays in
-  `packages/web-component/src/canvas-measurer.ts` and is injected into the
-  core's layout engine; it is the one piece of layout that needs a DOM.
+  `src/ui/src/docx/canvas-measurer.ts` and is injected into the core's layout
+  engine; it is the one piece of layout that needs a DOM.
 - Unsupported document features must be reported honestly (for example SmartArt
   is display-only, charts paint from their cached values for the common families (including bubble and
   open-high-low-close stock), bar/line combinations, waterfalls, histograms, treemaps and
@@ -108,46 +115,49 @@ the browser tests run against its production build.
 
 ## Where things live
 
-Repositories are named by their GitHub name under `ChristopherVR/`. Where each
-one is checked out on a given machine is local knowledge: keep it in an
-untracked `CLAUDE.local.md` (git-ignored), never in this file.
+This viewer is a member of the `ooxml` repository. Other repositories are named
+by their GitHub name under `ChristopherVR/`; where each one is checked out on a
+given machine is local knowledge: keep it in an untracked `CLAUDE.local.md`
+(git-ignored), never in this file.
 
-| Repository           | npm package                            | Owns                                                                                                             |
-| -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `docx-viewer` (this) | `docx-core`, `docx-<framework>-viewer` | Word UI: the `<docx-editor>` web component, six bindings, demos, browser tests and the docs site.                |
-| `ooxml`              | `ooxml-core`, `ooxml-ui`               | **All OOXML logic** by area (`docx`, `pptx`, `xml`, `opc`, `collab`, ...) and the shared `office-ui-*` elements. |
-| `pptx-viewer`        | `pptx-*-viewer`, `pptx-viewer-core`    | PowerPoint UI over `ooxml-core/pptx`.                                                                            |
-| `ole2`               | `@christophervr/ole2`                  | Legacy binary formats (DOC, XLS, PPT, CFB, RC4/MD4), inlined into `ooxml-core`.                                  |
+| Location                | npm package                            | Owns                                                                                                    |
+| ----------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `viewers/docx` (this)   | `docx-core`, `docx-<framework>-viewer` | Word framework bindings, package shells, docs site. Demos in `demos/docx`, browser tests in `e2e/docx`. |
+| `src/core` (`ooxml`)    | `ooxml-core`                           | **All OOXML logic** by area (`docx`, `pptx`, `xml`, `opc`, `collab`, ...).                              |
+| `src/ui` (`ooxml`)      | `ooxml-ui`                             | The shared `office-ui-*` elements and the `<docx-editor>` element (`src/ui/src/docx`).                  |
+| `viewers/pptx` etc.     | `pptx-*-viewer`, ...                   | The other viewers, over the same core.                                                                  |
+| `ole2` (own repository) | `@christophervr/ole2`                  | Legacy binary formats (DOC, XLS, PPT, CFB, RC4/MD4), inlined into `ooxml-core`.                         |
 
-This repository depends on the **published** `ooxml-core` and `ooxml-ui`. To
-try a core change before it is released, build the `ooxml` checkout
-(`bun run build`), point `packages/core` (and whichever package needs it) at it
-with a `file:` dependency, run `bun install --force`, and restore the version
-ranges before committing. `docs/ooxml-core-plan.md` tracks what is still moving
-into the core.
+`ooxml-core` and `ooxml-ui` resolve to the workspace, so there is no `file:`
+linking: edit the core or the UI and rebuild what the demo reads. Some packages
+read another package's `dist`, so build it (or `bun run build:packages` here)
+and suspect a stale `node_modules/.vite` before your code when one demo
+disagrees with another. The release flow rewrites the workspace ranges to caret
+ranges on the versions released together, so a change that needs both the core
+or UI and this viewer lands in one push (see the root `AGENTS.md`).
 
 ### Where does my change go?
 
-| The change is about...                                                              | Make it in                                          |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Parsing, the document model, editing commands, saving or round-trip loss            | `src/core/docx/` in `ooxml`, with a round-trip test |
-| Pagination, line breaking, page layout, `.doc` loading, collaboration sync          | `ooxml` (`docx/layout`, `docx/load`, `collab`)      |
-| A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` in `ooxml` (`src/ui`)                    |
-| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers                              | `ole2`                                              |
-| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `src/ui/src/docx` in the ooxml repository           |
-| Framework wiring (props, events, lifecycle)                                         | `packages/bindings` here (all adapters at once)     |
-| Demos, docs site, browser tests, packaging and release scripts                      | here                                                |
+| The change is about...                                                              | Make it in                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Parsing, the document model, editing commands, saving or round-trip loss            | `src/core/docx/`, with a round-trip test          |
+| Pagination, line breaking, page layout, `.doc` loading, collaboration sync          | `src/core` (`docx/layout`, `docx/load`, `collab`) |
+| A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` (`src/ui`)                             |
+| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers                              | `ole2`                                            |
+| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `src/ui/src/docx`                                 |
+| Framework wiring (props, events, lifecycle)                                         | `packages/bindings` here (all adapters at once)   |
+| Docs site, packaging scripts, build wiring for the demo                             | here (`demos/docx` and `e2e/docx` at the root)    |
 
 ### GitHub Pages
 
 `https://christophervr.github.io/ooxml/docx/` is the docs site (VitePress in
-`docs/`), deployed by `.github/workflows/docs.yml` on pushes to `main` that touch
-`docs/`, `demos/`, `packages/` or the build. `scripts/build-pages.mjs` also
-builds the demo once per framework at `/demo/` (React), `/demo-vue/`,
-`/demo-angular/`, `/demo-vanilla/`, `/demo-svelte/` and `/demo-solid/`. The
-Office-suite launcher at `https://christophervr.github.io/ooxml/` embeds those
-URLs, so a renamed demo route must be renamed there too. The demo follows the
-VitePress `vitepress-theme-appearance` key in `localStorage`.
+`docs/`), deployed by the repository's `.github/workflows/pages.yml` on pushes to
+`main` that touch `viewers/`, `demos/`, `e2e/`, `src/ui/` or `src/core/`.
+`scripts/build-pages.mjs` here also builds the demo once per framework at `/demo/`
+(React), `/demo-vue/`, `/demo-angular/`, `/demo-vanilla/`, `/demo-svelte/` and
+`/demo-solid/`. The Office-suite launcher at `https://christophervr.github.io/ooxml/`
+embeds those URLs, so a renamed demo route must be renamed there too. The demo
+follows the VitePress `vitepress-theme-appearance` key in `localStorage`.
 
 ## Commands
 
@@ -163,51 +173,47 @@ bun run build:packages   # build the seven publishable packages into packages/*/
 bun run check:published  # tarballs import only allowed packages
 bun run pack:smoke       # pack, install into a clean consumer, load DOCX and .doc through every package
 bun run check:shared     # docx-core stays a logic-free re-export; package classification
-bun run release:plan     # dry-run the release planner
 bun run fmt              # oxfmt (tabs, single quotes, width 100)
 ```
 
-The docs site installs separately: `cd docs && bun install && bun run docs:build`.
+These run from `viewers/docx`. From the repository root, `bun run verify` runs
+what CI would for your commits (it includes this viewer's own checks when you
+touch it). The docs site builds with `bun install --cwd docs && bun run --cwd docs docs:build`.
 
 ## Releasing
 
-Releases are automated from conventional commits, exactly like pptx-viewer and
-`ooxml`; `docs/releasing.md` has the whole flow.
+Releases are automated from conventional commits by the repository's shared flow
+(root `scripts/release-plan.mjs`, `scripts/viewer-packages.mjs` and
+`.github/workflows/release.yml`); `docs/releasing.md` here summarises what this
+viewer publishes and what triggers a release, and the root `docs/releasing.md`
+has the whole flow. Never run `npm publish` or push release tags by hand.
 
-- `scripts/release-plan.mjs` versions each published package from the commits
-  since its own `<npm-name>@<version>` tag (for example `docx-core@0.1.0`). A
-  change in `web-component` or `bindings` releases all six framework packages;
-  a `docx-core` release re-releases them too.
-- `.github/workflows/release.yml` runs hourly: it bumps versions, writes the
-  changelogs, commits `chore(release): ... [skip ci]` to `main`, creates the tag
-  and a **GitHub release** per package, prunes superseded releases, and
-  publishes to npm through trusted publishing (OIDC, provenance, no token). It
-  needs the `NPM_PUBLISH=true` repository variable and the `npm` environment.
-- Never run `npm publish` or push release tags by hand; a missed publish is
-  re-run with `gh workflow run release.yml -f tag=<npm-name>@<version>`.
-  (Version `0.1.0` was the one-off manual bootstrap.)
+- Each published package is versioned from the commits since its own
+  `<npm-name>@<version>` tag (for example `docx-core@0.3.0`). A change in
+  `web-component` or `bindings` releases all six framework packages; a `docx-core`
+  release re-releases them too.
+- Dry-run the planner from the repository root: `node scripts/release-plan.mjs --no-npm`.
 
 ## Branching and git workflow
 
-This repository uses **trunk-based development**: commit directly to `main`.
+The repository uses **trunk-based development**: commit directly to `main`.
 **Do not create feature branches unless the user explicitly asks for one**;
 this overrides any default "branch before committing" assumption. Keep each
 commit small and releasable, since every push to `main` can be released by the
-next hourly run. Run the local checks CI runs (typecheck, unit, script and
-browser tests, `build:packages`, `check:published`, `pack:smoke`) before
-pushing; do not push untested code to `main`.
+next scheduled run. Run `bun run verify` from your own worktree before pushing
+(add this viewer's `test:browser`, `build:packages`, `check:published` and
+`pack:smoke` when you touch what they cover); do not push untested code.
 
 > The working tree is sometimes shared by parallel agent sessions, and another
 > session may switch the checkout underneath you. Before committing, run
-> `git branch --show-current` and `git status`. `git fetch && git rebase
-> origin/main` before pushing (the release workflow pushes to `main` too). To
-> land work without moving a shared checkout, push `HEAD:main` (or use an
-> isolated `git worktree`) rather than `git checkout main`.
+> `git branch --show-current` and `git status`. To land work without moving a
+> shared checkout, push `HEAD:main` from an isolated `git worktree` rather than
+> `git checkout main`.
 
 ## Commit conventions
 
 Commits **must** follow [Conventional Commits](https://www.conventionalcommits.org);
-`CONTRIBUTING.md` has the full rules and `scripts/check-conventional-commits.mjs`
+the root `CONTRIBUTING.md` has the full rules and `scripts/check-conventional-commits.mjs`
 enforces them. The format is load-bearing: the type sets the version bump
 (`feat` minor, `!` or `BREAKING CHANGE:` major, anything else patch), and the
 **paths** a commit touches decide which packages release (tests, docs, demos

@@ -1,7 +1,9 @@
+import type { CollaborationState } from 'ooxml-core/collab';
 import type {
 	AwarenessLike,
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationLivePatcher,
 	CollaborationRole,
 	CollaborationShellState,
@@ -18,7 +20,7 @@ export type { AwarenessLike, CollaborationConfig, CollaborationRole };
 
 export interface UseCollaborationOptions {
 	/** Optional reactive configuration; replacing or clearing it starts or stops the session. */
-	collaboration?: MaybeRefOrGetter<CollaborationConfig | undefined>;
+	collaboration?: MaybeRefOrGetter<CollaborationInput | undefined>;
 	/** Host authorization, combined with the session's canonical read-only state. */
 	canEdit?: MaybeRefOrGetter<boolean>;
 	/** Whether an actual source file is still loading or failed to load. */
@@ -87,6 +89,8 @@ export interface RemotePresence {
 export interface UseCollaborationResult {
 	/** Shared custom-shell permissions, connection status and sanitized presence. */
 	shellState: ComputedRef<CollaborationShellState>;
+	/** The shared `CollaborationState` a host reads (`collaboration-change`). */
+	state: ComputedRef<CollaborationState>;
 	/** The configuration attached by start() or the reactive collaboration option. */
 	activeCollaboration: Ref<CollaborationConfig | null>;
 	status: Ref<import('ooxml-ui/pptx').ConnectionStatus>;

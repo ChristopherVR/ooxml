@@ -60,18 +60,29 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Events
 
-| Event                  | Payload                       | Description                                                                           |
-| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------- |
-| `@dirty-change`        | `isDirty: boolean`            | Fired when the unsaved-changes flag flips.                                            |
-| `@content-change`      | `content: Uint8Array`         | Fired with the re-serialised document bytes when content changes.                     |
-| `@autosave`            | `content: Uint8Array`         | Fired with the re-serialised bytes on each autosave cycle; see [Autosave](#autosave). |
-| `@active-slide-change` | `slideIndex: number`          | Fired when the active slide changes.                                                  |
-| `@zoom-change`         | `zoom: number`                | Fired when the zoom level changes.                                                    |
-| `@slide-count-change`  | `count: number`               | Fired when the total slide count changes (slide added/deleted).                       |
-| `@selection-change`    | `elementIds: string[]`        | Fired when element selection changes.                                                 |
-| `@mode-change`         | `mode: string`                | Fired when the viewer mode changes (e.g. edit to present).                            |
-| `@start-collaboration` | `config: CollaborationConfig` | Fired when the user starts a session from the Share dialog.                           |
-| `@stop-collaboration`  | -                             | Fired when the user stops a session from the Share dialog.                            |
+| Event                   | Payload                                    | Description                                                                                    |
+| ----------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `@dirty-change`         | `isDirty: boolean`                         | Fired when the unsaved-changes flag flips.                                                     |
+| `@content-change`       | `content: Uint8Array`                      | Fired with the re-serialised document bytes when content changes.                              |
+| `@autosave`             | `content: Uint8Array`                      | Fired with the re-serialised bytes on each autosave cycle; see [Autosave](#autosave).          |
+| `@active-slide-change`  | `slideIndex: number`                       | Fired when the active slide changes.                                                           |
+| `@zoom-change`          | `zoom: number`                             | Fired when the zoom level changes.                                                             |
+| `@slide-count-change`   | `count: number`                            | Fired when the total slide count changes (slide added/deleted).                                |
+| `@selection-change`     | `elementIds: string[]`                     | Fired when element selection changes.                                                          |
+| `@mode-change`          | `mode: string`                             | Fired when the viewer mode changes (e.g. edit to present).                                     |
+| `@change`               | -                                          | Fired after any committed document edit (move, resize, text, undo, redo, ...).                 |
+| `@autosave-toggle`      | `enabled: boolean`                         | Fired when the user enables or disables autosave (title bar or File > Options).                |
+| `@autosave-status`      | `'idle' \| 'saving' \| 'saved' \| 'error'` | Fired on every autosave lifecycle transition.                                                  |
+| `@autosave-recovery`    | `record: AutosaveRecord`                   | Fired when a recovery snapshot left by a previous session is found.                            |
+| `@properties-change`    | `updates: Partial<PptxCoreProperties>`     | Fired when the user (or the AI assistant) changes the document properties.                     |
+| `@notes-update`         | `notes: string`                            | Fired with the new speaker-notes text after a notes edit.                                      |
+| `@presentation-change`  | `presenting: boolean`                      | Fired when presentation (slide show) mode is entered or left.                                  |
+| `@collaboration-status` | `status: ConnectionStatus`                 | Fired on every collaboration connection-status transition.                                     |
+| `@start-collaboration`  | `config: CollaborationConfig`              | Fired when the user starts a session from the Share dialog.                                    |
+| `@collaboration-change` | `state: CollaborationState`                | Fired when a session starts or stops, and when its status, synced flag or people change.       |
+| `@load`                 | `detail: ViewerLoadDetail`                 | Fired each time a presentation finishes loading without an error (`slideCount`, `canvasSize`). |
+| `@error`                | `message: string`                          | Fired once per distinct load failure, with a human-readable message.                           |
+| `@stop-collaboration`   | -                                          | Fired when the user stops a session from the Share dialog.                                     |
 
 `content` and `autosave` share one signature (`Uint8Array` payload) in the underlying
 `PowerPointViewerEmits` type, as do `active-slide-change`, `zoom-change`, and `slide-count-change`
@@ -106,6 +117,22 @@ callback-prop shape rather than the emit convention used elsewhere in this compo
 />
 ```
 
+## Fonts, themes, locales and host extensions {#host-extensions}
+
+| Prop                     | Type                        | Description                                                                                                                        |
+| ------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `fonts`                  | `ViewerFontSource[]`        | Licensed font sources supplied by the host. No fonts are bundled.                                                                  |
+| `defaultThemeKey`        | `string`                    | Initial theme key for File > Options > Theme.                                                                                      |
+| `availableThemes`        | `ThemeCatalogEntry[]`       | Theme choices offered by File > Options.                                                                                           |
+| `onThemeChange`          | `(key: string) => void`     | Called when the user picks a theme; the host then owns persisting the choice.                                                      |
+| `defaultLocale`          | `string`                    | Initial locale code for File > Options > Language.                                                                                 |
+| `availableLocales`       | `LocaleCatalogEntry[]`      | Locale choices offered by File > Options > Language.                                                                               |
+| `onLocaleChange`         | `(code: string) => void`    | Called when the user picks a language; the host then owns applying and persisting it.                                              |
+| `accountAuth`            | `AccountAuthConfig`         | Hook point for File > Account's sign-in section; disabled by default.                                                              |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`     | Function prop (not an event). Called before following a link; return `false` to cancel the default action.                         |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]` | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. |
+| `inspectorInitiallyOpen` | `boolean`                   | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                            |
+
 ## UI customization {#ui-customization}
 
 | Prop            | Type                  | Default | Description                                                                                                                                                                                                                                                                                                                                      |
@@ -130,10 +157,10 @@ Every id, the rules and recipes are in the
 These props enable and control real-time co-editing. See [Collaboration](/vue/collaboration) for
 the full flow and the `CollaborationConfig` shape.
 
-| Prop            | Type                                                         | Default | Description                                                                                                                                         |
-| --------------- | ------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `collaboration` | `CollaborationConfig`                                        | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Requires the `yjs` and `y-websocket`/`y-webrtc` peers. |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Default values for the Share dialog fields. If omitted, the fields start empty.                                                                     |
+| Prop            | Type                                                         | Default | Description                                                                                                                                                                                                                                                             |
+| --------------- | ------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collaboration` | `CollaborationInput`                                         | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Takes the legacy `CollaborationConfig` or the shared `CollaborationOptions`. Requires the optional `yjs` peer; `y-websocket` and `y-webrtc` ship as optional dependencies. |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Default values for the Share dialog fields. If omitted, the fields start empty.                                                                                                                                                                                         |
 
 Starting/stopping a session is controlled via the `@start-collaboration` / `@stop-collaboration`
 events above: the host sets/clears the `collaboration` prop in response.
@@ -155,9 +182,24 @@ interface PowerPointViewerProps {
 	class?: string;
 	authorName?: string;
 	theme?: ViewerTheme;
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	shareDefaults?: { roomId?: string; userName?: string; serverUrl?: string };
 	onOpenFile?: () => void;
+	onHyperlinkClick?: HyperlinkClickHandler;
+	onThemeChange?: (key: string) => void;
+	onLocaleChange?: (code: string) => void;
+	fonts?: ViewerFontSource[];
+	fitPadding?: ViewportFitPadding;
+	maxFitScale?: number | null;
+	defaultThemeKey?: string;
+	availableThemes?: ThemeCatalogEntry[];
+	defaultLocale?: string;
+	availableLocales?: LocaleCatalogEntry[];
+	accountAuth?: AccountAuthConfig;
+	hiddenActions?: ToolbarActionId[];
+	ribbonAddIns?: readonly RibbonAddInTab[];
+	inspectorInitiallyOpen?: boolean;
+	customization?: ViewerCustomization;
 	smartArt3D?: boolean;
 	surfaceChart3D?: boolean;
 	barChart3D?: boolean;
@@ -170,11 +212,22 @@ interface PowerPointViewerProps {
 interface PowerPointViewerEmits {
 	(e: 'dirty-change', isDirty: boolean): void;
 	(e: 'content-change' | 'autosave', content: Uint8Array): void;
+	(e: 'change'): void;
+	(e: 'autosave-toggle', enabled: boolean): void;
+	(e: 'autosave-status', status: 'idle' | 'saving' | 'saved' | 'error'): void;
+	(e: 'autosave-recovery', record: AutosaveRecord): void;
+	(e: 'properties-change', updates: Partial<PptxCoreProperties>): void;
+	(e: 'notes-update', notes: string): void;
+	(e: 'presentation-change', presenting: boolean): void;
+	(e: 'collaboration-status', status: ConnectionStatus): void;
 	(e: 'active-slide-change' | 'zoom-change' | 'slide-count-change', value: number): void;
 	(e: 'mode-change', mode: string): void;
 	(e: 'selection-change', elementIds: string[]): void;
 	(e: 'start-collaboration', config: CollaborationConfig): void;
 	(e: 'stop-collaboration'): void;
+	(e: 'collaboration-change', state: CollaborationState): void;
+	(e: 'load', detail: ViewerLoadDetail): void;
+	(e: 'error', message: string): void;
 }
 ```
 
@@ -183,10 +236,11 @@ interface PowerPointViewerEmits {
 `pptx-vue-viewer` debounces slide changes, writes a crash-recovery snapshot to the shared IndexedDB
 store, and hands the serialised bytes back to the host via `@autosave`.
 
-| Prop                 | Type      | Default                | Description                                                                      |
-| -------------------- | --------- | ---------------------- | -------------------------------------------------------------------------------- |
-| `autosave`           | `boolean` | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.        |
-| `autosaveIntervalMs` | `number`  | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting. |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see below.                                                                        |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ### Who decides: the `autosave` prop or the AutoSave toggle? {#autosave-policy}
 

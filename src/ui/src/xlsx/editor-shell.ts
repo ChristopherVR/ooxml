@@ -70,7 +70,7 @@ export function buildShell(core: EditorCore): Shell {
 	style.textContent = editorStyleText;
 	const frame = el(doc, 'section', 'xve-frame');
 	let saveState: SaveState = 'saved';
-	const isHidden = (id: string) => core.hiddenActions.includes(id);
+	const isHidden = (id: string) => core.isHidden(id);
 	const chrome: FileChrome = {
 		setSaveState(state) {
 			saveState = state;
@@ -136,6 +136,16 @@ export function buildShell(core: EditorCore): Shell {
 			stop: () => core.collab.stop(),
 		},
 		hiddenActions: () => core.hiddenActions,
+		customization: () => core.customization,
+		regionContext: (region) => ({
+			region,
+			editor: element,
+			fileName: core.fileName,
+			locale: core.locale,
+			canEdit: !core.readOnly,
+			activeSheet: core.activeSheet,
+			close: closeBackstage,
+		}),
 		setHiddenActions(ids) {
 			element.hiddenActions = ids;
 			emit(element, 'ribbon-customize', { hiddenActions: [...ids] });

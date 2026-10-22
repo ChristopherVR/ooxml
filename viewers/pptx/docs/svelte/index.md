@@ -87,19 +87,23 @@ could never be `require()`d successfully anyway.
 
 ## Key exports
 
-| Export                                                       | Kind      | Purpose                                                                                       |
-| ------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------- |
-| `PowerPointViewer`                                           | component | The viewer/editor component. See [Getting Started](/svelte/getting-started).                  |
-| `PowerPointViewerProps`, `ViewerLoadDetail`                  | type      | Props and callback payloads. See [Component Props](/svelte/props).                            |
-| `PowerPointViewerApi`                                        | type      | The imperative surface reachable via `bind:this`. See [Instance API](/svelte/api).            |
-| `ViewerTheme`, `ViewerThemeColors`                           | type      | Theme configuration types. See [Theming](/svelte/theming).                                    |
-| `vermilionLightTheme`, `vermilionDarkTheme`                  | const     | Built-in vermilion light/dark presets.                                                        |
-| `themeToCssVars`, `defaultCssVars`                           | function  | Convert a theme to `--pptx-*` CSS vars.                                                       |
-| `registerTranslations`                                       | function  | Register locale dictionaries. See [Localization](/svelte/i18n).                               |
-| `exportSlideToSvg`, `exportAllSlidesToSvg`, ...              | function  | Standalone SVG export helpers. See [Export & Print](/svelte/export#svg-standalone-functions). |
-| `CollaborationConfig`, `CollaborationRole`                   | type      | Real-time co-editing configuration. See [Collaboration](/svelte/collaboration).               |
-| `getAutosaveSnapshot`, `listAutosaveSnapshots`, ...          | function  | IndexedDB recovery-store helpers for host-driven restore.                                     |
-| `ExportPdfOptions`, `ExportGifOptions`, `ExportVideoOptions` | type      | Options for the imperative export methods. See [Export & Print](/svelte/export).              |
+| Export                                                             | Kind      | Purpose                                                                                                   |
+| ------------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------- |
+| `PowerPointViewer`                                                 | component | The viewer/editor component. See [Getting Started](/svelte/getting-started).                              |
+| `PowerPointViewerProps`, `ViewerLoadDetail`                        | type      | Props and callback payloads. See [Component Props](/svelte/props).                                        |
+| `PowerPointViewerApi`                                              | type      | The imperative surface reachable via `bind:this`. See [Instance API](/svelte/api).                        |
+| `ViewerTheme`, `ViewerThemeColors`                                 | type      | Theme configuration types. See [Theming](/svelte/theming).                                                |
+| `vermilionLightTheme`, `vermilionDarkTheme`                        | const     | Built-in vermilion light/dark presets.                                                                    |
+| `themeToCssVars`, `defaultCssVars`                                 | function  | Convert a theme to `--pptx-*` CSS vars.                                                                   |
+| `registerTranslations`                                             | function  | Register locale dictionaries. See [Localization](/svelte/i18n).                                           |
+| `exportSlideToSvg`, `exportAllSlidesToSvg`, ...                    | function  | Standalone SVG export helpers. See [Export & Print](/svelte/export#svg-standalone-functions).             |
+| `CollaborationConfig`, `CollaborationRole`                         | type      | Real-time co-editing configuration. See [Collaboration](/svelte/collaboration).                           |
+| `CollaborationTransport`, `CollaborationState`, `ConnectionStatus` | type      | Transport, shared state and connection status types for co-editing.                                       |
+| `AutosaveRecord`, `AutosaveStatus`                                 | type      | Recovery snapshot record and autosave lifecycle status.                                                   |
+| `loadPresentationDeck`, `SessionDeck`                              | function  | Session-restore helpers (`rememberSessionDeck`, `restoreSessionDeck`, ...) and the deck type they return. |
+| `PptxAiConfig`, `PptxAiConnection`, ...                            | type      | Types for the optional `ai` prop.                                                                         |
+| `getAutosaveSnapshot`, `listAutosaveSnapshots`, ...                | function  | IndexedDB recovery-store helpers for host-driven restore.                                                 |
+| `ExportPdfOptions`, `ExportGifOptions`, `ExportVideoOptions`       | type      | Options for the imperative export methods. See [Export & Print](/svelte/export).                          |
 
 ## Rendering philosophy: CSS, not Canvas
 

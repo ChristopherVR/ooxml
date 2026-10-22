@@ -18,10 +18,11 @@ not maintain long-lived security-fix branches for older majors.
 | `packages/cli`     | `@christophervr/pptx-viewer` |
 | `packages/tools`   | `pptx-viewer-mcp`            |
 
-`packages/shared` (`pptx-viewer-shared`) is a private, unpublished internal package
-vendored into the bindings above at build time; it has no independent version to
-target, but a vulnerability there is fixed via whichever binding(s) ship the
-affected code path.
+`packages/shared` (`pptx-viewer-shared`) is a private, unpublished compatibility
+facade with no independent version to target. The parser and engine (`ooxml-core`)
+and the renderer (`ooxml-ui`) are published from the same repository and are
+covered by this policy too; a vulnerability in any of them is fixed in that
+package and reaches the bindings above through their dependency range.
 
 Always upgrade to the latest version of the package(s) you depend on before
 reporting a suspected vulnerability, in case it has already been fixed.

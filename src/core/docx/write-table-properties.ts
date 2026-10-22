@@ -52,7 +52,10 @@ export function patchRowProperties(
 	next: TableRowProperties | undefined,
 	base: TableRowProperties | undefined,
 ): void {
-	if (JSON.stringify(next ?? {}) === JSON.stringify(base ?? {})) return;
+	// The row's content control is written around the row (write-table-controls), not in w:trPr.
+	const { contentControl: _next, ...nextProperties } = next ?? {};
+	const { contentControl: _base, ...baseProperties } = base ?? {};
+	if (JSON.stringify(nextProperties) === JSON.stringify(baseProperties)) return;
 	let props = first(tr, 'trPr');
 	if (!props) {
 		props = makeW(doc, 'trPr');

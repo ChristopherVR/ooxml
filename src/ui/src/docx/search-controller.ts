@@ -2,7 +2,7 @@ import { closeHistory } from 'prosemirror-history';
 import { Fragment, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { expectDefined } from 'ooxml-core/docx/ui';
+import { expectDefined, insertedTextMarks } from 'ooxml-core/docx/ui';
 
 export interface SearchMatch {
 	from: number;
@@ -60,22 +60,40 @@ function paragraphSegments(node: ProseMirrorNode, pos: number): Segment[] {
 	return segments;
 }
 
+// A soft hyphen (`w:softHyphen`) shows only where a line breaks at it, so Find skips it.
+const SOFT_HYPHEN = '\u00AD';
+
+/** `text` without its soft hyphens, and the offset in `text` of each character that is left. */
+function withoutSoftHyphens(text: string): { text: string; offsets: number[] } {
+	let kept = '';
+	const offsets: number[] = [];
+	for (let index = 0; index < text.length; index++) {
+		if (text[index] === SOFT_HYPHEN) continue;
+		kept += text[index];
+		offsets.push(index);
+	}
+	return { text: kept, offsets };
+}
+
 function collectMatches(
 	doc: ProseMirrorNode,
 	query: string,
 	caseSensitive: boolean,
 ): SearchMatch[] {
-	if (!query) return [];
-	const expression = new RegExp(escapedLiteral(query), caseSensitive ? 'gu' : 'giu');
+	const literal = query.replaceAll(SOFT_HYPHEN, '');
+	if (!literal) return [];
+	const expression = new RegExp(escapedLiteral(literal), caseSensitive ? 'gu' : 'giu');
 	const matches: SearchMatch[] = [];
 	doc.descendants((node, pos) => {
 		if (node.type.name !== 'paragraph') return;
 		for (const segment of paragraphSegments(node, pos)) {
 			const boundaries = graphemeBoundaries(segment.text);
+			const { text, offsets } = withoutSoftHyphens(segment.text);
 			expression.lastIndex = 0;
-			for (const match of segment.text.matchAll(expression)) {
-				const start = match.index;
-				const end = start + match[0].length;
+			for (const match of text.matchAll(expression)) {
+				// The match in the segment, with the soft hyphens inside it but none at its ends.
+				const start = offsets[match.index]!;
+				const end = offsets[match.index + match[0].length - 1]! + 1;
 				if (boundaries.has(start) && boundaries.has(end))
 					matches.push({ from: segment.from + start, to: segment.from + end });
 			}
@@ -230,7 +248,7 @@ function replacementFragment(
 	const lines = replacement.split(/\r\n|\r|\n/);
 	const content: ProseMirrorNode[] = [];
 	lines.forEach((line, index) => {
-		if (line) content.push(schema.text(line, marks));
+		if (line) content.push(schema.text(line, insertedTextMarks(marks, line)));
 		if (index < lines.length - 1)
 			content.push(
 				expectDefined(schema.nodes.hardBreak, 'hardBreak node type').create(null, null, marks),

@@ -15,6 +15,7 @@ export type {
 } from './model-paragraph';
 import type { Paragraph } from './model-paragraph';
 export type * from './content-control-model';
+export type * from './form-field-model';
 export type { HyperlinkInfo, InlineImage, PicturePlacement, WatermarkSpec } from './inline-model';
 import type { Note, SectionProperties } from './section-model';
 export type {
@@ -145,6 +146,10 @@ export interface DocumentModel {
 	tableStyles?: TableStyleCatalog;
 	/** Parsed word/theme/theme1.xml and settings.xml color scheme mapping. */
 	theme?: import('./theme-model').ThemeCatalog;
+	/** settings.xml `w:documentProtection`; read only, saving keeps the source element. */
+	protection?: import('./form-field-model').DocumentProtection;
+	/** False when settings.xml has `w:doNotShadeFormData`: form fields are drawn without shading. */
+	formFieldShading?: false;
 }
 /** Bytes for a media part staged for save but not yet part of the loaded package (e.g. a newly inserted picture). */
 export interface PendingMediaPart {

@@ -91,17 +91,19 @@ hooks are internal architecture, but a curated, tree-shakeable subset is exporte
 
 ## Key exports
 
-| Export                                  | Kind          | Purpose                                                                                        |
-| --------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------- |
-| `PowerPointViewer`                      | component     | The main viewer/editor component.                                                              |
-| `PowerPointViewerProps`                 | type          | Props interface. See [Props](/react/props).                                                    |
-| `PowerPointViewerHandle`                | type          | Imperative ref API. See [Handle](/react/handle).                                               |
-| `renderToCanvas`                        | function      | Render a DOM element to a Canvas with an oklch-colour workaround. See [Export](/react/export). |
-| `getAnimationInitialStyle`              | function      | Compute the pre-animation initial CSS for an animation preset.                                 |
-| `ViewerTheme`, `ViewerThemeColors`      | type          | Theme configuration types. See [Theming](/react/theming).                                      |
-| `defaultThemeColors`, `defaultRadius`   | const         | Built-in dark-theme defaults.                                                                  |
-| `themeToCssVars`, `defaultCssVars`      | function      | Convert a theme to `--pptx-*` CSS vars.                                                        |
-| `ViewerThemeProvider`, `useViewerTheme` | provider/hook | Advanced theme context.                                                                        |
+| Export                                  | Kind          | Purpose                                                                                                                |
+| --------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `PowerPointViewer`                      | component     | The main viewer/editor component.                                                                                      |
+| `PowerPointViewerProps`                 | type          | Props interface. See [Props](/react/props).                                                                            |
+| `PowerPointViewerHandle`                | type          | Imperative ref API. See [Handle](/react/handle).                                                                       |
+| `renderToCanvas`                        | function      | Render a DOM element to a Canvas with an oklch-colour workaround. See [Export](/react/export).                         |
+| `getAnimationInitialStyle`              | function      | Compute the pre-animation initial CSS for an animation preset.                                                         |
+| `ViewerTheme`, `ViewerThemeColors`      | type          | Theme configuration types. See [Theming](/react/theming).                                                              |
+| `defaultThemeColors`, `defaultRadius`   | const         | Built-in dark-theme defaults.                                                                                          |
+| `themeToCssVars`, `defaultCssVars`      | function      | Convert a theme to `--pptx-*` CSS vars.                                                                                |
+| `ViewerThemeProvider`, `useViewerTheme` | provider/hook | Advanced theme context.                                                                                                |
+| `Toolbar`, `SlideCanvas`                | component     | The flat toolbar and canvas that `PowerPointViewer` renders internally, for custom layouts. See [Hooks](/react/hooks). |
+| `useViewerBuildingBlocks`               | hook          | Wires the document, selection and export state into `Toolbar` and `SlideCanvas` props. See [Hooks](/react/hooks).      |
 
 ## Next steps
 

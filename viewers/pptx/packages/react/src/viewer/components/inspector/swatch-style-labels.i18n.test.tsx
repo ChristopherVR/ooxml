@@ -53,15 +53,26 @@ function render(node: React.ReactElement, i18n: Awaited<ReturnType<typeof german
 
 describe('swatch and style names follow the locale', () => {
 	it('names theme colour swatches with the host dictionary', async () => {
-		const container = render(
-			<ThemeColorMapProvider value={OFFICE_THEME}>
-				<ThemeColorSwatchGrid prefix='fill' onPick={vi.fn()} />
-			</ThemeColorMapProvider>,
-			await german(),
+		// The shared grid draws its swatches in its shadow root, so mount it instead of static markup.
+		const i18n = await german();
+		const container = document.body.appendChild(document.createElement('div'));
+		const root = createRoot(container);
+		act(() =>
+			root.render(
+				<I18nextProvider i18n={i18n}>
+					<ThemeColorMapProvider value={OFFICE_THEME}>
+						<ThemeColorSwatchGrid onPick={vi.fn()} />
+					</ThemeColorMapProvider>
+				</I18nextProvider>,
+			),
 		);
-		const titles = [...container.querySelectorAll('button')].map((button) => button.title);
+		const shadow = container.querySelector('pptx-ui-color-grid')!.shadowRoot!;
+		const titles = [...shadow.querySelectorAll('button')].map((button) => button.title);
 		expect(titles).toContain('Akzent 1, heller 80 %');
 		expect(titles.some((title) => title.includes('Accent'))).toBeFalsy();
+		expect(shadow.querySelector('.heading')!.textContent).toBe('Designfarben');
+		act(() => root.unmount());
+		container.remove();
 	});
 
 	it('names Quick Styles presets with the host dictionary', async () => {

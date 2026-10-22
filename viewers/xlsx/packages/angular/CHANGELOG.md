@@ -7,6 +7,40 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.2.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Route save and open through host-owned storage ([ef768a6](https://github.com/ChristopherVR/ooxml/commit/ef768a684f558275071be347d68406503aef8c23))
+- **xlsx:** Forward file-command, workbook, ribbon and sheet events ([5aaf6db](https://github.com/ChristopherVR/ooxml/commit/5aaf6dbdc767a1ff8c30b1b8619c0dcb09cfdc38))
+- **xlsx:** Take the shared customization contract in <xlsx-editor> ([f96a544](https://github.com/ChristopherVR/ooxml/commit/f96a5449a6a36fba59997197b484ddefb4f2d8e8))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+
+### Bug Fixes
+
+- **xlsx:** Report read-only with the lock and host switch ([782adb9](https://github.com/ChristopherVR/ooxml/commit/782adb95a4c8ad4dded13d73e8a5fa5aee2c8666))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+
+### Styling
+
+- **xlsx:** Format the react binding test ([a2e8b70](https://github.com/ChristopherVR/ooxml/commit/a2e8b70fe6f25b51b02cbd612675f492f247b2fc))
+
+## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.1.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Let hosts own the data-validation alert in building blocks ([fcbe367](https://github.com/ChristopherVR/ooxml/commit/fcbe367f5cfe366cc425796e3fdff9c31aa99e25))
+
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.0.0) - 2026-10-22
+
+### Features
+
+- **xlsx:** Complete the building-block toolbar and add vanilla ([af8114f](https://github.com/ChristopherVR/ooxml/commit/af8114ff92e023858cd5a6d2a9922d6dbb2ee111))
+- **xlsx:** Make the building blocks read-only unless canEdit is true ([efe6158](https://github.com/ChristopherVR/ooxml/commit/efe6158de251e1e34694335292755cfec96d640b))
+
 ## [0.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@0.7.0) - 2026-10-21
 
 ### Features

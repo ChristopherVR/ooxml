@@ -14,6 +14,8 @@ export interface FileSectionProps {
 	onExportVideo: () => void;
 	onExportGif: () => void;
 	onExportJson: () => void;
+	/** File > Save (the backstage Save item): reported to host storage as `save`, not Save As. */
+	onSave?: () => void;
 	onSaveAsPptx: () => void;
 	onSaveAsPpsx: () => void;
 	onSaveAsPptm: () => void;

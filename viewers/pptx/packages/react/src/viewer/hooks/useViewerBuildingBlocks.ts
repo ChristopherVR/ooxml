@@ -1,6 +1,7 @@
 import {
 	openPptxFile,
 	readBackstageRecentFile,
+	resolveCollaborationConfig,
 	resolveCollaborationShellEditability,
 	resolveCollaborationShellState,
 } from 'ooxml-ui/pptx';
@@ -64,6 +65,7 @@ export function useViewerBuildingBlocks(
 		canEdit: requestedCanEdit = false,
 		filePath,
 		fileName,
+		initialSlide,
 		autosaveEnabled = true,
 		userName,
 		hiddenActions,
@@ -79,7 +81,8 @@ export function useViewerBuildingBlocks(
 		onOpenHeaderFooter,
 		onOpenShareDialog,
 	} = input;
-	const [collaborationReadOnly, setCollaborationReadOnly] = useState(Boolean(input.collaboration));
+	const collaborationConfig = resolveCollaborationConfig(input.collaboration);
+	const [collaborationReadOnly, setCollaborationReadOnly] = useState(Boolean(collaborationConfig));
 	const { t } = useTranslation();
 
 	// Local content state, synced from the incoming prop but able to diverge
@@ -136,7 +139,7 @@ export function useViewerBuildingBlocks(
 	// Shared slides can arrive before their original PPTX resources finish loading.
 	const canEdit = resolveCollaborationShellEditability({
 		authorizedCanEdit: requestedCanEdit,
-		configured: Boolean(input.collaboration),
+		configured: Boolean(collaborationConfig),
 		readOnly: collaborationReadOnly,
 		sourcePending: Boolean(content) && loading,
 		sourceError: Boolean(error),
@@ -159,6 +162,7 @@ export function useViewerBuildingBlocks(
 		content,
 		canEdit,
 		filePath,
+		initialSlide,
 		autosaveEnabled,
 		userName,
 		handle,
@@ -175,7 +179,7 @@ export function useViewerBuildingBlocks(
 	// ── Map hook outputs into flat component props ───────────────────────
 	const { collaboration, overlay } = useViewerBuildingBlocksCollaboration({
 		core,
-		config: input.collaboration,
+		config: collaborationConfig,
 		content,
 		loadOrigin,
 		loadVersion,
@@ -244,7 +248,7 @@ export function useViewerBuildingBlocks(
 		() =>
 			resolveCollaborationShellState({
 				authorizedCanEdit: requestedCanEdit,
-				configured: Boolean(input.collaboration),
+				configured: Boolean(collaborationConfig),
 				readOnly: collaborationReadOnly,
 				sourcePending: Boolean(content) && loading,
 				sourceError: Boolean(error),
@@ -253,7 +257,7 @@ export function useViewerBuildingBlocks(
 			}),
 		[
 			requestedCanEdit,
-			input.collaboration,
+			collaborationConfig,
 			collaborationReadOnly,
 			content,
 			loading,

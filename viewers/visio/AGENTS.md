@@ -3,49 +3,51 @@
 Guidance for coding agents (Claude Code, Codex, and others). This file is
 canonical; `CLAUDE.md` imports it. Never maintain a second set of instructions.
 
-## READ FIRST: this repository is UI only
+## READ FIRST: this viewer is the framework-binding layer
 
-All VSDX logic belongs in `ChristopherVR/ooxml`, exposed as `ooxml-core/visio`:
-package loading, XML, models, ShapeSheet interpretation, inheritance, geometry
-evaluation, editing commands, preservation and serialization. Shared Office
-logic belongs in the core's shared areas. Never copy or fork it into this viewer.
+`viewers/visio` lives inside the `ooxml` monorepo; the root `AGENTS.md` applies and describes the
+layout, the verify/push flow and the commit rules. All VSDX logic belongs in `src/core/visio`
+(exposed as `ooxml-core/visio`): package loading, XML, models, ShapeSheet interpretation,
+inheritance, geometry evaluation, editing commands, collaboration mapping, preservation and
+serialization. Shared Office logic belongs in the core's shared areas. Never copy or fork it into
+this viewer.
 
-This repository owns the browser UI: one controller, one SVG renderer, one
-`<visio-viewer>` custom element, six thin framework adapters, demos, browser
-tests and documentation. Microsoft Visio equivalence is a long-term target,
-not a description of the current beta.
+The browser UI (one controller, one SVG renderer, one `<visio-viewer>` custom element) lives in
+`src/ui/src/visio` and ships as `ooxml-ui/visio`. This folder owns six thin framework adapters
+(`packages/bindings` and the `packages/*` distributions), the composable building blocks,
+documentation and the package build. The demos are in `demos/visio/` and the browser tests in
+`e2e/visio/`. Microsoft Visio equivalence is a long-term target, not a description of the current
+beta.
 
 ### Shared Office UI lives in `ooxml-ui`
 
-Any UI control another Office product could use belongs in `ooxml-ui`
-(`src/ui` in `ooxml`) as an `office-ui-*` web component, never as a
-Visio-only copy. Examples: the ribbon tab row, ribbon buttons and groups,
-toolbars, the File backstage and print preview, Find bar, rulers, status bar,
-zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile,
-presence and neutral icons (undo, redo, delete, full screen, fit). Word,
-PowerPoint and Excel consume the same elements; docx-viewer follows the same
-web-component model. Before building any control here, check whether
-pptx-viewer, docx-viewer or xlsx-viewer has one; if so it belongs in ooxml-ui.
+Any UI control another Office product could use belongs in `ooxml-ui` (`src/ui`) as an
+`office-ui-*` web component, never as a Visio-only copy. Examples: the ribbon tab row, ribbon
+buttons and groups, toolbars, the File backstage and print preview, Find bar, rulers, status bar,
+zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile, presence and neutral
+icons (undo, redo, delete, full screen, fit). Word, PowerPoint and Excel consume the same elements.
+Before building any control here, check whether `src/ui/src/pptx`, `docx`, `xlsx` or the shared
+elements already have one; if so it belongs in `src/ui`.
 
-- This repository keeps only Visio product content: which commands the ribbon
+- Visio's own UI code (`src/ui/src/visio`) keeps only Visio product content: which commands the ribbon
   shows, Visio shortcuts, canvas tools, page/shape semantics and SVG rendering.
 - Compose the ribbon and status bar from `office-ui-*` elements and react to
   their events (`office-command`, `office-status-activate` and so on). Register
   product-only glyphs with `registerIcon`; add neutral glyphs to `ooxml-ui`.
-- If a needed control is missing, add it to `ooxml-ui` first, release it, then
-  adopt the released version here. Do not ship a local stand-in.
+- If a needed control is missing, add it to `src/ui` first and use it from there, in
+  the same change. Do not ship a local stand-in.
 - All UI ships inside the one `<visio-viewer>` element, so the six framework
   bindings get it without per-framework code. Never build controls in an adapter.
 
-### Build the element the docx-viewer way
+### Build the element the docx way
 
-`docx-viewer` (`packages/web-component`) is the reference for how the viewer
-element is built. New and touched UI code follows it; older template-string
-code migrates when it is next changed.
+The docx editor (`src/ui/src/docx`) is the reference for how the viewer element is
+built. New and touched UI code follows it; older template-string code migrates when
+it is next changed.
 
 - **Package layout.** The element, controller and renderer live in
-  `ooxml-ui/visio` (`src/ui/src/visio` in the `ooxml` repository); every
-  framework package depends on it. Root `src/index.ts` only re-exports it, and
+  `ooxml-ui/visio` (`src/ui/src/visio`); every framework package depends on it.
+  `viewers/visio/src/index.ts` only re-exports it, and
   `packages/bindings` (framework lifecycle adapters) is the only private input
   bundled into each framework package.
 - **DOM is built by typed builder functions**, never HTML template strings.
@@ -84,7 +86,7 @@ React, Vue, Angular, Svelte, Solid and vanilla use the same viewer. Adapters in
 `packages/bindings/src` own lifecycle, properties, events and handle forwarding.
 
 The UI is one web component, but every binding must feel native, as
-pptx-viewer's do. A React developer gets a `forwardRef` component with an
+the pptx bindings do. A React developer gets a `forwardRef` component with an
 imperative handle, `on*` callback props and hooks; Angular gets `@Input`,
 `@Output`, lifecycle hooks and signals; Vue gets props, emits, `expose` and
 composables; Svelte and Solid get their own reactive primitives. Viewer state
@@ -96,7 +98,7 @@ integrate.
 
 1. Diagnose whether a bug comes from document logic, shared view behavior or
    framework wiring before choosing a file to change.
-2. Fix rendering, selection, controls, keyboard and view state once in `src/ui/src/visio/` of the `ooxml` repository (shipped as `ooxml-ui/visio`).
+2. Fix rendering, selection, controls, keyboard and view state once in `src/ui/src/visio/` (shipped as `ooxml-ui/visio`).
 3. For adapter changes, search all six for the same pattern and fix every
    affected adapter together. Shared helpers belong in `common.ts`.
 4. Add regression coverage at the owning layer. Check actual native adapter
@@ -106,33 +108,25 @@ integrate.
 
 ## Where things live
 
-These are GitHub names under `ChristopherVR/`. Machine-local checkout paths
-belong in an untracked, git-ignored `CLAUDE.local.md`, never in this file.
-
-| Repository            | Packages                                 | Owns                                                                 |
-| --------------------- | ---------------------------------------- | -------------------------------------------------------------------- |
-| `visio-viewer` (this) | `visio-core`, `visio-<framework>-viewer` | Visio UI, adapters, demos, browser tests and docs                    |
-| `ooxml`               | `ooxml-core`, `ooxml-ui`                 | All OOXML logic by format/shared area, plus DOM-only Office controls |
-| `pptx-viewer`         | `pptx-viewer-core`, `pptx-*-viewer`      | PowerPoint UI and framework-neutral rendering                        |
-| `docx-viewer`         | `docx-core`, `docx-<framework>-viewer`   | Word editor UI and six thin adapters                                 |
-| `xlsx-viewer`         | XLSX core and framework viewer packages  | Excel UI and adapters                                                |
-| `ole2`                | `@christophervr/ole2`                    | Legacy compound-file and binary formats                              |
-| `emf-converter`       | `emf-converter`                          | EMF/WMF conversion and rendering                                     |
-| `mtx-decompressor`    | `mtx-decompressor`                       | MicroType Express font decompression                                 |
+The root `AGENTS.md` has the repository table. For Visio: logic in `src/core/visio`, the viewer UI
+in `src/ui/src/visio`, adapters and packages here, demos in `demos/visio/`, browser tests in
+`e2e/visio/`. Machine-local checkout paths belong in an untracked, git-ignored `CLAUDE.local.md`,
+never in this file.
 
 ### Where does my change go?
 
-| The change is about...                                                          | Make it in                                               |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/core/visio/` in `ooxml`, with core regression tests |
-| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `ooxml`                   |
-| DOM-only controls shared by Office viewers                                      | `src/ui` in `ooxml` (`ooxml-ui`)                         |
-| Legacy binary codecs or CFB                                                     | `ole2`                                                   |
-| Metafile conversion                                                             | `emf-converter`                                          |
-| SVG presentation, browser text measurement, controls or view state              | `src/ui/src/visio/` in `ooxml`                           |
-| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters        |
-| Docs, demos, packaging, release scripts and browser tests                       | Here                                                     |
-| Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                                |
+| The change is about...                                                          | Make it in                                        |
+| ------------------------------------------------------------------------------- | ------------------------------------------------- |
+| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/core/visio/`, with core regression tests     |
+| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `src/core`         |
+| DOM-only controls shared by Office viewers                                      | `src/ui` (`ooxml-ui`)                             |
+| Legacy binary codecs or CFB                                                     | `ole2`                                            |
+| Metafile conversion                                                             | `emf-converter`                                   |
+| SVG presentation, browser text measurement, controls or view state              | `src/ui/src/visio/`                               |
+| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters |
+| Docs, packaging and build scripts                                               | Here                                              |
+| Demos and browser tests                                                         | `demos/visio/` and `e2e/visio/`                   |
+| Office-suite launch routes                                                      | `site/apps.js`                                    |
 
 Extract reusable logic when touching it instead of introducing another copy.
 Separate browser rendering decisions from document semantics. Record source
@@ -141,22 +135,32 @@ must update `PROVENANCE.md` and retain licenses.
 
 ## Current structure and package status
 
-- `src/index.ts`: a re-export of `ooxml-ui/visio`, where the viewer lives. In that package:
+- `src/index.ts`: a re-export of `ooxml-ui/visio`, where the viewer lives. In `src/ui/src/visio`:
 - `controller.ts`: shared view state, selection, events and edit orchestration.
-- `contract.ts` and `binding.ts`: common properties/events and lifecycle.
-- `viewer-element.ts`: shared browser surface.
+- `binding.ts`: the lifecycle shared by every adapter; `viewer-element.ts`: the shared browser surface.
 - `render-*.ts` and browser text layout: SVG presentation.
-- `document-history.ts`: bounded source-backed history orchestration.
-  XML/package mutation remains in core through an isolated editing worker.
+- In the core (`src/core/visio/ui`): `contract.ts` (common properties and events), `document-history.ts`
+  (bounded source-backed history orchestration; XML/package mutation remains in core through an
+  isolated editing worker) and `document-text-search.ts`.
 - Cancellation and replacement must prevent stale worker results updating UI.
 - `packages/bindings` is private source. Use explicit framework entry points
   so hosts do not load unrelated framework runtimes.
-- Seven distribution packages live in `packages/{core,react,vue,angular,svelte,solid,vanilla}`. `npm run build:packages` bundles shared UI and adapters, declarations and browser workers. `npm run test:packages` installs their tarballs in a clean registry-only consumer.
+- Seven distribution packages live in `packages/{core,react,vue,angular,svelte,solid,vanilla}`. `bun run build:packages` bundles shared UI and adapters, declarations and browser workers. `bun run test:packages` installs their tarballs in a clean registry-only consumer.
 - The root implementation and bindings remain private build inputs; never put them in a published manifest.
+- The shared contract has the properties `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`,
+  `ribbonAddIns` and `collaboration`, and the events listed in `contract.ts`, including
+  `collaboration-change`. A contract change updates every adapter and `docs/bindings.md`. The
+  building blocks are read-only unless the host passes `canEdit: true` (`docs/building-blocks.md`),
+  `markClean()` declares exported bytes saved, and collaboration merges per page and shape
+  (`docs/collaboration.md`).
 
-### Core development bridge
+### Workspace
 
-Normal builds use the released `ooxml-core/visio` dependency. Format conformance tests run in `ooxml`; viewer and packed-consumer tests exercise the released API here. For core development, `VISIO_CORE_DIR` and `npm run link:core` point this repository at a local checkout; restore the published dependency ranges before committing.
+This folder is a member of the root Bun workspace: one `bun install` at the repository root, one
+lockfile. `ooxml-core` and `ooxml-ui` resolve to the packages in the same checkout (`"*"` ranges), so
+there is no bridge to a separately released core. A change that needs the core and the viewer lands
+in one push. (`scripts/link-core.mjs` and `VISIO_CORE_DIR` only matter for pointing this folder at a
+different core checkout.)
 
 ## Working agreements
 
@@ -164,9 +168,9 @@ Normal builds use the released `ooxml-core/visio` dependency. Format conformance
   It delegates inspection, experimental editing and filesystem execution to
   `ooxml-core/automation` and `/automation/node`. It is separate from the viewer
   distribution packages. The combined `ooxml-mcp` imports its `registerTools`.
-  Release the core automation entry before publishing the MCP package.
+  The MCP package and the core automation entry it uses are released by the same flow.
 
-- Node.js 22.12+, npm lockfiles, strict TypeScript with exact optional properties
+- Node.js 22.12+, Bun workspace (one root lockfile), strict TypeScript with exact optional properties
   and unchecked indexed access, Vitest and Playwright. Keep modules under
   300 lines where practical.
 - Parsing, preservation and package round-trip tests belong in core. Viewer
@@ -179,72 +183,58 @@ Normal builds use the released `ooxml-core/visio` dependency. Format conformance
   rich-text, formula recalculation or native Visio save/reopen fidelity.
   Generated fixtures alone do not establish native visual parity.
 - `docs/parity.md` is the canonical capability table (the documentation site is
-  VitePress, like pptx-viewer's). `npm run test:docs` builds the site and checks
+  VitePress, like the other viewers'). `bun run test:docs` builds the site and checks
   the ledger's inventory and the honesty statements. Update evidence and limits
   when behavior changes.
 - Do not commit generated output, credentials or user documents.
 
 ## Commands
 
+Install once at the repository root with `bun install`, then run these from `viewers/visio`:
+
 ```sh
-npm ci --ignore-scripts
-npm ci --prefix packages/bindings --ignore-scripts
-npm run dev                 # docs landing and /demo/ workspace
-npm run typecheck           # viewer and demo TypeScript
-npm test                    # viewer unit and DOM tests
-npm run check:bindings      # native adapter types, lifecycle and SSR
-npm run check:core          # core TypeScript and focused Visio tests
-npm run test:docs           # VitePress docs build, ledger and theme tests
-npm run docs:build          # VitePress docs plus every demo into docs/.vitepress/dist
-npm run build              # ESM/declarations and the playground in site-dist/
-npm run check              # all non-browser checks and production build
-npm run test:browser        # production browser interaction and landing tests
-npm run fmt                # oxfmt
-node --test scripts/release-plan.test.mjs
+bun run dev                 # docs landing and /demo/ workspace
+bun run typecheck           # viewer and demo TypeScript
+bun run test                # viewer unit and DOM tests
+bun run check:bindings      # native adapter types, lifecycle and SSR
+bun run check:core          # core TypeScript and focused Visio tests
+bun run test:docs           # VitePress docs build, ledger and theme tests
+bun run docs:build          # VitePress docs plus every demo into docs/.vitepress/dist
+bun run build               # ESM/declarations and the playground in site-dist/
+bun run check               # all non-browser checks and production build
+bun run test:browser        # production browser interaction and landing tests
+bun run fmt                 # oxfmt
 ```
 
-Run `npm run check` and `npm run test:browser` for implementation changes before
-pushing. Focused docs and formatting checks suffice for guidance-only changes.
-CI runs the full Linux suite. Record local environment failures and CI results
-instead of silently skipping checks. Browser tests accept `CHROMIUM_PATH`;
-otherwise install Playwright Chromium.
+Run `bun run check` and `bun run test:browser` for implementation changes, and the root
+`bun run verify` before pushing (it runs what the CI planner says your commits reach). Focused docs and
+formatting checks suffice for guidance-only changes. CI runs the full Linux suite. Record local
+environment failures and CI results instead of silently skipping checks. Browser tests accept
+`CHROMIUM_PATH`; otherwise install Playwright Chromium.
 
 ## GitHub Pages
 
 `https://christophervr.github.io/ooxml/visio/` is the public beta docs site and
 `/demo/` is the vanilla playground (also at `/demo-vanilla/`); `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
 `/demo-svelte/` and `/demo-solid/` mount the same workspace (`demos/visio/demo/workspace.ts`) through each
-framework binding (`demos/visio/demo-*`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned
-core and viewer, runs full checks and browser tests, and deploys `docs/.vitepress/dist/` (the VitePress docs plus every demo, built by `scripts/build-pages.mjs`)
-on pushes to `main`. The OOXML launcher embeds the demo; update its registry
-when a public demo route changes. Embedded theme follows the shared
+framework binding (`demos/visio/demo-*`, built by `scripts/build-demos.mjs`). The root `scripts/build-pages.mjs`
+runs this viewer's `scripts/build-pages.mjs` (VitePress docs plus every demo, into `docs/.vitepress/dist/`) and
+assembles it under `/ooxml/visio/` of the one Pages site. The Office launcher embeds the demo; update its
+registry (`site/apps.js`) when a public demo route changes. Embedded theme follows the shared
 `vitepress-theme-appearance` preference on the GitHub Pages origin.
 
 ## Releasing
 
-See `docs/releasing.md` for the functional package release flow.
-
-- Hourly/manual `release.yml` independently versions packages from conventional
-  commits since each `<npm-name>@<version>` tag, writes changelogs, commits
-  versions to `main`, creates GitHub releases and publishes with provenance.
-- Shared viewer or adapter changes release all six viewer packages. Core releases also release dependents. Build scripts trigger all packages; docs and test-only changes do not release unless a shipped package README changes.
-- npm trust names `ChristopherVR/visio-viewer`, `release.yml`, environment
-  `npm`; the job requests `id-token: write`. `NPM_PUBLISH=true` enables it.
-  No npm token is required.
-- Never run `npm publish` or push release tags manually after bootstrap.
-  Retry with `gh workflow run release.yml -f tag=<npm-name>@<version>`.
+See `docs/releasing.md` and the root `docs/releasing.md`. The root release flow
+(`scripts/release-plan.mjs`, `.github/workflows/release.yml`, the Visio package table in
+`scripts/viewer-packages.mjs`) versions the packages from conventional commits, writes changelogs
+and publishes with npm trusted publishing. Never run `npm publish` or push release tags manually.
 
 ## Branching and git workflow
 
-Use trunk-based development: commit directly to `main`. Do not create feature
-branches unless explicitly requested. Keep commits small and releasable.
-Follow each sibling repository's own guidance.
-
-The checkout may be shared. Before committing, check `git branch --show-current`
-and `git status`, and stage only your changes. Fetch and rebase onto `origin/main`
-before pushing because release automation also writes there. Do not switch
-a shared checkout underneath another session; push `HEAD:main` or use an
-isolated worktree when needed.
+Follow the root `AGENTS.md`: trunk-based development on `main`, no feature branches unless
+explicitly requested, small releasable commits, and your own worktree when the checkout is shared
+(`git push origin HEAD:main`). Run the root `bun run verify` before pushing.
 
 ## Commit conventions and style
 

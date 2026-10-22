@@ -1,5 +1,6 @@
 import type { EditorCore } from './editor-core';
 import { mountGrid } from './grid';
+import { routeValidationAlerts } from './grid/alert-route';
 import { editorStyleText } from './theme';
 import { fontCommands, alignmentCommands, numberCommands } from 'ooxml-core/xlsx/ui';
 
@@ -16,6 +17,7 @@ export function buildSurface(core: EditorCore): () => void {
 	frame.append(grid);
 	root.replaceChildren(style, frame);
 	core.commands.registerAll([...fontCommands(), ...alignmentCommands(), ...numberCommands()]);
+	routeValidationAlerts(core.ctx, () => core.surfaceActions.onOpenValidationAlert);
 	const dispose = mountGrid(core.ctx, grid);
 	core.shell = {
 		render: () => core.ctx.grid()?.invalidate(),

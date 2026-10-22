@@ -23,7 +23,7 @@ import { DialogFooter } from './DialogFooter';
 const TEMPLATES = EQUATION_TEMPLATES;
 
 /** Pre-computed MathML strings for each template (computed once at module load). */
-const TEMPLATE_MATHML: string[] = compileEquationTemplateMathMl();
+const TEMPLATE_MATHML: string[] = /* @__PURE__ */ compileEquationTemplateMathMl();
 
 // ── MathML preview renderer ──────────────────────────────────────────────
 

@@ -19,6 +19,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**Development**](#development) &nbsp;&middot;&nbsp;
 [**Roadmap**](../docs/roadmap.md) &nbsp;&middot;&nbsp;
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
+[**Discord**](https://discord.gg/haE8xpMET9) &nbsp;&middot;&nbsp;
 [**Contributing**](../CONTRIBUTING.md)
 
 <table>
@@ -67,7 +68,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 - **Everything runs client-side.** Files never leave the user's machine: no Office install, no conversion service, no native binaries. The same library runs in browsers, Node.js, Bun, workers and serverless functions.
 - **One model for every format.** Word, PowerPoint, Excel and Visio share one XML model, packaging layer, units, colours and geometry. Each format is an area of one package, not a dependency to keep in step.
 - **Round-trips without losing what it does not understand.** Untouched parts stay byte-for-byte, unknown markup is preserved, and edits that would damage unsupported content are rejected instead of silently dropped.
-- **Real editors, not only viewers.** Ribbons, grids, a formula engine (480+ functions), undo and redo, find and replace and real-time co-editing over Yjs, as web components with thin bindings for React, Vue, Angular, Svelte, Solid and plain JavaScript.
+- **Real editors, not only viewers.** Ribbons, grids, a formula engine (490+ functions), undo and redo, find and replace and real-time co-editing over Yjs, as web components with thin bindings for React, Vue, Angular, Svelte, Solid and plain JavaScript.
 - **Password-protected and legacy files.** Open and save ECMA-376 encrypted packages, and read legacy `.doc`, `.xls` and `.ppt` through the sibling [`ole2`](https://github.com/ChristopherVR/ole2) codecs.
 - **AI ready.** MCP servers let Claude, Cursor and other agents read and edit documents through the same code the editors use.
 - **Honest about its limits.** Unsupported features are reported, never hidden, and nothing here claims Office parity or lossless export without evidence.
@@ -92,7 +93,7 @@ What the suite gives you:
 - **Live tabs.** A document opens in one editor tab, and edits survive switching apps. Tabs close, close others and close to the right like a desktop app, saving first.
 - **Office files in Teams.** Share a document in an OpenTeams channel, reopen it in its editor from the conversation and return to the channel. With a configured Teams server, files go through its storage.
 - **Embedded documents.** Open the Office packages embedded in a parent document, edit them, and save child and parent together.
-- **An assistant across files.** Pick files (and optionally the current conversation) and get bounded edit proposals you review, apply and undo. It talks to your own OpenAI-compatible endpoint, and nothing is applied without you.
+- **An assistant across files.** Pick files (and optionally the current conversation) and get bounded edit proposals you review, apply and undo. It is off until a deployment configures it: [`ai-config.json`](../docs/suite-ai-config.md) chooses the providers (hosted, local or any OpenAI-compatible endpoint) and limits, and nothing is applied without you.
 - **Profiles and appearance.** Local profiles with separate libraries, plus Light, Dark and System appearance and accent themes shared by every editor.
 - **Install it.** The root installs as a PWA, and each product also installs on its own (`/apps/word/`, `/apps/excel/`, `/apps/powerpoint/`, `/apps/visio/`, `/apps/teams/`), sharing one profile and library on the same origin. A [desktop build](../desktop/README.md) (Tauri) wraps the same bundle and adds a native folder picker.
 
@@ -230,6 +231,7 @@ The working agreements are in [AGENTS.md](../AGENTS.md), and [PROVENANCE.md](../
 - **Questions and usage help:** ask in [Discussions, Q&A](https://github.com/ChristopherVR/ooxml/discussions/categories/q-a) and mark the answer that solved it.
 - **Ideas:** talk them through in [Ideas](https://github.com/ChristopherVR/ooxml/discussions/categories/ideas); agreed ones become feature requests.
 - **Built something?** Share it in [Show and tell](https://github.com/ChristopherVR/ooxml/discussions/categories/show-and-tell).
+- **Chat:** join the [Discord server](https://discord.gg/haE8xpMET9) to talk with other users and follow pull requests, releases and CI alerts as they happen.
 - **Bugs and fidelity gaps:** open an [issue](https://github.com/ChristopherVR/ooxml/issues/new/choose), ideally with a sample file.
 - **Security problems:** report them privately, see [SECURITY.md](../SECURITY.md).
 

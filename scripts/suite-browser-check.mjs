@@ -32,6 +32,7 @@ try {
 		await setXlsxCells(await createXlsx(['Budget']), 0, [
 			{ address: 'A1', input: 'Budget' },
 			{ address: 'B1', input: '4200' },
+			{ address: 'C1', input: '=B1*2' },
 		])
 	).bytes;
 	const zip = await JSZip.loadAsync(doc);
@@ -162,6 +163,10 @@ try {
 	await page.getByRole('button', { name: 'Use selected context' }).click();
 	await page.locator('#ai-input').fill('Move launch to December and update the budget to 6100.');
 	await page.locator('#ai-send').click();
+	// The card shows what else the budget edit changes, as the core compares the workbook.
+	const effect = page.locator('.ai-effects tbody tr');
+	await effect.first().waitFor();
+	assert.deepEqual(await effect.first().locator('td').allTextContents(), ['C1', '8400', '12200']);
 	await page.getByRole('button', { name: 'Apply changes', exact: true }).click();
 	await page.getByRole('button', { name: 'Undo these changes' }).waitFor();
 	const savedDocs = await page.evaluate(

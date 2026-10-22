@@ -15,7 +15,7 @@
  */
 import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'ooxml-ui/pptx';
 
-export const glyphOutlineFontCache = new GlyphOutlineFontCache();
+export const glyphOutlineFontCache = /* @__PURE__ */ new GlyphOutlineFontCache();
 
 /** The `getGlyphOutline` callback `buildGlyphEnvelope` accepts, backed by the module singleton. */
-export const getGlyphOutline = createGlyphOutlineLookup(glyphOutlineFontCache);
+export const getGlyphOutline = /* @__PURE__ */ createGlyphOutlineLookup(glyphOutlineFontCache);

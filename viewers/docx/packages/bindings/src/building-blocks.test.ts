@@ -7,7 +7,7 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 it('keeps the engine on repeated refs, guards retained commands and cleans subscriptions', async () => {
-	const session = createBuildingBlockSession({ documentModel: createDocument() });
+	const session = createBuildingBlockSession({ documentModel: createDocument(), canEdit: true });
 	const host = document.createElement('div');
 	document.body.append(host);
 	const snapshots = vi.fn();
@@ -64,6 +64,23 @@ it('reloads identical bytes after canvas replacement and recovers a rejected loa
 		expect(first.childElementCount).toBe(0);
 		expect(session.state.error).toBeNull();
 		expect(session.state.loading).toBe(false);
+	} finally {
+		session.destroy();
+	}
+});
+
+it('is read-only until the host passes canEdit: true', () => {
+	const session = createBuildingBlockSession({ documentModel: createDocument() });
+	const host = document.createElement('div');
+	document.body.append(host);
+	try {
+		expect(session.state.mode).toBe('view');
+		session.canvasProps.mount(host);
+		expect(session.state.mode).toBe('view');
+		expect(session.state.toolbarProps?.canEdit).toBe(false);
+		session.update({ canEdit: true });
+		expect(session.state.mode).toBe('edit');
+		expect(session.state.toolbarProps?.canEdit).toBe(true);
 	} finally {
 		session.destroy();
 	}

@@ -180,4 +180,4 @@ function arePropsEqual(prev: SlideCardProps, next: SlideCardProps): boolean {
 	return true;
 }
 
-export const SlideCard = React.memo(SlideCardImpl, arePropsEqual);
+export const SlideCard = /* @__PURE__ */ React.memo(SlideCardImpl, arePropsEqual);

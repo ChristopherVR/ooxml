@@ -17,6 +17,7 @@
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
 	import { nextGuideId } from '../state/guide-id';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
+	import { useViewerStorage } from '../state/viewer-storage-context';
 	import Ribbon from './ribbon/Ribbon.svelte';
 	import ProtectedViewBanner from './ProtectedViewBanner.svelte';
 	import ReadOnlyBanner from './ReadOnlyBanner.svelte';
@@ -60,6 +61,7 @@
 	const effectiveHiddenActions = $derived(hiddenActions ?? []);
 	const custom = useViewerCustomization();
 	// A host-removed dialog loses every entry point: `undefined` hides the button.
+	const viewerStorage = useViewerStorage();
 	const openSettings = $derived(custom.isDialogAvailable('options') ? () => { parityUi.syncAutosave(vm.autosaveEnabled); parityUi.settingsOpen = true; } : undefined);
 	const openPrint = $derived(custom.isDialogAvailable('print') ? () => (parityUi.printSettingsOpen = true) : undefined);
 
@@ -143,7 +145,8 @@
 		onundo={() => editor.undo()}
 		onredo={() => editor.redo()}
 		onsave={() => void editor.save()}
-		ondownload={() => void vm.downloadPptx()}
+		onsavefile={() => void vm.downloadPptx()}
+		ondownload={() => void vm.downloadAs('pptx')}
 		ondownloadppsx={() => void vm.downloadAs('ppsx')}
 		ondownloadpptm={() => void vm.downloadAs('pptm')}
 		ondownloadppt={() => void vm.downloadAs('ppt')}
@@ -237,7 +240,7 @@
 		onopenfile={vm.openFile}
 		onopenrecent={(key) => {
 			void (async () => {
-				const bytes = await readBackstageRecentFile(key);
+				const bytes = await readBackstageRecentFile(key, viewerStorage());
 				if (bytes) await loader.load(bytes);
 			})();
 		}}
@@ -264,7 +267,8 @@
 			onundo={() => editor.undo()}
 			onredo={() => editor.redo()}
 			onsave={() => void editor.save()}
-			ondownload={() => void vm.downloadPptx()}
+			onsavefile={() => void vm.downloadPptx()}
+			ondownload={() => void vm.downloadAs('pptx')}
 			ondownloadppsx={() => void vm.downloadAs('ppsx')}
 			ondownloadpptm={() => void vm.downloadAs('pptm')}
 			ondownloadppt={() => void vm.downloadAs('ppt')}
@@ -358,7 +362,7 @@
 			onopenfile={vm.openFile}
 			onopenrecent={(key) => {
 				void (async () => {
-					const bytes = await readBackstageRecentFile(key);
+					const bytes = await readBackstageRecentFile(key, viewerStorage());
 					if (bytes) await loader.load(bytes);
 				})();
 			}}

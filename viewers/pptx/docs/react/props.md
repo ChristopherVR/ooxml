@@ -23,12 +23,14 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## Content
 
-| Prop                 | Type         | Default                | Description                                                                                                 |
-| -------------------- | ------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `content`            | `Uint8Array` | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                   |
-| `filePath`           | `string`     | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.             |
-| `autosave`           | `boolean`    | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy). |
-| `autosaveIntervalMs` | `number`     | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                |
+| Prop                 | Type              | Default                | Description                                                                                                                                      |
+| -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content`            | `Uint8Array`      | (required)             | Raw `.pptx` file bytes. Wrap an `ArrayBuffer` with `new Uint8Array(buf)`.                                                                        |
+| `filePath`           | `string`          | -                      | Original file path or name. Used as the key for autosave recovery and display in the title bar.                                                  |
+| `fileName`           | `string`          | generic label          | Display name of the open document, shown in the title bar (for example `quarterly-review.pptx`).                                                 |
+| `autosave`           | `boolean`         | `true`                 | Recovery autosave. A policy ceiling over the title-bar toggle; see [Autosave & Recovery](#autosave-policy).                                      |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Recovery cadence. An explicit value outranks the user's AutoRecover setting.                                                                     |
+| `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 
 ::: warning `content` type
 The prop is a `Uint8Array`, not an `ArrayBuffer`. See [Getting Started](/react/getting-started) for
@@ -65,16 +67,25 @@ These four match the Svelte and vanilla bindings; the defaults and clamping are 
 
 ## Callbacks
 
-| Prop                  | Type                             | Default | Description                                                                                                                         |
-| --------------------- | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `onDirtyChange`       | `(isDirty: boolean) => void`     | -       | Called when the unsaved-changes flag flips.                                                                                         |
-| `onContentChange`     | `(content: Uint8Array) => void`  | -       | Called with the re-serialized document bytes when content changes.                                                                  |
-| `onActiveSlideChange` | `(slideIndex: number) => void`   | -       | Called when the active slide changes.                                                                                               |
-| `onModeChange`        | `(mode: ViewerMode) => void`     | -       | Called when the viewer mode changes (e.g. edit to present).                                                                         |
-| `onZoomChange`        | `(zoom: number) => void`         | -       | Called when the zoom level changes.                                                                                                 |
-| `onSelectionChange`   | `(elementIds: string[]) => void` | -       | Called when element selection changes.                                                                                              |
-| `onSlideCountChange`  | `(count: number) => void`        | -       | Called when the total slide count changes (slide added/deleted).                                                                    |
-| `onOpenFile`          | `() => void`                     | -       | Host override for the File > Open action: bypasses the built-in file picker; the host then supplies a new `content` buffer instead. |
+| Prop                    | Type                                                         | Default | Description                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `onDirtyChange`         | `(isDirty: boolean) => void`                                 | -       | Called when the unsaved-changes flag flips.                                                                                         |
+| `onContentChange`       | `(content: Uint8Array) => void`                              | -       | Called with the re-serialized document bytes when content changes.                                                                  |
+| `onActiveSlideChange`   | `(slideIndex: number) => void`                               | -       | Called when the active slide changes.                                                                                               |
+| `onModeChange`          | `(mode: ViewerMode) => void`                                 | -       | Called when the viewer mode changes (e.g. edit to present).                                                                         |
+| `onZoomChange`          | `(zoom: number) => void`                                     | -       | Called when the zoom level changes.                                                                                                 |
+| `onSelectionChange`     | `(elementIds: string[]) => void`                             | -       | Called when element selection changes.                                                                                              |
+| `onSlideCountChange`    | `(count: number) => void`                                    | -       | Called when the total slide count changes (slide added/deleted).                                                                    |
+| `onChange`              | `() => void`                                                 | -       | Called after any committed document edit (move, resize, text, undo, redo, ...).                                                     |
+| `onAutosave`            | `(content: Uint8Array) => void`                              | -       | Called with the serialised deck each time a recovery autosave snapshot is written.                                                  |
+| `onAutosaveToggle`      | `(enabled: boolean) => void`                                 | -       | Called when the user enables or disables autosave (title bar or File > Options).                                                    |
+| `onAutosaveStatus`      | `(status: 'idle' \| 'saving' \| 'saved' \| 'error') => void` | -       | Called on every autosave lifecycle transition.                                                                                      |
+| `onAutosaveRecovery`    | `(record: AutosaveRecord) => void`                           | -       | Called when a recovery snapshot left by a previous session is found. The built-in recovery prompt is shown as well.                 |
+| `onPropertiesChange`    | `(updates: Partial<PptxCoreProperties>) => void`             | -       | Called when the user (or the AI assistant) changes the document properties.                                                         |
+| `onNotesUpdate`         | `(notes: string) => void`                                    | -       | Called with the new speaker-notes text after a notes edit.                                                                          |
+| `onPresentationChange`  | `(presenting: boolean) => void`                              | -       | Called when presentation (slide show) mode is entered or left.                                                                      |
+| `onCollaborationStatus` | `(status: ConnectionStatus) => void`                         | -       | Called on every collaboration connection-status transition.                                                                         |
+| `onOpenFile`            | `() => void`                                                 | -       | Host override for the File > Open action: bypasses the built-in file picker; the host then supplies a new `content` buffer instead. |
 
 ::: info
 `onContentChange` delivers a `Uint8Array` (the serialized document), not a boolean. To pull content
@@ -131,25 +142,38 @@ Every id, the rules and recipes are in the
 These props enable and control real-time co-editing. See [Collaboration](/react/collaboration) for
 the full flow and the `CollaborationConfig` shape.
 
-| Prop                   | Type                                                         | Default | Description                                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `collaboration`        | `CollaborationConfig`                                        | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Requires the `yjs` and `y-websocket` peer dependencies. |
-| `onStartCollaboration` | `(config: CollaborationConfig) => void`                      | -       | Called when the user starts a session from the Share dialog. The host should set the `collaboration` prop with the returned config.                  |
-| `onStopCollaboration`  | `() => void`                                                 | -       | Called when the user stops a session from the Share dialog. The host should clear the `collaboration` prop.                                          |
-| `shareDefaults`        | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Default values for the Share dialog fields. If omitted, the fields start empty.                                                                      |
+| Prop                    | Type                                                         | Default | Description                                                                                                                                                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collaboration`         | `CollaborationInput`                                         | -       | When provided, enables collaborative editing with live cursors, presence, and Yjs CRDT sync. Takes the legacy `CollaborationConfig` or the shared `CollaborationOptions` (session, user, intent, provider, webrtc). Requires the `yjs` peer, plus `y-websocket` or `y-webrtc` for viewer-owned transports. |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void`                      | -       | Called when the user starts a session from the Share dialog. The host should set the `collaboration` prop with the returned config.                                                                                                                                                                        |
+| `onStopCollaboration`   | `() => void`                                                 | -       | Called when the user stops a session from the Share dialog. The host should clear the `collaboration` prop.                                                                                                                                                                                                |
+| `onCollaborationChange` | `(state: CollaborationState) => void`                        | -       | Reports the shared `CollaborationState` when a session starts or stops, and when its status, synced flag or people change.                                                                                                                                                                                 |
+| `shareDefaults`         | `{ roomId?: string; userName?: string; serverUrl?: string }` | -       | Default values for the Share dialog fields. If omitted, the fields start empty.                                                                                                                                                                                                                            |
 
 ::: info
 `collaboration` is controlled. The viewer does not start a session on its own - wire
 `onStartCollaboration` to set the `collaboration` prop, and `onStopCollaboration` to clear it.
 :::
 
+## Events, hooks and host extensions
+
+| Prop                     | Type                                 | Description                                                                                                                                             |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onLoad`                 | `(detail: ViewerLoadDetail) => void` | Fired each time a presentation finishes loading without an error, with the slide count and canvas size.                                                 |
+| `onError`                | `(message: string) => void`          | Fired once per distinct load failure, with a human-readable message.                                                                                    |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`              | Fired before following a link; return `false` to cancel the default action.                                                                             |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]`          | Ribbon tabs the host adds after Help. Each command runs its `run` callback and dispatches a bubbling `office-ribbon-add-in` event. Desktop ribbon only. |
+| `inspectorInitiallyOpen` | `boolean`                            | Initial inspector visibility; omitted keeps the desktop/mobile default.                                                                                 |
+
 ## Interface sketch
 
 ::: info Abridged
 This block shows the commonly used members, not the whole type. `PowerPointViewerProps`
-also carries `ai`, `accountAuth`, `hiddenActions`, `fonts`, `fileName`, `availableThemes`,
+also carries `ai`, `accountAuth`, `hiddenActions`, `fonts`, `availableThemes`,
 `defaultThemeKey`, `onThemeChange`, `availableLocales`, `defaultLocale`, `onLocaleChange`,
-`onModeChange`, `onSelectionChange`, `onSlideCountChange` and `onZoomChange`. Read the
+`onModeChange`, `onSelectionChange`, `onSlideCountChange` and `onZoomChange`; the tables above
+cover `fileName`, `onLoad`, `onError`, `onHyperlinkClick`, `ribbonAddIns` and
+`inspectorInitiallyOpen`. Read the
 shipped `.d.ts` (or `packages/react/src/viewer/types-ui.ts`) for the authoritative list.
 :::
 
@@ -157,11 +181,26 @@ shipped `.d.ts` (or `packages/react/src/viewer/types-ui.ts`) for the authoritati
 interface PowerPointViewerProps {
 	content: Uint8Array;
 	filePath?: string;
+	fileName?: string;
 
 	onDirtyChange?: (isDirty: boolean) => void;
 	onContentChange?: (content: Uint8Array) => void;
 	onActiveSlideChange?: (slideIndex: number) => void;
+	onChange?: () => void;
+	onAutosave?: (content: Uint8Array) => void;
+	onAutosaveToggle?: (enabled: boolean) => void;
+	onAutosaveStatus?: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+	onAutosaveRecovery?: (record: AutosaveRecord) => void;
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	onNotesUpdate?: (notes: string) => void;
+	onPresentationChange?: (presenting: boolean) => void;
+	onCollaborationStatus?: (status: ConnectionStatus) => void;
 	onOpenFile?: () => void;
+	onLoad?: (detail: ViewerLoadDetail) => void;
+	onError?: (message: string) => void;
+	onHyperlinkClick?: HyperlinkClickHandler;
+	ribbonAddIns?: readonly RibbonAddInTab[];
+	inspectorInitiallyOpen?: boolean;
 
 	canEdit?: boolean;
 	initialSlide?: number;
@@ -180,9 +219,10 @@ interface PowerPointViewerProps {
 
 	theme?: ViewerTheme;
 
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	onStartCollaboration?: (config: CollaborationConfig) => void;
 	onStopCollaboration?: () => void;
+	onCollaborationChange?: (state: CollaborationState) => void;
 	shareDefaults?: {
 		roomId?: string;
 		userName?: string;
@@ -224,7 +264,8 @@ Without this, the recovery check has no key to look up and will not find the sav
 
 ### Recovery helpers (shared package)
 
-The `pptx-viewer-shared` package exports low-level helpers for building custom recovery flows:
+`pptx-react-viewer` does not re-export the autosave store. Its helpers come from `ooxml-ui/pptx`
+(a dependency of the package), which exports them for building custom recovery flows:
 
 ```ts
 import {
@@ -232,7 +273,7 @@ import {
 	listAutosaveSnapshots,
 	deleteAutosaveSnapshot,
 	saveAutosaveSnapshot,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // List all stored snapshots (without the heavy data blob)
 const snapshots = await listAutosaveSnapshots();
@@ -253,7 +294,7 @@ await deleteAutosaveSnapshot('report.pptx');
 
 Recovery snapshots answer "the tab crashed, can I get my edits back?". A plain **refresh** is the
 more common case, and it has its own helpers. Every binding re-exports `rememberSessionDeck` /
-`restoreSessionDeck` (also available from `pptx-viewer-shared`), which remember the open deck **per
+`restoreSessionDeck` (also available from `ooxml-ui/pptx`), which remember the open deck **per
 browser tab** and hand it back on the next load:
 
 ```ts
@@ -286,8 +327,8 @@ All five demo apps use exactly this flow, which is why a refresh keeps the prese
 ### Example: recovery on page reload
 
 ```tsx
+import { getAutosaveSnapshot } from 'ooxml-ui/pptx';
 import { PowerPointViewer } from 'pptx-react-viewer';
-import { getAutosaveSnapshot } from 'pptx-viewer-shared';
 import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'my-app-last-file';

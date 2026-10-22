@@ -5,6 +5,7 @@ import type { FileCommand } from './file-commands';
 import { pageSizeOf } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
 import type { BackstageOptions, BackstageOptionKey } from './backstage-options';
+import type { ResolvedWordCustomization, WordRegionContext } from './customization';
 
 /** What the File view needs from the editor; every value is read when a page opens. */
 export interface BackstageHandlers {
@@ -25,6 +26,10 @@ export interface BackstageHandlers {
 	ribbon(): HTMLElement | undefined;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
+	/** The host customisation: hidden pages and host pages (`backstage.extraPages`). */
+	customization(): ResolvedWordCustomization;
+	/** The context of a host page's region. */
+	regionContext(region: string): WordRegionContext;
 }
 
 export interface PageContext {

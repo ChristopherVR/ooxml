@@ -22,6 +22,8 @@ not, how big each piece is, and how hard it is to retarget. Step 2 ports the top
 
 ## What the harness found
 
+**Baseline, measured 2026-10-17 before the slices below.** Rows such as data labels (now drawn on 27 of 27 parts, slice 1), markers and always-drawn major gridlines (slice 3) have since been ported, and later work covered radar axis scaling and many-point series; the harness test is still in the tree and the counts below have not been re-run. Read the table as the starting point, not the current state.
+
 No part throws. Core renders 78 of 82 parts to a chart; funnel, box and whisker and region map parts
 (and any pareto) have no summary and draw nothing (3 of the 7 ChartEx fixtures).
 

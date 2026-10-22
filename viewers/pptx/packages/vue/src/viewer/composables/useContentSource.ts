@@ -7,7 +7,7 @@
  * is cleared whenever the host supplies a fresh `content`, so an external reload
  * always wins over a locally-opened file.
  */
-import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
+import type { CollabLoadOrigin, DocumentStorage } from 'ooxml-ui/pptx';
 import { openPptxFile, readBackstageRecentFile } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
@@ -17,6 +17,8 @@ export interface UseContentSourceOptions {
 	content: () => Uint8Array | ArrayBuffer;
 	/** Getter for the host's `onOpenFile` override, read at click time. */
 	onOpenFile: () => (() => void) | undefined;
+	/** Getter for the host's `storage` prop: Recent files read from its recovery store. */
+	storage?: () => DocumentStorage | undefined;
 }
 
 export interface UseContentSourceResult {
@@ -59,7 +61,7 @@ export function useContentSource(options: UseContentSourceOptions): UseContentSo
 
 	function handleOpenRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key);
+			const bytes = await readBackstageRecentFile(key, options.storage?.());
 			if (bytes) {
 				internalContent.value = bytes;
 			}

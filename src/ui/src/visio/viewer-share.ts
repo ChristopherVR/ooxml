@@ -1,19 +1,44 @@
+import type { CollabSession, CollaborationState } from 'ooxml-core/collab';
+import {
+	sanitizeVisioPresence,
+	VISIO_INITIAL_PRESENCE,
+	type VisioPresence,
+} from 'ooxml-core/visio/ui';
 import type { OfficeProfile } from '../controls';
 import type { PresenceParticipant } from '../presence';
-import type { VisioDocument } from 'ooxml-core/visio';
-import type { ViewerController, ViewerState } from './controller';
+import type { ViewerController } from './controller';
+import { type Collab, DrawingSync, type DrawingCollab, type Session } from './viewer-share-sync';
+import type { VisioCollaborationOptions } from './collaboration-types';
+import { ViewerPresence } from './viewer-presence';
+import { ViewerWriteBack } from './viewer-write-back';
 
-type Collab = typeof import('ooxml-core/collab');
-type Session = ReturnType<Collab['createCollabSession']>;
 type Presence = HTMLElement & { participants: PresenceParticipant[] };
 
-/** Room names the core accepts: 1-64 letters, digits, hyphens or underscores. */
-const ROOM = /^[A-Za-z0-9_-]{1,64}$/;
+/** Not sharing: what `collaborationState` reports before a join and after a leave. */
+export const NOT_SHARING: CollaborationState = Object.freeze({
+	active: false,
+	roomId: undefined,
+	status: 'off',
+	synced: false,
+	people: [],
+});
+
+interface Joined {
+	collab: Collab;
+	session: Session;
+	owned: boolean;
+	sync: DrawingSync;
+	/** Live cursors and selections of the other collaborators. */
+	presence: ViewerPresence;
+	/** The owner's debounced save; inert for every other role. */
+	writeBack: ViewerWriteBack;
+	stops: (() => void)[];
+}
 
 /**
- * File > Share: a live session over `ooxml-core/collab` (Yjs). Peers in other windows of this
- * browser share the whole VSDX package through a BroadcastChannel; remote changes arrive as one
- * undoable history step. The collab runtime loads only when sharing starts.
+ * Sharing of one `<visio-viewer>` over `ooxml-core/collab` (Yjs): the File > Share panel and the
+ * host's `collaboration` property drive the same session. Peers merge pages, shapes and
+ * connectors item by item (see `DrawingSync`). The collab runtime loads only when sharing starts.
  */
 export class ViewerShare {
 	readonly #panel: HTMLElement;
@@ -22,23 +47,23 @@ export class ViewerShare {
 	readonly #stop: HTMLButtonElement;
 	readonly #status: HTMLElement;
 	readonly #people: Presence;
-	#session: Session | null = null;
-	#teardown: (() => void) | null = null;
-	#revision = 0;
-	/** The package this window last published or adopted, to skip repeats of it. */
-	#last: Uint8Array | null = null;
-	/** The drawing this window last published or adopted, so a local load or edit is sent once. */
-	#shared: VisioDocument | null = null;
-	#adopting = false;
-	#pending: Uint8Array | null = null;
-	/** Publishes a local drawing the room has not seen; set once the session has settled. */
-	#catchUp: (() => void) | null = null;
+	readonly #viewport: HTMLElement | null;
+	#joined: Joined | null = null;
 	#starting = false;
+	/** Bumped by every leave, so a join still loading the runtime is abandoned. */
+	#epoch = 0;
+	#wanted: VisioCollaborationOptions | null = null;
+	/** Called whenever `state` may have changed. */
+	onChange: (state: CollaborationState) => void = () => {};
+	/** Called with the failure of a declarative join. */
+	onError: (error: Error) => void = () => {};
 	constructor(
 		root: ShadowRoot,
 		private readonly controller: ViewerController,
 		private readonly profile: () => OfficeProfile,
 		private readonly loadCollab: () => Promise<Collab> = () => import('ooxml-core/collab'),
+		private readonly loadDrawing: () => Promise<DrawingCollab> = () =>
+			import('ooxml-core/visio/collab'),
 	) {
 		this.#panel = root.querySelector('.share-panel')!;
 		this.#room = this.#panel.querySelector('.share-room')!;
@@ -46,10 +71,38 @@ export class ViewerShare {
 		this.#stop = this.#panel.querySelector('[data-share="stop"]')!;
 		this.#status = this.#panel.querySelector('.share-status')!;
 		this.#people = this.#panel.querySelector<Presence>('office-ui-presence')!;
+		this.#viewport = root.querySelector<HTMLElement>('.viewport');
 		this.#room.value = `visio-${Math.random().toString(36).slice(2, 8)}`;
 	}
 	get active(): boolean {
-		return this.#session !== null;
+		return this.#joined !== null;
+	}
+	/** The options of the declarative `collaboration` property, if set. */
+	get wanted(): VisioCollaborationOptions | null {
+		return this.#wanted;
+	}
+	get state(): CollaborationState {
+		const joined = this.#joined;
+		if (!joined) return NOT_SHARING;
+		const state = joined.collab.collaborationStateOf(joined.session);
+		const writeBack = joined.writeBack.state;
+		// Only the window that writes back reports it.
+		return writeBack && joined.session.role === 'owner' ? { ...state, writeBack } : state;
+	}
+	/** Declarative sharing: while set, the drawing is shared; null leaves the room. */
+	want(options: VisioCollaborationOptions | null): void {
+		if (options === this.#wanted) return;
+		this.#wanted = options;
+		this.#leave();
+		this.#resume();
+	}
+	/** Leaves the room and forgets the `collaboration` property. */
+	stop(): void {
+		this.#wanted = null;
+		this.#leave();
+	}
+	reconnect(): void {
+		this.#joined?.session.reconnect();
 	}
 	wire(): () => void {
 		const Abort = this.#panel.ownerDocument.defaultView?.AbortController ?? AbortController;
@@ -63,146 +116,132 @@ export class ViewerShare {
 			},
 			{ signal: events.signal },
 		);
+		// A reconnected viewer rejoins the room its host asked for.
+		this.#resume();
 		return () => {
 			events.abort();
-			this.stop();
+			// The property outlives a disconnect; the session does not.
+			this.#leave();
 		};
 	}
+	/** The panel's Start: a room of this browser's own. */
 	async start(roomId: string): Promise<void> {
-		if (this.#session || this.#starting) return;
-		if (!ROOM.test(roomId))
-			return this.#say('Use 1 to 64 letters, digits, hyphens or underscores for the session name.');
+		if (this.#joined || this.#starting) return;
+		try {
+			await this.#open({ roomId });
+		} catch (error) {
+			this.#say(error instanceof Error ? error.message : String(error));
+		}
+	}
+	#resume(): void {
+		const wanted = this.#wanted;
+		if (!wanted || this.#joined || this.#starting) return;
+		this.#open(wanted).catch((error: unknown) => {
+			const failure = error instanceof Error ? error : new Error(String(error));
+			this.#say(failure.message);
+			this.onError(failure);
+		});
+	}
+	async #open(options: VisioCollaborationOptions): Promise<void> {
+		const epoch = this.#epoch;
 		this.#starting = true;
 		this.#render();
 		try {
-			const collab = await this.loadCollab();
-			if (!collab.canBroadcast())
-				return this.#say('Sharing needs BroadcastChannel, which this browser does not provide.');
-			this.#join(collab, roomId);
-		} catch (error) {
-			this.#say(error instanceof Error ? error.message : String(error));
+			const [collab, drawing] = await Promise.all([this.loadCollab(), this.loadDrawing()]);
+			if (epoch !== this.#epoch) return;
+			this.#join(collab, drawing, options);
 		} finally {
-			this.#starting = false;
+			if (epoch === this.#epoch) this.#starting = false;
 			this.#render();
 		}
 	}
-	stop(): void {
-		this.#teardown?.();
-		this.#teardown = null;
-		this.#session?.destroy();
-		this.#session = null;
-		this.#pending = null;
-		this.#shared = null;
-		this.#catchUp = null;
-		this.#revision = 0;
-		this.#last = null;
-		this.#people.participants = [];
-		this.#say('Not sharing.');
-		this.#render();
-	}
-	#join(collab: Collab, roomId: string): void {
-		const adapter = collab.packageAdapter();
+	#join(collab: Collab, drawing: DrawingCollab, options: VisioCollaborationOptions): void {
 		const me = this.profile();
-		const session = collab.createCollabSession({
-			roomId: `visio-${roomId}`,
-			provider: collab.transportProvider({
-				transport: collab.createBroadcastTransport({ roomId: `visio-${roomId}` }),
-			}),
-			user: { name: me.displayName || 'Visio user', color: me.avatarColor },
-			teardown: true,
+		// Panel rooms keep the wire name they always had (`ooxml-collab:visio-<room>`), so windows on
+		// an older build and rooms started from the panel stay interoperable.
+		// A host session made without the Visio sanitiser is accepted; its peers carry no payload.
+		const { session: given, ...rest } = options;
+		const { session, owned } = collab.openCollaborationSession<VisioPresence>(
+			{
+				...rest,
+				...(given ? { session: given as CollabSession<VisioPresence> } : {}),
+				user: { color: me.avatarColor, ...options.user },
+			},
+			{
+				defaultName: me.displayName || 'Visio user',
+				broadcastPrefix: 'ooxml-collab:visio-',
+				sanitizePayload: sanitizeVisioPresence,
+				initialPresence: VISIO_INITIAL_PRESENCE,
+			},
+		);
+		const sync = new DrawingSync(drawing, session, this.controller, {
+			join: options.intent === 'join',
+			fail: (message) => this.#say(message),
 		});
-		this.#session = session;
-		const publish = () => {
-			const { document } = this.controller.state;
-			if (this.#adopting || this.#pending || document === this.#shared || !session.canWrite())
-				return;
-			const bytes = this.#localBytes();
-			if (!bytes) return;
-			adapter.write(session.doc, { bytes, revision: this.#revision }, collab.LOCAL_ORIGIN);
-			this.#revision = adapter.read(session.doc).revision;
-			this.#last = bytes;
-			this.#shared = document;
+		const presence = new ViewerPresence(session, this.controller, this.#viewport);
+		const writeBack = new ViewerWriteBack(
+			this.controller,
+			options,
+			() => session.role === 'owner' && session.canWrite(),
+			() => this.#changed(),
+		);
+		// A viewer role is read-only: its edits are never published, so they are not offered either.
+		this.controller.setRoleReadOnly(session.role === 'viewer');
+		this.#joined = {
+			collab,
+			session,
+			owned,
+			sync,
+			presence,
+			writeBack,
+			stops: [
+				session.on('peers', () => this.#changed()),
+				session.on('synced', () => this.#changed()),
+				session.on('status', () => this.#changed()),
+			],
 		};
-		const adopt = () => {
-			if (adapter.isEmpty(session.doc)) return;
-			const model = adapter.read(session.doc);
-			// Two windows can write the same revision at once; the bytes tell them apart.
-			if (model.revision < this.#revision) return;
-			if (model.revision === this.#revision && same(model.bytes, this.#last)) return;
-			this.#revision = model.revision;
-			this.#last = model.bytes;
-			this.#apply(model.bytes);
-		};
-		const map = session.doc.getMap('package');
-		const observer = (_event: unknown, transaction: { origin: unknown }) => {
-			if (transaction.origin !== collab.LOCAL_ORIGIN) adopt();
-		};
-		map.observe(observer);
-		// The room wins when it already has a drawing; otherwise this window seeds it. From then on a
-		// settled local drawing the room has not seen is published from state, not only from the
-		// load and change events: the controller drops an event for later listeners when an earlier
-		// one changes state (a host fitting the page on load), and sharing must not depend on order.
-		const settle = () => {
-			this.#catchUp = publish;
-			if (adapter.isEmpty(session.doc)) publish();
-			else adopt();
-		};
-		const stopReady = session.on('ready', settle);
-		const stopPeers = session.on('peers', (peers) => this.#showPeers(peers));
-		const stopEvents = this.controller.onEvent((name, detail) => {
-			if (name === 'document-change' && (detail as { kind: string }).kind !== 'remote') publish();
-			if (name === 'document-load' && !this.#adopting) publish();
-		});
-		const stopState = this.controller.subscribe((state) => this.#flush(state));
-		this.#teardown = () => {
-			map.unobserve(observer);
-			stopReady();
-			stopPeers();
-			stopEvents();
-			stopState();
-			this.#catchUp = null;
-		};
-		if (session.canWrite()) settle();
-		this.#showPeers(session.peers());
-		this.#say(`Sharing as ${me.displayName || 'Visio user'} in session ${roomId}.`);
+		this.#say(`Sharing as ${session.identity.userName} in session ${session.roomId}.`);
+		this.#changed();
 	}
-	#localBytes(): Uint8Array | null {
-		const { edit, loading } = this.controller.state;
-		if (!edit.sourceAvailable || edit.busy || loading) return null;
-		try {
-			return this.controller.exportVsdx().bytes;
-		} catch {
-			return null;
-		}
-	}
-	#apply(bytes: Uint8Array): void {
-		const { edit, loading, document } = this.controller.state;
-		if (edit.busy || loading) {
-			this.#pending = bytes;
+	#leave(): void {
+		this.#epoch++;
+		this.#starting = false;
+		const joined = this.#joined;
+		if (!joined) {
+			this.#render();
 			return;
 		}
-		this.#pending = null;
-		const done = (error?: unknown) => {
-			this.#adopting = false;
-			if (error) this.#say(error instanceof Error ? error.message : String(error));
-			else this.#shared = this.controller.state.document;
-		};
-		this.#adopting = true;
-		const run =
-			document && edit.sourceAvailable
-				? this.controller.applyRemoteSource(bytes)
-				: this.controller.load(bytes);
-		run.then(() => done(), done);
+		this.#joined = null;
+		for (const stop of joined.stops) stop();
+		// The owner's last change is saved before the room is left; cursors are withdrawn.
+		joined.writeBack.dispose();
+		joined.presence.dispose();
+		joined.sync.dispose();
+		// A session the host passed in stays alive; one this viewer made is destroyed.
+		if (joined.owned) joined.session.destroy();
+		this.controller.setRoleReadOnly(false);
+		this.#say('Not sharing.');
+		this.#changed();
 	}
-	#flush(state: ViewerState): void {
-		if (this.#pending && !state.edit.busy && !state.loading) this.#apply(this.#pending);
-		else this.#catchUp?.();
+	#changed(): void {
+		this.#showPeers();
+		this.#render();
+		this.onChange(this.state);
 	}
-	#showPeers(peers: readonly { clientId: number; userName: string; userColor: string }[]): void {
-		const me = this.profile();
+	#showPeers(): void {
+		const joined = this.#joined;
+		if (!joined) {
+			this.#people.participants = [];
+			return;
+		}
 		this.#people.participants = [
-			{ id: 'self', name: me.displayName || 'Visio user', color: me.avatarColor, self: true },
-			...peers.map((peer) => ({
+			{
+				id: 'self',
+				name: joined.session.identity.userName,
+				color: joined.session.identity.userColor,
+				self: true,
+			},
+			...joined.session.peers().map((peer) => ({
 				id: String(peer.clientId),
 				name: peer.userName,
 				color: peer.userColor,
@@ -219,10 +258,4 @@ export class ViewerShare {
 		this.#start.disabled = this.#starting;
 		this.#room.disabled = active || this.#starting;
 	}
-}
-
-function same(a: Uint8Array, b: Uint8Array | null): boolean {
-	if (!b || a.byteLength !== b.byteLength) return false;
-	for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) return false;
-	return true;
 }

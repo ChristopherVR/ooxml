@@ -92,6 +92,7 @@ The Open Packaging Conventions namespaces (ISO/IEC 29500-2: content types, relat
 | `embeddedFonts` / `embeddedFontList`                    | `PptxEmbeddedFont[]` / `... \| null`       | Override or remove embedded fonts; default is lossless re-embedding.                                               |
 | `outputFormat`                                          | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`      | Standard, slide-show, macro-enabled, or legacy binary output (see below).                                          |
 | `pptPassword`                                           | `string`                                   | RC4 CryptoAPI password for `outputFormat: 'ppt'`; ignored for OpenXML formats.                                     |
+| `rasterizeSvg`                                          | `PptxSvgRasterizer`                        | SVG-to-PNG rasteriser for `outputFormat: 'ppt'` (see below); ignored for OpenXML formats.                          |
 | `conformance`                                           | `'strict' \| 'transitional' \| 'preserve'` | OOXML conformance class of the output (default `'preserve'`).                                                      |
 
 ```ts
@@ -113,12 +114,23 @@ The return type is always a plain `Uint8Array`, directly writable with `node:fs`
 | `'pptm'`       | `.pptm`   | Macro-enabled presentation; requires the loaded file's VBA data.                                                              |
 | `'ppt'`        | `.ppt`    | PowerPoint 97-2003 binary file. Unsupported element kinds degrade to a preview or placeholder and add compatibility warnings. |
 
-For legacy output, pass `outputFormat: 'ppt'`; `pptPassword` applies RC4 CryptoAPI protection to that binary stream. This path does not use the OpenXML ZIP save stages or `saveEncrypted()`. For a legacy save, `pptPassword` is the only `PptxHandlerSaveOptions` field the writer consults.
+For legacy output, pass `outputFormat: 'ppt'`; `pptPassword` applies RC4 CryptoAPI protection to that binary stream. This path does not use the OpenXML ZIP save stages or `saveEncrypted()`. `pptPassword` and `rasterizeSvg` are the only `PptxHandlerSaveOptions` fields specific to a legacy save.
 
 ```ts
 const bytes = await handler.save(data.slides, {
 	outputFormat: 'ppt',
 	pptPassword: 'legacy-password',
+});
+```
+
+A `.ppt` has no SVG picture type, so an SVG picture without a raster fallback is rasterised to PNG, at twice its intrinsic size as PowerPoint does. In a browser the DOM's own SVG renderer does it. Node.js has no DOM: pass `rasterizeSvgInNode` from the Node-only `ooxml-core/pptx/node` entry (it needs the optional `@napi-rs/canvas` peer), or your own `rasterizeSvg`. Without one the picture is written as a placeholder and the save reports a `ppt-image-format-unsupported` warning.
+
+```ts
+import { rasterizeSvgInNode } from 'ooxml-core/pptx/node';
+
+const bytes = await handler.save(data.slides, {
+	outputFormat: 'ppt',
+	rasterizeSvg: rasterizeSvgInNode,
 });
 ```
 

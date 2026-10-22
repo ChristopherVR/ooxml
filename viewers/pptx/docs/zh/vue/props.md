@@ -56,18 +56,21 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 
 ## 事件 {#events}
 
-| 事件                   | 载荷                          | 说明                                                                    |
-| ---------------------- | ----------------------------- | ----------------------------------------------------------------------- |
-| `@dirty-change`        | `isDirty: boolean`            | 未保存修改标记变化时触发。                                              |
-| `@content-change`      | `content: Uint8Array`         | 内容变化时触发，携带重新序列化的文档字节。                              |
-| `@autosave`            | `content: Uint8Array`         | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。 |
-| `@active-slide-change` | `slideIndex: number`          | 当前幻灯片变化时触发。                                                  |
-| `@zoom-change`         | `zoom: number`                | 缩放级别变化时触发。                                                    |
-| `@slide-count-change`  | `count: number`               | 幻灯片总数变化时触发，例如添加或删除幻灯片。                            |
-| `@selection-change`    | `elementIds: string[]`        | 元素选区变化时触发。                                                    |
-| `@mode-change`         | `mode: string`                | 查看器模式变化时触发，例如从编辑切换到放映。                            |
-| `@start-collaboration` | `config: CollaborationConfig` | 用户从共享对话框启动会话时触发。                                        |
-| `@stop-collaboration`  | -                             | 用户从共享对话框停止会话时触发。                                        |
+| 事件                    | 载荷                          | 说明                                                                    |
+| ----------------------- | ----------------------------- | ----------------------------------------------------------------------- |
+| `@dirty-change`         | `isDirty: boolean`            | 未保存修改标记变化时触发。                                              |
+| `@content-change`       | `content: Uint8Array`         | 内容变化时触发，携带重新序列化的文档字节。                              |
+| `@autosave`             | `content: Uint8Array`         | 每个自动保存周期触发，携带重新序列化的字节，参见[自动保存](#autosave)。 |
+| `@active-slide-change`  | `slideIndex: number`          | 当前幻灯片变化时触发。                                                  |
+| `@zoom-change`          | `zoom: number`                | 缩放级别变化时触发。                                                    |
+| `@slide-count-change`   | `count: number`               | 幻灯片总数变化时触发，例如添加或删除幻灯片。                            |
+| `@selection-change`     | `elementIds: string[]`        | 元素选区变化时触发。                                                    |
+| `@mode-change`          | `mode: string`                | 查看器模式变化时触发，例如从编辑切换到放映。                            |
+| `@start-collaboration`  | `config: CollaborationConfig` | 用户从共享对话框启动会话时触发。                                        |
+| `@collaboration-change` | `state: CollaborationState`   | 会话启动或停止，以及其状态、同步标记或人员变化时触发。                  |
+| `@load`                 | `detail: ViewerLoadDetail`    | 每次演示文稿无错误加载完成时触发（`slideCount`、`canvasSize`）。        |
+| `@error`                | `message: string`             | 每种不同的加载失败触发一次，携带便于阅读的消息。                        |
+| `@stop-collaboration`   | -                             | 用户从共享对话框停止会话时触发。                                        |
 
 在底层 `PowerPointViewerEmits` 类型中，`content` 和 `autosave` 共用一个签名，载荷为 `Uint8Array`；`active-slide-change`、`zoom-change` 和 `slide-count-change` 也共用一个签名，载荷均为 `number`。
 
@@ -99,14 +102,46 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 />
 ```
 
+## 字体、主题、语言和宿主扩展 {#host-extensions}
+
+| 属性                     | 类型                        | 说明                                                                                                      |
+| ------------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `fonts`                  | `ViewerFontSource[]`        | 由宿主提供的已授权字体来源，不内置任何字体。                                                              |
+| `defaultThemeKey`        | `string`                    | “文件 > 选项 > 主题”的初始主题键。                                                                        |
+| `availableThemes`        | `ThemeCatalogEntry[]`       | “文件 > 选项”中提供的主题选项。                                                                           |
+| `onThemeChange`          | `(key: string) => void`     | 用户选择主题时调用，之后由宿主负责保存该选择。                                                            |
+| `defaultLocale`          | `string`                    | “文件 > 选项 > 语言”的初始语言代码。                                                                      |
+| `availableLocales`       | `LocaleCatalogEntry[]`      | “文件 > 选项 > 语言”中提供的语言选项。                                                                    |
+| `onLocaleChange`         | `(code: string) => void`    | 用户选择语言时调用，之后由宿主负责应用并保存。                                                            |
+| `accountAuth`            | `AccountAuthConfig`         | “文件 > 账户”登录部分的接入点，默认禁用。                                                                 |
+| `onHyperlinkClick`       | `HyperlinkClickHandler`     | 函数属性（不是事件）。在跟随链接前调用，返回 `false` 可取消默认操作。                                     |
+| `ribbonAddIns`           | `readonly RibbonAddInTab[]` | 宿主在“帮助”之后添加的功能区选项卡。每个命令运行其 `run` 回调，并分发冒泡的 `office-ribbon-add-in` 事件。 |
+| `inspectorInitiallyOpen` | `boolean`                   | 检查器的初始可见性；省略时沿用桌面端和移动端的默认行为。                                                  |
+
+## 界面自定义 {#ui-customization}
+
+| 属性            | 类型                  | 默认值 | 说明                                                                                                                                                                                                                                                           |
+| --------------- | --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customization` | `ViewerCustomization` | -      | 隐藏、锁定或重映射界面的任意部分：功能区选项卡和按钮、“文件 > 选项”页面、分区和设置（锁定值、设置默认值）、文件选项卡页面和卡片、上下文菜单项、编辑器快捷键、面板、功能（智能助手、协作）和对话框。与 `hiddenActions` 取并集。传入新对象会替换整个自定义配置。 |
+
+```vue
+<PowerPointViewer
+	:content="bytes"
+	can-edit
+	:customization="{ ribbon: { hiddenTabs: ['draw'] }, disabledFeatures: ['ai'] }"
+/>
+```
+
+同样的辅助方法（`hideRibbonTab`、`lockSetting`、`remapShortcut` 等）也可通过模板 ref 在运行时调用以修改配置，参见 [API 页面](/zh/vue/handle#ui-customization)。所有标识符、规则和示例见[界面自定义指南](/zh/guide/customization)。
+
 ## 协作 {#collaboration}
 
 这些属性用于启用和控制实时协同编辑。完整流程及 `CollaborationConfig` 结构请参见[实时协作](/zh/vue/collaboration)。
 
-| 属性            | 类型                                                         | 默认值 | 说明                                                                                                               |
-| --------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------ |
-| `collaboration` | `CollaborationConfig`                                        | -      | 提供后启用协同编辑，包括实时光标、在线状态和 Yjs CRDT 同步。需要 `yjs` 以及 `y-websocket` / `y-webrtc` peer 依赖。 |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 共享对话框字段的默认值，省略时为空。                                                                               |
+| 属性            | 类型                                                         | 默认值 | 说明                                                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `collaboration` | `CollaborationInput`                                         | -      | 提供后启用协同编辑，包括实时光标、在线状态和 Yjs CRDT 同步。接受旧版 `CollaborationConfig` 或共享的 `CollaborationOptions`。需要可选的 `yjs` peer 依赖；`y-websocket` 和 `y-webrtc` 作为可选依赖提供。 |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 共享对话框字段的默认值，省略时为空。                                                                                                                                                                   |
 
 通过上述 `@start-collaboration` / `@stop-collaboration` 事件控制会话启动和停止：宿主响应事件，设置或清空 `collaboration` 属性。
 
@@ -127,9 +162,24 @@ interface PowerPointViewerProps {
 	class?: string;
 	authorName?: string;
 	theme?: ViewerTheme;
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 	shareDefaults?: { roomId?: string; userName?: string; serverUrl?: string };
 	onOpenFile?: () => void;
+	onHyperlinkClick?: HyperlinkClickHandler;
+	onThemeChange?: (key: string) => void;
+	onLocaleChange?: (code: string) => void;
+	fonts?: ViewerFontSource[];
+	fitPadding?: ViewportFitPadding;
+	maxFitScale?: number | null;
+	defaultThemeKey?: string;
+	availableThemes?: ThemeCatalogEntry[];
+	defaultLocale?: string;
+	availableLocales?: LocaleCatalogEntry[];
+	accountAuth?: AccountAuthConfig;
+	hiddenActions?: ToolbarActionId[];
+	ribbonAddIns?: readonly RibbonAddInTab[];
+	inspectorInitiallyOpen?: boolean;
+	customization?: ViewerCustomization;
 	smartArt3D?: boolean;
 	surfaceChart3D?: boolean;
 	barChart3D?: boolean;
@@ -147,6 +197,9 @@ interface PowerPointViewerEmits {
 	(e: 'selection-change', elementIds: string[]): void;
 	(e: 'start-collaboration', config: CollaborationConfig): void;
 	(e: 'stop-collaboration'): void;
+	(e: 'collaboration-change', state: CollaborationState): void;
+	(e: 'load', detail: ViewerLoadDetail): void;
+	(e: 'error', message: string): void;
 }
 ```
 

@@ -4,7 +4,7 @@ import { documentCanvas } from './building-blocks';
 import { createBuildingBlockSession } from '../../bindings/src/building-blocks';
 import { createDocument } from '../../core/src/index';
 it('preserves unsaved edits when a Svelte action receives fresh props with the same mount callback', () => {
-	const session = createBuildingBlockSession({ documentModel: createDocument() });
+	const session = createBuildingBlockSession({ documentModel: createDocument(), canEdit: true });
 	const host = document.createElement('div');
 	document.body.append(host);
 	const action = documentCanvas(host, session.canvasProps);

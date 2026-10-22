@@ -6,7 +6,7 @@ import { createEditSession } from '../edit/session';
 import { loadXlsx } from '../read/index';
 import { createWorkbook } from '../workbook';
 import { saveXlsx } from '../write/index';
-import { numberGroupLabel, numberGroupLabels } from './groups';
+import { defaultFieldGroup, numberGroupLabel, numberGroupLabels } from './groups';
 
 const fixture = readFileSync(
 	new URL('../__fixtures__/excel-pivot-group-number.xlsx', import.meta.url),
@@ -131,4 +131,17 @@ it('groups and ungroups a numeric field and keeps the groups through a source re
 			fieldGroups: [{ field: 'Score', start: 0, end: 30, by: 0 }],
 		}),
 	).toThrow('Choose a valid number group.');
+});
+
+it('offers a group over more records than a call takes arguments', () => {
+	// About 125,000 is the most arguments a call takes in Node; the extremes sit mid-column.
+	const score = (row: number) =>
+		row === 70_000 ? -5 : row === 130_000 ? 2_500 : 100 + (row % 100);
+	const records = Array.from({ length: 200_000 }, (_, row) => ['Fruit', score(row)]);
+	expect(defaultFieldGroup({ fields: ['Category', 'Score'], records }, 'Score')).toEqual({
+		field: 'Score',
+		start: -5,
+		end: 2_500,
+		by: 251,
+	});
 });

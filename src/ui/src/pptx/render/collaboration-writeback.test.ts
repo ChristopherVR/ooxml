@@ -154,7 +154,7 @@ describe('createWriteBackScheduler getSaveOptions wiring', () => {
 			}
 			expect(isCurrent()).toBeFalsy();
 			finish(new Uint8Array([7]));
-			await Promise.resolve();
+			await vi.advanceTimersByTimeAsync(0);
 			expect(host.config.onWriteBack).not.toHaveBeenCalled();
 			expect(host.listeners.size).toBe(0);
 		},
@@ -275,5 +275,183 @@ describe('createWriteBackScheduler getSaveOptions wiring', () => {
 		expect(saveMock).not.toHaveBeenCalled();
 		expect(getSaveOptions).not.toHaveBeenCalled();
 		expect(session.onWriteBack).not.toHaveBeenCalled();
+	});
+});
+
+describe('createWriteBackScheduler acknowledgement, retry, status and page close', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+	});
+	afterEach(() => vi.useRealTimers());
+
+	const owner = (overrides: Partial<CollaborationConfig> = {}) =>
+		({ role: 'owner', writeBackDebounceMs: 10, ...overrides }) as unknown as CollaborationConfig;
+
+	it('treats a returned promise as the acknowledgement and reports the status', async () => {
+		let release!: () => void;
+		const onWriteBack = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					release = resolve;
+				}),
+		);
+		const onWriteBackStatus = vi.fn();
+		const scheduler = createWriteBackScheduler({
+			getYDoc: () => mockDoc,
+			serialize: () => new Uint8Array([1]),
+			onWriteBackStatus,
+		});
+		expect(scheduler.getState()).toBeUndefined();
+		scheduler.schedule(owner({ onWriteBack }));
+		expect(scheduler.getState()?.status).toBe('pending');
+		await vi.advanceTimersByTimeAsync(10);
+		expect(scheduler.getState()?.status).toBe('saving');
+		release();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(scheduler.getState()?.status).toBe('saved');
+		expect(scheduler.getState()?.lastSavedAt).toBeTypeOf('number');
+		expect(onWriteBackStatus).toHaveBeenCalled();
+		scheduler.cancel();
+	});
+
+	it('retries a rejection per writeBackRetry, then reports failed with the message', async () => {
+		const onWriteBack = vi.fn().mockRejectedValue(new Error('offline'));
+		const scheduler = createWriteBackScheduler({
+			getYDoc: () => mockDoc,
+			serialize: () => new Uint8Array([1]),
+		});
+		scheduler.schedule(owner({ onWriteBack, writeBackRetry: { attempts: 3, baseDelayMs: 20 } }));
+		await vi.advanceTimersByTimeAsync(1_000);
+		expect(onWriteBack).toHaveBeenCalledTimes(3);
+		expect(scheduler.getState()).toEqual({ status: 'failed', error: 'offline' });
+		scheduler.cancel();
+	});
+
+	it('a serializer that stops because the session changed is not a failed save', async () => {
+		const onWriteBack = vi.fn();
+		const scheduler = createWriteBackScheduler({
+			getYDoc: () => mockDoc,
+			serialize: (isCurrent) => {
+				scheduler.cancel();
+				expect(isCurrent()).toBe(false);
+				throw new Error('Collaboration session changed during serialization');
+			},
+		});
+		scheduler.schedule(owner({ onWriteBack, writeBackDebounceMs: 0 }));
+		await vi.advanceTimersByTimeAsync(10);
+		expect(onWriteBack).not.toHaveBeenCalled();
+		expect(scheduler.getState()?.status).not.toBe('failed');
+	});
+
+	it('flushes on pagehide and when hidden, and stops listening after cancel', async () => {
+		const listeners = new Map<string, () => void>();
+		const doc = {
+			visibilityState: 'visible',
+			addEventListener: (type: string, listener: () => void) => void listeners.set(type, listener),
+			removeEventListener: (type: string) => void listeners.delete(type),
+		};
+		vi.stubGlobal('addEventListener', (type: string, listener: () => void) =>
+			listeners.set(type, listener),
+		);
+		vi.stubGlobal('removeEventListener', (type: string) => listeners.delete(type));
+		vi.stubGlobal('document', doc);
+		try {
+			const onWriteBack = vi.fn();
+			const scheduler = createWriteBackScheduler({
+				getYDoc: () => mockDoc,
+				serialize: () => new Uint8Array([1]),
+			});
+			scheduler.schedule(owner({ onWriteBack, writeBackDebounceMs: 60_000 }));
+			listeners.get('pagehide')!();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(onWriteBack).toHaveBeenCalledTimes(1);
+
+			scheduler.schedule(owner({ onWriteBack, writeBackDebounceMs: 60_000 }));
+			doc.visibilityState = 'hidden';
+			listeners.get('visibilitychange')!();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(onWriteBack).toHaveBeenCalledTimes(2);
+
+			scheduler.schedule(owner({ onWriteBack, writeBackDebounceMs: 60_000 }));
+			scheduler.cancel();
+			expect(listeners.size).toBe(0);
+			expect(onWriteBack).toHaveBeenCalledTimes(2);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('flush() resolves after the host acknowledged', async () => {
+		const onWriteBack = vi.fn(() => Promise.resolve());
+		const scheduler = createWriteBackScheduler({
+			getYDoc: () => mockDoc,
+			serialize: () => new Uint8Array([1]),
+		});
+		scheduler.schedule(owner({ onWriteBack, writeBackDebounceMs: 60_000 }));
+		await scheduler.flush();
+		expect(onWriteBack).toHaveBeenCalledTimes(1);
+		expect(scheduler.getState()?.status).toBe('saved');
+		scheduler.cancel();
+	});
+});
+
+describe('createWriteBackScheduler flush on stop', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+	});
+	afterEach(() => vi.useRealTimers());
+
+	it('writes an unsaved owner change once when cancelled, with the document as it was', async () => {
+		let doc: typeof mockDoc | null = mockDoc;
+		const onWriteBack = vi.fn();
+		const serialize = vi.fn(() => new Uint8Array([9]));
+		const scheduler = createWriteBackScheduler({ getYDoc: () => doc, serialize });
+		scheduler.schedule({ role: 'owner', onWriteBack, writeBackDebounceMs: 60_000 });
+		scheduler.cancel();
+		doc = null; // a binding clears its document right after cancelling
+		await vi.advanceTimersByTimeAsync(0);
+		expect(onWriteBack).toHaveBeenCalledExactlyOnceWith(new Uint8Array([9]));
+		await vi.advanceTimersByTimeAsync(120_000);
+		expect(onWriteBack).toHaveBeenCalledOnce();
+	});
+
+	it('writes nothing when nothing is unsaved, for a non-owner, or after readiness was lost', async () => {
+		const onWriteBack = vi.fn();
+		const serialize = () => new Uint8Array([9]);
+		const idle = createWriteBackScheduler({ getYDoc: () => mockDoc, serialize });
+		idle.cancel();
+		const saved = createWriteBackScheduler({ getYDoc: () => mockDoc, serialize });
+		saved.schedule({ role: 'owner', onWriteBack, writeBackDebounceMs: 0 });
+		await vi.advanceTimersByTimeAsync(10);
+		expect(onWriteBack).toHaveBeenCalledOnce();
+		saved.cancel();
+		await vi.advanceTimersByTimeAsync(10);
+		expect(onWriteBack).toHaveBeenCalledOnce();
+
+		const viewer = createWriteBackScheduler({ getYDoc: () => mockDoc, serialize });
+		viewer.schedule({ role: 'collaborator', onWriteBack, writeBackDebounceMs: 60_000 });
+		viewer.cancel();
+
+		const host = (() => {
+			let synced = true;
+			const session = {
+				getSnapshot: () => ({ status: 'connected', synced }),
+				subscribe: () => () => {},
+			} as unknown as ExternalCollaborationSession;
+			return { session, lose: () => (synced = false) };
+		})();
+		const suspended = createWriteBackScheduler({ getYDoc: () => mockDoc, serialize });
+		suspended.schedule({
+			role: 'owner',
+			onWriteBack,
+			writeBackDebounceMs: 60_000,
+			externalSession: host.session,
+		});
+		host.lose();
+		suspended.cancel();
+		await vi.advanceTimersByTimeAsync(10);
+		expect(onWriteBack).toHaveBeenCalledOnce();
 	});
 });

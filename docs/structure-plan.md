@@ -3,13 +3,25 @@
 Where the repository stands after a full survey, and the order of work toward
 one shared implementation per Office concept, shared UI bindings, and honest
 Office 365 parity. Facts below come from reading the tree on 2026-10-08
-(`origin/main` d9ef4e0); counts are approximate.
+(`origin/main` d9ef4e0); counts are approximate and sections 1 to 3 are that
+snapshot.
+
+**Status on 2026-10-22.** Waves 1 to 4 landed and the viewers now live in this repository, so the
+separate-repository observations (version pins, repository names) in section 1.2 are historical.
+Since the snapshot: the duplicate digests, the slow modify-verifier and the missing MD5, RIPEMD and
+WHIRLPOOL digests are fixed (`digest` computes them; bugs 1 and 6); the elbow connector geometry
+duplicate is gone (the pptx renderer imports `ooxml-core/geometry`); `drawingml/write-theme.ts`
+exists; the shared backstage, find bar and print preview live in `src/ui/src/chrome`; continuous
+section column balancing exists (`docx/layout/balance-columns.ts`, bug 4); editable Word Print
+Layout, Word chart drawing, Excel pivots, Page Layout and collaboration, and Visio collaboration
+landed (see the parity pages). `niceScale` is still in `chart/render/chart-scale.ts` next to
+`chart/axis-nice.ts`, pinned equal by `xlsx/layout/chart-scale-vs-axis-nice.test.ts`. Wave 5 below is
+the open list.
 
 ## 1. State
 
-Health: `bun run typecheck` passes (strict and pptx projects). The core
-vitest suite passes except two `modify-verifier*` tests that time out
-(section 3, bug 1). No open GitHub issues or pull requests.
+Health at the snapshot: `bun run typecheck` passed (strict and pptx projects) and the core vitest
+suite passed except two `modify-verifier*` tests that timed out (section 3, bug 1, since fixed).
 
 Size (non-test lines): `src/core/pptx` ~320k, `src/ui/src/pptx` ~195k,
 `src/core/xlsx` ~49k, `src/core/visio` ~36k, `src/ui/src/docx` ~27k,
@@ -20,16 +32,16 @@ under 30k, most of it geometry tables.
 
 | Concept                                      | Copies today                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Shared home                                                             |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Theme (colour, font and format scheme)       | pptx `core/types/theme.ts` + 3 runtime files + switching utils (~2.6k); xlsx `write/theme.ts` (patches the part). docx, xlsx `read/theme.ts` and visio `theme.ts` read `a:clrScheme`/`a:fontScheme` through `drawingml` `parseTheme`; visio keeps only its `vt:` extensions and the `fmtScheme` style selection                                                                                                                                                                                  | `drawingml` (`theme*.ts`)                                               |
+| Theme (colour, font and format scheme)       | pptx `core/types/theme.ts` + 3 runtime files + switching utils (~2.6k); xlsx `write/theme.ts` (patches the part; `drawingml/write-theme.ts` is the neutral writer pptx and visio use). docx, xlsx `read/theme.ts` and visio `theme.ts` read `a:clrScheme`/`a:fontScheme` through `drawingml` `parseTheme`; visio keeps only its `vt:` extensions and the `fmtScheme` style selection                                                                                                             | `drawingml` (`theme*.ts`)                                               |
 | Colour transforms                            | pptx `core/color/color-transforms.ts`; `drawingml/drawing-color.ts` + `ordered-color-transforms.ts` (docx, xlsx, chart and visio `drawingPaint` resolve through it); `math/omml-color.ts`                                                                                                                                                                                                                                                                                                        | `drawingml`, primitives in `color`                                      |
 | Fill, line, effects                          | `drawingml/drawing-fill.ts`; pptx `drawing-fill-xml.ts`, `save-shape-fill-stroke.ts`, gradient and effect codecs; xlsx chart fill writers; visio fill, line and gradient modules (theme `fmtScheme` selectors keep their strict reject-on-malformed checks, so they do not use the lenient shared fill/line readers)                                                                                                                                                                             | `drawingml` (readers and writers, `a:ln` included; no effect model yet) |
 | DrawingML text body (a:bodyPr, a:pPr, a:rPr) | pptx `text-run-properties-parser.ts` (557), `paragraph-properties-parser.ts` (371), `body-properties-parser.ts`; `diagram/drawing-text.ts` (57)                                                                                                                                                                                                                                                                                                                                                  | none                                                                    |
 | Chart model (`c:chartSpace`)                 | pptx `core/types/chart.ts` (1574) + ~160 `chart-*` utils (object tree, own writers); xlsx `write/chart-patch.ts` and `chart-colors.ts` (patch kept parts); xlsx `read/chart.ts`, xlsx `write/chart.ts` (new parts) and docx `chart.ts` go through the shared model                                                                                                                                                                                                                               | `chart/model.ts`, `parseChartSpace`, `writeChartSpace`                  |
 | Chart rendering                              | `chart/render/` (moved from xlsx `layout/chart-*.ts`) emits SVG strings for xlsx (`chartView`) and docx (`renderChartSpaceSvg`); pptx UI `render/chart-*` still emit descriptors                                                                                                                                                                                                                                                                                                                 | `chart/render` (pptx descriptors not yet on it)                         |
 | Axis nice bounds                             | xlsx `layout/chart-scale.ts` `niceScale`; `chart/axis-nice.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                   | `chart/axis-nice.ts`                                                    |
-| Message digests and password spin            | pptx `core/utils/digests/` (1,619 lines: md2, md4, md5, ripemd128/160, whirlpool, dispatcher) + `modify-verifier-codec.ts` `iteratedHash` (awaits one Web Crypto digest per round); `digest/` (788 lines, synchronous SHA family, `password-hash.ts` spin)                                                                                                                                                                                                                                       | `digest`                                                                |
+| Message digests and password spin            | Resolved: the pptx copies moved into `digest/` (md2, md4, md5, ripemd128/160, whirlpool, `password-hash.ts`); `modify-verifier-codec.ts` calls the synchronous spin                                                                                                                                                                                                                                                                                                                              | `digest`                                                                |
 | Document properties                          | pptx `PptxDocumentPropertiesUpdater.ts` (466, fast-xml-parser) + `app-properties-*.ts`; `opc/properties` (used by xlsx and docx)                                                                                                                                                                                                                                                                                                                                                                 | `opc/properties`                                                        |
-| Elbow connector geometry                     | `src/ui/src/pptx/render/connector-elbow-geometry.ts` (204) and `src/core/geometry/connector-elbow-geometry.ts` (160), same `elbowWaypoints` signature                                                                                                                                                                                                                                                                                                                                            | `geometry`                                                              |
+| Elbow connector geometry                     | Resolved: `src/ui/src/pptx/render/connector-elbow-geometry.ts` now imports `src/core/geometry/connector-elbow-geometry.ts` (`elbowWaypoints`)                                                                                                                                                                                                                                                                                                                                                    | `geometry`                                                              |
 | Locale normalisation and translator          | `src/ui/src/docx/localization.ts`, `src/core/xlsx/ui/localization.ts` (both `normalizeEditorLocale`), `src/core/xlsx/ui/locales/merge.ts`, `src/ui/src/pptx/i18n/translator.ts`; visio and teams have no i18n                                                                                                                                                                                                                                                                                    | none                                                                    |
 | Web-control registration contract            | `src/ui/src/registry.ts` (`office-ui.web-control-contract`) and `src/ui/src/pptx/web-components/registration-contract.ts` (`pptx-viewer.web-control-contract`)                                                                                                                                                                                                                                                                                                                                   | `registry.ts`                                                           |
 | Theme token bridge                           | docx `--dve-*` via `shadcnBridge`; xlsx `--xve-*` via `office-bridge.css`; pptx `--pptx-*` via `office-token-bridge.ts`; visio `--vv-*` with no bridge; only teams uses `--office-*` directly                                                                                                                                                                                                                                                                                                    | `theme-bridge.ts`, `tokens.ts`                                          |
@@ -117,10 +129,10 @@ the survey.
 
 ## 3. Outstanding bugs
 
-1. **Modify-password verification takes over 30 s**
+1. **Resolved.** Modify-password verification took over 30 s
    (`src/core/pptx/core/utils/modify-verifier-codec.ts`): `iteratedHash`
-   awaits `crypto.subtle.digest` 100,000 times. The shared
-   `digest/password-hash.ts` spins synchronously. Two tests fail from this.
+   awaited `crypto.subtle.digest` 100,000 times. It now uses the synchronous
+   `digest/password-hash.ts` spin.
 2. **Autosave recovery snapshot missing in a binding**:
    `e2e/pptx/autosave-recovery-prompt.spec.ts` (lines 226, 271) and
    `autosave-recovery-encryption.spec.ts` (203) skip when a binding "never
@@ -130,14 +142,15 @@ the survey.
    `e2e/xlsx/chart-gradient-raster.spec.ts`, `chart-series-path-raster.spec.ts`,
    `src/core/chart/gradient-raster.test.ts` (three-transparent-stop and
    coincident-angle cases).
-4. **Continuous section balancing** after multi-column sections starts a new
-   page (`src/core/docx/layout/page-flow.ts:83`); floats and footnotes are not
-   balanced.
+4. **Mostly resolved.** Continuous section balancing after multi-column
+   sections started a new page; `src/core/docx/layout/page-flow.ts` now balances
+   columns through `balance-columns.ts`. Floats and footnotes in balanced
+   sections were not re-verified.
 5. **Drift listed in 1.2 and 1.3** (each item is a bug for one binding or one
    reader of the docs).
-6. `digest/algorithm-names.ts` recognises MD5, RIPEMD and WHIRLPOOL but cannot
-   compute them, while pptx has pure-TypeScript implementations. Excel and
-   Word protection with those digests therefore report "unsupported".
+6. **Resolved.** `digest` now computes MD2, MD4, MD5, RIPEMD-128/160 and WHIRLPOOL
+   (the pptx copy was moved into it), so Excel and Word protection with those
+   digests verifies.
 
 ## 4. Waves
 
@@ -191,7 +204,7 @@ and no claim of parity without evidence.
 - Gradient raster gaps (bug 3): the coincident-stop case is fixed from native
   measurements (Excel paints a one-step ramp, not a hard edge); the sixteen
   translucent three-stop cases stay pinned with measured differences in the
-  test and in `xlsx-parity-review.md`.
+  test and in `xlsx-parity-status.md`.
 - `src/ui/tsconfig.pptx.json` extends the base; `src/core/pptx/ui` compiles
   strict; the Playwright Chromium helper is shared by docx and xlsx.
 - Every viewer typecheck is green (the `e2e/docx`, `e2e/xlsx`, teams Svelte
@@ -342,7 +355,11 @@ Implementation:
   is still a per-binding look-alike of the shared ribbon tabs; replacing it
   with `office-ui-ribbon` is the remaining unification step.
 
-### Wave 5 (next)
+### Wave 5 (open items, status 2026-10-22)
+
+Landed since the plan was written: the shared backstage, find bar and print preview
+(`src/ui/src/chrome`), editable Word Print Layout, Excel pivot authoring and Page Layout, Excel and
+Visio collaboration. Still open:
 
 - pptx binding factory; per-binding contract parity tests for all products;
   the pptx comments panels on the shared pane; the pptx tab row on
@@ -351,6 +368,7 @@ Implementation:
   the pptx DOM chart renderer onto `chart/render`.
 - Neutral paragraph model in `drawingml`, then SmartArt text projection and
   editing out of pptx; the engine's ordered XML onto the shared `xml` DOM.
-- Shared backstage and find bar; docx `DocumentAdapter` into `src/core/docx`.
-- Product parity: Word editable Print Layout and shapes drawn; Excel pivot
-  rendering and Page Layout; Visio connector routing and glue.
+- The docx Yjs mapping lives in `src/core/docx/ui/yjs-collaboration.ts`; whether it should become
+  a `DocumentAdapter` over `collab` like the Excel mapping is undecided.
+- Product parity is tracked in the per-product pages, not here: Word shapes and page-story
+  editing, Excel pivot filters and sheet-part collaboration, Visio connector routing and glue.

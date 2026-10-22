@@ -1,6 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StHighlightColor } from './generated/wml-simple-types';
+import type {
+	StHighlightColor,
+	StPTabAlignment,
+	StPTabLeader,
+	StPTabRelativeTo,
+} from './generated/wml-simple-types';
 import type { ContentControl } from './content-control-model';
+import type { FormField } from './form-field-model';
 import type { HyperlinkInfo, InlineImage } from './inline-model';
 import type {
 	ThemeColorReference,
@@ -85,7 +91,8 @@ export interface TextRun {
 	noteSeparator?: 'separator' | 'continuationSeparator';
 	/**
 	 * Present on runs holding a field's displayed result (`w:fldSimple`, or text between a complex
-	 * field's `separate` and `end`). Cached display metadata; saving does not recalculate instructions.
+	 * field's `separate` and `end`). Cached display metadata; saving recalculates only the STYLEREF
+	 * results of headers and footers (`refreshStyleRefFields`).
 	 */
 	field?: { instr: string; simple?: boolean };
 	/** Imported simple-field boundary identity, shared by its result runs; not an OOXML attribute. */
@@ -96,6 +103,23 @@ export interface TextRun {
 	fieldChar?: 'begin' | 'separate' | 'end';
 	/** A complex field's instruction text run (`w:instrText`), e.g. ` TOC \o "1-3" `; `text` is empty. */
 	fieldCode?: string;
+	/** On a legacy form field's begin marker: the field's `w:ffData`. */
+	formField?: FormField;
+	/**
+	 * The symbol (`w:sym`) this run shows: its font and hexadecimal character code, such as
+	 * Wingdings `F0FE`. Each occurrence of the symbol's private-use character in `text` is that
+	 * symbol; the writer writes those characters back as `w:sym`.
+	 */
+	symbol?: { font: string; char: string };
+	/**
+	 * Every tab in this run is a positional tab (`w:ptab`), placed relative to the margin or indent
+	 * rather than to the paragraph's tab stops; `text` holds a tab character for each.
+	 */
+	positionalTab?: {
+		alignment: StPTabAlignment;
+		relativeTo: StPTabRelativeTo;
+		leader?: StPTabLeader;
+	};
 	/** Tracked-change metadata for this run; absent means the run has no pending revision. */
 	revision?: Revision;
 	/** IDs of comments whose range covers this run. */

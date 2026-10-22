@@ -17,7 +17,7 @@ import {
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +37,10 @@ export interface UseRecoveryDetectionInput {
 	 * an earlier configuration left behind. Defaults to true.
 	 */
 	autosaveAllowed?: boolean;
+	/** Host storage; the snapshot is read from its recovery methods when it has them. */
+	storage?: DocumentStorage;
+	/** Called with the stored record when a recovery snapshot is offered (the host's `onAutosaveRecovery`). */
+	onOffered?: ((record: AutosaveRecord) => void) | undefined;
 	/** Load the recovered bytes into the viewer. */
 	onRestore?: (bytes: Uint8Array) => void;
 	/** Legacy behaviour: also open the Version History panel when one is found. */
@@ -67,6 +71,12 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 	const [discarding, setDiscarding] = useState(false);
 
 	const onRestore = input.onRestore;
+	const storageRef = useRef(input.storage);
+	storageRef.current = input.storage;
+	const onOfferedRef = useRef(input.onOffered);
+	useEffect(() => {
+		onOfferedRef.current = input.onOffered;
+	}, [input.onOffered]);
 	const openVersionHistory = input.openVersionHistory;
 
 	useEffect(() => {
@@ -85,12 +95,18 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 		recoveryCheckedRef.current = true;
 
 		void (async () => {
-			const offer = await probeAutosaveRecovery(filePath!, Date.now(), fileName);
+			const offer = await probeAutosaveRecovery(
+				filePath!,
+				Date.now(),
+				fileName,
+				storageRef.current,
+			);
 			if (!offer) {
 				return;
 			}
 			recordRef.current = offer.record;
 			setPrompt(offer.prompt);
+			onOfferedRef.current?.(offer.record);
 			openVersionHistory?.();
 		})();
 	}, [filePath, fileName, loading, error, slideCount, autosaveAllowed, openVersionHistory]);
@@ -122,7 +138,7 @@ export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecov
 		setDiscarding(true);
 		void (async () => {
 			try {
-				await discardAutosaveRecovery(record);
+				await discardAutosaveRecovery(record, storageRef.current);
 				recordRef.current = null;
 				setPrompt(null);
 			} catch {

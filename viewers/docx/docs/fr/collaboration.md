@@ -90,6 +90,34 @@ Les salles compatibles qui en sont dépourvues conservent leurs commentaires cha
 
 Essayez la [démo Yjs à deux pairs](/demo/collaboration.html?mode=yjs){target="_self"}. Ses actions Pause delivery, Reconnect providers et Resync providers exercent la récupération en mémoire. Elle ne fournit ni réseau de production ni stockage durable.
 
+## La propriété `collaboration`
+
+Dans le cas courant, `<docx-editor>` accepte le même contrat d'intégration déclaratif que les éditeurs Excel, PowerPoint et Visio (`CollaborationOptions` dans `ooxml-core/collab` ; les alias Word sont `DocxCollaborationOptions` et `DocxCollaborationState`). C'est une fine couche au-dessus du mode Yjs décrit plus haut : vous n'avez ni à créer une session, ni à l'attendre, ni à choisir un `documentId` :
+
+```ts
+editor.collaboration = {
+	roomId: 'q3-report',
+	serverUrl: 'wss://example.com/collab',
+	user: { name: 'Ada' },
+	intent: 'create',
+};
+editor.addEventListener('collaboration-change', (event) => render(event.detail)); // { active, roomId, status, synced, people }
+editor.collaboration = null; // or editor.stopCollaboration()
+```
+
+- Le transport est le premier parmi `session` (la vôtre, jamais détruite par l'éditeur), `provider`, `serverUrl`, sinon un BroadcastChannel entre onglets d'un même navigateur. Une session ouverte par l'éditeur lui-même est détruite quand il la quitte.
+- `user.name` vaut par défaut `reviewAuthor` ; un `user.role` égal à `viewer` bloque les modifications locales (à titre indicatif, comme plus haut).
+- `collaborationState` et `collaboration-change` rendent compte de toute liaison Yjs, y compris celle démarrée avec `startYjsCollaboration`. `reconnectCollaboration()` relance la connexion. Les échecs arrivent sous forme de `document-error`.
+- `stopCollaboration()` sans argument efface aussi la propriété. L'argument `discardPending` du mode autorité est inchangé.
+- Charger ou remplacer le document fait d'abord quitter la salle, puis la rejoint ensuite (l'API impérative lève toujours "Stop collaboration before replacing the document."). La jonction attend qu'un document soit monté et qu'il ne soit pas en cours de chargement.
+
+Limites assumées :
+
+- Le nom de la salle est le `documentId` Word. Rien ne vérifie que chaque fenêtre a chargé le même paquet source ; cela reste votre contrat.
+- **Deux créateurs entrent en concurrence.** Avec la valeur par défaut `intent: 'create'`, une fenêtre initialise une salle vide. Si plusieurs fenêtres ouvrent une salle vide au même instant, chacune l'initialise et la salle contient finalement les deux corps. Donnez `create` à une seule fenêtre et `intent: 'join'` aux autres ; ce dernier n'initialise jamais et signale `document-error` si la salle est toujours vide après la synchronisation.
+- Un créateur attend le premier échange avec la salle, ou l'ouverture de la barrière d'écriture (quelques secondes) lorsqu'il est seul sur un maillage sans serveur ; dans ce second cas, il initialise sans avoir vu la salle, si bien qu'un serveur lent dont le contenu arrive plus tard est initialisé deux fois. Utilisez un serveur ou `join` lorsque cela compte.
+- Après avoir quitté puis rejoint la salle autour d'un chargement, une `session` détenue par l'hôte conserve le contenu antérieur de la salle, qui l'emporte sur le document nouvellement chargé ; une session détenue par l'éditeur repart de zéro.
+
 ## Protocole
 
 Le composant web expose `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration` et `stopCollaboration`. Les hôtes peuvent utiliser `createCollaborationAuthority(model, options)` pour créer l'autorité de référence en mémoire, avec le même schéma et la même conversion de modèle que l'éditeur.

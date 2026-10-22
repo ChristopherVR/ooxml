@@ -5,14 +5,14 @@ The optional corpus runner checks 19 real drawings and 10 malformed security inp
 - [LibreOffice/libvisio](https://github.com/LibreOffice/libvisio/tree/49fb9d3a9d21d4374cad782925e48c577a41f5be/src/test/data), revision `49fb9d3a9d21d4374cad782925e48c577a41f5be`: 14 real VSDX files and two malformed inputs. The repository declares MPL-2.0 and includes the fixtures in its test distribution.
 - [Apache POI](https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/test-data/diagram), revision `732120980140d5ed64b482c470e0b625cdb1ab15`: five real VSDX files and eight malformed inputs. The repository provides Apache-2.0 license and notice files.
 
-Retain upstream provenance, licenses and notices. Confirm fixture-specific content rights before product redistribution. This viewer repository includes factual source identifiers, hashes and regression expectations only.
+Retain upstream provenance, licenses and notices. Confirm fixture-specific content rights before product redistribution. This repository includes factual source identifiers, hashes and regression expectations only.
 
 ## Run
 
-Prepare local upstream source checkouts containing the paths listed in the manifest. After building the core and viewer:
+Prepare local upstream source checkouts containing the paths listed in the manifest. From `viewers/visio`, after `bun install` at the repository root:
 
 ```sh
-npm run test:corpus -- /path/to/libvisio /path/to/poi
+bun run test:corpus -- /path/to/libvisio /path/to/poi
 ```
 
 Append `--svg` to additionally serialize each page in a simulated DOM and verify safe XML, local-only resource references, retained diagnostics and absence of viewer controls or event attributes. All 22 current pages pass this structural export check; it is not a browser or pixel-equivalence test.

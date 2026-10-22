@@ -15,7 +15,7 @@ import { createContext, useContext } from 'react';
 
 export type ThemeColorMapValue = Readonly<Record<string, string>> | undefined;
 
-const ThemeColorMapContext = createContext<ThemeColorMapValue>(undefined);
+const ThemeColorMapContext = /* @__PURE__ */ createContext<ThemeColorMapValue>(undefined);
 
 export const ThemeColorMapProvider = ThemeColorMapContext.Provider;
 

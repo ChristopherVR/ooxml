@@ -31,12 +31,11 @@ teams.example.com {
 
 Después apunta la aplicación a `wss://teams.example.com/sync` y `wss://teams.example.com/signal`.
 
-**El token es un secreto compartido** almacenado en el navegador: mantiene fuera a los extraños del servidor de un equipo pequeño, no es autenticación por usuario. Para cuentas reales, coloca delante tu propia autenticación (un proxy que compruebe una sesión, o sustituye `tokenOk` por una verificación de tokens) y conserva los mismos tres contratos.
+**El token es un secreto compartido** almacenado en el navegador: mantiene fuera a los extraños del servidor de un equipo pequeño, no es autenticación por usuario. Para cuentas reales, da al servidor `users` (o `TEAMS_USERS_FILE`) o una función `authenticate` para tu proveedor de identidad, y define `TEAMS_SESSION_SECRET` para que las sesiones sobrevivan a los reinicios (consulta "Accounts and sessions" en el README del servidor). Los tres contratos siguen siendo los mismos.
 
 ## Modelo de seguridad
 
-- **Un único token compartido abre todas las salas y todos los archivos.** No hay permisos por usuario
-  ni por sala. Trata el token como la contraseña de un equipo.
+- **Un único token compartido abre todas las salas y todos los archivos.** La identidad por usuario solo existe si activas las cuentas, y los permisos por sala solo si pasas `authorizeSync`. Trata el token como la contraseña del equipo.
 - **Todos los miembros de una sala confían entre sí.** El servidor solo mueve bytes de Yjs, así que
   cualquier miembro puede editar o borrar los mensajes de otros y falsificar identificadores de autor
   y roles. No invites a quien no sea de confianza para toda la sala.
@@ -88,12 +87,15 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/index.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
+  server/rate-limit.mjs server/chat-access.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data
 VOLUME /data
 EXPOSE 8787
-CMD ["node", "index.mjs"]
+CMD ["node", "bin.mjs"]
 ```
+
+Constrúyelo desde `viewers/teams`. Copia todos los módulos que importa el punto de entrada (los `files` de `server/package.json`); copiar solo `index.mjs` falla por un módulo ausente. La receta se comprobó ejecutando esos archivos con `npm install --omit=dev` en Node; la imagen en sí no se construyó.
 
 Ejecútalo con `TEAMS_TOKEN` y `TEAMS_ORIGINS` definidos, detrás de tu proxy TLS.
 

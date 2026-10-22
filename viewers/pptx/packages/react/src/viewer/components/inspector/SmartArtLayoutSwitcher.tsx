@@ -29,10 +29,12 @@ interface LayoutDescriptor {
 	i18nKey: string;
 }
 
-const LAYOUT_DESCRIPTORS: readonly LayoutDescriptor[] = SWITCHABLE_LAYOUT_TYPES.map((type) => ({
-	type,
-	i18nKey: `pptx.smartart.category.${type}`,
-}));
+const LAYOUT_DESCRIPTORS: readonly LayoutDescriptor[] = /* @__PURE__ */ SWITCHABLE_LAYOUT_TYPES.map(
+	(type) => ({
+		type,
+		i18nKey: `pptx.smartart.category.${type}`,
+	}),
+);
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */

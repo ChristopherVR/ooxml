@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 const fixture = fileURLToPath(
@@ -75,7 +75,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					editor.evaluate((element) => (element as DocxEditorElement).documentModel!.trackChanges),
 				)
 				.toBe(tracked);
-			await body.click();
+			await clickInEditor(body);
 			await page.keyboard.press('Control+End');
 			await page.keyboard.type('!');
 			await expect(body).toContainText('Format me!');

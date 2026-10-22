@@ -16,6 +16,7 @@
 export type {
 	CanvasSize,
 	CollaborationConfig,
+	CollaborationInput,
 	CollaborationRole,
 	ExternalCollaborationAwareness,
 	ExternalCollaborationSession,

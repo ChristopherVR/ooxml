@@ -20,6 +20,7 @@ export type {
 	PptxHandlerLoadOptions,
 	PptxHandlerSaveOptions,
 	PptxSaveFormat,
+	PptxSvgRasterizer,
 } from './types';
 export type {
 	BackgroundStyleApplication,

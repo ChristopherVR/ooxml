@@ -7,6 +7,48 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.1.0) - 2026-10-22
+
+### Features
+
+- **docx:** Route save and open through host-owned storage ([ec27cd2](https://github.com/ChristopherVR/ooxml/commit/ec27cd28c4f594446e08b60ab05db2b64b72c683))
+- **docx:** Forward file, review and ribbon events through every binding ([feac0f1](https://github.com/ChristopherVR/ooxml/commit/feac0f1de2287f9549209c1b35c4b76bbe944257))
+- **docx:** Take the shared customization contract in <docx-editor> ([65f05d3](https://github.com/ChristopherVR/ooxml/commit/65f05d3d70cc28e6633f300fb4758aca7ba34184))
+- **embedding:** Land the host customization, read-only and storage contracts ([822a6a0](https://github.com/ChristopherVR/ooxml/commit/822a6a073840b9e9d1671476542322b28332dc42))
+
+### Bug Fixes
+
+- **docx:** Forward readOnly only when the prop changes ([fb2b324](https://github.com/ChristopherVR/ooxml/commit/fb2b3245789ffb8b05f93cd046d0beb397916b44))
+- **docx:** Report read-only with the lock and host switch ([735fb0d](https://github.com/ChristopherVR/ooxml/commit/735fb0d78ff18dc71eeeb83db2a76f26e423ba30))
+- **docx:** Honour find: false in Ctrl+F and the shortcut help ([f38d2fa](https://github.com/ChristopherVR/ooxml/commit/f38d2fae33cad0444e201ab99635d56a985c9b26))
+
+### Other
+
+- Integrate the customization contract into host storage ([629554b](https://github.com/ChristopherVR/ooxml/commit/629554b3030728bfe16e11ac8ae5b2530bb28a17))
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
+### Testing
+
+- **docx:** Assert the binding customization state inline ([e83b995](https://github.com/ChristopherVR/ooxml/commit/e83b995ee36701cd6c6842e04a2dba3589897c43))
+
+## [1.0.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.0.1) - 2026-10-22
+
+### Documentation
+
+- **docx:** Add canEdit notes and reconcile the work trackers ([cf5fbff](https://github.com/ChristopherVR/ooxml/commit/cf5fbffd26822f78b327104f00d0ded6f13a9ef0))
+
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.0.0) - 2026-10-22
+
+### Features
+
+- **docx:** Take the shared collaboration contract in <docx-editor> ([58e5caa](https://github.com/ChristopherVR/ooxml/commit/58e5caa1103f2129b32976cf1def24ebd031cad9))
+- **docx:** Add navigation, status and full toolbar blocks to bindings ([d3ff60f](https://github.com/ChristopherVR/ooxml/commit/d3ff60f9c90291d11d7ff59b8ffcea96dc9bc464))
+- **docx:** Make the building blocks read-only unless canEdit is true ([f4f4227](https://github.com/ChristopherVR/ooxml/commit/f4f4227e43b8b6f9463f0b81fc23a925cb62dc01))
+
+### Bug Fixes
+
+- **docx:** Name the toolbar openers apart from the host options ([d5bc691](https://github.com/ChristopherVR/ooxml/commit/d5bc691e2aaa946147e55edf590a61f64c7a671a))
+
 ## [0.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@0.6.0) - 2026-10-21
 
 ### Features

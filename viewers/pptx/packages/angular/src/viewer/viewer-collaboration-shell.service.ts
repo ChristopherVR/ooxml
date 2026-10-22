@@ -1,12 +1,12 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
-import { resolveCollaborationShellState } from 'ooxml-ui/pptx';
+import { resolveCollaborationConfig, resolveCollaborationShellState } from 'ooxml-ui/pptx';
 import type { CollaborationShellState } from 'ooxml-ui/pptx';
 
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { buildSaveSlides } from './template-mode';
-import type { CollaborationConfig } from './types';
+import type { CollaborationInput } from './types';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 import { ViewerCollabCursorService } from './viewer-collab-cursor.service';
 import { ViewerCollaborationSessionService } from './viewer-collaboration-session.service';
@@ -14,7 +14,7 @@ import { ViewerCollaborationSessionService } from './viewer-collaboration-sessio
 /** Reactive accessors supplied by a component with its own canvas and chrome. */
 export interface ViewerCollaborationShellOptions {
 	content: () => Uint8Array | ArrayBuffer | null;
-	collaboration: () => CollaborationConfig | undefined;
+	collaboration: () => CollaborationInput | undefined;
 	/** Host permission is a ceiling; a collaboration session never grants it. */
 	canEdit: () => boolean;
 	/** The scaled slide stage, not its outer scroll container. */
@@ -47,7 +47,7 @@ export class ViewerCollaborationShellService {
 		const content = host?.content();
 		return resolveCollaborationShellState({
 			authorizedCanEdit: host?.canEdit() ?? false,
-			configured: Boolean(host?.collaboration()),
+			configured: Boolean(resolveCollaborationConfig(host?.collaboration())),
 			readOnly: this.collaboration.readOnly(),
 			sourcePending:
 				Boolean(content) && (this.loader.loading() || content !== this.loadedContent()),
@@ -60,7 +60,7 @@ export class ViewerCollaborationShellService {
 
 	constructor() {
 		this.session.bind({
-			authorName: () => this.options()?.collaboration()?.userName,
+			authorName: () => resolveCollaborationConfig(this.options()?.collaboration())?.userName,
 			shareDefaults: () => undefined,
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
@@ -115,7 +115,7 @@ export class ViewerCollaborationShellService {
 			});
 		});
 		effect(() => {
-			const config = this.options()?.collaboration();
+			const config = resolveCollaborationConfig(this.options()?.collaboration());
 			untracked(() => this.session.syncHostConfig(config));
 		});
 		effect(() => {

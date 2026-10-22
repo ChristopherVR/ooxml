@@ -60,6 +60,8 @@ export interface UseAiBridgeInput {
 	presentationProperties: Ref<PptxPresentationProperties>;
 	customProperties: Ref<PptxCustomProperty[]>;
 	coreProperties: Ref<PptxCoreProperties | undefined>;
+	/** The host's `properties-change` event: the core properties an AI edit set. */
+	onCorePropertiesChanged?: (properties: PptxCoreProperties) => void;
 	appProperties: Ref<PptxAppProperties | undefined>;
 	/**
 	 * `ppt/viewProps.xml` (grid/snap/guides toggles). Included so the deck
@@ -201,6 +203,9 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 			}
 			if (differs(before.coreProperties, after.coreProperties)) {
 				input.coreProperties.value = after.coreProperties;
+				if (after.coreProperties) {
+					input.onCorePropertiesChanged?.(after.coreProperties);
+				}
 			}
 			if (differs(before.appProperties, after.appProperties)) {
 				input.appProperties.value = after.appProperties;

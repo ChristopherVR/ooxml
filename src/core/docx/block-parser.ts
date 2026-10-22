@@ -15,6 +15,9 @@ import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from 
 import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
+import { parseFormField } from './form-fields';
+import { isAnnotationWrapper } from './inline-markers';
+import { runPositionalTab, runSymbol, specialCharacterText } from './special-characters';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
@@ -123,11 +126,14 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 						if (named(child, 't') || named(child, 'delText')) return textContent(child);
 						if (named(child, 'tab')) return '\t';
 						if (named(child, 'br') || named(child, 'cr')) return '\n';
-						if (named(child, 'noBreakHyphen')) return '‑';
-						return '';
+						return specialCharacterText(child) ?? '';
 					})
 					.join('');
 	const run: TextRun = { text, ...parseDirectRunProperties(props) };
+	const symbol = runSymbol(content);
+	if (symbol) run.symbol = symbol;
+	const positionalTab = runPositionalTab(content);
+	if (positionalTab) run.positionalTab = positionalTab;
 	if (props && runPropertiesHaveUnknownContent(props)) run.sourceRunPropertiesXml = buildXml(props);
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
@@ -137,6 +143,9 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 		run.fieldChar = fieldChar;
 		const flags = parseFieldFlags(only!);
 		if (flags) run.fieldFlags = flags;
+		const data = fieldChar === 'begin' ? first(only, 'ffData') : undefined;
+		const formField = data && parseFormField(data);
+		if (formField) run.formField = formField;
 	}
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
@@ -167,6 +176,20 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		const link = resolveHyperlink(hyperlink, activeContext.rels);
 		return link.href !== undefined || link.anchor !== undefined ? link : undefined;
 	};
+	// A simple field's cached result: runs, equations, and the runs smart tags and custom XML wrap.
+	const parseFieldResult = (child: XmlElement): TextRun[] | undefined => {
+		const equation = parseEquation(child);
+		if (equation) return [equation];
+		if (!isAnnotationWrapper(child)) return undefined;
+		return collectParagraphRuns(
+			child,
+			parseRun,
+			parseFieldResult,
+			undefined,
+			openComments,
+			openMoves,
+		).runs;
+	};
 	const parseOther = (item: XmlElement): TextRun[] | undefined => {
 		if (named(item, 'sdt'))
 			return parseInlineControl(
@@ -179,16 +202,23 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 			);
 		const equation = parseEquation(item);
 		if (equation) return [equation];
+		// Smart tags and inline custom XML only annotate the runs they wrap.
+		if (isAnnotationWrapper(item))
+			return collectParagraphRuns(
+				item,
+				parseInlineRun,
+				parseOther,
+				resolveInlineLink,
+				openComments,
+				openMoves,
+			).runs;
 		if (!named(item, 'fldSimple')) return undefined;
 		const instr = getW(item, 'instr') ?? '';
 		const link = parseSimpleHyperlinkField(instr);
 		const { runs: results } = collectParagraphRuns(
 			item,
 			parseRun,
-			(child) => {
-				const equation = parseEquation(child);
-				return equation ? [equation] : undefined;
-			},
+			parseFieldResult,
 			undefined,
 			openComments,
 			openMoves,

@@ -3,13 +3,37 @@ export {
 	mountDiagramCanvas,
 	fitDiagramCanvas,
 	mountDiagramInspector,
+	mountDiagramShapes,
 	diagramToolbarProps,
+	diagramMode,
+	DIAGRAM_DRAW_TOOLS,
+	DIAGRAM_OBJECT_TOOLS,
+	DIAGRAM_TOOLS,
 	type DiagramToolbarProps,
+	type DiagramToolbarLabels,
+	type DiagramToolbarHostCallbacks,
+	type DiagramMode,
+	type DiagramToolSummary,
+	type DiagramTool,
+	type DiagramDrawTool,
+	type DiagramObjectTool,
 } from './building-blocks';
 export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';
 export { mountViewer, type MountedViewer } from './binding';
+export type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element';
+export { VISIO_CAPABILITY_IDS } from 'ooxml-core/visio/ui';
+export type {
+	VisioBackstagePage,
+	VisioCapabilities,
+	VisioCapabilityId,
+	VisioCustomization,
+	VisioMenuCommand,
+	VisioMenuContext,
+	VisioRegionContext,
+	VisioRegionRenderer,
+} from 'ooxml-core/visio/ui';
 export { renderPage, type RenderResult, type RenderOptions } from './render-svg';
 export {
 	exportPageSvg,

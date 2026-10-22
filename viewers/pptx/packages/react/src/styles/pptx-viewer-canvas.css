@@ -1,0 +1,25 @@
+/*
+ * pptx-react-viewer: read-only canvas stylesheet
+ *
+ *   import 'pptx-react-viewer/canvas.css';
+ *
+ * Everything `SlideCanvas` needs to render slides (every element type), and
+ * nothing for the ribbon, panels, dialogs or backstage of the full viewer. Use
+ * it instead of `styles.css` when a host renders only the canvas, for example
+ * `SlideCanvas` with the canvas props of `useViewerBuildingBlocks`.
+ *
+ * It is built by `scripts/build-canvas-css.mjs`, which adds one `@source` line
+ * per file that `SlideCanvas` and `useViewerBuildingBlocks` can reach, read from
+ * the bundler's import graph, so the utilities follow the code instead of a
+ * hand-kept list. Do not add `@source` lines here.
+ */
+
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import '../../../../../../src/ui/src/pptx/theme/viewer-preflight.css' layer(base);
+/* `source(none)`: only the generated `@source` files are scanned. */
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+
+/* @canvas-sources */
+
+@import './theme.css';

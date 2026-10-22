@@ -8,7 +8,8 @@ const NO_ADD_INS: readonly RibbonAddInTab[] = [];
  * The host's ribbon tabs (the `ribbonAddIns` prop). `PowerPointViewer` provides them; a toolbar
  * rendered on its own sees none.
  */
-export const RibbonAddInsContext = createContext<readonly RibbonAddInTab[]>(NO_ADD_INS);
+export const RibbonAddInsContext =
+	/* @__PURE__ */ createContext<readonly RibbonAddInTab[]>(NO_ADD_INS);
 
 export interface RibbonAddInTabs {
 	/** The host tabs the ribbon shows, in order. */

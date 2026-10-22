@@ -1,6 +1,7 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isFeatureEnabled,
+	resolveCollaborationConfig,
 	resolveViewerRootOptions,
 } from 'ooxml-ui/pptx';
 import type { ResolvedCustomization } from 'ooxml-ui/pptx';
@@ -51,6 +52,7 @@ export function toViewerStateOptions(
 		// as an explicit `false`. See `resolveAutosaveActivation` in shared.
 		getAutosave: () => getProps().autosave,
 		getFilePath: () => getProps().filePath,
+		getStorage: () => getProps().storage,
 		getAuthorName: () => getProps().authorName,
 		getInitialSlide: () => resolveViewerRootOptions(getProps()).initialSlide,
 		getSmartArt3D: () => getProps().smartArt3D ?? false,
@@ -59,7 +61,7 @@ export function toViewerStateOptions(
 		getLineChart3D: () => getProps().lineChart3D ?? false,
 		getAreaChart3D: () => getProps().areaChart3D ?? false,
 		getPieChart3D: () => getProps().pieChart3D ?? false,
-		getEditable: () => getProps().editable ?? false,
+		getEditable: () => (getProps().editable ?? false) && !getProps().readOnly,
 		getFitPadding: () => getProps().fitPadding,
 		getMaxFitScale: () => getProps().maxFitScale,
 		getFileName: () => getProps().fileName,
@@ -68,7 +70,7 @@ export function toViewerStateOptions(
 			Boolean(getProps().ai) &&
 			isFeatureEnabled(dom.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION, 'ai'),
 		get collaboration() {
-			return getProps().collaboration;
+			return resolveCollaborationConfig(getProps().collaboration);
 		},
 		get shareDefaults() {
 			return getProps().shareDefaults;
@@ -115,8 +117,26 @@ export function toViewerStateOptions(
 		get onautosavetoggle() {
 			return getProps().onautosavetoggle;
 		},
+		get onautosavestatus() {
+			return getProps().onautosavestatus;
+		},
+		get onautosaverecovery() {
+			return getProps().onautosaverecovery;
+		},
+		get onpropertieschange() {
+			return getProps().onpropertieschange;
+		},
+		get onpresentationchange() {
+			return getProps().onpresentationchange;
+		},
+		get oncollaborationstatus() {
+			return getProps().oncollaborationstatus;
+		},
 		get onstartcollaboration() {
 			return getProps().onstartcollaboration;
+		},
+		get oncollaborationchange() {
+			return getProps().oncollaborationchange;
 		},
 		get onstopcollaboration() {
 			return getProps().onstopcollaboration;

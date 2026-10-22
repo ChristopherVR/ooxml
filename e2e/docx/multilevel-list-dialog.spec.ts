@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
 import { computeListLabels, loadDocx } from '../../viewers/docx/packages/core/src/index';
 import { restartFixture } from './support/restart-fixture';
-import { fileInput, reveal, saveButton, dialogByHeading } from './helpers';
+import { clickInEditor, fileInput, reveal, saveButton, dialogByHeading } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: define a multilevel list, undo, redo and export its restart and position settings`, async ({
@@ -20,7 +20,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		});
 		const editor = page.locator('docx-editor');
 		const body = editor.locator('.dve-paper > .ProseMirror');
-		await body.click();
+		const labels = () =>
+			body
+				.locator('p')
+				.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-list-label')?.trim()));
+		// The outline as loaded. Selecting before it has loaded selects the empty document it replaces.
+		await expect.poll(labels).toEqual(['1.', '1.', '1.', '2.', '2.', '1.', '2.', '2.']);
+		await clickInEditor(body);
 		await page.keyboard.press('Control+a');
 		const menu = editor.getByRole('combobox', { name: 'Multilevel list', exact: true });
 		await reveal(editor, menu);
@@ -45,10 +51,6 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await page.screenshot({ path: test.info().outputPath('multilevel-list-dialog.png') });
 		}
 		await dialog.getByRole('button', { name: 'OK', exact: true }).click();
-		const labels = () =>
-			body
-				.locator('p')
-				.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-list-label')?.trim()));
 		const expected = ['2.', '1.', '2.4.', '2.5.', '3.', '3.6.', '2.', '3.7.'];
 		await expect.poll(labels).toEqual(expected);
 		await editor

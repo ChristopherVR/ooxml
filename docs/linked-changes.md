@@ -1,7 +1,9 @@
-# Changes that span `ooxml` and a viewer
+# Changes that span `ooxml` and an outside repository
 
-A feature or fix often needs the model or logic here first and the viewer (or its binding) second.
-The viewers depend on the **published** `ooxml-core` and `ooxml-ui`, so the order matters.
+**The viewers under `viewers/` do not follow this.** They resolve the core and `ooxml-ui` to the
+workspace and are released by this repository's flow together with them, so a change that needs
+the core and a viewer lands in one push (see `AGENTS.md`). This page is for a repository outside
+this one that depends on the **published** `ooxml-core` and `ooxml-ui`, where the order matters.
 
 ## The order
 
@@ -26,7 +28,7 @@ release.
   request description, and `Needed by: ChristopherVR/<viewer>#<number>` in the `ooxml` one, so the
   pair can be found from either side.
 - Mark the viewer pull request ready only once the `ooxml` change is released and the viewer's
-  range points at that release (no `file:` ranges; `check:published` rejects them).
+  range points at that release (no `file:` ranges; `scripts/publish-released.mjs` refuses them).
 - A single pull request must not change both repositories' behaviour: split it, even if the two
   halves are written together.
 

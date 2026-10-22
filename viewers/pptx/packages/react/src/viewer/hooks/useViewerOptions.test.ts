@@ -3,9 +3,9 @@ import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_OPTIONS,
 	VIEWER_PREFS_STORAGE_KEY,
-	deleteAutosaveSnapshot,
-	listAutosaveSnapshots,
+	clearAutosaveSnapshots,
 	mergeViewerOptions,
+	pruneExpiredAutosaveSnapshots,
 } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -17,16 +17,18 @@ import { useViewerOptions } from './useViewerOptions';
 
 vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal<typeof import('ooxml-ui/pptx')>()),
-	listAutosaveSnapshots: vi.fn(),
-	deleteAutosaveSnapshot: vi.fn(),
+	// The sweeps themselves (expiry, host recovery stores) are covered by the shared
+	// `autosave-maintenance` tests; here only when the hook runs them matters.
+	pruneExpiredAutosaveSnapshots: vi.fn(),
+	clearAutosaveSnapshots: vi.fn(),
 }));
 
 let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-	vi.mocked(listAutosaveSnapshots).mockReset().mockResolvedValue([]);
-	vi.mocked(deleteAutosaveSnapshot).mockReset().mockResolvedValue(true);
+	vi.mocked(pruneExpiredAutosaveSnapshots).mockReset().mockResolvedValue(0);
+	vi.mocked(clearAutosaveSnapshots).mockReset().mockResolvedValue(0);
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	localStorage.clear();
 	container = document.createElement('div');
@@ -121,8 +123,8 @@ describe('useViewerOptions', () => {
 			window.dispatchEvent(new Event('beforeunload'));
 			root.render(null);
 		});
-		expect(listAutosaveSnapshots).not.toHaveBeenCalled();
-		expect(deleteAutosaveSnapshot).not.toHaveBeenCalled();
+		expect(pruneExpiredAutosaveSnapshots).not.toHaveBeenCalled();
+		expect(clearAutosaveSnapshots).not.toHaveBeenCalled();
 		expect(add.mock.calls.filter(([name]) => name === 'beforeunload')).toHaveLength(0);
 	});
 });
@@ -141,27 +143,12 @@ function mountMaintenance(initial = DEFAULT_VIEWER_OPTIONS) {
 }
 
 describe('full-viewer autosave cache maintenance', () => {
-	it('sweeps once using the mount options even if options change while listing', async () => {
-		const now = 2_000_000_000_000;
-		const day = 24 * 60 * 60 * 1000;
-		vi.spyOn(Date, 'now').mockReturnValue(now);
-		let resolve!: (value: Awaited<ReturnType<typeof listAutosaveSnapshots>>) => void;
-		vi.mocked(listAutosaveSnapshots).mockReturnValueOnce(
-			new Promise((done) => {
-				resolve = done;
-			}),
-		);
-		const hook = mountMaintenance(mergeViewerOptions({ save: { cacheRetentionDays: 7 } }));
+	it('sweeps once using the mount options even if options change', async () => {
+		const mounted = mergeViewerOptions({ save: { cacheRetentionDays: 7 } });
+		const hook = mountMaintenance(mounted);
 		hook.render(mergeViewerOptions({ save: { cacheRetentionDays: 30 } }));
-		await act(async () => {
-			resolve([
-				{ key: 'expired', timestamp: now - 10 * day, size: 10 },
-				{ key: 'boundary', timestamp: now - 7 * day, size: 10 },
-				{ key: 'recent', timestamp: now, size: 10 },
-			]);
-		});
-		expect(listAutosaveSnapshots).toHaveBeenCalledOnce();
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledExactlyOnceWith('expired');
+		await act(async () => {});
+		expect(pruneExpiredAutosaveSnapshots).toHaveBeenCalledExactlyOnceWith(mounted, undefined);
 	});
 
 	it('returns the same module-level clear callback across renders and mounts', () => {
@@ -175,15 +162,23 @@ describe('full-viewer autosave cache maintenance', () => {
 
 	it('manually clears every snapshot regardless of retention or close preferences', async () => {
 		const hook = mountMaintenance();
-		await act(async () => {});
-		vi.mocked(listAutosaveSnapshots).mockResolvedValueOnce([
-			{ key: 'old', timestamp: 0, size: 10 },
-			{ key: 'new', timestamp: Date.now(), size: 10 },
-		]);
 		await act(async () => {
 			expect(hook.clear()()).toBeUndefined();
 		});
-		expect(vi.mocked(deleteAutosaveSnapshot).mock.calls).toStrictEqual([['old'], ['new']]);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledExactlyOnceWith(undefined);
+	});
+
+	it('hands a host storage to both sweeps', async () => {
+		const storage = { save: async () => undefined };
+		let clear!: () => void;
+		function Probe(): null {
+			clear = useAutosaveCacheMaintenance(DEFAULT_VIEWER_OPTIONS, storage);
+			return null;
+		}
+		await act(async () => root.render(React.createElement(Probe)));
+		await act(async () => clear());
+		expect(pruneExpiredAutosaveSnapshots).toHaveBeenCalledWith(DEFAULT_VIEWER_OPTIONS, storage);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledWith(storage);
 	});
 
 	it('removes the exact listener on option changes and unmount without clearing by default', async () => {
@@ -199,51 +194,38 @@ describe('full-viewer autosave cache maintenance', () => {
 		const removed = remove.mock.calls.filter(([name]) => name === 'beforeunload');
 		expect(added).toHaveLength(2);
 		expect(removed).toStrictEqual(added);
-		expect(listAutosaveSnapshots).toHaveBeenCalledOnce();
-		expect(deleteAutosaveSnapshot).not.toHaveBeenCalled();
+		expect(pruneExpiredAutosaveSnapshots).toHaveBeenCalledOnce();
+		expect(clearAutosaveSnapshots).not.toHaveBeenCalled();
 	});
 
 	it('preserves clearing on requested close and option-effect cleanup', async () => {
 		const enabled = mergeViewerOptions({ save: { clearCacheOnClose: true } });
 		const hook = mountMaintenance(enabled);
-		await act(async () => {});
-		vi.mocked(listAutosaveSnapshots).mockResolvedValue([
-			{ key: 'cached', timestamp: Date.now(), size: 10 },
-		]);
 		await act(async () => {
 			window.dispatchEvent(new Event('beforeunload'));
 		});
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledOnce();
+		expect(clearAutosaveSnapshots).toHaveBeenCalledOnce();
 		await act(async () => hook.render(DEFAULT_VIEWER_OPTIONS));
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledTimes(2);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledTimes(2);
 		await act(async () => {
 			window.dispatchEvent(new Event('beforeunload'));
 		});
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledTimes(2);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledTimes(2);
 		await act(async () => hook.render(enabled));
 		await act(async () => root.render(null));
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledTimes(3);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledTimes(3);
 		await act(async () => {
 			window.dispatchEvent(new Event('beforeunload'));
 		});
-		expect(deleteAutosaveSnapshot).toHaveBeenCalledTimes(3);
+		expect(clearAutosaveSnapshots).toHaveBeenCalledTimes(3);
 	});
 
-	it.each(['list', 'delete'] as const)(
-		'ignores background sweep %s failures',
-		async (operation) => {
-			if (operation === 'list') {
-				vi.mocked(listAutosaveSnapshots).mockRejectedValueOnce(new Error('Blocked storage'));
-			} else {
-				vi.mocked(listAutosaveSnapshots).mockResolvedValueOnce([
-					{ key: 'expired', timestamp: 0, size: 10 },
-				]);
-				vi.mocked(deleteAutosaveSnapshot).mockRejectedValueOnce(new Error('Blocked storage'));
-			}
-			await act(async () => {
-				mountMaintenance();
-			});
-			expect(listAutosaveSnapshots).toHaveBeenCalledOnce();
-		},
-	);
+	it.each(['prune', 'clear'] as const)('ignores background %s failures', async (operation) => {
+		vi.mocked(
+			operation === 'prune' ? pruneExpiredAutosaveSnapshots : clearAutosaveSnapshots,
+		).mockRejectedValueOnce(new Error('Blocked storage'));
+		const hook = await act(async () => mountMaintenance());
+		await act(async () => hook.clear()());
+		expect(pruneExpiredAutosaveSnapshots).toHaveBeenCalledOnce();
+	});
 });

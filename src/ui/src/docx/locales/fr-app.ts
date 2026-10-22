@@ -133,6 +133,7 @@ export const frApp: AppStrings = {
 	'Next page section break': 'Saut de section (page suivante)',
 	'Continuous section break': 'Saut de section (continu)',
 	'Next page': 'Page suivante',
+	'Previous page': 'Page précédente',
 	Continuous: 'Continu',
 	'Page numbers': 'Numéros de page',
 	'Page number format': 'Format des numéros de page',

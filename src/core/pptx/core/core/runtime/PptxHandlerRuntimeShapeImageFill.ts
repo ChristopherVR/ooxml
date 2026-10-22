@@ -1,4 +1,5 @@
-import { PptxElement, XmlObject, TextStyle } from '../../types';
+import { PptxElement, ShapeStyle, XmlObject, TextStyle } from '../../types';
+import { resolveGroupFillImagePure, type GroupFillImageHost } from './group-parsing-helpers';
 import { xmlAttr, xmlChild, xmlPath } from '../../utils/xml-access';
 import { parseEmuInt } from './group-shape-geometry';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeGeometryParsing';
@@ -218,6 +219,64 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		} catch (e) {
 			console.warn(`[pptx] Skipping shape-with-image-fill (${id}):`, e);
 			return null;
+		}
+	}
+
+	/**
+	 * A text-bearing shape whose picture fill is inherited from its layout or
+	 * master placeholder (`a:blipFill` absent from its own `spPr`) gets
+	 * `fillMode: 'image'` from the merged properties but no image: the blip's
+	 * relationship id belongs to the part that authored it, not the slide.
+	 * Resolve it against the layout's, then the master's, relationships.
+	 */
+	protected async resolveInheritedFillImage(
+		element: PptxElement | null,
+		shape: XmlObject,
+		slidePath: string,
+	): Promise<void> {
+		const style = (element as { shapeStyle?: ShapeStyle } | null)?.shapeStyle;
+		if (!element || !style || style.fillMode !== 'image' || style.fillImageUrl) {
+			return;
+		}
+		const placeholderInfo = this.extractPlaceholderInfo(xmlPath(shape, 'p:nvSpPr', 'p:nvPr'));
+		const inherited = placeholderInfo
+			? this.findPlaceholderContext(slidePath, placeholderInfo)
+			: undefined;
+		const effectiveSpPr = this.mergeXmlObjects(
+			inherited?.shape?.['p:spPr'] as XmlObject | undefined,
+			xmlChild(shape, 'p:spPr'),
+		);
+		const blipFill = effectiveSpPr?.['a:blipFill'] as XmlObject | undefined;
+		const blip = blipFill?.['a:blip'] as XmlObject | undefined;
+		const relId = String(blip?.['@_r:embed'] ?? blip?.['@_r:link'] ?? '');
+		if (!relId) {
+			return;
+		}
+		const layoutPath = this.resolveLayoutPathForSlide(slidePath);
+		const masterPath = layoutPath ? this.resolveMasterPathForLayout(layoutPath) : undefined;
+		for (const partPath of [layoutPath, masterPath]) {
+			if (!partPath || !this.slideRelsMap.get(partPath)?.has(relId)) {
+				continue;
+			}
+			const fill = await resolveGroupFillImagePure(
+				this as unknown as GroupFillImageHost,
+				blipFill,
+				partPath,
+			);
+			if (fill) {
+				// `fillImageUrl` has no lazy-load patch target (unlike a picture's
+				// `imagePath`/`imageData` pair), so an unresolved archive path would
+				// 404 in the browser: decode it now whatever `eagerDecodeImages` says.
+				const isUrl = /^(?:data:|blob:|https?:)/u.test(fill.fillImageUrl);
+				const decoded = isUrl ? undefined : await this.getImageData(fill.fillImageUrl);
+				style.fillImageUrl = decoded ?? fill.fillImageUrl;
+				style.fillImageMode = fill.fillImageMode;
+				// Painted fill makes it a styled shape, as a solid inherited fill does.
+				if (element.type === 'text') {
+					(element as { type: PptxElement['type'] }).type = 'shape';
+				}
+			}
+			return;
 		}
 	}
 

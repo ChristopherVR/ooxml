@@ -18,7 +18,7 @@ describe('record section', () => {
 
 		expect(onRecordFromBeginning).toHaveBeenCalledOnce();
 		expect(onRecordFromCurrent).toHaveBeenCalledOnce();
-		expect(wrapper.findAll('pptx-ui-ribbon-group')).toHaveLength(4);
+		expect(wrapper.findAll('pptx-ui-ribbon-section > pptx-ui-ribbon-group')).toHaveLength(4);
 		expect(wrapper.findAll('pptx-ui-ribbon-command[disabled]')).toHaveLength(4);
 		wrapper.unmount();
 	});

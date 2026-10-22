@@ -41,15 +41,23 @@ export interface SourceSnapshot {
 }
 /** Private controller-owned bytes; transient worker copies and models are separate from this budget. */
 export class DocumentHistory {
-	readonly original: SourceSnapshot;
+	/** The last saved snapshot: the first one until the host calls `markClean()`. */
+	#baseline: SourceSnapshot;
 	#entries: SourceSnapshot[];
 	#index = 0;
 	#truncated = false;
 	#maxEntries: number = EDIT_HISTORY_LIMITS.maxEntries;
 	constructor(bytes: Uint8Array, maxEntries?: number) {
 		if (maxEntries !== undefined) this.#maxEntries = clampHistoryEntries(maxEntries);
-		this.original = { bytes: Uint8Array.from(bytes), diagnostics: Object.freeze([]) };
-		this.#entries = [this.original];
+		this.#baseline = { bytes: Uint8Array.from(bytes), diagnostics: Object.freeze([]) };
+		this.#entries = [this.#baseline];
+	}
+	get original(): SourceSnapshot {
+		return this.#baseline;
+	}
+	/** Declare the current snapshot saved: it becomes the reference `dirty` is measured against. */
+	markClean(): void {
+		this.#baseline = this.current;
 	}
 	get current(): SourceSnapshot {
 		return this.#entries[this.#index]!;

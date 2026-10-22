@@ -5,6 +5,7 @@ import { createRibbon } from './ribbon';
 import { createBackstage, type BackstageHandlers } from './backstage';
 import { documentStats } from 'ooxml-core/docx';
 import { localizeElement } from './localization';
+import { EMPTY_WORD_CUSTOMIZATION, resolveWordCustomization } from './customization';
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -30,6 +31,15 @@ function setup(overrides: Partial<BackstageHandlers> = {}) {
 		ribbon: () => undefined,
 		hiddenActions: () => [],
 		setHiddenActions: () => {},
+		customization: () => EMPTY_WORD_CUSTOMIZATION,
+		regionContext: (region) => ({
+			region,
+			editor: document.body,
+			fileName: 'Report.docx',
+			locale: 'en',
+			canEdit: true,
+			close: () => undefined,
+		}),
 		...overrides,
 	};
 	const backstage = createBackstage(handlers);
@@ -251,6 +261,26 @@ describe('Customize Ribbon', () => {
 		expect(named('Italic').checked).toBe(false);
 		named('Bold').click();
 		expect(hidden.at(-1)).toEqual(expect.arrayContaining(['bold', 'italic']));
+		dialog.querySelector<HTMLButtonElement>('.dve-options-action')!.click();
+		expect(hidden.at(-1)).toEqual([]);
+	});
+
+	it('leaves out the commands a host capability removed', () => {
+		const ribbon = createRibbon();
+		document.body.append(ribbon);
+		const hidden: string[][] = [];
+		const { backstage } = setup({
+			ribbon: () => ribbon,
+			setHiddenActions: (ids) => hidden.push(ids),
+			customization: () =>
+				resolveWordCustomization({ capabilities: { print: false, copy: false } }),
+		});
+		backstage.open('customize');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		const labels = [...dialog.querySelectorAll('.dve-customize-row')].map((row) => row.textContent);
+		expect(labels).toContain('Bold');
+		expect(labels).not.toContain('Print');
+		expect(labels).not.toContain('Copy');
 		dialog.querySelector<HTMLButtonElement>('.dve-options-action')!.click();
 		expect(hidden.at(-1)).toEqual([]);
 	});

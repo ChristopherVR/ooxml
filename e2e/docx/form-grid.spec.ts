@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { savedDocument } from './saved-document';
-import { fileInput } from './helpers';
+import { clickInEditor, fileInput } from './helpers';
 import { formGridFixture, formGridRowCellCounts } from './support/form-grid-fixture';
 
 const cellCounts = (xml: string) =>
@@ -24,7 +24,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		// The value cell beside the first label; its text changes, so it is located by position.
 		const value = editor.locator('.ProseMirror td').nth(1);
 		await expect(value).toHaveText('Number');
-		await value.click();
+		await clickInEditor(value);
 		await page.keyboard.press('End');
 		await page.keyboard.type(' DOC-0042');
 		await expect(value).toHaveText('Number DOC-0042');

@@ -29,12 +29,25 @@ export const VisioViewer = defineComponent({
 	name: 'VisioViewer',
 	props: {
 		canEdit: { type: Boolean, default: undefined },
+		readOnly: { type: Boolean, default: undefined },
 		document: { type: Object as PropType<ViewerProperties['document']>, default: undefined },
 		pageIndex: { type: Number, default: undefined },
 		zoom: { type: Number, default: undefined },
 		showToolbar: { type: Boolean, default: undefined },
 		ribbonAddIns: {
 			type: Array as unknown as PropType<ViewerProperties['ribbonAddIns']>,
+			default: undefined,
+		},
+		collaboration: {
+			type: Object as PropType<ViewerProperties['collaboration']>,
+			default: undefined,
+		},
+		storage: {
+			type: Object as PropType<ViewerProperties['storage']>,
+			default: undefined,
+		},
+		customization: {
+			type: Object as PropType<ViewerProperties['customization']>,
 			default: undefined,
 		},
 		events: Object as PropType<ViewerCallbacks>,

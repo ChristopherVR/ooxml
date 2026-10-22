@@ -25,7 +25,7 @@ exception: after adding a NEW export to `pptx-viewer-shared`, run
 
 - Landing page: click "or create a New Presentation" to get an editable deck
   without a fixture (Svelte demo may boot in French locale; same button).
-- Sample decks: the demos serve `e2e/fixtures` as their public dir.
+- Sample decks: the demos serve `e2e/pptx/fixtures` as their public dir.
 - Editing chrome mirrors PowerPoint: ribbon tabs along the top; element
   double-click opens type-specific editors (equations open the equation
   dialog, text enters inline edit).

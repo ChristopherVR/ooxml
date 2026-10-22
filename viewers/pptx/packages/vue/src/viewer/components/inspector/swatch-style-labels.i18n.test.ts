@@ -12,6 +12,7 @@ import { createI18n } from 'vue-i18n';
 import { toVueI18nSyntax, translationsEn } from '../../../i18n';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import QuickStylesGallery from './QuickStylesGallery.vue';
+import { themeColorGrid } from './test-theme-swatch';
 import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
 
 const OFFICE_THEME = {
@@ -46,9 +47,12 @@ describe('swatch and style names follow the locale', () => {
 		const wrapper = mount(ThemeColorSwatchGrid, {
 			global: { plugins: [german()], provide: { [ThemeColorMapKey as symbol]: ref(OFFICE_THEME) } },
 		});
-		const titles = wrapper.findAll('button').map((button) => button.attributes('title'));
+		// The shared grid draws its swatches and heading in its shadow root.
+		const shadow = themeColorGrid(wrapper)!;
+		const titles = [...shadow.querySelectorAll('button')].map((button) => button.title);
 		expect(titles).toContain('Akzent 1, heller 80 %');
-		expect(titles.some((title) => title?.includes('Accent'))).toBeFalsy();
+		expect(titles.some((title) => title.includes('Accent'))).toBeFalsy();
+		expect(shadow.querySelector('.heading')!.textContent).toBe('Designfarben');
 		wrapper.unmount();
 	});
 

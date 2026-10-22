@@ -1,7 +1,12 @@
 import type { ViewerState } from './controller';
+import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
+import { openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { wireNewDrawing } from './viewer-new-drawing';
+import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
+import type { VisioRegionContext } from 'ooxml-core/visio/ui';
+import { EMPTY_VISIO_CUSTOMIZATION, type ResolvedVisioCustomization } from './viewer-customization';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {
@@ -20,6 +25,22 @@ export interface BackstageHost {
 	noteCount(): number;
 	/** File > Print > Page Setup. */
 	pageSetup?(): void;
+	/** Announces the cancelable `file-command` event; false when the host handles the command. */
+	fileCommand?(command: VisioFileCommand): boolean;
+	/** Host-owned storage for Save and Open (the element's `storage`), when set. */
+	storage?(): DocumentStorage | undefined;
+	/** What the drawing is now; compared after an awaited save to see whether it changed. */
+	revision?(): unknown;
+	/** The drawing (as it was at `revision`) was saved to host storage under `fileName`. */
+	savedToStorage?(fileName: string, revision: unknown): void;
+	/** A host save failed (reported as `document-error`). */
+	saveFailed?(error: Error): void;
+	/** A copy was downloaded: the AutoRecover copy has done its job. */
+	downloaded?(): void;
+	/** The host customisation: removed pages and commands, and host pages. */
+	customization?(): ResolvedVisioCustomization;
+	/** The context of a host File tab page. */
+	regionContext?(region: string): VisioRegionContext;
 }
 
 /**
@@ -41,14 +62,30 @@ export class ViewerBackstage {
 	#state: ViewerState | undefined;
 	#items = '';
 	#urls = new Set<string>();
+	#saving = false;
 	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
+	readonly #hostPages: HostBackstagePages<VisioRegionContext>;
 	constructor(private readonly host: BackstageHost) {
 		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
+		this.#hostPages = createHostBackstagePages<VisioRegionContext>(this.#root, {
+			context: (region) => host.regionContext!(region),
+			pageClass: 'backstage-page',
+			label: '[visio-viewer]',
+		});
 		this.#ribbon = host.root.querySelector<Ribbon>('office-ui-ribbon')!;
 		this.#input = this.#root.querySelector('.backstage-file-input')!;
 	}
 	get open(): boolean {
 		return this.#root.open;
+	}
+	#custom(): ResolvedVisioCustomization {
+		return this.host.customization?.() ?? EMPTY_VISIO_CUSTOMIZATION;
+	}
+	/** Re-applies the host customisation: hidden pages, host pages and their contexts. */
+	refreshCustomization(): void {
+		this.#hostPages.setPages(this.#custom().extraPages);
+		this.#hostPages.refresh();
+		if (this.#state) this.render(this.#state);
 	}
 	show(page: BackstagePage = 'info'): void {
 		this.#ribbon.setAttribute('file-expanded', 'true');
@@ -64,7 +101,11 @@ export class ViewerBackstage {
 		const options = { signal: events.signal };
 		this.#newDrawing = wireNewDrawing(
 			this.host.root,
-			() => this.host.createBlankDrawing(),
+			async () => {
+				// Ctrl+N as well as the button: a host that removed New (`open: false`) gets neither.
+				if (this.#custom().commands.has('new-blank')) return;
+				if (this.#announce('new')) await this.host.createBlankDrawing();
+			},
 			() => !!(this.#state?.loading || this.#state?.edit.busy),
 			this.host.announce,
 		);
@@ -77,6 +118,7 @@ export class ViewerBackstage {
 			'office-backstage-select',
 			(event) => {
 				const id = (event as CustomEvent<{ id: string }>).detail.id;
+				if (this.#hostPages.show(id)) return;
 				if (id === 'save') this.#download();
 				else if (id === 'close') this.#close();
 				else if (id === 'options') {
@@ -123,13 +165,32 @@ export class ViewerBackstage {
 		);
 		return () => {
 			this.#newDrawing?.dispose();
+			this.#hostPages.destroy();
 			events.abort();
 			for (const url of this.#urls) URL.revokeObjectURL(url);
 			this.#urls.clear();
 		};
 	}
+	#announce(command: VisioFileCommand): boolean {
+		return this.host.fileCommand?.(command) ?? true;
+	}
+	#open(): void {
+		if (!this.#announce('open')) return;
+		const storage = this.host.storage?.();
+		if (!storage?.open) return this.#input.click();
+		openFromStorage(storage, this.host.root.ownerDocument)
+			.then((file) => {
+				if (!file) return;
+				this.hide();
+				return this.host.load(file);
+			})
+			.catch((error: unknown) =>
+				this.host.announce(error instanceof Error ? error.message : String(error)),
+			);
+	}
 	#run(action: string): void {
-		if (action === 'open') this.#input.click();
+		if (this.#custom().commands.has(action)) return;
+		if (action === 'open') this.#open();
 		else if (action === 'new-blank') this.#newDrawing?.run();
 		else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
@@ -165,17 +226,49 @@ export class ViewerBackstage {
 		this.#download();
 	}
 	#download(): void {
-		if (!this.#state?.edit.sourceAvailable) return;
+		// One save at a time: a Save while a host save is pending is ignored, not queued. A host
+		// that removed Save (`save: false`) gets neither `file-command` nor `storage.save`.
+		if (
+			!this.#state?.edit.sourceAvailable ||
+			this.#saving ||
+			this.#custom().commands.has('download')
+		)
+			return;
+		if (!this.#announce('save')) return;
+		const storage = this.host.storage?.();
+		if (storage) return void this.#saveToStorage(storage);
 		try {
 			const result = this.host.exportVsdx();
 			this.#save(
 				new Blob([new Uint8Array(result.bytes)], { type: 'application/vnd.ms-visio.drawing' }),
 				`${this.#base()}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`,
 			);
+			this.host.downloaded?.();
 			this.hide();
 			this.host.announce('Downloaded a copy of the drawing.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
+		}
+	}
+	/** True while a host save is pending. */
+	get saving(): boolean {
+		return this.#saving;
+	}
+	async #saveToStorage(storage: DocumentStorage): Promise<void> {
+		this.#saving = true;
+		try {
+			const revision = this.host.revision?.();
+			const { bytes } = this.host.exportVsdx();
+			this.hide();
+			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName());
+			this.host.savedToStorage?.(name, revision);
+			this.host.announce('Saved the drawing.');
+		} catch (cause) {
+			const error = cause instanceof Error ? cause : new Error(String(cause));
+			this.host.saveFailed?.(error);
+			this.host.announce(error.message);
+		} finally {
+			this.#saving = false;
 		}
 	}
 	#exportSvg(): void {
@@ -291,10 +384,13 @@ export class ViewerBackstage {
 			setup.title = setup.disabled ? 'Open a .vsdx file to change the page setup.' : '';
 		}
 		// Rebuild the navigation only when Save or Close change, so focus stays put.
-		const items = backstageItems({
-			save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
-			close: { disabled: !state.document },
-		});
+		const hidden = this.#custom().backstagePages;
+		const items = this.#hostPages.items(
+			backstageItems({
+				save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
+				close: { disabled: !state.document },
+			}).filter((item) => !hidden.has(item.id)),
+		);
 		const key = JSON.stringify(items);
 		if (key !== this.#items) {
 			this.#items = key;

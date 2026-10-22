@@ -2,12 +2,12 @@
 
 ## Lancer la démo depuis les sources
 
-Vous avez besoin de [Bun](https://bun.sh/) 1.3 et de Node.js 24.
+Vous avez besoin de [Bun](https://bun.sh/) 1.4 et de Node.js 24.
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
-cd ooxml/viewers/xlsx
-bun install
+bun install   # once, at the repository root (one workspace, one lockfile)
+cd viewers/xlsx
 bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
 ```
 

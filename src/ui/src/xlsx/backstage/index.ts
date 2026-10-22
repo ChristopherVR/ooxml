@@ -10,6 +10,9 @@ import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderOpen, renderPrint, renderSaveAs } from './pages-file';
 import { createExcelOptions } from './options-dialog';
 import { renderShare } from './pages-share';
+import { createHostBackstagePages } from '../../embedding/host-backstage';
+import type { ExcelRegionContext } from 'ooxml-core/xlsx/ui';
+import { EMPTY_EXCEL_CUSTOMIZATION } from '../customization';
 
 export type { BackstageHost, EditorOptions, CalculationMode, IterationSettings } from './parts';
 export { participants, type ShareHost } from './pages-share';
@@ -40,6 +43,10 @@ export interface Backstage {
 	relocalize(): void;
 	/** Re-renders `page` when it is the one open (its state changed). */
 	refresh(page: BackstagePage): void;
+	/** Re-applies the host customisation: removed pages, host pages and their contexts. */
+	applyCustomization(): void;
+	/** Tears the host pages down. */
+	destroy(): void;
 }
 
 type BackstageElement = HTMLElement & {
@@ -85,6 +92,12 @@ export function createBackstage(host: BackstageHost): Backstage {
 		contents.set(page, content);
 		element.append(content);
 	}
+	const custom = () => host.customization?.() ?? EMPTY_EXCEL_CUSTOMIZATION;
+	const hostPages = createHostBackstagePages<ExcelRegionContext>(element, {
+		context: (region) => host.regionContext!(region),
+		pageClass: 'xve-backstage-content',
+		label: '[xlsx-editor]',
+	});
 	let current: ContentPage = 'info';
 	const options = createExcelOptions(host);
 	const show = (page: ContentPage) => {
@@ -99,6 +112,7 @@ export function createBackstage(host: BackstageHost): Backstage {
 	};
 	element.addEventListener('office-backstage-select', (event) => {
 		const id = (event as CustomEvent<{ id: string }>).detail.id;
+		if (hostPages.show(id)) return;
 		if (id === 'save') {
 			host.close();
 			host.fileCommand('save');
@@ -119,17 +133,21 @@ export function createBackstage(host: BackstageHost): Backstage {
 		});
 		const label = new Map(PAGES);
 		const page = (id: ContentPage) => item(id, label.get(id)!);
-		element.items = [
-			page('info'),
-			page('new'),
-			page('open'),
-			item('save', 'Save'),
-			page('saveAs'),
-			page('print'),
-			page('share'),
-			page('export'),
-			item('options', 'Options', 'footer'),
-		];
+		hostPages.setPages(custom().extraPages);
+		const hidden = custom().backstagePages;
+		element.items = hostPages.items(
+			[
+				page('info'),
+				page('new'),
+				page('open'),
+				item('save', 'Save'),
+				page('saveAs'),
+				page('print'),
+				page('share'),
+				page('export'),
+				item('options', 'Options', 'footer'),
+			].filter((entry) => !hidden.has(entry.id)),
+		);
 		options.relocalize();
 		if (element.open) show(current);
 	};
@@ -137,7 +155,11 @@ export function createBackstage(host: BackstageHost): Backstage {
 	return {
 		element,
 		optionsDialog: options.element,
-		open(page = 'info') {
+		open(requested = 'info') {
+			const hidden = custom().backstagePages;
+			const page = hidden.has(requested === 'customize' ? 'options' : requested)
+				? 'info'
+				: requested;
 			if (page === 'options' || page === 'customize') {
 				showOptions(page === 'customize' ? 'ribbon' : undefined);
 				return;
@@ -154,6 +176,13 @@ export function createBackstage(host: BackstageHost): Backstage {
 		relocalize,
 		refresh(page) {
 			if (element.open && current === page) show(page);
+		},
+		applyCustomization() {
+			relocalize();
+			hostPages.refresh();
+		},
+		destroy() {
+			hostPages.destroy();
 		},
 	};
 }

@@ -7,6 +7,7 @@ export {
 	type FileCommand,
 	type FileCommandDetail,
 	type SelectionChangeDetail,
+	type ValidationErrorDetail,
 	type XlsxEditorEventDetail,
 	type XlsxEditorEventMap,
 	type XlsxEditorEventName,
@@ -61,3 +62,24 @@ export {
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';
 export type { SpreadsheetToolbarProps } from './building-blocks';
+export type {
+	SurfaceActionContext,
+	SurfaceActionName,
+	SurfaceHostActions,
+	ValidationAlertRequest,
+	StopValidationAlert,
+	WarningValidationAlert,
+	InformationValidationAlert,
+} from './surface-actions';
+export { EXCEL_CAPABILITY_IDS } from 'ooxml-core/xlsx/ui';
+export type {
+	ExcelBackstagePage,
+	ExcelCapabilities,
+	ExcelCapabilityId,
+	ExcelCustomization,
+	ExcelMenuCommand,
+	ExcelMenuContext,
+	ExcelMenuKind,
+	ExcelRegionContext,
+	ExcelRegionRenderer,
+} from 'ooxml-core/xlsx/ui';

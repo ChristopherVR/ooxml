@@ -216,6 +216,9 @@ const CHROME_CSS = `
 	cursor: pointer;
 }
 .pptxv-protected-view-enable:hover { background: #fde68a; }
+/* The bar stays in the DOM and toggles "hidden", which its "display: flex" would
+   override on a host page without a preflight reset. */
+.pptxv-protected-view[hidden] { display: none; }
 
 /* â”€â”€ Body: thumbnail rail + viewport â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pptxv-body { display: flex; flex: 1; min-height: 0; }

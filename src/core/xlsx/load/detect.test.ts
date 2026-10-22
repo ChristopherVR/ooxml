@@ -70,6 +70,17 @@ describe('loadWorkbook', () => {
 		expect(workbook.sheets[0]?.name).toBe('export');
 		expect(getCell(workbook.sheets[0]!, 1, 1)?.value).toBe(2);
 	});
+
+	it('passes CSV import options through and reports lossy conversions', async () => {
+		const bytes = new TextEncoder().encode('id,when\n00123,04/03/2024\n');
+		const plain = await loadWorkbook(bytes);
+		expect(getCell(plain.sheets[0]!, 1, 0)?.value).toBe(123);
+		expect(plain.warnings).toHaveLength(1);
+		const kept = await loadWorkbook(bytes, { csv: { columns: { 0: 'text', 1: 'DMY' } } });
+		expect(getCell(kept.sheets[0]!, 1, 0)?.value).toBe('00123');
+		expect(getCell(kept.sheets[0]!, 1, 1)?.value).toBe(45355);
+		expect(kept.warnings).toEqual([]);
+	});
 });
 
 describe('saveWorkbook', () => {

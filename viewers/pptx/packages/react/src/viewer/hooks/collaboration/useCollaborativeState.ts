@@ -1,5 +1,6 @@
+import type { CollaborationWriteBackState } from 'ooxml-core/collab';
 import { sanitizeColor } from 'ooxml-ui/pptx';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 /**
  * useCollaborativeState: Composes the Yjs provider and presence tracking
@@ -15,6 +16,7 @@ import { useMemo } from 'react';
  */
 import type { CollaborationConfig, CollaborationContextValue } from './types';
 import { useCollaborationSession } from './useCollaborationSession';
+import { useOwnedCollaboration } from './useOwnedCollaboration';
 import { usePresenceTracking } from './usePresenceTracking';
 
 // ---------------------------------------------------------------------------
@@ -38,13 +40,18 @@ export interface UseCollaborativeStateInput {
 // ---------------------------------------------------------------------------
 
 export function useCollaborativeState({
-	config,
+	config: requested,
 	canvasWidth,
 	canvasHeight,
 }: UseCollaborativeStateInput): CollaborationContextValue | null {
+	// A `provider` or same-browser room is opened here as a session the viewer owns.
+	const ownedSession = useOwnedCollaboration(requested);
+	const config = ownedSession.config;
 	const userColor = sanitizeColor(config?.userColor, '#6366f1');
 
-	const { status, awareness, doc, clientId, synced, retry } = useCollaborationSession({ config });
+	const session = useCollaborationSession({ config: ownedSession.holding ? undefined : config });
+	const { awareness, doc, clientId, synced, retry } = session;
+	const status = ownedSession.status ?? session.status;
 
 	const { remoteUsers, broadcastPresence } = usePresenceTracking({
 		awareness,
@@ -57,6 +64,9 @@ export function useCollaborativeState({
 		canvasHeight,
 	});
 
+	// The owner's write-back status, reported by the document sync.
+	const [writeBack, reportWriteBack] = useState<CollaborationWriteBackState | undefined>();
+
 	// Total connected = remote users + local (if connected)
 	const connectedCount = status === 'connected' ? remoteUsers.length + 1 : remoteUsers.length;
 
@@ -66,8 +76,31 @@ export function useCollaborativeState({
 	return useMemo(
 		() =>
 			config
-				? { status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry }
+				? {
+						status,
+						remoteUsers,
+						broadcastPresence,
+						connectedCount,
+						config,
+						doc,
+						synced,
+						retry,
+						clientId,
+						writeBack,
+						reportWriteBack,
+					}
 				: null,
-		[status, remoteUsers, broadcastPresence, connectedCount, config, doc, synced, retry],
+		[
+			status,
+			remoteUsers,
+			broadcastPresence,
+			connectedCount,
+			config,
+			doc,
+			synced,
+			retry,
+			clientId,
+			writeBack,
+		],
 	);
 }

@@ -1,8 +1,16 @@
 import * as officeTheme from 'ooxml-ui/theme';
 import { ViewerController, createWorkerParser, type VsdxSource } from 'ooxml-ui/visio';
 import * as ui from 'ooxml-ui/visio';
-export interface BuildingBlockOptions {
+/** Host-owned dialogs, as in the PowerPoint building blocks; omitted ones report not-enabled. */
+export interface BuildingBlockHostCallbacks {
+	onOpenFile?: (() => void) | undefined;
+	onOpenPageSetup?: (() => void) | undefined;
+	onOpenSettings?: (() => void) | undefined;
+	onOpenShareDialog?: (() => void) | undefined;
+}
+export interface BuildingBlockOptions extends BuildingBlockHostCallbacks {
 	content?: VsdxSource | undefined;
+	/** Host edit permission. Read-only until it is `true`, so nothing is editable before the host says so. */
 	canEdit?: boolean | undefined;
 	locale?: string | undefined;
 	onDocumentChange?:
@@ -13,17 +21,28 @@ export interface BuildingBlockOptions {
 }
 type Api = Pick<
 	typeof ui,
-	'mountDiagramCanvas' | 'fitDiagramCanvas' | 'mountDiagramInspector' | 'diagramToolbarProps'
+	| 'mountDiagramCanvas'
+	| 'fitDiagramCanvas'
+	| 'mountDiagramInspector'
+	| 'mountDiagramShapes'
+	| 'diagramToolbarProps'
+	| 'diagramMode'
 >;
 export function buildingBlock<K extends keyof Api>(key: K): Api[K] {
 	const value: unknown = Reflect.get(ui, key);
 	if (typeof value !== 'function') throw new Error('Update ooxml-ui to use Visio building blocks.');
 	return value as Api[K];
 }
+/** The mode a host sees: 'edit' only when permission is granted and the file can be saved back. */
+export function effectiveMode(state: ViewerController['state']): 'edit' | 'view' {
+	return buildingBlock('diagramMode')(state);
+}
 /** Framework-neutral ownership only; each adapter supplies its own reactive state. */
-export function createBuildingBlockSession() {
+export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 	const controller = new ViewerController(createWorkerParser());
-	let options: BuildingBlockOptions = {};
+	// Apply the host permission before anything can render or be interacted with.
+	controller.canEdit = initial.canEdit === true;
+	let options: BuildingBlockOptions = initial;
 	let source: VsdxSource | undefined;
 	let host: HTMLElement | null = null;
 	let disposeCanvas: (() => void) | undefined;
@@ -50,13 +69,23 @@ export function createBuildingBlockSession() {
 			host = node;
 			if (node) disposeCanvas = buildingBlock('mountDiagramCanvas')(node, controller);
 		},
-		toolbar(locale = options.locale) {
-			return buildingBlock('diagramToolbarProps')(controller, fit, locale);
+		/** Flat control props; pass the framework's latest options so callbacks stay current. */
+		toolbar(latest: BuildingBlockOptions = options) {
+			return buildingBlock('diagramToolbarProps')(controller, fit, latest.locale, {
+				onOpenFile: latest.onOpenFile,
+				onOpenPageSetup: latest.onOpenPageSetup,
+				onOpenSettings: latest.onOpenSettings,
+				onOpenShareDialog: latest.onOpenShareDialog,
+			});
+		},
+		/** Acknowledge a host save: clears dirty and emits the dirty change. */
+		markClean() {
+			controller.markClean();
 		},
 		update(next: BuildingBlockOptions) {
 			if (destroyed) return;
 			options = next;
-			controller.canEdit = next.canEdit !== false;
+			controller.canEdit = next.canEdit === true;
 			if (source === next.content) return;
 			source = next.content;
 			controller.cancelLoad();
@@ -83,7 +112,14 @@ export function createBuildingBlockSession() {
 	};
 }
 export type BuildingBlockSession = ReturnType<typeof createBuildingBlockSession>;
-export type { DiagramToolbarProps, ViewerController } from 'ooxml-ui/visio';
+export type {
+	DiagramToolbarProps,
+	DiagramToolbarLabels,
+	DiagramToolbarHostCallbacks,
+	DiagramMode,
+	DiagramTool,
+	ViewerController,
+} from 'ooxml-ui/visio';
 
 /** Resolve the new optional-control theme API only when that control is mounted. */
 export function prepareDiagramBlock(host: HTMLElement | null, kind: 'toolbar' | 'tabs') {

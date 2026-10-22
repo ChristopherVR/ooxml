@@ -142,17 +142,90 @@ export function validateChanges(changes, docs) {
 			}
 	}
 }
-export async function prepareChanges(changes, docs) {
-	const { setDocxRunText, setXlsxCells, editVisio } = await automation();
+/** The core's workbook edits for the `cells` changes to one file, in order. */
+const cellEdits = (changes, documentId) =>
+	changes
+		.filter((c) => c.type === 'cells' && c.documentId === documentId)
+		.map((c) => ({ op: 'setCells', sheet: c.sheetIndex, cells: c.cells }));
+
+const shown = (value) =>
+	value === null || value === undefined
+		? '(empty)'
+		: typeof value === 'object'
+			? value.error
+			: typeof value === 'boolean'
+				? String(value).toUpperCase()
+				: String(value);
+
+/**
+ * What the `cells` changes to spreadsheet `doc` would change, compared by the core before anything
+ * is saved. `effects` are the differences beyond the cells typed into (formulas that recalculate,
+ * spill ranges), at most `limit`, and `more` counts the rest. `proposal` is what
+ * {@link prepareChanges} applies when exactly these changes are approved.
+ */
+export async function reviewSpreadsheet(changes, doc, limit = 50) {
+	const edits = cellEdits(changes, doc.id);
+	if (!edits.length) return { effects: [], more: 0 };
+	const [{ proposeXlsxEdits }, { formatAddress }] = await Promise.all([
+		automation(),
+		import('ooxml-core/xlsx'),
+	]);
+	const { proposal, comparison } = await proposeXlsxEdits(doc.bytes, edits);
+	const typed = new Set(
+		edits.flatMap((e) => e.cells.map((cell) => `${e.sheet}!${cell.address.toUpperCase()}`)),
+	);
+	const effects = [];
+	for (const sheet of comparison.sheets)
+		for (const cell of sheet.cells) {
+			const address = formatAddress(cell.address);
+			if (cell.kind === 'format' || typed.has(`${sheet.afterIndex}!${address}`)) continue;
+			effects.push({
+				where: sheet.name,
+				address,
+				before: shown(cell.before.value),
+				after: shown(cell.after.value),
+			});
+		}
+	return {
+		proposal,
+		effects: effects.slice(0, limit),
+		more: Math.max(0, effects.length - limit) + (comparison.truncated ? 1 : 0),
+	};
+}
+
+/**
+ * The files with `changes` applied, as new revisions. Spreadsheet changes go through the core's
+ * proposal: one reviewed for exactly these changes (`proposals`, by file id) is applied only to the
+ * bytes it was reviewed against, so what is saved is what was shown; otherwise they are proposed
+ * and applied in one step.
+ */
+export async function prepareChanges(changes, docs, proposals = {}) {
+	const { setDocxRunText, editVisio, applyXlsxProposal, proposeXlsxEdits } = await automation();
 	validateChanges(changes, docs);
 	const updates = new Map();
+	for (const original of docs) {
+		const edits = cellEdits(changes, original.id);
+		if (!edits.length) continue;
+		const reviewed = proposals[original.id];
+		const proposal =
+			reviewed && JSON.stringify(reviewed.edits) === JSON.stringify(edits)
+				? reviewed
+				: (await proposeXlsxEdits(original.bytes, edits)).proposal;
+		const { bytes } = await applyXlsxProposal(original.bytes, proposal);
+		updates.set(original.id, {
+			...original,
+			bytes,
+			revision: original.revision + 1,
+			modified: Date.now(),
+		});
+	}
 	for (const c of changes) {
+		if (c.type === 'cells') continue;
 		const original = docs.find((d) => d.id === c.documentId);
 		const doc = updates.get(c.documentId) ?? original;
 		let bytes;
 		if (c.type === 'word_run')
 			bytes = (await setDocxRunText(doc.bytes, c.paragraphId, c.runIndex, c.text)).bytes;
-		if (c.type === 'cells') bytes = (await setXlsxCells(doc.bytes, c.sheetIndex, c.cells)).bytes;
 		if (c.type === 'shape_text')
 			bytes = (
 				await editVisio(doc.bytes, [

@@ -17,6 +17,7 @@ import {
 	headerFooterForPage,
 	headerFooterSlotForPage,
 	fieldDisplayText,
+	pageStyleRefs,
 	type PageFieldContext,
 	type LayoutPageBox,
 } from 'ooxml-core/docx/layout';
@@ -199,6 +200,8 @@ export function decoratePages(
 	const numbers = pageNumbers(model, pages);
 	const numericValues = pageNumberValues(model, pages);
 	const counts = sectionPageCounts(pages);
+	// STYLEREF fields show the text of the page they are drawn on, as in Word.
+	const styleRefs = pageStyleRefs(model, pages);
 	pages.forEach((page, index) => {
 		const sheet = sheets[index];
 		if (!sheet) return;
@@ -227,7 +230,7 @@ export function decoratePages(
 		for (const kind of ['header', 'footer'] as const) {
 			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;
-			const element = renderHeaderFooter(content, values, kind);
+			const element = renderHeaderFooter(styleRefs.content(content, index), values, kind);
 			const distanceTwips =
 				kind === 'header' ? section?.headerDistanceTwips : section?.footerDistanceTwips;
 			const distancePx = (distanceTwips ?? 720) / 15;

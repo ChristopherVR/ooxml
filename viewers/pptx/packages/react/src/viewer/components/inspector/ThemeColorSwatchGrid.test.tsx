@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 /**
  * W3-G2: the theme colour picker grid renders the deck's REAL theme palette
- * (via `pptx-viewer-shared`'s `buildThemeColorSwatchGrid`) instead of a
- * hard-coded Office palette, highlights the swatch matching the element's
- * current ref/hex, and commits both the resolved hex and the ref on click.
+ * (via `ooxml-ui/pptx`'s `buildThemeColorSwatchGrid`) instead of a
+ * hard-coded Office palette, on the shared `pptx-ui-color-grid`, highlights
+ * the swatch matching the element's current ref/hex, and commits both the
+ * resolved hex and the ref on click.
  */
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
@@ -34,6 +35,11 @@ const OFFICE_THEME = {
 let container: HTMLDivElement;
 let root: Root;
 
+const grid = () => container.querySelector('pptx-ui-color-grid');
+/** A Theme Colors swatch of the shared grid, by its label. */
+const themeSwatch = (title: string) =>
+	grid()?.shadowRoot?.querySelector<HTMLButtonElement>(`button[title="${title}"]`) ?? null;
+
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
@@ -50,24 +56,27 @@ describe('themeColorSwatchGrid', () => {
 		act(() => {
 			root.render(
 				<ThemeColorMapProvider value={undefined}>
-					<ThemeColorSwatchGrid prefix='fill' onPick={() => {}} />
+					<ThemeColorSwatchGrid onPick={() => {}} />
 				</ThemeColorMapProvider>,
 			);
 		});
-		expect(container.querySelector('button')).toBeNull();
+		expect(grid()).toBeNull();
 	});
 
 	it('renders a base + variant swatch button per theme column', () => {
 		act(() => {
 			root.render(
 				<ThemeColorMapProvider value={OFFICE_THEME}>
-					<ThemeColorSwatchGrid prefix='fill' onPick={() => {}} />
+					<ThemeColorSwatchGrid onPick={() => {}} />
 				</ThemeColorMapProvider>,
 			);
 		});
-		const buttons = container.querySelectorAll('button');
-		// 10 columns x (1 base + 5 variants) = 60 swatch buttons.
-		expect(buttons).toHaveLength(60);
+		const shadow = grid()!.shadowRoot!;
+		// 10 columns x (1 base + 5 variants) = 60 swatch buttons, and no standard row.
+		expect(shadow.querySelectorAll('button.swatch[data-source="theme"]')).toHaveLength(60);
+		expect(shadow.querySelectorAll('button.swatch')).toHaveLength(60);
+		// Only the Theme Colors heading: the inspector keeps its own standard and recent rows.
+		expect(shadow.querySelectorAll('.heading')).toHaveLength(1);
 	});
 
 	it('highlights the swatch matching the element ref', () => {
@@ -75,16 +84,28 @@ describe('themeColorSwatchGrid', () => {
 			root.render(
 				<ThemeColorMapProvider value={OFFICE_THEME}>
 					<ThemeColorSwatchGrid
-						prefix='fill'
 						selectedRef={{ scheme: 'accent1', lumMod: 0.2, lumOff: 0.8 }}
 						onPick={() => {}}
 					/>
 				</ThemeColorMapProvider>,
 			);
 		});
-		const selected = container.querySelector('button[title="Accent 1, Lighter 80%"]');
-		expect(selected).not.toBeNull();
-		expect(selected!.className).toContain('border-primary');
+		const checked = grid()!.shadowRoot!.querySelectorAll('button[aria-checked="true"]');
+		expect([...checked].map((el) => el.getAttribute('title'))).toStrictEqual([
+			'Accent 1, Lighter 80%',
+		]);
+	});
+
+	it('disables every swatch when the field is disabled', () => {
+		act(() => {
+			root.render(
+				<ThemeColorMapProvider value={OFFICE_THEME}>
+					<ThemeColorSwatchGrid disabled onPick={() => {}} />
+				</ThemeColorMapProvider>,
+			);
+		});
+		const swatches = [...grid()!.shadowRoot!.querySelectorAll('button.swatch')];
+		expect(swatches.every((button) => (button as HTMLButtonElement).disabled)).toBeTruthy();
 	});
 
 	it('commits both the hex and the ref on click', () => {
@@ -92,11 +113,11 @@ describe('themeColorSwatchGrid', () => {
 		act(() => {
 			root.render(
 				<ThemeColorMapProvider value={OFFICE_THEME}>
-					<ThemeColorSwatchGrid prefix='fill' onPick={(c) => (commit = c)} />
+					<ThemeColorSwatchGrid onPick={(c) => (commit = c)} />
 				</ThemeColorMapProvider>,
 			);
 		});
-		const accent1Base = container.querySelector('button[title="Accent 1"]') as HTMLElement;
+		const accent1Base = themeSwatch('Accent 1')!;
 		expect(accent1Base).not.toBeNull();
 		act(() => {
 			accent1Base.click();

@@ -4,7 +4,7 @@ import type { Alignment, CellStyle, CellValue, Workbook, Worksheet } from '../mo
 import { isCellError } from '../model';
 import { formatValue } from '../numfmt/index';
 import { styleAt } from '../styles';
-import { bordersView, fillView, fontView, mergeBorder, mergeFont } from './style-view';
+import { bordersView, cellFont, fillView, fontView, mergeBorder, mergeFont } from './style-view';
 import type { CellView, ConditionalFormatEvaluator, HAlignView } from './types';
 import { sparklineViewAt } from './sparkline-data';
 import { INDENT_PX_PER_LEVEL } from './units';
@@ -85,15 +85,7 @@ export function cellView(
 	const conditional = cf?.at(row, col);
 	const dxf = conditional?.style;
 
-	// A cell font is a complete spec; the default style only fills a missing name or size.
-	const defaultFont = workbook.styles[0]?.font ?? {};
-	const base = { ...style.font };
-	if (!base.name && !base.scheme) {
-		if (defaultFont.name) base.name = defaultFont.name;
-		if (defaultFont.scheme) base.scheme = defaultFont.scheme;
-	}
-	if (!base.size && defaultFont.size) base.size = defaultFont.size;
-	const font = mergeFont(base, dxf?.font);
+	const font = mergeFont(cellFont(style.font, workbook.styles[0]?.font ?? {}), dxf?.font);
 	// Show Formulas mode (Ctrl+`): formula cells show their text, left aligned, unformatted.
 	const formulaText =
 		sheet.view.showFormulas && cell?.formula !== undefined ? `=${cell.formula}` : undefined;

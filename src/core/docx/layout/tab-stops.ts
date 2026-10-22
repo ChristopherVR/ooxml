@@ -1,4 +1,4 @@
-import type { LayoutTabStop } from './input';
+import type { LayoutRun, LayoutTabStop } from './input';
 import { DEFAULT_TAB_STOP_PX } from './units';
 
 export interface TabPlacement {
@@ -44,4 +44,28 @@ export function placeTab(
 		return { widthPx: hangingStopPx - positionPx };
 	const next = (Math.floor(positionPx / DEFAULT_TAB_STOP_PX) + 1) * DEFAULT_TAB_STOP_PX;
 	return { widthPx: next - positionPx };
+}
+
+/**
+ * Where a positional tab (`w:ptab`) at `positionPx` advances to, whatever the tab stops: its
+ * alignment point between `startPx` and `endPx` (the text margins or the paragraph's indents),
+ * with the text after it (`followingPx` wide) starting, centred or ending there. Undefined when
+ * the line is already past that point, so the tab goes to it on the next line.
+ */
+export function placePositionalTab(
+	positionPx: number,
+	tab: NonNullable<LayoutRun['positionalTab']>,
+	startPx: number,
+	endPx: number,
+	followingPx: number,
+): TabPlacement | undefined {
+	const target =
+		tab.alignment === 'left' ? startPx : tab.alignment === 'center' ? (startPx + endPx) / 2 : endPx;
+	if (positionPx > target + 0.5) return undefined;
+	const shift =
+		tab.alignment === 'right' ? followingPx : tab.alignment === 'center' ? followingPx / 2 : 0;
+	return {
+		widthPx: Math.max(0, target - shift - positionPx),
+		...(tab.leader && tab.leader !== 'none' ? { leader: tab.leader } : {}),
+	};
 }

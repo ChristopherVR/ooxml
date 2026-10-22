@@ -207,4 +207,4 @@ function SlideItemInner({
  * the parent passes stable callbacks and only changes `isActive` for
  * the previously-active and newly-active slides.
  */
-export const SlideItem = React.memo(SlideItemInner);
+export const SlideItem = /* @__PURE__ */ React.memo(SlideItemInner);

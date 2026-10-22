@@ -2,12 +2,12 @@
 
 ## 从源码运行演示
 
-需要 [Bun](https://bun.sh/) 1.3 和 Node.js 24。
+需要 [Bun](https://bun.sh/) 1.4 和 Node.js 24。
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
-cd ooxml/viewers/xlsx
-bun install
+bun install   # once, at the repository root (one workspace, one lockfile)
+cd viewers/xlsx
 bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
 ```
 

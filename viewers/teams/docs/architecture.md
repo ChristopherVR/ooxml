@@ -2,15 +2,17 @@
 
 OpenTeams is split the same way as the other products built on
 [`ooxml`](https://github.com/ChristopherVR/ooxml) (Word, Excel, PowerPoint): the logic and the
-visual primitives live there, and this repository (`teams-viewer`) holds only the app that
-composes them, the framework bindings, a reference server and the demos.
+visual primitives live there, including the `<teams-app>` element itself. This folder
+(`viewers/teams` of the `ooxml` repository) holds the framework bindings, the reference server and
+the docs; the demos are in `demos/teams/` and the browser tests in `e2e/teams/` at the root.
 
 | Layer             | Where                                                                   | Owns                                                                                           |
 | ----------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Logic             | `ooxml-core/teams` (`src/core/teams` in the ooxml repository)           | the chat CRDT, presence, calls, signaling, server configuration, the `createTeamsClient` store |
 | Collaboration     | `ooxml-core/collab`                                                     | Yjs sessions and transports (WebSocket, `BroadcastChannel`), format-neutral                    |
-| Visual primitives | `ooxml-ui` (`src/ui/src/teams`)                                         | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls          |
-| App               | `packages/web-component` here (private `teams-viewer`, never published) | `<teams-app>`: composes the primitives over the store, settings dialog, raw store helpers      |
+| Visual primitives | `ooxml-ui/teams` (`src/ui/src/teams`)                                   | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls          |
+| App               | `ooxml-ui/teams` (`src/ui/src/teams/app`)                               | `<teams-app>`: composes the primitives over the store, settings dialog, raw store helpers      |
+| Bind layer        | `packages/web-component` here (private `teams-viewer`, never published) | re-exports `ooxml-ui/teams` and holds the prop and event binding (`bind.ts`) the bindings use  |
 | Bindings          | `packages/{react,vue,angular,svelte,solid,vanilla}` here                | lifecycle adapters plus a raw hook each, published as `openteams-<framework>-viewer`           |
 | Reference server  | `server/` here                                                          | Yjs sync, signaling relay, file storage, published as `openteams-server`                       |
 
@@ -36,7 +38,7 @@ Errors a user should see arrive as `on('notice', ...)`. The UI never touches Yjs
 
 ## `<teams-app>`
 
-One Lit element with one template and one real CSS file (`teams-app.ts`, `teams-app.css`). It
+One Lit element with one template and one real CSS file (`teams-app.ts`, `teams-app.css`, in `src/ui/src/teams/app`). It
 decides what is on screen and forwards user intent to client actions; colours, spacing and radii
 come from the `ooxml-ui` tokens (`var(--office-...)`). Anything a peer sent is rendered as text
 (`textContent` semantics), never as markup, and the core re-validates everything it reads back

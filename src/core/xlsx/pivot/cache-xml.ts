@@ -8,6 +8,7 @@ import { pivotValueKey } from './data';
 import { serialToIso } from './dates';
 import {
 	dateGroupDays,
+	dateGroupRange,
 	dateUnitLabels,
 	derivedDateFields,
 	resolveDateGroups,
@@ -58,12 +59,12 @@ export function pivotCacheDefinitionXml(
 			const items = data.items[index]!;
 			if (pivot.dateFields?.includes(name) && items.every((v) => typeof v === 'number')) {
 				const serials = items as number[];
-				const latest = Math.max(...serials);
-				// Excel ends the cached range one day after the latest whole-day date.
-				const maxDate = Number.isInteger(latest) ? latest + 1 : latest;
+				// The earliest date to a day after the latest whole-day date, found in a loop: a
+				// spread would pass one argument per date and overflow on large caches.
+				const range = dateGroupRange({}, serials);
 				const parent = derived.filter((entry) => entry.group.field === name).at(-1);
 				const link = parent ? `<fieldGroup par="${parent.index}"/>` : '';
-				return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 14 })}><sharedItems${attrs({ containsSemiMixedTypes: false, containsNonDate: false, containsDate: true, containsString: false, minDate: iso(Math.min(...serials)), maxDate: iso(maxDate), count: serials.length })}>${serials.map((serial) => `<d v="${iso(serial)}"/>`).join('')}</sharedItems>${link}</cacheField>`;
+				return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 14 })}><sharedItems${attrs({ containsSemiMixedTypes: false, containsNonDate: false, containsDate: true, containsString: false, minDate: iso(range.start), maxDate: iso(range.end), count: serials.length })}>${serials.map((serial) => `<d v="${iso(serial)}"/>`).join('')}</sharedItems>${link}</cacheField>`;
 			}
 			const types = new Set(
 				items.map((value) => (value === null || value === '' ? 'blank' : typeof value)),

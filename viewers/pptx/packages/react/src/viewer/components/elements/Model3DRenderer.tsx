@@ -25,7 +25,7 @@ function FailedToLoad() {
 	return null;
 }
 
-const LazyModel3DScene = React.lazy(
+const LazyModel3DScene = /* @__PURE__ */ React.lazy(
 	async (): Promise<{
 		default: React.ComponentType<import('./Model3DScene').Model3DSceneProps>;
 	}> => {

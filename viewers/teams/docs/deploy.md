@@ -12,6 +12,8 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.                                                                                            |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
+| `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (window, per address, per user).                                                                             |
 | `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
 | `TEAMS_MAX_ROOMS`                                       | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
@@ -38,14 +40,16 @@ teams.example.com {
 Then point the app at `wss://teams.example.com/sync` and `wss://teams.example.com/signal`.
 
 **The token is a shared secret** stored in the browser: it keeps strangers out of a small team's
-server, it is not per-user authentication. For real accounts, put your own auth in front (a proxy
-that checks a session, or replace `tokenOk` with token verification) and keep the same three
-contracts.
+server, it is not per-user authentication. For real accounts, give the server `users` (or
+`TEAMS_USERS_FILE`) or an `authenticate` function for your identity provider, and set
+`TEAMS_SESSION_SECRET` so sessions survive restarts; see "Accounts and sessions" in the server's
+README. Keep the same three contracts.
 
 ## Security model
 
-- **One shared token opens every room and every file.** There are no per-user or per-room
-  permissions. Treat the token like a team password.
+- **One shared token opens every room and every file.** Per-user identity exists only when you
+  enable accounts, and per-room permissions only when you pass `authorizeSync`. Treat the token
+  like a team password.
 - **All members of a room trust each other.** The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles. Do not invite people you would
   not trust with the whole room.
@@ -98,12 +102,20 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/index.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs   server/rate-limit.mjs server/chat-access.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data
 VOLUME /data
 EXPOSE 8787
-CMD ["node", "index.mjs"]
+CMD ["node", "bin.mjs"]
 ```
+
+Build it from `viewers/teams` (`docker build -t openteams-server .` with the file saved there). It
+copies every module the entry point imports (they are the `files` of `server/package.json`; copying
+only `index.mjs` fails with a missing module) and installs the four runtime dependencies. The
+server needs no other file: the data directory is created under `TEAMS_DATA`, and an accounts file,
+if you use one, is mounted and named by `TEAMS_USERS_FILE`. Add `server/hash-password.mjs` if you
+want `openteams-hash-password` inside the image. The recipe was checked by running those files with
+`npm install --omit=dev` on Node, not by building the image.
 
 Run it with `TEAMS_TOKEN` and `TEAMS_ORIGINS` set, behind your TLS proxy.
 

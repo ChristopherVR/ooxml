@@ -42,10 +42,10 @@ SDK 提供九项核心能力：
 - 缩放通过 CSS transform 实现，在不同缩放比例和屏幕像素密度下保持清晰。
 - 每个元素都是 DOM 节点，便于实现选择、拖动控点、行内文本编辑和无障碍交互。
 
-只有在请求位图导出时才会栅格化：PNG、JPEG、PDF、GIF 和视频导出使用 `html2canvas` 绘制 DOM。
+只有在请求位图导出时才会栅格化：PNG、JPEG、PDF、GIF 和视频导出会先尝试 SVG `foreignObject` 捕获（由浏览器自身的引擎绘制 DOM，保留 `backdrop-filter`、自定义属性和 3D 变换），失败时回退到重新栅格化现有的矢量 SVG 导出流程，最后才回退到通过 `html2canvas-pro` 绘制 DOM。
 
 ::: tip 取舍
-CSS 无法逐像素还原所有 PowerPoint 效果，例如部分混合模式和三维旋转采用近似实现。完整说明见[功能限制](/zh/guide/limitations)。
+CSS 无法逐像素还原所有 PowerPoint 效果，而 `html2canvas-pro` 回退路径（在资源无法嵌入 SVG 捕获时使用）也有自己的不足，例如用不透明度近似混合模式。完整说明见[功能限制](/zh/guide/limitations)。
 :::
 
 ## 各个包的用途 {#the-packages}
@@ -70,13 +70,13 @@ CSS 无法逐像素还原所有 PowerPoint 效果，例如部分混合模式和�
 ```
 pptx-react-viewer   ┐
 pptx-vue-viewer     │
-pptx-angular-viewer ├── pptx-viewer-shared ── pptx-viewer-core
+pptx-angular-viewer ├── ooxml-ui/pptx ── ooxml-core/pptx
 pptx-vanilla-viewer │                               ├── emf-converter
 pptx-svelte-viewer  ┘                               └── mtx-decompressor
 ```
 
 - **`pptx-viewer-core`** 负责文件格式相关的全部工作：加载和保存流程、类型化数据模型、主题解析、几何引擎、加密，以及 Markdown/SVG 转换。它不包含 UI，可以在支持 JavaScript 的环境中运行。
-- **`pptx-viewer-shared`** 保存不依赖框架的预览逻辑：样式和渐变解析、图表与坐标轴计算、连接线路由、动画和平滑切换引擎，以及导出准备工作。这是一个**内部包**，不发布到 npm，而是在构建时打包到各框架组件中，无需单独安装。
+- **`ooxml-ui/pptx`** 从 `src/ui/src/pptx` 发布共享的渲染、样式、Web 组件、浏览器加载和导出视图。每个组件都导入这套公共 API。不依赖 DOM 的编辑和协作操作位于 `ooxml-core/pptx/editor`；私有的 `pptx-viewer-shared` 包仅作为兼容外观保留。
 - **各框架组件** 是较薄的视图层，将共享渲染数据转换为对应框架的表达方式，例如 JSX、SFC 模板、Angular 模板、Svelte runes 或原生 DOM，因此五个组件可以保持渲染结果和功能一致。
 - **`emf-converter`**（将 EMF/WMF 图元文件转换为 PNG）和 **`mtx-decompressor`**（处理 MicroType Express 嵌入字体）是核心引擎依赖的独立 npm 包。
 - **`pptx-viewer-mcp`** 基于 `pptx-viewer-core`，为 AI 智能体提供工具调用和协作接口。

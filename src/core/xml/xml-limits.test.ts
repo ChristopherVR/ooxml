@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NS, parseXml, textContent } from './index';
-import { checkXmlLimits } from './xml';
+import { checkXmlLimits, XmlLimitError } from './xml';
 
 describe('parseXml resource limits', () => {
 	it('scans a long run of unterminated tags in linear time', () => {
@@ -26,6 +26,18 @@ describe('parseXml resource limits', () => {
 		const xml = `<root>${'<a/>'.repeat(20)}</root>`;
 		expect(() => parseXml(xml, { limits: { maxNodes: 10 } })).toThrow(/limit of 10 elements/);
 		expect(parseXml(xml, { limits: { maxNodes: 21 } }).documentElement.childNodes.length).toBe(20);
+	});
+
+	it('throws a typed error naming the limit', () => {
+		const deep = `<root>${'<a>'.repeat(60)}${'</a>'.repeat(60)}</root>`;
+		expect(() => parseXml(deep, { limits: { maxDepth: 50 } })).toThrow(
+			expect.objectContaining({ name: 'XmlLimitError', limit: 'maxDepth', maximum: 50 }),
+		);
+		const wide = `<root>${'<a/>'.repeat(20)}</root>`;
+		expect(() => checkXmlLimits(wide, 'XML', { maxNodes: 10 })).toThrow(XmlLimitError);
+		expect(() => checkXmlLimits(wide, 'XML', { maxNodes: 10 })).toThrow(
+			expect.objectContaining({ code: 'xml-limit', limit: 'maxNodes', maximum: 10 }),
+		);
 	});
 
 	it('does not count markup inside comments, CDATA or attribute values', () => {

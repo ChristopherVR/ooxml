@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
 import { makeSwatchPicker, OFFICE_STANDARD_SWATCHES } from './swatch-picker';
+import { themeSwatch } from './theme-color-swatch-grid.test-support';
 
 describe('makeSwatchPicker', () => {
 	it('renders one swatch button per catalogue colour', () => {
@@ -172,7 +173,7 @@ describe('makeSwatchPicker theme colour grid (W3-G2)', () => {
 			onSelect: vi.fn(),
 		});
 		picker.setThemeColorMap(OFFICE_THEME);
-		expect(picker.el.querySelector('.pptxv-theme-swatch-grid')).toBeNull();
+		expect(picker.el.querySelector('pptx-ui-color-grid')).toBeNull();
 	});
 
 	it('shows the theme grid once a theme is set, and hides it again when cleared', () => {
@@ -185,7 +186,7 @@ describe('makeSwatchPicker theme colour grid (W3-G2)', () => {
 			onSelect: vi.fn(),
 			onSelectTheme: vi.fn(),
 		});
-		const grid = picker.el.querySelector<HTMLElement>('.pptxv-theme-swatch-grid')!;
+		const grid = picker.el.querySelector('pptx-ui-color-grid')!;
 		expect(grid.hidden).toBeTruthy();
 
 		picker.setThemeColorMap(OFFICE_THEME);
@@ -211,7 +212,7 @@ describe('makeSwatchPicker theme colour grid (W3-G2)', () => {
 		picker.el.querySelector<HTMLButtonElement>('.pptxv-dropdown-trigger')!.click();
 		expect(menu.hidden).toBeFalsy();
 
-		picker.el.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		themeSwatch(picker.el, 'Accent 2')!.click();
 		expect(onSelectTheme).toHaveBeenCalledExactlyOnceWith({
 			hex: '#ed7d31',
 			ref: { scheme: 'accent2' },
@@ -254,7 +255,7 @@ describe('makeSwatchPicker theme colour grid (W3-G2)', () => {
 		picker.setThemeColorMap(OFFICE_THEME);
 		picker.setSelectedRef({ scheme: 'accent2' });
 
-		const swatch = picker.el.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!;
-		expect(swatch.classList.contains('is-selected')).toBeTruthy();
+		const swatch = themeSwatch(picker.el, 'Accent 2')!;
+		expect(swatch.getAttribute('aria-checked')).toBe('true');
 	});
 });

@@ -34,6 +34,12 @@ const OFFICE_THEME = {
 let container: HTMLDivElement;
 let root: Root;
 
+/** A Theme Colors swatch of the shared grid, by its label. */
+const themeSwatch = (title: string) =>
+	container
+		.querySelector('pptx-ui-color-grid')
+		?.shadowRoot?.querySelector<HTMLButtonElement>(`button[title="${title}"]`) ?? null;
+
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
@@ -60,7 +66,7 @@ describe('gradientStopRow theme colour picker', () => {
 	it('commits both the resolved hex and the ref on a theme swatch click', () => {
 		let updated: GradientStop[] | undefined;
 		renderRow({ color: '#4472c4', position: 0 }, (stops) => (updated = stops));
-		const accent1 = container.querySelector('button[title="Accent 1"]') as HTMLElement;
+		const accent1 = themeSwatch('Accent 1')!;
 		expect(accent1).not.toBeNull();
 		act(() => accent1.click());
 		expect(updated?.[0]).toMatchObject({ color: '#4472c4', colorRef: { scheme: 'accent1' } });

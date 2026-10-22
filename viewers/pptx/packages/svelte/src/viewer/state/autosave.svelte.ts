@@ -1,4 +1,4 @@
-import type { DeckSaveIntent } from 'ooxml-ui/pptx';
+import type { DeckSaveIntent, DocumentStorage } from 'ooxml-ui/pptx';
 import {
 	createPreviewEditGuard,
 	nextAutosaveDelayMs,
@@ -62,6 +62,8 @@ export interface AutosaveDeps {
 	getIntervalMs: () => number;
 	/** IndexedDB record key (host `filePath`); autosave is disabled without one. */
 	getFilePath: () => string | undefined;
+	/** Host `storage` prop: recovery snapshots go to its recovery methods when it has them. */
+	getStorage?: () => DocumentStorage | undefined;
 	/** The current editable slides (watched for edits). */
 	getSlides: () => PptxSlide[];
 	/**
@@ -261,7 +263,7 @@ export class AutosaveController {
 				this.status = 'idle';
 				return;
 			}
-			await saveAutosaveSnapshot(filePath, bytes);
+			await saveAutosaveSnapshot(filePath, bytes, this.#deps.getStorage?.());
 			this.lastSavedAt = Date.now();
 			if (this.#firstDirtyAt === savingFrom) {
 				this.#firstDirtyAt = null;

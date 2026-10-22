@@ -2,16 +2,10 @@
 
 ## 职责归属 {#ownership}
 
-- 同级 `ooxml` 中的 `ooxml-core/visio`：包的接收、XML、模型、继承、缓存几何以及结构化诊断。此处不包含任何查看器 UI。
-- `src/controller.ts`：文档/视图状态、选择、事件、“最新加载优先”行为以及事务性编辑编排。
-- `src/document-history.ts`：有上限的、以源为依据的编辑历史以及 VSDX 副本导出状态。XML/包的变更仍在核心中进行，并通过专用 Worker 运行。
-- `src/document-text-search.ts`：对规范化后的可见形状文本进行有上限的字面匹配，并给出不可变的、按页面划分的结果。导航和重入检查由共享控制器负责。
-- `src/render-svg.ts` 和 `src/render-text.ts`：SVG 呈现与渲染警告。
-- `src/export-svg.ts`：通过同一 SVG 渲染器对当前页面进行有上限的静态序列化，包含嵌入的栅格资源和兼容性元数据。
-- `src/print-snapshot.ts`：无副作用的所选页面产物、聚合预算以及保留的诊断信息。它不会创建打印框架，也不实现打印机策略。
-- `src/viewer-element.ts`：共享的浏览器界面。
-- `src/contract.ts` 和 `src/binding.ts`：属性、事件，以及仅限客户端的 mount/update/load/fit/exportSvg/destroy 生命周期。重入的较新更新会取代尚未处理的较旧补丁。
-- 框架包装器：仅负责框架生命周期以及事件/属性转发。没有针对各框架的解析、渲染或几何分叉。
+- `src/core/visio`（`ooxml-core/visio` 入口）：包的接收、XML、模型、继承、缓存几何、ShapeSheet 求值、编辑命令、协作映射（`ooxml-core/visio/collab`）以及结构化诊断。此处不包含任何查看器 UI。不依赖 DOM 的视图约定同样在核心中，位于 `src/core/visio/ui`：`contract.ts`（属性和事件）、`document-history.ts`（有上限的、以源为依据的编辑历史以及 VSDX 副本导出状态；XML/包的变更通过专用 Worker 运行）、`document-text-search.ts`（对规范化后的可见形状文本进行有上限的字面匹配，给出不可变的、按页面划分的结果）、协作选项与在线状态类型，以及其他不依赖 DOM 的编辑和视图方案。
+- `src/ui/src/visio`（以 `ooxml-ui/visio` 发布）：浏览器查看器。`controller.ts` 负责文档/视图状态、选择、事件、“最新加载优先”行为以及事务性编辑；`viewer-element.ts` 是共享的 `<visio-viewer>` 界面；`binding.ts` 是仅限客户端的 mount/update/load/fit/exportSvg/destroy 生命周期（重入的较新更新会取代尚未处理的较旧补丁）；`render-svg.ts` 和 `render-text.ts` 负责 SVG 呈现与渲染警告；`export-svg.ts` 通过同一 SVG 渲染器对当前页面进行有上限的静态序列化；`print-snapshot.ts` 生成无副作用的所选页面产物并带有聚合预算（它不会创建打印框架，也不实现打印机策略）；构建模块是 `building-blocks-*.ts`。
+- `viewers/visio/src/index.ts`：对 `ooxml-ui/visio` 的重新导出。
+- `viewers/visio/packages/bindings/src`（私有）以及 `packages/{react,vue,angular,svelte,solid,vanilla}`：框架生命周期、事件/属性转发，以及原生的构建模块组合。没有针对各框架的解析、渲染或几何分叉。
 
 ## 边界 {#boundaries}
 
@@ -29,9 +23,9 @@
 
 ## 嵌入式元文件 {#embedded-metafiles}
 
-嵌入的增强型元文件会接受有上限的记录级兼容性诊断。检查器会在任何转换之前拒绝不支持的格式、样式、映射状态和资源放大。它不会执行嵌入的 WMF 数据、字体、图像、脚本或外部引用。一次性的解析器 Worker 仅通过已发布的转换器包，在文档预算和由父级持有的硬性期限之内，转换一个范围很窄、已获准的线条/矩形/椭圆及库存对象子集。除非在隔离的宿主中明确提供受信任的转换器，否则直接的核心解析仍然只用于检查。先前检查的全部五个真实 EMF 媒体部件仍不受支持；仅有结构上的准入并不意味着承诺渲染或 Visio 保真度。
+嵌入的增强型元文件会接受有上限的记录级兼容性诊断。检查器会在任何转换之前拒绝不支持的格式、样式、映射状态和资源放大。它不会执行嵌入的 WMF 数据、字体、图像、脚本或外部引用。一次性的解析器 Worker 仅通过转换器包，在文档预算和由父级持有的硬性期限之内，转换一个范围很窄、已获准的线条/矩形/椭圆及库存对象子集。除非在隔离的宿主中明确提供受信任的转换器，否则直接的核心解析仍然只用于检查。先前检查的全部五个真实 EMF 媒体部件仍不受支持；仅有结构上的准入并不意味着承诺渲染或 Visio 保真度。
 
-无头核心包含一个经过测试的中性矢量清理器和传输验证器。解析器 Worker 使用已发布的转换器处理有上限的基本 EMF 子集，该子集由实时渲染、SVG 导出和不可变的打印渲染共用。非 Worker 的解析器回退路径仍不含转换器。生成的纯路径裁剪测试与本地 Skia SVG 后端一致；已安装的 librsvg 后端会忽略嵌套的 clip-path 交集。仍需进行浏览器和原生 Visio 的对比。参见[详细的采用评审](research/emf-adoption-review.md)。
+无头核心包含一个经过测试的中性矢量清理器和传输验证器。解析器 Worker 使用转换器处理有上限的基本 EMF 子集，该子集由实时渲染、SVG 导出和不可变的打印渲染共用。非 Worker 的解析器回退路径仍不含转换器。生成的纯路径裁剪测试与本地 Skia SVG 后端一致；已安装的 librsvg 后端会忽略嵌套的 clip-path 交集。仍需进行浏览器和原生 Visio 的对比。参见[详细的采用评审](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/research/emf-adoption-review.md)。
 
 ## 验证 {#verification}
 
@@ -41,8 +35,6 @@
 
 静态的多页面 Vite 构建：主页、指南、功能清单、架构以及独立的演示环境。链接为相对链接，资源均为本地资源。没有第三方字体或脚本。着陆页上没有解析器包。
 
-文档设计借鉴了 [pptx-viewer 参考实现](https://github.com/ChristopherVR/pptx-viewer)。深入的评审见 `research/pptx-pages-design-review.md`。
-
 ## 发布 {#publication}
 
-七个 npm 包提供无头 Visio API 和共享查看器，并附带六个原生框架适配器。它们依赖已发布的 `ooxml-core/visio`。每小时一次的约定式提交发布会构建并验证打包产物，然后通过 npm 可信发布进行发布。检查通过后，GitHub Pages 会部署文档和演示。
+八个 npm 包提供无头 Visio API、带有六个原生框架适配器的共享查看器以及 MCP 工具。它们依赖 `ooxml-core` 和 `ooxml-ui`，这两者位于本仓库中并与它们一起发布（见[版本发布](/releasing)）。仓库的 Pages 构建会把文档和演示部署到 `/ooxml/visio/` 下。

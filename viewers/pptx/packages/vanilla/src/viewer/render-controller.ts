@@ -36,6 +36,7 @@ import type { Store, ViewerState } from './state';
 import type { ViewerChrome } from './ui';
 import { renderHandoutMasterCanvas, renderNotesMasterCanvas } from './ui/master-canvases';
 import { fitViewerViewport } from './viewport-fit';
+import type { ViewportMeasureCache } from './viewport-fit';
 
 /** The sidebar's action list for the current master-view target, or `[]` when there is none. */
 function currentMasterViewCrudActions(state: ViewerState): MasterViewCrudAction[] {
@@ -144,6 +145,8 @@ export interface RenderController {
 	renderAll(): void;
 	/** Re-render the main stage + toolbar counters at the current state. */
 	renderStage(): void;
+	/** Forget the viewport measurement the fit scale reuses; call when the viewport resizes. */
+	invalidateViewportSize(): void;
 	/** Rebuild the thumbnail rail from the current slide list. */
 	renderThumbnails(): void;
 	/**
@@ -253,10 +256,22 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			reRenderPresentationElements(presentationContext, presentationStageNode, ids);
 		}
 	};
+	// The scale is read on every pointer event; measure the viewport once per stage render or
+	// resize instead of on each read.
+	const viewportMeasure: ViewportMeasureCache = {};
+	const invalidateViewportSize = (): void => {
+		viewportMeasure.client = undefined;
+	};
 	const fitScaleFor = (canvasSize: { width: number; height: number }): number => {
 		const state = store.get();
 		const viewport = deps.getChrome().viewport;
-		return fitViewerViewport(viewport, canvasSize, deps.getFitOptions?.() ?? {}, state.presenting);
+		return fitViewerViewport(
+			viewport,
+			canvasSize,
+			deps.getFitOptions?.() ?? {},
+			state.presenting,
+			viewportMeasure,
+		);
 	};
 	const effectiveScaleFor = (canvasSize: { width: number; height: number }): number => {
 		const state = store.get();
@@ -277,6 +292,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 	};
 
 	const renderStage = (): void => {
+		invalidateViewportSize();
 		const chrome = deps.getChrome();
 		const state = store.get();
 		const target = state.masterViewTarget;
@@ -528,6 +544,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			chrome.ribbon?.setViewOptions(state);
 		},
 		renderStage,
+		invalidateViewportSize,
 		renderThumbnails,
 		renderSlideNode: (slide, scale) => renderStageFor(slide, scale),
 		effectiveScale,

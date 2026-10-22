@@ -131,6 +131,7 @@ export const enApp = {
 	'Next page section break': 'Next page section break',
 	'Continuous section break': 'Continuous section break',
 	'Next page': 'Next page',
+	'Previous page': 'Previous page',
 	Continuous: 'Continuous',
 	'Page numbers': 'Page numbers',
 	'Page number format': 'Page number format',

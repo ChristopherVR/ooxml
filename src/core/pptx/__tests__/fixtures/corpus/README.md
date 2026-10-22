@@ -29,7 +29,7 @@ envelopes, namespace verbosity, etc.), which synthetic fixtures never do.
   plain rectangle) and the modern `TextFrame2.WarpFormat` property (which
   does emit real `a:prstTxWarp` curve/arch/wave geometry).
 - **smartart-orgchart-assistants.pptx** - 3 slides on the "Organization
-  Chart" layout (`scripts/make-smartart-orgchart-assistants.ps1`): a manager
+  Chart" layout (`viewers/pptx/scripts/make-smartart-orgchart-assistants.ps1`): a manager
   with 1, 3 and 4 assistants above its 3 reports. The witness for the
   assistant band: assistants pair up either side of the manager's centre line
   (the left one first, `sibSp / 2` from the line), further pairs stack one

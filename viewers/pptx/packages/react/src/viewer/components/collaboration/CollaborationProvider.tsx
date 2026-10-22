@@ -27,7 +27,7 @@ import { useCollaborativeState } from '../../hooks/collaboration/useCollaborativ
 // Context
 // ---------------------------------------------------------------------------
 
-const CollaborationContext = createContext<CollaborationContextValue | null>(null);
+const CollaborationContext = /* @__PURE__ */ createContext<CollaborationContextValue | null>(null);
 
 /**
  * Access the collaboration context. Returns null when called outside a

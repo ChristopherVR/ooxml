@@ -1,6 +1,8 @@
 // Shell strings (title bar, ribbon chrome, backstage, status bar, keyboard help, file commands).
 // English key -> fr text. Grid and command strings live in grid.ts and commands.ts.
 export const shell: Record<string, string> = {
+	'The current cell edit failed validation.':
+		'La modification de la cellule en cours a échoué à la validation.',
 	'Finish or cancel the current cell edit before saving.':
 		'Terminez ou annulez la modification de la cellule avant de sauvegarder.',
 	File: 'Fichier',

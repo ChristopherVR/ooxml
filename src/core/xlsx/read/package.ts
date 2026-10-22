@@ -9,17 +9,13 @@ import {
 	type ContentTypes,
 	type Relationship,
 	guardZip,
-	type ZipLimits as OpcZipLimits,
 } from '../../opc/index';
-
-/** Largest accepted package (compressed). */
-export const MAX_INPUT_BYTES = 50 * 1024 * 1024;
-/** Largest number of zip entries. */
-export const MAX_PARTS = 10_000;
-/** Largest total uncompressed size, guarding against zip bombs. */
-export const MAX_UNCOMPRESSED_BYTES = 300 * 1024 * 1024;
-/** Largest uncompressed size of a single part. */
-export const MAX_PART_BYTES = 200 * 1024 * 1024;
+import {
+	type XlsxLoadLimits,
+	WorkbookTooLargeError,
+	resolveLoadLimits,
+	zipLimitsFor,
+} from './limits';
 
 /** Content types of the SpreadsheetML parts the reader and writer know. */
 export const CONTENT_TYPES = {
@@ -125,37 +121,24 @@ export class SourceIndex {
 
 const mib = (bytes: number): number => Math.round(bytes / 1048576);
 
-/** Size limits applied while unzipping; every field defaults to the exported constant. */
-export interface ZipLimits {
-	/** Largest accepted package (compressed). */
-	maxInputBytes?: number;
-	/** Largest number of zip entries. */
-	maxParts?: number;
-	/** Largest inflated size of one part. */
-	maxPartBytes?: number;
-	/** Largest total inflated size of all parts. */
-	maxTotalBytes?: number;
-}
-
 /**
- * Unzips a package into raw parts, enforcing the size and part-count limits. Declared sizes give
- * a cheap early reject; the real guard (`opc/zip-limits`) counts inflated bytes while streaming
- * each entry.
+ * Unzips a package into raw parts, enforcing the size and part-count limits (see
+ * {@link XlsxLoadLimits}). Declared sizes give a cheap early reject; the real guard
+ * (`opc/zip-limits`) counts inflated bytes while streaming each entry.
  */
 export async function readZipParts(
 	input: Uint8Array | ArrayBuffer,
-	limits: ZipLimits = {},
+	limits: XlsxLoadLimits = {},
 ): Promise<Map<string, Uint8Array>> {
-	const maxInput = limits.maxInputBytes ?? MAX_INPUT_BYTES;
-	const zipLimits: OpcZipLimits = {
-		maxEntries: limits.maxParts ?? MAX_PARTS,
-		maxEntryBytes: limits.maxPartBytes ?? MAX_PART_BYTES,
-		maxTotalBytes: limits.maxTotalBytes ?? MAX_UNCOMPRESSED_BYTES,
-		label: 'XLSX',
-	};
+	const resolved = resolveLoadLimits(limits);
+	const maxInput = resolved.maxInputBytes;
 	const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
 	if (bytes.byteLength > maxInput)
-		throw new Error(`XLSX package exceeds the ${mib(maxInput)} MiB compressed input limit`);
+		throw new WorkbookTooLargeError(
+			`XLSX package exceeds the ${mib(maxInput)} MiB compressed input limit`,
+			'maxInputBytes',
+			maxInput,
+		);
 	let loaded: JSZip;
 	try {
 		loaded = await JSZip.loadAsync(bytes);
@@ -165,7 +148,7 @@ export async function readZipParts(
 			{ cause: error },
 		);
 	}
-	const zip = guardZip(loaded, zipLimits);
+	const zip = guardZip(loaded, zipLimitsFor(resolved));
 	const parts = new Map<string, Uint8Array>();
 	for (const entry of Object.values(zip.files)) {
 		if (entry.dir) continue;

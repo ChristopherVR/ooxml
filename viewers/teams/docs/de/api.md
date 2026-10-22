@@ -79,7 +79,7 @@ Autorisierung, bevor sie als Zugriffskontrolle gelten können.
 Beide Dateiansichten bieten Hochladen, das Anlegen leerer Excel-Arbeitsmappen und Suche. Uploads
 und neue Arbeitsmappen gehen in den ausgewählten Kanal, der neben den Bedienelementen genannt wird.
 Sie benötigen konfigurierten Speicher; Fehler können im ursprünglichen Kanal wiederholt werden.
-Gleichnamige Dateien erhalten getrennte Speicher-URLs. Uploads akzeptieren bis zu 20 Dateien zu je 32 MiB;
+Gleichnamige Dateien erhalten getrennte Speicher-URLs. Uploads akzeptieren bis zu 20 Dateien zu je 32 MiB (das Limit des Referenzservers liegt bei 25 MB pro Datei, solange Sie `maxFileBytes` nicht erhöhen);
 die Oberfläche meldet Aktivität, bietet aber weder Byte-Fortschritt noch Abbruch.
 
 ```ts

@@ -11,4 +11,6 @@ import type { AccountAuthConfig } from 'ooxml-ui/pptx';
 import { createContext } from 'react';
 
 /** `undefined` when the host has not opted in to a sign-in flow. */
-export const AccountAuthContext = createContext<AccountAuthConfig | undefined>(undefined);
+export const AccountAuthContext = /* @__PURE__ */ createContext<AccountAuthConfig | undefined>(
+	undefined,
+);

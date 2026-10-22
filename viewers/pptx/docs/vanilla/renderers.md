@@ -87,7 +87,7 @@ const myRenderer: ElementRenderer = (element, zIndex, context) => {
 The contract (documented on `ElementRenderer` in the source):
 
 - **Position absolutely** within the stage from the element's `x` / `y` / `width` / `height`
-  (unscaled canvas px). The built-in renderers do this with the shared `getContainerStyle`
+  (unscaled canvas px). The built-in renderers do this with the shared `getContainerStyle` (from `ooxml-ui/pptx`)
   helper, which also handles rotation and flips. The stage scales via a CSS transform; do not
   scale yourself.
 - Set `dataset.elementId = element.id` on the root node.
@@ -189,7 +189,7 @@ thumbnails both do).
 
 - Re-render happens automatically on navigation, zoom, theme, and locale changes; registry
   changes apply from the next render (navigate or call `goToSlide(getCurrentSlide())` to force).
-- Reuse `pptx-viewer-shared` helpers rather than reimplementing geometry/style math; the
+- Reuse the `ooxml-ui/pptx` helpers rather than reimplementing geometry/style math; the
   built-in renderers in
   [`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx/packages/vanilla/src/viewer/render/elements)
   are the reference implementations, and their `README.md` documents the house contract.

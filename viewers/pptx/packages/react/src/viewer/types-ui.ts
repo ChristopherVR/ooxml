@@ -1,9 +1,15 @@
+import type { CollaborationState } from 'ooxml-core/collab';
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
+	AutosaveRecord,
+	CollaborationInput,
+	ConnectionStatus,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
+	ViewerAutosaveStatus,
 	ViewerCustomization,
 	ViewerCustomizationApi,
 	ViewerFontSource,
@@ -14,6 +20,7 @@ import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type {
 	ConnectorArrowType,
 	PptxAnimationPreset,
+	PptxCoreProperties,
 	PptxElementAnimation,
 	PptxSlideTransition,
 	StrokeDashType,
@@ -293,7 +300,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * and canvas size.
 	 */
 	onLoad?: (detail: ViewerLoadDetail) => void;
-	/** Fired once per distinct load failure, with a human-readable message. */
+	/** Fired once per distinct load failure, and for each failed Save / Save As, with a human-readable message. */
 	onError?: (message: string) => void;
 	/**
 	 * Host override for the File ▸ Open action. When provided, the built-in
@@ -305,6 +312,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 
 	/** Whether editing actions are enabled */
 	canEdit?: boolean;
+	/**
+	 * Makes the deck read-only (default `false`). It is the inverse of the edit switch: true wins
+	 * over it, false only lifts this restriction, so editing still needs the edit switch and
+	 * is never granted over a collaboration `viewer` role or `capabilities.edit`.
+	 */
+	readOnly?: boolean;
 	/**
 	 * Recovery autosave: after an edit the deck is re-serialised (always as a
 	 * plain, unencrypted package, because recovery has no password) and stashed
@@ -327,6 +340,35 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * "Save AutoRecover information every N minutes" (two minutes by default).
 	 */
 	autosaveIntervalMs?: number;
+	/**
+	 * Host-owned storage (`DocumentStorage` from `ooxml-core/embedding`). When set,
+	 * Save and Save As hand the bytes to `storage.save()` instead of downloading
+	 * them, and recovery autosave snapshots go to the storage's recovery methods
+	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
+	 * when it provides them.
+	 */
+	storage?: DocumentStorage;
+	/** Fired with the serialised deck each time a recovery autosave snapshot is written. */
+	onAutosave?: (content: Uint8Array) => void;
+	/** Fired when the user enables or disables autosave (title bar or File > Options). */
+	onAutosaveToggle?: (enabled: boolean) => void;
+	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
+	onAutosaveStatus?: (status: ViewerAutosaveStatus) => void;
+	/**
+	 * Fired when a recovery snapshot left by a previous session is found for this deck. The
+	 * built-in recovery prompt is shown as well.
+	 */
+	onAutosaveRecovery?: (record: AutosaveRecord) => void;
+	/** Fired after any committed document edit (move, resize, text, undo, redo, ...). */
+	onChange?: () => void;
+	/** Fired with the changed fields when the user saves the document properties dialog. */
+	onPropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
+	/** Fired with the new speaker-notes text when the user edits the notes of a slide. */
+	onNotesUpdate?: (notes: string) => void;
+	/** Fired when presentation (slide show) mode is entered (`true`) or left (`false`). */
+	onPresentationChange?: (presenting: boolean) => void;
+	/** Fired on every collaboration connection-status transition. */
+	onCollaborationStatus?: (status: ConnectionStatus) => void;
 	/** Optional class name */
 	className?: string;
 
@@ -429,7 +471,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * />
 	 * ```
 	 */
-	collaboration?: CollaborationConfig;
+	collaboration?: CollaborationInput;
 
 	/**
 	 * Callback invoked when the user starts a collaboration session from the
@@ -443,6 +485,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Share dialog. The host app should clear the `collaboration` prop.
 	 */
 	onStopCollaboration?: () => void;
+
+	/**
+	 * Reports the shared `CollaborationState` (the contract Word, Excel and Visio
+	 * use): called when a session starts or stops (the off state), and when its
+	 * connection status, synced flag or people change. Works for viewer-owned and
+	 * host-owned (`collaboration.session`) sessions; unchanged states are not repeated.
+	 */
+	onCollaborationChange?: (state: CollaborationState) => void;
 
 	/**
 	 * Default values for the Share dialog fields. The host app should provide

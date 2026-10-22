@@ -33,6 +33,11 @@ export interface UseCompatibilityToastsResult {
 	dismiss: (id: string) => void;
 	dismissAll: () => void;
 	reset: () => void;
+	/**
+	 * Show a notice outside the load diagnostics (a failed Save); shown again if it was dismissed.
+	 * Cleared by {@link reset} with the rest.
+	 */
+	notify: (toast: CompatibilityWarningToast) => void;
 }
 
 export function useCompatibilityToasts(
@@ -41,7 +46,11 @@ export function useCompatibilityToasts(
 	const dismissedIds = ref<Set<string>>(new Set());
 	const allDismissed = ref(false);
 
-	const allToasts = computed(() => compatibilityWarningToasts(input.warnings.value));
+	const notices = ref<CompatibilityWarningToast[]>([]);
+	const allToasts = computed(() => [
+		...notices.value,
+		...compatibilityWarningToasts(input.warnings.value),
+	]);
 
 	const activeToasts = computed(() =>
 		allDismissed.value ? [] : allToasts.value.filter((toast) => !dismissedIds.value.has(toast.id)),
@@ -63,7 +72,19 @@ export function useCompatibilityToasts(
 	function reset(): void {
 		dismissedIds.value = new Set();
 		allDismissed.value = false;
+		notices.value = [];
 	}
 
-	return { visibleToasts, overflowCount, dismiss, dismissAll, reset };
+	function notify(toast: CompatibilityWarningToast): void {
+		// "Dismiss all" stays in force for what was already shown; only the new notice appears.
+		const dismissed = allDismissed.value
+			? new Set(allToasts.value.map((entry) => entry.id))
+			: new Set(dismissedIds.value);
+		notices.value = [toast, ...notices.value.filter((entry) => entry.id !== toast.id)];
+		dismissed.delete(toast.id);
+		dismissedIds.value = dismissed;
+		allDismissed.value = false;
+	}
+
+	return { visibleToasts, overflowCount, dismiss, dismissAll, reset, notify };
 }

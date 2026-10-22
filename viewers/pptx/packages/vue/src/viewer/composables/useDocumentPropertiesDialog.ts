@@ -8,6 +8,8 @@ export interface UseDocumentPropertiesDialogInput {
 	coreProperties: Ref<PptxCoreProperties | undefined>;
 	customProperties: Ref<PptxCustomProperty[]>;
 	appProperties: Ref<PptxAppProperties | undefined>;
+	/** The host's `properties-change` event: the core fields the dialog saved. */
+	onCorePropertiesChanged?: (updates: Partial<PptxCoreProperties>) => void;
 }
 
 export interface UseDocumentPropertiesDialogResult {
@@ -34,6 +36,7 @@ export function useDocumentPropertiesDialog(
 			appProperties.value = { ...appProperties.value, ...patch.app };
 		}
 		propertiesOpen.value = false;
+		input.onCorePropertiesChanged?.(patch.core);
 	}
 
 	return { propertiesOpen, onPropertiesSave };

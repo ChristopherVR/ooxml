@@ -1,9 +1,11 @@
 import { link, open, realpath, rename, unlink } from 'node:fs/promises';
 import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import type { AutomationTool } from './tools/types';
 
 export interface ByteEditResult {
-	bytes: Uint8Array;
+	/** Absent when the edit changed nothing. */
+	bytes?: Uint8Array | undefined;
 }
 
 /** Local filesystem boundary used by the repository-owned MCP adapters. */
@@ -137,6 +139,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 				return { filePath: await rel(path), saved: true };
 			});
 		},
+		/** Edit a file; an edit that returns no bytes changed nothing and writes nothing. */
 		async edit<T extends ByteEditResult>(
 			file: string,
 			extensions: readonly string[],
@@ -149,6 +152,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 				throw new Error('Save-as must keep the source file extension');
 			return serial(path, async () => {
 				const { bytes, ...result } = await edit(await read(path));
+				if (!bytes) return { ...result, filePath: await rel(path), saved: false };
 				await write(output, bytes, output === path);
 				return { ...result, filePath: await rel(output), saved: true };
 			});
@@ -177,4 +181,84 @@ export function createFileOperations(rootDir = process.cwd()) {
 		wrapped[name] = (...args: unknown[]) =>
 			scrub(() => (fn as (...a: unknown[]) => Promise<unknown>)(...args));
 	return wrapped as unknown as Api;
+}
+
+type FileOperations = ReturnType<typeof createFileOperations>;
+
+/** What `runAutomationFileTool` takes: the tool's own parameters plus where the file is. */
+export interface FileToolParams extends Record<string, unknown> {
+	filePath: string;
+	/** Edit tools only: save to this path instead of replacing the source. */
+	outputPath?: string;
+}
+
+/**
+ * Runs a headless tool against a file under the root: reads never write, creates never
+ * overwrite, and edits replace the source atomically unless `outputPath` is given.
+ */
+export async function runAutomationFileTool(
+	files: FileOperations,
+	tool: AutomationTool,
+	{ filePath, outputPath, ...params }: FileToolParams,
+): Promise<unknown> {
+	if (tool.kind === 'read')
+		return files.inspect(filePath, tool.extensions, (bytes) => tool.run(bytes, params));
+	if (tool.kind === 'create')
+		return files.create(filePath, tool.extensions, () => tool.run(params));
+	return files.edit(filePath, tool.extensions, (bytes) => tool.run(bytes, params), outputPath);
+}
+
+/**
+ * An MCP SDK `McpServer`, or anything with its `registerTool`. Typed loosely so every SDK version
+ * fits without core depending on it; the calls below follow the SDK's `registerTool` contract.
+ */
+export interface McpToolServer {
+	registerTool(name: string, config: never, handler: never): unknown;
+}
+
+interface ToolConfig {
+	description: string;
+	inputSchema: Readonly<Record<string, unknown>>;
+	annotations: { readOnlyHint: boolean; destructiveHint: boolean; openWorldHint: boolean };
+}
+
+type ToolHandler = (
+	params: FileToolParams,
+) => Promise<{ content: { type: 'text'; text: string }[]; isError?: boolean }>;
+
+const NOTES = {
+	read: '',
+	create: ' Existing files are never overwritten.',
+	edit: ' Without outputPath the source is updated.',
+};
+
+/**
+ * Registers headless tools on an MCP server as file tools confined to `rootDir`: each gains a
+ * `filePath` (and, for edits, `outputPath`), returns its result as JSON text and reports a
+ * failure as a tool error. This is all an MCP package needs; the tools themselves live in core.
+ */
+export function registerAutomationTools(
+	server: McpToolServer,
+	tools: readonly AutomationTool[],
+	options: { rootDir?: string | undefined } = {},
+): void {
+	const files = createFileOperations(options.rootDir);
+	for (const tool of tools) {
+		const readOnly = tool.kind === 'read';
+		const config: ToolConfig = {
+			description: tool.description + NOTES[tool.kind],
+			inputSchema: tool.fileInput,
+			annotations: { readOnlyHint: readOnly, destructiveHint: !readOnly, openWorldHint: false },
+		};
+		const handler: ToolHandler = async (params) => {
+			try {
+				const result = await runAutomationFileTool(files, tool, params);
+				return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+			} catch (error) {
+				const text = error instanceof Error ? error.message : String(error);
+				return { isError: true, content: [{ type: 'text', text }] };
+			}
+		};
+		server.registerTool(tool.name, config as never, handler as never);
+	}
 }

@@ -2,7 +2,11 @@ import { defineConfig } from 'tsup';
 
 /** Fast local build for the format's consumer, independent of the PowerPoint bundle. */
 export default defineConfig({
-	entry: { 'visio/index': 'visio/index.ts', 'visio/ui/index': 'visio/ui/index.ts' },
+	entry: {
+		'visio/index': 'visio/index.ts',
+		'visio/ui/index': 'visio/ui/index.ts',
+		'visio/collab/index': 'visio/collab/index.ts',
+	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
 	format: ['esm', 'cjs'],
@@ -11,7 +15,7 @@ export default defineConfig({
 	splitting: false,
 	sourcemap: false,
 	clean: false,
-	external: ['jszip', '@xmldom/xmldom'],
+	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0'],
 	treeshake: true,
 	platform: 'neutral',
 });

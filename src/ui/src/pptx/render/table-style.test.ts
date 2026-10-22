@@ -49,7 +49,9 @@ describe('cellStyleToCss', () => {
 	it('should emit the cell font family (a:rPr/a:latin)', () => {
 		// Parsed by core but dropped by this mapper until issue F3: a cell that
 		// named an explicit typeface rendered in the binding default stack.
-		expect(cellStyleToCss({ fontFamily: 'Georgia' }).fontFamily).toBe('Georgia');
+		// Through the substitution chain, as shape text: a bare name falls back
+		// to the browser default when the font is missing.
+		expect(cellStyleToCss({ fontFamily: 'Georgia' }).fontFamily).toMatch(/^"?Georgia"?, /u);
 	});
 
 	it('should map font / colour / weight properties', () => {
@@ -194,6 +196,41 @@ describe('cellStyleToCss', () => {
 });
 
 describe('cellRunStyle', () => {
+	it('substitutes the run family and keeps a bold weight variant at its weight', () => {
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Light' }).fontFamily).toMatch(
+			/^"DM Sans Light", "DM Sans"/u,
+		);
+		// A regular run inherits the weight the cell resolved.
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Light' }).fontWeight).toBeUndefined();
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Light', bold: true }).fontWeight).toBe(
+			'bold',
+		);
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Black', bold: true }).fontWeight).toBe(
+			'900',
+		);
+	});
+
+	it('weighs a regular run in its own family against the cell it sits in', () => {
+		const regularCell = { fontFamily: '"DM Sans Light", "DM Sans", sans-serif', fontWeight: 300 };
+		const run = (fontFamily: string) => cellRunStyle({ text: 'a', fontFamily }, regularCell);
+		// Same weight as the cell: inherited.
+		expect(run('DM Sans Light').fontWeight).toBeUndefined();
+		expect(run('DM Sans Medium').fontWeight).toBe(500);
+		expect(run('DM Sans Black').fontWeight).toBe(900);
+		expect(run('Arial').fontWeight).toBe(400);
+		// In a bold header row every regular run is at least bold.
+		const boldCell = { fontWeight: 700 };
+		expect(
+			cellRunStyle({ text: 'a', fontFamily: 'DM Sans Light' }, boldCell).fontWeight,
+		).toBeUndefined();
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Black' }, boldCell).fontWeight).toBe(900);
+		// A cell in a Black family is 900 without being bold.
+		const blackCell = { fontFamily: '"DM Sans Black", "DM Sans", sans-serif', fontWeight: 900 };
+		expect(cellRunStyle({ text: 'a', fontFamily: 'DM Sans Light' }, blackCell).fontWeight).toBe(
+			300,
+		);
+	});
+
 	it("carries the run's line-height, which exact paragraph spacing sets to zero", () => {
 		expect(cellRunStyle({ text: '•', fontSize: 9, lineHeight: 0 }).lineHeight).toBe(0);
 		expect(cellRunStyle({ text: '•', fontSize: 9 })).not.toHaveProperty('lineHeight');

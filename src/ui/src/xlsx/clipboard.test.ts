@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { getCell, parseRange } from 'ooxml-core/xlsx';
 import { createGridClipboard } from './clipboard';
 import { createTestContext } from './grid/test-context';
+import { provideCustomization, resolveExcelCustomization } from './customization';
 
 const range = (ref: string) => {
 	const result = parseRange(ref);
@@ -56,5 +57,25 @@ describe('grid clipboard selection', () => {
 		expect(clipboard.paste({ text: payload.tsv })).toBe(false);
 		expect(ctx.toasts).toContain('The copy and paste areas are not compatible sizes.');
 		expect(getCell(sheet, 2, 2)).toBeUndefined();
+	});
+});
+
+describe('grid clipboard with capabilities.copy off', () => {
+	it('refuses the browser copy and cut', () => {
+		const ctx = createTestContext();
+		provideCustomization(ctx, () => resolveExcelCustomization({ capabilities: { copy: false } }));
+		const sink = document.createElement('textarea');
+		createGridClipboard({
+			ctx,
+			sink,
+			isEditing: () => false,
+			setMarquee: () => undefined,
+			selectRange: () => undefined,
+		});
+		for (const type of ['copy', 'cut']) {
+			const event = new Event(type, { cancelable: true });
+			sink.dispatchEvent(event);
+			expect(event.defaultPrevented).toBe(true);
+		}
 	});
 });

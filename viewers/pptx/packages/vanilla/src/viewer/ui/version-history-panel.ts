@@ -5,12 +5,15 @@ import {
 	formatVersionTimestamp,
 	getAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
+import type { DocumentStorage } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 
 export interface VersionHistoryOptions {
 	filePath: string;
+	/** Host `storage` option: the snapshot is read from its recovery methods when it has them. */
+	storage?: DocumentStorage | undefined;
 	onRestore(data: Uint8Array): void | Promise<void>;
 }
 
@@ -40,7 +43,7 @@ export function openVersionHistoryPanel(
 	panel.append(header, content);
 	mount.appendChild(panel);
 
-	void getAutosaveSnapshot(options.filePath)
+	void getAutosaveSnapshot(options.filePath, options.storage)
 		.then((version) => {
 			content.replaceChildren();
 			if (!version) {
@@ -67,7 +70,7 @@ export function openVersionHistoryPanel(
 			remove.type = 'button';
 			remove.textContent = t('pptx.common.delete');
 			remove.addEventListener('click', () => {
-				void deleteAutosaveSnapshot(version.key)
+				void deleteAutosaveSnapshot(version.key, options.storage)
 					.then(() => card.remove())
 					.catch(() => {
 						// Keep the entry visible so deletion can be retried.

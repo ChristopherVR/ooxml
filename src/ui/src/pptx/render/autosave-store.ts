@@ -8,6 +8,18 @@
  * retried once.
  */
 
+import type { DocumentStorage } from 'ooxml-core/embedding';
+
+import {
+	hostRecoveryStore,
+	listHostSnapshots,
+	readHostSnapshot,
+	writeHostSnapshot,
+	type AutosaveRecord,
+} from './autosave-host-store';
+
+export type { AutosaveRecord } from './autosave-host-store';
+
 export const AUTOSAVE_DB_NAME = 'pptx-viewer-autosave';
 export const AUTOSAVE_DB_VERSION = 1;
 export const AUTOSAVE_STORE_NAME = 'recoveryVersions';
@@ -119,20 +131,23 @@ function putAutosaveRecord(filePath: string, data: Uint8Array): Promise<boolean>
 
 // ---------------------------------------------------------------------------
 // Read helpers (for host-app recovery flows)
+//
+// Each helper takes the viewer's `storage` last: when it provides the recovery methods of
+// `ooxml-core/embedding`, the snapshot lives with the host instead of in IndexedDB.
 // ---------------------------------------------------------------------------
-
-export interface AutosaveRecord {
-	key: string;
-	data: Uint8Array;
-	timestamp: number;
-	size: number;
-}
 
 /**
  * Retrieve a single autosave snapshot by file path.
  * Returns undefined when no snapshot exists.
  */
-export async function getAutosaveSnapshot(filePath: string): Promise<AutosaveRecord | undefined> {
+export async function getAutosaveSnapshot(
+	filePath: string,
+	storage?: DocumentStorage | null,
+): Promise<AutosaveRecord | undefined> {
+	const host = hostRecoveryStore(storage);
+	if (host) {
+		return readHostSnapshot(host, filePath);
+	}
 	const db = await openAutosaveDb();
 	return new Promise((resolve) => {
 		const tx = db.transaction(AUTOSAVE_STORE_NAME, 'readonly');
@@ -153,9 +168,13 @@ export async function getAutosaveSnapshot(filePath: string): Promise<AutosaveRec
  * List all autosave snapshots (without the heavy `data` blob).
  * Useful for showing a recovery picker on app start.
  */
-export async function listAutosaveSnapshots(): Promise<
-	Array<{ key: string; timestamp: number; size: number }>
-> {
+export async function listAutosaveSnapshots(
+	storage?: DocumentStorage | null,
+): Promise<Array<{ key: string; timestamp: number; size: number }>> {
+	const host = hostRecoveryStore(storage);
+	if (host) {
+		return listHostSnapshots(host);
+	}
 	const db = await openAutosaveDb();
 	return new Promise((resolve) => {
 		const results: Array<{ key: string; timestamp: number; size: number }> = [];
@@ -191,7 +210,15 @@ export async function listAutosaveSnapshots(): Promise<
 }
 
 /** Delete a snapshot, rejecting when IndexedDB cannot commit the transaction. */
-export async function deleteAutosaveSnapshot(filePath: string): Promise<boolean> {
+export async function deleteAutosaveSnapshot(
+	filePath: string,
+	storage?: DocumentStorage | null,
+): Promise<boolean> {
+	const host = hostRecoveryStore(storage);
+	if (host) {
+		await host.clearRecovery(filePath);
+		return true;
+	}
 	const db = await openAutosaveDb();
 	return new Promise((resolve, reject) => {
 		try {
@@ -225,9 +252,21 @@ export async function deleteAutosaveSnapshot(filePath: string): Promise<boolean>
 
 /**
  * Persist a recovery snapshot. On QuotaExceededError the oldest record is
- * dropped and the write retried once.
+ * dropped and the write retried once. With a host recovery store (`storage`),
+ * the host keeps it instead and its own retention applies.
  */
-export async function saveAutosaveSnapshot(filePath: string, data: Uint8Array): Promise<boolean> {
+export async function saveAutosaveSnapshot(
+	filePath: string,
+	data: Uint8Array,
+	storage?: DocumentStorage | null,
+): Promise<boolean> {
+	const host = hostRecoveryStore(storage);
+	if (host) {
+		const timestamp = Date.now();
+		await writeHostSnapshot(host, filePath, data, timestamp);
+		ownWrites.set(filePath, timestamp);
+		return true;
+	}
 	try {
 		return await putAutosaveRecord(filePath, data);
 	} catch (err) {

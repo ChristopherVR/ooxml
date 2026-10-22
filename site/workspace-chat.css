@@ -1072,6 +1072,18 @@
 	color: var(--muted);
 	font-weight: 600;
 }
+/* What a spreadsheet edit recalculates beyond the cells it types into. */
+.ai-change-effects {
+	list-style: none;
+}
+.ai-effects:not(:empty) {
+	margin: 4px 0 8px;
+}
+.ai-effects p {
+	margin: 0 0 4px;
+	font-size: 12px;
+	color: var(--muted);
+}
 .ai-card-actions {
 	flex-wrap: wrap;
 }

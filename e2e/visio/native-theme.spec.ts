@@ -6,13 +6,13 @@ declare global {
 		nativeBlocks: { controller: ViewerController };
 	}
 }
-for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid'])
+for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'])
 	test(`${framework}: shared theme reaches native controls and the shadow canvas`, async ({
 		page,
 	}) => {
 		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto(`/native-blocks.html?framework=${framework}`);
-		await expect(page.locator('output')).toHaveText('edit:1');
+		await expect(page.locator('output')).toHaveText('view:1');
 		await page.locator('#content').setInputFiles({
 			name: 'theme.vsdx',
 			mimeType: 'application/octet-stream',

@@ -139,20 +139,19 @@ export function buildTableViewModel(
 				// two layers here: Angular was the one binding without it, so a cell
 				// with no authored colour inherited the viewer chrome's `foreground`
 				// (#f0efec on the dark preset) and painted near-white on a light cell.
+				const cellCss = tableCellCss(
+					tableData,
+					cell,
+					{ rowIndex, cellIndex: colIndex, rowCount, columnCount },
+					styleCtx,
+				);
 				const tdStyle: StyleMap = {
 					'padding-left': '4px',
 					'padding-right': '4px',
 					'padding-top': '2px',
 					'padding-bottom': '2px',
 					'vertical-align': 'top',
-					...cssObjectToStyleMap(
-						tableCellCss(
-							tableData,
-							cell,
-							{ rowIndex, cellIndex: colIndex, rowCount, columnCount },
-							styleCtx,
-						),
-					),
+					...cssObjectToStyleMap(cellCss),
 				};
 
 				const blocks = cellParagraphBlocks(cell);
@@ -166,7 +165,7 @@ export function buildTableViewModel(
 					// Non-breaking space (U+00A0) keeps an empty cell from collapsing;
 					// mirrors React's `cell.text || '\u00a0'` in table-render-data.tsx.
 					displayText: cell.text || '\u00a0',
-					paragraphs: buildCellParagraphs(cell, blocks),
+					paragraphs: buildCellParagraphs(cell, blocks, cellCss),
 					paragraphStyles: buildCellParagraphStyles(blocks),
 					// Combine per-cell explicit diagonals with any inherited from the
 					// applicable table-style sections (per-cell still takes precedence).

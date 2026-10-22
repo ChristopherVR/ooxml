@@ -2,16 +2,10 @@
 
 ## Responsabilidades {#ownership}
 
-- `ooxml-core/visio` en el repositorio hermano `ooxml`: ingesta de paquetes, XML, modelo, herencia, geometría en caché y diagnósticos estructurados. Aquí no hay ninguna interfaz de visor.
-- `src/controller.ts`: estado del documento y de la vista, selección, eventos, comportamiento de "la última carga gana" y orquestación transaccional de la edición.
-- `src/document-history.ts`: historial de ediciones acotado y respaldado por el origen, y estado de exportación de copias VSDX. La mutación del XML y del paquete sigue en el núcleo y se ejecuta mediante un worker dedicado.
-- `src/document-text-search.ts`: coincidencia literal acotada sobre el texto visible normalizado de las formas, con resultados inmutables por página. El controlador compartido se encarga de la navegación y de las comprobaciones de reentrada.
-- `src/render-svg.ts` y `src/render-text.ts`: presentación SVG y avisos de renderizado.
-- `src/export-svg.ts`: serialización estática y acotada de la página actual mediante el mismo renderizador SVG, con recursos rasterizados incrustados y metadatos de compatibilidad.
-- `src/print-snapshot.ts`: artefactos de las páginas seleccionadas, sin efectos secundarios, con presupuestos agregados y diagnósticos conservados. No crea marcos de impresión ni implementa políticas de impresora.
-- `src/viewer-element.ts`: superficie compartida del navegador.
-- `src/contract.ts` y `src/binding.ts`: propiedades, eventos y ciclo de vida mount/update/load/fit/exportSvg/destroy solo de cliente. Las actualizaciones reentrantes más recientes reemplazan el resto del parche anterior.
-- Envoltorios de frameworks: solo ciclo de vida del framework y reenvío de eventos y propiedades. Ningún analizador, renderizador ni bifurcación de geometría por framework.
+- `src/core/visio` (el punto de entrada `ooxml-core/visio`): ingesta de paquetes, XML, modelo, herencia, geometría en caché, evaluación de ShapeSheet, comandos de edición, correspondencia de colaboración (`ooxml-core/visio/collab`) y diagnósticos estructurados. Aquí no hay ninguna interfaz de visor. El contrato de vista sin DOM también está en el núcleo, en `src/core/visio/ui`: `contract.ts` (propiedades y eventos), `document-history.ts` (historial de ediciones acotado y respaldado por el origen, y estado de exportación de copias VSDX; la mutación del XML y del paquete se ejecuta mediante un worker dedicado), `document-text-search.ts` (coincidencia literal acotada sobre el texto visible normalizado de las formas, con resultados inmutables por página), los tipos de opciones de colaboración y presencia, y los demás planes de edición y vista sin DOM.
+- `src/ui/src/visio` (publicado como `ooxml-ui/visio`): el visor del navegador. `controller.ts` gestiona el estado del documento y de la vista, la selección, los eventos, el comportamiento de «la última carga gana» y la edición transaccional; `viewer-element.ts` es la superficie compartida `<visio-viewer>`; `binding.ts` es el ciclo de vida mount/update/load/fit/exportSvg/destroy solo de cliente (las actualizaciones reentrantes más recientes reemplazan el resto del parche anterior); `render-svg.ts` y `render-text.ts` son la presentación SVG y los avisos de renderizado; `export-svg.ts` es la serialización estática y acotada de la página actual con el mismo renderizador SVG; `print-snapshot.ts` produce artefactos de las páginas seleccionadas, sin efectos secundarios y con presupuestos agregados (no crea marcos de impresión ni implementa políticas de impresora); los bloques de construcción son `building-blocks-*.ts`.
+- `viewers/visio/src/index.ts`: una reexportación de `ooxml-ui/visio`.
+- `viewers/visio/packages/bindings/src` (privado) y `packages/{react,vue,angular,svelte,solid,vanilla}`: ciclo de vida del framework, reenvío de eventos y propiedades, y las composiciones nativas de bloques de construcción. Ningún analizador, renderizador ni bifurcación de geometría por framework.
 
 ## Límites {#boundaries}
 
@@ -31,7 +25,7 @@ El elemento personalizado del navegador usa un worker de análisis dedicado con 
 
 Los metarchivos mejorados incrustados reciben diagnósticos de compatibilidad acotados a nivel de registro. El verificador rechaza los formatos, estilos, estados de asignación y amplificaciones de recursos no admitidos antes de cualquier conversión. No ejecuta datos WMF incrustados, fuentes, imágenes, scripts ni referencias externas. El worker de análisis desechable convierte únicamente un subconjunto estrecho admitido de líneas, rectángulos, elipses y objetos de stock mediante el paquete convertidor publicado, con presupuestos del documento y un plazo máximo controlado por el padre. El análisis directo del núcleo sigue siendo solo de inspección, salvo que se suministre explícitamente un convertidor de confianza en un anfitrión aislado. Los cinco medios EMF reales inspeccionados previamente siguen sin admitirse; la admisión estructural por sí sola no promete renderizado ni fidelidad con Visio.
 
-El núcleo sin interfaz contiene un sanitizador de vectores neutro y un validador de transporte, ambos probados. El worker de análisis usa el convertidor publicado para un subconjunto acotado de primitivas EMF, que comparte el renderizado en vivo, la exportación SVG y la impresión inmutable. El análisis alternativo sin worker sigue sin convertidor. Las pruebas de recorte generadas solo con rutas coinciden con el backend SVG local de Skia; el backend librsvg instalado ignora las intersecciones anidadas de clip-path. Siguen siendo necesarias las comparaciones en el navegador y con Visio nativo. Consulte [la revisión detallada de adopción](research/emf-adoption-review.md).
+El núcleo sin interfaz contiene un sanitizador de vectores neutro y un validador de transporte, ambos probados. El worker de análisis usa el convertidor para un subconjunto acotado de primitivas EMF, que comparte el renderizado en vivo, la exportación SVG y la impresión inmutable. El análisis alternativo sin worker sigue sin convertidor. Las pruebas de recorte generadas solo con rutas coinciden con el backend SVG local de Skia; el backend librsvg instalado ignora las intersecciones anidadas de clip-path. Siguen siendo necesarias las comparaciones en el navegador y con Visio nativo. Consulte [la revisión detallada de adopción](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/docs/research/emf-adoption-review.md).
 
 ## Verificación {#verification}
 
@@ -41,8 +35,6 @@ Las pruebas unitarias y de fixtures del núcleo establecen los casos de análisi
 
 Compilación estática multipágina con Vite: inicio, guía, registro de capacidades, arquitectura y un área de pruebas independiente. Los enlaces son relativos y los recursos locales. Sin fuentes ni scripts de terceros. Sin paquete del analizador en la página de inicio.
 
-El diseño de la documentación adapta la [referencia de pptx-viewer](https://github.com/ChristopherVR/pptx-viewer). La revisión en profundidad está en `research/pptx-pages-design-review.md`.
-
 ## Publicación {#publication}
 
-Siete paquetes de npm exponen la API de Visio sin interfaz y el visor compartido con seis adaptadores nativos de frameworks. Dependen de `ooxml-core/visio` publicado. Las versiones horarias basadas en conventional commits compilan y verifican los artefactos empaquetados antes de la publicación de confianza en npm. GitHub Pages despliega la documentación y la demostración tras las comprobaciones.
+Ocho paquetes de npm exponen la API de Visio sin interfaz, el visor compartido con seis adaptadores nativos de frameworks y las herramientas MCP. Dependen de `ooxml-core` y `ooxml-ui`, que están en este repositorio y se publican junto con ellos (véase [Versiones](/releasing)). La compilación de Pages del repositorio despliega la documentación y las demos en `/ooxml/visio/`.

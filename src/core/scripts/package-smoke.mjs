@@ -1,12 +1,15 @@
 // Packs the built package, installs the tarball into a clean project and imports every entry
 // point the way a consumer would (ESM `import`, and CJS `require` where the entry declares one).
 // Run after `bun run build`. Uses `npm pack`/`npm install` only, so it behaves the same on every OS.
+// Then bundles every browser entry for the browser and fails if one reaches a Node-only module.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
@@ -127,6 +130,11 @@ for (const load of [(s) => import(s), async (s) => require(s)]) {
 console.log('all entry points import');\n`,
 	);
 	console.log(run('node', ['consumer.mjs'], work).trim());
+
+	// A web host bundles the package for the browser, with no Node fallbacks: no browser entry may
+	// reach a Node built-in or a Node-only package (the Node-only subpaths are skipped).
+	const browserEntries = await assertNoNodeOnlyModules({ root: work, packages: [manifest.name] });
+	console.log(`${browserEntries} browser entries reach no Node-only module`);
 } finally {
 	await rm(work, { recursive: true, force: true });
 }

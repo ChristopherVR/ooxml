@@ -192,6 +192,8 @@ function plainText(el: PptxElement): string {
 @Component({
 	selector: 'pptx-slide-canvas',
 	standalone: true,
+	// A canvas rendered on its own (outside `pptx-viewer`) keeps the viewer's scoped reset.
+	host: { 'data-pptx-scope': '' },
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [
 		CanvasFitService,
@@ -639,13 +641,12 @@ export class SlideCanvasComponent implements SlideContext {
 		// Observe the viewport so the slide re-fits on container resize / rotation.
 		const destroyRef = inject(DestroyRef);
 		afterNextRender(() => {
-			this.canvasFit.recompute();
 			const el = this.viewportRef()?.nativeElement;
-			if (typeof ResizeObserver !== 'undefined' && el) {
-				const observer = new ResizeObserver(() => this.canvasFit.recompute());
-				observer.observe(el);
-				destroyRef.onDestroy(() => observer.disconnect());
+			if (!el) {
+				this.canvasFit.recompute();
+				return;
 			}
+			destroyRef.onDestroy(this.canvasFit.observe(el));
 		});
 
 		// Wire the ink-drawing controller's accessors + emitters (the stage

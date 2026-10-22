@@ -1,6 +1,6 @@
 # OpenTeams parity review and implementation sequence
 
-Reviewed 7 October 2026 against `src/core/teams`, `src/ui/src/teams`,
+Reviewed 7 October 2026 (the repeat and allowlist rows re-checked against the code on 2026-10-22) against `src/core/teams`, `src/ui/src/teams`,
 `viewers/teams`, the reference server, and the Teams browser tests.
 
 The target is Microsoft Teams user-workflow parity. This is an early workspace,
@@ -20,7 +20,7 @@ No feature is considered equivalent solely because a control is present.
 | Office content                  | Native Word, Excel and Visio previews; DOM PowerPoint reading view with media; XLSX local editing and channel save copies                                                                                                                       | PowerPoint presentation playback, coediting, write-back/version conflict handling and fidelity acceptance corpus                                                                   |
 | Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                                                                                                                                                          | Full CommonMark/GFM, nested structure, reference links and inline precedence                                                                                                       |
 | Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                                                                                                                                                               | App permissions, approved origins, app messaging and authentication                                                                                                                |
-| Accounts and administration     | Reference server has optional shared token and origin allowlist                                                                                                                                                                                 | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                                                                                      |
+| Accounts and administration     | Reference server has optional shared token and a CORS origin allowlist for its own endpoints                                                                                                                                                    | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                                                                                      |
 | Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                                                                                                                                                      | Framework-by-framework browser acceptance for the new embedding prop                                                                                                               |
 | Accessibility and visual parity | Existing Lit controls and token styles                                                                                                                                                                                                          | Keyboard/focus review, screen-reader acceptance, reference screenshots, native-app comparison (the phone layout has a bottom bar, list and conversation views, 44px touch targets) |
 
@@ -54,7 +54,7 @@ an expired link must be reopened from the attachment to request a fresh link.
 Local-mode name-only attachments still have no bytes to preview.
 
 Linked presentation media and supported online-video embeds follow browser and
-provider request policies. An administrative origin allowlist is not implemented.
+provider request policies. An administrative allowlist of media embed origins is not implemented (this is separate from the reference server's CORS allowlist).
 
 ### Integration contract
 
@@ -695,7 +695,7 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   is hidden, and the chime. Off and Do not disturb silence it, and a reminder held back by Do not
   disturb still fires if the status changes before the meeting starts. Each occurrence is announced
   once per device. The tab must be open: there is no push, email or background reminder.
-- **Not implemented.** Meeting lobby, roles, recording, captions, backgrounds, monthly and yearly repeats,
+- **Not implemented.** Meeting lobby, roles, recording, captions, backgrounds,
   free/busy and scheduling assistant, RSVP and invitations outside the workspace, an
   .ics import, external calendar sync, per-chat notification settings and chat search filters.
 

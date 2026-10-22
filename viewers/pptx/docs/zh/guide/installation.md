@@ -115,13 +115,17 @@ bun add pptx-angular-viewer @angular/core @angular/common
 :::
 
 ```typescript
-// app.module.ts
-import { PptxAngularViewerModule } from 'pptx-angular-viewer';
+// app.component.ts (standalone component, no NgModule)
+import { Component } from '@angular/core';
+import { PowerPointViewerComponent } from 'pptx-angular-viewer';
 
-@NgModule({
-	imports: [PptxAngularViewerModule],
+@Component({
+	selector: 'app-root',
+	standalone: true,
+	imports: [PowerPointViewerComponent],
+	templateUrl: './app.component.html',
 })
-export class AppModule {}
+export class AppComponent {}
 ```
 
 ```html
@@ -277,32 +281,33 @@ bun add three yjs y-websocket
 
 ## 本地开发（克隆 monorepo） {#local-development-cloning-the-monorepo}
 
-项目使用 **Bun** 管理依赖和运行工作区，各个包通过 `workspace:*` 协议相互引用。
+PowerPoint 查看器位于 `ooxml` monorepo 的 `viewers/pptx` 目录。该 monorepo 使用 **Bun** 管理依赖和运行工作区。
 
 ```bash
-# Clone the repository
-git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
-cd pptx-viewer
-
-# Install all workspace dependencies
+# Clone the repository and install every workspace dependency from the root
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml
 bun install
 
-# Build all packages
+# Build ooxml-core and ooxml-ui first, then work from the viewer
 bun run build
+bun run --cwd src/ui build
+cd viewers/pptx
 
-# Run tests / type-check
+# Build the viewer packages, then test / type-check
+bun run build
 bun run test
 bun run typecheck
 ```
 
 ::: warning 注意构建顺序
-各个包必须按照依赖顺序构建：
+查看器各包依赖已构建的 `ooxml-core` 和 `ooxml-ui`，因此请先在仓库根目录构建它们（如上所示）。在 `viewers/pptx` 内，各个包按照依赖顺序构建：
 
 ```
-core -> shared -> react / vue / angular / vanilla / svelte
+core -> shared -> locales -> tools -> react / vue / angular / vanilla / svelte -> cli
 ```
 
-在仓库根目录运行 `bun run build` 会自动处理这一顺序。手动构建单个包（`cd packages/<pkg> && bun run build`）时，请确保先构建它的依赖。
+在 `viewers/pptx` 中运行 `bun run build` 会自动处理这一顺序。手动构建单个包（`cd packages/<pkg> && bun run build`）时，请确保先构建它的依赖。
 :::
 
 ### 常用工作区命令 {#common-workspace-commands}

@@ -1,7 +1,7 @@
 # smartart.docx provenance
 
 `smartart.docx` is copied unchanged from `ooxml-core` (`src/core/docx/__fixtures__/smartart.docx`),
-where `scripts/docx/build-smartart-fixture.mjs` builds it from
+where `src/core/scripts/docx/build-smartart-fixture.mjs` builds it from
 `src/core/pptx/__tests__/fixtures/corpus/smartart-orgchart-assistants.pptx`: the five parts of each of
 its two diagrams and the theme are copied byte for byte (only the `relId` of `dsp:dataModelExt`
 is rewritten to the Word relationship id). `document.xml`, the relationships and the content types

@@ -15,11 +15,15 @@ describe('complete shared adapter contract', () => {
 	it('copies every property, keeps null and false, omits undefined and clears removed callbacks', () => {
 		const props: ViewerProps = {
 			canEdit: false,
+			readOnly: true,
 			document: null,
 			pageIndex: 0,
 			zoom: 2,
 			showToolbar: false,
 			ribbonAddIns: [],
+			collaboration: null,
+			storage: null,
+			customization: null,
 			events: { 'zoom-change': vi.fn() },
 		};
 		expect(Object.keys(viewerOptions(props)).sort()).toEqual([...propertyKeys, 'events'].sort());
@@ -35,6 +39,14 @@ describe('complete shared adapter contract', () => {
 		expect(Object.keys(options.events!).sort()).toEqual([...eventKeys].sort());
 		options.events?.['zoom-change']?.(2);
 		expect(received).toEqual(['callback', 'zoom-change']);
+	});
+	it('returns the host callback result so false can cancel file-command', () => {
+		const emitted: string[] = [];
+		const options = withEventEmitter({ events: { 'file-command': () => false } }, (name) =>
+			emitted.push(name),
+		);
+		expect(options.events?.['file-command']?.({ command: 'save' })).toBe(false);
+		expect(emitted).toEqual(['file-command']);
 	});
 	it('guards the shared lazy handle before mount and after unmount', async () => {
 		let binding: MountedViewer | undefined;

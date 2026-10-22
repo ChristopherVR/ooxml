@@ -1,11 +1,12 @@
-import type { AutosaveActivation, AutosaveRecoveryOffer } from 'ooxml-ui/pptx';
+import type { AutosaveActivation, AutosaveRecoveryOffer, DocumentStorage } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';
 import type { Store, ViewerState } from '../state';
 
-const saveAutosaveSnapshot = vi.fn<(path: string, data: Uint8Array) => Promise<boolean>>();
+const saveAutosaveSnapshot =
+	vi.fn<(path: string, data: Uint8Array, storage?: DocumentStorage | null) => Promise<boolean>>();
 const probeAutosaveRecovery =
 	vi.fn<
 		(path: string, now?: number, displayName?: string) => Promise<AutosaveRecoveryOffer | null>
@@ -13,7 +14,8 @@ const probeAutosaveRecovery =
 
 vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
-	saveAutosaveSnapshot: (path: string, data: Uint8Array) => saveAutosaveSnapshot(path, data),
+	saveAutosaveSnapshot: (path: string, data: Uint8Array, storage?: DocumentStorage | null) =>
+		saveAutosaveSnapshot(path, data, storage),
 	probeAutosaveRecovery: (path: string, now?: number, displayName?: string) =>
 		probeAutosaveRecovery(path, now, displayName),
 }));
@@ -72,8 +74,30 @@ describe('createAutosaveController', () => {
 		await vi.advanceTimersByTimeAsync(2000);
 
 		expect(save).toHaveBeenCalledOnce();
-		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith(
+			'deck.pptx',
+			new Uint8Array([1, 2, 3]),
+			undefined,
+		);
 		expect(statuses).toStrictEqual(['saving', 'saved']);
+		controller.destroy();
+	});
+
+	it('hands the written snapshot bytes to the host (onAutosave)', async () => {
+		const { handler } = makeHandler(new Uint8Array([9, 8, 7]));
+		const onSaved = vi.fn();
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getIntervalMs: () => 2000,
+			onSaved,
+		});
+
+		store.set({ slides: [makeSlide('a')], dirty: true });
+		await vi.advanceTimersByTimeAsync(2000);
+
+		expect(onSaved).toHaveBeenCalledExactlyOnceWith(new Uint8Array([9, 8, 7]));
 		controller.destroy();
 	});
 
@@ -213,7 +237,11 @@ describe('createAutosaveController', () => {
 		await vi.advanceTimersByTimeAsync(2000);
 
 		expect(save).toHaveBeenCalledOnce();
-		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith(
+			'deck.pptx',
+			new Uint8Array([1, 2, 3]),
+			undefined,
+		);
 		controller.destroy();
 	});
 });
@@ -393,6 +421,43 @@ describe('recovery probing', () => {
 		await vi.advanceTimersByTimeAsync(1000);
 		expect(save).toHaveBeenCalledOnce();
 		expect((save.mock.calls[0]![0] as PptxSlide[])[0]!.id).toBe('edited');
+		controller.destroy();
+	});
+});
+
+describe('createAutosaveController with host-owned storage', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		saveAutosaveSnapshot.mockReset().mockResolvedValue(true);
+		probeAutosaveRecovery.mockReset().mockResolvedValue(null);
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('hands the storage option to the snapshot write', async () => {
+		const store = createStore(createInitialViewerState());
+		const { handler } = makeHandler();
+		const storage: DocumentStorage = {
+			save: async () => undefined,
+			readRecovery: async () => undefined,
+			writeRecovery: async () => {},
+			clearRecovery: async () => {},
+		};
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getStorage: () => storage,
+			getIntervalMs: () => 2000,
+		});
+		store.set({ slides: [makeSlide('a')], dirty: true });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith(
+			'deck.pptx',
+			new Uint8Array([1, 2, 3]),
+			storage,
+		);
 		controller.destroy();
 	});
 });

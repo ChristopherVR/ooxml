@@ -160,6 +160,17 @@ describe('powerPointViewer capabilities and new hide ids', () => {
 		expect(mounted.find('main.is-editable').exists()).toBeFalsy();
 	});
 
+	it('readOnly is the inverse of canEdit: true wins and false only lifts its own lock', async () => {
+		mounted = await mountViewer(undefined, { readOnly: true });
+		expect(mounted.find('main.is-editable').exists()).toBeFalsy();
+		await mounted.setProps({ readOnly: false });
+		await flushPromises();
+		expect(mounted.find('main.is-editable').exists()).toBeTruthy();
+		await mounted.setProps({ canEdit: false });
+		await flushPromises();
+		expect(mounted.find('main.is-editable').exists()).toBeFalsy();
+	});
+
 	it('carries the ribbon control ids the new hide ids rely on', async () => {
 		mounted = await mountViewer();
 		for (const id of ['home.editing.find', 'home.editing.replace']) {

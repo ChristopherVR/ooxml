@@ -1,3 +1,4 @@
+import { SAVE_FAILED_TOAST } from 'ooxml-ui/pptx';
 import type { PptxCompatibilityWarning } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -47,5 +48,19 @@ describe('compatToastsState', () => {
 		expect(state.visibleToasts).toHaveLength(0);
 		state.reset();
 		expect(state.visibleToasts).toHaveLength(1);
+	});
+
+	it('notify() shows the save-failed notice first, again after a dismissal, until reset', () => {
+		const state = new CompatToastsState({ getWarnings: () => [warning('A')] });
+		state.notify(SAVE_FAILED_TOAST);
+		expect(state.visibleToasts.map((toast) => toast.id)).toEqual([
+			'save-failed',
+			expect.any(String),
+		]);
+		state.dismissAll();
+		state.notify(SAVE_FAILED_TOAST);
+		expect(state.visibleToasts.map((toast) => toast.id)).toEqual(['save-failed']);
+		state.reset();
+		expect(state.visibleToasts.map((toast) => toast.id)).not.toContain('save-failed');
 	});
 });

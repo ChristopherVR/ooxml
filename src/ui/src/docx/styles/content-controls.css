@@ -5,25 +5,39 @@
 	-webkit-box-decoration-break: clone;
 }
 .dve-sdt[data-sdt-placeholder],
-p[data-sdt-block] .dve-sdt[data-sdt-placeholder] {
+p[data-sdt-block] .dve-sdt[data-sdt-placeholder],
+td[data-sdt-cell][data-sdt-placeholder] {
 	color: #808080;
 }
 .dve-sdt:hover,
 .dve-sdt.dve-sdt-active,
 p[data-sdt-block]:hover,
-p[data-sdt-block].dve-sdt-active {
+p[data-sdt-block].dve-sdt-active,
+td[data-sdt-cell]:hover,
+td[data-sdt-cell].dve-sdt-active {
 	outline: 1px solid var(--dve-sdt-outline, #b6b6b6);
 	outline-offset: 1px;
 }
+/* A control around a table cell outlines the cell inside its borders. */
+td[data-sdt-cell] {
+	position: relative;
+}
+td[data-sdt-cell]:hover,
+td[data-sdt-cell].dve-sdt-active {
+	outline-offset: -2px;
+}
 .dve-sdt.dve-sdt-active,
-p[data-sdt-block].dve-sdt-active {
+p[data-sdt-block].dve-sdt-active,
+td[data-sdt-cell].dve-sdt-active {
 	outline-color: var(--dve-sdt-active, #4472c4);
 }
 /* The title tab sits above the control while it is hovered or holds the caret. */
 .dve-sdt[data-sdt-title]:hover::before,
 .dve-sdt[data-sdt-title].dve-sdt-active::before,
 p[data-sdt-block][data-sdt-title]:hover::before,
-p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
+p[data-sdt-block][data-sdt-title].dve-sdt-active::before,
+td[data-sdt-cell][data-sdt-title]:hover::before,
+td[data-sdt-cell][data-sdt-title].dve-sdt-active::before {
 	content: attr(data-sdt-title);
 	position: absolute;
 	left: -1px;
@@ -43,7 +57,9 @@ p[data-sdt-block] {
 	position: relative;
 }
 p[data-sdt-block][data-sdt-title]:hover::before,
-p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
+p[data-sdt-block][data-sdt-title].dve-sdt-active::before,
+td[data-sdt-cell][data-sdt-title]:hover::before,
+td[data-sdt-cell][data-sdt-title].dve-sdt-active::before {
 	bottom: auto;
 	top: -17px;
 }
@@ -71,8 +87,26 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	content: '\25bc';
 	font-size: 8px;
 }
-.dve-sdt[data-sdt-kind='checkbox'] {
+.dve-sdt[data-sdt-kind='checkbox'],
+td[data-sdt-cell][data-sdt-kind='checkbox'],
+td[data-sdt-cell][data-sdt-kind='dropDownList'] {
 	cursor: pointer;
+}
+/* A drop-down or date cell shows its arrow at the cell's top right corner. */
+td[data-sdt-cell][data-sdt-kind='dropDownList']:is(:hover, .dve-sdt-active)::after,
+td[data-sdt-cell][data-sdt-kind='comboBox']:is(:hover, .dve-sdt-active)::after,
+td[data-sdt-cell][data-sdt-kind='date']:is(:hover, .dve-sdt-active)::after {
+	content: '\25be';
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 16px;
+	background: var(--dve-sdt-active, #4472c4);
+	color: #fff;
+	font-size: 11px;
+	line-height: 16px;
+	text-align: center;
+	pointer-events: none;
 }
 .dve-sdt[data-sdt-lock='sdtLocked']:hover,
 .dve-sdt[data-sdt-lock='sdtContentLocked']:hover {
@@ -167,4 +201,15 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	background: var(--surface);
 	color: var(--ink);
 	font-size: 20px;
+}
+
+/* Legacy form fields: Word shades a text field's result, and draws a check box or a drop-down's
+   entry from the field's data on its (otherwise hidden) begin marker. */
+.ProseMirror:not([data-form-shading='off']) span[data-field='FORMTEXT'],
+.ProseMirror:not([data-form-shading='off']) .dve-form-field {
+	background-color: var(--dve-form-field-shading, #d9d9d9);
+}
+.dve-field-marker.dve-form-field {
+	font-size: inherit;
+	cursor: default;
 }

@@ -1,4 +1,5 @@
-import { RECORD_COMMAND_GROUPS } from 'ooxml-ui/pptx';
+import { buildRecordRibbon } from 'ooxml-ui/pptx';
+import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
@@ -11,23 +12,15 @@ export function createRecordTab(
 	handlers: RibbonSlideShowHandlers,
 ): HTMLElement {
 	const el = createEl(doc, 'div', 'pptxv-ribbon-tab-content');
-	for (const descriptor of RECORD_COMMAND_GROUPS) {
-		const group = doc.createElement('pptx-ui-ribbon-group');
-		group.setAttribute('label', t(descriptor.labelKey));
-		group.setAttribute('data-ribbon-group', descriptor.id);
-		for (const command of descriptor.commands) {
-			const control = doc.createElement('pptx-ui-ribbon-command');
-			control.setAttribute('label', t(command.labelKey));
-			control.setAttribute('icon', command.icon);
-			control.setAttribute('data-ribbon-control', command.id);
-			if (command.unsupported) {
-				control.setAttribute('disabled', '');
-			} else {
-				control.addEventListener('command-request', handlers.startRehearsal);
-			}
-			group.append(control);
+	const section = doc.createElement('pptx-ui-ribbon-section');
+	section.groups = buildRecordRibbon(t);
+	// Both recording commands start the rehearsal; the placeholders are disabled.
+	section.addEventListener('command-request', (event) => {
+		const id = (event as RibbonCommandRequestEvent).detail.id;
+		if (id === 'record.record.fromBeginning' || id === 'record.record.fromCurrent') {
+			handlers.startRehearsal();
 		}
-		el.append(group);
-	}
+	});
+	el.append(section);
 	return el;
 }

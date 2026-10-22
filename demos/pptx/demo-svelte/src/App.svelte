@@ -38,7 +38,7 @@
 	import { readStoredTheme, themes } from './themes';
 
 	let viewerRef: PowerPointViewerApi | undefined = $state();
-	$effect(() => installDevViewerHandle(() => viewerRef, import.meta.env.DEV));
+	$effect(() => installDevViewerHandle(() => viewerRef, import.meta.env.DEV || import.meta.env.VITE_PPTX_E2E_HANDLE === '1'));
 	let bytes = $state<Uint8Array | null>(null);
 	let fileName = $state('');
 	// Built from the persisted demo AI settings when a deck opens; undefined

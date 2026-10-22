@@ -18,7 +18,7 @@
  * failure (network, parse, no match) resolves to `undefined`; the caller
  * simply keeps the existing affine-transform fallback for that glyph.
  */
-import { findGoogleFontsFamily } from './google-fonts-lookup';
+import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
 import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
 
 interface ParsedFontFaceBlock {
@@ -67,10 +67,9 @@ function coversBasicLatin(unicodeRange: string | undefined): boolean {
 function pickBlock(
 	blocks: readonly ParsedFontFaceBlock[],
 	family: string,
-	bold: boolean,
+	targetWeight: number,
 	italic: boolean,
 ): ParsedFontFaceBlock | undefined {
-	const targetWeight = bold ? 700 : 400;
 	const byFamily = blocks.filter((b) => b.family.toLowerCase() === family.toLowerCase());
 	const pool = byFamily.length > 0 ? byFamily : blocks;
 	const byStyle = pool.filter((b) => b.weight === targetWeight && b.italic === italic);
@@ -103,7 +102,7 @@ export async function fetchGoogleWebfontOutlineBytes(
 	fetchImpl: FetchLike,
 ): Promise<Uint8Array | undefined> {
 	const canonical =
-		findGoogleFontsFamily(referencedFamily) ??
+		resolveGoogleFontsFace(referencedFamily)?.family ??
 		findMetricCompatibleGoogleFontsFamily(referencedFamily);
 	if (!canonical) {
 		return undefined;
@@ -114,7 +113,15 @@ export async function fetchGoogleWebfontOutlineBytes(
 			return undefined;
 		}
 		const css = await cssResponse.text();
-		const block = pickBlock(parseFontFaceBlocks(css), canonical, bold, italic);
+		// A weight variant ("DM Sans Light") is the base family's face at the
+		// weight its name implies, exactly as the text itself renders.
+		const weight = resolveFontWeight(referencedFamily, bold);
+		const block = pickBlock(
+			parseFontFaceBlocks(css),
+			canonical,
+			weight,
+			resolveFontItalic(referencedFamily, italic),
+		);
 		if (!block) {
 			return undefined;
 		}

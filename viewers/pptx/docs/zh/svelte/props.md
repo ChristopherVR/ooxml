@@ -21,19 +21,22 @@ description: PowerPointViewer Svelte 5 组件完整的属性和事件回调约�
 
 ## 界面与行为 {#chrome-and-behaviour}
 
-| 属性                                                                       | 类型                | 默认值  | 说明                                                                                                          |
-| -------------------------------------------------------------------------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`                                                             | `number`            | `0`     | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                     |
-| `showThumbnails`                                                           | `boolean`           | `true`  | 显示缩略图侧边栏。                                                                                            |
-| `showCompatibilityToasts`                                                  | `boolean`           | `true`  | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                   |
-| `showToolbar`                                                              | `boolean`           | `true`  | 显示导航和缩放工具栏，并在 `editable` 启用时显示功能区。                                                      |
-| `showNotes`                                                                | `boolean`           | `true`  | 显示演讲者备注面板及工具栏开关。传入 `onnotesupdate` 可编辑备注，省略时备注只读。                             |
-| `hiddenActions`                                                            | `ToolbarActionId[]` | -       | 要隐藏的工具栏按钮或功能区选项卡，参见[下方取值](#hiddenactions-values)。                                     |
-| `fileName`                                                                 | `string`            | -       | 桌面标题栏中显示的名称。                                                                                      |
-| `smartArt3D`                                                               | `boolean`           | `false` | 按需启用 Three.js（WebGL）SmartArt 渲染器。需要可选的 `three` 依赖；依赖不可用或 WebGL 挂载失败时回退为 SVG。 |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`           | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。 |
-| `ai`                                                                       | `PptxAiConfig`      | -       | 启用可选智能助手。SDK 同级依赖只在打开面板时加载，省略则不提供助手。                                          |
-| `editable`                                                                 | `boolean`           | `false` | 启用原地编辑，包括选择、拖动、缩放和旋转控点、双击文本编辑、键盘快捷键、撤销和重做、保存和下载。              |
+| 属性                                                                       | 类型                        | 默认值  | 说明                                                                                                                             |
+| -------------------------------------------------------------------------- | --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`                                                             | `number`                    | `0`     | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                                        |
+| `showThumbnails`                                                           | `boolean`                   | `true`  | 显示缩略图侧边栏。                                                                                                               |
+| `showCompatibilityToasts`                                                  | `boolean`                   | `true`  | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                      |
+| `showToolbar`                                                              | `boolean`                   | `true`  | 显示导航和缩放工具栏，并在 `editable` 启用时显示功能区。                                                                         |
+| `authorName`                                                               | `string`                    | -       | 批注作者和广播演示者使用的显示名称。回退为“选项 > 常规 > 用户名”，再回退为通用标签。                                             |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[]` | -       | 宿主在“帮助”之后添加的功能区选项卡。每个命令运行其 `run` 回调，并派发一个可冒泡的 `office-ribbon-add-in` 事件。仅限桌面功能区。  |
+| `inspectorInitiallyOpen`                                                   | `boolean`                   | -       | 检查器的初始可见性；省略时沿用桌面端和移动端的默认值。                                                                           |
+| `showNotes`                                                                | `boolean`                   | `true`  | 显示演讲者备注面板及工具栏开关。传入 `onnotesupdate` 可编辑备注，省略时备注只读。_已弃用：请使用 `customization.hiddenPanels`。_ |
+| `hiddenActions`                                                            | `ToolbarActionId[]`         | -       | 要隐藏的工具栏按钮或功能区选项卡，参见[下方取值](#hiddenactions-values)。                                                        |
+| `fileName`                                                                 | `string`                    | -       | 桌面标题栏中显示的名称。                                                                                                         |
+| `smartArt3D`                                                               | `boolean`                   | `false` | 按需启用 Three.js（WebGL）SmartArt 渲染器。需要可选的 `three` 依赖；依赖不可用或 WebGL 挂载失败时回退为 SVG。                    |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                   | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。                    |
+| `ai`                                                                       | `PptxAiConfig`              | -       | 启用可选智能助手。SDK 同级依赖只在打开面板时加载，省略则不提供助手。                                                             |
+| `editable`                                                                 | `boolean`                   | `false` | 启用原地编辑，包括选择、拖动、缩放和旋转控点、双击文本编辑、键盘快捷键、撤销和重做、保存和下载。                                 |
 
 ### `hiddenActions` 取值 {#hiddenactions-values}
 
@@ -99,37 +102,51 @@ description: PowerPointViewer Svelte 5 组件完整的属性和事件回调约�
 
 文稿加载完成后，如果同一键下存在 24 小时内的快照，查看器会弹出 **“恢复未保存的更改？”** 对话框，提供恢复和放弃选项。恢复会加载快照字节；放弃会删除快照。如果当前标签页已经接收过该快照，例如宿主已通过 `restoreSessionDeck` 恢复，则不会再次提示。
 
+## 界面自定义 {#ui-customization}
+
+| 属性            | 类型                  | 默认值 | 说明                                                                                                                                                                                                                                                         |
+| --------------- | --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `customization` | `ViewerCustomization` | -      | 隐藏、锁定或重映射界面的任何部分：功能区选项卡和按钮，文件 > 选项的页面、分区和设置项（锁定取值、设置默认值），文件选项卡的页面和卡片，右键菜单项，编辑器快捷键，面板，功能（AI、协作）和对话框。与 `hiddenActions` 取并集。传入新对象会替换整个自定义配置。 |
+
+```svelte
+<PowerPointViewer source={bytes} editable customization={{ ribbon: { hiddenTabs: ['draw'] }, disabledFeatures: ['ai'] }} />
+```
+
+同样的辅助方法（`hideRibbonTab`、`lockSetting`、`remapShortcut` 等）可通过 `bind:this` 在运行时调用以修改配置，参见 [API 页面](/zh/svelte/api#ui-customization)。所有 ID、规则和用法示例请参见[界面自定义指南](/zh/guide/customization)。
+
 ## 协作 {#collaboration}
 
 配置结构和传输方式请参见[实时协作](/zh/svelte/collaboration)。
 
-| 属性            | 类型                                                         | 默认值 | 说明                                                 |
-| --------------- | ------------------------------------------------------------ | ------ | ---------------------------------------------------- |
-| `collaboration` | `CollaborationConfig`                                        | -      | 设置后连接房间并实时同步编辑；清空后结束会话。       |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 内置共享对话框的预填值，广播对话框复用 `serverUrl`。 |
+| 属性            | 类型                                                         | 默认值 | 说明                                                                                                         |
+| --------------- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------ |
+| `collaboration` | `CollaborationInput`                                         | -      | 设置后连接房间并实时同步编辑（旧版 `CollaborationConfig` 或共享的 `CollaborationOptions`）；清空后结束会话。 |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string }` | -      | 内置共享对话框的预填值，广播对话框复用 `serverUrl`。                                                         |
 
 ## 事件回调 {#event-callbacks}
 
-| 属性                   | 签名                                    | 触发时机                                                                  |
-| ---------------------- | --------------------------------------- | ------------------------------------------------------------------------- |
-| `onload`               | `(detail: ViewerLoadDetail) => void`    | 演示文稿完成加载，载荷为 `{ slideCount, canvasSize }`。                   |
-| `onerror`              | `(message: string) => void`             | 加载失败，消息为可读文本。                                                |
-| `onslidechange`        | `(index: number) => void`               | 当前幻灯片变化，索引从 0 开始。                                           |
-| `onchange`             | `() => void`                            | 每次提交编辑修改后，包括移动、缩放、旋转、删除、复制、微移、文本和备注。  |
-| `ondirtychange`        | `(dirty: boolean) => void`              | 未保存编辑标记变化。                                                      |
-| `oncontentchange`      | `(content: Uint8Array) => void`         | 序列化的文档字节变化。                                                    |
-| `onmodechange`         | `(mode: string) => void`                | 查看器模式变化（`'preview' \| 'edit' \| 'present' \| 'master'`）。        |
-| `onzoomchange`         | `(zoom: number) => void`                | 缩放级别变化，1 表示 100%。                                               |
-| `onselectionchange`    | `(elementIds: string[]) => void`        | 元素选区变化。                                                            |
-| `onslidecountchange`   | `(count: number) => void`               | 幻灯片总数变化。                                                          |
-| `onnotesupdate`        | `(notes: string) => void`               | 用户提交演讲者备注编辑，通过 `change` / `blur` 触发。省略时备注面板只读。 |
-| `onopenfile`           | `() => void`                            | 宿主接管“文件 > 打开”操作。                                               |
-| `onautosave`           | `(bytes: Uint8Array) => void`           | 每次成功生成自动保存快照后。                                              |
-| `onautosavetoggle`     | `(enabled: boolean) => void`            | 桌面标题栏切换自动保存。                                                  |
-| `onstartcollaboration` | `(config: CollaborationConfig) => void` | 用户从共享或广播对话框启动会话。                                          |
-| `onstopcollaboration`  | `() => void`                            | 用户停止协作会话。                                                        |
-| `onThemeChange`        | `(themeKey: string) => void`            | 用户选择主题。注意名称采用 camelCase，属于上面的选项选择器分组。          |
-| `onLocaleChange`       | `(locale: string) => void`              | 用户选择语言，采用 camelCase，属于选项选择器分组。                        |
+| 属性                    | 签名                                    | 触发时机                                                                  |
+| ----------------------- | --------------------------------------- | ------------------------------------------------------------------------- |
+| `onload`                | `(detail: ViewerLoadDetail) => void`    | 演示文稿完成加载，载荷为 `{ slideCount, canvasSize }`。                   |
+| `onerror`               | `(message: string) => void`             | 加载失败，消息为可读文本。                                                |
+| `onslidechange`         | `(index: number) => void`               | 当前幻灯片变化，索引从 0 开始。                                           |
+| `onchange`              | `() => void`                            | 每次提交编辑修改后，包括移动、缩放、旋转、删除、复制、微移、文本和备注。  |
+| `ondirtychange`         | `(dirty: boolean) => void`              | 未保存编辑标记变化。                                                      |
+| `oncontentchange`       | `(content: Uint8Array) => void`         | 序列化的文档字节变化。                                                    |
+| `onmodechange`          | `(mode: string) => void`                | 查看器模式变化（`'preview' \| 'edit' \| 'present' \| 'master'`）。        |
+| `onzoomchange`          | `(zoom: number) => void`                | 缩放级别变化，1 表示 100%。                                               |
+| `onselectionchange`     | `(elementIds: string[]) => void`        | 元素选区变化。                                                            |
+| `onslidecountchange`    | `(count: number) => void`               | 幻灯片总数变化。                                                          |
+| `onnotesupdate`         | `(notes: string) => void`               | 用户提交演讲者备注编辑，通过 `change` / `blur` 触发。省略时备注面板只读。 |
+| `onopenfile`            | `() => void`                            | 宿主接管“文件 > 打开”操作。                                               |
+| `onautosave`            | `(bytes: Uint8Array) => void`           | 每次成功生成自动保存快照后。                                              |
+| `onautosavetoggle`      | `(enabled: boolean) => void`            | 桌面标题栏切换自动保存。                                                  |
+| `onstartcollaboration`  | `(config: CollaborationConfig) => void` | 用户从共享或广播对话框启动会话。                                          |
+| `onstopcollaboration`   | `() => void`                            | 用户停止协作会话。                                                        |
+| `oncollaborationchange` | `(state: CollaborationState) => void`   | 会话启动或停止，或其状态、同步标志或参与者发生变化。                      |
+| `onhyperlinkclick`      | `HyperlinkClickHandler`                 | 跟随链接之前触发；返回 `false` 可取消默认操作。                           |
+| `onThemeChange`         | `(themeKey: string) => void`            | 用户选择主题。注意名称采用 camelCase，属于上面的选项选择器分组。          |
+| `onLocaleChange`        | `(locale: string) => void`              | 用户选择语言，采用 camelCase，属于选项选择器分组。                        |
 
 ## 载荷类型 {#payload-types}
 

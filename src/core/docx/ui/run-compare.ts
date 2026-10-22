@@ -11,6 +11,7 @@ function sameRevisionMeta(left: TextRun, right: TextRun): boolean {
 		JSON.stringify(extraRunProperties(left)) === JSON.stringify(extraRunProperties(right)) &&
 		JSON.stringify(left.field) === JSON.stringify(right.field) &&
 		JSON.stringify(left.contentControl) === JSON.stringify(right.contentControl) &&
+		JSON.stringify(left.formField) === JSON.stringify(right.formField) &&
 		left.fieldChar === right.fieldChar &&
 		left.fieldCode === right.fieldCode
 	);

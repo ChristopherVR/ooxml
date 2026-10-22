@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument, reveal, saveButton } from './helpers';
+import { clickInEditor, newDocument, reveal, saveButton, waitForEditorFocus } from './helpers';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 
@@ -53,12 +53,13 @@ test('inherited headers edit together, unlink independently, relink and undo', a
 	await editor.locator('.dve-header [data-slot=default]').dblclick();
 	await expect(link).toBeEnabled();
 	await expect(link).toHaveAttribute('aria-pressed', 'true');
+	await waitForEditorFocus(editor.locator('.dve-header .ProseMirror'));
 	await page.keyboard.press('End');
 	await page.keyboard.type(' shared');
 	await reveal(editor, link);
 	await link.click();
 	await expect(link).toHaveAttribute('aria-pressed', 'false');
-	await editor.locator('.dve-header .ProseMirror').click();
+	await clickInEditor(editor.locator('.dve-header .ProseMirror'));
 	await page.keyboard.press('End');
 	await page.keyboard.type(' separate');
 	expect(

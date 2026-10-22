@@ -1,7 +1,7 @@
 # Visio scenes and experimental source-backed editing
 
 `ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
-UI components live in the separate viewer. This is a supported subset, not Visio
+Core holds the DOM-free model and helpers (`ooxml-core/visio`, `ooxml-core/visio/ui`); the Visio editor elements are in `ooxml-ui/visio` (`src/ui/src/visio`), and the app and framework bindings in `viewers/visio`. This is a supported subset, not Visio
 parity or a complete ShapeSheet calculation engine. The experimental edit API
 preserves untouched package payloads under the limitations documented below.
 
@@ -286,7 +286,7 @@ Background page layers are returned in painting order.
 
 ## Explicit limits
 
-Only saved cached values, supported theme records and numeric coordinate-list literals are used. No formulas,
+Only saved cached values, supported theme records and numeric coordinate-list literals are used. No formula is executed as code (cached formulas are evaluated by the bounded ShapeSheet interpreter described below), and no
 macros, addons, hyperlinks, external data, or network resources are executed or
 fetched. Unsupported theme effects/transforms, complex paint, arbitrary-path corner rounding,
 layer color overrides, nonliteral/periodic
@@ -391,7 +391,7 @@ required.
 
 Run `npm run build:visio` for just this area, or the repository's normal build for
 all areas. Tests: `npx vitest run src/core/visio`. Strict typecheck remains the base
-repository TypeScript project. Synthetic fixture generators are not shipped.
+repository TypeScript project. Synthetic fixture generators are not in the published package.
 
 Cached spline sequences require a preceding endpoint and one or more contiguous knot
 rows. They are bounded to 256 controls, degrees 1-25, 2,048 output segments and
@@ -804,22 +804,11 @@ instance on the page, a picture inside the group, and resizing or moving one
 sub-shape on its own.
 
 Refused: masters that inherit another master, 1D masters (lines and
-connectors), locally deleted sections, `GUARD`ed sizes and pins, active locks,
-and another page shape whose formula reads a changed cell of the instance. A shape whose master sizes it
-from its text still keeps its saved size after a text edit: `TEXTHEIGHT` needs
-text metrics the core does not have.
-
-Refused: group masters and sub-shapes of a group instance, masters that inherit
-another master, 1D masters (lines and connectors), locally deleted sections or
-rows, `GUARD`ed sizes and pins, active locks, and another page shape whose
-formula reads a changed cell of the instance. A shape whose master sizes it
-from its text follows the text where it can be measured, and otherwise keeps
-its saved size (see the plain-text section).
-
-rows, `GUARD`ed sizes and pins, active locks, a locked layer, and another page
-shape whose formula reads a changed cell of the instance. A shape whose master
-sizes it from its text still keeps its saved size after a text edit:
-`TEXTHEIGHT` needs text metrics the core does not have.
+connectors), locally deleted sections or rows, `GUARD`ed sizes and pins,
+active locks, a locked layer, and another page shape whose formula reads a
+changed cell of the instance. A shape whose master sizes it from its text
+follows the text where it can be measured (`visioTextExtents`), and otherwise
+keeps its saved size (see the plain-text section).
 
 ### Stencil instances: whole-shape commands
 
@@ -879,17 +868,15 @@ new page shape of the same ID.
 
 This first bundle has deliberate exclusions:
 
-| Exclusion                                              | Reason                                                  | Next expansion                                 |
-| ------------------------------------------------------ | ------------------------------------------------------- | ---------------------------------------------- |
-| Master-linked delete, group masters and foreign shapes | Nested transforms and resource semantics are not proven | Group instance overrides and instance deletion |
-
-| Resizing group masters; foreign shapes | Nested transforms and resource semantics are not proven | Group instance overrides |
-| Glue/Connects participation and broader 1D editing | Proven straight-line translation does not establish connector routing or glue | Endpoint editing and glued connector routing |
-| Non-page affected/unknown dependencies | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
-| GUARD, SETATREF and referenced transform formulas | Direct overwrites would bypass protection/redirection or discard semantics | Verified redirection commands; never bypass protection |
-| Protected cells and inherited/ambiguous protection | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored | Proven effective protection resolution |
-| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics | Additional row evaluators and explicit scaling proofs |
-| Deletion referenced outside a removed set | Retained formulas, Connects or metadata could dangle | Explicit validated dependency-removal and connector-healing transactions |
+| Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Foreign shapes                                                             | Nested transforms and resource semantics are not proven                            | Foreign-shape resource semantics                                                |
+| Glue/Connects participation and broader 1D editing                         | Proven straight-line translation does not establish connector routing or glue      | Endpoint editing and glued connector routing                                    |
+| Non-page affected/unknown dependencies                                     | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
+| GUARD, SETATREF and referenced transform formulas                          | Direct overwrites would bypass protection/redirection or discard semantics         | Verified redirection commands; never bypass protection                          |
+| Protected cells and inherited/ambiguous protection                         | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                        | Proven effective protection resolution                                          |
+| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics                             | Additional row evaluators and explicit scaling proofs                           |
+| Deletion referenced outside a removed set                                  | Retained formulas, Connects or metadata could dangle                               | Explicit validated dependency-removal and connector-healing transactions        |
 
 Relative MoveTo/LineTo geometry scales with Width/Height. Absolute MoveTo/LineTo
 coordinates require a supported transitive dependency on dimensions, except zero

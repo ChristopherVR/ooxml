@@ -16,6 +16,7 @@ import type { VisioCalloutStyle, VisioContainerStyle } from 'ooxml-core/visio';
 import {
 	loadVisio,
 	createVsdx,
+	mergeVisioPages,
 	type CreateVsdxOptions,
 	deserializeVisioClipboard,
 	type VisioDocument,
@@ -55,6 +56,7 @@ import {
 } from './viewer-layers';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import type { CancellableParser } from './worker-parser';
+import type { DiagramTool } from './diagram-tool';
 import type { ViewerEvents, VisioShapeSelection } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,
@@ -96,6 +98,8 @@ export interface ViewerState {
 	readonly selectedShapes: readonly VisioShapeSelection[];
 	/** Prepared source selection availability for native clipboard gestures. Payload stays private. */
 	readonly clipboard: ViewerClipboardState;
+	/** The standalone canvas's active tool; it falls back to the pointer whenever editing stops. */
+	readonly tool: DiagramTool;
 }
 /** Effective mutation availability shared by every diagram UI tool. */
 export function canEditDiagram(state: Pick<ViewerState, 'canEdit' | 'edit'>): boolean {
@@ -123,7 +127,20 @@ interface ReplacementMutation {
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
+/** What differs between the open drawing and a shared package, when only page content does. */
+export interface RemoteSourceChange {
+	/** Ids of the pages whose content changed. */
+	readonly pages: readonly string[];
+}
+/** Undo and redo of a shared drawing: they act on the local user's edits only. */
+export interface SharedHistory {
+	undo(): Promise<boolean>;
+	redo(): Promise<boolean>;
+	canUndo(): boolean;
+	canRedo(): boolean;
+}
 export class ViewerController {
+	#sharedHistory: SharedHistory | null = null;
 	#state: ViewerState = Object.freeze({
 		canEdit: true,
 		document: null,
@@ -137,6 +154,7 @@ export class ViewerController {
 		search: EMPTY_TEXT_SEARCH,
 		layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		clipboard: EMPTY_CLIPBOARD_STATE,
+		tool: 'pointer',
 	});
 	#subscribers = new Set<(state: ViewerState) => void>();
 	#events = new Set<EventListener>();
@@ -209,17 +227,56 @@ export class ViewerController {
 		if (!this.#notify(() => listener(this.#state))) this.#subscribers.delete(listener);
 		return () => this.#subscribers.delete(listener);
 	}
+	/**
+	 * Whether editing is allowed: the host's `canEdit` and `readOnly` switches, a collaboration
+	 * `viewer` role and `capabilities.edit` all have to permit it, so none of them can undo another.
+	 */
 	get canEdit(): boolean {
 		return this.#state.canEdit;
 	}
 	set canEdit(value: boolean) {
+		this.#hostCanEdit = Boolean(value);
+		this.#applyEditPermission();
+	}
+	/** The inverse of `canEdit`. True wins over `canEdit`; false only lifts its own restriction. */
+	get readOnly(): boolean {
+		return !this.#state.canEdit;
+	}
+	set readOnly(value: boolean) {
+		this.#hostReadOnly = Boolean(value);
+		this.#applyEditPermission();
+	}
+	/** Set by sharing while the collaboration role is `viewer`; independent of the host switches. */
+	setRoleReadOnly(locked: boolean): void {
+		this.#roleReadOnly = locked;
+		this.#applyEditPermission();
+	}
+	/** Set by the `customization` property while `capabilities.edit` is off. */
+	setCapabilityReadOnly(locked: boolean): void {
+		this.#capabilityReadOnly = locked;
+		this.#applyEditPermission();
+	}
+	#hostCanEdit = true;
+	#hostReadOnly = false;
+	#roleReadOnly = false;
+	#capabilityReadOnly = false;
+	#applyEditPermission(): void {
 		this.#assertAlive();
-		if (Boolean(value) === this.#state.canEdit) return;
+		const value =
+			this.#hostCanEdit && !this.#hostReadOnly && !this.#roleReadOnly && !this.#capabilityReadOnly;
+		if (value === this.#state.canEdit) return;
 		if (!value) {
 			this.cancelEdit();
 			this.cancelPreview();
 		}
-		this.#change({ canEdit: Boolean(value) });
+		this.#change({ canEdit: value });
+	}
+	/** Pick the canvas tool. A drawing tool needs edit permission and a source-backed drawing. */
+	setTool(tool: DiagramTool): void {
+		this.#assertAlive();
+		if (tool === this.#state.tool) return;
+		if (tool !== 'pointer' && !canEditDiagram(this.#state)) return;
+		this.#change({ tool });
 	}
 	onEvent(listener: EventListener): () => void {
 		this.#assertAlive();
@@ -509,6 +566,7 @@ export class ViewerController {
 		++this.#sourceGeneration;
 		++this.#loadId;
 		this.parser.cancel?.();
+		this.parser.dispose?.();
 		this.#subscribers.clear();
 		this.#events.clear();
 		this.#searchIndex = null;
@@ -526,6 +584,7 @@ export class ViewerController {
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 			clipboard: EMPTY_CLIPBOARD_STATE,
+			tool: 'pointer',
 		});
 	}
 	/** Replace one source-backed local plain-text target. Core decides target support. */
@@ -905,17 +964,66 @@ export class ViewerController {
 		this.#history.maxEntries = levels + 1;
 		this.#change({ edit: this.#sourceEditState() });
 	}
+	/**
+	 * While set (a shared drawing), undo and redo go to `history` instead of the package history,
+	 * and the edit state reports its stacks. Pass null to restore the package history.
+	 */
+	setSharedHistory(history: SharedHistory | null): void {
+		this.#assertAlive();
+		this.#sharedHistory = history;
+		this.refreshHistory();
+	}
+	/** Re-reads the undo and redo availability of a shared history. */
+	refreshHistory(): void {
+		if (!this.#destroyed) this.#change({ edit: this.#sourceEditState() });
+	}
 	async undo(): Promise<void> {
+		if (this.#sharedHistory) {
+			this.#assertAlive();
+			if (!this.canEdit) throw new Error('The drawing is read-only.');
+			await this.#sharedHistory.undo();
+			return;
+		}
 		return this.#mutate('undo');
 	}
 	/**
 	 * Adopt a package from a shared session as one undoable history step. Emits `document-change`
 	 * with kind `remote`, which a session must not publish back.
 	 */
-	async applyRemoteSource(bytes: Uint8Array): Promise<void> {
-		return this.#mutate('remote', undefined, bytes);
+	async applyRemoteSource(bytes: Uint8Array, change?: RemoteSourceChange): Promise<void> {
+		return this.#mutate('remote', undefined, bytes, undefined, false, undefined, undefined, change);
+	}
+	/**
+	 * Reads a shared package. With `change` (only the content of these pages differs from the open
+	 * drawing) and a parser that can read pages, just those pages are read and spliced into the
+	 * open document; anything else, or a merge that cannot match a whole read, reads the whole
+	 * package.
+	 */
+	async #parseRemote(
+		bytes: Uint8Array,
+		change: RemoteSourceChange | undefined,
+	): Promise<VisioDocument> {
+		const previous = this.#state.document;
+		const pages = this.parser.pages;
+		if (change && pages && previous?.format === 'vsdx') {
+			try {
+				const partial = await pages(Uint8Array.from(bytes), change.pages);
+				const merged = mergeVisioPages(previous, partial, change.pages);
+				if (merged) return merged;
+			} catch (cause) {
+				// A cancelled read stays cancelled; any other failure is retried on the whole package.
+				if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
+			}
+		}
+		return this.parser(Uint8Array.from(bytes));
 	}
 	async redo(): Promise<void> {
+		if (this.#sharedHistory) {
+			this.#assertAlive();
+			if (!this.canEdit) throw new Error('The drawing is read-only.');
+			await this.#sharedHistory.redo();
+			return;
+		}
 		return this.#mutate('redo');
 	}
 	cancelEdit(): void {
@@ -930,6 +1038,24 @@ export class ViewerController {
 		this.#invalidateEdit();
 		this.parser.cancel?.();
 		this.#change({ edit: this.#sourceEditState() });
+	}
+	/**
+	 * Declare the current content saved, for hosts that persist `exportVsdx()` themselves. Clears
+	 * `edit.dirty` and emits `document-change` with `dirty: false` and kind `save`. Later edits
+	 * and undo steps are measured against this point.
+	 */
+	markClean(): void {
+		this.#assertAlive();
+		const history = this.#history;
+		const document = this.#state.document;
+		if (!history || !document || this.#sourceFormat !== 'vsdx' || document.format !== 'vsdx')
+			return;
+		if (this.#state.edit.busy || this.#state.loading)
+			throw new Error('Wait for the current document operation before marking the drawing saved.');
+		const was = this.#state.edit.dirty;
+		history.markClean();
+		this.#change({ edit: this.#sourceEditState() });
+		if (was) this.#emit('document-change', { document, dirty: false, kind: 'save' });
 	}
 	exportVsdx(): VsdxExportResult {
 		this.#assertAlive();
@@ -1088,6 +1214,7 @@ export class ViewerController {
 		strictSelectionIntent = false,
 		creation?: CreationContext,
 		replacement?: ReplacementMutation,
+		remoteChange?: RemoteSourceChange,
 	): Promise<void> {
 		this.#assertAlive();
 		if (kind !== 'remote' && !this.canEdit) throw new Error('The drawing is read-only.');
@@ -1144,7 +1271,7 @@ export class ViewerController {
 			} else if (kind === 'remote') {
 				if (remote!.byteLength > MAX_INPUT_BYTES)
 					throw new Error('The shared VSDX exceeds 32 MiB.');
-				document = await this.parser(Uint8Array.from(remote!));
+				document = await this.#parseRemote(remote!, remoteChange);
 			} else document = await this.parser(Uint8Array.from(target!.bytes));
 			assertCurrent();
 			assertViewableDocument(document);
@@ -1334,7 +1461,24 @@ export class ViewerController {
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');
 	}
-	#change(change: Partial<ViewerState>): boolean {
+	#change(patch: Partial<ViewerState>): boolean {
+		const shared = this.#sharedHistory;
+		let change =
+			shared && patch.edit && patch.edit.sourceAvailable
+				? {
+						...patch,
+						edit: Object.freeze({
+							...patch.edit,
+							canUndo: shared.canUndo(),
+							canRedo: shared.canRedo(),
+						}),
+					}
+				: patch;
+		if (this.#state.tool !== 'pointer' || (change.tool && change.tool !== 'pointer')) {
+			const merged = { ...this.#state, ...change };
+			if (merged.tool !== 'pointer' && !canEditDiagram(merged))
+				change = { ...change, tool: 'pointer' };
+		}
 		const revision = ++this.#revision;
 		if (
 			(change.zoom !== undefined && change.zoom !== this.#state.zoom) ||

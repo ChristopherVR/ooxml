@@ -1,66 +1,123 @@
 ---
 title: Qu'est-ce que pptx-viewer ?
-description: Un apercu general du monorepo TypeScript pptx-viewer pour analyser, editer, afficher et convertir des fichiers PowerPoint avec React, Vue 3 et Angular.
+description: Un aperçu général du monorepo TypeScript pptx-viewer pour analyser, éditer, afficher et convertir des fichiers PowerPoint avec React, Vue 3, Angular, Svelte 5 et JavaScript natif.
 ---
 
 # Qu'est-ce que pptx-viewer ?
 
-`pptx-viewer` est un monorepo TypeScript complet pour **analyser, editer, afficher et convertir** des fichiers Microsoft PowerPoint (`.pptx`) - dans le navigateur et dans Node.js. Il fonctionne entierement en memoire sur l'archive ZIP OpenXML sans aucune dependance native.
+`pptx-viewer` est un monorepo TypeScript pour **analyser, éditer, afficher et convertir** des fichiers Microsoft PowerPoint (`.pptx`), dans le navigateur et dans Node.js. Il fonctionne entièrement en mémoire sur l'archive ZIP OpenXML, sans aucune dépendance native.
 
-La ou la plupart des bibliotheques PowerPoint font une seule chose - generer des diapositives _ou_ les afficher _ou_ en extraire du texte - `pptx-viewer` couvre le cycle complet : charger un fichier existant, modifier son modele de donnees structure, l'afficher avec une fidelite visuelle complete et le sauvegarder dans un fichier `.pptx` valide. Le meme moteur principal alimente des composants d'affichage integres pour **React**, **Vue 3** et **Angular**.
+`pptx-viewer` couvre le cycle complet : charger une présentation existante, modifier son modèle de données structuré, l'afficher et la sauvegarder dans un fichier `.pptx` valide. Le même moteur principal alimente des composants pour **React**, **Vue 3**, **Angular** et **Svelte 5**, ainsi qu'une version **JavaScript natif** pour les projets sans framework.
 
 ## Ce qu'il fait
 
-Le SDK fournit neuf capacites principales :
+Le SDK fournit neuf capacités principales :
 
-1. **Analyser** les fichiers `.pptx` depuis un `ArrayBuffer` brut en un modele [`PptxData`](/guide/data-model) structure.
-2. **Creer** des presentations de toutes pieces avec une API de construction fluide.
-3. **Afficher** les diapositives en tant que composants React, Vue ou Angular interactifs avec une fidelite visuelle complete.
-4. **Editer** les presentations par programmation ou via l'editeur WYSIWYG integre.
+1. **Analyser** les fichiers `.pptx` (ainsi que `.ppsx` / `.pptm` / `.potx`, et le format binaire historique `.ppt` de PowerPoint 97-2003) depuis un `ArrayBuffer` brut en un modèle [`PptxData`](/fr/guide/data-model) structuré.
+2. **Créer** des présentations de toutes pièces avec une API de construction fluide.
+3. **Afficher** les diapositives en tant que composants React, Vue, Angular, Svelte ou JavaScript natif interactifs.
+4. **Éditer** les présentations par programmation ou via l'éditeur WYSIWYG intégré.
 5. **Sauvegarder** les modifications dans un fichier `.pptx` valide (compatible aller-retour).
-6. **Convertir** les presentations en Markdown avec extraction optionnelle des medias.
-7. **Exporter** les diapositives en images (PNG/JPEG), SVG, PDF, GIF ou video.
-8. **Collaborer** en temps reel via Yjs CRDT avec suivi de presence.
-9. **Chiffrer/Dechiffrer** les fichiers PPTX proteges par mot de passe (AES-128/256).
+6. **Convertir** les présentations en Markdown avec extraction optionnelle des médias.
+7. **Exporter** les diapositives en images (PNG/JPEG), SVG, PDF, GIF ou vidéo.
+8. **Collaborer** en temps réel via Yjs CRDT avec suivi de présence.
+9. **Chiffrer/Déchiffrer** les fichiers PPTX protégés par mot de passe (AES-128/256).
 
-Le moteur gere la specification OpenXML complete incluant 16 types d'elements, 187+ formes prefinies, 23 types de graphiques, SmartArt, modeles 3D, animations, transitions (incluant morphe), themes, masques de diapositives, medias incorpores, metafichiers EMF/WMF, objets OLE, encre numerique, signatures numeriques, chiffrement, preservation des macros VBA et conformite OOXML Strict.
+Le moteur gère les éléments de présentation, des centaines de formes prédéfinies `ST_ShapeType`, les graphiques, les styles de tableau intégrés, SmartArt, les modèles 3D, les animations et transitions (y compris morphe), les thèmes, les masques de diapositives, les médias incorporés, les métafichiers EMF/WMF, les objets OLE, l'encre numérique, les signatures numériques, le chiffrement, la préservation des macros VBA et la conformité OOXML Strict.
+
+## Pour qui est-il conçu ?
+
+- **Équipes produit qui intègrent une visionneuse de documents** : affichez les présentations envoyées par les utilisateurs dans une application web sans envoyer les fichiers à un service de conversion.
+- **Équipes qui construisent un éditeur** : les bindings incluent une surface d'édition WYSIWYG complète (ruban, inspecteur, annuler/rétablir, collaboration) que vous pouvez activer fonctionnalité par fonctionnalité.
+- **Backend et automatisation** : le package Core est indépendant du framework et fonctionne dans Node.js ; vous pouvez donc générer, inspecter, comparer ou convertir des présentations dans des scripts, des serveurs et la CI.
+- **Pipelines IA et agents** : `pptx-viewer-mcp` expose le moteur sous forme d'appels d'outils MCP, et le convertisseur Markdown transforme les présentations en texte adapté aux LLM.
+
+## Modèle de rendu
+
+`pptx-viewer` ne rastérise pas les diapositives, ni côté serveur ni sur un `<canvas>`. Les diapositives sont rendues en **HTML, CSS et SVG dans le DOM** :
+
+- Le texte est du vrai texte HTML : sélectionnable, consultable, traduisible et lisible par les lecteurs d'écran.
+- Les formes et connecteurs sont du SVG avec des tracés de détourage calculés par le moteur de géométrie.
+- Les tableaux sont des éléments HTML `<table>` ; les graphiques sont du SVG en ligne construit à partir des données de graphique analysées.
+- Le zoom est une transformation CSS : les diapositives restent nettes à toute échelle et sur toute densité d'affichage.
+- Comme chaque élément est un nœud du DOM, l'éditeur bénéficie gratuitement de la sélection, des poignées de déplacement, de l'édition de texte en ligne et de l'accessibilité.
+
+La rastérisation n'a lieu que sur demande : l'export raster (PNG/JPEG/PDF/GIF/vidéo) tente d'abord une capture SVG `foreignObject` (le moteur du navigateur peint lui-même le DOM, en préservant `backdrop-filter`, les propriétés personnalisées et les transformations 3D), se rabat sur la re-rastérisation du pipeline d'export SVG vectoriel existant, et ne dessine le DOM via `html2canvas-pro` qu'en dernier recours.
+
+::: tip Compromis
+Le CSS ne peut pas exprimer pixel pour pixel tous les effets PowerPoint, et le chemin de repli `html2canvas-pro` (utilisé lorsqu'une ressource ne peut pas être incorporée pour la capture SVG) a ses propres lacunes, par exemple l'approximation des modes de fusion par l'opacité. Voir [Limitations](/fr/guide/limitations) pour la liste complète.
+:::
 
 ## Les packages
 
-Le monorepo publie six packages independants.
+Le monorepo publie huit packages.
 
-| Package          | Nom npm                      | Objectif                                                                                             |
-| ---------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Core**         | `pptx-viewer-core`           | Analyser, creer, editer, serialiser et convertir des fichiers PPTX. Independant du framework.        |
-| **React**        | `pptx-react-viewer`          | Visualiseur, editeur et presentateur React avec barre d'outils, inspecteur, collaboration et export. |
-| **Vue 3**        | `pptx-vue-viewer`            | Visualiseur/editeur Vue 3 construit sur le meme moteur, avec le meme ensemble de fonctionnalites.    |
-| **Angular**      | `pptx-angular-viewer`        | Visualiseur/editeur Angular construit sur le meme moteur, avec le meme ensemble de fonctionnalites.  |
-| **Outils / MCP** | `pptx-viewer-mcp`            | 73 fonctions d'outils PPTX, un serveur MCP pour les agents IA et le codec de collaboration Y.Doc.    |
-| **Installateur** | `@christophervr/pptx-viewer` | CLI interactif qui integre le bon package de visualiseur dans votre projet.                          |
+| Package                           | Nom npm                      | Objectif                                                                                                      |
+| --------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [**Core**](/core/)                | `pptx-viewer-core`           | Analyser, créer, éditer, sérialiser et convertir des fichiers PPTX. Indépendant du framework.                 |
+| [**React**](/react/)              | `pptx-react-viewer`          | Visionneuse, éditeur et présentateur React avec barre d'outils, inspecteur, collaboration et export.          |
+| [**Vue 3**](/vue/)                | `pptx-vue-viewer`            | Visionneuse/éditeur Vue 3 construit sur le même moteur, avec le même ensemble de fonctionnalités.             |
+| [**Angular**](/angular/)          | `pptx-angular-viewer`        | Visionneuse/éditeur Angular construit sur le même moteur, avec le même ensemble de fonctionnalités.           |
+| [**Vanilla JS**](/vanilla/)       | `pptx-vanilla-viewer`        | Binding sans framework construit sur le même moteur : DOM natif, une fonction de fabrique, aucune dépendance. |
+| [**Svelte**](/svelte/)            | `pptx-svelte-viewer`         | Composant Svelte 5 construit sur le même moteur, avec le même ensemble de fonctionnalités.                    |
+| [**Outils / MCP**](/packages/mcp) | `pptx-viewer-mcp`            | 73 fonctions d'outils PPTX, un serveur MCP pour les agents IA et le codec de collaboration Y.Doc.             |
+| **Installateur**                  | `@christophervr/pptx-viewer` | CLI interactif qui intègre le bon package de visionneuse dans votre projet.                                   |
 
-### Graphe de dependances
+### Comment les éléments s'articulent
 
-Les trois packages de frameworks UI s'appuient sur la couche partagee, qui s'appuie a son tour sur Core :
+Les cinq packages de bindings UI s'appuient sur une couche de rendu partagée, qui s'appuie à son tour sur Core :
 
 ```
 pptx-react-viewer   ┐
-pptx-vue-viewer     ├── pptx-viewer-shared ── pptx-viewer-core
-pptx-angular-viewer ┘                               ├── emf-converter
-                                                    └── mtx-decompressor
+pptx-vue-viewer     │
+pptx-angular-viewer ├── ooxml-ui/pptx ── ooxml-core/pptx
+pptx-vanilla-viewer │                               ├── emf-converter
+pptx-svelte-viewer  ┘                               └── mtx-decompressor
 ```
 
-## Pour qui est-il concu ?
+- **`pptx-viewer-core`** possède tout ce qui concerne le format de fichier : les pipelines de chargement et de sauvegarde, le modèle de données typé, la résolution des thèmes, le moteur de géométrie, le chiffrement et les convertisseurs Markdown/SVG. Il n'a pas d'interface et fonctionne partout où JavaScript fonctionne.
+- **`ooxml-ui/pptx`** publie le rendu partagé, le style, les composants web, le chargement dans le navigateur et les vues d'export depuis `src/ui/src/pptx`. Chaque binding importe cette API publique. Les opérations d'édition et de collaboration sans DOM vivent dans `ooxml-core/pptx/editor` ; le package privé `pptx-viewer-shared` n'est plus qu'une façade de compatibilité.
+- **Les bindings** sont de fines couches de vue. Chacun traduit les mêmes données de rendu partagées dans l'idiome de son framework (JSX, modèles SFC, modèles Angular, runes Svelte ou DOM natif), ce qui explique que les cinq bindings s'affichent de façon identique et restent à parité fonctionnelle.
+- **`emf-converter`** (métafichier EMF/WMF vers PNG) et **`mtx-decompressor`** (polices incorporées MicroType Express) sont des dépendances npm autonomes de Core.
+- **`pptx-viewer-mcp`** s'appuie sur `pptx-viewer-core` pour exposer des surfaces d'appel d'outils et de collaboration aux agents IA.
 
-- **Developpeurs React creant des interfaces de visualisation/edition** - utilisez [`pptx-react-viewer`](/react/). Il encapsule le moteur principal dans un composant `PowerPointViewer` qui affiche, edite, presente et exporte des diapositives pret a l'emploi.
-- **Developpeurs Vue 3** - utilisez `pptx-vue-viewer`. Meme moteur et meme ensemble de fonctionnalites que la liaison React.
-- **Developpeurs Angular** - utilisez `pptx-angular-viewer`. Meme histoire : meme moteur, meme ensemble de fonctionnalites.
-- **Developpeurs automatisant ou incorporant PowerPoint en mode headless** - utilisez [`pptx-viewer-core`](/core/). Aucune interface, aucune dependance de framework. Fonctionne dans un onglet de navigateur, une fonction serverless, un script de construction Node.js ou un Web Worker.
-- **Workflows IA / LLM** - utilisez [`pptx-viewer-mcp`](/packages/mcp). Le serveur MCP expose les 73 fonctions d'outils a tout client compatible MCP (Claude Desktop, Cursor, VS Code Copilot).
+## Exemples minimaux
 
-## Etapes suivantes
+::: code-group
 
-- [Installation](/fr/guide/installation) - installer les packages et configurer le developpement local.
-- [Demarrage rapide](/fr/guide/quick-start) - flux de bout en bout pour etre rapidement productif.
-- [Apercu du package Core](/core/) - le moteur d'analyse, d'edition et de serialisation.
-- [Apercu du package React](/react/) - le composant visualiseur/editeur.
-- [Limitations](/guide/limitations) - mises en garde importantes a lire avant d'adopter.
+```ts [Load, edit, save]
+import { PptxHandler } from 'pptx-viewer-core';
+
+const handler = new PptxHandler();
+const data = await handler.load(arrayBuffer);
+
+// data.slides is a typed, mutable model
+data.slides[0].elements.filter((el) => el.type === 'text').forEach((el) => console.log(el.text));
+
+const bytes = await handler.save(data.slides); // => Uint8Array (.pptx)
+```
+
+```ts [Create from scratch]
+import { PptxHandler } from 'pptx-viewer-core';
+
+const { handler, data, createSlide } = await PptxHandler.create({
+	title: 'Q4 Report',
+	theme: { colors: { accent1: '#FF6B6B' } },
+});
+
+data.slides.push(createSlide('Blank').addText('Hello', { fontSize: 36 }).build());
+
+const bytes = await handler.save(data.slides);
+```
+
+:::
+
+## Étapes suivantes
+
+- [Installation](/fr/guide/installation) - installer les packages et configurer le développement local.
+- [Démarrage rapide](/fr/guide/quick-start) - exemples d'utilisation de bout en bout.
+- [Architecture](/fr/guide/architecture) - fonctionnement des pipelines de chargement/sauvegarde et de la conception en couches.
+- [Le modèle PptxData](/fr/guide/data-model) - le modèle typé que vous éditez.
+- [Aperçu du package Core](/core/) - le moteur d'analyse, d'édition et de sérialisation.
+- [Aperçu du package React](/react/) - le composant visionneuse/éditeur.
+- [Limitations](/fr/guide/limitations) - mises en garde importantes à lire avant d'adopter.

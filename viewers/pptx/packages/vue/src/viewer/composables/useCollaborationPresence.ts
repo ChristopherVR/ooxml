@@ -17,6 +17,7 @@ export function useCollaborationPresence(options: UseCollaborationOptions) {
 	const remoteUsers = ref<SanitizedPresence[]>([]);
 	const cursors = ref<RemoteCursor[]>([]);
 	const followedClientId = ref<number | null>(null);
+	const localClientId = ref<number | null>(null);
 	const followedSlideIndex = computed(
 		() =>
 			remotePresences.value.find((peer) => peer.clientId === followedClientId.value)?.activeSlide ??
@@ -58,6 +59,7 @@ export function useCollaborationPresence(options: UseCollaborationOptions) {
 	}
 	function start(next: AwarenessLike, config: CollaborationConfig): void {
 		awareness = next;
+		localClientId.value = next.clientID ?? null;
 		publisher = createPresencePublisher(next, {
 			userName: config.userName,
 			// Keep a deterministic color for the same user across sessions.
@@ -86,8 +88,10 @@ export function useCollaborationPresence(options: UseCollaborationOptions) {
 		remoteUsers.value = [];
 		cursors.value = [];
 		followedClientId.value = null;
+		localClientId.value = null;
 	}
 	return {
+		localClientId,
 		remoteUsers,
 		remotePresences,
 		cursors,

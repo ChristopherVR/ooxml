@@ -143,6 +143,7 @@ export { RemoteSelectionOverlayComponent } from './remote-selection-overlay.comp
 export type { ViewerCollaborationShellOptions } from './viewer-collaboration-shell.service';
 export type {
 	CollaborationShellState,
+	CollaborationState,
 	ConnectionStatus,
 	SanitizedPresence,
 	DeckSaveState,

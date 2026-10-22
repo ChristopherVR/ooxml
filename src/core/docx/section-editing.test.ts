@@ -118,6 +118,28 @@ describe('section editing', () => {
 		expect((await loadDocx(saved)).model.sections).toHaveLength(1);
 	});
 
+	it('ends a section after a block content control at the paragraph that holds the break', async () => {
+		const body =
+			`<w:p><w:r><w:t>Cover</w:t></w:r></w:p>` +
+			`<w:sdt><w:sdtPr><w:id w:val="3"/></w:sdtPr><w:sdtContent><w:p><w:r><w:t>Inside</w:t></w:r></w:p></w:sdtContent></w:sdt>` +
+			`<w:p><w:pPr><w:sectPr><w:type w:val="continuous"/></w:sectPr></w:pPr><w:r><w:t>Break</w:t></w:r></w:p>` +
+			`<w:p><w:r><w:t>After</w:t></w:r></w:p>${finalSection}`;
+		const loaded = await loadDocx(await docx(body));
+		expect(loaded.model.blocks.map((block) => block.id)).toEqual(['p0', 'p1', 'p2', 'p3']);
+		expect(loaded.model.sections?.map((section) => section.endsAtBlockId)).toEqual(['p2', 'p3']);
+		const next = clone(loaded.model);
+		next.sections![0]!.verticalAlign = 'center';
+		const xml = await documentXml(await loaded.save(next));
+		const breakParagraph = xml.slice(
+			xml.lastIndexOf('<w:p>', xml.indexOf('Break')),
+			xml.indexOf('Break'),
+		);
+		expect(breakParagraph).toContain('<w:vAlign w:val="center"/>');
+		expect(xml.slice(xml.indexOf('<w:sdt>'), xml.indexOf('</w:sdt>'))).not.toContain('sectPr');
+		const reread = await loadDocx(await loaded.save(next));
+		expect(reread.model.sections?.map((section) => section.endsAtBlockId)).toEqual(['p2', 'p3']);
+	});
+
 	it('refuses to end a section on a table', async () => {
 		const loaded = await loadDocx(
 			await docx(

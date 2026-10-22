@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
+import { closeHistory, history, redo, undo } from 'prosemirror-history';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import type { ContentControl, TextRun } from '../model';
 import { markSpecs } from './schema-marks';
@@ -9,6 +10,7 @@ import {
 	chooseListItem,
 	deleteToPlaceholder,
 	insertContentControl,
+	replaceControlContent,
 	toggleCheckboxControl,
 	typeOverPlaceholder,
 } from './content-control-commands';
@@ -106,6 +108,45 @@ describe('content control commands', () => {
 		expect(controlSpans(dated.doc)[0]?.control.fullDate).toBe('2026-01-09T00:00:00Z');
 	});
 
+	it('writes a control whose placeholder shows no text either in one pass', () => {
+		// A picture control's default placeholder has no text: the control is left without text, as
+		// before, rather than tried again with its placeholder.
+		const picture = control({ kind: 'picture' });
+		const state = stateOf([{ text: 'x', contentControl: picture }]);
+		const span = controlSpans(state.doc)[0]!;
+		expect(
+			text(state.apply(replaceControlContent(state, span, { control: picture, text: '' }))),
+		).toBe('');
+	});
+
+	it('keeps a control whose picked entry or date shows no text, showing its placeholder', () => {
+		// An entry's display text can be empty (`w:displayText=""`, or no attributes at all), and so
+		// can a date format: an inline control lives on its text, so it would go with it.
+		for (const kind of ['dropDownList', 'comboBox'] as const) {
+			const list = control({
+				kind,
+				items: [
+					{ display: 'Red', value: 'r' },
+					{ display: '', value: 'none' },
+				],
+			});
+			const state = stateOf([{ text: 'Pick ' }, { text: 'Red', contentControl: list }]);
+			const next = state.apply(chooseListItem(state, '11', 1)!);
+			expect(
+				controlSpans(next.doc).map((span) => span.control),
+				kind,
+			).toEqual([{ ...list, showingPlaceholder: true }]);
+			expect(text(next), kind).toBe('Pick Choose an item.');
+		}
+		const date = control({ kind: 'date', dateFormat: '' });
+		const dated = stateOf([{ text: 'Due ' }, { text: '1/9/2026', contentControl: date }]);
+		const next = dated.apply(chooseDate(dated, '11', new Date(2026, 0, 9))!);
+		expect(controlSpans(next.doc).map((span) => span.control)).toEqual([
+			{ ...date, fullDate: '2026-01-09T00:00:00Z', showingPlaceholder: true },
+		]);
+		expect(text(next)).toBe('Due Click or tap to enter a date.');
+	});
+
 	it('typing over a placeholder replaces it; a drop-down takes no typing', () => {
 		const placeholder = control({ kind: 'text', showingPlaceholder: true });
 		const state = stateOf([
@@ -127,6 +168,44 @@ describe('content control commands', () => {
 		const next = all.apply(deleteToPlaceholder(all, 'backward')!);
 		expect(text(next)).toBe('Click or tap here to enter text.');
 		expect(controlSpans(next.doc)[0]?.control.showingPlaceholder).toBe(true);
+	});
+
+	it('deletes a selection running past a control as ordinary text, without its placeholder', () => {
+		const state = stateOf([
+			{ text: 'Hi', contentControl: control({ kind: 'text' }) },
+			{ text: ' there' },
+		]);
+		// From the control's first character to the middle of the text after it.
+		const past = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		expect(deleteToPlaceholder(past, 'backward')).toBeUndefined();
+	});
+
+	it('keeps a control whose own placeholder text is empty when its text is deleted', () => {
+		const empty = control({ kind: 'text', placeholderText: '' });
+		const state = stateOf([{ text: 'DOC-1', contentControl: empty }]);
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		const next = all.apply(deleteToPlaceholder(all, 'backward')!);
+		expect(text(next)).toBe('Click or tap here to enter text.');
+		expect(controlSpans(next.doc)).toHaveLength(1);
+	});
+
+	it('brings back the control’s own placeholder, in the Placeholder Text style', () => {
+		const own = control({ kind: 'text', placeholderText: 'Enter the document number.' });
+		const state = stateOf([{ text: 'DOC-1', contentControl: own, style: 'Strong' }]);
+		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 6)));
+		const next = all.apply(deleteToPlaceholder(all, 'backward')!);
+		expect(text(next)).toBe('Enter the document number.');
+		const styles = next.doc
+			.nodeAt(1)!
+			.marks.filter((mark) => mark.type.name === 'characterStyle')
+			.map((mark) => mark.attrs.id);
+		expect(styles).toEqual(['PlaceholderText']);
+		const typed = typeOverPlaceholder(next, 3, 'D');
+		if (typed === 'blocked' || !typed) throw new Error('expected a transaction');
+		const value = next.apply(typed);
+		expect(value.doc.nodeAt(1)!.marks.some((mark) => mark.attrs.id === 'PlaceholderText')).toBe(
+			false,
+		);
 	});
 
 	it('inserts a new control around the selection or as a placeholder', () => {
@@ -160,11 +239,78 @@ describe('content control locks', () => {
 		expect(state.applyTransaction(state.tr.insertText('x', 5)).transactions).toHaveLength(0);
 	});
 
+	it('applies a content lock to a step over all of a control that keeps it', () => {
+		// Deleting a control whose content is locked is not editing what it holds; a step over all of
+		// its text that keeps the control, formatting or text that carries it, is.
+		for (const lock of ['contentLocked', 'sdtContentLocked'] as const) {
+			const state = locked(lock);
+			const span = controlSpans(state.doc)[0]!;
+			const bold = state.tr.addMark(span.from, span.to, schema.marks.bold!.create());
+			expect(violatesControlLock(bold, state), lock).toBe(true);
+			const marks = state.doc.nodeAt(span.from)!.marks;
+			const same = state.tr.replaceWith(span.from, span.to, schema.text('other', marks));
+			expect(violatesControlLock(same, state), lock).toBe(true);
+		}
+		const state = locked('contentLocked');
+		const span = controlSpans(state.doc)[0]!;
+		expect(violatesControlLock(state.tr.delete(span.from, span.to), state)).toBe(false);
+	});
+
 	it('sdtLocked refuses removing the control but allows editing inside', () => {
 		const state = locked('sdtLocked');
 		expect(violatesControlLock(state.tr.delete(3, 9), state)).toBe(true);
 		expect(violatesControlLock(state.tr.insertText('x', 5), state)).toBe(false);
 		expect(violatesControlLock(state.tr.delete(4, 6), state)).toBe(false);
+	});
+
+	it('undoes and redoes a command on a control that may not be deleted', () => {
+		// Undo and redo are not the control's own edit, and they put back the control's own text:
+		// that deletes no control, and refusing them would leave every earlier edit undone too.
+		const box = control({ kind: 'checkbox', checked: false, lock: 'sdtLocked' });
+		const list = control({
+			id: '12',
+			kind: 'dropDownList',
+			lock: 'sdtLocked',
+			items: [
+				{ display: 'Red', value: 'r' },
+				{ display: 'Blue', value: 'b' },
+			],
+		});
+		const loaded = stateOf([
+			{ text: '\u2610', contentControl: box },
+			{ text: ' and ' },
+			{ text: 'Red', contentControl: list },
+		]);
+		let state = EditorState.create({
+			schema,
+			doc: loaded.doc,
+			plugins: [history(), contentControlPlugin()],
+		});
+		state = state.apply(toggleCheckboxControl(state, '11')!);
+		state = state.apply(closeHistory(chooseListItem(state, '12', 1)!));
+		expect(text(state)).toBe('\u2612 and Blue');
+		const run = (command: typeof undo) =>
+			command(state, (tr) => {
+				state = state.apply(tr);
+			});
+		expect(run(undo)).toBe(true);
+		expect(text(state)).toBe('\u2612 and Red');
+		expect(run(undo)).toBe(true);
+		expect(text(state)).toBe('\u2610 and Red');
+		expect(controlSpans(state.doc).map((span) => span.control)).toEqual([box, list]);
+		expect(run(redo)).toBe(true);
+		expect(run(redo)).toBe(true);
+		expect(text(state)).toBe('\u2612 and Blue');
+		// Text that a step puts in place of all of the control's text without the control, or a
+		// step that takes the control's mark off it, still deletes it.
+		const span = controlSpans(state.doc)[1]!;
+		const plain = state.tr.replaceWith(span.from, span.to, schema.text('Green'));
+		expect(violatesControlLock(plain, state)).toBe(true);
+		const unmarked = state.tr.removeMark(span.from, span.to, schema.marks.contentControl!);
+		expect(violatesControlLock(unmarked, state)).toBe(true);
+		// Formatting all of its text keeps it.
+		const bold = state.tr.addMark(span.from, span.to, schema.marks.bold!.create());
+		expect(violatesControlLock(bold, state)).toBe(false);
 	});
 
 	it('a content-locked block refuses typing anywhere in it, its ends included', () => {

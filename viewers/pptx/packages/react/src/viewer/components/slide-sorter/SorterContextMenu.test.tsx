@@ -94,4 +94,16 @@ describe('react sorter context menu', () => {
 		expect(handlers.onToggleHide).toHaveBeenCalledOnce();
 		expect(handlers.onDelete).toHaveBeenCalledOnce();
 	});
+
+	// An inline <span> around a separator and a flex button makes Chrome's elementsFromPoint
+	// report the span above the button, so a point-based hit test misses the command.
+	it('renders its commands and separators directly in the menu, with no inline wrapper', () => {
+		mount({ hasClipboard: true });
+		const rows = Array.from(container.querySelector('[role="menu"]')!.children);
+		expect(rows.some((row) => row.getAttribute('role') === 'separator')).toBe(true);
+		expect(rows.map((row) => row.getAttribute('role'))).toStrictEqual(
+			rows.map((row) => (row.tagName === 'BUTTON' ? 'menuitem' : 'separator')),
+		);
+		expect(rows.filter((row) => row.tagName === 'BUTTON')).toStrictEqual(items());
+	});
 });

@@ -6,6 +6,7 @@
  * formatting.
  */
 import { groupRowsByCategory } from './box-stats';
+import { extentOf } from './extent';
 
 /** The `cx:layoutPr/cx:binning` properties that drive numeric binning. */
 export interface HistogramOptions {
@@ -97,8 +98,7 @@ export function computeHistogramBins(
 		});
 	}
 	if (regular.length > 0) {
-		const min = Math.min(...regular.map((item) => item.value));
-		const max = Math.max(...regular.map((item) => item.value));
+		const { min, max } = extentOf(regular.map((item) => item.value));
 		const requestedSize = options.binSize && options.binSize > 0 ? options.binSize : undefined;
 		const requestedCount = options.binCount && options.binCount > 0 ? options.binCount : undefined;
 		const start = requestedSize ? Math.floor(min / requestedSize) * requestedSize : min;

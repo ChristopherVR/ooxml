@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../editor/editor-state.svelte';
 import GradientPanel from './GradientPanel.svelte';
+import { themeSwatch } from './theme-color-grid.test-support';
 
 /**
  * Gradient stop colour: each stop shows the deck's real "Theme Colors" grid
@@ -107,9 +108,7 @@ describe('gradientPanel theme colour', () => {
 
 		const stopGroups = target.querySelectorAll('.pptx-svelte-gradient-stop-group');
 		expect(stopGroups).toHaveLength(2);
-		const firstStopSwatch = stopGroups[0]?.querySelector<HTMLButtonElement>(
-			'button[title="Accent 2"]',
-		);
+		const firstStopSwatch = themeSwatch(stopGroups[0]!, 'Accent 2');
 		expect(firstStopSwatch).not.toBeNull();
 		firstStopSwatch?.click();
 		flushSync();
@@ -124,9 +123,7 @@ describe('gradientPanel theme colour', () => {
 		const target = mountPanel(editor, currentEl(editor));
 
 		const stopGroups = target.querySelectorAll('.pptx-svelte-gradient-stop-group');
-		const firstStopSwatch = stopGroups[0]?.querySelector<HTMLButtonElement>(
-			'button[title="Accent 2"]',
-		);
+		const firstStopSwatch = themeSwatch(stopGroups[0]!, 'Accent 2');
 		firstStopSwatch?.click();
 		flushSync();
 		expect(stops(editor)[0]?.colorRef).toStrictEqual({ scheme: 'accent2' });

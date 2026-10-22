@@ -24,7 +24,7 @@ test('routes both native Record commands and keeps unsupported controls disabled
 	fixture.componentInstance.recordFromCurrent.subscribe(current);
 	fixture.detectChanges();
 	const target = fixture.nativeElement as HTMLElement;
-	expect(target.querySelectorAll('pptx-ui-ribbon-group')).toHaveLength(4);
+	expect(target.querySelectorAll('pptx-ui-ribbon-section > pptx-ui-ribbon-group')).toHaveLength(4);
 	expect(target.querySelectorAll('pptx-ui-ribbon-command[disabled]')).toHaveLength(4);
 	for (const id of ['record.record.fromBeginning', 'record.record.fromCurrent']) {
 		target

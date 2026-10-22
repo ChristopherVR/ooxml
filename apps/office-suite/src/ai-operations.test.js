@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formulaProblem, validateChanges } from './ai-operations.js';
+import {
+	formulaProblem,
+	prepareChanges,
+	reviewSpreadsheet,
+	validateChanges,
+} from './ai-operations.js';
 
 const xlsxDoc = { id: 'd1', kind: 'xlsx', name: 'budget.xlsx', revision: 1 };
 const cellChange = (input) => ({
@@ -62,4 +67,55 @@ test('validateChanges rejects an unsafe formula and names the cell', () => {
 test('validateChanges accepts an ordinary formula and plain values', () => {
 	assert.doesNotThrow(() => validateChanges([cellChange('=SUM(A1:A3)')], [xlsxDoc]));
 	assert.doesNotThrow(() => validateChanges([cellChange('12.5')], [xlsxDoc]));
+});
+
+async function workbook() {
+	const { createXlsxFromSheets } = await import('ooxml-core/automation');
+	const bytes = await createXlsxFromSheets([{ name: 'Budget', rows: [[1, '=A1*2', '=B1+1']] }]);
+	return { ...xlsxDoc, bytes };
+}
+const edit = (address, input) => ({
+	documentId: 'd1',
+	type: 'cells',
+	sheetIndex: 0,
+	cells: [{ address, input }],
+});
+
+test('reviewSpreadsheet lists the cells an edit recalculates, not the ones it types into', async () => {
+	const doc = await workbook();
+	const review = await reviewSpreadsheet([edit('A1', '5')], doc);
+	assert.deepEqual(review.effects, [
+		{ where: 'Budget', address: 'B1', before: '2', after: '10' },
+		{ where: 'Budget', address: 'C1', before: '3', after: '11' },
+	]);
+	assert.equal(review.more, 0);
+	assert.equal(review.proposal.format, 'xlsx');
+	assert.deepEqual(await reviewSpreadsheet([], doc), { effects: [], more: 0 });
+	const capped = await reviewSpreadsheet([edit('A1', '5')], doc, 1);
+	assert.equal(capped.effects.length, 1);
+	assert.equal(capped.more, 1);
+});
+
+test('prepareChanges saves the reviewed proposal and refuses bytes it was not made for', async () => {
+	const { readXlsxRange } = await import('ooxml-core/automation');
+	const doc = await workbook();
+	const changes = [edit('A1', '5')];
+	const { proposal } = await reviewSpreadsheet(changes, doc);
+	const [next] = await prepareChanges(changes, [doc], { d1: proposal });
+	assert.equal(next.revision, 2);
+	const { cells } = await readXlsxRange(next.bytes, 0, 'A1:C1');
+	assert.deepEqual(
+		cells.map((c) => c.value),
+		[5, 10, 11],
+	);
+	await assert.rejects(
+		prepareChanges(changes, [{ ...doc, bytes: next.bytes }], { d1: proposal }),
+		/document changed/,
+	);
+	// A different set of changes than the one reviewed is compared again and applied.
+	const [other] = await prepareChanges([edit('A1', '7')], [doc], { d1: proposal });
+	assert.deepEqual(
+		(await readXlsxRange(other.bytes, 0, 'A1')).cells.map((c) => c.value),
+		[7],
+	);
 });

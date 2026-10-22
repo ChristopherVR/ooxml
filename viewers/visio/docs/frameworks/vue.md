@@ -20,4 +20,4 @@ defineProps<{ diagram: VisioDocument }>();
 
 The component ref exposes the same handle and also emits the native kebab-case events. For large immutable documents use `shallowRef` or `markRaw`: rewrapping a document in a new reactive proxy changes its identity and requests an external replacement.
 
-The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). [Try the Vue 3 demo](/demo-vue/){target="_self"}.
+The properties (`document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`, `events`) and the handle are identical in every framework: see the [binding contract](/bindings) and the [viewer API](/api). To compose your own UI from the viewer's parts instead, see the [building blocks](/building-blocks); to share a drawing, see [collaboration](/collaboration). [Try the Vue 3 demo](/demo-vue/){target="_self"}.

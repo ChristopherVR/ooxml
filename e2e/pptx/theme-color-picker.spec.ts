@@ -6,10 +6,13 @@
  * five, rather than each binding painting its own guess at the Office
  * palette?
  *
- * Every `ThemeColorSwatchGrid` (react/vue/angular/svelte/vanilla) titles and
- * labels each swatch with `describeThemeColorSwatch`'s exact English string
- * ("Accent 1, Lighter 80%"), so this spec locates the swatch the same way in
- * every binding: by that title, inside the inspector's Fill row. Picking it
+ * Every `ThemeColorSwatchGrid` (react/vue/angular/svelte/vanilla) draws its
+ * swatches with the shared `pptx-ui-color-grid`, which titles and labels each
+ * with `describeThemeColorSwatch`'s exact English string ("Accent 1, Lighter
+ * 80%"), so this spec locates the swatch the same way in every binding: by
+ * that title, in the grid's shadow root inside the inspector's Fill row. The
+ * grid must fit that row (its swatches shrink in a narrow field rather than
+ * drawing over the next one). Picking the swatch
  * must (a) repaint the shape with the resolved hex, computed here from the
  * fixture's OWN theme colour map via the same shared `buildThemeColorSwatchGrid`
  * the picker itself calls, and (b) save `<a:schemeClr val="accent1">` with
@@ -42,6 +45,8 @@ test.describe.configure({ timeout: 120_000 });
 
 const FIXTURE = fixture('theme-color-picker.pptx');
 const SWATCH_LABEL = 'Accent 1, Lighter 80%';
+/** A swatch in the narrowest inspector field (half of the 288px pane) is about 10px. */
+const MIN_SWATCH_PX = 8;
 
 // Resolve the built public UI dependency from a binding's package scope,
 // matching the package consumed by the framework renderers.
@@ -84,6 +89,10 @@ function hexToRgb(hex: string): string {
 }
 
 interface ThemePickResult {
+	/** How far the Fill row's swatches reach past the row's own box, in px (0 when they fit). */
+	gridOverflow: number;
+	/** The smallest swatch's width, in px: a fitted grid must still be usable, not collapsed. */
+	smallestSwatch: number;
 	/** Computed `background-color` right after the theme swatch is picked. */
 	afterSwatchBg: string;
 	/** Whether the saved XML's shape carries the theme ref, not a flat hex. */
@@ -132,20 +141,48 @@ async function runScenario(page: Page, origin: string): Promise<ThemePickResult>
 	}
 
 	const initialFillInput = await fillInputWithValue(`#${THEME_SHAPE_INITIAL_FILL}`);
-	await initialFillInput.evaluate((input: HTMLInputElement, label: string) => {
+	const fit = await initialFillInput.evaluate((input: HTMLInputElement, label: string) => {
 		let scope: HTMLElement | null = input.parentElement;
-		let button: HTMLButtonElement | null = null;
+		let grid: Element | undefined;
+		let button: HTMLButtonElement | undefined;
 		while (scope && !button) {
-			button =
-				[...scope.querySelectorAll<HTMLButtonElement>(`button[title="${label}"]`)].find(
-					(candidate) => !candidate.disabled,
-				) ?? null;
-			scope = scope.parentElement;
+			for (const candidate of scope.querySelectorAll('pptx-ui-color-grid')) {
+				button = [
+					...(candidate.shadowRoot?.querySelectorAll<HTMLButtonElement>(
+						`button[title="${label}"]`,
+					) ?? []),
+				].find((swatch) => !swatch.disabled);
+				if (button) {
+					grid = candidate;
+					break;
+				}
+			}
+			if (!button) {
+				scope = scope.parentElement;
+			}
 		}
-		if (!button) {
+		if (!button || !grid || !scope) {
 			throw new Error(`no enabled "${label}" swatch found near the fill colour input`);
 		}
+		// The row's box: Angular component hosts are `display: contents` and have none.
+		let row: HTMLElement | null = scope;
+		while (row && row.getBoundingClientRect().width === 0) {
+			row = row.parentElement;
+		}
+		const bounds = (row ?? scope).getBoundingClientRect();
+		const swatches = [...grid.shadowRoot!.querySelectorAll('button.swatch')].map((swatch) =>
+			swatch.getBoundingClientRect(),
+		);
+		const overflow = Math.max(
+			0,
+			...swatches.map((rect) => rect.right - bounds.right),
+			...swatches.map((rect) => bounds.left - rect.left),
+		);
 		button.click();
+		return {
+			gridOverflow: overflow,
+			smallestSwatch: Math.min(...swatches.map((rect) => Math.min(rect.width, rect.height))),
+		};
 	}, SWATCH_LABEL);
 
 	// Wait for the repaint to actually land before reading it back: the click
@@ -198,7 +235,7 @@ async function runScenario(page: Page, origin: string): Promise<ThemePickResult>
 	const customHex = THEME_SHAPE_CUSTOM_HEX.replace('#', '');
 	const savedSrgbClr = new RegExp(`<a:srgbClr val="${customHex}"`, 'iu').test(secondShapeXml);
 
-	return { afterSwatchBg, savedSchemeClr, savedSrgbClr };
+	return { ...fit, afterSwatchBg, savedSchemeClr, savedSrgbClr };
 }
 
 test.describe('theme colour picker', () => {
@@ -213,6 +250,16 @@ test.describe('theme colour picker', () => {
 		const expectedRgb = hexToRgb(EXPECTED_HEX);
 		const failures = results.flatMap(({ framework, value }) => {
 			const problems: string[] = [];
+			if (value.gridOverflow > 0.5) {
+				problems.push(
+					`the Fill row's theme swatches reach ${value.gridOverflow.toFixed(1)}px past the row`,
+				);
+			}
+			if (value.smallestSwatch < MIN_SWATCH_PX) {
+				problems.push(
+					`the Fill row's smallest theme swatch is ${value.smallestSwatch.toFixed(1)}px, below ${MIN_SWATCH_PX}px`,
+				);
+			}
 			if (value.afterSwatchBg !== expectedRgb) {
 				problems.push(
 					`repaints the shape ${value.afterSwatchBg}, expected the resolved theme colour ${expectedRgb} (${EXPECTED_HEX})`,

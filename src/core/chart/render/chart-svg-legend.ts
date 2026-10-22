@@ -7,6 +7,7 @@ import {
 	fitChartText,
 	type ChartSvgOptions,
 } from './chart-svg-text-metrics';
+import { extentOf } from '../extent';
 import { resolveManualLayoutRect } from '../manual-layout';
 
 /** Keep the automatic reservation when a legend is moved; overlay releases it. */
@@ -52,15 +53,13 @@ export function chartLegendSvg(
 		chartAreaRect(model, 'legend', { x: manual.x, y: manual.y, w: manual.width, h: manual.height }),
 	];
 	const baselineOffset = font ? (font.ascent - font.descent) / 2 : size * 0.35;
+	const widest = extentOf(widths).max;
 	entries.forEach((entry, i) => {
 		const available = horizontal
 			? chartTextWidth(entry.label, attrs, options)
 			: Math.max(0, rowWidth - size / 2 - keySize - keyGap);
 		const label = fitChartText(entry.label, available, attrs, options);
-		const contentWidth = Math.min(
-			horizontal ? (widths[i] ?? 0) : Math.max(...widths),
-			rowWidth - size / 2,
-		);
+		const contentWidth = Math.min(horizontal ? (widths[i] ?? 0) : widest, rowWidth - size / 2);
 		const x = horizontal
 			? horizontalX
 			: manual.x + Math.max(size / 4, (rowWidth - contentWidth) / 2);
@@ -153,7 +152,7 @@ function automaticLegend(
 	}
 	const width = Math.min(
 		area.w * 0.35,
-		Math.max(...entries.map((e) => chartTextWidth(e.label, attrs, options))) + 22,
+		extentOf(entries.map((e) => chartTextWidth(e.label, attrs, options))).max + 22,
 	);
 	const height = entries.length * rowH;
 	const x = pos === 'l' ? area.x + 4 : area.x + area.w - width;

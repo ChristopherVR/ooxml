@@ -1,3 +1,4 @@
+import { resolveFontItalic, resolveFontWeight, selectTrustedEmbeddedFonts } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 import { deobfuscateFont, detectFontFormat, getSubstituteFontFamily } from 'pptx-viewer-core';
 import { computed, onScopeDispose, toValue, watch } from 'vue';
@@ -101,6 +102,8 @@ interface ResolvedFontVariant {
 	style: string;
 	/** Object URL minted for this variant (must be revoked on cleanup). */
 	objectUrl?: string;
+	/** Registered as `@font-face` (its files match it, see `selectTrustedEmbeddedFonts`). */
+	registered?: boolean;
 }
 
 /**
@@ -117,8 +120,8 @@ function resolveVariant(font: PptxEmbeddedFont): ResolvedFontVariant | null {
 		return null;
 	}
 
-	const weight = font.bold ? '700' : '400';
-	const style = font.italic ? 'italic' : 'normal';
+	const weight = String(resolveFontWeight(name, font.bold));
+	const style = resolveFontItalic(name, font.italic) ? 'italic' : 'normal';
 
 	// ── Strategy 1: ready-made, validated data URL from the core loader ──
 	if (isInjectableUrl(font.dataUrl)) {
@@ -193,11 +196,13 @@ export function useEmbeddedFonts(
 		const previousUrls = liveObjectUrls;
 		const nextUrls: string[] = [];
 		const variants: ResolvedFontVariant[] = [];
+		const trusted = new Set(selectTrustedEmbeddedFonts(source));
 		for (const font of source) {
 			const variant = resolveVariant(font);
 			if (!variant) {
 				continue;
 			}
+			variant.registered = trusted.has(font);
 			variants.push(variant);
 			if (variant.objectUrl) {
 				nextUrls.push(variant.objectUrl);
@@ -209,7 +214,10 @@ export function useEmbeddedFonts(
 	});
 
 	const fontFaceCss = computed<string>(() =>
-		resolvedVariants.value.map(buildFontFaceRule).join('\n\n'),
+		resolvedVariants.value
+			.filter((variant) => variant.registered)
+			.map(buildFontFaceRule)
+			.join('\n\n'),
 	);
 
 	const fontFamilies = computed<string[]>(() => {

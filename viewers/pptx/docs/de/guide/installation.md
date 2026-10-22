@@ -1,31 +1,33 @@
 ---
 title: Installation
-description: Installieren Sie die pptx-viewer-Pakete von npm, richten Sie die Peer-Abhangigkeiten fur React, Vue 3 oder Angular ein, und fuhren Sie das Monorepo lokal aus.
+description: Installieren Sie die pptx-viewer-Pakete von npm, richten Sie die Peer-Abhängigkeiten für React, Vue 3, Angular, Svelte oder Vanilla JS ein, und führen Sie das Monorepo für die Entwicklung lokal aus.
 ---
 
 # Installation
 
-Die `pptx-viewer`-Pakete werden unabhangig voneinander auf npm veroffentlicht. Installieren Sie nur, was Sie benotigen: den frameworkunabhangigen [Core-Engine](/core/) oder eines der Framework-Viewer-Pakete.
+Die `pptx-viewer`-Pakete werden unabhängig voneinander auf npm veröffentlicht. Installieren Sie nur, was Sie benötigen: die framework-unabhängige [Core-Engine](/core/) oder eines der Framework-Viewer-Pakete.
 
 ::: tip Node-Version
-Node.js **18 oder neuer** ist fur die TypeScript-Kompilierung und fur die Ausfuhrung der Pakete ausserhalb des Browsers erforderlich.
+Node.js **18 oder neuer** ist für die TypeScript-Kompilierung und für die Ausführung der Pakete außerhalb des Browsers erforderlich.
 :::
 
-## Framework wahlen
+## Framework wählen
 
-| Framework                 | Paket                 | Hinweise                                                        |
-| ------------------------- | --------------------- | --------------------------------------------------------------- |
-| React                     | `pptx-react-viewer`   | Vollstandig: Viewer, Editor, Prasentator, Export, Collaboration |
-| Vue 3                     | `pptx-vue-viewer`     | Gleicher Engine und Funktionsumfang                             |
-| Angular                   | `pptx-angular-viewer` | Gleicher Engine und Funktionsumfang                             |
-| Headless (Node / Browser) | `pptx-viewer-core`    | Keine UI, keine Framework-Abhangigkeit                          |
-| KI / MCP-Werkzeuge        | `pptx-viewer-mcp`     | 73 MCP-Tools + CLI + Y.Doc-Codec                                |
+| Framework                 | Paket                 | Hinweise                                                           |
+| ------------------------- | --------------------- | ------------------------------------------------------------------ |
+| React                     | `pptx-react-viewer`   | Viewer, Editor, Präsentator, Export, Zusammenarbeit                |
+| Vue 3                     | `pptx-vue-viewer`     | Gleiche Engine und gleicher Funktionsumfang wie das React-Binding  |
+| Angular                   | `pptx-angular-viewer` | Gleiche Engine und gleicher Funktionsumfang wie das React-Binding  |
+| Svelte 5                  | `pptx-svelte-viewer`  | Gleiche Engine und gleicher Funktionsumfang wie das React-Binding  |
+| Ohne Framework            | `pptx-vanilla-viewer` | Gleiche Engine, reines DOM: überhaupt keine Framework-Abhängigkeit |
+| Headless (Node / Browser) | `pptx-viewer-core`    | Keine UI, keine Framework-Abhängigkeit                             |
+| KI / MCP-Werkzeuge        | `pptx-viewer-mcp`     | 73 MCP-Tools + CLI + Y.Doc-Codec                                   |
 
 ## Von npm installieren
 
-### React Viewer
+### React-Viewer
 
-Die vollstandige React-Viewer/Editor-Komponente, als **`pptx-react-viewer`** veroffentlicht. Der Core-Engine ist **enthalten**, Sie mussen ihn nicht separat installieren.
+Die React-Viewer/Editor-Komponente, veröffentlicht als **`pptx-react-viewer`**. Die Core-Engine ist **enthalten**, Sie müssen sie nicht separat installieren.
 
 ::: code-group
 
@@ -47,13 +49,13 @@ bun add pptx-react-viewer react react-dom
 
 :::
 
-::: tip Weitere Peer-Abhangigkeiten
-Der Viewer benotigt auch `framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip`, `fast-xml-parser` und `i18next`/`react-i18next` - installieren Sie die, die Sie benotigen.
+::: tip Weitere Peer-Abhängigkeiten
+Der Viewer erwartet außerdem `framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip`, `fast-xml-parser` und `i18next`/`react-i18next` - installieren Sie die, die Ihr Einsatz benötigt.
 :::
 
-### Vue 3 Viewer
+### Vue-3-Viewer
 
-Die Vue-3-Viewer-Komponente, als **`pptx-vue-viewer`** veroffentlicht. Der Core-Engine ist enthalten.
+Die Vue-3-Viewer-Komponente, veröffentlicht als **`pptx-vue-viewer`**. Die Core-Engine ist enthalten.
 
 ::: code-group
 
@@ -75,9 +77,22 @@ bun add pptx-vue-viewer vue
 
 :::
 
-### Angular Viewer
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { PowerPointViewer } from 'pptx-vue-viewer';
 
-Die Angular-Viewer-Komponente, als **`pptx-angular-viewer`** veroffentlicht. Der Core-Engine ist enthalten.
+const content = ref<ArrayBuffer | null>(null);
+</script>
+
+<template>
+	<PowerPointViewer :content="content" />
+</template>
+```
+
+### Angular-Viewer
+
+Die Angular-Viewer-Komponente, veröffentlicht als **`pptx-angular-viewer`**. Die Core-Engine ist enthalten.
 
 ::: code-group
 
@@ -99,9 +114,101 @@ bun add pptx-angular-viewer @angular/core @angular/common
 
 :::
 
+```typescript
+// app.component.ts (standalone component, no NgModule)
+import { Component } from '@angular/core';
+import { PowerPointViewerComponent } from 'pptx-angular-viewer';
+
+@Component({
+	selector: 'app-root',
+	standalone: true,
+	imports: [PowerPointViewerComponent],
+	templateUrl: './app.component.html',
+})
+export class AppComponent {}
+```
+
+```html
+<!-- app.component.html -->
+<pptx-viewer [content]="content"></pptx-viewer>
+```
+
+### Svelte-5-Viewer
+
+Die Svelte-5-Viewer-Komponente, veröffentlicht als **`pptx-svelte-viewer`**. Die Core-Engine ist
+enthalten - die vollständige Komponentenreferenz steht in der [Svelte-Dokumentation](/svelte/).
+
+::: code-group
+
+```bash [npm]
+npm install pptx-svelte-viewer svelte
+```
+
+```bash [pnpm]
+pnpm add pptx-svelte-viewer svelte
+```
+
+```bash [yarn]
+yarn add pptx-svelte-viewer svelte
+```
+
+```bash [bun]
+bun add pptx-svelte-viewer svelte
+```
+
+:::
+
+```svelte
+<script lang="ts">
+	import { PowerPointViewer } from 'pptx-svelte-viewer';
+
+	let bytes = $state<Uint8Array | null>(null);
+</script>
+
+{#if bytes}
+	<PowerPointViewer source={bytes} />
+{/if}
+```
+
+### Vanilla-JS-Viewer (ohne Framework)
+
+Der Viewer ohne Framework, veröffentlicht als **`pptx-vanilla-viewer`**. Die Core-Engine ist enthalten;
+es gibt keine Framework-Peer-Abhängigkeiten. Anzeigen, Präsentieren und Bearbeiten (hinter der Option
+`editable`) funktionieren alle über eine einzige Factory-Funktion - die vollständige API-Referenz
+steht in der [Vanilla-JS-Dokumentation](/vanilla/).
+
+::: code-group
+
+```bash [npm]
+npm install pptx-vanilla-viewer
+```
+
+```bash [pnpm]
+pnpm add pptx-vanilla-viewer
+```
+
+```bash [yarn]
+yarn add pptx-vanilla-viewer
+```
+
+```bash [bun]
+bun add pptx-vanilla-viewer
+```
+
+:::
+
+```ts
+import { createPptxViewer } from 'pptx-vanilla-viewer';
+
+const viewer = createPptxViewer(document.getElementById('host')!, {
+	source: '/decks/quarterly.pptx',
+	editable: true,
+});
+```
+
 ### Core-Engine
 
-Der frameworkunabhangige Engine zum Analysieren, Bearbeiten, Serialisieren und Konvertieren von PPTX-Dateien.
+Die framework-unabhängige Engine zum Analysieren, Bearbeiten, Serialisieren und Konvertieren von PPTX-Dateien. Verwenden Sie sie für Headless-Automatisierung, Build-Skripte oder Node.js-Pipelines ohne UI-Abhängigkeit. Die oben genannten UI-Pakete enthalten die Core-Engine bereits, Sie müssen sie also nicht separat installieren, wenn Sie schon eines davon nutzen.
 
 ::: code-group
 
@@ -125,7 +232,7 @@ bun add pptx-viewer-core
 
 ### MCP-Server und Werkzeuge
 
-73 PPTX-Manipulations-Tool-Funktionen, ein MCP-Server fur KI-Agenten und der Y.Doc-Zusammenarbeit-Codec.
+73 PPTX-Manipulations-Tool-Funktionen, ein MCP-Server für KI-Agenten und der Y.Doc-Zusammenarbeit-Codec - alles auf der Core-Engine aufgebaut.
 
 ::: code-group
 
@@ -147,60 +254,84 @@ bun add pptx-viewer-mcp
 
 :::
 
-## Optionale Peer-Abhangigkeiten
+## Optionale Peer-Abhängigkeiten
 
 Einige Funktionen im React-Paket werden nur aktiviert, wenn die optionalen Peers vorhanden sind.
 
-| Funktion                    | Optionale Peers      | Hinweise                                    |
-| --------------------------- | -------------------- | ------------------------------------------- |
-| **3D-Modelle** (GLB/GLTF)   | `three`              | Ohne sie zeigen 3D-Elemente ihr Posterbild. |
-| **Echtzeit-Zusammenarbeit** | `yjs`, `y-websocket` | Yjs CRDT mit Anwesenheitsverfolgung.        |
+| Funktion                    | Optionale Peers      | Hinweise                                                |
+| --------------------------- | -------------------- | ------------------------------------------------------- |
+| **3D-Modelle** (GLB/GLTF)   | `three`              | Ohne sie greifen 3D-Elemente auf ihr Posterbild zurück. |
+| **Echtzeit-Zusammenarbeit** | `yjs`, `y-websocket` | Yjs-CRDT mit Anwesenheitsanzeige.                       |
+
+::: code-group
+
+```bash [npm]
+npm install three yjs y-websocket
+```
+
+```bash [pnpm]
+pnpm add three yjs y-websocket
+```
+
+```bash [yarn]
+yarn add three yjs y-websocket
+```
+
+```bash [bun]
+bun add three yjs y-websocket
+```
+
+:::
 
 ## Lokale Entwicklung (Monorepo klonen)
 
-Das Monorepo verwendet **Bun** als Paketmanager. Pakete referenzieren sich gegenseitig uber das Protokoll `workspace:*`.
+Der PowerPoint-Viewer liegt im Monorepo `ooxml` unter `viewers/pptx`. Das Monorepo verwendet **Bun** als Paketmanager und Workspace-Runner.
 
 ```bash
-# Repository klonen
-git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
-cd pptx-viewer
-
-# Alle Workspace-Abhangigkeiten installieren
+# Clone the repository and install every workspace dependency from the root
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml
 bun install
 
-# Alle Pakete bauen
+# Build ooxml-core and ooxml-ui first, then work from the viewer
 bun run build
+bun run --cwd src/ui build
+cd viewers/pptx
 
-# Tests / Typprufung
+# Build the viewer packages, then test / type-check
+bun run build
 bun run test
 bun run typecheck
 ```
 
 ::: warning Build-Reihenfolge ist wichtig
-Pakete mussen in der Abhangigkeitsreihenfolge gebaut werden:
+Die Viewer-Pakete verwenden die gebauten Pakete `ooxml-core` und `ooxml-ui`; bauen Sie diese also zuerst im Repository-Stamm (wie oben). Innerhalb von `viewers/pptx` werden die Pakete in Abhängigkeitsreihenfolge gebaut:
 
 ```
-core -> shared -> react / vue / angular
+core -> shared -> locales -> tools -> react / vue / angular / vanilla / svelte -> cli
 ```
 
-`bun run build` vom Repo-Root ubernimmt dies fur Sie.
+`bun run build` in `viewers/pptx` übernimmt das für Sie. Wenn Sie ein einzelnes Paket manuell bauen (`cd packages/<pkg> && bun run build`), stellen Sie sicher, dass seine Abhängigkeiten zuerst gebaut sind.
 :::
 
-### Haufige Workspace-Befehle
+### Häufige Workspace-Befehle
 
 ```bash
-bun run build        # Alle Pakete in Abhangigkeitsreihenfolge bauen
-bun run test         # vitest uber alle Pakete ausfuhren
-bun run typecheck    # Alle Pakete typprufen
-bun run fmt          # Mit oxfmt formatieren
-bun run lint         # Mit oxlint linten
-bun run demo         # React-Demo-Dev-Server starten (Port 4173)
-bun run demo:vue     # Vue-Demo-Dev-Server starten (Port 4175)
-bun run demo:angular # Angular-Demo-Dev-Server starten (Port 4174)
+bun run build         # Build all packages in dependency order
+bun run test          # Run vitest across all packages
+bun run typecheck     # Type-check all packages (needs built packages)
+bun run typecheck:fresh  # Build the packages, then type-check (clean checkouts)
+bun run fmt           # Format with oxfmt
+bun run lint          # Lint with oxlint
+bun run demo          # Start the React demo dev server (port 4173)
+bun run demo:vue      # Start the Vue demo dev server (port 4175)
+bun run demo:angular  # Start the Angular demo dev server (port 4174)
+bun run demo:vanilla  # Start the Vanilla JS demo dev server (port 4176)
+bun run demo:svelte   # Start the Svelte demo dev server (port 4177)
 ```
 
-## Nachste Schritte
+## Nächste Schritte
 
-- [Schnellstart](/de/guide/quick-start) - Prasentation erstellen, analysieren, konvertieren und anzeigen.
+- [Schnellstart](/de/guide/quick-start) - Präsentationen erstellen, analysieren, konvertieren und rendern.
 - [Architektur](/de/guide/architecture) - wie die Schichten zusammenpassen.
-- [Einschrankungen](/de/guide/limitations) - wichtige Hinweise vor dem Produktionseinsatz.
+- [Einschränkungen](/de/guide/limitations) - wichtige Hinweise vor dem Produktionseinsatz.

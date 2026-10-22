@@ -1,3 +1,4 @@
+import { recoveryStoreOf, type DocumentStorage } from 'ooxml-core/embedding';
 import type { ViewerController } from './controller';
 
 /** A drawing with unsaved changes, kept as the bytes of the .vsdx it would save as. */
@@ -58,6 +59,26 @@ export function indexedDbRecoveryStore(
 	};
 }
 
+/**
+ * A host's `DocumentStorage` recovery methods as a recovery store, or undefined when the storage
+ * has none (the viewer then keeps using IndexedDB). The drawing's file name is the document id.
+ */
+export function storageRecoveryStore(
+	storage: DocumentStorage | null | undefined,
+): RecoveryStore | undefined {
+	const recovery = recoveryStoreOf(storage);
+	if (!recovery) return undefined;
+	return {
+		get: async (name) => {
+			const entry = await recovery.readRecovery(name);
+			return entry && { name: entry.id, savedAt: entry.savedAt, bytes: entry.bytes };
+		},
+		put: (entry) =>
+			recovery.writeRecovery({ id: entry.name, savedAt: entry.savedAt, bytes: entry.bytes }),
+		delete: (name) => recovery.clearRecovery(name),
+	};
+}
+
 /** A kept copy found when a drawing opens; the host asks whether to take it back. */
 export interface RecoveryOffer {
 	name: string;
@@ -89,21 +110,28 @@ export class ViewerAutoRecover {
 	constructor(
 		private readonly controller: ViewerController,
 		private readonly fileName: () => string,
-		private readonly store: RecoveryStore | undefined,
+		/** The store, or a getter read at each use so a host can swap it (the `storage` property). */
+		store: RecoveryStore | undefined | (() => RecoveryStore | undefined),
 		private readonly offer: (offer: RecoveryOffer) => void,
 		private readonly now: () => number = () => Date.now(),
 		private readonly timers: Timers = globalThis as unknown as Timers,
-	) {}
+	) {
+		this.#store = typeof store === 'function' ? store : () => store;
+	}
+	readonly #store: () => RecoveryStore | undefined;
+	private get store(): RecoveryStore | undefined {
+		return this.#store();
+	}
 	/** Apply the option: copy every `minutes` minutes while `enabled`. */
 	configure(enabled: boolean, minutes: number): void {
 		if (this.#timer !== undefined) this.timers.clearInterval(this.#timer);
 		this.#timer = undefined;
-		this.#enabled = enabled && !!this.store;
+		this.#enabled = enabled;
 		if (this.#enabled)
 			this.#timer = this.timers.setInterval(() => void this.saveNow(), minutes * 60_000);
 	}
 	get enabled(): boolean {
-		return this.#enabled;
+		return this.#enabled && !!this.store;
 	}
 	#name(): string {
 		return this.fileName() || 'Drawing1.vsdx';

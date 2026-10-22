@@ -22,6 +22,8 @@ describe('command registry', () => {
 		const hidden = spyCommand('c');
 		core.commands.registerAll([editing, disabled, hidden]);
 		core.hiddenActions = ['c'];
+		expect(core.commands.isHidden('c')).toBe(true);
+		expect(core.commands.isHidden('a')).toBe(false);
 		core.setReadOnly(true);
 		expect(await core.commands.run('missing')).toBe(false);
 		expect(await core.commands.run('a')).toBe(false);

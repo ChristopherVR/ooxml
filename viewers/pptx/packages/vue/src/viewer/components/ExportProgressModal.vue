@@ -46,6 +46,7 @@ function onCancel(): void {
 	<Teleport to="body">
 		<div
 			v-if="open"
+			data-pptx-scope
 			class="pptx-vue-export-progress-backdrop fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
 			role="dialog"
 			aria-modal="true"

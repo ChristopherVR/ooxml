@@ -7,6 +7,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
  * framework-specific prop/event/handle types on top of these.
  */
 
+import type { ProviderFactory, WebrtcOptions, WriteBackRetry } from 'ooxml-core/collab';
 import type { ExternalCollaborationSession } from './render/collaboration-external-session';
 import type { ElementUpdate, ElementUpdateOptions } from './render/element-update-batch';
 
@@ -218,7 +219,13 @@ export type CollaborationSessionIntent = 'create' | 'join';
 /**
  * Real-time collaboration configuration.
  *
- * The same shape is accepted by every framework binding.
+ * The same shape is accepted by every framework binding. A host may also pass the
+ * shared `CollaborationOptions` contract (`session`, `user`, `intent`) that Word, Excel
+ * and Visio take; see `CollaborationInput` and `resolveCollaborationConfig`. A host
+ * `CollabSession` from `ooxml-core/collab` is borrowed (never destroyed) and becomes
+ * `externalSession`. A `provider`, or a room with neither `serverUrl` nor `transport: 'webrtc'`
+ * (a BroadcastChannel between windows of this browser), is opened by the viewer as a session it
+ * owns and destroys; see `openOwnedCollaboration`.
  */
 export interface CollaborationConfig {
 	/** Unique identifier for the collaboration room (alphanumeric, hyphens, underscores). */
@@ -237,6 +244,17 @@ export interface CollaborationConfig {
 	 * these resources. Keep this object stable and report readiness via subscribe.
 	 */
 	externalSession?: ExternalCollaborationSession;
+	/**
+	 * A provider factory of your own (the shared `CollaborationOptions.provider`). Wins over
+	 * `serverUrl`; the viewer creates and destroys the session around it.
+	 */
+	provider?: ProviderFactory;
+	/**
+	 * Peer-to-peer over the host's own `y-webrtc` class (the shared `CollaborationOptions.webrtc`).
+	 * After `provider`, before `serverUrl`; the viewer creates and destroys the session around it,
+	 * with `authToken` as the room password unless `webrtc.password` is set.
+	 */
+	webrtc?: WebrtcOptions;
 	/**
 	 * WebRTC signaling server URLs (only used when `transport` is `'webrtc'`).
 	 * Defaults to y-webrtc's built-in public signaling list. Same-browser tabs
@@ -268,12 +286,21 @@ export interface CollaborationConfig {
 	 * callback so the host can persist the snapshot. Only one writer (the owner)
 	 * does this; other collaborators never trigger write-back, eliminating the
 	 * last-save-wins problem.
+	 *
+	 * Return a promise to acknowledge durable storage: the viewer reports `saving`, `saved` or
+	 * `failed` in `collaborationState.writeBack` and retries a rejection as `writeBackRetry`
+	 * says. A plain return counts as acknowledged at once. A pending write-back is flushed on
+	 * `pagehide` and when the page is hidden, but browsers do not wait for asynchronous work
+	 * then: a write that needs a network round trip should use `navigator.sendBeacon` or
+	 * `fetch(url, { keepalive: true })` to survive a close.
 	 */
-	onWriteBack?: (bytes: Uint8Array) => void;
+	onWriteBack?: (bytes: Uint8Array) => void | Promise<void>;
 	/**
 	 * Debounce delay (ms) between the last Y.Doc change and the write-back
 	 * invocation. Defaults to 5000 ms. Set to 0 to write back on every change
 	 * (not recommended for large documents).
 	 */
 	writeBackDebounceMs?: number;
+	/** Retries of a rejected `onWriteBack` with exponential backoff. Default: none. */
+	writeBackRetry?: WriteBackRetry;
 }

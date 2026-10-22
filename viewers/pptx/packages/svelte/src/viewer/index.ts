@@ -54,6 +54,7 @@ export type {
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
 	CollaborationShellState,
+	CollaborationState,
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,

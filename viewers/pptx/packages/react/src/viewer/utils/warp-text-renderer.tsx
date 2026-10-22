@@ -3,6 +3,8 @@ import {
 	buildGlyphEnvelopeBlock,
 	groupIntoParagraphs as sharedGroupIntoParagraphs,
 	hasGlyphEnvelope,
+	resolveFontItalic,
+	resolveFontWeight,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxElementWithText, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties, getSubstituteFontFamily } from 'pptx-viewer-core';
@@ -102,8 +104,10 @@ function getSegmentTspanProps(
 		fontSize: (s.fontSize ?? element.textStyle?.fontSize ?? DEFAULT_TEXT_FONT_SIZE) as
 			| number
 			| undefined,
-		fontWeight: s.bold ? 700 : 400,
-		fontStyle: s.italic ? 'italic' : undefined,
+		fontWeight: resolveFontWeight(s.fontFamily || element.textStyle?.fontFamily, s.bold),
+		fontStyle: resolveFontItalic(s.fontFamily || element.textStyle?.fontFamily, s.italic)
+			? 'italic'
+			: undefined,
 		fontFamily:
 			s.fontFamily || element.textStyle?.fontFamily
 				? getSubstituteFontFamily(s.fontFamily || element.textStyle?.fontFamily || '')
@@ -357,8 +361,12 @@ export function WarpedText({
 					fontSize={baseFontSize}
 					fontFamily={baseFontFamily}
 					fill={baseFill}
-					fontWeight={textEl.textStyle?.bold ? 700 : 400}
-					fontStyle={textEl.textStyle?.italic ? 'italic' : 'normal'}
+					fontWeight={resolveFontWeight(textEl.textStyle?.fontFamily, textEl.textStyle?.bold)}
+					fontStyle={
+						resolveFontItalic(textEl.textStyle?.fontFamily, textEl.textStyle?.italic)
+							? 'italic'
+							: 'normal'
+					}
 				>
 					<textPath
 						href={`#${pathIdPrefix}-${paraIdx}`}

@@ -5,9 +5,9 @@
  * version) and can be undone; new files are built by the core and opened in a tab.
  */
 import { badge, escape, task } from '../ui.js';
-import { buildFile, prepareChanges, validateChanges } from '../ai-operations.js';
+import { buildFile, prepareChanges, reviewSpreadsheet, validateChanges } from '../ai-operations.js';
 import { fileName, outline, summarize, validateCreate } from './protocol.js';
-import { wordDiff } from './diff.js';
+import { effectsView, wordDiff } from './diff.js';
 
 const el = (tag, className, text) => {
 	const node = document.createElement(tag);
@@ -62,6 +62,9 @@ export function proposalCard({
 		'Review each change. Untick any you do not want, then apply the rest.',
 	);
 	const list = el('ol', 'ai-change-list');
+	// Under each spreadsheet's edits: what else they change, as the core compares the workbook.
+	const effects = new Map();
+	const proposals = {};
 	const boxes = changes.map((change, index) => {
 		const ref = refs.find((d) => d.id === change.documentId);
 		// Edits arrive grouped by file; each file is named once, above its edits.
@@ -77,12 +80,33 @@ export function proposalCard({
 		box.setAttribute('aria-label', `Apply edit ${index + 1} to ${ref.name}`);
 		label.append(el('small', '', details[index]?.where ?? `Edit ${index + 1}`));
 		li.append(preview(change, details[index]));
+		if (ref.kind === 'xlsx' && change.documentId !== changes[index + 1]?.documentId) {
+			const slot = list.appendChild(el('li', 'ai-change-effects'));
+			effects.set(ref.id, { ref, slot, run: 0 });
+		}
 		box.onchange = () => {
 			li.classList.toggle('skipped', !box.checked);
 			apply.disabled = !boxes.some((b) => b.checked);
+			if (ref.kind === 'xlsx') task(() => showEffects(ref.id));
 		};
 		return box;
 	});
+	/** Recompares one spreadsheet with its ticked edits; a newer call wins over a slower older one. */
+	async function showEffects(id) {
+		const entry = effects.get(id);
+		const run = ++entry.run;
+		delete proposals[id];
+		const chosen = changes.filter(
+			(c, i) => c.documentId === id && boxes[i].checked && !boxes[i].disabled,
+		);
+		const doc = await store.get(id);
+		if (!doc || doc.revision !== entry.ref.revision) return entry.slot.replaceChildren();
+		const review = await reviewSpreadsheet(chosen, doc);
+		if (run !== entry.run) return;
+		if (review.proposal) proposals[id] = review.proposal;
+		entry.slot.replaceChildren(effectsView(review));
+	}
+	for (const id of effects.keys()) task(() => showEffects(id));
 	const details_ = el('details');
 	details_.append(el('summary', '', 'Show the operations'));
 	details_.append(
@@ -162,7 +186,7 @@ export function proposalCard({
 			const unlock = sessions.lock(targets.map((d) => d.id));
 			try {
 				const docs = await current(targets);
-				const next = await prepareChanges(chosen, docs);
+				const next = await prepareChanges(chosen, docs, proposals);
 				await current(targets);
 				await store.commit(
 					next.map((document) => ({ document, expected: document.revision - 1 })),

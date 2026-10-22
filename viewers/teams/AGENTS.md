@@ -18,13 +18,14 @@ controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:
 - `server/`: the reference bring-your-own server (sync, signaling relay, file storage), published as
   `openteams-server` (command `openteams-server`).
 - `demos/teams/` at the repository root: runnable demos (private workspace packages).
-- `e2e/teams/` at the repository root: the browser tests (`bun run test:browser`, Playwright config in this folder), run against the vanilla demo in local mode. Add specs there.
+- `e2e/teams/` at the repository root: the browser tests (`bun run test:browser`, Playwright config in this folder, `playwright.config.ts`, whose `testDir` points there), run against the vanilla demo in local mode. Add specs there.
 
 The product name is **OpenTeams**. The plain `openteams` npm name belongs to an unrelated project,
 so never publish or document that name.
 
 Never add or fork logic here that belongs in the core. If the core lacks something, change it there
-(the sibling `../ooxml-core` checkout), then use it here.
+in this repository (`src/core/teams`), then use it here: this folder is part of the `ooxml` monorepo, so
+it is the same tree.
 
 ## How the code is written
 
@@ -46,30 +47,30 @@ Never add or fork logic here that belongs in the core. If the core lacks somethi
 ## Commands
 
 ```bash
-bun install            # ooxml-core and ooxml-ui come from npm (caret ranges, moved by sync-ooxml.yml);
-                       # tests and demos alias to the sibling ../ooxml-core source when it exists
+bun install            # run at the repository root; ooxml-core and ooxml-ui are workspace ranges (`*`),
+                       # so tests and demos use the source in this tree (TEAMS_USE_DIST=1 uses dist)
 bun run dev            # reference server :8787, vanilla demo :5173, React demo :5174
 bun run typecheck      # strict; the web component and all six bindings (.svelte files excepted)
 bun run test           # vitest (jsdom) then the server's node:test suite
-bun run test:scripts   # release planner, publish guards, publish:local, commit and changelog checks
+bun run test:scripts   # this folder's script tests (published-reference and workspace-package checks)
 bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
 bun run check:published && bun run pack:smoke   # what the tarballs import; install and import them
-bun run release:plan   # which packages the next release would publish
 ```
 
 ## Releases
 
 Seven packages are published, each with its own version and tag `<npm-name>@<version>`:
-`openteams-{react,vue,angular,svelte,solid,vanilla}-viewer` and `openteams-server`. The hourly
-`release.yml` workflow plans from Conventional Commits (`scripts/release-plan.mjs`), writes the
-changelogs, tags, and publishes through npm trusted publishing; `--provenance` is added only once
-the repository is public. `bun run publish:local` is the maintainer's manual path (first publish of
-a name, for example): it logs in with `npm login --auth-type=web` when needed, runs the same checks,
-asks for `yes`, and never prompts for or accepts a one-time password. Details: `docs/releasing.md`.
+`openteams-{react,vue,angular,svelte,solid,vanilla}-viewer` and `openteams-server`. Releases are
+run by the repository root's flow (`scripts/release-plan.mjs`, `scripts/viewer-packages.mjs`,
+`.github/workflows/release.yml`; this folder's `.github/` is inert), which plans from Conventional
+Commits, writes the changelogs, tags and publishes through npm trusted publishing. This folder has
+no `release:plan` or `publish:local`. Details: `docs/releasing.md` here and the root
+`docs/releasing.md`.
 
 Never run `npm publish` by hand, never bump versions or edit `CHANGELOG.md` files by hand (the
-release commit does), and never add `file:` or `workspace:` ranges, or a `teams-viewer` dependency,
-to a published manifest (`check:published` and `pack:smoke` fail on them).
+release commit does), and never add `file:` or `link:` ranges, or a `teams-viewer` dependency, to a
+published manifest (`check:published` and `pack:smoke` fail on them; the `*` ranges on `ooxml-core` and
+`ooxml-ui` are rewritten by the release flow).
 
 ## Style and commits
 

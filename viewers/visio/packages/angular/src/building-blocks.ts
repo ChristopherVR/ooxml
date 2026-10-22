@@ -20,27 +20,41 @@ import {
 	buildingBlock,
 	prepareDiagramBlock,
 	createBuildingBlockSession,
+	effectiveMode,
 	type BuildingBlockOptions,
 } from '../../bindings/src/building-blocks';
+import {
+	toolbarGroups,
+	type ToolbarButton,
+	type ToolbarControl,
+	type ToolbarGroupId,
+	type ToolbarSearch,
+	type ToolbarText,
+} from '../../bindings/src/toolbar-controls';
 @Injectable()
 export class ViewerBuildingBlocks {
 	private readonly session = createBuildingBlockSession();
 	readonly controller = this.session.controller;
 	private readonly current = signal(this.controller.state);
 	readonly state = this.current.asReadonly();
-	private readonly locale = signal<string | undefined>(undefined);
+	private readonly latest = signal<BuildingBlockOptions>({});
 	readonly toolbarProps = computed(() => {
 		this.state();
-		return this.session.toolbar(this.locale());
+		return this.session.toolbar(this.latest());
 	});
 	readonly loading = computed(() => this.state().loading);
 	readonly error = computed(() => this.state().error ?? this.state().edit.error);
-	readonly mode = computed(() => (this.state().canEdit ? ('edit' as const) : ('view' as const)));
+	/** Effective permission: host `canEdit` and a drawing that can be saved back. */
+	readonly mode = computed(() => effectiveMode(this.state()));
 	readonly documentChange = new EventEmitter<NonNullable<typeof this.controller.state.document>>();
 	readonly dirtyChange = new EventEmitter<boolean>();
 	readonly documentError = new EventEmitter<Error>();
 	readonly canvasProps = { mount: (node: HTMLElement | null) => this.session.mount(node) };
 	readonly inspectorProps = { controller: this.controller };
+	readonly shapesProps = computed(() => ({
+		controller: this.controller,
+		locale: this.latest().locale,
+	}));
 	constructor() {
 		this.update({});
 		const stop = this.controller.subscribe((state) => this.current.set(state));
@@ -49,8 +63,12 @@ export class ViewerBuildingBlocks {
 			this.session.destroy();
 		});
 	}
+	/** Acknowledge a host save: clears dirty and emits `dirtyChange(false)`. */
+	markClean() {
+		this.session.markClean();
+	}
 	update(options: BuildingBlockOptions) {
-		this.locale.set(options.locale);
+		this.latest.set(options);
 		this.session.update({
 			...options,
 			onDocumentChange: (document) => {
@@ -87,8 +105,13 @@ export function createViewerBuildingBlocks(options: () => BuildingBlockOptions =
 export class ViewerBuildingBlocksComponent implements OnChanges, OnInit {
 	readonly blocks = inject(ViewerBuildingBlocks);
 	@Input() content?: BuildingBlockOptions['content'];
-	@Input() canEdit = true;
+	/** Host edit permission. Read-only until `true`. */
+	@Input() canEdit = false;
 	@Input() locale?: string;
+	@Input() onOpenFile?: () => void;
+	@Input() onOpenPageSetup?: () => void;
+	@Input() onOpenSettings?: () => void;
+	@Input() onOpenShareDialog?: () => void;
 	@Output() readonly documentChange = this.blocks.documentChange;
 	@Output() readonly dirtyChange = this.blocks.dirtyChange;
 	@Output() readonly documentError = this.blocks.documentError;
@@ -96,7 +119,15 @@ export class ViewerBuildingBlocksComponent implements OnChanges, OnInit {
 		this.ngOnChanges();
 	}
 	ngOnChanges() {
-		this.blocks.update({ content: this.content, canEdit: this.canEdit, locale: this.locale });
+		this.blocks.update({
+			content: this.content,
+			canEdit: this.canEdit,
+			locale: this.locale,
+			onOpenFile: this.onOpenFile,
+			onOpenPageSetup: this.onOpenPageSetup,
+			onOpenSettings: this.onOpenSettings,
+			onOpenShareDialog: this.onOpenShareDialog,
+		});
 	}
 }
 @Component({ selector: 'visio-diagram-canvas', standalone: true, template: '' })
@@ -114,29 +145,81 @@ export class DiagramCanvasComponent implements AfterViewInit, OnDestroy {
 	selector: 'visio-diagram-toolbar',
 	standalone: true,
 	template: `<div role="toolbar">
-		<button
-			type="button"
-			[disabled]="!blocks.toolbarProps().canUndo"
-			(click)="blocks.toolbarProps().onUndo()"
-		>
-			{{ blocks.toolbarProps().labels['Undo'] }}</button
-		><button
-			type="button"
-			[disabled]="!blocks.toolbarProps().canRedo"
-			(click)="blocks.toolbarProps().onRedo()"
-		>
-			{{ blocks.toolbarProps().labels['Redo'] }}</button
-		><button type="button" (click)="blocks.toolbarProps().onFit()">
-			{{ blocks.toolbarProps().labels['Fit to Window'] }}
-		</button>
+		@for (group of groups(); track group.id) {
+			<span [attr.data-group]="group.id">
+				@for (control of group.controls; track control.id) {
+					@switch (control.kind) {
+						@case ('text') {
+							<span [attr.data-control]="control.id">{{ asText(control).text }}</span>
+						}
+						@case ('button') {
+							<button
+								type="button"
+								[attr.data-control]="control.id"
+								[disabled]="asButton(control).disabled"
+								[attr.aria-pressed]="asButton(control).pressed ?? null"
+								(click)="asButton(control).run()"
+							>
+								{{ asButton(control).label }}
+							</button>
+						}
+						@default {
+							<span data-control="search">
+								<input
+									type="search"
+									[attr.aria-label]="asSearch(control).label"
+									[attr.placeholder]="asSearch(control).label"
+									[value]="asSearch(control).query"
+									(input)="asSearch(control).change(value($event))"
+								/>
+								<span aria-live="polite">{{ asSearch(control).summary }}</span>
+								<button
+									type="button"
+									[attr.data-control]="asSearch(control).previous.id"
+									[disabled]="asSearch(control).previous.disabled"
+									(click)="asSearch(control).previous.run()"
+								>
+									{{ asSearch(control).previous.label }}
+								</button>
+								<button
+									type="button"
+									[attr.data-control]="asSearch(control).next.id"
+									[disabled]="asSearch(control).next.disabled"
+									(click)="asSearch(control).next.run()"
+								>
+									{{ asSearch(control).next.label }}
+								</button>
+							</span>
+						}
+					}
+				}
+			</span>
+		}
 	</div>`,
 })
 export class ToolbarComponent implements AfterViewInit {
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	/** Groups to show; omit for all. Hosts may build their own controls from toolbarProps. */
+	@Input() include?: readonly ToolbarGroupId[];
 	ngAfterViewInit() {
 		prepareDiagramBlock(this.host.nativeElement.querySelector('div'), 'toolbar');
 	}
 	readonly blocks = inject(ViewerBuildingBlocks);
+	groups() {
+		return toolbarGroups(this.blocks.toolbarProps(), this.include);
+	}
+	asText(control: ToolbarControl) {
+		return control as ToolbarText;
+	}
+	asButton(control: ToolbarControl) {
+		return control as ToolbarButton;
+	}
+	asSearch(control: ToolbarControl) {
+		return control as ToolbarSearch;
+	}
+	value(event: Event) {
+		return (event.target as HTMLInputElement).value;
+	}
 }
 @Component({
 	selector: 'visio-page-navigation',
@@ -176,4 +259,25 @@ export class InspectorComponent implements AfterViewInit, OnDestroy {
 		this.stop?.();
 	}
 }
-export type { BuildingBlockOptions, DiagramToolbarProps } from '../../bindings/src/building-blocks';
+@Component({ selector: 'visio-shapes-pane', standalone: true, template: '' })
+export class ShapesPaneComponent implements AfterViewInit, OnDestroy {
+	readonly blocks = inject(ViewerBuildingBlocks);
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	private stop: (() => void) | undefined;
+	ngAfterViewInit() {
+		this.stop = buildingBlock('mountDiagramShapes')(
+			this.host.nativeElement,
+			this.blocks.controller,
+			{ locale: this.blocks.shapesProps().locale },
+		);
+	}
+	ngOnDestroy() {
+		this.stop?.();
+	}
+}
+export type {
+	BuildingBlockOptions,
+	BuildingBlockHostCallbacks,
+	DiagramToolbarProps,
+} from '../../bindings/src/building-blocks';
+export type { ToolbarGroupId } from '../../bindings/src/toolbar-controls';

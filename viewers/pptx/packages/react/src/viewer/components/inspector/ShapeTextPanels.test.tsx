@@ -175,9 +175,11 @@ describe('shapeTextPanels', () => {
 				</ThemeColorMapProvider>,
 			);
 		});
-		const swatch = container.querySelector(
-			'[data-pptx-text-card] button[title="Accent 1"]',
-		) as HTMLButtonElement;
+		const swatch = container
+			.querySelector('[data-pptx-text-card] pptx-ui-color-grid')
+			?.shadowRoot?.querySelector<HTMLButtonElement>(
+				'button[title="Accent 1"]',
+			) as HTMLButtonElement;
 		expect(swatch).not.toBeNull();
 		act(() => swatch.click());
 		expect(onUpdateTextStyle).toHaveBeenCalledWith({
