@@ -72,19 +72,12 @@ Field names are unchanged.
 - `DocumentModel.page` (`width`, `height`, margins) is in CSS pixels; `SectionProperties` is the
   authoritative twip source.
 
-## Breaking change and migration
+## Building model values
 
-This is a type-level breaking change for code that builds or edits model objects with plain
-numbers. Runtime behavior of well-formed values is identical.
+Model fields take branded numbers, so code that builds or edits model objects constructs them:
 
 ```ts
-// Before
-paragraph.spacingAfterTwips = 240;
-table.grid = [3000, 3000];
-side.sizeEighthPoints = 8;
-
-// After
-import { twips, eighthPoints, roundTwips, twipsFromPixels } from 'docx-core';
+import { twips, eighthPoints, roundSignedTwips, twipsFromPixels } from 'docx-core';
 paragraph.spacingAfterTwips = twips(240);
 table.grid = [twips(3000), twips(3000)];
 side.sizeEighthPoints = eighthPoints(8);
@@ -95,19 +88,10 @@ section.pageWidthTwips = twipsFromPixels(page.width);
 ```
 
 Reading is unaffected: branded values are numbers, so `paragraph.spacingAfterTwips ?? 0` and
-`twipsToPixels(x)` work as before. When you need a plain number in a branded slot from a source you
+`twipsToPixels(x)` work as usual. When you need a plain number in a branded slot from a source you
 trust to be whole (for example a value read back from your own JSON), pass it through `twips()` or
-`signedTwips()` so a bad value fails loudly.
-
-Exported signature changes:
-
-- `parseSignedTwips` now returns `SignedTwips | undefined` (was `Twips`); `parseTwips` still returns
-  `Twips | undefined`.
-- `twips(n)` now also rejects negative numbers; use `signedTwips(n)` for signed values.
-- `TocOptions.contentWidthTwips` is `Twips`.
-- `ooxml-core/docx/layout`: `twipsToPx` takes `SignedTwips`; `pxToTwips` returns `SignedTwips`
-  (rounded); new `NO_TWIPS`; `paragraphFloats` moved to its own module but is still exported from the
-  package root.
+`signedTwips()` so a bad value fails loudly. `twips(n)` rejects negative numbers; use
+`signedTwips(n)` for signed values.
 
 ## Parsing follows the schema signedness
 
