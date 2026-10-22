@@ -68,7 +68,7 @@ and optional dialog workflows; no hidden library toolbar is required.
 A rejected draft can be corrected through `onFormulaInput` without first committing the invalid
 value. `onCancelEdit()` cancels it. There is no separate formula state store.
 
-The composition API requires the matching `ooxml-ui` runtime, released with these additions.
+The composition API requires the `ooxml-ui` runtime of the same workspace release; the framework packages depend on it and are released with it.
 Existing full-viewer imports remain compatible with the previous published runtime. An older
 runtime rejects a composition request explicitly instead of mounting application UI by accident.
 
@@ -308,7 +308,7 @@ The component sources and their declarations are published as explicit subpaths.
   import Toolbar from 'xlsx-svelte-viewer/Toolbar.svelte';
   import FormulaBar from 'xlsx-svelte-viewer/FormulaBar.svelte';
   import SheetTabs from 'xlsx-svelte-viewer/SheetTabs.svelte';
-  let { workbook, canEdit = true }: {workbook: Workbook; canEdit?: boolean} = $props();
+  let { workbook, canEdit = false }: {workbook: Workbook; canEdit?: boolean} = $props();
   const blocks = createViewerBuildingBlocks();
   $effect(() => blocks.update({workbook, canEdit}));
 </script>

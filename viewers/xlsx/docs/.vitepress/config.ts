@@ -45,7 +45,7 @@ export default defineConfig({
 				text: 'Guide',
 				link: '/getting-started',
 				activeMatch:
-					'/(getting-started|architecture|bindings|api|theming|localization|demos|features|collaboration|frameworks)',
+					'/(getting-started|architecture|bindings|building-blocks|api|theming|localization|demos|features|collaboration|frameworks)',
 			},
 			{
 				text: 'OOXML Office',

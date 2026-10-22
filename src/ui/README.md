@@ -10,13 +10,15 @@
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): **[Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app)** &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
-Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint and
-Excel). Custom elements with shadow-root controls and typed events, no framework. The runtime
+Shared, format-neutral web components and styles for the Office products (Word, Excel, PowerPoint,
+Visio and Teams), and the product editors themselves as `ooxml-ui/<product>` subpaths. Custom
+elements with shadow-root controls and typed events, no framework. The runtime
 dependencies are `ooxml-core` (types and a few pure helpers) and `lit`, which every element is built on
 (see "How the elements are built").
 
 > **You do not install this package.** It is a regular `dependency` of every published editor
-> package (`docx-*-viewer`, `pptx-*-viewer` and `xlsx-*-viewer`), so installing the editor of your framework pulls it
+> package (`docx-*-viewer`, `xlsx-*-viewer`, `pptx-*-viewer`, `visio-*-viewer` and
+> `openteams-*-viewer`), so installing the editor of your framework pulls it
 > in. It is published separately only so that the editors share one copy of the controls. Do not
 > add it to your own install instructions or `package.json`; import controls through the editor
 > package, which registers them for you. Importing `ooxml-ui` directly is for
@@ -45,7 +47,7 @@ strip, task pane, backstage, account, find bar, print preview, ruler), `comments
 - **Updates are synchronous.** Setting a property or attribute redraws the shadow DOM before the call
   returns (the contract the earlier hand-built elements had and every test relies on). The team
   elements keep Lit's batched updates (`static syncUpdates = false`).
-- **Products subclass these elements** (pptx-viewer registers `pptx-ui-*` aliases that keep their own
+- **Products subclass these elements** (`ooxml-ui/pptx` registers `pptx-ui-*` aliases that keep their own
   event names and ids), so the base class keeps what those subclasses lean on: the shadow root exists
   when the constructor returns, a connected element renders on first `shadowRoot` read or in a
   microtask even if a subclass skips `super.connectedCallback()`, and a property that a product hook
@@ -64,7 +66,7 @@ strip, task pane, backstage, account, find bar, print preview, ruler), `comments
 ## Team workspace elements (`ooxml-ui/teams`)
 
 The chat and meeting pieces of the open-source Teams-style workspace (logic in `ooxml-core/teams`,
-app in the `teams-viewer` repository): `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`,
+app in `viewers/teams`, the editor element in `ooxml-ui/teams`): `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`,
 `-chat-composer`, `-prejoin`, `-call-grid` and `-call-controls`. Properties in, bubbling `office-*`
 events out, no data fetching; message text is always rendered as text.
 
@@ -122,6 +124,12 @@ applies at once.
 | `ooxml-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item, zoom slider, tab strip |
 | `ooxml-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                                              |
 | `ooxml-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                                                 |
+| `ooxml-ui/teams`    | the Teams elements and `<teams-app>`                                                                         |
+| `ooxml-ui/suite`    | browser document persistence the Office suite uses                                                           |
+| `ooxml-ui/docx`     | the Word editor and viewer elements (`<docx-editor>`)                                                        |
+| `ooxml-ui/xlsx`     | the Excel editor and viewer elements (`<xlsx-editor>`)                                                       |
+| `ooxml-ui/visio`    | the Visio editor and viewer elements (`<visio-viewer>`)                                                      |
+| `ooxml-ui/pptx`     | the PowerPoint renderer, editor and web components; also `/pptx/theme`, `/loader`, `/i18n`, `/ai`, `/dom`    |
 
 Every entry declares an `import` and a `default` export condition, so CommonJS consumers on Node 20.19+ or 22.12+ load it through `require(esm)`.
 
@@ -344,7 +352,7 @@ event detail (`approximatedGeometries`, `approximatedFills`, `flattened3d`); not
 ## Scope
 
 Only what every Office product needs lives here. Product-specific ribbon content (PowerPoint
-slides, transitions, animations; Word styles and review) stays in the viewers. See
+slides, transitions, animations; Word styles and review) lives in the product's own subpath (`src/ui/src/<product>/`), not in the shared entries. See
 `docs/ooxml-ui-plan.md` in the repository for what moves when, and how the `pptx-ui-*` tags
 become aliases of `office-ui-*`.
 

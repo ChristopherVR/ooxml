@@ -167,13 +167,12 @@ duplicate, arrow keys nudge 1px (`Shift`+arrow for 10px), `Escape` deselect.
 
 ## Saving & downloads
 
-| Method              | Signature                                                      | Description                                                                      |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag. |
-| `getContent`        | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).               |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported OpenXML format.               |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).          |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | Bundle the current presentation and usage notes in a shareable ZIP download.     |
+| Method         | Signature                                                      | Description                                                                      |
+| -------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | Serialise the (edited) presentation (default `'pptx'`) and clear the dirty flag. |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | Alias of `save()`: the serialized `.pptx` bytes (shared-API name).               |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | Save and trigger a browser download in a supported OpenXML format.               |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | `save()` plus trigger a browser download (default `presentation.pptx`).          |
 
 ```ts
 type PptxSaveFormat = 'pptx' | 'ppsx' | 'pptm';
@@ -388,11 +387,11 @@ image format round-trips in PowerPoint. No automatic paste listener is installed
 
 ## Collaboration {#collaboration}
 
-| Method                   | Signature                                        | Description                                                                                                                 |
-| ------------------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `startCollaboration`     | `(config: CollaborationConfig) => Promise<void>` | Start (or restart) a real-time session; resolves once the transport is created. Status arrives via `onCollaborationStatus`. |
-| `stopCollaboration`      | `() => void`                                     | Stop the active session (no-op when none is running).                                                                       |
-| `getCollaborationStatus` | `() => ConnectionStatus`                         | Current status: `'disconnected' \| 'connecting' \| 'connected' \| 'error'` (`'disconnected'` when inactive).                |
+| Method                   | Signature                                       | Description                                                                                                                 |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `startCollaboration`     | `(config: CollaborationInput) => Promise<void>` | Start (or restart) a real-time session; resolves once the transport is created. Status arrives via `onCollaborationStatus`. |
+| `stopCollaboration`      | `() => void`                                    | Stop the active session (no-op when none is running).                                                                       |
+| `getCollaborationStatus` | `() => ConnectionStatus`                        | Current status: `'disconnected' \| 'connecting' \| 'connected' \| 'error'` (`'disconnected'` when inactive).                |
 
 See [Options](/vanilla/options#collaboration) for `CollaborationConfig` and the wire-format caveat.
 

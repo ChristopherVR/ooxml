@@ -207,7 +207,7 @@ uses the same editability rule as the native editor. `EditorLayer`,
 `CollaborationCursors`, `RemoteSelectionOverlay` and their prop types are exported
 from `/viewer` for composing the real editing and presence layers with `SlideCanvas`.
 See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/svelte/collaboration#custom-host-chrome)
-and `demos/demo-svelte/src/HostOwnedHeadlessEditor.svelte` for complete wiring.
+and `demos/pptx/demo-svelte/src/HostOwnedHeadlessEditor.svelte` for complete wiring.
 
 `<PowerPointViewer>` bundles the slide canvas, ribbon, thumbnail rail,
 inspector, and every dialog into one component. If you only want a subset,
@@ -303,7 +303,7 @@ Two caveats if you go this route:
 ### Internal building blocks & slide-transition helpers
 
 Most of this package's cross-framework logic (colour/geometry/connector/animation/chart math,
-slide transitions, and more) lives in `pptx-viewer-shared`, an internal package that is **never
+slide transitions, and more) lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is **never
 published to npm**. The framework-neutral slide-transition resolver/keyframes
 (`resolveSlideTransition`, `resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) and the
 `PresentationTransitionOverlay` component behind presentation mode are re-exported from the

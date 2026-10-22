@@ -61,7 +61,6 @@ interface ExportHandlersResult {
 	handleCopySlideAsImage: () => Promise<void>; // current slide → clipboard PNG
 	handleExportVideo: () => Promise<void>; // all slides → WebM
 	handleExportGif: () => Promise<void>; // all slides → GIF
-	handlePackageForSharing: () => Promise<void>; // .pptx + README in a ZIP
 	handleSaveAsFormat: (format: PptxSaveFormat) => Promise<void>; // 'pptx' | 'ppsx' | 'pptm'
 	handleSaveAsPptx: () => void;
 	handleSaveAsPpsx: () => void;

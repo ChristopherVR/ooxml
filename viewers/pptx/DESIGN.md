@@ -9,10 +9,10 @@ Changes to the editor chrome must reach React, Vue, Angular, Svelte and Vanilla.
 ## Ownership
 
 - Theme colors come from the existing `--pptx-*` variables and shared theme presets.
-- Editor layout and CSS belong to `packages/shared/src/render/editor-chrome/`.
+- Editor layout and CSS belong to `src/ui/src/pptx/render/editor-chrome/`.
 - Bindings attach semantic `data-pptx-chrome` hooks and render the shared stylesheet.
 - Framework state and event wiring remain in each binding.
-- Demo upload styles live separately in `demos/shared/dropzone.css`.
+- Demo upload styles live separately in `demos/pptx/shared/dropzone.css`.
 
 ## Layout
 

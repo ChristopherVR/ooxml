@@ -1,6 +1,6 @@
 # Shared Web Controls
 
-`pptx-viewer-shared` registers these custom elements once in a browser. React,
+`ooxml-ui/pptx` registers these custom elements once in a browser. React,
 Vue, Angular, Svelte, and Vanilla use the same implementation and the existing
 viewer CSS variables for their colors.
 

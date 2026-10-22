@@ -1,14 +1,14 @@
 # MCP ownership and release order
 
-The standalone packages belong to their viewer repositories:
+The standalone packages live in this repository, one per viewer, and only register the tools:
 
-| Repository   | Package          | CLI         |
-| ------------ | ---------------- | ----------- |
-| docx-viewer  | docx-viewer-mcp  | docx-tools  |
-| xlsx-viewer  | xlsx-viewer-mcp  | xlsx-tools  |
-| visio-viewer | visio-viewer-mcp | visio-tools |
-| pptx-viewer  | pptx-viewer-mcp  | pptx-tools  |
-| ooxml        | ooxml-mcp        | ooxml-tools |
+| Directory                     | Package          | CLI         |
+| ----------------------------- | ---------------- | ----------- |
+| `viewers/docx/mcp`            | docx-viewer-mcp  | docx-tools  |
+| `viewers/xlsx/mcp`            | xlsx-viewer-mcp  | xlsx-tools  |
+| `viewers/visio/mcp`           | visio-viewer-mcp | visio-tools |
+| `viewers/pptx/packages/tools` | pptx-viewer-mcp  | pptx-tools  |
+| `mcp`                         | ooxml-mcp        | ooxml-tools |
 
 ## Tools are headless functions in core
 

@@ -7,7 +7,7 @@ description: pptx-viewer-core is a framework-agnostic TypeScript engine for pars
 
 `pptx-viewer-core` is a **framework-agnostic** TypeScript engine for working with PowerPoint (`.pptx`) files. It parses, creates, edits, serializes, and converts presentations entirely in memory on the OpenXML ZIP archive - no native dependencies, no browser DOM required.
 
-A `.pptx` file is a ZIP archive of XML documents conforming to the [Office Open XML (OOXML)](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/) specification. This package gives you a complete, typed SDK over that format. It has four runtime dependencies: **jszip** (ZIP handling), **fast-xml-parser** (XML parse/build), and the extracted **emf-converter** and **mtx-decompressor** binary-format packages.
+A `.pptx` file is a ZIP archive of XML documents conforming to the [Office Open XML (OOXML)](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/) specification. This package gives you a complete, typed SDK over that format. It has one runtime dependency, **`ooxml-core`**, which holds the engine (its `pptx` area) and brings in the ZIP, XML and binary-format libraries (jszip, fast-xml-parser, emf-converter, mtx-decompressor and others) itself.
 
 ::: tip Where this fits
 The viewer bindings (`pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`) render the data model this engine produces. The MCP tools package wraps it for AI agents. See [/react/](/react/) and [/packages/mcp](/packages/mcp).
@@ -161,7 +161,7 @@ Everything is re-exported from the package root (`pptx-viewer-core`). Import fro
 ## Architecture at a glance
 
 - **`PptxHandler`** wraps `PptxHandlerCore`, which delegates to an injectable `IPptxHandlerRuntime` (you can pass your own via `new PptxHandler({ runtime })` for testing).
-- The **runtime** is assembled from 102 focused mixin modules (theme loading, element parsing, save pipeline, etc.).
+- The **runtime** is assembled from many focused mixin modules (theme loading, element parsing, save pipeline, etc.).
 - The **type system** centres on `PptxElement`, a discriminated union of 16 variants (`text`, `shape`, `connector`, `image`, `picture`, `table`, `chart`, `smartArt`, `ole`, `media`, `group`, `ink`, `contentPart`, `zoom`, `model3d`, `unknown`) narrowed by `element.type`. See [/guide/data-model](/guide/data-model).
 - **EMU** (English Metric Units) is the native OOXML coordinate system: `1 inch = 914,400 EMU`, `1 point = 12,700 EMU`, `1 pixel = 9,525 EMU` at 96 DPI. The parsed model exposes pixel values (`data.width`/`data.height`) alongside raw EMU (`widthEmu`/`heightEmu`).
 

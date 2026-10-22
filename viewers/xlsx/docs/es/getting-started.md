@@ -2,12 +2,12 @@
 
 ## Ejecutar la demo desde el código fuente
 
-Necesita [Bun](https://bun.sh/) 1.3 y Node.js 24.
+Necesita [Bun](https://bun.sh/) 1.4 y Node.js 24.
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
-cd ooxml/viewers/xlsx
-bun install
+bun install   # once, at the repository root (one workspace, one lockfile)
+cd viewers/xlsx
 bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
 ```
 

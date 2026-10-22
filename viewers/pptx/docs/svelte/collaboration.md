@@ -54,8 +54,8 @@ without rendering `PowerPointViewer`.
 
 `<PowerPointViewer>` supports real-time, multi-user editing built on **Yjs** (a CRDT) with
 either a WebSocket transport (`y-websocket`, needs a server) or a serverless peer-to-peer
-transport (`y-webrtc`). The `CollaborationConfig` type and wire format are shared with the
-React, Vue, Angular, and Vanilla bindings (defined once in the shared layer), so all bindings
+transport (`y-webrtc`). The `CollaborationConfig` type and wire format are shared with
+the other four bindings (React, Vue, Angular and vanilla; defined once in `ooxml-ui/pptx`), so all five bindings
 interoperate in the same room. When enabled, the viewer connects to the room, publishes local
 edits granularly (per slide / element), applies remote peers' edits, and renders live remote
 cursors, selection highlights, and user presence. In single-user mode none of this is loaded.
@@ -195,9 +195,9 @@ underscores to avoid surprises.
 
 With the default `websocket` transport you need a `y-websocket`-compatible relay reachable at
 `serverUrl`. Because the wire format is shared across bindings, the repository's reference
-servers work unchanged: `demos/collab-server.example.mjs` (zero-dependency Bun relay with JWT
+servers work unchanged: `demos/pptx/collab-server.example.mjs` (zero-dependency Bun relay with JWT
 or token-allowlist auth and per-room persistence) and
-`demos/collab-server-hocuspocus.example.mjs` (the same contract on Node/Hocuspocus with SQLite
+`demos/pptx/collab-server-hocuspocus.example.mjs` (the same contract on Node/Hocuspocus with SQLite
 persistence). See [the Vue collaboration page](/vue/collaboration#server-side) for the full
 server setup and auth details; everything there applies to this binding as-is.
 
