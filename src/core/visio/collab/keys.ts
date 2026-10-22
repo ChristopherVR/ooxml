@@ -1,0 +1,59 @@
+// The stable identity of pages and shapes across peers. A local page or shape id maps to a shared
+// key; keys are minted by the peer that adds the item (never reused, so two peers adding "shape
+// 12" at once get two keys) or, while seeding an empty room, derived from the drawing's own ids so
+// two peers that open the same file agree.
+export class DrawingKeys {
+	#counter = 0;
+	/** Seeding derives keys from ids; otherwise they are minted. */
+	seeding = false;
+	readonly #pages = new Map<string, string>();
+	readonly #shapes = new Map<string, Map<string, string>>();
+	/** Content of each entry this peer last wrote or applied, to tell a local edit or deletion from a change it has not applied yet. */
+	known = new Map<string, string>();
+	/** Fingerprints of the parts this peer last wrote or applied. */
+	readonly partPrints = new Map<string, string>();
+	/** The part path of each page key in the local package. */
+	readonly pagePaths = new Map<string, string>();
+
+	constructor(private readonly tag: string) {}
+
+	mint(): string {
+		return `${this.tag}.${(++this.#counter).toString(36)}`;
+	}
+	pageKey(id: string): string {
+		let key = this.#pages.get(id);
+		if (key === undefined) {
+			key = this.seeding ? `s${id}` : this.mint();
+			this.#pages.set(id, key);
+		}
+		return key;
+	}
+	shapeKey(pageKey: string, id: string): string {
+		let map = this.#shapes.get(pageKey);
+		if (!map) this.#shapes.set(pageKey, (map = new Map()));
+		let key = map.get(id);
+		if (key === undefined) {
+			key = this.seeding ? `s${id}` : this.mint();
+			map.set(id, key);
+		}
+		return key;
+	}
+	findPage(id: string): string | undefined {
+		return this.#pages.get(id);
+	}
+	forgetPage(key: string): void {
+		for (const [id, k] of this.#pages) if (k === key) this.#pages.delete(id);
+		this.#shapes.delete(key);
+	}
+	forgetShape(pageKey: string, key: string): void {
+		const map = this.#shapes.get(pageKey);
+		if (map) for (const [id, k] of map) if (k === key) map.delete(id);
+	}
+	/** Replaces the id-to-key tables with those of a freshly composed package. */
+	reset(pages: Map<string, string>, shapes: Map<string, Map<string, string>>): void {
+		this.#pages.clear();
+		this.#shapes.clear();
+		for (const [id, key] of pages) this.#pages.set(id, key);
+		for (const [page, map] of shapes) this.#shapes.set(page, new Map(map));
+	}
+}

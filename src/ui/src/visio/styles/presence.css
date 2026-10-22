@@ -1,0 +1,10 @@
+/* Remote collaborators on the canvas: label text only; colours come from each peer's colour. */
+.paper [data-presence-overlay] {
+	pointer-events: none;
+}
+.paper [data-presence-name] {
+	fill: var(--office-on-accent, #fff);
+	font: 600 11px/1 var(--_vv-font, sans-serif);
+	paint-order: normal;
+	user-select: none;
+}

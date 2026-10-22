@@ -70,3 +70,62 @@ describe('<visio-viewer> collaboration', () => {
 		expect(element.collaborationState.active).toBe(false);
 	});
 });
+
+describe('<visio-viewer> collaboration transports', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it('opens a socket to serverUrl with the auth token, untouched', async () => {
+		const urls: string[] = [];
+		class FakeSocket {
+			binaryType = '';
+			readyState = 0;
+			onopen = null;
+			onclose = null;
+			onerror = null;
+			onmessage = null;
+			constructor(url: string) {
+				urls.push(url);
+			}
+			send() {}
+			close() {}
+		}
+		vi.stubGlobal('WebSocket', FakeSocket);
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, {
+			collaboration: { roomId: 'wire', serverUrl: 'wss://host/collab/', authToken: 'a b' },
+		});
+		await vi.waitFor(() => expect(urls).toEqual(['wss://host/collab/wire?token=a%20b']));
+		viewer.destroy();
+	});
+
+	it('constructs the host WebrtcProvider with the token as the room password', async () => {
+		const made: { roomId: string; options: Record<string, unknown> }[] = [];
+		const destroyed = vi.fn();
+		class FakeWebrtc {
+			connected = false;
+			constructor(roomId: string, _doc: unknown, options: Record<string, unknown>) {
+				made.push({ roomId, options });
+			}
+			on() {}
+			off() {}
+			destroy() {
+				destroyed();
+			}
+		}
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, {
+			collaboration: {
+				roomId: 'p2p',
+				authToken: 'secret',
+				webrtc: { WebrtcProvider: FakeWebrtc, signaling: ['wss://signal'] },
+			},
+		});
+		await vi.waitFor(() => expect(made).toHaveLength(1));
+		expect(made[0]!.roomId).toBe('p2p');
+		expect(made[0]!.options).toMatchObject({ signaling: ['wss://signal'], password: 'secret' });
+		viewer.destroy();
+		expect(destroyed).toHaveBeenCalled();
+	});
+});

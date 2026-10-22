@@ -126,7 +126,15 @@ interface ReplacementMutation {
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
+/** Undo and redo of a shared drawing: they act on the local user's edits only. */
+export interface SharedHistory {
+	undo(): Promise<boolean>;
+	redo(): Promise<boolean>;
+	canUndo(): boolean;
+	canRedo(): boolean;
+}
 export class ViewerController {
+	#sharedHistory: SharedHistory | null = null;
 	#state: ViewerState = Object.freeze({
 		canEdit: true,
 		document: null,
@@ -917,7 +925,26 @@ export class ViewerController {
 		this.#history.maxEntries = levels + 1;
 		this.#change({ edit: this.#sourceEditState() });
 	}
+	/**
+	 * While set (a shared drawing), undo and redo go to `history` instead of the package history,
+	 * and the edit state reports its stacks. Pass null to restore the package history.
+	 */
+	setSharedHistory(history: SharedHistory | null): void {
+		this.#assertAlive();
+		this.#sharedHistory = history;
+		this.refreshHistory();
+	}
+	/** Re-reads the undo and redo availability of a shared history. */
+	refreshHistory(): void {
+		if (!this.#destroyed) this.#change({ edit: this.#sourceEditState() });
+	}
 	async undo(): Promise<void> {
+		if (this.#sharedHistory) {
+			this.#assertAlive();
+			if (!this.canEdit) throw new Error('The drawing is read-only.');
+			await this.#sharedHistory.undo();
+			return;
+		}
 		return this.#mutate('undo');
 	}
 	/**
@@ -928,6 +955,12 @@ export class ViewerController {
 		return this.#mutate('remote', undefined, bytes);
 	}
 	async redo(): Promise<void> {
+		if (this.#sharedHistory) {
+			this.#assertAlive();
+			if (!this.canEdit) throw new Error('The drawing is read-only.');
+			await this.#sharedHistory.redo();
+			return;
+		}
 		return this.#mutate('redo');
 	}
 	cancelEdit(): void {
@@ -1364,7 +1397,19 @@ export class ViewerController {
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');
 	}
-	#change(change: Partial<ViewerState>): boolean {
+	#change(patch: Partial<ViewerState>): boolean {
+		const shared = this.#sharedHistory;
+		let change =
+			shared && patch.edit && patch.edit.sourceAvailable
+				? {
+						...patch,
+						edit: Object.freeze({
+							...patch.edit,
+							canUndo: shared.canUndo(),
+							canRedo: shared.canRedo(),
+						}),
+					}
+				: patch;
 		if (this.#state.tool !== 'pointer' || (change.tool && change.tool !== 'pointer')) {
 			const merged = { ...this.#state, ...change };
 			if (merged.tool !== 'pointer' && !canEditDiagram(merged))

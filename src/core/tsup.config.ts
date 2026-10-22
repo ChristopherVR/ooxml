@@ -29,6 +29,7 @@ export default defineConfig({
 		'teams/index': 'teams/index.ts',
 		'visio/index': 'visio/index.ts',
 		'visio/ui/index': 'visio/ui/index.ts',
+		'visio/collab/index': 'visio/collab/index.ts',
 		'xlsx/index': 'xlsx/index.ts',
 		'xlsx/load/index': 'xlsx/load/index.ts',
 		'xlsx/collab/index': 'xlsx/collab/index.ts',

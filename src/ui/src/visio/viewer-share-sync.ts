@@ -1,138 +1,113 @@
-import type { VisioDocument } from 'ooxml-core/visio';
-import type { ViewerController, ViewerState } from './controller';
+import type { CollabSession } from 'ooxml-core/collab';
+import type { DrawingBinding, DrawingEditor } from 'ooxml-core/visio/collab';
+import type { ViewerController } from './controller';
 
 export type Collab = typeof import('ooxml-core/collab');
+export type DrawingCollab = typeof import('ooxml-core/visio/collab');
 export type Session = ReturnType<Collab['createCollabSession']>;
 
-export interface PackageSyncOptions {
+export interface DrawingSyncOptions {
 	/** `join` never seeds an empty room with the drawing this window already has open. */
 	join: boolean;
-	/** Reports an adoption failure. */
+	/** Reports a failure to share or apply a change. */
 	fail(message: string): void;
 }
 
+/** The DOM-free editor the shared-drawing binding drives, over a viewer controller. */
+export function controllerEditor(controller: ViewerController): DrawingEditor {
+	let applying = false;
+	/** The drawing last shared or adopted here, so a load or edit is published once. */
+	let seen = controller.state.document;
+	const busy = () => controller.state.edit.busy || controller.state.loading;
+	return {
+		exportBytes() {
+			const { edit } = controller.state;
+			if (!edit.sourceAvailable || busy()) return undefined;
+			try {
+				return controller.exportVsdx().bytes;
+			} catch {
+				return undefined;
+			}
+		},
+		async applyRemote(bytes) {
+			const { document, edit } = controller.state;
+			applying = true;
+			try {
+				if (document && edit.sourceAvailable) await controller.applyRemoteSource(bytes);
+				else await controller.load(bytes);
+			} finally {
+				applying = false;
+				seen = controller.state.document;
+			}
+		},
+		onLocalChange(listener) {
+			// The controller drops an event for later listeners when an earlier one changes state (a
+			// host fitting the page on load), so a drawing the room has not seen is also found from
+			// state: sharing must not depend on listener order.
+			const check = () => {
+				const { document } = controller.state;
+				if (applying || busy() || !document || document === seen) return;
+				seen = document;
+				listener();
+			};
+			const stops = [
+				controller.onEvent((name, detail) => {
+					if (applying) return;
+					if (
+						// A host save only moves the clean point; it changes nothing to publish.
+						(name === 'document-change' &&
+							!['remote', 'save'].includes((detail as { kind: string }).kind)) ||
+						name === 'document-load'
+					) {
+						seen = controller.state.document;
+						listener();
+					}
+				}),
+				controller.subscribe(check),
+			];
+			return () => stops.forEach((stop) => stop());
+		},
+		onIdle: (listener) => controller.subscribe(() => !busy() && listener()),
+		busy,
+		version: () => controller.documentGeneration,
+	};
+}
+
 /**
- * Whole-package sync of one drawing over a shared session: the VSDX bytes live in
- * `session.doc.getMap('package')` and the last writer wins. Remote changes arrive as one undoable
- * history step. It borrows the session; the caller owns its lifetime.
+ * Shape-level sync of one drawing over a shared session (`ooxml-core/visio/collab`): pages, shapes
+ * and connectors merge per item; every other part is shared whole. Undo and redo act on this
+ * window's own edits. It borrows the session; the caller owns its lifetime.
  */
-export class PackageSync {
-	readonly #adapter: ReturnType<Collab['packageAdapter']>;
+export class DrawingSync {
+	readonly #binding: DrawingBinding;
 	readonly #stops: (() => void)[] = [];
-	#revision = 0;
-	/** The package this window last published or adopted, to skip repeats of it. */
-	#last: Uint8Array | null = null;
-	/** The drawing this window last published or adopted, so a local load or edit is sent once. */
-	#shared: VisioDocument | null = null;
-	#adopting = false;
-	#pending: Uint8Array | null = null;
-	/** Publishes a local drawing the room has not seen; set once the session has settled. */
-	#catchUp: (() => void) | null = null;
 
 	constructor(
-		private readonly collab: Collab,
-		private readonly session: Session,
+		drawing: DrawingCollab,
+		session: Pick<CollabSession<object>, 'doc' | 'synced' | 'canWrite' | 'on'>,
 		private readonly controller: ViewerController,
-		private readonly options: PackageSyncOptions,
+		options: DrawingSyncOptions,
 	) {
-		this.#adapter = collab.packageAdapter();
-		const map = session.doc.getMap('package');
-		const observer = (_event: unknown, transaction: { origin: unknown }) => {
-			if (transaction.origin !== collab.LOCAL_ORIGIN) this.#adopt();
-		};
-		map.observe(observer);
-		// The room wins when it already has a drawing; otherwise this window seeds it. From then on a
-		// settled local drawing the room has not seen is published from state, not only from the
-		// load and change events: the controller drops an event for later listeners when an earlier
-		// one changes state (a host fitting the page on load), and sharing must not depend on order.
-		const settle = () => {
-			this.#catchUp = () => this.#publish();
-			if (!this.#adapter.isEmpty(session.doc)) this.#adopt();
-			else if (options.join) this.#shared = this.controller.state.document;
-			else this.#publish();
-		};
-		this.#stops.push(
-			() => map.unobserve(observer),
-			session.on('ready', settle),
-			this.controller.onEvent((name, detail) => {
-				const kind = name === 'document-change' ? (detail as { kind: string }).kind : null;
-				// A host save only moves the clean point; it changes nothing to publish.
-				if (kind !== null && kind !== 'remote' && kind !== 'save') this.#publish();
-				if (name === 'document-load' && !this.#adopting) this.#publish();
-			}),
-			this.controller.subscribe((state) => this.#flush(state)),
-		);
-		if (session.canWrite()) settle();
+		this.#binding = drawing.bindDrawingSession(session, controllerEditor(controller), {
+			seed: !options.join,
+			onError: (error) => options.fail(error instanceof Error ? error.message : String(error)),
+		});
+		controller.setSharedHistory(this.#binding);
+		this.#stops.push(this.#binding.onHistoryChange(() => controller.refreshHistory()));
+	}
+
+	/** Resolves when queued publishing and applying has finished. */
+	idle(): Promise<void> {
+		return this.#binding.idle();
 	}
 
 	dispose(): void {
 		for (const stop of this.#stops.splice(0)) stop();
-		this.#catchUp = null;
-		this.#pending = null;
-	}
-
-	#publish(): void {
-		const { document } = this.controller.state;
-		if (this.#adopting || this.#pending || document === this.#shared || !this.session.canWrite())
-			return;
-		const bytes = this.#localBytes();
-		if (!bytes) return;
-		const { doc } = this.session;
-		this.#adapter.write(doc, { bytes, revision: this.#revision }, this.collab.LOCAL_ORIGIN);
-		this.#revision = this.#adapter.read(doc).revision;
-		this.#last = bytes;
-		this.#shared = document;
-	}
-
-	#adopt(): void {
-		if (this.#adapter.isEmpty(this.session.doc)) return;
-		const model = this.#adapter.read(this.session.doc);
-		// Two windows can write the same revision at once; the bytes tell them apart.
-		if (model.revision < this.#revision) return;
-		if (model.revision === this.#revision && same(model.bytes, this.#last)) return;
-		this.#revision = model.revision;
-		this.#last = model.bytes;
-		this.#apply(model.bytes);
-	}
-
-	#localBytes(): Uint8Array | null {
-		const { edit, loading } = this.controller.state;
-		if (!edit.sourceAvailable || edit.busy || loading) return null;
+		this.#binding.dispose();
 		try {
-			return this.controller.exportVsdx().bytes;
+			this.controller.setSharedHistory(null);
 		} catch {
-			return null;
+			/* The controller was destroyed first. */
 		}
 	}
-
-	#apply(bytes: Uint8Array): void {
-		const { edit, loading, document } = this.controller.state;
-		if (edit.busy || loading) {
-			this.#pending = bytes;
-			return;
-		}
-		this.#pending = null;
-		const done = (error?: unknown) => {
-			this.#adopting = false;
-			if (error) this.options.fail(error instanceof Error ? error.message : String(error));
-			else this.#shared = this.controller.state.document;
-		};
-		this.#adopting = true;
-		const run =
-			document && edit.sourceAvailable
-				? this.controller.applyRemoteSource(bytes)
-				: this.controller.load(bytes);
-		run.then(() => done(), done);
-	}
-
-	#flush(state: ViewerState): void {
-		if (this.#pending && !state.edit.busy && !state.loading) this.#apply(this.#pending);
-		else this.#catchUp?.();
-	}
-}
-
-function same(a: Uint8Array, b: Uint8Array | null): boolean {
-	if (!b || a.byteLength !== b.byteLength) return false;
-	for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) return false;
-	return true;
 }

@@ -1,5 +1,6 @@
 import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/index';
-import type { CollaborationOptions, CollaborationState } from '../../collab/index';
+import type { CollaborationState } from '../../collab/index';
+import type { VisioCollaborationOptions } from './collab-options';
 import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
@@ -11,7 +12,7 @@ export interface ViewerProperties {
 	/** Tabs the host adds after Help, as an Office add-in does. */
 	ribbonAddIns: readonly RibbonAddInTab[];
 	/** Shares the open drawing in a room while set; null leaves it (the shared embedding contract). */
-	collaboration: CollaborationOptions | null;
+	collaboration: VisioCollaborationOptions | null;
 }
 /** A page-scoped shape identity. Omitted pageId means the currently displayed page. */
 export interface VisioShapeSelection {

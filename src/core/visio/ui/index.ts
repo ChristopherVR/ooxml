@@ -1,4 +1,6 @@
 export * from './contract';
+export * from './collab-presence';
+export * from './collab-options';
 export * from './demo-document';
 export * from './diagnostics';
 export * from './document-history';
