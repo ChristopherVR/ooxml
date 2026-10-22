@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.23.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.23.1) - 2026-10-22
+
+### Bug Fixes
+
+- **ui:** Fit the pptx slide to sub-pixel viewport sizes ([#165](https://github.com/ChristopherVR/ooxml/issues/165)) ([d09a71d](https://github.com/ChristopherVR/ooxml/commit/d09a71d1e478eebc28edec2af309e7f4b0a69dbb))
+
+### Testing
+
+- **ci:** Check packed browser entries for node-only modules ([0420bef](https://github.com/ChristopherVR/ooxml/commit/0420bef6f98e8718a9051bc4a945980a57edf435))
+
 ## [1.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.23.0) - 2026-10-22
 
 ### Features

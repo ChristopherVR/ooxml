@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.47.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.47.1) - 2026-10-22
+
+### Bug Fixes
+
+- **ui:** Fit the pptx slide to sub-pixel viewport sizes ([#165](https://github.com/ChristopherVR/ooxml/issues/165)) ([d09a71d](https://github.com/ChristopherVR/ooxml/commit/d09a71d1e478eebc28edec2af309e7f4b0a69dbb))
+- **pptx:** Inject the .ppt svg rasteriser and move it to pptx/node ([be73b10](https://github.com/ChristopherVR/ooxml/commit/be73b10464c4629ebffa86d631b086e46a42fbe3))
+
 ## [4.47.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.47.0) - 2026-10-22
 
 ### Features

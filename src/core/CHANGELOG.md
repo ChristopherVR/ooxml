@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.24.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.24.1) - 2026-10-22
+
+### Bug Fixes
+
+- **pptx:** Inject the .ppt svg rasteriser and move it to pptx/node ([be73b10](https://github.com/ChristopherVR/ooxml/commit/be73b10464c4629ebffa86d631b086e46a42fbe3))
+
+### Testing
+
+- **ci:** Check packed browser entries for node-only modules ([0420bef](https://github.com/ChristopherVR/ooxml/commit/0420bef6f98e8718a9051bc4a945980a57edf435))
+
 ## [1.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.24.0) - 2026-10-22
 
 ### Features
