@@ -71,21 +71,21 @@ npm i yjs y-webrtc      # serverless peer-to-peer
 
 ## `CollaborationConfig` {#collaborationconfig}
 
-| 字段                  | 类型                                           | 必填 | 说明                                                                                                                            |
-| --------------------- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                                       | 是   | 房间标识符，建议只使用字母、数字、连字符和下划线。                                                                              |
-| `serverUrl`           | `string`                                       | 是   | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                                 |
-| `transport`           | `'websocket' \| 'webrtc'`                      | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                              |
-| `signaling`           | `string[]`                                     | 否   | y-webrtc 信令 URL，默认使用其公共列表。                                                                                         |
-| `userName`            | `string`                                       | 是   | 本地用户的显示名称。                                                                                                            |
-| `userAvatar`          | `string`                                       | 否   | 本地用户的头像 URL。                                                                                                            |
-| `userColor`           | `string`                                       | 否   | 用户光标和在线状态指示器的十六进制颜色。                                                                                        |
-| `authToken`           | `string`                                       | 否   | 随 WebSocket 握手发送，或用作 webrtc 房间密码。                                                                                 |
-| `role`                | `CollaborationRole`                            | 否   | `'owner'`、`'collaborator'`（默认）或 `'viewer'`（只读）。                                                                      |
-| `sessionIntent`       | `'create' \| 'join'`                           | 否   | 此客户端创建还是加入了房间，宿主可据此避免在加入时发布本地字节。                                                                |
-| `onWriteBack`         | `(bytes: Uint8Array) => void \| Promise<void>` | 否   | 选定写入者持久化：只有 `'owner'` 参与者收到带防抖的 PPTX 快照；返回的 promise 即确认（状态见 `collaborationState.writeBack`）。 |
-| `writeBackDebounceMs` | `number`                                       | 否   | 最后一次变化与 `onWriteBack` 之间的防抖时间，默认 5000 毫秒。                                                                   |
-| `writeBackRetry`      | `{ attempts; baseDelayMs?; maxDelayMs? }`      | 否   | 被拒绝的 `onWriteBack` 以指数退避重试，默认不重试。                                                                             |
+| 字段                  | 类型                                                              | 必填 | 说明                                                                                                                            |
+| --------------------- | ----------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                                                          | 是   | 房间标识符，建议只使用字母、数字、连字符和下划线。                                                                              |
+| `serverUrl`           | `string`                                                          | 是   | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                                 |
+| `transport`           | `'websocket' \| 'webrtc'`                                         | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                              |
+| `signaling`           | `string[]`                                                        | 否   | y-webrtc 信令 URL，默认使用其公共列表。                                                                                         |
+| `userName`            | `string`                                                          | 是   | 本地用户的显示名称。                                                                                                            |
+| `userAvatar`          | `string`                                                          | 否   | 本地用户的头像 URL。                                                                                                            |
+| `userColor`           | `string`                                                          | 否   | 用户光标和在线状态指示器的十六进制颜色。                                                                                        |
+| `authToken`           | `string`                                                          | 否   | 随 WebSocket 握手发送，或用作 webrtc 房间密码。                                                                                 |
+| `role`                | `CollaborationRole`                                               | 否   | `'owner'`、`'collaborator'`（默认）或 `'viewer'`（只读）。                                                                      |
+| `sessionIntent`       | `'create' \| 'join'`                                              | 否   | 此客户端创建还是加入了房间，宿主可据此避免在加入时发布本地字节。                                                                |
+| `onWriteBack`         | `(bytes: Uint8Array) => void \| Promise<void>`                    | 否   | 选定写入者持久化：只有 `'owner'` 参与者收到带防抖的 PPTX 快照；返回的 promise 即确认（状态见 `collaborationState.writeBack`）。 |
+| `writeBackDebounceMs` | `number`                                                          | 否   | 最后一次变化与 `onWriteBack` 之间的防抖时间，默认 5000 毫秒。                                                                   |
+| `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | 否   | 被拒绝的 `onWriteBack` 以指数退避重试，默认不重试。                                                                             |
 
 ### 无需文档服务器的点对点模式 {#serverless-peer-to-peer-mode}
 

@@ -82,7 +82,7 @@ interface CollaborationConfig {
 | `userColor`           | `string`                                                          | 否   | 用户光标环的十六进制颜色。                                                                                          |
 | `authToken`           | `string`                                                          | 否   | WebSocket 握手参数或 WebRTC 房间密码。                                                                              |
 | `role`                | `CollaborationRole`                                               | 否   | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                                                                  |
-| `onWriteBack`         | `(bytes) => void         \| Promise<void>`                        | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认，状态见 `collaborationState.writeBack`。 |
+| `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认，状态见 `collaborationState.writeBack`。 |
 | `writeBackDebounceMs` | `number`                                                          | 否   | 默认 5000 ms。                                                                                                      |
 | `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | 否   | 对被拒绝的 `onWriteBack` 做指数退避重试。默认不重试。                                                               |
 

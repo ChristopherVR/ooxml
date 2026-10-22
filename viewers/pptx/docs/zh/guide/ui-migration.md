@@ -379,8 +379,6 @@ Home (#373) 按分组系列交付，以便这个庞大的选项卡易于审阅�
 
 `e2e/pptx/title-bar-migration.spec.ts` 在全部五个绑定中覆盖名称、顺序、自动保存开关、漫游焦点和 Tab 顺序、搜索结果、面板自定义、窄宽度、主题令牌、触控目标和强制颜色。`chrome-shell-parity.spec.ts` 现在通过其 shadow root 测量该栏，并跨绑定比较命令搜索行。适配器单元测试在每个绑定中覆盖状态映射、事件路由、限制、插槽和功能区下方的位置。前后对比截图位于 `docs/public/assets/ui-migration/title-bar-before` 和 `title-bar-after`。
 
-外壳、演示工具栏、标题栏和快速访问，以及兼容性提示。这就是该 issue 仍保持打开的原因。
-
 ## 上下文菜单 (#393) {#context-menus-393}
 
 `pptx-ui-context-menu` 是全部五个绑定中元素、空白画布、幻灯片缩略图和幻灯片放映菜单（以及 Vanilla 的只读 AI 菜单）背后的一个受控共享元素。每个绑定保留其条目列表（`buildContextMenuEntries`、`buildCanvasContextMenuEntries`、`buildSlidePaneContextMenuEntries`、`getPresentationContextMenuSections`）、宿主自定义、限制和命令分派（剪贴板、表格、裁剪、合并、检查器焦点）；适配器把这些条目映射为行，并路由类型化的 `menu-request { id }` 和 `menu-close` 事件。属性和事件约定记录在 `src/ui/src/pptx/web-components/README.md` 中。浏览器菜单和节菜单在各绑定中各不相同（见节和浏览器一致性 issue），仍保持原生；Vue 的浏览器复用通用的 `ContextMenu.vue`，因此同样获得共享的外观和键盘模型。
