@@ -1,18 +1,22 @@
 # Office suite parity review
 
-Reviewed 2026-10-13, including the native acceptance and integration batches below.
+Last reviewed 2026-10-22: the headline table below was re-checked against the later rounds in this file and
+the code; the per-batch sections are dated by the work they describe (through round 6, 2026-10-16),
+and their test counts are snapshots. Per-product trackers: [xlsx-parity-status.md](xlsx-parity-status.md),
+[word-parity-review.md](word-parity-review.md), [visio-parity-review.md](visio-parity-review.md).
 This is an evidence-based source review and tested implementation batch, not
 a claim of Microsoft Office equivalence. The consolidated repository contains
-all four engines and product editors, with framework bindings under `viewers/`.
+all engines and product editors (Word, PowerPoint, Excel, Visio and Teams), with framework bindings
+under `viewers/`.
 
 ## Current state
 
-| Product    | Working foundation                                                                                                                                                             | Largest remaining workflow gaps                                                                                                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, authority-based and Yjs collaboration      | Header/footer and note-story editing in Print Layout, vertically justified sections, editable charts/equations and text-box pagination, complex-table structural editing                                                                                                                                                           |
-| PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, multiple framework bindings, import/export and conversion                                           | Full text layout in raster export, desktop Office clipboard interoperability, inherited master-text search, remaining animation target modes and broader native render comparisons                                                                                                                                                 |
-| Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, shared editor and bindings                                            | PivotTable label and value filters, date groups with report filters, custom subtotals with Values on rows and broader Values-on-rows field placements, XLSB and ODS imports, remaining financial/statistical formulas, sparkline style/date-axis/group controls, remaining header formatting/drawing fidelity and page-break views |
-| Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings | Full ShapeSheet behavior, complete native geometry/text fidelity, unmeasured routing profiles, parts of data graphics and accessibility/proofing workflows                                                                                                                                                                         |
+| Product    | Working foundation                                                                                                                                                                                                                                               | Largest remaining workflow gaps                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, editable Print Layout for body text, authority-based and Yjs collaboration                                                   | Dedicated page-story (header/footer and note) editing in Print Layout, vertically justified sections, editable charts and text-box pagination, complex-table structural editing                                                     |
+| PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, selected-slide transport between decks through the system clipboard, multiple framework bindings, import/export and conversion                                                        | Full text layout in raster export, clipboard interoperability with desktop Office beyond slide packages, inherited master-text search, remaining animation target modes and broader native render comparisons                       |
+| Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, bounded PivotTables with slicers, timelines and number/date groups, sparkline authoring, Page Layout and Page Break Preview, shared editor and bindings | PivotTable label and value filters, shared caches, XLSB and ODS imports, FORECAST.ETS, sparkline style galleries and grouping, remaining header formatting and drawing fidelity; see [xlsx-parity-status.md](xlsx-parity-status.md) |
+| Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings                                                                                   | Full ShapeSheet behavior, complete native geometry/text fidelity, unmeasured routing profiles, parts of data graphics and accessibility/proofing workflows                                                                          |
 
 Evidence entry points:
 
@@ -21,7 +25,7 @@ Evidence entry points:
   `src/core/docx/ui/yjs-collaboration.ts`.
 - PowerPoint: `src/core/pptx/converter/ShapeTextRenderer.ts`,
   `src/ui/src/pptx/render/slide-sorter-state.ts` and the shared search/editor modules.
-- Excel: [the focused Excel review](excel-parity-review.md),
+- Excel: [the Excel status page](xlsx-parity-status.md),
   `src/core/xlsx/read/load.ts`, `src/core/xlsx/load/detect.ts`.
 - Visio: `src/core/visio/{edit,formula,line-jumps}.ts`,
   `src/ui/src/visio/page-setup-dialog-form.ts` and
@@ -200,14 +204,10 @@ Office accessibility rule set remains outstanding. Reproduce native acceptance w
 workflow. The writer now preserves tabs/newlines in XML attributes as character
 references, with tests for unrelated attributes, comments and CDATA.
 
-## Reference projects and next priorities
+## Next priorities
 
-[Storytold WordCraft](https://github.com/storytold/wordcraft),
-[DeckCraft](https://github.com/storytold/deckcraft) and
-[GridCraft](https://github.com/storytold/gridcraft) are useful workflow references.
-Their advertised feature coverage is not proof of fidelity or a measure of
-this project's parity. Separate command coverage from end-to-end readiness:
-open, render, edit, save and reopen. No reference implementation was copied.
+Separate command coverage from end-to-end readiness: open, render, edit, save and reopen.
+Feature lists of other products are not proof of fidelity or a measure of this project's parity.
 
 Recommended next batches:
 

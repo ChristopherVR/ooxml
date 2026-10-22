@@ -22,8 +22,9 @@ renderer or document operations. Angular no longer vendors a source copy.
 
 ## Compatibility and validation
 
-PowerPoint's migrated UI keeps its existing compiler flags in a separate
-`tsconfig.pptx.json`; all other shared UI retains the strict configuration.
+PowerPoint's migrated UI keeps its existing compiler flags in `src/ui/tsconfig.pptx.json`
+(the core's relaxed pptx project is `src/core/tsconfig.pptx.json`); all other shared UI retains the
+strict configuration.
 Tightening these legacy flags is a separate correctness task, as with the
 existing PowerPoint engine. Importing the main UI entry does not load PowerPoint.
 The optional Three.js and AI SDK integrations remain optional peers.
@@ -44,6 +45,6 @@ all public ESM entries, and core checks both ESM and CJS exports.
 Extraction provenance is recorded in `PROVENANCE.md` and the complete module
 inventory in `docs/pptx-migration-provenance.json`.
 
-Validation: 10,475 migrated UI tests, 674 extracted core unit tests, all five
-framework builds/typechecks, clean package imports, and eight browser smoke
-checks per framework. The optional live AI tests remain opt-in.
+Validation at the time of the migration (2026-10-07; the counts have grown since): 10,475 migrated
+UI tests, 674 extracted core unit tests, all five framework builds/typechecks, clean package
+imports, and eight browser smoke checks per framework. The optional live AI tests remain opt-in.

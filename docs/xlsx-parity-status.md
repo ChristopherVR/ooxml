@@ -1,9 +1,11 @@
 # XLSX parity status
 
-Updated 8 October 2026. The latest XLSX increment renders imported manual
-legend rectangles and overlay reservation, following title placement and
-layout preservation at `f12ee7ea6`. Native references, core and browser
-regressions, and selected Excel reopen checks bound the implemented scope.
+Last reviewed 2026-10-22. This page is the single live status tracker for the Excel product; the
+earlier separate Excel review, lookup evidence and implementation-log pages were folded into it
+(the per-increment history lives in git). The chart-title and legend increments below were recorded
+at `f12ee7ea6` on 8 October 2026, and the test counts quoted further down are from that revision.
+Native references, core and browser regressions, and selected Excel reopen checks bound the
+implemented scope.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -18,14 +20,14 @@ evidence for specific workflows. We do not yet have Excel-equivalent behavior
 or UI. A supported feature means its listed scope works; it does not mean all
 Excel options, interactions or visual details in that area are implemented.
 
-| Parity dimension               | Assessment   | Evidence or remaining work                                                                                                                                                                                                  |
-| ------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workbook import and saving     | Partial      | Supported content has round-trip regressions and selected Excel acceptance checks. Unsupported features and structural edits need wider preservation coverage.                                                              |
-| Editing and calculation        | Partial      | Values, formulas, formatting, clipboard, history and structural editing work within supported scope. Missing functions and semantic edge cases remain.                                                                      |
-| Charts                         | Partial      | Eight SVG families plus combination, waterfall, histogram, bubble, stock, treemap and sunburst and selected formatting/edit/export workflows are tested. Advanced families, complete controls and exact layout remain open. |
-| SmartArt                       | Display-only | Shared cached drawings render; insertion, editing and reflow are absent.                                                                                                                                                    |
-| Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete.                                                           |
-| Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                                                                            |
+| Parity dimension               | Assessment   | Evidence or remaining work                                                                                                                                                                                                                      |
+| ------------------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workbook import and saving     | Partial      | Supported content has round-trip regressions and selected Excel acceptance checks. Unsupported features and structural edits need wider preservation coverage.                                                                                  |
+| Editing and calculation        | Partial      | Values, formulas, formatting, clipboard, history and structural editing work within supported scope. Missing functions and semantic edge cases remain.                                                                                          |
+| Charts                         | Partial      | Eight SVG families plus combination, waterfall, histogram, bubble, stock, treemap and sunburst and selected formatting/edit/export workflows are tested. Advanced families, complete controls and exact layout remain open.                     |
+| SmartArt                       | Display-only | Shared cached drawings render; insertion, editing and reflow are absent.                                                                                                                                                                        |
+| Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete.                                                                               |
+| Whole-product parity           | Not achieved | Bounded pivots, partial collaboration and Page Layout / Page Break Preview exist; shared pivot caches, label and value filters, FORECAST.ETS, data connections, macro execution and full print fidelity are missing, which prevents this claim. |
 
 The latest diagram/chart/XLSX and PowerPoint layout-parser sweep passed
 **8,591 ordinary tests**, with **17 existing expected raster failures**.
@@ -79,25 +81,24 @@ remain unverified or incomplete. The native and browser screenshots still
 show different plot geometry and gridline appearance. This is automatic
 wrapping support for the tested scope, not full chart or text parity.
 
-This page is the current summary. The [implementation review](xlsx-parity-review.md)
-records each increment and its evidence; older sections describe the state at
-their respective revisions. The [feature page](../viewers/xlsx/docs/features.md)
+This page is the current summary ([xlsx-parity-review.md](xlsx-parity-review.md) is now only a
+pointer to the removed increment log). The [feature page](../viewers/xlsx/docs/features.md)
 lists the broader product surface. [PROVENANCE](../PROVENANCE.md) records shared
 logic reuse and extraction.
 
 ## Implemented and verified work
 
-| Area                          | Current implementation                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Important limits                                                                                                                                                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Editing and clipboard         | Finite copies retain trailing blanks; compatible selections tile copied blocks. Directional fills copy content/formatting with translated formulas. Paste Special supports content modes, transpose, Skip Blanks, arithmetic, All Except Borders and column widths. Notes, validation, hyperlinks and supported conditional formats participate in the clipboard path. History, save/reload and structural reference behavior have regressions.                                 | This is not complete Excel clipboard metadata or every cut/paste scenario. Multi-area paste and large-selection semantics have restrictions.                                                                                          |
-| Conditional formatting        | Existing rules plus improvements to x14 data-bar preservation, copied rule identities, colors/borders, direction, axes, lengths, thresholds and context. Native comparisons exercise supported cases.                                                                                                                                                                                                                                                                           | Advanced rule authoring controls and exact data-bar raster appearance remain incomplete.                                                                                                                                              |
-| Calculation                   | Existing formula engine, dependency recalculation and recorded Excel comparisons; follow-up work includes AMORLINC and DB/DDB compatibility cases.                                                                                                                                                                                                                                                                                                                              | Missing functions, coercion/array/date edge cases and external workbook resolution remain. A function catalogue is not proof of complete compatibility.                                                                               |
-| What-If Analysis              | Goal Seek (secant search with bisection fallback over the recalculation engine, workbook iteration settings, status dialog, one undo step), one- and two-variable data tables with `TABLE()` evaluation, `<f t="dataTable">` round trip and protection against partial edits, and Scenario Manager (add, edit, delete, show; `<scenarios>` round trip). Core tests cover solver cases, tables and a generated openpyxl fixture; browser spec covers Goal Seek and a data table. | Forecast Sheet is disabled (needs FORECAST.ETS). No Scenario Summary or Merge, no Goal Seek Step or Pause, data tables are not shifted by row or column inserts and deletes, and results were not compared against real Excel output. |
-| Chart selection and structure | Pictures/charts can be selected, moved, resized and deleted. Charts support insertion, family/grouping changes, title and legend changes, history and save/reload.                                                                                                                                                                                                                                                                                                              | The supported SVG families are column, bar, line, area, pie, doughnut, scatter and radar. Other families and many native chart options remain unsupported.                                                                            |
-| Chart formatting UI           | Shared Change Colors gallery, individual series fills, bar gap/overlap controls and docked fill panes. No fill, solid, transparency and supported linear/rectangular/circular/shape gradients have authoring paths, stop controls, previews and native presets. Chart area, plot area, title and legend reuse the same fill controls.                                                                                                                                           | Borders/effects, full axes/data-label editing, style/layout galleries and exact native ribbon/pane behavior remain incomplete. Gradient support varies by chart element/type.                                                         |
-| Chart rendering and export    | Imported styles, supported gradients/shadows, axis visibility, built-in text defaults, chart-wide font inheritance and mixed title runs/lines/paragraphs. Supported fills and text formatting survive tested chart edits and regeneration.                                                                                                                                                                                                                                      | Text measurement, wrapping, spacing, automatic/manual layout and full chart raster fidelity remain approximate. Advanced text styling and mixed-format font authoring UI remain open.                                                 |
-| SmartArt                      | Imported cached drawings render through `office-ui-smartart`; shared theme colors, transforms and font choices improve native appearance. A native Basic Block List reference verifies three labels and measured text properties.                                                                                                                                                                                                                                               | Display-only. No insertion, text editing, layout reflow or complete layout/color/style galleries. Without a cached drawing, the viewer lists text in a placeholder. No whole-diagram pixel parity.                                    |
-| Shared architecture           | One XLSX core and one editor component, with six thin framework bindings. Shared XML/OPC, DrawingML/diagram, chart, geometry, color, units and Office UI controls are reused.                                                                                                                                                                                                                                                                                                   | Shared infrastructure does not by itself implement spreadsheet-specific behavior or establish parity.                                                                                                                                 |
+| Area                          | Current implementation                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Important limits                                                                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Editing and clipboard         | Finite copies retain trailing blanks; compatible selections tile copied blocks. Directional fills copy content/formatting with translated formulas. Paste Special supports content modes, transpose, Skip Blanks, arithmetic, All Except Borders and column widths. Notes, validation, hyperlinks and supported conditional formats participate in the clipboard path. History, save/reload and structural reference behavior have regressions.                                 | This is not complete Excel clipboard metadata or every cut/paste scenario. Multi-area paste and large-selection semantics have restrictions.                                                                                                            |
+| Conditional formatting        | Existing rules plus improvements to x14 data-bar preservation, copied rule identities, colors/borders, direction, axes, lengths, thresholds and context. Native comparisons exercise supported cases.                                                                                                                                                                                                                                                                           | Advanced rule authoring controls and exact data-bar raster appearance remain incomplete.                                                                                                                                                                |
+| Calculation                   | Existing formula engine, dependency recalculation and recorded Excel comparisons; follow-up work includes AMORLINC and DB/DDB compatibility cases.                                                                                                                                                                                                                                                                                                                              | Missing functions, coercion/array/date edge cases and external workbook resolution remain. A function catalogue is not proof of complete compatibility.                                                                                                 |
+| What-If Analysis              | Goal Seek (secant search with bisection fallback over the recalculation engine, workbook iteration settings, status dialog, one undo step), one- and two-variable data tables with `TABLE()` evaluation, `<f t="dataTable">` round trip and protection against partial edits, and Scenario Manager (add, edit, delete, show; `<scenarios>` round trip). Core tests cover solver cases, tables and a generated openpyxl fixture; browser spec covers Goal Seek and a data table. | Forecast Sheet is disabled (needs FORECAST.ETS). No Scenario Summary or Merge, no Goal Seek Step or Pause, data tables are not shifted by row or column inserts and deletes, and results were not compared against real Excel output.                   |
+| Chart selection and structure | Pictures/charts can be selected, moved, resized and deleted. Charts support insertion, family/grouping changes, title and legend changes, history and save/reload.                                                                                                                                                                                                                                                                                                              | The base SVG families are column, bar, line, area, pie, doughnut, scatter and radar; combination, waterfall, histogram, bubble, stock, treemap and sunburst are drawn as well (see the assessment table). Many native chart options remain unsupported. |
+| Chart formatting UI           | Shared Change Colors gallery, individual series fills, bar gap/overlap controls and docked fill panes. No fill, solid, transparency and supported linear/rectangular/circular/shape gradients have authoring paths, stop controls, previews and native presets. Chart area, plot area, title and legend reuse the same fill controls.                                                                                                                                           | Borders/effects, full axes/data-label editing, style/layout galleries and exact native ribbon/pane behavior remain incomplete. Gradient support varies by chart element/type.                                                                           |
+| Chart rendering and export    | Imported styles, supported gradients/shadows, axis visibility, built-in text defaults, chart-wide font inheritance and mixed title runs/lines/paragraphs. Supported fills and text formatting survive tested chart edits and regeneration.                                                                                                                                                                                                                                      | Text measurement, wrapping, spacing, automatic/manual layout and full chart raster fidelity remain approximate. Advanced text styling and mixed-format font authoring UI remain open.                                                                   |
+| SmartArt                      | Imported cached drawings render through `office-ui-smartart`; shared theme colors, transforms and font choices improve native appearance. A native Basic Block List reference verifies three labels and measured text properties.                                                                                                                                                                                                                                               | Display-only. No insertion, text editing, layout reflow or complete layout/color/style galleries. Without a cached drawing, the viewer lists text in a placeholder. No whole-diagram pixel parity.                                                      |
+| Shared architecture           | One XLSX core and one editor component, with six thin framework bindings. Shared XML/OPC, DrawingML/diagram, chart, geometry, color, units and Office UI controls are reused.                                                                                                                                                                                                                                                                                                   | Shared infrastructure does not by itself implement spreadsheet-specific behavior or establish parity.                                                                                                                                                   |
 
 ## Reuse from PowerPoint and other packages
 
@@ -125,8 +126,8 @@ The latest completed increment has the regression results listed above:
 8,591 ordinary core tests, 17 expected raster failures, 302 focused browser
 cases across vanilla, React, Vue, Angular, Svelte and Solid, and passing
 core/UI build, type and package checks. These are scoped implementation-run
-results, rather than a full-product equivalence suite. Historical
-results and their different scopes are retained in the implementation review.
+results, rather than a full-product equivalence suite. Earlier
+results had different scopes and are not carried here.
 
 Core tests cover supported parsing, editing, preservation and layout behavior.
 Browser tests cover selected painted geometry and actual edit/history/save
@@ -169,6 +170,68 @@ Native PNG comparisons expose remaining label-spacing and paint differences.
 Automatic geometry, multi-row/column packing, entry-specific formatting,
 line/marker swatches and position-authoring controls remain incomplete.
 
+## Pivots, slicers and sparklines
+
+- Pivots: bounded authoring and refresh in `src/core/xlsx/pivot/` (aggregation, layouts, report
+  filter, native cache XML) with `model-pivots.ts`, and dialogs in `src/ui/src/xlsx`. Up to 16
+  measures, any number of row and column fields, tabular/compact/outline layouts, per-field custom
+  subtotals, Values on rows, number and date grouping (seconds to years), and date groups together
+  with report filters, hidden items, slicers and timelines round trip. Date group names written by
+  Excel in another language are read by position and written back unchanged
+  (`PivotDateGroup.localized`), checked against fixtures relabelled as a German Excel names them
+  because only the English Excel is installed. Other captions Excel localizes (Row Labels, Grand
+  Total, Values, subtotal names) are English-only, so a fully localized workbook stays preserved.
+  Not supported and kept read-only with warnings (`pivot/admission.ts`): shared caches, label and
+  value filters, filters on date group items, mixed or custom layouts. Native acceptance:
+  `scripts/xlsx-pivot-acceptance.ps1` and the `xlsx-pivot-*-oracle.ps1` scripts.
+- Slicers and timelines: `src/core/xlsx/slicer/` views, `edit/slicers.ts`,
+  `scripts/xlsx-slicer-acceptance.ps1`.
+- Sparklines: line, column and win/loss groups are drawn and authored (create, format, clear, with
+  an Insert ribbon group; `edit/sparklines.ts`, `scripts/xlsx-sparkline-acceptance.ps1`). Excel
+  ignores the extension if its URI uses uppercase `4FD2`, so the writer uses lowercase `4fd2`;
+  edits to revision-tagged groups need a distinct revision UID, which the commands supply. Style
+  galleries, grouping/ungrouping, date-axis authoring and individual source-range editing remain;
+  existing date-axis metadata is preserved.
+
+## Calculation: lookups and regular expressions
+
+- Lookups: exact and approximate XMATCH/XLOOKUP keep the full reference extent, compare across
+  value types (numbers, text, logicals, blanks) and follow native duplicate positions in binary
+  search; MATCH/VLOOKUP/HLOOKUP reject scalar tables; omitted-argument defaults for XMATCH,
+  ADDRESS, INDIRECT and OFFSET follow one shared call policy; INDIRECT supports R1C1 with whole
+  rows/columns and wrapping (`address-r1c1.ts`). Evidence: 216 recorded comparisons
+  (`formula/__fixtures__/lookup-native.json`, `lookup-native.test.ts`, recorded by
+  `scripts/record-xlsx-lookups.ps1` on Excel 16.0 build 20430). Binary search requires the declared
+  sort order; arbitrary unsorted input is not established.
+- Regular expressions: `REGEXEXTRACT` implements return modes 0 (first match), 1 (all matches,
+  vertical spill) and 2 (capture groups, horizontal spill); an invalid mode or pattern is
+  `#VALUE!`, no match is `#N/A`. Patterns are JavaScript regular expressions, so PCRE2-only syntax
+  is unsupported, and the installed Excel returned `#NAME?`, so it could not validate them.
+- Functions: odd-period bond pricing (`odd-securities.ts`) and Bessel functions (`bessel.ts`)
+  exist; `FORECAST.ETS` is still missing, which keeps Forecast Sheet disabled. Native fixtures cover
+  AMORLINC, DB and DDB (`scripts/record-xlsx-amorlinc.ps1`, `record-xlsx-depreciation.ps1`).
+
+## Import, print and collaboration
+
+- Import: `load/detect.ts` identifies XLSB so it can be refused with a message; ODS is not
+  supported; legacy `.xls` and CSV load through `xlsx/load`. External connections use cached
+  values; VBA is carried but never executed; add-ins and Power Query are not implemented.
+- Print: paginated preview and print fields support saved page setup and header/footer fields
+  with font family/size, RGB colour, bold, italic, underline and strike (native PDF checks:
+  `scripts/xlsx-print-acceptance.ps1`, `xlsx-print-format-acceptance.ps1`). Theme colours, images,
+  page offsets, double underline and super/subscript are outside preview support.
+- Collaboration: `ooxml-core/xlsx/collab` maps the workbook to Yjs (cell values and formulas,
+  formats, row heights, column widths, merges, sheet add/rename/move/delete/state/tab colour,
+  defined names, selections; row and column inserts travel as the resulting cell moves), and
+  `<xlsx-editor>` is wired (share dialog, presence). Not shared yet: charts, drawings, images,
+  comments, hyperlinks, conditional formats, validations, tables, filters, pivots, freeze panes
+  and views, page setup, protection and document properties. See [collab-area.md](collab-area.md).
+- Clipboard: finite copies keep trailing blanks and tile into compatible selections; directional
+  fills translate formulas; Paste Special supports content modes, transpose, Skip Blanks,
+  arithmetic, All Except Borders and column widths; notes, validation, hyperlinks and supported
+  conditional formats travel (`edit/clipboard.ts`; native recordings `record-xlsx-paste-*.ps1`).
+  Clipboard payloads are dense arrays and whole-row/column copies are bounded to used content.
+
 ## Major work still required
 
 1. Native chart text measurement, wrapping, spacing, title/legend placement and
@@ -184,10 +247,10 @@ line/marker swatches and position-authoring controls remain incomplete.
    `sheetView/@view`); still missing there are Custom Views, copy and paste
    inside Page Layout view,
    separate per-view zoom attributes, and native-printer metrics.
-6. Pivot refresh/rendering beyond the bounded profiles (label and value filters, shared
-   caches, report captions in other languages), sparklines
-   beyond the supported slice, data connections
-   and spreadsheet collaboration integration.
+6. Pivots beyond the bounded profiles (label and value filters, shared caches, filters on date
+   group items, report captions in other languages), sparkline style galleries, grouping and
+   individual source-range editing, data connections, and the sheet parts the collaboration
+   mapping does not share yet (see "Import, print and collaboration").
 7. Wider formula and clipboard differential coverage. VBA execution, add-ins,
    Power Query and unsupported file formats also prevent whole-product parity.
 
