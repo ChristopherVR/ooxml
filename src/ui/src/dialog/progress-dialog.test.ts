@@ -80,6 +80,38 @@ describe('office-ui-progress-dialog', () => {
 		expect(document.activeElement).toBe(opener);
 	});
 
+	it('returns focus to an opener inside a shadow root, not to its host', () => {
+		document.body.innerHTML = '<div id="host"></div>';
+		const host = document.getElementById('host')!;
+		const inner = host.attachShadow({ mode: 'open' });
+		inner.innerHTML = '<button>Export</button>';
+		const opener = inner.querySelector('button')!;
+		opener.focus();
+		const dialog = document.createElement('office-ui-progress-dialog') as ProgressDialog;
+		document.body.append(dialog);
+		dialog.state = running;
+		expect(dialog.shadowRoot!.activeElement).toBe(dialog.shadowRoot!.querySelector('button'));
+		dialog.state = { ...running, open: false };
+		expect(inner.activeElement).toBe(opener);
+	});
+
+	it('keeps focus on Cancel when the backdrop or the box is pressed', () => {
+		const { root, cancel } = mount();
+		const press = (el: Element) => {
+			const event = new MouseEvent('mousedown', {
+				bubbles: true,
+				composed: true,
+				cancelable: true,
+			});
+			el.dispatchEvent(event);
+			return event.defaultPrevented;
+		};
+		// Pressing a part that cannot take focus would move it to the page behind the overlay.
+		expect(press(root.querySelector('.backdrop')!)).toBeTruthy();
+		expect(press(root.querySelector('h2')!)).toBeTruthy();
+		expect(press(cancel())).toBeFalsy();
+	});
+
 	it('emits a cancel request from Cancel only: Escape does not end the job', () => {
 		const { dialog, cancel } = mount();
 		const cancelled = vi.fn();

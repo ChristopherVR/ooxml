@@ -1,6 +1,7 @@
 import { html, type PropertyValues } from 'lit';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
+import { modalActiveElement } from './focus';
 import css from './progress-dialog.css?raw';
 
 export interface OfficeProgressDialogState {
@@ -42,6 +43,14 @@ export class OfficeUiProgressDialog extends OfficeElement {
 	constructor() {
 		super();
 		this.addEventListener('keydown', (event) => this.onKey(event));
+		// Pressing a part that cannot take focus (the backdrop, the text) would move focus to the page
+		// behind the overlay, out of reach of the Tab guard; Cancel keeps it instead.
+		this.addEventListener('mousedown', (event) => {
+			const cancel = this.cancelButton;
+			if (this.model.open && !(cancel && event.composedPath().includes(cancel))) {
+				event.preventDefault();
+			}
+		});
 	}
 
 	get state(): OfficeProgressDialogState {
@@ -77,7 +86,8 @@ export class OfficeUiProgressDialog extends OfficeElement {
 	protected override updated(_changed: PropertyValues<this>): void {
 		const open = this.model.open;
 		if (open && !this.wasOpen) {
-			const active = this.ownerDocument.activeElement as HTMLElement | null;
+			// Through open shadow roots: an opener inside a shared control is not its host.
+			const active = modalActiveElement(this.ownerDocument) as HTMLElement | null;
 			this.returnFocus = active && active !== this.ownerDocument.body ? active : null;
 			this.cancelButton?.focus();
 		} else if (!open && this.wasOpen) {
