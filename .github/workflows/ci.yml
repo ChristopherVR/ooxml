@@ -234,8 +234,30 @@ jobs:
           path: src/ui/dist
           retention-days: 1
 
-  # ooxml-ui's unit tests and package checks. The package is packed from the build job's core and
-  # ui output (`dist`), the same build the viewers run on.
+  # ooxml-ui's unit tests, in three shards (the suite took about nine minutes on one runner; Vitest
+  # shards the files of all its projects together).
+  ui-test:
+    name: ui test (${{ matrix.shard }}/3)
+    needs: [plan, build]
+    if: fromJSON(needs.plan.outputs.plan).checks.ui
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - run: bun run --cwd src/ui test --shard=${{ matrix.shard }}/3
+
+  # ooxml-ui's package checks. The package is packed from the build job's core and ui output
+  # (`dist`), the same build the viewers run on; it does not wait for the tests.
   ui:
     needs: [plan, build]
     if: fromJSON(needs.plan.outputs.plan).checks.ui
@@ -249,7 +271,6 @@ jobs:
         with:
           name: core-dist
           path: src/core/dist
-      - run: bun run --cwd src/ui test
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
@@ -363,6 +384,67 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The viewers' Playwright suites, one job per shard (docx, xlsx and visio in two, teams in one;
+  # a run narrowed to changed specs is one shard). The other check groups run in `viewers`.
+  viewer-browser:
+    name: viewer browser (${{ matrix.name }} ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [plan, build]
+    if: |
+      !cancelled() && needs.build.result == 'success' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).viewerBrowser) != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).viewerBrowser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ matrix.dir }}
+        run: bun x playwright install --with-deps chromium
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: ${{ matrix.dir }}
+        run: bun x playwright install-deps chromium
+      - name: Run the browser suite
+        working-directory: ${{ matrix.dir }}
+        env:
+          VERIFY: ${{ matrix.verify }}
+        run: |
+          while IFS= read -r command; do
+            echo "::group::$command"
+            bash -e -o pipefail -c "$command"
+            echo "::endgroup::"
+          done <<< "$VERIFY"
+      - name: Preserve browser test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: browser-test-results-${{ matrix.name }}-${{ matrix.shard }}
+          path: ${{ matrix.dir }}/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   # The PowerPoint viewer has more to check than the viewers job's ceiling fits: a ~20-minute unit
   # suite and a browser suite worth hours of runner time. So it gets its own jobs, laid out the way
   # pptx-viewer ran them: one build whose output the others download, a unit job per package, the
@@ -458,7 +540,7 @@ jobs:
           esac
 
   pptx-e2e:
-    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }})
+    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.total }})
     needs: [plan, pptx-build]
     # The frameworks the change reaches (pptxPlan): its own binding, the parity reference (react)
     # for shared or engine code, all five for dependencies, CI and the nightly; or, when only spec
@@ -473,8 +555,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.projects }}
-        shard: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.shards }}
+        include: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -492,16 +573,28 @@ jobs:
         with:
           name: pptx-dist
           path: viewers/pptx/packages
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
         run: bun x playwright install --with-deps chromium
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: viewers/pptx
+        run: bun x playwright install-deps chromium
       # Two attempts, as pptx-viewer ran it: a runner-level browser crash should not fail the run.
       - name: Run the browser suite
         working-directory: viewers/pptx
         env:
           PROJECT: ${{ matrix.project }}
           SHARD: ${{ matrix.shard }}
-          TOTAL: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }}
+          TOTAL: ${{ matrix.total }}
           # The changed spec files when only specs changed; empty runs every spec.
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
         run: |
@@ -573,9 +666,21 @@ jobs:
           for demo in react vue angular vanilla svelte; do
             (cd "demos/pptx/demo-$demo" && bun run build)
           done
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
         run: bun x playwright install --with-deps chromium
+      # The cached browsers skip the download; the system libraries still need installing.
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: viewers/pptx
+        run: bun x playwright install-deps chromium
       - name: Run the packaged-build smoke
         working-directory: viewers/pptx
         run: bun run e2e:packaged -- --workers=2 --reporter=list,html,github
@@ -661,9 +766,11 @@ jobs:
         test,
         build,
         ui,
+        ui-test,
         scripts,
         mcp,
         viewers,
+        viewer-browser,
         pptx-build,
         pptx-test,
         pptx-e2e,
