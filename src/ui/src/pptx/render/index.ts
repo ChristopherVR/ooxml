@@ -1800,3 +1800,5 @@ export * from './custom-path-markers';
 
 // The shared `CollaborationState` every binding reports to its host (`collaboration-change`).
 export * from './collaboration-state';
+// The payload the host-facing `autosaveStatus` event reports in every binding.
+export * from './viewer-event-payloads';
