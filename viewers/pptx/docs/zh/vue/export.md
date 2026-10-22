@@ -92,13 +92,13 @@ function downloadActiveSlideSvg() {
 
 其余接口可以通过 `pptx-vue-viewer/internals` 使用。这些内部构建模块**不受**语义化版本兼容承诺保障，请优先使用稳定的根入口导出：
 
-| 组合式函数          | 返回值                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                                       |
-| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }`，两个导出方法均返回解析为编码后 `Blob` 的 Promise                            |
-| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                                                   |
-| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }`                       |
-| `useExportWiring`   | 查看器自身使用的完整接线逻辑：`rasterizeSlide`、`onExportPng/Pdf/Gif/Webm()`、`downloadAs(format)`、`packageForSharing()`、`onCopySlideAsImage()` |
+| 组合式函数          | 返回值                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `useExport`         | `{ exporting, exportSlidePng(index), exportPdf(options?) }`                                                                 |
+| `useMediaExport`    | `{ exporting, progress, exportGif(options?), exportWebm(options?) }`，两个导出方法均返回解析为编码后 `Blob` 的 Promise      |
+| `usePrint`          | `{ isPrintDialogOpen, openPrintDialog(), closePrintDialog(), print(settings) }`                                             |
+| `useExportProgress` | `{ exportModalOpen, exportModalTitle, exportProgress, exportStatusMessage, runPdf(), runGif(), runWebm(), cancelExport() }` |
+| `useExportWiring`   | 查看器自身使用的完整接线逻辑：`rasterizeSlide`、`onExportPng/Pdf/Gif/Webm()`、`downloadAs(format)`、`onCopySlideAsImage()`  |
 
 `useExport`、`useMediaExport` 和 `usePrint` 使用依赖注入：接受你的 `slides` / `slideCount` ref，以及自行提供的 `rasterizeSlide: (index: number) => Promise<HTMLCanvasElement>`，因此可以驱动任意自行渲染的舞台。
 

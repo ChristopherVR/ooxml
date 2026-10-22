@@ -43,11 +43,33 @@ description: 了解 PowerPointViewer 的 hooks 架构、/viewer 提供的稳定�
 
 ## 公共 hooks {#public-hooks}
 
-以下 hooks 从 **`pptx-react-viewer/viewer`** 导出，可安全按需使用并支持 tree-shaking。根入口 `pptx-react-viewer` 导出组件、`renderToCanvas`、主题工具（包括 `useViewerTheme`）和偏好设置工具，但不导出下列预览器 hooks。
+以下 hooks 从 `pptx-react-viewer/viewer` 导出，可按需使用并支持 tree-shaking。`useViewerBuildingBlocks` 也从包根入口导出，同时导出的还有独立的 `Toolbar` 和 `SlideCanvas` 组件。
 
 ```tsx
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
 ```
+
+### 自定义编辑器的协作 {#custom-editor-collaboration}
+
+`useViewerBuildingBlocks` 接受与 `PowerPointViewer` 相同的可选 `collaboration` 配置，包括[宿主自有的 Yjs 会话](/zh/guide/host-owned-collaboration)。它返回可用于自定义状态栏的 `collaboration` 连接和在线状态，并在 `canvasProps` 中包含光标和远程选择叠加层，无需额外的协作 provider。
+
+```tsx
+import { SlideCanvas, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';
+
+function Editor({ content, collaboration }) {
+	const blocks = useViewerBuildingBlocks({ content, collaboration, canEdit: true });
+	return (
+		<>
+			<Toolbar {...blocks.toolbarProps} />
+			<SlideCanvas {...blocks.canvasProps} />
+		</>
+	);
+}
+```
+
+该 hook 使用内置编辑器的文档同步、就绪检查和写回路径。`role: 'viewer'` 会禁用编辑。这不会改变其现有的撤销语义，也不会增加单独的宿主批注集成。
+
+仅在配置了协作时才会增加源加载和错误检查。未配置协作时，该 hook 保持原有的宿主授权行为，包括用 `content: null` 表示空白文档。活动的协作会话同样遵循宿主的编辑权限和就绪状态；仅有已连接的传输层并不授予编辑权限。宿主需要为返回的状态类型命名时，可从包根入口使用 `CollaborationContextValue`。
 
 ### 打开指定幻灯片 {#opening-on-a-slide}
 

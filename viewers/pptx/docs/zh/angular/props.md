@@ -73,18 +73,21 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 
 ## 事件（`@Output()`） {#events-output-s}
 
-| 输出                 | 载荷                          | 说明                                                                                        |
-| -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `dirtyChange`        | `boolean`                     | 未保存修改标记切换时触发。                                                                  |
-| `contentChange`      | `Uint8Array`                  | 每当 [`getContent()`](/zh/angular/api) 将文稿序列化为字节时触发，携带重新序列化的文档字节。 |
-| `activeSlideChange`  | `number`                      | 当前幻灯片变化时触发。                                                                      |
-| `modeChange`         | `string`                      | 查看器模式变化时触发，模式为 `'preview'`、`'edit'`、`'present'` 或 `'master'`。             |
-| `zoomChange`         | `number`                      | 缩放级别变化时触发。                                                                        |
-| `selectionChange`    | `string[]`                    | 元素选区变化时触发。                                                                        |
-| `slideCountChange`   | `number`                      | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                |
-| `propertiesChange`   | `Partial<PptxCoreProperties>` | 用户在信息对话框中编辑文档属性（标题、作者等）时触发。                                      |
-| `startCollaboration` | `CollaborationConfig`         | 从共享或广播对话框启动会话时触发，请据此设置 `collaboration` 输入。                         |
-| `stopCollaboration`  | `void`                        | 从共享或广播对话框停止会话时触发，请据此清空 `collaboration` 输入。                         |
+| 输出                  | 载荷                          | 说明                                                                                        |
+| --------------------- | ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `dirtyChange`         | `boolean`                     | 未保存修改标记切换时触发。                                                                  |
+| `contentChange`       | `Uint8Array`                  | 每当 [`getContent()`](/zh/angular/api) 将文稿序列化为字节时触发，携带重新序列化的文档字节。 |
+| `activeSlideChange`   | `number`                      | 当前幻灯片变化时触发。                                                                      |
+| `modeChange`          | `string`                      | 查看器模式变化时触发，模式为 `'preview'`、`'edit'`、`'present'` 或 `'master'`。             |
+| `zoomChange`          | `number`                      | 缩放级别变化时触发。                                                                        |
+| `selectionChange`     | `string[]`                    | 元素选区变化时触发。                                                                        |
+| `slideCountChange`    | `number`                      | 幻灯片总数变化时触发，例如添加或删除幻灯片。                                                |
+| `propertiesChange`    | `Partial<PptxCoreProperties>` | 用户在信息对话框中编辑文档属性（标题、作者等）时触发。                                      |
+| `startCollaboration`  | `CollaborationConfig`         | 从共享或广播对话框启动会话时触发，请据此设置 `collaboration` 输入。                         |
+| `stopCollaboration`   | `void`                        | 从共享或广播对话框停止会话时触发，请据此清空 `collaboration` 输入。                         |
+| `collaborationChange` | `CollaborationState`          | 会话启动或停止，以及其状态、已同步标志或人员变化时触发。                                    |
+| `load`                | `ViewerLoadDetail`            | 每次演示文稿无错误地加载完成时触发（`slideCount`、`canvasSize`）。                          |
+| `error`               | `string`                      | 每种不同的加载失败触发一次，携带易读的消息。                                                |
 
 ::: info 说明
 `contentChange` 提供的是 `Uint8Array`，不是布尔值。需要按需拉取内容时，请调用组件实例上的 [`getContent()`](/zh/angular/api)。
@@ -92,14 +95,19 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 
 ## 展示与创作 {#presentation-authoring}
 
-| 输入                                                                       | 类型                        | 默认值  | 说明                                                                                                          |
-| -------------------------------------------------------------------------- | --------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `authorName`                                                               | `string \| undefined`       | -       | 用于批注和标注作者、以及广播所有者的显示名称，回退为 `collaboration.userName` 或 `'You'` / `'Presenter'`。    |
-| `class`                                                                    | `string`                    | `''`    | 应用于查看器根元素的可选类名。                                                                                |
-| `smartArt3D`                                                               | `boolean`                   | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。            |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                   | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。 |
-| `ai`                                                                       | `PptxAiConfig`              | -       | 启用可选的 AI 助手，其 SDK peer 依赖仅在打开面板时加载。省略此输入则不提供助手。                              |
-| `onOpenFile`                                                               | `(() => void) \| undefined` | -       | 由宿主接管“文件 > 打开”操作，绕过内置原生文件选择器，随后由宿主提供新的 `content` 值。                        |
+| 输入                                                                       | 类型                                     | 默认值  | 说明                                                                                                                        |
+| -------------------------------------------------------------------------- | ---------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `authorName`                                                               | `string \| undefined`                    | -       | 用于批注和标注作者、以及广播所有者的显示名称，回退为 `collaboration.userName` 或 `'You'` / `'Presenter'`。                  |
+| `class`                                                                    | `string`                                 | `''`    | 应用于查看器根元素的可选类名。                                                                                              |
+| `smartArt3D`                                                               | `boolean`                                | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。                          |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                                | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。               |
+| `ai`                                                                       | `PptxAiConfig`                           | -       | 启用可选的 AI 助手，其 SDK peer 依赖仅在打开面板时加载。省略此输入则不提供助手。                                            |
+| `onOpenFile`                                                               | `(() => void) \| undefined`              | -       | 由宿主接管“文件 > 打开”操作，绕过内置原生文件选择器，随后由宿主提供新的 `content` 值。                                      |
+| `onHyperlinkClick`                                                         | `HyperlinkClickHandler`                  | -       | 函数输入（不是输出）。跟随链接之前调用；返回 `false` 可取消默认操作。                                                       |
+| `ribbonAddIns`                                                             | `readonly RibbonAddInTab[] \| undefined` | -       | 宿主在“帮助”之后添加的功能区选项卡。每个命令会运行其 `run` 回调，并派发冒泡的 `office-ribbon-add-in` 事件。仅限桌面功能区。 |
+| `inspectorInitiallyOpen`                                                   | `boolean \| undefined`                   | -       | 检查器的初始可见性；省略时保持桌面端或移动端的默认值。                                                                      |
+| `fonts`                                                                    | `ViewerFontSource[]`                     | `[]`    | 由宿主提供的授权字体来源。不内置任何字体。                                                                                  |
+| `hiddenActions`                                                            | `ToolbarActionId[]`                      | `[]`    | 要隐藏的单个工具栏按钮和（或）功能区选项卡。与 `customization` 取并集。                                                     |
 
 ## 主题 {#theming}
 
@@ -114,14 +122,38 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 />
 ```
 
+### 主题、语言和账户 {#theme-language-and-account}
+
+| 输入               | 类型                                         | 说明                                                       |
+| ------------------ | -------------------------------------------- | ---------------------------------------------------------- |
+| `defaultThemeKey`  | `string \| undefined`                        | “文件 > 选项 > 主题”的初始主题键。                         |
+| `availableThemes`  | `readonly ThemeCatalogEntry[] \| undefined`  | “文件 > 选项”提供的主题选项。                              |
+| `onThemeChange`    | `((key: string) => void) \| undefined`       | 函数输入。用户选择主题时调用；之后由宿主负责持久化该选择。 |
+| `defaultLocale`    | `string \| undefined`                        | “文件 > 选项 > 语言”的初始语言代码。                       |
+| `availableLocales` | `readonly LocaleCatalogEntry[] \| undefined` | “文件 > 选项 > 语言”提供的语言选项。                       |
+| `onLocaleChange`   | `((code: string) => void) \| undefined`      | 函数输入。用户选择语言时调用；之后由宿主负责应用并持久化。 |
+| `accountAuth`      | `AccountAuthConfig \| undefined`             | “文件 > 账户”登录部分的接入点；默认禁用。                  |
+
+## 界面定制 {#ui-customization}
+
+| 输入              | 类型                  | 默认值 | 说明                                                                                                                                                                                                                                                   |
+| ----------------- | --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `[customization]` | `ViewerCustomization` | -      | 隐藏、锁定或重新映射界面的任何部分：功能区选项卡和按钮、“文件 > 选项”的页面、分区和设置（锁定值、设置默认值）、文件选项卡的页面和卡片、右键菜单项、编辑器快捷键、面板、功能（AI、协作）和对话框。与 `hiddenActions` 取并集。传入新对象会替换整个定制。 |
+
+```html
+<pptx-viewer [content]="bytes" [canEdit]="true" [customization]="customization" />
+```
+
+同样的辅助方法（`hideRibbonTab`、`lockSetting`、`remapShortcut` 等）也可在组件实例上调用，用于在运行时修改定制，参见[API 页面](/zh/angular/api#ui-customization)。所有 ID、规则和用法示例见[界面定制指南](/zh/guide/customization)。
+
 ## 协作 {#collaboration}
 
 这些输入用于启用和控制实时协同编辑。完整流程及 `CollaborationConfig` 结构请参见[实时协作](/zh/angular/collaboration)。
 
-| 输入            | 类型                                                                      | 默认值 | 说明                                                                                                                 |
-| --------------- | ------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
-| `collaboration` | `CollaborationConfig \| undefined`                                        | -      | 提供后启用协同编辑，包括实时光标、在线状态和 Yjs CRDT 同步。需要 `yjs` peer 依赖，以及 `y-websocket` 或 `y-webrtc`。 |
-| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string } \| undefined` | -      | 共享或广播对话框字段的默认值。省略时字段为空，userName 回退为 `authorName`。                                         |
+| 输入            | 类型                                                                      | 默认值 | 说明                                                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `collaboration` | `CollaborationInput \| undefined`                                         | -      | 提供后启用协同编辑，包括实时光标、在线状态和 Yjs CRDT 同步。接受旧版 `CollaborationConfig` 或共享的 `CollaborationOptions`。需要 `yjs` peer 依赖，以及 `y-websocket` 或 `y-webrtc`。 |
+| `shareDefaults` | `{ roomId?: string; userName?: string; serverUrl?: string } \| undefined` | -      | 共享或广播对话框字段的默认值。省略时字段为空，userName 回退为 `authorName`。                                                                                                         |
 
 ::: info 说明
 与 React 和 Vue 一样，`collaboration` 是受控的。查看器不会自行启动会话，请监听 `startCollaboration` 以设置输入，监听 `stopCollaboration` 以清空输入。
@@ -142,7 +174,7 @@ class PowerPointViewerComponent {
 	readonly theme = input<ViewerTheme | undefined>(undefined);
 	readonly filePath = input<string | undefined>(undefined);
 	readonly fileName = input<string | undefined>(undefined);
-	readonly collaboration = input<CollaborationConfig | undefined>(undefined);
+	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	readonly authorName = input<string>();
 	readonly shareDefaults = input<
 		{ roomId?: string; userName?: string; serverUrl?: string } | undefined
@@ -155,6 +187,16 @@ class PowerPointViewerComponent {
 	readonly areaChart3D = input<boolean>(false);
 	readonly pieChart3D = input<boolean>(false);
 	readonly ai = input<PptxAiConfig | undefined>(undefined);
+	readonly onHyperlinkClick = input<HyperlinkClickHandler>();
+	readonly ribbonAddIns = input<readonly RibbonAddInTab[] | undefined>(undefined);
+	readonly inspectorInitiallyOpen = input<boolean | undefined>(undefined);
+	readonly defaultThemeKey = input<string | undefined>(undefined);
+	readonly availableThemes = input<readonly ThemeCatalogEntry[] | undefined>(undefined);
+	readonly onThemeChange = input<((key: string) => void) | undefined>(undefined);
+	readonly defaultLocale = input<string | undefined>(undefined);
+	readonly availableLocales = input<readonly LocaleCatalogEntry[] | undefined>(undefined);
+	readonly onLocaleChange = input<((code: string) => void) | undefined>(undefined);
+	readonly accountAuth = input<AccountAuthConfig | undefined>(undefined);
 
 	// Outputs
 	readonly activeSlideChange = output<number>();
@@ -167,6 +209,9 @@ class PowerPointViewerComponent {
 	readonly slideCountChange = output<number>();
 	readonly startCollaboration = output<CollaborationConfig>();
 	readonly stopCollaboration = output<void>();
+	readonly collaborationChange = output<CollaborationState>();
+	readonly load = output<ViewerLoadDetail>();
+	readonly error = output<string>();
 }
 ```
 

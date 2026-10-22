@@ -142,7 +142,7 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 ### 幻灯片过渡辅助函数 {#slide-transition-helpers}
 
-`pptx-viewer-shared`（所有绑定共用的框架无关逻辑）是一个私有的、未发布的工作区包，因此搭建自己放映舞台的宿主无法直接 `import` 它。与本页其余内容不同，以下符号是通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 导出的，而不只是 `internals`：ng-packagr 会把这个库编译成单一入口文件，因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
+框架无关的渲染器以 `ooxml-ui/pptx` 发布，宿主可以直接导入。Angular 同样通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 重新导出这些辅助函数，而不只是 `internals`：ng-packagr 会把这个库编译成单一入口文件，因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
 
 | 导出项                                                                                                                            | 职责                                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

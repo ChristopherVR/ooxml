@@ -19,6 +19,8 @@ npm i yjs y-webrtc      # serverless peer-to-peer
 
 ## 通过 `collaboration` 属性启用 {#enabling-it-the-collaboration-prop}
 
+已经有自己的 Yjs provider？请提供 `collaboration.externalSession`，而不是让组件自行创建。生命周期、就绪状态和持久化约定见[宿主自有协作](/zh/guide/host-owned-collaboration)。
+
 向 `collaboration` 传入 `CollaborationConfig` 后，组件会通过协作 Provider 包裹内容，并接入在线状态、远程光标和 CRDT 同步。
 
 ```tsx
@@ -61,25 +63,27 @@ interface CollaborationConfig {
 	/** Session role - defaults to 'collaborator'. */
 	role?: CollaborationRole;
 	/** Elected-writer persistence: the 'owner' peer receives debounced PPTX snapshots. */
-	onWriteBack?: (bytes: Uint8Array) => void;
+	onWriteBack?: (bytes: Uint8Array) => void | Promise<void>;
 	/** Debounce (ms) between the last change and onWriteBack. Default 5000. */
 	writeBackDebounceMs?: number;
+	/** Retries of a rejected onWriteBack, exponential backoff. Default: none. */
+	writeBackRetry?: { attempts: number; baseDelayMs?: number; maxDelayMs?: number };
 }
 ```
 
-| 字段                  | 类型                     | 必填 | 说明                                                                |
-| --------------------- | ------------------------ | ---- | ------------------------------------------------------------------- |
-| `roomId`              | `string`                 | 是   | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                      |
-| `serverUrl`           | `string`                 | 是   | `y-websocket` 服务器 URL；当 `transport: 'webrtc'` 时可为 `''`。    |
-| `transport`           | `CollaborationTransport` | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                  |
-| `signaling`           | `string[]`               | 否   | y-webrtc 信令 URL，默认使用其公共列表。                             |
-| `userName`            | `string`                 | 是   | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。      |
-| `userAvatar`          | `string`                 | 否   | 经过校验的头像 URL。                                                |
-| `userColor`           | `string`                 | 否   | 用户光标环的十六进制颜色。                                          |
-| `authToken`           | `string`                 | 否   | WebSocket 握手参数或 WebRTC 房间密码。                              |
-| `role`                | `CollaborationRole`      | 否   | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                  |
-| `onWriteBack`         | `(bytes) => void`        | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照，供持久化使用。 |
-| `writeBackDebounceMs` | `number`                 | 否   | 默认 5000 ms。                                                      |
+| 字段                  | 类型                     | 必填           | 说明                                                             |
+| --------------------- | ------------------------ | -------------- | ---------------------------------------------------------------- |
+| `roomId`              | `string`                 | 是             | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                   |
+| `serverUrl`           | `string`                 | 是             | `y-websocket` 服务器 URL；当 `transport: 'webrtc'` 时可为 `''`。 |
+| `transport`           | `CollaborationTransport` | 否             | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。               |
+| `signaling`           | `string[]`               | 否             | y-webrtc 信令 URL，默认使用其公共列表。                          |
+| `userName`            | `string`                 | 是             | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。   |
+| `userAvatar`          | `string`                 | 否             | 经过校验的头像 URL。                                             |
+| `userColor`           | `string`                 | 否             | 用户光标环的十六进制颜色。                                       |
+| `authToken`           | `string`                 | 否             | WebSocket 握手参数或 WebRTC 房间密码。                           |
+| `role`                | `CollaborationRole`      | 否             | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。               |
+| `onWriteBack`         | `(bytes) => void         | Promise<void>` | 否                                                               | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认，状态见 `collaborationState.writeBack`。 |
+| `writeBackDebounceMs` | `number`                 | 否             | 默认 5000 ms。                                                   |
 
 ### 无需文档服务器的点对点模式 {#serverless-peer-to-peer-mode}
 
@@ -89,15 +93,35 @@ interface CollaborationConfig {
 协作层会清理房间 ID、用户名、头像 URL、光标位置和在线状态数据。`roomId` 建议只使用字母、数字、连字符和下划线。
 :::
 
+## 使用自己的 provider，或在同一浏览器内共享 {#your-own-provider-or-sharing-in-one-browser}
+
+除 `CollaborationConfig` 外，`collaboration` 选项也接受 Word、Excel 和 Visio 共用的约定（来自 `ooxml-core/collab` 的 `CollaborationOptions`）。以下两种形式无需宿主自有的 `session`，由组件自行打开会话，并在协作停止时销毁：
+
+```tsx
+<PowerPointViewer
+	content={bytes}
+	collaboration={{ roomId: 'deck-review', provider, user: { name: 'Ada' }, intent: 'join' }}
+/>
+// Same browser only:
+<PowerPointViewer content={bytes} collaboration={{ roomId: 'deck-review', user: { name: 'Ada' } }} />
+```
+
+- `provider`（`ProviderFactory`，例如 `transportProvider`，或通过 `adaptYjsProvider` 适配的现有 provider）优先于 `serverUrl`。
+- 未提供 `session`、`provider`、`serverUrl` 或 `transport` 时，房间通过 BroadcastChannel（`ooxml-pptx:<roomId>`）在此浏览器的标签页和窗口之间共享，无需服务器。
+- 优先级为 `session`（借用，从不销毁）> `provider` > `serverUrl` > BroadcastChannel。带 `serverUrl` 的旧版 `CollaborationConfig` 仍使用 y-websocket；带 `transport: 'webrtc'` 或空 `serverUrl` 的仍使用无服务器的 y-webrtc 传输。
+- `intent: 'join'` 从不用本地演示文稿填充空房间。会话同步后（或孤立对端在宽限期后）可写；`role: 'viewer'` 保持只读。
+- 会话打开期间状态为 `status: 'connecting'`；房间无效或 BroadcastChannel 不可用时为 `error`。
+
 ## 通过共享对话框控制会话 {#controlling-sessions-share-dialog-props}
 
 协作状态由**宿主应用控制**。共享对话框只报告用户意图，宿主随后更新 `collaboration` 属性。
 
-| 属性                   | 类型                                    | 用途                                                 |
-| ---------------------- | --------------------------------------- | ---------------------------------------------------- |
-| `onStartCollaboration` | `(config: CollaborationConfig) => void` | 用户创建会话后，使用返回的配置设置 `collaboration`。 |
-| `onStopCollaboration`  | `() => void`                            | 用户停止会话后，清空 `collaboration`。               |
-| `shareDefaults`        | `{ roomId?; userName?; serverUrl? }`    | 预填共享对话框，省略时为空。                         |
+| 属性                    | 类型                                    | 用途                                                                                                   |
+| ----------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `onStartCollaboration`  | `(config: CollaborationConfig) => void` | 用户在共享对话框中启动会话，使用此配置设置 `collaboration`。                                           |
+| `onStopCollaboration`   | `() => void`                            | 用户停止会话，清空 `collaboration`。                                                                   |
+| `onCollaborationChange` | `(state: CollaborationState) => void`   | 共享状态（`active`、`roomId`、`status`、`synced`、`people`），宿主自有会话同样适用；停止时为关闭状态。 |
+| `shareDefaults`         | `{ roomId?; userName?; serverUrl? }`    | 预填共享对话框，省略时为空。                                                                           |
 
 ```tsx
 function CollaborativeEditor({ content }: { content: Uint8Array }) {
@@ -153,9 +177,9 @@ import type {
 
 ## 服务器端 {#server-side}
 
-默认的 `websocket` 模式需要运行兼容 `y-websocket` 的中继服务，并确保 `serverUrl` 可访问。`demos/` 提供两个参考服务器：
+默认的 `websocket` 模式需要运行兼容 `y-websocket` 的中继服务，并确保 `serverUrl` 可访问。`demos/pptx/` 提供两个面向生产的参考服务器：
 
-- **`demos/collab-server.example.mjs`**：无需额外依赖的 Bun 服务器，使用仓库已有的 `yjs`、`y-protocols` 和 `lib0`。两种认证模式都在 WebSocket 握手阶段校验，升级前以 401 拒绝无效请求：
+- **`demos/pptx/collab-server.example.mjs`**：无需额外依赖的 Bun 服务器，使用仓库已有的 `yjs`、`y-protocols` 和 `lib0`。两种认证模式都在 WebSocket 握手阶段校验，升级前以 401 拒绝无效请求：
 
   - **JWT 模式**，适合生产：设置 `COLLAB_AUTH_JWT_SECRET`，由应用服务器签发短期 HS256 token。示例文件头部提供基于一次 `createHmac` 调用的签发片段。
   - 中继校验 `exp`、`room`（仅允许访问对应房间）、`sub`（用户 ID）和 `role`。`role: 'viewer'` 获得**只读连接**，中继丢弃其文档写入，在服务端落实只读约束，而非信任客户端的 `canEdit`。
@@ -164,10 +188,10 @@ import type {
   文件持久化会将各房间 Y.Doc 快照保存到 `COLLAB_DATA_DIR`，采用防抖并在最后一个连接断开时保存，下次加入时恢复，因此服务器重启后文档仍保留。
 
   ```bash
-  COLLAB_AUTH_JWT_SECRET=change-me bun demos/collab-server.example.mjs
+  COLLAB_AUTH_JWT_SECRET=change-me bun demos/pptx/collab-server.example.mjs
   ```
 
-- **`demos/collab-server-hocuspocus.example.mjs`**：在 Node/Hocuspocus 上实现同样的约定，使用 `@hocuspocus/extension-sqlite` 持久化，也可利用其 Redis 扩展、webhook 和数据库存储生态。普通 y-websocket 客户端不会触发 Hocuspocus 的 `onAuthenticate`，因此示例改为在 `onConnect` 校验请求的 `?token=` 参数。
+- **`demos/pptx/collab-server-hocuspocus.example.mjs`**：在 Node/Hocuspocus 上实现同样的约定，使用 `@hocuspocus/extension-sqlite` 持久化，也可利用其 Redis 扩展、webhook 和数据库存储生态。普通 y-websocket 客户端不会触发 Hocuspocus 的 `onAuthenticate`，因此示例改为在 `onConnect` 校验请求的 `?token=` 参数。
 
 两个服务器均校验各组件发送的 token：`CollaborationConfig.authToken` 会成为 WebSocket 握手中的 `?token=` 查询参数。生产环境应在中继前终止 TLS，使用 `wss://`，并优先采用短有效期 JWT。由于 token 位于 URL 查询中，应避免上游记录请求 URL。
 

@@ -131,13 +131,12 @@ await viewer?.print({
 
 ## 保存文档 {#saving-the-document}
 
-| 方法                | 签名                                                           | 说明                                                   |
-| ------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| `save`              | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 通过核心处理器序列化幻灯片，包括编辑后的内容。         |
-| `getContent`        | `() => Promise<Uint8Array>`                                    | 共享查看器约定中 `save()` 的别名。                     |
-| `downloadAs`        | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以 `pptx`、`ppsx` 或 `pptm` 格式触发浏览器下载。 |
-| `downloadPptx`      | `(fileName?: string) => Promise<void>`                         | 保存并使用默认名称下载 `.pptx`。                       |
-| `packageForSharing` | `(fileName?: string) => Promise<void>`                         | 组装并下载共享包。                                     |
+| 方法           | 签名                                                           | 说明                                                   |
+| -------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| `save`         | `(format?: PptxSaveFormat) => Promise<Uint8Array>`             | 通过核心处理器序列化幻灯片，包括编辑后的内容。         |
+| `getContent`   | `() => Promise<Uint8Array>`                                    | 共享查看器约定中 `save()` 的别名。                     |
+| `downloadAs`   | `(format: PptxSaveFormat, fileName?: string) => Promise<void>` | 保存并以 `pptx`、`ppsx` 或 `pptm` 格式触发浏览器下载。 |
+| `downloadPptx` | `(fileName?: string) => Promise<void>`                         | 保存并使用默认名称下载 `.pptx`。                       |
 
 ## SVG：独立函数 {#svg-standalone-functions}
 

@@ -66,7 +66,7 @@ const myRenderer: ElementRenderer = (element, zIndex, context) => {
 
 约定记录在源码的 `ElementRenderer` 上：
 
-- 根据元素的 `x` / `y` / `width` / `height` 在舞台中**绝对定位**，使用未缩放的画布像素。内置渲染器通过共享 `getContainerStyle` 辅助函数完成，它也处理旋转和翻转。舞台通过 CSS transform 缩放，渲染器不要自行缩放。
+- 根据元素的 `x` / `y` / `width` / `height` 在舞台中**绝对定位**，使用未缩放的画布像素。内置渲染器通过共享 `getContainerStyle`（来自 `ooxml-ui/pptx`）辅助函数完成，它也处理旋转和翻转。舞台通过 CSS transform 缩放，渲染器不要自行缩放。
 - 在根节点上设置 `dataset.elementId = element.id`。
 - **所有** DOM 都通过 `context.document` 创建，不使用全局 `document`，以便在测试和导出流程等场景中将幻灯片渲染到分离的文档。
 - 不得修改 `element` 或上下文上的任何内容。
