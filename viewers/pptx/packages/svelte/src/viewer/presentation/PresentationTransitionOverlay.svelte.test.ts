@@ -120,6 +120,47 @@ function discAndWording(): { from: PptxSlide; to: PptxSlide } {
 }
 
 /**
+ * Issue #141's slides 4 to 5: a departing picture keeps the unchanged
+ * backdrop's ghost painted, a full-slide picture fades in above the backdrop,
+ * and the title travels ABOVE that picture on the incoming slide.
+ */
+function veiledTitle(): { from: PptxSlide; to: PptxSlide } {
+	const picture = (id: string, name: string, imagePath: string): unknown => ({
+		id,
+		name,
+		type: 'picture',
+		x: 0,
+		y: 0,
+		width: 960,
+		height: 540,
+		imagePath,
+		imageData: `data:${imagePath}`,
+	});
+	const title = (id: string, x: number): unknown => ({
+		id,
+		name: 'Title',
+		type: 'text',
+		x,
+		y: 160,
+		width: 400,
+		height: 100,
+		text: 'Our Services',
+	});
+	return {
+		from: makeSlide('out', [
+			picture('out-gone', 'Leaving', 'ppt/media/leaving.png'),
+			picture('out-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+			title('out-title', 520),
+		]),
+		to: makeSlide('in', [
+			picture('in-backdrop', 'Backdrop', 'ppt/media/backdrop.png'),
+			picture('in-veil', 'Veil', 'ppt/media/veil.png'),
+			title('in-title', 80),
+		]),
+	};
+}
+
+/**
  * The same panel with its wording REPLACED rather than arriving: a matched pair
  * the overlay paints both halves of, which is what has to be blended additively
  * (issue #161). `shapeId` is the identity that pairs two text boxes saying
@@ -183,9 +224,13 @@ describe('presentationTransitionOverlay', () => {
 		const target = mountOverlay({ type: 'morph', durationMs: 800 } as PptxSlideTransition);
 		expect(target.querySelectorAll('[data-pptx-morph-outgoing]')).not.toHaveLength(0);
 
-		const stages = [...target.querySelectorAll<HTMLElement>('.pptx-svelte-stage')];
-		expect(stages).toHaveLength(2);
-		const [outgoing, incoming] = stages;
+		expect(target.querySelectorAll('.pptx-svelte-stage')).toHaveLength(2);
+		const outgoing = target.querySelector<HTMLElement>(
+			'[data-pptx-morph-outgoing] .pptx-svelte-stage',
+		)!;
+		const incoming = target.querySelector<HTMLElement>(
+			'[data-pptx-morph-incoming] .pptx-svelte-stage',
+		)!;
 		// The departing shapes float over the incoming slide, so this layer has to
 		// be see-through. `getSlideBackgroundStyle` always resolves to an OPAQUE
 		// paint, so inheriting it hid the whole morph behind a flat slab for the
@@ -286,6 +331,30 @@ describe('presentationTransitionOverlay', () => {
 		);
 	});
 
+	// Regression (issue #141): every lifted arrival used to be painted above
+	// every ghost, so a full-slide picture fading in veiled the title travelling
+	// ABOVE it on the incoming slide, which then snapped bright at the end.
+	it('stacks a travelling title ghost above a lifted picture arriving under it', () => {
+		const target = mountOverlay(
+			{ type: 'morph', durationMs: 800 } as PptxSlideTransition,
+			veiledTitle(),
+		);
+
+		const layers = [
+			...target.querySelectorAll<HTMLElement>(
+				'[data-pptx-morph-outgoing], [data-pptx-morph-lifted]',
+			),
+		].map((layer) => ({
+			z: Number(/z-index:\s*(\d+)/u.exec(layer.getAttribute('style') ?? '')?.[1]),
+			ids: [...layer.querySelectorAll<HTMLElement>('[data-element-id]')].map(
+				(node) => node.dataset.elementId,
+			),
+		}));
+		const zOf = (id: string): number => layers.find((layer) => layer.ids.includes(id))!.z;
+		expect(zOf('out-backdrop')).toBeLessThan(zOf('in-veil'));
+		expect(zOf('in-veil')).toBeLessThan(zOf('out-title'));
+	});
+
 	// Regression (issue #161): two fades stacked as ordinary layers composite
 	// source-over, leaving the ink the halves SHARE at 0.75 of full strength
 	// halfway through - measured 34.6/255 too dark on the wheel deck, which
@@ -301,8 +370,8 @@ describe('presentationTransitionOverlay', () => {
 		const group = target.querySelector<HTMLElement>('[data-pptx-morph-crossfade="in-wording"]');
 		expect(group, 'the pair must be rendered as its own group').not.toBeNull();
 		expect(group!.getAttribute('style')).toContain('isolation: isolate');
-		// Above the ghost layer (2) and the lifted layer (3).
-		expect(group!.getAttribute('style')).toContain('z-index: 4');
+		// Above the one ghost layer (2).
+		expect(group!.getAttribute('style')).toContain('z-index: 3');
 		const halves = [...group!.querySelectorAll<HTMLElement>('[data-pptx-transition-layer]')];
 		expect(halves).toHaveLength(2);
 		for (const half of halves) {

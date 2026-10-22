@@ -54,9 +54,10 @@ export interface SessionControllersDeps {
 
 /**
  * Owns the collaboration + autosave session controllers and their thin wiring
- * into the viewer chrome (the autosave status pill in the toolbar). Kept out of
- * `PptxViewer` so the orchestrator class stays under its file-size budget and
- * new session capabilities hang off this one indirection module.
+ * into the viewer chrome (the autosave state in the toolbar, title bar and
+ * status bar). Kept out of `PptxViewer` so the orchestrator class stays under
+ * its file-size budget and new session capabilities hang off this one
+ * indirection module.
  */
 export interface SessionControllers {
 	startCollaboration(config: CollaborationInput): Promise<void>;
@@ -108,7 +109,10 @@ export interface SessionControllers {
 	openBroadcast(): void;
 	/** Open the viewer's built-in collaboration sharing dialog. */
 	openShare(): void;
-	/** Rebuild the collaboration chrome (Share button, status pill) into a remounted chrome. */
+	/**
+	 * Rebuild the collaboration chrome (Share button, status pill) into a remounted chrome and
+	 * show the last autosave state there again.
+	 */
 	remountUi(): void;
 	destroy(): void;
 }
@@ -129,6 +133,21 @@ function autosaveLabel(status: AutosaveStatus, t: Translator): string {
 
 export function createSessionControllers(deps: SessionControllersDeps): SessionControllers {
 	const { options } = deps;
+	// The last autosave state and when it arrived (a "saved" arrives as the snapshot lands), shown
+	// again by a rebuilt chrome.
+	let lastAutosave: { status: AutosaveStatus; at: number } | undefined;
+	const showAutosave = (): void => {
+		if (!lastAutosave) {
+			return;
+		}
+		const { status, at } = lastAutosave;
+		const chrome = deps.getChrome();
+		chrome.ribbon?.setAutosaveStatus(autosaveLabel(status, deps.getTranslator()), status);
+		chrome.titleBar?.setAutosaveState(status);
+		chrome.statusBar?.setAutosave(
+			status === 'saved' ? { state: 'saved', timestamp: at } : { state: status },
+		);
+	};
 
 	// Activation, cadence and the crash-recovery prompt all live in the shared
 	// policy modules; this only supplies the host's options and the viewer's own
@@ -153,10 +172,8 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			passwordProtected: deps.store.get().isPasswordProtected,
 		}),
 		onStatus: (status) => {
-			deps
-				.getChrome()
-				.ribbon?.setAutosaveStatus(autosaveLabel(status, deps.getTranslator()), status);
-			deps.getChrome().titleBar?.setAutosaveState(status);
+			lastAutosave = { status, at: Date.now() };
+			showAutosave();
 			options.onAutosaveStatus?.(status);
 		},
 		onSaved: (bytes) => options.onAutosave?.(bytes),
@@ -274,6 +291,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			collabUi.destroy();
 			collabUi = buildCollabUi();
 			collabUi.onStatusChange(collaboration.getStatus());
+			showAutosave();
 		},
 		destroy() {
 			unsubscribePresence();

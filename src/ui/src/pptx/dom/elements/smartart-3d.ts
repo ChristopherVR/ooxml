@@ -3,6 +3,7 @@ import {
 	resolveSmartArtThreeViewSpec,
 	stripEditLayerMarkers,
 	routeEditLayerPointerToNodes,
+	SMARTART_3D_EDIT_LAYER_ATTRIBUTE,
 } from '../../index';
 
 import type { ElementRenderer } from '../types';
@@ -43,7 +44,7 @@ export const renderSmartArt3DElement: ElementRenderer = (element, zIndex, contex
 		const layer = renderSmartArtSvg(elementInLocalFrame(element), 0, context);
 		if (layer) {
 			layer.classList.add('pptxv-smartart-3d-edit-layer');
-			layer.setAttribute('data-smartart-3d-edit-layer', 'true');
+			layer.setAttribute(SMARTART_3D_EDIT_LAYER_ATTRIBUTE, 'true');
 			// One element, one set of markers: the layer is an input surface,
 			// not a second copy of the diagram for tests or assistive tech.
 			stripEditLayerMarkers(layer);

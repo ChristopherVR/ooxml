@@ -10,7 +10,7 @@ import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
 import { ensurePresentationKeyframes } from './animation-dom';
 import { buildFragmentedLayer } from './fragmented-transition-layer';
-import { buildMorphCrossfadeGroups, keepOnlyElements } from './morph-transition-layers';
+import { buildMorphCrossfadeGroups, buildMorphOverlayLayers } from './morph-transition-layers';
 import { buildLayer } from './transition-layer';
 
 export interface TransitionOverlayParams {
@@ -90,18 +90,13 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 				)
 			: undefined;
 
-	const outgoingZIndex = morphPlan ? 2 : resolved.outgoingOnTop ? 2 : 1;
+	const outgoingZIndex = resolved.outgoingOnTop ? 2 : 1;
 	const incomingZIndex = morphPlan ? 1 : resolved.outgoingOnTop ? 1 : 2;
+	const morphLayers = buildMorphOverlayLayers(doc, outgoing, incoming, morphPlan);
 	const outLayer =
 		!morphPlan && fragmented?.outgoing
 			? buildFragmentedLayer(doc, outgoing, fragmented.outgoing, outgoingZIndex, 'outgoing')
-			: buildLayer(
-					doc,
-					outgoing,
-					outgoingZIndex,
-					morphPlan ? 'none' : resolved.outgoing,
-					'outgoing',
-				);
+			: buildLayer(doc, outgoing, outgoingZIndex, resolved.outgoing, 'outgoing');
 	const inLayer =
 		!morphPlan && fragmented?.incoming
 			? buildFragmentedLayer(doc, incoming, fragmented.incoming, incomingZIndex, 'incoming')
@@ -113,39 +108,17 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 					'incoming',
 				);
 
-	// A shape ARRIVING on top of a departing one lives on the incoming slide, so
-	// the layer below draws it under the departing layer and nobody ever sees it
-	// dissolve in (issue #146). Those few get their own layer above; their copy
-	// on the incoming layer is held invisible by the plan, so the two never
-	// composite with each other.
-	const lifted =
-		morphPlan && morphPlan.overlayIncomingElements.length > 0
-			? keepOnlyElements(
-					incoming.cloneNode(true) as HTMLElement,
-					morphPlan.overlayIncomingElements.map((element) => element.id),
-				)
-			: undefined;
-	const liftedLayer = lifted ? buildLayer(doc, lifted, 3, 'none', 'lifted') : undefined;
-
-	// A pair the overlay paints BOTH halves of goes in its own isolated group -
-	// see `morph-transition-layers.ts`. The clones it takes are made BEFORE
-	// `keepOnlyElements` below strips the shared outgoing stage.
+	// The ghosts, and the shapes ARRIVING above one that would otherwise be
+	// drawn under it on the incoming layer and never seen dissolving in (issue
+	// #146), in the plan's single back-to-front order: one layer per run, each
+	// a background-free copy of its slide (issue #141). A pair the overlay
+	// paints BOTH halves of goes in its own isolated group above them. See
+	// `morph-transition-layers.ts`; both are built from clones taken before
+	// the stages are wrapped into their layers.
 	const crossfadeGroups = buildMorphCrossfadeGroups(doc, outgoing, incoming, morphPlan);
 
 	if (morphPlan) {
 		inLayer.dataset.pptxMorphIncoming = 'true';
-		outLayer.dataset.pptxMorphOutgoing = 'true';
-		// The departing snapshot only carries the morphing shapes and sits ABOVE
-		// the incoming slide, so it must not keep the outgoing slide's own
-		// background: `getSlideBackgroundStyle` always resolves to an OPAQUE fill,
-		// which would cover the whole morph with a flat slab for its duration.
-		keepOnlyElements(
-			outgoing,
-			morphPlan.outgoingElements.map((element) => element.id),
-		);
-		if (liftedLayer) {
-			liftedLayer.dataset.pptxMorphLifted = 'true';
-		}
 		const style = doc.createElement('style');
 		style.textContent = [
 			buildMorphScopedCss(morphPlan, 'data-pptx-morph-incoming', 'incoming'),
@@ -155,9 +128,14 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 		overlay.appendChild(style);
 	}
 
-	overlay.append(outLayer, inLayer);
-	if (liftedLayer) {
-		overlay.appendChild(liftedLayer);
+	// A morph paints its ghosts in `morphLayers`, never the whole snapshot.
+	if (morphPlan) {
+		overlay.appendChild(inLayer);
+	} else {
+		overlay.append(outLayer, inLayer);
+	}
+	for (const layer of morphLayers) {
+		overlay.appendChild(layer);
 	}
 	for (const group of crossfadeGroups) {
 		overlay.appendChild(group);

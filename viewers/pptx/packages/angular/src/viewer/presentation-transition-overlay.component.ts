@@ -22,9 +22,12 @@ import { ensureTransitionKeyframes } from './transition-keyframes';
 export {
 	classicIncomingLayerSlide,
 	morphCrossfadeGroupSlides,
-	morphLiftedSlide,
+	morphOverlayLayerSlides,
 } from './presentation-transition-overlay-morph';
-export type { MorphCrossfadeGroupSlides } from './presentation-transition-overlay-morph';
+export type {
+	MorphCrossfadeGroupSlides,
+	MorphOverlayLayerSlide,
+} from './presentation-transition-overlay-morph';
 
 /** Safety margin (ms) added to the animation duration before firing complete. */
 const COMPLETE_MARGIN_MS = 50;
@@ -195,7 +198,7 @@ export class PresentationTransitionOverlayComponent {
 	protected readonly morphPlan = this.state.morphPlan;
 	protected readonly isMorph = this.state.isMorph;
 	protected readonly layerSlide = this.state.layerSlide;
-	protected readonly liftedSlide = this.state.liftedSlide;
+	protected readonly overlayLayers = this.state.overlayLayers;
 	protected readonly crossfadeGroups = this.state.crossfadeGroups;
 	protected readonly layerStyle = this.state.layerStyle;
 	protected readonly incomingLayerSlide = this.state.incomingLayerSlide;
