@@ -2,8 +2,9 @@ name: CI
 
 # What runs is decided by scripts/ci-plan.mjs from the files the change touched: a docs edit runs
 # nothing, a docx change tests the affected files on as many runners as they need and checks only
-# docx-viewer, and a dependency or CI-config change (or the nightly run) runs everything. Pushes to
-# main are never cancelled by a later push: every commit gets its own verdict.
+# docx-viewer, and a dependency or CI-config change (or the nightly run) runs everything. A push to
+# main plans from the newest ancestor whose CI run succeeded, not from the previous push, so a newer
+# push may cancel an older run: its plan covers every commit nobody has verified yet.
 on:
   push:
     branches: [main]
@@ -40,10 +41,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
-  # PR plans include the whole branch, so a newer update supersedes them. Push plans cover only
-  # that push: cancelling one would leave its changes unchecked by the next incremental plan.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event_name == 'push' && 'push-main' || github.run_id }}
+  # PR plans include the whole branch, so a newer update supersedes them. Push plans start at the
+  # newest green commit (scripts/ci-base.mjs), so they include everything an earlier, cancelled push
+  # would have checked: cancelling one leaves nothing unchecked. A cancelled run is not green, so
+  # the next plan reaches back past it. The nightly and manual runs keep a group of their own.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
   BUN_VERSION: 1.4.2
@@ -52,6 +55,10 @@ env:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Reads which earlier CI runs succeeded, to pick the base of a push plan.
+      actions: read
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
       # The commit the other jobs check out: empty (the event's own) unless a run on the base.
@@ -79,7 +86,9 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.base }}
           SCOPE: ${{ inputs.scope || 'full' }}
           ON_BASE: ${{ inputs.on_base || false }}
-        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE" --on-base "$ON_BASE"
+          GITHUB_TOKEN: ${{ github.token }}
+        # `--green-base` (pushes only) widens BASE to the newest successful ancestor commit.
+        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE" --on-base "$ON_BASE" --green-base true
 
   lint:
     needs: plan

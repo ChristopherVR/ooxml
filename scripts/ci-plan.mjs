@@ -14,6 +14,8 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pushBase } from './ci-base.mjs';
+import { SHIPPING_AREA, gitReader, refineManifests } from './ci-manifests.mjs';
 
 export const MAX_SHARDS = 6;
 /** Test files one shard should take before another runner is worth its start-up cost. */
@@ -151,7 +153,7 @@ const ALL_CONSUMERS = Object.keys(CONSUMERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
-	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
+	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
@@ -163,13 +165,15 @@ const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.g
 const viewerOfFile = (file) => /^(?:viewers|demos|e2e)\/([^/]+)\//.exec(file)?.[1];
 
 /** The area a format owns: only its own viewer can break. */
-const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [] };
+// `SHIPPING_AREA` is a change to the core's shipped manifest fields: it breaks no viewer's checks.
+const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [], [SHIPPING_AREA]: [] };
 const AREA_VIEWERS = {
 	docx: ['docx'],
 	xlsx: ['xlsx'],
 	visio: ['visio'],
 	teams: ['teams'],
 	pptx: ['pptx'],
+	[SHIPPING_AREA]: [],
 };
 
 /** Which external viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
@@ -210,7 +214,8 @@ export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
 /**
  * The Playwright project a cross-binding change runs. React is the parity reference: its parity
  * specs drive all five demos and diff them against it. The other four run for their own changes,
- * and all five on the nightly and on changes to dependencies or CI.
+ * and all five on the nightly, manual full runs and changes to dependencies. A configuration or CI
+ * change on a push or pull request runs the reference alone.
  */
 const PPTX_REFERENCE_PROJECT = 'react';
 /** Shards per Playwright project for a full run of the suite (pptx-viewer settled on ten). */
@@ -244,11 +249,11 @@ const isTestFile = (path) => /(\.test\.[cm]?[jt]sx?|\/__tests__\/)/.test(path);
  * to spec files alone runs just those specs. Configuration, fixtures and support code the whole
  * suite depends on run all of it.
  */
-export function pptxPlan(files, { everything, reaches }) {
+export function pptxPlan(files, { everything, reaches, reference = false }) {
 	const none = {
 		run: false,
 		tests: [],
-		e2e: { projects: [], shards: [], total: 0, specs: '' },
+		e2e: { projects: [], shards: [], total: 0, specs: '', reason: '' },
 		packaged: false,
 	};
 	if (!reaches) return none;
@@ -256,7 +261,11 @@ export function pptxPlan(files, { everything, reaches }) {
 	const projects = new Set();
 	const specs = new Set();
 	let allLegs = everything;
-	let allProjects = everything;
+	// A full run for a configuration change (not the nightly, not a dependency change) needs only
+	// the parity reference: its specs drive all five demos.
+	const referenceOnly = everything && reference;
+	let allProjects = everything && !referenceOnly;
+	if (referenceOnly) projects.add(PPTX_REFERENCE_PROJECT);
 	let packaged = everything;
 	for (const file of files) {
 		if (file.startsWith('src/core/') || file.startsWith('src/ui/')) {
@@ -328,6 +337,11 @@ export function pptxPlan(files, { everything, reaches }) {
 			shards: Array.from({ length: total }, (_, i) => i + 1),
 			total,
 			specs: specFilter,
+			reason: referenceOnly
+				? 'reference only: configuration change'
+				: everything
+					? 'all bindings: dependency change, nightly or manual run'
+					: '',
 		},
 		packaged,
 	};
@@ -435,7 +449,7 @@ function verifyCommands(name, { groups, specs }) {
  * `testFiles` is the number of test files `vitest --changed` selected, or undefined when it has not
  * been counted (the planner then reports a placeholder and the workflow counts).
  */
-export function plan(changed, { full = false, testFiles } = {}) {
+export function plan(changed, { full = false, testFiles, reference = false } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
 	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
@@ -474,7 +488,7 @@ export function plan(changed, { full = false, testFiles } = {}) {
 				(file.startsWith('src/ui/') && !UI_PRODUCT.test(file)) ||
 				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
 		);
-	const pptx = pptxPlan(live, { everything, reaches: pptxReached });
+	const pptx = pptxPlan(live, { everything, reaches: pptxReached, reference });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
 
@@ -567,26 +581,37 @@ function existsAt(ref, file) {
 	}
 }
 
-function main() {
+async function main() {
 	const args = process.argv.slice(2);
 	const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 	const event = value('--event') ?? 'push';
-	const base = value('--base');
+	let base = value('--base');
 	const scope = value('--scope');
 	const onBase = value('--on-base') === 'true';
 	if (onBase && (event !== 'workflow_dispatch' || scope !== 'changed' || !base))
 		throw new Error('A run on the base needs a manual run with scope "changed" and a base commit.');
+	// A push plans from the newest green ancestor (see ci-base.mjs) when the workflow asks for it.
+	let baseSource = '';
+	if (event === 'push' && value('--green-base') === 'true')
+		({ base, source: baseSource } = await pushBase({ before: base }));
 	let changed = plannedFiles(event, base, scope);
 	if (onBase && changed === undefined) throw new Error(`Cannot diff against the base ${base}.`);
 	if (onBase) changed = changed.filter((file) => file && existsAt(base, file));
+	// bun.lock and src/core/package.json are classified by what changed in them (ci-manifests.mjs).
+	let deps = true;
+	if (changed !== undefined && !onBase)
+		({ files: changed, deps } = refineManifests(changed, gitReader(base)));
 	const full = changed === undefined;
-	let result = plan(changed ?? [], { full });
+	// A configuration change on a push or pull request needs one Playwright project, not five.
+	const reference = !full && !deps && (event === 'push' || event === 'pull_request');
+	let result = plan(changed ?? [], { full, reference });
 	if (!result.full && result.test.run) {
 		const count = countTestFiles(base);
 		result = { ...result, test: { ...result.test, shards: shardsFor(count, false), files: count } };
 	}
 	if (onBase && !result.full) result = onBasePlan(result, changed);
 	result.base = full ? '' : base;
+	result.baseSource = baseSource;
 	// The commit every job checks out: the base for a baseline run, otherwise the event's own.
 	result.ref = onBase ? git('rev-parse', `${base}^{commit}`) : '';
 	console.log(JSON.stringify(result, null, 2));
@@ -599,4 +624,8 @@ ref=${result.ref}
 		);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]))
+	main().catch((error) => {
+		console.error(error);
+		process.exitCode = 1;
+	});

@@ -8,14 +8,19 @@ import { test } from 'node:test';
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 const browserJob = workflow.match(/^  pptx-e2e:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1];
 
-test('incremental push plans cannot cancel checks for an earlier push', () => {
+test('push plans start at the last green commit, so a newer push may cancel an older one', () => {
 	const concurrency = workflow.match(/^concurrency:\r?\n([\s\S]*?)(?=^\S)/m)?.[1];
 	assert.ok(concurrency);
+	assert.match(concurrency, /github\.event_name == 'push' && 'push-main'/u);
 	assert.match(
 		concurrency,
-		/group: ci-\$\{\{ github.event_name == 'pull_request' && github.event.pull_request.number \|\| github.run_id \}\}/u,
+		/cancel-in-progress: \$\{\{ github.event_name == 'pull_request' \|\| github.event_name == 'push' \}\}/u,
 	);
-	assert.match(concurrency, /cancel-in-progress: \$\{\{ github.event_name == 'pull_request' \}\}/u);
+	const planJob = workflow.match(/^  plan:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1];
+	assert.ok(planJob);
+	assert.match(planJob, /actions: read/u);
+	assert.match(planJob, /--green-base true/u);
+	assert.doesNotMatch(workflow.replace(planJob, ''), /actions: read/u);
 });
 
 test('browser retries retain failed traces, including when the retry passes', () => {
