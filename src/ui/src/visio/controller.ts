@@ -534,6 +534,7 @@ export class ViewerController {
 		++this.#sourceGeneration;
 		++this.#loadId;
 		this.parser.cancel?.();
+		this.parser.dispose?.();
 		this.#subscribers.clear();
 		this.#events.clear();
 		this.#searchIndex = null;
