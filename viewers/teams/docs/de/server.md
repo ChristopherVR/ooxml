@@ -2,8 +2,7 @@
 
 OpenTeams hat keinen gehosteten Dienst. Der Arbeitsbereich läuft entweder **ohne Server** (`mode: 'local'`,
 nur Tabs eines Browsers) oder gegen **einen Server, den Sie betreiben** und der drei kleine Verträge einhält. Die
-Referenzimplementierung `openteams-server` erledigt alle drei in einem einzigen Node-Prozess mit etwa 300
-Zeilen; jeder andere Server, der dieselben Verträge spricht, funktioniert genauso gut.
+Referenzimplementierung `openteams-server` erledigt alle drei in einem einzigen Node-Prozess; jeder andere Server, der dieselben Verträge spricht, funktioniert genauso gut.
 
 ::: danger Keine Ende-zu-Ende-Verschlüsselung
 Der Chat läuft als Yjs-Updates über Ihren Server, der das Raumdokument und jede hochgeladene
@@ -115,10 +114,7 @@ kurzlebige aus. Die [Bereitstellungsanleitung](/de/deploy#anrufe-uber-nats-hinwe
 Machen Sie sich dies klar, bevor Sie Personen darauf arbeiten lassen:
 
 - **Keine Ende-zu-Ende-Verschlüsselung.** Er speichert jede Nachricht und jede Datei und kann sie lesen.
-- **Keine Benutzerkonten.** `TEAMS_TOKEN` ist ein gemeinsames Geheimnis für alle, im Browser gespeichert. Es
-  hält Fremde vom Server eines kleinen Teams fern; es ist keine Authentifizierung pro Benutzer. Autor- und Rollenprüfungen
-  im Client lassen sich von einem feindlichen Client umgehen, daher ist der Server die Vertrauensgrenze:
-  Schalten Sie für den echten Einsatz Ihre eigene Authentifizierung davor (ein Proxy, der eine Sitzung prüft).
+- **Konten sind optional und klein.** Mit `users` (oder `TEAMS_USERS_FILE`) oder einer `authenticate`-Funktion signiert der Server Sitzungen (`POST /auth/session`), übernimmt die Benutzer-ID aus der Sitzung und kann sie widerrufen. Ohne sie ist `TEAMS_TOKEN` ein gemeinsames Geheimnis für alle, im Browser gespeichert, und Benutzer-IDs sind Behauptungen. Es gibt kein Zurücksetzen von Passwörtern, keine Kontenverwaltung, kein SSO und keine Zugriffssteuerung pro Team. Autor- und Rollenprüfungen im Client lassen sich von einem feindlichen Client umgehen, daher ist der Server die Vertrauensgrenze: Nutzen Sie `authenticate` mit Ihrem Identitätsanbieter und `authorizeSync` für Rechte pro Raum.
 - **Kein eigenes TLS.** Betreiben Sie ihn hinter einem Reverse-Proxy, der TLS terminiert und WebSockets
   hochstuft; Browser verweigern `ws://` von einer `https://`-Seite.
 - **Ein Prozess, Räume im Arbeitsspeicher.** Er skaliert nicht horizontal. Ein Raum wird 30 Sekunden

@@ -31,11 +31,11 @@ teams.example.com {
 
 然后让应用指向 `wss://teams.example.com/sync` 和 `wss://teams.example.com/signal`。
 
-**令牌是一个共享密钥**，保存在浏览器中：它可以把陌生人挡在小团队的服务器之外，但并不是按用户的身份验证。若需要真正的账户，请在前面放置你自己的身份验证（检查会话的代理，或将 `tokenOk` 替换为令牌校验），并保持相同的三个约定。
+**令牌是一个共享密钥**，保存在浏览器中：它可以把陌生人挡在小团队的服务器之外，但并不是按用户的身份验证。若需要真正的账户，请为服务器提供 `users`（或 `TEAMS_USERS_FILE`）或面向你的身份提供方的 `authenticate` 函数，并设置 `TEAMS_SESSION_SECRET`，使会话在重启后仍然有效（参见服务器 README 中的 "Accounts and sessions"）。三个约定保持不变。
 
 ## 安全模型
 
-- **一个共享令牌可打开所有房间和所有文件。** 没有按用户或按房间的权限。请把令牌当作团队密码对待。
+- **一个共享令牌可打开所有房间和所有文件。** 只有启用账户时才有按用户的身份，只有传入 `authorizeSync` 时才有按房间的权限。请把令牌当作团队密码对待。
 - **房间内的所有成员彼此信任。** 服务器只转发 Yjs 字节，因此任何成员都可以编辑或删除他人的消息，并伪造作者
   ID 和角色。不要邀请你不愿把整个房间托付的人。
 - **令牌通过 WebSocket 查询字符串传输**（`?token=`），代理和访问日志可能记录它，浏览器也可能把它保留在历史记录中。
@@ -80,12 +80,15 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/index.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
+  server/rate-limit.mjs server/chat-access.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data
 VOLUME /data
 EXPOSE 8787
-CMD ["node", "index.mjs"]
+CMD ["node", "bin.mjs"]
 ```
+
+请在 `viewers/teams` 中构建。它会复制入口文件导入的每个模块（即 `server/package.json` 的 `files`）；只复制 `index.mjs` 会因缺少模块而失败。该配方是通过在 Node 上用 `npm install --omit=dev` 运行这些文件来验证的，镜像本身未构建。
 
 运行时请设置 `TEAMS_TOKEN` 和 `TEAMS_ORIGINS`，并置于你的 TLS 代理之后。
 

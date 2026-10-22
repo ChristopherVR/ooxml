@@ -35,13 +35,13 @@ The same works across real tabs, in any pairing: open [the vanilla demo as Ada](
 
 ## What is and is not supported
 
-| Supported                                                        | Not supported                                                                      |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Concurrent chat, replies and reactions merged by a Yjs CRDT      | End-to-end encryption: your server can read and store everything                   |
-| Presence and typing indicators                                   | Authenticated identity: names are claims, and the reference server has no accounts |
-| Same-browser collaboration with no server (local mode, as above) | Collaboration between different machines without a server you run                  |
-| Cross-machine collaboration through your own sync server         | A hosted service: none is provided, and the Pages demos have no server behind them |
-| Calls with audio, video, screen share and raise hand (mesh, ~12) | Webinar-size calls, recording, notifications                                       |
+| Supported                                                        | Not supported                                                                                         |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Concurrent chat, replies and reactions merged by a Yjs CRDT      | End-to-end encryption: your server can read and store everything                                      |
+| Presence and typing indicators                                   | Per-team access control and SSO; identity is a claim unless you enable the server's optional accounts |
+| Same-browser collaboration with no server (local mode, as above) | Collaboration between different machines without a server you run                                     |
+| Cross-machine collaboration through your own sync server         | A hosted service: none is provided, and the Pages demos have no server behind them                    |
+| Calls with audio, video, screen share and raise hand (mesh, ~12) | Webinar-size calls, recording, push notifications                                                     |
 
 ## Across machines
 

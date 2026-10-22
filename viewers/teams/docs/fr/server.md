@@ -3,7 +3,7 @@
 OpenTeams n’a pas de service hébergé. L’espace de travail fonctionne soit **sans serveur**
 (`mode: 'local'`, uniquement entre les onglets d’un même navigateur), soit avec **un serveur que
 vous exploitez** et qui respecte trois petits contrats. L’implémentation de référence,
-`openteams-server`, remplit les trois dans un seul processus Node d’environ 300 lignes ; tout autre
+`openteams-server`, remplit les trois dans un seul processus Node ; tout autre
 serveur qui parle les mêmes contrats fonctionne tout aussi bien.
 
 ::: danger Pas de chiffrement de bout en bout
@@ -123,11 +123,7 @@ coturn.
 Soyez au clair sur ces points avant d’y faire venir des personnes :
 
 - **Pas de chiffrement de bout en bout.** Il stocke et peut lire chaque message et chaque fichier.
-- **Pas de comptes utilisateur.** `TEAMS_TOKEN` est un secret unique partagé par tous, conservé dans
-  le navigateur. Il tient les inconnus à l’écart du serveur d’une petite équipe ; ce n’est pas une
-  authentification par utilisateur. Les contrôles d’auteur et de rôle dans le client peuvent être
-  contournés par un client hostile, donc le serveur est la frontière de confiance : placez votre
-  propre authentification devant (un proxy qui vérifie une session) pour un usage réel.
+- **Comptes facultatifs et modestes.** Avec `users` (ou `TEAMS_USERS_FILE`) ou une fonction `authenticate`, le serveur signe des sessions (`POST /auth/session`), prend l’identifiant d’utilisateur dans la session et peut la révoquer. Sans eux, `TEAMS_TOKEN` est un secret unique partagé par tous, conservé dans le navigateur, et les identifiants d’utilisateur sont des déclarations. Il n’y a ni réinitialisation de mot de passe, ni gestion de comptes, ni SSO, ni contrôle d’accès par équipe. Les contrôles d’auteur et de rôle dans le client peuvent être contournés par un client hostile, le serveur est donc la frontière de confiance : utilisez `authenticate` avec votre fournisseur d’identité et `authorizeSync` pour des droits par salle.
 - **Pas de TLS propre.** Exécutez-le derrière un proxy inverse qui termine TLS et met à niveau les
   WebSockets ; les navigateurs refusent `ws://` depuis une page `https://`.
 - **Un seul processus, salles en mémoire.** Il ne passe pas à l’échelle horizontalement. Une salle
