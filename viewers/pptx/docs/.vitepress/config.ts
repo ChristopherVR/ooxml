@@ -140,7 +140,11 @@ export default defineConfig({
 						{ text: 'Theming', link: '/guide/theming' },
 						{ text: 'UI Customization', link: '/guide/customization' },
 						{ text: 'Viewport Fitting', link: '/guide/viewport-fit' },
+						{ text: 'Slide Links', link: '/guide/slide-links' },
+						{ text: 'Element Update Batches', link: '/guide/element-update-batches' },
+						{ text: 'Ribbon parity (Home to Design)', link: '/guide/ribbon-parity' },
 						{ text: 'Ribbon parity (other tabs)', link: '/guide/ribbon-parity-other-tabs' },
+						{ text: 'Shared UI migration log', link: '/guide/ui-migration' },
 						{ text: 'Host-owned Collaboration', link: '/guide/host-owned-collaboration' },
 						{ text: 'Review Inside Your Application', link: '/guide/review-workflow' },
 						{ text: 'Localization (i18n)', link: '/guide/localization' },
@@ -148,6 +152,18 @@ export default defineConfig({
 						{ text: 'Account & Sign-in', link: '/guide/account' },
 						{ text: 'Visual Effect Fidelity', link: '/guide/visual-effects' },
 						{ text: 'Runtime Environments', link: '/guide/runtime-environments' },
+						{ text: 'Limitations', link: '/guide/limitations' },
+						{ text: 'OpenXML Conformance', link: '/architecture/openxml-conformance' },
+					],
+				},
+			],
+
+			'/architecture/': [
+				{
+					text: 'Architecture',
+					items: [
+						{ text: 'OpenXML Conformance', link: '/architecture/openxml-conformance' },
+						{ text: 'Architecture Guide', link: '/guide/architecture' },
 						{ text: 'Limitations', link: '/guide/limitations' },
 					],
 				},

@@ -41,11 +41,11 @@ Each binding exposes a top-level viewer/editor entry point that orchestrates sta
 
 Shared rendering lives in `src/ui/src/pptx/` at the repository root and is published through `ooxml-ui/pptx`. DOM-free document operations live in `src/core/pptx/editor/`, and tool schemas live in `src/core/pptx/automation/schemas/`. The renderer includes:
 
-- **Connector routing**: an A* router over an obstacle graph (`connector-router-astar.ts`, `connector-router-graph.ts`) plus path building and rerouting.
+- **Connector routing**: an A* router over an obstacle graph (`connector-router-astar.ts`, `connector-router-graph.ts`, now in the shared `ooxml-core/geometry` area) plus path building and rerouting.
 - **Chart mathematics**: axis ranges, category positioning, cartesian/polar plot builders, box-whisker statistics, combo/stock composition (the `chart-*` module family).
 - **Animation and morph engines**: timeline building and playback (`animation-timeline-*.ts`), plus morph transition matching and geometry interpolation (`morph-matching.ts`, `morph-geometry-interp.ts`, `morph-text.ts`).
 - **Text and style resolution**: bullet numbering, fill/gradient styling, image effect filters, kinsoku line-breaking styles.
-- **Math**: OMML to MathML and LaTeX to OMML converters (`omml-to-mathml.ts`, `latex-to-omml.ts`).
+- **Math**: OMML to MathML and LaTeX to OMML converters (`omml-to-mathml.ts`, `latex-to-omml.ts`, now in the shared `ooxml-core/math` area).
 - **Editor behaviour**: history, clipboard, alignment guides, format painter, find and replace, collaboration sync and presence.
 
 Sibling directories cover `export/`, `i18n/`, `loader/`, `theme/`, and the opt-in `smartart-3d/` renderer.
@@ -67,12 +67,12 @@ The engine is built as three layers of decreasing surface area:
 ```
 PptxHandler                    static factories (create / createBlank)
   └─ PptxHandlerCore           thin facade: load / save / export / encryption
-       └─ IPptxHandlerRuntime  the actual engine, assembled from ~98 mixin modules
+       └─ IPptxHandlerRuntime  the actual engine, assembled from many mixin modules
 ```
 
 - **`PptxHandler`** (`src/core/pptx/core/PptxHandler.ts`) adds the static `create()` / `createBlank()` builder entry points.
 - **`PptxHandlerCore`** delegates all heavy parsing, serialization, and XML manipulation to an injected `IPptxHandlerRuntime`. The runtime is replaceable via constructor dependencies (`runtime` or `runtimeFactory`), which is how tests and alternate hosts swap implementations.
-- **`PptxHandlerRuntime`** is not one class in one file. It is composed from roughly **98 focused modules** in `src/core/pptx/core/core/runtime/`, each named `PptxHandlerRuntime<Concern>.ts` and each handling exactly one concern: `PptxHandlerRuntimeChartParsing.ts`, `PptxHandlerRuntimeThemeLoading.ts`, `PptxHandlerRuntimeSaveElementWriter.ts`, `PptxHandlerRuntimeSmartArtParsing.ts`, and so on.
+- **`PptxHandlerRuntime`** is not one class in one file. It is composed from many **focused modules** in `src/core/pptx/core/core/runtime/`, each named `PptxHandlerRuntime<Concern>.ts` and each handling exactly one concern: `PptxHandlerRuntimeChartParsing.ts`, `PptxHandlerRuntimeThemeLoading.ts`, `PptxHandlerRuntimeSaveElementWriter.ts`, `PptxHandlerRuntimeSmartArtParsing.ts`, and so on.
 
 Each module declares a class that extends the class exported by the previous module, forming a linear inheritance chain that layers capability on capability:
 
@@ -184,7 +184,7 @@ The chain is implemented by dedicated runtime mixins: `PptxHandlerRuntimeThemeLo
 | Decision                             | Rationale                                                                                                                                                                                                                           |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CSS-based rendering** (not Canvas) | Sharp text at any zoom, native accessibility, DOM interactivity, and standard CSS styling.                                                                                                                                          |
-| **Mixin-composed engine**            | ~98 small, single-concern runtime modules keep each capability isolated and testable. New capabilities (including new element types) are added as new mixins, not bigger files.                                                     |
+| **Mixin-composed engine**            | Many small, single-concern runtime modules keep each capability isolated and testable. New capabilities (including new element types) are added as new mixins, not bigger files.                                                    |
 | **Discriminated union for elements** | TypeScript narrows to the correct element type via the `type` field, giving full type safety with no casting.                                                                                                                       |
 | **Theme resolution chain**           | Element, Placeholder, Layout, Master, Theme mirrors PowerPoint's own style inheritance.                                                                                                                                             |
 | **EMU units internally**             | PowerPoint uses English Metric Units (914,400 EMU per inch; 9,525 EMU per pixel at 96 DPI). Parsed elements expose pixel values for convenient layout math; exact EMU values are preserved where round-trip fidelity requires them. |

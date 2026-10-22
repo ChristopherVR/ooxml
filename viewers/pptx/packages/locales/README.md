@@ -38,7 +38,7 @@ Native and fluent speakers can review one semantic file at a time under
 `src/fr`, `src/es`, `src/de`, or `src/zh-CN`. Files are organized by product area, such as
 `charts.ts`, `presenting-and-slide-show.ts`, and `text-and-equations.ts`.
 
-1. Find the same key in `packages/shared/src/i18n/translations-en.ts` to confirm
+1. Find the same key in `src/ui/src/pptx/i18n/translations-en.ts` to confirm
    the English source and UI context.
 2. Improve only the translated value. Keep the dotted `pptx.*` key unchanged.
 3. Preserve every `{{placeholder}}` exactly, including spelling and braces.
@@ -77,7 +77,7 @@ copies its standalone runtime artifacts and declarations into each viewer's
 `dist/i18n` directory after the framework build. Dictionary values remain
 maintained here in one place.
 
-From the repository root, after building the viewers, run:
+From `viewers/pptx`, after building the viewers, run:
 
 ```sh
 bun run test:locale-subpaths

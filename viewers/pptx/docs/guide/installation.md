@@ -115,13 +115,17 @@ bun add pptx-angular-viewer @angular/core @angular/common
 :::
 
 ```typescript
-// app.module.ts
-import { PptxAngularViewerModule } from 'pptx-angular-viewer';
+// app.component.ts (standalone component, no NgModule)
+import { Component } from '@angular/core';
+import { PowerPointViewerComponent } from 'pptx-angular-viewer';
 
-@NgModule({
-	imports: [PptxAngularViewerModule],
+@Component({
+	selector: 'app-root',
+	standalone: true,
+	imports: [PowerPointViewerComponent],
+	templateUrl: './app.component.html',
 })
-export class AppModule {}
+export class AppComponent {}
 ```
 
 ```html
@@ -281,32 +285,33 @@ bun add three yjs y-websocket
 
 ## Local development (cloning the monorepo)
 
-The monorepo uses **Bun** as its package manager and workspace runner. Packages reference each other through the `workspace:*` protocol.
+The PowerPoint viewer lives in the `ooxml` monorepo under `viewers/pptx`. The monorepo uses **Bun** as its package manager and workspace runner.
 
 ```bash
-# Clone the repository
-git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
-cd pptx-viewer
-
-# Install all workspace dependencies
+# Clone the repository and install every workspace dependency from the root
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml
 bun install
 
-# Build all packages
+# Build ooxml-core and ooxml-ui first, then work from the viewer
 bun run build
+bun run --cwd src/ui build
+cd viewers/pptx
 
-# Run tests / type-check
+# Build the viewer packages, then test / type-check
+bun run build
 bun run test
 bun run typecheck
 ```
 
 ::: warning Build order matters
-Packages must be built in dependency order:
+The viewer packages consume the built `ooxml-core` and `ooxml-ui`, so build those at the repository root first (as above). Inside `viewers/pptx` the packages build in dependency order:
 
 ```
-core -> shared -> react / vue / angular / vanilla / svelte
+core -> shared -> locales -> tools -> react / vue / angular / vanilla / svelte -> cli
 ```
 
-`bun run build` from the repo root handles this for you. When building a single package manually (`cd packages/<pkg> && bun run build`), make sure its dependencies are built first.
+`bun run build` in `viewers/pptx` handles this for you. When building a single package manually (`cd packages/<pkg> && bun run build`), make sure its dependencies are built first.
 :::
 
 ### Common workspace commands

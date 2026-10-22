@@ -207,7 +207,7 @@ uses the same editability rule as the native editor. `EditorLayer`,
 `CollaborationCursors`, `RemoteSelectionOverlay` and their prop types are exported
 from `/viewer` for composing the real editing and presence layers with `SlideCanvas`.
 See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/svelte/collaboration#custom-host-chrome)
-and `demos/demo-svelte/src/HostOwnedHeadlessEditor.svelte` for complete wiring.
+and `demos/pptx/demo-svelte/src/HostOwnedHeadlessEditor.svelte` for complete wiring.
 
 `<PowerPointViewer>` bundles the slide canvas, ribbon, thumbnail rail,
 inspector, and every dialog into one component. If you only want a subset,
