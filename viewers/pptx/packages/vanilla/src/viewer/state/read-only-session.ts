@@ -1,7 +1,9 @@
 /**
  * The read-only banner's session (`read-only-session` in `ooxml-ui/pptx`) over the viewer store.
  * `ViewerState` keeps it in its public `readOnly*` fields; these helpers convert between the two
- * so the shared transitions drive the store.
+ * so the shared transitions drive the store. A host may build its own state against the public
+ * `ViewerState`, so the two fields added with the session may be missing: they read as their
+ * initial values.
  */
 import { readOnlyLocked } from 'ooxml-ui/pptx';
 import type { ReadOnlySession, ReadOnlySessionStore } from 'ooxml-ui/pptx';
@@ -22,11 +24,11 @@ export type ReadOnlySessionFields = Pick<
 export function readOnlySessionOf(state: ReadOnlySessionFields): ReadOnlySession {
 	return {
 		bannerHidden: state.readOnlyBannerDismissed,
-		editAnyway: state.readOnlyEditAnyway,
+		editAnyway: state.readOnlyEditAnyway ?? false,
 		passwordPromptOpen: state.readOnlyPasswordPromptOpen,
 		passwordError: state.readOnlyPasswordError,
 		checkingPassword: state.readOnlyCheckingPassword,
-		passwordCheck: state.readOnlyPasswordCheck,
+		passwordCheck: state.readOnlyPasswordCheck ?? 0,
 	};
 }
 
@@ -53,5 +55,7 @@ export function readOnlySessionStore(store: Store<ViewerState>): ReadOnlySession
 export function isReadOnlyLocked(
 	state: Pick<ViewerState, 'readOnlyRecommendation' | 'readOnlyEditAnyway'>,
 ): boolean {
-	return readOnlyLocked(state.readOnlyRecommendation, { editAnyway: state.readOnlyEditAnyway });
+	return readOnlyLocked(state.readOnlyRecommendation, {
+		editAnyway: state.readOnlyEditAnyway ?? false,
+	});
 }
