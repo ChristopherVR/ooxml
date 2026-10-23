@@ -45,6 +45,40 @@ it('finds across chart-title runs and saves text-only edits while preserving XML
 	handler.dispose();
 });
 
+const chartXmlOf = async (bytes: Uint8Array) =>
+	(await JSZip.loadAsync(bytes)).file('ppt/charts/chart1.xml')!.async('string');
+
+it('writes the edit in every one of two overlapping saves (an autosave during a user save)', async () => {
+	const handler = new PptxHandler(),
+		data = await handler.load(await createChartTitleDeck());
+	const slides = [...replaceInSlides(data.slides, 'report', 'summary').slides];
+	// The second save starts while the first is still running, as a viewer's autosave snapshot
+	// does when its timer fires during the user's own save; then once more after a macrotask.
+	const together = await Promise.all([handler.save(slides), handler.save(slides)]);
+	const first = handler.save(slides);
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	const staggered = await Promise.all([first, handler.save(slides)]);
+	for (const bytes of [...together, ...staggered]) {
+		expect(await chartXmlOf(bytes)).toContain('Annual summary');
+	}
+	handler.dispose();
+});
+
+it('runs the next save after one that failed', async () => {
+	const handler = new PptxHandler(),
+		data = await handler.load(await createChartTitleDeck());
+	const slides = [...replaceInSlides(data.slides, 'report', 'summary').slides];
+	const broken = slides.map((slide) => ({
+		...slide,
+		elements: slide.elements.map((element) => ({ ...element, x: Number.NaN })),
+	}));
+	const failed = handler.save(broken);
+	const next = handler.save(slides);
+	await expect(failed).rejects.toThrow(/invalid x=NaN/u);
+	expect(await chartXmlOf(await next)).toContain('Annual summary');
+	handler.dispose();
+});
+
 it('keeps the remaining title runs when deleting the entire first run', async () => {
 	const handler = new PptxHandler(),
 		data = await handler.load(await createChartTitleDeck());

@@ -29,7 +29,29 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return this.isStrictOoxml ? 'strict' : 'transitional';
 	}
 
+	/** The save running now, or the last one: see {@link save}. */
+	private saveQueue: Promise<unknown> = Promise.resolve();
+
+	/**
+	 * Saves run one at a time. A save rewrites `this.zip` in place across many awaits and moves
+	 * per-part baselines (slide fingerprints, chart data, pending chart updates) while it runs, so
+	 * a second save that starts mid-way (a viewer's autosave snapshot firing during the user's own
+	 * save) read half-written state: it skipped the slide as unchanged and wrote the chart part's
+	 * original XML back over the edit, in both outputs. Each save now waits for the one before it;
+	 * one that fails does not hold up the next.
+	 */
 	async save(slides: PptxSlide[], options?: PptxHandlerSaveOptions): Promise<Uint8Array> {
+		// `saveQueue` never rejects (the catch below), so a failed save does not hold up this one.
+		const run = this.saveQueue.then(() => this.saveNow(slides, options));
+		this.saveQueue = run.catch(() => undefined);
+		return run;
+	}
+
+	/** One save, with the package to itself; callers go through {@link save}. */
+	private async saveNow(
+		slides: PptxSlide[],
+		options?: PptxHandlerSaveOptions,
+	): Promise<Uint8Array> {
 		validateSlideGeometry(slides);
 		const templates = [
 			...(options?.slideMasters ?? []),
@@ -47,8 +69,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// pipeline below (it builds/mutates `this.zip`) rather than converting
 		// an already-produced .pptx. See `PptxHandlerRuntimeSaveLegacyPpt`.
 		if (options?.outputFormat === 'ppt') {
+			// Already inside the queue: the inner OOXML save must not wait for this one.
 			return this.saveAsLegacyPpt(slides, options, () =>
-				this.save(slides, {
+				this.saveNow(slides, {
 					...options,
 					pptPassword: undefined,
 					outputFormat: 'pptx',
