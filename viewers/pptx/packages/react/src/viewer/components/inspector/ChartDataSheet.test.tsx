@@ -57,14 +57,14 @@ function render(props: Partial<React.ComponentProps<typeof ChartDataSheet>> = {}
 	return { onChange, sheet, cell };
 }
 
-describe('ChartDataSheet (react)', () => {
+describe('chartDataSheet (react)', () => {
 	it('feeds the shared sheet the chart and commits its edits', () => {
 		const { onChange, cell } = render();
 		expect(cell(2, 1).value).toBe('2');
 		expect(cell(1, 1).getAttribute('aria-label')).toBe('North value 1');
 		cell(2, 1).value = '9';
 		cell(2, 1).dispatchEvent(new Event('change', { bubbles: true }));
-		expect(onChange).toHaveBeenCalledTimes(1);
+		expect(onChange).toHaveBeenCalledOnce();
 		const next = onChange.mock.calls[0]![0] as PptxChartData;
 		expect(next.series[0]).toMatchObject({ values: [1, 9], color: '#FF0000' });
 	});
@@ -74,8 +74,8 @@ describe('ChartDataSheet (react)', () => {
 			canEdit: false,
 			highlightCell: { seriesIndex: 0, pointIndex: 1 },
 		});
-		expect(cell(2, 1).classList.contains('highlight')).toBe(true);
-		expect(cell(2, 1).disabled).toBe(true);
+		expect(cell(2, 1).classList.contains('highlight')).toBeTruthy();
+		expect(cell(2, 1).disabled).toBeTruthy();
 		expect(sheet.shadowRoot!.querySelector('[data-action="add-series"]')).toBeNull();
 	});
 });

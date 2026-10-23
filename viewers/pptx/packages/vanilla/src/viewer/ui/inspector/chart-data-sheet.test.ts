@@ -54,8 +54,8 @@ describe('chart data sheet (vanilla)', () => {
 		const follow = vi.fn(() => false);
 		const { sheet, onChange, root } = mount(follow);
 		root.querySelector<HTMLButtonElement>('th.category button.remove')!.click();
-		expect(onChange.mock.calls[0]![0].categories).toEqual(['B']);
-		expect(follow).toHaveBeenCalled();
+		expect(onChange.mock.calls[0]![0].categories).toStrictEqual(['B']);
+		expect(follow).toHaveBeenCalledWith();
 		sheet.update({ chartType: 'bar', categories: ['A'], series: [{ name: 'S1', values: [1] }] });
 		expect(root.querySelector('button.remove')).toBeNull();
 	});
@@ -63,11 +63,11 @@ describe('chart data sheet (vanilla)', () => {
 	it('marks the canvas selection and goes read-only', () => {
 		const { sheet, root, cell } = mount();
 		sheet.update(chartData(), { seriesIndex: 1, pointIndex: 0 });
-		expect(cell(1, 2).classList.contains('highlight')).toBe(true);
+		expect(cell(1, 2).classList.contains('highlight')).toBeTruthy();
 		sheet.setEditable(false);
-		expect(cell(1, 1).disabled).toBe(true);
+		expect(cell(1, 1).disabled).toBeTruthy();
 		expect(root.querySelector('[data-action="add-series"]')).toBeNull();
 		sheet.update(undefined);
-		expect(sheet.el.hidden).toBe(true);
+		expect(sheet.el.hidden).toBeTruthy();
 	});
 });

@@ -77,7 +77,7 @@ describe('chartDataEditorComponent (angular)', () => {
 
 	it('is read-only without edit rights', () => {
 		const { sheet, cell } = mount({ element: chart, canEdit: false });
-		expect(cell(1, 1).disabled).toBe(true);
+		expect(cell(1, 1).disabled).toBeTruthy();
 		expect(sheet.shadowRoot!.querySelector('[data-action="add-series"]')).toBeNull();
 	});
 });
