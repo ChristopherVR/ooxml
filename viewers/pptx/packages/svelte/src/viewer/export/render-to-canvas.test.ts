@@ -25,6 +25,25 @@ function liveStage(): HTMLElement {
 }
 
 describe('renderToCanvas clone pass (shared prepareHtml2CanvasClone)', () => {
+	it("clones only the captured element's branch, not the rest of the page", async () => {
+		document.body.innerHTML =
+			'<div class="chrome"><button>Home</button></div><div class="viewport"><div class="stage"><span>Title</span></div></div>';
+		const stage = document.querySelector<HTMLElement>('.stage')!;
+		let ignore: ((node: Element) => boolean) | undefined;
+		vi.mocked(html2canvasPro).mockImplementationOnce(async (_element, options) => {
+			ignore = options?.ignoreElements;
+			return document.createElement('canvas');
+		});
+		await renderToCanvas(stage, { ignoreElements: (node) => node.localName === 'em' });
+		// The rest of the page is cloned as empty shells: kept, their contents skipped.
+		expect(ignore?.(document.querySelector('.chrome')!)).toBeFalsy();
+		expect(ignore?.(document.querySelector('.chrome button')!)).toBeTruthy();
+		expect(ignore?.(document.querySelector('.stage span')!)).toBeFalsy();
+		expect(ignore?.(document.querySelector('.viewport')!)).toBeFalsy();
+		expect(ignore?.(document.createElement('em'))).toBeTruthy();
+		document.body.replaceChildren();
+	});
+
 	it('drops editor-only nodes and snapshots 3D views before the caller onclone', async () => {
 		const source = liveStage();
 		const clone = source.cloneNode(true) as HTMLElement;
