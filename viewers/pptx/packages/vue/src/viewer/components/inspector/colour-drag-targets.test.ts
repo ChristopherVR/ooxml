@@ -23,6 +23,7 @@ import FillPanel from './FillPanel.vue';
 
 // Every wrapper goes after its test, a failing one too: the worker is shared.
 enableAutoUnmount(afterEach);
+
 afterAll(disableAutoUnmount);
 
 const A_STYLE: ShapeStyle = {

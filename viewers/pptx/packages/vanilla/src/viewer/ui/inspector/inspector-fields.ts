@@ -29,9 +29,10 @@ export interface InspectorFieldsOptions<T, P> {
 	onPreview?(patch: P, target: string): void;
 	/**
 	 * What the descriptors read on element `key` now: a colour drag the selection has
-	 * left is put back on it (none: such a drag is not put back).
+	 * left is put back on it (none: such a drag is not put back). Not where `T` is
+	 * inferred from: a lookup can always miss, a target need not.
 	 */
-	lookup?(key: string): T | undefined;
+	lookup?(key: string): NoInfer<T> | undefined;
 	/** A colour pick was committed (for the "Recent colours" list). */
 	onColorCommit?(hex: string): void;
 	/** Class of each section's box (default: the stacked `pptxv-inspector-fields-section`). */
