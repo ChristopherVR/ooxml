@@ -26,6 +26,10 @@ const before = (): PptxChartData =>
 		categories: ['Q1', 'Q2'],
 		series: [{ name: 'North', idx: 3, values: [4.4, 2] }],
 		style: { hasTitle: true, hasLegend: true, legendPosition: 'r', legendOverlay: false },
+		axes: [
+			{ axisType: 'catAx', axisId: 1, orientation: 'minMax' },
+			{ axisType: 'valAx', axisId: 2, orientation: 'minMax' },
+		],
 	}) as PptxChartData;
 
 const edited = (edit: (chart: PptxChartData) => void): PptxChartData => {
@@ -126,5 +130,40 @@ describe('saveChartPartThroughNeutral: title and legend', () => {
 			{ formula: 'Sheet1!$B$2:$B$3', isNumeric: true, values: ['4.4', '2'] },
 		]);
 		expect(writeChartSpace(parseChartSpace(PART).chartSpace)).toBe(PART);
+	});
+});
+
+describe('saveChartPartThroughNeutral: axes', () => {
+	const valueAxis = (xml: string) =>
+		parseChartSpace(xml).chartSpace.plotArea.axes.find((axis) => axis.kind === 'val')!;
+
+	it('writes bounds, units, visibility, number format and direction by axis id', () => {
+		const saved = save((c) => {
+			Object.assign(c.axes![1]!, {
+				min: 0,
+				max: 50,
+				majorUnit: 10,
+				deleted: true,
+				orientation: 'maxMin',
+				numFmt: { formatCode: '0.0%', sourceLinked: false },
+			});
+		})!;
+		expect(valueAxis(saved.xml)).toMatchObject({
+			scaling: { min: 0, max: 50, orientation: 'maxMin' },
+			majorUnit: 10,
+			deleted: true,
+			numberFormat: { formatCode: '0.0%', sourceLinked: false },
+		});
+	});
+
+	it('leaves axis edits the shared operation does not make to the object-tree writers', () => {
+		const linked = edited((c) => (c.axes![1]!.numFmt = { formatCode: '0', sourceLinked: true }));
+		expect(planNeutralChartSave(before(), linked)).toBeUndefined();
+		const gridlines = edited((c) => (c.axes![1]!.majorGridlines = true));
+		expect(planNeutralChartSave(before(), gridlines)).toBeUndefined();
+		const added = edited((c) => c.axes!.push({ axisType: 'valAx', axisId: 9 }));
+		expect(planNeutralChartSave(before(), added)).toBeUndefined();
+		// A minimum past the maximum is rejected by the shared operation.
+		expect(save((c) => Object.assign(c.axes![1]!, { min: 9, max: 1 }))).toBeUndefined();
 	});
 });

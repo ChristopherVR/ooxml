@@ -13,14 +13,16 @@
  */
 
 import {
+	setChartAxis,
 	setChartLegend,
 	setChartTitle,
 	setChartTitleVisible,
+	type ChartAxisEdit,
 	type ChartLegendEdit,
 	type ChartLegendPosition,
 	type ChartSpace,
 } from '../../../chart/index';
-import type { PptxChartData, PptxChartStyle } from '../types';
+import type { PptxChartAxisFormatting, PptxChartData, PptxChartStyle } from '../types';
 
 export type NeutralChartEdit = (space: ChartSpace) => ChartSpace;
 
@@ -106,6 +108,58 @@ function planLegend(before: PptxChartData, probe: PptxChartData, edits: NeutralC
 	revertStyle(probe, before, keys);
 }
 
+/** The axis fields the shared `setChartAxis` writes as the PowerPoint axis writers do. */
+function axisEdit(
+	was: PptxChartAxisFormatting,
+	now: PptxChartAxisFormatting,
+): { edit: ChartAxisEdit; claimed: (keyof PptxChartAxisFormatting)[] } {
+	const edit: ChartAxisEdit = {};
+	const claimed: (keyof PptxChartAxisFormatting)[] = [];
+	for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) {
+		if (was[key] === now[key]) continue;
+		edit[key] = now[key] ?? null;
+		claimed.push(key);
+	}
+	if (Boolean(was.deleted) !== Boolean(now.deleted)) {
+		edit.visible = !now.deleted;
+		claimed.push('deleted');
+	}
+	if (!same(was.numFmt, now.numFmt) && now.numFmt && !now.numFmt.sourceLinked) {
+		edit.numberFormat = now.numFmt.formatCode;
+		claimed.push('numFmt');
+	}
+	if (was.orientation !== now.orientation && now.orientation !== undefined) {
+		edit.reverse = now.orientation === 'maxMin';
+		claimed.push('orientation');
+	}
+	if (was.tickLblPos !== now.tickLblPos && now.tickLblPos !== undefined) {
+		edit.tickLabelPosition = now.tickLblPos;
+		claimed.push('tickLblPos');
+	}
+	return { edit, claimed };
+}
+
+/** Value and category axis scaling, visibility, number format, direction and labels. */
+function planAxes(before: PptxChartData, probe: PptxChartData, edits: NeutralChartEdit[]): void {
+	const was = before.axes ?? [];
+	const now = probe.axes ?? [];
+	if (was.length !== now.length) return;
+	now.forEach((axis, i) => {
+		const previous = was[i]!;
+		const id = previous.axisId;
+		if (id === undefined || axis.axisId !== id || axis.axisType !== previous.axisType) return;
+		const { edit, claimed } = axisEdit(previous, axis);
+		if (claimed.length === 0) return;
+		edits.push((space) => setChartAxis(space, { id }, edit));
+		const reverted: Record<string, unknown> = { ...axis };
+		for (const key of claimed) {
+			if (previous[key] === undefined) delete reverted[key];
+			else reverted[key] = previous[key];
+		}
+		now[i] = reverted as unknown as PptxChartAxisFormatting;
+	});
+}
+
 /**
  * The shared-core edits that turn the part saved as `before` into `after`, or
  * `undefined` when `after` changes something no family claims yet.
@@ -118,5 +172,6 @@ export function planNeutralChartSave(
 	const edits: NeutralChartEdit[] = [];
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
+	planAxes(before, probe, edits);
 	return same(probe, before) ? { edits, seriesData: false } : undefined;
 }
