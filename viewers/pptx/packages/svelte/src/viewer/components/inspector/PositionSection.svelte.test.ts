@@ -101,11 +101,8 @@ describe('positionSection', () => {
 
 	it('does not commit when the field is cleared to an unparseable empty value mid-edit', () => {
 		// A native <input type="number"> silently resets its `.value` to `''` for
-		// unparseable text, and `commit()` guards on `Number.isFinite`; `Number('')`
-		// is `0` (finite), so clearing the field is indistinguishable from
-		// explicitly typing 0 and DOES commit 0. This pins that native-input
-		// coercion behaviour down so a future guard change doesn't silently drop
-		// legitimate 0 commits.
+		// unparseable text. The shared field model treats an empty box as "no
+		// value" (typing 0 still commits 0), so nothing is written.
 		const editor = makeEditor(shapeEl());
 		const { target } = mountSection(editor, editor.slides[0]!.elements[0]!);
 		const [xInput] = numberInputs(target);
@@ -116,8 +113,8 @@ describe('positionSection', () => {
 		xInput.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
 
-		expect(editor.slides[0]?.elements[0]?.x).toBe(0);
-		expect(editor.canUndo).toBeTruthy();
+		expect(editor.slides[0]?.elements[0]?.x).toBe(10);
+		expect(editor.canUndo).toBeFalsy();
 	});
 
 	it('shows the lock button unpressed for an unlocked element', () => {

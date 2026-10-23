@@ -29,39 +29,46 @@ function lastPatch(wrapper: ReturnType<typeof mount>): Partial<PptxElement> {
 
 describe('arrangePanel', () => {
 	it('emits a shallow x patch when X changes', async () => {
-		const wrapper = mount(ArrangePanel, { props: { element: shape() } });
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: true } });
 		const input = wrapper.findAll('input[type="number"]')[0];
 		await setControlValue(input, '120');
 		expect(lastPatch(wrapper)).toStrictEqual({ x: 120 });
 	});
 
 	it('emits a shallow y patch when Y changes', async () => {
-		const wrapper = mount(ArrangePanel, { props: { element: shape() } });
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: true } });
 		const input = wrapper.findAll('input[type="number"]')[1];
 		await setControlValue(input, '75');
 		expect(lastPatch(wrapper)).toStrictEqual({ y: 75 });
 	});
 
 	it('clamps width to the minimum size', async () => {
-		const wrapper = mount(ArrangePanel, { props: { element: shape() } });
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: true } });
 		const input = wrapper.findAll('input[type="number"]')[2];
 		await setControlValue(input, '0');
 		expect(lastPatch(wrapper)).toStrictEqual({ width: 1 });
 	});
 
 	it('emits a rotation patch', async () => {
-		const wrapper = mount(ArrangePanel, { props: { element: shape() } });
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: true } });
 		const input = wrapper.findAll('input[type="number"]')[4];
 		await setControlValue(input, '45');
 		expect(lastPatch(wrapper)).toStrictEqual({ rotation: 45 });
 	});
 
 	it('emits flip toggle patches', async () => {
-		const wrapper = mount(ArrangePanel, { props: { element: shape() } });
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: true } });
 		const checks = wrapper.findAll('pptx-ui-checkbox');
 		await setControlValue(checks[0], true);
 		expect(lastPatch(wrapper)).toStrictEqual({ flipHorizontal: true });
 		await setControlValue(checks[1], true);
 		expect(lastPatch(wrapper)).toStrictEqual({ flipVertical: true });
+	});
+
+	it('disables the size and position fields on a read-only deck', () => {
+		const wrapper = mount(ArrangePanel, { props: { element: shape(), canEdit: false } });
+		const x = wrapper.find('[data-testid="geometry-x"]');
+		expect((x.element as HTMLInputElement).disabled).toBeTruthy();
+		expect((x.element as HTMLInputElement).value).toBe('100');
 	});
 });

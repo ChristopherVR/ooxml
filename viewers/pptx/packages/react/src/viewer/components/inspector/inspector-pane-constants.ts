@@ -40,14 +40,3 @@ export const INPUT =
 // WCAG miss on its smaller side.
 export const BTN =
 	'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-colors max-md:min-h-[44px]! max-md:min-w-[44px]!';
-
-// ---------------------------------------------------------------------------
-// Position / size field tuple
-// ---------------------------------------------------------------------------
-
-export const POS_FIELDS = [
-	['X', 'x'],
-	['Y', 'y'],
-	['W', 'width'],
-	['H', 'height'],
-] as const;

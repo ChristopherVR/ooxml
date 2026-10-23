@@ -56,6 +56,8 @@ export interface InspectorFieldDescriptor<T, P> {
 	step?: number;
 	/** Unit suffix a binding may show ("pt", "%", "°"). */
 	unit?: string;
+	/** Decimal places a numeric value is shown with (default 2, as PowerPoint's panes). */
+	decimals?: number;
 	/** Spans the full width of a two-column field grid. */
 	wide?: boolean;
 	/** `data-testid` of the control. */
@@ -131,11 +133,13 @@ const CONTROL_OF: Record<InspectorFieldKind, InspectorFieldControl> = {
 	toggle: 'checkbox',
 };
 
-/** Display rounding for numeric values (two decimals, as PowerPoint's panes show). */
-function displayNumber(value: InspectorFieldValue): InspectorFieldValue {
-	return typeof value === 'number' && Number.isFinite(value)
-		? Math.round(value * 100) / 100
-		: value;
+/** Display rounding for numeric values (two decimals unless the field says otherwise). */
+function displayNumber(value: InspectorFieldValue, decimals = 2): InspectorFieldValue {
+	if (typeof value !== 'number' || !Number.isFinite(value)) {
+		return value;
+	}
+	const scale = 10 ** decimals;
+	return Math.round(value * scale) / scale;
 }
 
 function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): InspectorFieldView {
@@ -144,7 +148,7 @@ function fieldView<T, P>(field: InspectorFieldDescriptor<T, P>, target: T): Insp
 		kind: field.kind,
 		control: CONTROL_OF[field.kind],
 		labelKey: field.labelKey,
-		value: displayNumber(field.read(target)),
+		value: displayNumber(field.read(target), field.decimals),
 		wide: field.wide === true,
 	};
 	if (field.kind === 'percent') {

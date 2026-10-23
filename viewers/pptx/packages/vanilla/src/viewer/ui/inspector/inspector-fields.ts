@@ -18,6 +18,8 @@ export interface InspectorFieldsOptions<T, P> {
 	onPatch(patch: P): void;
 	/** A colour pick was committed (for the "Recent colours" list). */
 	onColorCommit?(hex: string): void;
+	/** Class of each section's box (default: the stacked `pptxv-inspector-fields-section`). */
+	sectionClassName?: string;
 }
 
 export interface InspectorFieldsHandle<T> {
@@ -139,7 +141,7 @@ export function createInspectorFields<T, P>(
 	};
 
 	const buildSection = (view: InspectorSectionView): SectionSlot => {
-		const box = createEl(doc, 'div', 'pptxv-inspector-fields-section');
+		const box = createEl(doc, 'div', options.sectionClassName ?? 'pptxv-inspector-fields-section');
 		box.dataset['section'] = view.id;
 		const slot: SectionSlot = { el: box, signature: signatureOf(view), fields: new Map() };
 		if (view.toggleable) {

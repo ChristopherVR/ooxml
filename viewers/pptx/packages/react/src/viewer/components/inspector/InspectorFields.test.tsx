@@ -4,7 +4,11 @@
  * one toggle per section, its fields only while on, and every change goes out
  * as the descriptor's `Partial<ShapeStyle>` patch.
  */
-import { SHAPE_EFFECT_SECTIONS, SHAPE_LINE_SECTIONS } from 'ooxml-ui/pptx';
+import {
+	ELEMENT_GEOMETRY_SECTIONS,
+	SHAPE_EFFECT_SECTIONS,
+	SHAPE_LINE_SECTIONS,
+} from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -116,5 +120,38 @@ describe('inspectorFields (line options)', () => {
 			dash.dispatchEvent(new Event('change', { bubbles: true }));
 		});
 		expect(onPatch).toHaveBeenCalledWith({ strokeDash: 'dash' });
+	});
+});
+
+describe('inspectorFields (size and position)', () => {
+	it('shows the frame in whole px and writes a geometry patch, disabled when read-only', () => {
+		const onPatch = vi.fn();
+		const frame = { x: 53.4, y: 10, width: 200, height: 100, rotation: 0 };
+		act(() => {
+			root.render(
+				<InspectorFields sections={ELEMENT_GEOMETRY_SECTIONS} target={frame} onPatch={onPatch} />,
+			);
+		});
+		const x = byTestId('geometry-x')!;
+		expect(x.value).toBe('53');
+		expect(x.getAttribute('aria-label')).toBe('pptx.inspector.x');
+		act(() => {
+			const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+			setter.call(byTestId('geometry-width')!, '0');
+			byTestId('geometry-width')!.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		expect(onPatch).toHaveBeenCalledWith({ width: 1 });
+
+		act(() => {
+			root.render(
+				<InspectorFields
+					sections={ELEMENT_GEOMETRY_SECTIONS}
+					target={frame}
+					onPatch={onPatch}
+					disabled
+				/>,
+			);
+		});
+		expect(byTestId('geometry-rotation')!.disabled).toBeTruthy();
 	});
 });

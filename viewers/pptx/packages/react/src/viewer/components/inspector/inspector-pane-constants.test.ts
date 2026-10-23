@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { INSPECTOR_TABS, HEADING, CARD, INPUT, BTN, POS_FIELDS } from './inspector-pane-constants';
+import { INSPECTOR_TABS, HEADING, CARD, INPUT, BTN } from './inspector-pane-constants';
 
 describe('inspector-pane-constants', () => {
 	describe('iNSPECTOR_TABS', () => {
@@ -56,29 +56,6 @@ describe('inspector-pane-constants', () => {
 		it('bTN is a non-empty string', () => {
 			expectTypeOf(BTN).toBeString();
 			expect(BTN.length).toBeGreaterThan(0);
-		});
-	});
-
-	describe('pOS_FIELDS', () => {
-		it('is a 4-element tuple', () => {
-			expect(POS_FIELDS).toHaveLength(4);
-		});
-
-		it('contains expected label-key pairs', () => {
-			expect(POS_FIELDS[0]).toStrictEqual(['X', 'x']);
-			expect(POS_FIELDS[1]).toStrictEqual(['Y', 'y']);
-			expect(POS_FIELDS[2]).toStrictEqual(['W', 'width']);
-			expect(POS_FIELDS[3]).toStrictEqual(['H', 'height']);
-		});
-
-		it('has no duplicate labels', () => {
-			const labels = POS_FIELDS.map((f) => f[0]);
-			expect(new Set(labels).size).toBe(labels.length);
-		});
-
-		it('has no duplicate keys', () => {
-			const keys = POS_FIELDS.map((f) => f[1]);
-			expect(new Set(keys).size).toBe(keys.length);
 		});
 	});
 });
