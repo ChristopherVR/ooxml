@@ -88,6 +88,13 @@ export interface EditorOps {
 	commitChange(): void;
 	/** Patch geometry WITHOUT history (live gesture preview frames). */
 	patchGeometry(id: string, box: ElementBoxPatch): void;
+	/**
+	 * Merge `patch` into an element WITHOUT history or the dirty flag: a live
+	 * frame its caller commits later as one undo step (a gesture frame, or a
+	 * shade of a colour picker drag, which shared `createLiveColorInput` puts
+	 * back before its one committed edit).
+	 */
+	previewElement(id: string, patch: Partial<PptxElement>): void;
 	deleteSelected(): void;
 	duplicateSelected(): string | null;
 	nudgeSelected(dx: number, dy: number): void;
@@ -191,17 +198,19 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		deps.onChange?.();
 	};
 
-	const patchGeometry = (id: string, box: ElementBoxPatch): void => {
+	const previewElement = (id: string, patch: Partial<PptxElement>): void => {
 		const state = store.get();
 		// A group member's box is slide space; `mapActiveElement` writes it back
 		// into the group's space.
 		const elements = mapActiveElement(
 			state,
 			id,
-			(element) => ({ ...element, ...box }) as PptxElement,
+			(element) => ({ ...element, ...patch }) as PptxElement,
 		);
 		store.set(replaceActiveElements(state, elements));
 	};
+	const patchGeometry = (id: string, box: ElementBoxPatch): void =>
+		previewElement(id, box as Partial<PptxElement>);
 
 	const restore = (next: EditorSnapshot | undefined): void => {
 		if (!next) {
@@ -254,6 +263,7 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		pushHistory,
 		commitChange,
 		patchGeometry,
+		previewElement,
 
 		deleteSelected() {
 			const state = store.get();

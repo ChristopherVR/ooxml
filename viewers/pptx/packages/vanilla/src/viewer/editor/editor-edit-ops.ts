@@ -54,6 +54,8 @@ import {
 } from './editor-insert-structured';
 import type { InspectorActions } from './editor-inspector-actions';
 import { createInspectorActions } from './editor-inspector-actions';
+import type { LiveColorActions } from './editor-live-colors';
+import { createLiveColorActions } from './editor-live-colors';
 import type { MasterViewCrudActions } from './editor-master-view-crud-actions';
 import { createMasterViewCrudActions } from './editor-master-view-crud-actions';
 import type { MergeActions } from './editor-merge-actions';
@@ -98,6 +100,7 @@ export interface EditActions
 		TransitionActions,
 		AnimationActions,
 		InspectorActions,
+		LiveColorActions,
 		InkActions,
 		DeckActions,
 		GalleryActions,
@@ -223,6 +226,7 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		...createTransitionActions({ store, ops }),
 		...createAnimationActions({ store, ops }),
 		...createInspectorActions(applyToSelected),
+		...createLiveColorActions({ store, ops, applyToSelected }),
 		...createInkActions({ store, ops }),
 		...deckActions,
 		...createGalleryActions({ store, ops, getHandler: deps.getHandler }),

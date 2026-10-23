@@ -83,6 +83,11 @@ export interface ColorControlOptions {
 	 * MRU list grows once per pick rather than on every drag tick.
 	 */
 	onCommit?(hex: string): void;
+	/**
+	 * Fired when the input loses focus: a live picker settles a drag that no
+	 * `change` ended (shared `createLiveColorInput`).
+	 */
+	onBlur?(hex: string): void;
 }
 
 export interface ColorControlHandle {
@@ -119,6 +124,9 @@ export function makeColorControl(
 	input.addEventListener('input', () => options.onInput(input.value));
 	if (options.onCommit) {
 		input.addEventListener('change', () => options.onCommit?.(input.value));
+	}
+	if (options.onBlur) {
+		input.addEventListener('blur', () => options.onBlur?.(input.value));
 	}
 	el.appendChild(input);
 	return {

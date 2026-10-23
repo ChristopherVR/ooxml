@@ -1,9 +1,15 @@
-import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
+import {
+	createLiveColorPatchInput,
+	inspectorFieldPatch,
+	inspectorTogglePatch,
+	resolveInspectorSections,
+} from 'ooxml-ui/pptx';
 import type {
 	InspectorFieldValue,
 	InspectorFieldView,
 	InspectorSectionDescriptor,
 	InspectorSectionView,
+	LiveColorInput,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -16,6 +22,11 @@ export interface InspectorFieldsOptions<T, P> {
 	sections: readonly InspectorSectionDescriptor<T, P>[];
 	/** Receives the patch a control change produces. */
 	onPatch(patch: P): void;
+	/**
+	 * Receives a colour field's live patch while its picker is dragged: apply it
+	 * WITHOUT an undo step. The drag's one `onPatch` follows when it settles.
+	 */
+	onPreview?(patch: P): void;
 	/** A colour pick was committed (for the "Recent colours" list). */
 	onColorCommit?(hex: string): void;
 	/** Class of each section's box (default: the stacked `pptxv-inspector-fields-section`). */
@@ -80,6 +91,36 @@ export function createInspectorFields<T, P>(
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void =>
 		emit(inspectorFieldPatch(sections, sectionId, fieldId, current, raw));
 
+	// One live controller per colour field (shared `createLiveColorPatchInput`):
+	// a drag previews through `onPreview` and settles as one `onPatch`. Kept
+	// outside the section slots, so a rebuilt section does not drop a drag.
+	const colorInputs = new Map<string, LiveColorInput>();
+	const colorInput = (sectionId: string, fieldId: string): LiveColorInput => {
+		const key = `${sectionId}.${fieldId}`;
+		let control = colorInputs.get(key);
+		if (!control) {
+			control = createLiveColorPatchInput<T, P & object>({
+				read: () => {
+					const field = resolveInspectorSections(sections, current)
+						.find((view) => view.id === sectionId)
+						?.fields.find((candidate) => candidate.id === fieldId);
+					return field && { key, color: String(field.value), state: current };
+				},
+				patch: (target, hex) =>
+					inspectorFieldPatch(sections, sectionId, fieldId, target, hex) as
+						| (P & object)
+						| undefined,
+				preview: (patch) => options.onPreview?.(patch),
+				commit: (patch, hex) => {
+					options.onPatch(patch);
+					options.onColorCommit?.(hex);
+				},
+			});
+			colorInputs.set(key, control);
+		}
+		return control;
+	};
+
 	const buildField = (sectionId: string, field: InspectorFieldView): FieldHandle => {
 		const label = t(field.labelKey);
 		let handle: FieldHandle;
@@ -100,12 +141,14 @@ export function createInspectorFields<T, P>(
 			const row = createEl(doc, 'div', 'pptxv-inspector-row');
 			const caption = createEl(doc, 'span', 'pptxv-inspector-row-label');
 			caption.textContent = label;
+			const live = colorInput(sectionId, field.id);
 			const color = makeColorControl(
 				doc,
 				{
 					label,
-					onInput: (hex) => change(sectionId, field.id, hex),
-					...(options.onColorCommit ? { onCommit: options.onColorCommit } : {}),
+					onInput: (hex) => live.input(hex),
+					onCommit: (hex) => live.change(hex),
+					onBlur: (hex) => live.blur(hex),
 				},
 				String(field.value),
 			);

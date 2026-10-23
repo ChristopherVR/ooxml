@@ -41,6 +41,7 @@ export function createShapeEffectsControls(
 	const effects = createInspectorFields(doc, t, {
 		sections: SHAPE_EFFECT_SECTIONS,
 		onPatch: (patch) => handlers.setShapeStyle(patch),
+		onPreview: (patch) => handlers.previewShapeStyle(patch),
 		onColorCommit: handlers.pushRecentColor,
 	});
 	el.appendChild(effects.el);

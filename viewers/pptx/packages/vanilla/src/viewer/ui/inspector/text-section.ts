@@ -33,10 +33,10 @@ export function createTextSection(
 
 	// B6 (A3): the inspector's own text-colour picker, distinct from the
 	// ribbon's Home > Font colour swatch picker (both write the same
-	// `textStyle.color`). `onInput` commits live, matching every other colour
-	// field here; the "Recent colours" row below commits through the same
-	// `setTextStyle` call and pushes on both the row click and the native
-	// picker's `change` (never the continuous `input` a drag fires).
+	// `textStyle.color`). A drag shows every shade live with no undo step, and
+	// the settled colour (`change`, or `blur` for a drag no change ended) is
+	// the one undo step and the one recent colour, like the fill and line
+	// pickers; the "Recent colours" row below commits through `setTextStyle`.
 	const colorRow = doc.createElement('div');
 	colorRow.className = 'pptxv-inspector-row';
 	const colorLabel = doc.createElement('span');
@@ -46,8 +46,9 @@ export function createTextSection(
 		doc,
 		{
 			label: t('pptx.textPanel.color'),
-			onInput: (hex) => handlers.setTextStyle({ color: hex, colorRef: undefined }),
-			onCommit: handlers.pushRecentColor,
+			onInput: (hex) => handlers.liveColor('text', 'input', hex),
+			onCommit: (hex) => handlers.liveColor('text', 'change', hex),
+			onBlur: (hex) => handlers.liveColor('text', 'blur', hex),
 		},
 		'#000000',
 	);
