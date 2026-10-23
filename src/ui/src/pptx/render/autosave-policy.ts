@@ -38,14 +38,13 @@
  * AutoRecover information every N minutes" (default two minutes), which React
  * and Angular already respected and the other three ignored.
  *
- * ## What the two engine shapes must agree on
+ * ## The engine's promise
  *
- * React and Angular POLL on a fixed interval; Vue, Svelte and Vanilla DEBOUNCE
- * on the edit. Both are legitimate, but a plain debounce has a failure mode a
- * poll does not: a user who keeps editing keeps re-arming the timer, so it can
- * defer a snapshot forever, and at the two-minute cadence that is an entire
- * session of lost work. {@link nextAutosaveDelayMs} caps the debounce so both
- * shapes make the same promise:
+ * All five bindings run the one engine in `controller/autosave-controller`
+ * (they used to poll in React and Angular and debounce elsewhere). A plain
+ * debounce has a failure mode: a user who keeps editing keeps re-arming the
+ * timer, so it can defer a snapshot forever. {@link nextAutosaveDelayMs} caps
+ * the wait, which is the AutoRecover promise:
  *
  *   **a snapshot lands no later than one interval after the first unsaved edit,
  *   and no more often than once per interval.**
