@@ -17,8 +17,9 @@ import { requireFixture } from '../require-fixture';
 
 const DECK = path.resolve(__dirname, '../fixtures/e2e/three-d-parity/three-d-charts.pptx');
 
+// A copy through the constructor: `slice()` on a Node Buffer (`readFileSync`) is a view, not a copy.
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-	return bytes.slice().buffer as ArrayBuffer;
+	return new Uint8Array(bytes).buffer;
 }
 
 function chartOn(slides: PptxSlide[], n: number): ChartPptxElement {
