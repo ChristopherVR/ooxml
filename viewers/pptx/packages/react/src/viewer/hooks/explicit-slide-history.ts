@@ -49,6 +49,8 @@ export function serializeHistoryDocument(snapshot: EditorHistorySnapshot): strin
 				elements.map(historyElementContent),
 			]),
 		),
+		// A theme pick that changes nothing on the slides is still an edit, and an undo step.
+		theme: snapshot.theme,
 	});
 }
 

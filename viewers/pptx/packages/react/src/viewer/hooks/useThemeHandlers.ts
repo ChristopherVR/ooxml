@@ -21,7 +21,9 @@ import type {
  */
 import type { RefObject } from 'react';
 
+import type { EditorHistoryTheme } from '../types';
 import { applyThemeEditorEdit } from './theme-editor-apply';
+import { queueThemeWrite, restoreHistoryTheme } from './theme-history-restore';
 import type { EditorHistoryResult } from './useEditorHistory';
 
 export interface UseThemeHandlersInput {
@@ -32,6 +34,8 @@ export interface UseThemeHandlersInput {
 	setTheme: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
 	setSlideMasters: React.Dispatch<React.SetStateAction<Array<Record<string, unknown>>>>;
 	slideMasters: Array<Record<string, unknown>>;
+	/** The deck's theme parts as loaded; an undo back to the loaded theme restores its name. */
+	themeOptions?: PptxThemeOption[];
 	history: EditorHistoryResult;
 	/** Current live slides, re-coloured in place on a scheme-colour change. */
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -64,6 +68,8 @@ export interface ThemeHandlersResult {
 		fontScheme: PptxThemeFontScheme,
 		themeName?: string,
 	) => Promise<void>;
+	/** Undo or redo crossed a theme change: put that theme back (see `useEditorHistory`). */
+	handleRestoreHistoryTheme: (theme: EditorHistoryTheme) => Promise<void>;
 	handleSetTemplateBackground: (path: string, backgroundColor: string | undefined) => void;
 	handleGetTemplateBackgroundColor: (path: string) => string | undefined;
 	/** Return theme parts discovered in the loaded PPTX archive. */
@@ -125,7 +131,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		}
 		// Update the theme in the underlying archive + colour map so a later save
 		// (and any future parse) carries the new scheme.
-		await handler.updateThemeColorScheme(colorScheme);
+		await queueThemeWrite(handler, () => handler.updateThemeColorScheme(colorScheme));
 		// Re-colour the live slides IN PLACE rather than serialising the whole
 		// deck and feeding it back through the load pipeline. The old round-trip
 		// (`serialize -> setContent -> full re-parse`) is a heavy main-thread
@@ -155,7 +161,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		if (!handler) {
 			return;
 		}
-		await handler.updateThemeFontScheme(fontScheme);
+		await queueThemeWrite(handler, () => handler.updateThemeFontScheme(fontScheme));
 		// Re-resolve the live slides in place, as the colour scheme does: a full
 		// reload would jump back to the first slide and drop the undo history.
 		const previousFonts = theme?.fontScheme;
@@ -178,7 +184,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		if (!handler) {
 			return;
 		}
-		await handler.updateThemeName(name);
+		await queueThemeWrite(handler, () => handler.updateThemeName(name));
 		setTheme((prev) => (prev ? { ...prev, name } : { name }));
 		history.markDirty();
 	};
@@ -244,6 +250,8 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 	};
 
 	const handleApplyThemeEdit = (edit: ThemeEditorEdit) => applyThemeEditorEdit(input, edit);
+	const handleRestoreHistoryTheme = (target: EditorHistoryTheme) =>
+		restoreHistoryTheme(input, target);
 
 	return {
 		handleApplyThemeEdit,
@@ -253,6 +261,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		handleUpdateThemeName,
 		handleApplyThemeToPresentation,
 		handleApplyThemeData,
+		handleRestoreHistoryTheme,
 		handleSetTemplateBackground,
 		handleGetTemplateBackgroundColor,
 		handleGetAvailableThemes,

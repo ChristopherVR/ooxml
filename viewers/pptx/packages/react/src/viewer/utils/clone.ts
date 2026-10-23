@@ -25,8 +25,12 @@ export {
 /**
  * Deep-clone a history snapshot. Delegates to the shared implementation (which
  * rebuilds the structural fields and intentionally drops `actionLabel`, matching
- * the prior behaviour) and re-types the result as the React snapshot.
+ * the prior behaviour), keeps the React snapshot's recorded theme, and re-types
+ * the result as the React snapshot.
  */
 export function cloneHistorySnapshot(snapshot: EditorHistorySnapshot): EditorHistorySnapshot {
-	return cloneHistorySnapshotShared(snapshot as HistorySnapshotLike) as EditorHistorySnapshot;
+	const clone = cloneHistorySnapshotShared(
+		snapshot as HistorySnapshotLike,
+	) as EditorHistorySnapshot;
+	return snapshot.theme ? { ...clone, theme: structuredClone(snapshot.theme) } : clone;
 }

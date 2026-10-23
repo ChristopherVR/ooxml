@@ -7,7 +7,13 @@
  * clipboard operations, undo/redo history, geometry, and shape quick styles.
  */
 
-import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
+import type {
+	PptxElement,
+	PptxSlide,
+	PptxThemeColorScheme,
+	PptxThemeFontScheme,
+	ShapeStyle,
+} from 'pptx-viewer-core';
 
 // ---------------------------------------------------------------------------
 // Viewer mode
@@ -187,7 +193,19 @@ export interface EditorHistorySnapshot {
 	activeSlideIndex: number;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
+	/** The theme at that point, so undoing a theme pick puts the theme back with the slides. */
+	theme?: EditorHistoryTheme;
 	actionLabel?: string;
+}
+
+/**
+ * The part of the theme an undo step carries: the colour scheme, the font scheme and the name,
+ * which are what the theme editor, the Design galleries and the assistant change.
+ */
+export interface EditorHistoryTheme {
+	colorScheme?: PptxThemeColorScheme;
+	fontScheme?: PptxThemeFontScheme;
+	name?: string;
 }
 
 // ---------------------------------------------------------------------------

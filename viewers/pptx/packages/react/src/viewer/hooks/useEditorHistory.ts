@@ -1,13 +1,14 @@
 import { createEditorHistoryController } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxHeaderFooter, PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxHeaderFooter, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
-import type { CanvasSize, EditorHistorySnapshot } from '../types';
+import type { CanvasSize, EditorHistorySnapshot, EditorHistoryTheme } from '../types';
 import { cloneHistorySnapshot, cloneSlide, cloneTemplateElementsBySlideId } from '../utils/clone';
 import {
 	recordExplicitSlideUpdate,
 	serializeHistoryDocument as serializeDocument,
 } from './explicit-slide-history';
+import { historyTheme, sameHistoryTheme } from './history-theme';
 import { useController } from './useController';
 import { usePointerReleaseWakeup } from './usePointerReleaseWakeup';
 
@@ -46,6 +47,17 @@ export interface EditorHistoryInput {
 	 * Slide or a notes edit left the flag false and crash recovery never ran.
 	 */
 	onDirty?: () => void;
+	/**
+	 * The deck's theme. Its colour scheme, font scheme and name are recorded with every snapshot,
+	 * so a theme pick is an undo step like any other edit.
+	 */
+	theme?: PptxTheme | undefined;
+	/**
+	 * Put a recorded theme back (an undo or redo crossing a theme change). The slides come back
+	 * with the snapshot; the theme has to be written to the handler's theme part too, which this
+	 * hook cannot reach, so the theme handlers do it.
+	 */
+	onRestoreTheme?: (theme: EditorHistoryTheme) => void;
 	// Setters for applying snapshots
 	setSlides: (slides: PptxSlide[]) => void;
 	setCanvasSize: (size: CanvasSize) => void;
@@ -92,6 +104,8 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		hasActivePointerInteraction,
 		pointerCommitNonce,
 		onDirty,
+		theme,
+		onRestoreTheme,
 		setSlides,
 		setCanvasSize,
 		setActiveSlideIndex,
@@ -159,16 +173,18 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	const buildHistorySnapshot = useCallback(
 		(actionLabel?: string): EditorHistorySnapshot => {
+			const recordedTheme = historyTheme(theme);
 			return {
 				width: canvasSize.width,
 				height: canvasSize.height,
 				activeSlideIndex,
 				slides: slides.map(cloneSlide),
 				templateElementsBySlideId: cloneTemplateElementsBySlideId(templateElementsBySlideId),
+				...(recordedTheme ? { theme: structuredClone(recordedTheme) } : {}),
 				...(actionLabel ? { actionLabel } : {}),
 			};
 		},
-		[activeSlideIndex, canvasSize, slides, templateElementsBySlideId],
+		[activeSlideIndex, canvasSize, slides, templateElementsBySlideId, theme],
 	);
 
 	const applyHistorySnapshot = useCallback(
@@ -220,13 +236,28 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		onDirtyRef.current?.();
 	}, []);
 
+	const onRestoreThemeRef = useRef(onRestoreTheme);
+	useEffect(() => {
+		onRestoreThemeRef.current = onRestoreTheme;
+	}, [onRestoreTheme]);
+	/** Moving from `current` to `target` crosses a theme change: put the target's theme back. */
+	const restoreTheme = useCallback(
+		(current: EditorHistorySnapshot, target: EditorHistorySnapshot) => {
+			if (target.theme && !sameHistoryTheme(current.theme, target.theme)) {
+				onRestoreThemeRef.current?.(target.theme);
+			}
+		},
+		[],
+	);
+
 	// -- Stack navigation ---------------------------------------------------
 
 	const handleUndo = useCallback(() => {
 		if (!history.getSnapshot().canUndo) {
 			return;
 		}
-		const result = history.undo(buildHistorySnapshot());
+		const currentSnapshot = buildHistorySnapshot();
+		const result = history.undo(currentSnapshot);
 		if (!result) {
 			return;
 		}
@@ -236,15 +267,24 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(nextSnapshot);
 		lastHistorySerializedRef.current = serializeDocument(nextSnapshot);
 		applyHistorySnapshot(nextSnapshot);
+		restoreTheme(currentSnapshot, nextSnapshot);
 		unlockHistoryTracking();
 		markDirty();
-	}, [applyHistorySnapshot, buildHistorySnapshot, history, markDirty, unlockHistoryTracking]);
+	}, [
+		applyHistorySnapshot,
+		buildHistorySnapshot,
+		history,
+		markDirty,
+		restoreTheme,
+		unlockHistoryTracking,
+	]);
 
 	const handleRedo = useCallback(() => {
 		if (!history.getSnapshot().canRedo) {
 			return;
 		}
-		const result = history.redo(buildHistorySnapshot());
+		const currentSnapshot = buildHistorySnapshot();
+		const result = history.redo(currentSnapshot);
 		if (!result) {
 			return;
 		}
@@ -254,9 +294,17 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(targetSnapshot);
 		lastHistorySerializedRef.current = serializeDocument(targetSnapshot);
 		applyHistorySnapshot(targetSnapshot);
+		restoreTheme(currentSnapshot, targetSnapshot);
 		unlockHistoryTracking();
 		markDirty();
-	}, [applyHistorySnapshot, buildHistorySnapshot, history, markDirty, unlockHistoryTracking]);
+	}, [
+		applyHistorySnapshot,
+		buildHistorySnapshot,
+		history,
+		markDirty,
+		restoreTheme,
+		unlockHistoryTracking,
+	]);
 
 	// -- Reset --------------------------------------------------------------
 

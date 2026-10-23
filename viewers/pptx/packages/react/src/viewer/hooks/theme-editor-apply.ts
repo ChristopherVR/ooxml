@@ -7,9 +7,14 @@ import {
 } from 'pptx-viewer-core';
 import type { PptxData } from 'pptx-viewer-core';
 
+import { queueThemeWrite } from './theme-history-restore';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
-/** Commit a staged edit without reloading the presentation or resetting selection. */
+/**
+ * Commit a staged edit without reloading the presentation or resetting selection. It lands as one
+ * undo step, which records the theme too, so Undo puts the theme part back as well
+ * (`theme-history-restore.ts`).
+ */
 export async function applyThemeEditorEdit(
 	input: UseThemeHandlersInput,
 	{ colorScheme, fontScheme, name }: ThemeEditorEdit,
@@ -28,7 +33,7 @@ export async function applyThemeEditorEdit(
 	if (!handler) {
 		return;
 	}
-	await handler.applyTheme(colorScheme, fontScheme, name);
+	await queueThemeWrite(handler, () => handler.applyTheme(colorScheme, fontScheme, name));
 	const previousMap = theme?.colorScheme ? buildThemeColorMap(theme.colorScheme) : {};
 	bumpHistory();
 	setSlides(
