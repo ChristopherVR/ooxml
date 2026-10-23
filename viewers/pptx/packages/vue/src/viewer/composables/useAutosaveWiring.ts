@@ -54,6 +54,8 @@ export interface UseAutosaveWiringOptions {
 	 * snapshot cannot be reopened, because no recovery path has the password.
 	 */
 	getRecoverySnapshot: () => Promise<Uint8Array>;
+	/** The element whose inline editor is open (its live draft is in the snapshot already). */
+	getInlineEditingId?: () => string | null;
 	/** Emit the serialised bytes to the host. */
 	emitAutosave: (bytes: Uint8Array) => void;
 	/** Snapshot a restorable version (version history). */
@@ -114,7 +116,9 @@ export function useAutosaveWiring(options: UseAutosaveWiringOptions): UseAutosav
 		// The shared recovery store (IndexedDB, or the host's recovery methods).
 		// Recovery reads these bytes back with no password, so they are
 		// deliberately a plain ZIP even when the deck is protected.
+		// The recovery serialisation already reads the open inline editor's draft.
 		serialize: () => options.getRecoverySnapshot(),
+		...(options.getInlineEditingId ? { getInlineEditingId: options.getInlineEditingId } : {}),
 		onSaved: (bytes) => {
 			options.emitAutosave(bytes);
 			options.captureVersion('Autosave', Date.now());
