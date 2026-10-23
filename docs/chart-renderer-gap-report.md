@@ -12,6 +12,9 @@ not, how big each piece is, and how hard it is to retarget. Step 2 ports the top
   each runs core's own pipeline: `parseChartSpace`, `readChartFormatting` (the feed Word uses),
   `chartSummaryFromSpace`, `chartSummaryView`, `renderChartSvg`; ChartEx parts go through
   `chartExSummary`. It asserts nothing throws and that all 82 parts are reached.
+  Since 2026-10-23 `chartExSummary` builds its summary from the neutral ChartEx model
+  (`chart/ex`, `chart/render/summary-from-chartex.ts`), and the agnostic plan records that its outputs did not
+  change; the tables below were measured on 2026-10-17 and were not re-run.
 - Feature use is detected by regular expressions on the part text. "Core draws it" is measured by
   ablation: the feature is stripped from the part, the chart is rendered again, and if the SVG is
   identical core does not draw the feature. Set `CHART_GAP_REPORT=<file>` for the JSON table and

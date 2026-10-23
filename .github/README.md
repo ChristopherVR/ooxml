@@ -154,7 +154,7 @@ ooxml-mcp ───────────────────────�
 ```
 
 - **`ooxml-core`** owns the logic: packaging, XML, every format's model, parser, writer and editing commands, layout, validation and collaboration. It has no UI.
-- **`ooxml-ui`** owns the DOM: the shared elements and the product editors as `ooxml-ui/<product>` subpaths. The core never imports it.
+- **`ooxml-ui`** owns the DOM: the shared elements (including the chart and SmartArt editing elements the products mount), the framework-neutral binding kit (`ooxml-ui/bindings`) and the product editors as `ooxml-ui/<product>` subpaths. The core never imports it.
 - **Viewers** own only the framework bindings, demos, end-to-end tests and docs. They never copy logic from the library.
 
 ## What is in this repository
