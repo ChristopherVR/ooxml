@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { WebSelect, WebCheckbox } from '../WebControls';
 import type { EffectToggleCfg } from './fill-stroke-effect-configs';
 import { SEL, NUM, RNG, COL2, LBL, safeNum } from './FillStrokeHelpers';
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // EffectField
@@ -29,7 +29,7 @@ export function EffectField({
 	onUpdate: (u: Partial<ShapeStyle>) => void;
 }): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const fieldLabel = field.i18nKey ? t(field.i18nKey) : field.label;
 	const val = field.read(style);
 	const cls = `flex flex-col gap-1 ${field.span2 ? COL2 : ''}`;
@@ -62,10 +62,10 @@ export function EffectField({
 				<input
 					type='color'
 					value={String(val)}
+					ref={commitRecentColor}
 					onChange={(e) => {
 						const result = field.write(e.target.value, style);
 						onUpdate(typeof result === 'function' ? result(style) : result);
-						pushColor(e.target.value);
 					}}
 					className={`h-8 ${SEL} px-1`}
 				/>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { WebSelect } from '../WebControls';
 import { CARD, EXPLOSION_SUPPORTED_TYPES, HEADING, INPUT } from './chart-panel-constants';
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -33,7 +33,7 @@ export function ChartDataPointOptions({
 	onSetPointLabel,
 }: ChartDataPointOptionsProps) {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const [seriesIndex, setSeriesIndex] = useState(0);
 
 	if (series.length === 0 || categories.length === 0) {
@@ -99,10 +99,8 @@ export function ChartDataPointOptions({
 								title={t('pptx.chart.pointFill')}
 								className='h-6 w-8 cursor-pointer rounded border border-border bg-transparent'
 								value={point?.spPr?.fillColor ?? activeSeries.color ?? '#4472c4'}
-								onChange={(e) => {
-									onSetPointFill(seriesIndex, idx, e.target.value);
-									pushColor(e.target.value);
-								}}
+								ref={commitRecentColor}
+								onChange={(e) => onSetPointFill(seriesIndex, idx, e.target.value)}
 							/>
 							{point?.spPr?.fillColor && (
 								<button

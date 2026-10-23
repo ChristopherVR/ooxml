@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 import { normalizeHexColor } from '../../../utils';
 import { WebSelect, WebCheckbox } from '../../WebControls';
-import { useRecentColors } from '../RecentColorsContext';
+import { useRecentColorCommit } from '../useRecentColorCommit';
 
 // `max-md:min-h-[44px]!` matches MIN_TOUCH_TARGET_PX (44) from
 // pptx-viewer-shared's render/responsive module; `!` is load-bearing (see
@@ -30,7 +30,7 @@ export function Text3DProperties({
 	onUpdateTextStyle,
 }: Text3DPropertiesProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const t3d = ts?.text3d;
 	const hasExtrusion = Boolean(t3d?.extrusionHeight && t3d.extrusionHeight > 0);
 
@@ -84,10 +84,8 @@ export function Text3DProperties({
 							<input
 								type='color'
 								value={normalizeHexColor(t3d?.extrusionColor, '#888888')}
-								onChange={(e) => {
-									update3d({ extrusionColor: e.target.value });
-									pushColor(e.target.value);
-								}}
+								ref={commitRecentColor}
+								onChange={(e) => update3d({ extrusionColor: e.target.value })}
 								className={COLOR_CLS}
 							/>
 						</label>

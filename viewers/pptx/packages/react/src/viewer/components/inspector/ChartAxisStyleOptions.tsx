@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { WebSelect, WebCheckbox } from '../WebControls';
 import { CARD, GRIDLINE_DASH_OPTIONS, HEADING, INPUT } from './chart-panel-constants';
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -49,7 +49,7 @@ export function ChartAxisStyleOptions({
 	onSetGridlineStyle,
 }: ChartAxisStyleOptionsProps) {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 
 	const rows = SCALE_AXES.map((row) => ({
 		...row,
@@ -148,10 +148,8 @@ export function ChartAxisStyleOptions({
 										disabled={!canEdit}
 										className='h-6 w-8 cursor-pointer rounded border border-border bg-transparent'
 										value={axis.fontColor ?? '#000000'}
-										onChange={(e) => {
-											onSetTitleStyle(type, { fontColor: e.target.value });
-											pushColor(e.target.value);
-										}}
+										ref={commitRecentColor}
+										onChange={(e) => onSetTitleStyle(type, { fontColor: e.target.value })}
 									/>
 								</label>
 							</div>
@@ -178,10 +176,8 @@ export function ChartAxisStyleOptions({
 											title={t('pptx.chart.gridlineColor')}
 											className='h-6 w-8 cursor-pointer rounded border border-border bg-transparent'
 											value={spPr?.strokeColor ?? '#d9d9d9'}
-											onChange={(e) => {
-												onSetGridlineStyle(type, which, { color: e.target.value });
-												pushColor(e.target.value);
-											}}
+											ref={commitRecentColor}
+											onChange={(e) => onSetGridlineStyle(type, which, { color: e.target.value })}
 										/>
 										<input
 											type='number'

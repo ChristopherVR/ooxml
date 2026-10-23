@@ -138,11 +138,14 @@ export interface InspectorHandlers {
 	/**
 	 * Set the shape fill colour. Pass `ref` for a theme-swatch pick (wins on
 	 * save, so the fill follows a later theme change); omit it to clear a
-	 * previously-stored ref for a plain/custom/recent pick.
+	 * previously-stored ref for a plain/custom/recent pick. The colour also
+	 * goes into the recent colours, unless `committed` is `false`: a drag tick
+	 * through the native picker, which records only the colour it settles on
+	 * (its `change`, through {@link pushRecentColor}).
 	 */
-	setShapeFill(color: string, ref?: PptxThemeColorRef): void;
-	/** Same `ref` contract as {@link setShapeFill}, for the stroke colour. */
-	setShapeStroke(color: string, ref?: PptxThemeColorRef): void;
+	setShapeFill(color: string, ref?: PptxThemeColorRef, committed?: boolean): void;
+	/** Same `ref` and `committed` contract as {@link setShapeFill}, for the stroke colour. */
+	setShapeStroke(color: string, ref?: PptxThemeColorRef, committed?: boolean): void;
 	setShapeStrokeWidth(width: number): void;
 	setShapeStyle(patch: Partial<ShapeStyle>): void;
 	setShapeType(shapeType: string): void;

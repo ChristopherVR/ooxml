@@ -15,7 +15,7 @@ import {
 import type { ListMode } from '../../utils';
 import { normalizeHexColor } from '../../utils';
 import { WebSelect, WebCheckbox } from '../WebControls';
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 export interface TextPropertiesProps {
 	selectedElement: PptxElement;
@@ -121,7 +121,7 @@ export function AdvancedTextFormatting({
 	numChange,
 }: AdvancedTextFormattingProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	return (
 		<div className='mt-2 rounded border border-border bg-card p-2 space-y-2'>
 			<div className='text-[11px] uppercase tracking-wide text-muted-foreground'>
@@ -151,10 +151,8 @@ export function AdvancedTextFormatting({
 				<input
 					type='color'
 					value={normalizeHexColor(ts?.highlightColor, '#ffff00')}
-					onChange={(e) => {
-						onUpdateTextStyle({ highlightColor: e.target.value });
-						pushColor(e.target.value);
-					}}
+					ref={commitRecentColor}
+					onChange={(e) => onUpdateTextStyle({ highlightColor: e.target.value })}
 					disabled={!canEdit}
 					className={COLOR_CLS}
 				/>
@@ -188,10 +186,8 @@ export function AdvancedTextFormatting({
 					<input
 						type='color'
 						value={ts?.underlineColor || ts?.color || '#000000'}
-						onChange={(e) => {
-							onUpdateTextStyle({ underlineColor: e.target.value });
-							pushColor(e.target.value);
-						}}
+						ref={commitRecentColor}
+						onChange={(e) => onUpdateTextStyle({ underlineColor: e.target.value })}
 						className={COLOR_CLS}
 					/>
 				</label>
@@ -221,10 +217,8 @@ export function AdvancedTextFormatting({
 						<input
 							type='color'
 							value={ts?.textOutlineColor || '#000000'}
-							onChange={(e) => {
-								onUpdateTextStyle({ textOutlineColor: e.target.value });
-								pushColor(e.target.value);
-							}}
+							ref={commitRecentColor}
+							onChange={(e) => onUpdateTextStyle({ textOutlineColor: e.target.value })}
 							className={COLOR_CLS}
 						/>
 					</label>

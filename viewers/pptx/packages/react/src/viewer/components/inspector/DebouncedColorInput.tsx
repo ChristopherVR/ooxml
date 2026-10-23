@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ---------------------------------------------------------------------------
 // DebouncedColorInput
@@ -9,7 +9,9 @@ import { useRecentColors } from './RecentColorsContext';
 // the canvas reflects fill / stroke / text-colour changes immediately. A local
 // state mirror keeps the swatch responsive; undo grouping is handled downstream
 // in useEditorHistory (snapshots are diffed and gated by pointer interaction),
-// so live commits do not flood the undo stack.
+// so live commits do not flood the undo stack. The "Recent Colors" list only
+// takes the colour the picker settles on (native `change`), not every shade a
+// drag passes through.
 // ---------------------------------------------------------------------------
 
 interface DebouncedColorInputProps {
@@ -31,7 +33,7 @@ export function DebouncedColorInput({
 	const [local, setLocal] = useState(value);
 	const commitRef = useRef(onCommit);
 	commitRef.current = onCommit;
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 
 	// Sync external value when the selected element changes. Not pure derived
 	// state: `local` is then mutated independently by every keystroke until the
@@ -44,15 +46,11 @@ export function DebouncedColorInput({
 
 	// Commit live on every change so the canvas updates immediately, while
 	// mirroring the value locally to keep the picker swatch responsive.
-	const handleChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const next = e.target.value;
-			setLocal(next);
-			commitRef.current(next);
-			pushColor(next);
-		},
-		[pushColor],
-	);
+	const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		const next = e.target.value;
+		setLocal(next);
+		commitRef.current(next);
+	}, []);
 
 	return (
 		<input
@@ -61,6 +59,7 @@ export function DebouncedColorInput({
 			disabled={disabled}
 			value={local}
 			className={className}
+			ref={commitRecentColor}
 			onChange={handleChange}
 		/>
 	);
