@@ -11,6 +11,7 @@ import {
 	type DocxDiagramEdit,
 	type InlineImage,
 } from 'ooxml-core/docx';
+import { diagramNodeOutline } from 'ooxml-core/diagram';
 import type { OfficeSmartArtTextNode } from '../smartart';
 import { schema } from './schema';
 import { parseDiagram } from './smartart-node-view';
@@ -103,12 +104,5 @@ export function insertDiagram(view: EditorView, image: InlineImage): boolean {
 
 /** The diagram's nodes as text pane lines, with their depth below the top level. */
 export function diagramOutline(diagram: DocxDiagram): OfficeSmartArtTextNode[] {
-	const ids = new Set(diagram.nodes.map((node) => node.id));
-	const levels = new Map<string, number>();
-	return diagram.nodes.map((node) => {
-		const parent = node.parentId && ids.has(node.parentId) ? node.parentId : undefined;
-		const level = parent === undefined ? 0 : (levels.get(parent) ?? 0) + 1;
-		levels.set(node.id, level);
-		return { id: node.id, text: node.text, level };
-	});
+	return diagramNodeOutline(diagram.nodes);
 }

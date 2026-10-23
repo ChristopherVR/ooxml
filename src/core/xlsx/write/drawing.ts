@@ -8,6 +8,12 @@ import { readChartPaletteId } from '../read/chart-colors';
 import { writeChartColorStyle } from './chart-colors';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 import { XML_HEADER, escapeAttr } from './xml-out';
+import {
+	droppedSmartArtDrawings,
+	isRewrittenSmartArt,
+	writeEditedSmartArt,
+	writeInsertedSmartArt,
+} from './smart-art';
 
 /** A relationship target from `fromPart` to `toPart` (both package part names). */
 export function relativeTarget(fromPart: string, toPart: string): string {
@@ -109,13 +115,20 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 }
 
 /**
- * Drawing objects as far as saving is concerned: a SmartArt object's diagram, nodes and notices
- * are read from its parts and never written, so only its anchor, name and frame XML count.
+ * Drawing objects as far as saving is concerned: an unedited SmartArt object's diagram, nodes and
+ * notices are read from its parts and never written, so only its anchor, name and frame XML count;
+ * an edited or inserted one is rewritten (`smart-art.ts`).
  */
 export const savedDrawingShape = (objects: readonly DrawingObject[]): unknown[] =>
 	objects.map((o) =>
 		o.kind === 'smartArt'
-			? { kind: o.kind, anchor: o.anchor, name: o.name, sourceXml: o.sourceXml }
+			? {
+					kind: o.kind,
+					anchor: o.anchor,
+					name: o.name,
+					sourceXml: o.sourceXml,
+					...(isRewrittenSmartArt(o) ? { rewritten: true } : {}),
+				}
 			: o.kind === 'slicer' || o.kind === 'timeline'
 				? // A frame whose slicer is not modelled is the same kept anchor as the placeholder.
 					{ kind: 'unsupported', anchor: o.anchor, description: o.kind, sourceXml: o.sourceXml }
@@ -134,10 +147,13 @@ export function writeDrawing(
 ): boolean {
 	const rels = new RelationshipSet();
 	const source = writer.source;
+	// Cached drawings of edited SmartArt are dropped: Excel lays an edited diagram out again.
+	const dropped = droppedSmartArtDrawings(objects);
 	if (sourceDrawing && source) {
 		for (const [id, rel] of source.rels(sourceDrawing)) {
-			rels.keep(id, rel);
 			const target = source.target(sourceDrawing, rel);
+			if (target && dropped.has(target)) continue;
+			rels.keep(id, rel);
 			if (target && rel.type !== RELATIONSHIP_TYPES.chart && rel.type !== RELATIONSHIP_TYPES.image)
 				writer.carry(target);
 		}
@@ -155,6 +171,19 @@ export function writeDrawing(
 		) + 1;
 	let body = '';
 	for (const object of objects) {
+		if (object.kind === 'smartArt' && object.inserted) {
+			const frame = writeInsertedSmartArt(
+				writer,
+				object,
+				rels,
+				(part) => relativeTarget(partName, part),
+				nextId++,
+			);
+			body += anchorXml(object.anchor, frame);
+			continue;
+		}
+		if (object.kind === 'smartArt' && object.edited && sourceDrawing)
+			writeEditedSmartArt(writer, object);
 		if (
 			object.kind === 'unsupported' ||
 			object.kind === 'smartArt' ||

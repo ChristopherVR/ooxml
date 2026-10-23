@@ -32,6 +32,7 @@ import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
 import { createChartFormatPane } from './chart-format-pane';
+import { createSmartArtController } from './smartart-controller';
 
 /** Element properties the shell's options and customize pages change. */
 export interface ShellElement extends HTMLElement {
@@ -197,6 +198,7 @@ export function buildShell(core: EditorCore): Shell {
 
 	const workspace = el(doc, 'div', 'xve-workspace');
 	const chartFormatPane = createChartFormatPane(ctx);
+	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
 	const gridHost = el(doc, 'div', 'xve-grid-host');
@@ -205,7 +207,7 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, chartFormatPane.element);
+	canvasRow.append(workspace, chartFormatPane.element, smartArt.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -239,6 +241,7 @@ export function buildShell(core: EditorCore): Shell {
 			gridHost,
 			tabsRow,
 			chartFormatPane.element,
+			smartArt.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
@@ -284,6 +287,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.refresh();
 			pageViews?.refresh();
 			chartFormatPane.refresh();
+			smartArt.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');
@@ -300,6 +304,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.relocalize();
 			backstage.relocalize();
 			chartFormatPane.relocalize();
+			smartArt.relocalize();
 			core.requestRender();
 		},
 	};

@@ -1,6 +1,6 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
-import type { DiagramDrawing, DiagramIssue } from '../diagram/types';
-import type { DiagramNeutralTextParagraph } from '../diagram/text/node-text-neutral';
+import type { DiagramDrawing, DiagramIssue, DiagramLayoutType } from '../diagram/types';
+import type { DiagramHostNode } from '../diagram/edit/node-edit';
 import type { CellAddress, CellRange } from './address';
 import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
 import type {
@@ -570,24 +570,41 @@ export interface UnsupportedDrawingObject {
 	chartEx?: ChartObject;
 }
 
-/** One content node of a SmartArt data model (for a placeholder or an outline view). */
-export interface SmartArtNode {
-	id: string;
-	text: string;
-	/** Model id of the parent content node, when it has one. */
-	parentId?: string;
-	/**
-	 * The node's paragraphs on the neutral DrawingML text model (read-only); project them with
-	 * `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
-	 */
-	paragraphs?: DiagramNeutralTextParagraph[];
+/**
+ * One content node of a SmartArt data model: the host node Word and Excel share
+ * (`diagram/edit/node-edit.ts`). Nodes are kept in tree order; `paragraphs` (read-only) project
+ * with `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
+ */
+export type SmartArtNode = DiagramHostNode;
+
+/** Package part names of a SmartArt graphic's diagram parts, as read. */
+export interface SmartArtParts {
+	data?: string;
+	layout?: string;
+	quickStyle?: string;
+	colors?: string;
+	/** The cached drawing (`dsp:drawing`), when the data model names one. */
+	drawing?: string;
 }
 
 /**
- * A SmartArt graphic (`xdr:graphicFrame` with the DiagramML graphic). Shown from the drawing the
- * producing application cached (`dsp:drawing`); no SmartArt layout is computed and the content
- * is not editable. On save the frame XML and every diagram part are kept verbatim; only the
- * anchor position is written from the model.
+ * Definition XML a save writes for an inserted diagram (all three) or after Change Layout (the
+ * layout), from `ooxml-core/diagram/builtin`.
+ */
+export interface SmartArtDefinitions {
+	layout?: string;
+	colors?: string;
+	quickStyle?: string;
+}
+
+/**
+ * A SmartArt graphic (`xdr:graphicFrame` with the DiagramML graphic). Drawn from the drawing the
+ * producing application cached (`dsp:drawing`), or with an approximate layout when there is none;
+ * Office's layout is not computed here. Unedited, the frame XML and every diagram part are kept
+ * verbatim on save (only the anchor position is written from the model). Edited (`edited`, see
+ * `edit/smart-art.ts`), the data part is rewritten and the cached drawing dropped, because Excel
+ * lays an edited diagram out again (docs/agnostic-core-plan.md); inserted (`inserted`), new parts
+ * are written.
  */
 export interface SmartArtObject {
 	kind: 'smartArt';
@@ -595,19 +612,32 @@ export interface SmartArtObject {
 	name?: string;
 	/**
 	 * The cached drawing, in EMU relative to the frame: what `<office-ui-smartart>` (`ooxml-ui`)
-	 * takes as `drawing`. Absent when the file has no usable cached drawing: show a placeholder
-	 * with `nodes`.
+	 * takes as `drawing`. Absent when the file has none or an edit dropped it: draw the nodes with
+	 * `approximateDiagramDrawingFromNodes` (`ooxml-core/diagram`).
 	 */
 	diagram?: DiagramDrawing;
-	/** Content nodes of the data model, in document order. */
+	/** Content nodes of the data model, in tree order. */
 	nodes: SmartArtNode[];
 	/** `dgm:layoutDef/@uniqueId` (`urn:microsoft.com/office/officeart/2005/8/layout/default`). */
 	layoutId?: string;
+	/** Category of the layout (`list`, `process`...), for the approximate drawing. */
+	layoutFamily?: DiagramLayoutType;
+	/** `dgm:colorsDef/@uniqueId` and `dgm:styleDef/@uniqueId`. */
+	colorsId?: string;
+	quickStyleId?: string;
+	/** The diagram parts as read; absent for an inserted diagram. */
+	parts?: SmartArtParts;
+	/** The nodes or layout changed since loading: the save rewrites the data part. */
+	edited?: true;
+	/** Created by Insert SmartArt: the save writes its parts from `nodes` and `definitions`. */
+	inserted?: true;
+	/** Definitions the save writes (inserted diagram, Change Layout). */
+	definitions?: SmartArtDefinitions;
 	/** What is and is not shown, for the UI to display honestly. */
 	notice: string;
 	/** Problems met reading the diagram parts; empty when everything resolved. */
 	issues: DiagramIssue[];
-	/** The anchor element's XML as read, written back (re-anchored) on save. */
+	/** The anchor element's XML as read, written back (re-anchored) on save; empty when inserted. */
 	sourceXml: string;
 }
 

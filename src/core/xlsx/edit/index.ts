@@ -21,6 +21,7 @@ export { presetEdges } from './borders';
 export { validateDefinedName } from './view';
 export { uniqueHeaders } from './tables';
 export { IMAGE_EXTENSIONS, newMediaPart, type ChartPatch } from './charts';
+export type { SmartArtEditResult, SmartArtInsertion, SmartArtLayoutChange } from './smart-art';
 export { validateTableName, type TablePatch, type TableRef } from './table-edits';
 export { autoGrowRows, rowsToRefit } from './row-autofit';
 export {

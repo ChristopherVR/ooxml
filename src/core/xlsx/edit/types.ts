@@ -31,6 +31,8 @@ import type { FontView } from '../layout/types';
 import type { StylePatch } from '../styles';
 import type { CalcEngine } from './deps';
 import type { ChartPatch } from './charts';
+import type { SmartArtEditResult, SmartArtInsertion, SmartArtLayoutChange } from './smart-art';
+import type { DiagramNodeEdit } from '../../diagram/edit/node-edit';
 import type { TablePatch, TableRef } from './table-edits';
 import type { SparklineGroupPatch } from './sparklines';
 
@@ -216,6 +218,12 @@ export interface EditSession {
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
+	/** Applies a SmartArt Design or text pane command to the SmartArt at `index` (one undo step). */
+	editSmartArt(sheet: number, index: number, edit: DiagramNodeEdit): SmartArtEditResult;
+	/** SmartArt Design > Change Layout; false when the diagram already uses the layout. */
+	changeSmartArtLayout(sheet: number, index: number, change: SmartArtLayoutChange): boolean;
+	/** Insert > SmartArt; returns the new drawing's index. */
+	insertSmartArt(sheet: number, insertion: SmartArtInsertion): number;
 	/** Creates a worksheet-range PivotTable and its cached output. */
 	createPivotTable(sheet: number, destination: CellAddress, options: PivotTableOptions): string;
 	/** Refreshes cached records and output; an optional patch reconfigures fields. */

@@ -4,48 +4,59 @@
 // SmartArt Styles and Change Colors galleries are not offered: only one colour and one style
 // definition ship with the core, so there is nothing yet to switch between.
 import type { EditorState } from 'prosemirror-state';
+import {
+	DIAGRAM_ADD_SHAPE_COMMANDS,
+	DIAGRAM_ADD_SHAPE_LABEL,
+	DIAGRAM_DESIGN_COMMANDS,
+	DIAGRAM_DESIGN_GROUPS,
+	type DiagramDesignCommandKey,
+} from 'ooxml-core/diagram';
 import { group, menuSelect, stack, tool } from './ribbon-parts';
 import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
 import { selectedDiagram } from './smartart-commands';
 
-const ADD_SHAPE: Array<[string, string]> = [
-	['addAfter', 'Add Shape After'],
-	['addBefore', 'Add Shape Before'],
-	['addAbove', 'Add Shape Above'],
-	['addBelow', 'Add Shape Below'],
-];
+// The commands and labels are the shared SmartArt Design list (`ooxml-core/diagram`), which
+// Excel's tab is built from too.
+const ADD_SHAPE: Array<[string, string]> = DIAGRAM_ADD_SHAPE_COMMANDS.map((c) => [c.key, c.label]);
 type AddKey = 'addAfter' | 'addBefore' | 'addAbove' | 'addBelow';
+const label = (key: DiagramDesignCommandKey): string =>
+	DIAGRAM_DESIGN_COMMANDS.find((command) => command.key === key)?.label ?? key;
 
 export function buildSmartArtDesignPanel(panel: HTMLElement): void {
 	panel.append(
 		group(
-			'Create Graphic',
+			DIAGRAM_DESIGN_GROUPS.create,
 			menuSelect(
-				'Add Shape',
+				DIAGRAM_ADD_SHAPE_LABEL,
 				'addShape',
 				ADD_SHAPE,
 				(value) => ({ type: 'smartArt', key: value as AddKey }),
 				{ momentary: true },
 			),
 			tool(
-				'Text Pane',
+				label('textPane'),
 				'textPane',
 				{ type: 'smartArt', key: 'textPane' },
 				{ large: true, className: 'dve-smartart-text-pane-toggle' },
 			),
 			stack(
-				tool('Promote', 'promote', { type: 'smartArt', key: 'promote' }, { inline: true }),
-				tool('Demote', 'demote', { type: 'smartArt', key: 'demote' }, { inline: true }),
+				tool(label('promote'), 'promote', { type: 'smartArt', key: 'promote' }, { inline: true }),
+				tool(label('demote'), 'demote', { type: 'smartArt', key: 'demote' }, { inline: true }),
 			),
 			stack(
-				tool('Move Up', 'moveUp', { type: 'smartArt', key: 'moveUp' }, { inline: true }),
-				tool('Move Down', 'moveDown', { type: 'smartArt', key: 'moveDown' }, { inline: true }),
+				tool(label('moveUp'), 'moveUp', { type: 'smartArt', key: 'moveUp' }, { inline: true }),
+				tool(
+					label('moveDown'),
+					'moveDown',
+					{ type: 'smartArt', key: 'moveDown' },
+					{ inline: true },
+				),
 			),
 		),
 		group(
-			'Layouts',
+			DIAGRAM_DESIGN_GROUPS.layouts,
 			tool(
-				'Change Layout',
+				label('changeLayout'),
 				'changeLayout',
 				{ type: 'smartArt', key: 'changeLayout' },
 				{ large: true },

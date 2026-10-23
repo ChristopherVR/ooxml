@@ -11,3 +11,6 @@ export * from './reflow-category';
 export * from './reflow-directional';
 export * from './reflow-geometric';
 export * from './reflow-stacked';
+export * from './node-edit';
+export * from './node-tree';
+export * from './design-commands';

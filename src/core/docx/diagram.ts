@@ -11,7 +11,7 @@ import {
 	parseRelationshipIdAttributes,
 	type DiagramDrawing,
 	type DiagramIssue,
-	type DiagramNeutralTextParagraph,
+	type DiagramHostNode,
 	type DiagramLayoutType,
 	type DiagramRelationshipIds,
 } from '../diagram/index';
@@ -32,20 +32,11 @@ export interface DocxDiagramPart {
 	partName: string;
 }
 
-/** One content node of the diagram's data model. */
-export interface DocxDiagramNode {
-	id: string;
-	text: string;
-	/** Model id of the parent content node, when the data model has one. */
-	parentId?: string;
-	/**
-	 * The node's paragraphs on the neutral DrawingML text model (read-only); project them with
-	 * `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
-	 */
-	paragraphs?: DiagramNeutralTextParagraph[];
-	/** `asst` for an assistant point (org charts); absent for an ordinary node. */
-	nodeType?: 'asst';
-}
+/**
+ * One content node of the diagram's data model: the host node every product shares
+ * (`diagram/edit/node-edit.ts`); its `paragraphs` project with `projectDiagramNodeTextNeutral`.
+ */
+export type DocxDiagramNode = DiagramHostNode;
 
 /**
  * How the diagram can be shown.

@@ -34,7 +34,7 @@ test('Excel encrypted workbook prompts, retries and opens', async ({ page }) => 
 	expect(await editorProperty<string>(page, 'fileName')).toBe('protected.xlsx');
 });
 
-test('Excel SmartArt uses the shared renderer and declares display-only support', async ({
+test('Excel SmartArt uses the shared renderer for its cached drawing', async ({
 	page,
 }) => {
 	await openLanding(page);
@@ -53,9 +53,12 @@ test('Excel SmartArt uses the shared renderer and declares display-only support'
 			'Aptos Narrow',
 		);
 	}
-	await expect(editor(page).locator('.xg-smartart-notice').first()).toHaveText(
-		'SmartArt (display only)',
+	// Drawn from the cached drawing: no approximate-layout badge.
+	await expect(editor(page).locator('.xg-smartart').first()).toHaveAttribute(
+		'data-rendering',
+		'cached-drawing',
 	);
+	await expect(editor(page).locator('.xg-smartart-notice')).toHaveCount(0);
 });
 
 test('Info edits properties with undo and encrypts a downloaded workbook', async ({ page }) => {
