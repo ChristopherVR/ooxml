@@ -98,8 +98,7 @@ export function parseDrawingListStyle(
 		else extra.push(outerXml(child));
 	}
 	// Fill holes so `levels` is a dense array of `undefined` rather than a sparse one.
-	for (let index = 0; index < style.levels.length; index++)
-		style.levels[index] = style.levels[index];
+	style.levels = Array.from(style.levels);
 	if (extra.length) style.extraXml = extra;
 	return style;
 }
