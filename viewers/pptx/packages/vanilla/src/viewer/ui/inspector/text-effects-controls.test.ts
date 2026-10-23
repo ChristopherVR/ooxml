@@ -109,3 +109,74 @@ describe('text effects Transform (Text Warp) gallery', () => {
 		).toBe('true');
 	});
 });
+
+describe('text shadow, glow and reflection', () => {
+	/** The checkbox a caption names (each toggle carries its caption as its accessible name). */
+	function toggleNamed(root: HTMLElement, caption: string) {
+		const box = root.querySelector<HTMLElement & { checked: boolean; disabled: boolean }>(
+			`pptx-ui-checkbox[aria-label="${caption}"]`,
+		);
+		if (!box) {
+			throw new Error(`the text effects have no "${caption}" toggle`);
+		}
+		return box;
+	}
+
+	function tick(box: HTMLElement & { checked: boolean }, checked: boolean): void {
+		box.checked = checked;
+		box.dispatchEvent(new Event('change', { bubbles: true }));
+	}
+
+	it('switches each effect on with the defaults the other bindings write', () => {
+		const { controls, setTextStyle } = mount();
+		controls.update(state());
+		tick(toggleNamed(controls.el, t('pptx.textEffects.shadow')), true);
+		tick(toggleNamed(controls.el, t('pptx.textEffects.glow')), true);
+		tick(toggleNamed(controls.el, t('pptx.textEffects.reflection')), true);
+		expect(setTextStyle.mock.calls.map(([patch]) => patch)).toStrictEqual([
+			{
+				textShadowColor: '#000000',
+				textShadowBlur: 4,
+				textShadowOffsetX: 2,
+				textShadowOffsetY: 2,
+				textShadowOpacity: 0.5,
+			},
+			{ textGlowColor: '#ffff00', textGlowRadius: 6, textGlowOpacity: 0.6 },
+			{
+				textReflection: true,
+				textReflectionBlur: 1,
+				textReflectionStartOpacity: 0.5,
+				textReflectionEndOpacity: 0,
+				textReflectionOffset: 3,
+			},
+		]);
+	});
+
+	it('shows a glowing run as glowing, edits its size and clears it, on the selected range', () => {
+		const { controls, setTextStyle } = mount();
+		const range = { startSegIdx: 0, startOffset: 0, endSegIdx: 0, endOffset: 2 };
+		controls.update(
+			state({
+				textStyle: { textGlowColor: '#ff0000', textGlowRadius: 8 } as TextStyle,
+				selectedTextRange: range,
+			}),
+		);
+		const glow = toggleNamed(controls.el, t('pptx.textEffects.glow'));
+		expect(glow.checked).toBeTruthy();
+		const size = controls.el.querySelector<HTMLInputElement>('[data-testid="text-fx-glow-size"]')!;
+		expect(size.value).toBe('8');
+		size.value = '400';
+		size.dispatchEvent(new Event('change', { bubbles: true }));
+		tick(glow, false);
+		expect(setTextStyle.mock.calls).toStrictEqual([
+			[{ textGlowRadius: 50 }, range],
+			[{ textGlowColor: undefined, textGlowRadius: undefined, textGlowOpacity: undefined }, range],
+		]);
+	});
+
+	it('keeps the effect toggles disabled while the selection cannot take text', () => {
+		const { controls } = mount();
+		controls.update(state({ canText: false }));
+		expect(toggleNamed(controls.el, t('pptx.textEffects.glow')).disabled).toBeTruthy();
+	});
+});
