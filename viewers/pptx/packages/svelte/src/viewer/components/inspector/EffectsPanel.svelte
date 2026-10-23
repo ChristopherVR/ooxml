@@ -22,6 +22,11 @@
 	function onpatch(patch: Partial<ShapeStyle>): void {
 		editor.patchSelected(shapeQuickStylePatch(el, patch));
 	}
+
+	/** A colour drag's live shade: on the slide at once, no undo step. */
+	function onpreview(patch: Partial<ShapeStyle>): void {
+		editor.previewElement(el.id, shapeQuickStylePatch(el, patch));
+	}
 </script>
 
 <div class="pptx-svelte-effects">
@@ -29,6 +34,7 @@
 		sections={SHAPE_EFFECT_SECTIONS}
 		target={shapeStyle}
 		{onpatch}
+		{onpreview}
 		oncolorcommit={(hex) => editor.recordRecentColor(hex)}
 	/>
 </div>

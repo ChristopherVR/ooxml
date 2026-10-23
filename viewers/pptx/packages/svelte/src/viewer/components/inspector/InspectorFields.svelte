@@ -4,24 +4,39 @@
 	 * any list of shared inspector section descriptors (a toggle per section,
 	 * then a two-column grid of its fields); values, bounds, labels and patches
 	 * all come from the descriptors, so this component only maps them onto
-	 * markup. A colour commit is reported through `oncolorcommit` for the
-	 * "Recent colours" list.
+	 * markup. A colour field previews while its native picker is dragged
+	 * (`onpreview`, no undo step) and commits once when the pick settles
+	 * (`onpatch`, then `oncolorcommit` for the "Recent colours" list), through
+	 * the shared `createLiveColorPatchInput`.
 	 */
-	import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
-	import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
+	import {
+		createLiveColorPatchInput,
+		inspectorFieldPatch,
+		inspectorTogglePatch,
+		resolveInspectorSections,
+	} from 'ooxml-ui/pptx';
+	import type {
+		InspectorFieldValue,
+		InspectorSectionDescriptor,
+		LiveColorInput,
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
+	import { liveColorEvents } from './live-color';
 
 	const {
 		sections,
 		target,
 		onpatch,
+		onpreview,
 		oncolorcommit,
 		disabled = false,
 	}: {
 		sections: readonly InspectorSectionDescriptor<T, P>[];
 		target: T;
 		onpatch: (patch: P) => void;
+		/** A colour drag's live patch: apply it without an undo step. */
+		onpreview?: (patch: P) => void;
 		oncolorcommit?: (hex: string) => void;
 		disabled?: boolean;
 	} = $props();
@@ -34,6 +49,35 @@
 		if (patch !== undefined) {
 			onpatch(patch);
 		}
+	}
+
+	/** One live colour controller per colour field, created on first use. */
+	const colorInputs = new Map<string, LiveColorInput>();
+
+	function colorInput(sectionId: string, fieldId: string): LiveColorInput {
+		const key = `${sectionId}.${fieldId}`;
+		let control = colorInputs.get(key);
+		if (!control) {
+			control = createLiveColorPatchInput<T, P & object>({
+				read: () => {
+					const field = views
+						.find((section) => section.id === sectionId)
+						?.fields.find((candidate) => candidate.id === fieldId);
+					return field && { key, color: String(field.value), state: target };
+				},
+				patch: (value, hex) =>
+					inspectorFieldPatch(sections, sectionId, fieldId, value, hex) as
+						| (P & object)
+						| undefined,
+				preview: (patch) => onpreview?.(patch),
+				commit: (patch, hex) => {
+					onpatch(patch);
+					oncolorcommit?.(hex);
+				},
+			});
+			colorInputs.set(key, control);
+		}
+		return control;
 	}
 
 	function onToggle(sectionId: string, on: boolean): void {
@@ -97,10 +141,7 @@
 									aria-label={t(field.labelKey)}
 									value={String(field.value)}
 									{disabled}
-									onchange={(e) => {
-										onField(section.id, field.id, e.currentTarget.value);
-										oncolorcommit?.(e.currentTarget.value);
-									}}
+									use:liveColorEvents={colorInput(section.id, field.id)}
 								/>
 							{:else if field.control === 'range'}
 								<input
