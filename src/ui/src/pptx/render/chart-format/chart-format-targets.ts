@@ -1,7 +1,9 @@
 /**
- * The chart elements a Format pane can target, in the order PowerPoint lists
- * them in Chart Format > Current Selection and in the pane's element picker,
- * with their captions and pane titles.
+ * The chart elements a PowerPoint Format pane can target, in the order
+ * PowerPoint lists them in Chart Format > Current Selection and in the pane's
+ * element picker. Captions and pane titles come from the shared chart Format
+ * pane (`src/ui/src/chart/format-pane-targets.ts`), whose `chartFormat.*` keys
+ * this module maps onto PowerPoint's `pptx.chartFormat.*` dictionary.
  *
  * @module render/chart-format/chart-format-targets
  */
@@ -11,29 +13,23 @@ import type {
 	PptxChartFormatTarget,
 	PptxChartFormatTargetKey,
 } from 'ooxml-core/pptx';
-import { chartFormatTargetKey, parseChartFormatTargetKey } from 'ooxml-core/pptx';
+import { parseChartFormatTargetKey } from 'ooxml-core/pptx';
 
-/** A translatable caption: key, `{{name}}` parameters and the English fallback. */
-export interface ChartFormatText {
-	key: string;
-	fallback: string;
-	params?: Readonly<Record<string, string | number>>;
-	/** Parameters that are themselves captions ("{{axis}} Major Gridlines"). */
-	paramTexts?: Readonly<Record<string, ChartFormatText>>;
-}
+import { translateChartFormatText as translateNeutral } from '../../../chart/format-pane-common';
+import {
+	CHART_AREA_TARGET,
+	chartFormatPaneTitle as neutralPaneTitle,
+	chartFormatTargetLabel as neutralTargetLabel,
+	chartFormatTargetOptions,
+	type ChartFormatDescribe,
+} from '../../../chart/format-pane-targets';
+import type { ChartFormatTargetOption, ChartFormatText } from '../../../chart/format-pane-types';
 
-/** One entry of the element picker. */
-export interface ChartFormatTargetOption {
-	key: PptxChartFormatTargetKey;
-	target: PptxChartFormatTarget;
-	label: ChartFormatText;
-}
+export type { ChartFormatTargetOption, ChartFormatText } from '../../../chart/format-pane-types';
 
-const text = (
-	key: string,
-	fallback: string,
-	params?: Readonly<Record<string, string | number>>,
-): ChartFormatText => (params ? { key, fallback, params } : { key, fallback });
+/** The PowerPoint dictionary key of a shared chart Format caption key. */
+export const pptxChartFormatKey = (key: string): string =>
+	key.startsWith('chartFormat.') ? `pptx.${key}` : key;
 
 /** Whether an axis is drawn vertically (left/right edge). */
 function isVerticalAxis(axis: PptxChartAxisFormatting, data: PptxChartData): boolean {
@@ -44,35 +40,22 @@ function isVerticalAxis(axis: PptxChartAxisFormatting, data: PptxChartData): boo
 	return axis.axisType === 'valAx' ? !horizontalBars : horizontalBars;
 }
 
-function isSecondaryAxis(data: PptxChartData, index: number): boolean {
-	const axis = data.axes?.[index];
-	if (!axis) {
-		return false;
-	}
-	return (data.axes ?? []).slice(0, index).some((a) => a.axisType === axis.axisType);
-}
+const AXIS_KINDS = { catAx: 'cat', valAx: 'val', dateAx: 'date', serAx: 'ser' } as const;
 
-/** "Vertical (Value) Axis", "Secondary Horizontal (Category) Axis", ... */
-function axisCaption(data: PptxChartData, index: number): ChartFormatText {
-	const axis = data.axes?.[index];
-	if (!axis) {
-		return text('pptx.chartFormat.target.axis', 'Axis');
-	}
-	if (axis.axisType === 'serAx') {
-		return text('pptx.chartFormat.target.depthAxis', 'Depth (Series) Axis');
-	}
-	const vertical = isVerticalAxis(axis, data);
-	const value = axis.axisType === 'valAx';
-	const secondary = isSecondaryAxis(data, index);
-	const orientation = vertical ? 'Vertical' : 'Horizontal';
-	const id = secondary ? `secondary${orientation}` : orientation.toLowerCase();
-	const key = `${id}${value ? 'Value' : 'Category'}`;
-	const english = `${secondary ? 'Secondary ' : ''}${vertical ? 'Vertical' : 'Horizontal'} (${value ? 'Value' : 'Category'}) Axis`;
-	return text(`pptx.chartFormat.target.axis.${key}`, english);
-}
-
-function seriesName(data: PptxChartData, index: number): string {
-	return data.series[index]?.name || `Series ${index + 1}`;
+/** The facts captions need about `data`. */
+export function describePptxChart(data: PptxChartData): ChartFormatDescribe {
+	return {
+		axis: (index) => {
+			const axis = data.axes?.[index];
+			if (!axis) return undefined;
+			return {
+				kind: AXIS_KINDS[axis.axisType] ?? 'cat',
+				vertical: isVerticalAxis(axis, data),
+				secondary: (data.axes ?? []).slice(0, index).some((a) => a.axisType === axis.axisType),
+			};
+		},
+		seriesName: (index) => data.series[index]?.name || `Series ${index + 1}`,
+	};
 }
 
 /** The picker caption of `target`. */
@@ -80,69 +63,12 @@ export function chartFormatTargetLabel(
 	data: PptxChartData,
 	target: PptxChartFormatTarget,
 ): ChartFormatText {
-	switch (target.kind) {
-		case 'chartArea':
-			return text('pptx.chartFormat.target.chartArea', 'Chart Area');
-		case 'plotArea':
-			return text('pptx.chartFormat.target.plotArea', 'Plot Area');
-		case 'title':
-			return text('pptx.chartFormat.target.title', 'Chart Title');
-		case 'legend':
-			return text('pptx.chartFormat.target.legend', 'Legend');
-		case 'axis':
-			return axisCaption(data, target.axisIndex);
-		case 'majorGridlines':
-		case 'minorGridlines': {
-			const axis = axisCaption(data, target.axisIndex);
-			const major = target.kind === 'majorGridlines';
-			return {
-				...text(
-					major
-						? 'pptx.chartFormat.target.majorGridlines'
-						: 'pptx.chartFormat.target.minorGridlines',
-					major ? '{{axis}} Major Gridlines' : '{{axis}} Minor Gridlines',
-				),
-				paramTexts: { axis },
-			};
-		}
-		case 'series':
-			return text('pptx.chartFormat.target.series', 'Series "{{name}}"', {
-				name: seriesName(data, target.seriesIndex),
-			});
-		case 'dataLabels':
-			return target.seriesIndex === undefined
-				? text('pptx.chartFormat.target.dataLabels', 'Data Labels')
-				: text('pptx.chartFormat.target.seriesDataLabels', 'Series "{{name}}" Data Labels', {
-						name: seriesName(data, target.seriesIndex),
-					});
-		default:
-			return text('pptx.chartFormat.target.chartArea', 'Chart Area');
-	}
+	return neutralTargetLabel(target, describePptxChart(data));
 }
 
 /** The pane heading for `target` ("Format Chart Area", "Format Axis", ...). */
-export function chartFormatPaneTitle(target: PptxChartFormatTarget): ChartFormatText {
-	switch (target.kind) {
-		case 'plotArea':
-			return text('pptx.chartFormat.title.plotArea', 'Format Plot Area');
-		case 'title':
-			return text('pptx.chartFormat.title.title', 'Format Chart Title');
-		case 'legend':
-			return text('pptx.chartFormat.title.legend', 'Format Legend');
-		case 'axis':
-			return text('pptx.chartFormat.title.axis', 'Format Axis');
-		case 'majorGridlines':
-			return text('pptx.chartFormat.title.majorGridlines', 'Format Major Gridlines');
-		case 'minorGridlines':
-			return text('pptx.chartFormat.title.minorGridlines', 'Format Minor Gridlines');
-		case 'series':
-			return text('pptx.chartFormat.title.series', 'Format Data Series');
-		case 'dataLabels':
-			return text('pptx.chartFormat.title.dataLabels', 'Format Data Labels');
-		default:
-			return text('pptx.chartFormat.title.chartArea', 'Format Chart Area');
-	}
-}
+export const chartFormatPaneTitle = (target: PptxChartFormatTarget): ChartFormatText =>
+	neutralPaneTitle(target);
 
 function hasTitle(data: PptxChartData): boolean {
 	if (data.style?.hasTitle === false) {
@@ -182,11 +108,26 @@ export function listChartFormatTargets(data: PptxChartData): ChartFormatTargetOp
 		// hidden: their Label Options are where one series' labels are switched on.
 		targets.push({ kind: 'dataLabels', seriesIndex });
 	});
-	return targets.map((target) => ({
-		key: chartFormatTargetKey(target),
-		target,
-		label: chartFormatTargetLabel(data, target),
-	}));
+	return chartFormatTargetOptions(targets, describePptxChart(data));
+}
+
+/** A valid target of `data` the picker does not list (a deleted axis), or undefined. */
+export function resolveUnlistedChartFormatTarget(
+	data: PptxChartData,
+	key: PptxChartFormatTargetKey,
+): ChartFormatTargetOption | undefined {
+	const parsed = parseChartFormatTargetKey(key);
+	if (!parsed) return undefined;
+	const valid =
+		(parsed.kind === 'series' && data.series[parsed.seriesIndex]) ||
+		(parsed.kind === 'dataLabels' &&
+			parsed.seriesIndex !== undefined &&
+			data.series[parsed.seriesIndex]) ||
+		((parsed.kind === 'axis' ||
+			parsed.kind === 'majorGridlines' ||
+			parsed.kind === 'minorGridlines') &&
+			data.axes?.[parsed.axisIndex]);
+	return valid ? { key, target: parsed, label: chartFormatTargetLabel(data, parsed) } : undefined;
 }
 
 /**
@@ -197,50 +138,22 @@ export function resolveChartFormatTarget(
 	data: PptxChartData | undefined,
 	key: PptxChartFormatTargetKey | undefined,
 ): ChartFormatTargetOption {
-	const options = data ? listChartFormatTargets(data) : [];
-	const match = options.find((option) => option.key === key);
-	if (match) {
-		return match;
-	}
-	const parsed = key ? parseChartFormatTargetKey(key) : undefined;
-	if (data && parsed) {
-		const valid =
-			(parsed.kind === 'series' && data.series[parsed.seriesIndex]) ||
-			(parsed.kind === 'dataLabels' &&
-				parsed.seriesIndex !== undefined &&
-				data.series[parsed.seriesIndex]) ||
-			((parsed.kind === 'axis' ||
-				parsed.kind === 'majorGridlines' ||
-				parsed.kind === 'minorGridlines') &&
-				data.axes?.[parsed.axisIndex]);
-		if (valid) {
-			return { key: key!, target: parsed, label: chartFormatTargetLabel(data, parsed) };
-		}
-	}
-	return {
-		key: 'chartArea',
-		target: { kind: 'chartArea' },
-		label: text('pptx.chartFormat.target.chartArea', 'Chart Area'),
-	};
+	if (!data || !key) return CHART_AREA_TARGET;
+	return (
+		listChartFormatTargets(data).find((option) => option.key === key) ??
+		resolveUnlistedChartFormatTarget(data, key) ??
+		CHART_AREA_TARGET
+	);
 }
 
-/** Resolve a {@link ChartFormatText} with a translator that echoes unknown keys. */
+/** Resolve a {@link ChartFormatText} with a PowerPoint translator that echoes unknown keys. */
 export function translateChartFormatText(
 	value: ChartFormatText,
 	t: (key: string, params?: Readonly<Record<string, string | number>>) => string,
 ): string {
-	const nested = Object.entries(value.paramTexts ?? {}).map(
-		([name, caption]) => [name, translateChartFormatText(caption, t)] as const,
-	);
-	const params =
-		value.params || nested.length > 0
-			? { ...value.params, ...Object.fromEntries(nested) }
-			: undefined;
-	const translated = t(value.key, params);
-	if (translated && translated !== value.key) {
-		return translated;
-	}
-	return value.fallback.replace(/\{\{(\w+)\}\}/gu, (_, name: string) =>
-		String(params?.[name] ?? ''),
-	);
+	return translateNeutral(value, (key, params) => {
+		const pptxKey = pptxChartFormatKey(key);
+		const translated = t(pptxKey, params);
+		return translated === pptxKey ? key : translated;
+	});
 }

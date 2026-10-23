@@ -3,12 +3,11 @@
  * display units, log scale, order, tick marks, label position and number
  * format.
  *
- * @module render/chart-format/chart-format-pane-axis
+ * @module chart/format-pane-axis
  */
-import type { PptxChartData } from 'ooxml-core/pptx';
-
-import { choice, t } from './chart-format-pane-fill-line';
-import type { ChartFormatField, ChartFormatSection } from './chart-format-pane-types';
+import { choice, t } from './format-pane-common';
+import type { ChartFormatField, ChartFormatSection } from './format-pane-types';
+import type { ChartFormatAxisView } from './format-pane-view';
 
 const auto = (
 	id: string,
@@ -33,13 +32,9 @@ const TICKS: Array<[string, string]> = [
 ];
 const tickChoices = () => TICKS.map(([value, label]) => choice(value, `tick.${value}`, label));
 
-/** Axis Options, Tick Marks, Labels and Number sections for `data.axes[axisIndex]`. */
-export function axisOptions(data: PptxChartData, axisIndex: number): ChartFormatSection[] {
-	const axis = data.axes?.[axisIndex];
-	if (!axis) {
-		return [];
-	}
-	const value = axis.axisType === 'valAx' || axis.axisType === 'dateAx';
+/** Axis Options, Tick Marks, Labels and Number sections for `axis`. */
+export function axisOptions(axis: ChartFormatAxisView): ChartFormatSection[] {
+	const value = axis.kind === 'val' || axis.kind === 'date';
 	const fields: ChartFormatField[] = [];
 	if (value) {
 		fields.push(
@@ -72,13 +67,13 @@ export function axisOptions(data: PptxChartData, axisIndex: number): ChartFormat
 			value: axis.crossesAt ?? 0,
 		});
 	}
-	if (axis.axisType === 'valAx') {
+	if (axis.kind === 'val') {
 		fields.push(
 			{
 				id: 'axis.displayUnits',
 				kind: 'select',
 				label: t('displayUnits', 'Display units'),
-				value: axis.displayUnits && axis.displayUnits !== 'custom' ? axis.displayUnits : 'none',
+				value: axis.displayUnits ?? 'none',
 				choices: [
 					choice('none', 'units.none', 'None'),
 					choice('hundreds', 'units.hundreds', 'Hundreds'),
@@ -117,7 +112,7 @@ export function axisOptions(data: PptxChartData, axisIndex: number): ChartFormat
 		label: value
 			? t('reverseValues', 'Values in reverse order')
 			: t('reverseCategories', 'Categories in reverse order'),
-		value: axis.orientation === 'maxMin',
+		value: axis.reverse,
 	});
 	return [
 		{ id: 'axisOptions', title: t('section.axisOptions', 'Axis Options'), fields },
@@ -149,7 +144,7 @@ export function axisOptions(data: PptxChartData, axisIndex: number): ChartFormat
 					id: 'axis.tickLabelPosition',
 					kind: 'select',
 					label: t('labelPosition', 'Label Position'),
-					value: axis.tickLblPos ?? 'nextTo',
+					value: axis.tickLabelPosition ?? 'nextTo',
 					choices: [
 						choice('nextTo', 'labelPos.nextTo', 'Next to Axis'),
 						choice('high', 'labelPos.high', 'High'),
@@ -167,7 +162,7 @@ export function axisOptions(data: PptxChartData, axisIndex: number): ChartFormat
 					id: 'axis.numberFormat',
 					kind: 'text',
 					label: t('formatCode', 'Format Code'),
-					value: axis.numFmt && !axis.numFmt.sourceLinked ? axis.numFmt.formatCode : '',
+					value: axis.numberFormat ?? '',
 				},
 			],
 		},

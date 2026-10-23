@@ -56,6 +56,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-ribbon-section',
 	'office-ui-gallery',
 	'office-ui-comments-pane',
+	'office-ui-chart-format-pane',
 	'office-ui-symbol-picker',
 	'office-ui-color-grid',
 	'office-ui-color-custom',

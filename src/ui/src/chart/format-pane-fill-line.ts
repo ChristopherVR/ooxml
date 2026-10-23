@@ -1,15 +1,15 @@
 /**
- * The Fill & Line tab of a chart Format pane.
+ * The Fill & Line tab of a chart Format pane. Choices the element's source
+ * cannot write (`support`) are left out rather than offered and refused.
  *
- * @module render/chart-format/chart-format-pane-fill-line
+ * @module chart/format-pane-fill-line
  */
-import type { ChartElementFormatView, PptxChartFormatTarget } from 'ooxml-core/pptx';
+import type { ChartFormatTarget } from 'ooxml-core/chart';
 
-import { choice, hexForInput, pct, t } from './chart-format-pane-common';
-import { gradientFields, patternFields, pictureFields } from './chart-format-pane-fill-kinds';
-import type { ChartFormatChoice, ChartFormatSection } from './chart-format-pane-types';
-
-export { choice, hexForInput, t } from './chart-format-pane-common';
+import { choice, hexForInput, pct, t } from './format-pane-common';
+import { gradientFields, patternFields, pictureFields } from './format-pane-fill-kinds';
+import type { ChartFormatChoice, ChartFormatSection } from './format-pane-types';
+import type { ChartFormatElementView, ChartFormatSource } from './format-pane-view';
 
 const DASHES: Array<[string, string]> = [
 	['solid', 'Solid'],
@@ -51,11 +51,19 @@ const choices = (prefix: string, list: Array<[string, string]>): ChartFormatChoi
 	list.map(([value, label]) => choice(value, `${prefix}.${value}`, label));
 
 /** The Fill section, or `undefined` for a target that is a line. */
-function fillSection(view: ChartElementFormatView): ChartFormatSection | undefined {
+function fillSection(
+	view: ChartFormatElementView,
+	source: Pick<ChartFormatSource, 'patternPresets' | 'slots'>,
+): ChartFormatSection | undefined {
 	if (!view.support.fill) {
 		return undefined;
 	}
+	if (source.slots?.fill) {
+		return { id: 'fill', title: t('section.fill', 'Fill'), fields: [], slot: source.slots.fill };
+	}
 	const kind = view.fill.kind;
+	const presets = source.patternPresets ?? [];
+	const support = view.support;
 	const section: ChartFormatSection = {
 		id: 'fill',
 		title: t('section.fill', 'Fill'),
@@ -68,9 +76,13 @@ function fillSection(view: ChartElementFormatView): ChartFormatSection | undefin
 				choices: [
 					choice('none', 'fill.none', 'No fill'),
 					choice('solid', 'fill.solid', 'Solid fill'),
-					choice('gradient', 'fill.gradient', 'Gradient fill'),
-					choice('picture', 'fill.picture', 'Picture or texture fill'),
-					choice('pattern', 'fill.pattern', 'Pattern fill'),
+					...(support.gradient ? [choice('gradient', 'fill.gradient', 'Gradient fill')] : []),
+					...(support.picture
+						? [choice('picture', 'fill.picture', 'Picture or texture fill')]
+						: []),
+					...(support.pattern && presets.length > 0
+						? [choice('pattern', 'fill.pattern', 'Pattern fill')]
+						: []),
 					choice('automatic', 'fill.automatic', 'Automatic'),
 				],
 			},
@@ -98,7 +110,7 @@ function fillSection(view: ChartElementFormatView): ChartFormatSection | undefin
 	} else if (kind === 'gradient' && view.fill.gradient) {
 		section.fields.push(...gradientFields('fill', view.fill.gradient));
 	} else if (kind === 'pattern' && view.fill.pattern) {
-		section.fields.push(...patternFields(view.fill.pattern));
+		section.fields.push(...patternFields(view.fill.pattern, presets));
 	} else if (kind === 'picture') {
 		section.fields.push(...pictureFields(view.fill.picture));
 	}
@@ -106,12 +118,10 @@ function fillSection(view: ChartElementFormatView): ChartFormatSection | undefin
 }
 
 /** The Border section (Line for a line target). */
-function lineSection(
-	view: ChartElementFormatView,
-	target: PptxChartFormatTarget,
-): ChartFormatSection {
+function lineSection(view: ChartFormatElementView, target: ChartFormatTarget): ChartFormatSection {
 	const isLine = !view.support.fill;
 	const line = view.line;
+	const details = view.support.lineDetails !== false;
 	const section: ChartFormatSection = {
 		id: 'line',
 		title: isLine ? t('section.line', 'Line') : t('section.border', 'Border'),
@@ -124,7 +134,7 @@ function lineSection(
 				choices: [
 					choice('none', 'line.none', 'No line'),
 					choice('solid', 'line.solid', 'Solid line'),
-					choice('gradient', 'line.gradient', 'Gradient line'),
+					...(details ? [choice('gradient', 'line.gradient', 'Gradient line')] : []),
 					choice('automatic', 'fill.automatic', 'Automatic'),
 				],
 			},
@@ -155,25 +165,27 @@ function lineSection(
 	} else if (line.kind === 'gradient' && line.gradient) {
 		section.fields.push(...gradientFields('line', line.gradient));
 	}
-	section.fields.push(
-		{
-			id: 'line.width',
-			kind: 'number',
-			label: t('width', 'Width'),
-			value: line.width ?? '',
-			min: 0,
-			max: 1584,
-			step: 0.25,
-			unit: 'pt',
-			auto: true,
-		},
-		{
+	section.fields.push({
+		id: 'line.width',
+		kind: 'number',
+		label: t('width', 'Width'),
+		value: line.width ?? '',
+		min: 0,
+		max: 1584,
+		step: 0.25,
+		unit: 'pt',
+		auto: true,
+	});
+	if (details) {
+		section.fields.push({
 			id: 'line.compound',
 			kind: 'select',
 			label: t('compound', 'Compound type'),
 			value: line.compound ?? 'sng',
 			choices: choices('compound', COMPOUNDS),
-		},
+		});
+	}
+	section.fields.push(
 		{
 			id: 'line.dash',
 			kind: 'select',
@@ -188,14 +200,17 @@ function lineSection(
 			value: line.cap ?? 'flat',
 			choices: choices('cap', CAPS),
 		},
-		{
-			id: 'line.join',
-			kind: 'select',
-			label: t('join', 'Join type'),
-			value: line.join ?? 'round',
-			choices: choices('join', JOINS),
-		},
 	);
+	if (!details) {
+		return section;
+	}
+	section.fields.push({
+		id: 'line.join',
+		kind: 'select',
+		label: t('join', 'Join type'),
+		value: line.join ?? 'round',
+		choices: choices('join', JOINS),
+	});
 	// Arrows apply to open lines: axes, gridlines and line series.
 	if (isLine || target.kind === 'axis') {
 		section.fields.push(
@@ -220,9 +235,11 @@ function lineSection(
 
 /** The Fill & Line tab's sections. */
 export function fillLineSections(
-	view: ChartElementFormatView,
-	target: PptxChartFormatTarget,
+	view: ChartFormatElementView,
+	target: ChartFormatTarget,
+	source: Pick<ChartFormatSource, 'patternPresets' | 'slots'> = {},
 ): ChartFormatSection[] {
-	const fill = fillSection(view);
-	return [...(fill ? [fill] : []), lineSection(view, target)];
+	const fill = fillSection(view, source);
+	const line = view.support.line === false ? [] : [lineSection(view, target)];
+	return [...(fill ? [fill] : []), ...line];
 }
