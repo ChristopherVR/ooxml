@@ -89,6 +89,12 @@ export interface EditorOperations {
 	addElement: (element: PptxElement) => void;
 	/** Shallow-merge `updates` into the element with `elementId` on the active slide. */
 	updateElement: (elementId: string, updates: Partial<PptxElement>) => void;
+	/**
+	 * {@link updateElement} WITHOUT a history snapshot: a live frame the caller
+	 * commits later as one undo step (a shade of a colour picker drag, which
+	 * shared `createLiveColorInput` puts back before its one committed edit).
+	 */
+	previewElement: (elementId: string, updates: Partial<PptxElement>) => void;
 	/** Remove an element from the active slide and drop it from the selection. */
 	removeElement: (elementId: string) => void;
 	/** Patch an element's geometry (x/y/width/height/rotation). */
@@ -136,13 +142,18 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 	 * `slides.value`, snapshotting history first. No-op when the active index is
 	 * out of range.
 	 */
-	const commitElements = (mapElements: (elements: PptxElement[]) => PptxElement[]): void => {
+	const commitElements = (
+		mapElements: (elements: PptxElement[]) => PptxElement[],
+		record = true,
+	): void => {
 		const index = activeSlideIndex.value;
 		const slide = slides.value[index];
 		if (!slide) {
 			return;
 		}
-		pushHistory();
+		if (record) {
+			pushHistory();
+		}
 		slides.value = slides.value.map((s, i) =>
 			i === index ? { ...cloneSlide(s), elements: mapElements(s.elements) } : s,
 		);
@@ -153,6 +164,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 	/** Rebuild the active slide's template store via `mapElements` (history-tracked). */
 	const commitTemplateElements = (
 		mapElements: (elements: PptxElement[]) => PptxElement[],
+		record = true,
 	): void => {
 		const slide = slides.value[activeSlideIndex.value];
 		if (!templateMap || !slide) {
@@ -162,7 +174,9 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		if (!current) {
 			return;
 		}
-		pushHistory();
+		if (record) {
+			pushHistory();
+		}
 		templateMap.value = setTemplateElements(templateMap.value, slide.id, mapElements(current));
 	};
 
@@ -174,12 +188,13 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 	const commitForId = (
 		elementId: string,
 		mapElements: (elements: PptxElement[]) => PptxElement[],
+		record = true,
 	): void => {
 		if (templateMap && isTemplateElementId(elementId)) {
-			commitTemplateElements(mapElements);
+			commitTemplateElements(mapElements, record);
 			return;
 		}
-		commitElements(mapElements);
+		commitElements(mapElements, record);
 	};
 
 	/**
@@ -221,16 +236,23 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		selectedElementIds.value = [cloned.id];
 	};
 
-	const updateElement = (elementId: string, updates: Partial<PptxElement>): void => {
-		commitForId(elementId, (elements) =>
+	const mergeInto =
+		(elementId: string, updates: Partial<PptxElement>) =>
+		(elements: PptxElement[]): PptxElement[] =>
 			// A member selected inside its group (shared `group-drill`): `updates`
 			// are in slide space, written back into the group's own space.
 			isGroupMember(elements, elementId)
 				? updateElementInTree(elements, elementId, updates)
 				: elements.map((el) =>
 						el.id === elementId ? ({ ...cloneElement(el), ...updates } as PptxElement) : el,
-					),
-		);
+					);
+
+	const updateElement = (elementId: string, updates: Partial<PptxElement>): void => {
+		commitForId(elementId, mergeInto(elementId, updates));
+	};
+
+	const previewElement = (elementId: string, updates: Partial<PptxElement>): void => {
+		commitForId(elementId, mergeInto(elementId, updates), false);
 	};
 
 	const removeElement = (elementId: string): void => {
@@ -357,6 +379,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		selectedElementIds,
 		addElement,
 		updateElement,
+		previewElement,
 		removeElement,
 		transformElement,
 		moveElement: transformElement,

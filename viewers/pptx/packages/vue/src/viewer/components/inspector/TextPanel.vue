@@ -4,6 +4,7 @@ import {
 	TEXT_BOX_SECTIONS,
 	applyTextStyleUpdate,
 	text3dInheritsFromTemplate,
+	textColorOf,
 	textFontFamilyPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
@@ -16,6 +17,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
+import { useLiveElementColor } from '../../composables/useLiveElementColor';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import InspectorFields from './InspectorFields.vue';
 import Text3DProperties from './Text3DProperties.vue';
@@ -119,9 +121,13 @@ function onFontSize(event: Event): void {
 	emit('update', textFontSizePatch(props.element, textFontSizePtToPx(points)));
 }
 
-function onColor(event: Event): void {
-	patchTextStyle({ color: (event.target as HTMLInputElement).value, colorRef: undefined });
-}
+/** The native picker: live while dragging, one `update` and one recent colour per pick. */
+const colorEvents = useLiveElementColor({
+	element: () => props.element,
+	colorOf: textColorOf,
+	patch: (el, hex) => textStylePatch(el, { color: hex, colorRef: undefined }),
+	commit: (patch) => emit('update', patch),
+});
 
 function onColorPick(hex: string): void {
 	patchTextStyle({ color: hex, colorRef: undefined });
@@ -210,8 +216,7 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 						type="color"
 						class="pptx-vue-text-color w-full h-8 bg-muted border border-border rounded p-0.5"
 						:value="color"
-						@input="onColor"
-						@change="onColorPick(($event.target as HTMLInputElement).value)"
+						v-on="colorEvents"
 					/>
 				</label>
 			</div>

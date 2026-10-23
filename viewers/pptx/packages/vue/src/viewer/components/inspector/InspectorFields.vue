@@ -1,6 +1,16 @@
 <script setup lang="ts" generic="T, P">
-import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
-import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
+import {
+	createLiveColorPatchInput,
+	handleLiveColorEvent,
+	inspectorFieldPatch,
+	inspectorTogglePatch,
+	resolveInspectorSections,
+} from 'ooxml-ui/pptx';
+import type {
+	InspectorFieldValue,
+	InspectorSectionDescriptor,
+	LiveColorInput,
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -11,7 +21,9 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
  * list of shared inspector section descriptors (a toggle per section, then a
  * two-column grid of its fields); values, bounds, labels and patches all come
  * from the descriptors, so this SFC only maps them onto the template. A colour
- * commit also pushes into the "Recent colours" list.
+ * field previews while its native picker is dragged (`preview`, no undo step)
+ * and commits once when the pick settles (`patch`, plus the "Recent colours"
+ * list), through the shared `createLiveColorPatchInput`.
  */
 const props = withDefaults(
 	defineProps<{
@@ -24,6 +36,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
 	patch: [patch: P];
+	/** A colour drag's live patch: apply it without an undo step. */
+	preview: [patch: P];
 }>();
 
 const { t } = useI18n();
@@ -43,6 +57,35 @@ function onToggle(sectionId: string, on: boolean): void {
 	if (patch !== undefined) {
 		emit('patch', patch);
 	}
+}
+
+/** One live colour controller per colour field, created on its first event. */
+const colorInputs = new Map<string, LiveColorInput>();
+
+function onColor(sectionId: string, fieldId: string, event: Event): void {
+	const key = `${sectionId}.${fieldId}`;
+	let control = colorInputs.get(key);
+	if (!control) {
+		control = createLiveColorPatchInput<T, P & object>({
+			read: () => {
+				const field = views.value
+					.find((section) => section.id === sectionId)
+					?.fields.find((candidate) => candidate.id === fieldId);
+				return field && { key, color: String(field.value), state: props.target };
+			},
+			patch: (target, hex) =>
+				inspectorFieldPatch(props.sections, sectionId, fieldId, target, hex) as
+					| (P & object)
+					| undefined,
+			preview: (patch) => emit('preview', patch),
+			commit: (patch, hex) => {
+				emit('patch', patch);
+				recentColors?.push(hex);
+			},
+		});
+		colorInputs.set(key, control);
+	}
+	handleLiveColorEvent(control, event);
 }
 
 const valueOf = (event: Event): string => (event.target as HTMLInputElement).value;
@@ -112,8 +155,9 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 						:aria-label="t(field.labelKey)"
 						:value="String(field.value)"
 						:disabled="props.disabled"
-						@input="onField(section.id, field.id, valueOf($event))"
-						@change="recentColors?.push(valueOf($event))"
+						@input="onColor(section.id, field.id, $event)"
+						@change="onColor(section.id, field.id, $event)"
+						@blur="onColor(section.id, field.id, $event)"
 					/>
 					<input
 						v-else

@@ -5,6 +5,7 @@ import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { injectInspectorPreview } from '../../composables/inspector-preview-context';
 import InspectorFields from './InspectorFields.vue';
 import QuickStylesGallery from './QuickStylesGallery.vue';
 
@@ -44,6 +45,13 @@ const shapeStyle = computed(() =>
 /** Merge an effect field's shape-style patch into the element. */
 function onEffectPatch(patch: Partial<ShapeStyle>): void {
 	emit('update', shapeQuickStylePatch(props.element, patch));
+}
+
+const preview = injectInspectorPreview();
+
+/** An effect colour drag's live shade: on the slide at once, no undo step. */
+function onEffectPreview(patch: Partial<ShapeStyle>): void {
+	preview?.(shapeQuickStylePatch(props.element, patch));
 }
 
 /**
@@ -92,6 +100,7 @@ function onOpacity(value: string): void {
 				:sections="SHAPE_EFFECT_SECTIONS"
 				:target="shapeStyle"
 				@patch="onEffectPatch"
+				@preview="onEffectPreview"
 			/>
 		</template>
 

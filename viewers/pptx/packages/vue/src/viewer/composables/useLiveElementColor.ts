@@ -1,0 +1,49 @@
+/**
+ * useLiveElementColor: an inspector panel's native colour picker, live while
+ * the user drags (shared `createLiveColorPatchInput`).
+ *
+ * Every shade is merged into the element through the injected preview channel
+ * (`inspector-preview-context.ts`: no undo step, dirty flag or recent colour);
+ * the settled pick (`change`, or `blur` for a drag no change ended) puts the
+ * previews back and emits ONE `update`, then records the recent colour. A pick
+ * that settles where it started emits nothing. Bind the returned listeners
+ * with `v-on` on the `<input type="color">`.
+ */
+import { createLiveColorPatchInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
+
+import { injectInspectorPreview } from './inspector-preview-context';
+import { injectRecentColors } from './recent-colors-context';
+
+export interface UseLiveElementColorOptions {
+	/** The panel's element now (read on every event). */
+	element: () => PptxElement;
+	/** The colour the picker edits on an element. */
+	colorOf: (el: PptxElement) => string;
+	/** The patch that sets `hex` on an element (a native pick clears any theme ref). */
+	patch: (el: PptxElement, hex: string) => Partial<PptxElement>;
+	/** Emit the settled pick's one `update`. */
+	commit: (patch: Partial<PptxElement>) => void;
+}
+
+/** The `input` / `change` / `blur` listeners for one colour input. */
+export type LiveColorListeners = Record<'input' | 'change' | 'blur', (event: Event) => void>;
+
+export function useLiveElementColor(options: UseLiveElementColorOptions): LiveColorListeners {
+	const preview = injectInspectorPreview();
+	const recentColors = injectRecentColors();
+	const control = createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+		read: () => {
+			const el = options.element();
+			return { key: el.id, color: options.colorOf(el), state: el };
+		},
+		patch: options.patch,
+		preview: (patch) => preview?.(patch),
+		commit: (patch, hex) => {
+			options.commit(patch);
+			recentColors?.push(hex);
+		},
+	});
+	const handle = (event: Event): void => handleLiveColorEvent(control, event);
+	return { input: handle, change: handle, blur: handle };
+}

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import { SHAPE_LINE_SECTIONS, shapeOutlineChange } from 'ooxml-ui/pptx';
+import { SHAPE_LINE_SECTIONS, shapeOutlineChange, strokeColorOf } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
+import { useLiveElementColor } from '../../composables/useLiveElementColor';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import InspectorFields from './InspectorFields.vue';
 import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
@@ -47,11 +48,18 @@ function patchShapeStyle(next: Partial<ShapeStyle>): void {
 	emit('update', { shapeStyle: { ...shapeStyle.value, ...next } } as Partial<PptxElement>);
 }
 
-function onColor(event: Event): void {
-	patchShapeStyle(
-		shapeOutlineChange((event.target as HTMLInputElement).value, undefined, shapeStyle.value ?? {}),
-	);
-}
+/** The native picker: live while dragging, one `update` and one recent colour per pick. */
+const strokeColorEvents = useLiveElementColor({
+	element: () => props.element,
+	colorOf: strokeColorOf,
+	patch: (el, hex) => {
+		const style = hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
+		return {
+			shapeStyle: { ...style, ...shapeOutlineChange(hex, undefined, style) },
+		} as Partial<PptxElement>;
+	},
+	commit: (patch) => emit('update', patch),
+});
 
 function onColorPick(hex: string): void {
 	patchShapeStyle(shapeOutlineChange(hex, undefined, shapeStyle.value ?? {}));
@@ -85,8 +93,7 @@ function onThemeColor(commit: ThemeColorPickerCommit): void {
 					type="color"
 					class="pptx-vue-stroke-color w-full h-8 bg-muted border border-border rounded p-0.5"
 					:value="strokeColor"
-					@input="onColor"
-					@change="onColorPick(($event.target as HTMLInputElement).value)"
+					v-on="strokeColorEvents"
 				/>
 			</label>
 			<ThemeColorSwatchGrid

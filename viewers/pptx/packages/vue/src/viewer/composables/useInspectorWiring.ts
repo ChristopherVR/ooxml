@@ -25,6 +25,8 @@ export interface UseInspectorWiringOptions {
 	selectedElements: ComputedRef<PptxElement[]>;
 	pushHistory: () => void;
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
+	/** {@link updateElement} without an undo step (a colour drag's live shade). */
+	previewElement?: (id: string, patch: Partial<PptxElement>) => void;
 }
 
 export interface UseInspectorWiringResult {
@@ -33,6 +35,11 @@ export interface UseInspectorWiringResult {
 	/** `inspectorElement` augmented with this element's slide-level animations. */
 	inspectorElementForPanels: ComputedRef<PptxElement | undefined>;
 	onInspectorUpdate: (patch: Partial<PptxElement>) => void;
+	/**
+	 * Show a live frame on the inspector's element without an undo step: the
+	 * panels' preview channel (`InspectorPreviewKey`).
+	 */
+	onInspectorPreview: (patch: Partial<PptxElement>) => void;
 	writeSlideAnimations: (animations: PptxSlide['animations']) => void;
 	/** The selected element's motion path, when it has one. */
 	selectedMotionPath: ComputedRef<string | undefined>;
@@ -96,6 +103,13 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		options.updateElement(el.id, patch);
 	}
 
+	function onInspectorPreview(patch: Partial<PptxElement>): void {
+		const el = inspectorElement.value;
+		if (el) {
+			options.previewElement?.(el.id, patch);
+		}
+	}
+
 	const selectedMotionPath = computed(() => {
 		const el = inspectorElement.value;
 		return el ? motionPathFor(activeSlide.value?.animations ?? [], el.id) : undefined;
@@ -113,6 +127,7 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		inspectorElement,
 		inspectorElementForPanels,
 		onInspectorUpdate,
+		onInspectorPreview,
 		writeSlideAnimations,
 		selectedMotionPath,
 		onMotionPathChange,
