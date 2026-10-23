@@ -16,6 +16,7 @@ import type {
 } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from './state';
+import { isReadOnlyLocked } from './state/read-only-session';
 import type { RegionSupport } from './ui/region-set';
 
 export interface RegionSupportDeps {
@@ -38,10 +39,7 @@ export function createRegionSupport(deps: RegionSupportDeps): RegionSupport {
 			region,
 			viewer: deps.viewer,
 			mode: deps.viewer.getMode(),
-			canEdit:
-				state.editable &&
-				!state.protectedView &&
-				!(state.readOnlyRecommendation?.defaultReadOnly && !state.readOnlyBannerDismissed),
+			canEdit: state.editable && !state.protectedView && !isReadOnlyLocked(state),
 			activeSlideIndex: state.currentSlide,
 			slideCount: state.slides.length,
 			selectedElementIds: state.selectedElementIds,
