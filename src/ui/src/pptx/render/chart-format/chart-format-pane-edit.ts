@@ -1,6 +1,11 @@
 /**
- * Turns one field change of a chart Format pane into a new chart model, via
- * the core's chart format operations. Returns `null` when the value is not
+ * PowerPoint's adapter for the shared chart Format pane: turns one edit of
+ * `office-ui-chart-format-pane` (a field change, with its neutral
+ * `ChartEditIntent`) into a new `PptxChartData`, via the core's pptx chart
+ * format operations. `PptxChartData` is not a `ChartSpace` yet, so the field
+ * id drives the mapping; it also covers the PowerPoint-only fields (pattern
+ * and picture fills, effects, 3-D, text, the secondary axis) the neutral
+ * intents do not. Returns `null` when the value is not
  * usable (an empty or out-of-range number), so the pane can repaint the
  * current value instead of committing.
  *
@@ -25,7 +30,7 @@ import {
 	withChartSeriesOptions,
 } from 'ooxml-core/pptx';
 
-import { DEFAULT_CHART_GLOW, DEFAULT_CHART_SHADOW } from './chart-format-pane-effects';
+import { DEFAULT_CHART_GLOW, DEFAULT_CHART_SHADOW } from '../../../chart/format-pane-effects';
 import {
 	DEFAULT_CHART_TEXTURE,
 	defaultChartGradient,
@@ -33,6 +38,7 @@ import {
 	textPatch,
 	threeDPatch,
 } from './chart-format-pane-edit-extra';
+import type { ChartFormatEditDetail } from '../../../chart/format-pane';
 import type { ChartFormatFieldValue } from './chart-format-pane-types';
 import { resolveChartFormatTarget } from './chart-format-targets';
 
@@ -277,4 +283,12 @@ export function resetChartFormatTarget(
 	targetKey: PptxChartFormatTargetKey,
 ): PptxChartData {
 	return resetChartElementFormat(data, resolveChartFormatTarget(data, targetKey).target);
+}
+
+/** Applies an edit of the shared chart Format pane to `data`; `null` when it is refused. */
+export function applyChartFormatEdit(
+	data: PptxChartData,
+	edit: Pick<ChartFormatEditDetail, 'target' | 'field' | 'value'>,
+): PptxChartData | null {
+	return applyChartFormatField(data, edit.target, edit.field, edit.value);
 }

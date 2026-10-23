@@ -1,14 +1,14 @@
 /**
  * The Effects tab of a chart Format pane: Shadow, Glow, Soft Edges and, for
- * elements that have one, the 3-D Format section.
+ * elements that have one, the 3-D Format section. An extension section: only
+ * a source that reads effects (PowerPoint today) offers it.
  *
- * @module render/chart-format/chart-format-pane-effects
+ * @module chart/format-pane-effects
  */
-import type { ChartElementFormatView } from 'ooxml-core/pptx';
-
-import { threeDSection } from './chart-format-pane-3d';
-import { hexForInput, t } from './chart-format-pane-common';
-import type { ChartFormatSection } from './chart-format-pane-types';
+import { threeDSection } from './format-pane-3d';
+import { hexForInput, t } from './format-pane-common';
+import type { ChartFormatSection } from './format-pane-types';
+import type { ChartFormatEffectsView, ChartFormatElementView } from './format-pane-view';
 
 /** PowerPoint's "Outer: Offset Bottom Right" preset, what ticking Shadow applies. */
 export const DEFAULT_CHART_SHADOW = {
@@ -41,7 +41,7 @@ const num = (
 	unit,
 });
 
-type Effects = ChartElementFormatView['effects'];
+type Effects = ChartFormatEffectsView;
 
 /** The Shadow section; field ids start with `${prefix}shadow.` (`text.` for Text Effects). */
 export function shadowSection(prefix: string, shadow: Effects['shadow']): ChartFormatSection {
@@ -118,15 +118,16 @@ export function glowSection(prefix: string, glow: Effects['glow']): ChartFormatS
 }
 
 /** The Effects tab's sections. */
-export function effectsSections(view: ChartElementFormatView): ChartFormatSection[] {
+export function effectsSections(view: ChartFormatElementView): ChartFormatSection[] {
+	const effects = view.effects ?? {};
 	return [
-		shadowSection('', view.effects.shadow),
-		glowSection('', view.effects.glow),
+		shadowSection('', effects.shadow),
+		glowSection('', effects.glow),
 		{
 			id: 'softEdges',
 			title: t('section.softEdges', 'Soft Edges'),
-			fields: [num('softEdge.size', 'size', 'Size', view.effects.softEdge ?? 0, 100, 'pt', 0.5)],
+			fields: [num('softEdge.size', 'size', 'Size', effects.softEdge ?? 0, 100, 'pt', 0.5)],
 		},
-		...(view.support.threeD ? [threeDSection(view.threeD)] : []),
+		...(view.support.threeD && view.threeD ? [threeDSection(view.threeD)] : []),
 	];
 }

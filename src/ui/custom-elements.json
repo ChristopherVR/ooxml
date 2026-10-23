@@ -900,6 +900,73 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "chart/format-pane.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChartFormatPane",
+					"tagName": "office-ui-chart-format-pane",
+					"customElement": true,
+					"description": "`<office-ui-chart-format-pane>`: the chart Format task pane every product shares (Format Chart Area, Format Data Series, Format Axis, ...): the element picker, Chart Options and Text Options, the icon tabs and their collapsible sections. Give it a `source` (what the chart reads as, see `ChartFormatSource`) or a `chartSpace` (read through `chartSpaceFormatSource`) and a `target` key; it applies nothing itself. Each committed field fires `office-chart-format-edit` with the field, its value and the typed `ChartEditIntent` (`applyChartEditIntent` runs it over a `ChartSpace`; other products map it onto their own edits), then repaints from the source the host sets back. The picker fires `office-chart-format-target`, Close and Escape `office-chart-format-close`. A source with a `slots.fill` name leaves that section to the host's light-DOM child with the same `slot`. `translateLabel(key, params, fallback)` translates captions (`chartFormat.*` keys with English fallbacks); `disabled` makes every control read-only. It lays out in flow; a product docks it.",
+					"attributes": [
+						{
+							"name": "disabled"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "chartSpace"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "source"
+						},
+						{
+							"kind": "field",
+							"name": "target"
+						},
+						{
+							"kind": "field",
+							"name": "theme"
+						},
+						{
+							"kind": "field",
+							"name": "translateLabel"
+						}
+					],
+					"events": [
+						{
+							"name": "office-chart-format-close"
+						},
+						{
+							"name": "office-chart-format-edit"
+						},
+						{
+							"name": "office-chart-format-target"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chart-format-pane",
+					"declaration": {
+						"name": "OfficeUiChartFormatPane"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "dialog/chart-picker.ts",
 			"declarations": [
 				{

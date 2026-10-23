@@ -16,6 +16,7 @@
  *
  * @module types/chart-element-format
  */
+import type { ChartFormatTarget, ChartFormatTargetKey } from '../../../chart/edit/target';
 import type { ChartGradientFill } from '../../../chart/gradient-definition';
 
 /**
@@ -26,22 +27,13 @@ import type { ChartGradientFill } from '../../../chart/gradient-definition';
  * `PptxChartData.series`. A data-label target without a series index covers
  * every series (the chart-level "Data Labels" entry of the element picker).
  */
-export type PptxChartFormatTarget =
-	| { kind: 'chartArea' }
-	| { kind: 'plotArea' }
-	| { kind: 'title' }
-	| { kind: 'legend' }
-	| { kind: 'axis'; axisIndex: number }
-	| { kind: 'majorGridlines'; axisIndex: number }
-	| { kind: 'minorGridlines'; axisIndex: number }
-	| { kind: 'series'; seriesIndex: number }
-	| { kind: 'dataLabels'; seriesIndex?: number };
+export type PptxChartFormatTarget = ChartFormatTarget;
 
 /**
  * A {@link PptxChartFormatTarget} as a stable string (`chartArea`, `axis:1`,
  * `series:0`, `dataLabels`, `dataLabels:2`, ...), used as the record key.
  */
-export type PptxChartFormatTargetKey = string;
+export type PptxChartFormatTargetKey = ChartFormatTargetKey;
 
 /** `a:pattFill`: a preset pattern (`ST_PresetPatternVal`) in two colours. */
 export interface PptxChartPatternFill {

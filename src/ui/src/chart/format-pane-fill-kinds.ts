@@ -2,23 +2,16 @@
  * The detail fields of the gradient, pattern and picture choices of a chart
  * Format pane's Fill, Line and Text Fill sections.
  *
- * @module render/chart-format/chart-format-pane-fill-kinds
+ * @module chart/format-pane-fill-kinds
  */
-import type {
-	PptxChartGradientFill,
-	PptxChartPatternFill,
-	PptxChartPictureFill,
-} from 'ooxml-core/pptx';
+import type { ChartGradientFill } from 'ooxml-core/chart';
 
-import { PATTERN_PRESET_OPTIONS } from '../fill-pattern-label-keys';
-import type { ChartFormatField } from './chart-format-pane-types';
-import { choice, hexForInput, t } from './chart-format-pane-common';
+import { choice, hexForInput, t } from './format-pane-common';
+import type { ChartFormatChoice, ChartFormatField } from './format-pane-types';
+import type { ChartFormatFillView } from './format-pane-view';
 
 /** Type, stops and angle of a gradient; field ids are `${prefix}.gradient*`. */
-export function gradientFields(
-	prefix: string,
-	gradient: PptxChartGradientFill,
-): ChartFormatField[] {
+export function gradientFields(prefix: string, gradient: ChartGradientFill): ChartFormatField[] {
 	const stops = gradient.stops;
 	const fields: ChartFormatField[] = [
 		{
@@ -59,18 +52,18 @@ export function gradientFields(
 	return fields;
 }
 
-/** Preset, foreground and background of a pattern fill. */
-export function patternFields(pattern: PptxChartPatternFill): ChartFormatField[] {
+/** Preset (one of `presets`), foreground and background of a pattern fill. */
+export function patternFields(
+	pattern: NonNullable<ChartFormatFillView['pattern']>,
+	presets: readonly ChartFormatChoice[],
+): ChartFormatField[] {
 	return [
 		{
 			id: 'fill.patternPreset',
 			kind: 'select',
 			label: t('pattern', 'Pattern'),
 			value: pattern.preset,
-			choices: PATTERN_PRESET_OPTIONS.map((option) => ({
-				value: option.value,
-				label: { key: option.labelKey, fallback: option.value },
-			})),
+			choices: [...presets],
 		},
 		{
 			id: 'fill.patternForeground',
@@ -88,7 +81,7 @@ export function patternFields(pattern: PptxChartPatternFill): ChartFormatField[]
 }
 
 /** Picture source, transparency and tiling of a picture fill. */
-export function pictureFields(picture: PptxChartPictureFill | undefined): ChartFormatField[] {
+export function pictureFields(picture: ChartFormatFillView['picture']): ChartFormatField[] {
 	const fields: ChartFormatField[] = [
 		{
 			id: 'fill.picture',

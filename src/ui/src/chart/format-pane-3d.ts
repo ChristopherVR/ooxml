@@ -1,17 +1,13 @@
 /**
  * The 3-D Format section of a chart Format pane's Effects tab: top and
- * bottom bevel, depth, contour, material and lighting.
+ * bottom bevel, depth, contour, material and lighting. An extension section
+ * (PowerPoint's); bevel and material captions keep PowerPoint's shared keys.
  *
- * @module render/chart-format/chart-format-pane-3d
+ * @module chart/format-pane-3d
  */
-import type { PptxChartBevel, PptxChartElementThreeD } from 'ooxml-core/pptx';
-
-import { hexForInput, t } from './chart-format-pane-common';
-import type {
-	ChartFormatChoice,
-	ChartFormatField,
-	ChartFormatSection,
-} from './chart-format-pane-types';
+import { hexForInput, t } from './format-pane-common';
+import type { ChartFormatChoice, ChartFormatField, ChartFormatSection } from './format-pane-types';
+import type { ChartFormatBevelView, ChartFormatThreeDView } from './format-pane-view';
 
 /** `ST_BevelPresetType`, in PowerPoint's gallery order. */
 export const CHART_BEVEL_TYPES = [
@@ -79,7 +75,7 @@ const size = (id: string, key: string, fallback: string, value: number): ChartFo
 
 function bevelFields(
 	which: 'Top' | 'Bottom',
-	bevel: PptxChartBevel | null | undefined,
+	bevel: ChartFormatBevelView | null | undefined,
 ): ChartFormatField[] {
 	const fields: ChartFormatField[] = [
 		{
@@ -100,7 +96,7 @@ function bevelFields(
 }
 
 /** The 3-D Format section for an element with `threeD` as its current 3-D settings. */
-export function threeDSection(threeD: PptxChartElementThreeD): ChartFormatSection {
+export function threeDSection(threeD: ChartFormatThreeDView): ChartFormatSection {
 	return {
 		id: 'threeD',
 		title: t('section.threeD', '3-D Format'),

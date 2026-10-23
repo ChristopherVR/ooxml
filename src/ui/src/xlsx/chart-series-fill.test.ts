@@ -2,7 +2,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from './commands/test-support';
-import { chartSeriesCommand, createChartSeriesPane } from './chart-series-pane';
+import { chartSeriesCommand, createChartFormatPane } from './chart-format-pane';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -21,28 +21,30 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	);
 	ctx.selection.set({ drawing: ctx.session()!.addChart(0, chart) });
 	ctx.commands.register(chartSeriesCommand());
-	const pane = createChartSeriesPane(ctx);
+	const pane = createChartFormatPane(ctx);
 	ctx.root.append(pane.element);
 	ctx.onModelChange(pane.refresh);
 	await ctx.commands.run('chart.format-series', 1);
-	const series = pane.element.querySelector<HTMLSelectElement>('[aria-label="Series"]')!;
+	const series = pane.element.shadowRoot!.querySelector<HTMLSelectElement>(
+		'[aria-label="Chart element"]',
+	)!;
 	const fill = pane.element.querySelector<HTMLSelectElement>('[aria-label="Fill"]')!;
 	const color = pane.element.querySelector<HTMLButtonElement>('[aria-label="Color"]')!;
-	expect(series.value).toBe('1');
-	expect(series.selectedOptions[0]!.textContent).toBe('Cost');
+	expect(series.value).toBe('series:1');
+	expect(series.selectedOptions[0]!.textContent).toBe('Series "Cost"');
 	// The shared colour grid in Excel's popover.
 	const red = () =>
 		ctx.root
 			.querySelector('.color-grid office-ui-color-grid')!
 			.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Red"]')!;
 	color.click();
-	series.value = '0';
+	series.value = 'series:0';
 	series.dispatchEvent(new Event('change'));
 	red().click();
 	const drawing = ctx.workbook()!.sheets[0]!.drawings[0]!;
 	if (drawing.kind !== 'chart') throw new Error('Expected chart');
 	expect(drawing.series.every((item) => !item.drawingColor)).toBe(true);
-	series.value = '1';
+	series.value = 'series:1';
 	series.dispatchEvent(new Event('change'));
 	color.click();
 	red().click();
@@ -64,7 +66,7 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	fill.value = 'none';
 	fill.dispatchEvent(new Event('change'));
 	ctx.session()!.undo();
-	expect(series.value).toBe('1');
+	expect(series.value).toBe('series:1');
 	expect(fill.value).toBe('solid');
 	const edited = ctx.workbook()!.sheets[0]!.drawings[0]!;
 	if (edited.kind !== 'chart') throw new Error('Expected chart');
