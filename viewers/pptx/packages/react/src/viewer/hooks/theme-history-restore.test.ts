@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { EditorHistorySnapshot } from '../types';
 import { serializeHistoryDocument } from './explicit-slide-history';
 import { historyTheme, withHistoryTheme } from './history-theme';
-import { queueThemeWrite, restoreHistoryTheme } from './theme-history-restore';
+import { queueThemeWrite, restoreHistoryTheme, settleThemeWrites } from './theme-history-restore';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
 const office = PRESET_THEMES[0];
@@ -121,5 +121,28 @@ describe('restoreHistoryTheme', () => {
 		release();
 		await Promise.all([first, second]);
 		expect(order).toStrictEqual(['first', 'second']);
+	});
+
+	it('settles once every write queued so far has landed, even a failed one', async () => {
+		const { handler } = harness(undefined);
+		const target = handler as unknown as PptxHandler;
+		await expect(settleThemeWrites(target)).resolves.toBeUndefined();
+		const landed: string[] = [];
+		const failing = queueThemeWrite(target, async () => {
+			await new Promise<void>((done) => {
+				setTimeout(done, 20);
+			});
+			throw new Error('write failed');
+		});
+		const outcome = failing.then(
+			() => 'landed',
+			(error: Error) => error.message,
+		);
+		void queueThemeWrite(target, async () => {
+			landed.push('after the failure');
+		});
+		await settleThemeWrites(target);
+		expect(landed).toStrictEqual(['after the failure']);
+		await expect(outcome).resolves.toBe('write failed');
 	});
 });
