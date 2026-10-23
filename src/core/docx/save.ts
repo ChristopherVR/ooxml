@@ -22,6 +22,7 @@ import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 import { refreshStyleRefFields } from './style-ref-fields';
+import { applyChartPartEdits } from './chart-save';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
@@ -155,6 +156,8 @@ export async function saveDocx(
 		pendingMedia,
 		docPrIds,
 	);
+	// Edited charts are written back with their workbooks; unedited chart parts are not touched.
+	await applyChartPartEdits(zip, model, binding?.base);
 	await applyNumberingCatalog(zip, model, binding);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
 	if (binding) await applyStyleNumbering(zip, model, binding.base);

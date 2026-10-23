@@ -404,9 +404,10 @@ Still not at parity:
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
 - **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
-  inserting or editing Charts (existing charts are drawn read-only from the values cached in the part for bar, column, line,
-  area, pie, doughnut, scatter and radar charts, bar/line combinations, waterfalls and histograms; bubble, stock, surface and other chartex charts show a labelled frame naming the
-  family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,
+  most of chart editing (Insert > Chart adds an inline chart of eight families with Office's sample data, and Chart Design offers
+  Legend, Edit Data and Change Chart Type, saved to the chart part and its embedded workbook; chart styles and colours, Quick Layout,
+  Add Chart Element, Switch Row/Column, Select Data, the Format pane and editing extended (chartex) charts are missing; surface,
+  volume-stock and other chartex families show a labelled frame, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,
   Signature Line, Object.
 - **Layout and References:** Manual Hyphenation and its options, Position
   and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and

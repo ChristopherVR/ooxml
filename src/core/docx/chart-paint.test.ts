@@ -28,7 +28,7 @@ describe('Word charts are drawn', () => {
 		const { chart } = await loadChart();
 		expect(chart.formatting).toBeDefined();
 		expect(chart.colorPalette).toBe(10);
-		expect(chart.notice).toContain('not editable');
+		expect(chart.notice).toContain('can be edited');
 	});
 
 	it('paints the chart with the document theme at the drawing extent', async () => {

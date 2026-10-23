@@ -2,11 +2,14 @@
 // Assigns fresh relationship ids when write.ts introduces a new external hyperlink or a
 // newly inserted picture, and records what save.ts must add to word/_rels/document.xml.rels.
 import { RELATIONSHIP_TYPES, isSafeHyperlinkHref, nextRelationshipId } from '../opc/index';
+import type { ChartSpace } from '../chart/index';
 import { DocPrIdAllocator } from './docpr-ids';
 import { isElement, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 export const HYPERLINK_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.hyperlink;
 export const IMAGE_RELATIONSHIP_TYPE = RELATIONSHIP_TYPES.image;
+export const CHART_RELATIONSHIP_TYPE =
+	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart';
 export { isSafeHyperlinkHref };
 
 export interface NewRelationship {
@@ -16,6 +19,8 @@ export interface NewRelationship {
 	mode: 'Internal' | 'External';
 	/** Absolute package part name (e.g. `word/media/image1.png`), set only for newly added media parts. */
 	partName?: string;
+	/** A chart inserted in this session: its part, relationships and workbook are created on save, which sets the target. */
+	chart?: ChartSpace;
 }
 
 /** Walks every element/attribute in a parsed document.xml to find relationship ids already in use. */
@@ -72,6 +77,19 @@ export class RelationshipAllocator {
 			partName,
 		});
 		this.imagePartToRelId.set(partName, id);
+		return id;
+	}
+
+	/** Registers a chart inserted in this session; its part is named when the relationships are written. */
+	addChart(space: ChartSpace): string {
+		const id = this.nextId();
+		this.created.push({
+			id,
+			type: CHART_RELATIONSHIP_TYPE,
+			target: '',
+			mode: 'Internal',
+			chart: space,
+		});
 		return id;
 	}
 

@@ -8,6 +8,7 @@ import { esDropCap } from './drop-cap';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
 import { esShapes } from './shapes';
+import { esCharts } from './charts';
 import type { LocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
@@ -27,4 +28,5 @@ export const es: LocaleStrings = {
 	...esLigatures,
 	...esObjects,
 	...esShapes,
+	...esCharts,
 };

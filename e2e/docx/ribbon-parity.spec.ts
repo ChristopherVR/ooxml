@@ -206,6 +206,8 @@ test.describe('Word-style ribbon', () => {
 	});
 
 	test('Insert > Page number adds a footer that is saved into the DOCX', async ({ page }) => {
+		// Wide enough for the whole Insert tab, so Header & Footer is not folded into a button.
+		await page.setViewportSize({ width: 1440, height: 800 });
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Body text');
@@ -227,6 +229,8 @@ test.describe('Word-style ribbon', () => {
 	});
 
 	test('a created footer survives body edits and undo', async ({ page }) => {
+		// Wide enough for the whole Insert tab, so Header & Footer is not folded into a button.
+		await page.setViewportSize({ width: 1440, height: 800 });
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Body text');

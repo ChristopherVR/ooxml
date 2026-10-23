@@ -1,11 +1,18 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes inline picture runs: reuses original wp:inline/pic:pic XML verbatim (only patching
 // extent/alt text) for unchanged pictures, and synthesizes a minimal valid drawing for insertions.
-import type { InlineImage, PicturePlacement } from './model';
+import type { InlineImage } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
+import { chartRun } from './write-chart-drawing';
+import {
+	clearNonProperties,
+	updateDocPr,
+	updateExtent,
+	updatePlacement,
+} from './write-drawing-patch';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -52,94 +59,6 @@ export function findDrawingChild(run: XmlElement | undefined): XmlElement | unde
 
 function sameUnderlyingImage(a: InlineImage, b: InlineImage): boolean {
 	return Boolean(a.partName) && a.relId === b.relId && a.partName === b.partName;
-}
-
-function walk(root: XmlElement, visit: (node: XmlElement) => void): void {
-	const stack: XmlElement[] = [root];
-	while (stack.length) {
-		const node = stack.shift()!;
-		visit(node);
-		for (const child of Array.from(node.childNodes)) if (isElement(child)) stack.push(child);
-	}
-}
-
-function updateExtent(drawing: XmlElement, widthPx: number, heightPx: number): void {
-	const cx = String(Math.max(1, Math.round(widthPx * EMU_PER_PIXEL)));
-	const cy = String(Math.max(1, Math.round(heightPx * EMU_PER_PIXEL)));
-	walk(drawing, (node) => {
-		const isExtent = node.namespaceURI === WP_NS && node.localName === 'extent';
-		// Only a:xfrm/a:ext is a size; a:extLst/a:ext carries a uri and extension content.
-		const parent = node.parentNode as XmlElement | null;
-		const isExt =
-			node.namespaceURI === A_NS &&
-			node.localName === 'ext' &&
-			parent?.namespaceURI === A_NS &&
-			parent.localName === 'xfrm';
-		if (isExtent || isExt) {
-			node.setAttribute('cx', cx);
-			node.setAttribute('cy', cy);
-		}
-	});
-}
-
-function updateDocPr(
-	drawing: XmlElement,
-	altText: string | undefined,
-	title: string | undefined,
-): void {
-	walk(drawing, (node) => {
-		if (node.namespaceURI !== WP_NS || node.localName !== 'docPr') return;
-		if (altText) node.setAttribute('descr', altText);
-		else node.removeAttribute('descr');
-		if (title) node.setAttribute('title', title);
-		else node.removeAttribute('title');
-	});
-}
-
-/** Rewrites one `wp:positionH` or `wp:positionV` from the model's alignment or offset. */
-function patchPosition(
-	doc: XmlDocument,
-	anchor: XmlElement,
-	name: 'positionH' | 'positionV',
-	relativeFrom: string | undefined,
-	align: string | undefined,
-	offsetPx: number | undefined,
-): void {
-	const position = Array.from(anchor.childNodes).find(
-		(child): child is XmlElement =>
-			isElement(child) && child.namespaceURI === WP_NS && child.localName === name,
-	);
-	if (!position) return;
-	if (relativeFrom) position.setAttribute('relativeFrom', relativeFrom);
-	for (const child of Array.from(position.childNodes)) position.removeChild(child);
-	const value = align ? makeNS(doc, WP_NS, 'wp:align') : makeNS(doc, WP_NS, 'wp:posOffset');
-	value.appendChild(
-		doc.createTextNode(align ?? String(Math.round((offsetPx ?? 0) * EMU_PER_PIXEL))),
-	);
-	position.appendChild(value);
-}
-
-/** Moves a floating picture: only its position elements change; wrapping and the rest stay. */
-function updatePlacement(drawing: XmlElement, doc: XmlDocument, placement: PicturePlacement): void {
-	walk(drawing, (node) => {
-		if (node.namespaceURI !== WP_NS || node.localName !== 'anchor') return;
-		patchPosition(
-			doc,
-			node,
-			'positionH',
-			placement.relativeFrom,
-			placement.align,
-			placement.offsetXPx,
-		);
-		patchPosition(
-			doc,
-			node,
-			'positionV',
-			placement.relativeFromV,
-			placement.alignV,
-			placement.offsetYPx,
-		);
-	});
 }
 
 function el(doc: XmlDocument, ns: string, qualified: string): XmlElement {
@@ -228,13 +147,6 @@ function buildInlineDrawing(
 	return drawing;
 }
 
-function clearNonProperties(node: XmlElement, keep?: XmlElement): void {
-	for (const child of Array.from(node.childNodes)) {
-		if (isElement(child) && (named(child, 'rPr') || child === keep)) continue;
-		node.removeChild(child);
-	}
-}
-
 /**
  * Builds or reuses the run for an inline image. Reuses the original drawing XML verbatim
  * (patching only extent/alt text) when the run is recognizably the same picture; synthesizes a
@@ -260,6 +172,8 @@ export function createImageRun(
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
+	const chart = chartRun(doc, node, image, base, oldDrawing, oldContainer, allocator);
+	if (chart) return chart;
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.
 	if (base && oldDrawing && image.unsupported && JSON.stringify(image) === JSON.stringify(base)) {
 		clearNonProperties(node, oldContainer);
