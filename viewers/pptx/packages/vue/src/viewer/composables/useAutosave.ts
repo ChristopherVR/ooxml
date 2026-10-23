@@ -1,24 +1,20 @@
-import { nextAutosaveDelayMs } from 'ooxml-ui/pptx';
+import { createAutosaveController, saveAutosaveSnapshot } from 'ooxml-ui/pptx';
+import type { DocumentStorage, PptxAutosaveStatusKind } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { onScopeDispose, ref, toValue, watch } from 'vue';
-import type { Ref } from 'vue';
+import { computed, onScopeDispose, toValue, watch } from 'vue';
+import type { Ref, WritableComputedRef } from 'vue';
+
+import { useController } from './useController';
 
 /**
- * Autosave status, surfaced for status-pill rendering.
- *
- *  - `idle`     : nothing has been saved yet (or no edits since mount).
- *  - `disabled` : autosave is inactive because requirements are not met.
- *  - `saving`   : an `onSave` invocation is currently in flight.
- *  - `saved`    : the most recent save succeeded.
- *  - `error`    : the most recent save threw.
+ * Autosave status, surfaced for status-pill rendering: the `state` of the one
+ * shared `PptxAutosaveStatus` (`idle`, `disabled`, `saving`, `saved`, `error`).
  */
-export type AutosaveStatus = 'idle' | 'disabled' | 'saving' | 'saved' | 'error';
+export type AutosaveStatus = PptxAutosaveStatusKind;
 
 /**
- * Timer-injection seam so the debounce window is testable with
- * `vi.useFakeTimers()`. Defaults to the global `setTimeout` /
- * `clearTimeout`; tests can leave them unset (fake timers patch the
- * globals) or override explicitly.
+ * Timer-injection seam so the interval is testable with `vi.useFakeTimers()`.
+ * Defaults to the global `setTimeout` / `clearTimeout`.
  */
 export interface AutosaveTimerApi {
 	setTimer: (handler: () => void, timeoutMs: number) => number;
@@ -33,16 +29,9 @@ export interface UseAutosaveOptions {
 	 */
 	slides: Ref<PptxSlide[]>;
 	/**
-	 * The separate per-slide store of master/layout (template) elements.
-	 *
-	 * An edit made in edit-template mode rebuilds ONLY this map: it never
-	 * reassigns `slides`, because a template element does not live in
-	 * `slide.elements`. Watching `slides` alone therefore missed every
-	 * template-mode edit, and a user editing a master or layout got no crash
-	 * recovery at all. Svelte never had the bug because its equivalent effect
-	 * reads a value that already folds the template map in; watching the map
-	 * here reaches the same shape, and covers any FUTURE template mutation path
-	 * without that path having to remember to announce itself.
+	 * The separate per-slide store of master/layout (template) elements. An
+	 * edit made in edit-template mode rebuilds ONLY this map, so it is watched
+	 * too; otherwise a user editing a master or layout got no crash recovery.
 	 */
 	templateElements?: Ref<unknown>;
 	/**
@@ -50,20 +39,30 @@ export interface UseAutosaveOptions {
 	 * document does not, so nothing is marked dirty and no timer is armed.
 	 */
 	paused?: Ref<boolean>;
-	/** Master on/off switch. When falsy the debounce timer never fires. */
+	/** Master on/off switch: the resolved shared activation, not the raw toggle. */
 	enabled?: Ref<boolean> | boolean;
 	/**
-	 * Debounce window in milliseconds (e.g. `2000`). A `Ref` is re-read each
-	 * time the timer is armed, so File > Options > Save > AutoRecover cadence
-	 * changes apply to the next edit without re-mounting.
+	 * The AutoRecover interval in milliseconds. A `Ref` is re-read each time the
+	 * timer is armed, and a pending timer is re-armed when it changes.
 	 */
 	intervalMs: number | Ref<number>;
 	/**
-	 * Host save callback: typically calls `getContent()` and persists/emits
-	 * the resulting bytes. May be sync or async; rejections flip status to
-	 * `'error'`.
+	 * Serialise the deck for recovery (plaintext). With it, the engine writes the
+	 * snapshot itself under {@link filePath}; without it, {@link onSave} owns the
+	 * whole save.
 	 */
-	onSave: () => void | Promise<void>;
+	serialize?: () => Promise<Uint8Array | null>;
+	/** Snapshot key; autosave is inert while it is empty (used with {@link serialize}). */
+	filePath?: () => string | undefined;
+	/** Host `storage`: snapshots go to its recovery methods when it has them. */
+	storage?: () => DocumentStorage | undefined;
+	/** Called with the bytes of each snapshot written (used with {@link serialize}). */
+	onSaved?: (bytes: Uint8Array) => void;
+	/**
+	 * Host save callback for callers that persist the bytes themselves. May be
+	 * sync or async; rejections flip status to `'error'`.
+	 */
+	onSave?: () => void | Promise<void>;
 	/** Injectable timer API for testing. Defaults to the global timers. */
 	timers?: AutosaveTimerApi;
 }
@@ -73,159 +72,95 @@ export interface UseAutosaveResult {
 	status: Ref<AutosaveStatus>;
 	/** Epoch ms of the last successful save, or `null`. */
 	lastSavedAt: Ref<number | null>;
-	/** Force an immediate save, bypassing the debounce window. */
+	/** Force an immediate save, bypassing the interval. */
 	saveNow: () => Promise<void>;
-	/** True when there are unsaved edits pending. */
-	isDirty: Ref<boolean>;
+	/**
+	 * True when there are edits no snapshot has captured yet. Setting it true is
+	 * an edit (it starts the interval); setting it false clears them.
+	 */
+	isDirty: WritableComputedRef<boolean>;
 }
 
-const defaultTimers: AutosaveTimerApi = {
-	setTimer: (handler, timeoutMs) => setTimeout(handler, timeoutMs) as unknown as number,
-	clearTimer: (id) => {
-		clearTimeout(id);
-	},
-};
+const NO_BYTES = new Uint8Array(0);
 
 /**
- * `useAutosave`: debounced autosave for the Vue editor.
- *
- * Watches `slides`; on each change it marks the document dirty and
- * (re)arms a debounce timer. When the timer fires (and autosave is
- * enabled) it runs `onSave()`, transitioning `status`
- * `saving → saved | error`, stamping `lastSavedAt`, and clearing the
- * dirty flag. `saveNow()` performs the same save synchronously, cancelling
- * any pending debounce. The timer is torn down on scope dispose.
+ * `useAutosave`: the Vue adapter of the shared recovery autosave engine
+ * (`createAutosaveController` in `ooxml-ui/pptx`). Each reassignment of the
+ * watched stores is an edit; the engine writes one snapshot an AutoRecover
+ * interval after the first unsaved edit. The timer is torn down on scope dispose.
  */
 export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
-	const { slides, templateElements, enabled = true, intervalMs, onSave, paused } = options;
-	const timers = options.timers ?? defaultTimers;
+	const { slides, templateElements, enabled = true, intervalMs, paused } = options;
+	const timers = options.timers;
+	const ownsWrite = Boolean(options.serialize);
 
-	const status = ref<AutosaveStatus>('idle');
-	const lastSavedAt = ref<number | null>(null);
-	const isDirty = ref(false);
-
-	let timerId: number | null = null;
-	let savePromise: Promise<void> | null = null;
-	/**
-	 * When the oldest unsaved edit happened. A plain debounce re-arms on every
-	 * keystroke, so a user who keeps typing could defer the snapshot forever;
-	 * `nextAutosaveDelayMs` caps the wait at one interval from this moment, which
-	 * is the promise React and Angular's polling engines already keep.
-	 */
-	let firstDirtyAt: number | null = null;
-
-	const isEnabled = (): boolean => toValue(enabled) !== false;
-
-	const clearTimer = (): void => {
-		if (timerId !== null) {
-			timers.clearTimer(timerId);
-			timerId = null;
-		}
-	};
-
-	const runSave = async (): Promise<void> => {
-		// Serialise overlapping saves: chain onto any in-flight save.
-		if (savePromise) {
-			await savePromise.catch(() => {});
-		}
-		clearTimer();
-		status.value = 'saving';
-		const pending = (async () => {
-			try {
-				await onSave();
-				lastSavedAt.value = Date.now();
-				isDirty.value = false;
-				firstDirtyAt = null;
-				status.value = 'saved';
-			} catch (err) {
-				status.value = 'error';
-				throw err;
+	const controller = createAutosaveController({
+		getActivation: () => ({ active: toValue(enabled) !== false }),
+		getFilePath: () => (ownsWrite ? options.filePath?.() : 'autosave'),
+		getIntervalMs: () => toValue(intervalMs),
+		serialize: async () => {
+			if (options.serialize) {
+				return options.serialize();
 			}
-		})();
-		savePromise = pending.then(
-			() => undefined,
-			() => undefined,
-		);
-		try {
-			await pending;
-		} finally {
-			savePromise = null;
-		}
-	};
-
-	const saveNow = (): Promise<void> => runSave();
-
-	const scheduleSave = (): void => {
-		clearTimer();
-		const delay = nextAutosaveDelayMs({
-			intervalMs: toValue(intervalMs),
-			firstDirtyAt,
-			now: Date.now(),
-		});
-		timerId = timers.setTimer(() => {
-			timerId = null;
-			// Re-read `isDirty` HERE, not at arming time. The watcher below arms on
-			// every reassignment of the watched stores, including the one that seeds
-			// the freshly loaded deck, and `useAutosaveWiring` clears the flag again
-			// once loading settles. Without this check that already-cancelled arm
-			// still fired, so merely OPENING a deck wrote a crash-recovery snapshot
-			// and the next visit offered to "recover unsaved changes" for a deck the
-			// user had only read. Anything that legitimately clears the flag (a real
-			// save, a host reseed) now also disarms the timer it left behind.
-			//
-			// `saveNow()` is deliberately NOT gated: it is an explicit request, not
-			// a poll, and the same asymmetry holds in the shared
-			// `shouldWriteAutosaveSnapshot`.
-			if (isEnabled() && isDirty.value) {
-				void runSave().catch(() => {});
+			await options.onSave?.();
+			return NO_BYTES;
+		},
+		getStorage: () => options.storage?.(),
+		onSaved: (bytes) => {
+			if (ownsWrite) {
+				options.onSaved?.(bytes);
 			}
-		}, delay);
-	};
+		},
+		writeSnapshot: ownsWrite ? saveAutosaveSnapshot : async () => undefined,
+		...(timers
+			? {
+					timers: {
+						setTimeout: (handler, ms) => timers.setTimer(handler, ms),
+						clearTimeout: (id) => timers.clearTimer(id as number),
+					},
+				}
+			: {}),
+	});
+	const state = useController(controller);
 
-	// Fires only on actual reassignments of the watched stores (not on setup,
-	// since `immediate` is omitted), so each edit marks the document dirty and
-	// arms the debounce. The host is responsible for not re-priming them
-	// with the freshly-loaded document in a way that should trigger a save.
-	//
+	const status = computed(() => state.value.status.state);
+	const lastSavedAt = computed(() => state.value.lastSavedAt);
+	const isDirty = computed({
+		get: () => state.value.dirty,
+		set: (next: boolean) => {
+			if (next) {
+				controller.markEdited();
+			} else {
+				controller.markClean();
+			}
+		},
+	});
+
 	// Both stores are watched because an edit lands in exactly one of them: a
 	// normal edit rebuilds `slides`, a template-mode edit rebuilds the template
-	// map. Both are reassigned immutably, so a shallow watch is enough.
+	// map. Flushed synchronously so an edit marks the document dirty at once.
 	watch(
 		templateElements ? [slides, templateElements] : [slides],
 		() => {
-			if (paused?.value) {
-				return;
-			}
-			if (!isDirty.value || firstDirtyAt === null) {
-				firstDirtyAt = Date.now();
-			}
-			isDirty.value = true;
-			if (isEnabled()) {
-				scheduleSave();
+			if (!paused?.value) {
+				controller.markEdited();
 			}
 		},
-		// Flush synchronously so an edit immediately marks the document dirty
-		// and arms the debounce timer, matching the React effect-on-change
-		// behaviour and keeping fake-timer tests deterministic.
 		{ flush: 'sync' },
 	);
 
-	// File > Options > Save > "AutoRecover interval": re-arm a PENDING timer
-	// immediately when the cadence changes, rather than only picking up the new
-	// value on the next edit. Harmless when `intervalMs` is a plain number
-	// (the getter never changes, so this never re-fires).
+	// The activation and the cadence (File > Options > Save) apply at once.
 	watch(
-		() => toValue(intervalMs),
-		() => {
-			if (timerId !== null) {
-				scheduleSave();
-			}
-		},
+		() => [toValue(enabled), toValue(intervalMs), options.filePath?.()],
+		() => controller.refresh(),
 	);
 
-	onScopeDispose(() => {
-		clearTimer();
-	});
+	onScopeDispose(() => controller.destroy());
 
-	return { status, lastSavedAt, saveNow, isDirty };
+	return {
+		status: status as Ref<AutosaveStatus>,
+		lastSavedAt: lastSavedAt as Ref<number | null>,
+		saveNow: () => controller.saveNow(),
+		isDirty,
+	};
 }

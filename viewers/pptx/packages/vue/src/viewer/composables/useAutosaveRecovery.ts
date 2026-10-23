@@ -1,21 +1,18 @@
 /**
- * useAutosaveRecovery: offer a crash-recovery snapshot back to the user.
- *
- * Vue wrote recovery snapshots and never looked for one again, so the feature
- * was invisible: a crashed tab reopened on the pre-crash deck with no hint that
- * newer work existed. The decision and the copy come from `pptx-viewer-shared`
- * (`render/autosave-recovery`); this composable only owns the reactivity.
+ * useAutosaveRecovery: the Vue adapter of the shared crash-recovery offer
+ * (`createAutosaveRecoveryController` in `ooxml-ui/pptx`). The decision, the
+ * copy and the actions are shared; this composable only owns the reactivity.
  */
 import {
-	acceptAutosaveRecovery,
-	acknowledgeAutosaveRecovery,
+	createAutosaveRecoveryController,
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
-	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
 import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
-import { ref, watch } from 'vue';
+import { computed, onScopeDispose, watch } from 'vue';
 import type { Ref } from 'vue';
+
+import { useController } from './useController';
 
 export interface UseAutosaveRecoveryOptions {
 	/** IndexedDB key of the open deck (file path, else file name). */
@@ -53,82 +50,38 @@ export interface UseAutosaveRecoveryResult {
 export function useAutosaveRecovery(
 	options: UseAutosaveRecoveryOptions,
 ): UseAutosaveRecoveryResult {
-	const prompt = ref<AutosaveRecoveryPrompt | null>(null);
-	const discarding = ref(false);
-	let record: AutosaveRecord | null = null;
-	let checked = false;
-	let actionPending = false;
+	const controller = createAutosaveRecoveryController({
+		getStorage: () => options.storage?.(),
+		load: (bytes) => options.onRestore(bytes),
+		onOffered: (record) => options.onOffered?.(record),
+		probe: probeAutosaveRecovery,
+		discardRecord: discardAutosaveRecovery,
+	});
+	const state = useController(controller);
+	onScopeDispose(() => controller.destroy());
 
 	watch(
 		() => [options.loading.value, options.error.value, options.slideCount(), options.filePath()],
-		() => {
-			const filePath = options.filePath();
-			if (
-				!shouldProbeAutosaveRecovery({
-					alreadyChecked: checked,
-					filePath,
-					loading: options.loading.value,
-					error: options.error.value ?? null,
-					slideCount: options.slideCount(),
-					autosaveAllowed: options.autosaveAllowed(),
-				})
-			) {
-				return;
-			}
-			checked = true;
-			void probeAutosaveRecovery(
-				filePath as string,
-				Date.now(),
-				options.fileName(),
-				options.storage?.(),
-			).then((offer) => {
-				if (offer) {
-					record = offer.record;
-					prompt.value = offer.prompt;
-					options.onOffered?.(offer.record);
-				}
-				return offer;
-			});
-		},
+		() =>
+			controller.check({
+				filePath: options.filePath(),
+				fileName: options.fileName(),
+				loading: options.loading.value,
+				error: options.error.value ?? null,
+				slideCount: options.slideCount(),
+				autosaveAllowed: options.autosaveAllowed(),
+			}),
 		{ immediate: true },
 	);
 
-	function restore(): void {
-		if (actionPending) {
-			return;
-		}
-		actionPending = true;
-		const found = record;
-		prompt.value = null;
-		record = null;
-		if (found) {
-			options.onRestore(acceptAutosaveRecovery(found));
-			acknowledgeAutosaveRecovery(found);
-		}
-	}
-
-	async function discard(): Promise<void> {
-		if (actionPending) {
-			return;
-		}
-		const found = record;
-		if (!found) {
-			prompt.value = null;
-			return;
-		}
-		actionPending = true;
-		discarding.value = true;
-		try {
-			await discardAutosaveRecovery(found, options.storage?.());
-			record = null;
-			prompt.value = null;
-		} catch {
-			// Leave the prompt open so a failed discard can be retried.
-		} finally {
-			actionPending = false;
-			discarding.value = false;
-		}
-	}
-
-	return { prompt, discarding, restore, discard };
+	return {
+		prompt: computed(() => state.value.prompt) as Ref<AutosaveRecoveryPrompt | null>,
+		discarding: computed(() => state.value.discarding) as Ref<boolean>,
+		restore: () => {
+			void controller.restore().catch(() => {
+				// The load path reports its own error.
+			});
+		},
+		discard: () => controller.discard(),
+	};
 }
