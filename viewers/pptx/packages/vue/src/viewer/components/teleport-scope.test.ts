@@ -76,9 +76,9 @@ describe('teleported viewer surfaces keep the scoped reset', () => {
 				tag,
 			})),
 		);
-		// ThemeGallery (backdrop and dialog), PresentationMode, ModalDialog, ContextMenu,
-		// SettingsDialog and ExportProgressModal.
-		expect(roots.length).toBeGreaterThanOrEqual(7);
+		// ThemeGallery (backdrop and dialog), PresentationMode, ModalDialog, ContextMenu and
+		// SettingsDialog.
+		expect(roots.length).toBeGreaterThanOrEqual(6);
 		for (const { file, tag } of roots) {
 			expect(`${file}: ${tag}`).toContain('data-pptx-scope');
 		}
@@ -138,12 +138,18 @@ describe('teleported viewer surfaces keep the scoped reset', () => {
 		expect(backdrop?.hasAttribute('data-pptx-scope')).toBeTruthy();
 	});
 
-	it('renders the export progress modal inside a scope', () => {
+	it('renders the export progress modal in place, inside the viewer scope', () => {
+		// The shared modal is not teleported: it stays under the viewer root, which carries the
+		// scope (and the theme), and as a custom element it carries no marker of its own.
+		const viewer = document.createElement('div');
+		viewer.setAttribute('data-pptx-scope', '');
+		document.body.append(viewer);
 		mount(ExportProgressModal, {
 			props: { open: true, title: 'Exporting', progress: 0.5 },
-			attachTo: document.body,
+			attachTo: viewer,
 		});
-		const backdrop = document.body.querySelector('.pptx-vue-export-progress-backdrop');
-		expect(backdrop?.hasAttribute('data-pptx-scope')).toBeTruthy();
+		const modal = document.body.querySelector('pptx-ui-export-progress');
+		expect(modal?.closest('[data-pptx-scope]')).toBe(viewer);
+		expect(modal?.hasAttribute('data-pptx-scope')).toBeFalsy();
 	});
 });

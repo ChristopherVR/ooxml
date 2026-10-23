@@ -5,6 +5,7 @@ import {
 	defineContextMenu,
 	defineDialogFooter,
 	definePasteOptions,
+	defineProgressDialog,
 	defineRadio,
 	defineRibbonGroup,
 	defineReadOnlyBanner,
@@ -26,6 +27,7 @@ import {
 import type {
 	CompatToastsViewState,
 	DialogFooterViewState,
+	ExportProgressViewState,
 	PasteOptionsViewState,
 	ReadOnlyBannerViewState,
 } from '../render';
@@ -488,4 +490,38 @@ export function definePptxContextMenu(registry: CustomElementRegistry): void {
 			static markerPattern = /^data-pptx-[a-z0-9-]+$/;
 		},
 	);
+}
+
+/**
+ * The export progress modal: the shared progress dialog under its pptx name, `export-cancel` and
+ * the `pptx-export-progress-*` test ids, with the pptx export strings.
+ */
+export function definePptxExportProgress(registry: CustomElementRegistry): void {
+	if (registry.get('pptx-ui-export-progress')) {
+		return;
+	}
+	const Base = bridged(
+		base(registry, defineProgressDialog, 'office-ui-progress-dialog'),
+		'pptx-ui-export-progress',
+	) as unknown as new () => Stateful;
+	class PptxExportProgress extends Base {
+		static cancelEvent = 'export-cancel';
+		static testIdPrefix = 'pptx-export-progress';
+		#model: ExportProgressViewState = { open: false, title: '', progress: 0 };
+		override get state(): ExportProgressViewState {
+			return this.#model;
+		}
+		override set state(value: ExportProgressViewState) {
+			this.#model = value;
+			const t = value.translate ?? identity;
+			super.state = {
+				open: value.open,
+				title: value.title,
+				progress: value.progress,
+				status: value.status || t('pptx.export.processing'),
+				cancelLabel: t('pptx.export.cancel'),
+			};
+		}
+	}
+	registry.define('pptx-ui-export-progress', PptxExportProgress as unknown as Ctor);
 }

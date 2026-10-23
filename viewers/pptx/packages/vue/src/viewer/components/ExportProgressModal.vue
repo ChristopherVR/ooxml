@@ -1,22 +1,17 @@
 <script setup lang="ts">
-import { clampPercent } from 'ooxml-ui/pptx';
+import type { ExportProgressViewState } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import DialogFooter from './DialogFooter.vue';
-
 /**
- * ExportProgressModal - a centered, non-dismissable overlay shown while a
- * multi-slide export (PDF / GIF / WebM) runs. Vue counterpart of the React
- * `ExportProgressModal`.
+ * ExportProgressModal - the progress modal shown while a multi-slide export (PDF / GIF / WebM)
+ * runs. A thin adapter over the shared `pptx-ui-export-progress`, which owns the dialog and
+ * progress bar semantics, focus and the look, and is deliberately not dismissable: the export
+ * ends by completing, erroring or Cancel. Cancel emits `cancel`; the parent aborts the export
+ * and clears `open`.
  *
- * It deliberately does NOT close on backdrop click or Escape: an export in
- * flight should only end by completing, erroring, or the user pressing Cancel.
- * Cancel emits `cancel`; the parent owns cooperative cancellation (aborting the
- * `AbortController` the export loop checks between slides) and clearing `open`.
- *
- * Presentational only - the parent supplies `open`, `title`, `progress`
- * (0-100), and an optional `statusMessage`.
+ * Rendered in place (not teleported to `body`), so it takes the viewer's theme variables, and
+ * kept mounted while closed, so it hands focus back when an export ends.
  */
 const props = defineProps<{
 	/** Whether the overlay is visible. */
@@ -33,49 +28,21 @@ const emit = defineEmits<{
 	(e: 'cancel'): void;
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
-const clampedProgress = computed(() => clampPercent(props.progress));
-
-function onCancel(): void {
-	emit('cancel');
-}
+// A new state per locale makes the element re-read its labels.
+const state = computed<ExportProgressViewState>(() => {
+	void locale.value;
+	return {
+		open: props.open,
+		title: props.title,
+		progress: props.progress,
+		status: props.statusMessage,
+		translate: (key) => t(key),
+	};
+});
 </script>
 
 <template>
-	<Teleport to="body">
-		<div
-			v-if="open"
-			data-pptx-scope
-			class="pptx-vue-export-progress-backdrop fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-			role="dialog"
-			aria-modal="true"
-			:aria-label="title"
-		>
-			<div
-				class="pptx-vue-export-progress-panel w-[min(92vw,384px)] rounded-xl border border-border bg-popover p-6 text-foreground shadow-2xl"
-			>
-				<h3 class="mb-4 text-sm font-semibold">{{ title }}</h3>
-
-				<div class="mb-3 h-2.5 w-full overflow-hidden rounded-full bg-muted">
-					<div
-						class="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-						:style="{ width: `${clampedProgress}%` }"
-					/>
-				</div>
-
-				<div class="mb-4 flex items-center justify-between text-xs text-muted-foreground">
-					<span>{{ statusMessage ?? t('pptx.export.processing') }}</span>
-					<span class="tabular-nums">{{ clampedProgress }}%</span>
-				</div>
-
-				<div class="flex justify-end">
-					<DialogFooter
-						:actions="[{ id: 'cancel', label: t('pptx.export.cancel') }]"
-						@action="onCancel"
-					/>
-				</div>
-			</div>
-		</div>
-	</Teleport>
+	<pptx-ui-export-progress :state.prop="state" @export-cancel="emit('cancel')" />
 </template>

@@ -60,6 +60,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-color-grid',
 	'office-ui-color-custom',
 	'office-ui-chart-picker',
+	'office-ui-progress-dialog',
 	'office-ui-presence',
 	'office-ui-smartart',
 	...TEAMS_TAGS,

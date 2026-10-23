@@ -8,6 +8,19 @@
  * behaviour (the same phase split, the same final 95/100 reserved tail) without
  * re-deriving the arithmetic in each export handler.
  */
+import type { ChromeTranslate } from './chrome-controls-state';
+
+/** `pptx-ui-export-progress` state: the bindings pass their export modal's own values. */
+export interface ExportProgressViewState {
+	open: boolean;
+	/** Translated heading (for example "Export as PDF"). */
+	title: string;
+	/** Percent done, 0-100. */
+	progress: number;
+	/** Translated status line; "Processing..." when absent or empty. */
+	status?: string | undefined;
+	translate?: ChromeTranslate;
+}
 
 /** Reserved tail percentages for the post-capture assembly/save phase. */
 export const EXPORT_ASSEMBLING_PERCENT = 95;

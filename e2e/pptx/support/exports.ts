@@ -185,8 +185,14 @@ export async function watchProgress(
 			const regex = new RegExp(source, flags);
 			const w = window as unknown as Record<string, boolean>;
 			w[key] = false;
+			// Shared elements draw their text in open shadow roots (the export progress modal does).
+			const everything = (scope: ParentNode): Element[] =>
+				[...scope.querySelectorAll('*')].flatMap((element) => [
+					element,
+					...(element.shadowRoot ? everything(element.shadowRoot) : []),
+				]);
 			const matching = () =>
-				[...document.querySelectorAll('body *')].filter(
+				everything(document.body).filter(
 					(element) =>
 						element.children.length === 0 &&
 						regex.test(element.textContent ?? '') &&

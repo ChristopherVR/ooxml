@@ -50,6 +50,7 @@ export type {
 } from './form/color-custom';
 import { defineColorCustom } from './form/color-custom';
 import { defineChartPicker } from './dialog/chart-picker';
+import { defineProgressDialog } from './dialog/progress-dialog';
 
 export {
 	defineAccount,
@@ -94,6 +95,7 @@ export {
 	defineColorGrid,
 	defineColorCustom,
 	defineChartPicker,
+	defineProgressDialog,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -105,6 +107,7 @@ export type {
 } from './form/color-grid';
 export type { OfficeCommandEvent } from './ribbon/button';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog';
+export type { OfficeProgressDialogState } from './dialog/progress-dialog';
 export type { OfficeSelectOption } from './form/select';
 export type {
 	OfficeStatusActivateEvent,
@@ -281,6 +284,7 @@ export const CONTROL_DEFINERS = [
 	defineColorGrid,
 	defineColorCustom,
 	defineChartPicker,
+	defineProgressDialog,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */
