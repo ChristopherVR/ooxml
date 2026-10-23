@@ -162,6 +162,31 @@ describe('createInspectorActions text', () => {
 		});
 	});
 
+	it('applies a whole-text edit to the body and every run, as the ribbon does', () => {
+		const element = {
+			...textElement(),
+			text: 'hello world',
+			textSegments: [
+				{ text: 'hello ', style: { color: '#000000' } },
+				{ text: 'world', style: { color: '#000000', bold: true } },
+			],
+		} as PptxElement;
+		const { store, actions } = buildActions(element);
+
+		actions.setTextStyle({ textGlowColor: '#ffff00', textGlowRadius: 6 });
+
+		const updated = selectedEl(store) as {
+			textStyle?: Record<string, unknown>;
+			textSegments?: Array<{ style?: Record<string, unknown> }>;
+		};
+		expect(updated.textStyle).toMatchObject({ fontSize: 18, textGlowColor: '#ffff00' });
+		// A run is painted from its own style: a body-only glow never reached the slide.
+		expect(updated.textSegments?.map((segment) => segment.style)).toStrictEqual([
+			{ color: '#000000', textGlowColor: '#ffff00', textGlowRadius: 6 },
+			{ color: '#000000', bold: true, textGlowColor: '#ffff00', textGlowRadius: 6 },
+		]);
+	});
+
 	it('applies rich formatting only to the selected text range', () => {
 		const element = {
 			...textElement(),
