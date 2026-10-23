@@ -16,6 +16,7 @@ import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
 import { buildShapeFormatPanel } from './shape-format-ribbon';
+import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
 import { panelsOf, setTabHidden } from './ribbon-tab-api';
 
 export type { RibbonAction } from './ribbon-action';
@@ -44,6 +45,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Table',
 		'Header & Footer',
 		'Shape Format',
+		'SmartArt Design',
 	]) {
 		const key =
 			name === 'Header & Footer' ? 'header-footer' : name.toLowerCase().replace(/ /g, '-');
@@ -54,7 +56,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		panel.dataset.panel = name;
 		panel.id = `dve-panel-${key}`;
 		panel.tabIndex = 0;
-		if (name === 'Table' || name === 'Header & Footer' || name === 'Shape Format')
+		if (['Table', 'Header & Footer', 'Shape Format', 'SmartArt Design'].includes(name))
 			panel.dataset.contextual = '';
 		panels.set(name, panel);
 	}
@@ -63,9 +65,10 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	buildNativeTabs(panels);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
 	buildShapeFormatPanel(panels.get('Shape Format')!);
+	buildSmartArtDesignPanel(panels.get('SmartArt Design')!);
 	for (const panel of panels.values()) root.append(panel);
 	// Table tools are contextual: the tab appears only while the selection is in a table.
-	for (const key of ['table', 'header-footer', 'shape-format'])
+	for (const key of ['table', 'header-footer', 'shape-format', 'smartart-design'])
 		setTabHidden(root, key, 'contextual', true);
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font family"]')!, 'Calibri');
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font size"]')!, '11');

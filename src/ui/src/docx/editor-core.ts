@@ -39,6 +39,7 @@ import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
+import { syncSmartArtDesign } from './smartart-design-ribbon';
 
 export type LoadedDocument = Awaited<ReturnType<typeof loadDocument>>;
 
@@ -172,6 +173,7 @@ export class EditorCore {
 			paper: () => this.shell.paper,
 			toolbar: () => this.shell.toolbar,
 			reportError: (error) => emit(element, 'document-error', error),
+			refresh: () => this.refreshControls(),
 			newMediaPartName: (contentType) =>
 				this.collab.yjs?.media.partName(contentType) ?? newPicturePartName(contentType),
 			stageMedia: (name, part) => this.collab.yjs?.media.publish(name, part),
@@ -243,6 +245,8 @@ export class EditorCore {
 				this.shell.toolbar,
 				this.inserts.linkDialog.element,
 				this.inserts.pictureDialog.element,
+				this.inserts.smartArt.dialog.element,
+				this.inserts.smartArt.pane,
 				...this.formatDialogs.elements,
 			],
 		});
@@ -376,6 +380,15 @@ export class EditorCore {
 			Boolean(review?.commentsOpen),
 			this.canEditBody() && (!this.collab.active || Boolean(this.collab.yjs?.sharedComments)),
 		);
+		this.inserts.smartArt.sync();
+		const target = this.targetView();
+		if (toolbar && target)
+			syncSmartArtDesign(
+				toolbar,
+				target.state,
+				target.editable && this.canEditBody(),
+				this.inserts.smartArt.textPaneOpen,
+			);
 		if (status) {
 			this.wordText = status.wordText;
 			chrome?.refresh(status.pageText, status.wordText);

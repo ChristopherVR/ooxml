@@ -83,6 +83,7 @@ export function renderDocument(core: EditorCore): void {
 				editPicture: (pos) => core.inserts.pictureDialog.open(pos),
 				maxWidth: () => core.contentWidth(),
 				theme: () => core.model.theme,
+				locale: () => core.locale,
 			}),
 		},
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),

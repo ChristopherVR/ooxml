@@ -3,7 +3,8 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { NodeView } from 'prosemirror-view';
 import { defineSmartArt } from '../smartart';
 import { placementClass } from 'ooxml-core/docx/ui';
-import { themeDrawing } from 'ooxml-core/docx/ui';
+import { approximateDiagramDrawing, themeDrawing } from 'ooxml-core/docx/ui';
+import { translate, type EditorLocale } from './localization';
 
 const EMU_PER_PX = 9525;
 
@@ -49,6 +50,7 @@ export function diagramNotes(
 	diagram: DocxDiagram,
 	report: RenderReport | undefined,
 	themed?: { unappliedTransforms: string[]; alphaDropped: boolean },
+	approximate?: string,
 ): string[] {
 	const notes = [diagram.notice];
 	for (const issue of diagram.issues) notes.push(`${issue.code}: ${issue.message}`);
@@ -60,7 +62,9 @@ export function diagramNotes(
 	if (themed?.alphaDropped) notes.push('Transparent colours are drawn opaque.');
 	if (themed?.unappliedTransforms.length)
 		notes.push(`Colour transforms not applied: ${themed.unappliedTransforms.join(', ')}.`);
-	notes.push('Shown read-only from the saved drawing; not recomputed and not Word-identical.');
+	notes.push(
+		approximate ?? 'Shown read-only from the saved drawing; not recomputed and not Word-identical.',
+	);
 	return notes.filter(Boolean);
 }
 
@@ -102,12 +106,15 @@ let infoCounter = 0;
 /**
  * Node view for an image node that carries a SmartArt `diagram`: mounts `<office-ui-smartart>`
  * with the cached drawing (theme colours resolved), scaled from the diagram frame to the run's
- * size. Read-only: the diagram parts are never edited, and the node stays an atom.
+ * size. A diagram without a cached drawing (inserted or edited here, or saved without one) is
+ * drawn with the core's approximate layout instead. The node stays an atom: SmartArt Design and
+ * the text pane edit it, and a changed node is rebuilt.
  */
 export function smartArtNodeView(
 	node: ProseMirrorNode,
 	diagram: DocxDiagram,
 	theme: ThemeCatalog | undefined,
+	locale: EditorLocale = 'en',
 ): NodeView {
 	registerSmartArt();
 	const dom = box(node, diagram);
@@ -132,7 +139,7 @@ export function smartArtNodeView(
 	let themed: ReturnType<typeof themeDrawing> | undefined;
 	const writeNotes = (report?: RenderReport) => {
 		const list = document.createElement('ul');
-		for (const note of diagramNotes(diagram, report, themed)) {
+		for (const note of diagramNotes(diagram, report, themed, approximate)) {
 			const item = document.createElement('li');
 			item.textContent = note;
 			list.append(item);
@@ -141,10 +148,17 @@ export function smartArtNodeView(
 		dom.title = diagram.notice;
 	};
 
-	const drawable =
-		diagram.rendering === 'cached-drawing' && (diagram.drawing?.shapes.length ?? 0) > 0;
-	if (drawable && diagram.drawing) {
-		themed = themeDrawing(diagram.drawing, theme);
+	const cached =
+		diagram.rendering === 'cached-drawing' && (diagram.drawing?.shapes.length ?? 0) > 0
+			? diagram.drawing
+			: undefined;
+	const drawing = cached ?? approximateDiagramDrawing(diagram);
+	const approximate = cached
+		? undefined
+		: translate(locale, 'Drawn with an approximate layout computed here; not Word-identical.');
+	if (drawing) {
+		dom.dataset.rendering = cached ? 'cached-drawing' : 'approximate';
+		themed = themeDrawing(drawing, theme);
 		const element = document.createElement('office-ui-smartart') as SmartArtElement;
 		element.className = 'dve-smartart-drawing';
 		element.setAttribute('label', diagramLabel(node, diagram));
