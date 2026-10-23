@@ -198,6 +198,15 @@ export const CHART_SERIES_STRINGS: Translations = {
 		'Seleccione un gráfico de barras o columnas para dar formato a sus series.',
 		'选择条形图或柱形图以设置其系列格式。',
 	],
+	'Series "{name}"': ['Série « {name} »', 'Reihe „{name}“', 'Serie "{name}"', '系列“{name}”'],
+	'Legend Options': ['Options de légende', 'Legendenoptionen', 'Opciones de leyenda', '图例选项'],
+	'Legend Position': [
+		'Position de la légende',
+		'Legendenposition',
+		'Posición de la leyenda',
+		'图例位置',
+	],
+	'Top Right': ['En haut à droite', 'Oben rechts', 'Superior derecha', '右上'],
 	'Enter a whole number from {min} to {max}.': [
 		'Entrez un nombre entier compris entre {min} et {max}.',
 		'Geben Sie eine ganze Zahl zwischen {min} und {max} ein.',

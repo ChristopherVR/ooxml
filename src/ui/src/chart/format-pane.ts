@@ -98,6 +98,8 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	private collapsed = new Set<string>();
 	/** After an edit, write the model's values even into the focused box (a refused value). */
 	private forceSync = false;
+	/** The value each box and select was last given, to tell typing from a stale value. */
+	private synced = new WeakMap<Element, string>();
 
 	constructor() {
 		super();
@@ -185,7 +187,10 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	private edit(field: string, value: ChartFormatFieldValue): void {
 		const source = this.sourceValue;
 		const model = this.model();
-		if (this.disabled || !source || !model) return;
+		if (this.disabled || !source || !model) {
+			this.refreshValues();
+			return;
+		}
 		const view = source.element(model.target);
 		this.commit({
 			target: model.targetKey,
@@ -234,11 +239,15 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 		}
 	};
 
-	private preview = (id: string, value: number): void => {
+	private preview = (id: string, value: number, text: string): void => {
+		const field = CSS.escape(id);
 		const box = this.renderRoot.querySelector<HTMLInputElement>(
-			`[data-chart-format-field="${CSS.escape(id)}"] input`,
+			`[data-chart-format-field="${field}"] input`,
 		);
 		if (box) box.value = String(value);
+		this.renderRoot
+			.querySelector(`[data-chart-format-slider="${field}"] input`)
+			?.setAttribute('aria-valuetext', text);
 	};
 
 	private section(section: ChartFormatSection, ctx: FieldContext): TemplateResult {
@@ -373,9 +382,10 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 			'[data-value]',
 		)) {
 			const value = node.dataset.value ?? '';
-			if (node.value === value) continue;
-			if (!force && node.matches(':focus, :focus-within')) continue;
-			node.value = value;
+			const typing =
+				node.matches(':focus, :focus-within') && node.value !== (this.synced.get(node) ?? value);
+			if (node.value !== value && (force || !typing)) node.value = value;
+			this.synced.set(node, value);
 		}
 	}
 }

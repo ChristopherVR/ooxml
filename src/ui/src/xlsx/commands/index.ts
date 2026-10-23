@@ -24,8 +24,7 @@ import { pageBreakCommands } from 'ooxml-core/xlsx/ui';
 import { reviewCommands } from './review';
 import { styleCommands } from './styles';
 import { viewCommands } from './view';
-import { chartSeriesCommand } from '../chart-series-pane';
-import { chartAreaCommand } from '../chart-area-pane';
+import { chartAreaCommand, chartSeriesCommand } from '../chart-format-pane';
 
 /** Every UI-COMMANDS command (fresh objects; safe to register on several editors). */
 export function allCommands(): Command[] {

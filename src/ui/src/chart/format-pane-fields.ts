@@ -26,7 +26,7 @@ export interface FieldContext {
 	tr(text: ChartFormatText): string;
 	change(id: string, value: ChartFormatFieldValue): void;
 	/** Shows `value` in the box of field `id` without committing it. */
-	preview(id: string, value: number): void;
+	preview(id: string, value: number, text: string): void;
 	locked: boolean;
 	autoLabel: string;
 }
@@ -152,7 +152,7 @@ function slider(
 ): TemplateResult {
 	const value = field.value === '' ? (field.min ?? 0) : field.value;
 	let last = value;
-	return html`<div class="slider"
+	return html`<div class="slider" data-chart-format-slider=${field.id}
 		>${rangeControl({
 			label,
 			value,
@@ -164,7 +164,7 @@ function slider(
 			onInput: (next) => {
 				// The box previews the number while dragging; the slider's change commits it.
 				last = next;
-				ctx.preview(field.id, next);
+				ctx.preview(field.id, next, `${next}${field.unit ?? ''}`);
 			},
 			onChange: () => ctx.change(field.id, last),
 		})}</div
