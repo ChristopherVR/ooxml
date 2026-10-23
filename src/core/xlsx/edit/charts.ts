@@ -95,9 +95,26 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 				if (value === undefined) Reflect.deleteProperty(live, key);
 				else Reflect.set(live, key, value);
 			}
+			if (changes.axes) syncAxisVisibility(live);
 		},
 		{ sheet: s },
 	);
+}
+
+/**
+ * Keeps the explicit axis flags of a chart read from a file (`formatting.entries.*Axis.axisVisible`,
+ * which the writer patches into `c:delete`) in step with an edit of its axes (a Quick Layout hides
+ * the value axis through `axes[].deleted`).
+ */
+function syncAxisVisibility(chart: ChartObject): void {
+	for (const [part, kinds] of [
+		['categoryAxis', ['cat', 'date']],
+		['valueAxis', ['val']],
+	] as const) {
+		const entry = chart.formatting?.entries[part];
+		const axis = chart.axes?.find((item) => (kinds as readonly string[]).includes(item.kind));
+		if (entry?.axisVisible !== undefined && axis) entry.axisVisible = axis.deleted !== true;
+	}
 }
 
 /** A media part name not used by the workbook's package yet (`xl/media/imageN.ext`). */

@@ -13,6 +13,9 @@ import type { ChartObject } from '../model';
 import { parseChart } from '../read/chart';
 import { chartXml, patchChartReferences } from './chart';
 import { chartTitleXml } from './chart-title';
+import { withQuickLayout } from './chart-space';
+import { parseChartSpace } from '../../chart/parse-space';
+import { writeChartSpace } from '../../chart/write-space';
 import { patchChartColors } from './chart-colors';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
@@ -92,6 +95,13 @@ function patchSeriesNames(chart: XmlElement, model: ChartObject): void {
 	});
 }
 
+/** The part with a session's Quick Layout applied (`withQuickLayout`), through the shared model. */
+function layoutChartPart(xml: string, layout: number): string {
+	const { chartSpace } = parseChartSpace(xml);
+	const next = withQuickLayout(chartSpace, layout);
+	return next === chartSpace ? xml : writeChartSpace(next, { declarationBreak: '\n' });
+}
+
 /**
  * The chart part to write for a kept chart, or `undefined` when the source part can be copied
  * unchanged. Edits the source XML in place when only the title, legend, series names or series
@@ -99,10 +109,11 @@ function patchSeriesNames(chart: XmlElement, model: ChartObject): void {
  * grouping or number of series changed.
  */
 export function patchChartPart(
-	xml: string,
+	source: string,
 	model: ChartObject,
 	originalPalette?: number,
 ): string | undefined {
+	let xml = source;
 	assertBarClusterOptions(model);
 	let before: ChartObject;
 	try {
@@ -117,6 +128,7 @@ export function patchChartPart(
 		before.series.length !== model.series.length
 	)
 		return chartXml(model);
+	if (model.quickLayout !== undefined) xml = layoutChartPart(xml, model.quickLayout);
 	const refs = patchChartReferences(xml, model) ?? xml;
 	const doc = parseXml(refs, { label: 'XLSX chart' });
 	const formattingChanged = writeChartAxisFormatting(doc.documentElement, model.formatting);
@@ -154,9 +166,9 @@ export function patchChartPart(
 		!fillsChanged &&
 		before.colorPalette === model.colorPalette
 	)
-		return refs === xml ? undefined : refs;
+		return refs === source ? undefined : refs;
 	const chart = first(doc.documentElement, 'chart', NS.c);
-	if (!chart) return refs === xml ? undefined : refs;
+	if (!chart) return refs === source ? undefined : refs;
 	if (before.title !== model.title) patchTitle(doc, chart, model.title);
 	patchLegend(doc, chart, model);
 	// Title/legend edits can create or replace their nodes after the initial change check.
