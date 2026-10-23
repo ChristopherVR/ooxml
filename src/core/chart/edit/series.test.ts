@@ -36,6 +36,15 @@ describe('series edits', () => {
 		]);
 		const renamed = chartSpaceSeries(renameChartSeries(columnChart(), 1, 'Real'))[1]!;
 		expect(renamed.tx).toEqual({ value: 'Real', text: 'Real' });
+		const kept = chartSpaceSeries(
+			renameChartSeries(columnChart(), 1, 'Real', { keepReference: true }),
+		)[1]!;
+		expect(kept.tx?.text).toBe('Real');
+		expect(kept.tx?.reference).toMatchObject({
+			kind: 'strRef',
+			formula: chartSpaceSeries(columnChart())[1]!.tx?.reference?.formula,
+			cache: { type: 'string', pointCount: 1, points: [{ index: 0, value: 'Real' }] },
+		});
 		const moved = chartSpaceSeries(moveChartSeries(columnChart(), 1, 0));
 		expect(moved.map((s) => [s.tx?.text, s.index, s.order])).toEqual([
 			['Actual', 1, 0],

@@ -11,10 +11,17 @@
  * @module chart/data-sheet
  */
 
+/**
+ * One value of a series: a number, or `null` for a blank cell (written as a missing cached point).
+ * The one series-values shape of the chart core: the data sheet holds it and the `chart/edit`
+ * series operations (`setChartSeriesValues`, `addChartSeries`...) take it.
+ */
+export type ChartSeriesValue = number | null;
+
 /** One series column: its name and one value per category (`null` for a blank cell). */
 export interface ChartDataSheetSeries {
 	name: string;
-	values: readonly (number | null)[];
+	values: readonly ChartSeriesValue[];
 }
 
 /** The neutral chart data shape: category labels down the rows, series across the columns. */
