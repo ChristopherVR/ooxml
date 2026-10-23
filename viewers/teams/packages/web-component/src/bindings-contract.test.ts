@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { angularOutputName, optionNames, propKeys } from 'ooxml-ui/bindings';
 import { describe, expect, it } from 'vitest';
+import { TEAMS_CONTRACT } from './index';
 
 // The framework libraries are not installed in this package, so the component bindings are
 // checked at the source: every one routes props, events and the host class through bindTeams.
@@ -34,15 +36,43 @@ describe.each(Object.entries(bindings))('%s binding', (name, file) => {
 	});
 });
 
-describe('locale prop', () => {
+// The props and events of every binding against TEAMS_CONTRACT. The bindings that name their
+// props one by one (Vue, Angular) are read at the source; the others pass every prop through
+// pickTeamsProps, which reads the contract.
+describe('contract parity', () => {
 	const read = (file: string): string =>
 		readFileSync(resolve(process.cwd(), 'packages', file), 'utf8');
-	it('reaches the element through the shared pickTeamsProps list', () => {
-		expect(read('web-component/src/bind.ts')).toMatch(/'userId',\s+'locale'/u);
+	const sorted = (values: Iterable<string>) => [...values].sort();
+	const options = optionNames(TEAMS_CONTRACT);
+	it('lists the shared props, including locale', () => {
+		expect(sorted(propKeys(TEAMS_CONTRACT))).toEqual(
+			sorted([
+				'config',
+				'embeds',
+				'locale',
+				'openers',
+				'uploadFile',
+				'userId',
+				'userName',
+				'workspaceId',
+			]),
+		);
 	});
-	it('is declared by the bindings that name their props one by one', () => {
-		expect(read('vue/src/index.ts')).toContain('locale: String');
-		expect(read('vue/src/index.ts')).toContain('props.locale');
-		expect(read('angular/src/index.ts')).toContain('@Input() locale');
+	it('Vue declares one prop per key and emits one event per handler', () => {
+		const source = read('vue/src/index.ts');
+		const props = /props: \{([\s\S]*?)\n\t\},/u.exec(source)?.[1] ?? '';
+		const names = [...props.matchAll(/^\t\t(\w+):/gmu)].map((match) => match[1]!);
+		expect(sorted(names)).toEqual(sorted(propKeys(TEAMS_CONTRACT)));
+		const emits = /emits: \[([^\]]*)\]/u.exec(source)?.[1] ?? '';
+		const kebab = (option: string) =>
+			option.slice(2).replace(/[A-Z]/gu, (c, at: number) => (at ? '-' : '') + c.toLowerCase());
+		expect(sorted(emits.match(/[\w-]+/gu) ?? [])).toEqual(sorted(options.map(kebab)));
+	});
+	it('Angular has one input per key (plus className) and one output per handler', () => {
+		const source = read('angular/src/index.ts');
+		const inputs = [...source.matchAll(/@Input\(\) (\w+)/gu)].map((match) => match[1]!);
+		expect(sorted(inputs)).toEqual(sorted([...propKeys(TEAMS_CONTRACT), 'className']));
+		const outputs = [...source.matchAll(/@Output\(\) (\w+)/gu)].map((match) => match[1]!);
+		expect(sorted(outputs)).toEqual(sorted(options.map(angularOutputName)));
 	});
 });

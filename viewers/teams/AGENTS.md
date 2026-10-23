@@ -36,7 +36,7 @@ it is the same tree.
 - **Colours, spacing and radii come from the ooxml-ui tokens** (`var(--office-...)`). No raw colours
   or pixel lengths in component CSS; relative units (`em`) are fine.
 - **Bindings are lifecycle adapters.** The component binding creates `<teams-app>`, forwards props
-  with `bindTeams`/`pickTeamsProps` (`packages/web-component/src/bind.ts`, over `applyTeamsProps` and `listenTeamsEvents` in `bind.ts` of ooxml-ui) and re-emits events with it. Each
+  with `bindTeams`/`pickTeamsProps` (`src/ui/src/teams/app/bind.ts` in ooxml-ui, built on `TEAMS_CONTRACT` and the shared `ooxml-ui/bindings` kit) and re-emits events with it; `bindings-contract.test.ts` checks every binding against the contract. Each
   binding also exposes the **raw hook** over `createTeams` (React `useTeams`, Vue `useTeams`, Solid
   `createTeamsClient`, Svelte `teamsStore`, Angular `TeamsService`). A behaviour bug is fixed once,
   in `web-component` or the core; a hook or wiring bug is fixed in every binding in the same change.

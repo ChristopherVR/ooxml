@@ -47,7 +47,7 @@ from the shared document.
 ## Bindings
 
 A binding is a lifecycle adapter: it creates `<teams-app>`, forwards props with `bindTeams` (class included; `class` or `className` per framework)
-and re-emits events, all in `packages/web-component/src/bind.ts`. `onOpenFile` is `(detail, event)` everywhere except Angular, whose single-value output emits `{ detail, event }`. Each
+and re-emits events, all in `ooxml-ui/teams` (`src/ui/src/teams/app/bind.ts`, on the shared `ooxml-ui/bindings` kit). `onOpenFile` is `(detail, event)` everywhere except Angular, whose single-value output emits `{ detail, event }`. Each
 also exposes the raw hook over `createTeams`:
 
 | Binding  | Component                       | Raw hook                                                 |

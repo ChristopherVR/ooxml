@@ -13,7 +13,9 @@ import {
 	type ShallowRef,
 } from 'vue';
 import type { TeamsServerConfig } from 'ooxml-core/teams';
+import { propKeys } from 'ooxml-ui/bindings';
 import {
+	TEAMS_CONTRACT,
 	bindTeams,
 	createTeams,
 	defineTeamsApp,
@@ -62,19 +64,7 @@ export const Teams = defineComponent({
 			if (el.value) binding = bindTeams(el.value, current);
 			sync();
 		});
-		watch(
-			() => [
-				props.workspaceId,
-				props.userName,
-				props.userId,
-				props.locale,
-				props.config,
-				props.uploadFile,
-				props.openers,
-				props.embeds,
-			],
-			sync,
-		);
+		watch(() => propKeys(TEAMS_CONTRACT).map((key) => props[key as keyof typeof props]), sync);
 		onBeforeUnmount(() => binding?.destroy());
 		expose({ element: el });
 		return () => h('teams-app', { ref: el, style: 'display:block;height:100%' });

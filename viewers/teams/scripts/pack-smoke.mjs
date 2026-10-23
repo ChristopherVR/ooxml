@@ -34,6 +34,8 @@ const run = (command, args, options = {}) => {
 	return result.stdout;
 };
 
+const workspaceRuntime = process.argv.includes('--workspace-runtime');
+
 const FRAMEWORKS = ['react', 'vue', 'angular', 'solid', 'svelte', 'vanilla'];
 const PUBLISHED = [...FRAMEWORKS, 'server'];
 const dirOf = (name) =>
@@ -223,6 +225,23 @@ try {
 		const manifest = await inspectTarball(name, packed, target);
 		for (const [dependency, version] of Object.entries(manifest.peerDependencies ?? {}))
 			peers.set(dependency, version);
+	}
+	// `--workspace-runtime` installs this checkout's ooxml-core and ooxml-ui (built first) instead of
+	// the registry's, for a change that needs both before they are released together.
+	if (workspaceRuntime) {
+		for (const area of ['core', 'ui']) {
+			const packed = JSON.parse(
+				run('npm', [
+					'pack',
+					'--json',
+					'--ignore-scripts',
+					'--pack-destination',
+					work,
+					path.join(root, '../../src', area),
+				]),
+			)[0];
+			tarballs.push(path.join(work, packed.filename));
+		}
 	}
 	await writeFile(
 		path.join(work, 'package.json'),

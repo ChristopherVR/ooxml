@@ -16,6 +16,15 @@ export {
 	type FileEmbeds,
 	type SaveFileCopy,
 } from './content-preview';
-export { applyTeamsProps, listenTeamsEvents, type TeamsProps } from './bind';
+export {
+	applyTeamsProps,
+	bindTeams,
+	listenTeamsEvents,
+	pickTeamsProps,
+	TEAMS_CONTRACT,
+	type TeamsBinding,
+	type TeamsElementProps,
+	type TeamsProps,
+} from './bind';
 export * from './store';
 export { loadConfig, loadIdentity, safeStorage, saveConfig, saveIdentity } from './storage';

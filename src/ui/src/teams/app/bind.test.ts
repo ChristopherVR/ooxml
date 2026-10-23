@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { bindTeams, defineTeamsApp, pickTeamsProps, type TeamsApp } from './index';
+import { bindTeams, pickTeamsProps } from './bind';
+import { defineTeamsApp, type TeamsApp } from './teams-app';
 
 function element(): TeamsApp {
 	defineTeamsApp();
