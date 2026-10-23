@@ -14,7 +14,8 @@
 #    from the manifest. Unless -SkipWorkbook, each chart's embedded workbook is opened with
 #    ChartData.ActivateChartDataWindow and the manifest's cells are compared, so Edit Data in
 #    Word shows the edited numbers (Word refuses a workbook whose table no longer matches its
-#    header cells).
+#    header cells). For formatted charts (the Format pane's intents) the first series' fill colour
+#    and the legend position are compared too, and for resized charts the inline shape's size.
 param(
 	[string]$OutDir = (Join-Path ([IO.Path]::GetTempPath()) 'docx-word-chart-acceptance'),
 	[switch]$SkipBuild,
@@ -84,9 +85,30 @@ function Test-Number($got, $want) {
 	return [math]::Abs($n - [double]$want) -le 1e-9 * [math]::Max(1, [math]::Abs([double]$want))
 }
 
+# Word's legend positions (XlLegendPosition) by the manifest's c:legendPos value.
+$legendPositions = @{ t = -4160; b = -4107; l = -4131; r = -4152; tr = 2 }
+
 # What Word reads from one chart, compared with its manifest entry.
-function Test-Chart($chart, $want, [string]$where) {
+function Test-Chart($shape, $want, [string]$where) {
+	$chart = $shape.Chart
 	$problems = @()
+	if ($want.size) {
+		foreach ($side in 'width', 'height') {
+			$got = [double]$shape.$side
+			if ([math]::Abs($got - [double]$want.size.$side) -gt 0.5) { $problems += "$where $side is $got pt, expected $($want.size.$side) pt" }
+		}
+	}
+	if ($want.legendPosition) {
+		$expected = $legendPositions[[string]$want.legendPosition]
+		if (-not $chart.HasLegend) { $problems += "$where has no legend" }
+		elseif ($chart.Legend.Position -ne $expected) { $problems += "$where legend position is $($chart.Legend.Position), expected $expected" }
+	}
+	if ($want.seriesFill) {
+		# RGB is 0xBBGGRR.
+		$rgb = [int]$chart.SeriesCollection(1).Format.Fill.ForeColor.RGB
+		$hex = '{0:X2}{1:X2}{2:X2}' -f ($rgb -band 0xFF), (($rgb -shr 8) -band 0xFF), (($rgb -shr 16) -band 0xFF)
+		if ($hex -ne $want.seriesFill) { $problems += "$where series 1 fill is $hex, expected $($want.seriesFill)" }
+	}
 	$count = $chart.SeriesCollection().Count
 	if ($count -ne @($want.series).Count) { return @("$where has $count series, expected $(@($want.series).Count)") }
 	for ($s = 0; $s -lt $count; $s++) {
@@ -132,7 +154,7 @@ try {
 			$charts = [Collections.Generic.List[object]]::new()
 			for ($i = 1; $i -le $doc.InlineShapes.Count; $i++) {
 				$shape = $doc.InlineShapes.Item($i)
-				if ($shape.HasChart -eq -1 -or $shape.HasChart -eq $true) { $charts.Add($shape.Chart) }
+				if ($shape.HasChart -eq -1 -or $shape.HasChart -eq $true) { $charts.Add($shape) }
 			}
 			$want = @($manifest.($file.Name))
 			if ($file.Name -eq 'word-source.docx') { $detail = "$($charts.Count) chart(s) written by Word" }

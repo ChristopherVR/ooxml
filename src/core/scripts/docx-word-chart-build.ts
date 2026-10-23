@@ -3,19 +3,24 @@
 // Every file is saved by `saveDocx` after chart edits made with the shared chart core: a chart
 // Word itself authored (`word-source.docx`, written by the PowerShell script through Word's own
 // Insert Chart when Word is available), the committed Excel-authored chart fixture with an
-// embedded workbook, and new charts inserted into a blank document and into Word's document.
+// embedded workbook, and new charts inserted into a blank document and into Word's document;
+// formatted charts (the Format pane's intents through `applyChartEditIntent`) and resized charts
+// (a new drawing extent) on both sources.
 // `manifest.json` lists, per file and per chart in document order, the series names and values
-// Word must read back and the cells the embedded workbook must hold.
+// Word must read back, the cells the embedded workbook must hold and, for formatted and resized
+// charts, the first series' fill, the legend position and the drawing size in points.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import JSZip from 'jszip';
 import {
+	applyChartEditIntent,
 	chartSpaceDataSheet,
 	createChartWorkbook,
 	setChartTitle,
 	setChartType,
 	type ChartDataSheet,
 	type ChartDataSheetEdit,
+	type ChartEditIntent,
 } from '../chart/index';
 import {
 	applyDocxChartDataSheetEdits,
@@ -42,6 +47,12 @@ interface ChartExpectation {
 	series: { name: string; values: (number | null)[] }[];
 	/** `A1` reference -> text the embedded workbook's first sheet must show. */
 	cells: Record<string, string>;
+	/** `RRGGBB` of the first series' solid fill, when the document sets one. */
+	seriesFill?: string;
+	/** `t`, `b`, `l`, `r` or `tr`, when formatted. */
+	legendPosition?: string;
+	/** The drawing extent in points, when resized. */
+	size?: { width: number; height: number };
 }
 const manifest: Record<string, ChartExpectation[]> = {};
 
@@ -80,20 +91,57 @@ function appendChart(model: DocumentModel, chart: DocxChart): void {
 	});
 }
 
+/** What a formatted or resized document must also show, by file name. */
+const extras: Record<string, Partial<ChartExpectation>> = {};
+
 async function write(name: string, bytes: Uint8Array): Promise<void> {
 	writeFileSync(join(out!, name), bytes);
 	const reloaded = await loadDocx(bytes);
 	manifest[name] = chartsIn(documentDrawingBlocks(reloaded.model))
 		.filter((chart) => chart.chartSpace && !chart.layoutId)
-		.map(expectation);
+		.map((chart) => ({ ...expectation(chart), ...extras[name] }));
 }
 
-async function edited(source: Uint8Array, name: string, edit: (chart: DocxChart) => DocxChart) {
+async function edited(
+	source: Uint8Array,
+	name: string,
+	edit: (chart: DocxChart) => DocxChart,
+	size?: { widthPx: number; heightPx: number },
+) {
 	const loaded = await loadDocx(source);
 	const model = structuredClone(loaded.model);
 	replaceCharts(model, edit);
+	if (size) {
+		for (const block of documentDrawingBlocks(model))
+			if (block.type === 'paragraph')
+				for (const run of block.runs) if (run.image?.chart) Object.assign(run.image, size);
+		extras[name] = {
+			...extras[name],
+			size: { width: size.widthPx * 0.75, height: size.heightPx * 0.75 },
+		};
+	}
 	await write(name, await loaded.save(model));
 }
+
+const solid = (value: string) =>
+	({ kind: 'solid', color: { kind: 'srgb', value, transforms: [] } }) as const;
+
+/** The Format pane's edits: a red first series, the legend on top, a filled plot, an outline. */
+const FORMAT: ChartEditIntent[] = [
+	{ op: 'fill', target: { kind: 'series', seriesIndex: 0 }, fill: solid('FF0000') },
+	{ op: 'legend', edit: { position: 't' } },
+	{ op: 'fill', target: { kind: 'plotArea' }, fill: solid('F2F2F2') },
+	{ op: 'line', target: { kind: 'chartArea' }, line: { widthEmu: 19050, fill: solid('1F4E79') } },
+];
+
+function formatted(name: string) {
+	extras[name] = { seriesFill: 'FF0000', legendPosition: 't' };
+	return (chart: DocxChart) =>
+		editDocxChart(chart, (space) => FORMAT.reduce(applyChartEditIntent, space));
+}
+
+/** Resized to 4.5 x 2.5 inches (432 x 240 px), keeping the chart part as it is. */
+const RESIZED = { widthPx: 432, heightPx: 240 };
 
 const data = (edits: ChartDataSheetEdit[]) => (chart: DocxChart) =>
 	applyDocxChartDataSheetEdits(chart, edits);
@@ -156,6 +204,8 @@ await edited(fixture, 'fixture-structural.docx', data(structural));
 await edited(fixture, 'fixture-type-line.docx', (chart) =>
 	editDocxChart(chart, (space) => setChartTitle(setChartType(space, { kind: 'line' }), 'Lines')),
 );
+await edited(fixture, 'fixture-formatted.docx', formatted('fixture-formatted.docx'));
+await edited(fixture, 'fixture-resized.docx', (chart) => chart, RESIZED);
 
 const blank = createDocument();
 appendChart(blank, newDocxChart(undefined, { title: 'New column chart' }));
@@ -174,6 +224,13 @@ if (existsSync(source)) {
 	await edited(bytes, 'word-structural.docx', data(structural));
 	await edited(bytes, 'word-type-line.docx', (chart) =>
 		editDocxChart(chart, (space) => setChartType(space, { kind: 'line' })),
+	);
+	await edited(bytes, 'word-formatted.docx', formatted('word-formatted.docx'));
+	await edited(
+		bytes,
+		'word-formatted-resized.docx',
+		formatted('word-formatted-resized.docx'),
+		RESIZED,
 	);
 	const loaded = await loadDocx(bytes);
 	const model = structuredClone(loaded.model);
