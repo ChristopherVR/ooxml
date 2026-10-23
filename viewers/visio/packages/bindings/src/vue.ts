@@ -1,31 +1,20 @@
-import {
-	defineComponent,
-	h,
-	onBeforeUnmount,
-	onMounted,
-	ref,
-	shallowRef,
-	watch,
-	watchEffect,
-	type PropType,
-	type Ref,
-	type ShallowRef,
-} from 'vue';
+import { shallowRef, watchEffect, type PropType, type Ref, type ShallowRef } from 'vue';
+import { defineVueBinding } from 'ooxml-ui/bindings/vue';
 import {
 	eventKeys,
-	propertyKeys,
 	mountFrameworkViewer,
-	viewerHandle,
+	VIEWER_CONTRACT,
+	VIEWER_HANDLE_OPTIONS,
 	viewerStateSource,
 	withEventEmitter,
-	type MountedViewer,
 	type ViewerCallbacks,
 	type ViewerHandle,
 	type ViewerProperties,
+	type ViewerProps,
 	type ViewerState,
 } from './common';
 /** Vue props and emitted event names are checked against the shared contract. */
-export const VisioViewer = defineComponent({
+export const VisioViewer = defineVueBinding({
 	name: 'VisioViewer',
 	props: {
 		canEdit: { type: Boolean, default: undefined },
@@ -52,26 +41,14 @@ export const VisioViewer = defineComponent({
 		},
 		events: Object as PropType<ViewerCallbacks>,
 	} satisfies Record<keyof ViewerProperties | 'events', unknown>,
+	contract: VIEWER_CONTRACT,
+	// Events arrive through the shared callback map, so a host callback can still cancel one.
 	emits: [...eventKeys],
-	setup(props, { emit, expose }) {
-		const host = ref<HTMLElement>();
-		const binding = shallowRef<MountedViewer>();
-		const options = () => withEventEmitter(props, (name, value) => emit(name, value));
-		onMounted(() => {
-			binding.value = mountFrameworkViewer(host.value!, options());
-		});
-		watch(
-			() => [...propertyKeys.map((key) => props[key]), props.events],
-			() => binding.value?.update(options()),
-		);
-		onBeforeUnmount(() => {
-			const mounted = binding.value;
-			binding.value = undefined;
-			mounted?.destroy();
-		});
-		expose(viewerHandle(() => binding.value));
-		return () => h('div', { ref: host });
-	},
+	options: (props, emit) =>
+		withEventEmitter(props as ViewerProps, (name, value) => emit(name, value)),
+	handle: VIEWER_CONTRACT.handle,
+	handleOptions: VIEWER_HANDLE_OPTIONS,
+	mount: mountFrameworkViewer,
 });
 /**
  * Composable: reactive viewer state for a template ref to `<VisioViewer>`. The returned

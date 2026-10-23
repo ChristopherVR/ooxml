@@ -10,24 +10,26 @@ import {
 	type OnChanges,
 	type OnDestroy,
 } from '@angular/core';
+import { installHandle } from 'ooxml-ui/bindings';
 import {
 	mountFrameworkViewer,
+	VIEWER_CONTRACT,
+	VIEWER_HANDLE_OPTIONS,
 	viewerHandle,
 	viewerStateSource,
 	withEventEmitter,
 	type MountedViewer,
 	type ViewerCallbacks,
 	type ViewerEvents,
+	type ViewerHandle,
 	type ViewerProperties,
 	type ViewerState,
-	type VsdxSource,
-	type VisioEdit,
-	type CreateVsdxOptions,
-	type VisioShapeSelection,
-	type SvgExportOptions,
-	type CurrentPagePrintSnapshotOptions,
 } from './common';
+/** The handle members, defined on the prototype from `VIEWER_CONTRACT.handle`. */
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging -- members come from installHandle.
+export interface VisioViewerComponent extends ViewerHandle {}
 /** Angular input/output and lifecycle wiring over the one shared browser binding. */
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging -- see the interface above.
 @Component({ selector: 'visio-viewer-host', standalone: true, template: '' })
 export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
 	@Input() document?: ViewerProperties['document'];
@@ -55,6 +57,14 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding: MountedViewer | undefined;
 	private readonly handle = viewerHandle(() => this.binding);
+	static {
+		installHandle(
+			this.prototype,
+			VIEWER_CONTRACT.handle,
+			(self) => self.binding,
+			VIEWER_HANDLE_OPTIONS,
+		);
+	}
 	private stopState = () => {};
 	private readonly viewerState = signal<ViewerState | null>(null);
 	/** Reactive viewer state as an Angular signal (`viewer.state()?.pageIndex`); `null` until mounted. */
@@ -92,72 +102,6 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 		const mounted = this.binding;
 		this.binding = undefined;
 		mounted?.destroy();
-	}
-	get element() {
-		return this.handle.element;
-	}
-	get controller() {
-		return this.handle.controller;
-	}
-	load(source: VsdxSource) {
-		return this.handle.load(source);
-	}
-	createBlankDrawing(options?: CreateVsdxOptions) {
-		return this.handle.createBlankDrawing(options);
-	}
-	applyEdits(edits: readonly VisioEdit[]) {
-		return this.handle.applyEdits(edits);
-	}
-	selectShapes(shapes: readonly VisioShapeSelection[]) {
-		this.handle.selectShapes(shapes);
-	}
-	selectAll() {
-		this.handle.selectAll();
-	}
-	clearSelection() {
-		this.handle.clearSelection();
-	}
-	duplicateSelection() {
-		return this.handle.duplicateSelection();
-	}
-	copySelection() {
-		return this.handle.copySelection();
-	}
-	cutSelection() {
-		return this.handle.cutSelection();
-	}
-	pasteSelection() {
-		return this.handle.pasteSelection();
-	}
-	replacePlainText(pageId: string, shapeId: string, text: string) {
-		return this.handle.replacePlainText(pageId, shapeId, text);
-	}
-	undo() {
-		return this.handle.undo();
-	}
-	redo() {
-		return this.handle.redo();
-	}
-	cancelEdit() {
-		this.handle.cancelEdit();
-	}
-	exportVsdx() {
-		return this.handle.exportVsdx();
-	}
-	fit() {
-		this.handle.fit();
-	}
-	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null) {
-		this.handle.setLayerVisibility(pageId, layerId, visible);
-	}
-	resetLayerVisibility(pageId?: string) {
-		this.handle.resetLayerVisibility(pageId);
-	}
-	exportSvg(options?: SvgExportOptions) {
-		return this.handle.exportSvg(options);
-	}
-	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) {
-		return this.handle.createPrintSnapshot(options);
 	}
 }
 export type {

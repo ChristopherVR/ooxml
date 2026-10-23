@@ -100,7 +100,13 @@ integrate.
    framework wiring before choosing a file to change.
 2. Fix rendering, selection, controls, keyboard and view state once in `src/ui/src/visio/` (shipped as `ooxml-ui/visio`).
 3. For adapter changes, search all six for the same pattern and fix every
-   affected adapter together. Shared helpers belong in `common.ts`.
+   affected adapter together. Visio-specific helpers (the handle contract
+   `VIEWER_CONTRACT`, the revision-aware patches of `mountFrameworkViewer`,
+   `withEventEmitter`) belong in `packages/bindings/src/common.ts`; binding
+   machinery every product shares (the deferred handle, prop picking, the React
+   and Vue component factories) lives in `ooxml-ui/bindings`
+   (`src/ui/src/bindings`). `tests/contract-parity.test.ts` checks every
+   adapter against the contract.
 4. Add regression coverage at the owning layer. Check actual native adapter
    lifecycle and browser behavior; compilation alone is insufficient.
 5. Keep parsing and document mutations out of adapters. Editing UI delegates
