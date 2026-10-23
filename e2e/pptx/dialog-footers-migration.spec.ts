@@ -1,7 +1,7 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec */
 /**
- * Every dialog action row is the shared `pptx-ui-dialog-footer` in all five
- * bindings (#396). One spec, run once per binding by the Playwright projects:
+ * Every dialog action row is the shared `pptx-ui-dialog-footer` (or the
+ * `office-ui-dialog-footer` it aliases) in all five bindings (#396). One spec, run once per binding by the Playwright projects:
  * it opens each dialog and asserts the footer element, the button order (the
  * primary action last, at most one), that Escape leaves the footer intact and that a
  * focused Cancel/Close button closes it on Enter. Callbacks, ids and test hooks
@@ -127,9 +127,13 @@ const SURFACES: Surface[] = [
 	},
 ];
 
-/** Footers that are on screen (some bindings keep closed dialogs mounted, hidden). */
+/**
+ * Footers that are on screen (some bindings keep closed dialogs mounted, hidden). The insert
+ * dialogs built on the shared frame (`pptx-ui-insert-smartart-dialog`) render the shared
+ * `office-ui-dialog-footer` itself, which `pptx-ui-dialog-footer` only aliases.
+ */
 function visibleFooters(page: Page): Locator {
-	return page.locator('pptx-ui-dialog-footer:visible');
+	return page.locator('pptx-ui-dialog-footer:visible, office-ui-dialog-footer:visible');
 }
 
 for (const surface of SURFACES) {
