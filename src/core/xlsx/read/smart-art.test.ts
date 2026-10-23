@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
+import { projectDiagramNodeTextNeutral } from '../../diagram/index';
 import { createEditSession } from '../edit/index';
 import { anchorToPixelBox } from '../layout/index';
 import type { SmartArtObject, Workbook } from '../model';
@@ -33,6 +34,10 @@ describe('SmartArt in worksheet drawings', () => {
 		const art = smartArt(wb);
 		expect(art.name).toBe('Process Diagram');
 		expect(art.nodes.map((n) => n.text)).toEqual(['Plan', 'Build', 'Ship']);
+		// Node text is also exposed on the neutral paragraph model, projectable like pptx's.
+		const segments = projectDiagramNodeTextNeutral(art.nodes[0]!);
+		expect(segments.map((segment) => segment.text).join('')).toBe('Plan');
+		expect(art.nodes.every((node) => node.paragraphs?.length)).toBe(true);
 		expect(art.layoutId).toMatch(/layout\/default$/);
 		expect(art.diagram?.shapes.length).toBeGreaterThanOrEqual(3);
 		expect(art.diagram?.shapes.map((s) => s.text?.paragraphs?.[0]?.runs?.[0]?.text)).toEqual(

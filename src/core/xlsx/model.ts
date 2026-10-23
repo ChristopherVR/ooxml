@@ -1,5 +1,6 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
 import type { DiagramDrawing, DiagramIssue } from '../diagram/types';
+import type { DiagramNeutralTextParagraph } from '../diagram/text/node-text-neutral';
 import type { CellAddress, CellRange } from './address';
 import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
 import type {
@@ -568,6 +569,11 @@ export interface SmartArtNode {
 	text: string;
 	/** Model id of the parent content node, when it has one. */
 	parentId?: string;
+	/**
+	 * The node's paragraphs on the neutral DrawingML text model (read-only); project them with
+	 * `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
+	 */
+	paragraphs?: DiagramNeutralTextParagraph[];
 }
 
 /**
