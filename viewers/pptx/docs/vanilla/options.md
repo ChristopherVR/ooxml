@@ -123,13 +123,13 @@ dictionary of dotted `pptx.*` keys. Theme and locale can be changed later via
 
 ## Autosave
 
-Debounced crash-recovery snapshots in a shared IndexedDB store. Autosave never replaces the user's
+Crash-recovery snapshots in a shared IndexedDB store, written once per interval while there are unsaved edits. Autosave never replaces the user's
 real Save; it is a safety net offered back on the next start.
 
 | Option               | Type              | Default                | Description                                                                                                                                      |
 | -------------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `autosave`           | `boolean`         | `true`                 | Recovery autosave; the toolbar shows a small status pill. A policy ceiling over the title-bar toggle; see below.                                 |
-| `autosaveIntervalMs` | `number`          | File > Options cadence | Debounce window (ms). An explicit value outranks the user's AutoRecover setting.                                                                 |
+| `autosaveIntervalMs` | `number`          | File > Options cadence | Interval (ms) between recovery snapshots while there are unsaved edits. An explicit value outranks the user's AutoRecover setting.               |
 | `storage`            | `DocumentStorage` | none                   | Host-owned storage: Save goes to `storage.save()`, recovery copies to its recovery methods. See [Host-owned storage](/guide/host-owned-storage). |
 | `autosaveFilePath`   | `string`          | `'presentation.pptx'`  | IndexedDB recovery key for autosave.                                                                                                             |
 

@@ -46,9 +46,15 @@ Le rendu partagé vit dans `src/ui/src/pptx/` à la racine du dépôt et est pub
 - **Moteurs d'animation et de morphe** : construction et lecture de la chronologie (`animation-timeline-*.ts`), ainsi que l'appariement des transitions morphe et l'interpolation de géométrie (`morph-matching.ts`, `morph-geometry-interp.ts`, `morph-text.ts`).
 - **Résolution du texte et des styles** : numérotation des puces, styles de remplissage/dégradé, filtres d'effets d'image, styles de coupure de ligne kinsoku.
 - **Mathématiques** : convertisseurs OMML vers MathML et LaTeX vers OMML (`omml-to-mathml.ts`, `latex-to-omml.ts`, désormais dans l'aire partagée `ooxml-core/math`).
-- **Comportement de l'éditeur** : historique, presse-papiers, repères d'alignement, reproduction de la mise en forme, rechercher et remplacer, synchronisation de la collaboration et présence.
+- **Comportement de l'éditeur** : presse-papiers, repères d'alignement, reproduction de la mise en forme, rechercher et remplacer, synchronisation de la collaboration et présence.
 
 Les répertoires voisins couvrent `export/`, `i18n/`, `loader/`, `theme/` et le moteur de rendu optionnel `smartart-3d/`.
+
+### Contrôleurs sans interface
+
+La logique d'éditeur avec état est écrite une seule fois comme contrôleur sans interface dans `render/controller/` : un objet simple avec `getSnapshot()`, `subscribe(listener)` et des actions typées. L'historique annuler et rétablir (profondeur par défaut de 100 étapes), la sauvegarde automatique de récupération (un seul moteur, qui capture aussi le texte en ligne non validé), l'offre de récupération, le cycle de vie de la salle de collaboration et le volet IA sont des contrôleurs, de même que les gestes sur la zone de travail (`createGestureController`). Le répartiteur de touches (`dispatchEditorKey`), le pont IA (`createPptxAiBridge`), les cibles de clic sur un groupe et les étapes du diaporama sont des fonctions pures à côté. Chaque liaison raccorde son propre état réactif à un adaptateur de magasin générique (`useController` dans React et Vue, `controllerState` dans Svelte, `controllerSignal` dans Angular, `subscribe` en JavaScript natif), de sorte qu'une correction d'un contrôleur atteint les cinq liaisons.
+
+Les sections Effets, Ligne, Taille et position, et Zone de texte de l'inspecteur sont des descripteurs de champs dans `render/inspector/`, rendus par un seul moteur de rendu générique par liaison. La feuille de données du graphique, le volet Format du graphique, les boîtes de dialogue d'insertion de graphique et de SmartArt, le volet texte SmartArt et les galeries de création de graphiques sont des éléments `ooxml-ui` partagés que chaque liaison monte.
 
 ::: info Packages publics partagés
 Chaque binding déclare `ooxml-ui` comme dépendance d'exécution et importe ses entrées PowerPoint. Angular utilise la même API publique sans embarquer de copie des sources. Le package privé `pptx-viewer-shared` reste une façade de compatibilité et ne contient aucune implémentation.

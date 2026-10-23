@@ -199,11 +199,11 @@ interface PowerPointViewerProps {
 
 ## 自动保存与恢复 {#autosave-recovery}
 
-`canEdit` 为 true 且提供 `filePath` 时，组件会定时将恢复快照保存到 **IndexedDB**，默认每 120 秒一次。即使关闭页面或发生崩溃，数据仍保留在浏览器中。
+`canEdit` 为 true 且提供 `filePath` 时，组件会在有未保存修改时将恢复快照保存到 **IndexedDB**，默认在首次未保存修改两分钟后写入一次。即使关闭页面或发生崩溃，数据仍保留在浏览器中。
 
 ### 工作方式 {#how-it-works}
 
-1. 每隔 120 秒检查文档是否有未保存修改，间隔可配置。
+1. 首次未保存修改会启动计时器，默认两分钟，间隔可配置。之后的修改不会延后写入；文档未变化时不写入任何内容。
 2. 存在修改时，将当前状态序列化为 `Uint8Array`，存入 IndexedDB 数据库 `pptx-viewer-autosave`，以 `filePath` 为键。
 3. 下次加载相同 `filePath`，且幻灯片加载完成后，检查 24 小时内的近期快照，并打开版本历史面板。
 

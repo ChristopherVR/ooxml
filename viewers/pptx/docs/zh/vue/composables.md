@@ -15,21 +15,21 @@ description: PowerPointViewer 的组合式函数架构、pptx-vue-viewer/viewer 
 
 这些组合式函数说明了查看器的组装方式。它们可以导入（见下文），但依赖特定的组合顺序和共享输入。此表用于理解架构，并非 API 兼容性约定。
 
-| 组合式函数                  | 职责                                                                          |
-| --------------------------- | ----------------------------------------------------------------------------- |
-| `useLoadContent`            | 加载时通过 `PptxHandler` 解析 PPTX 缓冲区。                                   |
-| `useEditorHistory`          | 撤销和重做快照栈，支持模板元素层（母版和布局）。                              |
-| `useEditorOperations`       | 元素创建、更新、删除和复制的基础操作。                                        |
-| `useElementDrag`            | 移动、缩放、旋转和调整，以及吸附和对齐参考线。                                |
-| `useElementInsertion`       | 插入形状、图片、文本框、表格和图表。                                          |
-| `useSlideOperations`        | 添加、删除、复制和重排幻灯片。                                                |
-| `useAutosave`               | 带防抖的自动保存定时器和状态，参见[属性 > 自动保存](/zh/vue/props#autosave)。 |
-| `usePresentationModeWiring` | 将幻灯片放映导航接入组件。                                                    |
-| `useExportWiring`           | 将 PNG / PDF / GIF / WebM 导出和打印接入组件。                                |
-| `useCollaborationWiring`    | 共享或广播对话框，以及由属性驱动的 Yjs 会话生命周期。                         |
-| `useRibbonProps`            | 组装完整的 Office 风格功能区 `RibbonProps` 接口。                             |
-| `useEditorKeyboard`         | 由配置驱动的键盘快捷键注册和分发。                                            |
-| `useIsMobile`               | 判断设备、视口、手机、平板和方向。                                            |
+| 组合式函数                  | 职责                                                                |
+| --------------------------- | ------------------------------------------------------------------- |
+| `useLoadContent`            | 加载时通过 `PptxHandler` 解析 PPTX 缓冲区。                         |
+| `useEditorHistory`          | 撤销和重做快照栈，支持模板元素层（母版和布局）。                    |
+| `useEditorOperations`       | 元素创建、更新、删除和复制的基础操作。                              |
+| `useElementDrag`            | 移动、缩放、旋转和调整，以及吸附和对齐参考线。                      |
+| `useElementInsertion`       | 插入形状、图片、文本框、表格和图表。                                |
+| `useSlideOperations`        | 添加、删除、复制和重排幻灯片。                                      |
+| `useAutosave`               | 自动保存间隔和状态，参见[属性 > 自动保存](/zh/vue/props#autosave)。 |
+| `usePresentationModeWiring` | 将幻灯片放映导航接入组件。                                          |
+| `useExportWiring`           | 将 PNG / PDF / GIF / WebM 导出和打印接入组件。                      |
+| `useCollaborationWiring`    | 共享或广播对话框，以及由属性驱动的 Yjs 会话生命周期。               |
+| `useRibbonProps`            | 组装完整的 Office 风格功能区 `RibbonProps` 接口。                   |
+| `useEditorKeyboard`         | 由配置驱动的键盘快捷键注册和分发。                                  |
+| `useIsMobile`               | 判断设备、视口、手机、平板和方向。                                  |
 
 此外还有数十个组合式函数，负责对话框、批注、节、SmartArt 编辑、表格编辑、放映子逻辑、移动端界面等。按职责分组的完整列表请参见 **[完整组合式函数参考](/zh/vue/composables-reference)** 。
 

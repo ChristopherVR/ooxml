@@ -28,7 +28,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | Composable                    | Concern                                                              |
 | ----------------------------- | -------------------------------------------------------------------- |
 | `useLoadContent`              | Parses the PPTX buffer on load via `PptxHandler`.                    |
-| `useAutosave`                 | Debounced autosave timer, dirty tracking, and status.                |
+| `useAutosave`                 | Autosave interval, dirty tracking, and status.                       |
 | `useDocumentStatistics`       | Word/character/slide/note counts for the Document Properties dialog. |
 | `useDocumentPropertiesDialog` | Core / custom / app document-properties dialog state.                |
 | `useMasterViewState`          | Slide / notes / handout master view state.                           |

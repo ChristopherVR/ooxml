@@ -20,6 +20,26 @@ viewer packages contain framework adapters and consume `ooxml-ui/pptx`.
 The private `pptx-viewer-shared` package is a compatibility facade. It owns no
 renderer or document operations. Angular no longer vendors a source copy.
 
+## Controllers and shared editing UI (Wave 6, 2026-10-23)
+
+The five bindings no longer each hold their own copy of the editor's stateful logic. Undo and redo
+history, recovery autosave and its recovery offer, the collaboration room lifecycle, the AI panel and
+the canvas gestures are headless controllers in `src/ui/src/pptx/render/controller/` (and
+`render/editor-gestures.ts`, `ai/panel-controller.ts`), each adapted by one store adapter per
+framework. Keymap dispatch, the AI bridge, group press targets and slide show steps are pure
+functions in the same shared layer. The binding conventions are in `viewers/pptx/AGENTS.md` (Rule 2).
+
+Chart and SmartArt editing is shared too. The chart data sheet, chart Format pane, insert chart and
+insert SmartArt dialogs, the SmartArt text pane and the chart Design galleries are `ooxml-ui`
+elements (`office-ui-chart-data-sheet`, `office-ui-chart-format-pane`, `office-ui-chart-picker`,
+`office-ui-smartart-picker`, `office-ui-smartart-text-pane`) that the pptx web components mount.
+The per-binding chart grids, insert SmartArt dialogs and SmartArt text panes were removed. Chart edit
+operations and the ChartEx model and writers live in `src/core/chart` (`edit`, `ex`, `workbook`), and
+PowerPoint saves its classic and ChartEx title, legend, axis, label and series edits through them.
+
+Angular's `pptx-angular-viewer/internals` no longer exports `InsertSmartArtDialogComponent`,
+`SmartArtInsertEvent` or `SmartArtPreviewComponent`; their shared replacements are the elements above.
+
 ## Compatibility and validation
 
 PowerPoint's migrated UI keeps its existing compiler flags in `src/ui/tsconfig.pptx.json`

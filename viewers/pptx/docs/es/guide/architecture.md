@@ -46,9 +46,15 @@ El renderizado compartido vive en `src/ui/src/pptx/` en la raíz del repositorio
 - **Motores de animación y transformación (morph)**: construcción y reproducción de líneas de tiempo (`animation-timeline-*.ts`), además de la correspondencia de transiciones morph y la interpolación de geometría (`morph-matching.ts`, `morph-geometry-interp.ts`, `morph-text.ts`).
 - **Resolución de texto y estilo**: numeración de viñetas, estilos de relleno/degradado, filtros de efectos de imagen, estilos de salto de línea kinsoku.
 - **Matemáticas**: conversores de OMML a MathML y de LaTeX a OMML (`omml-to-mathml.ts`, `latex-to-omml.ts`, ahora en el área compartida `ooxml-core/math`).
-- **Comportamiento del editor**: historial, portapapeles, guías de alineación, copiar formato, buscar y reemplazar, sincronización de colaboración y presencia.
+- **Comportamiento del editor**: portapapeles, guías de alineación, copiar formato, buscar y reemplazar, sincronización de colaboración y presencia.
 
 Los directorios hermanos cubren `export/`, `i18n/`, `loader/`, `theme/` y el renderizador opcional `smartart-3d/`.
+
+### Controladores sin interfaz
+
+La lógica del editor con estado se escribe una vez como controlador sin interfaz en `render/controller/`: un objeto simple con `getSnapshot()`, `subscribe(listener)` y acciones tipadas. El historial de deshacer y rehacer (profundidad predeterminada de 100 pasos), el autoguardado de recuperación (un único motor que también guarda el texto en línea sin confirmar), la oferta de recuperación, el ciclo de vida de la sala de colaboración y el panel de IA son controladores, igual que los gestos del lienzo (`createGestureController`). El despachador de teclas (`dispatchEditorKey`), el puente de IA (`createPptxAiBridge`), los destinos de pulsación en grupos y los pasos de la presentación son funciones puras junto a ellos. Cada enlace conecta su propio estado reactivo a un adaptador de almacén genérico (`useController` en React y Vue, `controllerState` en Svelte, `controllerSignal` en Angular, `subscribe` en vanilla), de modo que una corrección en un controlador llega a los cinco enlaces.
+
+Las secciones Efectos, Línea, Tamaño y posición, y Cuadro de texto del inspector son descriptores de campos en `render/inspector/`, que dibuja un único renderizador genérico por enlace. La hoja de datos del gráfico, el panel de formato del gráfico, los diálogos de insertar gráfico y SmartArt, el panel de texto de SmartArt y las galerías de diseño de gráficos son elementos compartidos de `ooxml-ui` que todos los enlaces montan.
 
 ::: info Paquetes públicos compartidos
 Cada enlace declara `ooxml-ui` como dependencia de ejecución e importa sus entradas de PowerPoint. Angular usa la misma API pública sin incluir una copia del código fuente. El paquete privado `pptx-viewer-shared` sigue siendo una fachada de compatibilidad y no posee ninguna implementación.

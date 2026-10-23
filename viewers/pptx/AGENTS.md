@@ -93,26 +93,35 @@ plus `onScopeDispose`), `controllerState` in Svelte (`createSubscriber`, read
 `subscribe` in vanilla. State the controller does not own (the live selection) stays
 binding state: the controller reads it through its `deps` when an action needs it, and
 derived values are pure functions next to the controller (`resolveAiEffectiveTargets`)
-that the binding calls from its own reactive scope. Existing controllers: the undo/redo
-history (`createEditorHistoryController`, one default depth for every binding), the
-AI panel (`createPptxAiPanelController`), recovery autosave (`createAutosaveController`:
-one AutoRecover engine and one `PptxAutosaveStatus`), the recovery offer
-(`createAutosaveRecoveryController`; the dialog stays a native template) and the
-collaboration room lifecycle (`createCollaborationSessionController` over
-`openCollaborationYSession` / `createCollabProvider`, to which each binding passes its own
-lazy `yjs` / `y-*` loaders, since those packages are optional peers of the bindings); the AI bridge (`createPptxAiBridge` over a
-`PptxAiBridgePort`) and the keymap dispatch (`dispatchEditorKey` with one
-`EditorKeyHandlers` interface) are the same idea for logic without its own state. The
-canvas's move, resize and rotate gestures all run on `createGestureController`
-(`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
-exclusion, minimum size, mid-gesture lock check); a binding supplies deps and paints the
-frames (React writes them to the DOM, Angular emits them), and what a press or a
-double-click on a group selects is `resolveGroupPressTarget` /
-`resolveGroupDoubleClickTarget`. Where a slide show's forward or backward input lands
-(end screen, builds, click-advance gate, Zoom return, sub-show return, loop, show order)
-is `resolveShowForward` / `resolveShowBackward` (`render/presentation-show-step.ts`); the
-binding performs the step with its own index, overlay and timers. A binding keeps its own
-public shape (refs, signals, getters) and maps it onto these.
+that the binding calls from its own reactive scope. A binding keeps its own public shape
+(refs, signals, getters) and maps it onto these.
+
+The shared controllers, each adapted by every binding:
+
+- **Undo and redo**: `createEditorHistoryController` (`render/controller/history-controller.ts`),
+  one default depth of `DEFAULT_EDITOR_HISTORY_DEPTH` (100) for every binding.
+- **Recovery autosave**: `createAutosaveController` (`render/controller/autosave-controller.ts`),
+  one AutoRecover engine and one `PptxAutosaveStatus`. Uncommitted inline text is part of
+  its snapshot.
+- **Recovery offer**: `createAutosaveRecoveryController`; the dialog stays a native template.
+- **Collaboration room**: `createCollaborationSessionController` over `openCollaborationYSession`
+  and `createCollabProvider`. Each binding passes its own lazy `yjs` and `y-*` loaders, since
+  those packages are optional peers of the bindings.
+- **AI panel**: `createPptxAiPanelController` (`ai/panel-controller.ts`).
+- **Canvas gestures**: move, resize and rotate run on `createGestureController`
+  (`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
+  exclusion, minimum size, mid-gesture lock check). A binding supplies deps and paints the
+  frames (React writes them to the DOM, Angular emits them).
+
+Logic without its own state is a plain function set instead:
+
+- **AI bridge**: `createPptxAiBridge` over a `PptxAiBridgePort`.
+- **Keymap**: `dispatchEditorKey` with one `EditorKeyHandlers` interface.
+- **Group press**: `resolveGroupPressTarget` and `resolveGroupDoubleClickTarget`
+  (`render/group-press-target.ts`).
+- **Slide show steps**: `resolveShowForward` and `resolveShowBackward`
+  (`render/presentation-show-step.ts`); the binding performs the step with its own index,
+  overlay and timers.
 
 Both rules are expanded, with the concrete failures that motivated them, under
 [Key Conventions](#key-conventions).

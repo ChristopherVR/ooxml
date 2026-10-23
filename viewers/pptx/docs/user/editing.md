@@ -94,17 +94,17 @@ There is also a **Draw** tab with freehand tools: **Select**, **Pen**, **Highlig
 
 The inspector's **Properties** tab changes with the selection:
 
-| When you select...   | You can change...                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| Nothing (the slide)  | Presentation info, theme, slide size, slide transition, and background (colour or image). |
-| A shape or connector | Position, size, rotation, fill (solid, gradient, pattern, image), and stroke.             |
-| A text element       | Font, size, colour, alignment, and spacing.                                               |
-| An image             | Crop and picture adjustments.                                                             |
-| A table              | Table style presets, column widths, row heights, and cell formatting.                     |
-| A chart              | The series data grid, chart type, axes, data labels, markers, trendlines, and colours.    |
-| SmartArt             | Node text and layout.                                                                     |
-| Media                | Playback settings.                                                                        |
-| Any element          | Entrance, emphasis, and exit **animations** with direction, timing, and trigger settings. |
+| When you select...   | You can change...                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| Nothing (the slide)  | Presentation info, theme, slide size, slide transition, and background (colour or image).          |
+| A shape or connector | Position, size, rotation, fill (solid, gradient, pattern, image), and stroke.                      |
+| A text element       | Font, size, colour, alignment, and spacing.                                                        |
+| An image             | Crop and picture adjustments.                                                                      |
+| A table              | Table style presets, column widths, row heights, and cell formatting.                              |
+| A chart              | The series data sheet, chart type, axes, data labels, markers, trendlines, and colours.            |
+| SmartArt             | Node text (in the text pane, which also adds shapes before or above the selected node) and layout. |
+| Media                | Playback settings.                                                                                 |
+| Any element          | Entrance, emphasis, and exit **animations** with direction, timing, and trigger settings.          |
 
 ![Inspector panel showing element properties](/user-guide/editing-inspector-panel.jpg)
 
@@ -116,6 +116,7 @@ Charts are directly editable without leaving the slide:
 - **Click** a bar, point, or slice to select it; the matching cell highlights in the inspector's data grid.
 - **Drag** a bar or point up or down to change its value (bar, line, area, scatter, and bubble charts). A badge shows the value while you drag; release to commit or press **Escape** to cancel.
 - **Double-click the chart title** to rename it in place.
+- The chart's **data sheet** in the inspector lists its categories and series. A value is committed when you press **Enter** or **Tab** or move to another cell, and **Escape** restores the cell's previous value. A value that is not a number is refused.
 
 Pie, doughnut, radar, and stacked/percent-stacked marks are click-to-select; edit their values in the data grid. Each change is a single undo step. All of this works the same way across every binding (React, Vue, Angular, Svelte, and vanilla).
 
@@ -215,7 +216,7 @@ instead. Use **Insert > Image** to choose an external image file in that case.
 
 ## Autosave and recovery
 
-- The **AutoSave** switch in the title bar turns periodic snapshots on or off. When on, the app saves a recovery copy of your work to the browser's local storage every couple of minutes while there are unsaved changes.
+- The **AutoSave** switch in the title bar turns recovery snapshots on or off. When on, the app saves a recovery copy of your work in the browser's IndexedDB storage. The first unsaved edit starts a timer, and the copy is written when it runs out (every couple of minutes by default). Nothing is written while nothing has changed.
 - The status bar shows the current state: **Unsaved changes**, **Saving...**, **Saved [time]**, or **All saved**.
 - If you close the tab with unsaved changes and come back, a banner titled **Unsaved changes recovered** offers **Restore** and **Dismiss**.
 - **Version History** (in the **"..."** overflow menu) lists the stored recovery snapshot with its time and size, and lets you restore or delete it.

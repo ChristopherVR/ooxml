@@ -116,6 +116,7 @@ Les graphiques sont modifiables directement, sans quitter la diapositive :
 - **Cliquez** sur une barre, un point ou un secteur pour le sélectionner ; la cellule correspondante est mise en évidence dans la grille de données de l'inspecteur.
 - **Faites glisser** une barre ou un point vers le haut ou le bas pour modifier sa valeur (graphiques en barres, courbes, aires, nuages de points et bulles). Une pastille affiche la valeur pendant le glissement ; relâchez pour valider ou appuyez sur **Échap** pour annuler.
 - **Double-cliquez sur le titre du graphique** pour le renommer sur place.
+- La **feuille de données** du graphique, dans l'inspecteur, liste ses catégories et ses séries. Une valeur est validée lorsque vous appuyez sur **Entrée** ou **Tab** ou que vous passez à une autre cellule ; **Échap** rétablit la valeur précédente de la cellule. Une valeur qui n'est pas un nombre est refusée.
 
 Les marques des graphiques en secteurs, en anneau, en radar et empilés/empilés à 100 % se sélectionnent au clic ; modifiez leurs valeurs dans la grille de données. Chaque modification est une seule étape d'annulation. Tout cela fonctionne de la même façon dans tous les bindings (React, Vue, Angular, Svelte et vanilla).
 
@@ -217,7 +218,7 @@ Utilisez alors **Insertion > Image** pour choisir un fichier image externe.
 
 ## Sauvegarde automatique et récupération
 
-- Le commutateur **Sauvegarde automatique** de la barre de titre active ou désactive les instantanés périodiques. Lorsqu'il est activé, l'application enregistre toutes les deux minutes environ une copie de récupération de votre travail dans le stockage local du navigateur tant que des modifications ne sont pas enregistrées.
+- Le commutateur **Sauvegarde automatique** de la barre de titre active ou désactive les instantanés périodiques. Lorsqu'il est activé, l'application enregistre une copie de récupération de votre travail dans le stockage IndexedDB du navigateur. La première modification non enregistrée lance un minuteur, et la copie est écrite à son terme (toutes les deux minutes environ par défaut). Tant que rien ne change, rien n'est écrit.
 - La barre d'état indique l'état actuel : **Modifications non enregistrées**, **Enregistrement...**, **Enregistré [heure]** ou **Tout est enregistré**.
 - Si vous fermez l'onglet avec des modifications non enregistrées puis revenez, une bannière intitulée **Modifications non enregistrées récupérées** propose **Restaurer** et **Ignorer**.
 - **Historique des versions** (dans le menu de débordement **« ... »**) liste l'instantané de récupération stocké avec son heure et sa taille, et permet de le restaurer ou de le supprimer.

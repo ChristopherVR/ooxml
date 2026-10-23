@@ -116,6 +116,7 @@ Diagramme lassen sich direkt bearbeiten, ohne die Folie zu verlassen:
 - **Klicken** Sie auf einen Balken, Punkt oder ein Segment, um es zu markieren; die zugehörige Zelle wird im Datenraster des Inspektors hervorgehoben.
 - **Ziehen** Sie einen Balken oder Punkt nach oben oder unten, um seinen Wert zu ändern (Balken-, Linien-, Flächen-, Punkt- und Blasendiagramme). Eine Anzeige zeigt den Wert während des Ziehens; lassen Sie los, um zu übernehmen, oder drücken Sie **Esc**, um abzubrechen.
 - **Doppelklicken Sie auf den Diagrammtitel**, um ihn direkt umzubenennen.
+- Die **Datentabelle** des Diagramms im Inspektor listet seine Kategorien und Reihen. Ein Wert wird mit **Eingabe** oder **Tab** übernommen oder wenn Sie in eine andere Zelle wechseln; **Escape** stellt den vorherigen Wert der Zelle wieder her. Ein Wert, der keine Zahl ist, wird abgelehnt.
 
 Markierungen in Kreis-, Ring-, Netz- und gestapelten/prozentual gestapelten Diagrammen werden per Klick ausgewählt; bearbeiten Sie ihre Werte im Datenraster. Jede Änderung ist ein einzelner Rückgängig-Schritt. All das funktioniert in jedem Binding gleich (React, Vue, Angular, Svelte und Vanilla).
 
@@ -214,7 +215,7 @@ Verwenden Sie in diesem Fall **Einfügen > Bild**, um eine externe Bilddatei zu 
 
 ## Automatisches Speichern und Wiederherstellung
 
-- Der Schalter **Automatisch speichern** in der Titelleiste schaltet periodische Schnappschüsse ein oder aus. Wenn er an ist, speichert die App bei ungespeicherten Änderungen alle paar Minuten eine Wiederherstellungskopie Ihrer Arbeit im lokalen Speicher des Browsers.
+- Der Schalter **Automatisch speichern** in der Titelleiste schaltet periodische Schnappschüsse ein oder aus. Wenn er an ist, speichert die App eine Wiederherstellungskopie Ihrer Arbeit im IndexedDB-Speicher des Browsers. Die erste ungespeicherte Änderung startet einen Timer, und die Kopie wird nach Ablauf geschrieben (standardmäßig alle paar Minuten). Solange sich nichts ändert, wird nichts geschrieben.
 - Die Statusleiste zeigt den aktuellen Zustand: **Ungespeicherte Änderungen**, **Wird gespeichert...**, **Gespeichert [Zeit]** oder **Alles gespeichert**.
 - Schließen Sie den Tab mit ungespeicherten Änderungen und kommen zurück, bietet ein Banner mit dem Titel **Unsaved changes recovered** die Optionen **Wiederherstellen** und **Dismiss** an.
 - Der **Versionsverlauf** (im Überlaufmenü **"..."**) listet den gespeicherten Wiederherstellungs-Schnappschuss mit Zeit und Größe auf und lässt Sie ihn wiederherstellen oder löschen.
