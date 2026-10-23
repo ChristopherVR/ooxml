@@ -205,11 +205,11 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								[selectedHex]="liveFillColor()"
 								(pick)="onFillThemeColor($event)"
 							/>
-							<pptx-recent-colors-row
-								[colors]="recentColors.recent()"
-								(pick)="onFillColorPick($event)"
-							/>
 						</div>
+						<pptx-recent-colors-row
+							[colors]="recentColors.recent()"
+							(pick)="onFillColorPick($event)"
+						/>
 						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
 							<span class="pptx-ng-inspector__label">{{
 								'pptx.inspector.stroke' | translate
@@ -219,11 +219,11 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								[selectedHex]="liveStrokeColor()"
 								(pick)="onStrokeThemeColor($event)"
 							/>
-							<pptx-recent-colors-row
-								[colors]="recentColors.recent()"
-								(pick)="onStrokeColorPick($event)"
-							/>
 						</div>
+						<pptx-recent-colors-row
+							[colors]="recentColors.recent()"
+							(pick)="onStrokeColorPick($event)"
+						/>
 					}
 				</section>
 			}

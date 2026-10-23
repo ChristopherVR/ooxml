@@ -68,6 +68,39 @@ export function themeColorGridView(
 	return { palette, selectedTheme };
 }
 
+type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+/** What a recent-colours row's `pptx-ui-color-grid` shows: Recent Colors and nothing else. */
+export interface RecentColorsGridView {
+	palette: [];
+	standardColors: [];
+	recentColors: readonly string[];
+	label: string;
+	recentHeading: string;
+	recentLabel: (hex: string) => string;
+}
+
+/**
+ * The "Recent Colors" row under an inspector colour picker, as a `pptx-ui-color-grid` with only
+ * that section: every binding sets these fields (and `data-testid="pptx-color-recent"`) and
+ * hides the row while the list is empty, so the row looks, reads and is named the same
+ * everywhere. A pick arrives as `office-color-pick` with source `recent`.
+ */
+export function recentColorsGridView(
+	colors: readonly string[],
+	t: Translate,
+): RecentColorsGridView {
+	const heading = t('pptx.colorPicker.recentColors');
+	return {
+		palette: [],
+		standardColors: [],
+		recentColors: colors,
+		label: heading,
+		recentHeading: heading,
+		recentLabel: (hex) => t('pptx.colorPicker.recentColor', { hex }),
+	};
+}
+
 /** The hex and theme reference to store for a pick from that grid; undefined for any other pick. */
 export function themeColorGridCommit(
 	columns: readonly ThemeColorSwatchColumn[],

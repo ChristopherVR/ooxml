@@ -260,6 +260,7 @@ export const translations = {
 	'pptx.hyperlink.actionOleVerb': 'Acción del objeto',
 	'pptx.hyperlink.actionRunProgram': 'Ejecutar programa',
 	'pptx.colorPicker.recentColors': 'Colores recientes',
+	'pptx.colorPicker.recentColor': 'Color reciente {{hex}}',
 	'pptx.colorPicker.customColors': 'Colores personalizados',
 	'pptx.comments.mentionPlaceholder': 'Escribe @ para mencionar a alguien',
 	'pptx.comments.mentionSuggestions': 'Personas',

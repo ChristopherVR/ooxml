@@ -114,15 +114,14 @@ function fire(input: HTMLInputElement, type: 'input' | 'change', value: string):
 	input.dispatchEvent(new Event(type, { bubbles: true }));
 }
 
-/** A recent swatch by colour, in the row itself or inside a shared grid's shadow root. */
+/**
+ * A recent swatch by colour. The row is the shared colour grid, whose swatches carry their hex in
+ * `data-color` (their names come from the translator, which here returns keys).
+ */
 function recentSwatch(group: HTMLElement, hex: string): HTMLButtonElement | undefined {
 	const row = group.querySelector<HTMLElement>('[data-testid="pptx-color-recent"]');
-	const buttons = [
-		...(row?.querySelectorAll<HTMLButtonElement>('button') ?? []),
-		...(row?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? []),
-	];
-	return buttons.find(
-		(button) => button.getAttribute('aria-label')?.toLowerCase() === `recent ${hex}`,
+	return [...(row?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+		(button) => button.dataset.color === hex.toLowerCase(),
 	);
 }
 

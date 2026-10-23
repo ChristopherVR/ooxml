@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { themeSwatch, themeSwatches } from '../theme-color-swatch-grid.test-support';
+import {
+	recentSwatches,
+	themeSwatch,
+	themeSwatches,
+} from '../theme-color-swatch-grid.test-support';
 import { createTextSection } from './text-section';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -81,7 +85,7 @@ describe('createTextSection text colour', () => {
 		section.update(baseState({ recentColors: ['#abcdef'] }));
 		expect(row.hidden).toBeFalsy();
 
-		row.querySelector<HTMLButtonElement>('.pptxv-swatch')!.click();
+		recentSwatches(row)[0]!.click();
 		expect(handlers.setTextStyle).toHaveBeenCalledWith({ color: '#abcdef' });
 		expect(handlers.pushRecentColor).toHaveBeenCalledWith('#abcdef');
 	});
@@ -93,11 +97,7 @@ describe('createTextSection text colour', () => {
 		expect(
 			section.el.querySelector<HTMLInputElement>('input[type="color"]')!.disabled,
 		).toBeTruthy();
-		expect(
-			section.el
-				.querySelector<HTMLElement>('[data-testid="pptx-color-recent"]')!
-				.querySelector<HTMLButtonElement>('.pptxv-swatch')!.disabled,
-		).toBeTruthy();
+		expect(recentSwatches(section.el)[0]!.disabled).toBeTruthy();
 	});
 });
 

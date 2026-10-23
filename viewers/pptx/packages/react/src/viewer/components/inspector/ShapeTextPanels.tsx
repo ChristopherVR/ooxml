@@ -141,7 +141,6 @@ export function ShapeTextPanels({
 						</div>
 						<div className='col-span-2'>
 							<RecentColorsRow
-								prefix='text-color'
 								disabled={!canEdit}
 								onCommit={(hex) => onUpdateTextStyle({ color: hex, colorRef: undefined })}
 							/>

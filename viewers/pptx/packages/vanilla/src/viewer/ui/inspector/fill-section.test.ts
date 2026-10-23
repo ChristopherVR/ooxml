@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { themeSwatch, themeSwatches } from '../theme-color-swatch-grid.test-support';
+import {
+	recentSwatches,
+	themeGrids,
+	themeSwatch,
+	themeSwatches,
+} from '../theme-color-swatch-grid.test-support';
 import { createFillSection } from './fill-section';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -197,11 +202,11 @@ describe('createFillSection recent-colours rows', () => {
 		const [fillRow, strokeRow] = Array.from(
 			section.el.querySelectorAll<HTMLElement>('[data-testid="pptx-color-recent"]'),
 		);
-		fillRow.querySelector<HTMLButtonElement>('.pptxv-swatch')!.click();
+		recentSwatches(fillRow)[0]!.click();
 		expect(handlers.setShapeFill).toHaveBeenCalledExactlyOnceWith('#112233');
 		expect(handlers.setShapeStroke).not.toHaveBeenCalled();
 
-		strokeRow.querySelector<HTMLButtonElement>('.pptxv-swatch')!.click();
+		recentSwatches(strokeRow)[0]!.click();
 		expect(handlers.setShapeStroke).toHaveBeenCalledExactlyOnceWith('#112233');
 	});
 
@@ -210,7 +215,7 @@ describe('createFillSection recent-colours rows', () => {
 		section.update(baseState({ canShape: false, recentColors: ['#112233'] }));
 
 		for (const row of section.el.querySelectorAll('[data-testid="pptx-color-recent"]')) {
-			expect(row.querySelector<HTMLButtonElement>('.pptxv-swatch')!.disabled).toBeTruthy();
+			expect(recentSwatches(row)[0]!.disabled).toBeTruthy();
 		}
 	});
 });
@@ -220,14 +225,14 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section } = mount();
 		section.update(baseState());
 
-		const grids = section.el.querySelectorAll('pptx-ui-color-grid');
+		const grids = themeGrids(section.el);
 		expect(grids).toHaveLength(2);
 		for (const grid of grids) {
 			expect(grid.hidden).toBeTruthy();
 		}
 
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
-		for (const grid of section.el.querySelectorAll('pptx-ui-color-grid')) {
+		for (const grid of themeGrids(section.el)) {
 			expect(grid.hidden).toBeFalsy();
 		}
 	});
@@ -236,7 +241,7 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section, handlers } = mount();
 		section.update(baseState({ themeColorMap: OFFICE_THEME }));
 
-		const [fillGrid, strokeGrid] = Array.from(section.el.querySelectorAll('pptx-ui-color-grid'));
+		const [fillGrid, strokeGrid] = themeGrids(section.el);
 		themeSwatch(fillGrid, 'Accent 2')!.click();
 		expect(handlers.setShapeFill).toHaveBeenCalledExactlyOnceWith('#ed7d31', { scheme: 'accent2' });
 		expect(handlers.setShapeStroke).not.toHaveBeenCalled();
@@ -251,7 +256,7 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 		const { section } = mount();
 		section.update(baseState({ canShape: false, themeColorMap: OFFICE_THEME }));
 
-		const grids = section.el.querySelectorAll('pptx-ui-color-grid');
+		const grids = themeGrids(section.el);
 		expect(grids).toHaveLength(2);
 		for (const grid of grids) {
 			const swatches = themeSwatches(grid);
@@ -278,7 +283,7 @@ describe('createFillSection Fill and Line groups', () => {
 				group.getAttribute('aria-label'),
 			);
 			expect(group.querySelectorAll('input[type="color"]')).toHaveLength(1);
-			expect(group.querySelectorAll('pptx-ui-color-grid')).toHaveLength(1);
+			expect(themeGrids(group)).toHaveLength(1);
 			expect(group.querySelectorAll('[data-testid="pptx-color-recent"]')).toHaveLength(1);
 		}
 		// No grid or recent row is left loose in the section, outside a group.
@@ -292,9 +297,7 @@ describe('createFillSection Fill and Line groups', () => {
 			scheme: 'accent2',
 		});
 		expect(handlers.setShapeFill).not.toHaveBeenCalled();
-		fillGroup
-			.querySelector<HTMLButtonElement>('[data-testid="pptx-color-recent"] .pptxv-swatch')!
-			.click();
+		recentSwatches(fillGroup)[0]!.click();
 		expect(handlers.setShapeFill).toHaveBeenCalledExactlyOnceWith('#112233');
 	});
 });

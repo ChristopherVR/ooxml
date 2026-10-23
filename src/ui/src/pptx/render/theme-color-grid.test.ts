@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { themeColorGridCommit, themeColorGridView } from './theme-color-grid';
+import { recentColorsGridView, themeColorGridCommit, themeColorGridView } from './theme-color-grid';
 import { buildThemeColorSwatchGrid } from './theme-color-swatches';
 
 const OFFICE_THEME = {
@@ -71,5 +71,23 @@ describe('theme colour grid view', () => {
 			palette: [],
 			selectedTheme: null,
 		});
+	});
+});
+
+describe('recentColorsGridView', () => {
+	it('shows only Recent Colors, named in the viewer language', () => {
+		const t = (key: string, params?: Record<string, string | number>) =>
+			key === 'pptx.colorPicker.recentColors'
+				? 'Zuletzt verwendete Farben'
+				: `${key} ${params?.hex}`;
+		const { recentLabel, ...view } = recentColorsGridView(['#FF0000', '#0000FF'], t);
+		expect(view).toStrictEqual({
+			palette: [],
+			standardColors: [],
+			recentColors: ['#FF0000', '#0000FF'],
+			label: 'Zuletzt verwendete Farben',
+			recentHeading: 'Zuletzt verwendete Farben',
+		});
+		expect(recentLabel('#FF0000')).toBe('pptx.colorPicker.recentColor #FF0000');
 	});
 });

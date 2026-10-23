@@ -159,7 +159,7 @@ export function ColorPickerRow({
 					))}
 				</div>
 			</div>
-			<RecentColorsRow prefix={prefix} disabled={disabled} onCommit={commit} />
+			<RecentColorsRow disabled={disabled} onCommit={commit} />
 		</label>
 	);
 }

@@ -7,9 +7,10 @@
  * dropdown. The viewer models that list once per deck (shared
  * `render/recent-colors.ts`) and every binding is expected to:
  *
- *   - render the row (`data-testid="pptx-color-recent"`) under the inspector's
- *     fill and stroke pickers, most-recent first, one button per colour whose
- *     `title` is the hex;
+ *   - render the row (`data-testid="pptx-color-recent"`, the shared
+ *     `pptx-ui-color-grid` with only Recent Colors) under the inspector's fill
+ *     and stroke pickers, most-recent first, one button per colour carrying its
+ *     hex in `data-color` and named "Recent #HEX";
  *   - hide the row while the list is empty;
  *   - push a colour into the list when a picker COMMITS (the `change` event,
  *     not the continuous `input` stream a native colour input emits while the
@@ -47,12 +48,12 @@ function recentRows(page: Page): Locator {
 	return inspector(page).getByTestId('pptx-color-recent').filter({ visible: true });
 }
 
-/** The hexes one recent-colours row shows, most-recent first. */
+/** The hexes one recent-colours row shows, most-recent first (the locator pierces its shadow root). */
 async function rowColors(row: Locator): Promise<string[]> {
 	return row
 		.locator('button')
 		.evaluateAll((buttons) =>
-			buttons.map((button) => (button.getAttribute('title') ?? '').toLowerCase()),
+			buttons.map((button) => (button.getAttribute('data-color') ?? '').toLowerCase()),
 		);
 }
 
@@ -148,6 +149,26 @@ test.describe('recent colours', () => {
 		}
 	});
 
+	test('every recent-colours row stays inside the inspector', async ({ page }) => {
+		await loadDeck(page, DECK);
+		await selectSourceShape(page);
+		await pickColor(colorInputs(page).first(), RED);
+		await pickColor(colorInputs(page).nth(1), BLUE);
+		await expect.poll(() => recentRows(page).count()).toBeGreaterThanOrEqual(2);
+
+		// A row laid out beside its theme colours instead of under them ran past the panel's edge.
+		const panel = await inspector(page).boundingBox();
+		expect(panel).not.toBeNull();
+		const rows = recentRows(page);
+		const count = await rows.count();
+		for (let index = 0; index < count; index += 1) {
+			const box = await rows.nth(index).boundingBox();
+			expect(box).not.toBeNull();
+			expect(box!.x).toBeGreaterThanOrEqual(panel!.x - 1);
+			expect(box!.x + box!.width).toBeLessThanOrEqual(panel!.x + panel!.width + 1);
+		}
+	});
+
 	test('a second pick goes to the front, and re-picking a swatch moves it back to the front', async ({
 		page,
 	}) => {
@@ -163,7 +184,7 @@ test.describe('recent colours', () => {
 
 		// Clicking the older swatch commits it again, so it becomes the most
 		// recent pick and the row reorders rather than growing a duplicate.
-		await recentRows(page).first().locator(`button[title="${RED}" i]`).click();
+		await recentRows(page).first().locator(`button[data-color="${RED}" i]`).click();
 		await expect.poll(async () => rowColors(recentRows(page).first())).toStrictEqual([RED, BLUE]);
 	});
 

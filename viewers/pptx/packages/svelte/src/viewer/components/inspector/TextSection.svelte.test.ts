@@ -167,13 +167,15 @@ describe('textSection', () => {
 
 		const row = target.querySelector('[data-testid="pptx-color-recent"]');
 		expect(row).not.toBeNull();
-		const swatch = row!.querySelector<HTMLButtonElement>('.pptx-svelte-recent-colors-swatch');
+		const swatch = row!.shadowRoot?.querySelector<HTMLButtonElement>(
+			'button[data-source="recent"]',
+		);
 		swatch?.click();
 		flushSync();
 
-		// The shared MRU list normalises hex to upper-case, and the swatch applies
-		// exactly the value it displays.
-		expect((currentEl(editor) as TextStyleShape).textStyle?.color).toBe('#AABBCC');
+		// The shared MRU list normalises hex to upper-case; the shared grid reports a
+		// pick in lower case, as it does for its theme swatches and as the native input does.
+		expect((currentEl(editor) as TextStyleShape).textStyle?.color).toBe('#aabbcc');
 	});
 
 	it('enables editable text shadow effects', () => {

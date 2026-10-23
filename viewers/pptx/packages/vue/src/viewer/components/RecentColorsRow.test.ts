@@ -3,41 +3,60 @@ import { describe, expect, it } from 'vitest';
 
 import RecentColorsRow from './RecentColorsRow.vue';
 
+/** The shared grid's recent swatches, inside its shadow root. */
+function swatches(wrapper: ReturnType<typeof mount>): HTMLButtonElement[] {
+	const grid = wrapper.find('[data-testid="pptx-color-recent"]').element;
+	return [...(grid.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
+}
+
 describe('recentColorsRow', () => {
 	it('renders nothing when there are no recent colours', () => {
 		const wrapper = mount(RecentColorsRow, { props: { colors: [] } });
 		expect(wrapper.find('[data-testid="pptx-color-recent"]').exists()).toBeFalsy();
 	});
 
-	it('renders one swatch per colour, in order', () => {
-		const wrapper = mount(RecentColorsRow, { props: { colors: ['#112233', '#445566'] } });
-		const swatches = wrapper.findAll('[data-testid="pptx-color-recent"] button');
-		expect(swatches).toHaveLength(2);
-		expect((swatches[0].element as HTMLElement).style.backgroundColor).toBe('#112233');
+	it('is the shared grid with one swatch per colour, in order', () => {
+		const wrapper = mount(RecentColorsRow, {
+			props: { colors: ['#112233', '#445566'] },
+			attachTo: document.body,
+		});
+		expect(wrapper.find('[data-testid="pptx-color-recent"]').element.localName).toBe(
+			'pptx-ui-color-grid',
+		);
+		expect(swatches(wrapper).map((swatch) => swatch.dataset.color)).toStrictEqual([
+			'#112233',
+			'#445566',
+		]);
+		wrapper.unmount();
 	});
 
-	it('emits pick with the clicked colour', async () => {
-		const wrapper = mount(RecentColorsRow, { props: { colors: ['#112233', '#445566'] } });
-		const swatches = wrapper.findAll('[data-testid="pptx-color-recent"] button');
-		await swatches[1].trigger('click');
+	it('emits pick with the clicked colour', () => {
+		const wrapper = mount(RecentColorsRow, {
+			props: { colors: ['#112233', '#445566'] },
+			attachTo: document.body,
+		});
+		swatches(wrapper)[1]!.click();
 		expect(wrapper.emitted('pick')).toStrictEqual([['#445566']]);
+		wrapper.unmount();
 	});
 
-	it('labels the container and each swatch per the row contract', () => {
-		const wrapper = mount(RecentColorsRow, { props: { colors: ['#112233'] } });
-		const container = wrapper.get('[data-testid="pptx-color-recent"]');
-		expect(container.attributes('aria-label')).toBe('Recent Colors');
-		const swatch = wrapper.get('[data-testid="pptx-color-recent"] button');
-		expect(swatch.attributes('aria-label')).toBe('Recent #112233');
-		expect(swatch.attributes('title')).toBe('#112233');
+	it('labels the row and each swatch per the row contract', () => {
+		const wrapper = mount(RecentColorsRow, {
+			props: { colors: ['#112233'] },
+			attachTo: document.body,
+		});
+		const grid = wrapper.get('[data-testid="pptx-color-recent"]');
+		expect(grid.attributes('aria-label')).toBe('Recent Colors');
+		expect(swatches(wrapper)[0]!.getAttribute('aria-label')).toBe('Recent #112233');
+		wrapper.unmount();
 	});
 
 	it('disables every swatch when the picker is disabled', () => {
 		const wrapper = mount(RecentColorsRow, {
 			props: { colors: ['#112233', '#445566'], disabled: true },
+			attachTo: document.body,
 		});
-		for (const swatch of wrapper.findAll('[data-testid="pptx-color-recent"] button')) {
-			expect((swatch.element as HTMLButtonElement).disabled).toBeTruthy();
-		}
+		expect(swatches(wrapper).every((swatch) => swatch.disabled)).toBeTruthy();
+		wrapper.unmount();
 	});
 });
