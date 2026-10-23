@@ -1,38 +1,22 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// SmartArt editing in a Word document: applies the format-neutral node operations
-// (`diagram/edit`) to a `DocxDiagram`, and creates a new diagram from an Insert SmartArt preset.
-// An edit returns a new diagram (the editor keeps the old one for undo) with the nodes in tree
-// order and its cached drawing dropped: Word lays an edited diagram out again from its data and
-// layout parts and ignores a stale drawing (docs/agnostic-core-plan.md), so the save removes it.
+// SmartArt editing in a Word document: applies the shared node commands (`diagram/edit`,
+// `applyDiagramNodeEdit`, which Excel uses too) to a `DocxDiagram`, and creates a new diagram from
+// an Insert SmartArt preset. An edit returns a new diagram (the editor keeps the old one for undo)
+// with the nodes in tree order and its cached drawing dropped: Word lays an edited diagram out
+// again from its data and layout parts and ignores a stale drawing (docs/agnostic-core-plan.md),
+// so the save removes it.
 import {
-	addDiagramNodeAbove,
-	addDiagramNodeAfter,
-	addDiagramNodeBefore,
-	addDiagramNodeBelow,
-	demoteDiagramNode,
-	moveDiagramNode,
-	promoteDiagramNode,
-	removeDiagramNode,
-	setDiagramNodeText,
+	applyDiagramNodeEdit,
+	createDiagramNodes,
 	type DiagramEditOptions,
 	type DiagramLayoutType,
+	type DiagramNodeEdit,
 } from '../diagram/index';
 import { diagramNotice, type DocxDiagram, type DocxDiagramNode } from './diagram';
 import { treeOrderDiagramNodes } from './diagram-nodes';
 
-/** One SmartArt Design or text pane command. */
-export type DocxDiagramEdit =
-	| {
-			kind: 'add';
-			position: 'after' | 'before' | 'above' | 'below';
-			nodeId?: string;
-			text?: string;
-	  }
-	| { kind: 'remove'; nodeId: string }
-	| { kind: 'text'; nodeId: string; text: string }
-	| { kind: 'move'; nodeId: string; direction: 1 | -1 }
-	| { kind: 'promote'; nodeId: string }
-	| { kind: 'demote'; nodeId: string };
+/** One SmartArt Design or text pane command (the shared `DiagramNodeEdit`). */
+export type DocxDiagramEdit = DiagramNodeEdit;
 
 export interface DocxDiagramEditResult {
 	diagram: DocxDiagram;
@@ -40,54 +24,6 @@ export interface DocxDiagramEditResult {
 	nodeId?: string;
 	/** False when the command did not apply (unknown node, first sibling demoted, ...). */
 	changed: boolean;
-}
-
-interface EditableNodes {
-	nodes: DocxDiagramNode[];
-}
-
-function applyOperation(
-	data: EditableNodes,
-	edit: DocxDiagramEdit,
-	options: DiagramEditOptions | undefined,
-): EditableNodes {
-	switch (edit.kind) {
-		case 'add': {
-			const text = edit.text ?? '';
-			if (edit.position === 'below') return addDiagramNodeBelow(data, edit.nodeId, text, options);
-			if (edit.position === 'above')
-				return edit.nodeId ? addDiagramNodeAbove(data, edit.nodeId, text, options) : data;
-			const add = edit.position === 'after' ? addDiagramNodeAfter : addDiagramNodeBefore;
-			return add(data, text, edit.nodeId, options);
-		}
-		case 'remove':
-			return removeDiagramNode(data, edit.nodeId);
-		case 'text':
-			return setDiagramNodeText(data, edit.nodeId, edit.text);
-		case 'move':
-			return moveDiagramNode(data, edit.nodeId, edit.direction);
-		case 'promote':
-			return promoteDiagramNode(data, edit.nodeId);
-		case 'demote':
-			return demoteDiagramNode(data, edit.nodeId);
-	}
-}
-
-/** Plain nodes again: the operations add bookkeeping fields the Word model does not keep. */
-function cleanNodes(nodes: DocxDiagramNode[], before: DocxDiagramNode[]): DocxDiagramNode[] {
-	const previous = new Map(before.map((node) => [node.id, node]));
-	return nodes.map((node) => {
-		const old = previous.get(node.id);
-		const kept: DocxDiagramNode = {
-			id: node.id,
-			text: node.text,
-			...(node.parentId ? { parentId: node.parentId } : {}),
-			...(node.nodeType === 'asst' ? { nodeType: 'asst' as const } : {}),
-		};
-		// Rich paragraphs stay only while the text they spell is unchanged.
-		if (old?.paragraphs && old.text === node.text) kept.paragraphs = old.paragraphs;
-		return kept;
-	});
 }
 
 /** The diagram as edited: new nodes, no cached drawing. */
@@ -118,23 +54,10 @@ export function editDocxDiagram(
 	edit: DocxDiagramEdit,
 	options?: DiagramEditOptions,
 ): DocxDiagramEditResult {
-	const before = diagram.nodes;
-	const after = applyOperation({ nodes: before }, edit, options).nodes;
-	const nodes = cleanNodes(after, before);
-	if (JSON.stringify(nodes) === JSON.stringify(cleanNodes(before, before)))
-		return {
-			diagram,
-			changed: false,
-			...('nodeId' in edit && edit.nodeId ? { nodeId: edit.nodeId } : {}),
-		};
-	const known = new Set(before.map((node) => node.id));
-	const created = nodes.find((node) => !known.has(node.id))?.id;
-	const nodeId = created ?? (edit.kind === 'remove' ? undefined : edit.nodeId);
-	return {
-		diagram: withDiagramNodes(diagram, nodes),
-		changed: true,
-		...(nodeId ? { nodeId } : {}),
-	};
+	const result = applyDiagramNodeEdit(diagram.nodes, edit, options);
+	const nodeId = result.nodeId ? { nodeId: result.nodeId } : {};
+	if (!result.changed) return { diagram, changed: false, ...nodeId };
+	return { diagram: withDiagramNodes(diagram, result.nodes), changed: true, ...nodeId };
 }
 
 /**
@@ -194,11 +117,6 @@ export function insertedDiagramPartNames(
 export function createDocxDiagram(creation: DocxDiagramCreation): DocxDiagram {
 	const names = insertedDiagramPartNames(creation.partSuffix);
 	const options = creation.createModelId ? { createModelId: creation.createModelId } : undefined;
-	let data: EditableNodes = { nodes: [] };
-	// A hierarchy starts as one top node over the others, as Word's own Insert does.
-	const hierarchy = creation.family === 'hierarchy';
-	for (const text of creation.items)
-		data = addDiagramNodeBelow(data, hierarchy ? data.nodes[0]?.id : undefined, text, options);
 	const part = (partName: string) => ({ relId: '', partName });
 	return {
 		placement: 'inline',
@@ -221,7 +139,8 @@ export function createDocxDiagram(creation: DocxDiagramCreation): DocxDiagram {
 		},
 		colorsId: creation.colorsId,
 		quickStyleId: creation.quickStyleId,
-		nodes: cleanNodes(data.nodes, []),
+		// A hierarchy starts as one top node over the others, as Word's own Insert does.
+		nodes: createDiagramNodes(creation.items, creation.family, options),
 		rendering: 'placeholder',
 		notice: diagramNotice('placeholder'),
 		issues: [],

@@ -3,3 +3,4 @@
 // written by pptx (`pptx/core/core/runtime/smartart-fabrication-*`).
 export * from './data';
 export * from './data-edit';
+export * from './inserted';

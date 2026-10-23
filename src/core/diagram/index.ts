@@ -25,6 +25,7 @@ export * from './drawing';
 export * from './drawing-bounds';
 export * from './drawing-view';
 export * from './drawing-from-views';
+export * from './approximate';
 export * from './drawing-resolve';
 export * from './load';
 export { attributeReader } from './dom';

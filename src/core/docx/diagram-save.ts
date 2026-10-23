@@ -5,7 +5,7 @@
 // (relationship, part and content type), because Word ignores a stale drawing and lays the diagram
 // out again (docs/agnostic-core-plan.md). The run markup is written by write-diagram-drawing.ts.
 import type JSZip from 'jszip';
-import { writeEditedDiagramData, writeFabricatedDiagramData } from '../diagram/index';
+import { writeEditedDiagramData, writeInsertedDiagramData } from '../diagram/index';
 import { createOfficeGuid } from '../crypto/uuid';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
@@ -19,23 +19,21 @@ const HOST_PART = 'word/document.xml';
 const nodesOf = (diagram: DocxDiagram) =>
 	diagram.nodes.map(({ id, text, parentId, nodeType }) => ({ id, text, parentId, nodeType }));
 
-/** The data part of an inserted diagram: a document point and the nodes, no presentation points. */
+/** The data part of an inserted diagram (the shared `writeInsertedDiagramData`). */
 export function insertedDiagramDataXml(
 	diagram: DocxDiagram,
 	createModelId: () => string = createOfficeGuid,
 ): string {
-	const skeleton = writeFabricatedDiagramData(
-		{ nodes: [] },
+	return writeInsertedDiagramData(
 		{
-			layoutUniqueId: diagram.layout?.uniqueId ?? '',
-			layoutCategory: diagram.layout?.family ?? 'list',
-			quickStyleUniqueId: diagram.quickStyleId ?? '',
-			colorsUniqueId: diagram.colorsId ?? '',
-			colorsCategory: 'accent1',
+			nodes: diagram.nodes,
+			layoutId: diagram.layout?.uniqueId ?? '',
+			layoutCategory: diagram.layout?.family,
+			quickStyleId: diagram.quickStyleId ?? '',
+			colorsId: diagram.colorsId ?? '',
 		},
-		{ createModelId },
+		createModelId,
 	);
-	return writeEditedDiagramData(skeleton, nodesOf(diagram), { createModelId });
 }
 
 /** Removes a relationship from the document's `.rels` and the part it targets. */
