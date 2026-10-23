@@ -98,6 +98,8 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	private collapsed = new Set<string>();
 	/** After an edit, write the model's values even into the focused box (a refused value). */
 	private forceSync = false;
+	/** The pane title, the host's accessible name. */
+	private hostLabel = '';
 	/** The value each box and select was last given, to tell typing from a stale value. */
 	private synced = new WeakMap<Element, string>();
 
@@ -286,11 +288,15 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 				>×</button
 			></header
 		>`;
-		if (!model) return html`<div class="panel" role="complementary">${header}</div>`;
+		if (!model) {
+			this.hostLabel = '';
+			return html`<div class="panel">${header}</div>`;
+		}
 		// A tab or mode the target lacks fell back: remember what is showing.
 		this.paneTab = model.activeTab;
 		this.paneMode = model.mode;
 		const title = this.tr(model.title);
+		this.hostLabel = title;
 		const tags = this.statics().controlTags;
 		const picker = this.tr(model.picker);
 		const select = unsafeStatic(tags.select);
@@ -340,8 +346,6 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 			: nothing;
 		return html`<div
 			class="panel"
-			role="complementary"
-			aria-label=${title}
 			data-chart-format-pane
 			data-chart-format-mode=${model.mode}
 			data-chart-format-target-key=${model.targetKey}
@@ -376,6 +380,10 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 		super.updated(changed);
 		// Selects and boxes take their value after their options exist; the box being typed in
 		// keeps its text unless an edit was just committed (a refused value shows the model's).
+		// The host is the landmark, so a host's slotted section lies inside it.
+		this.setAttribute('role', 'complementary');
+		if (this.hostLabel) this.setAttribute('aria-label', this.hostLabel);
+		else this.removeAttribute('aria-label');
 		const force = this.forceSync;
 		this.forceSync = false;
 		for (const node of this.renderRoot.querySelectorAll<HTMLElement & { value: string }>(

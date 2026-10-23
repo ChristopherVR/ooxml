@@ -23,7 +23,8 @@ describe('office-ui-chart-format-pane', () => {
 	it('titles itself after the target, lists the elements and offers the neutral tabs', () => {
 		const node = pane('series:0');
 		expect(q(node, 'h3').textContent).toBe('Format Data Series');
-		expect(q(node, '.panel').getAttribute('aria-label')).toBe('Format Data Series');
+		expect(node.getAttribute('aria-label')).toBe('Format Data Series');
+		expect(node.getAttribute('role')).toBe('complementary');
 		const picker = q<HTMLSelectElement>(node, '[data-chart-format-target]');
 		expect(picker.value).toBe('series:0');
 		expect([...picker.options].map((o) => o.textContent)).toContain('Series "West"');
