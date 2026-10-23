@@ -1,7 +1,7 @@
 // Size limits applied while reading a workbook package. The defaults guard against zip bombs and
 // runaway memory use; a caller that expects very large workbooks raises them explicitly.
 import { ZipLimitError, type ZipLimitKind, type ZipLimits } from '../../opc/index';
-import { parseXml, XmlLimitError, type XmlDocument } from '../../xml/index';
+import { checkXmlLimits, parseXml, XmlLimitError, type XmlDocument } from '../../xml/index';
 
 /** Limits on a workbook package; each field left out keeps its default. */
 export interface XlsxLoadLimits {
@@ -102,6 +102,13 @@ export function zipLimitsFor(limits: Required<XlsxLoadLimits>): ZipLimits {
 	};
 }
 
+/** The element-count limit of the XML parser, reported as the `maxXmlElements` load limit. */
+function workbookLimit(error: unknown): unknown {
+	return error instanceof XmlLimitError && error.limit === 'maxNodes'
+		? new WorkbookTooLargeError(error.message, 'maxXmlElements', error.maximum, { cause: error })
+		: error;
+}
+
 /** Parses a part whose size follows the cell data under the `maxXmlElements` limit. */
 export function parseDataXml(
 	xml: string,
@@ -111,10 +118,22 @@ export function parseDataXml(
 	try {
 		return parseXml(xml, { label, limits: { maxNodes: maxXmlElements } });
 	} catch (error) {
-		if (error instanceof XmlLimitError && error.limit === 'maxNodes')
-			throw new WorkbookTooLargeError(error.message, 'maxXmlElements', error.maximum, {
-				cause: error,
-			});
-		throw error;
+		throw workbookLimit(error);
+	}
+}
+
+/**
+ * Checks such a part against the element-count and nesting limits {@link parseDataXml} applies,
+ * throwing the same errors, without building a DOM (for a part read by the light reader).
+ */
+export function checkDataXml(
+	xml: string,
+	label: string,
+	maxXmlElements = DEFAULT_XLSX_LOAD_LIMITS.maxXmlElements,
+): void {
+	try {
+		checkXmlLimits(xml, label, { maxNodes: maxXmlElements });
+	} catch (error) {
+		throw workbookLimit(error);
 	}
 }

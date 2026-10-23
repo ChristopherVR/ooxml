@@ -5,7 +5,7 @@
 // markup takes this path, with element prefixes declared on the root: comments and CDATA sections
 // may appear anywhere, but nested namespace declarations, processing instructions in the cell data
 // or anything else the light reader declines is parsed whole, as before, so the result is the same
-// either way.
+// either way. The strings of the shared strings part are read the same way (`rootChildren`).
 import { liteChildElements, type LiteNamespaces, type XmlElement } from '../../xml/index';
 
 export interface SplitSheetData {
@@ -67,6 +67,28 @@ function blankComments(xml: string): string | undefined {
 	}
 	pieces.push(xml.slice(copied));
 	return pieces.join('');
+}
+
+/** `parseXml` refuses a part holding these anywhere, even in a comment outside the root. */
+const DECLARATIONS = /<!DOCTYPE|<!ENTITY/i;
+
+/**
+ * The children of a part's root element (the strings of the shared strings part), read by the
+ * light reader one at a time like the rows of {@link SplitSheetData}, with the namespaces declared
+ * on the root; undefined when the part must go to the DOM parser (a declaration, a self-closing
+ * root, anything but whitespace, comments and an XML declaration around the root).
+ */
+export function rootChildren(xml: string): Iterable<XmlElement> | undefined {
+	if (DECLARATIONS.test(xml)) return undefined;
+	const plain = blankComments(xml);
+	if (plain === undefined) return undefined;
+	const namespaces = rootNamespaces(plain);
+	const root = ROOT.exec(plain.slice(0, 8192));
+	if (!namespaces || !root || (root[2] ?? '').trimEnd().endsWith('/')) return undefined;
+	const close = plain.lastIndexOf(`</${root[1] ?? ''}`);
+	if (close < root[0].length || !/^<\/[^\s>]+\s*>\s*$/.test(plain.slice(close))) return undefined;
+	const content = xml.slice(root[0].length, close);
+	return { [Symbol.iterator]: () => liteChildElements(content, namespaces) };
 }
 
 /** Splits the cell data from a worksheet part, or undefined when the whole part must be parsed. */

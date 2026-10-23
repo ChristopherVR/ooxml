@@ -1,6 +1,7 @@
-import type { XmlElement } from '../../xml/index';
+import { LiteDeclinedError, NS, named, type XmlElement } from '../../xml/index';
 import type { RichTextRun } from '../model';
-import { parseDataXml } from './limits';
+import { checkDataXml, parseDataXml } from './limits';
+import { rootChildren } from './sheet-data-source';
 import { parseFont } from './style-parts';
 import { xChildren, xFirst, xText } from './xml-util';
 
@@ -32,12 +33,30 @@ export function parseRichString(
 	return { text, runs: parsed };
 }
 
+const LABEL = 'XLSX shared strings';
+
+/**
+ * Reads the shared strings part. The strings are read one `<si>` at a time with the light reader
+ * (a DOM of a large table cost about 2 KiB per string), after the element and nesting limits the
+ * DOM parser checks; a part the light reader declines is parsed whole, with the same result.
+ */
 export function parseSharedStrings(
 	xml: string | undefined,
 	palette: readonly string[] | undefined,
 	maxXmlElements?: number,
 ): SharedString[] {
 	if (!xml) return [];
-	const root = parseDataXml(xml, 'XLSX shared strings', maxXmlElements).documentElement;
+	const items = rootChildren(xml);
+	if (items) {
+		checkDataXml(xml, LABEL, maxXmlElements);
+		try {
+			const out: SharedString[] = [];
+			for (const si of items) if (named(si, 'si', NS.x)) out.push(parseRichString(si, palette));
+			return out;
+		} catch (error) {
+			if (!(error instanceof LiteDeclinedError)) throw error;
+		}
+	}
+	const root = parseDataXml(xml, LABEL, maxXmlElements).documentElement;
 	return xChildren(root, 'si').map((si) => parseRichString(si, palette));
 }
