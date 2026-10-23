@@ -5,7 +5,7 @@ import {
 	newTableElement,
 	resolveInsertedFieldText,
 } from 'ooxml-ui/pptx';
-import type { InsertChartKind } from 'ooxml-ui/pptx';
+import type { InsertChartKind, InsertChartOptions } from 'ooxml-ui/pptx';
 import { createEditorId, createShapeElement, createTextElement } from 'pptx-viewer-core';
 import type { PptxElement, PptxHandler, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
 import { ref } from 'vue';
@@ -39,7 +39,7 @@ export interface UseElementInsertionResult {
 	addText: () => void;
 	addShape: (preset: ShapePreset) => void;
 	addTable: (rows?: number, columns?: number) => void;
-	addChart: (chartKind: InsertChartKind) => void;
+	addChart: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	addField: (fieldType: string, value?: string) => void;
 	openImagePicker: () => void;
 	onImageFileSelected: (e: Event) => void;
@@ -103,9 +103,12 @@ export function useElementInsertion(input: UseElementInsertionInput): UseElement
 		selectedElementIds.value = [el.id];
 	}
 
-	/** Insert a default chart of the given dropdown kind, centred on the slide. */
-	function addChart(chartKind: InsertChartKind): void {
-		const el = createDefaultChartElement(chartKind) as PptxElement;
+	/**
+	 * Insert a default chart of the given dropdown kind, centred on the slide. `options` carries
+	 * the Insert Chart dialog's title and grouping.
+	 */
+	function addChart(chartKind: InsertChartKind, options?: InsertChartOptions): void {
+		const el = createDefaultChartElement(chartKind, undefined, options) as PptxElement;
 		centreNewElement(el, el.width, el.height);
 		ops.addElement(el);
 		selectedElementIds.value = [el.id];

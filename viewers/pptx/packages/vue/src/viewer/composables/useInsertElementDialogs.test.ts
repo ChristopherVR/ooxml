@@ -90,3 +90,22 @@ describe('useInsertElementDialogs equation re-edit', () => {
 		expect(api.editingEquationOmml.value).toBeNull();
 	});
 });
+
+describe('useInsertElementDialogs SmartArt insert', () => {
+	it('adds a diagram of the chosen layout with the given node texts and selects it', () => {
+		const { api, selectedElementIds, addElement } = setup([]);
+		api.showInsertSmartArt.value = true;
+		api.onInsertSmartArt('basicCycle', ['Plan', 'Do', 'Check']);
+		const added = addElement.mock.calls[0]![0] as PptxElement & {
+			smartArtData: { nodes: { text: string }[] };
+		};
+		expect(added.type).toBe('smartArt');
+		expect(added.smartArtData.nodes.map((node) => node.text)).toStrictEqual([
+			'Plan',
+			'Do',
+			'Check',
+		]);
+		expect(selectedElementIds.value).toStrictEqual([added.id]);
+		expect(api.showInsertSmartArt.value).toBe(false);
+	});
+});

@@ -2,6 +2,7 @@ import type {
 	AnimationApplyGroup,
 	ChangeCaseMode,
 	InsertChartKind,
+	InsertChartOptions,
 	ReviewCommentsHost,
 	RibbonContextualTabId,
 	SlideTemplateId,
@@ -232,7 +233,7 @@ export interface RibbonProps {
 	onAddTextBox: () => void;
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
-	onAddChart?: (chartKind: InsertChartKind) => void;
+	onAddChart?: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
 	onAddActionButton: (shapeType: string) => void;

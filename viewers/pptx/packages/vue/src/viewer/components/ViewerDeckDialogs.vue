@@ -9,8 +9,10 @@
  * because each dialog closes itself.
  */
 import { isDialogAvailable } from 'ooxml-ui/pptx';
+import type { InsertSmartArtDialogInsertEvent } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import type { UseCollaborationWiringResult } from '../composables/useCollaborationWiring';
 import type { UseFontEmbeddingResult } from '../composables/useFontEmbedding';
@@ -23,13 +25,12 @@ import { useResolvedCustomization } from '../composables/useViewerCustomization'
 import BroadcastDialog from './BroadcastDialog.vue';
 import EquationEditorDialog from './EquationEditorDialog.vue';
 import FontEmbeddingPanel from './FontEmbeddingPanel.vue';
-import InsertSmartArtDialog from './InsertSmartArtDialog.vue';
 import PasswordProtectionDialog from './PasswordProtectionDialog.vue';
 import SetUpSlideShowDialog from './SetUpSlideShowDialog.vue';
 import SignatureStrippedDialog from './SignatureStrippedDialog.vue';
 import SlideSizeRescalePrompt from './SlideSizeRescalePrompt.vue';
 
-defineProps<{
+const props = defineProps<{
 	collaboration: UseCollaborationWiringResult;
 	broadcastServerUrl?: string;
 	slideShow: UseSlideShowSettingsResult;
@@ -50,6 +51,13 @@ const passwordAvailable = computed(() =>
 	isDialogAvailable(customization.value, 'passwordProtection'),
 );
 const equationAvailable = computed(() => isDialogAvailable(customization.value, 'equation'));
+
+const { t } = useI18n();
+const translateLabel = (key: string): string => t(key);
+function insertSmartArt(event: Event): void {
+	const { layout, items } = (event as InsertSmartArtDialogInsertEvent).detail;
+	props.insertDialogs.onInsertSmartArt(layout, items);
+}
 </script>
 
 <template>
@@ -95,11 +103,12 @@ const equationAvailable = computed(() => isDialogAvailable(customization.value, 
 		@close="fontEmbedding.showFontEmbedding.value = false"
 	/>
 
-	<!-- Insert > SmartArt -->
-	<InsertSmartArtDialog
-		:open="insertDialogs.showInsertSmartArt.value"
-		@insert="insertDialogs.onInsertElement"
-		@close="insertDialogs.showInsertSmartArt.value = false"
+	<!-- Insert > SmartArt: the shared dialog (categories, layout gallery, node texts). -->
+	<pptx-ui-insert-smartart-dialog
+		:open.prop="insertDialogs.showInsertSmartArt.value"
+		:translate-label.prop="translateLabel"
+		@insert-smartart="insertSmartArt"
+		@dialog-close="insertDialogs.showInsertSmartArt.value = false"
 	/>
 
 	<!-- Insert > Equation (also re-edits an existing equation) -->

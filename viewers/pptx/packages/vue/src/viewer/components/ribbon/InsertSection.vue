@@ -16,6 +16,7 @@ import {
 import type {
 	FreeformToolKind,
 	InsertChartKind,
+	InsertChartOptions,
 	InsertSlideLayout,
 	RibbonInsertRequestEvent,
 	SlideTemplateId,
@@ -27,6 +28,7 @@ import { useOutlineAuthoring } from '../../composables/useOutlineAuthoring';
 import { useResolvedCustomization } from '../../composables/useViewerCustomization';
 import SlideTemplateGalleryDialog from '../SlideTemplateGalleryDialog.vue';
 import DateTimeFieldDialog from './DateTimeFieldDialog.vue';
+import InsertChartDialog from './InsertChartDialog.vue';
 import type { SupportedShapeType } from './ribbon-types';
 
 interface Props {
@@ -39,7 +41,7 @@ interface Props {
 	onAddTextBox: () => void;
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
-	onAddChart?: (chartKind: InsertChartKind) => void;
+	onAddChart?: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
 	onAddActionButton: (shapeType: string) => void;
@@ -72,6 +74,8 @@ interface Props {
 export interface InsertDialogHost {
 	openDateTime: () => void;
 	openSlideTemplates: () => void;
+	/** Opens Insert > Chart > Insert Chart... (the shared dialog) outside the sheet. */
+	openInsertChart?: () => void;
 }
 
 const props = defineProps<Props>();
@@ -81,6 +85,7 @@ const customization = useResolvedCustomization();
 const chartKind = ref<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 const datePickerOpen = ref(false);
 const templatesOpen = ref(false);
+const chartDialogOpen = ref(false);
 const templatesAvailable = computed(
 	() =>
 		Boolean(props.onInsertSlideFromTemplate) &&
@@ -98,6 +103,7 @@ const state = computed(() => ({
 		? FREEFORM_TOOL_IDS.filter((tool) => isDrawingToolVisible(customization.value, tool))
 		: [],
 	chartAvailable: Boolean(props.onAddChart),
+	chartDialogAvailable: Boolean(props.onAddChart),
 	fieldAvailable: Boolean(props.onInsertField),
 	headerFooterAvailable: Boolean(props.onOpenHeaderFooter),
 	newSlideAvailable: Boolean(props.onInsertSlideFromLayout && props.layoutOptions?.length),
@@ -160,6 +166,13 @@ function request(event: RibbonInsertRequestEvent): void {
 		case 'chart':
 			props.onAddChart?.(intent.value as InsertChartKind);
 			break;
+		case 'chartDialog':
+			if (props.dialogHost?.openInsertChart) {
+				props.dialogHost.openInsertChart();
+			} else {
+				chartDialogOpen.value = true;
+			}
+			break;
 		case 'freeform':
 			outline?.armFreeformTool(intent.value as FreeformToolKind | null);
 			break;
@@ -195,6 +208,12 @@ function insertDate(formatted: string): void {
 		:scheme="props.templateScheme"
 		@insert="props.onInsertSlideFromTemplate?.($event)"
 		@close="templatesOpen = false"
+	/>
+	<InsertChartDialog
+		v-if="props.onAddChart && !props.dialogHost?.openInsertChart"
+		:open="chartDialogOpen"
+		:on-add-chart="props.onAddChart"
+		@close="chartDialogOpen = false"
 	/>
 	<DateTimeFieldDialog
 		v-if="datePickerOpen && !props.dialogHost && props.onInsertField"
