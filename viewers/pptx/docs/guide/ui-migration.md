@@ -981,6 +981,12 @@ Behaviour that changed so the five bindings now agree:
 
 - Read-only banner: every binding shows "Read-only recommended: message" with a
   lock and `role="status"`, and focuses the password input when the prompt opens.
+  Its session (banner hidden, Edit anyway, the password prompt and its check) is
+  the shared `read-only-session` model, which drops a password check result that
+  arrives after a new load or Cancel. Vue reads the recommendation once per load,
+  like the others, instead of from the live custom properties, and vanilla ANDs
+  the lock into its editable state instead of writing it into `setEditable`, so
+  Edit anyway never makes a viewer the host opened read-only editable.
 - Paste options: a press inside the strip no longer dismisses it before the click
   lands, and choosing a format always closes it. Escape inside the strip dismisses.
 - Compatibility toasts: all five cap the stack at five with a "+N" count and always
