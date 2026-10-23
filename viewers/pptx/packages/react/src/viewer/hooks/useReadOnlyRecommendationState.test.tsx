@@ -14,6 +14,13 @@ async function flush(): Promise<void> {
 	});
 }
 
+const PASSWORD_REQUIRED = {
+	kind: 'modifyVerifier',
+	messageKey: 'pptx.readOnly.modifyVerifierRecommended',
+	defaultReadOnly: true,
+	requiresPassword: true,
+} as const;
+
 let latest: UseReadOnlyRecommendationStateResult | null = null;
 
 function Harness({ content }: { content: unknown }) {
@@ -203,6 +210,64 @@ describe('useReadOnlyRecommendationState', () => {
 			expect(latest?.passwordPromptOpen).toBeTruthy();
 			expect(latest?.passwordError).toBe('wrong-password');
 			await flush();
+		});
+
+		it('ignores a password check that finishes after the next deck loads', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			render('deck-1');
+			act(() => {
+				latest?.setModifyVerifier(verifier);
+				latest?.setRecommendation(PASSWORD_REQUIRED);
+			});
+			act(() => {
+				latest?.editAnyway();
+			});
+			let pending: Promise<void> | undefined;
+			act(() => {
+				pending = latest?.submitPassword('right-password');
+			});
+			// The next deck loads (and asks for its own password) while the check runs.
+			act(() => {
+				root?.render(<Harness content='deck-2' />);
+			});
+			act(() => {
+				latest?.setRecommendation(PASSWORD_REQUIRED);
+			});
+			await act(async () => {
+				await pending;
+			});
+
+			expect(latest?.locked).toBeTruthy();
+			expect(latest?.bannerVisible).toBeTruthy();
+			expect(latest?.passwordPromptOpen).toBeFalsy();
+			expect(latest?.checkingPassword).toBeFalsy();
+		});
+
+		it('ignores a password check that finishes after Cancel', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			render('deck-1');
+			act(() => {
+				latest?.setModifyVerifier(verifier);
+				latest?.setRecommendation(PASSWORD_REQUIRED);
+			});
+			act(() => {
+				latest?.editAnyway();
+			});
+			let pending: Promise<void> | undefined;
+			act(() => {
+				pending = latest?.submitPassword('right-password');
+			});
+			act(() => {
+				latest?.cancelPasswordPrompt();
+			});
+			await act(async () => {
+				await pending;
+			});
+
+			expect(latest?.locked).toBeTruthy();
+			expect(latest?.passwordPromptOpen).toBeFalsy();
+			expect(latest?.passwordError).toBeNull();
+			expect(latest?.checkingPassword).toBeFalsy();
 		});
 
 		it('cancelPasswordPrompt closes the prompt without unlocking', async () => {

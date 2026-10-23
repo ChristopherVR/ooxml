@@ -389,7 +389,7 @@ const protectedViewActive = computed(
 // A deck's own `p:modifyVerifier` / "Mark as Final" recommends read-only the
 // same way Protected View does, so its lock feeds the SAME gate rather than a
 // second mechanism.
-const readOnlyRec = useReadOnlyRecommendation({ modifyVerifier, customProperties });
+const readOnlyRec = useReadOnlyRecommendation({ modifyVerifier, customProperties, loadVersion });
 // A requested preview disables interaction without changing host permission or the live deck.
 const editingRequested = ref(true);
 const collaborationReadOnly = ref(false);

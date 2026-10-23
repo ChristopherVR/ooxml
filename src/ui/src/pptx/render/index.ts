@@ -1672,6 +1672,8 @@ export * from './slide-size-rescale';
 export * from './read-only-recommendation';
 // Password check against p:modifyVerifier for the read-only banner's unlock prompt.
 export * from './modify-password-check';
+// The read-only banner's session (hidden, Edit anyway, password prompt) and its transitions.
+export * from './read-only-session';
 // getCompatibilityWarnings() -> toast descriptors, deduped by code.
 export * from './compatibility-warning-toasts';
 // `ppaction://program` ("Run program" action): turns the resolved command

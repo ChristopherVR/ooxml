@@ -3,7 +3,6 @@ import {
 	buildDeckSaveOptions,
 	buildPresentationAudienceUrl,
 	buildUserFontFaceStyles,
-	checkModifyPassword,
 	clearPresentationDeck,
 	collectAccessibilityIssues,
 	collectReferencedFontFamilies,
@@ -36,6 +35,7 @@ import {
 	PRESENTATION_MESSAGE_ORIGIN,
 	pruneExpiredAutosaveSnapshots,
 	readBackstageRecentFile,
+	readOnlySessionActions,
 	readStoredViewerPrefs,
 	reflowSmartArtData,
 	resolve3DRenderingFlags,
@@ -63,6 +63,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	DocumentStorage,
+	ReadOnlySessionActions,
 	SlidePackageClipboard,
 	SlidePasteRequest,
 	ElementUpdate,
@@ -133,6 +134,7 @@ import { createSessionControllers } from './session-controllers';
 import type { Store, ViewerState } from './state';
 import { createInitialViewerState, createStore } from './state';
 import { createStateSync } from './state-sync';
+import { isReadOnlyLocked, readOnlySessionStore } from './state/read-only-session';
 import { ensureViewerStyles } from './styles';
 import { toggleMasterView } from './template-view-control';
 import { applyThemeVars } from './theme-apply';
@@ -221,6 +223,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
 	private requestedEditable = false;
 	private requestedReadOnly = false;
+	/** The read-only banner's actions over the store (the shared `read-only-session` model). */
+	private readonly readOnlyActions: ReadOnlySessionActions;
 	private annotations!: PresentationAnnotationsHost;
 	private parityWorkflows!: ParityWorkflows;
 	private aiChat: AiChatMount | null = null;
@@ -273,6 +277,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.t = createTranslator(this.currentLocale, options.messages);
 		this.registry = options.registry ?? createDefaultRegistry();
 		this.store = createStore(createInitialViewerState(options.inspectorInitiallyOpen));
+		this.readOnlyActions = readOnlySessionActions(readOnlySessionStore(this.store), {
+			recommendation: () => this.store.get().readOnlyRecommendation,
+			modifyVerifier: () => this.store.get().modifyVerifier,
+		});
 		this.loading = createLoadingController({
 			options,
 			store: this.store,
@@ -1058,10 +1066,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTarget: () => {
 				const state = this.store.get();
 				return {
-					canEdit:
-						state.editable &&
-						!state.protectedView &&
-						!(state.readOnlyRecommendation?.defaultReadOnly && !state.readOnlyBannerDismissed),
+					canEdit: state.editable && !state.protectedView && !isReadOnlyLocked(state),
 					mode: this.getMode(),
 					loaded: !state.loading && !state.error,
 					editTemplateMode: state.editTemplateMode,
@@ -1079,10 +1084,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	addElement = (element: PptxElement): string | undefined => {
 		const state = this.store.get();
 		const prepared = prepareElementForInsertion(element, {
-			canEdit:
-				state.editable &&
-				!state.protectedView &&
-				!(state.readOnlyRecommendation?.defaultReadOnly && !state.readOnlyBannerDismissed),
+			canEdit: state.editable && !state.protectedView && !isReadOnlyLocked(state),
 			mode: this.getMode(),
 			hasActiveSlide: !state.loading && !state.error && Boolean(state.slides[state.currentSlide]),
 			editTemplateMode: state.editTemplateMode,
@@ -1791,14 +1793,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/**
 	 * The edit state the viewer actually runs in: what the host asked for (the
 	 * `editable` option and `readOnly` flag, `setEditable`), AND-ed with a
-	 * collaboration read-only role and the `capabilities.edit` customisation.
+	 * collaboration read-only role, the `capabilities.edit` customisation and
+	 * the deck's read-only recommendation until "Edit anyway" lifts it.
 	 */
 	private effectiveEditable(): boolean {
 		return (
 			this.requestedEditable &&
 			!this.requestedReadOnly &&
 			!this.sessions?.isCollaborationReadOnly() &&
-			isEditingAllowed(this.customization.getResolved())
+			isEditingAllowed(this.customization.getResolved()) &&
+			!isReadOnlyLocked(this.store.get())
 		);
 	}
 
@@ -1816,7 +1820,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/**
 	 * The read-only recommendation banner's "Edit anyway" button
 	 * (`p:modifyVerifier` / "Mark as Final"): lifts the lock and hides the
-	 * banner, unlike plain dismiss which only hides it.
+	 * banner, unlike plain dismiss which only hides it. The lock is ANDed into
+	 * {@link effectiveEditable}, so lifting it never turns on editing the host
+	 * did not ask for.
 	 *
 	 * When the recommendation's `requiresPassword` is set (a `modifyVerifier`
 	 * with a hash this viewer can check), this opens the inline password
@@ -1825,49 +1831,34 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * entered, and a wrong one leaves it locked.
 	 */
 	editAnywayFromReadOnlyRecommendation(): void {
-		if (this.store.get().readOnlyRecommendation?.requiresPassword) {
-			this.store.set({ readOnlyPasswordPromptOpen: true, readOnlyPasswordError: null });
-			return;
-		}
-		this.store.set({ readOnlyBannerDismissed: true });
-		this.setEditable(true);
+		this.readOnlyActions.editAnyway();
+		this.applyEditable(this.effectiveEditable());
 	}
 
 	/** The read-only recommendation banner's plain close button: hides the banner, keeps the lock. */
 	dismissReadOnlyBanner(): void {
-		this.store.set({ readOnlyBannerDismissed: true });
+		this.readOnlyActions.dismiss();
 	}
 
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */
 	cancelReadOnlyPasswordPrompt(): void {
-		this.store.set({ readOnlyPasswordPromptOpen: false, readOnlyPasswordError: null });
+		this.readOnlyActions.cancelPassword();
 	}
 
 	/**
 	 * Check `password` against the deck's `modifyVerifier`
-	 * (`checkModifyPassword`, `pptx-viewer-shared`); unlocks and closes the
-	 * prompt on a match, otherwise leaves the deck locked and reports why.
+	 * (`checkModifyPassword`, `ooxml-ui/pptx`); unlocks and closes the prompt
+	 * on a match, otherwise leaves the deck locked and reports why. A result
+	 * that arrives after a new load or Cancel is dropped.
 	 */
 	submitReadOnlyPassword(password: string): void {
 		void this.checkReadOnlyPassword(password);
 	}
 
 	private async checkReadOnlyPassword(password: string): Promise<void> {
-		this.store.set({ readOnlyCheckingPassword: true });
-		try {
-			const result = await checkModifyPassword(this.store.get().modifyVerifier, password);
-			if (result.ok) {
-				this.store.set({
-					readOnlyBannerDismissed: true,
-					readOnlyPasswordPromptOpen: false,
-					readOnlyPasswordError: null,
-				});
-				this.setEditable(true);
-			} else {
-				this.store.set({ readOnlyPasswordError: result.reason });
-			}
-		} finally {
-			this.store.set({ readOnlyCheckingPassword: false });
+		await this.readOnlyActions.submitPassword(password);
+		if (!this.destroyed) {
+			this.applyEditable(this.effectiveEditable());
 		}
 	}
 

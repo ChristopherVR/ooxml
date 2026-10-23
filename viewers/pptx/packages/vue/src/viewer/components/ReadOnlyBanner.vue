@@ -14,7 +14,8 @@
  * recommended" prompt keeps the deck locked until the correct password is
  * entered, and a wrong one leaves it locked.
  */
-import type { ReadOnlyBannerRequestEvent, ReadOnlyRecommendationKind } from 'ooxml-ui/pptx';
+import { dispatchReadOnlyBannerIntent, readOnlyBannerState } from 'ooxml-ui/pptx';
+import type { ReadOnlyBannerPasswordError, ReadOnlyRecommendationKind } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -23,7 +24,7 @@ const props = withDefaults(
 		kind: ReadOnlyRecommendationKind;
 		messageKey: string;
 		passwordPromptOpen?: boolean;
-		passwordError?: 'wrong-password' | 'unsupported-algorithm' | null;
+		passwordError?: ReadOnlyBannerPasswordError | null;
 		checkingPassword?: boolean;
 	}>(),
 	{
@@ -42,30 +43,15 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const state = computed(() => ({
-	kind: props.kind,
-	messageKey: props.messageKey,
-	passwordPromptOpen: props.passwordPromptOpen,
-	passwordError: props.passwordError,
-	checkingPassword: props.checkingPassword,
-	translate: t,
-}));
+const state = computed(() => readOnlyBannerState(props, props, t));
 
 function request(event: Event): void {
-	const intent = (event as ReadOnlyBannerRequestEvent).detail;
-	switch (intent.id) {
-		case 'editAnyway':
-			emit('edit-anyway');
-			break;
-		case 'dismiss':
-			emit('dismiss');
-			break;
-		case 'cancelPassword':
-			emit('cancel-password');
-			break;
-		case 'submitPassword':
-			emit('submit-password', intent.password);
-	}
+	dispatchReadOnlyBannerIntent(event, {
+		editAnyway: () => emit('edit-anyway'),
+		dismiss: () => emit('dismiss'),
+		cancelPassword: () => emit('cancel-password'),
+		submitPassword: (password) => emit('submit-password', password),
+	});
 }
 </script>
 
