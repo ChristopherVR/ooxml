@@ -1,9 +1,15 @@
-import { buildTextWarpGallery, registerPptxWebControls, textWarpStyle } from 'ooxml-ui/pptx';
+import {
+	TEXT_EFFECT_SECTIONS,
+	buildTextWarpGallery,
+	registerPptxWebControls,
+	textWarpStyle,
+} from 'ooxml-ui/pptx';
 import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 import type { TextStyle } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createInspectorCheckbox } from './controls-extra';
+import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
 export interface TextEffectsControls {
@@ -63,12 +69,15 @@ export function createTextEffectsControls(
 	const columnSpacing = number(t('pptx.textFormatting.columnSpacing'), 'columnSpacing', 0, true);
 	const outlineColor = color(t('pptx.textEffects.outline'), 'textOutlineColor');
 	const outlineWidth = number(t('pptx.textEffects.outlineWidth'), 'textOutlineWidth');
-	const shadow = toggle(t('pptx.textEffects.shadow'), 'textShadowOpacity');
-	const shadowColor = color(t('pptx.textEffects.shadowColor'), 'textShadowColor');
-	const shadowBlur = number(t('pptx.textEffects.blur'), 'textShadowBlur');
-	const glowColor = color(t('pptx.textEffects.glowColor'), 'textGlowColor');
-	const glowRadius = number(t('pptx.textEffects.glow'), 'textGlowRadius');
-	const reflection = toggle(t('pptx.textEffects.reflection'), 'textReflection');
+	// Text shadow, glow and reflection: the shared descriptors (a toggle per
+	// effect, its fields once on), applied like the other run effects here, to
+	// the selected range when there is one.
+	const effects = createInspectorFields(doc, t, {
+		sections: TEXT_EFFECT_SECTIONS,
+		onPatch: apply,
+		onColorCommit: (hex) => handlers.pushRecentColor(hex),
+	});
+	el.appendChild(effects.el);
 	const strike = toggle(t('pptx.textFormatting.strikethrough'), 'strikethrough');
 	const highlight = color(t('pptx.text.highlightColor'), 'highlightColor');
 	// Transform: the shared Text Warp gallery, one tile per preset. Captioned by a
@@ -102,12 +111,7 @@ export function createTextEffectsControls(
 			columnSpacing.value = String(style.columnSpacing ?? 0);
 			outlineColor.value = style.textOutlineColor ?? '#000000';
 			outlineWidth.value = String(style.textOutlineWidth ?? 0);
-			shadow.checked = Boolean(style.textShadowOpacity);
-			shadowColor.value = style.textShadowColor ?? '#000000';
-			shadowBlur.value = String(style.textShadowBlur ?? 4);
-			glowColor.value = style.textGlowColor ?? '#ffff00';
-			glowRadius.value = String(style.textGlowRadius ?? 0);
-			reflection.checked = Boolean(style.textReflection);
+			effects.update(next.textStyle, !next.canText);
 			strike.checked = Boolean(style.strikethrough);
 			highlight.value = style.highlightColor ?? '#ffff00';
 			warp.descriptor = buildTextWarpGallery(style.textWarpPreset, !next.canText);
