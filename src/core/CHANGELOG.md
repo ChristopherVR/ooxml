@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.25.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.25.1) - 2026-10-23
+
+### Bug Fixes
+
+- **xlsx:** Close the open code scanning alerts in core ([0f6b643](https://github.com/ChristopherVR/ooxml/commit/0f6b64306e57958a097caaf7085d63479766acb3))
+
+### Testing
+
+- **pptx:** Copy fixture Buffers by value in the chart save harnesses ([#181](https://github.com/ChristopherVR/ooxml/issues/181)) ([90ce9e4](https://github.com/ChristopherVR/ooxml/commit/90ce9e4704be388ef1ee8723c0b745c3457f07e7))
+
 ## [1.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.25.0) - 2026-10-23
 
 ### Features

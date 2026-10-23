@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.26.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.1) - 2026-10-23
+
+### Bug Fixes
+
+- **pptx:** Apply theme picks in place and keep theme tiles stable ([ecb6385](https://github.com/ChristopherVR/ooxml/commit/ecb6385a8e211b60461f842eb4a88945555796e5))
+
+### Testing
+
+- **ui:** Resolve ooxml-ui/chart-format-locales to source in vitest ([56e8522](https://github.com/ChristopherVR/ooxml/commit/56e8522f0386b6e8487471884ad47130bbacd45f))
+
 ## [1.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.0) - 2026-10-23
 
 ### Features
