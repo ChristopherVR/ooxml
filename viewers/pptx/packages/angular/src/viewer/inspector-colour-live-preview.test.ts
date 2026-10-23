@@ -248,7 +248,9 @@ describe('the generic field renderer colour control (shape effects)', () => {
 			committed.push(patch);
 			target.update((current) => ({ ...current, ...patch }));
 		});
-		outputs['preview']?.subscribe((patch) => {
+		(
+			outputs['preview'] as unknown as OutputEmitterRef<{ patch: Partial<ShapeStyle> }> | undefined
+		)?.subscribe(({ patch }) => {
 			previews.push(patch);
 			target.update((current) => ({ ...current, ...patch }));
 		});
@@ -274,11 +276,8 @@ describe('the generic field renderer colour control (shape effects)', () => {
 		fire('change', '#0000ff');
 
 		// The previews are put back before the one commit, so its undo step starts from red.
-		expect(previews.at(-1)).toMatchObject({
-			glowColor: '#ff0000',
-			glowRadius: 8,
-			glowOpacity: 0.5,
-		});
+		// Only the leaf the drag changed goes back: the radius and opacity were never touched.
+		expect(previews.at(-1)).toStrictEqual({ glowColor: '#ff0000' });
 		expect(committed).toStrictEqual([{ glowColor: '#0000ff', glowRadius: 8, glowOpacity: 0.5 }]);
 		expect(pushed).toStrictEqual(['#0000ff']);
 	});
@@ -306,7 +305,10 @@ describe('the generic field renderer colour control (shape effects)', () => {
 			'preview'
 		]?.subscribe((patch) => fireTemplateEvent(panel, toInspector, 'preview', patch));
 
-		fireTemplateEvent(effects, toEffects, 'preview', { glowColor: '#00ff00' });
+		fireTemplateEvent(effects, toEffects, 'preview', {
+			patch: { glowColor: '#00ff00' },
+			target: current().id,
+		});
 
 		expect((current() as { shapeStyle?: ShapeStyle }).shapeStyle?.glowColor).toBe('#00ff00');
 		expect(editor.canUndo()).toBeFalsy();

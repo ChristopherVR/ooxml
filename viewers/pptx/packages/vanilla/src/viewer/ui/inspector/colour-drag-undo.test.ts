@@ -83,6 +83,7 @@ function mount() {
 		const el = current();
 		const state = {
 			hasSelection: true,
+			elementId: el.id,
 			canShape: true,
 			canText: true,
 			fillColor: el.shapeStyle.fillColor,

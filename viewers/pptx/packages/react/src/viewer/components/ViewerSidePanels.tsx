@@ -152,7 +152,9 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 				onUpdateElementStyle={ops.updateSelectedShapeStyle}
 				onUpdateTextStyle={ops.updateSelectedTextStyle}
 				onUpdateElement={ops.updateSelectedElement}
-				withoutUndoStep={history.withoutUndoStep}
+				onPreviewElement={(id, patch) =>
+					history.withoutUndoStep(() => ops.updateElementById(id, patch))
+				}
 				onApplySelection={ops.applySelection}
 				onSetCanvasSize={s.setCanvasSize}
 				slideSizeEmu={s.slideSizeEmu}

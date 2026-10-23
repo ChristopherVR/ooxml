@@ -21,6 +21,8 @@ export type {
 	InspectorSectionToggle,
 	InspectorSectionView,
 } from './inspector-field-model';
+export { createInspectorColorFields } from './inspector-color-fields';
+export type { InspectorColorFieldsOptions } from './inspector-color-fields';
 export type {
 	ShapeEffectField,
 	ShapeEffectSection,

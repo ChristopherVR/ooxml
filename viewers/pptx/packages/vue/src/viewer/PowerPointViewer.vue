@@ -757,7 +757,7 @@ const inspector = useInspectorWiring({
 	previewElement: (id, patch) => ops.previewElement(id, patch),
 });
 // A colour picker drag's live shades reach the slide without an undo step.
-provide(InspectorPreviewKey, inspector.onInspectorPreview);
+provide(InspectorPreviewKey, inspector.inspectorPreview);
 
 // -- Slide operations (add / duplicate / delete / reorder) -------------
 const slideOps = useSlideOperations({

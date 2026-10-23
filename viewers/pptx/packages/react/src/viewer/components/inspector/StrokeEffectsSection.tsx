@@ -1,5 +1,11 @@
-import { SHAPE_EFFECT_SECTIONS, SHAPE_LINE_SECTIONS } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
+import {
+	SHAPE_EFFECT_SECTIONS,
+	SHAPE_LINE_SECTIONS,
+	shapeOutlineChange,
+	shapeQuickStylePatch,
+} from 'ooxml-ui/pptx';
+import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 import React from 'react';
 
 import { DEFAULT_STROKE_COLOR } from '../../constants';
@@ -18,6 +24,11 @@ export interface StrokeEffectsSectionProps {
 	isLine: boolean;
 	onUpdateShapeStyle: (updates: Partial<ShapeStyle>) => void;
 	onSetStrokeColor: (color: string, ref?: PptxThemeColorRef) => void;
+}
+
+/** The style the effects descriptors read, on any element (for a live colour drag). */
+function shapeStyleOf(el: PptxElement): ShapeStyle | undefined {
+	return hasShapeProperties(el) ? el.shapeStyle : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,6 +52,7 @@ export function StrokeEffectsSection({
 				value={normalizeHexColor(style?.strokeColor, DEFAULT_STROKE_COLOR)}
 				selectedRef={style?.strokeColorRef}
 				onChange={onSetStrokeColor}
+				styleChange={(hex, current) => shapeOutlineChange(hex, undefined, current)}
 			/>
 
 			{/* Fill Opacity */}
@@ -64,6 +76,8 @@ export function StrokeEffectsSection({
 				sections={SHAPE_EFFECT_SECTIONS}
 				target={style}
 				onPatch={onUpdateShapeStyle}
+				liveTarget={shapeStyleOf}
+				livePatch={shapeQuickStylePatch}
 			/>
 		</>
 	);

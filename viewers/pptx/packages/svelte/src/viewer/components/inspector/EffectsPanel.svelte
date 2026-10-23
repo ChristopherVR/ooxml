@@ -23,9 +23,15 @@
 		editor.patchSelected(shapeQuickStylePatch(el, patch));
 	}
 
-	/** A colour drag's live shade: on the slide at once, no undo step. */
-	function onpreview(patch: Partial<ShapeStyle>): void {
-		editor.previewElement(el.id, shapeQuickStylePatch(el, patch));
+	/**
+	 * A colour drag's live shade, merged into the style of the element it is for (the
+	 * selection, or one the drag has left): on the slide at once, no undo step.
+	 */
+	function onpreview(patch: Partial<ShapeStyle>, target: string): void {
+		const owner = editor.elementById(target);
+		if (owner) {
+			editor.previewElement(target, shapeQuickStylePatch(owner, patch));
+		}
 	}
 </script>
 
@@ -35,6 +41,7 @@
 		target={shapeStyle}
 		{onpatch}
 		{onpreview}
+		targetKey={el.id}
 		oncolorcommit={(hex) => editor.recordRecentColor(hex)}
 	/>
 </div>

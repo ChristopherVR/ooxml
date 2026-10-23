@@ -102,10 +102,10 @@ export interface ViewerInspectorProps {
 	/** Width of the panel in pixels (for resizable panels). */
 	panelWidth?: number;
 	/**
-	 * The history's `withoutUndoStep`: a colour picker drag applies its shades
-	 * through it, so the drag is one undo step (see `LiveEditContext`).
+	 * Merge a patch into an element with no undo step: what a colour picker drag
+	 * shows its shades with, so the drag is one undo step (see `LiveEditContext`).
 	 */
-	withoutUndoStep?: (apply: () => void) => void;
+	onPreviewElement?: (id: string, patch: Partial<PptxElement>) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,13 +165,14 @@ export function ViewerInspector({
 	onTableStyleMapChange,
 	onDeleteTableStyle,
 	panelWidth,
-	withoutUndoStep,
+	onPreviewElement,
 }: ViewerInspectorProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const regionRenderer = useRegionRenderer('inspector');
 	const liveEdit = useMemo(
-		() => ({ withoutUndoStep: withoutUndoStep ?? ((apply: () => void) => apply()) }),
-		[withoutUndoStep],
+		() =>
+			onPreviewElement ? { element: selectedElement, previewElement: onPreviewElement } : null,
+		[onPreviewElement, selectedElement],
 	);
 
 	if (!isOpen) {

@@ -4,6 +4,7 @@ import type {
 	InspectorFieldView,
 	InspectorSectionDescriptor,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -19,6 +20,14 @@ export interface InspectorFieldsProps<T, P> {
 	/** Receives the patch a control change produces. */
 	onPatch: (patch: P) => void;
 	disabled?: boolean;
+	/**
+	 * For the colour fields: the value the descriptors read on any element, and
+	 * how a field patch lands on it. With both, a drag through a colour picker
+	 * previews and is put back leaf by leaf on the element it started on
+	 * ({@link LiveColorInput}); without them every shade goes through `onPatch`.
+	 */
+	liveTarget?: (el: PptxElement) => T;
+	livePatch?: (el: PptxElement, patch: P) => Partial<PptxElement>;
 }
 
 /**
@@ -34,6 +43,8 @@ export function InspectorFields<T, P>({
 	target,
 	onPatch,
 	disabled = false,
+	liveTarget,
+	livePatch,
 }: InspectorFieldsProps<T, P>): React.ReactElement {
 	const { t } = useTranslation();
 	const views = resolveInspectorSections(sections, target);
@@ -94,6 +105,20 @@ export function InspectorFields<T, P>({
 						value={String(field.value)}
 						disabled={disabled}
 						onApply={(hex) => change(sectionId, field.id, hex)}
+						patch={
+							liveTarget && livePatch
+								? (el, hex) => {
+										const fieldPatch = inspectorFieldPatch(
+											sections,
+											sectionId,
+											field.id,
+											liveTarget(el),
+											hex,
+										);
+										return fieldPatch === undefined ? undefined : livePatch(el, fieldPatch);
+									}
+								: undefined
+						}
 						className={`h-8 ${SEL} px-1`}
 					/>
 				</label>

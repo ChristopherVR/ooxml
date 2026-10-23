@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { LiveColorSource } from './live-color-input';
 import {
 	createLiveColorInput,
-	createLiveColorPatchInput,
 	handleLiveColorEvent,
 	liveColorRevertPatch,
 } from './live-color-input';
@@ -32,8 +31,8 @@ function editor(initial: Shape) {
 			shown = shape;
 		}
 	};
-	const control = createLiveColorPatchInput<Shape, Partial<Shape>>({
-		read: (): LiveColorSource<Shape> => ({ key: shown.id, color: shown.style.fill, state: shown }),
+	const control = createLiveColorInput<Shape, Partial<Shape>>({
+		read: (): LiveColorSource<Shape> => ({ key: shown.id, color: shown.style.fill, value: shown }),
 		patch: (value, hex) => ({ style: { ...value.style, fill: hex, fillRef: undefined } }),
 		preview(patch) {
 			silent.push(patch);
@@ -72,7 +71,43 @@ function editor(initial: Shape) {
 
 const START: Shape = { id: 'a', style: { fill: '#4472c4', fillRef: 'accent1', width: 2 } };
 
-describe('createLiveColorPatchInput', () => {
+/** Two shapes and a selection, for drags the selection leaves: writes go to the shape named. */
+function deck() {
+	const shapes = new Map<string, Shape>([
+		['a', START],
+		['b', { id: 'b', style: { fill: '#00aa55', fillRef: 'accent6', width: 7 } }],
+	]);
+	let selected = 'a';
+	const undo: Shape[] = [];
+	const recent: string[] = [];
+	const write = (patch: Partial<Shape>, key: string): void => {
+		shapes.set(key, { ...shapes.get(key)!, ...patch });
+	};
+	const control = createLiveColorInput<Shape, Partial<Shape>>({
+		read: () => {
+			const shape = shapes.get(selected)!;
+			return { key: shape.id, color: shape.style.fill, value: shape };
+		},
+		patch: (value, hex) => ({ style: { ...value.style, fill: hex, fillRef: undefined } }),
+		preview: (patch, key) => write(patch, key),
+		commit(patch, key) {
+			undo.push(shapes.get(key)!);
+			write(patch, key);
+		},
+		remember: (hex) => recent.unshift(hex),
+	});
+	return {
+		control,
+		undo,
+		recent,
+		shape: (id: string) => shapes.get(id),
+		select(id: string) {
+			selected = id;
+		},
+	};
+}
+
+describe('createLiveColorInput', () => {
 	it('shows every shade of a drag from the start value, without an undo step or a recent colour', () => {
 		const ed = editor(START);
 		ed.control.input('#330000');
@@ -191,31 +226,13 @@ describe('createLiveColorPatchInput', () => {
 		expect(ed.undo).toStrictEqual([themed]);
 	});
 
-	it('starts over on another target even when it shows a colour the old drag passed', () => {
-		const ed = editor(START);
-		ed.control.input('#330000');
-		const other: Shape = { id: 'b', style: { fill: '#330000', width: 5 } };
-		ed.replace(other);
-		ed.control.input('#660000');
-		ed.control.change('#4472c4');
-
-		// The drag on `b` started at #330000: its commit records `b`, never `a`'s start state.
-		expect(ed.undo).toStrictEqual([other]);
-		expect(ed.shape).toStrictEqual({
-			id: 'b',
-			style: { fill: '#4472c4', fillRef: undefined, width: 5 },
-		});
-	});
-
 	it('does nothing while there is nothing to edit', () => {
 		let previews = 0;
 		let commits = 0;
-		const control = createLiveColorInput<null>({
+		const control = createLiveColorInput<null, object>({
 			read: () => undefined,
+			patch: () => ({}),
 			preview: () => {
-				previews += 1;
-			},
-			restore: () => {
 				previews += 1;
 			},
 			commit: () => {
@@ -229,6 +246,104 @@ describe('createLiveColorPatchInput', () => {
 		control.change('#ff0000');
 		control.blur('#ff0000');
 		expect([previews, commits]).toStrictEqual([0, 0]);
+	});
+});
+
+describe('a drag the selection leaves', () => {
+	it('is put back on its own target, and the pick that ends it touches nothing else', () => {
+		const d = deck();
+		const b = d.shape('b');
+		d.control.input('#330000');
+		d.select('b');
+		d.control.change('#330000');
+
+		expect(d.shape('a')).toStrictEqual(START);
+		expect(d.shape('b')).toStrictEqual(b);
+		expect(d.undo).toStrictEqual([]);
+		expect(d.recent).toStrictEqual([]);
+	});
+
+	it('is put back when a drag starts on the new target, which previews on its own', () => {
+		const d = deck();
+		d.control.input('#330000');
+		d.select('b');
+		d.control.input('#660000');
+
+		expect(d.shape('a')).toStrictEqual(START);
+		expect(d.shape('b')?.style.fill).toBe('#660000');
+	});
+
+	it('starts over on the new target even when it shows a colour the old drag passed', () => {
+		const d = deck();
+		d.control.input('#330000');
+		d.control.input('#00aa55');
+		d.select('b');
+		d.control.input('#660000');
+		d.control.change('#123456');
+
+		// The drag on `b` started at its own colour: its one undo step records `b`, never `a`.
+		expect(d.shape('a')).toStrictEqual(START);
+		expect(d.undo).toStrictEqual([
+			{ id: 'b', style: { fill: '#00aa55', fillRef: 'accent6', width: 7 } },
+		]);
+		expect(d.shape('b')?.style).toStrictEqual({ fill: '#123456', fillRef: undefined, width: 7 });
+	});
+
+	it('is put back on blur too, without committing to the new target', () => {
+		const d = deck();
+		const b = d.shape('b');
+		d.control.input('#330000');
+		d.select('b');
+		d.control.blur('#330000');
+
+		expect(d.shape('a')).toStrictEqual(START);
+		expect(d.shape('b')).toStrictEqual(b);
+		expect(d.undo).toStrictEqual([]);
+	});
+});
+
+describe('another edit to the same element while a drag runs', () => {
+	// A collaborator, an undo or the assistant changes a field next to the colour mid-drag.
+	it('survives the commit, and the undo step returns to the colour with that edit kept', () => {
+		const ed = editor(START);
+		ed.control.input('#330000');
+		ed.replace({ ...ed.shape, style: { ...ed.shape.style, width: 5 } });
+		ed.control.change('#330000');
+
+		expect(ed.shape.style).toStrictEqual({ fill: '#330000', fillRef: undefined, width: 5 });
+		expect(ed.undo).toStrictEqual([{ id: 'a', style: { ...START.style, width: 5 } }]);
+	});
+
+	it('survives a drag that settles where it started', () => {
+		const ed = editor(START);
+		ed.control.input('#330000');
+		ed.replace({ ...ed.shape, style: { ...ed.shape.style, width: 5 } });
+		ed.control.change('#4472c4');
+
+		expect(ed.shape).toStrictEqual({ id: 'a', style: { ...START.style, width: 5 } });
+		expect(ed.undo).toStrictEqual([]);
+	});
+});
+
+describe('putting a drag back', () => {
+	it('removes the entries its previews added, an emptied theme ref included', () => {
+		let value: { style: Record<string, unknown> } = { style: { fill: '#000000' } };
+		const control = createLiveColorInput<typeof value, Partial<typeof value>>({
+			read: () => ({ key: 'k', color: String(value.style['fill']), value }),
+			patch: (current, hex) => ({
+				style: { ...current.style, fill: hex, ref: undefined, width: 1 },
+			}),
+			preview(patch) {
+				value = { ...value, ...patch };
+			},
+			commit: () => {},
+			remember: () => {},
+		});
+		control.input('#330000');
+		control.input('#000000');
+		control.blur('#000000');
+
+		expect(value).toStrictEqual({ style: { fill: '#000000' } });
 	});
 });
 
@@ -261,37 +376,62 @@ describe('a pick whose input and change arrive in the same turn', () => {
 	);
 });
 
-describe('createLiveColorInput', () => {
-	it('restores once from the start state before committing a settled drag', () => {
+describe('the writes a drag makes', () => {
+	it('previews, puts back, remembers, then commits, each addressed to the target', () => {
 		const calls: string[] = [];
-		const state = { hex: '#000000' };
-		const control = createLiveColorInput<typeof state>({
-			read: () => ({ key: 'k', color: state.hex, state }),
-			preview: (hex, from) => calls.push(`preview ${hex} from ${from.hex}`),
-			restore: (from) => calls.push(`restore ${from.hex}`),
-			commit: (hex, from) => calls.push(`commit ${hex} from ${from.hex}`),
+		let value = { key: 'k', fill: '#000000', width: 1 };
+		const control = createLiveColorInput<typeof value, Partial<typeof value>>({
+			read: () => ({ key: value.key, color: value.fill, value }),
+			patch: (_value, hex) => ({ fill: hex }),
+			preview(patch, key) {
+				calls.push(`preview ${JSON.stringify(patch)} to ${key}`);
+				value = { ...value, ...patch };
+			},
+			commit: (patch, key, hex) => calls.push(`commit ${JSON.stringify(patch)} to ${key} (${hex})`),
 			remember: (hex) => calls.push(`remember ${hex}`),
 		});
 		control.input('#111111');
 		control.input('#222222');
 		control.change('#222222');
 		expect(calls).toStrictEqual([
-			'preview #111111 from #000000',
-			'preview #222222 from #000000',
-			'restore #000000',
+			'preview {"fill":"#111111"} to k',
+			'preview {"fill":"#222222"} to k',
+			'preview {"fill":"#000000"} to k',
 			'remember #222222',
-			'commit #222222 from #000000',
+			'commit {"fill":"#222222"} to k (#222222)',
 		]);
 	});
 });
 
 describe('liveColorRevertPatch', () => {
-	it('puts back each key as the value had it, an absent key as undefined', () => {
-		expect(liveColorRevertPatch({ a: 1, b: { c: 2 } }, ['b', 'z'])).toStrictEqual({
-			b: { c: 2 },
-			z: undefined,
-		});
-		expect(liveColorRevertPatch(undefined, ['a'])).toStrictEqual({ a: undefined });
+	it('puts back only the leaves named, on the value as it is now', () => {
+		const now = { style: { fill: '#330000', width: 5, glow: 'x' }, text: 'Hi' };
+		expect(
+			liveColorRevertPatch(now, [
+				{ path: ['style', 'fill'], present: true, value: '#4472c4' },
+				{ path: ['style', 'glow'], present: false, value: undefined },
+			]),
+		).toStrictEqual({ style: { fill: '#4472c4', width: 5 } });
+	});
+
+	it('brings back a top-level entry the target did not have as undefined', () => {
+		expect(
+			liveColorRevertPatch({ style: { fill: '#000' } }, [
+				{ path: ['style'], present: false, value: undefined },
+			]),
+		).toStrictEqual({ style: undefined });
+		expect(
+			liveColorRevertPatch(undefined, [{ path: ['a', 'b'], present: true, value: 1 }]),
+		).toStrictEqual({ a: { b: 1 } });
+	});
+
+	it('writes into arrays by index', () => {
+		const now = { runs: [{ color: '#330000' }, { color: '#330000', bold: true }] };
+		expect(
+			liveColorRevertPatch(now, [
+				{ path: ['runs', '1', 'color'], present: true, value: '#112233' },
+			]),
+		).toStrictEqual({ runs: [{ color: '#330000' }, { color: '#112233', bold: true }] });
 	});
 });
 

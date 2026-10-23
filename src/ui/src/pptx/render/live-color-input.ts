@@ -18,35 +18,57 @@
  *   colour goes into the recent colours like any other; a `blur` there is not a pick (an
  *   Escape, a drag back to the start), so it records nothing.
  *
- * A drag belongs to one target. It carries over to the next event only while the control edits
- * the same `key` and the model still shows the drag's work: the untouched start value (a
- * binding that has not re-rendered since), or a colour the drag itself put there. Anything
- * else (another selection, an undo, a theme swatch pick) starts a new drag from what the model
- * holds now, so a stale drag can never write its start state over a newer edit.
+ * The previews own only the leaves they wrote (`shapeStyle.fillColor`, its theme ref, ...),
+ * each remembered with the value it had before the drag. Putting a drag back and committing
+ * its pick are both rebased on the target as it is NOW: only those leaves go back, and the
+ * commit is built on the result, so an edit another hand made to the same element during the
+ * drag (a collaborator's line width, an assistant's text) survives, and the undo step returns
+ * to a state that existed.
+ *
+ * A drag belongs to one target (`key`, the element). It carries over to the next event only
+ * while the control edits that target and the model still shows the drag's work: the value it
+ * last read (a binding that has not re-rendered since), or a colour the drag itself put there.
+ * When the control has moved to another target, the drag is put back on its own target (the
+ * binding's writes are addressed by key) and the event that ends it is dropped: a pick made in
+ * a picker opened for one element never lands on another. When the target is the same but its
+ * colour was changed by another hand (a theme swatch, an undo), the drag is dropped as it is,
+ * since putting it back would overwrite that newer colour.
  *
  * @module render/live-color-input
  */
 
+import type { LiveColorLeaf } from './live-color-leaves';
+import { liveColorRevertPatch, recordLiveColorLeaves } from './live-color-leaves';
+
+export { liveColorRevertPatch } from './live-color-leaves';
+export type { LiveColorLeaf } from './live-color-leaves';
+
 /** What a colour control edits at the moment of an event. */
-export interface LiveColorSource<S> {
-	/** The edited object's identity (the element id, or the field id for a style field). */
+export interface LiveColorSource<T> {
+	/** The edited target's identity (the element id). A drag never crosses targets. */
 	readonly key: string;
 	/** The colour the control shows now. */
 	readonly color: string;
-	/** What a drag needs to preview from and to put back: the element, or the style it reads. */
-	readonly state: S;
+	/** The target as the binding holds it now: the element, or the style a field reads. */
+	readonly value: T;
 }
 
 /** What a binding gives {@link createLiveColorInput}; called afresh on every event. */
-export interface LiveColorInputOptions<S> {
+export interface LiveColorInputOptions<T, P extends object> {
 	/** The control's target now, or `undefined` when nothing can be edited. */
-	read(): LiveColorSource<S> | undefined;
-	/** Show `hex` over `from` (the drag's start) without an undo step, dirty flag or recent colour. */
-	preview(hex: string, from: S): void;
-	/** Put back, again silently, everything the drag's previews changed on `from`. */
-	restore(from: S): void;
-	/** Commit `hex` over `from` as ONE undo step and mark the deck dirty. */
-	commit(hex: string, from: S): void;
+	read(): LiveColorSource<T> | undefined;
+	/** The patch that sets `hex` on `value`; `undefined` when `value` cannot take a colour. */
+	patch(value: T, hex: string): P | undefined;
+	/**
+	 * Merge `patch` into the target `key` live: no undo step, dirty flag or recent colour. `key`
+	 * can name a target the control has left, when the drag started there is put back.
+	 */
+	preview(patch: P, key: string): void;
+	/**
+	 * Merge the settled pick into the current target `key` through the normal edit path: ONE
+	 * undo step and the dirty flag. The drag is already put back and `patch` is built on it.
+	 */
+	commit(patch: P, key: string, hex: string): void;
 	/**
 	 * Add `hex` to the recent colours: with every commit (just before it), and for a `change`
 	 * that settles on the colour the drag started from (a pick, though not an edit).
@@ -64,12 +86,14 @@ export interface LiveColorInput {
 	blur(hex: string): void;
 }
 
-interface Drag<S> {
+interface Drag<T> {
 	readonly key: string;
 	readonly start: string;
-	readonly state: S;
 	/** The start colour and every shade previewed since, normalised. */
 	readonly colors: Set<string>;
+	readonly leaves: Map<string, LiveColorLeaf>;
+	/** The target as last read: what the drag is put back on once the control has left it. */
+	last: T;
 }
 
 function normalizeColor(color: string): string {
@@ -77,29 +101,55 @@ function normalizeColor(color: string): string {
 }
 
 /** Build the controller for one colour input. */
-export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): LiveColorInput {
-	let drag: Drag<S> | undefined;
+export function createLiveColorInput<T, P extends object>(
+	options: LiveColorInputOptions<T, P>,
+): LiveColorInput {
+	let drag: Drag<T> | undefined;
 
 	/** The drag `source` carries on, or `undefined` when it starts a new one. */
-	const carriedOn = (source: LiveColorSource<S>): Drag<S> | undefined =>
+	const carriedOn = (source: LiveColorSource<T>): Drag<T> | undefined =>
 		drag &&
 		drag.key === source.key &&
-		(source.state === drag.state || drag.colors.has(normalizeColor(source.color)))
+		(source.value === drag.last || drag.colors.has(normalizeColor(source.color)))
 			? drag
 			: undefined;
 
 	/**
-	 * End the drag on `hex`. A drag that is still carried on is put back first, so the commit
-	 * records the state from before it; a stale one is dropped as it is, since putting it back
-	 * would overwrite whatever changed the model since. `picked` is true for a `change`.
+	 * End a drag that does not carry on to `source`. One the control has left is put back on its
+	 * own target and reported, so the event that found it is dropped; one whose own target was
+	 * recoloured by another hand is dropped as it is.
 	 */
-	const settle = (source: LiveColorSource<S>, hex: string, picked: boolean): void => {
-		const current = carriedOn(source);
+	const leave = (source: LiveColorSource<T> | undefined): boolean => {
+		const stale = drag;
 		drag = undefined;
-		if (current) {
-			options.restore(current.state);
+		if (!stale || (source && stale.key === source.key)) {
+			return false;
 		}
-		const from = current ? current.state : source.state;
+		if (stale.leaves.size > 0) {
+			options.preview(liveColorRevertPatch<P>(stale.last, stale.leaves.values()), stale.key);
+		}
+		return true;
+	};
+
+	/** End the drag on `hex`; `picked` is true for a `change`, false for a `blur`. */
+	const settle = (hex: string, picked: boolean): void => {
+		const source = options.read();
+		const current = source ? carriedOn(source) : undefined;
+		// A pick for a target the control has left is dropped; a blur outside a live drag is not
+		// a pick at all.
+		if (!current && (leave(source) || !picked)) {
+			return;
+		}
+		if (!source) {
+			return;
+		}
+		drag = undefined;
+		let base = source.value;
+		if (current && current.leaves.size > 0) {
+			const revert = liveColorRevertPatch<P>(source.value, current.leaves.values());
+			options.preview(revert, current.key);
+			base = { ...(source.value as object), ...revert } as unknown as T;
+		}
 		const start = current ? current.start : source.color;
 		const moved = normalizeColor(hex) !== normalizeColor(start);
 		// Recent colours first: a binding whose undo snapshot holds the list then keeps the pick
@@ -107,112 +157,45 @@ export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): Live
 		if (moved || picked) {
 			options.remember(hex);
 		}
-		if (moved) {
-			options.commit(hex, from);
+		const patch = moved ? options.patch(base, hex) : undefined;
+		if (patch) {
+			options.commit(patch, source.key, hex);
 		}
 	};
 
 	return {
 		input(hex) {
 			const source = options.read();
+			let current = source ? carriedOn(source) : undefined;
+			if (!source || !current) {
+				leave(source);
+			}
 			if (!source) {
 				return;
 			}
-			const current = carriedOn(source) ?? {
+			current ??= {
 				key: source.key,
 				start: source.color,
-				state: source.state,
 				colors: new Set([normalizeColor(source.color)]),
+				leaves: new Map(),
+				last: source.value,
 			};
 			drag = current;
+			current.last = source.value;
 			current.colors.add(normalizeColor(hex));
-			options.preview(hex, current.state);
-		},
-		change(hex) {
-			const source = options.read();
-			if (source) {
-				settle(source, hex, true);
-			} else {
-				drag = undefined;
+			const patch = options.patch(source.value, hex);
+			if (patch) {
+				recordLiveColorLeaves(current.leaves, source.value, patch);
+				options.preview(patch, current.key);
 			}
 		},
+		change: (hex) => settle(hex, true),
 		blur(hex) {
-			// Only a drag still in progress settles here: a blur is not a pick, so with no drag (or
-			// a stale one) it must not commit whatever the input happens to show.
-			const source = drag ? options.read() : undefined;
-			if (source && carriedOn(source)) {
-				settle(source, hex, false);
-			} else {
-				drag = undefined;
+			if (drag) {
+				settle(hex, false);
 			}
 		},
 	};
-}
-
-/** What a binding gives {@link createLiveColorPatchInput}: the colour as a patch on a value. */
-export interface LiveColorPatchOptions<T, P extends object> {
-	/** The edited value now (the element, or the style a field reads). */
-	read(): LiveColorSource<T> | undefined;
-	/** The patch that sets `hex` on `value`; `undefined` when `value` cannot take a colour. */
-	patch(value: T, hex: string): P | undefined;
-	/** Write `patch` live: no undo step, dirty flag or recent colour. */
-	preview(patch: P): void;
-	/** Write `patch` through the normal edit path: one undo step, the dirty flag. */
-	commit(patch: P): void;
-	/** Add `hex` to the recent colours (see {@link LiveColorInputOptions.remember}). */
-	remember(hex: string): void;
-}
-
-/**
- * The patch that puts back every key in `keys` as `value` had it, the way a drag's previews
- * are undone before its commit. A key `value` did not have comes back as `undefined`.
- */
-export function liveColorRevertPatch<P extends object>(value: unknown, keys: Iterable<string>): P {
-	const source =
-		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-	const patch: Record<string, unknown> = {};
-	for (const key of keys) {
-		patch[key] = source[key];
-	}
-	return patch as P;
-}
-
-/**
- * {@link createLiveColorInput} for a control whose colour is a patch on a value (an element
- * or a style object): each shade is the patch from the drag's start value, and the previews
- * are put back by writing the start value's own entries for every key they touched.
- */
-export function createLiveColorPatchInput<T, P extends object>(
-	options: LiveColorPatchOptions<T, P>,
-): LiveColorInput {
-	const touched = new Set<string>();
-	return createLiveColorInput<T>({
-		read: () => options.read(),
-		preview(hex, from) {
-			const patch = options.patch(from, hex);
-			if (!patch) {
-				return;
-			}
-			for (const key of Object.keys(patch)) {
-				touched.add(key);
-			}
-			options.preview(patch);
-		},
-		restore(from) {
-			if (touched.size > 0) {
-				options.preview(liveColorRevertPatch<P>(from, touched));
-				touched.clear();
-			}
-		},
-		commit(hex, from) {
-			touched.clear();
-			const patch = options.patch(from, hex);
-			if (patch) {
-				options.commit(patch);
-			}
-		},
-		remember: (hex) => options.remember(hex),
-	});
 }
 
 /**

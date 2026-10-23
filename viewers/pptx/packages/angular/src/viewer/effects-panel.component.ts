@@ -14,8 +14,8 @@
  *   [element]     : the selected PptxElement (required)
  *   (patch)       : emits a Partial<PptxElement> for the orchestrator to
  *                   commit via EditorStateService.updateElement
- *   (preview)     : emits a colour drag's live Partial<PptxElement>, for
- *                   EditorStateService.previewElement (no undo step)
+ *   (preview)     : emits a colour drag's live shape-style patch and the id of
+ *                   the element it is for, to merge with no undo step
  *
  * @module viewer/effects-panel
  */
@@ -37,6 +37,7 @@ import { InspectorFieldsComponent } from './inspector-fields.component';
 			class="pptx-ng-fx"
 			[sections]="sections"
 			[target]="shapeStyle()"
+			[targetKey]="element().id"
 			(patch)="onEffectPatch($event)"
 			(preview)="onEffectPreview($event)"
 		/>
@@ -51,8 +52,11 @@ export class EffectsPanelComponent {
 	 * The orchestrator should call EditorStateService.updateElement(slideIndex, element().id, patch).
 	 */
 	readonly patch = output<Partial<PptxElement>>();
-	/** Emits a colour drag's live patch, to apply without an undo step. */
-	readonly preview = output<Partial<PptxElement>>();
+	/**
+	 * Emits a colour drag's live shape-style patch with the id of the element it
+	 * is for (the selection, or one the drag has left), to merge without an undo step.
+	 */
+	readonly preview = output<{ patch: Partial<ShapeStyle>; target: string }>();
 
 	protected readonly sections = SHAPE_EFFECT_SECTIONS;
 
@@ -67,8 +71,8 @@ export class EffectsPanelComponent {
 		this.patch.emit(shapeQuickStylePatch(this.element(), patch));
 	}
 
-	/** Merge an effect colour drag's live shape-style patch into the element. */
-	protected onEffectPreview(patch: Partial<ShapeStyle>): void {
-		this.preview.emit(shapeQuickStylePatch(this.element(), patch));
+	/** Pass an effect colour drag's shade up as it is: the inspector merges it into its element. */
+	protected onEffectPreview(preview: { patch: Partial<ShapeStyle>; target: string }): void {
+		this.preview.emit(preview);
 	}
 }

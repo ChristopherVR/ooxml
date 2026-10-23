@@ -49,9 +49,15 @@ function onEffectPatch(patch: Partial<ShapeStyle>): void {
 
 const preview = injectInspectorPreview();
 
-/** An effect colour drag's live shade: on the slide at once, no undo step. */
-function onEffectPreview(patch: Partial<ShapeStyle>): void {
-	preview?.(shapeQuickStylePatch(props.element, patch));
+/**
+ * An effect colour drag's live shade, merged into the style of the element it is
+ * for (the current one, or one the drag has left): on the slide at once, no undo step.
+ */
+function onEffectPreview(patch: Partial<ShapeStyle>, target: string): void {
+	const owner = preview?.element(target);
+	if (owner) {
+		preview?.preview(shapeQuickStylePatch(owner, patch), target);
+	}
 }
 
 /**
@@ -99,6 +105,7 @@ function onOpacity(value: string): void {
 			<InspectorFields
 				:sections="SHAPE_EFFECT_SECTIONS"
 				:target="shapeStyle"
+				:target-key="props.element.id"
 				@patch="onEffectPatch"
 				@preview="onEffectPreview"
 			/>

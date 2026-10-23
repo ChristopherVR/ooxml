@@ -1,16 +1,12 @@
 <script setup lang="ts" generic="T, P">
 import {
-	createLiveColorPatchInput,
+	createInspectorColorFields,
 	handleLiveColorEvent,
 	inspectorFieldPatch,
 	inspectorTogglePatch,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
-import type {
-	InspectorFieldValue,
-	InspectorSectionDescriptor,
-	LiveColorInput,
-} from 'ooxml-ui/pptx';
+import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -23,21 +19,28 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
  * from the descriptors, so this SFC only maps them onto the template. A colour
  * field previews while its native picker is dragged (`preview`, no undo step)
  * and commits once when the pick settles (`patch`, plus the "Recent colours"
- * list), through the shared `createLiveColorPatchInput`.
+ * list), through the shared `createInspectorColorFields`. `targetKey` names the
+ * element `target` belongs to, so a field tells a new selection from a
+ * re-render of its own drag.
  */
 const props = withDefaults(
 	defineProps<{
 		sections: readonly InspectorSectionDescriptor<T, P>[];
 		target: T;
+		/** The identity of the element `target` belongs to (its id), for the colour fields. */
+		targetKey?: string;
 		disabled?: boolean;
 	}>(),
-	{ disabled: false },
+	{ disabled: false, targetKey: '' },
 );
 
 const emit = defineEmits<{
 	patch: [patch: P];
-	/** A colour drag's live patch: apply it without an undo step. */
-	preview: [patch: P];
+	/**
+	 * A colour drag's live patch for the element `target` names (the current one,
+	 * or one the drag has left): apply it without an undo step.
+	 */
+	preview: [patch: P, target: string];
 }>();
 
 const { t } = useI18n();
@@ -59,31 +62,18 @@ function onToggle(sectionId: string, on: boolean): void {
 	}
 }
 
-/** One live colour controller per colour field, created on its first event. */
-const colorInputs = new Map<string, LiveColorInput>();
+/** One live colour controller per colour field (shared `createInspectorColorFields`). */
+const colorField = createInspectorColorFields<T, P>({
+	sections: () => props.sections,
+	target: () => props.target,
+	targetKey: () => props.targetKey,
+	preview: (patch, target) => emit('preview', patch, target),
+	commit: (patch) => emit('patch', patch),
+	remember: (hex) => recentColors?.push(hex),
+});
 
 function onColor(sectionId: string, fieldId: string, event: Event): void {
-	const key = `${sectionId}.${fieldId}`;
-	let control = colorInputs.get(key);
-	if (!control) {
-		control = createLiveColorPatchInput<T, P & object>({
-			read: () => {
-				const field = views.value
-					.find((section) => section.id === sectionId)
-					?.fields.find((candidate) => candidate.id === fieldId);
-				return field && { key, color: String(field.value), state: props.target };
-			},
-			patch: (target, hex) =>
-				inspectorFieldPatch(props.sections, sectionId, fieldId, target, hex) as
-					| (P & object)
-					| undefined,
-			preview: (patch) => emit('preview', patch),
-			commit: (patch) => emit('patch', patch),
-			remember: (hex) => recentColors?.push(hex),
-		});
-		colorInputs.set(key, control);
-	}
-	handleLiveColorEvent(control, event);
+	handleLiveColorEvent(colorField(sectionId, fieldId), event);
 }
 
 const valueOf = (event: Event): string => (event.target as HTMLInputElement).value;

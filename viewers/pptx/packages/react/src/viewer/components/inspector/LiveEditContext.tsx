@@ -1,30 +1,33 @@
 /**
- * LiveEditContext: how an inspector control applies a live frame without an
- * undo step (a shade of a colour picker drag). `ViewerInspector` provides the
- * viewer history's `withoutUndoStep`, so the shades a drag passes run through
- * the control's normal edit callback but do not arm the undo tracker, and the
- * settled pick is the one undo step.
+ * LiveEditContext: how an inspector colour control shows a live frame (a
+ * shade of a colour picker drag) without an undo step. `ViewerInspector`
+ * provides the element the inspector edits and a silent element write (the
+ * viewer's element update inside the history's `withoutUndoStep`), so a drag
+ * previews and puts back exactly the element leaves it changes, and the settled
+ * pick goes through the control's normal edit callback as the one undo step.
  *
  * A context rather than a prop, for the same reason as `RecentColorsContext`:
  * the colour inputs sit several components below the pane, behind callbacks
  * that only know their own field. Without a provider (an isolated component)
- * every shade is an ordinary edit, as before.
+ * a colour input is a plain one: every shade is an ordinary edit, as before.
  */
+import type { PptxElement } from 'pptx-viewer-core';
 import { createContext, useContext } from 'react';
 
 export interface LiveEditContextValue {
-	/** Run `apply` so that its edits show at once but are no undo step. */
-	withoutUndoStep: (apply: () => void) => void;
+	/** The element the inspector edits, as last rendered; `null` with nothing selected. */
+	element: PptxElement | null;
+	/**
+	 * Merge `patch` into element `id` (the inspector's element, or one a drag has
+	 * left) at once, with no undo step and no dirty flag.
+	 */
+	previewElement: (id: string, patch: Partial<PptxElement>) => void;
 }
 
-const DEFAULT_VALUE: LiveEditContextValue = {
-	withoutUndoStep: (apply) => apply(),
-};
-
-const LiveEditContext = /* @__PURE__ */ createContext<LiveEditContextValue>(DEFAULT_VALUE);
+const LiveEditContext = /* @__PURE__ */ createContext<LiveEditContextValue | null>(null);
 
 export const LiveEditProvider = LiveEditContext.Provider;
 
-export function useLiveEdit(): LiveEditContextValue {
+export function useLiveEdit(): LiveEditContextValue | null {
 	return useContext(LiveEditContext);
 }

@@ -91,7 +91,7 @@ function harness(control: Control) {
 				updateElement: (id, patch) => ops.updateElement(id, patch),
 				previewElement: (id, patch) => ops.previewElement(id, patch),
 			});
-			provide(InspectorPreviewKey, inspector.onInspectorPreview);
+			provide(InspectorPreviewKey, inspector.inspectorPreview);
 			provide(RecentColorsKey, {
 				recent,
 				push: (hex: string) => {

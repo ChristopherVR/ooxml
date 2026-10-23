@@ -1,5 +1,5 @@
 import {
-	createLiveColorPatchInput,
+	createLiveColorInput,
 	fillColorOf,
 	shapeFillChange,
 	shapeOutlineChange,
@@ -12,6 +12,7 @@ import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
+import { findActiveElement } from './editor-active-elements';
 import type { ApplyToSelected } from './editor-apply-to-selected';
 import { patchShapeStyle } from './editor-format-mutations';
 import type { EditorOps } from './editor-operations';
@@ -25,7 +26,7 @@ export type LiveColorEventType = 'input' | 'change' | 'blur';
 
 /**
  * The inspector's native colour pickers, live while the user drags (shared
- * `createLiveColorPatchInput`): every shade is merged into the selected
+ * `createLiveColorInput`): every shade is merged into the selected
  * element without history, and the settled pick (`change`, or `blur` for a
  * drag no change ended) puts the previews back and commits once through
  * `applyToSelected`, so a drag is one undo step and one recent colour. A pick
@@ -35,8 +36,11 @@ export type LiveColorEventType = 'input' | 'change' | 'blur';
 export interface LiveColorActions {
 	/** One `input`, `change` or `blur` of the fill, line or text colour picker. */
 	liveColor(target: LiveColorTarget, type: LiveColorEventType, hex: string): void;
-	/** Show an effects colour drag's shape-style frame without an undo step. */
-	previewShapeStyle(patch: Partial<ShapeStyle>): void;
+	/**
+	 * Show an effects colour drag's shape-style frame without an undo step, on the
+	 * element `target` (the selection when omitted, or one the drag has left).
+	 */
+	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
 }
 
 export function createLiveColorActions(deps: {
@@ -52,16 +56,15 @@ export function createLiveColorActions(deps: {
 		colorOf: (el: PptxElement) => string,
 		patch: (el: PptxElement, hex: string) => Partial<PptxElement>,
 	): LiveColorInput =>
-		createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+		createLiveColorInput<PptxElement, Partial<PptxElement>>({
 			read: () => {
 				const el = editable();
-				return el && { key: el.id, color: colorOf(el), state: el };
+				return el && { key: el.id, color: colorOf(el), value: el };
 			},
 			patch,
-			preview: (next) => {
-				const el = editable();
-				if (el) {
-					ops.previewElement(el.id, next);
+			preview: (next, key) => {
+				if (store.get().editable) {
+					ops.previewElement(key, next);
 				}
 			},
 			commit: (next) => applyToSelected(() => next),
@@ -87,9 +90,10 @@ export function createLiveColorActions(deps: {
 		liveColor(target, type, hex) {
 			inputs[target][type](hex);
 		},
-		previewShapeStyle(patch) {
-			const el = editable();
-			if (el) {
+		previewShapeStyle(patch, target) {
+			const state = store.get();
+			const el = target ? findActiveElement(state, target) : editable();
+			if (state.editable && el) {
 				ops.previewElement(el.id, patchShapeStyle(el, patch));
 			}
 		},

@@ -350,7 +350,7 @@ export function buildChromeCallbacks(
 		setShapeStrokeWidth: (width) => deps.getEditActions().setShapeStrokeWidth(width),
 		setShapeStyle: (patch) => deps.getEditActions().setShapeStyle(patch),
 		liveColor: (target, type, hex) => deps.getEditActions().liveColor(target, type, hex),
-		previewShapeStyle: (patch) => deps.getEditActions().previewShapeStyle(patch),
+		previewShapeStyle: (patch, target) => deps.getEditActions().previewShapeStyle(patch, target),
 		setShapeType: (shapeType) => deps.getEditActions().setShapeType(shapeType),
 		pushRecentColor: (hex) => deps.getEditActions().pushRecentColor(hex),
 

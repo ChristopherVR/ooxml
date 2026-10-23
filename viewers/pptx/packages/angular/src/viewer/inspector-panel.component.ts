@@ -29,7 +29,7 @@ import type { ElementGeometryPatch, LiveColorInput, ThemeColorPickerCommit } fro
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
-	createLiveColorPatchInput,
+	createLiveColorInput,
 	ELEMENT_GEOMETRY_SECTIONS,
 	elementLockTogglePatch,
 	handleLiveColorEvent,
@@ -37,6 +37,7 @@ import {
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
 	shapeOutlineChange,
+	shapeQuickStylePatch,
 	textFontSizePtToPx,
 } from 'ooxml-ui/pptx';
 import type {
@@ -48,6 +49,7 @@ import type {
 	PptxElementAnimation,
 	PptxSmartArtData,
 	PptxThemeColorRef,
+	ShapeStyle,
 	SmartArtPptxElement,
 	TablePptxElement,
 } from 'pptx-viewer-core';
@@ -432,7 +434,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 					<pptx-effects-panel
 						[element]="el()"
 						(patch)="onPatch($event)"
-						(preview)="onPreview($event)"
+						(preview)="onEffectPreview($event)"
 					/>
 				</details>
 
@@ -1216,9 +1218,16 @@ export class InspectorPanelComponent {
 		} as Partial<PptxElement>);
 	}
 
-	/** Show a sub-panel's live frame (a colour drag shade) without an undo step. */
-	protected onPreview(patch: Partial<PptxElement>): void {
-		this.editor.previewElement(this.slideIndex(), this.el().id, patch);
+	/**
+	 * Show an effects colour drag's shade without an undo step, merged into the
+	 * style of the element it names (the selection, or one the drag has left).
+	 */
+	protected onEffectPreview(preview: { patch: Partial<ShapeStyle>; target: string }): void {
+		const slide = this.slideIndex();
+		const owner = this.editor.elementById(slide, preview.target);
+		if (owner) {
+			this.editor.previewElement(slide, preview.target, shapeQuickStylePatch(owner, preview.patch));
+		}
 	}
 
 	// ── Native colour pickers (live while dragging) ──────────────────────────
@@ -1228,7 +1237,7 @@ export class InspectorPanelComponent {
 	 * previews every shade on the slide (no undo step, no recent colour) and
 	 * settles as ONE undo step and one recent colour; one that ends where it
 	 * started is no undo step (its `change` still counts as a recent colour).
-	 * The decision is shared (`createLiveColorPatchInput`);
+	 * The decision is shared (`createLiveColorInput`);
 	 * each shade is a patch on the element from before the drag, a native pick
 	 * clears any theme ref like every custom colour.
 	 */
@@ -1254,14 +1263,16 @@ export class InspectorPanelComponent {
 		colorOf: (el: PptxElement) => string,
 		patch: (el: PptxElement, hex: string) => Partial<PptxElement>,
 	): LiveColorInput {
-		return createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+		return createLiveColorInput<PptxElement, Partial<PptxElement>>({
+			// The deck's own element, not the one last rendered: a drag rebases on it.
 			read: () => {
-				const cur = this.el();
-				return { key: cur.id, color: colorOf(cur), state: cur };
+				const id = this.el().id;
+				const cur = this.editor.elementById(this.slideIndex(), id) ?? this.el();
+				return { key: id, color: colorOf(cur), value: cur };
 			},
 			patch,
-			preview: (next) => this.onPreview(next),
-			commit: (next) => this.editor.updateElement(this.slideIndex(), this.el().id, next),
+			preview: (next, key) => this.editor.previewElement(this.slideIndex(), key, next),
+			commit: (next, key) => this.editor.updateElement(this.slideIndex(), key, next),
 			remember: (hex) => this.recentColors.push(hex),
 		});
 	}

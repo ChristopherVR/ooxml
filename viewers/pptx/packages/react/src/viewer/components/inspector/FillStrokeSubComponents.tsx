@@ -1,5 +1,6 @@
 import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef } from 'pptx-viewer-core';
+import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 import React from 'react';
 import { LuPipette } from 'react-icons/lu';
 
@@ -81,6 +82,7 @@ export function ColorPickerRow({
 	disabled,
 	prefix,
 	onChange,
+	styleChange,
 }: {
 	label: string;
 	value: string;
@@ -89,6 +91,12 @@ export function ColorPickerRow({
 	disabled?: boolean;
 	prefix: string;
 	onChange: (c: string, ref?: PptxThemeColorRef) => void;
+	/**
+	 * The shape-style change a native pick of `hex` makes (what `onChange` commits
+	 * for it), so a drag through the picker previews and is put back leaf by leaf
+	 * ({@link LiveColorInput}). Without it the native picker applies every shade.
+	 */
+	styleChange?: (hex: string, style: ShapeStyle) => Partial<ShapeStyle>;
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
@@ -109,9 +117,9 @@ export function ColorPickerRow({
 			<div className='flex items-center gap-1'>
 				<LiveColorInput
 					value={value}
-					selectedRef={selectedRef}
 					disabled={disabled}
 					onApply={onChange}
+					patch={styleChange && ((el, hex) => shapeStyleChangePatch(el, hex, styleChange))}
 					className={`h-8 flex-1 ${SEL} px-1 ${DIS}`}
 				/>
 				<button
@@ -161,6 +169,19 @@ export function ColorPickerRow({
 			<RecentColorsRow disabled={disabled} onCommit={commit} />
 		</label>
 	);
+}
+
+/** The element patch a {@link ColorPickerRow} style change makes for `hex`. */
+function shapeStyleChangePatch(
+	el: PptxElement,
+	hex: string,
+	change: (hex: string, style: ShapeStyle) => Partial<ShapeStyle>,
+): Partial<PptxElement> | undefined {
+	if (!hasShapeProperties(el)) {
+		return undefined;
+	}
+	const style = el.shapeStyle ?? {};
+	return { shapeStyle: { ...style, ...change(hex, style) } } as Partial<PptxElement>;
 }
 
 // ---------------------------------------------------------------------------

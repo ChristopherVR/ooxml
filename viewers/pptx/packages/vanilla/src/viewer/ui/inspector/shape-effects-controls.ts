@@ -41,7 +41,7 @@ export function createShapeEffectsControls(
 	const effects = createInspectorFields(doc, t, {
 		sections: SHAPE_EFFECT_SECTIONS,
 		onPatch: (patch) => handlers.setShapeStyle(patch),
-		onPreview: (patch) => handlers.previewShapeStyle(patch),
+		onPreview: (patch, target) => handlers.previewShapeStyle(patch, target),
 		onColorCommit: handlers.pushRecentColor,
 	});
 	el.appendChild(effects.el);
@@ -54,7 +54,7 @@ export function createShapeEffectsControls(
 	return {
 		el,
 		update(state) {
-			effects.update(state.shapeStyle, !state.canShape);
+			effects.update(state.shapeStyle, !state.canShape, state.elementId);
 			shapeType.setValue(state.shapeType ?? 'rect');
 			shapeType.el.hidden = !state.shapeType;
 			shapeType.setDisabled(!state.canShape);

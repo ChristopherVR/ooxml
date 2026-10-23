@@ -142,7 +142,14 @@ function Harness(): React.ReactElement {
 		[],
 	);
 	const recentValue = useMemo(() => ({ recentColors: recent, pushColor }), [recent, pushColor]);
-	const liveEdit = useMemo(() => ({ withoutUndoStep: history.withoutUndoStep }), [history]);
+	const liveEdit = useMemo(
+		() => ({
+			element: selectedElement,
+			previewElement: (id: string, patch: Partial<PptxElement>) =>
+				history.withoutUndoStep(() => ops.updateElementById(id, patch)),
+		}),
+		[history, ops, selectedElement],
+	);
 
 	return (
 		<LiveEditProvider value={liveEdit}>
@@ -165,7 +172,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
@@ -176,6 +183,7 @@ afterEach(() => {
 	act(() => root.unmount());
 	container.remove();
 	api = null;
+	vi.unstubAllGlobals();
 });
 
 type Control = 'fill' | 'line' | 'text' | 'glow';

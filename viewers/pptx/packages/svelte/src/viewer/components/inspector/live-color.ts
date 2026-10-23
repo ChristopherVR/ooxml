@@ -1,6 +1,6 @@
 /**
  * live-color.ts: the inspector's native colour pickers, live while the user
- * drags (shared `createLiveColorPatchInput`).
+ * drags (shared `createLiveColorInput`).
  *
  * Every shade of a drag is merged into the element with
  * `EditorState.previewElement` (no undo step, dirty flag or recent colour);
@@ -11,7 +11,7 @@
  *
  * @module viewer/components/inspector/live-color
  */
-import { createLiveColorPatchInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
+import { createLiveColorInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
 import type { LiveColorInput } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
@@ -28,13 +28,13 @@ export function liveElementColor(
 	colorOf: (el: PptxElement) => string,
 	patchOf: (el: PptxElement, hex: string) => Partial<PptxElement>,
 ): LiveColorInput {
-	return createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+	return createLiveColorInput<PptxElement, Partial<PptxElement>>({
 		read: () => {
 			const el = element();
-			return { key: el.id, color: colorOf(el), state: el };
+			return { key: el.id, color: colorOf(el), value: el };
 		},
 		patch: patchOf,
-		preview: (patch) => editor().previewElement(element().id, patch),
+		preview: (patch, key) => editor().previewElement(key, patch),
 		commit: (patch) => editor().patchSelected(patch),
 		remember: (hex) => editor().recordRecentColor(hex),
 	});

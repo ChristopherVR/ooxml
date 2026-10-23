@@ -7,7 +7,8 @@
  * onto its template. A colour field previews while the user drags through
  * the native picker (`preview`, no undo step) and commits once when the pick
  * settles (`patch`, plus the "Recent colours" list), through the shared
- * `createLiveColorPatchInput`.
+ * `createInspectorColorFields`. `targetKey` names the element the target belongs to,
+ * so a field tells a new selection from a re-render of its own drag.
  *
  * Selector: `pptx-inspector-fields`
  *
@@ -24,7 +25,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
-	createLiveColorPatchInput,
+	createInspectorColorFields,
 	handleLiveColorEvent,
 	inspectorFieldPatch,
 	inspectorTogglePatch,
@@ -34,7 +35,6 @@ import type {
 	InspectorFieldValue,
 	InspectorSectionDescriptor,
 	InspectorSectionView,
-	LiveColorInput,
 } from 'ooxml-ui/pptx';
 
 import { isCheckboxControl, isSelectControl } from './control-event-targets';
@@ -253,11 +253,15 @@ export class InspectorFieldsComponent<T, P> {
 
 	/** Emits the patch a control change produces. */
 	readonly patch = output<P>();
+	/** The identity of the element `target` belongs to (its id), for the colour fields. */
+	readonly targetKey = input('');
 	/**
-	 * Emits a colour field's live patch while its picker is dragged: apply it
-	 * WITHOUT an undo step. The drag's one `patch` follows when it settles.
+	 * Emits a colour field's live patch while its picker is dragged: apply it to
+	 * the element `target` names, WITHOUT an undo step. That can be an element
+	 * the selection has left, when its drag is put back. The drag's one `patch`
+	 * follows when it settles, for the current target.
 	 */
-	readonly preview = output<P>();
+	readonly preview = output<{ patch: P; target: string }>();
 
 	/** Optional: absent in a standalone unit test with no viewer-level DI tree. */
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
@@ -283,31 +287,18 @@ export class InspectorFieldsComponent<T, P> {
 		this.emit(inspectorFieldPatch(this.sections(), sectionId, fieldId, this.target(), raw));
 	}
 
-	/** One live colour controller per colour field, created on its first event. */
-	private readonly colorInputs = new Map<string, LiveColorInput>();
+	/** One live colour controller per colour field (shared `createInspectorColorFields`). */
+	private readonly colorField = createInspectorColorFields<T, P>({
+		sections: () => this.sections(),
+		target: () => this.target(),
+		targetKey: () => this.targetKey(),
+		preview: (patch, target) => this.preview.emit({ patch, target }),
+		commit: (patch) => this.patch.emit(patch),
+		remember: (hex) => this.recentColors?.push(hex),
+	});
 
 	protected onColor(sectionId: string, fieldId: string, event: Event): void {
-		const key = `${sectionId}.${fieldId}`;
-		let control = this.colorInputs.get(key);
-		if (!control) {
-			control = createLiveColorPatchInput<T, P & object>({
-				read: () => {
-					const field = this.views()
-						.find((section) => section.id === sectionId)
-						?.fields.find((candidate) => candidate.id === fieldId);
-					return field && { key, color: String(field.value), state: this.target() };
-				},
-				patch: (target, hex) =>
-					inspectorFieldPatch(this.sections(), sectionId, fieldId, target, hex) as
-						| (P & object)
-						| undefined,
-				preview: (patch) => this.preview.emit(patch),
-				commit: (patch) => this.patch.emit(patch),
-				remember: (hex) => this.recentColors?.push(hex),
-			});
-			this.colorInputs.set(key, control);
-		}
-		handleLiveColorEvent(control, event);
+		handleLiveColorEvent(this.colorField(sectionId, fieldId), event);
 	}
 
 	private emit(patch: P | undefined): void {

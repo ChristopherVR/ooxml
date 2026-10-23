@@ -1,6 +1,6 @@
 /**
  * useLiveElementColor: an inspector panel's native colour picker, live while
- * the user drags (shared `createLiveColorPatchInput`).
+ * the user drags (shared `createLiveColorInput`).
  *
  * Every shade is merged into the element through the injected preview channel
  * (`inspector-preview-context.ts`: no undo step, dirty flag or recent colour);
@@ -10,7 +10,7 @@
  * recent colour). Bind the returned listeners
  * with `v-on` on the `<input type="color">`.
  */
-import { createLiveColorPatchInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
+import { createLiveColorInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { injectInspectorPreview } from './inspector-preview-context';
@@ -33,13 +33,15 @@ export type LiveColorListeners = Record<'input' | 'change' | 'blur', (event: Eve
 export function useLiveElementColor(options: UseLiveElementColorOptions): LiveColorListeners {
 	const preview = injectInspectorPreview();
 	const recentColors = injectRecentColors();
-	const control = createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+	const control = createLiveColorInput<PptxElement, Partial<PptxElement>>({
+		// The deck's own element, not the one last rendered: a drag rebases on it.
 		read: () => {
-			const el = options.element();
-			return { key: el.id, color: options.colorOf(el), state: el };
+			const shown = options.element();
+			const el = preview?.element(shown.id) ?? shown;
+			return { key: el.id, color: options.colorOf(el), value: el };
 		},
 		patch: options.patch,
-		preview: (patch) => preview?.(patch),
+		preview: (patch, key) => preview?.preview(patch, key),
 		commit: (patch) => options.commit(patch),
 		remember: (hex) => recentColors?.push(hex),
 	});

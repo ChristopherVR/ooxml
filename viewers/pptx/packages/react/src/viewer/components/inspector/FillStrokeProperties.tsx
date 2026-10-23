@@ -1,3 +1,4 @@
+import { shapeFillChange } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { DEFAULT_FILL_COLOR } from '../../constants';
@@ -134,6 +135,7 @@ export function FillStrokeProperties({
 					selectedRef={style?.fillColorRef}
 					disabled={line}
 					onChange={onSetFillColor}
+					styleChange={(hex) => shapeFillChange(hex)}
 				/>
 
 				{/* Gradient / Pattern / Image controls */}

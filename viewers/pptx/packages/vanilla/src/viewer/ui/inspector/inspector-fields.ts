@@ -1,5 +1,5 @@
 import {
-	createLiveColorPatchInput,
+	createInspectorColorFields,
 	inspectorFieldPatch,
 	inspectorTogglePatch,
 	resolveInspectorSections,
@@ -9,7 +9,6 @@ import type {
 	InspectorFieldView,
 	InspectorSectionDescriptor,
 	InspectorSectionView,
-	LiveColorInput,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -23,10 +22,11 @@ export interface InspectorFieldsOptions<T, P> {
 	/** Receives the patch a control change produces. */
 	onPatch(patch: P): void;
 	/**
-	 * Receives a colour field's live patch while its picker is dragged: apply it
+	 * Receives a colour field's live patch while its picker is dragged, for the
+	 * element `target` names (the current one, or one the drag has left): apply it
 	 * WITHOUT an undo step. The drag's one `onPatch` follows when it settles.
 	 */
-	onPreview?(patch: P): void;
+	onPreview?(patch: P, target: string): void;
 	/** A colour pick was committed (for the "Recent colours" list). */
 	onColorCommit?(hex: string): void;
 	/** Class of each section's box (default: the stacked `pptxv-inspector-fields-section`). */
@@ -35,8 +35,12 @@ export interface InspectorFieldsOptions<T, P> {
 
 export interface InspectorFieldsHandle<T> {
 	el: HTMLElement;
-	/** Repaint for the current value; rebuilds a section only when its shape changed. */
-	update(target: T, disabled?: boolean): void;
+	/**
+	 * Repaint for the current value; rebuilds a section only when its shape changed.
+	 * `key` names the element `target` belongs to, so a colour field tells a new
+	 * selection from a re-render of its own drag.
+	 */
+	update(target: T, disabled?: boolean, key?: string): void;
 }
 
 interface FieldHandle {
@@ -82,6 +86,7 @@ export function createInspectorFields<T, P>(
 	const el = createEl(doc, 'div', 'pptxv-inspector-fields');
 	const slots = new Map<string, SectionSlot>();
 	let current: T;
+	let currentKey = '';
 
 	const emit = (patch: P | undefined): void => {
 		if (patch !== undefined) {
@@ -91,33 +96,17 @@ export function createInspectorFields<T, P>(
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void =>
 		emit(inspectorFieldPatch(sections, sectionId, fieldId, current, raw));
 
-	// One live controller per colour field (shared `createLiveColorPatchInput`):
+	// One live controller per colour field (shared `createInspectorColorFields`):
 	// a drag previews through `onPreview` and settles as one `onPatch`. Kept
 	// outside the section slots, so a rebuilt section does not drop a drag.
-	const colorInputs = new Map<string, LiveColorInput>();
-	const colorInput = (sectionId: string, fieldId: string): LiveColorInput => {
-		const key = `${sectionId}.${fieldId}`;
-		let control = colorInputs.get(key);
-		if (!control) {
-			control = createLiveColorPatchInput<T, P & object>({
-				read: () => {
-					const field = resolveInspectorSections(sections, current)
-						.find((view) => view.id === sectionId)
-						?.fields.find((candidate) => candidate.id === fieldId);
-					return field && { key, color: String(field.value), state: current };
-				},
-				patch: (target, hex) =>
-					inspectorFieldPatch(sections, sectionId, fieldId, target, hex) as
-						| (P & object)
-						| undefined,
-				preview: (patch) => options.onPreview?.(patch),
-				commit: (patch) => options.onPatch(patch),
-				remember: (hex) => options.onColorCommit?.(hex),
-			});
-			colorInputs.set(key, control);
-		}
-		return control;
-	};
+	const colorInput = createInspectorColorFields<T, P>({
+		sections: () => sections,
+		target: () => current,
+		targetKey: () => currentKey,
+		preview: (patch, target) => options.onPreview?.(patch, target),
+		commit: (patch) => options.onPatch(patch),
+		remember: (hex) => options.onColorCommit?.(hex),
+	});
 
 	const buildField = (sectionId: string, field: InspectorFieldView): FieldHandle => {
 		const label = t(field.labelKey);
@@ -209,8 +198,9 @@ export function createInspectorFields<T, P>(
 
 	return {
 		el,
-		update(target, disabled = false) {
+		update(target, disabled = false, key = '') {
 			current = target;
+			currentKey = key;
 			const views = resolveInspectorSections(sections, target);
 			views.forEach((view, index) => {
 				let slot = slots.get(view.id);

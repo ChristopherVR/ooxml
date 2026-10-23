@@ -17,6 +17,7 @@ import type { ComputedRef, ShallowRef, Ref } from 'vue';
 import { computed } from 'vue';
 
 import { mergeElementAnimations, replaceSlideAnimations } from './animation-persistence';
+import type { InspectorPreview } from './inspector-preview-context';
 
 export interface UseInspectorWiringOptions {
 	slides: ShallowRef<PptxSlide[]>;
@@ -36,10 +37,10 @@ export interface UseInspectorWiringResult {
 	inspectorElementForPanels: ComputedRef<PptxElement | undefined>;
 	onInspectorUpdate: (patch: Partial<PptxElement>) => void;
 	/**
-	 * Show a live frame on the inspector's element without an undo step: the
-	 * panels' preview channel (`InspectorPreviewKey`).
+	 * The panels' live preview channel (`InspectorPreviewKey`): a frame on an
+	 * element without an undo step, and the element as the deck holds it now.
 	 */
-	onInspectorPreview: (patch: Partial<PptxElement>) => void;
+	inspectorPreview: InspectorPreview;
 	writeSlideAnimations: (animations: PptxSlide['animations']) => void;
 	/** The selected element's motion path, when it has one. */
 	selectedMotionPath: ComputedRef<string | undefined>;
@@ -103,12 +104,12 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		options.updateElement(el.id, patch);
 	}
 
-	function onInspectorPreview(patch: Partial<PptxElement>): void {
-		const el = inspectorElement.value;
-		if (el) {
-			options.previewElement?.(el.id, patch);
-		}
-	}
+	const inspectorPreview: InspectorPreview = {
+		preview: (patch, id) => options.previewElement?.(id, patch),
+		element: (id) =>
+			selectedElements.value.find((el) => el.id === id) ??
+			activeSlide.value?.elements.find((el) => el.id === id),
+	};
 
 	const selectedMotionPath = computed(() => {
 		const el = inspectorElement.value;
@@ -127,7 +128,7 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		inspectorElement,
 		inspectorElementForPanels,
 		onInspectorUpdate,
-		onInspectorPreview,
+		inspectorPreview,
 		writeSlideAnimations,
 		selectedMotionPath,
 		onMotionPathChange,

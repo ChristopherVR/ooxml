@@ -154,8 +154,11 @@ export interface InspectorHandlers {
 	 * recent colour (see `LiveColorActions`).
 	 */
 	liveColor(target: LiveColorTarget, type: LiveColorEventType, hex: string): void;
-	/** Show an effects colour drag's shape-style frame without an undo step. */
-	previewShapeStyle(patch: Partial<ShapeStyle>): void;
+	/**
+	 * Show an effects colour drag's shape-style frame without an undo step, on the
+	 * element `target` (the selection when omitted, or one the drag has left).
+	 */
+	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
 	setShapeType(shapeType: string): void;
 	/**
 	 * B6: fold a colour into the deck's "Recent colours" (`p:clrMru`) MRU list,
@@ -257,6 +260,8 @@ export interface InspectorHandlers {
 /** Selection-derived state the inspector reflects, computed by `buildInspectorState`. */
 export interface InspectorState {
 	hasSelection: boolean;
+	/** The selected element's id: what a live colour drag in the inspector belongs to. */
+	elementId?: string;
 	isLocked: boolean;
 	/** `a:picLocks/@noCrop`: may the selected picture's crop be adjusted? */
 	croppable: boolean;

@@ -1,58 +1,63 @@
 import { createLiveColorInput } from 'ooxml-ui/pptx';
 import type { LiveColorInput as LiveColorController } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef } from 'pptx-viewer-core';
+import type { PptxElement, PptxThemeColorRef } from 'pptx-viewer-core';
 import React, { useCallback, useRef } from 'react';
 
+import type { LiveEditContextValue } from './LiveEditContext';
 import { useLiveEdit } from './LiveEditContext';
 import { useRecentColors } from './RecentColorsContext';
 
-/** The controller of the component that last attached each input. */
-const controllers = new WeakMap<HTMLInputElement, { current: LiveColorController | null }>();
+/** How the component that last attached each input handles its native `change`. */
+const changeHandlers = new WeakMap<HTMLInputElement, { current: (hex: string) => void }>();
 
 /** One native `change` listener for every input, so attaching an input again adds nothing. */
 function settleOnChange(event: Event): void {
 	const input = event.currentTarget as HTMLInputElement;
-	controllers.get(input)?.current?.change(input.value);
+	changeHandlers.get(input)?.current(input.value);
 }
 
-interface Latest {
-	value: string;
-	selectedRef: PptxThemeColorRef | undefined;
-	onApply: (hex: string, ref?: PptxThemeColorRef) => void;
-	withoutUndoStep: (apply: () => void) => void;
-	pushColor: (hex: string) => void;
-}
-
-/** The input's controller, reading the latest props through `latest` on every event. */
-function liveController(latest: { current: Latest }): LiveColorController {
-	return createLiveColorInput<{ hex: string; ref: PptxThemeColorRef | undefined }>({
-		read: () => ({
-			key: 'color',
-			color: latest.current.value,
-			state: { hex: latest.current.value, ref: latest.current.selectedRef },
-		}),
-		preview: (hex) => latest.current.withoutUndoStep(() => latest.current.onApply(hex)),
-		restore: (from) =>
-			latest.current.withoutUndoStep(() => latest.current.onApply(from.hex, from.ref)),
-		commit: (hex) => latest.current.onApply(hex),
-		remember: (hex) => latest.current.pushColor(hex),
-	});
-}
+/** The patch a colour pick makes on an element. */
+export type LiveColorPatch = (el: PptxElement, hex: string) => Partial<PptxElement> | undefined;
 
 export interface LiveColorInputProps extends Omit<
 	React.InputHTMLAttributes<HTMLInputElement>,
 	'type' | 'value' | 'onChange' | 'onBlur'
 > {
-	/** The colour the model holds now. */
+	/** The colour the control shows now. */
 	value: string;
-	/** The theme ref `value` came from, put back when a drag settles where it started. */
-	selectedRef?: PptxThemeColorRef;
-	/**
-	 * Apply a colour through the control's normal edit path: each shade of a
-	 * drag (inside the viewer's `withoutUndoStep`, so it is no undo step), the
-	 * start colour and ref when a drag is put back, and the settled pick.
-	 */
+	/** Commit a pick through the control's normal edit path (one undo step). */
 	onApply: (hex: string, ref?: PptxThemeColorRef) => void;
+	/**
+	 * The patch the same pick makes on the inspector's element, which the drag's
+	 * shades are written with (silently) and put back from, leaf by leaf. Without
+	 * it, or outside the inspector, the input is a plain one: every shade goes
+	 * through `onApply`.
+	 */
+	patch?: LiveColorPatch;
+}
+
+interface Latest {
+	value: string;
+	onApply: (hex: string) => void;
+	patch: LiveColorPatch | undefined;
+	live: LiveEditContextValue | null;
+	pushColor: (hex: string) => void;
+}
+
+/** The input's controller, reading the latest props through `latest` on every event. */
+function liveController(latest: { current: Latest }): LiveColorController {
+	return createLiveColorInput<PptxElement, Partial<PptxElement>>({
+		read: () => {
+			const { live, value } = latest.current;
+			return live?.element
+				? { key: live.element.id, color: value, value: live.element }
+				: undefined;
+		},
+		patch: (el, hex) => latest.current.patch?.(el, hex),
+		preview: (patch, key) => latest.current.live?.previewElement(key, patch),
+		commit: (_patch, _key, hex) => latest.current.onApply(hex),
+		remember: (hex) => latest.current.pushColor(hex),
+	});
 }
 
 /**
@@ -62,7 +67,9 @@ export interface LiveColorInputProps extends Omit<
  * recent colour, the settled pick (native `change`, or `blur` for a drag no
  * change ended) is ONE undo step and one Recent Colors entry, and a drag that
  * settles where it started is no undo step (its `change` still counts as a
- * recent colour).
+ * recent colour). Putting a drag back writes the element's own leaves, so an
+ * element with no colour of its own keeps none. The drag belongs to the
+ * element it started on: a new selection never receives its pick.
  *
  * React's `onChange` runs for every native `input`, and React does not expose
  * the native `change` on its own, so that one is listened for directly, the
@@ -70,21 +77,29 @@ export interface LiveColorInputProps extends Omit<
  */
 export function LiveColorInput({
 	value,
-	selectedRef,
 	onApply,
+	patch,
 	...rest
 }: LiveColorInputProps): React.ReactElement {
-	const { withoutUndoStep } = useLiveEdit();
+	const live = useLiveEdit();
 	const { pushColor } = useRecentColors();
-	const latest = useRef<Latest>({ value, selectedRef, onApply, withoutUndoStep, pushColor });
-	latest.current = { value, selectedRef, onApply, withoutUndoStep, pushColor };
+	const latest = useRef<Latest>({ value, onApply, patch, live, pushColor });
+	latest.current = { value, onApply, patch, live, pushColor };
+	const isLive = Boolean(live && patch);
 	// Created once per component: a drag's state must survive the re-render each shade causes.
 	const controlRef = useRef<LiveColorController | null>(null);
 	controlRef.current ??= liveController(latest);
 	const control = controlRef.current;
+	const onChangeRef = useRef((hex: string) => {
+		if (latest.current.live && latest.current.patch) {
+			control.change(hex);
+		} else {
+			latest.current.pushColor(hex);
+		}
+	});
 	const attach = useCallback((input: HTMLInputElement | null) => {
 		if (input) {
-			controllers.set(input, controlRef);
+			changeHandlers.set(input, onChangeRef);
 			input.addEventListener('change', settleOnChange);
 		}
 	}, []);
@@ -94,8 +109,20 @@ export function LiveColorInput({
 			type='color'
 			value={value}
 			ref={attach}
-			onChange={(event) => control.input(event.target.value)}
-			onBlur={(event) => control.blur(event.target.value)}
+			onChange={(event) => {
+				if (!isLive) {
+					onApply(event.target.value);
+				} else if (event.nativeEvent.type === 'input') {
+					// React also reports a native `change` here when the value moved since its last
+					// render; that one is the settled pick, which the listener above already handles.
+					control.input(event.target.value);
+				}
+			}}
+			onBlur={(event) => {
+				if (isLive) {
+					control.blur(event.target.value);
+				}
+			}}
 		/>
 	);
 }

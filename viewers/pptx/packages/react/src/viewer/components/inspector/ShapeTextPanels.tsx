@@ -1,4 +1,5 @@
 import {
+	applyTextStyleUpdate,
 	shapeOutlineChange,
 	shouldShowAccessibilitySection,
 	textFontSizePtToPx,
@@ -30,6 +31,17 @@ interface ShapeTextPanelsProps {
 	onUpdateElement: (updates: Partial<PptxElement>) => void;
 	onUpdateElementStyle: (patch: Partial<ShapeStyle>) => void;
 	onUpdateTextStyle: (patch: Partial<TextStyle>) => void;
+}
+
+/**
+ * The patch a native text colour pick makes on an element: the same style update
+ * `onUpdateTextStyle` commits outside inline editing (body and runs), so the
+ * drag's shades look like its pick.
+ */
+function textColorPatch(el: PptxElement, hex: string): Partial<PptxElement> | undefined {
+	return hasTextProperties(el)
+		? applyTextStyleUpdate(el, { color: hex, colorRef: undefined }, null).patch
+		: undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,9 +139,9 @@ export function ShapeTextPanels({
 								disabled={!canEdit}
 								aria-label='Text Color'
 								value={normalizeHexColor(selectedElement.textStyle?.color, '#000000')}
-								selectedRef={selectedElement.textStyle?.colorRef}
 								className='w-full h-7 rounded border border-border bg-transparent cursor-pointer'
-								onApply={(hex, ref) => onUpdateTextStyle({ color: hex, colorRef: ref })}
+								onApply={(hex) => onUpdateTextStyle({ color: hex, colorRef: undefined })}
+								patch={textColorPatch}
 							/>
 						</label>
 						<div className='col-span-2'>

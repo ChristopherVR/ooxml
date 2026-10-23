@@ -7,19 +7,16 @@
 	 * markup. A colour field previews while its native picker is dragged
 	 * (`onpreview`, no undo step) and commits once when the pick settles
 	 * (`onpatch`, then `oncolorcommit` for the "Recent colours" list), through
-	 * the shared `createLiveColorPatchInput`.
+	 * the shared `createInspectorColorFields`. `targetKey` names the element the target
+	 * belongs to, so a field tells a new selection from a re-render of its drag.
 	 */
 	import {
-		createLiveColorPatchInput,
+		createInspectorColorFields,
 		inspectorFieldPatch,
 		inspectorTogglePatch,
 		resolveInspectorSections,
 	} from 'ooxml-ui/pptx';
-	import type {
-		InspectorFieldValue,
-		InspectorSectionDescriptor,
-		LiveColorInput,
-	} from 'ooxml-ui/pptx';
+	import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import { liveColorEvents } from './live-color';
@@ -30,14 +27,20 @@
 		onpatch,
 		onpreview,
 		oncolorcommit,
+		targetKey = '',
 		disabled = false,
 	}: {
 		sections: readonly InspectorSectionDescriptor<T, P>[];
 		target: T;
 		onpatch: (patch: P) => void;
-		/** A colour drag's live patch: apply it without an undo step. */
-		onpreview?: (patch: P) => void;
+		/**
+		 * A colour drag's live patch for the element `target` names (the selection, or one
+		 * the drag has left): apply it without an undo step.
+		 */
+		onpreview?: (patch: P, target: string) => void;
 		oncolorcommit?: (hex: string) => void;
+		/** The identity of the element `target` belongs to (its id), for the colour fields. */
+		targetKey?: string;
 		disabled?: boolean;
 	} = $props();
 	const t = useTranslator();
@@ -51,32 +54,15 @@
 		}
 	}
 
-	/** One live colour controller per colour field, created on first use. */
-	const colorInputs = new Map<string, LiveColorInput>();
-
-	function colorInput(sectionId: string, fieldId: string): LiveColorInput {
-		const key = `${sectionId}.${fieldId}`;
-		let control = colorInputs.get(key);
-		if (!control) {
-			control = createLiveColorPatchInput<T, P & object>({
-				read: () => {
-					const field = views
-						.find((section) => section.id === sectionId)
-						?.fields.find((candidate) => candidate.id === fieldId);
-					return field && { key, color: String(field.value), state: target };
-				},
-				patch: (value, hex) =>
-					inspectorFieldPatch(sections, sectionId, fieldId, value, hex) as
-						| (P & object)
-						| undefined,
-				preview: (patch) => onpreview?.(patch),
-				commit: (patch) => onpatch(patch),
-				remember: (hex) => oncolorcommit?.(hex),
-			});
-			colorInputs.set(key, control);
-		}
-		return control;
-	}
+	/** One live colour controller per colour field (shared `createInspectorColorFields`). */
+	const colorInput = createInspectorColorFields<T, P>({
+		sections: () => sections,
+		target: () => target,
+		targetKey: () => targetKey,
+		preview: (patch, owner) => onpreview?.(patch, owner),
+		commit: (patch) => onpatch(patch),
+		remember: (hex) => oncolorcommit?.(hex),
+	});
 
 	function onToggle(sectionId: string, on: boolean): void {
 		const patch = inspectorTogglePatch(sections, sectionId, target, on);
