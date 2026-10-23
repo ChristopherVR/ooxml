@@ -218,6 +218,29 @@ the row hides below 768px (and on landscape phones) where the compact toolbar ta
 over. The shadow root exposes `part="bar"`; the host carries `data-pptx-title-bar`
 (`data-pptx-quick-access="below"` for the second placement).
 
+## Chart and SmartArt elements
+
+PowerPoint's chart and SmartArt editing uses the shared `office-ui-*` elements (`src/ui/src/chart`,
+`src/ui/src/smartart`) under PowerPoint's own tags. A binding sets `state` (or the named property) and
+commits the event detail through its own update path; the elements never change the deck.
+
+| Tag                              | Built on                                    | Input                                                                             | Events (detail)                                                                              |
+| -------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `pptx-ui-chart-data-sheet`       | `office-ui-chart-data-sheet`                | `state` `{ chartData, canEdit, highlight?, locale?, translate? }`                 | `pptx-chart-data-change` (`{ chartData, edits }`)                                            |
+| `pptx-ui-chart-format-pane`      | `office-ui-chart-format-pane` (subclass)    | `chartData` (replaces `source`), `target`, `translateLabel`, `locale`, `disabled` | `chart-format-change` (`{ chartData, target }`), `chart-format-target`, `chart-format-close` |
+| `pptx-ui-smartart-text-pane`     | `office-ui-smartart-text-pane`              | `state` `{ smartArtData, canEdit, translate? }`                                   | `pptx-smartart-data-change` (`{ smartArtData, recentColor? }`)                               |
+| `pptx-ui-insert-chart-dialog`    | a dialog around `office-ui-chart-picker`    | `open`, `kind`, `translateLabel`                                                  | `insert-chart` (`{ kind, title, grouping }`), `dialog-close`                                 |
+| `pptx-ui-insert-smartart-dialog` | a dialog around `office-ui-smartart-picker` | `open`, `translateLabel`, `drawPreview`                                           | `insert-smartart` (`{ layout, items }`), `dialog-close`                                      |
+
+- `pptx-ui-chart-format-pane` is the only one that subclasses the shared element. It translates the
+  shared `chartFormat.*` captions to PowerPoint's `pptx.chartFormat.*` dictionary, applies each edit
+  through `applyChartFormatEdit` and emits its own event names.
+- The two insert dialogs are PowerPoint's own elements built from the shared pickers; the detail is
+  what the host uses to create the chart or SmartArt.
+- Word and Excel mount the same shared elements under their own dialogs and controllers (for example
+  `src/ui/src/docx/smartart-controller.ts` and `src/ui/src/xlsx/chart-format-pane.ts`); see
+  `src/ui/src/chart/README.md` and `src/ui/src/smartart/README.md`.
+
 ## Registration and supported versions
 
 The controls are internal viewer UI, not separately published custom elements.
