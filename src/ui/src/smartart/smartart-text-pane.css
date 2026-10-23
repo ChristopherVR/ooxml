@@ -1,0 +1,90 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	min-width: calc(var(--office-space-6) * 8);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius);
+	background: var(--office-background);
+	color: var(--office-foreground);
+	font-family: var(--office-font);
+	font-size: var(--office-font-size);
+	box-shadow: var(--office-shadow);
+}
+[hidden] {
+	display: none !important;
+}
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2);
+	padding: var(--office-space-1) var(--office-space-2);
+	border-bottom: var(--office-border-width) solid var(--office-border);
+	background: var(--office-surface);
+}
+.title {
+	font-weight: var(--office-font-weight-bold);
+}
+.close {
+	min-width: var(--office-control-height-xs);
+	min-height: var(--office-control-height-xs);
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.close:hover {
+	background: var(--office-surface);
+}
+.close:focus-visible,
+input:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-width) * -1);
+}
+.outline {
+	margin: 0;
+	padding: var(--office-space-2);
+	list-style: none;
+	overflow-y: auto;
+	max-height: calc(var(--office-space-6) * 10);
+}
+.line {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	padding-inline-start: calc(var(--level, 0) * var(--office-space-5));
+}
+.bullet {
+	flex: none;
+	width: calc(var(--office-space-1) * 1.5);
+	height: calc(var(--office-space-1) * 1.5);
+	border-radius: var(--office-radius-full);
+	background: var(--office-foreground);
+}
+input {
+	flex: 1;
+	min-width: 0;
+	min-height: var(--office-control-height-xs);
+	padding: 0 var(--office-space-1);
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+}
+input:hover {
+	border-color: var(--office-border);
+}
+.line[aria-selected='true'] input {
+	background: var(--office-selected);
+}
+input::placeholder {
+	color: var(--office-muted-foreground);
+}
+.empty {
+	margin: 0;
+	padding: var(--office-space-3);
+	color: var(--office-muted-foreground);
+}

@@ -11,7 +11,7 @@ import {
 	chartPaletteColors,
 	findChartColorPalette,
 	withinLinearTransform,
-} from './chart-color-palette-catalog';
+} from 'ooxml-core/chart';
 import { applyRibbonGalleryItem, buildRibbonGallery } from './gallery-registry';
 import { OFFICE_THEME_COLORS } from './gallery-theme';
 

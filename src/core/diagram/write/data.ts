@@ -235,3 +235,8 @@ function dataModelExtXml(drawingRelId: string | undefined): string {
 		`</dgm:extLst>`
 	);
 }
+
+/** `xml` with exactly one XML declaration (the built-in definitions carry one; others may not). */
+export function withDiagramXmlProlog(xml: string): string {
+	return /^\s*<\?xml\b/u.test(xml) ? xml : `${DIAGRAM_XML_PROLOG}\r\n${xml}`;
+}

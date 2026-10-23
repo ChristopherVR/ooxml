@@ -5,7 +5,14 @@ import { activeChart, activeSlicer, activeTable, activeTimeline } from 'ooxml-co
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
 import { CHART_TYPES } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
-import { chartColorGalleryItems, chartColorGallerySections } from '../../commands/chart-colors';
+import {
+	chartColorGalleryItems,
+	chartColorGallerySections,
+	chartQuickLayoutGalleryItems,
+	chartQuickLayoutGallerySections,
+	chartStyleGalleryItems,
+	chartStyleGallerySections,
+} from '../../commands/chart-design';
 
 export function tableDesignTab(): RibbonTab {
 	return {
@@ -191,6 +198,12 @@ export function chartDesignTab(): RibbonTab {
 				controls: [
 					{
 						kind: 'gallery',
+						command: 'chart.styles',
+						items: chartStyleGalleryItems,
+						sections: chartStyleGallerySections,
+					},
+					{
+						kind: 'gallery',
 						command: 'chart.colors',
 						items: chartColorGalleryItems,
 						sections: chartColorGallerySections,
@@ -201,6 +214,12 @@ export function chartDesignTab(): RibbonTab {
 				id: 'chart-layouts',
 				label: 'Chart Layouts',
 				controls: [
+					{
+						kind: 'gallery',
+						command: 'chart.quick-layout',
+						items: chartQuickLayoutGalleryItems,
+						sections: chartQuickLayoutGallerySections,
+					},
 					{ kind: 'button', command: 'chart.title', size: 'large' },
 					{ kind: 'toggle', command: 'chart.legend', size: 'large' },
 				],

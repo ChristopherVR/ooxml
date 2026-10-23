@@ -83,3 +83,18 @@
 .dve-smartart-notes[hidden] {
 	display: none;
 }
+/* The SmartArt text pane docks beside the page while a SmartArt is selected and the pane is open. */
+.dve-smartart-text-pane {
+	flex: none;
+	align-self: flex-start;
+	width: 260px;
+	max-width: 40%;
+	margin: 12px 12px 0 0;
+}
+.dve-smartart-text-pane[hidden] {
+	display: none;
+}
+.dve-smartart-dialog .dve-smartart-picker {
+	display: grid;
+	width: min(760px, 86vw);
+}

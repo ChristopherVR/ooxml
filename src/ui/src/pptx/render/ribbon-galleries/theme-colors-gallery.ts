@@ -9,7 +9,7 @@
  */
 import type { PptxThemeColorScheme } from 'ooxml-core/pptx';
 
-import { swatchStripSvg } from './chart-gallery-tiles';
+import { swatchStripSvg } from '../../../ribbon/color-preview';
 import type { RibbonGalleryModule } from './gallery-module';
 import {
 	colorSchemesEqual,

@@ -70,6 +70,38 @@ test('chart colours and styles apply and persist through save and reopen', async
 	await expect.poll(() => firstMarkFill(page)).toBe(recoloured);
 });
 
+/** How many chart titles the chart on the main slide paints. */
+async function titleCount(page: Page): Promise<number> {
+	return page.evaluate(
+		() =>
+			document
+				.querySelector('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
+				?.querySelectorAll('[data-chart-part="title"]').length ?? 0,
+	);
+}
+
+test('Quick Layout uses the shared gallery and its layout persists through save and reopen', async ({
+	page,
+}, testInfo) => {
+	await loadDeck(page, fixture('chart-gallery.pptx'));
+	await openChartDesign(page);
+	await gallery(page, 'chartQuickLayout').locator('[data-ribbon-gallery]').click();
+	const tiles = page.locator('[data-ribbon-gallery-popup] [data-gallery-item]');
+	await expect(tiles).toHaveCount(11);
+	// Layout 1 shows the title; Layout 11 is the same chart without one.
+	await tiles.nth(0).click();
+	await expect.poll(() => titleCount(page)).toBe(1);
+	await gallery(page, 'chartQuickLayout').locator('[data-ribbon-gallery]').click();
+	await expect(tiles.nth(0)).toHaveAttribute('aria-pressed', 'true');
+	await tiles.nth(10).click();
+	await expect.poll(() => titleCount(page)).toBe(0);
+	const saved = testInfo.outputPath('chart-quick-layout-saved.pptx');
+	await writeFile(saved, await downloadBytes(await savePptxViaBackstage(page)));
+	await loadDeck(page, saved);
+	await elementsOfType(page, 'chart').first().waitFor();
+	await expect.poll(() => titleCount(page)).toBe(0);
+});
+
 test('the chart properties lead with Title, Chart type and Grouping, one per row', async ({
 	page,
 }) => {

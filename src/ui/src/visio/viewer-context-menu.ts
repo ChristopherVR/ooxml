@@ -42,6 +42,18 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				icon: 'pencil',
 				action: { type: 'reveal', panel: 'edit', focusText: true },
 			},
+			{
+				id: 'ctx-chart-data',
+				label: 'Edit Data',
+				icon: 'grid',
+				action: { type: 'insert', item: 'chart-data' },
+			},
+			{
+				id: 'ctx-chart-format',
+				label: 'Format Chart...',
+				icon: 'fill',
+				action: { type: 'insert', item: 'chart-format' },
+			},
 			'-',
 			{
 				id: 'ctx-group',

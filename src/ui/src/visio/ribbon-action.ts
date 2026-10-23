@@ -52,8 +52,17 @@ export type VisioTextFeature =
 	| 'field'
 	| 'spelling'
 	| 'language';
-/** Insert-tab items that act on the page or the selected shape. */
-export type VisioInsertItem = 'picture' | 'chart' | 'link' | 'screen-tip';
+/**
+ * Insert-tab items that act on the page or the selected shape; `chart-data` and `chart-format`
+ * open Edit Data and Format Chart for a selected chart object.
+ */
+export type VisioInsertItem =
+	| 'picture'
+	| 'chart'
+	| 'chart-data'
+	| 'chart-format'
+	| 'link'
+	| 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
 export type VisioReviewCommand =
 	| 'check-accessibility'

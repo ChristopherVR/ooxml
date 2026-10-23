@@ -1,7 +1,8 @@
 /**
  * Chart Design > Change Colors: Colorful Palettes 1-4 and Monochromatic
  * Palettes 1-13 (`Chart.ChartColor` 10..26), resolved per series exactly as
- * PowerPoint derives them (see `chart-color-palette-catalog.ts`).
+ * PowerPoint derives them (`ooxml-core/chart` `color-palettes`); the tiles
+ * are the shared Chart Design gallery (`src/ui/src/chart/design-galleries`).
  *
  * A pick writes each series' colour explicitly, as PowerPoint does
  * (`c:ser/c:spPr/a:solidFill`); the core save path rewrites an existing
@@ -19,18 +20,17 @@
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
 import { clearSeriesColor } from '../chart-quick-action-styles';
-import type { ChartColorPalette } from './chart-color-palette-catalog';
 import {
 	CHART_COLOR_PALETTES,
 	chartPaletteColors,
 	findChartColorPalette,
-} from './chart-color-palette-catalog';
-import { swatchStripSvg } from './chart-gallery-tiles';
+	type ChartColorPalette,
+} from 'ooxml-core/chart';
+
+import { chartColorGallerySections } from '../../../chart/design-galleries';
 import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
 import type { RibbonGalleryContext, RibbonGalleryItem } from './gallery-types';
-
-const TILE = { width: 96, height: 14 };
 
 function chartDataOf(element: PptxElement | null): PptxChartData | undefined {
 	return element?.type === 'chart' ? element.chartData : undefined;
@@ -89,48 +89,34 @@ function appliedPaletteId(chartData: PptxChartData, ctx: RibbonGalleryContext): 
 	})?.id;
 }
 
-function item(
-	palette: ChartColorPalette,
-	ctx: RibbonGalleryContext,
-	appliedId: number | undefined,
-): RibbonGalleryItem {
-	const scheme = galleryColorScheme(ctx);
-	const count = palette.group === 'colorful' ? Math.max(palette.base.length, 6) : 6;
-	const label =
-		palette.group === 'colorful'
-			? `Colorful Palette ${palette.index}`
-			: `Monochromatic Palette ${palette.index}`;
-	return {
-		id: String(palette.id),
-		labelKey: `pptx.gallery.chartColors.${palette.group}`,
-		labelParams: { n: palette.index },
-		label,
-		previewSvg: swatchStripSvg(chartPaletteColors(palette, count, scheme), TILE),
-		applied: appliedId === palette.id,
-	};
-}
-
 export const CHART_COLORS_GALLERY: RibbonGalleryModule = {
 	build(ctx) {
 		const chartData = chartDataOf(ctx.element);
 		const appliedId = chartData ? appliedPaletteId(chartData, ctx) : undefined;
-		const section = (group: ChartColorPalette['group'], title: string) => ({
-			id: group,
-			titleKey: `pptx.gallery.chartColors.section.${group}`,
-			title,
-			columns: 1,
-			tileWidth: TILE.width,
-			tileHeight: TILE.height,
-			items: CHART_COLOR_PALETTES.filter((palette) => palette.group === group).map((palette) =>
-				item(palette, ctx, appliedId),
-			),
-		});
+		const sections = chartColorGallerySections(galleryColorScheme(ctx), appliedId).map(
+			(section) => ({
+				id: section.id,
+				titleKey: `pptx.gallery.chartColors.section.${section.id}`,
+				title: section.title,
+				columns: section.columns,
+				tileWidth: section.tileWidth,
+				tileHeight: section.tileHeight,
+				items: section.items.map((entry): RibbonGalleryItem => ({
+					id: entry.id,
+					labelKey: `pptx.gallery.chartColors.${section.id}`,
+					labelParams: entry.labelParams,
+					label: entry.label,
+					previewSvg: entry.previewSvg,
+					applied: entry.applied,
+				})),
+			}),
+		);
 		return {
 			id: 'chartColors',
 			labelKey: 'pptx.gallery.chartColors.title',
 			label: 'Change Colors',
 			disabled: !chartData || chartData.series.length === 0,
-			sections: [section('colorful', 'Colorful'), section('monochromatic', 'Monochromatic')],
+			sections,
 		};
 	},
 	apply(itemId, ctx) {
