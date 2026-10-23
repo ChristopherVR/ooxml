@@ -5,6 +5,7 @@
 // from xlsx `edit/chart-colors.ts`); the caller records the new palette id in the colour style part.
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../color-palettes';
+import { findChartStylePreset } from '../style-presets';
 import type { ChartSpace } from '../model';
 import type { ChartShapeProperties } from '../model-series';
 import { chartSeriesEntries, editChartSpace } from './draft';
@@ -75,6 +76,59 @@ export function applyChartColorPalette(space: ChartSpace, from: number, to: numb
 					radial ? chartPaletteSeriesColorChoice(next, at, points) : choice,
 				);
 				recolorShape(point.marker?.spPr, old, choice);
+			}
+		});
+	});
+}
+
+const srgb = (hex: string): DrawingColor => ({
+	kind: 'srgb',
+	value: hex.replace('#', '').toUpperCase(),
+	transforms: [],
+});
+
+const LINE_KINDS = new Set(['line', 'scatter', 'radar']);
+
+function paintShape(shape: ChartShapeProperties | undefined, color: DrawingColor, line: boolean) {
+	const next: ChartShapeProperties = shape ?? {};
+	if (line) next.line = { ...next.line, fill: { kind: 'solid', color } };
+	else next.fill = { kind: 'solid', color };
+	return next;
+}
+
+/**
+ * Applies a curated Chart Styles preset (`chart/style-presets`): mirrors its built-in style onto
+ * `c:style` and pins each series' preset colour (line-like charts on the outline), clearing the
+ * series' point and marker fill overrides so nothing shadows the new colours. Pie and doughnut
+ * charts that vary colours by point take the preset per point. Semantics: PowerPoint's Chart
+ * Styles quick action as this repository's PowerPoint editor applies it.
+ */
+export function applyChartStylePreset(space: ChartSpace, id: string): ChartSpace {
+	const preset = findChartStylePreset(id);
+	if (!preset) throw new RangeError(`No chart style preset ${id}`);
+	const colors = preset.colors();
+	const styled = setChartStyle(space, preset.styleId);
+	return editChartSpace(styled, (draft) => {
+		chartSeriesEntries(draft).forEach(({ group, series }, index) => {
+			const radial =
+				(group.kind === 'pie' || group.kind === 'doughnut') && group.varyColors !== false;
+			if (radial) {
+				const count = series.values?.cache?.pointCount ?? series.values?.cache?.points.length ?? 0;
+				const points = new Map(series.dataPoints.map((point) => [point.index ?? 0, point]));
+				for (let at = 0; at < count; at++) {
+					const point = points.get(at) ?? { index: at };
+					point.spPr = paintShape(point.spPr, srgb(colors[at % colors.length]!), false);
+					points.set(at, point);
+				}
+				series.dataPoints = [...points.values()].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+				return;
+			}
+			const line = LINE_KINDS.has(group.kind);
+			series.spPr = paintShape(series.spPr, srgb(colors[index % colors.length]!), line);
+			if (series.marker?.spPr) delete series.marker.spPr.fill;
+			for (const point of series.dataPoints) {
+				if (point.spPr) delete point.spPr.fill;
+				if (point.marker?.spPr) delete point.marker.spPr.fill;
 			}
 		});
 	});

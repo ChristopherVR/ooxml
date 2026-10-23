@@ -13,6 +13,8 @@ import {
 	type ChartDataLabelsEdit,
 	type ChartLegendEdit,
 } from './legend-labels';
+import { applyChartQuickLayout } from './quick-layout';
+import { applyChartColorPalette, applyChartStylePreset, setChartStyle } from './style';
 import type { ChartFormatTarget } from './target';
 import { setChartTargetFill, setChartTargetLine, setChartTargetTransparency } from './target-paint';
 
@@ -29,7 +31,15 @@ export type ChartEditIntent =
 	/** The chart's data labels, or one series' own labels. */
 	| { op: 'dataLabels'; seriesIndex?: number; edit: ChartDataLabelsEdit }
 	/** Series Options of the group holding series `seriesIndex`. */
-	| { op: 'groupOptions'; seriesIndex: number; edit: ChartGroupOptionsEdit };
+	| { op: 'groupOptions'; seriesIndex: number; edit: ChartGroupOptionsEdit }
+	/** A built-in chart style: 1..48 (`c:style`) or 101..148 (`c14:style`). */
+	| { op: 'style'; id: number }
+	/** A curated Chart Styles preset (`chart/style-presets`). */
+	| { op: 'stylePreset'; preset: string }
+	/** Change Colors: recolour from palette `from` to palette `to` (the caller records `to`). */
+	| { op: 'colorPalette'; from: number; to: number }
+	/** Quick Layout `layout` (1..11). */
+	| { op: 'quickLayout'; layout: number };
 
 /** Applies `intent`, returning a new model; throws like the operation it names. */
 export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent): ChartSpace {
@@ -52,5 +62,13 @@ export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent)
 			);
 		case 'groupOptions':
 			return setChartGroupOptions(space, intent.seriesIndex, intent.edit);
+		case 'style':
+			return setChartStyle(space, intent.id);
+		case 'stylePreset':
+			return applyChartStylePreset(space, intent.preset);
+		case 'colorPalette':
+			return applyChartColorPalette(space, intent.from, intent.to);
+		case 'quickLayout':
+			return applyChartQuickLayout(space, intent.layout);
 	}
 }
