@@ -3,7 +3,12 @@ import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { diagramsIn, loadDocx, type DocxDiagram, type DocumentModel } from './index';
-import { createDocxDiagram, editDocxDiagram, insertedDiagramPartNames } from './diagram-edit';
+import {
+	changeDocxDiagramLayout,
+	createDocxDiagram,
+	editDocxDiagram,
+	insertedDiagramPartNames,
+} from './diagram-edit';
 import { expectParagraph } from './test-support/access';
 
 const fixture = (name: string) =>
@@ -182,5 +187,35 @@ describe('editing SmartArt in a Word document', () => {
 		expect(inserted.layout?.uniqueId).toBe(diagram.layout!.uniqueId);
 		expect(inserted.inserted).toBeUndefined();
 		expect(inserted.issues.filter((issue) => issue.code !== 'DIAGRAM_DRAWING_ABSENT')).toEqual([]);
+	});
+
+	it('changes the layout: new definition, document point and no presentation tree', async () => {
+		const loaded = await loadDocx(fixture('smartart-word.docx'));
+		const diagram = diagramsIn(loaded.model.blocks)[0]!;
+		const process = 'urn:microsoft.com/office/officeart/2005/8/layout/process1';
+		const next = changeDocxDiagramLayout(diagram, process, 'process');
+		expect(changeDocxDiagramLayout(diagram, diagram.layout!.uniqueId)).toBe(diagram);
+		await expect(loaded.save(withFirstDiagram(loaded.model, next))).rejects.toThrow(
+			/layout definition is missing/u,
+		);
+		const definition = `<dgm:layoutDef xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram" uniqueId="${process}"/>`;
+		const saved = await loaded.save(
+			withFirstDiagram(loaded.model, next),
+			new Map([
+				[
+					'word/diagrams/layout1.xml',
+					{ bytes: new TextEncoder().encode(definition), contentType: 'application/xml' },
+				],
+			]),
+		);
+		const zip = await JSZip.loadAsync(saved);
+		expect(await zip.file('word/diagrams/layout1.xml')!.async('string')).toBe(definition);
+		const data = await zip.file('word/diagrams/data1.xml')!.async('string');
+		expect(data).toContain(`loTypeId="${process}"`);
+		expect(data).not.toContain('type="pres"');
+		expect(data).not.toContain('presOf');
+		const reloaded = diagramsIn((await loadDocx(saved)).model.blocks)[0]!;
+		expect(reloaded.layout?.uniqueId).toBe(process);
+		expect(texts(reloaded)).toEqual(texts(diagram));
 	});
 });

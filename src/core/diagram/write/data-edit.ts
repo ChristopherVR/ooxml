@@ -48,6 +48,31 @@ export interface DiagramDataEditOptions {
 	createModelId?: () => string;
 	/** Remove the `dsp:dataModelExt` link to the cached drawing. */
 	dropDrawingLink?: boolean;
+	/**
+	 * A new layout (Change Layout): the document point names it (`loTypeId`, `loCatId`) and every
+	 * presentation point and `presOf`/`presParOf` connection is removed, since they were laid out
+	 * for the old layout's nodes; Word rebuilds them.
+	 */
+	layout?: { uniqueId: string; category?: string | undefined };
+}
+
+/** Applies a new layout: names it on the document point and drops the presentation tree. */
+function switchLayout(
+	ptLst: XmlElement,
+	cxnLst: XmlElement,
+	docPoint: XmlElement,
+	layout: { uniqueId: string; category?: string | undefined },
+): void {
+	const prSet = child(docPoint, 'prSet');
+	if (prSet) {
+		prSet.setAttribute('loTypeId', layout.uniqueId);
+		if (layout.category) prSet.setAttribute('loCatId', layout.category);
+	}
+	for (const pt of elements(ptLst)) if (pointType(pt) === 'pres') ptLst.removeChild(pt);
+	for (const cxn of elements(cxnLst)) {
+		const type = cxn.getAttribute('type');
+		if (type === 'presOf' || type === 'presParOf') cxnLst.removeChild(cxn);
+	}
 }
 
 const child = (parent: XmlElement, local: string, ns: string = DGM): XmlElement | undefined =>
@@ -293,6 +318,7 @@ export function writeEditedDiagramData(
 		edge.setAttribute('sibTransId', sibTransId);
 		cxnLst.appendChild(edge);
 	}
+	if (options.layout) switchLayout(ptLst, cxnLst, docPoint as XmlElement, options.layout);
 	if (options.dropDrawingLink) dropDrawingExtension(model);
 	return buildXml(doc);
 }

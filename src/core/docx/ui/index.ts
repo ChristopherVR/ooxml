@@ -46,6 +46,7 @@ export * from './run-adapter';
 export * from './run-mark-properties';
 export * from './schema-marks';
 export * from './smartart-theme';
+export * from './smartart-approximate';
 export * from './table-render';
 export * from './table-visuals';
 export * from './theme/css-vars';

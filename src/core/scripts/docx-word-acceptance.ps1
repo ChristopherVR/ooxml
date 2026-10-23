@@ -7,7 +7,7 @@
 #    untouched, after node edits, and with SmartArt inserted from presets.
 # 2. Each file is opened in Word through COM. A file fails when Word throws (an unattended Word
 #    refuses a package it would have to repair), when the caption says "Repaired", when a SmartArt
-#    reports different node texts (`SmartArt.AllNodes`) than manifest.json, or when a node's text is
+#    reports different node texts (`SmartArt.AllNodes`) or layout than manifest.json, or when a node's text is
 #    missing from the picture Word draws for the diagram (`Range.EnhMetaFileBits`, the EMF Word
 #    renders: evidence that Word laid the diagram out from the data, not from a stale drawing; inline
 #    SmartArt only).
@@ -53,7 +53,11 @@ try {
 				$texts = @()
 				for ($i = 1; $i -le $nodes.Count; $i++) { $texts += [string]$nodes.Item($i).TextFrame2.TextRange.Text }
 				$seen += , $texts
-				$expect = @($want[$index])
+				$expect = @($want[$index].texts)
+				$layout = [string]$shape.SmartArt.Layout.Id
+				if ($want[$index].layout -and $layout -ne $want[$index].layout) {
+					$problems += "SmartArt $($index + 1): Word uses layout $layout, expected $($want[$index].layout)"
+				}
 				if (($texts -join '|') -ne ($expect -join '|')) {
 					$problems += "SmartArt $($index + 1): Word has [$($texts -join ', ')], expected [$($expect -join ', ')]"
 				}

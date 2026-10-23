@@ -15,7 +15,7 @@ import {
 import { createOfficeGuid } from '../crypto/uuid';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
-import type { Block } from './model';
+import type { Block, PendingMediaPart } from './model';
 import { buildRelationshipsXml, parseRelationships } from './package-parts';
 import { relationshipsPartFor } from './part-relationships';
 import type { RelationshipAllocator } from './relationship-allocator';
@@ -133,13 +133,15 @@ async function dropDrawingPart(zip: JSZip, relId: string, partName: string): Pro
 }
 
 /**
- * Writes the data parts of body diagrams whose nodes changed since `baseBlocks`, and drops their
- * cached drawings. Unchanged diagrams are not touched.
+ * Writes the data parts of body diagrams whose nodes or layout changed since `baseBlocks`, and
+ * drops their cached drawings. A changed layout also replaces the layout part with the definition
+ * supplied in `pendingMedia` under that part's name. Unchanged diagrams are not touched.
  */
 export async function applyDiagramEdits(
 	zip: JSZip,
 	blocks: Block[],
 	baseBlocks: Block[],
+	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 ): Promise<void> {
 	const base = new Map<string, DocxDiagram>();
 	for (const diagram of diagramsIn(baseBlocks))
@@ -149,12 +151,29 @@ export async function applyDiagramEdits(
 		const partName = diagram.parts.data?.partName;
 		const original = partName ? base.get(partName) : undefined;
 		if (!partName || !original || diagram.inserted || done.has(partName)) continue;
-		if (JSON.stringify(nodesOf(diagram)) === JSON.stringify(nodesOf(original))) continue;
+		const layoutId = diagram.layout?.uniqueId;
+		const relaid = Boolean(layoutId) && layoutId !== original.layout?.uniqueId;
+		if (!relaid && JSON.stringify(nodesOf(diagram)) === JSON.stringify(nodesOf(original))) continue;
 		done.add(partName);
 		const xml = await zip.file(partName)?.async('string');
 		if (xml === undefined) continue;
 		const drawing = original.parts.drawing;
-		zip.file(partName, writeEditedDiagramData(xml, nodesOf(diagram), { dropDrawingLink: true }));
+		const layoutPart = diagram.parts.layout?.partName;
+		const definition = layoutPart ? pendingMedia?.get(layoutPart) : undefined;
+		if (relaid && (!layoutPart || !definition))
+			throw new Error(
+				'The new SmartArt layout definition is missing; the layout cannot be changed.',
+			);
+		if (relaid && layoutPart && definition) zip.file(layoutPart, definition.bytes);
+		zip.file(
+			partName,
+			writeEditedDiagramData(xml, nodesOf(diagram), {
+				dropDrawingLink: true,
+				...(relaid && layoutId
+					? { layout: { uniqueId: layoutId, category: diagram.layout?.family } }
+					: {}),
+			}),
+		);
 		if (drawing) await dropDrawingPart(zip, drawing.relId, drawing.partName);
 	}
 }

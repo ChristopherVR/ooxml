@@ -140,7 +140,7 @@ export async function saveDocx(
 	if (model.pageColor !== binding?.base.pageColor) applyPageBackground(document, model.pageColor);
 	zip.file('word/document.xml', buildXml(document));
 	await writeNewRelationships(zip, 'word/document.xml', newRelationships, pendingMedia);
-	if (binding) await applyDiagramEdits(zip, model.blocks, binding.base.blocks);
+	if (binding) await applyDiagramEdits(zip, model.blocks, binding.base.blocks, pendingMedia);
 	await applyHeaderFooterEdits(
 		zip,
 		model,

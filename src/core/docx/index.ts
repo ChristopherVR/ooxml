@@ -32,6 +32,7 @@ export {
 } from './diagram';
 export { diagramsIn } from './diagram-document';
 export {
+	changeDocxDiagramLayout,
 	createDocxDiagram,
 	editDocxDiagram,
 	insertedDiagramPartNames,

@@ -3,7 +3,7 @@
 // Every file is written by `saveDocx` through `loadDocx(...).save`: the committed SmartArt fixtures
 // saved untouched, saved after node edits (text, add, remove, move, promote, demote), and with
 // SmartArt inserted from Insert SmartArt presets. `manifest.json` lists, per file, the node texts
-// Word must report for each SmartArt (`SmartArt.AllNodes`, tree order).
+// Word must report for each SmartArt (`SmartArt.AllNodes`, tree order) and its layout id.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -12,11 +12,14 @@ import {
 	BUILTIN_SMARTART_QUICK_STYLE_ID,
 	BUILTIN_SMARTART_QUICK_STYLE_XML,
 	builtinLayoutIdForPreset,
+	defaultBuiltinSmartArtLayoutId,
 	loadBuiltinSmartArtLayoutXml,
 } from '../diagram/builtin/index';
 import { DIAGRAM_INSERT_PRESETS } from '../diagram/catalogue';
+import { withDiagramXmlProlog } from '../diagram/write/data';
 import type { DiagramLayoutPreset } from '../diagram/model/data';
 import {
+	changeDocxDiagramLayout,
 	createDocxDiagram,
 	diagramsIn,
 	editDocxDiagram,
@@ -31,11 +34,9 @@ const out = process.argv[2];
 if (!out) throw new Error('usage: bun scripts/docx-acceptance-build.ts <output folder>');
 mkdirSync(out, { recursive: true });
 const fixtures = join(import.meta.dir, '..', 'docx', '__fixtures__');
-const manifest: Record<string, string[][]> = {};
+const manifest: Record<string, { texts: string[]; layout?: string }[]> = {};
 const xmlPart = (xml: string): PendingMediaPart => ({
-	bytes: new TextEncoder().encode(
-		`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n${xml}`,
-	),
+	bytes: new TextEncoder().encode(withDiagramXmlProlog(xml)),
 	contentType: 'application/xml',
 });
 
@@ -48,8 +49,11 @@ const diagramRuns = (model: DocumentModel) => {
 };
 
 /** Word's AllNodes order is the tree order the model keeps; empty nodes report ''. */
-const expected = (model: DocumentModel): string[][] =>
-	diagramsIn(model.blocks).map((diagram) => diagram.nodes.map((node) => node.text));
+const expected = (model: DocumentModel) =>
+	diagramsIn(model.blocks).map((diagram) => ({
+		texts: diagram.nodes.map((node) => node.text),
+		...(diagram.layout?.uniqueId ? { layout: diagram.layout.uniqueId } : {}),
+	}));
 
 async function write(
 	name: string,
@@ -173,6 +177,18 @@ await write('06-inserted-then-edited.docx', 'smartart-word.docx', (model, media)
 	let next = editDocxDiagram(image.diagram!, { kind: 'demote', nodeId: second!.id }).diagram;
 	next = editDocxDiagram(next, { kind: 'text', nodeId: first!.id, text: 'Edited block' }).diagram;
 	image.diagram = next;
+});
+await write('07-layout-changed.docx', 'smartart-word.docx', (model, media) => {
+	const image = diagramRuns(model)[0]!;
+	const layoutId = defaultBuiltinSmartArtLayoutId('process')!;
+	media.set(image.diagram!.parts.layout!.partName, xmlPart(loadBuiltinSmartArtLayoutXml(layoutId)));
+	const [first] = image.diagram!.nodes;
+	const relaid = changeDocxDiagramLayout(image.diagram!, layoutId, 'process');
+	image.diagram = editDocxDiagram(relaid, {
+		kind: 'text',
+		nodeId: first!.id,
+		text: 'Relaid',
+	}).diagram;
 });
 writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, '\t'));
 console.log(`wrote ${Object.keys(manifest).length} documents to ${out}`);

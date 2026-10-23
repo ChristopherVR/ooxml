@@ -137,6 +137,23 @@ export function editDocxDiagram(
 	};
 }
 
+/**
+ * The diagram laid out with another layout (SmartArt Design > Change Layout). The caller supplies
+ * the new definition as pending media under the diagram's layout part name; the save writes it,
+ * names it on the data part and drops the presentation points laid out for the old layout.
+ */
+export function changeDocxDiagramLayout(
+	diagram: DocxDiagram,
+	layoutId: string,
+	family?: DiagramLayoutType,
+): DocxDiagram {
+	if (diagram.layout?.uniqueId === layoutId) return diagram;
+	return {
+		...withDiagramNodes(diagram, diagram.nodes),
+		layout: { uniqueId: layoutId, ...(family ? { family } : {}) },
+	};
+}
+
 /** What Insert SmartArt needs to create a diagram. */
 export interface DocxDiagramCreation {
 	/** `uniqueId` of the layout definition supplied as the layout part. */
