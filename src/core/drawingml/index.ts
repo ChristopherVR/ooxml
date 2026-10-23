@@ -27,3 +27,14 @@ export * from './rect-path-gradient';
 export * from './theme-model';
 export * from './theme';
 export * from './theme-color';
+export * from './text-model';
+export {
+	parseDrawingFont,
+	parseDrawingHyperlink,
+	parseDrawingRunProperties,
+} from './read-run-properties';
+export * from './read-paragraph-properties';
+export * from './read-text-body';
+export * from './write-run-properties';
+export * from './write-paragraph-properties';
+export * from './write-text-body';
