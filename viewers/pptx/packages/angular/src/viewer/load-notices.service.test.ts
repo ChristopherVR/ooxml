@@ -92,6 +92,36 @@ describe('loadNoticesService', () => {
 			expect(service.bannerActive()).toBeTruthy();
 		});
 
+		it('ignores a password check that finishes after the next deck loads', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			const service = createService({ modifyVerifier: verifier } as unknown as PptxData);
+			service.editAnyway();
+
+			const pending = service.submitPassword('right-password');
+			service.resetForLoad();
+			await pending;
+
+			expect(service.lockActive()).toBeTruthy();
+			expect(service.bannerActive()).toBeTruthy();
+			expect(service.passwordPromptOpen()).toBeFalsy();
+			expect(service.checkingPassword()).toBeFalsy();
+		});
+
+		it('ignores a password check that finishes after Cancel', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			const service = createService({ modifyVerifier: verifier } as unknown as PptxData);
+			service.editAnyway();
+
+			const pending = service.submitPassword('right-password');
+			service.cancelPasswordPrompt();
+			await pending;
+
+			expect(service.lockActive()).toBeTruthy();
+			expect(service.passwordPromptOpen()).toBeFalsy();
+			expect(service.passwordError()).toBeNull();
+			expect(service.checkingPassword()).toBeFalsy();
+		});
+
 		it('resetForLoad re-arms the password prompt state for a newly loaded document', async () => {
 			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
 			const service = createService({ modifyVerifier: verifier } as unknown as PptxData);

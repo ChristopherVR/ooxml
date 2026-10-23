@@ -17,20 +17,20 @@
  */
 import { Injectable, computed, inject, signal } from '@angular/core';
 import {
-	checkModifyPassword,
 	compatibilityWarningToasts,
+	INITIAL_READ_ONLY_SESSION,
+	readOnlyBannerVisible,
+	readOnlyLocked,
 	readOnlyRecommendation,
+	readOnlySessionActions,
 } from 'ooxml-ui/pptx';
 import type {
 	CompatibilityWarningToast,
-	ModifyPasswordCheckResult,
 	ReadOnlyRecommendation,
+	ReadOnlySession,
 } from 'ooxml-ui/pptx';
 
 import { LoadContentService } from './load-content.service';
-
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok: false }>['reason'];
 
 @Injectable()
 export class LoadNoticesService {
@@ -43,26 +43,34 @@ export class LoadNoticesService {
 	readonly recommendation = computed<ReadOnlyRecommendation>(() =>
 		readOnlyRecommendation(this.loader?.parsedData()),
 	);
-	/** Whether the banner has been hidden ("Edit anyway" or "Dismiss") this load. */
-	private readonly bannerHidden = signal(false);
-	/** Whether "Edit anyway" has lifted the recommendation's editing lock this load. */
-	private readonly lockLifted = signal(false);
+	/**
+	 * What the user did about it this load: banner hidden, Edit anyway, the
+	 * password prompt and its check (the shared `read-only-session` model).
+	 */
+	private readonly session = signal<ReadOnlySession>(INITIAL_READ_ONLY_SESSION);
+	private readonly actions = readOnlySessionActions(
+		{ get: () => this.session(), set: (next) => this.session.set(next) },
+		{
+			recommendation: () => this.recommendation(),
+			modifyVerifier: () => this.loader?.parsedData()?.modifyVerifier ?? undefined,
+		},
+	);
 	/** Whether the read-only banner should render. */
-	readonly bannerActive = computed(
-		() => this.recommendation().kind !== null && !this.bannerHidden(),
+	readonly bannerActive = computed(() =>
+		readOnlyBannerVisible(this.recommendation(), this.session()),
 	);
 	/**
 	 * Whether the recommendation is still actively locking editing. Gates the
 	 * host viewer's `canEdit`, the same way the Protected View lock does.
 	 */
-	readonly lockActive = computed(() => this.recommendation().defaultReadOnly && !this.lockLifted());
+	readonly lockActive = computed(() => readOnlyLocked(this.recommendation(), this.session()));
 
 	/** Whether the inline password prompt should render instead of the two buttons. */
-	readonly passwordPromptOpen = signal(false);
+	readonly passwordPromptOpen = computed(() => this.session().passwordPromptOpen);
 	/** Reason the last password attempt failed, or null before any attempt / after success. */
-	readonly passwordError = signal<ModifyPasswordErrorReason | null>(null);
+	readonly passwordError = computed(() => this.session().passwordError);
 	/** True while {@link submitPassword}'s check is in flight (disables the form). */
-	readonly checkingPassword = signal(false);
+	readonly checkingPassword = computed(() => this.session().checkingPassword);
 
 	/**
 	 * "Edit anyway": lifts the recommendation's lock and hides the banner, or
@@ -70,48 +78,22 @@ export class LoadNoticesService {
 	 * password prompt instead of unlocking immediately.
 	 */
 	editAnyway(): void {
-		if (this.recommendation().requiresPassword) {
-			this.passwordPromptOpen.set(true);
-			this.passwordError.set(null);
-			return;
-		}
-		this.unlock();
+		this.actions.editAnyway();
 	}
 
 	/** "Dismiss": hides the banner but leaves any lock in place. */
 	dismissBanner(): void {
-		this.bannerHidden.set(true);
+		this.actions.dismiss();
 	}
 
 	/** Close the password prompt without unlocking. */
 	cancelPasswordPrompt(): void {
-		this.passwordPromptOpen.set(false);
-		this.passwordError.set(null);
+		this.actions.cancelPassword();
 	}
 
 	/** Check `password` against the deck's `modifyVerifier`; unlocks on a match. */
-	async submitPassword(password: string): Promise<void> {
-		this.checkingPassword.set(true);
-		try {
-			const result = await checkModifyPassword(
-				this.loader?.parsedData()?.modifyVerifier ?? undefined,
-				password,
-			);
-			if (result.ok) {
-				this.unlock();
-			} else {
-				this.passwordError.set(result.reason);
-			}
-		} finally {
-			this.checkingPassword.set(false);
-		}
-	}
-
-	private unlock(): void {
-		this.lockLifted.set(true);
-		this.bannerHidden.set(true);
-		this.passwordPromptOpen.set(false);
-		this.passwordError.set(null);
+	submitPassword(password: string): Promise<void> {
+		return this.actions.submitPassword(password);
 	}
 
 	// ── Compatibility-warning toasts ────────────────────────────────────────
@@ -154,11 +136,7 @@ export class LoadNoticesService {
 
 	/** Reset both notices' dismissed/lifted state for a newly loaded deck. */
 	resetForLoad(): void {
-		this.bannerHidden.set(false);
-		this.lockLifted.set(false);
-		this.passwordPromptOpen.set(false);
-		this.passwordError.set(null);
-		this.checkingPassword.set(false);
+		this.actions.reset();
 		this.dismissedToastIds.set(new Set());
 		this.notices.set([]);
 	}
