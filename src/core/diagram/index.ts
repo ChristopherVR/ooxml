@@ -12,6 +12,7 @@ export * from './write';
 export * from './attributes';
 export * from './layout-category';
 export * from './catalogue';
+export * from './strings/index';
 export * from './relationships';
 export * from './data-model';
 export * from './definitions';
