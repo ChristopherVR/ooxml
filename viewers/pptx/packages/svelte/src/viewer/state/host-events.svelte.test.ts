@@ -66,19 +66,18 @@ describe('onpresentationchange', () => {
 });
 
 describe('onautosavestatus', () => {
-	it('reports the public lifecycle, folding a disabled engine into idle', () => {
+	it('reports the public lifecycle of the shared engine, not the initial state', async () => {
 		const onautosavestatus = vi.fn();
-		const state = renderHarness({ onautosavestatus });
+		const state = renderHarness({ onautosavestatus, filePath: 'deck.pptx' });
 		expect(onautosavestatus).not.toHaveBeenCalled();
 
-		state.autosaveCtl.status = 'saving';
+		// No deck is loaded, so the write is skipped: saving, then back to idle.
+		const pending = state.autosaveCtl.save();
 		flushSync();
-		state.autosaveCtl.status = 'saved';
-		flushSync();
-		state.autosaveCtl.status = 'disabled';
+		await pending;
 		flushSync();
 
-		expect(onautosavestatus.mock.calls).toStrictEqual([['saving'], ['saved'], ['idle']]);
+		expect(onautosavestatus.mock.calls).toStrictEqual([['saving'], ['idle']]);
 	});
 });
 
