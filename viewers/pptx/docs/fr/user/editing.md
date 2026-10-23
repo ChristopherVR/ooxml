@@ -94,17 +94,17 @@ Il existe aussi un onglet **Dessin** avec des outils à main levée : **Sélecti
 
 L'onglet **Propriétés** de l'inspecteur change selon la sélection :
 
-| Lorsque vous sélectionnez... | Vous pouvez modifier...                                                                                                                             |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rien (la diapositive)        | Informations de la présentation, thème, taille des diapositives, transition et arrière-plan (couleur ou image).                                     |
-| Une forme ou un connecteur   | Position, taille, rotation, remplissage (uni, dégradé, motif, image) et contour.                                                                    |
-| Un élément texte             | Police, taille, couleur, alignement et espacement.                                                                                                  |
-| Une image                    | Rognage et retouches de l'image.                                                                                                                    |
-| Un tableau                   | Styles de tableau prédéfinis, largeurs de colonnes, hauteurs de lignes et mise en forme des cellules.                                               |
-| Un graphique                 | La grille de données des séries, le type de graphique, les axes, les étiquettes de données, les marqueurs, les courbes de tendance et les couleurs. |
-| SmartArt                     | Texte des nœuds et disposition.                                                                                                                     |
-| Média                        | Paramètres de lecture.                                                                                                                              |
-| Tout élément                 | **Animations** d'entrée, d'accentuation et de sortie, avec direction, minutage et déclencheur.                                                      |
+| Lorsque vous sélectionnez... | Vous pouvez modifier...                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rien (la diapositive)        | Informations de la présentation, thème, taille des diapositives, transition et arrière-plan (couleur ou image).                                      |
+| Une forme ou un connecteur   | Position, taille, rotation, remplissage (uni, dégradé, motif, image) et contour.                                                                     |
+| Un élément texte             | Police, taille, couleur, alignement et espacement.                                                                                                   |
+| Une image                    | Rognage et retouches de l'image.                                                                                                                     |
+| Un tableau                   | Styles de tableau prédéfinis, largeurs de colonnes, hauteurs de lignes et mise en forme des cellules.                                                |
+| Un graphique                 | La feuille de données des séries, le type de graphique, les axes, les étiquettes de données, les marqueurs, les courbes de tendance et les couleurs. |
+| SmartArt                     | Texte des nœuds et disposition.                                                                                                                      |
+| Média                        | Paramètres de lecture.                                                                                                                               |
+| Tout élément                 | **Animations** d'entrée, d'accentuation et de sortie, avec direction, minutage et déclencheur.                                                       |
 
 ![Panneau d'inspection affichant les propriétés d'un élément](/user-guide/editing-inspector-panel.jpg)
 
@@ -113,12 +113,12 @@ L'onglet **Propriétés** de l'inspecteur change selon la sélection :
 Les graphiques sont modifiables directement, sans quitter la diapositive :
 
 - **Survolez** une marque pour voir sa valeur dans une info-bulle.
-- **Cliquez** sur une barre, un point ou un secteur pour le sélectionner ; la cellule correspondante est mise en évidence dans la grille de données de l'inspecteur.
+- **Cliquez** sur une barre, un point ou un secteur pour le sélectionner ; la cellule correspondante est mise en évidence dans la feuille de données de l'inspecteur.
 - **Faites glisser** une barre ou un point vers le haut ou le bas pour modifier sa valeur (graphiques en barres, courbes, aires, nuages de points et bulles). Une pastille affiche la valeur pendant le glissement ; relâchez pour valider ou appuyez sur **Échap** pour annuler.
 - **Double-cliquez sur le titre du graphique** pour le renommer sur place.
 - La **feuille de données** du graphique, dans l'inspecteur, liste ses catégories et ses séries. Une valeur est validée lorsque vous appuyez sur **Entrée** ou **Tab** ou que vous passez à une autre cellule ; **Échap** rétablit la valeur précédente de la cellule. Une valeur qui n'est pas un nombre est refusée.
 
-Les marques des graphiques en secteurs, en anneau, en radar et empilés/empilés à 100 % se sélectionnent au clic ; modifiez leurs valeurs dans la grille de données. Chaque modification est une seule étape d'annulation. Tout cela fonctionne de la même façon dans tous les bindings (React, Vue, Angular, Svelte et vanilla).
+Les marques des graphiques en secteurs, en anneau, en radar et empilés/empilés à 100 % se sélectionnent au clic ; modifiez leurs valeurs dans la feuille de données. Chaque modification est une seule étape d'annulation. Tout cela fonctionne de la même façon dans tous les bindings (React, Vue, Angular, Svelte et vanilla).
 
 ### Modifier les tableaux
 

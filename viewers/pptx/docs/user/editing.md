@@ -113,12 +113,12 @@ The inspector's **Properties** tab changes with the selection:
 Charts are directly editable without leaving the slide:
 
 - **Hover** a mark to see its value in a tooltip.
-- **Click** a bar, point, or slice to select it; the matching cell highlights in the inspector's data grid.
+- **Click** a bar, point, or slice to select it; the matching cell highlights in the chart's data sheet in the inspector.
 - **Drag** a bar or point up or down to change its value (bar, line, area, scatter, and bubble charts). A badge shows the value while you drag; release to commit or press **Escape** to cancel.
 - **Double-click the chart title** to rename it in place.
 - The chart's **data sheet** in the inspector lists its categories and series. A value is committed when you press **Enter** or **Tab** or move to another cell, and **Escape** restores the cell's previous value. A value that is not a number is refused.
 
-Pie, doughnut, radar, and stacked/percent-stacked marks are click-to-select; edit their values in the data grid. Each change is a single undo step. All of this works the same way across every binding (React, Vue, Angular, Svelte, and vanilla).
+Pie, doughnut, radar, and stacked/percent-stacked marks are click-to-select; edit their values in the data sheet. Each change is a single undo step. All of this works the same way across every binding (React, Vue, Angular, Svelte, and vanilla).
 
 ### Editing tables
 
