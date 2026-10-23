@@ -56,3 +56,4 @@ export * from './marker-shape';
 export * from './edit/index';
 
 export * from './data-sheet';
+export * from './data-sheet-space';
