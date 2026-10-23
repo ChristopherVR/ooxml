@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { EditorState } from '../../editor/editor-state.svelte';
 import EffectsPanel from './EffectsPanel.svelte';
 import FillStrokeSection from './FillStrokeSection.svelte';
+import TextSection from './TextSection.svelte';
 
 /**
  * A live colour drag in the Svelte inspector stays on the element it started
@@ -113,6 +114,51 @@ describe('a fill drag the selection leaves', () => {
 	});
 });
 
+describe('a fill drag the selection leaves after another edit to the shape', () => {
+	it('puts the colour back on the shape as it is now, keeping that edit', () => {
+		const { editor, style, fire, select } = mountDeck(FillStrokeSection as unknown as Section);
+		fire(FILL, 'input', '#330000');
+		editor.slides = editor.slides.map((slide) => ({
+			...slide,
+			elements: slide.elements.map((el) =>
+				el.id === 'a'
+					? ({ ...el, shapeStyle: { ...style('a'), strokeWidth: 5 } } as PptxElement)
+					: el,
+			),
+		}));
+		select('b');
+		fire(FILL, 'change', '#330000');
+
+		expect(style('a')).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
+	});
+});
+
+describe('a text colour drag on text with no style of its own', () => {
+	it('puts back only the colour, keeping what another edit added to the new style', () => {
+		const { editor, fire } = mountDeck(TextSection as unknown as Section);
+		const colour = 'input.pptx-svelte-text-color';
+		const start = (document.querySelector(colour) as HTMLInputElement).value;
+		fire(colour, 'input', '#330000');
+		editor.slides = editor.slides.map((slide) => ({
+			...slide,
+			elements: slide.elements.map((el) =>
+				el.id === 'a'
+					? ({
+							...el,
+							textStyle: { ...(el as { textStyle?: object }).textStyle, bold: true },
+						} as PptxElement)
+					: el,
+			),
+		}));
+		fire(colour, 'input', start);
+		fire(colour, 'blur', start);
+
+		expect((editor.elementById('a') as { textStyle?: object }).textStyle).toStrictEqual({
+			bold: true,
+		});
+	});
+});
+
 describe('another edit to the dragged shape', () => {
 	it('survives the commit, and the one undo step keeps it', () => {
 		const { editor, style, fire } = mountDeck(FillStrokeSection as unknown as Section);
@@ -148,5 +194,24 @@ describe('an effects colour field whose target changes mid-drag', () => {
 
 		expect(style('b')).toStrictEqual(B_STYLE);
 		expect(style('a')).toMatchObject({ glowColor: '#ff0000', glowRadius: 8, glowOpacity: 0.5 });
+	});
+
+	it('puts the first target back as it is now, keeping an edit made there since', () => {
+		const { editor, style, fire, select } = mountDeck(EffectsPanel as unknown as Section);
+		const glow = '[data-testid="fx-glow-color"]';
+		fire(glow, 'input', '#00ff00');
+		editor.slides = editor.slides.map((slide) => ({
+			...slide,
+			elements: slide.elements.map((el) =>
+				el.id === 'a'
+					? ({ ...el, shapeStyle: { ...style('a'), glowRadius: 12 } } as PptxElement)
+					: el,
+			),
+		}));
+		select('b');
+		fire(glow, 'blur', '#00ff00');
+
+		expect(style('a')).toStrictEqual({ ...A_STYLE, glowRadius: 12 });
+		expect(style('b')).toStrictEqual(B_STYLE);
 	});
 });

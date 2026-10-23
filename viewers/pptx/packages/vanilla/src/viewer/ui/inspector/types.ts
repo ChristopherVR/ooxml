@@ -159,6 +159,8 @@ export interface InspectorHandlers {
 	 * element `target` (the selection when omitted, or one the drag has left).
 	 */
 	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
+	/** The shape style of element `id` now (what an effects drag the selection left goes back on). */
+	shapeStyleOf(id: string): ShapeStyle | undefined;
 	setShapeType(shapeType: string): void;
 	/**
 	 * B6: fold a colour into the deck's "Recent colours" (`p:clrMru`) MRU list,

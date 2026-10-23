@@ -1,10 +1,12 @@
 /**
  * LiveEditContext: how an inspector colour control shows a live frame (a
  * shade of a colour picker drag) without an undo step. `ViewerInspector`
- * provides the element the inspector edits and a silent element write (the
- * viewer's element update inside the history's `withoutUndoStep`), so a drag
- * previews and puts back exactly the element leaves it changes, and the settled
- * pick goes through the control's normal edit callback as the one undo step.
+ * provides the element the inspector edits, a silent element write (the
+ * viewer's element update inside the history's `withoutUndoStep`) and a read of
+ * any element as the deck holds it, so a drag previews and puts back exactly the
+ * element leaves it changes (on the element as it is then, also once the
+ * selection has left it), and the settled pick goes through the control's
+ * normal edit callback as the one undo step.
  *
  * A context rather than a prop, for the same reason as `RecentColorsContext`:
  * the colour inputs sit several components below the pane, behind callbacks
@@ -22,6 +24,11 @@ export interface LiveEditContextValue {
 	 * left) at once, with no undo step and no dirty flag.
 	 */
 	previewElement: (id: string, patch: Partial<PptxElement>) => void;
+	/**
+	 * Element `id` as the deck holds it now, or `undefined` when it is gone: what a
+	 * drag the selection has left is put back on (nothing is, when it is gone).
+	 */
+	elementById: (id: string) => PptxElement | undefined;
 }
 
 const LiveEditContext = /* @__PURE__ */ createContext<LiveEditContextValue | null>(null);

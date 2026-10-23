@@ -54,6 +54,7 @@ function liveController(latest: { current: Latest }): LiveColorController {
 				: undefined;
 		},
 		patch: (el, hex) => latest.current.patch?.(el, hex),
+		lookup: (key) => latest.current.live?.elementById(key),
 		preview: (patch, key) => latest.current.live?.previewElement(key, patch),
 		commit: (_patch, _key, hex) => latest.current.onApply(hex),
 		remember: (hex) => latest.current.pushColor(hex),

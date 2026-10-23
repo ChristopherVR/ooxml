@@ -112,6 +112,27 @@ describe('a fill drag the selection leaves', () => {
 	});
 });
 
+describe('a fill drag the selection leaves after another edit to the shape', () => {
+	it('puts the colour back on the shape as it is now, keeping that edit', () => {
+		const { editor, selected, style, fire } = harness();
+		fire('input', '#330000');
+		editor.slides.update((slides) =>
+			slides.map((slide) => ({
+				...slide,
+				elements: slide.elements.map((el) =>
+					el.id === 'a'
+						? ({ ...el, shapeStyle: { ...style('a'), strokeWidth: 5 } } as PptxElement)
+						: el,
+				),
+			})),
+		);
+		selected.set('b');
+		fire('change', '#330000');
+
+		expect(style('a')).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
+	});
+});
+
 describe('another edit to the dragged shape', () => {
 	it('survives the commit, and the one undo step keeps it', () => {
 		const { editor, style, fire } = harness();
@@ -140,7 +161,8 @@ describe('an effects colour field whose target changes mid-drag', () => {
 	const scope = { section: { id: 'glow' }, field: { id: 'color' } };
 	const fieldsSource = componentSource(import.meta.dirname, 'inspector-fields.component.ts');
 
-	it('does not write the first target onto the second', () => {
+	/** The generic renderer over two shapes' styles, showing `a` until `select` moves it. */
+	function fieldsHarness() {
 		const styles: Record<string, ShapeStyle> = {
 			a: { glowColor: '#ff0000', glowRadius: 8, glowOpacity: 0.5 },
 			b: { glowColor: '#ff0000', glowRadius: 3, glowOpacity: 0.9 },
@@ -160,6 +182,9 @@ describe('an effects colour field whose target changes mid-drag', () => {
 			>,
 			target: target as unknown as InputSignal<ShapeStyle | undefined>,
 			targetKey: targetKey as unknown as InputSignal<string>,
+			lookup: signal((key: string) => styles[key]) as unknown as InputSignal<
+				(key: string) => ShapeStyle | undefined
+			>,
 			disabled: signal(false) as unknown as InputSignal<boolean>,
 		});
 		// The parent's job: a patch goes to the element it names (the selection when none).
@@ -172,25 +197,41 @@ describe('an effects colour field whose target changes mid-drag', () => {
 		const outputs = fields as unknown as Record<string, OutputEmitterRef<unknown>>;
 		outputs['patch']!.subscribe((patch) => apply(patch as Partial<ShapeStyle>));
 		outputs['preview']!.subscribe((event) => {
-			const named = event as { patch?: Partial<ShapeStyle>; target?: string };
-			if (named.patch && named.target) {
-				apply(named.patch, named.target);
-			} else {
-				apply(event as Partial<ShapeStyle>);
-			}
+			const named = event as { patch: Partial<ShapeStyle>; target: string };
+			apply(named.patch, named.target);
 		});
 		const bindings = templateEventBindings(fieldsSource, 'class="pptx-ng-fields__color"');
-		const fire = (type: 'input' | 'blur', hex: string): void =>
-			fireTemplateEvent(fields, bindings, type, colorInputEvent(type, hex), scope);
+		return {
+			styles,
+			fire: (type: 'input' | 'blur', hex: string): void =>
+				fireTemplateEvent(fields, bindings, type, colorInputEvent(type, hex), scope),
+			select(id: string) {
+				current = id;
+				targetKey.set(id);
+				target.set(styles[id]);
+			},
+		};
+	}
 
+	it('does not write the first target onto the second', () => {
+		const { styles, fire, select } = fieldsHarness();
 		fire('input', '#00ff00');
 		fire('input', '#ff0000');
-		current = 'b';
-		targetKey.set('b');
-		target.set(styles['b']);
+		select('b');
 		fire('blur', '#ff0000');
 
 		expect(styles['b']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 3, glowOpacity: 0.9 });
 		expect(styles['a']).toMatchObject({ glowColor: '#ff0000', glowRadius: 8, glowOpacity: 0.5 });
+	});
+
+	it('puts the first target back as it is now, keeping an edit made there since', () => {
+		const { styles, fire, select } = fieldsHarness();
+		fire('input', '#00ff00');
+		styles['a'] = { ...styles['a'], glowRadius: 12 };
+		select('b');
+		fire('blur', '#00ff00');
+
+		expect(styles['a']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 12, glowOpacity: 0.5 });
+		expect(styles['b']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 3, glowOpacity: 0.9 });
 	});
 });

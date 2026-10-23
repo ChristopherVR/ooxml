@@ -24,6 +24,11 @@ export interface InspectorColorFieldsOptions<T, P> {
 	target(): T;
 	/** The identity of the element `target` belongs to (its id). */
 	targetKey(): string;
+	/**
+	 * What the descriptors read on element `key` now (its `target`), or `undefined` when
+	 * it is gone: what a drag the selection has left is put back on.
+	 */
+	lookup(key: string): T | undefined;
 	/** A shade, or the drag put back, for element `target`: apply it without an undo step. */
 	preview(patch: P, target: string): void;
 	/** The settled pick for the current target: the field's normal patch (one undo step). */
@@ -53,6 +58,7 @@ export function createInspectorColorFields<T, P>(
 					inspectorFieldPatch(options.sections(), sectionId, fieldId, target, hex) as
 						| (P & object)
 						| undefined,
+				lookup: (key) => options.lookup(key),
 				preview: (patch, target) => options.preview(patch, target),
 				commit: (patch) => options.commit(patch),
 				remember: (hex) => options.remember(hex),

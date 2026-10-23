@@ -41,6 +41,7 @@ export function useLiveElementColor(options: UseLiveElementColorOptions): LiveCo
 			return { key: el.id, color: options.colorOf(el), value: el };
 		},
 		patch: options.patch,
+		lookup: (key) => preview?.element(key),
 		preview: (patch, key) => preview?.preview(patch, key),
 		commit: (patch) => options.commit(patch),
 		remember: (hex) => recentColors?.push(hex),

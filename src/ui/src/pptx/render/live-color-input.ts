@@ -28,8 +28,9 @@
  * A drag belongs to one target (`key`, the element). It carries over to the next event only
  * while the control edits that target and the model still shows the drag's work: the value it
  * last read (a binding that has not re-rendered since), or a colour the drag itself put there.
- * When the control has moved to another target, the drag is put back on its own target (the
- * binding's writes are addressed by key) and the event that ends it is dropped: a pick made in
+ * When the control has moved to another target, the drag is put back on its own target as it
+ * is then (`lookup`; the binding's writes are addressed by key; nothing is written if the
+ * target is gone) and the event that ends it is dropped: a pick made in
  * a picker opened for one element never lands on another. When the target is the same but its
  * colour was changed by another hand (a theme swatch, an undo), the drag is dropped as it is,
  * since putting it back would overwrite that newer colour.
@@ -59,6 +60,12 @@ export interface LiveColorInputOptions<T, P extends object> {
 	read(): LiveColorSource<T> | undefined;
 	/** The patch that sets `hex` on `value`; `undefined` when `value` cannot take a colour. */
 	patch(value: T, hex: string): P | undefined;
+	/**
+	 * The target `key` as the model holds it now (the element by id, or the style a field
+	 * reads on it), or `undefined` when it is gone: what a drag the control has left is put
+	 * back on. A drag whose target cannot be found is not put back at all.
+	 */
+	lookup(key: string): T | undefined;
 	/**
 	 * Merge `patch` into the target `key` live: no undo step, dirty flag or recent colour. `key`
 	 * can name a target the control has left, when the drag started there is put back.
@@ -92,7 +99,7 @@ interface Drag<T> {
 	/** The start colour and every shade previewed since, normalised. */
 	readonly colors: Set<string>;
 	readonly leaves: Map<string, LiveColorLeaf>;
-	/** The target as last read: what the drag is put back on once the control has left it. */
+	/** The target as last read (a binding that has not re-rendered hands the same value again). */
 	last: T;
 }
 
@@ -125,8 +132,9 @@ export function createLiveColorInput<T, P extends object>(
 		if (!stale || (source && stale.key === source.key)) {
 			return false;
 		}
-		if (stale.leaves.size > 0) {
-			options.preview(liveColorRevertPatch<P>(stale.last, stale.leaves.values()), stale.key);
+		const now = stale.leaves.size > 0 ? options.lookup(stale.key) : undefined;
+		if (now !== undefined) {
+			options.preview(liveColorRevertPatch<P>(now, stale.leaves.values()), stale.key);
 		}
 		return true;
 	};

@@ -147,6 +147,28 @@ describe('a fill drag the selection leaves', () => {
 	});
 });
 
+describe('a fill drag the selection leaves after another edit to the shape', () => {
+	it('puts the colour back on the shape as it is now, keeping that edit', () => {
+		const view = mount();
+		view.fire(view.fillInput, 'input', '#330000');
+		const state = view.store.get();
+		view.store.set({
+			slides: state.slides.map((slide) => ({
+				...slide,
+				elements: slide.elements.map((el) =>
+					el.id === 'a'
+						? ({ ...el, shapeStyle: { ...view.style('a'), strokeWidth: 5 } } as PptxElement)
+						: el,
+				),
+			})),
+		});
+		view.select('b');
+		view.fire(view.fillInput, 'change', '#330000');
+
+		expect(view.style('a')).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
+	});
+});
+
 describe('another edit to the dragged shape', () => {
 	it('survives the commit, and the one undo step keeps it', () => {
 		const view = mount();
@@ -186,6 +208,27 @@ describe('an effects colour field whose target changes mid-drag', () => {
 			glowRadius: 8,
 			glowOpacity: 0.5,
 		});
+	});
+
+	it('puts the first target back as it is now, keeping an edit made there since', () => {
+		const view = mount();
+		view.fire(view.glowInput, 'input', '#00ff00');
+		const state = view.store.get();
+		view.store.set({
+			slides: state.slides.map((slide) => ({
+				...slide,
+				elements: slide.elements.map((el) =>
+					el.id === 'a'
+						? ({ ...el, shapeStyle: { ...view.style('a'), glowRadius: 12 } } as PptxElement)
+						: el,
+				),
+			})),
+		});
+		view.select('b');
+		view.fire(view.glowInput, 'blur', '#00ff00');
+
+		expect(view.style('a')).toStrictEqual({ ...A_STYLE, glowRadius: 12 });
+		expect(view.style('b')).toStrictEqual(B_STYLE);
 	});
 });
 

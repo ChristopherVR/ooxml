@@ -34,6 +34,7 @@ function editor(initial: Shape) {
 	const control = createLiveColorInput<Shape, Partial<Shape>>({
 		read: (): LiveColorSource<Shape> => ({ key: shown.id, color: shown.style.fill, value: shown }),
 		patch: (value, hex) => ({ style: { ...value.style, fill: hex, fillRef: undefined } }),
+		lookup: (key) => (key === shape.id ? shape : undefined),
 		preview(patch) {
 			silent.push(patch);
 			write(patch);
@@ -80,8 +81,12 @@ function deck() {
 	let selected = 'a';
 	const undo: Shape[] = [];
 	const recent: string[] = [];
+	// Like a binding's write by id: nothing happens for an element that is gone.
 	const write = (patch: Partial<Shape>, key: string): void => {
-		shapes.set(key, { ...shapes.get(key)!, ...patch });
+		const shape = shapes.get(key);
+		if (shape) {
+			shapes.set(key, { ...shape, ...patch });
+		}
 	};
 	const control = createLiveColorInput<Shape, Partial<Shape>>({
 		read: () => {
@@ -89,6 +94,7 @@ function deck() {
 			return { key: shape.id, color: shape.style.fill, value: shape };
 		},
 		patch: (value, hex) => ({ style: { ...value.style, fill: hex, fillRef: undefined } }),
+		lookup: (key) => shapes.get(key),
 		preview: (patch, key) => write(patch, key),
 		commit(patch, key) {
 			undo.push(shapes.get(key)!);
@@ -103,6 +109,14 @@ function deck() {
 		shape: (id: string) => shapes.get(id),
 		select(id: string) {
 			selected = id;
+		},
+		/** Another hand edits a shape's style (a collaborator, the assistant). */
+		edit(id: string, style: Partial<Shape['style']>) {
+			const shape = shapes.get(id)!;
+			shapes.set(id, { ...shape, style: { ...shape.style, ...style } });
+		},
+		remove(id: string) {
+			shapes.delete(id);
 		},
 	};
 }
@@ -232,6 +246,7 @@ describe('createLiveColorInput', () => {
 		const control = createLiveColorInput<null, object>({
 			read: () => undefined,
 			patch: () => ({}),
+			lookup: () => undefined,
 			preview: () => {
 				previews += 1;
 			},
@@ -289,6 +304,28 @@ describe('a drag the selection leaves', () => {
 		expect(d.shape('b')?.style).toStrictEqual({ fill: '#123456', fillRef: undefined, width: 7 });
 	});
 
+	it('is put back on the first target as it is now, keeping an edit made there after its last shade', () => {
+		const d = deck();
+		d.control.input('#330000');
+		d.edit('a', { width: 5 });
+		d.select('b');
+		d.control.change('#330000');
+
+		expect(d.shape('a')).toStrictEqual({ id: 'a', style: { ...START.style, width: 5 } });
+	});
+
+	it('writes nothing when the first target is gone', () => {
+		const d = deck();
+		const b = d.shape('b');
+		d.control.input('#330000');
+		d.remove('a');
+		d.select('b');
+		d.control.change('#330000');
+
+		expect(d.shape('a')).toBeUndefined();
+		expect(d.shape('b')).toStrictEqual(b);
+	});
+
 	it('is put back on blur too, without committing to the new target', () => {
 		const d = deck();
 		const b = d.shape('b');
@@ -325,6 +362,51 @@ describe('another edit to the same element while a drag runs', () => {
 	});
 });
 
+describe('a preview that creates an entry the target did not have', () => {
+	// A text colour on an element with no `textStyle`: the preview creates the whole object.
+	function bare() {
+		let value: { id: string; style?: Record<string, unknown> } = { id: 'a' };
+		const control = createLiveColorInput<typeof value, Partial<typeof value>>({
+			read: () => ({ key: 'a', color: String(value.style?.['fill'] ?? '#000000'), value }),
+			patch: (current, hex) => ({ style: { ...current.style, fill: hex } }),
+			lookup: () => value,
+			preview(patch) {
+				value = { ...value, ...patch };
+			},
+			commit: () => {},
+			remember: () => {},
+		});
+		return {
+			control,
+			get value() {
+				return value;
+			},
+			edit(style: Record<string, unknown>) {
+				value = { ...value, style: { ...value.style, ...style } };
+			},
+		};
+	}
+
+	it('puts back only what it added, keeping what another edit put inside since', () => {
+		const t = bare();
+		t.control.input('#330000');
+		t.edit({ bold: true });
+		t.control.input('#000000');
+		t.control.blur('#000000');
+
+		expect(t.value).toStrictEqual({ id: 'a', style: { bold: true } });
+	});
+
+	it('takes the entry away again when nothing else went into it', () => {
+		const t = bare();
+		t.control.input('#330000');
+		t.control.input('#000000');
+		t.control.blur('#000000');
+
+		expect(t.value.style).toBeUndefined();
+	});
+});
+
 describe('putting a drag back', () => {
 	it('removes the entries its previews added, an emptied theme ref included', () => {
 		let value: { style: Record<string, unknown> } = { style: { fill: '#000000' } };
@@ -333,6 +415,7 @@ describe('putting a drag back', () => {
 			patch: (current, hex) => ({
 				style: { ...current.style, fill: hex, ref: undefined, width: 1 },
 			}),
+			lookup: () => value,
 			preview(patch) {
 				value = { ...value, ...patch };
 			},
@@ -383,6 +466,7 @@ describe('the writes a drag makes', () => {
 		const control = createLiveColorInput<typeof value, Partial<typeof value>>({
 			read: () => ({ key: value.key, color: value.fill, value }),
 			patch: (_value, hex) => ({ fill: hex }),
+			lookup: () => value,
 			preview(patch, key) {
 				calls.push(`preview ${JSON.stringify(patch)} to ${key}`);
 				value = { ...value, ...patch };

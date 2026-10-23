@@ -7,8 +7,8 @@
  * onto its template. A colour field previews while the user drags through
  * the native picker (`preview`, no undo step) and commits once when the pick
  * settles (`patch`, plus the "Recent colours" list), through the shared
- * `createInspectorColorFields`. `targetKey` names the element the target belongs to,
- * so a field tells a new selection from a re-render of its own drag.
+ * `createInspectorColorFields`; `targetKey` and `lookup` let a field tell a new selection
+ * from a re-render of its own drag, and put a drag it left back on its element.
  *
  * Selector: `pptx-inspector-fields`
  *
@@ -255,11 +255,12 @@ export class InspectorFieldsComponent<T, P> {
 	readonly patch = output<P>();
 	/** The identity of the element `target` belongs to (its id), for the colour fields. */
 	readonly targetKey = input('');
+	/** What the descriptors read on element `key` now: a drag the selection left goes back on it. */
+	readonly lookup = input<(key: string) => T | undefined>(() => undefined);
 	/**
-	 * Emits a colour field's live patch while its picker is dragged: apply it to
-	 * the element `target` names, WITHOUT an undo step. That can be an element
-	 * the selection has left, when its drag is put back. The drag's one `patch`
-	 * follows when it settles, for the current target.
+	 * Emits a colour field's live patch while its picker is dragged, for the element `target`
+	 * names (one the selection has left, when its drag is put back), WITHOUT an undo step.
+	 * The drag's one `patch` follows when it settles, for the current target.
 	 */
 	readonly preview = output<{ patch: P; target: string }>();
 
@@ -292,6 +293,7 @@ export class InspectorFieldsComponent<T, P> {
 		sections: () => this.sections(),
 		target: () => this.target(),
 		targetKey: () => this.targetKey(),
+		lookup: (key) => this.lookup()(key),
 		preview: (patch, target) => this.preview.emit({ patch, target }),
 		commit: (patch) => this.patch.emit(patch),
 		remember: (hex) => this.recentColors?.push(hex),

@@ -34,6 +34,7 @@ export function liveElementColor(
 			return { key: el.id, color: colorOf(el), value: el };
 		},
 		patch: patchOf,
+		lookup: (key) => editor().elementById(key),
 		preview: (patch, key) => editor().previewElement(key, patch),
 		commit: (patch) => editor().patchSelected(patch),
 		remember: (hex) => editor().recordRecentColor(hex),

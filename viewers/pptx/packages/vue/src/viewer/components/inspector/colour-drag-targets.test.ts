@@ -7,9 +7,9 @@
  * commit and its undo step, and an effects colour field tells a new target
  * from a re-render of its own drag. Wired as `PowerPointViewer` wires it.
  */
-import { mount } from '@vue/test-utils';
+import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
 import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue';
 
@@ -20,6 +20,10 @@ import { useEditorOperations } from '../../composables/useEditorOperations';
 import { useInspectorWiring } from '../../composables/useInspectorWiring';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
+
+// Every wrapper goes after its test, a failing one too: the worker is shared.
+enableAutoUnmount(afterEach);
+afterAll(disableAutoUnmount);
 
 const A_STYLE: ShapeStyle = {
 	fillMode: 'solid',
@@ -117,7 +121,7 @@ function harness(panel: Component, selector: string) {
 		selectedElementIds.value = [id];
 		await nextTick();
 	};
-	return { slides, history, recent, fire, style, select, unmount: () => wrapper.unmount() };
+	return { slides, history, recent, fire, style, select };
 }
 
 describe('a fill drag the selection leaves', () => {
@@ -131,7 +135,26 @@ describe('a fill drag the selection leaves', () => {
 		expect(view.style('b')).toStrictEqual(B_STYLE);
 		expect(view.history.canUndo.value).toBeFalsy();
 		expect(view.recent.value).toStrictEqual([]);
-		view.unmount();
+	});
+});
+
+describe('a fill drag the selection leaves after another edit to the shape', () => {
+	it('puts the colour back on the shape as it is now, keeping that edit', async () => {
+		const view = harness(FillPanel, 'input.pptx-vue-fill-color');
+		await view.fire('input', '#330000');
+		view.slides.value = view.slides.value.map((slide) => ({
+			...slide,
+			elements: slide.elements.map((el) =>
+				el.id === 'a'
+					? ({ ...el, shapeStyle: { ...view.style('a'), strokeWidth: 5 } } as PptxElement)
+					: el,
+			),
+		}));
+		await nextTick();
+		await view.select('b');
+		await view.fire('change', '#330000');
+
+		expect(view.style('a')).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
 	});
 });
 
@@ -156,7 +179,6 @@ describe('another edit to the dragged shape', () => {
 		view.history.undo();
 		await nextTick();
 		expect(view.style('a')).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
-		view.unmount();
 	});
 });
 
@@ -174,6 +196,24 @@ describe('an effects colour field whose target changes mid-drag', () => {
 			glowRadius: 8,
 			glowOpacity: 0.5,
 		});
-		view.unmount();
+	});
+
+	it('puts the first target back as it is now, keeping an edit made there since', async () => {
+		const view = harness(EffectsPanel, '[data-testid="fx-glow-color"]');
+		await view.fire('input', '#00ff00');
+		view.slides.value = view.slides.value.map((slide) => ({
+			...slide,
+			elements: slide.elements.map((el) =>
+				el.id === 'a'
+					? ({ ...el, shapeStyle: { ...view.style('a'), glowRadius: 12 } } as PptxElement)
+					: el,
+			),
+		}));
+		await nextTick();
+		await view.select('b');
+		await view.fire('blur', '#00ff00');
+
+		expect(view.style('a')).toStrictEqual({ ...A_STYLE, glowRadius: 12 });
+		expect(view.style('b')).toStrictEqual(B_STYLE);
 	});
 });

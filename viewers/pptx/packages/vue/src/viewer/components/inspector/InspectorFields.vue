@@ -21,7 +21,8 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
  * and commits once when the pick settles (`patch`, plus the "Recent colours"
  * list), through the shared `createInspectorColorFields`. `targetKey` names the
  * element `target` belongs to, so a field tells a new selection from a
- * re-render of its own drag.
+ * re-render of its own drag, and `lookup` reads any element's target now, which
+ * a drag the selection left is put back on.
  */
 const props = withDefaults(
 	defineProps<{
@@ -29,9 +30,11 @@ const props = withDefaults(
 		target: T;
 		/** The identity of the element `target` belongs to (its id), for the colour fields. */
 		targetKey?: string;
+		/** What the descriptors read on element `key` now (none: a drag left is not put back). */
+		lookup?: (key: string) => T | undefined;
 		disabled?: boolean;
 	}>(),
-	{ disabled: false, targetKey: '' },
+	{ disabled: false, targetKey: '', lookup: () => undefined },
 );
 
 const emit = defineEmits<{
@@ -67,6 +70,7 @@ const colorField = createInspectorColorFields<T, P>({
 	sections: () => props.sections,
 	target: () => props.target,
 	targetKey: () => props.targetKey,
+	lookup: (key) => props.lookup(key),
 	preview: (patch, target) => emit('preview', patch, target),
 	commit: (patch) => emit('patch', patch),
 	remember: (hex) => recentColors?.push(hex),

@@ -8,7 +8,8 @@
 	 * (`onpreview`, no undo step) and commits once when the pick settles
 	 * (`onpatch`, then `oncolorcommit` for the "Recent colours" list), through
 	 * the shared `createInspectorColorFields`. `targetKey` names the element the target
-	 * belongs to, so a field tells a new selection from a re-render of its drag.
+	 * belongs to, so a field tells a new selection from a re-render of its drag, and
+	 * `lookup` reads any element's target now, which a drag it left is put back on.
 	 */
 	import {
 		createInspectorColorFields,
@@ -28,6 +29,7 @@
 		onpreview,
 		oncolorcommit,
 		targetKey = '',
+		lookup = () => undefined,
 		disabled = false,
 	}: {
 		sections: readonly InspectorSectionDescriptor<T, P>[];
@@ -41,6 +43,8 @@
 		oncolorcommit?: (hex: string) => void;
 		/** The identity of the element `target` belongs to (its id), for the colour fields. */
 		targetKey?: string;
+		/** What the descriptors read on element `key` now (none: a drag left is not put back). */
+		lookup?: (key: string) => T | undefined;
 		disabled?: boolean;
 	} = $props();
 	const t = useTranslator();
@@ -59,6 +63,7 @@
 		sections: () => sections,
 		target: () => target,
 		targetKey: () => targetKey,
+		lookup: (key) => lookup(key),
 		preview: (patch, owner) => onpreview?.(patch, owner),
 		commit: (patch) => onpatch(patch),
 		remember: (hex) => oncolorcommit?.(hex),

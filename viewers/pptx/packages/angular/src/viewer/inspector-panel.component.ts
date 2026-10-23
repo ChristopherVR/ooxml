@@ -433,6 +433,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 					</summary>
 					<pptx-effects-panel
 						[element]="el()"
+						[lookup]="elementLookup"
 						(patch)="onPatch($event)"
 						(preview)="onEffectPreview($event)"
 					/>
@@ -1218,6 +1219,10 @@ export class InspectorPanelComponent {
 		} as Partial<PptxElement>);
 	}
 
+	/** The deck's element `id` now: what a colour drag the selection left goes back on. */
+	protected readonly elementLookup = (id: string): PptxElement | undefined =>
+		this.editor.elementById(this.slideIndex(), id);
+
 	/**
 	 * Show an effects colour drag's shade without an undo step, merged into the
 	 * style of the element it names (the selection, or one the drag has left).
@@ -1271,6 +1276,7 @@ export class InspectorPanelComponent {
 				return { key: id, color: colorOf(cur), value: cur };
 			},
 			patch,
+			lookup: (key) => this.elementLookup(key),
 			preview: (next, key) => this.editor.previewElement(this.slideIndex(), key, next),
 			commit: (next, key) => this.editor.updateElement(this.slideIndex(), key, next),
 			remember: (hex) => this.recentColors.push(hex),

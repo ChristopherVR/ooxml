@@ -49,6 +49,12 @@ function onEffectPatch(patch: Partial<ShapeStyle>): void {
 
 const preview = injectInspectorPreview();
 
+/** The shape style of element `id` now: what a drag the selection left is put back on. */
+function styleOf(id: string): ShapeStyle | undefined {
+	const owner = preview?.element(id);
+	return owner && hasShapeProperties(owner) ? owner.shapeStyle : undefined;
+}
+
 /**
  * An effect colour drag's live shade, merged into the style of the element it is
  * for (the current one, or one the drag has left): on the slide at once, no undo step.
@@ -106,6 +112,7 @@ function onOpacity(value: string): void {
 				:sections="SHAPE_EFFECT_SECTIONS"
 				:target="shapeStyle"
 				:target-key="props.element.id"
+				:lookup="styleOf"
 				@patch="onEffectPatch"
 				@preview="onEffectPreview"
 			/>

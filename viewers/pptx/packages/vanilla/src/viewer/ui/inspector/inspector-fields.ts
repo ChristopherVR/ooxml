@@ -27,6 +27,11 @@ export interface InspectorFieldsOptions<T, P> {
 	 * WITHOUT an undo step. The drag's one `onPatch` follows when it settles.
 	 */
 	onPreview?(patch: P, target: string): void;
+	/**
+	 * What the descriptors read on element `key` now: a colour drag the selection has
+	 * left is put back on it (none: such a drag is not put back).
+	 */
+	lookup?(key: string): T | undefined;
 	/** A colour pick was committed (for the "Recent colours" list). */
 	onColorCommit?(hex: string): void;
 	/** Class of each section's box (default: the stacked `pptxv-inspector-fields-section`). */
@@ -103,6 +108,7 @@ export function createInspectorFields<T, P>(
 		sections: () => sections,
 		target: () => current,
 		targetKey: () => currentKey,
+		lookup: (key) => options.lookup?.(key),
 		preview: (patch, target) => options.onPreview?.(patch, target),
 		commit: (patch) => options.onPatch(patch),
 		remember: (hex) => options.onColorCommit?.(hex),

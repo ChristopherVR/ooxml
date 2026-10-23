@@ -8,9 +8,9 @@
  * `PowerPointViewer` wires it: the real history, editor operations and
  * inspector wiring, with the preview channel and recent colours provided.
  */
-import { mount } from '@vue/test-utils';
+import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxElement, PptxSlide, ShapeStyle, TextStyle } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
 import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue';
 
@@ -23,6 +23,10 @@ import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
 import StrokePanel from './StrokePanel.vue';
 import TextPanel from './TextPanel.vue';
+
+// Every wrapper goes after its test, a failing one too: the worker is shared.
+enableAutoUnmount(afterEach);
+afterAll(disableAutoUnmount);
 
 type Styled = PptxElement & { shapeStyle: ShapeStyle; textStyle: TextStyle };
 
@@ -126,7 +130,6 @@ function harness(control: Control) {
 		pick,
 		recent,
 		current: () => slides.value[0]!.elements[0] as Styled,
-		unmount: () => wrapper.unmount(),
 	};
 }
 
@@ -156,7 +159,6 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		expect(color(view.current())).toBe('#330000');
 		expect(view.history.canUndo.value).toBeFalsy();
 		expect(view.recent.value).toStrictEqual([]);
-		view.unmount();
 	});
 
 	it('makes a drag and its settling change ONE undo step and ONE recent colour', async () => {
@@ -180,7 +182,6 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		expect(color(view.current())).toBe(color(before));
 		expect(themeRef(view.current())).toStrictEqual(themeRef(before));
 		expect(view.history.canUndo.value).toBeFalsy();
-		view.unmount();
 	});
 
 	it('leaves no undo step, and keeps the theme colour, when a drag settles where it started', async () => {
@@ -195,7 +196,6 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		expect(view.recent.value).toStrictEqual([color(before)]);
 		expect(color(view.current())).toBe(color(before));
 		expect(themeRef(view.current())).toStrictEqual(themeRef(before));
-		view.unmount();
 	});
 
 	it('commits a pick whose input and change arrive in one turn as one undo step', async () => {
@@ -209,7 +209,6 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		await nextTick();
 		expect(color(view.current())).toBe(color(before));
 		expect(view.history.canUndo.value).toBeFalsy();
-		view.unmount();
 	});
 
 	it('counts a pick of the colour already there as a recent colour, with no undo step', async () => {
@@ -220,7 +219,6 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		expect(view.recent.value).toStrictEqual([color(before)]);
 		expect(view.history.canUndo.value).toBeFalsy();
 		expect(themeRef(view.current())).toStrictEqual(themeRef(before));
-		view.unmount();
 	});
 
 	it('settles a drag that no change event ended when the picker loses focus', async () => {
@@ -234,6 +232,5 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		await nextTick();
 		expect(color(view.current())).toBe(color(before));
 		expect(view.history.canUndo.value).toBeFalsy();
-		view.unmount();
 	});
 });

@@ -42,6 +42,7 @@ export function createShapeEffectsControls(
 		sections: SHAPE_EFFECT_SECTIONS,
 		onPatch: (patch) => handlers.setShapeStyle(patch),
 		onPreview: (patch, target) => handlers.previewShapeStyle(patch, target),
+		lookup: (id) => handlers.shapeStyleOf(id),
 		onColorCommit: handlers.pushRecentColor,
 	});
 	el.appendChild(effects.el);

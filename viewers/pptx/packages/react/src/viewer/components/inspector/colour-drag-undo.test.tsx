@@ -147,8 +147,9 @@ function Harness(): React.ReactElement {
 			element: selectedElement,
 			previewElement: (id: string, patch: Partial<PptxElement>) =>
 				history.withoutUndoStep(() => ops.updateElementById(id, patch)),
+			elementById: (id: string) => activeSlide?.elements.find((el) => el.id === id),
 		}),
-		[history, ops, selectedElement],
+		[history, ops, selectedElement, activeSlide],
 	);
 
 	return (

@@ -41,6 +41,8 @@ export interface LiveColorActions {
 	 * element `target` (the selection when omitted, or one the drag has left).
 	 */
 	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
+	/** The shape style of element `id` now (what an effects drag the selection left goes back on). */
+	shapeStyleOf(id: string): ShapeStyle | undefined;
 }
 
 export function createLiveColorActions(deps: {
@@ -62,6 +64,7 @@ export function createLiveColorActions(deps: {
 				return el && { key: el.id, color: colorOf(el), value: el };
 			},
 			patch,
+			lookup: (key) => findActiveElement(store.get(), key),
 			preview: (next, key) => {
 				if (store.get().editable) {
 					ops.previewElement(key, next);
@@ -96,6 +99,10 @@ export function createLiveColorActions(deps: {
 			if (state.editable && el) {
 				ops.previewElement(el.id, patchShapeStyle(el, patch));
 			}
+		},
+		shapeStyleOf(id) {
+			const el = findActiveElement(store.get(), id);
+			return el && hasShapeProperties(el) ? el.shapeStyle : undefined;
 		},
 	};
 }

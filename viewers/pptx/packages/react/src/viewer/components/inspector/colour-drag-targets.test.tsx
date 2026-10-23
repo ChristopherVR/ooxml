@@ -64,6 +64,7 @@ interface HarnessApi {
 	element(id: string): Styled;
 	select(id: string): void;
 	edit(id: string, patch: Partial<ShapeStyle>): void;
+	editText(id: string, patch: Partial<TextStyle>): void;
 	canUndo(): boolean;
 	recent(): string[];
 }
@@ -153,6 +154,17 @@ function Harness({ elements }: { elements: PptxElement[] }): React.ReactElement 
 					),
 				})),
 			),
+		editText: (id, patch) =>
+			setSlides((prev) =>
+				prev.map((slide) => ({
+					...slide,
+					elements: slide.elements.map((el) =>
+						el.id === id
+							? ({ ...el, textStyle: { ...(el as Styled).textStyle, ...patch } } as PptxElement)
+							: el,
+					),
+				})),
+			),
 		canUndo: () => latest.current.history.canUndo,
 		recent: () => latest.current.recent,
 	};
@@ -166,8 +178,9 @@ function Harness({ elements }: { elements: PptxElement[] }): React.ReactElement 
 			element: selectedElement,
 			previewElement: (id: string, patch: Partial<PptxElement>) =>
 				history.withoutUndoStep(() => ops.updateElementById(id, patch)),
+			elementById: (id: string) => activeSlide?.elements.find((el) => el.id === id),
 		}),
-		[history, ops, selectedElement],
+		[history, ops, selectedElement, activeSlide],
 	);
 
 	return (
@@ -279,6 +292,49 @@ describe('a fill drag the selection leaves', () => {
 		fire(glow(), 'blur', '#ff0000');
 
 		expect(api!.element('b').shapeStyle).toStrictEqual(b);
+	});
+
+	it('puts the first shape’s effect colour back on it as it is now, keeping an edit made there since', () => {
+		const b = { ...A_STYLE, glowRadius: 3, glowOpacity: 0.9 } as ShapeStyle;
+		render([shape('a', A_STYLE), shape('b', b)]);
+		const glow = () => container.querySelector<HTMLInputElement>('[data-testid="fx-glow-color"]')!;
+		fire(glow(), 'input', '#00ff00');
+		act(() => api!.edit('a', { glowRadius: 12 }));
+		act(() => api!.select('b'));
+		fire(glow(), 'blur', '#00ff00');
+
+		expect(api!.element('a').shapeStyle).toStrictEqual({ ...A_STYLE, glowRadius: 12 });
+		expect(api!.element('b').shapeStyle).toStrictEqual(b);
+	});
+});
+
+describe('a fill drag the selection leaves after another edit to the shape', () => {
+	it('puts the colour back on the shape as it is now, keeping that edit', () => {
+		const b = {
+			...A_STYLE,
+			fillColor: '#00aa55',
+			fillColorRef: { scheme: 'accent6' },
+		} as ShapeStyle;
+		render([shape('a', A_STYLE), shape('b', b)]);
+		fire(fill(), 'input', '#330000');
+		act(() => api!.edit('a', { strokeWidth: 5 }));
+		act(() => api!.select('b'));
+		fire(fill(), 'change', '#330000');
+
+		expect(api!.element('a').shapeStyle).toStrictEqual({ ...A_STYLE, strokeWidth: 5 });
+	});
+});
+
+describe('a text colour drag on text with no style of its own', () => {
+	it('puts back only the colour, keeping what another edit added to the new style', () => {
+		render([shape('a', A_STYLE)]);
+		const start = text().value;
+		fire(text(), 'input', '#330000');
+		act(() => api!.editText('a', { bold: true }));
+		fire(text(), 'input', start);
+		fire(text(), 'blur', start);
+
+		expect(api!.element('a').textStyle).toStrictEqual({ bold: true });
 	});
 });
 

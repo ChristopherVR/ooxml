@@ -106,6 +106,12 @@ export interface ViewerInspectorProps {
 	 * shows its shades with, so the drag is one undo step (see `LiveEditContext`).
 	 */
 	onPreviewElement?: (id: string, patch: Partial<PptxElement>) => void;
+	/**
+	 * Element `id` as the deck holds it now (slide and template elements): what a
+	 * colour drag the selection has left is put back on. Without it, such a drag
+	 * is not put back.
+	 */
+	elementById?: (id: string) => PptxElement | undefined;
 }
 
 /* ------------------------------------------------------------------ */
@@ -166,13 +172,20 @@ export function ViewerInspector({
 	onDeleteTableStyle,
 	panelWidth,
 	onPreviewElement,
+	elementById,
 }: ViewerInspectorProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const regionRenderer = useRegionRenderer('inspector');
 	const liveEdit = useMemo(
 		() =>
-			onPreviewElement ? { element: selectedElement, previewElement: onPreviewElement } : null,
-		[onPreviewElement, selectedElement],
+			onPreviewElement
+				? {
+						element: selectedElement,
+						previewElement: onPreviewElement,
+						elementById: elementById ?? (() => undefined),
+					}
+				: null,
+		[onPreviewElement, selectedElement, elementById],
 	);
 
 	if (!isOpen) {

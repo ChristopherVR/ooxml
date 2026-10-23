@@ -17,6 +17,7 @@ function renderer() {
 		sections: () => SHAPE_EFFECT_SECTIONS,
 		target: () => styles[selected],
 		targetKey: () => selected,
+		lookup: (key) => styles[key],
 		preview(patch, target) {
 			styles[target] = { ...styles[target], ...patch };
 		},
@@ -57,5 +58,15 @@ describe('createInspectorColorFields', () => {
 		expect(r.styles['a']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 8, glowOpacity: 0.5 });
 		expect(r.styles['b']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 3, glowOpacity: 0.9 });
 		expect(r.commits).toStrictEqual([]);
+	});
+
+	it('puts it back on that shape as it is now, keeping an edit made there since', () => {
+		const r = renderer();
+		r.glow().input('#00ff00');
+		r.styles['a'] = { ...r.styles['a'], glowRadius: 12 };
+		r.select('b');
+		r.glow().blur('#00ff00');
+
+		expect(r.styles['a']).toStrictEqual({ glowColor: '#ff0000', glowRadius: 12, glowOpacity: 0.5 });
 	});
 });
