@@ -154,10 +154,17 @@ export async function savedByNeutral(deck: SaveDeck, edit: SaveEdit, parts: read
 }
 
 /**
- * What the embedded workbook holds: PowerPoint's save writes edited series data into it, the
- * neutral reference writes the chart part only, so the two are not compared.
+ * What depends on the embedded workbook: PowerPoint's save writes edited series data into it, the
+ * neutral reference writes the chart part only, so the two are not compared. That covers the
+ * workbook contents and whether data labels may be edited through it (`dataLabelTextEditable`
+ * and its `dataLabelSourceShape`, set only while every referenced cell agrees with the caches).
  */
-const WORKBOOK_PATHS = new Set(['.embeddedWorkbookData', '.externalData.embeddedWorkbookData']);
+const WORKBOOK_PATHS = new Set([
+	'.embeddedWorkbookData',
+	'.externalData.embeddedWorkbookData',
+	'.dataLabelTextEditable',
+	'.dataLabelSourceShape',
+]);
 
 /** Paths where two JSON values differ, with both values. */
 export function modelDifferences(a: unknown, b: unknown, at = ''): string[] {
