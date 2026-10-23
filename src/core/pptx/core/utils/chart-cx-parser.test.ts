@@ -714,3 +714,21 @@ describe('parseCxChartSeries chartData (axes/title) wiring', () => {
 		);
 	});
 });
+
+describe('parseCxChartSeries bare elements (chartex parity harness)', () => {
+	it('reads a bare cx:aggregation (an empty string in the object tree) as category binning', () => {
+		const plotArea: XmlObject = {
+			'cx:plotAreaRegion': {
+				'cx:series': {
+					'@_layoutId': 'clusteredColumn',
+					'cx:layoutPr': { 'cx:aggregation': '' },
+				},
+			},
+		};
+		const result = parseCxChartSeries(plotArea, xmlLookup);
+		expect(result?.series[0]?.histogramOptions).toEqual({
+			layout: 'histogram',
+			aggregateByCategory: true,
+		});
+	});
+});
