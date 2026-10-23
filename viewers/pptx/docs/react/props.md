@@ -118,6 +118,16 @@ on demand instead, use the handle's [`getContent()`](/react/handle).
 />
 ```
 
+## Language {#language}
+
+| Prop               | Type                     | Default                          | Description                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultLocale`    | `string`                 | stored choice, then `'en'`       | Initial locale code for File > Options > Language. Falls back to a persisted `localStorage` choice, then `'en'`. Ignored inside a `PptxI18nProvider`, whose `locale` is the language.                                                                                                                               |
+| `availableLocales` | `LocaleCatalogEntry[]`   | registered `react-i18next` codes | Locale choices offered by File > Options > Language. Defaults to the codes registered on the host's `react-i18next` instance. Inside a `PptxI18nProvider` there is no default: pass two or more, together with `onLocaleChange`, to show the Language category.                                                     |
+| `onLocaleChange`   | `(code: string) => void` | -                                | Called when the user picks a language from File > Options > Language. When provided, the host owns applying and persisting the choice; otherwise the viewer applies and persists it itself. Inside a `PptxI18nProvider` the host always owns the language: without this callback the Language category is left out. |
+
+To translate the viewer with your own i18n library instead of react-i18next, wrap it in `PptxI18nProvider` (React only); see [Use your own i18n library](/guide/localization#use-your-own-i18n-library).
+
 ## UI customization {#ui-customization}
 
 | Prop            | Type                  | Default | Description                                                                                                                                                                                                                                                                                                                                      |
@@ -170,10 +180,9 @@ the full flow and the `CollaborationConfig` shape.
 ::: info Abridged
 This block shows the commonly used members, not the whole type. `PowerPointViewerProps`
 also carries `ai`, `accountAuth`, `hiddenActions`, `fonts`, `availableThemes`,
-`defaultThemeKey`, `onThemeChange`, `availableLocales`, `defaultLocale`, `onLocaleChange`,
-`onModeChange`, `onSelectionChange`, `onSlideCountChange` and `onZoomChange`; the tables above
-cover `fileName`, `onLoad`, `onError`, `onHyperlinkClick`, `ribbonAddIns` and
-`inspectorInitiallyOpen`. Read the
+`defaultThemeKey`, `onThemeChange`, `onModeChange`, `onSelectionChange`, `onSlideCountChange` and
+`onZoomChange`; the tables above cover `fileName`, `onLoad`, `onError`, `onHyperlinkClick`,
+`ribbonAddIns`, `inspectorInitiallyOpen`, `defaultLocale`, `availableLocales` and `onLocaleChange`. Read the
 shipped `.d.ts` (or `packages/react/src/viewer/types-ui.ts`) for the authoritative list.
 :::
 

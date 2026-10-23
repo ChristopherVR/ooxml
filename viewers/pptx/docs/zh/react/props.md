@@ -100,6 +100,16 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 />
 ```
 
+## 语言 {#language}
+
+| 属性               | 类型                     | 默认值                           | 说明                                                                                                                                                                                    |
+| ------------------ | ------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultLocale`    | `string`                 | 已保存的选择，否则为 `'en'`      | “文件 > 选项 > 语言”的初始语言代码。依次回退到 `localStorage` 中保存的选择和 `'en'`。在 `PptxI18nProvider` 内忽略此项，语言由其 `locale` 决定。                                         |
+| `availableLocales` | `LocaleCatalogEntry[]`   | `react-i18next` 中注册的语言代码 | “文件 > 选项 > 语言”提供的语言。默认使用宿主 `react-i18next` 实例中注册的语言代码。在 `PptxI18nProvider` 内没有默认值：需要同时传入至少两个语言和 `onLocaleChange` 才会显示“语言”类别。 |
+| `onLocaleChange`   | `(code: string) => void` | -                                | 用户在“文件 > 选项 > 语言”中选择语言时调用。提供后由宿主负责应用和持久化；否则由组件自行应用和持久化。在 `PptxI18nProvider` 内语言始终由宿主掌控：未提供此回调时不显示“语言”类别。      |
+
+如果要用自己的 i18n 库代替 react-i18next 翻译组件，请用 `PptxI18nProvider` 包裹它（仅限 React），详见[使用自己的 i18n 库](/zh/guide/localization#use-your-own-i18n-library)。
+
 ## 界面自定义 {#ui-customization}
 
 | 属性            | 类型                  | 默认值 | 说明                                                                                                                                                                                                                                                       |
@@ -145,7 +155,7 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 ## 接口示意 {#interface-sketch}
 
 ::: info 节选
-下面只展示常用成员，并非完整类型。`PowerPointViewerProps` 还包含 `ai`、`accountAuth`、`hiddenActions`、`fonts`、`availableThemes`、`defaultThemeKey`、`onThemeChange`、`availableLocales`、`defaultLocale`、`onLocaleChange`、`onModeChange`、`onSelectionChange`、`onSlideCountChange` 和 `onZoomChange`；上方表格涵盖 `fileName`、`onLoad`、`onError`、`onHyperlinkClick`、`ribbonAddIns` 和 `inspectorInitiallyOpen`。完整列表以包内 `.d.ts` 或 `packages/react/src/viewer/types-ui.ts` 为准。
+下面只展示常用成员，并非完整类型。`PowerPointViewerProps` 还包含 `ai`、`accountAuth`、`hiddenActions`、`fonts`、`availableThemes`、`defaultThemeKey`、`onThemeChange`、`onModeChange`、`onSelectionChange`、`onSlideCountChange` 和 `onZoomChange`；上方表格涵盖 `fileName`、`onLoad`、`onError`、`onHyperlinkClick`、`ribbonAddIns`、`inspectorInitiallyOpen`、`defaultLocale`、`availableLocales` 和 `onLocaleChange`。完整列表以包内 `.d.ts` 或 `packages/react/src/viewer/types-ui.ts` 为准。
 :::
 
 ```ts

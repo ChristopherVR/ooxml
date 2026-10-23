@@ -62,6 +62,8 @@ export interface SettingsDialogProps {
 	/** Currently active locale code. */
 	localeCode: string;
 	availableLocales: readonly LocaleCatalogEntry[];
+	/** `false` leaves the Language category out, for a host that takes no pick. Default `true`. */
+	languageSelectable?: boolean;
 	onSelectLocale: (code: string) => void;
 	/** When true, an "AI" section is shown for exporting detailed chat logs. */
 	aiEnabled?: boolean;
@@ -99,6 +101,7 @@ function OpenSettingsDialog({
 	onSelectTheme,
 	localeCode,
 	availableLocales,
+	languageSelectable = true,
 	onSelectLocale,
 	aiEnabled,
 	chatStore,
@@ -106,7 +109,21 @@ function OpenSettingsDialog({
 	onCustomFontRegistered,
 }: SettingsDialogProps): React.ReactElement {
 	const { t } = useTranslation();
-	const customization = useViewerCustomizationContext();
+	const viewerCustomization = useViewerCustomizationContext();
+	// A host that takes no language pick hides the Language page like any host-hidden page.
+	const customization = useMemo(
+		() =>
+			languageSelectable
+				? viewerCustomization
+				: {
+						...viewerCustomization,
+						hiddenOptionsPages: new Set([
+							...viewerCustomization.hiddenOptionsPages,
+							'language' as const,
+						]),
+					},
+		[viewerCustomization, languageSelectable],
+	);
 	const regionBase = useContext(ViewerRegionBaseContext);
 	// A host `dialog.options` region fills the body; the shared binding adds the options model.
 	const regionContext = useMemo(

@@ -13,8 +13,20 @@
  * excludes promises, and function components do not accept `ref` as a plain
  * prop. Everything below sticks to the React 18 spelling on purpose.
  */
-import type { PowerPointViewerHandle, PowerPointViewerProps, ViewerTheme } from 'pptx-react-viewer';
-import { PowerPointViewer, vermilionDarkTheme } from 'pptx-react-viewer';
+import type {
+	PowerPointViewerHandle,
+	PowerPointViewerProps,
+	PptxI18nProviderProps,
+	PptxTranslate,
+	PptxTranslateParams,
+	ViewerTheme,
+} from 'pptx-react-viewer';
+import {
+	LOCALE_CATALOG,
+	PowerPointViewer,
+	PptxI18nProvider,
+	vermilionDarkTheme,
+} from 'pptx-react-viewer';
 import type { ReactElement } from 'react';
 import { useCallback, useRef, useState } from 'react';
 
@@ -51,5 +63,38 @@ export function React18Consumer({ content }: { content: Uint8Array }): ReactElem
 		<div data-dirty={dirty} data-selected={selected.length} onClick={() => void save()}>
 			<PowerPointViewer ref={viewerRef} {...props} />
 		</div>
+	);
+}
+
+/** The shape of a host library's message lookup, e.g. Lingui's `i18n._(id, values)`. */
+declare const hostI18n: { _(id: string, values?: Record<string, unknown>): string };
+
+/** The documented module-level translator: `params` passes straight to the host library. */
+export const moduleTranslate: PptxTranslate = (key, params) => hostI18n._(key, params);
+
+/** The shipped dictionaries as they are: a missing entry is `undefined`, a miss. */
+export const dictionaryTranslate =
+	(dictionary: Readonly<Record<string, string>>): PptxTranslate =>
+	(key) =>
+		dictionary[key];
+
+/** A host translating the viewer with its own i18n library through `PptxI18nProvider`. */
+export function React18TranslatedConsumer({ content }: { content: Uint8Array }): ReactElement {
+	const [locale, setLocale] = useState('en');
+	// Stable per language, as the provider documents: a new function re-translates the viewer.
+	const translate = useCallback<PptxTranslate>(
+		(key: string, params?: PptxTranslateParams) =>
+			locale === 'en' ? undefined : `${key}:${String(params?.count ?? '')}`,
+		[locale],
+	);
+	const props: PptxI18nProviderProps = { translate, locale };
+	return (
+		<PptxI18nProvider {...props}>
+			<PowerPointViewer
+				content={content}
+				availableLocales={LOCALE_CATALOG.slice(0, 2)}
+				onLocaleChange={setLocale}
+			/>
+		</PptxI18nProvider>
 	);
 }

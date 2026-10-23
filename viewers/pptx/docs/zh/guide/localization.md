@@ -5,15 +5,15 @@ description: 了解 React、Vue 3、Angular、原生 JavaScript 和 Svelte 组�
 
 # 国际化 {#localization-i18n}
 
-**组件通过 `pptx.*` 翻译键查找所有界面文本，字典由宿主应用提供。** 每个组件包都包含英文。仓库还在私有的 `pptx-viewer-locales` 工作区维护完整的法语、西班牙语、德语和简体中文参考字典，这些字典随各组件包发布，可通过 `i18n/fr`、`i18n/es`、`i18n/de` 和 `i18n/zh-CN` 子路径按需导入。语言工作区本身不单独发布到 npm。React、Vue 和 Angular 使用宿主框架的 i18n 库；Vanilla 和 Svelte 则提供轻量的内置翻译器：
+**组件通过 `pptx.*` 翻译键查找所有界面文本，字典由宿主应用提供。** 每个组件包都包含英文。仓库还在私有的 `pptx-viewer-locales` 工作区维护完整的法语、西班牙语、德语和简体中文参考字典，这些字典随各组件包发布，可通过 `i18n/fr`、`i18n/es`、`i18n/de` 和 `i18n/zh-CN` 子路径按需导入。语言工作区本身不单独发布到 npm。React、Vue 和 Angular 使用宿主框架的 i18n 库（React 也可以通过 `PptxI18nProvider` 接收你自己的 `translate` 函数）；Vanilla 和 Svelte 则提供轻量的内置翻译器：
 
-| 组件    | 组件内部的翻译调用                                        | 宿主需要提供的库                                                                  |
-| ------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| React   | `react-i18next` 的 `t(key, opts)`                         | [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) |
-| Vue 3   | `vue-i18n` 的 `useI18n().t(key, opts)`                    | [vue-i18n](https://vue-i18n.intlify.dev/)                                         |
-| Angular | `ngx-translate` 的 `translate()` signal / `TranslatePipe` | [@ngx-translate/core](https://github.com/ngx-translate/core)                      |
-| Vanilla | 包内置的 `t(key, params)`                                 | 无需 i18n 库，直接传入 `messages` 字典                                            |
-| Svelte  | 包内置的 `t(key, params)`                                 | 无需 i18n 库，调用 `registerTranslations(locale, dict)`                           |
+| 组件    | 组件内部的翻译调用                                                                    | 宿主需要提供的库                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| React   | `react-i18next` 的 `t(key, opts)`，或通过 `PptxI18nProvider` 传入的自定义 `translate` | [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/)，或通过 `PptxI18nProvider` 使用任意库 |
+| Vue 3   | `vue-i18n` 的 `useI18n().t(key, opts)`                                                | [vue-i18n](https://vue-i18n.intlify.dev/)                                                                               |
+| Angular | `ngx-translate` 的 `translate()` signal / `TranslatePipe`                             | [@ngx-translate/core](https://github.com/ngx-translate/core)                                                            |
+| Vanilla | 包内置的 `t(key, params)`                                                             | 无需 i18n 库，直接传入 `messages` 字典                                                                                  |
+| Svelte  | 包内置的 `t(key, params)`                                                             | 无需 i18n 库，调用 `registerTranslations(locale, dict)`                                                                 |
 
 这种设计遵循各框架生态的使用习惯。React、Vue 和 Angular 可以接入应用已有的 i18n 配置，Vanilla 和 Svelte 则无需额外依赖。
 
@@ -80,6 +80,40 @@ import i18nInstance from './i18n';
 ```
 
 调用 `i18nInstance.changeLanguage('fr')` 切换语言。
+
+#### 使用自己的 i18n 库 {#use-your-own-i18n-library}
+
+如果要用 Lingui、FormatJS 或其他任意库代替 react-i18next 翻译查看器，请用 `PptxI18nProvider` 包裹它，并传入 `translate(key, params)` 函数和当前的 `locale`。它覆盖 `PowerPointViewer` 以及独立的构建块（`Toolbar`、`SlideCanvas`、`SlideTemplateGalleryDialog` 等）：
+
+```tsx
+import { i18n } from '@lingui/core';
+import { useLingui } from '@lingui/react';
+import { LOCALE_CATALOG, PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer';
+import type { PptxTranslate } from 'pptx-react-viewer';
+
+import { dynamicActivate } from './i18n'; // loads a catalog, then calls i18n.activate(code)
+
+// Module level, so it never changes: the viewer re-translates when `locale` changes.
+const translate: PptxTranslate = (key, params) => i18n._(key, params);
+const LOCALES = LOCALE_CATALOG.filter((entry) => ['en', 'fr'].includes(entry.code));
+
+function TranslatedViewer({ content }: { content: Uint8Array }) {
+	const { i18n: active } = useLingui(); // re-renders when the language changes
+	return (
+		<PptxI18nProvider locale={active.locale} translate={translate}>
+			<PowerPointViewer
+				content={content}
+				availableLocales={LOCALES}
+				onLocaleChange={(code) => void dynamicActivate(code)}
+			/>
+		</PptxI18nProvider>
+	);
+}
+```
+
+`translate` 会原样收到组件传入的参数：`defaultValue`、`count` 以及 `{{name}}` 占位符的值。请在目录中使用相同的名称（ICU 语法中写作 `{name}`）；`count` 只是普通的值，复数形式需要在你的目录中处理。返回文本中残留的 `{{name}}` 占位符同样会被填充，因此随包提供的字典可以直接使用：`const translate: PptxTranslate = (key) => translationsFr[key];`。当 `translate` 返回键本身、空字符串或不返回内容，或者抛出异常时，组件会依次显示内置英文文本、调用中的默认文本和由键生成的标签，因此不完整的目录也不会显示原始的 `pptx.*` 键。请保持 `translate` 的引用稳定（模块级函数或 `useCallback`）：`translate` 或 `locale` 一旦变化，组件就会重新翻译。
+
+在 Provider 内，语言由宿主掌控：组件从不调用 `changeLanguage`，忽略 `defaultLocale`，也不会恢复已保存的语言选择。只有同时传入 `onLocaleChange` 和至少两个 `availableLocales` 时，“文件 > 选项 > 语言”才会出现；选择语言会调用 `onLocaleChange`，选中项跟随 `locale`（`fr-CA` 这类地区代码会选中列表中的 `fr`）。`locale` 不会设置文字方向。`PowerPointViewer` 读取其上方最近的 Provider；放在组件内部的 Provider 会被忽略，因此整个组件使用同一种语言。`i18next` 和 `react-i18next` 在 4.x 中仍是必需的 peer 依赖：需要安装，但在 Provider 内组件不会使用它们。`PptxI18nProvider` 仅适用于 React；其他组件包的翻译方式见下文。
 
 ### Vue 3 {#vue-3}
 
@@ -212,17 +246,17 @@ registerTranslations('fr', translationsFr);
 
 每个组件的设置对话框都提供**语言**选项卡，与[外观](/zh/guide/theming)选项卡相邻，供用户在运行时选择语言。这个选择器不会自行打包或加载翻译内容，只切换通过上述 i18n 配置**已经注册的语言**。未传入 `availableLocales` 时，各组件按以下方式读取已加载的语言：
 
-| 组件    | 如何发现可用语言                                                     |
-| ------- | -------------------------------------------------------------------- |
-| React   | `react-i18next` 实例中的 `i18n.options.resources` / `i18n.languages` |
-| Vue 3   | `useI18n().availableLocales`，即 `vue-i18n` 组合式函数的内置属性     |
-| Angular | `TranslateService.getLangs()`                                        |
-| Vanilla | 传给 `createPptxViewer` 的 `messages` 字典，以及 `'en'`              |
-| Svelte  | 所有通过 `registerTranslations` 注册的语言                           |
+| 组件    | 如何发现可用语言                                                                                                        |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| React   | `react-i18next` 实例中的 `i18n.options.resources` / `i18n.languages`；在 `PptxI18nProvider` 内仅使用 `availableLocales` |
+| Vue 3   | `useI18n().availableLocales`，即 `vue-i18n` 组合式函数的内置属性                                                        |
+| Angular | `TranslateService.getLangs()`                                                                                           |
+| Vanilla | 传给 `createPptxViewer` 的 `messages` 字典，以及 `'en'`                                                                 |
+| Svelte  | 所有通过 `registerTranslations` 注册的语言                                                                              |
 
 例如，只注册了 `en` 和 `fr` 时，语言选项卡就只提供这两种语言，不会列出没有字典的选项。共享的 `LOCALE_CATALOG` 为已知代码提供英文、法语、西班牙语、德语和简体中文的显示名称；无法识别的代码直接显示原值。
 
-其处理机制与外观选项卡相似：选择语言后，组件直接调用宿主 i18n 实例，例如 `i18n.changeLanguage`、`locale.value =` 或 `TranslateService.use`，立即应用并保存到 `localStorage` 的 `pptx-viewer-prefs`。如果传入 `onLocaleChange`，组件就只调用该回调，不再自行操作 i18n 实例，应用和持久化均由宿主负责。`defaultLocale`、`availableLocales` 和 `onLocaleChange` 的完整属性说明见[主题配置](/zh/guide/theming)。
+其处理机制与外观选项卡相似：选择语言后，组件直接调用宿主 i18n 实例，例如 `i18n.changeLanguage`、`locale.value =` 或 `TranslateService.use`，立即应用并保存到 `localStorage` 的 `pptx-viewer-prefs`。如果传入 `onLocaleChange`，组件就只调用该回调，不再自行操作 i18n 实例，应用和持久化均由宿主负责。在 `PptxI18nProvider` 内，组件从不自行应用或保存所选语言：它只调用 `onLocaleChange`，未提供该回调时不显示“语言”选项卡。`defaultLocale`、`availableLocales` 和 `onLocaleChange` 的完整属性说明见[主题配置](/zh/guide/theming)。
 
 ## 简体中文 {#simplified-chinese}
 

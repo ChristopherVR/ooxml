@@ -128,9 +128,9 @@ const bytes = await viewerRef.current?.getContent(); // Uint8Array of a valid .p
 | `defaultThemeKey`                                                          | `string`                                | n/a      | Initial File > Options > Appearance selection when no persisted preference exists                                                                                                                                                                                                                                                                              |
 | `availableThemes`                                                          | `ThemeCatalogEntry[]`                   | n/a      | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog)                                                                                                                                                                                                                                                                        |
 | `onThemeChange`                                                            | `(key: string) => void`                 | n/a      | Host hook for the appearance picker; when set, the host owns persisting the choice                                                                                                                                                                                                                                                                             |
-| `defaultLocale`                                                            | `string`                                | n/a      | Initial locale code when no persisted preference exists                                                                                                                                                                                                                                                                                                        |
-| `availableLocales`                                                         | `LocaleCatalogEntry[]`                  | n/a      | Locale choices offered by File > Options > Language (defaults to the registered i18next locales)                                                                                                                                                                                                                                                               |
-| `onLocaleChange`                                                           | `(code: string) => void`                | n/a      | Host hook for the language picker; when set, the host owns applying/persisting the switch                                                                                                                                                                                                                                                                      |
+| `defaultLocale`                                                            | `string`                                | n/a      | Initial locale code when no persisted preference exists. Ignored inside a `PptxI18nProvider`, whose `locale` is the language                                                                                                                                                                                                                                   |
+| `availableLocales`                                                         | `LocaleCatalogEntry[]`                  | n/a      | Locale choices offered by File > Options > Language (defaults to the registered i18next locales; inside a `PptxI18nProvider` no default: pass two or more with `onLocaleChange`)                                                                                                                                                                               |
+| `onLocaleChange`                                                           | `(code: string) => void`                | n/a      | Host hook for the language picker; when set, the host owns applying/persisting the switch. Inside a `PptxI18nProvider` the host always owns it, and without this callback the Language category is left out                                                                                                                                                    |
 | `accountAuth`                                                              | `AccountAuthConfig`                     | n/a      | Optional sign-in hook point for File > Account (disabled unless `enabled: true`)                                                                                                                                                                                                                                                                               |
 
 ### `PowerPointViewerHandle` (via `ref`)
@@ -267,7 +267,41 @@ The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and radi
 
 ## Localization (i18n)
 
-UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`. Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demos/pptx/demo-react/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
+UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`, or through your own i18n library with `PptxI18nProvider` (see below). Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demos/pptx/demo-react/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
+
+### Use your own i18n library
+
+To translate the viewer with Lingui, FormatJS or any other library, wrap it (or the standalone building blocks) in `PptxI18nProvider` and pass a `translate(key, params)` function plus the active `locale`:
+
+```tsx
+import { i18n } from '@lingui/core';
+import { useLingui } from '@lingui/react';
+import { LOCALE_CATALOG, PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer';
+import type { PptxTranslate } from 'pptx-react-viewer';
+
+import { dynamicActivate } from './i18n'; // loads a catalog, then calls i18n.activate(code)
+
+// Module level, so it never changes: the viewer re-translates when `locale` changes.
+const translate: PptxTranslate = (key, params) => i18n._(key, params);
+const LOCALES = LOCALE_CATALOG.filter((entry) => ['en', 'fr'].includes(entry.code));
+
+function TranslatedViewer({ content }: { content: Uint8Array }) {
+	const { i18n: active } = useLingui(); // re-renders when the language changes
+	return (
+		<PptxI18nProvider locale={active.locale} translate={translate}>
+			<PowerPointViewer
+				content={content}
+				availableLocales={LOCALES}
+				onLocaleChange={(code) => void dynamicActivate(code)}
+			/>
+		</PptxI18nProvider>
+	);
+}
+```
+
+`translate` receives the viewer's params unchanged: `defaultValue`, `count` and the values of the `{{name}}` placeholders. Use the same names in your catalog (`{name}` in ICU syntax); `count` is a plain value, so pluralise in your catalog. `{{name}}` placeholders left in the text you return are filled too, so the shipped dictionaries work as they are: `const translate: PptxTranslate = (key) => translationsFr[key];`. A miss (the key itself, an empty string, nothing, or a throw) shows the built-in English text, then the call's default text, then a label derived from the key, never a raw key. Keep `translate` stable (a module-level function or `useCallback`): the viewer re-translates whenever `translate` or `locale` changes.
+
+Inside a provider the host owns the language: the viewer never calls `changeLanguage`, ignores `defaultLocale` and never restores a stored language choice. File > Options > Language appears only with `onLocaleChange` and two or more `availableLocales`; a pick calls `onLocaleChange`, and the selection follows `locale` (`fr-CA` selects an offered `fr`). A `PowerPointViewer` reads the provider nearest above it; a provider rendered inside the viewer is ignored. `i18next` and `react-i18next` stay required peer dependencies in 4.x: install them, but inside a provider the viewer does not use them. `PptxI18nProvider` is React-only: the Vue and Angular bindings delegate to vue-i18n and ngx-translate, and Vanilla and Svelte take `messages` dictionaries.
 
 ## How it's built
 

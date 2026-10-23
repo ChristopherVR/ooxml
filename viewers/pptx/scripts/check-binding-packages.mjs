@@ -57,6 +57,22 @@ function npm(args, cwd, capture = false) {
 	return run('npm', args, cwd, capture);
 }
 
+// `PptxI18nProvider` is exported from both React entries. Each entry is its own bundle, so a
+// provider from one and a viewer from the other only work if they share the context module.
+function sharedContextCheck(load) {
+	return `const translate = (key) => (key === 'pptx.viewer.loading' ? 'Loading (host)' : undefined);
+const pairs = [
+  ['pptx-react-viewer', main.PptxI18nProvider, 'pptx-react-viewer/viewer', viewer.PowerPointViewer],
+  ['pptx-react-viewer/viewer', viewer.PptxI18nProvider, 'pptx-react-viewer', main.PowerPointViewer],
+];
+for (const [providerFrom, Provider, viewerFrom, Viewer] of pairs) {
+  const html = renderToString(createElement(Provider, { locale: 'de', translate }, createElement(Viewer, { content: null })));
+  assert.ok(html.includes('Loading (host)'), 'a provider from ' + providerFrom + ' translates a viewer from ' + viewerFrom + ' (${load})');
+}
+console.log('pptx-react-viewer: provider and viewer from either entry share one i18n context (${load})');
+`;
+}
+
 try {
 	const tarballs = [];
 	const cjsBindings = [];
@@ -194,6 +210,27 @@ for (const { name, entry } of ${JSON.stringify(cjsBindings.map(({ name, entry })
 `,
 	);
 	run(process.execPath, ['consumer.cjs'], consumer);
+
+	writeFileSync(
+		join(consumer, 'react-i18n-context.mjs'),
+		`import assert from 'node:assert/strict';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import * as main from 'pptx-react-viewer';
+import * as viewer from 'pptx-react-viewer/viewer';
+${sharedContextCheck('ESM')}`,
+	);
+	run(process.execPath, ['react-i18n-context.mjs'], consumer);
+	writeFileSync(
+		join(consumer, 'react-i18n-context.cjs'),
+		`const assert = require('node:assert/strict');
+const { createElement } = require('react');
+const { renderToString } = require('react-dom/server');
+const main = require('pptx-react-viewer');
+const viewer = require('pptx-react-viewer/viewer');
+${sharedContextCheck('CommonJS')}`,
+	);
+	run(process.execPath, ['react-i18n-context.cjs'], consumer);
 
 	// A web host bundles the same packages for the browser, with no Node fallbacks. The core and
 	// UI packages get the same check in their own package smoke tests.

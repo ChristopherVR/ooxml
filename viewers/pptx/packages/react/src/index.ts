@@ -119,6 +119,11 @@ export {
 	resolveThemeCatalogEntry,
 } from './theme';
 
+// ── Host translations: translate the viewer with any i18n library ──
+export { PptxI18nProvider } from './viewer/i18n/provider';
+export type { PptxI18nProviderProps } from './viewer/i18n/provider';
+export type { PptxTranslate, PptxTranslateParams } from './viewer/i18n/types';
+
 // ── Locale catalog (File > Options > Language) ──
 export { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 export type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
