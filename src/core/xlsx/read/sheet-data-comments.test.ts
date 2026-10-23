@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
+import { LiteDeclinedError } from '../../xml/index';
 import { loadXlsx } from './load';
 import { splitSheetData } from './sheet-data-source';
 
@@ -67,14 +68,39 @@ describe('worksheets with comments or CDATA', () => {
 		expect(fast.changed).toBeGreaterThan(0);
 		for (const xml of fast.edited) {
 			expect(xml).not.toBe(forceDom(xml));
-			expect(splitSheetData(xml)).toBeDefined();
+			expect(() => [...splitSheetData(xml)!.rows]).not.toThrow();
 		}
-		for (const xml of dom.edited) expect(splitSheetData(xml)).toBeUndefined();
+		for (const xml of dom.edited)
+			expect(() => [...splitSheetData(xml)!.rows]).toThrow(LiteDeclinedError);
 		expect(fast.workbook.sheets).toStrictEqual(dom.workbook.sheets);
 		expect(fast.workbook.warnings).toStrictEqual(dom.workbook.warnings);
 		const plain = await loadXlsx(fixture);
 		expect(fast.workbook.sheets.map((sheet) => sheet.rows)).toStrictEqual(
 			plain.sheets.map((sheet) => sheet.rows),
 		);
+	});
+});
+
+describe('a worksheet the light reader declines part way through', () => {
+	it('is read again whole, into the model and warnings of the DOM path', async () => {
+		// A missing shared string in the first rows (a warning) and markup the light reader leaves
+		// to the XML parser after the last row, so the rows are read before it gives up.
+		const late = (xml: string): string =>
+			xml
+				.replace(/(<c [^>]*t="s"[^>]*><v>)\d+(<\/v>)/, '$199999$2')
+				.replace('</sheetData>', '<?late?></sheetData>');
+		const streamed = await loadEdited(late);
+		const dom = await loadEdited((xml) => forceDom(late(xml)));
+		expect(streamed.changed).toBeGreaterThan(0);
+		for (const xml of streamed.edited) {
+			const rows = splitSheetData(xml)!.rows[Symbol.iterator]();
+			expect(rows.next().done).toBe(false);
+			expect(() => {
+				while (!rows.next().done);
+			}).toThrow(LiteDeclinedError);
+		}
+		expect(streamed.workbook.sheets).toStrictEqual(dom.workbook.sheets);
+		expect(streamed.workbook.warnings).toStrictEqual(dom.workbook.warnings);
+		expect(streamed.workbook.warnings).toContain('A cell refers to a missing shared string.');
 	});
 });

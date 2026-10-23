@@ -1,5 +1,5 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index';
-import { elements, relAttr, type XmlElement } from '../../xml/index';
+import { LiteDeclinedError, elements, relAttr, type XmlElement } from '../../xml/index';
 import { parseRange } from '../address';
 import type { DifferentialStyle, Hyperlink, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
@@ -140,19 +140,38 @@ export function parseWorksheet(
 	name: string,
 	sheetId: number,
 ): Worksheet {
-	const sheet = createWorksheet(name, sheetId);
-	sheet.partName = partName;
 	const xml = ctx.source.text(partName);
 	if (!xml) {
+		const sheet = createWorksheet(name, sheetId);
+		sheet.partName = partName;
 		ctx.warn(`Sheet "${name}" has no part ${partName}; it was loaded empty.`);
 		return sheet;
 	}
 	const split = splitSheetData(xml);
-	const root = parseDataXml(
-		split?.xml ?? xml,
-		'XLSX worksheet',
-		ctx.maxXmlElements,
-	).documentElement;
+	if (split) {
+		try {
+			return readWorksheet(ctx, partName, name, sheetId, split.xml, split.rows);
+		} catch (error) {
+			// The light reader met markup it leaves to the XML parser part way through the rows: the
+			// part is read again whole (warnings are kept once, so none is repeated).
+			if (!(error instanceof LiteDeclinedError)) throw error;
+		}
+	}
+	return readWorksheet(ctx, partName, name, sheetId, xml);
+}
+
+/** Reads a worksheet part, its cell data from `rows` when the part was split. */
+function readWorksheet(
+	ctx: SheetContext,
+	partName: string,
+	name: string,
+	sheetId: number,
+	xml: string,
+	rows?: Iterable<XmlElement>,
+): Worksheet {
+	const sheet = createWorksheet(name, sheetId);
+	sheet.partName = partName;
+	const root = parseDataXml(xml, 'XLSX worksheet', ctx.maxXmlElements).documentElement;
 	const byName = new Map<string, XmlElement>();
 	const cfBlocks: XmlElement[] = [];
 	for (const node of elements(root)) {
@@ -175,7 +194,7 @@ export function parseWorksheet(
 	if (format.format) sheet.format = format.format;
 	sheet.columns = readColumns(byName.get('cols'), ctx.xfMap);
 	const data = byName.get('sheetData');
-	if (data) readSheetData(ctx, split?.sheetData ?? data, sheet);
+	if (data) readSheetData(ctx, rows ?? elements(data), sheet);
 	const protection = readProtection(byName.get('sheetProtection'));
 	if (protection) sheet.protection = protection;
 	const autoFilter = readAutoFilter(byName.get('autoFilter'));

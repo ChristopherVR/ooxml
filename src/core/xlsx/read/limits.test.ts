@@ -7,6 +7,7 @@ import { saveXlsx } from '../write/index';
 import * as xlsxEntry from '../index';
 import * as loadEntry from '../load/index';
 import { ZipLimitError } from '../../opc/index';
+import { LiteDeclinedError } from '../../xml/index';
 import { isWorkbookTooLargeError, WorkbookTooLargeError } from './limits';
 import { loadXlsx } from './load';
 import { splitSheetData } from './sheet-data-source';
@@ -84,7 +85,7 @@ describe('loadXlsx limits', () => {
 		const { xml, bytes } = await withSheet((part) =>
 			part.replace('<sheetData>', '<sheetData><?keep?>'),
 		);
-		expect(splitSheetData(xml)).toBeUndefined();
+		expect(() => [...splitSheetData(xml)!.rows]).toThrow(LiteDeclinedError);
 		const limits = { maxXmlElements: 1000 };
 		await expect(loadXlsx(bytes, { limits })).rejects.toEqual(
 			expect.objectContaining({ message: expect.stringMatching(/^XLSX worksheet XML/) }),

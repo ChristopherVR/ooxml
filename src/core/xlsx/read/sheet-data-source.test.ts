@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
-import { NS, elements, parseXml, type XmlElement } from '../../xml/index';
+import { LiteDeclinedError, NS, elements, parseXml, type XmlElement } from '../../xml/index';
 import { createWorksheet } from '../workbook';
 import { parseDynamicArrayMetadata } from './metadata';
 import { readZipParts, SourceIndex } from './package';
@@ -43,13 +43,24 @@ function readBothWays(xml: string, source?: SourceIndex) {
 	const domData = elements(parseXml(xml).documentElement).find(
 		(node) => node.localName === 'sheetData',
 	) as XmlElement;
-	const read = (data: XmlElement) => {
+	const read = (rows: Iterable<XmlElement>) => {
 		const warnings: string[] = [];
 		const sheet = createWorksheet('S', 1);
-		readSheetData(context(warnings, source), data, sheet);
+		readSheetData(context(warnings, source), rows, sheet);
 		return { rows: sheet.rows, rowInfo: sheet.rowInfo, warnings };
 	};
-	return { split, dom: read(domData), lite: split ? read(split.sheetData) : undefined };
+	return { split, dom: read(elements(domData)), lite: split ? read(split.rows) : undefined };
+}
+
+/** The rows the light reader takes from a part, or undefined when the DOM must read it. */
+function lightRows(xml: string): XmlElement[] | undefined {
+	const split = splitSheetData(xml);
+	try {
+		return split && [...split.rows];
+	} catch (error) {
+		if (error instanceof LiteDeclinedError) return undefined;
+		throw error;
+	}
 }
 
 describe('splitSheetData', () => {
@@ -201,8 +212,24 @@ describe('splitSheetData', () => {
 		['no sheetData', (xml: string) => xml.replace(/<sheetData>[^]*<\/sheetData>/, '')],
 	])('leaves a sheet with %s to the DOM parser', (_, edit) => {
 		expect(
-			splitSheetData(edit(sheet(`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`, CELLS))),
+			lightRows(edit(sheet(`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`, CELLS))),
 		).toBeUndefined();
+	});
+
+	it('builds the rows one at a time, each only when it is read', () => {
+		// Markup the light reader declines after two rows: the rows before it are complete and
+		// handed out before the reader gets that far.
+		const xml = sheet(
+			`xmlns="${NS.x}" xmlns:x14ac="urn:x14ac"`,
+			CELLS.replace('<row r="4">', '<?keep?><row r="4">'),
+		);
+		const rows = splitSheetData(xml)?.rows[Symbol.iterator]();
+		const first = rows?.next().value;
+		expect(first?.getAttribute('r')).toBe('1');
+		expect(elements(first as XmlElement)).toHaveLength(4);
+		expect(rows?.next().value?.getAttribute('r')).toBe('3');
+		expect(() => rows?.next()).toThrow(LiteDeclinedError);
+		expect(lightRows(xml)).toBeUndefined();
 	});
 
 	it('still refuses a part whose cell data quotes a DTD or entity declaration', () => {
@@ -211,7 +238,7 @@ describe('splitSheetData', () => {
 			base.replace('<t>Bold</t>', '<t><![CDATA[<!DOCTYPE html>]]></t>'),
 			base.replace('<row r="3">', '<!-- <!entity x "y"> --><row r="3">'),
 		]) {
-			expect(splitSheetData(xml)).toBeUndefined();
+			expect(lightRows(xml)).toBeUndefined();
 			expect(() => parseXml(xml)).toThrow(/DTD or entity declarations/);
 		}
 	});
