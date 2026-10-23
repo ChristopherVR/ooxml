@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
-import { dialogByHeading, fileInput, newDocument } from './helpers';
+import { dialogByHeading, newDocument, reopenDocument } from './helpers';
 
 const FRAMEWORKS = ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'] as const;
 const WORKBOOK = 'word/embeddings/Microsoft_Excel_Worksheet.xlsx';
@@ -81,13 +81,7 @@ for (const framework of FRAMEWORKS) {
 		expect(sheetXml).toContain('Series 1');
 
 		// Reloaded: the chart comes back drawn, with its title.
-		await (
-			await fileInput(page)
-		).setInputFiles({
-			name: 'chart-edited.docx',
-			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-			buffer: Buffer.from(bytes),
-		});
+		await reopenDocument(page, 'chart-edited.docx', bytes);
 		const reloaded = editor.locator('.ProseMirror [data-docx-chart="1"]');
 		await expect(reloaded).toHaveCount(1);
 		await expect(reloaded.locator('svg text', { hasText: 'Results' })).toHaveCount(1);

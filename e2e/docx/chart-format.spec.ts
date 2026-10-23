@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
-import { dialogByHeading, fileInput, newDocument } from './helpers';
+import { dialogByHeading, newDocument, reopenDocument } from './helpers';
 
 const FRAMEWORKS = ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'] as const;
 
@@ -75,13 +75,7 @@ for (const framework of FRAMEWORKS) {
 		expect(documentXml).toContain(`<wp:extent cx="${resized * 9525}"`);
 
 		// Reloaded: the formatted chart comes back at its new size.
-		await (
-			await fileInput(page)
-		).setInputFiles({
-			name: 'chart-formatted.docx',
-			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-			buffer: Buffer.from(bytes),
-		});
+		await reopenDocument(page, 'chart-formatted.docx', bytes);
 		const reloaded = editor.locator('.ProseMirror [data-docx-chart="1"]');
 		await expect(reloaded).toHaveCount(1);
 		expect(pixels(await reloaded.getAttribute('style'))).toBe(resized);

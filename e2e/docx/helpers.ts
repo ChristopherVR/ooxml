@@ -55,6 +55,23 @@ export async function saveCopyAsDocx(page: Page) {
 export const fileNameLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .name');
 export const saveStateLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .status');
 
+/**
+ * Opens `bytes` in the running editor and waits until the editor has swapped the document in. The
+ * title takes the new name only once loading finishes; until then the previous document (which
+ * may hold the same kind of object) is still on screen, and clicking it selects an object that the
+ * load then replaces.
+ */
+export async function reopenDocument(page: Page, name: string, bytes: Uint8Array | Buffer) {
+	await (
+		await fileInput(page)
+	).setInputFiles({
+		name,
+		mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		buffer: Buffer.from(bytes),
+	});
+	await expect(fileNameLabel(page)).toHaveText(name);
+}
+
 /** Switches the ribbon tab row's Editing/Viewing mode. */
 export async function setReadOnly(page: Page, readOnly: boolean) {
 	// Located by part: its accessible name follows the editor's display locale.

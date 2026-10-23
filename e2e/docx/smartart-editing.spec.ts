@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { savedDocument } from './saved-document';
-import { dialogByHeading, fileInput, newDocument, reveal } from './helpers';
+import { dialogByHeading, fileInput, newDocument, reopenDocument, reveal } from './helpers';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 // Word's own output (Basic Block List, Alpha..Epsilon); provenance in src/core PROVENANCE.md.
@@ -115,7 +115,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(document).toContain('<dgm:relIds');
 
 		// Reload the saved file: the diagram comes back with its nodes.
-		await open(page, bytes, `reloaded-${framework}.docx`);
+		// Wait for the load: until then the old document's diagram is still there to be clicked.
+		await reopenDocument(page, `reloaded-${framework}.docx`, bytes);
 		await expect(diagrams(editor)).toHaveCount(1);
 		await diagrams(editor)
 			.first()
