@@ -1,4 +1,5 @@
 import {
+	DEFAULT_FIND_REPLACE_OPTIONS,
 	findInSlides,
 	findReplacementAvailability,
 	findReplaceSessionActions,
@@ -74,9 +75,9 @@ export interface FindReplaceActionsDeps {
 
 const scopes = (
 	matchCase: boolean,
-	includeNotes = false,
-	includeChartTitles = true,
-	includeChartData = false,
+	includeNotes = DEFAULT_FIND_REPLACE_OPTIONS.includeNotes,
+	includeChartTitles = DEFAULT_FIND_REPLACE_OPTIONS.includeChartTitles,
+	includeChartData = DEFAULT_FIND_REPLACE_OPTIONS.includeChartData,
 ): FindReplaceOptions => ({ matchCase, includeNotes, includeChartTitles, includeChartData });
 
 const sameScopes = (a: FindReplaceOptions, b: FindReplaceOptions): boolean =>

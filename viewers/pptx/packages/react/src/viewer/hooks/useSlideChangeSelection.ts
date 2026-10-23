@@ -45,8 +45,10 @@ export function useSlideChangeSelection({
 	return { slideSelectionRef, showSlideSelection };
 }
 
-interface SlideChangeClearState extends SlideChangeSelectionSetters {
+interface SlideChangeClearState {
 	slideSelectionRef: MutableRefObject<number | null>;
+	setSelectedElementId: Dispatch<SetStateAction<string | null>>;
+	setSelectedElementIds: Dispatch<SetStateAction<string[]>>;
 	setInlineEditingElementId: (id: string | null) => void;
 }
 
@@ -55,7 +57,7 @@ interface SlideChangeClearState extends SlideChangeSelectionSetters {
  * the slide it landed on. Used by `PowerPointViewer` and by the headless building blocks.
  */
 export function useClearSelectionOnSlideChange(
-	state: Omit<SlideChangeClearState, 'setActiveSlideIndex'>,
+	state: SlideChangeClearState,
 	activeSlideIndex: number,
 ): void {
 	useEffect(() => {

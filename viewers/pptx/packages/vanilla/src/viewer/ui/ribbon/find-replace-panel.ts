@@ -72,7 +72,10 @@ export function createFindReplacePanel(
 	/** Paint the status line and the buttons from the session; never searches. */
 	const render = (): void => {
 		const query = queryInput.value;
-		const current = actions.status?.() ?? { current: lastCount > 0 ? 1 : 0, total: lastCount };
+		const matchStatus = actions.status?.() ?? {
+			current: lastCount > 0 ? 1 : 0,
+			total: lastCount,
+		};
 		const availability = actions.replacementAvailability?.(
 			query,
 			matchCaseInput.checked,
@@ -80,10 +83,10 @@ export function createFindReplacePanel(
 			chartsInput.checked,
 			dataInput.checked,
 		);
-		prevBtn.setDisabled(current.total === 0);
-		nextBtn.setDisabled(current.total === 0);
-		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? current.total > 0));
-		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? current.total > 0));
+		prevBtn.setDisabled(matchStatus.total === 0);
+		nextBtn.setDisabled(matchStatus.total === 0);
+		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? matchStatus.total > 0));
+		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? matchStatus.total > 0));
 		hint.textContent = availability?.hasReadOnly
 			? t(
 					dataInput.checked
@@ -91,13 +94,13 @@ export function createFindReplacePanel(
 						: 'pptx.findReplace.readOnlyChartTitle',
 				)
 			: '';
-		status.textContent = !open
-			? ''
-			: current.total > 0
-				? t('pptx.findReplace.matchCount', { ...current })
-				: query
-					? t('pptx.findReplace.noMatches')
-					: '';
+		if (!open) {
+			status.textContent = '';
+		} else if (matchStatus.total > 0) {
+			status.textContent = t('pptx.findReplace.matchCount', { ...matchStatus });
+		} else {
+			status.textContent = query ? t('pptx.findReplace.noMatches') : '';
+		}
 	};
 
 	const runFind = (): void => {

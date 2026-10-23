@@ -14,7 +14,11 @@
 
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { findReplaceSessionActions, INITIAL_FIND_REPLACE_SESSION } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_FIND_REPLACE_OPTIONS,
+	findReplaceSessionActions,
+	INITIAL_FIND_REPLACE_SESSION,
+} from 'ooxml-ui/pptx';
 import type { FindReplaceSession } from 'ooxml-ui/pptx';
 
 import { EditorStateService } from './editor-state.service';
@@ -83,9 +87,10 @@ export class ViewerFindReplaceService {
 			query: evt.query,
 			options: {
 				matchCase: evt.matchCase,
-				includeNotes: evt.includeNotes ?? false,
-				includeChartTitles: evt.includeChartTitles ?? true,
-				includeChartData: evt.includeChartData ?? false,
+				includeNotes: evt.includeNotes ?? DEFAULT_FIND_REPLACE_OPTIONS.includeNotes,
+				includeChartTitles:
+					evt.includeChartTitles ?? DEFAULT_FIND_REPLACE_OPTIONS.includeChartTitles,
+				includeChartData: evt.includeChartData ?? DEFAULT_FIND_REPLACE_OPTIONS.includeChartData,
 			},
 		});
 	}

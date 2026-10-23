@@ -1,8 +1,4 @@
-import {
-	findReplaceSessionActions,
-	findReplaceStatus,
-	INITIAL_FIND_REPLACE_SESSION,
-} from 'ooxml-ui/pptx';
+import { findReplaceSessionActions, INITIAL_FIND_REPLACE_SESSION } from 'ooxml-ui/pptx';
 import type { FindReplaceOptions, FindReplaceSession, FindResult } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
@@ -94,7 +90,7 @@ export function useFindReplace({
 		includeChartTitles: option('includeChartTitles'),
 		includeChartData: option('includeChartData'),
 		matches: computed(() => session.value.matches),
-		matchCount: computed(() => findReplaceStatus(session.value).total),
+		matchCount: computed(() => session.value.matches.length),
 		currentMatch: computed(() => session.value.current),
 		next: actions.next,
 		prev: actions.previous,
