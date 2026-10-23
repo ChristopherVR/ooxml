@@ -90,8 +90,8 @@ own `AGENTS.md` (`viewers/<name>/AGENTS.md`, read it before working there) has t
 - **Browser tests that crash hosted runners** are tagged `@local-only` and excluded in CI; run them
   yourself (`bun run e2e:local-only` in `viewers/pptx`) before pushing a change to what they cover.
 - **Shared bindings and controllers.** Framework-neutral binding plumbing lives in `ooxml-ui/bindings`
-  (contract-driven React, Vue and Solid factories); the docx, xlsx and visio bindings run on it, and the
-  teams Vue adapter does too. PowerPoint's headless controllers live in `src/ui/src/pptx/render/controller/`:
+  (contract-driven React, Vue and Solid factories); the docx, xlsx and visio bindings run on it, and
+  every teams binding goes through `bindTeams` in `ooxml-ui/teams`, which is built on it. PowerPoint's headless controllers live in `src/ui/src/pptx/render/controller/`:
   each binding adds one store adapter and keeps only its native template, lifecycle, focus and portals.
   Shared chart and SmartArt elements (`office-ui-chart-*`, `office-ui-smartart-*`) are mounted by the
   products that use them rather than re-implemented per binding (see `docs/agnostic-core-plan.md` sections

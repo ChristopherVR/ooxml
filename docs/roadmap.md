@@ -20,7 +20,7 @@ Where the project stands and what comes next. The repository layout and the way 
   - pptx chart data labels and fills saved through the neutral writer, then `PptxChartData` as an adapter over the neutral model, then pptx ChartEx parsing on the neutral model (agnostic plan C3 to C5);
   - Word and Excel ChartEx editing (C5);
   - SmartArt styles and colours, and the cached drawing writer (S4, S5);
-  - the shared Format pane's remaining controls (effects, 3-D, text, trendlines, error bars, markers, axis titles) and Visio's use of it (U2).
+  - the shared Format pane's remaining controls (effects, 3-D, text, trendlines, error bars, markers, axis titles) (U2).
     The steps are defined in [agnostic-core-plan.md](agnostic-core-plan.md) sections 3.5 to 3.7 and the order is in [structure-plan.md](structure-plan.md) section 5.3.
 - **Less logic in the UI packages:** the Word editor and PowerPoint renderer code now live in `src/ui/src/docx` and `src/ui/src/pptx`; DOM-free pieces of them still move into `src/core` areas over time.
 

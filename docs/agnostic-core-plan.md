@@ -535,11 +535,12 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   draws PowerPoint's Format pane from a neutral model over a `ChartFormatSource`. `chartSpaceFormatSource` reads a
   `ChartSpace`, and each field is emitted as a typed `ChartEditIntent` (`chart/edit/intent.ts`, with the new target paint
   and group options operations).
-- **U2, products mount the pane (done for PowerPoint, Excel and Word).** PowerPoint subclasses it
+- **U2, products mount the pane (done for PowerPoint, Excel, Word and Visio).** PowerPoint subclasses it
   (`pptx-ui-chart-format-pane`) with a `PptxChartData` source and one adapter (`chart-format-pane-edit.ts`) onto its own
   operations; effects, 3-D, Text Options, pattern and picture fills and the secondary axis remain PowerPoint extensions.
   Excel replaced its Format Chart Area and Format Data Series panes with it (`xlsx/chart-format-source.ts`, intents applied
-  through `editChart`), keeping its richer fill controls in a slot. Word mounts it since Wave 6 (`src/ui/src/docx/chart-format-pane.ts`).
+  through `editChart`), keeping its richer fill controls in a slot. Word mounts it since Wave 6 (`src/ui/src/docx/chart-format-pane.ts`), and Visio for an
+  inserted chart object (Format Chart, `src/ui/src/visio/viewer-chart-editor.ts`).
   **Remains:** the pane has no effects, 3-D, text, pattern or picture fill, secondary axis, trendline, error bar, marker or axis
   title controls (no shared intents); Visio does not mount it.
 - **U3, shared chart data sheet (`office-ui-chart-data-sheet`, `src/ui/src/chart/data-sheet.ts`).** One element for the
