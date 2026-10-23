@@ -2,8 +2,9 @@
 /**
  * The format inspector's Text Effects: text shadow, glow and reflection of the TEXT
  * (`a:rPr/a:effectLst`), as opposed to the shape's own Effects. Every binding offers them as
- * checkboxes named "Text Shadow", "Text Glow" and "Text Reflection" (React and Svelte with their
- * own controls, Vue, Angular and vanilla through the shared `TEXT_EFFECT_SECTIONS`).
+ * checkboxes in `<label>`s captioned "Text Shadow", "Text Glow" and "Text Reflection" (React and
+ * Svelte with their own controls, Vue, Angular and vanilla through the shared
+ * `TEXT_EFFECT_SECTIONS`).
  *
  * Two bindings had none on screen: Vue imported its panels and never rendered them, and Angular
  * had 3-D text but no shadow, glow or reflection. And Svelte and vanilla (and Vue's unrendered
@@ -13,7 +14,7 @@
  * `a:rPr` as `a:glow` / `a:outerShdw`.
  *
  * Some bindings keep the section in a collapsed `<details>`, so the spec opens every inspector
- * section first, as a user would, and then finds the controls by their accessible names.
+ * section first, as a user would, and then finds the controls by their captions.
  *
  * Run: bunx playwright test inspector-text-effects
  */
@@ -39,9 +40,18 @@ async function openInspectorSections(page: Page): Promise<void> {
 	});
 }
 
-/** One of the Text Effects checkboxes, by the name every binding gives it. */
+/**
+ * One of the Text Effects checkboxes: the checkbox of the `<label>` captioned with the name every
+ * binding gives it. The checkbox is `<pptx-ui-checkbox>`, a form-associated custom element that
+ * takes its accessible name from that label (Chromium's accessibility tree reads "Text Glow"), but
+ * Playwright's own role and label matching only follow a `<label>` to native controls, so
+ * `getByRole('checkbox', { name })` finds it only where a binding also sets `aria-label`.
+ */
 function effectToggle(page: Page, name: 'Text Shadow' | 'Text Glow' | 'Text Reflection'): Locator {
-	return inspector(page).getByRole('checkbox', { name, exact: true });
+	return inspector(page)
+		.locator('label')
+		.filter({ hasText: new RegExp(`^\\s*${name}\\s*$`, 'u') })
+		.getByRole('checkbox');
 }
 
 /** The ribbon's Undo control (an icon button: its name is the one thing all five agree on). */
