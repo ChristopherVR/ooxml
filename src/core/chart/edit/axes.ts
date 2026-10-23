@@ -8,8 +8,11 @@ import type { ChartShapeProperties } from '../model-series';
 import { assignOrDelete, editChartSpace } from './draft';
 import { chartTitleWithText } from './title';
 
-/** The first axis of a kind (PowerPoint's addressing) or the axis with an id. */
-export type ChartAxisTarget = ChartAxisKind | { id: number };
+/**
+ * The first axis of a kind (PowerPoint's addressing), the axis with an id, or the axis at a
+ * position of `plotArea.axes` (a Format pane's `axis:N` target).
+ */
+export type ChartAxisTarget = ChartAxisKind | { id: number } | { index: number };
 
 export interface ChartAxisEdit {
 	/** `c:delete` is the inverse. */
@@ -42,8 +45,12 @@ export interface ChartAxisEdit {
 
 /** The axis an edit targets; throws when the part has no such axis. */
 export function chartAxisAt(space: ChartSpace, target: ChartAxisTarget): ChartAxis {
-	const axis = space.plotArea.axes.find((item) =>
-		typeof target === 'string' ? item.kind === target : item.id === target.id,
+	const axis = space.plotArea.axes.find((item, position) =>
+		typeof target === 'string'
+			? item.kind === target
+			: 'index' in target
+				? position === target.index
+				: item.id === target.id,
 	);
 	if (!axis) throw new RangeError(`No chart axis ${JSON.stringify(target)}`);
 	return axis;
