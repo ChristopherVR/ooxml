@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 /**
- * The autosave TIMER contract (the polling half of the five-binding split).
+ * The autosave TIMER contract, through the shared `createAutosaveController`.
  *
  * `isDirty` stays true from the first edit until the user performs a real save,
  * so a timer keyed on it alone re-serialized the whole deck and rewrote an
@@ -109,9 +109,9 @@ describe('autosave timer redundancy', () => {
 		expect(saveAutosaveSnapshot).toHaveBeenCalledTimes(2);
 	});
 
-	it('writes on every tick when the host supplies no change sources', async () => {
-		// The opt-out must keep the old always-write behaviour: a binding that
-		// cannot describe its state is never a reason to drop a snapshot.
+	it('without change sources, the clean-to-dirty transition is the one edit', async () => {
+		// The unified engine (shared `createAutosaveController`): one snapshot per
+		// interval after an edit, never a rewrite of an unchanged deck.
 		const serialize = vi.fn(async () => new Uint8Array([1]));
 		function Host(): null {
 			useAutosave({
@@ -131,7 +131,7 @@ describe('autosave timer redundancy', () => {
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(INTERVAL_SECONDS * 1000);
 		});
-		expect(serialize).toHaveBeenCalledTimes(2);
+		expect(serialize).toHaveBeenCalledTimes(1);
 	});
 
 	it('does not mistake an edit during serialization for an already saved source', async () => {
