@@ -2,14 +2,10 @@
  * chart-data-helpers.ts: Pure immutable ELEMENT-level wrappers for chart data
  * editing (`ChartPptxElement` in, `ChartPptxElement` out).
  *
- * The row/column add-remove policy (auto-naming, refusing to drop the last
- * series/category, rejecting non-numeric cell input) lives once in shared's
- * `render/chart-data-grid-ops` (`addChartSeries`, `removeChartSeries`, etc.,
- * which operate on the bare `PptxChartData`); these functions just lift that
- * policy to the element level so `chart-data-editor.component.ts` can stay a
- * thin `elementChange` emitter. `setSeriesName`, `setSeriesColor`,
- * `patchChartStyle` and the advanced formatting wrappers below have no shared
- * equivalent yet and are genuinely local.
+ * The chart data sheet's row/column edits go through the shared
+ * `pptx-ui-chart-data-sheet` element and core's `chartDataApplySheetEdits`;
+ * what stays here is the per-series colour, `patchChartStyle` / `patchChartData`
+ * and the advanced formatting wrappers, which have no shared element yet.
  *
  * All functions are immutable (return new objects, leave inputs unchanged)
  * and framework-agnostic.
@@ -20,15 +16,7 @@
  * @module angular-viewer/chart-data-helpers
  */
 
-import {
-	addChartCategory,
-	addChartSeries,
-	patchChartData as sharedPatchChartData,
-	removeChartCategory,
-	removeChartSeries,
-	setChartCategoryLabel,
-	setChartCellValue,
-} from 'ooxml-ui/pptx';
+import { patchChartData as sharedPatchChartData } from 'ooxml-ui/pptx';
 import {
 	chartDataChangeType,
 	chartDataUpdatePoint,
@@ -165,205 +153,6 @@ export function setDataPointExplosion(
 	return withClonedChart(element, (el) =>
 		setChartDataPointExplosion(el, seriesIndex, pointIndex, explosion),
 	);
-}
-
-// ---------------------------------------------------------------------------
-// addSeries
-// ---------------------------------------------------------------------------
-
-/**
- * Add a new blank series to a `ChartPptxElement`, returning a new element.
- *
- * The series is seeded with zeroes matching the current category count.
- * When the chart has no `chartData`, the element is returned unchanged.
- *
- * @param element - The source chart element (not mutated).
- * @returns A new `ChartPptxElement` with the series appended.
- *
- * @example
- * ```ts
- * const updated = addSeries(el);
- * ```
- */
-export function addSeries(element: ChartPptxElement): ChartPptxElement {
-	const chartData = element.chartData;
-	if (!chartData) {
-		return element;
-	}
-	return { ...element, chartData: addChartSeries(chartData) };
-}
-
-// ---------------------------------------------------------------------------
-// removeSeries
-// ---------------------------------------------------------------------------
-
-/**
- * Remove a series by index from a `ChartPptxElement`, returning a new
- * element.
- *
- * Guards against removing the last series (requires at least 1).  When the
- * chart has no `chartData`, the element is returned unchanged.
- *
- * @param element - The source chart element (not mutated).
- * @param seriesIndex - Zero-based index of the series to remove.
- * @returns A new `ChartPptxElement`, or the original if removal is not
- *   possible.
- *
- * @example
- * ```ts
- * const updated = removeSeries(el, 1);
- * ```
- */
-export function removeSeries(element: ChartPptxElement, seriesIndex: number): ChartPptxElement {
-	const chartData = element.chartData;
-	const next = chartData && removeChartSeries(chartData, seriesIndex);
-	return next ? { ...element, chartData: next } : element;
-}
-
-// ---------------------------------------------------------------------------
-// addCategory
-// ---------------------------------------------------------------------------
-
-/**
- * Append a new category (data column) to a `ChartPptxElement`, returning a
- * new element.
- *
- * @param element - The source chart element (not mutated).
- * @returns A new `ChartPptxElement` with the category appended.
- *
- * @example
- * ```ts
- * const updated = addCategory(el);
- * ```
- */
-export function addCategory(element: ChartPptxElement): ChartPptxElement {
-	const chartData = element.chartData;
-	if (!chartData) {
-		return element;
-	}
-	return { ...element, chartData: addChartCategory(chartData) };
-}
-
-// ---------------------------------------------------------------------------
-// removeCategory
-// ---------------------------------------------------------------------------
-
-/**
- * Remove a category by index from a `ChartPptxElement`, returning a new
- * element.
- *
- * Guards against removing the last category (requires at least 1).
- *
- * @param element - The source chart element (not mutated).
- * @param catIndex - Zero-based index of the category to remove.
- * @returns A new `ChartPptxElement`, or the original if removal is not
- *   possible.
- *
- * @example
- * ```ts
- * const updated = removeCategory(el, 2);
- * ```
- */
-export function removeCategory(
-	element: ChartPptxElement,
-	catIndex: number,
-	followDataPoint = true,
-): ChartPptxElement {
-	const chartData = element.chartData;
-	const next = chartData && removeChartCategory(chartData, catIndex, followDataPoint);
-	return next ? { ...element, chartData: next } : element;
-}
-
-// ---------------------------------------------------------------------------
-// setSeriesValue
-// ---------------------------------------------------------------------------
-
-/**
- * Update a single numeric value in a chart series, returning a new
- * `ChartPptxElement`.
- *
- * Parses `rawValue` as a float.  When the parsed value is not finite, the
- * element is returned unchanged.
- *
- * @param element - The source chart element (not mutated).
- * @param seriesIndex - Zero-based series index.
- * @param catIndex - Zero-based category (point) index.
- * @param rawValue - The new value as a string (from an `<input type="number">`).
- * @returns A new `ChartPptxElement`, or the original when the value is invalid.
- *
- * @example
- * ```ts
- * const updated = setSeriesValue(el, 0, 2, "42.5");
- * ```
- */
-export function setSeriesValue(
-	element: ChartPptxElement,
-	seriesIndex: number,
-	catIndex: number,
-	rawValue: string,
-): ChartPptxElement {
-	const chartData = element.chartData;
-	const next = chartData && setChartCellValue(chartData, seriesIndex, catIndex, rawValue);
-	return next ? { ...element, chartData: next } : element;
-}
-
-// ---------------------------------------------------------------------------
-// setSeriesName
-// ---------------------------------------------------------------------------
-
-/**
- * Rename a series in a `ChartPptxElement`, returning a new element.
- *
- * @param element - The source chart element (not mutated).
- * @param seriesIndex - Zero-based index of the series to rename.
- * @param name - The new series name.
- * @returns A new `ChartPptxElement`.
- *
- * @example
- * ```ts
- * const updated = setSeriesName(el, 0, "Revenue");
- * ```
- */
-export function setSeriesName(
-	element: ChartPptxElement,
-	seriesIndex: number,
-	name: string,
-): ChartPptxElement {
-	const chartData = element.chartData;
-	if (!chartData) {
-		return element;
-	}
-	const series = chartData.series.map((s, i): PptxChartSeries =>
-		i === seriesIndex ? { ...s, name } : s,
-	);
-	return { ...element, chartData: { ...chartData, series } };
-}
-
-// ---------------------------------------------------------------------------
-// setCategoryLabel
-// ---------------------------------------------------------------------------
-
-/**
- * Rename a category label in a `ChartPptxElement`, returning a new element.
- *
- * @param element - The source chart element (not mutated).
- * @param catIndex - Zero-based index of the category to rename.
- * @param label - The new label text.
- * @returns A new `ChartPptxElement`.
- *
- * @example
- * ```ts
- * const updated = setCategoryLabel(el, 0, "Q1 2025");
- * ```
- */
-export function setCategoryLabel(
-	element: ChartPptxElement,
-	catIndex: number,
-	label: string,
-): ChartPptxElement {
-	const chartData = element.chartData;
-	const next = chartData && setChartCategoryLabel(chartData, catIndex, label);
-	return next ? { ...element, chartData: next } : element;
 }
 
 // ---------------------------------------------------------------------------

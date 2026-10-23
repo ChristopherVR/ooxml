@@ -17,10 +17,10 @@ import { ViewerOptionsKey } from '../../composables/useViewerOptionsStore';
 import ChartAxisOptions from './ChartAxisOptions.vue';
 import ChartAxisStyleOptions from './ChartAxisStyleOptions.vue';
 import ChartComboTypeOptions from './ChartComboTypeOptions.vue';
-import ChartDataGrid from './ChartDataGrid.vue';
 import ChartDataLabelOptions from './ChartDataLabelOptions.vue';
 import ChartDataPointMarkerOptions from './ChartDataPointMarkerOptions.vue';
 import ChartDataPointOptions from './ChartDataPointOptions.vue';
+import ChartDataSheet from './ChartDataSheet.vue';
 import ChartDisplayOptions from './ChartDisplayOptions.vue';
 import ChartErrorBarOptions from './ChartErrorBarOptions.vue';
 import ChartFilteredSeriesOptions from './ChartFilteredSeriesOptions.vue';
@@ -103,10 +103,11 @@ function emitChartData(next: PptxChartData): void {
 // (no provider, e.g. a standalone unit test) falls back to PowerPoint's own
 // default of `true`.
 const viewerOptions = inject(ViewerOptionsKey, undefined);
-const getFollowDataPoint = (): boolean =>
-	viewerOptions?.value.advanced.chartPropertiesFollowDataPoint ?? true;
+const followDataPoint = computed(
+	() => viewerOptions?.value.advanced.chartPropertiesFollowDataPoint ?? true,
+);
 
-const editing = useChartEditing(chartElement, chartData, emitChartData, getFollowDataPoint);
+const editing = useChartEditing(chartElement, chartData, emitChartData);
 
 function onTypeChange(event: Event): void {
 	editing.patchChartData({ chartType: (event.target as HTMLSelectElement).value as PptxChartType });
@@ -265,17 +266,12 @@ const CONTROL =
 
 			<ChartUserShapeOptions :chart-data="chartData" @update-chart-data="editing.patchChartData" />
 
-			<ChartDataGrid
-				:series="series"
-				:categories="categories"
+			<ChartDataSheet
+				:chart-data="chartData"
+				:can-edit="props.canEdit"
+				:follow-data-point="followDataPoint"
 				:highlight-cell="highlightCell"
-				@update-series="editing.updateSeries"
-				@update-category-label="editing.updateCategoryLabel"
-				@update-value="editing.updateValue"
-				@add-series="editing.addSeries"
-				@remove-series="editing.removeSeries"
-				@add-category="editing.addCategory"
-				@remove-category="editing.removeCategory"
+				@change="emitChartData"
 			/>
 		</template>
 	</div>

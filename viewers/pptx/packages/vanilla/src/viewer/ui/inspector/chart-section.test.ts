@@ -186,7 +186,9 @@ describe('chart section canvas-click selection surfacing', () => {
 			chartHighlightCell: { seriesIndex: 0, pointIndex: 1 },
 		} as InspectorState);
 
-		const highlighted = section.el.querySelector('.pptxv-chart-grid-cell-highlight');
+		const highlighted = section.el
+			.querySelector('pptx-ui-chart-data-sheet')!
+			.shadowRoot!.querySelector('.highlight');
 		expect(highlighted).not.toBeNull();
 		expect((highlighted as HTMLInputElement).value).toBe('2');
 	});
@@ -215,7 +217,9 @@ describe('chart section canvas-click selection surfacing', () => {
 	it('leaves no highlight when nothing is selected on canvas', () => {
 		const { section } = mount();
 
-		expect(section.el.querySelector('.pptxv-chart-grid-cell-highlight')).toBeNull();
+		expect(
+			section.el.querySelector('pptx-ui-chart-data-sheet')!.shadowRoot!.querySelector('.highlight'),
+		).toBeNull();
 	});
 });
 

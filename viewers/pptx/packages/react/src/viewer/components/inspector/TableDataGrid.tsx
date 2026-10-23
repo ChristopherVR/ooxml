@@ -13,7 +13,7 @@ import {
 /**
  * TableDataGrid.tsx: Inspector-resident spreadsheet editor for table cell TEXT.
  *
- * WHY this exists: every binding already ships a `ChartDataGrid` so chart values
+ * WHY this exists: every binding already ships a chart data sheet so chart values
  * can be edited from the sidebar without entering an on-canvas edit mode. Tables
  * had no equivalent, so the only way to retype a cell was to double-click it on
  * the slide. This is the table analogue: a compact grid of one text input per

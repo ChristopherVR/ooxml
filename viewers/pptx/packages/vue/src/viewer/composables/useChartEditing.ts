@@ -1,13 +1,7 @@
 import {
-	addChartCategory,
-	addChartSeries,
 	hideChartSeries,
 	patchChartData as sharedPatchChartData,
-	removeChartCategory,
-	removeChartSeries,
 	restoreFilteredSeries,
-	setChartCategoryLabel,
-	setChartCellValue,
 	setDataLabelsRangeCache,
 } from 'ooxml-ui/pptx';
 /**
@@ -60,15 +54,6 @@ export interface ChartEditing extends ChartOpEditing {
 	setSeriesErrorBars: (index: number, errBars: PptxChartErrBars | null) => void;
 	/** Patch a single series (e.g. rename) in place, preserving the rest. */
 	updateSeries: (index: number, patch: Partial<PptxChartSeries>) => void;
-	/** Rename one category label. */
-	updateCategoryLabel: (catIndex: number, value: string) => void;
-	/** Set one numeric value from a raw input string (ignored if not finite). */
-	updateValue: (seriesIndex: number, catIndex: number, raw: string) => void;
-	/** Append an empty series/category, or remove one by index. */
-	addSeries: () => void;
-	removeSeries: (seriesIndex: number) => void;
-	addCategory: () => void;
-	removeCategory: (catIndex: number) => void;
 	/** PowerPoint "Chart Filters": hide a currently-visible series. */
 	hideSeries: (seriesIndex: number) => void;
 	/** PowerPoint "Chart Filters": restore a series it hid. */
@@ -83,15 +68,11 @@ export interface ChartEditing extends ChartOpEditing {
  * @param element    reactive accessor for the selected chart element (or null).
  * @param chartData  reactive accessor for that element's chart data (or null).
  * @param emitUpdate emits the shallow `{ chartData }` patch up to the host.
- * @param getFollowDataPoint File > Options > Advanced > "Properties follow
- *   chart data point for current workbook", read fresh on every category
- *   removal. Defaults to PowerPoint's own default (`true`) when omitted.
  */
 export function useChartEditing(
 	element: ComputedRef<ChartPptxElement | null>,
 	chartData: ComputedRef<PptxChartData | null>,
 	emitUpdate: (next: PptxChartData) => void,
-	getFollowDataPoint: () => boolean = () => true,
 ): ChartEditing {
 	const replaceChartData = (next: PptxChartData): void => emitUpdate(next);
 
@@ -141,57 +122,6 @@ export function useChartEditing(
 	const setSeriesColor = (index: number, color: string | null): void =>
 		updateSeries(index, { color: color ?? undefined });
 
-	const updateCategoryLabel = (catIndex: number, value: string): void => {
-		const data = chartData.value;
-		const next = data && setChartCategoryLabel(data, catIndex, value);
-		if (next) {
-			replaceChartData(next);
-		}
-	};
-
-	const updateValue = (seriesIndex: number, catIndex: number, raw: string): void => {
-		const data = chartData.value;
-		if (!data) {
-			return;
-		}
-		const next = setChartCellValue(data, seriesIndex, catIndex, raw);
-		if (next) {
-			replaceChartData(next);
-		}
-	};
-
-	const addCategory = (): void => {
-		const data = chartData.value;
-		if (!data) {
-			return;
-		}
-		replaceChartData(addChartCategory(data));
-	};
-
-	const removeCategory = (catIndex: number): void => {
-		const data = chartData.value;
-		const next = data && removeChartCategory(data, catIndex, getFollowDataPoint());
-		if (next) {
-			replaceChartData(next);
-		}
-	};
-
-	const addSeries = (): void => {
-		const data = chartData.value;
-		if (!data) {
-			return;
-		}
-		replaceChartData(addChartSeries(data));
-	};
-
-	const removeSeries = (seriesIndex: number): void => {
-		const data = chartData.value;
-		const next = data && removeChartSeries(data, seriesIndex);
-		if (next) {
-			replaceChartData(next);
-		}
-	};
-
 	const setSeriesTrendline = (index: number, trendline: PptxChartTrendline | null): void =>
 		updateSeries(index, { trendlines: trendline ? [trendline] : [] });
 
@@ -237,12 +167,6 @@ export function useChartEditing(
 		setSeriesErrorBars,
 		...opEditing,
 		updateSeries,
-		updateCategoryLabel,
-		updateValue,
-		addSeries,
-		removeSeries,
-		addCategory,
-		removeCategory,
 		hideSeries,
 		restoreSeries,
 		setLabelsRangeCache,

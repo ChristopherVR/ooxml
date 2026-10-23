@@ -6,7 +6,7 @@ import { inject, provide, ref, watchEffect } from 'vue';
 /**
  * chart-part-selection (Vue): the bridge between on-canvas chart part clicks
  * (`useChartCanvasInteraction`, wired into `ChartRenderer`) and the chart
- * inspector (`ChartPanel` / `ChartDataGrid`), without threading props through
+ * inspector (`ChartPanel` / `ChartDataSheet`), without threading props through
  * the hot `SlideStage` -> `ElementRenderer` chain. Mirrors React's
  * `ChartPartSelectionContext` using the same provide/inject pattern as
  * `SmartArtNodeEditKey` / `TableCellEditKey`.

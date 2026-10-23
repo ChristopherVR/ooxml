@@ -1,9 +1,8 @@
 import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
-import type { PptxChartData, MediaPptxElement, TextStyle } from 'pptx-viewer-core';
+import type { MediaPptxElement, TextStyle } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';
-import { createChartDataGrid } from './chart-data-grid';
 import { createImageSection } from './image-section';
 import { createMediaTrimTimeline } from './media-trim-timeline';
 import { createQuickStylesGallery } from './quick-styles-gallery';
@@ -144,75 +143,6 @@ describe('text 3d section', () => {
 		expect(setTextStyle).toHaveBeenCalledWith(
 			expect.objectContaining({ text3d: expect.objectContaining({ bevelTopWidth: 38100 }) }),
 		);
-	});
-});
-
-describe('chart data grid', () => {
-	const chartData = (): PptxChartData => ({
-		chartType: 'bar',
-		categories: ['A', 'B'],
-		series: [
-			{ name: 'S1', values: [1, 2] },
-			{ name: 'S2', values: [3, 4] },
-		],
-	});
-
-	it('renders one column per series and one row per category', () => {
-		const grid = createChartDataGrid(document, createTranslator(), vi.fn());
-		grid.update(chartData());
-
-		expect(grid.el.querySelectorAll('thead th')).toHaveLength(3);
-		expect(grid.el.querySelectorAll('tbody tr')).toHaveLength(2);
-	});
-
-	it('commits an edited cell value', () => {
-		const onChange = vi.fn();
-		const grid = createChartDataGrid(document, createTranslator(), onChange);
-		grid.update(chartData());
-
-		const cell = grid.el.querySelector<HTMLInputElement>('tbody input[type="number"]')!;
-		cell.value = '42';
-		cell.dispatchEvent(new Event('change'));
-
-		expect(onChange.mock.calls[0][0].series[0].values[0]).toBe(42);
-	});
-
-	it('ignores a non-numeric cell instead of writing NaN', () => {
-		const onChange = vi.fn();
-		const grid = createChartDataGrid(document, createTranslator(), onChange);
-		grid.update(chartData());
-
-		const cell = grid.el.querySelector<HTMLInputElement>('tbody input[type="number"]')!;
-		cell.value = '';
-		cell.dispatchEvent(new Event('change'));
-
-		expect(onChange).not.toHaveBeenCalled();
-	});
-
-	it('adds a category and a series through the toolbar', () => {
-		const onChange = vi.fn();
-		const grid = createChartDataGrid(document, createTranslator(), onChange);
-		grid.update(chartData());
-
-		const [addCategory, addSeries] =
-			grid.el.querySelectorAll<HTMLButtonElement>('.pptxv-chart-grid-btn');
-		addCategory.click();
-		addSeries.click();
-
-		expect(onChange.mock.calls[0][0].categories).toHaveLength(3);
-		expect(onChange.mock.calls[1][0].series).toHaveLength(3);
-	});
-
-	it('removes a series but never the last one', () => {
-		const onChange = vi.fn();
-		const grid = createChartDataGrid(document, createTranslator(), onChange);
-		grid.update(chartData());
-		grid.el.querySelector<HTMLButtonElement>('thead .pptxv-chart-grid-remove')!.click();
-		expect(onChange.mock.calls[0][0].series).toHaveLength(1);
-
-		onChange.mockClear();
-		grid.update({ chartType: 'bar', categories: ['A'], series: [{ name: 'S1', values: [1] }] });
-		expect(grid.el.querySelector('.pptxv-chart-grid-remove')).toBeNull();
 	});
 });
 
