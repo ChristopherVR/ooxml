@@ -4,7 +4,7 @@
  * one toggle per section, its fields only while on, and every change goes out
  * as the descriptor's `Partial<ShapeStyle>` patch.
  */
-import { SHAPE_EFFECT_SECTIONS } from 'ooxml-ui/pptx';
+import { SHAPE_EFFECT_SECTIONS, SHAPE_LINE_SECTIONS } from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -85,5 +85,36 @@ describe('inspectorFields (effects)', () => {
 		});
 		expect(onPatch).toHaveBeenCalledWith(expect.objectContaining({ shadowBlur: 96 }));
 		expect(byTestId('fx-outer-shadow-rotate-with-shape')).not.toBeNull();
+	});
+});
+
+describe('inspectorFields (line options)', () => {
+	function renderLine(style: ShapeStyle | undefined, onPatch: (p: Partial<ShapeStyle>) => void) {
+		act(() => {
+			root.render(
+				<div className='grid grid-cols-2'>
+					<InspectorFields sections={SHAPE_LINE_SECTIONS} target={style} onPatch={onPatch} />
+				</div>,
+			);
+		});
+	}
+
+	it('draws the untitled line fields with their current values', () => {
+		renderLine({ strokeWidth: 3, strokeOpacity: 0.4, lineCap: 'sq' }, vi.fn());
+		expect(byTestId('line-width')!.value).toBe('3');
+		expect(byTestId('line-opacity')!.value).toBe('40');
+		expect(byTestId('line-cap')!.tagName.toLowerCase()).toBe('pptx-ui-select');
+		expect(container.querySelector('pptx-ui-checkbox')).toBeNull();
+	});
+
+	it('writes a dash choice as a shape-style patch', () => {
+		const onPatch = vi.fn();
+		renderLine({}, onPatch);
+		const dash = byTestId('line-dash')!;
+		act(() => {
+			dash.value = 'dash';
+			dash.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onPatch).toHaveBeenCalledWith({ strokeDash: 'dash' });
 	});
 });

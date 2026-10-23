@@ -55,9 +55,9 @@
 					{disabled}
 					onchange={(e) => onToggle(section.id, e.currentTarget.checked)}
 				></pptx-ui-checkbox>
-				<span>{t(section.labelKey)}</span>
+				<span>{t(section.labelKey ?? '')}</span>
 			</label>
-		{:else}
+		{:else if section.labelKey}
 			<span class="pptx-svelte-fields-title">{t(section.labelKey)}</span>
 		{/if}
 		{#if section.fields.length}

@@ -1,7 +1,9 @@
 <script lang="ts">
 	/**
-	 * FillStrokeSection: flat fill/stroke colour (as before), plus fill/stroke
-	 * opacity sliders, a gradient-fill toggle, and a pattern-fill toggle
+	 * FillStrokeSection: flat fill/stroke colour (as before), the fill opacity
+	 * slider, the shared Line options (`SHAPE_LINE_SECTIONS`: width,
+	 * transparency, dash, compound, join, cap, drawn by `InspectorFields`),
+	 * a gradient-fill toggle, and a pattern-fill toggle
 	 * (mutually exclusive with gradient, both mutually exclusive with solid).
 	 * When the gradient toggle is on, {@link GradientPanel} renders the
 	 * linear/radial + angle + stop editor built on the shared
@@ -11,7 +13,7 @@
 	 * vanilla binding's scope. Shown only for elements that pass
 	 * `hasShapeProperties`.
 	 */
-	import type { PptxElement } from 'pptx-viewer-core';
+	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
 	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 	import {
@@ -19,6 +21,8 @@
 		gradientStateOf,
 		gradientStatePatch,
 		hasGradientFill,
+		SHAPE_LINE_SECTIONS,
+		shapeQuickStylePatch,
 		strokeColorOf,
 	} from 'ooxml-ui/pptx';
 
@@ -29,10 +33,9 @@
 		setFillOpacityPatch,
 		setSolidFillPatch,
 		setStrokeColorPatch,
-		setStrokeOpacityPatch,
-		strokeOpacityOf,
 	} from '../../editor';
 	import GradientPanel from './GradientPanel.svelte';
+	import InspectorFields from './InspectorFields.svelte';
 	import PatternFillPanel from './PatternFillPanel.svelte';
 	import RecentColorsRow from './RecentColorsRow.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
@@ -43,7 +46,7 @@
 	const fill = $derived(fillColorOf(el));
 	const stroke = $derived(strokeColorOf(el));
 	const fillOpacity = $derived(fillOpacityOf(el));
-	const strokeOpacity = $derived(strokeOpacityOf(el));
+	const shapeStyle = $derived(hasShapeProperties(el) ? el.shapeStyle : undefined);
 	const gradientOn = $derived(hasGradientFill(el));
 	const patternOn = $derived(
 		hasShapeProperties(el) ? el.shapeStyle?.fillMode === 'pattern' : false,
@@ -85,6 +88,10 @@
 	const strokeColorRef = $derived(
 		hasShapeProperties(el) ? el.shapeStyle?.strokeColorRef : undefined,
 	);
+
+	function patchLine(patch: Partial<ShapeStyle>): void {
+		editor.patchSelected(shapeQuickStylePatch(el, patch));
+	}
 
 	function togglePattern(checked: boolean): void {
 		if (checked) {
@@ -150,19 +157,7 @@
 		oninput={(e) => editor.patchSelected(setFillOpacityPatch(el, Number(e.currentTarget.value)))}
 	/>
 </label>
-<label class="pptx-svelte-field">
-	<span class="pptx-svelte-field-label"
-		>{t('pptx.strokeEffects.strokeOpacity')} <b>{pct(strokeOpacity)}</b></span
-	>
-	<input
-		type="range"
-		min="0"
-		max="1"
-		step="0.01"
-		value={strokeOpacity}
-		oninput={(e) => editor.patchSelected(setStrokeOpacityPatch(el, Number(e.currentTarget.value)))}
-	/>
-</label>
+<InspectorFields sections={SHAPE_LINE_SECTIONS} target={shapeStyle} onpatch={patchLine} />
 
 <label class="pptx-svelte-field-checkbox">
 	<pptx-ui-checkbox

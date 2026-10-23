@@ -81,8 +81,12 @@ export interface InspectorSectionToggle<T, P> {
 /** A titled group of fields, optionally behind a toggle. */
 export interface InspectorSectionDescriptor<T, P> {
 	id: string;
-	/** Translation key of the section title (the toggle's caption when toggleable). */
-	labelKey: string;
+	/**
+	 * Translation key of the section title (the toggle's caption when
+	 * toggleable). A section without a toggle may omit it to draw its fields
+	 * untitled inside a pane that already heads them.
+	 */
+	labelKey?: string;
 	toggle?: InspectorSectionToggle<T, P>;
 	fields: readonly InspectorFieldDescriptor<T, P>[];
 }
@@ -106,7 +110,8 @@ export interface InspectorFieldView {
 /** What a binding draws for one section. */
 export interface InspectorSectionView {
 	id: string;
-	labelKey: string;
+	/** Absent for an untitled section (never for a toggleable one). */
+	labelKey?: string;
 	/** The section has an on/off checkbox. */
 	toggleable: boolean;
 	/** The toggle is on (always `true` for a section without one). */
@@ -165,7 +170,6 @@ export function resolveInspectorSections<T, P>(
 		const on = section.toggle ? section.toggle.isOn(target) : true;
 		const view: InspectorSectionView = {
 			id: section.id,
-			labelKey: section.labelKey,
 			toggleable: section.toggle !== undefined,
 			on,
 			fields: on
@@ -174,6 +178,7 @@ export function resolveInspectorSections<T, P>(
 						.map((field) => fieldView(field, target))
 				: [],
 		};
+		if (section.labelKey !== undefined) view.labelKey = section.labelKey;
 		if (section.toggle?.testId !== undefined) view.toggleTestId = section.toggle.testId;
 		return view;
 	});

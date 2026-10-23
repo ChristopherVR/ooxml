@@ -194,7 +194,8 @@ describe('fillStrokeSection', () => {
 		// how the live `editor.selectedElement` derivation refreshes it in the
 		// real InspectorPanel tree.
 		setProps({ el: currentEl(editor) });
-		strokeOpacity.value = '0.7';
+		// The stroke slider is the shared Line descriptor's 0-100 transparency.
+		strokeOpacity.value = '70';
 		strokeOpacity.dispatchEvent(new Event('input', { bubbles: true }));
 		flushSync();
 
@@ -203,6 +204,23 @@ describe('fillStrokeSection', () => {
 		};
 		expect(el.shapeStyle?.fillOpacity).toBe(0.4);
 		expect(el.shapeStyle?.strokeOpacity).toBe(0.7);
+	});
+
+	it('draws the shared Line options and writes a dash choice', () => {
+		const editor = makeEditor(shapeEl());
+		const { target } = mountSection(editor, currentEl(editor));
+		const dash = target.querySelector<HTMLSelectElement>('[data-testid="line-dash"]');
+		expect(target.querySelector('[data-testid="line-width"]')).not.toBeNull();
+		expect(target.querySelector('[data-testid="line-cap"]')).not.toBeNull();
+		if (!dash) {
+			throw new Error('dash picker not found');
+		}
+		dash.value = 'dash';
+		dash.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+
+		const el = currentEl(editor) as { shapeStyle?: { strokeDash?: string } };
+		expect(el.shapeStyle?.strokeDash).toBe('dash');
 	});
 
 	it('shows the gradient sub-panel only while the gradient toggle is on', () => {

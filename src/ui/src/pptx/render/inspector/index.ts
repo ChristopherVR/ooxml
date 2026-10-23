@@ -28,3 +28,5 @@ export type {
 } from './shape-effect-fields';
 export { SHAPE_BEVEL_OPTIONS } from './shape-effect-fields-more';
 export { SHAPE_EFFECT_SECTIONS } from './shape-effect-sections';
+export { SHAPE_LINE_SECTION, SHAPE_LINE_SECTIONS } from './shape-line-fields';
+export type { ShapeLineSection } from './shape-line-fields';

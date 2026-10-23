@@ -31,7 +31,7 @@ describe('shape effect sections', () => {
 	it('uses only translation keys the English dictionary defines', () => {
 		const keys = new Set<string>();
 		for (const section of SHAPE_EFFECT_SECTIONS) {
-			keys.add(section.labelKey);
+			if (section.labelKey) keys.add(section.labelKey);
 			for (const field of section.fields) {
 				keys.add(field.labelKey);
 				for (const option of field.options ?? []) keys.add(option.labelKey);

@@ -144,14 +144,14 @@ export function createInspectorFields<T, P>(
 		const slot: SectionSlot = { el: box, signature: signatureOf(view), fields: new Map() };
 		if (view.toggleable) {
 			const toggle = makeCheckboxField(doc, {
-				label: t(view.labelKey),
+				label: t(view.labelKey ?? ''),
 				onChange: (on) => emit(inspectorTogglePatch(sections, view.id, current, on)),
 			});
 			toggle.el.classList.add('pptxv-inspector-fields-toggle');
 			tagControl(toggle.el, view.toggleTestId);
 			box.appendChild(toggle.el);
 			slot.toggle = toggle;
-		} else {
+		} else if (view.labelKey) {
 			const title = createEl(doc, 'div', 'pptxv-inspector-fields-title');
 			title.textContent = t(view.labelKey);
 			box.appendChild(title);

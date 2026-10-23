@@ -3,6 +3,7 @@ import {
 	defaultGradientState,
 	gradientStopColorCommitPatch,
 	PATTERN_PRESET_OPTIONS,
+	SHAPE_LINE_SECTIONS,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -12,6 +13,7 @@ import { makeButton, makeColorControl, makeNumberField } from '../controls';
 import { createRecentColorsRow } from '../recent-colors-row';
 import { createThemeColorSwatchGrid } from '../theme-color-swatch-grid';
 import { makeCheckboxField, makeRangeField, makeSelectField } from './controls-extra';
+import { createInspectorFields } from './inspector-fields';
 import { createShapeEffectsControls } from './shape-effects-controls';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -92,14 +94,6 @@ export function createFillSection(
 	colorGroup(t('pptx.inspector.fill'), fill.el, fillTheme.el, fillRecent.el);
 	colorGroup(t('pptx.inspector.line'), stroke.el, strokeTheme.el, strokeRecent.el);
 
-	const strokeWidth = makeNumberField(doc, {
-		label: t('pptx.ribbon.strokeWidth'),
-		min: 0,
-		step: 0.5,
-		onCommit: handlers.setShapeStrokeWidth,
-	});
-	el.appendChild(strokeWidth.el);
-
 	const fillOpacity = makeRangeField(doc, {
 		label: t('pptx.strokeEffects.fillOpacity'),
 		min: 0,
@@ -109,15 +103,13 @@ export function createFillSection(
 		onCommit: handlers.setFillOpacity,
 	});
 	el.appendChild(fillOpacity.el);
-	const strokeOpacity = makeRangeField(doc, {
-		label: t('pptx.strokeEffects.strokeOpacity'),
-		min: 0,
-		max: 1,
-		step: 0.01,
-		formatValue: pct,
-		onCommit: handlers.setStrokeOpacity,
+	// Line options (width, transparency, dash, compound, join, cap): the shared
+	// descriptors, drawn by the generic renderer.
+	const lineFields = createInspectorFields(doc, t, {
+		sections: SHAPE_LINE_SECTIONS,
+		onPatch: (patch) => handlers.setShapeStyle(patch),
 	});
-	el.appendChild(strokeOpacity.el);
+	el.appendChild(lineFields.el);
 
 	// -- Gradient sub-panel -----------------------------------------------------
 	const gradientToggle = makeCheckboxField(doc, {
@@ -280,15 +272,7 @@ export function createFillSection(
 		});
 	};
 
-	const gated = [
-		fill,
-		stroke,
-		strokeWidth,
-		fillOpacity,
-		strokeOpacity,
-		gradientToggle,
-		patternToggle,
-	];
+	const gated = [fill, stroke, fillOpacity, gradientToggle, patternToggle];
 	const gradientGated = [linearBtn, radialBtn, angleField, addStopBtn];
 	const patternGated = [patternPreset, patternBackground];
 	const effects = createShapeEffectsControls(doc, t, handlers);
@@ -300,9 +284,8 @@ export function createFillSection(
 			el.hidden = !state.hasSelection || !state.canShape;
 			fill.setValue(state.fillColor);
 			stroke.setValue(state.strokeColor);
-			strokeWidth.setValue(state.strokeWidth);
 			fillOpacity.setValue(state.fillOpacity);
-			strokeOpacity.setValue(state.strokeOpacity);
+			lineFields.update(state.shapeStyle, !state.canShape);
 			fillTheme.setThemeColorMap(state.themeColorMap);
 			fillTheme.setSelected(state.fillColorRef, state.fillColor);
 			fillTheme.setDisabled(!state.canShape);

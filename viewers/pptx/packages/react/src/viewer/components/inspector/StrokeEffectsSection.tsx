@@ -1,19 +1,12 @@
-import { SHAPE_EFFECT_SECTIONS } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef, ShapeStyle, StrokeDashType } from 'pptx-viewer-core';
+import { SHAPE_EFFECT_SECTIONS, SHAPE_LINE_SECTIONS } from 'ooxml-ui/pptx';
+import type { PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { STROKE_DASH_OPTIONS, DEFAULT_STROKE_COLOR } from '../../constants';
+import { DEFAULT_STROKE_COLOR } from '../../constants';
 import { normalizeHexColor } from '../../utils';
-import { WebSelect } from '../WebControls';
-import {
-	COMPOUND_LINE_OPTIONS,
-	LINE_JOIN_OPTIONS,
-	LINE_CAP_OPTIONS,
-	getCompoundLinePreviewStyle,
-} from './fill-stroke-options';
-import { NUM, RNG, DIS, LBL, COL2, SEL, safeNum } from './FillStrokeHelpers';
-import { SelectRow, ColorPickerRow } from './FillStrokeSubComponents';
+import { RNG, DIS, LBL } from './FillStrokeHelpers';
+import { ColorPickerRow } from './FillStrokeSubComponents';
 import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
@@ -50,21 +43,6 @@ export function StrokeEffectsSection({
 				onChange={onSetStrokeColor}
 			/>
 
-			{/* Stroke Width */}
-			<label className='flex flex-col gap-1'>
-				<span className={LBL}>{t('pptx.strokeEffects.strokeWidth')}</span>
-				<input
-					type='number'
-					min={0}
-					value={Math.round(style?.strokeWidth || 0)}
-					onChange={(e) => {
-						const v = safeNum(e.target.value, 0);
-						onUpdateShapeStyle({ strokeWidth: Math.max(0, v) });
-					}}
-					className={NUM}
-				/>
-			</label>
-
 			{/* Fill Opacity */}
 			<label className='flex flex-col gap-1'>
 				<span className={LBL}>{t('pptx.strokeEffects.fillOpacity')}</span>
@@ -79,95 +57,13 @@ export function StrokeEffectsSection({
 				/>
 			</label>
 
-			{/* Stroke Opacity */}
-			<label className='flex flex-col gap-1'>
-				<span className={LBL}>{t('pptx.strokeEffects.strokeOpacity')}</span>
-				<input
-					type='range'
-					min={0}
-					max={100}
-					value={Math.round((style?.strokeOpacity ?? 1) * 100)}
-					onChange={(e) =>
-						onUpdateShapeStyle({
-							strokeOpacity: Number(e.target.value) / 100,
-						})
-					}
-					className={RNG}
-				/>
-			</label>
-
-			{/* Stroke Dash */}
-			<label className={`flex flex-col gap-1 ${COL2}`}>
-				<span className={LBL}>{t('pptx.strokeEffects.strokeDash')}</span>
-				<WebSelect
-					aria-label={t('pptx.strokeEffects.strokeDash')}
-					value={style?.strokeDash || 'solid'}
-					onChange={(e) =>
-						onUpdateShapeStyle({
-							strokeDash: e.target.value as StrokeDashType,
-						})
-					}
-					className={SEL}
-				>
-					{STROKE_DASH_OPTIONS.map((o) => (
-						<option key={o.value} value={o.value}>
-							{t(o.i18nKey)}
-						</option>
-					))}
-				</WebSelect>
-			</label>
-
-			{/* Compound Line with visual preview */}
-			<label className={`flex flex-col gap-1 ${COL2}`}>
-				<span className={LBL}>{t('pptx.strokeEffects.compoundLine')}</span>
-				<div className='grid grid-cols-5 gap-1'>
-					{COMPOUND_LINE_OPTIONS.map((opt) => (
-						<button
-							key={opt.value}
-							type='button'
-							title={t(opt.i18nKey)}
-							aria-label={t(opt.i18nKey)}
-							className={`h-10 max-md:h-11 px-2 rounded border transition-all ${
-								(style?.compoundLine || 'sng') === opt.value
-									? 'border-primary bg-accent'
-									: 'border-border hover:border-primary/50'
-							}`}
-							onClick={() =>
-								onUpdateShapeStyle({
-									compoundLine: opt.value as NonNullable<ShapeStyle['compoundLine']>,
-								})
-							}
-						>
-							<div
-								className='w-full h-full flex items-center justify-center'
-								style={getCompoundLinePreviewStyle(opt.value)}
-							/>
-						</button>
-					))}
-				</div>
-			</label>
-
-			{/* Effects: the shared Format Shape > Effects sections (shadows, glow,
-			    soft edge, reflection, blur, bevel), drawn by the generic renderer. */}
+			{/* Line options (width, transparency, dash, compound, join, cap) and the
+			    Format Shape > Effects sections, drawn from the shared descriptors. */}
+			<InspectorFields sections={SHAPE_LINE_SECTIONS} target={style} onPatch={onUpdateShapeStyle} />
 			<InspectorFields
 				sections={SHAPE_EFFECT_SECTIONS}
 				target={style}
 				onPatch={onUpdateShapeStyle}
-			/>
-
-			{/* Line Join / Cap */}
-			<SelectRow
-				label={t('pptx.strokeEffects.lineJoin')}
-				value={style?.lineJoin || 'round'}
-				options={LINE_JOIN_OPTIONS}
-				onChange={(v) => onUpdateShapeStyle({ lineJoin: v as 'round' | 'bevel' | 'miter' })}
-			/>
-
-			<SelectRow
-				label={t('pptx.strokeEffects.lineCap')}
-				value={style?.lineCap || 'flat'}
-				options={LINE_CAP_OPTIONS}
-				onChange={(v) => onUpdateShapeStyle({ lineCap: v as 'flat' | 'rnd' | 'sq' })}
 			/>
 		</>
 	);
