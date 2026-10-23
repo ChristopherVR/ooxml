@@ -70,7 +70,7 @@ export const VIEWERS = {
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
-				'bun run pack:smoke',
+				'bun run pack:smoke --workspace-runtime',
 				'bun run check:shared',
 			],
 		},
@@ -89,7 +89,7 @@ export const VIEWERS = {
 			packages: [
 				'bun run build:packages',
 				'bun run check:published',
-				'bun run pack:smoke',
+				'bun run pack:smoke --workspace-runtime',
 				'bun run check:shared',
 			],
 		},
@@ -116,19 +116,19 @@ export const VIEWERS = {
 				'bun run test:worker',
 				'bun run test:package',
 				'bun run build:packages',
-				'bun run test:packages',
+				'node scripts/test-packages.mjs --workspace-runtime',
 			],
 		},
 		// Its `test:browser` also loads the built packages in a browser, through the consumer
 		// project `test:packages` writes (`.package-build/consumer.txt`), so both run first.
-		before: { browser: ['bun run build:packages', 'bun run test:packages'] },
+		before: { browser: ['bun run build:packages', 'node scripts/test-packages.mjs --workspace-runtime'] },
 		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
 		// `browserShardCommands` shards the first and leaves the other two on shard 1.
 		browserChain: {
 			sharded: 'bun x playwright test',
 			rest: [
 				'bun x playwright test --config native-blocks.playwright.config.ts',
-				'node scripts/test-packages-browser.mjs',
+				'node scripts/test-packages-browser.mjs --workspace-runtime',
 			],
 		},
 	},
@@ -140,7 +140,7 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			browser: ['bun run test:browser'],
-			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke'],
+			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke --workspace-runtime'],
 		},
 		// The demos resolve the framework packages through their built dist.
 		before: { types: ['bun run build:packages'], browser: ['bun run build:packages'] },
