@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vue-viewer@1.1.1) - 2026-10-23
+
+### Other
+
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+- Visio, Teams and package check docs (docs6-5) ([e6b2151](https://github.com/ChristopherVR/ooxml/commit/e6b2151824f447a53875592ee9f0a5f89f89cc69))
+
+### Refactor
+
+- **visio:** Build the Visio bindings on ooxml-ui/bindings ([70e9c6c](https://github.com/ChristopherVR/ooxml/commit/70e9c6c77505ef97f9100942aa149cfe26f1cc63))
+
+### Documentation
+
+- **visio:** Describe the shared binding kit, new props and chart editing ([ef66cf6](https://github.com/ChristopherVR/ooxml/commit/ef66cf68620585b6ed3ea070d5690cae2a258121))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vue-viewer@1.1.0) - 2026-10-22
 
 ### Features

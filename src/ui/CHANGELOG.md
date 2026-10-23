@@ -7,6 +7,91 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.0) - 2026-10-23
+
+### Features
+
+- **ui:** Add the shared chart data sheet element ([0a87377](https://github.com/ChristopherVR/ooxml/commit/0a873776e44afbd9f2c672bafdc42e941cfd3957))
+- **ui:** Add headless pptx controllers, key dispatch and ai bridge ([e76abc1](https://github.com/ChristopherVR/ooxml/commit/e76abc1938f9f43cfd138230980bbd3002a042a6))
+- **ui:** Add the ooxml-ui/bindings framework binding kit ([519313b](https://github.com/ChristopherVR/ooxml/commit/519313b1cdd6f2fd323e0f8023b38b116025cd1e))
+- **ui:** Add shared SmartArt picker and pptx insert dialogs ([85085d9](https://github.com/ChristopherVR/ooxml/commit/85085d9f21e9dc9b54c08d36c8e63f63db0b3f88))
+- **ui:** Share one chart Format pane across products ([07f92d9](https://github.com/ChristopherVR/ooxml/commit/07f92d98cc3726aade9c67c9b8c206a804339a0a))
+- **xlsx:** Format charts in the shared chart Format pane ([f1b7e30](https://github.com/ChristopherVR/ooxml/commit/f1b7e309b76ee19828f3a83a4f8e5a43851c93a1))
+- **ui:** Add the shared pptx autosave and recovery controllers ([318997a](https://github.com/ChristopherVR/ooxml/commit/318997a5984e5479dfc913d7cad7785458329fbb))
+- **ui:** Add the shared pptx collaboration provider and session ([56cfc9d](https://github.com/ChristopherVR/ooxml/commit/56cfc9d1d0bb78e8856e76f8fc7265479f4d4814))
+- **ui:** Draw the pptx effects inspector from shared field descriptors ([3e5afa8](https://github.com/ChristopherVR/ooxml/commit/3e5afa829164142fd4a97866db24efe861c6db1e))
+- **ui:** Draw the pptx line options from shared field descriptors ([6194f50](https://github.com/ChristopherVR/ooxml/commit/6194f509e0715ce9d653a49742402693952cbfee))
+- **ui:** Draw the pptx size and position fields from descriptors ([edd890a](https://github.com/ChristopherVR/ooxml/commit/edd890a291dc01af63cfdb8c245b131d298868bc))
+- **ui:** Draw the pptx text box options from shared field descriptors ([bf34da5](https://github.com/ChristopherVR/ooxml/commit/bf34da5910f4623e189b0ff7b6ffe37f632dd949))
+- **ui:** Insert and edit Word charts on the shared chart elements ([3227a15](https://github.com/ChristopherVR/ooxml/commit/3227a15a57ff0da6c6deb6bcd5511f734281a456))
+- **chart:** Share the chart design galleries and add quick layouts ([c95c89a](https://github.com/ChristopherVR/ooxml/commit/c95c89aab3ac5cdd6cdb500e033d0b799533343e))
+- **xlsx:** Add chart styles and quick layout to chart design ([a16785a](https://github.com/ChristopherVR/ooxml/commit/a16785aeb35dc33a4476c18589bb8b8287185879))
+- **visio:** Edit data and format an inserted chart object ([edbd1eb](https://github.com/ChristopherVR/ooxml/commit/edbd1ebb49bffe107ea5b78c056d709879926ed9))
+- **ui:** Add the shared smartart text pane element ([1005bdc](https://github.com/ChristopherVR/ooxml/commit/1005bdc9ab3236bae1fb72ca0e0f283f5deeffc8))
+- **ui:** Edit and insert smartart in the word editor ([228f6b3](https://github.com/ChristopherVR/ooxml/commit/228f6b365b1343b53451670c4cc4a97f997ce179))
+- **ui:** Count uncommitted inline text as an autosave edit ([555ea92](https://github.com/ChristopherVR/ooxml/commit/555ea92f0a0bc49f8a3d0f852aafda0758ca8276))
+- **ui:** Resize Word charts with the shared drawing handle ([0716e69](https://github.com/ChristopherVR/ooxml/commit/0716e6974c133cd3d2851698612ae5b5248b3a0b))
+- **ui:** Format Word charts in the shared chart Format pane ([43b01d2](https://github.com/ChristopherVR/ooxml/commit/43b01d219d56c5e1219277da519842da6a449ebb))
+- **ui:** Edit and insert smartart in the excel editor ([2f44aae](https://github.com/ChristopherVR/ooxml/commit/2f44aae764c9d1ed0bc8ea8039b23964f8bc724b))
+- **ui:** Read the Excel chart Format pane from ChartSpace ([7e7717c](https://github.com/ChristopherVR/ooxml/commit/7e7717ced6b37c0a5661f7b7ca13fc3f70a08dd8))
+- **diagram:** Share the outline levels of a diagram's nodes ([d20e8cf](https://github.com/ChristopherVR/ooxml/commit/d20e8cf0bcfe2b9b8c5c6e06f5701adb0ef68673))
+- **ui:** Add tools to the shared smartart text pane ([7056ec7](https://github.com/ChristopherVR/ooxml/commit/7056ec72e90c62603bc2fc6e85db07d64c3521a0))
+- **ui:** Add the pptx-ui-smartart-text-pane alias ([89dc5f1](https://github.com/ChristopherVR/ooxml/commit/89dc5f16edb98cbab866132f7de9548562cd0d4b))
+- **ui:** Add shape before and above to the smartart design ribbon ([6a1c8d8](https://github.com/ChristopherVR/ooxml/commit/6a1c8d88414c4d2673ea289da043032558c10db3))
+- **ui:** Draw the pptx inspector Recent Colors on the shared colour grid ([#174](https://github.com/ChristopherVR/ooxml/issues/174)) ([8f99d4a](https://github.com/ChristopherVR/ooxml/commit/8f99d4a3b1bf0750b51279b374992ffe338fb33a))
+
+### Bug Fixes
+
+- **ui:** Keep the smartart picker css on design tokens ([a58dddd](https://github.com/ChristopherVR/ooxml/commit/a58dddd33cfb6a81ebc0100796d972a88e8bf756))
+- **ui:** Make the chart Format pane host its own landmark ([9b247d8](https://github.com/ChristopherVR/ooxml/commit/9b247d8ee4886eef31141eacc7328eb726460285))
+- **ui:** Close the smartart text pane when a new document opens ([5e7f7f4](https://github.com/ChristopherVR/ooxml/commit/5e7f7f420c101f078f6669829f21105b047dbc4a))
+- **ui:** Use tokens for the chart data sheet lengths ([ba916fe](https://github.com/ChristopherVR/ooxml/commit/ba916fe276f76bc5bc6152e51fbd0b079dc377a0))
+- **ui:** Keep an open inline draft outstanding on a clean editor ([032ca5e](https://github.com/ChristopherVR/ooxml/commit/032ca5e79f35715b644f5815cd901851ce338e63))
+- **xlsx:** Never rewrite a chart part the model cannot carry ([ac136f7](https://github.com/ChristopherVR/ooxml/commit/ac136f7319080e129106b452504ca915310367f3))
+- **ui:** Keep the smartart text pane attribute-free on construction ([ed54acf](https://github.com/ChristopherVR/ooxml/commit/ed54acfe2b3d7d6ddbebb909c0b7d31ad56aa60c))
+
+### Other
+
+- Shared chart data sheet (wave6-5) ([b546a73](https://github.com/ChristopherVR/ooxml/commit/b546a73c0eff334308473e8d970e72cd674534e0))
+- Pptx headless controllers (wave6-2) ([41dc33b](https://github.com/ChristopherVR/ooxml/commit/41dc33be23af816e33e08983f29e08621d5ae32f))
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+- Shared smartart picker and insert dialogs (wave6-6) ([60c4372](https://github.com/ChristopherVR/ooxml/commit/60c437219dc3e495238bb0760e17a8036e511f41))
+- Shared chart format pane (wave6-7) ([0324c80](https://github.com/ChristopherVR/ooxml/commit/0324c80633332e602ce813bc64b0e231ab6b64af))
+- Pptx autosave, recovery and collaboration controllers (wave6-10) ([e48da7a](https://github.com/ChristopherVR/ooxml/commit/e48da7a6ffb025682d27314d537868355512916f))
+- Pptx inspector field descriptors (wave6-12) ([a360ffc](https://github.com/ChristopherVR/ooxml/commit/a360ffcbec5303ebe7d427c5e442f99d82e72d06))
+- Word chart editing (wave6-11) ([45ecd4b](https://github.com/ChristopherVR/ooxml/commit/45ecd4b144f4195cfa4cbe85763b87fbca162470))
+- Shared chart design galleries and Visio chart editing (wave6-14) ([692e476](https://github.com/ChristopherVR/ooxml/commit/692e4763f28083d3d280b78a2e1a73e13f77499b))
+- Bring wave6-integration into wave6-13 ([0b881ed](https://github.com/ChristopherVR/ooxml/commit/0b881ed1a85fe81295e0e68f7f92bd137e65f91b))
+- Word SmartArt editing (wave6-13) ([751ba15](https://github.com/ChristopherVR/ooxml/commit/751ba157ca578e8ff6b57371a243180101ed562e))
+- Autosave uncommitted inline text (wave6-10b) ([d75cc4d](https://github.com/ChristopherVR/ooxml/commit/d75cc4dc43d86717653481c6237679117ad586a6))
+- Word chart Format pane, chart resizing and shared pane translations (wave6-17) ([d6ac348](https://github.com/ChristopherVR/ooxml/commit/d6ac3489fd3e8ed959f4978b4de8fd4674ee71b3))
+- Shared pptx canvas gestures, group selection and show steps (wave6-16) ([2f0df81](https://github.com/ChristopherVR/ooxml/commit/2f0df81355f1c3e4db3e12a8d39489b5d4c23825))
+- Excel SmartArt editing on the shared diagram core (wave6-20) ([c5fdb99](https://github.com/ChristopherVR/ooxml/commit/c5fdb9919cfce94ae9daac4d1079ca235c0c5183))
+- Excel chart editing over ChartSpace (wave6-18) ([ce75f7f](https://github.com/ChristopherVR/ooxml/commit/ce75f7faba40314ebc8c6de2a43c757328aa4c40))
+- Pptx SmartArt text pane on the shared element (wave6-19) ([e025597](https://github.com/ChristopherVR/ooxml/commit/e025597647c9b19da2c8a308e0cc44734c569c4d))
+- Bring origin/main into wave 6 ([2fedfaa](https://github.com/ChristopherVR/ooxml/commit/2fedfaae708c279044fdf86ea192315e366f80da))
+- Ooxml-ui and shared element docs (docs6-1) ([c1635a1](https://github.com/ChristopherVR/ooxml/commit/c1635a146f796af9f810eebc2befb81546e40ea9))
+
+### Refactor
+
+- **teams:** Move bindTeams into ooxml-ui/teams on the binding kit ([fd417a5](https://github.com/ChristopherVR/ooxml/commit/fd417a515f76b580af69acc5b1e319d15d41fee5))
+- **diagram:** Move built-in smartart definitions to diagram/builtin ([d673145](https://github.com/ChristopherVR/ooxml/commit/d6731456c840ef85032e490f60c3492b36cd7445))
+- **ui:** Ship the chart Format pane's own translations ([d6c3d65](https://github.com/ChristopherVR/ooxml/commit/d6c3d6539cf8f28ba5032959a7e2bbd0076f15ae))
+- **ui:** Run every pptx canvas gesture on the shared controller ([f10083a](https://github.com/ChristopherVR/ooxml/commit/f10083abf1c3dfc34dd7d2b0e0107ad8dadd0343))
+- **ui:** Decide pptx slide show steps once for every binding ([582e31f](https://github.com/ChristopherVR/ooxml/commit/582e31ff532e343f589e3345360783e275704172))
+- **diagram:** Share the smartart ui strings with every product ([b96c393](https://github.com/ChristopherVR/ooxml/commit/b96c393e820e88317bda0dea1ab25eb9e20b8b26))
+- **ui:** Share the smartart text pane wiring and design list ([5a051b5](https://github.com/ChristopherVR/ooxml/commit/5a051b50dc9983f8979d3bdf96224254fd901fa0))
+
+### Documentation
+
+- **ui:** Document the ooxml-ui/bindings kit and its provenance ([7f53c90](https://github.com/ChristopherVR/ooxml/commit/7f53c90123674e26962d5a0f6e94718c4f1314e1))
+- **pptx:** Record the autosave, recovery and collaboration controllers ([6bbbef7](https://github.com/ChristopherVR/ooxml/commit/6bbbef778175cc320c152f4587014dc435d6d8b6))
+- **ui:** Document the binding kit, chart and SmartArt elements ([a3dd7b8](https://github.com/ChristopherVR/ooxml/commit/a3dd7b81d6ad1fe639e8f8c929556ea4c1205289))
+
+### Chores
+
+- **ui:** Regenerate the custom elements manifest after the merges ([ebb0650](https://github.com/ChristopherVR/ooxml/commit/ebb06500d5fe9d43bfee8a9773bae6a01307bd4c))
+
 ## [1.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.25.0) - 2026-10-23
 
 ### Features

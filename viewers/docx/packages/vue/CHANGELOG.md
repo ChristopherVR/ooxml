@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@1.1.1) - 2026-10-23
+
+### Other
+
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+- Word SmartArt editing (wave6-13) ([751ba15](https://github.com/ChristopherVR/ooxml/commit/751ba157ca578e8ff6b57371a243180101ed562e))
+- Word and Excel docs for wave 6 (docs6-4) ([da0f3e8](https://github.com/ChristopherVR/ooxml/commit/da0f3e83c59b8ff55104bd852cf46fa052c587b5))
+
+### Refactor
+
+- **docx:** Build the Word bindings on ooxml-ui/bindings ([90e8131](https://github.com/ChristopherVR/ooxml/commit/90e81310800081ad484e93a3bab25806a07bc3e4))
+
+### Documentation
+
+- **docs:** Describe word smartart editing and its limits ([7a1ef43](https://github.com/ChristopherVR/ooxml/commit/7a1ef43c5bc0ba910b0f2468516e3d3578158605))
+- Describe wave 6 chart and smartart editing in word and excel ([d212908](https://github.com/ChristopherVR/ooxml/commit/d212908f59be7f5da51ce5347b23a665e4cedb08))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@1.1.0) - 2026-10-22
 
 ### Features

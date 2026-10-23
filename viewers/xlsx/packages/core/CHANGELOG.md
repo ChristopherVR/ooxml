@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.1](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@0.3.1) - 2026-10-23
+
+### Other
+
+- Word and Excel docs for wave 6 (docs6-4) ([da0f3e8](https://github.com/ChristopherVR/ooxml/commit/da0f3e83c59b8ff55104bd852cf46fa052c587b5))
+
+### Documentation
+
+- Describe wave 6 chart and smartart editing in word and excel ([d212908](https://github.com/ChristopherVR/ooxml/commit/d212908f59be7f5da51ce5347b23a665e4cedb08))
+
 ## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@0.3.0) - 2026-10-21
 
 ### Features

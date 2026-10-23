@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-vanilla-viewer",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Framework-free <xlsx-editor> web component and mount helper for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
 	"keywords": [
 		"editor",
@@ -41,7 +41,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@christophervr/xlsx-core": "^0.3.0",
+		"@christophervr/xlsx-core": "^0.3.1",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	}

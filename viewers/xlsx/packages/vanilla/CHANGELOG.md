@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-vanilla-viewer@1.2.1) - 2026-10-23
+
+### Other
+
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+
+### Refactor
+
+- **docx:** Build the Word bindings on ooxml-ui/bindings ([90e8131](https://github.com/ChristopherVR/ooxml/commit/90e81310800081ad484e93a3bab25806a07bc3e4))
+- **xlsx:** Build the Excel bindings on ooxml-ui/bindings ([31ca812](https://github.com/ChristopherVR/ooxml/commit/31ca812ba4513f0b0e0db643ab4b36643cbe62e5))
+
 ## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-vanilla-viewer@1.2.0) - 2026-10-22
 
 ### Features

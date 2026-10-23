@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.4.1) - 2026-10-23
+
+### Features
+
+- **server:** Add per-room sync permissions for host applications ([33643ec](https://github.com/ChristopherVR/ooxml/commit/33643ec02d475f4599f21c7ed7f6ac64cdb69acf))
+
+### Other
+
+- Bring origin/main into wave 6 ([2fedfaa](https://github.com/ChristopherVR/ooxml/commit/2fedfaae708c279044fdf86ea192315e366f80da))
+
+### Chores
+
+- **teams:** Commit the server's bin scripts as executable ([#180](https://github.com/ChristopherVR/ooxml/issues/180)) ([0491277](https://github.com/ChristopherVR/ooxml/commit/0491277232a67f83c75ea233a86af1a17bd30ee2))
+
 ## [0.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@0.4.0) - 2026-10-21
 
 ### Features

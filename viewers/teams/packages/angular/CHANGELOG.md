@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.3.1) - 2026-10-23
+
+### Other
+
+- Shared binding kit (wave6-1) ([98ab396](https://github.com/ChristopherVR/ooxml/commit/98ab396a11b31675c0266acd5242060412642bd3))
+
+### Refactor
+
+- **teams:** Move bindTeams into ooxml-ui/teams on the binding kit ([fd417a5](https://github.com/ChristopherVR/ooxml/commit/fd417a515f76b580af69acc5b1e319d15d41fee5))
+
+### Dependencies
+
+- **deps:** Bump the angular group with 7 updates ([c3aee14](https://github.com/ChristopherVR/ooxml/commit/c3aee1459d6f86422e51c20819d6203343993ef0))
+- **deps:** Merge angular updates ([#90](https://github.com/ChristopherVR/ooxml/issues/90)) ([119c279](https://github.com/ChristopherVR/ooxml/commit/119c279502424ffc0e14a0543c334fc828fccdd5))
+
 ## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.3.0) - 2026-10-16
 
 ### Features
