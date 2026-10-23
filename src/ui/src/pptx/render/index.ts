@@ -1542,6 +1542,9 @@ export * from './theme-color-swatches';
 export * from './theme-color-picker-state';
 export * from './theme-color-grid';
 export * from './theme-color-field-commit';
+// A native colour input's drag: live preview on `input`, one undo step and one recent colour
+// on `change` (or `blur`), nothing at all for a pick that settles where it started.
+export * from './live-color-input';
 
 // PowerPoint-style title bar (AutoSave toggle + quick access + file name +
 // search) and the shared IndexedDB autosave recovery store behind it. Pure
