@@ -1,5 +1,6 @@
 import type {
 	CollaborationLivePatcher,
+	InlineTextDraftSink,
 	ResolvedKeyboardCustomization,
 	SnapGuideInput,
 } from 'ooxml-ui/pptx';
@@ -57,6 +58,8 @@ export interface EditorControllerDeps {
 	 * published through this instead. Omit outside a collaborative viewer.
 	 */
 	getLivePatcher?(): CollaborationLivePatcher | undefined;
+	/** The autosave engine: typing that was never committed still counts as an edit. */
+	getAutosave?(): InlineTextDraftSink | undefined;
 	/** The slide the inline-edited element belongs to (live-preview lookup). */
 	getActiveSlide?(): PptxSlide | undefined;
 	/**

@@ -315,3 +315,32 @@ describe('autosaveController', () => {
 		h.dispose();
 	});
 });
+
+describe('autosaveController inline drafts', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		saveSnapshot.mockClear();
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('snapshots uncommitted inline typing, with the typed text in the saved slides', async () => {
+		const h = setup();
+		h.editor.setSlides([
+			{
+				id: 's1',
+				rId: 'rId-s1',
+				slideNumber: 1,
+				elements: [{ id: 'title', type: 'text', text: 'Old', x: 0, y: 0, width: 10, height: 10 }],
+			} as unknown as PptxSlide,
+		]);
+		flushSync();
+		h.ctl.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Typed' });
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(saveSnapshot).toHaveBeenCalledOnce();
+		const saved = h.save.mock.calls.at(-1)![0] as PptxSlide[];
+		expect((saved[0]!.elements[0] as { text?: string }).text).toBe('Typed');
+		h.dispose();
+	});
+});
