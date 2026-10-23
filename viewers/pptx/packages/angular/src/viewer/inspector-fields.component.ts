@@ -160,22 +160,28 @@ import { RecentColorsService } from './recent-colors.service';
 			cursor: pointer;
 		}
 
+		/*
+		 * A two-column grid, as every binding's generic renderer draws it: paired
+		 * fields (X/Y, W/H) share a row whatever the pane's width. A wrapping flex
+		 * row let a narrow phone sheet push H under W.
+		 */
 		.pptx-ng-fields__fields {
-			display: flex;
-			flex-wrap: wrap;
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 			align-items: center;
 			gap: 0.3rem;
 			padding: 0.35rem 0 0 1.25rem;
 		}
 
 		.pptx-ng-fields__field {
-			display: inline-flex;
+			display: flex;
 			align-items: center;
 			gap: 0.3rem;
+			min-width: 0;
 		}
 
 		.pptx-ng-fields__wide {
-			flex-basis: 100%;
+			grid-column: 1 / -1;
 		}
 
 		.pptx-ng-fields__label {
@@ -197,6 +203,8 @@ import { RecentColorsService } from './recent-colors.service';
 
 		.pptx-ng-fields__input--number {
 			width: 56px;
+			min-width: 0;
+			flex: 0 1 auto;
 			text-align: right;
 		}
 
@@ -209,6 +217,19 @@ import { RecentColorsService } from './recent-colors.service';
 			cursor: pointer;
 			background: transparent;
 			flex-shrink: 0;
+		}
+
+		/* Touch: 44px targets, 16px text (no iOS focus zoom), inputs fill their column. */
+		@media (pointer: coarse), (max-width: 767px) {
+			.pptx-ng-fields__input {
+				min-height: 44px;
+				font-size: 16px;
+			}
+
+			.pptx-ng-fields__input--number {
+				width: 100%;
+				flex: 1 1 auto;
+			}
 		}
 	`,
 })
