@@ -1,4 +1,6 @@
-import { NS, buildXml, children, elements, first, parseXml } from '../../xml/index';
+import { buildXml, parseXml } from '../../xml/index';
+import type { ChartSpace } from '../../chart/model';
+import { parseChartSpace } from '../../chart/parse-space';
 import type { ChartObject } from '../model';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
@@ -25,32 +27,9 @@ export function chartXml(chart: ChartObject): string {
 }
 
 /**
- * Updates the series references of a kept chart part when the model moved them (rows inserted,
- * sheet renamed). Returns `undefined` when nothing changed, so the part stays byte-identical.
+ * The neutral model of the part {@link chartXml} writes for `chart`: what a chart built from the
+ * summary alone (a new chart, or a type the operations cannot switch to) is edited and saved as.
  */
-export function patchChartReferences(xml: string, chart: ChartObject): string | undefined {
-	const doc = parseXml(xml, { label: 'XLSX chart' });
-	const plotArea = first(first(doc.documentElement, 'chart', NS.c), 'plotArea', NS.c);
-	const plot = plotArea
-		? elements(plotArea).find((node) => children(node, 'ser', NS.c).length)
-		: undefined;
-	if (!plot) return undefined;
-	let changed = false;
-	const setRef = (node: Element | undefined, ref: string | undefined) => {
-		const f = node
-			? first(first(node, 'numRef', NS.c) ?? first(node, 'strRef', NS.c), 'f', NS.c)
-			: undefined;
-		if (f && ref !== undefined && f.textContent !== ref) {
-			f.textContent = ref;
-			changed = true;
-		}
-	};
-	children(plot, 'ser', NS.c).forEach((ser, index) => {
-		const model = chart.series[index];
-		if (!model) return;
-		setRef(first(ser, 'tx', NS.c), model.nameRef);
-		setRef(first(ser, 'cat', NS.c) ?? first(ser, 'xVal', NS.c), model.categoriesRef);
-		setRef(first(ser, 'val', NS.c) ?? first(ser, 'yVal', NS.c), model.valuesRef);
-	});
-	return changed ? buildXml(doc) : undefined;
+export function newChartSpaceOf(chart: ChartObject): ChartSpace {
+	return parseChartSpace(chartXml(chart)).chartSpace;
 }

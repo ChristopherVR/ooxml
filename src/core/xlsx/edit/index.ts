@@ -20,7 +20,7 @@ export { cellInputText, formulaBarText, numberInputText } from './input-text';
 export { presetEdges } from './borders';
 export { validateDefinedName } from './view';
 export { uniqueHeaders } from './tables';
-export { IMAGE_EXTENSIONS, newMediaPart, type ChartPatch } from './charts';
+export { IMAGE_EXTENSIONS, chartSpaceOf, newMediaPart, type ChartPatch } from './charts';
 export { validateTableName, type TablePatch, type TableRef } from './table-edits';
 export { autoGrowRows, rowsToRefit } from './row-autofit';
 export {

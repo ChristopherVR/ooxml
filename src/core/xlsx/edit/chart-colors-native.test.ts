@@ -110,7 +110,12 @@ describe('Change Colors against native Excel', () => {
 		series[0]!.color = { rgb: '123456' };
 		const session = createEditSession(workbook);
 		session.updateChart(0, 0, { series });
-		expect(chartOf(workbook).series[0]!.drawingColor).toBeUndefined();
+		// The parsed choice is replaced: the series now reads the legacy colour back from the part.
+		expect(chartOf(workbook).series[0]!.drawingColor).toEqual({
+			kind: 'srgb',
+			value: '123456',
+			transforms: [],
+		});
 		session.updateChart(0, 0, chartColorPalettePatch(chartOf(workbook), 12)!);
 		const saved = await loadXlsx(await saveXlsx(workbook));
 		expect(chartView(saved, 0, chartOf(saved), () => []).series[0]!.color).toBe('#123456');

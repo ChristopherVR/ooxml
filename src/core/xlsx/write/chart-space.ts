@@ -43,8 +43,8 @@ function source(
 	};
 }
 
-function effects(series: ChartSeries): string | undefined {
-	const xml = series.effectsXml;
+/** An imported series effect list (`a:effectLst`), checked before it is written; throws otherwise. */
+export function validChartEffects(xml: string | undefined): string | undefined {
 	if (!xml) return undefined;
 	const root = parseXml(xml).documentElement;
 	if (root.namespaceURI !== NS.a || root.localName !== 'effectLst')
@@ -81,7 +81,7 @@ function seriesModel(chart: ChartObject, series: ChartSeries, index: number): Ch
 		};
 	else if (series.name !== undefined) out.tx = { value: series.name };
 	const lineLike = type === 'line' || type === 'scatter' || type === 'radar';
-	const effectsXml = effects(series);
+	const effectsXml = validChartEffects(series.effectsXml);
 	if (
 		(type !== 'pie' && type !== 'doughnut') ||
 		series.fill ||

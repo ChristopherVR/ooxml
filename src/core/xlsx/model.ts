@@ -9,6 +9,7 @@ import type {
 	ChartSummaryType,
 	ChartThemePalette,
 } from '../chart/render/summary';
+import type { ChartSpace } from '../chart/model';
 
 /** Excel error values. */
 export const ERROR_CODES = [
@@ -546,6 +547,14 @@ export interface ChartObject extends ChartSummary<ChartSeries> {
 	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
 	partName?: string;
 	name?: string;
+	/**
+	 * The chart part as the format-neutral model (`chart/parseChartSpace`): what edits change (the
+	 * `chart/edit` operations, through `updateChart` or `editChart`) and what is saved, with
+	 * `chart/writeChartSpace`, when it differs from the kept part. The summary fields above are
+	 * derived from it after every edit. Absent on a chart built by hand; `addChart` and the reader
+	 * set it.
+	 */
+	chartSpace?: ChartSpace;
 	/**
 	 * Chart Design > Quick Layout applied in this session (1..11). The title, legend and bar spacing
 	 * it sets live on the summary fields; on save the layout's axis titles, gridlines, value axis,

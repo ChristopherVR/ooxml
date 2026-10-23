@@ -293,6 +293,7 @@ export function createEditSession(
 			sparklines.deleteSparklines(ctx, s, ranges, wholeGroups),
 		addChart: (s, chart) => charts.addChart(ctx, s, chart),
 		updateChart: (s, index, patch) => charts.updateChart(ctx, s, index, patch),
+		editChart: (s, index, intent) => charts.editChart(ctx, s, index, intent),
 		addImage: (s, bytes, type, anchor, name) => charts.addImage(ctx, s, bytes, type, anchor, name),
 		replaceConditionalFormat: (s, index, cf) => cfEdits.replaceConditionalFormat(ctx, s, index, cf),
 		removeConditionalFormat: (s, index) => cfEdits.removeConditionalFormat(ctx, s, index),
