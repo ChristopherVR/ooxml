@@ -439,17 +439,36 @@ SmartArt: a neutral paragraph and run model in `drawingml`, then node text proje
 (`diagram/write`), then Word and Excel SmartArt editing, with a shared insert picker, galleries and
 text pane.
 
-### Wave 6 (in progress)
+### Wave 6 (landed 2026-10-23)
 
-| #   | Work                                                                                             |
-| --- | ------------------------------------------------------------------------------------------------ |
-| 1   | `ooxml-ui/bindings` kit; docx, xlsx, visio and teams bindings on it; contract-parity tests       |
-| 2   | pptx controller convention and store adapters; shared AI bridge, undo history, keyboard dispatch |
-| 3   | `chart/edit` neutral operations; Excel's chart edits through them; pptx adapter proof            |
-| 4   | `drawingml` paragraph and run model; SmartArt node text projection into `diagram`                |
-| 5   | `office-ui-chart-data-sheet` replaces the five pptx chart data editors                           |
-| 6   | pptx Insert Chart on `office-ui-chart-picker`; shared SmartArt picker and design galleries       |
+Framework layers:
 
-Next: autosave, collaboration, presentation and canvas-gesture controllers; inspector field
-descriptors; the format pane on `ChartSpace`; pptx chart save through `writeChartSpace`; the
-SmartArt drawing shape, edit operations and writers.
+- `ooxml-ui/bindings`: one contract-driven binding kit with React, Vue and Solid factories; the
+  docx, xlsx, visio and teams bindings run on it, with a contract-parity test per product.
+- pptx headless controllers (`src/ui/src/pptx/render/controller/`) with one store adapter per
+  binding: undo history (one default depth, 100), keyboard dispatch, AI bridge and panel, autosave
+  (one engine, uncommitted inline text included), recovery, collaboration provider and session,
+  canvas gestures (React and Angular moved onto `createGestureController`), group selection and
+  slide show steps. Inspector Effects, Line, Size and Position and Text Box sections are field
+  descriptors with one generic renderer per binding.
+- The per-binding chart data grids, insert SmartArt dialogs and SmartArt text panes are gone in
+  favour of shared elements.
+
+Charts: neutral edit operations and typed intents (`chart/edit`), a ChartEx model, parser, writer
+and edits (`chart/ex`), the embedded workbook writer (`chart/workbook`), one Format pane
+(`office-ui-chart-format-pane`, its own translations), one data sheet, one insert picker and shared
+Chart Design galleries. pptx saves title, legend, axis and series data edits of classic charts and
+title, legend, label and series edits of ChartEx through the neutral writers, behind save-parity
+harnesses. Excel edits over `ChartSpace` and never rewrites a part the model cannot carry. Word
+inserts, edits, formats, resizes and saves charts; Visio edits inserted charts. Word and Excel
+results are checked in desktop Office by acceptance scripts.
+
+SmartArt: a neutral DrawingML text model, node text projection, drawing view, edit operations and
+data writers in `diagram`, built-in definitions in `diagram/builtin`, and one picker, text pane and
+design command list. Word and Excel insert and edit SmartArt; desktop Word and Excel rebuild the
+layout from the data part, so an edit drops the cached drawing.
+
+Next: the presentation controller (timers, annotations, presenter window); the Fill inspector
+section; pptx chart data labels and fills on the neutral writer, then `PptxChartData` as an adapter
+and pptx ChartEx parsing on the neutral model; Word and Excel ChartEx editing; SmartArt styles and
+colours and the cached drawing writer; the pptx tab row on `office-ui-ribbon`.
