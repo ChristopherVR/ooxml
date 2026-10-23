@@ -94,17 +94,17 @@ Es gibt außerdem eine Registerkarte **Zeichnen** mit Freihandwerkzeugen: **Ausw
 
 Die Registerkarte **Eigenschaften** des Inspektors ändert sich mit der Auswahl:
 
-| Wenn Sie markieren...          | Können Sie ändern...                                                                                        |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Nichts (die Folie)             | Präsentationsinfo, Design, Foliengröße, Folienübergang und Hintergrund (Farbe oder Bild).                   |
-| Eine Form oder einen Verbinder | Position, Größe, Drehung, Füllung (einfarbig, Verlauf, Muster, Bild) und Kontur.                            |
-| Ein Textelement                | Schriftart, Größe, Farbe, Ausrichtung und Abstände.                                                         |
-| Ein Bild                       | Zuschnitt und Bildanpassungen.                                                                              |
-| Eine Tabelle                   | Tabellenformatvorlagen, Spaltenbreiten, Zeilenhöhen und Zellformatierung.                                   |
-| Ein Diagramm                   | Das Datenraster der Reihen, Diagrammtyp, Achsen, Datenbeschriftungen, Markierungen, Trendlinien und Farben. |
-| SmartArt                       | Knotentext und Layout.                                                                                      |
-| Medien                         | Wiedergabeeinstellungen.                                                                                    |
-| Ein beliebiges Element         | **Animationen** für Eingang, Hervorhebung und Ausgang mit Richtung, Zeitsteuerung und Auslöser.             |
+| Wenn Sie markieren...          | Können Sie ändern...                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Nichts (die Folie)             | Präsentationsinfo, Design, Foliengröße, Folienübergang und Hintergrund (Farbe oder Bild).                    |
+| Eine Form oder einen Verbinder | Position, Größe, Drehung, Füllung (einfarbig, Verlauf, Muster, Bild) und Kontur.                             |
+| Ein Textelement                | Schriftart, Größe, Farbe, Ausrichtung und Abstände.                                                          |
+| Ein Bild                       | Zuschnitt und Bildanpassungen.                                                                               |
+| Eine Tabelle                   | Tabellenformatvorlagen, Spaltenbreiten, Zeilenhöhen und Zellformatierung.                                    |
+| Ein Diagramm                   | Die Datentabelle der Reihen, Diagrammtyp, Achsen, Datenbeschriftungen, Markierungen, Trendlinien und Farben. |
+| SmartArt                       | Knotentext und Layout.                                                                                       |
+| Medien                         | Wiedergabeeinstellungen.                                                                                     |
+| Ein beliebiges Element         | **Animationen** für Eingang, Hervorhebung und Ausgang mit Richtung, Zeitsteuerung und Auslöser.              |
 
 ![Inspektorbereich mit Elementeigenschaften](/user-guide/editing-inspector-panel.jpg)
 
@@ -113,12 +113,12 @@ Die Registerkarte **Eigenschaften** des Inspektors ändert sich mit der Auswahl:
 Diagramme lassen sich direkt bearbeiten, ohne die Folie zu verlassen:
 
 - **Zeigen** Sie auf eine Markierung, um ihren Wert in einem Tooltip zu sehen.
-- **Klicken** Sie auf einen Balken, Punkt oder ein Segment, um es zu markieren; die zugehörige Zelle wird im Datenraster des Inspektors hervorgehoben.
+- **Klicken** Sie auf einen Balken, Punkt oder ein Segment, um es zu markieren; die zugehörige Zelle wird in der Datentabelle des Inspektors hervorgehoben.
 - **Ziehen** Sie einen Balken oder Punkt nach oben oder unten, um seinen Wert zu ändern (Balken-, Linien-, Flächen-, Punkt- und Blasendiagramme). Eine Anzeige zeigt den Wert während des Ziehens; lassen Sie los, um zu übernehmen, oder drücken Sie **Esc**, um abzubrechen.
 - **Doppelklicken Sie auf den Diagrammtitel**, um ihn direkt umzubenennen.
 - Die **Datentabelle** des Diagramms im Inspektor listet seine Kategorien und Reihen. Ein Wert wird mit **Eingabe** oder **Tab** übernommen oder wenn Sie in eine andere Zelle wechseln; **Escape** stellt den vorherigen Wert der Zelle wieder her. Ein Wert, der keine Zahl ist, wird abgelehnt.
 
-Markierungen in Kreis-, Ring-, Netz- und gestapelten/prozentual gestapelten Diagrammen werden per Klick ausgewählt; bearbeiten Sie ihre Werte im Datenraster. Jede Änderung ist ein einzelner Rückgängig-Schritt. All das funktioniert in jedem Binding gleich (React, Vue, Angular, Svelte und Vanilla).
+Markierungen in Kreis-, Ring-, Netz- und gestapelten/prozentual gestapelten Diagrammen werden per Klick ausgewählt; bearbeiten Sie ihre Werte in der Datentabelle. Jede Änderung ist ein einzelner Rückgängig-Schritt. All das funktioniert in jedem Binding gleich (React, Vue, Angular, Svelte und Vanilla).
 
 ### Tabellen bearbeiten
 
