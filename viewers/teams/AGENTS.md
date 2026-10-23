@@ -11,8 +11,7 @@ CRDT, presence, calls, signaling, server configuration and the `createTeamsClien
 **visual primitives** (avatar, app rail, channel list, chat list, composer, pre-join, call grid and
 controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:
 
-- `packages/web-component`: a re-export of `ooxml-ui/teams`, where `<teams-app>` (the app that composes those primitives over the store) now lives
-  (the private workspace package `teams-viewer`, never published, inlined into every binding).
+- `packages/web-component`: a re-export of `ooxml-ui/teams`, where `<teams-app>` (the app that composes those primitives over the store) and the binding wiring (`bindTeams`, `pickTeamsProps`, `TEAMS_CONTRACT`) live (the private workspace package `teams-viewer`, never published, inlined into every binding).
 - `packages/{react,vue,solid,svelte,angular,vanilla}`: thin bindings, published as
   `openteams-<framework>-viewer`.
 - `server/`: the reference bring-your-own server (sync, signaling relay, file storage), published as
@@ -36,7 +35,7 @@ it is the same tree.
 - **Colours, spacing and radii come from the ooxml-ui tokens** (`var(--office-...)`). No raw colours
   or pixel lengths in component CSS; relative units (`em`) are fine.
 - **Bindings are lifecycle adapters.** The component binding creates `<teams-app>`, forwards props
-  with `bindTeams`/`pickTeamsProps` (`src/ui/src/teams/app/bind.ts` in ooxml-ui, built on `TEAMS_CONTRACT` and the shared `ooxml-ui/bindings` kit) and re-emits events with it; `bindings-contract.test.ts` checks every binding against the contract. Each
+  with `bindTeams`/`pickTeamsProps` (`src/ui/src/teams/app/bind.ts` in ooxml-ui, built on `TEAMS_CONTRACT` and the shared `ooxml-ui/bindings` kit) and re-emits events with it; `packages/web-component/src/bindings-contract.test.ts` checks every binding against the contract. Each
   binding also exposes the **raw hook** over `createTeams` (React `useTeams`, Vue `useTeams`, Solid
   `createTeamsClient`, Svelte `teamsStore`, Angular `TeamsService`). A behaviour bug is fixed once,
   in `web-component` or the core; a hook or wiring bug is fixed in every binding in the same change.
@@ -55,6 +54,7 @@ bun run test           # vitest (jsdom) then the server's node:test suite
 bun run test:scripts   # this folder's script tests (published-reference and workspace-package checks)
 bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
 bun run check:published && bun run pack:smoke   # what the tarballs import; install and import them
+bun run pack:smoke --workspace-runtime          # the same, with this checkout's ooxml-core and ooxml-ui (CI)
 ```
 
 ## Releases
@@ -70,7 +70,9 @@ no `release:plan` or `publish:local`. Details: `docs/releasing.md` here and the 
 Never run `npm publish` by hand, never bump versions or edit `CHANGELOG.md` files by hand (the
 release commit does), and never add `file:` or `link:` ranges, or a `teams-viewer` dependency, to a
 published manifest (`check:published` and `pack:smoke` fail on them; the `*` ranges on `ooxml-core` and
-`ooxml-ui` are rewritten by the release flow).
+`ooxml-ui` are rewritten by the release flow). CI packs with `--workspace-runtime`, so the tarballs
+are tested against the core and UI that release with them; without the flag `pack:smoke` installs
+the registry's `ooxml-core` and `ooxml-ui`, as an outside user would.
 
 ## Style and commits
 

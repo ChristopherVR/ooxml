@@ -5,7 +5,7 @@
 - `src/core/visio`（`ooxml-core/visio` 入口）：包的接收、XML、模型、继承、缓存几何、ShapeSheet 求值、编辑命令、协作映射（`ooxml-core/visio/collab`）以及结构化诊断。此处不包含任何查看器 UI。不依赖 DOM 的视图约定同样在核心中，位于 `src/core/visio/ui`：`contract.ts`（属性和事件）、`document-history.ts`（有上限的、以源为依据的编辑历史以及 VSDX 副本导出状态；XML/包的变更通过专用 Worker 运行）、`document-text-search.ts`（对规范化后的可见形状文本进行有上限的字面匹配，给出不可变的、按页面划分的结果）、协作选项与在线状态类型，以及其他不依赖 DOM 的编辑和视图方案。
 - `src/ui/src/visio`（以 `ooxml-ui/visio` 发布）：浏览器查看器。`controller.ts` 负责文档/视图状态、选择、事件、“最新加载优先”行为以及事务性编辑；`viewer-element.ts` 是共享的 `<visio-viewer>` 界面；`binding.ts` 是仅限客户端的 mount/update/load/fit/exportSvg/destroy 生命周期（重入的较新更新会取代尚未处理的较旧补丁）；`render-svg.ts` 和 `render-text.ts` 负责 SVG 呈现与渲染警告；`export-svg.ts` 通过同一 SVG 渲染器对当前页面进行有上限的静态序列化；`print-snapshot.ts` 生成无副作用的所选页面产物并带有聚合预算（它不会创建打印框架，也不实现打印机策略）；构建模块是 `building-blocks-*.ts`。
 - `viewers/visio/src/index.ts`：对 `ooxml-ui/visio` 的重新导出。
-- `viewers/visio/packages/bindings/src`（私有）以及 `packages/{react,vue,angular,svelte,solid,vanilla}`：框架生命周期、事件/属性转发，以及原生的构建模块组合。没有针对各框架的解析、渲染或几何分叉。
+- `src/ui/src/bindings`（以 `ooxml-ui/bindings` 发布）：docx、xlsx、visio 和 teams 共用的框架无关绑定工具包（延迟句柄、属性选取、仅转发变更，以及 React 和 Vue 的组件工厂）。`viewers/visio/packages/bindings/src`（私有）包含 Visio 契约（`VIEWER_CONTRACT`）、`mountFrameworkViewer` 的按修订转发以及每个适配器；`packages/{react,vue,angular,svelte,solid,vanilla}` 是发布包。原生的构建模块组合也在其中。没有针对各框架的解析、渲染或几何分叉。
 
 ## 边界 {#boundaries}
 

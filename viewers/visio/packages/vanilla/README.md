@@ -50,7 +50,7 @@ input.addEventListener('change', async () => {
 The shared properties are `document` (a parsed `VisioDocument`, or `null` to clear),
 `pageIndex` (zero-based), `zoom` (`1` means 100%), `showToolbar`, `ribbonAddIns` (tabs the host adds
 after Help), `canEdit` (editing permission; the viewer is editable unless you pass `false`),
-`collaboration` (shares the open drawing in a room while set; `null` leaves it) and `events`.
+`readOnly` (a restriction of its own), `storage` and `customization` (host-owned save and open), `collaboration` (shares the open drawing in a room while set; `null` leaves it) and `events`.
 The callback map uses `document-load`, `document-change` (`{ document, dirty, kind }` with kind
 `edit`, `undo`, `redo`, `remote` or `save`), `document-error`, `page-change`, `zoom-change`,
 `shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. File loading uses the imperative

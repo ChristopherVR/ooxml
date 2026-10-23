@@ -24,8 +24,9 @@ beta.
 Any UI control another Office product could use belongs in `ooxml-ui` (`src/ui`) as an
 `office-ui-*` web component, never as a Visio-only copy. Examples: the ribbon tab row, ribbon
 buttons and groups, toolbars, the File backstage and print preview, Find bar, rulers, status bar,
-zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile, presence and neutral
-icons (undo, redo, delete, full screen, fit). Word, PowerPoint and Excel consume the same elements.
+zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile, presence, the chart
+elements (`office-ui-chart-picker`, `office-ui-chart-data-sheet`, `office-ui-chart-format-pane`) and
+neutral icons (undo, redo, delete, full screen, fit). Word, PowerPoint and Excel consume the same elements.
 Before building any control here, check whether `src/ui/src/pptx`, `docx`, `xlsx` or the shared
 elements already have one; if so it belongs in `src/ui`.
 
@@ -105,8 +106,8 @@ integrate.
    `withEventEmitter`) belong in `packages/bindings/src/common.ts`; binding
    machinery every product shares (the deferred handle, prop picking, the React
    and Vue component factories) lives in `ooxml-ui/bindings`
-   (`src/ui/src/bindings`). `tests/contract-parity.test.ts` checks every
-   adapter against the contract.
+   (`src/ui/src/bindings`). `packages/bindings/tests/contract-parity.test.ts`
+   checks every adapter against the contract.
 4. Add regression coverage at the owning layer. Check actual native adapter
    lifecycle and browser behavior; compilation alone is insufficient.
 5. Keep parsing and document mutations out of adapters. Editing UI delegates
@@ -151,11 +152,13 @@ must update `PROVENANCE.md` and retain licenses.
 - Cancellation and replacement must prevent stale worker results updating UI.
 - `packages/bindings` is private source. Use explicit framework entry points
   so hosts do not load unrelated framework runtimes.
-- Seven distribution packages live in `packages/{core,react,vue,angular,svelte,solid,vanilla}`. `bun run build:packages` bundles shared UI and adapters, declarations and browser workers. `bun run test:packages` installs their tarballs in a clean registry-only consumer.
+- Seven distribution packages live in `packages/{core,react,vue,angular,svelte,solid,vanilla}`. `bun run build:packages` bundles shared UI and adapters, declarations and browser workers. `bun run test:packages` installs their tarballs in a clean consumer with the registry's `ooxml-core` and `ooxml-ui`; `bun run test:packages:workspace` installs them with this checkout's core and UI, which is what CI runs (`--workspace-runtime`), as it is the combination a release publishes together.
 - The root implementation and bindings remain private build inputs; never put them in a published manifest.
-- The shared contract has the properties `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`,
-  `ribbonAddIns` and `collaboration`, and the events listed in `contract.ts`, including
-  `collaboration-change`. A contract change updates every adapter and `docs/bindings.md`. The
+- The shared contract (`propertyKeys` and `eventKeys` in `src/core/visio/ui/contract.ts`) has the
+  properties `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`,
+  `collaboration`, `storage` and `customization`, and the events listed there, including
+  `collaboration-change` and `file-command`. A contract change updates every adapter, the
+  contract-parity test and `docs/bindings.md`. The
   building blocks are read-only unless the host passes `canEdit: true` (`docs/building-blocks.md`),
   `markClean()` declares exported bytes saved, and collaboration merges per page and shape
   (`docs/collaboration.md`).
@@ -208,7 +211,9 @@ bun run test:docs           # VitePress docs build, ledger and theme tests
 bun run docs:build          # VitePress docs plus every demo into docs/.vitepress/dist
 bun run build               # ESM/declarations and the playground in site-dist/
 bun run check               # all non-browser checks and production build
-bun run test:browser        # production browser interaction and landing tests
+bun run build:packages      # the seven framework and core distributions
+bun run test:packages:workspace  # packed distributions, with this checkout's core and ui (CI)
+bun run test:browser        # production browser interaction and landing tests (ends with the packed-package browser check)
 bun run fmt                 # oxfmt
 ```
 

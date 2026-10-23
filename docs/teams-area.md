@@ -7,11 +7,12 @@ devices, `RTCPeerConnection` and `WebSocket` are all injectable.
 
 The UI is split the same way as every other product:
 
-| Layer                | Where                                                                                          | Owns                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Logic                | `src/core/teams/` (this area)                                                                  | model, chat CRDT, signaling, calls, server config, client store        |
-| Visual primitives    | `src/ui/src/teams/` (`ooxml-ui/teams`)                                                         | `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`, ...    |
-| App, bindings, demos | `viewers/teams` in this repository (the standalone `teams-viewer` repository only points here) | `<teams-app>`, React/Vue/Solid/Svelte/Angular/vanilla bindings, server |
+| Layer                  | Where                                                                                          | Owns                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Logic                  | `src/core/teams/` (this area)                                                                  | model, chat CRDT, signaling, calls, server config, client store             |
+| Visual primitives      | `src/ui/src/teams/` (`ooxml-ui/teams`)                                                         | `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`, ...         |
+| App and binding wiring | `src/ui/src/teams/app/` (`ooxml-ui/teams`), on the `ooxml-ui/bindings` kit                     | `<teams-app>`, `bindTeams`, `pickTeamsProps`, `TEAMS_CONTRACT`              |
+| Bindings, demos        | `viewers/teams` in this repository (the standalone `teams-viewer` repository only points here) | React/Vue/Solid/Svelte/Angular/vanilla lifecycle adapters, reference server |
 
 ## The client: one state, plain actions
 

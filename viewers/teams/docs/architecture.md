@@ -12,7 +12,8 @@ the docs; the demos are in `demos/teams/` and the browser tests in `e2e/teams/` 
 | Collaboration     | `ooxml-core/collab`                                                     | Yjs sessions and transports (WebSocket, `BroadcastChannel`), format-neutral                    |
 | Visual primitives | `ooxml-ui/teams` (`src/ui/src/teams`)                                   | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls          |
 | App               | `ooxml-ui/teams` (`src/ui/src/teams/app`)                               | `<teams-app>`: composes the primitives over the store, settings dialog, raw store helpers      |
-| Bind layer        | `packages/web-component` here (private `teams-viewer`, never published) | re-exports `ooxml-ui/teams` and holds the prop and event binding (`bind.ts`) the bindings use  |
+| Bind layer        | `ooxml-ui/teams` (`src/ui/src/teams/app/bind.ts`)                       | `bindTeams`, `pickTeamsProps` and `TEAMS_CONTRACT`: the prop and event wiring the bindings use |
+| Web component     | `packages/web-component` here (private `teams-viewer`, never published) | re-exports `ooxml-ui/teams`, so the bindings import one name; inlined into every binding       |
 | Bindings          | `packages/{react,vue,angular,svelte,solid,vanilla}` here                | lifecycle adapters plus a raw hook each, published as `openteams-<framework>-viewer`           |
 | Reference server  | `server/` here                                                          | Yjs sync, signaling relay, file storage, published as `openteams-server`                       |
 

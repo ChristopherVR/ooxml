@@ -111,11 +111,11 @@ Unterstützte Hintergrundinhalte und validierte Rasterbilder werden eingebettet.
 
 ## Eigenschaften und Ereignisse {#properties-and-events}
 
-| Oberfläche    | Aktueller Vertrag                                                                                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
-| Lebenszyklus  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+| Oberfläche    | Aktueller Vertrag                                                                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
+| Lebenszyklus  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 
 `canEdit` ist die Bearbeitungsberechtigung (der Viewer ist standardmäßig bearbeitbar; `false` macht ihn schreibgeschützt), `collaboration` teilt die geöffnete Zeichnung in einem Raum, und `document-change` meldet `kind` als `edit`, `undo`, `redo`, `remote` oder `save`. Nachdem der Host die Bytes aus `exportVsdx()` gespeichert hat, löscht `controller.markClean()` das Änderungskennzeichen. Eigene Oberflächen aus den Teilen des Viewers bauen Sie mit den [Bausteinen](/building-blocks); zum Teilen einer Zeichnung siehe [Zusammenarbeit](/de/collaboration).
 

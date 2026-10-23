@@ -103,6 +103,23 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 | ------------------------------------------------------ | -------------------- | ---------- | ----------------- | ----------- |
 | `ooxml-core`, `ooxml-ui`, `ooxml-mcp`, viewer packages | `ChristopherVR`      | `ooxml`    | `release.yml`     | `npm`       |
 
+## Package checks
+
+Each viewer's packed distributions are installed into a clean consumer and imported before they
+are released: `pack:smoke` for docx, xlsx and teams, and `test-packages.mjs` (plus
+`test-packages-browser.mjs` in the browser suite) for Visio. CI, as planned by `scripts/ci-plan.mjs`,
+runs them with `--workspace-runtime`: the consumer installs this checkout's `ooxml-core` and
+`ooxml-ui`, packed from `src/core` and `src/ui`, instead of the registry's. That is the combination a
+release publishes together, so a change that needs both the core and a viewer is tested as it will
+be released. Without the flag the consumer installs the registry's packages, which is what an
+outside user gets; run it locally (`bun run test:packages`, `bun run pack:smoke`) when you need that
+view.
+
+`scripts/verify.mjs` runs the packing steps only with `--full`, except the steps a browser suite
+needs, which `--browser` runs. Each viewer browser suite gets its own `PLAYWRIGHT_PORT`, so the
+suites can run side by side, and Visio's browser suite ends with the packed-package check in a
+browser.
+
 ## One-time setup
 
 1. **Rulesets on `main`**: require the `ci-success` and `Conventional Commits` checks; add a bypass for repository admins (the release commit is pushed straight to `main`).

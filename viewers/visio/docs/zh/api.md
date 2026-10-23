@@ -24,10 +24,10 @@ viewer.destroy(); // idempotent; later commands reject
 
 每个绑定都接受相同的属性并报告相同的事件（约定为 `ooxml-ui/visio` 中的 `ViewerProperties` 和 `ViewerEvents`；[绑定](/bindings)列出了各框架的原生形式）。
 
-| 接口 | 约定                                                                                                                                                                   |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性 | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| 事件 | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| 接口 | 约定                                                                                                                                                                                   |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 属性 | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| 事件 | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit`（布尔值）是编辑权限。完整查看器默认可编辑，`canEdit: false` 使其只读；[构建模块](/building-blocks)在宿主传入 `true` 之前是只读的。没有包字节的图纸（作为 `document` 传入的模型、旧版 `.vsd`）无论 `canEdit` 取何值都是只读的。
 - `document-change` 携带 `{ document, dirty, kind }`。`kind` 对本窗口自己的更改为 `edit`、`undo` 或 `redo`，应用协作者的更改时为 `remote`，`markClean()` 之后为 `save`。

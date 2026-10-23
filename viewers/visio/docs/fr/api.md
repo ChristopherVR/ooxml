@@ -32,10 +32,10 @@ l'[architecture](/fr/architecture) pour la répartition des modules.
 
 Chaque binding accepte les mêmes propriétés et signale les mêmes événements (le contrat est `ViewerProperties` et `ViewerEvents` dans `ooxml-ui/visio` ; les [bindings](/bindings) listent les formes natives).
 
-| Surface    | Contrat                                                                                                                                                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propriétés | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Événements | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Surface    | Contrat                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Propriétés | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Événements | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (booléen) est l'autorisation de modification. Le visualiseur complet est modifiable par défaut et `canEdit: false` le met en lecture seule ; les [blocs de construction](/building-blocks) sont en lecture seule tant que l'hôte ne passe pas `true`. Un dessin sans octets de paquet (un modèle passé comme `document`, un ancien `.vsd`) est en lecture seule quelle que soit la valeur de `canEdit`.
 - `document-change` fournit `{ document, dirty, kind }`. `kind` vaut `edit`, `undo` ou `redo` pour les modifications de cette fenêtre, `remote` quand la modification d'un collaborateur a été appliquée, et `save` après `markClean()`.
