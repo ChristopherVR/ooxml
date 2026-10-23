@@ -163,13 +163,17 @@ for (const viewer of p.viewers) {
 			previous = [add(`${viewer.name ?? viewer.dir}:${index}`, cmd, viewer.dir, previous)];
 }
 // The browser suites are separate, sharded CI entries; locally one run covers each whole suite,
-// after the viewer's own checks.
+// after the viewer's own checks. Suites run side by side, and docx and xlsx share a default
+// preview port, so each gets its own (`PLAYWRIGHT_PORT`, read by every viewer's config).
 if (browser)
-	for (const entry of (p.viewerBrowser ?? []).filter((item) => item.shard === 1)) {
+	for (const [suite, entry] of (p.viewerBrowser ?? [])
+		.filter((item) => item.shard === 1)
+		.entries()) {
 		const name = `${entry.name}:browser`;
+		const port = `export PLAYWRIGHT_PORT=${4300 + suite * 20}; `;
 		let previous = [add(`${name}:install`, PLAYWRIGHT_INSTALL, entry.dir, BUILT)];
 		for (const [index, cmd] of entry.local.split('\n').entries())
-			previous = [add(`${name}:${index}`, cmd, entry.dir, previous)];
+			previous = [add(`${name}:${index}`, port + cmd, entry.dir, previous)];
 	}
 if (p.pptx.run) {
 	// `packaged` is the planner's "this change alters what the viewer's packages build". Without it
