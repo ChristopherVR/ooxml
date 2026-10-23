@@ -2439,3 +2439,11 @@ Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move).
 - `src/core/diagram/text/node-text-paragraphs.ts` is `smartArtParagraphsText` and `firstParagraphRuns` from `src/core/pptx/core/core/runtime/smartart-text-paragraphs.ts`, generic; the pptx functions forward to it (the object-tree parser and builder stay in pptx).
 - `src/core/diagram/text/node-text-projection.ts` is the structure of `projectSmartArtNodeText` from `src/core/pptx/core/utils/smartart-node-text-projection.ts` (segments, paragraph metadata, `dgm:bulletEnabled` synthesis, paragraph breaks), parameterised by a styler. The pptx module keeps its `TextStyle` styler over its own parsers and calls the shared projection.
 - `src/core/diagram/text/node-text-neutral.ts` (DOM reader into the node paragraphs and the neutral styler) is new code.
+
+## `diagram` drawing-shape view and edit operations (2026-10-23)
+
+Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move).
+
+- `src/core/diagram/drawing-view.ts` (`DiagramShapeView`) is the resolved-shape part of `PptxSmartArtDrawingShape` from `src/core/pptx/core/types/smart-art.ts`, unchanged in fields; the pptx interface now extends it and keeps its 3D, rich-text segment and custom-geometry slots.
+- `src/core/diagram/drawing-resolve.ts` is new code generalising `parseDrawingShape` of `src/core/pptx/core/core/runtime/PptxHandlerRuntimeSmartArtParsing.ts` and the helpers of `smartart-drawing-shape-style.ts` and `smartart-drawing-shape-font-ref.ts` over the DOM reader and an injected colour resolver. `pptx/__tests__/integration/smartart-drawing-shape-neutral-parity.test.ts` pins agreement.
+- `src/core/diagram/edit/` is `src/core/pptx/core/utils/smartart-editing-node-ops.ts` (split into `node-ops.ts`, `node-order.ts` and `shape-match.ts`), `smartart-editing-node-style.ts` (and its test), `smartart-editing-reflow.ts` (split into `reflow.ts` and `reflow-category.ts`) and `smartart-editing-reflow-layouts-{directional,geometric,stacked}.ts`, made generic over the neutral data model and `DiagramShapeView`. The two copies of the drawing-shape matcher became one (`shape-match.ts`); the model id generator is injected (pptx passes its font GUID generator). `addDiagramNodeBefore` and `addDiagramNodeAbove` are new. The pptx modules are facades with the historical names.

@@ -8,11 +8,12 @@
  * These are "visual reflow" layouts used after editing operations to
  * reposition nodes without requiring the full layout engine.
  *
- * @module smartart-editing-reflow-layouts-geometric
+ * @module diagram/edit/reflow-geometric
  */
 
-import type { PptxSmartArtNode, PptxSmartArtDrawingShape } from '../types';
-import type { ContainerBounds } from './smartart-helpers';
+import type { DiagramShapeView } from '../drawing-view';
+import type { DiagramNode } from '../model/node';
+import type { DiagramReflowBounds } from './types';
 
 // ── Cycle ────────────────────────────────────────────────────────────────
 
@@ -23,10 +24,7 @@ import type { ContainerBounds } from './smartart-helpers';
  * @param bounds - Container bounding box.
  * @returns Array of positioned drawing shapes.
  */
-export function reflowCycle(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+export function reflowCycle(nodes: DiagramNode[], bounds: DiagramReflowBounds): DiagramShapeView[] {
 	const size = Math.min(bounds.width, bounds.height);
 	const cx = bounds.x + bounds.width / 2;
 	const cy = bounds.y + bounds.height / 2;
@@ -62,9 +60,9 @@ export function reflowCycle(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowMatrix(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const cols = Math.ceil(Math.sqrt(nodes.length));
 	const rows = Math.ceil(nodes.length / cols);
 	const padding = 8;
@@ -102,9 +100,9 @@ export function reflowMatrix(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowTarget(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const cx = bounds.x + bounds.width / 2;
 	const cy = bounds.y + bounds.height / 2;
 	const size = Math.min(bounds.width, bounds.height);
@@ -139,10 +137,7 @@ export function reflowTarget(
  * @param bounds - Container bounding box.
  * @returns Array of positioned drawing shapes.
  */
-export function reflowGear(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+export function reflowGear(nodes: DiagramNode[], bounds: DiagramReflowBounds): DiagramShapeView[] {
 	const gearNodes = nodes.slice(0, 3);
 	const extraNodes = nodes.slice(3);
 	const gearAreaW = extraNodes.length > 0 ? bounds.width * 0.7 : bounds.width;
@@ -153,7 +148,7 @@ export function reflowGear(
 	const gearR = Math.min(spacing * 0.4, gearAreaH * 0.35);
 	const gearDiameter = gearR * 2;
 
-	const shapes: PptxSmartArtDrawingShape[] = [];
+	const shapes: DiagramShapeView[] = [];
 
 	gearNodes.forEach((node, i) => {
 		// Position gears: first and third at same height, second shifted down
@@ -205,10 +200,7 @@ export function reflowGear(
  * @param bounds - Container bounding box.
  * @returns Array of positioned drawing shapes.
  */
-export function reflowVenn(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+export function reflowVenn(nodes: DiagramNode[], bounds: DiagramReflowBounds): DiagramShapeView[] {
 	const cx = bounds.x + bounds.width / 2;
 	const cy = bounds.y + bounds.height / 2;
 	const size = Math.min(bounds.width, bounds.height);

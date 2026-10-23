@@ -5,10 +5,8 @@
  * layout types (cycle, matrix, pyramid, funnel, target, gear, venn,
  * timeline, relationship, chevron, bending).
  *
- * Implementation is split across focused sub-modules:
- * - `smartart-editing-reflow-layouts-geometric` -- Cycle, matrix, target, gear, venn
- * - `smartart-editing-reflow-layouts-directional` -- Pyramid, funnel, timeline,
- *   relationship, chevron, bending
+ * The implementations live in `diagram/edit` (`reflow-geometric`,
+ * `reflow-stacked`, `reflow-directional`); this module re-exports them.
  *
  * These are "visual reflow" layouts used after editing operations to
  * reposition nodes without requiring the full layout engine.
@@ -24,11 +22,11 @@ export {
 	reflowTarget,
 	reflowGear,
 	reflowVenn,
-} from './smartart-editing-reflow-layouts-geometric';
+} from '../../../diagram/edit/reflow-geometric';
 
 // ── Stacked layouts (vertical bands with varying widths) ─────────────────
 
-export { reflowPyramid, reflowFunnel } from './smartart-editing-reflow-layouts-stacked';
+export { reflowPyramid, reflowFunnel } from '../../../diagram/edit/reflow-stacked';
 
 // ── Directional / flow layouts ───────────────────────────────────────────
 
@@ -37,4 +35,4 @@ export {
 	reflowRelationship,
 	reflowChevron,
 	reflowBending,
-} from './smartart-editing-reflow-layouts-directional';
+} from '../../../diagram/edit/reflow-directional';

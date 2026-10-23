@@ -8,11 +8,12 @@
  * These are "visual reflow" layouts used after editing operations to
  * reposition nodes without requiring the full layout engine.
  *
- * @module smartart-editing-reflow-layouts-directional
+ * @module diagram/edit/reflow-directional
  */
 
-import type { PptxSmartArtNode, PptxSmartArtDrawingShape } from '../types';
-import type { ContainerBounds } from './smartart-helpers';
+import type { DiagramShapeView } from '../drawing-view';
+import type { DiagramNode } from '../model/node';
+import type { DiagramReflowBounds } from './types';
 
 // ── Timeline ─────────────────────────────────────────────────────────────
 
@@ -25,9 +26,9 @@ import type { ContainerBounds } from './smartart-helpers';
  * @returns Array of positioned drawing shapes.
  */
 export function reflowTimeline(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const padding = 24;
 	const lineY = bounds.y + bounds.height / 2;
 	const lineStartX = bounds.x + padding;
@@ -37,7 +38,7 @@ export function reflowTimeline(
 	const nodeH = nodeW * 0.5;
 	const labelOffset = Math.min(bounds.height * 0.28, 40);
 
-	const shapes: PptxSmartArtDrawingShape[] = [];
+	const shapes: DiagramShapeView[] = [];
 
 	// Add the timeline bar as a thin rectangle
 	shapes.push({
@@ -85,10 +86,10 @@ export function reflowTimeline(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowRelationship(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
-	const shapes: PptxSmartArtDrawingShape[] = [];
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
+	const shapes: DiagramShapeView[] = [];
 
 	if (nodes.length <= 2) {
 		// Side by side with bidirectional arrow
@@ -167,9 +168,9 @@ export function reflowRelationship(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowChevron(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const padding = 8;
 	const gap = 4;
 	const usableW = bounds.width - padding * 2;
@@ -204,9 +205,9 @@ export function reflowChevron(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowBending(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const COLS = 4;
 	const padding = 8;
 	const gap = 6;
@@ -218,7 +219,7 @@ export function reflowBending(
 	const boxW = cellW * 0.85;
 	const boxH = Math.min(cellH * 0.7, 40);
 
-	const shapes: PptxSmartArtDrawingShape[] = [];
+	const shapes: DiagramShapeView[] = [];
 
 	nodes.forEach((node, i) => {
 		const row = Math.floor(i / COLS);
