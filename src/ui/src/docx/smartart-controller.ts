@@ -1,28 +1,21 @@
 // SmartArt in the Word editor: Insert > SmartArt, the SmartArt Design commands and the shared text
-// pane, wired to the core's editing operations. The layout, colour and quick-style definitions a
-// new or re-laid-out diagram needs come from `ooxml-core/diagram/builtin`, loaded on first use
-// (its 176 layouts are large), and are staged as pending media for the save.
+// pane (`SmartArtTextPaneController`, which Excel uses too), wired to the core's editing
+// operations. The layout, colour and quick-style definitions a new or re-laid-out diagram needs
+// come from `ooxml-core/diagram/builtin`, loaded on first use (its 176 layouts are large), and are
+// staged as pending media for the save.
 import type { EditorView } from 'prosemirror-view';
 import type { DiagramInsertPreset } from 'ooxml-core/diagram';
 import {
 	changeDocxDiagramLayout,
 	createDocxDiagram,
 	insertedDiagramPartNames,
-	type DocxDiagramEdit,
 	type PendingMediaPart,
 } from 'ooxml-core/docx';
-import {
-	defineSmartArtTextPane,
-	type OfficeSmartArtNodeRequest,
-	type OfficeSmartArtTextChange,
-	type OfficeSmartArtTextNode,
-	type OfficeSmartArtTextPaneLabels,
-} from '../smartart';
+import { SmartArtTextPaneController } from '../smartart';
 import type { RibbonAction } from './ribbon-action';
 import { focusView } from './focus-view';
-import { translate, type EditorLocale } from './localization';
+import { translate, type EditorLocale, type LocalizationKey } from './localization';
 import {
-	diagramOutline,
 	insertDiagram,
 	replaceDiagram,
 	runDiagramEdit,
@@ -32,13 +25,6 @@ import {
 import { createSmartArtDialog, type SmartArtDialog } from './smartart-dialog';
 
 type SmartArtKey = Extract<RibbonAction, { type: 'smartArt' }>['key'];
-type TextPane = HTMLElement & {
-	nodes: OfficeSmartArtTextNode[];
-	selected: string | null;
-	closable: boolean;
-	labels: Partial<OfficeSmartArtTextPaneLabels>;
-	focusSelected(): void;
-};
 
 export interface SmartArtHost {
 	view(): EditorView | undefined;
@@ -60,53 +46,45 @@ const xmlPart = (xml: string): PendingMediaPart => ({
 
 export class SmartArtController {
 	readonly dialog: SmartArtDialog;
-	readonly pane: TextPane;
-	private paneOpen = false;
-	/** The node the text pane (and so Add Shape, Promote...) acts on, per diagram. */
-	private current: string | null = null;
+	private readonly text: SmartArtTextPaneController;
 	private locale: EditorLocale = 'en';
+	/** Whether the last pane edit came from a ribbon command (focus returns to the document). */
+	private refocus = false;
 
 	constructor(private readonly host: SmartArtHost) {
 		this.dialog = createSmartArtDialog(() => focusView(host.view()));
-		defineSmartArtTextPane();
-		this.pane = document.createElement('office-ui-smartart-text-pane') as TextPane;
-		this.pane.className = 'dve-smartart-text-pane';
-		this.pane.closable = true;
-		this.pane.hidden = true;
-		this.pane.addEventListener('office-smartart-text-change', (event) => {
-			const { id, text } = (event as CustomEvent<OfficeSmartArtTextChange>).detail;
-			const view = host.view();
-			if (view) setDiagramNodeText(view, id, text);
-		});
-		const request = (name: string, edit: (id: string) => DocxDiagramEdit) =>
-			this.pane.addEventListener(name, (event) => {
-				const { id } = (event as CustomEvent<OfficeSmartArtNodeRequest>).detail;
-				this.current = id;
-				this.edit(edit(id), false);
-			});
-		request('office-smartart-node-add', (id) => ({ kind: 'add', position: 'after', nodeId: id }));
-		request('office-smartart-node-promote', (id) => ({ kind: 'promote', nodeId: id }));
-		request('office-smartart-node-demote', (id) => ({ kind: 'demote', nodeId: id }));
-		this.pane.addEventListener('office-smartart-node-remove', (event) => {
-			const { id } = (event as CustomEvent<OfficeSmartArtNodeRequest>).detail;
-			const nodes = this.pane.nodes;
-			const index = nodes.findIndex((node) => node.id === id);
-			this.current = nodes[index - 1]?.id ?? nodes[index + 1]?.id ?? null;
-			this.edit({ kind: 'remove', nodeId: id }, false);
-		});
-		this.pane.addEventListener('office-smartart-node-select', (event) => {
-			this.current = (event as CustomEvent<OfficeSmartArtNodeRequest>).detail.id;
-		});
-		this.pane.addEventListener('office-smartart-text-pane-close', () => {
-			this.paneOpen = false;
-			this.sync();
-			host.refresh();
-			focusView(host.view());
-		});
+		this.text = new SmartArtTextPaneController(
+			document,
+			{
+				nodes: () => {
+					const view = host.view();
+					return view ? selectedDiagram(view.state)?.diagram.nodes : undefined;
+				},
+				edit: (edit) => {
+					const view = host.view();
+					const nodeId = view ? runDiagramEdit(view, edit) : undefined;
+					if (this.refocus) focusView(view);
+					return nodeId;
+				},
+				setText: (id, text) => {
+					const view = host.view();
+					if (view) setDiagramNodeText(view, id, text);
+				},
+				toggled: (open) => {
+					host.refresh();
+					if (!open) focusView(host.view());
+				},
+			},
+			'dve-smartart-text-pane',
+		);
+	}
+
+	get pane(): HTMLElement {
+		return this.text.pane;
 	}
 
 	get textPaneOpen(): boolean {
-		return this.paneOpen;
+		return this.text.open;
 	}
 
 	/** Handles the SmartArt actions; returns false for everything else. */
@@ -122,50 +100,21 @@ export class SmartArtController {
 
 	private run(key: SmartArtKey): void {
 		const view = this.host.view();
-		const selected = view && selectedDiagram(view.state);
-		if (!view || !selected) return;
-		const nodeId = this.currentNode();
+		if (!view || !selectedDiagram(view.state)) return;
 		if (key === 'textPane') {
-			this.paneOpen = !this.paneOpen;
-			this.sync();
-			this.host.refresh();
-			if (this.paneOpen) this.pane.focusSelected();
+			this.text.setOpen(!this.text.open);
 			return;
 		}
 		if (key === 'changeLayout') {
 			this.dialog.open((preset) => void this.relayout(preset), undefined);
 			return;
 		}
-		const edits: Record<Exclude<SmartArtKey, 'textPane' | 'changeLayout'>, DocxDiagramEdit> = {
-			addAfter: { kind: 'add', position: 'after', ...(nodeId ? { nodeId } : {}) },
-			addBefore: { kind: 'add', position: 'before', ...(nodeId ? { nodeId } : {}) },
-			addAbove: { kind: 'add', position: 'above', ...(nodeId ? { nodeId } : {}) },
-			addBelow: { kind: 'add', position: 'below', ...(nodeId ? { nodeId } : {}) },
-			promote: { kind: 'promote', nodeId: nodeId ?? '' },
-			demote: { kind: 'demote', nodeId: nodeId ?? '' },
-			moveUp: { kind: 'move', nodeId: nodeId ?? '', direction: -1 },
-			moveDown: { kind: 'move', nodeId: nodeId ?? '', direction: 1 },
-		};
-		this.edit(edits[key], true);
-	}
-
-	/** The node commands act on: the text pane's, else the diagram's last node. */
-	private currentNode(): string | undefined {
-		const view = this.host.view();
-		const selected = view && selectedDiagram(view.state);
-		if (!selected) return undefined;
-		const nodes = selected.diagram.nodes;
-		if (this.current && nodes.some((node) => node.id === this.current)) return this.current;
-		return nodes.at(-1)?.id;
-	}
-
-	private edit(edit: DocxDiagramEdit, refocus: boolean): void {
-		const view = this.host.view();
-		if (!view) return;
-		const nodeId = runDiagramEdit(view, edit);
-		if (nodeId) this.current = nodeId;
-		this.sync();
-		if (refocus) focusView(view);
+		this.refocus = true;
+		try {
+			this.text.runCommand(key);
+		} finally {
+			this.refocus = false;
+		}
 	}
 
 	private async definitions() {
@@ -207,8 +156,7 @@ export class SmartArtController {
 				unsupported: 'SmartArt',
 				diagram,
 			});
-			this.current = diagram.nodes[0]?.id ?? null;
-			this.sync();
+			this.text.select(diagram.nodes[0]?.id ?? null);
 			focusView(view);
 		} catch (error) {
 			this.host.reportError(error instanceof Error ? error : new Error(String(error)));
@@ -238,34 +186,18 @@ export class SmartArtController {
 
 	/** Shows the text pane for the selected diagram while it is open. */
 	sync(): void {
-		const view = this.host.view();
-		const selected = view && selectedDiagram(view.state);
-		this.pane.hidden = !this.paneOpen || !selected;
-		if (!selected) return;
-		const outline = diagramOutline(selected.diagram);
-		this.pane.nodes = outline;
-		const current = this.currentNode();
-		if (this.pane.selected !== (current ?? null)) this.pane.selected = current ?? null;
+		this.text.sync();
 	}
 
 	setLocale(locale: EditorLocale): void {
 		this.locale = locale;
 		this.dialog.setLocale(locale);
-		const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
-		this.pane.labels = {
-			title: t('Type your text here'),
-			placeholder: t('[Text]'),
-			close: t('Close'),
-			outline: t('SmartArt text'),
-			empty: t('This diagram has no shapes with text.'),
-		};
+		this.text.setLabels((key) => translate(locale, key as LocalizationKey));
 	}
 
 	/** A new document: no current node, and the text pane closed. */
 	reset(): void {
-		this.current = null;
-		this.paneOpen = false;
 		if (this.dialog.isOpen) this.dialog.close();
-		this.sync();
+		this.text.reset();
 	}
 }

@@ -5,3 +5,4 @@ export * from './smartart/smartart-picker';
 export * from './smartart/smartart-text-pane';
 export * from './smartart/tiles';
 export * from './smartart/galleries';
+export * from './smartart/text-pane-controller';
