@@ -254,6 +254,8 @@ export {
 export {
 	addSmartArtNode,
 	addSmartArtNodeAsChild,
+	addSmartArtNodeBefore,
+	addSmartArtNodeAbove,
 	removeSmartArtNode,
 	updateSmartArtNodeText,
 	reorderSmartArtNode,

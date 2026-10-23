@@ -4,6 +4,8 @@ import type { PptxSmartArtData, SmartArtLayoutType } from '../types';
 import {
 	addSmartArtNode,
 	addSmartArtNodeAsChild,
+	addSmartArtNodeAbove,
+	addSmartArtNodeBefore,
 	removeSmartArtNode,
 	updateSmartArtNodeText,
 	reorderSmartArtNode,
@@ -49,6 +51,37 @@ function makeHierarchyData(): PptxSmartArtData {
 		],
 	};
 }
+
+// ===========================================================================
+// addSmartArtNodeBefore / addSmartArtNodeAbove (Add Shape Before / Above)
+// ===========================================================================
+
+describe('addSmartArtNodeBefore', () => {
+	it('inserts before the sibling with a GUID id under the same parent', () => {
+		const data = makeHierarchyData();
+		const result = addSmartArtNodeBefore(data, 'New', 'child-b');
+		expect(result.nodes.map((n) => n.text)).toEqual([
+			'CEO',
+			'VP Marketing',
+			'New',
+			'VP Engineering',
+			'Dev Lead',
+		]);
+		expect(result.nodes[2].parentId).toBe('root');
+		expect(result.nodes[2].id).toMatch(/^\{[0-9A-F-]+\}$/iu);
+	});
+});
+
+describe('addSmartArtNodeAbove', () => {
+	it('puts the new node in the target place and nests the target under it', () => {
+		const data = makeHierarchyData();
+		const result = addSmartArtNodeAbove(data, 'child-b', 'Above');
+		const above = result.nodes.find((n) => n.text === 'Above');
+		expect(above?.parentId).toBe('root');
+		expect(result.nodes.find((n) => n.id === 'child-b')?.parentId).toBe(above?.id);
+		expect(addSmartArtNodeAbove(data, 'missing', 'x')).toBe(data);
+	});
+});
 
 // ===========================================================================
 // addSmartArtNode (after sibling)

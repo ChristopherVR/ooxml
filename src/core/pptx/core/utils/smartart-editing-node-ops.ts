@@ -9,7 +9,9 @@
  */
 
 import {
+	addDiagramNodeAbove,
 	addDiagramNodeAfter,
+	addDiagramNodeBefore,
 	addDiagramNodeBelow,
 	demoteDiagramNode,
 	moveDiagramNode,
@@ -38,6 +40,27 @@ export function addSmartArtNode(
 	afterNodeId?: string,
 ): PptxSmartArtData {
 	return addDiagramNodeAfter(data, text, afterNodeId, PPTX_EDIT_OPTIONS);
+}
+
+/** Add a new node before a given sibling (Add Shape Before), or at the end. */
+export function addSmartArtNodeBefore(
+	data: PptxSmartArtData,
+	text: string,
+	beforeNodeId?: string,
+): PptxSmartArtData {
+	return addDiagramNodeBefore(data, text, beforeNodeId, PPTX_EDIT_OPTIONS);
+}
+
+/**
+ * Add a new node above a given node (Add Shape Above): the new node takes the
+ * target's place and the target becomes its child. Unknown ids return `data`.
+ */
+export function addSmartArtNodeAbove(
+	data: PptxSmartArtData,
+	nodeId: string,
+	text: string,
+): PptxSmartArtData {
+	return addDiagramNodeAbove(data, nodeId, text, PPTX_EDIT_OPTIONS);
 }
 
 /** Remove a node by ID, re-parenting its children. */
