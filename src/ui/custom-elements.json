@@ -3951,6 +3951,71 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "smartart/smartart-text-pane.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSmartArtTextPane",
+					"tagName": "office-ui-smartart-text-pane",
+					"customElement": true,
+					"description": "`<office-ui-smartart-text-pane>`: the SmartArt text pane every product shares. It shows the diagram's nodes as an outline of text lines indented by level and turns keys into requests the host applies to its diagram model (the pane never edits the model itself): - typing fires `office-smartart-text-change` (`{ id, text }`); - Enter fires `office-smartart-node-add` (add a node after this one, same level); - Tab and Shift+Tab fire `office-smartart-node-demote` and `office-smartart-node-promote`; - Backspace in an empty line fires `office-smartart-node-remove`; - focusing a line fires `office-smartart-node-select`; Up and Down move between lines. The node events carry `{ id }`. The host sets `nodes` again after applying a request and `selected` to the node to focus (the new node after Enter, the previous one after Backspace). `closable` adds a close button that fires `office-smartart-text-pane-close`. Strings come translated through `labels`.",
+					"attributes": [
+						{
+							"name": "closable"
+						},
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "closable",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "nodes"
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-smartart-node-select"
+						},
+						{
+							"name": "office-smartart-text-change"
+						},
+						{
+							"name": "office-smartart-text-pane-close"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-smartart-text-pane",
+					"declaration": {
+						"name": "OfficeUiSmartArtTextPane"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "chrome/status-bar.ts",
 			"declarations": [
 				{
