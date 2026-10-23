@@ -154,16 +154,16 @@ Seven packages are published on npm, each versioned independently. The names are
 | `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none            |
 | `openteams-server`         | The reference server and its `openteams-server` command (`server`).    | none (Node 22+) |
 
-The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, the re-export of `<teams-app>` and its bind layer, inlined into every binding at build time) and the demos.
+The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, a re-export of `ooxml-ui/teams`, inlined into every binding at build time) and the demos.
 
 ```
-packages/web-component   re-exports ooxml-ui/teams and holds the prop and event binding (bind.ts)
+packages/web-component   re-exports ooxml-ui/teams (the element and the binding wiring in bind.ts)
 packages/{react,vue,solid,svelte,angular,vanilla}   thin bindings: a component AND raw hooks each
 server/                  reference BYO server: Yjs sync + signaling relay + file storage + accounts
 docs/                    the VitePress site and the GitHub Pages build (separate install)
 ```
 
-`<teams-app>` itself (Lit: `teams-app.ts` + `teams-app.css`, the controller) is `src/ui/src/teams/app` at the repository root, shipped as `ooxml-ui/teams`. The demos are `demos/teams/*` and the browser tests `e2e/teams/`, both at the repository root.
+`<teams-app>` itself (Lit: `teams-app.ts` + `teams-app.css`, the controller) and the binding wiring (`bindTeams`, `pickTeamsProps`, `TEAMS_CONTRACT` in `bind.ts`) are `src/ui/src/teams/app` at the repository root, shipped as `ooxml-ui/teams`. The demos are `demos/teams/*` and the browser tests `e2e/teams/`, both at the repository root.
 
 ## Development
 
@@ -177,6 +177,7 @@ bun run test           # vitest (jsdom) then the server's node:test suite
 bun run test:scripts   # this folder's script tests (published-reference and workspace-package checks)
 bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
 bun run check:published && bun run pack:smoke
+bun run pack:smoke --workspace-runtime   # also packs this checkout's ooxml-core and ooxml-ui (what CI runs)
 bun install --cwd docs && bun run build:pages   # the docs site and both demos, as deployed
 bun run docs:dev       # the docs site with hot reload
 ```

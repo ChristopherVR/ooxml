@@ -22,7 +22,7 @@ This folder has no release scripts, no workflow of its own (its `.github/` is in
 | `openteams-vanilla-viewer` | `packages/vanilla` | `ooxml-core`, `ooxml-ui`, `lit`                       | `packages/web-component`   |
 | `openteams-server`         | `server`           | `ws`, `yjs`, `y-protocols`, `lib0`                    | nothing (ships its source) |
 
-`teams-viewer` (`packages/web-component`, the re-export and bind layer of `<teams-app>`) and the
+`teams-viewer` (`packages/web-component`, a re-export of `ooxml-ui/teams`, which holds `<teams-app>` and the binding wiring) and the
 demos are `private` and never published. `scripts/build-packages.mjs` inlines the web component,
 CSS included, into every framework bundle (vite library build) and flattens its declarations into
 each package's `dist/index.d.ts` (rollup-plugin-dts), so a tarball imports only what its manifest
@@ -57,6 +57,11 @@ Use `docs(teams): ...`, `fix(server): ...` and similar scopes (see the root `AGE
 published manifest; it also scans `.mjs` files and the server directory) and `bun run pack:smoke`
 (install and import the tarballs). `bun run test:scripts` runs the viewer's own script tests
 (`scripts/*.test.mjs`).
+
+CI runs `bun run pack:smoke --workspace-runtime`: the tarballs are installed with this checkout's
+`ooxml-core` and `ooxml-ui` (built first), the combination a release publishes together. Without the
+flag, `pack:smoke` installs the registry's core and UI, which is what an outside user gets. The root
+`verify` runs these package steps only with `--full`.
 
 Never run `npm publish` or push release tags by hand, and never edit versions or `CHANGELOG.md`
 files; the release commit does. A new package name needs the manual bootstrap and trusted-publisher
