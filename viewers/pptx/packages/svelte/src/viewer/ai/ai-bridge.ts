@@ -11,19 +11,16 @@
 
 import type {
 	PptxAiBridge,
-	PptxAiDataUpdater,
-	PptxAiDeckMeta,
-	PptxAiElementUpdate,
+	PptxAiBridgePort,
+	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
-	PptxAiSlidesUpdater,
 } from 'ooxml-ui/pptx/ai';
-import { applyElementUpdate, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
+import { createPptxAiBridge } from 'ooxml-ui/pptx/ai';
 import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
-	PptxData,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -61,6 +58,11 @@ export interface SvelteAiBridgeDeps {
 	applyTheme(updates: Partial<PptxTheme>): void;
 	/** Optional host notification sink (status line / toast / console). */
 	notify?(message: string, level?: PptxAiNotifyLevel): void;
+	/**
+	 * The assistant's focus (picks, pin, live selection) from the AI panel
+	 * controller, so the model is scoped to what the user is pointing at.
+	 */
+	getFocusedTargets?(): PptxAiFocusedTarget[];
 
 	// ── presentation-level (deck) state, for getDeckData / applyDeckData ───────
 	// Svelte tracks the full deck: sections + document metadata live on the
@@ -117,125 +119,47 @@ export interface SvelteAiBridgeDeps {
 	setTagCollections(tags: PptxTagCollection[]): void;
 }
 
-/** Build the AI bridge that exposes the live Svelte viewer to the AI core. */
+/**
+ * Build the AI bridge that exposes the live Svelte viewer to the AI core: the
+ * shared `createPptxAiBridge` over these accessors.
+ */
 export function createSvelteAiBridge(deps: SvelteAiBridgeDeps): PptxAiBridge {
-	const applySlidesUpdate = (updater: PptxAiSlidesUpdater, label: string): void => {
-		const next = updater(structuredClone(deps.getSlides()));
-		deps.commitSlides(next, label);
-	};
-
-	/** Reconstruct the presentation-level PptxData the deck MCP tools read/write. */
-	const readDeckData = (): PptxData => {
-		const canvas = deps.getCanvasSize();
-		return {
-			slides: deps.getSlides(),
-			width: canvas.width,
-			height: canvas.height,
-			theme: deps.getTheme(),
-			sections: deps.getSections(),
-			presentationProperties: deps.getPresentationProperties(),
-			customProperties: deps.getCustomProperties(),
-			coreProperties: deps.getCoreProperties(),
-			appProperties: deps.getAppProperties(),
-			viewProperties: deps.getViewProperties(),
-			tableStyleMap: deps.getTableStyleMap(),
-			tableStylesDefaultId: deps.getTableStylesDefaultId(),
-			tags: deps.getTagCollections(),
-		} satisfies Partial<PptxData> as PptxData;
-	};
-
-	const differs = deckDataFieldChanged;
-
-	return {
-		getDeckMeta(): PptxAiDeckMeta {
-			const slides = deps.getSlides();
-			const canvas = deps.getCanvasSize();
-			return {
-				slideCount: slides.length,
-				activeSlideIndex: deps.getActiveSlideIndex(),
-				title: deps.getFileName() ?? deckTitle(slides),
-				width: canvas.width,
-				height: canvas.height,
-			};
-		},
+	const port: PptxAiBridgePort = {
 		getSlides: () => deps.getSlides(),
 		getActiveSlideIndex: () => deps.getActiveSlideIndex(),
+		getCanvasSize: () => deps.getCanvasSize(),
 		getTheme: () => deps.getTheme(),
-		getHandler: () => deps.getHandler() ?? undefined,
-
+		getHandler: () => deps.getHandler(),
+		getFileName: () => deps.getFileName(),
+		getSections: () => deps.getSections(),
+		getPresentationProperties: () => deps.getPresentationProperties(),
+		getCustomProperties: () => deps.getCustomProperties(),
+		getCoreProperties: () => deps.getCoreProperties(),
+		getAppProperties: () => deps.getAppProperties(),
+		getViewProperties: () => deps.getViewProperties(),
+		getTableStyleMap: () => deps.getTableStyleMap(),
+		getTableStylesDefaultId: () => deps.getTableStylesDefaultId(),
+		getTagCollections: () => deps.getTagCollections(),
 		goToSlide: (index) => deps.goToSlide(index),
 		selectElements: (slideIndex, elementIds) => deps.selectElements(slideIndex, elementIds),
-
-		applySlidesUpdate,
-		updateElement(slideIndex, elementId, updates: PptxAiElementUpdate) {
-			applySlidesUpdate((slides) => {
-				const el = slides[slideIndex]?.elements.find((candidate) => candidate.id === elementId);
-				if (el) {
-					applyElementUpdate(el, updates);
-				}
-				return slides;
-			}, `Update ${elementId}`);
-		},
+		updateSlides: (update, label) => deps.commitSlides(update(deps.getSlides()), label),
 		applyTheme: (updates) => deps.applyTheme(updates),
-
-		getDeckData: () => readDeckData(),
-		applyDeckData(updater: PptxAiDataUpdater, label: string) {
-			const before = readDeckData();
-			const after = updater(structuredClone(before));
-			// Slides + canvas size route through the undoable editor paths; the
-			// other deck fields commit through their own editor mutations (each an
-			// undo entry). Fan out only the top-level fields that actually changed.
-			if (differs(before.slides, after.slides)) {
-				deps.commitSlides(after.slides, label);
-			}
-			if (before.width !== after.width || before.height !== after.height) {
-				deps.setCanvasSize({ width: after.width, height: after.height });
-			}
-			const nextSections = after.sections ?? before.sections ?? [];
-			if (differs(before.sections, nextSections)) {
-				deps.setSections(nextSections);
-			}
-			const nextPresProps = after.presentationProperties ?? before.presentationProperties ?? {};
-			if (differs(before.presentationProperties, nextPresProps)) {
-				deps.setPresentationProperties(nextPresProps);
-			}
-			// Svelte commits core / app / custom document properties as one unit, so
-			// touch the combined setter when any of the three changed.
-			const nextCore = after.coreProperties ?? before.coreProperties;
-			const nextApp = after.appProperties ?? before.appProperties;
-			const nextCustom = after.customProperties ?? before.customProperties ?? [];
-			if (
-				differs(before.coreProperties, nextCore) ||
-				differs(before.appProperties, nextApp) ||
-				differs(before.customProperties, nextCustom)
-			) {
-				deps.setDocumentProperties(nextCore ?? {}, nextApp ?? {}, nextCustom);
-			}
-			if (differs(before.viewProperties, after.viewProperties)) {
-				deps.setViewProperties(after.viewProperties);
-			}
-			if (differs(before.tableStyleMap, after.tableStyleMap)) {
-				deps.setTableStyleMap(after.tableStyleMap);
-			}
-			if (differs(before.tableStylesDefaultId, after.tableStylesDefaultId)) {
-				deps.setTableStylesDefaultId(after.tableStylesDefaultId);
-			}
-			const nextTags = after.tags ?? before.tags ?? [];
-			if (differs(before.tags, nextTags)) {
-				deps.setTagCollections(nextTags);
-			}
-		},
-
-		notify: deps.notify,
+		setCanvasSize: (size) => deps.setCanvasSize(size),
+		setSections: (sections) => deps.setSections(sections),
+		setPresentationProperties: (props) => deps.setPresentationProperties(props),
+		setDocumentProperties: (core, app, custom) => deps.setDocumentProperties(core, app, custom),
+		setViewProperties: (props) => deps.setViewProperties(props),
+		setTableStyleMap: (map) => deps.setTableStyleMap(map),
+		setTableStylesDefaultId: (id) => deps.setTableStylesDefaultId(id),
+		setTagCollections: (tags) => deps.setTagCollections(tags),
+		...(deps.getFocusedTargets
+			? { getFocusedTargets: () => deps.getFocusedTargets?.() ?? [] }
+			: {}),
+		...(deps.notify
+			? {
+					notify: (message: string, level?: PptxAiNotifyLevel) => deps.notify?.(message, level),
+				}
+			: {}),
 	};
-}
-
-/** First non-empty text run on the first slide, used as a friendly deck title. */
-function deckTitle(slides: PptxSlide[]): string | undefined {
-	for (const el of slides[0]?.elements ?? []) {
-		if (el.type === 'text' && el.text?.trim()) {
-			return el.text.trim().slice(0, 120);
-		}
-	}
-	return undefined;
+	return createPptxAiBridge(port);
 }

@@ -57,6 +57,9 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 		getHandler: () => loader.handler,
 		getFileName: () => options.getFileName?.(),
 		goToSlide: (index) => viewer.goTo(index),
+		// Picks, then a pin, then the live selection: the same scope the focus
+		// chips show (the panel is created below; this only runs on a tool call).
+		getFocusedTargets: () => panel.effectiveTargets,
 		selectElements: (slideIndex, ids) => {
 			if (slideIndex !== viewer.current) {
 				viewer.goTo(slideIndex);

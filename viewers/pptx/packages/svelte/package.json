@@ -144,7 +144,7 @@
 	"peerDependencies": {
 		"@ai-sdk/svelte": "^5.0.31",
 		"ai": ">=6 <8",
-		"svelte": "^5.0.0",
+		"svelte": "^5.7.0",
 		"yjs": "^13.6.32"
 	},
 	"peerDependenciesMeta": {

@@ -1,9 +1,9 @@
-import {
-	isEditorControlTarget,
-	isEditorTextInputTarget,
-	mapCustomizedEditorKey,
+import { dispatchEditorKey } from 'ooxml-ui/pptx';
+import type {
+	EditorKeyActionName,
+	EditorKeyHandlers,
+	ResolvedKeyboardCustomization,
 } from 'ooxml-ui/pptx';
-import type { ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 
 import type {
 	EditorTextAlign,
@@ -11,11 +11,14 @@ import type {
 	SelectionCycleDirection,
 } from './editor-shortcut-types';
 
+/** Slide paging keys the root navigation fall-through owns. */
+const PAGING_ACTIONS: readonly EditorKeyActionName[] = ['prevSlide', 'nextSlide'];
+
 /**
  * Editing keyboard shortcuts, called from the viewer root's keydown before the
- * slideshow navigation handler. Key-to-action resolution is the shared
- * `mapEditorKey`, the one keymap all five bindings resolve against, so this file
- * is only the dispatch table.
+ * slideshow navigation handler. Key-to-action resolution and the dispatch switch
+ * are the shared `dispatchEditorKey`, so this file only maps the shared handler
+ * names onto the Svelte editor's callbacks.
  *
  * Slide paging is deliberately NOT dispatched here: the root handler falls
  * through to `viewer.handleNavigationKey` when this one does not consume the
@@ -88,122 +91,62 @@ export interface EditorKeyboardDeps {
 export function createEditorKeydownHandler(
 	deps: EditorKeyboardDeps,
 ): (event: KeyboardEvent) => void {
+	const handlers: EditorKeyHandlers = {
+		// Unwind the transient chrome one layer at a time: format painter, then
+		// the cheat sheet, then a member selected inside a group steps out to its
+		// group, then the selection itself.
+		escape: () => {
+			if (
+				!deps.cancelFormatPainter?.() &&
+				!deps.closeShortcuts?.() &&
+				!deps.selectParentGroup?.()
+			) {
+				deps.deselect();
+			}
+		},
+		toggleShortcuts: () => deps.toggleShortcuts?.(),
+		find: () => deps.toggleFind?.(),
+		undo: () => deps.undo(),
+		redo: () => deps.redo(),
+		paste: () => deps.paste(),
+		selectAll: () => deps.selectAll(),
+		delete: () => deps.deleteSelected(),
+		duplicate: () => deps.duplicateSelected(),
+		copy: () => deps.copySelected(),
+		cut: () => deps.cutSelected(),
+		group: () => deps.groupSelected(),
+		ungroup: () => deps.ungroupSelected(),
+		nudge: (dx, dy) => deps.nudgeSelected(dx, dy),
+		findReplace: () => deps.toggleFindReplace?.(),
+		alignLeft: () => deps.setTextAlign?.('left'),
+		alignCenter: () => deps.setTextAlign?.('center'),
+		alignRight: () => deps.setTextAlign?.('right'),
+		alignJustify: () => deps.setTextAlign?.('justify'),
+		increaseFontSize: () => deps.stepFontSize?.('increase'),
+		decreaseFontSize: () => deps.stepFontSize?.('decrease'),
+		copyFormat: () => deps.copyFormat?.(),
+		pasteFormat: () => deps.pasteFormat?.(),
+		newSlide: () => deps.newSlide?.(),
+		hyperlink: () => deps.openHyperlink?.(),
+		clearFormatting: () => deps.clearFormatting?.(),
+		cycleSelectionNext: () => deps.cycleSelection?.('next'),
+		cycleSelectionPrev: () => deps.cycleSelection?.('prev'),
+		pasteSpecial: () => deps.onPasteSpecial?.(),
+	};
 	return (event) => {
 		if (!deps.isActive()) {
 			return;
 		}
-		const { action, dx, dy } = mapCustomizedEditorKey(
+		dispatchEditorKey(
 			event,
 			{
 				canPaste: deps.canPaste?.(),
 				hasSelection: deps.getSelectedId() !== null,
-				isTextInputTarget: isEditorTextInputTarget(event.target),
-				isControlTarget: isEditorControlTarget(event.target),
+				keyboard: deps.getKeyboardCustomization?.(),
+				// Paging is owned by the root navigation fall-through; see the module note.
+				passThrough: PAGING_ACTIONS,
 			},
-			deps.getKeyboardCustomization?.(),
+			handlers,
 		);
-		// Paging is owned by the root navigation fall-through; see the module note.
-		if (action === null || action === 'prevSlide' || action === 'nextSlide') {
-			return;
-		}
-		event.preventDefault();
-
-		switch (action) {
-			case 'escape':
-				// Unwind the transient chrome one layer at a time: format painter,
-				// then the cheat sheet, then a member selected inside a group steps
-				// out to its group, then the selection itself.
-				if (deps.cancelFormatPainter?.() || deps.closeShortcuts?.() || deps.selectParentGroup?.()) {
-					return;
-				}
-				deps.deselect();
-				break;
-			case 'toggleShortcuts':
-				deps.toggleShortcuts?.();
-				break;
-			case 'find':
-				deps.toggleFind?.();
-				break;
-			case 'undo':
-				deps.undo();
-				break;
-			case 'redo':
-				deps.redo();
-				break;
-			case 'paste':
-				deps.paste();
-				break;
-			case 'selectAll':
-				deps.selectAll();
-				break;
-			case 'delete':
-				deps.deleteSelected();
-				break;
-			case 'duplicate':
-				deps.duplicateSelected();
-				break;
-			case 'copy':
-				deps.copySelected();
-				break;
-			case 'cut':
-				deps.cutSelected();
-				break;
-			case 'group':
-				deps.groupSelected();
-				break;
-			case 'ungroup':
-				deps.ungroupSelected();
-				break;
-			case 'nudge':
-				deps.nudgeSelected(dx ?? 0, dy ?? 0);
-				break;
-			case 'findReplace':
-				deps.toggleFindReplace?.();
-				break;
-			case 'alignLeft':
-				deps.setTextAlign?.('left');
-				break;
-			case 'alignCenter':
-				deps.setTextAlign?.('center');
-				break;
-			case 'alignRight':
-				deps.setTextAlign?.('right');
-				break;
-			case 'alignJustify':
-				deps.setTextAlign?.('justify');
-				break;
-			case 'increaseFontSize':
-				deps.stepFontSize?.('increase');
-				break;
-			case 'decreaseFontSize':
-				deps.stepFontSize?.('decrease');
-				break;
-			case 'copyFormat':
-				deps.copyFormat?.();
-				break;
-			case 'pasteFormat':
-				deps.pasteFormat?.();
-				break;
-			case 'newSlide':
-				deps.newSlide?.();
-				break;
-			case 'hyperlink':
-				deps.openHyperlink?.();
-				break;
-			case 'clearFormatting':
-				deps.clearFormatting?.();
-				break;
-			case 'cycleSelectionNext':
-				deps.cycleSelection?.('next');
-				break;
-			case 'cycleSelectionPrev':
-				deps.cycleSelection?.('prev');
-				break;
-			case 'pasteSpecial':
-				deps.onPasteSpecial?.();
-				break;
-			default:
-				break;
-		}
 	};
 }
