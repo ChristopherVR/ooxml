@@ -16,6 +16,18 @@ export interface NewRelationship {
 	mode: 'Internal' | 'External';
 	/** Absolute package part name (e.g. `word/media/image1.png`), set only for newly added media parts. */
 	partName?: string;
+	/** A new XML part: its content type goes into an `Override`, not an extension `Default`. */
+	overrideContentType?: string;
+	/** The new part's text, when the writer produced it (otherwise it comes from pending media). */
+	content?: string;
+}
+
+/** A part a new diagram adds: its relationship type and, for the data part, its text. */
+export interface NewDiagramPart {
+	partName: string;
+	type: string;
+	contentType: string;
+	content?: string;
 }
 
 /** Walks every element/attribute in a parsed document.xml to find relationship ids already in use. */
@@ -72,6 +84,21 @@ export class RelationshipAllocator {
 			partName,
 		});
 		this.imagePartToRelId.set(partName, id);
+		return id;
+	}
+
+	/** Registers a part of a newly inserted diagram and returns its relationship id. */
+	addDiagramPart(part: NewDiagramPart): string {
+		const id = this.nextId();
+		this.created.push({
+			id,
+			type: part.type,
+			target: part.partName.replace(/^word\//, ''),
+			mode: 'Internal',
+			partName: part.partName,
+			overrideContentType: part.contentType,
+			...(part.content !== undefined ? { content: part.content } : {}),
+		});
 		return id;
 	}
 

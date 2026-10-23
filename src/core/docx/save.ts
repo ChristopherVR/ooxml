@@ -22,6 +22,7 @@ import { numberCommentIds } from './comment-spans';
 import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 import { refreshStyleRefFields } from './style-ref-fields';
+import { applyDiagramEdits } from './diagram-save';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
@@ -139,6 +140,7 @@ export async function saveDocx(
 	if (model.pageColor !== binding?.base.pageColor) applyPageBackground(document, model.pageColor);
 	zip.file('word/document.xml', buildXml(document));
 	await writeNewRelationships(zip, 'word/document.xml', newRelationships, pendingMedia);
+	if (binding) await applyDiagramEdits(zip, model.blocks, binding.base.blocks);
 	await applyHeaderFooterEdits(
 		zip,
 		model,

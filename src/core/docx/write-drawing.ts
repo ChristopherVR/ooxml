@@ -7,6 +7,7 @@ import { buildWatermarkRun } from './watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import type { RelationshipAllocator } from './relationship-allocator';
+import { buildInsertedDiagramDrawing, isSameDiagram, patchDiagramExtent } from './diagram-save';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -259,6 +260,23 @@ export function createImageRun(
 		patchTextBox(doc, oldDrawing, image, base);
 		clearNonProperties(node, oldContainer);
 		return node;
+	}
+	if (image.diagram) {
+		// An edited SmartArt keeps its markup; its parts are rewritten by applyDiagramEdits.
+		if (base?.diagram && oldDrawing && isSameDiagram(base.diagram, image.diagram)) {
+			if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
+				patchDiagramExtent(oldDrawing, image.widthPx, image.heightPx);
+			clearNonProperties(node, oldContainer);
+			return node;
+		}
+		if (!base && image.diagram.inserted) {
+			if (!allocator) throw new Error('Cannot insert SmartArt without a relationship allocator.');
+			clearNonProperties(node);
+			node.appendChild(
+				buildInsertedDiagramDrawing(doc, image.diagram, image.widthPx, image.heightPx, allocator),
+			);
+			return node;
+		}
 	}
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.
 	if (base && oldDrawing && image.unsupported && JSON.stringify(image) === JSON.stringify(base)) {

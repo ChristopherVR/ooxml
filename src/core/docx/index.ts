@@ -31,6 +31,16 @@ export {
 	type DocxDiagramRendering,
 } from './diagram';
 export { diagramsIn } from './diagram-document';
+export {
+	createDocxDiagram,
+	editDocxDiagram,
+	insertedDiagramPartNames,
+	withDiagramNodes,
+	type DocxDiagramCreation,
+	type DocxDiagramEdit,
+	type DocxDiagramEditResult,
+} from './diagram-edit';
+export { treeOrderDiagramNodes } from './diagram-nodes';
 export { CHART_GRAPHIC_URI, CHART_NOTICE, chartsIn, type DocxChart } from './chart';
 export { docxChartPaint, themeCatalogColorScheme, type DocxChartPaint } from './chart-paint';
 export { diagramColorTheme, resolveDiagramColor } from './diagram-theme';
