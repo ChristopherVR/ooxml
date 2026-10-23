@@ -1,14 +1,15 @@
 /**
- * usePointerHandlers: Global pointer move/up handlers for drag, resize,
- * marquee selection, and shape-adjustment interactions.
+ * usePointerHandlers: the canvas's pointer gestures.
  *
- * Heavy logic is extracted into:
- *   - pointer-move-handlers.ts  (processPointerMove)
- *   - pointer-up-handlers.ts    (processPointerUp)
- *   - pointer-handler-types.ts  (shared types)
+ *   - move and resize run on the shared gesture controller
+ *     (canvas-gestures.ts), created once here and handed to the press handlers
+ *     through `gestureRef`;
+ *   - the marquee and the shape-adjustment drags keep the global listeners
+ *     below (pointer-move-handlers.ts, pointer-up-handlers.ts).
  */
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
+import { createCanvasGestures } from './canvas-gestures';
 import type { PointerFrameTracker, UsePointerHandlersInput } from './pointer-handler-types';
 import { processPointerMove } from './pointer-move-handlers';
 import { processPointerUp } from './pointer-up-handlers';
@@ -22,56 +23,47 @@ export function usePointerHandlers(input: UsePointerHandlersInput): void {
 		canvasSize,
 		activeSlide,
 		activeSlideIndex,
-		gridSpacingPx,
-		dragStateRef,
-		resizeStateRef,
 		shapeAdjustmentDragStateRef,
 		marqueeStateRef,
 		editTemplateMode,
-		snapToGrid,
-		snapToShape,
-		guides,
 		templateElements,
-		elementLookup,
 		setMarqueeSelectionState,
-		setSnapLines,
-		setTemplateElementsBySlideId,
 		setPointerCommitNonce,
 		applySelection,
 		clearSelection,
-		updateSlides,
 		updateElementById,
 		markDirty,
 		livePatcher,
+		gestureRef,
 	} = input;
 
+	// The gesture controller lives for the whole mount and reads the latest
+	// input on every frame, so a re-render mid-drag never tears it down.
+	const inputRef = useRef(input);
+	inputRef.current = input;
+	const gestures = useMemo(() => createCanvasGestures(() => inputRef.current), []);
+	useEffect(() => {
+		if (gestureRef) {
+			gestureRef.current = gestures;
+		}
+		return () => {
+			gestures.dispose();
+			if (gestureRef?.current === gestures) {
+				gestureRef.current = null;
+			}
+		};
+	}, [gestures, gestureRef]);
+
 	// The effect body closes over `input` as a whole (passed straight through to
-	// processPointerMove/processPointerUp) rather than the individually
-	// destructured fields above, so the fields never show up as "read" to the
-	// dependency analyzer. They are listed below anyway, deliberately, so the
-	// global pointermove/pointerup listeners only re-subscribe when one of
-	// these specific values actually changes.
-	//
-	// Deliberately does NOT also list `input` itself: the caller
-	// (`useViewerIntegration`) builds it as a fresh object literal on every
-	// render, so its identity differs every render regardless of whether any
-	// field changed. Every field the closure reads is already covered
-	// individually below, so adding `input` on top contributes nothing except
-	// forcing this effect to tear down and rebuild on EVERY render. During a
-	// drag that is fatal: `handlePointerMove`'s rAF-scheduled call to
-	// `processPointerMove` (which writes the live position straight to the
-	// DOM, bypassing React) gets cancelled by the old effect's cleanup before
-	// it ever fires if a re-render lands mid-frame for any unrelated reason,
-	// so the dragged element only reaches its true position once, on
-	// `pointerup`, when React actually commits the new `x`/`y` - i.e. the
-	// element visually does not move until the mouse is released.
+	// processPointerMove/processPointerUp) rather than the destructured fields
+	// above, so they never show up as "read" to the dependency analyzer. They are
+	// listed below anyway, deliberately, so the global listeners only
+	// re-subscribe when one of them actually changes. `input` itself is a fresh
+	// object every render; listing it would rebuild the listeners on every
+	// render and cancel a marquee frame scheduled mid-render.
 	/* oxlint-disable react-hooks/exhaustive-deps -- see comment above */
 	useEffect(() => {
-		const tracker: PointerFrameTracker = {
-			rafId: 0,
-			pendingMoveEvent: null,
-			lastSnapLinesKey: '',
-		};
+		const tracker: PointerFrameTracker = { rafId: 0, pendingMoveEvent: null };
 
 		const handlePointerMove = (e: PointerEvent) => {
 			tracker.pendingMoveEvent = e;
@@ -79,7 +71,7 @@ export function usePointerHandlers(input: UsePointerHandlersInput): void {
 				tracker.rafId = requestAnimationFrame(() => {
 					tracker.rafId = 0;
 					if (tracker.pendingMoveEvent) {
-						processPointerMove(tracker.pendingMoveEvent, input, tracker);
+						processPointerMove(tracker.pendingMoveEvent, input);
 						tracker.pendingMoveEvent = null;
 					}
 				});
@@ -109,31 +101,22 @@ export function usePointerHandlers(input: UsePointerHandlersInput): void {
 	}, [
 		editorScale,
 		canvasStageRef,
-		dragStateRef,
-		resizeStateRef,
 		shapeAdjustmentDragStateRef,
 		marqueeStateRef,
 		editTemplateMode,
-		snapToGrid,
-		snapToShape,
-		guides,
 		templateElements,
 		setMarqueeSelectionState,
-		setSnapLines,
-		elementLookup,
-		setTemplateElementsBySlideId,
 		setPointerCommitNonce,
 		activeSlide,
 		activeSlideIndex,
 		canvasSize.width,
 		canvasSize.height,
-		gridSpacingPx,
 		applySelection,
 		clearSelection,
-		updateSlides,
 		updateElementById,
 		markDirty,
 		livePatcher,
+		gestureRef,
 	]);
 	/* oxlint-enable react-hooks/exhaustive-deps */
 }

@@ -133,6 +133,14 @@ describe('svelte selecting inside a group', () => {
 		expect(h.controller.editingId).toBeNull();
 	});
 
+	it('keeps a group whole when it is pressed inside a multi-selection', () => {
+		const h = mount('cards');
+		// The group is the primary (last) of two selected elements.
+		h.editor.selection.setAll(['other', 'cards']);
+		h.controller.onStagePointerDown(press(h.groupNode, 250, 130));
+		expect(h.editor.selectedElementId).not.toBe('a');
+	});
+
 	it('moves to another member of the entered group', () => {
 		const h = mount('a');
 		h.controller.onStagePointerDown(press(h.groupNode, 360, 130));

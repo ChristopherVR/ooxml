@@ -1,11 +1,8 @@
 import {
-	drillSelectionForClick,
-	drillSelectionForDoubleClick,
-	findElementPath,
 	isAdditiveSelectionPress,
-	isEnterableGroup,
 	isGroupMember,
-	memberChainAtPoint,
+	resolveGroupDoubleClickTarget,
+	resolveGroupPressTarget,
 	setPendingCaretPoint,
 } from 'ooxml-ui/pptx';
 import type { PendingInlineTextEdit } from 'ooxml-ui/pptx';
@@ -67,33 +64,18 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 		resolveStagePoint(deps.getOverlay()?.root, deps.getScale(), event);
 
 	/**
-	 * The ids under the pointer inside the top-level group `id`, innermost first
-	 * and `id` last (shared `memberChainAtPoint`: geometric, since grouped
-	 * children never receive the pointer). Null when `id` isn't an enterable
-	 * group (rotated, flipped, not a group), which then selects as one.
+	 * What a press on the top-level element `id` selects, PowerPoint-style
+	 * (shared `resolveGroupPressTarget`): a group first, then (once it is
+	 * selected) the member under the pointer, and another member of the entered
+	 * group moves the selection to it.
 	 */
-	const drillChain = (state: ViewerState, id: string, event: MouseEvent): string[] | null => {
-		const elements = getActiveElements(state);
-		const top = elements.find((element) => element.id === id);
-		const point = stagePoint(event as PointerEvent);
-		return top && point && isEnterableGroup(top) ? memberChainAtPoint(elements, id, point) : null;
-	};
-
-	/**
-	 * What a press on the top-level element `id` selects, PowerPoint-style: a
-	 * group first, then (once it is selected) the member under the pointer, and
-	 * another member of the entered group moves the selection to it.
-	 */
-	const resolvePressTarget = (state: ViewerState, id: string, event: PointerEvent): string => {
-		const chain = drillChain(state, id, event);
-		if (!chain) {
-			return id;
-		}
-		const selectedPath = state.selectedElementId
-			? findElementPath(getActiveElements(state), state.selectedElementId)
-			: null;
-		return drillSelectionForClick(chain, selectedPath) ?? id;
-	};
+	const resolvePressTarget = (state: ViewerState, id: string, event: PointerEvent): string =>
+		resolveGroupPressTarget(
+			getActiveElements(state),
+			id,
+			stagePoint(event),
+			state.selectedElementIds,
+		);
 
 	/**
 	 * A press on the already-selected group member: when it is released without
@@ -240,8 +222,13 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 		}
 		// A double-click on a group goes straight to the innermost shape under the
 		// pointer, so its text can be edited without ungrouping (PowerPoint).
-		const chain = id ? drillChain(state, id, event) : null;
-		const target = (chain ? drillSelectionForDoubleClick(chain) : null) ?? id;
+		const target = id
+			? resolveGroupDoubleClickTarget(
+					getActiveElements(state),
+					id,
+					stagePoint(event as PointerEvent),
+				)
+			: null;
 		if (target && isElementIdSelectable(state, target)) {
 			if (target !== id) {
 				ops.select(target);

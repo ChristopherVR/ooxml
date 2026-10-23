@@ -11,6 +11,7 @@ import type {
 	ResizeState,
 	ShapeAdjustmentDragState,
 } from '../types';
+import type { CanvasGestures } from './canvas-gestures';
 
 export interface UsePointerHandlersInput {
 	editorScale: number;
@@ -55,11 +56,16 @@ export interface UsePointerHandlersInput {
 	 * compositions, dormant when not collaborating.
 	 */
 	livePatcher?: CollaborationLivePatcher;
+	/**
+	 * Receives the canvas's move/resize gesture controller (see
+	 * canvas-gestures.ts) so the press handlers can start it. Optional: a
+	 * composition without it still arms and disarms the gesture records.
+	 */
+	gestureRef?: React.MutableRefObject<CanvasGestures | null>;
 }
 
-/** Mutable tracking state shared between pointer-move and pointer-up helpers. */
+/** The rAF throttle of the global pointer-move listener. */
 export interface PointerFrameTracker {
 	rafId: number;
 	pendingMoveEvent: PointerEvent | null;
-	lastSnapLinesKey: string;
 }

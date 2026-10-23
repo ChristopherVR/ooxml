@@ -1,11 +1,8 @@
 import {
 	canInteractWithElement,
-	drillSelectionForClick,
-	drillSelectionForDoubleClick,
-	findElementPath,
-	isEnterableGroup,
-	memberChainAtPoint,
 	parentSelection,
+	resolveGroupDoubleClickTarget,
+	resolveGroupPressTarget,
 	resolveTopLevelElementId,
 	setPendingCaretPoint,
 } from 'ooxml-ui/pptx';
@@ -124,45 +121,28 @@ export function useCanvasPointer(options: UseCanvasPointerOptions): UseCanvasPoi
 		return { x: (event.clientX - rect.left) / scale, y: (event.clientY - rect.top) / scale };
 	}
 
-	/** The ids under the pointer inside the group `topId`, innermost first; null when it can't be entered. */
-	function drillChain(topId: string, event: MouseEvent): string[] | null {
-		const elements = options.slideElements?.();
-		const top = elements?.find((el) => el.id === topId);
-		if (!elements || !top || !isEnterableGroup(top)) {
-			return null;
-		}
-		const point = slidePoint(event);
-		return point ? memberChainAtPoint(elements, topId, point) : null;
-	}
-
-	/** A drilled-to member, or the top-level id when the member may not be selected. */
-	function selectableOr(memberId: string | null, topId: string): string {
-		if (!memberId || memberId === topId) {
-			return topId;
-		}
-		return canInteractWithElement(options.findActiveElement(memberId), 'select') ? memberId : topId;
-	}
-
 	/**
-	 * What a press on the top-level element `topId` selects, PowerPoint-style: a
-	 * group first, then -- once it's selected -- the member under the pointer; a
-	 * press on another member of the entered group moves to that member.
+	 * What a press on the top-level element `topId` selects, PowerPoint-style
+	 * (shared `resolveGroupPressTarget`): a group first, then -- once it's
+	 * selected -- the member under the pointer; a press on another member of the
+	 * entered group moves to that member.
 	 */
 	function resolvePressTarget(topId: string, event: PointerEvent): string {
-		const chain = drillChain(topId, event);
 		const elements = options.slideElements?.();
-		if (!chain || !elements) {
-			return topId;
-		}
-		const ids = options.selectedElementIds.value;
-		const selectedPath = ids.length === 1 ? findElementPath(elements, ids[0]) : null;
-		return selectableOr(drillSelectionForClick(chain, selectedPath), topId);
+		return elements
+			? resolveGroupPressTarget(
+					elements,
+					topId,
+					slidePoint(event),
+					options.selectedElementIds.value,
+				)
+			: topId;
 	}
 
 	/** A double-click on a group goes straight to the innermost member under the pointer. */
 	function resolveDoubleClickTarget(topId: string, event: MouseEvent): string {
-		const chain = drillChain(topId, event);
-		return selectableOr(chain ? drillSelectionForDoubleClick(chain) : null, topId);
+		const elements = options.slideElements?.();
+		return elements ? resolveGroupDoubleClickTarget(elements, topId, slidePoint(event)) : topId;
 	}
 
 	function requestElementEdit(id: string): void {

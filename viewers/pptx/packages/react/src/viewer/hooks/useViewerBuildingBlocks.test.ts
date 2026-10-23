@@ -809,7 +809,7 @@ describe('useViewerBuildingBlocks', () => {
 				// Pointerup is a separate native event: allow the history effect to
 				// observe the pending selection drag first. No pointermove occurs.
 				await act(async () => {
-					document.dispatchEvent(new Event('pointerup'));
+					document.dispatchEvent(new Event('pointerup', { bubbles: true }));
 				});
 			} else {
 				await act(async () => latest!.canvasProps.onInlineEditCommit());
@@ -841,10 +841,10 @@ describe('useViewerBuildingBlocks', () => {
 			);
 		});
 		await act(async () => {
-			document.dispatchEvent(new Event('pointerup'));
+			document.dispatchEvent(new Event('pointerup', { bubbles: true }));
 		});
 		await act(async () => {
-			document.dispatchEvent(new Event('pointerup'));
+			document.dispatchEvent(new Event('pointerup', { bubbles: true }));
 		});
 		expect(handle.current!.getElementById(first.id)).toStrictEqual(first);
 		expect(handle.current!.isDirty()).toBeFalsy();
@@ -870,9 +870,12 @@ describe('useViewerBuildingBlocks', () => {
 				}) as unknown as React.MouseEvent,
 			);
 		});
+		// Real pointer events bubble up to window, where the shared gesture controller listens.
 		for (const x of [50, 90]) {
 			await act(async () => {
-				document.dispatchEvent(new MouseEvent('pointermove', { clientX: x, clientY: 50 }));
+				document.dispatchEvent(
+					new MouseEvent('pointermove', { bubbles: true, clientX: x, clientY: 50 }),
+				);
 				await new Promise<void>((resolve) => {
 					requestAnimationFrame(() => resolve());
 				});
@@ -880,7 +883,7 @@ describe('useViewerBuildingBlocks', () => {
 			expect(handle.current!.canUndo()).toBeFalsy();
 		}
 		await act(async () => {
-			document.dispatchEvent(new Event('pointerup'));
+			document.dispatchEvent(new Event('pointerup', { bubbles: true }));
 		});
 		expect(handle.current!.getElementById(first.id)?.x).not.toBe(first.x);
 		expect(handle.current!.canUndo()).toBeTruthy();

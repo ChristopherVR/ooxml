@@ -20,13 +20,14 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type {
+	GestureKind,
 	InlineListController,
+	InteractionBox,
 	InlineListSeed,
 	InlineTextEditSnapshot,
 	InlineTextFormatProperty,
 	CanvasSize,
 	ConnectorEndpointKind,
-	ElementInteraction,
 	RulerUnit,
 	ShapeAdjustmentDragState,
 	Tick,
@@ -49,6 +50,8 @@ import {
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	resolveConnectorEndpointUpdate,
+	resolveGroupDoubleClickTarget,
+	resolveGroupPressTarget,
 	setPendingCaretPoint,
 	takePendingCaretPoint,
 	withConnectorEndpointUpdate,
@@ -76,7 +79,7 @@ import { CanvasFitService } from './canvas-fit.service';
 import { ChartQuickActionsOverlayComponent } from './chart-quick-actions-overlay.component';
 import { CollaborationService } from './collaboration.service';
 import { CropOverlayComponent } from './crop-overlay.component';
-import { applyMove, applyResize, marqueeHitIds } from './drag-resize';
+import { applyResize, marqueeHitIds } from './drag-resize';
 import type { Box, ResizeHandle } from './drag-resize';
 import { ElementRendererComponent } from './element-renderer.component';
 import type { StyleMap } from './element-style';
@@ -85,8 +88,6 @@ import {
 	enteredGroupBox,
 	placeTextareaCaretAt,
 	renderedTextOffsetAt,
-	resolveGroupDoubleClickTarget,
-	resolveGroupPressTarget,
 	withGroupMembers,
 } from './group-drill-canvas';
 import { InkDrawingService } from './ink-drawing.service';
@@ -114,10 +115,11 @@ import {
 } from './shape-adjust-handle';
 import type { AdjustHandleBox } from './shape-adjust-handle';
 import { getSlideBackgroundStyle } from './slide-background';
+import { createSlideCanvasGestures } from './slide-canvas-gestures';
 import { affordanceElements, isViewportBackgroundPressTarget } from './slide-canvas-helpers';
 import { SLIDE_CONTEXT } from './slide-context';
 import type { SlideContext } from './slide-context';
-import { computeGridSpacingPx, computeSnap, snapToGridStep } from './snap-guides';
+import { computeGridSpacingPx } from './snap-guides';
 import type { SnapGuide } from './snap-guides';
 import type { TableCellCommit } from './table-renderer.component';
 import { isElementInteractive } from './template-mode';
@@ -130,8 +132,6 @@ const DRAG_THRESHOLD = 3;
 const HANDLE_SCREEN_PX_FINE = 24;
 /** Handle size in screen pixels (coarse pointer: touch); larger hit target. */
 const HANDLE_SCREEN_PX_COARSE = 24;
-/** Snap distance (screen pixels) for alignment guides. */
-const SNAP_SCREEN_PX = 6;
 /** Max delay (ms) between two taps to count as a double-tap on touch. */
 const DOUBLE_TAP_MS = 300;
 
@@ -144,28 +144,6 @@ const IS_COARSE_POINTER: boolean =
 
 /** Resize/rotate handle size in screen pixels for the current pointer kind. */
 const HANDLE_SCREEN_PX = IS_COARSE_POINTER ? HANDLE_SCREEN_PX_COARSE : HANDLE_SCREEN_PX_FINE;
-
-interface DragState {
-	id: string;
-	mode: 'move' | 'resize' | 'rotate';
-	handle: ResizeHandle | null;
-	startBox: Box;
-	startX: number;
-	startY: number;
-	started: boolean;
-	/** Rotation-gesture state (stage coords + degrees). */
-	centerX?: number;
-	centerY?: number;
-	startAngle?: number;
-	startRotation?: number;
-}
-
-/** Which lock governs each drag mode, for the mid-gesture lock re-check. */
-const DRAG_MODE_INTERACTION: Readonly<Record<DragState['mode'], ElementInteraction>> = {
-	move: 'move',
-	resize: 'resize',
-	rotate: 'rotate',
-};
 
 /** Best-effort plain text of a text-bearing element for inline editing. */
 function plainText(el: PptxElement): string {
@@ -450,7 +428,7 @@ export class SlideCanvasComponent implements SlideContext {
 
 	hasActivePointerInteraction(): boolean {
 		return Boolean(
-			this.drag ||
+			this.gestures.isActive() ||
 			this.adjustDrag ||
 			this.marquee ||
 			this.connectorEndpointDrag() ||
@@ -458,7 +436,26 @@ export class SlideCanvasComponent implements SlideContext {
 		);
 	}
 
-	private drag: DragState | null = null;
+	/** Move / resize / rotate, on the shared gesture controller (see slide-canvas-gestures). */
+	private readonly gestures = createSlideCanvasGestures({
+		scale: () => this.effectiveScale(),
+		stage: () => this.stageRef()?.nativeElement,
+		elementBox: (id, kind) => this.gestureStartBox(id, kind),
+		canInteract: (id, kind) => canInteractWithElement(this.elementById(id), kind),
+		snapOthers: (id) =>
+			this.allElements()
+				.filter((el) => el.id !== id)
+				.map((el) => ({ x: el.x, y: el.y, width: el.width, height: el.height })),
+		snapToShape: () => this.snapToShape(),
+		snapToGrid: () => this.snapToGrid(),
+		gridSize: () => this.gridSpacingPx(),
+		rulerGuides: () => (this.snapToGuides() ? this.rulerGuidesSvc.rulerGuides() : null),
+		setSnapGuides: (guides) => this.snapGuides.set(guides),
+		start: (id, kind) => this.transformStart.emit({ id, label: this.gestureLabel(kind) }),
+		update: (id, box) => this.transformUpdate.emit({ id, box }),
+		rotate: (id, rotation) => this.rotateUpdate.emit({ id, rotation }),
+		end: (ids) => this.transformEnd.emit({ ids }),
+	});
 	/** Live shape-adjustment gesture (amber diamond), or null when idle. */
 	private adjustDrag: ShapeAdjustmentDragState | null = null;
 
@@ -640,6 +637,7 @@ export class SlideCanvasComponent implements SlideContext {
 
 		// Observe the viewport so the slide re-fits on container resize / rotation.
 		const destroyRef = inject(DestroyRef);
+		destroyRef.onDestroy(() => this.gestures.dispose());
 		afterNextRender(() => {
 			const el = this.viewportRef()?.nativeElement;
 			if (!el) {
@@ -1016,15 +1014,7 @@ export class SlideCanvasComponent implements SlideContext {
 		if (!canInteractWithElement(el, 'move')) {
 			return;
 		}
-		this.drag = {
-			id,
-			mode: 'move',
-			handle: null,
-			startBox: { x: el.x, y: el.y, width: el.width, height: el.height },
-			startX: event.clientX,
-			startY: event.clientY,
-			started: false,
-		};
+		this.gestures.begin('move', id, event);
 	}
 
 	/**
@@ -1253,45 +1243,50 @@ export class SlideCanvasComponent implements SlideContext {
 		if (!box || !canInteractWithElement(this.singleSelectedElement(), 'resize')) {
 			return;
 		}
-		this.drag = {
-			id: box.id,
-			mode: 'resize',
-			handle,
-			startBox: { x: box.x, y: box.y, width: box.width, height: box.height },
-			startX: event.clientX,
-			startY: event.clientY,
-			started: false,
-		};
+		this.gestures.begin('resize', box.id, event, handle);
 	}
 
 	onRotatePointerDown(event: PointerEvent): void {
 		event.stopPropagation();
 		(event.target as Element | null)?.setPointerCapture?.(event.pointerId);
 		const box = this.singleSelected();
-		const stage = this.stageRef()?.nativeElement;
-		const el = this.singleSelectedElement();
-		if (!box || !stage || !canInteractWithElement(el, 'rotate')) {
+		if (
+			!box ||
+			!this.stageRef() ||
+			!canInteractWithElement(this.singleSelectedElement(), 'rotate')
+		) {
 			return;
 		}
-		const zoom = this.effectiveScale() || 1;
-		const rect = stage.getBoundingClientRect();
-		const centerX = box.x + box.width / 2;
-		const centerY = box.y + box.height / 2;
-		const px = (event.clientX - rect.left) / zoom;
-		const py = (event.clientY - rect.top) / zoom;
-		this.drag = {
-			id: box.id,
-			mode: 'rotate',
-			handle: null,
-			startBox: box,
-			startX: event.clientX,
-			startY: event.clientY,
-			started: false,
-			centerX,
-			centerY,
-			startAngle: Math.atan2(py - centerY, px - centerX),
-			startRotation: el?.rotation ?? 0,
-		};
+		this.gestures.begin('rotate', box.id, event);
+	}
+
+	/**
+	 * The box a gesture starts from: the element's own box for a move, the single
+	 * selection's for a resize (axis-aligned, as the canvas has always resized)
+	 * and, for a rotate, that box with the element's authored rotation.
+	 */
+	private gestureStartBox(id: string, kind: GestureKind): InteractionBox | undefined {
+		if (kind === 'move') {
+			const el = this.elementById(id);
+			return el ? { x: el.x, y: el.y, width: el.width, height: el.height } : undefined;
+		}
+		const box = this.singleSelected();
+		if (!box || box.id !== id) {
+			return undefined;
+		}
+		const frame = { x: box.x, y: box.y, width: box.width, height: box.height };
+		return kind === 'rotate'
+			? { ...frame, rotation: this.singleSelectedElement()?.rotation ?? 0 }
+			: frame;
+	}
+
+	/** The undo label for a gesture that just left its dead zone. */
+	private gestureLabel(kind: GestureKind): string {
+		return kind === 'move'
+			? this.translate.instant('pptx.undoAction.move')
+			: kind === 'resize'
+				? this.translate.instant('pptx.undoAction.resize')
+				: this.translate.instant('pptx.undoAction.rotate');
 	}
 
 	/**
@@ -1442,117 +1437,7 @@ export class SlideCanvasComponent implements SlideContext {
 				width: Math.abs(curX - marquee.startX),
 				height: Math.abs(curY - marquee.startY),
 			});
-			return;
 		}
-
-		const drag = this.drag;
-		if (!drag) {
-			return;
-		}
-		// Belt-and-braces lock gate: the pointer-down paths already refuse to arm a
-		// gesture a lock forbids, but a lock added mid-gesture (a collaborator, an
-		// AI edit) must not keep writing transforms for the rest of the drag.
-		if (!canInteractWithElement(this.elementById(drag.id), DRAG_MODE_INTERACTION[drag.mode])) {
-			this.drag = null;
-			return;
-		}
-		const zoom = this.effectiveScale() || 1;
-
-		if (!drag.started) {
-			if (
-				Math.abs(event.clientX - drag.startX) < DRAG_THRESHOLD &&
-				Math.abs(event.clientY - drag.startY) < DRAG_THRESHOLD
-			) {
-				return;
-			}
-			drag.started = true;
-			const label =
-				drag.mode === 'move'
-					? this.translate.instant('pptx.undoAction.move')
-					: drag.mode === 'resize'
-						? this.translate.instant('pptx.undoAction.resize')
-						: this.translate.instant('pptx.undoAction.rotate');
-			this.transformStart.emit({ id: drag.id, label });
-		}
-
-		if (drag.mode === 'rotate') {
-			const stage = this.stageRef()?.nativeElement;
-			if (
-				!stage ||
-				drag.centerX === undefined ||
-				drag.centerY === undefined ||
-				drag.startAngle === undefined ||
-				drag.startRotation === undefined
-			) {
-				return;
-			}
-			const rect = stage.getBoundingClientRect();
-			const px = (event.clientX - rect.left) / zoom;
-			const py = (event.clientY - rect.top) / zoom;
-			const angle = Math.atan2(py - drag.centerY, px - drag.centerX);
-			const deltaDeg = ((angle - drag.startAngle) * 180) / Math.PI;
-			const rotation = (((drag.startRotation + deltaDeg) % 360) + 360) % 360;
-			this.rotateUpdate.emit({ id: drag.id, rotation: Math.round(rotation) });
-			return;
-		}
-
-		const dx = (event.clientX - drag.startX) / zoom;
-		const dy = (event.clientY - drag.startY) / zoom;
-		let box =
-			drag.mode === 'move' || drag.handle === null
-				? applyMove(drag.startBox, dx, dy)
-				: applyResize(drag.startBox, drag.handle, dx, dy);
-
-		// Snap a move to nearby element edges/centres and show alignment guides.
-		if (drag.mode === 'move') {
-			const others = this.allElements()
-				.filter((el) => el.id !== drag.id)
-				.map((el) => ({ x: el.x, y: el.y, width: el.width, height: el.height }));
-			if (this.snapToShape()) {
-				const snap = computeSnap(box, others, SNAP_SCREEN_PX / zoom);
-				box = { ...box, x: snap.x, y: snap.y };
-				this.snapGuides.set(snap.guides);
-			} else {
-				this.snapGuides.set([]);
-			}
-
-			// Grid snap: applied after element-edge snap so grid takes precedence.
-			if (this.snapToGrid()) {
-				const step = this.gridSpacingPx();
-				box = {
-					...box,
-					x: snapToGridStep(box.x, step),
-					y: snapToGridStep(box.y, step),
-				};
-			}
-
-			// Guide snap: snap the moving element to the nearest user guide.
-			if (this.snapToGuides()) {
-				const guides = this.rulerGuidesSvc.rulerGuides();
-				const thr = SNAP_SCREEN_PX / zoom;
-				let gx = box.x;
-				let gy = box.y;
-				for (const g of guides) {
-					if (g.axis === 'x') {
-						for (const candidate of [gx, gx + box.width / 2, gx + box.width]) {
-							if (Math.abs(candidate - g.pos) <= thr) {
-								gx = g.pos - (candidate - gx);
-								break;
-							}
-						}
-					} else {
-						for (const candidate of [gy, gy + box.height / 2, gy + box.height]) {
-							if (Math.abs(candidate - g.pos) <= thr) {
-								gy = g.pos - (candidate - gy);
-								break;
-							}
-						}
-					}
-				}
-				box = { ...box, x: gx, y: gy };
-			}
-		}
-		this.transformUpdate.emit({ id: drag.id, box });
 	}
 
 	@HostListener('document:pointerup')
@@ -1623,14 +1508,11 @@ export class SlideCanvasComponent implements SlideContext {
 			this.adjustDrag = null;
 			return;
 		}
-		const drag = this.drag;
-		this.drag = null;
-		this.snapGuides.set([]);
 		// A plain click (no drag) on the already-selected group member opens its
 		// text, caret at the click point (see onStagePointerDown).
 		const clickEdit = this.pendingClickTextEdit;
 		this.pendingClickTextEdit = null;
-		if (clickEdit && !drag?.started && this.editingId() !== clickEdit.id) {
+		if (clickEdit && !this.gestures.moved() && this.editingId() !== clickEdit.id) {
 			// Read the caret's place from the rendered text now, while the member is
 			// still drawn (the plain textarea's own layout can't place it).
 			const node = this.stageRef()?.nativeElement.querySelector(
@@ -1643,13 +1525,6 @@ export class SlideCanvasComponent implements SlideContext {
 			this.pendingEditOffset = offset === null ? null : { id: clickEdit.id, offset };
 			setPendingCaretPoint(clickEdit);
 			this.textEditStart.emit({ id: clickEdit.id });
-		}
-		// A gesture that actually moved/resized a shape must let the parent reroute
-		// the connectors bound to it, otherwise every connector keeps pointing at
-		// where its shape used to be. Rotation leaves the box (and so every
-		// connection site's anchor) alone, so it is not worth a model write.
-		if (drag?.started && drag.mode !== 'rotate') {
-			this.transformEnd.emit({ ids: [drag.id] });
 		}
 	}
 

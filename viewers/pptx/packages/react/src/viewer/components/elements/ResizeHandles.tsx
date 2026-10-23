@@ -1,11 +1,11 @@
-import { createRotationDrag, elementIdSelector, getResizeHandleHitAreaStyle } from 'ooxml-ui/pptx';
+import { getResizeHandleHitAreaStyle } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ShapeAdjustmentHandleDescriptor } from '../../types';
 import { cn } from '../../utils';
-import { syncSelectionHandleOverlay } from '../../utils/selection-handle-overlay';
 import { CORNER_HANDLES, EDGE_HANDLES } from './resize-handle-classes';
+import { startRotateKnobGesture } from './rotate-knob-gesture';
 import { RotateHandleArtwork } from './RotateHandleArtwork';
 import {
 	RESIZE_ARTWORK,
@@ -87,78 +87,17 @@ export function ResizeHandles({
 	};
 
 	// ── Rotate handle (self-contained) ───────────────────────────────────
-	// Dragging the knob rotates from its initial press and authored angle,
-	// keeping off-center grabs stable. Preview live by mutating the wrapper
-	// transform, then commit the final degrees on release. Shift snaps to 15°.
-	const startRotate = (
-		btn: HTMLElement,
-		pointer: { clientX: number; clientY: number },
-		pointerId?: number,
-	): void => {
-		// Resolve the REAL element node directly by id, not via `closest`: since
-		// selection handles now live in a stage-level overlay that is a SIBLING of
-		// `ElementRenderer` (not its parent), `data-element-id` is never an
-		// ancestor of `btn` for a regular shape, so `closest` always landed on the
-		// overlay host instead. Mutating the overlay's (invisible) transform live
-		// rotated only the handles; the shape itself stayed frozen until the
-		// `onRotate` commit on release. A connector still nests its handles
-		// inside its own element, which also carries `data-element-id`, so the
-		// direct lookup covers both cases uniformly.
-		//
-		// Scoped to this viewer's `[data-pptx-viewport]`, never `document`: two
-		// viewers of one deck on the same page (docs landing, collab demo) both
-		// render the selected id, and a page-wide lookup would spin the OTHER
-		// instance's shape. The handle button is always inside the viewport, so
-		// `closest` finds it; the `document` fallback only serves unit tests that
-		// mount the handles bare.
-		const scope = btn.closest('[data-pptx-viewport]') ?? document;
-		const wrapper = scope.querySelector<HTMLElement>(elementIdSelector(elementId));
-		if (!wrapper) {
-			return;
-		}
-		const rect = wrapper.getBoundingClientRect();
-		const cx = rect.left + rect.width / 2;
-		const cy = rect.top + rect.height / 2;
-		// Rotation must precede the flip/skew transforms so a live rotate-drag
-		// preview matches the resting `getElementTransform` order (rotate first).
-		const base = nonRotationTransform ? ` ${nonRotationTransform}` : '';
-		const startDeg = rotation ?? 0;
-		const dragRotation = createRotationDrag(
-			{ x: cx, y: cy },
-			{ x: pointer.clientX, y: pointer.clientY },
-			startDeg,
-		);
-		let last = startDeg;
-		if (pointerId !== undefined) {
-			btn.setPointerCapture?.(pointerId);
-		}
-		// Track via Pointer Events only; they fire for both mouse and touch,
-		// matching the rest of the canvas (usePointerHandlers). A plain
-		// `mousemove` listener would miss the touch drag entirely.
-		const apply = (clientX: number, clientY: number, shift: boolean): void => {
-			let deg = dragRotation({ x: clientX, y: clientY });
-			if (shift) {
-				deg = Math.round(deg / 15) * 15;
-			}
-			deg = Math.round(((deg % 360) + 360) % 360);
-			last = deg;
-			const transform = `rotate(${deg}deg)${base}`;
-			wrapper.style.transform = transform;
-			syncSelectionHandleOverlay(wrapper, elementId, { transform });
-		};
-		const onPointerMove = (ev: PointerEvent): void => apply(ev.clientX, ev.clientY, ev.shiftKey);
-		const end = (): void => {
-			window.removeEventListener('pointermove', onPointerMove);
-			window.removeEventListener('pointerup', end);
-			window.removeEventListener('pointercancel', end);
-			if (last !== startDeg) {
-				onRotate?.(elementId, last);
-			}
-		};
-		window.addEventListener('pointermove', onPointerMove);
-		window.addEventListener('pointerup', end);
-		window.addEventListener('pointercancel', end);
-	};
+	// Shared gesture, live preview on the element's transform, commit on release.
+	const startRotate = (button: HTMLElement, pointer: React.PointerEvent): void =>
+		startRotateKnobGesture({
+			button,
+			elementId,
+			pointer,
+			pointerId: pointer.pointerId,
+			rotation: rotation ?? 0,
+			...(nonRotationTransform ? { nonRotationTransform } : {}),
+			...(onRotate ? { onRotate } : {}),
+		});
 
 	return (
 		<>
@@ -239,7 +178,7 @@ export function ResizeHandles({
 						// Keep the same subpixel coordinates as pointermove; legacy
 						// mousedown rounds them and can shift a short shape's anchor.
 						e.stopPropagation();
-						startRotate(e.currentTarget, e, e.pointerId);
+						startRotate(e.currentTarget, e);
 					}}
 					onMouseDown={(e) => {
 						e.stopPropagation();
