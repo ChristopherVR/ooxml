@@ -5,7 +5,8 @@
  * These tests verify the handler result shape and edge-case handling
  * without mounting React components.
  */
-import type { PptxElement, PptxHandler } from 'pptx-viewer-core';
+import { PRESET_THEMES } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { describe, it, expect, vi } from 'vitest';
 
 import { useThemeHandlers } from './useThemeHandlers';
@@ -217,5 +218,69 @@ describe('theme picks apply in place', () => {
 		expect(input.setSlides).toHaveBeenCalledWith(expect.any(Function));
 		expect(input.setTemplateElementsBySlideId).toHaveBeenCalledWith(expect.any(Function));
 		expect(input.bumpHistory).toHaveBeenCalledOnce();
+	});
+
+	it('a fonts pick writes only the font scheme, leaving the colours and the name as authored', async () => {
+		// `applyTheme` would also rewrite the colour scheme (a `sysClr` slot becomes `srgbClr`) and
+		// copy the primary scheme into every theme part.
+		const text = {
+			type: 'text',
+			id: 'body',
+			x: 0,
+			y: 0,
+			width: 20,
+			height: 20,
+			textSegments: [
+				{ text: 'Body', style: { fontFamily: 'Calibri', latinFontThemeToken: '+mn-lt' } },
+			],
+		} as unknown as PptxElement;
+		let slides = [{ id: 'slide', slideNumber: 1, elements: [text] }] as PptxSlide[];
+		let templates: Record<string, PptxElement[]> = { slide: [text] };
+		let theme: Record<string, unknown> | null = {
+			name: 'Kept',
+			colorScheme: PRESET_THEMES[0].colorScheme,
+		};
+		const handler = {
+			applyTheme: vi.fn(),
+			updateThemeColorScheme: vi.fn(),
+			updateThemeName: vi.fn(),
+			updateThemeFontScheme: vi.fn().mockResolvedValue(undefined),
+		};
+		const input: UseThemeHandlersInput = {
+			...inPlaceInput(handler as unknown as Partial<PptxHandler>),
+			theme: { fontScheme: { minorFont: { latin: 'Calibri' } } },
+			setSlides: vi.fn((update) => {
+				slides = typeof update === 'function' ? update(slides) : update;
+			}),
+			templateElementsBySlideId: templates,
+			setTemplateElementsBySlideId: vi.fn((update) => {
+				templates = typeof update === 'function' ? update(templates) : update;
+			}),
+			setTheme: vi.fn((update) => {
+				theme = typeof update === 'function' ? update(theme) : update;
+			}),
+		};
+		const fontScheme = { majorFont: { latin: 'Arial' }, minorFont: { latin: 'Arial' } };
+
+		await useThemeHandlers(input).handleUpdateThemeFontScheme(fontScheme);
+
+		expect(handler.updateThemeFontScheme).toHaveBeenCalledExactlyOnceWith(fontScheme);
+		expect(handler.updateThemeColorScheme).not.toHaveBeenCalled();
+		expect(handler.updateThemeName).not.toHaveBeenCalled();
+		expect(handler.applyTheme).not.toHaveBeenCalled();
+		expect(input.bumpHistory).toHaveBeenCalledOnce();
+		expect(input.history.markDirty).toHaveBeenCalledOnce();
+		const face = (element: PptxElement | undefined) =>
+			(element as { textSegments: Array<{ style: { fontFamily: string } }> }).textSegments[0].style
+				.fontFamily;
+		expect(face(slides[0].elements[0])).toBe('Arial');
+		expect(face(templates.slide[0])).toBe('Arial');
+		expect(theme).toStrictEqual({
+			name: 'Kept',
+			colorScheme: PRESET_THEMES[0].colorScheme,
+			fontScheme,
+		});
+		expect(input.serializeSlides).not.toHaveBeenCalled();
+		expect(input.setContent).not.toHaveBeenCalled();
 	});
 });
