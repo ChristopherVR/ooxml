@@ -6,6 +6,7 @@ export * from './shape-match';
 export * from './node-ops';
 export * from './node-order';
 export * from './node-style';
+export * from './outline';
 export * from './reflow';
 export * from './reflow-category';
 export * from './reflow-directional';

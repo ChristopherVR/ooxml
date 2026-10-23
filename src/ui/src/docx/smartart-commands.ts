@@ -5,6 +5,7 @@
 import { closeHistory } from 'prosemirror-history';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { diagramNodeLevels } from 'ooxml-core/diagram';
 import {
 	editDocxDiagram,
 	type DocxDiagram,
@@ -103,12 +104,10 @@ export function insertDiagram(view: EditorView, image: InlineImage): boolean {
 
 /** The diagram's nodes as text pane lines, with their depth below the top level. */
 export function diagramOutline(diagram: DocxDiagram): OfficeSmartArtTextNode[] {
-	const ids = new Set(diagram.nodes.map((node) => node.id));
-	const levels = new Map<string, number>();
-	return diagram.nodes.map((node) => {
-		const parent = node.parentId && ids.has(node.parentId) ? node.parentId : undefined;
-		const level = parent === undefined ? 0 : (levels.get(parent) ?? 0) + 1;
-		levels.set(node.id, level);
-		return { id: node.id, text: node.text, level };
-	});
+	const levels = diagramNodeLevels(diagram.nodes);
+	return diagram.nodes.map((node, index) => ({
+		id: node.id,
+		text: node.text,
+		level: levels[index] ?? 0,
+	}));
 }
