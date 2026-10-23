@@ -1,37 +1,41 @@
 /**
- * autosave.service.ts: periodic recovery-snapshot autosave for the Angular
- * editor, the counterpart of React's `useAutosave` hook.
+ * autosave.service.ts: the Angular adapter of the shared recovery autosave
+ * engine (`createAutosaveController` in `ooxml-ui/pptx`), the counterpart of
+ * React's `useAutosave` hook.
  *
- * Every N milliseconds (resolved by the shared {@link resolveAutosaveIntervalMs}:
- * the host's explicit cadence, else the user's File > Options > Save AutoRecover
- * cadence, else 120s) it serialises the edited deck and writes
- * it to the shared IndexedDB recovery store via {@link saveAutosaveSnapshot} when
- * the document is dirty, a `filePath` key is set, autosave is enabled, and no
- * save is already in flight. The IndexedDB store itself lives in
- * `pptx-viewer-shared` so React/Vue/Angular share one recovery database.
+ * The engine follows PowerPoint's AutoRecover: while there are unsaved edits a
+ * recovery snapshot is written every interval (the shared
+ * {@link resolveAutosaveIntervalMs}: the host's explicit cadence, else File >
+ * Options > Save AutoRecover, else 120s), and nothing is written while the deck
+ * is unchanged. This service only feeds it the component's signals and exposes
+ * its state as a signal.
  *
  * Provide it once on the viewer component (`providers: [AutosaveService]`). The
  * component wires its reactive accessors via {@link bind}; the resulting
  * {@link status} signal feeds both the title bar and the status bar.
  */
 
-import { DestroyRef, effect, inject, Injectable, Injector, signal } from '@angular/core';
+import {
+	computed,
+	DestroyRef,
+	effect,
+	inject,
+	Injectable,
+	Injector,
+	untracked,
+} from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
-	autosaveSnapshotMark,
+	createAutosaveController,
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
-	shouldWriteAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveDisabledReason, AutosaveSnapshotMark, DocumentStorage } from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason, DocumentStorage, PptxAutosaveStatus } from 'ooxml-ui/pptx';
 
-/** Lifecycle status of the autosave engine (mirrors React's `AutosaveStatus`). */
-export type AutosaveStatus =
-	| { state: 'idle' }
-	| { state: 'disabled'; reason: string }
-	| { state: 'saving' }
-	| { state: 'saved'; timestamp: number }
-	| { state: 'error'; message: string };
+import { controllerSignal } from './controller-signal';
+
+/** The one autosave status every binding renders (`PptxAutosaveStatus` in `ooxml-ui/pptx`). */
+export type AutosaveStatus = PptxAutosaveStatus;
 
 /** Live host accessors the autosave engine reads (all reactive). */
 export interface AutosaveHost {
@@ -55,20 +59,12 @@ export interface AutosaveHost {
 	 * cadence > 120s default).
 	 */
 	readonly intervalMs?: () => number;
-	/**
-	 * Why autosave is inactive, straight from the shared activation verdict, so
-	 * the title bar names the condition the user would have to change first
-	 * instead of always blaming the toggle.
-	 */
+	/** Why autosave is inactive, straight from the shared activation verdict. */
 	readonly disabledReason?: () => AutosaveDisabledReason | undefined;
 	/**
-	 * The values a snapshot is built from, read fresh on each tick.
-	 *
-	 * The dirty flag stays true from the first edit until the user performs a
-	 * real save, so on its own it made this timer re-serialize and rewrite an
-	 * identical deck every N seconds forever. Vue, Svelte and Vanilla never had
-	 * that problem because they debounce on the slides signal being reassigned;
-	 * this is the same trigger. Omit it and every tick writes, as before.
+	 * The signals a snapshot is built from (reassigned, never mutated). While the
+	 * deck is dirty, a change in any of them is an edit that starts the
+	 * AutoRecover interval. Omit it and only the clean-to-dirty transition counts.
 	 */
 	readonly changeSources?: () => readonly unknown[];
 	/** Called with the serialised deck after each snapshot is written (the host's `autosaved`). */
@@ -81,44 +77,47 @@ export class AutosaveService {
 	private readonly destroyRef = inject(DestroyRef);
 	private readonly translate = inject(TranslateService);
 
-	/** Current autosave status, surfaced in the title bar and status bar. */
-	readonly status = signal<AutosaveStatus>({ state: 'idle' });
-
 	private host: AutosaveHost | null = null;
-	private timer: ReturnType<typeof setInterval> | null = null;
-	private saving = false;
-	private lastSnapshot: AutosaveSnapshotMark | undefined;
+	private readonly controller = createAutosaveController({
+		getActivation: () =>
+			this.host
+				? { active: this.host.enabled(), reason: this.host.disabledReason?.() }
+				: { active: false },
+		getFilePath: () => this.host?.filePath(),
+		getIntervalMs: () => resolveAutosaveIntervalMs({ hostIntervalMs: this.host?.intervalMs?.() }),
+		serialize: () => this.host?.serialize() ?? Promise.resolve(null),
+		getStorage: () => this.host?.storage?.(),
+		onSaved: (data) => this.host?.saved?.(data),
+		errorMessage: () => this.translate.instant('pptx.autosave.error'),
+		writeSnapshot: saveAutosaveSnapshot,
+	});
+	private readonly state = controllerSignal(this.controller);
+
+	/** Current autosave status, surfaced in the title bar and status bar. */
+	readonly status = computed(() => this.state().status);
 
 	/**
-	 * Wire the host accessors (called once from the component constructor). An
-	 * effect re-establishes the interval whenever `enabled`, `filePath`, or the
-	 * interval length changes, matching React's interval-effect dependencies.
+	 * Wire the host accessors (called once from the component constructor). One
+	 * effect re-reads the activation and cadence; another reports edits.
 	 */
 	bind(host: AutosaveHost): void {
 		this.host = host;
-		this.destroyRef.onDestroy(() => this.clearTimer());
+		this.destroyRef.onDestroy(() => this.controller.destroy());
 		effect(
 			() => {
-				const enabled = host.enabled();
-				const filePath = host.filePath();
-				const intervalMs = resolveAutosaveIntervalMs({ hostIntervalMs: host.intervalMs?.() });
-				const reason = host.disabledReason?.();
-				this.clearTimer();
-				if (!enabled) {
-					this.status.set({ state: 'disabled', reason: reason ?? 'autosave_toggle_off' });
-					return;
-				}
-				if (!filePath) {
-					this.status.set({ state: 'disabled', reason: reason ?? 'no_file_path' });
-					return;
-				}
-				// Requirements met; reset to idle if currently disabled.
-				if (this.status().state === 'disabled') {
-					this.status.set({ state: 'idle' });
-				}
-				this.timer = setInterval(() => {
-					void this.doAutosave({ polled: true });
-				}, intervalMs);
+				host.enabled();
+				host.filePath();
+				host.intervalMs?.();
+				host.disabledReason?.();
+				untracked(() => this.controller.refresh());
+			},
+			{ injector: this.injector },
+		);
+		effect(
+			() => {
+				const dirty = host.isDirty();
+				const sources = host.changeSources?.() ?? [];
+				untracked(() => this.controller.observe(dirty, sources));
 			},
 			{ injector: this.injector },
 		);
@@ -126,64 +125,6 @@ export class AutosaveService {
 
 	/** Manually trigger an autosave right now (mirrors React's `triggerAutosave`). */
 	async triggerAutosave(): Promise<void> {
-		await this.doAutosave();
-	}
-
-	/**
-	 * `polled` marks the interval tick, which may be skipped as redundant. An
-	 * explicit {@link triggerAutosave} is a request, not a poll, and always
-	 * writes.
-	 */
-	private async doAutosave(options?: { polled?: boolean }): Promise<void> {
-		const host = this.host;
-		if (!host) {
-			return;
-		}
-		const filePath = host.filePath();
-		if (!filePath) {
-			return;
-		}
-		const sources = host.changeSources?.() ?? [];
-		if (
-			!shouldWriteAutosaveSnapshot({
-				filePath,
-				isDirty: host.isDirty(),
-				saving: this.saving,
-				sources: options?.polled === true ? sources : [],
-				lastSnapshot: this.lastSnapshot,
-			})
-		) {
-			return;
-		}
-
-		this.saving = true;
-		this.status.set({ state: 'saving' });
-		try {
-			const data = await host.serialize();
-			if (!data) {
-				this.status.set({ state: 'idle' });
-				return;
-			}
-			await saveAutosaveSnapshot(filePath, data, host.storage?.());
-			// Marked AFTER the write, from the sources read before it, so an edit
-			// made while serialising is not mistaken for one already captured.
-			this.lastSnapshot = autosaveSnapshotMark(filePath, sources);
-			this.status.set({ state: 'saved', timestamp: Date.now() });
-			host.saved?.(data);
-		} catch (err) {
-			this.status.set({
-				state: 'error',
-				message: err instanceof Error ? err.message : this.translate.instant('pptx.autosave.error'),
-			});
-		} finally {
-			this.saving = false;
-		}
-	}
-
-	private clearTimer(): void {
-		if (this.timer !== null) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
+		await this.controller.saveNow();
 	}
 }
