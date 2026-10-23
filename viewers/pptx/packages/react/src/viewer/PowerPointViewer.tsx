@@ -156,7 +156,7 @@ import { useViewPreferencesSync } from './hooks/useViewPreferencesSync';
 import { useZoomViewport } from './hooks/useZoomViewport';
 import { ViewerI18nRoot, useViewerLocaleControls } from './i18n/root';
 import { useTranslation } from './i18n/use-translation';
-import type { PowerPointViewerProps, PowerPointViewerHandle } from './types';
+import type { EditorHistoryTheme, PowerPointViewerProps, PowerPointViewerHandle } from './types';
 import { cn } from './utils';
 import { withDisplayName } from './utils/display-name';
 
@@ -698,6 +698,11 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			onChangeCallback.current?.();
 		}, [setIsDirty]);
 
+		// Undo and redo of a theme step put the theme part back through the theme handlers, which
+		// are built further down (`useViewerIntegration`).
+		const restoreHistoryThemeRef = useRef<((theme: EditorHistoryTheme) => void) | undefined>(
+			undefined,
+		);
 		const history = useEditorHistory({
 			slides,
 			canvasSize,
@@ -715,6 +720,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			hasActivePointerInteraction,
 			pointerCommitNonce: state.pointerCommitNonce,
 			onDirty: markDocumentDirty,
+			theme: state.theme,
+			onRestoreTheme: (recorded) => restoreHistoryThemeRef.current?.(recorded),
 			setSlides: state.setSlides,
 			setCanvasSize: state.setCanvasSize,
 			setActiveSlideIndex: state.setActiveSlideIndex,
@@ -1031,6 +1038,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			customizationApi: custom.api,
 			customization: customizationResolved,
 		});
+		restoreHistoryThemeRef.current = (recorded) =>
+			void themeHandlers.handleRestoreHistoryTheme(recorded);
 
 		// ── Deck view preferences (grid/snap/guides) load-seed + write-back ──
 		// Seeds `state.snapToGrid`/`snapToShape`/`showGuides` from the deck's own

@@ -154,6 +154,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 			React.SetStateAction<Array<Record<string, unknown>>>
 		>,
 		slideMasters: state.slideMasters as unknown as Array<Record<string, unknown>>,
+		themeOptions: state.themeOptions,
 		history,
 		setSlides: state.setSlides,
 		templateElementsBySlideId: state.templateElementsBySlideId,
