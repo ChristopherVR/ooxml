@@ -1,28 +1,20 @@
-import type { PptxSmartArtData } from 'pptx-viewer-core';
-import React from 'react';
-/**
- * Tests for the SmartArt properties panel.
- *
- * Renders to static markup to assert accessibility roles / aria-labels and the
- * validation-driven enabling/disabling of the add / remove affordances. The
- * editing *behaviour* (add / remove / promote / demote / reorder / keyboard) is
- * unit-tested against the shared handlers in
- * `smartart-node-pane-handlers.test.ts`, which exercise the same core ops the
- * panel calls.
- */
+// @vitest-environment happy-dom
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, it, expect, vi } from 'vitest';
+/**
+ * Tests for the SmartArt properties panel. The text pane is the shared
+ * `pptx-ui-smartart-text-pane` element (its outline, tools and edits are tested
+ * in `ooxml-ui`); here the panel must feed it the data and commit what it emits.
+ */
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-// Mock react-i18next: return the key (or a templated form) so assertions are stable.
+// Mock react-i18next: return the key so assertions are stable.
 vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
-	useTranslation: () => ({
-		t: (key: string, opts?: Record<string, unknown>) => {
-			if (key === 'pptx.smartart.extraConnections') {
-				return `${opts?.count ?? 0} other connection(s)`;
-			}
-			return key;
-		},
-	}),
+	useTranslation: () => ({ t: (key: string) => key }),
 }));
 
 const { SmartArtPropertiesPanel } = await import('./SmartArtPropertiesPanel');
@@ -38,44 +30,62 @@ function listData(count: number): PptxSmartArtData {
 	};
 }
 
-describe('smartArtPropertiesPanel - accessibility', () => {
-	it('wraps the panel in a labelled group', () => {
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={listData(2)} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toContain('role="group"');
-		expect(html).toContain('aria-label="pptx.smartart.title"');
+beforeAll(() => {
+	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+	registerPptxWebControls();
+});
+
+const mounted: { root: Root; target: HTMLElement }[] = [];
+afterEach(() => {
+	for (const { root, target } of mounted.splice(0)) {
+		act(() => root.unmount());
+		target.remove();
+	}
+});
+
+function mount(data: PptxSmartArtData, canEdit = true) {
+	const onUpdateElement = vi.fn<(updates: Partial<PptxElement>) => void>();
+	const target = document.createElement('div');
+	document.body.append(target);
+	const root = createRoot(target);
+	mounted.push({ root, target });
+	act(() =>
+		root.render(
+			<SmartArtPropertiesPanel
+				smartArtData={data}
+				canEdit={canEdit}
+				onUpdateElement={onUpdateElement}
+			/>,
+		),
+	);
+	const pane = target.querySelector('pptx-ui-smartart-text-pane')!;
+	const inputs = () => [
+		...pane.shadowRoot!.querySelectorAll<HTMLInputElement>('[data-testid="smartart-node-text"]'),
+	];
+	return { onUpdateElement, pane, inputs };
+}
+
+describe('smartArtPropertiesPanel - shared text pane', () => {
+	it('wraps the panel in a labelled group and feeds the pane the nodes', () => {
+		const { pane, inputs } = mount(listData(2));
+		expect(pane.closest('[role="group"]')?.getAttribute('aria-label')).toBe('pptx.smartart.title');
+		expect(inputs().map((input) => input.value)).toEqual(['Item 1', 'Item 2']);
 	});
 
-	it('exposes a list with listitem rows', () => {
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={listData(2)} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toContain('role="list"');
-		expect(html).toContain('role="listitem"');
+	it('commits the edits the pane emits through onUpdateElement', () => {
+		const { onUpdateElement, inputs } = mount(listData(2));
+		const second = inputs()[1]!;
+		second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+		expect(onUpdateElement).toHaveBeenCalledOnce();
+		const next = onUpdateElement.mock.calls[0]![0].smartArtData as PptxSmartArtData;
+		expect(next.nodes.find((node) => node.id === 'n1')?.parentId).toBe('n0');
 	});
 
-	it('gives each node input an aria-label referencing its content', () => {
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={listData(1)} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toContain('aria-label="Item 1: Item 1"');
-	});
-
-	it('labels the move up / move down controls', () => {
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={listData(2)} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toMatch(/aria-label="Move [^"]*up"/u);
-		expect(html).toMatch(/aria-label="Move [^"]*down"/u);
-	});
-
-	it('marks the active style button with aria-pressed', () => {
-		const data: PptxSmartArtData = { ...listData(1), style: 'moderate' };
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={data} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toMatch(/aria-pressed="true"[^>]*>pptx\.smartart\.styleModerate/u);
+	it('is read-only when canEdit is false', () => {
+		const { onUpdateElement, inputs } = mount(listData(2), false);
+		expect(inputs().every((input) => input.disabled)).toBe(true);
+		inputs()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		expect(onUpdateElement).not.toHaveBeenCalled();
 	});
 });
 
@@ -124,80 +134,5 @@ describe('smartArtPropertiesPanel - schema tokens are spelled, values are not', 
 		expect(html).not.toMatch(/>intense</u);
 		// The group keeps its role and accessible name.
 		expect(html).toContain('aria-label="pptx.smartart.style"');
-	});
-});
-
-describe('smartArtPropertiesPanel - validation', () => {
-	it('disables Add when a fixed-count layout is at its max (matrix)', () => {
-		const data: PptxSmartArtData = {
-			resolvedLayoutType: 'matrix',
-			nodes: Array.from({ length: 4 }, (_, i) => ({ id: `n${i}`, text: `Q${i}` })),
-		};
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={data} canEdit onUpdateElement={vi.fn()} />,
-		);
-		// The Add button is disabled; surface explains the fixed count.
-		expect(html).toMatch(/exactly 4 items/u);
-	});
-
-	it('shows a bounds note for ranged layouts (venn)', () => {
-		const data: PptxSmartArtData = {
-			resolvedLayoutType: 'venn',
-			nodes: [
-				{ id: 'a', text: 'A' },
-				{ id: 'b', text: 'B' },
-			],
-		};
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={data} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toMatch(/2 to 3 items/u);
-	});
-
-	it('shows no bounds note for unbounded layouts (list)', () => {
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={listData(3)} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).not.toMatch(/Works best/u);
-		expect(html).not.toMatch(/exactly/u);
-	});
-});
-
-describe('smartArtPropertiesPanel - connections awareness', () => {
-	it('surfaces the presence of non-tree connections', () => {
-		const data: PptxSmartArtData = {
-			...listData(2),
-			connections: [{ sourceId: 'n0', destId: 'n1', type: 'presOf' }],
-		};
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={data} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).toContain('other connection(s)');
-	});
-
-	it('does not surface plain parOf tree connections', () => {
-		const data: PptxSmartArtData = {
-			...listData(2),
-			connections: [{ sourceId: 'n0', destId: 'n1', type: 'parOf' }],
-		};
-		const html = render(
-			<SmartArtPropertiesPanel smartArtData={data} canEdit onUpdateElement={vi.fn()} />,
-		);
-		expect(html).not.toContain('other connection(s)');
-	});
-});
-
-describe('smartArtPropertiesPanel - read only', () => {
-	it('disables inputs and buttons when canEdit is false', () => {
-		const html = render(
-			<SmartArtPropertiesPanel
-				smartArtData={listData(2)}
-				canEdit={false}
-				onUpdateElement={vi.fn()}
-			/>,
-		);
-		expect(html).toContain('disabled');
-		// Inputs render disabled.
-		expect(html).toMatch(/<input[^>]*disabled/u);
 	});
 });

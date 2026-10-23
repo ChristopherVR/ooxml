@@ -21,7 +21,6 @@ import type {
 	PptxSlide,
 	PptxSlideMaster,
 	PptxSmartArtData,
-	PptxSmartArtNodeStyle,
 	PptxTableCellStyle,
 	PptxTableData,
 	XmlObject,
@@ -232,18 +231,11 @@ export interface InspectorHandlers {
 	mergeTableCells(cells: TableCellPosition[]): void;
 	splitTableCell(cell: TableCellPosition): void;
 
-	setSmartArtNodeText(nodeId: string, text: string): void;
-	setSmartArtNodeStyle(nodeId: string, patch: Partial<PptxSmartArtNodeStyle>): void;
-	mutateSmartArtNode(
-		nodeId: string,
-		action: 'add' | 'addChild' | 'remove' | 'promote' | 'demote',
-	): void;
 	/**
 	 * Commit a whole replacement `smartArtData`, reflowed and history-integrated
-	 * like every other SmartArt mutation. Used by the text pane's Tab / Enter /
-	 * Backspace keyboard handling, which computes the next data (and, for
-	 * add/remove, the node to focus next) via the shared `smartart-node-pane-
-	 * handlers` builders before committing.
+	 * like every other SmartArt mutation. Used by the text pane
+	 * (`pptx-ui-smartart-text-pane`), which computes the next data through the
+	 * pptx SmartArt facades before emitting it.
 	 */
 	replaceSmartArtData(data: PptxSmartArtData): void;
 	setSmartArtLayout(layout: SmartArtLayoutType): void;

@@ -18,6 +18,8 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.smartArtLayouts.title': 'Dispositions',
 	'pptx.gallery.smartArtLayouts.named': '{{name}}',
 	'pptx.gallery.smartArtCommand.addShape': 'Ajouter une forme',
+	'pptx.gallery.smartArtCommand.addShapeBefore': 'Ajouter une forme avant',
+	'pptx.gallery.smartArtCommand.addShapeAbove': 'Ajouter une forme au-dessus',
 	'pptx.gallery.smartArtCommand.addBullet': 'Ajouter une puce',
 	'pptx.gallery.smartArtCommand.textPane': 'Volet Texte',
 	'pptx.gallery.smartArtCommand.promote': 'Promouvoir',

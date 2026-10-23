@@ -4,10 +4,10 @@ import {
 	SMARTART_COLOR_SCHEME_LABEL_KEYS,
 	SMARTART_STYLE_LABEL_KEYS,
 } from 'ooxml-ui/pptx';
+import type { SmartArtTextPaneChangeEvent, SmartArtTextPaneViewState } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSmartArtData,
-	PptxSmartArtNodeStyle,
 	SmartArtColorScheme,
 	SmartArtLayoutType,
 	SmartArtStyle,
@@ -15,25 +15,23 @@ import type {
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { injectRecentColors } from '../../composables/recent-colors-context';
 import {
 	SMARTART_COLOR_SCHEMES,
 	SMARTART_STYLE_OPTIONS,
 	useSmartArtEditing,
 } from '../../composables/useSmartArtEditing';
 import SmartArtLayoutSwitcher from './SmartArtLayoutSwitcher.vue';
-import SmartArtNodeRow from './SmartArtNodeRow.vue';
 
 /**
  * SmartArtPropertiesPanel: inspector panel for `smartArt` elements.
  *
- * Vue port of the React `SmartArtPropertiesPanel.tsx`. Provides per-node text
- * editing, keyboard structural edits (Enter inserts a sibling, Backspace/Delete
- * removes an empty node, Tab/Shift+Tab demote/promote), focus management after a
- * structural edit, add item / add sub-item, remove, reorder, colour-scheme,
- * style, a layout switcher, per-node visual overrides (fill / font / bold /
- * italic), layout node-count bounds, and read-only awareness of non-tree
- * connections. All logic lives in `useSmartArtEditing` (core ops only); this SFC
- * is thin presentation.
+ * Vue port of the React `SmartArtPropertiesPanel.tsx`: a layout switcher,
+ * colour scheme and style, and the text pane, which is the shared
+ * `pptx-ui-smartart-text-pane` element (outline with levels, keyboard structure
+ * edits, move, sub-item, remove, per-node style, layout bounds and the non-tree
+ * connections note). This SFC feeds it the data and commits what it emits
+ * through `useSmartArtEditing`.
  *
  * Follows the uniform inspector-panel contract: `props { element }`, emits
  * `update` with a shallow `Partial<PptxElement>` patch the host merges via
@@ -50,6 +48,7 @@ const props = withDefaults(
 const emit = defineEmits<{ update: [patch: Partial<PptxElement>] }>();
 
 const { t } = useI18n();
+const recentColors = injectRecentColors();
 
 const editable = computed(() => props.canEdit !== false);
 
@@ -91,7 +90,19 @@ function styleLabel(style: SmartArtStyle): string {
 	return schemaLabel(SMARTART_STYLE_LABEL_KEYS, style, (key: string) => t(key));
 }
 
-const addDisabled = computed(() => !editable.value || !editing.canAdd.value);
+const paneState = computed<SmartArtTextPaneViewState>(() => ({
+	smartArtData: isSmartArt.value ? smartArtData.value : undefined,
+	canEdit: editable.value,
+	translate: (key, params) => (params ? t(key, { ...params }) : t(key)),
+}));
+
+function onPaneChange(event: Event): void {
+	const { smartArtData: next, recentColor } = (event as SmartArtTextPaneChangeEvent).detail;
+	editing.commit(next);
+	if (recentColor) {
+		recentColors?.push(recentColor);
+	}
+}
 
 function onColorSchemeChange(event: Event): void {
 	editing.setColorScheme((event.target as HTMLSelectElement).value as SmartArtColorScheme);
@@ -103,14 +114,6 @@ function onSwitchLayout(layout: SmartArtLayoutType): void {
 
 function onSetStyle(value: SmartArtStyle): void {
 	editing.setStyle(value);
-}
-
-function onSetNodeStyle(nodeId: string, style: Partial<PptxSmartArtNodeStyle>): void {
-	editing.setNodeStyle(nodeId, style);
-}
-
-function onRegisterInput(nodeId: string, el: HTMLInputElement | null): void {
-	editing.setInputEl(nodeId, el);
 }
 </script>
 
@@ -171,69 +174,11 @@ function onRegisterInput(nodeId: string, el: HTMLInputElement | null): void {
 				</div>
 			</div>
 
-			<div class="flex items-center justify-between">
-				<span class="text-[11px] text-muted-foreground">
-					{{ t('pptx.smartart.textPane') }} ({{ editing.nodes.value.length }})
-				</span>
-				<button
-					type="button"
-					:disabled="addDisabled"
-					data-testid="smartart-add-item"
-					class="rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-colors disabled:opacity-40"
-					:title="addDisabled ? editing.boundsHint.value : undefined"
-					@click="editing.addItem()"
-				>
-					{{ t('pptx.smartart.addItem') }}
-				</button>
-			</div>
-
-			<div
-				v-if="editing.boundsHint.value"
-				class="text-[9px] text-muted-foreground"
-				role="note"
-				data-testid="smartart-bounds-hint"
-			>
-				{{ editing.boundsHint.value }}
-			</div>
-
-			<div
-				class="max-h-52 overflow-y-auto space-y-1 pr-1"
-				data-testid="smartart-node-list"
-				role="list"
-			>
-				<SmartArtNodeRow
-					v-for="row in editing.rows.value"
-					:key="row.node.id"
-					:node="row.node"
-					:display-index="row.displayIndex"
-					:is-child="row.isChild"
-					:can-edit="editable"
-					:remove-disabled="row.removeDisabled"
-					:move-up-disabled="row.moveUpDisabled"
-					:move-down-disabled="row.moveDownDisabled"
-					@change-text="editing.updateNodeText"
-					@keydown-node="editing.onNodeKeyDown"
-					@set-style="onSetNodeStyle"
-					@add-sub-item="editing.addSubItem"
-					@move-up="editing.moveUp"
-					@move-down="editing.moveDown"
-					@remove="editing.removeNode"
-					@register-input="onRegisterInput"
-				/>
-			</div>
-
-			<div
-				v-if="editing.extraConnections.value > 0"
-				class="text-[9px] text-muted-foreground"
-				role="note"
-				data-testid="smartart-extra-connections"
-			>
-				{{ t('pptx.smartart.extraConnections', { count: editing.extraConnections.value }) }}
-			</div>
-
-			<p class="text-[9px] text-muted-foreground mt-1">
-				{{ t('pptx.smartart.tabHint') }}
-			</p>
+			<pptx-ui-smartart-text-pane
+				data-testid="smartart-text-pane"
+				:state.prop="paneState"
+				@pptx-smartart-data-change="onPaneChange"
+			/>
 		</template>
 	</div>
 </template>

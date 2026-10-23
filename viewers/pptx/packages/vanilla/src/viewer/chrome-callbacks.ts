@@ -397,11 +397,6 @@ export function buildChromeCallbacks(
 		mergeTableCells: (cells) => deps.getEditActions().mergeTableCells(cells),
 		splitTableCell: (cell) => deps.getEditActions().splitTableCell(cell),
 
-		setSmartArtNodeText: (nodeId, text) => deps.getEditActions().setSmartArtNodeText(nodeId, text),
-		setSmartArtNodeStyle: (nodeId, patch) =>
-			deps.getEditActions().setSmartArtNodeStyle(nodeId, patch),
-		mutateSmartArtNode: (nodeId, action) =>
-			deps.getEditActions().mutateSmartArtNode(nodeId, action),
 		replaceSmartArtData: (data) => deps.getEditActions().replaceSmartArtData(data),
 		setSmartArtLayout: (layout) => deps.getEditActions().setSmartArtLayout(layout),
 		setSmartArtColorScheme: (scheme) => deps.getEditActions().setSmartArtColorScheme(scheme),

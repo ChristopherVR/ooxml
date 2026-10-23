@@ -27,6 +27,8 @@ export {
 	promoteSmartArtNode,
 	demoteSmartArtNode,
 	addSmartArtNodeAsChild,
+	addSmartArtNodeBefore,
+	addSmartArtNodeAbove,
 	reorderSmartArtNodeToIndex,
 } from './smartart-editing-node-ops';
 

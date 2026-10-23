@@ -70,6 +70,8 @@ export type RibbonGalleryId =
 	| 'smartArtColors'
 	| 'smartArtLayouts'
 	| 'smartArtAddShape'
+	| 'smartArtAddShapeBefore'
+	| 'smartArtAddShapeAbove'
 	| 'smartArtAddBullet'
 	| 'smartArtTextPane'
 	| 'smartArtPromote'

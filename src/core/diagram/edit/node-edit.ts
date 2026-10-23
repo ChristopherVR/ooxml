@@ -8,6 +8,7 @@ import { addDiagramNodeAbove, addDiagramNodeAfter, addDiagramNodeBefore } from '
 import { addDiagramNodeBelow, removeDiagramNode, setDiagramNodeText } from './node-ops';
 import { demoteDiagramNode, moveDiagramNode, promoteDiagramNode } from './node-order';
 import { treeOrderDiagramNodes } from './node-tree';
+import { diagramNodeLevels } from './outline';
 import type { DiagramEditOptions } from './types';
 
 /** A content node as a host model keeps it: array order is tree order. */
@@ -147,12 +148,6 @@ export interface DiagramOutlineLine {
 
 /** The nodes (in tree order) as text pane lines. */
 export function diagramNodeOutline(nodes: readonly DiagramHostNode[]): DiagramOutlineLine[] {
-	const ids = new Set(nodes.map((node) => node.id));
-	const levels = new Map<string, number>();
-	return nodes.map((node) => {
-		const parent = node.parentId && ids.has(node.parentId) ? node.parentId : undefined;
-		const level = parent === undefined ? 0 : (levels.get(parent) ?? 0) + 1;
-		levels.set(node.id, level);
-		return { id: node.id, text: node.text, level };
-	});
+	const levels = diagramNodeLevels(nodes);
+	return nodes.map((node, index) => ({ id: node.id, text: node.text, level: levels[index] ?? 0 }));
 }

@@ -36,6 +36,7 @@ export const translations = {
 	'pptx.smartart.styleIntense': 'Intense',
 	'pptx.smartart.textPane': 'Volet de texte',
 	'pptx.smartart.addItem': 'Ajouter un élément',
+	'pptx.smartart.textPaneEmpty': 'Ce diagramme ne contient aucune forme avec du texte.',
 	'pptx.smartart.extraConnections':
 		'Ce diagramme comporte des connexions supplémentaires {{count}} que le volet de texte ne modifie pas.',
 	'pptx.smartart.tabHint':

@@ -1212,6 +1212,8 @@ unit test fails if an id is missing here.
 | `chartFormat.currentSelection.formatSelection`    | Format Selection                                                              |
 | `chartFormat.currentSelection.resetToMatchStyle`  | Reset to Match Style                                                          |
 | `smartArtDesign.createGraphic.addShape`           | Add Shape                                                                     |
+| `smartArtDesign.createGraphic.addShapeBefore`     | Add Shape Before                                                              |
+| `smartArtDesign.createGraphic.addShapeAbove`      | Add Shape Above                                                               |
 | `smartArtDesign.createGraphic.addBullet`          | Add Bullet                                                                    |
 | `smartArtDesign.createGraphic.textPane`           | Text Pane                                                                     |
 | `smartArtDesign.createGraphic.promote`            | Promote                                                                       |

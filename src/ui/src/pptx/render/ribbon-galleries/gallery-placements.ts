@@ -299,6 +299,16 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 					mode: 'dropdown',
 				},
 				{
+					gallery: 'smartArtAddShapeBefore',
+					control: 'smartArtDesign.createGraphic.addShapeBefore',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'smartArtAddShapeAbove',
+					control: 'smartArtDesign.createGraphic.addShapeAbove',
+					mode: 'dropdown',
+				},
+				{
 					gallery: 'smartArtAddBullet',
 					control: 'smartArtDesign.createGraphic.addBullet',
 					mode: 'dropdown',

@@ -991,6 +991,9 @@ export * from './smartart-node-limits';
 // function delegates to the core editing ops; each binding's own
 // `smartart-node-pane-handlers.ts` is a thin re-export of this module.
 export * from './smartart-node-pane-handlers';
+// SmartArt text pane model: the outline lines, notes and append state
+// `pptx-ui-smartart-text-pane` shows, and the edit each pane request makes.
+export * from './smartart-text-pane-model';
 // Vanilla three.js GLTF/GLB model scene controller: mounts an interactive 3D
 // model into a container element (auto-centre/fit, lights, OrbitControls, RAF
 // loop) and exposes resize()/dispose(). `three` is dynamically imported and

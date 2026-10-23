@@ -37,6 +37,7 @@ export const translations = {
 	'pptx.smartart.styleIntense': 'Intensiv',
 	'pptx.smartart.textPane': 'Textbereich',
 	'pptx.smartart.addItem': 'Element hinzufügen',
+	'pptx.smartart.textPaneEmpty': 'Dieses Diagramm enthält keine Formen mit Text.',
 	'pptx.smartart.extraConnections':
 		'Dieses Diagramm verfügt über {{count}} zusätzliche Verbindungen, die im Textbereich nicht bearbeitet werden.',
 	'pptx.smartart.tabHint':

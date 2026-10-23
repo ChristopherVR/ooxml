@@ -15,9 +15,8 @@ function mount() {
 	const section = createSmartArtSection(document, (key) => key, sectionFactory(), {
 		setSmartArtColorScheme,
 		setSmartArtLayout: vi.fn(),
-		setSmartArtNodeText: vi.fn(),
-		setSmartArtNodeStyle: vi.fn(),
-		mutateSmartArtNode: vi.fn(),
+		replaceSmartArtData: vi.fn(),
+		pushRecentColor: vi.fn(),
 	} as unknown as InspectorHandlers);
 	section.update({
 		isSmartArt: true,
@@ -30,7 +29,7 @@ function mount() {
 }
 
 /** Mount with real nodes and a `replaceSmartArtData` that feeds back through `update`. */
-function mountWithNodes(nodes: PptxSmartArtData['nodes']) {
+function mountWithNodes(nodes: PptxSmartArtData['nodes'], extra: Partial<InspectorHandlers> = {}) {
 	let data: PptxSmartArtData = { nodes, resolvedLayoutType: 'list' } as PptxSmartArtData;
 	const replaceSmartArtData = vi.fn((next: PptxSmartArtData) => {
 		data = next;
@@ -39,10 +38,9 @@ function mountWithNodes(nodes: PptxSmartArtData['nodes']) {
 	const section = createSmartArtSection(document, (key) => key, sectionFactory(), {
 		setSmartArtColorScheme: vi.fn(),
 		setSmartArtLayout: vi.fn(),
-		setSmartArtNodeText: vi.fn(),
-		setSmartArtNodeStyle: vi.fn(),
-		mutateSmartArtNode: vi.fn(),
 		replaceSmartArtData,
+		pushRecentColor: vi.fn(),
+		...extra,
 	} as unknown as InspectorHandlers);
 	document.body.appendChild(section.el);
 	section.update({ isSmartArt: true, smartArtData: data } as InspectorState);
@@ -50,128 +48,52 @@ function mountWithNodes(nodes: PptxSmartArtData['nodes']) {
 }
 
 function nodeInputs(el: HTMLElement): HTMLInputElement[] {
-	return [...el.querySelectorAll<HTMLInputElement>('[data-testid="smartart-node-text"]')];
+	const pane = el.querySelector('pptx-ui-smartart-text-pane');
+	return [
+		...(pane?.shadowRoot?.querySelectorAll<HTMLInputElement>(
+			'[data-testid="smartart-node-text"]',
+		) ?? []),
+	];
 }
 
-describe('smartArtSection keyboard editing', () => {
+describe('smartArtSection shared text pane', () => {
 	afterEach(() => {
 		document.body.replaceChildren();
 	});
 
-	it('enter key inserts a new sibling after the current node', () => {
-		const { section, getData } = mountWithNodes([
+	it('feeds the pane the nodes', () => {
+		const { section } = mountWithNodes([
 			{ id: 'n1', text: 'One' },
 			{ id: 'n2', text: 'Two' },
 		]);
-		const [first] = nodeInputs(section.el);
-		first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-		const data = getData();
-		expect(data.nodes).toHaveLength(3);
-		expect(data.nodes[1]?.text).toBe('');
+		expect(nodeInputs(section.el).map((input) => input.value)).toStrictEqual(['One', 'Two']);
 	});
 
-	it('backspace key on an empty node removes it', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: '' },
-		]);
-		const [, second] = nodeInputs(section.el);
-		second.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }),
-		);
-		expect(getData().nodes).toHaveLength(1);
-	});
-
-	it('backspace key on a node with text does not remove it', () => {
-		const { section, getData } = mountWithNodes([
+	it('commits the structure edits the pane emits', () => {
+		const { section, replaceSmartArtData, getData } = mountWithNodes([
 			{ id: 'n1', text: 'One' },
 			{ id: 'n2', text: 'Two' },
 		]);
-		const [, second] = nodeInputs(section.el);
-		second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }));
-		expect(getData().nodes).toHaveLength(2);
-	});
-
-	it('tab key demotes the node under its preceding sibling', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: 'Two' },
-		]);
-		const [, second] = nodeInputs(section.el);
-		second.dispatchEvent(
+		nodeInputs(section.el)[1]!.dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
 		);
+		expect(replaceSmartArtData).toHaveBeenCalledOnce();
 		expect(getData().nodes.find((n) => n.id === 'n2')?.parentId).toBe('n1');
-	});
-
-	/**
-	 * The input commits its text via `change` (blur-triggered), which never
-	 * fires on Tab because the handler calls `preventDefault()`. A demote that
-	 * read the last-committed (pre-edit) node text instead of the live input
-	 * value silently discarded whatever the user had just typed.
-	 */
-	it('tab key commits the just-typed text before demoting, not just the demote', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: 'Two' },
-		]);
-		const [, second] = nodeInputs(section.el);
-		second.value = 'Two edited';
-		second.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+		nodeInputs(section.el)[0]!.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
 		);
-		const node = getData().nodes.find((n) => n.id === 'n2');
-		expect(node?.text).toBe('Two edited');
-		expect(node?.parentId).toBe('n1');
+		expect(getData().nodes).toHaveLength(3);
 	});
 
-	/**
-	 * The very first top-level node has no preceding sibling to nest under, so
-	 * `demote` is a structural no-op (returns undefined) - and a version of the
-	 * fix that only committed the edit ALONGSIDE a successful demote lost the
-	 * typed text here specifically, since the whole branch was skipped. This is
-	 * the exact scenario CI's save-corruption-repro / smartart-insert-edit
-	 * specs exercise (they always edit the FIRST node).
-	 */
-	it('tab key on the first node (demote no-ops) still commits the just-typed text', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: 'Two' },
-		]);
-		const [first] = nodeInputs(section.el);
-		first.value = 'SmartArt One';
-		first.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
-		);
-		const node = getData().nodes.find((n) => n.id === 'n1');
-		expect(node?.text).toBe('SmartArt One');
-		expect(node?.parentId).toBeUndefined();
-	});
-
-	it('enter key commits the just-typed text before inserting a sibling', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: 'Two' },
-		]);
-		const [first] = nodeInputs(section.el);
-		first.value = 'One edited';
-		first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-		const data = getData();
-		expect(data.nodes.find((n) => n.id === 'n1')?.text).toBe('One edited');
-		expect(data.nodes).toHaveLength(3);
-	});
-
-	it('shift+tab promotes an already-nested node back to top level', () => {
-		const { section, getData } = mountWithNodes([
-			{ id: 'n1', text: 'One' },
-			{ id: 'n2', text: 'Two', parentId: 'n1' },
-		]);
-		const inputs = nodeInputs(section.el);
-		const nested = inputs.find((input) => input.dataset.nodeId === 'n2')!;
-		nested.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
-		);
-		expect(getData().nodes.find((n) => n.id === 'n2')?.parentId).toBeUndefined();
+	it('records a picked node colour as a recent colour', () => {
+		const pushRecentColor = vi.fn();
+		const { section, getData } = mountWithNodes([{ id: 'n1', text: 'One' }], { pushRecentColor });
+		const pane = section.el.querySelector('pptx-ui-smartart-text-pane')!;
+		const fill = pane.shadowRoot!.querySelector<HTMLInputElement>('.fill input')!;
+		fill.value = '#ff0000';
+		fill.dispatchEvent(new Event('change', { bubbles: true }));
+		expect(getData().nodes[0]?.style?.fillColor).toBe('#ff0000');
+		expect(pushRecentColor).toHaveBeenCalledWith('#ff0000');
 	});
 });
 

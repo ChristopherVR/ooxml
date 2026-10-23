@@ -38,6 +38,8 @@ export const galleryTranslationsEn: Record<string, string> = {
 	'pptx.gallery.smartArtLayouts.title': 'Layouts',
 	'pptx.gallery.smartArtLayouts.named': '{{name}}',
 	'pptx.gallery.smartArtCommand.addShape': 'Add Shape',
+	'pptx.gallery.smartArtCommand.addShapeBefore': 'Add Shape Before',
+	'pptx.gallery.smartArtCommand.addShapeAbove': 'Add Shape Above',
 	'pptx.gallery.smartArtCommand.addBullet': 'Add Bullet',
 	'pptx.gallery.smartArtCommand.textPane': 'Text Pane',
 	'pptx.gallery.smartArtCommand.promote': 'Promote',

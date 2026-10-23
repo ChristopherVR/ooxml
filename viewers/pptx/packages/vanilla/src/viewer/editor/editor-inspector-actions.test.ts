@@ -1,4 +1,5 @@
 import type { PptxElement, PptxSlide, TablePptxElement } from 'pptx-viewer-core';
+import { addSmartArtNode, updateSmartArtNodeText } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Store, ViewerState } from '../state';
@@ -495,7 +496,8 @@ function smartArtData(store: Store<ViewerState>) {
 describe('createInspectorActions smartArt reflow', () => {
 	it('rebuilds the cached drawing shapes a structural edit cleared', () => {
 		const { store, actions } = buildActions(smartArtElement());
-		actions.mutateSmartArtNode('n2', 'add');
+		const current = smartArtData(store)!;
+		actions.replaceSmartArtData(addSmartArtNode(current, 'New item'));
 		const data = smartArtData(store)!;
 		expect(data.nodes).toHaveLength(3);
 		// Without the reflow this is the empty array the core op left behind.
@@ -513,7 +515,7 @@ describe('createInspectorActions smartArt reflow', () => {
 
 	it('leaves an intact cached drawing alone on a text edit', () => {
 		const { store, actions } = buildActions(smartArtElement());
-		actions.setSmartArtNodeText('n1', 'Uno');
+		actions.replaceSmartArtData(updateSmartArtNodeText(smartArtData(store)!, 'n1', 'Uno'));
 		const shapes = smartArtData(store)?.drawingShapes ?? [];
 		// The cached `dsp` drawing still wins: patched in place, never regenerated.
 		expect(shapes.map((s) => s.id)).toStrictEqual(['dsp1', 'dsp2']);

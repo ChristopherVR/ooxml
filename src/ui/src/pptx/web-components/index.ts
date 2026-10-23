@@ -25,6 +25,14 @@ import {
 	definePptxSwitch,
 } from './office-aliases';
 import { definePptxChartDataSheet } from './chart-data-sheet';
+export { smartArtTextPaneLabels } from './smartart-text-pane';
+export type {
+	PptxUiSmartArtTextPaneElement,
+	SmartArtTextPaneChange,
+	SmartArtTextPaneChangeEvent,
+	SmartArtTextPaneViewState,
+} from './smartart-text-pane';
+import { definePptxSmartArtTextPane } from './smartart-text-pane';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
 import { definePptxInsertChartDialog } from './insert-chart-dialog';
@@ -172,6 +180,7 @@ const controls = [
 	['pptx-ui-search', definePptxSearchField],
 	['pptx-ui-color-grid', definePptxColorGrid],
 	['pptx-ui-chart-data-sheet', definePptxChartDataSheet],
+	['pptx-ui-smartart-text-pane', definePptxSmartArtTextPane],
 	['pptx-ui-checkbox', definePptxCheckbox],
 	['pptx-ui-radio', definePptxRadio],
 	['pptx-ui-switch', definePptxSwitch],

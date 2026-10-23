@@ -4025,19 +4025,43 @@
 					"name": "OfficeUiSmartArtTextPane",
 					"tagName": "office-ui-smartart-text-pane",
 					"customElement": true,
-					"description": "`<office-ui-smartart-text-pane>`: the SmartArt text pane every product shares. It shows the diagram's nodes as an outline of text lines indented by level and turns keys into requests the host applies to its diagram model (the pane never edits the model itself): - typing fires `office-smartart-text-change` (`{ id, text }`); - Enter fires `office-smartart-node-add` (add a node after this one, same level); - Tab and Shift+Tab fire `office-smartart-node-demote` and `office-smartart-node-promote`; - Backspace in an empty line fires `office-smartart-node-remove`; - focusing a line fires `office-smartart-node-select`; Up and Down move between lines. The node events carry `{ id }`. The host sets `nodes` again after applying a request and `selected` to the node to focus (the new node after Enter, the previous one after Backspace). `closable` adds a close button that fires `office-smartart-text-pane-close`. Strings come translated through `labels`.",
+					"description": "`<office-ui-smartart-text-pane>`: the SmartArt text pane every product shares. It shows the diagram's nodes as an outline of text lines indented by level and turns keys into requests the host applies to its diagram model (the pane never edits the model itself): - typing fires `office-smartart-text-change` (`{ id, text }`); - Enter fires `office-smartart-node-add` (add a node after this one, same level); - Tab and Shift+Tab fire `office-smartart-node-demote` and `office-smartart-node-promote`; - Backspace or Delete in an empty line fires `office-smartart-node-remove` (unless the line's `canRemove` is false); - focusing a line fires `office-smartart-node-select`; Up and Down move between lines. The node events carry `{ id }`. The host sets `nodes` again after applying a request and `selected` to the node to focus (the new node after Enter, the previous one after Backspace). `closable` adds a close button that fires `office-smartart-text-pane-close`. Strings come translated through `labels`. `tools` adds PowerPoint's inspector tools: a header button that fires `office-smartart-node-append`, and per line move up and down (`office-smartart-node-move`, `{ id, direction }`), add sub-item (`office-smartart-node-add-child`), remove (`office-smartart-node-remove`) and a style row (fill and text colour, bold, italic) that fires `office-smartart-node-style` (`{ id, style }`). `disabled` makes the pane read-only, `notes` adds hint lines under the outline and `appendDisabled` disables the header button.",
 					"attributes": [
+						{
+							"name": "append-disabled"
+						},
 						{
 							"name": "closable"
 						},
 						{
+							"name": "disabled"
+						},
+						{
 							"name": "selected"
+						},
+						{
+							"name": "tools"
 						}
 					],
 					"members": [
 						{
 							"kind": "field",
+							"name": "appendDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "append-disabled"
+						},
+						{
+							"kind": "field",
 							"name": "closable",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
 							"type": {
 								"text": "boolean"
 							}
@@ -4052,13 +4076,27 @@
 						},
 						{
 							"kind": "field",
+							"name": "notes"
+						},
+						{
+							"kind": "field",
 							"name": "selected",
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "tools",
+							"type": {
+								"text": "boolean"
+							}
 						}
 					],
 					"events": [
+						{
+							"name": "office-smartart-node-append"
+						},
 						{
 							"name": "office-smartart-node-select"
 						},

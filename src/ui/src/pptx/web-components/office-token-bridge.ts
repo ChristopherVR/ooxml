@@ -31,6 +31,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-ribbon-gallery',
 	'pptx-ui-ribbon-actions',
 	'pptx-ui-options-dialog',
+	'pptx-ui-smartart-text-pane',
 ] as const;
 
 /** Every alias maps the shared tokens onto the pptx theme and control tokens. */
@@ -131,6 +132,7 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	--office-command-icon-color: var(--pptx-primary, #6366f1); --office-z-popover: 1200;
 	--office-popover-foreground: var(--pptx-popover-foreground, #f9fafb);
 	--office-icon-stroke: 1.6; --office-line-height-tight: 11px; }`,
+	'pptx-ui-smartart-text-pane': `:host { --office-shadow: none; }`,
 	'pptx-ui-select': `:host { --office-select-background: var(--pptx-select-control-bg, var(--pptx-background, #11111b)); }
 :host(.bg-muted) { --office-select-background: var(--pptx-muted, #1f2937); }
 :host(.bg-popover) { --office-select-background: var(--pptx-popover, #111827); }`,

@@ -36,19 +36,8 @@ import type {
 	TextStyle,
 	PptxElement,
 	PptxSmartArtData,
-	PptxSmartArtNodeStyle,
 } from 'pptx-viewer-core';
-import {
-	elementActionToPptxAction,
-	addSmartArtNode,
-	addSmartArtNodeAsChild,
-	removeSmartArtNode,
-	promoteSmartArtNode,
-	demoteSmartArtNode,
-	isImageLikeElement,
-	setSmartArtNodeStyle,
-	updateSmartArtNodeText,
-} from 'pptx-viewer-core';
+import { elementActionToPptxAction, isImageLikeElement } from 'pptx-viewer-core';
 
 import type { ApplyToSelected } from './editor-apply-to-selected';
 import { patchShapeStyle } from './editor-format-mutations';
@@ -119,12 +108,6 @@ export interface InspectorActions {
 	mergeTableCells(cells: TableCellPosition[]): void;
 	splitTableCell(cell: TableCellPosition): void;
 
-	setSmartArtNodeText(nodeId: string, text: string): void;
-	setSmartArtNodeStyle(nodeId: string, patch: Partial<PptxSmartArtNodeStyle>): void;
-	mutateSmartArtNode(
-		nodeId: string,
-		action: 'add' | 'addChild' | 'remove' | 'promote' | 'demote',
-	): void;
 	replaceSmartArtData(data: PptxSmartArtData): void;
 	setSmartArtLayout(layout: SmartArtLayoutType): void;
 	setSmartArtColorScheme(scheme: SmartArtColorScheme): void;
@@ -307,28 +290,6 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 					: {},
 			),
 
-		setSmartArtNodeText: (nodeId, text) =>
-			applyToSelected((el) =>
-				smartArtPatch(el, (data) => updateSmartArtNodeText(data, nodeId, text)),
-			),
-		setSmartArtNodeStyle: (nodeId, patch) =>
-			applyToSelected((el) =>
-				smartArtPatch(el, (data) => setSmartArtNodeStyle(data, nodeId, patch)),
-			),
-		mutateSmartArtNode: (nodeId, action) =>
-			applyToSelected((el) =>
-				smartArtPatch(el, (data) =>
-					action === 'add'
-						? addSmartArtNode(data, 'New item')
-						: action === 'addChild'
-							? addSmartArtNodeAsChild(data, nodeId, 'New item')
-							: action === 'remove'
-								? removeSmartArtNode(data, nodeId)
-								: action === 'promote'
-									? promoteSmartArtNode(data, nodeId)
-									: demoteSmartArtNode(data, nodeId),
-				),
-			),
 		replaceSmartArtData: (data) => applyToSelected((el) => smartArtPatch(el, () => data)),
 		setSmartArtLayout: (layout) =>
 			applyToSelected((el) => smartArtPatch(el, (data) => switchSmartArtLayoutData(data, layout))),
