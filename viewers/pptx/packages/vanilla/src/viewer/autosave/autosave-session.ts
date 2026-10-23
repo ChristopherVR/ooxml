@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
+	InlineTextDraft,
 	DocumentStorage,
 } from 'ooxml-ui/pptx';
 import {
@@ -69,6 +70,8 @@ export interface AutosaveSessionDeps {
 export interface AutosaveSession {
 	/** Force an immediate snapshot (no-op when autosave is not active). */
 	saveNow(): Promise<void>;
+	/** In-progress inline text: a changed draft is an edit and goes into the snapshot. */
+	noteInlineDraft(draft: InlineTextDraft | null): void;
 	/** What actually runs right now (the shared verdict's `active`). */
 	isEnabled(): boolean;
 	/** The user's AutoSave preference, i.e. what the title-bar switch shows. */
@@ -184,6 +187,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 
 	return {
 		saveNow: () => controller.saveNow(),
+		noteInlineDraft: (draft) => controller.noteInlineDraft(draft),
 		isEnabled: () => controller.isEnabled(),
 		isPreferred: () => activation().toggleAvailable && userEnabled,
 		getActivation: activation,

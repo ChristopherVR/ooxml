@@ -95,8 +95,11 @@ export interface EditorControllerDeps {
 	onNotesUpdate?: (notes: string) => void;
 	/** Notified with slide-space coordinates on stage pointer move (collaboration cursor broadcast). */
 	onCursorMove?: (x: number, y: number) => void;
-	/** Mirror in-progress inline-editor text to collaborators (live preview). */
-	onInlineTextInput?: (elementId: string, text: string) => void;
+	/**
+	 * In-progress inline-editor text: the collaboration live preview and the
+	 * autosave draft. `null` when the editor closes.
+	 */
+	onInlineTextInput?: (elementId: string | null, text: string) => void;
 	/** Push any queued live-preview frame out before an inline commit lands. */
 	flushInlineTextInput?: () => void;
 	/** The host's keyboard customisation, read on every key press. */

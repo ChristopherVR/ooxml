@@ -5,9 +5,11 @@ import type {
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
 	DocumentStorage,
+	InlineTextDraft,
 	ViewerAutosaveStatus,
 } from 'ooxml-ui/pptx';
 import {
+	applyInlineTextDraft,
 	autosaveStatusKind,
 	createAutosaveController as createSharedAutosaveController,
 	createAutosaveRecoveryController,
@@ -89,6 +91,8 @@ export interface AutosaveControllerDeps {
 export interface AutosaveController {
 	/** Force an immediate snapshot of unsaved edits (no-op while autosave is not active). */
 	saveNow(): Promise<void>;
+	/** In-progress inline text: a changed draft is an edit and goes into the snapshot. */
+	noteInlineDraft(draft: InlineTextDraft | null): void;
 	/** Current status. */
 	getStatus(): AutosaveStatus;
 	/** Re-read the activation verdict (the toggle or edit-ability changed). */
@@ -111,14 +115,15 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		getActivation: activation,
 		getFilePath: () => deps.filePath,
 		getIntervalMs: deps.getIntervalMs,
-		serialize: async () => {
+		serialize: async (draft) => {
 			const handler = deps.getHandler();
 			if (!handler) {
 				return null;
 			}
 			return saveDeckWithPassword(
 				handler,
-				store.get().slides,
+				// Typing not committed yet is part of the snapshot (AutoRecover keeps it).
+				[...applyInlineTextDraft(store.get().slides, draft)],
 				undefined,
 				recoverySnapshotIntent(deps.getSaveIntent?.()),
 			);
@@ -191,6 +196,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 	return {
 		saveNow: () =>
 			engine.getSnapshot().dirty && activation().active ? engine.saveNow() : Promise.resolve(),
+		noteInlineDraft: (draft) => engine.noteInlineDraft(draft),
 		getStatus: () => status,
 		refresh: () => engine.refresh(),
 		isEnabled: () => activation().active,
