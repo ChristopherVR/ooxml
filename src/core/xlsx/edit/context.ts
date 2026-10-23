@@ -1,6 +1,6 @@
 import { MAX_COL, MAX_ROW, type CellRange, normalizeRange } from '../address';
 import { getCell, putCell, usedRange } from '../cells';
-import type { Cell, CellValue, Workbook, Worksheet } from '../model';
+import type { Cell, CellValue, DrawingObject, Workbook, Worksheet } from '../model';
 import { isCellError } from '../model';
 import type { CalcEngine, CellPosition } from './deps';
 export { displayText } from '../display-text';
@@ -40,6 +40,16 @@ export function sheetAt(workbook: Workbook, index: number): Worksheet {
 	const sheet = Number.isInteger(index) && index >= 0 ? workbook.sheets.at(index) : undefined;
 	if (!sheet) throw new RangeError(`No sheet at index ${index}`);
 	return sheet;
+}
+
+/** The drawing at `index` on sheet `s`, read like {@link sheetAt} so no key names a prototype property. */
+export function sheetDrawingAt(
+	workbook: Workbook,
+	s: number,
+	index: number,
+): DrawingObject | undefined {
+	const { drawings } = sheetAt(workbook, s);
+	return Number.isInteger(index) && index >= 0 ? drawings.at(index) : undefined;
 }
 
 /** The style a new cell at a position inherits: the row's format, else the column's. */

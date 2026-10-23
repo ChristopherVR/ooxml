@@ -22,6 +22,12 @@ describe('locale numbers', () => {
 		expect(parseLocaleNumber('1.2,5', 'de-DE')).toBeNull();
 	});
 
+	it('refuses a long run of digits followed by junk without backtracking', () => {
+		const start = performance.now();
+		expect(parseLocaleNumber(`${'0'.repeat(50_000)}x`, 'en-US')).toBeNull();
+		expect(performance.now() - start).toBeLessThan(1000);
+	});
+
 	it('writes a value that reads back the same', () => {
 		expect(formatLocaleNumber(1234.5, 'de-DE')).toBe('1234,5');
 		expect(formatLocaleNumber(1234.5, 'en-US')).toBe('1234.5');

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseChartExSpace } from './parse';
 import { DECLARATION, FULL, NS } from './test-support/full-part';
-import { writeChartExSpace } from './write';
+import { chartExWriteOptionsOf, writeChartExSpace } from './write';
 
 describe('parseChartExSpace and writeChartExSpace', () => {
 	it('round-trips every modelled element byte for byte', () => {
@@ -130,5 +130,23 @@ describe('parseChartExSpace and writeChartExSpace', () => {
 			`${DECLARATION}<cx:chartSpace ${NS} xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><cx:chartData /><cx:chart><cx:plotArea><cx:plotAreaRegion><cx:series layoutId="funnel" /></cx:plotAreaRegion></cx:plotArea></cx:chart><c:userShapes r:id="rId2" /></cx:chartSpace>`,
 		);
 		expect(parseChartExSpace(written).chartExSpace.userShapesRelId).toBe('rId2');
+	});
+});
+
+describe('chartExWriteOptionsOf', () => {
+	it('detects the declaration break and a space before an empty element', () => {
+		expect(chartExWriteOptionsOf('<?xml version="1.0"?>\r\n<a><b /></a>')).toEqual({
+			declarationBreak: '\r\n',
+			emptyElementSpace: true,
+		});
+		expect(chartExWriteOptionsOf('<?xml version="1.0"?><a><b/></a>')).toEqual({
+			declarationBreak: '',
+		});
+	});
+
+	it('scans a long run of unclosed tags without backtracking', () => {
+		const start = performance.now();
+		expect(chartExWriteOptionsOf('<'.repeat(50_000))).toEqual({ declarationBreak: '' });
+		expect(performance.now() - start).toBeLessThan(1000);
 	});
 });

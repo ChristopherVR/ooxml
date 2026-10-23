@@ -36,7 +36,7 @@ export function parseLocaleNumber(raw: string, language?: string): number | null
 	if (decimal !== '.') {
 		text = text.replace(decimal, '.');
 	}
-	if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(text)) {
+	if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text)) {
 		return null;
 	}
 	const value = Number(text);

@@ -12,7 +12,7 @@ import {
 } from '../../diagram/index';
 import type { DrawingAnchor, SmartArtObject } from '../model';
 import { SMART_ART_NOTICES } from '../smart-art-notices';
-import { type EditContext, sheetAt } from './context';
+import { type EditContext, sheetAt, sheetDrawingAt } from './context';
 
 export interface SmartArtEditResult {
 	changed: boolean;
@@ -40,7 +40,7 @@ export interface SmartArtInsertion extends SmartArtLayoutChange {
 }
 
 function smartArtAt(ctx: EditContext, s: number, index: number): SmartArtObject {
-	const drawing = sheetAt(ctx.workbook, s).drawings[index];
+	const drawing = sheetDrawingAt(ctx.workbook, s, index);
 	if (drawing?.kind !== 'smartArt')
 		throw new RangeError(`No SmartArt graphic at index ${index} on sheet ${s}`);
 	return drawing;

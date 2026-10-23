@@ -3,7 +3,7 @@
 // `chart/edit` intent, `updateChart` maps a summary patch onto the same operations
 // (`chart-space-patch.ts`), and the summary the painter reads is derived from the edited model.
 import type { ChartObject, DrawingAnchor, ImageObject, Workbook } from '../model';
-import { type EditContext, sheetAt } from './context';
+import { type EditContext, sheetAt, sheetDrawingAt } from './context';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { applyChartEditIntent, type ChartEditIntent } from '../../chart/edit/intent';
 import { parseChartSpace } from '../../chart/parse-space';
@@ -75,13 +75,13 @@ function replaceChart(
 	label: string,
 	next: ChartObject,
 ) {
-	const sheet = sheetAt(ctx.workbook, s);
+	chartAt(ctx, s, index);
 	ctx.run(
 		label,
 		'annotations',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
-			const live = sheet.drawings[index] as ChartObject;
+			const live = chartAt(ctx, s, index);
 			for (const key of Object.keys(live)) Reflect.deleteProperty(live, key);
 			Object.assign(live, structuredClone(next));
 		},
@@ -90,7 +90,7 @@ function replaceChart(
 }
 
 function chartAt(ctx: EditContext, s: number, index: number): ChartObject {
-	const chart = sheetAt(ctx.workbook, s).drawings[index];
+	const chart = sheetDrawingAt(ctx.workbook, s, index);
 	if (!chart || chart.kind !== 'chart') throw new RangeError(`No chart at index ${index}`);
 	return chart;
 }

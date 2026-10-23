@@ -33,7 +33,7 @@ export const CHART_EX_ROOT_DECLARATIONS: readonly { prefix: string; uri: string 
 /** The writer options that reproduce how `xml` was written (declaration break, empty elements). */
 export function chartExWriteOptionsOf(xml: string): WriteChartExSpaceOptions {
 	const declarationBreak = (/^<\?xml[^>]*\?>(\r\n|\n)?/.exec(xml)?.[1] ?? '') as '' | '\n' | '\r\n';
-	return { declarationBreak, ...(/<[^>]*\s\/>/.test(xml) ? { emptyElementSpace: true } : {}) };
+	return { declarationBreak, ...(/<[^<>]*\s\/>/.test(xml) ? { emptyElementSpace: true } : {}) };
 }
 
 /**

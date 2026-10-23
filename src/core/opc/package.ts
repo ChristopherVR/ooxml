@@ -35,6 +35,20 @@ export async function ensureContentTypeOverride(
 }
 
 /**
+ * Removes the `<Override>` for `partName` from `[Content_Types].xml`, if there is one. Plain string
+ * surgery like {@link ensureContentTypeOverride}, so the rest of the part stays byte-identical.
+ */
+export async function removeContentTypeOverride(zip: JSZip, partName: string): Promise<void> {
+	const xml = await zip.file(CONTENT_TYPES_PATH)?.async('string');
+	if (!xml) return;
+	const target = `/${partName}`;
+	const tag = (xml.match(/<Override\b[^>]*\/>/g) ?? []).find(
+		(candidate) => attr(candidate, 'PartName') === target,
+	);
+	if (tag) zip.file(CONTENT_TYPES_PATH, xml.replace(tag, ''));
+}
+
+/**
  * Returns the id of the relationship of `type` to `target` in the `.rels` part at `relsPath`,
  * creating the relationship (and the part) when it does not exist. Existing XML is left intact.
  */

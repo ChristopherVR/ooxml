@@ -7,13 +7,13 @@
 import type JSZip from 'jszip';
 import { writeEditedDiagramData, writeInsertedDiagramData } from '../diagram/index';
 import { createOfficeGuid } from '../crypto/uuid';
+import { removeContentTypeOverride } from '../opc/index';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
 import type { Block, PendingMediaPart } from './model';
 import { buildRelationshipsXml, parseRelationships } from './package-parts';
 import { relationshipsPartFor } from './part-relationships';
 
-const CONTENT_TYPES_PART = '[Content_Types].xml';
 const HOST_PART = 'word/document.xml';
 
 const nodesOf = (diagram: DocxDiagram) =>
@@ -45,15 +45,7 @@ async function dropDrawingPart(zip: JSZip, relId: string, partName: string): Pro
 	for (const rel of rels.values())
 		if (rel.target.replace(/^\.?\//, '') === partName.replace(/^word\//, '')) return;
 	zip.remove(partName);
-	const types = await zip.file(CONTENT_TYPES_PART)?.async('string');
-	if (types)
-		zip.file(
-			CONTENT_TYPES_PART,
-			types.replace(
-				new RegExp(`<Override\\s+PartName="/${partName.replace(/[.]/g, '\\.')}"[^>]*/>`),
-				'',
-			),
-		);
+	await removeContentTypeOverride(zip, partName);
 }
 
 /**

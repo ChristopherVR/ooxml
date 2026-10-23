@@ -1,10 +1,10 @@
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
 import { deleteTimeline } from './timelines';
-import { type EditContext, sheetAt } from './context';
+import { type EditContext, sheetAt, sheetDrawingAt } from './context';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
-	const drawing = sheetAt(ctx.workbook, s).drawings[index];
+	const drawing = sheetDrawingAt(ctx.workbook, s, index);
 	if (!drawing) throw new RangeError(`No drawing at index ${index} on sheet ${s}`);
 	return drawing;
 }
