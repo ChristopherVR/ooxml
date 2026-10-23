@@ -346,6 +346,16 @@ await host.call('xlsx_set_cells', {
 
 For a headless backend with no editor on screen, use the tools on bytes directly (`docs/mcp.md`).
 
+## Framework handles
+
+Every framework adapter exposes the same imperative handle as its product's contract, built by the
+binding kit (`ooxml-ui/bindings`, see `src/ui/src/bindings/README.md`): a React `ref`, a Vue template
+ref, a Solid `editorRef` callback, an Angular component instance or a Svelte component instance. The
+members are listed per product in its contract (Word: `EDITOR_CONTRACT.handle` in
+`viewers/docx/packages/bindings/src/contract.ts`). Before the editor is mounted, a property read or
+a method call throws the product's "not mounted" error, an async method rejects, `markClean()` does
+nothing and `dirty` reads `false`. Call handle methods from event handlers or after the first mount.
+
 ## Building blocks vs the full editor
 
 The full editors (`<docx-editor>`, `<xlsx-editor>`, `<visio-viewer>`, the PowerPoint viewer) bring the
