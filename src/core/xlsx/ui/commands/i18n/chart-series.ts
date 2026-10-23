@@ -1,6 +1,12 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	'This chart element cannot take that setting.': [
+		'Cet élément de graphique n’accepte pas ce paramètre.',
+		'Dieses Diagrammelement unterstützt diese Einstellung nicht.',
+		'Este elemento del gráfico no admite ese ajuste.',
+		'此图表元素不支持该设置。',
+	],
 	'Format Chart Title': [
 		'Format du titre du graphique',
 		'Diagrammtitel formatieren',
