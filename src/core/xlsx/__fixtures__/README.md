@@ -15,7 +15,8 @@ see `../../chart/__fixtures__/README.md`.
 
 ## chart-surface-band-formats.xml
 
-A surface chart part with `c:bandFmts` (content the shared chart model does not hold), copied from
+A surface chart part with `c:bandFmts` (kept verbatim by the shared chart model), copied from
 `src/core/pptx/__tests__/fixtures/e2e/three-d-parity/three-d-charts.pptx` (`ppt/charts/chart16.xml`)
 with its `c:externalData` removed. `xlsx/edit/chart-space-blocked.test.ts` and the Excel acceptance
-script use it to check that such a chart is saved from its source bytes and never rewritten.
+script use it to check that band formats survive an edit (and, with an unreadable value injected,
+that a part the model cannot carry is saved from its source bytes).

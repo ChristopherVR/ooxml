@@ -34,6 +34,8 @@ export type ChartGroupKind =
 /** One chart group of the plot area (`c:barChart`, `c:pie3DChart`, `c:stockChart`...). */
 export interface ChartPlotGroup {
 	kind: ChartGroupKind;
+	/** Surface charts: `c:bandFmts` as written (band formatting is not modelled), kept verbatim. */
+	bandFormatsXml?: string;
 	/** The element's local name, e.g. `bar3DChart`. */
 	element: string;
 	is3D: boolean;

@@ -233,9 +233,8 @@ describe('parseChartSpace on PowerPoint-authored charts', () => {
 			'ser',
 		]);
 		expect(surface.chartSpace.view3D).toEqual({ rotX: 15, rotY: 20, rightAngleAxes: false });
-		expect(issueCodes(surface.issues)).toEqual([
-			'CHART_ELEMENT_NOT_MODELLED c:surface3DChart/c:bandFmts',
-		]);
+		expect(issueCodes(surface.issues)).toEqual([]);
+		expect(surface.chartSpace.plotArea.groups[0]?.bandFormatsXml).toContain('<c:bandFmt>');
 		expect(surface.chartSpace.floor).toMatchObject({ thickness: 0 });
 		expect(surface.chartSpace.sideWall).toBeDefined();
 		expect(surface.chartSpace.backWall).toBeDefined();

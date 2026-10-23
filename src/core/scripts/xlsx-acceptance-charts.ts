@@ -106,10 +106,10 @@ export function chartEditBuilds(fixtures: string): [string, () => Promise<Workbo
 }
 
 /**
- * A surface chart whose part holds `c:bandFmts`, which the model lacks: its edits are refused and
- * its part is saved from the source bytes with only its references moved by an inserted row.
+ * A surface chart whose part holds `c:bandFmts` (kept verbatim by the model), retitled and with a
+ * row inserted above its data, so Excel opens a written part that still carries its band formats.
  */
-export async function blockedChartBuild(fixtures: string): Promise<Workbook> {
+export async function surfaceChartBuild(fixtures: string): Promise<Workbook> {
 	const workbook = createWorkbook({ sheets: ['Sheet1'] });
 	const session = createEditSession(workbook);
 	session.setRangeValues(0, { row: 0, col: 0 }, [
@@ -131,6 +131,8 @@ export async function blockedChartBuild(fixtures: string): Promise<Workbook> {
 		readFileSync(join(fixtures, 'chart-surface-band-formats.xml'), 'utf8'),
 	);
 	const loaded = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
-	createEditSession(loaded).insertRows(0, 0, 1);
+	const edits = createEditSession(loaded);
+	edits.updateChart(0, 0, { title: 'Surface bands' });
+	edits.insertRows(0, 0, 1);
 	return loaded;
 }

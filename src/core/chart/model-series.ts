@@ -182,6 +182,8 @@ export interface ChartDataPoint {
 	marker?: ChartMarker;
 	/** Present whenever `c:spPr` is written, even empty. */
 	spPr?: ChartShapeProperties;
+	/** `c:pictureOptions` as written (picture stacking of a picture fill), kept verbatim. */
+	pictureOptionsXml?: string;
 	extLst?: string;
 }
 
@@ -196,6 +198,8 @@ export interface ChartSpaceSeries {
 	marker?: ChartMarker;
 	dataLabels?: ChartDataLabels;
 	dataPoints: ChartDataPoint[];
+	/** Bar and area series: `c:pictureOptions` as written (picture stacking), kept verbatim. */
+	pictureOptionsXml?: string;
 	/** `c:trendline` elements, present when at least one is written. */
 	trendlines?: ChartTrendline[];
 	/** `c:errBars` elements (two on a scatter or bubble series), present when written. */

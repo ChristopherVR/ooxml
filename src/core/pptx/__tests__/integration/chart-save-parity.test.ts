@@ -27,23 +27,24 @@ const DECKS = await classicChartDecks();
  * PowerPoint writers do to the rest of an edited part (see docs/agnostic-core-plan.md, step C3):
  * they renumber series `c:idx`, drop an all-default group `c:dLbls`, pin theme fonts (`+mn-lt`) and
  * resolved run and line colours, rewrite every cache from JavaScript numbers and normalise manual
- * layout numbers. The three parts the neutral parser reports unmodelled elements in (picture
- * options of a 3-D bar series, surface band formats) stay on the object-tree path and differ.
+ * layout numbers. The neutral model keeps the picture options of a 3-D bar series and surface band
+ * formats verbatim, so every part is on the neutral path; `bar3d-picture-fill.pptx` writes a series
+ * `c:shape` before `c:cat`, which the neutral writer moves to its schema position after `c:val`.
  */
 const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = {
-	'no edit (slide dirty)': { parts: 75, xml: 72, model: 72 },
-	'title text': { parts: 75, xml: 71, model: 72 },
-	'title hidden': { parts: 75, xml: 72, model: 72 },
-	'legend position': { parts: 75, xml: 72, model: 72 },
-	'legend hidden': { parts: 75, xml: 72, model: 72 },
-	'value axis scaling': { parts: 51, xml: 48, model: 48 },
-	'value axis hidden': { parts: 51, xml: 48, model: 48 },
-	'value axis number format': { parts: 51, xml: 48, model: 48 },
-	'series values': { parts: 75, xml: 72, model: 72 },
-	categories: { parts: 71, xml: 68, model: 68 },
-	'series name': { parts: 75, xml: 72, model: 72 },
-	'data labels': { parts: 72, xml: 29, model: 50 },
-	'series colour': { parts: 75, xml: 20, model: 37 },
+	'no edit (slide dirty)': { parts: 75, xml: 74, model: 75 },
+	'title text': { parts: 75, xml: 74, model: 75 },
+	'title hidden': { parts: 75, xml: 75, model: 75 },
+	'legend position': { parts: 75, xml: 75, model: 75 },
+	'legend hidden': { parts: 75, xml: 75, model: 75 },
+	'value axis scaling': { parts: 51, xml: 51, model: 51 },
+	'value axis hidden': { parts: 51, xml: 51, model: 51 },
+	'value axis number format': { parts: 51, xml: 51, model: 51 },
+	'series values': { parts: 75, xml: 75, model: 75 },
+	categories: { parts: 71, xml: 71, model: 71 },
+	'series name': { parts: 75, xml: 75, model: 75 },
+	'data labels': { parts: 72, xml: 29, model: 51 },
+	'series colour': { parts: 75, xml: 20, model: 40 },
 };
 
 /** An XML difference line reduced to its category: sign, the last three path steps, attribute names. */

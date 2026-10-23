@@ -22,6 +22,7 @@ import {
 	extensionList,
 	manualLayout,
 	numberFormat,
+	rawChild,
 	reportUnmodelled,
 	shapeProperties,
 	textProperties,
@@ -88,6 +89,7 @@ const GROUP = new Set([
 	'showNegBubbles',
 	'sizeRepresents',
 	'wireframe',
+	'bandFmts',
 	'extLst',
 ]);
 
@@ -161,6 +163,7 @@ function parseGroup(context: ChartParseContext, element: XmlElement): ChartPlotG
 			showNegativeBubbles: flag('showNegBubbles'),
 			sizeRepresents: cVal(element, 'sizeRepresents'),
 			wireframe: flag('wireframe'),
+			bandFormatsXml: rawChild(element, 'bandFmts'),
 			extLst: extensionList(element),
 		},
 	);

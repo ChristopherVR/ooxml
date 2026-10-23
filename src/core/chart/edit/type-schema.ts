@@ -49,8 +49,8 @@ export const GROUP_FIELDS: Readonly<Record<string, readonly GroupField[]>> = {
 	radarChart: [...LABELLED, 'radarStyle'],
 	bubbleChart: [...LABELLED, 'bubble3D', 'bubbleScale', 'showNegativeBubbles', 'sizeRepresents'],
 	stockChart: ['dataLabels', 'extLst', ...DROP_LINES, 'hiLowLines', 'hiLowLinesSpPr', 'upDownBars'],
-	surfaceChart: ['wireframe', 'extLst'],
-	surface3DChart: ['wireframe', 'extLst'],
+	surfaceChart: ['wireframe', 'bandFormatsXml', 'extLst'],
+	surface3DChart: ['wireframe', 'bandFormatsXml', 'extLst'],
 };
 
 /** Whether a group element references axes (the pie family does not). */
@@ -62,10 +62,10 @@ const ANALYSED: SeriesField[] = ['dataPoints', 'dataLabels', 'trendlines', 'erro
 
 /** The optional series fields of each family, beside idx, order, tx, spPr and extLst. */
 const SERIES_FIELDS: Readonly<Record<ChartGroupKind, readonly SeriesField[]>> = {
-	bar: ['invertIfNegative', ...ANALYSED, 'categories', 'values', 'shape'],
+	bar: ['invertIfNegative', 'pictureOptionsXml', ...ANALYSED, 'categories', 'values', 'shape'],
 	line: ['marker', ...ANALYSED, 'categories', 'values', 'smooth'],
 	stock: ['marker', ...ANALYSED, 'categories', 'values', 'smooth'],
-	area: [...ANALYSED, 'categories', 'values'],
+	area: ['pictureOptionsXml', ...ANALYSED, 'categories', 'values'],
 	scatter: ['marker', ...ANALYSED, 'xValues', 'yValues', 'smooth'],
 	bubble: ['invertIfNegative', ...ANALYSED, 'xValues', 'yValues', 'bubbleSizes', 'bubble3D'],
 	pie: ['explosion', 'dataPoints', 'dataLabels', 'categories', 'values'],

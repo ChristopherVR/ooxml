@@ -13,7 +13,7 @@ import { createWorkbook, createWorksheet, defaultCellStyle } from '../xlsx/workb
 import { loadXlsx } from '../xlsx/read/index';
 import { saveXlsx } from '../xlsx/write/index';
 import { pivotBuilds } from './xlsx-acceptance-pivots';
-import { blockedChartBuild, chartEditBuilds } from './xlsx-acceptance-charts';
+import { chartEditBuilds, surfaceChartBuild } from './xlsx-acceptance-charts';
 import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session';
 
 const out = process.argv[2];
@@ -457,7 +457,7 @@ for (const [file, build, cellChecks] of sessionBuilds(fixtures, FIXTURES, PNG)) 
 }
 builds.push(...pivotBuilds(fixtures));
 builds.push(...chartEditBuilds(fixtures));
-builds.push(['chart-blocked-surface.xlsx', () => blockedChartBuild(fixtures)]);
+builds.push(['chart-surface-bands.xlsx', () => surfaceChartBuild(fixtures)]);
 for (const fixture of FIXTURES) {
 	builds.push([
 		`roundtrip-${fixture}`,

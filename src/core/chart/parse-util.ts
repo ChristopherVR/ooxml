@@ -105,6 +105,12 @@ export function reportUnmodelled(
 	}
 }
 
+/** A `c:` child as written, for content the model keeps verbatim (`c:bandFmts`, `c:pictureOptions`). */
+export function rawChild(parent: XmlElement | undefined, local: string): string | undefined {
+	const element = cChild(parent, local);
+	return element ? buildXml(element) : undefined;
+}
+
 /** `c:extLst` as written, for round-trip. */
 export function extensionList(parent: XmlElement | undefined): string | undefined {
 	const extLst = cChild(parent, 'extLst');
