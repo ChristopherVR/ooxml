@@ -197,6 +197,22 @@ describe('commitGalleryResult', () => {
 		expect(handler.commitMasterBackgroundStyle).toHaveBeenCalledWith(3);
 	});
 
+	it('writes only the font scheme for a fonts pick, keeping the colours and the name', async () => {
+		// `applyTheme` would also rewrite the colour scheme (a `sysClr` slot becomes `srgbClr`).
+		const handler = fakeHandler();
+		const fontScheme = { majorFont: { latin: 'Arial' }, minorFont: { latin: 'Arial' } };
+		const out = (await commitGalleryResult(
+			{ kind: 'themeFontScheme', fontScheme, name: 'Arial' },
+			state(),
+			handler,
+			target,
+		))!;
+		expect(handler.updateThemeFontScheme).toHaveBeenCalledExactlyOnceWith(fontScheme);
+		expect(handler.updateThemeColorScheme).not.toHaveBeenCalled();
+		expect(handler.applyTheme).not.toHaveBeenCalled();
+		expect(out.theme).toStrictEqual({ name: 'T', colorScheme: OLD, fontScheme });
+	});
+
 	it('does nothing without a handler', async () => {
 		expect(
 			await commitGalleryResult(
