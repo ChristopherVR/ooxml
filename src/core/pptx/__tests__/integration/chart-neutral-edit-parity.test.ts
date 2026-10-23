@@ -23,7 +23,8 @@ import type { ChartPptxElement, PptxElement } from '../../core/types/elements';
 const DECK = path.resolve(__dirname, '../fixtures/e2e/chart-gallery.pptx');
 const PART = /^ppt\/charts\/chart\d+\.xml$/u;
 
-const toBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer as ArrayBuffer;
+// A copy through the constructor: `slice()` on a Node Buffer (`readFileSync`) is a view, not a copy.
+const toBuffer = (bytes: Uint8Array): ArrayBuffer => new Uint8Array(bytes).buffer;
 
 type Slide = { isDirty?: boolean };
 

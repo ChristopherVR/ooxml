@@ -44,7 +44,9 @@ export interface SaveDeck {
 	parts: ClassicPart[];
 }
 
-const toBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer as ArrayBuffer;
+// A copy through the constructor: `slice()` on a Node Buffer (`readFileSync`) is a view, not a copy,
+// and since Node 24.21 (`Buffer.poolSize` 64 KiB) a file under 32 KiB is a view into a shared pool.
+const toBuffer = (bytes: Uint8Array): ArrayBuffer => new Uint8Array(bytes).buffer;
 
 /** Every committed deck with at least one classic (`c:chartSpace`) chart part. */
 export async function classicChartDecks(): Promise<SaveDeck[]> {
