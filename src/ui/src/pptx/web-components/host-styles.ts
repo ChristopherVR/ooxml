@@ -9,6 +9,7 @@ import { FOCUS_RING, tok } from './control-tokens';
 // viewer chrome and dialogs, never the embedding page, and written with `:where`
 // so a component that needs a different size can still override it.
 export const HOST_STYLES = `
+pptx-ui-insert-chart-dialog, pptx-ui-insert-smartart-dialog { display: contents; }
 pptx-ui-search {
 	border: 1px solid ${tok('--pptx-field-border')};
 	border-radius: ${tok('--pptx-field-radius')};

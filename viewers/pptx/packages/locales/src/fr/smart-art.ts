@@ -50,6 +50,16 @@ export const translations = {
 	'pptx.insertSmartArt.itemsLabel': 'Éléments (un par ligne)',
 	'pptx.insertSmartArt.cancel': 'Annuler',
 	'pptx.insertSmartArt.insert': 'Insérer',
+	'pptx.insertSmartArt.description.list':
+		"Afficher des blocs d'informations non séquentiels ou groupés.",
+	'pptx.insertSmartArt.description.process':
+		"Afficher une progression, une chronologie ou les étapes successives d'une tâche.",
+	'pptx.insertSmartArt.description.cycle':
+		"Afficher un processus continu ou des éléments autour d'un centre.",
+	'pptx.insertSmartArt.description.hierarchy':
+		'Afficher des relations hiérarchiques, comme un organigramme.',
+	'pptx.insertSmartArt.description.relationship':
+		'Afficher des liens, des chevauchements, des proportions ou des inclusions entre des idées.',
 	'pptx.smartArt.insertTitle': 'Insérer un SmartArt',
 	'pptx.smartArt.categoriesLabel': 'Catégories SmartArt',
 	'pptx.smartArt.layoutsLabel': 'Dispositions SmartArt',

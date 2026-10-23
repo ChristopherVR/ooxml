@@ -4,20 +4,21 @@
  * rebuild drawing shapes a structural edit had cleared (exactly what React's
  * `SmartArtPropertiesPanel.applySmartArtData` does with the element's box).
  *
- * Also the gallery catalogues: the core model offers five colour schemes and
- * three style intensities; each is named after the PowerPoint gallery entry
- * it writes (`Application.SmartArtColors` / `SmartArtQuickStyles` names, and
- * the accents `smartart-fabrication-styles.ts` puts in the fabricated
- * `dgm:colorsDef`).
+ * Also the gallery catalogues with their pptx dictionary keys: the core model
+ * offers five colour schemes and three style intensities, named after the
+ * PowerPoint gallery entries they write; the catalogue itself is
+ * product-neutral (`DIAGRAM_COLOR_ENTRIES` / `DIAGRAM_STYLE_ENTRIES` in
+ * `ooxml-core/diagram`).
  *
  * @module render/ribbon-galleries/smartart-gallery-patch
  */
+import { DIAGRAM_COLOR_ENTRIES, DIAGRAM_STYLE_ENTRIES } from 'ooxml-core/diagram';
+import type { DiagramColorEntry } from 'ooxml-core/diagram';
 import { switchSmartArtLayout } from 'ooxml-core/pptx';
 import type {
 	PptxElement,
 	SmartArtLayoutType,
 	PptxSmartArtData,
-	PptxThemeColorScheme,
 	SmartArtColorScheme,
 	SmartArtStyle,
 } from 'ooxml-core/pptx';
@@ -125,46 +126,22 @@ export interface SmartArtColorEntry {
 	name: string;
 	labelKey: string;
 	/** Theme accents the scheme fills nodes with, in cycle order. */
-	accents: ReadonlyArray<keyof PptxThemeColorScheme>;
+	accents: DiagramColorEntry['accents'];
 }
 
-export const SMARTART_COLOR_ENTRIES: readonly SmartArtColorEntry[] = [
-	{
-		id: 'colorful1',
-		section: 'colorful',
-		name: 'Colorful - Accent Colors',
-		labelKey: 'pptx.gallery.smartArtColors.colorful1',
-		accents: ['accent1', 'accent2', 'accent3'],
-	},
-	{
-		id: 'colorful2',
-		section: 'colorful',
-		name: 'Colorful Range - Accent Colors 2 to 3',
-		labelKey: 'pptx.gallery.smartArtColors.colorfulRange',
-		accents: ['accent2', 'accent3', 'accent4'],
-	},
-	{
-		id: 'colorful3',
-		section: 'colorful',
-		name: 'Colorful Range - Accent Colors 3 to 4',
-		labelKey: 'pptx.gallery.smartArtColors.colorfulRange',
-		accents: ['accent3', 'accent4', 'accent5'],
-	},
-	{
-		id: 'monochromatic1',
-		section: 'accent1',
-		name: 'Colored Fill - Accent 1',
-		labelKey: 'pptx.gallery.smartArtColors.coloredFill',
-		accents: ['accent1'],
-	},
-	{
-		id: 'monochromatic2',
-		section: 'accent2',
-		name: 'Colored Fill - Accent 2',
-		labelKey: 'pptx.gallery.smartArtColors.coloredFill',
-		accents: ['accent2'],
-	},
-];
+/** Dictionary keys of the colour schemes; the two ranges and two fills share a parameterised key. */
+const COLOR_LABEL_KEYS: Readonly<Record<SmartArtColorScheme, string>> = {
+	colorful1: 'pptx.gallery.smartArtColors.colorful1',
+	colorful2: 'pptx.gallery.smartArtColors.colorfulRange',
+	colorful3: 'pptx.gallery.smartArtColors.colorfulRange',
+	monochromatic1: 'pptx.gallery.smartArtColors.coloredFill',
+	monochromatic2: 'pptx.gallery.smartArtColors.coloredFill',
+};
+
+/** The product-neutral catalogue (`ooxml-core/diagram`) with the pptx dictionary keys. */
+export const SMARTART_COLOR_ENTRIES: readonly SmartArtColorEntry[] = DIAGRAM_COLOR_ENTRIES.map(
+	(entry) => ({ ...entry, labelKey: COLOR_LABEL_KEYS[entry.id] }),
+);
 
 export interface SmartArtStyleEntry {
 	id: SmartArtStyle;
@@ -172,15 +149,15 @@ export interface SmartArtStyleEntry {
 	labelKey: string;
 }
 
-export const SMARTART_STYLE_ENTRIES: readonly SmartArtStyleEntry[] = [
-	{ id: 'flat', name: 'Simple Fill', labelKey: 'pptx.gallery.smartArtStyles.simpleFill' },
-	{
-		id: 'moderate',
-		name: 'Moderate Effect',
-		labelKey: 'pptx.gallery.smartArtStyles.moderateEffect',
-	},
-	{ id: 'intense', name: 'Intense Effect', labelKey: 'pptx.gallery.smartArtStyles.intenseEffect' },
-];
+const STYLE_LABEL_KEYS: Readonly<Record<SmartArtStyle, string>> = {
+	flat: 'pptx.gallery.smartArtStyles.simpleFill',
+	moderate: 'pptx.gallery.smartArtStyles.moderateEffect',
+	intense: 'pptx.gallery.smartArtStyles.intenseEffect',
+};
+
+export const SMARTART_STYLE_ENTRIES: readonly SmartArtStyleEntry[] = DIAGRAM_STYLE_ENTRIES.map(
+	(entry) => ({ ...entry, labelKey: STYLE_LABEL_KEYS[entry.id] }),
+);
 
 /** The patch that applies built-in layout `layoutId`, or `undefined` while the library loads. */
 export function smartArtBuiltinLayoutPatch(

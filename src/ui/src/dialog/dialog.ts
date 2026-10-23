@@ -64,8 +64,28 @@ export class OfficeUiDialog extends OfficeElement {
 		return this.renderRoot.querySelector('.close');
 	}
 
+	/**
+	 * The body's focusable controls in order, including those inside the shadow root of a
+	 * composite element (a picker) that is not itself focusable.
+	 */
 	private focusables(): HTMLElement[] {
-		return [...this.querySelectorAll<HTMLElement>(FOCUSABLE)];
+		const found: HTMLElement[] = [];
+		const walk = (root: ParentNode): void => {
+			for (const child of Array.from(root.children)) {
+				if (child.matches(FOCUSABLE)) found.push(child as HTMLElement);
+				else if (child.shadowRoot) walk(child.shadowRoot);
+				else walk(child);
+			}
+		};
+		walk(this);
+		return found;
+	}
+
+	/** The focused element, followed into open shadow roots. */
+	private deepActive(): Element | null {
+		let active = this.ownerDocument.activeElement;
+		while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+		return active;
 	}
 
 	private onOpen(): void {
@@ -90,10 +110,10 @@ export class OfficeUiDialog extends OfficeElement {
 			// Cycle over [light-DOM focusables..., close button].
 			const closeButton = this.closeButton;
 			const items: HTMLElement[] = [...this.focusables(), ...(closeButton ? [closeButton] : [])];
-			const current = this.ownerDocument.activeElement;
+			const current = this.deepActive();
 			const inside = (el: HTMLElement) => el === current || el.contains(current);
 			const index = items.findIndex(inside);
-			const shadowFocus = this.shadowRoot?.activeElement === closeButton;
+			const shadowFocus = current !== null && current === closeButton;
 			const at = shadowFocus ? items.length - 1 : index;
 			const last = items.length - 1;
 			if (at < 0 || (!event.shiftKey && at === last) || (event.shiftKey && at === 0)) {

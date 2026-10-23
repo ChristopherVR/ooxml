@@ -1,6 +1,6 @@
 import { registerControls } from './controls';
 import { definePresence } from './presence';
-import { defineSmartArt } from './smartart';
+import { defineSmartArt, defineSmartArtPicker } from './smartart';
 import { TEAMS_TAGS, registerTeams } from './teams/index';
 import { installOfficeUiTheme } from './theme';
 
@@ -62,6 +62,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-chart-picker',
 	'office-ui-presence',
 	'office-ui-smartart',
+	'office-ui-smartart-picker',
 	...TEAMS_TAGS,
 ] as const;
 
@@ -75,5 +76,6 @@ export function registerOfficeUi(options: { theme?: boolean } = {}): void {
 	registerControls();
 	definePresence();
 	defineSmartArt();
+	defineSmartArtPicker();
 	registerTeams();
 }

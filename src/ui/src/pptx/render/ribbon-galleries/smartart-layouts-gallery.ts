@@ -6,6 +6,7 @@
  *
  * @module render/ribbon-galleries/smartart-layouts-gallery
  */
+import { DIAGRAM_NAMED_LAYOUT_CATEGORIES } from 'ooxml-core/diagram';
 import { SWITCHABLE_LAYOUT_TYPES } from 'ooxml-core/pptx';
 
 import { SMARTART_LAYOUT_LABEL_KEYS } from '../schema-label-keys';
@@ -35,19 +36,7 @@ export function smartArtLayoutNameKey(title: string): string {
 }
 
 /** PowerPoint's gallery order for the built-in layouts' categories, with English headings. */
-const NAMED_CATEGORIES: ReadonlyArray<readonly [string, string]> = [
-	['list', 'List'],
-	['process', 'Process'],
-	['cycle', 'Cycle'],
-	['hierarchy', 'Hierarchy'],
-	['relationship', 'Relationship'],
-	['matrix', 'Matrix'],
-	['pyramid', 'Pyramid'],
-	['picture', 'Picture'],
-	['timeline', 'Timeline'],
-	['textcard', 'Text Card'],
-	['meettheteam', 'Meet the Team'],
-];
+const NAMED_CATEGORIES = DIAGRAM_NAMED_LAYOUT_CATEGORIES;
 
 /**
  * One section per category with PowerPoint's own built-in layouts, once the library has loaded.

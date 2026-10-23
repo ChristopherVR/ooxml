@@ -221,6 +221,13 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 					row.addEventListener('click', () => this.request({ kind: 'chart', value: item.id }));
 					rows.append(row);
 				}
+				if (this.model.chartDialogAvailable) {
+					const label = this.text(['pptx.ribbon.insertChartDialog', 'Insert Chart...']);
+					const row = this.button('row', label, doc.createTextNode(label));
+					row.dataset.insertControl = 'insert.illustrations.chartDialog';
+					row.addEventListener('click', () => this.request({ kind: 'chartDialog' }));
+					rows.append(row);
+				}
 				children.push(rows);
 			} else if (this.view === 'layouts') {
 				children.push(this.head(SPECS.get('insert.slides.newSlide') as InsertControlSpec));

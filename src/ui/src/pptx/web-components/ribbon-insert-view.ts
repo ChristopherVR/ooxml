@@ -31,6 +31,8 @@ import { RIBBON_INSERT_ICON_PATHS } from './ribbon-insert-icons';
 const RECENT_PREFIX = 'recent:';
 /** Menu id of the Slide Templates entry at the end of New Slide's menu. */
 const TEMPLATES_ID = '__slideTemplates__';
+/** Id of the Insert Chart... entry that ends the Chart menu. */
+const CHART_DIALOG_ID = '__chartDialog__';
 const FREEFORM_ICONS: Record<string, string> = { freeformShape: 'penTool', curve: 'spline' };
 const FREEFORM_FALLBACKS: Record<string, string> = {
 	freeformShape: 'Freeform: Shape',
@@ -189,19 +191,33 @@ export function createRibbonInsertView(
 			doc,
 			spec.control,
 			'chart',
-			(value) => stageThenInsert({ kind: 'chartType', value }, { kind: 'chart', value }),
+			(value) =>
+				value === CHART_DIALOG_ID
+					? request({ kind: 'chartDialog' })
+					: stageThenInsert({ kind: 'chartType', value }, { kind: 'chart', value }),
 			{ large: true },
 		);
 		addMenu(spec, menu, (state, text) => {
 			menu.sync({
 				label: text(spec.label),
 				title: tooltip(spec, text, null),
-				items: INSERT_CHART_TYPES.map((item) => ({
-					id: item.id,
-					label: text([item.labelKey, item.label]),
-					glyph: RIBBON_INSERT_ICON_PATHS.chart,
-					viewBox: '0 0 20 20',
-				})),
+				items: [
+					...INSERT_CHART_TYPES.map((item) => ({
+						id: item.id,
+						label: text([item.labelKey, item.label]),
+						glyph: RIBBON_INSERT_ICON_PATHS.chart,
+						viewBox: '0 0 20 20',
+					})),
+					// The whole gallery with previews, grouping and title, as PowerPoint's Chart button opens.
+					...(state.chartDialogAvailable
+						? [
+								{
+									id: CHART_DIALOG_ID,
+									label: text(['pptx.ribbon.insertChartDialog', 'Insert Chart...']),
+								},
+							]
+						: []),
+				],
 				disabled: !state.editable,
 				menuLabel: text(['pptx.ribbon.chartType', 'Chart type']),
 			});

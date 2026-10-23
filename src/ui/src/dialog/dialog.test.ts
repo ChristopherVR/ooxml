@@ -103,6 +103,27 @@ describe('office-ui-dialog', () => {
 		expect(key(field, 'Tab', { shiftKey: true })).toBe(false);
 	});
 
+	it('finds the controls inside a composite element and moves Tab through them', () => {
+		document.body.innerHTML = '<office-ui-dialog open heading="Pick"></office-ui-dialog>';
+		const dialog = document.querySelector('office-ui-dialog') as Dialog;
+		const picker = document.createElement('div');
+		const inner = picker.attachShadow({ mode: 'open' });
+		inner.innerHTML = '<button id="first">A</button><button id="last">B</button>';
+		const ok = document.createElement('button');
+		ok.slot = 'footer';
+		dialog.append(picker, ok);
+		const [first, last] = [...inner.querySelectorAll('button')] as HTMLElement[];
+		dialog.open = false;
+		dialog.open = true;
+		expect(inner.activeElement).toBe(first);
+		// Inside the picker the browser moves focus; the dialog does not interfere.
+		last!.focus();
+		expect(key(last!, 'Tab')).toBe(true);
+		first!.focus();
+		expect(key(first!, 'Tab', { shiftKey: true })).toBe(false);
+		expect(dialog.shadowRoot!.activeElement).toBe(dialog.shadowRoot!.querySelector('.close'));
+	});
+
 	it('hides the footer without footer content', () => {
 		document.body.innerHTML = '<office-ui-dialog open heading="x">body</office-ui-dialog>';
 		const dialog = document.querySelector('office-ui-dialog') as HTMLElement;

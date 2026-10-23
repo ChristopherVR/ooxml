@@ -2429,3 +2429,13 @@ Source: ChristopherVR/ooxml, `origin/main` at `3588b3349` before these commits (
 - `src/ui/src/embedding/region-host.ts` (`HostRegionHost`) is `ViewerRegionHost` of `customization-regions.ts` made generic over the context, with the region attribute, callback keys and log label as options; `ViewerRegionHost` is now a subclass with PowerPoint's `data-pptx-region` attribute and settings callbacks.
 
 New code (not moved): the pure helpers `isCapabilityEnabled`, `disabledCapabilities`, `capabilityHiddenActions`, `mergeHiddenActions` and `acceptedHostBackstagePages`; `createHostBackstagePages`, `withHostMenuItems` and `syncHostMenuChildren` in `src/ui/src/embedding/`; and the Word, Excel and Visio bindings of the contract (`src/core/docx/ui/customization.ts`, `src/core/xlsx/ui/customization.ts`, `src/core/visio/ui/customization.ts` and their `src/ui/src/<product>` appliers).
+
+## Shared Insert SmartArt and Insert Chart dialogs, SmartArt gallery catalogue (2026-10-23)
+
+Source: ChristopherVR/ooxml, `origin/main` at `3b2ecd9a6` (an in-repo move).
+
+- `src/core/diagram/catalogue.ts` holds the SmartArt insert presets and categories from `src/ui/src/pptx/render/smart-art-presets.ts` and the colour-scheme and style catalogues of `render/ribbon-galleries/smartart-gallery-patch.ts` (with the section titles and `labelParams` of `smartart-colors-gallery.ts` and the named-layout categories of `smartart-layouts-gallery.ts`). What changed: English names only, typed on the `diagram` types; each preset gained a tile `family`, each category an English description. The pptx modules keep their exports and add the pptx dictionary keys.
+- `src/ui/src/smartart/tiles.ts` joins `render/ribbon-galleries/smartart-layout-tiles.ts` and `smartart-gallery-tiles.ts` unchanged in output; both pptx files now re-export it.
+- `src/ui/src/pptx/dom/smartart-insert-preview.ts` is the vanilla binding's `ui/ribbon/tabs/insert/smartart-gallery-preview.ts`, taking a target size instead of a fixed 64px tile.
+
+New code (not moved): `office-ui-smartart-picker` and `src/ui/src/smartart/galleries.ts`; `pptx-ui-insert-chart-dialog`, `pptx-ui-insert-smartart-dialog` and `insert-dialog-frame.ts`; `render/insert-chart-preview.ts`. The per-binding Insert SmartArt dialogs they replace were deleted.

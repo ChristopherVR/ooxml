@@ -6,30 +6,19 @@
  *
  * @module render/ribbon-galleries/smartart-colors-gallery
  */
+import { DIAGRAM_COLOR_SECTIONS, diagramColorLabelParams } from 'ooxml-core/diagram';
+
 import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
 import type { RibbonGallerySection } from './gallery-types';
 import { smartArtColorPatch } from './smartart-color-patch';
 import { SMARTART_COLOR_ENTRIES, smartArtElementPatch } from './smartart-gallery-patch';
-import type { SmartArtColorEntry } from './smartart-gallery-patch';
 import { smartArtTileSvg } from './smartart-gallery-tiles';
 
 const TILE = { width: 56, height: 36 };
 
-const SECTIONS: ReadonlyArray<{ id: SmartArtColorEntry['section']; title: string }> = [
-	{ id: 'colorful', title: 'Colorful' },
-	{ id: 'accent1', title: 'Accent 1' },
-	{ id: 'accent2', title: 'Accent 2' },
-];
-
-/** `{{from}}`/`{{to}}` for the "Colorful Range" entries. */
-function labelParams(entry: SmartArtColorEntry): Record<string, number> | undefined {
-	const match = /(\d) to (\d)$/u.exec(entry.name) ?? /Accent (\d)$/u.exec(entry.name);
-	if (!match) {
-		return undefined;
-	}
-	return match[2] ? { from: Number(match[1]), to: Number(match[2]) } : { accent: Number(match[1]) };
-}
+const SECTIONS = DIAGRAM_COLOR_SECTIONS;
+const labelParams = diagramColorLabelParams;
 
 export const SMARTART_COLORS_GALLERY: RibbonGalleryModule = {
 	build(ctx) {

@@ -185,4 +185,23 @@ describe('insert-chart', () => {
 		expect(histogram.chartData?.series).toHaveLength(1);
 		expect(pareto.chartData?.series).toHaveLength(2);
 	});
+
+	it('applies the Insert Chart dialog title, grouping and legend choices', () => {
+		const stacked = createDefaultChartElement('column', undefined, {
+			title: ' Sales ',
+			grouping: 'stacked',
+			hasLegend: false,
+		});
+		expect(stacked.chartData?.title).toBe('Sales');
+		expect(stacked.chartData?.grouping).toBe('stacked');
+		expect(stacked.chartData?.style?.hasLegend).toBe(false);
+		const untitled = createDefaultChartElement('pie', undefined, {
+			title: '',
+			grouping: 'stacked',
+		});
+		expect(untitled.chartData?.title).toBeUndefined();
+		// Pie has no grouping to offer.
+		expect(untitled.chartData?.grouping).toBeUndefined();
+		expect(createDefaultChartElement('line').chartData?.title).toBe('Chart Title');
+	});
 });

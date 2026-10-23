@@ -67,6 +67,8 @@ export interface RibbonInsertState {
 	commentAvailable?: boolean;
 	/** The host can open the Slide Templates dialog: New Slide's menu then always ends with it. */
 	slideTemplatesAvailable?: boolean;
+	/** The host mounts the Insert Chart dialog: the Chart menu then ends with "Insert Chart...". */
+	chartDialogAvailable?: boolean;
 	/** The layouts New Slide offers; empty leaves the gallery out and inserts the host default. */
 	layouts?: readonly InsertSlideLayout[];
 	/** The active slide's layout, marked in the New Slide gallery. */
@@ -87,6 +89,8 @@ export type RibbonInsertIntent =
 	| { kind: 'newSlide'; value: string | null }
 	/** Slide Templates... at the end of New Slide's menu: the host opens its dialog. */
 	| { kind: 'slideTemplates' }
+	/** Insert Chart... at the end of the Chart menu: the host opens the Insert Chart dialog. */
+	| { kind: 'chartDialog' }
 	/** Insert Table from the grid picker: rows by columns. */
 	| { kind: 'table'; rows: number; columns: number };
 
@@ -256,6 +260,10 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertI
 			);
 		case 'slideTemplates':
 			return state.editable && state.slideTemplatesAvailable === true;
+		case 'chartDialog':
+			return (
+				state.editable && state.chartAvailable !== false && state.chartDialogAvailable === true
+			);
 		case 'newSlide':
 			return (
 				state.editable &&
