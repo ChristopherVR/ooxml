@@ -53,7 +53,7 @@ const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8'
 /** Commands of a viewer's verify list that only `--browser` or `--full` runs. */
 const BROWSER = /playwright|test:browser|e2e/;
 const SLOW =
-	/mktemp|pack:smoke|build:packages|test:packages|check:published|test:package\b|test:worker/;
+	/mktemp|pack:smoke|build:packages|test:packages|test-packages\.mjs|check:published|test:package\b|test:worker/;
 const FORMATTED = /\.(m?[jt]sx?|css|json|md|vue|svelte|html|ya?ml)$/;
 
 function fail(message) {
