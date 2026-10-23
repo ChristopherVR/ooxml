@@ -1,3 +1,4 @@
+import { DEFAULT_EDITOR_HISTORY_DEPTH } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 import { ref, shallowRef } from 'vue';
@@ -145,5 +146,34 @@ describe('useEditorHistory', () => {
 		undo();
 		redo();
 		expect(slides.value).toBe(before);
+	});
+});
+
+describe('useEditorHistory (shared controller)', () => {
+	it('defaults to the one shared depth (it used to be 120 here)', () => {
+		const slides = shallowRef<PptxSlide[]>([slide('s1', [el('a')])]);
+		const history = useEditorHistory(slides);
+		for (let i = 0; i < DEFAULT_EDITOR_HISTORY_DEPTH + 5; i++) {
+			history.pushHistory(`edit ${i}`);
+		}
+		let undone = 0;
+		while (history.canUndo.value) {
+			history.undo();
+			undone += 1;
+		}
+		expect(undone).toBe(DEFAULT_EDITOR_HISTORY_DEPTH);
+	});
+
+	it('keeps the newest entries when the maximum shrinks', () => {
+		const slides = shallowRef<PptxSlide[]>([slide('s1', [el('a')])]);
+		const history = useEditorHistory(slides);
+		for (let i = 0; i < 5; i++) {
+			history.pushHistory(`edit ${i}`);
+		}
+		history.setMaxDepth(2);
+		expect(history.undoLabel.value).toBe('edit 4');
+		history.undo();
+		history.undo();
+		expect(history.canUndo.value).toBe(false);
 	});
 });

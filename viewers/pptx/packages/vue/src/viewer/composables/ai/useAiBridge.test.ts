@@ -192,3 +192,22 @@ describe('useAiBridge deck-data seam', () => {
 		]);
 	});
 });
+
+describe('useAiBridge (shared bridge)', () => {
+	it('leaves the deck clean when an AI deck edit changes nothing', () => {
+		const h = makeBridge();
+		h.bridge.applyDeckData?.((data) => data, 'no-op');
+		expect(h.pushHistory).not.toHaveBeenCalled();
+		expect(h.markDirty).not.toHaveBeenCalled();
+	});
+
+	it('records a slides edit as one history entry before installing it', () => {
+		const h = makeBridge();
+		h.bridge.applySlidesUpdate(
+			(slides) => [...slides, { ...slides[0], id: 's2' } as PptxSlide],
+			'add',
+		);
+		expect(h.pushHistory).toHaveBeenCalledOnce();
+		expect(h.slides.value.map((s) => s.id)).toEqual(['s1', 's2']);
+	});
+});

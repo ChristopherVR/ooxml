@@ -1,15 +1,16 @@
 import type {
 	AiCanvasHighlight,
 	AiChangeBatch,
+	FocusSelectionInput,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
 } from 'ooxml-ui/pptx/ai';
-import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai';
 /**
  * useAiPanelController: owns the AI panel's "scope" (the focused targets + a
  * prefilled composer directive) plus the two on-canvas highlight sources that
- * share one overlay system. Vue counterpart of the React
- * `useAiPanelController` hook; the panel open state itself stays in
+ * share one overlay system: the shared `createPptxAiPanelController`, mirrored
+ * into Vue with the generic `useController` adapter. The panel open state itself stays in
  * `PowerPointViewer` (an `aiPanelOpen` ref), so this composable only owns focus,
  * picks and the live-tool flash.
  *
@@ -21,8 +22,10 @@ import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
  *     the tool references (see {@link flashToolTarget}).
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { computed, onScopeDispose, ref } from 'vue';
+import { computed, onScopeDispose } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
+
+import { useController } from '../useController';
 
 export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai';
 
@@ -38,23 +41,23 @@ export interface AiPanelController {
 	/** Focused targets derived live from the current canvas selection. */
 	liveFocusTargets: ComputedRef<PptxAiFocusedTarget[]>;
 	/** Pinned focus override (null follows the live selection). */
-	pinnedFocus: Ref<PptxAiFocusedTarget[] | null>;
+	pinnedFocus: Readonly<Ref<PptxAiFocusedTarget[] | null>>;
 	/** Pin the current live targets as the chat's focus. */
 	pinFocus(): void;
 	/** Drop the pin and follow the live selection again. */
 	clearPinnedFocus(): void;
 	/** One-shot composer prefill; `nonce` bumps on every ask/fix. */
-	prefill: Ref<{ text: string; nonce: number }>;
+	prefill: Readonly<Ref<{ text: string; nonce: number }>>;
 	/** Scope the panel to the current selection, empty composer (bumps prefill). */
 	askAboutSelection(): void;
 	/** Scope the panel to the current selection, prefilled fix directive. */
 	fixSelection(): void;
 
 	/* Pick mode */
-	pickMode: Ref<boolean>;
+	pickMode: Readonly<Ref<boolean>>;
 	startPicking(): void;
 	stopPicking(): void;
-	pickTargets: Ref<PptxAiFocusedTarget[]>;
+	pickTargets: Readonly<Ref<PptxAiFocusedTarget[]>>;
 	addPick(slideIndex: number, elementId: string): void;
 	clearPicks(): void;
 
@@ -65,134 +68,45 @@ export interface AiPanelController {
 
 	/* Applied-edit change animation */
 	/** The batch of just-applied element changes the canvas should animate. */
-	changeBatch: Ref<AiChangeBatch | null>;
+	changeBatch: Readonly<Ref<AiChangeBatch | null>>;
 	/** Push (or clear) the change batch the AI apply path published. */
 	showChangeBatch(batch: AiChangeBatch | null): void;
 }
 
 /** How long a live-tool highlight / colour-tween window stays up after a call. */
-const TOOL_FLASH_MS = 2600;
-
-/** Build the "Fix with AI" directive for one element (never auto-sent). */
-function fixDirective(element: PptxElement, slideIndex: number): string {
-	return `Review and fix any issues with this ${element.type} (id=${element.id}) on slide ${slideIndex + 1}.`;
-}
-
 export function useAiPanelController(input: UseAiPanelControllerInput): AiPanelController {
 	const { activeSlideIndex, selectedElementIds, selectedElement } = input;
-	const pinnedFocus = ref<PptxAiFocusedTarget[] | null>(null);
-	const prefill = ref<{ text: string; nonce: number }>({ text: '', nonce: 0 });
-	const pickMode = ref(false);
-	const pickTargets = ref<PptxAiFocusedTarget[]>([]);
-	const toolFocus = ref<{ slideIndex: number; elementIds: string[] } | null>(null);
-	const flashTick = ref(0);
-	let flashTimer: ReturnType<typeof setTimeout> | null = null;
-	const changeBatch = ref<AiChangeBatch | null>(null);
-	const showChangeBatch = (batch: AiChangeBatch | null): void => {
-		changeBatch.value = batch;
-	};
-
-	const liveFocusTargets = computed(() =>
-		computeFocusTargets({
-			activeSlideIndex: activeSlideIndex.value,
-			selectedElementIds: selectedElementIds.value,
-			selectedElementId: selectedElementIds.value[0] ?? null,
-		}),
-	);
-
-	const pinFocus = (): void => {
-		pinnedFocus.value = liveFocusTargets.value;
-	};
-	const clearPinnedFocus = (): void => {
-		pinnedFocus.value = null;
-	};
-
-	const askAboutSelection = (): void => {
-		pinnedFocus.value = liveFocusTargets.value;
-		prefill.value = { text: '', nonce: prefill.value.nonce + 1 };
-	};
-	const fixSelection = (): void => {
-		pinnedFocus.value = liveFocusTargets.value;
-		const el = selectedElement();
-		const text = el ? fixDirective(el, activeSlideIndex.value) : '';
-		prefill.value = { text, nonce: prefill.value.nonce + 1 };
-	};
-
-	const startPicking = (): void => {
-		pickMode.value = true;
-	};
-	const stopPicking = (): void => {
-		pickMode.value = false;
-	};
-	const addPick = (slideIndex: number, elementId: string): void => {
-		if (pickTargets.value.some((t) => t.kind === 'element' && t.elementId === elementId)) {
-			return;
-		}
-		pickTargets.value = [...pickTargets.value, { kind: 'element', slideIndex, elementId }];
-	};
-	const clearPicks = (): void => {
-		pickTargets.value = [];
-		pickMode.value = false;
-	};
-
-	const flashToolTarget = (target: ToolCanvasTarget | null): void => {
-		if (target && target.slideIndex !== undefined && target.elementIds.length > 0) {
-			toolFocus.value = { slideIndex: target.slideIndex, elementIds: target.elementIds };
-		} else {
-			toolFocus.value = null;
-		}
-		flashTick.value += 1;
-		if (flashTimer) {
-			clearTimeout(flashTimer);
-		}
-		flashTimer = setTimeout(() => {
-			toolFocus.value = null;
-			flashTick.value = 0;
-		}, TOOL_FLASH_MS);
-	};
-
-	onScopeDispose(() => {
-		if (flashTimer) {
-			clearTimeout(flashTimer);
-		}
+	const selection = (): FocusSelectionInput => ({
+		activeSlideIndex: activeSlideIndex.value,
+		selectedElementIds: selectedElementIds.value,
+		selectedElementId: selectedElementIds.value[0] ?? null,
 	});
-
-	const canvasHighlights = computed<AiCanvasHighlight[]>(() => {
-		const out: AiCanvasHighlight[] = [];
-		for (const t of pickTargets.value) {
-			if (t.kind === 'element') {
-				out.push({ slideIndex: t.slideIndex, elementId: t.elementId, variant: 'pick' });
-			}
-		}
-		const focus = toolFocus.value;
-		if (focus) {
-			for (const elementId of focus.elementIds) {
-				out.push({ slideIndex: focus.slideIndex, elementId, variant: 'active' });
-			}
-		}
-		return out;
+	// The shared controller owns the state; `useController` mirrors its snapshot.
+	const controller = createPptxAiPanelController({
+		getSelection: selection,
+		getSelectedElement: () => selectedElement(),
 	});
-
-	const canvasAnimating = computed(() => canvasHighlights.value.length > 0 || flashTick.value > 0);
+	const state = useController(controller);
+	onScopeDispose(() => controller.dispose());
 
 	return {
-		liveFocusTargets,
-		pinnedFocus,
-		pinFocus,
-		clearPinnedFocus,
-		prefill,
-		askAboutSelection,
-		fixSelection,
-		pickMode,
-		startPicking,
-		stopPicking,
-		pickTargets,
-		addPick,
-		clearPicks,
-		canvasHighlights,
-		canvasAnimating,
-		flashToolTarget,
-		changeBatch,
-		showChangeBatch,
+		liveFocusTargets: computed(() => computeFocusTargets(selection())),
+		pinnedFocus: computed(() => state.value.pinnedFocus),
+		pinFocus: () => controller.pinFocus(),
+		clearPinnedFocus: () => controller.clearPinnedFocus(),
+		prefill: computed(() => state.value.prefill),
+		askAboutSelection: () => controller.askAboutSelection(),
+		fixSelection: () => controller.fixSelection(),
+		pickMode: computed(() => state.value.pickMode),
+		startPicking: () => controller.startPicking(),
+		stopPicking: () => controller.stopPicking(),
+		pickTargets: computed(() => state.value.pickTargets),
+		addPick: (slideIndex, elementId) => controller.addPick(slideIndex, elementId),
+		clearPicks: () => controller.clearPicks(),
+		canvasHighlights: computed(() => state.value.canvasHighlights),
+		canvasAnimating: computed(() => state.value.canvasAnimating),
+		flashToolTarget: (target) => controller.flashToolTarget(target),
+		changeBatch: computed(() => state.value.changeBatch),
+		showChangeBatch: (batch) => controller.showChangeBatch(batch),
 	};
 }

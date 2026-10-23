@@ -523,3 +523,26 @@ describe('useKeyboardShortcuts', () => {
 		expect(() => scope.stop()).not.toThrow();
 	});
 });
+
+describe('useKeyboardShortcuts shared dispatch', () => {
+	it('dispatches through the shared handler names and skips keys typed into fields', () => {
+		const undo = vi.fn();
+		const nudge = vi.fn();
+		const actions: ShortcutActions = { undo, nudge };
+		const keys = useKeyboardShortcuts({ hasSelection: true, actions });
+		const z = new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, cancelable: true });
+		keys.handleKeyDown(z);
+		expect(undo).toHaveBeenCalledOnce();
+		expect(z.defaultPrevented).toBe(true);
+		keys.handleKeyDown(new KeyboardEvent('keydown', { key: 'ArrowUp', shiftKey: true }));
+		expect(nudge).toHaveBeenCalledWith(0, -NUDGE_LARGE);
+
+		const input = document.createElement('input');
+		document.body.appendChild(input);
+		const typed = new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true });
+		input.dispatchEvent(typed);
+		keys.handleKeyDown(typed);
+		expect(undo).toHaveBeenCalledOnce();
+		input.remove();
+	});
+});

@@ -1,10 +1,11 @@
-import { EditorHistory } from 'ooxml-ui/pptx';
+import { createEditorHistoryController } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { computed, nextTick, shallowRef } from 'vue';
+import { computed, nextTick } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
 import type { TemplateElementMap } from './template-editing';
+import { useController } from './useController';
 
 /**
  * useEditorHistory: framework-idiomatic undo/redo stack over `PptxSlide[]`.
@@ -15,10 +16,10 @@ import type { TemplateElementMap } from './template-editing';
  * template-element layers; the Vue editor foundation operates purely on the
  * `PptxSlide[]` model, so a snapshot is simply a cloned slide array.
  *
- * The stack itself is the shared, framework-agnostic `EditorHistory<T>` command
- * stack (`pptx-viewer-shared`); this composable adds only the Vue reactivity
- * (`computed` canUndo/canRedo) and the `cloneSlide` deep-snapshotting the shared
- * class deliberately leaves to the caller.
+ * The stack itself is the shared history controller
+ * (`createEditorHistoryController` in `ooxml-ui/pptx`), read through the
+ * generic `useController` adapter; this composable adds only the `cloneSlide`
+ * deep-snapshotting the shared stack deliberately leaves to the caller.
  *
  * Usage pattern (push-before-mutate):
  *
@@ -35,13 +36,6 @@ import type { TemplateElementMap } from './template-editing';
  * clears the redo stack; callers invoke it immediately before committing a new
  * `slides.value`. `undo`/`redo` swap snapshots in and out of the live ref.
  */
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Cap the past stack to bound memory; mirrors the React `MAX_HISTORY_ENTRIES`. */
-const MAX_HISTORY_ENTRIES = 120;
 
 // ---------------------------------------------------------------------------
 // Result interface
@@ -91,8 +85,9 @@ interface HistorySnapshot {
 /** Optional tuning knobs for the history stack. */
 export interface UseEditorHistoryOptions {
 	/**
-	 * Maximum undo depth. Defaults to `MAX_HISTORY_ENTRIES`; File > Options >
-	 * Advanced > "Maximum number of undos" threads `resolveHistoryDepth` here.
+	 * Maximum undo depth. Defaults to the shared `DEFAULT_EDITOR_HISTORY_DEPTH`;
+	 * File > Options > Advanced > "Maximum number of undos" threads
+	 * `resolveHistoryDepth` here.
 	 */
 	maxDepth?: number;
 	/**
@@ -122,19 +117,13 @@ export function useEditorHistory(
 	templateElementsBySlideId?: Ref<TemplateElementMap>,
 	options?: UseEditorHistoryOptions,
 ): EditorHistoryResult {
-	// The shared, framework-agnostic command stack. It performs no cloning, so we
-	// snapshot with `cloneSlide` / `cloneElement` before every record/undo/redo
-	// round-trip.
-	const stack = new EditorHistory<HistorySnapshot>({
-		maxDepth: options?.maxDepth ?? MAX_HISTORY_ENTRIES,
-	});
-
-	// A monotonically-increasing tick bumped on every mutation so the `computed`
-	// flags below re-evaluate against the (non-reactive) shared stack.
-	const tick = shallowRef(0);
-	const bump = (): void => {
-		tick.value++;
-	};
+	// The shared history controller (one stack and one default depth for every
+	// binding). It performs no cloning, so we snapshot with `cloneSlide` /
+	// `cloneElement` before every record/undo/redo round-trip.
+	const stack = createEditorHistoryController<HistorySnapshot>(
+		options?.maxDepth === undefined ? {} : { maxDepth: options.maxDepth },
+	);
+	const state = useController(stack);
 
 	const cloneTemplateMap = (source: TemplateElementMap): TemplateElementMap => {
 		const next: TemplateElementMap = {};
@@ -163,23 +152,10 @@ export function useEditorHistory(
 		}
 	};
 
-	const canUndo = computed(() => {
-		void tick.value;
-		return stack.canUndo;
-	});
-	const canRedo = computed(() => {
-		void tick.value;
-		return stack.canRedo;
-	});
-
-	const undoLabel = computed(() => {
-		void tick.value;
-		return stack.undoLabel || undefined;
-	});
-	const redoLabel = computed(() => {
-		void tick.value;
-		return stack.redoLabel || undefined;
-	});
+	const canUndo = computed(() => state.value.canUndo);
+	const canRedo = computed(() => state.value.canRedo);
+	const undoLabel = computed(() => state.value.undoLabel);
+	const redoLabel = computed(() => state.value.redoLabel);
 
 	let changePending = false;
 	const notifyChange = (): void => {
@@ -195,7 +171,6 @@ export function useEditorHistory(
 
 	const pushHistory = (label = ''): void => {
 		stack.record(snapshot(), label);
-		bump();
 		notifyChange();
 	};
 
@@ -205,7 +180,6 @@ export function useEditorHistory(
 			return;
 		}
 		restore(result.snapshot);
-		bump();
 		notifyChange();
 	};
 
@@ -215,18 +189,15 @@ export function useEditorHistory(
 			return;
 		}
 		restore(result.snapshot);
-		bump();
 		notifyChange();
 	};
 
 	const clearHistory = (): void => {
 		stack.clear();
-		bump();
 	};
 
 	const setMaxDepth = (depth: number): void => {
 		stack.setMaxDepth(depth);
-		bump();
 	};
 
 	return {
