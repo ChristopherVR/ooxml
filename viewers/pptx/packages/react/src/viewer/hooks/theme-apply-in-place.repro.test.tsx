@@ -19,7 +19,7 @@ import JSZip from 'jszip';
 import { applyRibbonGalleryItem } from 'ooxml-ui/pptx';
 import type { RibbonGalleryId } from 'ooxml-ui/pptx';
 import { act } from 'react';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
 	betaTitleFont,
@@ -238,6 +238,42 @@ describe('design gallery theme picks apply in place', () => {
 			expect(betaTitleFont()).toBe('Calibri Light');
 			await expect(bothThemes()).resolves.toStrictEqual(LOADED_BOTH);
 			expect(live().theme).toStrictEqual(loaded);
+		});
+	});
+
+	it('a save straight after Undo or Redo writes the theme that step put back', async () => {
+		await withHarness(deckBytes, async () => {
+			await openOnSlideTwo();
+			await pick('themes', 'facet', 'Trebuchet MS');
+			// Undo and Redo write the theme part after the slides are back. Make that write take a
+			// moment, as a large theme part or a busy page does, and save without waiting for it,
+			// as a Ctrl+S right after Ctrl+Z does.
+			const handler = live().handler();
+			if (!handler) {
+				throw new Error('no deck is loaded');
+			}
+			const write = handler.updateThemeColorScheme.bind(handler);
+			const slowWrite = vi
+				.spyOn(handler, 'updateThemeColorScheme')
+				.mockImplementation(async (scheme) => {
+					await new Promise<void>((done) => {
+						setTimeout(done, 50);
+					});
+					await write(scheme);
+				});
+			try {
+				await act(async () => {
+					live().history.handleUndo();
+				});
+				await expect(themePartOf(await live().save())).resolves.toStrictEqual(LOADED_THEME);
+				await act(async () => {
+					live().history.handleRedo();
+				});
+				await expect(themePartOf(await live().save())).resolves.toStrictEqual(FACET_THEME);
+				expect(slowWrite).toHaveBeenCalledTimes(2);
+			} finally {
+				slowWrite.mockRestore();
+			}
 		});
 	});
 });

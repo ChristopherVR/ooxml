@@ -20,6 +20,15 @@ export function queueThemeWrite(handler: PptxHandler, write: () => Promise<void>
 	return run;
 }
 
+/**
+ * Resolves once every theme part write queued on `handler` so far has landed. An undo or redo puts
+ * the slides back at once and writes the theme part after, so a save must wait for this or it
+ * writes the theme the step just undid.
+ */
+export function settleThemeWrites(handler: PptxHandler): Promise<void> {
+	return pendingWrites.get(handler) ?? Promise.resolve();
+}
+
 /** The name the deck's primary theme part was loaded with; the parsed theme carries no name. */
 function loadedThemeName(input: UseThemeHandlersInput): string | undefined {
 	const options = input.themeOptions ?? [];
