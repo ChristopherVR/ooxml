@@ -1,8 +1,10 @@
 // The neutral chart model (`chart/ChartSpace`) of a chart created in the spreadsheet model: what
 // `chart/writeChartSpace` serialises for a new chart part. It describes the part the xlsx writer
-// has always generated (and Excel accepts): one chart group, two axes with fixed ids, palette or
-// manual series colours, the modern built-in style 102 unless the chart carries its own.
+// has always generated (and Excel accepts): one chart group, two axes with fixed ids (the
+// `chart/edit` defaults the type switch also uses), palette or manual series colours, the modern
+// built-in style 102 unless the chart carries its own.
 import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
+import { DEFAULT_CHART_AXIS_IDS, defaultChartAxes } from '../../chart/edit/type-axes';
 import type { ChartAxis, ChartPlotGroup, ChartSpace } from '../../chart/model';
 import type {
 	ChartDataPoint,
@@ -17,8 +19,7 @@ import type { ChartObject, ChartSeries } from '../model';
 import { chartSeriesDrawingFill } from './chart-colors';
 import { chartTitle } from './chart-title';
 
-const FIRST_AXIS = 500000001;
-const SECOND_AXIS = 500000002;
+const [FIRST_AXIS, SECOND_AXIS] = DEFAULT_CHART_AXIS_IDS;
 
 /** A string reference with its cache, or a literal: empty values keep their index, no point. */
 function source(
@@ -115,52 +116,6 @@ function seriesModel(chart: ChartObject, series: ChartSeries, index: number): Ch
 	return out;
 }
 
-/** The category (or X value) axis and the value axis, crossing at zero. */
-function axes(horizontal: boolean, scatter: boolean): ChartAxis[] {
-	const common = {
-		scaling: { orientation: 'minMax' },
-		deleted: false,
-		minorGridlines: false,
-		numberFormat: { formatCode: 'General', sourceLinked: true },
-		majorTickMark: 'out',
-		minorTickMark: 'none',
-		tickLabelPosition: 'nextTo',
-		crosses: 'autoZero',
-	};
-	const first: ChartAxis = scatter
-		? {
-				...common,
-				kind: 'val',
-				id: FIRST_AXIS,
-				position: 'b',
-				majorGridlines: false,
-				crossAxisId: SECOND_AXIS,
-				crossBetween: 'midCat',
-			}
-		: {
-				...common,
-				kind: 'cat',
-				id: FIRST_AXIS,
-				position: horizontal ? 'l' : 'b',
-				majorGridlines: false,
-				crossAxisId: SECOND_AXIS,
-				auto: true,
-				labelAlign: 'ctr',
-				labelOffset: 100,
-				noMultiLevelLabels: false,
-			};
-	const second: ChartAxis = {
-		...common,
-		kind: 'val',
-		id: SECOND_AXIS,
-		position: horizontal ? 'b' : 'l',
-		majorGridlines: true,
-		crossAxisId: FIRST_AXIS,
-		crossBetween: scatter ? 'midCat' : 'between',
-	};
-	return [first, second];
-}
-
 /** The chart group and its axes for the chart type. */
 function plot(chart: ChartObject, series: ChartSpaceSeries[]): [ChartPlotGroup, ChartAxis[]] {
 	const grouping =
@@ -174,12 +129,12 @@ function plot(chart: ChartObject, series: ChartSpaceSeries[]): [ChartPlotGroup, 
 		case 'line':
 			return [
 				group('line', 'lineChart', { grouping: flat, varyColors: false, marker: true }),
-				axes(false, false),
+				defaultChartAxes(false, false),
 			];
 		case 'area':
 			return [
 				group('area', 'areaChart', { grouping: flat, varyColors: false }),
-				axes(false, false),
+				defaultChartAxes(false, false),
 			];
 		case 'pie':
 			return [group('pie', 'pieChart', { varyColors: true, firstSliceAngle: 0, axisIds: [] }), []];
@@ -196,12 +151,12 @@ function plot(chart: ChartObject, series: ChartSpaceSeries[]): [ChartPlotGroup, 
 		case 'scatter':
 			return [
 				group('scatter', 'scatterChart', { scatterStyle: 'lineMarker', varyColors: false }),
-				axes(false, true),
+				defaultChartAxes(false, true),
 			];
 		case 'radar':
 			return [
 				group('radar', 'radarChart', { radarStyle: 'marker', varyColors: false }),
-				axes(false, false),
+				defaultChartAxes(false, false),
 			];
 		default: {
 			// Column and bar; the other families are generated as clustered columns.
@@ -219,7 +174,7 @@ function plot(chart: ChartObject, series: ChartSpaceSeries[]): [ChartPlotGroup, 
 					gapWidth: chart.barGapWidth ?? 150,
 					...overlap,
 				}),
-				axes(horizontal, false),
+				defaultChartAxes(horizontal, false),
 			];
 		}
 	}
