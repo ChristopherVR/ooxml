@@ -1,11 +1,18 @@
-import type { ModifyPasswordCheckResult, ReadOnlyRecommendation } from 'ooxml-ui/pptx';
-import { checkModifyPassword, readOnlyRecommendation } from 'ooxml-ui/pptx';
+import {
+	INITIAL_READ_ONLY_SESSION,
+	readOnlyBannerVisible,
+	readOnlyLocked,
+	readOnlyRecommendation,
+	readOnlySessionActions,
+} from 'ooxml-ui/pptx';
+import type {
+	ReadOnlyBannerPasswordError,
+	ReadOnlyRecommendation,
+	ReadOnlySession,
+} from 'ooxml-ui/pptx';
 import type { PptxCustomProperty, PptxModifyVerifier } from 'pptx-viewer-core';
-import { computed, ref } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
-
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok: false }>['reason'];
 
 /**
  * useReadOnlyRecommendation: the Trust-Center-style banner shown when a
@@ -18,10 +25,19 @@ export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok:
  * every edit entry point already reads, and `reset()` is called from the same
  * `watch(activeContent, ...)` handler that resets Protected View, so a newly
  * opened document is evaluated fresh even if a previous one was unlocked.
+ *
+ * The session (banner hidden, Edit anyway, the prompt and its check) and its
+ * transitions are the shared `read-only-session` model; this keeps it in a ref.
  */
 export interface UseReadOnlyRecommendationInput {
 	modifyVerifier: Ref<PptxModifyVerifier | undefined>;
 	customProperties: Ref<PptxCustomProperty[]>;
+	/**
+	 * Bumped when a load finishes applying a deck. The recommendation is read
+	 * then, as PowerPoint reads it when the file opens, not again whenever the
+	 * deck's custom properties are edited.
+	 */
+	loadVersion: Ref<number>;
 }
 
 export interface UseReadOnlyRecommendationResult {
@@ -42,11 +58,11 @@ export interface UseReadOnlyRecommendationResult {
 	/** Re-arm the recommendation for a newly loaded document. */
 	reset: () => void;
 	/** Whether the inline password prompt should render instead of the two buttons. */
-	passwordPromptOpen: Ref<boolean>;
+	passwordPromptOpen: ComputedRef<boolean>;
 	/** Reason the last password attempt failed, or null before any attempt / after success. */
-	passwordError: Ref<ModifyPasswordErrorReason | null>;
+	passwordError: ComputedRef<ReadOnlyBannerPasswordError | null>;
 	/** True while `submitPassword`'s check is in flight (disables the form). */
-	checkingPassword: Ref<boolean>;
+	checkingPassword: ComputedRef<boolean>;
 	/** Check `password` against the deck's `modifyVerifier`; unlocks on a match. */
 	submitPassword: (password: string) => Promise<void>;
 	/** Close the password prompt without unlocking. */
@@ -56,85 +72,41 @@ export interface UseReadOnlyRecommendationResult {
 export function useReadOnlyRecommendation(
 	input: UseReadOnlyRecommendationInput,
 ): UseReadOnlyRecommendationResult {
-	const dismissed = ref(false);
-	const editAnywayGranted = ref(false);
-	const passwordPromptOpen = ref(false);
-	const passwordError = ref<ModifyPasswordErrorReason | null>(null);
-	const checkingPassword = ref(false);
-
-	const recommendation = computed<ReadOnlyRecommendation>(() =>
+	const read = () =>
 		readOnlyRecommendation({
 			modifyVerifier: input.modifyVerifier.value,
 			customProperties: input.customProperties.value,
-		}),
+		});
+	const loaded = shallowRef<ReadOnlyRecommendation>(read());
+	watch(
+		input.loadVersion,
+		() => {
+			loaded.value = read();
+		},
+		{ flush: 'sync' },
 	);
-
-	const showBanner = computed(() => recommendation.value.kind !== null && !dismissed.value);
-	const locked = computed(
-		() =>
-			recommendation.value.kind !== null &&
-			recommendation.value.defaultReadOnly &&
-			!editAnywayGranted.value,
+	const session = shallowRef<ReadOnlySession>(INITIAL_READ_ONLY_SESSION);
+	const actions = readOnlySessionActions(
+		{
+			get: () => session.value,
+			set: (next) => {
+				session.value = next;
+			},
+		},
+		{ recommendation: () => loaded.value, modifyVerifier: () => input.modifyVerifier.value },
 	);
-
-	function unlock(): void {
-		editAnywayGranted.value = true;
-		dismissed.value = true;
-		passwordPromptOpen.value = false;
-		passwordError.value = null;
-	}
-
-	function editAnyway(): void {
-		if (recommendation.value.requiresPassword) {
-			passwordPromptOpen.value = true;
-			passwordError.value = null;
-			return;
-		}
-		unlock();
-	}
-
-	function dismiss(): void {
-		dismissed.value = true;
-	}
-
-	function cancelPasswordPrompt(): void {
-		passwordPromptOpen.value = false;
-		passwordError.value = null;
-	}
-
-	async function submitPassword(password: string): Promise<void> {
-		checkingPassword.value = true;
-		try {
-			const result = await checkModifyPassword(input.modifyVerifier.value, password);
-			if (result.ok) {
-				unlock();
-			} else {
-				passwordError.value = result.reason;
-			}
-		} finally {
-			checkingPassword.value = false;
-		}
-	}
-
-	function reset(): void {
-		dismissed.value = false;
-		editAnywayGranted.value = false;
-		passwordPromptOpen.value = false;
-		passwordError.value = null;
-		checkingPassword.value = false;
-	}
 
 	return {
-		recommendation,
-		showBanner,
-		locked,
-		editAnyway,
-		dismiss,
-		reset,
-		passwordPromptOpen,
-		passwordError,
-		checkingPassword,
-		submitPassword,
-		cancelPasswordPrompt,
+		recommendation: computed(() => loaded.value),
+		showBanner: computed(() => readOnlyBannerVisible(loaded.value, session.value)),
+		locked: computed(() => readOnlyLocked(loaded.value, session.value)),
+		editAnyway: actions.editAnyway,
+		dismiss: actions.dismiss,
+		reset: actions.reset,
+		passwordPromptOpen: computed(() => session.value.passwordPromptOpen),
+		passwordError: computed(() => session.value.passwordError),
+		checkingPassword: computed(() => session.value.checkingPassword),
+		submitPassword: actions.submitPassword,
+		cancelPasswordPrompt: actions.cancelPassword,
 	};
 }
