@@ -13,9 +13,9 @@ import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor, sanitizeGradientStops } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { AccessibilityTextSection } from './AccessibilityTextSection';
-import { DebouncedColorInput } from './DebouncedColorInput';
 import { FillStrokeProperties } from './FillStrokeProperties';
 import { CARD, HEADING, INPUT } from './inspector-pane-constants';
+import { LiveColorInput } from './LiveColorInput';
 import { RecentColorsRow } from './RecentColorsRow';
 import { TextAdvancedSections } from './TextAdvancedSections';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
@@ -123,12 +123,13 @@ export function ShapeTextPanels({
 						</label>
 						<label className='flex flex-col gap-1'>
 							<span className='text-muted-foreground'>Color</span>
-							<DebouncedColorInput
+							<LiveColorInput
 								disabled={!canEdit}
-								ariaLabel='Text Color'
+								aria-label='Text Color'
 								value={normalizeHexColor(selectedElement.textStyle?.color, '#000000')}
+								selectedRef={selectedElement.textStyle?.colorRef}
 								className='w-full h-7 rounded border border-border bg-transparent cursor-pointer'
-								onCommit={(hex) => onUpdateTextStyle({ color: hex, colorRef: undefined })}
+								onApply={(hex, ref) => onUpdateTextStyle({ color: hex, colorRef: ref })}
 							/>
 						</label>
 						<div className='col-span-2'>

@@ -8,6 +8,7 @@ import { normalizeHexColor, openNativeEyeDropper } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { SEL, RNG, SWATCH, DIS, LBL, COL2 } from './FillStrokeHelpers';
 import type { GradientStop } from './FillStrokeHelpers';
+import { LiveColorInput } from './LiveColorInput';
 import { useRecentColors } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
@@ -64,8 +65,8 @@ export function SelectRow({
  * colour's own row) simply never did, so its row silently rendered nothing.
  * Every commit here (native picker, theme swatch, standard swatch, recent
  * swatch, eyedropper) also pushes the resolved hex back into that same shared
- * list; a drag through the native picker applies live but adds only the
- * colour it settles on.
+ * list; a drag through the native picker shows every shade live but is one
+ * undo step and adds only the colour it settles on ({@link LiveColorInput}).
  *
  * Clicking a {@link ThemeColorSwatchGrid} swatch commits BOTH the resolved
  * hex and its `PptxThemeColorRef`, so the colour keeps following the theme
@@ -91,7 +92,6 @@ export function ColorPickerRow({
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
-	const commitRecentColor = useRecentColorCommit();
 	const commit = (color: string, ref?: PptxThemeColorRef): void => {
 		onChange(color, ref);
 		pushColor(color);
@@ -107,12 +107,11 @@ export function ColorPickerRow({
 		<label className='flex flex-col gap-1'>
 			<span className={LBL}>{label}</span>
 			<div className='flex items-center gap-1'>
-				<input
-					type='color'
+				<LiveColorInput
 					value={value}
+					selectedRef={selectedRef}
 					disabled={disabled}
-					ref={commitRecentColor}
-					onChange={(e) => onChange(e.target.value)}
+					onApply={onChange}
 					className={`h-8 flex-1 ${SEL} px-1 ${DIS}`}
 				/>
 				<button

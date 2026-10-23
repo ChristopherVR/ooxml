@@ -24,11 +24,13 @@ import type {
 	TextStyle,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
+import { useMemo } from 'react';
 
 import type { UseCommentsResult } from '../hooks/useComments-helpers';
 import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize, ViewerMode, TableCellEditorState } from '../types';
 import type { InspectorTab } from './inspector/inspector-pane-types';
+import { LiveEditProvider } from './inspector/LiveEditContext';
 import { InspectorPane } from './InspectorPane';
 import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
@@ -99,6 +101,11 @@ export interface ViewerInspectorProps {
 	onDeleteTableStyle?: (styleId: string) => void;
 	/** Width of the panel in pixels (for resizable panels). */
 	panelWidth?: number;
+	/**
+	 * The history's `withoutUndoStep`: a colour picker drag applies its shades
+	 * through it, so the drag is one undo step (see `LiveEditContext`).
+	 */
+	withoutUndoStep?: (apply: () => void) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -158,9 +165,14 @@ export function ViewerInspector({
 	onTableStyleMapChange,
 	onDeleteTableStyle,
 	panelWidth,
+	withoutUndoStep,
 }: ViewerInspectorProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const regionRenderer = useRegionRenderer('inspector');
+	const liveEdit = useMemo(
+		() => ({ withoutUndoStep: withoutUndoStep ?? ((apply: () => void) => apply()) }),
+		[withoutUndoStep],
+	);
 
 	if (!isOpen) {
 		return null;
@@ -202,89 +214,93 @@ export function ViewerInspector({
 			className='h-full flex-shrink-0 max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:z-30'
 			style={panelWidth ? { width: panelWidth } : undefined}
 		>
-			<InspectorPane
-				isOpen={isOpen}
-				canEdit={canEdit}
-				mode={mode}
-				activeSlide={activeSlide}
-				slides={slides}
-				customShows={customShows}
-				canvasSize={canvasSize}
-				selectedElement={selectedElement}
-				selectedElementIds={effectiveSelectedIds}
-				tableEditorState={tableEditorState}
-				activeTab={sidebarPanelMode as InspectorTab}
-				onSetActiveTab={(nextTab) => onSetSidebarPanelMode(nextTab)}
-				onClose={onClose}
-				onUpdateElementStyle={onUpdateElementStyle}
-				onUpdateTextStyle={onUpdateTextStyle}
-				onUpdateElement={onUpdateElement}
-				onUpdateSlide={onUpdateSlide}
-				onSelectElement={(id) => onApplySelection(id)}
-				onMoveLayer={onMoveLayer}
-				onMoveLayerToEdge={onMoveLayerToEdge}
-				onDeleteElement={onDeleteElement}
-				comments={activeSlide?.comments ?? []}
-				presentationProperties={presentationProperties}
-				onUpdatePresentationProperties={onUpdatePresentationProperties}
-				notesMaster={notesMaster}
-				handoutMaster={handoutMaster}
-				notesCanvasSize={notesCanvasSize}
-				coreProperties={coreProperties}
-				appProperties={appProperties}
-				customProperties={customProperties}
-				themeOptions={themeOptions}
-				onUpdateCoreProperties={onUpdateCoreProperties}
-				onUpdateAppProperties={onUpdateAppProperties}
-				onUpdateCustomProperties={onUpdateCustomProperties}
-				tagCollections={tagCollections}
-				onUpdateTagCollections={onUpdateTagCollections}
-				onApplyTheme={onApplyTheme}
-				commentDraft={commentDraft}
-				commentDraftMentions={comments.commentDraftMentionsBySlideId?.[slideId] ?? []}
-				commentAuthors={commentAuthors ?? []}
-				editingCommentId={editingCommentId}
-				commentEditDraft={
-					editingCommentId ? (comments.commentEditDraftByCommentId[editingCommentId] ?? '') : ''
-				}
-				onSetCommentDraft={(draft, mentions) =>
-					comments.handleCommentDraftChange(slideId, draft, mentions)
-				}
-				onAddComment={() => comments.handleAddSlideComment(activeSlideIndex)}
-				onDeleteComment={(id) => comments.handleDeleteSlideComment(activeSlideIndex, id)}
-				onStartEditComment={(id) => comments.handleStartCommentEdit(slideId, id)}
-				onSaveEditComment={(id) => comments.handleSaveCommentEdit(activeSlideIndex, id)}
-				onCancelEditComment={() => comments.handleCancelCommentEdit(slideId)}
-				onSetCommentEditDraft={(draft) =>
-					comments.handleSetCommentEditDraft(
-						comments.editingCommentIdBySlideId[slideId] ?? '',
-						draft,
-					)
-				}
-				onToggleCommentResolved={(id) => comments.handleToggleCommentResolved(activeSlideIndex, id)}
-				onStartReply={(id) => comments.handleStartReply(activeSlideIndex, id)}
-				onCancelReply={comments.handleCancelReply}
-				onReplyDraftChange={(commentId, draft, mentions) =>
-					comments.handleReplyDraftChange(commentId, draft, mentions)
-				}
-				onSubmitReply={(commentId) => comments.handleSubmitReply(activeSlideIndex, commentId)}
-				replyingToCommentId={comments.replyingToCommentId}
-				replyDraftByCommentId={comments.replyDraftByCommentId}
-				replyDraftMentionsByCommentId={comments.replyDraftMentionsByCommentId}
-				onUpdateCanvasSize={onSetCanvasSize}
-				slideSizeEmu={slideSizeEmu}
-				onUpdateSlideSize={onSetSlideSize}
-				editTemplateMode={editTemplateMode}
-				slideMasters={slideMasters}
-				onSetTemplateBackground={onSetTemplateBackground}
-				onGetTemplateBackgroundColor={onGetTemplateBackgroundColor}
-				mediaDataUrls={mediaDataUrls}
-				theme={theme}
-				tableStyleMap={tableStyleMap}
-				onTableStyleMapChange={onTableStyleMapChange}
-				onDeleteTableStyle={onDeleteTableStyle}
-				panelWidth={panelWidth}
-			/>
+			<LiveEditProvider value={liveEdit}>
+				<InspectorPane
+					isOpen={isOpen}
+					canEdit={canEdit}
+					mode={mode}
+					activeSlide={activeSlide}
+					slides={slides}
+					customShows={customShows}
+					canvasSize={canvasSize}
+					selectedElement={selectedElement}
+					selectedElementIds={effectiveSelectedIds}
+					tableEditorState={tableEditorState}
+					activeTab={sidebarPanelMode as InspectorTab}
+					onSetActiveTab={(nextTab) => onSetSidebarPanelMode(nextTab)}
+					onClose={onClose}
+					onUpdateElementStyle={onUpdateElementStyle}
+					onUpdateTextStyle={onUpdateTextStyle}
+					onUpdateElement={onUpdateElement}
+					onUpdateSlide={onUpdateSlide}
+					onSelectElement={(id) => onApplySelection(id)}
+					onMoveLayer={onMoveLayer}
+					onMoveLayerToEdge={onMoveLayerToEdge}
+					onDeleteElement={onDeleteElement}
+					comments={activeSlide?.comments ?? []}
+					presentationProperties={presentationProperties}
+					onUpdatePresentationProperties={onUpdatePresentationProperties}
+					notesMaster={notesMaster}
+					handoutMaster={handoutMaster}
+					notesCanvasSize={notesCanvasSize}
+					coreProperties={coreProperties}
+					appProperties={appProperties}
+					customProperties={customProperties}
+					themeOptions={themeOptions}
+					onUpdateCoreProperties={onUpdateCoreProperties}
+					onUpdateAppProperties={onUpdateAppProperties}
+					onUpdateCustomProperties={onUpdateCustomProperties}
+					tagCollections={tagCollections}
+					onUpdateTagCollections={onUpdateTagCollections}
+					onApplyTheme={onApplyTheme}
+					commentDraft={commentDraft}
+					commentDraftMentions={comments.commentDraftMentionsBySlideId?.[slideId] ?? []}
+					commentAuthors={commentAuthors ?? []}
+					editingCommentId={editingCommentId}
+					commentEditDraft={
+						editingCommentId ? (comments.commentEditDraftByCommentId[editingCommentId] ?? '') : ''
+					}
+					onSetCommentDraft={(draft, mentions) =>
+						comments.handleCommentDraftChange(slideId, draft, mentions)
+					}
+					onAddComment={() => comments.handleAddSlideComment(activeSlideIndex)}
+					onDeleteComment={(id) => comments.handleDeleteSlideComment(activeSlideIndex, id)}
+					onStartEditComment={(id) => comments.handleStartCommentEdit(slideId, id)}
+					onSaveEditComment={(id) => comments.handleSaveCommentEdit(activeSlideIndex, id)}
+					onCancelEditComment={() => comments.handleCancelCommentEdit(slideId)}
+					onSetCommentEditDraft={(draft) =>
+						comments.handleSetCommentEditDraft(
+							comments.editingCommentIdBySlideId[slideId] ?? '',
+							draft,
+						)
+					}
+					onToggleCommentResolved={(id) =>
+						comments.handleToggleCommentResolved(activeSlideIndex, id)
+					}
+					onStartReply={(id) => comments.handleStartReply(activeSlideIndex, id)}
+					onCancelReply={comments.handleCancelReply}
+					onReplyDraftChange={(commentId, draft, mentions) =>
+						comments.handleReplyDraftChange(commentId, draft, mentions)
+					}
+					onSubmitReply={(commentId) => comments.handleSubmitReply(activeSlideIndex, commentId)}
+					replyingToCommentId={comments.replyingToCommentId}
+					replyDraftByCommentId={comments.replyDraftByCommentId}
+					replyDraftMentionsByCommentId={comments.replyDraftMentionsByCommentId}
+					onUpdateCanvasSize={onSetCanvasSize}
+					slideSizeEmu={slideSizeEmu}
+					onUpdateSlideSize={onSetSlideSize}
+					editTemplateMode={editTemplateMode}
+					slideMasters={slideMasters}
+					onSetTemplateBackground={onSetTemplateBackground}
+					onGetTemplateBackgroundColor={onGetTemplateBackgroundColor}
+					mediaDataUrls={mediaDataUrls}
+					theme={theme}
+					tableStyleMap={tableStyleMap}
+					onTableStyleMapChange={onTableStyleMapChange}
+					onDeleteTableStyle={onDeleteTableStyle}
+					panelWidth={panelWidth}
+				/>
+			</LiveEditProvider>
 		</div>
 	);
 }

@@ -9,7 +9,7 @@ import React from 'react';
 import { useTranslation } from '../../i18n/use-translation';
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { COL2, LBL, NUM, RNG, SEL } from './FillStrokeHelpers';
-import { useRecentColorCommit } from './useRecentColorCommit';
+import { LiveColorInput } from './LiveColorInput';
 
 export interface InspectorFieldsProps<T, P> {
 	/** The section descriptors to draw (from `ooxml-ui/pptx`). */
@@ -26,8 +26,8 @@ export interface InspectorFieldsProps<T, P> {
  * inspector section descriptors (a toggle per section, then its fields) as
  * cells of the surrounding two-column grid. Values, bounds, labels and the
  * patches all come from the descriptors; this component only maps them onto
- * JSX. A colour pick is added to the "Recent colours" list once it settles
- * (`useRecentColorCommit`), not on every shade a drag passes.
+ * JSX. A colour field shows every shade of a drag live but is one undo step
+ * and one "Recent colours" entry when the pick settles ({@link LiveColorInput}).
  */
 export function InspectorFields<T, P>({
 	sections,
@@ -36,7 +36,6 @@ export function InspectorFields<T, P>({
 	disabled = false,
 }: InspectorFieldsProps<T, P>): React.ReactElement {
 	const { t } = useTranslation();
-	const commitRecentColor = useRecentColorCommit();
 	const views = resolveInspectorSections(sections, target);
 
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void => {
@@ -89,14 +88,12 @@ export function InspectorFields<T, P>({
 			return (
 				<label key={key} className={cls}>
 					<span className={LBL}>{label}</span>
-					<input
-						type='color'
+					<LiveColorInput
 						data-testid={field.testId}
 						aria-label={label}
 						value={String(field.value)}
 						disabled={disabled}
-						ref={commitRecentColor}
-						onChange={(e) => change(sectionId, field.id, e.target.value)}
+						onApply={(hex) => change(sectionId, field.id, hex)}
 						className={`h-8 ${SEL} px-1`}
 					/>
 				</label>
