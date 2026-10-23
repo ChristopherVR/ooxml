@@ -62,10 +62,10 @@ export function SelectRow({
  * not a prop: every caller used to have to thread its own `recentColors`
  * array down from the loaded deck, and one of the two calls (the fill
  * colour's own row) simply never did, so its row silently rendered nothing.
- * Every commit here (theme swatch, standard swatch, recent swatch,
- * eyedropper, and the native picker once it settles on a colour) also pushes
- * the resolved hex back into that same shared list; a drag through the native
- * picker applies live but adds only the colour it ends on.
+ * Every commit here (native picker, theme swatch, standard swatch, recent
+ * swatch, eyedropper) also pushes the resolved hex back into that same shared
+ * list; a drag through the native picker applies live but adds only the
+ * colour it settles on.
  *
  * Clicking a {@link ThemeColorSwatchGrid} swatch commits BOTH the resolved
  * hex and its `PptxThemeColorRef`, so the colour keeps following the theme

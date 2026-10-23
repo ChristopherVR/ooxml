@@ -121,6 +121,7 @@ export interface EditActions
 		ref?: import('pptx-viewer-core').PptxThemeColorRef,
 		committed?: boolean,
 	): void;
+	/** Same `committed` contract as {@link setShapeFill}, for the outline colour. */
 	setShapeStroke(
 		color: string,
 		ref?: import('pptx-viewer-core').PptxThemeColorRef,
