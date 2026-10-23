@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
+	TEXT_BOX_SECTIONS,
 	textFontFamilyPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
@@ -14,6 +15,7 @@ import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
 import RecentColorsRow from '../RecentColorsRow.vue';
+import InspectorFields from './InspectorFields.vue';
 import Text3DProperties from './Text3DProperties.vue';
 import TextEffectsPanel from './TextEffectsPanel.vue';
 import TextWarpGallery from './TextWarpGallery.vue';
@@ -23,8 +25,10 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
  * TextPanel: typography inspector for the Vue `pptx-vue-viewer` editor.
  *
  * Exposes character/paragraph formatting (`fontFamily`, `fontSize`, `bold`,
- * `italic`, `underline`, `strikethrough`, `color`, `align`, `vAlign`) read from
- * `element.textStyle`. Each control emits a SHALLOW `update` patch carrying the
+ * `italic`, `underline`, `strikethrough`, `color`, `align`) read from
+ * `element.textStyle`, plus the shared Text Box options (`TEXT_BOX_SECTIONS`:
+ * vertical alignment, direction, autofit, wrap, columns) drawn by the generic
+ * {@link InspectorFields} renderer. Each control emits a SHALLOW `update` patch carrying the
  * FULL merged `textStyle` sub-object so the parent can forward it verbatim to
  * `ops.updateElement(id, patch)`.
  *
@@ -33,7 +37,6 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
  * last, after the formatting, as in React's `TextAdvancedSections`.
  */
 type AlignValue = NonNullable<TextStyle['align']>;
-type VAlignValue = NonNullable<TextStyle['vAlign']>;
 
 const props = withDefaults(
 	defineProps<{
@@ -68,12 +71,6 @@ const ALIGN_OPTIONS: ReadonlyArray<{ value: AlignValue; labelKey: string }> = [
 	{ value: 'justify', labelKey: 'pptx.textPanel.alignJustify' },
 ];
 
-const VALIGN_OPTIONS: ReadonlyArray<{ value: VAlignValue; labelKey: string }> = [
-	{ value: 'top', labelKey: 'pptx.textPanel.valignTop' },
-	{ value: 'middle', labelKey: 'pptx.textPanel.valignMiddle' },
-	{ value: 'bottom', labelKey: 'pptx.textPanel.valignBottom' },
-];
-
 const TOGGLES: ReadonlyArray<{
 	key: 'bold' | 'italic' | 'underline' | 'strikethrough';
 	label: string;
@@ -98,7 +95,6 @@ const fontSize = computed<number>(() =>
 const color = computed<string>(() => textStyle.value?.color ?? '#000000');
 const colorRef = computed(() => textStyle.value?.colorRef);
 const align = computed<AlignValue | undefined>(() => textStyle.value?.align);
-const vAlign = computed<VAlignValue | undefined>(() => textStyle.value?.vAlign);
 
 function patchTextStyle(next: Partial<TextStyle>): void {
 	emit('update', textStylePatch(props.element, next));
@@ -144,10 +140,6 @@ function isActive(key: 'bold' | 'italic' | 'underline' | 'strikethrough'): boole
 
 function setAlign(value: AlignValue): void {
 	patchTextStyle({ align: value });
-}
-
-function setVAlign(value: VAlignValue): void {
-	patchTextStyle({ vAlign: value });
 }
 
 function onWarpSelect(style: Pick<TextStyle, 'textWarpPreset'>): void {
@@ -278,29 +270,12 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 				</div>
 			</div>
 
-			<div class="pptx-vue-text-field flex flex-col gap-1">
-				<span class="pptx-vue-text-label text-muted-foreground">
-					{{ t('pptx.textPanel.verticalAlign') }}
-				</span>
-				<div class="pptx-vue-text-toggles flex flex-wrap gap-1">
-					<button
-						v-for="opt in VALIGN_OPTIONS"
-						:key="opt.value"
-						type="button"
-						class="pptx-vue-text-toggle min-w-8 rounded border border-border px-2 py-1 transition-colors max-md:min-h-[44px] max-md:min-w-[44px]"
-						:class="
-							vAlign === opt.value
-								? 'pptx-vue-text-toggle-active bg-primary text-white font-semibold'
-								: 'bg-muted hover:bg-accent'
-						"
-						:aria-pressed="vAlign === opt.value"
-						:title="t(opt.labelKey)"
-						@click="setVAlign(opt.value)"
-					>
-						{{ t(opt.labelKey) }}
-					</button>
-				</div>
-			</div>
+			<InspectorFields
+				:sections="TEXT_BOX_SECTIONS"
+				:target="textStyle"
+				:disabled="!props.canEdit"
+				@patch="patchTextStyle"
+			/>
 
 			<TextWarpGallery :ts="textStyle" :disabled="!props.canEdit" @select="onWarpSelect" />
 		</div>

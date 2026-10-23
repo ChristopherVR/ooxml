@@ -40,3 +40,5 @@ export type {
 	ElementGeometrySection,
 	ElementGeometryTarget,
 } from './element-geometry-fields';
+export { TEXT_BOX_SECTION, TEXT_BOX_SECTIONS } from './text-box-fields';
+export type { TextBoxSection, TextBoxTarget } from './text-box-fields';

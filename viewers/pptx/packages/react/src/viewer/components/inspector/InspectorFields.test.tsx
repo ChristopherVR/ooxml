@@ -1,15 +1,17 @@
 // @vitest-environment happy-dom
 /**
- * The React generic field renderer draws the shared shape Effects descriptors:
- * one toggle per section, its fields only while on, and every change goes out
- * as the descriptor's `Partial<ShapeStyle>` patch.
+ * The React generic field renderer draws the shared inspector descriptors
+ * (Effects, Line, Size & Position, Text Box): one toggle per toggleable
+ * section, its fields only while on, and every change goes out as the
+ * descriptor's patch.
  */
 import {
 	ELEMENT_GEOMETRY_SECTIONS,
 	SHAPE_EFFECT_SECTIONS,
 	SHAPE_LINE_SECTIONS,
+	TEXT_BOX_SECTIONS,
 } from 'ooxml-ui/pptx';
-import type { ShapeStyle } from 'pptx-viewer-core';
+import type { ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -153,5 +155,33 @@ describe('inspectorFields (size and position)', () => {
 			);
 		});
 		expect(byTestId('geometry-rotation')!.disabled).toBeTruthy();
+	});
+});
+
+describe('inspectorFields (text box options)', () => {
+	it('draws the text box options and writes body-level text-style patches', () => {
+		const onPatch = vi.fn<(p: Partial<TextStyle>) => void>();
+		act(() => {
+			root.render(
+				<InspectorFields
+					sections={TEXT_BOX_SECTIONS}
+					target={{ vAlign: 'bottom' } as TextStyle}
+					onPatch={onPatch}
+				/>,
+			);
+		});
+		expect(byTestId('text-box-valign')!.value).toBe('bottom');
+		const wrap = byTestId('text-box-wrap')!;
+		act(() => {
+			wrap.checked = false;
+			wrap.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onPatch).toHaveBeenCalledWith({ textWrap: 'none' });
+		const autofit = byTestId('text-box-autofit')!;
+		act(() => {
+			autofit.value = 'normal';
+			autofit.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onPatch).toHaveBeenLastCalledWith({ autoFitMode: 'normal', autoFit: true });
 	});
 });
