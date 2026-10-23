@@ -90,7 +90,14 @@ export function shapePropertiesXml(
 	context: ChartWriteContext,
 	shape: ChartShapeProperties | undefined,
 ): string {
-	if (!shape) return '';
+	return shape ? elementXml('spPr', shapePropertiesInnerXml(context, shape)) : '';
+}
+
+/** The children of a shape properties element (`c:spPr`, `cx:spPr`). */
+export function shapePropertiesInnerXml(
+	context: ChartWriteContext,
+	shape: ChartShapeProperties,
+): string {
 	const { sourceXml, ...fields } = shape;
 	let inner: string;
 	if (sourceXml !== undefined) {
@@ -106,7 +113,7 @@ export function shapePropertiesXml(
 		inner =
 			(fill ?? '') + (fields.line ? drawingLineXml(fields.line) : '') + (fields.effectsXml ?? '');
 	}
-	return elementXml('spPr', raw(context, inner));
+	return raw(context, inner);
 }
 
 /** The children of a text body: the kept source while it still reads back, else the model. */
