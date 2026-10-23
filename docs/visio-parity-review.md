@@ -17,7 +17,10 @@ page navigation, zoom, source-backed history and bounded editing/save operations
 These are implemented subsets. The Home tab's clipboard, font, paragraph, Shape Styles,
 Change Shape, Arrange and connector commands are enabled (`src/ui/src/visio/ribbon-home.ts`,
 ledger in `viewers/visio/docs/parity.md`). Insert > Chart (`viewer-insert-chart.ts`,
-`core/visio/edit-chart-object.ts`) and the data-link and data-source dialogs
+`core/visio/edit-chart-object.ts`), with Edit Data and Format Chart on a chart object's shortcut
+menu (`viewer-chart-editor.ts`: the shared chart data sheet and Format pane over the embedded
+workbook's chart part, re-embedded with a fresh metafile preview; effects, 3-D and text formatting
+are not editable there), and the data-link and data-source dialogs
 (`viewer-data-links.ts`, `viewer-data-sources.ts`) are implemented; the commands that stay
 disabled (for example the 3-D effects in Shape Styles) carry their reason in the tooltip, and the
 ledger lists which ones. Six bindings share one controller and renderer.

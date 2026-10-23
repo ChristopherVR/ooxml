@@ -62,3 +62,34 @@
 	color: var(--_vv-muted);
 	font-size: 12px;
 }
+
+.chart-edit-dialog {
+	--office-dialog-width: min(760px, 96vw);
+	--office-dialog-max-width: min(760px, 96vw);
+}
+.chart-edit-body {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: flex-start;
+}
+.chart-edit-body > office-ui-chart-data-sheet,
+.chart-edit-body > office-ui-chart-format-pane {
+	flex: 1 1 320px;
+	min-width: 0;
+	max-height: 60vh;
+	overflow: auto;
+}
+.chart-edit-body > [hidden] {
+	display: none;
+}
+.chart-edit-preview {
+	flex: 0 1 320px;
+	border: 1px solid var(--office-border, #d0d0d0);
+	background: #ffffff;
+}
+.chart-edit-preview svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
