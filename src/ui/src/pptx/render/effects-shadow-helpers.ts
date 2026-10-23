@@ -99,6 +99,24 @@ export function disableOuterShadowPatch(el: PptxElement): Partial<PptxElement> {
 }
 
 /**
+ * The shapeStyle fields of an outer-shadow state, clamped. Re-derives
+ * offsetX/Y from angle+distance to keep the coordinate pair consistent.
+ */
+export function outerShadowStyle(state: OuterShadowState): Partial<ShapeStyle> {
+	const angleRad = (state.angle * Math.PI) / 180;
+	return {
+		shadowColor: state.color,
+		shadowOpacity: clamp(state.opacity, 0, 1),
+		shadowBlur: Math.max(0, state.blur),
+		shadowAngle: state.angle,
+		shadowDistance: Math.max(0, state.distance),
+		shadowOffsetX: Math.cos(angleRad) * state.distance,
+		shadowOffsetY: Math.sin(angleRad) * state.distance,
+		shadowRotateWithShape: state.rotateWithShape,
+	};
+}
+
+/**
  * Update a single outer-shadow field. Re-derives offsetX/Y from angle+distance
  * when either is changed to keep the coordinate pair consistent.
  */
@@ -107,18 +125,7 @@ export function updateOuterShadowPatch(
 	changes: Partial<OuterShadowState>,
 ): Partial<PptxElement> {
 	const cur = outerShadowStateOf(hasShapeProperties(el) ? el.shapeStyle : undefined);
-	const next = { ...cur, ...changes };
-	const angleRad = (next.angle * Math.PI) / 180;
-	return shapeStyleMergePatch(el, {
-		shadowColor: next.color,
-		shadowOpacity: clamp(next.opacity, 0, 1),
-		shadowBlur: Math.max(0, next.blur),
-		shadowAngle: next.angle,
-		shadowDistance: Math.max(0, next.distance),
-		shadowOffsetX: Math.cos(angleRad) * next.distance,
-		shadowOffsetY: Math.sin(angleRad) * next.distance,
-		shadowRotateWithShape: next.rotateWithShape,
-	});
+	return shapeStyleMergePatch(el, outerShadowStyle({ ...cur, ...changes }));
 }
 
 /** Enable inner shadow with current or default values. */
@@ -140,18 +147,22 @@ export function disableInnerShadowPatch(el: PptxElement): Partial<PptxElement> {
 	return shapeStyleMergePatch(el, { innerShadowColor: 'transparent' });
 }
 
+/** The shapeStyle fields of an inner-shadow state, clamped. */
+export function innerShadowStyle(state: InnerShadowState): Partial<ShapeStyle> {
+	return {
+		innerShadowColor: state.color,
+		innerShadowOpacity: clamp(state.opacity, 0, 1),
+		innerShadowBlur: Math.max(0, state.blur),
+		innerShadowOffsetX: state.offsetX,
+		innerShadowOffsetY: state.offsetY,
+	};
+}
+
 /** Update a single inner-shadow field. */
 export function updateInnerShadowPatch(
 	el: PptxElement,
 	changes: Partial<InnerShadowState>,
 ): Partial<PptxElement> {
 	const cur = innerShadowStateOf(hasShapeProperties(el) ? el.shapeStyle : undefined);
-	const next = { ...cur, ...changes };
-	return shapeStyleMergePatch(el, {
-		innerShadowColor: next.color,
-		innerShadowOpacity: clamp(next.opacity, 0, 1),
-		innerShadowBlur: Math.max(0, next.blur),
-		innerShadowOffsetX: next.offsetX,
-		innerShadowOffsetY: next.offsetY,
-	});
+	return shapeStyleMergePatch(el, innerShadowStyle({ ...cur, ...changes }));
 }

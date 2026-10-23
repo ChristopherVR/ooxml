@@ -1,118 +1,129 @@
 /**
- * EffectsPanelComponent's outer-shadow "Rotate with Shape" toggle, Angular
- * binding.
+ * EffectsPanelComponent and the generic InspectorFieldsComponent it draws the
+ * shared `SHAPE_EFFECT_SECTIONS` with, Angular binding.
  *
- * No Angular TestBed (see `vitest.config.ts`): the component is instantiated
- * directly, inputs are stubbed as signals. Pins the parity fix: Angular's
- * outer-shadow section had no control for `a:outerShdw@rotWithShape`, even
- * though shared's `OuterShadowState`/`updateOuterShadowPatch` already
- * supported it.
+ * No Angular TestBed (see `vitest.config.ts`): components are instantiated
+ * directly, inputs are stubbed as signals. Pins that the renderer resolves the
+ * shared descriptors, turns control events into the descriptor patches, and
+ * that the panel merges them into an element patch.
  */
 import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal, OutputEmitterRef } from '@angular/core';
+import { SHAPE_EFFECT_SECTIONS } from 'ooxml-ui/pptx';
+import type { InspectorSectionDescriptor, InspectorSectionView } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { EffectsPanelComponent } from './effects-panel.component';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import { RecentColorsService } from './recent-colors.service';
 
-function shapeElement(shapeStyle: ShapeStyle): PptxElement {
-	return {
-		type: 'shape',
-		id: 'shape-1',
-		name: 'Shape 1',
-		x: 0,
-		y: 0,
-		width: 100,
-		height: 100,
-		shapeStyle,
-	} as PptxElement;
-}
+type Fields = InspectorFieldsComponent<ShapeStyle | undefined, Partial<ShapeStyle>>;
 
-function createPanel(
-	shapeStyle: ShapeStyle,
-	recentColors?: { push: (hex: string) => void },
-): EffectsPanelComponent {
+function createFields(target: ShapeStyle, recentColors?: { push: (hex: string) => void }): Fields {
 	const providers = recentColors ? [{ provide: RecentColorsService, useValue: recentColors }] : [];
-	const panel = runInInjectionContext(
+	const fields = runInInjectionContext(
 		Injector.create({ providers }),
-		() => new EffectsPanelComponent(),
+		() => new InspectorFieldsComponent<ShapeStyle | undefined, Partial<ShapeStyle>>(),
 	);
-	Object.assign(panel, {
-		element: signal(shapeElement(shapeStyle)) as unknown as InputSignal<PptxElement>,
+	Object.assign(fields, {
+		sections: signal(SHAPE_EFFECT_SECTIONS) as unknown as InputSignal<
+			readonly InspectorSectionDescriptor<ShapeStyle | undefined, Partial<ShapeStyle>>[]
+		>,
+		target: signal(target) as unknown as InputSignal<ShapeStyle | undefined>,
+		disabled: signal(false) as unknown as InputSignal<boolean>,
 	});
-	return panel;
+	return fields;
 }
 
-function colorChange(value: string): Event {
+function captured(fields: Fields): Partial<ShapeStyle>[] {
+	const out: Partial<ShapeStyle>[] = [];
+	vi.spyOn(fields.patch as OutputEmitterRef<Partial<ShapeStyle>>, 'emit').mockImplementation(
+		(value) => {
+			out.push(value);
+		},
+	);
+	return out;
+}
+
+function inputEvent(type: string, value: string): Event {
 	const input = document.createElement('input');
-	input.type = 'color';
+	input.type = type;
 	input.value = value;
 	return { target: input } as unknown as Event;
 }
 
-function checkboxChange(checked: boolean): Event {
-	const input = document.createElement('input');
-	input.type = 'checkbox';
-	input.checked = checked;
-	return { target: input } as unknown as Event;
+function checkboxEvent(checked: boolean): Event {
+	const box = document.createElement('pptx-ui-checkbox') as HTMLElement & { checked: boolean };
+	box.checked = checked;
+	return { target: box } as unknown as Event;
 }
 
-describe('effectsPanelComponent outer shadow rotateWithShape', () => {
-	it('defaults to true, matching PowerPoint, when the attribute is absent', () => {
-		const panel = createPanel({ shadowColor: '#000000' } as ShapeStyle);
-		expect(panel['state']().outerShadow.rotateWithShape).toBeTruthy();
-	});
-
-	it('reads an authored shadowRotateWithShape: false', () => {
-		const panel = createPanel({
-			shadowColor: '#000000',
-			shadowRotateWithShape: false,
-		} as ShapeStyle);
-		expect(panel['state']().outerShadow.rotateWithShape).toBeFalsy();
+describe('inspectorFieldsComponent (effects)', () => {
+	it('resolves every effect section, with fields only for the enabled ones', () => {
+		const fields = createFields({ shadowColor: '#000000' });
+		const views = fields['views']() as InspectorSectionView[];
+		expect(views.map((v) => v.id)).toContain('bevel');
+		expect(views[0]!.fields.map((f) => f.id)).toContain('rotateWithShape');
+		expect(views[1]!.fields).toHaveLength(0);
 	});
 
 	it('emits a patch turning rotateWithShape off', () => {
-		const panel = createPanel({ shadowColor: '#000000' } as ShapeStyle);
+		const fields = createFields({ shadowColor: '#000000' });
+		const out = captured(fields);
+		fields['onField']('outerShadow', 'rotateWithShape', checkboxEvent(false));
+		expect(out[0]?.shadowRotateWithShape).toBeFalsy();
+	});
+
+	it('enables an effect from its toggle and clamps a typed number', () => {
+		const fields = createFields({});
+		const out = captured(fields);
+		fields['onToggle']('glow', checkboxEvent(true));
+		expect(out[0]).toStrictEqual({ glowColor: '#ffff00', glowRadius: 6, glowOpacity: 0.75 });
+		fields['onField']('glow', 'radius', inputEvent('number', '400'));
+		expect(out[1]?.glowRadius).toBe(96);
+		fields['onField']('glow', 'radius', inputEvent('number', ''));
+		expect(out).toHaveLength(2);
+	});
+
+	it('pushes a committed colour into RecentColorsService', () => {
+		const pushed: string[] = [];
+		const fields = createFields({ shadowColor: '#000000' }, { push: (hex) => pushed.push(hex) });
+		captured(fields);
+		fields['onColor']('outerShadow', 'color', inputEvent('color', '#ff00ff'));
+		expect(pushed).toStrictEqual(['#ff00ff']);
+	});
+
+	it('does not throw when RecentColorsService is unavailable (standalone unit test)', () => {
+		const fields = createFields({});
+		captured(fields);
+		expect(() => fields['onColor']('glow', 'color', inputEvent('color', '#123456'))).not.toThrow();
+	});
+});
+
+describe('effectsPanelComponent', () => {
+	it('merges an effect patch into the element shape style', () => {
+		const panel = runInInjectionContext(Injector.create({ providers: [] }), () => {
+			return new EffectsPanelComponent();
+		});
+		const element = {
+			type: 'shape',
+			id: 'shape-1',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			shapeStyle: { fillColor: '#abcdef' },
+		} as PptxElement;
+		Object.assign(panel, { element: signal(element) as unknown as InputSignal<PptxElement> });
 		let emitted: Partial<PptxElement> | undefined;
 		vi.spyOn(panel.patch as OutputEmitterRef<Partial<PptxElement>>, 'emit').mockImplementation(
 			(value) => {
 				emitted = value;
 			},
 		);
-		panel['onOuterShadowRotateWithShapeToggle'](checkboxChange(false));
-		expect((emitted?.shapeStyle as ShapeStyle | undefined)?.shadowRotateWithShape).toBeFalsy();
-	});
-});
-
-describe('effectsPanelComponent recent colours (wave-4 B6)', () => {
-	it('pushes a committed outer-shadow colour into RecentColorsService', () => {
-		const pushed: string[] = [];
-		const panel = createPanel({ shadowColor: '#000000' } as ShapeStyle, {
-			push: (hex) => pushed.push(hex),
-		});
-		vi.spyOn(panel.patch as OutputEmitterRef<Partial<PptxElement>>, 'emit').mockImplementation(
-			() => {},
-		);
-		panel['onOuterShadowField']('color', colorChange('#ff00ff'));
-		expect(pushed).toStrictEqual(['#ff00ff']);
-	});
-
-	it('pushes a committed glow colour into RecentColorsService', () => {
-		const pushed: string[] = [];
-		const panel = createPanel({} as ShapeStyle, { push: (hex) => pushed.push(hex) });
-		vi.spyOn(panel.patch as OutputEmitterRef<Partial<PptxElement>>, 'emit').mockImplementation(
-			() => {},
-		);
-		panel['onGlowField']('color', colorChange('#00ffaa'));
-		expect(pushed).toStrictEqual(['#00ffaa']);
-	});
-
-	it('does not throw when RecentColorsService is unavailable (standalone unit test)', () => {
-		const panel = createPanel({} as ShapeStyle);
-		vi.spyOn(panel.patch as OutputEmitterRef<Partial<PptxElement>>, 'emit').mockImplementation(
-			() => {},
-		);
-		expect(() => panel['onInnerShadowField']('color', colorChange('#123456'))).not.toThrow();
+		expect(panel['shapeStyle']()).toStrictEqual({ fillColor: '#abcdef' });
+		panel['onEffectPatch']({ softEdgeRadius: 4 });
+		expect(emitted).toStrictEqual({ shapeStyle: { fillColor: '#abcdef', softEdgeRadius: 4 } });
 	});
 });

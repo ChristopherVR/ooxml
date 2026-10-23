@@ -1,18 +1,20 @@
+import { SHAPE_EFFECT_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef, ShapeStyle, StrokeDashType } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { STROKE_DASH_OPTIONS, DEFAULT_STROKE_COLOR } from '../../constants';
 import { normalizeHexColor } from '../../utils';
-import { WebSelect, WebCheckbox } from '../WebControls';
+import { WebSelect } from '../WebControls';
 import {
 	COMPOUND_LINE_OPTIONS,
 	LINE_JOIN_OPTIONS,
 	LINE_CAP_OPTIONS,
 	getCompoundLinePreviewStyle,
 } from './fill-stroke-options';
-import { NUM, RNG, DIS, LBL, COL2, SEL, safeNum, EFFECT_CONFIGS } from './FillStrokeHelpers';
-import { SelectRow, ColorPickerRow, EffectField } from './FillStrokeSubComponents';
+import { NUM, RNG, DIS, LBL, COL2, SEL, safeNum } from './FillStrokeHelpers';
+import { SelectRow, ColorPickerRow } from './FillStrokeSubComponents';
+import { InspectorFields } from './InspectorFields';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -145,27 +147,13 @@ export function StrokeEffectsSection({
 				</div>
 			</label>
 
-			{/* Effects: Shadow, Glow, Soft Edge, Reflection, Blur, Bevel/3D */}
-			{EFFECT_CONFIGS.map((cfg) => {
-				const on = cfg.isOn(style);
-				return (
-					<React.Fragment key={cfg.label}>
-						<label className={`inline-flex items-center gap-2 text-foreground ${COL2}`}>
-							<WebCheckbox
-								checked={on}
-								onChange={(e) => {
-									onUpdateShapeStyle(e.target.checked ? cfg.onEnable(style) : cfg.onDisable(style));
-								}}
-							/>
-							{cfg.i18nKey ? t(cfg.i18nKey) : cfg.label}
-						</label>
-						{on &&
-							cfg.fields.map((f) => (
-								<EffectField key={f.key} field={f} style={style} onUpdate={onUpdateShapeStyle} />
-							))}
-					</React.Fragment>
-				);
-			})}
+			{/* Effects: the shared Format Shape > Effects sections (shadows, glow,
+			    soft edge, reflection, blur, bevel), drawn by the generic renderer. */}
+			<InspectorFields
+				sections={SHAPE_EFFECT_SECTIONS}
+				target={style}
+				onPatch={onUpdateShapeStyle}
+			/>
 
 			{/* Line Join / Cap */}
 			<SelectRow
