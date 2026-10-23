@@ -15,7 +15,7 @@ import {
 	translationsZhCN,
 } from '../../../../../../viewers/pptx/packages/locales/src';
 import { translationsEn } from '../../i18n';
-import { BUILTIN_SMARTART_LAYOUTS } from '../../../../../core/pptx/core/utils/smartart-builtin-layouts/catalog';
+import { BUILTIN_SMARTART_LAYOUTS } from '../../../../../core/diagram/builtin/catalog';
 import { smartArtLayoutNameKey } from './smartart-layouts-gallery';
 import { galleryItemLabel } from './gallery-view';
 import { buildRibbonGallery, RIBBON_GALLERY_IDS } from './gallery-registry';
