@@ -1,6 +1,7 @@
 import {
 	addGradientStopPatch,
 	applyStyleToSelectedSegments,
+	applyTextStyleUpdate,
 	applyUniformCellPaddingPatch,
 	autoFitModePatch,
 	buildOleObjectNamePatch,
@@ -14,7 +15,6 @@ import {
 	removeGradientStopPatch,
 	tableInspectorPatch,
 	textAdvancedPatch,
-	textStylePatch,
 	textWrapPatch,
 	updateGradientStopPatch,
 	vAlignPatch,
@@ -152,7 +152,10 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 						...(liveText !== undefined ? { text: liveText } : {}),
 					};
 				}
-				return textStylePatch(el, patch);
+				// No selection: the whole text, body AND every run, the ribbon's update.
+				// A run is painted from its own style, so a body-only change to a run
+				// property (colour, outline, shadow, glow) never reached the slide.
+				return applyTextStyleUpdate(el, patch, null).patch;
 			}),
 
 		setFillOpacity: (opacity) =>
