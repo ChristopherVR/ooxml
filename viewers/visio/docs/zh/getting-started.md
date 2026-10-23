@@ -111,11 +111,11 @@ bun run dev
 
 ## 属性与事件 {#properties-and-events}
 
-| 接口     | 当前约定                                                                                                                                                               |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
-| 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+| 接口     | 当前约定                                                                                                                                                                               |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 属性     | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| 事件     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
+| 生命周期 | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 
 `canEdit` 是编辑权限（查看器默认可编辑；`false` 表示只读），`collaboration` 在房间中共享已打开的图纸，`document-change` 的 `kind` 取值为 `edit`、`undo`、`redo`、`remote` 或 `save`。宿主保存 `exportVsdx()` 返回的字节后，调用 `controller.markClean()` 清除“已更改”标记。若要用查看器的各个部件组合自己的界面，请参阅[构建模块](/building-blocks)；若要共享图纸，请参阅[协作](/zh/collaboration)。
 

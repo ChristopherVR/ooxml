@@ -34,10 +34,10 @@ Modulzuständigkeiten stehen in der [Architektur](/de/architecture).
 
 Jedes Binding akzeptiert dieselben Eigenschaften und meldet dieselben Ereignisse (der Vertrag sind `ViewerProperties` und `ViewerEvents` in `ooxml-ui/visio`; die [Bindings](/bindings) listen die nativen Formen auf).
 
-| Oberfläche    | Vertrag                                                                                                                                                                |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Oberfläche    | Vertrag                                                                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eigenschaften | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Ereignisse    | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (boolean) ist die Bearbeitungsberechtigung. Der vollständige Viewer ist standardmäßig bearbeitbar, und `canEdit: false` macht ihn schreibgeschützt; die [Bausteine](/building-blocks) sind schreibgeschützt, bis der Host `true` übergibt. Eine Zeichnung ohne Paket-Bytes (ein als `document` übergebenes Modell, eine ältere `.vsd`) ist unabhängig von `canEdit` schreibgeschützt.
 - `document-change` liefert `{ document, dirty, kind }`. `kind` ist `edit`, `undo` oder `redo` für Änderungen dieses Fensters, `remote`, wenn die Änderung eines Mitwirkenden angewendet wurde, und `save` nach `markClean()`.

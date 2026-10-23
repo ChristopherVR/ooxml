@@ -111,11 +111,11 @@ Se incrustan el contenido de fondo compatible y las imágenes rasterizadas valid
 
 ## Propiedades y eventos {#properties-and-events}
 
-| Superficie    | Contrato actual                                                                                                                                                        |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propiedades   | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Eventos       | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
-| Ciclo de vida | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+| Superficie    | Contrato actual                                                                                                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Propiedades   | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Eventos       | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
+| Ciclo de vida | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 
 `canEdit` es el permiso de edición (el visor es editable por defecto; `false` lo deja en solo lectura), `collaboration` comparte el dibujo abierto en una sala y `document-change` informa `kind` como `edit`, `undo`, `redo`, `remote` o `save`. Cuando el anfitrión ha guardado los bytes de `exportVsdx()`, `controller.markClean()` borra el indicador de cambios. Para componer su propia interfaz con las piezas del visor, consulte los [bloques de construcción](/building-blocks); para compartir un dibujo, consulte [Colaboración](/es/collaboration).
 

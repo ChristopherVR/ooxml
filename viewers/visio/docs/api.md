@@ -34,15 +34,17 @@ Every binding accepts the same properties and reports the same events (the contr
 `ViewerProperties` and `ViewerEvents` in `ooxml-ui/visio`; [bindings](bindings.md) lists the native
 forms).
 
-| Surface    | Contract                                                                                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Surface    | Contract                                                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (boolean) is the editing permission. The full viewer is editable by default and
   `canEdit: false` makes it read-only; the [building blocks](building-blocks.md) are read-only until
   the host passes `true`. A drawing without package bytes (a model passed as `document`, a legacy
   `.vsd`) is read-only whatever `canEdit` says.
+- `readOnly` (boolean) is a restriction of its own: `true` makes the drawing read-only and wins over
+  `canEdit`; `false` (or leaving it out after `true`) lifts only that restriction.
 - `document-change` carries `{ document, dirty, kind }`. `kind` is `edit`, `undo` or `redo` for this
   window's own changes, `remote` when a collaborator's change was applied, and `save` after
   `markClean()`.

@@ -18,6 +18,8 @@ and marquee selection run inside the same shared web component for all bindings.
 
 Import a specific framework package to avoid loading unrelated framework runtimes. The source of the adapters is `packages/bindings` in the repository, and its README lists the checks that guard them.
 
+The wiring is shared. The contract (`VIEWER_CONTRACT`, the property and event keys and the handle members) and the revision-aware patch forwarding of `mountFrameworkViewer` live in `packages/bindings/src/common.ts`. The generic binding machinery (the deferred handle, prop picking, and the React and Vue component factories) is the `ooxml-ui/bindings` kit. React and Vue are built from those factories; Angular installs its handle members from `VIEWER_CONTRACT`; Svelte is a component; Solid is a JSX component that mounts the shared element directly. `packages/bindings/tests/contract-parity.test.ts` checks every adapter against the contract: the same properties, every event through the callback map and the native output, and every handle member.
+
 ## Shared contract
 
 All adapters accept the same properties:
@@ -27,11 +29,13 @@ All adapters accept the same properties:
 - `zoom`: scale, where `1` means 100%
 - `showToolbar`: toolbar visibility
 - `canEdit`: editing permission. The full viewer defaults to editable; `false` makes it read-only (selection, search, zoom and export keep working). The building blocks default to read-only instead, see [building blocks](building-blocks.md)
+- `readOnly`: a restriction of its own. `true` makes the drawing read-only and wins over `canEdit`; `false` or omitted lifts only that restriction
 - `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](api.md#ribbon-add-in-tabs))
 - `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](collaboration.md))
+- `storage` and `customization`: host-owned save and open, and the shared customization object (see [Customization](api.md#customization) and [Host-owned storage](api.md#host-owned-storage-and-file-commands))
 - `events`: typed callback map using literal event names
 
-The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
+The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` and `file-command`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
 
 Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
 
@@ -60,7 +64,7 @@ Angular exposes native inputs and outputs. Add the standalone component to the a
 <visio-viewer-host [document]="diagram" (documentError)="reportError($event)" />
 ```
 
-Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn` and `collaborationChange`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
+Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn`, `collaborationChange` and `fileCommand`. `fileCommand` only reports the command; to cancel one, an Angular host returns `false` from the `events['file-command']` callback. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
 
 For large immutable document models, use Vue `shallowRef`/`markRaw` and Svelte `$state.raw` rather than deeply proxying a newly constructed options object on every update. Rewrapping a document in a new reactive proxy changes its identity and requests an external replacement. In-place mutation is not supported.
 

@@ -111,11 +111,11 @@ Supported background content and validated raster images are embedded. Fonts are
 
 ## Properties and events
 
-| Surface    | Current contract                                                                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
-| Lifecycle  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                 |
+| Surface    | Current contract                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Events     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
+| Lifecycle  | `update`, `load`, `fit`, `exportSvg`, `createPrintSnapshot`, `replacePlainText`, `undo`, `redo`, `cancelEdit`, `exportVsdx`, `destroy`                                                 |
 
 `canEdit` is the editing permission (editable by default in the viewer; `false` is read-only), `collaboration` shares the open drawing in a room, and `document-change` reports `kind` `edit`, `undo`, `redo`, `remote` or `save`. After the host has persisted the bytes from `exportVsdx()`, `controller.markClean()` clears the dirty flag. To compose your own UI from the viewer's parts see the [building blocks](/building-blocks), and to share a drawing see [collaboration](/collaboration).
 

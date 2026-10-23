@@ -9,7 +9,9 @@ Six thin native integrations use one browser element and one `mountViewer` imple
 - Svelte 5: `src/VisioViewer.svelte`, default `VisioViewer`
 - Solid: `src/solid.tsx`, `VisioViewer`
 
-This package is private source inside the repository. It is not a published, standalone npm artifact. It imports the canonical viewer through relative source paths; a distribution build and packed-consumer verification are required before publication. Import a specific framework entry point to avoid loading unrelated framework runtimes.
+This package is private source inside the repository and is never published itself. `bun run build:packages` bundles each entry point into its framework distribution (`packages/{react,vue,angular,svelte,solid,vanilla}`), and those are what is published; `bun run test:packages` checks the packed tarballs in a clean consumer. Import a specific framework entry point to avoid loading unrelated framework runtimes.
+
+The contract (`VIEWER_CONTRACT` and the property and event keys) and the revision-aware forwarding (`mountFrameworkViewer`) are in `src/common.ts`. React and Vue are built from the `ooxml-ui/bindings` factories, Angular installs its handle members from the contract, and Solid mounts the element with JSX. `tests/contract-parity.test.ts` checks every adapter against the contract.
 
 ## Shared contract
 
@@ -26,11 +28,13 @@ All adapters accept the same properties:
 - `zoom`: scale, where `1` means 100%
 - `showToolbar`: toolbar visibility
 - `canEdit`: editing permission. The full viewer defaults to editable; `false` makes it read-only (selection, search, zoom and export keep working). The building blocks default to read-only instead, see [building blocks](../../docs/building-blocks.md)
+- `readOnly`: a restriction of its own. `true` makes the drawing read-only and wins over `canEdit`; `false` or omitted lifts only that restriction
 - `ribbonAddIns`: tabs the host adds after Help (see [Ribbon add-in tabs](../../docs/api.md#ribbon-add-in-tabs))
 - `collaboration`: shares the open drawing in a room while set, `null` leaves it (see [collaboration](../../docs/collaboration.md))
+- `storage` and `customization`: host-owned save and open, and the shared customization object (see [Customization](../../docs/api.md#customization))
 - `events`: typed callback map using literal event names
 
-The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in` and `collaboration-change`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
+The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` and `file-command`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
 
 Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
 
@@ -59,7 +63,7 @@ Angular exposes native inputs and outputs. Add the standalone component to the a
 <visio-viewer-host [document]="diagram" (documentError)="reportError($event)" />
 ```
 
-Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn` and `collaborationChange`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
+Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect`, `selectionChange`, `ribbonAddIn`, `collaborationChange` and `fileCommand` (notification only; cancel through `events['file-command']`). The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
 
 For large immutable document models, use Vue `shallowRef`/`markRaw` and Svelte `$state.raw` rather than deeply proxying a newly constructed options object on every update. Rewrapping a document in a new reactive proxy changes its identity and requests an external replacement. In-place mutation is not supported.
 
@@ -122,6 +126,8 @@ bun run check:bindings   # runs `bun run --cwd packages/bindings check`
 
 Checks include TypeScript, `svelte-check`, native runtime lifecycle tests and real-element integration:
 
+- Contract parity: every adapter receives every property, reports every event through the callback map and the native output, and exposes every handle member
+
 - React StrictMode mount, cleanup and remount
 - Native state subscription replacement, conditional remount and stale-controller isolation
 - Native prop diffing preserves imperative documents/user zoom across unrelated updates
@@ -139,3 +145,5 @@ The focused lifecycle tests mock only the shared mount to isolate framework wiri
 ## Editing scope
 
 Editing is experimental and source-backed. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. `applyEdits()` forwards atomic geometry, text, formatting and ordering commands to the shared core. Plain-text replacement rejects master-linked text, rich text and fields; other commands have their own admission rules. Signed packages and macro content remain unsupported. The shared Home ribbon supports multi-selection formatting, alignment/distribution and deletion. History is bounded. Native Visio save/reopen evidence covers specific formatting and arrangement captures, not general fidelity; see `docs/verification.md` and `docs/parity.md` for current limits. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo`, `redo`, `remote` or `save`. Unrelated framework rerenders must not replace an edited model with stale props.
+
+A chart inserted with Insert > Chart is an embedded workbook object, and its shortcut menu offers Edit Data and Format Chart (the shared `office-ui-chart-data-sheet` and `office-ui-chart-format-pane`). Effects, 3-D and text formatting are not editable there; the limits are in `docs/parity.md`.

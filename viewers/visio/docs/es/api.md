@@ -32,10 +32,10 @@ al mismo estado y a los mismos eventos. `renderPage` es el puerto del renderizad
 
 Todos los bindings aceptan las mismas propiedades y notifican los mismos eventos (el contrato son `ViewerProperties` y `ViewerEvents` en `ooxml-ui/visio`; [bindings](/bindings) lista las formas nativas).
 
-| Superficie  | Contrato                                                                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propiedades | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `ribbonAddIns`, `collaboration`                                                                             |
-| Eventos     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change` |
+| Superficie  | Contrato                                                                                                                                                                               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Propiedades | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Eventos     | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (booleano) es el permiso de edición. El visor completo es editable por defecto y `canEdit: false` lo deja en solo lectura; los [bloques de construcción](/building-blocks) son de solo lectura hasta que el anfitrión pase `true`. Un dibujo sin bytes de paquete (un modelo pasado como `document`, un `.vsd` heredado) es de solo lectura sea cual sea `canEdit`.
 - `document-change` entrega `{ document, dirty, kind }`. `kind` es `edit`, `undo` o `redo` para los cambios de esta ventana, `remote` cuando se aplicó el cambio de un colaborador y `save` tras `markClean()`.
