@@ -107,8 +107,8 @@ export class OfficeUiSmartArtTextPane extends OfficeElement {
 	static override properties = {
 		closable: { type: Boolean },
 		selected: { type: String },
-		disabled: { type: Boolean, reflect: true },
-		tools: { type: Boolean, reflect: true },
+		disabled: { type: Boolean },
+		tools: { type: Boolean },
 		appendDisabled: { type: Boolean, attribute: 'append-disabled' },
 	};
 	/** Shows the close button. */

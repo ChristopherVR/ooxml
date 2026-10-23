@@ -35,6 +35,12 @@ const inputs = (pane: HTMLElement) => [
 ];
 
 describe('pptx-ui-smartart-text-pane', () => {
+	it('can be created with createElement (a constructor may not add attributes)', () => {
+		const pane = document.createElement('pptx-ui-smartart-text-pane');
+		expect(pane.getAttributeNames()).toEqual([]);
+		expect(pane.tools).toBe(true);
+	});
+
 	it('shows the diagram with the pptx labels and tools', () => {
 		const { pane } = mount();
 		expect(pane.shadowRoot!.querySelector('.title')!.textContent).toBe(
