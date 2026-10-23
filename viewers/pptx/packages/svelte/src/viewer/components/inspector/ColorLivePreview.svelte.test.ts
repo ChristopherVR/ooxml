@@ -172,6 +172,10 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		fire(input(target), 'change', '#990000');
 
 		expect(color(currentEl(editor))).toBe('#990000');
+		if (control !== 'glow') {
+			// A native pick is a custom colour: the theme ref goes.
+			expect(ref(currentEl(editor))).toBeUndefined();
+		}
 		expect(editor.dirty).toBeTruthy();
 		expect(editor.mruColors).toStrictEqual(['#990000']);
 
