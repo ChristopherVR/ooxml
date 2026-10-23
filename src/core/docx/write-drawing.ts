@@ -6,6 +6,7 @@ import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
+import { buildChartDrawing } from './write-chart-drawing';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -258,6 +259,26 @@ export function createImageRun(
 	if (base && oldDrawing && image.textBoxEditable && base.textBoxEditable) {
 		patchTextBox(doc, oldDrawing, image, base);
 		clearNonProperties(node, oldContainer);
+		return node;
+	}
+	// An edited chart keeps its drawing (the part is saved by chart-save.ts); only its size can change.
+	if (
+		base?.chart &&
+		oldDrawing &&
+		image.chart?.partName &&
+		image.chart.partName === base.chart.partName &&
+		image.chart.relId === base.chart.relId
+	) {
+		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
+			updateExtent(oldDrawing, image.widthPx, image.heightPx);
+		clearNonProperties(node, oldContainer);
+		return node;
+	}
+	if (!base && image.chart?.chartSpace && !image.chart.relId && !image.chart.partName) {
+		if (!allocator) throw new Error('Cannot insert a chart without a relationship allocator.');
+		const relId = allocator.addChart(image.chart.chartSpace);
+		clearNonProperties(node);
+		node.appendChild(buildChartDrawing(doc, image, relId, allocator.docPrIds.next()));
 		return node;
 	}
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.
