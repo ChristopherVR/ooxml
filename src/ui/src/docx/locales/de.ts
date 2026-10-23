@@ -10,7 +10,6 @@ import { deObjects } from './objects';
 import { deShapes } from './shapes';
 import { deSmartArt } from './smartart';
 import { deCharts } from './charts';
-import { deChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { deApp } from './de-app';
 import { deTableProperties } from './table-properties';
@@ -32,5 +31,4 @@ export const de: LocaleStrings = {
 	...deShapes,
 	...deSmartArt,
 	...deCharts,
-	...deChartFormat,
 };

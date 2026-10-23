@@ -20,6 +20,7 @@ import {
 import { chartFormatFieldIntent } from './format-pane-intent';
 import { buildChartFormatModel } from './format-pane-model';
 import { chartSpaceFormatSource } from './format-pane-space';
+import { chartFormatTranslator } from './format-pane-translate';
 import type {
 	ChartFormatFieldValue,
 	ChartFormatPaneMode,
@@ -62,8 +63,9 @@ const echo: ChartFormatTranslate = (key) => key;
  * `ChartSpace`; other products map it onto their own edits), then repaints from the source the
  * host sets back. The picker fires `office-chart-format-target`, Close and Escape
  * `office-chart-format-close`. A source with a `slots.fill` name leaves that section to the host's
- * light-DOM child with the same `slot`. `translateLabel(key, params, fallback)` translates captions
- * (`chartFormat.*` keys with English fallbacks); `disabled` makes every control read-only. It lays
+ * light-DOM child with the same `slot`. Captions (`chartFormat.*` keys) come from the pane's own
+ * dictionary for `locale`; `translateLabel(key, params, fallback)` overrides the ones a product
+ * words differently. `disabled` makes every control read-only. It lays
  * out in flow; a product docks it.
  */
 export class OfficeUiChartFormatPane extends OfficeElement {
@@ -84,6 +86,7 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 		'theme',
 		'target',
 		'translateLabel',
+		'locale',
 	];
 	/** Every control is read-only and nothing is emitted. */
 	declare disabled: boolean;
@@ -93,6 +96,9 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	private themeValue: DrawingColorTheme | undefined;
 	private targetValue = 'chartArea';
 	private translator: ChartFormatTranslate = echo;
+	private localeValue = 'en';
+	/** The translator captions go through: the product's, then the pane's own dictionary. */
+	private captions: ChartFormatTranslate = chartFormatTranslator('en');
 	private paneTab: ChartFormatTabId = 'fillLine';
 	private paneMode: ChartFormatPaneMode = 'chart';
 	private collapsed = new Set<string>();
@@ -159,7 +165,20 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	}
 	set translateLabel(value: ChartFormatTranslate | undefined) {
 		this.translator = value ?? echo;
+		this.captions = chartFormatTranslator(this.localeValue, this.translator);
 		this.requestUpdate('translateLabel');
+	}
+	/**
+	 * The display locale of the pane's own captions (`en`, `fr`, `de`, `es`, `zh-CN`; any BCP 47
+	 * tag maps onto them). `translateLabel` still wins where it knows a key.
+	 */
+	get locale(): string {
+		return this.localeValue;
+	}
+	set locale(value: string | undefined) {
+		this.localeValue = value || 'en';
+		this.captions = chartFormatTranslator(this.localeValue, this.translator);
+		this.requestUpdate('locale');
 	}
 
 	private themeOptions() {
@@ -171,9 +190,7 @@ export class OfficeUiChartFormatPane extends OfficeElement {
 	}
 
 	protected tr = (text: ChartFormatText): string =>
-		translateChartFormatText(text, (key, params, fallback) =>
-			this.translator(key, params, fallback),
-		);
+		translateChartFormatText(text, (key, params, fallback) => this.captions(key, params, fallback));
 
 	private label(key: string, fallback: string): string {
 		return this.tr({ key: `chartFormat.${key}`, fallback });

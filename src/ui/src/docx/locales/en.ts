@@ -2,7 +2,6 @@ import { enObjects } from './objects';
 import { enShapes } from './shapes';
 import { enSmartArt } from './smartart';
 import { enCharts } from './charts';
-import { enChartFormat } from './chart-format';
 import { enOptions } from './options';
 import { enColumns } from './columns';
 import { enMultilevelList } from './multilevel-list';
@@ -35,7 +34,6 @@ export const en = {
 	...enShapes,
 	...enSmartArt,
 	...enCharts,
-	...enChartFormat,
 } as const;
 
 export type LocalizationKey = keyof typeof en;

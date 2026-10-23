@@ -10,7 +10,6 @@ import { esObjects } from './objects';
 import { esShapes } from './shapes';
 import { esSmartArt } from './smartart';
 import { esCharts } from './charts';
-import { esChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
@@ -32,5 +31,4 @@ export const es: LocaleStrings = {
 	...esShapes,
 	...esSmartArt,
 	...esCharts,
-	...esChartFormat,
 };

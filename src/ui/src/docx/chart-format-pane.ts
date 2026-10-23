@@ -16,7 +16,7 @@ import {
 } from '../chart/format-pane';
 import { editSelectedChart } from './chart-commands';
 import { focusView } from './focus-view';
-import { translate, type EditorLocale, type LocalizationKey } from './localization';
+import type { EditorLocale } from './localization';
 
 export interface ChartFormatPaneHost {
 	view(): EditorView | undefined;
@@ -62,10 +62,11 @@ export function createChartFormatPane(host: ChartFormatPaneHost): DocxChartForma
 			close();
 			return;
 		}
+		// The pane's captions come from its own dictionary (`chart/format-pane-locales`).
 		const nextLocale = host.locale();
 		if (nextLocale !== locale) {
 			locale = nextLocale;
-			element.translateLabel = (key) => translate(nextLocale, key as LocalizationKey);
+			element.locale = nextLocale;
 		}
 		const nextTheme = host.theme();
 		if (nextTheme !== theme) {

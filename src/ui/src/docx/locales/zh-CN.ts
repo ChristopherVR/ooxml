@@ -10,7 +10,6 @@ import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
 import { zhSmartArt } from './smartart';
 import { zhCharts } from './charts';
-import { zhCNChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
 import { zhTableProperties } from './table-properties';
@@ -32,5 +31,4 @@ export const zhCN: LocaleStrings = {
 	...zhShapes,
 	...zhSmartArt,
 	...zhCharts,
-	...zhCNChartFormat,
 };

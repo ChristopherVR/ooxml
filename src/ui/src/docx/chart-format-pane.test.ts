@@ -18,7 +18,7 @@ import { createChartFormatPane } from './chart-format-pane';
 import { computeMenuItems, menuStateFromView } from './context-menu-items';
 import { resizePicture } from './image-media';
 import type { EditorLocale } from './localization';
-import { strings } from './localization-strings';
+import { CHART_FORMAT_STRINGS } from '../chart/format-pane-locales/index';
 import { docToModel, modelToDoc } from './model-adapter';
 
 afterEach(() => {
@@ -112,7 +112,7 @@ describe('Word chart Format pane', () => {
 		expect(pane.isOpen).toBe(false);
 	});
 
-	it('translates every caption it shows from the docx dictionary', () => {
+	it('shows every caption from the pane dictionary in the editor locale', () => {
 		const { view } = editorWithChart();
 		const pane = paneFor(view, 'fr');
 		const seen = new Set<string>();
@@ -133,7 +133,7 @@ describe('Word chart Format pane', () => {
 			))
 				tab.click();
 		}
-		const missing = [...seen].filter((key) => !(key in strings.fr));
+		const missing = [...seen].filter((key) => !(key in CHART_FORMAT_STRINGS.fr));
 		expect(missing).toEqual([]);
 		expect(pane.element.getAttribute('aria-label')).not.toMatch(/^Format/);
 	});
