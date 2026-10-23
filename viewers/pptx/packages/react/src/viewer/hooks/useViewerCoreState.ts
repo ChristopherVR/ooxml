@@ -51,6 +51,7 @@ import type { CanvasGestures } from './canvas-gestures';
 import { useDerivedElementState } from './useDerivedElementState';
 import { useEditPointsState } from './useEditPointsState';
 import { useInlineEditingState } from './useInlineEditingState';
+import { useSlideChangeSelection } from './useSlideChangeSelection';
 import { useSlideState } from './useSlideState';
 import type { UseViewerCoreStateInput, ViewerCoreState } from './viewer-core-state-types';
 
@@ -116,6 +117,12 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 	const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+	// A selection made in the same step as a slide change (Find's), kept across that change.
+	const slideChangeSelection = useSlideChangeSelection({
+		setActiveSlideIndex,
+		setSelectedElementId,
+		setSelectedElementIds,
+	});
 	const [isDirty, setIsDirty] = useState(false);
 	// The autosave engine, set by useAutosave once it exists (it is built later).
 	const autosaveDraftSinkRef = useRef<InlineTextDraftSink | null>(null);
@@ -230,6 +237,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		setSelectedElementId,
 		selectedElementIds,
 		setSelectedElementIds,
+		...slideChangeSelection,
 		isDirty,
 		setIsDirty,
 		editTemplateMode,

@@ -145,6 +145,7 @@ import { useResizablePanels } from './hooks/useResizablePanels';
 import { useRibbonGalleryCommands } from './hooks/useRibbonGalleryCommands';
 import { useRunProgramNoticesState } from './hooks/useRunProgramNoticesState';
 import { useShapeFormatCommands } from './hooks/useShapeFormatCommands';
+import { useClearSelectionOnSlideChange } from './hooks/useSlideChangeSelection';
 import { useTouchGestures } from './hooks/useTouchGestures';
 import { useViewerCustomization } from './hooks/useViewerCustomization';
 import { useViewerDialogs } from './hooks/useViewerDialogs';
@@ -878,13 +879,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		});
 
 		// ── Editor operations (element ops, canvas, insert, etc.) ─────
-		// ── Clear selection on slide change ──────────────────────────
-		useEffect(() => {
-			state.setSelectedElementId(null);
-			state.setSelectedElementIds([]);
-			state.setInlineEditingElementId(null);
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [activeSlideIndex]);
+		// ── Clear selection on slide change, unless it was made for that slide ──
+		useClearSelectionOnSlideChange(state, activeSlideIndex);
 
 		// ── Reset canvas state when entering presentation mode ───────
 		// A selection carried into present mode leaks its outline (and, with the

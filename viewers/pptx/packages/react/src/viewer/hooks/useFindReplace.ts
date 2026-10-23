@@ -15,8 +15,11 @@ export type { FindResult } from 'ooxml-ui/pptx';
 interface UseFindReplaceInput {
 	slides: PptxSlide[];
 	mode: string;
-	onSetActiveSlideIndex: (index: number) => void;
-	onSetSelectedElementId: (id: string | null) => void;
+	/**
+	 * Go to a match's slide and select its element there (null for a speaker-notes match), in one
+	 * step: the viewer's `showSlideSelection`, which keeps the selection across the slide change.
+	 */
+	onShowMatch: (slideIndex: number, elementId: string | null) => void;
 	onUpdateSlides: (updater: (slides: PptxSlide[]) => PptxSlide[]) => void;
 	onMarkDirty: () => void;
 	/** Host keyboard customisation (disabled / remapped Find shortcuts). */
@@ -49,8 +52,7 @@ interface UseFindReplaceResult {
 export function useFindReplace({
 	slides,
 	mode,
-	onSetActiveSlideIndex,
-	onSetSelectedElementId,
+	onShowMatch,
 	onUpdateSlides,
 	onMarkDirty,
 	keyboard,
@@ -59,20 +61,8 @@ export function useFindReplace({
 	const [session, setSession] = useState<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
 	// The actions run long after the render that made them, so they read the latest slides and
 	// callbacks, and the store reads a ref rather than this render's `session`.
-	const latest = useRef({
-		slides,
-		onSetActiveSlideIndex,
-		onSetSelectedElementId,
-		onUpdateSlides,
-		onMarkDirty,
-	});
-	latest.current = {
-		slides,
-		onSetActiveSlideIndex,
-		onSetSelectedElementId,
-		onUpdateSlides,
-		onMarkDirty,
-	};
+	const latest = useRef({ slides, onShowMatch, onUpdateSlides, onMarkDirty });
+	latest.current = { slides, onShowMatch, onUpdateSlides, onMarkDirty };
 	const latestSession = useRef(session);
 	// One set of actions for the hook's lifetime (they read everything through the refs).
 	const [actions] = useState(() =>
@@ -90,10 +80,7 @@ export function useFindReplace({
 					latest.current.onUpdateSlides(() => next as PptxSlide[]);
 					latest.current.onMarkDirty();
 				},
-				navigate: ({ slideIndex, elementId }) => {
-					latest.current.onSetActiveSlideIndex(slideIndex);
-					latest.current.onSetSelectedElementId(elementId);
-				},
+				navigate: ({ slideIndex, elementId }) => latest.current.onShowMatch(slideIndex, elementId),
 			},
 		),
 	);

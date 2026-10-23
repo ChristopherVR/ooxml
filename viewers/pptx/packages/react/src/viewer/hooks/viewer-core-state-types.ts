@@ -39,6 +39,7 @@ import type { ViewerMode } from '../types-core';
 import type { CanvasGestures } from './canvas-gestures';
 import type { EditPointsModeState } from './useEditPointsState';
 import type { InlineEditingState } from './useInlineEditingState';
+import type { SlideChangeSelection } from './useSlideChangeSelection';
 
 /* ------------------------------------------------------------------ */
 /*  Input                                                             */
@@ -66,7 +67,8 @@ export interface UseViewerCoreStateInput {
  * that comprises the core viewer state. It is merged with {@link ViewerUIState}
  * inside {@link useViewerState} to produce the unified {@link ViewerState}.
  */
-export interface ViewerCoreState extends InlineEditingState, EditPointsModeState {
+export interface ViewerCoreState
+	extends InlineEditingState, EditPointsModeState, SlideChangeSelection {
 	// ── Refs ──────────────────────────────────────────────────────────
 
 	/** Ref to the outermost container `<div>` wrapping the viewer. */

@@ -59,8 +59,7 @@ function mount(initial: PptxSlide[]) {
 	let api!: Api;
 	let current = initial;
 	let replaceSlides!: (next: PptxSlide[]) => void;
-	const onSetActiveSlideIndex = vi.fn<(index: number) => void>();
-	const onSetSelectedElementId = vi.fn<(id: string | null) => void>();
+	const onShowMatch = vi.fn<(slideIndex: number, elementId: string | null) => void>();
 	function Harness() {
 		const [slides, setSlides] = useState(initial);
 		current = slides;
@@ -68,8 +67,7 @@ function mount(initial: PptxSlide[]) {
 		api = useFindReplace({
 			slides,
 			mode: 'edit',
-			onSetActiveSlideIndex,
-			onSetSelectedElementId,
+			onShowMatch,
 			onUpdateSlides: (updater) => setSlides((prev) => updater(prev)),
 			onMarkDirty: () => {},
 		});
@@ -83,8 +81,7 @@ function mount(initial: PptxSlide[]) {
 		slides: () => current,
 		/** An ordinary edit, made outside the find bar. */
 		edit: (next: PptxSlide[]) => act(() => replaceSlides(next)),
-		onSetActiveSlideIndex,
-		onSetSelectedElementId,
+		onShowMatch,
 	};
 }
 
@@ -156,8 +153,7 @@ describe('useFindReplace', () => {
 		// "2 of 2": the match after the replaced one, not back to the first.
 		expect(h.api().findResults).toHaveLength(2);
 		expect(h.api().findResultIndex).toBe(1);
-		expect(h.onSetActiveSlideIndex).toHaveBeenLastCalledWith(1);
-		expect(h.onSetSelectedElementId).toHaveBeenLastCalledWith('b-t');
+		expect(h.onShowMatch).toHaveBeenLastCalledWith(1, 'b-t');
 	});
 
 	it('replace refuses a match the deck no longer has where the search found it', () => {
@@ -178,7 +174,6 @@ describe('useFindReplace', () => {
 		});
 		search(h.api, 'foo');
 		expect(h.api().findResults).toHaveLength(1);
-		expect(h.onSetActiveSlideIndex).toHaveBeenLastCalledWith(1);
-		expect(h.onSetSelectedElementId).toHaveBeenLastCalledWith(null);
+		expect(h.onShowMatch).toHaveBeenLastCalledWith(1, null);
 	});
 });

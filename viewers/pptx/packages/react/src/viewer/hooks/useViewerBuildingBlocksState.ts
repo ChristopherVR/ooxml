@@ -10,7 +10,6 @@
  * effect, `useEditorOperations`, and `useViewerIntegration` (export/print/
  * property handlers, mode switching, and the imperative handle).
  */
-import { useEffect } from 'react';
 
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
@@ -22,6 +21,7 @@ import type { ExportHandlersResult } from './useExportHandlers';
 import type { PrintHandlersResult } from './usePrintHandlers';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { useReadOnlyRecommendationState } from './useReadOnlyRecommendationState';
+import { useClearSelectionOnSlideChange } from './useSlideChangeSelection';
 import type { ViewerBuildingBlocksCore } from './useViewerBuildingBlocksCore';
 import type { ViewerDialogsResult } from './useViewerDialogs';
 import { useViewerDialogs } from './useViewerDialogs';
@@ -157,13 +157,8 @@ export function useViewerBuildingBlocksState(
 	const readOnlyRec = useReadOnlyRecommendationState(content);
 	const compatToastsState = useCompatibilityToastsState();
 
-	// ── Clear selection on slide change (same effect PowerPointViewer runs) ──
-	useEffect(() => {
-		state.setSelectedElementId(null);
-		state.setSelectedElementIds([]);
-		state.setInlineEditingElementId(null);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [activeSlideIndex]);
+	// ── Clear selection on slide change (same hook PowerPointViewer runs) ──
+	useClearSelectionOnSlideChange(state, activeSlideIndex);
 
 	const editorOps = useEditorOperations({
 		state,

@@ -195,8 +195,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 	const findReplace = useFindReplace({
 		slides,
 		mode,
-		onSetActiveSlideIndex: state.setActiveSlideIndex,
-		onSetSelectedElementId: state.setSelectedElementId,
+		onShowMatch: state.showSlideSelection,
 		onUpdateSlides: ops.updateSlides,
 		onMarkDirty: history.markDirty,
 		keyboard,
