@@ -95,6 +95,6 @@ button:focus-visible {
 		background: Highlight;
 	}
 	.track {
-		border: 1px solid CanvasText;
+		border: var(--office-border-width) solid CanvasText;
 	}
 }
