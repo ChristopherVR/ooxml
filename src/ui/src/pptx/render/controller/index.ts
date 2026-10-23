@@ -12,3 +12,27 @@ export type {
 	EditorHistoryControllerOptions,
 	EditorHistoryState,
 } from './history-controller';
+export { createAutosaveController } from './autosave-controller';
+export type {
+	AutosaveController,
+	AutosaveControllerDeps,
+	AutosaveControllerState,
+	AutosaveEngineActivation,
+	AutosaveTimers,
+	PptxAutosaveStatus,
+	PptxAutosaveStatusKind,
+} from './autosave-controller';
+export { createAutosaveRecoveryController } from './autosave-recovery-controller';
+export type {
+	AutosaveRecoveryCheckInput,
+	AutosaveRecoveryController,
+	AutosaveRecoveryControllerDeps,
+	AutosaveRecoveryState,
+} from './autosave-recovery-controller';
+export { createCollaborationSessionController } from './collaboration-session-controller';
+export type {
+	CollaborationSessionController,
+	CollaborationSessionControllerDeps,
+	CollaborationSessionState,
+	CollaborationSessionTimers,
+} from './collaboration-session-controller';

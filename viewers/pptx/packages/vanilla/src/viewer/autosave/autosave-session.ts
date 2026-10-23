@@ -6,9 +6,6 @@ import type {
 	DocumentStorage,
 } from 'ooxml-ui/pptx';
 import {
-	acceptAutosaveRecovery,
-	acknowledgeAutosaveRecovery,
-	clearAutosaveRecoveryAcknowledgement,
 	discardAutosaveRecovery,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
@@ -114,7 +111,9 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 
 	const offerRecovery = async (offer: AutosaveRecoveryOffer): Promise<void> => {
 		dialogOpen = true;
+		const recovery = controller.getRecovery();
 		try {
+			// The dialog owns the discard retry (it stays open when the delete fails).
 			const choice = await openAutosaveRecoveryDialog(
 				deps.doc,
 				deps.getTranslator(),
@@ -122,13 +121,9 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 				() => discardAutosaveRecovery(offer.record, deps.getStorage?.()),
 			);
 			if (choice === 'restore') {
-				acknowledgeAutosaveRecovery(offer.record);
-				try {
-					await deps.loadFile(acceptAutosaveRecovery(offer.record));
-				} catch (error) {
-					clearAutosaveRecoveryAcknowledgement(offer.record);
-					throw error;
-				}
+				await recovery.restore();
+			} else {
+				recovery.dismiss();
 			}
 		} finally {
 			dialogOpen = false;
@@ -180,6 +175,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 		// still be asked about work a crash left behind.
 		isRecoveryAllowed: () => deps.hostAutosave !== false,
 		onRecovery: deps.onRecovery,
+		loadFile: (bytes) => deps.loadFile(bytes),
 		onRecoveryOffer: (offer) => {
 			pendingOffer = offer;
 			flushRecoveryOffer();

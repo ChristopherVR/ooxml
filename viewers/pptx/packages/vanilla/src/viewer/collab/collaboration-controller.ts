@@ -1,30 +1,23 @@
 import type {
 	CollabLoadOrigin,
+	CollabYSession,
 	CollaborationConfig,
-	CollaborationInput,
+	CollaborationTransport,
 	ConnectionStatus,
 	YDocLike,
 	YjsFactories,
 } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
+	createCollaborationSessionController,
 	createSyncGate,
 	DEFAULT_CURSOR_COLOR,
-	isMixedContentBlocked,
 	LOCAL_SYNC_ORIGIN,
-	needsOwnedSession,
 	observeYDocSlides,
-	openOwnedCollaboration,
 	readSlidesFromYDoc,
-	registerCollaborationTeardown,
-	resolveCollaborationConfig,
-	resolveTransportForServerUrl,
 	shouldRoomSlidesReplaceLoad,
-	validateRoomId,
 } from 'ooxml-ui/pptx';
 
-import type { ConnectionWiring } from './collaboration-connection';
-import { wireConnectionStatus } from './collaboration-connection';
 import type {
 	CollaborationController,
 	CollaborationControllerDeps,
@@ -34,7 +27,6 @@ import type { ExternalSessionSync } from './collaboration-external-sync';
 import { createExternalSessionSync } from './collaboration-external-sync';
 import type { PresenceController } from './collaboration-presence';
 import { createPresenceController } from './collaboration-presence';
-import type { CollaborationSession } from './collaboration-session';
 import { createCollaborationSession } from './collaboration-session';
 import { createSlidesSync } from './collaboration-slides-sync';
 import type { SlidesSync } from './collaboration-slides-sync';
@@ -42,8 +34,10 @@ import { createCollaborationStateTracker } from './collaboration-state-tracker';
 import { createWriteBackScheduler } from './collaboration-writeback';
 
 /**
- * Yjs collaboration with built-in transports or a borrowed host session.
- * Granular slide sync and presence live in their focused modules.
+ * Yjs collaboration with built-in transports or a borrowed host session. The
+ * room lifecycle (owned sessions, transport, connection status, first-write
+ * gate, pagehide teardown) is the shared `createCollaborationSessionController`;
+ * granular slide sync and presence live in their focused modules.
  *
  * KNOWN LIMITATION: collaboration undo semantics are undefined - the local
  * `EditorHistory` stack keeps working but does not coordinate with peers
@@ -57,20 +51,14 @@ export function createCollaborationController(
 
 	let status: ConnectionStatus = 'disconnected';
 	let active = false;
-	let session: CollaborationSession | null = null;
-	let generation = 0;
 	let externalSync: ExternalSessionSync | null = null;
 	let currentYDoc: YDocLike | null = null;
 	let yFactories: YjsFactories | null = null;
 	let presence: PresenceController | null = null;
 	const editState = createCollaborationEditState(deps);
 	let lastConfig: CollaborationConfig | null = null;
-	let lastInput: CollaborationInput | null = null;
-	// Releases the session this controller opened itself (provider or same-browser sharing).
-	let releaseOwned: (() => void) | null = null;
 	let unobserveSlides: (() => void) | null = null;
 	let unsubscribeStore: (() => void) | null = null;
-	let connection: ConnectionWiring | null = null;
 	let loadApplying = false;
 	const livePatcher = createCollaborationLivePatcher();
 	const stateTracker = createCollaborationStateTracker(store, deps.onStateChange);
@@ -114,148 +102,106 @@ export function createCollaborationController(
 		},
 	};
 
-	async function start(input: CollaborationInput): Promise<void> {
-		const requested = resolveCollaborationConfig(input) as CollaborationConfig;
-		stop();
-		const token = generation;
-		lastInput = input;
-		lastConfig = requested;
-		let config = requested;
-		try {
-			validateRoomId(requested.roomId);
-		} catch {
-			setStatus('error');
-			return;
-		}
-		if (needsOwnedSession(requested)) {
-			// A provider or same-browser room: open the session, released again by stop().
-			const owned = openOwnedCollaboration(requested);
-			releaseOwned = owned.release;
-			setStatus('connecting');
-			try {
-				const prepared = await owned.ready;
-				if (token !== generation || !prepared) {
+	/** The session is live: attach presence, the slide mapping and the readiness owner. */
+	function attach(
+		created: CollabYSession,
+		config: CollaborationConfig,
+		_transport: CollaborationTransport,
+	): void {
+		currentYDoc = created.doc;
+		yFactories = created.factories;
+		presence = createPresenceController(
+			store,
+			created.awareness,
+			{
+				userName: config.userName,
+				userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
+				userAvatar: config.userAvatar,
+				role: config.role,
+			},
+			() => ({ width: store.get().canvasSize.width, height: store.get().canvasSize.height }),
+		);
+
+		// Observe remote slide changes, skipping our own reconcile transactions.
+		if (!config.externalSession) {
+			unobserveSlides = observeYDocSlides(currentYDoc, (_events, transaction) => {
+				if (transaction?.origin === LOCAL_SYNC_ORIGIN || slidesSync.isApplyingRemote()) {
 					return;
 				}
-				config = prepared;
-				lastConfig = prepared;
-			} catch {
-				if (token === generation) {
-					stop();
-					setStatus('error');
-				}
-				return;
-			}
-		}
-		const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
-		// Mixed-content only affects a ws:// socket from an https page.
-		if (
-			!config.externalSession &&
-			transport === 'websocket' &&
-			isMixedContentBlocked(config.serverUrl)
-		) {
-			setStatus('error');
-			return;
-		}
-		setStatus('connecting');
-		editState.setReadOnly(Boolean(config.externalSession) || config.role === 'viewer');
-		try {
-			const created = await createCollaborationSession(config, transport);
-			if (token !== generation) {
-				created.dispose();
-				return;
-			}
-			session = created;
-			currentYDoc = created.doc;
-			yFactories = created.factories;
-			presence = createPresenceController(
-				store,
-				created.awareness,
-				{
-					userName: config.userName,
-					userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
-					userAvatar: config.userAvatar,
-					role: config.role,
-				},
-				() => ({ width: store.get().canvasSize.width, height: store.get().canvasSize.height }),
-			);
-
-			// Observe remote slide changes, skipping our own reconcile transactions.
-			if (!config.externalSession) {
-				unobserveSlides = observeYDocSlides(currentYDoc, (_events, transaction) => {
-					if (transaction?.origin === LOCAL_SYNC_ORIGIN || slidesSync.isApplyingRemote()) {
-						return;
-					}
-					slidesSync.applyRemoteSlides(currentYDoc, config);
-				});
-			}
-
-			// Broadcast local slide edits granularly (diff by id, one transaction).
-			// Suppressed until the sync gate opens (the gate flushes on open) and
-			// while the load pipeline is committing a parsed deck (adoption in
-			// notifyContentLoaded decides whether that deck may be published).
-			unsubscribeStore = store.subscribe((state, previous) => {
-				if (
-					state.slides !== previous.slides &&
-					!state.deckStyleHeld &&
-					!previous.deckStyleHeld &&
-					!loadApplying &&
-					syncGate.isOpen()
-				) {
-					flushLocal();
-				}
+				slidesSync.applyRemoteSlides(currentYDoc, config);
 			});
+		}
 
-			active = true;
-			stateTracker.patch({ active: true, config, clientId: created.awareness.clientID ?? null });
-			if (config.externalSession) {
-				externalSync = createExternalSessionSync(config.externalSession, config, {
-					factories: created.factories,
-					livePatcher,
-					gate: syncGate,
-					setStatus,
-					setReadOnly: editState.setReadOnly,
-					flushLocal,
-					resetBaseline: slidesSync.reset,
-					cancelWriteBack: writeBack.cancel,
-					adoptSlides: (slides) => slidesSync.adoptSlides(slides, config),
-				});
-			} else if (created.provider) {
-				const provider = created.provider;
-				livePatcher.configure(
-					editState.isReadOnly() ? null : currentYDoc,
-					editState.isReadOnly() ? null : yFactories,
-				);
-				provider.onSynced(() => syncGate.open());
-				if (provider.syncedNow) {
-					syncGate.open();
-				} else {
-					syncGate.arm();
-				}
-				connection = wireConnectionStatus({
-					provider,
-					transport,
-					setStatus,
-					isActive: () => active,
-					reArmGate: () => {
-						syncGate.reset();
-						syncGate.arm();
-					},
-					onConnectTimeout: () => {
-						if (status !== 'connected') {
-							stop();
-							setStatus('error');
-						}
-					},
-				});
+		// Broadcast local slide edits granularly (diff by id, one transaction).
+		// Suppressed until the sync gate opens (the gate flushes on open) and
+		// while the load pipeline is committing a parsed deck (adoption in
+		// notifyContentLoaded decides whether that deck may be published).
+		unsubscribeStore = store.subscribe((state, previous) => {
+			if (
+				state.slides !== previous.slides &&
+				!state.deckStyleHeld &&
+				!previous.deckStyleHeld &&
+				!loadApplying &&
+				syncGate.isOpen()
+			) {
+				flushLocal();
 			}
-		} catch {
-			if (token === generation) {
-				stop();
-				setStatus('error');
-			}
+		});
+
+		active = true;
+		stateTracker.patch({ active: true, config, clientId: created.awareness.clientID ?? null });
+		if (config.externalSession) {
+			externalSync = createExternalSessionSync(config.externalSession, config, {
+				factories: created.factories,
+				livePatcher,
+				gate: syncGate,
+				setStatus: (next) => session.setStatus(next),
+				setReadOnly: editState.setReadOnly,
+				flushLocal,
+				resetBaseline: slidesSync.reset,
+				cancelWriteBack: writeBack.cancel,
+				adoptSlides: (slides) => slidesSync.adoptSlides(slides, config),
+			});
+		} else {
+			livePatcher.configure(
+				editState.isReadOnly() ? null : currentYDoc,
+				editState.isReadOnly() ? null : yFactories,
+			);
 		}
 	}
+
+	/** The session is ending: detach everything `attach` set up. */
+	function detach(): void {
+		externalSync?.dispose();
+		externalSync = null;
+		loadApplying = false;
+		writeBack.cancel();
+		slidesSync.reset();
+		unobserveSlides?.();
+		unobserveSlides = null;
+		unsubscribeStore?.();
+		unsubscribeStore = null;
+		presence?.destroy();
+		presence = null;
+		currentYDoc = null;
+		yFactories = null;
+		livePatcher.configure(null, null);
+		active = false;
+		stateTracker.patch({ active: false, config: null, clientId: null });
+		editState.setReadOnly(false);
+	}
+
+	const session = createCollaborationSessionController({
+		openSession: createCollaborationSession,
+		gate: syncGate,
+		onBegin: (config) => {
+			lastConfig = config;
+			editState.setReadOnly(Boolean(config.externalSession) || config.role === 'viewer');
+		},
+		onOpen: attach,
+		onClose: detach,
+	});
+	session.subscribe(() => setStatus(session.getSnapshot().status));
 
 	// Loads suppress publishing until adoption decides whether the room's deck
 	// beats a late bootstrap. Explicit user-opened files instead replace the room.
@@ -284,48 +230,9 @@ export function createCollaborationController(
 		}
 	}
 
-	function stop(): void {
-		generation += 1;
-		externalSync?.dispose();
-		externalSync = null;
-		connection?.cancelConnectTimer();
-		connection = null;
-		loadApplying = false;
-		writeBack.cancel();
-		syncGate.reset();
-		slidesSync.reset();
-		unobserveSlides?.();
-		unobserveSlides = null;
-		unsubscribeStore?.();
-		unsubscribeStore = null;
-		presence?.destroy();
-		presence = null;
-		session?.dispose();
-		session = null;
-		releaseOwned?.();
-		releaseOwned = null;
-		currentYDoc = null;
-		yFactories = null;
-		livePatcher.configure(null, null);
-		active = false;
-		stateTracker.patch({ active: false, config: null, clientId: null });
-		editState.setReadOnly(false);
-		setStatus('disconnected');
-	}
-
-	const disposeTeardown = registerCollaborationTeardown({
-		leaveOnBeforeUnload: () => !lastConfig?.externalSession,
-		leave: stop,
-		rejoin: () => {
-			if (lastInput) {
-				void start(lastInput);
-			}
-		},
-	});
-
 	return {
-		start,
-		stop,
+		start: (input) => session.start(input),
+		stop: () => session.stop(),
 		isActive: () => active,
 		isReadOnly: editState.isReadOnly,
 		getStatus: () => status,
@@ -340,8 +247,7 @@ export function createCollaborationController(
 		notifyContentLoaded,
 		livePatcher,
 		destroy: () => {
-			disposeTeardown();
-			stop();
+			session.destroy();
 			stateTracker.dispose();
 		},
 	};

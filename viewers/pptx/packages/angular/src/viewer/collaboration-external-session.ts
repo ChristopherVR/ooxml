@@ -2,26 +2,28 @@ import type {
 	CollaborationConfig,
 	ExternalCollaborationSession,
 	ExternalCollaborationReadiness,
-	YjsFactories,
+	CollabYSession,
 } from 'ooxml-ui/pptx';
-import {
-	borrowExternalCollaborationAwareness,
-	DEFAULT_CURSOR_COLOR,
-	observeExternalCollaborationReadiness,
-} from 'ooxml-ui/pptx';
+import { DEFAULT_CURSOR_COLOR, observeExternalCollaborationReadiness } from 'ooxml-ui/pptx';
 
 import { LocalPresencePublisher } from './collaboration-local-presence';
 import type { ActiveSession, ActivateSessionDeps } from './collaboration-session-setup';
 
-/** Attach viewer-owned observers without acquiring ownership of host resources. */
+/**
+ * Attach viewer-owned observers to a borrowed host session without acquiring
+ * ownership of host resources: the shared session controller already holds the
+ * presence lease (`live.awareness`) and releases it on stop.
+ */
 export function activateExternalSession(
 	external: ExternalCollaborationSession,
 	config: CollaborationConfig,
-	factories: YjsFactories,
+	live: CollabYSession,
 	deps: ActivateSessionDeps,
 ): ActiveSession {
-	const borrowed = borrowExternalCollaborationAwareness(external.awareness);
-	const awareness = borrowed.awareness;
+	const factories = live.factories;
+	const awareness = live.awareness as ActiveSession['awareness'] & {
+		off: (event: string, cb: () => void) => void;
+	};
 	deps.slideSync.bind({
 		ydoc: external.doc,
 		factories,
@@ -44,7 +46,6 @@ export function activateExternalSession(
 		readiness?.();
 		awareness.off('change', deps.refreshPresence);
 		awareness.off('update', deps.refreshPresence);
-		borrowed.dispose();
 	};
 	try {
 		readiness = observeExternalCollaborationReadiness(external, {
@@ -69,7 +70,7 @@ export function activateExternalSession(
 	return {
 		ydoc: external.doc,
 		awareness,
-		selfId: awareness.clientID,
+		selfId: awareness.clientID ?? -1,
 		localPresence,
 		readiness,
 		dispose,

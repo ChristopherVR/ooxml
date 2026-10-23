@@ -1,28 +1,27 @@
-import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
+import type {
+	AutosaveRecord,
+	AutosaveRecoveryController as SharedRecoveryController,
+	AutosaveRecoveryPrompt,
+	AutosaveRecoveryState,
+	DocumentStorage,
+} from 'ooxml-ui/pptx';
 import {
-	acceptAutosaveRecovery,
-	acknowledgeAutosaveRecovery,
-	clearAutosaveRecoveryAcknowledgement,
+	createAutosaveRecoveryController,
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
-	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
+import { untrack } from 'svelte';
+
+import { controllerState } from './controller-state';
+import type { ControllerState } from './controller-state';
 
 /**
- * autosave-recovery.svelte.ts: offer the crash-recovery snapshot back.
+ * autosave-recovery.svelte.ts: the Svelte adapter of the shared crash-recovery
+ * offer (`createAutosaveRecoveryController` in `ooxml-ui/pptx`).
  *
- * This binding has always WRITTEN recovery snapshots (see `autosave.svelte.ts`)
- * and never once offered one back, so the whole feature was invisible: the user
- * lost a tab mid-edit, reopened the deck, and silently got the pre-crash work
- * thrown away. Every decision (is it worth probing, is the snapshot fresh
- * enough, what should the prompt say) lives in `pptx-viewer-shared`'s
- * `render/autosave-recovery` so all five
- * bindings ask the same questions in the same order; this class is only the
- * runes wiring plus the two actions.
- *
- * It registers its own probing `$effect` in the constructor, exactly like
- * {@link AutosaveController}, so a caller only has to construct it during
- * component initialisation and render `prompt` when it is non-null.
+ * It registers its own probing `$effect` in the constructor, so a caller only
+ * has to construct it during component initialisation and render `prompt` when
+ * it is non-null. The probe runs once per loaded deck (`getLoadCount`).
  */
 
 export interface AutosaveRecoveryDeps {
@@ -51,115 +50,55 @@ export interface AutosaveRecoveryDeps {
 }
 
 export class AutosaveRecoveryController {
-	/** The prompt to render, or null when there is nothing to recover. */
-	prompt = $state.raw<AutosaveRecoveryPrompt | null>(null);
-	/** The destructive delete is still pending. */
-	discarding = $state(false);
-
-	readonly #deps: AutosaveRecoveryDeps;
-	#record: AutosaveRecord | null = null;
-	/** `getLoadCount()` value the probe already ran for; -1 means "never". */
-	#checkedLoadCount = -1;
-	/** Prevent the restore action's own load from immediately reopening its dialog. */
-	#restoring = false;
-	#actionPending = false;
+	readonly #controller: SharedRecoveryController;
+	readonly #state: ControllerState<AutosaveRecoveryState>;
 
 	constructor(deps: AutosaveRecoveryDeps) {
-		this.#deps = deps;
+		this.#controller = createAutosaveRecoveryController({
+			getStorage: () => deps.getStorage?.(),
+			load: (bytes) => deps.load(bytes),
+			onOffered: (record) => deps.onOffered?.(record),
+			probe: probeAutosaveRecovery,
+			discardRecord: discardAutosaveRecovery,
+		});
+		this.#state = controllerState(this.#controller);
 		$effect(() => {
-			const loadCount = deps.getLoadCount();
-			const filePath = deps.getFilePath();
-			if (this.#restoring) {
-				this.#checkedLoadCount = loadCount;
-				return;
-			}
-			const probe = shouldProbeAutosaveRecovery({
-				alreadyChecked: this.#checkedLoadCount === loadCount,
-				filePath,
+			const input = {
+				loadKey: deps.getLoadCount(),
+				filePath: deps.getFilePath(),
+				fileName: deps.getFileName?.(),
 				loading: deps.getLoading(),
 				error: deps.getError(),
 				slideCount: deps.getSlideCount(),
 				autosaveAllowed: deps.getAutosaveAllowed(),
-			});
-			if (!probe || !filePath) {
-				return;
-			}
-			this.#checkedLoadCount = loadCount;
-			void this.#probe(filePath, loadCount);
+			};
+			untrack(() => this.#controller.check(input));
 		});
+		$effect(() => () => this.#controller.destroy());
 	}
 
-	async #probe(filePath: string, loadCount: number): Promise<void> {
-		const offer = await probeAutosaveRecovery(
-			filePath,
-			Date.now(),
-			this.#deps.getFileName?.(),
-			this.#deps.getStorage?.(),
-		);
-		// A newer load landed while IndexedDB was answering: its own probe owns
-		// the prompt, so drop this (now stale) answer instead of overwriting it.
-		if (this.#checkedLoadCount !== loadCount) {
-			return;
-		}
-		this.prompt = offer?.prompt ?? null;
-		this.#record = offer?.record ?? null;
-		if (offer) {
-			this.#deps.onOffered?.(offer.record);
-		}
+	/** The prompt to render, or null when there is nothing to recover (reactive). */
+	get prompt(): AutosaveRecoveryPrompt | null {
+		return this.#state.current.prompt;
+	}
+
+	/** The destructive delete is still pending (reactive). */
+	get discarding(): boolean {
+		return this.#state.current.discarding;
 	}
 
 	/** Take the snapshot and load its bytes in place without deleting it. */
-	async restore(): Promise<void> {
-		if (this.#actionPending) {
-			return;
-		}
-		this.#actionPending = true;
-		const record = this.#record;
-		this.dismiss();
-		if (!record) {
-			this.#actionPending = false;
-			return;
-		}
-		this.#restoring = true;
-		acknowledgeAutosaveRecovery(record);
-		try {
-			await this.#deps.load(acceptAutosaveRecovery(record));
-		} catch (error) {
-			clearAutosaveRecoveryAcknowledgement(record);
-			throw error;
-		} finally {
-			this.#checkedLoadCount = this.#deps.getLoadCount();
-			this.#restoring = false;
-			this.#actionPending = false;
-		}
+	restore(): Promise<void> {
+		return this.#controller.restore();
 	}
 
 	/** Decline the snapshot: delete it, and never load it. */
-	async discard(): Promise<void> {
-		if (this.#actionPending) {
-			return;
-		}
-		const record = this.#record;
-		if (!record) {
-			this.dismiss();
-			return;
-		}
-		this.#actionPending = true;
-		this.discarding = true;
-		try {
-			await discardAutosaveRecovery(record, this.#deps.getStorage?.());
-			this.dismiss();
-		} catch {
-			// Leave the prompt open so a failed discard can be retried.
-		} finally {
-			this.discarding = false;
-			this.#actionPending = false;
-		}
+	discard(): Promise<void> {
+		return this.#controller.discard();
 	}
 
 	/** Close the prompt without touching the stored snapshot. */
 	dismiss(): void {
-		this.prompt = null;
-		this.#record = null;
+		this.#controller.dismiss();
 	}
 }

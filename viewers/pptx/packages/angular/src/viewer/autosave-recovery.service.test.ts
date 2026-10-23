@@ -17,10 +17,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * shared probe is stubbed so the assertion is about the wiring: probe -> prompt
  * -> restore/discard.
  */
-const { probeMock, discardMock, acknowledgeMock } = vi.hoisted(() => ({
+const { probeMock, discardMock } = vi.hoisted(() => ({
 	probeMock: vi.fn(),
 	discardMock: vi.fn(),
-	acknowledgeMock: vi.fn(),
 }));
 
 vi.mock(import('ooxml-ui/pptx'), async () => {
@@ -29,12 +28,12 @@ vi.mock(import('ooxml-ui/pptx'), async () => {
 		...actual,
 		probeAutosaveRecovery: probeMock,
 		discardAutosaveRecovery: discardMock,
-		acknowledgeAutosaveRecovery: acknowledgeMock,
 	};
 });
 
 const { AutosaveRecoveryService } = await import('./autosave-recovery.service');
-const { autosaveRecoveryPrompt } = await import('ooxml-ui/pptx');
+const { autosaveRecoveryPrompt, getAcknowledgedAutosaveRecoveryTimestamp } =
+	await import('ooxml-ui/pptx');
 
 interface SchedulableEffect {
 	run(): void;
@@ -81,7 +80,7 @@ describe('autosaveRecoveryService', () => {
 	beforeEach(() => {
 		probeMock.mockReset();
 		discardMock.mockReset();
-		acknowledgeMock.mockReset();
+		sessionStorage.clear();
 	});
 
 	function bind(overrides: { loading?: boolean; slideCount?: number; allowed?: boolean } = {}) {
@@ -139,7 +138,7 @@ describe('autosaveRecoveryService', () => {
 		await Promise.resolve();
 		service.restore();
 		expect(restore).toHaveBeenCalledWith(BYTES);
-		expect(acknowledgeMock).toHaveBeenCalledWith(RECORD);
+		expect(getAcknowledgedAutosaveRecoveryTimestamp('deck.pptx')).toBe(RECORD.timestamp);
 		expect(service.prompt()).toBeNull();
 	});
 

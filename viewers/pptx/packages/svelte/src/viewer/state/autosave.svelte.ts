@@ -1,7 +1,13 @@
-import type { DeckSaveIntent, DocumentStorage } from 'ooxml-ui/pptx';
+import type {
+	AutosaveController as SharedAutosaveController,
+	AutosaveControllerState,
+	DeckSaveIntent,
+	DocumentStorage,
+	PptxAutosaveStatusKind,
+} from 'ooxml-ui/pptx';
 import {
+	createAutosaveController,
 	createPreviewEditGuard,
-	nextAutosaveDelayMs,
 	recoverySnapshotIntent,
 	saveAutosaveSnapshot,
 	saveDeckWithPassword,
@@ -14,42 +20,25 @@ import type {
 	PptxSlide,
 	PptxSlideMaster,
 } from 'pptx-viewer-core';
+import { untrack } from 'svelte';
+
+import { controllerState } from './controller-state';
+import type { ControllerState } from './controller-state';
 
 /**
- * autosave.svelte.ts: debounced crash-recovery autosave for the Svelte viewer.
+ * autosave.svelte.ts: the Svelte adapter of the shared recovery autosave engine
+ * (`createAutosaveController` in `ooxml-ui/pptx`).
  *
- * A runes port that fuses the two shared semantics the other bindings use:
- *  - React's persistence target: each successful save writes the serialized
- *    `.pptx` bytes to the shared IndexedDB recovery store
- *    (`saveAutosaveSnapshot`, keyed by `filePath`), so a host can offer
- *    restore-on-load with `getAutosaveSnapshot` / `listAutosaveSnapshots`
- *    (both re-exported from this package). This binding does NOT auto-restore;
- *    matching React/Vue, recovery is a host concern.
- *  - Vue's debounce-on-edit trigger: an edit marks the document dirty and
- *    (re)arms a debounce timer instead of polling on a fixed interval.
- *
- * The debounce is CAPPED by the shared `nextAutosaveDelayMs`, so it keeps the
- * same promise React's and Angular's polling engines do: a snapshot lands no
- * later than one interval after the FIRST unsaved edit, and no more often than
- * once per interval. Without that cap a user who keeps typing keeps re-arming
- * the timer, and at the two-minute AutoRecover cadence that is a whole session
- * of work that never reaches the recovery store.
- *
- * The controller registers its own edit-watching `$effect` in the constructor,
- * so the SFC only has to construct it once during setup and read its reactive
- * `status` / `isDirty` for the toolbar indicator.
+ * The engine follows PowerPoint's AutoRecover: one snapshot an interval after
+ * the first unsaved edit, written to the shared recovery store (IndexedDB, or
+ * the host's recovery methods) and nothing while the deck is unchanged. This
+ * class only tells it about edits (telling a load and a hover preview apart
+ * from a real edit) and serialises the deck; `status` / `isDirty` /
+ * `lastSavedAt` are the engine's state, read reactively.
  */
 
-/**
- * Autosave status, surfaced for the toolbar status pill.
- *
- *  - `idle`     : nothing has been saved yet (or no edits since mount).
- *  - `disabled` : autosave is inactive (off, not editable, or no file path).
- *  - `saving`   : a save is currently in flight.
- *  - `saved`    : the most recent save succeeded.
- *  - `error`    : the most recent save threw.
- */
-export type AutosaveStatus = 'idle' | 'disabled' | 'saving' | 'saved' | 'error';
+/** The `state` of the one shared `PptxAutosaveStatus`. */
+export type AutosaveStatus = PptxAutosaveStatusKind;
 
 export interface AutosaveDeps {
 	/**
@@ -109,115 +98,96 @@ export interface AutosaveDeps {
 }
 
 export class AutosaveController {
-	/** Current autosave lifecycle status (reactive). */
-	status = $state<AutosaveStatus>('idle');
-	/** Whether there are unsaved edits pending (reactive). */
-	isDirty = $state(false);
-	/** Epoch ms of the last successful save, or null (reactive). */
-	lastSavedAt = $state<number | null>(null);
-
 	readonly #deps: AutosaveDeps;
-	#timer: ReturnType<typeof setTimeout> | null = null;
-	#saving = false;
+	readonly #engine: SharedAutosaveController;
+	readonly #state: ControllerState<AutosaveControllerState>;
 	#lastLoadCount = 0;
 	#lastSeedNonce = 0;
 	#started = false;
-	/**
-	 * Epoch ms of the OLDEST edit not yet in a snapshot, or null when the
-	 * document is clean. This, not the latest edit, is what the debounce is
-	 * measured against.
-	 */
-	#firstDirtyAt: number | null = null;
 	readonly #previewGuard = createPreviewEditGuard();
 
 	constructor(deps: AutosaveDeps) {
 		this.#deps = deps;
 		this.#lastLoadCount = deps.getLoadCount();
 		this.#lastSeedNonce = deps.getSeedNonce?.() ?? 0;
+		this.#engine = createAutosaveController({
+			getActivation: () => ({ active: deps.getEnabled() }),
+			getFilePath: deps.getFilePath,
+			getIntervalMs: deps.getIntervalMs,
+			serialize: () => this.#serialize(),
+			getStorage: () => deps.getStorage?.(),
+			onSaved: (bytes) => deps.onSaved?.(bytes),
+			writeSnapshot: saveAutosaveSnapshot,
+		});
+		this.#state = controllerState(this.#engine);
+
+		// The activation, the cadence and the key apply at once.
+		$effect(() => {
+			deps.getEnabled();
+			deps.getIntervalMs();
+			deps.getFilePath();
+			untrack(() => this.#engine.refresh());
+		});
 
 		// Watch edits: reassigning the (immutable) slide array on each edit fires
-		// this effect. A load bumps `getLoadCount()` in the same flush, which we
-		// treat as a reseed (clear dirty) rather than an edit. The effect's
-		// teardown clears any pending debounce on destroy.
+		// this effect. A load bumps `getLoadCount()` (and the seed nonce), which
+		// is a reseed (clear dirty) rather than an edit.
 		$effect(() => {
-			const loadCount = this.#deps.getLoadCount();
-			const seedNonce = this.#deps.getSeedNonce?.() ?? 0;
-			// Track the slides so edits (array reassignment) re-run the effect.
-			this.#deps.getSlides();
-			this.#deps.getSlideMasters?.();
-			this.#deps.getNotesMaster?.();
-			this.#deps.getHandoutMaster?.();
-			this.#deps.getSections?.();
-			const held = this.#deps.getPreviewHeld?.() ?? false;
-			const documentKey = this.#deps.getDocumentKey?.();
+			const loadCount = deps.getLoadCount();
+			const seedNonce = deps.getSeedNonce?.() ?? 0;
+			// Track the stores so edits (reassignment) re-run the effect.
+			deps.getSlides();
+			deps.getSlideMasters?.();
+			deps.getNotesMaster?.();
+			deps.getHandoutMaster?.();
+			deps.getSections?.();
+			const held = deps.getPreviewHeld?.() ?? false;
+			const documentKey = deps.getDocumentKey?.();
 
-			if (!this.#started) {
-				this.#started = true;
-				this.#lastLoadCount = loadCount;
-				this.#lastSeedNonce = seedNonce;
-				return;
-			}
-			// Either half of a load counts as a reseed. They arrive in separate
-			// flushes (see `getSeedNonce`), so both have to be able to answer.
-			if (loadCount !== this.#lastLoadCount || seedNonce !== this.#lastSeedNonce) {
-				this.#lastLoadCount = loadCount;
-				this.#lastSeedNonce = seedNonce;
-				this.#clearTimer();
-				this.#firstDirtyAt = null;
-				this.isDirty = false;
-				return;
-			}
-			if (documentKey && !this.#previewGuard.isEdit(documentKey, held)) {
-				return;
-			}
-			this.isDirty = true;
-			this.#firstDirtyAt ??= Date.now();
-			if (this.#isEnabled()) {
-				this.#schedule();
-			}
-			return () => this.#clearTimer();
+			untrack(() => {
+				if (!this.#started) {
+					this.#started = true;
+					this.#lastLoadCount = loadCount;
+					this.#lastSeedNonce = seedNonce;
+					return;
+				}
+				// Either half of a load counts as a reseed. They arrive in separate
+				// flushes (see `getSeedNonce`), so both have to be able to answer.
+				if (loadCount !== this.#lastLoadCount || seedNonce !== this.#lastSeedNonce) {
+					this.#lastLoadCount = loadCount;
+					this.#lastSeedNonce = seedNonce;
+					this.#engine.markClean();
+					return;
+				}
+				if (documentKey && !this.#previewGuard.isEdit(documentKey, held)) {
+					return;
+				}
+				this.#engine.markEdited();
+			});
 		});
+		$effect(() => () => this.#engine.destroy());
 	}
 
-	#isEnabled(): boolean {
-		return this.#deps.getEnabled() && Boolean(this.#deps.getFilePath());
+	/** Current autosave lifecycle status (reactive). */
+	get status(): AutosaveStatus {
+		return this.#state.current.status.state;
 	}
 
-	#clearTimer(): void {
-		if (this.#timer !== null) {
-			clearTimeout(this.#timer);
-			this.#timer = null;
-		}
+	/** Whether there are edits no snapshot has captured yet (reactive). */
+	get isDirty(): boolean {
+		return this.#state.current.dirty;
+	}
+
+	/** Epoch ms of the last successful save, or null (reactive). */
+	get lastSavedAt(): number | null {
+		return this.#state.current.lastSavedAt;
 	}
 
 	/**
-	 * (Re)arm the debounce. The delay is whatever is LEFT of the first unsaved
-	 * edit's interval, so an unbroken stream of edits still gets a snapshot each
-	 * interval instead of pushing the deadline out forever.
-	 */
-	#schedule(): void {
-		this.#clearTimer();
-		const delay = nextAutosaveDelayMs({
-			intervalMs: this.#deps.getIntervalMs(),
-			firstDirtyAt: this.#firstDirtyAt,
-			now: Date.now(),
-		});
-		this.#timer = setTimeout(() => {
-			this.#timer = null;
-			if (this.#isEnabled()) {
-				void this.save();
-			}
-		}, delay);
-	}
-
-	/**
-	 * Serialize the current slides to `.pptx` bytes, or null when unavailable.
-	 *
-	 * Routed through the shared `saveDeckWithPassword` with an explicit
-	 * `recoverySnapshotIntent` rather than calling `handler.save` directly. The
-	 * bytes are identical (a recovery snapshot is always a plain ZIP), but the
-	 * decision is now the same one every binding makes, so this cannot drift
-	 * into writing an encrypted snapshot that recovery could never reopen.
+	 * Serialize the current slides to `.pptx` bytes, or null when unavailable,
+	 * through the shared `saveDeckWithPassword` with an explicit
+	 * `recoverySnapshotIntent`, so a snapshot is always a plain ZIP that
+	 * recovery can reopen.
 	 */
 	async #serialize(): Promise<Uint8Array | null> {
 		const handler = this.#deps.getHandler();
@@ -244,37 +214,8 @@ export class AutosaveController {
 		);
 	}
 
-	/** Force an immediate save, bypassing the debounce window. */
-	async save(): Promise<void> {
-		const filePath = this.#deps.getFilePath();
-		if (!filePath || this.#saving) {
-			return;
-		}
-		this.#saving = true;
-		this.#clearTimer();
-		// Remembered across the await: an edit that lands mid-save starts a NEW
-		// dirty window, and clearing it below would hide that edit from the
-		// interval ceiling until the user happened to type again.
-		const savingFrom = this.#firstDirtyAt;
-		this.status = 'saving';
-		try {
-			const bytes = await this.#serialize();
-			if (!bytes) {
-				this.status = 'idle';
-				return;
-			}
-			await saveAutosaveSnapshot(filePath, bytes, this.#deps.getStorage?.());
-			this.lastSavedAt = Date.now();
-			if (this.#firstDirtyAt === savingFrom) {
-				this.#firstDirtyAt = null;
-				this.isDirty = false;
-			}
-			this.status = 'saved';
-			this.#deps.onSaved?.(bytes);
-		} catch {
-			this.status = 'error';
-		} finally {
-			this.#saving = false;
-		}
+	/** Force an immediate save, bypassing the interval. */
+	save(): Promise<void> {
+		return this.#engine.saveNow();
 	}
 }

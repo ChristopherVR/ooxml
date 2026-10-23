@@ -1,10 +1,10 @@
 /**
  * @fileoverview The payloads of the viewer events every binding reports the same way.
  *
- * Each binding keeps its own autosave engine and so its own internal status shape (a bare string
- * in Vue and Svelte, a `{ state }` object in React and Angular, a string without `disabled` in
- * Vanilla). The host-facing `autosaveStatus` event must not leak that difference, so every
- * binding maps what it holds through {@link autosaveStatusKind} before reporting it.
+ * Every binding runs the shared autosave engine (`PptxAutosaveStatus`, which also has a
+ * `disabled` state); some render only its `state` string. The host-facing `autosaveStatus` event
+ * must not leak that difference, so every binding maps what it holds through
+ * {@link autosaveStatusKind} before reporting it.
  *
  * @module render/viewer-event-payloads
  */

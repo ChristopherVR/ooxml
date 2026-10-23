@@ -1,23 +1,28 @@
 /**
- * collaboration-session.ts: the live Yjs document + transport for one
- * collaboration session, plus the default factory that builds it.
+ * collaboration-session.ts: the session factory seam of the Svelte controller.
  *
- * Kept separate from the runes controller (`collaboration.svelte.ts`) so the
- * controller can accept a fake {@link CollabSessionFactory} in tests without
- * pulling in the real `yjs` / `y-webrtc` / `y-websocket` modules (which are
- * dynamically imported here on demand and only optional peer dependencies).
+ * The document, factories and transport are the shared
+ * `openCollaborationYSession` in `ooxml-ui/pptx`, bound to this package's lazy
+ * Yjs loaders. The controller accepts a fake {@link CollabSessionFactory} in
+ * tests, so they never load the real `yjs` / `y-webrtc` / `y-websocket`.
  */
 import type {
+	CollabProviderHandle,
+	CollabYSession,
 	CollaborationConfig,
 	CollaborationTransport,
 	ExternalCollaborationSession,
 	YDocLike,
 	YjsFactories,
+	YjsModuleLike,
 } from 'ooxml-ui/pptx';
-import { borrowExternalCollaborationAwareness, createSnapshotTextPositions } from 'ooxml-ui/pptx';
+import {
+	borrowExternalCollaborationAwareness,
+	createYjsFactories,
+	openCollaborationYSession,
+} from 'ooxml-ui/pptx';
 
-import type { CollabProviderHandle } from './collaboration-provider';
-import { createCollabProvider } from './collaboration-provider';
+import { collabModules } from './collaboration-modules';
 
 /** A fully-wired collaboration session: the doc, its factories, and transport. */
 export interface CollabSession {
@@ -40,61 +45,38 @@ export type CollabSessionFactory = (
 	config: CollaborationConfig,
 ) => Promise<CollabSession>;
 
-/**
- * Default factory: dynamically import `yjs`, build a `Y.Doc` plus the
- * `YjsFactories`, and attach the requested transport provider.
- */
+/** Default factory: the shared session opener with this package's loaders. */
 export const createDefaultSession: CollabSessionFactory = async (transport, config) => {
-	const Y = await import('yjs');
-	const doc = new Y.Doc();
-	const factories: YjsFactories = {
-		createMap: () => new Y.Map(),
-		createArray: () => new Y.Array(),
-		createText: () => new Y.Text(),
-		createTextPositions: (text) =>
-			createSnapshotTextPositions(text, {
-				read: () => Y.snapshot(doc),
-				equal: Y.equalSnapshots,
-				subscribeBeforeObservers: (listener) => {
-					doc.on('beforeObserverCalls', listener);
-					return () => doc.off('beforeObserverCalls', listener);
-				},
-			}),
-	};
-	const provider = await createCollabProvider(transport, config, doc);
+	const session = await openCollaborationYSession(config, transport, collabModules);
 	return {
-		ydoc: doc as unknown as YDocLike,
-		factories,
-		provider,
-		destroy: () => {
-			provider.destroy();
-			doc.destroy();
-		},
+		ydoc: session.doc,
+		factories: session.factories,
+		provider: session.provider!,
+		destroy: session.dispose,
 	};
 };
 
 /** Attach factories and a presence lease, never a transport, to a host's doc. */
-export async function createExternalSession(session: ExternalCollaborationSession) {
-	const Y = await import('yjs');
+export async function createExternalSession(
+	session: ExternalCollaborationSession,
+): Promise<CollabYSession> {
+	const Y = (await collabModules.loadYjs()) as YjsModuleLike;
 	const borrowed = borrowExternalCollaborationAwareness(session.awareness);
-	const doc = session.doc as import('yjs').Doc;
 	return {
-		ydoc: session.doc,
-		factories: {
-			createMap: () => new Y.Map(),
-			createArray: () => new Y.Array(),
-			createText: () => new Y.Text(),
-			createTextPositions: (text) =>
-				createSnapshotTextPositions(text, {
-					read: () => Y.snapshot(doc),
-					equal: Y.equalSnapshots,
-					subscribeBeforeObservers: (listener) => {
-						doc.on('beforeObserverCalls', listener);
-						return () => doc.off('beforeObserverCalls', listener);
-					},
-				}),
-		} satisfies YjsFactories,
+		doc: session.doc,
+		factories: createYjsFactories(Y, session.doc),
 		awareness: borrowed.awareness,
 		dispose: borrowed.dispose,
+	};
+}
+
+/** The shared session shape of a factory-built session. */
+export function toSharedSession(session: CollabSession): CollabYSession {
+	return {
+		doc: session.ydoc,
+		factories: session.factories,
+		awareness: session.provider.awareness,
+		provider: session.provider,
+		dispose: session.destroy,
 	};
 }

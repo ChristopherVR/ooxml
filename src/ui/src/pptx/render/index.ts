@@ -865,6 +865,10 @@ export * from './collaboration-load-origin';
 // removing the viewer iframe) leaves the room instead of lingering as a ghost
 // collaborator until the awareness timeout.
 export * from './collaboration-teardown';
+// The Yjs transport provider and the session's document, factories and transport,
+// shared by every binding (each passes its own lazy `yjs` / `y-*` loaders).
+export * from './collaboration-provider';
+export * from './collaboration-yjs-session';
 // Synchronous "I am leaving" BroadcastChannel announcement: a provider destroyed
 // inside `pagehide` cannot get its awareness removal out (y-webrtc broadcasts it
 // a microtask later, after the frame's channels are dead), so peers drop the

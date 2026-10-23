@@ -13,14 +13,27 @@ import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
-import { createWebrtcBundle, createWebsocketBundle } from './collaboration-providers';
+import { collabModules } from './collaboration-providers';
 import { WriteBackScheduler } from './collaboration-writeback';
 import { CollaborationService } from './collaboration.service';
 
-vi.mock(import('./collaboration-providers'), () => ({
-	createWebrtcBundle: vi.fn(),
-	createWebsocketBundle: vi.fn(),
-}));
+vi.mock(import('./collaboration-providers'), async (importOriginal) => {
+	const actual = await importOriginal();
+	const { openCollaborationYSession } = await import('ooxml-ui/pptx');
+	const modules = {
+		loadYjs: actual.collabModules.loadYjs,
+		loadWebsocket: vi.fn(actual.collabModules.loadWebsocket),
+		loadWebrtc: vi.fn(actual.collabModules.loadWebrtc),
+	};
+	return {
+		...actual,
+		collabModules: modules,
+		openCollaborationSession: (
+			config: Parameters<typeof actual.openCollaborationSession>[0],
+			transport: Parameters<typeof actual.openCollaborationSession>[1],
+		) => openCollaborationYSession(config, transport, modules),
+	};
+});
 
 const factories = {
 	createMap: () => new Y.Map(),
@@ -279,8 +292,8 @@ describe('host-owned Angular collaboration', () => {
 		expect(apply).toHaveBeenCalledOnce();
 		expect(readSlidesFromYDoc(room.doc).map((item) => item.id)).toStrictEqual(['remote']);
 		expect(collab.livePatcher.isActive()).toBeTruthy();
-		expect(createWebrtcBundle).not.toHaveBeenCalled();
-		expect(createWebsocketBundle).not.toHaveBeenCalled();
+		expect(collabModules.loadWebrtc).not.toHaveBeenCalled();
+		expect(collabModules.loadWebsocket).not.toHaveBeenCalled();
 		room.awareness.setLocalStateField('hostField', 'updated');
 		collab.disconnect();
 		expect(room.destroy).not.toHaveBeenCalled();

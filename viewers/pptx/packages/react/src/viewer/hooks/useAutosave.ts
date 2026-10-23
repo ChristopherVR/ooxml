@@ -1,22 +1,19 @@
 import {
-	autosaveSnapshotMark,
+	createAutosaveController,
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
-	shouldWriteAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveSnapshotMark, DocumentStorage } from 'ooxml-ui/pptx';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { DocumentStorage, PptxAutosaveStatus } from 'ooxml-ui/pptx';
+import { useEffect, useRef, useState } from 'react';
+
+import { useController } from './useController';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type AutosaveStatus =
-	| { state: 'idle' }
-	| { state: 'disabled'; reason: string }
-	| { state: 'saving' }
-	| { state: 'saved'; timestamp: number }
-	| { state: 'error'; message: string };
+/** The one autosave status every binding renders (`PptxAutosaveStatus` in `ooxml-ui/pptx`). */
+export type AutosaveStatus = PptxAutosaveStatus;
 
 export interface UseAutosaveInput {
 	/** Whether the document has unsaved changes. */
@@ -29,9 +26,8 @@ export interface UseAutosaveInput {
 	 * Autosave interval in seconds.
 	 *
 	 * @deprecated Pass {@link intervalMs} instead. Seconds cannot express the
-	 * short cadence a host may legitimately ask for, and the shared clamp it went
-	 * through raised anything under 10s back to 10s, so an explicit host policy
-	 * was silently overruled. Ignored when `intervalMs` is given.
+	 * short cadence a host may legitimately ask for. Ignored when `intervalMs`
+	 * is given.
 	 */
 	intervalSeconds?: number;
 	/**
@@ -48,14 +44,10 @@ export interface UseAutosaveInput {
 	/** Host storage; its recovery methods replace IndexedDB when it has them. */
 	storage?: DocumentStorage;
 	/**
-	 * The values a snapshot is built from, read fresh on each tick.
-	 *
-	 * `isDirty` stays true from the first edit until the user performs a real
-	 * save, so on its own it makes the timer re-serialize and rewrite an
-	 * identical deck every N seconds forever. Vue, Svelte and Vanilla never had
-	 * that problem because they debounce on the slides array being reassigned;
-	 * this is the same trigger, and `shouldWriteAutosaveSnapshot` writes
-	 * whenever it is unsure. Omit it and every tick writes, as before.
+	 * The values a snapshot is built from (reassigned, never mutated), read on
+	 * every render. While `isDirty`, a change in any of them is an edit that
+	 * starts the AutoRecover interval; unchanged values never cause a rewrite.
+	 * Omit it and only the clean-to-dirty transition counts as an edit.
 	 */
 	getChangeSources?: () => readonly unknown[];
 	/** Called with the serialised deck after each snapshot is written (the host's `onAutosave`). */
@@ -70,126 +62,51 @@ export interface UseAutosaveResult {
 }
 
 // ---------------------------------------------------------------------------
-// Hook (the IndexedDB store itself lives in pptx-viewer-shared)
+// Hook: the React adapter of the shared autosave controller
 // ---------------------------------------------------------------------------
 
 export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
-	const { isDirty, filePath, serializeSlides, enabled = true, getChangeSources } = input;
-	// One rule for all five bindings: an explicit interval is honoured as given,
-	// anything else falls back to the user's AutoRecover cadence.
+	const { isDirty, filePath, enabled = true } = input;
 	const intervalMs = resolveAutosaveIntervalMs({
 		hostIntervalMs: input.intervalMs,
 		optionsIntervalSeconds: input.intervalSeconds,
 	});
 
-	const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>({
-		state: 'idle',
+	// The controller reads the latest props through this ref, so it is built once.
+	const live = useRef(input);
+	live.current = input;
+	const [controller] = useState(() =>
+		createAutosaveController({
+			getActivation: () => ({ active: live.current.enabled ?? true }),
+			getFilePath: () => live.current.filePath,
+			getIntervalMs: () =>
+				resolveAutosaveIntervalMs({
+					hostIntervalMs: live.current.intervalMs,
+					optionsIntervalSeconds: live.current.intervalSeconds,
+				}),
+			serialize: () => live.current.serializeSlides(),
+			getStorage: () => live.current.storage,
+			onSaved: (data) => live.current.onSaved?.(data),
+			writeSnapshot: saveAutosaveSnapshot,
+		}),
+	);
+	const { status } = useController(controller);
+
+	useEffect(() => {
+		controller.refresh();
+	}, [controller, enabled, filePath, intervalMs]);
+
+	// Every render: the controller compares identities, so this is cheap, and it
+	// also sees values that live in refs (an inline edit in progress).
+	useEffect(() => {
+		controller.observe(isDirty, live.current.getChangeSources?.() ?? []);
 	});
 
-	// Refs to avoid stale closures in the interval callback.
-	const isDirtyRef = useRef(isDirty);
-	const filePathRef = useRef(filePath);
-	const serializeRef = useRef(serializeSlides);
-	const storageRef = useRef(input.storage);
-	storageRef.current = input.storage;
-	const isSavingRef = useRef(false);
-	const changeSourcesRef = useRef(getChangeSources);
-	const lastSnapshotRef = useRef<AutosaveSnapshotMark | undefined>(undefined);
-	const onSavedRef = useRef(input.onSaved);
-
-	useEffect(() => {
-		onSavedRef.current = input.onSaved;
-	}, [input.onSaved]);
-	useEffect(() => {
-		isDirtyRef.current = isDirty;
-	}, [isDirty]);
-	useEffect(() => {
-		filePathRef.current = filePath;
-	}, [filePath]);
-	useEffect(() => {
-		serializeRef.current = serializeSlides;
-	}, [serializeSlides]);
-	useEffect(() => {
-		changeSourcesRef.current = getChangeSources;
-	}, [getChangeSources]);
-
-	// ── Core save logic ─────────────────────────────────────────────
-	// `polled` distinguishes the interval from an explicit `triggerAutosave()`:
-	// a poll may be skipped as redundant, a request never is. It is an options
-	// object rather than a positional boolean so that wiring the trigger
-	// straight to a DOM handler cannot smuggle an event in as `true`.
-	const doAutosave = useCallback(async (options?: { polled?: boolean }) => {
-		const path = filePathRef.current;
-		if (!path) {
-			return;
-		}
-		const sources = changeSourcesRef.current?.() ?? [];
-		if (
-			!shouldWriteAutosaveSnapshot({
-				filePath: path,
-				isDirty: isDirtyRef.current,
-				saving: isSavingRef.current,
-				sources: options?.polled === true ? sources : [],
-				lastSnapshot: lastSnapshotRef.current,
-			})
-		) {
-			return;
-		}
-
-		isSavingRef.current = true;
-		setAutosaveStatus({ state: 'saving' });
-
-		try {
-			const data = await serializeRef.current();
-			if (!data) {
-				setAutosaveStatus({ state: 'idle' });
-				isSavingRef.current = false;
-				return;
-			}
-
-			await saveAutosaveSnapshot(path, data, storageRef.current);
-			// Mark AFTER the write, and from the sources read before it, so an
-			// edit made while serialising is not mistaken for one already
-			// captured: the next tick sees a different reference and writes.
-			lastSnapshotRef.current = autosaveSnapshotMark(path, sources);
-			setAutosaveStatus({ state: 'saved', timestamp: Date.now() });
-			onSavedRef.current?.(data);
-		} catch (err) {
-			setAutosaveStatus({
-				state: 'error',
-				message: err instanceof Error ? err.message : 'Autosave failed',
-			});
-		} finally {
-			isSavingRef.current = false;
-		}
-	}, []);
-
-	// ── Interval timer ──────────────────────────────────────────────
-	useEffect(() => {
-		if (!enabled) {
-			setAutosaveStatus({ state: 'disabled', reason: 'autosave_toggle_off' });
-			return;
-		}
-		if (!filePath) {
-			setAutosaveStatus({
-				state: 'disabled',
-				reason: 'no_file_path',
-			});
-			return;
-		}
-
-		// Requirements met; reset to idle if currently disabled.
-		setAutosaveStatus((prev) => (prev.state === 'disabled' ? { state: 'idle' } : prev));
-
-		const id = setInterval(() => {
-			void doAutosave({ polled: true });
-		}, intervalMs);
-
-		return () => clearInterval(id);
-	}, [enabled, filePath, intervalMs, doAutosave]);
+	// No permanent teardown: StrictMode re-runs effects on the same controller.
+	useEffect(() => () => controller.markClean(), [controller]);
 
 	return {
-		autosaveStatus,
-		triggerAutosave: () => doAutosave(),
+		autosaveStatus: status,
+		triggerAutosave: () => controller.saveNow(),
 	};
 }

@@ -3,20 +3,19 @@ import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { effectScope, nextTick, ref } from 'vue';
 
-const { probeMock, discardMock, acknowledgeMock } = vi.hoisted(() => ({
+const { probeMock, discardMock } = vi.hoisted(() => ({
 	probeMock: vi.fn(),
 	discardMock: vi.fn(),
-	acknowledgeMock: vi.fn(),
 }));
 
 vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	probeAutosaveRecovery: probeMock,
 	discardAutosaveRecovery: discardMock,
-	acknowledgeAutosaveRecovery: acknowledgeMock,
 }));
 
 const { useAutosaveRecovery } = await import('./useAutosaveRecovery');
+const { getAcknowledgedAutosaveRecoveryTimestamp } = await import('ooxml-ui/pptx');
 
 const PROMPT: AutosaveRecoveryPrompt = {
 	filePath: 'internal-key',
@@ -64,7 +63,7 @@ describe('useAutosaveRecovery', () => {
 	beforeEach(() => {
 		probeMock.mockReset().mockResolvedValue({ prompt: PROMPT, record: RECORD });
 		discardMock.mockReset().mockResolvedValue(undefined);
-		acknowledgeMock.mockReset();
+		sessionStorage.clear();
 	});
 
 	it('reports the offered record to the host (autosave-recovery)', async () => {
@@ -130,7 +129,7 @@ describe('useAutosaveRecovery', () => {
 		harness.recovery.restore();
 
 		expect(harness.onRestore).toHaveBeenCalledWith(RECORD.data);
-		expect(acknowledgeMock).toHaveBeenCalledWith(RECORD);
+		expect(getAcknowledgedAutosaveRecoveryTimestamp(RECORD.key)).toBe(RECORD.timestamp);
 		harness.stop();
 	});
 
