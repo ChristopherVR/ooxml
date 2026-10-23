@@ -97,61 +97,118 @@ function resolveLimits(limits: ZipLimits): Resolved {
  * attacker-controlled, so the read is rejected as soon as the entry inflates past its declared
  * size or the running total passes the limit, before the rest of the entry is inflated.
  */
-export function inflateEntryGuarded(
+export async function inflateEntryGuarded(
 	entry: JSZip.JSZipObject,
 	alreadyRead: number,
 	limits: ZipLimits,
 ): Promise<Uint8Array> {
+	const chunks: Uint8Array[] = [];
+	let size = 0;
+	for await (const chunk of streamEntryGuarded(entry, alreadyRead, limits)) {
+		chunks.push(chunk);
+		size += chunk.byteLength;
+	}
+	if (chunks.length === 1 && chunks[0]) return chunks[0];
+	const out = new Uint8Array(size);
+	let offset = 0;
+	for (const chunk of chunks) {
+		out.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return out;
+}
+
+/** Inflated chunks a stream may run ahead of its reader before it is paused. */
+const AHEAD = 8;
+
+/**
+ * The inflated chunks of one entry as they are produced, with the checks of
+ * {@link inflateEntryGuarded}: a violation throws from the iteration before more is inflated.
+ * Inflating pauses while the reader is behind, and stops when the reader stops early.
+ */
+export async function* streamEntryGuarded(
+	entry: JSZip.JSZipObject,
+	alreadyRead: number,
+	limits: ZipLimits,
+): AsyncGenerator<Uint8Array, void, undefined> {
 	const r = resolveLimits(limits);
 	const declared = declaredEntrySize(entry);
-	return new Promise((resolvePromise, reject) => {
-		const chunks: Uint8Array[] = [];
-		let size = 0;
-		let done = false;
-		const stream = (entry as unknown as InternalStream).internalStream('uint8array');
-		const abort = (error: Error): void => {
-			if (done) return;
-			done = true;
-			stream.pause();
-			chunks.length = 0;
-			reject(error);
-		};
-		stream.on('data', (chunk) => {
-			if (done) return;
-			size += chunk.byteLength;
-			if (size > declared || size > r.maxEntryBytes)
-				return abort(
-					r.fail(
-						`${r.label} part ${entry.name} inflates past its declared size`,
-						r.maxEntryBytes,
-						size > declared ? 'declaredSize' : 'maxEntryBytes',
-					),
-				);
-			if (alreadyRead + size > r.maxTotalBytes)
-				return abort(
-					r.fail(
-						`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
-						r.maxTotalBytes,
-						'maxTotalBytes',
-					),
-				);
-			chunks.push(chunk);
-		});
-		stream.on('error', (error) => abort(error));
-		stream.on('end', () => {
-			if (done) return;
-			done = true;
-			if (chunks.length === 1 && chunks[0]) return resolvePromise(chunks[0]);
-			const out = new Uint8Array(size);
-			let offset = 0;
-			for (const chunk of chunks) {
-				out.set(chunk, offset);
-				offset += chunk.byteLength;
-			}
-			resolvePromise(out);
-		});
+	const stream = (entry as unknown as InternalStream).internalStream('uint8array');
+	const queue: Uint8Array[] = [];
+	let size = 0;
+	let ended = false;
+	// Set on a violation or once the reader is done: from then on the stream stays paused.
+	let stopped = false;
+	let failure: Error | undefined;
+	let paused = false;
+	let wake: (() => void) | undefined;
+	const pause = (): void => {
+		paused = true;
+		stream.pause();
+	};
+	// JSZip runs a resume on a later turn while a pause is immediate, so a resume asked for before
+	// a violation may still restart the stream: every chunk after one is a reason to pause again.
+	const resume = (): void => {
+		if (!paused || stopped) return;
+		paused = false;
 		stream.resume();
+	};
+	const fail = (error: Error): void => {
+		failure ??= error;
+		stopped = true;
+		queue.length = 0;
+		pause();
+		wake?.();
+	};
+	stream.on('data', (chunk) => {
+		if (stopped) return pause();
+		size += chunk.byteLength;
+		if (size > declared || size > r.maxEntryBytes)
+			return fail(
+				r.fail(
+					`${r.label} part ${entry.name} inflates past its declared size`,
+					r.maxEntryBytes,
+					size > declared ? 'declaredSize' : 'maxEntryBytes',
+				),
+			);
+		if (alreadyRead + size > r.maxTotalBytes)
+			return fail(
+				r.fail(
+					`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
+					r.maxTotalBytes,
+					'maxTotalBytes',
+				),
+			);
+		queue.push(chunk);
+		if (queue.length >= AHEAD) pause();
+		wake?.();
 	});
+	stream.on('error', (error) => fail(error));
+	stream.on('end', () => {
+		ended = true;
+		wake?.();
+	});
+	stream.resume();
+	try {
+		for (;;) {
+			if (failure) throw failure;
+			const chunk = queue.shift();
+			if (chunk) {
+				if (queue.length < AHEAD / 2) resume();
+				yield chunk;
+				continue;
+			}
+			if (ended) return;
+			await new Promise<void>((resolve) => {
+				wake = resolve;
+				resume();
+			});
+			wake = undefined;
+		}
+	} finally {
+		stopped = true;
+		if (!ended) pause();
+	}
 }
 
 function toBase64(bytes: Uint8Array): string {

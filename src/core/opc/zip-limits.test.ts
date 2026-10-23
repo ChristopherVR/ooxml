@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { readPackage } from '../docx/parse';
 import { listEmbeddedPackages } from './embedded-packages';
 import { deflateZeros, lyingZipOf } from './__fixtures__/lying-zip';
-import { isSafePartName, openZip, ZipLimitError } from './zip-limits';
+import { isSafePartName, openZip, streamEntryGuarded, ZipLimitError } from './zip-limits';
 
 /** 64 MiB of zeros that the headers claim is 100 bytes. */
 async function bombEntry(name: string) {
@@ -81,5 +81,107 @@ describe('forged headers in each loader', () => {
 	it('rejects a forged embedded package', async () => {
 		const bytes = lyingZipOf([await bombEntry('word/embeddings/x.docx')]);
 		await expect(listEmbeddedPackages(bytes)).rejects.toThrow(/inflates past/);
+	});
+});
+
+/** Reads a stream to its end and returns how many bytes it gave. */
+async function drain(chunks: AsyncIterable<Uint8Array>): Promise<number> {
+	let size = 0;
+	for await (const chunk of chunks) size += chunk.byteLength;
+	return size;
+}
+
+describe('streamEntryGuarded', () => {
+	/** An entry of about 5 MB of numbers, so it inflates in many chunks. */
+	const text = Array.from({ length: 1 << 19 }, (_, i) => `${(i * 2654435761) % 1e9}\n`).join('');
+	let opened: Promise<JSZip> | undefined;
+	const bigZip = async () => ({
+		text,
+		zip: await (opened ??= zipOf({ 'a.xml': text }).then((bytes) => JSZip.loadAsync(bytes))),
+	});
+
+	it('hands out the inflated entry chunk by chunk', async () => {
+		const { zip } = await bigZip();
+		const chunks: Uint8Array[] = [];
+		for await (const chunk of streamEntryGuarded(zip.file('a.xml')!, 0, {})) chunks.push(chunk);
+		expect(chunks.length).toBeGreaterThan(1);
+		expect(new TextDecoder().decode(Buffer.concat(chunks))).toBe(text);
+	});
+
+	it('yields the first chunk without inflating the whole entry', async () => {
+		const { zip } = await bigZip();
+		const entry = zip.file('a.xml')!;
+		let read = 0;
+		for await (const chunk of streamEntryGuarded(entry, 0, {})) {
+			read += chunk.byteLength;
+			break;
+		}
+		expect(read).toBeGreaterThan(0);
+		expect(read).toBeLessThan(1 << 20);
+	});
+
+	it('keeps a rejected entry paused when a resume asked for earlier runs late', async () => {
+		// An entry streamed the way JSZip streams: a pause is immediate, a resume runs on a later
+		// turn, and a running stream schedules its next chunk itself.
+		let paused = true;
+		let scheduled = false;
+		let sent = 0;
+		const listeners: Record<string, ((chunk?: Uint8Array) => void)[]> = { data: [], end: [] };
+		const tick = (): void => {
+			scheduled = false;
+			if (paused || sent === 1000) return;
+			sent++;
+			for (const listener of listeners.data ?? []) listener(new Uint8Array(1024));
+			if (sent === 1000) for (const listener of listeners.end ?? []) listener();
+			else {
+				scheduled = true;
+				setImmediate(tick);
+			}
+		};
+		const stream = {
+			on(event: string, listener: (chunk?: Uint8Array) => void) {
+				(listeners[event] ??= []).push(listener);
+				return stream;
+			},
+			pause() {
+				paused = true;
+				return stream;
+			},
+			resume() {
+				setImmediate(() => {
+					if (!paused) return;
+					paused = false;
+					if (!scheduled) setImmediate(tick);
+					scheduled = true;
+				});
+				return stream;
+			},
+		};
+		const entry = {
+			name: 'x.xml',
+			_data: { uncompressedSize: 5 * 1024 },
+			internalStream: () => stream,
+		} as unknown as JSZip.JSZipObject;
+		await expect(drain(streamEntryGuarded(entry, 0, {}))).rejects.toMatchObject({
+			kind: 'declaredSize',
+		});
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		expect(sent).toBeLessThan(10);
+	});
+
+	it('applies the limits while streaming, counting what was read before', async () => {
+		const { zip } = await bigZip();
+		const read = (entry: JSZip.JSZipObject, alreadyRead: number, limits = {}) =>
+			drain(streamEntryGuarded(entry, alreadyRead, limits));
+		const entry = zip.file('a.xml')!;
+		await expect(read(entry, 0, { maxEntryBytes: 1 << 20 })).rejects.toMatchObject({
+			kind: 'maxEntryBytes',
+		});
+		await expect(read(entry, 100, { maxTotalBytes: text.length + 99 })).rejects.toMatchObject({
+			kind: 'maxTotalBytes',
+		});
+		await expect(read(entry, 100, { maxTotalBytes: text.length + 100 })).resolves.toBe(text.length);
+		const forged = await openZip(lyingZipOf([await bombEntry('b.xml')]));
+		await expect(read(forged.file('b.xml')!, 0)).rejects.toMatchObject({ kind: 'declaredSize' });
 	});
 });
