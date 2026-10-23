@@ -73,6 +73,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(
+				'Insert chart',
+				'chart',
+				{ type: 'formatDialog', kind: 'insertChart' },
+				{ large: true, caption: 'Chart' },
+			),
+			tool(
 				'Format picture',
 				'formatPicture',
 				{ type: 'formatPicture' },

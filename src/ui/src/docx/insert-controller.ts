@@ -23,6 +23,7 @@ import {
 	type ShapeWrap,
 } from './shape-commands';
 import { insertPicture, PICTURE_TYPES, stagePicture } from './picture-commands';
+import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
 import { focusView } from './focus-view';
@@ -89,6 +90,9 @@ export class InsertController {
 			if (editable) this.shapeTool.arm(action.preset);
 		} else if (action.type === 'shape') {
 			if (view) this.runShapeAction(view, action);
+			focusView(view);
+		} else if (action.type === 'chart') {
+			if (view) setSelectedChartLegend(view, action.value);
 			focusView(view);
 		} else if (action.type === 'insertEquation') {
 			const entry = EQUATION_GALLERY.find((item) => item.id === action.id);

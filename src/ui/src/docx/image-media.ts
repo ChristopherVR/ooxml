@@ -1,5 +1,6 @@
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
+import { NodeSelection } from 'prosemirror-state';
 import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
@@ -46,6 +47,8 @@ export class ImageMediaCache {
 export interface ImageNodeViewOptions {
 	/** Opens Format Picture for the picture at `pos` (double-click). */
 	editPicture?(pos: number): void;
+	/** Opens Edit Data for the selected chart (double-click on a chart). */
+	editChart?(): void;
 	/** The widest a picture may be resized to, in CSS pixels. */
 	maxWidth?(): number;
 	/** The document theme, for resolving SmartArt and chart colours. */
@@ -83,9 +86,21 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram) return smartArtNodeView(node, diagram, options.theme?.());
 		if (node.attrs.chart) {
-			// The chart is painted read-only with the document theme; its part is preserved on save.
-			const spec = chartNodeSpec(node, options.theme?.());
-			return { dom: DOMSerializer.renderSpec(document, spec).dom, ignoreMutation: () => true };
+			// The chart is painted with the document theme; an edit replaces the node, which repaints it.
+			const dom = DOMSerializer.renderSpec(document, chartNodeSpec(node, options.theme?.()))
+				.dom as HTMLElement;
+			dom.addEventListener('dblclick', () => {
+				const pos = getPos();
+				if (pos === undefined || !view.editable) return;
+				view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)));
+				options.editChart?.();
+			});
+			return {
+				dom,
+				ignoreMutation: () => true,
+				selectNode: () => dom.classList.add('dve-chart-selected'),
+				deselectNode: () => dom.classList.remove('dve-chart-selected'),
+			};
 		}
 		const content = renderSpec(node);
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.

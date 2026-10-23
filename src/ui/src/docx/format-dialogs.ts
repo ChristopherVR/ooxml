@@ -1,4 +1,5 @@
-import type { DocumentModel } from 'ooxml-core/docx';
+import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
+import { createChartDataDialog, createChartTypeDialog } from './chart-dialogs';
 import type { EditorView } from 'prosemirror-view';
 import { createFontDialog, type FormatDialog } from './font-dialog';
 import type { EditorLocale } from './localization';
@@ -44,7 +45,10 @@ export type FormatDialogKind =
 	| 'dropCap'
 	| 'columns'
 	| 'multilevelList'
-	| 'tracking';
+	| 'tracking'
+	| 'insertChart'
+	| 'changeChartType'
+	| 'chartData';
 
 export interface FormatDialogsHost {
 	view(): EditorView | undefined;
@@ -62,6 +66,8 @@ export interface FormatDialogsHost {
 	pageBorders?: Omit<PageBordersHost, 'restoreFocus'>;
 	watermark?: Omit<WatermarkHost, 'restoreFocus'>;
 	columns?: Omit<ColumnsHost, 'restoreFocus'>;
+	/** The document theme, for chart previews. */
+	theme?(): ThemeCatalog | undefined;
 }
 
 /** The Font and Paragraph dialogs opened from the ribbon's group launchers. */
@@ -69,6 +75,7 @@ export class FormatDialogs {
 	private readonly dialogs: Record<FormatDialogKind, FormatDialog>;
 
 	constructor(host: FormatDialogsHost) {
+		const charts = { view: () => host.view(), theme: () => host.theme?.() };
 		this.dialogs = {
 			font: createFontDialog(
 				() => host.view(),
@@ -132,6 +139,9 @@ export class FormatDialogs {
 				() => host.model(),
 				() => host.canDefineList?.() ?? true,
 			),
+			insertChart: createChartTypeDialog(charts, false),
+			changeChartType: createChartTypeDialog(charts, true),
+			chartData: createChartDataDialog(charts),
 			tracking: createReviewOptionsDialog(() =>
 				host.reviewView ? host.reviewView() : host.view(),
 			),

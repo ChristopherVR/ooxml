@@ -220,12 +220,13 @@ describe('localized rendering', () => {
 		} as const;
 		for (const locale of EDITOR_LOCALES) {
 			const ribbon = createRibbon(locale);
-			// Header & Footer and Shape Format are contextual: they show only inside a header or footer, or on a shape.
+			// Header & Footer, Shape Format and Chart Design are contextual: they show only inside a header or footer, on a shape or on a chart.
 			const names = panelsOf(ribbon).map((panel) => panel.dataset.label);
 			expect(names, locale).toEqual([
 				...expected[locale],
 				strings[locale]['tab.header-footer'],
 				strings[locale]['tab.shape-format'],
+				strings[locale]['tab.chart-design'],
 			]);
 		}
 		expect(strings.fr['tab.insert']).toBe('Insertion');
