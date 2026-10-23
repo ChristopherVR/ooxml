@@ -1,27 +1,20 @@
 /**
- * Save-side glue between an edited chart's cache-write loop and the
- * embedded-workbook writer in `utils/chart-xlsx-writer.ts`.
- *
- * Resolves a chart's `c:externalData` reference to its embedded xlsx part
- * inside the SAME package zip already being saved, hands the collected
- * cell writes to {@link writeChartWorkbookUpdates}, and stores the result
- * back into the zip. Every way the reference can fail to resolve (no
- * linked workbook, an external/non-xlsx target, a missing or unreadable
- * part, or individual writes the range parser could not place) degrades
- * safely: the chart's `c:numCache`/`c:strCache` edit (already applied by
- * the caller) stands as the saved result, and a {@link CompatibilityWarningInput}
- * is reported instead of throwing. Opt-in atomic label edits throw instead, so
- * callers cannot publish mismatched chart caches and workbook cells.
+ * Save-side glue between an edited chart's cache-write loop and the shared embedded-workbook
+ * writer. The resolution, write-back and degrade-to-warning policy live in the format-neutral
+ * chart area (`chart/workbook/package-save.ts`, shared with Word); this module resolves the
+ * pptx relationship target inside the package zip being saved and adds the slide context to
+ * each warning. Opt-in atomic label edits throw instead, so callers cannot publish mismatched
+ * chart caches and workbook cells.
  *
  * @module chart-external-workbook-save
  */
 
 import type JSZip from 'jszip';
 
+import { saveChartWorkbookUpdates } from '../../../../chart/workbook/package-save';
 import type { CompatibilityWarningInput } from '../../services/PptxCompatibilityService';
 import type { PptxExternalData } from '../../types';
 import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
-import { writeChartWorkbookUpdates } from '../../utils/chart-xlsx-writer';
 
 /** The runtime primitives this module needs, kept explicit for testability. */
 export interface ChartExternalWorkbookSaveDeps {
@@ -42,84 +35,35 @@ export async function saveChartExternalWorkbookUpdates(
 	writes: readonly PptxChartWorkbookWrite[],
 	atomic = false,
 ): Promise<boolean> {
-	if (atomic && externalData && (!externalData.targetPath || externalData.isExternal)) {
-		throw new Error('Chart label replacement cannot update an external or missing workbook.');
-	}
-	if (writes.length === 0 || !externalData?.targetPath) {
-		// No data edits collected, or the chart has no linked external data at
-		// all (the normal case for most charts) - nothing to reconcile.
-		return writes.length === 0;
-	}
-
-	const embeddingPath = deps.resolveImagePath(chartPartPath, externalData.targetPath);
-	const looksEmbedded = embeddingPath.includes('embeddings/') && /\.xlsx$/iu.test(embeddingPath);
-	if (!looksEmbedded || externalData.isExternal) {
-		if (atomic) {
-			throw new Error('Chart label replacement requires an embedded .xlsx workbook.');
-		}
-		// e.g. TargetMode="External" pointing outside the package, or a legacy
-		// .xls/.xlsb workbook this module does not parse.
-		deps.reportWarning({
-			code: 'CHART_EXTERNAL_DATA_WRITEBACK_UNSUPPORTED',
-			message:
-				'Chart data changes were saved to the cached values only: the linked data source is external or not an embedded .xlsx workbook, so it was not updated.',
-			severity: 'info',
-			scope: 'save',
-			slideId: slidePath,
-			xmlPath: chartPartPath,
-		});
-		return false;
-	}
-
-	const xlsxFile = deps.zip.file(embeddingPath);
-	if (!xlsxFile) {
-		if (atomic) {
-			throw new Error('Chart label replacement workbook is missing.');
-		}
-		deps.reportWarning({
-			code: 'CHART_EMBEDDED_WORKBOOK_MISSING',
-			message:
-				'Chart data changes were saved to the cached values only: the referenced embedded workbook was not found in the package.',
-			severity: 'warning',
-			scope: 'save',
-			slideId: slidePath,
-			xmlPath: embeddingPath,
-		});
-		return false;
-	}
-
-	let xlsxBytes: Uint8Array;
-	try {
-		xlsxBytes = await xlsxFile.async('uint8array');
-	} catch {
-		if (atomic) {
-			throw new Error('Chart label replacement workbook cannot be read.');
-		}
-		deps.reportWarning({
-			code: 'CHART_EMBEDDED_WORKBOOK_UNREADABLE',
-			message:
-				'Chart data changes were saved to the cached values only: the referenced embedded workbook could not be read.',
-			severity: 'warning',
-			scope: 'save',
-			slideId: slidePath,
-			xmlPath: embeddingPath,
-		});
-		return false;
-	}
-
-	const result = await writeChartWorkbookUpdates(xlsxBytes, writes, { atomic });
-	if (result.bytes) {
-		deps.zip.file(embeddingPath, result.bytes);
-	}
-	if (result.unresolved > 0) {
-		deps.reportWarning({
-			code: 'CHART_EMBEDDED_WORKBOOK_PARTIAL_WRITEBACK',
-			message: `${result.unresolved} chart data update(s) could not be matched to a cell in the linked workbook and were saved to the cached values only.`,
-			severity: 'info',
-			scope: 'save',
-			slideId: slidePath,
-			xmlPath: embeddingPath,
-		});
-	}
-	return result.unresolved === 0;
+	const target = externalData
+		? {
+				...(externalData.targetPath
+					? { partName: deps.resolveImagePath(chartPartPath, externalData.targetPath) }
+					: {}),
+				...(externalData.isExternal ? { external: true } : {}),
+			}
+		: undefined;
+	return saveChartWorkbookUpdates(
+		{
+			read: async (partName) => deps.zip.file(partName)?.async('uint8array'),
+			write: (partName, bytes) => {
+				deps.zip.file(partName, bytes);
+			},
+		},
+		chartPartPath,
+		target,
+		writes,
+		{
+			atomic,
+			report: (issue) =>
+				deps.reportWarning({
+					code: issue.code,
+					message: issue.message,
+					severity: issue.severity,
+					scope: 'save',
+					slideId: slidePath,
+					xmlPath: issue.partName,
+				}),
+		},
+	);
 }

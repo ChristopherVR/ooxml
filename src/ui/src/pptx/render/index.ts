@@ -865,6 +865,10 @@ export * from './collaboration-load-origin';
 // removing the viewer iframe) leaves the room instead of lingering as a ghost
 // collaborator until the awareness timeout.
 export * from './collaboration-teardown';
+// The Yjs transport provider and the session's document, factories and transport,
+// shared by every binding (each passes its own lazy `yjs` / `y-*` loaders).
+export * from './collaboration-provider';
+export * from './collaboration-yjs-session';
 // Synchronous "I am leaving" BroadcastChannel announcement: a provider destroyed
 // inside `pagehide` cannot get its awareness removal out (y-webrtc broadcasts it
 // a microtask later, after the frame's channels are dead), so peers drop the
@@ -1110,6 +1114,9 @@ export { fontFamilyStyleUpdates, mergeTextStyleUpdate } from './font-family-upda
 // Effects panel: shadow/inner-shadow/glow/reflection/soft-edge state readers +
 // enable/disable/update shapeStyle merge patch builders.
 export * from './effects-helpers';
+// Descriptor-driven inspector sections (field model + section descriptors) that
+// every binding draws with its one generic field renderer.
+export * from './inspector';
 // Embedded-font @font-face assembly: URL/format validation, XOR de-obfuscation
 // fallback, and the resolved-variant -> stylesheet/family-list build (the
 // managed <style> id + object-URL minting stay per-binding).

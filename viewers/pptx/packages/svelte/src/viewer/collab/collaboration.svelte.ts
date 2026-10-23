@@ -1,66 +1,59 @@
 /**
  * Real-time collaboration for the Svelte viewer (Yjs: y-websocket or serverless
- * y-webrtc), a runes port of the Vue binding's `useCollaboration` core. Provider
- * status and the remote-slide observer are extracted to `collaboration-status.ts`
- * / `collaboration-remote-sync.ts`, and presence to `collaboration-presence.svelte.ts`.
+ * y-webrtc). The room lifecycle is the shared `createCollaborationSessionController`
+ * (read through `controllerState`); the remote-slide observer lives in
+ * `collaboration-remote-sync.ts` and presence in `collaboration-presence.svelte.ts`.
  * KNOWN LIMITATION: collaborative-undo semantics are undefined in shared - local
  * undo is kept as-is and may fight a concurrent remote edit (matching the others).
  */
 import type {
 	CollaborationConfig,
+	CollaborationSessionController,
+	CollaborationSessionState,
 	CollaborationState,
 	CollabLoadOrigin,
+	CollabYSession,
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
 import {
 	buildCollaborationState,
+	createCollaborationSessionController,
 	writeBackReport,
 	DEFAULT_CURSOR_COLOR,
-	isMixedContentBlocked,
-	needsOwnedSession,
-	openOwnedCollaboration,
-	resolveTransportForServerUrl,
-	validateRoomId,
 } from 'ooxml-ui/pptx';
 
+import { controllerState } from '../state/controller-state';
+import type { ControllerState } from '../state/controller-state';
 import type { CollaborationDeps } from './collaboration-deps';
 import { CollaborationDocument } from './collaboration-document.svelte';
 import { registerCollaborationEffects } from './collaboration-effects.svelte';
 import { CollaborationPresence } from './collaboration-presence.svelte';
-import type { CollabProviderHandle } from './collaboration-provider';
-import type { CollabSession, CollabSessionFactory } from './collaboration-session';
-import { createDefaultSession, createExternalSession } from './collaboration-session';
-import { wireProviderStatus } from './collaboration-status';
+import type { CollabSessionFactory } from './collaboration-session';
+import {
+	createDefaultSession,
+	createExternalSession,
+	toSharedSession,
+} from './collaboration-session';
 
 /**
  * The collaboration controller. Construct it once during component setup: it
- * registers the two effects (auto start/stop from the config, granular publish
- * of local edits) itself, so no further wiring is needed in the SFC.
+ * registers the effects (auto start/stop from the config, granular publish of
+ * local edits) itself, so no further wiring is needed in the SFC.
  */
 export class CollaborationController {
-	/** Live connection status (reactive). */
-	status = $state<ConnectionStatus>('disconnected');
 	/** Interim Y.Doc channel for in-flight inline text (dormant when stopped). */
 	get livePatcher() {
 		return this.#document.livePatcher;
 	}
 
-	#active = $state(false);
 	readonly #deps: CollaborationDeps;
 	readonly #makeSession: CollabSessionFactory;
-
-	#session: CollabSession | null = null;
-	#provider: CollabProviderHandle | null = null;
-	#config: CollaborationConfig | null = $state(null);
+	readonly #session: CollaborationSessionController;
+	readonly #state: ControllerState<CollaborationSessionState>;
 	#lastStarted: CollaborationConfig | null = null;
 	#startedByEffect = false;
-	#startToken = 0;
-	#restoreExternalPresence: (() => void) | null = null;
-	/** Destroys the session this controller opened itself (a provider or same-browser room). */
-	#releaseOwned: (() => void) | null = null;
-	#connectTimer: ReturnType<typeof setTimeout> | null = null;
 	readonly #document: CollaborationDocument;
 	readonly #presence: CollaborationPresence;
 
@@ -74,26 +67,39 @@ export class CollaborationController {
 			width: this.#deps.getCanvasWidth?.(),
 			height: this.#deps.getCanvasHeight?.(),
 		}));
+		this.#session = createCollaborationSessionController({
+			openSession: async (config, transport) =>
+				config.externalSession
+					? createExternalSession(config.externalSession)
+					: toSharedSession(await this.#makeSession(transport, config)),
+			gate: this.#document.gate,
+			onBegin: (config) => this.#document.begin(config),
+			onOpen: (live, config) => this.#attach(live, config),
+			onClose: () => this.#detach(),
+		});
+		this.#state = controllerState(this.#session);
 
 		registerCollaborationEffects({
 			getConfig: () => this.#deps.getConfig(),
 			getSlides: () => this.#deps.getSlides(),
 			syncConfig: (config) => this.#syncConfig(config),
-			isPublishable: () => this.#active && this.#document.gate.isOpen(),
+			isPublishable: () => this.active && this.#document.gate.isOpen(),
 			flushLocalSlides: (slides) => this.#document.flush(slides),
-			leaveOnBeforeUnload: () => !this.#config?.externalSession,
-			stop: () => this.stop(),
-			rejoin: () => {
-				if (this.#lastStarted) {
-					void this.#run(this.#lastStarted);
-				}
-			},
+			destroy: () => this.#session.destroy(),
 		});
 	}
 
+	/** Live connection status (reactive). */
+	get status(): ConnectionStatus {
+		return this.#state.current.status;
+	}
+	/** A borrowed host session's readiness reports its status here. */
+	set status(next: ConnectionStatus) {
+		this.#session.setStatus(next);
+	}
 	/** Whether a session is live (reactive). */
 	get active(): boolean {
-		return this.#active;
+		return this.#state.current.active;
 	}
 	/** The requested viewer role forbids editing, including while attachment is pending. */
 	get readOnly(): boolean {
@@ -114,13 +120,13 @@ export class CollaborationController {
 	/** The config the active session was started with (null when stopped); the
 	 * Share dialog's active view reads the local user's name/colour from this. */
 	get activeCollaboration(): CollaborationConfig | null {
-		return this.#config;
+		return this.#state.current.config;
 	}
 	/** The shared `CollaborationState` a host reads (`oncollaborationchange`), reactive. */
 	get state(): CollaborationState {
-		const config = this.#config;
+		const config = this.activeCollaboration;
 		return buildCollaborationState({
-			active: this.#active,
+			active: this.active,
 			roomId: config?.roomId,
 			status: this.status,
 			synced: this.#document.synced,
@@ -133,7 +139,7 @@ export class CollaborationController {
 	}
 	/** Total connected participants (self + remote peers), reactive. */
 	get connectedCount(): number {
-		return this.remotePresences.length + (this.#active ? 1 : 0);
+		return this.remotePresences.length + (this.active ? 1 : 0);
 	}
 
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */
@@ -161,7 +167,7 @@ export class CollaborationController {
 	 * late joiner's bootstrap deck never clobbers the room's synced content.
 	 */
 	adoptDocAfterLoad(origin: CollabLoadOrigin = 'user'): void {
-		if (this.#active) {
+		if (this.active) {
 			this.#document.adoptAfterLoad(origin);
 		}
 	}
@@ -170,7 +176,7 @@ export class CollaborationController {
 		if (config && config !== this.#lastStarted) {
 			this.#lastStarted = config;
 			this.#startedByEffect = true;
-			void this.#run(config);
+			void this.#session.start(config);
 		} else if (!config && this.#startedByEffect) {
 			// Only auto-stop a session THIS effect started; a direct `start()`
 			// call (e.g. from a dialog) always clears the flag below, so it
@@ -181,12 +187,6 @@ export class CollaborationController {
 		}
 	}
 
-	#clearTimers(): void {
-		if (this.#connectTimer !== null) {
-			clearTimeout(this.#connectTimer);
-			this.#connectTimer = null;
-		}
-	}
 	/** Start (or restart) a session with the given config (dialog-driven). */
 	async start(config: CollaborationConfig): Promise<void> {
 		// Set synchronously, before any `await` below, so a same-tick effect
@@ -194,149 +194,32 @@ export class CollaborationController {
 		// does not redundantly start a second, concurrent session.
 		this.#lastStarted = config;
 		this.#startedByEffect = false;
-		await this.#run(config);
+		await this.#session.start(config);
 	}
 
-	async #run(requested: CollaborationConfig): Promise<void> {
-		this.stop();
-		const token = ++this.#startToken;
-		this.#config = requested;
-		this.#document.begin(requested);
-		let config = requested;
-		try {
-			validateRoomId(requested.roomId);
-		} catch {
-			this.stop();
-			this.status = 'error';
-			return;
-		}
-		if (needsOwnedSession(requested)) {
-			this.status = 'connecting';
-			const owned = openOwnedCollaboration(requested);
-			this.#releaseOwned = owned.release;
-			try {
-				const prepared = await owned.ready;
-				if (token !== this.#startToken || !prepared) {
-					return;
-				}
-				config = prepared;
-				this.#document.begin(config);
-			} catch {
-				if (token === this.#startToken) {
-					this.stop();
-					this.status = 'error';
-				}
-				return;
-			}
-		}
-		const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
-		// Mixed-content only affects a ws:// socket from an https page.
-		if (
-			!config.externalSession &&
-			transport === 'websocket' &&
-			isMixedContentBlocked(config.serverUrl)
-		) {
-			this.stop();
-			this.status = 'error';
-			return;
-		}
-		this.status = 'connecting';
-		try {
-			if (config.externalSession) {
-				await this.#runExternal(config, token);
-				return;
-			}
-			const session = await this.#makeSession(transport, config);
-			if (token !== this.#startToken) {
-				session.destroy();
-				return;
-			}
-			this.#session = session;
-			this.#document.attach(session.ydoc, session.factories);
-			this.#provider = session.provider;
-
-			// Gate local writes on the provider's initial sync; the grace timer
-			// covers a lone webrtc peer that never receives a sync event.
-			this.#document.gate.reset();
-			this.#provider.onSynced(() => this.#document.gate.open());
-			if (this.#provider.syncedNow) {
-				this.#document.gate.open();
-			} else {
-				this.#document.gate.arm();
-			}
-
-			this.#presence.start(this.#provider.awareness, {
-				userName: config.userName,
-				userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
-				userAvatar: config.userAvatar,
-				role: config.role,
-			});
-
-			this.#wireProvider(transport);
-
-			this.#active = true;
-			this.#deps.onStart?.(config);
-		} catch {
-			if (token !== this.#startToken) {
-				return;
-			}
-			this.stop();
-			this.status = 'error';
-		}
-	}
-
-	async #runExternal(config: CollaborationConfig, token: number): Promise<void> {
-		const external = config.externalSession!;
-		const session = await createExternalSession(external);
-		if (token !== this.#startToken) {
-			session.dispose();
-			return;
-		}
-		this.#restoreExternalPresence = session.dispose;
-		this.#presence.start(session.awareness, {
+	/** The session is live: attach the document and presence. */
+	#attach(live: CollabYSession, config: CollaborationConfig): void {
+		this.#document.attach(live.doc, live.factories);
+		this.#presence.start(live.awareness, {
 			userName: config.userName,
 			userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
 			userAvatar: config.userAvatar,
 			role: config.role,
 		});
-		this.#active = true;
-		this.#document.attach(session.ydoc, session.factories);
 		this.#deps.onStart?.(config);
 	}
 
-	/** Attach the status machine and the remote-slide observer to the session. */
-	#wireProvider(transport: string): void {
-		if (!this.#provider) {
-			return;
+	/** The session is ending (also on every restart): detach before it is disposed. */
+	#detach(): void {
+		this.#document.stop();
+		this.#presence.stop();
+		// The controller is still being built when its first stop() runs.
+		if (this.#session?.getSnapshot().active) {
+			this.#deps.onStop?.();
 		}
-		wireProviderStatus(this.#provider, transport, {
-			setStatus: (status) => (this.status = status),
-			getStatus: () => this.status,
-			isActive: () => this.#active,
-			stop: () => this.stop(),
-			gate: this.#document.gate,
-			setConnectTimer: (timer) => (this.#connectTimer = timer),
-			getConnectTimer: () => this.#connectTimer,
-		});
 	}
 
 	stop(): void {
-		this.#startToken++;
-		this.#document.stop();
-		this.#clearTimers();
-		this.#presence.stop();
-		this.#restoreExternalPresence?.();
-		this.#restoreExternalPresence = null;
-		this.#releaseOwned?.();
-		this.#releaseOwned = null;
-		this.#session?.destroy();
-		this.#session = null;
-		this.#provider = null;
-		this.#config = null;
-		if (this.#active) {
-			this.#deps.onStop?.();
-		}
-		this.#active = false;
-		this.status = 'disconnected';
+		this.#session.stop();
 	}
 }

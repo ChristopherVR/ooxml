@@ -1,24 +1,18 @@
 /**
- * useRecoveryDetection: after a deck finishes loading, ask the shared recovery
- * store whether a NEWER crash-recovery snapshot exists for it, and hand the
- * caller a prompt descriptor to render.
- *
- * It used to open the Version History panel instead, which never says the word
- * "recover" and left the user to work out what they were looking at. The panel
- * is still opened alongside the prompt when the caller wants it, but the
- * decision and the copy now come from `pptx-viewer-shared`
- * (`render/autosave-recovery`), so the other four bindings render the same
- * dialog from the same descriptor.
+ * useRecoveryDetection: the React adapter of the shared crash-recovery offer
+ * (`createAutosaveRecoveryController` in `ooxml-ui/pptx`). After a deck
+ * finishes loading it asks the recovery store whether a snapshot exists for it
+ * and hands back the prompt descriptor the native dialog renders.
  */
 import {
-	acceptAutosaveRecovery,
-	acknowledgeAutosaveRecovery,
+	createAutosaveRecoveryController,
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
-	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
 import type { AutosaveRecord, AutosaveRecoveryPrompt, DocumentStorage } from 'ooxml-ui/pptx';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { useController } from './useController';
 
 // ---------------------------------------------------------------------------
 // Input / output
@@ -64,91 +58,36 @@ export interface UseRecoveryDetectionResult {
 
 export function useRecoveryDetection(input: UseRecoveryDetectionInput): UseRecoveryDetectionResult {
 	const { filePath, fileName, loading, error, slideCount, autosaveAllowed = true } = input;
-	const recoveryCheckedRef = useRef(false);
-	const recordRef = useRef<AutosaveRecord | null>(null);
-	const actionPendingRef = useRef(false);
-	const [prompt, setPrompt] = useState<AutosaveRecoveryPrompt | null>(null);
-	const [discarding, setDiscarding] = useState(false);
+	const live = useRef(input);
+	live.current = input;
+	const [controller] = useState(() =>
+		createAutosaveRecoveryController({
+			getStorage: () => live.current.storage,
+			load: (bytes) => live.current.onRestore?.(bytes),
+			onOffered: (record) => {
+				live.current.onOffered?.(record);
+				live.current.openVersionHistory?.();
+			},
+			probe: probeAutosaveRecovery,
+			discardRecord: discardAutosaveRecovery,
+		}),
+	);
+	const { prompt, discarding } = useController(controller);
 
-	const onRestore = input.onRestore;
-	const storageRef = useRef(input.storage);
-	storageRef.current = input.storage;
-	const onOfferedRef = useRef(input.onOffered);
 	useEffect(() => {
-		onOfferedRef.current = input.onOffered;
-	}, [input.onOffered]);
-	const openVersionHistory = input.openVersionHistory;
+		controller.check({ filePath, fileName, loading, error, slideCount, autosaveAllowed });
+	}, [controller, filePath, fileName, loading, error, slideCount, autosaveAllowed]);
 
-	useEffect(() => {
-		if (
-			!shouldProbeAutosaveRecovery({
-				alreadyChecked: recoveryCheckedRef.current,
-				filePath,
-				loading,
-				error,
-				slideCount,
-				autosaveAllowed,
-			})
-		) {
-			return;
-		}
-		recoveryCheckedRef.current = true;
-
-		void (async () => {
-			const offer = await probeAutosaveRecovery(
-				filePath!,
-				Date.now(),
-				fileName,
-				storageRef.current,
-			);
-			if (!offer) {
-				return;
-			}
-			recordRef.current = offer.record;
-			setPrompt(offer.prompt);
-			onOfferedRef.current?.(offer.record);
-			openVersionHistory?.();
-		})();
-	}, [filePath, fileName, loading, error, slideCount, autosaveAllowed, openVersionHistory]);
-
-	const restore = useCallback(() => {
-		if (actionPendingRef.current) {
-			return;
-		}
-		actionPendingRef.current = true;
-		const record = recordRef.current;
-		setPrompt(null);
-		if (record && onRestore) {
-			onRestore(acceptAutosaveRecovery(record));
-			acknowledgeAutosaveRecovery(record);
-		}
-		recordRef.current = null;
-	}, [onRestore]);
-
-	const discard = useCallback(() => {
-		if (actionPendingRef.current) {
-			return;
-		}
-		const record = recordRef.current;
-		if (!record) {
-			setPrompt(null);
-			return;
-		}
-		actionPendingRef.current = true;
-		setDiscarding(true);
-		void (async () => {
-			try {
-				await discardAutosaveRecovery(record, storageRef.current);
-				recordRef.current = null;
-				setPrompt(null);
-			} catch {
-				// Leave the prompt open so a failed discard can be retried.
-			} finally {
-				actionPendingRef.current = false;
-				setDiscarding(false);
-			}
-		})();
-	}, []);
-
-	return { prompt, restore, discard, discarding };
+	return {
+		prompt,
+		discarding,
+		restore: () => {
+			void controller.restore().catch(() => {
+				// The load path reports its own error.
+			});
+		},
+		discard: () => {
+			void controller.discard();
+		},
+	};
 }

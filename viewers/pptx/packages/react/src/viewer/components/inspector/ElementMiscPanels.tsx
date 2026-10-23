@@ -166,7 +166,7 @@ export function OlePropertiesPanel({
 }
 
 // ---------------------------------------------------------------------------
-// Transform Panel (Rotation + Opacity)
+// Transform Panel (Opacity; rotation is in the Size & Position grid)
 // ---------------------------------------------------------------------------
 
 interface TransformPanelProps {
@@ -184,16 +184,6 @@ export function TransformPanel({
 		<div className={CARD}>
 			<div className={HEADING}>Transform</div>
 			<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
-				<label className='flex flex-col gap-1'>
-					<span className='text-muted-foreground'>Rotation (°)</span>
-					<input
-						type='number'
-						disabled={!canEdit}
-						className={INPUT}
-						value={Math.round(selectedElement.rotation || 0)}
-						onChange={(e) => onUpdateElement({ rotation: Number(e.target.value) })}
-					/>
-				</label>
 				<label className='flex flex-col gap-1'>
 					<span className='text-muted-foreground'>Opacity</span>
 					<input

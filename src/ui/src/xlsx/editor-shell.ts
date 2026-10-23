@@ -31,8 +31,7 @@ import { editorStyleText } from './theme';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
-import { createChartSeriesPane } from './chart-series-pane';
-import { createChartAreaPane } from './chart-area-pane';
+import { createChartFormatPane } from './chart-format-pane';
 
 /** Element properties the shell's options and customize pages change. */
 export interface ShellElement extends HTMLElement {
@@ -197,8 +196,7 @@ export function buildShell(core: EditorCore): Shell {
 	const toaster = createToaster(doc, () => ctx.t('Close'));
 
 	const workspace = el(doc, 'div', 'xve-workspace');
-	const chartSeriesPane = createChartSeriesPane(ctx, () => chartAreaPane.close());
-	const chartAreaPane = createChartAreaPane(ctx, () => chartSeriesPane.close());
+	const chartFormatPane = createChartFormatPane(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
 	const gridHost = el(doc, 'div', 'xve-grid-host');
@@ -207,7 +205,7 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, chartSeriesPane.element, chartAreaPane.element);
+	canvasRow.append(workspace, chartFormatPane.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -240,14 +238,15 @@ export function buildShell(core: EditorCore): Shell {
 			formulaRow,
 			gridHost,
 			tabsRow,
-			chartSeriesPane.element,
-			chartAreaPane.element,
+			chartFormatPane.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
 		if (region === ribbon.element) return ribbon.focus();
 		if (region === gridHost) return ctx.grid()?.focus();
-		region.querySelector<HTMLElement>('input, button:not(:disabled), [tabindex="0"]')?.focus();
+		(region.shadowRoot ?? region)
+			.querySelector<HTMLElement>('input, button:not(:disabled), [tabindex="0"]')
+			?.focus();
 	};
 	const actions = (action: ShellAction) => {
 		if (action === 'help') return help.open();
@@ -284,8 +283,7 @@ export function buildShell(core: EditorCore): Shell {
 			ribbonActions.refresh();
 			statusBar.refresh();
 			pageViews?.refresh();
-			chartSeriesPane.refresh();
-			chartAreaPane.refresh();
+			chartFormatPane.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');
@@ -301,8 +299,7 @@ export function buildShell(core: EditorCore): Shell {
 			ribbonActions.relocalize();
 			statusBar.relocalize();
 			backstage.relocalize();
-			chartSeriesPane.relocalize();
-			chartAreaPane.relocalize();
+			chartFormatPane.relocalize();
 			core.requestRender();
 		},
 	};

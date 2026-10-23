@@ -175,3 +175,33 @@ describe('createTextSection text colour theme grid', () => {
 		expect(swatches.every((swatch) => swatch.disabled)).toBeTruthy();
 	});
 });
+
+describe('createTextSection text box options', () => {
+	it('draws the shared Text Box options from the text style and commits through setTextStyle', () => {
+		const { section, handlers } = mount();
+		section.update(baseState({ textStyle: { vAlign: 'middle', columnCount: 2 } }));
+		const byTestId = (id: string) =>
+			section.el.querySelector<HTMLInputElement>(`[data-testid="${id}"]`)!;
+		expect(byTestId('text-box-valign').value).toBe('middle');
+		expect(byTestId('text-box-columns').value).toBe('2');
+
+		const autofit = byTestId('text-box-autofit');
+		autofit.value = 'shrink';
+		autofit.dispatchEvent(new Event('change'));
+		expect(handlers.setTextStyle).toHaveBeenCalledWith({ autoFitMode: 'shrink', autoFit: true });
+
+		const wrap = byTestId('text-box-wrap');
+		wrap.checked = false;
+		wrap.dispatchEvent(new Event('change'));
+		expect(handlers.setTextStyle).toHaveBeenLastCalledWith({ textWrap: 'none' });
+	});
+
+	it('disables the text box options when text cannot be formatted', () => {
+		const { section } = mount();
+		section.update(baseState({ canText: false }));
+		const direction = section.el.querySelector<HTMLSelectElement>(
+			'[data-testid="text-box-direction"]',
+		)!;
+		expect(direction.disabled).toBeTruthy();
+	});
+});

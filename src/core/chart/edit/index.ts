@@ -18,3 +18,9 @@ export {
 } from './type-schema';
 export * from './fill';
 export * from './style';
+export * from './target';
+export * from './target-paint';
+export * from './group-options';
+export * from './intent';
+export * from './data-sheet';
+export * from './new-chart';

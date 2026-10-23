@@ -19,20 +19,19 @@ import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { probeMock, discardMock, acknowledgeMock } = vi.hoisted(() => ({
+const { probeMock, discardMock } = vi.hoisted(() => ({
 	probeMock: vi.fn(),
 	discardMock: vi.fn(),
-	acknowledgeMock: vi.fn(),
 }));
 
 vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	probeAutosaveRecovery: probeMock,
 	discardAutosaveRecovery: discardMock,
-	acknowledgeAutosaveRecovery: acknowledgeMock,
 }));
 
 const { useRecoveryDetection } = await import('./useRecoveryDetection');
+const { getAcknowledgedAutosaveRecoveryTimestamp } = await import('ooxml-ui/pptx');
 type Result = ReturnType<typeof useRecoveryDetection>;
 type Input = Parameters<typeof useRecoveryDetection>[0];
 
@@ -65,7 +64,7 @@ let root: Root;
 beforeEach(() => {
 	probeMock.mockReset();
 	discardMock.mockReset();
-	acknowledgeMock.mockReset();
+	sessionStorage.clear();
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
@@ -152,7 +151,7 @@ describe('useRecoveryDetection', () => {
 			current().restore();
 		});
 		expect(onRestore).toHaveBeenCalledWith(BYTES);
-		expect(acknowledgeMock).toHaveBeenCalledWith(offer().record);
+		expect(getAcknowledgedAutosaveRecoveryTimestamp('deck.pptx')).toBe(PROMPT.timestamp);
 		expect(current().prompt).toBeNull();
 	});
 

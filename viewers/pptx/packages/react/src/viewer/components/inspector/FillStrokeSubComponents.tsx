@@ -244,7 +244,3 @@ export function GradientStopRow({
 		</div>
 	);
 }
-
-// EffectField was extracted to `./EffectField` to keep this file inside the
-// per-file line budget; re-exported here so existing imports keep working.
-export { EffectField } from './EffectField';

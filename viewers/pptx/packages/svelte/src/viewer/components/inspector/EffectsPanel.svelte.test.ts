@@ -7,9 +7,8 @@ import EffectsPanel from './EffectsPanel.svelte';
 
 /**
  * EffectsPanel tests: enable/disable + field edits for outer shadow, inner
- * shadow, glow, reflection, and soft edge, all built on the shared
- * `effects-helpers.ts` / `effects-shadow-helpers.ts` reader + patch-builder
- * pair. Named `*.svelte.test.ts` so `mountPanel`'s props object can be
+ * shadow, glow, reflection, and soft edge, drawn by the generic
+ * `InspectorFields` renderer from the shared `SHAPE_EFFECT_SECTIONS`. Named `*.svelte.test.ts` so `mountPanel`'s props object can be
  * wrapped in `$state(...)` and refreshed between chained interactions.
  */
 
@@ -68,19 +67,17 @@ function mountPanel(editor: EditorState, el: PptxElement) {
 	};
 }
 
-function toggles(target: HTMLElement): HTMLInputElement[] {
-	return Array.from(
-		target.querySelectorAll<HTMLInputElement>('.pptx-svelte-effects-toggle pptx-ui-checkbox'),
-	);
+function toggle(target: HTMLElement, testId: string): HTMLInputElement | null {
+	return target.querySelector<HTMLInputElement>(`[data-testid="${testId}"]`);
 }
 
 describe('effectsPanel', () => {
 	it('enables outer shadow with defaults and reveals its fields', () => {
 		const editor = makeEditor(shapeEl());
 		const { target, setProps } = mountPanel(editor, currentEl(editor));
-		expect(target.querySelector('.pptx-svelte-effects-fields')).toBeNull();
+		expect(target.querySelector('.pptx-svelte-fields-grid')).toBeNull();
 
-		toggles(target)[0]?.click();
+		toggle(target, 'fx-outer-shadow-toggle')?.click();
 		flushSync();
 		setProps({ el: currentEl(editor) });
 
@@ -89,14 +86,14 @@ describe('effectsPanel', () => {
 		};
 		expect(el.shapeStyle?.shadowColor).toBe('#000000');
 		expect(el.shapeStyle?.shadowOpacity).toBe(0.35);
-		expect(target.querySelector('.pptx-svelte-effects-fields')).not.toBeNull();
+		expect(target.querySelector('.pptx-svelte-fields-grid')).not.toBeNull();
 	});
 
 	it('disables outer shadow back to transparent', () => {
 		const editor = makeEditor(shapeEl({ shadowColor: '#ff0000', shadowOpacity: 0.5 }));
 		const { target, setProps } = mountPanel(editor, currentEl(editor));
 
-		toggles(target)[0]?.click();
+		toggle(target, 'fx-outer-shadow-toggle')?.click();
 		flushSync();
 		setProps({ el: currentEl(editor) });
 
@@ -108,8 +105,7 @@ describe('effectsPanel', () => {
 		const editor = makeEditor(shapeEl());
 		const { target, setProps } = mountPanel(editor, currentEl(editor));
 
-		// Outer shadow, inner shadow, glow: third toggle.
-		toggles(target)[2]?.click();
+		toggle(target, 'fx-glow-toggle')?.click();
 		flushSync();
 		setProps({ el: currentEl(editor) });
 
@@ -117,11 +113,7 @@ describe('effectsPanel', () => {
 		expect(el.shapeStyle?.glowColor).toBe('#ffff00');
 		expect(el.shapeStyle?.glowRadius).toBe(6);
 
-		// Only the glow toggle is on, so its fields are the only
-		// `.pptx-svelte-effects-fields` block rendered: color, radius, opacity.
-		const radiusInput = target
-			.querySelector('.pptx-svelte-effects-fields')
-			?.querySelectorAll<HTMLInputElement>('input')[1];
+		const radiusInput = target.querySelector<HTMLInputElement>('[data-testid="fx-glow-radius"]');
 		if (!radiusInput) {
 			throw new Error('glow radius input not found');
 		}
@@ -138,7 +130,7 @@ describe('effectsPanel', () => {
 		const editor = makeEditor(shapeEl());
 		const { target, setProps } = mountPanel(editor, currentEl(editor));
 
-		toggles(target)[3]?.click();
+		toggle(target, 'fx-reflection-toggle')?.click();
 		flushSync();
 		setProps({ el: currentEl(editor) });
 
@@ -153,11 +145,21 @@ describe('effectsPanel', () => {
 		const editor = makeEditor(shapeEl());
 		const { target, setProps } = mountPanel(editor, currentEl(editor));
 
-		toggles(target)[4]?.click();
+		toggle(target, 'fx-soft-edge-toggle')?.click();
 		flushSync();
 		setProps({ el: currentEl(editor) });
 
 		const el = currentEl(editor) as { shapeStyle?: { softEdgeRadius?: number } };
 		expect(el.shapeStyle?.softEdgeRadius).toBeGreaterThan(0);
+	});
+
+	it('draws the blur and top bevel sections from the shared descriptors', () => {
+		const editor = makeEditor(shapeEl({ shape3d: { bevelTopType: 'circle' } }));
+		const { target } = mountPanel(editor, currentEl(editor));
+
+		expect(toggle(target, 'fx-blur-toggle')).not.toBeNull();
+		const bevelType = target.querySelector<HTMLSelectElement>('[data-testid="fx-bevel-type"]');
+		expect(bevelType?.localName).toBe('pptx-ui-select');
+		expect(target.querySelector('[data-testid="fx-bevel-width"]')).not.toBeNull();
 	});
 });

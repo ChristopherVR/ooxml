@@ -10,6 +10,7 @@ import {
 	chartSelectionHomeControls,
 	dispatchChartSelectionRequest,
 	listChartFormatTargets,
+	pptxChartFormatKey,
 	resetChartFormatTarget,
 	resolveChartFormatTarget,
 	translateChartFormatText,
@@ -56,7 +57,7 @@ describe('chart format targets', () => {
 /** Every caption a pane model can show, for the dictionary check. */
 function captions(text: ChartFormatText | undefined, out: Set<string>): void {
 	if (text) {
-		out.add(text.key);
+		out.add(pptxChartFormatKey(text.key));
 		for (const nested of Object.values(text.paramTexts ?? {})) {
 			captions(nested, out);
 		}

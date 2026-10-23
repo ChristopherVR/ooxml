@@ -184,6 +184,7 @@ export class EditorCore {
 			historyView: () => (this.parts.usesBodyHistory() ? this.view : this.targetView()),
 			model: () => this.model,
 			canDefineList: () => !this.readOnly && !this.collab.active,
+			theme: () => this.model.theme,
 			zoom: {
 				percent: () => Math.round(this.pages.zoom * 100),
 				setPercent: (percent) => this.pages.setZoom(percent),

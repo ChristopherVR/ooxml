@@ -1,36 +1,25 @@
 /**
  * Vue session lifecycle for owned providers or a borrowed host connection.
- * Document readiness is shared across bindings; Vue watches and presence have
- * focused composables so resource ownership stays visible here.
+ * The room lifecycle is the shared `createCollaborationSessionController`;
+ * document readiness is shared across bindings; Vue watches and presence have
+ * focused composables.
  */
-import type {
-	CollaborationConfig,
-	CollaborationRole,
-	ConnectionStatus,
-	YjsFactories,
-} from 'ooxml-ui/pptx';
+import type { CollaborationConfig, CollaborationRole, ConnectionStatus } from 'ooxml-ui/pptx';
 import {
-	borrowExternalCollaborationAwareness,
-	CONNECTION_TIMEOUT_MS,
-	createSnapshotTextPositions,
-	isMixedContentBlocked,
-	needsOwnedSession,
-	openOwnedCollaboration,
-	registerCollaborationTeardown,
-	resolveTransportForServerUrl,
+	buildCollaborationState,
+	createCollaborationSessionController,
 	resolveCollaborationConfig,
 	resolveCollaborationShellState,
-	validateRoomId,
-	buildCollaborationState,
 	writeBackReport,
 } from 'ooxml-ui/pptx';
-import { computed, onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
+import { computed, onScopeDispose, toValue, watch } from 'vue';
+import type { Ref } from 'vue';
 
-import { createCollabProvider } from './collaboration-provider';
-import type { CollabProviderHandle } from './collaboration-provider';
+import { collabModules } from './collaboration-modules';
 import type { UseCollaborationOptions, UseCollaborationResult } from './collaboration-types';
 import { useCollaborationDocumentSync } from './useCollaborationDocumentSync';
 import { useCollaborationPresence } from './useCollaborationPresence';
+import { useController } from './useController';
 
 export type {
 	RemotePresence,
@@ -41,13 +30,43 @@ export type {
 export function useCollaboration(options: UseCollaborationOptions): UseCollaborationResult {
 	const hostConfig = (): CollaborationConfig | undefined =>
 		resolveCollaborationConfig(toValue(options.collaboration));
-	const status = ref<ConnectionStatus>('disconnected');
-	const connected = computed(() => status.value === 'connected');
-	const active = ref(false);
-	const activeCollaboration = shallowRef<CollaborationConfig | null>(null);
-	const activeRole = ref<CollaborationRole | undefined>(undefined);
+	// The document layer reports a borrowed session's readiness through this.
+	const statusPort = {
+		get value(): ConnectionStatus {
+			return session.getSnapshot().status;
+		},
+		set value(next: ConnectionStatus) {
+			session.setStatus(next);
+		},
+	};
 	const presence = useCollaborationPresence(options);
-	const document = useCollaborationDocumentSync(options, status);
+	const document = useCollaborationDocumentSync(options, statusPort);
+	const session = createCollaborationSessionController({
+		modules: collabModules,
+		gate: document.gate,
+		onBegin: (config) => document.begin(config),
+		onOpen: (live, config) => {
+			presence.start(live.awareness, config);
+			// Observe and catch up before the first-write gate opens: a provider
+			// can already contain the room while its async factory is resolving.
+			document.attach(live.doc, live.factories);
+		},
+		onClose: () => {
+			document.stop();
+			presence.stop();
+		},
+	});
+	const sessionState = useController(session);
+	const status = computed(() => sessionState.value.status) as Ref<ConnectionStatus>;
+	const connected = computed(() => status.value === 'connected');
+	const active = computed(() => sessionState.value.active) as Ref<boolean>;
+	// The host's config stays the identity of the running session (the watcher compares it).
+	const activeCollaboration = computed(
+		() => sessionState.value.config,
+	) as Ref<CollaborationConfig | null>;
+	const activeRole = computed(() => sessionState.value.config?.role) as Ref<
+		CollaborationRole | undefined
+	>;
 	const shellState = computed(() =>
 		resolveCollaborationShellState({
 			authorizedCanEdit: toValue(options.canEdit) ?? true,
@@ -75,150 +94,9 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	const connectedCount = computed(
 		() => presence.remotePresences.value.length + (active.value ? 1 : 0),
 	);
-	let ydoc: { destroy: () => void } | null = null;
-	let provider: CollabProviderHandle | null = null;
-	let restoreExternalPresence: (() => void) | null = null;
-	let connectTimer: ReturnType<typeof setTimeout> | null = null;
-	let lastConfig: CollaborationConfig | null = null;
-	// Releases the session this composable opened itself (a provider or same-browser room).
-	let releaseOwned: (() => void) | null = null;
-	let startToken = 0;
-
-	async function start(requested: CollaborationConfig): Promise<void> {
-		stop();
-		const token = ++startToken;
-		lastConfig = requested;
-		// The host's config stays the identity of the running session (the watcher compares it).
-		activeCollaboration.value = requested;
-		activeRole.value = requested.role;
-		document.begin(requested);
-		let config = requested;
-		try {
-			validateRoomId(requested.roomId);
-			if (needsOwnedSession(requested)) {
-				status.value = 'connecting';
-				const owned = openOwnedCollaboration(requested);
-				releaseOwned = owned.release;
-				const prepared = await owned.ready;
-				if (token !== startToken || !prepared) {
-					return;
-				}
-				config = prepared;
-				document.begin(config);
-			}
-			const external = config.externalSession;
-			const transport = config.transport ?? resolveTransportForServerUrl(config.serverUrl);
-			if (!external && transport === 'websocket' && isMixedContentBlocked(config.serverUrl)) {
-				throw new Error('Mixed-content connection blocked');
-			}
-			status.value = 'connecting';
-			const Y = await import('yjs');
-			if (token !== startToken) {
-				return;
-			}
-			const ownedDoc = external ? null : new Y.Doc();
-			const doc = (external?.doc ?? ownedDoc!) as import('yjs').Doc;
-			ydoc = ownedDoc;
-			const factories: YjsFactories = {
-				createMap: () => new Y.Map(),
-				createArray: () => new Y.Array(),
-				createText: () => new Y.Text(),
-				createTextPositions: (text) =>
-					createSnapshotTextPositions(text, {
-						read: () => Y.snapshot(doc),
-						equal: Y.equalSnapshots,
-						subscribeBeforeObservers: (listener) => {
-							doc.on('beforeObserverCalls', listener);
-							return () => doc.off('beforeObserverCalls', listener);
-						},
-					}),
-			};
-			if (external) {
-				const borrowed = borrowExternalCollaborationAwareness(external.awareness);
-				restoreExternalPresence = borrowed.dispose;
-				presence.start(borrowed.awareness, config);
-				active.value = true;
-				document.attach(doc, factories);
-				return;
-			}
-			const created = await createCollabProvider(transport, config, ownedDoc!);
-			if (token !== startToken) {
-				created.destroy();
-				ownedDoc!.destroy();
-				return;
-			}
-			provider = created;
-			presence.start(created.awareness, config);
-			// Observe and catch up before opening the first-write gate. A provider
-			// can already contain the room while its async factory is resolving.
-			document.attach(doc, factories);
-			created.onSynced(() => document.gate.open());
-			if (created.syncedNow) {
-				document.gate.open();
-			} else {
-				document.gate.arm();
-			}
-			created.onStatus((isConnected) => {
-				if (isConnected) {
-					if (connectTimer !== null) {
-						clearTimeout(connectTimer);
-					}
-					connectTimer = null;
-					status.value = 'connected';
-				} else if (active.value) {
-					status.value = 'disconnected';
-					document.gate.reset();
-					document.gate.arm();
-				}
-			});
-			if (transport === 'webrtc' || created.connectedNow) {
-				// Same-browser WebRTC peers meet immediately through BroadcastChannel.
-				status.value = 'connected';
-			} else {
-				connectTimer = setTimeout(() => {
-					connectTimer = null;
-					if (status.value !== 'connected') {
-						stop();
-						status.value = 'error';
-					}
-				}, CONNECTION_TIMEOUT_MS);
-			}
-			active.value = true;
-		} catch {
-			if (token !== startToken) {
-				return;
-			}
-			stop();
-			status.value = 'error';
-		}
-	}
-
-	function stop(): void {
-		startToken++;
-		document.stop();
-		if (connectTimer !== null) {
-			clearTimeout(connectTimer);
-		}
-		connectTimer = null;
-		presence.stop();
-		restoreExternalPresence?.();
-		restoreExternalPresence = null;
-		releaseOwned?.();
-		releaseOwned = null;
-		provider?.destroy();
-		ydoc?.destroy();
-		provider = null;
-		ydoc = null;
-		status.value = 'disconnected';
-		active.value = false;
-		activeCollaboration.value = null;
-		activeRole.value = undefined;
-	}
-	async function retry(): Promise<void> {
-		if (lastConfig) {
-			await start(lastConfig);
-		}
-	}
+	const start = (config: CollaborationConfig): Promise<void> => session.start(config);
+	const stop = (): void => session.stop();
+	const retry = (): Promise<void> => session.retry();
 	watch(
 		hostConfig,
 		(config) => {
@@ -230,16 +108,8 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		},
 		{ immediate: true },
 	);
-	// A cancelled beforeunload must not detach a borrowed connection. pagehide
-	// still releases our listeners/presence if the page actually goes away.
-	const disposeTeardown = registerCollaborationTeardown({
-		leave: stop,
-		rejoin: () => void retry(),
-		leaveOnBeforeUnload: () => !lastConfig?.externalSession,
-	});
 	onScopeDispose(() => {
-		disposeTeardown();
-		stop();
+		session.destroy();
 		document.dispose();
 	});
 	return {

@@ -1,9 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Charts in a Word document: the `w:drawing` whose `a:graphicData` holds `c:chart r:id`. This
 // module models the host side (placement, relationship, part name) and reads the chart part
-// through the format-neutral `chart` area. The chart part, its relationships and its embedded
-// workbook are never rewritten: they stay in the package untouched. The drawing is painted from
-// the cached values by the shared chart painter (`chart-paint.ts`).
+// through the format-neutral `chart` area. A chart that is not edited keeps its part,
+// relationships and embedded workbook untouched; an edited one (`chart-edit.ts`) is written back
+// with the shared chart writer and its workbook updated (`chart-save.ts`). The drawing is painted
+// from the cached values by the shared chart painter (`chart-paint.ts`).
 import {
 	chartColorStyleId,
 	chartExSummary,
@@ -16,7 +17,7 @@ import {
 } from '../chart/index';
 import { parseXml } from '../xml/index';
 import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../opc/index';
-import type { Block } from './model';
+import type { Block, DocumentModel } from './model';
 import type { Relationship } from './package-parts';
 import { forEachParagraph } from './parse-warnings';
 import { getR, isElement, type XmlElement } from './xml';
@@ -31,7 +32,7 @@ const CHARTEX_RELATIONSHIP_TYPE = 'http://schemas.microsoft.com/office/2014/rela
 const PACKAGE_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package';
 
-/** A chart (`c:chart` in a `w:drawing`). The chart part is read-only and preserved on save. */
+/** A chart (`c:chart` in a `w:drawing`). An unedited chart part is preserved byte for byte. */
 export interface DocxChart {
 	/** `inline` (`wp:inline`) or `anchor` (`wp:anchor`, floating). */
 	placement: 'inline' | 'anchor';
@@ -66,7 +67,7 @@ export interface DocxChart {
 
 /** The honest status shown with every chart. */
 export const CHART_NOTICE =
-	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter, bubble, stock and radar charts, bar and line combinations with a secondary axis, waterfalls, histograms, treemaps and sunbursts; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
+	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter, bubble, stock and radar charts, bar and line combinations with a secondary axis, waterfalls, histograms, treemaps and sunbursts; other kinds show a labelled frame). Classic charts can be edited (type, title, legend and data); the edited part and its embedded workbook are saved, and charts that are not edited are preserved unchanged. Extended charts (waterfall, histogram, treemap, sunburst and other chartex families) are read-only.';
 
 /** Reads the host side of a chart graphic. Synchronous: resolves the relationship, reads no part. */
 export function parseChartGraphic(
@@ -169,6 +170,20 @@ export async function resolveChartPart(
 			message: `The chart part ${chart.partName} could not be read: ${error instanceof Error ? error.message : String(error)}`,
 		});
 	}
+}
+
+/** Every block that can hold a drawing: body, headers, footers, footnotes and endnotes. */
+export function documentDrawingBlocks(model: DocumentModel): Block[] {
+	return [
+		...model.blocks,
+		...(model.sections ?? []).flatMap((section) =>
+			[section.headers, section.footers].flatMap((slots) =>
+				Object.values(slots ?? {}).flatMap((content) => content?.blocks ?? []),
+			),
+		),
+		...Object.values(model.footnoteSeparators ?? {}).flatMap((note) => note.blocks),
+		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].flatMap((note) => note.blocks),
+	];
 }
 
 /** Every chart in the given blocks, in document order. */

@@ -118,9 +118,10 @@ for (const framework of FRAMEWORKS)
 		const chart = await openNativeStyle(page, 209, framework);
 		await chart.locator('g[data-chart-series="1"][data-chart-point="0"] rect').dblclick();
 		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
-		const series = pane.getByRole('combobox', { name: 'Series', exact: true });
+		// The shared Format pane picks a series among the chart elements.
+		const series = pane.getByRole('combobox', { name: 'Chart element', exact: true });
 		const fill = pane.getByRole('combobox', { name: 'Fill', exact: true });
-		await expect(series).toHaveValue('1');
+		await expect(series).toHaveValue('series:1');
 		await expect(fill).toHaveValue('gradient');
 		await fill.selectOption('solid');
 		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
@@ -166,10 +167,10 @@ for (const framework of FRAMEWORKS)
 		await expect(transparency).toHaveValue('0');
 		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
 		await expect(transparencySlider).toHaveValue('37');
-		await expect(series).toHaveValue('1');
-		await series.selectOption('0');
+		await expect(series).toHaveValue('series:1');
+		await series.selectOption('series:0');
 		await expect(fill).toHaveValue('gradient');
-		await series.selectOption('1');
+		await series.selectOption('series:1');
 		await editor(page).evaluate((node) => {
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});

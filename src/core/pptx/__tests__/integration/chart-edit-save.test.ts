@@ -163,7 +163,8 @@ describe('chart edits reach the saved package', () => {
 		});
 		const xml = await text(saved.zip, 'ppt/charts/chart1.xml');
 		expect(xml).toContain('<a:t>Added later</a:t>');
-		expect(xml).toContain('<c:autoTitleDeleted val="0">');
+		// The title edit is saved through the shared chart writer, which closes empty elements.
+		expect(xml).toMatch(/<c:autoTitleDeleted val="0"\s*\/?>/u);
 		expect(xml.indexOf('<c:title>')).toBeGreaterThan(-1);
 		expect(xml.indexOf('<c:title>')).toBeLessThan(xml.indexOf('<c:autoTitleDeleted'));
 		expect(xml.indexOf('<c:autoTitleDeleted')).toBeLessThan(xml.indexOf('<c:plotArea>'));
@@ -182,7 +183,7 @@ describe('chart edits reach the saved package', () => {
 		});
 		const xml = await text(saved.zip, 'ppt/charts/chart1.xml');
 		expect(xml).not.toContain('<c:title');
-		expect(xml).toContain('<c:autoTitleDeleted val="1">');
+		expect(xml).toMatch(/<c:autoTitleDeleted val="1"\s*\/?>/u);
 		expect((await reload(saved)).title).toBeUndefined();
 	});
 

@@ -1,3 +1,4 @@
+import { TEXT_BOX_SECTIONS } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle, UnderlineStyle } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,7 @@ import {
 import type { ListMode } from '../../utils';
 import { normalizeHexColor } from '../../utils';
 import { WebSelect, WebCheckbox } from '../WebControls';
+import { InspectorFields } from './InspectorFields';
 import { useRecentColors } from './RecentColorsContext';
 
 export interface TextPropertiesProps {
@@ -280,15 +282,16 @@ export function AdvancedTextFormatting({
 				</label>
 			</div>
 
-			{/* Auto-fit */}
-			<label className='inline-flex items-center gap-2 text-foreground'>
-				<WebCheckbox
-					checked={Boolean(ts?.autoFit)}
+			{/* Text box options (vertical alignment, direction, autofit, wrap,
+			    columns): the shared descriptors, drawn by the generic renderer. */}
+			<div className='grid grid-cols-2 gap-2'>
+				<InspectorFields
+					sections={TEXT_BOX_SECTIONS}
+					target={ts}
+					onPatch={onUpdateTextStyle}
 					disabled={!canEdit}
-					onChange={(e) => onUpdateTextStyle({ autoFit: e.target.checked })}
 				/>
-				{t('pptx.textProperties.autoFitToShape')}
-			</label>
+			</div>
 		</div>
 	);
 }

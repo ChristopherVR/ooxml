@@ -24,6 +24,7 @@ export * from './run-format-command';
 export * from './note-parts';
 export * from './inline-content-schema';
 export { chartNodeSpec, nodeChart, svgMarkupSpec } from './chart-spec';
+export * from './chart-commands';
 export * from './ligature-style';
 export * from './node-numbering';
 export * from './paragraph-attributes';

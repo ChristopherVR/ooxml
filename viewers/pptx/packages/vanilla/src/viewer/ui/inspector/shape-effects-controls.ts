@@ -1,12 +1,10 @@
-import { SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
-import type { ShapeStyle } from 'pptx-viewer-core';
+import { SHAPE_EFFECT_SECTIONS, SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
-import type { ColorControlHandle, NumberFieldHandle } from '../controls';
-import { makeColorControl, makeNumberField } from '../controls';
 import { createConnectorArrowControls } from './connector-arrow-controls';
-import { makeCheckboxField, makeSelectField } from './controls-extra';
+import { makeSelectField } from './controls-extra';
+import { createInspectorFields } from './inspector-fields';
 import type { InspectorHandlers, InspectorState } from './types';
 
 export interface ShapeEffectsControls {
@@ -15,17 +13,13 @@ export interface ShapeEffectsControls {
 }
 
 /**
- * The shape's outline preset and its effect stack (shadow, glow, soft edges,
- * reflection), plus the connector arrowhead pickers.
+ * The shape's outline preset and its effect stack (outer and inner shadow,
+ * glow, soft edge, reflection, blur, top bevel), plus the connector arrowhead
+ * pickers.
  *
- * Every row is built from the panel's own field factories rather than raw
- * `<label>`/`<input>` pairs. Written by hand they carried no class at all, so
- * the panel's stylesheet never reached them: the captions and their controls
- * became loose inline text that wrapped wherever the column ended ("Shadow
- * Color [swatch] Blur" on one line, its value on the next), and a second,
- * unstyled copy of the Quick Styles buttons rendered as the bare run
- * "AccentSubtleOutlineDark". The real gallery is its own section
- * (`quick-styles-gallery`), so that copy is gone.
+ * The effects are the shared `SHAPE_EFFECT_SECTIONS` descriptors drawn by the
+ * generic `createInspectorFields` renderer, whose rows come from the panel's
+ * own field factories so the panel's stylesheet reaches every one of them.
  */
 export function createShapeEffectsControls(
 	doc: Document,
@@ -44,92 +38,26 @@ export function createShapeEffectsControls(
 	});
 	el.appendChild(shapeType.el);
 
-	/**
-	 * A colour swatch on its own labelled row, the same shape the Fill & Stroke
-	 * rows use: the swatch control carries only a title, so the row supplies the
-	 * visible caption.
-	 */
-	const colorRow = (label: string, key: keyof ShapeStyle, fallback: string): ColorControlHandle => {
-		const row = createEl(doc, 'div', 'pptxv-inspector-row');
-		const caption = createEl(doc, 'span', 'pptxv-inspector-row-label');
-		caption.textContent = label;
-		const control = makeColorControl(
-			doc,
-			{
-				label,
-				onInput: (value) => handlers.setShapeStyle({ [key]: value }),
-				onCommit: handlers.pushRecentColor,
-			},
-			fallback,
-		);
-		row.append(caption, control.el);
-		el.appendChild(row);
-		return control;
-	};
-
-	const numberRow = (label: string, key: keyof ShapeStyle): NumberFieldHandle => {
-		const field = makeNumberField(doc, {
-			label,
-			min: 0,
-			onCommit: (value) => handlers.setShapeStyle({ [key]: value }),
-		});
-		el.appendChild(field.el);
-		return field;
-	};
-
-	const shadowColor = colorRow(t('pptx.textEffects.shadowColor'), 'shadowColor', '#000000');
-	const shadowBlur = numberRow(t('pptx.textEffects.blur'), 'shadowBlur');
-	const shadowDistance = numberRow(t('pptx.shape.shadowDistance'), 'shadowDistance');
-	const shadowRotateWithShape = makeCheckboxField(doc, {
-		label: t('pptx.effects.rotateWithShape'),
-		onChange: (checked) => handlers.setShapeStyle({ shadowRotateWithShape: checked }),
+	const effects = createInspectorFields(doc, t, {
+		sections: SHAPE_EFFECT_SECTIONS,
+		onPatch: (patch) => handlers.setShapeStyle(patch),
+		onColorCommit: handlers.pushRecentColor,
 	});
-	el.appendChild(shadowRotateWithShape.el);
-	const glowColor = colorRow(t('pptx.textEffects.glowColor'), 'glowColor', '#ffff00');
-	const glowRadius = numberRow(t('pptx.textEffects.glow'), 'glowRadius');
-	const softEdge = numberRow(t('pptx.shape.softEdges'), 'softEdgeRadius');
-	const reflection = makeCheckboxField(doc, {
-		label: t('pptx.textEffects.reflection'),
-		onChange: (checked) =>
-			handlers.setShapeStyle({ reflectionStartOpacity: checked ? 0.5 : undefined }),
-	});
-	el.appendChild(reflection.el);
+	el.appendChild(effects.el);
 
 	// The six `a:headEnd`/`a:tailEnd` dropdowns are their own card; see
 	// `connector-arrow-controls`.
 	const arrows = createConnectorArrowControls(doc, t, handlers);
 	el.appendChild(arrows.el);
 
-	const fields = [
-		shapeType,
-		shadowColor,
-		shadowBlur,
-		shadowDistance,
-		shadowRotateWithShape,
-		glowColor,
-		glowRadius,
-		softEdge,
-		reflection,
-	];
-
 	return {
 		el,
 		update(state) {
-			const style = state.shapeStyle ?? {};
-			shadowColor.setValue(style.shadowColor ?? '#000000');
-			shadowBlur.setValue(style.shadowBlur ?? 0);
-			shadowDistance.setValue(style.shadowDistance ?? 0);
-			shadowRotateWithShape.setValue(style.shadowRotateWithShape ?? true);
-			glowColor.setValue(style.glowColor ?? '#ffff00');
-			glowRadius.setValue(style.glowRadius ?? 0);
-			softEdge.setValue(style.softEdgeRadius ?? 0);
-			reflection.setValue(Boolean(style.reflectionStartOpacity));
+			effects.update(state.shapeStyle, !state.canShape);
 			shapeType.setValue(state.shapeType ?? 'rect');
 			shapeType.el.hidden = !state.shapeType;
+			shapeType.setDisabled(!state.canShape);
 			arrows.update(state);
-			for (const field of fields) {
-				field.setDisabled(!state.canShape);
-			}
 		},
 	};
 }

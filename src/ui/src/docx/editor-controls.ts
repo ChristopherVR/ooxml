@@ -16,6 +16,7 @@ import { syncIndentInputs } from './indent-commands';
 import { syncParagraphToggles } from './paragraph-toggle-sync';
 import { syncContextualTabs } from './contextual-tabs';
 import { syncShapeFormat } from './shape-format-ribbon';
+import { syncChartDesign } from './chart-design-ribbon';
 import { tablePropertiesContext } from './table-properties';
 import { syncRuler } from './ruler-sync';
 import { hasAnyChange, hasChangeAtCursor } from './review-commands';
@@ -87,6 +88,7 @@ export function refreshEditorControls(
 		syncParagraphToggles(toolbar, view, model);
 		syncContextualTabs(toolbar, state);
 		syncShapeFormat(toolbar, state, view.editable && !readOnly);
+		syncChartDesign(toolbar, state, view.editable && !readOnly);
 		syncRuler(toolbar, view, model);
 		const trackButton = findLocalizedControl<HTMLButtonElement>(toolbar, 'Track changes');
 		trackButton?.setAttribute('aria-pressed', String(Boolean(model.trackChanges)));

@@ -57,11 +57,9 @@ describe('effectsPanel', () => {
 	});
 
 	it('forwards a shadow-section patch through to the update event untouched', async () => {
-		// EffectsPanel composes EffectsShadowSection + EffectsGlowReflectionSection
-		// (each split out to stay under the repo's 300-LOC-per-file budget) and
-		// re-emits their `update` events as its own. The shadow toggle button lives
-		// on the child; this pins that forwarding wire, not the shadow logic itself
-		// (covered in `EffectsShadowSection.test.ts`).
+		// EffectsPanel draws the shared effect descriptors with InspectorFields and
+		// merges each shape-style patch into the element; this pins that wire, not
+		// the field logic itself (covered in `InspectorFields.test.ts` and shared).
 		const wrapper = mount(EffectsPanel, { props: { element: shape() } });
 		const toggle = wrapper.find('[data-testid="fx-outer-shadow-toggle"]');
 		expect(toggle.exists()).toBeTruthy();

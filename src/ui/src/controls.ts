@@ -13,6 +13,7 @@ import { defineSearchField } from './form/search-field';
 import { defineBackstage } from './chrome/backstage';
 import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
+import { defineChartFormatPane } from './chart/format-pane';
 import { definePrintPreview } from './chrome/print-preview';
 import { defineRibbon } from './ribbon/ribbon-tabs';
 import { defineRibbonActions } from './ribbon/ribbon-actions';
@@ -63,6 +64,7 @@ export {
 	defineToasts,
 	defineBackstage,
 	defineCommentsPane,
+	defineChartFormatPane,
 	defineFindBar,
 	defineGallery,
 	definePrintPreview,
@@ -286,6 +288,7 @@ export const CONTROL_DEFINERS = [
 	defineRibbonSection,
 	defineGallery,
 	defineCommentsPane,
+	defineChartFormatPane,
 	defineSymbolPicker,
 	defineColorGrid,
 	defineColorCustom,
@@ -297,3 +300,10 @@ export const CONTROL_DEFINERS = [
 export function registerControls(registry?: CustomElementRegistry): void {
 	for (const define of CONTROL_DEFINERS) define(registry);
 }
+export {
+	OfficeUiChartFormatPane,
+	type ChartFormatEditDetail,
+	type ChartFormatEditEvent,
+	type ChartFormatTargetEvent,
+} from './chart/format-pane';
+export * from './chart/format-pane-api';

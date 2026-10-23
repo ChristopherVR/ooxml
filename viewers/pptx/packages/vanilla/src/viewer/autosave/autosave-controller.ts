@@ -1,56 +1,46 @@
 import type {
 	AutosaveActivation,
 	AutosaveRecord,
+	AutosaveRecoveryController,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
 	DocumentStorage,
+	ViewerAutosaveStatus,
 } from 'ooxml-ui/pptx';
 import {
-	nextAutosaveDelayMs,
+	autosaveStatusKind,
+	createAutosaveController as createSharedAutosaveController,
+	createAutosaveRecoveryController,
+	discardAutosaveRecovery,
 	probeAutosaveRecovery,
 	recoverySnapshotIntent,
 	saveAutosaveSnapshot,
 	saveDeckWithPassword,
-	shouldProbeAutosaveRecovery,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
 
 /**
- * Debounced autosave for the vanilla viewer, layered on the shared IndexedDB
- * recovery store (`pptx-viewer-shared/autosave-store`).
+ * The vanilla adapter of the shared recovery autosave engine
+ * (`createAutosaveController` in `ooxml-ui/pptx`) and of the shared recovery
+ * offer (`createAutosaveRecoveryController`).
  *
- * A local edit marks the document dirty; a debounce timer then re-serializes the
- * deck through the shared `saveDeckWithPassword` and persists it under
- * `filePath` via `saveAutosaveSnapshot` (evicting the oldest record on quota
- * exhaustion). The recovery blob is a crash-safety net only; **it never clears
- * the editor's dirty flag** or stands in for the user's real Save.
+ * The engine follows PowerPoint's AutoRecover: while there are unsaved edits a
+ * snapshot (always a plain ZIP, written with `recoverySnapshotIntent`) lands
+ * one interval after the first edit, and nothing is written while the deck is
+ * unchanged. A recovery snapshot **never clears the editor's dirty flag**: it
+ * is a crash-safety net, not the user's Save. Whether autosave runs at all is
+ * the shared `resolveAutosaveActivation` verdict, read live through
+ * {@link AutosaveControllerDeps.getActivation}.
  *
- * The snapshot is written with `recoverySnapshotIntent`, so it is a plain ZIP
- * even when the deck is password protected: `getAutosaveSnapshot` hands the
- * bytes back with no password, and an encrypted package would simply refuse to
- * open (see `deck-save-encryption` in `pptx-viewer-shared` for the reasoning
- * and the cleartext-at-rest tradeoff it accepts).
- *
- * Two decisions are NOT made here, so all five bindings share them:
- *
- *  - **whether autosave runs at all** comes from the shared
- *    `resolveAutosaveActivation` verdict, read live through
- *    {@link AutosaveControllerDeps.getActivation}. This controller never owns a
- *    raw `enabled` boolean, because the host prop is a ceiling and the user's
- *    toggle is a preference inside it.
- *  - **how long the debounce may defer a snapshot** comes from the shared
- *    `nextAutosaveDelayMs`. A plain re-armed debounce can defer forever while
- *    the user keeps typing; the ceiling keeps the promise that a snapshot lands
- *    no later than one interval after the FIRST unsaved edit.
- *
- * Recovery is probed once per loaded deck through the shared
- * `shouldProbeAutosaveRecovery` / `probeAutosaveRecovery` pair, and surfaced
- * both to the host callback ({@link AutosaveControllerDeps.onRecovery}) and to
- * the viewer's own prompt ({@link AutosaveControllerDeps.onRecoveryOffer}).
+ * This adapter only feeds the engine from the store (local edits set `dirty`;
+ * loads and remote collaboration applies do not) and serialises the deck. The
+ * recovery offer is probed once per loaded deck and surfaced both to the host
+ * callback ({@link AutosaveControllerDeps.onRecovery}) and to the viewer's own
+ * prompt ({@link AutosaveControllerDeps.onRecoveryOffer}).
  */
-export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type AutosaveStatus = ViewerAutosaveStatus;
 
 /** Fallback verdict when a host wires no activation function (tests, embeds). */
 const ALWAYS_ACTIVE: AutosaveActivation = { active: true, toggleAvailable: true };
@@ -73,8 +63,7 @@ export interface AutosaveControllerDeps {
 	/**
 	 * The Protect-Presentation state, forwarded to the shared save decision.
 	 * Deliberately inert here: a recovery snapshot is written in the clear
-	 * whatever it says. It is threaded through so this path runs the same one
-	 * decision function as every real save instead of side-stepping it.
+	 * whatever it says.
 	 */
 	getSaveIntent?: () => DeckSaveIntent;
 	/** Surface status transitions (toolbar indicator + optional host callback). */
@@ -93,10 +82,12 @@ export interface AutosaveControllerDeps {
 	 * still be asked about work a crash left behind.
 	 */
 	isRecoveryAllowed?: () => boolean;
+	/** Load restored bytes through the viewer's load path (the recovery offer's restore). */
+	loadFile?: (bytes: Uint8Array) => Promise<void> | void;
 }
 
 export interface AutosaveController {
-	/** Force an immediate snapshot, bypassing the debounce window. */
+	/** Force an immediate snapshot of unsaved edits (no-op while autosave is not active). */
 	saveNow(): Promise<void>;
 	/** Current status. */
 	getStatus(): AutosaveStatus;
@@ -104,174 +95,115 @@ export interface AutosaveController {
 	refresh(): void;
 	/** Whether new edits currently schedule recovery snapshots. */
 	isEnabled(): boolean;
+	/** The shared recovery offer (restore and dismiss). */
+	getRecovery(): AutosaveRecoveryController;
 	/** Tear down the timer + store subscription. */
 	destroy(): void;
 }
 
 export function createAutosaveController(deps: AutosaveControllerDeps): AutosaveController {
 	const { store } = deps;
-	let status: AutosaveStatus = 'idle';
-	let timer: ReturnType<typeof setTimeout> | null = null;
-	let saving = false;
+	const activation = (): AutosaveActivation => deps.getActivation?.() ?? ALWAYS_ACTIVE;
 	let disposed = false;
-	let recoveryChecked = false;
-	/**
-	 * When the OLDEST still-unsaved edit happened. The debounce ceiling is
-	 * measured from here, not from the newest edit, and it is cleared only by a
-	 * snapshot that actually landed.
-	 */
-	let firstDirtyAt: number | null = null;
+	let loadKey = 0;
 
-	const isActive = (): boolean => (deps.getActivation?.() ?? ALWAYS_ACTIVE).active;
-	let active = isActive();
-
-	const setStatus = (next: AutosaveStatus): void => {
-		status = next;
-		deps.onStatus?.(next);
-	};
-
-	const clearTimer = (): void => {
-		if (timer !== null) {
-			clearTimeout(timer);
-			timer = null;
-		}
-	};
-
-	async function runSave(): Promise<void> {
-		const handler = deps.getHandler();
-		if (disposed || !isActive() || saving || !handler || !store.get().dirty) {
-			return;
-		}
-		// A Design gallery hover preview is never part of a recovery snapshot: try again after it.
-		if (store.get().deckStyleHeld) {
-			schedule();
-			return;
-		}
-		saving = true;
-		setStatus('saving');
-		try {
-			const bytes = await saveDeckWithPassword(
+	const engine = createSharedAutosaveController({
+		getActivation: activation,
+		getFilePath: () => deps.filePath,
+		getIntervalMs: deps.getIntervalMs,
+		serialize: async () => {
+			const handler = deps.getHandler();
+			if (!handler) {
+				return null;
+			}
+			return saveDeckWithPassword(
 				handler,
 				store.get().slides,
 				undefined,
 				recoverySnapshotIntent(deps.getSaveIntent?.()),
 			);
-			await saveAutosaveSnapshot(deps.filePath, bytes, deps.getStorage?.());
-			// The snapshot landed, so the ceiling restarts from the next edit. The
-			// editor's own `dirty` flag is deliberately left alone: a recovery blob
-			// is not the user's Save.
-			firstDirtyAt = null;
-			if (!disposed && isActive()) {
-				setStatus('saved');
-			}
-			deps.onSaved?.(bytes);
-		} catch {
-			if (!disposed && isActive()) {
-				setStatus('error');
-			}
-		} finally {
-			saving = false;
-		}
-	}
-
-	const schedule = (): void => {
-		if (!isActive()) {
-			return;
-		}
-		const now = Date.now();
-		firstDirtyAt ??= now;
-		const delay = nextAutosaveDelayMs({
-			intervalMs: deps.getIntervalMs(),
-			firstDirtyAt,
-			now,
-		});
-		clearTimer();
-		timer = setTimeout(() => {
-			timer = null;
-			void runSave();
-		}, delay);
-	};
-
-	const maybeProbeRecovery = (state: ViewerState): void => {
-		if (
-			disposed ||
-			!shouldProbeAutosaveRecovery({
-				alreadyChecked: recoveryChecked,
-				filePath: deps.filePath,
-				loading: state.loading,
-				error: state.error,
-				slideCount: state.slides.length,
-				autosaveAllowed: deps.isRecoveryAllowed?.() ?? true,
-			})
-		) {
-			return;
-		}
-		recoveryChecked = true;
-		void probeAutosaveRecovery(deps.filePath, Date.now(), deps.fileName, deps.getStorage?.()).then(
-			(offer) => {
-				if (offer && !disposed) {
-					deps.onRecovery?.(offer.record);
-					deps.onRecoveryOffer?.(offer);
-				}
-				return offer;
-			},
-		);
-	};
-
-	/** Apply an activation flip (host prop, user toggle, or edit-ability). */
-	const syncActivation = (): void => {
-		const next = isActive();
-		if (next === active || disposed) {
-			return;
-		}
-		active = next;
-		clearTimer();
-		setStatus('idle');
-		if (next) {
-			firstDirtyAt = null;
-			if (store.get().dirty) {
-				schedule();
-			}
-		}
-	};
-
-	// Only local edits set `dirty` (loads and remote collaboration applies do
-	// not), so keying autosave on the dirty flag avoids re-persisting a deck the
-	// user just opened.
-	const unsubscribe = store.subscribe((state, previous) => {
-		syncActivation();
-		// A fresh load is a fresh deck: it gets its own recovery probe.
-		if (state.loading && !previous.loading) {
-			recoveryChecked = false;
-		}
-		// A hover preview swaps the slides for a moment; neither it nor the restore is an edit.
-		const previewing = state.deckStyleHeld || previous.deckStyleHeld;
-		if (
-			state.dirty &&
-			!previewing &&
-			(state.dirty !== previous.dirty || state.slides !== previous.slides)
-		) {
-			schedule();
-		} else if (!state.dirty && previous.dirty && !saving) {
-			// A manual save cleared the dirty flag: reflect it in the indicator.
-			setStatus('saved');
-		}
-		maybeProbeRecovery(state);
+		},
+		...(deps.getStorage ? { getStorage: deps.getStorage } : {}),
+		// A Design gallery hover preview is never part of a recovery snapshot.
+		isHeld: () => store.get().deckStyleHeld,
+		...(deps.onSaved ? { onSaved: deps.onSaved } : {}),
+		writeSnapshot: saveAutosaveSnapshot,
 	});
 
-	// A deck may already be open when the controller is built (a host that
+	let status: AutosaveStatus = autosaveStatusKind(engine.getSnapshot().status);
+	const unsubscribeEngine = engine.subscribe(() => {
+		const next = autosaveStatusKind(engine.getSnapshot().status);
+		if (next !== status) {
+			status = next;
+			deps.onStatus?.(next);
+		}
+	});
+
+	const recovery = createAutosaveRecoveryController({
+		...(deps.getStorage ? { getStorage: deps.getStorage } : {}),
+		load: (bytes) => deps.loadFile?.(bytes),
+		onOffered: (record) => {
+			deps.onRecovery?.(record);
+			const prompt = recovery.getSnapshot().prompt;
+			if (prompt) {
+				deps.onRecoveryOffer?.({ prompt, record });
+			}
+		},
+		probe: probeAutosaveRecovery,
+		discardRecord: discardAutosaveRecovery,
+	});
+
+	const checkRecovery = (state: ViewerState): void => {
+		recovery.check({
+			loadKey,
+			filePath: deps.filePath,
+			fileName: deps.fileName,
+			loading: state.loading,
+			error: state.error,
+			slideCount: state.slides.length,
+			autosaveAllowed: deps.isRecoveryAllowed?.() ?? true,
+		});
+	};
+
+	const unsubscribe = store.subscribe((state, previous) => {
+		engine.refresh();
+		// A fresh load is a fresh deck: it gets its own recovery probe.
+		if (state.loading && !previous.loading) {
+			loadKey += 1;
+		}
+		// A hover preview swaps the slides for a moment; neither it nor the restore is an edit.
+		if (!state.deckStyleHeld && !previous.deckStyleHeld) {
+			engine.observe(state.dirty, [state.slides]);
+		}
+		if (!state.dirty && previous.dirty && engine.getSnapshot().status.state !== 'saving') {
+			// A manual save cleared the dirty flag: reflect it in the indicator.
+			engine.markClean({ saved: true });
+		}
+		checkRecovery(state);
+	});
+
+	// Seed the comparison with the state the controller was built on, so only
+	// later local edits count. A deck may already be open (a host that
 	// re-created it after a load, for instance).
-	maybeProbeRecovery(store.get());
+	engine.observe(store.get().dirty, [store.get().slides]);
+	checkRecovery(store.get());
 
 	return {
-		saveNow: runSave,
+		saveNow: () =>
+			engine.getSnapshot().dirty && activation().active ? engine.saveNow() : Promise.resolve(),
 		getStatus: () => status,
-		refresh: syncActivation,
-		isEnabled: isActive,
+		refresh: () => engine.refresh(),
+		isEnabled: () => activation().active,
+		getRecovery: () => recovery,
 		destroy() {
+			if (disposed) {
+				return;
+			}
 			disposed = true;
-			clearTimer();
 			unsubscribe();
+			unsubscribeEngine();
+			engine.destroy();
+			recovery.destroy();
 		},
 	};
 }

@@ -2,9 +2,9 @@
 // refreshes the cache from the cells), a source without one becomes a literal. Values are numbers or
 // blanks (`null`, written as a missing point, as Office writes an empty cell); categories are text,
 // or numbers when every category is a number.
+import type { ChartSeriesValue } from '../data-sheet';
 import type { ChartDataSource } from '../model-series';
 
-export type ChartSeriesValue = number | null;
 export type ChartCategoryValue = string | number | null;
 
 function points(values: readonly (string | number | null)[]) {

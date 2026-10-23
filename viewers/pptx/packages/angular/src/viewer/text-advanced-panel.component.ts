@@ -1,7 +1,9 @@
 /**
  * text-advanced-panel.component.ts: Standalone Angular component for editing
  * advanced text properties (letter spacing, line spacing, paragraph alignment,
- * indent, text direction, vertical anchor) on a selected PPTX element.
+ * indent, right-to-left) on a selected PPTX element, plus the shared Text Box
+ * options (`TEXT_BOX_SECTIONS`: vertical anchor, text direction, autofit,
+ * wrap, columns) drawn by the generic `pptx-inspector-fields` renderer.
  *
  * Selector: `pptx-text-advanced-panel`
  *
@@ -27,21 +29,19 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { TEXT_BOX_SECTIONS, textStylePatch } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
-import { isSelectControl, isCheckboxControl } from './control-event-targets';
+import { isCheckboxControl } from './control-event-targets';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import {
 	ALIGN_OPTIONS,
-	TEXT_DIRECTION_OPTIONS,
-	VALIGN_OPTIONS,
 	alignPatch,
 	characterSpacingPatch,
 	lineSpacingPatch,
 	textAdvancedPatch,
 	textAdvancedStateOf,
-	textDirectionPatch,
-	vAlignPatch,
 } from './text-advanced-helpers';
 import type { TextAdvancedState } from './text-advanced-helpers';
 
@@ -50,7 +50,7 @@ import type { TextAdvancedState } from './text-advanced-helpers';
 	selector: 'pptx-text-advanced-panel',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe],
+	imports: [TranslatePipe, InspectorFieldsComponent],
 	template: `
 		<div class="pptx-ng-txadv">
 			@if (!hasText()) {
@@ -76,47 +76,13 @@ import type { TextAdvancedState } from './text-advanced-helpers';
 					</div>
 				</section>
 
-				<!-- ── Vertical anchor ──────────────────────────────────── -->
+				<!-- ── Text box options (shared descriptors) ───────────────── -->
 				<section class="pptx-ng-txadv__section">
-					<div class="pptx-ng-txadv__row">
-						<label class="pptx-ng-txadv__label" for="txadv-valign">{{
-							'pptx.textAdvanced.vAlign' | translate
-						}}</label>
-						<pptx-ui-select
-							id="txadv-valign"
-							class="pptx-ng-txadv__select"
-							[value]="state().vAlign"
-							(change)="onVAlignChange($event)"
-						>
-							@for (opt of vAlignOptions; track opt[0]) {
-								<option [value]="opt[0]" [selected]="opt[0] === state().vAlign">
-									{{ opt[1] }}
-								</option>
-							}
-						</pptx-ui-select>
-					</div>
-				</section>
-
-				<!-- ── Text direction ────────────────────────────────────── -->
-				<section class="pptx-ng-txadv__section">
-					<div class="pptx-ng-txadv__row">
-						<label class="pptx-ng-txadv__label" for="txadv-dir">{{
-							'pptx.animation.direction' | translate
-						}}</label>
-						<pptx-ui-select
-							id="txadv-dir"
-							class="pptx-ng-txadv__select"
-							[value]="state().textDirection"
-							(change)="onTextDirectionChange($event)"
-						>
-							@for (opt of textDirectionOptions; track opt[0]) {
-								<option [value]="opt[0]" [selected]="opt[0] === state().textDirection">
-									{{ opt[1] }}
-								</option>
-							}
-						</pptx-ui-select>
-					</div>
-
+					<pptx-inspector-fields
+						[sections]="textBoxSections"
+						[target]="textStyle()"
+						(patch)="onTextBoxPatch($event)"
+					/>
 					<div class="pptx-ng-txadv__row">
 						<label class="pptx-ng-txadv__label" for="txadv-rtl">
 							<pptx-ui-checkbox
@@ -412,8 +378,13 @@ export class TextAdvancedPanelComponent {
 
 	/** Exposed option arrays for the template. */
 	protected readonly alignOptions = ALIGN_OPTIONS;
-	protected readonly vAlignOptions = VALIGN_OPTIONS;
-	protected readonly textDirectionOptions = TEXT_DIRECTION_OPTIONS;
+	protected readonly textBoxSections = TEXT_BOX_SECTIONS;
+
+	/** The element's text style, the value the Text Box descriptors read. */
+	protected readonly textStyle = computed<TextStyle | undefined>(() => {
+		const el = this.element();
+		return hasTextProperties(el) ? el.textStyle : undefined;
+	});
 
 	// ── Short display label for alignment buttons ──────────────────────────────
 
@@ -444,20 +415,11 @@ export class TextAdvancedPanelComponent {
 		this.emit(alignPatch(this.element(), align));
 	}
 
-	protected onVAlignChange(event: Event): void {
-		const val = selectValueFromEvent(event) as NonNullable<TextStyle['vAlign']> | null;
-		if (val && (val === 'top' || val === 'middle' || val === 'bottom')) {
-			this.emit(vAlignPatch(this.element(), val));
-		}
-	}
+	// ── Text box options ──────────────────────────────────────────────────────
 
-	// ── Direction ─────────────────────────────────────────────────────────────
-
-	protected onTextDirectionChange(event: Event): void {
-		const val = selectValueFromEvent(event);
-		if (val && isTextDirection(val)) {
-			this.emit(textDirectionPatch(this.element(), val));
-		}
+	/** Merge a Text Box field's body-level text-style patch into the element. */
+	protected onTextBoxPatch(patch: Partial<TextStyle>): void {
+		this.emit(textStylePatch(this.element(), patch));
 	}
 
 	protected onRtlToggle(event: Event): void {
@@ -557,33 +519,10 @@ function numberFromEvent(event: Event): number | null {
 	return Number.isFinite(parsed) ? parsed : null;
 }
 
-function selectValueFromEvent(event: Event): string | null {
-	const target = event.target;
-	if (!isSelectControl(target)) {
-		return null;
-	}
-	const val = target.value.trim();
-	return val.length > 0 ? val : null;
-}
-
 function checkedFromEvent(event: Event): boolean | null {
 	const target = event.target;
 	if (!isCheckboxControl(target)) {
 		return null;
 	}
 	return target.checked;
-}
-
-const TEXT_DIRECTION_VALUES = new Set<string>([
-	'horizontal',
-	'vertical',
-	'vertical270',
-	'eaVert',
-	'wordArtVert',
-	'wordArtVertRtl',
-	'mongolianVert',
-]);
-
-function isTextDirection(val: string): val is NonNullable<TextStyle['textDirection']> {
-	return TEXT_DIRECTION_VALUES.has(val);
 }

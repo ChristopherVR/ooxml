@@ -94,8 +94,13 @@ plus `onScopeDispose`), `controllerState` in Svelte (`createSubscriber`, read
 binding state: the controller reads it through its `deps` when an action needs it, and
 derived values are pure functions next to the controller (`resolveAiEffectiveTargets`)
 that the binding calls from its own reactive scope. Existing controllers: the undo/redo
-history (`createEditorHistoryController`, one default depth for every binding) and the
-AI panel (`createPptxAiPanelController`); the AI bridge (`createPptxAiBridge` over a
+history (`createEditorHistoryController`, one default depth for every binding), the
+AI panel (`createPptxAiPanelController`), recovery autosave (`createAutosaveController`:
+one AutoRecover engine and one `PptxAutosaveStatus`), the recovery offer
+(`createAutosaveRecoveryController`; the dialog stays a native template) and the
+collaboration room lifecycle (`createCollaborationSessionController` over
+`openCollaborationYSession` / `createCollabProvider`, to which each binding passes its own
+lazy `yjs` / `y-*` loaders, since those packages are optional peers of the bindings); the AI bridge (`createPptxAiBridge` over a
 `PptxAiBridgePort`) and the keymap dispatch (`dispatchEditorKey` with one
 `EditorKeyHandlers` interface) are the same idea for logic without its own state. A
 binding keeps its own public shape (refs, signals, getters) and maps it onto these.

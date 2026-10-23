@@ -70,3 +70,29 @@ describe('position section lock toggle', () => {
 		expect(button.disabled).toBeTruthy();
 	});
 });
+
+describe('position section geometry fields', () => {
+	it('shows the frame from the shared descriptors and commits through setGeometry', () => {
+		const setGeometry = vi.fn();
+		const position = createPositionSection(
+			document,
+			createTranslator(),
+			sectionFactory(),
+			setGeometry,
+			vi.fn(),
+		);
+		position.update(state({ x: 53.4, width: 200 }));
+		const field = (id: string) =>
+			position.el.querySelector<HTMLInputElement>(`[data-testid="geometry-${id}"]`)!;
+		expect(field('x').value).toBe('53');
+		expect(field('x').getAttribute('aria-label')).toBe('X');
+		expect(position.el.querySelector('.pptxv-inspector-grid')).not.toBeNull();
+
+		field('height').value = '0';
+		field('height').dispatchEvent(new Event('change'));
+		expect(setGeometry).toHaveBeenCalledWith({ height: 1 });
+
+		position.update(state({ hasSelection: false }));
+		expect(field('rotation').disabled).toBeTruthy();
+	});
+});

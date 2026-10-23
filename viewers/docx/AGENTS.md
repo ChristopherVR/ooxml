@@ -95,7 +95,8 @@ the element, forward props and options, and re-emit its events.
   SmartArt is drawn with an approximate layout, not Word's, and its styles and
   colours are not editable; charts paint from their cached values for the common families (including bubble and
   open-high-low-close stock), bar/line combinations, waterfalls, histograms, treemaps and
-  sunbursts, and surface, volume-stock and other chartex charts show a labelled frame). Never claim Word layout
+  sunbursts, and surface, volume-stock and other chartex charts show a labelled frame; classic charts can be
+  inserted and edited (type, legend, data) through the shared chart core, chartex charts stay read-only). Never claim Word layout
   parity or lossless export.
 - Bun, TypeScript strict mode, Vitest (tests next to the code) and Playwright
   browser tests (`e2e/docx/*.spec.ts`). Keep source modules under 300 lines where

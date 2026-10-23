@@ -42,8 +42,24 @@ export {
 	type DocxDiagramEditResult,
 } from './diagram-edit';
 export { treeOrderDiagramNodes } from './diagram-nodes';
-export { CHART_GRAPHIC_URI, CHART_NOTICE, chartsIn, type DocxChart } from './chart';
+export {
+	CHART_GRAPHIC_URI,
+	CHART_NOTICE,
+	chartsIn,
+	documentDrawingBlocks,
+	type DocxChart,
+} from './chart';
 export { docxChartPaint, themeCatalogColorScheme, type DocxChartPaint } from './chart-paint';
+export {
+	applyDocxChartDataSheetEdits,
+	docxChartDataSheet,
+	editDocxChart,
+	isDocxChartEditable,
+	isNewDocxChart,
+	newChartImage,
+	newDocxChart,
+	NEW_CHART_SIZE_PX,
+} from './chart-edit';
 export { diagramColorTheme, resolveDiagramColor } from './diagram-theme';
 export { saveDocx } from './save';
 export {

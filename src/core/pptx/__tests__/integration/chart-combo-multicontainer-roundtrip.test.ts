@@ -142,7 +142,7 @@ describe('multi-container combo chart round-trip', () => {
 		expect(savedChartXml).toContain('<c:barChart');
 		expect(savedChartXml).toContain('<c:lineChart');
 		expect(savedChartXml).toMatch(
-			/<c:lineChart[\s\S]*?<c:axId val="333333333"><\/c:axId><c:axId val="444444444"><\/c:axId>[\s\S]*?<\/c:lineChart>/u,
+			/<c:lineChart[\s\S]*?<c:axId val="333333333"(?:\/>|><\/c:axId>)<c:axId val="444444444"(?:\/>|><\/c:axId>)[\s\S]*?<\/c:lineChart>/u,
 		);
 		// The edited line value is written back.
 		expect(savedChartXml).toContain('<c:v>17</c:v>');

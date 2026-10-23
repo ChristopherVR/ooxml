@@ -174,7 +174,7 @@ describe('editor chrome localization', () => {
 				'pptx.notes.hasNotes',
 				'pptx.customShows.addShow',
 				'pptx.text.highlightColor',
-				'pptx.textProperties.autoFitToShape',
+				'pptx.textAdvanced.wrapText',
 				'pptx.textEffects.color',
 				'pptx.textEffects.opacity',
 				'pptx.textEffects.blur',

@@ -12,4 +12,5 @@ export * from './chart-format-pane-edit';
 export * from './chart-format-hit-test';
 export * from './chart-format-context-menu';
 export * from './chart-selection-strip';
-export { DEFAULT_CHART_GLOW, DEFAULT_CHART_SHADOW } from './chart-format-pane-effects';
+export { DEFAULT_CHART_GLOW, DEFAULT_CHART_SHADOW } from '../../../chart/format-pane-effects';
+export * from './chart-format-source';

@@ -12,10 +12,8 @@ import {
 	setHighlightColorPatch,
 	setSolidFillPatch,
 	setStrokeColorPatch,
-	setStrokeOpacityPatch,
 	setStrokeWidthPatch,
 	setTextColorPatch,
-	strokeOpacityOf,
 	strokeWidthOf,
 	toggleTextFlagPatch,
 } from './editor-format-mutations';
@@ -143,15 +141,6 @@ describe('shape format patches', () => {
 		expect(setFillOpacityPatch(shapeEl(), -1).shapeStyle).toMatchObject({ fillOpacity: 0 });
 		expect(fillOpacityOf(shapeEl({ shapeStyle: { fillOpacity: 0.25 } }))).toBe(0.25);
 		expect(fillOpacityOf(shapeEl({ shapeStyle: {} }))).toBe(1);
-
-		expect(setStrokeOpacityPatch(shapeEl(), 0.75).shapeStyle).toMatchObject({
-			strokeOpacity: 0.75,
-			strokeColor: '#000000',
-		});
-		expect(setStrokeOpacityPatch(shapeEl(), 4).shapeStyle).toMatchObject({ strokeOpacity: 1 });
-		expect(setStrokeOpacityPatch(shapeEl(), -1).shapeStyle).toMatchObject({ strokeOpacity: 0 });
-		expect(strokeOpacityOf(shapeEl({ shapeStyle: { strokeOpacity: 0.6 } }))).toBe(0.6);
-		expect(strokeOpacityOf(shapeEl({ shapeStyle: {} }))).toBe(1);
 	});
 
 	it('setSolidFillPatch sets fillColor and forces fillMode back to solid', () => {

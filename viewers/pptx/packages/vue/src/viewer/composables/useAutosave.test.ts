@@ -202,4 +202,25 @@ describe('useAutosave', () => {
 		await vi.runOnlyPendingTimersAsync();
 		expect(onSave).not.toHaveBeenCalled();
 	});
+
+	it('reads the one shared engine: isDirty = true is an edit, inactive reads disabled', async () => {
+		const slides = ref<PptxSlide[]>([slide('a')]);
+		const enabled = ref(true);
+		const onSave = vi.fn(() => Promise.resolve());
+		const scope = effectScope();
+		let api!: UseAutosaveResult;
+		scope.run(() => {
+			api = useAutosave({ slides, enabled, intervalMs: 1000, onSave });
+		});
+
+		api.isDirty.value = true;
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(onSave).toHaveBeenCalledOnce();
+
+		enabled.value = false;
+		await Promise.resolve();
+		expect(api.status.value).toBe('disabled');
+
+		scope.stop();
+	});
 });

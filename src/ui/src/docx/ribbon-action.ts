@@ -150,6 +150,7 @@ export type RibbonAction =
 			key: 'fill' | 'outline' | 'weight' | 'width' | 'height' | 'wrap';
 			value: string | number;
 	  }
+	| { type: 'chart'; key: 'legend'; value: string }
 	| { type: 'insertEquation'; id: 'area' | 'quadratic' | 'pythagorean' | 'binomial' }
 	| {
 			type: 'insertContentControl';

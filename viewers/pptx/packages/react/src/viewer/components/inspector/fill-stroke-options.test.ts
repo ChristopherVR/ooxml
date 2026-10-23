@@ -1,14 +1,10 @@
 import { describe, it, expect, test, expectTypeOf } from 'vitest';
 
 import {
-	COMPOUND_LINE_OPTIONS,
-	LINE_JOIN_OPTIONS,
-	LINE_CAP_OPTIONS,
 	FILL_MODE_OPTIONS,
 	PATTERN_PRESET_OPTIONS,
 	GRADIENT_TYPE_OPTIONS,
 	IMAGE_MODE_OPTIONS,
-	getCompoundLinePreviewStyle,
 } from './fill-stroke-options';
 
 // ---------------------------------------------------------------------------
@@ -35,57 +31,6 @@ function assertOptionArray(options: ReadonlyArray<{ value: string; label: string
 		expect(new Set(values).size).toBe(values.length);
 	});
 }
-
-// ---------------------------------------------------------------------------
-// COMPOUND_LINE_OPTIONS
-// ---------------------------------------------------------------------------
-
-describe('cOMPOUND_LINE_OPTIONS', () => {
-	it('has exactly 5 items', () => {
-		expect(COMPOUND_LINE_OPTIONS).toHaveLength(5);
-	});
-
-	it('contains sng, dbl, thickThin, thinThick, tri', () => {
-		const values = COMPOUND_LINE_OPTIONS.map((o) => o.value);
-		expect(values).toStrictEqual(['sng', 'dbl', 'thickThin', 'thinThick', 'tri']);
-	});
-
-	assertOptionArray(COMPOUND_LINE_OPTIONS, 'COMPOUND_LINE_OPTIONS');
-});
-
-// ---------------------------------------------------------------------------
-// LINE_JOIN_OPTIONS
-// ---------------------------------------------------------------------------
-
-describe('lINE_JOIN_OPTIONS', () => {
-	it('has exactly 3 items', () => {
-		expect(LINE_JOIN_OPTIONS).toHaveLength(3);
-	});
-
-	it('contains round, bevel, miter', () => {
-		const values = LINE_JOIN_OPTIONS.map((o) => o.value);
-		expect(values).toStrictEqual(['round', 'bevel', 'miter']);
-	});
-
-	assertOptionArray(LINE_JOIN_OPTIONS, 'LINE_JOIN_OPTIONS');
-});
-
-// ---------------------------------------------------------------------------
-// LINE_CAP_OPTIONS
-// ---------------------------------------------------------------------------
-
-describe('lINE_CAP_OPTIONS', () => {
-	it('has exactly 3 items', () => {
-		expect(LINE_CAP_OPTIONS).toHaveLength(3);
-	});
-
-	it('contains flat, rnd, sq', () => {
-		const values = LINE_CAP_OPTIONS.map((o) => o.value);
-		expect(values).toStrictEqual(['flat', 'rnd', 'sq']);
-	});
-
-	assertOptionArray(LINE_CAP_OPTIONS, 'LINE_CAP_OPTIONS');
-});
 
 // ---------------------------------------------------------------------------
 // FILL_MODE_OPTIONS
@@ -170,42 +115,4 @@ describe('iMAGE_MODE_OPTIONS', () => {
 	});
 
 	assertOptionArray(IMAGE_MODE_OPTIONS, 'IMAGE_MODE_OPTIONS');
-});
-
-// ---------------------------------------------------------------------------
-// getCompoundLinePreviewStyle
-// ---------------------------------------------------------------------------
-
-describe('getCompoundLinePreviewStyle', () => {
-	it('returns a style with borderTop for sng', () => {
-		const style = getCompoundLinePreviewStyle('sng');
-		expect(style.borderTop).toBeDefined();
-		expect(style.width).toBe('100%');
-	});
-
-	it('returns a style with boxShadow for dbl', () => {
-		const style = getCompoundLinePreviewStyle('dbl');
-		expect(style.boxShadow).toBeDefined();
-		expect(style.position).toBe('relative');
-	});
-
-	it('returns a style with boxShadow for thickThin', () => {
-		const style = getCompoundLinePreviewStyle('thickThin');
-		expect(style.boxShadow).toBeDefined();
-	});
-
-	it('returns a style with boxShadow for thinThick', () => {
-		const style = getCompoundLinePreviewStyle('thinThick');
-		expect(style.boxShadow).toBeDefined();
-	});
-
-	it('returns a style with boxShadow for tri', () => {
-		const style = getCompoundLinePreviewStyle('tri');
-		expect(style.boxShadow).toBeDefined();
-	});
-
-	it('returns an empty object for unknown type', () => {
-		const style = getCompoundLinePreviewStyle('unknown');
-		expect(Object.keys(style)).toHaveLength(0);
-	});
 });

@@ -67,7 +67,7 @@ export function effectsStateOf(el: PptxElement): EffectsState {
 	};
 }
 
-function glowStateOf(ss: ShapeStyle | undefined): GlowState {
+export function glowStateOf(ss: ShapeStyle | undefined): GlowState {
 	const enabled = Boolean(ss?.glowColor) && ss?.glowColor !== 'transparent';
 	const color = ss?.glowColor && ss.glowColor !== 'transparent' ? ss.glowColor : '#ffff00';
 	const radius = typeof ss?.glowRadius === 'number' ? ss.glowRadius : 6;
@@ -75,7 +75,7 @@ function glowStateOf(ss: ShapeStyle | undefined): GlowState {
 	return { enabled, color, radius, opacity };
 }
 
-function reflectionStateOf(ss: ShapeStyle | undefined): ReflectionState {
+export function reflectionStateOf(ss: ShapeStyle | undefined): ReflectionState {
 	const enabled =
 		(typeof ss?.reflectionBlurRadius === 'number' && ss.reflectionBlurRadius > 0) ||
 		(typeof ss?.reflectionStartOpacity === 'number' && ss.reflectionStartOpacity > 0);
@@ -88,7 +88,7 @@ function reflectionStateOf(ss: ShapeStyle | undefined): ReflectionState {
 	return { enabled, blurRadius, startOpacity, endOpacity, distance, direction };
 }
 
-function softEdgeStateOf(ss: ShapeStyle | undefined): SoftEdgeState {
+export function softEdgeStateOf(ss: ShapeStyle | undefined): SoftEdgeState {
 	const radius = typeof ss?.softEdgeRadius === 'number' ? ss.softEdgeRadius : 0;
 	return { enabled: radius > 0, radius };
 }
@@ -104,16 +104,21 @@ function shapeStyleMergePatch(el: PptxElement, changes: Partial<ShapeStyle>): Pa
 
 /** Enable glow with current or default values. */
 export function enableGlowPatch(el: PptxElement, state: GlowState): Partial<PptxElement> {
-	return shapeStyleMergePatch(el, {
-		glowColor: state.color,
-		glowRadius: Math.max(0, state.radius),
-		glowOpacity: clamp(state.opacity, 0, 1),
-	});
+	return shapeStyleMergePatch(el, glowStyle(state));
 }
 
 /** Disable glow. */
 export function disableGlowPatch(el: PptxElement): Partial<PptxElement> {
 	return shapeStyleMergePatch(el, { glowColor: 'transparent', glowRadius: 0 });
+}
+
+/** The shapeStyle fields of a glow state, clamped. */
+export function glowStyle(state: GlowState): Partial<ShapeStyle> {
+	return {
+		glowColor: state.color,
+		glowRadius: Math.max(0, state.radius),
+		glowOpacity: clamp(state.opacity, 0, 1),
+	};
 }
 
 /** Update a single glow field. */
@@ -122,12 +127,18 @@ export function updateGlowPatch(
 	changes: Partial<GlowState>,
 ): Partial<PptxElement> {
 	const cur = glowStateOf(hasShapeProperties(el) ? el.shapeStyle : undefined);
-	const next = { ...cur, ...changes };
-	return shapeStyleMergePatch(el, {
-		glowColor: next.color,
-		glowRadius: Math.max(0, next.radius),
-		glowOpacity: clamp(next.opacity, 0, 1),
-	});
+	return shapeStyleMergePatch(el, glowStyle({ ...cur, ...changes }));
+}
+
+/** The shapeStyle fields of a reflection state, clamped. */
+export function reflectionStyle(state: ReflectionState): Partial<ShapeStyle> {
+	return {
+		reflectionBlurRadius: Math.max(0, state.blurRadius),
+		reflectionStartOpacity: clamp(state.startOpacity, 0, 100),
+		reflectionEndOpacity: clamp(state.endOpacity, 0, 100),
+		reflectionDistance: Math.max(0, state.distance),
+		reflectionDirection: state.direction,
+	};
 }
 
 /** Enable reflection with current or default values. */
@@ -135,13 +146,7 @@ export function enableReflectionPatch(
 	el: PptxElement,
 	state: ReflectionState,
 ): Partial<PptxElement> {
-	return shapeStyleMergePatch(el, {
-		reflectionBlurRadius: Math.max(0, state.blurRadius),
-		reflectionStartOpacity: clamp(state.startOpacity, 0, 100),
-		reflectionEndOpacity: clamp(state.endOpacity, 0, 100),
-		reflectionDistance: Math.max(0, state.distance),
-		reflectionDirection: state.direction,
-	});
+	return shapeStyleMergePatch(el, reflectionStyle(state));
 }
 
 /** Disable reflection. */

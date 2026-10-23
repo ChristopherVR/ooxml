@@ -25,10 +25,11 @@ import {
 } from '@angular/core';
 import { LucideArrowDown, LucideArrowUp } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import type { ElementGeometryPatch, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
+	ELEMENT_GEOMETRY_SECTIONS,
 	elementLockTogglePatch,
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
@@ -61,6 +62,7 @@ import { ElementFlipControlsComponent } from './element-flip-controls.component'
 import { ElementMiscPropertiesComponent } from './element-misc-properties.component';
 import { GradientPickerComponent } from './gradient-picker.component';
 import { ImagePropertiesPanelComponent } from './image-properties-panel.component';
+import { InspectorFieldsComponent } from './inspector-fields.component';
 import {
 	fillColorOf,
 	fontSizeOf,
@@ -114,6 +116,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 		MediaPropertiesPanelComponent,
 		ElementMiscPropertiesComponent,
 		ElementFlipControlsComponent,
+		InspectorFieldsComponent,
 		ShapeAuthoringPanelComponent,
 		Text3DPanelComponent,
 		TextWarpGalleryComponent,
@@ -140,73 +143,14 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 				<h3 class="pptx-ng-inspector__heading">{{ 'pptx.inspector.transform' | translate }}</h3>
 
 				@if (elementKey(); as key) {
-					<div
-						class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs"
+					<!-- X / Y / W / H / rotation: the shared Size & Position descriptors. -->
+					<pptx-inspector-fields
 						[attr.data-el-key]="key"
-					>
-						<label class="pptx-ng-inspector__label" for="insp-x">{{
-							'pptx.inspector.x' | translate
-						}}</label>
-						<input
-							id="insp-x"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="numeric"
-							[value]="seed().x"
-							(change)="onPositionChange($event, 'x')"
-						/>
-						<label class="pptx-ng-inspector__label" for="insp-y">{{
-							'pptx.inspector.y' | translate
-						}}</label>
-						<input
-							id="insp-y"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="numeric"
-							[value]="seed().y"
-							(change)="onPositionChange($event, 'y')"
-						/>
-					</div>
-
+						[sections]="geometrySections"
+						[target]="el()"
+						(patch)="onGeometryPatch($event)"
+					/>
 					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
-						<label class="pptx-ng-inspector__label" for="insp-w">{{
-							'pptx.inspector.w' | translate
-						}}</label>
-						<input
-							id="insp-w"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="numeric"
-							min="1"
-							[value]="seed().width"
-							(change)="onSizeChange($event, 'width')"
-						/>
-						<label class="pptx-ng-inspector__label" for="insp-h">{{
-							'pptx.inspector.h' | translate
-						}}</label>
-						<input
-							id="insp-h"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="numeric"
-							min="1"
-							[value]="seed().height"
-							(change)="onSizeChange($event, 'height')"
-						/>
-					</div>
-
-					<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
-						<label class="pptx-ng-inspector__label" for="insp-rot">{{
-							'pptx.inspector.rotation' | translate
-						}}</label>
-						<input
-							id="insp-rot"
-							class="pptx-ng-inspector__input pptx-ng-inspector__input--number"
-							type="number"
-							inputmode="numeric"
-							[value]="seed().rotation"
-							(change)="onRotationChange($event)"
-						/>
 						<label class="pptx-ng-inspector__label" for="insp-opacity">{{
 							'pptx.inspector.opacity' | translate
 						}}</label>
@@ -932,6 +876,9 @@ export class InspectorPanelComponent {
 
 	protected readonly editor = inject(EditorStateService);
 
+	/** The shared Size & Position descriptors (X, Y, W, H, rotation). */
+	protected readonly geometrySections = ELEMENT_GEOMETRY_SECTIONS;
+
 	/**
 	 * Optional: absent when the panel is rendered outside a viewer. The ribbon's
 	 * "Animation Panel" bumps {@link ViewerInspectorPanelService.animationPanelRequest};
@@ -994,11 +941,6 @@ export class InspectorPanelComponent {
 		this.elementKey();
 		const cur = this.el();
 		return {
-			x: cur.x,
-			y: cur.y,
-			width: cur.width,
-			height: cur.height,
-			rotation: cur.rotation ?? 0,
 			opacity: cur.opacity ?? 1,
 			fillColor: fillColorOf(cur),
 			strokeColor: strokeColorOf(cur),
@@ -1215,38 +1157,27 @@ export class InspectorPanelComponent {
 
 	// ── Position & size ──────────────────────────────────────────────────────
 
-	protected onPositionChange(event: Event, axis: 'x' | 'y'): void {
-		const val = numberFromEvent(event);
-		if (val === null) {
-			return;
-		}
+	/**
+	 * Commit a Size & Position field: a move or resize goes through the
+	 * editor's geometry operations, a rotation through a plain element update.
+	 */
+	protected onGeometryPatch(patch: ElementGeometryPatch): void {
 		const cur = this.el();
-		const x = axis === 'x' ? val : cur.x;
-		const y = axis === 'y' ? val : cur.y;
-		this.editor.setPosition(this.slideIndex(), cur.id, x, y);
+		const slide = this.slideIndex();
+		if (patch.x !== undefined || patch.y !== undefined) {
+			this.editor.setPosition(slide, cur.id, patch.x ?? cur.x, patch.y ?? cur.y);
+		}
+		if (patch.width !== undefined || patch.height !== undefined) {
+			this.editor.resize(slide, cur.id, patch.width ?? cur.width, patch.height ?? cur.height);
+		}
+		if (patch.rotation !== undefined) {
+			this.editor.updateElement(slide, cur.id, {
+				rotation: patch.rotation,
+			} as Partial<PptxElement>);
+		}
 	}
 
-	protected onSizeChange(event: Event, dim: 'width' | 'height'): void {
-		const val = numberFromEvent(event);
-		if (val === null || val < 1) {
-			return;
-		}
-		const cur = this.el();
-		const width = dim === 'width' ? val : cur.width;
-		const height = dim === 'height' ? val : cur.height;
-		this.editor.resize(this.slideIndex(), cur.id, width, height);
-	}
-
-	// ── Rotation & opacity ───────────────────────────────────────────────────
-
-	protected onRotationChange(event: Event): void {
-		const val = numberFromEvent(event);
-		if (val === null) {
-			return;
-		}
-		const cur = this.el();
-		this.editor.updateElement(this.slideIndex(), cur.id, { rotation: val } as Partial<PptxElement>);
-	}
+	// ── Opacity ──────────────────────────────────────────────────────────────
 
 	protected onOpacityChange(event: Event): void {
 		const val = numberFromEvent(event);

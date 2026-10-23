@@ -1,4 +1,4 @@
-import { elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
+import { ELEMENT_GEOMETRY_SECTIONS, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSlide,
@@ -25,7 +25,8 @@ import {
 	LayerOrderButtons,
 } from './ElementMiscPanels';
 import { ImagePropertiesPanel } from './ImagePropertiesPanel';
-import { CARD, HEADING, INPUT, POS_FIELDS } from './inspector-pane-constants';
+import { CARD, HEADING } from './inspector-pane-constants';
+import { InspectorFields } from './InspectorFields';
 import { MediaPropertiesPanel } from './MediaPropertiesPanel';
 import { ShapeTextPanels } from './ShapeTextPanels';
 import { SmartArtPropertiesPanel } from './SmartArtPropertiesPanel';
@@ -139,23 +140,14 @@ export function ElementInspectorBody({
 						)}
 					</button>
 				</div>
+				{/* X / Y / W / H / rotation: the shared Size & Position descriptors. */}
 				<div className='grid grid-cols-2 gap-1.5 text-[11px]'>
-					{POS_FIELDS.map(([label, key]) => (
-						<label key={key} className='flex items-center gap-1'>
-							<span className='w-4 text-muted-foreground'>{label}</span>
-							<input
-								type='number'
-								className={INPUT}
-								disabled={!canEdit}
-								value={Math.round((selectedElement[key as keyof PptxElement] as number) ?? 0)}
-								onChange={(e) =>
-									onUpdateElement({
-										[key]: Number(e.target.value),
-									} as Partial<PptxElement>)
-								}
-							/>
-						</label>
-					))}
+					<InspectorFields
+						sections={ELEMENT_GEOMETRY_SECTIONS}
+						target={selectedElement}
+						onPatch={(patch) => onUpdateElement(patch as Partial<PptxElement>)}
+						disabled={!canEdit}
+					/>
 				</div>
 			</div>
 

@@ -12,36 +12,28 @@
  */
 
 import { DestroyRef, Injector } from '@angular/core';
-import type { CollaborationConfig, YjsFactories } from 'ooxml-ui/pptx';
+import type { CollabYSession, CollaborationConfig, YjsFactories } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type {
-	AwarenessLike,
-	DestroyableYDoc,
-	ProviderBundle,
-	ProviderLike,
-} from './collaboration-providers';
+import type { AwarenessLike } from './collaboration-providers';
 import { CollaborationService } from './collaboration.service';
 
 const PEER_ID = 2;
 
 const mocks = vi.hoisted(() => {
 	const pending: Array<{
-		resolve: (bundle: ProviderBundle) => void;
+		resolve: (session: CollabYSession) => void;
 		reject: (error: unknown) => void;
 	}> = [];
 	return { pending };
 });
 
 vi.mock(import('./collaboration-providers'), () => {
-	const defer = (): Promise<ProviderBundle> =>
+	const defer = (): Promise<CollabYSession> =>
 		new Promise((resolve, reject) => {
 			mocks.pending.push({ resolve, reject });
 		});
-	return {
-		createWebrtcBundle: defer,
-		createWebsocketBundle: defer,
-	};
+	return { openCollaborationSession: defer };
 });
 
 /** A bundle whose awareness keeps a real listener registry and state map. */
@@ -61,19 +53,26 @@ function makeLiveBundle() {
 	};
 	const slidesArray = { observeDeep: vi.fn(), unobserveDeep: vi.fn(), length: 0 };
 	const doc = { getArray: () => slidesArray, destroy: vi.fn() };
-	const provider = { awareness, disconnect: vi.fn(), destroy: vi.fn(), on: vi.fn() };
+	const provider = {
+		awareness,
+		onStatus: vi.fn(),
+		onSynced: vi.fn(),
+		connectedNow: true,
+		syncedNow: false,
+		destroy: vi.fn(),
+	};
 	return {
 		bundle: {
-			doc: doc as unknown as DestroyableYDoc,
-			provider: provider as unknown as ProviderLike,
+			doc: doc as unknown as CollabYSession['doc'],
+			provider,
 			awareness,
 			factories: {
 				createMap: vi.fn(),
 				createArray: vi.fn(),
 				createText: vi.fn(),
 			} as unknown as YjsFactories,
-			departure: { announce: vi.fn(), dispose: vi.fn() },
-		} satisfies ProviderBundle,
+			dispose: vi.fn(),
+		} satisfies CollabYSession,
 		states,
 		emit: () => listeners.forEach((cb) => cb()),
 		emitPeer(overrides: Record<string, unknown> = {}) {

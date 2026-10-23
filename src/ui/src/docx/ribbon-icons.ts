@@ -135,6 +135,10 @@ const paths = {
 	contentControl: 'M4 7h16v12H4z M4 7V4h7v3 M8 12h8 M8 15h5',
 	pageColor: 'M6 3h9l3 3v15H6z M9 11h6v6H9z',
 	hyphenation: 'M4 6h16 M4 11h9 M16 11h4 M4 16h16 M13 11h3',
+	chart: 'M4 20h16 M6 20v-6h3v6 M11 20V7h3v13 M16 20v-9h3v9',
+	chartType: 'M4 20h8 M5 20v-5h2v5 M9 20v-9h2v9 M14 9l2-3 2 2 2-4 M14 14h6v6h-6z',
+	editData: 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14',
+	legend: 'M4 6h3v3H4z M10 7.5h10 M4 11h3v3H4z M10 12.5h10 M4 16h3v3H4z M10 17.5h10',
 	caret: 'M7 10l5 5 5-5',
 } as const;
 

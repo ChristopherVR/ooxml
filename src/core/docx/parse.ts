@@ -24,7 +24,7 @@ import { parseContentTypes, parseRelationships } from './package-parts';
 import { withParseWarnings } from './parse-diagnostics';
 import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings';
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
-import { resolveDocumentCharts } from './chart';
+import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
 import { readPlaceholderTexts } from './glossary';
 
 export interface PackageContext {
@@ -200,16 +200,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			'Text in nested tables is editable; the grid, merges and formatting of a nested table are preserved but cannot be changed.',
 		);
 	// Every block that can hold a drawing: body, headers, footers, footnotes and endnotes.
-	const pictureBlocks = [
-		...blocks,
-		...(model.sections ?? []).flatMap((section) =>
-			[section.headers, section.footers].flatMap((slots) =>
-				Object.values(slots ?? {}).flatMap((content) => content?.blocks ?? []),
-			),
-		),
-		...Object.values(model.footnoteSeparators ?? {}).flatMap((note) => note.blocks),
-		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].flatMap((note) => note.blocks),
-	];
+	const pictureBlocks = documentDrawingBlocks({ ...model, blocks });
 	await resolveDocumentDiagrams(pictureBlocks, async (partName) =>
 		zip.file(partName)?.async('string'),
 	);

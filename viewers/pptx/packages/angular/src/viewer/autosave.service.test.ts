@@ -1,10 +1,12 @@
 import {
 	DestroyRef,
 	Injector,
+	signal,
 	runInInjectionContext,
 	ɵChangeDetectionScheduler as ChangeDetectionScheduler,
 	ɵEffectScheduler as EffectScheduler,
 } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -69,7 +71,7 @@ function harness(): { autosave: AutosaveService; flushEffects: () => void } {
 	};
 }
 
-describe('autosave timer redundancy', () => {
+describe('the shared autosave engine through AutosaveService', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 		vi.mocked(saveAutosaveSnapshot).mockClear();
@@ -81,14 +83,15 @@ describe('autosave timer redundancy', () => {
 
 	interface Bound {
 		serialize: ReturnType<typeof vi.fn>;
-		sources: { value: readonly unknown[] };
+		sources: WritableSignal<readonly unknown[]>;
 		autosave: AutosaveService;
+		flushEffects: () => void;
 		tick: () => Promise<void>;
 	}
 
 	function bind(withSources: boolean): Bound {
 		const serialize = vi.fn(async () => new Uint8Array([1, 2, 3]));
-		const sources: { value: readonly unknown[] } = { value: [] };
+		const sources = signal<readonly unknown[]>([[{ id: 'slide1' }]]);
 		const { autosave, flushEffects } = harness();
 		autosave.bind({
 			enabled: () => true,
@@ -96,14 +99,14 @@ describe('autosave timer redundancy', () => {
 			isDirty: () => true,
 			serialize,
 			intervalMs: () => 10_000,
-			...(withSources ? { changeSources: () => sources.value } : {}),
+			...(withSources ? { changeSources: () => sources() } : {}),
 		});
-		// The interval is armed inside the bind effect.
 		flushEffects();
 		return {
 			serialize,
 			sources,
 			autosave,
+			flushEffects,
 			tick: async () => {
 				await vi.advanceTimersByTimeAsync(10_000);
 			},
@@ -128,41 +131,32 @@ describe('autosave timer redundancy', () => {
 
 		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', bytes, undefined);
 		expect(saved).toHaveBeenCalledExactlyOnceWith(bytes);
+		expect(autosave.status()).toMatchObject({ state: 'saved' });
 	});
 
-	it('writes the first snapshot, then skips ticks that change nothing', async () => {
-		const slides = [{ id: 'slide1' }];
+	it('writes the first snapshot, then nothing while the deck is unchanged', async () => {
 		const bound = bind(true);
-		bound.sources.value = [slides];
-
 		await bound.tick();
-		expect(bound.serialize).toHaveBeenCalledOnce();
 		expect(saveAutosaveSnapshot).toHaveBeenCalledOnce();
-
 		await bound.tick();
 		await bound.tick();
 		expect(bound.serialize).toHaveBeenCalledOnce();
-		expect(saveAutosaveSnapshot).toHaveBeenCalledOnce();
 	});
 
-	it('writes again as soon as an edit reassigns the slides', async () => {
-		const slides = [{ id: 'slide1' }];
+	it('writes again one interval after an edit reassigns the slides', async () => {
 		const bound = bind(true);
-		bound.sources.value = [slides];
 		await bound.tick();
-		expect(bound.serialize).toHaveBeenCalledOnce();
-
-		// An immutable edit: same content, new array.
-		bound.sources.value = [[...slides]];
+		bound.sources.set([[{ id: 'slide1' }]]);
+		bound.flushEffects();
 		await bound.tick();
 		expect(bound.serialize).toHaveBeenCalledTimes(2);
 	});
 
-	it('writes on every tick when the host supplies no change sources', async () => {
+	it('without change sources, the clean-to-dirty transition is the one edit', async () => {
 		const bound = bind(false);
 		await bound.tick();
 		await bound.tick();
-		expect(bound.serialize).toHaveBeenCalledTimes(2);
+		expect(bound.serialize).toHaveBeenCalledOnce();
 	});
 
 	it('honours an explicit host cadence instead of the AutoRecover default', async () => {
@@ -173,8 +167,6 @@ describe('autosave timer redundancy', () => {
 			filePath: () => 'deck.pptx',
 			isDirty: () => true,
 			serialize,
-			// A host asking for a two second cadence is stating a policy; the old
-			// seconds path clamped anything under ten seconds back up to ten.
 			intervalMs: () => 2000,
 		});
 		flushEffects();
@@ -184,14 +176,12 @@ describe('autosave timer redundancy', () => {
 
 	it('never suppresses an explicit triggerAutosave', async () => {
 		const bound = bind(true);
-		bound.sources.value = [[{ id: 'slide1' }]];
-
 		await bound.autosave.triggerAutosave();
 		await bound.autosave.triggerAutosave();
 		expect(bound.serialize).toHaveBeenCalledTimes(2);
 	});
 
-	it('does not mistake an edit during serialization for an already saved source', async () => {
+	it('keeps an edit made during a write for the next interval', async () => {
 		const bound = bind(true);
 		let finish!: (data: Uint8Array) => void;
 		bound.serialize.mockImplementationOnce(
@@ -200,17 +190,29 @@ describe('autosave timer redundancy', () => {
 					finish = resolve;
 				}),
 		);
-		bound.sources.value = [[{ id: 'before' }]];
-		const pending = bound.autosave.triggerAutosave();
-		bound.sources.value = [[{ id: 'after' }]];
+		await bound.tick();
+		bound.sources.set([[{ id: 'after' }]]);
+		bound.flushEffects();
 		finish(new Uint8Array([1]));
-		await pending;
+		await vi.advanceTimersByTimeAsync(0);
 		expect(saveAutosaveSnapshot).toHaveBeenCalledOnce();
 		await bound.tick();
-		expect(bound.serialize).toHaveBeenCalledTimes(2);
 		expect(saveAutosaveSnapshot).toHaveBeenCalledTimes(2);
 		await bound.tick();
 		expect(bound.serialize).toHaveBeenCalledTimes(2);
+	});
+
+	it('reports the shared disabled status when autosave is off', () => {
+		const { autosave, flushEffects } = harness();
+		autosave.bind({
+			enabled: () => false,
+			disabledReason: () => 'autosave_host_off',
+			filePath: () => 'deck.pptx',
+			isDirty: () => false,
+			serialize: async () => null,
+		});
+		flushEffects();
+		expect(autosave.status()).toEqual({ state: 'disabled', reason: 'autosave_host_off' });
 	});
 });
 
@@ -259,6 +261,7 @@ describe('a ribbon New Slide on a freshly loaded deck', () => {
 		// The handler `ribbon-home-section` runs for `home.slides.newSlide`.
 		editor.addSlide(0, layoutPath);
 		expect(editor.dirty()).toBeTruthy();
+		flushEffects();
 
 		await vi.advanceTimersByTimeAsync(2000);
 		expect(serialize).toHaveBeenCalledOnce();

@@ -3,8 +3,8 @@
  * `.xlsx` OLE payload).
  *
  * Reuses the same SpreadsheetML primitives the chart embedded-workbook
- * write-back path already relies on (`chart-xlsx-sheet-cells.ts`,
- * `chart-xlsx-cellref.ts`): only the specific `<c>` element a write targets
+ * write-back path already relies on (`chart/workbook/sheet-cells.ts`,
+ * `chart/workbook/cellref.ts`): only the specific `<c>` element a write targets
  * is touched, so an untouched cell's styles, formulas, and formatting
  * survive the round-trip byte-for-byte.
  *
@@ -15,7 +15,8 @@ import { openNestedZip } from './zip-open';
 
 import type { XmlObject } from '../types';
 import { formatCellAddress, parseCellAddress } from './chart-xlsx-cellref';
-import { applyCellWritesToWorksheet } from './chart-xlsx-sheet-cells';
+import { applyCellWritesToWorksheet } from '../../../chart/workbook/sheet-cells';
+import { buildXml, parseXml } from '../../../xml/index';
 import { xmlAttr, xmlChild, xmlChildren, xmlText } from './xml-access';
 import { preservesSpreadsheetXmlWhitespace } from './xml-whitespace';
 
@@ -204,18 +205,18 @@ export async function writeOleSheetCellEdit(
 		}
 		const parser = createSpreadsheetXmlParser();
 		const builder = createSpreadsheetXmlBuilder();
-		const sheetTree = parser.parse(await sheetFile.async('string')) as XmlObject;
+		const sheetDoc = parseXml(await sheetFile.async('string'), { label: 'Worksheet' });
 
 		const ref = formatCellAddress({ col: edit.col, row: edit.row });
 		const numeric =
 			!edit.forceText && edit.value.trim().length > 0 && Number.isFinite(Number(edit.value));
-		const changed = applyCellWritesToWorksheet(sheetTree, [
+		const changed = applyCellWritesToWorksheet(sheetDoc, [
 			{ ref, isNumeric: numeric, value: edit.value },
 		]);
 		if (!changed) {
 			return xlsxBytes;
 		}
-		zip.file(FIRST_SHEET_PATH, builder.build(sheetTree) as string);
+		zip.file(FIRST_SHEET_PATH, buildXml(sheetDoc));
 
 		const workbookFile = zip.file('xl/workbook.xml');
 		if (workbookFile) {

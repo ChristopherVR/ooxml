@@ -53,8 +53,12 @@ describe('strokePanel', () => {
 			props: { element: shapeEl({ strokeColor: '#ff0000', strokeWidth: 3, strokeDash: 'dash' }) },
 		});
 		expect((wrapper.find('input[type="color"]').element as HTMLInputElement).value).toBe('#ff0000');
-		expect((wrapper.find('input[type="number"]').element as HTMLInputElement).value).toBe('3');
-		expect((wrapper.find('pptx-ui-select').element as HTMLSelectElement).value).toBe('dash');
+		expect((wrapper.find('[data-testid="line-width"]').element as HTMLInputElement).value).toBe(
+			'3',
+		);
+		expect((wrapper.find('[data-testid="line-dash"]').element as HTMLSelectElement).value).toBe(
+			'dash',
+		);
 	});
 
 	it('emits a full merged shapeStyle patch when color changes, clearing any stored theme ref', async () => {
@@ -80,7 +84,7 @@ describe('strokePanel', () => {
 
 	it('emits a clamped numeric strokeWidth', async () => {
 		const wrapper = mount(StrokePanel, { props: { element: shapeEl({}) } });
-		const num = wrapper.find('input[type="number"]');
+		const num = wrapper.find('[data-testid="line-width"]');
 		(num.element as HTMLInputElement).value = '-5';
 		await num.trigger('input');
 
@@ -90,7 +94,7 @@ describe('strokePanel', () => {
 
 	it('emits the selected strokeDash value', async () => {
 		const wrapper = mount(StrokePanel, { props: { element: shapeEl({}) } });
-		const select = wrapper.find('pptx-ui-select');
+		const select = wrapper.find('[data-testid="line-dash"]');
 		await setControlValue(select, 'sysDot');
 
 		const patch = wrapper.emitted('update')?.at(-1)?.[0] as Partial<PptxElement>;
@@ -133,8 +137,18 @@ describe('strokePanel', () => {
 	it('offers the full shared dash-pattern catalogue, in shared order', () => {
 		const wrapper = mount(StrokePanel, { props: { element: shapeEl({}) } });
 		const values = wrapper
-			.findAll('pptx-ui-select option')
+			.findAll('[data-testid="line-dash"] option')
 			.map((o) => (o.element as HTMLOptionElement).value);
 		expect(values).toStrictEqual(STROKE_DASH_OPTIONS.map((o) => o.value));
+	});
+
+	it('offers the shared join, cap and compound options and writes them', async () => {
+		const wrapper = mount(StrokePanel, { props: { element: shapeEl({ strokeWidth: 2 }) } });
+		await setControlValue(wrapper.find('[data-testid="line-join"]'), 'miter');
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			shapeStyle: { strokeWidth: 2, lineJoin: 'miter' },
+		});
+		expect(wrapper.find('[data-testid="line-compound"]').exists()).toBeTruthy();
+		expect(wrapper.find('[data-testid="line-cap"]').exists()).toBeTruthy();
 	});
 });

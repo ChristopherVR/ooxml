@@ -1,5 +1,5 @@
 /**
- * The three `$effect`s the collaboration controller registers on construction,
+ * The `$effect`s the collaboration controller registers on construction,
  * lifted out of `collaboration.svelte.ts` to keep that file inside the repo's
  * 300 LOC ceiling. They are pure wiring: every piece of state they touch is
  * reached through the {@link CollaborationEffectsHost} callbacks, so this module
@@ -7,7 +7,6 @@
  */
 
 import type { CollaborationConfig } from 'ooxml-ui/pptx';
-import { registerCollaborationTeardown } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 export interface CollaborationEffectsHost {
@@ -16,9 +15,8 @@ export interface CollaborationEffectsHost {
 	syncConfig: (config: CollaborationConfig | undefined) => void;
 	isPublishable: () => boolean;
 	flushLocalSlides: (slides: PptxSlide[]) => void;
-	stop: () => void;
-	rejoin: () => void;
-	leaveOnBeforeUnload: () => boolean;
+	/** Tear the session down with the component (the shared session controller also leaves on `pagehide`). */
+	destroy: () => void;
 }
 
 /**
@@ -41,16 +39,6 @@ export function registerCollaborationEffects(host: CollaborationEffectsHost): vo
 		}
 	});
 
-	// Component destruction is not the only way a session ends: a tab close, a
-	// navigation, or an embedding page detaching the viewer's iframe destroys the
-	// document without running any Svelte cleanup, leaving a ghost peer in
-	// everyone else's presence list. Leave the room from `pagehide` too; the
-	// effect's return value unregisters the listeners on destroy.
-	$effect(() =>
-		registerCollaborationTeardown({
-			leave: host.stop,
-			rejoin: host.rejoin,
-			leaveOnBeforeUnload: host.leaveOnBeforeUnload,
-		}),
-	);
+	// Leave the room and drop the pagehide listeners when the component goes.
+	$effect(() => () => host.destroy());
 }
