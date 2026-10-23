@@ -63,15 +63,17 @@ export const THEMES_GALLERY: RibbonGalleryModule = {
 	build(ctx) {
 		const active = activeGalleryThemePreset(ctx.theme);
 		const items = GALLERY_THEME_PRESETS.map((preset) => tile(preset, preset.id === active?.id));
-		if (ctx.theme && !active) {
-			// An edited or imported theme heads the list, as PowerPoint's "This Presentation".
+		if (ctx.theme) {
+			// The deck's theme always heads the list, as PowerPoint's "This Presentation". Showing it
+			// only for a non-built-in theme shifted every tile when a built-in was picked, so the tile
+			// under the pointer became the next theme and started previewing it.
 			const scheme = galleryColorScheme(ctx);
 			items.unshift({
 				id: CURRENT_ID,
 				labelKey: 'pptx.gallery.themes.current',
 				label: 'Current theme',
 				previewSvg: themeTileSvg(scheme, currentFonts(ctx)?.majorFont?.latin),
-				applied: true,
+				applied: !active,
 			});
 		}
 		return {

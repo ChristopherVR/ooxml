@@ -2,7 +2,8 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { loadDeck, ribbonTab, slideElements } from './support/deck';
+import { loadDeck, ribbonTab, slideElements, thumbnail } from './support/deck';
+import { slidePosition } from './support/keyboard';
 
 /**
  * Round 5 ribbon parity: the categorised Shapes gallery (Insert and Home), Slide Templates in the
@@ -158,6 +159,26 @@ test.describe('Design', () => {
 		await tile('facet').click();
 		await expect(tile('facet')).toHaveAttribute('aria-pressed', 'true');
 		await expect(tile('office')).toHaveAttribute('aria-pressed', 'false');
+	});
+
+	test('a theme pick keeps the active slide and every tile in place', async ({ page }) => {
+		await open(page, 'Design');
+		await thumbnail(page, 2).click();
+		await expect.poll(() => slidePosition(page)).toMatch(/^Slide 2 of/u);
+		const themes = page.locator('[data-ribbon-control="design.themes.gallery"]');
+		const ids = () =>
+			themes
+				.locator('[data-gallery-item]')
+				.evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute('data-gallery-item')));
+		const before = await ids();
+		await themes.locator('[data-gallery-item="facet"]').first().click();
+		await expect(themes.locator('[data-gallery-item="facet"]').first()).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		// Re-theming used to reload the deck in React, jumping back to slide 1.
+		expect(await slidePosition(page)).toMatch(/^Slide 2 of/u);
+		expect(await ids()).toEqual(before);
 	});
 
 	test('Variants offers four tiles and Colors, Fonts, Effects and Background Styles', async ({

@@ -1,5 +1,11 @@
 import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
-import { buildThemeColorMap, reResolveElementColors, reResolveSlideColors } from 'pptx-viewer-core';
+import {
+	buildThemeColorMap,
+	reResolveElementColors,
+	reResolveElementFonts,
+	reResolveSlideColors,
+	reResolveSlideFonts,
+} from 'pptx-viewer-core';
 import type {
 	PptxElement,
 	PptxSlide,
@@ -150,8 +156,21 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 			return;
 		}
 		await handler.updateThemeFontScheme(fontScheme);
+		// Re-resolve the live slides in place, as the colour scheme does: a full
+		// reload would jump back to the first slide and drop the undo history.
+		const previousFonts = theme?.fontScheme;
+		bumpHistory();
+		setSlides((prev) => reResolveSlideFonts(prev, previousFonts, fontScheme));
+		setTemplateElementsBySlideId((prev) =>
+			Object.fromEntries(
+				Object.entries(prev).map(([slideId, elements]) => [
+					slideId,
+					reResolveElementFonts(elements, previousFonts, fontScheme),
+				]),
+			),
+		);
 		setTheme((prev) => (prev ? { ...prev, fontScheme } : { fontScheme }));
-		await refreshContentAfterThemeChange();
+		history.markDirty();
 	};
 
 	const handleUpdateThemeName = async (name: string) => {
@@ -176,24 +195,14 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		await refreshContentAfterThemeChange();
 	};
 
-	const handleApplyThemeData = async (
+	// Design > Themes and the theme gallery: re-themed in place (one undo step,
+	// the active slide and selection kept), never by reloading the deck.
+	const handleApplyThemeData = (
 		colorScheme: PptxThemeColorScheme,
 		fontScheme: PptxThemeFontScheme,
 		themeName?: string,
-	) => {
-		const handler = handlerRef.current;
-		if (!handler) {
-			return;
-		}
-		await handler.applyTheme(colorScheme, fontScheme, themeName);
-		setTheme((prev) => ({
-			...prev,
-			colorScheme,
-			fontScheme,
-			...(themeName && { name: themeName }),
-		}));
-		await refreshContentAfterThemeChange();
-	};
+	) =>
+		applyThemeEditorEdit(input, { colorScheme, fontScheme, name: themeName ?? theme?.name ?? '' });
 
 	const handleSetTemplateBackground = (path: string, backgroundColor: string | undefined) => {
 		const handler = handlerRef.current;

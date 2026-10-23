@@ -16,13 +16,27 @@ const ctx = (preset = office, name = preset.name) => ({
 });
 
 describe('Design > Themes gallery', () => {
-	it('offers every built-in theme, three of them inline, and marks the deck theme applied', () => {
+	it('offers the current and every built-in theme, three inline, and marks the deck theme', () => {
 		const descriptor = buildRibbonGallery('themes', ctx(facet));
 		const items = descriptor.sections.flatMap((section) => section.items);
-		expect(items.map((item) => item.id)).toEqual(GALLERY_THEME_PRESETS.map((preset) => preset.id));
+		expect(items.map((item) => item.id)).toEqual([
+			'current',
+			...GALLERY_THEME_PRESETS.map((preset) => preset.id),
+		]);
 		expect(inlineGalleryItems(descriptor)).toHaveLength(3);
 		expect(items.filter((item) => item.applied).map((item) => item.id)).toEqual(['facet']);
 		expect(items[0]?.previewSvg).toContain('<svg');
+	});
+
+	it('keeps every tile in place when a built-in theme replaces a custom one', () => {
+		const custom = {
+			element: null,
+			theme: { name: 'Mine', colorScheme: { ...office.colorScheme, accent1: '#123456' } },
+		};
+		const ids = (context: Parameters<typeof buildRibbonGallery>[1]) =>
+			buildRibbonGallery('themes', context).sections[0]!.items.map((item) => item.id);
+		// The picked tile stays under the pointer, so it does not start previewing another theme.
+		expect(ids(ctx(facet))).toEqual(ids(custom));
 	});
 
 	it('heads the list with the current theme when it is not a built-in one', () => {

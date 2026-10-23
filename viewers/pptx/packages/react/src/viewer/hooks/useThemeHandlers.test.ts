@@ -147,3 +147,75 @@ describe('handleUpdateThemeColorScheme', () => {
 		expect(patched.shapeStyle?.fillColor).toBe(ION_ACCENT1);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// Design > Themes and Fonts: applied in place, never by reloading the deck
+// ---------------------------------------------------------------------------
+
+describe('theme picks apply in place', () => {
+	const FONTS = {
+		majorFont: { latin: 'Calibri Light' },
+		minorFont: { latin: 'Calibri' },
+	} as NonNullable<UseThemeHandlersInput['theme']>['fontScheme'];
+
+	function inPlaceInput(handler: Partial<PptxHandler>) {
+		const slides = [
+			{ id: 's1', elements: [] },
+			{ id: 's2', elements: [] },
+		] as unknown as Parameters<UseThemeHandlersInput['setSlides']>[0];
+		const input = {
+			handlerRef: { current: handler as PptxHandler },
+			serializeSlides: vi
+				.fn<() => Promise<Uint8Array | null>>()
+				.mockResolvedValue(new Uint8Array()),
+			setContent: vi.fn<() => void>(),
+			onContentChange: undefined,
+			setTheme: vi.fn<() => void>(),
+			setSlideMasters: vi.fn<() => void>(),
+			slideMasters: [],
+			history: { markDirty: vi.fn<() => void>() } as unknown as UseThemeHandlersInput['history'],
+			setSlides: vi.fn((updater: unknown) =>
+				typeof updater === 'function' ? updater(slides) : updater,
+			),
+			templateElementsBySlideId: {},
+			setTemplateElementsBySlideId: vi.fn<() => void>(),
+			theme: { name: 'Office', fontScheme: FONTS } as UseThemeHandlersInput['theme'],
+			bumpHistory: vi.fn<() => void>(),
+		} satisfies UseThemeHandlersInput;
+		return input;
+	}
+
+	it('handleApplyThemeData re-themes the live slides without serialising or reloading', async () => {
+		const applyTheme = vi.fn().mockResolvedValue(undefined);
+		const input = inPlaceInput({ applyTheme });
+		const { handleApplyThemeData } = useThemeHandlers(input);
+
+		await handleApplyThemeData({ accent1: '#90C226' } as never, FONTS!, 'Facet');
+
+		expect(applyTheme).toHaveBeenCalledWith({ accent1: '#90C226' }, FONTS, 'Facet');
+		expect(input.serializeSlides).not.toHaveBeenCalled();
+		expect(input.setContent).not.toHaveBeenCalled();
+		expect(input.setSlides).toHaveBeenCalledWith(expect.any(Function));
+		expect(input.bumpHistory).toHaveBeenCalledOnce();
+		expect(input.history.markDirty).toHaveBeenCalledWith();
+	});
+
+	it('handleUpdateThemeFontScheme re-resolves fonts in place as one undo step', async () => {
+		const updateThemeFontScheme = vi.fn().mockResolvedValue(undefined);
+		const input = inPlaceInput({ updateThemeFontScheme });
+		const { handleUpdateThemeFontScheme } = useThemeHandlers(input);
+		const next = {
+			majorFont: { latin: 'Georgia' },
+			minorFont: { latin: 'Verdana' },
+		} as typeof FONTS;
+
+		await handleUpdateThemeFontScheme(next!);
+
+		expect(updateThemeFontScheme).toHaveBeenCalledWith(next);
+		expect(input.serializeSlides).not.toHaveBeenCalled();
+		expect(input.setContent).not.toHaveBeenCalled();
+		expect(input.setSlides).toHaveBeenCalledWith(expect.any(Function));
+		expect(input.setTemplateElementsBySlideId).toHaveBeenCalledWith(expect.any(Function));
+		expect(input.bumpHistory).toHaveBeenCalledOnce();
+	});
+});
