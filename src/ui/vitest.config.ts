@@ -55,6 +55,10 @@ const AREAS = {
 				{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
 				// The package imports its own subpaths by name; resolve them to source, not to dist.
 				{ find: /^ooxml-ui\/pptx\/dom$/, replacement: `${uiSource}/pptx/dom/index.ts` },
+				{
+					find: /^ooxml-ui\/chart-format-locales$/,
+					replacement: `${uiSource}/chart/format-pane-locales/index.ts`,
+				},
 				// Node resolves solid-js to its server build, where effects never run; the bindings
 				// tests mount Solid components in a DOM, so they need the browser build.
 				{
@@ -76,7 +80,17 @@ const AREAS = {
 		},
 	},
 	pptx: {
-		resolve: { alias: [{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1` }] },
+		resolve: {
+			alias: [
+				{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1` },
+				// The viewer's locale dictionaries import the chart format pane strings by package name;
+				// resolve them to source so the tests never depend on a build of this package.
+				{
+					find: /^ooxml-ui\/chart-format-locales$/,
+					replacement: `${uiSource}/chart/format-pane-locales/index.ts`,
+				},
+			],
+		},
 		test: { css, globals: true, testTimeout: 30_000, hookTimeout: 30_000 },
 	},
 } as const;
