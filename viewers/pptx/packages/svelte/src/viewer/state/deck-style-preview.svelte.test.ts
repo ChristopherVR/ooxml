@@ -65,9 +65,7 @@ describe('Design gallery preview in the Svelte editor', () => {
 				syncConfig: () => {},
 				isPublishable: () => true,
 				flushLocalSlides: (slides) => published.push(slides),
-				stop: () => {},
-				rejoin: () => {},
-				leaveOnBeforeUnload: () => false,
+				destroy: () => {},
 			});
 		});
 		flushSync();
