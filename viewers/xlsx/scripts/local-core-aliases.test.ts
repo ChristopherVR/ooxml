@@ -39,3 +39,11 @@ it('resolves shared PowerPoint editor leaves alongside area entry points', () =>
 		expect(existsSync(name.replace(entry.find, entry.replacement))).toBe(true);
 	}
 });
+it('resolves the ooxml-ui binding kit and its framework factories', () => {
+	vi.stubEnv('OOXML_CORE_SRC', checkout);
+	const aliases = localCoreAliases(root);
+	for (const name of ['ooxml-ui/bindings', 'ooxml-ui/bindings/react', 'ooxml-ui/bindings/vue']) {
+		const entry = aliases.find((alias) => alias.find.test(name))!;
+		expect(existsSync(name.replace(entry.find, entry.replacement))).toBe(true);
+	}
+});
