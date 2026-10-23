@@ -403,7 +403,7 @@ Still not at parity:
   its apply-to/list-style options. (Add tab stop at: a level's `w:tab w:val="num"` is read, written and
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
-- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
+- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, SmartArt Styles and Change Colors, SmartArt pictures and per-shape formatting, and SmartArt in headers, footers and notes (body SmartArt can be inserted and its nodes, text and layout edited; an edited diagram is drawn with an approximate layout, not Word's, until Word lays it out again),
   inserting or editing Charts (existing charts are drawn read-only from the values cached in the part for bar, column, line,
   area, pie, doughnut, scatter and radar charts, bar/line combinations, waterfalls and histograms; bubble, stock, surface and other chartex charts show a labelled frame naming the
   family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,

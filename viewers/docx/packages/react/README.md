@@ -69,8 +69,9 @@ dependencies; document and layout algorithms live in OOXML core.
 
 This is an early editor. It does not establish Microsoft Word layout parity or
 lossless saving for unsupported features. Legacy DOC support is limited to
-main-body text with constrained paragraph edits. SmartArt is display-only and
-charts render as placeholders.
+main-body text with constrained paragraph edits. SmartArt nodes, text and layout can be edited
+(drawn with an approximate layout until Word lays them out again) and charts
+render read-only.
 
 ## Documentation
 

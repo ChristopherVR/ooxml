@@ -91,8 +91,9 @@ the element, forward props and options, and re-emit its events.
 - The browser `createCanvasMeasurer` stays in
   `src/ui/src/docx/canvas-measurer.ts` and is injected into the core's layout
   engine; it is the one piece of layout that needs a DOM.
-- Unsupported document features must be reported honestly (for example SmartArt
-  is display-only, charts paint from their cached values for the common families (including bubble and
+- Unsupported document features must be reported honestly (for example edited
+  SmartArt is drawn with an approximate layout, not Word's, and its styles and
+  colours are not editable; charts paint from their cached values for the common families (including bubble and
   open-high-low-close stock), bar/line combinations, waterfalls, histograms, treemaps and
   sunbursts, and surface, volume-stock and other chartex charts show a labelled frame). Never claim Word layout
   parity or lossless export.
