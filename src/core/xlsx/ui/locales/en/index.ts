@@ -6,6 +6,7 @@ import * as commands from './commands';
 import * as grid from './grid';
 import * as options from './options';
 import * as shell from './shell';
+import * as smartart from './smartart';
 
 export const en: Readonly<Record<string, string>> = mergeStringModules({
 	'./collab.ts': collab,
@@ -13,4 +14,5 @@ export const en: Readonly<Record<string, string>> = mergeStringModules({
 	'./grid.ts': grid,
 	'./options.ts': options,
 	'./shell.ts': shell,
+	'./smartart.ts': smartart,
 });

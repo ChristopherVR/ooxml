@@ -90,12 +90,6 @@ export const CORE_FEATURE_STRINGS: Translations = {
 		'Gráfico SmartArt',
 		'SmartArt 图形',
 	],
-	'SmartArt (display only)': [
-		'SmartArt (affichage uniquement)',
-		'SmartArt (nur Anzeige)',
-		'SmartArt (solo visualización)',
-		'SmartArt（仅显示）',
-	],
 	Category: ['Catégorie', 'Kategorie', 'Categoría', '类别'],
 	'Content status': ['État du contenu', 'Inhaltsstatus', 'Estado del contenido', '内容状态'],
 	Company: ['Société', 'Firma', 'Empresa', '公司'],

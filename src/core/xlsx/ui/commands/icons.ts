@@ -154,6 +154,14 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	fillRight: 'M3 4h5v12H3zM10 10h7M14 7l3 3-3 3',
 	fillUp: 'M4 12h12v5H4zM10 10V3M7 6l3-3 3 3',
 	fillLeft: 'M12 4h5v12h-5zM10 10H3M6 7l-3 3 3 3',
+	smartArt: 'M7.5 2.5h5v3.5h-5zM2.5 13h5v3.5h-5zM12.5 13h5v3.5h-5zM10 6v3M5 13V9.5h10V13',
+	smartArtAddShape: 'M3 5h8v7H3zM14.5 11.5v6M11.5 14.5h6',
+	smartArtTextPane: 'M2.5 3.5h15v13h-15zM7.5 3.5v13M10 7.5h5M10 11h5M10 14h3M4.5 7.5h1M4.5 11h1',
+	smartArtPromote: 'M8.5 5H3.5M16.5 10H7M16.5 15H7M3.5 10l2.5-2.5M3.5 10 6 12.5',
+	smartArtDemote: 'M3.5 5h13M8.5 10h8M8.5 15h8M3.5 7.5 6 10l-2.5 2.5',
+	smartArtMoveUp: 'M10 16.5V4M5 9l5-5 5 5',
+	smartArtMoveDown: 'M10 3.5V16M5 11l5 5 5-5',
+	smartArtLayout: 'M2.5 3.5h6v6h-6zM11.5 3.5h6v6h-6zM2.5 12.5h6v4h-6zM11.5 12.5h6v4h-6z',
 };
 
 /** The registered name of a glyph. */

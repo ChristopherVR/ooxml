@@ -1,6 +1,12 @@
 // Contextual Table Design and Chart Design commands. A table is "selected" when the active cell is
 // inside it; a chart when it is the selected drawing (`selection.drawing`, set by clicking it).
-import { type ChartObject, type ChartPatch, type ChartType, type Table } from '../../index';
+import {
+	type ChartObject,
+	type ChartPatch,
+	type ChartType,
+	type SmartArtObject,
+	type Table,
+} from '../../index';
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
 import { icon } from './icons';
@@ -24,6 +30,17 @@ export function activeChart(ctx: EditorContext): { chart: ChartObject; index: nu
 	if (!t || index === undefined) return undefined;
 	const picked = t.ws.drawings[index];
 	return picked?.kind === 'chart' ? { chart: picked, index } : undefined;
+}
+
+/** The selected SmartArt graphic, which Excel's SmartArt Design tab and text pane follow. */
+export function activeSmartArt(
+	ctx: EditorContext,
+): { smartArt: SmartArtObject; index: number } | undefined {
+	const t = target(ctx);
+	const index = ctx.selection.get().drawing;
+	if (!t || index === undefined) return undefined;
+	const picked = t.ws.drawings[index];
+	return picked?.kind === 'smartArt' ? { smartArt: picked, index } : undefined;
 }
 
 /** Edits the active chart (a chart read from a file keeps its part; the core patches it on save). */
