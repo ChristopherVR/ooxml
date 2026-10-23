@@ -45,8 +45,13 @@ re-emit its events as callbacks.
   tracking, event mapping, the `src` loader, the deferred handle, the React, Vue
   and Solid component factories) lives in the shared kit `ooxml-ui/bindings`
   (`src/ui/src/bindings`, see its README section); a helper only Excel needs
-  goes in `packages/bindings/src/index.ts` (or the web component).
-  `packages/bindings/src/common.ts` is the re-export surface every package shares.
+  goes in `packages/bindings/src/index.ts` (or the web component). `contract.ts`
+  keeps only Excel's wrappers over the kit (`deferredHandle`, typed to the editor
+  binding, and `svelteEditorOptions`, which maps Svelte's lower-case callbacks).
+  `packages/bindings/src/common.ts` is the re-export surface that every framework
+  package spreads (the workbook model API, the web component, `loadWorkbook` and
+  the other load helpers, the binding types and `mountEditorSurface`); add an
+  export there only when a published package must see it.
 
 ## Working agreements
 
@@ -83,7 +88,9 @@ re-emit its events as callbacks.
   is the one piece of layout that needs a DOM.
 - Unsupported workbook features must be reported honestly (for example pivots from
   external or OLAP sources and Power Query are preserved but not shown or refreshed, sparkline style
-  galleries and grouping are missing, charts are display-only; `docs/features.md` has the full table).
+  galleries and grouping are missing, chart style definitions cannot be authored, surface charts show a
+  labelled frame, a chart part the model cannot carry is never rewritten and is reported, and a SmartArt
+  drawn with an approximate layout is badged as such; `docs/features.md` has the full table).
   Never claim Excel parity or lossless export.
 - Bun, TypeScript strict mode (with `exactOptionalPropertyTypes` and
   `noUncheckedIndexedAccess`, no `any`), Vitest (tests next to the code) and
@@ -136,17 +143,19 @@ first. The release flow rewrites the ranges to the versions released with them.
 
 ### Where does my change go?
 
-| The change is about...                                                                | Make it in                                                                       |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Parsing, the workbook model, saving or round-trip loss                                | `src/core/xlsx/` in `ooxml`, with a round-trip test                              |
-| Formulas, functions, recalculation, number formats, editing commands, undo            | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)                                       |
-| Grid metrics, cell views, conditional formats, chart view models, keyboard navigation | `ooxml` (`xlsx/layout`)                                                          |
-| `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                                                            |
-| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`src/ui`)                                                 |
-| `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                | `ole2`                                                                           |
-| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `src/ui/src/xlsx` in the ooxml repository                                        |
-| Framework wiring (props, events, lifecycle)                                           | `packages/<framework>/src`; neutral engine ownership only in `packages/bindings` |
-| Demos, docs site, browser tests, packaging and release scripts                        | here                                                                             |
+| The change is about...                                                                              | Make it in                                                                                            |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Parsing, the workbook model, saving or round-trip loss                                              | `src/core/xlsx/` in `ooxml`, with a round-trip test                                                   |
+| Formulas, functions, recalculation, number formats, editing commands, undo                          | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)                                                            |
+| Grid metrics, cell views, conditional formats, chart view models, keyboard navigation               | `ooxml` (`xlsx/layout`)                                                                               |
+| `.xls` loading, CSV, format detection                                                               | `ooxml` (`xlsx/load`)                                                                                 |
+| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)                    | `ooxml-ui` in `ooxml` (`src/ui`)                                                                      |
+| `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                              | `ole2`                                                                                                |
+| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales                        | `src/ui/src/xlsx` in the ooxml repository                                                             |
+| Chart or SmartArt edit operations, part writers, layout (shared by every product)                   | `src/core/chart`, `src/core/diagram`; Excel's chart edits over `ChartSpace` in `src/core/xlsx/edit`   |
+| Chart Design and SmartArt Design tabs, the text pane beside the grid, Insert > Chart and > SmartArt | `src/ui/src/xlsx` (`smartart-controller.ts`, `dialogs/insert-chart.ts`, `dialogs/insert-smartart.ts`) |
+| Framework wiring (props, events, lifecycle)                                                         | `packages/<framework>/src`; neutral engine ownership only in `packages/bindings`                      |
+| Demos, docs site, browser tests, packaging and release scripts                                      | here                                                                                                  |
 
 ### GitHub Pages
 

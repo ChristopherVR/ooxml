@@ -31,7 +31,7 @@ const reopened = await loadWorkbook(bytes, { fileName: 'Book1.xlsx' });
 
 ## API and limitations
 
-The main entry handles `.xlsx`, `.xlsm` and `.xltx`. The `/load` entry also opens legacy Excel 97-2003 `.xls` files (read only; they save as `.xlsx`) and `.csv` text, sniffing the format from the bytes. Saving is not lossless for features the model does not cover; unmodelled parts (VBA, pivot tables, charts) are carried through unchanged where the sheet still exists.
+The main entry handles `.xlsx`, `.xlsm` and `.xltx`. The `/load` entry also opens legacy Excel 97-2003 `.xls` files (read only; they save as `.xlsx`) and `.csv` text, sniffing the format from the bytes. Saving is not lossless for features the model does not cover; unmodelled parts (VBA, pivot tables, and any chart content the chart model cannot carry) are carried through unchanged where the sheet still exists. Charts are edited over their parsed `ChartSpace` and written from it, except a chart part the model cannot carry, which keeps its source bytes and is reported.
 
 ## Documentation
 
