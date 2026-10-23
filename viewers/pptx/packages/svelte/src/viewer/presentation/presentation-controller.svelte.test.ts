@@ -300,6 +300,14 @@ describe('presentationController hidden slides', () => {
 		expect(deck.index).toBe(0);
 	});
 
+	it('leaves an ordinary backward press to previousSlide (retreat declines)', () => {
+		const { deck, controller } = showHarness([false, false]);
+		deck.index = 1;
+		expect(controller.retreat()).toBeFalsy();
+		controller.previousSlide();
+		expect(deck.index).toBe(0);
+	});
+
 	it('ends the show at the last VISIBLE slide when trailing slides are hidden', () => {
 		const { deck, controller } = showHarness([false, false, true, true]);
 		deck.index = 1;

@@ -2,8 +2,8 @@ import {
 	acceptsPresentationInput,
 	beginZoomExcursion,
 	buildZoomTransitionOverride,
-	isClickAdvanceAllowed,
-	resolveForwardSlideWithZoomReturn,
+	resolveShowBackward,
+	resolveShowForward,
 } from 'ooxml-ui/pptx';
 import type { ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 /**
@@ -143,67 +143,69 @@ export function usePresentationNavigation(
 		goTo(target.targetSlideIndex, buildZoomTransitionOverride(target.transitionDurationMs));
 	}
 
-	function next(): void {
-		if (showEndScreen.value) {
-			// A second advance on the end screen exits the show, like PowerPoint.
-			options.requestClose();
-			return;
-		}
-		if (playback().advance()) {
-			return; // revealed an animation build step; stay on the slide
-		}
-		// A Slide Zoom / Section Zoom / Summary Zoom tile whose `zmPr` set
-		// `returnToParent` armed an excursion. Once this forward advance reaches
-		// the last slide of that target's range, jump back to the zoom's origin
-		// slide instead of continuing linearly through the deck; PowerPoint's
-		// return jump is forward-only, so `prev()` never consults this.
-		const excursion = zoomExcursion.value;
-		const zoomStep = resolveForwardSlideWithZoomReturn(currentIndex.value, undefined, excursion);
-		if (zoomStep.returnedToZoom && zoomStep.nextSlideIndex !== undefined) {
-			zoomExcursion.value = zoomStep.excursion;
-			goTo(zoomStep.nextSlideIndex, buildZoomTransitionOverride(excursion?.transitionDurationMs));
-			return;
-		}
-		if (!showOrder.hasNext(currentIndex.value)) {
-			// A returning sub-show (`ppaction://customshow?...&return=true`)
-			// outranks everything else: PowerPoint resumes the show it branched
-			// from at the slide it branched at, not the black end screen.
-			if (options.onShowEnd?.()) {
-				return;
-			}
-			// "Loop continuously until 'Esc'" outranks both the black end screen and
-			// exiting: PowerPoint wraps straight back to the show's first slide.
-			if (options.loopContinuously?.()) {
-				goTo(showOrder.first(currentIndex.value));
-				return;
-			}
-			if (options.endWithBlackSlide()) {
-				showEndScreen.value = true;
-			} else {
-				// No black slide configured: PowerPoint ends the show outright rather
-				// than sitting on the last slide ignoring every further advance.
+	/**
+	 * A forward input, decided by the shared show step: the end screen ends the
+	 * show, a remaining build is revealed, a click past the last build is gated
+	 * by the slide's transition, a Zoom excursion returns to its zoom slide, and
+	 * past the show's end a returning sub-show resumes, a looping show wraps,
+	 * the black end screen rises or the show ends.
+	 */
+	function forward(fromClick: boolean): void {
+		const step = resolveShowForward({
+			currentIndex: currentIndex.value,
+			currentSlide: activeSlide.value,
+			showOrder: showOrder.indexes.value,
+			endOfShow: showEndScreen.value,
+			fromClick,
+			loop: options.loopContinuously?.() === true,
+			endWithBlackSlide: options.endWithBlackSlide(),
+			zoomExcursion: zoomExcursion.value,
+			returnFromSubShow: () => options.onShowEnd?.() === true,
+			advanceBuild: () => playback().advance(),
+		});
+		switch (step.kind) {
+			case 'exit':
+				// A second advance on the end screen exits the show, like PowerPoint.
 				options.requestClose();
-			}
-			return;
+				return;
+			case 'end-screen':
+				showEndScreen.value = true;
+				return;
+			case 'go':
+				if (step.zoomReturn) {
+					zoomExcursion.value = step.zoomReturn.excursion;
+					goTo(step.index, step.zoomReturn.transitionOverride);
+					return;
+				}
+				goTo(step.index);
+				break;
+			default:
+				break;
 		}
-		goTo(showOrder.next(currentIndex.value));
+	}
+
+	function next(): void {
+		forward(false);
 	}
 
 	function prev(): void {
-		if (showEndScreen.value) {
+		const step = resolveShowBackward({
+			currentIndex: currentIndex.value,
+			showOrder: showOrder.indexes.value,
+			endOfShow: showEndScreen.value,
+			seededCompleted: playback().seededCompleted.value,
+		});
+		if (step.kind === 'dismiss-end-screen') {
 			showEndScreen.value = false;
-			return;
-		}
-		// A slide entered backward shows its builds already complete. The next back
-		// press replays them from the start rather than leaving the slide, so a
-		// presenter who overshot can watch the build again (PowerPoint).
-		if (playback().seededCompleted.value) {
+		} else if (step.kind === 'replay') {
+			// A slide entered backward shows its builds already complete; the next
+			// back press replays them rather than leaving the slide (PowerPoint).
 			playback().reset();
-			return;
+		} else if (step.kind === 'go') {
+			// PowerPoint shows a slide you step BACK onto with its builds played.
+			playback().markNextEntryCompleted();
+			goTo(step.index);
 		}
-		// PowerPoint shows a slide you step BACK onto with its builds already played.
-		playback().markNextEntryCompleted();
-		goTo(showOrder.previous(currentIndex.value));
 	}
 
 	function advanceFromClick(): void {
@@ -212,14 +214,7 @@ export function usePresentationNavigation(
 		if (!acceptsPresentationInput()) {
 			return;
 		}
-		if (
-			!showEndScreen.value &&
-			playback().isComplete.value &&
-			!isClickAdvanceAllowed(activeSlide.value)
-		) {
-			return;
-		}
-		next();
+		forward(true);
 	}
 
 	watch(currentIndex, (index, previousIndex) => {

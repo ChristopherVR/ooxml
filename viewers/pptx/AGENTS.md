@@ -108,8 +108,11 @@ canvas's move, resize and rotate gestures all run on `createGestureController`
 exclusion, minimum size, mid-gesture lock check); a binding supplies deps and paints the
 frames (React writes them to the DOM, Angular emits them), and what a press or a
 double-click on a group selects is `resolveGroupPressTarget` /
-`resolveGroupDoubleClickTarget`. A binding keeps its own public shape (refs, signals,
-getters) and maps it onto these.
+`resolveGroupDoubleClickTarget`. Where a slide show's forward or backward input lands
+(end screen, builds, click-advance gate, Zoom return, sub-show return, loop, show order)
+is `resolveShowForward` / `resolveShowBackward` (`render/presentation-show-step.ts`); the
+binding performs the step with its own index, overlay and timers. A binding keeps its own
+public shape (refs, signals, getters) and maps it onto these.
 
 Both rules are expanded, with the concrete failures that motivated them, under
 [Key Conventions](#key-conventions).

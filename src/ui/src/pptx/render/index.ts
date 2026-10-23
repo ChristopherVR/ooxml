@@ -1598,6 +1598,7 @@ export * from './presentation-ole-verb';
 // runs; the rest of the slide is scenery the click passes through.
 export * from './presentation-hit-test';
 export * from './presentation-show-order';
+export * from './presentation-show-step';
 // The slide a show opens on: the active slide when the show includes it, else
 // the first show slide after it. Entering on an excluded slide is a parity bug.
 export * from './presentation-entry-slide';

@@ -1,11 +1,10 @@
 import {
 	firstShowSlideIndex,
-	hasShowSlideAfter,
 	lastShowSlideIndex,
-	nextShowSlideIndex,
 	presentationEntrySlideIndex,
-	previousShowSlideIndex,
 	resolveAuthoredSlideRange,
+	resolveShowBackward,
+	resolveShowForward,
 	resolveShowSlideIndexes,
 	createViewerZoomStore,
 } from 'ooxml-ui/pptx';
@@ -152,83 +151,77 @@ export function createViewerControls(
 		});
 	};
 	return {
-		// While presenting, a "next" first reveals the current slide's next
-		// on-click animation build; only once the timeline is exhausted does the
-		// slide advance. Backward navigation just jumps slides (matches Vue).
+		// While presenting, the shared show step decides where "next" lands (end
+		// screen, builds, Zoom return, end of show, show order). Outside a show the
+		// deck pages one slide at a time (hidden slides stay reachable there).
 		next: () => {
 			const state = store.get();
-			// While the end screen is up a forward input ends the show (PowerPoint's
-			// "click to exit"); it never advances anything.
-			if (state.endOfShow) {
-				store.set({ endOfShow: false });
-				onEndShow?.();
-				return;
-			}
-			if (state.presenting && renderer.presentationPlayback.advance()) {
-				return;
-			}
-			// A Slide Zoom / Section Zoom / Summary Zoom tile whose `zmPr` set
-			// `returnToParent` armed an excursion (see `navigateToZoomTarget`). Once
-			// this forward advance reaches the last slide of that target's range,
-			// jump back to the zoom's origin slide instead of continuing linearly
-			// through the deck; PowerPoint's return jump is forward-only, so `prev`
-			// never consults this.
-			if (state.presenting) {
-				const zoomReturnIndex = renderer.presentationPlayback.consumeZoomReturnOnAdvance(
-					state.currentSlide,
-				);
-				if (zoomReturnIndex !== undefined) {
-					goToSlide(zoomReturnIndex);
-					return;
-				}
-			}
-			const order = showOrder();
-			// "Loop Continuously" (`p:showPr/@loop`, the Set Up Slide Show dialog's
-			// checkbox): the end of the show wraps back to its first slide instead of
-			// raising the black end screen. Rehearsal (a distinct "record timings"
-			// flow) is not modelled by this controller, so there is no rehearsing
-			// exception to make here.
-			const loop = state.presentationProperties.loopContinuously === true;
-			if (state.presenting && !loop && !hasShowSlideAfter(state.currentSlide, order)) {
-				if (getEndWithBlackSlide?.() === false) {
-					// No black slide configured: PowerPoint ends the show outright
-					// rather than sitting on the last slide swallowing every advance.
+			if (!state.presenting) {
+				if (state.endOfShow) {
+					store.set({ endOfShow: false });
 					onEndShow?.();
 					return;
 				}
-				// Nothing further to advance to: raise the black end screen rather
-				// than sitting on the last slide ignoring every further advance.
-				store.set({ endOfShow: true });
+				goToSlide(state.currentSlide + 1);
 				return;
 			}
-			// Outside a show the deck pages one slide at a time (hidden slides are
-			// still editable and still reachable); inside one the show order rules.
-			goToSlide(
-				state.presenting
-					? (nextShowSlideIndex(state.currentSlide, order, { loop }) ?? state.currentSlide)
-					: state.currentSlide + 1,
-			);
+			const playback = renderer.presentationPlayback;
+			const step = resolveShowForward({
+				currentIndex: state.currentSlide,
+				currentSlide: state.slides[state.currentSlide],
+				showOrder: showOrder(),
+				endOfShow: state.endOfShow,
+				// "Loop Continuously" (`p:showPr/@loop`). Rehearsal (a distinct "record
+				// timings" flow) is not modelled by this controller.
+				loop: state.presentationProperties.loopContinuously === true,
+				endWithBlackSlide: getEndWithBlackSlide?.() !== false,
+				zoomExcursion: playback.peekZoomExcursion(),
+				advanceBuild: () => playback.advance(),
+			});
+			switch (step.kind) {
+				case 'exit':
+					store.set({ endOfShow: false });
+					onEndShow?.();
+					return;
+				case 'end-screen':
+					store.set({ endOfShow: true });
+					return;
+				case 'go':
+					if (step.zoomReturn) {
+						// Clears the excursion and arms the zoom's own transition.
+						playback.consumeZoomReturnOnAdvance(state.currentSlide);
+					}
+					goToSlide(step.index);
+					break;
+				default:
+					break;
+			}
 		},
 		prev: () => {
-			// A backward input while the end screen is up just dismisses it.
-			if (store.get().endOfShow) {
-				store.set({ endOfShow: false });
-				return;
-			}
-			// A slide entered backward shows its builds already complete. The next
-			// back press replays them from the start rather than leaving the slide,
-			// so a presenter who overshot can watch the build again (PowerPoint).
-			if (store.get().presenting && renderer.presentationPlayback.isSeededCompleted()) {
-				renderer.presentationPlayback.replayCurrentSlide(document);
-				return;
-			}
 			const state = store.get();
-			goToSlide(
-				state.presenting
-					? (previousShowSlideIndex(state.currentSlide, showOrder()) ?? state.currentSlide)
-					: state.currentSlide - 1,
-				state.presenting,
-			);
+			if (!state.presenting) {
+				if (state.endOfShow) {
+					store.set({ endOfShow: false });
+					return;
+				}
+				goToSlide(state.currentSlide - 1, false);
+				return;
+			}
+			const step = resolveShowBackward({
+				currentIndex: state.currentSlide,
+				showOrder: showOrder(),
+				endOfShow: state.endOfShow,
+				seededCompleted: renderer.presentationPlayback.isSeededCompleted(),
+			});
+			if (step.kind === 'dismiss-end-screen') {
+				store.set({ endOfShow: false });
+			} else if (step.kind === 'replay') {
+				// A slide entered backward shows its builds complete; the next back
+				// press replays them rather than leaving the slide (PowerPoint).
+				renderer.presentationPlayback.replayCurrentSlide(document);
+			} else if (step.kind === 'go') {
+				goToSlide(step.index, true);
+			}
 		},
 		// Home / End land on the show's first / last slide, so a deck whose first
 		// or last slide is hidden does not open one on a key PowerPoint reads as

@@ -14,21 +14,16 @@ import { signal } from '@angular/core';
 import {
 	beginZoomExcursion,
 	buildZoomTransitionOverride,
-	resolveForwardSlideWithZoomReturn,
+	resolveShowBackward,
+	resolveShowForward,
+	resolveShowSlideIndexes,
 } from 'ooxml-ui/pptx';
-import type { ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
+import type { ShowForwardStep, ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
 import type { AnimationPlaybackService } from './animation-playback.service';
 import type { PresentationAnnotationsService } from './presentation-annotations.service';
-import {
-	clampIndex,
-	firstVisibleIndex,
-	hasVisibleSlideAfter,
-	lastVisibleIndex,
-	nextVisibleIndex,
-	prevVisibleIndex,
-} from './presentation-overlay-helpers';
+import { clampIndex, firstVisibleIndex, lastVisibleIndex } from './presentation-overlay-helpers';
 import type { ActiveShow, AuthoredRange } from './presentation-overlay-helpers';
 
 /** Where a navigation request wants to go. */
@@ -204,120 +199,115 @@ export class PresentationShowNavigator {
 		if (count === 0) {
 			return;
 		}
-
-		// While the end screen is up a forward input ends the show (PowerPoint's
-		// "click to exit") and a backward input just dismisses it.
-		if (this.endOfShow()) {
-			this.endOfShow.set(false);
-			if (direction === 'next') {
-				this.deps.requestClose();
-			}
-			return;
-		}
-
-		// On forward navigation, first reveal the next click-group of element
-		// animations; only advance the slide once the slide's builds are exhausted.
-		if (direction === 'next' && this.deps.playback.advance()) {
-			return;
-		}
-
-		// A Slide Zoom / Section Zoom / Summary Zoom tile whose `zmPr` set
-		// `returnToParent` armed an excursion (see `navigateToZoomTarget`). Once a
-		// FORWARD advance reaches the last slide of that target's range, jump
-		// back to the zoom's origin slide instead of continuing linearly through
-		// the deck; PowerPoint's return jump is forward-only, so `prev` never
-		// consults this.
-		if (direction === 'next') {
-			const excursion = this.zoomExcursion;
-			const step = resolveForwardSlideWithZoomReturn(this.currentIndex(), undefined, excursion);
-			if (step.returnedToZoom && step.nextSlideIndex !== undefined) {
-				this.zoomExcursion = step.excursion;
-				this.goToSlide(
-					step.nextSlideIndex,
-					buildZoomTransitionOverride(excursion?.transitionDurationMs),
-				);
-				return;
-			}
-		}
-
-		if (direction === 'prev') {
-			// A slide entered backward shows its builds already complete. The next
-			// back press replays them from the start rather than leaving the slide,
-			// so a presenter who overshot can watch the build again (PowerPoint).
-			if (this.deps.playback.isSeededCompleted()) {
-				const size = this.deps.canvasSize?.();
-				this.deps.playback.setSlide(this.deps.currentSlide(), this.deps.showWithAnimation(), {
-					slideHeightPx: size?.height,
-					slideWidthPx: size?.width,
-					themeColorMap: this.deps.themeColorMap?.(),
-					pixelateMosaic: this.deps.pixelateMosaicAnimation?.(),
-				});
-				return;
-			}
-			// PowerPoint shows a slide you step BACK onto with its builds played.
-			this.pendingCompletedEntry = true;
-		}
-
 		const current = this.currentIndex();
 		const activeShow = this.deps.activeCustomShow?.();
 		const authoredRange = this.deps.authoredRange?.();
-		let next: number;
-
-		switch (direction) {
-			case 'next':
-				next = nextVisibleIndex(current, slides, activeShow, authoredRange);
-				break;
-			case 'prev':
-				next = prevVisibleIndex(current, slides, activeShow, authoredRange);
-				break;
-			case 'first':
-				// Home goes to the START OF THE SHOW, which is not slide 1 when the
-				// author hid it. Clamped anyway so an empty order cannot produce -1.
-				next = clampIndex(firstVisibleIndex(slides, activeShow, authoredRange), count);
-				break;
-			case 'last':
-				next = clampIndex(lastVisibleIndex(slides, activeShow, authoredRange), count);
-				break;
-		}
-
-		// `nextVisibleIndex` always wraps back to the first slide (`loop: true`)
-		// so `next` above is already the wrapped index; whether that wrap is
-		// honoured or overridden into ending the show is "Loop continuously
-		// until Esc" (Set Up Slide Show), matching PowerPoint's own default OFF.
-		if (
-			direction === 'next' &&
-			!hasVisibleSlideAfter(current, slides, activeShow, authoredRange) &&
-			this.deps.loopContinuously?.() !== true
-		) {
-			if (this.deps.endWithBlackSlide?.() === false) {
-				// No black slide configured: PowerPoint ends the show outright rather
-				// than sitting on the last slide ignoring every further advance.
-				this.deps.requestClose();
-				return;
-			}
-			this.endOfShow.set(true);
+		// Forward and backward are the shared show-step decisions every binding
+		// makes (end screen, builds, Zoom return, end of show, show order).
+		if (direction === 'next') {
+			this.applyForward(
+				resolveShowForward({
+					currentIndex: current,
+					currentSlide: slides[current],
+					showOrder: resolveShowSlideIndexes(slides, activeShow, authoredRange),
+					endOfShow: this.endOfShow(),
+					loop: this.deps.loopContinuously?.() === true,
+					endWithBlackSlide: this.deps.endWithBlackSlide?.() !== false,
+					zoomExcursion: this.zoomExcursion,
+					advanceBuild: () => this.deps.playback.advance(),
+				}),
+			);
 			return;
 		}
-
+		if (direction === 'prev') {
+			this.applyBackward(current);
+			return;
+		}
+		// Home goes to the START OF THE SHOW, which is not slide 1 when the author
+		// hid it. Clamped anyway so an empty order cannot produce -1.
+		const next = clampIndex(
+			direction === 'first'
+				? firstVisibleIndex(slides, activeShow, authoredRange)
+				: lastVisibleIndex(slides, activeShow, authoredRange),
+			count,
+		);
 		if (next === current) {
 			return;
 		}
-
-		// Play the incoming slide's transition (if any) over the new slide,
-		// animating the outgoing slide out. A backward step replays the LEAVING
-		// slide's transition in reverse instead (PowerPoint: a morph glides its
-		// shapes back to where they came from).
 		const incoming = slides[next];
 		const outgoing = slides[current];
-		const transition =
-			direction === 'prev'
-				? outgoing?.transition && incoming
-					? { outgoing, transition: outgoing.transition }
-					: null
-				: (direction === 'next' || direction === 'first') && incoming?.transition && outgoing
-					? { outgoing, transition: incoming.transition }
-					: null;
-		this.commit(next, transition);
+		this.commit(
+			next,
+			direction === 'first' && incoming?.transition && outgoing
+				? { outgoing, transition: incoming.transition }
+				: null,
+		);
+	}
+
+	private applyForward(step: ShowForwardStep): void {
+		switch (step.kind) {
+			case 'exit':
+				// A forward input on the end screen ends the show (PowerPoint's "click
+				// to exit"), as does running off the end without a black slide.
+				this.endOfShow.set(false);
+				this.deps.requestClose();
+				return;
+			case 'end-screen':
+				this.endOfShow.set(true);
+				return;
+			case 'go':
+				if (step.zoomReturn) {
+					this.zoomExcursion = step.zoomReturn.excursion;
+					this.goToSlide(step.index, step.zoomReturn.transitionOverride);
+					return;
+				}
+				this.goToSlide(step.index);
+				break;
+			default:
+				break;
+		}
+	}
+
+	private applyBackward(current: number): void {
+		const slides = this.deps.slides();
+		const step = resolveShowBackward({
+			currentIndex: current,
+			showOrder: resolveShowSlideIndexes(
+				slides,
+				this.deps.activeCustomShow?.(),
+				this.deps.authoredRange?.(),
+			),
+			endOfShow: this.endOfShow(),
+			seededCompleted: this.deps.playback.isSeededCompleted(),
+		});
+		if (step.kind === 'dismiss-end-screen') {
+			this.endOfShow.set(false);
+			return;
+		}
+		if (step.kind === 'replay') {
+			const size = this.deps.canvasSize?.();
+			this.deps.playback.setSlide(this.deps.currentSlide(), this.deps.showWithAnimation(), {
+				slideHeightPx: size?.height,
+				slideWidthPx: size?.width,
+				themeColorMap: this.deps.themeColorMap?.(),
+				pixelateMosaic: this.deps.pixelateMosaicAnimation?.(),
+			});
+			return;
+		}
+		if (step.kind !== 'go') {
+			return;
+		}
+		// PowerPoint shows a slide you step BACK onto with its builds played, and
+		// replays the LEAVING slide's transition in reverse (a morph glides its
+		// shapes back to where they came from).
+		this.pendingCompletedEntry = true;
+		const outgoing = slides[current];
+		this.commit(
+			step.index,
+			outgoing?.transition && slides[step.index]
+				? { outgoing, transition: outgoing.transition }
+				: null,
+		);
 	}
 
 	/**

@@ -86,6 +86,12 @@ describe('presentationShowNavigator hidden slides', () => {
 		expect(navigator.currentIndex()).toBe(0);
 	});
 
+	it('does not seed the next entry as built when a back press at the start goes nowhere', () => {
+		const { navigator } = makeNavigator(slides(false, false));
+		navigator.navigate('prev');
+		expect(navigator.takePendingCompletedEntry()).toBeFalsy();
+	});
+
 	it('stays on the first show slide on a backward press', () => {
 		const { navigator } = makeNavigator(slides(false, false));
 		navigator.navigate('prev');
