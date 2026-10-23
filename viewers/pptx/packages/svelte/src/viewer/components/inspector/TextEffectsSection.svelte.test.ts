@@ -193,3 +193,69 @@ describe('textEffectsSection text warp gallery', () => {
 		expect(tiles(gallery).some((candidate) => candidate.disabled)).toBeFalsy();
 	});
 });
+
+describe('text effects section: shadow, glow and reflection', () => {
+	function runsElement(): PptxElement {
+		return {
+			...textElement(),
+			text: 'Hello world',
+			textSegments: [
+				{ text: 'Hello ', style: { fontSize: 24 } },
+				{ text: 'world', style: { fontSize: 24, bold: true } },
+			],
+		} as PptxElement;
+	}
+
+	/** The checkbox a caption names: each toggle sits in a label with its caption. */
+	function toggleNamed(caption: string): HTMLElement & { checked: boolean } {
+		const label = Array.from(document.body.querySelectorAll('label')).find(
+			(node) => node.textContent?.trim() === caption,
+		);
+		const box = label?.querySelector<HTMLElement & { checked: boolean }>('pptx-ui-checkbox');
+		if (!box) {
+			throw new Error(`no "${caption}" toggle`);
+		}
+		return box;
+	}
+
+	it('glows every run as well as the body, so the slide shows it', () => {
+		const { editor } = mountSection(runsElement());
+		const glow = toggleNamed('Text Glow');
+		glow.checked = true;
+		glow.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+
+		const updated = editor.selectedElement as PptxElement & {
+			textSegments?: Array<{ style?: TextStyle }>;
+		};
+		const on = { textGlowColor: '#ffff00', textGlowRadius: 6, textGlowOpacity: 0.6 };
+		expect(textStyleOf(editor)).toMatchObject({ fontSize: 24, ...on });
+		expect(updated.textSegments?.map((segment) => segment.style)).toStrictEqual([
+			{ fontSize: 24, ...on },
+			{ fontSize: 24, bold: true, ...on },
+		]);
+	});
+
+	it('edits a shadow field on every run too', () => {
+		const { editor } = mountSection({
+			...runsElement(),
+			textStyle: { fontSize: 24, textShadowColor: '#000000', textShadowBlur: 4 },
+		} as PptxElement);
+		const blur = Array.from(document.body.querySelectorAll('label'))
+			.find((node) => node.textContent?.trim() === 'Blur')
+			?.querySelector('input');
+		if (!blur) {
+			throw new Error('no shadow Blur field');
+		}
+		blur.value = '9';
+		blur.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+
+		const updated = editor.selectedElement as PptxElement & {
+			textSegments?: Array<{ style?: TextStyle }>;
+		};
+		expect(updated.textSegments?.map((segment) => segment.style?.textShadowBlur)).toStrictEqual([
+			9, 9,
+		]);
+	});
+});
