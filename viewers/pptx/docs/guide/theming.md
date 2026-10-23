@@ -253,14 +253,14 @@ The Appearance tab only takes effect when you do **not** pass an explicit `theme
 
 ### Catalog props (all optional)
 
-| Prop               | Type                     | Purpose                                                                                                                |
-| ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `defaultThemeKey`  | `string`                 | Initial `THEME_CATALOG` key, used only when nothing is persisted yet.                                                  |
-| `availableThemes`  | `ThemeCatalogEntry[]`    | Override the catalog offered in Appearance (add your own presets, or narrow the list).                                 |
-| `onThemeChange`    | `(key: string) => void`  | When supplied, **you** own persisting the choice; the viewer stops writing to `localStorage` and only calls this back. |
-| `defaultLocale`    | `string`                 | Same idea for Language: initial locale code when nothing is persisted.                                                 |
-| `availableLocales` | `LocaleCatalogEntry[]`   | Override the locales offered in Options > Language.                                                                    |
-| `onLocaleChange`   | `(code: string) => void` | When supplied, the viewer never touches your i18n instance itself; it only calls this back.                            |
+| Prop               | Type                     | Purpose                                                                                                                                                                                                                                                               |
+| ------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultThemeKey`  | `string`                 | Initial `THEME_CATALOG` key, used only when nothing is persisted yet.                                                                                                                                                                                                 |
+| `availableThemes`  | `ThemeCatalogEntry[]`    | Override the catalog offered in Appearance (add your own presets, or narrow the list).                                                                                                                                                                                |
+| `onThemeChange`    | `(key: string) => void`  | When supplied, **you** own persisting the choice; the viewer stops writing to `localStorage` and only calls this back.                                                                                                                                                |
+| `defaultLocale`    | `string`                 | Same idea for Language: initial locale code when nothing is persisted. React: ignored inside a `PptxI18nProvider`, whose `locale` is the language.                                                                                                                    |
+| `availableLocales` | `LocaleCatalogEntry[]`   | Override the locales offered in Options > Language. React: defaults to the codes registered on the host's `react-i18next` instance; inside a `PptxI18nProvider` there is no default: pass two or more, together with `onLocaleChange`, to show the Language category. |
+| `onLocaleChange`   | `(code: string) => void` | When supplied, the viewer never touches your i18n instance itself; it only calls this back. React: inside a `PptxI18nProvider` the host always owns the language, and without this callback the Language category is left out.                                        |
 
 React, Vue, Angular, and Svelte all use this exact shape. Vanilla is the one exception: it already had public `theme`/`locale` constructor options and `setTheme()`/`setLocale()` methods, so those serve as the initial value instead of separate `defaultThemeKey`/`defaultLocale` options; `availableThemes`/`availableLocales`/`onThemeChange`/`onLocaleChange` are the same as everywhere else.
 

@@ -1,6 +1,11 @@
 // @vitest-environment happy-dom
 import type { OfficeOptionCategory, ViewerOptions } from 'ooxml-ui/pptx';
-import { cloneViewerOptions, DEFAULT_VIEWER_OPTIONS, VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
+import {
+	cloneViewerOptions,
+	DEFAULT_VIEWER_OPTIONS,
+	resolveCustomization,
+	VIEWER_OPTIONS_TABS,
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -11,6 +16,7 @@ vi.mock(import('../i18n/use-translation'), () => ({
 }));
 
 const { SettingsDialog } = await import('./SettingsDialog');
+const { ViewerCustomizationContext } = await import('./viewer-customization-context');
 type SettingsDialogProps = import('./SettingsDialog').SettingsDialogProps;
 
 type OptionsDialogElement = HTMLElement & {
@@ -85,6 +91,30 @@ describe('settingsDialog', () => {
 			VIEWER_OPTIONS_TABS.map((tab) => tab.id),
 		);
 		expect(dialog().categories[0]?.label).toBe('pptx.settings.general');
+	});
+
+	it('leaves out the Language category when a language pick cannot apply', () => {
+		renderDialog(createProps({ languageSelectable: false }));
+		const ids = dialog().categories.map((entry) => entry.id);
+		expect(ids).not.toContain('language');
+		expect(ids).toHaveLength(VIEWER_OPTIONS_TABS.length - 1);
+		renderDialog(createProps({ languageSelectable: true }));
+		expect(dialog().categories.map((entry) => entry.id)).toContain('language');
+	});
+
+	it('hides the Language category on top of the pages the host hid', () => {
+		const customization = resolveCustomization({ options: { hiddenPages: ['save'] } });
+		act(() => {
+			root.render(
+				<ViewerCustomizationContext.Provider value={customization}>
+					<SettingsDialog {...createProps({ languageSelectable: false })} />
+				</ViewerCustomizationContext.Provider>,
+			);
+		});
+		const ids = dialog().categories.map((entry) => entry.id);
+		expect(ids).not.toContain('language');
+		expect(ids).not.toContain('save');
+		expect(ids).toHaveLength(VIEWER_OPTIONS_TABS.length - 2);
 	});
 
 	it('slots the product panes of the open category only', () => {

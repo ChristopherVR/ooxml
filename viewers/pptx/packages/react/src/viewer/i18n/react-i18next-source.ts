@@ -1,7 +1,8 @@
 /**
  * The host's react-i18next instance as a translation source. This is the only module of the
  * package that imports `react-i18next`; every component translates through
- * `./use-translation` instead.
+ * `./use-translation` instead. Only a viewer root and a standalone building block outside any
+ * `PptxI18nProvider` call it.
  */
 import { useTranslation as useReactI18nextTranslation } from 'react-i18next';
 

@@ -247,14 +247,14 @@ interface ThemeCatalogEntry {
 
 ### 目录相关属性（均可选） {#catalog-props-all-optional}
 
-| 属性               | 类型                     | 用途                                                                        |
-| ------------------ | ------------------------ | --------------------------------------------------------------------------- |
-| `defaultThemeKey`  | `string`                 | 初始 `THEME_CATALOG` 键，仅在没有持久化选择时使用。                         |
-| `availableThemes`  | `ThemeCatalogEntry[]`    | 覆盖外观选项卡中的目录，可添加自定义预设或减少选项。                        |
-| `onThemeChange`    | `(key: string) => void`  | 提供后由**宿主**负责持久化选择，组件不再写入 `localStorage`，只调用此回调。 |
-| `defaultLocale`    | `string`                 | 语言的初始代码，同样仅在没有持久化选择时使用。                              |
-| `availableLocales` | `LocaleCatalogEntry[]`   | 覆盖“选项 > 语言”中的语言列表。                                             |
-| `onLocaleChange`   | `(code: string) => void` | 提供后，组件不会自行操作 i18n 实例，只调用此回调。                          |
+| 属性               | 类型                     | 用途                                                                                                                                                                                          |
+| ------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultThemeKey`  | `string`                 | 初始 `THEME_CATALOG` 键，仅在没有持久化选择时使用。                                                                                                                                           |
+| `availableThemes`  | `ThemeCatalogEntry[]`    | 覆盖外观选项卡中的目录，可添加自定义预设或减少选项。                                                                                                                                          |
+| `onThemeChange`    | `(key: string) => void`  | 提供后由**宿主**负责持久化选择，组件不再写入 `localStorage`，只调用此回调。                                                                                                                   |
+| `defaultLocale`    | `string`                 | 语言的初始代码，同样仅在没有持久化选择时使用。React：在 `PptxI18nProvider` 内忽略此项，语言由其 `locale` 决定。                                                                               |
+| `availableLocales` | `LocaleCatalogEntry[]`   | 覆盖“选项 > 语言”中的语言列表。React：默认使用宿主 `react-i18next` 实例中注册的语言代码；在 `PptxI18nProvider` 内没有默认值，需要同时传入至少两个语言和 `onLocaleChange` 才会显示“语言”类别。 |
+| `onLocaleChange`   | `(code: string) => void` | 提供后，组件不会自行操作 i18n 实例，只调用此回调。React：在 `PptxI18nProvider` 内语言始终由宿主掌控，未提供此回调时不显示“语言”类别。                                                         |
 
 React、Vue、Angular 和 Svelte 使用相同结构。Vanilla 已有公开的 `theme`、`locale` 构造选项和 `setTheme()`、`setLocale()` 方法，因此直接使用它们提供初始值，不另设 `defaultThemeKey` 或 `defaultLocale`。其 `availableThemes`、`availableLocales`、`onThemeChange` 和 `onLocaleChange` 与其他组件相同。
 

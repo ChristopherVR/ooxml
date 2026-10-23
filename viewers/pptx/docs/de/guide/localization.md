@@ -5,15 +5,15 @@ description: Wie die UI-Strings von pptx-viewer mit React, Vue 3, Angular, Vanil
 
 # Lokalisierung (i18n)
 
-**Der Viewer sucht jedes UI-Label über einen `pptx.*`-Übersetzungsschlüssel; Ihre App stellt das Wörterbuch bereit.** Jedes Binding liefert Englisch mit. Vollständige Referenzwörterbücher für Französisch, Spanisch, Deutsch und vereinfachtes Chinesisch werden außerdem über die Unterpfade `i18n/<locale>` jedes Viewer-Pakets ausgeliefert. Ihre Quelle wird einmal im privaten Workspace `pptx-viewer-locales` gepflegt, der in die Viewer-Pakete eingebunden wird und nicht separat installiert werden muss. React, Vue und Angular delegieren an die i18n-Bibliothek ihres Host-Frameworks; Vanilla und Svelte liefern einen kleinen eingebauten Übersetzer:
+**Der Viewer sucht jedes UI-Label über einen `pptx.*`-Übersetzungsschlüssel; Ihre App stellt das Wörterbuch bereit.** Jedes Binding liefert Englisch mit. Vollständige Referenzwörterbücher für Französisch, Spanisch, Deutsch und vereinfachtes Chinesisch werden außerdem über die Unterpfade `i18n/<locale>` jedes Viewer-Pakets ausgeliefert. Ihre Quelle wird einmal im privaten Workspace `pptx-viewer-locales` gepflegt, der in die Viewer-Pakete eingebunden wird und nicht separat installiert werden muss. React, Vue und Angular delegieren an die i18n-Bibliothek ihres Host-Frameworks (React nimmt über `PptxI18nProvider` auch Ihre eigene `translate`-Funktion an); Vanilla und Svelte liefern einen kleinen eingebauten Übersetzer:
 
-| Binding | Übersetzungsaufruf, den der Viewer macht                   | Bibliothek, die Sie bereitstellen                                                 |
-| ------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| React   | `t(key, opts)` von `react-i18next`                         | [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) |
-| Vue 3   | `useI18n().t(key, opts)` von `vue-i18n`                    | [vue-i18n](https://vue-i18n.intlify.dev/)                                         |
-| Angular | `translate()`-Signal / `TranslatePipe` von `ngx-translate` | [@ngx-translate/core](https://github.com/ngx-translate/core)                      |
-| Vanilla | Das eigene eingebaute `t(key, params)` des Pakets          | keine: ein `messages`-Wörterbuch direkt übergeben, keine i18n-Bibliothek nötig    |
-| Svelte  | Das eigene eingebaute `t(key, params)` des Pakets          | keine: `registerTranslations(locale, dict)` aufrufen, keine i18n-Bibliothek nötig |
+| Binding | Übersetzungsaufruf, den der Viewer macht                                                | Bibliothek, die Sie bereitstellen                                                                                                        |
+| ------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| React   | `t(key, opts)` von `react-i18next` oder Ihr eigenes `translate` über `PptxI18nProvider` | [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) oder eine beliebige Bibliothek über `PptxI18nProvider` |
+| Vue 3   | `useI18n().t(key, opts)` von `vue-i18n`                                                 | [vue-i18n](https://vue-i18n.intlify.dev/)                                                                                                |
+| Angular | `translate()`-Signal / `TranslatePipe` von `ngx-translate`                              | [@ngx-translate/core](https://github.com/ngx-translate/core)                                                                             |
+| Vanilla | Das eigene eingebaute `t(key, params)` des Pakets                                       | keine: ein `messages`-Wörterbuch direkt übergeben, keine i18n-Bibliothek nötig                                                           |
+| Svelte  | Das eigene eingebaute `t(key, params)` des Pakets                                       | keine: `registerTranslations(locale, dict)` aufrufen, keine i18n-Bibliothek nötig                                                        |
 
 So bleibt der Viewer für jedes Ökosystem idiomatisch (Sie schließen React/Vue/Angular an das i18n-Setup an, das Ihre App bereits hat; Vanilla/Svelte brauchen nichts Zusätzliches), statt Bindings, die noch keine haben, eine Übersetzungs-Laufzeitabhängigkeit aufzuzwingen.
 
@@ -80,6 +80,40 @@ import i18nInstance from './i18n';
 ```
 
 Sprachen wechseln Sie mit `i18nInstance.changeLanguage('fr')`.
+
+#### Eigene i18n-Bibliothek verwenden
+
+Um den Viewer mit Lingui, FormatJS oder einer anderen Bibliothek statt react-i18next zu übersetzen, umschließen Sie ihn mit `PptxI18nProvider` und übergeben eine Funktion `translate(key, params)` sowie die aktive `locale`. Das gilt für `PowerPointViewer` und die eigenständigen Bausteine (`Toolbar`, `SlideCanvas`, `SlideTemplateGalleryDialog`, ...):
+
+```tsx
+import { i18n } from '@lingui/core';
+import { useLingui } from '@lingui/react';
+import { LOCALE_CATALOG, PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer';
+import type { PptxTranslate } from 'pptx-react-viewer';
+
+import { dynamicActivate } from './i18n'; // loads a catalog, then calls i18n.activate(code)
+
+// Module level, so it never changes: the viewer re-translates when `locale` changes.
+const translate: PptxTranslate = (key, params) => i18n._(key, params);
+const LOCALES = LOCALE_CATALOG.filter((entry) => ['en', 'fr'].includes(entry.code));
+
+function TranslatedViewer({ content }: { content: Uint8Array }) {
+	const { i18n: active } = useLingui(); // re-renders when the language changes
+	return (
+		<PptxI18nProvider locale={active.locale} translate={translate}>
+			<PowerPointViewer
+				content={content}
+				availableLocales={LOCALES}
+				onLocaleChange={(code) => void dynamicActivate(code)}
+			/>
+		</PptxI18nProvider>
+	);
+}
+```
+
+`translate` erhält die Parameter des Viewers unverändert: `defaultValue`, `count` und die Werte der `{{name}}`-Platzhalter. Verwenden Sie dieselben Namen in Ihrem Katalog (`{name}` in ICU-Syntax); `count` ist ein einfacher Wert, die Pluralbildung gehört also in Ihren Katalog. `{{name}}`-Platzhalter, die im zurückgegebenen Text verbleiben, werden ebenfalls gefüllt, sodass die mitgelieferten Wörterbücher unverändert funktionieren: `const translate: PptxTranslate = (key) => translationsFr[key];`. Gibt `translate` den Schlüssel selbst, eine leere Zeichenkette oder nichts zurück oder wirft es einen Fehler, zeigt der Viewer seinen eingebauten englischen Text, dann den Standardtext des Aufrufs, dann ein aus dem Schlüssel abgeleitetes Label; ein unvollständiger Katalog zeigt also nie einen rohen `pptx.*`-Schlüssel. Halten Sie `translate` stabil (eine Funktion auf Modulebene oder `useCallback`): Der Viewer übersetzt neu, sobald sich `translate` oder `locale` ändert.
+
+Innerhalb eines Providers gehört die Sprache dem Host: Der Viewer ruft nie `changeLanguage` auf, ignoriert `defaultLocale` und stellt nie eine gespeicherte Sprachwahl wieder her. Datei > Optionen > Sprache erscheint nur, wenn Sie `onLocaleChange` und mindestens zwei `availableLocales` übergeben; eine Auswahl ruft `onLocaleChange` auf, und die Markierung folgt `locale` (eine regionale `locale` wie `fr-CA` markiert ein angebotenes `fr`). `locale` legt die Schreibrichtung nicht fest. Ein `PowerPointViewer` liest den nächsten Provider über ihm; ein Provider innerhalb des Viewers wird ignoriert, sodass der ganze Viewer eine Sprache teilt. `i18next` und `react-i18next` bleiben in 4.x erforderliche Peer-Abhängigkeiten: Installieren Sie sie, innerhalb eines Providers verwendet der Viewer sie aber nicht. `PptxI18nProvider` gibt es nur für React; die anderen Bindings übersetzen wie unten beschrieben.
 
 ### Vue 3
 
@@ -212,17 +246,17 @@ Registrierungen werden über das bereits für diese Locale Registrierte gemischt
 
 Der Einstellungsdialog jedes Bindings hat außerdem ein Register **Sprache**: eine Liste von Locales, aus denen der Benutzer zur Laufzeit wählen kann, direkt neben dem Register [Darstellung](/guide/theming). Es bündelt oder lädt selbst nie Übersetzungsinhalte - es bietet nur eine Oberfläche zum Wechseln zwischen Locales, die _Sie bereits_ in dem oben eingerichteten i18n-Setup registriert haben. Konkret: Wenn Sie `availableLocales` nicht selbst angeben, untersucht jedes Binding, was bereits geladen ist:
 
-| Binding | Wie es verfügbare Locales ermittelt                                                   |
-| ------- | ------------------------------------------------------------------------------------- |
-| React   | `i18n.options.resources` / `i18n.languages` der `react-i18next`-Instanz               |
-| Vue 3   | `useI18n().availableLocales` (eine eingebaute Eigenschaft des `vue-i18n`-Composables) |
-| Angular | `TranslateService.getLangs()`                                                         |
-| Vanilla | das an `createPptxViewer` übergebene `messages`-Wörterbuch plus `'en'`                |
-| Svelte  | jede an `registerTranslations` übergebene Locale                                      |
+| Binding | Wie es verfügbare Locales ermittelt                                                                                                 |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| React   | `i18n.options.resources` / `i18n.languages` der `react-i18next`-Instanz; innerhalb eines `PptxI18nProvider`: nur `availableLocales` |
+| Vue 3   | `useI18n().availableLocales` (eine eingebaute Eigenschaft des `vue-i18n`-Composables)                                               |
+| Angular | `TranslateService.getLangs()`                                                                                                       |
+| Vanilla | das an `createPptxViewer` übergebene `messages`-Wörterbuch plus `'en'`                                                              |
+| Svelte  | jede an `registerTranslations` übergebene Locale                                                                                    |
 
 Haben Sie also nur `en` und `fr` registriert, bietet das Register Sprache genau diese zwei an - nie eine Locale ohne Wörterbuch dahinter. Codes werden über den gemeinsamen `LOCALE_CATALOG` beschriftet (Anzeigenamen für Englisch/Französisch/Spanisch/Deutsch/vereinfachtes Chinesisch), wenn sie erkannt werden, andernfalls als roher Code angezeigt.
 
-Die Rangfolge entspricht dem Register Darstellung: Eine gewählte Locale wird sofort angewendet, indem direkt Ihre i18n-Instanz aufgerufen wird (`i18n.changeLanguage`, `locale.value =`, `TranslateService.use` usw.), und in `localStorage` (`pptx-viewer-prefs`) gespeichert - es sei denn, Sie übergeben `onLocaleChange`; dann berührt der Viewer Ihre i18n-Instanz nie selbst und ruft nur diesen Callback auf, sodass Speicherung und Anwendung ganz Ihnen überlassen bleiben. Die vollständige Referenz der Props `defaultLocale`/`availableLocales`/`onLocaleChange` (gleiche Form wie die Theme-Props, dort einmal statt zweimal dokumentiert) steht unter [Theming](/guide/theming).
+Die Rangfolge entspricht dem Register Darstellung: Eine gewählte Locale wird sofort angewendet, indem direkt Ihre i18n-Instanz aufgerufen wird (`i18n.changeLanguage`, `locale.value =`, `TranslateService.use` usw.), und in `localStorage` (`pptx-viewer-prefs`) gespeichert - es sei denn, Sie übergeben `onLocaleChange`; dann berührt der Viewer Ihre i18n-Instanz nie selbst und ruft nur diesen Callback auf, sodass Speicherung und Anwendung ganz Ihnen überlassen bleiben. Innerhalb eines `PptxI18nProvider` wendet der Viewer eine Auswahl nie selbst an und speichert sie nie: Er ruft `onLocaleChange` auf, und ohne diesen Callback fehlt das Register Sprache. Die vollständige Referenz der Props `defaultLocale`/`availableLocales`/`onLocaleChange` (gleiche Form wie die Theme-Props, dort einmal statt zweimal dokumentiert) steht unter [Theming](/guide/theming).
 
 ## Vereinfachtes Chinesisch
 

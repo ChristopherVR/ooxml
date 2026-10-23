@@ -424,23 +424,23 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onThemeChange?: (key: string) => void;
 
 	/**
-	 * Initial locale code for File > Options > Language. Falls back to a
-	 * persisted `localStorage` choice, then `'en'`.
+	 * Initial locale code for File > Options > Language. Falls back to a persisted `localStorage`
+	 * choice, then `'en'`. Ignored inside a `PptxI18nProvider`, whose `locale` is the language.
 	 */
 	defaultLocale?: string;
 
 	/**
-	 * Locale choices offered by File > Options > Language. Defaults to the
-	 * codes actually registered on the host's `react-i18next` instance
-	 * (mapped through the shared `LOCALE_CATALOG` for display labels).
+	 * Locale choices offered by File > Options > Language. Defaults to the codes registered on the
+	 * host's `react-i18next` instance. Inside a `PptxI18nProvider` there is no default: pass two or
+	 * more, together with `onLocaleChange`, to show the Language category.
 	 */
 	availableLocales?: LocaleCatalogEntry[];
 
 	/**
-	 * Called when the user picks a language from File > Options > Language.
-	 * When provided, the host owns applying and persisting the choice (the
-	 * viewer will not call `i18n.changeLanguage` or touch `localStorage`
-	 * itself); otherwise the viewer applies and persists it directly.
+	 * Called when the user picks a language from File > Options > Language. When provided, the
+	 * host owns applying and persisting the choice; otherwise the viewer applies and persists it
+	 * itself. Inside a `PptxI18nProvider` the host always owns the language: without this callback
+	 * the Language category is left out.
 	 */
 	onLocaleChange?: (code: string) => void;
 

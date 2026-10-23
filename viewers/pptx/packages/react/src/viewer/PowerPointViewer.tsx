@@ -315,6 +315,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			localeCode,
 			locales: resolvedLocales,
 			selectLocale: handleLocaleChange,
+			languageSelectable,
 		} = useViewerLocaleControls();
 
 		// Local content state -- synced from incoming prop but may diverge during editing.
@@ -1638,6 +1639,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					onSelectTheme={handleThemeChange}
 					localeCode={localeCode}
 					availableLocales={resolvedLocales}
+					languageSelectable={languageSelectable}
 					onSelectLocale={handleLocaleChange}
 					aiEnabled={aiEnabled}
 					customFontFamilies={customFontFamilies}
