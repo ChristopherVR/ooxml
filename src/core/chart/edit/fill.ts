@@ -4,7 +4,7 @@
 // Format pane (xlsx `edit/chart-series-fill.ts`): a new colour keeps the old transparency and
 // replaces the points' own fills; a line, scatter or radar series is coloured by its line.
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
-import type { ChartSpace } from '../model';
+import type { ChartPlotGroup, ChartSpace } from '../model';
 import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import { assignOrDelete, chartSeriesEntryAt, editChartSpace } from './draft';
 import { editChartGradientFill, type ChartGradientFillEdit } from './gradient';
@@ -81,11 +81,36 @@ export function setChartElementLine(
 	);
 }
 
-/** Whether a series is coloured by its line (line, stock, radar other than filled, scatter). */
-function paintsLine(space: ChartSpace, index: number): boolean {
-	const { group } = chartSeriesEntryAt(space, index);
+/** Whether a group's series are coloured by their line (line, stock, scatter, unfilled radar). */
+export function chartGroupPaintsLine(group: Pick<ChartPlotGroup, 'kind' | 'radarStyle'>): boolean {
 	if (group.kind === 'radar') return group.radarStyle !== 'filled';
 	return group.kind === 'line' || group.kind === 'stock' || group.kind === 'scatter';
+}
+
+const paintsLine = (space: ChartSpace, index: number) =>
+	chartGroupPaintsLine(chartSeriesEntryAt(space, index).group);
+
+const painted = (fill: DrawingFill | undefined): fill is DrawingFill =>
+	fill !== undefined && fill.kind !== 'none';
+
+/**
+ * A series moving between a filled family (bar, area, pie) and a line family keeps its colour:
+ * the fill becomes the line (Excel's 2.25 pt round-capped series line) or the line the fill, when
+ * the other paint is not set. Semantics: PowerPoint's writer, which paints a line series by its
+ * series colour; Excel's line width and cap.
+ */
+export function repaintSeriesForFamily(series: ChartSpaceSeries, toLine: boolean): void {
+	const shape = series.spPr;
+	if (!shape) return;
+	if (toLine && painted(shape.fill) && !painted(shape.line?.fill))
+		shape.line = {
+			...shape.line,
+			widthEmu: shape.line?.widthEmu ?? 28575,
+			cap: shape.line?.cap ?? 'rnd',
+			fill: structuredClone(shape.fill),
+		};
+	else if (!toLine && painted(shape.line?.fill) && !painted(shape.fill))
+		shape.fill = structuredClone(shape.line!.fill!);
 }
 
 function clearPointPaint(series: ChartSpaceSeries, key: 'fill' | 'line'): void {

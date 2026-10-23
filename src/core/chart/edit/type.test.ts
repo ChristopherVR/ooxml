@@ -28,6 +28,13 @@ describe('setChartType', () => {
 		expect(group.overlap).toBeUndefined();
 		expect(group.series.map((s) => s.tx?.text)).toEqual(['Plan', 'Actual']);
 		expect(group.series[0]!.invertIfNegative).toBeUndefined();
+		// The bar colour becomes the line colour, with Excel's series line width and cap.
+		expect(group.series[0]!.spPr?.line).toEqual({
+			widthEmu: 28575,
+			cap: 'rnd',
+			fill: { kind: 'solid', color: { kind: 'srgb', value: '4472C4', transforms: [] } },
+		});
+		expect(line.plotArea.axes[1]!.crossBetween).toBe('between');
 		expect(line.plotArea.axes.map((a) => a.id)).toEqual([11, 22]);
 		expect(roundTrip(line).plotArea.groups[0]!.element).toBe('lineChart');
 	});

@@ -17,6 +17,7 @@ import {
 	rotatedAxisPosition,
 } from './type-axes';
 import { isXYChartKind } from './series';
+import { chartGroupPaintsLine, repaintSeriesForFamily } from './fill';
 
 /** Grouping of bar, line and area charts. */
 export type ChartGrouping = 'clustered' | 'stacked' | 'percentStacked' | 'standard';
@@ -112,7 +113,8 @@ function groupAxes(space: ChartSpace, base: ChartPlotGroup, group: ChartPlotGrou
 			const kind = i === 0 ? (xy ? 'val' : axis.kind === 'val' ? 'cat' : axis.kind) : axis.kind;
 			const next = convertChartAxis(axis, kind);
 			if (rotate) assignOrDelete(next, 'position', rotatedAxisPosition(next.position));
-			if (i === 1 && next.kind === 'val') next.crossBetween = xy ? 'midCat' : 'between';
+			if (i === 1 && next.kind === 'val' && xy !== isXYChartKind(base.kind))
+				next.crossBetween = xy ? 'midCat' : 'between';
 			return next;
 		});
 	if (group.element === 'line3DChart' && axes.length < 3)
@@ -130,6 +132,9 @@ export function setChartType(space: ChartSpace, target: ChartTypeTarget): ChartS
 			stripSeriesForKind(item, base.kind, target.kind),
 		);
 		const group = newGroup(base, target, series);
+		const toLine = chartGroupPaintsLine(group);
+		if (toLine !== chartGroupPaintsLine(base))
+			for (const item of series) repaintSeriesForFamily(item, toLine);
 		if (
 			group.is3D &&
 			target.kind === 'bar' &&
