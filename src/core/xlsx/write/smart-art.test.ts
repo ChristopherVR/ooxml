@@ -10,7 +10,11 @@ import {
 	builtinLayoutIdForPreset,
 	loadBuiltinSmartArtLayoutXml,
 } from '../../diagram/builtin/index';
-import { diagramNodeOutline } from '../../diagram/index';
+import {
+	diagramNodeOutline,
+	type DiagramLayoutPreset,
+	type DiagramLayoutType,
+} from '../../diagram/index';
 import { createEditSession } from '../edit/index';
 import type { SmartArtObject, Workbook } from '../model';
 import { loadXlsx } from '../read/index';
@@ -31,7 +35,7 @@ const text = async (zip: JSZip, part: string) => (await zip.file(part)?.async('s
 const outline = (object: SmartArtObject) =>
 	diagramNodeOutline(object.nodes).map((line) => `${'  '.repeat(line.level)}${line.text}`);
 
-function layout(preset: string) {
+function layout(preset: DiagramLayoutPreset) {
 	const layoutId = builtinLayoutIdForPreset(preset);
 	if (!layoutId) throw new Error(`no built-in layout for ${preset}`);
 	return { layoutId, layoutXml: loadBuiltinSmartArtLayoutXml(layoutId) };
@@ -75,7 +79,7 @@ describe('editing SmartArt in a workbook', () => {
 		const added = session.editSmartArt(0, index, {
 			kind: 'add',
 			position: 'below',
-			nodeId: build,
+			nodeId: build!,
 			text: 'Child',
 		});
 		expect(added.changed).toBe(true);
@@ -121,7 +125,11 @@ describe('editing SmartArt in a workbook', () => {
 });
 
 describe('inserting SmartArt in a workbook', () => {
-	const insertion = (items: string[], preset = 'basicBlockList', family = 'list' as const) => ({
+	const insertion = (
+		items: string[],
+		preset: DiagramLayoutPreset = 'basicBlockList',
+		family: DiagramLayoutType = 'list',
+	) => ({
 		anchor: {
 			from: { row: 1, col: 1, rowOffset: 0, colOffset: 0 },
 			ext: { cx: 4572000, cy: 2667000 },
