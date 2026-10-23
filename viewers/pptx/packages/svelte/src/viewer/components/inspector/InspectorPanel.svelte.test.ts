@@ -132,7 +132,7 @@ describe('inspectorPanel', () => {
 		expect(target.querySelector('aside')?.getAttribute('aria-label')).toBe('Properties');
 		expect(target.querySelector('aside')?.hasAttribute('data-pptx-inspector')).toBeTruthy();
 		expect(target.querySelector('.pptx-svelte-inspector-empty')).toBeNull();
-		expect(target.querySelector('.pptx-svelte-inspector-grid')).toBeNull();
+		expect(target.querySelector('[data-testid="geometry-x"]')).toBeNull();
 	});
 
 	it('shows the "No slide selected" note only when there is genuinely no active slide', () => {
@@ -150,7 +150,7 @@ describe('inspectorPanel', () => {
 		editor.select(el.id);
 		const { target } = mountInspector(editor);
 
-		expect(target.querySelector('.pptx-svelte-inspector-grid')).toBeTruthy();
+		expect(target.querySelector('[data-testid="geometry-x"]')).toBeTruthy();
 		expect(sectionTitles(target)).toStrictEqual([
 			'Fill & Stroke',
 			'Effects',
