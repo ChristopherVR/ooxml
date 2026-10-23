@@ -1,7 +1,7 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 
 import { useFindReplace } from './useFindReplace';
 
@@ -147,5 +147,47 @@ describe('useFindReplace', () => {
 		// Second match untouched, so one match remains.
 		expect(findTextElement(slides.value, 1, 'c').text).toBe('world peace');
 		expect(fr.matchCount.value).toBe(1);
+	});
+
+	it('selects the matched element after the slide change has dropped the old selection', async () => {
+		const slides = ref(makeSlides()),
+			activeSlideIndex = ref(0),
+			selected = ref<string[]>(['b']),
+			fr = useFindReplace({
+				slides,
+				activeSlideIndex,
+				pushHistory: () => {},
+				selectElements: (ids) => {
+					selected.value = ids;
+				},
+			});
+		// PowerPointViewer.vue clears the selection whenever the active slide changes.
+		watch(activeSlideIndex, () => {
+			selected.value = [];
+		});
+		fr.query.value = 'world';
+		await nextTick();
+		expect(selected.value).toStrictEqual(['a']);
+		fr.next();
+		await nextTick();
+		expect(activeSlideIndex.value).toBe(1);
+		expect(selected.value).toStrictEqual(['c']);
+	});
+
+	it('closing the bar drops the matches; reopening searches again from the first', async () => {
+		const slides = ref(makeSlides()),
+			activeSlideIndex = ref(0),
+			open = ref(true),
+			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {}, open });
+		fr.query.value = 'world';
+		fr.next();
+		expect(fr.currentMatch.value).toBe(1);
+		open.value = false;
+		await nextTick();
+		expect(fr.matchCount.value).toBe(0);
+		open.value = true;
+		await nextTick();
+		expect(fr.matchCount.value).toBe(2);
+		expect(fr.currentMatch.value).toBe(0);
 	});
 });

@@ -831,7 +831,15 @@ function updateSelectedShapeStyle(updates: Partial<ShapeStyle>): void {
 
 // -- Find & replace ----------------------------------------------------
 const findOpen = ref(false);
-const find = useFindReplace({ slides, activeSlideIndex, pushHistory: history.pushHistory });
+const find = useFindReplace({
+	slides,
+	activeSlideIndex,
+	pushHistory: history.pushHistory,
+	open: findOpen,
+	selectElements: (ids) => {
+		selection.selectedElementIds.value = ids;
+	},
+});
 
 // -- Export (PNG / PDF) + print ----------------------------------------
 const exporter = useExportWiring({
