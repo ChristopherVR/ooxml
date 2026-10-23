@@ -5,10 +5,11 @@ import type { DeckStyleHost, RibbonGalleryApplyResult, RibbonGalleryContext } fr
  * the viewer provides to every ribbon gallery.
  *
  * All decisions (what a gallery offers, what a pick writes) are shared; this
- * hook only gathers the context from viewer state and maps the three apply
- * result kinds onto the paths the inspector already uses: element patches go
- * through `updateElementById` (which records history via `markDirty`), theme
- * scheme picks through the theme editor's handlers.
+ * hook only gathers the context from viewer state and maps the apply result
+ * kinds onto the viewer's paths: element patches go through `updateElementById`
+ * (which records history via `markDirty`); theme, colour and font scheme picks,
+ * like the effect and background picks, through the Design galleries' shared
+ * commit (`deckStyle`), and through the theme handlers only without one.
  */
 import type {
 	PptxElement,
@@ -45,6 +46,15 @@ export interface UseRibbonGalleryCommandsInput {
 		fontScheme: PptxThemeFontScheme,
 		themeName?: string,
 	) => Promise<void>;
+}
+
+/** A Themes, Colors or Fonts pick: what the shared commit re-resolves the slides for. */
+function isThemeResult(result: RibbonGalleryApplyResult): boolean {
+	return (
+		result.kind === 'theme' ||
+		result.kind === 'themeColorScheme' ||
+		result.kind === 'themeFontScheme'
+	);
 }
 
 export function useRibbonGalleryCommands(
@@ -92,9 +102,13 @@ export function useRibbonGalleryCommands(
 			if (
 				result.kind === 'themeEffects' ||
 				result.kind === 'backgroundStyle' ||
-				result.kind === 'sequence'
+				result.kind === 'sequence' ||
+				(deckStyle && isThemeResult(result))
 			) {
-				// Settles the hover preview itself, so the commit starts from the real slides.
+				// Settles the hover preview itself, so the commit starts from the real slides. A theme
+				// pick goes this way too: the pick arrives while its preview shows, and the theme
+				// handlers would re-resolve from the theme of the last render, the PREVIEWED one, and
+				// change nothing on the slides.
 				void deckStyle?.commit(result);
 				return;
 			}
