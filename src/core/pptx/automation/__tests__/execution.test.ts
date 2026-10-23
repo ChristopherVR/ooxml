@@ -1,7 +1,12 @@
 import { PptxHandler } from '../../index';
 import { describe, it, expect, vi } from 'vitest';
 
-import { loadPresentation, savePresentation, executeToolWithContext } from '../execution';
+import {
+	arrayBufferOf,
+	loadPresentation,
+	savePresentation,
+	executeToolWithContext,
+} from '../execution';
 import type { ExecutionContext, FileSystemProvider, ToolContext, ToolResult } from '../types';
 import { createTestPptxBytes } from './helpers/create-test-pptx';
 
@@ -43,6 +48,27 @@ describe('loadPresentation', () => {
 		const { fs } = await makeInMemoryFs();
 		const ctx: ExecutionContext = { filesystem: fs };
 		await expect(loadPresentation('/nonexistent.pptx', ctx)).rejects.toThrow('File not found');
+	});
+
+	it('loads a deck the filesystem returns as a Node Buffer view of a larger store', async () => {
+		const bytes = await createTestPptxBytes(2);
+		// A pooled or sliced read hands back a view like this, at a non-zero offset.
+		const store = new Uint8Array(bytes.length + 64);
+		store.set(bytes, 32);
+		const fs: FileSystemProvider = {
+			readFile: async () => Buffer.from(store.buffer, 32, bytes.length),
+			writeFile: async () => {},
+		};
+		const { pptxData } = await loadPresentation('/test.pptx', { filesystem: fs });
+		expect(pptxData.slides).toHaveLength(2);
+	});
+});
+
+describe('arrayBufferOf', () => {
+	it('copies exactly the bytes of a Node Buffer view, not its backing store', () => {
+		const store = new Uint8Array(64).fill(7);
+		store.set([1, 2, 3], 10);
+		expect([...new Uint8Array(arrayBufferOf(Buffer.from(store.buffer, 10, 3)))]).toEqual([1, 2, 3]);
 	});
 });
 

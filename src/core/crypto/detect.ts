@@ -16,12 +16,16 @@ const OLE_MAGIC = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] as const;
 export const toBytes = (input: Uint8Array | ArrayBuffer): Uint8Array =>
 	input instanceof Uint8Array ? input : new Uint8Array(input);
 
-/** An ArrayBuffer holding exactly `bytes` (copied only when it is a view of a larger buffer). */
+/**
+ * An ArrayBuffer holding exactly `bytes` (copied only when it is a view of a larger buffer). The copy
+ * goes through the Uint8Array constructor because `slice()` on a Node Buffer is a view, not a copy:
+ * a small Buffer sits inside Node's shared allocation pool, so its `.buffer` is the whole pool.
+ */
 export function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 	if (bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength) {
 		return bytes.buffer as ArrayBuffer;
 	}
-	return bytes.slice().buffer;
+	return new Uint8Array(bytes).buffer;
 }
 
 /** Whether the bytes start with the compound-file magic. */

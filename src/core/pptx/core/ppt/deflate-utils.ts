@@ -32,7 +32,8 @@ export async function inflateZlib(data: Uint8Array): Promise<Uint8Array | undefi
 		return undefined;
 	}
 	try {
-		const stream = new Blob([data.slice().buffer as ArrayBuffer])
+		// A copy through the constructor: slice() on a Node Buffer does not copy, so its buffer is the whole pool.
+		const stream = new Blob([new Uint8Array(data).buffer])
 			.stream()
 			.pipeThrough(new DecompressionStream('deflate'));
 		const reader = stream.getReader();

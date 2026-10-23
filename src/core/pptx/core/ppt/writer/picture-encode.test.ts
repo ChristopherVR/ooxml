@@ -145,4 +145,22 @@ describe('resolvePictureSources', () => {
 		);
 		expect(resolved.get(emfEl)?.extension).toBe('emf');
 	});
+
+	it('decodes a TIFF part read as a Node Buffer view of a larger store', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(new Uint8Array(readFileSync(FIXTURE)).buffer);
+		const tiffEl = data.slides[0]!.elements.find((e) => e.name === 'pic-img.tif')!;
+		const zip = await fixtureParts();
+		const resolved = await resolvePictureSources(data.slides, async (p) => {
+			const bytes = await zip.file(p)?.async('uint8array');
+			if (!bytes) {
+				return undefined;
+			}
+			// A pooled or sliced read hands back a view like this, at a non-zero offset.
+			const store = new Uint8Array(bytes.length + 64);
+			store.set(bytes, 32);
+			return Buffer.from(store.buffer, 32, bytes.length);
+		});
+		expect(resolved.get(tiffEl)?.extension).toBe('png');
+	});
 });
