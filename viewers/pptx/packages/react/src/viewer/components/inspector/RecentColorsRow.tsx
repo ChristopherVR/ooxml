@@ -10,9 +10,9 @@ import { useRecentColors } from './RecentColorsContext';
 // ---------------------------------------------------------------------------
 
 /**
- * The "Recent colours" row shared by every colour picker in the inspector: the
- * shared `pptx-ui-color-grid` showing only Recent Colors
- * ({@link recentColorsGridView}), sourced from {@link useRecentColors}
+ * The "Recent colours" row under every colour picker in the inspector, drawn
+ * by the shared `pptx-ui-color-grid` with only its Recent Colors section
+ * ({@link recentColorsGridView}) and sourced from {@link useRecentColors}
  * (context), so every caller renders the SAME list rather than re-deriving it.
  *
  * Renders nothing while the list is empty, so a caller can render it

@@ -1,4 +1,7 @@
-/** Reading the Theme Colors swatches of the shared `pptx-ui-color-grid` through its open shadow root. */
+/**
+ * Reading the Theme Colors and Recent Colors swatches of the shared `pptx-ui-color-grid` through
+ * its open shadow root.
+ */
 
 /** The Recent Colors rows are the same element, marked with the row's test id. */
 const THEME_GRID = 'pptx-ui-color-grid:not([data-testid="pptx-color-recent"])';

@@ -80,15 +80,14 @@ describe('recentColorsGridView', () => {
 			key === 'pptx.colorPicker.recentColors'
 				? 'Zuletzt verwendete Farben'
 				: `${key} ${params?.hex}`;
-		const view = recentColorsGridView(['#FF0000', '#0000FF'], t);
-		expect({ ...view, recentLabel: undefined }).toStrictEqual({
+		const { recentLabel, ...view } = recentColorsGridView(['#FF0000', '#0000FF'], t);
+		expect(view).toStrictEqual({
 			palette: [],
 			standardColors: [],
 			recentColors: ['#FF0000', '#0000FF'],
 			label: 'Zuletzt verwendete Farben',
 			recentHeading: 'Zuletzt verwendete Farben',
-			recentLabel: undefined,
 		});
-		expect(view.recentLabel('#FF0000')).toBe('pptx.colorPicker.recentColor #FF0000');
+		expect(recentLabel('#FF0000')).toBe('pptx.colorPicker.recentColor #FF0000');
 	});
 });

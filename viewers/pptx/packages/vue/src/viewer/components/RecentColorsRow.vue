@@ -26,6 +26,10 @@ const { t } = useI18n();
 const view = computed(() =>
 	recentColorsGridView(props.colors, (key, params) => (params ? t(key, { ...params }) : t(key))),
 );
+
+function pick(event: Event): void {
+	emit('pick', (event as OfficeColorPickEvent).detail.color);
+}
 </script>
 
 <template>
@@ -40,6 +44,6 @@ const view = computed(() =>
 		:recentLabel.prop="view.recentLabel"
 		:label.prop="view.label"
 		:disabled.prop="disabled"
-		@office-color-pick="emit('pick', ($event as OfficeColorPickEvent).detail.color)"
+		@office-color-pick="pick"
 	/>
 </template>

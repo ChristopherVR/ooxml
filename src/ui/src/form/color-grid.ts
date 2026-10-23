@@ -45,8 +45,8 @@ const COLUMNS = 10;
  * colour it can resolve, each with up to five variants; a missing one leaves its cell empty), and
  * one that stores theme references marks
  * the current swatch with `selectedTheme`. An empty `palette` leaves out Theme Colors and an empty
- * `standardColors` leaves out Standard Colors, so a product can show Recent Colors on their own;
- * `recentLabel` names those swatches (their hex by default).
+ * `standardColors` leaves out Standard Colors, so a product can show Recent Colors on their own.
+ * `recentLabel` names the Recent Colors swatches (their hex by default).
  * Choosing emits `office-color-pick`
  * `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a
  * product can save a theme reference instead of the colour); the More Colors command emits
@@ -282,7 +282,10 @@ export class OfficeUiColorGrid extends OfficeElement {
 			.map((hex) => normalizePaletteHex(hex))
 			.filter((hex): hex is string => !!hex)
 			.slice(0, COLUMNS)
-			.map((hex) => ({ hex, label: this.recentLabel?.(hex.toUpperCase()) ?? hex.toUpperCase() }));
+			.map((hex) => {
+				const upper = hex.toUpperCase();
+				return { hex, label: this.recentLabel?.(upper) ?? upper };
+			});
 		const automatic = this.automaticLabel;
 		const none = this.noneLabel;
 		const more = this.moreLabel;

@@ -11,8 +11,8 @@ import type { Translator } from '../i18n';
  *
  * Row contract (asserted by the cross-binding e2e spec): the grid carries
  * `data-testid="pptx-color-recent"` and an `aria-label` matching its visible
- * heading, one swatch per colour (most-recent first) named
- * "Recent <hex>", and the whole row hidden while the list is empty.
+ * heading, one swatch per colour (most-recent first) named "Recent <hex>",
+ * and the whole row hidden while the list is empty.
  */
 export interface RecentColorsRowHandle {
 	el: HTMLElement;
