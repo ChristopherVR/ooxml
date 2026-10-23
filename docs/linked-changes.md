@@ -2,8 +2,11 @@
 
 **The viewers under `viewers/` do not follow this.** They resolve the core and `ooxml-ui` to the
 workspace and are released by this repository's flow together with them, so a change that needs
-the core and a viewer lands in one push (see `AGENTS.md`). This page is for a repository outside
-this one that depends on the **published** `ooxml-core` and `ooxml-ui`, where the order matters.
+the core and a viewer lands in one push (see `AGENTS.md`). Their package checks pack this checkout's
+core and UI in CI (`--workspace-runtime`), so the packed viewers are tested against the versions
+they release with (see [package checks](releasing.md#package-checks)). This page is for a repository
+outside this one that depends on the **published** `ooxml-core` and `ooxml-ui`, where the order
+matters.
 
 ## The order
 
