@@ -22,7 +22,7 @@ export function newChartTitle(text: string): ChartTitle {
 }
 
 /** A rich body whose first run reads `text`, other runs removed; `undefined` if it has no run. */
-function retextBody(body: ChartTextBody, text: string): ChartTextBody | undefined {
+export function retextChartTextBody(body: ChartTextBody, text: string): ChartTextBody | undefined {
 	if (body.sourceXml !== undefined) {
 		const root = parseXml(
 			`<c:rich xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}">${body.sourceXml}</c:rich>`,
@@ -54,7 +54,7 @@ function retextBody(body: ChartTextBody, text: string): ChartTextBody | undefine
 export function chartTitleWithText(title: ChartTitle | undefined, text: string): ChartTitle {
 	if (!title) return newChartTitle(text);
 	const rich = title.tx?.reference ? undefined : title.tx?.rich;
-	const body = rich ? retextBody(rich, text) : undefined;
+	const body = rich ? retextChartTextBody(rich, text) : undefined;
 	const fresh = newChartTitle(text);
 	const next: ChartTitle = {
 		...structuredClone(title),

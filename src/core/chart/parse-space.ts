@@ -136,7 +136,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 	if (root.localName !== 'chartSpace' || (root.namespaceURI && root.namespaceURI !== NS.c)) {
 		context.issues.push({
 			code: 'CHART_ROOT_UNEXPECTED',
-			message: `The part root is {${root.namespaceURI ?? ''}}${root.localName}, not c:chartSpace (chartex parts are not modelled).`,
+			message: `The part root is {${root.namespaceURI ?? ''}}${root.localName}, not c:chartSpace (chartex parts are read by parseChartExSpace).`,
 		});
 		return { chartSpace: { plotArea: { groups: [], axes: [] } }, issues: context.issues };
 	}

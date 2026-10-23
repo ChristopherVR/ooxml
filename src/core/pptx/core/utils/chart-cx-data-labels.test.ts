@@ -114,3 +114,22 @@ describe('parseCxDataLabels cx:txPr font (C2 wave-1 skip)', () => {
 		expect(result?.options?.txPr).toBeUndefined();
 	});
 });
+
+describe('parseCxDataLabels per-point visibility (chartex parity harness)', () => {
+	it("uses a cx:dataLabel's own cx:visibility over the group's", () => {
+		const ser: XmlObject = {
+			'cx:dataLabels': {
+				'cx:visibility': { '@_value': '1', '@_categoryName': '1', '@_seriesName': '0' },
+				'cx:dataLabel': [
+					{ '@_idx': '0', 'cx:visibility': { '@_value': '0', '@_seriesName': '1' } },
+					{ '@_idx': '1' },
+				],
+			},
+		};
+		const labels = parseCxDataLabels(ser, xmlLookup)?.labels;
+		expect(labels).toEqual([
+			{ idx: 0, showVal: false, showCatName: false, showSerName: true },
+			{ idx: 1, showVal: true, showCatName: true, showSerName: false },
+		]);
+	});
+});

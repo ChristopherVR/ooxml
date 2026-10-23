@@ -103,6 +103,31 @@ function parseTxPrFont(
 }
 
 /**
+ * The divisors of `ST_AxisUnit`, the enumeration `cx:units/@unit` holds ([MS-ODRAWXML] chartex).
+ * `percentage` has no divisor and is not read.
+ */
+const CX_AXIS_UNITS: Record<string, number> = {
+	hundreds: 1e2,
+	thousands: 1e3,
+	tenThousands: 1e4,
+	hundredThousands: 1e5,
+	millions: 1e6,
+	tenMillions: 1e7,
+	hundredMillions: 1e8,
+	billions: 1e9,
+	trillions: 1e12,
+};
+
+/**
+ * The divisor of a `cx:units/@unit` value: the schema's unit names (found by the chartex parity
+ * harness; the numeric form below never matched them), else a number as earlier decks wrote it.
+ */
+function cxUnitDivisor(raw: unknown): number {
+	const text = String(raw ?? '').trim();
+	return CX_AXIS_UNITS[text] ?? Number.parseFloat(text);
+}
+
+/**
  * Parse `cx:axis/cx:units` (C1 gap: ChartEx axis display units, the `cx:`
  * counterpart of classic `c:dispUnits`). Unlike classic charts' enumerated
  * `c:builtInUnit` (hundreds/thousands/.../trillions) plus an optional
@@ -125,7 +150,7 @@ function parseCxUnits(
 	if (!unitsNode) {
 		return;
 	}
-	const unit = Number.parseFloat(String(unitsNode['@_unit'] ?? ''));
+	const unit = cxUnitDivisor(unitsNode['@_unit']);
 	if (!Number.isFinite(unit) || unit <= 0) {
 		return;
 	}
@@ -162,7 +187,8 @@ function parseSingleCxAxis(
 ): PptxChartAxisFormatting {
 	// cx:axis distinguishes category vs. value scaling by which child is
 	// present, unlike classic charts' distinct catAx/valAx elements.
-	const isCategory = xmlLookup.getChildByLocalName(axisNode, 'catScaling') !== undefined;
+	// By key: a bare `<cx:catScaling/>` reads as an empty string (chartex parity harness).
+	const isCategory = hasLocalName(axisNode, 'catScaling');
 	const axisType: PptxChartAxisFormatting['axisType'] = isCategory ? 'catAx' : 'valAx';
 	const result: PptxChartAxisFormatting = { axisType };
 
@@ -216,7 +242,9 @@ function parseSingleCxAxis(
 	// element entirely to hide axis tick labels. There is no attribute to
 	// mirror classic ST_TickLblPos's high/low/nextTo, so absence maps onto
 	// the existing 'none' (the enum's only other value this cx feature needs).
-	if (xmlLookup.getChildByLocalName(axisNode, 'tickLabels') === undefined) {
+	// `hasLocalName`, not `getChildByLocalName`: Word and Excel write a bare `<cx:tickLabels />`,
+	// which fast-xml-parser reads as an empty string (found by the chartex parity harness).
+	if (!hasLocalName(axisNode, 'tickLabels')) {
 		result.tickLblPos = 'none';
 	}
 

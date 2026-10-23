@@ -25,3 +25,5 @@ export * from './group-options';
 export * from './intent';
 export * from './data-sheet';
 export * from './new-chart';
+export * from './chartex';
+export * from './chartex-data';
