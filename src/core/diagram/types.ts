@@ -13,6 +13,7 @@ import type {
 	DrawingTextRun,
 	DrawingTextSpacing,
 } from '../drawingml/types';
+import type { DrawingRichTextBody } from '../drawingml/text-model';
 
 export type { AttributeReader } from '../drawingml/types';
 import type { DiagramNeutralTextParagraph } from './text/node-text-neutral';
@@ -243,8 +244,13 @@ export interface DiagramDrawingShape {
 	paths?: DiagramPath[];
 	fill?: DiagramFill;
 	line?: DiagramLine;
+	/** Colour of the first outer shadow (`a:effectLst/a:outerShdw`), unresolved. */
+	shadowColor?: DiagramColor;
 	style?: DiagramStyleReference;
+	/** Flattened text summary (runs per paragraph), as charts read it. */
 	text?: DiagramTextBody;
+	/** The `dsp:txBody` on the neutral rich text model (body, list style, paragraphs, runs). */
+	body?: DrawingRichTextBody;
 	/** `dsp:txXfrm`: the independent text rectangle. */
 	textFrame?: DiagramFrame;
 	/** The shape carries `a:scene3d` or `a:sp3d`; not modelled, kept only in the source part. */

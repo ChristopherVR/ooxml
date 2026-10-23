@@ -20,6 +20,8 @@ export * from '../drawingml/drawing-text';
 export * from '../drawingml/drawing-geometry';
 export * from './drawing';
 export * from './drawing-bounds';
+export * from './drawing-view';
+export * from './drawing-resolve';
 export * from './load';
 export { attributeReader } from './dom';
 export * from '../drawingml/write-color';
