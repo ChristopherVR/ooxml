@@ -4,6 +4,8 @@
 import { EMU_PER_PIXEL } from './drawing';
 import { CHART_GRAPHIC_URI } from './chart';
 import type { InlineImage } from './model';
+import type { RelationshipAllocator } from './relationship-allocator';
+import { clearNonProperties, updateExtent } from './write-drawing-patch';
 import { makeNS, makeW, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -45,4 +47,40 @@ export function buildChartDrawing(
 	const chart = child(data, C_NS, 'c:chart');
 	chart.setAttributeNS(REL_NS, 'r:id', relId);
 	return drawing;
+}
+
+/**
+ * The run of a chart, or undefined when `image` is not a chart this module writes. An edited chart
+ * keeps its drawing (the part is saved by chart-save.ts) and only its size can change; a chart
+ * inserted in this session gets a new drawing and a chart relationship.
+ */
+export function chartRun(
+	doc: XmlDocument,
+	node: XmlElement,
+	image: InlineImage,
+	base: InlineImage | undefined,
+	oldDrawing: XmlElement | undefined,
+	oldContainer: XmlElement | undefined,
+	allocator: RelationshipAllocator | undefined,
+): XmlElement | undefined {
+	if (
+		base?.chart &&
+		oldDrawing &&
+		image.chart?.partName &&
+		image.chart.partName === base.chart.partName &&
+		image.chart.relId === base.chart.relId
+	) {
+		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
+			updateExtent(oldDrawing, image.widthPx, image.heightPx);
+		clearNonProperties(node, oldContainer);
+		return node;
+	}
+	if (!base && image.chart?.chartSpace && !image.chart.relId && !image.chart.partName) {
+		if (!allocator) throw new Error('Cannot insert a chart without a relationship allocator.');
+		const relId = allocator.addChart(image.chart.chartSpace);
+		clearNonProperties(node);
+		node.appendChild(buildChartDrawing(doc, image, relId, allocator.docPrIds.next()));
+		return node;
+	}
+	return undefined;
 }
