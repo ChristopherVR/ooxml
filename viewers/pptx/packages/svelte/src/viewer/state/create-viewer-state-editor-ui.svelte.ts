@@ -210,7 +210,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		getSlides: () => editor.slides,
 		commitSlides: (next) => editor.commitSlides(next),
 		onNavigate: (slideIndex, elementId) => {
-			viewer.goTo(slideIndex);
+			viewer.goToWithSelection(slideIndex);
 			editor.select(elementId);
 		},
 	});
