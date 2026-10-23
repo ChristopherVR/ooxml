@@ -1,15 +1,12 @@
-// Excel's chart Format pane: the shared `office-ui-chart-format-pane` (Format Chart Area, Plot
-// Area, Chart Title, Legend and Data Series in one pane), read through `xlsxChartFormatSource`.
-// Its typed edit intents go through the xlsx `ChartPatch` path (`updateChart`, whose paint edits
-// call the shared `chart/edit` operations); the Fill section is Excel's own fill controls, slotted.
-import type { ChartEditIntent } from 'ooxml-core/chart';
-import {
-	chartView,
-	createRefEvaluator,
-	type ChartFillPart,
-	type ChartPatch,
-} from 'ooxml-core/xlsx';
+// Excel's chart Format pane: the shared `office-ui-chart-format-pane` over the chart's `ChartSpace`
+// (`xlsxChartFormatSource`, the neutral `chartSpaceFormatSource`). Its typed edit intents go to the
+// edit session's `editChart`, which applies them with `applyChartEditIntent` as one undo step; the
+// Fill section of the chart area, plot area, title, legend and series is Excel's own fill controls,
+// slotted, which edit through `updateChart`.
+import { parseChartFormatTargetKey, type ChartFormatTarget } from 'ooxml-core/chart';
+import { chartSpaceOf, type ChartFillPart } from 'ooxml-core/xlsx';
 import { activeChart, editing, icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { chartView, createRefEvaluator } from 'ooxml-core/xlsx';
 import {
 	defineChartFormatPane,
 	type ChartFormatEditEvent,
@@ -17,7 +14,13 @@ import {
 	type OfficeUiChartFormatPane,
 } from '../chart/format-pane';
 import { backgroundFillBinding } from './chart-fill-binding';
-import { formatsSeries, xlsxChartFormatSource, XLSX_CHART_FILL_SLOT } from './chart-format-source';
+import {
+	formatsSeries,
+	workbookChartTheme,
+	xlsxChartFormatSource,
+	xlsxFillsTarget,
+	XLSX_CHART_FILL_SLOT,
+} from './chart-format-source';
 import { createSeriesFill } from './chart-series-fill';
 
 export function chartAreaCommand(): Command {
@@ -50,21 +53,12 @@ const BACKGROUNDS: readonly string[] = ['chartArea', 'plotArea', 'title', 'legen
 /** Shared captions carry `{{name}}`; Excel's dictionary is keyed by English text with `{name}`. */
 const englishKey = (fallback: string) => fallback.replace(/\{\{(\w+)\}\}/gu, '{$1}');
 
-/** The `ChartPatch` of an intent the pane offers in Excel, or undefined for one it does not. */
-function patchOf(intent: ChartEditIntent): ChartPatch | undefined {
-	if (intent.op === 'groupOptions') {
-		const { gapWidth, overlap } = intent.edit;
-		if (gapWidth !== undefined) return { barGapWidth: gapWidth };
-		if (overlap !== undefined) return { barOverlap: overlap };
-	}
-	if (intent.op === 'legend' && intent.edit.position)
-		return { showLegend: true, legendPosition: intent.edit.position };
-	return undefined;
-}
-
+/** The whole-number range of the spacing fields, for the message a refused value gets. */
 const SPACING: Record<string, [number, number]> = {
 	'series.gapWidth': [0, 500],
 	'series.overlap': [-100, 100],
+	'series.firstSliceAngle': [0, 360],
+	'series.holeSize': [10, 90],
 };
 
 export function createChartFormatPane(ctx: EditorContext) {
@@ -87,7 +81,8 @@ export function createChartFormatPane(ctx: EditorContext) {
 		// The pane's own section toggle names the Fill section.
 		fill.element.querySelector('h3')?.setAttribute('hidden', '');
 	}
-	const isSeries = () => target.startsWith('series:');
+	const parsed = (): ChartFormatTarget | undefined => parseChartFormatTargetKey(target);
+	const isSeries = () => parsed()?.kind === 'series';
 	const commandId = () => (isSeries() ? 'chart.format-series' : 'chart.format-area');
 	const close = () => {
 		seriesFill.refresh(undefined, undefined);
@@ -109,16 +104,25 @@ export function createChartFormatPane(ctx: EditorContext) {
 			found.chart,
 			createRefEvaluator(book, ctx.session()?.calc, { sheet: ctx.activeSheet() }),
 		);
-		const source = xlsxChartFormatSource(found.chart, view);
-		if (!source.targets.some((option) => option.key === target)) target = 'chartArea';
-		seriesIndex = isSeries() ? Number(target.slice(7)) : 0;
+		const space = chartSpaceOf(book, found.chart);
+		const theme = workbookChartTheme(book);
+		const listed = xlsxChartFormatSource(found.chart, space, theme, undefined);
+		if (!listed.targets.some((option) => option.key === target)) target = 'chartArea';
+		const selected = parsed();
+		seriesIndex = selected?.kind === 'series' ? selected.seriesIndex : 0;
 		part = BACKGROUNDS.includes(target) ? (target as ChartFillPart) : 'chartArea';
+		const slotted = selected !== undefined && xlsxFillsTarget(selected);
 		const [active, idle] = isSeries() ? [seriesFill, backgroundFill] : [backgroundFill, seriesFill];
 		idle.refresh(undefined, undefined);
 		idle.element.remove();
-		if (active.element.parentNode !== element) element.append(active.element);
-		active.refresh(found.chart, view);
-		element.source = source;
+		if (slotted) {
+			if (active.element.parentNode !== element) element.append(active.element);
+			active.refresh(found.chart, view);
+		} else {
+			active.refresh(undefined, undefined);
+			active.element.remove();
+		}
+		element.source = xlsxChartFormatSource(found.chart, space, theme, selected);
 		element.target = target;
 		element.disabled = !ctx.commands.isEnabled(commandId());
 	};
@@ -131,8 +135,8 @@ export function createChartFormatPane(ctx: EditorContext) {
 		const { field, intent } = (event as ChartFormatEditEvent).detail;
 		if (!ctx.commands.isEnabled(commandId())) return refresh();
 		const range = SPACING[field];
-		const patch = intent && patchOf(intent);
-		if (!patch) {
+		const found = activeChart(ctx);
+		if (!intent || !found) {
 			if (range)
 				ctx.toast(
 					ctx.t('Enter a whole number from {min} to {max}.', { min: range[0], max: range[1] }),
@@ -140,11 +144,12 @@ export function createChartFormatPane(ctx: EditorContext) {
 				);
 			return refresh();
 		}
-		const found = activeChart(ctx);
-		const changed = Object.entries(patch).some(
-			([key, next]) => found?.chart[key as keyof typeof found.chart] !== next,
-		);
-		if (found && changed) ctx.session()?.updateChart(ctx.activeSheet(), found.index, patch);
+		try {
+			ctx.session()?.editChart(ctx.activeSheet(), found.index, intent);
+		} catch (error) {
+			if (!(error instanceof RangeError)) throw error;
+			ctx.toast(ctx.t('This chart element cannot take that setting.'), 'warning');
+		}
 		refresh();
 	});
 	const relocalize = () => {

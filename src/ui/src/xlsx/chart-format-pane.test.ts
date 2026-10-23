@@ -101,12 +101,20 @@ describe('Excel chart Format pane', () => {
 			control.dispatchEvent(new Event('change'));
 		};
 		expect(title(pane)).toBe('Format Chart Area');
-		// A line chart's series are not formatted here: only the backgrounds are listed.
+		// Every element the chart part has, in PowerPoint's picker order.
 		expect(
 			[...shadow<HTMLSelectElement>(pane, '[aria-label="Chart element"]').options].map(
 				(option) => option.value,
 			),
-		).toEqual(['chartArea', 'plotArea']);
+		).toEqual([
+			'chartArea',
+			'axis:0',
+			'axis:1',
+			'majorGridlines:1',
+			'plotArea',
+			'series:0',
+			'dataLabels:0',
+		]);
 		change(input('Fill'), 'gradient');
 		change(input('Type'), 'circle');
 		const chart = ctx.workbook()!.sheets[0]!.drawings[0]!;
@@ -234,8 +242,68 @@ describe('Excel chart Format pane', () => {
 		bottom.checked = true;
 		bottom.dispatchEvent(new Event('change'));
 		expect(ctx.workbook()!.sheets[0]!.drawings[index]).toMatchObject({ legendPosition: 'b' });
-		expect(
-			pane.element.shadowRoot!.querySelector('[data-chart-format-field="legend.noOverlap"]'),
-		).toBeNull();
+		const noOverlap = shadow<HTMLElement & { checked: boolean }>(
+			pane,
+			'[data-chart-format-field="legend.noOverlap"] office-ui-checkbox',
+		);
+		noOverlap.checked = false;
+		noOverlap.dispatchEvent(new Event('change'));
+		const chart = ctx.workbook()!.sheets[0]!.drawings[index]!;
+		if (chart.kind !== 'chart') throw new Error('Missing chart');
+		expect(chart.chartSpace?.legend).toMatchObject({ position: 'b', overlay: true });
+	});
+
+	it('edits axis, gridline, border and data label options through chart edit intents', async () => {
+		const ctx = createTestContext();
+		const index = ctx.session()!.addChart(0, {
+			chartType: 'line',
+			showLegend: false,
+			anchor: { from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 } },
+			series: [{ name: 'Sales', categories: ['A', 'B'], values: [10, 20] }],
+		});
+		ctx.selection.set({ drawing: index });
+		const pane = mount(ctx);
+		await ctx.commands.run('chart.format-area');
+		const picker = shadow<HTMLSelectElement>(pane, '[aria-label="Chart element"]');
+		const pick = (key: string) => {
+			picker.value = key;
+			picker.dispatchEvent(new Event('change'));
+		};
+		const field = <T extends HTMLElement>(id: string, selector = 'input') =>
+			shadow<T>(pane, `[data-chart-format-field="${id}"] ${selector}`);
+		const chart = () => {
+			const found = ctx.workbook()!.sheets[0]!.drawings[index]!;
+			if (found.kind !== 'chart') throw new Error('Missing chart');
+			return found;
+		};
+		pick('axis:1');
+		expect(title(pane)).toBe('Format Axis');
+		const max = field<HTMLInputElement>('axis.max');
+		max.value = '50';
+		max.dispatchEvent(new Event('change'));
+		expect(chart().chartSpace?.plotArea.axes[1]?.scaling.max).toBe(50);
+		expect(chart().axes?.[1]?.scaling.max).toBe(50);
+		pick('series:0');
+		expect(title(pane)).toBe('Format Data Series');
+		const width = field<HTMLInputElement>('line.width');
+		width.value = '4';
+		width.dispatchEvent(new Event('change'));
+		expect(chart().chartSpace?.plotArea.groups[0]?.series[0]?.spPr?.line?.widthEmu).toBe(50800);
+		pick('dataLabels:0');
+		const value = field<HTMLElement & { checked: boolean }>(
+			'labels.showValue',
+			'office-ui-checkbox',
+		);
+		value.checked = true;
+		value.dispatchEvent(new Event('change'));
+		expect(chart().series[0]?.dataLabels?.series?.showValue).toBe(true);
+		ctx.session()!.undo();
+		expect(chart().series[0]?.dataLabels?.series?.showValue).not.toBe(true);
+		ctx.session()!.redo();
+		const saved = (await loadXlsx(await saveXlsx(ctx.workbook()!))).sheets[0]!.drawings[0]!;
+		if (saved.kind !== 'chart') throw new Error('Missing exported chart');
+		expect(saved.axes?.[1]?.scaling.max).toBe(50);
+		expect(saved.chartSpace?.plotArea.groups[0]?.series[0]?.spPr?.line?.widthEmu).toBe(50800);
+		expect(saved.series[0]?.dataLabels?.series?.showValue).toBe(true);
 	});
 });

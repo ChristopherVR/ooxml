@@ -113,6 +113,7 @@ describe('Insert Chart dialog', () => {
 			{ title: 'Keep me' },
 		);
 		ctx.session()!.addChart(0, original);
+		const added = structuredClone(ctx.workbook()!.sheets[0]!.drawings[0]!);
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
 		const dialog = dialogEl(ctx, 'insert-chart');
@@ -137,7 +138,7 @@ describe('Insert Chart dialog', () => {
 			series: original.series,
 		});
 		ctx.session()!.undo();
-		expect(chart()).toEqual(original);
+		expect(chart()).toEqual(added);
 		ctx.session()!.redo();
 		expect(chart()).toMatchObject({ chartType: 'bar', grouping: 'percentStacked' });
 	});
