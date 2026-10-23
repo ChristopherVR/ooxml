@@ -150,6 +150,7 @@ import type { RibbonTab } from './ribbon-types';
 					(chartTypeChange)="newChartType.set($event)"
 					(shapeTypeChange)="newShapeType.set($event)"
 					(openSmartArtDialog)="openSmartArtDialog.emit()"
+					(openChartDialog)="openChartDialog.emit()"
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openHyperlink)="link.emit()"
 					[commentsOpen]="commentsOpen()"
@@ -233,6 +234,7 @@ export class RibbonContentComponent {
 	readonly copySlideAsImage = output<void>();
 	readonly replace = output<void>();
 	readonly openSmartArtDialog = output<void>();
+	readonly openChartDialog = output<void>();
 	readonly openEquationDialog = output<void>();
 	/** "Slide Templates" in the Home tab's Slides group; the host opens the gallery. */
 	readonly openTemplateGallery = output<void>();

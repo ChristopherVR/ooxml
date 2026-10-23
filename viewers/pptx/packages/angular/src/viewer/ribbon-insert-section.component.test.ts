@@ -97,6 +97,15 @@ describe('ribbonInsertSectionComponent', () => {
 		expect(showHeaderFooter.set).toHaveBeenCalledExactlyOnceWith(true);
 	});
 
+	it('offers Insert Chart... and opens the chart dialog through its output', () => {
+		const { section, addElement } = create();
+		const chartDialog = vi.spyOn(section.openChartDialog, 'emit');
+		expect(section['view']()).toMatchObject({ chartDialogAvailable: true });
+		request(section, { kind: 'chartDialog' });
+		expect(chartDialog).toHaveBeenCalledOnce();
+		expect(addElement).not.toHaveBeenCalled();
+	});
+
 	it('adds a slide on the chosen or active layout and opens the comments pane once', () => {
 		const { section, addSlide } = create();
 		request(section, { kind: 'newSlide', value: null });

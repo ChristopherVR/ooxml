@@ -9,7 +9,7 @@
  */
 
 import { DEFAULT_INSERT_CHART_KIND, createDefaultChartElement } from 'ooxml-ui/pptx';
-import type { InsertChartKind, ShapePresetType } from 'ooxml-ui/pptx';
+import type { InsertChartKind, InsertChartOptions, ShapePresetType } from 'ooxml-ui/pptx';
 import type { PptxChartType, PptxElement } from 'pptx-viewer-core';
 
 export {
@@ -54,11 +54,13 @@ export {
  * @param chartKind - The insert-dropdown entry to create ('column' yields
  *   vertical columns, 'bar' horizontal bars); a raw `PptxChartType` is still
  *   accepted for callers that predate the dropdown ids.
+ * @param options - The Insert Chart dialog's title and grouping choices.
  */
 export function newChartElement(
 	chartKind: InsertChartKind | PptxChartType = DEFAULT_INSERT_CHART_KIND,
+	options?: InsertChartOptions,
 ): PptxElement {
-	return { ...createDefaultChartElement(chartKind), id: '' } as PptxElement;
+	return { ...createDefaultChartElement(chartKind, undefined, options), id: '' } as PptxElement;
 }
 
 /**
