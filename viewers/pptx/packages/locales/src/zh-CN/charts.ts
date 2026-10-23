@@ -84,6 +84,7 @@ export const translations = {
 	'pptx.chart.seriesName': '系列名称',
 	'pptx.chart.seriesValues': '系列值',
 	'pptx.chart.seriesValueCell': '{{name}} 值 {{number}}',
+	'pptx.chart.dataSheetInvalidNumber': '请输入数字',
 	'pptx.chart.seriesOptions': '系列选项',
 	'pptx.chart.dataLabelOptions': '数据标签选项',
 	'pptx.chart.labelSeparator': '分隔符',

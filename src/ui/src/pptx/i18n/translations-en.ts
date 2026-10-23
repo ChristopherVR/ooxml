@@ -710,6 +710,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.chart.seriesName': 'Series name',
 	'pptx.chart.seriesValues': 'Series values',
 	'pptx.chart.seriesValueCell': '{{name}} value {{number}}',
+	'pptx.chart.dataSheetInvalidNumber': 'Enter a number',
 	'pptx.chart.seriesOptions': 'Series options',
 	'pptx.chart.dataLabelOptions': 'Data label options',
 	'pptx.chart.labelSeparator': 'Separator',
