@@ -4,8 +4,10 @@
  * toggle per section, then its fields); values, bounds, labels and patches all
  * come from the descriptors (`resolveInspectorSections`, `inspectorFieldPatch`,
  * `inspectorTogglePatch` in `ooxml-ui/pptx`), so this component only maps them
- * onto its template. A colour commit also pushes into the "Recent colours"
- * list.
+ * onto its template. A colour field previews while the user drags through
+ * the native picker (`preview`, no undo step) and commits once when the pick
+ * settles (`patch`, plus the "Recent colours" list), through the shared
+ * `createLiveColorPatchInput`.
  *
  * Selector: `pptx-inspector-fields`
  *
@@ -21,11 +23,18 @@ import {
 	output,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
+import {
+	createLiveColorPatchInput,
+	handleLiveColorEvent,
+	inspectorFieldPatch,
+	inspectorTogglePatch,
+	resolveInspectorSections,
+} from 'ooxml-ui/pptx';
 import type {
 	InspectorFieldValue,
 	InspectorSectionDescriptor,
 	InspectorSectionView,
+	LiveColorInput,
 } from 'ooxml-ui/pptx';
 
 import { isCheckboxControl, isSelectControl } from './control-event-targets';
@@ -100,7 +109,9 @@ import { RecentColorsService } from './recent-colors.service';
 												[attr.aria-label]="field.labelKey | translate"
 												[value]="field.value"
 												[disabled]="disabled()"
+												(input)="onColor(section.id, field.id, $event)"
 												(change)="onColor(section.id, field.id, $event)"
+												(blur)="onColor(section.id, field.id, $event)"
 											/>
 										} @else {
 											<input
@@ -242,6 +253,11 @@ export class InspectorFieldsComponent<T, P> {
 
 	/** Emits the patch a control change produces. */
 	readonly patch = output<P>();
+	/**
+	 * Emits a colour field's live patch while its picker is dragged: apply it
+	 * WITHOUT an undo step. The drag's one `patch` follows when it settles.
+	 */
+	readonly preview = output<P>();
 
 	/** Optional: absent in a standalone unit test with no viewer-level DI tree. */
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
@@ -267,16 +283,33 @@ export class InspectorFieldsComponent<T, P> {
 		this.emit(inspectorFieldPatch(this.sections(), sectionId, fieldId, this.target(), raw));
 	}
 
+	/** One live colour controller per colour field, created on its first event. */
+	private readonly colorInputs = new Map<string, LiveColorInput>();
+
 	protected onColor(sectionId: string, fieldId: string, event: Event): void {
-		const raw = rawValueOf(event);
-		if (typeof raw !== 'string') {
-			return;
+		const key = `${sectionId}.${fieldId}`;
+		let control = this.colorInputs.get(key);
+		if (!control) {
+			control = createLiveColorPatchInput<T, P & object>({
+				read: () => {
+					const field = this.views()
+						.find((section) => section.id === sectionId)
+						?.fields.find((candidate) => candidate.id === fieldId);
+					return field && { key, color: String(field.value), state: this.target() };
+				},
+				patch: (target, hex) =>
+					inspectorFieldPatch(this.sections(), sectionId, fieldId, target, hex) as
+						| (P & object)
+						| undefined,
+				preview: (patch) => this.preview.emit(patch),
+				commit: (patch, hex) => {
+					this.patch.emit(patch);
+					this.recentColors?.push(hex);
+				},
+			});
+			this.colorInputs.set(key, control);
 		}
-		const patch = inspectorFieldPatch(this.sections(), sectionId, fieldId, this.target(), raw);
-		this.emit(patch);
-		if (patch !== undefined) {
-			this.recentColors?.push(raw);
-		}
+		handleLiveColorEvent(control, event);
 	}
 
 	private emit(patch: P | undefined): void {

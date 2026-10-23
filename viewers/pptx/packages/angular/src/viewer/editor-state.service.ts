@@ -459,6 +459,17 @@ export class EditorStateService {
 			cropBottom?: number;
 		},
 	): void {
+		this.previewElement(slideIndex, id, box as Partial<PptxElement>);
+	}
+
+	/**
+	 * Merge `patch` into an element WITHOUT recording history or marking the
+	 * deck dirty: a live frame the caller commits later as one undo step (a
+	 * gesture frame, or a shade of a colour picker drag, which shared
+	 * `createLiveColorInput` puts back before its one committed edit). Routes by
+	 * id like {@link applyTransform}.
+	 */
+	previewElement(slideIndex: number, id: string, patch: Partial<PptxElement>): void {
 		const slides = this.slides();
 		const target = slides[slideIndex];
 		if (!target) {
@@ -467,17 +478,14 @@ export class EditorStateService {
 		if (isTemplateElementId(id)) {
 			this.writeTemplatesForSlide(
 				target.id,
-				updateElementById(this.templatesForSlide(target.id), id, box as Partial<PptxElement>),
+				updateElementById(this.templatesForSlide(target.id), id, patch),
 			);
 			return;
 		}
 		this.slides.set(
 			slides.map((slide, i) =>
 				i === slideIndex
-					? {
-							...slide,
-							elements: updateElementById(slide.elements, id, box as Partial<PptxElement>),
-						}
+					? { ...slide, elements: updateElementById(slide.elements, id, patch) }
 					: slide,
 			),
 		);

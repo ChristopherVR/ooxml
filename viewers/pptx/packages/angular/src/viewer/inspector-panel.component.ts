@@ -25,12 +25,14 @@ import {
 } from '@angular/core';
 import { LucideArrowDown, LucideArrowUp } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { ElementGeometryPatch, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import type { ElementGeometryPatch, LiveColorInput, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
+	createLiveColorPatchInput,
 	ELEMENT_GEOMETRY_SECTIONS,
 	elementLockTogglePatch,
+	handleLiveColorEvent,
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
@@ -137,7 +139,10 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 			value once. While the user types, the [value] binding is NOT re-evaluated
 			against the live (just-patched) element, so .value is never rewritten
 			mid-edit: the caret stays put and the on-screen keyboard does not dismiss.
-			All commits happen on (change) (blur), reading event.target.value.
+			All commits happen on (change) (blur), reading event.target.value. The
+			native colour pickers also preview on (input): every shade of a drag
+			shows on the slide without an undo step, and the drag becomes ONE undo
+			step and one recent colour when it settles (shared createLiveColorInput).
 		-->
 		<aside [class]="inspectorClass()" [attr.aria-label]="'pptx.inspector.properties' | translate">
 			<!-- ── Transform: Position & Size ─────────────────────────────────── -->
@@ -187,7 +192,9 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								class="pptx-ng-inspector__color"
 								type="color"
 								[value]="seed().fillColor"
-								(change)="onFillColorChange($event)"
+								(input)="onLiveColor(fillColorInput, $event)"
+								(change)="onLiveColor(fillColorInput, $event)"
+								(blur)="onLiveColor(fillColorInput, $event)"
 							/>
 							<label class="pptx-ng-inspector__label" for="insp-stroke">{{
 								'pptx.inspector.stroke' | translate
@@ -197,7 +204,9 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								class="pptx-ng-inspector__color"
 								type="color"
 								[value]="seed().strokeColor"
-								(change)="onStrokeColorChange($event)"
+								(input)="onLiveColor(strokeColorInput, $event)"
+								(change)="onLiveColor(strokeColorInput, $event)"
+								(blur)="onLiveColor(strokeColorInput, $event)"
 							/>
 						</div>
 						<div class="pptx-ng-inspector__row" [attr.data-el-key]="key">
@@ -252,7 +261,9 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								class="pptx-ng-inspector__color"
 								type="color"
 								[value]="seed().textColor"
-								(change)="onTextColorChange($event)"
+								(input)="onLiveColor(textColorInput, $event)"
+								(change)="onLiveColor(textColorInput, $event)"
+								(blur)="onLiveColor(textColorInput, $event)"
 							/>
 							<label class="pptx-ng-inspector__label" for="insp-font-size">{{
 								'pptx.inspector.size' | translate
@@ -418,7 +429,11 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 					<summary class="pptx-ng-inspector__summary">
 						{{ 'pptx.inspector.effects' | translate }}
 					</summary>
-					<pptx-effects-panel [element]="el()" (patch)="onPatch($event)" />
+					<pptx-effects-panel
+						[element]="el()"
+						(patch)="onPatch($event)"
+						(preview)="onPreview($event)"
+					/>
 				</details>
 
 				<!-- ── Advanced: line format (dash / compound / join / cap) ────── -->
@@ -1201,17 +1216,60 @@ export class InspectorPanelComponent {
 		} as Partial<PptxElement>);
 	}
 
-	// ── Fill & stroke ────────────────────────────────────────────────────────
-
-	protected onFillColorChange(event: Event): void {
-		const color = stringFromEvent(event);
-		if (!color) {
-			return;
-		}
-		this.commitFillColor(color);
+	/** Show a sub-panel's live frame (a colour drag shade) without an undo step. */
+	protected onPreview(patch: Partial<PptxElement>): void {
+		this.editor.previewElement(this.slideIndex(), this.el().id, patch);
 	}
 
-	/** Recent-colours row pick: commits through the same path as the native picker, clearing any stored ref. */
+	// ── Native colour pickers (live while dragging) ──────────────────────────
+
+	/**
+	 * The fill, line and text colour pickers. A drag through the native picker
+	 * previews every shade on the slide (no undo step, no recent colour) and
+	 * settles as ONE undo step and one recent colour; one that ends where it
+	 * started records nothing. The decision is shared (`createLiveColorPatchInput`);
+	 * each shade is a patch on the element from before the drag, a native pick
+	 * clears any theme ref like every custom colour.
+	 */
+	protected readonly fillColorInput = this.liveColorInput(fillColorOf, (cur, hex) =>
+		shapeStylePatch(cur, { fillColor: hex, fillColorRef: undefined }),
+	);
+	protected readonly strokeColorInput = this.liveColorInput(strokeColorOf, (cur, hex) =>
+		shapeStylePatch(
+			cur,
+			shapeOutlineChange(hex, undefined, hasShapeProperties(cur) ? (cur.shapeStyle ?? {}) : {}),
+		),
+	);
+	protected readonly textColorInput = this.liveColorInput(textColorOf, (cur, hex) =>
+		textStylePatch(cur, { color: hex, colorRef: undefined }),
+	);
+
+	/** A colour input's `input`, `change` or `blur`, for its live colour controller. */
+	protected onLiveColor(control: LiveColorInput, event: Event): void {
+		handleLiveColorEvent(control, event);
+	}
+
+	private liveColorInput(
+		colorOf: (el: PptxElement) => string,
+		patch: (el: PptxElement, hex: string) => Partial<PptxElement>,
+	): LiveColorInput {
+		return createLiveColorPatchInput<PptxElement, Partial<PptxElement>>({
+			read: () => {
+				const cur = this.el();
+				return { key: cur.id, color: colorOf(cur), state: cur };
+			},
+			patch,
+			preview: (next) => this.onPreview(next),
+			commit: (next, hex) => {
+				this.editor.updateElement(this.slideIndex(), this.el().id, next);
+				this.recentColors.push(hex);
+			},
+		});
+	}
+
+	// ── Fill & stroke ────────────────────────────────────────────────────────
+
+	/** Recent-colours row pick: one committed edit, clearing any stored ref like a native pick. */
 	protected onFillColorPick(color: string): void {
 		this.commitFillColor(color, undefined);
 	}
@@ -1231,15 +1289,7 @@ export class InspectorPanelComponent {
 		this.recentColors.push(color);
 	}
 
-	protected onStrokeColorChange(event: Event): void {
-		const color = stringFromEvent(event);
-		if (!color) {
-			return;
-		}
-		this.commitStrokeColor(color);
-	}
-
-	/** Recent-colours row pick: commits through the same path as the native picker, clearing any stored ref. */
+	/** Recent-colours row pick: one committed edit, clearing any stored ref like a native pick. */
 	protected onStrokeColorPick(color: string): void {
 		this.commitStrokeColor(color, undefined);
 	}
@@ -1264,15 +1314,7 @@ export class InspectorPanelComponent {
 
 	// ── Text style ───────────────────────────────────────────────────────────
 
-	protected onTextColorChange(event: Event): void {
-		const color = stringFromEvent(event);
-		if (!color) {
-			return;
-		}
-		this.commitTextColor(color);
-	}
-
-	/** Recent-colours row pick: commits through the same path as the native picker, clearing any stored ref. */
+	/** Recent-colours row pick: one committed edit, clearing any stored ref like a native pick. */
 	protected onTextColorPick(color: string): void {
 		this.commitTextColor(color, undefined);
 	}
@@ -1354,14 +1396,4 @@ function numberFromEvent(event: Event): number | null {
 	}
 	const parsed = parseFloat(target.value);
 	return Number.isFinite(parsed) ? parsed : null;
-}
-
-/** Extract a non-empty string value from an input change event. */
-function stringFromEvent(event: Event): string | null {
-	const target = event.target;
-	if (!(target instanceof HTMLInputElement)) {
-		return null;
-	}
-	const val = target.value.trim();
-	return val.length > 0 ? val : null;
 }

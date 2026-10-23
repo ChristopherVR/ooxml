@@ -14,6 +14,8 @@
  *   [element]     : the selected PptxElement (required)
  *   (patch)       : emits a Partial<PptxElement> for the orchestrator to
  *                   commit via EditorStateService.updateElement
+ *   (preview)     : emits a colour drag's live Partial<PptxElement>, for
+ *                   EditorStateService.previewElement (no undo step)
  *
  * @module viewer/effects-panel
  */
@@ -36,6 +38,7 @@ import { InspectorFieldsComponent } from './inspector-fields.component';
 			[sections]="sections"
 			[target]="shapeStyle()"
 			(patch)="onEffectPatch($event)"
+			(preview)="onEffectPreview($event)"
 		/>
 	`,
 })
@@ -48,6 +51,8 @@ export class EffectsPanelComponent {
 	 * The orchestrator should call EditorStateService.updateElement(slideIndex, element().id, patch).
 	 */
 	readonly patch = output<Partial<PptxElement>>();
+	/** Emits a colour drag's live patch, to apply without an undo step. */
+	readonly preview = output<Partial<PptxElement>>();
 
 	protected readonly sections = SHAPE_EFFECT_SECTIONS;
 
@@ -60,5 +65,10 @@ export class EffectsPanelComponent {
 	/** Merge an effect field's shape-style patch into the element. */
 	protected onEffectPatch(patch: Partial<ShapeStyle>): void {
 		this.patch.emit(shapeQuickStylePatch(this.element(), patch));
+	}
+
+	/** Merge an effect colour drag's live shape-style patch into the element. */
+	protected onEffectPreview(patch: Partial<ShapeStyle>): void {
+		this.preview.emit(shapeQuickStylePatch(this.element(), patch));
 	}
 }
