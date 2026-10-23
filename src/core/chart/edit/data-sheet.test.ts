@@ -4,6 +4,7 @@ import { writeChartSpace } from '../write-space';
 import { parseXml } from '../../xml/index';
 import { applyChartSpaceDataSheetEdits, chartSpaceDataSheet } from './data-sheet';
 import { DEFAULT_CHART_DATA_SHEET, newChartSpace } from './new-chart';
+import { columnChart } from './test-support/column-chart';
 
 const reload = (xml: string) => parseChartSpace(parseXml(xml).documentElement!).chartSpace;
 
@@ -75,5 +76,40 @@ describe('a new chart part', () => {
 		const xml = writeChartSpace(line);
 		expect(xml).toContain('<c:lineChart>');
 		expect(chartSpaceDataSheet(reload(xml))).toEqual(DEFAULT_CHART_DATA_SHEET);
+	});
+});
+
+describe('the data sheet of a column chart part', () => {
+	it('reads names, categories and values from the part caches', () => {
+		expect(chartSpaceDataSheet(columnChart())).toEqual({
+			categories: ['North', 'South', 'East'],
+			series: [
+				{ name: 'Plan', values: [10, 20, 30] },
+				{ name: 'Actual', values: [12, 18, 33] },
+			],
+		});
+	});
+
+	it('applies edits through the series operations, keeping series formatting', () => {
+		const space = applyChartSpaceDataSheetEdits(columnChart(), [
+			{ kind: 'remove-category', category: 1 },
+			{ kind: 'category-label', category: 0, label: 'N' },
+			{ kind: 'remove-series', series: 0 },
+			{ kind: 'value', series: 0, category: 1, value: 7 },
+		]);
+		expect(chartSpaceDataSheet(space)).toEqual({
+			categories: ['N', 'East'],
+			series: [{ name: 'Actual', values: [12, 7] }],
+		});
+		expect(space.plotArea.groups[0]!.series[0]!.spPr?.fill).toMatchObject({ kind: 'solid' });
+	});
+
+	it('returns the chart itself when the sheet refuses every edit', () => {
+		const space = columnChart();
+		expect(applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-series', series: 5 }])).toBe(
+			space,
+		);
+		const one = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-series', series: 0 }]);
+		expect(applyChartSpaceDataSheetEdits(one, [{ kind: 'remove-series', series: 0 }])).toBe(one);
 	});
 });

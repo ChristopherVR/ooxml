@@ -6,6 +6,11 @@ import type { EditorContext } from '../context';
 import { icon } from './icons';
 import { editing, tableAt, target } from './util';
 import { chartColorPalettePatch } from '../../edit/chart-colors';
+import {
+	chartQuickLayoutPatch,
+	chartStylePresetPatch,
+	chartTakesQuickLayout,
+} from '../../edit/chart-design';
 
 export const activeTable = (ctx: EditorContext): Table | undefined => {
 	const t = target(ctx);
@@ -74,6 +79,35 @@ export function contextualCommands(): Command[] {
 				if (!t || !found) return;
 				const patch = chartColorPalettePatch(found.chart, id);
 				if (patch) t.session.updateChart(t.sheet, found.index, patch);
+			},
+		}),
+		chartCmd({
+			id: 'chart.styles',
+			label: 'Chart Styles',
+			icon: icon('chartStyles'),
+			run: (ctx, arg) => {
+				if (typeof arg !== 'string') return;
+				const t = target(ctx);
+				const found = activeChart(ctx);
+				const patch = found && chartStylePresetPatch(found.chart, arg);
+				if (t && found && patch) t.session.updateChart(t.sheet, found.index, patch);
+			},
+		}),
+		chartCmd({
+			id: 'chart.quick-layout',
+			label: 'Quick Layout',
+			icon: icon('quickLayout'),
+			enabled: (ctx) => {
+				const found = activeChart(ctx);
+				return !!found && chartTakesQuickLayout(found.chart);
+			},
+			run: (ctx, arg) => {
+				const n = typeof arg === 'string' ? Number(/^layout(\d+)$/u.exec(arg)?.[1]) : Number(arg);
+				const t = target(ctx);
+				const found = activeChart(ctx);
+				const patch =
+					found && Number.isInteger(n) ? chartQuickLayoutPatch(found.chart, n) : undefined;
+				if (t && found && patch) t.session.updateChart(t.sheet, found.index, patch);
 			},
 		}),
 		tableCmd({

@@ -13,6 +13,8 @@ export * from './stock-candles';
 export * from './hierarchy';
 export * from './sunburst-arcs';
 export * from './style-palette';
+export * from './style-presets';
+export * from './quick-layouts';
 export * from './histogram-binning';
 export * from './waterfall';
 export * from './treemap-squarify';

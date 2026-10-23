@@ -935,6 +935,24 @@ that data; formatting made to the embedded workbook in Excel is not kept. Reopen
 an exported chart in Visio is not recorded in the verification record. Evidence:
 `viewer-insert-chart.ts`, `render-embedded-chart.ts` and their tests.
 
+## Chart object Edit Data and Format Chart, 2026-10-23
+
+A chart object's shortcut menu adds Edit Data and Format Chart (shown only for a
+chart object). Both read the embedded workbook's chart part as a neutral chart
+model: Edit Data is the shared `office-ui-chart-data-sheet` (names, categories and
+values; add and remove series and categories; paste), Format Chart the shared
+`office-ui-chart-format-pane` (fill and outline of the chart area, plot area,
+title, legend, axes, gridlines and series, series and axis options, legend and
+data-label options), with a live preview. OK writes the chart part back through
+the shared chart edit operations, rewrites the data block at A1 of the chart's
+sheet when the data changed (series references follow it; formatting-only edits
+leave the cells alone), and replaces the object's workbook and EMF preview as one
+undoable edit. Unlike double-click Edit Chart, formatting already in the part is
+kept. Effects, 3-D, text formatting, pattern and picture fills are not editable
+there, and a chart whose data lived elsewhere in its workbook has that data
+replaced by the block. Evidence: `viewer-chart-editor.ts` and its test,
+`core/xlsx/embedded-chart-space.ts` and its test, `e2e/visio/chart-object.spec.ts`.
+
 ## Text dialog, Text Block, Symbol, Field and proofing, 2026-10-09
 
 Home > Font and Paragraph dialog launchers open a Text dialog (shared

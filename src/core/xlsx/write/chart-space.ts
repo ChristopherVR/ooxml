@@ -4,6 +4,7 @@
 // `chart/edit` defaults the type switch also uses), palette or manual series colours, the modern
 // built-in style 102 unless the chart carries its own.
 import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
+import { applyChartQuickLayout, chartSupportsQuickLayout } from '../../chart/edit/quick-layout';
 import { DEFAULT_CHART_AXIS_IDS, defaultChartAxes } from '../../chart/edit/type-axes';
 import type { ChartAxis, ChartPlotGroup, ChartSpace } from '../../chart/model';
 import type {
@@ -202,5 +203,15 @@ export function chartSpaceFromObject(chart: ChartObject): ChartSpace {
 	if (chart.title !== undefined) space.title = chartTitle(chart.title);
 	if (chart.showLegend)
 		space.legend = { position: chart.legendPosition ?? 'r', overlay: false, entries: [] };
-	return space;
+	return withQuickLayout(space, chart.quickLayout);
+}
+
+/**
+ * The parts of a session's Quick Layout the summary does not carry (axis titles, gridlines, value
+ * axis, data labels, data table) applied to `space`; the title, legend and spacing come from the
+ * summary fields. Unchanged when no layout was applied or the family takes none.
+ */
+export function withQuickLayout(space: ChartSpace, layout: number | undefined): ChartSpace {
+	if (layout === undefined || !chartSupportsQuickLayout(space)) return space;
+	return applyChartQuickLayout(space, layout, ['dataLabels', 'axes', 'dataTable']);
 }

@@ -48,6 +48,9 @@ it('enables Pictures for editable drawings and Link/ScreenTip only for one selec
 	expect(view.button('link').disabled).toBe(false);
 	expect(view.button('screen-tip').disabled).toBe(false);
 	expect(view.button('ctx-hyperlink').disabled).toBe(false);
+	// Edit Data and Format Chart show only for a chart object.
+	expect(view.button('ctx-chart-data').hidden).toBe(true);
+	expect(view.button('ctx-chart-format').disabled).toBe(true);
 	view.dispose();
 	const readOnly = await setup(false);
 	expect(readOnly.button('pictures').disabled).toBe(true);

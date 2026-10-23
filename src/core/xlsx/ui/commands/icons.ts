@@ -141,6 +141,8 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	chartType: 'M3 17h14M5 17v-6M9 17V8M13 17v-4M15 4l2 2-2 2M17 6h-5',
 	chartTitle: 'M3 3h14M7 3v4M13 3v4M3 17h14M6 17v-5M10 17V9M14 17v-3',
 	legend: 'M3 4h14v12H3zM5 8h2M9 8h6M5 12h2M9 12h6',
+	chartStyles: 'M3 17h14M5 17v-5M9 17V8M13 17v-3M14 3l3 3-5 5-3 1 1-3z',
+	quickLayout: 'M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6zM12 15l1.5-2 1.5 1.5 1-1.5',
 	rowHeight: 'M3 6h14M3 14h14M10 7v6M8 8.5l2-2 2 2M8 11.5l2 2 2-2',
 	columnWidth: 'M6 3v14M14 3v14M7 10h6M8.5 8l-2 2 2 2M11.5 8l2 2-2 2',
 	hide: 'M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5zM4 4l12 12',

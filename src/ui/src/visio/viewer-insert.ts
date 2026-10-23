@@ -20,6 +20,7 @@ import type { RibbonCommand } from './ribbon-parts';
 import { selectedShape, safeExternalHref } from './shape-inspector';
 import { InsertDialog } from './viewer-insert-dialog';
 import { InsertChartDialog, type ChartObjectData, type ChartTarget } from './viewer-insert-chart';
+import { ChartObjectEditor, type ChartEditMode } from './viewer-chart-editor';
 
 type Run = (action: () => Promise<void>, success: string) => void;
 
@@ -32,6 +33,7 @@ export class ViewerInsert {
 	readonly link: InsertDialog;
 	readonly tip: InsertDialog;
 	readonly chart: InsertChartDialog;
+	readonly chartEditor: ChartObjectEditor;
 	#target: { pageId: string; shapeId: string; row?: string; generation: number } | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
@@ -64,6 +66,7 @@ export class ViewerInsert {
 			(button) => void this.#applyLink(button),
 		);
 		this.chart = new InsertChartDialog(root, (data, target) => this.#saveChart(data, target));
+		this.chartEditor = new ChartObjectEditor(root, (data, target) => this.#saveChart(data, target));
 		this.tip = new InsertDialog(
 			root,
 			'screen-tip-dialog',
@@ -98,6 +101,15 @@ export class ViewerInsert {
 			if (state.document?.pages[state.pageIndex]) this.chart.open();
 			return;
 		}
+		if (item === 'chart-data' || item === 'chart-format') {
+			const shape = this.#shape(state);
+			if (
+				!shape?.embeddedObject ||
+				!this.editChart(shape.id, item === 'chart-data' ? 'data' : 'format')
+			)
+				this.announce('Select one chart to edit its data or format it.');
+			return;
+		}
 		const shape = this.#shape(state);
 		const page = state.document?.pages[state.pageIndex];
 		if (!shape || !page) {
@@ -130,23 +142,26 @@ export class ViewerInsert {
 		this.link.dialog.close();
 		this.tip.dialog.close();
 		this.chart.close();
+		this.chartEditor.close();
 	}
-	/** Open the editor for the embedded chart `shapeId` on this page; false if it is not one. */
-	editChart(shapeId: string): boolean {
+	/**
+	 * Open an editor for the embedded chart `shapeId` on this page: the chart dialog (type, title
+	 * and data grid, as a double-click does), Edit Data or Format Chart. False if it is not one.
+	 */
+	editChart(shapeId: string, mode: 'chart' | ChartEditMode = 'chart'): boolean {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
 		const shape = page && embeddedChartShape(page.shapes, shapeId);
 		if (!page || !shape?.embeddedObject || !this.#editable(state)) return false;
-		void this.chart.edit(
-			{
-				pageId: page.id,
-				shapeId,
-				width: shape.width,
-				height: shape.height,
-				generation: this.controller.documentGeneration,
-			},
-			shape.embeddedObject.bytes,
-		);
+		const target = {
+			pageId: page.id,
+			shapeId,
+			width: shape.width,
+			height: shape.height,
+			generation: this.controller.documentGeneration,
+		};
+		if (mode === 'chart') void this.chart.edit(target, shape.embeddedObject.bytes);
+		else void this.chartEditor.open(mode, target, shape.embeddedObject.bytes);
 		return true;
 	}
 	/**
@@ -328,6 +343,13 @@ export class ViewerInsert {
 				? 'Insert a chart drawn from data you type or paste. Double-click it to edit.'
 				: 'Open a .vsdx file to insert a chart.';
 		}
+		const chartShape = shape?.embeddedObject ? shape : undefined;
+		for (const name of ['ctx-chart-data', 'ctx-chart-format']) {
+			const control = button(name);
+			if (!control) continue;
+			control.disabled = !chartShape;
+			control.hidden = !chartShape;
+		}
 		for (const [name, label] of [
 			['link', 'Link (Ctrl+K)'],
 			['ctx-hyperlink', 'Hyperlink (Ctrl+K)'],
@@ -339,6 +361,13 @@ export class ViewerInsert {
 			control.title = shape ? label : `${label}: select one shape on an editable drawing.`;
 		}
 		if (this.chart.dialog.open && (!canEditDiagram(state) || state.loading)) this.chart.close();
+		if (
+			this.chartEditor.dialog.open &&
+			(!canEditDiagram(state) ||
+				state.loading ||
+				this.chartEditor.target?.generation !== this.controller.documentGeneration)
+		)
+			this.chartEditor.close();
 		for (const dialog of [this.link, this.tip]) {
 			if (!dialog.dialog.open) continue;
 			if (

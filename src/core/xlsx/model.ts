@@ -546,6 +546,13 @@ export interface ChartObject extends ChartSummary<ChartSeries> {
 	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
 	partName?: string;
 	name?: string;
+	/**
+	 * Chart Design > Quick Layout applied in this session (1..11). The title, legend and bar spacing
+	 * it sets live on the summary fields; on save the layout's axis titles, gridlines, value axis,
+	 * data labels and data table are written into the part (`chart/edit` `applyChartQuickLayout`).
+	 * Not read back from a file.
+	 */
+	quickLayout?: number;
 }
 
 /** A shape or object the model does not draw; reported so the UI can say so honestly. */

@@ -1,7 +1,10 @@
 /**
  * Chart Design > Quick Layout: Layout 1-11, each a set of chart elements
- * switched on or off together (`chart-quick-layout-catalog.ts`, measured via
- * COM on a column chart). A pick toggles the matching `PptxChartData` fields
+ * switched on or off together (`ooxml-core/chart` `quick-layouts`, measured via
+ * COM on a column chart; the tiles are the shared Chart Design gallery,
+ * `src/ui/src/chart/design-galleries`). `chart/edit` `applyChartQuickLayout`
+ * is the same layout over a `ChartSpace`; this module maps it onto
+ * `PptxChartData`. A pick toggles the matching `PptxChartData` fields
  * through the same helpers the "Chart Elements" quick action uses; gap width
  * and overlap only apply to bar / column charts. Line and area charts take the
  * same element set (PowerPoint's own line layouts are not separately
@@ -19,13 +22,17 @@ import type {
 import { patchChartData } from '../chart-editor-options';
 import { chartGridlinesPatch, chartGridlinesState } from '../chart-gridlines-toggle';
 import { chartDataLabelsTogglePatch } from '../chart-quick-action-toggles';
-import { chartLayoutTileSvg } from './chart-gallery-tiles';
-import type { ChartQuickLayout } from './chart-quick-layout-catalog';
-import { CHART_QUICK_LAYOUTS } from './chart-quick-layout-catalog';
-import type { RibbonGalleryModule } from './gallery-module';
+import {
+	CHART_QUICK_LAYOUT_AXIS_TITLE as AXIS_TITLE,
+	CHART_QUICK_LAYOUTS,
+	type ChartQuickLayout,
+} from 'ooxml-core/chart';
 
-const TILE = { width: 56, height: 44 };
-const AXIS_TITLE = 'Axis Title';
+import {
+	chartQuickLayoutGallerySection,
+	chartQuickLayoutItemNumber,
+} from '../../../chart/design-galleries';
+import type { RibbonGalleryModule } from './gallery-module';
 const LAYOUT_CHART_TYPES = new Set(['bar', 'bar3D', 'line', 'line3D', 'area', 'area3D']);
 
 function chartDataOf(element: PptxElement | null): PptxChartData | undefined {
@@ -125,6 +132,10 @@ function matchesLayout(chartData: PptxChartData, layout: ChartQuickLayout): bool
 export const CHART_QUICK_LAYOUT_GALLERY: RibbonGalleryModule = {
 	build(ctx) {
 		const chartData = chartDataOf(ctx.element);
+		const applied = chartData
+			? CHART_QUICK_LAYOUTS.find((layout) => matchesLayout(chartData, layout))?.n
+			: undefined;
+		const section = chartQuickLayoutGallerySection(applied);
 		return {
 			id: 'chartQuickLayout',
 			labelKey: 'pptx.gallery.chartQuickLayout.title',
@@ -132,17 +143,17 @@ export const CHART_QUICK_LAYOUT_GALLERY: RibbonGalleryModule = {
 			disabled: !chartData,
 			sections: [
 				{
-					id: 'layouts',
-					columns: 4,
-					tileWidth: TILE.width,
-					tileHeight: TILE.height,
-					items: CHART_QUICK_LAYOUTS.map((layout) => ({
-						id: `layout${layout.n}`,
+					id: section.id,
+					columns: section.columns,
+					tileWidth: section.tileWidth,
+					tileHeight: section.tileHeight,
+					items: section.items.map((item) => ({
+						id: item.id,
 						labelKey: 'pptx.gallery.chartQuickLayout.layout',
-						labelParams: { n: layout.n },
-						label: `Layout ${layout.n}`,
-						previewSvg: chartLayoutTileSvg(layout, TILE),
-						applied: chartData ? matchesLayout(chartData, layout) : false,
+						labelParams: item.labelParams,
+						label: item.label,
+						previewSvg: item.previewSvg,
+						applied: item.applied,
 					})),
 				},
 			],
@@ -151,7 +162,8 @@ export const CHART_QUICK_LAYOUT_GALLERY: RibbonGalleryModule = {
 	apply(itemId, ctx) {
 		const element = ctx.element;
 		const chartData = chartDataOf(element);
-		const layout = CHART_QUICK_LAYOUTS.find((entry) => `layout${entry.n}` === itemId);
+		const n = chartQuickLayoutItemNumber(itemId);
+		const layout = CHART_QUICK_LAYOUTS.find((entry) => entry.n === n);
 		if (!element || !chartData || !layout) {
 			return null;
 		}

@@ -1,12 +1,18 @@
-export { swatchStripSvg } from '../../../ribbon/color-preview';
 /**
- * Tile previews for the chart galleries (Chart Styles, Change Colors, Quick
- * Layout): a small clustered-column chart in the given colours, and a
- * schematic of a Quick Layout's element set.
+ * Tile previews for the Chart Design galleries every product shares (Chart Styles, Change Colors,
+ * Quick Layout): a small clustered-column chart in the given colours, a palette's swatch strip and
+ * a schematic of a Quick Layout's element set. Each tile is one self-contained `<svg>` string.
  *
- * @module render/ribbon-galleries/chart-gallery-tiles
+ * Moved from `src/ui/src/pptx/render/ribbon-galleries/chart-gallery-tiles.ts`.
+ *
+ * @module chart/gallery-tiles
  */
-import { safeColor, svgTile } from './gallery-preview-svg';
+import type { ChartLayoutSketch } from 'ooxml-core/chart';
+
+import { safeColor, svgTile } from '../ribbon/svg-preview';
+
+export { swatchStripSvg } from '../ribbon/color-preview';
+export type { ChartLayoutSketch } from 'ooxml-core/chart';
 
 function num(value: number): string {
 	return String(Math.round(value * 100) / 100);
@@ -28,7 +34,7 @@ export function columnChartTileSvg(
 	const bars: string[] = [];
 	for (let g = 0; g < 3; g++) {
 		series.forEach((color, s) => {
-			const h = plotH * HEIGHTS[(g + s * 2) % HEIGHTS.length];
+			const h = plotH * (HEIGHTS[(g + s * 2) % HEIGHTS.length] ?? 0.5);
 			const x = pad + g * groupW + groupW * 0.1 + s * barW;
 			bars.push(
 				`<rect x="${num(x)}" y="${num(pad + plotH - h)}" width="${num(barW * 0.9)}" height="${num(h)}" fill="${safeColor(color, '#808080')}"/>`,
@@ -38,19 +44,6 @@ export function columnChartTileSvg(
 	const axis = `<line x1="${pad}" y1="${num(pad + plotH)}" x2="${num(pad + plotW)}" y2="${num(pad + plotH)}" stroke="#A6A6A6" stroke-width="0.75"/>`;
 	const bg = `<rect x="0" y="0" width="${size.width}" height="${size.height}" fill="#FFFFFF"/>`;
 	return svgTile(size.width, size.height, '', bg + bars.join('') + axis);
-}
-
-/** The elements a Quick Layout switches on, as its schematic tile draws them. */
-export interface ChartLayoutSketch {
-	title: boolean;
-	legend: 'r' | 't' | 'b' | 'l' | null;
-	dataLabels: boolean;
-	catAxisTitle: boolean;
-	valAxisTitle: boolean;
-	majorGridlines: boolean;
-	minorGridlines: boolean;
-	valueAxis: boolean;
-	dataTable: boolean;
 }
 
 const INK = '#7F7F7F';
