@@ -55,6 +55,7 @@ export { GradientPickerComponent } from './gradient-picker.component';
 export { EffectsPanelComponent } from './effects-panel.component';
 export { TextAdvancedPanelComponent } from './text-advanced-panel.component';
 export { Text3DPanelComponent } from './text-3d-panel.component';
+export { TextEffectsPanelComponent } from './text-effects-panel.component';
 export {
 	TEXT_3D_BOTTOM_BEVEL_KEYS,
 	TEXT_3D_TOP_BEVEL_KEYS,
