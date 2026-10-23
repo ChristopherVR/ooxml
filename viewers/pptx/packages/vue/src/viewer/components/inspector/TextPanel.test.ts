@@ -218,3 +218,148 @@ describe('textPanel font family', () => {
 		});
 	});
 });
+
+describe('textPanel text effects and 3-D text', () => {
+	/** The checkbox a caption names: each toggle sits in a label with its caption. */
+	function toggleNamed(wrapper: ReturnType<typeof mount>, caption: string) {
+		const label = wrapper.findAll('label').find((node) => node.text().trim() === caption);
+		if (!label) {
+			throw new Error(`the text panel has no "${caption}" toggle`);
+		}
+		return label.get('pptx-ui-checkbox');
+	}
+
+	it('shows Text Effects with its shadow, glow and reflection toggles, then 3-D text', () => {
+		const wrapper = mount(TextPanel, { props: { element: textEl({}) } });
+		const text = wrapper.text();
+		expect(text).toContain('Text Effects');
+		expect(text).toContain('3D Text');
+		// Order as in the other bindings: Text Warp, then the effects, then 3-D text.
+		expect(text.indexOf('Text Warp')).toBeLessThan(text.indexOf('Text Effects'));
+		expect(text.indexOf('Text Effects')).toBeLessThan(text.indexOf('3D Text'));
+		for (const caption of ['Text Shadow', 'Text Glow', 'Text Reflection', '3D Extrusion']) {
+			expect(toggleNamed(wrapper, caption).attributes('aria-checked')).not.toBe('true');
+		}
+	});
+
+	it('turns glow on into the full textStyle patch, and off again', async () => {
+		const on = mount(TextPanel, { props: { element: textEl({ bold: true }) } });
+		await setControlValue(toggleNamed(on, 'Text Glow'), true);
+		expect(on.emitted('update')?.[0]?.[0]).toStrictEqual({
+			textStyle: { bold: true, textGlowColor: '#ffff00', textGlowRadius: 6, textGlowOpacity: 0.6 },
+		});
+
+		const glowing = { textGlowColor: '#ff0000', textGlowRadius: 8, textGlowOpacity: 0.4 };
+		const off = mount(TextPanel, { props: { element: textEl({ ...glowing }) } });
+		await setControlValue(toggleNamed(off, 'Text Glow'), false);
+		expect(off.emitted('update')?.[0]?.[0]).toStrictEqual({
+			textStyle: {
+				textGlowColor: undefined,
+				textGlowRadius: undefined,
+				textGlowOpacity: undefined,
+			},
+		});
+	});
+
+	it('glows every run, not only the body, so the slide shows it', async () => {
+		const element = {
+			...textEl({ fontSize: 20 }),
+			text: 'Hello world',
+			textSegments: [
+				{ text: 'Hello ', style: { fontSize: 20 } },
+				{ text: 'world', style: { fontSize: 20, bold: true } },
+			],
+		} as PptxElement;
+		const wrapper = mount(TextPanel, { props: { element } });
+		await setControlValue(toggleNamed(wrapper, 'Text Glow'), true);
+		const patch = wrapper.emitted('update')?.[0]?.[0] as Partial<PptxElement> & {
+			textSegments?: Array<{ text: string; style?: TextStyle }>;
+		};
+		const glow = { textGlowColor: '#ffff00', textGlowRadius: 6, textGlowOpacity: 0.6 };
+		expect(patch.textStyle).toMatchObject({ fontSize: 20, ...glow });
+		expect(patch.textSegments?.map((segment) => segment.style)).toStrictEqual([
+			{ fontSize: 20, ...glow },
+			{ fontSize: 20, bold: true, ...glow },
+		]);
+	});
+
+	it('keeps 3-D text on the body: it is an a:bodyPr property, not a run one', async () => {
+		const element = {
+			...textEl({}),
+			text: 'Hi',
+			textSegments: [{ text: 'Hi', style: { fontSize: 20 } }],
+		} as PptxElement;
+		const wrapper = mount(TextPanel, { props: { element } });
+		await setControlValue(toggleNamed(wrapper, '3D Extrusion'), true);
+		const patch = wrapper.emitted('update')?.[0]?.[0] as Partial<PptxElement>;
+		expect(patch).toStrictEqual({
+			textStyle: { text3d: { extrusionHeight: 76200 }, flatText: undefined },
+		});
+	});
+
+	it('edits the size of a glow, clamped to the offered range', async () => {
+		const wrapper = mount(TextPanel, {
+			props: { element: textEl({ textGlowColor: '#ff0000', textGlowRadius: 8 }) },
+		});
+		const size = wrapper
+			.findAll('input[type="number"]')
+			.find((input) => input.attributes('aria-label') === 'Size');
+		expect(size?.element).toBeDefined();
+		(size!.element as HTMLInputElement).value = '400';
+		await size!.trigger('input');
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			textStyle: { textGlowColor: '#ff0000', textGlowRadius: 50 },
+		});
+	});
+
+	it('turns shadow and reflection on with the same defaults as the other bindings', async () => {
+		const wrapper = mount(TextPanel, { props: { element: textEl({}) } });
+		await setControlValue(toggleNamed(wrapper, 'Text Shadow'), true);
+		await setControlValue(toggleNamed(wrapper, 'Text Reflection'), true);
+		expect(wrapper.emitted('update')?.map(([patch]) => patch)).toStrictEqual([
+			{
+				textStyle: {
+					textShadowColor: '#000000',
+					textShadowBlur: 4,
+					textShadowOffsetX: 2,
+					textShadowOffsetY: 2,
+					textShadowOpacity: 0.5,
+				},
+			},
+			{
+				textStyle: {
+					textReflection: true,
+					textReflectionBlur: 1,
+					textReflectionStartOpacity: 0.5,
+					textReflectionEndOpacity: 0,
+					textReflectionOffset: 3,
+				},
+			},
+		]);
+	});
+
+	it('seeds a visible depth when 3-D extrusion is switched on', async () => {
+		const wrapper = mount(TextPanel, { props: { element: textEl({ bold: true }) } });
+		await setControlValue(toggleNamed(wrapper, '3D Extrusion'), true);
+		expect(wrapper.emitted('update')?.[0]?.[0]).toStrictEqual({
+			textStyle: { bold: true, text3d: { extrusionHeight: 6 * 12700 }, flatText: undefined },
+		});
+	});
+
+	it('switches placeholder 3-D text off with a:flatTx, so the layout extrusion cannot return', async () => {
+		const element = {
+			...textEl({ text3d: { extrusionHeight: 76200 } }),
+			placeholderType: 'title',
+		} as PptxElement;
+		const wrapper = mount(TextPanel, { props: { element } });
+		await setControlValue(toggleNamed(wrapper, '3D Extrusion'), false);
+		expect(wrapper.emitted('update')?.[0]?.[0]).toStrictEqual({
+			textStyle: { text3d: undefined, flatText: true },
+		});
+	});
+
+	it('keeps the effect toggles inert on a read-only deck', () => {
+		const wrapper = mount(TextPanel, { props: { element: textEl({}), canEdit: false } });
+		expect(toggleNamed(wrapper, 'Text Glow').attributes('aria-disabled')).toBe('true');
+	});
+});
