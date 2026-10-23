@@ -2,9 +2,6 @@
 // properties, and axes (`cx:axis`).
 import type { XmlElement } from '../../xml/index';
 import type {
-	ChartExAxis,
-	ChartExAxisScaling,
-	ChartExAxisUnits,
 	ChartExBinning,
 	ChartExDataLabel,
 	ChartExDataLabelOptions,
@@ -25,7 +22,6 @@ import {
 	cxChildren,
 	extensionList,
 	indexAttribute,
-	lines,
 	numberAttribute,
 	numberFormat,
 	rawChild,
@@ -35,7 +31,7 @@ import {
 	valNumber,
 	type ChartParseContext,
 } from './parse-util';
-import { parseData, parseText, parseTitle } from './parse-text';
+import { parseData, parseText } from './parse-text';
 
 function labelVisibility(
 	context: ChartParseContext,
@@ -230,90 +226,6 @@ export function parseSeries(context: ChartParseContext, element: XmlElement): Ch
 			data: inline ? parseData(context, inline) : undefined,
 			dataId: valNumber(context, element, 'dataId'),
 			layoutProperties: layout ? parseLayout(context, layout) : undefined,
-			extLst: extensionList(element),
-		},
-	);
-}
-
-function parseScaling(
-	context: ChartParseContext,
-	axis: XmlElement,
-): ChartExAxisScaling | undefined {
-	const category = cxChild(axis, 'catScaling');
-	if (category)
-		return assignDefined<ChartExAxisScaling>(
-			{ kind: 'cat' },
-			{ gapWidth: autoNumberAttribute(context, category, 'gapWidth') },
-		);
-	const value = cxChild(axis, 'valScaling');
-	if (!value) return undefined;
-	return assignDefined<ChartExAxisScaling & { kind: 'val' }>(
-		{ kind: 'val' },
-		{
-			max: autoNumberAttribute(context, value, 'max'),
-			min: autoNumberAttribute(context, value, 'min'),
-			majorUnit: autoNumberAttribute(context, value, 'majorUnit'),
-			minorUnit: autoNumberAttribute(context, value, 'minorUnit'),
-		},
-	);
-}
-
-function parseUnits(context: ChartParseContext, element: XmlElement): ChartExAxisUnits {
-	reportUnmodelled(context, element, new Set(['unitsLabel', 'extLst']));
-	const label = cxChild(element, 'unitsLabel');
-	return assignDefined<ChartExAxisUnits>(
-		{},
-		{
-			unit: attribute(element, 'unit'),
-			label: label ? parseTitle(context, label) : undefined,
-			extLst: extensionList(element),
-		},
-	);
-}
-
-const AXIS = new Set([
-	'catScaling',
-	'valScaling',
-	'title',
-	'units',
-	'majorGridlines',
-	'minorGridlines',
-	'majorTickMarks',
-	'minorTickMarks',
-	'tickLabels',
-	'numFmt',
-	'spPr',
-	'txPr',
-	'extLst',
-]);
-
-const tickMarks = (element: XmlElement | undefined) =>
-	element ? assignDefined<{ type?: string }>({}, { type: attribute(element, 'type') }) : undefined;
-
-/** One `cx:axis`. */
-export function parseAxis(context: ChartParseContext, element: XmlElement): ChartExAxis {
-	reportUnmodelled(context, element, AXIS);
-	const title = cxChild(element, 'title');
-	const units = cxChild(element, 'units');
-	const tickLabels = cxChild(element, 'tickLabels');
-	return assignDefined<ChartExAxis>(
-		{},
-		{
-			id: indexAttribute(context, element, 'id'),
-			hidden: boolAttribute(context, element, 'hidden'),
-			scaling: parseScaling(context, element),
-			title: title ? parseTitle(context, title) : undefined,
-			units: units ? parseUnits(context, units) : undefined,
-			majorGridlines: lines(element, 'majorGridlines'),
-			minorGridlines: lines(element, 'minorGridlines'),
-			majorTickMarks: tickMarks(cxChild(element, 'majorTickMarks')),
-			minorTickMarks: tickMarks(cxChild(element, 'minorTickMarks')),
-			tickLabels: tickLabels
-				? assignDefined<{ extLst?: string }>({}, { extLst: extensionList(tickLabels) })
-				: undefined,
-			numberFormat: numberFormat(element),
-			spPr: shapeProperties(element),
-			txPr: textProperties(element),
 			extLst: extensionList(element),
 		},
 	);
