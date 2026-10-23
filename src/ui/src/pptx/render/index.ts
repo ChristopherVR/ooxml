@@ -1840,3 +1840,6 @@ export * from './custom-path-markers';
 export * from './collaboration-state';
 // The payload the host-facing `autosaveStatus` event reports in every binding.
 export * from './viewer-event-payloads';
+// The Find and Replace bar's session (matches, cursor, replace plans) and its actions.
+export * from './find-replace-session';
+export * from './find-replace-session-actions';
