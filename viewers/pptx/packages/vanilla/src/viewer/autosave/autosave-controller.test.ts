@@ -460,4 +460,27 @@ describe('createAutosaveController with host-owned storage', () => {
 		);
 		controller.destroy();
 	});
+
+	it('reads the one shared engine: an unchanged dirty deck is never rewritten', async () => {
+		vi.useFakeTimers();
+		saveAutosaveSnapshot.mockReset().mockResolvedValue(true);
+		const store = createStore(createInitialViewerState());
+		const { handler, save } = makeHandler();
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getIntervalMs: () => 2000,
+		});
+		store.set({ slides: [makeSlide('a')], dirty: true });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(save).toHaveBeenCalledOnce();
+		// Still dirty in the editor (no real save) and an unrelated store change: no rewrite.
+		store.set({ loading: false });
+		await vi.advanceTimersByTimeAsync(6000);
+		expect(save).toHaveBeenCalledOnce();
+		expect(controller.getRecovery().getSnapshot().prompt).toBeNull();
+		controller.destroy();
+		vi.useRealTimers();
+	});
 });
