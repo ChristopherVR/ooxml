@@ -34,10 +34,8 @@ function liveController(latest: { current: Latest }): LiveColorController {
 		preview: (hex) => latest.current.withoutUndoStep(() => latest.current.onApply(hex)),
 		restore: (from) =>
 			latest.current.withoutUndoStep(() => latest.current.onApply(from.hex, from.ref)),
-		commit: (hex) => {
-			latest.current.onApply(hex);
-			latest.current.pushColor(hex);
-		},
+		commit: (hex) => latest.current.onApply(hex),
+		remember: (hex) => latest.current.pushColor(hex),
 	});
 }
 
@@ -63,7 +61,8 @@ export interface LiveColorInputProps extends Omit<
  * `createLiveColorInput`): every shade shows on the slide with no undo step or
  * recent colour, the settled pick (native `change`, or `blur` for a drag no
  * change ended) is ONE undo step and one Recent Colors entry, and a drag that
- * settles where it started records nothing.
+ * settles where it started is no undo step (its `change` still counts as a
+ * recent colour).
  *
  * React's `onChange` runs for every native `input`, and React does not expose
  * the native `change` on its own, so that one is listened for directly, the

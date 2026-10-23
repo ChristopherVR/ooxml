@@ -29,7 +29,8 @@ export type LiveColorEventType = 'input' | 'change' | 'blur';
  * element without history, and the settled pick (`change`, or `blur` for a
  * drag no change ended) puts the previews back and commits once through
  * `applyToSelected`, so a drag is one undo step and one recent colour. A pick
- * that settles where it started records nothing.
+ * that settles where it started is no undo step (its `change` still counts as
+ * a recent colour).
  */
 export interface LiveColorActions {
 	/** One `input`, `change` or `blur` of the fill, line or text colour picker. */
@@ -63,10 +64,8 @@ export function createLiveColorActions(deps: {
 					ops.previewElement(el.id, next);
 				}
 			},
-			commit: (next, hex) => {
-				recordRecentColor(store, hex);
-				applyToSelected(() => next);
-			},
+			commit: (next) => applyToSelected(() => next),
+			remember: (hex) => recordRecentColor(store, hex),
 		});
 
 	// A native pick is a custom colour: it clears any theme ref, like every

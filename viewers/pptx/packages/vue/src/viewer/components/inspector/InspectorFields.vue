@@ -78,10 +78,8 @@ function onColor(sectionId: string, fieldId: string, event: Event): void {
 					| (P & object)
 					| undefined,
 			preview: (patch) => emit('preview', patch),
-			commit: (patch, hex) => {
-				emit('patch', patch);
-				recentColors?.push(hex);
-			},
+			commit: (patch) => emit('patch', patch),
+			remember: (hex) => recentColors?.push(hex),
 		});
 		colorInputs.set(key, control);
 	}

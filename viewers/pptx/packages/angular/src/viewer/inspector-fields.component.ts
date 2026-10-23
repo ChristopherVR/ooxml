@@ -302,10 +302,8 @@ export class InspectorFieldsComponent<T, P> {
 						| (P & object)
 						| undefined,
 				preview: (patch) => this.preview.emit(patch),
-				commit: (patch, hex) => {
-					this.patch.emit(patch);
-					this.recentColors?.push(hex);
-				},
+				commit: (patch) => this.patch.emit(patch),
+				remember: (hex) => this.recentColors?.push(hex),
 			});
 			this.colorInputs.set(key, control);
 		}

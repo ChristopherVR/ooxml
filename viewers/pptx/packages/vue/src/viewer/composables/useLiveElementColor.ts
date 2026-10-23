@@ -5,8 +5,9 @@
  * Every shade is merged into the element through the injected preview channel
  * (`inspector-preview-context.ts`: no undo step, dirty flag or recent colour);
  * the settled pick (`change`, or `blur` for a drag no change ended) puts the
- * previews back and emits ONE `update`, then records the recent colour. A pick
- * that settles where it started emits nothing. Bind the returned listeners
+ * previews back, records the recent colour and emits ONE `update`. A pick that
+ * settles where it started emits no `update` (its `change` still counts as a
+ * recent colour). Bind the returned listeners
  * with `v-on` on the `<input type="color">`.
  */
 import { createLiveColorPatchInput, handleLiveColorEvent } from 'ooxml-ui/pptx';
@@ -39,10 +40,8 @@ export function useLiveElementColor(options: UseLiveElementColorOptions): LiveCo
 		},
 		patch: options.patch,
 		preview: (patch) => preview?.(patch),
-		commit: (patch, hex) => {
-			options.commit(patch);
-			recentColors?.push(hex);
-		},
+		commit: (patch) => options.commit(patch),
+		remember: (hex) => recentColors?.push(hex),
 	});
 	const handle = (event: Event): void => handleLiveColorEvent(control, event);
 	return { input: handle, change: handle, blur: handle };

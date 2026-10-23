@@ -111,10 +111,8 @@ export function createInspectorFields<T, P>(
 						| (P & object)
 						| undefined,
 				preview: (patch) => options.onPreview?.(patch),
-				commit: (patch, hex) => {
-					options.onPatch(patch);
-					options.onColorCommit?.(hex);
-				},
+				commit: (patch) => options.onPatch(patch),
+				remember: (hex) => options.onColorCommit?.(hex),
 			});
 			colorInputs.set(key, control);
 		}

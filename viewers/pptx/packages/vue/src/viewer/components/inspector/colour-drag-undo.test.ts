@@ -112,9 +112,18 @@ function harness(control: Control) {
 		await input.trigger(type);
 		await nextTick();
 	};
+	/** Set the value and fire `input` then `change` in one turn, with no re-render between. */
+	const pick = async (hex: string): Promise<void> => {
+		const input = wrapper.find(PANELS[control].selector);
+		(input.element as HTMLInputElement).value = hex;
+		input.element.dispatchEvent(new Event('input', { bubbles: true }));
+		input.element.dispatchEvent(new Event('change', { bubbles: true }));
+		await nextTick();
+	};
 	return {
 		history,
 		fire,
+		pick,
 		recent,
 		current: () => slides.value[0]!.elements[0] as Styled,
 		unmount: () => wrapper.unmount(),
@@ -182,8 +191,34 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		await view.fire('change', color(before)!);
 
 		expect(view.history.canUndo.value).toBeFalsy();
-		expect(view.recent.value).toStrictEqual([]);
+		// The `change` is still a pick: its colour counts as recent, though nothing was edited.
+		expect(view.recent.value).toStrictEqual([color(before)]);
 		expect(color(view.current())).toBe(color(before));
+		expect(themeRef(view.current())).toStrictEqual(themeRef(before));
+		view.unmount();
+	});
+
+	it('commits a pick whose input and change arrive in one turn as one undo step', async () => {
+		const view = harness(control);
+		const before = view.current();
+		await view.pick('#00ff00');
+
+		expect(color(view.current())).toBe('#00ff00');
+		expect(view.recent.value).toStrictEqual(['#00ff00']);
+		view.history.undo();
+		await nextTick();
+		expect(color(view.current())).toBe(color(before));
+		expect(view.history.canUndo.value).toBeFalsy();
+		view.unmount();
+	});
+
+	it('counts a pick of the colour already there as a recent colour, with no undo step', async () => {
+		const view = harness(control);
+		const before = view.current();
+		await view.pick(color(before)!);
+
+		expect(view.recent.value).toStrictEqual([color(before)]);
+		expect(view.history.canUndo.value).toBeFalsy();
 		expect(themeRef(view.current())).toStrictEqual(themeRef(before));
 		view.unmount();
 	});

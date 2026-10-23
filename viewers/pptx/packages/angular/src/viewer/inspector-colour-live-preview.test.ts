@@ -157,7 +157,8 @@ describe.each(['fill', 'line', 'text'] as const)('the %s colour picker', (contro
 		fire(control, 'change', color(before)!);
 
 		expect(editor.canUndo()).toBeFalsy();
-		expect(pushed).toStrictEqual([]);
+		// The `change` is still a pick: its colour counts as recent, though nothing was edited.
+		expect(pushed).toStrictEqual([color(before)]);
 		expect(color(current())).toBe(color(before));
 		expect(ref(current())).toStrictEqual(ref(before));
 	});
@@ -172,6 +173,31 @@ describe.each(['fill', 'line', 'text'] as const)('the %s colour picker', (contro
 		editor.undo();
 		expect(color(current())).toBe(color(before));
 		expect(editor.canUndo()).toBeFalsy();
+	});
+
+	it('commits a pick whose input and change arrive in one turn as one undo step', () => {
+		// No change detection between the two events, as when a picker commits at once.
+		const { editor, pushed, current, fire } = harness(false);
+		const before = current();
+		fire(control, 'input', '#00ff00');
+		fire(control, 'change', '#00ff00');
+
+		expect(color(current())).toBe('#00ff00');
+		expect(pushed).toStrictEqual(['#00ff00']);
+		editor.undo();
+		expect(color(current())).toBe(color(before));
+		expect(editor.canUndo()).toBeFalsy();
+	});
+
+	it('counts a pick of the colour already there as a recent colour, with no undo step', () => {
+		const { editor, pushed, current, fire } = harness(false);
+		const before = current();
+		fire(control, 'input', color(before)!);
+		fire(control, 'change', color(before)!);
+
+		expect(pushed).toStrictEqual([color(before)]);
+		expect(editor.canUndo()).toBeFalsy();
+		expect(ref(current())).toStrictEqual(ref(before));
 	});
 
 	it('keeps a drag to one undo step while change detection has not run between events', () => {
@@ -255,6 +281,15 @@ describe('the generic field renderer colour control (shape effects)', () => {
 		});
 		expect(committed).toStrictEqual([{ glowColor: '#0000ff', glowRadius: 8, glowOpacity: 0.5 }]);
 		expect(pushed).toStrictEqual(['#0000ff']);
+	});
+
+	it('counts a pick of the colour already there as a recent colour, without a commit', () => {
+		const { fire, pushed, committed } = fields();
+		fire('input', '#ff0000');
+		fire('change', '#ff0000');
+
+		expect(pushed).toStrictEqual(['#ff0000']);
+		expect(committed).toStrictEqual([]);
 	});
 
 	it('reaches the slide through the effects panel and the inspector without an undo step', () => {

@@ -12,8 +12,11 @@
  * - `input`: show the shade live, with no undo step, dirty flag or recent colour;
  * - `change`, or `blur` for a drag no `change` ended: put back what the previews changed, then
  *   commit the settled colour through the binding's normal edit path, so its one undo step
- *   returns to the colour from before the drag. A pick that settles where the drag started is
- *   no edit at all: the previews are put back and nothing is recorded.
+ *   returns to the colour from before the drag, and add it to the recent colours. A pick that
+ *   settles where the drag started is no edit at all: the previews are put back (theme ref
+ *   included) and no undo step is recorded. A `change` there is still the user's pick, so its
+ *   colour goes into the recent colours like any other; a `blur` there is not a pick (an
+ *   Escape, a drag back to the start), so it records nothing.
  *
  * A drag belongs to one target. It carries over to the next event only while the control edits
  * the same `key` and the model still shows the drag's work: the untouched start value (a
@@ -42,8 +45,13 @@ export interface LiveColorInputOptions<S> {
 	preview(hex: string, from: S): void;
 	/** Put back, again silently, everything the drag's previews changed on `from`. */
 	restore(from: S): void;
-	/** Commit `hex` over `from` as ONE undo step, mark the deck dirty and record the recent colour. */
+	/** Commit `hex` over `from` as ONE undo step and mark the deck dirty. */
 	commit(hex: string, from: S): void;
+	/**
+	 * Add `hex` to the recent colours: with every commit (just before it), and for a `change`
+	 * that settles on the colour the drag started from (a pick, though not an edit).
+	 */
+	remember(hex: string): void;
 }
 
 /** The native events of one colour input, each with the input's current value. */
@@ -83,9 +91,9 @@ export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): Live
 	/**
 	 * End the drag on `hex`. A drag that is still carried on is put back first, so the commit
 	 * records the state from before it; a stale one is dropped as it is, since putting it back
-	 * would overwrite whatever changed the model since.
+	 * would overwrite whatever changed the model since. `picked` is true for a `change`.
 	 */
-	const settle = (source: LiveColorSource<S>, hex: string): void => {
+	const settle = (source: LiveColorSource<S>, hex: string, picked: boolean): void => {
 		const current = carriedOn(source);
 		drag = undefined;
 		if (current) {
@@ -93,7 +101,13 @@ export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): Live
 		}
 		const from = current ? current.state : source.state;
 		const start = current ? current.start : source.color;
-		if (normalizeColor(hex) !== normalizeColor(start)) {
+		const moved = normalizeColor(hex) !== normalizeColor(start);
+		// Recent colours first: a binding whose undo snapshot holds the list then keeps the pick
+		// when the edit is undone.
+		if (moved || picked) {
+			options.remember(hex);
+		}
+		if (moved) {
 			options.commit(hex, from);
 		}
 	};
@@ -117,7 +131,7 @@ export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): Live
 		change(hex) {
 			const source = options.read();
 			if (source) {
-				settle(source, hex);
+				settle(source, hex, true);
 			} else {
 				drag = undefined;
 			}
@@ -127,7 +141,7 @@ export function createLiveColorInput<S>(options: LiveColorInputOptions<S>): Live
 			// a stale one) it must not commit whatever the input happens to show.
 			const source = drag ? options.read() : undefined;
 			if (source && carriedOn(source)) {
-				settle(source, hex);
+				settle(source, hex, false);
 			} else {
 				drag = undefined;
 			}
@@ -143,8 +157,10 @@ export interface LiveColorPatchOptions<T, P extends object> {
 	patch(value: T, hex: string): P | undefined;
 	/** Write `patch` live: no undo step, dirty flag or recent colour. */
 	preview(patch: P): void;
-	/** Write `patch` through the normal edit path (one undo step) and record `hex` as recent. */
-	commit(patch: P, hex: string): void;
+	/** Write `patch` through the normal edit path: one undo step, the dirty flag. */
+	commit(patch: P): void;
+	/** Add `hex` to the recent colours (see {@link LiveColorInputOptions.remember}). */
+	remember(hex: string): void;
 }
 
 /**
@@ -192,9 +208,10 @@ export function createLiveColorPatchInput<T, P extends object>(
 			touched.clear();
 			const patch = options.patch(from, hex);
 			if (patch) {
-				options.commit(patch, hex);
+				options.commit(patch);
 			}
 		},
+		remember: (hex) => options.remember(hex),
 	});
 }
 

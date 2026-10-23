@@ -116,10 +116,22 @@ function mount() {
 		input.dispatchEvent(new Event(type, { bubbles: type !== 'blur' }));
 		render();
 	};
+	/** Set the value and fire `input` then `change` in one turn, with no repaint between. */
+	const pick = (control: Control, hex: string): void => {
+		const input = inputs[control];
+		if (!input) {
+			throw new Error(`no ${control} colour input`);
+		}
+		input.value = hex;
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+		render();
+	};
 	return {
 		ops,
 		current,
 		fire,
+		pick,
 		recent: () => store.get().presentationProperties.mruColors ?? [],
 		dirty: () => store.get().dirty,
 	};
@@ -187,8 +199,31 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		view.fire(control, 'change', color(before)!);
 
 		expect(view.ops.canUndo()).toBeFalsy();
-		expect(view.recent()).toStrictEqual([]);
+		// The `change` is still a pick: its colour counts as recent, though nothing was edited.
+		expect(view.recent()).toStrictEqual([color(before)!.toUpperCase()]);
 		expect(color(view.current())).toBe(color(before));
+		expect(ref(view.current())).toStrictEqual(ref(before));
+	});
+
+	it('commits a pick whose input and change arrive in one turn as one undo step', () => {
+		const view = mount();
+		const before = view.current();
+		view.pick(control, '#00ff00');
+
+		expect(color(view.current())).toBe('#00ff00');
+		expect(view.recent()).toStrictEqual(['#00FF00']);
+		view.ops.undo();
+		expect(color(view.current())).toBe(color(before));
+		expect(view.ops.canUndo()).toBeFalsy();
+	});
+
+	it('counts a pick of the colour already there as a recent colour, with no undo step', () => {
+		const view = mount();
+		const before = view.current();
+		view.pick(control, color(before)!);
+
+		expect(view.recent()).toStrictEqual([color(before)!.toUpperCase()]);
+		expect(view.ops.canUndo()).toBeFalsy();
 		expect(ref(view.current())).toStrictEqual(ref(before));
 	});
 

@@ -228,6 +228,19 @@ function fire(control: Control, type: 'input' | 'change' | 'blur', hex: string):
 	});
 }
 
+/** Set the value and fire `input` then `change` in one act, so React renders only after both. */
+function pick(control: Control, hex: string): void {
+	const input = INPUTS[control]();
+	if (!input) {
+		throw new Error(`no ${control} colour input`);
+	}
+	act(() => {
+		Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, hex);
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+}
+
 const SHADES = ['#330000', '#660000', '#990000'];
 
 describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker', (control) => {
@@ -270,8 +283,29 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		fire(control, 'change', color(before)!);
 
 		expect(api!.canUndo()).toBeFalsy();
-		expect(api!.recent()).toStrictEqual([]);
+		// The `change` is still a pick: its colour counts as recent, though nothing was edited.
+		expect(api!.recent()).toStrictEqual([color(before)]);
 		expect(color(api!.element())).toBe(color(before));
+		expect(themeRef(api!.element())).toStrictEqual(themeRef(before));
+	});
+
+	it('commits a pick whose input and change arrive in one turn as one undo step', () => {
+		const before = api!.element();
+		pick(control, '#00ff00');
+
+		expect(color(api!.element())).toBe('#00ff00');
+		expect(api!.recent()).toStrictEqual(['#00ff00']);
+		act(() => api!.undo());
+		expect(color(api!.element())).toBe(color(before));
+		expect(api!.canUndo()).toBeFalsy();
+	});
+
+	it('counts a pick of the colour already there as a recent colour, with no undo step', () => {
+		const before = api!.element();
+		pick(control, color(before)!);
+
+		expect(api!.recent()).toStrictEqual([color(before)]);
+		expect(api!.canUndo()).toBeFalsy();
 		expect(themeRef(api!.element())).toStrictEqual(themeRef(before));
 	});
 

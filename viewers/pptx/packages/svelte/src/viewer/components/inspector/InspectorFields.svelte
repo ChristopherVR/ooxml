@@ -70,10 +70,8 @@
 						| (P & object)
 						| undefined,
 				preview: (patch) => onpreview?.(patch),
-				commit: (patch, hex) => {
-					onpatch(patch);
-					oncolorcommit?.(hex);
-				},
+				commit: (patch) => onpatch(patch),
+				remember: (hex) => oncolorcommit?.(hex),
 			});
 			colorInputs.set(key, control);
 		}

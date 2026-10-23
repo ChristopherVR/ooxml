@@ -39,9 +39,11 @@ function editor(initial: Shape) {
 			silent.push(patch);
 			write(patch);
 		},
-		commit(patch, hex) {
+		commit(patch) {
 			undo.push(shape);
 			write(patch);
+		},
+		remember(hex) {
 			recent.unshift(hex);
 		},
 	});
@@ -97,25 +99,27 @@ describe('createLiveColorPatchInput', () => {
 		expect(ed.shape.style).toStrictEqual({ fill: '#990000', fillRef: undefined, width: 2 });
 	});
 
-	it('records nothing when the drag settles where it started, and puts the theme ref back', () => {
+	it('makes no undo step when the drag settles where it started, and puts the theme ref back', () => {
 		const ed = editor(START);
 		ed.control.input('#330000');
 		ed.control.input('#4472C4');
 		ed.control.change('#4472c4');
 
 		expect(ed.undo).toStrictEqual([]);
-		expect(ed.recent).toStrictEqual([]);
 		expect(ed.shape).toStrictEqual(START);
+		// The `change` is still the user's pick, so it counts as a recent colour.
+		expect(ed.recent).toStrictEqual(['#4472c4']);
 	});
 
-	it('commits a pick that arrives as a lone change event, and ignores one at the current colour', () => {
+	it('commits a pick that arrives as a lone change event; one at the current colour is no edit', () => {
 		const ed = editor(START);
 		ed.control.change('#4472c4');
 		expect(ed.undo).toStrictEqual([]);
+		expect(ed.recent).toStrictEqual(['#4472c4']);
 
 		ed.control.change('#00ff00');
 		expect(ed.undo).toStrictEqual([START]);
-		expect(ed.recent).toStrictEqual(['#00ff00']);
+		expect(ed.recent).toStrictEqual(['#00ff00', '#4472c4']);
 		expect(ed.silent).toStrictEqual([]);
 	});
 
@@ -158,6 +162,7 @@ describe('createLiveColorPatchInput', () => {
 		ed.control.blur('#4472c4');
 
 		expect(ed.undo).toStrictEqual([]);
+		expect(ed.recent).toStrictEqual([]);
 		expect(ed.shape).toStrictEqual(START);
 	});
 
@@ -216,12 +221,44 @@ describe('createLiveColorPatchInput', () => {
 			commit: () => {
 				commits += 1;
 			},
+			remember: () => {
+				commits += 1;
+			},
 		});
 		control.input('#ff0000');
 		control.change('#ff0000');
 		control.blur('#ff0000');
 		expect([previews, commits]).toStrictEqual([0, 0]);
 	});
+});
+
+describe('a pick whose input and change arrive in the same turn', () => {
+	// What a picker that commits at once does, and what Playwright's `fill()` does: no render
+	// runs between the two events, so a lagging binding still hands over the old value.
+	it.each([false, true])('commits a new colour once (binding lagging: %s)', (lag) => {
+		const ed = editor(START);
+		ed.setLag(lag);
+		ed.control.input('#00ff00');
+		ed.control.change('#00ff00');
+
+		expect(ed.undo).toStrictEqual([START]);
+		expect(ed.recent).toStrictEqual(['#00ff00']);
+		expect(ed.shape.style).toStrictEqual({ fill: '#00ff00', fillRef: undefined, width: 2 });
+	});
+
+	it.each([false, true])(
+		'counts a pick of the colour already there as a recent colour, with no undo step (binding lagging: %s)',
+		(lag) => {
+			const ed = editor(START);
+			ed.setLag(lag);
+			ed.control.input('#4472c4');
+			ed.control.change('#4472c4');
+
+			expect(ed.recent).toStrictEqual(['#4472c4']);
+			expect(ed.undo).toStrictEqual([]);
+			expect(ed.shape).toStrictEqual(START);
+		},
+	);
 });
 
 describe('createLiveColorInput', () => {
@@ -233,6 +270,7 @@ describe('createLiveColorInput', () => {
 			preview: (hex, from) => calls.push(`preview ${hex} from ${from.hex}`),
 			restore: (from) => calls.push(`restore ${from.hex}`),
 			commit: (hex, from) => calls.push(`commit ${hex} from ${from.hex}`),
+			remember: (hex) => calls.push(`remember ${hex}`),
 		});
 		control.input('#111111');
 		control.input('#222222');
@@ -241,6 +279,7 @@ describe('createLiveColorInput', () => {
 			'preview #111111 from #000000',
 			'preview #222222 from #000000',
 			'restore #000000',
+			'remember #222222',
 			'commit #222222 from #000000',
 		]);
 	});

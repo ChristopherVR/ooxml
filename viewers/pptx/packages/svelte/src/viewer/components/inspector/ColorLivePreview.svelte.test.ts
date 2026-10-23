@@ -145,6 +145,17 @@ function fire(
 	flushSync();
 }
 
+/** Set the value and fire `input` then `change` in one turn, as a picker that commits at once does. */
+function pick(input: HTMLInputElement | null, hex: string): void {
+	if (!input) {
+		throw new Error('colour input not found');
+	}
+	input.value = hex;
+	input.dispatchEvent(new Event('input', { bubbles: true }));
+	input.dispatchEvent(new Event('change', { bubbles: true }));
+	flushSync();
+}
+
 const SHADES = ['#330000', '#660000', '#990000'];
 
 describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker', (control) => {
@@ -195,7 +206,8 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		fire(input(target), 'change', color(before)!);
 
 		expect(editor.canUndo).toBeFalsy();
-		expect(editor.mruColors).toStrictEqual([]);
+		// The `change` is still a pick: its colour counts as recent, though nothing was edited.
+		expect(editor.mruColors).toStrictEqual([color(before)!.toUpperCase()]);
 		expect(color(currentEl(editor))).toBe(color(before));
 		expect(ref(currentEl(editor))).toStrictEqual(ref(before));
 	});
@@ -212,6 +224,31 @@ describe.each(['fill', 'line', 'text', 'glow'] as const)('the %s colour picker',
 		flushSync();
 		expect(color(currentEl(editor))).toBe(color(before));
 		expect(editor.canUndo).toBeFalsy();
+	});
+
+	it('commits a pick whose input and change arrive in one turn as one undo step', () => {
+		const editor = makeEditor();
+		const before = currentEl(editor);
+		const target = mountSection(section, editor);
+		pick(input(target), '#00ff00');
+
+		expect(color(currentEl(editor))).toBe('#00ff00');
+		expect(editor.mruColors).toStrictEqual(['#00FF00']);
+		editor.undo();
+		flushSync();
+		expect(color(currentEl(editor))).toBe(color(before));
+		expect(editor.canUndo).toBeFalsy();
+	});
+
+	it('counts a pick of the colour already there as a recent colour, with no undo step', () => {
+		const editor = makeEditor();
+		const before = currentEl(editor);
+		const target = mountSection(section, editor);
+		pick(input(target), color(before)!);
+
+		expect(editor.mruColors).toStrictEqual([color(before)!.toUpperCase()]);
+		expect(editor.canUndo).toBeFalsy();
+		expect(ref(currentEl(editor))).toStrictEqual(ref(before));
 	});
 
 	it('keeps a drag to one undo step while the section still holds the old element', () => {

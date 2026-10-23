@@ -6,8 +6,8 @@
  * `EditorState.previewElement` (no undo step, dirty flag or recent colour);
  * the settled pick (`change`, or `blur` for a drag no change ended) puts the
  * previews back and commits once through `patchSelected`, so the drag is one
- * undo step and one recent colour. A pick that settles where it started
- * records nothing.
+ * undo step and one recent colour. A pick that settles where it started is
+ * no undo step (its `change` still counts as a recent colour).
  *
  * @module viewer/components/inspector/live-color
  */
@@ -35,10 +35,8 @@ export function liveElementColor(
 		},
 		patch: patchOf,
 		preview: (patch) => editor().previewElement(element().id, patch),
-		commit: (patch, hex) => {
-			editor().patchSelected(patch);
-			editor().recordRecentColor(hex);
-		},
+		commit: (patch) => editor().patchSelected(patch),
+		remember: (hex) => editor().recordRecentColor(hex),
 	});
 }
 

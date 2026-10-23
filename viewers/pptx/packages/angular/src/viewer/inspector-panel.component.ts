@@ -1227,7 +1227,8 @@ export class InspectorPanelComponent {
 	 * The fill, line and text colour pickers. A drag through the native picker
 	 * previews every shade on the slide (no undo step, no recent colour) and
 	 * settles as ONE undo step and one recent colour; one that ends where it
-	 * started records nothing. The decision is shared (`createLiveColorPatchInput`);
+	 * started is no undo step (its `change` still counts as a recent colour).
+	 * The decision is shared (`createLiveColorPatchInput`);
 	 * each shade is a patch on the element from before the drag, a native pick
 	 * clears any theme ref like every custom colour.
 	 */
@@ -1260,10 +1261,8 @@ export class InspectorPanelComponent {
 			},
 			patch,
 			preview: (next) => this.onPreview(next),
-			commit: (next, hex) => {
-				this.editor.updateElement(this.slideIndex(), this.el().id, next);
-				this.recentColors.push(hex);
-			},
+			commit: (next) => this.editor.updateElement(this.slideIndex(), this.el().id, next),
+			remember: (hex) => this.recentColors.push(hex),
 		});
 	}
 
