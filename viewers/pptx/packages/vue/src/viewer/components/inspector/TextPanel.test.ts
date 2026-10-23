@@ -91,9 +91,10 @@ describe('textPanel', () => {
 	it('emits align and vAlign field names', async () => {
 		const wrapper = mount(TextPanel, { props: { element: textEl({}) } });
 		const buttons = wrapper.findAll('.pptx-vue-text-toggle');
-		// toggles: B I U S | Left Center Right Justify | Top Middle Bottom
+		// toggles: B I U S | Left Center Right Justify; vertical alignment is the
+		// shared Text Box options' drop-down.
 		await buttons[5].trigger('click'); // Center
-		await buttons[9].trigger('click'); // Middle
+		await setControlValue(wrapper.find('[data-testid="text-box-valign"]'), 'middle');
 
 		const events = wrapper.emitted('update');
 		expect(events?.[0]?.[0]).toStrictEqual({ textStyle: { align: 'center' } });

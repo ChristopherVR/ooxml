@@ -313,6 +313,8 @@ export const EDITOR_CSS = `
 	margin-bottom: 8px;
 }
 .pptxv-inspector-row-label { color: var(--pptx-muted-foreground); }
+.pptxv-inspector-fields-section { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; border-bottom: 1px solid var(--pptx-border); }
+.pptxv-inspector-fields-section:last-child { border-bottom: none; }
 /* Fill & Stroke: one group per target (picker, theme grid, recent colours). */
 .pptxv-inspector-color-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .pptxv-inspector-color-group > .pptxv-inspector-row { margin-bottom: 0; }

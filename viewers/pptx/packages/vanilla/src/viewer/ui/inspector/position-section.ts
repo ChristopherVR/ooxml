@@ -1,9 +1,11 @@
+import { ELEMENT_GEOMETRY_SECTIONS } from 'ooxml-ui/pptx';
+
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
-import type { NumberFieldHandle } from '../controls';
-import { makeButton, makeNumberField } from '../controls';
+import { makeButton } from '../controls';
 import { createIcon } from '../icons';
+import { createInspectorFields } from './inspector-fields';
 import type { InspectorState } from './types';
 
 export interface PositionSection {
@@ -11,7 +13,11 @@ export interface PositionSection {
 	update(state: InspectorState): void;
 }
 
-/** The universal Position & Size section: X/Y/W/H/rotation numeric fields. */
+/**
+ * The universal Position & Size section: the shared X/Y/W/H/rotation
+ * descriptors (`ELEMENT_GEOMETRY_SECTIONS`) drawn by the generic renderer, in
+ * the panel's two-column grid, plus the element lock toggle.
+ */
 export function createPositionSection(
 	doc: Document,
 	t: Translator,
@@ -44,37 +50,27 @@ export function createPositionSection(
 	});
 	headerRow.appendChild(lockBtn.btn);
 
-	const grid = createEl(doc, 'div', 'pptxv-inspector-grid');
-	el.appendChild(grid);
-
-	const geo = (label: string, key: keyof GeometryPatch, min?: number): NumberFieldHandle => {
-		const field = makeNumberField(doc, {
-			label,
-			min,
-			onCommit: (value) => setGeometry({ [key]: value }),
-		});
-		grid.appendChild(field.el);
-		return field;
-	};
-	const xField = geo(t('pptx.arrange.x'), 'x');
-	const yField = geo(t('pptx.arrange.y'), 'y');
-	const wField = geo(t('pptx.arrange.width'), 'width', 1);
-	const hField = geo(t('pptx.arrange.height'), 'height', 1);
-	const rotField = geo(t('pptx.arrange.rotation'), 'rotation');
-	const fields = [xField, yField, wField, hField, rotField];
+	const geometry = createInspectorFields(doc, t, {
+		sections: ELEMENT_GEOMETRY_SECTIONS,
+		onPatch: (patch) => setGeometry(patch as GeometryPatch),
+		sectionClassName: 'pptxv-inspector-grid',
+	});
+	el.appendChild(geometry.el);
 
 	return {
 		el,
 		update(state) {
 			el.hidden = !state.hasSelection;
-			xField.setValue(state.x);
-			yField.setValue(state.y);
-			wField.setValue(state.width);
-			hField.setValue(state.height);
-			rotField.setValue(state.rotation);
-			for (const f of fields) {
-				f.setDisabled(!state.hasSelection);
-			}
+			geometry.update(
+				{
+					x: state.x,
+					y: state.y,
+					width: state.width,
+					height: state.height,
+					rotation: state.rotation,
+				},
+				!state.hasSelection,
+			);
 			lockBtn.setActive(state.isLocked);
 			lockBtn.setDisabled(!state.hasSelection);
 			const label = t(state.isLocked ? 'pptx.inspector.unlock' : 'pptx.inspector.lock');

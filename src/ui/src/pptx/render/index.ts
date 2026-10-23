@@ -1114,6 +1114,9 @@ export { fontFamilyStyleUpdates, mergeTextStyleUpdate } from './font-family-upda
 // Effects panel: shadow/inner-shadow/glow/reflection/soft-edge state readers +
 // enable/disable/update shapeStyle merge patch builders.
 export * from './effects-helpers';
+// Descriptor-driven inspector sections (field model + section descriptors) that
+// every binding draws with its one generic field renderer.
+export * from './inspector';
 // Embedded-font @font-face assembly: URL/format validation, XOR de-obfuscation
 // fallback, and the resolved-variant -> stylesheet/family-list build (the
 // managed <style> id + object-URL minting stay per-binding).

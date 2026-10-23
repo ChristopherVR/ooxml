@@ -93,10 +93,8 @@ export {
 	setHighlightColorPatch,
 	setSolidFillPatch,
 	setStrokeColorPatch,
-	setStrokeOpacityPatch,
 	setStrokeWidthPatch,
 	setTextColorPatch,
-	strokeOpacityOf,
 	strokeWidthOf,
 	toggleTextFlagPatch,
 } from './editor-format-mutations';

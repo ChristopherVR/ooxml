@@ -66,6 +66,34 @@ function mount() {
 	return { section, handlers };
 }
 
+describe('createFillSection line options', () => {
+	it('draws the shared Line options and writes them as shape-style patches', () => {
+		const { section, handlers } = mount();
+		section.update(baseState({ shapeStyle: { strokeWidth: 2.5, lineCap: 'rnd' } }));
+		const byTestId = (id: string) =>
+			section.el.querySelector<HTMLInputElement>(`[data-testid="${id}"]`)!;
+		expect(byTestId('line-width').value).toBe('2.5');
+		expect(byTestId('line-cap').value).toBe('rnd');
+
+		const dash = byTestId('line-dash');
+		dash.value = 'sysDash';
+		dash.dispatchEvent(new Event('change'));
+		expect(handlers.setShapeStyle).toHaveBeenCalledWith({ strokeDash: 'sysDash' });
+
+		const width = byTestId('line-width');
+		width.value = '4';
+		width.dispatchEvent(new Event('change'));
+		expect(handlers.setShapeStyle).toHaveBeenLastCalledWith({ strokeWidth: 4 });
+	});
+
+	it('disables the line options when the shape cannot be formatted', () => {
+		const { section } = mount();
+		section.update(baseState({ canShape: false, shapeStyle: {} }));
+		const width = section.el.querySelector<HTMLInputElement>('[data-testid="line-width"]')!;
+		expect(width.disabled).toBeTruthy();
+	});
+});
+
 describe('createFillSection pattern-fill panel', () => {
 	it('is hidden until the shape is in pattern fill mode', () => {
 		const { section } = mount();

@@ -1,31 +1,21 @@
 <script lang="ts">
 	/**
-	 * TextSection: vertical anchor, wrap-in-shape toggle, and autofit mode, for
+	 * TextSection: the shared Text Box options (`TEXT_BOX_SECTIONS`: vertical
+	 * anchor, direction, autofit mode, wrap-in-shape, columns, drawn by
+	 * `InspectorFields`), text colour, text effects and paragraph spacing, for
 	 * elements carrying text properties. Paragraph alignment (left/center/right/
 	 * justify) is already covered by the Home tab's Paragraph group
 	 * (`ParagraphGroup.svelte`), so it is intentionally not duplicated here.
 	 *
-	 * NOTE on autofit labels: `TextStyle.autoFitMode` is counterintuitively
-	 * named. `'shrink'` is OOXML `spAutoFit` (resize the SHAPE to fit the text)
-	 * and `'normal'` is OOXML `normAutofit` (shrink the TEXT on overflow). The
-	 * option labels below are worded by what they DO, not by the enum name.
 	 */
 	import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
-	import {
-		autoFitModeOf,
-		autoFitModePatch,
-		textAdvancedStateOf,
-		textColorOf,
-		textStylePatch,
-		textWrapOf,
-		textWrapPatch,
-		vAlignPatch,
-	} from 'ooxml-ui/pptx';
+	import { TEXT_BOX_SECTIONS, textColorOf, textStylePatch } from 'ooxml-ui/pptx';
 	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import { setTextColorPatch } from '../../editor';
+	import InspectorFields from './InspectorFields.svelte';
 	import RecentColorsRow from './RecentColorsRow.svelte';
 	import TextEffectsSection from './TextEffectsSection.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
@@ -33,22 +23,10 @@
 	const { editor, el }: { editor: EditorState; el: PptxElement } = $props();
 	const t = useTranslator();
 
-	const vAlign = $derived(textAdvancedStateOf(el).vAlign);
-	const wrap = $derived(textWrapOf(el));
-	const autoFit = $derived(autoFitModeOf(el));
 	const textColor = $derived(textColorOf(el));
 	const textColorRef = $derived('textStyle' in el ? el.textStyle?.colorRef : undefined);
 	const textStyle = $derived('textStyle' in el ? (el.textStyle ?? {}) : {});
 
-	function setVAlign(value: string): void {
-		editor.patchSelected(vAlignPatch(el, value as NonNullable<TextStyle['vAlign']>));
-	}
-	function setWrap(checked: boolean): void {
-		editor.patchSelected(textWrapPatch(el, checked ? 'square' : 'none'));
-	}
-	function setAutoFit(value: string): void {
-		editor.patchSelected(autoFitModePatch(el, value as NonNullable<TextStyle['autoFitMode']>));
-	}
 	/** Native colour input: always clears `colorRef` (theme-grid pick keeps it). */
 	function commitTextColor(hex: string, ref?: PptxThemeColorRef): void {
 		editor.patchSelected(setTextColorPatch(el, hex, ref));
@@ -62,14 +40,7 @@
 	}
 </script>
 
-<label class="pptx-svelte-field">
-	<span class="pptx-svelte-field-label">{t('pptx.textPanel.verticalAlign')}</span>
-	<pptx-ui-select aria-label={t('pptx.textPanel.verticalAlign')} value={vAlign} onchange={(e) => setVAlign(e.currentTarget.value)}>
-		<option value="top">{t('pptx.textPanel.valignTop')}</option>
-		<option value="middle">{t('pptx.textPanel.valignMiddle')}</option>
-		<option value="bottom">{t('pptx.textPanel.valignBottom')}</option>
-	</pptx-ui-select>
-</label>
+<InspectorFields sections={TEXT_BOX_SECTIONS} target={textStyle} onpatch={patchText} />
 
 <label class="pptx-svelte-field pptx-svelte-text-color-field">
 	<span class="pptx-svelte-field-label">{t('pptx.textPanel.color')}</span>
@@ -88,29 +59,13 @@
 />
 <RecentColorsRow colors={editor.mruColors} onselect={commitTextColor} />
 
-<label class="pptx-svelte-field-checkbox">
-	<pptx-ui-checkbox checked={wrap === 'square'} onchange={(e) => setWrap(e.currentTarget.checked)} ></pptx-ui-checkbox>
-	<span>{t('pptx.textAdvanced.wrapText')}</span>
-</label>
-
-<label class="pptx-svelte-field">
-	<span class="pptx-svelte-field-label">{t('pptx.textAdvanced.autoFit')}</span>
-	<pptx-ui-select aria-label={t('pptx.textAdvanced.autoFit')} value={autoFit} onchange={(e) => setAutoFit(e.currentTarget.value)}>
-		<option value="none">{t('pptx.textAdvanced.autoFitNone')}</option>
-		<option value="normal">{t('pptx.textAdvanced.autoFitShrink')}</option>
-		<option value="shrink">{t('pptx.textAdvanced.autoFitResize')}</option>
-	</pptx-ui-select>
-</label>
-
 <TextEffectsSection {editor} {el} />
 
 <div class="pptx-svelte-grid">
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.lineSpacing')}</span><input type="number" min="0.5" max="5" step="0.05" value={textStyle.lineSpacing ?? 1} onchange={(event) => patchText({ lineSpacing: Number(event.currentTarget.value), lineSpacingExactPt: undefined })} /></label>
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceBefore')}</span><input type="number" min="0" value={textStyle.paragraphSpacingBefore ?? 0} onchange={(event) => patchText({ paragraphSpacingBefore: Number(event.currentTarget.value) })} /></label>
 	<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.spaceAfter')}</span><input type="number" min="0" value={textStyle.paragraphSpacingAfter ?? 0} onchange={(event) => patchText({ paragraphSpacingAfter: Number(event.currentTarget.value) })} /></label>
-	<label class="pptx-svelte-field"><span>{t('pptx.textFormatting.columns')}</span><input type="number" min="1" max="16" value={textStyle.columnCount ?? 1} onchange={(event) => patchText({ columnCount: Math.max(1, Number(event.currentTarget.value)) })} /></label>
 </div>
-<label class="pptx-svelte-field"><span>{t('pptx.textAdvanced.direction')}</span><pptx-ui-select aria-label={t('pptx.textAdvanced.direction')} value={textStyle.textDirection ?? 'horizontal'} onchange={(event) => patchText({ textDirection: event.currentTarget.value as TextStyle['textDirection'] })}>{#each ['horizontal', 'vertical', 'vertical270', 'eaVert', 'wordArtVert', 'wordArtVertRtl', 'mongolianVert'] as direction (direction)}<option value={direction}>{t(`pptx.textAdvanced.direction.${direction}`)}</option>{/each}</pptx-ui-select></label>
 <label class="pptx-svelte-field-checkbox"><pptx-ui-checkbox checked={textStyle.rtl ?? false} onchange={(event) => patchText({ rtl: event.currentTarget.checked })} ></pptx-ui-checkbox><span>{t('pptx.textAdvanced.rtl')}</span></label>
 
 <style>

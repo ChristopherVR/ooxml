@@ -1,10 +1,5 @@
 import type { PptxThemeColorRef, ShapeStyle, PptxElement } from 'pptx-viewer-core';
 
-import { SHADOW_EFFECT_CONFIGS } from './fill-stroke-effect-configs';
-import { VISUAL_EFFECT_CONFIGS } from './fill-stroke-visual-configs';
-
-export const EFFECT_CONFIGS = [...SHADOW_EFFECT_CONFIGS, ...VISUAL_EFFECT_CONFIGS];
-
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -39,7 +34,7 @@ export interface FillStrokePropertiesProps {
 // the utility is `!important` (see inspector-pane-constants.ts's `BTN`/`INPUT`
 // for the same fix). `SEL` backs every <select>/<input> row across the
 // Fill/Stroke/Effect inspector sub-panels (FillStrokeSubComponents,
-// FillAdvancedControls, EffectField, table cell fill controls), so fixing it
+// FillAdvancedControls, InspectorFields, table cell fill controls), so fixing it
 // once here reaches all of them instead of each row sizing itself.
 export const SEL = 'bg-muted border border-border rounded px-2 py-1 max-md:min-h-[44px]!';
 export const NUM = SEL;
