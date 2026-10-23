@@ -1,4 +1,5 @@
 import type {
+	InlineTextDraftSink,
 	CollaborationLivePatcher,
 	InlineListController,
 	InlineTextEditSnapshot,
@@ -8,7 +9,7 @@ import {
 	applyAutoCorrect,
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
-	publishLiveInlineText,
+	reportInlineTextDraft,
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
 	setCellText,
@@ -38,6 +39,8 @@ export interface UseInlineEditingInput {
 	 * peer typed; `updateInlineText` publishes each keystroke through this.
 	 */
 	livePatcher?: () => CollaborationLivePatcher | undefined;
+	/** The autosave engine: typing that was never committed still counts as an edit. */
+	autosave?: () => InlineTextDraftSink | undefined;
 	/** The slide the edited element belongs to (needed by the live channel). */
 	activeSlide?: () => PptxSlide | undefined;
 	/** Adopt already-published connected text locally before a host disables editing. */
@@ -119,8 +122,8 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 			snapshot.text === text
 				? snapshot
 				: undefined;
-		publishLiveInlineText(
-			input.livePatcher?.(),
+		reportInlineTextDraft(
+			{ livePatcher: input.livePatcher?.(), autosave: input.autosave?.() },
 			input.activeSlide?.(),
 			inlineEditingElementId.value,
 			text,

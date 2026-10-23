@@ -3,10 +3,12 @@ import JSZip from 'jszip';
 import type {
 	DeckSaveIntent,
 	DeckSavePurpose,
+	InlineTextDraft,
 	PendingInlineTextEdit,
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
 import {
+	applyInlineTextDraft,
 	createPresentationLoadResources,
 	applyImagePathPatches,
 	buildDeckSaveOptions,
@@ -263,7 +265,7 @@ export interface UseLoadContentResult {
 	 * `deck-save-encryption` in `pptx-viewer-shared` for the rationale and the
 	 * privacy tradeoff it accepts).
 	 */
-	getRecoverySnapshot: () => Promise<Uint8Array>;
+	getRecoverySnapshot: (draft?: InlineTextDraft | null) => Promise<Uint8Array>;
 	/** Serialise to a specific OpenXML format (pptx / ppsx / pptm). */
 	saveAs: (format: PptxSaveFormat) => Promise<Uint8Array>;
 }
@@ -590,6 +592,7 @@ export function useLoadContent(
 	const serialize = async (
 		format: PptxSaveFormat,
 		purpose: DeckSavePurpose,
+		draft: InlineTextDraft | null = null,
 	): Promise<Uint8Array> => {
 		if (!handler.value) {
 			throw new Error('No presentation is loaded.');
@@ -610,7 +613,13 @@ export function useLoadContent(
 					)
 				: null;
 		const saveSlides = buildSaveSlides(
-			options?.getHeldDeck?.()?.slides ?? slides.value,
+			// A plain inline editor has no rich snapshot: its autosave draft stands in.
+			[
+				...applyInlineTextDraft(
+					options?.getHeldDeck?.()?.slides ?? slides.value,
+					pending ? null : draft,
+				),
+			],
 			options?.getHeldDeck?.()?.templateElementsBySlideId ?? templateElementsBySlideId.value,
 		).map((slide) =>
 			pending && 'slideId' in pending.target && slide.id === pending.target.slideId
@@ -677,7 +686,8 @@ export function useLoadContent(
 	// Autosave used to call `getContent()`, so protecting a deck wrote an
 	// ENCRYPTED recovery snapshot that nothing could reopen. Recovery gets its
 	// own serialisation now, and the decision lives in shared.
-	const getRecoverySnapshot = (): Promise<Uint8Array> => serialize('pptx', 'recovery-snapshot');
+	const getRecoverySnapshot = (draft?: InlineTextDraft | null): Promise<Uint8Array> =>
+		serialize('pptx', 'recovery-snapshot', draft ?? null);
 
 	watch(
 		() => toValue(content),

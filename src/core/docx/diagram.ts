@@ -2,7 +2,7 @@
 // SmartArt (DiagramML) in a Word document: the `w:drawing` whose `a:graphicData` uses the diagram
 // namespace. This module models the host side (extent, anchor/inline, relationships to the four
 // diagram parts and the cached drawing) and reads the five parts through the format-neutral
-// `diagram` area. The parts themselves are never rewritten: they stay in the package untouched.
+// `diagram` area. Unedited parts stay in the package untouched (see `diagram-save.ts` for edits).
 import {
 	DIAGRAM_RELATIONSHIP_TYPES,
 	attributeReader,
@@ -16,6 +16,7 @@ import {
 	type DiagramRelationshipIds,
 } from '../diagram/index';
 import { parseRelationships, resolvePartPath } from '../opc/index';
+import { diagramNodesInTreeOrder } from './diagram-nodes';
 import type { Relationship } from './package-parts';
 import type { XmlElement } from './xml';
 
@@ -42,6 +43,8 @@ export interface DocxDiagramNode {
 	 * `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
 	 */
 	paragraphs?: DiagramNeutralTextParagraph[];
+	/** `asst` for an assistant point (org charts); absent for an ordinary node. */
+	nodeType?: 'asst';
 }
 
 /**
@@ -53,7 +56,11 @@ export interface DocxDiagramNode {
  */
 export type DocxDiagramRendering = 'cached-drawing' | 'placeholder';
 
-/** A SmartArt graphic in a Word document. Part contents are read-only; the XML is preserved on save. */
+/**
+ * A SmartArt graphic in a Word document. An unedited diagram keeps its markup and parts byte for
+ * byte on save; an edited one (`diagram-edit.ts`) has its data part rewritten and its stale cached
+ * drawing dropped, and an inserted one gets new parts (`diagram-save.ts`).
+ */
 export interface DocxDiagram {
 	/** `inline` (`wp:inline`) or `anchor` (`wp:anchor`, floating). */
 	placement: 'inline' | 'anchor';
@@ -93,6 +100,12 @@ export interface DocxDiagram {
 	notice: string;
 	/** Problems met reading the parts; empty when everything resolved. */
 	issues: DiagramIssue[];
+	/**
+	 * Created in this session (Insert SmartArt): `parts` name the parts to create, with empty
+	 * relationship ids that the save allocates. The layout, colour and quick-style parts are
+	 * supplied as pending media; the data part is written from `nodes`.
+	 */
+	inserted?: true;
 }
 
 const emu = (element: XmlElement | undefined, name: string): number => {
@@ -102,9 +115,9 @@ const emu = (element: XmlElement | undefined, name: string): number => {
 
 const NOTICES = {
 	cached:
-		'Shown from the drawing cached in the file (the layout last saved by the producing application). Word layout is not recomputed, so the diagram can differ from Word after edits elsewhere, and its content is not editable here; the diagram parts are preserved unchanged on save.',
+		'Shown from the drawing cached in the file (the layout last saved by the producing application). Word layout is not recomputed, so the diagram can differ from Word after edits elsewhere. Unedited, the diagram parts are preserved unchanged on save; editing its nodes rewrites the data part and drops the cached drawing, which Word lays out again when it opens the file.',
 	placeholder:
-		'This file has no usable cached drawing for the diagram, and SmartArt layout is not computed here, so only a placeholder with the node text is shown. The diagram parts are preserved unchanged on save.',
+		'This diagram has no usable cached drawing (none in the file, or it was dropped by an edit here), so it is drawn with an approximate layout computed from its nodes, not the layout Word computes. Word lays the diagram out again from its data and layout parts when it opens the file.',
 } as const;
 
 const isDrawingRelationship = (diagram: DocxDiagram, relId: string): boolean =>
@@ -245,15 +258,7 @@ export async function resolveDiagramParts(
 	}
 	if (loaded.colors?.uniqueId) diagram.colorsId = loaded.colors.uniqueId;
 	if (loaded.quickStyle?.uniqueId) diagram.quickStyleId = loaded.quickStyle.uniqueId;
-	if (loaded.data)
-		diagram.nodes = loaded.data.nodes.map((node) => ({
-			id: node.modelId,
-			text: node.text,
-			...(node.textParagraphs ? { paragraphs: node.textParagraphs } : {}),
-			...(loaded.data?.parentById.get(node.modelId)
-				? { parentId: loaded.data.parentById.get(node.modelId) as string }
-				: {}),
-		}));
+	if (loaded.data) diagram.nodes = diagramNodesInTreeOrder(loaded.data);
 	if (loaded.drawing && loaded.drawing.shapes.length > 0) {
 		diagram.drawing = loaded.drawing;
 		diagram.rendering = 'cached-drawing';

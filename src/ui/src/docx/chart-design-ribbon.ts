@@ -1,8 +1,8 @@
 // The Chart Design tab: Word's contextual tab for a selected chart. It appears while a chart is
 // selected and offers the edits the shared chart core supports here: the legend, Edit Data and
-// Change Chart Type. Chart styles, colours and Quick Layout are not offered (there is no shared
-// chart style gallery yet). The shared chart Format pane is to mount from this tab once it exists:
-// add a "Format" group whose action opens it for `selectedChart(state)`.
+// Change Chart Type, and Format Selection, which opens the shared chart Format pane docked beside
+// the page (`chart-format-pane.ts`). Chart styles, colours and Quick Layout are not offered (there
+// is no shared chart style gallery in Word yet).
 import type { EditorState } from 'prosemirror-state';
 import { selectedChart } from 'ooxml-core/docx/ui';
 import { group, menuSelect, tool } from './ribbon-parts';
@@ -40,6 +40,15 @@ export function buildChartDesignPanel(panel: HTMLElement): void {
 				'chartType',
 				{ type: 'formatDialog', kind: 'changeChartType' },
 				{ large: true, caption: 'Change Chart Type' },
+			),
+		),
+		group(
+			'Current Selection',
+			tool(
+				'Format Selection',
+				'formatSelection',
+				{ type: 'chart', key: 'format' },
+				{ large: true, caption: 'Format Selection' },
 			),
 		),
 	);

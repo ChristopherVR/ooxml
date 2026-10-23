@@ -64,6 +64,20 @@ export interface CxDataLabelVisibility {
 	showSerName?: boolean;
 }
 
+const isTrue = (value: unknown) => value === '1' || value === 'true';
+
+/** The flags of a `cx:visibility` element, or undefined when it is absent. */
+function readVisibility(node: XmlObject | undefined): CxDataLabelVisibility | undefined {
+	if (!node) {
+		return undefined;
+	}
+	return {
+		showVal: isTrue(node['@_value']),
+		showCatName: isTrue(node['@_categoryName']),
+		showSerName: isTrue(node['@_seriesName']),
+	};
+}
+
 /** Parse cx:dataLabels (group visibility/options, and per-point overrides) on a cx:series. */
 export function parseCxDataLabels(
 	ser: XmlObject,
@@ -82,16 +96,9 @@ export function parseCxDataLabels(
 		return undefined;
 	}
 
-	const visibility: CxDataLabelVisibility = {};
-
 	// cx:dataLabels may have cx:visibility with @seriesName, @categoryName, @value attributes
-	const visNode = xmlLookup.getChildByLocalName(dlNode, 'visibility');
-	if (visNode) {
-		visibility.showVal = visNode['@_value'] === '1' || visNode['@_value'] === 'true';
-		visibility.showCatName =
-			visNode['@_categoryName'] === '1' || visNode['@_categoryName'] === 'true';
-		visibility.showSerName = visNode['@_seriesName'] === '1' || visNode['@_seriesName'] === 'true';
-	}
+	const visibility: CxDataLabelVisibility =
+		readVisibility(xmlLookup.getChildByLocalName(dlNode, 'visibility')) ?? {};
 
 	// Group-level defaults (CT_DataLabels): position and number format apply
 	// to every point unless a cx:dataLabel override below carries its own.
@@ -121,11 +128,14 @@ export function parseCxDataLabels(
 	const dlItems = xmlLookup.getChildrenArrayByLocalName(dlNode, 'dataLabel');
 	for (const dlItem of dlItems) {
 		const idx = Number.parseInt(String(dlItem['@_idx'] || '0'), 10);
+		// A point's own `cx:visibility` overrides the group's (found by the chartex parity harness).
+		const own = readVisibility(xmlLookup.getChildByLocalName(dlItem, 'visibility'));
+		const shown = own ?? visibility;
 		const label: PptxChartDataLabel = {
 			idx,
-			showVal: visibility.showVal,
-			showCatName: visibility.showCatName,
-			showSerName: visibility.showSerName,
+			showVal: shown.showVal,
+			showCatName: shown.showCatName,
+			showSerName: shown.showSerName,
 		};
 		const itemPos = cxPosition(dlItem['@_pos']);
 		if (itemPos) {

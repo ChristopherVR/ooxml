@@ -107,6 +107,7 @@ import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializ
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
 import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
+import { saveChartExPartThroughNeutral } from '../../utils/chart-ex-neutral-save';
 import { saveChartPartThroughNeutral } from '../../utils/chart-neutral-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
@@ -409,7 +410,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 				// A 2006 `c:chartSpace` and a 2016+ `cx:chartSpace` are different
 				// part families; see `chart-part-family-switch` / `chart-cx-update`.
-				if (await this.saveChartAcrossFamilies(chartXmlData, chartSpace, chartData, slidePath)) {
+				if (
+					await this.saveChartAcrossFamilies(
+						chartXmlData,
+						chartSpace,
+						chartData,
+						slidePath,
+						chartXmlStr,
+					)
+				) {
 					continue;
 				}
 
@@ -1352,6 +1361,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartSpace: XmlObject,
 		chartData: PptxChartData,
 		slidePath: string,
+		chartXmlStr?: string,
 	): Promise<boolean> {
 		const getLocalName = (key: string) => this.compatibilityService.getXmlLocalName(key);
 		const deps = { zip: this.zip, parser: this.parser, builder: this.builder, getLocalName };
@@ -1376,6 +1386,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				await this.syncChartUserShapesToXml(regeneratedSpace, chartData, chartData.chartPartPath);
 			}
 			this.zip.file(chartData.chartPartPath, this.builder.build(regenerated));
+			return true;
+		}
+		// An edit the shared chart core can express is saved through it (`writeChartExSpace` keeps
+		// everything else as written); anything else falls through to the object-tree update.
+		const baseline = this.chartDataBaselines.get(chartData.chartPartPath);
+		const neutralXml =
+			baseline && chartXmlStr !== undefined
+				? saveChartExPartThroughNeutral(
+						chartXmlStr,
+						JSON.parse(baseline) as PptxChartData,
+						chartData,
+					)
+				: undefined;
+		if (neutralXml !== undefined) {
+			this.zip.file(chartData.chartPartPath, neutralXml);
+			this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
 			return true;
 		}
 		if (applyChartExUpdate(chartSpace, chartData, getLocalName)) {

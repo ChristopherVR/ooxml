@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	applyInlineTextDraft,
 	autosaveStatusKind,
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
@@ -63,6 +64,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
+	InlineTextDraft,
 	CollaborationState,
 	DocumentStorage,
 	ConnectionStatus,
@@ -3157,7 +3159,8 @@ export class PowerPointViewerComponent
 			filePath: () => this.filePath(),
 			storage: () => this.storage(),
 			isDirty: () => this.editor.dirty(),
-			serialize: () => this.serializeForAutosave(),
+			serialize: (draft) => this.serializeForAutosave(draft),
+			inlineEditingId: () => this.canvasEditing.editingId(),
 			saved: (data) => this.autosaved.emit(data),
 			// Host input first (an explicit policy), else Options > Save > "Save
 			// AutoRecover information every N minutes", else the shared 120s.
@@ -4043,14 +4046,18 @@ export class PowerPointViewerComponent
 	 * by omitting the argument, which is one refactor away from silently writing
 	 * an unrecoverable encrypted snapshot (the bug React and Vue shipped).
 	 */
-	private async serializeForAutosave(): Promise<Uint8Array | null> {
+	private async serializeForAutosave(draft: InlineTextDraft | null): Promise<Uint8Array | null> {
 		if (!this.canEdit()) {
 			return null;
 		}
 		// A Design gallery hover preview is never part of a recovery snapshot.
 		const saved = this.deckStyle.savedDeck();
 		return this.loader.saveSlides(
-			buildSaveSlides(saved.slides, saved.templateElementsBySlideId),
+			// Typing not committed yet is part of the snapshot (AutoRecover keeps it).
+			buildSaveSlides(
+				[...applyInlineTextDraft(saved.slides, draft)],
+				saved.templateElementsBySlideId,
+			),
 			'pptx',
 			this.editor.sections(),
 			recoverySnapshotIntent({

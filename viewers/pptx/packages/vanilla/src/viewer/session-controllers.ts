@@ -6,7 +6,7 @@ import type {
 	ConnectionStatus,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
-import { publishLiveInlineText, resolveAutosaveFileKey } from 'ooxml-ui/pptx';
+import { reportInlineTextDraft, resolveAutosaveFileKey } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxHandlerSaveOptions } from 'pptx-viewer-core';
 
 import type { AutosaveStatus } from './autosave';
@@ -73,7 +73,7 @@ export interface SessionControllers {
 	 * reaches the store on commit, so without this peers saw nothing while a peer
 	 * typed. No-op when no session is active.
 	 */
-	publishCollaborationInlineText(elementId: string, text: string): void;
+	publishCollaborationInlineText(elementId: string | null, text: string): void;
 	/** Push any queued live-preview frame out (called just before a commit). */
 	flushCollaborationLivePatch(): void;
 	/** Follow the given peer's active slide, or `null` to stop following. */
@@ -261,8 +261,10 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		setCollaborationCursor: (x, y) => collaboration.setCursor(x, y, deps.store.get().currentSlide),
 		publishCollaborationInlineText: (elementId, text) => {
 			const state = deps.store.get();
-			publishLiveInlineText(
-				collaboration.livePatcher,
+			// The collaboration preview, and the autosave draft: typing that was
+			// never committed still reaches the recovery snapshot.
+			reportInlineTextDraft(
+				{ livePatcher: collaboration.livePatcher, autosave },
 				state.slides[state.currentSlide],
 				elementId,
 				text,

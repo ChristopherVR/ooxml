@@ -169,6 +169,8 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		// Forward reference (like `getScale` below): the options cluster is built
 		// after this one, and the cadence is only read when a save is scheduled.
 		getOptionsIntervalSeconds: () => editorUi.optionsState.autosaveIntervalSeconds,
+		// Forward reference too: read only when a snapshot is written.
+		getInlineEditingId: () => editorUi.controller.editingId,
 	});
 	// `.current` is filled in once `deck` is constructed below. The keyboard
 	// shortcut that needs it (Ctrl+M) is only ever invoked on a real key press,
@@ -188,6 +190,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		editor,
 		viewer,
 		collab: collabCluster.collab,
+		autosave: collabCluster.autosaveCtl,
 		options,
 		getScale: () => derived.scale,
 		getEditable: () => collabCluster.shellState.canEdit,

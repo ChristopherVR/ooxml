@@ -1,6 +1,14 @@
 /** Line icons for ribbon buttons on a 24x24 grid, drawn with `currentColor` so themes apply. */
 const paths = {
 	envelope: 'M3 5h18v14H3z M3 5l9 7 9-7',
+	smartArt: 'M9 3h6v4H9z M3 15h6v4H3z M15 15h6v4h-6z M12 7v4 M6 15v-4h12v4',
+	addShape: 'M4 6h10v8H4z M17 14v6 M14 17h6',
+	promote: 'M10 6H4 M20 12H8 M20 18H8 M4 12l3-3 M4 12l3 3',
+	demote: 'M4 6h16 M10 12h10 M10 18h10 M4 9l3 3-3 3',
+	moveUp: 'M12 20V5 M6 11l6-6 6 6',
+	moveDown: 'M12 4v15 M6 13l6 6 6-6',
+	textPane: 'M3 4h18v16H3z M9 4v16 M12 9h6 M12 13h6 M12 17h4 M5 9h2 M5 13h2',
+	changeLayout: 'M3 4h7v7H3z M14 4h7v7h-7z M3 15h7v5H3z M14 15h7v5h-7z',
 	field: 'M4 3h16v18H4z M10 8l-3 4 3 4 M14 8l3 4-3 4',
 	help: 'M9 8a3 3 0 1 1 4 2.8c-1 .5-1 1.2-1 2.2 M12 17h.01 M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20',
 	close: 'M6 6l12 12 M18 6L6 18',
@@ -130,6 +138,7 @@ const paths = {
 	chart: 'M4 20h16 M6 20v-6h3v6 M11 20V7h3v13 M16 20v-9h3v9',
 	chartType: 'M4 20h8 M5 20v-5h2v5 M9 20v-9h2v9 M14 9l2-3 2 2 2-4 M14 14h6v6h-6z',
 	editData: 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14',
+	formatSelection: 'M4 4h11v11H4z M7 8h5 M7 11h3 M15 13l5 5-2 2-5-5z',
 	legend: 'M4 6h3v3H4z M10 7.5h10 M4 11h3v3H4z M10 12.5h10 M4 16h3v3H4z M10 17.5h10',
 	caret: 'M7 10l5 5 5-5',
 } as const;

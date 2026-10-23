@@ -209,6 +209,8 @@ export function createStageInteractions(deps: StageInteractionsDeps): StageInter
 				modelObserver = undefined;
 				deps.getOverlay()?.setEditing(false);
 				setStaticTextSuppressed(id, false);
+				// The draft is committed or cancelled now: autosave stops carrying it.
+				deps.onInlineTextInput?.(null, '');
 			},
 		});
 		modelObserver = observeInlineTextModel(

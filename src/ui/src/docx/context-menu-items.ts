@@ -1,5 +1,6 @@
 /** Pure context-menu model: which items appear, and which are disabled, for a given editor state. */
 import type { EditorView } from 'prosemirror-view';
+import { selectedChart } from 'ooxml-core/docx/ui';
 import { linkAtSelection } from './link-commands';
 import type { LocalizationKey } from './localization';
 import type { RibbonAction } from './ribbon-action';
@@ -27,6 +28,8 @@ export interface MenuState {
 	hasSelection: boolean;
 	onLink: boolean;
 	inTable: boolean;
+	/** An editable chart is selected: Edit Data and Format Chart Area appear. */
+	onChart?: boolean;
 	/** The browser exposes an async clipboard read API. */
 	canReadClipboard: boolean;
 	canTable(command: TableCommand): boolean;
@@ -80,6 +83,17 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 			action: { type: 'comments', key: 'add' },
 		}),
 	]);
+	if (state.onChart)
+		groups.push([
+			link('chart-data', 'Edit Data', {
+				kind: 'ribbon',
+				action: { type: 'formatDialog', kind: 'chartData' },
+			}),
+			link('chart-format', 'Format Chart Area...', {
+				kind: 'ribbon',
+				action: { type: 'chart', key: 'format' },
+			}),
+		]);
 	if (state.inTable)
 		groups.push(
 			TABLE_ITEMS.map(([key, label]) => ({
@@ -107,6 +121,7 @@ export function menuStateFromView(view: EditorView, readOnly: boolean): MenuStat
 		hasSelection: !view.state.selection.empty,
 		onLink: Boolean(linkAtSelection(view)),
 		inTable: selectionInTable(view),
+		onChart: Boolean(selectedChart(view.state)?.editable),
 		canReadClipboard:
 			typeof navigator !== 'undefined' &&
 			(typeof navigator.clipboard?.read === 'function' ||

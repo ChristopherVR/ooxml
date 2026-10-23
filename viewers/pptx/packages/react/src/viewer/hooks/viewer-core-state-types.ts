@@ -1,4 +1,5 @@
 import type { CollaborationLivePatcher, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -75,6 +76,8 @@ export interface ViewerCoreState extends InlineEditingState, EditPointsModeState
 	mediaInputRef: React.RefObject<HTMLInputElement | null>;
 	/** Mutable ref mirroring `activeSlideIndex` for use in event handlers that must not re-subscribe on index change. */
 	activeSlideIndexRef: React.MutableRefObject<number>;
+	/** The autosave engine, which receives in-progress inline text (set by useAutosave). */
+	autosaveDraftSinkRef: React.MutableRefObject<InlineTextDraftSink | null>;
 	/** Tracks the in-progress drag operation (move) for element(s). */
 	dragStateRef: React.MutableRefObject<DragState | null>;
 	/** Tracks the in-progress resize operation for an element. */

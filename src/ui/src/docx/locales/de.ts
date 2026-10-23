@@ -8,6 +8,7 @@ import { deDropCap } from './drop-cap';
 import { deLineNumbers } from './line-numbers';
 import { deObjects } from './objects';
 import { deShapes } from './shapes';
+import { deSmartArt } from './smartart';
 import { deCharts } from './charts';
 import type { LocaleStrings } from './en';
 import { deApp } from './de-app';
@@ -28,5 +29,6 @@ export const de: LocaleStrings = {
 	...deLigatures,
 	...deObjects,
 	...deShapes,
+	...deSmartArt,
 	...deCharts,
 };

@@ -1,5 +1,6 @@
 import type { PptxChartHistogramOptions, XmlObject } from '../types';
 import type { XmlLookupLike } from './chart-cx-parser';
+import { hasLocalName } from './chart-xml-presence';
 
 function parseDoubleOrAutomatic(value: unknown): number | 'auto' | undefined {
 	if (value === 'auto') {
@@ -38,7 +39,8 @@ export function parseCxHistogramOptions(
 	}
 	const layoutPr = xmlLookup.getChildByLocalName(series, 'layoutPr');
 	const binning = xmlLookup.getChildByLocalName(layoutPr, 'binning');
-	const aggregation = xmlLookup.getChildByLocalName(layoutPr, 'aggregation');
+	// A bare `<cx:aggregation/>` reads as an empty string, so test the key (chartex parity harness).
+	const aggregation = layoutPr && hasLocalName(layoutPr, 'aggregation') ? true : undefined;
 	const rawBinSize = binningValue(binning, 'binSize', xmlLookup);
 	const rawBinCount = binningValue(binning, 'binCount', xmlLookup);
 	const binSize = Number.parseFloat(String(rawBinSize ?? ''));
@@ -55,6 +57,6 @@ export function parseCxHistogramOptions(
 		...(binning?.['@_overflow'] !== undefined
 			? { overflow: parseDoubleOrAutomatic(binning['@_overflow']) }
 			: {}),
-		...(aggregation !== undefined ? { aggregateByCategory: true } : {}),
+		...(aggregation ? { aggregateByCategory: true } : {}),
 	};
 }

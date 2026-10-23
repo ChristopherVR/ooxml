@@ -8,6 +8,7 @@ import { zhLineNumbers } from './line-numbers';
 import { zhDropCap } from './drop-cap';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
+import { zhSmartArt } from './smartart';
 import { zhCharts } from './charts';
 import type { LocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
@@ -28,5 +29,6 @@ export const zhCN: LocaleStrings = {
 	...zhLigatures,
 	...zhObjects,
 	...zhShapes,
+	...zhSmartArt,
 	...zhCharts,
 };

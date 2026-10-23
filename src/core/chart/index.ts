@@ -45,6 +45,7 @@ export { parseChartSpace } from './parse-space';
 export { readDisplayNaAsBlank } from './parse-chrome';
 export { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 export { withUnmodelledChartChildren } from './keep-unmodelled';
+export * from './ex/index';
 export { CHART_GROUP_ELEMENTS } from './parse-plot';
 export * from './render/index';
 

@@ -52,6 +52,11 @@
 			"import": "./dist/icons.js",
 			"default": "./dist/icons.js"
 		},
+		"./chart-format-locales": {
+			"types": "./dist/chart/format-pane-locales/index.d.ts",
+			"import": "./dist/chart-format-locales.js",
+			"default": "./dist/chart-format-locales.js"
+		},
 		"./controls": {
 			"types": "./dist/controls.d.ts",
 			"import": "./dist/controls.js",

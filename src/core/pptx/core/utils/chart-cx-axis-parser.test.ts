@@ -255,3 +255,25 @@ describe('resolveCxTitleText', () => {
 		expect(resolveCxTitleText(title, xmlLookup)).toBe('Sheet1!$A$1 cache');
 	});
 });
+
+describe('parseCxAxes bare elements and unit names (chartex parity harness)', () => {
+	it('reads a bare cx:tickLabels and cx:catScaling (empty strings in the object tree)', () => {
+		const plotArea: XmlObject = {
+			'cx:plotAreaRegion': {},
+			'cx:axis': { '@_id': '0', 'cx:catScaling': '', 'cx:tickLabels': '' },
+		};
+		const [axis] = parseCxAxes(plotArea, xmlLookup)!;
+		expect(axis.axisType).toBe('catAx');
+		expect(axis.tickLblPos).toBeUndefined();
+	});
+
+	it('maps the ST_AxisUnit names of cx:units/@unit onto their divisors', () => {
+		const plotArea: XmlObject = {
+			'cx:plotAreaRegion': {},
+			'cx:axis': { '@_id': '1', 'cx:valScaling': '', 'cx:units': { '@_unit': 'millions' } },
+		};
+		const [axis] = parseCxAxes(plotArea, xmlLookup)!;
+		expect(axis.displayUnits).toBe('custom');
+		expect(axis.displayUnitsValue).toBe(1_000_000);
+	});
+});

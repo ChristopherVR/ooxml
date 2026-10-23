@@ -21,7 +21,7 @@ import {
 	memberChainAtPoint,
 	overlayInlineTextSnapshot,
 	parentSelection,
-	publishLiveInlineText,
+	reportInlineTextDraft,
 	resolveConnectorEndpointUpdate,
 	resolveContextMenuElementId,
 	setPendingCaretPoint,
@@ -625,7 +625,12 @@ export class EditorController {
 	 * state or history: the commit path stays the single source of truth.
 	 */
 	previewInline(id: string, text: string): void {
-		publishLiveInlineText(this.#deps.getLivePatcher?.(), this.#deps.getActiveSlide?.(), id, text);
+		reportInlineTextDraft(
+			{ livePatcher: this.#deps.getLivePatcher?.(), autosave: this.#deps.getAutosave?.() },
+			this.#deps.getActiveSlide?.(),
+			id,
+			text,
+		);
 	}
 
 	/** Native editor capability stays scoped to this controller's active slide. */

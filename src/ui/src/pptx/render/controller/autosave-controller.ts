@@ -38,6 +38,7 @@ import { nextAutosaveDelayMs } from '../autosave-policy';
 import { saveAutosaveSnapshot } from '../autosave-store';
 import { autosaveSnapshotMark, autosaveSourcesChanged } from '../autosave-tick';
 import type { AutosaveSnapshotMark } from '../autosave-tick';
+import type { InlineTextDraft } from '../autosave-inline-draft';
 import type { PptxController } from './controller';
 import { createControllerStore } from './controller';
 
@@ -84,7 +85,13 @@ export interface AutosaveControllerDeps {
 	 * Serialise the deck for recovery: the plaintext `recovery-snapshot` bytes,
 	 * never the user's encrypted save. `null` skips the write.
 	 */
-	serialize(): Promise<Uint8Array | null>;
+	serialize(draft: InlineTextDraft | null): Promise<Uint8Array | null>;
+	/**
+	 * The element whose inline editor is open, if any. A draft is only handed
+	 * to {@link serialize} while its element is still being edited, so a
+	 * cancelled edit never reaches a snapshot.
+	 */
+	getInlineEditingId?(): string | null | undefined;
 	/** Host `storage`: snapshots go to its recovery methods when it has them. */
 	getStorage?(): DocumentStorage | undefined;
 	/** True while a hover preview stands in for the document; a due write waits. */
@@ -106,6 +113,12 @@ export interface AutosaveControllerDeps {
 export interface AutosaveController extends PptxController<AutosaveControllerState> {
 	/** An edit landed: mark the document dirty and start the interval. */
 	markEdited(): void;
+	/**
+	 * Inline text typed but not committed yet (see `reportInlineTextDraft`):
+	 * a changed draft is an edit, and the next snapshot includes it. `null`
+	 * clears it (the editor closed).
+	 */
+	noteInlineDraft(draft: InlineTextDraft | null): void;
 	/**
 	 * Nothing is outstanding any more (a deck was loaded, or the user saved).
 	 * `saved: true` also shows "saved" (a real save captured everything).
@@ -171,6 +184,18 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 	let inFlight: Promise<void> | null = null;
 	let observed: AutosaveSnapshotMark | undefined;
 	let observedDirty = false;
+	let inlineDraft: InlineTextDraft | null = null;
+	/** The draft still belongs to an open editor (or the binding does not say). */
+	const liveDraft = (): InlineTextDraft | null => {
+		if (!inlineDraft) {
+			return null;
+		}
+		const editing = deps.getInlineEditingId?.();
+		if (editing !== undefined && editing !== inlineDraft.elementId) {
+			inlineDraft = null;
+		}
+		return inlineDraft;
+	};
 	let destroyed = false;
 
 	const clearTimer = (): void => {
@@ -213,7 +238,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		clearTimer();
 		patch({ status: { state: 'saving' } });
 		try {
-			const bytes = await deps.serialize();
+			const bytes = await deps.serialize(liveDraft());
 			if (!bytes) {
 				if (!destroyed) {
 					patch({ status: idleOrDisabled() });
@@ -325,6 +350,18 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		getSnapshot: store.getSnapshot,
 		subscribe: store.subscribe,
 		markEdited,
+		noteInlineDraft(draft) {
+			const previous = inlineDraft;
+			inlineDraft = draft;
+			if (
+				draft &&
+				(previous?.elementId !== draft.elementId ||
+					previous.slideId !== draft.slideId ||
+					previous.text !== draft.text)
+			) {
+				markEdited();
+			}
+		},
 		markClean,
 		observe(dirty, sources) {
 			const changed = autosaveSourcesChanged(observed, sources);
@@ -332,7 +369,8 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			observed = autosaveSnapshotMark('', sources);
 			observedDirty = dirty;
 			if (!dirty) {
-				if (store.getSnapshot().dirty) {
+				// The editor is clean, but typing still open in an inline editor is not.
+				if (store.getSnapshot().dirty && !liveDraft()) {
 					markClean();
 				}
 				return;

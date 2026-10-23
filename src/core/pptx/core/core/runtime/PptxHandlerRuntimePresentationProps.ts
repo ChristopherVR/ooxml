@@ -15,6 +15,7 @@ import {
 import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
 import { parseChartLegendEntries } from '../../utils/chart-legend-serializer';
 import { parseChartTitleStyle } from '../../utils/chart-title-style-parser';
+import { hasLocalName } from '../../utils/chart-xml-presence';
 import { parseShowProperties } from './pptx-presentation-props-helpers';
 import { findChildByLocalName, parsePrintProperties } from './pptx-print-properties';
 import { parseViewProperties } from './pptx-view-props-helpers';
@@ -240,7 +241,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		if (chartRoot) {
 			// Legend
-			const legend = this.xmlLookupService.getChildByLocalName(chartRoot, 'legend');
+			// A bare `<cx:legend/>` (all of CT_Legend is optional) reads as an empty string, so the
+			// key decides presence (found by the chartex parity harness).
+			const legend = hasLocalName(chartRoot, 'legend')
+				? (this.xmlLookupService.getChildByLocalName(chartRoot, 'legend') ?? {})
+				: undefined;
 			if (legend) {
 				style.hasLegend = true;
 				hasStyle = true;

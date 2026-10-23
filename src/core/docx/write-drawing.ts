@@ -14,6 +14,7 @@ import {
 	updatePlacement,
 } from './write-drawing-patch';
 import type { RelationshipAllocator } from './relationship-allocator';
+import { diagramRun } from './write-diagram-drawing';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -172,6 +173,8 @@ export function createImageRun(
 		clearNonProperties(node, oldContainer);
 		return node;
 	}
+	const diagram = diagramRun(doc, node, image, base, oldDrawing, oldContainer, allocator);
+	if (diagram) return diagram;
 	const chart = chartRun(doc, node, image, base, oldDrawing, oldContainer, allocator);
 	if (chart) return chart;
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.

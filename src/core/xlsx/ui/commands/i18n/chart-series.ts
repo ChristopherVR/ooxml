@@ -25,8 +25,6 @@ export const CHART_SERIES_STRINGS: Translations = {
 		'Formato del área de trazado',
 		'设置绘图区格式',
 	],
-	'Chart Area': ['Zone de graphique', 'Diagrammbereich', 'Área del gráfico', '图表区'],
-	'Plot Area': ['Zone de traçage', 'Zeichnungsfläche', 'Área de trazado', '绘图区'],
 	'Chart element': ['Élément de graphique', 'Diagrammelement', 'Elemento del gráfico', '图表元素'],
 	'Linear gradient': ['Linéaire', 'Linear', 'Lineal', '线性'],
 	Rectangular: ['Rectangulaire', 'Rechteckig', 'Rectangular', '矩形'],
@@ -199,14 +197,6 @@ export const CHART_SERIES_STRINGS: Translations = {
 		'选择条形图或柱形图以设置其系列格式。',
 	],
 	'Series "{name}"': ['Série « {name} »', 'Reihe „{name}“', 'Serie "{name}"', '系列“{name}”'],
-	'Legend Options': ['Options de légende', 'Legendenoptionen', 'Opciones de leyenda', '图例选项'],
-	'Legend Position': [
-		'Position de la légende',
-		'Legendenposition',
-		'Posición de la leyenda',
-		'图例位置',
-	],
-	'Top Right': ['En haut à droite', 'Oben rechts', 'Superior derecha', '右上'],
 	'Enter a whole number from {min} to {max}.': [
 		'Entrez un nombre entier compris entre {min} et {max}.',
 		'Geben Sie eine ganze Zahl zwischen {min} und {max} ein.',

@@ -73,3 +73,12 @@ export const DIAGRAM_RELATIONSHIP_TYPES = {
 	colors: RELATIONSHIP_TYPES.diagramColors,
 	drawing: RELATIONSHIP_TYPES.diagramDrawing,
 } as const;
+
+/** Content types of the five diagram parts (`[Content_Types].xml` overrides). */
+export const DIAGRAM_CONTENT_TYPES = {
+	data: 'application/vnd.openxmlformats-officedocument.drawingml.diagramData+xml',
+	layout: 'application/vnd.openxmlformats-officedocument.drawingml.diagramLayout+xml',
+	quickStyle: 'application/vnd.openxmlformats-officedocument.drawingml.diagramStyle+xml',
+	colors: 'application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml',
+	drawing: 'application/vnd.ms-office.drawingml.diagramDrawing+xml',
+} as const;

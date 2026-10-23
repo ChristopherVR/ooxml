@@ -153,8 +153,13 @@ export function createChartFormatPane(ctx: EditorContext) {
 		refresh();
 	});
 	const relocalize = () => {
-		element.translateLabel = (_key, params, fallback) =>
-			ctx.t(englishKey(fallback ?? _key), params as Record<string, string | number> | undefined);
+		// The pane's own dictionary translates its captions; Excel's wording wins where it has one.
+		element.locale = ctx.locale();
+		element.translateLabel = (key, params, fallback) => {
+			const english = englishKey(fallback ?? key);
+			const own = ctx.t(english, params as Record<string, string | number> | undefined);
+			return own === english ? key : own;
+		};
 		refresh();
 	};
 	const open = (focus: string) => {
