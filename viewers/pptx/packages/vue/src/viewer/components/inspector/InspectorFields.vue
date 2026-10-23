@@ -93,6 +93,7 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 					<span class="pptx-vue-fields-label text-muted-foreground">{{ t(field.labelKey) }}</span>
 					<pptx-ui-select
 						v-if="field.control === 'select'"
+						class="pptx-vue-fields-select w-full rounded border border-border bg-muted px-2 py-1 max-md:min-h-[44px]"
 						:data-testid="field.testId"
 						:aria-label="t(field.labelKey)"
 						:value="String(field.value)"
@@ -120,7 +121,7 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 						:class="
 							field.control === 'range'
 								? 'pptx-vue-fields-range w-full accent-primary'
-								: 'pptx-vue-fields-input rounded border border-border bg-muted px-2 py-1'
+								: 'pptx-vue-fields-input rounded border border-border bg-muted px-2 py-1 max-md:min-h-[44px]'
 						"
 						:data-testid="field.testId"
 						:aria-label="t(field.labelKey)"
