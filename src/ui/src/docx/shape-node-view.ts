@@ -9,6 +9,7 @@ import {
 	type ThemeCatalog,
 } from 'ooxml-core/docx';
 import { placementClass } from 'ooxml-core/docx/ui';
+import { createResizeHandle } from './resize-handle';
 
 const MIN_SIZE = 4;
 
@@ -44,9 +45,28 @@ export function shapeNodeView(
 	const dom = document.createElement('span');
 	const holder = document.createElement('span');
 	holder.className = 'dve-shape-drawing';
-	const handle = document.createElement('span');
-	handle.className = 'dve-shape-handle';
-	handle.setAttribute('aria-hidden', 'true');
+	const handle = createResizeHandle('dve-shape-handle', {
+		editable: () => view.editable,
+		size: () => ({ width: Number(node.attrs.widthPx), height: Number(node.attrs.heightPx) }),
+		min: MIN_SIZE,
+		keepRatio: () => false,
+		zoomOf: () => dom,
+		preview: (width, height) => {
+			dom.style.width = `${width}px`;
+			dom.style.height = `${height}px`;
+		},
+		commit: (width, height) => {
+			const pos = getPos();
+			if (pos === undefined) return;
+			view.dispatch(
+				view.state.tr.setNodeMarkup(pos, undefined, {
+					...node.attrs,
+					widthPx: width,
+					heightPx: height,
+				}),
+			);
+		},
+	});
 	dom.append(holder, handle);
 	dom.contentEditable = 'false';
 
@@ -79,43 +99,6 @@ export function shapeNodeView(
 		} else holder.textContent = String(node.attrs.unsupported ?? 'Shape');
 	};
 	render();
-
-	handle.addEventListener('pointerdown', (event) => {
-		if (!view.editable) return;
-		event.preventDefault();
-		const startX = event.clientX;
-		const startY = event.clientY;
-		const startWidth = Number(node.attrs.widthPx);
-		const startHeight = Number(node.attrs.heightPx);
-		const zoom = dom.getBoundingClientRect().width / Math.max(1, dom.offsetWidth) || 1;
-		let width = startWidth;
-		let height = startHeight;
-		const move = (moveEvent: PointerEvent) => {
-			width = Math.max(MIN_SIZE, startWidth + (moveEvent.clientX - startX) / zoom);
-			height = Math.max(MIN_SIZE, startHeight + (moveEvent.clientY - startY) / zoom);
-			dom.style.width = `${Math.round(width)}px`;
-			dom.style.height = `${Math.round(height)}px`;
-		};
-		const up = () => {
-			window.removeEventListener('pointermove', move);
-			window.removeEventListener('pointerup', up);
-			const pos = getPos();
-			if (
-				pos === undefined ||
-				(Math.round(width) === startWidth && Math.round(height) === startHeight)
-			)
-				return;
-			view.dispatch(
-				view.state.tr.setNodeMarkup(pos, undefined, {
-					...node.attrs,
-					widthPx: Math.round(width),
-					heightPx: Math.round(height),
-				}),
-			);
-		};
-		window.addEventListener('pointermove', move);
-		window.addEventListener('pointerup', up);
-	});
 
 	return {
 		dom,

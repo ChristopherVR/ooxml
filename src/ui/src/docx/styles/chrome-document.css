@@ -40,9 +40,33 @@
 	overflow: hidden;
 	background: #fff;
 }
+/* The chart's frame carries the selection outline and the corner resize handle. */
+.dve-paper .dve-chart-frame {
+	position: relative;
+	display: inline-block;
+	vertical-align: bottom;
+	max-width: 100%;
+	line-height: 0;
+}
 .dve-paper .dve-chart-selected {
 	outline: 2px solid var(--word);
 	outline-offset: 1px;
+}
+.dve-chart-selected .dve-picture-handle {
+	display: block;
+}
+/* The chart Format pane, docked beside the page like Word's task panes. */
+.dve-chart-format-pane {
+	flex: none;
+	width: 300px;
+	min-height: 0;
+	overflow-y: auto;
+	border-left: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--ink);
+}
+.dve-chart-format-pane[hidden] {
+	display: none;
 }
 .dve-chart-dialog office-ui-chart-picker,
 .dve-chart-data-dialog office-ui-chart-data-sheet {
