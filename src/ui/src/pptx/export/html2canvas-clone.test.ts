@@ -10,7 +10,7 @@
  * is a `<div>` carrying the marker plus the `state`/`canvas`/`flush` surface
  * of the real element (which is not registered in jsdom).
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { THREE_VIEW_MARKER_ATTR } from '../three-view/element';
 import { THREE_VIEW_SNAPSHOT_ATTR } from '../three-view/export-snapshot';
@@ -21,6 +21,17 @@ import {
 } from './html2canvas-clone';
 
 const PIXELS = 'data:image/png;base64,chart';
+
+// Test files share a worker, so each test puts the document back as it found it: a style sheet or
+// slide left behind here would leak into the next file's document.
+let saved: { head: Node[]; body: Node[] };
+beforeEach(() => {
+	saved = { head: [...document.head.childNodes], body: [...document.body.childNodes] };
+});
+afterEach(() => {
+	document.head.replaceChildren(...saved.head);
+	document.body.replaceChildren(...saved.body);
+});
 
 function liveSlide(): HTMLElement {
 	const slide = document.createElement('div');
@@ -224,5 +235,12 @@ describe('pinCapturedSize', () => {
 		const unsized = document.createElement('div');
 		pinCapturedSize(document.createElement('div'), unsized);
 		expect(unsized.getAttribute('style')).toBeNull();
+	});
+});
+
+describe('document hygiene', () => {
+	it('leaves the shared document as it found it for the next file in this worker', () => {
+		expect(document.head.innerHTML).not.toContain('font-family: Deck');
+		expect(document.querySelector(`.ribbon, .viewer, [${THREE_VIEW_MARKER_ATTR}]`)).toBeNull();
 	});
 });
