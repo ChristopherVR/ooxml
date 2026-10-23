@@ -185,3 +185,35 @@ describe('host-owned storage', () => {
 		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', expect.any(Uint8Array), storage);
 	});
 });
+
+describe('in-progress inline text', () => {
+	it('counts uncommitted typing on a clean deck as an edit', async () => {
+		const serialize = vi.fn(async () => new Uint8Array([1]));
+		const sinkRef: { current: import('ooxml-ui/pptx').InlineTextDraftSink | null } = {
+			current: null,
+		};
+		let editing: string | null = 'title';
+		function Host(): null {
+			useAutosave({
+				isDirty: false,
+				filePath: 'deck.pptx',
+				serializeSlides: serialize,
+				intervalSeconds: INTERVAL_SECONDS,
+				inlineDraftSinkRef: sinkRef,
+				getInlineEditingId: () => editing,
+			});
+			return null;
+		}
+		act(() => {
+			root.render(<Host />);
+		});
+		act(() => {
+			sinkRef.current?.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Typed' });
+		});
+		await act(async () => {
+			await vi.advanceTimersByTimeAsync(INTERVAL_SECONDS * 1000);
+		});
+		expect(serialize).toHaveBeenCalledOnce();
+		editing = null;
+	});
+});

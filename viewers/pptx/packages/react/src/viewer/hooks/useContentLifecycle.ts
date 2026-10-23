@@ -240,6 +240,8 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		// deck it has already snapshotted. The two refs are read by `.current`
 		// because an inline edit in progress lives there and nowhere else yet.
 		onSaved: input.onAutosave,
+		inlineDraftSinkRef: state.autosaveDraftSinkRef,
+		getInlineEditingId: () => state.inlineEditingElementIdRef.current,
 		getChangeSources: () => [
 			slides,
 			state.templateElementsBySlideId,

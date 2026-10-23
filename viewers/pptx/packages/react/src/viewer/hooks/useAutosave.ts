@@ -3,8 +3,9 @@ import {
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { DocumentStorage, PptxAutosaveStatus } from 'ooxml-ui/pptx';
+import type { DocumentStorage, InlineTextDraftSink, PptxAutosaveStatus } from 'ooxml-ui/pptx';
 import { useEffect, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 
 import { useController } from './useController';
 
@@ -52,6 +53,10 @@ export interface UseAutosaveInput {
 	getChangeSources?: () => readonly unknown[];
 	/** Called with the serialised deck after each snapshot is written (the host's `onAutosave`). */
 	onSaved?: ((data: Uint8Array) => void) | undefined;
+	/** Receives the engine so in-progress inline text counts as an edit (`reportInlineTextDraft`). */
+	inlineDraftSinkRef?: MutableRefObject<InlineTextDraftSink | null>;
+	/** The element whose inline editor is open; a closed editor's draft is dropped. */
+	getInlineEditingId?: () => string | null;
 }
 
 export interface UseAutosaveResult {
@@ -88,8 +93,13 @@ export function useAutosave(input: UseAutosaveInput): UseAutosaveResult {
 			getStorage: () => live.current.storage,
 			onSaved: (data) => live.current.onSaved?.(data),
 			writeSnapshot: saveAutosaveSnapshot,
+			// serializeSlides already overlays the live inline draft from its refs.
+			getInlineEditingId: () => live.current.getInlineEditingId?.(),
 		}),
 	);
+	if (input.inlineDraftSinkRef) {
+		input.inlineDraftSinkRef.current = controller;
+	}
 	const { status } = useController(controller);
 
 	useEffect(() => {

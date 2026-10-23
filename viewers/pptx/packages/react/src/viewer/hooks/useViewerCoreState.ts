@@ -9,7 +9,8 @@
  * UI panel state lives in {@link useViewerUIState}.
  *
  */
-import { createCollaborationLivePatcher, publishLiveInlineText } from 'ooxml-ui/pptx';
+import { createCollaborationLivePatcher, reportInlineTextDraft } from 'ooxml-ui/pptx';
+import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
 import type { SlideSizeEmu } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
@@ -114,11 +115,14 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 	const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
 	const [isDirty, setIsDirty] = useState(false);
+	// The autosave engine, set by useAutosave once it exists (it is built later).
+	const autosaveDraftSinkRef = useRef<InlineTextDraftSink | null>(null);
 	const publishInlineText = useCallback(
 		(elementId: string | null, text: string) => {
-			// Preserve the existing authored-text preview for collaboration peers.
-			publishLiveInlineText(
-				livePatcher,
+			// The collaboration preview for peers, and the autosave draft: typing
+			// that was never committed still reaches the recovery snapshot.
+			reportInlineTextDraft(
+				{ livePatcher, autosave: autosaveDraftSinkRef.current },
 				slidesRef.current[activeSlideIndexRef.current],
 				elementId,
 				text,
@@ -192,6 +196,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		imageInputRef,
 		mediaInputRef,
 		activeSlideIndexRef,
+		autosaveDraftSinkRef,
 		...inlineEditing,
 		...editPointsMode,
 		dragStateRef,
