@@ -39,14 +39,14 @@ export function useReadOnlyRecommendationState(content: unknown) {
 	);
 	const [modifyVerifier, setModifyVerifier] = useState<PptxModifyVerifier | undefined>(undefined);
 	const [session, setSession] = useState<ReadOnlySession>(INITIAL_READ_ONLY_SESSION);
-	// A password check reads the session again when it finishes, after renders it cannot see,
-	// so the store mirrors the latest value it set.
-	const latest = useRef(session);
+	// The store reads a ref, not this render's `session`: a password check reads the session
+	// again when it finishes, by which time later renders may have replaced it.
+	const latestSession = useRef(session);
 	const store = useMemo<ReadOnlySessionStore>(
 		() => ({
-			get: () => latest.current,
+			get: () => latestSession.current,
 			set: (next) => {
-				latest.current = next;
+				latestSession.current = next;
 				setSession(next);
 			},
 		}),

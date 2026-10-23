@@ -224,7 +224,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private requestedEditable = false;
 	private requestedReadOnly = false;
 	/** The read-only banner's actions over the store (the shared `read-only-session` model). */
-	private readonly readOnlySession: ReadOnlySessionActions;
+	private readonly readOnlyActions: ReadOnlySessionActions;
 	private annotations!: PresentationAnnotationsHost;
 	private parityWorkflows!: ParityWorkflows;
 	private aiChat: AiChatMount | null = null;
@@ -277,7 +277,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.t = createTranslator(this.currentLocale, options.messages);
 		this.registry = options.registry ?? createDefaultRegistry();
 		this.store = createStore(createInitialViewerState(options.inspectorInitiallyOpen));
-		this.readOnlySession = readOnlySessionActions(readOnlySessionStore(this.store), {
+		this.readOnlyActions = readOnlySessionActions(readOnlySessionStore(this.store), {
 			recommendation: () => this.store.get().readOnlyRecommendation,
 			modifyVerifier: () => this.store.get().modifyVerifier,
 		});
@@ -1830,18 +1830,18 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * entered, and a wrong one leaves it locked.
 	 */
 	editAnywayFromReadOnlyRecommendation(): void {
-		this.readOnlySession.editAnyway();
+		this.readOnlyActions.editAnyway();
 		this.applyEditable(this.effectiveEditable());
 	}
 
 	/** The read-only recommendation banner's plain close button: hides the banner, keeps the lock. */
 	dismissReadOnlyBanner(): void {
-		this.readOnlySession.dismiss();
+		this.readOnlyActions.dismiss();
 	}
 
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */
 	cancelReadOnlyPasswordPrompt(): void {
-		this.readOnlySession.cancelPassword();
+		this.readOnlyActions.cancelPassword();
 	}
 
 	/**
@@ -1855,7 +1855,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	private async checkReadOnlyPassword(password: string): Promise<void> {
-		await this.readOnlySession.submitPassword(password);
+		await this.readOnlyActions.submitPassword(password);
 		if (!this.destroyed) {
 			this.applyEditable(this.effectiveEditable());
 		}

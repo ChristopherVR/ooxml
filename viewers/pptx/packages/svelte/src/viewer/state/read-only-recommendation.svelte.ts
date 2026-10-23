@@ -27,7 +27,7 @@ import type { PptxCustomProperty, PptxModifyVerifier } from 'pptx-viewer-core';
  *
  * The session (banner hidden, Edit anyway, the prompt and its check) and its
  * transitions are the shared `read-only-session` model; this keeps it in
- * `$state`.
+ * `$state.raw` (each transition replaces the whole value).
  */
 export class ReadOnlyRecommendationState {
 	#session = $state.raw<ReadOnlySession>(INITIAL_READ_ONLY_SESSION);

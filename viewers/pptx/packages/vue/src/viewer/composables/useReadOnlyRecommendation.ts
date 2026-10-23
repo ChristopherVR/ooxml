@@ -72,16 +72,17 @@ export interface UseReadOnlyRecommendationResult {
 export function useReadOnlyRecommendation(
 	input: UseReadOnlyRecommendationInput,
 ): UseReadOnlyRecommendationResult {
-	const read = () =>
-		readOnlyRecommendation({
+	function readRecommendation(): ReadOnlyRecommendation {
+		return readOnlyRecommendation({
 			modifyVerifier: input.modifyVerifier.value,
 			customProperties: input.customProperties.value,
 		});
-	const loaded = shallowRef<ReadOnlyRecommendation>(read());
+	}
+	const loaded = shallowRef<ReadOnlyRecommendation>(readRecommendation());
 	watch(
 		input.loadVersion,
 		() => {
-			loaded.value = read();
+			loaded.value = readRecommendation();
 		},
 		{ flush: 'sync' },
 	);

@@ -3,10 +3,12 @@
  *
  * `readOnlyRecommendation` says whether a loaded deck asks to be opened read-only. What the user
  * does about it during the session (hide the banner, lift the lock with Edit anyway or the right
- * password, open and cancel the password prompt) was written five times. The session is a plain
- * value each host keeps in its own reactive container: {@link reduceReadOnlySession} is the only
- * place it changes, {@link readOnlyLocked} and {@link readOnlyBannerVisible} derive the edit gate
- * and the banner from it, {@link runReadOnlyPasswordCheck} runs Unlock through the transitions and
+ * password, open and cancel the password prompt) is the same in every binding, so it lives here.
+ * The session is a plain value each host keeps in its own reactive container:
+ * {@link reduceReadOnlySession} is the only place it changes, {@link readOnlyLocked} and
+ * {@link readOnlyBannerVisible} derive the edit gate and the banner from it,
+ * {@link readOnlyBannerState} builds the element's state, {@link readOnlySessionActions} binds the
+ * banner's actions (Unlock through {@link runReadOnlyPasswordCheck}) to the host's store and
  * {@link dispatchReadOnlyBannerIntent} routes the element's requests.
  *
  * DOM-free and framework-free.
