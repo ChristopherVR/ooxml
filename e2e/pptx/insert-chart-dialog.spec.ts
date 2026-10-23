@@ -30,7 +30,11 @@ test('Insert Chart... opens the shared picker and inserts the chosen chart', asy
 	await picker.locator('[data-gallery-item="bar"]').click();
 	await picker.locator('select[data-key="grouping"]').selectOption('stacked');
 	await picker.locator('input[data-key="title"]').fill('Quarterly sales');
-	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+	// The footer is slotted into the shared dialog element, not the shadow box getByRole finds.
+	await page
+		.locator('pptx-ui-insert-chart-dialog')
+		.getByRole('button', { name: 'Insert', exact: true })
+		.click();
 
 	await expect(dialog).toBeHidden();
 	await expect(slideElements(page)).toHaveCount(before + 1);
