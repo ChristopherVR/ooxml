@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
-import { writeChartWorkbookUpdates } from './chart-xlsx-writer';
+import { writeChartWorkbookUpdates } from './writer';
 
 async function workbook(
 	cell = '<c r="A1" s="4" t="inlineStr"><is><t>Old</t></is></c>',
@@ -10,7 +10,7 @@ async function workbook(
 	const zip = new JSZip();
 	zip.file(
 		'xl/workbook.xml',
-		'<workbook><sheets><sheet name="Data" r:id="r1"/></sheets></workbook>',
+		'<workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Data" r:id="r1"/></sheets></workbook>',
 	);
 	zip.file(
 		'xl/_rels/workbook.xml.rels',

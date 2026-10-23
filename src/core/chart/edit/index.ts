@@ -18,3 +18,5 @@ export {
 } from './type-schema';
 export * from './fill';
 export * from './style';
+export * from './data-sheet';
+export * from './new-chart';
