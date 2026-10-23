@@ -272,8 +272,8 @@
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
 <SlideTemplatesLauncher {editor} onnavigate={(index) => onnavigateslide?.(index)} bind:open={templatesOpen} />
-<pptx-ui-insert-smartart-dialog open={smartArtOpen} translateLabel={t} oninsert-smartart={insertSmartArt} ondialog-close={closeSmartArt}></pptx-ui-insert-smartart-dialog>
-<pptx-ui-insert-chart-dialog open={chartDialogOpen} kind={chartKind} translateLabel={t} oninsert-chart={insertChart} ondialog-close={closeChartDialog}></pptx-ui-insert-chart-dialog>
+{#if smartArtOpen}<pptx-ui-insert-smartart-dialog open={smartArtOpen} translateLabel={t} oninsert-smartart={insertSmartArt} ondialog-close={closeSmartArt}></pptx-ui-insert-smartart-dialog>{/if}
+{#if chartDialogOpen}<pptx-ui-insert-chart-dialog open={chartDialogOpen} kind={chartKind} translateLabel={t} oninsert-chart={insertChart} ondialog-close={closeChartDialog}></pptx-ui-insert-chart-dialog>{/if}
 <EquationEditorDialog {editor} {canvasSize} open={equationOpen && customization.isDialogAvailable('equation')} onclose={closeEquationDialog} />
 {#if hyperlinkOpen && customization.isDialogAvailable('hyperlink')}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
 

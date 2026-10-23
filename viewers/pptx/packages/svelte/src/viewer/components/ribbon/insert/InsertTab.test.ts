@@ -173,12 +173,13 @@ describe('insertTab', () => {
 	it('opens the shared SmartArt dialog and inserts the chosen layout', async () => {
 		const editor = makeEditor();
 		const target = mountTab(editor);
+		// Mounted only while open, like the other insert dialogs (several InsertTabs can be mounted).
+		expect(target.querySelector('pptx-ui-insert-smartart-dialog')).toBeNull();
+		control(target, 'insert.illustrations.smartArt').click();
+		flushSync();
 		const dialog = target.querySelector<HTMLElement & { open: boolean }>(
 			'pptx-ui-insert-smartart-dialog',
 		)!;
-		expect(dialog.open).toBe(false);
-		control(target, 'insert.illustrations.smartArt').click();
-		flushSync();
 		expect(dialog.open).toBe(true);
 		const picker = dialog.querySelector('office-ui-smartart-picker')!;
 		picker.shadowRoot!.querySelector<HTMLElement>('[data-category="cycle"]')!.click();
@@ -212,11 +213,12 @@ describe('insertTab', () => {
 	it('opens Insert Chart... from the Chart menu and inserts the dialog choice', async () => {
 		const editor = makeEditor();
 		const target = mountTab(editor);
+		expect(target.querySelector('pptx-ui-insert-chart-dialog')).toBeNull();
+		pickItem(target, 'insert.illustrations.chart', '__chartDialog__');
+		flushSync();
 		const dialog = target.querySelector<HTMLElement & { open: boolean }>(
 			'pptx-ui-insert-chart-dialog',
 		)!;
-		pickItem(target, 'insert.illustrations.chart', '__chartDialog__');
-		flushSync();
 		expect(dialog.open).toBe(true);
 		const picker = dialog.querySelector('office-ui-chart-picker') as HTMLElement & {
 			value: { type: string; grouping: string; title: string };
