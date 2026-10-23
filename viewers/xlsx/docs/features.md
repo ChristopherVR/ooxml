@@ -56,40 +56,44 @@ Pictures and charts are selected by clicking them: they move and resize with the
 Common chart families (column, bar, line, area, pie, doughnut, scatter, bubble, stock
 (high-low-close and open-high-low-close) and radar), bar/line combinations with a secondary
 axis, and waterfall, histogram, treemap and sunburst charts (read-only, from their ChartEx parts)
-render as SVG from live values. Volume-stock combinations and surface charts show a labelled frame. Chart insertion, type/grouping, title, legend and
-color changes use the shared core and Office gallery controls. Docked formatting
-panes provide series fills, supported bar spacing, and fills for chart area,
-plot area, title and legend. Supported gradient types, stops, transparency,
-brightness, direction previews and native presets share the same fill controls.
+render as SVG from live values. Volume-stock combinations and surface charts show a labelled frame.
 
-Imported chart styles, supported shadows/gradients, axis visibility, inherited
-fonts, mixed-format title runs, automatic title wrapping and point/percentage title paragraph spacing
-have rendering and preservation support. Imported manual title positions and
-title overlays render; title/plot/legend layout XML is preserved through
-chart type changes. Imported manual legend rectangles and overlays render,
-including the tested horizontal/vertical entry arrangements. Manual title
-dimensions, complete plot placement, automatic legend geometry, multi-row/column
-legend packing and
-position-authoring controls remain incomplete.
-Surface charts are not drawn: they render as a labelled frame and are
-preserved on save (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). Chart-style authoring is not supported: imported style
-definitions are kept and rendered, but cannot be created or edited
-(`src/core/xlsx/model.ts`, `styleDefinition`). The rendering and formatting
-above are covered by the core chart tests and by `docs/xlsx-parity-status.md`
-in the ooxml repository.
-Native Excel comparisons verify specific edit/export paths. Exact chart text
-measurement, wrapping, placement and raster fidelity remain incomplete, as do
-many axes/labels/effects controls, advanced chart families and full native UI.
+**Insert > Chart** opens the shared chart picker, the same one Word and PowerPoint use. Every chart
+is edited over its parsed chart model (`ChartSpace`, the shared model in `ooxml-core/chart`):
 
-SmartArt uses the shared cached-drawing renderer with workbook theme fonts and
-colors. Insert > SmartArt opens the shared layout picker; selecting a diagram shows
-the SmartArt Design tab (Add Shape, Promote, Demote, Move Up, Move Down, Text Pane,
-Change Layout, the same commands as Word) and double-clicking opens the shared text
-pane. Every edit is an undoable step. An edited or inserted diagram, or one saved
-without a cached drawing, is drawn with an approximate layout (marked as such):
-Excel lays it out again when it opens the file, and saved files open in Excel
-without repair. SmartArt Styles, Change Colors, per-shape formatting and rich text
-in the text pane are not implemented.
+- **Chart Design tab:** Chart Styles, Change Colors and Chart Layouts (Quick Layout 1 to 11 for
+  column, bar, line and area charts) galleries, Chart Title and Legend, Type, Series Options, and
+  Delete. The galleries are the shared ones, so they look the same in every product.
+- **Format pane:** a docked panel with the shared chart Format pane. It edits the border and
+  outline of the chart, axes (bounds, units, scale, crossing, tick marks, labels, number format),
+  gridlines, data labels, the legend and series options. Series fills and the chart area fill
+  open the same panel from their Series Options commands.
+- A type change keeps the formatting: titles, legend, axes and fills carry over to the new type.
+- A chart part whose content the model cannot carry (for example detail below the top level, such
+  as a surface chart's band formats) is never rewritten from the model. Its chart commands and
+  Format pane are disabled, a workbook warning reports it, and it is saved from its source bytes,
+  with only moved references patched in.
+
+Not offered: effects, 3-D format, text options, pattern and picture fills, trendlines, error bars,
+markers and axis titles in the Format pane (no shared intent writes them yet); chart styles are
+curated recolour presets, so style definitions (`styleN.xml`) cannot be authored; surface charts are
+not drawn. Imported chart styles, supported shadows and gradients, axis visibility, inherited fonts,
+mixed-format title runs, automatic title wrapping and title paragraph spacing have rendering and
+preservation support. Imported manual title positions and overlays render, and title, plot and
+legend layout XML is kept through chart type changes. Exact chart text measurement, wrapping,
+placement and raster fidelity remain incomplete, as do many axis, label and effect controls.
+Native Excel checks cover specific edit and export paths (`src/core/scripts/xlsx-excel-acceptance.ps1`
+opens the saved workbooks in desktop Excel); they are not a claim of native layout parity.
+
+**Insert > SmartArt** opens the shared layout picker (35 layouts). Selecting a diagram shows the
+SmartArt Design tab (Add Shape after, before, above and below, Promote, Demote, Move Up, Move Down,
+Text Pane and Change Layout, the same command list as Word). The text pane opens beside the grid,
+and double-clicking a diagram opens it too. Each node edit, and each keystroke in the text pane, is
+one undoable step. A diagram that is inserted, edited or saved without a cached drawing is drawn
+with an approximate layout, badged as not Excel-identical; Excel lays it out again when it opens the
+file, and saved files open in desktop Excel without repair
+(`src/core/scripts/xlsx/smartart-excel-acceptance.ps1`). SmartArt Styles, Change Colors,
+per-shape formatting and rich text in the text pane are not implemented.
 
 ## Sparklines
 

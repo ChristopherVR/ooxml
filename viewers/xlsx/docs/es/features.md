@@ -53,35 +53,18 @@ Las imágenes y los gráficos se seleccionan haciendo clic en ellos: se mueven y
 
 ## Gráficos y SmartArt
 
-Las familias de gráficos más comunes (columnas, barras, líneas, áreas, circular, anillo, dispersión, burbujas, cotizaciones (máximos-mínimos-cierre y apertura-máximos-mínimos-cierre) y radial), las combinaciones de barras y líneas con eje secundario, y los gráficos de cascada, histograma, rectángulos (treemap) y proyección solar (solo lectura, desde sus partes ChartEx) se dibujan como SVG a partir de valores en vivo. Las combinaciones de volumen y cotizaciones y los gráficos de superficie muestran un marco con etiqueta. La inserción de gráficos, el tipo y la agrupación, el título, la leyenda y los
-cambios de color usan el núcleo compartido y los controles de galería de Office. Los paneles de formato acoplados
-ofrecen rellenos de series, el espaciado de barras admitido y rellenos para el área del gráfico,
-el área de trazado, el título y la leyenda. Los tipos de degradado admitidos, las paradas, la transparencia,
-el brillo, las vistas previas de dirección y los preajustes nativos comparten los mismos controles de relleno.
+Las familias de gráficos más comunes (columnas, barras, líneas, áreas, circular, anillo, dispersión, burbujas, cotizaciones (máximos-mínimos-cierre y apertura-máximos-mínimos-cierre) y radial), las combinaciones de barras y líneas con eje secundario, y los gráficos de cascada, histograma, rectángulos (treemap) y proyección solar (solo lectura, desde sus partes ChartEx) se dibujan como SVG a partir de valores en vivo. Las combinaciones de cotizaciones por volumen y los gráficos de superficie se muestran como un marco con etiqueta.
 
-Los estilos de gráfico importados, las sombras y degradados admitidos, la visibilidad de los ejes, las fuentes
-heredadas, los tramos de título con formato mixto, el ajuste automático del título y el espaciado entre párrafos del título de punto o porcentaje
-cuentan con compatibilidad de representación y conservación. Las posiciones manuales de título importadas y
-las superposiciones de título se representan; el XML de diseño de título, área de trazado y leyenda se conserva
-al cambiar el tipo de gráfico. Los rectángulos manuales de leyenda importados y las superposiciones se representan,
-incluidas las disposiciones horizontales y verticales de entradas probadas. Las dimensiones manuales del título,
-la ubicación completa del área de trazado, la geometría automática de la leyenda, el empaquetado de leyendas en varias filas o columnas y
-los controles de creación de posiciones siguen incompletos.
-Los gráficos de superficie no se dibujan: se representan como un marco con etiqueta y se conservan al guardar (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). La creación de estilos de gráfico no está admitida: las definiciones
-de estilo importadas se conservan y se representan, pero no se pueden crear ni editar
-(`src/core/xlsx/model.ts`, `styleDefinition`). La representación y el formato
-anteriores están cubiertos por las pruebas de gráficos del núcleo y por `docs/xlsx-parity-status.md`
-en el repositorio ooxml.
-Las comparaciones con Excel nativo verifican rutas concretas de edición y exportación. La medición exacta del texto del gráfico,
-el ajuste, la ubicación y la fidelidad de trama siguen incompletos, al igual que
-muchos controles de ejes, etiquetas y efectos, las familias de gráficos avanzadas y la interfaz nativa completa.
+**Insertar > Gráfico** abre el selector de gráficos compartido, el mismo que usan Word y PowerPoint. Cada gráfico se edita sobre su modelo de gráfico analizado (`ChartSpace`, el modelo compartido de `ooxml-core/chart`):
 
-SmartArt usa el renderizador compartido de dibujos en caché con las fuentes y los
-colores del tema del libro. Insertar > SmartArt abre el selector de diseños compartido; al seleccionar un gráfico aparece la pestaña
-Diseño de SmartArt (Agregar forma, Promover, Disminuir nivel, Subir, Bajar, Panel de texto, Cambiar diseño, los
-mismos comandos que Word) y un doble clic abre el panel de texto compartido. Cada edición se puede deshacer. Un
-gráfico editado o insertado se dibuja con un diseño aproximado; Excel lo vuelve a diseñar al abrir el archivo.
-No hay estilos de SmartArt, Cambiar colores ni texto enriquecido en el panel de texto.
+- **Pestaña Diseño de gráfico:** galerías de Estilos de gráfico, Cambiar colores y Diseños de gráfico (Diseño rápido 1 a 11 para gráficos de columnas, barras, líneas y áreas), Título y Leyenda del gráfico, Tipo, Opciones de serie y Eliminar. Las galerías son las compartidas, así que se ven igual en todos los productos.
+- **Panel de formato:** un panel acoplado con el panel de formato de gráficos compartido. Edita el borde y el contorno del gráfico, los ejes (límites, unidades, escala, cruce, marcas de graduación, etiquetas, formato numérico), las líneas de cuadrícula, las etiquetas de datos, la leyenda y las opciones de serie. El relleno de las series y el del área del gráfico abren el mismo panel desde sus comandos de Opciones de serie.
+- Un cambio de tipo conserva el formato: títulos, leyenda, ejes y rellenos pasan al nuevo tipo.
+- Una parte de gráfico cuyo contenido el modelo no puede conservar (por ejemplo, detalle por debajo del nivel superior, como los formatos de banda de un gráfico de superficie) nunca se reescribe desde el modelo. Sus comandos de gráfico y el panel de formato quedan deshabilitados, una advertencia del libro lo indica y se guarda a partir de sus bytes originales, solo con las referencias movidas aplicadas.
+
+No se ofrecen: efectos, formato 3-D, opciones de texto, rellenos de patrón e imagen, líneas de tendencia, barras de error, marcadores y títulos de eje en el panel de formato (todavía no hay una intención compartida que los escriba). Los estilos de gráfico son preajustes de color seleccionados, por lo que no se pueden crear definiciones de estilo (`styleN.xml`); los gráficos de superficie no se dibujan. Los formatos de gráfico importados, las sombras y degradados compatibles, la visibilidad de ejes, las fuentes heredadas, los fragmentos de título con formato mixto, el ajuste automático de títulos y el espaciado de párrafos del título se dibujan y se conservan. Los títulos con posición manual importada y sus superposiciones se dibujan, y el XML de diseño del título, el área de trazado y la leyenda se conserva al cambiar el tipo de gráfico. La medición y el ajuste exactos del texto de los gráficos, la colocación y la fidelidad del raster siguen incompletos, como muchos controles de ejes, etiquetas y efectos. Las comprobaciones nativas de Excel cubren rutas concretas de edición y exportación (`src/core/scripts/xlsx-excel-acceptance.ps1` abre los libros guardados en Excel de escritorio); no equivalen a una paridad de diseño nativo.
+
+**Insertar > SmartArt** abre el selector de diseños compartido (35 diseños). Al seleccionar un diagrama aparece la pestaña Diseño de SmartArt (Agregar forma después, antes, encima y debajo, Promover, Disminuir nivel, Subir, Bajar, Panel de texto y Cambiar diseño, la misma lista de comandos que en Word). El panel de texto se abre junto a la cuadrícula, y al hacer doble clic en un diagrama también. Cada edición de nodo, y cada pulsación en el panel de texto, es un paso que se puede deshacer. Un diagrama que se inserta, edita o guarda sin dibujo en caché se dibuja con un diseño aproximado, marcado como no idéntico a Excel. Excel vuelve a calcular el diseño al abrir el archivo, y los archivos guardados se abren sin reparación en Excel de escritorio (`src/core/scripts/xlsx/smartart-excel-acceptance.ps1`). No están implementados los estilos de SmartArt, Cambiar colores, el formato por forma ni el texto enriquecido en el panel de texto.
 
 ## Minigráficos
 

@@ -65,8 +65,8 @@ To render only the controls you use, with your own design system, use the buildi
 This is an early editor. It does not establish Microsoft Word layout parity or
 lossless saving for unsupported features. Legacy DOC support is limited to
 main-body text with constrained paragraph edits. SmartArt nodes, text and layout can be edited
-(drawn with an approximate layout until Word lays them out again) and charts
-render read-only.
+(drawn with an approximate layout until Word lays them out again) and charts can be inserted, edited and resized (chartex charts stay
+read-only).
 
 ## Documentation
 

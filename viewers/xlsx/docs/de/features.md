@@ -53,35 +53,18 @@ Bilder und Diagramme werden per Klick ausgewählt: Sie lassen sich mit der Maus 
 
 ## Diagramme und SmartArt
 
-Gängige Diagrammfamilien (Säulen, Balken, Linien, Flächen, Kreis, Ring, Punkt (XY), Blasen, Kurs (Hoch-Tief-Schluss und Eröffnung-Hoch-Tief-Schluss) und Netz), Balken-/Liniendiagramme mit Sekundärachse sowie Wasserfall-, Histogramm-, Treemap- und Sunburst-Diagramme (nur lesend, aus ihren ChartEx-Teilen) werden aus Live-Werten als SVG gezeichnet. Kombinationen aus Volumen und Kurs sowie Oberflächendiagramme zeigen einen beschrifteten Rahmen. Das Einfügen von Diagrammen, Typ und Gruppierung, Titel, Legende und
-Farbänderungen nutzen den gemeinsamen Core und die Office-Katalogsteuerelemente. Andockbare Formatierungsbereiche
-bieten Datenreihenfüllungen, unterstützte Balkenabstände sowie Füllungen für Diagrammbereich,
-Zeichnungsfläche, Titel und Legende. Unterstützte Farbverlaufstypen, Stopps, Transparenz,
-Helligkeit, Richtungsvorschauen und native Vorgaben verwenden dieselben Füllungs-Steuerelemente.
+Gängige Diagrammfamilien (Säulen, Balken, Linien, Flächen, Kreis, Ring, Punkt (XY), Blasen, Kurs (Hoch-Tief-Schluss und Eröffnung-Hoch-Tief-Schluss) und Netz), Balken-/Liniendiagramme mit Sekundärachse sowie Wasserfall-, Histogramm-, Treemap- und Sunburst-Diagramme (nur lesend, aus ihren ChartEx-Teilen) werden aus Live-Werten als SVG gezeichnet. Kombinationen mit Kursdiagrammen für das Volumen und Oberflächendiagramme erscheinen als beschrifteter Rahmen.
 
-Importierte Diagrammformatvorlagen, unterstützte Schatten und Farbverläufe, Achsensichtbarkeit, geerbte
-Schriftarten, Titelabschnitte mit gemischter Formatierung, automatischer Titelumbruch und Absatzabstände von Titeln mit Datenpunkt- oder Prozentangaben
-werden gerendert und beim Speichern erhalten. Importierte manuelle Titelpositionen und
-Titelüberlagerungen werden gerendert; das Layout-XML für Titel, Zeichnungsfläche und Legende bleibt bei
-Änderungen des Diagrammtyps erhalten. Importierte manuelle Legendenrechtecke und Überlagerungen werden gerendert,
-einschließlich der getesteten horizontalen und vertikalen Eintragsanordnungen. Manuelle Titelabmessungen,
-die vollständige Platzierung der Zeichnungsfläche, die automatische Legendengeometrie, das Packen der Legende in mehrere Zeilen und Spalten sowie
-Steuerelemente zur Positionierung sind weiterhin unvollständig.
-Oberflächendiagramme werden nicht gezeichnet: Sie erscheinen als beschrifteter Rahmen und werden beim Speichern erhalten (`src/core/chart/render/`, `src/core/xlsx/layout/chart.test.ts`). Das Erstellen von Diagrammformatvorlagen wird nicht unterstützt: Importierte Formatdefinitionen
-werden beibehalten und gerendert, können aber nicht erstellt oder bearbeitet werden
-(`src/core/xlsx/model.ts`, `styleDefinition`). Das oben beschriebene Rendering und die Formatierung
-sind durch die Diagrammtests des Cores und durch `docs/xlsx-parity-status.md`
-im Repository ooxml abgedeckt.
-Vergleiche mit nativem Excel prüfen bestimmte Bearbeitungs- und Exportpfade. Die exakte Textmessung in Diagrammen,
-der Umbruch, die Platzierung und die Rastertreue sind weiterhin unvollständig, ebenso viele
-Steuerelemente für Achsen, Beschriftungen und Effekte, erweiterte Diagrammfamilien und die vollständige native Oberfläche.
+**Einfügen > Diagramm** öffnet die gemeinsame Diagrammauswahl, dieselbe wie in Word und PowerPoint. Jedes Diagramm wird über sein geparstes Diagrammmodell (`ChartSpace`, das gemeinsame Modell in `ooxml-core/chart`) bearbeitet:
 
-SmartArt verwendet den gemeinsamen Renderer für zwischengespeicherte Zeichnungen mit den Designschriftarten und
--farben der Arbeitsmappe. Einfügen > SmartArt öffnet die gemeinsame Layoutauswahl; eine ausgewählte Grafik zeigt die Registerkarte
-SmartArt-Design (Form hinzufügen, Höher stufen, Tiefer stufen, Nach oben, Nach unten, Textbereich, Layout ändern,
-dieselben Befehle wie in Word), ein Doppelklick öffnet den gemeinsamen Textbereich. Jede Änderung lässt sich
-rückgängig machen. Bearbeitete oder eingefügte Grafiken werden mit einem Näherungslayout gezeichnet; Excel ordnet
-sie beim Öffnen neu an. SmartArt-Formatvorlagen, Farben ändern und Rich Text im Textbereich fehlen.
+- **Registerkarte Diagrammentwurf:** Galerien für Diagrammformatvorlagen, Farben ändern und Diagrammlayouts (Schnelllayout 1 bis 11 für Säulen-, Balken-, Linien- und Flächendiagramme), Diagrammtitel und Legende, Diagrammtyp, Reihenoptionen und Löschen. Die Galerien sind die gemeinsamen, sie sehen in jedem Produkt gleich aus.
+- **Formatbereich:** ein angedockter Bereich mit dem gemeinsamen Formatbereich für Diagramme. Er bearbeitet Rahmen und Umriss des Diagramms, Achsen (Grenzen, Einheiten, Skalierung, Kreuzung, Teilstriche, Beschriftungen, Zahlenformat), Gitternetzlinien, Datenbeschriftungen, die Legende und Reiheneinstellungen. Reihenfüllungen und die Füllung des Diagrammbereichs öffnen denselben Bereich über ihre Befehle unter Reiheneinstellungen.
+- Ein Typwechsel behält die Formatierung bei: Titel, Legende, Achsen und Füllungen bleiben beim neuen Typ erhalten.
+- Ein Diagrammteil, dessen Inhalt das Modell nicht abbilden kann (zum Beispiel Angaben unterhalb der obersten Ebene, etwa die Bandformate eines Oberflächendiagramms), wird nie aus dem Modell neu geschrieben. Seine Diagrammbefehle und der Formatbereich sind deaktiviert, eine Arbeitsmappenwarnung meldet es, und er wird aus seinen Quellbytes gespeichert, wobei nur verschobene Verweise angepasst werden.
+
+Nicht angeboten: Effekte, 3-D-Format, Textoptionen, Muster- und Bildfüllungen, Trendlinien, Fehlerindikatoren, Markierungen und Achsentitel im Formatbereich (dafür gibt es noch keine gemeinsame Absicht). Diagrammformatvorlagen sind kuratierte Farbvoreinstellungen, daher können Formatdefinitionen (`styleN.xml`) nicht erstellt werden. Oberflächendiagramme werden nicht gezeichnet. Importierte Diagrammformate, unterstützte Schatten und Verläufe, die Achsensichtbarkeit, geerbte Schriften, gemischt formatierte Titelläufe, der automatische Titelumbruch und die Absatzabstände von Titeln werden dargestellt und erhalten. Importierte manuelle Titelpositionen und -überlagerungen werden dargestellt, und das XML für Titel-, Diagrammflächen- und Legendenlayout bleibt bei Typwechseln erhalten. Die genaue Messung und der Umbruch von Diagrammtext, die Platzierung und die Rastertreue sind unvollständig, ebenso viele Achsen-, Beschriftungs- und Effektsteuerungen. Die Excel-Prüfungen decken bestimmte Bearbeitungs- und Exportpfade ab (`src/core/scripts/xlsx-excel-acceptance.ps1` öffnet die gespeicherten Arbeitsmappen in der Desktop-Version von Excel); sie sind keine Aussage über die Layout-Parität mit Excel.
+
+**Einfügen > SmartArt** öffnet die gemeinsame Layoutauswahl (35 Layouts). Wählt man eine Grafik aus, erscheint die Registerkarte SmartArt-Entwurf (Form nach, vor, über und unter hinzufügen, Herabstufen, Heraufstufen, Nach oben, Nach unten, Textbereich und Layout ändern, dieselbe Befehlsliste wie in Word). Der Textbereich öffnet sich neben dem Raster, ein Doppelklick auf eine Grafik öffnet ihn ebenfalls. Jede Knotenbearbeitung und jeder Tastendruck im Textbereich ist ein rückgängig machbarer Schritt. Eine Grafik, die eingefügt, bearbeitet oder ohne zwischengespeicherte Zeichnung gespeichert wurde, wird mit einem Näherungslayout gezeichnet und als nicht Excel-identisch gekennzeichnet. Excel berechnet das Layout beim Öffnen der Datei neu, und gespeicherte Dateien öffnen sich in der Desktop-Version von Excel ohne Reparatur (`src/core/scripts/xlsx/smartart-excel-acceptance.ps1`). SmartArt-Formatvorlagen, Farben ändern, formatierte Formen und Rich Text im Textbereich sind nicht implementiert.
 
 ## Sparklines
 

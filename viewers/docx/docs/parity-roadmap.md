@@ -69,9 +69,11 @@ detail and limits of each feature already built.
    remaining table/cell geometry controls only with imported-package surgery,
    identity-aware undo and save/reopen tests. Extend formatted clipboard coverage
    across paragraphs, cells and document stories.
-3. **Drawing and embedded objects.** Reuse the format-neutral core for SmartArt,
-   shapes, charts and equations. Add insertion/editing only after model, parser,
-   layout and serializer contracts preserve the source package. Keep UI controls
+3. **Drawing and embedded objects.** SmartArt and classic chart insertion and editing
+   run on the format-neutral core and the shared elements in `ooxml-ui`. Next are
+   chartex chart editing, SmartArt styles and colours, and shapes beyond preset
+   geometry. Add each only after model, parser, layout and
+   serializer contracts preserve the source package. Keep UI controls in `ooxml-ui`
    and framework adapters in the viewer.
 4. **Word authoring breadth.** Extend style-definition editing, object positioning
    and wrapping, citations/bibliography/index, field recalculation and accessibility
