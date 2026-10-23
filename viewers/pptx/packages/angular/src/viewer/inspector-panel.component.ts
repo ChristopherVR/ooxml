@@ -89,6 +89,7 @@ import { TableDataEditorComponent } from './table-data-editor.component';
 import { TablePropertiesComponent } from './table-properties.component';
 import { Text3DPanelComponent } from './text-3d-panel.component';
 import { TextAdvancedPanelComponent } from './text-advanced-panel.component';
+import { TextEffectsPanelComponent } from './text-effects-panel.component';
 import { TextWarpGalleryComponent } from './text-warp-gallery.component';
 import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.component';
 import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
@@ -119,6 +120,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 		InspectorFieldsComponent,
 		ShapeAuthoringPanelComponent,
 		Text3DPanelComponent,
+		TextEffectsPanelComponent,
 		TextWarpGalleryComponent,
 		RecentColorsRowComponent,
 		ThemeColorSwatchGridComponent,
@@ -443,6 +445,14 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						{{ 'pptx.inspector.textAdvanced' | translate }}
 					</summary>
 					<pptx-text-advanced-panel [element]="el()" (patch)="onPatch($event)" />
+				</details>
+
+				<!-- ── Advanced: text effects (shadow / glow / reflection of the text) ── -->
+				<details class="pptx-ng-inspector__details">
+					<summary class="pptx-ng-inspector__summary">
+						{{ 'pptx.textEffects.title' | translate }}
+					</summary>
+					<pptx-text-effects-panel [element]="el()" (patch)="onPatch($event)" />
 				</details>
 
 				<!-- ── Advanced: 3D text (extrusion / bevels / material) ────────── -->

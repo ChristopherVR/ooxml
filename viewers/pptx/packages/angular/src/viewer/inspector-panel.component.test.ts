@@ -82,3 +82,17 @@ describe('inspector panel theme colour swatch grid (W3-G2)', () => {
 		expect(source).toContain('textStylePatch(cur, { color, colorRef: ref })');
 	});
 });
+
+describe('inspector panel text effects', () => {
+	it('mounts Text Effects with the text sections, between the text options and 3-D text', () => {
+		const mount = '<pptx-text-effects-panel [element]="el()" (patch)="onPatch($event)" />';
+		expect(source).toContain(mount);
+		expect(source).toContain('TextEffectsPanelComponent,');
+		const advanced = source.indexOf('<pptx-text-advanced-panel');
+		const effects = source.indexOf(mount);
+		const text3d = source.indexOf('<pptx-text-3d-panel');
+		expect(advanced).toBeLessThan(effects);
+		expect(effects).toBeLessThan(text3d);
+		expect(source.slice(advanced, text3d)).toContain("{{ 'pptx.textEffects.title' | translate }}");
+	});
+});
