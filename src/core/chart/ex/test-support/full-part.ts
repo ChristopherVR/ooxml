@@ -46,4 +46,3 @@ export const FULL =
 	`${fill('F2F2F2')}</cx:plotArea><cx:legend pos="r" align="min" overlay="1">${fill('FFFFFF')}</cx:legend>${ext}</cx:chart>` +
 	`${fill('FFFFFF')}<cx:clrMapOvr bg1="lt1" tx1="dk1"/><cx:fmtOvrs><cx:fmtOvr idx="0"/></cx:fmtOvrs>` +
 	`<cx:printSettings><cx:pageMargins l="0.7"/></cx:printSettings>${ext}</cx:chartSpace>`;
-

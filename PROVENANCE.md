@@ -2556,14 +2556,20 @@ Source: ChristopherVR/ooxml, commit `3b2ecd9a6` (an in-repo move out of the Powe
 - `src/core/chart/workbook/package-save.ts` (`saveChartWorkbookUpdates`) is the resolution and degrade-to-warning policy of `pptx/core/core/runtime/chart-external-workbook-save.ts`, which now only maps the pptx relationship and slide context onto it. Messages and codes are unchanged.
 
 New code (not moved): `chart/workbook/layout.ts`, `space-writes.ts`, `create.ts`, `chart/edit/data-sheet.ts` and `chart/edit/new-chart.ts`.
+
 ## Shared Chart Design galleries (2026-10-23)
+
 Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move plus new code).
+
 - `src/core/chart/quick-layouts.ts` is `src/ui/src/pptx/render/ribbon-galleries/chart-quick-layout-catalog.ts` (deleted) with the `ChartLayoutSketch` type of `chart-gallery-tiles.ts`, unchanged in data; `findChartQuickLayout` and the "Axis Title" constant are new.
 - `src/core/chart/style-presets.ts` is the preset table of `src/ui/src/pptx/render/chart-quick-action-styles.ts`. What changed: English labels replace the pptx i18n keys (the pptx module derives its keys from the ids), palettes read from `chart/style-palette`; `sameChartColors` and `chartStylePresetOfColors` are new. `chart-quick-action-styles.ts` keeps its exports and the `PptxChartData` mapping.
 - `src/ui/src/chart/gallery-tiles.ts` is `src/ui/src/pptx/render/ribbon-galleries/chart-gallery-tiles.ts`, unchanged in output (the sketch type now comes from core). `chart-color-palette-catalog.ts`, a re-export of `ooxml-core/chart`, was deleted.
 - New code: `src/core/chart/edit/quick-layout.ts` (`applyChartQuickLayout` over `ChartSpace`), `applyChartStylePreset` in `chart/edit/style.ts`, the `style`, `stylePreset`, `colorPalette` and `quickLayout` intents, `src/ui/src/chart/design-galleries.ts` (shared section data both the pptx gallery modules and Excel's Chart Design tab read), `src/core/xlsx/edit/chart-design.ts` (Excel's patches) and `ChartObject.quickLayout`. `src/ui/src/xlsx/commands/chart-design.ts` is `commands/chart-colors.ts` renamed and rebuilt on the shared section data.
+
 ## Neutral ChartEx model, parser, writer and edit operations (2026-10-23)
+
 Source: ChristopherVR/ooxml at `3b2ecd9a6` (new code, with the pptx ChartEx readers and update as the checklist).
+
 - `src/core/chart/ex/` (`model.ts`, `parse*.ts`, `write*.ts`) is new code: a strict DOM model of `cx:chartSpace`. The fields follow what `src/core/pptx/core/utils/chart-cx-parser.ts`, `chart-cx-axis-parser.ts`, `chart-cx-data-labels.ts`, `chart-cx-histogram.ts`, `chart-cx-waterfall.ts`, `chart-cx-box-whisker.ts`, `chart-cx-treemap.ts` and `chart-cx-region-map.ts` read, extended to the rest of the chartex schema; nothing was moved and the pptx readers stay. `write-shape.ts` gained `shapePropertiesInnerXml` (split out of `shapePropertiesXml`) so `cx:spPr` goes through the same writer.
 - `src/core/chart/render/summary-from-chartex.ts` keeps its output and now reads `ChartExSpace` instead of walking the DOM itself (`chartExSummaryFromModel` added).
 - `src/core/chart/edit/chartex.ts` and `chartex-data.ts` are new code following `src/core/pptx/core/core/runtime/chart-cx-update.ts`, `chart-cx-update-series.ts` and `chart-cx-update-data.ts` (what PowerPoint writes for each edit); `retextChartTextBody` is the former private `retextBody` of `chart/edit/title.ts`, exported.
@@ -2585,7 +2591,9 @@ Source: ChristopherVR/ooxml, commit `3b2ecd9a6` (an in-repo move from the five P
 - `src/ui/src/pptx/render/presentation-show-step.ts` (`resolveShowForward`, `resolveShowBackward`) is the forward and backward decision each binding made in its own copy: Angular `viewer/presentation-show-navigator.ts` (`navigate`), Svelte `presentation/presentation-controller.svelte.ts` (`advance`, `retreat`, `previousSlide`), Vue `composables/usePresentationNavigation.ts` (`next`, `prev`, `advanceFromClick`), vanilla `viewer-controls.ts` (`next`, `prev` while presenting) and React `hooks/presentation-mode/useSlideNavigation.ts` (`movePresentationSlide`, with `isClickAdvanceBlocked` and its tests deleted). The bindings keep their own index, end screen, transition overlay and timers and perform the step it returns. What changed: a back press at the start of the show no longer marks the next entered slide as already built (Angular and Vue set that flag before finding there was nowhere to go).
 
 ## Shared SmartArt editing for Word and Excel (2026-10-23)
+
 Source: ChristopherVR/ooxml at `3b2ecd9a6` (in-repo moves out of the Word SmartArt code of wave6-13, plus new code).
+
 - `src/core/diagram/edit/node-edit.ts` holds the command type, the operation dispatch and the node clean-up of `src/core/docx/diagram-edit.ts` (`DocxDiagramEdit` is now an alias of `DiagramNodeEdit`; `applyDiagramNodeEdit` and `createDiagramNodes` are the former private `applyOperation`/`cleanNodes` and the node loop of `createDocxDiagram`), and `diagramNodeOutline` is `diagramOutline` of `src/ui/src/docx/smartart-commands.ts` over the shared node type. `DocxDiagramNode` is an alias of the new `DiagramHostNode`.
 - `src/core/diagram/edit/node-tree.ts` is `src/core/docx/diagram-nodes.ts` unchanged apart from the node type; the docx module re-exports it.
 - `src/core/diagram/write/inserted.ts` (`writeInsertedDiagramData`) is the body of `insertedDiagramDataXml` in `src/core/docx/diagram-save.ts`, which now calls it.

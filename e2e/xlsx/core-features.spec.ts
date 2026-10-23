@@ -34,9 +34,7 @@ test('Excel encrypted workbook prompts, retries and opens', async ({ page }) => 
 	expect(await editorProperty<string>(page, 'fileName')).toBe('protected.xlsx');
 });
 
-test('Excel SmartArt uses the shared renderer for its cached drawing', async ({
-	page,
-}) => {
+test('Excel SmartArt uses the shared renderer for its cached drawing', async ({ page }) => {
 	await openLanding(page);
 	await (
 		await landingFileInput(page)

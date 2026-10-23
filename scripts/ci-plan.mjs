@@ -121,7 +121,9 @@ export const VIEWERS = {
 		},
 		// Its `test:browser` also loads the built packages in a browser, through the consumer
 		// project `test:packages` writes (`.package-build/consumer.txt`), so both run first.
-		before: { browser: ['bun run build:packages', 'node scripts/test-packages.mjs --workspace-runtime'] },
+		before: {
+			browser: ['bun run build:packages', 'node scripts/test-packages.mjs --workspace-runtime'],
+		},
 		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
 		// `browserShardCommands` shards the first and leaves the other two on shard 1.
 		browserChain: {
@@ -140,7 +142,11 @@ export const VIEWERS = {
 			unit: ['bun run test'],
 			scripts: ['bun run test:scripts'],
 			browser: ['bun run test:browser'],
-			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke --workspace-runtime'],
+			packages: [
+				'bun run build:packages',
+				'bun run check:published',
+				'bun run pack:smoke --workspace-runtime',
+			],
 		},
 		// The demos resolve the framework packages through their built dist.
 		before: { types: ['bun run build:packages'], browser: ['bun run build:packages'] },
