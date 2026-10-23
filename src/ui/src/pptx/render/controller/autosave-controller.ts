@@ -369,7 +369,8 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			observed = autosaveSnapshotMark('', sources);
 			observedDirty = dirty;
 			if (!dirty) {
-				if (store.getSnapshot().dirty) {
+				// The editor is clean, but typing still open in an inline editor is not.
+				if (store.getSnapshot().dirty && !liveDraft()) {
 					markClean();
 				}
 				return;

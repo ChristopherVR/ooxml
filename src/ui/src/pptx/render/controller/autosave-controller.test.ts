@@ -236,3 +236,28 @@ describe('createAutosaveController inline drafts', () => {
 		expect(serialize).toHaveBeenLastCalledWith(null);
 	});
 });
+
+describe('createAutosaveController inline drafts and a clean editor', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('keeps an open draft outstanding while the editor reports clean', async () => {
+		const serialize = vi.fn(async () => new Uint8Array([1]));
+		const controller = createAutosaveController({
+			getActivation: () => ({ active: true }),
+			getFilePath: () => 'deck.pptx',
+			getIntervalMs: () => INTERVAL,
+			serialize,
+			getInlineEditingId: () => 'title',
+			writeSnapshot: async () => undefined,
+		});
+		controller.noteInlineDraft({ elementId: 'title', text: 'Typed' });
+		controller.observe(false, []);
+		await vi.advanceTimersByTimeAsync(INTERVAL);
+		expect(serialize).toHaveBeenCalledOnce();
+	});
+});
