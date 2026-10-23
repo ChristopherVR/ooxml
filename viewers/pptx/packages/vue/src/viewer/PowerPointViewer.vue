@@ -628,6 +628,8 @@ const inlineEdit = useInlineEditing({
 	// typing before the editor commits. `collaboration` is declared further down;
 	// the accessor is only invoked from user input, long after setup.
 	livePatcher: () => collaboration.collab.livePatcher,
+	// `autosave` is declared further down, like `collaboration`.
+	autosave: () => autosave.engine,
 	activeSlide: () => activeSlide.value,
 	onConnectedSuspend: (snapshot) => {
 		const id = activeSlide.value?.id;
@@ -1070,6 +1072,7 @@ const {
 	snapshotName: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
 	storage: () => props.storage,
 	getRecoverySnapshot,
+	getInlineEditingId: () => inlineEdit.inlineEditingElementId.value,
 	emitAutosave: (bytes) => emit('autosave', bytes),
 	captureVersion: (label, at) => versionHistoryWiring.versionHistory.capture(label, at),
 });

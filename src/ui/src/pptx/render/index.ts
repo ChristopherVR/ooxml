@@ -1567,6 +1567,8 @@ export * from './autosave-file-key';
 // say?" One decision, five dialogs.
 export * from './autosave-recovery';
 export * from './autosave-recovery-acknowledgement';
+// In-progress inline text counts as an autosave edit and reaches the snapshot.
+export * from './autosave-inline-draft';
 export * from './backstage';
 export * from './backstage-cards';
 export * from './master-page-layout';

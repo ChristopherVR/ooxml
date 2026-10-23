@@ -197,3 +197,67 @@ describe('createAutosaveController', () => {
 		expect(writeSnapshot).not.toHaveBeenCalled();
 	});
 });
+
+describe('createAutosaveController inline drafts', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('counts typed-but-uncommitted text as an edit and hands it to the snapshot', async () => {
+		let editing: string | null = 'title';
+		const serialize = vi.fn(async (_draft: unknown) => new Uint8Array([1]));
+		const controller = createAutosaveController({
+			getActivation: () => ({ active: true }),
+			getFilePath: () => 'deck.pptx',
+			getIntervalMs: () => INTERVAL,
+			serialize,
+			getInlineEditingId: () => editing,
+			writeSnapshot: async () => undefined,
+		});
+		controller.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Hel' });
+		controller.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Hello' });
+		await vi.advanceTimersByTimeAsync(INTERVAL);
+		expect(serialize).toHaveBeenCalledExactlyOnceWith({
+			slideId: 's1',
+			elementId: 'title',
+			text: 'Hello',
+		});
+		// The same draft again is not a new edit.
+		controller.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Hello' });
+		await vi.advanceTimersByTimeAsync(INTERVAL * 2);
+		expect(serialize).toHaveBeenCalledOnce();
+		// A cancelled edit never reaches a snapshot.
+		controller.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Hello!' });
+		editing = null;
+		await vi.advanceTimersByTimeAsync(INTERVAL);
+		expect(serialize).toHaveBeenLastCalledWith(null);
+	});
+});
+
+describe('createAutosaveController inline drafts and a clean editor', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('keeps an open draft outstanding while the editor reports clean', async () => {
+		const serialize = vi.fn(async () => new Uint8Array([1]));
+		const controller = createAutosaveController({
+			getActivation: () => ({ active: true }),
+			getFilePath: () => 'deck.pptx',
+			getIntervalMs: () => INTERVAL,
+			serialize,
+			getInlineEditingId: () => 'title',
+			writeSnapshot: async () => undefined,
+		});
+		controller.noteInlineDraft({ elementId: 'title', text: 'Typed' });
+		controller.observe(false, []);
+		await vi.advanceTimersByTimeAsync(INTERVAL);
+		expect(serialize).toHaveBeenCalledOnce();
+	});
+});

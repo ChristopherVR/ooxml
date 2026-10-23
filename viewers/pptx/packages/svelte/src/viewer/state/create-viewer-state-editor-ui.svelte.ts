@@ -1,3 +1,4 @@
+import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
 	resolveAuthoredCustomShowId,
@@ -32,6 +33,8 @@ export interface EditorUiClusterDeps {
 	editor: EditorState;
 	viewer: ViewerState;
 	collab: CollaborationController;
+	/** The autosave engine, which receives in-progress inline text. */
+	autosave?: InlineTextDraftSink;
 	options: CreateViewerStateOptions;
 	/** Effective canvas scale (main stage), or master-view scale when applicable. */
 	getScale(): number;
@@ -150,6 +153,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		getSnapToShape: () => parityUi.snapToShape,
 		getGuides: () => parityUi.guides,
 		getLivePatcher: () => collab.livePatcher,
+		getAutosave: () => deps.autosave,
 		getActiveSlide: () => editor.slides[viewer.current],
 		// The stage gesture preventDefault()s the click, so the keymap's focus has
 		// to be put back on the (focusable) viewer root after every canvas press.

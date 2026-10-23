@@ -203,3 +203,39 @@ describe('a read-only session writes no recovery snapshot', () => {
 		harness.stop();
 	});
 });
+
+describe('useAutosaveWiring inline drafts', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('hands uncommitted inline typing to the recovery serialiser', async () => {
+		const scope = effectScope();
+		const getRecoverySnapshot = vi.fn((_draft?: unknown) => Promise.resolve(new Uint8Array([1])));
+		let api!: UseAutosaveWiringResult;
+		scope.run(() => {
+			api = useAutosaveWiring({
+				slides: shallowRef<PptxSlide[]>([]),
+				loading: ref(false),
+				canEdit: () => true,
+				autosaveEnabledByHost: () => undefined,
+				intervalMs: () => 2000,
+				snapshotName: () => 'deck.pptx',
+				getRecoverySnapshot,
+				getInlineEditingId: () => 'title',
+				emitAutosave: vi.fn(),
+				captureVersion: vi.fn(),
+			});
+		});
+		api.autosave.engine.noteInlineDraft({ elementId: 'title', text: 'Typed' });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(getRecoverySnapshot).toHaveBeenCalledExactlyOnceWith({
+			elementId: 'title',
+			text: 'Typed',
+		});
+		scope.stop();
+	});
+});

@@ -3,9 +3,11 @@ import type {
 	AutosaveControllerState,
 	DeckSaveIntent,
 	DocumentStorage,
+	InlineTextDraft,
 	PptxAutosaveStatusKind,
 } from 'ooxml-ui/pptx';
 import {
+	applyInlineTextDraft,
 	createAutosaveController,
 	createPreviewEditGuard,
 	recoverySnapshotIntent,
@@ -93,6 +95,8 @@ export interface AutosaveDeps {
 	 * offered to recover unsaved changes that never existed.
 	 */
 	getSeedNonce?: () => number;
+	/** The element whose inline editor is open; a closed editor's draft is dropped. */
+	getInlineEditingId?: () => string | null;
 	/** Host callback with the freshly-serialized bytes on each successful save. */
 	onSaved?: (bytes: Uint8Array) => void;
 }
@@ -114,7 +118,8 @@ export class AutosaveController {
 			getActivation: () => ({ active: deps.getEnabled() }),
 			getFilePath: deps.getFilePath,
 			getIntervalMs: deps.getIntervalMs,
-			serialize: () => this.#serialize(),
+			serialize: (draft) => this.#serialize(draft),
+			...(deps.getInlineEditingId ? { getInlineEditingId: deps.getInlineEditingId } : {}),
 			getStorage: () => deps.getStorage?.(),
 			onSaved: (bytes) => deps.onSaved?.(bytes),
 			writeSnapshot: saveAutosaveSnapshot,
@@ -189,7 +194,7 @@ export class AutosaveController {
 	 * `recoverySnapshotIntent`, so a snapshot is always a plain ZIP that
 	 * recovery can reopen.
 	 */
-	async #serialize(): Promise<Uint8Array | null> {
+	async #serialize(draft: InlineTextDraft | null): Promise<Uint8Array | null> {
 		const handler = this.#deps.getHandler();
 		if (!handler) {
 			return null;
@@ -201,7 +206,8 @@ export class AutosaveController {
 		const hasMasters = Boolean(slideMasters?.length || notesMaster || handoutMaster);
 		return saveDeckWithPassword(
 			handler,
-			this.#deps.getSlides(),
+			// Typing not committed yet is part of the snapshot (AutoRecover keeps it).
+			[...applyInlineTextDraft(this.#deps.getSlides(), draft)],
 			hasMasters
 				? {
 						slideMasters,
@@ -212,6 +218,11 @@ export class AutosaveController {
 				: { sections: sections?.length ? sections : undefined },
 			recoverySnapshotIntent(this.#deps.getSaveIntent?.()),
 		);
+	}
+
+	/** In-progress inline text: a changed draft is an edit and goes into the snapshot. */
+	noteInlineDraft(draft: InlineTextDraft | null): void {
+		this.#engine.noteInlineDraft(draft);
 	}
 
 	/** Force an immediate save, bypassing the interval. */

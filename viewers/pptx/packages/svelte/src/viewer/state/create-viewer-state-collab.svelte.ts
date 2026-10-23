@@ -37,6 +37,8 @@ export interface CollabClusterDeps {
 	 * A closure, not a value: the options cluster is built after this one.
 	 */
 	getOptionsIntervalSeconds?: () => number | undefined;
+	/** The element whose inline editor is open (its draft goes into the snapshot). */
+	getInlineEditingId?: () => string | null;
 }
 
 export interface CollabCluster {
@@ -232,6 +234,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		// slides; this changes WITH them, so the adoption cannot be mistaken for
 		// an edit. See `EditorState.seedNonce`.
 		getSeedNonce: () => editor.seedNonce,
+		...(deps.getInlineEditingId ? { getInlineEditingId: deps.getInlineEditingId } : {}),
 		onSaved: (bytes) => options.onautosave?.(bytes),
 	});
 	// The public lifecycle, not the engine's own status (`disabled` reports as `idle`).

@@ -18,7 +18,7 @@ export interface StageInteractionsDeps {
 	 * keystroke; the commit path is untouched. Omit outside a collaborative
 	 * viewer.
 	 */
-	onInlineTextInput?: (elementId: string, text: string) => void;
+	onInlineTextInput?: (elementId: string | null, text: string) => void;
 	/** Push any queued live-preview frame out before a commit lands. */
 	flushInlineTextInput?: () => void;
 	onEditEquation?(id: string, omml: Record<string, unknown>): void;

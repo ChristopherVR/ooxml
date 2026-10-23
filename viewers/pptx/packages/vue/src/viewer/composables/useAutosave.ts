@@ -1,5 +1,10 @@
 import { createAutosaveController, saveAutosaveSnapshot } from 'ooxml-ui/pptx';
-import type { DocumentStorage, PptxAutosaveStatusKind } from 'ooxml-ui/pptx';
+import type {
+	DocumentStorage,
+	InlineTextDraft,
+	InlineTextDraftSink,
+	PptxAutosaveStatusKind,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { computed, onScopeDispose, toValue, watch } from 'vue';
 import type { Ref, WritableComputedRef } from 'vue';
@@ -51,7 +56,7 @@ export interface UseAutosaveOptions {
 	 * snapshot itself under {@link filePath}; without it, {@link onSave} owns the
 	 * whole save.
 	 */
-	serialize?: () => Promise<Uint8Array | null>;
+	serialize?: (draft: InlineTextDraft | null) => Promise<Uint8Array | null>;
 	/** Snapshot key; autosave is inert while it is empty (used with {@link serialize}). */
 	filePath?: () => string | undefined;
 	/** Host `storage`: snapshots go to its recovery methods when it has them. */
@@ -65,6 +70,8 @@ export interface UseAutosaveOptions {
 	onSave?: () => void | Promise<void>;
 	/** Injectable timer API for testing. Defaults to the global timers. */
 	timers?: AutosaveTimerApi;
+	/** The element whose inline editor is open; a closed editor's draft is dropped. */
+	getInlineEditingId?: () => string | null;
 }
 
 export interface UseAutosaveResult {
@@ -74,6 +81,8 @@ export interface UseAutosaveResult {
 	lastSavedAt: Ref<number | null>;
 	/** Force an immediate save, bypassing the interval. */
 	saveNow: () => Promise<void>;
+	/** The engine, which receives in-progress inline text (`reportInlineTextDraft`). */
+	engine: InlineTextDraftSink;
 	/**
 	 * True when there are edits no snapshot has captured yet. Setting it true is
 	 * an edit (it starts the interval); setting it false clears them.
@@ -98,9 +107,9 @@ export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
 		getActivation: () => ({ active: toValue(enabled) !== false }),
 		getFilePath: () => (ownsWrite ? options.filePath?.() : 'autosave'),
 		getIntervalMs: () => toValue(intervalMs),
-		serialize: async () => {
+		serialize: async (draft) => {
 			if (options.serialize) {
-				return options.serialize();
+				return options.serialize(draft);
 			}
 			await options.onSave?.();
 			return NO_BYTES;
@@ -112,6 +121,7 @@ export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
 			}
 		},
 		writeSnapshot: ownsWrite ? saveAutosaveSnapshot : async () => undefined,
+		...(options.getInlineEditingId ? { getInlineEditingId: options.getInlineEditingId } : {}),
 		...(timers
 			? {
 					timers: {
@@ -161,6 +171,7 @@ export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
 		status: status as Ref<AutosaveStatus>,
 		lastSavedAt: lastSavedAt as Ref<number | null>,
 		saveNow: () => controller.saveNow(),
+		engine: controller,
 		isDirty,
 	};
 }

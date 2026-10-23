@@ -1,5 +1,5 @@
 import { resolveAutosaveActivation, resolveAutosaveIntervalMs } from 'ooxml-ui/pptx';
-import type { AutosaveDisabledReason, DocumentStorage } from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason, DocumentStorage, InlineTextDraft } from 'ooxml-ui/pptx';
 /**
  * useAutosaveWiring: the title-bar AutoSave toggle plus the debounced save
  * engine behind it.
@@ -53,7 +53,9 @@ export interface UseAutosaveWiringOptions {
 	 * (`recovery-snapshot`) serialisation, NOT `getContent`: an encrypted
 	 * snapshot cannot be reopened, because no recovery path has the password.
 	 */
-	getRecoverySnapshot: () => Promise<Uint8Array>;
+	getRecoverySnapshot: (draft?: InlineTextDraft | null) => Promise<Uint8Array>;
+	/** The element whose inline editor is open (its live draft is in the snapshot already). */
+	getInlineEditingId?: () => string | null;
 	/** Emit the serialised bytes to the host. */
 	emitAutosave: (bytes: Uint8Array) => void;
 	/** Snapshot a restorable version (version history). */
@@ -114,7 +116,9 @@ export function useAutosaveWiring(options: UseAutosaveWiringOptions): UseAutosav
 		// The shared recovery store (IndexedDB, or the host's recovery methods).
 		// Recovery reads these bytes back with no password, so they are
 		// deliberately a plain ZIP even when the deck is protected.
-		serialize: () => options.getRecoverySnapshot(),
+		// The open inline editor's rich draft, else the plain autosave draft.
+		serialize: (draft) => options.getRecoverySnapshot(draft),
+		...(options.getInlineEditingId ? { getInlineEditingId: options.getInlineEditingId } : {}),
 		onSaved: (bytes) => {
 			options.emitAutosave(bytes);
 			options.captureVersion('Autosave', Date.now());
