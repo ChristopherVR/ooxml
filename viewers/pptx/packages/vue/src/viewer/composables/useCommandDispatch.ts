@@ -1,5 +1,5 @@
 import { DEFAULT_INSERT_CHART_KIND } from 'ooxml-ui/pptx';
-import type { InsertChartKind } from 'ooxml-ui/pptx';
+import type { InsertChartKind, InsertChartOptions } from 'ooxml-ui/pptx';
 /**
  * useCommandDispatch: the two "run a command by id" entry points in the title
  * bar, kept out of the SFC because they are lookup tables, not presentation.
@@ -26,7 +26,7 @@ export interface CommandDispatchActions {
 	addText: () => void;
 	addShape: (preset: ShapePreset) => void;
 	addTable: () => void;
-	addChart: (chartKind: InsertChartKind) => void;
+	addChart: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	openImagePicker: () => void;
 	openMediaPicker: () => void;
 	showInsertSmartArt: Ref<boolean>;

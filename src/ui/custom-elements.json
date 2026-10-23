@@ -3872,6 +3872,85 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "smartart/smartart-picker.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSmartArtPicker",
+					"tagName": "office-ui-smartart-picker",
+					"customElement": true,
+					"description": "`<office-ui-smartart-picker>`: the body of every product's Insert SmartArt dialog: a category list, a gallery of layout tiles (`role=\"listbox\"`), and a pane with the chosen layout's large preview, name and its category's description. The product owns the dialog around it, the OK and Cancel buttons and the diagram model. The host sets `categories`, `layouts` and `labels` (translated), and optionally `drawPreview` (a live render; without it each tile draws its layout family in `accent`). `items-editor` adds a text box of node texts, one per line, seeded from the chosen layout's `defaultItems`. Read and write the choice with `value` and the shown category with `category`; choosing a category selects its first layout. Emits `office-smartart-change` with the value on every choice or edit, and `office-smartart-activate` with the value when a tile is double-clicked or Enter is pressed on it (the host inserts, as OK would).",
+					"attributes": [
+						{
+							"name": "accent"
+						},
+						{
+							"name": "items-editor"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "accent",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "categories"
+						},
+						{
+							"kind": "field",
+							"name": "category"
+						},
+						{
+							"kind": "field",
+							"name": "drawPreview"
+						},
+						{
+							"kind": "field",
+							"name": "itemsEditor",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "items-editor"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "layouts"
+						},
+						{
+							"kind": "field",
+							"name": "value"
+						}
+					],
+					"events": [
+						{
+							"name": "office-smartart-activate"
+						},
+						{
+							"name": "office-smartart-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-smartart-picker",
+					"declaration": {
+						"name": "OfficeUiSmartArtPicker"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "chrome/status-bar.ts",
 			"declarations": [
 				{

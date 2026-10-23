@@ -240,3 +240,42 @@ describe('insert section phone variant', () => {
 		wrapper.unmount();
 	});
 });
+
+describe('insert section Insert Chart dialog', () => {
+	const chartMenu = () =>
+		document.body.querySelector<HTMLElement>('[data-ribbon-control="insert.illustrations.chart"]')!;
+
+	it('opens the shared dialog from the Chart menu and inserts its choice', async () => {
+		const onAddChart = vi.fn();
+		const { wrapper } = mountInsert({ onAddChart });
+		chartMenu().querySelector<HTMLButtonElement>('.trigger')!.click();
+		chartMenu().querySelector<HTMLButtonElement>('[data-insert-item="__chartDialog__"]')!.click();
+		await wrapper.vm.$nextTick();
+		const dialog = document.body.querySelector('pptx-ui-insert-chart-dialog') as HTMLElement & {
+			open: boolean;
+		};
+		expect(dialog.open).toBe(true);
+		dialog.dispatchEvent(
+			new CustomEvent('insert-chart', {
+				detail: { kind: 'bar', title: 'Sales', grouping: 'stacked' },
+			}),
+		);
+		expect(onAddChart).toHaveBeenCalledWith('bar', { title: 'Sales', grouping: 'stacked' });
+		dialog.dispatchEvent(new CustomEvent('dialog-close'));
+		await wrapper.vm.$nextTick();
+		expect(dialog.open).toBe(false);
+		wrapper.unmount();
+	});
+
+	it('hands the dialog to the phone sheet host when it owns one', async () => {
+		const openInsertChart = vi.fn();
+		const { wrapper } = mountInsert({
+			dialogHost: { openDateTime: vi.fn(), openSlideTemplates: vi.fn(), openInsertChart },
+		});
+		chartMenu().querySelector<HTMLButtonElement>('.trigger')!.click();
+		chartMenu().querySelector<HTMLButtonElement>('[data-insert-item="__chartDialog__"]')!.click();
+		expect(openInsertChart).toHaveBeenCalledOnce();
+		expect(document.body.querySelector('pptx-ui-insert-chart-dialog')).toBeNull();
+		wrapper.unmount();
+	});
+});

@@ -1,4 +1,4 @@
-import type { CanvasSize, InsertChartKind } from 'ooxml-ui/pptx';
+import type { CanvasSize, InsertChartKind, InsertChartOptions } from 'ooxml-ui/pptx';
 import {
 	buildActionButtonElement,
 	buildSmartArtPresetData,
@@ -27,13 +27,15 @@ const FIELD_SIZE = { width: 200, height: 40 };
 
 /**
  * Build a new, centred chart element for the given insert-dropdown entry
- * (`'column'` yields vertical columns, `'bar'` horizontal bars).
+ * (`'column'` yields vertical columns, `'bar'` horizontal bars), with the
+ * Insert Chart dialog's title and grouping when it supplies them.
  */
 export function buildChartInsertElement(
 	chartKind: InsertChartKind,
 	canvasSize: CanvasSize,
+	options?: InsertChartOptions,
 ): PptxElement {
-	const el = createDefaultChartElement(chartKind);
+	const el = createDefaultChartElement(chartKind, undefined, options);
 	centerOnCanvas(el, canvasSize);
 	return el;
 }

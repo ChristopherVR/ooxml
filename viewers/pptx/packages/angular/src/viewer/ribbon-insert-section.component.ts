@@ -97,6 +97,8 @@ export class RibbonInsertSectionComponent {
 	readonly handled = output<void>();
 
 	readonly openSmartArtDialog = output<void>();
+	/** Insert Chart... at the end of the Chart menu; the host opens the Insert Chart dialog. */
+	readonly openChartDialog = output<void>();
 	readonly openEquationDialog = output<void>();
 	/** "Hyperlink"; the host opens the hyperlink edit dialog for the selection. */
 	readonly openHyperlink = output<void>();
@@ -124,6 +126,7 @@ export class RibbonInsertSectionComponent {
 			newSlideAvailable: true,
 			commentAvailable: true,
 			slideTemplatesAvailable: isDialogAvailable(this.customization(), 'slideTemplates'),
+			chartDialogAvailable: true,
 			layouts: this.layouts(),
 			...this.currentLayout(),
 			translate: (key: string) => this.translate.instant(key),
@@ -169,6 +172,9 @@ export class RibbonInsertSectionComponent {
 			}
 			case 'slideTemplates':
 				this.openTemplateGallery.emit();
+				break;
+			case 'chartDialog':
+				this.openChartDialog.emit();
 				break;
 			case 'shapeType':
 				this.shapeTypeChange.emit(intent.value as ShapePresetType);

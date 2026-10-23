@@ -35,6 +35,7 @@ import { RibbonInsertSectionComponent } from './ribbon-insert-section.component'
 					[commentsOpen]="commentsOpen()"
 					(handled)="closed.emit()"
 					(openSmartArtDialog)="openSmartArtDialog.emit()"
+					(openChartDialog)="openChartDialog.emit()"
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openHyperlink)="openHyperlink.emit()"
 					(toggleComments)="toggleComments.emit()"
@@ -55,6 +56,7 @@ export class MobileInsertSheetComponent {
 
 	readonly closed = output<void>();
 	readonly openSmartArtDialog = output<void>();
+	readonly openChartDialog = output<void>();
 	readonly openEquationDialog = output<void>();
 	readonly openHyperlink = output<void>();
 	readonly toggleComments = output<void>();

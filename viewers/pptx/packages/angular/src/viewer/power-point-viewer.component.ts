@@ -144,8 +144,7 @@ import { FindReplaceBarComponent } from './find-replace-bar.component';
 import { FollowModeBarComponent } from './follow-mode-bar.component';
 import { GoogleWebfontsService } from './google-webfonts.service';
 import { HyperlinkDialogComponent } from './hyperlink-dialog.component';
-import { InsertSmartArtDialogComponent } from './insert-smart-art-dialog.component';
-import type { SmartArtInsertEvent } from './insert-smart-art-dialog.component';
+import { InsertDialogsHostComponent } from './insert-dialogs-host.component';
 import { IsMobileService } from './is-mobile';
 import { LoadContentService } from './load-content.service';
 import { LoadNoticesService } from './load-notices.service';
@@ -203,7 +202,6 @@ import { SlideDefaultInspectorComponent } from './slide-default-inspector.compon
 import { SlideSorterOverlayComponent } from './slide-sorter-overlay.component';
 import { SlideTemplateGalleryDialogComponent } from './slide-template-gallery-dialog.component';
 import { SlidesPanelComponent } from './slides-panel.component';
-import { buildSmartArtInsertElement } from './smart-art-insert-helpers';
 import { StatusBarComponent } from './status-bar.component';
 import { TableSelectionService } from './table-selection.service';
 import { buildSaveSlides } from './template-mode';
@@ -321,7 +319,7 @@ const noopClose = (): void => undefined;
 		ChartFormatPaneHostComponent,
 		SelectionPaneComponent,
 		CustomShowsComponent,
-		InsertSmartArtDialogComponent,
+		InsertDialogsHostComponent,
 		SlideTemplateGalleryDialogComponent,
 		ViewerExtraDialogsComponent,
 		AutosaveRecoveryDialogComponent,
@@ -512,6 +510,7 @@ const noopClose = (): void => undefined;
 						(toggleSelectionPane)="inspectorPanel.togglePanel('selection')"
 						(openCustomShows)="customShowsCtl.showDialog.set(true)"
 						(openSmartArtDialog)="showSmartArtInsert.set(true)"
+						(openChartDialog)="showChartInsert.set(true)"
 						(openTemplateGallery)="showTemplateGallery.set(true)"
 						(openEquationDialog)="dialogs.openEquationInsert()"
 						(openMasterView)="openMasterView()"
@@ -1327,11 +1326,13 @@ const noopClose = (): void => undefined;
 					(close)="customShowsCtl.showDialog.set(false)"
 				/>
 
-				<!-- ── Insert SmartArt gallery dialog ─────────────────────────── -->
-				<pptx-insert-smart-art-dialog
-					[open]="showSmartArtInsert()"
-					(insert)="onInsertSmartArt($event)"
-					(close)="showSmartArtInsert.set(false)"
+				<!-- ── Insert SmartArt and Insert Chart dialogs (shared elements) ── -->
+				<pptx-insert-dialogs-host
+					[smartArtOpen]="showSmartArtInsert()"
+					[chartOpen]="showChartInsert()"
+					[slideIndex]="activeSlideIndex()"
+					(smartArtClosed)="showSmartArtInsert.set(false)"
+					(chartClosed)="showChartInsert.set(false)"
 				/>
 
 				<!-- ── Slide Templates gallery dialog ─────────────────────────── -->
@@ -1362,6 +1363,7 @@ const noopClose = (): void => undefined;
 					[commentsOpen]="inspectorPanel.activePanel() === 'comments'"
 					(closed)="mobileSheetSvc.mobileSheet.set(null)"
 					(openSmartArtDialog)="showSmartArtInsert.set(true)"
+					(openChartDialog)="showChartInsert.set(true)"
 					(openEquationDialog)="dialogs.openEquationInsert()"
 					(openHyperlink)="docProperties.showHyperlink.set(true)"
 					(toggleComments)="applyMobileSheetTap('comments')"
@@ -2285,6 +2287,7 @@ export class PowerPointViewerComponent
 	]);
 	/** Whether the Insert SmartArt gallery dialog is open. */
 	protected readonly showSmartArtInsert = signal(false);
+	protected readonly showChartInsert = signal(false);
 	/** Whether the Slide Templates gallery dialog is open. */
 	protected readonly showTemplateGallery = signal(false);
 	/** Deck scheme map for template gallery previews (deck theme colours). */
@@ -4216,19 +4219,6 @@ export class PowerPointViewerComponent
 				comments: withMentionsOnLastReply(next, event.parentId, event.mentions),
 			});
 		}
-	}
-
-	// ── Insert SmartArt ────────────────────────────────────────────────────────
-
-	/**
-	 * Insert a new SmartArt element built from the dialog's chosen preset + item
-	 * texts. The element id is left empty so `EditorStateService.addElement`
-	 * assigns one; the insert is a single undo/redo history entry.
-	 */
-	protected onInsertSmartArt(event: SmartArtInsertEvent): void {
-		const element = buildSmartArtInsertElement(event.layout, event.items);
-		this.editor.addElement(this.activeSlideIndex(), element);
-		this.showSmartArtInsert.set(false);
 	}
 
 	/**

@@ -1,4 +1,10 @@
-import type { AlignEdge, DistributeAxis, InsertChartKind, SlideTemplateId } from 'ooxml-ui/pptx';
+import type {
+	AlignEdge,
+	DistributeAxis,
+	InsertChartKind,
+	InsertChartOptions,
+	SlideTemplateId,
+} from 'ooxml-ui/pptx';
 import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 import type {
 	PptxComment,
@@ -131,7 +137,7 @@ export interface UseRibbonPropsActionsInput {
 	addText: () => void;
 	addShape: (preset: ShapePreset) => void;
 	addTable: (rows?: number, columns?: number) => void;
-	addChart: (chartKind: InsertChartKind) => void;
+	addChart: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	addField: (fieldType: string, value?: string) => void;
 	addActionButton: (shapeType: string) => void;
 	openImagePicker: () => void;

@@ -628,6 +628,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				onAddShape={insertHandlers.handleAddShape}
 				onAddTable={insertHandlers.handleAddTable}
 				onAddChart={insertHandlers.handleAddChart}
+				onOpenChartDialog={() => dialogs.setIsChartDialogOpen(true)}
 				onAddSmartArt={() => dialogs.setIsSmartArtDialogOpen(true)}
 				onAddEquation={() => {
 					dialogs.setEditingEquationOmml(null);

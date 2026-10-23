@@ -9,7 +9,6 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';
-import { allButtons } from '../../dialog-footer.test-support';
 import type { RibbonInsertHandlers } from '../ribbon-types';
 import { createInsertTab } from './insert-tab';
 
@@ -69,13 +68,21 @@ function pick(tab: { el: HTMLElement }, id: string, value: string): void {
 		)!
 		.click();
 }
-function dialog(): HTMLElement | null {
-	return document.querySelector<HTMLElement>('[role="dialog"][aria-label="Insert SmartArt"]');
+type Shadowed = HTMLElement & { shadowRoot: ShadowRoot };
+/** The shared Insert SmartArt / Insert Chart dialog element, and its picker's shadow root. */
+function shared(tag: string): HTMLElement & { open: boolean } {
+	return document.querySelector(tag) as HTMLElement & { open: boolean };
 }
-function dialogButton(name: string): HTMLButtonElement | undefined {
-	const root = dialog();
-	return (root ? allButtons(root) : []).find((button) => button.textContent === name);
+function pickerRoot(tag: string, picker: string): ShadowRoot {
+	return (shared(tag).querySelector(picker) as Shadowed).shadowRoot;
 }
+function footerButton(tag: string, id: string): HTMLButtonElement {
+	return (
+		shared(tag).querySelector('office-ui-dialog-footer') as Shadowed
+	).shadowRoot.querySelector(`button[data-action="${id}"]`)!;
+}
+const SMARTART = 'pptx-ui-insert-smartart-dialog';
+const CHART = 'pptx-ui-insert-chart-dialog';
 
 describe('createInsertTab', () => {
 	afterEach(() => {
@@ -156,7 +163,8 @@ describe('createInsertTab', () => {
 		const items = (id: string) =>
 			tab.el.querySelectorAll(`[data-ribbon-control="${id}"] [data-insert-item]`);
 		expect(items('insert.illustrations.shapes')).toHaveLength(SHAPE_GALLERY_ITEMS.length);
-		expect(items('insert.illustrations.chart')).toHaveLength(INSERT_CHART_TYPES.length);
+		// Every chart type, then Insert Chart... for the whole dialog.
+		expect(items('insert.illustrations.chart')).toHaveLength(INSERT_CHART_TYPES.length + 1);
 		// Shapes, Chart, Action, Table, Pictures and Video are large dropdowns, not selects beside a button.
 		expect(tab.el.querySelectorAll('select')).toHaveLength(0);
 		expect(tab.el.querySelectorAll('.trigger.large')).toHaveLength(10);
@@ -231,54 +239,50 @@ describe('createInsertTab', () => {
 		expect(equation).toHaveBeenCalledOnce();
 	});
 
-	it('opens an accessible SmartArt dialog and confirms the selected layout', () => {
+	it('opens the shared Insert SmartArt dialog and inserts the chosen layout', () => {
 		const insertSmartArt = vi.fn();
 		const tab = make({ insertSmartArt });
 		control(tab, 'insert.illustrations.smartArt').click();
-		const panel = dialog();
-		expect(panel).not.toBeNull();
-		expect(panel?.parentElement?.hidden).toBeFalsy();
-		expect(panel?.querySelector('[role="listbox"][aria-label="SmartArt layouts"]')).not.toBeNull();
-		const option = panel?.querySelector<HTMLButtonElement>('[role="option"]');
-		const insertButton = dialogButton('Insert');
-		expect(insertButton?.disabled).toBeTruthy();
-		option?.click();
-		expect(option?.getAttribute('aria-selected')).toBe('true');
-		insertButton?.click();
-		expect(insertSmartArt).toHaveBeenCalledWith(PRESETS[0].layout, PRESETS[0].defaultItems);
-		expect(panel?.parentElement?.hidden).toBeTruthy();
-	});
-
-	it('filters SmartArt layouts by category and resets selection', () => {
-		const tab = make();
-		control(tab, 'insert.illustrations.smartArt').click();
-		dialog()?.querySelector<HTMLButtonElement>('[role="option"]')?.click();
+		expect(shared(SMARTART).open).toBe(true);
+		const root = pickerRoot(SMARTART, 'office-ui-smartart-picker');
+		expect(root.querySelector('[role="listbox"][aria-label="SmartArt layouts"]')).not.toBeNull();
 		const category = CATEGORIES[1];
-		Array.from(dialog()?.querySelectorAll<HTMLButtonElement>('.pptxv-smartart-category') ?? [])
-			.find((button) => button.dataset.category === category.id)
-			?.click();
+		root.querySelector<HTMLButtonElement>(`[data-category="${category.id}"]`)!.click();
 		const expected = PRESETS.filter((preset) => preset.category === category.id);
-		const options = dialog()?.querySelectorAll<HTMLElement>('[role="option"]') ?? [];
-		expect(options).toHaveLength(expected.length);
-		expect(
-			Array.from(options).every((option) => option.getAttribute('aria-selected') === 'false'),
-		).toBeTruthy();
-		expect(dialogButton('Insert')?.disabled).toBeTruthy();
+		expect(root.querySelectorAll('[role="option"]')).toHaveLength(expected.length);
+		footerButton(SMARTART, 'insert').click();
+		expect(insertSmartArt).toHaveBeenCalledWith(expected[0].layout, expected[0].defaultItems);
+		expect(shared(SMARTART).open).toBe(false);
 	});
 
-	it('cancels SmartArt insertion and returns focus to the SmartArt control', () => {
+	it('cancels SmartArt insertion and returns focus to the SmartArt control', async () => {
 		const insertSmartArt = vi.fn();
 		const tab = make({ insertSmartArt });
-		const smartArt = control(tab, 'insert.illustrations.smartArt');
-		smartArt.click();
-		const panel = dialog();
-		panel?.querySelector<HTMLButtonElement>('[role="option"]')?.click();
-		dialogButton('Cancel')?.click();
+		control(tab, 'insert.illustrations.smartArt').click();
+		footerButton(SMARTART, 'cancel').click();
+		await Promise.resolve();
 		expect(insertSmartArt).not.toHaveBeenCalled();
-		expect(panel?.parentElement?.hidden).toBeTruthy();
+		expect(shared(SMARTART).open).toBe(false);
 		expect(tab.el.querySelector('[data-ribbon-control="insert.illustrations.smartArt"]')).toBe(
 			document.activeElement,
 		);
+	});
+
+	it('opens the shared Insert Chart dialog from the Chart menu and inserts its choice', () => {
+		const insertChart = vi.fn();
+		const tab = make({ insertChart });
+		pick(tab, 'insert.illustrations.chart', '__chartDialog__');
+		expect(shared(CHART).open).toBe(true);
+		const picker = shared(CHART).querySelector('office-ui-chart-picker') as HTMLElement & {
+			value: { type: string; grouping: string; title: string };
+		};
+		picker.value = { type: 'bar', grouping: 'stacked', title: 'Sales' };
+		footerButton(CHART, 'insert').click();
+		expect(insertChart).toHaveBeenCalledExactlyOnceWith('bar', {
+			title: 'Sales',
+			grouping: 'stacked',
+		});
+		expect(shared(CHART).open).toBe(false);
 	});
 
 	it('dispatches insertActionButton(type) and insertField(type) from the shared menus', () => {

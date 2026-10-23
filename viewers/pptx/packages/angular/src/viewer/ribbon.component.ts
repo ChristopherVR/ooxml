@@ -159,6 +159,7 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 					(copySlideAsImage)="copySlideAsImage.emit()"
 					(replace)="replace.emit()"
 					(openSmartArtDialog)="openSmartArtDialog.emit()"
+					(openChartDialog)="openChartDialog.emit()"
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openTemplateGallery)="openTemplateGallery.emit()"
 					(openPassword)="openPassword.emit()"
@@ -392,6 +393,7 @@ export class RibbonComponent {
 	readonly toggleEyedropper = output<void>();
 	/** "SmartArt" in the Insert tab; the host opens the gallery dialog and does the insert. */
 	readonly openSmartArtDialog = output<void>();
+	readonly openChartDialog = output<void>();
 	/** "Slide Templates" in the Home tab; the host opens the gallery dialog and does the insert. */
 	readonly openTemplateGallery = output<void>();
 	/** Emitted when the user clicks "Equation" in the Insert tab (opens the editor). */

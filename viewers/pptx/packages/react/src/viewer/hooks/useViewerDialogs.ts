@@ -49,6 +49,7 @@ export function useViewerDialogs(input: UseViewerDialogsInput): ViewerDialogsRes
 
 	// ── Dialog states ─────────────────────────────────────────────────
 	const [isSmartArtDialogOpen, setIsSmartArtDialogOpen] = useState(false);
+	const [isChartDialogOpen, setIsChartDialogOpen] = useState(false);
 	const [isEquationDialogOpen, setIsEquationDialogOpen] = useState(false);
 	const [isHyperlinkDialogOpen, setIsHyperlinkDialogOpen] = useState(false);
 	const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -242,6 +243,8 @@ export function useViewerDialogs(input: UseViewerDialogsInput): ViewerDialogsRes
 	return {
 		isSmartArtDialogOpen,
 		setIsSmartArtDialogOpen,
+		isChartDialogOpen,
+		setIsChartDialogOpen,
 		isEquationDialogOpen,
 		setIsEquationDialogOpen,
 		isHyperlinkDialogOpen,

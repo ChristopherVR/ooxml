@@ -1,5 +1,11 @@
+import { buildSmartArtPresetData } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { PptxElement, TextSegment } from 'pptx-viewer-core';
+import type {
+	PptxElement,
+	SmartArtLayout,
+	SmartArtPptxElement,
+	TextSegment,
+} from 'pptx-viewer-core';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 
@@ -17,6 +23,8 @@ export interface UseInsertElementDialogsResult {
 	/** The OMML being edited, or null when the dialog is in "insert" mode. */
 	editingEquationOmml: Ref<Record<string, unknown> | null>;
 	onInsertElement: (element: PptxElement) => void;
+	/** Insert > SmartArt: add a diagram of `layout` seeded with `items`, and select it. */
+	onInsertSmartArt: (layout: SmartArtLayout, items: string[]) => void;
 	/** Open the equation editor seeded from an existing equation element; returns
 	 *  false when `el` carries no equation segment (so the caller can fall back to
 	 *  ordinary inline text editing). */
@@ -25,6 +33,14 @@ export interface UseInsertElementDialogsResult {
 	onApplyEquation: (segment: TextSegment) => void;
 	/** Close the equation editor and drop any edit-mode state. */
 	closeEquationEditor: () => void;
+}
+
+/** Best-effort unique id, mirroring the core element-factory style. */
+function newId(prefix: string): string {
+	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+		return `${prefix}-${crypto.randomUUID()}`;
+	}
+	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /**
@@ -54,6 +70,19 @@ export function useInsertElementDialogs(
 		showEquationEditor.value = false;
 		editingEquationOmml.value = null;
 		editingEquationElementId.value = null;
+	}
+
+	function onInsertSmartArt(layout: SmartArtLayout, items: string[]): void {
+		const element: SmartArtPptxElement = {
+			id: newId('smartart'),
+			type: 'smartArt',
+			x: 100,
+			y: 120,
+			width: 600,
+			height: 340,
+			smartArtData: buildSmartArtPresetData(layout, items, (i) => newId(`node-${i}`)),
+		};
+		onInsertElement(element);
 	}
 
 	function openEquationEditorForElement(el: PptxElement): boolean {
@@ -99,6 +128,7 @@ export function useInsertElementDialogs(
 		showEquationEditor,
 		editingEquationOmml,
 		onInsertElement,
+		onInsertSmartArt,
 		openEquationEditorForElement,
 		onApplyEquation,
 		closeEquationEditor,

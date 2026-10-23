@@ -328,6 +328,22 @@ describe('shared Insert view', () => {
 		]);
 	});
 
+	it('ends the Chart menu with Insert Chart... only when the host mounts the dialog', () => {
+		const open = (state: Partial<RibbonInsertState>) => {
+			const { host, requests } = mount(state);
+			const menu = control(host, 'insert.illustrations.chart');
+			menu.querySelector<HTMLButtonElement>('.trigger')!.click();
+			return { menu, requests };
+		};
+		expect(open({}).menu.querySelector('[data-insert-item="__chartDialog__"]')).toBeNull();
+		document.body.replaceChildren();
+		const { menu, requests } = open({ chartDialogAvailable: true });
+		const entry = menu.querySelector<HTMLButtonElement>('[data-insert-item="__chartDialog__"]')!;
+		expect(entry.textContent).toContain('Insert Chart...');
+		entry.click();
+		expect(calls(requests)).toStrictEqual([{ kind: 'chartDialog' }]);
+	});
+
 	it('lays the controls out as large or small Office commands', () => {
 		const { host } = mount();
 		for (const id of ['insert.text.textBox', 'insert.comments.comment', 'insert.links.link']) {

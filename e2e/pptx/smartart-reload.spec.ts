@@ -58,9 +58,11 @@ for (const source of ['cached', 'computed', 'powerpoint-computed', 'inserted'] a
 				.getByRole('tab', { name: 'Insert', exact: true })
 				.click();
 			await page.getByRole('button', { name: 'SmartArt', exact: true }).click();
-			const dialog = page.getByRole('dialog', { name: /Insert SmartArt/iu });
-			await dialog.getByRole('option').first().click();
-			await dialog.getByRole('button', { name: /^Insert$/iu }).click();
+			await expect(page.getByRole('dialog', { name: /Insert SmartArt/iu })).toBeVisible();
+			// The picker and its buttons are slotted into the shared dialog element, not the shadow box.
+			const smartArtDialog = page.locator('pptx-ui-insert-smartart-dialog');
+			await smartArtDialog.getByRole('option').first().click();
+			await smartArtDialog.getByRole('button', { name: /^Insert$/iu }).click();
 		}
 		const diagram = page.locator('[data-pptx-viewport] [data-testid^="smartart-"]').first();
 		await expect(diagram).toBeVisible();

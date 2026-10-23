@@ -97,6 +97,8 @@ export interface ToolbarProps {
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
+	/** Opens the Insert Chart dialog; without it the Chart menu leaves "Insert Chart..." out. */
+	onOpenChartDialog?: () => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
 	onAddActionButton: (shapeType: string) => void;

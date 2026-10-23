@@ -1436,6 +1436,7 @@ export * from './sheet-dismiss';
 // list shown in the insert dropdown. The single source of truth every binding's
 // "Insert > Chart" toolbar action calls; wraps core's `createChartElement`.
 export * from './insert-chart';
+export * from './insert-chart-preview';
 
 // SmartArt reflow: convert algorithmic layout results back to PptxSmartArtDrawingShape[]
 // so the drawing-shape renderer handles post-edit display and shapes round-trip through save.

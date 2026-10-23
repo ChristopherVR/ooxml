@@ -71,7 +71,6 @@ export * from './viewer/chart-waterfall-map';
 
 // ── SmartArt internals (2D authoring helpers + the opt-in 3D renderer) ──
 export { SmartArt3DRendererComponent } from './viewer/smart-art-3d-renderer.component';
-export { SmartArtPreviewComponent } from './viewer/smart-art-preview.component';
 export { SmartArtPropertiesComponent } from './viewer/smart-art-properties.component';
 // `DEFAULT_PALETTE` here is the SmartArt node palette; it collides with the
 // chart palette of the same name re-exported via `chart-renderer-helpers`
@@ -173,8 +172,7 @@ export { CustomShowsComponent } from './viewer/custom-shows.component';
 export * from './viewer/custom-shows-helpers';
 export { ExportProgressModalComponent } from './viewer/export-progress-modal.component';
 export { FollowModeBarComponent } from './viewer/follow-mode-bar.component';
-export { InsertSmartArtDialogComponent } from './viewer/insert-smart-art-dialog.component';
-export type { SmartArtInsertEvent } from './viewer/insert-smart-art-dialog.component';
+export { InsertDialogsHostComponent } from './viewer/insert-dialogs-host.component';
 export { NotesToolbarComponent } from './viewer/notes-toolbar.component';
 export { RemoteSelectionOverlayComponent } from './viewer/remote-selection-overlay.component';
 export { SelectionPaneComponent } from './viewer/selection-pane.component';

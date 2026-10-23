@@ -5,10 +5,11 @@
 	 * the Action / Field menus; this component supplies viewer state and routes typed
 	 * intents to the native handlers. Every insertion routes through
 	 * `EditorState.insertElement` (undoable, selects the new element). The file
-	 * pickers, the SmartArt gallery, the equation editor and the hyperlink dialog stay
-	 * native to the Svelte binding.
+	 * pickers, the equation editor and the hyperlink dialog stay native to the Svelte
+	 * binding; Insert SmartArt and Insert Chart are the shared
+	 * `pptx-ui-insert-smartart-dialog` / `pptx-ui-insert-chart-dialog`.
 	 */
-	import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
+	import type { PptxLayoutOption } from 'pptx-viewer-core';
 	import {
 		DEFAULT_INSERT_CHART_KIND,
 		FREEFORM_TOOL_IDS,
@@ -19,7 +20,9 @@
 	import type {
 		CanvasSize,
 		FreeformToolKind,
+		InsertChartDialogInsertEvent,
 		InsertChartKind,
+		InsertSmartArtDialogInsertEvent,
 		PptxUiRibbonInsertElement,
 		RibbonInsertRequestEvent,
 		ShapePresetType,
@@ -46,7 +49,6 @@
 	import EquationEditorDialog from './EquationEditorDialog.svelte';
 	import HyperlinkDialog from './HyperlinkDialog.svelte';
 	import SlideTemplatesLauncher from '../home/SlideTemplatesLauncher.svelte';
-	import SmartArtDialog from './SmartArtDialog.svelte';
 
 	const {
 		editor,
@@ -85,6 +87,7 @@
 	let mediaInput = $state<HTMLInputElement | null>(null);
 	let equationOpen = $state(false);
 	let smartArtOpen = $state(false);
+	let chartDialogOpen = $state(false);
 	let templatesOpen = $state(false);
 	// eslint-disable-next-line prefer-const
 	let hyperlinkOpen = $state(false);
@@ -116,6 +119,7 @@
 		// Like Home, New Slide works without layouts (it adds a blank slide).
 		newSlideAvailable: true,
 		slideTemplatesAvailable: customization.isDialogAvailable('slideTemplates'),
+		chartDialogAvailable: true,
 		commentAvailable: Boolean(chromeUi),
 		layouts: scopedLayouts.map(({ path, name }) => ({ path, name })),
 		...(currentLayoutPath ? { currentLayoutPath } : {}),
@@ -134,9 +138,20 @@
 		void tick().then(() => host?.focusControl('insert.illustrations.smartArt'));
 	}
 
-	function insertSmartArt(layout: SmartArtLayout, defaultItems: string[]): void {
-		editor.insertElement(buildSmartArtInsertElement(layout, defaultItems, canvasSize));
-		closeSmartArt();
+	function insertSmartArt(event: InsertSmartArtDialogInsertEvent): void {
+		const { layout, items } = event.detail;
+		editor.insertElement(buildSmartArtInsertElement(layout, items, canvasSize));
+	}
+
+	function closeChartDialog(): void {
+		chartDialogOpen = false;
+		void tick().then(() => host?.focusControl('insert.illustrations.chart'));
+	}
+
+	function insertChart(event: InsertChartDialogInsertEvent): void {
+		const { kind, title, grouping } = event.detail;
+		chartKind = kind;
+		editor.insertElement(buildChartInsertElement(kind, canvasSize, { title, grouping }));
 	}
 
 	function insertField(fieldType: string): void {
@@ -225,6 +240,7 @@
 				break;
 			}
 			case 'slideTemplates': templatesOpen = true; break;
+			case 'chartDialog': chartDialogOpen = true; break;
 			case 'shapeType': shapeType = intent.value as ShapePresetType; break;
 			case 'shape': editor.insertElement(newPresetShapeElement(intent.value as ShapePresetType)); break;
 			case 'chartType': chartKind = intent.value as InsertChartKind; break;
@@ -256,7 +272,8 @@
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
 <SlideTemplatesLauncher {editor} onnavigate={(index) => onnavigateslide?.(index)} bind:open={templatesOpen} />
-{#if smartArtOpen}<SmartArtDialog oncancel={closeSmartArt} oninsert={insertSmartArt} />{/if}
+{#if smartArtOpen}<pptx-ui-insert-smartart-dialog open={smartArtOpen} translateLabel={t} oninsert-smartart={insertSmartArt} ondialog-close={closeSmartArt}></pptx-ui-insert-smartart-dialog>{/if}
+{#if chartDialogOpen}<pptx-ui-insert-chart-dialog open={chartDialogOpen} kind={chartKind} translateLabel={t} oninsert-chart={insertChart} ondialog-close={closeChartDialog}></pptx-ui-insert-chart-dialog>{/if}
 <EquationEditorDialog {editor} {canvasSize} open={equationOpen && customization.isDialogAvailable('equation')} onclose={closeEquationDialog} />
 {#if hyperlinkOpen && customization.isDialogAvailable('hyperlink')}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
 

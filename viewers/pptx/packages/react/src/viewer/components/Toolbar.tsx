@@ -262,6 +262,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							onAddShape={p.onAddShape}
 							onAddTable={p.onAddTable}
 							onAddChart={p.onAddChart}
+							onOpenChartDialog={p.onOpenChartDialog}
 							onAddSmartArt={p.onAddSmartArt}
 							onAddEquation={p.onAddEquation}
 							onAddActionButton={p.onAddActionButton}

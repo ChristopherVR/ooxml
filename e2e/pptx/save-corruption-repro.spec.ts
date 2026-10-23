@@ -68,12 +68,14 @@ async function addSmartArt(page: Page): Promise<void> {
 	await switchToInsertTab(page);
 	await page.getByRole('button', { name: 'SmartArt' }).click();
 	const dialog = page.getByRole('dialog', { name: /Insert SmartArt/iu });
+	// The picker and its buttons are slotted into the shared dialog element, not the shadow box.
+	const smartArtDialog = page.locator('pptx-ui-insert-smartart-dialog');
 	await expect(dialog).toBeVisible();
-	const presetButton = dialog.getByRole('option').first();
+	const presetButton = smartArtDialog.getByRole('option').first();
 	await expect(presetButton).toBeVisible();
 	await presetButton.click();
 	await page.waitForTimeout(200);
-	await dialog.getByRole('button', { name: /^Insert$/iu }).click();
+	await smartArtDialog.getByRole('button', { name: /^Insert$/iu }).click();
 	await page.waitForTimeout(500);
 }
 

@@ -1,18 +1,8 @@
 /**
- * smart-art-insert-helpers.ts: pure logic for the Angular "Insert SmartArt"
- * dialog.
- *
- * The presentational `InsertSmartArtDialogComponent` is intentionally thin:
- * every non-trivial computation (filtering the preset gallery by category,
- * building the SmartArt element payload from a chosen preset, hierarchy
- * parenting) is delegated to the pure functions below so they can be unit-tested
- * in plain vitest (the Angular package's vitest setup has no Angular compiler,
- * so component / TestBed tests are not available).
- *
- * The preset catalogue itself is the framework-agnostic, vendored
- * `pptx-viewer-shared` source of truth (`render/smart-art-presets`), consumed
- * through the `../internal/shared` barrel. This mirrors the React
- * `InsertSmartArtDialog.tsx` + `insert-structured-elements.ts` spec.
+ * smart-art-insert-helpers.ts: builds the SmartArt element the shared Insert
+ * SmartArt dialog (`pptx-ui-insert-smartart-dialog`, hosted by
+ * `insert-dialogs-host.component.ts`) inserts for a chosen preset and node
+ * texts, plus catalogue lookups. Pure functions, unit-tested in plain vitest.
  *
  * @module angular-viewer/smart-art-insert-helpers
  *

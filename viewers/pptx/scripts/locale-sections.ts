@@ -226,7 +226,7 @@ const SECTION_DEFINITIONS = [
 	{ name: 'backstage', prefixes: ['backstage'] },
 	{ name: 'viewer-options', prefixes: ['options'] },
 	{ name: 'slide-templates', prefixes: ['slideTemplates'] },
-	{ name: 'ribbon', prefixes: ['ribbon', 'home', 'insert'] },
+	{ name: 'ribbon', prefixes: ['ribbon', 'home', 'insert', 'insertChart'] },
 	{ name: 'ribbon-galleries', prefixes: ['gallery'] },
 	{ name: 'shape-gallery', prefixes: ['shapes'] },
 ] as const;

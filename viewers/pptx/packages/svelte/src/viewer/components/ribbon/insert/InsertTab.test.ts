@@ -4,7 +4,6 @@ import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EditorState } from '../../../editor/editor-state.svelte';
-import { allButtons } from '../../dialog-footer.test-support';
 import InsertTab from './InsertTab.svelte';
 
 /**
@@ -48,6 +47,12 @@ function control(target: HTMLElement, id: string): HTMLButtonElement {
 	return target
 		.querySelector(`[data-ribbon-control="${id}"]`)!
 		.shadowRoot!.querySelector('button')!;
+}
+
+function footer(dialog: HTMLElement, id: string): HTMLButtonElement {
+	return dialog
+		.querySelector('office-ui-dialog-footer')!
+		.shadowRoot!.querySelector<HTMLButtonElement>(`button[data-action="${id}"]`)!;
 }
 
 function headerFooter(target: HTMLElement): HTMLElement {
@@ -165,22 +170,28 @@ describe('insertTab', () => {
 		expect(clicks).toStrictEqual(['image/*', 'video/*,audio/*']);
 	});
 
-	it('opens the SmartArt dialog and inserts a layout', async () => {
+	it('opens the shared SmartArt dialog and inserts the chosen layout', async () => {
 		const editor = makeEditor();
 		const target = mountTab(editor);
+		// Mounted only while open, like the other insert dialogs (several InsertTabs can be mounted).
+		expect(target.querySelector('pptx-ui-insert-smartart-dialog')).toBeNull();
 		control(target, 'insert.illustrations.smartArt').click();
 		flushSync();
-		const dialog = document.body.querySelector('[role="dialog"]');
-		expect(dialog?.getAttribute('aria-label')).toBe('Insert SmartArt');
-		dialog!.querySelector<HTMLButtonElement>('[role="option"]')!.click();
-		flushSync();
-		allButtons(dialog!)
-			.find((button) => button.textContent?.trim() === 'Insert')!
-			.click();
+		const dialog = target.querySelector<HTMLElement & { open: boolean }>(
+			'pptx-ui-insert-smartart-dialog',
+		)!;
+		expect(dialog.open).toBe(true);
+		const picker = dialog.querySelector('office-ui-smartart-picker')!;
+		picker.shadowRoot!.querySelector<HTMLElement>('[data-category="cycle"]')!.click();
+		footer(dialog, 'insert').click();
 		flushSync();
 		await tick();
-		expect(editor.slides[0]?.elements[0]?.type).toBe('smartArt');
-		expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+		const inserted = editor.slides[0]?.elements[0];
+		expect(inserted?.type).toBe('smartArt');
+		expect(
+			inserted?.type === 'smartArt' ? inserted.smartArtData?.nodes.map((node) => node.text) : [],
+		).toStrictEqual(['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4']);
+		expect(dialog.open).toBe(false);
 	});
 
 	it('cancels the SmartArt dialog without inserting', async () => {
@@ -188,13 +199,42 @@ describe('insertTab', () => {
 		const target = mountTab(editor);
 		control(target, 'insert.illustrations.smartArt').click();
 		flushSync();
-		allButtons(document.body.querySelector('[role="dialog"]')!)
-			.find((button) => button.textContent?.trim() === 'Cancel')!
-			.click();
+		const dialog = target.querySelector<HTMLElement & { open: boolean }>(
+			'pptx-ui-insert-smartart-dialog',
+		)!;
+		footer(dialog, 'cancel').click();
+		await Promise.resolve();
 		flushSync();
 		await tick();
 		expect(editor.slides[0]?.elements).toHaveLength(0);
-		expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+		expect(dialog.open).toBe(false);
+	});
+
+	it('opens Insert Chart... from the Chart menu and inserts the dialog choice', async () => {
+		const editor = makeEditor();
+		const target = mountTab(editor);
+		expect(target.querySelector('pptx-ui-insert-chart-dialog')).toBeNull();
+		pickItem(target, 'insert.illustrations.chart', '__chartDialog__');
+		flushSync();
+		const dialog = target.querySelector<HTMLElement & { open: boolean }>(
+			'pptx-ui-insert-chart-dialog',
+		)!;
+		expect(dialog.open).toBe(true);
+		const picker = dialog.querySelector('office-ui-chart-picker') as HTMLElement & {
+			value: { type: string; grouping: string; title: string };
+		};
+		picker.value = { type: 'bar', grouping: 'stacked', title: 'Sales' };
+		footer(dialog, 'insert').click();
+		flushSync();
+		await tick();
+		const chart = editor.slides[0]?.elements[0];
+		expect(chart?.type).toBe('chart');
+		if (chart?.type === 'chart') {
+			expect(chart.chartData?.title).toBe('Sales');
+			expect(chart.chartData?.grouping).toBe('stacked');
+			expect(chart.chartData?.barDirection).toBe('bar');
+		}
+		expect(dialog.open).toBe(false);
 	});
 
 	it('toggles the equation dialog open and closed', () => {

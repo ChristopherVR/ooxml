@@ -50,3 +50,4 @@ export { buildEmbeddedFontStyles, buildFieldSubstitutionContext } from '../index
 export { createTranslator } from '../i18n';
 
 export { releasePptxRenderCaches } from '../render/render-cache-lifecycle';
+export * from './smartart-insert-preview';

@@ -27,6 +27,8 @@ import {
 import { definePptxChartDataSheet } from './chart-data-sheet';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
+import { definePptxInsertChartDialog } from './insert-chart-dialog';
+import { definePptxInsertSmartArtDialog } from './insert-smartart-dialog';
 import { definePptxPresentToolbar } from './present-toolbar';
 import { definePptxPresenterConsole } from './presenter-console';
 import { assertWebControlContract, markWebControlContract } from './registration-contract';
@@ -64,6 +66,16 @@ import { definePptxChartFormatPane } from './chart-format-pane';
 import { definePptxTitleBar } from './title-bar';
 
 export type { PptxUiThemeEditorElement, ThemeEditorApplyEvent } from './theme-editor';
+export type {
+	InsertChartDialogDetail,
+	InsertChartDialogInsertEvent,
+	PptxUiInsertChartDialogElement,
+} from './insert-chart-dialog';
+export type {
+	InsertSmartArtDialogDetail,
+	InsertSmartArtDialogInsertEvent,
+	PptxUiInsertSmartArtDialogElement,
+} from './insert-smartart-dialog';
 export type {
 	ChartFormatChangeEvent,
 	ChartFormatPaneTranslate,
@@ -210,6 +222,8 @@ const controls = [
 	['pptx-ui-title-bar', definePptxTitleBar],
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 	['pptx-ui-options-dialog', definePptxOptionsDialog],
+	['pptx-ui-insert-chart-dialog', definePptxInsertChartDialog],
+	['pptx-ui-insert-smartart-dialog', definePptxInsertSmartArtDialog],
 ] as const;
 
 /** Idempotent browser-only registration. Safe to call from every viewer binding. */

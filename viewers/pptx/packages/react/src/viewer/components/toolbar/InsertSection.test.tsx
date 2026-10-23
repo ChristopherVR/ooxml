@@ -174,6 +174,28 @@ describe('insertSection', () => {
 		expect(props.onAddActionButton).toHaveBeenCalledOnce();
 	});
 
+	it('ends the Chart menu with Insert Chart... and opens the dialog from it', () => {
+		const open = (overrides: Partial<InsertSectionProps>) => {
+			render(overrides);
+			act(() =>
+				container
+					.querySelector<HTMLButtonElement>(
+						'[data-ribbon-control="insert.illustrations.chart"] .trigger',
+					)!
+					.click(),
+			);
+			return container.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.illustrations.chart"] [data-insert-item="__chartDialog__"]',
+			);
+		};
+		expect(open({})).toBeNull();
+		const onOpenChartDialog = vi.fn();
+		const entry = open({ onOpenChartDialog });
+		expect(entry).not.toBeNull();
+		act(() => entry!.click());
+		expect(onOpenChartDialog).toHaveBeenCalledOnce();
+	});
+
 	it('inserts a table of the size picked on the Table grid', () => {
 		const props = baseProps();
 		act(() => root.render(React.createElement(InsertSection, props)));

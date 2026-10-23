@@ -9,7 +9,7 @@ import {
 	shapeFillChange,
 	shapeOutlineChange,
 } from 'ooxml-ui/pptx';
-import type { Guide, InsertChartKind, ShapePresetType } from 'ooxml-ui/pptx';
+import type { Guide, InsertChartKind, InsertChartOptions, ShapePresetType } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per action); merging them isn't a
    style choice here. */
@@ -130,7 +130,8 @@ export interface EditActions
 	/** Existing history-tracked insertion transaction for a prepared element. */
 	insertElement(element: PptxElement): void;
 	/** Insert a default chart for the given dropdown entry (defaults to Column). */
-	insertChart(chartKind?: InsertChartKind): void;
+	/** `options` carries the Insert Chart dialog's title and grouping. */
+	insertChart(chartKind?: InsertChartKind, options?: InsertChartOptions): void;
 	insertSmartArt(layout: SmartArtLayout, defaultItems: string[]): void;
 	insertEquation(omml: Record<string, unknown>): void;
 	updateEquation(id: string, omml: Record<string, unknown>): void;
@@ -299,12 +300,12 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 			insertElement(await pickMediaElement(doc, state.canvasSize));
 		},
 
-		insertChart(chartKind = DEFAULT_INSERT_CHART_KIND) {
+		insertChart(chartKind = DEFAULT_INSERT_CHART_KIND, options) {
 			const state = store.get();
 			if (!state.slides[state.currentSlide]) {
 				return;
 			}
-			insertElement(buildChartInsertElement(chartKind, state.canvasSize));
+			insertElement(buildChartInsertElement(chartKind, state.canvasSize, options));
 		},
 		insertSmartArt(layout, defaultItems) {
 			const state = store.get();

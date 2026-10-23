@@ -143,18 +143,20 @@ async function openSmartArtDialog(page: Page): Promise<void> {
  */
 async function insertFirstPresetInCategory(page: Page, categoryName: RegExp): Promise<void> {
 	const dialog = page.getByRole('dialog', { name: /Insert SmartArt/iu });
+	// The picker and its buttons are slotted into the shared dialog element, not the shadow box.
+	const smartArtDialog = page.locator('pptx-ui-insert-smartart-dialog');
 	await expect(dialog).toBeVisible();
 
-	const category = dialog.getByRole('button', { name: categoryName });
+	const category = smartArtDialog.getByRole('button', { name: categoryName });
 	await category.click();
 	await page.waitForTimeout(200);
 
-	const galleryItem = dialog.getByRole('option').first();
+	const galleryItem = smartArtDialog.getByRole('option').first();
 	await expect(galleryItem).toBeVisible();
 	await galleryItem.click();
 	await page.waitForTimeout(100);
 
-	const insertBtn = dialog.getByRole('button', { name: /^Insert$/iu });
+	const insertBtn = smartArtDialog.getByRole('button', { name: /^Insert$/iu });
 	await insertBtn.click();
 	await page.waitForTimeout(600);
 }

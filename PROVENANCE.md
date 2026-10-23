@@ -2488,3 +2488,13 @@ Source: ChristopherVR/ooxml, `origin/main` at `3b2ecd9a6` before these commits (
 - `src/ui/src/bindings/handle.ts` (`deferredHandle`, `installHandle`) generalises the Excel `deferredHandle` (`viewers/xlsx/packages/bindings/src/index.ts`) and the Visio `viewerHandle` (`viewers/visio/packages/bindings/src/common.ts`): one spec of handle members (`get`, `call`, `async`, `optional-call`, `{ fallback }`) replaces the hand-written delegates; both products keep their old function as a thin wrapper.
 - `src/ui/src/bindings/contract.ts` and `bind-element.ts` generalise `pickEditorProps`, `eventOptions` and the listener tables of `mountEditor` in the Word and Excel `index.ts`: a product contract lists props with a forwarding policy, events with their handler option and arguments, and the handle. The React, Vue and Solid factories (`react.ts`, `vue.ts`, `solid.ts`) are the shared shape of the Word and Excel `react.tsx`, `vue.ts` and `solid.ts` adapters and the Visio `react.ts` and `vue.ts`.
 - `src/ui/src/teams/app/bind.ts` gains `bindTeams`, `pickTeamsProps`, `TeamsElementProps` and `TeamsBinding` from `viewers/teams/packages/web-component/src/bind.ts` (deleted; its test moved to `bind.test.ts` beside it). What changed: they and `applyTeamsProps` / `listenTeamsEvents` are built on `TEAMS_CONTRACT` and the kit; behaviour is unchanged.
+
+## Shared Insert SmartArt and Insert Chart dialogs, SmartArt gallery catalogue (2026-10-23)
+
+Source: ChristopherVR/ooxml, `origin/main` at `3b2ecd9a6` (an in-repo move).
+
+- `src/core/diagram/catalogue.ts` holds the SmartArt insert presets and categories from `src/ui/src/pptx/render/smart-art-presets.ts` and the colour-scheme and style catalogues of `render/ribbon-galleries/smartart-gallery-patch.ts` (with the section titles and `labelParams` of `smartart-colors-gallery.ts` and the named-layout categories of `smartart-layouts-gallery.ts`). What changed: English names only, typed on the `diagram` types; each preset gained a tile `family`, each category an English description. The pptx modules keep their exports and add the pptx dictionary keys.
+- `src/ui/src/smartart/tiles.ts` joins `render/ribbon-galleries/smartart-layout-tiles.ts` and `smartart-gallery-tiles.ts` unchanged in output; both pptx files now re-export it.
+- `src/ui/src/pptx/dom/smartart-insert-preview.ts` is the vanilla binding's `ui/ribbon/tabs/insert/smartart-gallery-preview.ts`, taking a target size instead of a fixed 64px tile.
+
+New code (not moved): `office-ui-smartart-picker` and `src/ui/src/smartart/galleries.ts`; `pptx-ui-insert-chart-dialog`, `pptx-ui-insert-smartart-dialog` and `insert-dialog-frame.ts`; `render/insert-chart-preview.ts`. The per-binding Insert SmartArt dialogs they replace were deleted.

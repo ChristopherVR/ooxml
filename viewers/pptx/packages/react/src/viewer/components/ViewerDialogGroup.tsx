@@ -39,7 +39,7 @@ import type { CanvasSize } from '../types';
 import { ComparePanel } from './ComparePanel';
 import { EquationEditorDialog } from './EquationEditorDialog';
 import { HyperlinkEditDialog } from './HyperlinkEditDialog';
-import { InsertSmartArtDialog } from './InsertSmartArtDialog';
+import { InsertChartDialog, InsertSmartArtDialog } from './InsertDialogs';
 import { useViewerCustomizationContext } from './viewer-customization-context';
 
 // ---------------------------------------------------------------------------
@@ -188,6 +188,12 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 				isOpen={dialogs.isSmartArtDialogOpen}
 				onClose={() => dialogs.setIsSmartArtDialogOpen(false)}
 				onInsert={insertHandlers.handleInsertSmartArt}
+			/>
+
+			<InsertChartDialog
+				isOpen={dialogs.isChartDialogOpen}
+				onClose={() => dialogs.setIsChartDialogOpen(false)}
+				onInsert={insertHandlers.handleAddChart}
 			/>
 
 			<EquationEditorDialog

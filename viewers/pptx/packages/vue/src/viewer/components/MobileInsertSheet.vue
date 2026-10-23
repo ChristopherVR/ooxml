@@ -11,6 +11,7 @@ import { useI18n } from 'vue-i18n';
 import { useResolvedCustomization } from '../composables/useViewerCustomization';
 import MobileSheet from './MobileSheet.vue';
 import DateTimeFieldDialog from './ribbon/DateTimeFieldDialog.vue';
+import InsertChartDialog from './ribbon/InsertChartDialog.vue';
 import InsertSection from './ribbon/InsertSection.vue';
 import type { RibbonProps } from './ribbon/ribbon-types';
 import SlideTemplateGalleryDialog from './SlideTemplateGalleryDialog.vue';
@@ -27,6 +28,7 @@ const customization = useResolvedCustomization();
 // moment a pick closes it, which would take a dialog owned by the section along.
 const dateOpen = ref(false);
 const templatesOpen = ref(false);
+const chartDialogOpen = ref(false);
 const templatesAvailable = computed(
 	() =>
 		Boolean(props.onInsertSlideFromTemplate) &&
@@ -38,6 +40,9 @@ const dialogHost = {
 	},
 	openSlideTemplates: () => {
 		templatesOpen.value = true;
+	},
+	openInsertChart: () => {
+		chartDialogOpen.value = true;
 	},
 };
 function insertDate(formatted: string): void {
@@ -85,6 +90,12 @@ function insertDate(formatted: string): void {
 		:scheme="props.templateScheme"
 		@insert="props.onInsertSlideFromTemplate?.($event)"
 		@close="templatesOpen = false"
+	/>
+	<InsertChartDialog
+		v-if="props.onAddChart"
+		:open="chartDialogOpen"
+		:on-add-chart="props.onAddChart"
+		@close="chartDialogOpen = false"
 	/>
 	<DateTimeFieldDialog
 		v-if="dateOpen && props.onInsertField"

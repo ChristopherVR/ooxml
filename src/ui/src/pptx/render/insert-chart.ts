@@ -131,6 +131,38 @@ const DEFAULT_CATEGORIES = ['Category 1', 'Category 2', 'Category 3'] as const;
 /** Default single series with sample values for a freshly inserted chart. */
 const DEFAULT_SERIES_VALUES = [4, 3, 5] as const;
 
+/** Grouping choices the Insert Chart dialog offers for the families that stack. */
+export type InsertChartGrouping = 'clustered' | 'stacked' | 'percentStacked';
+
+/** The Insert Chart dialog's grouping entries, with translatable labels. */
+export const INSERT_CHART_GROUPINGS: ReadonlyArray<{
+	id: InsertChartGrouping;
+	labelKey: string;
+	label: string;
+}> = [
+	{ id: 'clustered', labelKey: 'pptx.chart.groupingClustered', label: 'Clustered' },
+	{ id: 'stacked', labelKey: 'pptx.chart.groupingStacked', label: 'Stacked' },
+	{ id: 'percentStacked', labelKey: 'pptx.chart.groupingPercentStacked', label: '100% Stacked' },
+];
+
+/** The insert entries whose chart family offers a grouping. */
+export const GROUPED_INSERT_CHART_KINDS: readonly InsertChartKind[] = [
+	'column',
+	'bar',
+	'line',
+	'area',
+];
+
+/** What the Insert Chart dialog chose besides the chart type. */
+export interface InsertChartOptions {
+	/** Chart title; the default sample title when undefined, none when empty. */
+	title?: string;
+	/** Grouping of a {@link GROUPED_INSERT_CHART_KINDS} entry. */
+	grouping?: InsertChartGrouping;
+	/** Show the legend (default true). */
+	hasLegend?: boolean;
+}
+
 /** Optional position overrides when inserting a chart. */
 export interface InsertChartPosition {
 	x?: number;
@@ -149,11 +181,13 @@ export interface InsertChartPosition {
  * @param chartKind - The dropdown entry (or a raw chart family) to create.
  *   `'column'` yields vertical columns, `'bar'` horizontal bars.
  * @param position - Optional position/size overrides.
+ * @param options - The Insert Chart dialog's title, grouping and legend choices.
  * @returns A valid {@link ChartPptxElement} with a fresh id.
  */
 export function createDefaultChartElement(
 	chartKind: InsertChartKind | PptxChartType = DEFAULT_INSERT_CHART_KIND,
 	position?: InsertChartPosition,
+	options: InsertChartOptions = {},
 ): ChartPptxElement {
 	const option = INSERT_CHART_TYPES.find((entry) => entry.id === chartKind);
 	const chartType: PptxChartType = option?.type ?? (chartKind as PptxChartType);
@@ -174,8 +208,16 @@ export function createDefaultChartElement(
 			categories: chartExData?.categories ?? [...DEFAULT_CATEGORIES],
 			series: chartExData?.series ?? [{ name: 'Series 1', values: [...DEFAULT_SERIES_VALUES] }],
 			...(chartExData?.categoryLevels ? { categoryLevels: chartExData.categoryLevels } : {}),
-			title: 'Chart Title',
-			hasLegend: true,
+			...(options.title === undefined
+				? { title: 'Chart Title' }
+				: options.title.trim()
+					? { title: options.title.trim() }
+					: {}),
+			hasLegend: options.hasLegend ?? true,
+			...(options.grouping !== undefined &&
+			GROUPED_INSERT_CHART_KINDS.includes((option?.id ?? chartKind) as InsertChartKind)
+				? { grouping: options.grouping }
+				: {}),
 			...(option?.barDirection !== undefined ? { barDirection: option.barDirection } : {}),
 		},
 		{

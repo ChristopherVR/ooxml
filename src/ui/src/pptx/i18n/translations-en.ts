@@ -1809,6 +1809,14 @@ export const translationsEn: Record<string, string> = {
 	'pptx.insertSmartArt.itemsLabel': 'Items (one per line)',
 	'pptx.insertSmartArt.cancel': 'Cancel',
 	'pptx.insertSmartArt.insert': 'Insert',
+	'pptx.insertSmartArt.description.list': 'Show non-sequential or grouped blocks of information.',
+	'pptx.insertSmartArt.description.process':
+		'Show a progression, a timeline or the sequential steps of a task.',
+	'pptx.insertSmartArt.description.cycle': 'Show a continual process or parts around a centre.',
+	'pptx.insertSmartArt.description.hierarchy':
+		'Show hierarchical relationships, such as an organisation chart.',
+	'pptx.insertSmartArt.description.relationship':
+		'Show connections, overlaps, proportions or containment between ideas.',
 	'pptx.smartArt.insertTitle': 'Insert SmartArt',
 	'pptx.smartArt.categoriesLabel': 'SmartArt categories',
 	'pptx.smartArt.layoutsLabel': 'SmartArt layouts',
@@ -2162,6 +2170,9 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.smartArt': 'SmartArt',
 	'pptx.ribbon.insertSmartArt': 'Insert SmartArt diagram',
 	'pptx.ribbon.chartType': 'Chart type',
+	'pptx.ribbon.insertChartDialog': 'Insert Chart...',
+	'pptx.insertChart.title': 'Insert Chart',
+	'pptx.insertChart.preview': 'Preview',
 	'pptx.ribbon.chart': 'Chart',
 	'pptx.ribbon.insertChart': 'Insert chart',
 	'pptx.ribbon.equation': 'Equation',
