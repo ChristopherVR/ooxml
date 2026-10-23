@@ -70,7 +70,7 @@ describe('complete shared adapter contract', () => {
 		handle.resetLayerVisibility('page');
 		expect(current().binding.resetLayerVisibility).toHaveBeenLastCalledWith('page');
 		handle.resetLayerVisibility();
-		expect(current().binding.resetLayerVisibility).toHaveBeenLastCalledWith(undefined);
+		expect(current().binding.resetLayerVisibility).toHaveBeenLastCalledWith();
 		expect(handle.exportSvg({ maxBytes: 1000 }).svg).toBe('<svg/>');
 		expect(current().binding.exportSvg).toHaveBeenCalledWith({ maxBytes: 1000 });
 		expect(handle.createPrintSnapshot({ limits: { maxPages: 1 } }).appearance).toBe(

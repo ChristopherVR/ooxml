@@ -185,6 +185,7 @@ describe('host ribbon tabs through every binding', () => {
 		const attach = /use:attach=\{\{([^}]*)\}\}/.exec(source)?.[1] ?? '';
 		expect(attach).toMatch(/\bribbonAddIns\b/);
 		expect(attach).toMatch(/\bonribbonaddin\b/);
-		expect(source).toContain("'office-ribbon-add-in': value.onribbonaddin");
+		// Handlers reach the binding through the contract (`contract-parity.test.ts`).
+		expect(source).toContain('...svelteEditorOptions(value)');
 	});
 });

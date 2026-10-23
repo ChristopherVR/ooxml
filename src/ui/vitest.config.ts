@@ -55,6 +55,14 @@ const AREAS = {
 				{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
 				// The package imports its own subpaths by name; resolve them to source, not to dist.
 				{ find: /^ooxml-ui\/pptx\/dom$/, replacement: `${uiSource}/pptx/dom/index.ts` },
+				// Node resolves solid-js to its server build, where effects never run; the bindings
+				// tests mount Solid components in a DOM, so they need the browser build.
+				{
+					find: /^solid-js$/,
+					replacement: fileURLToPath(
+						new URL('./node_modules/solid-js/dist/solid.js', import.meta.url),
+					),
+				},
 			],
 		},
 		test: {

@@ -1,20 +1,14 @@
-import {
-	createElement,
-	forwardRef,
-	useEffect,
-	useImperativeHandle,
-	useRef,
-	useSyncExternalStore,
-	type CSSProperties,
-	type RefObject,
-} from 'react';
+import { useSyncExternalStore, type CSSProperties, type RefObject } from 'react';
+import { createReactBinding } from 'ooxml-ui/bindings/react';
 import {
 	mountFrameworkViewer,
-	viewerHandle,
+	VIEWER_CONTRACT,
+	VIEWER_HANDLE_OPTIONS,
 	viewerOptions,
 	viewerStateSource,
 	type MountedViewer,
 	type ViewerHandle,
+	type ViewerOptions,
 	type ViewerProps,
 	type ViewerState,
 } from './common';
@@ -25,30 +19,23 @@ export interface VisioViewerProps extends ViewerProps {
 	'aria-label'?: string | undefined;
 }
 /** React owns only the host and lifecycle; the shared element owns all viewer behavior. */
-export const VisioViewer = forwardRef<ViewerHandle, VisioViewerProps>(
-	function VisioViewer(props, ref) {
-		const host = useRef<HTMLDivElement>(null);
-		const binding = useRef<MountedViewer | undefined>(undefined);
-		useEffect(() => {
-			const mounted = mountFrameworkViewer(host.current!, viewerOptions(props));
-			binding.current = mounted;
-			return () => {
-				binding.current = undefined;
-				mounted.destroy();
-			};
-		}, []);
-		useEffect(() => {
-			binding.current?.update(viewerOptions(props));
-		});
-		useImperativeHandle(ref, () => viewerHandle(() => binding.current), []);
-		return createElement('div', {
-			ref: host,
-			className: props.className,
-			style: props.style,
-			'aria-label': props['aria-label'],
-		});
-	},
-);
+export const VisioViewer = createReactBinding<
+	VisioViewerProps,
+	ViewerHandle,
+	ViewerOptions,
+	MountedViewer
+>({
+	displayName: 'VisioViewer',
+	handle: VIEWER_CONTRACT.handle,
+	handleOptions: VIEWER_HANDLE_OPTIONS,
+	mount: mountFrameworkViewer,
+	options: viewerOptions,
+	host: (props) => ({
+		className: props.className,
+		style: props.style,
+		'aria-label': props['aria-label'],
+	}),
+});
 /**
  * Reactive viewer state (page, zoom, selection, search, edit and undo state) for the `ref`
  * given to `<VisioViewer>`, through React's external-store hook. `null` until mounted.

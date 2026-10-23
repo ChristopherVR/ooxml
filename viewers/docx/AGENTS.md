@@ -38,8 +38,15 @@ the element, forward props and options, and re-emit its events.
   pattern and fix them in the same change; the binding contract tests in
   `packages/bindings/src/*.test.ts` and `packages/vanilla/src/index.test.ts`
   should cover all of them.
-- Never put editor logic in an adapter. If two adapters need the same helper, it
-  goes in `packages/bindings/src/common.ts` (or the editor in `src/ui/src/docx`).
+- Never put editor logic in an adapter. The props, events and handle every
+  adapter shares are one contract, `EDITOR_CONTRACT` in
+  `packages/bindings/src/contract.ts`, and `contract-parity.test.ts` checks each
+  adapter against it. Binding machinery that is not Word-specific (prop
+  tracking, event mapping, the deferred handle, the React, Vue and Solid
+  component factories) lives in the shared kit `ooxml-ui/bindings`
+  (`src/ui/src/bindings`, see its README section); a helper only Word needs goes
+  in `packages/bindings/src/index.ts` (or the editor in `src/ui/src/docx`).
+  `common.ts` is only the re-export surface every package shares.
 
 ## Working agreements
 
@@ -97,17 +104,17 @@ the element, forward props and options, and re-emit its events.
 
 ## Packages
 
-| Directory                | npm name              | Published | What it is                                                                    |
-| ------------------------ | --------------------- | --------- | ----------------------------------------------------------------------------- |
-| `packages/core`          | `docx-core`           | yes       | Re-export of `ooxml-core/docx` and `/docx/embedded`.                          |
-| `packages/web-component` | `docx-web-component`  | internal  | One-line re-export of `ooxml-ui/docx`, the `<docx-editor>` element.           |
-| `packages/bindings`      | `docx-bindings`       | internal  | Framework adapters over one framework-neutral core (`index.ts`, `common.ts`). |
-| `packages/react`         | `docx-react-viewer`   | yes       | React entry (`WordEditor`).                                                   |
-| `packages/vue`           | `docx-vue-viewer`     | yes       | Vue 3 entry (`WordEditor`).                                                   |
-| `packages/angular`       | `docx-angular-viewer` | yes       | Angular entry (`WordEditorComponent`).                                        |
-| `packages/svelte`        | `docx-svelte-viewer`  | yes       | Svelte 5 entry (`/runtime`, `mountEditor`).                                   |
-| `packages/solid`         | `docx-solid-viewer`   | yes       | Solid entry (`WordEditor`).                                                   |
-| `packages/vanilla`       | `docx-vanilla-viewer` | yes       | Plain `<docx-editor>` registration and `mountEditor`.                         |
+| Directory                | npm name              | Published | What it is                                                                                                           |
+| ------------------------ | --------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`          | `docx-core`           | yes       | Re-export of `ooxml-core/docx` and `/docx/embedded`.                                                                 |
+| `packages/web-component` | `docx-web-component`  | internal  | One-line re-export of `ooxml-ui/docx`, the `<docx-editor>` element.                                                  |
+| `packages/bindings`      | `docx-bindings`       | internal  | Framework adapters over one framework-neutral core (`contract.ts`, `index.ts`, `common.ts`) and `ooxml-ui/bindings`. |
+| `packages/react`         | `docx-react-viewer`   | yes       | React entry (`WordEditor`).                                                                                          |
+| `packages/vue`           | `docx-vue-viewer`     | yes       | Vue 3 entry (`WordEditor`).                                                                                          |
+| `packages/angular`       | `docx-angular-viewer` | yes       | Angular entry (`WordEditorComponent`).                                                                               |
+| `packages/svelte`        | `docx-svelte-viewer`  | yes       | Svelte 5 entry (`/runtime`, `mountEditor`).                                                                          |
+| `packages/solid`         | `docx-solid-viewer`   | yes       | Solid entry (`WordEditor`).                                                                                          |
+| `packages/vanilla`       | `docx-vanilla-viewer` | yes       | Plain `<docx-editor>` registration and `mountEditor`.                                                                |
 
 `demos/docx/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
 editor through that framework's adapter (`demos/docx/demo-vanilla/framework.ts`), and

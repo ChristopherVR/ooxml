@@ -4,7 +4,7 @@
 import { createWorkbook } from '@christophervr/xlsx-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XlsxEditorElement } from 'xlsx-web-component';
-import { nameFromUrl, sameThemeColors } from './forwarding';
+import { nameFromUrl, shallowEqual } from 'ooxml-ui/bindings';
 import { mountEditor, type EditorOptions } from './index';
 import { emit } from './test-support';
 
@@ -71,8 +71,8 @@ describe('prop forwarding', () => {
 		expect(binding.element.themeColors).toEqual({ primary: '#654321' });
 		binding.update({});
 		expect(setter).toHaveBeenCalledTimes(3);
-		expect(sameThemeColors(undefined, {})).toBe(true);
-		expect(sameThemeColors({ primary: '#1' }, { primary: '#1', accent: '#2' })).toBe(false);
+		expect(shallowEqual(undefined, {})).toBe(true);
+		expect(shallowEqual({ primary: '#1' }, { primary: '#1', accent: '#2' })).toBe(false);
 		binding.destroy();
 	});
 

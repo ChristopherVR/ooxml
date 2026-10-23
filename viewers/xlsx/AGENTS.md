@@ -38,8 +38,14 @@ re-emit its events as callbacks.
   pattern and fix them in the same change; the binding contract tests in
   `packages/bindings/src/*.test.ts` and `packages/vanilla/src/index.test.ts`
   should cover all of them.
-- Never put editor logic in an adapter. If two adapters need the same helper, it
-  goes in `packages/bindings/src/index.ts` (or the web component);
+- Never put editor logic in an adapter. The props, events and handle every
+  adapter shares are one contract, `EDITOR_CONTRACT` in
+  `packages/bindings/src/contract.ts`, and `contract-parity.test.ts` checks each
+  adapter against it. Binding machinery that is not Excel-specific (prop
+  tracking, event mapping, the `src` loader, the deferred handle, the React, Vue
+  and Solid component factories) lives in the shared kit `ooxml-ui/bindings`
+  (`src/ui/src/bindings`, see its README section); a helper only Excel needs
+  goes in `packages/bindings/src/index.ts` (or the web component).
   `packages/bindings/src/common.ts` is the re-export surface every package shares.
 
 ## Working agreements
@@ -90,17 +96,17 @@ re-emit its events as callbacks.
 
 ## Packages
 
-| Directory                | npm name                           | Published | What it is                                                                    |
-| ------------------------ | ---------------------------------- | --------- | ----------------------------------------------------------------------------- |
-| `packages/core`          | `@christophervr/xlsx-core`         | yes       | Re-export of `ooxml-core/xlsx` and `/xlsx/load`.                              |
-| `packages/web-component` | `xlsx-web-component`               | internal  | One-line re-export of `ooxml-ui/xlsx`, the `<xlsx-editor>` element.           |
-| `packages/bindings`      | `xlsx-bindings`                    | internal  | Framework adapters over one framework-neutral core (`index.ts`, `common.ts`). |
-| `packages/react`         | `@christophervr/xlsx-react-viewer` | yes       | React entry (`SpreadsheetEditor`).                                            |
-| `packages/vue`           | `xlsx-vue-viewer`                  | yes       | Vue 3 entry (`SpreadsheetEditor`).                                            |
-| `packages/angular`       | `xlsx-angular-viewer`              | yes       | Angular entry (`SpreadsheetEditorComponent`).                                 |
-| `packages/svelte`        | `xlsx-svelte-viewer`               | yes       | Svelte 5 entry (`/runtime`, `mountEditor`).                                   |
-| `packages/solid`         | `xlsx-solid-viewer`                | yes       | Solid entry (`SpreadsheetEditor`).                                            |
-| `packages/vanilla`       | `xlsx-vanilla-viewer`              | yes       | Plain `<xlsx-editor>` registration and `mountEditor`.                         |
+| Directory                | npm name                           | Published | What it is                                                                                                           |
+| ------------------------ | ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`          | `@christophervr/xlsx-core`         | yes       | Re-export of `ooxml-core/xlsx` and `/xlsx/load`.                                                                     |
+| `packages/web-component` | `xlsx-web-component`               | internal  | One-line re-export of `ooxml-ui/xlsx`, the `<xlsx-editor>` element.                                                  |
+| `packages/bindings`      | `xlsx-bindings`                    | internal  | Framework adapters over one framework-neutral core (`contract.ts`, `index.ts`, `common.ts`) and `ooxml-ui/bindings`. |
+| `packages/react`         | `@christophervr/xlsx-react-viewer` | yes       | React entry (`SpreadsheetEditor`).                                                                                   |
+| `packages/vue`           | `xlsx-vue-viewer`                  | yes       | Vue 3 entry (`SpreadsheetEditor`).                                                                                   |
+| `packages/angular`       | `xlsx-angular-viewer`              | yes       | Angular entry (`SpreadsheetEditorComponent`).                                                                        |
+| `packages/svelte`        | `xlsx-svelte-viewer`               | yes       | Svelte 5 entry (`/runtime`, `mountEditor`).                                                                          |
+| `packages/solid`         | `xlsx-solid-viewer`                | yes       | Solid entry (`SpreadsheetEditor`).                                                                                   |
+| `packages/vanilla`       | `xlsx-vanilla-viewer`              | yes       | Plain `<xlsx-editor>` registration and `mountEditor`.                                                                |
 
 `demos/xlsx/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
 editor through that framework's adapter (`demos/xlsx/demo-vanilla/framework.ts` at the repository root), and

@@ -1,5 +1,6 @@
 import { mountViewer, type MountedViewer } from 'ooxml-ui/visio';
 import type { ViewerState } from 'ooxml-ui/visio';
+import { deferredHandle, pickProps, type BindingContract } from 'ooxml-ui/bindings';
 import {
 	eventKeys,
 	propertyKeys,
@@ -38,14 +39,47 @@ export type ViewerHandle = Pick<
 	| 'createPrintSnapshot'
 >;
 
+/**
+ * The Visio binding contract. `mountViewer` (ooxml-ui/visio) forwards properties and events itself,
+ * so every property is `manual` here: `mountFrameworkViewer` sends them as revision-aware patches.
+ * Events reach native outputs through the `events` callback map (`withEventEmitter`).
+ */
+export const VIEWER_CONTRACT: BindingContract<never, ViewerProperties, ViewerHandle> = {
+	props: Object.fromEntries(
+		propertyKeys.map((key) => [key, { forward: 'manual' }]),
+	) as BindingContract<never, ViewerProperties>['props'],
+	events: {},
+	handle: {
+		element: 'get',
+		controller: 'get',
+		load: 'async',
+		createBlankDrawing: 'async',
+		applyEdits: 'async',
+		selectShapes: 'call',
+		selectAll: 'call',
+		clearSelection: 'call',
+		duplicateSelection: 'async',
+		copySelection: 'async',
+		cutSelection: 'async',
+		pasteSelection: 'async',
+		replacePlainText: 'async',
+		undo: 'async',
+		redo: 'async',
+		cancelEdit: 'call',
+		exportVsdx: 'call',
+		fit: 'call',
+		setLayerVisibility: 'call',
+		resetLayerVisibility: 'call',
+		exportSvg: 'call',
+		createPrintSnapshot: 'call',
+	},
+};
+/** The error every lazy handle member throws before mount and after unmount. */
+export const VIEWER_HANDLE_OPTIONS = { message: 'The viewer is not mounted.' } as const;
+
 /** One mapping for every property and event, shared by every framework adapter. */
 export function viewerOptions(props: ViewerProps): ViewerOptions {
-	const result: ViewerOptions = { events: props.events ?? {} };
-	for (const key of propertyKeys) {
-		const value = props[key];
-		if (value !== undefined) Object.assign(result, { [key]: value });
-	}
-	return result;
+	return { events: props.events ?? {}, ...pickProps<ViewerOptions>(VIEWER_CONTRACT, props, true) };
 }
 
 /**
@@ -98,79 +132,7 @@ export function mountFrameworkViewer(
 
 /** Lazy imperative methods reject both before mount and after unmount. */
 export function viewerHandle(current: () => MountedViewer | undefined): ViewerHandle {
-	const requireViewer = (): MountedViewer => {
-		const binding = current();
-		if (!binding) throw new Error('The viewer is not mounted.');
-		return binding;
-	};
-	return {
-		get element() {
-			return requireViewer().element;
-		},
-		get controller() {
-			return requireViewer().controller;
-		},
-		async load(source) {
-			await requireViewer().load(source);
-		},
-		async createBlankDrawing(options) {
-			await requireViewer().createBlankDrawing(options);
-		},
-		async applyEdits(edits) {
-			await requireViewer().applyEdits(edits);
-		},
-		selectShapes(shapes) {
-			requireViewer().selectShapes(shapes);
-		},
-		selectAll() {
-			requireViewer().selectAll();
-		},
-		clearSelection() {
-			requireViewer().clearSelection();
-		},
-		async replacePlainText(pageId, shapeId, text) {
-			await requireViewer().replacePlainText(pageId, shapeId, text);
-		},
-		async duplicateSelection() {
-			await requireViewer().duplicateSelection();
-		},
-		async copySelection() {
-			await requireViewer().copySelection();
-		},
-		async cutSelection() {
-			await requireViewer().cutSelection();
-		},
-		async pasteSelection() {
-			await requireViewer().pasteSelection();
-		},
-		async undo() {
-			await requireViewer().undo();
-		},
-		async redo() {
-			await requireViewer().redo();
-		},
-		cancelEdit() {
-			requireViewer().cancelEdit();
-		},
-		exportVsdx() {
-			return requireViewer().exportVsdx();
-		},
-		fit() {
-			requireViewer().fit();
-		},
-		setLayerVisibility(pageId, layerId, visible) {
-			requireViewer().setLayerVisibility(pageId, layerId, visible);
-		},
-		resetLayerVisibility(pageId) {
-			requireViewer().resetLayerVisibility(pageId);
-		},
-		exportSvg(options) {
-			return requireViewer().exportSvg(options);
-		},
-		createPrintSnapshot(options) {
-			return requireViewer().createPrintSnapshot(options);
-		},
-	};
+	return deferredHandle(VIEWER_CONTRACT.handle, current, VIEWER_HANDLE_OPTIONS);
 }
 
 /**

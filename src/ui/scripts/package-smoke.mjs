@@ -75,6 +75,10 @@ try {
 			'--no-fund',
 			'--package-lock=false',
 			'jsdom@^26.1.0',
+			// The optional framework peers of the `ooxml-ui/bindings/*` component factories.
+			'react@^19.0.0',
+			'solid-js@^1.9.0',
+			'vue@^3.5.0',
 			path.join(work, core.filename),
 			path.join(work, ui.filename),
 		],
