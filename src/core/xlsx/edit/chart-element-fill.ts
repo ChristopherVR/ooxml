@@ -1,5 +1,10 @@
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
-import { resolveDrawingColor } from '../../drawingml/drawing-color';
+import {
+	assertChartPercent,
+	drawingColorTransparency,
+	withAlphaOf,
+	withDrawingColorTransparency,
+} from '../../chart/edit/paint';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
@@ -50,15 +55,10 @@ export function chartElementFillPatch(
 	const choice = chartDrawingColor(color);
 	if (!choice) throw new RangeError('Invalid chart fill color');
 	const previous = chartElementFill(chart, part);
-	if (previous.kind === 'solid')
-		choice.transforms.push(
-			...structuredClone(
-				previous.color.transforms.filter((item) =>
-					['alpha', 'alphaMod', 'alphaOff'].includes(item.name),
-				),
-			),
-		);
-	return patch(chart, part, { kind: 'solid', color: choice });
+	return patch(chart, part, {
+		kind: 'solid',
+		color: withAlphaOf(choice, previous.kind === 'solid' ? previous.color : undefined),
+	});
 }
 
 export function chartElementSolidFillPatch(
@@ -89,13 +89,7 @@ export function chartElementTransparency(
 	part: ChartFillPart,
 ): number | undefined {
 	const fill = chartElementFill(chart, part);
-	if (fill.kind !== 'solid') return undefined;
-	const resolved = resolveDrawingColor(
-		fill.color,
-		{ scheme: () => '#000000' },
-		{ transformOrder: 'document' },
-	);
-	return resolved ? Math.round((1 - resolved.alpha) * 100000) / 1000 : undefined;
+	return fill.kind === 'solid' ? drawingColorTransparency(fill.color) : undefined;
 }
 
 export function chartElementTransparencyPatch(
@@ -103,15 +97,11 @@ export function chartElementTransparencyPatch(
 	part: ChartFillPart,
 	percent: number,
 ): ChartPatch | undefined {
-	if (!Number.isFinite(percent) || percent < 0 || percent > 100)
-		throw new RangeError('Chart transparency must be from 0 to 100');
+	assertChartPercent(percent, 'Chart transparency must be from 0 to 100');
 	const fill = chartElementFill(chart, part);
 	if (fill.kind !== 'solid') return undefined;
-	const color = structuredClone(fill.color);
-	color.transforms = color.transforms.filter(
-		(item) => !['alpha', 'alphaMod', 'alphaOff'].includes(item.name),
-	);
-	if (percent !== 0)
-		color.transforms.push({ name: 'alpha', value: String(Math.round((100 - percent) * 1000)) });
-	return patch(chart, part, { kind: 'solid', color });
+	return patch(chart, part, {
+		kind: 'solid',
+		color: withDrawingColorTransparency(fill.color, percent),
+	});
 }

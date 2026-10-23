@@ -75,6 +75,14 @@ export interface ChartPlotGroup {
 	holeSize?: number;
 	/** Pie of pie / bar of pie: `pie` or `bar`. */
 	ofPieType?: string;
+	/** Pie of pie: how points move to the second plot (`auto`, `cust`, `percent`, `pos`, `val`). */
+	splitType?: string;
+	/** Pie of pie: the split threshold (`c:splitPos`). */
+	splitPosition?: number;
+	/** Pie of pie: point indexes of a custom split (`c:custSplit/c:secondPiePt`), when written. */
+	customSplit?: number[];
+	/** Pie of pie: size of the second plot, percent of the first (`c:secondPieSize`). */
+	secondPieSize?: number;
 	/** Scatter: `lineMarker`, `smoothMarker`, `marker`... */
 	scatterStyle?: string;
 	/** Radar: `standard`, `marker`, `filled`. */
@@ -136,6 +144,10 @@ export interface ChartAxis {
 	tickMarkSkip?: number;
 	noMultiLevelLabels?: boolean;
 	baseTimeUnit?: string;
+	/** Date axis: the unit of `majorUnit` (`days`, `months`, `years`). */
+	majorTimeUnit?: string;
+	/** Date axis: the unit of `minorUnit`. */
+	minorTimeUnit?: string;
 	/** Value axis: `c:dispUnits`. */
 	displayUnits?: ChartDisplayUnits;
 	spPr?: ChartShapeProperties;

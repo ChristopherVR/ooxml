@@ -1,5 +1,9 @@
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
-import { resolveDrawingColor } from '../../drawingml/drawing-color';
+import {
+	assertChartPercent,
+	drawingColorTransparency,
+	withDrawingColorTransparency,
+} from '../../chart/edit/paint';
 import type { DrawingColor } from '../../drawingml/types';
 import type { ChartObject } from '../model';
 import type { ChartPatch } from './charts';
@@ -24,13 +28,7 @@ export function chartSeriesSolidColor(chart: ChartObject, index: number): Drawin
 /** Theme lookup cannot affect opacity; the shared resolver applies ordered alpha transforms. */
 export function chartSeriesTransparency(chart: ChartObject, index: number): number | undefined {
 	const color = chartSeriesSolidColor(chart, index);
-	if (!color) return undefined;
-	const resolved = resolveDrawingColor(
-		color,
-		{ scheme: () => '#000000' },
-		{ transformOrder: 'document' },
-	);
-	return resolved ? Math.round((1 - resolved.alpha) * 100000) / 1000 : undefined;
+	return color ? drawingColorTransparency(color) : undefined;
 }
 
 /** Set the solid series opacity while retaining its theme and luminance transforms. */
@@ -39,17 +37,11 @@ export function chartSeriesTransparencyPatch(
 	index: number,
 	percent: number,
 ): ChartPatch | undefined {
-	if (!Number.isFinite(percent) || percent < 0 || percent > 100)
-		throw new RangeError('Chart transparency must be from 0 to 100');
+	assertChartPercent(percent, 'Chart transparency must be from 0 to 100');
 	const current = chartSeriesAt(chart, index);
 	const color = chartSeriesSolidColor(chart, index);
 	if (!color) return undefined;
-	const choice = structuredClone(color);
-	choice.transforms = choice.transforms.filter(
-		(transform) => !['alpha', 'alphaMod', 'alphaOff'].includes(transform.name),
-	);
-	if (percent !== 0)
-		choice.transforms.push({ name: 'alpha', value: String(Math.round((100 - percent) * 1000)) });
+	const choice = withDrawingColorTransparency(color, percent);
 	if (
 		sameChartColor(choice, color) &&
 		!Object.keys(current.pointColors ?? {}).length &&

@@ -2,7 +2,8 @@
 // the sequence is axId, scaling, delete, axPos, gridlines, title, numFmt, tick marks, tickLblPos,
 // spPr, txPr, crossAx, crosses or crossesAt; the type-specific tail is written in one order that is
 // consistent with all four types (crossBetween, auto, lblAlgn, lblOffset, baseTimeUnit, majorUnit,
-// minorUnit, dispUnits, tickLblSkip, tickMarkSkip, noMultiLvlLbl, extLst).
+// majorTimeUnit, minorUnit, minorTimeUnit, dispUnits, tickLblSkip, tickMarkSkip, noMultiLvlLbl,
+// extLst).
 import type { ChartAxis, ChartAxisKind } from './model';
 import type { ChartShapeProperties } from './model-series';
 import { numberFormatXml, shapePropertiesXml, textBodyXml } from './write-shape';
@@ -57,7 +58,9 @@ export function axisXml(context: ChartWriteContext, axis: ChartAxis): string {
 			valXml('lblOffset', axis.labelOffset) +
 			valXml('baseTimeUnit', axis.baseTimeUnit) +
 			valXml('majorUnit', axis.majorUnit) +
+			valXml('majorTimeUnit', axis.majorTimeUnit) +
 			valXml('minorUnit', axis.minorUnit) +
+			valXml('minorTimeUnit', axis.minorTimeUnit) +
 			displayUnitsXml(context, axis.displayUnits) +
 			valXml('tickLblSkip', axis.tickLabelSkip) +
 			valXml('tickMarkSkip', axis.tickMarkSkip) +

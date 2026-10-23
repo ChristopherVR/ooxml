@@ -5,6 +5,7 @@ import { THEME_SLOTS } from '../layout/colors';
 import type { ChartPatch } from './charts';
 import { sameChartColor } from './chart-colors';
 import { chartSeriesAt, cloneChartSeriesForEdit } from './chart-series-target';
+import { withAlphaOf } from '../../chart/edit/paint';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 
 /** Spreadsheet theme tints use HSL luminance, represented by DrawingML lumMod/lumOff. */
@@ -31,15 +32,7 @@ export function chartSeriesFillPatch(
 	const choice = color === null ? undefined : chartDrawingColor(color);
 	if (color !== null && !choice) throw new RangeError('Invalid chart fill color');
 	const previous = current.fill?.kind === 'solid' ? current.fill.color : current.drawingColor;
-	if (choice)
-		choice.transforms.push(
-			...structuredClone(
-				previous?.transforms.filter((transform) =>
-					['alpha', 'alphaMod', 'alphaOff'].includes(transform.name),
-				) ?? [],
-			),
-		);
-	return replaceSeriesPaint(chart, index, choice);
+	return replaceSeriesPaint(chart, index, choice && withAlphaOf(choice, previous));
 }
 
 /** Flatten the primary paint to solid without converting a translucent CSS string back to RGB. */
