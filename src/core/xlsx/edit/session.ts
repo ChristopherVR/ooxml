@@ -36,6 +36,7 @@ import { rangesIntersect } from '../address';
 import * as cellStyle from './cell-style';
 import * as cfEdits from './conditional-formats';
 import * as charts from './charts';
+import * as smartArt from './smart-art';
 import * as tableEdits from './table-edits';
 import * as duplicates from './duplicates';
 import * as outline from './outline';
@@ -284,6 +285,10 @@ export function createEditSession(
 		insertTimeline: (s, source) => timelines.insertTimeline(ctx, s, source),
 		deleteTimeline: (name) => timelines.deleteTimeline(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
+		editSmartArt: (s, index, edit) => smartArt.editSmartArt(ctx, s, index, edit),
+		changeSmartArtLayout: (s, index, change) =>
+			smartArt.changeSmartArtLayout(ctx, s, index, change),
+		insertSmartArt: (s, insertion) => smartArt.insertSmartArt(ctx, s, insertion),
 		createSparklineGroup: (s, source, locations, patch) =>
 			sparklines.createSparklineGroup(ctx, s, source, locations, patch),
 		setSparklineGroups: (s, ranges, patch) => sparklines.setSparklineGroups(ctx, s, ranges, patch),

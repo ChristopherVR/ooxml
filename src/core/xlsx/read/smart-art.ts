@@ -1,9 +1,10 @@
 // SmartArt (DiagramML) in a worksheet drawing: the `xdr:graphicFrame` whose `a:graphicData` uses
 // the diagram namespace. The frame is read synchronously with the drawing part; the five diagram
 // parts are read afterwards through the format-neutral `diagram` area (`loadDiagram`), as
-// `src/core/docx/diagram.ts` does for Word. The parts are never rewritten.
+// `src/core/docx/diagram.ts` does for Word. Unedited parts are kept verbatim on save.
 import {
 	attributeReader,
+	diagramNodesInTreeOrder,
 	loadDiagram,
 	parseDiagramDataModel,
 	parseRelationshipIdAttributes,
@@ -13,16 +14,12 @@ import { parseRelationships, resolvePartPath } from '../../opc/index';
 import { NS, first } from '../../xml/index';
 import type { DrawingAnchor, SmartArtObject, Worksheet } from '../model';
 import type { SourceIndex } from './package';
+import { SMART_ART_NOTICES } from '../smart-art-notices';
 
 /** The `a:graphicData/@uri` of a SmartArt graphic. */
 export const SMART_ART_GRAPHIC_URI = NS.dgm;
 
-const NOTICES = {
-	cached:
-		'Shown from the drawing cached in the file (the layout Excel last saved). SmartArt layout is not recomputed and the content is not editable here; the diagram is kept unchanged on save.',
-	placeholder:
-		'This file has no usable cached drawing for the SmartArt graphic, and SmartArt layout is not computed here, so only its text can be shown. The diagram is kept unchanged on save.',
-} as const;
+const NOTICES = SMART_ART_NOTICES;
 
 interface Pending {
 	hostPart: string;
@@ -103,18 +100,19 @@ async function resolveOne(object: SmartArtObject, info: Pending, source: SourceI
 		},
 	});
 	object.issues.push(...loaded.issues);
+	const paths = loaded.paths;
+	object.parts = {
+		...(paths.data ? { data: paths.data } : {}),
+		...(paths.layout ? { layout: paths.layout } : {}),
+		...(paths.quickStyle ? { quickStyle: paths.quickStyle } : {}),
+		...(paths.colors ? { colors: paths.colors } : {}),
+		...(paths.drawing ? { drawing: paths.drawing } : {}),
+	};
 	if (loaded.layout?.uniqueId) object.layoutId = loaded.layout.uniqueId;
-	const data = loaded.data;
-	if (data)
-		object.nodes = data.nodes.map((node) => {
-			const parentId = data.parentById.get(node.modelId);
-			return {
-				id: node.modelId,
-				text: node.text,
-				...(parentId ? { parentId } : {}),
-				...(node.textParagraphs ? { paragraphs: node.textParagraphs } : {}),
-			};
-		});
+	if (loaded.layout?.family) object.layoutFamily = loaded.layout.family;
+	if (loaded.colors?.uniqueId) object.colorsId = loaded.colors.uniqueId;
+	if (loaded.quickStyle?.uniqueId) object.quickStyleId = loaded.quickStyle.uniqueId;
+	if (loaded.data) object.nodes = diagramNodesInTreeOrder(loaded.data);
 	if (loaded.drawing && loaded.drawing.shapes.length > 0) {
 		object.diagram = loaded.drawing;
 		object.notice = NOTICES.cached;
@@ -139,7 +137,7 @@ export async function resolveSmartArt(
 			await resolveOne(drawing, info, source);
 			if (!drawing.diagram)
 				warn(
-					`A SmartArt graphic on sheet "${sheet.name}" has no cached drawing; only its text can be shown. It is kept on save.`,
+					`A SmartArt graphic on sheet "${sheet.name}" has no cached drawing; it is drawn with an approximate layout. It is kept on save.`,
 				);
 		}
 }
