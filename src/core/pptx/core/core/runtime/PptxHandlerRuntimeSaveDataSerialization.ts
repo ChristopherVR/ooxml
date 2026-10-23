@@ -107,6 +107,7 @@ import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializ
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
 import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
+import { saveChartPartThroughNeutral } from '../../utils/chart-neutral-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
 import { saveChartExternalWorkbookUpdates } from './chart-external-workbook-save';
@@ -409,6 +410,28 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// A 2006 `c:chartSpace` and a 2016+ `cx:chartSpace` are different
 				// part families; see `chart-part-family-switch` / `chart-cx-update`.
 				if (await this.saveChartAcrossFamilies(chartXmlData, chartSpace, chartData, slidePath)) {
+					continue;
+				}
+
+				// An edit the shared chart core can express is saved through it (`writeChartSpace`
+				// keeps every element the neutral model holds as written); anything else falls
+				// through to the object-tree writers below.
+				const baseline = this.chartDataBaselines.get(chartPartPath);
+				const neutralSave = baseline
+					? saveChartPartThroughNeutral(
+							chartXmlStr,
+							JSON.parse(baseline) as PptxChartData,
+							chartData,
+						)
+					: undefined;
+				if (neutralSave) {
+					await this.commitChartPart(
+						chartPartPath,
+						slidePath,
+						chartData,
+						neutralSave.workbookWrites,
+						neutralSave.xml,
+					);
 					continue;
 				}
 
@@ -1247,44 +1270,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// see `PptxHandlerRuntimeChartUserShapes` for the dirty contract.
 				await this.syncChartUserShapesToXml(chartSpace, chartData, chartPartPath);
 
-				// Write updated chart XML back
-				// Delay committing the chart part until workbook reconciliation succeeds.
-
-				// Mirror the same edit into the embedded workbook (`ppt/embeddings/*.xlsx`)
-				// so "Edit Data in Excel" and any Excel recalculation see the new
-				// values too, instead of silently reverting them. Degrades to a
-				// compatibility warning, never throws; see
-				// `saveChartExternalWorkbookUpdates`.
-				const serializedBaseline = this.chartDataBaselines.get(chartPartPath);
-				const signature = chartWorkbookDataSignature(chartData);
-				const workbookBaseline = this.chartWorkbookDataBaselines.get(chartPartPath);
-				const previousSignature =
-					workbookBaseline?.signature ??
-					(serializedBaseline
-						? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
-						: undefined);
-				const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
-				if (workbookDataChanged) {
-					const complete = await saveChartExternalWorkbookUpdates(
-						{
-							zip: this.zip,
-							resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
-							reportWarning: (warning) => this.compatibilityService.reportWarning(warning),
-						},
-						chartPartPath,
-						slidePath,
-						chartData.externalData,
-						workbookWrites,
-						chartData.dataLabelTextOnly ?? false,
-					);
-					this.chartWorkbookDataBaselines.set(chartPartPath, {
-						signature: complete ? signature : (previousSignature ?? signature),
-						pending: !complete,
-					});
-				}
-				this.zip.file(chartPartPath, this.builder.build(chartXmlData));
-				// Subsequent saves compare against the model now stored in this mutable ZIP.
-				this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
+				await this.commitChartPart(
+					chartPartPath,
+					slidePath,
+					chartData,
+					workbookWrites,
+					this.builder.build(chartXmlData),
+				);
 			} catch (e) {
 				if (chartData.dataLabelTextOnly) {
 					throw e;
@@ -1298,6 +1290,54 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				chartData.chartPartPath &&
 				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending,
 		);
+	}
+
+	/**
+	 * Write a chart part's new XML, after mirroring a changed series cache into
+	 * its embedded workbook, and record the saved model as the part's baseline.
+	 */
+	private async commitChartPart(
+		chartPartPath: string,
+		slidePath: string,
+		chartData: PptxChartData,
+		workbookWrites: PptxChartWorkbookWrite[],
+		xml: string,
+	): Promise<void> {
+		// Mirror the same edit into the embedded workbook (`ppt/embeddings/*.xlsx`)
+		// so "Edit Data in Excel" and any Excel recalculation see the new
+		// values too, instead of silently reverting them. Degrades to a
+		// compatibility warning, never throws; see
+		// `saveChartExternalWorkbookUpdates`.
+		const serializedBaseline = this.chartDataBaselines.get(chartPartPath);
+		const signature = chartWorkbookDataSignature(chartData);
+		const workbookBaseline = this.chartWorkbookDataBaselines.get(chartPartPath);
+		const previousSignature =
+			workbookBaseline?.signature ??
+			(serializedBaseline
+				? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
+				: undefined);
+		const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
+		if (workbookDataChanged) {
+			const complete = await saveChartExternalWorkbookUpdates(
+				{
+					zip: this.zip,
+					resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
+					reportWarning: (warning) => this.compatibilityService.reportWarning(warning),
+				},
+				chartPartPath,
+				slidePath,
+				chartData.externalData,
+				workbookWrites,
+				chartData.dataLabelTextOnly ?? false,
+			);
+			this.chartWorkbookDataBaselines.set(chartPartPath, {
+				signature: complete ? signature : (previousSignature ?? signature),
+				pending: !complete,
+			});
+		}
+		this.zip.file(chartPartPath, xml);
+		// Subsequent saves compare against the model now stored in this mutable ZIP.
+		this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 	}
 
 	/**

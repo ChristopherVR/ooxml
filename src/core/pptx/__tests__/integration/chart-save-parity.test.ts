@@ -32,10 +32,10 @@ const DECKS = await classicChartDecks();
  */
 const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = {
 	'no edit (slide dirty)': { parts: 75, xml: 72, model: 72 },
-	'title text': { parts: 75, xml: 14, model: 34 },
-	'title hidden': { parts: 75, xml: 35, model: 52 },
-	'legend position': { parts: 75, xml: 31, model: 51 },
-	'legend hidden': { parts: 75, xml: 30, model: 51 },
+	'title text': { parts: 75, xml: 71, model: 72 },
+	'title hidden': { parts: 75, xml: 72, model: 72 },
+	'legend position': { parts: 75, xml: 72, model: 72 },
+	'legend hidden': { parts: 75, xml: 72, model: 72 },
 	'value axis scaling': { parts: 51, xml: 26, model: 43 },
 	'value axis hidden': { parts: 51, xml: 26, model: 43 },
 	'value axis number format': { parts: 51, xml: 12, model: 43 },
