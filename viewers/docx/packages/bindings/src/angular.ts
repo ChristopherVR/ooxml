@@ -14,6 +14,7 @@ import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
 	DocxCollaborationState,
+	DocxEditorElement,
 	EditorTheme,
 	EditorThemeMode,
 	FileCommandDetail,
@@ -24,7 +25,23 @@ import type {
 	RibbonAddInTab,
 	WordCustomization,
 } from 'docx-web-component';
-import { eventOptions, mountEditor, pickEditorProps, type EditorBinding } from './index';
+import { angularOutputs, installHandle } from 'ooxml-ui/bindings';
+import {
+	EDITOR_CONTRACT,
+	mountEditor,
+	pickEditorProps,
+	type EditorBinding,
+	type EditorEventOptions,
+	type EditorHandle,
+} from './index';
+
+/** The handle members, defined on the prototype from `EDITOR_CONTRACT.handle`. */
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging -- members come from installHandle.
+export interface WordEditorComponent extends Omit<EditorHandle, 'element'> {
+	/** The `<docx-editor>` element; `undefined` before the view is initialised. */
+	readonly element: DocxEditorElement | undefined;
+}
+// oxlint-disable-next-line typescript/no-unsafe-declaration-merging -- see the interface above.
 @Component({ selector: 'word-editor', standalone: true, template: '' })
 export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy {
 	@Input() documentModel?: DocumentModel;
@@ -48,6 +65,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Output() dirtyChange = new EventEmitter<boolean>();
 	/** Cancelable: call `preventDefault()` on the emitted event to take a File command over. */
 	@Output() fileCommand = new EventEmitter<CustomEvent<FileCommandDetail>>();
+	/** Pairs with `readOnly` for `[(readOnly)]`: the host's own switch, never a role lock. */
 	@Output() readOnlyChange = new EventEmitter<boolean>();
 	@Output() ribbonAction = new EventEmitter<RibbonAction>();
 	@Output() ribbonCustomize = new EventEmitter<readonly string[]>();
@@ -55,25 +73,15 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Output() collaborationChange = new EventEmitter<DocxCollaborationState>();
 	private host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding?: EditorBinding;
+	static {
+		installHandle(this.prototype, EDITOR_CONTRACT.handle, (self) => self.binding, {
+			lenientGetters: true,
+		});
+	}
 	private options() {
 		return {
 			...pickEditorProps(this),
-			...eventOptions({
-				'document-change': (model) => this.documentChange.emit(model),
-				'document-error': (error) => this.documentError.emit(error),
-				'document-warning': (message) => this.documentWarning.emit(message),
-				'page-change': (detail) => this.pageChange.emit(detail),
-				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
-				'file-command': (event) => this.fileCommand.emit(event),
-				'readonly-change': (_readOnly, detail) => {
-					// Two-way binding mirrors the host's switch only, never a role lock.
-					if (detail.hostReadOnly !== this.readOnly) this.readOnlyChange.emit(detail.hostReadOnly);
-				},
-				'ribbon-action': (detail) => this.ribbonAction.emit(detail),
-				'ribbon-customize': (ids) => this.ribbonCustomize.emit(ids),
-				'office-ribbon-add-in': (detail) => this.ribbonAddIn.emit(detail),
-				'collaboration-change': (state) => this.collaborationChange.emit(state),
-			}),
+			...angularOutputs<EditorEventOptions>(EDITOR_CONTRACT, this),
 		};
 	}
 	ngAfterViewInit() {
@@ -84,26 +92,5 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	}
 	ngOnDestroy() {
 		this.binding?.destroy();
-	}
-	get element() {
-		return this.binding?.element;
-	}
-	async load(input: Uint8Array | ArrayBuffer) {
-		if (!this.binding) throw new Error('Editor is not mounted');
-		await this.binding.load(input);
-	}
-	async save() {
-		if (!this.binding) throw new Error('Editor is not mounted');
-		return this.binding.save();
-	}
-	async download(fileName?: string) {
-		if (!this.binding) throw new Error('Editor is not mounted');
-		await this.binding.download(fileName);
-	}
-	markClean() {
-		this.binding?.markClean();
-	}
-	get dirty() {
-		return this.binding?.dirty ?? false;
 	}
 }

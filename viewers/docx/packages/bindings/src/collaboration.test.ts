@@ -122,7 +122,8 @@ describe('collaboration in every binding', () => {
 		const source = readFileSync(resolve(__dirname, 'WordEditor.svelte'), 'utf8');
 		expect(() => compile(source, { filename: 'WordEditor.svelte' })).not.toThrow();
 		expect(source).toMatch(/collaboration,[^}]*oncollaborationchange/);
-		expect(source).toContain("'collaboration-change': value.oncollaborationchange");
+		// Handlers reach the binding through the contract (`contract-parity.test.ts`).
+		expect(source).toContain('...svelteEditorOptions(value)');
 		expect(source).toMatch(
 			/ribbonAddIns, collaboration, (customization, )?(storage, )?ondocumentchange/,
 		);

@@ -257,8 +257,7 @@ describe('framework bindings: file commands and fileName', () => {
 		const attach = /use:attach=\{\{([^}]*)\}\}/.exec(source)?.[1] ?? '';
 		for (const name of ['fileName', 'reviewAuthor', 'themeColors', 'onfilecommand'])
 			expect(attach).toMatch(new RegExp(`\\b${name}\\b`));
-		expect(source).toContain("'file-command': value.onfilecommand");
-		expect(source).toContain("'readonly-change': value.onreadonlychange");
-		expect(source).toContain("'ribbon-customize': value.onribboncustomize");
+		// Handlers reach the binding through the contract (`contract-parity.test.ts`).
+		expect(source).toContain('...svelteEditorOptions(value)');
 	});
 });

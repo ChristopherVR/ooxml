@@ -1,6 +1,7 @@
-import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { contractOptions } from 'ooxml-ui/bindings';
+import { createSolidBinding } from 'ooxml-ui/bindings/solid';
 import type { EditorBinding, EditorHandle, EditorOptions } from './index';
-import { eventOptions, mountEditor, pickEditorProps } from './index';
+import { EDITOR_CONTRACT, mountEditor } from './index';
 
 export interface WordEditorProps extends EditorOptions {
 	class?: string;
@@ -8,47 +9,13 @@ export interface WordEditorProps extends EditorOptions {
 }
 
 /** Solid lifecycle adapter over the shared editor binding. */
-export function WordEditor(props: WordEditorProps) {
-	const host = document.createElement('div');
-	const [binding, setBinding] = createSignal<EditorBinding>();
-	const options = (): EditorOptions => ({
-		...pickEditorProps(props),
-		...eventOptions({
-			'document-change': props.onDocumentChange,
-			'document-error': props.onDocumentError,
-			'page-change': props.onPageChange,
-			'dirty-change': props.onDirtyChange,
-			'file-command': props.onFileCommand,
-			'document-warning': props.onDocumentWarning,
-			'readonly-change': props.onReadOnlyChange,
-			'ribbon-action': props.onRibbonAction,
-			'ribbon-customize': props.onRibbonCustomize,
-			'office-ribbon-add-in': props.onRibbonAddIn,
-			'collaboration-change': props.onCollaborationChange,
-		}),
-	});
-	onMount(() => {
-		const mounted = mountEditor(host, options());
-		setBinding(mounted);
-		props.editorRef?.({
-			get element() {
-				return mounted.element;
-			},
-			load: (input) => mounted.load(input),
-			save: () => mounted.save(),
-			download: (fileName) => mounted.download(fileName),
-			markClean: () => mounted.markClean(),
-			get dirty() {
-				return mounted.dirty;
-			},
-		});
-	});
-	createEffect(() => {
-		const current = binding();
-		if (!current) return;
-		host.className = props.class ?? '';
-		current.update(options());
-	});
-	onCleanup(() => binding()?.destroy());
-	return host;
-}
+export const WordEditor = createSolidBinding<
+	WordEditorProps,
+	EditorHandle,
+	EditorOptions,
+	EditorBinding
+>({
+	handle: EDITOR_CONTRACT.handle,
+	mount: mountEditor,
+	options: (props) => contractOptions(EDITOR_CONTRACT, props),
+});
