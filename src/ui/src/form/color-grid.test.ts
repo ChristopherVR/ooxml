@@ -285,7 +285,9 @@ describe('office-ui-color-grid', () => {
 			['recent', '#0000ff', 'Zuletzt #0000FF'],
 		]);
 		const picked = vi.fn();
-		grid.addEventListener('office-color-pick', (event) => picked(event.detail));
+		grid.addEventListener('office-color-pick', (event) =>
+			picked((event as CustomEvent<OfficeColorPick>).detail),
+		);
 		buttons(grid)[1]!.click();
 		expect(picked).toHaveBeenCalledWith({
 			color: '#0000ff',
