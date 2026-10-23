@@ -81,7 +81,7 @@ export interface SlideCanvasProps {
 	onCommitCellEdit?: (elementId: string, rowIndex: number, colIndex: number, text: string) => void;
 	onResizeTableColumns?: (elementId: string, newWidths: number[]) => void;
 	onResizeTableRow?: (elementId: string, rowIndex: number, newHeight: number) => void;
-	findResults?: Array<{
+	findResults?: ReadonlyArray<{
 		slideIndex: number;
 		elementId: string;
 		segmentIndex: number;

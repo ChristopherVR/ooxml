@@ -93,7 +93,7 @@ export interface ViewerCanvasAreaProps {
 		setFindIncludeChartTitles: (value: boolean) => void;
 		setFindIncludeChartData: (value: boolean) => void;
 		setFindIncludeNotes: (value: boolean) => void;
-		findResults: Array<{
+		findResults: ReadonlyArray<{
 			slideIndex: number;
 			elementId: string;
 			segmentIndex: number;
