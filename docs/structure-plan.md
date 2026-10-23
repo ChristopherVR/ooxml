@@ -372,3 +372,83 @@ Visio collaboration. Still open:
   a `DocumentAdapter` over `collab` like the Excel mapping is undecided.
 - Product parity is tracked in the per-product pages, not here: Word shapes and page-story
   editing, Excel pivot filters and sheet-part collaboration, Visio connector routing and glue.
+
+## 5. Framework layers and shared chart and SmartArt editing (2026-10-23)
+
+A survey on 2026-10-23 (`origin/main` 3b2ecd9a6) found that the largest remaining duplication is not
+Office logic but the framework layer, and that chart and SmartArt editing exists only in PowerPoint.
+
+### 5.1 State
+
+Tracked, non-test source lines:
+
+| Product | Shared implementation                   | Per framework                                             |
+| ------- | --------------------------------------- | --------------------------------------------------------- |
+| pptx    | `src/ui/src/pptx` 211k                  | React 106k, Angular 96k, Vue 82k, Svelte 66k, vanilla 64k |
+| docx    | `src/ui/src/docx` 38k, `bindings` 1.3k  | 80 to 200                                                 |
+| xlsx    | `src/ui/src/xlsx` 27k, `bindings` 1.2k  | 90 to 250                                                 |
+| visio   | `src/ui/src/visio` 35k, `bindings` 1.3k | 150 to 290                                                |
+| teams   | `src/ui/src/teams` 17k, `bind.ts`       | 50 to 130                                                 |
+
+- **pptx bindings are ports of each other.** Roughly 20 to 25% of each binding (80k to 100k lines
+  in all) is framework-free logic: the state machine around each shared policy. Drift found: undo
+  depth (React and Vue 120, Svelte and vanilla 100, React keeps its own stack), two autosave engines
+  (interval in React and Angular, debounce elsewhere), React and Angular outside
+  `createGestureController`, the AI bridge copied into every binding, five keyboard dispatchers with
+  differently named handlers. Per binding, the chart and SmartArt files alone are 3.5k to 7.9k lines
+  (each has its own data editor, insert SmartArt dialog and text pane).
+- **docx, xlsx, visio and teams each wrote their own binding kit** (prop tracker, change-only
+  forwarding, deferred handle, contract mapping, near-identical Vue, React and Solid adapters).
+- **Chart and SmartArt editing is pptx-only.** Reading goes through `chart` and `diagram` for every
+  product, and docx, xlsx and visio draw charts through `chart/render`, but pptx edits
+  `PptxChartData` through `builders/sdk/chart-*` and saves through about 127 object-tree writers;
+  Excel edits through its own `ChartPatch`; Word and Visio cannot edit charts. SmartArt node
+  operations, reflow, text projection and part writers live in `src/core/pptx`; Word and Excel show
+  the cached drawing only.
+
+### 5.2 Target layers
+
+1. **Core** (DOM-free): model, editing operations and policies.
+2. **`ooxml-ui`** (no framework): headless controllers (`getSnapshot`, `subscribe`, typed actions),
+   imperative leaf renderers and shared Lit elements, including the chart and SmartArt editing
+   elements every product mounts.
+3. **One store adapter per framework**, written once for every controller (React
+   `useSyncExternalStore`, Vue `shallowRef`, Svelte runes, Angular signals, Solid).
+4. **Native templates** on top, so each framework keeps its idioms (slots, render props,
+   `v-model`, DI, SSR). Bindings hold templates, lifecycle, focus and portals only.
+
+The docx, xlsx, visio and teams wrappers share one contract-driven kit in `ooxml-ui/bindings`, with
+generic React, Vue and Solid factories (Angular and Svelte need their compilers, so their small
+adapters stay per product over the same kit) and one contract-parity test per product.
+
+### 5.3 Chart and SmartArt order
+
+Charts, core: neutral edit operations over `ChartSpace` (`chart/edit`, with Excel's `ChartPatch` as
+a client), then the model gaps, then pptx save through `writeChartSpace` one feature family per
+commit behind an old-versus-new part diff over every committed deck, then `PptxChartData` as an
+adapter, then a ChartEx model, parser and writer, then Word chart editing (edited parts plus the
+embedded workbook), then Visio editing of embedded charts through the same operations.
+
+Charts, UI: a shared format-pane model and element (from `src/ui/src/pptx/render/chart-format`),
+shared chart design galleries, and one insert-chart picker (`office-ui-chart-picker`) and one data
+sheet (`office-ui-chart-data-sheet`) for every product.
+
+SmartArt: a neutral paragraph and run model in `drawingml`, then node text projection into
+`diagram`, then a neutral drawing shape and edit operations (`diagram/edit`), then part writers
+(`diagram/write`), then Word and Excel SmartArt editing, with a shared insert picker, galleries and
+text pane.
+
+### Wave 6 (in progress)
+
+| #   | Work                                                                                             |
+| --- | ------------------------------------------------------------------------------------------------ |
+| 1   | `ooxml-ui/bindings` kit; docx, xlsx, visio and teams bindings on it; contract-parity tests       |
+| 2   | pptx controller convention and store adapters; shared AI bridge, undo history, keyboard dispatch |
+| 3   | `chart/edit` neutral operations; Excel's chart edits through them; pptx adapter proof            |
+| 4   | `drawingml` paragraph and run model; SmartArt node text projection into `diagram`                |
+| 5   | `office-ui-chart-data-sheet` replaces the five pptx chart data editors                           |
+| 6   | pptx Insert Chart on `office-ui-chart-picker`; shared SmartArt picker and design galleries       |
+
+Next: autosave, collaboration, presentation and canvas-gesture controllers; inspector field
+descriptors; the format pane on `ChartSpace`; pptx chart save through `writeChartSpace`; the
+SmartArt drawing shape, edit operations and writers.
