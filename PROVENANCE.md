@@ -2498,3 +2498,12 @@ Source: ChristopherVR/ooxml, `origin/main` at `3b2ecd9a6` (an in-repo move).
 - `src/ui/src/pptx/dom/smartart-insert-preview.ts` is the vanilla binding's `ui/ribbon/tabs/insert/smartart-gallery-preview.ts`, taking a target size instead of a fixed 64px tile.
 
 New code (not moved): `office-ui-smartart-picker` and `src/ui/src/smartart/galleries.ts`; `pptx-ui-insert-chart-dialog`, `pptx-ui-insert-smartart-dialog` and `insert-dialog-frame.ts`; `render/insert-chart-preview.ts`. The per-binding Insert SmartArt dialogs they replace were deleted.
+
+## `diagram` drawing-shape view and edit operations (2026-10-23)
+
+Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move).
+
+- `src/core/diagram/drawing-view.ts` (`DiagramShapeView`) is the resolved-shape part of `PptxSmartArtDrawingShape` from `src/core/pptx/core/types/smart-art.ts`, unchanged in fields; the pptx interface now extends it and keeps its 3D, rich-text segment and custom-geometry slots.
+- `src/core/diagram/drawing-resolve.ts` is new code generalising `parseDrawingShape` of `src/core/pptx/core/core/runtime/PptxHandlerRuntimeSmartArtParsing.ts` and the helpers of `smartart-drawing-shape-style.ts` and `smartart-drawing-shape-font-ref.ts` over the DOM reader and an injected colour resolver. `pptx/__tests__/integration/smartart-drawing-shape-neutral-parity.test.ts` pins agreement.
+- `src/core/diagram/edit/` is `src/core/pptx/core/utils/smartart-editing-node-ops.ts` (split into `node-ops.ts`, `node-order.ts` and `shape-match.ts`), `smartart-editing-node-style.ts` (and its test), `smartart-editing-reflow.ts` (split into `reflow.ts` and `reflow-category.ts`) and `smartart-editing-reflow-layouts-{directional,geometric,stacked}.ts`, made generic over the neutral data model and `DiagramShapeView`. The two copies of the drawing-shape matcher became one (`shape-match.ts`); the model id generator is injected (pptx passes its font GUID generator). `addDiagramNodeBefore` and `addDiagramNodeAbove` are new. The pptx modules are facades with the historical names.
+- `src/core/diagram/write/data.ts` is `src/core/pptx/core/core/runtime/smartart-fabrication-data.ts` moved and made generic over the neutral node model, with the model id generator injected and the exports renamed for the `diagram` namespace (`writeFabricatedDiagramData`, `buildDiagramNodeGuidMap`, `escapeDiagramXml`, ...). The pptx module is a facade that passes its GUID generator; its output is byte-identical (checked under a seeded random source over the committed decks).

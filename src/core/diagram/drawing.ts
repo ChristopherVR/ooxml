@@ -7,6 +7,8 @@ import { parseStyleReferences } from './definitions';
 import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
 import { parseDrawingGeometry, parseFrame, parseTransform } from '../drawingml/drawing-geometry';
 import { parseDrawingTextBody } from '../drawingml/drawing-text';
+import { parseDrawingColorIn } from '../drawingml/drawing-color';
+import { parseDrawingRichTextBody } from '../drawingml/read-text-body';
 import { NS, first, stringAttribute, type XmlElement } from './dom';
 import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types';
 
@@ -99,8 +101,13 @@ function parseShape(
 	if (line) shape.line = line;
 	const style = first(sp, 'style', NS.dsp);
 	if (style) shape.style = parseStyleReferences(style);
-	const text = parseDrawingTextBody(first(sp, 'txBody', NS.dsp));
+	const shadow = parseDrawingColorIn(first(first(spPr, 'effectLst', NS.a), 'outerShdw', NS.a));
+	if (shadow) shape.shadowColor = shadow;
+	const txBody = first(sp, 'txBody', NS.dsp);
+	const text = parseDrawingTextBody(txBody);
 	if (text) shape.text = text;
+	const body = parseDrawingRichTextBody(txBody);
+	if (body) shape.body = body;
 	const textFrame = parseFrame(first(sp, 'txXfrm', NS.dsp));
 	if (textFrame) shape.textFrame = applyGroup(textFrame, group);
 	return shape;

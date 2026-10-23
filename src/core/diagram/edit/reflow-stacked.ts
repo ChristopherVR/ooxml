@@ -7,11 +7,12 @@
  * These are "visual reflow" layouts used after editing operations to
  * reposition nodes without requiring the full layout engine.
  *
- * @module smartart-editing-reflow-layouts-stacked
+ * @module diagram/edit/reflow-stacked
  */
 
-import type { PptxSmartArtNode, PptxSmartArtDrawingShape } from '../types';
-import type { ContainerBounds } from './smartart-helpers';
+import type { DiagramShapeView } from '../drawing-view';
+import type { DiagramNode } from '../model/node';
+import type { DiagramReflowBounds } from './types';
 
 // ── Pyramid ──────────────────────────────────────────────────────────────
 
@@ -23,9 +24,9 @@ import type { ContainerBounds } from './smartart-helpers';
  * @returns Array of positioned drawing shapes.
  */
 export function reflowPyramid(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const padding = 8;
 	const gap = 4;
 	const usableH = bounds.height - padding * 2;
@@ -63,9 +64,9 @@ export function reflowPyramid(
  * @returns Array of positioned drawing shapes.
  */
 export function reflowFunnel(
-	nodes: PptxSmartArtNode[],
-	bounds: ContainerBounds,
-): PptxSmartArtDrawingShape[] {
+	nodes: DiagramNode[],
+	bounds: DiagramReflowBounds,
+): DiagramShapeView[] {
 	const padding = 8;
 	const gap = 4;
 	const usableH = bounds.height - padding * 2;
