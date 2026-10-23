@@ -26,6 +26,7 @@ import { parseRelationships, resolvePartPath } from '../../opc/relationships';
 import { buildXml, parseXml } from '../../xml/index';
 import { expandRangeAddresses, parseChartFormulaRange } from './cellref';
 import { applyCellWritesToWorksheet, childrenNamed, type ChartCellWrite } from './sheet-cells';
+import { sharedStringTexts, syncWorksheetTables } from './tables';
 import { validateAtomicChartWorkbookWrites } from './validation';
 
 /** One chart data reference (series name, categories or values) to write back. */
@@ -130,6 +131,7 @@ export async function writeChartWorkbookUpdates(
 		writesBySheet.set(sheetPath, bucket);
 	}
 	let changed = false;
+	const shared = await sharedStringTexts(zip).catch(() => []);
 	for (const [sheetPath, resolved] of writesBySheet) {
 		const file = zip.file(sheetPath);
 		if (!file) {
@@ -141,7 +143,8 @@ export async function writeChartWorkbookUpdates(
 			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ refs, values, isNumeric }) =>
 				refs.map((ref, index) => ({ ref, isNumeric, value: values[index] ?? '' })),
 			);
-			if (applyCellWritesToWorksheet(doc, cellWrites)) {
+			if (applyCellWritesToWorksheet(doc, cellWrites, shared)) {
+				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);
 				zip.file(sheetPath, buildXml(doc));
 				changed = true;
 			}

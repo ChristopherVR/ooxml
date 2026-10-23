@@ -8,4 +8,5 @@ export * from './package-save';
 export * from './space-writes';
 export * from './create';
 export { applyCellWritesToWorksheet, type ChartCellWrite } from './sheet-cells';
+export { sharedStringTexts, syncWorksheetTables } from './tables';
 export { validateAtomicChartWorkbookWrites } from './validation';

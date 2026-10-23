@@ -92,3 +92,61 @@ describe('the embedded workbook of a new chart', () => {
 		expect(xml).toContain('<c r="B3"/>');
 	});
 });
+
+describe('the data table Word and PowerPoint put behind a chart', () => {
+	/** The sample workbook with Word's `Table1` over A1:D5 and its names in shared strings. */
+	async function withTable(): Promise<Uint8Array> {
+		const zip = await JSZip.loadAsync(await createChartWorkbook(DEFAULT_CHART_DATA_SHEET));
+		const sheet = 'xl/worksheets/sheet1.xml';
+		zip.file(
+			sheet,
+			(await zip.file(sheet)!.async('string'))
+				.replace(
+					'<c r="B1" t="inlineStr"><is><t xml:space="preserve">Series 1</t></is></c>',
+					'<c r="B1" t="s"><v>0</v></c>',
+				)
+				.replace('<row r="1">', '<row r="1" spans="1:4">')
+				.replace(
+					'</worksheet>',
+					'<tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>',
+				),
+		);
+		zip.file(
+			'xl/sharedStrings.xml',
+			'<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>Series 1</t></si></sst>',
+		);
+		zip.file(
+			'xl/worksheets/_rels/sheet1.xml.rels',
+			'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/></Relationships>',
+		);
+		zip.file(
+			'xl/tables/table1.xml',
+			'<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1" name="Table1" displayName="Table1" ref="A1:D5"><tableColumns count="4"><tableColumn id="1" name=" "/><tableColumn id="2" name="Series 1"/><tableColumn id="3" name="Series 2"/><tableColumn id="4" name="Series 3"/></tableColumns></table>',
+		);
+		return zip.generateAsync({ type: 'uint8array' });
+	}
+
+	it('renames and grows the table with the data and keeps unchanged shared strings', async () => {
+		const edited = applyChartSpaceDataSheetEdits(newChartSpace(), [
+			{ kind: 'series-name', series: 1, name: 'Renamed' },
+			{ kind: 'add-series' },
+			{ kind: 'add-category' },
+		]);
+		const result = await writeChartWorkbookUpdates(
+			await withTable(),
+			chartSpaceWorkbookWrites(edited),
+		);
+		expect(result.unresolved).toBe(0);
+		const zip = await JSZip.loadAsync(result.bytes!);
+		const table = await zip.file('xl/tables/table1.xml')!.async('string');
+		expect(table).toContain('ref="A1:E6"');
+		expect(table).toContain('<tableColumns count="5">');
+		expect(table).toContain('name="Renamed"');
+		expect(table).toContain('<tableColumn id="1" name=" "/>');
+		expect(table).toContain('<tableColumn id="5" name="Series 4"/>');
+		const sheet = await zip.file('xl/worksheets/sheet1.xml')!.async('string');
+		expect(sheet).toContain('<c r="B1" t="s"><v>0</v></c>');
+		expect(sheet).toContain('<dimension ref="A1:E6"/>');
+		expect(sheet).not.toContain('spans=');
+	});
+});

@@ -67,6 +67,8 @@ function ensureCell(sheetData: XmlElement, ref: string): XmlElement | undefined 
 			return existing !== undefined && existing.col > address.col;
 		});
 		row.insertBefore(cell, after ?? null);
+		// `spans` is an optional hint of the row's column range; a new cell can fall outside it.
+		row.removeAttribute('spans');
 	}
 	return cell;
 }
@@ -81,7 +83,12 @@ function inlineText(cell: XmlElement): string | undefined {
  * Whether `cell` already holds `value` in the representation a write would produce, so an
  * unchanged cell is left untouched rather than reformatted.
  */
-function holds(cell: XmlElement, isNumeric: boolean, value: string): boolean {
+function holds(
+	cell: XmlElement,
+	isNumeric: boolean,
+	value: string,
+	sharedStrings: readonly string[],
+): boolean {
 	const type = cell.getAttribute('t') || 'n';
 	if (isNumeric) {
 		const current = childNamed(cell, 'v')?.textContent ?? undefined;
@@ -91,6 +98,8 @@ function holds(cell: XmlElement, isNumeric: boolean, value: string): boolean {
 		const after = Number.parseFloat(value);
 		return Number.isFinite(before) && Number.isFinite(after) ? before === after : current === value;
 	}
+	if (type === 's') return sharedStrings[Number(childNamed(cell, 'v')?.textContent)] === value;
+	if (type === 'str') return childNamed(cell, 'v')?.textContent === value;
 	return type === 'inlineStr' && inlineText(cell) === value;
 }
 
@@ -122,11 +131,13 @@ function writeCell(cell: XmlElement, isNumeric: boolean, value: string): void {
 
 /**
  * Apply a batch of cell writes to a parsed worksheet. Returns whether any cell changed, so the
- * caller only re-serializes a worksheet that differs from what was loaded.
+ * caller only re-serializes a worksheet that differs from what was loaded. `sharedStrings` (the
+ * workbook's shared string texts) lets a shared-string cell that already shows the text stay.
  */
 export function applyCellWritesToWorksheet(
 	doc: XmlDocument,
 	writes: readonly ChartCellWrite[],
+	sharedStrings: readonly string[] = [],
 ): boolean {
 	const sheetData = worksheetData(doc);
 	if (!sheetData) return false;
@@ -134,7 +145,7 @@ export function applyCellWritesToWorksheet(
 	for (const write of writes) {
 		if (!parseCellAddress(write.ref)) continue;
 		const existing = findCell(sheetData, write.ref);
-		if (existing && holds(existing, write.isNumeric, write.value)) continue;
+		if (existing && holds(existing, write.isNumeric, write.value, sharedStrings)) continue;
 		const cell = existing ?? ensureCell(sheetData, write.ref);
 		if (!cell) continue;
 		writeCell(cell, write.isNumeric, write.value);
