@@ -16,7 +16,7 @@ export interface OfficeProgressDialogState {
 	cancelLabel?: string;
 }
 
-/** `progress` rounded into 0..100 (NaN reads as 0). */
+/** `progress` rounded into 0..100 (a non-finite value reads as 0). */
 function percent(value: number): number {
 	return Number.isFinite(value) ? Math.min(100, Math.max(0, Math.round(value))) : 0;
 }
@@ -43,14 +43,7 @@ export class OfficeUiProgressDialog extends OfficeElement {
 	constructor() {
 		super();
 		this.addEventListener('keydown', (event) => this.onKey(event));
-		// Pressing a part that cannot take focus (the backdrop, the text) would move focus to the page
-		// behind the overlay, out of reach of the Tab guard; Cancel keeps it instead.
-		this.addEventListener('mousedown', (event) => {
-			const cancel = this.cancelButton;
-			if (this.model.open && !(cancel && event.composedPath().includes(cancel))) {
-				event.preventDefault();
-			}
-		});
+		this.addEventListener('mousedown', (event) => this.onPress(event));
 	}
 
 	get state(): OfficeProgressDialogState {
@@ -73,6 +66,15 @@ export class OfficeUiProgressDialog extends OfficeElement {
 			event.stopPropagation();
 			this.cancelButton?.focus();
 		}
+	}
+
+	private onPress(event: MouseEvent): void {
+		if (!this.model.open) return;
+		// Pressing a part that cannot take focus (the backdrop, the text) would move focus to the page
+		// behind the overlay, out of reach of the Tab guard, so focus stays on Cancel instead.
+		const cancel = this.cancelButton;
+		if (cancel && event.composedPath().includes(cancel)) return;
+		event.preventDefault();
 	}
 
 	private cancel(): void {

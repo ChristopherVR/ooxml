@@ -30,6 +30,7 @@ const emit = defineEmits<{
 
 const { t, locale } = useI18n();
 
+// A new state per locale makes the element re-read its labels.
 const state = computed<ExportProgressViewState>(() => {
 	void locale.value;
 	return {

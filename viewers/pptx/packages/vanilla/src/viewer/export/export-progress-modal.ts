@@ -48,14 +48,7 @@ export function createExportProgressModal(deps: ExportProgressModalDeps): Export
 		if (open && el.parentElement !== host) {
 			host.appendChild(el);
 		}
-		const t = deps.getTranslator();
-		el.state = {
-			open,
-			title,
-			progress,
-			status,
-			translate: (key, params) => t(key, params ? { ...params } : undefined),
-		};
+		el.state = { open, title, progress, status, translate: deps.getTranslator() };
 	};
 
 	return {

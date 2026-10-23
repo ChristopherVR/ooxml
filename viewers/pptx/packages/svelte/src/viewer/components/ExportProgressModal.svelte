@@ -30,7 +30,7 @@
 	const state = $derived.by<ExportProgressViewState>(() => {
 		// Read here so a language switch hands the element a new state and its labels follow.
 		void t('pptx.export.cancel');
-		return { open, title, progress, status: statusMessage, translate: (key) => t(key) };
+		return { open, title, progress, status: statusMessage, translate: t };
 	});
 </script>
 
