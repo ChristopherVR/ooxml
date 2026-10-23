@@ -3,7 +3,7 @@
 // go; a new title is one run under the paragraph properties Excel writes, so Office still resolves
 // the inherited title font. Removing the chart title also sets `c:autoTitleDeleted`, or Office would
 // draw an automatic title in its place.
-import { NS, elements, parseXml } from '../../xml/index';
+import { NS, parseXml } from '../../xml/index';
 import type { ChartSpace } from '../model';
 import type { ChartTextBody, ChartTitle } from '../model-series';
 import { chartTextBodyFromXml } from '../write-shape';
