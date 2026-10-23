@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regenerate `pptx/core/utils/smartart-builtin-layouts/{catalog,data}.ts`: PowerPoint's built-in
+ * Regenerate `diagram/builtin/{catalog,data}.ts`: PowerPoint's built-in
  * SmartArt layout definitions (`dgm:layoutDef`), one per `uniqueId`, taken from the layout parts
  * of the ground-truth gallery fixtures (`__tests__/fixtures/smartart-gallery`, which PowerPoint
  * itself produced via COM; see its README).
@@ -20,7 +20,7 @@ import JSZip from 'jszip';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GALLERY = path.resolve(HERE, '../../pptx/__tests__/fixtures/smartart-gallery');
-const OUT = path.resolve(HERE, '../../pptx/core/utils/smartart-builtin-layouts');
+const OUT = path.resolve(HERE, '../../diagram/builtin');
 
 const manifest = JSON.parse(readFileSync(path.join(GALLERY, 'manifest.json'), 'utf8'));
 const titles = new Map(manifest.map((entry) => [entry.file, entry]));

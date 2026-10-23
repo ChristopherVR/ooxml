@@ -95,7 +95,7 @@ describe('SmartArt node view', () => {
 		expect(view.update?.(node, [], {} as never)).toBe(false);
 	});
 
-	it('shows a labelled box with the node text when there is no cached drawing', async () => {
+	it('draws an approximate layout of the nodes when there is no cached drawing', async () => {
 		const { runs } = await diagramRuns();
 		const base = runs[0]!.image!.diagram!;
 		const { drawing: _drawing, ...rest } = base;
@@ -104,14 +104,25 @@ describe('SmartArt node view', () => {
 			...runs[0]!,
 			image: { ...runs[0]!.image!, diagram },
 		})[0]!;
+		const dom = smartArtNodeView(node, diagram, undefined, 'fr').dom as HTMLElement;
+		expect(dom.dataset.rendering).toBe('approximate');
+		const svg = dom.querySelector('office-ui-smartart')!.shadowRoot!.querySelector('svg')!;
+		const texts = [...svg.querySelectorAll('text')].map((text) => text.textContent);
+		expect(texts).toEqual(diagram.nodes.filter((entry) => entry.text).map((entry) => entry.text));
+		expect(dom.querySelector('.dve-smartart-notes')!.textContent).toContain(
+			'disposition approximative',
+		);
+	});
+
+	it('shows a labelled box when a diagram without a cached drawing has no nodes', async () => {
+		const { runs } = await diagramRuns();
+		const { drawing: _drawing, ...rest } = runs[0]!.image!.diagram!;
+		const diagram: DocxDiagram = { ...rest, nodes: [], rendering: 'placeholder' };
+		const node = runToInlineNodes({ ...runs[0]!, image: { ...runs[0]!.image!, diagram } })[0]!;
 		const dom = smartArtNodeView(node, diagram, undefined).dom as HTMLElement;
 		expect(dom.querySelector('office-ui-smartart')).toBeNull();
 		expect(dom.dataset.rendering).toBe('placeholder');
-		const items = [...dom.querySelectorAll('.dve-smartart-placeholder li')].map(
-			(li) => li.textContent,
-		);
-		expect(items.length).toBeGreaterThan(0);
-		expect(items).toEqual(diagram.nodes.filter((entry) => entry.text).map((entry) => entry.text));
+		expect(dom.querySelector('.dve-smartart-placeholder')).not.toBeNull();
 	});
 
 	it('lists issues and approximations without claiming fidelity', async () => {

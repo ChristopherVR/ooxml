@@ -54,8 +54,8 @@ table {
 }
 th,
 td {
-	min-width: 64px;
-	padding: 1px;
+	min-width: calc(var(--office-space-4) * 4);
+	padding: var(--office-space-px);
 	border: var(--office-border-width) solid var(--office-border);
 	font-weight: normal;
 	text-align: start;
@@ -74,13 +74,13 @@ th.category {
 .header {
 	display: flex;
 	align-items: center;
-	gap: 2px;
+	gap: var(--office-space-0);
 }
 .cell {
 	box-sizing: border-box;
 	width: 100%;
 	min-width: 0;
-	height: 22px;
+	height: var(--office-control-height-xs);
 	padding: 0 var(--office-space-1);
 	border: var(--office-border-width) solid transparent;
 	border-radius: var(--office-radius-xs);
@@ -102,11 +102,11 @@ td .cell {
 }
 /* The cell of the chart part picked on the canvas. */
 .cell.highlight {
-	box-shadow: inset 0 0 0 1px var(--office-accent);
+	box-shadow: inset 0 0 0 var(--office-border-width) var(--office-accent);
 }
 .remove {
 	flex: none;
-	width: 16px;
+	width: var(--office-icon-size-md);
 	padding: 0;
 	border: none;
 	background: transparent;

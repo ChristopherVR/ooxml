@@ -129,6 +129,21 @@ export type RibbonAction =
 	| { type: 'comments'; key: 'toggle' | 'add' | 'delete' | 'previous' | 'next' }
 	| { type: 'insertPicture' }
 	| { type: 'shapePicker' }
+	| { type: 'insertSmartArt' }
+	| {
+			type: 'smartArt';
+			key:
+				| 'addAfter'
+				| 'addBefore'
+				| 'addAbove'
+				| 'addBelow'
+				| 'promote'
+				| 'demote'
+				| 'moveUp'
+				| 'moveDown'
+				| 'textPane'
+				| 'changeLayout';
+	  }
 	| { type: 'drawShape'; preset: string }
 	| {
 			type: 'shape';

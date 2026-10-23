@@ -14,6 +14,7 @@ import {
 	type NewRelationship,
 } from './relationship-allocator';
 import type { DocPrIdAllocator } from './docpr-ids';
+import { ensureContentTypeOverride } from './zip-parts';
 import type { XmlDocument } from './xml';
 import { writeNewChartPart } from './chart-save';
 
@@ -69,6 +70,7 @@ export async function writeNewRelationships(
 				relativeTarget(partName, await writeNewChartPart(zip, relationship.chart)),
 			);
 	let contentTypesXml = await zip.file(CONTENT_TYPES_PART)?.async('string');
+	const overrides: NewRelationship[] = [];
 	for (const relationship of created) {
 		relationships.set(relationship.id, {
 			id: relationship.id,
@@ -77,6 +79,15 @@ export async function writeNewRelationships(
 			type: relationship.type,
 		});
 		if (!relationship.partName) continue;
+		if (relationship.overrideContentType) {
+			const bytes =
+				relationship.content ?? pendingMedia?.get(relationship.partName)?.bytes ?? undefined;
+			if (bytes === undefined)
+				throw new Error(`Missing content for newly inserted part: ${relationship.partName}`);
+			zip.file(relationship.partName, bytes);
+			overrides.push(relationship);
+			continue;
+		}
 		const pending = pendingMedia?.get(relationship.partName);
 		if (!pending)
 			throw new Error(`Missing bytes for newly inserted media part: ${relationship.partName}`);
@@ -89,4 +100,7 @@ export async function writeNewRelationships(
 	}
 	zip.file(relsPath, buildRelationshipsXml(relationships));
 	if (contentTypesXml) zip.file(CONTENT_TYPES_PART, contentTypesXml);
+	for (const { partName, overrideContentType } of overrides)
+		if (partName && overrideContentType)
+			await ensureContentTypeOverride(zip, partName, overrideContentType);
 }

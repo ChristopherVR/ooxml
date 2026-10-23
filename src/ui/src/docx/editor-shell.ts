@@ -218,6 +218,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		shell.navigator.element,
 		shell.headings.element,
 		canvas,
+		core.inserts.smartArt.pane,
 		review.commentsPanel.element,
 	);
 	frame.append(toolbar, shell.searchPanel.element, body);
@@ -227,6 +228,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	frame.append(
 		core.inserts.linkDialog.element,
 		core.inserts.pictureDialog.element,
+		core.inserts.smartArt.dialog.element,
 		...core.formatDialogs.elements,
 		core.inserts.pictureInput,
 	);

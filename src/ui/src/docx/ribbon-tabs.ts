@@ -79,6 +79,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ large: true, caption: 'Chart' },
 			),
 			tool(
+				'Insert SmartArt',
+				'smartArt',
+				{ type: 'insertSmartArt' },
+				{ large: true, caption: 'SmartArt' },
+			),
+			tool(
 				'Format picture',
 				'formatPicture',
 				{ type: 'formatPicture' },

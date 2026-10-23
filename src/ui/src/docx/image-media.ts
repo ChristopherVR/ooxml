@@ -6,6 +6,7 @@ import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
 import type { ThemeCatalog } from 'ooxml-core/docx';
+import type { EditorLocale } from './localization';
 
 /**
  * Resolves inline picture bytes (kept off the JSON model by docx-core) into object URLs. URLs are
@@ -53,6 +54,8 @@ export interface ImageNodeViewOptions {
 	maxWidth?(): number;
 	/** The document theme, for resolving SmartArt and chart colours. */
 	theme?(): ThemeCatalog | undefined;
+	/** The editor's locale, for the notes beside a SmartArt. */
+	locale?(): EditorLocale;
 }
 
 const MIN_SIZE = 16;
@@ -84,7 +87,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
 		if (node.attrs.shape) return shapeNodeView(node, view, getPos, () => options.theme?.());
 		const diagram = parseDiagram(node.attrs.diagram);
-		if (diagram) return smartArtNodeView(node, diagram, options.theme?.());
+		if (diagram) return smartArtNodeView(node, diagram, options.theme?.(), options.locale?.());
 		if (node.attrs.chart) {
 			// The chart is painted with the document theme; an edit replaces the node, which repaints it.
 			const dom = DOMSerializer.renderSpec(document, chartNodeSpec(node, options.theme?.()))

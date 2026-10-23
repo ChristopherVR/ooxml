@@ -84,6 +84,7 @@ export function renderDocument(core: EditorCore): void {
 				editChart: () => core.formatDialogs.open('chartData'),
 				maxWidth: () => core.contentWidth(),
 				theme: () => core.model.theme,
+				locale: () => core.locale,
 			}),
 		},
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),

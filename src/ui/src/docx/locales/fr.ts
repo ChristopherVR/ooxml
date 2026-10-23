@@ -8,6 +8,7 @@ import { frDropCap } from './drop-cap';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
+import { frSmartArt } from './smartart';
 import { frCharts } from './charts';
 import type { LocaleStrings } from './en';
 import { frApp } from './fr-app';
@@ -28,5 +29,6 @@ export const fr: LocaleStrings = {
 	...frLigatures,
 	...frObjects,
 	...frShapes,
+	...frSmartArt,
 	...frCharts,
 };

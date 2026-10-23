@@ -18,6 +18,7 @@ export default defineConfig({
 		'opc/index': 'opc/index.ts',
 		'drawingml/index': 'drawingml/index.ts',
 		'diagram/index': 'diagram/index.ts',
+		'diagram/builtin/index': 'diagram/builtin/index.ts',
 		'digest/index': 'digest/index.ts',
 		'crypto/index': 'crypto/index.ts',
 		'math/index': 'math/index.ts',

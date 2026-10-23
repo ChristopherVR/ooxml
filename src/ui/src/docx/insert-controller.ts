@@ -23,6 +23,7 @@ import {
 	type ShapeWrap,
 } from './shape-commands';
 import { insertPicture, PICTURE_TYPES, stagePicture } from './picture-commands';
+import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
@@ -43,6 +44,8 @@ export interface InsertControllerHost {
 	paper(): HTMLElement | undefined;
 	toolbar(): HTMLElement | undefined;
 	reportError(error: Error): void;
+	/** Refreshes the ribbon and panes after a change that is not a document transaction. */
+	refresh?(): void;
 	/** Shared media hosts allocate immutable room-wide names and publish bytes before insertion. */
 	newMediaPartName?(contentType: string): string;
 	stageMedia?(partName: string, part: PendingMediaPart): void;
@@ -57,6 +60,8 @@ export class InsertController {
 	readonly pendingMedia = new Map<string, PendingMediaPart>();
 	/** The shape Insert > Shapes armed for the next drag on the page. */
 	readonly shapeTool = new ShapeTool();
+	/** Insert > SmartArt, SmartArt Design and the SmartArt text pane. */
+	readonly smartArt: SmartArtController;
 	private showHidden = false;
 	private showMarks = false;
 	private showGridlines = false;
@@ -74,12 +79,23 @@ export class InsertController {
 		this.pictureInput.hidden = true;
 		this.pictureInput.className = 'dve-picture-input';
 		this.pictureInput.addEventListener('change', () => void this.insertSelectedPicture());
+		this.smartArt = new SmartArtController({
+			view: () => host.view(),
+			contentWidth: () => host.contentWidth(),
+			stage: (partName, part) => {
+				this.pendingMedia.set(partName, part);
+				host.stageMedia?.(partName, part);
+			},
+			reportError: (error) => host.reportError(error),
+			refresh: () => host.refresh?.(),
+		});
 	}
 
 	/** Handles the actions this controller owns; returns false for everything else. */
 	handle(action: RibbonAction): boolean {
 		const view = this.host.view();
 		const editable = Boolean(view?.editable);
+		if (this.smartArt.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
 		} else if (action.type === 'insertContentControl') {
@@ -191,6 +207,7 @@ export class InsertController {
 	reset(): void {
 		this.shapeTool.disarm();
 		this.pendingMedia.clear();
+		this.smartArt.reset();
 		if (this.linkDialog.isOpen) this.linkDialog.close();
 		if (this.pictureDialog.isOpen) this.pictureDialog.close();
 	}
@@ -198,6 +215,7 @@ export class InsertController {
 	setLocale(locale: EditorLocale): void {
 		this.linkDialog.setLocale(locale);
 		this.pictureDialog.setLocale(locale);
+		this.smartArt.setLocale(locale);
 		this.pictureInput.setAttribute('aria-label', translate(locale, 'Insert picture'));
 	}
 

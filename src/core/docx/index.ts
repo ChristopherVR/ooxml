@@ -32,6 +32,17 @@ export {
 } from './diagram';
 export { diagramsIn } from './diagram-document';
 export {
+	changeDocxDiagramLayout,
+	createDocxDiagram,
+	editDocxDiagram,
+	insertedDiagramPartNames,
+	withDiagramNodes,
+	type DocxDiagramCreation,
+	type DocxDiagramEdit,
+	type DocxDiagramEditResult,
+} from './diagram-edit';
+export { treeOrderDiagramNodes } from './diagram-nodes';
+export {
 	CHART_GRAPHIC_URI,
 	CHART_NOTICE,
 	chartsIn,

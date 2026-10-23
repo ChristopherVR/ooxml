@@ -1,5 +1,6 @@
 import { enObjects } from './objects';
 import { enShapes } from './shapes';
+import { enSmartArt } from './smartart';
 import { enCharts } from './charts';
 import { enOptions } from './options';
 import { enColumns } from './columns';
@@ -31,6 +32,7 @@ export const en = {
 	...enLigatures,
 	...enObjects,
 	...enShapes,
+	...enSmartArt,
 	...enCharts,
 } as const;
 
