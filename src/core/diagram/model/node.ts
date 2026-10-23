@@ -5,6 +5,7 @@
  * `pptx/core/types/smart-art-node.ts`.
  */
 
+import type { DrawingParagraphProperties, DrawingRunProperties } from '../../drawingml/text-model';
 import type { DiagramNodeCustomLayout } from '../types';
 
 /**
@@ -32,6 +33,8 @@ export interface DiagramNodeTextRun<S = unknown> {
 	rPr?: Record<string, unknown>;
 	/** Resolved standard shape-text style derived from {@link rPr}. */
 	style?: S;
+	/** Neutral run properties, set by readers on the shared DOM (`readDiagramNodeParagraphs`). */
+	properties?: DrawingRunProperties;
 	/** Raw run XML used to retain unmodelled extension children on save. */
 	rawXml?: Record<string, unknown>;
 	/** Original direct-child order, including unmodelled extension children. */
@@ -45,6 +48,7 @@ export type DiagramNodeTextParagraphItem<S = unknown> =
 			kind: 'break';
 			rPr?: Record<string, unknown>;
 			style?: S;
+			properties?: DrawingRunProperties;
 			rawXml?: Record<string, unknown>;
 			childOrder?: string[];
 	  }
@@ -56,6 +60,8 @@ export type DiagramNodeTextParagraphItem<S = unknown> =
 			rPr?: Record<string, unknown>;
 			style?: S;
 			pPr?: Record<string, unknown>;
+			properties?: DrawingRunProperties;
+			paragraphProperties?: DrawingParagraphProperties;
 			rawXml?: Record<string, unknown>;
 			childOrder?: string[];
 	  }
@@ -72,6 +78,10 @@ export interface DiagramNodeTextParagraph<S = unknown> {
 	endParaRPr?: Record<string, unknown>;
 	/** Resolved style for the paragraph terminator. */
 	endParaStyle?: S;
+	/** Neutral paragraph properties, set by readers on the shared DOM. */
+	properties?: DrawingParagraphProperties;
+	/** Neutral end-paragraph run properties, set by readers on the shared DOM. */
+	endProperties?: DrawingRunProperties;
 	/** Raw paragraph XML used to retain unmodelled extension children on save. */
 	rawXml?: Record<string, unknown>;
 }

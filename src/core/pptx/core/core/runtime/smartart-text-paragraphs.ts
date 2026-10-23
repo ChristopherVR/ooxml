@@ -1,3 +1,7 @@
+import {
+	diagramParagraphsText,
+	firstDiagramParagraphRuns,
+} from '../../../../diagram/text/node-text-paragraphs';
 import { orderedXmlKey } from '../../geometry/custom-geometry-command-order';
 import type {
 	PptxSmartArtTextParagraph,
@@ -119,32 +123,14 @@ export function parseSmartArtTextParagraphs(
 
 /** Flatten typed SmartArt paragraphs into the legacy node text value. */
 export function smartArtParagraphsText(paragraphs: PptxSmartArtTextParagraph[]): string {
-	return paragraphs
-		.map((paragraph) =>
-			paragraph.items
-				.map((item) => {
-					if (item.kind === 'run') {
-						return item.run.text;
-					}
-					if (item.kind === 'field') {
-						return item.text;
-					}
-					if (item.kind === 'break') {
-						return '\n';
-					}
-					return item.kind === 'tab' ? '\t' : '';
-				})
-				.join(''),
-		)
-		.join('\n');
+	return diagramParagraphsText(paragraphs);
 }
 
 /** Project first-paragraph regular runs for the legacy `node.runs` API. */
 export function firstParagraphRuns(
 	paragraphs: PptxSmartArtTextParagraph[] | undefined,
 ): PptxSmartArtTextRun[] | undefined {
-	const runs = paragraphs?.[0]?.items.flatMap((item) => (item.kind === 'run' ? [item.run] : []));
-	return runs && runs.length > 0 ? runs : undefined;
+	return firstDiagramParagraphRuns(paragraphs);
 }
 
 function objectWithAttributes(raw: XmlObject | undefined): XmlObject {
