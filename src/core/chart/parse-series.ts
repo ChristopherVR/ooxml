@@ -10,6 +10,7 @@ import {
 	cNumber,
 	cVal,
 	extensionList,
+	rawChild,
 	reportUnmodelled,
 	shapeProperties,
 	type ChartParseContext,
@@ -42,6 +43,7 @@ const POINT = new Set([
 	'bubble3D',
 	'explosion',
 	'spPr',
+	'pictureOptions',
 	'extLst',
 ]);
 
@@ -57,6 +59,7 @@ function parseDataPoint(context: ChartParseContext, element: XmlElement): ChartD
 			explosion: cNumber(context, element, 'explosion'),
 			marker: parseMarker(context, cChild(element, 'marker')),
 			spPr: shapeProperties(element),
+			pictureOptionsXml: rawChild(element, 'pictureOptions'),
 			extLst: extensionList(element),
 		},
 	);
@@ -68,6 +71,7 @@ const SERIES = new Set([
 	'tx',
 	'spPr',
 	'invertIfNegative',
+	'pictureOptions',
 	'dPt',
 	'dLbls',
 	'trendline',
@@ -85,7 +89,7 @@ const SERIES = new Set([
 	'extLst',
 ]);
 
-/** One series (`c:ser`). Picture options are reported, not modelled. */
+/** One series (`c:ser`). Picture options are kept verbatim. */
 export function parseSeries(context: ChartParseContext, element: XmlElement): ChartSpaceSeries {
 	reportUnmodelled(context, element, SERIES);
 	return assignDefined<ChartSpaceSeries>(
@@ -107,6 +111,7 @@ export function parseSeries(context: ChartParseContext, element: XmlElement): Ch
 			bubbleSizes: parseDataSource(cChild(element, 'bubbleSize')),
 			smooth: cBool(context, element, 'smooth'),
 			invertIfNegative: cBool(context, element, 'invertIfNegative'),
+			pictureOptionsXml: rawChild(element, 'pictureOptions'),
 			explosion: cNumber(context, element, 'explosion'),
 			bubble3D: cBool(context, element, 'bubble3D'),
 			shape: cVal(element, 'shape'),

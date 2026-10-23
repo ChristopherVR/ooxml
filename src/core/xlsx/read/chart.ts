@@ -1,10 +1,15 @@
 // Builds the spreadsheet chart object from the shared chart summary (`chartSummaryFromSpace` over
-// `chart/parseChartSpace`), adding the anchor and each series' SpreadsheetML colour. Direct
-// formatting metadata is still read from the part by `chart/readChartFormatting`.
-import { parseXml } from '../../xml/index';
+// `chart/parseChartSpace`), adding the anchor and each series' SpreadsheetML colour. The parsed
+// `ChartSpace` is kept on the object: edits change it and the summary is derived from it again
+// (`chartObjectFromSpace`). Direct formatting metadata is read from the part's XML by
+// `chart/readChartFormatting`.
+import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartObject, ChartSeries, Color, DrawingAnchor } from '../model';
 import { readChartFormatting } from '../../chart/read-formatting';
 import { parseChartSpace } from '../../chart/parse-space';
+import { writeChartSpace } from '../../chart/write-space';
+import { chartIssuesLostOnWrite } from '../../chart/keep-source';
+import type { ChartSpace } from '../../chart/model';
 import { chartSummaryFromSpace } from '../../chart/render/summary-from-space';
 import type { DrawingColor } from '../../drawingml/types';
 
@@ -38,28 +43,38 @@ function legacyColor(color: DrawingColor | undefined): Color | undefined {
 	return undefined;
 }
 
-/** Reads the modelled summary of a `c:chartSpace` part. */
-export function parseChart(
-	xml: string,
-	anchor: DrawingAnchor,
-	partName: string,
-	name?: string,
+/** What a chart object keeps beside its part: placement, package part and session state. */
+export type ChartObjectFrame = Pick<ChartObject, 'anchor'> &
+	Partial<
+		Pick<
+			ChartObject,
+			'partName' | 'name' | 'quickLayout' | 'colorPalette' | 'styleDefinition' | 'editBlocked'
+		>
+	>;
+
+/**
+ * The chart object showing `space`: the painter's summary, SpreadsheetML series colours and the
+ * direct formatting, read from `root` (the part as written, `writeChartSpace(space)` when absent),
+ * with the frame's placement and session fields.
+ */
+export function chartObjectFromSpace(
+	space: ChartSpace,
+	frame: ChartObjectFrame,
+	root?: XmlElement,
 ): ChartObject {
-	const root = parseXml(xml, { label: 'XLSX chart' }).documentElement;
-	const { chartSpace } = parseChartSpace(root);
-	const summary = chartSummaryFromSpace(chartSpace);
+	const summary = chartSummaryFromSpace(space);
 	const series = summary.series.map((source): ChartSeries => {
 		const color = legacyColor(source.drawingColor);
 		return color ? { ...source, color } : source;
 	});
 	const object: ChartObject = {
 		kind: 'chart',
-		anchor,
+		anchor: frame.anchor,
 		chartType: summary.chartType,
 		series,
 		showLegend: summary.showLegend,
-		partName,
 	};
+	if (frame.partName !== undefined) object.partName = frame.partName;
 	if (summary.axes) object.axes = summary.axes;
 	if (summary.axisIds) object.axisIds = summary.axisIds;
 	if (summary.grouping) object.grouping = summary.grouping;
@@ -70,8 +85,37 @@ export function parseChart(
 	if (summary.extraGroups) object.extraGroups = summary.extraGroups;
 	if (summary.bubble) object.bubble = summary.bubble;
 	if (summary.stock) object.stock = summary.stock;
-	if (name) object.name = name;
-	const formatting = readChartFormatting(root);
+	if (frame.name) object.name = frame.name;
+	if (frame.quickLayout !== undefined) object.quickLayout = frame.quickLayout;
+	if (frame.colorPalette !== undefined) object.colorPalette = frame.colorPalette;
+	if (frame.styleDefinition) object.styleDefinition = frame.styleDefinition;
+	if (frame.editBlocked) object.editBlocked = frame.editBlocked;
+	const formatting = readChartFormatting(
+		root ?? parseXml(writeChartSpace(space), { label: 'XLSX chart' }).documentElement,
+	);
 	if (formatting) object.formatting = formatting;
+	object.chartSpace = space;
 	return object;
+}
+
+/** Reads the modelled summary of a `c:chartSpace` part. */
+export function parseChart(
+	xml: string,
+	anchor: DrawingAnchor,
+	partName: string,
+	name?: string,
+): ChartObject {
+	const root = parseXml(xml, { label: 'XLSX chart' }).documentElement;
+	const { chartSpace, issues } = parseChartSpace(root);
+	const lost = chartIssuesLostOnWrite(issues);
+	const editBlocked = lost.length
+		? `Chart ${partName} has content the editor does not model (${[
+				...new Set(lost.map((issue) => issue.element ?? issue.code)),
+			].join(', ')}); it is shown and saved unchanged but cannot be edited.`
+		: undefined;
+	return chartObjectFromSpace(
+		chartSpace,
+		{ anchor, partName, ...(name ? { name } : {}), ...(editBlocked ? { editBlocked } : {}) },
+		root,
+	);
 }

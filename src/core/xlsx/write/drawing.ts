@@ -3,9 +3,12 @@ import { NS, buildXml, first, parseXml } from '../../xml/index';
 import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../model';
 import { CONTENT_TYPES } from '../read/package';
 import { chartXml } from './chart';
-import { patchChartPart } from './chart-patch';
-import { readChartPaletteId } from '../read/chart-colors';
 import { writeChartColorStyle } from './chart-colors';
+import { parseChartSpace } from '../../chart/parse-space';
+import { writeChartSpace } from '../../chart/write-space';
+import { withUnmodelledChartChildren } from '../../chart/keep-unmodelled';
+import { chartIssuesLostOnWrite, patchChartFormulas } from '../../chart/keep-source';
+import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 import { XML_HEADER, escapeAttr } from './xml-out';
 import {
@@ -90,18 +93,42 @@ function frameXml(chart: ChartObject, id: number, relId: string): string {
 	);
 }
 
+/**
+ * The part to write for a kept chart, or `undefined` when its model is the source part's (the part
+ * is then copied byte for byte). An edited model is written with `writeChartSpace` in the source's
+ * declaration style, keeping the source's unmodelled top-level children.
+ */
+export function editedChartPart(source: string, chart: ChartObject): string | undefined {
+	if (!chart.chartSpace) return undefined;
+	let parsed;
+	try {
+		parsed = parseChartSpace(source);
+	} catch {
+		return undefined;
+	}
+	const loaded = parsed.chartSpace;
+	if (sameModel(loaded, chart.chartSpace)) return undefined;
+	// A part with unmodelled content below the top level keeps its bytes (reference moves only).
+	if (chartIssuesLostOnWrite(parsed.issues).length)
+		return patchChartFormulas(source, loaded, chart.chartSpace);
+	const declarationBreak = (/^<\?xml[^>]*\?>(\r\n|\n)?/.exec(source)?.[1] ?? '') as
+		| ''
+		| '\n'
+		| '\r\n';
+	return withUnmodelledChartChildren(
+		source,
+		writeChartSpace(chart.chartSpace, { declarationBreak }),
+	);
+}
+
 /** Writes (or keeps) the chart part behind a chart object and returns its part name. */
 function writeChart(writer: PackageWriter, chart: ChartObject): string {
 	const source = writer.source;
 	if (chart.partName && source?.has(chart.partName)) {
 		if (writer.has(chart.partName)) return chart.partName;
-		const patched = patchChartPart(
-			source.text(chart.partName) ?? '',
-			chart,
-			readChartPaletteId(source, chart.partName),
-		);
+		const edited = editedChartPart(source.text(chart.partName) ?? '', chart);
 		writer.carry(chart.partName);
-		if (patched) writer.add(chart.partName, patched, CONTENT_TYPES.chart);
+		if (edited) writer.add(chart.partName, edited, CONTENT_TYPES.chart);
 		writeChartColorStyle(writer, chart.partName, chart);
 		return chart.partName;
 	}
@@ -109,7 +136,10 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 		(n) => `xl/charts/chart${n}.xml`,
 		source ? new Set(source.parts.keys()) : undefined,
 	);
-	writer.add(part, chartXml(chart), CONTENT_TYPES.chart);
+	const xml = chart.chartSpace
+		? writeChartSpace(chart.chartSpace, { declarationBreak: '\n' })
+		: chartXml(chart);
+	writer.add(part, xml, CONTENT_TYPES.chart);
 	writeChartColorStyle(writer, part, chart);
 	return part;
 }

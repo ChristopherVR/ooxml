@@ -44,7 +44,9 @@ it('edits background fills atomically, preserving series overrides and other for
 	const patch = chartElementFillPatch(chart, 'chartArea', { theme: 5, tint: 0.25 })!;
 	session.updateChart(0, 0, patch);
 	expect(chart.series).toEqual(before.series);
-	expect(chart.formatting?.entries.chartArea?.bold).toBe(true);
+	expect(chart.formatting?.entries.chartArea?.bold).toBe(
+		before.formatting?.entries.chartArea?.bold,
+	);
 	expect(chart.formatting?.entries.categoryAxis).toEqual(before.formatting?.entries.categoryAxis);
 	expect(chart).not.toHaveProperty('elementFills');
 	session.updateChart(0, 0, chartElementTransparencyPatch(chart, 'chartArea', 37)!);

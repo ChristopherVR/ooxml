@@ -13,6 +13,7 @@ import { createWorkbook, createWorksheet, defaultCellStyle } from '../xlsx/workb
 import { loadXlsx } from '../xlsx/read/index';
 import { saveXlsx } from '../xlsx/write/index';
 import { pivotBuilds } from './xlsx-acceptance-pivots';
+import { chartEditBuilds, surfaceChartBuild } from './xlsx-acceptance-charts';
 import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session';
 
 const out = process.argv[2];
@@ -455,6 +456,8 @@ for (const [file, build, cellChecks] of sessionBuilds(fixtures, FIXTURES, PNG)) 
 	]);
 }
 builds.push(...pivotBuilds(fixtures));
+builds.push(...chartEditBuilds(fixtures));
+builds.push(['chart-surface-bands.xlsx', () => surfaceChartBuild(fixtures)]);
 for (const fixture of FIXTURES) {
 	builds.push([
 		`roundtrip-${fixture}`,
@@ -485,7 +488,10 @@ for (const [file, build] of builds) {
 	manifest[file] = reloaded.sheets.map((sheet) => ({
 		name: sheet.name,
 		tables: sheet.tables.length,
-		charts: sheet.drawings.filter((d) => d.kind === 'chart').length,
+		// Excel's ChartObjects also lists the extended (chartex) charts, kept as frames.
+		charts: sheet.drawings.filter(
+			(d) => d.kind === 'chart' || (d.kind === 'unsupported' && d.chartEx),
+		).length,
 		hyperlinks: sheet.hyperlinks.length,
 		comments: sheet.comments.length,
 		merges: sheet.merges.length,

@@ -4,6 +4,7 @@ import { getCell } from '../cells';
 import type { CellPosition } from './deps';
 import { rewritePreservedFormulas } from './shift-preserved';
 import { rewriteConditionalRule } from './conditional-formulas';
+import { rewriteChartSpaceReferences } from './chart-space-series';
 
 /**
  * Rewrites one formula; `formulaSheet` is the sheet unqualified references point at.
@@ -112,6 +113,8 @@ export function rewriteSheetFormulas(
 				if (series.categoriesRef) series.categoriesRef = safe(rewrite, series.categoriesRef, name);
 				if (series.valuesRef) series.valuesRef = safe(rewrite, series.valuesRef, name);
 			}
+			if (drawing.chartSpace)
+				rewriteChartSpaceReferences(drawing.chartSpace, (formula) => safe(rewrite, formula, name));
 		}
 	}
 }

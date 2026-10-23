@@ -33,6 +33,7 @@ import type { CalcEngine } from './deps';
 import type { ChartPatch } from './charts';
 import type { SmartArtEditResult, SmartArtInsertion, SmartArtLayoutChange } from './smart-art';
 import type { DiagramNodeEdit } from '../../diagram/edit/node-edit';
+import type { ChartEditIntent } from '../../chart/edit/intent';
 import type { TablePatch, TableRef } from './table-edits';
 import type { SparklineGroupPatch } from './sparklines';
 
@@ -261,8 +262,10 @@ export interface EditSession {
 	deleteSparklines(sheet: number, ranges: CellRange[], wholeGroups?: boolean): void;
 	/** Adds a chart drawn from the model; returns its index in the sheet's drawings. */
 	addChart(sheet: number, chart: Omit<ChartObject, 'kind'>): number;
-	/** Edits the chart at `index` of the sheet's drawings (a loaded chart part is patched on save). */
+	/** Edits the chart at `index` of the sheet's drawings through its summary fields. */
 	updateChart(sheet: number, index: number, patch: ChartPatch): void;
+	/** Applies a `chart/edit` intent (a Format pane edit) to the chart at `index`. */
+	editChart(sheet: number, index: number, intent: ChartEditIntent): void;
 	/** Inserts a picture (bytes stored as a new media part) and returns it. */
 	addImage(
 		sheet: number,

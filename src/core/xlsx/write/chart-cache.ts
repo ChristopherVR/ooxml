@@ -2,6 +2,7 @@ import { MAX_COL, MAX_ROW, rangeSize } from '../address';
 import { getValue } from '../cells';
 import { resolveSparklineRange } from '../layout/sparkline-data';
 import type { CellValue, ChartObject, Workbook, Worksheet } from '../model';
+import { chartSpaceWithSeries } from '../edit/chart-space-series';
 
 /** Maximum cells reread for one chart cache; larger references retain their existing data. */
 const MAX_CHART_CACHE_CELLS = 10_000;
@@ -52,7 +53,7 @@ export function chartWithCurrentCaches(
 	sheet: Worksheet,
 	chart: ChartObject,
 ): ChartObject {
-	return {
+	const cached: ChartObject = {
 		...chart,
 		series: chart.series.map((series) => {
 			const values = referenceValues(workbook, sheet, series.valuesRef);
@@ -69,4 +70,7 @@ export function chartWithCurrentCaches(
 			};
 		}),
 	};
+	return chart.chartSpace
+		? { ...cached, chartSpace: chartSpaceWithSeries(chart.chartSpace, chart, cached, true) }
+		: cached;
 }

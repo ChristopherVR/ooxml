@@ -1,12 +1,14 @@
+import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { createWorkbook } from '../workbook';
 import { createEditSession } from '../edit/session';
 import { loadXlsx } from '../read';
 import { saveXlsx } from './index';
 import { chartXml } from './chart';
-import { patchChartPart } from './chart-patch';
 import { parseChart } from '../read/chart';
 import type { ChartObject } from '../model';
+import type { ChartPatch } from '../edit/charts';
+import { withChartPart } from './test-support/chart-parity-cases';
 
 function chart(
 	chartType: ChartObject['chartType'],
@@ -28,6 +30,9 @@ function chart(
 		},
 	};
 }
+
+const savedPart = async (book: Parameters<typeof saveXlsx>[0]) =>
+	(await JSZip.loadAsync(await saveXlsx(book))).file('xl/charts/chart1.xml')!.async('string');
 
 describe('XLSX axis formatting export', () => {
 	it.each(['column', 'bar', 'line', 'area', 'scatter', 'radar'] as const)(
@@ -53,15 +58,19 @@ describe('XLSX axis formatting export', () => {
 		},
 	);
 
-	it('patches flags on kept charts and retains unknown axis XML', () => {
+	it('edits axis options on kept charts and retains unknown axis XML', async () => {
 		const model = chart('column', true, true);
 		const source = chartXml(model)
 			.replace('<c:tickLblPos val="nextTo"/>', '<c:tickLblPos val="high"/>')
 			.replace('</c:catAx>', '<c:extLst><c:ext uri="retained"/></c:extLst></c:catAx>');
-		const imported = parseChart(source, model.anchor, 'xl/charts/chart1.xml');
-		expect(patchChartPart(source, imported)).toBeUndefined();
-		imported.formatting!.entries.categoryAxis!.labelsVisible = false;
-		const patched = patchChartPart(source, imported)!;
+		const book = await withChartPart(source);
+		expect(await savedPart(book)).toBe(source);
+		createEditSession(book).editChart(0, 0, {
+			op: 'axis',
+			axisIndex: 0,
+			edit: { tickLabelPosition: 'none' },
+		});
+		const patched = await savedPart(book);
 		expect(patched).toContain('uri="retained"');
 		expect(
 			parseChart(patched, model.anchor, '').formatting?.entries.categoryAxis?.labelsVisible,
@@ -69,14 +78,19 @@ describe('XLSX axis formatting export', () => {
 	});
 
 	it.each(['type', 'grouping', 'series'] as const)(
-		'retains flags when %s changes regenerate a kept chart',
-		(change) => {
-			const model = chart('column', true, false),
-				source = chartXml(model);
-			if (change === 'type') model.chartType = 'line';
-			if (change === 'grouping') model.grouping = 'stacked';
-			if (change === 'series') model.series.push({ categories: ['A', 'B'], values: [30, 40] });
-			const back = parseChart(patchChartPart(source, model)!, model.anchor, '');
+		'retains flags when a %s change edits a kept chart',
+		async (change) => {
+			const model = chart('column', true, false);
+			const book = await withChartPart(chartXml(model));
+			const live = book.sheets[0]!.drawings[0] as ChartObject;
+			const patch: ChartPatch =
+				change === 'type'
+					? { chartType: 'line' }
+					: change === 'grouping'
+						? { grouping: 'stacked' }
+						: { series: [...live.series, { categories: ['A', 'B'], values: [30, 40] }] };
+			createEditSession(book).updateChart(0, 0, patch);
+			const back = parseChart(await savedPart(book), model.anchor, '');
 			expect(back.formatting?.entries.categoryAxis?.labelsVisible).toBe(false);
 			expect(back.formatting?.entries.valueAxis?.labelsVisible).toBe(false);
 		},

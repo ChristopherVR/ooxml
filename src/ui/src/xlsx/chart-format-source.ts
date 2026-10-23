@@ -1,68 +1,67 @@
-// Excel's source for the shared chart Format pane (`office-ui-chart-format-pane`): what an xlsx
-// `ChartObject` reads as. The chart summary is not a `ChartSpace`, so the pane gets the elements
-// and options Excel's `ChartPatch` path writes: the chart area, plot area, title and legend fills,
-// series fills (bar and column charts), series spacing and the legend position. Fills are drawn by
-// Excel's own fill controls in the pane's `fill` slot (preset gradients, stops, directions).
-import { chartBarSpacing, type ChartObject, type ChartViewModel } from 'ooxml-core/xlsx';
-import type { ChartFormatTarget } from 'ooxml-core/chart';
+// Excel's source for the shared chart Format pane (`office-ui-chart-format-pane`): the chart's
+// `ChartSpace` read through the neutral `chartSpaceFormatSource`, so the pane offers every element
+// and option the `chart/edit` intents write (fill, border, series, axis, gridline, legend and data
+// label options), as PowerPoint's pane does. Excel keeps three choices of its own: the fills of the
+// chart area, plot area, title, legend and series are drawn by Excel's fill controls in the pane's
+// `fill` slot (preset gradients, stops, directions), the spacing boxes have sliders, and an
+// untitled chart (an empty title) lists no title.
 import {
-	chartFormatTargetOptions,
-	type ChartFormatElementView,
-	type ChartFormatSource,
-} from '../chart/format-pane-api';
+	chartBarSpacing,
+	chartColorScheme,
+	type ChartObject,
+	type Workbook,
+} from 'ooxml-core/xlsx';
+import type { ChartFormatTarget, ChartSpace } from 'ooxml-core/chart';
+import type { DrawingColorTheme } from 'ooxml-core/drawingml';
+import { chartSpaceFormatSource, type ChartFormatSource } from '../chart/format-pane-api';
 
 /** The slot Excel's fill controls go into. */
 export const XLSX_CHART_FILL_SLOT = 'fill';
 
-/** Bar and column charts: the series Excel formats (spacing and fill). */
-export const formatsSeries = (chart: ChartObject): boolean =>
-	chart.chartType === 'bar' || chart.chartType === 'column';
+/** Whether the chart has series to format. */
+export const formatsSeries = (chart: ChartObject): boolean => chart.series.length > 0;
 
-const ELEMENT: ChartFormatElementView = {
-	support: {
-		fill: true,
-		gradient: true,
-		pattern: false,
-		picture: false,
-		threeD: false,
-		text: false,
-		line: false,
-		effects: false,
-	},
-	fill: { kind: 'automatic' },
-	line: { kind: 'automatic' },
-};
+/** The workbook theme as the pane resolves scheme colours (`accent1`, `tx1`...). */
+export function workbookChartTheme(workbook: Workbook): DrawingColorTheme {
+	const scheme = chartColorScheme(workbook.theme) as unknown as Readonly<Record<string, string>>;
+	return { scheme: (name) => scheme[name] };
+}
 
-/** The Format pane source of `chart`, drawn as `view`. */
-export function xlsxChartFormatSource(chart: ChartObject, view: ChartViewModel): ChartFormatSource {
-	const targets: ChartFormatTarget[] = [{ kind: 'chartArea' }, { kind: 'plotArea' }];
-	if (chart.title) targets.push({ kind: 'title' });
-	if (chart.showLegend) targets.push({ kind: 'legend' });
-	if (formatsSeries(chart))
-		chart.series.forEach((_, seriesIndex) => targets.push({ kind: 'series', seriesIndex }));
+const FILL_PARTS: readonly string[] = ['chartArea', 'plotArea', 'title', 'legend', 'series'];
+
+/** Whether Excel's own fill controls format `target`. */
+export const xlsxFillsTarget = (target: ChartFormatTarget): boolean =>
+	FILL_PARTS.includes(target.kind);
+
+/**
+ * The Format pane source of `chart` (whose model is `space`) with `target` selected: Excel's fill
+ * controls take the Fill section of the elements they edit.
+ */
+export function xlsxChartFormatSource(
+	chart: ChartObject,
+	space: ChartSpace,
+	theme: DrawingColorTheme,
+	target: ChartFormatTarget | undefined,
+): ChartFormatSource {
+	const source = chartSpaceFormatSource(space, { theme });
 	const spacing = chartBarSpacing(chart);
 	return {
-		targets: chartFormatTargetOptions(targets, {
-			axis: () => undefined,
-			seriesName: (index) => view.series[index]?.name || `Series ${index + 1}`,
-		}),
-		element: () => ELEMENT,
-		seriesOptions: () =>
-			formatsSeries(chart)
-				? {
-						chartType: 'bar',
-						overlap: spacing.barOverlap,
-						gapWidth: spacing.barGapWidth,
-						sliders: true,
-					}
-				: undefined,
-		legendOptions: () =>
-			chart.showLegend
-				? { position: chart.legendPosition ?? 'r', overlaySupported: false }
-				: undefined,
-		slots: { fill: XLSX_CHART_FILL_SLOT },
+		...source,
+		targets: chart.title
+			? source.targets
+			: source.targets.filter((option) => option.target.kind !== 'title'),
+		seriesOptions: (seriesIndex) => {
+			const view = source.seriesOptions?.(seriesIndex);
+			if (!view || view.chartType !== 'bar') return view;
+			return {
+				...view,
+				gapWidth: view.gapWidth ?? spacing.barGapWidth,
+				overlap: view.overlap ?? spacing.barOverlap,
+				sliders: true,
+			};
+		},
+		...(target && xlsxFillsTarget(target) ? { slots: { fill: XLSX_CHART_FILL_SLOT } } : {}),
 		flat: true,
-		textOptions: false,
 		picker: { key: 'chartFormat.chartElement', fallback: 'Chart element' },
 	};
 }

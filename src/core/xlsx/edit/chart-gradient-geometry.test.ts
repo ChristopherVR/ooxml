@@ -36,7 +36,11 @@ for (const sample of [...native.cases, ...series.cases])
 		if (chart.kind !== 'chart') throw new Error('Expected chart');
 		const originalChart = structuredClone(chart);
 		const edit = chartSeriesGradientPatch(chart, 0, { kind: 'geometry', type, direction })!;
-		expect(chart.series[0]!.fill).toEqual(original);
+		// The summary is read back from the chart part, so its source XML is the part as written.
+		expect({ ...chart.series[0]!.fill, sourceXml: undefined }).toEqual({
+			...original,
+			sourceXml: undefined,
+		});
 		session.updateChart(0, 0, edit.patch);
 		const updated = book.sheets[0]!.drawings[0]!;
 		if (updated.kind !== 'chart') throw new Error('Expected chart');

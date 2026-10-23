@@ -37,13 +37,15 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 		ctx.root
 			.querySelector('.color-grid office-ui-color-grid')!
 			.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Red"]')!;
+	const drawing = ctx.workbook()!.sheets[0]!.drawings[0]!;
+	if (drawing.kind !== 'chart') throw new Error('Expected chart');
+	const colors = structuredClone(drawing.series.map((item) => item.drawingColor));
 	color.click();
 	series.value = 'series:0';
 	series.dispatchEvent(new Event('change'));
 	red().click();
-	const drawing = ctx.workbook()!.sheets[0]!.drawings[0]!;
-	if (drawing.kind !== 'chart') throw new Error('Expected chart');
-	expect(drawing.series.every((item) => !item.drawingColor)).toBe(true);
+	// The menu opened for another series changes nothing.
+	expect(drawing.series.map((item) => item.drawingColor)).toEqual(colors);
 	series.value = 'series:1';
 	series.dispatchEvent(new Event('change'));
 	color.click();
@@ -70,7 +72,7 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	expect(fill.value).toBe('solid');
 	const edited = ctx.workbook()!.sheets[0]!.drawings[0]!;
 	if (edited.kind !== 'chart') throw new Error('Expected chart');
-	expect(edited.series[0]!.drawingColor).toBeUndefined();
+	expect(edited.series[0]!.drawingColor).toEqual(colors[0]);
 	expect(edited.series[1]!.drawingColor).toEqual({
 		kind: 'srgb',
 		value: '0070C0',

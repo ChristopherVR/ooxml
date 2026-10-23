@@ -82,7 +82,11 @@ export function contextualCommands(): Command[] {
 		editing({
 			...command,
 			lock: 'objects',
-			enabled: (ctx) => !!activeChart(ctx) && (command.enabled?.(ctx) ?? true),
+			// A chart whose part holds content the model lacks is shown and saved, never edited.
+			enabled: (ctx) => {
+				const found = activeChart(ctx);
+				return !!found && !found.chart.editBlocked && (command.enabled?.(ctx) ?? true);
+			},
 		});
 	return [
 		chartCmd({
