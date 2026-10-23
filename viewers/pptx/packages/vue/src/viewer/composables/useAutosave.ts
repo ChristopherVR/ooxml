@@ -1,5 +1,10 @@
 import { createAutosaveController, saveAutosaveSnapshot } from 'ooxml-ui/pptx';
-import type { DocumentStorage, InlineTextDraftSink, PptxAutosaveStatusKind } from 'ooxml-ui/pptx';
+import type {
+	DocumentStorage,
+	InlineTextDraft,
+	InlineTextDraftSink,
+	PptxAutosaveStatusKind,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { computed, onScopeDispose, toValue, watch } from 'vue';
 import type { Ref, WritableComputedRef } from 'vue';
@@ -51,7 +56,7 @@ export interface UseAutosaveOptions {
 	 * snapshot itself under {@link filePath}; without it, {@link onSave} owns the
 	 * whole save.
 	 */
-	serialize?: () => Promise<Uint8Array | null>;
+	serialize?: (draft: InlineTextDraft | null) => Promise<Uint8Array | null>;
 	/** Snapshot key; autosave is inert while it is empty (used with {@link serialize}). */
 	filePath?: () => string | undefined;
 	/** Host `storage`: snapshots go to its recovery methods when it has them. */
@@ -102,9 +107,9 @@ export function useAutosave(options: UseAutosaveOptions): UseAutosaveResult {
 		getActivation: () => ({ active: toValue(enabled) !== false }),
 		getFilePath: () => (ownsWrite ? options.filePath?.() : 'autosave'),
 		getIntervalMs: () => toValue(intervalMs),
-		serialize: async () => {
+		serialize: async (draft) => {
 			if (options.serialize) {
-				return options.serialize();
+				return options.serialize(draft);
 			}
 			await options.onSave?.();
 			return NO_BYTES;
