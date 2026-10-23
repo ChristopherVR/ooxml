@@ -1,22 +1,23 @@
 // A worksheet's `<sheetData>` holds nearly all of its XML (every cell). Building a full DOM for it
 // dominated opening a large workbook, so the cell data is cut out of the part and read with the
-// lightweight fragment reader; the rest of the part (views, columns, formatting, ...) still goes
-// through the DOM. Only plain markup takes this path, with element prefixes declared on the root:
-// comments and CDATA sections may appear anywhere, but nested namespace declarations, processing
-// instructions in the cell data or anything else the light reader declines is parsed whole, as
-// before, so the result is the same either way.
-import {
-	LiteElement,
-	parseLiteFragment,
-	type LiteNamespaces,
-	type XmlElement,
-} from '../../xml/index';
+// lightweight fragment reader, one row at a time so that only the current row exists as elements;
+// the rest of the part (views, columns, formatting, ...) still goes through the DOM. Only plain
+// markup takes this path, with element prefixes declared on the root: comments and CDATA sections
+// may appear anywhere, but nested namespace declarations, processing instructions in the cell data
+// or anything else the light reader declines is parsed whole, as before, so the result is the same
+// either way.
+import { liteChildElements, type LiteNamespaces, type XmlElement } from '../../xml/index';
 
 export interface SplitSheetData {
 	/** The part with `<sheetData>` emptied, for the DOM parser. */
 	xml: string;
-	/** The cell data, readable through the same DOM subset as a parsed `<sheetData>`. */
-	sheetData: XmlElement;
+	/**
+	 * The children of `<sheetData>` (its rows), readable through the same DOM subset as parsed
+	 * ones and built one at a time while iterating. Markup the light reader declines throws a
+	 * `LiteDeclinedError` from the iteration, possibly after some rows: the part must then be
+	 * read whole.
+	 */
+	rows: Iterable<XmlElement>;
 }
 
 const ROOT = /^\uFEFF?(?:\s*<\?[^]*?\?>)?\s*<([A-Za-z_][\w.:-]*)((?:\s[^>]*)?)>/;
@@ -86,8 +87,9 @@ export function splitSheetData(xml: string): SplitSheetData | undefined {
 	if (attributes.trimEnd().endsWith('/') || attributes.includes('xmlns')) return undefined;
 	const close = plain.indexOf(`</${tagName}`, openEnd);
 	if (close < 0 || OPEN.test(plain.slice(openEnd))) return undefined;
-	const container = new LiteElement(tagName, 'sheetData', ns || null);
-	const data = parseLiteFragment(xml.slice(openEnd + 1, close), container, namespaces);
-	if (!data) return undefined;
-	return { xml: xml.slice(0, openEnd + 1) + xml.slice(close), sheetData: data.asElement() };
+	const data = xml.slice(openEnd + 1, close);
+	return {
+		xml: xml.slice(0, openEnd + 1) + xml.slice(close),
+		rows: { [Symbol.iterator]: () => liteChildElements(data, namespaces) },
+	};
 }

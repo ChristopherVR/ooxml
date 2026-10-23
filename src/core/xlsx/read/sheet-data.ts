@@ -169,12 +169,19 @@ function readRowInfo(ctx: CellContext, rowEl: XmlElement): RowInfo | undefined {
 	return Object.keys(info).length ? info : undefined;
 }
 
-/** Reads `<sheetData>` into the sheet's cell map and row info. */
-export function readSheetData(ctx: CellContext, sheetData: XmlElement, sheet: Worksheet): void {
+/**
+ * Reads the children of `<sheetData>` (`elements(sheetData)`, or the rows of a split part) into
+ * the sheet's cell map and row info.
+ */
+export function readSheetData(
+	ctx: CellContext,
+	rows: Iterable<XmlElement>,
+	sheet: Worksheet,
+): void {
 	const masters = new Map<string, SharedMaster>();
 	const anchors: DynamicAnchor[] = [];
 	let rowIndex = -1;
-	for (const rowEl of elements(sheetData)) {
+	for (const rowEl of rows) {
 		if (rowEl.localName !== 'row') continue;
 		const r = numAttr(rowEl, 'r');
 		rowIndex = r !== undefined ? r - 1 : rowIndex + 1;

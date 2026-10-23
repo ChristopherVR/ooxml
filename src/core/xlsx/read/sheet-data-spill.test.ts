@@ -18,7 +18,7 @@ function read(data: string, dynamic = new Set([1])) {
 			dynamicCells: dynamic,
 			warn: () => {},
 		} as never,
-		sheetData,
+		elements(sheetData),
 		sheet,
 	);
 	return sheet;
