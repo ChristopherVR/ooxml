@@ -1,29 +1,28 @@
 /**
- * collaboration-session-setup.ts: build up and tear down a live collaboration
- * session for the Angular `CollaborationService`.
+ * collaboration-session-setup.ts: attach the Angular `CollaborationService`'s
+ * document and presence wiring to a live collaboration session.
  *
- * Extracted from `collaboration.service.ts` so the service keeps only its
- * reactive state and public API. `activateSession` wires a freshly-created
- * provider bundle into a running session and returns the {@link ActiveSession}
- * the service holds as a single atomic handle; `teardownSession` disposes it.
+ * The session itself (document, transport, connection status, first-write
+ * gate) comes from the shared `createCollaborationSessionController`;
+ * `activateSession` binds the slide-sync engine and presence to it and returns
+ * the {@link ActiveSession} the service holds as a single atomic handle.
  */
 
 import type {
+	CollabYSession,
 	CollaborationConfig,
 	CollaborationLivePatcher,
-	CollaborationTransport,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
 	YDocLike,
 } from 'ooxml-ui/pptx';
-import { clearLocalAwareness, observeYDocSlides } from 'ooxml-ui/pptx';
+import { observeYDocSlides } from 'ooxml-ui/pptx';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
-import { wireConnectionStatus } from './collaboration-connection';
 import { DEFAULT_CURSOR_COLOR } from './collaboration-helpers';
 import { LocalPresencePublisher } from './collaboration-local-presence';
-import type { AwarenessLike, ProviderBundle } from './collaboration-providers';
-import { SlideSyncEngine } from './collaboration-slide-sync';
+import type { AwarenessLike } from './collaboration-providers';
+import type { SlideSyncEngine } from './collaboration-slide-sync';
 import type { TemplateElementsBySlideId } from './template-mode';
 
 /** Options a host passes to `connect`, held for reconnection. */
@@ -69,82 +68,56 @@ export interface ActivateSessionDeps {
 	scheduleWriteBack: () => void;
 	cancelWriteBack: () => void;
 	setReadOnly: (readOnly: boolean) => void;
+	/** A borrowed session's readiness reports the connection status here. */
 	setStatus: (status: ConnectionStatus) => void;
-	getStatus: () => ConnectionStatus;
-	isActive: () => boolean;
-	/** Websocket connect timeout / hard failure: tear down and surface 'error'. */
-	failConnection: () => void;
 }
 
 /**
- * Wire `bundle` into an active session: configure the live-patch channel, bind
- * the slide-sync engine, publish local presence, subscribe to awareness +
- * connection-status + remote-slide changes, then open the first-write gate.
+ * Wire an owned session into the service: configure the live-patch channel,
+ * bind the slide-sync engine, publish local presence and subscribe to awareness
+ * and remote-slide changes. The connection status, the first-write gate and the
+ * transport teardown belong to the shared session controller.
  */
 export function activateSession(
-	bundle: ProviderBundle,
+	live: CollabYSession,
 	config: CollaborationConfig,
-	transport: CollaborationTransport,
 	deps: ActivateSessionDeps,
 ): ActiveSession {
-	deps.livePatcher.configure(
-		config.role === 'viewer' ? null : bundle.doc,
-		config.role === 'viewer' ? null : bundle.factories,
-	);
-	deps.setReadOnly(config.role === 'viewer');
+	const viewer = config.role === 'viewer';
+	deps.livePatcher.configure(viewer ? null : live.doc, viewer ? null : live.factories);
+	deps.setReadOnly(viewer);
 	deps.slideSync.bind({
-		ydoc: bundle.doc,
-		factories: bundle.factories,
-		readOnly: config.role === 'viewer',
+		ydoc: live.doc,
+		factories: live.factories,
+		readOnly: viewer,
 		onRemoteSlides: deps.onRemoteSlides,
 		scheduleWriteBack: deps.scheduleWriteBack,
 	});
 
-	const localPresence = new LocalPresencePublisher(bundle.awareness, {
+	const awareness = live.awareness as AwarenessLike;
+	const localPresence = new LocalPresencePublisher(awareness, {
 		userName: config.userName,
 		userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
 		userAvatar: config.userAvatar,
 		role: config.role,
 	});
 	localPresence.publish();
-	bundle.awareness.on('change', deps.refreshPresence);
-	bundle.awareness.on('update', deps.refreshPresence);
+	awareness.on('change', deps.refreshPresence);
+	awareness.on('update', deps.refreshPresence);
 
-	deps.slideSync.gate.reset();
-	const connection = wireConnectionStatus({
-		provider: bundle.provider,
-		transport,
-		setStatus: deps.setStatus,
-		getStatus: deps.getStatus,
-		isActive: deps.isActive,
-		reArmGate: () => {
-			deps.slideSync.gate.reset();
-			deps.slideSync.gate.arm();
-		},
-		onConnectTimeout: deps.failConnection,
-	});
-	deps.slideSync.wireSynced(bundle.provider);
-
-	const unobserve = observeYDocSlides(bundle.doc, (_events, transaction) =>
+	const unobserve = observeYDocSlides(live.doc, (_events, transaction) =>
 		deps.slideSync.onRemoteChange(transaction),
 	);
 
 	return {
-		ydoc: bundle.doc,
-		awareness: bundle.awareness,
-		selfId: bundle.awareness.clientID ?? -1,
+		ydoc: live.doc,
+		awareness,
+		selfId: awareness.clientID ?? -1,
 		localPresence,
 		dispose() {
-			connection.cancelConnectTimer();
 			unobserve();
-			bundle.awareness.off?.('change', deps.refreshPresence);
-			bundle.awareness.off?.('update', deps.refreshPresence);
-			bundle.departure.announce();
-			bundle.departure.dispose();
-			clearLocalAwareness(bundle.awareness);
-			bundle.provider.disconnect();
-			bundle.provider.destroy();
-			bundle.doc.destroy();
+			awareness.off?.('change', deps.refreshPresence);
+			awareness.off?.('update', deps.refreshPresence);
 		},
 	};
 }

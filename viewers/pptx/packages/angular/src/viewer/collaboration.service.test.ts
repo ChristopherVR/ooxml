@@ -17,43 +17,37 @@ import { readFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 
 import { DestroyRef, Injector } from '@angular/core';
-import type { CollaborationConfig, YjsFactories } from 'ooxml-ui/pptx';
+import type { CollabYSession, CollaborationConfig, YjsFactories } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
-import type {
-	AwarenessLike,
-	DestroyableYDoc,
-	ProviderBundle,
-	ProviderLike,
-} from './collaboration-providers';
+import type { AwarenessLike } from './collaboration-providers';
 import { CollaborationService } from './collaboration.service';
 
 const mocks = vi.hoisted(() => {
 	const pending: Array<{
-		resolve: (bundle: ProviderBundle) => void;
+		resolve: (session: CollabYSession) => void;
 		reject: (error: unknown) => void;
 	}> = [];
 	return { pending };
 });
 
-vi.mock(import('./collaboration-providers'), () => {
-	const defer = (): Promise<ProviderBundle> =>
-		new Promise((resolve, reject) => {
-			mocks.pending.push({ resolve, reject });
-		});
-	return {
-		createWebrtcBundle: defer,
-		createWebsocketBundle: defer,
-	};
+vi.mock(import('./collaboration-providers'), async (importOriginal) => {
+	const actual = await importOriginal();
+	// Owned transports resolve by hand; a borrowed host session opens for real.
+	const open: typeof actual.openCollaborationSession = (config, transport) =>
+		config.externalSession
+			? actual.openCollaborationSession(config, transport)
+			: new Promise((resolve, reject) => {
+					mocks.pending.push({ resolve, reject });
+				});
+	return { ...actual, openCollaborationSession: open };
 });
 
 interface FakeBundle {
-	bundle: ProviderBundle;
-	doc: { destroy: ReturnType<typeof vi.fn> };
-	provider: { disconnect: ReturnType<typeof vi.fn>; destroy: ReturnType<typeof vi.fn> };
-	departure: { announce: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn> };
+	bundle: CollabYSession;
+	dispose: ReturnType<typeof vi.fn>;
 }
 
 function makeBundle(): FakeBundle {
@@ -66,24 +60,29 @@ function makeBundle(): FakeBundle {
 		on: vi.fn(),
 		off: vi.fn(),
 	};
-	const provider = { awareness, disconnect: vi.fn(), destroy: vi.fn(), on: vi.fn() };
+	const provider = {
+		awareness,
+		onStatus: vi.fn(),
+		onSynced: vi.fn(),
+		connectedNow: true,
+		syncedNow: false,
+		destroy: vi.fn(),
+	};
 	const factories = {
 		createMap: vi.fn(),
 		createArray: vi.fn(),
 		createText: vi.fn(),
 	} as unknown as YjsFactories;
-	const departure = { announce: vi.fn(), dispose: vi.fn() };
+	const dispose = vi.fn();
 	return {
 		bundle: {
-			doc: doc as unknown as DestroyableYDoc,
-			provider: provider as unknown as ProviderLike,
+			doc: doc as unknown as CollabYSession['doc'],
+			provider,
 			awareness,
 			factories,
-			departure,
+			dispose,
 		},
-		doc,
-		provider,
-		departure,
+		dispose,
 	};
 }
 
@@ -166,11 +165,8 @@ describe('collaborationService connect reentrancy', () => {
 		await Promise.all([first, second]);
 
 		// First (stale) bundle torn down without touching the newer session.
-		expect(b1.provider.disconnect).toHaveBeenCalledWith();
-		expect(b1.provider.destroy).toHaveBeenCalledWith();
-		expect(b1.doc.destroy).toHaveBeenCalledWith();
-		expect(b2.provider.destroy).not.toHaveBeenCalled();
-		expect(b2.doc.destroy).not.toHaveBeenCalled();
+		expect(b1.dispose).toHaveBeenCalledOnce();
+		expect(b2.dispose).not.toHaveBeenCalled();
 		expect(svc.active()).toBeTruthy();
 		expect(svc.status()).toBe('connected');
 		svc.disconnect();
@@ -185,8 +181,7 @@ describe('collaborationService connect reentrancy', () => {
 		mocks.pending[0].resolve(b.bundle);
 		await pendingConnect;
 
-		expect(b.provider.destroy).toHaveBeenCalledWith();
-		expect(b.doc.destroy).toHaveBeenCalledWith();
+		expect(b.dispose).toHaveBeenCalledOnce();
 		expect(svc.active()).toBeFalsy();
 		expect(svc.status()).toBe('disconnected');
 	});
@@ -203,7 +198,7 @@ describe('collaborationService connect reentrancy', () => {
 
 		expect(svc.status()).toBe('connected');
 		expect(svc.active()).toBeTruthy();
-		expect(b2.provider.destroy).not.toHaveBeenCalled();
+		expect(b2.dispose).not.toHaveBeenCalled();
 		svc.disconnect();
 	});
 });
