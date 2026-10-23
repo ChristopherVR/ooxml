@@ -102,6 +102,8 @@ const ELEMENT_FOR: Record<RibbonGalleryId, PptxElement | null> = {
 	smartArtColors: smartArt,
 	smartArtLayouts: smartArt,
 	smartArtAddShape: smartArt,
+	smartArtAddShapeBefore: smartArt,
+	smartArtAddShapeAbove: smartArt,
 	smartArtAddBullet: smartArt,
 	smartArtTextPane: smartArt,
 	smartArtPromote: smartArt,

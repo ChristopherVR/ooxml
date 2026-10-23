@@ -27,7 +27,13 @@ const run = (id: RibbonGalleryId) => applyRibbonGalleryItem(id, 'run', ctx);
 
 describe('smartArt Design commands', () => {
 	it('draws each command as one enabled, command-style entry on a SmartArt', () => {
-		for (const id of ['smartArtAddShape', 'smartArtAddBullet', 'smartArtResetGraphic'] as const) {
+		for (const id of [
+			'smartArtAddShape',
+			'smartArtAddShapeBefore',
+			'smartArtAddShapeAbove',
+			'smartArtAddBullet',
+			'smartArtResetGraphic',
+		] as const) {
 			const descriptor = buildRibbonGallery(id, ctx);
 			expect(descriptor.disabled).toBeFalsy();
 			expect(descriptor.command?.iconPath).toMatch(/^M/u);
@@ -47,6 +53,24 @@ describe('smartArt Design commands', () => {
 		expect(result?.kind).toBe('element');
 		const data = (result as { patch: { smartArtData: { nodes: unknown[] } } }).patch.smartArtData;
 		expect(data.nodes).toHaveLength(3);
+	});
+
+	it('add Shape Before inserts a top-level node before the first one', () => {
+		const result = run('smartArtAddShapeBefore');
+		const data = (result as { patch: { smartArtData: { nodes: { id: string }[] } } }).patch
+			.smartArtData;
+		expect(data.nodes).toHaveLength(3);
+		expect(data.nodes[1]!.id).toBe('n1');
+	});
+
+	it('add Shape Above puts a new parent over the last top-level node', () => {
+		const result = run('smartArtAddShapeAbove');
+		const data = (
+			result as { patch: { smartArtData: { nodes: { id: string; parentId?: string }[] } } }
+		).patch.smartArtData;
+		const added = data.nodes.find((node) => node.id !== 'n1' && node.id !== 'n2');
+		expect(added).toBeDefined();
+		expect(data.nodes.find((node) => node.id === 'n2')?.parentId).toBe(added!.id);
 	});
 
 	it('add Bullet adds a child under the last top-level node', () => {

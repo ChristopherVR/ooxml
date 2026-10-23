@@ -6,7 +6,9 @@
  * disabled and say why in their tooltip, never silently inert.
  *
  * - Add Shape / Add Bullet run the core node edits (`addSmartArtNode`,
- *   `addSmartArtNodeAsChild`) on the last top-level node.
+ *   `addSmartArtNodeAsChild`) on the last top-level node; Add Shape Before inserts
+ *   before the first top-level node (`addSmartArtNodeBefore`) and Add Shape Above
+ *   puts a new parent over the last one (`addSmartArtNodeAbove`).
  * - Reset Graphic restores the default colours and style (content and layout stay).
  * - Promote, Demote, Move Up and Move Down need a selected node; the ribbon has no
  *   node selection (nodes are chosen in the Inspector's text pane), so they stay
@@ -15,7 +17,12 @@
  * @module render/ribbon-galleries/smartart-commands
  */
 import type { PptxElement, PptxSmartArtData } from 'ooxml-core/pptx';
-import { addSmartArtNode, addSmartArtNodeAsChild } from 'ooxml-core/pptx';
+import {
+	addSmartArtNode,
+	addSmartArtNodeAbove,
+	addSmartArtNodeAsChild,
+	addSmartArtNodeBefore,
+} from 'ooxml-core/pptx';
 
 import type { RibbonGalleryModule } from './gallery-module';
 import type {
@@ -47,9 +54,15 @@ const NO_ENGINE = {
 	text: 'Not available yet in this viewer',
 };
 
+function topLevelIds(data: PptxSmartArtData): string[] {
+	const ids = new Set(data.nodes.map((node) => node.id));
+	return data.nodes
+		.filter((node) => !node.parentId || !ids.has(node.parentId))
+		.map((node) => node.id);
+}
+
 function lastTopLevelId(data: PptxSmartArtData): string | undefined {
-	const top = data.nodes.filter((node) => !node.parentId);
-	return top.at(-1)?.id;
+	return topLevelIds(data).at(-1);
 }
 
 function viaData(
@@ -71,6 +84,24 @@ const SPECS: readonly CommandSpec[] = [
 		label: 'Add Shape',
 		iconPath: 'M3 4h14v12H3zM10 7v6M7 10h6',
 		run: (data, ctx) => viaData(ctx.element, addSmartArtNode(data, '', lastTopLevelId(data)), data),
+	},
+	{
+		id: 'smartArtAddShapeBefore',
+		labelKey: 'pptx.gallery.smartArtCommand.addShapeBefore',
+		label: 'Add Shape Before',
+		iconPath: 'M8 4h9v12H8zM4 10h6M4 10l2-2M4 10l2 2',
+		run: (data, ctx) =>
+			viaData(ctx.element, addSmartArtNodeBefore(data, '', topLevelIds(data)[0]), data),
+	},
+	{
+		id: 'smartArtAddShapeAbove',
+		labelKey: 'pptx.gallery.smartArtCommand.addShapeAbove',
+		label: 'Add Shape Above',
+		iconPath: 'M5 3h10v5H5zM5 12h10v5H5zM10 8v4',
+		run: (data, ctx) => {
+			const target = lastTopLevelId(data);
+			return target ? viaData(ctx.element, addSmartArtNodeAbove(data, target, ''), data) : null;
+		},
 	},
 	{
 		id: 'smartArtAddBullet',
@@ -206,6 +237,8 @@ function moduleFor(spec: CommandSpec): RibbonGalleryModule {
 export type SmartArtCommandGalleryId = Extract<
 	RibbonGalleryId,
 	| 'smartArtAddShape'
+	| 'smartArtAddShapeBefore'
+	| 'smartArtAddShapeAbove'
 	| 'smartArtAddBullet'
 	| 'smartArtTextPane'
 	| 'smartArtPromote'

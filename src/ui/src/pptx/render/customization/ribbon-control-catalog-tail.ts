@@ -235,6 +235,8 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 			label: 'Create Graphic',
 			controls: {
 				addShape: 'Add Shape',
+				addShapeBefore: 'Add Shape Before',
+				addShapeAbove: 'Add Shape Above',
 				addBullet: 'Add Bullet',
 				textPane: 'Text Pane',
 				promote: 'Promote',

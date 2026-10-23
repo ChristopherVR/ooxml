@@ -294,11 +294,12 @@ test('SmartArt Design offers Create Graphic, Layouts and Reset with working Add 
 	await selectElement(page, elementWithText(page, 'Alpha'));
 	await page.locator('[data-ribbon-contextual-tab="smartArtDesign"]').first().click();
 	const bar = ribbon(page);
-	// Three rows by three columns of small commands, like PowerPoint's Create Graphic.
+	// Three rows of small commands, like PowerPoint's Create Graphic (Add Shape Before and
+	// Above sit beside Add Shape here, where PowerPoint folds them into its drop-down).
 	const create = bar.locator(
 		'[data-ribbon-group="smartArtDesign.createGraphic"] pptx-ui-ribbon-gallery',
 	);
-	expect(await create.count()).toBe(8);
+	expect(await create.count()).toBe(10);
 	const ys = await create.evaluateAll((items) =>
 		items.map((item) => Math.round(item.getBoundingClientRect().y)),
 	);
