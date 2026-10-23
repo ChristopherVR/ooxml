@@ -26,6 +26,19 @@ function slideWithText(text: string): PptxSlide {
 	} as PptxSlide;
 }
 
+/** Three matches of "foo" on two slides. */
+function twoSlides(): PptxSlide[] {
+	const first = slideWithText('foo bar foo');
+	const second = slideWithText('a foo');
+	return [
+		{ ...first, id: 's1', elements: [{ ...first.elements[0]!, id: 'a1' }] },
+		{ ...second, id: 's2', elements: [{ ...second.elements[0]!, id: 'b1' }] },
+	] as PptxSlide[];
+}
+
+const texts = (slides: readonly PptxSlide[]) =>
+	slides.map((s) => (s.elements[0] as { text: string }).text);
+
 function fakeOps(): EditorOps {
 	return {
 		history: createEditorHistoryController(),
@@ -106,5 +119,52 @@ describe('editor-find-replace-actions', () => {
 		const actions = createFindReplaceActions({ store, ops });
 		expect(actions.replaceAll('hello', 'bye', false)).toBe(0);
 		expect(ops.pushHistory).not.toHaveBeenCalled();
+	});
+
+	it('a search goes to the first match; Next and Previous wrap and report n of N', () => {
+		const store = createStore({ ...createInitialViewerState(), slides: twoSlides() });
+		const ops = fakeOps();
+		const actions = createFindReplaceActions({ store, ops });
+		expect(actions.search('foo', false)).toBe(3);
+		expect(ops.select).toHaveBeenLastCalledWith('a1');
+		expect(actions.status!()).toStrictEqual({ current: 1, total: 3 });
+		actions.next!();
+		actions.next!();
+		expect(store.get().currentSlide).toBe(1);
+		expect(ops.select).toHaveBeenLastCalledWith('b1');
+		expect(actions.status!()).toStrictEqual({ current: 3, total: 3 });
+		actions.next!();
+		expect(actions.status!().current).toBe(1);
+		expect(store.get().currentSlide).toBe(0);
+		actions.previous!();
+		expect(actions.status!()).toStrictEqual({ current: 3, total: 3 });
+	});
+
+	it('replace acts on the current match, then moves on to the next one', () => {
+		const store = createStore({
+			...createInitialViewerState(),
+			editable: true,
+			slides: twoSlides(),
+		});
+		const ops = fakeOps();
+		const actions = createFindReplaceActions({ store, ops });
+		actions.search('foo', false);
+		actions.next!();
+		expect(actions.replaceCurrent('foo', 'qux', false)).toBe(1);
+		expect(texts(store.get().slides)).toStrictEqual(['foo bar qux', 'a foo']);
+		expect(ops.pushHistory).toHaveBeenCalledOnce();
+		expect(actions.status!()).toStrictEqual({ current: 2, total: 2 });
+		expect(ops.select).toHaveBeenLastCalledWith('b1');
+	});
+
+	it('closing drops the matches and keeps the query for the next search', () => {
+		const store = createStore({ ...createInitialViewerState(), slides: twoSlides() });
+		const actions = createFindReplaceActions({ store, ops: fakeOps() });
+		actions.search('foo', false);
+		actions.next!();
+		actions.close!();
+		expect(actions.status!()).toStrictEqual({ current: 0, total: 0 });
+		expect(actions.search('foo', false)).toBe(3);
+		expect(actions.status!().current).toBe(1);
 	});
 });
