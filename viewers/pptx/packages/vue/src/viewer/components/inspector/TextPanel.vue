@@ -2,6 +2,8 @@
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	TEXT_BOX_SECTIONS,
+	applyTextStyleUpdate,
+	text3dInheritsFromTemplate,
 	textFontFamilyPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
@@ -33,8 +35,9 @@ import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';
  * `ops.updateElement(id, patch)`.
  *
  * Only text-bearing elements (`hasTextProperties`) expose editable controls;
- * other element types show a muted note instead. The Text Warp gallery comes
- * last, after the formatting, as in React's `TextAdvancedSections`.
+ * other element types show a muted note instead. After the formatting come the
+ * Text Warp gallery, the Text Effects (shadow, glow, reflection) and 3-D text,
+ * in that order, as in React's `TextAdvancedSections`.
  */
 type AlignValue = NonNullable<TextStyle['align']>;
 
@@ -146,8 +149,9 @@ function onWarpSelect(style: Pick<TextStyle, 'textWarpPreset'>): void {
 	patchTextStyle(style);
 }
 
+/** Run effects (`a:rPr/a:effectLst`) reach every run, as the ribbon applies them. */
 function onTextEffectPatch(patch: Partial<TextStyle>): void {
-	patchTextStyle(patch);
+	emit('update', applyTextStyleUpdate(props.element, patch, null).patch);
 }
 </script>
 
@@ -278,6 +282,15 @@ function onTextEffectPatch(patch: Partial<TextStyle>): void {
 			/>
 
 			<TextWarpGallery :ts="textStyle" :disabled="!props.canEdit" @select="onWarpSelect" />
+
+			<TextEffectsPanel :ts="textStyle" :disabled="!props.canEdit" @update="onTextEffectPatch" />
+
+			<Text3DProperties
+				:ts="textStyle"
+				:inherits="text3dInheritsFromTemplate(props.element)"
+				:disabled="!props.canEdit"
+				@update="patchTextStyle"
+			/>
 		</div>
 	</div>
 </template>

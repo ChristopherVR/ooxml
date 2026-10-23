@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import { BEVEL_PRESETS } from 'ooxml-ui/pptx';
+import { BEVEL_PRESETS, TEXT_3D_MAX_BEVEL_PT, clampText3dPt, text3dEmuToPt } from 'ooxml-ui/pptx';
 import type { BevelPresetType } from 'pptx-viewer-core';
 import { useI18n } from 'vue-i18n';
-
-import { clamp, emuToPt } from '../../composables/useTextEffects';
 
 /**
  * Text3DBevelSection: one bevel editor (type / width / height), reused for the
  * top and bottom bevels of `Text3DProperties`. Widths and heights are shown in
- * points and emitted in points; the parent converts to EMU. Mirrors the React
- * `BevelSection` sub-component.
+ * points and emitted in points (clamped by the shared `text-3d-fields` limits);
+ * the parent converts to EMU. Mirrors the React `BevelSection` sub-component.
  */
 const props = defineProps<{
 	label: string;
 	bevelType: BevelPresetType | undefined;
 	bevelWidth: number | undefined;
 	bevelHeight: number | undefined;
+	disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -34,13 +33,13 @@ function onType(event: Event): void {
 function onWidth(event: Event): void {
 	const v = Number((event.target as HTMLInputElement).value);
 	if (Number.isFinite(v)) {
-		emit('widthChange', clamp(v, 0, 50));
+		emit('widthChange', clampText3dPt(v, TEXT_3D_MAX_BEVEL_PT));
 	}
 }
 function onHeight(event: Event): void {
 	const v = Number((event.target as HTMLInputElement).value);
 	if (Number.isFinite(v)) {
-		emit('heightChange', clamp(v, 0, 50));
+		emit('heightChange', clampText3dPt(v, TEXT_3D_MAX_BEVEL_PT));
 	}
 }
 </script>
@@ -50,11 +49,12 @@ function onHeight(event: Event): void {
 		<span class="text-[11px] text-muted-foreground">{{ props.label }}</span>
 		<div class="grid grid-cols-3 gap-2">
 			<label class="flex flex-col gap-1">
-				<span class="text-muted-foreground">{{ t('pptx.text3d.type') }}</span>
+				<span class="text-muted-foreground">{{ t('pptx.text3d.bevelType') }}</span>
 				<pptx-ui-select
-					:aria-label="t('pptx.text3d.type')"
+					:aria-label="t('pptx.text3d.bevelType')"
 					:class="INPUT_CLS"
 					:value="props.bevelType ?? 'none'"
+					:disabled="props.disabled"
 					@change="onType"
 				>
 					<option v-for="opt in BEVEL_PRESETS" :key="opt.value" :value="opt.value">
@@ -63,26 +63,28 @@ function onHeight(event: Event): void {
 				</pptx-ui-select>
 			</label>
 			<label class="flex flex-col gap-1">
-				<span class="text-muted-foreground">{{ t('pptx.text3d.width') }}</span>
+				<span class="text-muted-foreground">{{ t('pptx.text3d.bevelWidth') }}</span>
 				<input
 					type="number"
 					min="0"
-					max="50"
+					:max="TEXT_3D_MAX_BEVEL_PT"
 					step="1"
 					:class="INPUT_CLS"
-					:value="emuToPt(props.bevelWidth)"
+					:disabled="props.disabled"
+					:value="text3dEmuToPt(props.bevelWidth)"
 					@input="onWidth"
 				/>
 			</label>
 			<label class="flex flex-col gap-1">
-				<span class="text-muted-foreground">{{ t('pptx.text3d.height') }}</span>
+				<span class="text-muted-foreground">{{ t('pptx.text3d.bevelHeight') }}</span>
 				<input
 					type="number"
 					min="0"
-					max="50"
+					:max="TEXT_3D_MAX_BEVEL_PT"
 					step="1"
 					:class="INPUT_CLS"
-					:value="emuToPt(props.bevelHeight)"
+					:disabled="props.disabled"
+					:value="text3dEmuToPt(props.bevelHeight)"
 					@input="onHeight"
 				/>
 			</label>
