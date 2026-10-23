@@ -154,25 +154,6 @@ export const INSPECTOR_EXTRAS_CSS = `
 	font-weight: 600;
 }
 
-/* ── SmartArt text pane: per-node hierarchy actions ──────────────────── */
-.pptxv-smartart-hierarchy {
-	display: flex;
-	flex-wrap: wrap;
-	grid-column: 2 / -1;
-	gap: 4px;
-	margin-top: 2px;
-}
-.pptxv-smartart-hierarchy button {
-	padding: 1px 6px;
-	border: 1px solid var(--pptx-border);
-	border-radius: var(--pptx-radius);
-	background: transparent;
-	color: var(--pptx-muted-foreground);
-	font: inherit;
-	font-size: 10px;
-	cursor: pointer;
-}
-.pptxv-smartart-hierarchy button:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 
 /* ── OLE editor dialog: nested deck tab ──────────────────────────────── */
 .pptxv-ole-edit-content { display: flex; flex-direction: column; gap: 8px; min-width: 0; }

@@ -64,7 +64,6 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | Composable                   | Concern                                                                   |
 | ---------------------------- | ------------------------------------------------------------------------- |
 | `useSmartArtEditing`         | SmartArt node/layout/color/style editing operations.                      |
-| `useSmartArtFocus`           | SmartArt node keyboard focus and navigation.                              |
 | `useSmartArtHoverRect`       | Hover-highlight rectangle for a SmartArt node.                            |
 | `useSmartArtNodeEditContext` | Provide/inject context for inline SmartArt node text/fill editing.        |
 | `useSmartArtInlineEditState` | Inline SmartArt node editor open/close state (`smartart-inline-edit.ts`). |

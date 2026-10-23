@@ -5,30 +5,15 @@
 		SmartArtStyle,
 		SmartArtPptxElement,
 	} from 'pptx-viewer-core';
+	import { SWITCHABLE_LAYOUT_TYPES } from 'pptx-viewer-core';
 	import {
-		addSmartArtNode,
-		demoteSmartArtNode,
-		promoteSmartArtNode,
-		removeSmartArtNode,
-		reorderSmartArtNode,
-		setSmartArtNodeStyle,
-		SWITCHABLE_LAYOUT_TYPES,
-		updateSmartArtNodeText,
-	} from 'pptx-viewer-core';
-	import {
-		addSiblingAfter,
-		canRemoveTopLevelNode,
-		countTopLevel,
-		demote,
-		promote,
 		reflowSmartArtData,
-		removeEmptyNode,
 		schemaLabel,
 		SMARTART_COLOR_SCHEME_LABEL_KEYS,
 		SMARTART_STYLE_LABEL_KEYS,
 		switchSmartArtLayoutData,
-} from 'ooxml-ui/pptx';
-	import { tick } from 'svelte';
+	} from 'ooxml-ui/pptx';
+	import type { SmartArtTextPaneChangeEvent, SmartArtTextPaneViewState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';
@@ -36,9 +21,6 @@
 	const { editor, el }: { editor: EditorState; el: SmartArtPptxElement } = $props();
 	const t = useTranslator();
 	const data = $derived(el.smartArtData);
-	// eslint-disable-next-line prefer-const
-	let selectedNodeId = $state<string | null>(null);
-	const selectedNode = $derived(data?.nodes.find((node) => node.id === selectedNodeId));
 
 	// `dgm:colorsDef` / `dgm:styleDef` family tokens. Both lists stay explicit so
 	// spelling them out through the shared tables cannot change which variations
@@ -52,11 +34,14 @@
 	];
 	const diagramStyles: readonly SmartArtStyle[] = ['flat', 'moderate', 'intense'];
 
-	function setNodeText(nodeId: string, text: string): void {
-		if (data) {
-			applyData(updateSmartArtNodeText(data, nodeId, text));
-		}
-	}
+	// The text pane is the shared `pptx-ui-smartart-text-pane` element (outline with levels,
+	// keyboard structure edits, move, sub-item, remove, per-node style); this section feeds it
+	// the data and commits what it emits.
+	const paneState = $derived<SmartArtTextPaneViewState>({
+		smartArtData: data,
+		canEdit: editor.editable,
+		translate: t,
+	});
 
 	function setLayout(layout: SmartArtLayoutType): void {
 		if (data && layout !== data.resolvedLayoutType) {
@@ -85,97 +70,11 @@
 			applyData({ ...data, style, drawingDirty: true, drawingShapes: [] });
 		}
 	}
-	function nodeStyle(patch: Parameters<typeof setSmartArtNodeStyle>[2]): void {
-		if (data && selectedNodeId) {
-			applyData(setSmartArtNodeStyle(data, selectedNodeId, patch));
-		}
-	}
-	function nodeColorStyle(patch: Parameters<typeof setSmartArtNodeStyle>[2], color: string): void {
-		nodeStyle(patch);
-		editor.recordRecentColor(color);
-	}
-
-	/** Focus the text input for `nodeId` once the DOM has updated. */
-	async function focusNodeInput(nodeId: string): Promise<void> {
-		await tick();
-		const input = document.querySelector<HTMLInputElement>(
-			`.pptx-svelte-smartart-node[data-node-id="${nodeId}"] input`,
-		);
-		input?.focus();
-	}
-
-	/**
-	 * Text-pane keyboard editing, matching React's SmartArtPropertiesPanel:
-	 * Enter inserts a sibling after the current node, Backspace/Delete on an
-	 * empty node removes it, Tab demotes, Shift+Tab promotes. All four go
-	 * through the shared smartart-node-pane-handlers so the behaviour (and its
-	 * focus-follows-edit affordance) can't drift from React/Vue/Angular.
-	 */
-	function handleNodeKeydown(event: KeyboardEvent, nodeId: string): void {
-		if (!data) {
-			return;
-		}
-		const node = data.nodes.find((n) => n.id === nodeId);
-		// The input commits via `onchange` (blur-triggered), so `data` can be
-		// stale while the user is still typing: the emptiness check reads the
-		// live DOM value directly, and Enter/Tab/Shift+Tab commit it into a
-		// fresh copy of `data` first, since each of those keys fires the
-		// mutation WITHOUT the browser ever blurring the input (a demote/promote
-		// that ran on stale data silently dropped whatever the user had just
-		// typed).
-		const liveValue = (event.currentTarget as HTMLInputElement).value;
-		const isEmpty = !liveValue;
-		// `updateSmartArtNodeText` always returns a NEW object (even when the
-		// text is unchanged), so a plain reference check cannot tell "nothing to
-		// commit" from "committed"; compare against the last-known text instead,
-		// and only fold the edit in when a structural op no-ops (demoting the
-		// very first node has nothing to nest under) so a bare Tab press cannot
-		// still push a no-op history entry.
-		const committed = updateSmartArtNodeText(data, nodeId, liveValue);
-		const textChanged = liveValue !== node?.text;
-
-		if (event.key === 'Enter') {
-			event.preventDefault();
-			const result = addSiblingAfter(committed, nodeId);
-			if (result) {
-				applyData(result.data);
-				if (result.focusNodeId) {
-					void focusNodeInput(result.focusNodeId);
-				}
-			} else if (textChanged) {
-				applyData(committed);
-			}
-		} else if ((event.key === 'Backspace' || event.key === 'Delete') && isEmpty) {
-			const isTop = !node?.parentId;
-			if (isTop && !canRemoveTopLevelNode(data.resolvedLayoutType, countTopLevel(data))) {
-				return;
-			}
-			event.preventDefault();
-			const result = removeEmptyNode(data, nodeId);
-			if (result) {
-				applyData(result.data);
-				if (result.focusNodeId) {
-					void focusNodeInput(result.focusNodeId);
-				}
-			}
-		} else if (event.key === 'Tab' && !event.shiftKey) {
-			event.preventDefault();
-			const next = demote(committed, nodeId);
-			if (next) {
-				applyData(next);
-				void focusNodeInput(nodeId);
-			} else if (textChanged) {
-				applyData(committed);
-			}
-		} else if (event.key === 'Tab' && event.shiftKey) {
-			event.preventDefault();
-			const next = promote(committed, nodeId);
-			if (next) {
-				applyData(next);
-				void focusNodeInput(nodeId);
-			} else if (textChanged) {
-				applyData(committed);
-			}
+	function onPaneChange(event: Event): void {
+		const { smartArtData: next, recentColor } = (event as SmartArtTextPaneChangeEvent).detail;
+		applyData(next);
+		if (recentColor) {
+			editor.recordRecentColor(recentColor);
 		}
 	}
 </script>
@@ -211,24 +110,11 @@
 	</label>
 	<label class="pptx-svelte-smartart-field"><span>{t('pptx.smartart.style')}</span><pptx-ui-select aria-label={t('pptx.smartart.style')} value={data.style ?? 'moderate'} onchange={(event) => setDiagramStyle(event.currentTarget.value as SmartArtStyle)}>{#each diagramStyles as diagramStyle}<option value={diagramStyle}>{schemaLabel(SMARTART_STYLE_LABEL_KEYS, diagramStyle, t)}</option>{/each}</pptx-ui-select></label>
 
-	<span class="pptx-svelte-smartart-label">{t('pptx.smartart.textPane')}</span>
-	<div class="pptx-svelte-smartart-nodes">
-		{#each data.nodes as node, index (node.id)}
-			<div class="pptx-svelte-smartart-node" class:active={node.id === selectedNodeId} data-node-id={node.id}>
-				<button type="button" aria-label={t('pptx.smartArt.selectItemIndex', { index: index + 1 })} onclick={() => (selectedNodeId = node.id)}>{index + 1}</button>
-				<input
-					type="text"
-					value={node.text}
-					aria-label={`${t('pptx.smartart.item')} ${index + 1}`}
-					data-testid="smartart-node-text"
-					onchange={(event) => setNodeText(node.id, event.currentTarget.value)}
-					onkeydown={(event) => handleNodeKeydown(event, node.id)}
-				/>
-			</div>
-		{/each}
-	</div>
-	<div class="pptx-svelte-smartart-actions"><button type="button" onclick={() => { if (data) applyData(addSmartArtNode(data, 'New item', selectedNodeId ?? undefined)); }}>{t('pptx.smartart.addItem')}</button><button type="button" disabled={!selectedNodeId || data.nodes.length <= 1} onclick={() => { if (data && selectedNodeId) { applyData(removeSmartArtNode(data, selectedNodeId)); selectedNodeId = null; } }}>{t('pptx.smartArt.remove')}</button><button type="button" disabled={!selectedNodeId} onclick={() => { if (data && selectedNodeId) applyData(reorderSmartArtNode(data, selectedNodeId, -1)); }}>{t('pptx.smartArt.moveUp')}</button><button type="button" disabled={!selectedNodeId} onclick={() => { if (data && selectedNodeId) applyData(reorderSmartArtNode(data, selectedNodeId, 1)); }}>{t('pptx.smartArt.moveDown')}</button><button type="button" disabled={!selectedNodeId} onclick={() => { if (data && selectedNodeId) applyData(promoteSmartArtNode(data, selectedNodeId)); }}>{t('pptx.smartart.promote')}</button><button type="button" disabled={!selectedNodeId} onclick={() => { if (data && selectedNodeId) applyData(demoteSmartArtNode(data, selectedNodeId)); }}>{t('pptx.smartart.demote')}</button></div>
-	{#if selectedNode}<div class="pptx-svelte-smartart-style"><label>{t('pptx.smartArt.fill')}<input type="color" value={selectedNode.style?.fillColor ?? '#4472c4'} onchange={(event) => nodeColorStyle({ fillColor: event.currentTarget.value }, event.currentTarget.value)} /></label><label>{t('pptx.textPanel.font')}<input type="color" value={selectedNode.style?.fontColor ?? '#ffffff'} onchange={(event) => nodeColorStyle({ fontColor: event.currentTarget.value }, event.currentTarget.value)} /></label><button type="button" class:active={selectedNode.style?.bold} onclick={() => nodeStyle({ bold: !selectedNode.style?.bold })}>{t('pptx.textPanel.bold')}</button><button type="button" class:active={selectedNode.style?.italic} onclick={() => nodeStyle({ italic: !selectedNode.style?.italic })}>{t('pptx.textPanel.italic')}</button></div>{/if}
+	<pptx-ui-smartart-text-pane
+		data-testid="smartart-text-pane"
+		state={paneState}
+		onpptx-smartart-data-change={onPaneChange}
+	></pptx-ui-smartart-text-pane>
 {/if}
 
 <style>
@@ -279,8 +165,7 @@
 		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
 	}
 
-	.pptx-svelte-smartart-field select,
-	.pptx-svelte-smartart-node input {
+	.pptx-svelte-smartart-field select {
 		height: 26px;
 		box-sizing: border-box;
 		padding: 2px 6px;
@@ -290,26 +175,4 @@
 		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
 		font: inherit;
 	}
-
-	.pptx-svelte-smartart-nodes {
-		display: flex;
-		max-height: 208px;
-		flex-direction: column;
-		gap: 5px;
-		overflow-y: auto;
-	}
-
-	.pptx-svelte-smartart-node {
-		display: grid;
-		grid-template-columns: 20px minmax(0, 1fr);
-		align-items: center;
-		gap: 5px;
-	}
-	.pptx-svelte-smartart-node.active { border-radius: 4px; outline: 2px solid var(--pptx-primary, var(--office-accent, #2563eb)); }
-	.pptx-svelte-smartart-node button { min-width: 20px; padding: 0; border: 0; background: transparent; color: inherit; }
-
-	.pptx-svelte-smartart-node input {
-		min-width: 0;
-	}
-	.pptx-svelte-smartart-actions,.pptx-svelte-smartart-style{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:7px}.pptx-svelte-smartart-actions button,.pptx-svelte-smartart-style button{min-width:0;height:25px;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:4px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}.pptx-svelte-smartart-style{grid-template-columns:1fr 1fr auto auto}.pptx-svelte-smartart-style label{display:grid;gap:2px;color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));font-size:9px}.pptx-svelte-smartart-style input{width:100%;height:24px}.pptx-svelte-smartart-style button.active{background:var(--pptx-primary, var(--office-accent, #2563eb));color:var(--pptx-primary-foreground, var(--office-accent-foreground, #ffffff))}
 </style>

@@ -57,7 +57,6 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | 组合式函数                   | 职责                                                                   |
 | ---------------------------- | ---------------------------------------------------------------------- |
 | `useSmartArtEditing`         | 编辑 SmartArt 节点、布局、颜色和样式。                                 |
-| `useSmartArtFocus`           | SmartArt 节点的键盘焦点和导航。                                        |
 | `useSmartArtHoverRect`       | SmartArt 节点的悬停高亮矩形。                                          |
 | `useSmartArtNodeEditContext` | 通过 provide/inject 为 SmartArt 节点的内联文本和填充编辑提供上下文。   |
 | `useSmartArtInlineEditState` | SmartArt 内联节点编辑器的打开和关闭状态（`smartart-inline-edit.ts`）。 |

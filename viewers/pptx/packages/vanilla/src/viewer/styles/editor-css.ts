@@ -356,17 +356,6 @@ export const EDITOR_CSS = `
 }
 .pptxv-smartart-layout-button:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 .pptxv-smartart-layout-button.is-active { border-color: var(--pptx-primary); background: color-mix(in srgb, var(--pptx-primary) 16%, transparent); color: var(--pptx-primary); }
-.pptxv-smartart-nodes { display: flex; max-height: 208px; flex-direction: column; gap: 5px; overflow-y: auto; }
-/* One row per node: index, text, fill, font colour, bold, italic; the
-   hierarchy actions (inspector-extras-css.ts) wrap onto a second row under
-   the text. With two columns the six controls used to scatter over four. */
-.pptxv-smartart-node { display: grid; grid-template-columns: 20px minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 5px; }
-.pptxv-smartart-node > input[type='color'] { width: 22px; height: 22px; }
-.pptxv-smartart-node > button { min-width: 22px; height: 22px; padding: 0 4px; border: 1px solid var(--pptx-border); border-radius: var(--pptx-radius); background: transparent; color: var(--pptx-foreground); font: inherit; font-weight: 600; cursor: pointer; }
-.pptxv-smartart-node-index { color: var(--pptx-muted-foreground); text-align: center; }
-.pptxv-smartart-node-input { min-width: 0; height: 26px; box-sizing: border-box; padding: 2px 6px; border: 1px solid var(--pptx-border); border-radius: var(--pptx-radius); background: var(--pptx-background); color: var(--pptx-foreground); font: inherit; }
-.pptxv-smartart-node-input:focus-visible { outline: 2px solid var(--pptx-ring); outline-offset: -1px; }
-
 /* Select / checkbox / range fields (text/image/table inspector sections). */
 .pptxv-field-select,
 .pptxv-field-checkbox,

@@ -45,10 +45,9 @@ describe('inspector panel classes that used to have no rule', () => {
 		expect(missing).toStrictEqual([]);
 	});
 
-	it('styles the SmartArt hierarchy actions and the OLE nested-deck tab by the classes they render', () => {
+	it('styles the OLE nested-deck tab by the classes it renders', () => {
 		const css = buildViewerCss();
 		const names = [
-			'pptxv-smartart-hierarchy',
 			'pptxv-ole-edit-content',
 			'pptxv-ole-edit-deck-slide',
 			'pptxv-ole-edit-deck-caption',

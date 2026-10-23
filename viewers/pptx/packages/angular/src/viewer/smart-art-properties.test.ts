@@ -5,9 +5,9 @@ import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
  * The Angular package's vitest setup has no Angular compiler,
  * so component/TestBed rendering is not exercised here. Instead these tests
  * target the pure helper layer in `smart-art-properties-helpers.ts` plus the
- * `editor-insert.ts` re-exports of the core editing ops, which together carry
- * 100% of the inspector's editing behaviour (the component is a thin shell that
- * only forwards events to these helpers and emits their result).
+ * `editor-insert.ts` re-exports of the core editing ops. The text pane is the
+ * shared `pptx-ui-smartart-text-pane` element, covered in `ooxml-ui` and by
+ * `smart-art-properties.component.test.ts`.
  */
 import type { PptxSmartArtData, PptxSmartArtNode } from 'pptx-viewer-core';
 import { resetSmartArtEditCounter } from 'pptx-viewer-core';
@@ -30,27 +30,17 @@ import {
 	smartArtStyleLabelKey,
 } from './schema-token-labels';
 import {
-	addItem,
-	addSubItem,
 	currentColorScheme,
 	currentLayout,
 	currentStyle,
-	demoteNode,
 	DEFAULT_COLOR_SCHEME,
 	DEFAULT_LAYOUT,
 	DEFAULT_STYLE,
-	isChildNode,
-	moveNodeDown,
-	moveNodeUp,
-	promoteNode,
-	removeNode,
 	setColorScheme,
 	setLayout,
-	setNodeText,
 	setStyle,
 	SMART_ART_COLOR_SCHEMES,
 	SMART_ART_STYLE_OPTIONS,
-	smartArtNodes,
 } from './smart-art-properties-helpers';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -120,20 +110,6 @@ describe('option constants', () => {
 // ── Read helpers ──────────────────────────────────────────────────────────────
 
 describe('read helpers', () => {
-	it('smartArtNodes returns the node list', () => {
-		expect(smartArtNodes(flatData())).toHaveLength(3);
-	});
-
-	it('smartArtNodes tolerates a missing node list', () => {
-		const empty = { nodes: undefined } as unknown as PptxSmartArtData;
-		expect(smartArtNodes(empty)).toStrictEqual([]);
-	});
-
-	it('isChildNode reflects the presence of a parentId', () => {
-		expect(isChildNode(node('x', 'X'))).toBeFalsy();
-		expect(isChildNode(node('x', 'X', 'p'))).toBeTruthy();
-	});
-
 	it('falls back to defaults when scheme/style/layout are unset', () => {
 		const bare: PptxSmartArtData = { nodes: [] };
 		expect(currentColorScheme(bare)).toBe(DEFAULT_COLOR_SCHEME);
@@ -151,128 +127,6 @@ describe('read helpers', () => {
 		expect(currentColorScheme(data)).toBe('colorful3');
 		expect(currentStyle(data)).toBe('intense');
 		expect(currentLayout(data)).toBe('cycle');
-	});
-});
-
-// ── Node add ──────────────────────────────────────────────────────────────────
-
-describe('addItem / addSubItem', () => {
-	it('addItem appends a top-level node', () => {
-		const next = addItem(flatData());
-		expect(next.nodes).toHaveLength(4);
-		expect(next.nodes[3].parentId).toBeUndefined();
-	});
-
-	it('addItem returns a new immutable object', () => {
-		const data = flatData();
-		const next = addItem(data);
-		expect(next).not.toBe(data);
-		expect(data.nodes).toHaveLength(3);
-	});
-
-	it('addSubItem adds a child under the given parent with the Sub-item label', () => {
-		const next = addSubItem(flatData(), 'a');
-		const added = next.nodes.find((n) => n.parentId === 'a');
-		expect(added).toBeDefined();
-		expect(added?.text).toBe('Sub-item');
-	});
-
-	it('addItem clears drawingShapes to force reflow', () => {
-		const data: PptxSmartArtData = { ...flatData(), drawingShapes: [] };
-		expect(addItem(data).drawingShapes).toBeUndefined();
-	});
-});
-
-// ── Node text ─────────────────────────────────────────────────────────────────
-
-describe('setNodeText', () => {
-	it('updates the targeted node only', () => {
-		const next = setNodeText(flatData(), 'b', 'Renamed');
-		expect(next.nodes.find((n) => n.id === 'b')?.text).toBe('Renamed');
-		expect(next.nodes.find((n) => n.id === 'a')?.text).toBe('Alpha');
-	});
-
-	it('leaves the input data untouched (immutability)', () => {
-		const data = flatData();
-		setNodeText(data, 'a', 'Changed');
-		expect(data.nodes.find((n) => n.id === 'a')?.text).toBe('Alpha');
-	});
-});
-
-// ── Node remove ───────────────────────────────────────────────────────────────
-
-describe('removeNode', () => {
-	it('removes a node by id', () => {
-		const next = removeNode(flatData(), 'b');
-		expect(next.nodes.map((n) => n.id)).toStrictEqual(['a', 'c']);
-	});
-
-	it('refuses to remove the last remaining node', () => {
-		const single: PptxSmartArtData = { nodes: [node('only', 'Only')] };
-		const next = removeNode(single, 'only');
-		expect(next).toBe(single);
-		expect(next.nodes).toHaveLength(1);
-	});
-
-	it('re-parents children of a removed parent to the root', () => {
-		const next = removeNode(nestedData(), 'root');
-		expect(next.nodes.find((n) => n.id === 'child1')?.parentId).toBeUndefined();
-		expect(next.nodes.find((n) => n.id === 'child2')?.parentId).toBeUndefined();
-	});
-});
-
-// ── Promote / demote ──────────────────────────────────────────────────────────
-
-describe('promoteNode / demoteNode', () => {
-	it('promote lifts a child to its parent level', () => {
-		const next = promoteNode(nestedData(), 'child1');
-		expect(next.nodes.find((n) => n.id === 'child1')?.parentId).toBeUndefined();
-	});
-
-	it('promote on a root node is a no-op', () => {
-		const data = nestedData();
-		expect(promoteNode(data, 'root')).toBe(data);
-	});
-
-	it('demote nests a node under its preceding sibling', () => {
-		const next = demoteNode(flatData(), 'b');
-		expect(next.nodes.find((n) => n.id === 'b')?.parentId).toBe('a');
-	});
-
-	it('demote on the first sibling is a no-op', () => {
-		const data = flatData();
-		expect(demoteNode(data, 'a')).toBe(data);
-	});
-
-	it('promote then demote round-trips the parentId', () => {
-		const promoted = promoteNode(nestedData(), 'child2');
-		expect(promoted.nodes.find((n) => n.id === 'child2')?.parentId).toBeUndefined();
-		const demoted = demoteNode(promoted, 'child2');
-		expect(demoted.nodes.find((n) => n.id === 'child2')?.parentId).toBe('root');
-	});
-});
-
-// ── Reorder ───────────────────────────────────────────────────────────────────
-
-describe('moveNodeUp / moveNodeDown', () => {
-	it('moveNodeDown swaps a node with the next sibling', () => {
-		const next = moveNodeDown(flatData(), 'a');
-		expect(next.nodes.map((n) => n.id)).toStrictEqual(['b', 'a', 'c']);
-	});
-
-	it('moveNodeUp swaps a node with the previous sibling', () => {
-		const next = moveNodeUp(flatData(), 'c');
-		expect(next.nodes.map((n) => n.id)).toStrictEqual(['a', 'c', 'b']);
-	});
-
-	it('moveNodeUp on the first sibling is a no-op', () => {
-		const data = flatData();
-		expect(moveNodeUp(data, 'a')).toBe(data);
-	});
-
-	it('moveNodeDown on the last sibling is a no-op', () => {
-		const data = flatData();
-		expect(moveNodeDown(data, 'c')).toBe(data);
 	});
 });
 

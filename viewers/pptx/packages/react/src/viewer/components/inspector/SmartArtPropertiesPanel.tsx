@@ -1,43 +1,22 @@
 import { rebuildDrawingShapesIfCleared } from 'ooxml-ui/pptx';
-import type { BoundingBox } from 'ooxml-ui/pptx';
-/* oxlint-disable eslint/one-var -- this component declares many independent
-   locals across its render body; merging unrelated declarations would hurt
-   readability, not help it. */
+import type {
+	BoundingBox,
+	PptxUiSmartArtTextPaneElement,
+	SmartArtTextPaneChangeEvent,
+} from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSmartArtData,
-	PptxSmartArtNodeStyle,
 	SmartArtColorScheme,
 	SmartArtStyle,
-} from 'pptx-viewer-core';
-import {
-	addSmartArtNodeAsChild,
-	removeSmartArtNode,
-	setSmartArtNodeStyle,
-	updateSmartArtNodeText,
 } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { resolveSmartArtDataPalette } from '../../utils/smartart-helpers';
-import { HEADING, CARD, BTN } from './inspector-pane-constants';
-import {
-	canAddTopLevelNode,
-	canRemoveTopLevelNode,
-	describeSmartArtBounds,
-} from './smartart-node-limits';
-import {
-	addSiblingAfter,
-	classifyExtraConnections,
-	demote,
-	promote,
-	removeEmptyNode,
-	reorder,
-	siblingCount,
-	siblingIndex,
-} from './smartart-node-pane-handlers';
+import { HEADING, CARD } from './inspector-pane-constants';
+import { useRecentColors } from './RecentColorsContext';
 import { SmartArtLayoutSwitcher } from './SmartArtLayoutSwitcher';
-import { SmartArtNodeRow } from './SmartArtNodeRow';
 import { SmartArtStyleControls } from './SmartArtStyleControls';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +47,12 @@ const STYLE_OPTIONS: SmartArtStyle[] = ['flat', 'moderate', 'intense'];
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * SmartArt inspector: layout, colours and style, and the text pane, which is the shared
+ * `pptx-ui-smartart-text-pane` element (outline with levels, keyboard structure edits, move,
+ * sub-item, remove and per-node style). This component feeds it the data and commits what it
+ * emits through the element-update path, rebuilding the drawing when an edit cleared it.
+ */
 export function SmartArtPropertiesPanel({
 	smartArtData,
 	canEdit,
@@ -75,26 +60,10 @@ export function SmartArtPropertiesPanel({
 	box,
 }: SmartArtPropertiesPanelProps): React.ReactElement {
 	const { t } = useTranslation();
-	const nodes = smartArtData.nodes ?? [];
-	const layout = smartArtData.resolvedLayoutType;
-	const topLevelCount = nodes.filter((n) => !n.parentId).length;
+	const { pushColor } = useRecentColors();
+	const paneRef = React.useRef<PptxUiSmartArtTextPaneElement>(null);
 
-	// Focus the input of a node after a structural edit (Enter / Delete / move).
-	const inputRefs = React.useRef<Map<string, HTMLInputElement | null>>(new Map());
-	const pendingFocusId = React.useRef<string | null>(null);
-
-	React.useEffect(() => {
-		const id = pendingFocusId.current;
-		if (id) {
-			inputRefs.current.get(id)?.focus();
-			pendingFocusId.current = null;
-		}
-	});
-
-	const applySmartArtData = (newData: PptxSmartArtData, focusId?: string) => {
-		if (focusId) {
-			pendingFocusId.current = focusId;
-		}
+	const applySmartArtData = (newData: PptxSmartArtData) => {
 		const reflowed = box
 			? rebuildDrawingShapesIfCleared(
 					newData,
@@ -107,102 +76,39 @@ export function SmartArtPropertiesPanel({
 			: newData;
 		onUpdateElement({ smartArtData: reflowed } as Partial<PptxElement>);
 	};
+	// The listener is attached once; it reads the latest commit path through this ref.
+	const applyRef = React.useRef(applySmartArtData);
+	applyRef.current = applySmartArtData;
 
 	const updateSmartArt = (patch: Partial<PptxSmartArtData>) => {
 		applySmartArtData({ ...smartArtData, ...patch });
 	};
 
-	const handleUpdateNodeText = (nodeId: string, text: string) => {
-		applySmartArtData(updateSmartArtNodeText(smartArtData, nodeId, text));
-	};
-
-	const handleChangeNodeStyle = (nodeId: string, patch: Partial<PptxSmartArtNodeStyle>) => {
-		const next = setSmartArtNodeStyle(smartArtData, nodeId, patch);
-		if (next !== smartArtData) {
-			applySmartArtData(next);
+	React.useLayoutEffect(() => {
+		if (paneRef.current) {
+			paneRef.current.state = {
+				smartArtData,
+				canEdit,
+				translate: (key, params) => t(key, params),
+			};
 		}
-	};
+	}, [smartArtData, canEdit, t]);
 
-	const addNode = () => {
-		if (!canAddTopLevelNode(layout, topLevelCount)) {
+	React.useEffect(() => {
+		const pane = paneRef.current;
+		if (!pane) {
 			return;
 		}
-		applySmartArtData(addSmartArtNodeAsChild(smartArtData));
-	};
-
-	const addSubItem = (parentId: string) => {
-		applySmartArtData(addSmartArtNodeAsChild(smartArtData, parentId, 'Sub-item'));
-	};
-
-	const removeNode = (nodeId: string) => {
-		const isTopLevel = !nodes.find((n) => n.id === nodeId)?.parentId;
-		if (isTopLevel && !canRemoveTopLevelNode(layout, topLevelCount)) {
-			return;
-		}
-		applySmartArtData(removeSmartArtNode(smartArtData, nodeId));
-	};
-
-	const moveNode = (nodeId: string, direction: 1 | -1) => {
-		const next = reorder(smartArtData, nodeId, direction);
-		if (next) {
-			applySmartArtData(next, nodeId);
-		}
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent, nodeId: string) => {
-		const node = nodes.find((n) => n.id === nodeId);
-		const isEmpty = !node?.text;
-
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			const result = addSiblingAfter(smartArtData, nodeId);
-			if (result) {
-				applySmartArtData(result.data, result.focusNodeId);
+		const commit = (event: Event) => {
+			const { smartArtData: next, recentColor } = (event as SmartArtTextPaneChangeEvent).detail;
+			applyRef.current(next);
+			if (recentColor) {
+				pushColor(recentColor);
 			}
-		} else if ((e.key === 'Backspace' || e.key === 'Delete') && isEmpty) {
-			const isTop = !node?.parentId;
-			if (isTop && !canRemoveTopLevelNode(layout, topLevelCount)) {
-				return;
-			}
-			e.preventDefault();
-			const result = removeEmptyNode(smartArtData, nodeId);
-			if (result) {
-				applySmartArtData(result.data, result.focusNodeId);
-			}
-		} else if (e.key === 'Tab' && !e.shiftKey) {
-			e.preventDefault();
-			const next = demote(smartArtData, nodeId);
-			if (next) {
-				applySmartArtData(next, nodeId);
-			}
-		} else if (e.key === 'Tab' && e.shiftKey) {
-			e.preventDefault();
-			const next = promote(smartArtData, nodeId);
-			if (next) {
-				applySmartArtData(next, nodeId);
-			}
-		}
-	};
-
-	const setInputRef = (nodeId: string) => (el: HTMLInputElement | null) => {
-		if (el) {
-			inputRefs.current.set(nodeId, el);
-		} else {
-			inputRefs.current.delete(nodeId);
-		}
-	};
-
-	const boundsHint = describeSmartArtBounds(layout);
-	const addDisabled = !canEdit || !canAddTopLevelNode(layout, topLevelCount);
-
-	// Connections beyond the editable parent/child tree (read-only awareness).
-	const extraConnections = classifyExtraConnections(smartArtData);
-	// Human-readable summary of the distinct relationship types, e.g. "presOf, presParOf".
-	const extraConnectionSummary = Array.from(
-		new Set(extraConnections.map((c) => c.type ?? 'unknown')),
-	).join(', ');
-
-	let topDisplayIndex = 0;
+		};
+		pane.addEventListener('pptx-smartart-data-change', commit);
+		return () => pane.removeEventListener('pptx-smartart-data-change', commit);
+	}, [pushColor]);
 
 	return (
 		<div className={CARD} role='group' aria-label={t('pptx.smartart.title')}>
@@ -224,77 +130,7 @@ export function SmartArtPropertiesPanel({
 					onChangeStyle={(style) => updateSmartArt({ style })}
 				/>
 
-				<div className='flex items-center justify-between'>
-					<span className='text-[11px] text-muted-foreground'>
-						{t('pptx.smartart.textPane')} ({nodes.length})
-					</span>
-					<button
-						type='button'
-						disabled={addDisabled}
-						className={BTN}
-						onClick={addNode}
-						title={addDisabled ? boundsHint : undefined}
-					>
-						{t('pptx.smartart.addItem')}
-					</button>
-				</div>
-
-				{boundsHint && (
-					<div className='text-[9px] text-muted-foreground' role='note'>
-						{boundsHint}
-					</div>
-				)}
-
-				<div className='max-h-52 overflow-y-auto space-y-1 pr-1' role='list'>
-					{nodes.map((node) => {
-						const isChild = Boolean(node.parentId);
-						if (!isChild) {
-							// `topDisplayIndex` is a local running counter reset to 0 at the top of each
-							// render, not a mutated prop/ref.
-							// oxlint-disable-next-line react/immutability -- see comment above
-							topDisplayIndex += 1;
-						}
-						const sIdx = siblingIndex(smartArtData, node.id);
-						const sCount = siblingCount(smartArtData, node.id);
-						const removeDisabled =
-							nodes.length <= 1 || (!isChild && !canRemoveTopLevelNode(layout, topLevelCount));
-						return (
-							<SmartArtNodeRow
-								key={node.id}
-								nodeId={node.id}
-								text={node.text}
-								displayIndex={topDisplayIndex}
-								isChild={isChild}
-								canEdit={canEdit}
-								removeDisabled={removeDisabled}
-								moveUpDisabled={sIdx <= 0}
-								moveDownDisabled={sIdx < 0 || sIdx >= sCount - 1}
-								inputRef={setInputRef(node.id)}
-								style={node.style}
-								onChangeText={handleUpdateNodeText}
-								onKeyDown={handleKeyDown}
-								onAddSubItem={addSubItem}
-								onMoveUp={(id) => moveNode(id, -1)}
-								onMoveDown={(id) => moveNode(id, 1)}
-								onRemove={removeNode}
-								onChangeStyle={handleChangeNodeStyle}
-							/>
-						);
-					})}
-				</div>
-
-				{extraConnections.length > 0 && (
-					<div
-						className='text-[9px] text-muted-foreground'
-						role='note'
-						aria-label={`${extraConnections.length} non-tree relationship connection(s): ${extraConnectionSummary}`}
-					>
-						{t('pptx.smartart.extraConnections', { count: extraConnections.length })}
-						<span className='block opacity-80'>{extraConnectionSummary}</span>
-					</div>
-				)}
-
-				<div className='text-[9px] text-muted-foreground mt-1'>{t('pptx.smartart.tabHint')}</div>
+				<pptx-ui-smartart-text-pane ref={paneRef} data-testid='smartart-text-pane' />
 			</div>
 		</div>
 	);

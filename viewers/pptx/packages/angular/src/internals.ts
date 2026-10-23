@@ -89,7 +89,6 @@ export {
 } from './viewer/smart-art-drawing';
 export * from './viewer/smart-art-inline-edit';
 export * from './viewer/smart-art-insert-helpers';
-export * from './viewer/smart-art-node-style-helpers';
 export * from './viewer/smart-art-properties-helpers';
 export * from './viewer/smart-art-renderer-helpers';
 
