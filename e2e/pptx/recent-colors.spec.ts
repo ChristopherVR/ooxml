@@ -149,6 +149,26 @@ test.describe('recent colours', () => {
 		}
 	});
 
+	test('every recent-colours row stays inside the inspector', async ({ page }) => {
+		await loadDeck(page, DECK);
+		await selectSourceShape(page);
+		await pickColor(colorInputs(page).first(), RED);
+		await pickColor(colorInputs(page).nth(1), BLUE);
+		await expect.poll(() => recentRows(page).count()).toBeGreaterThanOrEqual(2);
+
+		// A row laid out beside its theme colours instead of under them ran past the panel's edge.
+		const panel = await inspector(page).boundingBox();
+		expect(panel).not.toBeNull();
+		const rows = recentRows(page);
+		const count = await rows.count();
+		for (let index = 0; index < count; index += 1) {
+			const box = await rows.nth(index).boundingBox();
+			expect(box).not.toBeNull();
+			expect(box!.x).toBeGreaterThanOrEqual(panel!.x - 1);
+			expect(box!.x + box!.width).toBeLessThanOrEqual(panel!.x + panel!.width + 1);
+		}
+	});
+
 	test('a second pick goes to the front, and re-picking a swatch moves it back to the front', async ({
 		page,
 	}) => {
