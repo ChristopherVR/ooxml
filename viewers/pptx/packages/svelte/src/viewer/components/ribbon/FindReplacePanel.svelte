@@ -15,8 +15,8 @@
 	const availability = $derived(findReplacementAvailability(findReplace.results, findReplace.index));
 
 	function onQueryInput(value: string): void {
+		// Setting the query searches.
 		findReplace.query = value;
-		findReplace.search();
 	}
 
 	function onKeydown(event: KeyboardEvent): void {
@@ -41,15 +41,14 @@
 			oninput={(e) => onQueryInput(e.currentTarget.value)}
 			onkeydown={onKeydown}
 		/>
-		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeNotes')} checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeNotes')}</label>
-		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartTitles')} checked={findReplace.includeChartTitles} onchange={(e) => { findReplace.includeChartTitles = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartTitles')}</label>
-		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartData')} checked={findReplace.includeChartData} onchange={(e) => { findReplace.includeChartData = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartData')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeNotes')} checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; }}></pptx-ui-checkbox>{t('pptx.findReplace.includeNotes')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartTitles')} checked={findReplace.includeChartTitles} onchange={(e) => { findReplace.includeChartTitles = e.currentTarget.checked; }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartTitles')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartData')} checked={findReplace.includeChartData} onchange={(e) => { findReplace.includeChartData = e.currentTarget.checked; }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartData')}</label>
 		<label class="pptx-svelte-findreplace-case">
 			<pptx-ui-checkbox
 				checked={findReplace.matchCase}
 				onchange={(e) => {
 					findReplace.matchCase = e.currentTarget.checked;
-					findReplace.search();
 				}}></pptx-ui-checkbox>
 			{t('pptx.findReplace.matchCase')}
 		</label>

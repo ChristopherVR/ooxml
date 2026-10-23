@@ -98,4 +98,75 @@ describe('findReplaceState', () => {
 		state.replaceCurrent();
 		expect(commitSlides).not.toHaveBeenCalled();
 	});
+
+	it('closing drops the matches; reopening searches the kept query from the first', () => {
+		const slides: PptxSlide[] = [slide([textEl('a', 'foo foo foo')])];
+		const state = new FindReplaceState({ getSlides: () => slides, commitSlides: () => {} });
+		state.toggle();
+		state.query = 'foo';
+		state.search();
+		state.next();
+		state.close();
+		expect(state.open).toBeFalsy();
+		expect(state.matchCount).toBe(0);
+		state.toggle();
+		expect(state.query).toBe('foo');
+		expect(state.matchCount).toBe(3);
+		expect(state.index).toBe(0);
+	});
+
+	it('replace changes the current match and moves on to the next one', () => {
+		let slides: PptxSlide[] = [
+			{ ...slide([textEl('a', 'foo bar')]), id: 's1' },
+			{ ...slide([textEl('b', 'foo foo')]), id: 's2' },
+		];
+		const onNavigate = vi.fn();
+		const state = new FindReplaceState({
+			getSlides: () => slides,
+			commitSlides: (next) => {
+				slides = next;
+			},
+			onNavigate,
+		});
+		state.query = 'foo';
+		state.replacement = 'qux';
+		state.search();
+		state.next();
+		state.replaceCurrent();
+		expect(slides.map((s) => (s.elements[0] as PptxElement & { text: string }).text)).toStrictEqual(
+			['foo bar', 'qux foo'],
+		);
+		expect(state.matchCount).toBe(2);
+		expect(state.index).toBe(1);
+		expect(onNavigate).toHaveBeenLastCalledWith(1, 'b');
+	});
+
+	it('replace refuses a match the deck no longer has where the search found it', () => {
+		let slides: PptxSlide[] = [slide([textEl('a', 'foo bar')])];
+		const commitSlides = vi.fn((next: PptxSlide[]) => {
+			slides = next;
+		});
+		const state = new FindReplaceState({ getSlides: () => slides, commitSlides });
+		state.query = 'foo';
+		state.replacement = 'qux';
+		state.search();
+		slides = [slide([textEl('a', 'xx foo bar')])];
+		state.replaceCurrent();
+		expect(commitSlides).not.toHaveBeenCalled();
+		expect((slides[0].elements[0] as PptxElement & { text: string }).text).toBe('xx foo bar');
+	});
+
+	it('a speaker-notes match goes to its slide and selects no element', () => {
+		const slides: PptxSlide[] = [slide([]), { ...slide([]), notes: 'speaker foo' }];
+		const onNavigate = vi.fn();
+		const state = new FindReplaceState({
+			getSlides: () => slides,
+			commitSlides: () => {},
+			onNavigate,
+		});
+		state.includeNotes = true;
+		state.query = 'foo';
+		state.search();
+		expect(onNavigate).toHaveBeenLastCalledWith(1, null);
+	});
 });
