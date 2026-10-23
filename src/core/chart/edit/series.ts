@@ -8,12 +8,8 @@ import type { ChartGroupKind, ChartPlotGroup, ChartSpace } from '../model';
 import type { ChartDataSource, ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import { chartSourceValues } from '../data-cache';
 import { chartSeriesEntryAt, chartSpaceSeries, editChartSpace } from './draft';
-import {
-	categorySource,
-	numberSource,
-	type ChartCategoryValue,
-	type ChartSeriesValue,
-} from './series-data';
+import type { ChartSeriesValue } from '../data-sheet';
+import { categorySource, numberSource, type ChartCategoryValue } from './series-data';
 
 /** Scatter and bubble series plot x and y values instead of categories and values. */
 export const isXYChartKind = (kind: ChartGroupKind): boolean =>
@@ -105,10 +101,33 @@ export function moveChartSeries(space: ChartSpace, from: number, to: number): Ch
 	});
 }
 
-/** Renames a series; a name taken from a cell becomes a literal name, as typing it in Office does. */
-export function renameChartSeries(space: ChartSpace, index: number, name: string): ChartSpace {
+export interface RenameChartSeriesOptions {
+	/**
+	 * Keep a name taken from a cell and refresh its cached text, as PowerPoint's and Word's data
+	 * sheet does when the cell itself is retyped (the embedded workbook is the caller's to update).
+	 */
+	keepReference?: boolean;
+}
+
+/**
+ * Renames a series. By default a name taken from a cell becomes a literal name, as typing it into
+ * Excel's series name box does; `keepReference` follows the data sheet instead.
+ */
+export function renameChartSeries(
+	space: ChartSpace,
+	index: number,
+	name: string,
+	options: RenameChartSeriesOptions = {},
+): ChartSpace {
 	return editChartSpace(space, (draft) => {
-		chartSeriesEntryAt(draft, index).series.tx = { value: name, text: name };
+		const { series } = chartSeriesEntryAt(draft, index);
+		const reference = series.tx?.reference;
+		if (options.keepReference && reference?.kind === 'strRef' && reference.formula) {
+			const cache = { type: 'string' as const, pointCount: 1, points: [{ index: 0, value: name }] };
+			series.tx = { reference: { ...reference, cache }, text: name };
+			return;
+		}
+		series.tx = { value: name, text: name };
 	});
 }
 

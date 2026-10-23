@@ -39,9 +39,9 @@ const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = 
 	'value axis scaling': { parts: 51, xml: 48, model: 48 },
 	'value axis hidden': { parts: 51, xml: 48, model: 48 },
 	'value axis number format': { parts: 51, xml: 48, model: 48 },
-	'series values': { parts: 75, xml: 30, model: 51 },
-	categories: { parts: 71, xml: 42, model: 63 },
-	'series name': { parts: 75, xml: 1, model: 51 },
+	'series values': { parts: 75, xml: 72, model: 72 },
+	categories: { parts: 71, xml: 68, model: 68 },
+	'series name': { parts: 75, xml: 72, model: 72 },
 	'data labels': { parts: 72, xml: 29, model: 50 },
 	'series colour': { parts: 75, xml: 20, model: 37 },
 };

@@ -29,8 +29,15 @@ function chartOf(data: Loaded): ChartPptxElement {
 	return data.slides[0].elements.find((element) => element.type === 'chart') as ChartPptxElement;
 }
 
+/**
+ * Empty elements in their long form, the shape the object-tree writer saves: the shared chart
+ * writer (`writeChartSpace`) closes them instead, and these assertions compare markup as text.
+ */
+const longForm = (xml: string): string =>
+	xml.replace(/<([\w:.-]+)((?:\s[^<>]*?)?)\s*\/>/gu, '<$1$2></$1>');
+
 async function readPart(bytes: Uint8Array, part = CHART_PART): Promise<string> {
-	return (await JSZip.loadAsync(bytes)).file(part)!.async('string');
+	return longForm(await (await JSZip.loadAsync(bytes)).file(part)!.async('string'));
 }
 
 async function writePart(bytes: Uint8Array, xml: string): Promise<Uint8Array> {

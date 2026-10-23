@@ -13,8 +13,11 @@
  */
 
 import {
+	renameChartSeries,
 	setChartAxis,
+	setChartCategories,
 	setChartLegend,
+	setChartSeriesValues,
 	setChartTitle,
 	setChartTitleVisible,
 	type ChartAxisEdit,
@@ -160,6 +163,45 @@ function planAxes(before: PptxChartData, probe: PptxChartData, edits: NeutralCha
 	});
 }
 
+/** Series names, values and text categories (the cache writes of the save loop). */
+function planSeriesData(
+	before: PptxChartData,
+	probe: PptxChartData,
+	edits: NeutralChartEdit[],
+): boolean {
+	if (before.series.length !== probe.series.length) return false;
+	let changed = false;
+	probe.series.forEach((series, i) => {
+		const previous = before.series[i]!;
+		if (series.name !== previous.name) {
+			const name = series.name;
+			edits.push((space) => renameChartSeries(space, i, name, { keepReference: true }));
+			series.name = previous.name;
+			changed = true;
+		}
+		if (!same(series.values, previous.values) || !same(series.blanks, previous.blanks)) {
+			const values = series.values.map((value, point) => (series.blanks?.[point] ? null : value));
+			edits.push((space) => setChartSeriesValues(space, i, values));
+			series.values = previous.values;
+			if (previous.blanks === undefined) delete series.blanks;
+			else series.blanks = previous.blanks;
+			changed = true;
+		}
+	});
+	const textCategories =
+		!before.categoryLevels &&
+		!before.dateCategories &&
+		!['scatter', 'bubble'].includes(before.chartType) &&
+		!before.series.some((s) => s.seriesChartType === 'scatter' || s.seriesChartType === 'bubble');
+	if (!same(before.categories, probe.categories) && textCategories) {
+		const categories = [...probe.categories];
+		edits.push((space) => setChartCategories(space, categories));
+		probe.categories = before.categories;
+		changed = true;
+	}
+	return changed;
+}
+
 /**
  * The shared-core edits that turn the part saved as `before` into `after`, or
  * `undefined` when `after` changes something no family claims yet.
@@ -173,5 +215,6 @@ export function planNeutralChartSave(
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
-	return same(probe, before) ? { edits, seriesData: false } : undefined;
+	const seriesData = planSeriesData(before, probe, edits);
+	return same(probe, before) ? { edits, seriesData } : undefined;
 }

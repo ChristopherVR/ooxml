@@ -115,7 +115,8 @@ export const SAVE_EDITS: SaveEdit[] = [
 		pptx: (element) => {
 			element.chartData!.series[0]!.name = 'Renamed';
 		},
-		neutral: (space) => neutral.renameChartSeries(space, 0, 'Renamed'),
+		// PowerPoint's data sheet retypes the cell the name references.
+		neutral: (space) => neutral.renameChartSeries(space, 0, 'Renamed', { keepReference: true }),
 	},
 	{
 		name: 'data labels',

@@ -167,3 +167,44 @@ describe('saveChartPartThroughNeutral: axes', () => {
 		expect(save((c) => Object.assign(c.axes![1]!, { min: 9, max: 1 }))).toBeUndefined();
 	});
 });
+
+describe('saveChartPartThroughNeutral: series data', () => {
+	const series = (xml: string) => parseChartSpace(xml).chartSpace.plotArea.groups[0]!.series[0]!;
+
+	it('renames through the referenced cell, keeping the formula, and writes the workbook back', () => {
+		const saved = save((c) => (c.series[0]!.name = 'South'))!;
+		expect(series(saved.xml).tx?.reference).toMatchObject({
+			formula: 'Sheet1!$B$1',
+			cache: { points: [{ index: 0, value: 'South' }] },
+		});
+		expect(saved.workbookWrites[0]).toEqual({
+			formula: 'Sheet1!$B$1',
+			isNumeric: false,
+			values: ['South'],
+		});
+	});
+
+	it('writes edited values with blanks as missing points, and new text categories', () => {
+		const saved = save((c) => {
+			c.series[0]!.values = [7, 0];
+			c.series[0]!.blanks = [false, true];
+			c.categories = ['H1', 'H2'];
+		})!;
+		const written = series(saved.xml);
+		expect(written.values?.cache).toMatchObject({
+			pointCount: 2,
+			points: [{ index: 0, value: '7' }],
+		});
+		expect(written.values?.formula).toBe('Sheet1!$B$2:$B$3');
+		expect(written.categories?.cache?.points.map((p) => p.value)).toEqual(['H1', 'H2']);
+		// Untouched series and caches keep the text Office wrote ("4.4000000000000004").
+		expect(save((c) => (c.title = 'Revenue'))!.xml).toContain('<c:v>4.4000000000000004</c:v>');
+	});
+
+	it('leaves added series and multi-level or date categories to the object-tree writers', () => {
+		const added = edited((c) => c.series.push({ name: 'New', values: [1, 2] }));
+		expect(planNeutralChartSave(before(), added)).toBeUndefined();
+		const levels = { ...before(), categoryLevels: [['A', 'B']] };
+		expect(planNeutralChartSave(levels, { ...levels, categories: ['X', 'Y'] })).toBeUndefined();
+	});
+});
