@@ -9,6 +9,7 @@ import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
 import { esShapes } from './shapes';
 import { esCharts } from './charts';
+import { esChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
@@ -29,4 +30,5 @@ export const es: LocaleStrings = {
 	...esObjects,
 	...esShapes,
 	...esCharts,
+	...esChartFormat,
 };

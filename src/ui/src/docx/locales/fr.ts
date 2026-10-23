@@ -9,6 +9,7 @@ import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
 import { frShapes } from './shapes';
 import { frCharts } from './charts';
+import { frChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { frApp } from './fr-app';
 import { frTableProperties } from './table-properties';
@@ -29,4 +30,5 @@ export const fr: LocaleStrings = {
 	...frObjects,
 	...frShapes,
 	...frCharts,
+	...frChartFormat,
 };

@@ -28,6 +28,7 @@ import { applyViewOptions } from './view-options';
 import { wordRegionContext } from './customization-apply';
 import { attachEditorInteractions } from './editor-interactions';
 import { attachCanvasClick } from './canvas-click';
+import { createChartFormatPane } from './chart-format-pane';
 
 /** Element-level operations the chrome needs; they stay on the element because they are public API. */
 export interface ShellApi {
@@ -214,11 +215,18 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	core.formatDialogs.setLocale(core.locale);
 	const body = document.createElement('div');
 	body.className = 'dve-body';
+	shell.chartFormat = createChartFormatPane({
+		view: () => core.targetView(),
+		theme: () => core.model.theme,
+		locale: () => core.locale,
+		canEdit: () => core.canEditBody(),
+	});
 	body.append(
 		shell.navigator.element,
 		shell.headings.element,
 		canvas,
 		review.commentsPanel.element,
+		shell.chartFormat.element,
 	);
 	frame.append(toolbar, shell.searchPanel.element, body);
 	const chrome = createChrome(core, api);

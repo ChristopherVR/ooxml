@@ -136,6 +136,8 @@ export type RibbonAction =
 			value: string | number;
 	  }
 	| { type: 'chart'; key: 'legend'; value: string }
+	/** Format Selection: the docked chart Format pane, on `target` (`chartArea` by default). */
+	| { type: 'chart'; key: 'format'; target?: string }
 	| { type: 'insertEquation'; id: 'area' | 'quadratic' | 'pythagorean' | 'binomial' }
 	| {
 			type: 'insertContentControl';

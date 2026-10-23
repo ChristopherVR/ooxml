@@ -9,6 +9,7 @@ import { zhDropCap } from './drop-cap';
 import { zhObjects } from './objects';
 import { zhShapes } from './shapes';
 import { zhCharts } from './charts';
+import { zhCNChartFormat } from './chart-format';
 import type { LocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
 import { zhTableProperties } from './table-properties';
@@ -29,4 +30,5 @@ export const zhCN: LocaleStrings = {
 	...zhObjects,
 	...zhShapes,
 	...zhCharts,
+	...zhCNChartFormat,
 };
