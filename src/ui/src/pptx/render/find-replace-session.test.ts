@@ -253,6 +253,40 @@ describe('reduceFindReplaceSession: searching again after a replace', () => {
 		expect(findReplaceStatus(kept.session)).toStrictEqual({ current: 1, total: 3 });
 	});
 
+	it('Replace after an ordinary edit added a match moves on from the deck as it is now', () => {
+		const deck = [
+			slide('a', [text('a1', 'foo')]),
+			slide('b', [text('b1', 'foo')]),
+			slide('c', [text('c1', 'bar')]),
+		];
+		const session = run(searched(deck), { type: 'setReplacement', replacement: 'qux' });
+		expect(session.matches).toHaveLength(2);
+		// An ordinary edit adds a match on slide c; the session keeps its two matches.
+		const edited = [deck[0]!, deck[1]!, slide('c', [text('c1', 'foo')])];
+		expect(reduceFindReplaceSession(session, { type: 'slidesChanged', slides: edited })).toBe(
+			session,
+		);
+		const after = replaceAndLand(session, 'current', edited);
+		expect(texts(after.slides)).toStrictEqual(['qux', 'foo', 'foo']);
+		// The match after the replaced one is b's, not c's.
+		expect(findReplaceTarget(after.session)).toStrictEqual({ slideIndex: 1, elementId: 'b1' });
+		expect(findReplaceStatus(after.session)).toStrictEqual({ current: 1, total: 2 });
+	});
+
+	it('Replace after an ordinary edit steps past a match the replacement itself created', () => {
+		const deck = [
+			slide('a', [text('a1', 'foo')]),
+			slide('b', [text('b1', 'foo')]),
+			slide('c', [text('c1', 'bar')]),
+		];
+		const session = run(searched(deck), { type: 'setReplacement', replacement: 'food' });
+		const edited = [deck[0]!, deck[1]!, slide('c', [text('c1', 'foo')])];
+		const after = replaceAndLand(session, 'current', edited);
+		expect(texts(after.slides)).toStrictEqual(['food', 'foo', 'foo']);
+		expect(findReplaceTarget(after.session)).toStrictEqual({ slideIndex: 1, elementId: 'b1' });
+		expect(findReplaceStatus(after.session)).toStrictEqual({ current: 2, total: 3 });
+	});
+
 	it('waits while the host still holds the replaced slides, then searches once they land', () => {
 		const session = searched();
 		const plan = planFindReplace(session, DECK, 'current')!;

@@ -42,7 +42,7 @@ export type FindReplaceScope = 'current' | 'all';
 /** A replace was applied; the search runs again once the host's slides are no longer `base`. */
 export interface FindReplacePendingRefind {
 	readonly scope: FindReplaceScope;
-	/** The current match and the match count when the replace was applied. */
+	/** The plan's own search of `base`: where the replaced match was in it, and how many it found. */
 	readonly index: number;
 	readonly count: number;
 	/** The slides the replace was applied to. */
@@ -80,6 +80,13 @@ export interface FindReplacePlan {
 	readonly scope: FindReplaceScope;
 	readonly matches: readonly FindResult[];
 	readonly replacement: string;
+	/**
+	 * That search: how many matches it found, and the current match's place among them (-1 for
+	 * Replace All). The session's own list can be stale (an ordinary edit leaves it alone), so the
+	 * search after the replace counts from these.
+	 */
+	readonly count: number;
+	readonly index: number;
 }
 
 export type FindReplaceSessionEvent =
@@ -152,8 +159,8 @@ export function reduceFindReplaceSession(
 				...session,
 				pendingRefind: {
 					scope: event.plan.scope,
-					index: session.current,
-					count: session.matches.length,
+					index: event.plan.index,
+					count: event.plan.count,
 					base: event.slides,
 				},
 			};
@@ -238,14 +245,15 @@ export function planFindReplace(
 ): FindReplacePlan | null {
 	const found = search(slides, session);
 	let matches: readonly FindResult[] = found;
+	let index = -1;
 	if (scope === 'current') {
 		const current = session.current >= 0 ? session.matches[session.current] : undefined;
 		const key = current ? matchKey(current) : null;
-		const same = key === null ? undefined : found.find((match) => matchKey(match) === key);
-		matches = same ? [same] : [];
+		index = key === null ? -1 : found.findIndex((match) => matchKey(match) === key);
+		matches = index >= 0 ? [found[index]!] : [];
 	}
 	if (matches.length === 0 || matches.some((match) => match.readOnly)) {
 		return null;
 	}
-	return { scope, matches, replacement: session.replacement };
+	return { scope, matches, replacement: session.replacement, count: found.length, index };
 }

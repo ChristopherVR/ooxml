@@ -132,6 +132,21 @@ describe('findReplaceSessionActions', () => {
 		expect(h.navigate).not.toHaveBeenCalled();
 	});
 
+	it('two Replaces after an ordinary edit added a match change the next two matches in order', () => {
+		const h = harness();
+		h.actions.search({ query: 'foo' });
+		h.actions.setReplacement('qux');
+		// An ordinary edit adds a match on the second slide; the session keeps its three.
+		h.edit([deck()[0]!, { ...deck()[1]!, elements: [text('b1', 'a foo foo')] }]);
+		h.actions.slidesChanged();
+		expect(h.actions.replaceCurrent()).toBe(1);
+		expect(texts(h.slides())).toStrictEqual(['qux bar foo', 'a foo foo']);
+		expect(findReplaceStatus(h.session())).toStrictEqual({ current: 1, total: 3 });
+		expect(h.actions.replaceCurrent()).toBe(1);
+		expect(texts(h.slides())).toStrictEqual(['qux bar qux', 'a foo foo']);
+		expect(h.navigate).toHaveBeenLastCalledWith({ slideIndex: 1, elementId: 'b1' });
+	});
+
 	it('a refused replace commits nothing and leaves no search waiting', () => {
 		const h = harness();
 		h.actions.search({ query: 'foo' });
