@@ -35,7 +35,9 @@ describe('renderToCanvas clone pass (shared prepareHtml2CanvasClone)', () => {
 			return document.createElement('canvas');
 		});
 		await renderToCanvas(stage, { ignoreElements: (node) => node.localName === 'em' });
-		expect(ignore?.(document.querySelector('.chrome')!)).toBeTruthy();
+		// The rest of the page is cloned as empty shells: kept, their contents skipped.
+		expect(ignore?.(document.querySelector('.chrome')!)).toBeFalsy();
+		expect(ignore?.(document.querySelector('.chrome button')!)).toBeTruthy();
 		expect(ignore?.(document.querySelector('.stage span')!)).toBeFalsy();
 		expect(ignore?.(document.querySelector('.viewport')!)).toBeFalsy();
 		expect(ignore?.(document.createElement('em'))).toBeTruthy();
