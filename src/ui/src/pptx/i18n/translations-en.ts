@@ -905,6 +905,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.smartart.style': 'Style',
 	'pptx.smartart.textPane': 'Text pane',
 	'pptx.smartart.addItem': 'Add item',
+	'pptx.smartart.textPaneEmpty': 'This diagram has no shapes with text.',
 	'pptx.smartart.extraConnections':
 		'This diagram has {{count}} extra connection(s) that the text pane does not edit.',
 	'pptx.smartart.tabHint':

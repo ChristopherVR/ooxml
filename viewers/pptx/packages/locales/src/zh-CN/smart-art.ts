@@ -28,6 +28,7 @@ export const translations = {
 	'pptx.smartart.style': '样式',
 	'pptx.smartart.textPane': '文本窗格',
 	'pptx.smartart.addItem': '添加项目',
+	'pptx.smartart.textPaneEmpty': '此图形没有包含文本的形状。',
 	'pptx.smartart.extraConnections': '此图中有 {{count}} 个额外连接，无法在文本窗格中编辑。',
 	'pptx.smartart.tabHint': 'Enter 添加一项，Backspace 删除空项，Tab 降级，Shift+Tab 提升。',
 	'pptx.smartart.cancel': '取消',
