@@ -6,7 +6,7 @@ import {
 import type { FindReplaceOptions, FindReplaceSession, FindResult } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
-import { computed, nextTick, shallowRef, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 
 // The match descriptor, the search / replace implementations and the session around them
 // (`find-replace-session`) are shared with the other bindings; this composable keeps the
@@ -16,16 +16,14 @@ export type { FindResult } from 'ooxml-ui/pptx';
 export interface UseFindReplaceInput {
 	/** Reactive list of slides being edited. */
 	slides: Ref<PptxSlide[]>;
-	/** The currently active slide index (moved to the current match's slide). */
-	activeSlideIndex: Ref<number>;
+	/**
+	 * Show a match: go to its slide and select its element there (an empty list for a
+	 * speaker-notes match) in one step, the viewer's `showSlideSelection`, which keeps that
+	 * selection across the slide change.
+	 */
+	showMatch: (slideIndex: number, ids: string[]) => void;
 	/** Snapshot the current document onto the undo/redo history stack. */
 	pushHistory: () => void;
-	/**
-	 * Select the current match's element (an empty list for a speaker-notes match). Called once
-	 * the slide change has been handled, so the viewer's "new slide drops the selection" watcher
-	 * runs first.
-	 */
-	selectElements?: (ids: string[]) => void;
 	/** Whether the bar is open: closing it drops the matches, opening it searches again. */
 	open?: Ref<boolean>;
 }
@@ -55,9 +53,8 @@ export interface UseFindReplaceResult {
  */
 export function useFindReplace({
 	slides,
-	activeSlideIndex,
+	showMatch,
 	pushHistory,
-	selectElements,
 	open,
 }: UseFindReplaceInput): UseFindReplaceResult {
 	const session = shallowRef<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
@@ -69,11 +66,7 @@ export function useFindReplace({
 				pushHistory();
 				slides.value = next as PptxSlide[];
 			},
-			navigate: ({ slideIndex, elementId }) => {
-				activeSlideIndex.value = slideIndex;
-				const ids = elementId ? [elementId] : [];
-				void nextTick(() => selectElements?.(ids));
-			},
+			navigate: ({ slideIndex, elementId }) => showMatch(slideIndex, elementId ? [elementId] : []),
 		},
 	);
 

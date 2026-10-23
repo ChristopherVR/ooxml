@@ -1,9 +1,18 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
-import { nextTick, ref, watch } from 'vue';
+import type { Ref } from 'vue';
+import { nextTick, ref } from 'vue';
 
 import { useFindReplace } from './useFindReplace';
+import { useSlideChangeSelection } from './useSlideChangeSelection';
+
+/** A `showMatch` that only moves `activeSlideIndex`, for the tests that check navigation alone. */
+const showOn =
+	(activeSlideIndex: Ref<number>) =>
+	(slideIndex: number): void => {
+		activeSlideIndex.value = slideIndex;
+	};
 
 function textEl(id: string, text: string): PptxElement {
 	return {
@@ -48,7 +57,7 @@ describe('useFindReplace', () => {
 	it('exposes a reactive match count over the live slides, at per-occurrence precision', () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 
 		fr.query.value = 'world';
 		expect(fr.matchCount.value).toBe(2);
@@ -57,7 +66,7 @@ describe('useFindReplace', () => {
 	it('counts every occurrence within a single element, not one match per element', () => {
 		const slides = ref([slide('s1', [textEl('a', 'world world world')])]),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 
 		fr.query.value = 'world';
 		// Per-occurrence: 3 matches inside one element, not 1.
@@ -67,7 +76,7 @@ describe('useFindReplace', () => {
 	it('next() cycles matches and moves the active slide', () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 		fr.query.value = 'world';
 
 		fr.next();
@@ -81,7 +90,7 @@ describe('useFindReplace', () => {
 	it('prev() cycles backwards', () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 		fr.query.value = 'world';
 
 		fr.prev();
@@ -92,7 +101,7 @@ describe('useFindReplace', () => {
 	it('respects case sensitivity', () => {
 		const slides = ref([slide('s1', [textEl('a', 'World'), textEl('b', 'world')])]),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 
 		fr.matchCase.value = true;
 		fr.query.value = 'world';
@@ -106,7 +115,7 @@ describe('useFindReplace', () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
 			pushHistory = vi.fn(),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory });
 
 		fr.query.value = 'world';
 		fr.replacement.value = 'earth';
@@ -123,7 +132,7 @@ describe('useFindReplace', () => {
 	it('replaceAll replaces every occurrence within a single element, not just the first', () => {
 		const slides = ref([slide('s1', [textEl('a', 'world world world')])]),
 			activeSlideIndex = ref(0),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {} });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory: () => {} });
 
 		fr.query.value = 'world';
 		fr.replacement.value = 'earth';
@@ -136,7 +145,7 @@ describe('useFindReplace', () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
 			pushHistory = vi.fn(),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory });
+			fr = useFindReplace({ slides, showMatch: showOn(activeSlideIndex), pushHistory });
 
 		fr.query.value = 'world';
 		fr.replacement.value = 'earth';
@@ -149,22 +158,23 @@ describe('useFindReplace', () => {
 		expect(fr.matchCount.value).toBe(1);
 	});
 
-	it('selects the matched element after the slide change has dropped the old selection', async () => {
+	it('selects the matched element, also across a slide change, which still clears otherwise', async () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
 			selected = ref<string[]>(['b']),
+			// The viewer's own rule: a slide change drops the selection unless Find made it for that slide.
+			slideSelection = useSlideChangeSelection({
+				activeSlideIndex,
+				goTo: (index) => {
+					activeSlideIndex.value = index;
+				},
+				selectedElementIds: selected,
+			}),
 			fr = useFindReplace({
 				slides,
-				activeSlideIndex,
+				showMatch: slideSelection.showSlideSelection,
 				pushHistory: () => {},
-				selectElements: (ids) => {
-					selected.value = ids;
-				},
 			});
-		// PowerPointViewer.vue clears the selection whenever the active slide changes.
-		watch(activeSlideIndex, () => {
-			selected.value = [];
-		});
 		fr.query.value = 'world';
 		await nextTick();
 		expect(selected.value).toStrictEqual(['a']);
@@ -172,13 +182,21 @@ describe('useFindReplace', () => {
 		await nextTick();
 		expect(activeSlideIndex.value).toBe(1);
 		expect(selected.value).toStrictEqual(['c']);
+		activeSlideIndex.value = 0;
+		await nextTick();
+		expect(selected.value).toStrictEqual([]);
 	});
 
 	it('closing the bar drops the matches; reopening searches again from the first', async () => {
 		const slides = ref(makeSlides()),
 			activeSlideIndex = ref(0),
 			open = ref(true),
-			fr = useFindReplace({ slides, activeSlideIndex, pushHistory: () => {}, open });
+			fr = useFindReplace({
+				slides,
+				showMatch: showOn(activeSlideIndex),
+				pushHistory: () => {},
+				open,
+			});
 		fr.query.value = 'world';
 		fr.next();
 		expect(fr.currentMatch.value).toBe(1);

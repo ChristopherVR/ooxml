@@ -7,8 +7,10 @@ import PowerPointViewer from './PowerPointViewer.vue';
 import type { PowerPointViewerExpose } from './types';
 
 /**
- * The find bar through the whole viewer: the viewer drops the selection whenever the active
- * slide changes, so a match on another slide is only selected if the bar selects it after that.
+ * The find bar through the whole viewer. The viewer drops the selection whenever the active slide
+ * changes, in a watcher that runs before the next render, so a match on another slide stays
+ * selected only because the watcher keeps a selection made for the slide it lands on. A slide
+ * change of the user's own must still drop the selection.
  */
 function text(value: string): PptxElement {
 	return {
@@ -77,5 +79,17 @@ describe('powerPointViewer find and replace', () => {
 		await flushPromises();
 		// Reopened, the kept query is searched again from the first match.
 		expect(mounted!.get('.pptx-vue-fr-counter').text()).toBe('1 / 2');
+		expect(viewer.getActiveSlideIndex()).toBe(0);
+		expect(viewer.getSelectedElementIds()).toStrictEqual([idWith(viewer, 0, 'quarter one')]);
+
+		// A slide change of the user's own still clears the selection, a find one or not.
+		viewer.setActiveSlideIndex(1);
+		await flushPromises();
+		expect(viewer.getSelectedElementIds()).toStrictEqual([]);
+		viewer.selectElements([idWith(viewer, 1, 'quarter two')!]);
+		await flushPromises();
+		viewer.setActiveSlideIndex(0);
+		await flushPromises();
+		expect(viewer.getSelectedElementIds()).toStrictEqual([]);
 	});
 });
