@@ -2,8 +2,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { savePptxViaBackstage } from './save-pptx';
 import { loadDeck, ribbonTab, slideElements, thumbnail } from './support/deck';
+import { downloadBytes } from './support/exports';
 import { slidePosition } from './support/keyboard';
+import { readZipPartText } from './support/pptx-xml';
 
 /**
  * Round 5 ribbon parity: the categorised Shapes gallery (Insert and Home), Slide Templates in the
@@ -34,6 +37,29 @@ async function open(page: Page, tab: string): Promise<void> {
 }
 
 const headings = (menu: Locator) => menu.locator('.heading').allTextContents();
+
+/** The sample deck's theme, and the Facet theme a Themes pick writes. */
+const OFFICE_THEME = { name: 'Office Theme', accent1: '4472C4', major: 'Calibri Light' };
+const FACET_THEME = { name: 'Facet', accent1: '90C226', major: 'Trebuchet MS' };
+
+/**
+ * Save the deck through File > Save and read its theme part's name, accent 1 and heading face.
+ * The File backstage closes after the save; the Design tab is put back on screen.
+ */
+async function savedTheme(page: Page): Promise<typeof OFFICE_THEME> {
+	const bytes = await downloadBytes(await savePptxViaBackstage(page));
+	const design = ribbonTab(page, 'Design');
+	if ((await design.getAttribute('aria-selected')) !== 'true') {
+		await design.click();
+	}
+	const xml = await readZipPartText(bytes, 'ppt/theme/theme1.xml');
+	const read = (pattern: RegExp) => pattern.exec(xml)?.[1] ?? 'missing';
+	return {
+		name: read(/<a:theme\b[^>]*\bname="([^"]*)"/u),
+		accent1: read(/<a:accent1>\s*<a:srgbClr val="([0-9A-Fa-f]{6})"/u).toUpperCase(),
+		major: read(/<a:majorFont>\s*<a:latin typeface="([^"]*)"/u),
+	};
+}
 
 test.describe('Insert > Shapes', () => {
 	test('is categorised like PowerPoint, with ScreenTips and Freeform in Lines', async ({
@@ -179,6 +205,30 @@ test.describe('Design', () => {
 		// Re-theming used to reload the deck in React, jumping back to slide 1.
 		expect(await slidePosition(page)).toMatch(/^Slide 2 of/u);
 		expect(await ids()).toEqual(before);
+	});
+
+	test('Undo takes a theme pick back on the tiles and in the saved file, Redo reapplies it', async ({
+		page,
+	}) => {
+		await open(page, 'Design');
+		const themes = page.locator('[data-ribbon-control="design.themes.gallery"]');
+		const tile = (id: string) => themes.locator(`[data-gallery-item="${id}"]`).first();
+		const undo = page.getByRole('button', { name: 'Undo', exact: true }).first();
+		const redo = page.getByRole('button', { name: 'Redo', exact: true }).first();
+		await expect(tile('office')).toHaveAttribute('aria-pressed', 'true');
+		await tile('facet').click();
+		await expect(tile('facet')).toHaveAttribute('aria-pressed', 'true');
+		await expect(undo).toBeEnabled();
+		await undo.click();
+		// The undo stack held only the slides: the viewer's theme and the theme part a save writes
+		// kept the undone pick.
+		await expect(tile('office')).toHaveAttribute('aria-pressed', 'true');
+		await expect(tile('facet')).toHaveAttribute('aria-pressed', 'false');
+		await expect(undo).toBeDisabled();
+		expect(await savedTheme(page)).toStrictEqual(OFFICE_THEME);
+		await redo.click();
+		await expect(tile('facet')).toHaveAttribute('aria-pressed', 'true');
+		expect(await savedTheme(page)).toStrictEqual(FACET_THEME);
 	});
 
 	test('Variants offers four tiles and Colors, Fonts, Effects and Background Styles', async ({
