@@ -15,6 +15,7 @@
  *
  * @module utils/chart-grid-operations
  */
+import { nextChartCategoryName, nextChartSeriesName } from '../../../chart/data-sheet';
 import type { PptxChartData } from '../types/chart';
 import {
 	chartDataAddCategory,
@@ -27,7 +28,7 @@ import {
 /** Append a zero-filled series named `Series N` (matches PowerPoint's naming). */
 export function chartGridAddSeries(data: PptxChartData): PptxChartData {
 	return chartDataAddSeries(data, {
-		name: `Series ${data.series.length + 1}`,
+		name: nextChartSeriesName(data.series.length),
 		values: data.categories.map(() => 0),
 	});
 }
@@ -55,7 +56,7 @@ export function chartGridRemoveSeries(
 
 /** Append a category named `Cat N`, padding every series with a zero. */
 export function chartGridAddCategory(data: PptxChartData): PptxChartData {
-	return chartDataAddCategory(data, `Cat ${data.categories.length + 1}`);
+	return chartDataAddCategory(data, nextChartCategoryName(data.categories.length));
 }
 
 /**

@@ -733,3 +733,4 @@ export {
 } from './auto-number-scripts';
 
 export * from './chart-grid-operations';
+export * from './chart-data-sheet';
