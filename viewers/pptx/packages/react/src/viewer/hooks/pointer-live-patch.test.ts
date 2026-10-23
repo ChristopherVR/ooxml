@@ -10,15 +10,16 @@ import type { YDocLike, YjsFactories } from 'ooxml-ui/pptx';
  * resize write straight to the DOM and only commit to `slides` on pointer-up,
  * so without the live patch remote peers saw nothing until the gesture ended.
  * These tests assert the Y.Doc already carries the in-flight geometry BEFORE
- * `processPointerUp` runs.
+ * the gesture is released. The gesture runs on the shared controller
+ * (canvas-gestures.ts) with frames painted synchronously.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
-import type { UsePointerHandlersInput, PointerFrameTracker } from './pointer-handler-types';
-import { processPointerMove } from './pointer-move-handlers';
-import { processPointerUp } from './pointer-up-handlers';
+import { createCanvasGestures } from './canvas-gestures';
+import type { CanvasGestures, FrameScheduler } from './canvas-gestures';
+import type { UsePointerHandlersInput } from './pointer-handler-types';
 
 const factories: YjsFactories = {
 	createMap: () => new Y.Map() as unknown as ReturnType<YjsFactories['createMap']>,
@@ -85,14 +86,35 @@ function makeInput(
 	} as UsePointerHandlersInput;
 }
 
-const move = (clientX: number, clientY: number): PointerEvent =>
-	({ clientX, clientY }) as unknown as PointerEvent;
+/** Paint every preview frame at once instead of on the next animation frame. */
+const syncFrames: FrameScheduler = {
+	request: (callback) => {
+		callback();
+		return 1;
+	},
+	cancel: () => undefined,
+};
 
-const newTracker = (): PointerFrameTracker => ({
-	rafId: 0,
-	pendingMoveEvent: null,
-	lastSnapLinesKey: '',
-});
+const running: CanvasGestures[] = [];
+
+/** Start the gesture armed in the input's drag/resize record, pressed at 0,0. */
+function press(input: UsePointerHandlersInput): void {
+	const gestures = createCanvasGestures(() => input, syncFrames);
+	running.push(gestures);
+	const resize = input.resizeStateRef.current;
+	const id = resize?.elementId ?? input.dragStateRef.current?.elementId ?? '';
+	gestures.begin(resize ? 'resize' : 'move', id, {
+		clientX: 0,
+		clientY: 0,
+		shiftKey: false,
+	});
+}
+
+const pointer = (type: 'pointermove' | 'pointerup', clientX: number, clientY: number): void => {
+	window.dispatchEvent(new PointerEvent(type, { clientX, clientY }));
+};
+const move = (clientX: number, clientY: number): void => pointer('pointermove', clientX, clientY);
+const release = (clientX: number, clientY: number): void => pointer('pointerup', clientX, clientY);
 
 /**
  * One viewer instance's worth of DOM: a `[data-pptx-viewport]` wrapper holding
@@ -112,6 +134,9 @@ function mountViewport(elementId: string): { domEl: HTMLDivElement; handleHost: 
 }
 
 afterEach(() => {
+	for (const gestures of running.splice(0)) {
+		gestures.dispose();
+	}
 	document.body.replaceChildren();
 });
 
@@ -142,7 +167,8 @@ describe('selection handle overlay preview', () => {
 			lastDy: 0,
 		};
 
-		processPointerMove(move(40, 25), input, newTracker());
+		press(input);
+		move(40, 25);
 
 		expect(domEl.style.left).toBe('140px');
 		expect(domEl.style.top).toBe('125px');
@@ -171,7 +197,8 @@ describe('selection handle overlay preview', () => {
 			lastHeight: 150,
 		};
 
-		processPointerMove(move(50, 30), input, newTracker());
+		press(input);
+		move(50, 30);
 
 		expect(domEl.style.width).toBe('250px');
 		expect(domEl.style.height).toBe('180px');
@@ -203,7 +230,8 @@ describe('selection handle overlay preview', () => {
 			lastDy: 0,
 		};
 
-		processPointerMove(move(40, 25), input, newTracker());
+		press(input);
+		move(40, 25);
 
 		expect(handleHost.style.left).toBe('140px');
 		expect(other.handleHost.style.left).toBe('');
@@ -219,16 +247,17 @@ describe('selection handle overlay preview', () => {
 			elementId: id,
 			startClientX: 0,
 			startClientY: 0,
-			startPositionsById: { [id]: { x: 10, y: 10 } },
+			startPositionsById: { [id]: { x: 100, y: 100 } },
 			domEls: new Map([[id, domEl]]),
 			moved: false,
 			lastDx: 0,
 			lastDy: 0,
 		};
 
-		processPointerMove(move(5, 5), input, newTracker());
+		press(input);
+		move(5, 5);
 
-		expect(handleHost.style.left).toBe('15px');
+		expect(handleHost.style.left).toBe('105px');
 	});
 });
 
@@ -248,7 +277,8 @@ describe('pointer live patch', () => {
 			lastDy: 0,
 		};
 
-		processPointerMove(move(40, 25), input, newTracker());
+		press(input);
+		move(40, 25);
 
 		// The gesture has NOT ended: updateSlides was never called, yet the doc
 		// already reflects the new position for remote peers.
@@ -278,15 +308,16 @@ describe('pointer live patch', () => {
 			lastHeight: 150,
 		};
 
-		processPointerMove(move(50, 30), input, newTracker());
+		press(input);
+		move(50, 30);
 		expect(input.updateElementById).not.toHaveBeenCalled();
 		expect(docElement(doc, 'e1')?.width).toBe(250);
 		expect(docElement(doc, 'e1')?.height).toBe(180);
 
 		// A second frame inside the throttle window is only published by the
 		// pointer-up flush, never left pending.
-		processPointerMove(move(80, 60), input, newTracker());
-		processPointerUp(input);
+		move(80, 60);
+		release(80, 60);
 		expect(docElement(doc, 'e1')?.width).toBe(280);
 		expect(docElement(doc, 'e1')?.height).toBe(210);
 	});
@@ -306,7 +337,8 @@ describe('pointer live patch', () => {
 			lastDy: 0,
 		};
 
-		processPointerMove(move(40, 25), input, newTracker());
+		press(input);
+		move(40, 25);
 		expect(docElement(doc, 'e1')?.x).toBe(100);
 	});
 
@@ -325,8 +357,10 @@ describe('pointer live patch', () => {
 		};
 
 		expect(() => {
-			processPointerMove(move(40, 25), input, newTracker());
-			processPointerUp(input);
+			press(input);
+			move(40, 25);
+			release(40, 25);
 		}).not.toThrow();
+		expect(input.updateSlides).toHaveBeenCalledOnce();
 	});
 });

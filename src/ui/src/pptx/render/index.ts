@@ -647,6 +647,7 @@ export * from './ole-edit-model';
 // model), snap-to-box (closest-per-axis span guides, Angular model), grid
 // snapping. Pure maths; the pointer/drag driver stays in each binding.
 export * from './snap-guides';
+export * from './span-snap-move';
 // Ruler tick generation + constants (View ▸ Ruler). Pure; each binding renders.
 export * from './ruler';
 export * from './bullet-autonum';
@@ -1366,6 +1367,7 @@ export * from './css-escape';
 // (PowerPoint's rule), with the innermost id kept available for drill-in.
 export * from './element-hit-test';
 export * from './group-drill';
+export * from './group-press-target';
 export * from './modal-focus';
 // Freehand ink: points -> SVG path `d`, completed-stroke -> `InkPptxElement`.
 export * from './ink-drawing';
@@ -1598,6 +1600,7 @@ export * from './presentation-ole-verb';
 // runs; the rest of the slide is scenery the click passes through.
 export * from './presentation-hit-test';
 export * from './presentation-show-order';
+export * from './presentation-show-step';
 // The slide a show opens on: the active slide when the show includes it, else
 // the first show slide after it. Entering on an excluded slide is a parity bug.
 export * from './presentation-entry-slide';
@@ -1659,6 +1662,7 @@ export * from './editor-geometry';
 export * from './editor-mutations';
 // Pointer move/resize/rotate gesture state machine for the editing overlay.
 export * from './editor-gestures';
+export * from './editor-gesture-frames';
 // Read a contenteditable inline-edit surface's plain text back out.
 export * from './inline-text-extract';
 // No-op detection plus rich-run preservation for committed inline text.

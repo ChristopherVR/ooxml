@@ -126,6 +126,8 @@ export interface PresentationPlayback {
 	 * caller falls through to its normal show-order advance.
 	 */
 	consumeZoomReturnOnAdvance(currentSlideIndex: number): number | undefined;
+	/** The pending zoom excursion, read by the shared show step without consuming it. */
+	peekZoomExcursion(): ZoomExcursion | undefined;
 	/** Cancel any running transition/timers and forget all per-slide state. */
 	reset(): void;
 	/**
@@ -341,6 +343,10 @@ export function createPresentationPlayback(): PresentationPlayback {
 			zoomExcursion = beginZoomExcursion(target, returnSlideIndex, slides);
 			pendingTransitionOverride = buildZoomTransitionOverride(target.transitionDurationMs);
 			return target.targetSlideIndex;
+		},
+
+		peekZoomExcursion() {
+			return zoomExcursion;
 		},
 
 		consumeZoomReturnOnAdvance(currentSlideIndex) {

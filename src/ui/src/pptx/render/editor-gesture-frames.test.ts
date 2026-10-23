@@ -1,13 +1,41 @@
 import { describe, it, expect } from 'vitest';
 
-import { MIN_ELEMENT_SIZE } from '../constants';
-import { computeResizeGeometry } from './pointer-move-handlers';
+import { computeResizeFrame } from './editor-gesture-frames';
+import type { ResizeHandleId } from './element-interaction';
 
-// ---------------------------------------------------------------------------
-// computeResizeGeometry
-// ---------------------------------------------------------------------------
+/**
+ * The resize frame every binding's gesture runs. These cases came from the
+ * React canvas's own resize maths (`computeResizeGeometry`), which the shared
+ * frame replaced when React moved onto `createGestureController`: the 8-handle
+ * resize, the minimum size, Shift's corner aspect lock and the per-edge grid
+ * snap.
+ */
 
-describe('computeResizeGeometry', () => {
+/** The React canvas's minimum element size. */
+const MIN_ELEMENT_SIZE = 12;
+
+function computeResizeGeometry(
+	handle: ResizeHandleId,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	dx: number,
+	dy: number,
+	snapToGrid: boolean,
+	gridSpacingPx: number,
+	lockAspect = false,
+) {
+	const frame = computeResizeFrame('a', { x, y, width, height }, handle, dx, dy, {
+		scale: 1,
+		lockAspect,
+		minSize: MIN_ELEMENT_SIZE,
+		gridSize: snapToGrid ? gridSpacingPx : null,
+	});
+	return { x: frame.x, y: frame.y, width: frame.width, height: frame.height };
+}
+
+describe('computeResizeFrame', () => {
 	const start = { x: 100, y: 100, width: 200, height: 150 };
 
 	describe('handle: se (south-east)', () => {

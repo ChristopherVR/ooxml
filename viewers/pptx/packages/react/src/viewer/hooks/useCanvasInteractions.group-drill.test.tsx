@@ -63,9 +63,13 @@ interface Harness {
 	handlers: CanvasInteractionHandlers;
 	applySelection: ReturnType<typeof vi.fn>;
 	setInlineEditingElementId: ReturnType<typeof vi.fn>;
+	begin: ReturnType<typeof vi.fn>;
 }
 
-function mount(selectedId: string | null, opts: { drill?: boolean } = {}): Harness {
+function mount(
+	selectedId: string | null,
+	opts: { drill?: boolean; selectedIds?: string[] } = {},
+): Harness {
 	const stage = document.createElement('div');
 	stage.getBoundingClientRect = () =>
 		({
@@ -82,7 +86,8 @@ function mount(selectedId: string | null, opts: { drill?: boolean } = {}): Harne
 	const applySelection = vi.fn();
 	const setInlineEditingElementId = vi.fn();
 	const noop = (): void => undefined;
-	const selected = selectedId ? [selectedId] : [];
+	const selected = opts.selectedIds ?? (selectedId ? [selectedId] : []);
+	const begin = vi.fn();
 	let captured: CanvasInteractionHandlers | null = null;
 	const input = {
 		mode: 'edit',
@@ -105,6 +110,7 @@ function mount(selectedId: string | null, opts: { drill?: boolean } = {}): Harne
 		shapeAdjustmentDragStateRef: { current: null },
 		marqueeStateRef: { current: null },
 		justInteractedRef: { current: false },
+		gestureRef: { current: { begin, isActive: () => false, dispose: noop } },
 		setInlineEditingElementId,
 		setInlineEditingText: noop,
 		setContextMenuState: noop,
@@ -132,7 +138,7 @@ function mount(selectedId: string | null, opts: { drill?: boolean } = {}): Harne
 	if (!captured) {
 		throw new Error('the hook produced no handlers');
 	}
-	return { handlers: captured, applySelection, setInlineEditingElementId };
+	return { handlers: captured, applySelection, setInlineEditingElementId, begin };
 }
 
 /** A left-button press at a slide point (the stage sits at the origin, zoom 1). */
@@ -161,6 +167,14 @@ describe('selecting inside a group', () => {
 		h.handlers.handleElementClick('cards', at(250, 130));
 		expect(h.applySelection).toHaveBeenCalledWith('a');
 		expect(h.setInlineEditingElementId).not.toHaveBeenCalled();
+	});
+
+	it('keeps a group whole when it is pressed inside a multi-selection', () => {
+		const h = mount('cards', { selectedIds: ['cards', 'plain'] });
+		h.handlers.handleElementMouseDown('cards', at(250, 130));
+		expect(h.applySelection).not.toHaveBeenCalledWith('a');
+		// The whole selection is dragged together, on the shared gesture controller.
+		expect(h.begin).toHaveBeenCalledWith('move', 'cards', expect.anything());
 	});
 
 	it('moves to another member of the entered group', () => {

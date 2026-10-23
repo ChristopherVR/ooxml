@@ -3,12 +3,9 @@ import {
 	beginShapeAdjustment,
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
-	drillSelectionForClick,
-	drillSelectionForDoubleClick,
 	filterInteractableIds,
-	findElementPath,
-	isEnterableGroup,
-	memberChainAtPoint,
+	resolveGroupDoubleClickTarget,
+	resolveGroupPressTarget,
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
 	setPendingCaretPoint,
@@ -29,6 +26,7 @@ import type {
 	ElementContextMenuState,
 } from '../types';
 import type { ViewerMode } from '../types-core';
+import type { CanvasGestures } from './canvas-gestures';
 import type { CanvasInteractionHandlers } from './canvas-interaction-types';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementOperations } from './useElementOperations';
@@ -67,6 +65,8 @@ export interface UseCanvasInteractionsInput {
 	 * `ViewerCoreState.justInteractedRef`.
 	 */
 	justInteractedRef: React.MutableRefObject<boolean>;
+	/** The move/resize gesture controller a press starts (set by `usePointerHandlers`). */
+	gestureRef?: React.MutableRefObject<CanvasGestures | null>;
 	setInlineEditingElementId: React.Dispatch<React.SetStateAction<string | null>>;
 	setInlineEditingText: React.Dispatch<React.SetStateAction<string>>;
 	setContextMenuState: React.Dispatch<React.SetStateAction<ElementContextMenuState | null>>;
@@ -133,6 +133,7 @@ export function useCanvasInteractions(
 		shapeAdjustmentDragStateRef,
 		marqueeStateRef,
 		justInteractedRef,
+		gestureRef,
 		setInlineEditingElementId,
 		setInlineEditingText,
 		setContextMenuState,
@@ -169,36 +170,14 @@ export function useCanvasInteractions(
 		return rect ? { x: (e.clientX - rect.left) / scale, y: (e.clientY - rect.top) / scale } : null;
 	};
 
-	/** The member under the pointer inside a group, as the geometric chain innermost-first. */
-	const drillChain = (
-		elementId: string,
-		e: { clientX: number; clientY: number },
-	): string[] | null => {
-		if (!slideElements) {
-			return null;
-		}
-		const top = slideElements.find((el) => el.id === elementId);
-		const point = slidePoint(e);
-		if (!top || !point || !isEnterableGroup(top)) {
-			return null;
-		}
-		return memberChainAtPoint(slideElements, elementId, point);
-	};
-
 	/**
 	 * What a press on `elementId` (a top-level element) selects, PowerPoint-style:
 	 * a group first, then -- once it's selected -- the member under the pointer.
 	 */
-	const resolvePressTarget = (elementId: string, e: React.MouseEvent): string => {
-		const chain = drillChain(elementId, e);
-		if (!chain || !slideElements) {
-			return elementId;
-		}
-		const selectedPath = selectedElementId
-			? findElementPath(slideElements, selectedElementId)
-			: null;
-		return drillSelectionForClick(chain, selectedPath) ?? elementId;
-	};
+	const resolvePressTarget = (elementId: string, e: React.MouseEvent): string =>
+		slideElements
+			? resolveGroupPressTarget(slideElements, elementId, slidePoint(e), effectiveSelectedIds)
+			: elementId;
 
 	const handleInlineEditCommit = () => {
 		const editId = inlineEditingElementId;
@@ -351,14 +330,11 @@ export function useCanvasInteractions(
 	const handleElementDoubleClick = (pressedId: string, e: React.MouseEvent) => {
 		// A double-click on a group goes straight to the shape under the pointer, so
 		// its text can be edited without ungrouping (PowerPoint does the same).
-		const chain = mode === 'present' ? null : drillChain(pressedId, e);
-		const innermost = chain ? drillSelectionForDoubleClick(chain) : null;
-		// Only a selectable member is drilled into (the shared resolver already
-		// skips noSelect members; this keeps the binding honest on its own).
+		// The shared resolver never drills into a noSelect member.
 		const elementId =
-			innermost && canInteractWithElement(elementLookup.get(innermost), 'select')
-				? innermost
-				: pressedId;
+			mode === 'present' || !slideElements
+				? pressedId
+				: resolveGroupDoubleClickTarget(slideElements, pressedId, slidePoint(e));
 		if (elementId !== pressedId) {
 			ops.applySelection(elementId);
 		}
@@ -443,6 +419,8 @@ export function useCanvasInteractions(
 			lastDy: 0,
 		};
 		setSnapLines([]);
+		// The first movable id leads: its box is what snaps, the rest follow it.
+		gestureRef?.current?.begin('move', movableIds[0], e);
 	};
 
 	const handleElementContextMenu = (elementId: string, e: React.MouseEvent) => {
@@ -531,6 +509,7 @@ export function useCanvasInteractions(
 			lastWidth: el.width,
 			lastHeight: el.height,
 		};
+		gestureRef?.current?.begin('resize', elementId, e);
 	};
 
 	const handleRotate = (elementId: string, rotationDeg: number) => {

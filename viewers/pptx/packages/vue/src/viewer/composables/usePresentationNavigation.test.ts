@@ -52,8 +52,17 @@ function setup(opts: {
 		onSlideChange,
 		onShowEnd: opts.onShowEnd,
 	});
-	return { nav, requestClose, onSlideChange };
+	return { nav, requestClose, onSlideChange, playback };
 }
+
+describe('usePresentationNavigation - backward at the start of the show', () => {
+	it('stays put without marking the next entry as already built', () => {
+		const { nav, playback } = setup({ slides: [slide('a'), slide('b')] });
+		nav.prev();
+		expect(nav.currentIndex.value).toBe(0);
+		expect(playback.markNextEntryCompleted).not.toHaveBeenCalled();
+	});
+});
 
 describe('usePresentationNavigation - onShowEnd (returning custom-show sub-show)', () => {
 	it('outranks loop continuously, the black end screen, and requestClose', () => {

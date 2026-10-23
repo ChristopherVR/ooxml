@@ -1,11 +1,4 @@
-import {
-	hasShowSlideAfter,
-	nextShowSlideIndex,
-	previousShowSlideIndex,
-	resolveAutoAdvanceDelayMs,
-	resolveForwardSlideWithZoomReturn,
-	buildZoomTransitionOverride,
-} from 'ooxml-ui/pptx';
+import { resolveAutoAdvanceDelayMs, resolveShowBackward, resolveShowForward } from 'ooxml-ui/pptx';
 import type { ZoomExcursion } from 'ooxml-ui/pptx';
 import type { PptxAction, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { useRef, useCallback } from 'react';
@@ -13,26 +6,8 @@ import { useRef, useCallback } from 'react';
 import type { ViewerMode } from '../../types';
 import { handlePresentationActionImpl } from './presentation-actions';
 import { executeSlideTransition } from './slide-transition';
+import type { SlideTransitionDeps } from './slide-transition';
 import type { PresentationTransitionOverlayState, SlideAdvanceTrigger } from './types';
-
-// ---------------------------------------------------------------------------
-// Click-advance gating
-// ---------------------------------------------------------------------------
-
-/**
- * PowerPoint suppresses click-to-advance when a slide's transition sets
- * `advanceOnClick` to false: the show then advances only via timings or explicit
- * navigation. Returns true when a click-triggered forward advance must be
- * blocked. Backward moves and explicit navigation are never blocked, and an
- * undefined flag defaults to allowed (preserving existing behaviour).
- */
-export function isClickAdvanceBlocked(
-	slide: PptxSlide | undefined,
-	direction: 1 | -1,
-	trigger: SlideAdvanceTrigger,
-): boolean {
-	return trigger === 'click' && direction === 1 && slide?.transition?.advanceOnClick === false;
-}
 
 // ---------------------------------------------------------------------------
 // Sub-hook interface
@@ -169,71 +144,85 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 
 	const movePresentationSlide = useCallback(
 		(direction: 1 | -1, trigger: SlideAdvanceTrigger = 'explicit') => {
-			// A click/tap still steps through any pending element-animation builds,
-			// but once they are exhausted PowerPoint only advances the slide on
-			// click when the transition allows it (advanceOnClick !== false).
-			if (direction === 1 && playNextAnimationGroup()) {
-				return;
-			}
-			if (isClickAdvanceBlocked(slides[presentationSlideIndex], direction, trigger)) {
-				return;
-			}
-
-			// A Slide Zoom / Section Zoom / Summary Zoom tile whose `zmPr` set
-			// `returnToParent` armed an excursion (see `useZoomNavigation`). Once
-			// a FORWARD advance reaches the last slide of that target's range,
-			// jump back to the zoom's origin slide instead of continuing linearly
-			// through the deck; PowerPoint's return jump is forward-only, so a
-			// backward step leaves the excursion untouched.
-			if (direction === 1) {
-				const consumedExcursion = zoomExcursionRef.current;
-				const step = resolveForwardSlideWithZoomReturn(
-					presentationSlideIndex,
-					undefined,
-					consumedExcursion,
-				);
-				if (step.returnedToZoom && step.nextSlideIndex !== undefined) {
-					zoomExcursionRef.current = step.excursion;
-					executeSlideTransition(step.nextSlideIndex, {
-						slides,
-						currentSlideIndex: presentationSlideIndex,
-						onPlayActionSound,
-						onStopActionSound,
-						setPresentationSlideVisible,
-						clearPresentationTimers,
-						setPresentationSlideIndex,
-						onSetActiveSlideIndex,
-						seedSlideAnimations,
-						startSlideAnimations,
-						scheduleAutoAdvanceForSlide,
-						presentationTimersRef,
-						setTransitionOverlay,
-						playTransition: true,
-						transitionOverride: buildZoomTransitionOverride(
-							consumedExcursion?.transitionDurationMs,
-						),
-					});
-					return;
-				}
-			}
-
 			// The show order (custom-show membership minus hidden slides) is resolved
-			// upstream; the shared helpers below turn it into "what comes next", so
-			// a slide the author hid is skipped in every binding identically.
-			const availableSlideIndexes =
+			// upstream. The end screen and the replay of a slide entered backward
+			// are handled by `usePresentationMode` before this runs.
+			const showOrder =
 				visibleSlideIndexes.length > 0
 					? visibleSlideIndexes
 					: slides.map((_slide, slideIndex) => slideIndex);
-			if (availableSlideIndexes.length === 0) {
+			const current = presentationSlideIndex;
+			const transitionTo = (index: number, options: Partial<SlideTransitionDeps> = {}): void =>
+				executeSlideTransition(index, {
+					slides,
+					currentSlideIndex: current,
+					onPlayActionSound,
+					onStopActionSound,
+					setPresentationSlideVisible,
+					clearPresentationTimers,
+					setPresentationSlideIndex,
+					onSetActiveSlideIndex,
+					seedSlideAnimations,
+					startSlideAnimations,
+					scheduleAutoAdvanceForSlide: rehearsing ? undefined : scheduleAutoAdvanceForSlide,
+					presentationTimersRef,
+					setTransitionOverlay,
+					// PowerPoint plays a slide's transition only when advancing into it,
+					// and replays the LEAVING slide's transition in reverse when stepping
+					// back (a morph glides its shapes back to where they came from).
+					playTransition: true,
+					...options,
+				});
+
+			if (direction === -1) {
+				const step = resolveShowBackward({
+					currentIndex: current,
+					showOrder,
+					endOfShow: false,
+					seededCompleted: false,
+				});
+				if (step.kind === 'go') {
+					// Stepping back onto a slide shows it with its builds already played.
+					transitionTo(step.index, { reverse: true, seedCompleted: true });
+				}
 				return;
 			}
 
-			const pastLastSlide =
-				direction === 1 && !hasShowSlideAfter(presentationSlideIndex, availableSlideIndexes);
-
-			// --- Rehearsal: advancing past last slide ends rehearsal ---
-			if (rehearsing && pastLastSlide) {
-				recordCurrentSlideTime(presentationSlideIndex);
+			// The shared show step: builds first, then the click-advance gate
+			// (`advanceOnClick`), a Zoom excursion's return, and the end of the show.
+			const step = resolveShowForward({
+				currentIndex: current,
+				currentSlide: slides[current],
+				showOrder,
+				endOfShow: false,
+				fromClick: trigger === 'click',
+				loop: Boolean(loopContinuously) && !rehearsing,
+				endWithBlackSlide: true,
+				zoomExcursion: zoomExcursionRef.current,
+				advanceBuild: playNextAnimationGroup,
+			});
+			if (step.kind === 'go') {
+				if (step.zoomReturn) {
+					zoomExcursionRef.current = step.zoomReturn.excursion;
+					transitionTo(step.index, {
+						scheduleAutoAdvanceForSlide,
+						transitionOverride: step.zoomReturn.transitionOverride,
+					});
+					return;
+				}
+				// Record timing for the slide we are leaving (rehearsal mode only).
+				if (rehearsing) {
+					recordCurrentSlideTime(current);
+				}
+				transitionTo(step.index);
+				return;
+			}
+			if (step.kind !== 'end-screen' && step.kind !== 'exit') {
+				return;
+			}
+			// Past the last slide. Rehearsal ends with its summary.
+			if (rehearsing) {
+				recordCurrentSlideTime(current);
 				try {
 					if (document.fullscreenElement) {
 						void document.exitFullscreen().catch(() => {
@@ -247,51 +236,9 @@ export function useSlideNavigation(input: UseSlideNavigationInput): UseSlideNavi
 				setShowRehearsalSummary(true);
 				return;
 			}
-
-			// Advancing past the last slide (no loop, not rehearsing): let the
-			// presentation hook decide (black end-of-show slide or exit).
-			if (!loopContinuously && !rehearsing && pastLastSlide && onAdvancePastLastSlide) {
-				onAdvancePastLastSlide();
-				return;
-			}
-
-			const nextSlideIndex =
-				direction === 1
-					? nextShowSlideIndex(presentationSlideIndex, availableSlideIndexes, {
-							loop: Boolean(loopContinuously) && !rehearsing,
-						})
-					: previousShowSlideIndex(presentationSlideIndex, availableSlideIndexes);
-			if (nextSlideIndex === undefined || nextSlideIndex === presentationSlideIndex) {
-				return;
-			}
-
-			// Record timing for the slide we are leaving (rehearsal mode only)
-			if (rehearsing && direction === 1) {
-				recordCurrentSlideTime(presentationSlideIndex);
-			}
-
-			executeSlideTransition(nextSlideIndex, {
-				slides,
-				currentSlideIndex: presentationSlideIndex,
-				onPlayActionSound,
-				onStopActionSound,
-				setPresentationSlideVisible,
-				clearPresentationTimers,
-				setPresentationSlideIndex,
-				onSetActiveSlideIndex,
-				seedSlideAnimations,
-				startSlideAnimations,
-				scheduleAutoAdvanceForSlide: rehearsing ? undefined : scheduleAutoAdvanceForSlide,
-				presentationTimersRef,
-				setTransitionOverlay,
-				// PowerPoint plays a slide's transition only when advancing into it,
-				// and replays the LEAVING slide's transition in reverse when stepping
-				// back (a morph glides its shapes back to where they came from).
-				playTransition: true,
-				reverse: direction === -1,
-				// Stepping back onto a slide shows it with its builds already played.
-				seedCompleted: direction === -1,
-			});
+			// The presentation hook decides: a returning custom show, the black
+			// end-of-show slide, or exit. Without it, the show stays on its last slide.
+			onAdvancePastLastSlide?.();
 		},
 		[
 			clearPresentationTimers,

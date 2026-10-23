@@ -6,14 +6,11 @@ import {
 	findHighlightClickTarget,
 	firstShowSlideIndex,
 	handlePresentationStageClick,
-	hasShowSlideAfter,
 	HIGHLIGHT_CLEAR_STYLE,
-	isClickAdvanceAllowed,
 	lastShowSlideIndex,
-	nextShowSlideIndex,
 	presentationEntrySlideIndex,
-	previousShowSlideIndex,
-	resolveForwardSlideWithZoomReturn,
+	resolveShowBackward,
+	resolveShowForward,
 	resolveShowSlideIndexes,
 	stopAllPersistentAudio,
 } from 'ooxml-ui/pptx';
@@ -378,67 +375,54 @@ export class PresentationController {
 	 * on-screen next button pass `fromClick = false` and are never gated.
 	 */
 	advance(fromClick = false): void {
-		// While the end screen is up, a forward input ends the show (PowerPoint's
-		// "click to exit"); it never advances anything.
-		if (this.#endOfShow) {
-			this.#endOfShow = false;
-			this.#deps.exit?.();
-			return;
-		}
-		if (this.playback.advance()) {
-			return;
-		}
-		if (fromClick && !isClickAdvanceAllowed(this.#currentSlide())) {
-			return;
-		}
-		const current = this.#deps.getCurrentIndex();
-		// A Slide Zoom / Section Zoom / Summary Zoom tile whose `zmPr` set
-		// `returnToParent` armed an excursion (see `navigateToZoomTarget`). Once
-		// this forward advance reaches the last slide of that target's range,
-		// jump back to the zoom's origin slide instead of continuing linearly
-		// through the deck; PowerPoint's return jump is forward-only, so
-		// `previousSlide` never consults this.
-		const excursion = this.#zoomExcursion;
-		const zoomStep = resolveForwardSlideWithZoomReturn(current, undefined, excursion);
-		if (zoomStep.returnedToZoom && zoomStep.nextSlideIndex !== undefined) {
-			this.#zoomExcursion = zoomStep.excursion;
-			this.#pendingTransitionOverride = buildZoomTransitionOverride(
-				excursion?.transitionDurationMs,
-			);
-			this.#deps.navigate(zoomStep.nextSlideIndex);
-			return;
-		}
-		const order = this.#showOrder();
-		if (!hasShowSlideAfter(current, order)) {
-			// Wave-4 B7: a `ppaction://customshow?...&return=true` sub-show running
-			// off its end returns to the show it interrupted, at the slide it
-			// interrupted, instead of raising the black end screen.
-			if (this.#customShowReturn) {
-				const { previousId, originIndex } = this.#customShowReturn;
-				this.#customShowReturn = null;
-				this.#deps.setActiveCustomShowId?.(previousId);
-				this.#deps.navigate(originIndex);
-				return;
-			}
-			if (this.#deps.getLoopContinuously?.()) {
-				// PowerPoint's "Loop continuously until 'Esc'": wrap straight back to
-				// the show's first slide instead of the black end screen.
-				const first = firstShowSlideIndex(order);
-				if (first !== undefined) {
-					this.#deps.navigate(first);
-				}
-				return;
-			}
-			if (this.#deps.getEndWithBlackSlide?.() === false) {
-				// No black slide configured: end the show outright rather than
-				// sitting on the last slide ignoring every further advance.
+		// The shared show step decides (end screen, builds, click gate, Zoom
+		// return, end of show, show order); this performs its answer.
+		const step = resolveShowForward({
+			currentIndex: this.#deps.getCurrentIndex(),
+			currentSlide: this.#currentSlide(),
+			showOrder: this.#showOrder(),
+			endOfShow: this.#endOfShow,
+			fromClick,
+			loop: this.#deps.getLoopContinuously?.() === true,
+			endWithBlackSlide: this.#deps.getEndWithBlackSlide?.() !== false,
+			zoomExcursion: this.#zoomExcursion,
+			returnFromSubShow: () => this.#returnFromSubShow(),
+			advanceBuild: () => this.playback.advance(),
+		});
+		switch (step.kind) {
+			case 'exit':
+				this.#endOfShow = false;
 				this.#deps.exit?.();
-			} else {
+				return;
+			case 'end-screen':
 				this.#endOfShow = true;
-			}
-			return;
+				return;
+			case 'go':
+				if (step.zoomReturn) {
+					this.#zoomExcursion = step.zoomReturn.excursion;
+					this.#pendingTransitionOverride = step.zoomReturn.transitionOverride;
+				}
+				this.#deps.navigate(step.index);
+				break;
+			default:
+				break;
 		}
-		this.#deps.navigate(nextShowSlideIndex(current, order) ?? current);
+	}
+
+	/**
+	 * Wave-4 B7: a `ppaction://customshow?...&return=true` sub-show running off
+	 * its end returns to the show it interrupted, at the slide it interrupted,
+	 * instead of raising the black end screen.
+	 */
+	#returnFromSubShow(): boolean {
+		if (!this.#customShowReturn) {
+			return false;
+		}
+		const { previousId, originIndex } = this.#customShowReturn;
+		this.#customShowReturn = null;
+		this.#deps.setActiveCustomShowId?.(previousId);
+		this.#deps.navigate(originIndex);
+		return true;
 	}
 
 	/**
@@ -448,10 +432,14 @@ export class PresentationController {
 	 * wraps a backward press off the first slide.
 	 */
 	previousSlide(): void {
-		const current = this.#deps.getCurrentIndex();
-		const previous = previousShowSlideIndex(current, this.#showOrder());
-		if (previous !== undefined && previous !== current) {
-			this.#deps.navigate(previous);
+		const step = resolveShowBackward({
+			currentIndex: this.#deps.getCurrentIndex(),
+			showOrder: this.#showOrder(),
+			endOfShow: false,
+			seededCompleted: false,
+		});
+		if (step.kind === 'go') {
+			this.#deps.navigate(step.index);
 		}
 	}
 
@@ -521,11 +509,17 @@ export class PresentationController {
 	 * Returns true when the press was consumed here.
 	 */
 	retreat(): boolean {
-		if (this.#endOfShow) {
+		const step = resolveShowBackward({
+			currentIndex: this.#deps.getCurrentIndex(),
+			showOrder: this.#showOrder(),
+			endOfShow: this.#endOfShow,
+			seededCompleted: this.playback.seededCompleted,
+		});
+		if (step.kind === 'dismiss-end-screen') {
 			this.#endOfShow = false;
 			return true;
 		}
-		if (this.playback.seededCompleted) {
+		if (step.kind === 'replay') {
 			this.playback.reset();
 			return true;
 		}

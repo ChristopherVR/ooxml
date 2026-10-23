@@ -102,8 +102,17 @@ collaboration room lifecycle (`createCollaborationSessionController` over
 `openCollaborationYSession` / `createCollabProvider`, to which each binding passes its own
 lazy `yjs` / `y-*` loaders, since those packages are optional peers of the bindings); the AI bridge (`createPptxAiBridge` over a
 `PptxAiBridgePort`) and the keymap dispatch (`dispatchEditorKey` with one
-`EditorKeyHandlers` interface) are the same idea for logic without its own state. A
-binding keeps its own public shape (refs, signals, getters) and maps it onto these.
+`EditorKeyHandlers` interface) are the same idea for logic without its own state. The
+canvas's move, resize and rotate gestures all run on `createGestureController`
+(`render/editor-gestures.ts`: dead zone, window listeners, snapping, multi-selection snap
+exclusion, minimum size, mid-gesture lock check); a binding supplies deps and paints the
+frames (React writes them to the DOM, Angular emits them), and what a press or a
+double-click on a group selects is `resolveGroupPressTarget` /
+`resolveGroupDoubleClickTarget`. Where a slide show's forward or backward input lands
+(end screen, builds, click-advance gate, Zoom return, sub-show return, loop, show order)
+is `resolveShowForward` / `resolveShowBackward` (`render/presentation-show-step.ts`); the
+binding performs the step with its own index, overlay and timers. A binding keeps its own
+public shape (refs, signals, getters) and maps it onto these.
 
 Both rules are expanded, with the concrete failures that motivated them, under
 [Key Conventions](#key-conventions).

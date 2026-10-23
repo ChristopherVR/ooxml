@@ -71,6 +71,10 @@ function harness(options: {
 			isSeededCompleted: () => false,
 			replayCurrentSlide: () => undefined,
 			consumeZoomReturnOnAdvance: () => options.zoomReturnIndex,
+			peekZoomExcursion: () =>
+				options.zoomReturnIndex === undefined
+					? undefined
+					: { returnSlideIndex: options.zoomReturnIndex, endSlideIndex: options.startIndex ?? 0 },
 			navigateToZoomTarget: (...args: unknown[]) => {
 				zoomNavigateCalls.push(args);
 				const target = args[0] as { targetSlideIndex: number };
@@ -305,7 +309,7 @@ describe('viewerControls zoom navigation (delegation to presentationPlayback)', 
 		expect(store.get().currentSlide).toBe(2);
 	});
 
-	it("consults consumeZoomReturnOnAdvance on a forward advance and jumps to its result instead of the show's natural next slide", () => {
+	it("returns to the zoom slide at the end of a pending excursion instead of the show's natural next slide", () => {
 		const { store, controls } = harness({
 			deck: slides(false, false, false, false),
 			startIndex: 1,
@@ -315,7 +319,7 @@ describe('viewerControls zoom navigation (delegation to presentationPlayback)', 
 		expect(store.get().currentSlide).toBe(0);
 	});
 
-	it('falls through to the normal show-order advance when consumeZoomReturnOnAdvance returns undefined', () => {
+	it('falls through to the normal show-order advance without a pending excursion', () => {
 		const { store, controls } = harness({
 			deck: slides(false, false, false, false),
 			startIndex: 1,

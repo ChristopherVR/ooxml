@@ -1,66 +1,74 @@
-import { lockResizeAspect } from './editor-geometry';
+import type { GestureSnap, GestureTransform } from './editor-gesture-frames';
+import {
+	computeMoveFrame,
+	computeResizeFrame,
+	computeRotateFrame,
+	startRotationFrame,
+	toGestureTransform,
+} from './editor-gesture-frames';
 import type { InteractionBox, Point, ResizeHandleId } from './element-interaction';
-import { applyDragDelta, applyResize, boxCenter, snapAngle } from './element-interaction';
-import { createRotationDrag } from './rotation-drag';
 import type { SnapGuideInput, SnapLine, SnapSibling } from './snap-guides';
-import { computeSnapToShape, snapToGridStep } from './snap-guides';
+
+export type { GestureSnap, GestureTransform } from './editor-gesture-frames';
 
 /**
- * Pointer gesture driver for the editing overlay: move / resize / rotate.
+ * Pointer gesture driver for the editing overlay: move / resize / rotate, used
+ * by all five bindings.
  *
- * All geometry math comes from the shared `element-interaction` helpers
- * (`applyDragDelta`, `applyResize`, `snapAngle`) and `createRotationDrag` plus the
- * shared `computeSnapToShape` snap model during moves; this module only owns
- * the pointer-event lifecycle (dead-zone, window listeners, cancel). Extracted
- * from the byte-for-byte-equivalent Svelte / Vanilla `editor/editor-gestures`
- * (Svelte's superset: grid snap, shape-snap toggle, and guide lines).
+ * The per-frame maths is `editor-gesture-frames` (the shared
+ * `element-interaction` helpers, `createRotationDrag` and the snap models);
+ * this module only owns the pointer-event lifecycle (dead zone, window
+ * listeners, cancel). A binding supplies what differs through its deps: the
+ * boxes, the snap settings, the minimum size, the ids a multi-selection drag
+ * ignores when snapping, its own snap model, a mid-gesture lock re-check, and
+ * what a preview frame or the end of the gesture writes.
  *
- * Unlike the pre-extraction bindings, the public surface here (`begin`,
- * `computeRotate`) takes a {@link PointerLike} plain object instead of a real
- * `PointerEvent`, so the pure math is testable without constructing DOM events.
- * The controller still attaches real `window` pointer listeners internally (a
- * `PointerEvent` satisfies `PointerLike` structurally, so the DOM listener
- * wires straight into the same handlers); only `window` is touched, and only
- * from inside `begin`/`dispose`.
- *
- * Behaviour change from the pre-extraction bindings: `begin` no longer calls
- * `event.preventDefault()` / `event.stopPropagation()` on the source event
- * (a plain object has no such methods). The caller's `pointerdown` handler
- * must call both itself before invoking `begin`.
+ * The public surface (`begin`) takes a {@link PointerLike} plain object
+ * instead of a real `PointerEvent`, so it is testable without constructing DOM
+ * events. A `PointerEvent` (or a `MouseEvent`, which has no `pointerId`)
+ * satisfies it structurally. `begin` never calls `preventDefault` /
+ * `stopPropagation`; the caller's `pointerdown` handler does that.
  */
 
 export type GestureKind = 'move' | 'resize' | 'rotate';
 
-/** The subset of a `PointerEvent` this module needs. A real `PointerEvent`
- * satisfies this structurally, so a binding can pass one straight through. */
+/** The subset of a `PointerEvent` this module needs. */
 export interface PointerLike {
 	clientX: number;
 	clientY: number;
-	pointerId: number;
+	/**
+	 * Absent on a `mousedown` (a `MouseEvent`): the gesture then follows any
+	 * pointer, as there is only one mouse.
+	 */
+	pointerId?: number;
 	shiftKey: boolean;
-}
-
-/** Live geometry emitted during and at the end of a gesture (element px). */
-export interface GestureTransform {
-	id: string;
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	rotation: number;
 }
 
 export interface GestureDeps {
 	/** Current stage scale (screen px per element px). */
 	getScale(): number;
-	/** Element geometry at gesture start (element px). */
-	getElementBox(id: string): InteractionBox | undefined;
+	/**
+	 * Element geometry at gesture start (element px). `kind` lets a binding
+	 * leave the rotation out of a move or resize box when it resizes axis-aligned.
+	 */
+	getElementBox(id: string, kind: GestureKind): InteractionBox | undefined;
 	/** Sibling boxes on the same slide, for snap-to-shape during a move. */
 	getSiblings(): SnapSibling[];
 	getSnapToGrid?(): boolean;
 	getSnapToShape?(): boolean;
 	getGridSize?(): number;
 	getGuides?(): readonly SnapGuideInput[];
+	/** Smallest width/height a resize may reach (the geometry default when absent). */
+	getMinSize?(): number;
+	/** Ids the shape snap ignores besides `id` itself (the rest of a dragged selection). */
+	getSnapExcludeIds?(id: string): Iterable<string>;
+	/** A binding's own move snap, replacing the grid and shape snap. */
+	snapMove?(box: InteractionBox, id: string): GestureSnap;
+	/**
+	 * Re-checked on every move: false (a lock arrived mid-gesture) ends the
+	 * gesture where it is, as an unmoved one, with no further frames.
+	 */
+	canContinue?(id: string, kind: GestureKind): boolean;
 	/** Overlay origin in client coordinates, for rotation pointer mapping. */
 	getStageOrigin(): { left: number; top: number };
 	/** First movement past the dead zone (push history, mark interaction). */
@@ -72,11 +80,7 @@ export interface GestureDeps {
 }
 
 export interface GestureController {
-	/**
-	 * Begin a gesture from a `pointerdown`. `handle` only for `resize`. Unlike
-	 * the source event, `begin` does NOT call `preventDefault` /
-	 * `stopPropagation`; the caller does that before invoking `begin`.
-	 */
+	/** Begin a gesture from a press. `handle` only for `resize`. */
 	begin(kind: GestureKind, id: string, pointer: PointerLike, handle?: ResizeHandleId): void;
 	isActive(): boolean;
 	/** Abort listeners without emitting an end transform (teardown). */
@@ -89,7 +93,7 @@ const DRAG_DEAD_ZONE_PX = 2;
 interface ActiveGesture {
 	kind: GestureKind;
 	id: string;
-	pointerId: number;
+	pointerId: number | undefined;
 	startClientX: number;
 	startClientY: number;
 	startBox: InteractionBox;
@@ -99,60 +103,10 @@ interface ActiveGesture {
 	last: GestureTransform | null;
 }
 
+type Frame = readonly [GestureTransform, readonly SnapLine[]];
+
 export function createGestureController(deps: GestureDeps): GestureController {
 	let active: ActiveGesture | null = null;
-
-	const toTransform = (id: string, box: InteractionBox): GestureTransform => ({
-		id,
-		x: box.x,
-		y: box.y,
-		width: box.width,
-		height: box.height,
-		rotation: box.rotation ?? 0,
-	});
-
-	function computeMove(g: ActiveGesture, dx: number, dy: number): [GestureTransform, SnapLine[]] {
-		const scale = deps.getScale();
-		let box = applyDragDelta(g.startBox, dx, dy, scale);
-		if (deps.getSnapToGrid?.()) {
-			const grid = deps.getGridSize?.() ?? 12;
-			box = { ...box, x: snapToGridStep(box.x, grid), y: snapToGridStep(box.y, grid) };
-		}
-		// Snap to sibling edges/centres (skipped for rotated boxes, whose AABB
-		// no longer matches the visual outline).
-		if (!box.rotation && deps.getSnapToShape?.() !== false) {
-			const siblings = deps.getSiblings();
-			const snapped = computeSnapToShape(
-				box.x,
-				box.y,
-				box.width,
-				box.height,
-				siblings,
-				new Set([g.id]),
-				deps.getGuides?.() ?? [],
-			);
-			return [{ ...toTransform(g.id, box), x: snapped.x, y: snapped.y }, snapped.lines];
-		}
-		return [toTransform(g.id, box), []];
-	}
-
-	function computeResize(
-		g: ActiveGesture,
-		dx: number,
-		dy: number,
-		shift: boolean,
-	): GestureTransform {
-		const scale = deps.getScale();
-		const handle = g.handle;
-		if (!handle) {
-			return toTransform(g.id, g.startBox);
-		}
-		let box = applyResize(g.startBox, handle, dx, dy, scale);
-		if (shift) {
-			box = lockResizeAspect(box, g.startBox, handle);
-		}
-		return toTransform(g.id, box);
-	}
 
 	function stagePoint(pointer: PointerLike): Point {
 		const scale = deps.getScale() || 1;
@@ -163,17 +117,52 @@ export function createGestureController(deps: GestureDeps): GestureController {
 		};
 	}
 
-	function computeRotate(g: ActiveGesture, pointer: PointerLike): GestureTransform {
-		let angle = g.rotate?.(stagePoint(pointer)) ?? g.startBox.rotation ?? 0;
-		if (pointer.shiftKey) {
-			angle = snapAngle(angle);
+	function frame(g: ActiveGesture, pointer: PointerLike, dx: number, dy: number): Frame {
+		const scale = deps.getScale();
+		const snapToGrid = deps.getSnapToGrid?.() ?? false;
+		const gridSize = deps.getGridSize?.() ?? 12;
+		if (g.kind === 'move') {
+			return computeMoveFrame(g.id, g.startBox, dx, dy, {
+				scale,
+				snapToGrid,
+				gridSize,
+				snapToShape: deps.getSnapToShape?.() !== false,
+				siblings: deps.getSiblings(),
+				excludeIds: new Set([g.id, ...(deps.getSnapExcludeIds?.(g.id) ?? [])]),
+				guides: deps.getGuides?.() ?? [],
+				...(deps.snapMove ? { snapMove: deps.snapMove } : {}),
+			});
 		}
-		return { ...toTransform(g.id, g.startBox), rotation: angle };
+		if (g.kind === 'resize') {
+			const minSize = deps.getMinSize?.();
+			const next = computeResizeFrame(g.id, g.startBox, g.handle, dx, dy, {
+				scale,
+				lockAspect: pointer.shiftKey,
+				gridSize: snapToGrid ? gridSize : null,
+				...(minSize === undefined ? {} : { minSize }),
+			});
+			return [next, []];
+		}
+		const point = stagePoint(pointer);
+		return [computeRotateFrame(g.id, g.startBox, g.rotate, point, pointer.shiftKey), []];
+	}
+
+	const samePointer = (g: ActiveGesture, pointer: PointerLike): boolean =>
+		g.pointerId === undefined || pointer.pointerId === g.pointerId;
+
+	function finish(g: ActiveGesture, transform: GestureTransform | null, moved: boolean): void {
+		detach();
+		active = null;
+		deps.onEnd(transform, moved, g.id);
 	}
 
 	function onPointerMove(pointer: PointerLike): void {
 		const g = active;
-		if (!g || pointer.pointerId !== g.pointerId) {
+		if (!g || !samePointer(g, pointer)) {
+			return;
+		}
+		if (deps.canContinue && !deps.canContinue(g.id, g.kind)) {
+			finish(g, null, false);
 			return;
 		}
 		const dx = pointer.clientX - g.startClientX;
@@ -185,27 +174,17 @@ export function createGestureController(deps: GestureDeps): GestureController {
 			g.moved = true;
 			deps.onStart(g.id, g.kind);
 		}
-		let lines: readonly SnapLine[] = [];
-		let next: GestureTransform;
-		if (g.kind === 'move') {
-			[next, lines] = computeMove(g, dx, dy);
-		} else if (g.kind === 'resize') {
-			next = computeResize(g, dx, dy, pointer.shiftKey);
-		} else {
-			next = computeRotate(g, pointer);
-		}
+		const [next, lines] = frame(g, pointer, dx, dy);
 		g.last = next;
 		deps.onPreview(next, lines);
 	}
 
 	function onPointerUp(pointer: PointerLike): void {
 		const g = active;
-		if (!g || pointer.pointerId !== g.pointerId) {
+		if (!g || !samePointer(g, pointer)) {
 			return;
 		}
-		detach();
-		active = null;
-		deps.onEnd(g.moved ? g.last : null, g.moved, g.id);
+		finish(g, g.moved ? g.last : null, g.moved);
 	}
 
 	function detach(): void {
@@ -216,35 +195,39 @@ export function createGestureController(deps: GestureDeps): GestureController {
 
 	function onPointerCancel(pointer: PointerLike): void {
 		const g = active;
-		if (!g || pointer.pointerId !== g.pointerId) return;
-		detach();
-		active = null;
+		if (!g || !samePointer(g, pointer)) {
+			return;
+		}
 		// Repaint the original geometry without committing the interrupted preview.
-		if (g.moved) deps.onPreview(toTransform(g.id, g.startBox), []);
-		deps.onEnd(null, false, g.id);
+		if (g.moved) {
+			deps.onPreview(toGestureTransform(g.id, g.startBox), []);
+		}
+		finish(g, null, false);
 	}
 
 	return {
 		begin(kind, id, pointer, handle) {
-			const box = deps.getElementBox(id);
+			const box = deps.getElementBox(id, kind);
 			if (!box || active) {
 				return;
 			}
+			const startBox = { ...box };
 			active = {
 				kind,
 				id,
 				pointerId: pointer.pointerId,
 				startClientX: pointer.clientX,
 				startClientY: pointer.clientY,
-				startBox: { ...box },
-				rotate:
-					kind === 'rotate'
-						? createRotationDrag(boxCenter(box), stagePoint(pointer), box.rotation ?? 0)
-						: undefined,
-				handle,
+				startBox,
 				moved: false,
 				last: null,
 			};
+			if (kind === 'rotate') {
+				active.rotate = startRotationFrame(startBox, stagePoint(pointer));
+			}
+			if (handle) {
+				active.handle = handle;
+			}
 			window.addEventListener('pointermove', onPointerMove);
 			window.addEventListener('pointerup', onPointerUp);
 			window.addEventListener('pointercancel', onPointerCancel);

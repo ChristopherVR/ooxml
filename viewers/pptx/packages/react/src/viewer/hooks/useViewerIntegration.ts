@@ -272,6 +272,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		updateElementById: editorOps.ops.updateElementById,
 		markDirty: history.markDirty,
 		livePatcher: state.livePatcher,
+		gestureRef: state.gestureControllerRef,
 	});
 
 	// ── Content lifecycle (load, font, serialize, autosave) ───────

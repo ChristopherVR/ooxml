@@ -152,6 +152,10 @@ describe('slide-canvas pointer gates', () => {
 
 	it('guards the resize and rotate handle pointer-downs, not just their rendering', () => {
 		expect(component).toContain(`!canInteractWithElement(this.singleSelectedElement(), 'resize')`);
-		expect(component).toContain(`!canInteractWithElement(el, 'rotate')`);
+		expect(component).toContain(`!canInteractWithElement(this.singleSelectedElement(), 'rotate')`);
+		// ...and re-checked on every move of a running gesture.
+		expect(component).toContain(
+			'canInteract: (id, kind) => canInteractWithElement(this.elementById(id), kind)',
+		);
 	});
 });

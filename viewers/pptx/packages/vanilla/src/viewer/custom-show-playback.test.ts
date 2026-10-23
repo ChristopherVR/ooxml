@@ -52,6 +52,7 @@ function harness(options: {
 			isSeededCompleted: () => false,
 			replayCurrentSlide: () => undefined,
 			consumeZoomReturnOnAdvance: () => undefined,
+			peekZoomExcursion: () => undefined,
 			navigateToZoomTarget: (target: { targetSlideIndex: number }) => target.targetSlideIndex,
 		},
 		effectiveScale: () => 1,

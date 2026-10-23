@@ -163,7 +163,9 @@ describe('canvas -> editor wiring', () => {
 	it('emits a gesture end from the canvas the parent can reroute on', () => {
 		const canvas = readFileSync(join(__dirname, 'slide-canvas.component.ts'), 'utf8');
 		expect(canvas).toContain('readonly transformEnd = output<{ ids: readonly string[] }>()');
-		expect(canvas).toContain('this.transformEnd.emit({ ids: [drag.id] })');
+		expect(canvas).toContain('end: (ids) => this.transformEnd.emit({ ids })');
+		const gestures = readFileSync(join(__dirname, 'slide-canvas-gestures.ts'), 'utf8');
+		expect(gestures).toContain('host.end([id])');
 	});
 
 	it('binds that end to the reroute, and the adjust drag to the adjustment write', () => {

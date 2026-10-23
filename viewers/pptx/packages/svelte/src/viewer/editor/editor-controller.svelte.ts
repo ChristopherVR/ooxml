@@ -11,19 +11,16 @@ import type {
 import {
 	armEditorKeyboard,
 	collectConnectorSiteCandidates,
-	drillSelectionForClick,
-	drillSelectionForDoubleClick,
 	findConnectorSiteNear,
-	findElementPath,
 	inlineListBodyText,
-	isEnterableGroup,
 	isGroupMember,
-	memberChainAtPoint,
 	overlayInlineTextSnapshot,
 	parentSelection,
 	reportInlineTextDraft,
 	resolveConnectorEndpointUpdate,
 	resolveContextMenuElementId,
+	resolveGroupDoubleClickTarget,
+	resolveGroupPressTarget,
 	setPendingCaretPoint,
 	slideSpaceElement,
 	withConnectorEndpointUpdate,
@@ -192,32 +189,18 @@ export class EditorController {
 	}
 
 	/**
-	 * The ids under the pointer inside the top-level group `topId`, innermost
-	 * first (shared `memberChainAtPoint`, geometric because grouped children are
-	 * `pointer-events: none`); null when `topId` is not an enterable group.
-	 */
-	#drillChain(topId: string, event: { clientX: number; clientY: number }): string[] | null {
-		const elements = this.#currentElements();
-		const top = elements.find((element) => element.id === topId);
-		if (!top || !isEnterableGroup(top)) {
-			return null;
-		}
-		return memberChainAtPoint(elements, topId, this.#stagePoint(event));
-	}
-
-	/**
-	 * What a press on the top-level element `topId` selects, PowerPoint-style:
-	 * a group first, then (once it is selected) the member under the pointer,
-	 * and another member of the entered group moves the selection to it.
+	 * What a press on the top-level element `topId` selects, PowerPoint-style
+	 * (shared `resolveGroupPressTarget`): a group first, then (once it is
+	 * selected) the member under the pointer, and another member of the entered
+	 * group moves the selection to it.
 	 */
 	#resolvePressTarget(topId: string, event: PointerEvent): string {
-		const chain = this.#drillChain(topId, event);
-		if (!chain) {
-			return topId;
-		}
-		const selectedId = this.#editor.selectedElementId;
-		const selectedPath = selectedId ? findElementPath(this.#currentElements(), selectedId) : null;
-		return drillSelectionForClick(chain, selectedPath) ?? topId;
+		return resolveGroupPressTarget(
+			this.#currentElements(),
+			topId,
+			this.#stagePoint(event),
+			this.#editor.selection.ids,
+		);
 	}
 
 	/** True when editing owns the keyboard (a selection or inline edit is live). */
@@ -371,13 +354,11 @@ export class EditorController {
 
 	/**
 	 * A double-click on a group goes straight to the innermost member under the
-	 * pointer (shared `drillSelectionForDoubleClick`), so its text can be edited
+	 * pointer (shared `resolveGroupDoubleClickTarget`), so its text can be edited
 	 * without ungrouping, as in PowerPoint. Anything else keeps `id`.
 	 */
 	#doubleClickTarget(id: string, event: { clientX: number; clientY: number }): string {
-		const chain = this.#drillChain(id, event);
-		const innermost = chain ? drillSelectionForDoubleClick(chain) : null;
-		return innermost && this.#editor.isElementInteractive(innermost) ? innermost : id;
+		return resolveGroupDoubleClickTarget(this.#currentElements(), id, this.#stagePoint(event));
 	}
 
 	/** Select the right-clicked element and expose the edit context menu. */

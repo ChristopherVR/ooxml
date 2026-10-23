@@ -60,12 +60,16 @@ afterEach(() => {
 	vi.mocked(setPendingCaretPoint).mockClear();
 });
 
-function setup(selectedId: string | null, group: PptxElement = cardsGroup()) {
+function setup(
+	selectedId: string | null,
+	group: PptxElement = cardsGroup(),
+	selectedIds: string[] = selectedId ? [selectedId] : [],
+) {
 	const store = createStore({
 		...createInitialViewerState(),
 		editable: true,
 		selectedElementId: selectedId,
-		selectedElementIds: selectedId ? [selectedId] : [],
+		selectedElementIds: selectedIds,
 		slides: [{ id: 'slide-1', rId: 'rId1', slideNumber: 1, elements: [group] }],
 	});
 	const ops = createEditorOps({ store, getHandler: () => null, onHistoryChange: () => {} });
@@ -147,6 +151,13 @@ describe('selecting inside a group', () => {
 		expect(h.store.get().selectedElementId).toBe('a');
 		expect(h.store.get().selectedElementIds).toStrictEqual(['a']);
 		expect(h.editorSurface()).toBeNull();
+	});
+
+	it('keeps a group whole when it is pressed inside a multi-selection', () => {
+		const h = setup('cards', cardsGroup(), ['cards', 'other']);
+		h.press(250, 130);
+		h.release(250, 130);
+		expect(h.store.get().selectedElementId).not.toBe('a');
 	});
 
 	it('moves to another member of the entered group', () => {

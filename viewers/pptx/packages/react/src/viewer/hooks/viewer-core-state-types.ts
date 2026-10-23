@@ -36,6 +36,7 @@ import type {
 	SupportedShapeType,
 } from '../types';
 import type { ViewerMode } from '../types-core';
+import type { CanvasGestures } from './canvas-gestures';
 import type { EditPointsModeState } from './useEditPointsState';
 import type { InlineEditingState } from './useInlineEditingState';
 
@@ -103,6 +104,11 @@ export interface ViewerCoreState extends InlineEditingState, EditPointsModeState
 	 * that made a single Ctrl+Z look like it did nothing.
 	 */
 	justInteractedRef: React.MutableRefObject<boolean>;
+	/**
+	 * The canvas's move/resize gesture controller, set by `usePointerHandlers`
+	 * and started by the press handlers (see canvas-gestures.ts).
+	 */
+	gestureControllerRef: React.MutableRefObject<CanvasGestures | null>;
 
 	// ── Collaboration ─────────────────────────────────────────────────
 

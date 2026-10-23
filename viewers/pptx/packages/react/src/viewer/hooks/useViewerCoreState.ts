@@ -47,6 +47,7 @@ import type {
 	SupportedShapeType,
 } from '../types';
 import type { ViewerMode } from '../types-core';
+import type { CanvasGestures } from './canvas-gestures';
 import { useDerivedElementState } from './useDerivedElementState';
 import { useEditPointsState } from './useEditPointsState';
 import { useInlineEditingState } from './useInlineEditingState';
@@ -88,6 +89,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const isDrawingRef = useRef(false);
 	/** See {@link ViewerCoreState.justInteractedRef}. */
 	const justInteractedRef = useRef(false);
+	const gestureControllerRef = useRef<CanvasGestures | null>(null);
 
 	// ── Collaboration live-patch channel ──────────────────────────────
 	// Interim Y.Doc writes for in-flight gestures/edits. Created once per
@@ -205,6 +207,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		marqueeStateRef,
 		isDrawingRef,
 		justInteractedRef,
+		gestureControllerRef,
 		livePatcher,
 		mode,
 		setMode,
