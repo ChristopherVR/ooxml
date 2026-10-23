@@ -29,3 +29,10 @@ export type {
 	AutosaveRecoveryControllerDeps,
 	AutosaveRecoveryState,
 } from './autosave-recovery-controller';
+export { createCollaborationSessionController } from './collaboration-session-controller';
+export type {
+	CollaborationSessionController,
+	CollaborationSessionControllerDeps,
+	CollaborationSessionState,
+	CollaborationSessionTimers,
+} from './collaboration-session-controller';
