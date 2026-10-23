@@ -28,7 +28,10 @@ export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
 
 /** What `updateChart` may change (the chart keeps its kind, source part and model). */
 export type ChartPatch = Partial<
-	Omit<ChartObject, 'kind' | 'partName' | 'styleDefinition' | 'formatting' | 'chartSpace'>
+	Omit<
+		ChartObject,
+		'kind' | 'partName' | 'styleDefinition' | 'formatting' | 'chartSpace' | 'editBlocked'
+	>
 > & { elementFills?: ChartElementFills };
 
 /**
@@ -120,7 +123,17 @@ function patchedSummary(chart: ChartObject, patch: ChartPatch): ChartObject {
 		}
 	});
 	for (const [key, value] of Object.entries(changes)) {
-		if (['kind', 'partName', 'chartSpace', '__proto__', 'constructor', 'prototype'].includes(key))
+		if (
+			[
+				'kind',
+				'partName',
+				'chartSpace',
+				'editBlocked',
+				'__proto__',
+				'constructor',
+				'prototype',
+			].includes(key)
+		)
 			continue;
 		if (value === undefined) Reflect.deleteProperty(after, key);
 		else Reflect.set(after, key, value);
@@ -147,6 +160,7 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 		...(patch.quickLayout === undefined ? {} : { layout: patch.quickLayout }),
 		...(patch.elementFills ? { fills: patch.elementFills } : {}),
 	});
+	if (chart.editBlocked && !same(next, space)) throw new RangeError(chart.editBlocked);
 	replaceChart(ctx, s, index, 'Edit chart', chartObjectFromSpace(next, after));
 }
 
@@ -164,6 +178,7 @@ export function editChart(
 	const space = chartSpaceOf(ctx.workbook, chart);
 	const next = applyChartEditIntent(space, intent);
 	if (same(next, space)) return;
+	if (chart.editBlocked) throw new RangeError(chart.editBlocked);
 	const frame = intent.op === 'colorPalette' ? { ...chart, colorPalette: intent.to } : chart;
 	replaceChart(ctx, s, index, 'Format chart', chartObjectFromSpace(next, frame));
 }

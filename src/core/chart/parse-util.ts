@@ -38,6 +38,7 @@ function malformed(context: ChartParseContext, element: XmlElement, value: strin
 	context.issues.push({
 		code: 'CHART_VALUE_INVALID',
 		message: `${path(element)} has an unreadable value "${value}".`,
+		element: path(element),
 	});
 }
 
@@ -99,6 +100,7 @@ export function reportUnmodelled(
 		context.issues.push({
 			code: 'CHART_ELEMENT_NOT_MODELLED',
 			message: `${path(child)} is not modelled; it is kept only in the source part.`,
+			element: path(child),
 		});
 	}
 }

@@ -8,6 +8,7 @@ import type { ChartObject, ChartSeries, Color, DrawingAnchor } from '../model';
 import { readChartFormatting } from '../../chart/read-formatting';
 import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
+import { chartIssuesLostOnWrite } from '../../chart/keep-source';
 import type { ChartSpace } from '../../chart/model';
 import { chartSummaryFromSpace } from '../../chart/render/summary-from-space';
 import type { DrawingColor } from '../../drawingml/types';
@@ -45,7 +46,10 @@ function legacyColor(color: DrawingColor | undefined): Color | undefined {
 /** What a chart object keeps beside its part: placement, package part and session state. */
 export type ChartObjectFrame = Pick<ChartObject, 'anchor'> &
 	Partial<
-		Pick<ChartObject, 'partName' | 'name' | 'quickLayout' | 'colorPalette' | 'styleDefinition'>
+		Pick<
+			ChartObject,
+			'partName' | 'name' | 'quickLayout' | 'colorPalette' | 'styleDefinition' | 'editBlocked'
+		>
 	>;
 
 /**
@@ -85,6 +89,7 @@ export function chartObjectFromSpace(
 	if (frame.quickLayout !== undefined) object.quickLayout = frame.quickLayout;
 	if (frame.colorPalette !== undefined) object.colorPalette = frame.colorPalette;
 	if (frame.styleDefinition) object.styleDefinition = frame.styleDefinition;
+	if (frame.editBlocked) object.editBlocked = frame.editBlocked;
 	const formatting = readChartFormatting(
 		root ?? parseXml(writeChartSpace(space), { label: 'XLSX chart' }).documentElement,
 	);
@@ -101,6 +106,16 @@ export function parseChart(
 	name?: string,
 ): ChartObject {
 	const root = parseXml(xml, { label: 'XLSX chart' }).documentElement;
-	const { chartSpace } = parseChartSpace(root);
-	return chartObjectFromSpace(chartSpace, { anchor, partName, ...(name ? { name } : {}) }, root);
+	const { chartSpace, issues } = parseChartSpace(root);
+	const lost = chartIssuesLostOnWrite(issues);
+	const editBlocked = lost.length
+		? `Chart ${partName} has content the editor does not model (${[
+				...new Set(lost.map((issue) => issue.element ?? issue.code)),
+			].join(', ')}); it is shown and saved unchanged but cannot be edited.`
+		: undefined;
+	return chartObjectFromSpace(
+		chartSpace,
+		{ anchor, partName, ...(name ? { name } : {}), ...(editBlocked ? { editBlocked } : {}) },
+		root,
+	);
 }

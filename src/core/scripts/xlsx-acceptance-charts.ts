@@ -3,6 +3,9 @@
 // and a second copy whose charts change type and grouping, so Excel opens parts the operations and
 // `writeChartSpace` wrote rather than the source parts. Edits a chart cannot take are skipped.
 import { readFileSync } from 'node:fs';
+import JSZip from 'jszip';
+import { createWorkbook } from '../xlsx/workbook';
+import { saveXlsx } from '../xlsx/write/index';
 import { join } from 'node:path';
 import type { ChartEditIntent } from '../chart/edit/intent';
 import type { ChartObject, Workbook } from '../xlsx/model';
@@ -100,4 +103,34 @@ export function chartEditBuilds(fixtures: string): [string, () => Promise<Workbo
 			[`chart-retyped-${name}`, build(TYPE_EDITS)],
 		];
 	});
+}
+
+/**
+ * A surface chart whose part holds `c:bandFmts`, which the model lacks: its edits are refused and
+ * its part is saved from the source bytes with only its references moved by an inserted row.
+ */
+export async function blockedChartBuild(fixtures: string): Promise<Workbook> {
+	const workbook = createWorkbook({ sheets: ['Sheet1'] });
+	const session = createEditSession(workbook);
+	session.setRangeValues(0, { row: 0, col: 0 }, [
+		['', 'Series 1', 'Series 2', 'Series 3'],
+		['Category 1', 4.3, 2.4, 2],
+		['Category 2', 2.5, 4.4, 2],
+		['Category 3', 3.5, 1.8, 3],
+		['Category 4', 4.5, 2.8, 5],
+	]);
+	session.addChart(0, {
+		anchor: { from: { row: 0, col: 6, rowOffset: 0, colOffset: 0 }, ext: { cx: 5e6, cy: 3e6 } },
+		chartType: 'column',
+		showLegend: true,
+		series: [],
+	});
+	const zip = await JSZip.loadAsync(await saveXlsx(workbook));
+	zip.file(
+		'xl/charts/chart1.xml',
+		readFileSync(join(fixtures, 'chart-surface-band-formats.xml'), 'utf8'),
+	);
+	const loaded = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+	createEditSession(loaded).insertRows(0, 0, 1);
+	return loaded;
 }

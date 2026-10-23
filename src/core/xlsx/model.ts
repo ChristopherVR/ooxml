@@ -556,6 +556,12 @@ export interface ChartObject extends ChartSummary<ChartSeries> {
 	 */
 	chartSpace?: ChartSpace;
 	/**
+	 * Why the chart cannot be edited, when its part holds content `ChartSpace` does not model below
+	 * the top level (writing the part from the model would lose it). Such a chart is shown and saved
+	 * unchanged; only reference moves are patched into its part.
+	 */
+	editBlocked?: string;
+	/**
 	 * Chart Design > Quick Layout applied in this session (1..11). The title, legend and bar spacing
 	 * it sets live on the summary fields; on save the layout's axis titles, gridlines, value axis,
 	 * data labels and data table are written into the part (`chart/edit` `applyChartQuickLayout`).

@@ -132,6 +132,7 @@ export function parseDrawing(
 					if (id !== undefined) chart.colorPalette = id;
 					const style = readChartStylePart(source, target, warn);
 					if (style) chart.styleDefinition = style;
+					if (chart.editBlocked) warn(chart.editBlocked);
 					out.push(chart);
 				} catch {
 					warn(`Chart ${target} could not be read; it is kept but not shown.`);

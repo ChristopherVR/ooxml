@@ -2,8 +2,8 @@
 // and the direct children of `c:chartSpace` and `c:chart` the parser reports as not modelled
 // (`c:clrMapOvr`, `c:pivotSource`, `c:protection`, `c:pivotFmts`) are carried over from the source
 // part at their schema positions, so a pivot chart or a protected chart keeps them through an edit.
-// Unmodelled content deeper in the part (inside the plot area, a series or an axis) is not carried;
-// the parser lists it in its issues.
+// Unmodelled content deeper in the part (inside the plot area, a series or an axis) cannot be
+// carried this way: `keep-source.ts` says when a part has some, and such a part keeps its bytes.
 import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
 
 /** CT_ChartSpace children in schema order. */

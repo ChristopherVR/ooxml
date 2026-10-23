@@ -12,6 +12,8 @@ import type { ChartErrorBars, ChartTrendline } from './model-analysis';
 export interface ChartParseIssue {
 	code: string;
 	message: string;
+	/** The element the issue is about, as `c:parent/c:child`. */
+	element?: string;
 }
 
 /** Shape properties (`c:spPr`) of a chart element, read through `drawingml`. */

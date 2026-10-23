@@ -7,6 +7,7 @@ import { writeChartColorStyle } from './chart-colors';
 import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
 import { withUnmodelledChartChildren } from '../../chart/keep-unmodelled';
+import { chartIssuesLostOnWrite, patchChartFormulas } from '../../chart/keep-source';
 import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 import { XML_HEADER, escapeAttr } from './xml-out';
@@ -93,13 +94,17 @@ function frameXml(chart: ChartObject, id: number, relId: string): string {
  */
 export function editedChartPart(source: string, chart: ChartObject): string | undefined {
 	if (!chart.chartSpace) return undefined;
-	let loaded;
+	let parsed;
 	try {
-		loaded = parseChartSpace(source).chartSpace;
+		parsed = parseChartSpace(source);
 	} catch {
 		return undefined;
 	}
+	const loaded = parsed.chartSpace;
 	if (sameModel(loaded, chart.chartSpace)) return undefined;
+	// A part with unmodelled content below the top level keeps its bytes (reference moves only).
+	if (chartIssuesLostOnWrite(parsed.issues).length)
+		return patchChartFormulas(source, loaded, chart.chartSpace);
 	const declarationBreak = (/^<\?xml[^>]*\?>(\r\n|\n)?/.exec(source)?.[1] ?? '') as
 		| ''
 		| '\n'

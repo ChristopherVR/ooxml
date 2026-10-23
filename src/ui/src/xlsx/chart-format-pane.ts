@@ -29,7 +29,10 @@ export function chartAreaCommand(): Command {
 		label: 'Format Chart Area',
 		icon: icon('chartColumn'),
 		lock: 'objects',
-		enabled: (ctx) => !!activeChart(ctx),
+		enabled: (ctx) => {
+			const chart = activeChart(ctx)?.chart;
+			return !!chart && !chart.editBlocked;
+		},
 		run: (ctx, arg) => void ctx.dialogs.open('format-chart-area', arg),
 	});
 }
@@ -42,7 +45,7 @@ export function chartSeriesCommand(): Command {
 		lock: 'objects',
 		enabled: (ctx) => {
 			const chart = activeChart(ctx)?.chart;
-			return !!chart && formatsSeries(chart);
+			return !!chart && !chart.editBlocked && formatsSeries(chart);
 		},
 		run: (ctx, arg) => void ctx.dialogs.open('format-chart-series', arg),
 	});
