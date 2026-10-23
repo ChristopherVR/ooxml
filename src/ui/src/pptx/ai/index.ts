@@ -16,6 +16,23 @@ export type { AiSdkModule } from './loader';
 
 export { deckDataFieldChanged } from './deck-data-diff';
 
+export { createPptxAiBridge, pptxAiDeckTitle } from './bridge-factory';
+export type { PptxAiBridgePort, PptxAiCanvasSize } from './bridge-factory';
+
+export {
+	AI_TOOL_FLASH_MS,
+	aiFixDirective,
+	createPptxAiPanelController,
+	isAiFocusPinned,
+	resolveAiEffectiveTargets,
+} from './panel-controller';
+export type {
+	PptxAiPanelController,
+	PptxAiPanelControllerDeps,
+	PptxAiPanelState,
+	PptxAiPrefill,
+} from './panel-controller';
+
 export { resolveChatTransport } from './config';
 export type {
 	PptxAiConfig,

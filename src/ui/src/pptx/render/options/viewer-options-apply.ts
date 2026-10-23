@@ -1,5 +1,6 @@
 import type { PrintSettings } from '../../export/print-document';
 import { AUTOSAVE_MIN_INTERVAL_SECONDS } from '../autosave-store';
+import { DEFAULT_EDITOR_HISTORY_DEPTH } from '../editor-history';
 import type { ToolbarTabDefinition } from '../toolbar-actions';
 import { TOOLBAR_TABS } from '../toolbar-actions';
 import type { ImageResolutionPreset, ViewerOptions } from './viewer-options';
@@ -13,7 +14,7 @@ import type { ImageResolutionPreset, ViewerOptions } from './viewer-options';
 /** Maximum undo steps for `EditorHistory({ maxDepth })`. */
 export function resolveHistoryDepth(options: ViewerOptions): number {
 	const steps = Math.round(options.advanced.maximumUndoSteps);
-	return Math.min(150, Math.max(3, Number.isFinite(steps) ? steps : 100));
+	return Math.min(150, Math.max(3, Number.isFinite(steps) ? steps : DEFAULT_EDITOR_HISTORY_DEPTH));
 }
 
 /** AutoRecover cadence in seconds, honoring the shared minimum. */

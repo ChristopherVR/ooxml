@@ -1,3 +1,4 @@
+import { DEFAULT_EDITOR_HISTORY_DEPTH } from '../editor-history';
 import type { ToolbarTabId } from '../toolbar-actions';
 import type { ViewerPreferences } from '../viewer-preferences';
 
@@ -219,7 +220,7 @@ export const DEFAULT_VIEWER_OPTIONS: ViewerOptions = {
 	advanced: {
 		autoSelectEntireWord: true,
 		allowTextDragAndDrop: true,
-		maximumUndoSteps: 100,
+		maximumUndoSteps: DEFAULT_EDITOR_HISTORY_DEPTH,
 		useSmartCutAndPaste: true,
 		showPasteOptionsButton: true,
 		imageDefaultResolution: 'highFidelity',
