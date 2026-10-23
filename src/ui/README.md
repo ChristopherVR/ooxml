@@ -125,6 +125,7 @@ uses it for Text Warp and Quick Styles, whose picks apply at once.
 | `ooxml-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                                              |
 | `ooxml-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                                                 |
 | `ooxml-ui/teams`    | the Teams elements and `<teams-app>`                                                                         |
+| `ooxml-ui/bindings` | the framework binding kit; `/bindings/react`, `/vue` and `/solid` are its component factories                |
 | `ooxml-ui/suite`    | browser document persistence the Office suite uses                                                           |
 | `ooxml-ui/docx`     | the Word editor and viewer elements (`<docx-editor>`)                                                        |
 | `ooxml-ui/xlsx`     | the Excel editor and viewer elements (`<xlsx-editor>`)                                                       |
@@ -148,6 +149,37 @@ controls follow the product palette.
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
 with an incompatible build of this package.
+
+## Framework binding kit (`ooxml-ui/bindings`)
+
+The machinery every product's framework adapters share (Word, Excel, Visio and Teams), so a product
+binding only declares what is its own. It has no framework imports and touches no DOM at import.
+
+- **A contract per product** (`BindingContract`): `props` lists each forwarded prop in forwarding
+  order with its policy (`always`, `changed`, `defined`: written only when set and changed, or
+  `manual`: left to the product's mount function), an optional `fallback`, equality (`same`),
+  `initial` value and `apply`; `events` maps each element event to its handler option
+  (`onDocumentChange`) and arguments (`eventArgs.detail`, `.event` for cancelable events such as
+  `file-command`, `.readOnly`, `.detailAndEvent`, `.field(name)`), and `readOnlyChange` adds the
+  `v-model:readOnly` / `[(readOnly)]` model that mirrors the host's own switch; `handle` lists the
+  imperative handle's members.
+- **`bindElement(element, contract, handlers)`** listens to the events (reading the current
+  handlers at event time) and forwards changed props; the product's mount function keeps what is
+  its own around it (Word's document model after collaboration, Excel's workbook, bytes and `src`
+  supersession, Visio's revision-aware patches, the Teams host class with `syncClassName`).
+- **Helpers**: `createPropTracker`, `shallowEqual`, `sameList`, `createSrcLoader`, `nameFromUrl`,
+  `deferredHandle` (a handle that throws a clear error before mount), `installHandle` (the same
+  members on an Angular component's prototype), `pickProps`, `eventOptions`, `contractOptions`,
+  `angularOutputs` and the framework naming rules (`svelteHandlerName`, `angularOutputName`).
+- **Component factories** for frameworks that need no compiler: `createReactBinding`
+  (`ooxml-ui/bindings/react`, a `forwardRef` component whose ref is the handle), `defineVueBinding`
+  (`/vue`: props, kebab-case emits, `v-model` and `expose` from the contract) and
+  `createSolidBinding` (`/solid`: a host element, reactive options and an `editorRef` callback).
+  React, Vue and Solid are optional peer dependencies. Angular components and `.svelte` files need
+  their compilers, so they stay in each product, as small as the helpers above make them.
+
+Each product checks every adapter against its contract (`contract-parity.test.ts` in the Word,
+Excel and Visio bindings, `bindings-contract.test.ts` in Teams).
 
 ## One theme for composed editors
 
