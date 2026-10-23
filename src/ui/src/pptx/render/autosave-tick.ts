@@ -107,3 +107,18 @@ export function shouldWriteAutosaveSnapshot(input: AutosaveTickInput): boolean {
 		(source, index) => !Object.is(sourceIdentity(source), previous.sources[index]),
 	);
 }
+
+/**
+ * True when any of `sources` is a different value (by the same identity rule as
+ * {@link shouldWriteAutosaveSnapshot}) from the ones `mark` captured. A missing
+ * mark, or a different number of sources, counts as a change.
+ */
+export function autosaveSourcesChanged(
+	mark: AutosaveSnapshotMark | undefined,
+	sources: readonly unknown[],
+): boolean {
+	if (!mark || mark.sources.length !== sources.length) {
+		return true;
+	}
+	return sources.some((source, index) => !Object.is(sourceIdentity(source), mark.sources[index]));
+}
