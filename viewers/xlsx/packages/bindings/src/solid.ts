@@ -1,6 +1,7 @@
-import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { contractOptions } from 'ooxml-ui/bindings';
+import { createSolidBinding } from 'ooxml-ui/bindings/solid';
 import type { EditorBinding, EditorHandle, EditorOptions } from './index';
-import { deferredHandle, eventOptions, mountEditor, pickEditorProps } from './index';
+import { EDITOR_CALLBACKS, EDITOR_CONTRACT, mountEditor } from './index';
 
 export interface SpreadsheetEditorProps extends EditorOptions {
 	class?: string;
@@ -8,38 +9,13 @@ export interface SpreadsheetEditorProps extends EditorOptions {
 }
 
 /** Solid lifecycle adapter over the shared editor binding. */
-export function SpreadsheetEditor(props: SpreadsheetEditorProps) {
-	const host = document.createElement('div');
-	const [binding, setBinding] = createSignal<EditorBinding>();
-	const options = (): EditorOptions => ({
-		...pickEditorProps(props),
-		...eventOptions({
-			'workbook-change': props.onWorkbookChange,
-			'workbook-error': props.onWorkbookError,
-			'selection-change': props.onSelectionChange,
-			'dirty-change': props.onDirtyChange,
-			'readonly-change': props.onReadOnlyChange,
-			'file-command': props.onFileCommand,
-			'workbook-warning': props.onWorkbookWarning,
-			'ribbon-action': props.onRibbonAction,
-			'ribbon-customize': props.onRibbonCustomize,
-			'sheet-change': props.onSheetChange,
-			'office-ribbon-add-in': props.onRibbonAddIn,
-			'collaboration-change': props.onCollaborationChange,
-			ready: props.onReady,
-		}),
-	});
-	onMount(() => {
-		const mounted = mountEditor(host, options());
-		setBinding(mounted);
-		props.editorRef?.(deferredHandle(() => mounted));
-	});
-	createEffect(() => {
-		const current = binding();
-		if (!current) return;
-		host.className = props.class ?? '';
-		current.update(options());
-	});
-	onCleanup(() => binding()?.destroy());
-	return host;
-}
+export const SpreadsheetEditor = createSolidBinding<
+	SpreadsheetEditorProps,
+	EditorHandle,
+	EditorOptions,
+	EditorBinding
+>({
+	handle: EDITOR_CONTRACT.handle,
+	mount: mountEditor,
+	options: (props) => contractOptions(EDITOR_CONTRACT, props, undefined, EDITOR_CALLBACKS),
+});

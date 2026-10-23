@@ -1,27 +1,20 @@
-import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
+import type { PropType } from 'vue';
 import type { Workbook } from '@christophervr/xlsx-core';
 import type { DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	EditorThemeMode,
-	RibbonAddInCommandDetail,
 	RibbonAddInTab,
 	XlsxCollaborationOptions,
-	XlsxCollaborationState,
-	XlsxEditorElement,
 	XlsxThemeColors,
 	ExcelCustomization,
 } from 'xlsx-web-component';
-import {
-	EDITOR_EVENT_NAMES,
-	EDITOR_PROP_KEYS,
-	deferredHandle,
-	eventOptions,
-	mountEditor,
-	pickEditorProps,
-	type EditorBinding,
-	type EditorPropKey,
-} from './index';
-export const SpreadsheetEditor = defineComponent({
+import { defineVueBinding } from 'ooxml-ui/bindings/vue';
+import { EDITOR_CONTRACT, mountEditor, type EditorPropKey } from './index';
+/**
+ * Kebab-case emits for every editor event plus `ready`, `v-model:readOnly` (the host's switch,
+ * never a role lock) and the handle on the template ref, all generated from `EDITOR_CONTRACT`.
+ */
+export const SpreadsheetEditor = defineVueBinding({
 	name: 'SpreadsheetEditor',
 	props: {
 		workbook: Object as PropType<Workbook>,
@@ -41,61 +34,8 @@ export const SpreadsheetEditor = defineComponent({
 		storage: Object as PropType<DocumentStorage | null>,
 		customization: Object as PropType<ExcelCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
-	emits: [...EDITOR_EVENT_NAMES, 'update:readOnly', 'ready'],
-	setup(props, { emit, expose }) {
-		const host = ref<HTMLElement>();
-		let binding: EditorBinding | undefined;
-		const options = () => ({
-			...pickEditorProps(props),
-			...eventOptions({
-				'workbook-change': (workbook: Workbook) => emit('workbook-change', workbook),
-				'workbook-error': (error: Error) => emit('workbook-error', error),
-				'selection-change': (detail) => emit('selection-change', detail),
-				'dirty-change': (dirty: boolean) => emit('dirty-change', dirty),
-				'readonly-change': (readOnly, detail) => {
-					emit('readonly-change', readOnly, detail);
-					// `v-model:readOnly` mirrors the host's switch only, never a role lock.
-					if (detail.hostReadOnly !== props.readOnly) emit('update:readOnly', detail.hostReadOnly);
-				},
-				'file-command': (event) => emit('file-command', event),
-				'workbook-warning': (warnings) => emit('workbook-warning', warnings),
-				'ribbon-action': (detail) => emit('ribbon-action', detail),
-				'ribbon-customize': (hiddenActions: string[]) => emit('ribbon-customize', hiddenActions),
-				'sheet-change': (detail) => emit('sheet-change', detail),
-				'office-ribbon-add-in': (detail: RibbonAddInCommandDetail) =>
-					emit('office-ribbon-add-in', detail),
-				'collaboration-change': (state: XlsxCollaborationState) =>
-					emit('collaboration-change', state),
-				ready: (element: XlsxEditorElement) => emit('ready', element),
-			}),
-		});
-		onMounted(() => {
-			binding = mountEditor(host.value!, options());
-		});
-		watch(
-			() => EDITOR_PROP_KEYS.map((key) => props[key]),
-			() => binding?.update(options()),
-		);
-		onBeforeUnmount(() => binding?.destroy());
-		const handle = deferredHandle(() => binding);
-		expose({
-			get element() {
-				return binding?.element;
-			},
-			load: handle.load,
-			newWorkbook: handle.newWorkbook,
-			save: handle.save,
-			saveBytes: handle.saveBytes,
-			download: handle.download,
-			markClean: handle.markClean,
-			select: handle.select,
-			getSelection: handle.getSelection,
-			setActiveSheet: handle.setActiveSheet,
-			share: handle.share,
-			get dirty() {
-				return handle.dirty;
-			},
-		});
-		return () => h('div', { ref: host });
-	},
+	contract: EDITOR_CONTRACT,
+	callbacks: { ready: 'onReady' },
+	handle: EDITOR_CONTRACT.handle,
+	mount: mountEditor,
 });

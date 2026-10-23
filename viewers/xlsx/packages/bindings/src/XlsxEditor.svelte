@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deferredHandle, eventOptions, mountEditor, pickEditorProps, type EditorBinding, type EditorEventHandlers, type EditorProps, type EditorHandle } from './index';
+  import { deferredHandle, mountEditor, svelteEditorOptions, type EditorBinding, type EditorEventHandlers, type EditorOptions, type EditorProps, type EditorHandle } from './index';
   type Props = EditorProps & {
     onworkbookchange?: EditorEventHandlers['workbook-change'];
     onworkbookerror?: EditorEventHandlers['workbook-error'];
@@ -24,9 +24,8 @@
   const element = $derived(mountedElement);
   const dirty = $derived(dirtyState);
   function attach(host: HTMLElement, options: Props) {
-    const normalized = (value: Props) => ({ ...pickEditorProps(value),
-      ...eventOptions({ 'workbook-change': value.onworkbookchange, 'workbook-error': value.onworkbookerror, 'selection-change': value.onselectionchange, 'dirty-change': value.ondirtychange, 'readonly-change': value.onreadonlychange, 'file-command': value.onfilecommand, 'workbook-warning': value.onworkbookwarning, 'ribbon-action': value.onribbonaction, 'ribbon-customize': value.onribboncustomize, 'sheet-change': value.onsheetchange, 'office-ribbon-add-in': value.onribbonaddin, 'collaboration-change': value.oncollaborationchange, ready: value.onready }) });
-    const tracked = (value: Props) => normalized({ ...value, ondirtychange: (next: boolean) => { dirtyState = next; value.ondirtychange?.(next); } });
+    // Callback props are the lower-case options (`onworkbookchange`); `dirty` is tracked on the way.
+    const tracked = (value: Props): EditorOptions => ({ ...svelteEditorOptions(value), onDirtyChange: (next: boolean) => { dirtyState = next; value.ondirtychange?.(next); } });
     binding = mountEditor(host, tracked(options));
     mountedElement = binding.element;
     dirtyState = binding.dirty;
