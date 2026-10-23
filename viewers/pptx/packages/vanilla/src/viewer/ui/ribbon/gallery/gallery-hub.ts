@@ -8,6 +8,8 @@ import { applyRibbonGalleryItem } from 'ooxml-ui/pptx';
 /** A mounted gallery control the hub keeps in step with the selection. */
 export interface RibbonGalleryView {
 	refresh(ctx: RibbonGalleryContext, editable: boolean): void;
+	/** Catch up on a refresh it put off while out of sight, if it shows now. */
+	reveal?(): void;
 	close(): void;
 }
 
@@ -23,6 +25,8 @@ export interface RibbonGalleryHub {
 	register(view: RibbonGalleryView): void;
 	/** Rebuild every registered gallery when the selection, theme or editability changed. */
 	sync(ctx: RibbonGalleryContext | undefined, editable: boolean): void;
+	/** Something may have come into sight (a tab, a contextual pane, the desktop layout). */
+	reveal(): void;
 	/**
 	 * Resolve a tile pick (with the context menu `action` chosen on the tile, if any) through the
 	 * shared registry and dispatch the result. Returns it when it is a command the caller runs.
@@ -89,6 +93,11 @@ export function createRibbonGalleryHub(
 			}
 			key = nextKey;
 			refreshAll();
+		},
+		reveal() {
+			for (const view of views) {
+				view.reveal?.();
+			}
 		},
 		pick(gallery, itemId, action) {
 			const result = applyRibbonGalleryItem(gallery, itemId, ctx, action);
