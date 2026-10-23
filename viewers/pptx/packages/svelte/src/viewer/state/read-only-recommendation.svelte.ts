@@ -1,9 +1,17 @@
-import type { ModifyPasswordCheckResult, ReadOnlyRecommendation } from 'ooxml-ui/pptx';
-import { checkModifyPassword, readOnlyRecommendation } from 'ooxml-ui/pptx';
+import {
+	INITIAL_READ_ONLY_SESSION,
+	readOnlyBannerVisible,
+	readOnlyLocked,
+	readOnlyRecommendation,
+	readOnlySessionActions,
+} from 'ooxml-ui/pptx';
+import type {
+	ReadOnlyBannerPasswordError,
+	ReadOnlyRecommendation,
+	ReadOnlySession,
+	ReadOnlySessionActions,
+} from 'ooxml-ui/pptx';
 import type { PptxCustomProperty, PptxModifyVerifier } from 'pptx-viewer-core';
-
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok: false }>['reason'];
 
 /**
  * ReadOnlyRecommendationState: the Trust-Center-style banner shown when a
@@ -16,13 +24,14 @@ export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok:
  * editability mechanism. `reset()` is called from the load-commit hook
  * (`onContentApplied`) so a newly opened document is evaluated fresh even if
  * a previous one was unlocked.
+ *
+ * The session (banner hidden, Edit anyway, the prompt and its check) and its
+ * transitions are the shared `read-only-session` model; this keeps it in
+ * `$state`.
  */
 export class ReadOnlyRecommendationState {
-	#dismissed = $state(false);
-	#editAnywayGranted = $state(false);
-	#passwordPromptOpen = $state(false);
-	#passwordError = $state<ModifyPasswordErrorReason | null>(null);
-	#checkingPassword = $state(false);
+	#session = $state.raw<ReadOnlySession>(INITIAL_READ_ONLY_SESSION);
+	#actions: ReadOnlySessionActions;
 	#getModifyVerifier: () => PptxModifyVerifier | undefined;
 	#getCustomProperties: () => PptxCustomProperty[];
 
@@ -32,6 +41,18 @@ export class ReadOnlyRecommendationState {
 	}) {
 		this.#getModifyVerifier = deps.getModifyVerifier;
 		this.#getCustomProperties = deps.getCustomProperties;
+		this.#actions = readOnlySessionActions(
+			{
+				get: () => this.#session,
+				set: (next) => {
+					this.#session = next;
+				},
+			},
+			{
+				recommendation: () => this.recommendation,
+				modifyVerifier: () => this.#getModifyVerifier(),
+			},
+		);
 	}
 
 	/** The current recommendation (`kind: null` when the deck asks for nothing). */
@@ -44,28 +65,27 @@ export class ReadOnlyRecommendationState {
 
 	/** Whether the banner should render. */
 	get showBanner(): boolean {
-		return this.recommendation.kind !== null && !this.#dismissed;
+		return readOnlyBannerVisible(this.recommendation, this.#session);
 	}
 
 	/** Whether editing should currently be blocked because of this recommendation. */
 	get locked(): boolean {
-		const rec = this.recommendation;
-		return rec.kind !== null && rec.defaultReadOnly && !this.#editAnywayGranted;
+		return readOnlyLocked(this.recommendation, this.#session);
 	}
 
 	/** Whether the inline password prompt should render instead of the two buttons. */
 	get passwordPromptOpen(): boolean {
-		return this.#passwordPromptOpen;
+		return this.#session.passwordPromptOpen;
 	}
 
 	/** Reason the last password attempt failed, or null before any attempt / after success. */
-	get passwordError(): ModifyPasswordErrorReason | null {
-		return this.#passwordError;
+	get passwordError(): ReadOnlyBannerPasswordError | null {
+		return this.#session.passwordError;
 	}
 
 	/** True while {@link submitPassword}'s check is in flight (disables the form). */
 	get checkingPassword(): boolean {
-		return this.#checkingPassword;
+		return this.#session.checkingPassword;
 	}
 
 	/**
@@ -74,53 +94,26 @@ export class ReadOnlyRecommendationState {
 	 * password prompt instead of unlocking immediately.
 	 */
 	editAnyway(): void {
-		if (this.recommendation.requiresPassword) {
-			this.#passwordPromptOpen = true;
-			this.#passwordError = null;
-			return;
-		}
-		this.#unlock();
+		this.#actions.editAnyway();
 	}
 
 	/** "Dismiss": hides the banner but leaves the lock (if any) in place. */
 	dismiss(): void {
-		this.#dismissed = true;
+		this.#actions.dismiss();
 	}
 
 	/** Close the password prompt without unlocking. */
 	cancelPasswordPrompt(): void {
-		this.#passwordPromptOpen = false;
-		this.#passwordError = null;
+		this.#actions.cancelPassword();
 	}
 
 	/** Check `password` against the deck's `modifyVerifier`; unlocks on a match. */
-	async submitPassword(password: string): Promise<void> {
-		this.#checkingPassword = true;
-		try {
-			const result = await checkModifyPassword(this.#getModifyVerifier(), password);
-			if (result.ok) {
-				this.#unlock();
-			} else {
-				this.#passwordError = result.reason;
-			}
-		} finally {
-			this.#checkingPassword = false;
-		}
-	}
-
-	#unlock(): void {
-		this.#editAnywayGranted = true;
-		this.#dismissed = true;
-		this.#passwordPromptOpen = false;
-		this.#passwordError = null;
+	submitPassword(password: string): Promise<void> {
+		return this.#actions.submitPassword(password);
 	}
 
 	/** Re-arm the recommendation for a newly loaded document. */
 	reset(): void {
-		this.#dismissed = false;
-		this.#editAnywayGranted = false;
-		this.#passwordPromptOpen = false;
-		this.#passwordError = null;
-		this.#checkingPassword = false;
+		this.#actions.reset();
 	}
 }

@@ -14,11 +14,8 @@
 	 * locked until the correct password is entered, and a wrong one leaves it
 	 * locked.
 	 */
-	import type {
-		ReadOnlyBannerRequestEvent,
-		ReadOnlyBannerViewState,
-		ReadOnlyRecommendationKind,
-	} from 'ooxml-ui/pptx';
+	import { dispatchReadOnlyBannerIntent, readOnlyBannerState } from 'ooxml-ui/pptx';
+	import type { ReadOnlyBannerPasswordError, ReadOnlyRecommendationKind } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 
@@ -38,37 +35,32 @@
 		oneditanyway: () => void;
 		ondismiss: () => void;
 		passwordpromptopen?: boolean;
-		passworderror?: 'wrong-password' | 'unsupported-algorithm' | null;
+		passworderror?: ReadOnlyBannerPasswordError | null;
 		checkingpassword?: boolean;
 		onsubmitpassword?: (password: string) => void;
 		oncancelpassword?: () => void;
 	} = $props();
 
 	const t = useTranslator();
-	const view = $derived<ReadOnlyBannerViewState>({
-		kind,
-		messageKey,
-		passwordPromptOpen: passwordpromptopen,
-		passwordError: passworderror,
-		checkingPassword: checkingpassword,
-		translate: t,
-	});
+	const view = $derived(
+		readOnlyBannerState(
+			{ kind, messageKey },
+			{
+				passwordPromptOpen: passwordpromptopen,
+				passwordError: passworderror,
+				checkingPassword: checkingpassword,
+			},
+			t,
+		),
+	);
 
-	function request(event: ReadOnlyBannerRequestEvent): void {
-		const intent = event.detail;
-		switch (intent.id) {
-			case 'editAnyway':
-				oneditanyway();
-				break;
-			case 'dismiss':
-				ondismiss();
-				break;
-			case 'cancelPassword':
-				oncancelpassword?.();
-				break;
-			case 'submitPassword':
-				onsubmitpassword?.(intent.password);
-		}
+	function request(event: Event): void {
+		dispatchReadOnlyBannerIntent(event, {
+			editAnyway: oneditanyway,
+			dismiss: ondismiss,
+			cancelPassword: oncancelpassword,
+			submitPassword: onsubmitpassword,
+		});
 	}
 </script>
 
