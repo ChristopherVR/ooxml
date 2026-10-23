@@ -138,6 +138,8 @@ describe.each(['fill', 'line', 'text'] as const)('the %s colour picker', (contro
 		fire(control, 'change', '#990000');
 
 		expect(color(current())).toBe('#990000');
+		// A native pick is a custom colour: the theme ref goes.
+		expect(ref(current())).toBeUndefined();
 		expect(editor.dirty()).toBeTruthy();
 		expect(pushed).toStrictEqual(['#990000']);
 
