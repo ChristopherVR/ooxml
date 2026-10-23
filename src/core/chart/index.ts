@@ -52,3 +52,5 @@ export * from './line-dash';
 export * from './axis-range-auto';
 export * from './marker-shape';
 export * from './edit/index';
+
+export * from './data-sheet';

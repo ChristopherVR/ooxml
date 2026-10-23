@@ -24,6 +24,7 @@ import {
 	definePptxSelect,
 	definePptxSwitch,
 } from './office-aliases';
+import { definePptxChartDataSheet } from './chart-data-sheet';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
 import { definePptxPresentToolbar } from './present-toolbar';
@@ -71,6 +72,13 @@ export type {
 } from './chart-format-pane';
 export type { CompatToastsRequestEvent, PptxUiCompatToastsElement } from './office-alias-types';
 export type { PptxUiColorGridElement } from './office-aliases';
+export { chartDataSheetLabels } from './chart-data-sheet';
+export type {
+	ChartDataSheetChange,
+	ChartDataSheetChangeEvent,
+	ChartDataSheetViewState,
+	PptxUiChartDataSheetElement,
+} from './chart-data-sheet';
 export type { DialogFooterRequestEvent, PptxUiDialogFooterElement } from './office-alias-types';
 export type { MobileBarRequestEvent, PptxUiMobileBarElement } from './mobile-bar';
 export type { MobileInsertRequestEvent, PptxUiMobileInsertElement } from './mobile-insert';
@@ -151,6 +159,7 @@ export type {
 const controls = [
 	['pptx-ui-search', definePptxSearchField],
 	['pptx-ui-color-grid', definePptxColorGrid],
+	['pptx-ui-chart-data-sheet', definePptxChartDataSheet],
 	['pptx-ui-checkbox', definePptxCheckbox],
 	['pptx-ui-radio', definePptxRadio],
 	['pptx-ui-switch', definePptxSwitch],

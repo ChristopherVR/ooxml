@@ -3,7 +3,7 @@
 	 * TableDataGrid: inspector-resident spreadsheet editor for table cell TEXT,
 	 * mirroring React's `inspector/TableDataGrid.tsx`.
 	 *
-	 * WHY this exists: every binding already ships a `ChartDataGrid` so chart
+	 * WHY this exists: every binding already ships a chart data sheet so chart
 	 * values can be retyped from the sidebar without entering an on-canvas edit
 	 * mode. Tables had no equivalent, so the ONLY way to change a cell's text was
 	 * to double-click it on the slide, which is slow, easy to miss on a small

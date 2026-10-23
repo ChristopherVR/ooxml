@@ -4,7 +4,7 @@
 	 * `inspector/ChartDataPanel.tsx` composition.
 	 *
 	 * Order matches React: type + title + display toggles, then the
-	 * spreadsheet-style {@link ChartDataGrid}, then per-series styling, axes,
+	 * spreadsheet-style {@link ChartDataSheet}, then per-series styling, axes,
 	 * {@link ChartErrorBarSection}, and the advanced disclosures.
 	 *
 	 * The old comma-joined "series values" text input is kept alongside the grid
@@ -48,7 +48,7 @@
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import ChartAdvancedSection from './ChartAdvancedSection.svelte';
 	import ChartAxisFormatSection from './ChartAxisFormatSection.svelte';
-	import ChartDataGrid from './ChartDataGrid.svelte';
+	import ChartDataSheet from './ChartDataSheet.svelte';
 	import ChartErrorBarSection from './ChartErrorBarSection.svelte';
 	import ChartFilteredSeriesOptions from './ChartFilteredSeriesOptions.svelte';
 	import ChartLabelsAxesSection from './ChartLabelsAxesSection.svelte';
@@ -212,12 +212,7 @@
 			<label>{t('pptx.chart.surfaceWireframeLabel')}<pptx-ui-select aria-label={t('pptx.chart.surfaceWireframeLabel')} data-testid="pptx-chart-surface-wireframe" value={data.wireframe ? 'true' : 'false'} onchange={(event) => onSurfaceWireframeChange(event.currentTarget.value)}>{#each SURFACE_WIREFRAME_OPTIONS as option (option.value)}<option value={option.value}>{t(option.labelKey)}</option>{/each}</pptx-ui-select></label>
 		{/if}
 	</div>
-	<ChartDataGrid
-		{data}
-		{canEdit}
-		onreplace={replace}
-		onrenameseries={(index, name) => seriesPatch(index, { name })}
-	/>
+	<ChartDataSheet {data} {canEdit} onreplace={replace} />
 	<h5>{t('pptx.chart.series')}</h5>{#each data.series as series, index}<fieldset><input aria-label={t('pptx.chart.seriesName')} value={series.name} oninput={(event) => seriesPatch(index, { name: event.currentTarget.value })} /><input aria-label={t('pptx.chart.seriesValues')} value={series.values.join(', ')} onchange={(event) => seriesPatch(index, { values: event.currentTarget.value.split(',').map(Number).filter(Number.isFinite) })} /><input type="color" aria-label={t('pptx.chart.seriesColor', { name: series.name })} value={series.color ?? '#4472c4'} onchange={(event) => seriesColorPatch(index, event.currentTarget.value)} />{#if seriesColorClearState(series, canEdit).visible}<button type="button" class="clear-series-color" title={t('pptx.chart.clearSeriesColor')} aria-label={t('pptx.chart.clearSeriesColor')} onclick={() => seriesPatch(index, { color: undefined })}>×</button>{/if}</fieldset>{/each}
 	<ChartFilteredSeriesOptions
 		chartData={data}

@@ -84,6 +84,7 @@ export const translations = {
 	'pptx.chart.seriesName': 'Datenreihenname',
 	'pptx.chart.seriesValues': 'Datenreihenwerte',
 	'pptx.chart.seriesValueCell': '{{name}} Wert {{number}}',
+	'pptx.chart.dataSheetInvalidNumber': 'Geben Sie eine Zahl ein',
 	'pptx.chart.seriesOptions': 'Datenreihenoptionen',
 	'pptx.chart.dataLabelOptions': 'Datenbeschriftungsoptionen',
 	'pptx.chart.labelSeparator': 'Trennzeichen',

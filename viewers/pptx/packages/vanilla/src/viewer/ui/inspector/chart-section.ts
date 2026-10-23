@@ -16,7 +16,7 @@ import type { PptxChartData } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createChartAdvancedSection } from './chart-advanced-section';
-import { createChartDataGrid } from './chart-data-grid';
+import { createChartDataSheet } from './chart-data-sheet';
 import { checkbox, input, tokenSelect } from './chart-exhaustive-controls';
 import { createChartExhaustiveSection } from './chart-exhaustive-section';
 import { createChartFilteredSeriesSection } from './chart-filtered-series-section';
@@ -58,16 +58,17 @@ export function createChartSection(
 		CHART_GROUPING_LABEL_KEYS,
 		t,
 	);
-	// The data grid replaces the old free-text categories/series textareas: the
+	// The data sheet replaces the old free-text categories/series textareas: the
 	// textarea round-trip rebuilt every series from parsed text, silently
 	// dropping per-series colour/marker/trendline fields the advanced controls
-	// below had just set. The grid edits through core's `chartData*` helpers,
+	// below had just set. The sheet edits through core's `chartData*` helpers,
 	// which preserve them.
-	const grid = createChartDataGrid(
+	const grid = createChartDataSheet(
 		doc,
 		t,
 		(data) => handlers.setChartData(data),
-		() => handlers.getChartFollowDataPoint(),
+		// Read on every update; partial handler stubs (tests, embedders) fall back to the default.
+		() => handlers.getChartFollowDataPoint?.() ?? true,
 	);
 	const legend = checkbox(doc, t('pptx.chart.showLegend'));
 	const labels = checkbox(doc, t('pptx.chart.dataLabels'));
@@ -204,6 +205,7 @@ export function createChartSection(
 		},
 		/** Read-only mode: disables the Chart Filters / Value From Cells controls. */
 		setEditable(editable: boolean) {
+			grid.setEditable(editable);
 			filteredSeries.setEditable(editable);
 			advanced.setEditable(editable);
 		},

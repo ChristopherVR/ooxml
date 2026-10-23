@@ -2449,3 +2449,23 @@ Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move).
 - `src/core/diagram/text/node-text-paragraphs.ts` is `smartArtParagraphsText` and `firstParagraphRuns` from `src/core/pptx/core/core/runtime/smartart-text-paragraphs.ts`, generic; the pptx functions forward to it (the object-tree parser and builder stay in pptx).
 - `src/core/diagram/text/node-text-projection.ts` is the structure of `projectSmartArtNodeText` from `src/core/pptx/core/utils/smartart-node-text-projection.ts` (segments, paragraph metadata, `dgm:bulletEnabled` synthesis, paragraph breaks), parameterised by a styler. The pptx module keeps its `TextStyle` styler over its own parsers and calls the shared projection.
 - `src/core/diagram/text/node-text-neutral.ts` (DOM reader into the node paragraphs and the neutral styler) is new code.
+
+## Shared chart data sheet (2026-10-23)
+
+Source: ChristopherVR/ooxml at `3b2ecd9a6` (an in-repo move).
+
+- `src/core/text/tsv.ts` is `src/core/xlsx/edit/clipboard-text.ts` moved unchanged (a module
+  comment added) so the chart data sheet reads Excel's clipboard text without importing the
+  `xlsx` area; `xlsx/edit/clipboard-text.ts` now re-exports it.
+- `src/ui/src/chart/data-sheet.ts` (`office-ui-chart-data-sheet`) replaces the five per-binding
+  PowerPoint chart data grids (`react/.../inspector/ChartDataGrid.tsx`,
+  `vue/.../inspector/ChartDataGrid.vue`, `svelte/.../inspector/ChartDataGrid.svelte`,
+  `vanilla/.../inspector/chart-data-grid.ts` and the grid of
+  `angular/src/viewer/chart-data-editor.component.ts`). What changed: one Lit element instead of
+  five templates; the highlight, add/remove, accessible names and refuse-a-non-number policy are
+  kept; keyboard navigation, tab-separated paste and locale number parsing are new. The vanilla
+  grid's ragged-series padding moved to `src/core/pptx/core/utils/chart-data-sheet.ts`.
+
+New code (not moved): `src/core/chart/data-sheet.ts`, `src/core/text/locale-number.ts`,
+`src/core/pptx/core/utils/chart-data-sheet.ts` and the `pptx-ui-chart-data-sheet` alias
+(`src/ui/src/pptx/web-components/chart-data-sheet.ts`).

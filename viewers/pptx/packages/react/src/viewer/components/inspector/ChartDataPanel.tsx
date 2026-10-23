@@ -1,17 +1,11 @@
 import {
-	addChartCategory,
-	addChartSeries,
 	chartGridlinesPatch,
 	chartGridlinesState,
 	collapseChartTitleRunsForEdit,
 	hideChartSeries,
 	patchChartData,
-	removeChartCategory,
-	removeChartSeries,
 	restoreFilteredSeries,
 	seriesSecondaryAxisPatch,
-	setChartCategoryLabel,
-	setChartCellValue,
 	setDataLabelsRangeCache,
 } from 'ooxml-ui/pptx';
 import type {
@@ -44,10 +38,10 @@ import { useViewerOptionsContext } from '../viewer-options-context';
 import { ChartAxisOptions } from './ChartAxisOptions';
 import { ChartAxisStyleOptions } from './ChartAxisStyleOptions';
 import { ChartComboTypeOptions } from './ChartComboTypeOptions';
-import { ChartDataGrid } from './ChartDataGrid';
 import { ChartDataLabelOptions } from './ChartDataLabelOptions';
 import { ChartDataPointMarkerOptions } from './ChartDataPointMarkerOptions';
 import { ChartDataPointOptions } from './ChartDataPointOptions';
+import { ChartDataSheet } from './ChartDataSheet';
 import { ChartDisplayOptions } from './ChartDisplayOptions';
 import { ChartErrorBarOptions } from './ChartErrorBarOptions';
 import { ChartFilteredSeriesOptions } from './ChartFilteredSeriesOptions';
@@ -217,63 +211,6 @@ export function ChartDataPanel({ selectedElement, canEdit, onUpdateElement }: Ch
 			updateSeries(index, { color: color ?? undefined });
 		},
 		[updateSeries],
-	);
-
-	// ── Data-grid edits ─────────────────────────────────────────
-	// The guards (auto-naming, keep-at-least-one, reject non-numeric cells) live
-	// in `pptx-viewer-shared`'s `chart-data-grid-ops` so every binding's grid
-	// behaves identically; `null` means the edit must not be applied.
-	const updateCategoryLabel = useCallback(
-		(catIndex: number, value: string) => {
-			const next = chartData && setChartCategoryLabel(chartData, catIndex, value);
-			if (next) {
-				replaceChartData(next);
-			}
-		},
-		[chartData, replaceChartData],
-	);
-
-	const updateValue = useCallback(
-		(seriesIndex: number, catIndex: number, raw: string) => {
-			const next = chartData && setChartCellValue(chartData, seriesIndex, catIndex, raw);
-			if (next) {
-				replaceChartData(next);
-			}
-		},
-		[chartData, replaceChartData],
-	);
-
-	// ── Add / Remove helpers ────────────────────────────────────
-	const addCategory = useCallback(() => {
-		if (chartData) {
-			replaceChartData(addChartCategory(chartData));
-		}
-	}, [chartData, replaceChartData]);
-
-	const removeCategory = useCallback(
-		(catIndex: number) => {
-			const next = chartData && removeChartCategory(chartData, catIndex, followDataPoint);
-			if (next) {
-				replaceChartData(next);
-			}
-		},
-		[chartData, followDataPoint, replaceChartData],
-	);
-
-	const addSeries = useCallback(() => {
-		if (chartData) {
-			replaceChartData(addChartSeries(chartData));
-		}
-	}, [chartData, replaceChartData]);
-
-	const removeSeries = useCallback(
-		(seriesIndex: number) => {
-			const next = chartData && removeChartSeries(chartData, seriesIndex);
-			if (next) {
-				replaceChartData(next);
-			}
-		},
-		[chartData, replaceChartData],
 	);
 
 	// ── PowerPoint "Chart Filters" show/hide + "Value From Cells" cache edit ──
@@ -517,22 +454,16 @@ export function ChartDataPanel({ selectedElement, canEdit, onUpdateElement }: Ch
 				onUpdateChartData={updateChartData}
 			/>
 
-			<ChartDataGrid
-				categories={categories}
-				series={series}
+			<ChartDataSheet
+				chartData={chartData}
 				canEdit={canEdit}
+				followDataPoint={followDataPoint}
 				highlightCell={
 					canvasPart
 						? { seriesIndex: canvasPart.seriesIndex, pointIndex: canvasPart.pointIndex }
 						: null
 				}
-				onUpdateSeries={updateSeries}
-				onUpdateCategoryLabel={updateCategoryLabel}
-				onUpdateValue={updateValue}
-				onAddCategory={addCategory}
-				onRemoveCategory={removeCategory}
-				onAddSeries={addSeries}
-				onRemoveSeries={removeSeries}
+				onChange={replaceChartData}
 			/>
 		</>
 	);

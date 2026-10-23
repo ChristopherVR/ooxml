@@ -50,6 +50,7 @@ export type {
 } from './form/color-custom';
 import { defineColorCustom } from './form/color-custom';
 import { defineChartPicker } from './dialog/chart-picker';
+import { defineChartDataSheet } from './chart/data-sheet';
 
 export {
 	defineAccount,
@@ -94,6 +95,7 @@ export {
 	defineColorGrid,
 	defineColorCustom,
 	defineChartPicker,
+	defineChartDataSheet,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -227,6 +229,13 @@ export {
 	type OfficeChartValue,
 } from './dialog/chart-picker';
 export {
+	type OfficeChartDataChange,
+	type OfficeChartDataChangeEvent,
+	type OfficeChartDataSheetHighlight,
+	type OfficeChartDataSheetLabels,
+	type OfficeUiChartDataSheet,
+} from './chart/data-sheet';
+export {
 	optionsLabels,
 	optionText,
 	personalizeSection,
@@ -281,6 +290,7 @@ export const CONTROL_DEFINERS = [
 	defineColorGrid,
 	defineColorCustom,
 	defineChartPicker,
+	defineChartDataSheet,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

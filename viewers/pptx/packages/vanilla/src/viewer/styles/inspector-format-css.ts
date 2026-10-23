@@ -20,67 +20,8 @@ export const INSPECTOR_FORMAT_CSS = `
 .pptxv-text3d-bevel-label { color: var(--pptx-muted-foreground); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
 .pptxv-text3d-color { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
-/* ── Chart data grid ─────────────────────────────────────────────────── */
-.pptxv-chart-grid { display: grid; gap: 4px; margin: 6px 0; max-width: 100%; overflow-x: auto; }
-.pptxv-chart-grid[hidden] { display: none; }
-.pptxv-chart-grid-toolbar { display: flex; justify-content: flex-end; gap: 4px; }
-.pptxv-chart-grid-btn {
-	padding: 2px 6px;
-	border: 1px solid var(--pptx-border);
-	border-radius: var(--pptx-radius);
-	background: var(--pptx-muted);
-	color: var(--pptx-foreground);
-	font: inherit;
-	font-size: 10px;
-	cursor: pointer;
-}
-.pptxv-chart-grid-btn:hover:not(:disabled) { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
-.pptxv-chart-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-.pptxv-chart-grid-table th, .pptxv-chart-grid-table td { padding: 1px; min-width: 72px; }
-.pptxv-chart-grid-table th { font-weight: 400; }
-.pptxv-chart-grid-table :is(th, td) { display: table-cell; white-space: nowrap; }
-.pptxv-chart-grid-cell {
-	box-sizing: border-box;
-	width: 100%;
-	min-width: 52px;
-	padding: 2px 4px;
-	border: 1px solid var(--pptx-border);
-	border-radius: var(--pptx-radius);
-	background: var(--pptx-background);
-	color: var(--pptx-foreground);
-	font: inherit;
-	font-size: 11px;
-}
-.pptxv-chart-grid-cell:focus-visible { outline: 2px solid var(--pptx-ring); outline-offset: -1px; }
-/* Ring-highlight for the cell matching the on-canvas chart part selection. */
-.pptxv-chart-grid-cell-highlight { outline: 2px solid var(--pptx-ring); outline-offset: -1px; }
-.pptxv-chart-grid-remove {
-	margin-left: 2px;
-	padding: 0 3px;
-	border: none;
-	background: transparent;
-	color: var(--pptx-muted-foreground);
-	font: inherit;
-	cursor: pointer;
-}
-.pptxv-chart-grid-remove:hover { color: var(--pptx-destructive); }
-/* Below this width, matches isDensePanelCompact()/MOBILE_BREAKPOINT (768) in
-   pptx-viewer-shared: getDenseGridLayoutPlan(width) returns
-   stickyFirstColumn: true, minCellWidthPx: 64, and
-   getDensePanelTouchTargetPx(width) returns MIN_TOUCH_TARGET_PX (44). Pins
-   the category-label column so a value scrolled into view still reads
-   against its row, and gives the add/remove controls a touch-sized hit area. */
-@media (max-width: 767px) {
-	.pptxv-chart-grid-table th, .pptxv-chart-grid-table td { min-width: 64px; }
-	.pptxv-chart-grid-table th:first-child, .pptxv-chart-grid-table td:first-child {
-		position: sticky;
-		left: 0;
-		z-index: 1;
-		background: var(--pptx-background);
-	}
-	.pptxv-chart-grid-table thead th:first-child { z-index: 2; }
-	.pptxv-chart-grid-btn, .pptxv-chart-grid-remove { min-width: 44px !important; min-height: 44px !important; }
-}
+/* ── Chart data sheet (the shared pptx-ui-chart-data-sheet styles itself) ── */
+.pptxv-chart-sheet { margin: 6px 0; }
 
 /* ── Table data grid ─────────────────────────────────────────────────── */
 .pptxv-table-grid-header { display: flex; align-items: center; justify-content: space-between; gap: 4px; }

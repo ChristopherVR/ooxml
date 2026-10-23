@@ -23,7 +23,7 @@ import type { InspectorHandlers, InspectorState } from './types';
  * values can be retyped from the sidebar. Tables had no equivalent, and the
  * only way to change a cell's text was to double-click it on the canvas, which
  * is awkward for a small table and impossible for a cell scrolled out of view.
- * This is the table analogue of `chart-data-grid.ts`, and it is deliberately
+ * This is the table analogue of the chart data sheet (`chart-data-sheet.ts`), and it is deliberately
  * built the same way so both behave identically.
  *
  * Every mutation goes through the pure element-level helpers in

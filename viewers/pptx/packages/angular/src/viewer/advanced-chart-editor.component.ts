@@ -4,7 +4,7 @@
  *
  * Selector: `pptx-advanced-chart-editor`
  *
- * Composes the existing data grid (`pptx-chart-data-editor`) with the advanced
+ * Composes the chart data sheet (`pptx-chart-data-editor`) with the advanced
  * formatting controls: display toggles, data labels, axis scale/format, axis
  * styling, markers, combo per-series types, per-data-point overrides, trendlines,
  * and error bars. Every child emits a complete new `ChartPptxElement`, which this

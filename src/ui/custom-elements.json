@@ -837,6 +837,69 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "chart/data-sheet.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChartDataSheet",
+					"tagName": "office-ui-chart-data-sheet",
+					"customElement": true,
+					"description": "`<office-ui-chart-data-sheet>`: the categories x series table of a chart's \"Edit Data\" view, shared by every product. Series names run across the header row, category labels down the first column, values in between; the toolbar adds a category or a series and each header has a remove button while more than one is left. Arrow keys, Enter, Tab, F2 and Escape behave as in the spreadsheet PowerPoint opens; pasting a tab-separated block (from Excel, Word or this sheet) fills cells from the focused one, adding the series and categories it needs. Values are read and shown in `locale`'s number convention (the browser's when unset, as Office follows the system's); a value that is not a number is refused and the cell restored. The host sets `data` (`{ categories, series: [{ name, values }] }`), `labels` (translated), `highlight` and `disabled`, and maps `office-chart-data-change` `{ edits, data }` onto its own chart model; the sheet shows the edited data at once and takes whatever `data` the host sets next.",
+					"attributes": [
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "locale"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "data"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "highlight"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-chart-data-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chart-data-sheet",
+					"declaration": {
+						"name": "OfficeUiChartDataSheet"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "dialog/chart-picker.ts",
 			"declarations": [
 				{

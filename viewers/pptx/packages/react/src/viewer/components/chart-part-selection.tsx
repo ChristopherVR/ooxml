@@ -1,7 +1,7 @@
 /**
  * Chart part selection context: the bridge between on-canvas chart part
  * clicks (ChartElementView) and the chart inspector (ChartDataPanel /
- * ChartDataGrid), without threading props through the canvas layers.
+ * ChartDataSheet), without threading props through the canvas layers.
  *
  * The default value is an inert no-op so chart components keep working when
  * rendered outside the viewer (tests, thumbnails).

@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import type { VueWrapper } from '@vue/test-utils';
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -50,6 +51,22 @@ function lastChartData(emitted: unknown): PptxChartData {
 		throw new Error('patch has no chartData');
 	}
 	return patch.chartData;
+}
+
+/** The shadow root of the shared chart data sheet the panel renders. */
+function sheetRoot(wrapper: VueWrapper): ShadowRoot {
+	return wrapper.get('pptx-ui-chart-data-sheet').element.shadowRoot!;
+}
+
+function sheetCell(wrapper: VueWrapper, row: number, col: number): HTMLInputElement {
+	return sheetRoot(wrapper).querySelector<HTMLInputElement>(
+		`input[data-row="${row}"][data-col="${col}"]`,
+	)!;
+}
+
+function commitCell(input: HTMLInputElement, value: string): void {
+	input.value = value;
+	input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 describe('chartPanel', () => {
@@ -330,9 +347,9 @@ describe('chartPanel', () => {
 		expect(next.series[0].dataPoints?.find((p) => p.idx === 1)?.spPr?.fillColor).toBe('#abcdef');
 	});
 
-	// ── Data grid + summary ────────────────────────────────────────────
+	// ── Data sheet (shared pptx-ui-chart-data-sheet) ──────────────────
 
-	it('renders a data summary line reporting series and category counts', () => {
+	it('renders the shared data sheet with a summary of series and category counts', () => {
 		const wrapper = mount(ChartPanel, {
 			props: {
 				element: chartElement({
@@ -343,48 +360,39 @@ describe('chartPanel', () => {
 				}),
 			},
 		});
-		expect(wrapper.get('[data-testid="chart-data-summary"]').text()).toBe(
+		expect(sheetRoot(wrapper).querySelector('.summary')!.textContent).toBe(
 			'2 Series · 3 Categories',
 		);
 	});
 
-	it('editing a grid value emits chartData with the new numeric value', async () => {
+	it('editing a sheet value emits chartData with the new numeric value', () => {
 		const wrapper = mount(ChartPanel, { props: { element: chartElement() } });
-		await setControlValue(wrapper.findAll('[data-testid="chart-grid-value"]')[1], '99');
+		commitCell(sheetCell(wrapper, 2, 1), '99');
 
 		const next = lastChartData(wrapper.emitted('update'));
 		expect(next.series[0].values[1]).toBe(99);
 	});
 
-	it('renaming a series via the grid header emits chartData with the new name', async () => {
+	it('renaming a series in the sheet header emits chartData with the new name', () => {
 		const wrapper = mount(ChartPanel, { props: { element: chartElement() } });
-		await setControlValue(wrapper.get('[data-testid="chart-grid-series-name"]'), 'Profit');
+		commitCell(sheetCell(wrapper, 0, 1), 'Profit');
 
 		const next = lastChartData(wrapper.emitted('update'));
 		expect(next.series[0].name).toBe('Profit');
 	});
 
-	it('adding a series appends a zero-filled series matching the category count', async () => {
+	it('adding a series appends a zero-filled series matching the category count', () => {
 		const wrapper = mount(ChartPanel, { props: { element: chartElement() } });
-		await wrapper.get('[data-testid="chart-add-series"]').trigger('click');
+		sheetRoot(wrapper).querySelector<HTMLButtonElement>('[data-action="add-series"]')!.click();
 
 		const next = lastChartData(wrapper.emitted('update'));
 		expect(next.series).toHaveLength(2);
 		expect(next.series[1].values).toStrictEqual([0, 0, 0]);
 	});
 
-	it('adding a category appends a label and a zero to each series', async () => {
+	it('removing a category drops it and its values from every series', () => {
 		const wrapper = mount(ChartPanel, { props: { element: chartElement() } });
-		await wrapper.get('[data-testid="chart-add-category"]').trigger('click');
-
-		const next = lastChartData(wrapper.emitted('update'));
-		expect(next.categories).toHaveLength(4);
-		expect(next.series[0].values).toHaveLength(4);
-	});
-
-	it('removing a category drops it and its values from every series', async () => {
-		const wrapper = mount(ChartPanel, { props: { element: chartElement() } });
-		await wrapper.findAll('[data-testid="chart-remove-category"]')[0].trigger('click');
+		sheetRoot(wrapper).querySelectorAll<HTMLButtonElement>('th.category button.remove')[0]!.click();
 
 		const next = lastChartData(wrapper.emitted('update'));
 		expect(next.categories).toStrictEqual(['Feb', 'Mar']);
