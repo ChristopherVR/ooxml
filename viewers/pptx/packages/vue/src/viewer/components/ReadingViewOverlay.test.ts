@@ -75,6 +75,10 @@ const globals = globalThis as unknown as {
 	ResizeObserver?: typeof ResizeObserver;
 };
 let requestFullscreen: ReturnType<typeof vi.fn>;
+// The environment's own, put back after each test: test files share a worker, so deleting them
+// left every later file without a ResizeObserver.
+const originalResizeObserver = globals.ResizeObserver;
+const originalRequestFullscreen = Element.prototype.requestFullscreen;
 
 beforeEach(() => {
 	globals.ResizeObserver = StubResizeObserver as unknown as typeof ResizeObserver;
@@ -83,7 +87,16 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	delete globals.ResizeObserver;
+	if (originalResizeObserver) {
+		globals.ResizeObserver = originalResizeObserver;
+	} else {
+		delete globals.ResizeObserver;
+	}
+	if (originalRequestFullscreen) {
+		Element.prototype.requestFullscreen = originalRequestFullscreen;
+	} else {
+		delete (Element.prototype as Partial<Element>).requestFullscreen;
+	}
 });
 
 describe('reading view overlay', () => {
