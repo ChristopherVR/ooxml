@@ -63,8 +63,10 @@ async function rowColors(row: Locator): Promise<string[]> {
 }
 
 /**
- * The inspector's native colour inputs, in document order: for a shape the
- * fill picker comes first and the stroke picker after it in every binding.
+ * The inspector's native colour inputs, in document order. Every binding shows
+ * at least two for a shape, but not in the same order: Vue lays its Text section
+ * (with the text colour) out above Fill. A case that needs the FILL picker
+ * itself finds it with {@link fillColorInput}.
  */
 function colorInputs(page: Page): Locator {
 	return inspector(page).locator('input[type="color"]:visible');
@@ -136,6 +138,30 @@ async function selectSourceShape(page: Page): Promise<void> {
  */
 async function shapeFill(shape: Locator): Promise<string> {
 	return shape.evaluate((el) => getComputedStyle(el).backgroundColor);
+}
+
+/** `rgb(r, g, b)` as the `#rrggbb` a colour input holds. */
+function rgbToHex(rgb: string): string {
+	const channels = (/rgba?\(([^)]+)\)/u.exec(rgb)?.[1] ?? '').split(',').slice(0, 3);
+	return `#${channels.map((channel) => Number(channel).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * The inspector colour input that edits the shape's fill: the one showing the
+ * fill the shape paints, as `theme-color-picker.spec.ts` finds its fill row.
+ * Exactly one input must show it, or the case would not know which picker it
+ * drives.
+ */
+async function fillColorInput(page: Page, shape: Locator): Promise<Locator> {
+	const fill = rgbToHex(await shapeFill(shape));
+	const values = await colorInputs(page).evaluateAll((inputs) =>
+		inputs.map((input) => (input as HTMLInputElement).value.toLowerCase()),
+	);
+	expect(
+		values.filter((value) => value === fill),
+		`one inspector colour input shows the fill ${fill}`,
+	).toHaveLength(1);
+	return colorInputs(page).nth(values.indexOf(fill));
 }
 
 /**
@@ -241,13 +267,14 @@ test.describe('recent colours', () => {
 		await loadDeck(page, DECK);
 		await selectSourceShape(page);
 		const shape = sourceShape(page);
+		const fill = await fillColorInput(page, shape);
 
 		// No `change` yet: the picker is still open, so this is all preview.
 		for (const [shade, painted] of [
 			['#330000', 'rgb(51, 0, 0)'],
 			['#990000', 'rgb(153, 0, 0)'],
 		] as const) {
-			await dragColor(colorInputs(page).first(), [shade]);
+			await dragColor(fill, [shade]);
 			await expect.poll(() => shapeFill(shape)).toBe(painted);
 		}
 		// A preview is not an edit: Undo has nothing to take back yet.
@@ -261,11 +288,12 @@ test.describe('recent colours', () => {
 		await selectSourceShape(page);
 		const shape = sourceShape(page);
 		const before = await shapeFill(shape);
+		const fill = await fillColorInput(page, shape);
 		await expect(undoButton(page)).toBeDisabled();
 
 		const settled = '#cc0000';
-		await dragColor(colorInputs(page).first(), ['#330000', '#660000', '#990000', settled]);
-		await settleColor(colorInputs(page).first(), settled);
+		await dragColor(fill, ['#330000', '#660000', '#990000', settled]);
+		await settleColor(fill, settled);
 		await expect.poll(() => shapeFill(shape)).toBe('rgb(204, 0, 0)');
 		await expect(undoButton(page)).toBeEnabled();
 
