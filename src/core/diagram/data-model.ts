@@ -13,6 +13,7 @@ import {
 	type XmlElement,
 } from './dom';
 import type { DiagramConnection, DiagramDataModel, DiagramIssue, DiagramPoint } from './types';
+import { readDiagramNodeParagraphs } from './text/node-text-neutral';
 
 /** `parTrans` and `sibTrans` points carry the text drawn on an org-chart relationship line. */
 const TRANSITION_TYPES: ReadonlySet<string> = new Set(['parTrans', 'sibTrans']);
@@ -67,13 +68,16 @@ export function textBodyParagraphs(body: XmlElement | undefined): string[] {
 function parsePoint(element: XmlElement): DiagramPoint | undefined {
 	const modelId = stringAttribute(element, 'modelId');
 	if (!modelId) return undefined;
-	const paragraphs = textBodyParagraphs(first(element, 't', NS.dgm));
+	const body = first(element, 't', NS.dgm);
+	const paragraphs = textBodyParagraphs(body);
+	const textParagraphs = readDiagramNodeParagraphs(body);
 	const prSet = first(element, 'prSet', NS.dgm);
 	const point: DiagramPoint = {
 		modelId,
 		type: stringAttribute(element, 'type') ?? 'node',
 		paragraphs,
 		text: paragraphs.join('\n'),
+		...(textParagraphs ? { textParagraphs } : {}),
 	};
 	const optional: [keyof DiagramPoint, string | number | undefined][] = [
 		['connectionId', stringAttribute(element, 'cxnId')],

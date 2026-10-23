@@ -6,6 +6,7 @@ export type * from './model';
 export * from './engine';
 export * from './layout';
 export * from './hierarchy';
+export * from './text';
 export * from './attributes';
 export * from './layout-category';
 export * from './relationships';

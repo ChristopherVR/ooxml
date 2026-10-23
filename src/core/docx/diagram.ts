@@ -11,6 +11,7 @@ import {
 	parseRelationshipIdAttributes,
 	type DiagramDrawing,
 	type DiagramIssue,
+	type DiagramNeutralTextParagraph,
 	type DiagramLayoutType,
 	type DiagramRelationshipIds,
 } from '../diagram/index';
@@ -36,6 +37,11 @@ export interface DocxDiagramNode {
 	text: string;
 	/** Model id of the parent content node, when the data model has one. */
 	parentId?: string;
+	/**
+	 * The node's paragraphs on the neutral DrawingML text model (read-only); project them with
+	 * `projectDiagramNodeTextNeutral` from `ooxml-core/diagram`.
+	 */
+	paragraphs?: DiagramNeutralTextParagraph[];
 }
 
 /**
@@ -243,6 +249,7 @@ export async function resolveDiagramParts(
 		diagram.nodes = loaded.data.nodes.map((node) => ({
 			id: node.modelId,
 			text: node.text,
+			...(node.textParagraphs ? { paragraphs: node.textParagraphs } : {}),
 			...(loaded.data?.parentById.get(node.modelId)
 				? { parentId: loaded.data.parentById.get(node.modelId) as string }
 				: {}),

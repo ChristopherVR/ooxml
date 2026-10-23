@@ -15,6 +15,7 @@ import type {
 } from '../drawingml/types';
 
 export type { AttributeReader } from '../drawingml/types';
+import type { DiagramNeutralTextParagraph } from './text/node-text-neutral';
 
 // The DrawingML primitives a diagram uses are the neutral `drawingml` types under their
 // historical diagram names, kept so the public `ooxml-core/diagram` API does not change.
@@ -121,6 +122,11 @@ export interface DiagramPoint {
 	paragraphs: string[];
 	/** The paragraphs joined by a newline. */
 	text: string;
+	/**
+	 * The `dgm:t` paragraphs on the neutral DrawingML text model (runs, breaks, fields and their
+	 * properties), for `projectDiagramNodeTextNeutral`; absent when the point has no text body.
+	 */
+	textParagraphs?: DiagramNeutralTextParagraph[];
 	connectionId?: string;
 	/** `dgm:prSet` identifiers that tie a presentation point to its data point and layout node. */
 	presAssocId?: string;

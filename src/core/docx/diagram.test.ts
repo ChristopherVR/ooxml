@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
+import { projectDiagramNodeTextNeutral } from '../diagram/index';
 import { diagramsIn, loadDocx, resolveDiagramColor, type DocxDiagram } from './index';
 import { at, expectParagraph } from './test-support/access';
 
@@ -173,6 +174,14 @@ describe('SmartArt fallbacks', () => {
 		expect(first.notice).toContain('no usable cached drawing');
 		expect(first.issues.map((issue) => issue.code)).toContain('DIAGRAM_DRAWING_ABSENT');
 		expect(first.nodes.some((node) => node.text.length > 0)).toBe(true);
+		// The node text is exposed on the neutral paragraph model, read-only, for a placeholder too.
+		const withText = first.nodes.find((node) => node.text.length > 0)!;
+		expect(
+			projectDiagramNodeTextNeutral(withText)
+				.filter((segment) => !segment.isParagraphBreak)
+				.map((segment) => segment.text)
+				.join('\n'),
+		).toBe(withText.text);
 		// The other diagram keeps its own drawing and is not given this one.
 		expect(second.rendering).toBe('cached-drawing');
 		expect(second.parts.drawing?.partName).toBe('word/diagrams/drawing2.xml');

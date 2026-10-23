@@ -108,7 +108,12 @@ async function resolveOne(object: SmartArtObject, info: Pending, source: SourceI
 	if (data)
 		object.nodes = data.nodes.map((node) => {
 			const parentId = data.parentById.get(node.modelId);
-			return { id: node.modelId, text: node.text, ...(parentId ? { parentId } : {}) };
+			return {
+				id: node.modelId,
+				text: node.text,
+				...(parentId ? { parentId } : {}),
+				...(node.textParagraphs ? { paragraphs: node.textParagraphs } : {}),
+			};
 		});
 	if (loaded.drawing && loaded.drawing.shapes.length > 0) {
 		object.diagram = loaded.drawing;
