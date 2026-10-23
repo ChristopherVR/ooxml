@@ -34,4 +34,10 @@ describe('editor-insert-chart buildChartInsertElement', () => {
 			expect(el.chartData?.series?.[1].histogramOptions?.layout).toBe('pareto');
 		}
 	});
+
+	it('passes the Insert Chart dialog title and grouping through', () => {
+		const el = buildChartInsertElement('column', CANVAS, { title: 'Sales', grouping: 'stacked' });
+		expect(el.type === 'chart' ? el.chartData?.title : undefined).toBe('Sales');
+		expect(el.type === 'chart' ? el.chartData?.grouping : undefined).toBe('stacked');
+	});
 });
