@@ -261,8 +261,10 @@ export class SmartArtController {
 		};
 	}
 
+	/** A new document: no current node, and the text pane closed. */
 	reset(): void {
 		this.current = null;
+		this.paneOpen = false;
 		if (this.dialog.isOpen) this.dialog.close();
 		this.sync();
 	}
