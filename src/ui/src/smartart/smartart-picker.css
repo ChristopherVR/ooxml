@@ -1,8 +1,11 @@
 :host {
 	display: grid;
-	grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) minmax(160px, 220px);
+	grid-template-columns: minmax(
+			calc(var(--office-space-6) * 5),
+			calc(var(--office-space-4) * 10)
+		) minmax(0, 1fr) minmax(calc(var(--office-space-4) * 10), calc(var(--office-space-5) * 11));
 	gap: var(--office-space-3);
-	min-height: 280px;
+	min-height: calc(var(--office-space-5) * 14);
 	font-family: var(--office-font);
 	font-size: var(--office-font-size);
 	color: var(--office-foreground);
@@ -40,7 +43,7 @@
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	align-content: start;
 	gap: var(--office-space-2);
-	max-height: 360px;
+	max-height: calc(var(--office-space-6) * 15);
 	overflow-y: auto;
 	padding: var(--office-space-1);
 }
@@ -68,8 +71,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 64px;
-	height: 40px;
+	width: calc(var(--office-space-4) * 4);
+	height: calc(var(--office-space-5) * 2);
 	overflow: hidden;
 	pointer-events: none;
 }
@@ -137,7 +140,7 @@ textarea:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
 	outline-offset: 0;
 }
-@media (max-width: 640px) {
+@media (max-width: 40em) {
 	:host {
 		grid-template-columns: minmax(0, 1fr);
 	}
@@ -152,6 +155,6 @@ textarea:focus-visible {
 	.category[aria-pressed='true'],
 	.layout[aria-selected='true'] {
 		border-color: Highlight;
-		outline: 2px solid Highlight;
+		outline: var(--office-focus-width) solid Highlight;
 	}
 }
