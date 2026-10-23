@@ -22,6 +22,8 @@ declare module 'react' {
 		interface IntrinsicElements {
 			'pptx-ui-search': WebControlProps;
 			'pptx-ui-options-dialog': WebControlProps;
+			'pptx-ui-insert-chart-dialog': WebControlProps;
+			'pptx-ui-insert-smartart-dialog': WebControlProps;
 			'pptx-ui-select': WebControlProps;
 			'pptx-ui-checkbox': WebControlProps;
 			'pptx-ui-radio': WebControlProps;

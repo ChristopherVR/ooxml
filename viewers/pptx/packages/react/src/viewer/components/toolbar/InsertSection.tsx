@@ -34,6 +34,8 @@ export interface InsertSectionProps {
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
+	/** Opens the Insert Chart dialog; without it the Chart menu leaves "Insert Chart..." out. */
+	onOpenChartDialog?: () => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
 	onAddActionButton: (shapeType: string) => void;
@@ -100,6 +102,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 				? FREEFORM_TOOL_IDS.filter((tool) => isDrawingToolVisible(customization, tool))
 				: [],
 			chartAvailable: Boolean(p.onAddChart),
+			chartDialogAvailable: Boolean(p.onAddChart && p.onOpenChartDialog),
 			fieldAvailable: Boolean(p.onInsertField),
 			headerFooterAvailable: Boolean(p.onOpenHeaderFooter),
 			newSlideAvailable: Boolean(p.onInsertSlideFromLayout && p.layoutOptions?.length),
@@ -166,6 +169,9 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					break;
 				case 'chart':
 					p.onAddChart?.(intent.value as InsertChartKind);
+					break;
+				case 'chartDialog':
+					p.onOpenChartDialog?.();
 					break;
 				case 'freeform':
 					p.onArmFreeformTool?.(intent.value as FreeformToolKind | null);

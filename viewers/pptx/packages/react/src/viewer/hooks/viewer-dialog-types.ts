@@ -102,6 +102,9 @@ export interface ViewerDialogsResult {
 	/** Whether the Insert SmartArt dialog is visible. */
 	isSmartArtDialogOpen: boolean;
 	setIsSmartArtDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	/** Whether the Insert Chart dialog is visible. */
+	isChartDialogOpen: boolean;
+	setIsChartDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	/** Whether the equation (MathML/OMML) editor dialog is visible. */
 	isEquationDialogOpen: boolean;
 	setIsEquationDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
