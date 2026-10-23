@@ -5,6 +5,10 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
+	InsertChartDialogInsertEvent,
+	InsertSmartArtDialogInsertEvent,
+	PptxUiInsertChartDialogElement,
+	PptxUiInsertSmartArtDialogElement,
 	SlideTemplateId,
 	InsertChartKind,
 	InsertSlideLayout,
@@ -16,7 +20,6 @@ import type {
 import type { Translator } from '../../../i18n';
 import { createSlideTemplateDialog } from '../home/slide-template-dialog';
 import type { RibbonInsertHandlers } from '../ribbon-types';
-import { createSmartArtDialog } from './insert/smartart-dialog';
 
 export interface InsertTab {
 	el: HTMLElement;
@@ -38,7 +41,8 @@ export interface InsertTab {
  * (backed by `EditActions`, so it's undoable and selects the new element), except
  * Equation, which opens the modal equation editor dialog, Hyperlink, which opens the
  * link editor for the current selection, Header & Footer, which opens the viewer's
- * own dialog, and SmartArt, whose gallery dialog stays native to this binding.
+ * own dialog, and SmartArt and Insert Chart..., which open the shared
+ * `pptx-ui-insert-smartart-dialog` / `pptx-ui-insert-chart-dialog`.
  */
 export function createInsertTab(
 	doc: Document,
@@ -62,9 +66,34 @@ export function createInsertTab(
 	el.className = 'pptxv-ribbon-tab-content';
 	const shared = doc.createElement('pptx-ui-ribbon-insert');
 	el.append(shared);
-	const smartArt = createSmartArtDialog(doc, t, (layout, defaultItems) =>
-		handlers.insertSmartArt(layout, defaultItems),
-	);
+	const dialogHost = () => el.closest<HTMLElement>('.pptxv') ?? doc.body;
+	const smartArt = doc.createElement(
+		'pptx-ui-insert-smartart-dialog',
+	) as PptxUiInsertSmartArtDialogElement;
+	smartArt.translateLabel = t;
+	smartArt.addEventListener('insert-smartart', (event) => {
+		const { layout, items } = (event as InsertSmartArtDialogInsertEvent).detail;
+		handlers.insertSmartArt(layout, items);
+	});
+	const chartDialog = doc.createElement(
+		'pptx-ui-insert-chart-dialog',
+	) as PptxUiInsertChartDialogElement;
+	chartDialog.translateLabel = t;
+	chartDialog.addEventListener('insert-chart', (event) => {
+		const { kind, title, grouping } = (event as InsertChartDialogInsertEvent).detail;
+		handlers.insertChart(kind, { title, grouping });
+	});
+	/** Mount a shared dialog in the viewer root, open it, and focus `restore` when it closes. */
+	const openDialog = (dialog: HTMLElement & { open: boolean }, restore?: () => void) => {
+		const host = dialogHost();
+		if (dialog.parentElement !== host) {
+			host.appendChild(dialog);
+		}
+		if (restore) {
+			dialog.addEventListener('dialog-close', restore, { once: true });
+		}
+		dialog.open = true;
+	};
 	const templateDialog = templates
 		? createSlideTemplateDialog(doc, t, {
 				onInsert: (templateId) => templates.insert(templateId),
@@ -81,6 +110,7 @@ export function createInsertTab(
 		newSlideAvailable: Boolean(handlers.addSlide),
 		commentAvailable: Boolean(onOpenComments),
 		slideTemplatesAvailable: templates ? (templates.available?.() ?? true) : false,
+		chartDialogAvailable: true,
 		layouts: [],
 		translate: t,
 	};
@@ -105,9 +135,7 @@ export function createInsertTab(
 						void handlers.insertMedia();
 						break;
 					case 'smartArt':
-						smartArt.open(el.closest<HTMLElement>('.pptxv') ?? doc.body, () =>
-							shared.focusControl('insert.illustrations.smartArt'),
-						);
+						openDialog(smartArt, () => shared.focusControl('insert.illustrations.smartArt'));
 						break;
 					case 'equation':
 						onToggleEquationPanel();
@@ -155,6 +183,10 @@ export function createInsertTab(
 			case 'chart':
 				handlers.insertChart(intent.value as InsertChartKind);
 				break;
+			case 'chartDialog':
+				chartDialog.kind = (state.chartKind as InsertChartKind) ?? DEFAULT_INSERT_CHART_KIND;
+				openDialog(chartDialog, () => shared.focusControl('insert.illustrations.chart'));
+				break;
 			case 'freeform':
 				handlers.armFreeformTool?.(intent.value as FreeformToolKind | null);
 				break;
@@ -168,11 +200,12 @@ export function createInsertTab(
 	sync();
 	return {
 		el,
-		openSmartArt: () => smartArt.open(el.closest<HTMLElement>('.pptxv') ?? doc.body, () => {}),
+		openSmartArt: () => openDialog(smartArt),
 		setEditable(editable) {
 			state = { ...state, editable };
 			if (!editable) {
-				smartArt.close();
+				smartArt.open = false;
+				chartDialog.open = false;
 				templateDialog?.close();
 			}
 			sync();

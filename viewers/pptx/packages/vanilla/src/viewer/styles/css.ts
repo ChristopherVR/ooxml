@@ -37,7 +37,6 @@ import { REGION_CSS } from './region-css';
 import { RIBBON_CSS } from './ribbon-css';
 import { RIBBON_QUICK_CSS } from './ribbon-quick-css';
 import { SLIDE_TEMPLATE_DIALOG_CSS } from './slide-template-dialog-css';
-import { SMARTART_DIALOG_CSS } from './smartart-dialog-css';
 
 /**
  * The viewer stylesheet, scoped under the `.pptxv` root class.
@@ -852,7 +851,6 @@ ${RIBBON_CSS}
 ${RIBBON_QUICK_CSS}
 ${DOCUMENT_PROPERTIES_CSS}
 ${FILE_INFO_CSS}
-${SMARTART_DIALOG_CSS}
 ${SLIDE_TEMPLATE_DIALOG_CSS}
 ${EQUATION_DIALOG_CSS}
 ${COLLAB_CSS}

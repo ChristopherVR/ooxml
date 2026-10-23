@@ -271,7 +271,7 @@ export function buildChromeCallbacks(
 				deps.getEditActions().insert(kind, shapeType, tableSize),
 			insertImage: () => deps.getEditActions().insertImage(),
 			insertMedia: () => deps.getEditActions().insertMedia(),
-			insertChart: (chartType) => deps.getEditActions().insertChart(chartType),
+			insertChart: (chartType, options) => deps.getEditActions().insertChart(chartType, options),
 			insertSmartArt: (layout, defaultItems) =>
 				deps.getEditActions().insertSmartArt(layout, defaultItems),
 			insertEquation: (omml) => deps.getEditActions().insertEquation(omml),
