@@ -77,6 +77,10 @@ const GROUP = new Set([
 	'firstSliceAng',
 	'holeSize',
 	'ofPieType',
+	'splitType',
+	'splitPos',
+	'custSplit',
+	'secondPieSize',
 	'scatterStyle',
 	'radarStyle',
 	'bubble3D',
@@ -86,6 +90,20 @@ const GROUP = new Set([
 	'wireframe',
 	'extLst',
 ]);
+
+/** `c:custSplit`: the indexes of the points drawn in the second pie or bar. */
+function customSplit(
+	context: ChartParseContext,
+	element: XmlElement | undefined,
+): number[] | undefined {
+	if (!element) return undefined;
+	reportUnmodelled(context, element, new Set(['secondPiePt']));
+	return children(element, 'secondPiePt', NS.c).flatMap((point) => {
+		const raw = attribute(point, 'val')?.trim();
+		const index = raw ? Number(raw) : Number.NaN;
+		return Number.isInteger(index) && index >= 0 ? [index] : [];
+	});
+}
 
 function parseGroup(context: ChartParseContext, element: XmlElement): ChartPlotGroup {
 	const { kind, is3D } = CHART_GROUP_ELEMENTS[element.localName] ?? { kind: 'bar', is3D: false };
@@ -132,6 +150,10 @@ function parseGroup(context: ChartParseContext, element: XmlElement): ChartPlotG
 			firstSliceAngle: number('firstSliceAng'),
 			holeSize: number('holeSize'),
 			ofPieType: cVal(element, 'ofPieType'),
+			splitType: cVal(element, 'splitType'),
+			splitPosition: number('splitPos'),
+			customSplit: customSplit(context, cChild(element, 'custSplit')),
+			secondPieSize: number('secondPieSize'),
 			scatterStyle: cVal(element, 'scatterStyle'),
 			radarStyle: cVal(element, 'radarStyle'),
 			bubble3D: flag('bubble3D'),
@@ -172,6 +194,8 @@ const AXIS = new Set([
 	'tickMarkSkip',
 	'noMultiLvlLbl',
 	'baseTimeUnit',
+	'majorTimeUnit',
+	'minorTimeUnit',
 	'dispUnits',
 	'extLst',
 ]);
@@ -226,6 +250,8 @@ function parseAxis(
 			tickMarkSkip: number('tickMarkSkip'),
 			noMultiLevelLabels: cBool(context, element, 'noMultiLvlLbl'),
 			baseTimeUnit: cVal(element, 'baseTimeUnit'),
+			majorTimeUnit: cVal(element, 'majorTimeUnit'),
+			minorTimeUnit: cVal(element, 'minorTimeUnit'),
 			displayUnits: parseDisplayUnits(context, cChild(element, 'dispUnits')),
 			spPr: shapeProperties(element),
 			txPr: textProperties(element),
