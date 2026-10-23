@@ -4,10 +4,18 @@
  *
  * WHY this file exists: these four sections (advanced character formatting,
  * the warp gallery, shadow/glow/reflection and 3D extrusion) used to hang off
- * `TextProperties`, which nothing rendered, so React alone shipped them as dead
- * code while Vue, Angular, Svelte and Vanilla surfaced the equivalents. They
- * are grouped here rather than inlined into `ShapeTextPanels` so that file
- * stays a thin presentational shell and neither grows past the 300-line limit.
+ * `TextProperties`, which nothing rendered, so React shipped them as dead
+ * code. They are grouped here rather than inlined into `ShapeTextPanels` so
+ * that file stays a thin presentational shell and neither grows past the
+ * 300-line limit.
+ *
+ * The other bindings show the same Text Warp, Text Effects and 3D text: Vue
+ * in `TextPanel.vue`, Angular in its inspector's Text Warp gallery and Text
+ * Effects and 3D Text sections, Svelte in `TextEffectsSection.svelte`, vanilla
+ * in `text-effects-controls.ts` and `text-3d-section.ts`. Vue, Angular and
+ * vanilla draw shadow/glow/reflection from the shared `TEXT_EFFECT_SECTIONS`
+ * descriptors; `TextEffectsPanel` here still builds its own controls, with the
+ * same defaults.
  *
  * The font/size/colour/alignment controls of the old `TextProperties` are
  * deliberately NOT here: the ribbon's Home tab already owns them, and a second
