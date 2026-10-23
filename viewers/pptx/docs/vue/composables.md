@@ -24,21 +24,21 @@ These composables describe how the viewer is wired. They are importable (see bel
 specific composition order and shared inputs; treat this table as conceptual reference, not an API
 contract.
 
-| Composable                  | Concern                                                                          |
-| --------------------------- | -------------------------------------------------------------------------------- |
-| `useLoadContent`            | Parses the PPTX buffer on load via `PptxHandler`.                                |
-| `useEditorHistory`          | Undo/redo snapshot stack, aware of the template (master/layout) element layer.   |
-| `useEditorOperations`       | Element create/update/delete/duplicate primitives.                               |
-| `useElementDrag`            | Move / resize / rotate / adjust, plus snap & alignment guides.                   |
-| `useElementInsertion`       | Shape / image / text box / table / chart insertion.                              |
-| `useSlideOperations`        | Add / delete / duplicate / reorder slides.                                       |
-| `useAutosave`               | Debounced autosave timer + status (see [Props > Autosave](/vue/props#autosave)). |
-| `usePresentationModeWiring` | Slideshow navigation wiring into the component.                                  |
-| `useExportWiring`           | PNG / PDF / GIF / WebM export + print, wired into the component.                 |
-| `useCollaborationWiring`    | Share/Broadcast dialog + prop-driven Yjs session lifecycle.                      |
-| `useRibbonProps`            | Composes the full Office-ribbon `RibbonProps` contract.                          |
-| `useEditorKeyboard`         | Config-driven keyboard-shortcut registry + dispatch.                             |
-| `useIsMobile`               | Device/viewport classification (mobile/tablet/orientation).                      |
+| Composable                  | Concern                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `useLoadContent`            | Parses the PPTX buffer on load via `PptxHandler`.                              |
+| `useEditorHistory`          | Undo/redo snapshot stack, aware of the template (master/layout) element layer. |
+| `useEditorOperations`       | Element create/update/delete/duplicate primitives.                             |
+| `useElementDrag`            | Move / resize / rotate / adjust, plus snap & alignment guides.                 |
+| `useElementInsertion`       | Shape / image / text box / table / chart insertion.                            |
+| `useSlideOperations`        | Add / delete / duplicate / reorder slides.                                     |
+| `useAutosave`               | Autosave interval + status (see [Props > Autosave](/vue/props#autosave)).      |
+| `usePresentationModeWiring` | Slideshow navigation wiring into the component.                                |
+| `useExportWiring`           | PNG / PDF / GIF / WebM export + print, wired into the component.               |
+| `useCollaborationWiring`    | Share/Broadcast dialog + prop-driven Yjs session lifecycle.                    |
+| `useRibbonProps`            | Composes the full Office-ribbon `RibbonProps` contract.                        |
+| `useEditorKeyboard`         | Config-driven keyboard-shortcut registry + dispatch.                           |
+| `useIsMobile`               | Device/viewport classification (mobile/tablet/orientation).                    |
 
 There are dozens more (dialogs, comments, sections, SmartArt editing, table editing, presentation
 sub-composables, mobile chrome, etc.). See the

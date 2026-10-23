@@ -46,9 +46,15 @@ description: 了解 pptx-viewer 的加载和保存流程、mixin 组合运行时
 - **动画和平滑切换引擎**：构建和播放时间线（`animation-timeline-*.ts`），以及平滑切换中的匹配和几何插值（`morph-matching.ts`、`morph-geometry-interp.ts`、`morph-text.ts`）。
 - **文本和样式解析**：项目符号编号、填充和渐变样式、图片效果滤镜，以及禁则换行样式。
 - **数学公式**：OMML 到 MathML、LaTeX 到 OMML 的转换器（`omml-to-mathml.ts`、`latex-to-omml.ts`，现位于共享的 `ooxml-core/math` 区域）。
-- **编辑行为**：历史记录、剪贴板、对齐参考线、格式刷、查找替换、协作同步和在线状态。
+- **编辑行为**：剪贴板、对齐参考线、格式刷、查找替换、协作同步和在线状态。
 
 同级目录还包括 `export/`、`i18n/`、`loader/`、`theme/`，以及可选的 `smartart-3d/` 渲染器。
+
+### 无界面控制器
+
+有状态的编辑器逻辑在 `render/controller/` 中只写一次，作为无界面控制器：一个包含 `getSnapshot()`、`subscribe(listener)` 和类型化操作的普通对象。撤销和重做历史（默认深度 100 步）、恢复自动保存（一个引擎，也会快照未提交的行内文本）、恢复提示、协作房间生命周期和 AI 面板都是控制器，画布手势（`createGestureController`）也是。键盘分发（`dispatchEditorKey`）、AI 桥接（`createPptxAiBridge`）、组的按下目标和幻灯片放映步骤是旁边的纯函数。每个框架绑定都把自己的响应式状态映射到一个通用的存储适配器（React 和 Vue 用 `useController`，Svelte 用 `controllerState`，Angular 用 `controllerSignal`，原生 JavaScript 用 `subscribe`），因此对控制器的修复会同时覆盖五个绑定。
+
+检查器中的“效果”“线条”“大小和位置”以及“文本框”部分是 `render/inspector/` 中的字段描述，由每个绑定的一个通用渲染器绘制。图表数据表、图表格式窗格、插入图表和 SmartArt 对话框、SmartArt 文本窗格以及图表设计图库，都是每个绑定都挂载的共享 `ooxml-ui` 元素。
 
 ::: info 共享的公共包
 每个组件都将 `ooxml-ui` 声明为运行时依赖，并导入其中的 PowerPoint 入口。Angular 使用同一套公共 API，不再复制源码。私有的 `pptx-viewer-shared` 包仅作为兼容外观保留，不包含任何实现。

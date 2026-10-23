@@ -181,7 +181,7 @@ viewer?.getMode(); // 'preview' | 'edit' | 'present' | 'master'
 
 ## 6. 自动保存与崩溃恢复 {#autosave}
 
-允许自动保存（默认行为）且提供 `filePath` 时，提交的编辑会经过防抖，序列化为 `.pptx` 字节并写入共享 IndexedDB 恢复存储。`filePath` 是 IndexedDB 记录键，通常使用文件名。显式 `autosaveIntervalMs` 决定保存频率，否则由用户在“文件 > 选项”中设置的自动恢复频率决定。每次成功生成快照后，`onautosave` 携带字节触发。
+允许自动保存（默认行为）且提供 `filePath` 时，提交的编辑会在自动保存间隔到达时序列化为 `.pptx` 字节并写入共享 IndexedDB 恢复存储。`filePath` 是 IndexedDB 记录键，通常使用文件名。显式 `autosaveIntervalMs` 决定保存频率，否则由用户在“文件 > 选项”中设置的自动恢复频率决定。每次成功生成快照后，`onautosave` 携带字节触发。
 
 ```svelte
 <PowerPointViewer

@@ -46,9 +46,15 @@ Das gemeinsame Rendering liegt in `src/ui/src/pptx/` im Repository-Stamm und wir
 - **Animations- und Morph-Engines**: Zeitleistenaufbau und Wiedergabe (`animation-timeline-*.ts`) sowie Morph-Übergangszuordnung und Geometrieinterpolation (`morph-matching.ts`, `morph-geometry-interp.ts`, `morph-text.ts`).
 - **Text- und Stilauflösung**: Aufzählungsnummerierung, Füll-/Verlaufsstile, Bildeffektfilter, Kinsoku-Zeilenumbruchstile.
 - **Mathematik**: Konverter von OMML zu MathML und von LaTeX zu OMML (`omml-to-mathml.ts`, `latex-to-omml.ts`, jetzt im gemeinsamen Bereich `ooxml-core/math`).
-- **Editor-Verhalten**: Verlauf, Zwischenablage, Ausrichtungshilfen, Formatübertragung, Suchen und Ersetzen, Zusammenarbeits-Sync und Anwesenheit.
+- **Editor-Verhalten**: Zwischenablage, Ausrichtungshilfen, Formatübertragung, Suchen und Ersetzen, Zusammenarbeits-Sync und Anwesenheit.
 
 Benachbarte Verzeichnisse decken `export/`, `i18n/`, `loader/`, `theme/` und den optionalen Renderer `smartart-3d/` ab.
+
+### Headless-Controller
+
+Zustandsbehaftete Editor-Logik ist als Headless-Controller in `render/controller/` einmal geschrieben: ein einfaches Objekt mit `getSnapshot()`, `subscribe(listener)` und typisierten Aktionen. Der Verlauf für Rückgängig und Wiederholen (standardmäßig 100 Schritte), die Wiederherstellungs-Autosave (eine Engine, die auch nicht übernommenen Inline-Text sichert), das Wiederherstellungsangebot, der Lebenszyklus des Zusammenarbeitsraums und das KI-Panel sind Controller, ebenso die Canvas-Gesten (`createGestureController`). Tastaturzuordnung (`dispatchEditorKey`), KI-Brücke (`createPptxAiBridge`), Gruppenziele und Schritte der Diashow sind reine Funktionen daneben. Jede Bindung ordnet ihren eigenen reaktiven Zustand einem generischen Store-Adapter zu (`useController` in React und Vue, `controllerState` in Svelte, `controllerSignal` in Angular, `subscribe` in Vanilla), sodass eine Korrektur am Controller alle fünf Bindungen erreicht.
+
+Die Inspektor-Abschnitte Effekte, Linie, Größe und Position sowie Textfeld sind Felddeschreibungen in `render/inspector/`, die je Bindung von einem generischen Renderer gezeichnet werden. Datentabelle des Diagramms, Formatbereich, Einfügedialoge für Diagramm und SmartArt, der SmartArt-Textbereich und die Diagramm-Entwurfsgalerien sind gemeinsame `ooxml-ui`-Elemente, die jede Bindung einbindet.
 
 ::: info Gemeinsame öffentliche Pakete
 Jedes Binding deklariert `ooxml-ui` als Laufzeitabhängigkeit und importiert dessen PowerPoint-Einstiegspunkte. Angular nutzt dieselbe öffentliche API, ohne eine Quellkopie mitzuführen. Das private Paket `pptx-viewer-shared` bleibt eine Kompatibilitätsfassade und enthält keine Implementierung.

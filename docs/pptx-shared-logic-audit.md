@@ -34,7 +34,31 @@ and changes are recorded in `../PROVENANCE.md`.
 
 The viewer copies of the automatic axis, histogram binning and theme swatch modules, which had been duplicated rather than moved, now forward to the core.
 
+## Moved into the shared PowerPoint UI (2026-10-23)
+
+These were view behaviour duplicated in every binding, so they moved to `src/ui/src/pptx` rather than
+to the core. Each binding adapts the shared controller or function; see the controller convention in
+`viewers/pptx/AGENTS.md`.
+
+| Shared home (`src/ui/src/pptx`)                               | Capability                                                                                  |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `render/controller/history-controller.ts`                     | Undo and redo, one default depth (100) for every binding                                    |
+| `render/controller/autosave-controller.ts`                    | Recovery autosave: one interval engine, one status, uncommitted inline text included        |
+| `render/controller/autosave-recovery-controller.ts`           | The recovery offer                                                                          |
+| `render/controller/collaboration-session-controller.ts`       | The collaboration room lifecycle over the shared provider                                   |
+| `ai/panel-controller.ts`, `ai/bridge-factory.ts`              | AI panel state and the AI bridge                                                            |
+| `render/editor-gestures.ts`                                   | Move, resize and rotate gestures (`createGestureController`)                                |
+| `render/editor-key-dispatch.ts`                               | Keymap dispatch with one `EditorKeyHandlers` interface                                      |
+| `render/group-press-target.ts`                                | Group press and double-click targets                                                        |
+| `render/presentation-show-step.ts`                            | Slide show forward and backward steps                                                       |
+| `render/inspector/`                                           | Field descriptors for the Effects, Line, Size and Position, and Text Box inspector sections |
+| `web-components/` plus `ooxml-ui` chart and SmartArt elements | Chart data sheet, chart Format pane, insert chart and SmartArt dialogs, SmartArt text pane  |
+
+Fill inspector fields are still per binding.
+
 ## Remaining candidates and prerequisites
+
+Re-checked on 2026-10-23: the candidates below still match the tree, at the paths listed.
 
 On 2026-10-07, the shared renderer moved into `src/ui/src/pptx` and DOM-free
 editing helpers into `src/core/pptx/editor`. Snapshot cloning now belongs to
@@ -43,13 +67,13 @@ the core editor entry as well. Cached drawing bounds are shared through
 the independent text-frame fallback behavior. These bounds use authored
 rectangles, without rotated geometry or effect extents.
 
-| Candidate in `src/ui/src/pptx/render`                  | Destination                                      | Required separation                                                                                           |
-| ------------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `chart-date-format.ts` and chart number formatting     | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation                               |
-| Remaining SmartArt family layout approximations        | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine                          |
-| Font-picker catalogs and grouping                      | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                                           |
-| Cross-product history contracts and `secure-random.ts` | Neutral editor / crypto areas                    | PowerPoint history is already in core; agree cross-product snapshots and preserve strong RNG failure behavior |
-| `path-gradient-rect.ts`                                | `drawingml`                                      | Still emits SVG markup; the geometry already lives in `drawingml/rect-path-gradient.ts`                       |
+| Candidate in `src/ui/src/pptx/render`                  | Destination                                      | Required separation                                                                                                                                       |
+| ------------------------------------------------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chart-date-format.ts` and chart number formatting     | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation                                                                           |
+| Remaining SmartArt family layout approximations        | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine                                                                      |
+| Font-picker catalogs and grouping                      | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                                                                                       |
+| Cross-product history contracts and `secure-random.ts` | Neutral editor / crypto areas                    | PowerPoint's `EditorHistory` is in core and its controller is shared (2026-10-23); agree cross-product snapshots and preserve strong RNG failure behavior |
+| `path-gradient-rect.ts`                                | `drawingml`                                      | Still emits SVG markup; the geometry already lives in `drawingml/rect-path-gradient.ts`                                                                   |
 
 The chart number-format pattern moved to `chart/number-format-pattern.ts`. OMML equation converters are already in `math`. Preset shape evaluators and
 boolean operations already live in `geometry`. SmartArt interpreter compatibility

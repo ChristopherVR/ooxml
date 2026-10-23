@@ -46,9 +46,17 @@ Shared rendering lives in `src/ui/src/pptx/` at the repository root and is publi
 - **Animation and morph engines**: timeline building and playback (`animation-timeline-*.ts`), plus morph transition matching and geometry interpolation (`morph-matching.ts`, `morph-geometry-interp.ts`, `morph-text.ts`).
 - **Text and style resolution**: bullet numbering, fill/gradient styling, image effect filters, kinsoku line-breaking styles.
 - **Math**: OMML to MathML and LaTeX to OMML converters (`omml-to-mathml.ts`, `latex-to-omml.ts`, now in the shared `ooxml-core/math` area).
-- **Editor behaviour**: history, clipboard, alignment guides, format painter, find and replace, collaboration sync and presence.
+- **Editor behaviour**: clipboard, alignment guides, format painter, find and replace, and collaboration presence.
 
 Sibling directories cover `export/`, `i18n/`, `loader/`, `theme/`, and the opt-in `smartart-3d/` renderer.
+
+Sibling directories cover `export/`, `i18n/`, `loader/`, `theme/`, and the opt-in `smartart-3d/` renderer.
+
+### Headless controllers
+
+Stateful editor logic is written once as a headless controller in `render/controller/`: a plain object with `getSnapshot()`, `subscribe(listener)` and typed actions. Undo and redo history (one default depth of 100 steps), recovery autosave (one engine that also snapshots uncommitted inline text), the recovery offer, the collaboration room lifecycle and the AI panel are controllers, and so are the canvas gestures (`createGestureController`). The keymap (`dispatchEditorKey`), the AI bridge (`createPptxAiBridge`), group press targets and slide show steps are pure functions beside them. Each binding maps its own reactive state onto one generic store adapter (`useController` in React and Vue, `controllerState` in Svelte, `controllerSignal` in Angular, `subscribe` in vanilla), so a fix to a controller reaches all five bindings.
+
+The inspector's Effects, Line, Size and Position, and Text Box sections are field descriptors in `render/inspector/`, rendered by one generic renderer per binding. The chart data sheet, chart Format pane, insert chart and insert SmartArt dialogs, the SmartArt text pane and the chart Design galleries are shared `ooxml-ui` elements that every binding mounts.
 
 ::: info Shared public packages
 Every binding declares `ooxml-ui` as a runtime dependency and imports its PowerPoint entries. Angular uses the same public API without vendoring a source copy. The private `pptx-viewer-shared` package remains a compatibility facade and owns no implementation.

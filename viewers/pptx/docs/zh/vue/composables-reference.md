@@ -21,7 +21,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | 组合式函数                    | 职责                                               |
 | ----------------------------- | -------------------------------------------------- |
 | `useLoadContent`              | 加载时通过 `PptxHandler` 解析 PPTX 缓冲区。        |
-| `useAutosave`                 | 带防抖的自动保存定时器、未保存修改跟踪和状态。     |
+| `useAutosave`                 | 自动保存间隔、未保存修改跟踪和状态。               |
 | `useDocumentStatistics`       | 为文档属性对话框统计单词、字符、幻灯片和备注数量。 |
 | `useDocumentPropertiesDialog` | 核心、自定义及应用文档属性的对话框状态。           |
 | `useMasterViewState`          | 幻灯片、备注和讲义的母版视图状态。                 |

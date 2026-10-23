@@ -19,7 +19,7 @@ description: pptx-svelte-viewer 是 Svelte 5 PowerPoint 查看器组件，与 Re
 | **放映**       | 通过真实 Fullscreen API 进入全屏放映模式，支持切换效果、动画播放，以及带观众窗口的演示者视图。                         |
 | **导出**       | PNG、PDF、GIF、WebM 视频、SVG、打印（幻灯片、讲义、备注、大纲），以及另存为 `.pptx` / `.ppsx` / `.pptm`。              |
 | **协作**       | 可选的 Yjs 实时协同编辑，使用 y-websocket 或无服务器的 y-webrtc，包含在线状态、远程光标和共享或广播对话框。            |
-| **自动保存**   | 编辑时提供 `filePath`，即可在 IndexedDB 中保存带防抖的崩溃恢复快照；宿主可通过 `autosave={false}` 禁用。               |
+| **自动保存**   | 编辑时提供 `filePath`，即可在 IndexedDB 中保存崩溃恢复快照（有未保存修改时写入）；宿主可通过 `autosave={false}` 禁用。 |
 | **主题**       | 共享的 `ViewerTheme` 系统，使用 `--pptx-*` CSS 自定义属性，包含朱红色预设。参见[主题](/zh/svelte/theming)。            |
 | **国际化**     | 内置英文，可通过 `pptx-svelte-viewer/i18n` 注册更多语言。参见[本地化](/zh/svelte/i18n)。                               |
 

@@ -14,17 +14,17 @@ A live [Svelte demo](https://christophervr.github.io/ooxml/pptx/demo-svelte/) is
 
 ## What it provides
 
-| Capability          | Summary                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Slide rendering** | Text, shapes, images, groups, connectors, tables, charts, SmartArt (2D and opt-in 3D), media, ink, OLE, and the rest of the element model. |
-| **Editing**         | Behind `editable`: insert, format, group, arrange, drag/resize/rotate, rich text/notes, master view, undo/redo, and save/download.         |
-| **Navigation**      | Responsive desktop/mobile chrome, thumbnail rail, keyboard navigation, and a speaker-notes panel.                                          |
-| **Presentation**    | Fullscreen presentation mode via the real Fullscreen API, with transition/animation playback and a presenter view (audience window).       |
-| **Export**          | PNG, PDF, GIF, WebM video, SVG, print (slides / handouts / notes / outline), and `.pptx` / `.ppsx` / `.pptm` save-as.                      |
-| **Collaboration**   | Optional real-time co-editing over Yjs (y-websocket or serverless y-webrtc), with presence, remote cursors, and Share/Broadcast dialogs.   |
-| **Autosave**        | Debounced crash-recovery snapshots in IndexedDB when editing has a `filePath`; the host can disable them with `autosave={false}`.          |
-| **Theming**         | The shared `ViewerTheme` system (`--pptx-*` CSS custom properties), including the vermilion presets. See [Theming](/svelte/theming).       |
-| **i18n**            | English built in; register more locales via `pptx-svelte-viewer/i18n`. See [Localization](/svelte/i18n).                                   |
+| Capability          | Summary                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Slide rendering** | Text, shapes, images, groups, connectors, tables, charts, SmartArt (2D and opt-in 3D), media, ink, OLE, and the rest of the element model.                      |
+| **Editing**         | Behind `editable`: insert, format, group, arrange, drag/resize/rotate, rich text/notes, master view, undo/redo, and save/download.                              |
+| **Navigation**      | Responsive desktop/mobile chrome, thumbnail rail, keyboard navigation, and a speaker-notes panel.                                                               |
+| **Presentation**    | Fullscreen presentation mode via the real Fullscreen API, with transition/animation playback and a presenter view (audience window).                            |
+| **Export**          | PNG, PDF, GIF, WebM video, SVG, print (slides / handouts / notes / outline), and `.pptx` / `.ppsx` / `.pptm` save-as.                                           |
+| **Collaboration**   | Optional real-time co-editing over Yjs (y-websocket or serverless y-webrtc), with presence, remote cursors, and Share/Broadcast dialogs.                        |
+| **Autosave**        | Crash-recovery snapshots in IndexedDB, written while there are unsaved edits, when editing has a `filePath`; the host can disable them with `autosave={false}`. |
+| **Theming**         | The shared `ViewerTheme` system (`--pptx-*` CSS custom properties), including the vermilion presets. See [Theming](/svelte/theming).                            |
+| **i18n**            | English built in; register more locales via `pptx-svelte-viewer/i18n`. See [Localization](/svelte/i18n).                                                        |
 
 ::: info Element coverage
 For a precise list of what the underlying parser supports, and what is approximated, see

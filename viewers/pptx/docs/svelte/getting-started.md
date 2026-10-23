@@ -201,7 +201,7 @@ the full ribbon.
 ## 6. Autosave and crash recovery {#autosave}
 
 With autosave permitted (the default) and a `filePath` (the IndexedDB record key, typically the
-file name), committed edits are debounced and serialized to `.pptx` bytes in a shared IndexedDB
+file name), committed edits are serialized to `.pptx` bytes on the autosave interval, in a shared IndexedDB
 recovery store. An explicit `autosaveIntervalMs` sets the cadence; otherwise the user's File >
 Options AutoRecover setting decides it. `onautosave` fires with the bytes after each successful
 snapshot.

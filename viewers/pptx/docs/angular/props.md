@@ -31,7 +31,7 @@ template reference variable or `viewChild()`. See [Public API](/angular/api).
 | `fileName` | `string \| undefined`               | -       | Display name shown in the title bar next to the save-location status. Falls back to a localised "Presentation". |
 
 ::: tip Autosave recovery requires `filePath`
-The viewer's built-in autosave timer periodically serializes the document to IndexedDB keyed by
+The viewer's built-in autosave serializes the document to IndexedDB keyed by
 `filePath`. Without a stable `filePath` across reloads, recovery has no key to look up.
 :::
 

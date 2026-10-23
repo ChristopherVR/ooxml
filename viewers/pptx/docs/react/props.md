@@ -38,7 +38,7 @@ conversion from a `fetch`/file `ArrayBuffer`.
 :::
 
 ::: tip Autosave recovery requires `filePath`
-The viewer's built-in autosave timer periodically serializes the document to IndexedDB keyed by
+The viewer's built-in autosave serializes the document to IndexedDB keyed by
 `filePath`. On page reload, recovery detection checks for a recent snapshot matching the same
 `filePath`. If you don't persist and re-supply `filePath` across reloads, recovery won't trigger.
 See [Autosave & Recovery](#autosave-recovery) below.
@@ -241,13 +241,13 @@ See [Export](/react/export) for details on document export.
 ## Autosave & Recovery {#autosave-recovery}
 
 When `canEdit` is true and a `filePath` is supplied, the viewer automatically saves recovery
-snapshots to **IndexedDB** on a timer (default every 120 seconds). If the page is closed or crashes,
+snapshots to **IndexedDB** while there are unsaved edits (by default one snapshot two minutes after the first unsaved edit). If the page is closed or crashes,
 the data persists in the browser.
 
 ### How it works
 
-1. Every 120 s (configurable) the viewer checks if the document is dirty.
-2. If dirty, it serializes the current state to a `Uint8Array` and stores it in an IndexedDB
+1. The first unsaved edit starts the interval (two minutes by default, see the cadence rule below). Later edits do not push it out, and nothing is written while the document is unchanged.
+2. When the interval ends, it serializes the current state to a `Uint8Array` and stores it in an IndexedDB
    database (`pptx-viewer-autosave`) keyed by `filePath`.
 3. On next load, if the viewer receives the same `filePath` and slides are loaded, it checks
    IndexedDB for a recent snapshot (within 24 hours) and opens the version-history panel.
