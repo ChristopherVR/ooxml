@@ -210,3 +210,12 @@ describe('createSvelteAiBridge', () => {
 		]);
 	});
 });
+
+describe('createSvelteAiBridge focus', () => {
+	it('scopes the assistant to the panel focus when the viewer wires it', () => {
+		expect(createSvelteAiBridge(makeDeps()).getFocusedTargets).toBeUndefined();
+		const focus = [{ kind: 'element' as const, slideIndex: 0, elementId: 'e1' }];
+		const bridge = createSvelteAiBridge(makeDeps({ getFocusedTargets: () => focus }));
+		expect(bridge.getFocusedTargets?.()).toEqual(focus);
+	});
+});

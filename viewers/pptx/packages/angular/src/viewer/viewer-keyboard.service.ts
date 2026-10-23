@@ -1,15 +1,16 @@
 /**
  * viewer-keyboard.service.ts: Viewer-scoped editing keyboard-shortcut handler.
  *
- * Key-to-action resolution is delegated to `mapEditorKey`, the shared editor
- * keymap every binding resolves against, so Angular cannot drift from React /
- * Vue / Vanilla / Svelte again. This service only supplies the guard state, then
- * performs the resolved action against {@link EditorStateService}.
+ * Key-to-action resolution and the dispatch switch are the shared
+ * `dispatchEditorKey`, the one keymap and handler interface every binding uses,
+ * so Angular cannot drift from React / Vue / Vanilla / Svelte again. This
+ * service only supplies the guard state and the `EditorKeyHandlers` that act on
+ * {@link EditorStateService}.
  *
- * F5 / Shift+F5 (real PowerPoint's "start the show") are resolved separately by
- * the shared `mapSlideShowStartKey`, ahead of `mapEditorKey`, because they must
- * fire regardless of `canEdit` or the event target: PowerPoint starts the show
- * even from a read-only deck and even with the caret in a text box.
+ * F5 / Shift+F5 (real PowerPoint's "start the show") are checked by the same
+ * dispatcher ahead of the editor gates, because they must fire regardless of
+ * `canEdit` or the event target: PowerPoint starts the show even from a
+ * read-only deck and even with the caret in a text box.
  *
  * Extracted from {@link PowerPointViewerComponent}: the component keeps the thin
  * `@HostListener('document:keydown')` (a decorator can only live on the
@@ -23,13 +24,11 @@
 import { inject, Injectable } from '@angular/core';
 import {
 	cycleSelectableElement,
+	dispatchEditorKey,
 	EMPTY_RESOLVED_CUSTOMIZATION,
-	isEditorControlTarget,
-	isEditorTextInputTarget,
 	isFeatureEnabled,
-	mapCustomizedEditorKey,
-	mapSlideShowStartKey,
 } from 'ooxml-ui/pptx';
+import type { EditorKeyHandlers } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
@@ -95,162 +94,78 @@ export class ViewerKeyboardService {
 		if (!host) {
 			return;
 		}
-		// Crop mode owns Enter (commit) and Escape (cancel) outright: an Escape
-		// that cancels a crop must not also run the normal Escape unwinding.
 		if (this.crop?.handleKeyDown(event)) {
 			return;
 		}
-
-		// F5 / Shift+F5 must start the show even with editing disabled and even
-		// with the caret parked in a text box, exactly like real PowerPoint, so
-		// this runs ahead of (and unguarded by) the canEdit/text-input gates
-		// `mapEditorKey` applies below. `event.preventDefault()` only on a match:
-		// otherwise the browser reloads the page on a bare F5.
 		const resolved = this.customization?.resolved() ?? EMPTY_RESOLVED_CUSTOMIZATION;
-		const showAction = isFeatureEnabled(resolved, 'presentMode')
-			? mapSlideShowStartKey(event, { isPresenting: host.presenting() })
-			: null;
-		if (showAction !== null) {
-			event.preventDefault();
-			if (showAction === 'fromBeginning') {
-				this.presentationMode.presentFromBeginning();
-			} else {
-				this.presentationMode.present();
-			}
-			return;
-		}
+		dispatchEditorKey(
+			event,
+			{
+				canEdit: host.canEdit(),
+				canPaste: this.editor.hasClipboard(),
+				isPresenting: host.presenting(),
+				hasSelection: this.editor.hasSelection(),
+				isDrawing: host.isDrawing?.() ?? false,
+				isEditingText: host.isEditingText?.() ?? false,
+				keyboard: resolved.keyboard,
+				canStartShow: isFeatureEnabled(resolved, 'presentMode'),
+			},
+			this.keyHandlers(host),
+		);
+	}
 
-		const guard = {
-			canEdit: host.canEdit(),
-			canPaste: this.editor.hasClipboard(),
-			isPresenting: host.presenting(),
-			hasSelection: this.editor.hasSelection(),
-			isDrawing: host.isDrawing?.() ?? false,
-			isEditingText: host.isEditingText?.() ?? false,
-			isTextInputTarget: isEditorTextInputTarget(event.target),
-			isControlTarget: isEditorControlTarget(event.target),
-		};
-		const { action, dx, dy } = mapCustomizedEditorKey(event, guard, resolved.keyboard);
-		if (action === null) {
-			return;
-		}
-		event.preventDefault();
-
+	/** The shared editor key handlers, bound to the active slide of `host`. */
+	private keyHandlers(host: KeyboardHost): EditorKeyHandlers {
 		const idx = host.activeSlideIndex();
-		switch (action) {
-			case 'escape':
-				this.handleEscape();
-				break;
-			case 'toggleShortcuts':
-				this.dialogs.showShortcuts.set(!this.dialogs.showShortcuts());
-				break;
-			case 'find':
-				this.toggleFind();
-				break;
-			case 'undo':
-				this.editor.undo();
-				break;
-			case 'redo':
-				this.editor.redo();
-				break;
-			case 'duplicate':
-				this.editor.duplicateSelected(idx);
-				break;
-			case 'copy':
-				this.editor.copySelected(idx);
-				break;
-			case 'cut':
-				this.editor.cutSelected(idx);
-				break;
-			case 'paste':
-				this.editor.paste(idx);
-				break;
-			case 'selectAll':
-				this.editor.selectAll(idx);
-				break;
-			case 'group':
-				this.editor.groupSelected(idx);
-				break;
-			case 'ungroup':
-				this.editor.ungroupSelected(idx);
-				break;
-			case 'delete':
-				this.editor.deleteSelected(idx);
-				break;
-			case 'nudge':
-				this.editor.moveSelectedBy(idx, dx ?? 0, dy ?? 0);
-				break;
-			case 'prevSlide':
-				host.goPrev?.();
-				break;
-			case 'nextSlide':
-				host.goNext?.();
-				break;
-			case 'alignLeft':
-				this.applyTextPatch(idx, { align: 'left' });
-				break;
-			case 'alignCenter':
-				this.applyTextPatch(idx, { align: 'center' });
-				break;
-			case 'alignRight':
-				this.applyTextPatch(idx, { align: 'right' });
-				break;
-			case 'alignJustify':
-				this.applyTextPatch(idx, { align: 'justify' });
-				break;
-			case 'increaseFontSize':
-				stepSelectionFontSize(
-					this.editor,
-					idx,
-					host.selectedElement?.() ?? null,
-					'increase',
-					this.canvasEditing,
-				);
-				break;
-			case 'decreaseFontSize':
-				stepSelectionFontSize(
-					this.editor,
-					idx,
-					host.selectedElement?.() ?? null,
-					'decrease',
-					this.canvasEditing,
-				);
-				break;
-			case 'copyFormat':
-				this.formatPainter.toggle();
-				break;
-			case 'pasteFormat':
-				this.pasteFormat();
-				break;
-			case 'newSlide':
-				this.editor.addSlide(idx);
-				break;
-			case 'hyperlink':
-				this.openHyperlink();
-				break;
-			case 'findReplace':
-				this.findReplace.openFindReplace();
-				break;
-			case 'clearFormatting':
+		const fontStep = (direction: 'increase' | 'decrease'): void =>
+			stepSelectionFontSize(
+				this.editor,
+				idx,
+				host.selectedElement?.() ?? null,
+				direction,
+				this.canvasEditing,
+			);
+		return {
+			startShowFromBeginning: () => this.presentationMode.presentFromBeginning(),
+			startShowFromCurrent: () => this.presentationMode.present(),
+			escape: () => this.handleEscape(),
+			toggleShortcuts: () => this.dialogs.showShortcuts.set(!this.dialogs.showShortcuts()),
+			find: () => this.toggleFind(),
+			undo: () => this.editor.undo(),
+			redo: () => this.editor.redo(),
+			duplicate: () => this.editor.duplicateSelected(idx),
+			copy: () => this.editor.copySelected(idx),
+			cut: () => this.editor.cutSelected(idx),
+			paste: () => this.editor.paste(idx),
+			selectAll: () => this.editor.selectAll(idx),
+			group: () => this.editor.groupSelected(idx),
+			ungroup: () => this.editor.ungroupSelected(idx),
+			delete: () => this.editor.deleteSelected(idx),
+			nudge: (dx, dy) => this.editor.moveSelectedBy(idx, dx, dy),
+			prevSlide: () => host.goPrev?.(),
+			nextSlide: () => host.goNext?.(),
+			alignLeft: () => this.applyTextPatch(idx, { align: 'left' }),
+			alignCenter: () => this.applyTextPatch(idx, { align: 'center' }),
+			alignRight: () => this.applyTextPatch(idx, { align: 'right' }),
+			alignJustify: () => this.applyTextPatch(idx, { align: 'justify' }),
+			increaseFontSize: () => fontStep('increase'),
+			decreaseFontSize: () => fontStep('decrease'),
+			copyFormat: () => this.formatPainter.toggle(),
+			pasteFormat: () => this.pasteFormat(),
+			newSlide: () => this.editor.addSlide(idx),
+			hyperlink: () => this.openHyperlink(),
+			findReplace: () => this.findReplace.openFindReplace(),
+			clearFormatting: () =>
 				this.applyTextPatch(idx, {
 					bold: false,
 					italic: false,
 					underline: false,
 					strikethrough: false,
-				});
-				break;
-			case 'cycleSelectionNext':
-				this.cycleSelection(idx, 'next');
-				break;
-			case 'cycleSelectionPrev':
-				this.cycleSelection(idx, 'prev');
-				break;
-			case 'pasteSpecial':
-				this.editor.isPasteSpecialDialogOpen.set(true);
-				break;
-			default:
-				break;
-		}
+				}),
+			cycleSelectionNext: () => this.cycleSelection(idx, 'next'),
+			cycleSelectionPrev: () => this.cycleSelection(idx, 'prev'),
+			pasteSpecial: () => this.editor.isPasteSpecialDialogOpen.set(true),
+		};
 	}
 
 	private applyTextPatch(slideIndex: number, patch: Parameters<typeof applyTextCommand>[3]): void {

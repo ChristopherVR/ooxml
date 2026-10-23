@@ -45,11 +45,20 @@ export interface UndoRedoResult<T> {
 // Options
 // ---------------------------------------------------------------------------
 
+/**
+ * The one default undo depth every binding uses (File > Options > Advanced >
+ * "Maximum number of undos"). The viewer options default and the history
+ * controller in `ooxml-ui/pptx` both read this constant. PowerPoint itself
+ * ships with 20 (range 3 to 150); this viewer keeps its documented default of
+ * 100 within the same range.
+ */
+export const DEFAULT_EDITOR_HISTORY_DEPTH = 100;
+
 export interface EditorHistoryOptions {
 	/**
 	 * Maximum number of past entries kept on the undo stack.
 	 * When exceeded, the oldest entry is silently dropped.
-	 * @default 100
+	 * @default DEFAULT_EDITOR_HISTORY_DEPTH (100)
 	 */
 	maxDepth?: number;
 }
@@ -73,7 +82,7 @@ export class EditorHistory<T> {
 	private readonly _future: HistoryEntry<T>[] = [];
 
 	constructor(options?: EditorHistoryOptions) {
-		this._maxDepth = options?.maxDepth ?? 100;
+		this._maxDepth = options?.maxDepth ?? DEFAULT_EDITOR_HISTORY_DEPTH;
 	}
 
 	/**

@@ -81,6 +81,25 @@ returns a framework-neutral descriptor, and the binding does nothing but map tha
 descriptor onto its own style object or template. Following that shape, a new
 branch reaches all five bindings at once.
 
+For **stateful** view logic (a stack, a mode, a timer), the target shape is a
+**headless controller** in `src/ui/src/pptx` (see `render/controller/controller.ts`):
+a plain object with `getSnapshot()` (an immutable state whose identity changes only
+when the state does), `subscribe(listener)` (returns the unsubscribe) and typed
+action methods, built on `createControllerStore`. A binding never re-implements a
+controller; it reads it through its ONE generic store adapter, which works for every
+controller: `useController` in React (`useSyncExternalStore`) and Vue (`shallowRef`
+plus `onScopeDispose`), `controllerState` in Svelte (`createSubscriber`, read
+`.current`), `controllerSignal` in Angular (a read-only signal) and a direct
+`subscribe` in vanilla. State the controller does not own (the live selection) stays
+binding state: the controller reads it through its `deps` when an action needs it, and
+derived values are pure functions next to the controller (`resolveAiEffectiveTargets`)
+that the binding calls from its own reactive scope. Existing controllers: the undo/redo
+history (`createEditorHistoryController`, one default depth for every binding) and the
+AI panel (`createPptxAiPanelController`); the AI bridge (`createPptxAiBridge` over a
+`PptxAiBridgePort`) and the keymap dispatch (`dispatchEditorKey` with one
+`EditorKeyHandlers` interface) are the same idea for logic without its own state. A
+binding keeps its own public shape (refs, signals, getters) and maps it onto these.
+
 Both rules are expanded, with the concrete failures that motivated them, under
 [Key Conventions](#key-conventions).
 

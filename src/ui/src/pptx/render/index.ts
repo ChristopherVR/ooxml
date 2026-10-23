@@ -615,6 +615,9 @@ export * from './background-shade-to-title';
 export * from './editor-insert';
 export * from './element-operations';
 export * from './editor-history';
+// Headless controllers (`getSnapshot` / `subscribe` / typed actions) that every
+// binding adapts with one store adapter; the history controller is the first.
+export * from './controller';
 // Section CRUD: pure immutable transforms over the sections + slides arrays
 // (add/rename/delete/move section, move-slides-to-section) + GUID-like section
 // id + OOXML slide-id resolution. Each binding wires its reactive state through
@@ -1253,6 +1256,9 @@ export * from './outline-view-dismiss';
 // group, select-all, slide paging, help) as one shared mapping, so the five
 // bindings cannot disagree about what Ctrl+D or an arrow key does.
 export * from './editor-keymap';
+// The action-to-handler switch every binding used to copy, keyed by the
+// keymap's own action names (`dispatchEditorKey` + `EditorKeyHandlers`).
+export * from './editor-key-dispatch';
 export * from './selection-cycle';
 // Start-a-show keys (F5 / Shift+F5): kept apart from the editor keymap because
 // they must fire on a read-only host and from inside a text field, which the

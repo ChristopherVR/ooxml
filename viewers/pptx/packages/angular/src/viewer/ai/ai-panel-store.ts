@@ -1,7 +1,7 @@
 /**
  * AiPanelStore: owns the AI panel's "scope" (focused targets + a prefilled
- * composer directive) and the two on-canvas highlight sources, mirroring
- * React's `useAiPanelController` as an Angular signal service.
+ * composer directive) and the two on-canvas highlight sources: the shared
+ * `createPptxAiPanelController`, adapted to signals with `controllerSignal`.
  *
  * The live focus follows the canvas selection; `pinnedFocus` freezes it (set
  * from the chat or a canvas "Ask AI" affordance) so the assistant stays scoped
@@ -16,17 +16,27 @@
  * Provided at the viewer component level so the canvas, the panel, and the
  * bridge all read the same store.
  */
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { computeFocusTargets, createAiChangeAnimator } from 'ooxml-ui/pptx/ai';
+import { computed, DestroyRef, inject, Injectable } from '@angular/core';
+import {
+	computeFocusTargets,
+	createAiChangeAnimator,
+	createPptxAiPanelController,
+	isAiFocusPinned,
+	resolveAiEffectiveTargets,
+} from 'ooxml-ui/pptx/ai';
 import type {
 	AiCanvasHighlight,
 	AiChangeAnimationConfig,
 	AiChangeAnimator,
 	AiChangeBatch,
+	FocusSelectionInput,
 	PptxAiFocusedTarget,
+	PptxAiPanelController,
 	ToolCanvasTarget,
 } from 'ooxml-ui/pptx/ai';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+
+import { controllerSignal } from '../controller-signal';
 
 /** Live selection accessors the store reads to derive the follow-selection focus. */
 export interface AiPanelSelectionAccessors {
@@ -35,14 +45,6 @@ export interface AiPanelSelectionAccessors {
 	selectedElementId(): string | null;
 	/** The primary selected element, for building the "Fix with AI" directive. */
 	selectedElement(): PptxElement | null;
-}
-
-/** How long a live-tool highlight / colour-tween window stays up after a call. */
-const TOOL_FLASH_MS = 2600;
-
-/** Build the "Fix with AI" directive for one element (never auto-sent). */
-function fixDirective(element: PptxElement, slideIndex: number): string {
-	return `Review and fix any issues with this ${element.type} (id=${element.id}) on slide ${slideIndex + 1}.`;
 }
 
 @Injectable()
@@ -63,42 +65,29 @@ export class AiPanelStore {
 	private accessors: AiPanelSelectionAccessors | null = null;
 
 	/** Pinned focus override (null follows the live selection). */
-	readonly pinnedFocus = signal<PptxAiFocusedTarget[] | null>(null);
-	/**
-	 * One-shot composer prefill. `nonce` bumps on every ask/fix so the composer
-	 * applies `text` (and focuses) even when `text` is empty and unchanged.
-	 */
-	readonly prefill = signal<{ text: string; nonce: number }>({ text: '', nonce: 0 });
+	/** The shared panel controller; this store adapts its snapshot to signals. */
+	private readonly controller: PptxAiPanelController = createPptxAiPanelController({
+		getSelection: () => this.selection(),
+		getSelectedElement: () => this.accessors?.selectedElement() ?? null,
+	});
+	private readonly state = controllerSignal(this.controller, this.destroyRef);
 
+	/** Pinned focus override; null means "follow the live selection". */
+	readonly pinnedFocus = computed(() => this.state().pinnedFocus);
+	/** One-shot composer prefill. `nonce` bumps on every ask/fix so it re-applies. */
+	readonly prefill = computed(() => this.state().prefill);
 	/** True while the user is picking element(s) on the canvas for the assistant. */
-	readonly pickMode = signal(false);
-	/** The elements the user has explicitly handed to the assistant. */
-	readonly pickTargets = signal<PptxAiFocusedTarget[]>([]);
+	readonly pickMode = computed(() => this.state().pickMode);
+	/** The elements the user has explicitly handed to the assistant (pick mode). */
+	readonly pickTargets = computed(() => this.state().pickTargets);
 
-	/** The element(s) a running tool is currently touching (transient). */
-	private readonly toolFocus = signal<{ slideIndex: number; elementIds: string[] } | null>(null);
-	private readonly flashTick = signal(0);
-	private flashTimer: ReturnType<typeof setTimeout> | null = null;
-
-	/**
-	 * Canvas change animator: the shared subscribe/publish bus that carries "these
-	 * elements just changed, animate them" from the AI apply path (the bridge's
-	 * write choke point calls {@link publishAiChange}) to the panel, which reveals
-	 * the slide and hands the batch to the on-canvas overlay via
-	 * {@link showChangeBatch}. Owned here (viewer-scoped) so it survives the panel
-	 * opening/closing while the write path stays alive. Mirrors React's
-	 * `session.changeAnimator`; Angular drives the same shared animator from the
-	 * bridge because its vanilla-chat controller does not surface the session.
-	 */
 	readonly changeAnimator: AiChangeAnimator = createAiChangeAnimator();
-	/** The batch of just-applied element changes the canvas overlay should play. */
-	readonly changeBatch = signal<AiChangeBatch | null>(null);
+	/** The batch of just-applied element changes the canvas overlay animates. */
+	readonly changeBatch = computed(() => this.state().changeBatch);
 
 	constructor() {
 		this.destroyRef?.onDestroy(() => {
-			if (this.flashTimer) {
-				clearTimeout(this.flashTimer);
-			}
+			this.controller.dispose();
 			this.changeAnimator.dispose();
 		});
 	}
@@ -108,84 +97,72 @@ export class AiPanelStore {
 		this.accessors = accessors;
 	}
 
-	/** Focused targets derived live from the current canvas selection. */
-	readonly liveFocusTargets = computed<PptxAiFocusedTarget[]>(() => {
+	private selection(): FocusSelectionInput {
 		const a = this.accessors;
-		if (!a) {
-			return [{ kind: 'slide', slideIndex: 0 }];
-		}
-		return computeFocusTargets({
-			activeSlideIndex: a.activeSlideIndex(),
-			selectedElementIds: a.selectedElementIds(),
-			selectedElementId: a.selectedElementId(),
-		});
-	});
+		return a
+			? {
+					activeSlideIndex: a.activeSlideIndex(),
+					selectedElementIds: a.selectedElementIds(),
+					selectedElementId: a.selectedElementId(),
+				}
+			: { activeSlideIndex: 0, selectedElementIds: [], selectedElementId: null };
+	}
 
-	/** Whether there are explicit picks (they win over a pin / live selection). */
+	/** Focused targets derived live from the current canvas selection. */
+	readonly liveFocusTargets = computed<PptxAiFocusedTarget[]>(() =>
+		computeFocusTargets(this.selection()),
+	);
+
+	/** True when there are explicit picks (they win over a pin / live selection). */
 	readonly hasPicks = computed(() => this.pickTargets().length > 0);
 
-	/** The targets the panel + bridge should actually scope to. */
-	readonly effectiveTargets = computed<PptxAiFocusedTarget[]>(() => {
-		if (this.hasPicks()) {
-			return this.pickTargets();
-		}
-		return this.pinnedFocus() ?? this.liveFocusTargets();
-	});
+	/** The targets the assistant should scope to: picks > pin > live selection. */
+	readonly effectiveTargets = computed<PptxAiFocusedTarget[]>(() =>
+		resolveAiEffectiveTargets(this.state(), this.liveFocusTargets()),
+	);
 
-	/** True when a pin is in force (and no picks override it). */
-	readonly isPinned = computed(() => !this.hasPicks() && this.pinnedFocus() !== null);
+	/** Whether a pin is currently the active focus (no picks override it). */
+	readonly isPinned = computed(() => isAiFocusPinned(this.state()));
 
-	/**
-	 * Focused targets for the bridge's `getFocusedTargets`: picks beat a pin,
-	 * which beats the live selection.
-	 */
+	/** Bridge accessor: the assistant's current focus scope. */
 	getFocusedTargets(): PptxAiFocusedTarget[] {
 		return this.effectiveTargets();
 	}
 
 	pinFocus(): void {
-		this.pinnedFocus.set(this.liveFocusTargets());
+		this.controller.pinFocus();
 	}
 	clearPinnedFocus(): void {
-		this.pinnedFocus.set(null);
+		this.controller.clearPinnedFocus();
 	}
 
-	/** Open the panel scoped to the current selection, empty composer (focused). */
+	/** Scope to the current selection with an empty composer. */
 	askAboutSelection(): void {
-		this.pinnedFocus.set(this.liveFocusTargets());
-		this.prefill.update((p) => ({ text: '', nonce: p.nonce + 1 }));
+		this.controller.askAboutSelection();
 	}
 
-	/** Open the panel scoped to the current selection, prefilled fix directive. */
+	/** Scope to the current selection with a prefilled "fix" directive. */
 	fixSelection(): void {
-		this.pinnedFocus.set(this.liveFocusTargets());
-		const el = this.accessors?.selectedElement() ?? null;
-		const index = this.accessors?.activeSlideIndex() ?? 0;
-		const text = el ? fixDirective(el, index) : '';
-		this.prefill.update((p) => ({ text, nonce: p.nonce + 1 }));
+		this.controller.fixSelection();
 	}
 
 	/* ── Pick mode ─────────────────────────────────────────────────────────── */
 
+	/** Enter pick mode (the next canvas element clicks become picks). */
 	startPicking(): void {
-		this.pickMode.set(true);
+		this.controller.startPicking();
 	}
+	/** Leave pick mode without clearing the accumulated picks. */
 	stopPicking(): void {
-		this.pickMode.set(false);
+		this.controller.stopPicking();
 	}
-	/** Add one clicked canvas element to the pick set (dedupe by id). */
+	/** Add one clicked canvas element to the pick set (and highlight it). */
 	addPick(slideIndex: number, elementId: string): void {
-		this.pickTargets.update((prev) => {
-			if (prev.some((t) => t.kind === 'element' && t.elementId === elementId)) {
-				return prev;
-			}
-			return [...prev, { kind: 'element', slideIndex, elementId }];
-		});
+		this.controller.addPick(slideIndex, elementId);
 	}
 	/** Empty the pick set and leave pick mode. */
 	clearPicks(): void {
-		this.pickTargets.set([]);
-		this.pickMode.set(false);
+		this.controller.clearPicks();
 	}
 
 	/* ── Live tool / canvas animation ──────────────────────────────────────── */
@@ -196,48 +173,20 @@ export class AiPanelStore {
 	 * enable tweening (e.g. a theme-colour edit with no single element target).
 	 */
 	flashToolTarget(target: ToolCanvasTarget | null): void {
-		if (target && target.slideIndex !== undefined && target.elementIds.length > 0) {
-			this.toolFocus.set({ slideIndex: target.slideIndex, elementIds: target.elementIds });
-		} else {
-			this.toolFocus.set(null);
-		}
-		this.flashTick.update((n) => n + 1);
-		if (this.flashTimer) {
-			clearTimeout(this.flashTimer);
-		}
-		this.flashTimer = setTimeout(() => {
-			this.toolFocus.set(null);
-			this.flashTick.set(0);
-		}, TOOL_FLASH_MS);
+		this.controller.flashToolTarget(target);
 	}
 
 	/** Element rings the canvas should draw (picks + the live tool focus). */
-	readonly canvasHighlights = computed<AiCanvasHighlight[]>(() => {
-		const out: AiCanvasHighlight[] = [];
-		for (const t of this.pickTargets()) {
-			if (t.kind === 'element') {
-				out.push({ slideIndex: t.slideIndex, elementId: t.elementId, variant: 'pick' });
-			}
-		}
-		const focus = this.toolFocus();
-		if (focus) {
-			for (const elementId of focus.elementIds) {
-				out.push({ slideIndex: focus.slideIndex, elementId, variant: 'active' });
-			}
-		}
-		return out;
-	});
+	readonly canvasHighlights = computed<AiCanvasHighlight[]>(() => this.state().canvasHighlights);
 
 	/** True while the canvas should tween colour changes (AI is active). */
-	readonly canvasAnimating = computed(
-		() => this.canvasHighlights().length > 0 || this.flashTick() > 0,
-	);
+	readonly canvasAnimating = computed(() => this.state().canvasAnimating);
 
 	/* ── Applied-edit change animation ─────────────────────────────────────── */
 
 	/** Apply (or clear) the change batch the panel wants the canvas to animate. */
 	showChangeBatch(batch: AiChangeBatch | null): void {
-		this.changeBatch.set(batch);
+		this.controller.showChangeBatch(batch);
 	}
 
 	/**

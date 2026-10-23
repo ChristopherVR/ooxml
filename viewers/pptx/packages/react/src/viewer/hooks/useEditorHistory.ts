@@ -1,3 +1,4 @@
+import { createEditorHistoryController } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHeaderFooter, PptxSlide } from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
@@ -7,6 +8,7 @@ import {
 	recordExplicitSlideUpdate,
 	serializeHistoryDocument as serializeDocument,
 } from './explicit-slide-history';
+import { useController } from './useController';
 import { usePointerReleaseWakeup } from './usePointerReleaseWakeup';
 
 // ---------------------------------------------------------------------------
@@ -26,7 +28,8 @@ export interface EditorHistoryInput {
 	error: string | null;
 	/**
 	 * Undo-stack depth (File > Options > Advanced > "Maximum number of undos",
-	 * resolved via the shared `resolveHistoryDepth`). Defaults to 120.
+	 * resolved via the shared `resolveHistoryDepth`). Defaults to the shared
+	 * `DEFAULT_EDITOR_HISTORY_DEPTH`.
 	 */
 	maxHistoryEntries?: number;
 	hasActivePointerInteraction: () => boolean;
@@ -74,12 +77,6 @@ export interface EditorHistoryResult {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_MAX_HISTORY_ENTRIES = 120;
-
-// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -91,7 +88,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		templateElementsBySlideId,
 		loading,
 		error,
-		maxHistoryEntries = DEFAULT_MAX_HISTORY_ENTRIES,
+		maxHistoryEntries,
 		hasActivePointerInteraction,
 		pointerCommitNonce,
 		onDirty,
@@ -105,8 +102,13 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	// -- Refs ---------------------------------------------------------------
 
-	const historyPastRef = useRef<EditorHistorySnapshot[]>([]);
-	const historyFutureRef = useRef<EditorHistorySnapshot[]>([]);
+	/**
+	 * The shared undo/redo controller: one stack and one default depth for every
+	 * binding. This hook keeps only React's change detection (below), which
+	 * decides WHEN a snapshot is recorded; the stack itself is shared.
+	 */
+	const [history] = useState(() => createEditorHistoryController<EditorHistorySnapshot>());
+	const historyState = useController(history);
 	const lastHistorySnapshotRef = useRef<EditorHistorySnapshot | null>(null);
 	const lastHistorySerializedRef = useRef<string>('');
 	/**
@@ -121,10 +123,6 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	// -- State --------------------------------------------------------------
 
-	const [canUndo, setCanUndo] = useState(false);
-	const [canRedo, setCanRedo] = useState(false);
-	const [undoLabel, setUndoLabel] = useState<string | undefined>(undefined);
-	const [redoLabel, setRedoLabel] = useState<string | undefined>(undefined);
 	/**
 	 * Monotonic counter bumped by every `markDirty()` call, i.e. by every local
 	 * edit-commit choke point in the editor.
@@ -153,14 +151,11 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	// -- Helpers ------------------------------------------------------------
 
-	const updateHistoryAvailability = useCallback(() => {
-		setCanUndo(historyPastRef.current.length > 0);
-		setCanRedo(historyFutureRef.current.length > 0);
-		const pastTop = historyPastRef.current[historyPastRef.current.length - 1];
-		setUndoLabel(pastTop?.actionLabel);
-		const futureTop = historyFutureRef.current[historyFutureRef.current.length - 1];
-		setRedoLabel(futureTop?.actionLabel);
-	}, []);
+	useEffect(() => {
+		if (maxHistoryEntries !== undefined) {
+			history.setMaxDepth(maxHistoryEntries);
+		}
+	}, [history, maxHistoryEntries]);
 
 	const buildHistorySnapshot = useCallback(
 		(actionLabel?: string): EditorHistorySnapshot => {
@@ -228,59 +223,46 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	// -- Stack navigation ---------------------------------------------------
 
 	const handleUndo = useCallback(() => {
-		const previousSnapshot = historyPastRef.current.pop();
-		if (!previousSnapshot) {
+		if (!history.getSnapshot().canUndo) {
+			return;
+		}
+		const result = history.undo(buildHistorySnapshot());
+		if (!result) {
 			return;
 		}
 
-		const currentSnapshot = buildHistorySnapshot(previousSnapshot.actionLabel);
-		historyFutureRef.current.push(currentSnapshot);
 		isApplyingHistoryRef.current = true;
-		const nextSnapshot = cloneHistorySnapshot(previousSnapshot);
+		const nextSnapshot = cloneHistorySnapshot(result.snapshot);
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(nextSnapshot);
 		lastHistorySerializedRef.current = serializeDocument(nextSnapshot);
 		applyHistorySnapshot(nextSnapshot);
-		updateHistoryAvailability();
 		unlockHistoryTracking();
 		markDirty();
-	}, [
-		applyHistorySnapshot,
-		buildHistorySnapshot,
-		markDirty,
-		unlockHistoryTracking,
-		updateHistoryAvailability,
-	]);
+	}, [applyHistorySnapshot, buildHistorySnapshot, history, markDirty, unlockHistoryTracking]);
 
 	const handleRedo = useCallback(() => {
-		const nextSnapshot = historyFutureRef.current.pop();
-		if (!nextSnapshot) {
+		if (!history.getSnapshot().canRedo) {
+			return;
+		}
+		const result = history.redo(buildHistorySnapshot());
+		if (!result) {
 			return;
 		}
 
-		const currentSnapshot = buildHistorySnapshot(nextSnapshot.actionLabel);
-		historyPastRef.current.push(currentSnapshot);
 		isApplyingHistoryRef.current = true;
-		const targetSnapshot = cloneHistorySnapshot(nextSnapshot);
+		const targetSnapshot = cloneHistorySnapshot(result.snapshot);
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(targetSnapshot);
 		lastHistorySerializedRef.current = serializeDocument(targetSnapshot);
 		applyHistorySnapshot(targetSnapshot);
-		updateHistoryAvailability();
 		unlockHistoryTracking();
 		markDirty();
-	}, [
-		applyHistorySnapshot,
-		buildHistorySnapshot,
-		markDirty,
-		unlockHistoryTracking,
-		updateHistoryAvailability,
-	]);
+	}, [applyHistorySnapshot, buildHistorySnapshot, history, markDirty, unlockHistoryTracking]);
 
 	// -- Reset --------------------------------------------------------------
 
 	const resetHistory = useCallback(
 		(initialSnapshot?: EditorHistorySnapshot | null) => {
-			historyPastRef.current = [];
-			historyFutureRef.current = [];
+			history.clear();
 			if (initialSnapshot) {
 				const clonedInitial = cloneHistorySnapshot(initialSnapshot);
 				lastHistorySnapshotRef.current = clonedInitial;
@@ -289,9 +271,8 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 				lastHistorySnapshotRef.current = null;
 				lastHistorySerializedRef.current = '';
 			}
-			updateHistoryAvailability();
 		},
-		[updateHistoryAvailability],
+		[history],
 	);
 
 	// -- Cleanup timer on unmount -------------------------------------------
@@ -375,7 +356,6 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 			lastHistorySnapshotRef.current = snapshot;
 			lastHistorySerializedRef.current = serialized;
 			lastCheapHashRef.current = cheapHash;
-			updateHistoryAvailability();
 			return;
 		}
 
@@ -385,15 +365,10 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		// first snapshot after a load takes the `!previousSnapshot` branch above
 		// and so never reports dirty.
 		onDirtyRef.current?.();
-		historyPastRef.current.push(previousSnapshot);
-		while (historyPastRef.current.length > Math.max(1, maxHistoryEntries)) {
-			historyPastRef.current.shift();
-		}
-		historyFutureRef.current = [];
+		history.record(previousSnapshot, previousSnapshot.actionLabel);
 		lastHistorySnapshotRef.current = snapshot;
 		lastHistorySerializedRef.current = serialized;
 		lastCheapHashRef.current = cheapHash;
-		updateHistoryAvailability();
 	}, [
 		activeSlideIndex,
 		buildHistorySnapshot,
@@ -403,12 +378,11 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		editCommitNonce,
 		error,
 		hasActivePointerInteraction,
+		history,
 		loading,
-		maxHistoryEntries,
 		pointerCommitNonce,
 		pointerReleaseNonce,
 		slides,
-		updateHistoryAvailability,
 	]);
 
 	// -- Public API ---------------------------------------------------------
@@ -416,20 +390,12 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	const commitSlides = (nextSlides: PptxSlide[], label?: string, beforeSlides = slides): void => {
 		const before = { ...buildHistorySnapshot(), slides: beforeSlides.map(cloneSlide) };
 		const after = { ...before, slides: nextSlides.map(cloneSlide) };
-		recordExplicitSlideUpdate(
-			historyPastRef.current,
-			historyFutureRef.current,
-			lastHistorySnapshotRef.current,
-			before,
-			label,
-			maxHistoryEntries,
-		);
+		recordExplicitSlideUpdate(history, lastHistorySnapshotRef.current, before, label);
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(after);
 		lastHistorySerializedRef.current = serializeDocument(after);
 		isApplyingHistoryRef.current = false;
 		setSlides(nextSlides);
 		onDirtyRef.current?.();
-		updateHistoryAvailability();
 	};
 
 	const holdTracking = useCallback((held: boolean) => {
@@ -439,10 +405,10 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	return {
 		commitSlides,
 		holdTracking,
-		canUndo,
-		canRedo,
-		undoLabel,
-		redoLabel,
+		canUndo: historyState.canUndo,
+		canRedo: historyState.canRedo,
+		undoLabel: historyState.undoLabel,
+		redoLabel: historyState.redoLabel,
 		handleUndo,
 		handleRedo,
 		resetHistory,

@@ -1,3 +1,4 @@
+import { resolveKeyboardCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createEditorKeydownHandler } from './editor-keyboard';
@@ -261,5 +262,23 @@ describe('createEditorKeydownHandler: PowerPoint 365 shortcuts', () => {
 		expect(cycleSelection).not.toHaveBeenCalled();
 		expect(event.defaultPrevented).toBeFalsy();
 		button.remove();
+	});
+});
+
+describe('createEditorKeydownHandler shared dispatch', () => {
+	it('claims an editor chord whose optional handler is not wired (shared dispatch rule)', () => {
+		const event = keydown('k', { ctrlKey: true });
+		createEditorKeydownHandler(makeDeps())(event);
+		expect(event.defaultPrevented).toBe(true);
+	});
+
+	it('honours a remapped command from the keyboard customisation', () => {
+		const undo = vi.fn();
+		const keyboard = resolveKeyboardCustomization({ remap: { undo: 'Ctrl+U' } });
+		const handler = createEditorKeydownHandler(
+			makeDeps({ undo, getKeyboardCustomization: () => keyboard }),
+		);
+		handler(keydown('u', { ctrlKey: true }));
+		expect(undo).toHaveBeenCalledOnce();
 	});
 });

@@ -1,3 +1,5 @@
+import type { EditorHistoryController } from 'ooxml-ui/pptx';
+
 import type { EditorHistorySnapshot } from '../types';
 import { cloneHistorySnapshot } from '../utils/clone';
 
@@ -52,19 +54,13 @@ export function serializeHistoryDocument(snapshot: EditorHistorySnapshot): strin
 
 /** Record pending ordinary edits, then the explicit batch, as separate entries. */
 export function recordExplicitSlideUpdate(
-	past: EditorHistorySnapshot[],
-	future: EditorHistorySnapshot[],
+	history: EditorHistoryController<EditorHistorySnapshot>,
 	previous: EditorHistorySnapshot | null,
 	before: EditorHistorySnapshot,
 	label: string | undefined,
-	maxDepth: number,
 ): void {
 	if (previous && serializeHistoryDocument(previous) !== serializeHistoryDocument(before)) {
-		past.push(cloneHistorySnapshot(previous));
+		history.record(cloneHistorySnapshot(previous), previous.actionLabel);
 	}
-	past.push({ ...cloneHistorySnapshot(before), actionLabel: label });
-	while (past.length > Math.max(1, maxDepth)) {
-		past.shift();
-	}
-	future.length = 0;
+	history.record({ ...cloneHistorySnapshot(before), actionLabel: label }, label);
 }

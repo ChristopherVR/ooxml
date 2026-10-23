@@ -1,13 +1,14 @@
 import type { CanvasSize } from 'ooxml-ui/pptx';
-import { applyElementUpdate, computeFocusTargets, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
+import {
+	computeFocusTargets,
+	createPptxAiBridge,
+	resolveAiEffectiveTargets,
+} from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
-	PptxAiDataUpdater,
-	PptxAiDeckMeta,
-	PptxAiElementUpdate,
+	PptxAiBridgePort,
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
-	PptxAiSlidesUpdater,
 } from 'ooxml-ui/pptx/ai';
 /**
  * useAiBridge: builds a stable {@link PptxAiBridge} that lets the
@@ -15,25 +16,20 @@ import type {
  * navigate it, and route edits through the Vue editor-history layer so every AI
  * change is a single Ctrl+Z.
  *
- * The three write choke points (`applySlidesUpdate` / `updateElement` /
- * `applyTheme`) all funnel through the same `pushHistory()`-before-mutate path
- * the manual editor uses, so an AI batch commits as one undoable entry. Unlike
- * the React bridge (whose count-based history auto-snapshot needs a nonce bump
- * for content-only edits), the Vue history is an explicit push-before-mutate
- * stack, so calling `pushHistory()` here is sufficient for text/style-only AI
- * writes to be captured.
+ * The bridge itself is the shared `createPptxAiBridge`; this composable is only
+ * its port over the Vue refs. Slide writes funnel through the same
+ * `pushHistory()`-before-mutate path the manual editor uses, so an AI edit is
+ * one undoable entry.
  *
  * The returned bridge object identity is stable (created once, closing over the
  * reactive refs), so the chat session built from it in {@link useAiChat} is not
  * torn down and rebuilt on every keystroke.
  */
-import { cloneSlide } from 'pptx-viewer-core';
 import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
-	PptxData,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -97,155 +93,78 @@ export interface UseAiBridgeInput {
 }
 
 export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
-	const applySlidesUpdate = (updater: PptxAiSlidesUpdater, _label: string): void => {
-		// Push the current state, then install a freshly-cloned, updater-mutated
-		// slide array. The clone keeps the just-snapshotted slides untouched so a
-		// single undo restores them faithfully.
-		input.pushHistory();
-		input.slides.value = updater(input.slides.value.map(cloneSlide));
-		input.markDirty();
-	};
-
-	/** Reconstruct the presentation-level PptxData the AI deck tools read/write. */
-	const readDeckData = (): PptxData =>
-		({
-			slides: input.slides.value,
-			width: input.canvasSize.value.width,
-			height: input.canvasSize.value.height,
-			theme: input.theme.value,
-			sections: input.sections.value,
-			presentationProperties: input.presentationProperties.value,
-			customProperties: input.customProperties.value,
-			coreProperties: input.coreProperties.value,
-			appProperties: input.appProperties.value,
-			viewProperties: input.viewProperties.value,
-			tableStyleMap: input.tableStyleMap.value,
-			tableStylesDefaultId: input.tableStylesDefaultId.value,
-			tags: input.tagCollections.value,
-		}) satisfies Partial<PptxData> as PptxData;
-
-	const differs = deckDataFieldChanged;
-
-	return {
-		getDeckMeta(): PptxAiDeckMeta {
-			const slides = input.slides.value;
-			const firstTitle = slides[0]?.elements.find(
-				(el) => 'text' in el && typeof el.text === 'string' && el.text.trim().length > 0,
-			);
-			return {
-				slideCount: slides.length,
-				activeSlideIndex: input.activeSlideIndex.value,
-				title:
-					input.fileName() ??
-					(firstTitle && 'text' in firstTitle ? String(firstTitle.text) : undefined),
-				width: input.canvasSize.value.width,
-				height: input.canvasSize.value.height,
-			};
-		},
+	const port: PptxAiBridgePort = {
 		getSlides: () => input.slides.value,
 		getActiveSlideIndex: () => input.activeSlideIndex.value,
+		getCanvasSize: () => input.canvasSize.value,
 		getTheme: () => input.theme.value,
-		getHandler: () => input.handler.value ?? undefined,
-		goToSlide(index: number) {
-			input.goTo(index);
-		},
-		selectElements(slideIndex: number, elementIds: string[]) {
+		getHandler: () => input.handler.value,
+		getFileName: () => input.fileName(),
+		getSections: () => input.sections.value,
+		getPresentationProperties: () => input.presentationProperties.value,
+		getCustomProperties: () => input.customProperties.value,
+		getCoreProperties: () => input.coreProperties.value,
+		getAppProperties: () => input.appProperties.value,
+		getViewProperties: () => input.viewProperties.value,
+		getTableStyleMap: () => input.tableStyleMap.value,
+		getTableStylesDefaultId: () => input.tableStylesDefaultId.value,
+		getTagCollections: () => input.tagCollections.value,
+		goToSlide: (index) => input.goTo(index),
+		selectElements(slideIndex, elementIds) {
 			if (slideIndex !== input.activeSlideIndex.value) {
 				input.goTo(slideIndex);
 			}
 			input.setSelection(elementIds);
 		},
-		applySlidesUpdate,
-		updateElement(slideIndex: number, elementId: string, updates: PptxAiElementUpdate) {
-			applySlidesUpdate((slides) => {
-				const el = slides[slideIndex]?.elements.find((e) => e.id === elementId);
-				if (el) {
-					applyElementUpdate(el, updates);
-				}
-				return slides;
-			}, `Update element ${elementId}`);
-		},
-		applyTheme(updates: Partial<PptxTheme>) {
-			input.applyThemeUpdates(updates);
-		},
-		getDeckData(): PptxData {
-			return readDeckData();
-		},
-		applyDeckData(updater: PptxAiDataUpdater, _label: string) {
-			const before = readDeckData();
-			const after = updater(structuredClone(before));
-			// Slides and canvas size are the undoable part of a deck edit, so snapshot
-			// history once (before mutating) when either changed. The remaining
-			// presentation-level fields persist into the save model and re-render, but
-			// are not yet individually undoable (a history-snapshot follow-up).
-			const slidesChanged = differs(before.slides, after.slides);
-			const canvasChanged = before.width !== after.width || before.height !== after.height;
-			if (slidesChanged || canvasChanged) {
-				input.pushHistory();
-			}
-			if (slidesChanged) {
-				input.slides.value = after.slides;
-			}
-			if (canvasChanged) {
-				input.canvasSize.value = { width: after.width, height: after.height };
-			}
-			const nextSections = after.sections ?? before.sections ?? [];
-			if (differs(before.sections, nextSections)) {
-				input.sections.value = nextSections;
-			}
-			const nextPresProps = after.presentationProperties ?? input.presentationProperties.value;
-			if (differs(before.presentationProperties, nextPresProps)) {
-				input.presentationProperties.value = nextPresProps;
-			}
-			const nextCustomProps = after.customProperties ?? before.customProperties ?? [];
-			if (differs(before.customProperties, nextCustomProps)) {
-				input.customProperties.value = nextCustomProps;
-			}
-			if (differs(before.coreProperties, after.coreProperties)) {
-				input.coreProperties.value = after.coreProperties;
-				if (after.coreProperties) {
-					input.onCorePropertiesChanged?.(after.coreProperties);
-				}
-			}
-			if (differs(before.appProperties, after.appProperties)) {
-				input.appProperties.value = after.appProperties;
-			}
-			if (differs(before.viewProperties, after.viewProperties)) {
-				input.viewProperties.value = after.viewProperties;
-			}
-			if (differs(before.tableStyleMap, after.tableStyleMap)) {
-				input.tableStyleMap.value = after.tableStyleMap;
-			}
-			if (differs(before.tableStylesDefaultId, after.tableStylesDefaultId)) {
-				input.tableStylesDefaultId.value = after.tableStylesDefaultId;
-			}
-			const nextTags = after.tags ?? before.tags ?? [];
-			if (differs(before.tags, nextTags)) {
-				input.tagCollections.value = nextTags;
-			}
+		// Push the current state, then install the updated slides: the explicit
+		// push-before-mutate entry makes the AI edit a single Ctrl+Z.
+		updateSlides(update) {
+			input.pushHistory();
+			input.slides.value = update(input.slides.value);
 			input.markDirty();
 		},
-		getFocusedTargets(): PptxAiFocusedTarget[] {
-			// Explicit picks (pick mode) are the strongest signal of intent.
-			const picked = input.pickedFocus?.();
-			if (picked && picked.length > 0) {
-				return picked;
-			}
-			// A pinned focus (set from the chat) wins over the live selection so the
-			// assistant stays scoped even after the user clicks elsewhere.
-			const pinned = input.pinnedFocus?.();
-			if (pinned && pinned.length > 0) {
-				return pinned;
-			}
+		applyTheme: (updates) => input.applyThemeUpdates(updates),
+		setCanvasSize(size) {
+			input.pushHistory();
+			input.canvasSize.value = { width: size.width, height: size.height };
+		},
+		setSections: (sections) => {
+			input.sections.value = sections;
+		},
+		setPresentationProperties: (props) => {
+			input.presentationProperties.value = props;
+		},
+		setDocumentProperties(core, app, custom) {
+			input.coreProperties.value = core;
+			input.appProperties.value = app;
+			input.customProperties.value = custom;
+		},
+		setViewProperties: (props) => {
+			input.viewProperties.value = props;
+		},
+		setTableStyleMap: (map) => {
+			input.tableStyleMap.value = map;
+		},
+		setTableStylesDefaultId: (id) => {
+			input.tableStylesDefaultId.value = id;
+		},
+		setTagCollections: (tags) => {
+			input.tagCollections.value = tags;
+		},
+		afterDeckUpdate: () => input.markDirty(),
+		onCorePropertiesChanged: (properties) => input.onCorePropertiesChanged?.(properties),
+		getFocusedTargets() {
 			const selectedIds = input.selectedElementIds?.() ?? [];
-			return computeFocusTargets({
-				activeSlideIndex: input.activeSlideIndex.value,
-				selectedElementIds: selectedIds,
-				selectedElementId: selectedIds[0] ?? null,
-			});
+			return resolveAiEffectiveTargets(
+				{ pickTargets: input.pickedFocus?.() ?? [], pinnedFocus: input.pinnedFocus?.() ?? null },
+				computeFocusTargets({
+					activeSlideIndex: input.activeSlideIndex.value,
+					selectedElementIds: selectedIds,
+					selectedElementId: selectedIds[0] ?? null,
+				}),
+			);
 		},
-		notify(message: string, level?: PptxAiNotifyLevel) {
-			input.notify?.(message, level);
-		},
+		notify: (message, level) => input.notify?.(message, level),
 	};
+	return createPptxAiBridge(port);
 }

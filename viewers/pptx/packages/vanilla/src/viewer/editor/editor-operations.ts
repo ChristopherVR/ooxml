@@ -1,4 +1,4 @@
-import type { ElementBoxPatch } from 'ooxml-ui/pptx';
+import type { EditorHistoryController, ElementBoxPatch } from 'ooxml-ui/pptx';
 import {
 	applyFormatToElement,
 	buildDeckSaveOptions,
@@ -8,7 +8,7 @@ import {
 	copyFormatFromElement,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
-	EditorHistory,
+	createEditorHistoryController,
 	resolveSlideSizeSelection,
 	saveDeckWithPassword,
 	updateSlideNotes,
@@ -112,6 +112,8 @@ export interface EditorOps {
 	updateSections(value: PptxSection[]): void;
 	updateHeaderFooter(value: PptxHeaderFooter): void;
 	updateCustomShows(value: PptxCustomShow[]): void;
+	/** The shared undo/redo controller (subscribe to follow `canUndo` / labels). */
+	readonly history: EditorHistoryController<EditorSnapshot>;
 	undo(): void;
 	redo(): void;
 	canUndo(): boolean;
@@ -125,7 +127,7 @@ export interface EditorOps {
 	save(format?: PptxSaveFormat): Promise<Uint8Array>;
 }
 
-interface EditorSnapshot {
+export interface EditorSnapshot {
 	slides: PptxSlide[];
 	sections: PptxSection[];
 	coreProperties?: PptxCoreProperties;
@@ -141,13 +143,13 @@ interface EditorSnapshot {
 	customShows: PptxCustomShow[];
 }
 
-const MAX_HISTORY_ENTRIES = 100;
 /** Consecutive arrow-key nudges within this window share one history entry. */
 const NUDGE_COALESCE_MS = 800;
 
 export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 	const { store } = deps;
-	const history = new EditorHistory<EditorSnapshot>({ maxDepth: MAX_HISTORY_ENTRIES });
+	// The shared history controller owns the stack and its one default depth.
+	const history = createEditorHistoryController<EditorSnapshot>();
 	let lastNudgeAt = 0;
 
 	const selectedElement = (state: ViewerState = store.get()): PptxElement | undefined =>
@@ -452,10 +454,11 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		redo() {
 			restore(history.redo(snapshot())?.snapshot);
 		},
-		canUndo: () => history.canUndo,
-		canRedo: () => history.canRedo,
-		undoLabel: () => history.undoLabel,
-		redoLabel: () => history.redoLabel,
+		history,
+		canUndo: () => history.getSnapshot().canUndo,
+		canRedo: () => history.getSnapshot().canRedo,
+		undoLabel: () => history.getSnapshot().undoLabel,
+		redoLabel: () => history.getSnapshot().redoLabel,
 		clearHistory() {
 			history.clear();
 			lastNudgeAt = 0;

@@ -275,3 +275,20 @@ describe('createAngularAiBridge', () => {
 		]);
 	});
 });
+
+describe('createAngularAiBridge (shared bridge)', () => {
+	it('two element updates in one tick both land, each as one undo step', () => {
+		const { editor, bridge } = setup();
+		editor.setSlides([slide('s1', [textElement('a', 'A'), textElement('b', 'B')])]);
+		bridge.updateElement(0, 'a', { x: 1 });
+		bridge.updateElement(0, 'b', { x: 2 });
+		expect(editor.slides()[0]?.elements.map((el) => el.x)).toEqual([1, 2]);
+		editor.undo();
+		expect(editor.slides()[0]?.elements.map((el) => el.x)).toEqual([1, 10]);
+	});
+
+	it('scopes the assistant to the whole active slide without a panel focus', () => {
+		const { bridge } = setup();
+		expect(bridge.getFocusedTargets?.()).toEqual([{ kind: 'slide', slideIndex: 0 }]);
+	});
+});

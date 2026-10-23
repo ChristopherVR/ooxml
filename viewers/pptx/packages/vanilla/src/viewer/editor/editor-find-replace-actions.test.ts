@@ -1,3 +1,4 @@
+import { createEditorHistoryController } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -27,6 +28,7 @@ function slideWithText(text: string): PptxSlide {
 
 function fakeOps(): EditorOps {
 	return {
+		history: createEditorHistoryController(),
 		selectedElement: () => undefined,
 		select: vi.fn(),
 		pushHistory: vi.fn(),

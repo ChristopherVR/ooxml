@@ -1,5 +1,8 @@
 // Compatibility exports: document operations live in ooxml-core.
-export { EditorHistory } from 'ooxml-core/pptx/editor/render/editor-history';
+export {
+	DEFAULT_EDITOR_HISTORY_DEPTH,
+	EditorHistory,
+} from 'ooxml-core/pptx/editor/render/editor-history';
 export type {
 	UndoRedoResult,
 	EditorHistoryOptions,

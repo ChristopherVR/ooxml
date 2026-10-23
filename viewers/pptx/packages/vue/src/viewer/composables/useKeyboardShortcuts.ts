@@ -30,6 +30,7 @@
  *    navigation map to the same actions and selection guards as React.
  */
 import {
+	dispatchEditorKey,
 	isEditorControlTarget,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
@@ -205,31 +206,28 @@ export function useKeyboardShortcuts(
 	}
 
 	/**
-	 * Dispatch by name rather than a hand-enumerated `switch`: every
-	 * `ShortcutActionName` is also a `ShortcutActions` property of the same
-	 * name (nudge excepted, handled separately for its `dx`/`dy` payload), so a
-	 * new shared action reaches this dispatcher automatically instead of
-	 * needing a matching `case` added here.
+	 * Resolve and dispatch through the shared `dispatchEditorKey`: the one
+	 * action-to-handler switch every binding uses, so a new shared action
+	 * reaches this composable automatically and the claim rule matches the
+	 * other bindings.
 	 */
-	function dispatch(result: MatchedShortcut): void {
-		if (result.action === null) {
-			return;
-		}
-		if (result.action === 'nudge') {
-			actions.nudge?.(result.dx ?? 0, result.dy ?? 0);
-			return;
-		}
-		const handler = actions[result.action];
-		handler?.();
-	}
-
 	function handleKeyDown(event: KeyboardEvent): void {
-		const result = matchShortcut(event);
-		if (result.action === null) {
-			return;
-		}
-		event.preventDefault();
-		dispatch(result);
+		const guard = readGuard(event);
+		dispatchEditorKey(
+			event,
+			{
+				canEdit: guard.canEdit,
+				canPaste: guard.canPaste,
+				isPresenting: guard.isPresenting,
+				hasSelection: guard.hasSelection,
+				isEditingText: Boolean(guard.inlineEditingElementId || guard.tableEditorIsEditing),
+				isDrawing: guard.activeTool !== 'select',
+				isTextInputTarget: guard.isTextInput,
+				isControlTarget: guard.isControl ?? false,
+				keyboard: options.keyboard?.(),
+			},
+			actions,
+		);
 	}
 
 	function attach(): () => void {

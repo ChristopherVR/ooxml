@@ -1,12 +1,9 @@
-import { applyElementUpdate, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
+import { createPptxAiBridge } from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
-	PptxAiDataUpdater,
-	PptxAiDeckMeta,
-	PptxAiElementUpdate,
+	PptxAiBridgePort,
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
-	PptxAiSlidesUpdater,
 } from 'ooxml-ui/pptx/ai';
 /**
  * createAngularAiBridge: builds a {@link PptxAiBridge} that lets the
@@ -26,7 +23,6 @@ import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
-	PptxData,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -116,137 +112,48 @@ export interface BridgeDeps {
 	notify?(message: string, level?: PptxAiNotifyLevel): void;
 }
 
-/** Build a stable {@link PptxAiBridge} over the Angular viewer state/editor. */
+/**
+ * Build a stable {@link PptxAiBridge} over the Angular viewer state/editor: the
+ * shared `createPptxAiBridge` over these accessors.
+ */
 export function createAngularAiBridge(deps: BridgeDeps): PptxAiBridge {
-	const applySlidesUpdate = (updater: PptxAiSlidesUpdater, label: string): void => {
-		// Clone before handing to the updater so mutating updaters never touch the
-		// live signal value; the committed result becomes one history entry.
-		const next = updater(structuredClone([...deps.getSlides()]));
-		deps.applySlides(next, label);
-	};
-
-	/**
-	 * Assemble the presentation-level {@link PptxData} the deck tools read, with
-	 * the live (edited) slides/theme and Angular's tracked deck metadata overlaid.
-	 * Only the fields Angular actually tracks are populated; the rest stay absent
-	 * so their MCP sub-tools degrade gracefully rather than reading stale data.
-	 */
-	const readDeckData = (): PptxData => {
-		const size = deps.getCanvasSize();
-		return {
-			slides: [...deps.getSlides()],
-			width: size.width,
-			height: size.height,
-			theme: deps.getTheme(),
-			sections: [...deps.getSections()],
-			presentationProperties: deps.getPresentationProperties(),
-			customProperties: [...deps.getCustomProperties()],
-			coreProperties: deps.getCoreProperties(),
-			appProperties: deps.getAppProperties(),
-			viewProperties: deps.getViewProperties(),
-			tableStyleMap: deps.getTableStyleMap(),
-			tableStylesDefaultId: deps.getTableStylesDefaultId(),
-			tags: [...deps.getTagCollections()],
-		} satisfies Partial<PptxData> as PptxData;
-	};
-
-	const differs = deckDataFieldChanged;
-
-	return {
-		getDeckMeta(): PptxAiDeckMeta {
-			const slides = deps.getSlides();
-			const size = deps.getCanvasSize();
-			const firstTitle = slides[0]?.elements.find(
-				(el) => 'text' in el && typeof el.text === 'string' && el.text.trim().length > 0,
-			);
-			return {
-				slideCount: slides.length,
-				activeSlideIndex: deps.getActiveSlideIndex(),
-				title:
-					deps.getFileName() ??
-					(firstTitle && 'text' in firstTitle ? String(firstTitle.text) : undefined),
-				width: size.width,
-				height: size.height,
-			};
-		},
-		getSlides: () => [...deps.getSlides()],
+	const port: PptxAiBridgePort = {
+		getSlides: () => deps.getSlides(),
 		getActiveSlideIndex: () => deps.getActiveSlideIndex(),
+		getCanvasSize: () => deps.getCanvasSize(),
 		getTheme: () => deps.getTheme(),
 		getHandler: () => deps.getHandler(),
-		goToSlide(index: number): void {
-			deps.goToSlide(index);
+		getFileName: () => deps.getFileName(),
+		getSections: () => deps.getSections(),
+		getPresentationProperties: () => deps.getPresentationProperties(),
+		getCustomProperties: () => deps.getCustomProperties(),
+		getCoreProperties: () => deps.getCoreProperties(),
+		getAppProperties: () => deps.getAppProperties(),
+		getViewProperties: () => deps.getViewProperties(),
+		getTableStyleMap: () => deps.getTableStyleMap(),
+		getTableStylesDefaultId: () => deps.getTableStylesDefaultId(),
+		getTagCollections: () => deps.getTagCollections(),
+		goToSlide: (index) => deps.goToSlide(index),
+		selectElements: (slideIndex, elementIds) => deps.selectElements(slideIndex, elementIds),
+		// One `applyReplacement` per commit, so an AI edit is one Ctrl+Z.
+		updateSlides: (update, label) => deps.applySlides(update(deps.getSlides()), label),
+		applyTheme: (updates) => deps.applyTheme(updates),
+		setCanvasSize: (size) => deps.setCanvasSize(size),
+		setSections: (sections) => deps.setSections(sections),
+		setPresentationProperties: (props) => deps.setPresentationProperties(props),
+		setDocumentProperties(core, app, custom) {
+			deps.setCoreProperties(core);
+			deps.setAppProperties(app);
+			deps.setCustomProperties(custom);
 		},
-		selectElements(slideIndex: number, elementIds: string[]): void {
-			deps.selectElements(slideIndex, elementIds);
-		},
-		applySlidesUpdate,
-		updateElement(slideIndex: number, elementId: string, updates: PptxAiElementUpdate): void {
-			applySlidesUpdate((slides) => {
-				const el = slides[slideIndex]?.elements.find((e) => e.id === elementId);
-				if (el) {
-					applyElementUpdate(el, updates);
-				}
-				return slides;
-			}, `Update element ${elementId}`);
-		},
-		applyTheme(updates: Partial<PptxTheme>): void {
-			deps.applyTheme(updates);
-		},
-		getDeckData(): PptxData {
-			return readDeckData();
-		},
-		applyDeckData(updater: PptxAiDataUpdater, label: string): void {
-			const before = readDeckData();
-			const after = updater(structuredClone(before));
-			// Slides route through the undoable editor path (one history entry); the
-			// other deck fields persist into the save model and re-render but are not
-			// individually undoable, mirroring React's change-detecting fan-out. Each
-			// setter marks the deck dirty, so no separate markDirty is needed.
-			if (differs(before.slides, after.slides)) {
-				deps.applySlides(after.slides, label);
-			}
-			if (before.width !== after.width || before.height !== after.height) {
-				deps.setCanvasSize({ width: after.width, height: after.height });
-			}
-			const nextSections = after.sections ?? before.sections ?? [];
-			if (differs(before.sections, nextSections)) {
-				deps.setSections(nextSections);
-			}
-			const nextPresProps = after.presentationProperties ?? deps.getPresentationProperties();
-			if (differs(before.presentationProperties, nextPresProps)) {
-				deps.setPresentationProperties(nextPresProps);
-			}
-			const nextCustomProps = after.customProperties ?? before.customProperties ?? [];
-			if (differs(before.customProperties, nextCustomProps)) {
-				deps.setCustomProperties(nextCustomProps);
-			}
-			if (differs(before.coreProperties, after.coreProperties)) {
-				deps.setCoreProperties(after.coreProperties);
-			}
-			if (differs(before.appProperties, after.appProperties)) {
-				deps.setAppProperties(after.appProperties);
-			}
-			if (differs(before.viewProperties, after.viewProperties)) {
-				deps.setViewProperties(after.viewProperties);
-			}
-			if (differs(before.tableStyleMap, after.tableStyleMap)) {
-				deps.setTableStyleMap(after.tableStyleMap);
-			}
-			if (differs(before.tableStylesDefaultId, after.tableStylesDefaultId)) {
-				deps.setTableStylesDefaultId(after.tableStylesDefaultId);
-			}
-			const nextTags = after.tags ?? before.tags ?? [];
-			if (differs(before.tags, nextTags)) {
-				deps.setTagCollections(nextTags);
-			}
-		},
-		getFocusedTargets(): PptxAiFocusedTarget[] {
-			return (
-				deps.getFocusedTargets?.() ?? [{ kind: 'slide', slideIndex: deps.getActiveSlideIndex() }]
-			);
-		},
-		notify(message: string, level?: PptxAiNotifyLevel): void {
-			deps.notify?.(message, level);
-		},
+		setViewProperties: (props) => deps.setViewProperties(props),
+		setTableStyleMap: (map) => deps.setTableStyleMap(map),
+		setTableStylesDefaultId: (id) => deps.setTableStylesDefaultId(id),
+		setTagCollections: (tags) => deps.setTagCollections(tags),
+		// Without a panel focus the assistant scopes to the whole active slide.
+		getFocusedTargets: () =>
+			deps.getFocusedTargets?.() ?? [{ kind: 'slide', slideIndex: deps.getActiveSlideIndex() }],
+		notify: (message, level) => deps.notify?.(message, level),
 	};
+	return createPptxAiBridge(port);
 }
