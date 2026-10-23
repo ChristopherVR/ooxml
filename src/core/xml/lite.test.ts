@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LiteElement, parseLiteFragment } from './lite';
+import { LiteDeclinedError, LiteElement, liteChildElements, parseLiteFragment } from './lite';
 import { elements, parseXml, type XmlElement } from './xml';
 
 interface Shape {
@@ -30,6 +30,31 @@ function shape(element: XmlElement): Shape {
 		children: elements(element).map(shape),
 	};
 }
+
+/** Fragments the light reader leaves to the full parser. */
+const DECLINED: [string, string][] = [
+	['an undeclared element prefix', '<y:row/>'],
+	['a namespace declaration', '<row xmlns="urn:other"/>'],
+	['a prefixed namespace declaration', '<row xmlns:y="urn:y"/>'],
+	['a comment with -- inside', '<row/><!-- a -- b -->'],
+	['a comment ending in -', '<row/><!-- a --->'],
+	['an unterminated comment', '<row/><!-- note'],
+	['unterminated CDATA', '<t><![CDATA[x</t>'],
+	['CDATA quoting a DTD', '<t><![CDATA[<!DOCTYPE x>]]></t>'],
+	['a comment quoting an entity declaration', '<row/><!-- <!ENTITY x "y"> -->'],
+	['a declaration', '<!DOCTYPE x><row/>'],
+	['a processing instruction', '<?pi x?><row/>'],
+	['an unknown entity', '<t>&nbsp;</t>'],
+	['a bare ampersand', '<t>a & b</t>'],
+	['an unclosed element', '<row><c>'],
+	['a mismatched end tag', '<row></c>'],
+	['a stray end tag', '</row>'],
+	['an unquoted attribute', '<row r=1/>'],
+	['a duplicate attribute', '<row r="1" r="2"/>'],
+	['a < in an attribute', '<row r="<"/>'],
+	['a missing space between attributes', '<row r="1"s="2"/>'],
+	['an undeclared attribute prefix', '<row y:a="1"/>'],
+];
 
 const lite = (inner: string, namespaces: Record<string, string> = { '': X }) =>
 	parseLiteFragment(inner, new LiteElement('data', 'data', X), namespaces);
@@ -100,29 +125,27 @@ describe('parseLiteFragment', () => {
 		expect(dom.map((row) => row.attrs.r)).toEqual(['1', '2']);
 	});
 
-	it.each([
-		['an undeclared element prefix', '<y:row/>'],
-		['a namespace declaration', '<row xmlns="urn:other"/>'],
-		['a prefixed namespace declaration', '<row xmlns:y="urn:y"/>'],
-		['a comment with -- inside', '<row/><!-- a -- b -->'],
-		['a comment ending in -', '<row/><!-- a --->'],
-		['an unterminated comment', '<row/><!-- note'],
-		['unterminated CDATA', '<t><![CDATA[x</t>'],
-		['CDATA quoting a DTD', '<t><![CDATA[<!DOCTYPE x>]]></t>'],
-		['a comment quoting an entity declaration', '<row/><!-- <!ENTITY x "y"> -->'],
-		['a declaration', '<!DOCTYPE x><row/>'],
-		['a processing instruction', '<?pi x?><row/>'],
-		['an unknown entity', '<t>&nbsp;</t>'],
-		['a bare ampersand', '<t>a & b</t>'],
-		['an unclosed element', '<row><c>'],
-		['a mismatched end tag', '<row></c>'],
-		['a stray end tag', '</row>'],
-		['an unquoted attribute', '<row r=1/>'],
-		['a duplicate attribute', '<row r="1" r="2"/>'],
-		['a < in an attribute', '<row r="<"/>'],
-		['a missing space between attributes', '<row r="1"s="2"/>'],
-		['an undeclared attribute prefix', '<row y:a="1"/>'],
-	])('declines %s', (_, inner) => {
+	it.each(DECLINED)('declines %s', (_, inner) => {
 		expect(lite(inner)).toBeUndefined();
+	});
+});
+
+describe('liteChildElements', () => {
+	it('yields the elements parseLiteFragment reads, one at a time', () => {
+		const inner = [
+			'<!-- before --><row r="1"><c r="A1"><v>1</v></c></row>\n',
+			'<row r="2"/><![CDATA[text]]><x:row r="3"><c><![CDATA[a<b]]></c></x:row>',
+		].join('');
+		const namespaces = { '': X, x: X };
+		const whole = parseLiteFragment(inner, new LiteElement('data', 'data', X), namespaces);
+		const rows = liteChildElements(inner, namespaces);
+		const first = rows.next();
+		expect(first.done).toBe(false);
+		expect(shape(first.value as XmlElement)).toEqual(shape(elements(whole!.asElement())[0]!));
+		expect([...rows].map(shape)).toEqual(elements(whole!.asElement()).slice(1).map(shape));
+	});
+
+	it.each(DECLINED)('throws a LiteDeclinedError for %s', (_, inner) => {
+		expect(() => [...liteChildElements(inner, { '': X })]).toThrow(LiteDeclinedError);
 	});
 });

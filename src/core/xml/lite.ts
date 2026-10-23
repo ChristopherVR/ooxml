@@ -7,7 +7,8 @@
 // skipped and CDATA sections kept as text, as the DOM's `textContent` reads them. Anything it does
 // not handle (namespace declarations inside the fragment, an undeclared prefix, processing
 // instructions, a comment XML forbids, unknown entities, malformed markup) makes it return
-// `undefined`, and the caller parses the XML with the full parser instead.
+// `undefined` (the streaming form throws a `LiteDeclinedError`), and the caller parses the XML
+// with the full parser instead.
 import type { XmlElement } from './xml';
 
 /** A text node is kept as its decoded string; elements are {@link LiteElement}s. */
@@ -94,6 +95,17 @@ const hasLineEnds = (xml: string): boolean =>
 export type LiteNamespaces = Readonly<Record<string, string>>;
 
 /**
+ * Thrown while iterating {@link liteChildElements} at markup this reader does not handle, where
+ * {@link parseLiteFragment} returns undefined: the caller reads the XML with the full parser.
+ */
+export class LiteDeclinedError extends Error {
+	constructor() {
+		super('The XML fragment needs the full parser');
+		this.name = 'LiteDeclinedError';
+	}
+}
+
+/**
  * Parses the content of one element (its children) into the container {@link LiteElement}
  * `container`, resolving element prefixes through `namespaces`. Returns undefined when the
  * fragment uses markup this reader does not handle or is malformed.
@@ -103,41 +115,83 @@ export function parseLiteFragment(
 	container: LiteElement,
 	namespaces: LiteNamespaces,
 ): LiteElement | undefined {
+	const nodes = topLevelNodes(xml, namespaces);
+	for (let next = nodes.next(); ; next = nodes.next()) {
+		if (next.done) return next.value ? container : undefined;
+		container.childNodes.push(next.value);
+	}
+}
+
+/**
+ * The child elements of a fragment, read as {@link parseLiteFragment} reads them but built one at
+ * a time: each is complete when it is yielded and the next is read only when asked for, so a
+ * large fragment (the rows of a worksheet) never exists as one tree. Where `parseLiteFragment`
+ * returns undefined, the iteration throws a {@link LiteDeclinedError}, possibly after some
+ * elements have been yielded.
+ */
+export function* liteChildElements(
+	xml: string,
+	namespaces: LiteNamespaces,
+): Generator<XmlElement, void, undefined> {
+	const nodes = topLevelNodes(xml, namespaces);
+	for (let next = nodes.next(); ; next = nodes.next()) {
+		if (next.done) {
+			if (next.value) return;
+			throw new LiteDeclinedError();
+		}
+		if (typeof next.value !== 'string') yield next.value.asElement();
+	}
+}
+
+/**
+ * The top-level nodes of a fragment in order, each element once its end tag is read. Returns
+ * false when the fragment uses markup this reader does not handle or is malformed.
+ */
+function* topLevelNodes(
+	xml: string,
+	namespaces: LiteNamespaces,
+): Generator<LiteNode, boolean, undefined> {
 	const source = hasLineEnds(xml)
 		? xml.replace(/\r[\n\u0085]/g, '\n').replace(/[\r\u0085\u2028\u2029]/g, '\n')
 		: xml;
-	const root = container;
+	// Top-level nodes collect in `root` and are handed out whenever no element is open.
+	const root = new LiteElement('', '', null);
+	const level = root.childNodes;
 	const stack: LiteElement[] = [root];
 	let top = root;
 	const n = source.length;
 	let pos = 0;
 	while (pos < n) {
+		if (level.length && stack.length === 1) {
+			yield* level;
+			level.length = 0;
+		}
 		const lt = source.indexOf('<', pos);
 		const end = lt < 0 ? n : lt;
 		if (end > pos) {
 			const text = decode(source.slice(pos, end));
-			if (text === undefined) return undefined;
+			if (text === undefined) return false;
 			top.childNodes.push(text);
 		}
 		if (lt < 0) break;
 		const next = source.charCodeAt(lt + 1);
 		if (next === 33) {
 			const after = skipCommentOrCdata(source, lt, top);
-			if (after < 0) return undefined;
+			if (after < 0) return false;
 			pos = after;
 			continue;
 		}
 		if (next === 47) {
 			const gt = source.indexOf('>', lt);
 			if (gt < 0 || stack.length < 2 || source.slice(lt + 2, gt).trimEnd() !== top.tagName)
-				return undefined;
+				return false;
 			stack.pop();
 			top = stack[stack.length - 1] as LiteElement;
 			pos = gt + 1;
 			continue;
 		}
 		const parsed = startTag(source, lt + 1, namespaces);
-		if (!parsed) return undefined;
+		if (!parsed) return false;
 		top.childNodes.push(parsed.element);
 		if (!parsed.selfClosing) {
 			stack.push(parsed.element);
@@ -145,7 +199,9 @@ export function parseLiteFragment(
 		}
 		pos = parsed.end;
 	}
-	return stack.length === 1 ? root : undefined;
+	if (stack.length !== 1) return false;
+	yield* level;
+	return true;
 }
 
 /** `parseXml` refuses a part holding these anywhere, even quoted in a comment or CDATA. */
