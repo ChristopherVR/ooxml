@@ -8,6 +8,7 @@ export * from './layout';
 export * from './hierarchy';
 export * from './attributes';
 export * from './layout-category';
+export * from './catalogue';
 export * from './relationships';
 export * from './data-model';
 export * from './definitions';
