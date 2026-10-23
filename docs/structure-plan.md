@@ -424,6 +424,10 @@ adapters stay per product over the same kit) and one contract-parity test per pr
 
 ### 5.3 Chart and SmartArt order
 
+Status at the end of Wave 6 (2026-10-23): the steps below have landed in part. The open items are the
+Wave 6 "Next" list and the "Remains" entries of [agnostic-core-plan.md](agnostic-core-plan.md) sections
+3.5 to 3.7, which define the step labels (C1 to C6, U1 to U5, S1 to S5).
+
 Charts, core: neutral edit operations over `ChartSpace` (`chart/edit`, with Excel's `ChartPatch` as
 a client), then the model gaps, then pptx save through `writeChartSpace` one feature family per
 commit behind an old-versus-new part diff over every committed deck, then `PptxChartData` as an
