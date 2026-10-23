@@ -30,7 +30,12 @@ import {
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
 } from 'ooxml-ui/pptx';
-import type { AutosaveDisabledReason, DocumentStorage, PptxAutosaveStatus } from 'ooxml-ui/pptx';
+import type {
+	AutosaveDisabledReason,
+	DocumentStorage,
+	InlineTextDraft,
+	PptxAutosaveStatus,
+} from 'ooxml-ui/pptx';
 
 import { controllerSignal } from './controller-signal';
 
@@ -52,7 +57,9 @@ export interface AutosaveHost {
 	/** Host `storage` input: recovery snapshots go to its recovery methods when it has them. */
 	readonly storage?: () => DocumentStorage | undefined;
 	/** Serialise the current edited deck to `.pptx` bytes (null skips the write). */
-	readonly serialize: () => Promise<Uint8Array | null>;
+	readonly serialize: (draft: InlineTextDraft | null) => Promise<Uint8Array | null>;
+	/** The element whose inline editor is open; a closed editor's draft is dropped. */
+	readonly inlineEditingId?: () => string | null;
 	/**
 	 * The resolved cadence in milliseconds (shared `resolveAutosaveIntervalMs`:
 	 * host `autosaveIntervalMs` input > File > Options > Save AutoRecover
@@ -85,7 +92,8 @@ export class AutosaveService {
 				: { active: false },
 		getFilePath: () => this.host?.filePath(),
 		getIntervalMs: () => resolveAutosaveIntervalMs({ hostIntervalMs: this.host?.intervalMs?.() }),
-		serialize: () => this.host?.serialize() ?? Promise.resolve(null),
+		serialize: (draft) => this.host?.serialize(draft) ?? Promise.resolve(null),
+		getInlineEditingId: () => this.host?.inlineEditingId?.(),
 		getStorage: () => this.host?.storage?.(),
 		onSaved: (data) => this.host?.saved?.(data),
 		errorMessage: () => this.translate.instant('pptx.autosave.error'),
@@ -121,6 +129,11 @@ export class AutosaveService {
 			},
 			{ injector: this.injector },
 		);
+	}
+
+	/** In-progress inline text: a changed draft is an edit and goes into the snapshot. */
+	noteInlineDraft(draft: InlineTextDraft | null): void {
+		this.controller.noteInlineDraft(draft);
 	}
 
 	/** Manually trigger an autosave right now (mirrors React's `triggerAutosave`). */

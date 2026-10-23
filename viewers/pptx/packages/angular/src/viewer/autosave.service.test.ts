@@ -272,3 +272,35 @@ describe('a ribbon New Slide on a freshly loaded deck', () => {
 		);
 	});
 });
+
+describe('in-progress inline text', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		vi.mocked(saveAutosaveSnapshot).mockClear();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('counts uncommitted typing on a clean deck as an edit and hands it to the serialiser', async () => {
+		const serialize = vi.fn(async () => new Uint8Array([1]));
+		const { autosave, flushEffects } = harness();
+		autosave.bind({
+			enabled: () => true,
+			filePath: () => 'deck.pptx',
+			isDirty: () => false,
+			serialize,
+			intervalMs: () => 2000,
+			inlineEditingId: () => 'title',
+		});
+		flushEffects();
+		autosave.noteInlineDraft({ slideId: 's1', elementId: 'title', text: 'Typed' });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(serialize).toHaveBeenCalledExactlyOnceWith({
+			slideId: 's1',
+			elementId: 'title',
+			text: 'Typed',
+		});
+	});
+});
