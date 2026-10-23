@@ -214,7 +214,7 @@ export class ViewerKeyboardService {
 	private toggleFind(): void {
 		if (this.findReplace.showFind() || this.findReplace.showFindReplace()) {
 			this.findReplace.showFind.set(false);
-			this.findReplace.showFindReplace.set(false);
+			this.findReplace.closeFindReplace();
 			return;
 		}
 		this.findReplace.showFind.set(true);
