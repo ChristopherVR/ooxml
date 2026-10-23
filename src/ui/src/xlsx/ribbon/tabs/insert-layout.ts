@@ -35,7 +35,10 @@ export function insertTab(): RibbonTab {
 			{
 				id: 'illustrations',
 				label: 'Illustrations',
-				controls: [{ kind: 'button', command: 'insert.pictures', size: 'large' }],
+				controls: [
+					{ kind: 'button', command: 'insert.pictures', size: 'large' },
+					{ kind: 'button', command: 'insert.smartart', size: 'large' },
+				],
 			},
 			{
 				id: 'charts',

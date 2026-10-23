@@ -103,6 +103,16 @@ export class DrawingLayer {
 					node.addEventListener('dblclick', (event) => {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
+						const frame = view.sheet()?.drawings[index];
+						if (frame?.kind === 'smartArt') {
+							// Excel opens the text pane on a double-click into a SmartArt graphic.
+							event.stopPropagation();
+							view.ctx.selection.set({ drawing: index });
+							const textPane = view.ctx.commands.get('smartart.textPane');
+							if (textPane && !textPane.checked?.(view.ctx))
+								void view.ctx.commands.run('smartart.textPane');
+							return;
+						}
 						const series = (event.currentTarget as ObjectNode).xgSeriesHit;
 						const part = (event.currentTarget as ObjectNode).xgChartPart;
 						if (series === undefined && part === undefined) return;
@@ -156,7 +166,7 @@ export class DrawingLayer {
 		} else if (drawing.kind === 'timeline') {
 			paintTimeline(node, drawing, box.w, box.h, view.ctx, view.workbook());
 		} else if (drawing.kind === 'smartArt') {
-			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme);
+			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme, box);
 		} else if (drawing.chartEx) {
 			// An extended chart (waterfall, histogram) the core painter draws; the frame is read-only.
 			this.#paintChart(node, drawing.chartEx, box);

@@ -76,3 +76,19 @@
 	padding: 0;
 	font-size: 18px;
 }
+/* The shared SmartArt text pane, beside the grid while a SmartArt graphic is selected. */
+.xve-smartart-text-pane {
+	box-sizing: border-box;
+	flex: none;
+	align-self: flex-start;
+	width: 260px;
+	max-width: 40%;
+	margin: 8px;
+}
+.xve-smartart-text-pane[hidden] {
+	display: none;
+}
+.xve-cmd-dialog .xve-smartart-picker {
+	display: grid;
+	width: min(760px, 86vw);
+}

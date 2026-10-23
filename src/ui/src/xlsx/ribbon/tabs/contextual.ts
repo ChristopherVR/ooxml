@@ -1,7 +1,19 @@
 // Contextual tabs: Table Design (active cell inside a table) and Chart Design (active cell under
 // a chart).
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
-import { activeChart, activeSlicer, activeTable, activeTimeline } from 'ooxml-core/xlsx/ui';
+import {
+	activeChart,
+	activeSlicer,
+	activeSmartArt,
+	activeTable,
+	activeTimeline,
+} from 'ooxml-core/xlsx/ui';
+import {
+	DIAGRAM_ADD_SHAPE_COMMANDS,
+	DIAGRAM_ADD_SHAPE_LABEL,
+	DIAGRAM_DESIGN_GROUPS,
+} from 'ooxml-core/diagram';
+import { smartArtCommandId } from '../../smartart-controller';
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
 import { CHART_TYPES } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
@@ -181,6 +193,49 @@ export function timelineTab(): RibbonTab {
 				id: 'timeline-delete',
 				label: 'Delete',
 				controls: [{ kind: 'button', command: 'timeline.delete', size: 'large' }],
+			},
+		],
+	};
+}
+
+/**
+ * SmartArt Design: shown while a SmartArt graphic is the selected object, with the same commands
+ * as Word's tab (the shared list of `ooxml-core/diagram`). SmartArt Styles and Change Colors are
+ * not offered: only one colour and one style definition ship with the core.
+ */
+export function smartArtDesignTab(): RibbonTab {
+	const small = (key: Parameters<typeof smartArtCommandId>[0]) => ({
+		kind: 'button' as const,
+		command: smartArtCommandId(key),
+		showLabel: true,
+	});
+	return {
+		id: 'smartart-design',
+		label: 'SmartArt Design',
+		contextual: (ctx) => !!activeSmartArt(ctx),
+		groups: [
+			{
+				id: 'create-graphic',
+				label: DIAGRAM_DESIGN_GROUPS.create,
+				controls: [
+					{
+						kind: 'menu',
+						label: DIAGRAM_ADD_SHAPE_LABEL,
+						icon: 'xl-smartArtAddShape',
+						size: 'large',
+						items: DIAGRAM_ADD_SHAPE_COMMANDS.map((command) => ({
+							command: smartArtCommandId(command.key),
+						})),
+					},
+					{ kind: 'toggle', command: smartArtCommandId('textPane'), size: 'large' },
+					{ kind: 'stack', controls: [small('promote'), small('demote')] },
+					{ kind: 'stack', controls: [small('moveUp'), small('moveDown')] },
+				],
+			},
+			{
+				id: 'layouts',
+				label: DIAGRAM_DESIGN_GROUPS.layouts,
+				controls: [{ kind: 'button', command: smartArtCommandId('changeLayout'), size: 'large' }],
 			},
 		],
 	};
