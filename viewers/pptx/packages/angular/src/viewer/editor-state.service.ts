@@ -7,7 +7,8 @@
  * record a history snapshot before each mutation.
  *
  * Pure logic is delegated to `element-operations.ts` (immutable array
- * transforms) and `editor-history.ts` (generic snapshot stack); this service
+ * transforms) and the shared history controller (`createEditorHistoryController`,
+ * adapted with `controllerSignal`); this service
  * only wires them to Angular signals. Provide it at the component level:
  * `@Component({ providers: [EditorStateService] })`.
  */
@@ -21,6 +22,7 @@ import {
 	applyReroutedConnectors,
 	buildSlideTemplateSlide,
 	cloneElementForPaste,
+	createEditorHistoryController,
 	groupSlidesBySection,
 	isTemplateElement,
 	isTemplateElementId,
@@ -41,7 +43,7 @@ import type { PptxElement, PptxHeaderFooter, PptxSection, PptxSlide } from 'pptx
 
 import { computeAlign, computeDistribute } from './align-distribute';
 import type { AlignMode, DistributeMode } from './align-distribute';
-import { EditorHistory } from './editor-history';
+import { controllerSignal } from './controller-signal';
 import { createEditorSectionOperations } from './editor-section-operations';
 import {
 	bringForward,
@@ -76,34 +78,6 @@ interface EditorSnapshot {
 	headerFooter: PptxHeaderFooter;
 }
 
-/** An undo stack that tells its owner each time an edit is recorded, undone or redone. */
-class NotifyingEditorHistory extends EditorHistory<EditorSnapshot> {
-	constructor(private readonly onCommit: () => void) {
-		super();
-	}
-
-	override record(snapshot: EditorSnapshot, label: string): void {
-		super.record(snapshot, label);
-		this.onCommit();
-	}
-
-	override undo(current: EditorSnapshot): ReturnType<EditorHistory<EditorSnapshot>['undo']> {
-		const result = super.undo(current);
-		if (result) {
-			this.onCommit();
-		}
-		return result;
-	}
-
-	override redo(current: EditorSnapshot): ReturnType<EditorHistory<EditorSnapshot>['redo']> {
-		const result = super.redo(current);
-		if (result) {
-			this.onCommit();
-		}
-		return result;
-	}
-}
-
 @Injectable()
 export class EditorStateService {
 	private readonly loader: LoadContentService | null = (() => {
@@ -127,14 +101,14 @@ export class EditorStateService {
 			return null;
 		}
 	})();
+	/** The shared undo/redo controller (one stack and one default depth for every binding). */
+	private readonly history = createEditorHistoryController<EditorSnapshot>();
+	private readonly historyState = controllerSignal(this.history);
 	/**
 	 * Counts committed edits (recorded, undone or redone), never loads. The viewer component
 	 * reports it to the host as `documentChange`.
 	 */
-	readonly editRevision = signal(0);
-	private readonly history = new NotifyingEditorHistory(() =>
-		this.editRevision.update((revision) => revision + 1),
-	);
+	readonly editRevision = computed(() => this.historyState().revision);
 
 	/**
 	 * Apply File > Options > Advanced > "Maximum number of undos" at runtime.
@@ -194,10 +168,10 @@ export class EditorStateService {
 	 */
 	readonly templateElementsBySlideId = signal<TemplateElementsBySlideId>({});
 
-	readonly canUndo = signal(false);
-	readonly canRedo = signal(false);
-	readonly undoLabel = signal<string | undefined>(undefined);
-	readonly redoLabel = signal<string | undefined>(undefined);
+	readonly canUndo = computed(() => this.historyState().canUndo);
+	readonly canRedo = computed(() => this.historyState().canRedo);
+	readonly undoLabel = computed(() => this.historyState().undoLabel);
+	readonly redoLabel = computed(() => this.historyState().redoLabel);
 
 	readonly hasSelection = computed(() => this.selectedIds().length > 0);
 
@@ -222,7 +196,6 @@ export class EditorStateService {
 		this.selectedIds.set([]);
 		this.history.clear();
 		this.dirty.set(false);
-		this.syncHistory();
 	}
 
 	/** Current editable (template-free) slides as a fresh (cloned) array. */
@@ -242,7 +215,6 @@ export class EditorStateService {
 		this.history.record(this.captureSnapshot(), label);
 		this.slides.set(newSlides.map(cloneSlide));
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	private async hydrateInsertedSlideLayout(index: number, id: string, path: string): Promise<void> {
@@ -303,7 +275,6 @@ export class EditorStateService {
 		this.headerFooter.set(value);
 		this.loader?.headerFooter.set(structuredClone(value));
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/** The template (master/layout) elements separated out of a slide, by id. */
@@ -437,7 +408,6 @@ export class EditorStateService {
 	beginTransform(label: string): void {
 		this.history.record(this.captureSnapshot(), label);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/**
@@ -598,7 +568,6 @@ export class EditorStateService {
 			this.restoreSnapshot(result.snapshot);
 			this.dirty.set(true);
 			this.selectedIds.set([]);
-			this.syncHistory();
 		}
 	}
 
@@ -608,7 +577,6 @@ export class EditorStateService {
 			this.restoreSnapshot(result.snapshot);
 			this.dirty.set(true);
 			this.selectedIds.set([]);
-			this.syncHistory();
 		}
 	}
 
@@ -666,7 +634,6 @@ export class EditorStateService {
 			),
 		);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	// ── Group / ungroup ──────────────────────────────────────────────────────
@@ -695,7 +662,6 @@ export class EditorStateService {
 		this.slides.set(slides.map((s, i) => (i === slideIndex ? { ...s, elements } : s)));
 		this.selectedIds.set([groupId]);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/** Ungroup the single selected group back into its children. */
@@ -731,7 +697,6 @@ export class EditorStateService {
 		this.slides.set(slides.map((s, i) => (i === slideIndex ? { ...s, elements } : s)));
 		this.selectedIds.set(used);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	// ── Clipboard ──────────────────────────────────────────────────────────────
@@ -793,7 +758,6 @@ export class EditorStateService {
 		);
 		this.selectedIds.set(newIds);
 		this.dirty.set(true);
-		this.syncHistory();
 		// A plain paste IS "Keep Source Formatting": each clone is its own
 		// pristine source, so the Paste Options toolbar's later choices always
 		// re-derive from it, never from an already-transformed element.
@@ -835,7 +799,6 @@ export class EditorStateService {
 		);
 		this.selectedIds.set(additions.map((el) => el.id));
 		this.dirty.set(true);
-		this.syncHistory();
 		const entries = sourceClones.map((sourceClone, i) => ({ id: additions[i].id, sourceClone }));
 		this.pasteOptionsToolbar.set(entries);
 		return entries;
@@ -886,7 +849,6 @@ export class EditorStateService {
 		);
 		this.selectedIds.set([withId.id]);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	// ── Slide operations ─────────────────────────────────────────────────────
@@ -900,7 +862,6 @@ export class EditorStateService {
 		this.history.record(this.captureSnapshot(), this.t('pptx.undoAction.slideProperties'));
 		this.slides.set(slides.map((s, i) => (i === slideIndex ? { ...s, ...patch } : s)));
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/**
@@ -926,7 +887,6 @@ export class EditorStateService {
 		this.slides.set(this.renumber(next));
 		this.selectedIds.set([]);
 		this.dirty.set(true);
-		this.syncHistory();
 		if (layoutPath) {
 			void this.hydrateInsertedSlideLayout(
 				Math.min(afterIndex + 1, next.length - 1),
@@ -972,7 +932,6 @@ export class EditorStateService {
 			[updated.id]: templateElements,
 		});
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/**
@@ -996,7 +955,6 @@ export class EditorStateService {
 		this.slides.set(this.renumber(next));
 		this.selectedIds.set([]);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/** Delete a slide (keeps at least one; records history). */
@@ -1009,7 +967,6 @@ export class EditorStateService {
 		this.slides.set(this.renumber(slides.filter((_, i) => i !== index)));
 		this.selectedIds.set([]);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/** Duplicate a slide, inserting the copy after it (records history). */
@@ -1024,7 +981,6 @@ export class EditorStateService {
 		);
 		this.selectedIds.set([]);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	duplicateSlide(index: number): void {
@@ -1039,7 +995,6 @@ export class EditorStateService {
 		next.splice(index + 1, 0, copy);
 		this.slides.set(this.renumber(next));
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	/** Reorder a slide from `from` to `to` (records history). */
@@ -1054,7 +1009,6 @@ export class EditorStateService {
 		next.splice(to, 0, moved);
 		this.slides.set(this.renumber(next));
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	addSection(afterSlideIndex: number): void {
@@ -1066,7 +1020,6 @@ export class EditorStateService {
 		this.sections.set(sections);
 		this.slides.set(slides);
 		this.dirty.set(true);
-		this.syncHistory();
 	}
 
 	// ── Internals ────────────────────────────────────────────────────────────
@@ -1114,14 +1067,6 @@ export class EditorStateService {
 		);
 		this.writeTemplatesForSlide(target.id, nextTemplates);
 		this.dirty.set(true);
-		this.syncHistory();
-	}
-
-	private syncHistory(): void {
-		this.canUndo.set(this.history.canUndo);
-		this.canRedo.set(this.history.canRedo);
-		this.undoLabel.set(this.history.undoLabel);
-		this.redoLabel.set(this.history.redoLabel);
 	}
 
 	private newId(): string {

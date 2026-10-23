@@ -566,3 +566,13 @@ describe('viewerKeyboardService: Tab cycles the selection', () => {
 		button.remove();
 	});
 });
+
+describe('viewerKeyboardService: shared dispatch', () => {
+	it('claims the keys the shared keymap resolves and leaves the rest alone', () => {
+		const h = harness({ hasSelection: false });
+		expect(h.press('z', { ctrlKey: true }).defaultPrevented).toBe(true);
+		expect(h.editor.undo).toHaveBeenCalledOnce();
+		// Ctrl+K needs a selection, so with none the keymap resolves nothing.
+		expect(h.press('k', { ctrlKey: true }).defaultPrevented).toBe(false);
+	});
+});
