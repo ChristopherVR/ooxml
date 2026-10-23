@@ -8,8 +8,7 @@ import { themeSwatch } from './theme-color-grid.test-support';
 
 /**
  * Inspector text colour: `TextSection` shows the deck's real "Theme Colors"
- * grid below the native colour input, mirroring the ribbon font-colour
- * control (`FontExtrasGroup`) and React's `ShapeTextPanels`. A theme swatch
+ * grid below the native colour input, mirroring React's `ShapeTextPanels`. A theme swatch
  * commits both the resolved hex and its `PptxThemeColorRef`; the native
  * colour input always clears the ref.
  */

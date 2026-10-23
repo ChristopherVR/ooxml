@@ -3,8 +3,7 @@
  * stop theme-colour wiring. No Angular TestBed (see `vitest.config.ts`) and
  * `element` is `input.required<PptxElement>()`, which cannot be set on a
  * directly-constructed instance outside a component factory, so this pins
- * the template/handler wiring as text (same technique as
- * `ribbon-color-popover.component.test.ts`); the underlying patch-builder
+ * the template/handler wiring as text; the underlying patch-builder
  * behaviour (`gradientStopColorCommitPatch` + `updateGradientStopPatch`) is
  * covered directly in `gradient-picker-helpers.test.ts`.
  */

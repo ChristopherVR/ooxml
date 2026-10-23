@@ -4,7 +4,6 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EditorState } from '../../../editor/editor-state.svelte';
-import TextFormatGroup from '../../TextFormatGroup.svelte';
 import DrawingGroup from './DrawingGroup.svelte';
 import FontFormattingGroup from './FontFormattingGroup.svelte';
 import ParagraphGroup from './ParagraphGroup.svelte';
@@ -24,7 +23,7 @@ afterEach(() => {
 	cleanup = undefined;
 });
 
-function makeEditor(withText = false, fontSize?: number): EditorState {
+function makeEditor(withText = false): EditorState {
 	const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
 	editor.editable = true;
 	editor.setSlides([
@@ -42,7 +41,7 @@ function makeEditor(withText = false, fontSize?: number): EditorState {
 							width: 100,
 							height: 20,
 							text: 'Hi',
-							textStyle: fontSize === undefined ? {} : { fontSize },
+							textStyle: {},
 						},
 					]
 				: [],
@@ -196,37 +195,5 @@ describe('home text shadow toggle', () => {
 		flushSync();
 		el = editor.slides[0]?.elements[0];
 		expect(el?.type === 'text' ? el.textStyle?.textShadowColor : 'x').toBeUndefined();
-	});
-});
-
-describe('home text font size', () => {
-	it.each([
-		['empty selection', false, true, true],
-		['read-only selection', true, false, true],
-		['editable selection', true, true, false],
-	] as const)('gates the size input for %s', (_name, withText, editable, disabled) => {
-		const editor = makeEditor(withText);
-		editor.editable = editable;
-		const target = mountComponent(TextFormatGroup, editor);
-		expect(target.querySelector<HTMLInputElement>('[aria-label="Font size"]')?.disabled).toBe(
-			disabled,
-		);
-	});
-
-	it('shows points and converts fractional point edits back to model pixels', () => {
-		const editor = makeEditor(true, 48.1 * (96 / 72));
-		const target = mountComponent(TextFormatGroup, editor);
-		const input = target.querySelector<HTMLInputElement>('[aria-label="Font size"]');
-
-		expect(input?.value).toBe('48.1');
-		expect(input?.step).toBe('any');
-		input!.value = '10.1';
-		input!.dispatchEvent(new Event('change', { bubbles: true }));
-		flushSync();
-
-		const element = editor.slides[0]?.elements[0];
-		expect(element?.type === 'text' ? element.textStyle?.fontSize : undefined).toBeCloseTo(
-			10.1 * (96 / 72),
-		);
 	});
 });

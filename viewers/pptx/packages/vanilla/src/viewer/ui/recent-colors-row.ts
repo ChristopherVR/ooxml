@@ -3,11 +3,7 @@ import { createEl } from '../render';
 
 /**
  * B6: the reusable "Recent colours" (`p:clrMru`) swatch row, shown under a
- * colour input (fill, stroke, text) or inside a swatch-picker's popup menu
- * (ribbon font-colour / shape-fill / shape-outline). Extracted from
- * `swatch-picker.ts`'s previously inline recent grid so every colour surface
- * (ribbon popovers AND the property inspector) shares one implementation
- * instead of a copy-pasted grid each.
+ * colour input (fill, stroke, text) in the property inspector.
  *
  * Row contract (asserted by the cross-binding e2e spec): a single container
  * carrying `data-testid="pptx-color-recent"` and an `aria-label` matching the
@@ -20,8 +16,6 @@ export interface RecentColorsRowHandle {
 	/** Replace the shown colours (most-recent-first); hides the row when empty. */
 	setColors(colors: readonly string[]): void;
 	setDisabled(disabled: boolean): void;
-	/** Highlight the swatch matching the picker's current value, if any (swatch-picker only). */
-	setSelected(hex: string | undefined): void;
 }
 
 /** Build a "Recent colours" row. `onSelect` fires the same commit path the picker's own change handler uses. */
@@ -45,20 +39,13 @@ export function createRecentColorsRow(
 	el.appendChild(grid);
 
 	let disabled = false;
-	let selected: string | undefined;
-	const buttons = new Map<HTMLButtonElement, string>();
-
-	const applySelected = (): void => {
-		for (const [btn, hex] of buttons) {
-			btn.classList.toggle('is-selected', hex === selected);
-		}
-	};
+	const buttons: HTMLButtonElement[] = [];
 
 	return {
 		el,
 		setColors(colors) {
 			grid.replaceChildren();
-			buttons.clear();
+			buttons.length = 0;
 			for (const hex of colors ?? []) {
 				const btn = createEl(doc, 'button', 'pptxv-swatch');
 				btn.type = 'button';
@@ -69,20 +56,15 @@ export function createRecentColorsRow(
 				btn.disabled = disabled;
 				btn.addEventListener('click', () => onSelect(hex));
 				grid.appendChild(btn);
-				buttons.set(btn, hex);
+				buttons.push(btn);
 			}
 			el.hidden = colors.length === 0;
-			applySelected();
 		},
 		setDisabled(next) {
 			disabled = next;
-			for (const btn of buttons.keys()) {
+			for (const btn of buttons) {
 				btn.disabled = next;
 			}
-		},
-		setSelected(hex) {
-			selected = hex;
-			applySelected();
 		},
 	};
 }

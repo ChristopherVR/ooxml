@@ -8,9 +8,8 @@
  * `RecentColorsService` (which moves it to the front of the list), exactly
  * like React's `ColorPickerRow` and Vue's `RecentColorsRow.vue`.
  *
- * Extracted out of `RibbonColorPopoverComponent`'s inline markup so every
- * colour picker (ribbon popover, inspector fill/stroke/text) mounts the same
- * row instead of re-implementing it.
+ * The inspector's fill, stroke and text colour pickers all mount this one row
+ * instead of re-implementing it.
  *
  * @module viewer/recent-colors-row
  */

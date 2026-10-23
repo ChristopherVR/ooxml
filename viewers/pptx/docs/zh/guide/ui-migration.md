@@ -134,7 +134,6 @@ Home (#373) 按分组系列交付，以便这个庞大的选项卡易于审阅�
 - “幻灯片模板”对话框本身。它是一个模态对话框，其焦点管理归对话框迁移 (#342 和 #396) 负责；打开它的 Home 按钮是共享的。
 - 每个版式缩略图内部绘制的图案。这属于幻灯片元素渲染（React 中的 `StaticElementRenderer`，Vue 和 Svelte 中的 `SlideStage`，Angular 中的 `pptx-element-renderer`，Vanilla 中的 DOM 渲染器），而幻灯片内容的渲染是单独的架构决策。缩略图外壳、几何、当前图块标记、键盘和弹出层是共享的，宿主通过 `layoutArtwork` 在已缩放的表面上绘制。
 - 画布上下文菜单和缩略图栏中的版式库（React、Vue、Svelte 和 Angular 中的 `LayoutGalleryMenu`，以及 `ViewerMainContent`、`ViewerEditDialogs`）：上下文菜单留给 #393。
-- Svelte 中编辑工具栏自带的文本格式分组（`FontExtrasGroup`、`FontFamilySelect`、`ShapeFormatGroup`）；它不属于 Home 功能区。
 
 `e2e/pptx/ribbon-home-migration.spec.ts` 在全部五个绑定中覆盖 id、选择和剪贴板限制、带撤销和重做的真实复制/粘贴/剪切、格式刷、自定义、触控目标、主题令牌和强制颜色，现在还包括字体、颜色、段落、选择、形状填充/轮廓、轮廓宽度、排列菜单和版式库控件，并含保存和重新加载。本次变更的可比较截图位于 `/assets/ui-migration/home-remaining-before/` 和 `/assets/ui-migration/home-remaining-after/`（`<binding>-home.png`）；早期的 Home 截图仍在基线目录和完成后目录中。
 

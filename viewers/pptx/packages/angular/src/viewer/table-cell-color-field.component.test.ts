@@ -3,8 +3,8 @@
  * table-cell colour field's theme-colour wiring. No Angular TestBed (see
  * `vitest.config.ts`) and `label`/`fallback` are `input.required<string>()`,
  * which cannot be set on a directly-constructed instance outside a
- * component factory, so this pins the template/handler wiring as text (same
- * technique as `ribbon-color-popover.component.test.ts`); the shared
+ * component factory, so this pins the template/handler wiring as text
+ * (`componentSource`); the shared
  * `normalizeHexColor` fallback logic it reuses is covered by
  * `pptx-viewer-shared`'s own tests.
  */
