@@ -122,16 +122,14 @@ export class SourceIndex {
 const mib = (bytes: number): number => Math.round(bytes / 1048576);
 
 /**
- * Unzips a package into raw parts, enforcing the size and part-count limits (see
- * {@link XlsxLoadLimits}). Declared sizes give a cheap early reject; the real guard
- * (`opc/zip-limits`) counts inflated bytes while streaming each entry.
+ * Opens a package under the input-size limit and guards it, so that every entry inflates under
+ * the part-count, part-size and total limits (see {@link readZipParts}).
  */
-export async function readZipParts(
+export async function openPackage(
 	input: Uint8Array | ArrayBuffer,
-	limits: XlsxLoadLimits = {},
-): Promise<Map<string, Uint8Array>> {
-	const resolved = resolveLoadLimits(limits);
-	const maxInput = resolved.maxInputBytes;
+	limits: Required<XlsxLoadLimits>,
+): Promise<JSZip> {
+	const maxInput = limits.maxInputBytes;
 	const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
 	if (bytes.byteLength > maxInput)
 		throw new WorkbookTooLargeError(
@@ -148,7 +146,19 @@ export async function readZipParts(
 			{ cause: error },
 		);
 	}
-	const zip = guardZip(loaded, zipLimitsFor(resolved));
+	return guardZip(loaded, zipLimitsFor(limits));
+}
+
+/**
+ * Unzips a package into raw parts, enforcing the size and part-count limits (see
+ * {@link XlsxLoadLimits}). Declared sizes give a cheap early reject; the real guard
+ * (`opc/zip-limits`) counts inflated bytes while streaming each entry.
+ */
+export async function readZipParts(
+	input: Uint8Array | ArrayBuffer,
+	limits: XlsxLoadLimits = {},
+): Promise<Map<string, Uint8Array>> {
+	const zip = await openPackage(input, resolveLoadLimits(limits));
 	const parts = new Map<string, Uint8Array>();
 	for (const entry of Object.values(zip.files)) {
 		if (entry.dir) continue;

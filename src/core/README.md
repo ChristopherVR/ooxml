@@ -144,6 +144,22 @@ const workbook = await loadXlsx(bytes, {
 // ('ooxml-core/xlsx/load') takes `limits` too.
 ```
 
+To read one sheet's rows once (an import, an export to another system), `readXlsxRows` walks them
+without building the workbook. It holds the shared strings, the styles and the piece of the sheet
+being read, so its memory does not grow with the sheet; values, formulas and dates are what
+`loadXlsx` gives for the same cells.
+
+```ts
+import { readXlsxRows } from 'ooxml-core/xlsx';
+
+for await (const { row, cells } of readXlsxRows(bytes, { sheet: 'Orders', limits })) {
+	for (const { col, value, formula, numberFormat, iso } of cells) {
+		// row and col are zero-based; value is a number, string, boolean, { error } or null (a
+		// formula without a cached result); iso is set for a number shown as a date or time
+	}
+}
+```
+
 **Compare two versions of a workbook**
 
 ```ts

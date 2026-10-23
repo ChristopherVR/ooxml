@@ -178,11 +178,21 @@ export function readSheetData(
 	rows: Iterable<XmlElement>,
 	sheet: Worksheet,
 ): void {
+	const reader = sheetDataReader(ctx, sheet);
+	for (const rowEl of rows) reader.read(rowEl);
+	reader.done();
+}
+
+/**
+ * Reads `<sheetData>` children into `sheet` one at a time, carrying shared formulas and the row
+ * position from one to the next; `done` marks the cells dynamic arrays spill into.
+ */
+export function sheetDataReader(ctx: CellContext, sheet: Worksheet) {
 	const masters = new Map<string, SharedMaster>();
 	const anchors: DynamicAnchor[] = [];
 	let rowIndex = -1;
-	for (const rowEl of rows) {
-		if (rowEl.localName !== 'row') continue;
+	const read = (rowEl: XmlElement): void => {
+		if (rowEl.localName !== 'row') return;
 		const r = numAttr(rowEl, 'r');
 		rowIndex = r !== undefined ? r - 1 : rowIndex + 1;
 		const info = readRowInfo(ctx, rowEl);
@@ -223,8 +233,8 @@ export function readSheetData(
 			}
 			cells.set(colIndex, cell);
 		}
-	}
-	markSpills(sheet, anchors);
+	};
+	return { read, done: () => markSpills(sheet, anchors) };
 }
 
 /**
