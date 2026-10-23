@@ -19,6 +19,8 @@ export interface ExportLifecycleDeps {
 	doc: Document;
 	/** Host the off-screen capture stage mounts into; matches the viewer container. */
 	container: HTMLElement;
+	/** Where the export progress modal mounts (the chrome root, which carries the theme). */
+	getModalHost?(): HTMLElement;
 	store: Store<ViewerState>;
 	registry: ElementRendererRegistry;
 	getTranslator(): Translator;
@@ -145,6 +147,7 @@ export function createExportLifecycle(deps: ExportLifecycleDeps): ExportLifecycl
 	const modal = createExportProgressModal({
 		doc: deps.doc,
 		getTranslator: deps.getTranslator,
+		...(deps.getModalHost ? { getHost: deps.getModalHost } : {}),
 		onCancel: () => progressUi.cancel(),
 	});
 	const progressUi = createExportProgressUi({

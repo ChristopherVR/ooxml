@@ -727,8 +727,13 @@ Read-only banner. The element owns the lock icon, "Read-only recommended: messag
 text, Edit anyway and Dismiss, and the password form (labelled input, Unlock,
 Cancel, an `alert` error and `aria-invalid`/`aria-describedby`). The input takes
 focus when `passwordPromptOpen` turns on and is cleared when it turns off. Inner
-buttons keep the `pptx-readonly-*` test ids. Hosts own unlocking, dismissal and the
-password check (`checkModifyPassword`).
+buttons keep the `pptx-readonly-*` test ids. Hosts keep the session in their own
+state and drive it through `render/read-only-session.ts`: `reduceReadOnlySession`
+for every transition (Dismiss keeps the lock; a check result that arrives after a
+new load or Cancel is dropped), `readOnlyLocked` for the edit gate,
+`readOnlyBannerVisible` and `readOnlyBannerState` for the element,
+`runReadOnlyPasswordCheck` or `readOnlySessionActions` for the password check
+(`checkModifyPassword`), and `dispatchReadOnlyBannerIntent` for `read-only-request`.
 
 Paste options. The host measures the pasted element with `findCanvasElementNode`
 (each binding waits its own number of frames for the node to render) and mounts

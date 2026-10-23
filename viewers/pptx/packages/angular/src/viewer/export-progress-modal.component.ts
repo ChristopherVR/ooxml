@@ -4,9 +4,9 @@
  *
  * Selector: `pptx-export-progress-modal`
  *
- * Mirrors React's `ExportProgressModal` and the Vue `ExportProgressModal.vue`: a
- * centered card with a determinate progress bar, a status line, and a Cancel
- * button. It is deliberately NOT dismissable by backdrop click or Escape - an
+ * A thin adapter around the shared `pptx-ui-export-progress` element, which owns
+ * the dialog and progress bar semantics, focus and the look (from the viewer's
+ * theme). It is deliberately NOT dismissable by backdrop click or Escape - an
  * export in flight should only end by completing, erroring, or the user pressing
  * Cancel (which emits `cancel`; the host aborts the `AbortController` the export
  * loop checks between slides and clears `open`).
@@ -23,123 +23,29 @@
  * ```
  */
 
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
-import { clampPercent } from 'ooxml-ui/pptx';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
+	input,
+	output,
+} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import type { ExportProgressViewState } from 'ooxml-ui/pptx';
 
-import type { DialogFooterActionSpec } from './dialog-footer.component';
-import { DialogFooterComponent } from './dialog-footer.component';
+import { translationsSignal } from './translations-signal';
 
 @Component({
 	selector: 'pptx-export-progress-modal',
 	standalone: true,
-	imports: [DialogFooterComponent, TranslatePipe],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	template: `
-		@if (open()) {
-			<div
-				class="pptx-ng-export-progress__backdrop"
-				role="dialog"
-				aria-modal="true"
-				[attr.aria-label]="title()"
-			>
-				<div class="pptx-ng-export-progress">
-					<h3 class="pptx-ng-export-progress__title">{{ title() }}</h3>
-
-					<div class="pptx-ng-export-progress__track">
-						<div class="pptx-ng-export-progress__fill" [style.width.%]="clampedProgress()"></div>
-					</div>
-
-					<div class="pptx-ng-export-progress__status">
-						<span>{{ statusMessage() || ('pptx.export.processing' | translate) }}</span>
-						<span class="pptx-ng-export-progress__pct">{{ clampedProgress() }}%</span>
-					</div>
-
-					<div class="pptx-ng-export-progress__actions">
-						<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction()" />
-					</div>
-				</div>
-			</div>
-		}
-	`,
-	styles: [
-		`
-			.pptx-ng-export-progress__backdrop {
-				position: fixed;
-				inset: 0;
-				z-index: 1200;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				background: rgba(0, 0, 0, 0.6);
-				backdrop-filter: blur(2px);
-			}
-
-			.pptx-ng-export-progress {
-				display: flex;
-				flex-direction: column;
-				width: min(92vw, 384px);
-				padding: 1.5rem;
-				border: 1px solid rgba(255, 255, 255, 0.12);
-				border-radius: 0.75rem;
-				background: #1e1e1e;
-				color: #e5e5e5;
-				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-			}
-
-			.pptx-ng-export-progress__title {
-				margin: 0 0 1rem;
-				font-size: 0.875rem;
-				font-weight: 600;
-				color: #ffffff;
-			}
-
-			.pptx-ng-export-progress__track {
-				width: 100%;
-				height: 0.625rem;
-				margin-bottom: 0.75rem;
-				overflow: hidden;
-				border-radius: 9999px;
-				background: rgba(255, 255, 255, 0.12);
-			}
-
-			.pptx-ng-export-progress__fill {
-				height: 100%;
-				border-radius: 9999px;
-				background: #2563eb;
-				transition: width 300ms ease-out;
-			}
-
-			.pptx-ng-export-progress__status {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				margin-bottom: 1rem;
-				font-size: 0.75rem;
-				color: rgba(255, 255, 255, 0.6);
-			}
-
-			.pptx-ng-export-progress__pct {
-				font-variant-numeric: tabular-nums;
-			}
-
-			.pptx-ng-export-progress__actions {
-				display: flex;
-				justify-content: flex-end;
-			}
-		`,
-	],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
+	host: { class: 'contents' },
+	template: `<pptx-ui-export-progress [state]="view()" (export-cancel)="cancel.emit()" />`,
 })
 export class ExportProgressModalComponent {
-	/** Footer actions for the shared `pptx-ui-dialog-footer`. */
-	protected readonly footerActions = computed<DialogFooterActionSpec[]>(() => [
-		{ id: 'cancel', labelKey: 'pptx.export.cancel' },
-	]);
-
-	protected onFooterAction(): void {
-		this.cancel.emit();
-	}
-
 	/** Whether the overlay is visible. */
 	readonly open = input<boolean>(false);
 	/** Heading shown at the top (e.g. "Export as PDF"). */
@@ -152,6 +58,17 @@ export class ExportProgressModalComponent {
 	/** Emitted when the user presses Cancel. */
 	readonly cancel = output<void>();
 
-	/** Progress clamped to the inclusive `[0, 100]` integer range for display. */
-	readonly clampedProgress = computed(() => clampPercent(this.progress()));
+	private readonly translate = inject(TranslateService);
+	private readonly translations = translationsSignal(this.translate);
+
+	protected readonly view = computed<ExportProgressViewState>(() => {
+		this.translations();
+		return {
+			open: this.open(),
+			title: this.title(),
+			progress: this.progress(),
+			status: this.statusMessage(),
+			translate: (key, params) => this.translate.instant(key, params),
+		};
+	});
 }

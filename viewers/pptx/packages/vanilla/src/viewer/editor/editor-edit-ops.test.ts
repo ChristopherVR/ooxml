@@ -263,3 +263,24 @@ describe('createEditActions toggleViewOption', () => {
 		root.remove();
 	});
 });
+
+describe('createEditActions recent colours for shape fill and outline', () => {
+	type Styled = PptxElement & { shapeStyle: { fillColor?: string; strokeColor?: string } };
+
+	it('records a committed fill or outline pick (swatches, eyedropper, ribbon)', () => {
+		const { store, actions } = setup();
+		actions.setShapeFill('#abcdef');
+		actions.setShapeStroke('#123456', { scheme: 'accent1' });
+		expect(store.get().presentationProperties.mruColors).toStrictEqual(['#123456', '#ABCDEF']);
+	});
+
+	it('applies a drag tick through the native picker without recording it', () => {
+		const { store, actions } = setup();
+		actions.setShapeFill('#abcdef', undefined, false);
+		actions.setShapeStroke('#123456', undefined, false);
+		const el = elementById(store, 'a') as Styled;
+		expect(el.shapeStyle.fillColor).toBe('#abcdef');
+		expect(el.shapeStyle.strokeColor).toBe('#123456');
+		expect(store.get().presentationProperties.mruColors ?? []).toStrictEqual([]);
+	});
+});

@@ -52,8 +52,6 @@ export { createPresentationToolbar } from './presentation-toolbar';
 export type { PresentationTouchControls } from './presentation-touch-controls';
 export { createPresentationTouchControls } from './presentation-touch-controls';
 export * from './ribbon';
-export type { SwatchPickerHandle, SwatchPickerOptions } from './swatch-picker';
-export { makeSwatchPicker, OFFICE_STANDARD_SWATCHES } from './swatch-picker';
 export type { ThumbnailRail } from './thumbnails';
 export { createThumbnailRail } from './thumbnails';
 export type { RulerSelection, RulerStrips, RulerStripsState } from './ruler-strips';

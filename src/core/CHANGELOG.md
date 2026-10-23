@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.24.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.24.3) - 2026-10-23
+
+### Bug Fixes
+
+- **core:** Copy Node Buffer views by value before parsing them ([#178](https://github.com/ChristopherVR/ooxml/issues/178)) ([16b3a66](https://github.com/ChristopherVR/ooxml/commit/16b3a66f5a83cf9ba198d151745c208214961021))
+
 ## [1.24.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.24.2) - 2026-10-22
 
 ### Bug Fixes

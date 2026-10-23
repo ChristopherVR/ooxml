@@ -1,7 +1,6 @@
 /**
  * recent-colors-row.component.test.ts: the reusable "Recent colours" row
- * (wave-4 B6), extracted out of `RibbonColorPopoverComponent` so the
- * inspector's fill/stroke/text colour pickers can mount the same row.
+ * (wave-4 B6) that the inspector's fill/stroke/text colour pickers all mount.
  *
  * No Angular TestBed (see `vitest.config.ts`): the component takes no
  * injected dependencies, so it is instantiated directly and inputs are

@@ -7,7 +7,7 @@ import type {
 	FreeformToolKind,
 	InlineTextSelection,
 	Guide,
-	ModifyPasswordCheckResult,
+	ReadOnlyBannerPasswordError,
 	ReadOnlyRecommendation,
 	RemoteCursor,
 	RunProgramNotice,
@@ -44,8 +44,8 @@ import type {
 
 import type { ChartPartSelection } from '../render';
 
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok: false }>['reason'];
+/** Why the last password attempt failed; see `checkModifyPassword` (`ooxml-ui/pptx`). */
+export type ModifyPasswordErrorReason = ReadOnlyBannerPasswordError;
 
 /** `zoom` is either an explicit scale factor (1 = 100%) or fit-to-viewport. */
 export type ZoomLevel = number | 'fit';
@@ -321,9 +321,18 @@ export interface ViewerState {
 	 * Whether the read-only recommendation banner has been closed for this
 	 * load, by either "Edit anyway" or the plain dismiss button. Independent
 	 * from whether editing is actually locked: "Dismiss" hides the banner but
-	 * keeps the lock, only "Edit anyway" lifts it too.
+	 * keeps the lock, only "Edit anyway" lifts it too (see
+	 * {@link readOnlyEditAnyway}).
 	 */
 	readOnlyBannerDismissed: boolean;
+	/**
+	 * Whether "Edit anyway" (or the right password) lifted the read-only
+	 * recommendation's lock for this load. The lock is ANDed into the editable
+	 * state, so the host's `setEditable(true)` does not lift it. Optional so a
+	 * host state built before this field still type-checks; missing reads as
+	 * false (`createInitialViewerState` sets it).
+	 */
+	readOnlyEditAnyway?: boolean;
 	/**
 	 * The loaded deck's raw `p:modifyVerifier`, kept alongside
 	 * {@link readOnlyRecommendation} so `submitReadOnlyPassword` can check a
@@ -340,6 +349,13 @@ export interface ViewerState {
 	readOnlyPasswordError: ModifyPasswordErrorReason | null;
 	/** True while a submitted password is being checked; disables the form. */
 	readOnlyCheckingPassword: boolean;
+	/**
+	 * Which password check a result belongs to (`ReadOnlySession.passwordCheck`
+	 * in `ooxml-ui/pptx`): a new load, Cancel and every new check move it on,
+	 * so a check that finishes late is dropped. Optional like
+	 * {@link readOnlyEditAnyway}; missing reads as 0.
+	 */
+	readOnlyPasswordCheck?: number;
 	/**
 	 * Compatibility-warning toasts for the current load (deck-level
 	 * `data.warnings` concatenated with every slide's own `warnings`, deduped
@@ -447,10 +463,12 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		spellCheckEnabled: false,
 		readOnlyRecommendation: null,
 		readOnlyBannerDismissed: false,
+		readOnlyEditAnyway: false,
 		modifyVerifier: undefined,
 		readOnlyPasswordPromptOpen: false,
 		readOnlyPasswordError: null,
 		readOnlyCheckingPassword: false,
+		readOnlyPasswordCheck: 0,
 		compatToasts: [],
 		runProgramNotices: [],
 	};

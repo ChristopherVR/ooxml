@@ -1,6 +1,6 @@
 /**
  * Ribbon stylesheet fragment: the tab bar, tab content groups, the reusable
- * dropdown / swatch-picker popovers, the Insert shape grid, and the docked
+ * dropdown popover, the Insert shape grid, and the docked
  * Find & Replace panel. Concatenated after `editor-css.ts` by
  * {@link buildViewerCss}. All colours come from the shared `--pptx-*` theme
  * custom properties so the vermilion light/dark presets keep working.
@@ -276,33 +276,10 @@ export const RIBBON_CSS = `
 .pptxv-dropdown-item:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 .pptxv-dropdown-item.is-selected { font-weight: 600; color: var(--pptx-primary); }
 
-/* ── Swatch colour picker ────────────────────────────────────────────── */
-.pptxv-swatch-picker { position: relative; display: inline-flex; }
-.pptxv-swatch-trigger { flex-direction: column; height: 28px; padding: 2px 6px; gap: 0; }
-.pptxv-swatch-swab { display: block; width: 16px; height: 3px; border-radius: 1px; margin-top: 1px; }
-.pptxv-swatch-menu {
-	/* Positioned by attachAnchoredPopup (position: fixed + inline top/left),
-	   which escapes the ribbon row's overflow-x clip (issue #183). */
-	z-index: 30;
-	padding: 8px;
-	border: 1px solid var(--pptx-border);
-	border-radius: var(--pptx-radius);
-	background: var(--pptx-card);
-	color: var(--pptx-card-foreground);
-	box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
-}
-.pptxv-swatch-menu[hidden] { display: none; }
-/* B6: "Recent colours" row (ui/recent-colors-row.ts), shared by the swatch
-   picker's popup menu and the property inspector's colour inputs. */
+/* B6: "Recent colours" row (ui/recent-colors-row.ts) under the property
+   inspector's colour inputs. */
 .pptxv-recent-colors[hidden] { display: none; }
 .pptxv-recent-colors-label {
-	margin-bottom: 4px;
-	color: var(--pptx-muted-foreground);
-	font-size: 10px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-}
-.pptxv-swatch-standard-label {
 	margin-bottom: 4px;
 	color: var(--pptx-muted-foreground);
 	font-size: 10px;
@@ -319,25 +296,6 @@ export const RIBBON_CSS = `
 	cursor: pointer;
 }
 .pptxv-swatch:hover { transform: scale(1.15); }
-.pptxv-swatch.is-selected { outline: 2px solid var(--pptx-ring); outline-offset: 1px; }
-.pptxv-swatch-custom {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 6px;
-	font-size: 11px;
-	color: var(--pptx-muted-foreground);
-	cursor: pointer;
-}
-.pptxv-swatch-custom-input {
-	width: 20px;
-	height: 20px;
-	padding: 0;
-	border: 1px solid var(--pptx-border);
-	border-radius: 4px;
-	background: none;
-	cursor: pointer;
-}
 
 /* ── Find & Replace docked panel ─────────────────────────────────────── */
 .pptxv-findreplace {

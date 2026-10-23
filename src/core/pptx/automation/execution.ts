@@ -36,9 +36,12 @@ export async function loadPresentation(
 	return { pptxData, rawBytes };
 }
 
-/** The bytes as a standalone ArrayBuffer (a view into a pooled buffer must not leak the rest). */
+/**
+ * The bytes as a standalone ArrayBuffer (a view into a pooled buffer must not leak the rest). The copy
+ * goes through the Uint8Array constructor because `slice()` on a Node Buffer is a view, not a copy.
+ */
 export function arrayBufferOf(bytes: Uint8Array): ArrayBuffer {
-	return bytes.slice().buffer as ArrayBuffer;
+	return new Uint8Array(bytes).buffer;
 }
 
 /**

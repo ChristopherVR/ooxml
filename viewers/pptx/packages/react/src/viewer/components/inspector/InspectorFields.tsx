@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { COL2, LBL, NUM, RNG, SEL } from './FillStrokeHelpers';
-import { useRecentColors } from './RecentColorsContext';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 export interface InspectorFieldsProps<T, P> {
 	/** The section descriptors to draw (from `ooxml-ui/pptx`). */
@@ -26,7 +26,8 @@ export interface InspectorFieldsProps<T, P> {
  * inspector section descriptors (a toggle per section, then its fields) as
  * cells of the surrounding two-column grid. Values, bounds, labels and the
  * patches all come from the descriptors; this component only maps them onto
- * JSX. A colour commit also pushes into the "Recent colours" list.
+ * JSX. A colour pick is added to the "Recent colours" list once it settles
+ * (`useRecentColorCommit`), not on every shade a drag passes.
  */
 export function InspectorFields<T, P>({
 	sections,
@@ -35,7 +36,7 @@ export function InspectorFields<T, P>({
 	disabled = false,
 }: InspectorFieldsProps<T, P>): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const views = resolveInspectorSections(sections, target);
 
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void => {
@@ -94,10 +95,8 @@ export function InspectorFields<T, P>({
 						aria-label={label}
 						value={String(field.value)}
 						disabled={disabled}
-						onChange={(e) => {
-							change(sectionId, field.id, e.target.value);
-							pushColor(e.target.value);
-						}}
+						ref={commitRecentColor}
+						onChange={(e) => change(sectionId, field.id, e.target.value)}
 						className={`h-8 ${SEL} px-1`}
 					/>
 				</label>

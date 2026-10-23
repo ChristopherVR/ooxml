@@ -22,10 +22,10 @@ import type { PptxViewerInstance } from './types';
 
 let active: PptxViewerInstance[] = [];
 
-function mount(): { container: HTMLElement; viewer: PptxViewerInstance } {
+function mount(editable = true): { container: HTMLElement; viewer: PptxViewerInstance } {
 	const container = document.createElement('div');
 	document.body.appendChild(container);
-	const viewer = createPptxViewer(container, { editable: true });
+	const viewer = createPptxViewer(container, { editable });
 	active.push(viewer);
 	return { container, viewer };
 }
@@ -60,6 +60,18 @@ async function buildSaltlessPasswordProtectedDeck(password: string): Promise<Uin
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
 	try {
 		return await handler.save(data.slides, { modifyVerifier: verifier });
+	} finally {
+		handler.dispose();
+	}
+}
+
+/** A "Mark as Final" deck: read-only recommended, Edit anyway needs no password. */
+async function buildMarkedFinalDeck(): Promise<Uint8Array> {
+	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
+	try {
+		return await handler.save(data.slides, {
+			customProperties: [{ name: '_MarkAsFinal', value: 'true', type: 'bool' }],
+		});
 	} finally {
 		handler.dispose();
 	}
@@ -160,6 +172,44 @@ describe('vanilla read-only recommendation password prompt', () => {
 		);
 
 		await expectUnlocked(container);
+	});
+
+	describe("the lock is the banner's, not the host's editable flag", () => {
+		let markedFinalDeck: Uint8Array;
+		beforeAll(async () => {
+			markedFinalDeck = await buildMarkedFinalDeck();
+		});
+		const editable = (container: HTMLElement) =>
+			container.querySelector('.pptxv')?.classList.contains('pptxv-editable');
+
+		it('"Edit anyway" does not make a viewer the host opened read-only editable', async () => {
+			const { container, viewer } = mount(false);
+			await viewer.loadFile(markedFinalDeck);
+			inner<HTMLButtonElement>(container, '[data-testid="pptx-readonly-edit-anyway"]')!.click();
+
+			expect(
+				container.querySelector<HTMLElement>('[data-testid="pptx-readonly-banner"]')?.hidden,
+			).toBeTruthy();
+			expect(editable(container)).toBeFalsy();
+		});
+
+		it('the host turning editing on keeps the deck locked until "Edit anyway"', async () => {
+			const { container, viewer } = mount();
+			await viewer.loadFile(markedFinalDeck);
+			viewer.setEditable(true);
+			expect(editable(container)).toBeFalsy();
+
+			inner<HTMLButtonElement>(container, '[data-testid="pptx-readonly-edit-anyway"]')!.click();
+			expect(editable(container)).toBeTruthy();
+		});
+
+		it('"Dismiss" keeps the lock when the host turns editing on', async () => {
+			const { container, viewer } = mount();
+			await viewer.loadFile(markedFinalDeck);
+			inner<HTMLButtonElement>(container, '[data-testid="pptx-readonly-dismiss"]')!.click();
+			viewer.setEditable(true);
+			expect(editable(container)).toBeFalsy();
+		});
 	});
 
 	describe('salt-less modifyVerifier (no saltData attribute at all)', () => {

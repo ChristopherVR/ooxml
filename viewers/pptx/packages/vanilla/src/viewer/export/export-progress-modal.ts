@@ -1,101 +1,74 @@
-import { clampPercent } from 'ooxml-ui/pptx';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { PptxUiExportProgressElement } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
-import { createEl } from '../render';
-import { appendDialogFooter } from '../ui/dialog-footer';
 
 /**
- * ExportProgressModal: a centered, non-dismissable overlay shown while a
- * multi-slide export (PDF / GIF / WebM) runs. Vanilla port of the shared
- * ExportProgressModal pattern (React/Vue/Angular/Svelte): same layout and
- * `--pptx-*` theme tokens, hand-built DOM instead of a template.
- *
- * It deliberately does NOT close on backdrop click or Escape: an export in
- * flight should only end by completing, erroring, or the user pressing
- * Cancel. `onCancel` aborts cooperatively (the export loops check the
- * signal between slides).
+ * ExportProgressModal: the progress modal shown while a multi-slide export (PDF / GIF / WebM)
+ * runs. A thin adapter over the shared `pptx-ui-export-progress`, which owns the dialog and
+ * progress bar semantics, focus and the look, and is deliberately not dismissable: the export
+ * ends by completing, erroring or Cancel. `onCancel` aborts cooperatively (the export loops
+ * check the signal between slides).
  */
 export interface ExportProgressModal {
 	/** Show the modal with a fresh title, zeroed bar, and initial status. */
 	open(title: string, status: string): void;
 	/** Update the bar (0-100, clamped) and the status line under it. */
 	update(progress: number, status: string): void;
-	/** Hide and remove the modal from the document. */
+	/** Hide the modal. */
 	close(): void;
 }
 
 export interface ExportProgressModalDeps {
 	doc: Document;
 	getTranslator(): Translator;
+	/**
+	 * Where the modal mounts: the viewer's chrome root, so it takes the viewer's theme variables.
+	 * Defaults to `doc.body`.
+	 */
+	getHost?(): HTMLElement;
 	/** The Cancel control was pressed (abort the in-flight export). */
 	onCancel(): void;
 }
 
-/** Build a (closed) progress modal; `open` mounts it onto `doc.body`. */
+/** Build a (closed) progress modal; `open` mounts it into the host. */
 export function createExportProgressModal(deps: ExportProgressModalDeps): ExportProgressModal {
-	const { doc } = deps;
-	let backdrop: HTMLElement | null = null;
-	let heading: HTMLElement | null = null;
-	let fill: HTMLElement | null = null;
-	let statusLine: HTMLElement | null = null;
-	let percentLine: HTMLElement | null = null;
+	let el: PptxUiExportProgressElement | null = null;
+	let title = '';
+	let opened = false;
 
-	const build = (): void => {
-		const t = deps.getTranslator();
-		backdrop = createEl(doc, 'div', 'pptxv-export-progress-backdrop');
-		backdrop.setAttribute('role', 'dialog');
-		backdrop.setAttribute('aria-modal', 'true');
-		const panel = createEl(doc, 'div', 'pptxv-export-progress-panel');
-		heading = createEl(doc, 'h3');
-		const track = createEl(doc, 'div', 'pptxv-export-progress-track');
-		fill = createEl(doc, 'div', 'pptxv-export-progress-fill');
-		track.appendChild(fill);
-		const statusRow = createEl(doc, 'div', 'pptxv-export-progress-status');
-		statusLine = createEl(doc, 'span');
-		percentLine = createEl(doc, 'span', 'pptxv-export-progress-pct');
-		statusRow.append(statusLine, percentLine);
-		const actions = createEl(doc, 'div', 'pptxv-export-progress-actions');
-		appendDialogFooter(doc, actions, [{ id: 'cancel', label: t('pptx.export.cancel') }], () =>
-			deps.onCancel(),
-		);
-		panel.append(heading, track, statusRow, actions);
-		backdrop.appendChild(panel);
-		doc.body.appendChild(backdrop);
-	};
-
-	const paint = (progress: number, status: string): void => {
-		const clamped = clampPercent(progress);
-		if (fill) {
-			fill.style.width = `${clamped}%`;
+	const show = (open: boolean, progress: number, status: string): void => {
+		if (!el) {
+			registerPptxWebControls();
+			el = deps.doc.createElement('pptx-ui-export-progress');
+			el.addEventListener('export-cancel', () => deps.onCancel());
 		}
-		if (statusLine) {
-			statusLine.textContent = status;
+		// The chrome is rebuilt on a locale switch, so the host can change between exports.
+		const host = deps.getHost?.() ?? deps.doc.body;
+		if (open && el.parentElement !== host) {
+			host.appendChild(el);
 		}
-		if (percentLine) {
-			percentLine.textContent = `${clamped}%`;
-		}
+		el.state = { open, title, progress, status, translate: deps.getTranslator() };
 	};
 
 	return {
-		open(title, status) {
-			this.close();
-			build();
-			backdrop?.setAttribute('aria-label', title);
-			if (heading) {
-				heading.textContent = title;
-			}
-			paint(0, status);
+		open(nextTitle, status) {
+			title = nextTitle;
+			opened = true;
+			show(true, 0, status);
 		},
 		update(progress, status) {
-			paint(progress, status);
+			// A late progress report after Cancel must not bring the modal back.
+			if (opened) {
+				show(true, progress, status);
+			}
 		},
 		close() {
-			backdrop?.remove();
-			backdrop = null;
-			heading = null;
-			fill = null;
-			statusLine = null;
-			percentLine = null;
+			// Kept in place while closed, so it hands focus back to where the export started.
+			if (opened) {
+				opened = false;
+				show(false, 0, '');
+			}
 		},
 	};
 }

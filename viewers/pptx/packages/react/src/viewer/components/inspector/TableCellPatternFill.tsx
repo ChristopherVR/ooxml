@@ -4,8 +4,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { WebSelect } from '../WebControls';
-import { useRecentColors } from './RecentColorsContext';
 import { LBL, PATTERN_OPTIONS, SEL } from './table-cell-advanced-fill-constants';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 /**
  * Pattern-fill sub-controls for a table cell (`a:pattFill`).
@@ -31,7 +31,7 @@ export function TableCellPatternFill({
 	onUpdateCellStyle,
 }: TableCellPatternFillProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	// `schemaLabel` takes a plain `(key) => string`; react-i18next's `t` is an
 	// overloaded generic, so narrow it once here.
 	const translate = (key: string): string => t(key);
@@ -62,10 +62,8 @@ export function TableCellPatternFill({
 						disabled={!canEdit}
 						className='w-full h-7 rounded border border-border bg-transparent cursor-pointer'
 						value={cellStyle.patternFillForeground ?? '#000000'}
-						onChange={(e) => {
-							onUpdateCellStyle({ patternFillForeground: e.target.value });
-							pushColor(e.target.value);
-						}}
+						ref={commitRecentColor}
+						onChange={(e) => onUpdateCellStyle({ patternFillForeground: e.target.value })}
 					/>
 				</label>
 				<label className='flex flex-col gap-0.5'>
@@ -75,10 +73,8 @@ export function TableCellPatternFill({
 						disabled={!canEdit}
 						className='w-full h-7 rounded border border-border bg-transparent cursor-pointer'
 						value={cellStyle.patternFillBackground ?? '#FFFFFF'}
-						onChange={(e) => {
-							onUpdateCellStyle({ patternFillBackground: e.target.value });
-							pushColor(e.target.value);
-						}}
+						ref={commitRecentColor}
+						onChange={(e) => onUpdateCellStyle({ patternFillBackground: e.target.value })}
 					/>
 				</label>
 			</div>

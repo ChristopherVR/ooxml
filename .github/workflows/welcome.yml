@@ -23,14 +23,16 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3
-        with:
-          issue_message: |
+      # Not actions/first-interaction: v3 comments when the author has no earlier *issue* (so every
+      # PR from someone who only opens PRs) and its pull-request check ignores the author.
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          ISSUE_MESSAGE: |
             Thanks for opening your first issue here! If it is about a specific file, attaching a
             small document that shows the problem (with anything private removed) is the fastest
             way to a fix. Questions and ideas are also welcome in
             [Discussions](https://github.com/ChristopherVR/ooxml/discussions).
-          pr_message: |
+          PR_MESSAGE: |
             Thanks for your first pull request! A few things that help it land:
 
             - Commit subjects and the PR title follow [Conventional Commits](https://www.conventionalcommits.org) with the area as the scope (for example `fix(xlsx): ...`); the `Conventional Commits` check explains any it rejects.
@@ -38,3 +40,25 @@ jobs:
             - Run `bun run verify` before pushing to run what CI will.
 
             See [CONTRIBUTING.md](https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md) for the rest.
+        with:
+          script: |
+            const item = context.payload.pull_request ?? context.payload.issue;
+            const isPull = context.payload.pull_request !== undefined;
+            const author = item.user.login;
+            const { owner, repo } = context.repo;
+            // Any issue or pull request this author opened before this one, of either kind.
+            const found = await github.paginate(github.rest.search.issuesAndPullRequests, {
+              q: `repo:${owner}/${repo} author:${author}`,
+              per_page: 100,
+            });
+            const earlier = found.filter((entry) => entry.number < item.number);
+            if (earlier.length > 0) {
+              core.info(`Skipping: ${author} has ${earlier.length} earlier contribution(s).`);
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: item.number,
+              body: isPull ? process.env.PR_MESSAGE : process.env.ISSUE_MESSAGE,
+            });

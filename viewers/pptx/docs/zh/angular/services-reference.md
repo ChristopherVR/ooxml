@@ -123,7 +123,6 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 | `RibbonEditingSectionComponent`                                   | 编辑选项卡控件，提供查找和替换入口。               |
 | `RibbonFileSectionComponent`                                      | 文件选项卡：打开和保存操作。                       |
 | `RibbonFontControlsComponent`, `RibbonParagraphControlsComponent` | 跨分区复用的共享字体和段落控件组。                 |
-| `RibbonColorPopoverComponent`                                     | 跨分区复用的共享色板弹出层。                       |
 | `ribbon-text-helpers` 的导出 (`patchTextStyle`)                   | 将文本样式补丁应用到选中元素。                     |
 
 ## 放映、导航与触控内部接口 {#presentation-navigation-touch-internals}

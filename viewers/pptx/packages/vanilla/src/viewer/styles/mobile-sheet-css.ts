@@ -1,6 +1,10 @@
+/** Where the viewer swaps the ribbon for the mobile toolbar and sheets. */
+export const MOBILE_CHROME_MEDIA =
+	'(max-width: 767px), (max-width: 1023px) and (max-height: 520px)';
+
 export const MOBILE_SHEET_CSS = `
 .pptxv-mobile-toolbar, .pptxv-mobile-actions { display: none; }
-@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {
+@media ${MOBILE_CHROME_MEDIA} {
 	.pptxv-ribbon { display: none; }
 	.pptxv-mobile-toolbar { display: block; flex: none; }
 	.pptxv-mobile-toolbar-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--pptx-foreground); touch-action: manipulation; }

@@ -131,35 +131,37 @@ describe('createExportProgressModal', () => {
 		document.body.replaceChildren();
 	});
 
-	it('mounts a labeled dialog with a bar, status, and a wired Cancel', () => {
+	const inner = (selector: string) =>
+		document.querySelector('pptx-ui-export-progress')?.shadowRoot?.querySelector(selector) ?? null;
+
+	it('opens the shared progress dialog in the host, with a bar, status and a wired Cancel', () => {
 		const onCancel = vi.fn();
+		const host = document.createElement('div');
+		document.body.append(host);
 		const modal = createExportProgressModal({
 			doc: document,
 			getTranslator: () => createTranslator('en'),
+			getHost: () => host,
 			onCancel,
 		});
 
 		modal.open('Export as PDF', 'Capturing slides...');
-		const dialog = document.querySelector('.pptxv-export-progress-backdrop');
-		expect(dialog?.getAttribute('role')).toBe('dialog');
-		expect(dialog?.getAttribute('aria-label')).toBe('Export as PDF');
-		expect(dialog?.querySelector('h3')?.textContent).toBe('Export as PDF');
+		expect(host.querySelector('pptx-ui-export-progress')).not.toBeNull();
+		expect(inner('[role="dialog"]')?.getAttribute('aria-modal')).toBe('true');
+		expect(inner('#title')?.textContent).toBe('Export as PDF');
+		expect(inner('#status')?.textContent).toBe('Capturing slides...');
 
 		modal.update(45, 'Rendering slide 3 of 4...');
-		const fill = dialog?.querySelector<HTMLElement>('.pptxv-export-progress-fill');
-		expect(fill?.style.width).toBe('45%');
-		expect(dialog?.querySelector('.pptxv-export-progress-status span')?.textContent).toBe(
-			'Rendering slide 3 of 4...',
-		);
-		expect(dialog?.querySelector('.pptxv-export-progress-pct')?.textContent).toBe('45%');
+		expect(inner('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('45');
+		expect(inner('#status')?.textContent).toBe('Rendering slide 3 of 4...');
 
-		dialog
-			?.querySelector('pptx-ui-dialog-footer')
-			?.shadowRoot?.querySelector('button')
-			?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		(inner('[data-testid="pptx-export-progress-cancel"]') as HTMLElement).click();
 		expect(onCancel).toHaveBeenCalledOnce();
 
 		modal.close();
-		expect(document.querySelector('.pptxv-export-progress-backdrop')).toBeNull();
+		expect(inner('[role="dialog"]')).toBeNull();
+		// A late progress report after Cancel does not bring it back.
+		modal.update(80, 'Rendering slide 4 of 4...');
+		expect(inner('[role="dialog"]')).toBeNull();
 	});
 });

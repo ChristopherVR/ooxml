@@ -132,7 +132,6 @@ Composed by `RibbonComponent`, itself composed by `PowerPointViewerComponent`.
 | `RibbonEditingSectionComponent`                                   | Editing tab controls (find/replace entry point).             |
 | `RibbonFileSectionComponent`                                      | File tab: open/save actions.                                 |
 | `RibbonFontControlsComponent`, `RibbonParagraphControlsComponent` | Shared font/paragraph control groups reused across sections. |
-| `RibbonColorPopoverComponent`                                     | Shared color-swatch popover reused across sections.          |
 | `ribbon-text-helpers` exports (`patchTextStyle`)                  | Applies a text-style patch to the selected element.          |
 
 ## Presentation, navigation & touch internals

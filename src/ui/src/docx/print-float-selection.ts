@@ -115,6 +115,12 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		if (redraw === undefined) redraw = requestAnimationFrame(draw);
 	}
 
+	/** Draws the frame now, in place of a redraw waiting for the next animation frame. */
+	function drawNow(): void {
+		if (redraw !== undefined) cancelAnimationFrame(redraw);
+		draw();
+	}
+
 	/** The float under a viewport point: in front of the text first, behind it only off the text. */
 	function floatAt(x: number, y: number): HTMLElement | undefined {
 		const inside = (element: HTMLElement) => {
@@ -279,9 +285,14 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		{ capture: true, signal: controller.signal },
 	);
 
-	const observer = new MutationObserver(schedule);
-	observer.observe(host.pages, { childList: true });
-	observer.observe(host.pages, {
+	// A relayout replaces the pages, the frame and its handles with them, and the page window mounts a
+	// page again as it scrolls back into view. Draw the frame again before that task ends, not on the
+	// next frame: a press in between would find no handle and, on a shape, start a move instead of a
+	// resize. Two observers, because observing a node again replaces its earlier options.
+	const relayout = new MutationObserver(drawNow);
+	relayout.observe(host.pages, { childList: true });
+	const remount = new MutationObserver(drawNow);
+	remount.observe(host.pages, {
 		attributes: true,
 		attributeFilter: ['data-render-version'],
 		subtree: true,
@@ -292,7 +303,8 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		destroy() {
 			controller.abort();
 			closeText?.();
-			observer.disconnect();
+			relayout.disconnect();
+			remount.disconnect();
 			if (redraw !== undefined) cancelAnimationFrame(redraw);
 			clearFrame();
 		},

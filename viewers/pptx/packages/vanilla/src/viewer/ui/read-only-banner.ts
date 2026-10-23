@@ -1,14 +1,19 @@
-import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import {
+	dispatchReadOnlyBannerIntent,
+	readOnlyBannerState,
+	readOnlyBannerVisible,
+	registerPptxWebControls,
+} from 'ooxml-ui/pptx';
 import type {
 	PptxUiReadOnlyBannerElement,
-	ReadOnlyBannerRequestEvent,
+	ReadOnlyBannerPasswordError,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = 'wrong-password' | 'unsupported-algorithm';
+/** Why the last password attempt failed; see `checkModifyPassword` (`ooxml-ui/pptx`). */
+export type ModifyPasswordErrorReason = ReadOnlyBannerPasswordError;
 
 /**
  * The `p:modifyVerifier` / "Mark as Final" read-only recommendation banner:
@@ -48,38 +53,30 @@ export function createReadOnlyBanner(
 	registerPptxWebControls();
 	const el = doc.createElement('pptx-ui-read-only-banner') as PptxUiReadOnlyBannerElement;
 	el.hidden = true;
-	el.addEventListener('read-only-request', (event) => {
-		const intent = (event as ReadOnlyBannerRequestEvent).detail;
-		switch (intent.id) {
-			case 'editAnyway':
-				onEditAnyway();
-				break;
-			case 'dismiss':
-				onDismiss();
-				break;
-			case 'cancelPassword':
-				onCancelPassword();
-				break;
-			case 'submitPassword':
-				onSubmitPassword(intent.password);
-		}
-	});
+	el.addEventListener('read-only-request', (event) =>
+		dispatchReadOnlyBannerIntent(event, {
+			editAnyway: onEditAnyway,
+			dismiss: onDismiss,
+			cancelPassword: onCancelPassword,
+			submitPassword: onSubmitPassword,
+		}),
+	);
 	return {
 		el,
 		update(recommendation, dismissed, passwordState) {
-			const visible = recommendation !== null && !dismissed;
-			el.hidden = !visible;
-			if (!visible || !recommendation) {
+			el.hidden = !readOnlyBannerVisible(recommendation, { bannerHidden: dismissed });
+			if (el.hidden || !recommendation) {
 				return;
 			}
-			el.state = {
-				kind: recommendation.kind ?? null,
-				messageKey: recommendation.messageKey,
-				passwordPromptOpen: passwordState.promptOpen,
-				passwordError: passwordState.error,
-				checkingPassword: passwordState.checking,
-				translate: t,
-			};
+			el.state = readOnlyBannerState(
+				recommendation,
+				{
+					passwordPromptOpen: passwordState.promptOpen,
+					passwordError: passwordState.error,
+					checkingPassword: passwordState.checking,
+				},
+				t,
+			);
 		},
 	};
 }

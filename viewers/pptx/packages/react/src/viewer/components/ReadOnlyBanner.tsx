@@ -1,14 +1,12 @@
+import { dispatchReadOnlyBannerIntent, readOnlyBannerState } from 'ooxml-ui/pptx';
 import type {
 	PptxUiReadOnlyBannerElement,
-	ReadOnlyBannerIntent,
+	ReadOnlyBannerPasswordError,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';
-
-/** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
-export type ModifyPasswordErrorReason = 'wrong-password' | 'unsupported-algorithm';
 
 /**
  * ReadOnlyBanner: shown above the canvas (under the ribbon/toolbar) when a
@@ -33,7 +31,7 @@ export interface ReadOnlyBannerProps {
 	/** Whether the inline password prompt should render instead of the two buttons. */
 	passwordPromptOpen?: boolean;
 	/** Reason the last password attempt failed, or null/undefined otherwise. */
-	passwordError?: ModifyPasswordErrorReason | null;
+	passwordError?: ReadOnlyBannerPasswordError | null;
 	/** True while a submitted password is being checked; disables the form. */
 	checkingPassword?: boolean;
 	onSubmitPassword?: (password: string) => void;
@@ -43,31 +41,23 @@ export interface ReadOnlyBannerProps {
 export function ReadOnlyBanner(p: ReadOnlyBannerProps) {
 	const { t } = useTranslation();
 	const ref = useWebControl<PptxUiReadOnlyBannerElement>(
-		{
-			kind: p.recommendation.kind ?? null,
-			messageKey: p.recommendation.messageKey,
-			passwordPromptOpen: p.passwordPromptOpen ?? false,
-			passwordError: p.passwordError ?? null,
-			checkingPassword: p.checkingPassword ?? false,
-			translate: t,
-		},
-		{
-			'read-only-request': (event) => {
-				const intent = event.detail as ReadOnlyBannerIntent;
-				switch (intent.id) {
-					case 'editAnyway':
-						p.onEditAnyway();
-						break;
-					case 'dismiss':
-						p.onDismiss();
-						break;
-					case 'cancelPassword':
-						p.onCancelPassword?.();
-						break;
-					case 'submitPassword':
-						p.onSubmitPassword?.(intent.password);
-				}
+		readOnlyBannerState(
+			p.recommendation,
+			{
+				passwordPromptOpen: p.passwordPromptOpen ?? false,
+				passwordError: p.passwordError ?? null,
+				checkingPassword: p.checkingPassword ?? false,
 			},
+			t,
+		),
+		{
+			'read-only-request': (event) =>
+				dispatchReadOnlyBannerIntent(event, {
+					editAnyway: p.onEditAnyway,
+					dismiss: p.onDismiss,
+					cancelPassword: p.onCancelPassword,
+					submitPassword: p.onSubmitPassword,
+				}),
 		},
 	);
 	return <pptx-ui-read-only-banner ref={ref} />;

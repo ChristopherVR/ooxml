@@ -343,8 +343,10 @@ export function buildChromeCallbacks(
 			deps.getEditActions().reorderAnimation(elementId, direction),
 		setGeometry: (patch) => deps.getEditActions().setGeometry(patch),
 		toggleElementLock: () => deps.getEditActions().toggleElementLock(),
-		setShapeFill: (color, ref) => deps.getEditActions().setShapeFill(color, ref),
-		setShapeStroke: (color, ref) => deps.getEditActions().setShapeStroke(color, ref),
+		setShapeFill: (color, ref, committed) =>
+			deps.getEditActions().setShapeFill(color, ref, committed),
+		setShapeStroke: (color, ref, committed) =>
+			deps.getEditActions().setShapeStroke(color, ref, committed),
 		setShapeStrokeWidth: (width) => deps.getEditActions().setShapeStrokeWidth(width),
 		setShapeStyle: (patch) => deps.getEditActions().setShapeStyle(patch),
 		setShapeType: (shapeType) => deps.getEditActions().setShapeType(shapeType),

@@ -23,6 +23,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
+import { MOBILE_CHROME_MEDIA } from '../../styles/mobile-sheet-css';
 import { createEquationPanel } from './equation-panel';
 import { createFindReplacePanel } from './find-replace-panel';
 import { createFormatBackgroundPanel } from './format-background-panel';
@@ -276,8 +277,15 @@ export function createRibbon(
 				pane.hidden = id !== tab;
 			}
 		}
+		// The galleries of the tab now showing build the tiles they put off while it was hidden.
+		galleryHub.reveal();
 	}
 	setActiveTab(activeTab);
+
+	// A gallery out of sight puts off building its tiles; the desktop layout brings the ribbon back.
+	const revealGalleries = (): void => galleryHub.reveal();
+	const phoneLayout = doc.defaultView?.matchMedia?.(MOBILE_CHROME_MEDIA);
+	phoneLayout?.addEventListener('change', revealGalleries);
 
 	let latestSelected: PptxElement | undefined;
 	let latestExtra: RibbonSelectionState = { hasClipboard: false, slideCount: 0, selectedCount: 0 };
@@ -297,6 +305,8 @@ export function createRibbon(
 	const syncHome = (): void => {
 		galleryHub.sync(latestExtra.galleryContext, lastEditable);
 		syncContextual();
+		// A contextual pane just mounted, or the ribbon itself just entered the document.
+		galleryHub.reveal();
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
 		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
@@ -375,6 +385,7 @@ export function createRibbon(
 	return {
 		el,
 		destroy() {
+			phoneLayout?.removeEventListener('change', revealGalleries);
 			for (const detach of detachOverflow.splice(0)) {
 				detach();
 			}

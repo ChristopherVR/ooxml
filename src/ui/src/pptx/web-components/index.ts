@@ -13,6 +13,7 @@ import {
 	definePptxCompatToasts,
 	definePptxContextMenu,
 	definePptxDialogFooter,
+	definePptxExportProgress,
 	definePptxPasteOptions,
 	definePptxRadio,
 	definePptxReadOnlyBanner,
@@ -110,6 +111,7 @@ export type {
 	PresenterConsoleRequestEvent,
 } from './presenter-console';
 export type { PptxUiReadOnlyBannerElement, ReadOnlyBannerRequestEvent } from './office-alias-types';
+export type { PptxUiExportProgressElement } from './office-alias-types';
 
 export { attachRibbonOverflow, reflowRibbon } from './ribbon-overflow';
 export type { RibbonRowOptions } from './ribbon-overflow';
@@ -195,6 +197,7 @@ const controls = [
 	['pptx-ui-present-toolbar', definePptxPresentToolbar],
 	['pptx-ui-presenter-console', definePptxPresenterConsole],
 	['pptx-ui-read-only-banner', definePptxReadOnlyBanner],
+	['pptx-ui-export-progress', definePptxExportProgress],
 	['pptx-ui-ribbon-command', definePptxRibbonCommand],
 	['pptx-ui-ribbon-animations', definePptxRibbonAnimations],
 	['pptx-ui-ribbon-draw', definePptxRibbonDraw],

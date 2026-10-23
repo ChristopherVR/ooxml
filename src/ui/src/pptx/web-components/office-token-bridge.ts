@@ -22,6 +22,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-dialog-footer',
 	'pptx-ui-compat-toasts',
 	'pptx-ui-read-only-banner',
+	'pptx-ui-export-progress',
 	'pptx-ui-paste-options',
 	'pptx-ui-ribbon-command',
 	'pptx-ui-ribbon-group',
@@ -127,6 +128,12 @@ const STATUS_BAR = `:host {
 const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	'pptx-ui-title-bar': TITLE_BAR,
 	'pptx-ui-status-bar': STATUS_BAR,
+	'pptx-ui-export-progress': `:host { --office-popover: var(--pptx-popover, var(--pptx-card, #1e1e2e));
+	--office-popover-foreground: var(--pptx-popover-foreground, #f9fafb);
+	--office-foreground: var(--pptx-foreground, #f9fafb); --office-border: var(--pptx-border, #33334d);
+	--office-muted-foreground: var(--pptx-muted-foreground, #a5a5b5);
+	--office-accent: var(--pptx-primary, #6366f1); --office-surface: var(--pptx-secondary, #1e1e2e);
+	--office-selected: var(--pptx-muted, #2a2a3d); }`,
 	'pptx-ui-ribbon-gallery': `:host { --office-foreground: var(--pptx-foreground, #f9fafb); --office-background: var(--pptx-background, #111827);
 	--office-gallery-strip-background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 30%, transparent);
 	--office-command-icon-color: var(--pptx-primary, #6366f1); --office-z-popover: 1200;

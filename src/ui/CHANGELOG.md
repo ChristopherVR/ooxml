@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.25.0) - 2026-10-23
+
+### Features
+
+- **ui:** Add a shared progress dialog for the pptx export modal ([#175](https://github.com/ChristopherVR/ooxml/issues/175)) ([05ca9c0](https://github.com/ChristopherVR/ooxml/commit/05ca9c0a9c3fd4726fed6ae9cacd9736512d30a3))
+- **ui:** Share the pptx read-only banner session ([#176](https://github.com/ChristopherVR/ooxml/issues/176)) ([43effb0](https://github.com/ChristopherVR/ooxml/commit/43effb07fa8a71977557b345da1913de3646a59a))
+
+### Bug Fixes
+
+- **ui:** Keep a selected float's handles through a print relayout ([#177](https://github.com/ChristopherVR/ooxml/issues/177)) ([eeda2bf](https://github.com/ChristopherVR/ooxml/commit/eeda2bfe52a643ffa9c878bbad15502e7b14e059))
+
+### Performance
+
+- **ui:** Let html2canvas clone only the captured element's branch ([#171](https://github.com/ChristopherVR/ooxml/issues/171)) ([ee0cd6e](https://github.com/ChristopherVR/ooxml/commit/ee0cd6e8045c2f0271c511909981dbe7d10677be))
+
 ## [1.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.24.0) - 2026-10-22
 
 ### Features

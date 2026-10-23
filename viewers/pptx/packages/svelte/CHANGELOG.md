@@ -7,6 +7,25 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.49.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.49.0) - 2026-10-23
+
+### Features
+
+- **ui:** Add a shared progress dialog for the pptx export modal ([#175](https://github.com/ChristopherVR/ooxml/issues/175)) ([05ca9c0](https://github.com/ChristopherVR/ooxml/commit/05ca9c0a9c3fd4726fed6ae9cacd9736512d30a3))
+- **ui:** Share the pptx read-only banner session ([#176](https://github.com/ChristopherVR/ooxml/issues/176)) ([43effb0](https://github.com/ChristopherVR/ooxml/commit/43effb07fa8a71977557b345da1913de3646a59a))
+
+### Bug Fixes
+
+- **core:** Copy Node Buffer views by value before parsing them ([#178](https://github.com/ChristopherVR/ooxml/issues/178)) ([16b3a66](https://github.com/ChristopherVR/ooxml/commit/16b3a66f5a83cf9ba198d151745c208214961021))
+
+### Performance
+
+- **ui:** Let html2canvas clone only the captured element's branch ([#171](https://github.com/ChristopherVR/ooxml/issues/171)) ([ee0cd6e](https://github.com/ChristopherVR/ooxml/commit/ee0cd6e8045c2f0271c511909981dbe7d10677be))
+
+### Refactor
+
+- **pptx:** Remove the ribbon controls no binding renders anymore ([#173](https://github.com/ChristopherVR/ooxml/issues/173)) ([6c1d764](https://github.com/ChristopherVR/ooxml/commit/6c1d7640af70910f61d91a020e347d15099da534))
+
 ## [4.48.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.48.0) - 2026-10-22
 
 ### Features

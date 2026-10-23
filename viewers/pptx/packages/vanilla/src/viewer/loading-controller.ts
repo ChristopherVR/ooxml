@@ -3,6 +3,7 @@ import {
 	describeFontEmbedding,
 	partitionTemplateElements,
 	readOnlyRecommendation,
+	reduceReadOnlySession,
 	resolveAuthoredCustomShowId,
 	resolveInitialSlideIndex,
 } from 'ooxml-ui/pptx';
@@ -16,6 +17,7 @@ import type { Translator } from './i18n';
 import type { PptxViewerSource } from './load';
 import { loadPresentation, resolveSourceToBuffer, revokeBlobUrls } from './load';
 import type { Store, ViewerState } from './state';
+import { readOnlySessionFields, readOnlySessionOf } from './state/read-only-session';
 import type { PptxViewerOptions } from './types';
 
 export interface LoadingControllerDeps {
@@ -142,14 +144,17 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			// `p:modifyVerifier` (a password-protected deck) or `docProps/custom.xml`
 			// "Mark as Final" both ask to open read-only, independent of Trust
 			// Center's Protected View above (which only gates a freshly opened file,
-			// not host bootstrap content). Only meaningful when the host permits
-			// editing at all.
+			// not host bootstrap content). The lock is part of the viewer's
+			// effective editable state until "Edit anyway" lifts it, so it never
+			// overrides what the host asked for.
 			const recommendation = readOnlyRecommendation({
 				modifyVerifier: loaded.modifyVerifier,
 				customProperties: loaded.customProperties,
 			});
-			const readOnlyLocked =
-				options.editable === true && recommendation.kind !== null && recommendation.defaultReadOnly;
+			// A new deck starts a new session; a password check still running is dropped.
+			const readOnlySession = readOnlySessionFields(
+				reduceReadOnlySession(readOnlySessionOf(store.get()), { type: 'reset' }),
+			);
 			const deckViewPreferences = seedDeckViewPreferences(store.get(), loaded.viewProperties);
 			const compatToasts = compatibilityWarningToasts([
 				...loaded.warnings,
@@ -159,11 +164,8 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				slides: partition.slides,
 				protectedView,
 				readOnlyRecommendation: recommendation.kind === null ? null : recommendation,
-				readOnlyBannerDismissed: false,
+				...readOnlySession,
 				modifyVerifier: loaded.modifyVerifier ?? undefined,
-				readOnlyPasswordPromptOpen: false,
-				readOnlyPasswordError: null,
-				readOnlyCheckingPassword: false,
 				compatToasts,
 				...deckViewPreferences,
 				sections: loaded.sections,
@@ -224,9 +226,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			// Goes through the central editable gate (store flag + the editor
 			// controller's own mirrored flag), not a bare store patch, so
 			// interaction gating and the store agree on whether editing is live.
-			deps.setEditableForLoad?.(
-				protectedView || readOnlyLocked ? false : options.editable === true,
-			);
+			deps.setEditableForLoad?.(protectedView ? false : options.editable === true);
 			deps.onContentApplied?.(origin);
 			options.onLoad?.({ slideCount: loaded.slides.length, canvasSize: loaded.canvasSize });
 		} catch (error) {

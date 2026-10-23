@@ -13,7 +13,7 @@ import type { Options as Html2CanvasOptions } from 'html2canvas-pro';
  * imports `html2canvas-pro` stays here. `_testing` is re-exported so the
  * colocated unit tests keep their historical import path.
  */
-import { prepareHtml2CanvasClone, _testing } from 'ooxml-ui/pptx';
+import { html2canvasCaptureScope, prepareHtml2CanvasClone, _testing } from 'ooxml-ui/pptx';
 
 export { _testing };
 
@@ -42,6 +42,8 @@ export async function renderToCanvas(
 
 	return html2canvasPro(element, {
 		...options,
+		// Clone only the captured element's branch: html2canvas would copy the whole page.
+		ignoreElements: html2canvasCaptureScope(element, options.ignoreElements),
 		onclone: async (doc: Document, clonedEl: HTMLElement) => {
 			await prepareHtml2CanvasClone(element, doc, clonedEl);
 

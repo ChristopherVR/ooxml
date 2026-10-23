@@ -1,17 +1,13 @@
 <script lang="ts">
 	/**
-	 * ExportProgressModal: a centered, non-dismissable overlay shown while a
-	 * multi-slide export (PDF / GIF / WebM) runs. Svelte port of Vue's
-	 * `ExportProgressModal.vue` (same layout and theme tokens, scoped CSS over
-	 * the `--pptx-*` variables instead of Tailwind utilities).
-	 *
-	 * It deliberately does NOT close on backdrop click or Escape: an export in
-	 * flight should only end by completing, erroring, or the user pressing
-	 * Cancel. `oncancel` aborts cooperatively (the export loops check the
-	 * signal between slides).
+	 * ExportProgressModal: the progress modal shown while a multi-slide export (PDF / GIF / WebM)
+	 * runs. A thin adapter over the shared `pptx-ui-export-progress`, which owns the dialog and
+	 * progress bar semantics, focus and the look, and is deliberately not dismissable: the export
+	 * ends by completing, erroring or Cancel. `oncancel` aborts cooperatively (the export loops
+	 * check the signal between slides). It stays mounted while closed, so it hands focus back
+	 * when an export ends.
 	 */
-	import DialogFooter from './DialogFooter.svelte';
-	import { clampPercent } from 'ooxml-ui/pptx';
+	import type { ExportProgressViewState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 
@@ -31,87 +27,11 @@
 
 	const t = useTranslator();
 
-	const clamped = $derived(clampPercent(progress));
+	const state = $derived.by<ExportProgressViewState>(() => {
+		// Read here so a language switch hands the element a new state and its labels follow.
+		void t('pptx.export.cancel');
+		return { open, title, progress, status: statusMessage, translate: t };
+	});
 </script>
 
-{#if open}
-	<div class="pptx-svelte-export-progress-backdrop" role="dialog" aria-modal="true" aria-label={title}>
-		<div class="pptx-svelte-export-progress-panel">
-			<h3>{title}</h3>
-			<div class="pptx-svelte-export-progress-track">
-				<div class="pptx-svelte-export-progress-fill" style={`width: ${clamped}%`}></div>
-			</div>
-			<div class="pptx-svelte-export-progress-status">
-				<span>{statusMessage ?? t('pptx.export.processing')}</span>
-				<span class="pptx-svelte-export-progress-pct">{clamped}%</span>
-			</div>
-			<div class="pptx-svelte-export-progress-actions">
-				<DialogFooter actions={[{ id: 'cancel', label: t('pptx.export.cancel') }]} onaction={(id) => oncancel()} />
-			</div>
-		</div>
-	</div>
-{/if}
-
-<style>
-	.pptx-svelte-export-progress-backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 1200;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(4px);
-	}
-
-	.pptx-svelte-export-progress-panel {
-		width: min(92vw, 384px);
-		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
-		border-radius: calc(var(--pptx-radius, var(--office-radius, 4px)) + 6px);
-		background: var(--pptx-popover, var(--office-popover, var(--office-background, #ffffff)));
-		color: var(--pptx-popover-foreground, var(--office-popover-foreground, var(--office-foreground, #1f2937)));
-		padding: 24px;
-		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-		font-family: system-ui, sans-serif;
-	}
-
-	.pptx-svelte-export-progress-panel h3 {
-		margin: 0 0 16px;
-		font-size: 14px;
-		font-weight: 600;
-	}
-
-	.pptx-svelte-export-progress-track {
-		height: 10px;
-		width: 100%;
-		overflow: hidden;
-		border-radius: 9999px;
-		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
-		margin-bottom: 12px;
-	}
-
-	.pptx-svelte-export-progress-fill {
-		height: 100%;
-		border-radius: 9999px;
-		background: var(--pptx-primary, var(--office-accent, #2563eb));
-		transition: width 0.3s ease-out;
-	}
-
-	.pptx-svelte-export-progress-status {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 16px;
-		font-size: 12px;
-		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
-	}
-
-	.pptx-svelte-export-progress-pct {
-		font-variant-numeric: tabular-nums;
-	}
-
-	.pptx-svelte-export-progress-actions {
-		display: flex;
-		justify-content: flex-end;
-	}
-	</style>
+<pptx-ui-export-progress {state} onexport-cancel={() => oncancel()}></pptx-ui-export-progress>

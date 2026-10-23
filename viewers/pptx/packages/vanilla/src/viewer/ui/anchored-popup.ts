@@ -10,7 +10,7 @@ import { computeAnchoredPopupPosition } from 'ooxml-ui/pptx';
  * framework-agnostic `computeAnchoredPopupPosition`.
  *
  * Unlike those three - whose popups are hover-shown and stay mounted the
- * whole time - `makeDropdown`/`makeSwatchPicker` menus are click-toggled and
+ * whole time - `makeDropdown` menus are click-toggled and
  * only exist in the DOM meaningfully while open, so this attaches its
  * resize/scroll listeners on `open()` and removes them on `close()` rather
  * than for the menu's whole lifetime.

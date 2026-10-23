@@ -1,7 +1,7 @@
 import type { PptxCustomProperty, PptxModifyVerifier } from 'pptx-viewer-core';
 import { createModifyVerifier, createSaltlessModifyVerifierForTesting } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 
 import { useReadOnlyRecommendation } from './useReadOnlyRecommendation';
 
@@ -11,8 +11,9 @@ function useHarness(
 ) {
 	const modifyVerifier = ref<PptxModifyVerifier | undefined>(modifyVerifierValue);
 	const customProperties = ref<PptxCustomProperty[]>(customPropertiesValue);
-	const result = useReadOnlyRecommendation({ modifyVerifier, customProperties });
-	return { result, modifyVerifier, customProperties };
+	const loadVersion = ref(0);
+	const result = useReadOnlyRecommendation({ modifyVerifier, customProperties, loadVersion });
+	return { result, modifyVerifier, customProperties, loadVersion };
 }
 
 describe('useReadOnlyRecommendation', () => {
@@ -48,6 +49,21 @@ describe('useReadOnlyRecommendation', () => {
 		const { result } = useHarness({ hashData: 'abc' });
 		result.dismiss();
 		expect(result.showBanner.value).toBeFalsy();
+		expect(result.locked.value).toBeTruthy();
+	});
+
+	it('reads the recommendation when a deck loads, not on every property edit', async () => {
+		const { result, customProperties, loadVersion } = useHarness();
+		// Editing the deck's custom properties (Document Properties) must not lock it mid-session.
+		customProperties.value = [{ name: '_MarkAsFinal', value: 'true', type: 'bool' }];
+		await nextTick();
+		expect(result.locked.value).toBeFalsy();
+		expect(result.showBanner.value).toBeFalsy();
+
+		// The next load reads it like PowerPoint does when the file is opened.
+		loadVersion.value += 1;
+		await nextTick();
+		expect(result.recommendation.value.kind).toBe('markedFinal');
 		expect(result.locked.value).toBeTruthy();
 	});
 
@@ -95,6 +111,36 @@ describe('useReadOnlyRecommendation', () => {
 			expect(result.locked.value).toBeTruthy();
 			expect(result.passwordPromptOpen.value).toBeTruthy();
 			expect(result.passwordError.value).toBe('wrong-password');
+		});
+
+		it('ignores a password check that finishes after the next deck loads', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			const { result } = useHarness(verifier);
+			result.editAnyway();
+
+			const pending = result.submitPassword('right-password');
+			result.reset();
+			await pending;
+
+			expect(result.locked.value).toBeTruthy();
+			expect(result.showBanner.value).toBeTruthy();
+			expect(result.passwordPromptOpen.value).toBeFalsy();
+			expect(result.checkingPassword.value).toBeFalsy();
+		});
+
+		it('ignores a password check that finishes after Cancel', async () => {
+			const verifier = await createModifyVerifier('right-password', { spinCount: 10 });
+			const { result } = useHarness(verifier);
+			result.editAnyway();
+
+			const pending = result.submitPassword('right-password');
+			result.cancelPasswordPrompt();
+			await pending;
+
+			expect(result.locked.value).toBeTruthy();
+			expect(result.passwordPromptOpen.value).toBeFalsy();
+			expect(result.passwordError.value).toBeNull();
+			expect(result.checkingPassword.value).toBeFalsy();
 		});
 
 		it('cancelPasswordPrompt closes the prompt without unlocking', async () => {

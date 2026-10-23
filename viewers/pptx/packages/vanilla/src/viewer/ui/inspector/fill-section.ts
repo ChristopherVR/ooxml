@@ -46,14 +46,25 @@ export function createFillSection(
 	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'fill-stroke');
 
+	// A drag through the OS picker fires `input` on every shade it passes: those
+	// apply live without recording, and only the settled colour (`change`) goes
+	// into the deck's recent colours.
 	const fill = makeColorControl(
 		doc,
-		{ label: t('pptx.inspector.fill'), onInput: handlers.setShapeFill },
+		{
+			label: t('pptx.inspector.fill'),
+			onInput: (hex) => handlers.setShapeFill(hex, undefined, false),
+			onCommit: handlers.pushRecentColor,
+		},
 		'#4f86ff',
 	);
 	const stroke = makeColorControl(
 		doc,
-		{ label: t('pptx.inspector.line'), onInput: handlers.setShapeStroke },
+		{
+			label: t('pptx.inspector.line'),
+			onInput: (hex) => handlers.setShapeStroke(hex, undefined, false),
+			onCommit: handlers.pushRecentColor,
+		},
 		'#1e3a8a',
 	);
 
@@ -71,7 +82,7 @@ export function createFillSection(
 	// B6 (A1/A2): "Recent colours" rows under the fill and stroke pickers.
 	// Clicking a swatch commits through the SAME handler the picker's own
 	// `<input type="color">` uses (`setShapeFill`/`setShapeStroke`), which
-	// already folds the pick back into the deck's MRU list.
+	// folds a committed pick back into the deck's MRU list.
 	const fillRecent = createRecentColorsRow(doc, t, handlers.setShapeFill);
 	const strokeRecent = createRecentColorsRow(doc, t, handlers.setShapeStroke);
 

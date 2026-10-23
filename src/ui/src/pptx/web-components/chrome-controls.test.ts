@@ -242,3 +242,35 @@ describe('pptx-ui-dialog-footer', () => {
 		expect((host.shadowRoot!.activeElement as HTMLElement).dataset.action).toBe('b');
 	});
 });
+
+describe('pptx-ui-export-progress', () => {
+	const t = (key: string) => `t:${key}`;
+	const mount = (state = {}) => {
+		const host = document.createElement('pptx-ui-export-progress');
+		document.body.append(host);
+		host.state = { open: true, title: 'Export as PDF', progress: 30, translate: t, ...state };
+		return host;
+	};
+
+	it('is the shared progress dialog with the pptx strings and test ids', () => {
+		const host = mount({ status: 'Rendering slide 2 of 4...' });
+		const dialog = q<HTMLElement>(host, '[role="dialog"]')!;
+		expect(dialog.dataset.testid).toBe('pptx-export-progress-dialog');
+		expect(q(host, '#title')!.textContent).toBe('Export as PDF');
+		expect(q(host, '[role="progressbar"]')!.getAttribute('aria-valuenow')).toBe('30');
+		expect(q(host, '#status')!.textContent).toBe('Rendering slide 2 of 4...');
+		expect(q(host, '[data-testid="pptx-export-progress-cancel"]')!.textContent).toBe(
+			't:pptx.export.cancel',
+		);
+	});
+
+	it('says Processing without a status line, and Cancel asks the host to stop', () => {
+		const host = mount();
+		expect(q(host, '#status')!.textContent).toBe('t:pptx.export.processing');
+		const cancel = listen(host, 'export-cancel');
+		q<HTMLButtonElement>(host, '[data-testid="pptx-export-progress-cancel"]')!.click();
+		expect(cancel).toHaveBeenCalledOnce();
+		host.state = { open: false, title: 'Export as PDF', progress: 100 };
+		expect(q(host, '[role="dialog"]')).toBeNull();
+	});
+});

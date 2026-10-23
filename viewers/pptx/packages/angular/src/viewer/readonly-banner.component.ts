@@ -28,13 +28,13 @@ import {
 	output,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { dispatchReadOnlyBannerIntent, readOnlyBannerState } from 'ooxml-ui/pptx';
 import type {
-	ReadOnlyBannerRequestEvent,
+	ReadOnlyBannerPasswordError,
 	ReadOnlyBannerViewState,
 	ReadOnlyRecommendationKind,
 } from 'ooxml-ui/pptx';
 
-import type { ModifyPasswordErrorReason } from './load-notices.service';
 import { translationsSignal } from './translations-signal';
 
 @Component({
@@ -53,7 +53,7 @@ export class ReadOnlyBannerComponent {
 	/** Whether the inline password prompt should render instead of the two buttons. */
 	readonly passwordPromptOpen = input(false);
 	/** Reason the last password attempt failed, or null before any attempt / after success. */
-	readonly passwordError = input<ModifyPasswordErrorReason | null>(null);
+	readonly passwordError = input<ReadOnlyBannerPasswordError | null>(null);
 	/** True while a submitted password is being checked; disables the form. */
 	readonly checkingPassword = input(false);
 	/** "Edit anyway": lift the lock and hide the banner, or open the password prompt. */
@@ -70,30 +70,23 @@ export class ReadOnlyBannerComponent {
 
 	protected readonly view = computed<ReadOnlyBannerViewState>(() => {
 		this.translations();
-		return {
-			kind: this.kind(),
-			messageKey: this.messageKey(),
-			passwordPromptOpen: this.passwordPromptOpen(),
-			passwordError: this.passwordError(),
-			checkingPassword: this.checkingPassword(),
-			translate: (key, params) => this.translate.instant(key, params),
-		};
+		return readOnlyBannerState(
+			{ kind: this.kind(), messageKey: this.messageKey() },
+			{
+				passwordPromptOpen: this.passwordPromptOpen(),
+				passwordError: this.passwordError(),
+				checkingPassword: this.checkingPassword(),
+			},
+			(key, params) => this.translate.instant(key, params),
+		);
 	});
 
 	protected request(event: Event): void {
-		const intent = (event as ReadOnlyBannerRequestEvent).detail;
-		switch (intent.id) {
-			case 'editAnyway':
-				this.editAnyway.emit();
-				break;
-			case 'dismiss':
-				this.dismiss.emit();
-				break;
-			case 'cancelPassword':
-				this.cancelPassword.emit();
-				break;
-			case 'submitPassword':
-				this.submitPassword.emit(intent.password);
-		}
+		dispatchReadOnlyBannerIntent(event, {
+			editAnyway: () => this.editAnyway.emit(),
+			dismiss: () => this.dismiss.emit(),
+			cancelPassword: () => this.cancelPassword.emit(),
+			submitPassword: (password) => this.submitPassword.emit(password),
+		});
 	}
 }

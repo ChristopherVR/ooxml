@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import { normalizeHexColor } from '../../utils';
 import { WebCheckbox } from '../WebControls';
-import { useRecentColors } from './RecentColorsContext';
 import { INPUT_CLS, COLOR_CLS } from './TextPropertiesHelpers';
 import { TextReflectionSection } from './TextReflectionSection';
+import { useRecentColorCommit } from './useRecentColorCommit';
 
 // ==========================================================================
 // Props
@@ -30,7 +30,7 @@ export function TextEffectsPanel({
 	numChange,
 }: TextEffectsPanelProps): React.ReactElement {
 	const { t } = useTranslation();
-	const { pushColor } = useRecentColors();
+	const commitRecentColor = useRecentColorCommit();
 	const hasShadow = Boolean(
 		ts?.textShadowColor || (typeof ts?.textShadowBlur === 'number' && ts.textShadowBlur > 0),
 	);
@@ -78,10 +78,8 @@ export function TextEffectsPanel({
 							<input
 								type='color'
 								value={normalizeHexColor(ts?.textShadowColor, '#000000')}
-								onChange={(e) => {
-									onUpdateTextStyle({ textShadowColor: e.target.value });
-									pushColor(e.target.value);
-								}}
+								ref={commitRecentColor}
+								onChange={(e) => onUpdateTextStyle({ textShadowColor: e.target.value })}
 								className={COLOR_CLS}
 							/>
 						</label>
@@ -171,10 +169,8 @@ export function TextEffectsPanel({
 							<input
 								type='color'
 								value={normalizeHexColor(ts?.textGlowColor, '#ffff00')}
-								onChange={(e) => {
-									onUpdateTextStyle({ textGlowColor: e.target.value });
-									pushColor(e.target.value);
-								}}
+								ref={commitRecentColor}
+								onChange={(e) => onUpdateTextStyle({ textGlowColor: e.target.value })}
 								className={COLOR_CLS}
 							/>
 						</label>
