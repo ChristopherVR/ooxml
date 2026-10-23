@@ -1,5 +1,5 @@
 import type { AiChangeBatch, PptxAiFocusedTarget, ToolCanvasTarget } from 'ooxml-ui/pptx/ai';
-import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai';
 /**
  * useAiPanelController: owns the AI panel's open state and its "scope" (the
  * focused targets + a prefilled composer directive) so PowerPointViewer can
@@ -16,7 +16,9 @@ import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
  *     the tool references (see {@link flashToolTarget}).
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { useController } from '../useController';
 
 export interface UseAiPanelControllerInput {
 	activeSlideIndex: number;
@@ -90,135 +92,62 @@ export interface AiPanelController {
 	showChangeBatch(batch: AiChangeBatch | null): void;
 }
 
-/** How long a live-tool highlight / colour-tween window stays up after a call. */
-const TOOL_FLASH_MS = 2600;
-
-/** Build the "Fix with AI" directive for one element (never auto-sent). */
-function fixDirective(element: PptxElement, slideIndex: number): string {
-	return `Review and fix any issues with this ${element.type} (id=${element.id}) on slide ${slideIndex + 1}.`;
-}
-
 export function useAiPanelController(input: UseAiPanelControllerInput): AiPanelController {
-	const { activeSlideIndex, selectedElementId, selectedElementIds, selectedElement } = input;
-	const [isOpen, setIsOpen] = useState(false);
-	const [pinnedFocus, setPinnedFocus] = useState<PptxAiFocusedTarget[] | null>(null);
-	const [prefill, setPrefill] = useState<{ text: string; nonce: number }>({ text: '', nonce: 0 });
-	const [pickMode, setPickMode] = useState(false);
-	const [pickTargets, setPickTargets] = useState<PptxAiFocusedTarget[]>([]);
-	const [toolFocus, setToolFocus] = useState<{ slideIndex: number; elementIds: string[] } | null>(
-		null,
+	const { activeSlideIndex, selectedElementId, selectedElementIds } = input;
+	const inputRef = useRef(input);
+	inputRef.current = input;
+	// The shared controller owns the state; `useController` re-renders on change.
+	const [controller] = useState(() =>
+		createPptxAiPanelController({
+			getSelection: () => ({
+				activeSlideIndex: inputRef.current.activeSlideIndex,
+				selectedElementIds: inputRef.current.selectedElementIds,
+				selectedElementId: inputRef.current.selectedElementId,
+			}),
+			getSelectedElement: () => inputRef.current.selectedElement,
+		}),
 	);
-	const [flashTick, setFlashTick] = useState(0);
-	const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const [changeBatch, setChangeBatch] = useState<AiChangeBatch | null>(null);
-	const showChangeBatch = useCallback((batch: AiChangeBatch | null) => setChangeBatch(batch), []);
+	const state = useController(controller);
+	useEffect(() => () => controller.dispose(), [controller]);
 
 	const liveFocusTargets = useMemo(
 		() => computeFocusTargets({ activeSlideIndex, selectedElementIds, selectedElementId }),
 		[activeSlideIndex, selectedElementIds, selectedElementId],
 	);
 
-	const open = useCallback(() => setIsOpen(true), []);
-	const close = useCallback(() => setIsOpen(false), []);
-	const toggle = useCallback(() => setIsOpen((p) => !p), []);
-	const pinFocus = useCallback(() => setPinnedFocus(liveFocusTargets), [liveFocusTargets]);
-	const clearPinnedFocus = useCallback(() => setPinnedFocus(null), []);
-
-	const askAboutSelection = useCallback(() => {
-		setPinnedFocus(liveFocusTargets);
-		setPrefill((p) => ({ text: '', nonce: p.nonce + 1 }));
-		setIsOpen(true);
-	}, [liveFocusTargets]);
-
-	const fixSelection = useCallback(() => {
-		setPinnedFocus(liveFocusTargets);
-		const text = selectedElement ? fixDirective(selectedElement, activeSlideIndex) : '';
-		setPrefill((p) => ({ text, nonce: p.nonce + 1 }));
-		setIsOpen(true);
-	}, [liveFocusTargets, selectedElement, activeSlideIndex]);
-
-	const startPicking = useCallback(() => {
-		setPickMode(true);
-		setIsOpen(true);
-	}, []);
-	const stopPicking = useCallback(() => setPickMode(false), []);
-	const addPick = useCallback((slideIndex: number, elementId: string) => {
-		setPickTargets((prev) => {
-			if (prev.some((t) => t.kind === 'element' && t.elementId === elementId)) {
-				return prev;
-			}
-			return [...prev, { kind: 'element', slideIndex, elementId }];
-		});
-	}, []);
-	const clearPicks = useCallback(() => {
-		setPickTargets([]);
-		setPickMode(false);
-	}, []);
-
-	const flashToolTarget = useCallback((target: ToolCanvasTarget | null) => {
-		if (target && target.slideIndex !== undefined && target.elementIds.length > 0) {
-			setToolFocus({ slideIndex: target.slideIndex, elementIds: target.elementIds });
-		} else {
-			setToolFocus(null);
-		}
-		setFlashTick((n) => n + 1);
-		if (flashTimer.current) {
-			clearTimeout(flashTimer.current);
-		}
-		flashTimer.current = setTimeout(() => {
-			setToolFocus(null);
-			setFlashTick(0);
-		}, TOOL_FLASH_MS);
-	}, []);
-
-	useEffect(
-		() => () => {
-			if (flashTimer.current) {
-				clearTimeout(flashTimer.current);
-			}
-		},
-		[],
+	// Stable action identities: they only call into the controller.
+	const actions = useMemo(
+		() => ({
+			open: () => controller.open(),
+			close: () => controller.close(),
+			toggle: () => controller.toggle(),
+			pinFocus: () => controller.pinFocus(),
+			clearPinnedFocus: () => controller.clearPinnedFocus(),
+			askAboutSelection: () => controller.askAboutSelection(),
+			fixSelection: () => controller.fixSelection(),
+			startPicking: () => controller.startPicking(),
+			stopPicking: () => controller.stopPicking(),
+			addPick: (slideIndex: number, elementId: string) => controller.addPick(slideIndex, elementId),
+			clearPicks: () => controller.clearPicks(),
+			flashToolTarget: (target: ToolCanvasTarget | null) => controller.flashToolTarget(target),
+			showChangeBatch: (batch: AiChangeBatch | null) => controller.showChangeBatch(batch),
+		}),
+		[controller],
 	);
 
-	const canvasHighlights = useMemo<AiCanvasHighlight[]>(() => {
-		const out: AiCanvasHighlight[] = [];
-		for (const t of pickTargets) {
-			if (t.kind === 'element') {
-				out.push({ slideIndex: t.slideIndex, elementId: t.elementId, variant: 'pick' });
-			}
-		}
-		if (toolFocus) {
-			for (const elementId of toolFocus.elementIds) {
-				out.push({ slideIndex: toolFocus.slideIndex, elementId, variant: 'active' });
-			}
-		}
-		return out;
-	}, [pickTargets, toolFocus]);
-
-	const canvasAnimating = canvasHighlights.length > 0 || flashTick > 0;
-
-	return {
-		isOpen,
-		open,
-		close,
-		toggle,
-		liveFocusTargets,
-		pinnedFocus,
-		pinFocus,
-		clearPinnedFocus,
-		prefill,
-		askAboutSelection,
-		fixSelection,
-		pickMode,
-		startPicking,
-		stopPicking,
-		pickTargets,
-		addPick,
-		clearPicks,
-		canvasHighlights,
-		canvasAnimating,
-		flashToolTarget,
-		changeBatch,
-		showChangeBatch,
-	};
+	return useMemo<AiPanelController>(
+		() => ({
+			...actions,
+			isOpen: state.isOpen,
+			liveFocusTargets,
+			pinnedFocus: state.pinnedFocus,
+			prefill: state.prefill,
+			pickMode: state.pickMode,
+			pickTargets: state.pickTargets,
+			canvasHighlights: state.canvasHighlights,
+			canvasAnimating: state.canvasAnimating,
+			changeBatch: state.changeBatch,
+		}),
+		[actions, liveFocusTargets, state],
+	);
 }

@@ -1,3 +1,4 @@
+import { DEFAULT_EDITOR_HISTORY_DEPTH } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxElement } from 'pptx-viewer-core';
 import { describe, it, expect } from 'vitest';
 
@@ -7,7 +8,8 @@ import type { EditorHistorySnapshot } from '../types';
 // Pure logic extracted from useEditorHistory for testing.
 // ---------------------------------------------------------------------------
 
-const MAX_HISTORY_ENTRIES = 120;
+/** The one shared default depth (React kept its own 120 before). */
+const MAX_HISTORY_ENTRIES = DEFAULT_EDITOR_HISTORY_DEPTH;
 
 /**
  * Build a history snapshot (mirrors buildHistorySnapshot callback).
@@ -154,15 +156,15 @@ describe('pushToHistoryStack', () => {
 	});
 
 	it('should remove oldest entry when exceeding max', () => {
-		const stack = Array.from({ length: 120 }, (_, i) => ({
+		const stack = Array.from({ length: MAX_HISTORY_ENTRIES }, (_, i) => ({
 			...baseSnapshot,
 			activeSlideIndex: i,
 		}));
 		const newEntry = { ...baseSnapshot, activeSlideIndex: 999 };
 		const result = pushToHistoryStack(stack, newEntry);
-		expect(result).toHaveLength(120);
+		expect(result).toHaveLength(MAX_HISTORY_ENTRIES);
 		expect(result[0].activeSlideIndex).toBe(1); // first was removed
-		expect(result[119].activeSlideIndex).toBe(999);
+		expect(result[MAX_HISTORY_ENTRIES - 1].activeSlideIndex).toBe(999);
 	});
 
 	it('should respect custom max entries', () => {

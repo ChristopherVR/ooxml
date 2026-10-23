@@ -326,3 +326,33 @@ describe('useKeyboardShortcuts F5 / Shift+F5 start-show keys', () => {
 		expect(onStartShowFromBeginning).toHaveBeenCalledOnce();
 	});
 });
+
+describe('useKeyboardShortcuts shared dispatch', () => {
+	it('starts the show on F5 from a read-only master view, and maps the shared handler names', () => {
+		const onStartShowFromBeginning = vi.fn();
+		const onAlignCenter = vi.fn();
+		mount(
+			inputWith(container, {
+				canEdit: false,
+				mode: 'master',
+				onStartShowFromBeginning,
+				onAlignCenter,
+			}),
+		);
+		const f5 = new KeyboardEvent('keydown', { key: 'F5', cancelable: true });
+		window.dispatchEvent(f5);
+		expect(onStartShowFromBeginning).toHaveBeenCalledOnce();
+		expect(f5.defaultPrevented).toBe(true);
+
+		// Read-only: the editor keymap is gated, so Ctrl+E reaches nobody.
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', ctrlKey: true }));
+		expect(onAlignCenter).not.toHaveBeenCalled();
+	});
+
+	it('claims an editor chord whose optional callback is not wired', () => {
+		mount(inputWith(container));
+		const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, cancelable: true });
+		window.dispatchEvent(event);
+		expect(event.defaultPrevented).toBe(true);
+	});
+});

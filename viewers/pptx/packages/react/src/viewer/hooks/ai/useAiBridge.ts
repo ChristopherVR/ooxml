@@ -1,21 +1,18 @@
-import type {
-	PptxAiBridge,
-	PptxAiDataUpdater,
-	PptxAiDeckMeta,
-	PptxAiElementUpdate,
-	PptxAiFocusedTarget,
-	PptxAiNotifyLevel,
-	PptxAiSlidesUpdater,
+import type { PptxAiBridge, PptxAiFocusedTarget, PptxAiNotifyLevel } from 'ooxml-ui/pptx/ai';
+import {
+	computeFocusTargets,
+	createPptxAiBridge,
+	resolveAiEffectiveTargets,
 } from 'ooxml-ui/pptx/ai';
-import { applyElementUpdate, computeFocusTargets, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
 /**
  * useAiBridge: builds a stable {@link PptxAiBridge} that lets the
  * framework-agnostic AI core (`pptx-viewer-shared/ai`) read the open deck,
  * navigate it, and route edits through the React editor-history layer so every
  * AI change is a single Ctrl+Z.
  *
- * The bridge identity is kept stable across renders (its methods read live
- * values from a ref) so the chat session built from it in {@link useAiChat} is
+ * The bridge is the shared `createPptxAiBridge`; this hook is only its port over
+ * React state. The bridge identity is kept stable across renders (the port
+ * reads live values from a ref) so the chat session built from it in {@link useAiChat} is
  * not torn down and rebuilt on every keystroke.
  */
 import type {
@@ -23,7 +20,6 @@ import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
-	PptxData,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -104,149 +100,69 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 	ref.current = input;
 
 	return useMemo<PptxAiBridge>(() => {
-		const applySlidesUpdate = (updater: PptxAiSlidesUpdater, _label: string): void => {
-			const live = ref.current;
-			live.setSlides((prev) => updater(structuredClone(prev)));
-			// Content-only edits (text/style) do not change slide/element counts,
-			// so nudge the history nonce to force the snapshot capture that makes
-			// the AI edit a single undoable entry.
-			live.bumpHistory();
-			live.markDirty();
-		};
-
-		/** Reconstruct the presentation-level PptxData the AI deck tools read/write. */
-		const readDeckData = (live: UseAiBridgeInput): PptxData =>
-			({
-				slides: live.slides,
-				width: live.canvasSize.width,
-				height: live.canvasSize.height,
-				theme: live.theme,
-				sections: live.sections,
-				presentationProperties: live.presentationProperties,
-				customProperties: live.customProperties,
-				coreProperties: live.coreProperties,
-				appProperties: live.appProperties,
-				viewProperties: live.viewProperties,
-				tableStyleMap: live.tableStyleMap,
-				tableStylesDefaultId: live.tableStylesDefaultId,
-				tags: live.tagCollections,
-			}) satisfies Partial<PptxData> as PptxData;
-
-		const differs = deckDataFieldChanged;
-
-		return {
-			getDeckMeta(): PptxAiDeckMeta {
-				const live = ref.current;
-				const firstTitle = live.slides[0]?.elements.find(
-					(el) => 'text' in el && typeof el.text === 'string' && el.text.trim().length > 0,
+		const live = (): UseAiBridgeInput => ref.current;
+		return createPptxAiBridge({
+			getSlides: () => live().slides,
+			getActiveSlideIndex: () => live().activeSlideIndex,
+			getCanvasSize: () => live().canvasSize,
+			getTheme: () => live().theme,
+			getHandler: () => live().handlerRef.current,
+			getFileName: () => live().fileName,
+			getSections: () => live().sections,
+			getPresentationProperties: () => live().presentationProperties,
+			getCustomProperties: () => live().customProperties,
+			getCoreProperties: () => live().coreProperties,
+			getAppProperties: () => live().appProperties,
+			getViewProperties: () => live().viewProperties,
+			getTableStyleMap: () => live().tableStyleMap,
+			getTableStylesDefaultId: () => live().tableStylesDefaultId,
+			getTagCollections: () => live().tagCollections,
+			goToSlide: (index) => live().setActiveSlideIndex(index),
+			selectElements(slideIndex, elementIds) {
+				const current = live();
+				if (slideIndex !== current.activeSlideIndex) {
+					current.setActiveSlideIndex(slideIndex);
+				}
+				current.applySelection(elementIds[0] ?? null, elementIds);
+			},
+			updateSlides(update) {
+				const current = live();
+				// A functional update, so two AI edits in one tick compose.
+				current.setSlides((prev) => update(prev));
+				// Content-only edits (text/style) do not change slide/element counts,
+				// so nudge the history nonce to force the snapshot capture that makes
+				// the AI edit a single undoable entry.
+				current.bumpHistory();
+				current.markDirty();
+			},
+			applyTheme: (updates) => live().applyThemeUpdates(updates),
+			setCanvasSize: (size) => live().setCanvasSize(size),
+			setSections: (sections) => live().setSections(sections),
+			setPresentationProperties: (props) => live().setPresentationProperties(props),
+			setDocumentProperties(core, app, custom) {
+				const current = live();
+				current.setCoreProperties(core);
+				current.setAppProperties(app);
+				current.setCustomProperties(custom);
+			},
+			setViewProperties: (props) => live().setViewProperties(props),
+			setTableStyleMap: (map) => live().setTableStyleMap(map),
+			setTableStylesDefaultId: (id) => live().setTableStylesDefaultId(id),
+			setTagCollections: (tags) => live().setTagCollections(tags),
+			afterDeckUpdate: () => live().markDirty(),
+			getFocusedTargets() {
+				const current = live();
+				// Explicit picks win, then a pinned focus, then the live selection.
+				return resolveAiEffectiveTargets(
+					{ pickTargets: current.pickedFocus ?? [], pinnedFocus: current.pinnedFocus },
+					computeFocusTargets({
+						activeSlideIndex: current.activeSlideIndex,
+						selectedElementIds: current.selectedElementIds,
+						selectedElementId: current.selectedElementId,
+					}),
 				);
-				return {
-					slideCount: live.slides.length,
-					activeSlideIndex: live.activeSlideIndex,
-					title:
-						live.fileName ??
-						(firstTitle && 'text' in firstTitle ? String(firstTitle.text) : undefined),
-					width: live.canvasSize.width,
-					height: live.canvasSize.height,
-				};
 			},
-			getSlides: () => ref.current.slides,
-			getActiveSlideIndex: () => ref.current.activeSlideIndex,
-			getTheme: () => ref.current.theme,
-			getHandler: () => ref.current.handlerRef.current ?? undefined,
-			goToSlide(index: number) {
-				ref.current.setActiveSlideIndex(index);
-			},
-			selectElements(slideIndex: number, elementIds: string[]) {
-				const live = ref.current;
-				if (slideIndex !== live.activeSlideIndex) {
-					live.setActiveSlideIndex(slideIndex);
-				}
-				live.applySelection(elementIds[0] ?? null, elementIds);
-			},
-			applySlidesUpdate,
-			updateElement(slideIndex: number, elementId: string, updates: PptxAiElementUpdate) {
-				applySlidesUpdate((slides) => {
-					const el = slides[slideIndex]?.elements.find((e) => e.id === elementId);
-					if (el) {
-						applyElementUpdate(el, updates);
-					}
-					return slides;
-				}, `Update element ${elementId}`);
-			},
-			applyTheme(updates: Partial<PptxTheme>) {
-				ref.current.applyThemeUpdates(updates);
-			},
-			getDeckData(): PptxData {
-				return readDeckData(ref.current);
-			},
-			applyDeckData(updater: PptxAiDataUpdater, _label: string) {
-				const live = ref.current;
-				const before = readDeckData(live);
-				const after = updater(structuredClone(before));
-				// Slides and canvas size are captured by the undo history; the other
-				// presentation-level fields persist into the save model and re-render,
-				// but are not yet individually undoable (a history-snapshot follow-up).
-				if (differs(before.slides, after.slides)) {
-					live.setSlides(() => after.slides);
-					live.bumpHistory();
-				}
-				if (before.width !== after.width || before.height !== after.height) {
-					live.setCanvasSize({ width: after.width, height: after.height });
-				}
-				const nextSections = after.sections ?? before.sections ?? [];
-				if (differs(before.sections, nextSections)) {
-					live.setSections(nextSections);
-				}
-				const nextPresProps = after.presentationProperties ?? live.presentationProperties;
-				if (differs(before.presentationProperties, nextPresProps)) {
-					live.setPresentationProperties(nextPresProps);
-				}
-				const nextCustomProps = after.customProperties ?? before.customProperties ?? [];
-				if (differs(before.customProperties, nextCustomProps)) {
-					live.setCustomProperties(nextCustomProps);
-				}
-				if (differs(before.coreProperties, after.coreProperties)) {
-					live.setCoreProperties(after.coreProperties);
-				}
-				if (differs(before.appProperties, after.appProperties)) {
-					live.setAppProperties(after.appProperties);
-				}
-				if (differs(before.viewProperties, after.viewProperties)) {
-					live.setViewProperties(after.viewProperties);
-				}
-				if (differs(before.tableStyleMap, after.tableStyleMap)) {
-					live.setTableStyleMap(after.tableStyleMap);
-				}
-				if (differs(before.tableStylesDefaultId, after.tableStylesDefaultId)) {
-					live.setTableStylesDefaultId(after.tableStylesDefaultId);
-				}
-				const nextTags = after.tags ?? before.tags ?? [];
-				if (differs(before.tags, nextTags)) {
-					live.setTagCollections(nextTags);
-				}
-				live.markDirty();
-			},
-			getFocusedTargets(): PptxAiFocusedTarget[] {
-				const live = ref.current;
-				// Explicit picks (pick mode) are the strongest signal of intent.
-				if (live.pickedFocus && live.pickedFocus.length > 0) {
-					return live.pickedFocus;
-				}
-				// A pinned focus (set from the chat) wins over the live selection so
-				// the assistant stays scoped even after the user clicks elsewhere.
-				if (live.pinnedFocus && live.pinnedFocus.length > 0) {
-					return live.pinnedFocus;
-				}
-				return computeFocusTargets({
-					activeSlideIndex: live.activeSlideIndex,
-					selectedElementIds: live.selectedElementIds,
-					selectedElementId: live.selectedElementId,
-				});
-			},
-			notify(message: string, level?: PptxAiNotifyLevel) {
-				ref.current.notify?.(message, level);
-			},
-		};
+			notify: (message, level) => live().notify?.(message, level),
+		});
 	}, []);
 }

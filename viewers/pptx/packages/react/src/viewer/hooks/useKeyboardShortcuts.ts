@@ -1,17 +1,12 @@
-import {
-	isEditorControlTarget,
-	isEditorTextInputTarget,
-	isFeatureEnabled,
-	mapCustomizedEditorKey,
-	mapSlideShowStartKey,
-} from 'ooxml-ui/pptx';
-import type { ResolvedCustomization } from 'ooxml-ui/pptx';
+import { dispatchEditorKey, isFeatureEnabled } from 'ooxml-ui/pptx';
+import type { EditorKeyHandlers, ResolvedCustomization } from 'ooxml-ui/pptx';
 /**
  * useKeyboardShortcuts: the editor keymap, wired into React.
  *
- * Key-to-action resolution lives in `pptx-viewer-shared`'s `mapEditorKey`, the
- * one map all five bindings share; this hook only snapshots the guard state,
- * dispatches, and owns the listener lifetime.
+ * Key-to-action resolution and the dispatch switch are the shared
+ * `dispatchEditorKey` (`ooxml-ui/pptx`), the one keymap and handler interface
+ * all five bindings share; this hook only snapshots the guard state, maps its
+ * `on*` callbacks onto `EditorKeyHandlers`, and owns the listener lifetime.
  *
  * The listener is registered on `window` exactly once. It used to be registered
  * on the viewer container *as well*, "as a fallback", which meant every key
@@ -21,8 +16,8 @@ import type { ResolvedCustomization } from 'ooxml-ui/pptx';
  * (they bubble), so the container listener was never a fallback, only a second
  * delivery.
  *
- * `F5` / `Shift+F5` (start the show) are resolved via the separate
- * `mapSlideShowStartKey`, checked BEFORE `mapEditorKey` runs. PowerPoint starts
+ * `F5` / `Shift+F5` (start the show) are checked by the same dispatcher BEFORE
+ * the editor keymap runs. PowerPoint starts
  * the show from the keyboard even with the caret in a text box and even when
  * the host is read-only, both of which `mapEditorKey` gates against, so the
  * start-show check must sit ahead of (not inside) that gate, on the same
@@ -141,150 +136,28 @@ export function useKeyboardShortcuts(input: UseKeyboardShortcutsInput): void {
 
 	const handleKeyDown = useCallback((e: KeyboardEvent) => {
 		const current = inputRef.current;
-
-		// Checked ahead of `mapEditorKey` and its `canEdit` / text-input gates:
-		// PowerPoint starts the show from F5 with the caret in a text box, and a
-		// read-only viewer can still start a show (it has a "From Beginning"
-		// button too), so neither gate may sit in front of this check.
-		const startAction =
-			current.customization && !isFeatureEnabled(current.customization, 'presentMode')
-				? null
-				: mapSlideShowStartKey(e, { isPresenting: current.mode === 'present' });
-		if (startAction !== null) {
-			e.preventDefault();
-			if (startAction === 'fromBeginning') {
-				current.onStartShowFromBeginning();
-			} else {
-				current.onStartShowFromCurrent();
-			}
-			return;
-		}
-
-		const { action, dx, dy } = mapCustomizedEditorKey(
+		dispatchEditorKey(
 			e,
 			{
 				canEdit: current.canEdit,
-				canPaste: current.canPaste,
-				// The Slide Master view is an editing surface, not a viewing one.
-				// Gating on `mode !== 'edit'` alone made `mapEditorKey` return
-				// NO_ACTION there, so Delete, the arrow-key nudges and the clipboard
-				// keys were all inert over a master shape even though the write path
-				// behind them routes to the owning part correctly. Svelte and
-				// vanilla, which render the master into their ordinary editable
-				// stage, never had the gap.
+				...(current.canPaste === undefined ? {} : { canPaste: current.canPaste }),
+				// The Slide Master view is an editing surface, not a viewing one, so
+				// only the other modes count as "not editing" for the editor keymap.
 				isPresenting: current.mode !== 'edit' && current.mode !== 'master',
+				// F5 is only inert while the show itself runs: a read-only viewer can
+				// still start a show (it has a "From Beginning" button too).
+				isShowRunning: current.mode === 'present',
+				canStartShow:
+					!current.customization || isFeatureEnabled(current.customization, 'presentMode'),
 				hasSelection: current.hasSelection,
 				isEditingText: Boolean(
 					current.inlineEditingElementId || current.tableEditorState?.isEditing,
 				),
 				isDrawing: current.activeTool !== 'select',
-				isTextInputTarget: isEditorTextInputTarget(e.target),
-				isControlTarget: isEditorControlTarget(e.target),
+				keyboard: current.customization?.keyboard,
 			},
-			current.customization?.keyboard,
+			toEditorKeyHandlers(current),
 		);
-		if (action === null) {
-			return;
-		}
-		e.preventDefault();
-
-		switch (action) {
-			case 'escape':
-				current.onEscape();
-				break;
-			case 'delete':
-				current.onDelete();
-				break;
-			case 'undo':
-				current.onUndo();
-				break;
-			case 'redo':
-				current.onRedo();
-				break;
-			case 'copy':
-				current.onCopy();
-				break;
-			case 'cut':
-				current.onCut();
-				break;
-			case 'paste':
-				current.onPaste();
-				break;
-			case 'duplicate':
-				current.onDuplicate();
-				break;
-			case 'selectAll':
-				current.onSelectAll();
-				break;
-			case 'group':
-				current.onGroup?.();
-				break;
-			case 'ungroup':
-				current.onUngroup?.();
-				break;
-			case 'toggleShortcuts':
-				current.onToggleShortcuts?.();
-				break;
-			case 'find':
-				current.onFind?.();
-				break;
-			case 'nudge':
-				current.onNudge(dx ?? 0, dy ?? 0);
-				break;
-			case 'prevSlide':
-				current.onPrevSlide?.();
-				break;
-			case 'nextSlide':
-				current.onNextSlide?.();
-				break;
-			case 'alignLeft':
-				current.onAlignLeft?.();
-				break;
-			case 'alignCenter':
-				current.onAlignCenter?.();
-				break;
-			case 'alignRight':
-				current.onAlignRight?.();
-				break;
-			case 'alignJustify':
-				current.onAlignJustify?.();
-				break;
-			case 'increaseFontSize':
-				current.onIncreaseFontSize?.();
-				break;
-			case 'decreaseFontSize':
-				current.onDecreaseFontSize?.();
-				break;
-			case 'copyFormat':
-				current.onCopyFormat?.();
-				break;
-			case 'pasteFormat':
-				current.onPasteFormat?.();
-				break;
-			case 'newSlide':
-				current.onNewSlide?.();
-				break;
-			case 'hyperlink':
-				current.onHyperlink?.();
-				break;
-			case 'findReplace':
-				current.onFindReplace?.();
-				break;
-			case 'clearFormatting':
-				current.onClearFormatting?.();
-				break;
-			case 'cycleSelectionNext':
-				current.onCycleSelectionNext?.();
-				break;
-			case 'cycleSelectionPrev':
-				current.onCycleSelectionPrev?.();
-				break;
-			case 'pasteSpecial':
-				current.onPasteSpecial?.();
-				break;
-			default:
-				break;
-		}
 	}, []);
 
 	useEffect(() => {
@@ -295,4 +168,43 @@ export function useKeyboardShortcuts(input: UseKeyboardShortcutsInput): void {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
 	}, [handleKeyDown]);
+}
+
+/** The hook's `on*` callbacks under the shared handler names. */
+function toEditorKeyHandlers(current: UseKeyboardShortcutsInput): EditorKeyHandlers {
+	return {
+		startShowFromBeginning: current.onStartShowFromBeginning,
+		startShowFromCurrent: current.onStartShowFromCurrent,
+		escape: current.onEscape,
+		delete: current.onDelete,
+		undo: current.onUndo,
+		redo: current.onRedo,
+		copy: current.onCopy,
+		cut: current.onCut,
+		paste: current.onPaste,
+		duplicate: current.onDuplicate,
+		selectAll: current.onSelectAll,
+		group: current.onGroup,
+		ungroup: current.onUngroup,
+		toggleShortcuts: current.onToggleShortcuts,
+		find: current.onFind,
+		nudge: current.onNudge,
+		prevSlide: current.onPrevSlide,
+		nextSlide: current.onNextSlide,
+		alignLeft: current.onAlignLeft,
+		alignCenter: current.onAlignCenter,
+		alignRight: current.onAlignRight,
+		alignJustify: current.onAlignJustify,
+		increaseFontSize: current.onIncreaseFontSize,
+		decreaseFontSize: current.onDecreaseFontSize,
+		copyFormat: current.onCopyFormat,
+		pasteFormat: current.onPasteFormat,
+		newSlide: current.onNewSlide,
+		hyperlink: current.onHyperlink,
+		findReplace: current.onFindReplace,
+		clearFormatting: current.onClearFormatting,
+		cycleSelectionNext: current.onCycleSelectionNext,
+		cycleSelectionPrev: current.onCycleSelectionPrev,
+		pasteSpecial: current.onPasteSpecial,
+	};
 }
