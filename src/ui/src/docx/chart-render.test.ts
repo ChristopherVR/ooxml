@@ -31,7 +31,10 @@ describe('Word charts in the editor', () => {
 			{ editable: true } as unknown as EditorView,
 			() => 0,
 		);
-		const dom = view.dom as HTMLElement;
+		// The frame holds the painted chart and its corner resize handle.
+		expect((view.dom as HTMLElement).className).toBe('dve-chart-frame');
+		expect((view.dom as HTMLElement).querySelector('.dve-picture-handle')).not.toBeNull();
+		const dom = (view.dom as HTMLElement).querySelector<HTMLElement>('[data-docx-chart]')!;
 		expect(dom.dataset.docxChart).toBe('1');
 		expect(dom.style.width).toBe(`${run.image!.widthPx}px`);
 		const svg = dom.querySelector('svg')!;

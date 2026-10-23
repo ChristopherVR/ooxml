@@ -930,6 +930,7 @@
       "name": "pptx-viewer-locales",
       "version": "0.1.0",
       "devDependencies": {
+        "ooxml-ui": "workspace:*",
         "tsdown": "^0.23.1",
         "tsup": "^9.0.0",
         "typescript": "^7.0.2",

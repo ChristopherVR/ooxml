@@ -30,3 +30,10 @@ export {
 	drawingGradientFrom,
 } from './format-pane-intent';
 export { chartSpaceFormatSource, type ChartSpaceFormatSourceOptions } from './format-pane-space';
+export { chartFormatLocale, chartFormatTranslator } from './format-pane-translate';
+export {
+	CHART_FORMAT_LOCALES,
+	CHART_FORMAT_STRINGS,
+	prefixChartFormatStrings,
+	type ChartFormatLocale,
+} from './format-pane-locales/index';

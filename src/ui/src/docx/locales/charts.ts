@@ -41,6 +41,9 @@ export const enCharts = {
 	'chart.sheet.summary': '{series} series · {categories} categories',
 	'chart.sheet.invalidNumber': 'Enter a number',
 	'chart.readOnly': 'This kind of chart cannot be edited; it is kept as it is.',
+	'Current Selection': 'Current Selection',
+	'Format Selection': 'Format Selection',
+	'Format Chart Area...': 'Format Chart Area...',
 } as const;
 
 export type ChartStrings = Record<keyof typeof enCharts, string>;
@@ -87,6 +90,9 @@ export const frCharts: ChartStrings = {
 	'chart.sheet.summary': '{series} séries · {categories} catégories',
 	'chart.sheet.invalidNumber': 'Entrez un nombre',
 	'chart.readOnly': 'Ce type de graphique ne peut pas être modifié ; il est conservé tel quel.',
+	'Current Selection': 'Sélection active',
+	'Format Selection': 'Mettre en forme la sélection',
+	'Format Chart Area...': 'Mettre en forme la zone de graphique...',
 };
 
 export const deCharts: ChartStrings = {
@@ -131,6 +137,9 @@ export const deCharts: ChartStrings = {
 	'chart.sheet.summary': '{series} Reihen · {categories} Kategorien',
 	'chart.sheet.invalidNumber': 'Geben Sie eine Zahl ein',
 	'chart.readOnly': 'Dieser Diagrammtyp kann nicht bearbeitet werden; er bleibt unverändert.',
+	'Current Selection': 'Aktuelle Auswahl',
+	'Format Selection': 'Auswahl formatieren',
+	'Format Chart Area...': 'Diagrammbereich formatieren...',
 };
 
 export const esCharts: ChartStrings = {
@@ -175,6 +184,9 @@ export const esCharts: ChartStrings = {
 	'chart.sheet.summary': '{series} series · {categories} categorías',
 	'chart.sheet.invalidNumber': 'Escriba un número',
 	'chart.readOnly': 'Este tipo de gráfico no se puede editar; se conserva tal cual.',
+	'Current Selection': 'Selección actual',
+	'Format Selection': 'Aplicar formato a la selección',
+	'Format Chart Area...': 'Formato del área del gráfico...',
 };
 
 export const zhCharts: ChartStrings = {
@@ -218,4 +230,7 @@ export const zhCharts: ChartStrings = {
 	'chart.sheet.summary': '{series} 个系列 · {categories} 个类别',
 	'chart.sheet.invalidNumber': '请输入数字',
 	'chart.readOnly': '无法编辑此图表类型；将按原样保留。',
+	'Current Selection': '当前所选内容',
+	'Format Selection': '设置所选内容格式',
+	'Format Chart Area...': '设置图表区域格式...',
 };

@@ -405,8 +405,10 @@ Still not at parity:
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
 - **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, SmartArt Styles and Change Colors, SmartArt pictures and per-shape formatting, and SmartArt in headers, footers and notes (body SmartArt can be inserted and its nodes, text and layout edited; an edited diagram is drawn with an approximate layout, not Word's, until Word lays it out again),
   most of chart editing (Insert > Chart adds an inline chart of eight families with Office's sample data, and Chart Design offers
-  Legend, Edit Data and Change Chart Type, saved to the chart part and its embedded workbook; chart styles and colours, Quick Layout,
-  Add Chart Element, Switch Row/Column, Select Data, the Format pane and editing extended (chartex) charts are missing; surface,
+  Legend, Edit Data, Change Chart Type and Format Selection, saved to the chart part and its embedded workbook; the docked Format pane
+  writes fills, outlines, transparency and legend, axis, label and series options, and the corner handle resizes a chart on the
+  editing surface; chart styles and colours, Quick Layout, Add Chart Element, Switch Row/Column, Select Data, the Format pane's
+  pattern, picture, 3-D, effects and text sections and editing extended (chartex) charts are missing; surface,
   volume-stock and other chartex families show a labelled frame, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,
   Signature Line, Object.
 - **Layout and References:** Manual Hyphenation and its options, Position

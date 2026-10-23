@@ -34,6 +34,7 @@ import { DirtyState } from 'ooxml-core/docx/ui';
 import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
 import type { HeadingNavigator } from './heading-navigator';
+import type { DocxChartFormatPane } from './chart-format-pane';
 import { HEADER_FOOTER_INPUT, isFormsProtected } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
@@ -63,6 +64,8 @@ export interface ShellParts {
 	surfaceNavigation?: () => void;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
+	/** The docked Format pane of the selected chart. */
+	chartFormat?: DocxChartFormatPane;
 }
 
 /**
@@ -362,6 +365,7 @@ export class EditorCore {
 			);
 		const { searchPanel, printLayout, review, chrome, toolbar } = this.shell;
 		searchPanel?.refresh();
+		this.shell.chartFormat?.refresh();
 		// The open pane follows the caret's thread and whether a selection can take a comment.
 		if (review?.commentsOpen) review.commentsPanel.refresh();
 		if (this.pages.viewMode === 'print') {

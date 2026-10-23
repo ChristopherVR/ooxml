@@ -138,6 +138,7 @@ const paths = {
 	chart: 'M4 20h16 M6 20v-6h3v6 M11 20V7h3v13 M16 20v-9h3v9',
 	chartType: 'M4 20h8 M5 20v-5h2v5 M9 20v-9h2v9 M14 9l2-3 2 2 2-4 M14 14h6v6h-6z',
 	editData: 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14',
+	formatSelection: 'M4 4h11v11H4z M7 8h5 M7 11h3 M15 13l5 5-2 2-5-5z',
 	legend: 'M4 6h3v3H4z M10 7.5h10 M4 11h3v3H4z M10 12.5h10 M4 16h3v3H4z M10 17.5h10',
 	caret: 'M7 10l5 5 5-5',
 } as const;

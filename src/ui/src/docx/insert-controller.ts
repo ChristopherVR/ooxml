@@ -107,7 +107,7 @@ export class InsertController {
 		} else if (action.type === 'shape') {
 			if (view) this.runShapeAction(view, action);
 			focusView(view);
-		} else if (action.type === 'chart') {
+		} else if (action.type === 'chart' && action.key === 'legend') {
 			if (view) setSelectedChartLegend(view, action.value);
 			focusView(view);
 		} else if (action.type === 'insertEquation') {

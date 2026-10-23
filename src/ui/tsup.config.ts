@@ -30,6 +30,7 @@ export default defineConfig({
 		theme: 'src/theme.ts',
 		icons: 'src/icons.ts',
 		controls: 'src/controls.ts',
+		'chart-format-locales': 'src/chart/format-pane-locales/index.ts',
 		presence: 'src/presence.ts',
 		smartart: 'src/smartart.ts',
 		teams: 'src/teams/index.ts',

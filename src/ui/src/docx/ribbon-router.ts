@@ -35,6 +35,10 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 		);
 		return;
 	}
+	if (action.type === 'chart' && action.key === 'format') {
+		shell.chartFormat?.open(action.target);
+		return;
+	}
 	if (inserts.handle(action)) return;
 	const target = core.targetView();
 	if (action.type === 'history' && parts.usesBodyHistory()) {
