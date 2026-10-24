@@ -376,6 +376,78 @@ describe('useSlideManagement layout insertion', () => {
 	});
 });
 
+describe('useSlideManagement layout insertion while the slide is edited', () => {
+	it('keeps an edit made to the new slide while its layout loads', async () => {
+		const initialSlide = makeSlide({ id: 'slide-1' });
+		let layoutArrives: () => void = () => {};
+		const handler = {
+			applyLayoutToSlide: vi.fn(async (index: number, layoutPath: string, current: PptxSlide[]) => {
+				await new Promise<void>((resolve) => {
+					layoutArrives = resolve;
+				});
+				return { ...current[index]!, layoutPath, layoutName: 'Remapped' } as PptxSlide;
+			}),
+			getTemplateElementsForSlide: vi
+				.fn()
+				.mockResolvedValue([{ id: 'layout-art', type: 'shape' } as PptxElement]),
+		} as unknown as PptxHandler;
+		const container = document.createElement('div');
+		document.body.append(container);
+		const root: Root = createRoot(container);
+		let management: ReturnType<typeof useSlideManagement> | undefined;
+		let current: { slides: PptxSlide[]; templates: Record<string, PptxElement[]> } | undefined;
+		let editSlides: ((update: (slides: PptxSlide[]) => PptxSlide[]) => void) | undefined;
+		function Harness(): null {
+			const [slides, setSlides] = useState([initialSlide]);
+			const [templateElementsBySlideId, setTemplateElementsBySlideId] = useState<
+				Record<string, PptxElement[]>
+			>({});
+			editSlides = setSlides;
+			current = { slides, templates: templateElementsBySlideId };
+			management = useSlideManagement({
+				slides,
+				activeSlide: slides[0],
+				activeSlideIndex: 0,
+				setActiveSlideIndex: vi.fn(),
+				ops: { updateSlides: (update) => setSlides(update) } as never,
+				history: { markDirty: vi.fn() } as never,
+				handlerRef: { current: handler },
+				setTemplateElementsBySlideId,
+			});
+			return null;
+		}
+
+		try {
+			await act(async () => {
+				root.render(React.createElement(Harness));
+			});
+			await act(async () => {
+				management!.handleInsertSlideFromLayout('ppt/slideLayouts/slideLayout2.xml');
+			});
+			await vi.waitFor(() => expect(handler.applyLayoutToSlide).toHaveBeenCalledOnce());
+			const typed = { id: 'typed', type: 'shape' } as PptxElement;
+			await act(async () => {
+				editSlides!((slides) =>
+					slides.map((slide, index) => (index === 1 ? { ...slide, elements: [typed] } : slide)),
+				);
+			});
+			await act(async () => {
+				layoutArrives();
+				await new Promise((resolve) => {
+					setTimeout(resolve, 0);
+				});
+			});
+			const inserted = current!.slides[1]!;
+			expect(current!.templates[inserted.id]).toHaveLength(1);
+			expect(inserted.elements.map((element) => element.id)).toStrictEqual(['typed']);
+			expect(inserted.layoutName).toBeUndefined();
+		} finally {
+			await act(async () => root.unmount());
+			container.remove();
+		}
+	});
+});
+
 describe('toggleHideSlidesUpdater', () => {
 	it('should toggle hidden from undefined to true', () => {
 		const slides = [makeSlide({ id: 's1' }), makeSlide({ id: 's2' })];
