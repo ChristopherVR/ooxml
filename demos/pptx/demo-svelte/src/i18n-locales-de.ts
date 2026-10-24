@@ -118,11 +118,8 @@ export const translationsDe: Partial<Record<TranslationKey, string>> = {
 	'pptx.shortcuts.action.zoomCanvas': 'Arbeitsbereich zoomen',
 	'pptx.shortcuts.action.commitTextEdit': 'Inline-Textbearbeitung bestatigen',
 	'pptx.shortcuts.action.cancelTextEdit': 'Inline-Textbearbeitung abbrechen / Menus schliessen',
-	'pptx.shortcuts.action.clearSelection':
-		'Auswahl aufheben / Menus schliessen / Bearbeitung abbrechen',
 	'pptx.shortcuts.action.nextSlide': 'Nachste Folie (ohne Auswahl)',
 	'pptx.shortcuts.action.prevSlide': 'Vorherige Folie (ohne Auswahl)',
-	'pptx.shortcuts.action.redoAlternate': 'Wiederholen (alternativ)',
 	'pptx.shortcuts.action.selectAll': 'Alle Elemente auswahlen',
 	'pptx.shortcuts.group.editing': 'Bearbeitung',
 	'pptx.shortcuts.group.navigation': 'Navigation',
