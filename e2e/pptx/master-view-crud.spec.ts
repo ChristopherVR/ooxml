@@ -1,10 +1,14 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec */
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import JSZip from 'jszip';
+import { PptxHandler } from 'pptx-viewer-core';
 
+import { savePptxViaBackstage } from './save-pptx';
 import {
 	elementWithText,
 	fixture,
@@ -14,6 +18,7 @@ import {
 	slideStage,
 	thumbnail,
 } from './support/deck';
+import { downloadBytes } from './support/exports';
 import { readFixtureLayout } from './support/fixture-layout';
 import { dragBy } from './support/keyboard';
 
@@ -81,6 +86,92 @@ async function slideOffset(page: Page, target: Locator): Promise<number> {
 
 function undoButton(page: Page): Locator {
 	return page.getByRole('button', { name: /^undo/iu }).first();
+}
+
+function redoButton(page: Page): Locator {
+	return page.getByRole('button', { name: /^redo/iu }).first();
+}
+
+/** Slide 1's layout and a layout on its master that no slide uses, read from the deck itself. */
+async function readLayoutPair(path: string): Promise<{ home: string; spare: string }> {
+	const data = await new PptxHandler().load(new Uint8Array(await readFile(path)).buffer);
+	const homePath = data.slides[0]?.layoutPath;
+	const used = new Set(data.slides.map((slide) => slide.layoutPath));
+	const layouts =
+		data.slideMasters?.find((master) => master.layouts?.some((layout) => layout.path === homePath))
+			?.layouts ?? [];
+	const home = layouts.find((layout) => layout.path === homePath)?.name;
+	const spare = layouts.find(
+		(layout) => !used.has(layout.path) && layout.name && layout.name !== home,
+	)?.name;
+	if (!home || !spare) {
+		throw new Error(`${path} has no unused layout beside the one slide 1 uses`);
+	}
+	return { home, spare };
+}
+
+/**
+ * Open Home > Layout, the active slide's layout gallery. As in `layout-gallery-parity.spec.ts`,
+ * a hover then a click opens it in every binding (Angular reveals it on hover).
+ */
+async function openLayoutMenu(page: Page): Promise<Locator> {
+	await ribbonTab(page, 'Home').click();
+	const trigger = page.getByRole('button', { name: /^layout$/iu }).first();
+	await trigger.hover();
+	await trigger.click().catch(() => {});
+	const entries = page.locator('[data-testid="layout-gallery-menu"]:visible button');
+	await expect(entries.first()).toBeVisible();
+	return entries;
+}
+
+async function closeLayoutMenu(page: Page): Promise<void> {
+	await page.keyboard.press('Escape');
+	await page.mouse.move(0, 0);
+	await expect(page.locator('[data-testid="layout-gallery-menu"]:visible button')).toHaveCount(0);
+}
+
+async function applyLayout(page: Page, name: string): Promise<void> {
+	const entries = await openLayoutMenu(page);
+	await entries
+		.filter({ has: page.getByText(name, { exact: true }) })
+		.first()
+		.click();
+	await closeLayoutMenu(page);
+	// The apply is asynchronous in some bindings: wait until it has landed, or the next step (another
+	// apply, an Undo) races it and a late apply overwrites what that step did.
+	await expectCurrentLayout(page, name);
+}
+
+/** The Layout menu marks the active slide's layout, and only that one. */
+async function expectCurrentLayout(page: Page, name: string): Promise<void> {
+	const entries = await openLayoutMenu(page);
+	const marked = entries.and(page.locator('[aria-current="true"]'));
+	await expect(marked).toHaveCount(1);
+	await expect(marked.filter({ has: page.getByText(name, { exact: true }) })).toHaveCount(1);
+	await closeLayoutMenu(page);
+}
+
+/** Every slide-to-layout relationship in a saved package whose target part is not in it. */
+async function danglingLayoutRelationships(bytes: Uint8Array): Promise<string[]> {
+	const zip = await JSZip.loadAsync(bytes);
+	const dangling: string[] = [];
+	const rels = Object.keys(zip.files).filter((name) =>
+		/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/u.test(name),
+	);
+	for (const name of rels) {
+		const xml = (await zip.file(name)?.async('string')) ?? '';
+		for (const [relationship] of xml.matchAll(/<Relationship\b[^>]*>/gu)) {
+			if (!/Type="[^"]*\/slideLayout"/u.test(relationship)) {
+				continue;
+			}
+			const target = /Target="([^"]+)"/u.exec(relationship)?.[1] ?? '';
+			const part = new URL(target, 'file:///ppt/slides/').pathname.slice(1);
+			if (!zip.file(part)) {
+				dangling.push(`${name} -> ${target}`);
+			}
+		}
+	}
+	return dangling;
 }
 
 /** The sidebar's first button closes Slide Master view. */
@@ -172,6 +263,40 @@ test.describe('slide master view CRUD', () => {
 
 		await expect(pictures).toHaveCount(count);
 		await expect.poll(broken).toBe(0);
+	});
+
+	test('leaves no undo or redo step that puts a slide back on a deleted layout', async ({
+		page,
+	}) => {
+		// Delete Layout only checks the slides as they are now. A slide on the layout in an older
+		// undo step, or in an undone redo step, went back onto it, and the next save wrote a slide
+		// relationship to a part the package no longer has.
+		const { home, spare } = await readLayoutPair(SAMPLE_DECK);
+		await openDeck(page, SAMPLE_DECK);
+		// Slide 1 goes onto the spare layout and back, so an undo step has it on the spare layout.
+		await applyLayout(page, spare);
+		await applyLayout(page, home);
+
+		await enterMasterView(page);
+		await sidebar(page).getByRole('button', { name: spare, exact: true }).click();
+		await expect(crudButton(page, 'deleteLayout')).toBeEnabled();
+		const before = await railEntries(page).count();
+		await crudButton(page, 'deleteLayout').click();
+		await expect(railEntries(page)).toHaveCount(before - 1);
+		await closeMasterView(page);
+
+		// How many steps are left differs by binding (some also restore the masters, so a delete
+		// leaves none); none of them may reach the deleted layout.
+		for (let step = 0; step < 6 && (await undoButton(page).isEnabled()); step++) {
+			await undoButton(page).click();
+			await expectCurrentLayout(page, home);
+		}
+		for (let step = 0; step < 6 && (await redoButton(page).isEnabled()); step++) {
+			await redoButton(page).click();
+			await expectCurrentLayout(page, home);
+		}
+		const saved = await downloadBytes(await savePptxViaBackstage(page));
+		expect(await danglingLayoutRelationships(saved)).toStrictEqual([]);
 	});
 
 	test('a layout a slide uses cannot be deleted', async ({ page }) => {
