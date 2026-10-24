@@ -443,7 +443,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getScale: () => this.renderer.effectiveScale(),
 			getStorage: () => this.options.storage,
 			getHandler: () => this.loading.getHandler(),
-			setHandler: (handler) => this.loading.setHandler(handler),
+			setHandler: (handler, keepPrevious) => this.loading.setHandler(handler, keepPrevious),
 			getUserName: () =>
 				options.authorName || this.optionsController?.getOptions().general.userName,
 			transformCommittedText: (text) =>

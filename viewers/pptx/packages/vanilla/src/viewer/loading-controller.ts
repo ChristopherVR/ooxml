@@ -80,8 +80,10 @@ export interface LoadingController {
 	 * Adopt a handler produced by an IN-SESSION document mutation that returns
 	 * a fresh `PptxHandler` rather than patching the existing one (Slide
 	 * Master view CRUD's `applyMasterViewCrudAction`, which reloads a new ZIP
-	 * built from the current archive). Disposes the previous handler; leaves
-	 * Blob URLs and the load token alone, since this is not a new document.
+	 * built from the current archive). Disposes the previous handler unless
+	 * `keepPrevious` (a master command and a slide paste keep it, since the
+	 * slides on screen still show its pictures); leaves Blob URLs and the load
+	 * token alone, since this is not a new document.
 	 */
 	setHandler(next: PptxHandler, keepPrevious?: boolean): void;
 	/** Invalidate any in-flight load so it discards its result on resolution. */

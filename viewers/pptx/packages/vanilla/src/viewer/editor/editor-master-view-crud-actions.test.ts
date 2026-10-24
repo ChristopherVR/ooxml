@@ -128,7 +128,9 @@ describe('vanilla master-view CRUD action wiring', () => {
 			{ tab: 'slides', masterIndex: 0, layoutIndex: null },
 			{ name: undefined },
 		);
-		expect(setHandler).toHaveBeenCalledWith(newHandler);
+		// The previous handler is kept (`keepPrevious`): the slides and the undo stack still show its
+		// pictures, and disposing it revokes their Blob URLs.
+		expect(setHandler).toHaveBeenCalledExactlyOnceWith(newHandler, true);
 		expect(store.get().masterViewTarget).toStrictEqual({ masterIndex: 0, layoutIndex: 1 });
 		expect(store.get().slideMasters[0]?.layouts).toHaveLength(2);
 		expect(store.get().dirty).toBeTruthy();
