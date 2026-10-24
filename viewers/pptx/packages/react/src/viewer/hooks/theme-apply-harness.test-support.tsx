@@ -6,6 +6,7 @@
  * reset (the parse count, the selection, the slide on screen, the dirty flag, the undo stack) plus
  * the theme and the saved bytes. Test-only: nothing in the package imports it.
  */
+import type { HistoryTheme } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxHandler,
@@ -18,7 +19,7 @@ import React, { act, useCallback, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import type { RibbonGalleryCommands } from '../components/ribbon-gallery-context';
-import type { CanvasSize, EditorHistoryTheme } from '../types';
+import type { CanvasSize } from '../types';
 import { useDeckStyleHost } from './useDeckStyleHost';
 import { useEditorHistory } from './useEditorHistory';
 import type { EditorHistoryResult } from './useEditorHistory';
@@ -94,7 +95,7 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 	const [pointerCommitNonce, setPointerCommitNonce] = useState(0);
 	const parses = useRef(0);
 	const selectionClears = useRef(0);
-	const restoreTheme = useRef<((target: EditorHistoryTheme) => void) | undefined>(undefined);
+	const restoreTheme = useRef<((target: HistoryTheme) => void) | undefined>(undefined);
 	const mediaDataUrls = useMemo(() => new Map<string, string>(), []);
 	const markDocumentDirty = useCallback(() => setIsDirty(true), []);
 	const bumpHistory = useCallback(() => setPointerCommitNonce((nonce) => nonce + 1), []);

@@ -1,5 +1,5 @@
 import { queueThemeWrite } from 'ooxml-ui/pptx';
-import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
+import type { HistoryTheme, ThemeEditorEdit } from 'ooxml-ui/pptx';
 import {
 	buildThemeColorMap,
 	reResolveElementColors,
@@ -22,7 +22,6 @@ import type {
  */
 import type { RefObject } from 'react';
 
-import type { EditorHistoryTheme } from '../types';
 import { applyThemeEditorEdit } from './theme-editor-apply';
 import { restoreHistoryTheme } from './theme-history-restore';
 import type { EditorHistoryResult } from './useEditorHistory';
@@ -70,7 +69,7 @@ export interface ThemeHandlersResult {
 		themeName?: string,
 	) => Promise<void>;
 	/** Undo or redo crossed a theme change: put that theme back (see `useEditorHistory`). */
-	handleRestoreHistoryTheme: (theme: EditorHistoryTheme) => Promise<void>;
+	handleRestoreHistoryTheme: (theme: HistoryTheme) => Promise<void>;
 	handleSetTemplateBackground: (path: string, backgroundColor: string | undefined) => void;
 	handleGetTemplateBackgroundColor: (path: string) => string | undefined;
 	/** Return theme parts discovered in the loaded PPTX archive. */
@@ -251,8 +250,7 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 	};
 
 	const handleApplyThemeEdit = (edit: ThemeEditorEdit) => applyThemeEditorEdit(input, edit);
-	const handleRestoreHistoryTheme = (target: EditorHistoryTheme) =>
-		restoreHistoryTheme(input, target);
+	const handleRestoreHistoryTheme = (target: HistoryTheme) => restoreHistoryTheme(input, target);
 
 	return {
 		handleApplyThemeEdit,
