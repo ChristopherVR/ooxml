@@ -21,10 +21,13 @@ interface DuotonePanelProps {
 }
 
 // ---------------------------------------------------------------------------
-// Debounced colour input (matches InspectorPane's pattern)
+// Colour input that applies the colour the picker settles on (native `change`),
+// once, and adds it to Recent Colors. Focusing it and leaving changes nothing:
+// it used to commit on blur too, which applied black and white to a picture
+// with no duotone and put #000000 in Recent Colors.
 // ---------------------------------------------------------------------------
 
-function DebouncedColorInput({
+function DuotoneColorInput({
 	value,
 	disabled,
 	className,
@@ -53,11 +56,6 @@ function DebouncedColorInput({
 		setLocal(e.target.value);
 	}, []);
 
-	const handleBlur = useCallback(() => {
-		commitRef.current(local);
-		pushColor(local);
-	}, [local, pushColor]);
-
 	const inputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => {
 		const el = inputRef.current;
@@ -80,7 +78,6 @@ function DebouncedColorInput({
 			className={className}
 			value={local}
 			onChange={handleChange}
-			onBlur={handleBlur}
 		/>
 	);
 }
@@ -136,7 +133,7 @@ export function DuotonePanel({
 			<div className='flex items-center gap-3'>
 				<label className='flex items-center gap-1.5'>
 					<span className='text-muted-foreground'>{t('pptx.image.duotoneShadows')}</span>
-					<DebouncedColorInput
+					<DuotoneColorInput
 						disabled={!canEdit}
 						value={shadowColor}
 						className='h-6 w-8 rounded border border-border bg-transparent cursor-pointer'
@@ -145,7 +142,7 @@ export function DuotonePanel({
 				</label>
 				<label className='flex items-center gap-1.5'>
 					<span className='text-muted-foreground'>{t('pptx.image.duotoneHighlights')}</span>
-					<DebouncedColorInput
+					<DuotoneColorInput
 						disabled={!canEdit}
 						value={highlightColor}
 						className='h-6 w-8 rounded border border-border bg-transparent cursor-pointer'

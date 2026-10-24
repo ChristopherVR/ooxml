@@ -339,3 +339,28 @@ describe('recent colours grow once per committed pick, not per drag tick', () =>
 		}
 	});
 });
+
+describe('a picker focused and left without a pick changes nothing', () => {
+	it.each(CASES)('$name', ({ inputs: count, render }) => {
+		const apply = vi.fn();
+		const pushColor = vi.fn();
+		act(() => {
+			root.render(
+				<RecentColorsProvider value={{ recentColors: [], pushColor }}>
+					{render(apply)}
+				</RecentColorsProvider>,
+			);
+		});
+		const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="color"]'));
+		expect(inputs).toHaveLength(count);
+
+		for (const [index, input] of inputs.entries()) {
+			act(() => {
+				input.focus();
+				input.blur();
+			});
+			expect(apply, `input ${index} applies nothing`).not.toHaveBeenCalled();
+			expect(pushColor, `input ${index} adds no recent colour`).not.toHaveBeenCalled();
+		}
+	});
+});
