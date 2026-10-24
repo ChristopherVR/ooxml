@@ -84,7 +84,7 @@ export interface EditorControllerDeps {
 	/** Host `storage` option: Save / Save As go to `storage.save()` instead of a download. */
 	getStorage?(): import('ooxml-ui/pptx').DocumentStorage | undefined;
 	/** Adopt a handler produced by an in-session mutation (Slide Master view CRUD). */
-	setHandler(handler: PptxHandler): void;
+	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
 	getUserName?: () => string | undefined;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */

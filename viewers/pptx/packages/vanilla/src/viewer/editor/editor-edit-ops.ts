@@ -180,7 +180,7 @@ export interface EditActionsDeps {
 	/** Live handler getter (deck-level theme apply); null before a load. */
 	getHandler(): PptxHandler | null;
 	/** See `MasterViewCrudActionsDeps.setHandler`. */
-	setHandler(handler: PptxHandler): void;
+	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
 	getUserName?: () => string | undefined;
 }

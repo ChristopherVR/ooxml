@@ -46,8 +46,11 @@ export interface MasterViewCrudActionsDeps {
 	store: Store<ViewerState>;
 	ops: Pick<EditorOps, 'pushHistory' | 'commitChange'>;
 	getHandler(): PptxHandler | null;
-	/** Adopt the fresh handler `applyMasterViewCrudAction` returns on success. */
-	setHandler(handler: PptxHandler): void;
+	/**
+	 * Adopt the fresh handler `applyMasterViewCrudAction` returns on success; `keepPrevious` leaves
+	 * the one it replaces undisposed.
+	 */
+	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 }
 
 /**
@@ -180,7 +183,9 @@ export function createMasterViewCrudActions(
 			}
 
 			ops.pushHistory();
-			deps.setHandler(result.handler);
+			// Keep the previous handler alive: the slides on screen and the undo stack still show its
+			// pictures, and disposing it revokes their Blob URLs.
+			deps.setHandler(result.handler, true);
 			const slideMasters = await resolveSlideMasterImages(
 				result.handler,
 				result.data.slideMasters ?? [],
