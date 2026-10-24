@@ -6,13 +6,7 @@
  * map; an undo or redo that crosses a theme change puts them back and writes the parts that differ
  * into the handler's theme parts, so a save after it writes the theme the slides show.
  */
-import {
-	crossedHistoryTheme,
-	historyTheme,
-	loadedThemeName,
-	withHistoryTheme,
-	writeThemeParts,
-} from 'ooxml-ui/pptx';
+import { historyTheme, loadedThemeName, restoreCrossedTheme } from 'ooxml-ui/pptx';
 import type { HistoryTheme } from 'ooxml-ui/pptx';
 
 import type { LoadContentService } from './load-content.service';
@@ -39,16 +33,18 @@ export function restoreLoaderTheme(
 	current: RecordedTheme,
 	target: RecordedTheme,
 ): void {
-	const crossed = crossedHistoryTheme(current.theme, target.theme);
-	if (!loader || !crossed) {
+	if (!loader) {
 		return;
 	}
-	loader.theme.set(withHistoryTheme(loader.theme(), crossed));
-	loader.themeColorMap.set(target.themeColorMap ? { ...target.themeColorMap } : undefined);
-	void writeThemeParts(
-		loader.getHandler(),
+	const theme = restoreCrossedTheme(
+		loader.theme(),
 		current.theme,
-		crossed,
-		loadedThemeName(loader.themeOptions(), loader.slideMasters()[0]?.themePath),
+		target.theme,
+		loader.getHandler(),
+		loadedThemeName(loader.themeOptions(), loader.slideMasters()),
 	);
+	if (theme) {
+		loader.theme.set(theme);
+		loader.themeColorMap.set(target.themeColorMap ? { ...target.themeColorMap } : undefined);
+	}
 }
