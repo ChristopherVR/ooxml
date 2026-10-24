@@ -45,6 +45,8 @@ import type { PptxElement, PptxHeaderFooter, PptxSection, PptxSlide } from 'pptx
 import { computeAlign, computeDistribute } from './align-distribute';
 import type { AlignMode, DistributeMode } from './align-distribute';
 import { controllerSignal } from './controller-signal';
+import { recordLoaderTheme, restoreLoaderTheme } from './editor-history-theme';
+import type { RecordedTheme } from './editor-history-theme';
 import { createEditorSectionOperations } from './editor-section-operations';
 import {
 	bringForward,
@@ -70,9 +72,10 @@ const DUPLICATE_OFFSET = 12;
 /**
  * A complete editor snapshot recorded on the undo/redo stack: the editable
  * (template-free) deck plus the separated template store, so undoing a template
- * edit restores the template store alongside the slides.
+ * edit restores the template store alongside the slides, and the loader's theme,
+ * so undoing a theme pick puts the theme back too.
  */
-interface EditorSnapshot {
+interface EditorSnapshot extends RecordedTheme {
 	slides: readonly PptxSlide[];
 	templateElementsBySlideId: TemplateElementsBySlideId;
 	sections: readonly PptxSection[];
@@ -262,6 +265,7 @@ export class EditorStateService {
 			templateElementsBySlideId: cloneTemplateElementsBySlideId(this.templateElementsBySlideId()),
 			sections: structuredClone(this.sections()),
 			headerFooter: structuredClone(this.headerFooter()),
+			...recordLoaderTheme(this.loader),
 		};
 	}
 
@@ -569,8 +573,10 @@ export class EditorStateService {
 	// ── Undo / redo ──────────────────────────────────────────────────────────
 
 	undo(): void {
-		const result = this.history.undo(this.captureSnapshot());
+		const current = this.captureSnapshot();
+		const result = this.history.undo(current);
 		if (result) {
+			restoreLoaderTheme(this.loader, current, result.snapshot);
 			this.restoreSnapshot(result.snapshot);
 			this.dirty.set(true);
 			this.selectedIds.set([]);
@@ -578,8 +584,10 @@ export class EditorStateService {
 	}
 
 	redo(): void {
-		const result = this.history.redo(this.captureSnapshot());
+		const current = this.captureSnapshot();
+		const result = this.history.redo(current);
 		if (result) {
+			restoreLoaderTheme(this.loader, current, result.snapshot);
 			this.restoreSnapshot(result.snapshot);
 			this.dirty.set(true);
 			this.selectedIds.set([]);
