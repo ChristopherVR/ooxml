@@ -103,3 +103,25 @@ describe('syncGoogleWebfontsLink', () => {
 		removeGoogleWebfontsLink(document);
 	});
 });
+
+describe('resolveWebfontHref googleFonts host policy', () => {
+	it('returns null and fetches nothing when googleFonts is false', async () => {
+		const fetch = vi.fn();
+		vi.stubGlobal('fetch', fetch);
+		expect(await resolveWebfontHref([slide(textEl('ADLaM Display'))], [], false)).toBeNull();
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it('builds the href on a self-hosted mirror', async () => {
+		const href = await resolveWebfontHref([slide(textEl('ADLaM Display'))], [], {
+			baseUrl: 'https://fonts.example.test/css2',
+		});
+		expect(href?.startsWith('https://fonts.example.test/css2?')).toBe(true);
+		expect(href).not.toContain('googleapis');
+	});
+
+	it('keeps the Google Fonts default when googleFonts is unset', async () => {
+		const href = await resolveWebfontHref([slide(textEl('ADLaM Display'))], [], undefined);
+		expect(href?.startsWith('https://fonts.googleapis.com/css2?')).toBe(true);
+	});
+});

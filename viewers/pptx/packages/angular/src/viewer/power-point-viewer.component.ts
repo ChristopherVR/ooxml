@@ -61,6 +61,7 @@ import {
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	InlineTextDraft,
@@ -1689,6 +1690,16 @@ export class PowerPointViewerComponent
 	 */
 	readonly initialSlide = input<number | undefined>(undefined);
 	/**
+	 * Google Fonts fallback for deck fonts that are neither installed nor
+	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * `false`: no request goes to Google (`fonts.googleapis.com` or
+	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
+	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts
+	 * CSS2 API instead, so the user's browser never contacts Google. An
+	 * invalid `baseUrl` disables the fallback (with a console warning).
+	 */
+	readonly googleFonts = input<GoogleFontsOption | undefined>(undefined);
+	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
 	 * and read-only banners, the mobile toolbar and the status bar. Default
 	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
@@ -2758,7 +2769,11 @@ export class PowerPointViewerComponent
 		// installed nor embedded (Microsoft 365 "cloud fonts" have no browser
 		// equivalent).
 		effect(() => {
-			this.googleWebfonts.sync(this.mergedSlides(), this.loader.embeddedFonts());
+			this.googleWebfonts.sync(
+				this.mergedSlides(),
+				this.loader.embeddedFonts(),
+				this.googleFonts(),
+			);
 		});
 
 		// Feed the live deck (templates merged back) to the accessibility checker.

@@ -8,6 +8,7 @@ import type {
 	CollaborationState,
 	CollaborationTransport,
 	DocumentStorage,
+	GoogleFontsOption,
 	ConnectionStatus,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
@@ -124,6 +125,16 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	accountAuth?: AccountAuthConfig;
 	/** Slide shown after load (0-based, clamped). Default 0. */
 	initialSlide?: number;
+	/**
+	 * Google Fonts fallback for deck fonts that are neither installed nor
+	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * `false`: no request goes to Google (`fonts.googleapis.com` or
+	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
+	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts
+	 * CSS2 API instead, so the user's browser never contacts Google. An
+	 * invalid `baseUrl` disables the fallback (with a console warning).
+	 */
+	googleFonts?: GoogleFontsOption;
 	/** Show the thumbnail sidebar. Default true. */
 	showThumbnails?: boolean;
 	/** Show the navigation/zoom toolbar. Default true. */

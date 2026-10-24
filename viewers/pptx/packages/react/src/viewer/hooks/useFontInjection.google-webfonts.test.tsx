@@ -8,6 +8,7 @@ import { resetGoogleWebfontSessionCache } from 'ooxml-ui/pptx';
  * lists the family, and must not when the deck embeds it itself or the
  * catalogue does not know it. Nothing may reach the network.
  */
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -64,14 +65,34 @@ function slide(...elements: PptxElement[]): PptxSlide {
 	} as unknown as PptxSlide;
 }
 
-function Probe({ slides, fonts }: { slides: PptxSlide[]; fonts: PptxEmbeddedFont[] }): null {
-	useFontInjection({ embeddedFonts: fonts, slides });
+function Probe({
+	slides,
+	fonts,
+	googleFonts,
+}: {
+	slides: PptxSlide[];
+	fonts: PptxEmbeddedFont[];
+	googleFonts?: GoogleFontsOption;
+}): null {
+	useFontInjection({ embeddedFonts: fonts, slides, googleFonts });
 	return null;
 }
 
-function render(slides: PptxSlide[], fonts: PptxEmbeddedFont[]): void {
+function render(
+	slides: PptxSlide[],
+	fonts: PptxEmbeddedFont[],
+	googleFonts?: GoogleFontsOption,
+): void {
 	act(() => {
-		root.render(<Probe slides={slides} fonts={fonts} />);
+		root.render(<Probe slides={slides} fonts={fonts} googleFonts={googleFonts} />);
+	});
+}
+
+async function settle(): Promise<void> {
+	await act(async () => {
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
 	});
 }
 
@@ -205,5 +226,51 @@ describe('useFontInjection google webfonts fallback', () => {
 		const css = document.getElementById('pptx-embedded-fonts')?.textContent ?? '';
 		expect([...css.matchAll(/font-weight: (\d+)/g)].map((m) => m[1])).toStrictEqual(['300', '700']);
 		expect(document.getElementById(LINK_ID)).toBeNull();
+	});
+});
+
+describe('useFontInjection googleFonts host policy', () => {
+	it('injects no link and fetches nothing when googleFonts is false', async () => {
+		const fetch = vi.fn();
+		vi.stubGlobal('fetch', fetch);
+		render([slide(textEl('ADLaM Display'))], [], false);
+		await settle();
+		expect(document.getElementById(LINK_ID)).toBeNull();
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it('points the link at a self-hosted mirror', async () => {
+		stubNetwork();
+		render([slide(textEl('ADLaM Display'))], [], { baseUrl: 'https://fonts.example.test/css2' });
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		const href = document.getElementById(LINK_ID)?.getAttribute('href') ?? '';
+		expect(href.startsWith('https://fonts.example.test/css2?')).toBe(true);
+		expect(href).toContain('family=ADLaM%20Display');
+		expect(href).not.toContain('googleapis');
+	});
+
+	it('removes an injected link when the host switches googleFonts to false', async () => {
+		stubNetwork();
+		render([slide(textEl('ADLaM Display'))], []);
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		render([slide(textEl('ADLaM Display'))], [], false);
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).toBeNull());
+	});
+
+	it('keeps the link untouched when an equal inline mirror object is passed again', async () => {
+		stubNetwork();
+		const slides = [slide(textEl('ADLaM Display'))];
+		const fonts: PptxEmbeddedFont[] = [];
+		render(slides, fonts, { baseUrl: 'https://fonts.example.test/css2' });
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		const link = document.getElementById(LINK_ID);
+		const mutations: MutationRecord[] = [];
+		const observer = new MutationObserver((records) => mutations.push(...records));
+		observer.observe(document.head, { childList: true, attributes: true, subtree: true });
+		render(slides, fonts, { baseUrl: 'https://fonts.example.test/css2' });
+		await settle();
+		observer.disconnect();
+		expect(mutations).toHaveLength(0);
+		expect(document.getElementById(LINK_ID)).toBe(link);
 	});
 });

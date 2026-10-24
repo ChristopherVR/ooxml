@@ -1,4 +1,9 @@
-import { resolveGoogleWebfontHref, syncGoogleWebfontStylesheet } from 'ooxml-ui/pptx';
+import {
+	resolveGoogleFontsCss2Base,
+	resolveGoogleWebfontHref,
+	syncGoogleWebfontStylesheet,
+} from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 
 /**
@@ -18,12 +23,21 @@ import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 /** DOM id of the managed `<link>` element (distinct from the other bindings'). */
 export const SVELTE_GOOGLE_FONTS_LINK_ID = 'pptx-svelte-google-fonts';
 
-/** Resolve the Google Fonts href for a loaded deck (`null` when nothing needs fetching). */
+/**
+ * Resolve the Google Fonts href for a loaded deck (`null` when nothing needs
+ * fetching, or when the host `googleFonts` policy is `false`).
+ */
 export function resolveWebfontHref(
 	slides: readonly PptxSlide[],
 	embeddedFonts: readonly PptxEmbeddedFont[],
+	googleFonts?: GoogleFontsOption,
 ): Promise<string | null> {
-	return resolveGoogleWebfontHref(slides ?? [], embeddedFonts ?? []);
+	return resolveGoogleWebfontHref(
+		slides ?? [],
+		embeddedFonts ?? [],
+		undefined,
+		resolveGoogleFontsCss2Base(googleFonts),
+	);
 }
 
 /** Create / update / remove the managed `<link>` element to match `href`. */

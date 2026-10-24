@@ -42,6 +42,7 @@ import {
 	resolveAudienceScreenPlacement,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
+	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
@@ -701,7 +702,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// first repaint this state change causes.
 			glyphOutlineFontCache.registerEmbeddedFonts(state.embeddedFonts);
 			const token = ++this.webfontsToken;
-			void resolveGoogleWebfontHref(state.slides, state.embeddedFonts).then((href) => {
+			void resolveGoogleWebfontHref(
+				state.slides,
+				state.embeddedFonts,
+				undefined,
+				resolveGoogleFontsCss2Base(this.options.googleFonts),
+			).then((href) => {
 				if (token !== this.webfontsToken) {
 					return null;
 				}
@@ -822,7 +828,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (candidates.length === 0) {
 			return;
 		}
-		void resolveGoogleWebfontHref(slides, embeddedFonts).then(async (href) => {
+		void resolveGoogleWebfontHref(
+			slides,
+			embeddedFonts,
+			undefined,
+			resolveGoogleFontsCss2Base(this.options.googleFonts),
+		).then(async (href) => {
 			if (token !== this.webfontsToken || !href) {
 				return;
 			}

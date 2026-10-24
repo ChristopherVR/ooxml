@@ -9,8 +9,11 @@ import {
 	isFontFamilyInstalledLocally,
 	findGoogleFontsFamily,
 	findMetricCompatibleGoogleFontsFamily,
+	GOOGLE_FONTS_CSS2_BASE,
 	matchGoogleWebfontFragments,
+	normalizeGoogleFontsBaseUrl,
 	resetGoogleWebfontSessionCache,
+	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
 } from './google-webfonts';
@@ -233,7 +236,80 @@ describe('matchGoogleWebfontFragments', () => {
 	});
 });
 
+describe('resolveGoogleFontsCss2Base', () => {
+	it('keeps the Google Fonts CSS2 API when the option is unset', () => {
+		expect(resolveGoogleFontsCss2Base(undefined)).toBe(GOOGLE_FONTS_CSS2_BASE);
+	});
+
+	it('turns the fallback off for false', () => {
+		expect(resolveGoogleFontsCss2Base(false)).toBeNull();
+	});
+
+	it('uses a valid self-hosted mirror base URL', () => {
+		expect(resolveGoogleFontsCss2Base({ baseUrl: 'https://fonts.example.test/css2' })).toBe(
+			'https://fonts.example.test/css2',
+		);
+		expect(resolveGoogleFontsCss2Base({ baseUrl: ' http://127.0.0.1:8080/css2 ' })).toBe(
+			'http://127.0.0.1:8080/css2',
+		);
+	});
+
+	it('fails closed with one warning for an invalid base URL', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		expect(resolveGoogleFontsCss2Base({ baseUrl: 'ftp://fonts.example.test/css2' })).toBeNull();
+		expect(resolveGoogleFontsCss2Base({ baseUrl: 'ftp://fonts.example.test/css2' })).toBeNull();
+		expect(warn).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('normalizeGoogleFontsBaseUrl', () => {
+	it.each([
+		'',
+		'/css2',
+		'fonts.example.test/css2',
+		'javascript:alert(1)',
+		'data:text/css,body{}',
+		'https://user:secret@fonts.example.test/css2',
+		'https://user@fonts.example.test/css2',
+		'https://fonts.example.test/css2?key=1',
+		'https://fonts.example.test/css2#x',
+	])('rejects %j', (value) => {
+		expect(normalizeGoogleFontsBaseUrl(value)).toBeNull();
+	});
+
+	it('rejects non-string values', () => {
+		expect(normalizeGoogleFontsBaseUrl(undefined)).toBeNull();
+		expect(normalizeGoogleFontsBaseUrl(42)).toBeNull();
+	});
+});
+
 describe('resolveGoogleWebfontHref', () => {
+	it('builds the href on a self-hosted mirror with the same query format', async () => {
+		const base = resolveGoogleFontsCss2Base({ baseUrl: 'https://fonts.example.test/css2' });
+		const href = await resolveGoogleWebfontHref(
+			[slide(textEl('ADLaM Display'))],
+			[],
+			() => false,
+			base,
+		);
+		expect(href).toBe(
+			`https://fonts.example.test/css2?family=${encodeURIComponent('ADLaM Display:ital,wght@0,400;0,700;1,400;1,700')}&display=swap`,
+		);
+	});
+
+	it('resolves nothing and inspects no family when the fallback is off', async () => {
+		const isInstalled = vi.fn(() => false);
+		await expect(
+			resolveGoogleWebfontHref(
+				[slide(textEl('ADLaM Display'))],
+				[],
+				isInstalled,
+				resolveGoogleFontsCss2Base(false),
+			),
+		).resolves.toBeNull();
+		expect(isInstalled).not.toHaveBeenCalled();
+	});
+
 	it('resolves the href for a deck referencing an unembedded served font', async () => {
 		const href = await resolveGoogleWebfontHref([slide(textEl('ADLaM Display'))], []);
 		expect(href).toContain('family=ADLaM%20Display%3Aital');

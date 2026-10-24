@@ -154,3 +154,39 @@ describe('googleWebfontsService', () => {
 		expect(document.getElementById(GOOGLE_WEBFONTS_LINK_ID)).toBeNull();
 	});
 });
+
+describe('googleWebfontsService googleFonts host policy', () => {
+	it('injects no link and fetches nothing when googleFonts is false', async () => {
+		const fetch = vi.fn();
+		vi.stubGlobal('fetch', fetch);
+		const { svc, destroy } = makeService();
+		svc.sync([slide(textEl('ADLaM Display'))], [], false);
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+		expect(document.getElementById(GOOGLE_WEBFONTS_LINK_ID)).toBeNull();
+		expect(fetch).not.toHaveBeenCalled();
+		destroy();
+	});
+
+	it('points the link at a self-hosted mirror', async () => {
+		stubNetwork();
+		const { svc, destroy } = makeService();
+		svc.sync([slide(textEl('ADLaM Display'))], [], { baseUrl: 'https://fonts.example.test/css2' });
+		await vi.waitFor(() => expect(document.getElementById(GOOGLE_WEBFONTS_LINK_ID)).not.toBeNull());
+		const href = document.getElementById(GOOGLE_WEBFONTS_LINK_ID)?.getAttribute('href') ?? '';
+		expect(href.startsWith('https://fonts.example.test/css2?')).toBe(true);
+		expect(href).not.toContain('googleapis');
+		destroy();
+	});
+
+	it('removes the link when a later sync turns googleFonts off', async () => {
+		stubNetwork();
+		const { svc, destroy } = makeService();
+		svc.sync([slide(textEl('ADLaM Display'))], []);
+		await vi.waitFor(() => expect(document.getElementById(GOOGLE_WEBFONTS_LINK_ID)).not.toBeNull());
+		svc.sync([slide(textEl('ADLaM Display'))], [], false);
+		await vi.waitFor(() => expect(document.getElementById(GOOGLE_WEBFONTS_LINK_ID)).toBeNull());
+		destroy();
+	});
+});

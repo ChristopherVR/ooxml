@@ -1,6 +1,7 @@
 import type {
 	CollaborationInput,
 	CollaborationShellState,
+	GoogleFontsOption,
 	ToolbarActionId,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
@@ -31,6 +32,8 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	 * the handle's `goTo` to move an open deck.
 	 */
 	initialSlide?: number;
+	/** As `PowerPointViewer`'s `googleFonts`: the Google Fonts fallback policy (off, or a self-hosted mirror). */
+	googleFonts?: GoogleFontsOption;
 	/** Whether the built-in autosave-to-localStorage recovery timer is active. Defaults to true. */
 	autosaveEnabled?: boolean;
 	/** Display name used as the author for comments. */

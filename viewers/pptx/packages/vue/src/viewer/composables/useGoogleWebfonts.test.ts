@@ -1,4 +1,5 @@
 import { resetGoogleWebfontSessionCache } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 // oxlint-disable react-hooks/rules-of-hooks
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -116,5 +117,48 @@ describe('useGoogleWebfonts', () => {
 
 		stop();
 		expect(document.getElementById(LINK_ID)).toBeNull();
+	});
+});
+
+describe('useGoogleWebfonts googleFonts host policy', () => {
+	it('injects no link and fetches nothing when googleFonts is false', async () => {
+		const fetch = vi.fn();
+		vi.stubGlobal('fetch', fetch);
+		const { stop } = withScope(() =>
+			useGoogleWebfonts(ref([slide(textEl('ADLaM Display'))]), ref([]), () => false),
+		);
+		await nextTick();
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+		expect(document.getElementById(LINK_ID)).toBeNull();
+		expect(fetch).not.toHaveBeenCalled();
+		stop();
+	});
+
+	it('points the link at a self-hosted mirror', async () => {
+		stubNetwork();
+		const { stop } = withScope(() =>
+			useGoogleWebfonts(ref([slide(textEl('ADLaM Display'))]), ref([]), () => ({
+				baseUrl: 'https://fonts.example.test/css2',
+			})),
+		);
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		const href = document.getElementById(LINK_ID)?.getAttribute('href') ?? '';
+		expect(href.startsWith('https://fonts.example.test/css2?')).toBe(true);
+		expect(href).not.toContain('googleapis');
+		stop();
+	});
+
+	it('removes the link when the policy switches to false reactively', async () => {
+		stubNetwork();
+		const policy = ref<GoogleFontsOption | undefined>(undefined);
+		const { stop } = withScope(() =>
+			useGoogleWebfonts(ref([slide(textEl('ADLaM Display'))]), ref([]), policy),
+		);
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).not.toBeNull());
+		policy.value = false;
+		await vi.waitFor(() => expect(document.getElementById(LINK_ID)).toBeNull());
+		stop();
 	});
 });

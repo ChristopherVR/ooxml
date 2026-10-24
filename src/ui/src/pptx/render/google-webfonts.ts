@@ -57,6 +57,73 @@ export { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-
 export const GOOGLE_FONTS_CSS2_BASE = 'https://fonts.googleapis.com/css2';
 
 /**
+ * Host policy for the Google Fonts webfont fallback, the `googleFonts`
+ * prop / input / option of every binding.
+ *
+ * - unset: the fallback requests `fonts.googleapis.com` (the default).
+ * - `false`: the fallback is off. No stylesheet is injected and no outline
+ *   bytes are fetched, so no request reaches `fonts.googleapis.com` or
+ *   `fonts.gstatic.com`; text uses installed, embedded or fallback fonts.
+ * - `{ baseUrl }`: every CSS2 request goes to `baseUrl` instead, with the
+ *   same query format (`?family=...&display=swap`). Font files are whatever
+ *   the mirror's CSS references.
+ */
+export type GoogleFontsOption = false | { readonly baseUrl: string };
+
+/**
+ * Validate a self-hosted CSS2 mirror base URL: it must be an absolute
+ * `http:` or `https:` URL without credentials, query or fragment (the
+ * viewer appends its own query). Returns the normalised URL, or `null`
+ * when it is not acceptable.
+ */
+export function normalizeGoogleFontsBaseUrl(baseUrl: unknown): string | null {
+	if (typeof baseUrl !== 'string' || baseUrl.trim() === '') {
+		return null;
+	}
+	let url: URL;
+	try {
+		url = new URL(baseUrl.trim());
+	} catch {
+		return null;
+	}
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		return null;
+	}
+	if (url.username !== '' || url.password !== '' || url.search !== '' || url.hash !== '') {
+		return null;
+	}
+	return url.href;
+}
+
+const warnedInvalidBaseUrls = new Set<string>();
+
+/**
+ * Resolve a binding's `googleFonts` value to the CSS2 base URL the fallback
+ * requests, or `null` when the fallback is off. An invalid `baseUrl` fails
+ * closed: it warns (once per distinct value) and disables the fallback
+ * rather than silently falling back to Google.
+ */
+export function resolveGoogleFontsCss2Base(option: GoogleFontsOption | undefined): string | null {
+	if (option === undefined) {
+		return GOOGLE_FONTS_CSS2_BASE;
+	}
+	if (option === false) {
+		return null;
+	}
+	const normalized = normalizeGoogleFontsBaseUrl(
+		typeof option === 'object' && option !== null ? option.baseUrl : undefined,
+	);
+	const raw = typeof option === 'object' && option !== null ? String(option.baseUrl) : '';
+	if (normalized === null && !warnedInvalidBaseUrls.has(raw)) {
+		warnedInvalidBaseUrls.add(raw);
+		console.warn(
+			'[pptx-viewer] googleFonts.baseUrl must be an absolute http(s) URL without credentials, query or fragment; the Google Fonts fallback is disabled.',
+		);
+	}
+	return normalized;
+}
+
+/**
  * Axis spec requested for every catalogue family. The API is lenient: it serves
  * only the weights/styles the family actually has (verified for single-style
  * families), so this one fragment is safe to request universally and yields
@@ -260,13 +327,18 @@ export function matchGoogleWebfontFragments(families: readonly string[]): string
  *
  * @param googleFontsBaseUrl - Passed through to {@link buildGoogleFontsHref};
  *   overrides `fonts.googleapis.com` for a self-hosted CSS2 API mirror.
+ *   `null` (see {@link resolveGoogleFontsCss2Base}) disables the fallback:
+ *   the result is always `null` and no family is inspected.
  */
 export async function resolveGoogleWebfontHref(
 	slides: readonly PptxSlide[],
 	embeddedFonts: readonly PptxEmbeddedFont[],
 	isLocallyInstalled: (family: string) => boolean = isFontFamilyInstalledLocally,
-	googleFontsBaseUrl?: string,
+	googleFontsBaseUrl?: string | null,
 ): Promise<string | null> {
+	if (googleFontsBaseUrl === null) {
+		return null;
+	}
 	const referenced = collectReferencedFontFamilies(slides);
 	const candidates = selectGoogleWebfontFamilies(
 		referenced,

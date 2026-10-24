@@ -235,6 +235,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		commitPendingText: () =>
 			options.getRootEl()?.querySelector<HTMLElement>('[data-inline-editor]')?.blur(),
 		getInitialSlide: options.getInitialSlide,
+		getGoogleFonts: () => options.getGoogleFonts?.(),
 		getTranslator: () => options.t,
 		loader,
 		viewer,
