@@ -42,7 +42,11 @@ import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-marke
 import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
-import { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from './shape-geometry';
+import {
+	getResolvedShapeClipPath,
+	getResolvedShapeClipPathFor,
+	isIdentityRectClip,
+} from './shape-geometry';
 import type { StrokeClipJoin } from './stroke-clip-outset';
 import { strokeOnlyPresetPathData } from './stroke-only-preset';
 import { strokeMiterLimit } from './stroke-style';
@@ -294,6 +298,39 @@ function needsCenteredStrokeOverlay(
 }
 
 /**
+ * Whether a closed shape's line is inset (`a:ln/@algn="in"`) on a shape whose
+ * box is clipped to its geometry (anything but a rectangle, a rounded
+ * rectangle or an ellipse, which keep their box and a CSS border).
+ *
+ * The binding's CSS border sits on the bounding box, so under the clip it only
+ * survived where the geometry touches that box: a chevron or a pin drew its
+ * inset line on the straight sides of its box and none on its diagonals. The
+ * overlay paints it along the real outline instead.
+ */
+function insetLineOnClippedShape(
+	element: PptxElement,
+	style: ShapeStyle | undefined,
+	declaredWidth: number,
+): boolean {
+	if (
+		!style ||
+		style.lineAlignment !== 'in' ||
+		declaredWidth <= 0 ||
+		element.type === 'connector' ||
+		element.type === 'picture' ||
+		element.type === 'image' ||
+		!hasStrokePaint(style)
+	) {
+		return false;
+	}
+	const shapeType = getShapeType((element as { shapeType?: string }).shapeType);
+	if (shapeType === 'line' || shapeType === 'roundRect' || shapeType === 'ellipse') {
+		return false;
+	}
+	return !isIdentityRectClip(element) && getResolvedShapeClipPath(element) !== undefined;
+}
+
+/**
  * The width of a centred, solid outline that straddles a clipped shape's edge,
  * or `0` when the shape has none (inset, dashed, absent, or not a closed shape).
  * The geometry cascade widens the shape's clip by this much; a dashed line is
@@ -354,11 +391,12 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 			? (buildSvgStrokeGradientDef(style, element.id) ??
 				buildSvgStrokePatternDef(style, element.id))
 			: undefined;
+	const insetOnClip = !openPresetD && insetLineOnClippedShape(element, style, declaredWidth);
 	const centeredFlatStroke =
 		!paint &&
 		!openPresetD &&
 		(isArrowedCustomPath(element) || needsCenteredStrokeOverlay(element, style, declaredWidth));
-	if (!paint && !openPresetD && !centeredFlatStroke) {
+	if (!paint && !openPresetD && !centeredFlatStroke && !insetOnClip) {
 		return undefined;
 	}
 	const d =
@@ -367,7 +405,10 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 	if (!d) {
 		return undefined;
 	}
-	const strokeWidth = declaredWidth > 0 ? declaredWidth : DEFAULT_OPEN_PRESET_STROKE_WIDTH;
+	const lineWidth = declaredWidth > 0 ? declaredWidth : DEFAULT_OPEN_PRESET_STROKE_WIDTH;
+	// An inset line is stroked at twice its width on the outline and the shape's
+	// exact clip keeps the inner half: precisely the authored line, inside.
+	const strokeWidth = insetOnClip ? lineWidth * 2 : lineWidth;
 	const stroke = paint
 		? svgGradientFillRef(paint)
 		: colorWithOpacity(style?.strokeColor ?? DEFAULT_STROKE_COLOR, style?.strokeOpacity);
@@ -380,7 +421,7 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 		strands: outlineStrands(style?.compoundLine, strokeWidth),
 		dashArray: getSvgStrokeDasharray(
 			normalizeStrokeDashType(style?.strokeDash),
-			Math.max(strokeWidth, 1),
+			Math.max(lineWidth, 1),
 			style?.customDashSegments,
 		),
 		lineCap: svgLineCap(style?.lineCap),

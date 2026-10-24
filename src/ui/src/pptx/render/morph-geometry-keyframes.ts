@@ -15,6 +15,8 @@ import { resolveElementOutline } from './morph-geometry';
 import { interpolateOutline, normalizeOutlinePair } from './morph-geometry-interp';
 import type { MorphAnimationStyle, MorphPair } from './morph-types';
 import { MORPH_EASING } from './morph-types';
+import { outsetClipPathForStroke } from './stroke-clip-outset';
+import { outlineStrokeJoin, straddlingStrokeWidth } from './stroke-outline';
 
 /** Number of intermediate keyframe stops baked into a geometry morph. */
 export const GEOMETRY_MORPH_STEPS = 8;
@@ -72,6 +74,12 @@ function buildClipKeyframeBody(from: PptxElement, to: PptxElement, steps: number
 	if (fromRing.length === 0 || toRing.length === 0) {
 		return null;
 	}
+	// The incoming shape's outline is painted inside this clip, as on the static
+	// slide, so every stop is widened the way the geometry cascade widens the
+	// static clip; an exact clip halved a centred line and cut its corners for
+	// the whole tween, then snapped to full width when the morph ended.
+	const stroke = straddlingStrokeWidth(to);
+	const join = outlineStrokeJoin(to);
 	const lines: string[] = [];
 	for (let s = 0; s <= steps; s++) {
 		const t = s / steps;
@@ -79,8 +87,11 @@ function buildClipKeyframeBody(from: PptxElement, to: PptxElement, steps: number
 		if (!d) {
 			return null;
 		}
+		const clip = `path('${d}')`;
+		const widened =
+			stroke > 0 ? outsetClipPathForStroke(clip, stroke, to.width, to.height, join) : clip;
 		const pct = Number(((s / steps) * 100).toFixed(2));
-		lines.push(`\t${pct}% {\n\t\tclip-path: path('${d}');\n\t}`);
+		lines.push(`\t${pct}% {\n\t\tclip-path: ${widened};\n\t}`);
 	}
 	return lines.join('\n');
 }

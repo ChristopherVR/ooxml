@@ -805,7 +805,12 @@ function flipFactors(el: PptxElement): string {
  *
  * Nothing scales: PowerPoint's dissolve keeps the box exactly where it is.
  *
- * @param elements - Unmatched elements from the outgoing slide.
+ * A copy that another outgoing element stacks almost exactly on top of drops
+ * out the moment the dissolve starts, while the copy above is still opaque
+ * over it, so the pair dissolves away as one object (see
+ * `morph-stacked-copies`).
+ *
+ * @param elements - Unmatched elements from the outgoing slide, in paint order.
  * @param durationMs - Animation duration in milliseconds.
  * @param startIndex - Index offset for unique keyframe naming.
  * @returns An array of fade-out animation style descriptors.
@@ -815,10 +820,23 @@ export function generateUnmatchedFadeOutAnimations(
 	durationMs: number,
 	startIndex: number,
 ): MorphAnimationStyle[] {
+	const covered = coveredStackedCopyIds(elements);
 	return elements.map((el, i) => {
 		const safeName = `pptx-morph-fadeout-${startIndex + i}-${el.id.replace(/[^a-zA-Z0-9]/gu, '')}`;
 		const transform = `\t\ttransform: scale(1)${staticTransformSuffix(el)};`;
-		const keyframes = `
+		const keyframes = covered.has(el.id)
+			? `
+@keyframes ${safeName} {
+\t0%, ${MORPH_FADE_OUT_HOLD_PERCENT}% {
+\t\topacity: ${el.opacity ?? 1};
+${transform}
+\t}
+\t${MORPH_FADE_OUT_HOLD_PERCENT + 0.1}%, 100% {
+\t\topacity: 0;
+${transform}
+\t}
+}`
+			: `
 @keyframes ${safeName} {
 \t0% {
 \t\topacity: ${el.opacity ?? 1};

@@ -2,7 +2,9 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { resolveShapeGeometry } from './shape-geometry-cascade';
+import { generateGeometryMorphAnimation } from './morph-geometry-keyframes';
 import { outsetClipPathForStroke } from './stroke-clip-outset';
+import { buildStrokeOutline, suppressesCssBorder } from './stroke-outline';
 
 /** Whether the point lies in the union of the closed polygons of a flattened `path('...')`. */
 function nonZeroContains(clip: string, x: number, y: number): boolean {
@@ -123,6 +125,80 @@ describe('resolveShapeGeometry stroke outset', () => {
 		for (const extra of [{ strokeDash: 'dash' }, { lineAlignment: 'in' }]) {
 			const geometry = resolveShapeGeometry(marker({ strokeWidth: 2, ...extra }));
 			expect((geometry as { clipPath: string }).clipPath).toBe(exact);
+		}
+	});
+});
+
+describe('geometry morph clip widening', () => {
+	const shape = (id: string, shapeType: string, strokeWidth: number): PptxElement =>
+		({
+			id,
+			type: 'shape',
+			shapeType,
+			x: 0,
+			y: 0,
+			width: 60,
+			height: 40,
+			shapeStyle: { strokeColor: '#000000', strokeWidth, lineJoin: 'miter' },
+		}) as unknown as PptxElement;
+
+	it('widens every baked stop so the outline is not halved mid-tween', () => {
+		const animation = generateGeometryMorphAnimation(
+			{ fromElement: shape('a', 'rect', 4), toElement: shape('b', 'triangle', 4) },
+			1000,
+			0,
+		);
+		const stops = [...(animation?.keyframes ?? '').matchAll(/clip-path: (path\('[^']*'\))/gu)].map(
+			(match) => match[1] as string,
+		);
+		expect(stops.length).toBeGreaterThan(2);
+		for (const stop of stops) {
+			// The outline polygon plus one band and one join piece per vertex.
+			expect(stop.split('M').length - 1).toBeGreaterThan(1);
+		}
+		// Same command structure at every stop, so CSS can interpolate between them.
+		const shapeOf = (clip: string): string => clip.replace(/-?\d*\.?\d+(?:e[-+]?\d+)?/gu, '#');
+		expect(new Set(stops.map(shapeOf)).size).toBe(1);
+	});
+
+	it('keeps the exact outline when there is no centred stroke', () => {
+		const animation = generateGeometryMorphAnimation(
+			{ fromElement: shape('a', 'rect', 0), toElement: shape('b', 'triangle', 0) },
+			1000,
+			0,
+		);
+		for (const match of (animation?.keyframes ?? '').matchAll(/clip-path: path\('([^']*)'\)/gu)) {
+			expect((match[1] as string).split('M').length - 1).toBe(1);
+		}
+	});
+});
+
+describe('inset outlines on clipped shapes', () => {
+	const shape = (shapeType: string): PptxElement =>
+		({
+			id: shapeType,
+			type: 'shape',
+			shapeType,
+			x: 0,
+			y: 0,
+			width: 80,
+			height: 40,
+			shapeStyle: { strokeColor: '#ff0000', strokeWidth: 3, lineAlignment: 'in' },
+		}) as unknown as PptxElement;
+
+	it('strokes the real outline at twice the width so the exact clip keeps the inner line', () => {
+		const outline = buildStrokeOutline(shape('chevron'));
+		expect(outline?.strokeWidth).toBe(6);
+		expect(suppressesCssBorder(shape('chevron'))).toBe(true);
+		// The clip stays exact: widening it would show the outer half too.
+		expect((resolveShapeGeometry(shape('chevron')) as { clipPath: string }).clipPath).not.toMatch(
+			/Z M/u,
+		);
+	});
+
+	it('keeps the CSS border for boxes the border already follows', () => {
+		for (const type of ['rect', 'roundRect', 'ellipse']) {
+			expect(buildStrokeOutline(shape(type))).toBeUndefined();
 		}
 	});
 });

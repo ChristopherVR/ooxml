@@ -236,11 +236,18 @@ describe('buildStrokeOutline stroke-only ("open") presets', () => {
 	});
 
 	it('leaves closed presets to the CSS border only when the line is explicitly inset', () => {
-		for (const shapeType of ['rect', 'ellipse', 'roundRect', 'triangle']) {
+		for (const shapeType of ['rect', 'ellipse', 'roundRect']) {
 			const inset = line({ shapeType, width: 200, height: 120 }, { lineAlignment: 'in' });
 			expect(buildStrokeOutline(inset)).toBeUndefined();
 			expect(suppressesCssBorder(inset)).toBeFalsy();
 		}
+	});
+
+	it('paints an inset line along a clipped outline, which a box border cannot follow', () => {
+		// Under the triangle's clip a CSS border survived only on its base.
+		const inset = line({ shapeType: 'triangle', width: 200, height: 120 }, { lineAlignment: 'in' });
+		expect(buildStrokeOutline(inset)).toBeDefined();
+		expect(suppressesCssBorder(inset)).toBeTruthy();
 	});
 
 	it('centres a closed preset at the default (omitted) alignment instead', () => {

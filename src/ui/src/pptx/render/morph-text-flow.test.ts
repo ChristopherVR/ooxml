@@ -126,3 +126,14 @@ describe('stacked incoming copies', () => {
 		expect(fading?.keyframes).not.toContain('99.9%');
 	});
 });
+
+describe('stacked outgoing copies', () => {
+	it('drops the covered copy as the dissolve starts, while the top copy fades', async () => {
+		const { generateUnmatchedFadeOutAnimations } = await import('./morph-animation');
+		const lower = text('lower', 'L', { x: 428, y: 273, width: 46, height: 87 });
+		const upper = text('upper', 'L', { x: 426, y: 274, width: 46, height: 87 });
+		const [dropped, fading] = generateUnmatchedFadeOutAnimations([lower, upper], 2000, 0);
+		expect(dropped?.keyframes).toMatch(/%, 100% \{\s*opacity: 0;/u);
+		expect(fading?.keyframes).not.toMatch(/%, 100% \{/u);
+	});
+});

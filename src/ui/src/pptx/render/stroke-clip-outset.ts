@@ -250,15 +250,19 @@ export function outsetClipPathForStroke(
 		quads.push(`M ${wound.map(([x, y]) => `${fmt(x)} ${fmt(y)}`).join(' L ')} Z`);
 	};
 	for (const sub of subpaths) {
-		// Drop zero-length segments so every vertex has a real incoming and outgoing direction.
-		const pts = sub.filter((p, k) => {
-			const next = sub[(k + 1) % sub.length] as Point;
-			return Math.hypot(next[0] - p[0], next[1] - p[1]) >= 1e-6;
-		});
+		// Every segment and every vertex emits a fixed number of points, even a
+		// zero-length segment or a straight join, so two outlines with the same
+		// vertex count widen to paths CSS can interpolate between (the baked
+		// geometry morph steps through them).
+		const pts = sub;
+		let last: Point = [0, 0];
 		const normals: Point[] = pts.map((a, k) => {
 			const b = pts[(k + 1) % pts.length] as Point;
 			const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-			return [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+			if (len >= 1e-6) {
+				last = [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+			}
+			return last;
 		});
 		for (let k = 0; k < pts.length; k++) {
 			const a = pts[k] as Point;
@@ -270,14 +274,11 @@ export function outsetClipPathForStroke(
 				[b[0] - nx * half, b[1] - ny * half],
 				[a[0] - nx * half, a[1] - ny * half],
 			]);
-			const piece = joinPiece(b, normals[k] as Point, normals[(k + 1) % pts.length] as Point);
-			if (piece) {
-				push(piece);
-			}
+			push(joinPiece(b, normals[k] as Point, normals[(k + 1) % pts.length] as Point));
 		}
 	}
 	/** The corner a join adds outside the two segment bands meeting at `v`. */
-	function joinPiece(v: Point, n1: Point, n2: Point): Point[] | undefined {
+	function joinPiece(v: Point, n1: Point, n2: Point): Point[] {
 		if (join.join === 'round') {
 			// Circumscribed, so the painted arc never reaches outside the polygon.
 			const r = half / Math.cos(Math.PI / ROUND_JOIN_STEPS);
@@ -289,7 +290,7 @@ export function outsetClipPathForStroke(
 		// The cross product of the normals is that of the directions of travel.
 		const turn = n1[0] * n2[1] - n1[1] * n2[0];
 		if (Math.abs(turn) < 1e-9) {
-			return undefined;
+			return [v, v, v, v];
 		}
 		// The bands leave a gap on the outside of the turn only.
 		const side = turn > 0 ? -1 : 1;
@@ -303,7 +304,7 @@ export function outsetClipPathForStroke(
 			const reach = half / cosHalf / blen;
 			return [v, p1, [v[0] + side * bx * reach, v[1] + side * by * reach], p2];
 		}
-		return [v, p1, p2];
+		return [v, p1, p2, p2];
 	}
 	return `path('${d} ${quads.join(' ')}')`;
 }
