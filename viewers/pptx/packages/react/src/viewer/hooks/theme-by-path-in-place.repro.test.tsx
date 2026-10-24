@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	buildTwoThemesDeck,
+	themePartHeadingFaces,
 	TWO_THEMES,
 } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { flush, flushUntil, live, session, withHarness } from './theme-apply-harness.test-support';
@@ -148,6 +149,25 @@ describe('react theme by path', () => {
 				...LOADED,
 				masters: ['theme1.xml', 'theme1.xml'],
 			});
+		});
+	});
+
+	it('parts that differ in their script faces: Undo writes neither part', async () => {
+		await withHarness(await buildTwoThemesDeck({ scriptFaces: true }), async () => {
+			await openOnSlideTwo();
+			await act(async () => {
+				await live().themeHandlers.handleApplyTheme(theme2.path, false);
+			});
+			await flush();
+			await act(async () => {
+				live().history.handleUndo();
+			});
+			await flush();
+			await expect(themePartHeadingFaces(await live().save())).resolves.toStrictEqual({
+				[theme1.path]: theme1.major,
+				[theme2.path]: theme2.major,
+			});
+			await expect(saved()).resolves.toStrictEqual(LOADED);
 		});
 	});
 });

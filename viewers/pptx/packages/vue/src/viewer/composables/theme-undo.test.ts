@@ -24,8 +24,10 @@ import { effectScope, ref, shallowRef } from 'vue';
 
 import {
 	buildTwoThemesDeck,
+	themePartHeadingFaces,
 	TWO_THEMES,
 } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
+import type { TwoThemesDeckOptions } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { useDeckStyleHost } from './useDeckStyleHost';
 import { useEditorHistory } from './useEditorHistory';
 import { useInspectorDeckActions } from './useInspectorDeckActions';
@@ -190,8 +192,8 @@ describe('vue theme undo', () => {
  * 1 blue; slide 3 on master 2, "Ember", accent 1 red), wired the way `PowerPointViewer.vue` wires
  * the inspector's deck actions and the history.
  */
-async function openTwoThemes() {
-	const bytes = await buildTwoThemesDeck();
+async function openTwoThemes(options?: TwoThemesDeckOptions) {
+	const bytes = await buildTwoThemesDeck(options);
 	const handler = new PptxHandler();
 	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
 	const partition = partitionTemplateElements(data.slides);
@@ -253,6 +255,9 @@ async function openTwoThemes() {
 			accents: [await accent(TWO_THEMES.theme1.path), await accent(TWO_THEMES.theme2.path)],
 		};
 	};
+	/** Each theme part's heading face, as a save writes it now. */
+	const faces = async () =>
+		themePartHeadingFaces(await saveDeckWithPassword(handler, slides.value, {}, null));
 	return {
 		...parts,
 		slides,
@@ -264,6 +269,7 @@ async function openTwoThemes() {
 		scope,
 		accents,
 		saved,
+		faces,
 	};
 }
 
@@ -332,6 +338,18 @@ describe('vue theme by path', () => {
 			theme2.path,
 		]);
 		deck.history.undo();
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
+		deck.scope.stop();
+	});
+
+	it('parts that differ in their script faces: Undo writes neither part', async () => {
+		const deck = await openTwoThemes({ scriptFaces: true });
+		await deck.actions.applyThemeByPath(theme2.path, false);
+		deck.history.undo();
+		await expect(deck.faces()).resolves.toStrictEqual({
+			[theme1.path]: theme1.major,
+			[theme2.path]: theme2.major,
+		});
 		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 		deck.scope.stop();
 	});

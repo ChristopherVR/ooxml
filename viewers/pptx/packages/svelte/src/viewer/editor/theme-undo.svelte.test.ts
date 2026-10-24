@@ -17,8 +17,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	buildTwoThemesDeck,
+	themePartHeadingFaces,
 	TWO_THEMES,
 } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
+import type { TwoThemesDeckOptions } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { createRibbonGalleryHost } from '../components/ribbon/galleries/ribbon-gallery-host';
 import { createInspectorDeckActions } from '../state/inspector-deck';
 import type { PresentationLoader } from '../state/presentation-loader.svelte';
@@ -141,8 +143,8 @@ describe('svelte theme undo', () => {
  * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
  * 1 blue; slide 3 on master 2, "Ember", accent 1 red), through the inspector's deck actions.
  */
-async function openTwoThemes() {
-	const bytes = await buildTwoThemesDeck();
+async function openTwoThemes(options?: TwoThemesDeckOptions) {
+	const bytes = await buildTwoThemesDeck(options);
 	const handler = new PptxHandler();
 	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
 	// Slide 2 is on screen.
@@ -188,7 +190,9 @@ async function openTwoThemes() {
 			accents: [await accent(TWO_THEMES.theme1.path), await accent(TWO_THEMES.theme2.path)],
 		};
 	};
-	return { editor, loader, actions, accents, saved };
+	/** Each theme part's heading face, as File > Save writes it now. */
+	const faces = async () => themePartHeadingFaces(await editor.save());
+	return { editor, loader, actions, accents, saved, faces };
 }
 
 describe('svelte theme by path', () => {
@@ -252,6 +256,17 @@ describe('svelte theme by path', () => {
 		expect(deck.editor.slides[0]).toBe(first);
 		expect(deck.editor.slides[1]).toBe(second);
 		deck.editor.undo();
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
+	});
+
+	it('parts that differ in their script faces: Undo writes neither part', async () => {
+		const deck = await openTwoThemes({ scriptFaces: true });
+		await deck.actions.applyThemeByPath(theme2.path, false);
+		deck.editor.undo();
+		await expect(deck.faces()).resolves.toStrictEqual({
+			[theme1.path]: theme1.major,
+			[theme2.path]: theme2.major,
+		});
 		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 	});
 });

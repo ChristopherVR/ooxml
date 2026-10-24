@@ -19,8 +19,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
 	buildTwoThemesDeck,
+	themePartHeadingFaces,
 	TWO_THEMES,
 } from '../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
+import type { TwoThemesDeckOptions } from '../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { dispatchGalleryResult } from './ribbon-gallery-helpers';
@@ -154,8 +156,8 @@ describe('angular theme undo', () => {
  * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
  * 1 blue; slide 3 on master 2, "Ember", accent 1 red), through the inspector's theme card.
  */
-async function openTwoThemes() {
-	const bytes = await buildTwoThemesDeck();
+async function openTwoThemes(options?: TwoThemesDeckOptions) {
+	const bytes = await buildTwoThemesDeck(options);
 	const handler = new PptxHandler();
 	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
 	const destroyRefStub: Pick<DestroyRef, 'onDestroy'> = { onDestroy: () => () => {} };
@@ -211,7 +213,12 @@ async function openTwoThemes() {
 			accents: [await accent(TWO_THEMES.theme1.path), await accent(TWO_THEMES.theme2.path)],
 		};
 	};
-	return { editor, loader, apply, accents, masterThemes, saved };
+	/** Each theme part's heading face, as File > Save writes it now. */
+	const faces = async () => {
+		const slides = buildSaveSlides(editor.slides(), editor.templateElementsBySlideId());
+		return themePartHeadingFaces(await saveDeckWithPassword(handler, slides, {}, null));
+	};
+	return { editor, loader, apply, accents, masterThemes, saved, faces };
 }
 
 describe('angular theme by path', () => {
@@ -263,6 +270,17 @@ describe('angular theme by path', () => {
 		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
 		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
 		deck.editor.undo();
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
+	});
+
+	it('parts that differ in their script faces: Undo writes neither part', async () => {
+		const deck = await openTwoThemes({ scriptFaces: true });
+		await deck.apply(theme2.path, false);
+		deck.editor.undo();
+		await expect(deck.faces()).resolves.toStrictEqual({
+			[theme1.path]: theme1.major,
+			[theme2.path]: theme2.major,
+		});
 		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 	});
 });
