@@ -2,8 +2,10 @@ import {
 	applyImagePathPatches,
 	applyMasterViewCrudAction,
 	collectImagePaths,
+	historyStepUsesParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
 import type { MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
 /**
@@ -44,7 +46,7 @@ export interface MasterViewCrudActionsDeps {
 	/** Live getter, not a snapshot: a `setLocale` switch must reach the next call. */
 	getTranslator(): Translator;
 	store: Store<ViewerState>;
-	ops: Pick<EditorOps, 'pushHistory' | 'commitChange'>;
+	ops: Pick<EditorOps, 'pushHistory' | 'commitChange' | 'history'>;
 	getHandler(): PptxHandler | null;
 	/**
 	 * Adopt the fresh handler `applyMasterViewCrudAction` returns on success; `keepPrevious` leaves
@@ -199,6 +201,12 @@ export function createMasterViewCrudActions(
 				selectedElementId: null,
 				selectedElementIds: [],
 			});
+			// A step restores the masters too, so every step taken before a delete still holds what it
+			// removed, and goes.
+			const removed = removedSlideMasterParts(data, result.data);
+			if (removed.length > 0) {
+				ops.history.forget((step) => historyStepUsesParts(step, removed));
+			}
 			ops.commitChange();
 		},
 	};

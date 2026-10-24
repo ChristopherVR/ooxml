@@ -1,5 +1,5 @@
 import type { MasterViewCrudAction, MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
-import type { PptxHandler } from 'pptx-viewer-core';
+import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
@@ -7,6 +7,7 @@ import { createInitialViewerState, createStore } from '../state';
 import type { Store, ViewerState } from '../state';
 import { createMasterViewCrudActions } from './editor-master-view-crud-actions';
 import { createEditorOps } from './editor-operations';
+import type { EditorOps } from './editor-operations';
 
 const { applyMasterViewCrudAction, masterViewCrudActions } = vi.hoisted(() => ({
 	applyMasterViewCrudAction: vi.fn(),
@@ -33,6 +34,7 @@ function harness(overrides: Partial<ViewerState> = {}): {
 	prompt: ReturnType<typeof vi.fn>;
 	alert: ReturnType<typeof vi.fn>;
 	run: (id: MasterViewCrudActionId) => Promise<void>;
+	ops: EditorOps;
 } {
 	const store = createStore<ViewerState>({
 		...createInitialViewerState(),
@@ -56,7 +58,7 @@ function harness(overrides: Partial<ViewerState> = {}): {
 		getHandler: () => handler,
 		setHandler,
 	});
-	return { store, setHandler, handler, prompt, alert, run: actions.runMasterViewCrudAction };
+	return { store, setHandler, handler, prompt, alert, run: actions.runMasterViewCrudAction, ops };
 }
 
 function stubActionList(id: string, enabled = true): void {
@@ -185,5 +187,69 @@ describe('vanilla master-view CRUD action wiring', () => {
 		await run('deleteLayout');
 
 		expect(alert).toHaveBeenCalledOnce();
+	});
+
+	it('leaves no undo or redo step that brings a deleted layout back', async () => {
+		const home = 'layout-1';
+		const spare = 'layout-2';
+		const master = { path: 'master-1', name: 'Corporate', elements: [] };
+		const { run, store, ops } = harness({
+			slideMasters: [
+				{
+					...master,
+					layouts: [
+						{ path: home, name: 'Title', elements: [] },
+						{ path: spare, name: 'Blank', elements: [] },
+					],
+				},
+			],
+			slides: [{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [], layoutPath: home }],
+			masterViewTarget: { masterIndex: 0, layoutIndex: 1 },
+		});
+		const edit = (label: string, patch: Partial<PptxSlide>) => {
+			ops.pushHistory(label);
+			store.set({ slides: [{ ...store.get().slides[0]!, ...patch }] });
+			ops.commitChange();
+		};
+		const reachesSpare = () =>
+			store.get().slides.some((slide) => slide.layoutPath === spare) ||
+			store
+				.get()
+				.slideMasters.some((entry) =>
+					(entry.layouts ?? []).some((layout) => layout.path === spare),
+				);
+		// The spare layout is in an undo step (before 'two') and, once 'four' is undone, in the
+		// redo step, but no slide uses it now.
+		edit('one', { layoutPath: spare });
+		edit('two', { layoutPath: home });
+		edit('three', { backgroundColor: '#FF0000' });
+		edit('four', { layoutPath: spare });
+		ops.undo();
+		expect(store.get().slides[0]?.layoutPath).toBe(home);
+		stubActionList('deleteLayout');
+		applyMasterViewCrudAction.mockResolvedValue({
+			ok: true,
+			handler: { getImageData: vi.fn() } as unknown as PptxHandler,
+			data: {
+				slideMasters: [{ ...master, layouts: [{ path: home, name: 'Title', elements: [] }] }],
+			},
+			target: { tab: 'slides', masterIndex: 0, layoutIndex: null },
+		});
+
+		await run('deleteLayout');
+
+		expect(reachesSpare()).toBeFalsy();
+		const reached: boolean[] = [];
+		for (let step = 0; step < 6; step++) {
+			ops.undo();
+			reached.push(reachesSpare());
+		}
+		for (let step = 0; step < 6; step++) {
+			ops.redo();
+			reached.push(reachesSpare());
+		}
+		expect(reached).not.toContain(true);
+		// Every step here also restores the masters, and they all still hold the spare layout.
+		expect([ops.canUndo(), ops.canRedo()]).toStrictEqual([false, false]);
 	});
 });
