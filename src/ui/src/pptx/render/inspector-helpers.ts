@@ -10,12 +10,14 @@ import type {
 	PlaceholderDefaults,
 	PptxElement,
 	PptxThemeColorRef,
+	ShapeStyle,
 	TextStyle,
 } from 'ooxml-core/pptx';
 import { hasShapeProperties, hasTextProperties } from 'ooxml-core/pptx';
 import { textRunsStylePatch } from 'ooxml-core/pptx/editor/render/text-runs-style-patch';
 
 import { mergeTextStyleUpdate } from './font-family-update';
+import { shapeOutlineChange } from './ribbon-home-commands';
 import { textStyleFlagsOf } from './selection-format-state';
 import { textFontSizePxToPt } from './text-format-presets';
 import { paragraphOverridePatch, withExclusiveLineSpacing } from './text-style-scope';
@@ -130,6 +132,29 @@ export function shapeStylePatch(el: PptxElement, changes: ShapeStyleChanges): Pa
 			...changes,
 		},
 	} as Partial<PptxElement>;
+}
+
+/**
+ * The style change a line colour pick makes on `el`: `shapeOutlineChange`
+ * against the element's own style, so a pick on a shape whose line does not
+ * show also turns the line on. Pass `ref` for a theme-swatch pick; omit it to
+ * clear a previously-stored ref.
+ */
+export function strokeColorChange(
+	el: PptxElement,
+	hex: string,
+	ref?: PptxThemeColorRef,
+): Partial<ShapeStyle> {
+	return shapeOutlineChange(hex, ref, hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {});
+}
+
+/** The patch a line colour pick makes on `el`: {@link strokeColorChange} in its `shapeStyle`. */
+export function strokeColorPatch(
+	el: PptxElement,
+	hex: string,
+	ref?: PptxThemeColorRef,
+): Partial<PptxElement> {
+	return shapeStylePatch(el, strokeColorChange(el, hex, ref));
 }
 
 /**
