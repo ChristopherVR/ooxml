@@ -53,6 +53,14 @@ export class EditorHistoryState {
 		this.controller.clear();
 	}
 
+	/**
+	 * Drop the undo and redo steps that would bring back a state `reaches` matches, with the steps
+	 * behind them: a Slide Master view command removed a layout the package cannot get back.
+	 */
+	forget(reaches: (snapshot: EditorSnapshot) => boolean): void {
+		this.controller.forget(reaches);
+	}
+
 	undo(current: EditorSnapshot): EditorSnapshot | undefined {
 		return this.controller.undo(current)?.snapshot;
 	}
