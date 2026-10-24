@@ -36,7 +36,6 @@ import { InspectorFields } from './InspectorFields';
 import { Text3DProperties } from './properties/Text3DProperties';
 import { RecentColorsProvider } from './RecentColorsContext';
 import { TableCellAdvancedFill } from './TableCellAdvancedFill';
-import { GradientControls, PatternControls } from './TableCellFillSubControls';
 import { TableCellPatternFill } from './TableCellPatternFill';
 import { TextEffectsPanel } from './TextEffectsPanel';
 import { AdvancedTextFormatting } from './TextPropertiesHelpers';
@@ -253,22 +252,6 @@ const CASES: Case[] = [
 		name: 'TableCellPatternFill',
 		inputs: 2,
 		render: (apply) => <TableCellPatternFill cellStyle={{}} canEdit onUpdateCellStyle={apply} />,
-	},
-	{
-		name: 'TableCellFillSubControls GradientControls',
-		inputs: 2,
-		render: (apply) => (
-			<GradientControls
-				cellStyle={{ gradientFillStops: stops } as PptxTableCellStyle}
-				canEdit
-				onUpdateCellStyle={apply}
-			/>
-		),
-	},
-	{
-		name: 'TableCellFillSubControls PatternControls',
-		inputs: 2,
-		render: (apply) => <PatternControls cellStyle={{}} canEdit onUpdateCellStyle={apply} />,
 	},
 	{
 		name: 'TextEffectsPanel',
