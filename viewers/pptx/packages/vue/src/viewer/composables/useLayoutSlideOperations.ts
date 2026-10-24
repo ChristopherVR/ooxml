@@ -26,7 +26,11 @@ export function useLayoutSlideOperations(input: Input) {
 		if (!h || !target) {
 			return;
 		}
-		const updated = await h.applyLayoutToSlide(index, layoutPath, slides.value).catch(() => null);
+		// The core replaces the slide in the array it is given: a copy keeps `slides` as it was until
+		// the history step below records it.
+		const updated = await h
+			.applyLayoutToSlide(index, layoutPath, slides.value.slice())
+			.catch(() => null);
 		if (!updated || slides.value[index]?.id !== target.id) {
 			return;
 		}
@@ -68,7 +72,7 @@ export function useLayoutSlideOperations(input: Input) {
 			return;
 		}
 		const updated = await h
-			.applyLayoutToSlide(insertAt, layoutPath, slides.value)
+			.applyLayoutToSlide(insertAt, layoutPath, slides.value.slice())
 			.catch(() => null);
 		if (!updated || updated.id !== draft.id || slides.value[insertAt]?.id !== draft.id) {
 			return;
