@@ -1,5 +1,5 @@
 import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxSlide, PptxThemeColorScheme } from 'pptx-viewer-core';
+import type { PptxElement, PptxHandler, PptxSlide, PptxThemeColorScheme } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createGalleryActions } from '../../../editor/editor-gallery-actions';
@@ -166,7 +166,7 @@ describe('ribbon gallery (vanilla)', () => {
 			selectedElementIds: ['s1'],
 		});
 		const ops = { pushHistory: vi.fn(), commitChange: vi.fn() };
-		const actions = createGalleryActions({ store, ops, deck: { applyThemeEdit: vi.fn() } });
+		const actions = createGalleryActions({ store, ops });
 		const hub = createRibbonGalleryHub((result) => actions.applyRibbonGalleryResult(result));
 		const gallery = createRibbonGallery(
 			document,
@@ -186,16 +186,31 @@ describe('ribbon gallery (vanilla)', () => {
 		expect(updated.id).toBe('s1');
 	});
 
-	it('routes theme scheme picks to the theme editing path', () => {
-		const store = createStore({ ...createInitialViewerState(), editable: true });
-		const applyThemeEdit = vi.fn();
+	it('commits a theme scheme pick through the shared Design gallery commit', async () => {
+		// The theme editor's path wrote all three parts and named the theme after the scheme ("Blue").
+		const store = createStore({
+			...createInitialViewerState(),
+			editable: true,
+			themeName: 'Office Theme',
+		});
+		const ops = { pushHistory: vi.fn(), commitChange: vi.fn() };
+		const handler = {
+			applyTheme: vi.fn(async () => {}),
+			updateThemeColorScheme: vi.fn(async () => {}),
+			updateThemeFontScheme: vi.fn(async () => {}),
+		};
 		const actions = createGalleryActions({
 			store,
-			ops: { pushHistory: vi.fn(), commitChange: vi.fn() },
-			deck: { applyThemeEdit },
+			ops,
+			getHandler: () => handler as unknown as PptxHandler,
 		});
 		const colorScheme = { ...colorMap } as unknown as PptxThemeColorScheme;
 		actions.applyRibbonGalleryResult({ kind: 'themeColorScheme', colorScheme, name: 'Blue' });
-		expect(applyThemeEdit).toHaveBeenCalledWith({ colorScheme, fontScheme: {}, name: 'Blue' });
+		await vi.waitFor(() => expect(ops.commitChange).toHaveBeenCalledOnce());
+		expect(handler.updateThemeColorScheme).toHaveBeenCalledExactlyOnceWith(colorScheme);
+		expect(handler.applyTheme).not.toHaveBeenCalled();
+		expect(ops.pushHistory).toHaveBeenCalledOnce();
+		expect(store.get().colorScheme).toStrictEqual(colorScheme);
+		expect(store.get().themeName).toBe('Office Theme');
 	});
 });

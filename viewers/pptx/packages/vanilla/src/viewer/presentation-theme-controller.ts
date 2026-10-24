@@ -1,4 +1,9 @@
-import { buildSaveSlides, GALLERY_THEME_PRESETS, partitionTemplateElements } from 'ooxml-ui/pptx';
+import {
+	buildSaveSlides,
+	GALLERY_THEME_PRESETS,
+	partitionTemplateElements,
+	queueThemeWrite,
+} from 'ooxml-ui/pptx';
 
 import type { EditorController } from './editor';
 import type { LoadingController } from './loading-controller';
@@ -21,15 +26,18 @@ export async function applyPresentationThemePreset(options: {
 		return false;
 	}
 	const state = options.store.get();
-	const updated = await handler.switchThemePreset(
-		{
-			slides: buildSaveSlides(state.slides, state.templateElementsBySlideId),
-			width: state.canvasSize.width,
-			height: state.canvasSize.height,
-			themeColorMap: state.colorScheme ? { ...state.colorScheme } : undefined,
-			theme: { colorScheme: state.colorScheme },
-		},
-		preset,
+	// Writes the theme part, on the handler's theme write queue (a save waits for it).
+	const updated = await queueThemeWrite(handler, () =>
+		handler.switchThemePreset(
+			{
+				slides: buildSaveSlides(state.slides, state.templateElementsBySlideId),
+				width: state.canvasSize.width,
+				height: state.canvasSize.height,
+				themeColorMap: state.colorScheme ? { ...state.colorScheme } : undefined,
+				theme: { colorScheme: state.colorScheme },
+			},
+			preset,
+		),
 	);
 	const partition = partitionTemplateElements(updated.slides);
 	options.editor.commitSlides(partition.slides, state.currentSlide);

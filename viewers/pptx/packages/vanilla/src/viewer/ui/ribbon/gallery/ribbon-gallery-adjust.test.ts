@@ -62,7 +62,7 @@ describe('picture adjust galleries (vanilla)', () => {
 				selectedElementIds: ['p1'],
 			});
 			const ops = { pushHistory: vi.fn(), commitChange: vi.fn() };
-			const actions = createGalleryActions({ store, ops, deck: { applyThemeEdit: vi.fn() } });
+			const actions = createGalleryActions({ store, ops });
 			const hub = createRibbonGalleryHub((result) => actions.applyRibbonGalleryResult(result));
 			const control = createRibbonGallery(document, createTranslator(), placementFor(gallery), hub);
 			// In the document, as in the ribbon: a gallery builds its tiles once it is shown.

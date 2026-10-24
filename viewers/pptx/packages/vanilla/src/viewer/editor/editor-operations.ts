@@ -1,4 +1,4 @@
-import type { EditorHistoryController, ElementBoxPatch } from 'ooxml-ui/pptx';
+import type { EditorHistoryController, ElementBoxPatch, HistoryTheme } from 'ooxml-ui/pptx';
 import {
 	applyFormatToElement,
 	buildDeckSaveOptions,
@@ -44,6 +44,7 @@ import {
 import { setHandoutSlidesPerPage } from './editor-master-actions';
 import { selectionState } from './editor-selection-state';
 import { createStructuredEditorOperations } from './editor-structured-operations';
+import { restoreStoreTheme, storeHistoryTheme } from './editor-theme-history';
 import {
 	remapInlineText,
 	resolveInlineTextAutoFitHeight,
@@ -141,6 +142,8 @@ export interface EditorSnapshot {
 	presentationProperties: PptxPresentationProperties;
 	headerFooter: PptxHeaderFooter;
 	customShows: PptxCustomShow[];
+	/** The theme's colour scheme, font scheme and name, so Undo takes a theme pick back too. */
+	theme?: HistoryTheme;
 }
 
 /** Consecutive arrow-key nudges within this window share one history entry. */
@@ -157,6 +160,10 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 
 	const select = (id: string | null, ids = id ? [id] : []): void =>
 		store.set(selectionState(id, ids));
+	const recordedTheme = (): Pick<EditorSnapshot, 'theme'> => {
+		const theme = storeHistoryTheme(store.get());
+		return theme ? { theme } : {};
+	};
 	const snapshot = (): EditorSnapshot => ({
 		slides: cloneSlides(store.get().slides),
 		sections: structuredClone(store.get().sections),
@@ -173,6 +180,7 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		presentationProperties: structuredClone(store.get().presentationProperties),
 		headerFooter: structuredClone(store.get().headerFooter),
 		customShows: structuredClone(store.get().customShows),
+		...recordedTheme(),
 	});
 
 	const pushHistory = (label = ''): void => {
@@ -224,6 +232,15 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 			interactionActive: false,
 		});
 		commitChange();
+	};
+	/** Undo or redo one step; a step that crosses a theme change puts that theme back too. */
+	const step = (move: (current: EditorSnapshot) => EditorSnapshot | undefined): void => {
+		const current = snapshot();
+		const next = move(current);
+		if (next) {
+			restoreStoreTheme(store, deps.getHandler(), current.theme, next.theme);
+		}
+		restore(next);
 	};
 	const structured = createStructuredEditorOperations({
 		store,
@@ -449,10 +466,10 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		},
 
 		undo() {
-			restore(history.undo(snapshot())?.snapshot);
+			step((current) => history.undo(current)?.snapshot);
 		},
 		redo() {
-			restore(history.redo(snapshot())?.snapshot);
+			step((current) => history.redo(current)?.snapshot);
 		},
 		history,
 		canUndo: () => history.getSnapshot().canUndo,
