@@ -1,7 +1,7 @@
 import {
 	applyTextStyleUpdate,
-	shapeOutlineChange,
 	shouldShowAccessibilitySection,
+	strokeColorChange,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
 } from 'ooxml-ui/pptx';
@@ -103,7 +103,7 @@ export function ShapeTextPanels({
 							onUpdateElementStyle({ fillColor: hex, fillMode: 'solid', fillColorRef: ref })
 						}
 						onSetStrokeColor={(hex, ref) =>
-							onUpdateElementStyle(shapeOutlineChange(hex, ref, selectedElement.shapeStyle ?? {}))
+							onUpdateElementStyle(strokeColorChange(selectedElement, hex, ref))
 						}
 					/>
 				</div>
