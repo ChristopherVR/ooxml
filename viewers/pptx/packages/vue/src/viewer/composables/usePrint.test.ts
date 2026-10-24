@@ -7,12 +7,17 @@
 // jsdom does not, and is what actually approximates the real browsers this
 // code runs in (`window.open` print windows), so this file opts into jsdom
 // specifically to get a faithful sanitisation result.
+import { mount } from '@vue/test-utils';
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
+import { defineComponent, h, ref } from 'vue';
+import { createI18n } from 'vue-i18n';
 
+import { translationsDe } from '../../../../locales/src';
+import { toVueI18nSyntax, translationsEn } from '../../i18n';
 import type { PrintSettings } from '../components/print-dialog-types';
 import { usePrint } from './usePrint';
+import type { UsePrintOptions, UsePrintResult } from './usePrint';
 
 function fakeCanvas(id = 'AAAA'): HTMLCanvasElement {
 	return { toDataURL: () => `data:image/png;base64,${id}` } as unknown as HTMLCanvasElement;
@@ -38,6 +43,31 @@ function makeSlides(n: number, notes?: (i: number) => string): PptxSlide[] {
 				notes: notes?.(i),
 			}) as unknown as PptxSlide,
 	);
+}
+
+/** `usePrint` set up inside a component of a German viewer (vue-i18n installed). */
+function usePrintInGerman(options: UsePrintOptions): UsePrintResult {
+	let result: UsePrintResult | undefined;
+	const i18n = createI18n({
+		legacy: false,
+		locale: 'de',
+		fallbackLocale: 'en',
+		messages: { en: translationsEn, de: toVueI18nSyntax(translationsDe) },
+	});
+	mount(
+		defineComponent({
+			setup() {
+				// oxlint-disable-next-line react/hooks, react-hooks/rules-of-hooks -- Vue composable, not a React hook
+				result = usePrint(options);
+				return () => h('div');
+			},
+		}),
+		{ global: { plugins: [i18n] } },
+	);
+	if (!result) {
+		throw new Error('usePrint did not set up');
+	}
+	return result;
 }
 
 function baseSettings(overrides: Partial<PrintSettings> = {}): PrintSettings {
@@ -293,6 +323,65 @@ describe('usePrint', () => {
 		await print(baseSettings());
 		expect(rasterizeSlide).not.toHaveBeenCalled();
 		expect(openPrintWindow).not.toHaveBeenCalled();
+	});
+
+	it('opens nothing for an outline of hidden slides only', async () => {
+		const openPrintWindow = vi.fn().mockReturnValue(true);
+		const slideList = makeSlides(2).map((slide) => ({ ...slide, hidden: true }));
+		const { print } = usePrint({
+			slides: ref(slideList),
+			activeSlideIndex: ref(0),
+			rasterizeSlide: vi.fn(),
+			openPrintWindow,
+		});
+		await print(baseSettings({ printWhat: 'outline' }));
+		expect(openPrintWindow).not.toHaveBeenCalled();
+	});
+
+	it('titles the print window in the viewer language', async () => {
+		const openPrintWindow = vi.fn().mockReturnValue(true);
+		const { print } = usePrintInGerman({
+			slides: ref(makeSlides(2)),
+			activeSlideIndex: ref(0),
+			rasterizeSlide: vi.fn().mockResolvedValue(fakeCanvas()),
+			openPrintWindow,
+		});
+		const titles: string[] = [];
+		for (const settings of [
+			baseSettings(),
+			baseSettings({ printWhat: 'outline' }),
+			baseSettings({ printWhat: 'notes' }),
+			baseSettings({ printWhat: 'handouts', slidesPerPage: 4 }),
+		]) {
+			await print(settings);
+			titles.push(
+				/<title>(?<title>[^<]*)<\/title>/u.exec(openPrintWindow.mock.calls.at(-1)?.[0])?.groups
+					?.title ?? '',
+			);
+		}
+		expect(titles).toStrictEqual([
+			'Folien',
+			'Gliederung',
+			'Notizseiten',
+			'4 Folien pro Handzettel',
+		]);
+	});
+
+	it('captures the slides when the vector export throws', async () => {
+		const rasterizeSlide = vi.fn().mockResolvedValue(fakeCanvas());
+		const openPrintWindow = vi.fn().mockReturnValue(true);
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const broken = [{ ...makeSlides(1)[0], elements: undefined }] as unknown as PptxSlide[];
+		const { print } = usePrint({
+			slides: ref(broken),
+			activeSlideIndex: ref(0),
+			rasterizeSlide,
+			openPrintWindow,
+		});
+		await print(baseSettings());
+		expect(rasterizeSlide).toHaveBeenCalledExactlyOnceWith(0, 1);
+		expect(openPrintWindow.mock.calls[0][0]).toContain('data:image/png;base64,AAAA');
+		warn.mockRestore();
 	});
 
 	it('swallows rasterisation errors', async () => {

@@ -1,24 +1,19 @@
 import {
-	buildHandoutsHtml,
-	buildNotesHtml,
-	buildPrintDocument as buildSvgPrintDocument,
-	buildPrintHtmlDocument,
-	buildSlidesHtml,
+	buildOutlinePrintJobDocument,
+	buildRasterPrintJobDocument,
+	buildVectorPrintJobDocument,
 	DEFAULT_VIEWER_OPTIONS,
-	filterHiddenSlideIndices,
 	finishPrintWindow as finishPendingPrintWindow,
 	openPendingPrintWindow,
 	openPrintWindow as sharedOpenPrintWindow,
+	planPrintJob,
+	printJobRasterFallback,
 } from 'ooxml-ui/pptx';
+import type { PrintJobCapture, PrintJobPlan } from 'ooxml-ui/pptx';
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
 import { inject, ref } from 'vue';
 import type { Ref } from 'vue';
 
-import {
-	buildOutlineHtml,
-	computeColorFilter,
-	computeSlideIndices,
-} from '../components/print-dialog-types';
 import type { PrintSettings } from '../components/print-dialog-types';
 import { exportSlideToSvg } from '../export-svg';
 import type { CanvasSize } from '../types';
@@ -27,8 +22,11 @@ import { ViewerOptionsKey } from './useViewerOptionsStore';
 
 /**
  * usePrint: print-dialog state + the print-with-settings flow for the Vue
- * viewer. Direct slide printing uses core SVG output; composed notes and
- * handouts retain the DOM raster path.
+ * viewer. What prints, through which path and under which (translated) window
+ * title is decided by the shared `planPrintJob`; this composable keeps only
+ * its capture and its opener. Direct slide printing uses core SVG output
+ * (captured instead when the export throws); notes and handouts use the DOM
+ * raster path.
  *
  * The DOM-touching pieces are injected so the composable is unit-testable with
  * mocks, exactly like `useExport` injects `rasterizeSlide`:
@@ -36,8 +34,6 @@ import { ViewerOptionsKey } from './useViewerOptionsStore';
  *    off-screen `SlideStage` + `html2canvas-pro` integration).
  *  - `openPrintWindow(html)` opens a print window for a full HTML document. A
  *    default implementation (`window.open` → write → print) is supplied.
- *
- * Slide titles for outline mode reuse the shared `buildOutlineHtml`.
  */
 
 /**
@@ -100,30 +96,6 @@ function defaultOpenPrintWindow(htmlDocument: string): boolean {
 	return sharedOpenPrintWindow(htmlDocument);
 }
 
-/**
- * Assemble the print stylesheet + body into a complete HTML document. Thin
- * wrapper over the shared `buildPrintHtmlDocument` (title/orientation/colour-
- * filter escaping and body sanitisation live there once, reused by every
- * binding) that keeps this composable's historical positional signature.
- */
-function buildPrintDocument(
-	title: string,
-	bodyHtml: string,
-	orientation: 'landscape' | 'portrait',
-	colorFilter: string,
-	frameSlides: boolean,
-	scaleToFit: boolean | undefined,
-): string {
-	return buildPrintHtmlDocument({
-		title,
-		bodyHtml,
-		orientation,
-		colorFilter,
-		frameSlides,
-		scaleToFit,
-	});
-}
-
 export function usePrint(options: UsePrintOptions): UsePrintResult {
 	const { slides, activeSlideIndex, rasterizeSlide } = options;
 	// A custom opener gets the complete document in one call, as documented;
@@ -147,66 +119,15 @@ export function usePrint(options: UsePrintOptions): UsePrintResult {
 		isPrintDialogOpen.value = false;
 	}
 
-	async function print(settings: PrintSettings): Promise<void> {
-		isPrintDialogOpen.value = false;
+	const title = (plan: PrintJobPlan): string => t(plan.title.key, plan.title.params);
 
-		const slideList = slides.value;
-		const colorFilter = computeColorFilter(settings.colorMode);
-		const viewerOptions = injectedViewerOptions?.value ?? DEFAULT_VIEWER_OPTIONS;
-		const slideIndices = filterHiddenSlideIndices(
-			computeSlideIndices(
-				settings.slideRange,
-				activeSlideIndex.value,
-				slideList.length,
-				settings.customRangeFrom,
-				settings.customRangeTo,
-			),
-			slideList,
-			viewerOptions.advanced.printHiddenSlides,
-		);
-
-		// ── Outline: text-only, no rasterisation needed ─────────────────────
-		if (settings.printWhat === 'outline') {
-			const outlineHtml = buildOutlineHtml(slideIndices, slideList);
-			(customOpenWindow ?? defaultOpenPrintWindow)(
-				buildPrintDocument(
-					'Outline',
-					`<div class="outline-page">${outlineHtml}</div>`,
-					settings.orientation,
-					colorFilter,
-					settings.frameSlides,
-					settings.scaleToFit,
-				),
-			);
-			return;
-		}
-
-		if (slideIndices.length === 0) {
-			return;
-		}
-
-		if (settings.printWhat === 'slides') {
-			try {
-				const { width, height } = slideSize.value;
-				const svgs = slideIndices.map((index) => exportSlideToSvg(slideList[index], width, height));
-				(customOpenWindow ?? defaultOpenPrintWindow)(
-					buildSvgPrintDocument(svgs, width, height, {
-						title: 'Slides (Vector)',
-						orientation: settings.orientation,
-						colorFilter,
-						scaleToFit: settings.scaleToFit,
-					}),
-				);
-				return;
-			} catch (err) {
-				console.warn('[PowerPointViewer] SVG print failed, falling back to raster:', err);
-			}
-		}
-
-		// From here on the raster path awaits `rasterizeSlide` per slide, so the
-		// default opener must grab the window NOW, before that first await, or
-		// the browser silently blocks it as a popup. A host-supplied opener owns
-		// its own timing (see `customOpenWindow` above).
+	/**
+	 * Capture each planned slide and hand the document to the opener. The
+	 * default opener grabs its window before the first await (see
+	 * `openPendingPrintWindow`), or the browser blocks it as a popup; a
+	 * host-supplied opener owns its own timing and gets the finished document.
+	 */
+	async function printCaptured(plan: PrintJobPlan, slideList: PptxSlide[]): Promise<void> {
 		const pendingWindow = customOpenWindow
 			? undefined
 			: openPendingPrintWindow(t('pptx.print.preparingToPrint'));
@@ -216,69 +137,68 @@ export function usePrint(options: UsePrintOptions): UsePrintResult {
 			);
 			return;
 		}
-		const commit = (html: string): void => {
+		try {
+			const viewerOptions = injectedViewerOptions?.value ?? DEFAULT_VIEWER_OPTIONS;
+			// Options > Advanced > "High quality" raster scale, composed on top of
+			// the host's own baseline (2x * Options > Advanced > Image Size/Quality).
+			const printScaleMultiplier = viewerOptions.advanced.printHighQuality ? 2 : 1;
+			const captures: PrintJobCapture[] = [];
+			for (const slideIndex of plan.slideIndices) {
+				const canvas = await rasterizeSlide(slideIndex, printScaleMultiplier);
+				captures.push({ slideIndex, dataUrl: canvas.toDataURL('image/png') });
+			}
+			const html = buildRasterPrintJobDocument(
+				plan,
+				title(plan),
+				captures,
+				slideList,
+				options.handoutMaster?.value,
+			);
 			if (pendingWindow) {
 				finishPendingPrintWindow(pendingWindow, html);
 			} else {
 				customOpenWindow?.(html);
 			}
-		};
-
-		try {
-			// Options > Advanced > "High quality" raster scale for this
-			// notes/handouts fallback path, composed on top of the host's own
-			// baseline (2x * Options > Advanced > Image Size/Quality) scale.
-			const printScaleMultiplier = viewerOptions.advanced.printHighQuality ? 2 : 1;
-			// Rasterise each selected slide to a PNG data URL.
-			const images: string[] = [];
-			for (const idx of slideIndices) {
-				const canvas = await rasterizeSlide(idx, printScaleMultiplier);
-				images.push(canvas.toDataURL('image/png'));
-			}
-			if (settings.printWhat === 'slides') {
-				commit(
-					buildPrintDocument(
-						'Slides',
-						buildSlidesHtml(images, slideIndices),
-						settings.orientation,
-						colorFilter,
-						settings.frameSlides,
-						settings.scaleToFit,
-					),
-				);
-				return;
-			}
-
-			if (settings.printWhat === 'notes') {
-				commit(
-					buildPrintDocument(
-						'Notes Pages',
-						buildNotesHtml(images, slideIndices, slideList),
-						'portrait',
-						colorFilter,
-						settings.frameSlides,
-						settings.scaleToFit,
-					),
-				);
-				return;
-			}
-
-			// ── Handouts ─────────────────────────────────────────────────────
-			const spp = settings.slidesPerPage;
-			commit(
-				buildPrintDocument(
-					`Handout ${spp} per page`,
-					buildHandoutsHtml(images, slideIndices, spp, options.handoutMaster?.value),
-					'portrait',
-					colorFilter,
-					settings.frameSlides,
-					settings.scaleToFit,
-				),
-			);
 		} catch (err) {
 			console.error('[PowerPointViewer] Print layout failed:', err);
 			pendingWindow?.close();
 		}
+	}
+
+	async function print(settings: PrintSettings): Promise<void> {
+		isPrintDialogOpen.value = false;
+
+		const slideList = slides.value;
+		const viewerOptions = injectedViewerOptions?.value ?? DEFAULT_VIEWER_OPTIONS;
+		const plan = planPrintJob(settings, {
+			slides: slideList,
+			activeSlideIndex: activeSlideIndex.value,
+			includeHiddenSlides: viewerOptions.advanced.printHiddenSlides,
+		});
+		if (!plan.ok) {
+			return;
+		}
+		const openWindow = customOpenWindow ?? defaultOpenPrintWindow;
+
+		if (plan.output === 'outline') {
+			openWindow(buildOutlinePrintJobDocument(plan, title(plan), slideList));
+			return;
+		}
+
+		if (plan.output === 'vector') {
+			try {
+				const size = slideSize.value;
+				const svgs = plan.slideIndices.map((index) =>
+					exportSlideToSvg(slideList[index], size.width, size.height),
+				);
+				openWindow(buildVectorPrintJobDocument(plan, title(plan), svgs, size));
+				return;
+			} catch (err) {
+				console.warn('[PowerPointViewer] SVG print failed, falling back to raster:', err);
+			}
+		}
+
+		await printCaptured(printJobRasterFallback(plan), slideList);
 	}
 
 	return { isPrintDialogOpen, openPrintDialog, closePrintDialog, print };
