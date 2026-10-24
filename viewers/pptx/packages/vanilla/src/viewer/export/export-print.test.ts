@@ -1,6 +1,8 @@
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
+import { translationsDe } from 'pptx-viewer-locales';
 import { describe, expect, it, vi } from 'vitest';
 
+import { createTranslator } from '../i18n';
 import { createInitialViewerState, createStore } from '../state';
 import type { Store, ViewerState } from '../state';
 import { runPrint } from './export-print';
@@ -77,7 +79,7 @@ describe('runPrint', () => {
 		expect(openPrintWindow).toHaveBeenCalledOnce();
 		const html = openPrintWindow.mock.calls[0][0];
 		expect(html).toContain('<!doctype html>');
-		expect(html).toContain('<title>Slides (Vector)</title>');
+		expect(html).toContain('<title>Slides</title>');
 		expect(html).toContain('size: landscape');
 		expect(html.match(/print-slide-page/gu)?.length).toBeGreaterThanOrEqual(3);
 		expect(html).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
@@ -210,5 +212,83 @@ describe('runPrint', () => {
 		expect(deps.rasterizeSlide).toHaveBeenCalledOnce();
 		expect(openPrintWindow).not.toHaveBeenCalled();
 		expect(onProgress).toHaveBeenCalledWith(0, 3);
+	});
+
+	it('titles the print window in the viewer language', async () => {
+		const titles: string[] = [];
+		for (const options of [
+			{},
+			{ printWhat: 'outline' as const },
+			{ printWhat: 'notes' as const },
+			{ printWhat: 'handouts' as const, slidesPerPage: 4 as const },
+		]) {
+			const deps = makeDeps(2);
+			deps.getTranslator = () => createTranslator('de', { de: translationsDe });
+			const openPrintWindow = vi.fn((_html: string) => true);
+			await runPrint(deps, { ...options, openPrintWindow });
+			titles.push(
+				/<title>(?<title>[^<]*)<\/title>/u.exec(openPrintWindow.mock.calls[0]?.[0] ?? '')?.groups
+					?.title ?? '',
+			);
+		}
+		expect(titles).toStrictEqual([
+			'Folien',
+			'Gliederung',
+			'Notizseiten',
+			'4 Folien pro Handzettel',
+		]);
+	});
+
+	it('captures the slides when the SVG export throws', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const deps = makeDeps(1);
+		const [slide] = deps.store.get().slides;
+		deps.store.set({ slides: [{ ...slide, elements: undefined } as unknown as PptxSlide] });
+		const openPrintWindow = vi.fn((_html: string) => true);
+
+		await expect(runPrint(deps, { openPrintWindow })).resolves.toBeTruthy();
+
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringContaining('falling back to raster'),
+			expect.anything(),
+		);
+		expect(deps.rasterizeSlide).toHaveBeenCalledExactlyOnceWith(0, 1);
+		expect(openPrintWindow.mock.calls[0][0]).toContain(PNG_DATA_URL);
+		warn.mockRestore();
+	});
+
+	it('prints the layout and master elements of each vector slide', async () => {
+		const deps = makeDeps(2);
+		deps.store.set({
+			templateElementsBySlideId: {
+				s0: [
+					{
+						id: 'master-logo',
+						type: 'text',
+						x: 0,
+						y: 0,
+						width: 400,
+						height: 40,
+						text: 'Brand',
+					} as PptxSlide['elements'][number],
+				],
+			},
+		});
+		const openPrintWindow = vi.fn((_html: string) => true);
+
+		await runPrint(deps, { slideRange: 'current', openPrintWindow });
+
+		expect(openPrintWindow.mock.calls[0][0]).toContain('>Brand</tspan>');
+	});
+
+	it('opens nothing for an outline of hidden slides only', async () => {
+		const deps = makeDeps(2);
+		deps.store.set({
+			slides: deps.store.get().slides.map((slide) => ({ ...slide, hidden: true })),
+		});
+		const openPrintWindow = vi.fn((_html: string) => true);
+
+		await expect(runPrint(deps, { printWhat: 'outline', openPrintWindow })).resolves.toBeFalsy();
+		expect(openPrintWindow).not.toHaveBeenCalled();
 	});
 });
