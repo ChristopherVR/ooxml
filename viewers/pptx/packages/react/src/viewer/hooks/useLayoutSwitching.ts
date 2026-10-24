@@ -118,11 +118,11 @@ export function useLayoutSwitching(input: UseLayoutSwitchingInput): LayoutSwitch
 			}
 			setIsLoading(true);
 			try {
-				const updated = await handler.applyLayoutToSlide(
-					activeSlideIndex,
-					layoutPath,
-					slidesRef.current,
-				);
+				// The core replaces the slide in the array it is given: a copy keeps the slides state
+				// as it is until `updateSlides` below.
+				const updated = await handler.applyLayoutToSlide(activeSlideIndex, layoutPath, [
+					...slidesRef.current,
+				]);
 				// Replace the slide in the slides array via ops
 				ops.updateSlides((prev) => {
 					const next = [...prev];
