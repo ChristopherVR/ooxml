@@ -39,7 +39,6 @@ import type React from 'react';
 import type { CanvasSize } from '../types';
 import { buildSaveSlides } from '../utils/template-editing';
 import { overlayPendingInlineEdit } from './serialize-inline-edit';
-import { settleThemeWrites } from './theme-history-restore';
 
 // ---------------------------------------------------------------------------
 // Input
@@ -265,12 +264,6 @@ export function useSerialize(input: UseSerializeInput): SerializeSlides {
 				embedFonts,
 				outputFormat: format,
 			});
-
-			// Every save, export, autosave and `getContent()` comes through here. An undo or redo
-			// of a theme step writes the theme part after the slides are back; wait for it, or a save
-			// right after the step writes the theme it undid. Awaited only now, so the inline edit
-			// above is still read the moment the save was asked for.
-			await settleThemeWrites(handler);
 
 			// One shared decision for all five bindings: a captured password means
 			// `saveEncrypted` (OLE2 container), never `save` (plain ZIP) - unless

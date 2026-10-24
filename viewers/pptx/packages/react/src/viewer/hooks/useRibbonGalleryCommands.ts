@@ -1,4 +1,4 @@
-import { galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
+import { commitsThroughDeckStyle, galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
 import type { DeckStyleHost, RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /**
  * useRibbonGalleryCommands: builds the {@link RibbonGalleryCommands} value
@@ -48,15 +48,6 @@ export interface UseRibbonGalleryCommandsInput {
 	) => Promise<void>;
 }
 
-/** A Themes, Colors or Fonts pick: what the shared commit re-resolves the slides for. */
-function isThemeResult(result: RibbonGalleryApplyResult): boolean {
-	return (
-		result.kind === 'theme' ||
-		result.kind === 'themeColorScheme' ||
-		result.kind === 'themeFontScheme'
-	);
-}
-
 export function useRibbonGalleryCommands(
 	input: UseRibbonGalleryCommandsInput,
 ): RibbonGalleryCommands {
@@ -99,17 +90,12 @@ export function useRibbonGalleryCommands(
 			if (!editable) {
 				return;
 			}
-			if (
-				result.kind === 'themeEffects' ||
-				result.kind === 'backgroundStyle' ||
-				result.kind === 'sequence' ||
-				(deckStyle && isThemeResult(result))
-			) {
+			if (deckStyle && commitsThroughDeckStyle(result)) {
 				// Settles the hover preview itself, so the commit starts from the real slides. A theme
 				// pick goes this way too: the pick arrives while its preview shows, and the theme
 				// handlers would re-resolve from the theme of the last render, the PREVIEWED one, and
 				// change nothing on the slides.
-				void deckStyle?.commit(result);
+				void deckStyle.commit(result);
 				return;
 			}
 			deckStyle?.endPreview();
