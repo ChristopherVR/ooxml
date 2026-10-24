@@ -44,38 +44,105 @@ export const DEFAULT_VIEWER_PREFERENCES: ViewerPreferences = {
 
 export const DEFAULT_VIEWER_SETTINGS = DEFAULT_VIEWER_PREFERENCES;
 
+/** The heading a shortcut is listed under in the keyboard shortcut help. */
+export type ShortcutReferenceGroup = 'history' | 'clipboard' | 'editing' | 'navigation' | 'general';
+
 export interface ShortcutReferenceItem {
 	actionKey: string;
 	shortcut: string;
+	group: ShortcutReferenceGroup;
 }
 
 export const VIEWER_SHORTCUT_REFERENCE: readonly ShortcutReferenceItem[] = [
-	{ actionKey: 'pptx.toolbar.undo', shortcut: 'Ctrl/Cmd+Z' },
-	{ actionKey: 'pptx.toolbar.redo', shortcut: 'Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y' },
-	{ actionKey: 'pptx.shortcuts.action.copyElement', shortcut: 'Ctrl/Cmd+C' },
-	{ actionKey: 'pptx.shortcuts.action.cutElement', shortcut: 'Ctrl/Cmd+X' },
-	{ actionKey: 'pptx.shortcuts.action.pasteElement', shortcut: 'Ctrl/Cmd+V' },
-	{ actionKey: 'pptx.shortcuts.action.duplicateElement', shortcut: 'Ctrl/Cmd+D' },
-	{ actionKey: 'pptx.shortcuts.action.deleteElement', shortcut: 'Delete / Backspace' },
-	{ actionKey: 'pptx.shortcuts.action.selectAll', shortcut: 'Ctrl/Cmd+A' },
-	{ actionKey: 'pptx.ribbon.group', shortcut: 'Ctrl/Cmd+G' },
-	{ actionKey: 'pptx.ribbon.ungroup', shortcut: 'Ctrl/Cmd+Shift+G' },
-	{ actionKey: 'pptx.shortcuts.action.nudgeElement', shortcut: 'Arrow keys' },
-	{ actionKey: 'pptx.shortcuts.action.nudgeElementLarge', shortcut: 'Shift+Arrow keys' },
-	{ actionKey: 'pptx.shortcuts.action.prevSlide', shortcut: 'Left or Up arrow, Page Up' },
-	{ actionKey: 'pptx.shortcuts.action.nextSlide', shortcut: 'Right or Down arrow, Page Down' },
-	{ actionKey: 'pptx.shortcuts.action.zoomCanvas', shortcut: 'Ctrl/Cmd+Mouse wheel' },
-	{ actionKey: 'pptx.shortcuts.action.commitTextEdit', shortcut: 'Ctrl/Cmd+Enter' },
-	{ actionKey: 'pptx.shortcuts.action.cancelTextEdit', shortcut: 'Escape' },
+	{ actionKey: 'pptx.toolbar.undo', shortcut: 'Ctrl/Cmd+Z', group: 'history' },
+	{
+		actionKey: 'pptx.toolbar.redo',
+		shortcut: 'Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y',
+		group: 'history',
+	},
+	{ actionKey: 'pptx.shortcuts.action.copyElement', shortcut: 'Ctrl/Cmd+C', group: 'clipboard' },
+	{ actionKey: 'pptx.shortcuts.action.cutElement', shortcut: 'Ctrl/Cmd+X', group: 'clipboard' },
+	{ actionKey: 'pptx.shortcuts.action.pasteElement', shortcut: 'Ctrl/Cmd+V', group: 'clipboard' },
+	{
+		actionKey: 'pptx.shortcuts.action.duplicateElement',
+		shortcut: 'Ctrl/Cmd+D',
+		group: 'editing',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.deleteElement',
+		shortcut: 'Delete / Backspace',
+		group: 'editing',
+	},
+	{ actionKey: 'pptx.shortcuts.action.selectAll', shortcut: 'Ctrl/Cmd+A', group: 'editing' },
+	{ actionKey: 'pptx.ribbon.group', shortcut: 'Ctrl/Cmd+G', group: 'editing' },
+	{ actionKey: 'pptx.ribbon.ungroup', shortcut: 'Ctrl/Cmd+Shift+G', group: 'editing' },
+	{ actionKey: 'pptx.shortcuts.action.nudgeElement', shortcut: 'Arrow keys', group: 'editing' },
+	{
+		actionKey: 'pptx.shortcuts.action.nudgeElementLarge',
+		shortcut: 'Shift+Arrow keys',
+		group: 'editing',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.prevSlide',
+		shortcut: 'Left or Up arrow, Page Up',
+		group: 'navigation',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.nextSlide',
+		shortcut: 'Right or Down arrow, Page Down',
+		group: 'navigation',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.zoomCanvas',
+		shortcut: 'Ctrl/Cmd+Mouse wheel',
+		group: 'navigation',
+	},
+	{
+		actionKey: 'pptx.shortcuts.action.commitTextEdit',
+		shortcut: 'Ctrl/Cmd+Enter',
+		group: 'editing',
+	},
+	{ actionKey: 'pptx.shortcuts.action.cancelTextEdit', shortcut: 'Escape', group: 'editing' },
 	// Both of these reached the shared keymap late (Ctrl+F was hand-wired in two
 	// bindings, Ctrl+/ in one), so the panel that is supposed to teach the keymap
 	// was advertising neither. The help panel is the keymap's documentation: a
 	// chord missing here is a chord nobody discovers.
-	{ actionKey: 'pptx.findReplace.title', shortcut: 'Ctrl/Cmd+F' },
-	{ actionKey: 'pptx.slideShow.fromBeginning', shortcut: 'F5' },
-	{ actionKey: 'pptx.slideShow.fromCurrent', shortcut: 'Shift+F5' },
-	{ actionKey: 'pptx.shortcuts.title', shortcut: '? or Ctrl/Cmd+/' },
+	{ actionKey: 'pptx.findReplace.title', shortcut: 'Ctrl/Cmd+F', group: 'general' },
+	{ actionKey: 'pptx.slideShow.fromBeginning', shortcut: 'F5', group: 'general' },
+	{ actionKey: 'pptx.slideShow.fromCurrent', shortcut: 'Shift+F5', group: 'general' },
+	{ actionKey: 'pptx.shortcuts.title', shortcut: '? or Ctrl/Cmd+/', group: 'general' },
 ];
+
+/** The heading of each shortcut group, in the order the help lists them. */
+export const SHORTCUT_REFERENCE_GROUP_LABEL_KEYS: Readonly<Record<ShortcutReferenceGroup, string>> =
+	{
+		history: 'pptx.editorToolbar.history',
+		clipboard: 'pptx.ribbon.clipboard',
+		editing: 'pptx.shortcuts.group.editing',
+		navigation: 'pptx.shortcuts.group.navigation',
+		general: 'pptx.settings.general',
+	};
+
+/** One heading of the shortcut help and the shortcuts under it. */
+export interface ShortcutReferenceBucket {
+	group: ShortcutReferenceGroup;
+	labelKey: string;
+	shortcuts: ShortcutReferenceItem[];
+}
+
+/** `items` under their headings, in heading order; a heading with no shortcut is left out. */
+export function groupShortcutReference(
+	items: readonly ShortcutReferenceItem[] = VIEWER_SHORTCUT_REFERENCE,
+): ShortcutReferenceBucket[] {
+	const order = Object.keys(SHORTCUT_REFERENCE_GROUP_LABEL_KEYS) as ShortcutReferenceGroup[];
+	return order
+		.map((group) => ({
+			group,
+			labelKey: SHORTCUT_REFERENCE_GROUP_LABEL_KEYS[group],
+			shortcuts: items.filter((item) => item.group === group),
+		}))
+		.filter((bucket) => bucket.shortcuts.length > 0);
+}
 
 export const SHORTCUT_REFERENCE_ITEMS = VIEWER_SHORTCUT_REFERENCE;
 
