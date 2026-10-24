@@ -22,7 +22,9 @@ export {
 	exportSlideAsPng,
 	copySlideToClipboard,
 	captureAllSlidesAsPngDataUrls,
+	captureSlidesAsPngDataUrls,
 } from './export-slides';
+export type { CapturedSlidePng } from './export-slides';
 
 export { exportAllSlidesAsPdf, exportAllSlidesAsNotesPdf, exportSlideAsPdf } from './export-pdf';
 

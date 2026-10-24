@@ -138,6 +138,9 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		activeSlideIndex,
 		canvasStageRef: zoom.canvasStageRef,
 		setActiveSlideIndex: state.setActiveSlideIndex,
+		canvasSize,
+		templateElementsBySlideId: state.templateElementsBySlideId,
+		handoutMaster: state.handoutMaster,
 	});
 
 	const themeHandlers = useThemeHandlers({

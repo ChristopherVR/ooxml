@@ -71,17 +71,62 @@ export async function copySlideToClipboard(
 	await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
 }
 
+/** One slide captured by {@link captureSlidesAsPngDataUrls}. */
+export interface CapturedSlidePng {
+	/** Zero-based index of the captured slide. */
+	slideIndex: number;
+	/** The slide as a PNG `data:` URL. */
+	dataUrl: string;
+}
+
 /**
- * Capture all slides as PNG data URLs.
+ * Capture the given slides, in the given order, as PNG data URLs.
  *
- * Reuses the same slide-switching and render wait strategy as PDF export so
- * callers can build custom print layouts (handouts, notes pages, etc.). Goes
- * through the shared single-canvas raster path (`renderElementToTiledCanvas`,
- * tiled and stitched past the browser canvas cap rather than downscaled)
- * rather than calling `html2canvas-pro` directly: a print layout draws one
- * image per slide, so it needs one canvas, and this preserves the same
- * `backdrop-filter`/custom-property/3D-transform fidelity every other export
- * format gets, at full resolution.
+ * Each slide is shown on the live stage in turn (`setActiveSlide`, then a
+ * render wait) and captured; the slide on screen before is restored at the
+ * end. Goes through the shared single-canvas raster path
+ * (`renderElementToTiledCanvas`, tiled and stitched past the browser canvas
+ * cap rather than downscaled) rather than calling `html2canvas-pro` directly:
+ * a print layout draws one image per slide, so it needs one canvas, and this
+ * preserves the same `backdrop-filter`/custom-property/3D-transform fidelity
+ * every other export format gets, at full resolution. A slide whose stage is
+ * missing is left out of the result.
+ */
+export async function captureSlidesAsPngDataUrls(
+	slideStageRef: React.RefObject<HTMLElement | null>,
+	slideIndices: readonly number[],
+	setActiveSlide: (index: number) => void,
+	currentSlideIndex: number,
+	options: SlideCaptureOptions = {},
+): Promise<CapturedSlidePng[]> {
+	const { scale = 2, onProgress } = options;
+	const total = slideIndices.length;
+	const captures: CapturedSlidePng[] = [];
+
+	for (const [position, slideIndex] of slideIndices.entries()) {
+		onProgress?.(position, total);
+		setActiveSlide(slideIndex);
+		await waitForRender(150);
+
+		const stageEl = slideStageRef.current;
+		if (!stageEl) {
+			console.warn(`[export] Could not find slide stage element for slide ${slideIndex}`);
+			continue;
+		}
+
+		const { canvas } = await renderElementToTiledCanvas(stageEl, scale);
+		// Extract data URL immediately so the canvas can be GC'd
+		captures.push({ slideIndex, dataUrl: canvas.toDataURL('image/png') });
+	}
+
+	onProgress?.(total, total);
+	setActiveSlide(currentSlideIndex);
+	return captures;
+}
+
+/**
+ * Capture every slide of the deck as PNG data URLs (see
+ * {@link captureSlidesAsPngDataUrls}, which captures only the slides asked for).
  */
 export async function captureAllSlidesAsPngDataUrls(
 	slideStageRef: React.RefObject<HTMLElement | null>,
@@ -90,26 +135,13 @@ export async function captureAllSlidesAsPngDataUrls(
 	currentSlideIndex: number,
 	options: SlideCaptureOptions = {},
 ): Promise<string[]> {
-	const { scale = 2, onProgress } = options;
-	const dataUrls: string[] = [];
-
-	for (let i = 0; i < totalSlides; i++) {
-		onProgress?.(i, totalSlides);
-		setActiveSlide(i);
-		await waitForRender(150);
-
-		const stageEl = slideStageRef.current;
-		if (!stageEl) {
-			console.warn(`[export] Could not find slide stage element for slide ${i}`);
-			continue;
-		}
-
-		const { canvas } = await renderElementToTiledCanvas(stageEl, scale);
-		// Extract data URL immediately so the canvas can be GC'd
-		dataUrls.push(canvas.toDataURL('image/png'));
-	}
-
-	onProgress?.(totalSlides, totalSlides);
-	setActiveSlide(currentSlideIndex);
-	return dataUrls;
+	const indices = Array.from({ length: totalSlides }, (_, i) => i);
+	const captures = await captureSlidesAsPngDataUrls(
+		slideStageRef,
+		indices,
+		setActiveSlide,
+		currentSlideIndex,
+		options,
+	);
+	return captures.map((capture) => capture.dataUrl);
 }
