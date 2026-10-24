@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
 	DEFAULT_VIEWER_PREFERENCES,
 	groupShortcutReference,
-	SHORTCUT_REFERENCE_GROUP_LABEL_KEYS,
 	updateViewerPreference,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
@@ -137,9 +136,13 @@ describe('viewPropertiesPatchFromPreferences', () => {
 describe('shortcut reference groups', () => {
 	it('lists every shortcut once, under the headings in their order', () => {
 		const grouped = groupShortcutReference();
-		expect(grouped.map((bucket) => bucket.group)).toStrictEqual(
-			Object.keys(SHORTCUT_REFERENCE_GROUP_LABEL_KEYS),
-		);
+		expect(grouped.map((bucket) => bucket.group)).toStrictEqual([
+			'history',
+			'clipboard',
+			'editing',
+			'navigation',
+			'general',
+		]);
 		expect(grouped.flatMap((bucket) => bucket.shortcuts)).toHaveLength(
 			VIEWER_SHORTCUT_REFERENCE.length,
 		);
