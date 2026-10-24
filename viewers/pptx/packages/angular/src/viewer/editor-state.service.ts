@@ -31,7 +31,12 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
-import type { PasteSpecialFormat, SlideTemplateId, SlidePasteRequest } from 'ooxml-ui/pptx';
+import type {
+	PasteSpecialFormat,
+	SlideMasterHistoryStep,
+	SlideTemplateId,
+	SlidePasteRequest,
+} from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import {
 	cloneElement,
@@ -578,6 +583,14 @@ export class EditorStateService {
 			this.dirty.set(true);
 			this.selectedIds.set([]);
 		}
+	}
+
+	/**
+	 * Drop the undo and redo steps that would bring back a state `reaches` matches, with the steps
+	 * behind them: a Slide Master view command removed a layout the package cannot get back.
+	 */
+	forgetHistory(reaches: (step: SlideMasterHistoryStep) => boolean): void {
+		this.history.forget(reaches);
 	}
 
 	// ── Align / distribute (multi-selection) ─────────────────────────────────

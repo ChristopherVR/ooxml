@@ -95,4 +95,40 @@ describe('slide master view commands on the deck as it is now', () => {
 
 		expect(deletable()).toBeFalsy();
 	});
+
+	it('leaves no undo or redo step that puts a slide back on a deleted layout', async () => {
+		const { editor, loader, saveSlides } = await open();
+		const layouts = loader.slideMasters()[0]?.layouts ?? [];
+		const used = new Set(editor.slides().map((slide) => slide.layoutPath));
+		const spareIndex = layouts.findIndex((layout) => !used.has(layout.path));
+		const spare = layouts[spareIndex]!.path;
+		const home = editor.slides()[0]!.layoutPath;
+		const moved = editor.slides()[1]!.elements[0]!;
+		const layoutsInUse = () => editor.slides().map((slide) => slide.layoutPath);
+		// The spare layout is in an undo step (before the second edit) and, once the fourth edit is
+		// undone, in the redo step, but no slide uses it now.
+		editor.updateSlide(0, { layoutPath: spare });
+		editor.updateSlide(0, { layoutPath: home });
+		editor.updateElement(1, moved.id, { x: moved.x + 40 });
+		editor.updateSlide(0, { layoutPath: spare });
+		editor.undo();
+		expect(layoutsInUse()).not.toContain(spare);
+
+		const result = await runMasterViewCrud(loader, editor, {
+			id: 'deleteLayout',
+			target: { tab: 'slides', masterIndex: 0, layoutIndex: spareIndex },
+			slides: saveSlides(),
+		});
+
+		expect(result?.ok).toBeTruthy();
+		expect(loader.slideMasters()[0]?.layouts?.map((layout) => layout.path)).not.toContain(spare);
+		expect([editor.canUndo(), editor.canRedo()]).toStrictEqual([true, false]);
+		editor.undo();
+		expect(layoutsInUse()).not.toContain(spare);
+		expect(editor.slides()[1]!.elements[0]!.x).toBe(moved.x);
+		expect([editor.canUndo(), editor.canRedo()]).toStrictEqual([false, true]);
+		editor.redo();
+		expect(layoutsInUse()).not.toContain(spare);
+		expect([editor.canUndo(), editor.canRedo()]).toStrictEqual([true, false]);
+	});
 });
