@@ -204,7 +204,9 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		// must not rewrite that choice for every other host.
 		getAutosaveEnabled: () => collabCluster.autosavePreference,
 		setAutosaveEnabled: collabCluster.setAutosaveFlag,
-		newSlide: () => deckApi.current?.addSlide(),
+		// Ctrl+M inserts after the slide on screen and shows the new one, as the ribbon's New Slide
+		// does (the API's own default is the end of the deck).
+		newSlide: () => deckApi.current?.addSlide(deckApi.current.getActiveSlideIndex()),
 		getPresentation: () => presentationApi.current,
 	});
 
