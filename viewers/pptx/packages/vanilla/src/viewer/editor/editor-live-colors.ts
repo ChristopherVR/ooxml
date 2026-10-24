@@ -22,7 +22,7 @@ import { recordRecentColor } from './editor-recent-colors';
 export type LiveColorTarget = 'fill' | 'line' | 'text';
 
 /** The native colour input events a live picker reports. */
-export type LiveColorEventType = 'input' | 'change' | 'blur';
+export type LiveColorEventType = keyof LiveColorInput;
 
 /**
  * The inspector's native colour pickers, live while the user drags (the
