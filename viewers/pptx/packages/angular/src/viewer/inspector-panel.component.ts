@@ -1238,13 +1238,10 @@ export class InspectorPanelComponent {
 	// ── Native colour pickers (live while dragging) ──────────────────────────
 
 	/**
-	 * The fill, line and text colour pickers. A drag through the native picker
-	 * previews every shade on the slide (no undo step, no recent colour) and
-	 * settles as ONE undo step and one recent colour; one that ends where it
-	 * started is no undo step (its `change` still counts as a recent colour).
-	 * The decision is shared (`createLiveColorInput`);
-	 * each shade is a patch on the element from before the drag, a native pick
-	 * clears any theme ref like every custom colour.
+	 * The fill, line and text colour pickers, live while the user drags (the
+	 * shared `createLiveColorInput` rule). Each shade is a patch on the element
+	 * as the deck holds it now; a native pick clears any theme ref like every
+	 * custom colour.
 	 */
 	protected readonly fillColorInput = this.liveColorInput(fillColorOf, (cur, hex) =>
 		shapeStylePatch(cur, { fillColor: hex, fillColorRef: undefined }),
