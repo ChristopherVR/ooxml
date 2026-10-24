@@ -14,6 +14,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSlide } from 'pptx-viewer-core';
 
+import type { Translator } from '../../i18n/translator';
 import type { ExportGifOptions } from './export-gif';
 import { exportSlidesToGifBlob } from './export-gif';
 import type { OpenPrintWindow, PrintOptions } from './export-print';
@@ -83,6 +84,8 @@ export interface ExportControllerDeps {
 	getIncludeHiddenSlides?(): boolean;
 	/** Options > Advanced > "High quality" raster scale for the print fallback path. */
 	getPrintHighQuality?(): boolean;
+	/** Live translator, for the print window title. English when omitted. */
+	getTranslator?(): Translator;
 }
 
 /**
@@ -287,6 +290,7 @@ export class ExportController {
 					getIncludeHiddenSlides: this.#deps.getIncludeHiddenSlides,
 					getPrintHighQuality: this.#deps.getPrintHighQuality,
 					getHandoutMaster: () => this.#deps.getDeckData?.()?.handoutMaster,
+					getTranslator: this.#deps.getTranslator,
 				},
 				options,
 			);
