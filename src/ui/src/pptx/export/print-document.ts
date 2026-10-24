@@ -16,6 +16,7 @@
 import type { PptxHandoutMaster, PptxSlide } from 'ooxml-core/pptx';
 
 import { sanitizeMarkupOrEmpty } from '../render/dompurify-safe';
+import { isTemplateElement } from '../render/element';
 import {
 	handoutBackgroundStyle,
 	handoutChromeBoxesHtml,
@@ -196,7 +197,7 @@ export function computeSlideIndices(
  */
 export function filterHiddenSlideIndices(
 	indices: number[],
-	slides: PptxSlide[],
+	slides: readonly PptxSlide[],
 	includeHidden: boolean,
 ): number[] {
 	if (includeHidden) {
@@ -276,8 +277,10 @@ export function estimatePageCount(
 /* ------------------------------------------------------------------ */
 
 /**
- * Best-effort slide title: the first element carrying non-empty `text`,
- * falling back to `Slide N` (1-based).
+ * Best-effort slide title: the first slide-owned element carrying non-empty
+ * `text`, falling back to `Slide N` (1-based). Layout and master elements
+ * merged into the slide (`buildSaveSlides`) come first and are skipped: a
+ * logo caption or footer on the master is not the slide's title.
  */
 export function slideTitle(slide: PptxSlide | undefined, index: number): string {
 	const fallback = `Slide ${index + 1}`;
@@ -286,6 +289,9 @@ export function slideTitle(slide: PptxSlide | undefined, index: number): string 
 	}
 	const elements = slide.elements ?? [];
 	for (const el of elements) {
+		if (isTemplateElement(el)) {
+			continue;
+		}
 		if ('text' in el) {
 			const text = (el as { text?: unknown }).text;
 			if (typeof text === 'string' && text.trim()) {
@@ -301,7 +307,10 @@ export function slideTitle(slide: PptxSlide | undefined, index: number): string 
 /* ------------------------------------------------------------------ */
 
 /** Build the outline body markup (`<h2>` title + optional `<p>` notes per slide). */
-export function buildOutlineHtml(slideIndices: number[], slides: PptxSlide[]): string {
+export function buildOutlineHtml(
+	slideIndices: readonly number[],
+	slides: readonly PptxSlide[],
+): string {
 	return slideIndices
 		.map((idx) => {
 			const slide = slides[idx];
@@ -329,7 +338,7 @@ export function buildSlidesHtml(slideImages: string[], slideIndices: number[]): 
 export function buildNotesHtml(
 	slideImages: string[],
 	slideIndices: number[],
-	slides: PptxSlide[],
+	slides: readonly PptxSlide[],
 ): string {
 	return slideImages
 		.map((img, i) => {
