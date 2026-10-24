@@ -243,4 +243,35 @@ describe('createExportWiring', () => {
 
 		wiring.destroy();
 	});
+
+	it('rasterises a High quality print at twice the base scale', async () => {
+		// Options > Advanced > "High quality" doubles the print raster scale. The
+		// print flow computes the multiplier and hands it to `rasterizeSlide`, so
+		// the wiring must forward it to the capture stage rather than drop it.
+		renderToCanvas.mockResolvedValue(fakeCanvas());
+		const wiring = createExportWiring({
+			getContainer: () => undefined,
+			getSlides: () => [slide('s1')],
+			getCanvasSize: () => ({ width: 960, height: 540 }),
+			getMediaDataUrls: () => new Map(),
+			getCurrent: () => 0,
+			getTranslator: () => createTranslator(() => 'en'),
+			getSmartArt3D: () => false,
+			getSurfaceChart3D: () => false,
+			getBarChart3D: () => false,
+			getLineChart3D: () => false,
+			getAreaChart3D: () => false,
+			getPieChart3D: () => false,
+			getImageResolutionScale: () => 1,
+			getPrintHighQuality: () => true,
+		});
+
+		await wiring.controller.print({ printWhat: 'notes' });
+
+		expect(rasterizeElementTiledToCanvas).toHaveBeenCalledOnce();
+		const options = vi.mocked(rasterizeElementTiledToCanvas).mock.calls[0]?.[4];
+		expect(options?.scale).toBe(4);
+
+		wiring.destroy();
+	});
 });

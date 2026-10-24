@@ -93,7 +93,10 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 		getCurrent: deps.getCurrent,
 		getCanvasSize: deps.getCanvasSize,
 		getSlides: deps.getSlides,
-		rasterizeSlide: (index) => getRasterizer().rasterizeSlide(index),
+		// The print path passes Options > Advanced > "High quality" as the
+		// multiplier; every other caller passes only the index (multiplier 1).
+		rasterizeSlide: (index, scaleMultiplier) =>
+			getRasterizer().rasterizeSlide(index, scaleMultiplier),
 		rasterizeSlideToRaster: (index) => getRasterizer().rasterizeSlideToRaster(index),
 		rasterizeSlideToTiles: (index) => getRasterizer().rasterizeSlideToTiles(index),
 		getDeckData: () => deps.getDeckData?.(),
