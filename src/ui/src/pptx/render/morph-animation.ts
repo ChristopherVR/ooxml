@@ -35,6 +35,7 @@ import { ghostMorphPairsHiddenByGhosts } from './morph-overlay-layers';
 import type { MorphBox } from './morph-overlay-order';
 import { boxesOverlap, travelledBox } from './morph-overlay-order';
 import { tokenizeText } from './morph-text';
+import { coveredStackedCopyIds } from './morph-stacked-copies';
 import { morphTextReplacedInSlot } from './morph-text-slot';
 import { buildTokenMorphAnimations, diffTokens } from './morph-text-tokens';
 import type { MorphAnimationStyle, MorphMode, MorphPair } from './morph-types';
@@ -179,6 +180,18 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 	parts.push(image.imagePath ?? '', image.svgPath ?? '');
 	if (hasTextProperties(element)) {
 		parts.push(element.text ?? '', element.textStyle?.color ?? '');
+		// The same words in another size or weight are a different look: issue
+		// #141's third column keeps its text from slide 17 to 18 but its second
+		// paragraph grows from 14pt to the default, and comparing the words alone
+		// kept the outgoing ghost opaque over the incoming half for the whole flight.
+		for (const segment of element.textSegments ?? []) {
+			const style = segment.style;
+			parts.push(
+				`${style?.fontSize ?? ''}|${style?.bold ? 1 : 0}|${style?.italic ? 1 : 0}|${
+					style?.underline ? 1 : 0
+				}|${style?.fontFamily ?? ''}|${style?.color ?? ''}`,
+			);
+		}
 	}
 	const children = (element as { children?: PptxElement[] }).children;
 	if (children && depth < SIGNATURE_MAX_DEPTH) {
@@ -841,7 +854,11 @@ ${transform}
  *
  * Nothing scales: PowerPoint's dissolve keeps the box exactly where it is.
  *
- * @param elements - Unmatched elements from the incoming slide.
+ * A copy that another incoming element stacks almost exactly on top of stays
+ * hidden until the last frame, so the two dissolve in as one object (see
+ * `morph-stacked-copies`).
+ *
+ * @param elements - Unmatched elements from the incoming slide, in paint order.
  * @param durationMs - Animation duration in milliseconds.
  * @param startIndex - Index offset for unique keyframe naming.
  * @returns An array of fade-in animation style descriptors.
@@ -851,10 +868,23 @@ export function generateUnmatchedFadeInAnimations(
 	durationMs: number,
 	startIndex: number,
 ): MorphAnimationStyle[] {
+	const covered = coveredStackedCopyIds(elements);
 	return elements.map((el, i) => {
 		const safeName = `pptx-morph-fadein-${startIndex + i}-${el.id.replace(/[^a-zA-Z0-9]/gu, '')}`;
 		const transform = `\t\ttransform: scale(1)${staticTransformSuffix(el)};`;
-		const keyframes = `
+		const keyframes = covered.has(el.id)
+			? `
+@keyframes ${safeName} {
+\t0%, 99.9% {
+\t\topacity: 0;
+${transform}
+\t}
+\t100% {
+\t\topacity: ${el.opacity ?? 1};
+${transform}
+\t}
+}`
+			: `
 @keyframes ${safeName} {
 \t0% {
 \t\topacity: 0;
