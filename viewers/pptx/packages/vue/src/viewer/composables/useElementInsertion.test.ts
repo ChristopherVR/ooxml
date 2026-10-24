@@ -372,6 +372,46 @@ describe('useElementInsertion: Home > Layout and Undo', () => {
 		expect(layoutOfSlide2()).toBe(L2);
 	});
 
+	it('keeps an edit made to the new slide while its layout loads', async () => {
+		const slides = shallowRef([
+			{ id: 'slide-1', elements: [], layoutPath: L1 } as unknown as PptxSlide,
+		]);
+		const templateElementsBySlideId = ref<Record<string, PptxElement[]>>({});
+		let layoutArrives: () => void = () => {};
+		const handler = {
+			applyLayoutToSlide: vi.fn(async (index: number, layoutPath: string, current: PptxSlide[]) => {
+				await new Promise<void>((resolve) => {
+					layoutArrives = resolve;
+				});
+				return { ...current[index]!, layoutPath, layoutName: 'Remapped' };
+			}),
+			getTemplateElementsForSlide: vi
+				.fn()
+				.mockResolvedValue([{ id: 'layout-art', type: 'shape' } as PptxElement]),
+		};
+		const insertion = useElementInsertion({
+			canvasSize: ref({ width: 960, height: 540 }),
+			ops: { addElement: vi.fn() } as unknown as EditorOperations,
+			selectedElementIds: ref<string[]>([]),
+			slides,
+			activeSlideIndex: ref(0),
+			pushHistory: vi.fn(),
+			handler: shallowRef(handler as never),
+			templateElementsBySlideId,
+		});
+
+		const inserting = insertion.insertSlideFromLayout(L2);
+		await vi.waitFor(() => expect(handler.applyLayoutToSlide).toHaveBeenCalledOnce());
+		const typed = { id: 'typed', type: 'shape' } as PptxElement;
+		slides.value = slides.value.map((slide, index) =>
+			index === 1 ? { ...slide, elements: [typed] } : slide,
+		);
+		layoutArrives();
+		await inserting;
+		expect(slides.value[1]?.elements.map((element) => element.id)).toStrictEqual(['typed']);
+		expect(templateElementsBySlideId.value[slides.value[1]!.id]).toHaveLength(1);
+	});
+
 	it('a new slide from a layout takes the layout together with its artwork', async () => {
 		const slides = ref([{ id: 'slide-1', elements: [], layoutPath: L1 } as unknown as PptxSlide]);
 		const templateElementsBySlideId = ref<Record<string, PptxElement[]>>({});
