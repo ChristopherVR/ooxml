@@ -5,10 +5,12 @@ import type {
 	MasterViewCrudApplySuccess,
 	MasterViewTarget,
 } from 'ooxml-ui/pptx';
-import type { PptxData, PptxHandler, PptxSlideMaster } from 'pptx-viewer-core';
+import type { PptxData, PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 
+import type { EditorHistoryResult } from './useEditorHistory';
+import { useEditorHistory } from './useEditorHistory';
 import type { UseMasterViewCrudResult } from './useMasterViewCrud';
 
 const { applyMasterViewCrudActionMock } = vi.hoisted(() => ({
@@ -68,6 +70,7 @@ function setup(
 					onSelectLayout,
 					markDirty,
 					pushHistory,
+					forgetHistory: vi.fn(),
 				});
 				return () => h('div');
 			},
@@ -180,5 +183,82 @@ describe('useMasterViewCrud', () => {
 		expect(promptSpy).toHaveBeenCalledWith('New name', 'Office Theme');
 		expect(applyMasterViewCrudActionMock).not.toHaveBeenCalled();
 		vi.unstubAllGlobals();
+	});
+
+	it('leaves no undo or redo step that puts a slide back on a deleted layout', async () => {
+		const masterPath = 'ppt/slideMasters/slideMaster1.xml';
+		const home = 'ppt/slideLayouts/slideLayout1.xml';
+		const spare = 'ppt/slideLayouts/slideLayout2.xml';
+		const masterRef = shallowRef<PptxSlideMaster[]>([
+			master(masterPath, {
+				layouts: [
+					{ path: home, name: 'Title Slide' },
+					{ path: spare, name: 'Blank' },
+				],
+			}),
+		]);
+		const slides = shallowRef<PptxSlide[]>([
+			{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [], layoutPath: home },
+		]);
+		let history: EditorHistoryResult | null = null;
+		let crud: UseMasterViewCrudResult | null = null;
+		mount(
+			defineComponent({
+				setup() {
+					history = useEditorHistory(slides);
+					crud = useMasterViewCrud({
+						handler: shallowRef<PptxHandler | null>({} as PptxHandler),
+						slideMasters: masterRef,
+						deckData: () => baseData(masterRef.value, slides.value),
+						target: () => ({ tab: 'slides', masterIndex: 0, layoutIndex: 1 }),
+						onSelectMaster: vi.fn(),
+						onSelectLayout: vi.fn(),
+						markDirty: vi.fn(),
+						pushHistory: history.pushHistory,
+						forgetHistory: history.forgetHistory,
+					});
+					return () => h('div');
+				},
+			}),
+		);
+		const undoStack = history as unknown as EditorHistoryResult;
+		const edit = (label: string, patch: Partial<PptxSlide>) => {
+			undoStack.pushHistory(label);
+			slides.value = [{ ...slides.value[0]!, ...patch }];
+		};
+		const layoutsInUse = () => slides.value.map((slide) => slide.layoutPath);
+		// The spare layout is in an undo step (before 'two') and, once 'four' is undone, in the
+		// redo step, but no slide uses it now.
+		edit('one', { layoutPath: spare });
+		edit('two', { layoutPath: home });
+		edit('three', { backgroundColor: '#FF0000' });
+		edit('four', { layoutPath: spare });
+		undoStack.undo();
+		expect(layoutsInUse()).toStrictEqual([home]);
+		applyMasterViewCrudActionMock.mockResolvedValue({
+			ok: true,
+			handler: {} as PptxHandler,
+			data: baseData([master(masterPath, { layouts: [{ path: home, name: 'Title Slide' }] })]),
+			target: { tab: 'slides', masterIndex: 0, layoutIndex: null },
+		} satisfies MasterViewCrudApplySuccess);
+
+		await (crud as unknown as UseMasterViewCrudResult).run('deleteLayout');
+
+		// Left: the command's own step and the one before 'three'; the command emptied the redo stack.
+		expect(undoStack.canUndo.value).toBeTruthy();
+		expect(undoStack.canRedo.value).toBeFalsy();
+		const reached: (string | undefined)[] = [];
+		let undos = 0;
+		while (undoStack.canUndo.value) {
+			undoStack.undo();
+			undos += 1;
+			reached.push(...layoutsInUse());
+		}
+		while (undoStack.canRedo.value) {
+			undoStack.redo();
+			reached.push(...layoutsInUse());
+		}
+		expect(reached).not.toContain(spare);
+		expect(undos).toBe(2);
 	});
 });
