@@ -47,6 +47,27 @@ export function keepOnlyElements(stage: HTMLElement, ids: readonly string[]): HT
 	return stage;
 }
 
+/**
+ * Restack a stripped stage's kept shapes in the order the plan ranked them.
+ *
+ * A clone keeps every shape's z-index from its OWN slide, but a run is ordered
+ * by the incoming slide (see `morph-overlay-layers`), and the two disagree
+ * whenever a ghost climbs above a shape it used to sit under. Issue #141's
+ * slides 9 to 10: the left column's ghost rose from under slide 9's full-slide
+ * backdrop, and this binding alone kept it under that backdrop's ghost, so the
+ * column vanished for the whole morph. The other bindings render the run's
+ * element list, whose order is the plan's.
+ */
+export function stackInRunOrder(stage: HTMLElement, ids: readonly string[]): HTMLElement {
+	ids.forEach((id, rank) => {
+		const node = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(id)}"]`);
+		if (node) {
+			node.style.zIndex = String(rank + 1);
+		}
+	});
+	return stage;
+}
+
 /** The z-index of the first morph overlay layer, just above the incoming layer (1). */
 const MORPH_LAYER_Z_BASE = 2;
 
@@ -72,12 +93,10 @@ export function buildMorphOverlayLayers(
 ): HTMLElement[] {
 	return (morphPlan?.overlayLayers ?? []).map((run, index) => {
 		const source = run.side === 'outgoing' ? outgoing : incoming;
+		const ids = run.elements.map((element) => element.id);
 		const layer = buildLayer(
 			doc,
-			keepOnlyElements(
-				source.cloneNode(true) as HTMLElement,
-				run.elements.map((element) => element.id),
-			),
+			stackInRunOrder(keepOnlyElements(source.cloneNode(true) as HTMLElement, ids), ids),
 			MORPH_LAYER_Z_BASE + index,
 			'none',
 			run.side === 'outgoing' ? 'outgoing' : 'lifted',
