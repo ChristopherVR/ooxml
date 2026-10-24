@@ -36,8 +36,8 @@ import {
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
-	shapeOutlineChange,
 	shapeQuickStylePatch,
+	strokeColorPatch,
 	textFontSizePtToPx,
 } from 'ooxml-ui/pptx';
 import type {
@@ -1250,10 +1250,7 @@ export class InspectorPanelComponent {
 		shapeStylePatch(cur, { fillColor: hex, fillColorRef: undefined }),
 	);
 	protected readonly strokeColorInput = this.liveColorInput(strokeColorOf, (cur, hex) =>
-		shapeStylePatch(
-			cur,
-			shapeOutlineChange(hex, undefined, hasShapeProperties(cur) ? (cur.shapeStyle ?? {}) : {}),
-		),
+		strokeColorPatch(cur, hex),
 	);
 	protected readonly textColorInput = this.liveColorInput(textColorOf, (cur, hex) =>
 		textStylePatch(cur, { color: hex, colorRef: undefined }),
@@ -1317,14 +1314,7 @@ export class InspectorPanelComponent {
 
 	private commitStrokeColor(color: string, ref?: PptxThemeColorRef): void {
 		const cur = this.el();
-		this.editor.updateElement(
-			this.slideIndex(),
-			cur.id,
-			shapeStylePatch(
-				cur,
-				shapeOutlineChange(color, ref, hasShapeProperties(cur) ? (cur.shapeStyle ?? {}) : {}),
-			),
-		);
+		this.editor.updateElement(this.slideIndex(), cur.id, strokeColorPatch(cur, color, ref));
 		this.recentColors.push(color);
 	}
 

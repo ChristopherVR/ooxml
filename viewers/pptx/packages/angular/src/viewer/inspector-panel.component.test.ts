@@ -76,9 +76,7 @@ describe('inspector panel theme colour swatch grid (W3-G2)', () => {
 
 	it('a theme-swatch pick commits fillColorRef/strokeColorRef/colorRef alongside the hex', () => {
 		expect(source).toContain('shapeStylePatch(cur, { fillColor: color, fillColorRef: ref })');
-		expect(source).toContain(
-			'shapeOutlineChange(color, ref, hasShapeProperties(cur) ? (cur.shapeStyle ?? {}) : {})',
-		);
+		expect(source).toContain('strokeColorPatch(cur, color, ref)');
 		expect(source).toContain('textStylePatch(cur, { color, colorRef: ref })');
 	});
 });
