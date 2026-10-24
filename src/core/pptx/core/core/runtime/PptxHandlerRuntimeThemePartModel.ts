@@ -149,7 +149,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * The colour scheme, font scheme and name of one theme part in the package, as the part holds
+	 * The colour, font and format schemes and name of one theme part in the package, as the part holds
 	 * them now (a scheme edit already written to it included). Reads only: the loaded theme, the
 	 * masters and what a save writes are unchanged. `undefined` when the package has no such part.
 	 */
@@ -165,6 +165,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...(model.name ? { name: model.name } : {}),
 			colorScheme: colorSchemeFromMap(model.colorMap),
 			fontScheme: fontSchemeFromMap(model.fontMap, model.majorFontScripts, model.minorFontScripts),
+			...(model.formatScheme ? { formatScheme: model.formatScheme } : {}),
 		};
 	}
 }

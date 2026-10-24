@@ -266,8 +266,8 @@ export class PptxHandlerCore {
 	}
 
 	/**
-	 * Read one theme part's colour scheme, font scheme and name without changing the loaded theme,
-	 * for example to show what switching to it would apply.
+	 * Read one theme part's colour, font and format schemes and its name without changing the
+	 * loaded theme, for example to show what switching to it would apply.
 	 *
 	 * @param themePath - The theme part's path (e.g. `ppt/theme/theme2.xml`).
 	 * @returns The part's schemes, or `undefined` when the package has no such part.

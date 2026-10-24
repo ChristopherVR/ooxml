@@ -63,6 +63,17 @@ describe('getThemePartSchemes', () => {
 		await expect(handler.getThemePartSchemes('ppt/theme/theme9.xml')).resolves.toBeUndefined();
 	});
 
+	it("carries the part's own format scheme", async () => {
+		const { handler } = await open(await buildTwoThemesDeck({ formatSchemes: true }));
+		const first = await handler.getThemePartSchemes(theme1.path);
+		const second = await handler.getThemePartSchemes(theme2.path);
+		expect(first?.formatScheme?.name).toBe('Tide');
+		expect(second?.formatScheme?.name).toBe('Ember');
+		expect(first?.formatScheme?.effectStyles[0]).not.toStrictEqual(
+			second?.formatScheme?.effectStyles[0],
+		);
+	});
+
 	it('changes nothing: an edit after a read still goes to the parts the masters use', async () => {
 		const { handler, data } = await open();
 		await handler.getThemePartSchemes(theme2.path);

@@ -311,8 +311,8 @@ export interface PptxTheme {
 }
 
 /**
- * The colour scheme, font scheme and name one theme part of the package carries, read without
- * changing the loaded theme (`PptxHandler.getThemePartSchemes`).
+ * The colour, font and format schemes and the name one theme part of the package carries, read
+ * without changing the loaded theme (`PptxHandler.getThemePartSchemes`).
  */
 export interface PptxThemePartSchemes {
 	/** The theme part's path in the package (e.g. `ppt/theme/theme2.xml`). */
@@ -321,6 +321,8 @@ export interface PptxThemePartSchemes {
 	name?: string;
 	colorScheme: PptxThemeColorScheme;
 	fontScheme: PptxThemeFontScheme;
+	/** The part's format scheme (`a:fmtScheme`), when it has one. */
+	formatScheme?: PptxThemeFormatScheme;
 }
 
 /**
