@@ -29,11 +29,16 @@ import { applyThemePreset } from './editor-theme-scheme';
 
 const DECK = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
+/** The format scheme a save writes (`a:fmtScheme/@name` of the theme part). */
+function fmtSchemeName(xml: string): string {
+	return /<a:fmtScheme\b[^>]*\bname="([^"]*)"/u.exec(xml)?.[1] ?? 'missing';
+}
+
 const OFFICE = { name: 'Office Theme', accent1: '4472C4', major: 'Calibri Light' };
 const FACET = { name: 'Facet', accent1: '90C226', major: 'Trebuchet MS' };
 
-async function open() {
-	const bytes = readFileSync(DECK);
+async function open(source?: Uint8Array) {
+	const bytes = source ?? readFileSync(DECK);
 	const handler = new PptxHandler();
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
@@ -59,9 +64,12 @@ async function open() {
 		expect(editor.canUndo).toBeTruthy();
 	};
 	/** The theme part as File > Save writes it now. */
-	const saved = async () => {
+	const savedXml = async (part = 'ppt/theme/theme1.xml') => {
 		const zip = await JSZip.loadAsync(await editor.save());
-		const xml = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+		return (await zip.file(part)?.async('string')) ?? '';
+	};
+	const saved = async () => {
+		const xml = await savedXml();
 		const read = (pattern: RegExp) => pattern.exec(xml)?.[1] ?? 'missing';
 		return {
 			name: read(/<a:theme\b[^>]*\bname="([^"]*)"/u),
@@ -69,7 +77,28 @@ async function open() {
 			major: read(/<a:majorFont>\s*<a:latin typeface="([^"]*)"/u),
 		};
 	};
-	return { editor, handler, host, published, pick, saved, loaded: data.theme };
+	/** The format scheme each theme part holds in a save, theme 1 then theme 2. */
+	const partEffects = async () => [
+		fmtSchemeName(await savedXml('ppt/theme/theme1.xml')),
+		fmtSchemeName(await savedXml('ppt/theme/theme2.xml')),
+	];
+	/** The format scheme in the editor's theme, the theme it publishes and the saved theme part. */
+	const effects = async () => ({
+		viewer: editor.theme?.formatScheme?.name,
+		published: published.theme?.formatScheme?.name,
+		file: fmtSchemeName(await savedXml()),
+	});
+	return {
+		editor,
+		handler,
+		host,
+		published,
+		pick,
+		saved,
+		effects,
+		partEffects,
+		loaded: data.theme,
+	};
 }
 
 describe('svelte theme undo', () => {
@@ -89,6 +118,37 @@ describe('svelte theme undo', () => {
 		expect(deck.editor.theme?.name).toBe('Facet');
 		expect(deck.published.theme?.name).toBe('Facet');
 		await expect(deck.saved()).resolves.toStrictEqual(FACET);
+	});
+
+	it('an Effects pick is one undo step, and Undo and Redo take the format scheme', async () => {
+		const deck = await open();
+		const loaded = { viewer: 'Office Theme', published: 'Office Theme', file: 'Office Theme' };
+		const glossy = { viewer: 'Glossy', published: 'Glossy', file: 'Glossy' };
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.effects()).resolves.toStrictEqual(glossy);
+
+		deck.editor.undo();
+		expect(deck.editor.canUndo).toBeFalsy();
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		// The restored scheme is the record's plain copy, without the keys left undefined.
+		expect(deck.editor.theme?.formatScheme).toStrictEqual(
+			JSON.parse(JSON.stringify(deck.loaded?.formatScheme)),
+		);
+
+		deck.editor.redo();
+		await expect(deck.effects()).resolves.toStrictEqual(glossy);
+	});
+
+	it("an Effects pick on masters with their own theme parts: Undo puts each part's back", async () => {
+		const deck = await open(await buildTwoThemesDeck({ formatSchemes: true }));
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
+		deck.editor.undo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		deck.editor.redo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
 	});
 
 	it('a Fonts pick re-resolves the slides as one undo step, and Undo takes the fonts back', async () => {

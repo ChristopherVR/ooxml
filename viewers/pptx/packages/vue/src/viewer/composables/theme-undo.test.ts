@@ -36,11 +36,16 @@ import { useThemeEditing } from './useThemeEditing';
 
 const DECK = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
+/** The format scheme a save writes (`a:fmtScheme/@name` of the theme part). */
+function fmtSchemeName(xml: string): string {
+	return /<a:fmtScheme\b[^>]*\bname="([^"]*)"/u.exec(xml)?.[1] ?? 'missing';
+}
+
 const OFFICE = { name: 'Office Theme', accent1: '4472C4', major: 'Calibri Light' };
 const FACET = { name: 'Facet', accent1: '90C226', major: 'Trebuchet MS' };
 
-async function open() {
-	const bytes = readFileSync(DECK);
+async function open(source?: Uint8Array) {
+	const bytes = source ?? readFileSync(DECK);
 	const handler = new PptxHandler();
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
@@ -96,9 +101,12 @@ async function open() {
 		await expect.poll(() => parts.history.canUndo.value).toBeTruthy();
 	};
 	/** The theme part as File > Save writes it now. */
-	const saved = async () => {
+	const savedXml = async (part = 'ppt/theme/theme1.xml') => {
 		const zip = await JSZip.loadAsync(await saveDeckWithPassword(handler, slides.value, {}, null));
-		const xml = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+		return (await zip.file(part)?.async('string')) ?? '';
+	};
+	const saved = async () => {
+		const xml = await savedXml();
 		const read = (pattern: RegExp) => pattern.exec(xml)?.[1] ?? 'missing';
 		return {
 			name: read(/<a:theme\b[^>]*\bname="([^"]*)"/u),
@@ -106,12 +114,33 @@ async function open() {
 			major: read(/<a:majorFont>\s*<a:latin typeface="([^"]*)"/u),
 		};
 	};
+	/** The format scheme each theme part holds in a save, theme 1 then theme 2. */
+	const partEffects = async () => [
+		fmtSchemeName(await savedXml('ppt/theme/theme1.xml')),
+		fmtSchemeName(await savedXml('ppt/theme/theme2.xml')),
+	];
+	/** The format scheme in the viewer's theme and in the saved theme part. */
+	const effects = async () => ({
+		viewer: pptxTheme.value?.formatScheme?.name,
+		file: fmtSchemeName(await savedXml()),
+	});
 	const viewer = () => ({
 		accent1: pptxTheme.value?.colorScheme?.accent1,
 		major: pptxTheme.value?.fontScheme?.majorFont?.latin,
 		mapAccent1: themeColorMap.value?.accent1?.replace('#', ''),
 	});
-	return { ...parts, pptxTheme, themeColorMap, scope, saved, viewer, pick, loaded: data.theme };
+	return {
+		...parts,
+		pptxTheme,
+		themeColorMap,
+		scope,
+		saved,
+		effects,
+		partEffects,
+		viewer,
+		pick,
+		loaded: data.theme,
+	};
 }
 
 describe('vue theme undo', () => {
@@ -156,6 +185,38 @@ describe('vue theme undo', () => {
 		await expect(deck.saved()).resolves.toStrictEqual({ ...OFFICE, accent1: '156082' });
 		deck.history.undo();
 		await expect(deck.saved()).resolves.toStrictEqual(OFFICE);
+		deck.scope.stop();
+	});
+
+	it('an Effects pick is one undo step, and Undo and Redo take the format scheme', async () => {
+		const deck = await open();
+		const loaded = { viewer: 'Office Theme', file: 'Office Theme' };
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+
+		deck.history.undo();
+		expect(deck.history.canUndo.value).toBeFalsy();
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		// The restored scheme is the record's plain copy, without the keys left undefined.
+		expect(deck.pptxTheme.value?.formatScheme).toStrictEqual(
+			JSON.parse(JSON.stringify(deck.loaded?.formatScheme)),
+		);
+
+		deck.history.redo();
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+		deck.scope.stop();
+	});
+
+	it("an Effects pick on masters with their own theme parts: Undo puts each part's back", async () => {
+		const deck = await open(await buildTwoThemesDeck({ formatSchemes: true }));
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
+		deck.history.undo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		deck.history.redo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
 		deck.scope.stop();
 	});
 

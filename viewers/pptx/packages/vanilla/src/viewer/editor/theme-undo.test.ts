@@ -25,11 +25,16 @@ import { createEditorOps } from './editor-operations';
 
 const DECK = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
+/** The format scheme a save writes (`a:fmtScheme/@name` of the theme part). */
+function fmtSchemeName(xml: string): string {
+	return /<a:fmtScheme\b[^>]*\bname="([^"]*)"/u.exec(xml)?.[1] ?? 'missing';
+}
+
 const OFFICE = { name: 'Office Theme', accent1: '4472C4', major: 'Calibri Light' };
 const FACET = { name: 'Facet', accent1: '90C226', major: 'Trebuchet MS' };
 
-async function open() {
-	const bytes = readFileSync(DECK);
+async function open(source?: Uint8Array) {
+	const bytes = source ?? readFileSync(DECK);
 	const handler = new PptxHandler();
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
@@ -66,9 +71,12 @@ async function open() {
 		await expect.poll(() => ops.canUndo()).toBeTruthy();
 	};
 	/** The theme part as File > Save writes it now. */
-	const saved = async () => {
+	const savedXml = async (part = 'ppt/theme/theme1.xml') => {
 		const zip = await JSZip.loadAsync(await ops.save());
-		const xml = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+		return (await zip.file(part)?.async('string')) ?? '';
+	};
+	const saved = async () => {
+		const xml = await savedXml();
 		const read = (pattern: RegExp) => pattern.exec(xml)?.[1] ?? 'missing';
 		return {
 			name: read(/<a:theme\b[^>]*\bname="([^"]*)"/u),
@@ -76,7 +84,17 @@ async function open() {
 			major: read(/<a:majorFont>\s*<a:latin typeface="([^"]*)"/u),
 		};
 	};
-	return { store, ops, deck, handler, theme, loaded, pick, saved };
+	/** The format scheme each theme part holds in a save, theme 1 then theme 2. */
+	const partEffects = async () => [
+		fmtSchemeName(await savedXml('ppt/theme/theme1.xml')),
+		fmtSchemeName(await savedXml('ppt/theme/theme2.xml')),
+	];
+	/** The format scheme in the store and in the saved theme part. */
+	const effects = async () => ({
+		viewer: store.get().formatScheme?.name,
+		file: fmtSchemeName(await savedXml()),
+	});
+	return { store, ops, deck, handler, theme, loaded, pick, saved, effects, partEffects };
 }
 
 describe('vanilla theme undo', () => {
@@ -94,6 +112,33 @@ describe('vanilla theme undo', () => {
 		deck.ops.redo();
 		expect(deck.theme().name).toBe('Facet');
 		await expect(deck.saved()).resolves.toStrictEqual(FACET);
+	});
+
+	it('an Effects pick is one undo step, and Undo and Redo take the format scheme', async () => {
+		const deck = await open();
+		const loaded = { viewer: 'Office Theme', file: 'Office Theme' };
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+
+		deck.ops.undo();
+		expect(deck.ops.canUndo()).toBeFalsy();
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		expect(deck.theme()).toStrictEqual(deck.loaded);
+
+		deck.ops.redo();
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+	});
+
+	it("an Effects pick on masters with their own theme parts: Undo puts each part's back", async () => {
+		const deck = await open(await twoThemesDeckBytes({ formatSchemes: true }));
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
+		deck.ops.undo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		deck.ops.redo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
 	});
 
 	it('a Fonts pick writes only the fonts and keeps the name, and Undo takes them back', async () => {
@@ -167,6 +212,14 @@ const TWO_THEMES_HELPER = resolve(
 	process.cwd(),
 	'../../../../src/core/pptx/__tests__/helpers/two-themes-deck.ts',
 );
+
+/** The two-themes deck's bytes, from the same helper. */
+async function twoThemesDeckBytes(options: { formatSchemes?: boolean }): Promise<Uint8Array> {
+	const helper = (await import(/* @vite-ignore */ TWO_THEMES_HELPER)) as {
+		buildTwoThemesDeck(options?: { formatSchemes?: boolean }): Promise<Uint8Array>;
+	};
+	return helper.buildTwoThemesDeck(options);
+}
 
 /**
  * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent

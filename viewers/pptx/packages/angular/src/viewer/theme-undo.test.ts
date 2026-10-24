@@ -33,11 +33,16 @@ import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 
 const DECK = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
+/** The format scheme a save writes (`a:fmtScheme/@name` of the theme part). */
+function fmtSchemeName(xml: string): string {
+	return /<a:fmtScheme\b[^>]*\bname="([^"]*)"/u.exec(xml)?.[1] ?? 'missing';
+}
+
 const OFFICE = { name: 'Office Theme', accent1: '4472C4', major: 'Calibri Light' };
 const FACET = { name: 'Facet', accent1: '90C226', major: 'Trebuchet MS' };
 
-async function open() {
-	const bytes = readFileSync(DECK);
+async function open(source?: Uint8Array) {
+	const bytes = source ?? readFileSync(DECK);
 	const handler = new PptxHandler();
 	const data = await handler.load(
 		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
@@ -78,10 +83,13 @@ async function open() {
 		await expect.poll(() => editor.canUndo()).toBeTruthy();
 	};
 	/** The theme part as File > Save writes it now. */
-	const saved = async () => {
+	const savedXml = async (part = 'ppt/theme/theme1.xml') => {
 		const slides = buildSaveSlides(editor.slides(), editor.templateElementsBySlideId());
 		const zip = await JSZip.loadAsync(await saveDeckWithPassword(handler, slides, {}, null));
-		const xml = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+		return (await zip.file(part)?.async('string')) ?? '';
+	};
+	const saved = async () => {
+		const xml = await savedXml();
 		const read = (pattern: RegExp) => pattern.exec(xml)?.[1] ?? 'missing';
 		return {
 			name: read(/<a:theme\b[^>]*\bname="([^"]*)"/u),
@@ -89,7 +97,27 @@ async function open() {
 			major: read(/<a:majorFont>\s*<a:latin typeface="([^"]*)"/u),
 		};
 	};
-	return { editor, loader, themes, pick, saved, loaded: data.theme, loadedMap: data.themeColorMap };
+	/** The format scheme each theme part holds in a save, theme 1 then theme 2. */
+	const partEffects = async () => [
+		fmtSchemeName(await savedXml('ppt/theme/theme1.xml')),
+		fmtSchemeName(await savedXml('ppt/theme/theme2.xml')),
+	];
+	/** The format scheme in the viewer's theme and in the saved theme part. */
+	const effects = async () => ({
+		viewer: loader.theme()?.formatScheme?.name,
+		file: fmtSchemeName(await savedXml()),
+	});
+	return {
+		editor,
+		loader,
+		themes,
+		pick,
+		saved,
+		effects,
+		partEffects,
+		loaded: data.theme,
+		loadedMap: data.themeColorMap,
+	};
 }
 
 describe('angular theme undo', () => {
@@ -127,6 +155,36 @@ describe('angular theme undo', () => {
 		await expect(deck.saved()).resolves.toStrictEqual({ ...OFFICE, accent1: '156082' });
 		deck.editor.undo();
 		await expect(deck.saved()).resolves.toStrictEqual(OFFICE);
+	});
+
+	it('an Effects pick is one undo step, and Undo and Redo take the format scheme', async () => {
+		const deck = await open();
+		const loaded = { viewer: 'Office Theme', file: 'Office Theme' };
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+
+		deck.editor.undo();
+		expect(deck.editor.canUndo()).toBeFalsy();
+		await expect(deck.effects()).resolves.toStrictEqual(loaded);
+		// The restored scheme is the record's plain copy, without the keys left undefined.
+		expect(deck.loader.theme()?.formatScheme).toStrictEqual(
+			JSON.parse(JSON.stringify(deck.loaded?.formatScheme)),
+		);
+
+		deck.editor.redo();
+		await expect(deck.effects()).resolves.toStrictEqual({ viewer: 'Glossy', file: 'Glossy' });
+	});
+
+	it("an Effects pick on masters with their own theme parts: Undo puts each part's back", async () => {
+		const deck = await open(await buildTwoThemesDeck({ formatSchemes: true }));
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		await deck.pick('themeEffects', 'glossy');
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
+		deck.editor.undo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+		deck.editor.redo();
+		await expect(deck.partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
 	});
 
 	it('the theme editor and Browse Themes are undone in the theme part too', async () => {

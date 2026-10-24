@@ -21,6 +21,7 @@ import type { RibbonGalleryId } from 'ooxml-ui/pptx';
 import { act } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { buildTwoThemesDeck } from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import {
 	betaTitleFont,
 	flush,
@@ -127,6 +128,33 @@ async function pick(gallery: RibbonGalleryId, itemId: string, expectedFont: stri
 	await flush(150);
 }
 
+const fmtSchemeName = (xml: string) =>
+	/<a:fmtScheme\b[^>]*\bname="([^"]*)"/u.exec(xml)?.[1] ?? 'missing';
+
+/** The format scheme in the viewer's theme and in the theme part a save writes. */
+async function effects(): Promise<{ viewer: string; file: string }> {
+	const zip = await JSZip.loadAsync(await live().save());
+	const xml = (await zip.file('ppt/theme/theme1.xml')?.async('string')) ?? '';
+	return { viewer: live().theme?.formatScheme?.name ?? 'missing', file: fmtSchemeName(xml) };
+}
+
+/** The format scheme each theme part holds in a save, theme 1 then theme 2. */
+async function partEffects(): Promise<string[]> {
+	const zip = await JSZip.loadAsync(await live().save());
+	const read = async (part: string) => fmtSchemeName((await zip.file(part)?.async('string')) ?? '');
+	return [await read('ppt/theme/theme1.xml'), await read('ppt/theme/theme2.xml')];
+}
+
+/** Pick an Effects tile the way `RibbonGallery` does, and wait for its undo step. */
+async function pickEffects(itemId: string): Promise<void> {
+	const result = applyRibbonGalleryItem('themeEffects', itemId, live().gallery.context);
+	expect(result).not.toBeNull();
+	await act(async () => {
+		live().gallery.dispatch(result!);
+	});
+	await flushUntil(() => live().history.canUndo && !live().loading);
+}
+
 /** Undo (or Redo) one step and let the theme part writes behind it settle. */
 async function step(direction: 'undo' | 'redo'): Promise<void> {
 	await act(async () => {
@@ -164,6 +192,37 @@ describe('design gallery theme picks apply in place', () => {
 			expect(betaTitleFont()).toBe('Trebuchet MS');
 			await expect(bothThemes()).resolves.toStrictEqual({ viewer: facet, file: facet });
 			expect(live().theme).toStrictEqual(picked);
+		});
+	});
+
+	it('an Effects pick is one undo step, and Undo and Redo take the format scheme', async () => {
+		await withHarness(deckBytes, async () => {
+			await openOnSlideTwo();
+			const loaded = { viewer: 'Office Theme', file: 'Office Theme' };
+			const glossy = { viewer: 'Glossy', file: 'Glossy' };
+			await expect(effects()).resolves.toStrictEqual(loaded);
+			await pickEffects('glossy');
+			await expect(effects()).resolves.toStrictEqual(glossy);
+
+			await step('undo');
+			expect(live().history.canUndo).toBeFalsy();
+			await expect(effects()).resolves.toStrictEqual(loaded);
+
+			await step('redo');
+			await expect(effects()).resolves.toStrictEqual(glossy);
+		});
+	});
+
+	it("an Effects pick on masters with their own theme parts: Undo puts each part's back", async () => {
+		await withHarness(await buildTwoThemesDeck({ formatSchemes: true }), async () => {
+			await flushUntil(() => live().parses >= 1 && !live().loading);
+			await expect(partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+			await pickEffects('glossy');
+			await expect(partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
+			await step('undo');
+			await expect(partEffects()).resolves.toStrictEqual(['Tide', 'Ember']);
+			await step('redo');
+			await expect(partEffects()).resolves.toStrictEqual(['Glossy', 'Glossy']);
 		});
 	});
 
