@@ -1821,6 +1821,8 @@ export * from './title-bar-state';
 export * from './tab-row-actions';
 
 export * from './slide-sorter-state';
+// What a binding does with a new slide's layout once the core has re-mapped it.
+export * from './inserted-slide-layout';
 
 export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
