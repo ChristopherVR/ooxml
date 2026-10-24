@@ -3,6 +3,7 @@ import type { WriteBackScheduler } from 'ooxml-ui/pptx';
 import {
 	createWriteBackScheduler as createSharedWriteBackScheduler,
 	readSlidesFromYDoc,
+	settleThemeWrites,
 } from 'ooxml-ui/pptx';
 /**
  * collaboration-writeback.ts: elected-writer (role 'owner') PPTX write-back
@@ -42,7 +43,10 @@ export function createWriteBackScheduler(deps: WriteBackDeps): WriteBackSchedule
 			if (!ydoc || !handler) {
 				return null;
 			}
-			return handler.save(readSlidesFromYDoc(ydoc), deps.getSaveOptions?.());
+			// Like every other save, after the theme part writes queued on the live handler.
+			return settleThemeWrites(handler).then(() =>
+				handler.save(readSlidesFromYDoc(ydoc), deps.getSaveOptions?.()),
+			);
 		},
 	});
 }

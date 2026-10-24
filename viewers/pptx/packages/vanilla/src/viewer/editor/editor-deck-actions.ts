@@ -1,5 +1,6 @@
 import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import {
+	queueThemeWrite,
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
 	resolveSlideSizeSelection,
@@ -113,7 +114,12 @@ export function createDeckActions(deps: DeckActionsDeps): DeckActions {
 			if (!store.get().editable) {
 				return;
 			}
-			await deps.getHandler()?.applyTheme(colorScheme, fontScheme, name);
+			// On the handler's theme write queue: an undo still writing a theme part, or a save, waits
+			// for it rather than interleaving with it.
+			const handler = deps.getHandler();
+			if (handler) {
+				await queueThemeWrite(handler, () => handler.applyTheme(colorScheme, fontScheme, name));
+			}
 			const state = store.get();
 			ops.pushHistory();
 			// Core's pure `applyThemeToData` re-resolves every slide's scheme-based

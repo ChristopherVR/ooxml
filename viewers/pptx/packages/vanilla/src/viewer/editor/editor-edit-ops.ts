@@ -225,7 +225,7 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		...createInspectorActions(applyToSelected),
 		...createInkActions({ store, ops }),
 		...deckActions,
-		...createGalleryActions({ store, ops, deck: deckActions, getHandler: deps.getHandler }),
+		...createGalleryActions({ store, ops, getHandler: deps.getHandler }),
 		...createMergeActions({ store, ops }),
 		...createCropActions({ doc, store, ops }),
 		...createChartFormatActions({ store, applyToSelected }),

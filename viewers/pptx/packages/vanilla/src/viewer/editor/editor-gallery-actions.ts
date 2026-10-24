@@ -1,4 +1,4 @@
-import { createDeckStyleHost } from 'ooxml-ui/pptx';
+import { commitsThroughDeckStyle, createDeckStyleHost } from 'ooxml-ui/pptx';
 import type {
 	DeckStyleHandler,
 	DeckStyleHost,
@@ -10,16 +10,16 @@ import type { PptxElement, PptxHandler } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';
-import type { DeckActions } from './editor-deck-actions';
 import type { EditorOps } from './editor-operations';
 
 /**
  * The ribbon style galleries' dispatcher. What a pick writes is decided by the
  * shared `applyRibbonGalleryItem`; this only routes the result onto the
- * binding's existing history-integrated paths: an element patch merges onto
- * the named element (push -> mutate -> commit, the same shape every inspector
- * edit takes), and a theme colour / font scheme goes through the inspector
- * THEME EDITOR card's `applyThemeEdit`, which re-resolves every scheme colour.
+ * binding's history-integrated paths: an element patch merges onto the named
+ * element (push -> mutate -> commit, the same shape every inspector edit takes),
+ * and every Design gallery pick (Themes, Colors, Fonts, Effects, Background
+ * Styles) goes through the shared deck-style commit, which writes only what the
+ * pick changes into the theme part and records one undo step.
  */
 export interface GalleryActions {
 	applyRibbonGalleryResult(result: RibbonGalleryApplyResult): void;
@@ -34,7 +34,6 @@ export interface GalleryActions {
 export interface GalleryActionsDeps {
 	store: Store<ViewerState>;
 	ops: Pick<EditorOps, 'pushHistory' | 'commitChange'>;
-	deck: Pick<DeckActions, 'applyThemeEdit'>;
 	getHandler?: () => PptxHandler | null;
 }
 
@@ -86,7 +85,7 @@ function createStoreDeckStyleHost(
 }
 
 export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
-	const { store, ops, deck } = deps;
+	const { store, ops } = deps;
 	const deckStyle = createStoreDeckStyleHost(store, ops, deps.getHandler ?? (() => null));
 	return {
 		previewRibbonGalleryResult(result) {
@@ -101,12 +100,9 @@ export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
 			if (!state.editable) {
 				return;
 			}
-			if (
-				result.kind === 'themeEffects' ||
-				result.kind === 'backgroundStyle' ||
-				result.kind === 'sequence'
-			) {
-				// Settles the hover preview itself, so the commit starts from the real slides.
+			if (commitsThroughDeckStyle(result)) {
+				// Settles the hover preview itself, so the commit starts from the real slides. A Colors
+				// or Fonts pick writes only that scheme and keeps the theme's name.
 				void deckStyle.commit(result);
 				return;
 			}
@@ -131,32 +127,7 @@ export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
 					),
 				);
 				ops.commitChange();
-				return;
 			}
-			if (result.kind === 'theme') {
-				deck.applyThemeEdit({
-					colorScheme: result.colorScheme,
-					fontScheme: result.fontScheme,
-					name: result.name,
-				});
-				return;
-			}
-			if (result.kind === 'themeColorScheme') {
-				deck.applyThemeEdit({
-					colorScheme: result.colorScheme,
-					fontScheme: state.fontScheme ?? {},
-					name: result.name,
-				});
-				return;
-			}
-			if (!state.colorScheme) {
-				return;
-			}
-			deck.applyThemeEdit({
-				colorScheme: state.colorScheme,
-				fontScheme: result.fontScheme,
-				name: result.name,
-			});
 		},
 	};
 }

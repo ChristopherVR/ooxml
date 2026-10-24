@@ -44,7 +44,6 @@ function setup(onCommand = vi.fn()) {
 	const actions = createGalleryActions({
 		store,
 		ops,
-		deck: { applyThemeEdit: vi.fn() },
 		getHandler: () => handler,
 	});
 	const hub = createRibbonGalleryHub((result) => actions.applyRibbonGalleryResult(result), {
