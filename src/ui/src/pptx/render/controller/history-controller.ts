@@ -56,6 +56,12 @@ export interface EditorHistoryController<T> extends PptxController<EditorHistory
 	redo(current: T): UndoRedoResult<T> | undefined;
 	/** Drop both stacks (a new document was loaded). */
 	clear(): void;
+	/**
+	 * Drop every undo and redo step that would bring back a state `reaches` matches, with the
+	 * steps behind it (the core `EditorHistory.forget`): after a change the stack cannot reverse,
+	 * such as a Slide Master view command that removed a layout from the package.
+	 */
+	forget(reaches: (snapshot: T) => boolean): void;
 	/** Apply File > Options "Maximum number of undos"; trims the oldest entries. */
 	setMaxDepth(maxDepth: number): void;
 }
@@ -114,6 +120,10 @@ export function createEditorHistoryController<T>(
 		redo: (current) => step(stack.redo(current)),
 		clear() {
 			stack.clear();
+			sync();
+		},
+		forget(reaches) {
+			stack.forget(reaches);
 			sync();
 		},
 		setMaxDepth(next) {
