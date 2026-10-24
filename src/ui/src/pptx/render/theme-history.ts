@@ -8,6 +8,10 @@
  * {@link crossedHistoryTheme crosses} a theme change puts the binding's theme back and writes only
  * the parts that differ into the handler ({@link restoreCrossedTheme}).
  *
+ * The record carries the deck's format scheme too, which a Design > Effects pick changes on its own:
+ * a restore across one writes the recorded scheme back as the part held it (the handler's
+ * `restoreThemeFormatScheme`).
+ *
  * A theme applied by path (`render/theme-by-path`) points slide masters at another theme part, so the
  * record also holds each master's theme part ({@link historyTheme} with the masters), and a restore
  * that crosses such a switch points the masters back before it writes anything: Undo returns to
@@ -26,6 +30,7 @@ import type {
 	PptxThemeFormatScheme,
 	PptxThemeOption,
 } from 'ooxml-core/pptx';
+import { formatSchemeKey } from 'ooxml-core/pptx';
 
 import { queueThemeWrite } from './theme-write-queue';
 
@@ -33,15 +38,15 @@ export { queueThemeWrite, settleThemeWrites } from './theme-write-queue';
 
 /**
  * The part of a theme an undo step records: the colour scheme, the font scheme and the name, which
- * are what the Design galleries, the theme editor and the assistant change, and the format scheme.
+ * are what the Design galleries, the theme editor and the assistant change, and the format scheme
+ * (Design > Effects).
  */
 export interface HistoryTheme {
 	colorScheme?: PptxThemeColorScheme;
 	fontScheme?: PptxThemeFontScheme;
 	/**
-	 * The deck's format scheme. A step carries it back, but it never makes a step cross a theme change
-	 * by itself ({@link crossedHistoryTheme}): no theme part write restores it, only pointing a master
-	 * back at its own part does.
+	 * The deck's format scheme. Two records hold the same one when it is the same element, however
+	 * the colours of its placeholder styles resolved when each was read (`formatSchemeKey`).
 	 */
 	formatScheme?: PptxThemeFormatScheme;
 	name?: string;
@@ -116,7 +121,14 @@ export function historyTheme(
 	};
 }
 
-/** `theme` without its format scheme, which alone never makes a step cross a theme change. */
+/** Whether two themes hold the same format scheme (none in both counts as the same). */
+function sameFormatScheme(a: ThemeLike | undefined, b: ThemeLike | undefined): boolean {
+	const key = (theme: ThemeLike | undefined) =>
+		theme?.formatScheme ? formatSchemeKey(theme.formatScheme as PptxThemeFormatScheme) : undefined;
+	return key(a) === key(b);
+}
+
+/** `theme` without its format scheme, which {@link sameFormatScheme} compares. */
 function withoutFormatScheme(theme: HistoryTheme | undefined): HistoryTheme | null {
 	if (!theme) {
 		return null;
@@ -127,33 +139,29 @@ function withoutFormatScheme(theme: HistoryTheme | undefined): HistoryTheme | nu
 
 /**
  * The theme an undo or redo from `current` to `target` has to put back, or `undefined` when the
- * step crosses no theme change (or `target` recorded none). A step whose records differ only in the
- * format scheme (an Effects pick) crosses none.
+ * step crosses no theme change (or `target` recorded none).
  */
 export function crossedHistoryTheme(
 	current: HistoryTheme | undefined,
 	target: HistoryTheme | undefined,
 ): HistoryTheme | undefined {
-	return target && !sameJson(withoutFormatScheme(current), withoutFormatScheme(target))
-		? target
-		: undefined;
-}
-
-/** The theme part the deck's theme comes from (the first master's), as `theme` records it. */
-function deckPartOf(theme: HistoryTheme | undefined): string | undefined {
-	return Object.values(theme?.masterThemePaths ?? {})[0];
+	if (!target) {
+		return undefined;
+	}
+	const same =
+		sameJson(withoutFormatScheme(current), withoutFormatScheme(target)) &&
+		sameFormatScheme(current, target);
+	return same ? undefined : target;
 }
 
 /**
  * `theme` carrying exactly the recorded parts of `target`: a part `target` does not have is
- * removed, so the restored theme records the same as the snapshot it came from. Everything else on
- * the theme is kept, the format scheme too unless the step from `from` puts the deck back on
- * another theme part (a theme applied by path), whose own format scheme comes back with it.
+ * removed, so the restored theme records the same as the snapshot it came from, and the format
+ * scheme when `target` records another one. Everything else on the theme is kept.
  */
 export function withHistoryTheme<T extends ThemeLike>(
 	theme: T | null | undefined,
 	target: HistoryTheme,
-	from?: HistoryTheme,
 ): T {
 	const { masterThemePaths: _masters, formatScheme, ...parts } = target;
 	const next: Record<string, unknown> = { ...theme, ...plain(parts) };
@@ -162,7 +170,7 @@ export function withHistoryTheme<T extends ThemeLike>(
 			delete next[key];
 		}
 	}
-	if (formatScheme && deckPartOf(from) !== deckPartOf(target)) {
+	if (formatScheme && !sameFormatScheme(theme ?? undefined, target)) {
 		next.formatScheme = plain(formatScheme);
 	}
 	return next as T;
@@ -213,6 +221,11 @@ export interface ThemePartWriter {
 		themePaths?: readonly string[],
 	): Promise<void>;
 	updateThemeName(name: string, themePaths?: readonly string[]): Promise<void>;
+	/** Put back a format scheme a theme part held before (undo and redo of an Effects pick). */
+	restoreThemeFormatScheme(
+		formatScheme: PptxThemeFormatScheme,
+		themePaths?: readonly string[],
+	): Promise<unknown>;
 	/** Point one slide master at a theme part (undo and redo of a theme by path switch). */
 	setSlideMasterTheme(masterPath: string, themePath: string): Promise<void>;
 	/** One theme part's schemes and name as the part holds them now. */
@@ -223,6 +236,7 @@ export interface ThemePartWriter {
 export type ThemePartWrite =
 	| { readonly part: 'colorScheme'; readonly colorScheme: PptxThemeColorScheme }
 	| { readonly part: 'fontScheme'; readonly fontScheme: PptxThemeFontScheme }
+	| { readonly part: 'formatScheme'; readonly formatScheme: PptxThemeFormatScheme }
 	| { readonly part: 'name'; readonly name: string };
 
 /**
@@ -242,6 +256,9 @@ export function themePartWrites(
 	}
 	if (to.fontScheme && !sameJson(to.fontScheme, from?.fontScheme)) {
 		writes.push({ part: 'fontScheme', fontScheme: to.fontScheme });
+	}
+	if (to.formatScheme && !sameFormatScheme(from, to)) {
+		writes.push({ part: 'formatScheme', formatScheme: to.formatScheme });
 	}
 	const name = to.name ?? loadedName;
 	if (name && name !== (from?.name ?? loadedName)) {
@@ -274,6 +291,8 @@ async function applyWrites(
 			await handler.updateThemeColorScheme(write.colorScheme, ...scope);
 		} else if (write.part === 'fontScheme') {
 			await handler.updateThemeFontScheme(write.fontScheme, ...scope);
+		} else if (write.part === 'formatScheme') {
+			await handler.restoreThemeFormatScheme(write.formatScheme, ...scope);
 		} else {
 			await handler.updateThemeName(write.name, ...scope);
 		}
@@ -365,5 +384,5 @@ export function restoreCrossedTheme<T extends ThemeLike>(
 		return undefined;
 	}
 	void writeThemeParts(handler, current, crossed, loadedName);
-	return withHistoryTheme(theme, crossed, current);
+	return withHistoryTheme(theme, crossed);
 }

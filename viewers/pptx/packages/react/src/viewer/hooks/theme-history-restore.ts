@@ -10,7 +10,7 @@ import type { HistoryMaster, HistoryTheme } from 'ooxml-ui/pptx';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
 /**
- * An undo or redo crossed a theme change: put `target`'s colour scheme, font scheme and name
+ * An undo or redo crossed a theme change: put `target`'s colour, font and format schemes and name
  * back, in the viewer's theme and in the handler's theme parts, so what a save writes matches the
  * slides again. Only the parts that differ are written (the shared `writeThemeParts`, on the
  * handler's theme write queue): undoing a fonts pick leaves the colour scheme part as it is. A step
@@ -22,7 +22,7 @@ export function restoreHistoryTheme(
 ): Promise<void> {
 	const masters = input.slideMasters as unknown as HistoryMaster[];
 	const current = historyTheme(input.theme, masters);
-	input.setTheme((prev) => withHistoryTheme(prev, target, current));
+	input.setTheme((prev) => withHistoryTheme(prev, target));
 	if (target.masterThemePaths) {
 		input.setSlideMasters(
 			(prev) =>
