@@ -6,17 +6,13 @@
  * commit and its undo step, an effects colour field tells a new target from a
  * re-render of its own drag, and a pick with several shapes selected edits the
  * primary one alone, as `applyToSelected` always has. Wired end to end: the
- * sections, the chrome's inspector handlers, the real edit actions and history.
+ * sections, the chrome's inspector handlers, the real edit actions and history
+ * (`colour-drag.test-support.ts`).
  */
-import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
-import { describe, expect, it, vi } from 'vitest';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { describe, expect, it } from 'vitest';
 
-import { buildChromeCallbacks } from '../../chrome-callbacks';
-import type { ChromeCallbackDeps } from '../../chrome-callbacks';
-import { createEditActions } from '../../editor/editor-edit-ops';
-import { createEditorOps } from '../../editor/editor-operations';
-import { createTranslator } from '../../i18n';
-import { createInitialViewerState, createStore } from '../../state';
+import { mountInspectorEditor } from './colour-drag.test-support';
 import { createFillSection } from './fill-section';
 import type { InspectorState } from './types';
 
@@ -52,39 +48,15 @@ function shape(id: string, shapeStyle: ShapeStyle): PptxElement {
 }
 
 function mount() {
-	const slide = {
-		id: 's',
-		rId: 'rId1',
-		slideNumber: 1,
-		notes: '',
-		elements: [shape('a', A_STYLE), shape('b', B_STYLE)],
-	} as PptxSlide;
-	const store = createStore({
-		...createInitialViewerState(),
-		slides: [slide],
-		currentSlide: 0,
-		editable: true,
-		selectedElementId: 'a',
-		selectedElementIds: ['a'],
-		presentationProperties: { mruColors: [] },
-	});
-	const ops = createEditorOps({ store, getHandler: () => null, onHistoryChange: vi.fn() });
-	const actions = createEditActions({
-		doc: document,
-		getTranslator: () => createTranslator(),
-		store,
-		ops,
-		getHandler: () => null,
-		setHandler: () => {},
-	});
-	const deps = new Proxy({ getEditActions: () => actions } as unknown as ChromeCallbackDeps, {
-		get: (target, property, receiver) => Reflect.get(target, property, receiver) ?? vi.fn(),
-	});
+	const { store, ops, handlers } = mountInspectorEditor(
+		[shape('a', A_STYLE), shape('b', B_STYLE)],
+		{ selectedElementId: 'a', selectedElementIds: ['a'] },
+	);
 	const fill = createFillSection(
 		document,
 		(key) => key,
 		() => document.createElement('section'),
-		buildChromeCallbacks(deps).inspectorHandlers,
+		handlers,
 	);
 	const element = (id: string) =>
 		store.get().slides[0]!.elements.find((el) => el.id === id) as PptxElement & {
