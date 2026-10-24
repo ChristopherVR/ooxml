@@ -207,9 +207,9 @@ function targetForMaster(data: PptxData, masterPath: string | undefined): Master
  * loaded pictures, and nothing the command changes lives on them. And it
  * keeps the previous handler undisposed, since the slides on screen and the
  * undo stack still show that handler's pictures (disposing it revokes their
- * Blob URLs). After a command that removed layouts (`removedSlideMasterParts`
- * in `./master-view-crud-history`), it forgets the undo and redo steps that
- * would bring one back (`historyStepUsesParts`).
+ * Blob URLs). Then the binding forgets the undo and redo steps that would
+ * bring back a part the command removed (`forgetStepsUsingRemovedParts` in
+ * `./master-view-crud-history`).
  */
 export async function applyMasterViewCrudAction(
 	handler: PptxHandler,

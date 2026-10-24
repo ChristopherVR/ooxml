@@ -1,9 +1,8 @@
 import {
 	applyMasterViewCrudAction,
-	historyStepUsesParts,
+	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
 import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 /**
@@ -105,12 +104,12 @@ export class EditorMasterCrudController {
 			layoutIndex: result.target.layoutIndex,
 		};
 		this.editor.selection.clear();
-		// A step restores the masters too, so every step taken before a delete still holds what it
-		// removed, and goes.
-		const removed = removedSlideMasterParts(data, result.data);
-		if (removed.length > 0) {
-			this.editor.history.forget((step) => historyStepUsesParts(step, removed));
-		}
+		// A step restores the masters too, so a delete leaves no undo step here.
+		forgetStepsUsingRemovedParts(
+			(reaches) => this.editor.history.forget(reaches),
+			data,
+			result.data,
+		);
 		this.editor.commitChange();
 		return true;
 	}

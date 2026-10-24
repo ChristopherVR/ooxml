@@ -9,9 +9,8 @@
  * that step makes the next save write a slide relationship to a part that is
  * not in the package, and a later Insert Layout that reuses the file name
  * silently gives the slide a different layout. So after a command the binding
- * asks {@link removedSlideMasterParts} what it removed and, when anything was,
- * forgets the steps {@link historyStepUsesParts} matches
- * (`EditorHistoryController.forget`).
+ * calls {@link forgetStepsUsingRemovedParts}, which forgets the steps that would
+ * bring back what it removed (`EditorHistoryController.forget`).
  *
  * @module render/master-view-crud-history
  */
@@ -52,14 +51,28 @@ export function removedSlideMasterParts(
  */
 export function historyStepUsesParts(
 	step: SlideMasterHistoryStep,
-	removed: readonly string[],
+	removed: ReadonlySet<string>,
 ): boolean {
-	if (removed.length === 0) {
-		return false;
-	}
-	const gone = new Set(removed);
 	return (
-		step.slides.some((slide) => slide.layoutPath !== undefined && gone.has(slide.layoutPath)) ||
-		partPaths(step.slideMasters).some((path) => gone.has(path))
+		step.slides.some((slide) => slide.layoutPath !== undefined && removed.has(slide.layoutPath)) ||
+		partPaths(step.slideMasters).some((path) => removed.has(path))
 	);
+}
+
+/**
+ * After a Slide Master view command took the deck from `before` to `after`,
+ * forget every undo and redo step that would bring back a part it removed
+ * (nothing, unless it was a delete). In a binding whose steps restore the
+ * masters too, every step taken before a delete still holds what it removed,
+ * so a delete leaves no undo step there.
+ */
+export function forgetStepsUsingRemovedParts(
+	forget: (reaches: (step: SlideMasterHistoryStep) => boolean) => void,
+	before: Pick<PptxData, 'slideMasters'>,
+	after: Pick<PptxData, 'slideMasters'>,
+): void {
+	const removed = new Set(removedSlideMasterParts(before, after));
+	if (removed.size > 0) {
+		forget((step) => historyStepUsesParts(step, removed));
+	}
 }

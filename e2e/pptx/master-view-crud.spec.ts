@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 
 import { savePptxViaBackstage } from './save-pptx';
@@ -21,6 +20,7 @@ import {
 import { downloadBytes } from './support/exports';
 import { readFixtureLayout } from './support/fixture-layout';
 import { dragBy } from './support/keyboard';
+import { validatePptxIntegrity } from './support/pptx-integrity';
 
 /**
  * Wave-4 B4: the Slide Master view sidebar's Insert / Duplicate / Delete /
@@ -151,27 +151,11 @@ async function expectCurrentLayout(page: Page, name: string): Promise<void> {
 	await closeLayoutMenu(page);
 }
 
-/** Every slide-to-layout relationship in a saved package whose target part is not in it. */
-async function danglingLayoutRelationships(bytes: Uint8Array): Promise<string[]> {
-	const zip = await JSZip.loadAsync(bytes);
-	const dangling: string[] = [];
-	const rels = Object.keys(zip.files).filter((name) =>
-		/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/u.test(name),
+/** The package problems a saved deck has in its slide master and layout parts and the links to them. */
+async function masterAndLayoutProblems(bytes: Uint8Array): Promise<string[]> {
+	return (await validatePptxIntegrity(bytes)).filter((problem) =>
+		/slide(?:Layout|Master)/u.test(problem),
 	);
-	for (const name of rels) {
-		const xml = (await zip.file(name)?.async('string')) ?? '';
-		for (const [relationship] of xml.matchAll(/<Relationship\b[^>]*>/gu)) {
-			if (!/Type="[^"]*\/slideLayout"/u.test(relationship)) {
-				continue;
-			}
-			const target = /Target="([^"]+)"/u.exec(relationship)?.[1] ?? '';
-			const part = new URL(target, 'file:///ppt/slides/').pathname.slice(1);
-			if (!zip.file(part)) {
-				dangling.push(`${name} -> ${target}`);
-			}
-		}
-	}
-	return dangling;
 }
 
 /** The sidebar's first button closes Slide Master view. */
@@ -300,7 +284,7 @@ test.describe('slide master view CRUD', () => {
 			await expectCurrentLayout(page, home);
 		}
 		const saved = await downloadBytes(await savePptxViaBackstage(page));
-		expect(await danglingLayoutRelationships(saved)).toStrictEqual([]);
+		expect(await masterAndLayoutProblems(saved)).toStrictEqual([]);
 	});
 
 	test('a layout a slide uses cannot be deleted', async ({ page }) => {

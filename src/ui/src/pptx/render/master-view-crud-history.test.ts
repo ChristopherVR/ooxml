@@ -5,7 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { createEditorHistoryController } from './controller/history-controller';
 import type { MasterViewTarget } from './master-view';
 import { applyMasterViewCrudAction } from './master-view-crud';
-import { historyStepUsesParts, removedSlideMasterParts } from './master-view-crud-history';
+import {
+	forgetStepsUsingRemovedParts,
+	historyStepUsesParts,
+	removedSlideMasterParts,
+} from './master-view-crud-history';
 
 const ON_MASTER: MasterViewTarget = { tab: 'slides', masterIndex: 0, layoutIndex: null };
 
@@ -69,8 +73,13 @@ describe('historyStepUsesParts', () => {
 	} as PptxSlideMaster;
 
 	it('matches a step with a slide on a removed layout', () => {
-		const removed = ['ppt/slideLayouts/slideLayout2.xml'];
-		expect(historyStepUsesParts({ slides: [{}, onLayout(removed[0]!)] }, removed)).toBeTruthy();
+		const removed = new Set(['ppt/slideLayouts/slideLayout2.xml']);
+		expect(
+			historyStepUsesParts(
+				{ slides: [{}, onLayout('ppt/slideLayouts/slideLayout2.xml')] },
+				removed,
+			),
+		).toBeTruthy();
 		expect(
 			historyStepUsesParts({ slides: [onLayout('ppt/slideLayouts/slideLayout3.xml')] }, removed),
 		).toBeFalsy();
@@ -78,25 +87,28 @@ describe('historyStepUsesParts', () => {
 
 	it('matches a step whose masters still hold a removed master or layout', () => {
 		expect(
-			historyStepUsesParts({ slides: [], slideMasters: [master] }, [
-				'ppt/slideLayouts/slideLayout2.xml',
-			]),
+			historyStepUsesParts(
+				{ slides: [], slideMasters: [master] },
+				new Set(['ppt/slideLayouts/slideLayout2.xml']),
+			),
 		).toBeTruthy();
 		expect(
-			historyStepUsesParts({ slides: [], slideMasters: [{ ...master, layouts: [] }] }, [
-				master.path,
-			]),
+			historyStepUsesParts(
+				{ slides: [], slideMasters: [{ ...master, layouts: [] }] },
+				new Set([master.path]),
+			),
 		).toBeTruthy();
 		expect(
-			historyStepUsesParts({ slides: [], slideMasters: [master] }, [
-				'ppt/slideLayouts/slideLayout9.xml',
-			]),
+			historyStepUsesParts(
+				{ slides: [], slideMasters: [master] },
+				new Set(['ppt/slideLayouts/slideLayout9.xml']),
+			),
 		).toBeFalsy();
 	});
 
 	it('matches nothing when the command removed nothing', () => {
 		expect(
-			historyStepUsesParts({ slides: [onLayout('x')], slideMasters: [master] }, []),
+			historyStepUsesParts({ slides: [onLayout('x')], slideMasters: [master] }, new Set()),
 		).toBeFalsy();
 	});
 
@@ -123,8 +135,7 @@ describe('historyStepUsesParts', () => {
 		if (!result.ok) {
 			return;
 		}
-		const removed = removedSlideMasterParts(data, result.data);
-		history.forget((step) => historyStepUsesParts(step, removed));
+		forgetStepsUsingRemovedParts(history.forget, data, result.data);
 
 		expect(history.getSnapshot()).toMatchObject({
 			canUndo: true,
