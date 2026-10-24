@@ -116,7 +116,7 @@ export class ViewerThemeGalleryService {
 			this.loader.getHandler(),
 			from,
 			historyTheme(this.loader.theme()) ?? {},
-			loadedThemeName(this.loader.themeOptions(), this.loader.slideMasters()[0]?.themePath),
+			loadedThemeName(this.loader.themeOptions(), this.loader.slideMasters()),
 		);
 	}
 
