@@ -37,7 +37,7 @@ export function sanitizeChartSvg(svg: Element): void {
 }
 
 /** A chart painted by the core (`LayoutObject.chart`), or its labelled frame. */
-function chartElement(chart: { svg?: string; label: string }): HTMLElement {
+function chartElement(chart: { svg?: string; label: string; shape?: true }): HTMLElement {
 	const element = document.createElement('div');
 	element.dataset.docxChart = chart.svg ? '1' : 'frame';
 	const svg = chart.svg
@@ -46,6 +46,10 @@ function chartElement(chart: { svg?: string; label: string }): HTMLElement {
 	if (svg && svg.localName === 'svg') {
 		sanitizeChartSvg(svg);
 		element.classList.add('dve-print-chart');
+		// A shape's centred outline straddles its box, and it has no backdrop of
+		// its own: the chart frame's clip halved the outline and its white fill
+		// showed in the corners around a non-rectangular shape.
+		if (chart.shape) element.classList.add('dve-print-shape');
 		element.title = chart.label;
 		element.append(document.importNode(svg, true));
 	} else {
@@ -61,7 +65,7 @@ export function pictureElement(
 		contentType: string;
 		widthPx: number;
 		heightPx: number;
-		chart?: { svg?: string; label: string };
+		chart?: { svg?: string; label: string; shape?: true };
 		noteSeparator?: 'separator' | 'continuationSeparator';
 	},
 	pictureUrl: PictureUrl | undefined,

@@ -12,7 +12,7 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 		const svg = image.shape && shapeSvg(image.shape, image.widthPx, image.heightPx, theme);
 		floats.push({
 			index: floats.length,
-			...(svg ? { chart: { svg, label: 'Shape' } } : {}),
+			...(svg ? { chart: { svg, label: 'Shape', shape: true as const } } : {}),
 			partName: image.partName,
 			contentType: image.contentType,
 			widthPx: image.widthPx,

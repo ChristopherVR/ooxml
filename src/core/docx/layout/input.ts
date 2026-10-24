@@ -56,8 +56,12 @@ export interface LayoutObject {
 	heightPx: number;
 	/** How far the object extends below the baseline (an equation's descent); 0 sits on it. */
 	descentPx?: number;
-	/** A chart drawn at this size: the painted SVG markup, or only its frame label. */
-	chart?: { svg?: string; label: string };
+	/**
+	 * A chart drawn at this size: the painted SVG markup, or only its frame label.
+	 * `shape` marks a drawing shape painted the same way, whose outline may reach
+	 * past its box and which has no chart background.
+	 */
+	chart?: { svg?: string; label: string; shape?: true };
 	/** Native note separator rule, drawn without loading a media part. */
 	noteSeparator?: 'separator' | 'continuationSeparator';
 }

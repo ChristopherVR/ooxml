@@ -93,6 +93,10 @@
 	overflow: hidden;
 	background: #fff;
 }
+.dve-print-chart.dve-print-shape {
+	overflow: visible;
+	background: none;
+}
 .dve-print-chart > svg {
 	display: block;
 	width: 100%;

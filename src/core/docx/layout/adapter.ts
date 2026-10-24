@@ -71,9 +71,9 @@ function shapeChart(
 	widthPx: number,
 	heightPx: number,
 	theme: DocumentModel['theme'],
-): { chart?: { svg: string; label: string } } {
+): { chart?: { svg: string; label: string; shape: true } } {
 	const svg = shapeSvg(shape, widthPx, heightPx, theme);
-	return svg ? { chart: { svg, label: 'Shape' } } : {};
+	return svg ? { chart: { svg, label: 'Shape', shape: true } } : {};
 }
 
 function sectionBreak(

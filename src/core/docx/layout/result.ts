@@ -198,7 +198,7 @@ export interface LayoutFloatBox {
 	partName: string;
 	contentType: string;
 	/** A drawing shape painted as SVG (it has no media part); the print view draws it like a chart. */
-	chart?: { svg?: string; label: string };
+	chart?: { svg?: string; label: string; shape?: true };
 	behindText: boolean;
 	/** `wp:wrapSquare`, `wrapTopAndBottom`… (`none` floats over or behind the text). */
 	wrap?: string;

@@ -53,3 +53,18 @@ describe('pictureElement chart SVG sanitising', () => {
 		expect(svg.getElementsByTagName('g')[0]!.hasAttribute('onmouseover')).toBe(false);
 	});
 });
+
+describe('pictureElement drawing shapes', () => {
+	const svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L100 0 L50 50 Z"/></svg>';
+
+	it('marks a shape so its outline is not clipped to the box', () => {
+		const shape = pictureElement(
+			{ ...object(svg), chart: { svg, label: 'Shape', shape: true } },
+			undefined,
+		);
+		expect(shape.classList.contains('dve-print-shape')).toBe(true);
+		expect(pictureElement(object(svg), undefined).classList.contains('dve-print-shape')).toBe(
+			false,
+		);
+	});
+});
