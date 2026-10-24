@@ -11,7 +11,8 @@
  * A theme applied by path (`render/theme-by-path`) points slide masters at another theme part, so the
  * record also holds each master's theme part ({@link historyTheme} with the masters), and a restore
  * that crosses such a switch points the masters back before it writes anything: Undo returns to
- * the old part instead of writing the old schemes into the new one.
+ * the old part instead of writing the old schemes into the new one. The record describes the deck's
+ * part only, so what such a restore still writes goes into that part alone.
  *
  * Each theme part write reads, edits and writes the part back, so the writes on one handler run one
  * after another ({@link queueThemeWrite}), and every save waits for the ones queued before it
@@ -162,11 +163,20 @@ export interface ThemePartSchemes {
 	readonly fontScheme: PptxThemeFontScheme;
 }
 
-/** The handler operations that write the recorded parts (the `PptxHandler` has them all). */
+/**
+ * The handler operations that write the recorded parts (the `PptxHandler` has them all). A scheme
+ * edit writes every part a slide master uses, or only `themePaths`.
+ */
 export interface ThemePartWriter {
-	updateThemeColorScheme(colorScheme: PptxThemeColorScheme): Promise<void>;
-	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;
-	updateThemeName(name: string): Promise<void>;
+	updateThemeColorScheme(
+		colorScheme: PptxThemeColorScheme,
+		themePaths?: readonly string[],
+	): Promise<void>;
+	updateThemeFontScheme(
+		fontScheme: PptxThemeFontScheme,
+		themePaths?: readonly string[],
+	): Promise<void>;
+	updateThemeName(name: string, themePaths?: readonly string[]): Promise<void>;
 	/** Point one slide master at a theme part (undo and redo of a theme by path switch). */
 	setSlideMasterTheme(masterPath: string, themePath: string): Promise<void>;
 	/** One theme part's schemes and name as the part holds them now. */
@@ -217,16 +227,39 @@ export function loadedThemeName(
 	return (options.find((option) => option.path === primary) ?? options[0])?.name;
 }
 
-async function applyWrites(handler: ThemePartWriter, writes: readonly ThemePartWrite[]) {
+/** Write `writes` into every part the masters use, or with `scope` into those parts only. */
+async function applyWrites(
+	handler: ThemePartWriter,
+	writes: readonly ThemePartWrite[],
+	...scope: [] | [themePaths: readonly string[]]
+) {
 	for (const write of writes) {
 		if (write.part === 'colorScheme') {
-			await handler.updateThemeColorScheme(write.colorScheme);
+			await handler.updateThemeColorScheme(write.colorScheme, ...scope);
 		} else if (write.part === 'fontScheme') {
-			await handler.updateThemeFontScheme(write.fontScheme);
+			await handler.updateThemeFontScheme(write.fontScheme, ...scope);
 		} else {
-			await handler.updateThemeName(write.name);
+			await handler.updateThemeName(write.name, ...scope);
 		}
 	}
+}
+
+/**
+ * `theme` with only the faces a font scheme write changes: the major and minor latin faces. The
+ * per-script faces of a deck theme are merged across every theme part (the loaded `PptxTheme`), so
+ * they never match one part's own, and the write leaves a part's script faces as they are anyway.
+ */
+function writableFaces(theme: HistoryTheme): HistoryTheme {
+	const { fontScheme } = theme;
+	if (!fontScheme) {
+		return theme;
+	}
+	const latin = (font: { latin?: string } | undefined) =>
+		font?.latin ? { latin: font.latin } : {};
+	return {
+		...theme,
+		fontScheme: { majorFont: latin(fontScheme.majorFont), minorFont: latin(fontScheme.minorFont) },
+	};
 }
 
 /** The masters `to` puts on another theme part than `from` has them on, with that part. */
@@ -239,8 +272,9 @@ function masterThemeMoves(from: HistoryTheme | undefined, to: HistoryTheme): [st
 /**
  * Write {@link themePartWrites} into `handler`, after every write queued on it before. When `to`
  * has masters on other theme parts (a step across a theme by path switch) they are pointed back
- * first, and only what then still differs from the deck's part (the first master's) is written:
- * Undo returns to the old part rather than writing the old schemes into the new one.
+ * first, and only what then still differs from the deck's part (the first master's) is written,
+ * into that part alone: Undo returns to the old part rather than writing the old schemes into the
+ * new one, and leaves the parts of the other masters, which the record does not describe, alone.
  */
 export function writeThemeParts(
 	handler: ThemePartWriter | null | undefined,
@@ -271,9 +305,10 @@ async function repointAndWrite(
 	}
 	const deckPart = Object.values(to.masterThemePaths ?? {})[0];
 	const now = deckPart ? await handler.getThemePartSchemes(deckPart) : undefined;
-	if (now) {
+	if (deckPart && now) {
 		// The part's own name stands for a record that carries none (the loaded theme).
-		await applyWrites(handler, themePartWrites(historyTheme(now), to, now.name));
+		const writes = themePartWrites(writableFaces(historyTheme(now)), writableFaces(to), now.name);
+		await applyWrites(handler, writes, [deckPart]);
 	}
 }
 

@@ -34,19 +34,24 @@ const FACET: PptxThemeColorScheme = { ...OFFICE, accent1: '#90C226' };
 const CALIBRI = { majorFont: { latin: 'Calibri Light' }, minorFont: { latin: 'Calibri' } };
 const ARIAL = { majorFont: { latin: 'Arial' }, minorFont: { latin: 'Arial' } };
 
-/** A handler that logs its writes; `parts` are the theme parts it reads (`getThemePartSchemes`). */
+/**
+ * A handler that logs its writes, with the parts a scoped write names (`colors@part`); `parts` are
+ * the theme parts it reads (`getThemePartSchemes`).
+ */
 function writer(parts: Record<string, ThemePartSchemes> = {}) {
 	const writes: string[] = [];
+	const log = (write: string, themePaths?: readonly string[]) =>
+		writes.push(themePaths ? `${write}@${themePaths.join(',')}` : write);
 	return {
 		writes,
-		updateThemeColorScheme: vi.fn(async () => {
-			writes.push('colors');
+		updateThemeColorScheme: vi.fn(async (_scheme: unknown, themePaths?: readonly string[]) => {
+			log('colors', themePaths);
 		}),
-		updateThemeFontScheme: vi.fn(async () => {
-			writes.push('fonts');
+		updateThemeFontScheme: vi.fn(async (_scheme: unknown, themePaths?: readonly string[]) => {
+			log('fonts', themePaths);
 		}),
-		updateThemeName: vi.fn(async (name: string) => {
-			writes.push(`name:${name}`);
+		updateThemeName: vi.fn(async (name: string, themePaths?: readonly string[]) => {
+			log(`name:${name}`, themePaths);
 		}),
 		setSlideMasterTheme: vi.fn(async (master: string, path: string) => {
 			writes.push(`${master}->${path}`);
@@ -291,6 +296,7 @@ describe('a step across a theme applied by path', () => {
 			switched,
 		);
 		await writeThemeParts(handler, after, before, 'Ember');
-		expect(handler.writes).toStrictEqual([`m1->${T1}`, 'colors', 'name:Renamed']);
+		// Into the deck's part only: the record does not describe the parts of the other masters.
+		expect(handler.writes).toStrictEqual([`m1->${T1}`, `colors@${T1}`, `name:Renamed@${T1}`]);
 	});
 });

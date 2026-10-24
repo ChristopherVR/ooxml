@@ -1,6 +1,6 @@
 import { PptxHandler } from 'ooxml-core/pptx';
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
 	buildTwoThemesDeck,
@@ -9,15 +9,15 @@ import {
 import { partitionTemplateElements } from './template-editing';
 import { applyThemeByPath } from './theme-by-path';
 import type { ThemeByPathHandler } from './theme-by-path';
-import { settleThemeWrites } from './theme-history';
+import { historyTheme, settleThemeWrites, writeThemeParts } from './theme-history';
 import type { ThemePartSchemes } from './theme-history';
 import { queueThemeWrite } from './theme-write-queue';
 
 const { theme1, theme2, shapeName, masterBarName } = TWO_THEMES;
 
 /** The two-themes deck as a binding holds it: template elements apart from the slides. */
-async function open() {
-	const bytes = await buildTwoThemesDeck();
+async function open(options?: Parameters<typeof buildTwoThemesDeck>[0]) {
+	const bytes = await buildTwoThemesDeck(options);
 	const handler = new PptxHandler();
 	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
 	const { slides, templateElementsBySlideId } = partitionTemplateElements(data.slides);
@@ -41,6 +41,14 @@ const headingFace = (slide: PptxSlide | undefined) => {
 		? heading.textSegments?.[0]?.style?.fontFamily
 		: undefined;
 };
+
+/** The heading face of every slide after a save and a reload. */
+async function savedHeadingFaces(handler: PptxHandler, slides: PptxSlide[]) {
+	const reopened = new PptxHandler();
+	const bytes = await handler.save(slides);
+	const data = await reopened.load(bytes.buffer.slice(0) as ArrayBuffer);
+	return data.slides.map(headingFace);
+}
 
 async function savedMasterThemes(handler: PptxHandler, slides: PptxSlide[]) {
 	const reopened = new PptxHandler();
@@ -169,6 +177,66 @@ describe('applyThemeByPath', () => {
 		expect(change?.deckTheme?.theme).toStrictEqual({
 			colorScheme: { accent1: '#111111' },
 			fontScheme: {},
+		});
+	});
+
+	describe('Undo of a switch', () => {
+		/** Switch the first master to theme 2, then undo it the way every binding does. */
+		async function switchAndUndo(deck: Awaited<ReturnType<typeof open>>) {
+			const before = historyTheme(deck.theme, deck.slideMasters);
+			const change = await applyThemeByPath(deck.handler, {
+				themePath: theme2.path,
+				applyToAllMasters: false,
+				...deck,
+			});
+			const after = historyTheme(change!.deckTheme!.theme, change!.slideMasters);
+			const color = vi.spyOn(deck.handler, 'updateThemeColorScheme');
+			const font = vi.spyOn(deck.handler, 'updateThemeFontScheme');
+			await writeThemeParts(deck.handler, after, before);
+			await settleThemeWrites(deck.handler);
+			return { color, font };
+		}
+
+		it('writes nothing when the parts differ in their per-script faces', async () => {
+			// The deck theme merges both parts' script faces, so it matches neither part's own.
+			const deck = await open({ scriptFaces: true });
+			expect(deck.theme?.fontScheme?.majorFont?.byScript).toStrictEqual({
+				Jpan: 'Yu Mincho',
+				Hang: 'Batang',
+			});
+			const { color, font } = await switchAndUndo(deck);
+			const second = await deck.handler.getThemePartSchemes(theme2.path);
+			expect(second?.fontScheme.majorFont?.latin).toBe(theme2.major);
+			await expect(savedHeadingFaces(deck.handler, deck.slides)).resolves.toStrictEqual([
+				theme1.major,
+				theme1.major,
+				theme2.major,
+			]);
+			expect(font).not.toHaveBeenCalled();
+			expect(color).not.toHaveBeenCalled();
+		});
+
+		it("writes what the deck's part no longer holds into that part only", async () => {
+			const deck = await open();
+			const before = historyTheme(deck.theme, deck.slideMasters);
+			// An edit the record predates reaches every part the masters use.
+			const edited = { ...deck.theme!.colorScheme!, accent1: '#123456' };
+			await deck.handler.updateThemeColorScheme(edited);
+			const change = await applyThemeByPath(deck.handler, {
+				themePath: theme2.path,
+				applyToAllMasters: false,
+				...deck,
+			});
+			const after = historyTheme(change!.deckTheme!.theme, change!.slideMasters);
+			const held = await deck.handler.getThemePartSchemes(theme2.path);
+			expect(hex(held?.colorScheme.accent1)).toBe('123456');
+			// A step from after the switch back to before the edit.
+			await writeThemeParts(deck.handler, after, before);
+			await settleThemeWrites(deck.handler);
+			const first = await deck.handler.getThemePartSchemes(theme1.path);
+			expect(hex(first?.colorScheme.accent1)).toBe(theme1.colors.accent1);
+			// The record describes the deck's part, not the part master 2 kept.
+			await expect(deck.handler.getThemePartSchemes(theme2.path)).resolves.toStrictEqual(held);
 		});
 	});
 });
