@@ -13,7 +13,7 @@
  * @module render/live-color-leaves
  */
 
-export type LiveColorPath = readonly string[];
+type LiveColorPath = readonly string[];
 
 /** One leaf a drag's previews wrote, with what the target held there before the first one. */
 export interface LiveColorLeaf {

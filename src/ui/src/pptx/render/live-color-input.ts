@@ -41,9 +41,6 @@
 import type { LiveColorLeaf } from './live-color-leaves';
 import { liveColorRevertPatch, recordLiveColorLeaves } from './live-color-leaves';
 
-export { liveColorRevertPatch } from './live-color-leaves';
-export type { LiveColorLeaf } from './live-color-leaves';
-
 /** What a colour control edits at the moment of an event. */
 export interface LiveColorSource<T> {
 	/** The edited target's identity (the element id). A drag never crosses targets. */
