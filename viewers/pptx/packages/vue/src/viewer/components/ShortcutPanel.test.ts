@@ -73,7 +73,7 @@ describe('shortcutPanel', () => {
 		const combos = Array.from(document.querySelectorAll('.pptx-vue-shortcuts-combo')).map(
 			(el) => el.textContent ?? '',
 		);
-		// In the (non-mac) test environment, Mod renders as "Ctrl".
+		// In the (non-mac) test environment, `Ctrl/Cmd` renders as "Ctrl".
 		expect(combos.some((text) => text.includes('Ctrl'))).toBeTruthy();
 	});
 

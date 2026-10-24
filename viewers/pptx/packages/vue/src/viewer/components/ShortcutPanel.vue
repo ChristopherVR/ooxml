@@ -11,7 +11,6 @@
  * Presentational: the parent owns the `open` flag and handles `close`.
  */
 import { groupShortcutReference, VIEWER_SHORTCUT_REFERENCE } from 'ooxml-ui/pptx';
-import type { ShortcutReferenceItem } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -59,16 +58,16 @@ function platformShortcut(shortcut: string): string {
 /** The reference filtered by the live query, then grouped for display. */
 const groups = computed(() => {
 	const needle = query.value.trim().toLowerCase();
-	const filtered: ShortcutReferenceItem[] =
+	const matches =
 		needle.length === 0
-			? [...VIEWER_SHORTCUT_REFERENCE]
+			? VIEWER_SHORTCUT_REFERENCE
 			: VIEWER_SHORTCUT_REFERENCE.filter(
 					(item) =>
 						t(item.actionKey).toLowerCase().includes(needle) ||
 						platformShortcut(item.shortcut).toLowerCase().includes(needle) ||
 						item.shortcut.toLowerCase().includes(needle),
 				);
-	return groupShortcutReference(filtered);
+	return groupShortcutReference(matches);
 });
 
 const hasResults = computed(() => groups.value.length > 0);
