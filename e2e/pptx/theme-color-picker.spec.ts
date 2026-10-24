@@ -126,6 +126,21 @@ async function runScenario(page: Page, origin: string): Promise<ThemePickResult>
 	// second interaction operating on an ElementHandle detached from the live
 	// DOM, silently doing nothing.
 	async function fillInputWithValue(hex: string) {
+		// The input can arrive after the inspector does (Angular renders the Fill row about 165 ms
+		// after the selection), so wait for it before taking the handle.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						(wanted: string) =>
+							[...document.querySelectorAll<HTMLInputElement>('input[type="color"]')].some(
+								(input) => input.value.toLowerCase() === wanted.toLowerCase(),
+							),
+						hex,
+					),
+				{ message: `no colour input found with value ${hex}` },
+			)
+			.toBe(true);
 		const handle = await page.evaluateHandle(
 			(wanted: string) =>
 				[...document.querySelectorAll<HTMLInputElement>('input[type="color"]')].find(
