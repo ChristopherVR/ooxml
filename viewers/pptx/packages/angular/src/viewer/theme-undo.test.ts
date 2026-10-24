@@ -17,10 +17,15 @@ import type { RibbonGalleryId } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+	buildTwoThemesDeck,
+	TWO_THEMES,
+} from '../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { dispatchGalleryResult } from './ribbon-gallery-helpers';
 import { buildSaveSlides } from './template-mode';
+import { ThemeSelectorCardComponent } from './theme-selector-card.component';
 import { ViewerDeckStyleService } from './viewer-deck-style.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 
@@ -142,5 +147,122 @@ describe('angular theme undo', () => {
 		deck.editor.undo();
 		expect(deck.loader.theme()).toStrictEqual(deck.loaded);
 		await expect(deck.saved()).resolves.toStrictEqual(OFFICE);
+	});
+});
+
+/**
+ * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
+ * 1 blue; slide 3 on master 2, "Ember", accent 1 red), through the inspector's theme card.
+ */
+async function openTwoThemes() {
+	const bytes = await buildTwoThemesDeck();
+	const handler = new PptxHandler();
+	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
+	const destroyRefStub: Pick<DestroyRef, 'onDestroy'> = { onDestroy: () => () => {} };
+	const injector = Injector.create({
+		providers: [
+			{ provide: DestroyRef, useValue: destroyRefStub },
+			{ provide: TranslateService, useValue: { instant: (key: string) => key } },
+			{ provide: EditorStateService, useClass: EditorStateService },
+			{ provide: LoadContentService, useClass: LoadContentService },
+		],
+	});
+	const editor = runInInjectionContext(injector, () => injector.get(EditorStateService));
+	const loader = runInInjectionContext(injector, () => injector.get(LoadContentService));
+	vi.spyOn(loader, 'getHandler').mockReturnValue(handler);
+	loader.theme.set(data.theme);
+	loader.themeColorMap.set(data.themeColorMap);
+	loader.themeOptions.set(data.themeOptions ?? []);
+	loader.slideMasters.set(data.slideMasters ?? []);
+	editor.setSlides(data.slides);
+	const card = runInInjectionContext(
+		injector,
+		() => new ThemeSelectorCardComponent(),
+	) as unknown as {
+		onSelect(event: Event): void;
+		apply(allMasters: boolean): Promise<void>;
+	};
+	/** Pick `themePath` in the card's theme list, then press Apply First / All Masters. */
+	const apply = async (themePath: string, allMasters: boolean) => {
+		card.onSelect({ target: { value: themePath } } as unknown as Event);
+		await card.apply(allMasters);
+	};
+	const accents = () =>
+		editor.slides().map((slide) =>
+			slide.elements
+				.find((element) => element.name === TWO_THEMES.shapeName)
+				?.shapeStyle?.fillColor?.replace('#', '')
+				.toUpperCase(),
+		);
+	const masterThemes = () => loader.slideMasters().map((master) => master.themePath);
+	/** The masters' theme relationships and each part's accent 1, as File > Save writes them now. */
+	const saved = async () => {
+		const slides = buildSaveSlides(editor.slides(), editor.templateElementsBySlideId());
+		const zip = await JSZip.loadAsync(await saveDeckWithPassword(handler, slides, {}, null));
+		const text = async (path: string) => (await zip.file(path)?.async('string')) ?? '';
+		const master = async (n: number) =>
+			/Target="\.\.\/theme\/(theme\d\.xml)"/u.exec(
+				await text(`ppt/slideMasters/_rels/slideMaster${n}.xml.rels`),
+			)?.[1];
+		const accent = async (path: string) =>
+			/<a:accent1>\s*<a:srgbClr val="([0-9A-F]{6})"/iu.exec(await text(path))?.[1]?.toUpperCase();
+		return {
+			masters: [await master(1), await master(2)],
+			accents: [await accent(TWO_THEMES.theme1.path), await accent(TWO_THEMES.theme2.path)],
+		};
+	};
+	return { editor, loader, apply, accents, masterThemes, saved };
+}
+
+describe('angular theme by path', () => {
+	const { theme1, theme2 } = TWO_THEMES;
+	const LOADED = {
+		masters: ['theme1.xml', 'theme2.xml'],
+		accents: [theme1.colors.accent1, theme2.colors.accent1],
+	};
+
+	it('every master on theme 2 re-themes the slides, as one undo step that Undo takes back', async () => {
+		const deck = await openTwoThemes();
+		const selected = deck.editor.slides()[1]!.elements[0]!.id;
+		deck.editor.selectedIds.set([selected]);
+		const third = deck.editor.slides()[2];
+		await deck.apply(theme2.path, true);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.editor.slides()[2]).toStrictEqual(third);
+		expect(deck.editor.selectedIds()).toStrictEqual([selected]);
+		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
+		expect(deck.loader.theme()?.name).toBe('Ember');
+		expect(deck.loader.themeColorMap()?.accent1?.replace('#', '')).toBe(theme2.colors.accent1);
+		expect(deck.editor.dirty()).toBeTruthy();
+		expect(deck.editor.canUndo()).toBeTruthy();
+		await expect(deck.saved()).resolves.toStrictEqual({
+			...LOADED,
+			masters: ['theme2.xml', 'theme2.xml'],
+		});
+
+		deck.editor.undo();
+		expect(deck.accents()).toStrictEqual([
+			theme1.colors.accent1,
+			theme1.colors.accent1,
+			theme2.colors.accent1,
+		]);
+		expect(deck.masterThemes()).toStrictEqual([theme1.path, theme2.path]);
+		expect(deck.loader.theme()?.colorScheme?.accent1?.replace('#', '')).toBe(theme1.colors.accent1);
+		expect(deck.editor.canUndo()).toBeFalsy();
+		// Undo went back to the old part: neither part was rewritten.
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
+
+		deck.editor.redo();
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
+	});
+
+	it('the first master alone on theme 2 re-themes only its slides', async () => {
+		const deck = await openTwoThemes();
+		await deck.apply(theme2.path, false);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
+		deck.editor.undo();
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 	});
 });

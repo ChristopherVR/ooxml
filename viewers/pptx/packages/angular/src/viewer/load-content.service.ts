@@ -606,28 +606,10 @@ export class LoadContentService {
 	}
 
 	/**
-	 * Point the presentation (first master, or every master) at another theme
-	 * part in the package, mirroring React's `handleApplyTheme`. Updates the
-	 * in-memory ZIP for save round-trip and the `slideMasters` signal so the
-	 * change is visible to consumers; callers mark the editor dirty.
-	 */
-	async setPresentationTheme(themePath: string, applyToAllMasters: boolean): Promise<void> {
-		if (!this.handler) {
-			return;
-		}
-		await this.handler.setPresentationTheme(themePath, applyToAllMasters);
-		this.slideMasters.update((masters) =>
-			masters.map((master, index) =>
-				applyToAllMasters || index === 0 ? { ...master, themePath } : master,
-			),
-		);
-	}
-
-	/**
 	 * Adopt a new handler + fully-resolved `PptxData` from a Slide Master view
 	 * CRUD action (`applyMasterViewCrudAction`'s insert/duplicate/delete/rename
-	 * layout or master). Unlike {@link setPresentationTheme}, those functions
-	 * perform ZIP surgery and reload through a FRESH `PptxHandler` (see
+	 * layout or master). Unlike a theme switch (`theme-by-path-commit.ts`), those
+	 * functions perform ZIP surgery and reload through a FRESH `PptxHandler` (see
 	 * `master-layout-crud`'s module doc) rather than mutating this one in
 	 * place, so the loaded handler itself must be swapped, not just the
 	 * derived signals.

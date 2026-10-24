@@ -2,8 +2,8 @@
  * theme-selector-card.component.ts: THEME card of the default (no-selection)
  * inspector, mirroring React's `ThemeSelectorCard` + `useInspectorPaneState`
  * fallback: a dropdown of the package's theme parts plus "Apply First Master"
- * / "Apply All Masters" actions routed through
- * {@link LoadContentService.setPresentationTheme}.
+ * / "Apply All Masters" actions, applied in place as one undo step
+ * ({@link applyThemePartInPlace}).
  */
 import {
 	ChangeDetectionStrategy,
@@ -14,12 +14,13 @@ import {
 	signal,
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxThemeOption } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { LoadContentService } from './load-content.service';
+import { applyThemePartInPlace } from './theme-by-path-commit';
 
 @Component({
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -80,6 +81,7 @@ export class ThemeSelectorCardComponent {
 
 	private readonly loader = inject(LoadContentService);
 	private readonly editor = inject(EditorStateService);
+	private readonly translate = inject(TranslateService);
 
 	/** Theme path the user explicitly picked (null = follow the active theme). */
 	private readonly userSelectedPath = signal<string | null>(null);
@@ -116,7 +118,14 @@ export class ThemeSelectorCardComponent {
 		if (!path) {
 			return;
 		}
-		await this.loader.setPresentationTheme(path, allMasters);
-		this.editor.dirty.set(true);
+		const option = this.options().find((candidate) => candidate.path === path);
+		const name = option ? this.optionLabel(option) : path;
+		await applyThemePartInPlace(
+			this.editor,
+			this.loader,
+			path,
+			allMasters,
+			this.translate.instant('pptx.undoAction.applyTheme', { name }),
+		);
 	}
 }

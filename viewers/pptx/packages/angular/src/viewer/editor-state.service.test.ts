@@ -121,9 +121,14 @@ describe('layout artwork hydration', () => {
 			})),
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue(artwork),
 		};
-		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		// The undo snapshot records the loader's theme and masters, so the stub has them (none loaded).
 		Object.assign(svc, {
-			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+			loader: {
+				getHandler: () => handler,
+				theme: () => undefined,
+				themeColorMap: () => undefined,
+				slideMasters: () => [],
+			},
 		});
 
 		svc.addSlide(0, 'layout-new');
@@ -144,9 +149,14 @@ describe('layout artwork hydration', () => {
 			applyLayoutToSlide: vi.fn().mockResolvedValue(updated),
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue(artwork),
 		};
-		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		// The undo snapshot records the loader's theme and masters, so the stub has them (none loaded).
 		Object.assign(svc, {
-			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+			loader: {
+				getHandler: () => handler,
+				theme: () => undefined,
+				themeColorMap: () => undefined,
+				slideMasters: () => [],
+			},
 		});
 		svc.templateElementsBySlideId.set({ s1: [element('layout-old-art')] });
 
@@ -170,9 +180,14 @@ describe('layout artwork hydration', () => {
 					}),
 			),
 		};
-		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		// The undo snapshot records the loader's theme and masters, so the stub has them (none loaded).
 		Object.assign(svc, {
-			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+			loader: {
+				getHandler: () => handler,
+				theme: () => undefined,
+				themeColorMap: () => undefined,
+				slideMasters: () => [],
+			},
 		});
 		const applying = svc.applyLayout(0, 'layout-new');
 		await vi.waitFor(() => expect(handler.getTemplateElementsForSlide).toHaveBeenCalledWith('s1'));
@@ -198,6 +213,7 @@ describe('editorStateService align', () => {
 				theme: () => undefined,
 				themeColorMap: () => undefined,
 				getHandler: () => null,
+				slideMasters: () => [],
 			},
 		});
 		svc.setSlides([slide('s1', [element('a', 30, 20), element('b', 300, 200)])]);
