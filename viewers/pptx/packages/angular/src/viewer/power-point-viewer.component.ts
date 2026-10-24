@@ -2861,6 +2861,8 @@ export class PowerPointViewerComponent
 		// Hand the find/replace controller a slide-navigation callback so a match
 		// can scroll its slide into view.
 		this.findReplace.bind((index) => this.goTo(index));
+		// New Slide shows the slide it adds, from every place that offers it.
+		this.editor.bindSlideNavigation((index) => this.goTo(index));
 
 		// Hand the custom-shows controller the active-slide-index accessor (so a
 		// normal show starts at the current slide) and the LIVE edited-slides
