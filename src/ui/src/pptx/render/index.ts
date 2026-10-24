@@ -1627,6 +1627,9 @@ export * from './options';
 export * from './customization';
 export * from './ribbon-galleries';
 export * from './deck-style';
+// A theme change as an undo step: what each snapshot records, what an undo writes back into the
+// handler's theme parts, and the write queue every save waits for.
+export * from './theme-history';
 // Host ribbon tabs (`ribbonAddIns`): which show, which is active and how a command runs.
 export * from './ribbon-add-ins';
 

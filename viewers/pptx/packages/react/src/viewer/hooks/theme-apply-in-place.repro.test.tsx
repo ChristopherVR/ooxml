@@ -276,4 +276,36 @@ describe('design gallery theme picks apply in place', () => {
 			}
 		});
 	});
+
+	it('a save asked for while a gallery pick is still writing the theme part waits for it', async () => {
+		await withHarness(deckBytes, async () => {
+			await openOnSlideTwo();
+			const handler = live().handler();
+			if (!handler) {
+				throw new Error('no deck is loaded');
+			}
+			// The gallery commit writes the theme part before the slides take the pick. Make that write
+			// take a moment and save straight after the click, as a Ctrl+S right after it does.
+			const write = handler.applyTheme.bind(handler);
+			const slowWrite = vi.spyOn(handler, 'applyTheme').mockImplementation(async (...args) => {
+				await new Promise<void>((done) => {
+					setTimeout(done, 50);
+				});
+				await write(...args);
+			});
+			try {
+				const facet = applyRibbonGalleryItem('themes', 'facet', live().gallery.context);
+				expect(facet).not.toBeNull();
+				let saved: Promise<Uint8Array> | undefined;
+				await act(async () => {
+					live().gallery.dispatch(facet!);
+					saved = live().save();
+				});
+				await expect(themePartOf(await saved!)).resolves.toStrictEqual(FACET_THEME);
+				expect(slowWrite).toHaveBeenCalledOnce();
+			} finally {
+				slowWrite.mockRestore();
+			}
+		});
+	});
 });

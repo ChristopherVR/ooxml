@@ -29,6 +29,7 @@ import {
 } from 'ooxml-core/pptx';
 
 import type { RibbonGalleryApplyResult } from './ribbon-galleries/gallery-types';
+import { queueThemeWrite } from './theme-history';
 
 /** The state a Design gallery changes. */
 export interface DeckStyleState {
@@ -168,8 +169,32 @@ export function previewGalleryResult(
 }
 
 /**
+ * A Design gallery result that commits through {@link DeckStyleHost.commit}: the Themes, Colors
+ * and Fonts picks, the effect and background picks and a variant's sequence of them. The commit
+ * settles the hover preview first, re-resolves from the state the preview started from (a binding
+ * whose last render still shows the preview would re-resolve from the previewed theme and change
+ * nothing), writes only what the pick changes into the handler and records one undo step, so every
+ * binding routes these through it rather than by a path of its own.
+ */
+export function commitsThroughDeckStyle(result: RibbonGalleryApplyResult): boolean {
+	switch (result.kind) {
+		case 'theme':
+		case 'themeColorScheme':
+		case 'themeFontScheme':
+		case 'themeEffects':
+		case 'backgroundStyle':
+		case 'sequence':
+			return true;
+		default:
+			return false;
+	}
+}
+
+/**
  * Write `result` to the handler (the theme part, the master) and return the state it produces
- * from `base`, or `undefined` when there is nothing for the deck state to take.
+ * from `base`, or `undefined` when there is nothing for the deck state to take. Theme part writes
+ * go on the handler's theme write queue (`render/theme-history`), so a save asked for while one
+ * runs waits for it.
  */
 export async function commitGalleryResult(
 	result: RibbonGalleryApplyResult,
@@ -182,21 +207,25 @@ export async function commitGalleryResult(
 	}
 	switch (result.kind) {
 		case 'theme': {
-			await handler.applyTheme(result.colorScheme, result.fontScheme, result.name);
+			await queueThemeWrite(handler, () =>
+				handler.applyTheme(result.colorScheme, result.fontScheme, result.name),
+			);
 			return previewGalleryResult(result, base, handler, target);
 		}
 		case 'themeColorScheme':
-			await handler.updateThemeColorScheme(result.colorScheme);
+			await queueThemeWrite(handler, () => handler.updateThemeColorScheme(result.colorScheme));
 			return previewGalleryResult(result, base, handler, target);
 		case 'themeFontScheme':
-			await handler.updateThemeFontScheme(result.fontScheme);
+			await queueThemeWrite(handler, () => handler.updateThemeFontScheme(result.fontScheme));
 			return previewGalleryResult(result, base, handler, target);
 		case 'themeEffects': {
-			const scheme = result.schemeId
-				? await handler.applyThemeEffectScheme(result.schemeId)
-				: result.fmtSchemeXml
-					? await handler.applyThemeFormatSchemeXml(result.fmtSchemeXml)
-					: undefined;
+			const scheme = await queueThemeWrite(handler, async () =>
+				result.schemeId
+					? handler.applyThemeEffectScheme(result.schemeId)
+					: result.fmtSchemeXml
+						? handler.applyThemeFormatSchemeXml(result.fmtSchemeXml)
+						: undefined,
+			);
 			if (!scheme) {
 				return undefined;
 			}
