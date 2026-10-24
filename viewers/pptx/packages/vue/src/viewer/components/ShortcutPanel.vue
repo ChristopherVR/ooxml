@@ -2,19 +2,19 @@
 /**
  * ShortcutPanel - grouped, searchable keyboard-shortcut help overlay.
  *
- * Vue port of the React `ShortcutPanel.tsx`. Where the React panel renders a
- * flat `SHORTCUT_REFERENCE_ITEMS` list, this version renders the
- * {@link SHORTCUT_CATALOG} grouped by `group`, with a live filter input and
- * platform-aware key glyphs (⌘ vs Ctrl). It reuses {@link ModalDialog} for the
- * teleported shell, backdrop/Esc close, and header chrome.
+ * Lists the shared `VIEWER_SHORTCUT_REFERENCE`, the keymap every binding's help
+ * shows, under its shared headings (`groupShortcutReference`), with a live
+ * filter input and the platform's modifier (⌘ or Ctrl for `Ctrl/Cmd`). It
+ * reuses {@link ModalDialog} for the teleported shell, backdrop/Esc close, and
+ * header chrome.
  *
  * Presentational: the parent owns the `open` flag and handles `close`.
  */
+import { groupShortcutReference, VIEWER_SHORTCUT_REFERENCE } from 'ooxml-ui/pptx';
+import type { ShortcutReferenceItem } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { SHORTCUT_CATALOG, groupShortcutCatalog } from '../composables/useKeyboardShortcuts';
-import type { ShortcutDefinition } from '../composables/useKeyboardShortcuts';
 import ModalDialog from './ModalDialog.vue';
 
 const props = defineProps<{
@@ -51,49 +51,24 @@ const isMac = computed(() => {
 	return /mac|iphone|ipad|ipod/iu.test(platform) || /mac/iu.test(ua);
 });
 
-/** Render a single combo token into a platform-aware glyph/label. */
-function tokenGlyph(token: string): string {
-	switch (token) {
-		case 'Mod':
-			return isMac.value ? '⌘' : 'Ctrl';
-		case 'Shift':
-			return isMac.value ? '⇧' : 'Shift';
-		case 'ArrowKeys':
-			return '←↑→↓';
-		case 'ArrowLeft':
-			return '←';
-		case 'ArrowRight':
-			return '→';
-		case 'Delete':
-			return isMac.value ? 'Delete / ⌫' : 'Delete / Backspace';
-		case 'Escape':
-			return 'Esc';
-		default:
-			return token;
-	}
+/** A shortcut as this platform writes it: `Ctrl/Cmd` is ⌘ on macOS and Ctrl elsewhere. */
+function platformShortcut(shortcut: string): string {
+	return shortcut.replaceAll('Ctrl/Cmd', isMac.value ? '⌘' : 'Ctrl');
 }
 
-/** Render a `combo` string (e.g. `Mod+Shift+Z`) into its display glyphs. */
-function comboGlyphs(combo: string): string {
-	return combo
-		.split('+')
-		.map(tokenGlyph)
-		.join(isMac.value ? '' : '+');
-}
-
-/** The catalog filtered by the live query, then grouped for display. */
+/** The reference filtered by the live query, then grouped for display. */
 const groups = computed(() => {
 	const needle = query.value.trim().toLowerCase();
-	const filtered: ShortcutDefinition[] =
+	const filtered: ShortcutReferenceItem[] =
 		needle.length === 0
-			? [...SHORTCUT_CATALOG]
-			: SHORTCUT_CATALOG.filter(
-					(entry) =>
-						t(entry.descriptionKey).toLowerCase().includes(needle) ||
-						comboGlyphs(entry.combo).toLowerCase().includes(needle) ||
-						entry.combo.toLowerCase().includes(needle),
+			? [...VIEWER_SHORTCUT_REFERENCE]
+			: VIEWER_SHORTCUT_REFERENCE.filter(
+					(item) =>
+						t(item.actionKey).toLowerCase().includes(needle) ||
+						platformShortcut(item.shortcut).toLowerCase().includes(needle) ||
+						item.shortcut.toLowerCase().includes(needle),
 				);
-	return groupShortcutCatalog(filtered);
+	return groupShortcutReference(filtered);
 });
 
 const hasResults = computed(() => groups.value.length > 0);
@@ -133,16 +108,16 @@ function requestClose(): void {
 					</h3>
 					<div
 						v-for="shortcut in bucket.shortcuts"
-						:key="shortcut.id"
+						:key="shortcut.actionKey"
 						class="pptx-vue-shortcuts-row flex items-center justify-between gap-3 rounded bg-muted px-2 py-1.5"
 					>
 						<span class="pptx-vue-shortcuts-desc text-[13px] text-foreground">
-							{{ t(shortcut.descriptionKey) }}
+							{{ t(shortcut.actionKey) }}
 						</span>
 						<kbd
 							class="pptx-vue-shortcuts-combo shrink-0 whitespace-nowrap rounded border border-border bg-popover px-2 py-0.5 font-mono text-xs text-foreground"
 						>
-							{{ comboGlyphs(shortcut.combo) }}
+							{{ platformShortcut(shortcut.shortcut) }}
 						</kbd>
 					</div>
 				</section>
