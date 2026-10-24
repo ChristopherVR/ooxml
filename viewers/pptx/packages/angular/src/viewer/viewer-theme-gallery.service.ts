@@ -14,6 +14,7 @@
 
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { historyTheme, loadedThemeName, queueThemeWrite, writeThemeParts } from 'ooxml-ui/pptx';
 import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 import { applyThemeToData, reResolveElementColors, reResolveElementFonts } from 'pptx-viewer-core';
 import type {
@@ -42,8 +43,16 @@ export class ViewerThemeGalleryService {
 		}
 		this.themeEditorApplying.set(true);
 		try {
-			await this.loader.getHandler()?.applyTheme(edit.colorScheme, edit.fontScheme, edit.name);
-			this.applyCustomTheme(edit.colorScheme, edit.fontScheme, edit.name);
+			// On the handler's theme write queue: an undo still writing a theme part, or a save, waits
+			// for it rather than interleaving with it.
+			const handler = this.loader.getHandler();
+			if (handler) {
+				await queueThemeWrite(handler, () =>
+					handler.applyTheme(edit.colorScheme, edit.fontScheme, edit.name),
+				);
+			}
+			this.reTheme(edit.colorScheme, edit.fontScheme, edit.name, edit.name);
+			this.showThemeGallery.set(false);
 		} finally {
 			this.themeEditorApplying.set(false);
 		}
@@ -56,9 +65,9 @@ export class ViewerThemeGalleryService {
 	 *
 	 * Mirrors Vue's `applyThemePreset()`: re-resolves slide colours via core's
 	 * pure `applyThemeToData`, then writes the updated slides + theme metadata
-	 * into `EditorStateService` as a single undoable entry. Also refreshes the
-	 * `loader.themeColorMap` so subsequent theme switches start from the correct
-	 * baseline.
+	 * into `EditorStateService` as a single undoable entry and the theme into the
+	 * handler's theme parts. Also refreshes the `loader.themeColorMap` so
+	 * subsequent theme switches start from the correct baseline.
 	 */
 	applyThemePreset(preset: PptxThemePreset): void {
 		this.applyCustomTheme(preset.colorScheme, preset.fontScheme, preset.name);
@@ -69,7 +78,7 @@ export class ViewerThemeGalleryService {
 		fontScheme: PptxThemeFontScheme,
 		name: string,
 	): void {
-		this.applySchemes(colorScheme, fontScheme, name, name);
+		void this.applySchemes(colorScheme, fontScheme, name, name);
 		this.showThemeGallery.set(false);
 	}
 
@@ -88,10 +97,31 @@ export class ViewerThemeGalleryService {
 		if (!colorScheme) {
 			return;
 		}
-		this.applySchemes(colorScheme, variant.fontScheme, undefined, name);
+		void this.applySchemes(colorScheme, variant.fontScheme, undefined, name);
 	}
 
+	/**
+	 * {@link reTheme}, then write the parts it changed into the handler's theme parts (only those:
+	 * a fonts-only change leaves the colour scheme part as authored). Resolves once written.
+	 */
 	private applySchemes(
+		colorScheme: PptxThemeColorScheme,
+		fontScheme: PptxThemeFontScheme | undefined,
+		themeName: string | undefined,
+		label: string,
+	): Promise<void> {
+		const from = historyTheme(this.loader.theme());
+		this.reTheme(colorScheme, fontScheme, themeName, label);
+		return writeThemeParts(
+			this.loader.getHandler(),
+			from,
+			historyTheme(this.loader.theme()) ?? {},
+			loadedThemeName(this.loader.themeOptions(), this.loader.slideMasters()[0]?.themePath),
+		);
+	}
+
+	/** The slides, the template layer, the theme and its colour map, as one undo step. */
+	private reTheme(
 		colorScheme: PptxThemeColorScheme,
 		fontScheme: PptxThemeFontScheme | undefined,
 		themeName: string | undefined,

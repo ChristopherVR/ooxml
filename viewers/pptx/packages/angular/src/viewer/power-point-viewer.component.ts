@@ -3481,11 +3481,12 @@ export class PowerPointViewerComponent
 		if (!colorScheme || !fontScheme) {
 			return;
 		}
-		this.themeGallery.applyCustomTheme(
-			colorScheme,
-			fontScheme,
-			updates.name ?? current?.name ?? 'AI theme',
-		);
+		if (updates.name) {
+			this.themeGallery.applyCustomTheme(colorScheme, fontScheme, updates.name);
+			return;
+		}
+		// No new name: keep the theme's own (in the theme part too), as a Colors or Fonts pick does.
+		this.themeGallery.applyThemeVariant({ colorScheme, fontScheme }, current?.name ?? 'AI theme');
 	}
 
 	/**

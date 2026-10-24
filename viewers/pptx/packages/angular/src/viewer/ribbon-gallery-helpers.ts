@@ -1,4 +1,4 @@
-import { galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
+import { commitsThroughDeckStyle, galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
 import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /**
  * ribbon-gallery-helpers.ts: the Angular glue between `pptx-viewer-shared`'s
@@ -84,13 +84,18 @@ export function dispatchGalleryResult(
 	if (!result) {
 		return false;
 	}
+	if (targets.deckStyle && commitsThroughDeckStyle(result)) {
+		// Settles the hover preview itself, so the commit starts from the real slides, writes only
+		// what the pick changes into the theme part and records one undo step.
+		void targets.deckStyle.commit(result);
+		return true;
+	}
 	if (
 		result.kind === 'themeEffects' ||
 		result.kind === 'backgroundStyle' ||
 		result.kind === 'sequence'
 	) {
-		// Settles the hover preview itself, so the commit starts from the real slides.
-		void targets.deckStyle?.commit(result);
+		// Nothing but the deck-style host commits these.
 		return true;
 	}
 	targets.deckStyle?.endPreview();

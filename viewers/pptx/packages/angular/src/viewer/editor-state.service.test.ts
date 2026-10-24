@@ -49,7 +49,10 @@ describe('layout artwork hydration', () => {
 			})),
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue(artwork),
 		};
-		Object.assign(svc, { loader: { getHandler: () => handler } });
+		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		Object.assign(svc, {
+			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+		});
 
 		svc.addSlide(0, 'layout-new');
 		const insertedId = svc.slides()[1].id;
@@ -69,7 +72,10 @@ describe('layout artwork hydration', () => {
 			applyLayoutToSlide: vi.fn().mockResolvedValue(updated),
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue(artwork),
 		};
-		Object.assign(svc, { loader: { getHandler: () => handler } });
+		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		Object.assign(svc, {
+			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+		});
 		svc.templateElementsBySlideId.set({ s1: [element('layout-old-art')] });
 
 		await svc.applyLayout(0, 'layout-new');
@@ -92,7 +98,10 @@ describe('layout artwork hydration', () => {
 					}),
 			),
 		};
-		Object.assign(svc, { loader: { getHandler: () => handler } });
+		// The undo snapshot records the loader's theme, so the stub has one (none loaded).
+		Object.assign(svc, {
+			loader: { getHandler: () => handler, theme: () => undefined, themeColorMap: () => undefined },
+		});
 		const applying = svc.applyLayout(0, 'layout-new');
 		await vi.waitFor(() => expect(handler.getTemplateElementsForSlide).toHaveBeenCalledWith('s1'));
 		svc.slides.set([slide('replacement', [])]);
@@ -115,6 +124,7 @@ describe('editorStateService align', () => {
 				canvasSize: () => ({ width: 960, height: 540 }),
 				headerFooter: () => ({}),
 				theme: () => undefined,
+				themeColorMap: () => undefined,
 				getHandler: () => null,
 			},
 		});
