@@ -50,6 +50,7 @@ import { generateTextLayoutFixture } from './generate-text-layout-fixture';
 import { generateTextWarpFidelityFixture } from './generate-text-warp-fidelity-fixture';
 import { generateThemeColorPickerFixture } from './generate-theme-color-picker-fixture';
 import { generateFixture as generateTransitionsAnimationsFixture } from './generate-transitions-animations-fixture';
+import { generateTwoThemesFixture } from './generate-two-themes-fixture';
 import { generateUnderlineWordsFixture } from './generate-underline-words-fixture';
 import { generateUnderlineWordsRubyTabFixture } from './generate-underline-words-ruby-tab-fixture';
 
@@ -97,6 +98,7 @@ const GENERATORS: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
 	['generateRunProgramFixture', generateRunProgramFixture],
 	['generateFidelityShowcaseFixture', generateFidelityShowcaseFixture],
 	['generateArrowTextRegressions', generateArrowTextRegressions],
+	['generateTwoThemesFixture', generateTwoThemesFixture],
 ];
 
 /** A small, fast, seedable PRNG (mulberry32) with `Math.random`'s contract. */
