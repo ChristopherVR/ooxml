@@ -5,9 +5,8 @@
  * as well as its slides. Undo must take both back: the slides come back with the history snapshot,
  * but the theme lives in the binding's theme state and, for a save, in the handler's theme parts.
  * So each binding records {@link historyTheme} with every snapshot, and an undo or redo that
- * {@link crossedHistoryTheme crosses} a theme change puts the binding's theme back
- * ({@link withHistoryTheme}) and writes only the parts that differ into the handler
- * ({@link writeThemeParts}).
+ * {@link crossedHistoryTheme crosses} a theme change puts the binding's theme back and writes only
+ * the parts that differ into the handler ({@link restoreCrossedTheme}).
  *
  * Each theme part write reads, edits and writes the part back, so the writes on one handler run one
  * after another ({@link queueThemeWrite}), and every save waits for the ones queued before it
@@ -41,10 +40,17 @@ function plain<T>(value: T): T {
 	return JSON.parse(JSON.stringify(value)) as T;
 }
 
+/** Whether two plain values serialise the same. */
+function sameJson(a: unknown, b: unknown): boolean {
+	return JSON.stringify(a) === JSON.stringify(b);
+}
+
 /**
  * The part of `theme` an undo step records, as a copy. Built in a fixed key order, so two records
  * of the same theme serialise to the same JSON.
  */
+export function historyTheme(theme: ThemeLike): HistoryTheme;
+export function historyTheme(theme: ThemeLike | null | undefined): HistoryTheme | undefined;
 export function historyTheme(theme: ThemeLike | null | undefined): HistoryTheme | undefined {
 	if (!theme) {
 		return undefined;
@@ -57,13 +63,6 @@ export function historyTheme(theme: ThemeLike | null | undefined): HistoryTheme 
 	};
 }
 
-export function sameHistoryTheme(
-	a: HistoryTheme | undefined,
-	b: HistoryTheme | undefined,
-): boolean {
-	return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-}
-
 /**
  * The theme an undo or redo from `current` to `target` has to put back, or `undefined` when the
  * step crosses no theme change (or `target` recorded none).
@@ -72,7 +71,7 @@ export function crossedHistoryTheme(
 	current: HistoryTheme | undefined,
 	target: HistoryTheme | undefined,
 ): HistoryTheme | undefined {
-	return target && !sameHistoryTheme(current, target) ? target : undefined;
+	return target && !sameJson(current ?? null, target) ? target : undefined;
 }
 
 /**
@@ -106,8 +105,6 @@ export type ThemePartWrite =
 	| { readonly part: 'fontScheme'; readonly fontScheme: PptxThemeFontScheme }
 	| { readonly part: 'name'; readonly name: string };
 
-const differs = (a: unknown, b: unknown): boolean => JSON.stringify(a) !== JSON.stringify(b);
-
 /**
  * The writes that take the handler's theme parts from `from` to `to`: only the parts that differ,
  * so undoing a fonts pick leaves the colour scheme part (and its `sysClr` slots) as it is. The
@@ -120,10 +117,10 @@ export function themePartWrites(
 	loadedName?: string,
 ): ThemePartWrite[] {
 	const writes: ThemePartWrite[] = [];
-	if (to.colorScheme && differs(to.colorScheme, from?.colorScheme)) {
+	if (to.colorScheme && !sameJson(to.colorScheme, from?.colorScheme)) {
 		writes.push({ part: 'colorScheme', colorScheme: to.colorScheme });
 	}
-	if (to.fontScheme && differs(to.fontScheme, from?.fontScheme)) {
+	if (to.fontScheme && !sameJson(to.fontScheme, from?.fontScheme)) {
 		writes.push({ part: 'fontScheme', fontScheme: to.fontScheme });
 	}
 	const name = to.name ?? loadedName;
@@ -133,13 +130,17 @@ export function themePartWrites(
 	return writes;
 }
 
-/** The name the deck's primary theme part was loaded with (the parsed theme carries none). */
+/**
+ * The name the deck's primary theme part (the first master's) was loaded with; the parsed theme
+ * carries none.
+ */
 export function loadedThemeName(
 	themeOptions: readonly Pick<PptxThemeOption, 'path' | 'name'>[] | undefined,
-	primaryThemePath: string | undefined,
+	slideMasters: readonly { readonly themePath?: unknown }[] | undefined,
 ): string | undefined {
 	const options = themeOptions ?? [];
-	return (options.find((option) => option.path === primaryThemePath) ?? options[0])?.name;
+	const primary = slideMasters?.[0]?.themePath;
+	return (options.find((option) => option.path === primary) ?? options[0])?.name;
 }
 
 /** Per handler, the end of its queue: settles once the last queued write has landed or failed. */
@@ -204,4 +205,24 @@ export function writeThemeParts(
 			}
 		}
 	});
+}
+
+/**
+ * An undo or redo moved from `current` to `target`: when it crosses a theme change, queue the
+ * writes of the parts that differ on `handler` and return `theme` carrying `target`'s recorded
+ * parts, for the binding to put back. `undefined` when the step crosses no theme change.
+ */
+export function restoreCrossedTheme<T extends ThemeLike>(
+	theme: T | null | undefined,
+	current: HistoryTheme | undefined,
+	target: HistoryTheme | undefined,
+	handler: ThemePartWriter | null | undefined,
+	loadedName?: string,
+): T | undefined {
+	const crossed = crossedHistoryTheme(current, target);
+	if (!crossed) {
+		return undefined;
+	}
+	void writeThemeParts(handler, current, crossed, loadedName);
+	return withHistoryTheme(theme, crossed);
 }
