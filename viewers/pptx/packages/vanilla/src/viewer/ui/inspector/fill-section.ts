@@ -46,9 +46,8 @@ export function createFillSection(
 	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'fill-stroke');
 
-	// A drag through the OS picker fires `input` on every shade it passes: those
-	// show live with no undo step, and the settled colour (`change`, or `blur`
-	// for a drag no change ended) is the one undo step and the one recent colour.
+	// The native pickers report every `input`, `change` and `blur` to the live
+	// colour actions (`editor-live-colors.ts`).
 	const liveColor = (target: 'fill' | 'line', label: string, fallback: string) =>
 		makeColorControl(
 			doc,

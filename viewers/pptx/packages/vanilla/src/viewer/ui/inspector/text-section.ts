@@ -33,10 +33,9 @@ export function createTextSection(
 
 	// B6 (A3): the inspector's own text-colour picker, distinct from the
 	// ribbon's Home > Font colour swatch picker (both write the same
-	// `textStyle.color`). A drag shows every shade live with no undo step, and
-	// the settled colour (`change`, or `blur` for a drag no change ended) is
-	// the one undo step and the one recent colour, like the fill and line
-	// pickers; the "Recent colours" row below commits through `setTextStyle`.
+	// `textStyle.color`). It is live while dragging, like the fill and line
+	// pickers (`editor-live-colors.ts`); the "Recent colours" row below
+	// commits through `setTextStyle`.
 	const colorRow = doc.createElement('div');
 	colorRow.className = 'pptxv-inspector-row';
 	const colorLabel = doc.createElement('span');

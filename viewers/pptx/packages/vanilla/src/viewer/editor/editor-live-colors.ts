@@ -25,13 +25,10 @@ export type LiveColorTarget = 'fill' | 'line' | 'text';
 export type LiveColorEventType = 'input' | 'change' | 'blur';
 
 /**
- * The inspector's native colour pickers, live while the user drags (shared
- * `createLiveColorInput`): every shade is merged into the selected
- * element without history, and the settled pick (`change`, or `blur` for a
- * drag no change ended) puts the previews back and commits once through
- * `applyToSelected`, so a drag is one undo step and one recent colour. A pick
- * that settles where it started is no undo step (its `change` still counts as
- * a recent colour).
+ * The inspector's native colour pickers, live while the user drags (the
+ * shared `createLiveColorInput` rule): the shades, and a drag put back, go
+ * through `EditorOps.previewElement`, and the settled pick commits through
+ * `applyToSelected`.
  */
 export interface LiveColorActions {
 	/** One `input`, `change` or `blur` of the fill, line or text colour picker. */
