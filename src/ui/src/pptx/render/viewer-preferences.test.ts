@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	DEFAULT_VIEWER_PREFERENCES,
+	groupShortcutReference,
+	SHORTCUT_REFERENCE_GROUP_LABEL_KEYS,
 	updateViewerPreference,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
@@ -129,5 +131,25 @@ describe('viewPropertiesPatchFromPreferences', () => {
 			slideViewPr: { snapToGrid: true, snapToObjects: false, showGuides: true },
 			gridSpacing: { cx: 100000, cy: 200000 },
 		});
+	});
+});
+
+describe('shortcut reference groups', () => {
+	it('lists every shortcut once, under the headings in their order', () => {
+		const grouped = groupShortcutReference();
+		expect(grouped.map((bucket) => bucket.group)).toStrictEqual(
+			Object.keys(SHORTCUT_REFERENCE_GROUP_LABEL_KEYS),
+		);
+		expect(grouped.flatMap((bucket) => bucket.shortcuts)).toHaveLength(
+			VIEWER_SHORTCUT_REFERENCE.length,
+		);
+		expect(grouped.every((bucket) => bucket.labelKey.startsWith('pptx.'))).toBeTruthy();
+	});
+
+	it('leaves out a heading with no shortcut', () => {
+		const grouped = groupShortcutReference(
+			VIEWER_SHORTCUT_REFERENCE.filter((item) => item.group === 'history'),
+		);
+		expect(grouped.map((bucket) => bucket.group)).toStrictEqual(['history']);
 	});
 });
