@@ -152,7 +152,7 @@ import { LoadNoticesService } from './load-notices.service';
 import { createLoadNotifier } from './load-notifier';
 import type { ViewerLoadDetail } from './load-notifier';
 import { MasterViewCanvasComponent } from './master-view-canvas.component';
-import { runMasterViewCrud } from './master-view-crud-session';
+import { masterViewDeck, runMasterViewCrud } from './master-view-crud-session';
 import { MasterViewSidebarComponent } from './master-view-sidebar.component';
 import { applyMobileBarSheetTap } from './mobile-bar-sheet-tap';
 import { MobileBottomBarComponent } from './mobile-bottom-bar.component';
@@ -3317,7 +3317,7 @@ export class PowerPointViewerComponent
 	/** The Insert/Duplicate/Delete/Rename Layout+Master sidebar commands for the current selection. */
 	protected readonly masterViewCrudActionsList = computed(() =>
 		masterViewCrudActions(
-			this.loader.parsedData() ?? { slides: [], width: 0, height: 0 },
+			masterViewDeck(this.loader, this.editor.slides()),
 			this.masterViewTarget(),
 		),
 	);
@@ -3334,10 +3334,10 @@ export class PowerPointViewerComponent
 	 * compat-toast stack is load-diagnostics only).
 	 */
 	protected async onMasterViewCrudAction(id: MasterViewCrudActionId): Promise<void> {
-		const data = this.loader.parsedData();
-		if (!this.loader.getHandler() || !data) {
+		if (!this.loader.getHandler() || !this.loader.parsedData()) {
 			return;
 		}
+		const masters = this.loader.slideMasters();
 		const target = this.masterViewTarget();
 		let name: string | undefined;
 		if (id === 'renameLayout' || id === 'renameMaster') {
@@ -3346,10 +3346,10 @@ export class PowerPointViewerComponent
 			// name even while the sidebar has one of its layouts selected.
 			const current =
 				id === 'renameMaster'
-					? (data.slideMasters?.[target.masterIndex]?.name ?? '')
+					? (masters[target.masterIndex]?.name ?? '')
 					: target.layoutIndex === null
 						? ''
-						: (data.slideMasters?.[target.masterIndex]?.layouts?.[target.layoutIndex]?.name ?? '');
+						: (masters[target.masterIndex]?.layouts?.[target.layoutIndex]?.name ?? '');
 			const typed = window.prompt(
 				this.translateService.instant('pptx.masterView.renamePrompt'),
 				current,
@@ -3359,10 +3359,13 @@ export class PowerPointViewerComponent
 			}
 			name = typed.trim();
 		}
+		// The deck a save would write now: a Design gallery hover preview is never part of it.
+		const saved = this.deckStyle.savedDeck();
 		const result = await runMasterViewCrud(this.loader, this.editor, {
 			id,
 			target,
 			options: { name },
+			slides: buildSaveSlides(saved.slides, saved.templateElementsBySlideId),
 		});
 		if (!result) {
 			return;

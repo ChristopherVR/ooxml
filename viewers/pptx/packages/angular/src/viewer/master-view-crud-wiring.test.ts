@@ -7,8 +7,8 @@
  * patch is not enough, the loaded HANDLER itself has to be swapped, or the
  * next save would write the OLD package. This exercises the real shared
  * functions against a real generated presentation, then adopts the result
- * through `LoadContentService.adoptMasterViewData` (the method
- * `PowerPointViewerComponent.onMasterViewCrudAction` calls), and asserts the
+ * through `LoadContentService.adoptMasterViewData` (which `runMasterViewCrud`
+ * calls, with `keepPrevious`), and asserts the
  * service's own signals (and its `getHandler()`) reflect the NEW package, not
  * a stale one.
  */
