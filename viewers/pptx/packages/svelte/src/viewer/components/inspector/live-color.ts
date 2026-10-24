@@ -1,13 +1,8 @@
 /**
  * live-color.ts: the inspector's native colour pickers, live while the user
- * drags (shared `createLiveColorInput`).
- *
- * Every shade of a drag is merged into the element with
- * `EditorState.previewElement` (no undo step, dirty flag or recent colour);
- * the settled pick (`change`, or `blur` for a drag no change ended) puts the
- * previews back and commits once through `patchSelected`, so the drag is one
- * undo step and one recent colour. A pick that settles where it started is
- * no undo step (its `change` still counts as a recent colour).
+ * drags (the shared `createLiveColorInput` rule). The shades, and a drag put
+ * back, go through `EditorState.previewElement`; the settled pick commits
+ * through `patchSelected`.
  *
  * @module viewer/components/inspector/live-color
  */
