@@ -9,9 +9,8 @@ import InspectorFields from './InspectorFields.vue';
  * TextEffectsPanel: text shadow / glow / reflection for the selected text, as
  * React's `TextEffectsPanel` offers them. The fields are the shared
  * `TEXT_EFFECT_SECTIONS` descriptors drawn by the generic {@link InspectorFields}
- * renderer; each change emits an `update` carrying a PARTIAL body-level
- * `TextStyle` patch, which the parent (`TextPanel`) merges onto the current
- * `textStyle`.
+ * renderer; each change emits an `update` carrying a PARTIAL `TextStyle` patch,
+ * which the parent (`TextPanel`) applies to the body and every run.
  */
 const props = withDefaults(
 	defineProps<{
