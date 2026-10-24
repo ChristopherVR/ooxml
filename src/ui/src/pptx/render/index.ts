@@ -1580,6 +1580,8 @@ export * from './master-page-layout';
 export * from './master-view';
 export * from './master-view-editing';
 export * from './master-view-crud';
+// The undo and redo steps a Delete Layout or Delete Slide Master leaves behind.
+export * from './master-view-crud-history';
 export * from './virtualized-list';
 export * from './document-statistics';
 export * from './used-fonts';

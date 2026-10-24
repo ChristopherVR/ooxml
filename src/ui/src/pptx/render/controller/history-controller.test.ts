@@ -56,6 +56,34 @@ describe('createEditorHistoryController', () => {
 		expect(history.getSnapshot()).toMatchObject({ depth: 2, maxDepth: 2, undoLabel: 'step 4' });
 	});
 
+	it('forgets the steps that reach a matching state and reports what is left', () => {
+		const history = createEditorHistoryController<string>();
+		history.record('a', 'one');
+		history.record('x', 'two');
+		history.record('b', 'three');
+		history.record('d', 'four');
+		history.undo('c');
+		const listener = vi.fn();
+		history.subscribe(listener);
+
+		history.forget((snapshot) => snapshot === 'x' || snapshot === 'c');
+
+		expect(history.getSnapshot()).toMatchObject({
+			canUndo: true,
+			canRedo: false,
+			undoLabel: 'three',
+			redoLabel: undefined,
+			depth: 1,
+		});
+		expect(listener).toHaveBeenCalledOnce();
+
+		// Nothing left to forget: no change, no notification.
+		history.forget((snapshot) => snapshot === 'x');
+		expect(listener).toHaveBeenCalledOnce();
+		expect(history.undo('d')).toEqual({ snapshot: 'b', label: 'three' });
+		expect(history.getSnapshot().canUndo).toBeFalsy();
+	});
+
 	it('clears both stacks', () => {
 		const history = createEditorHistoryController<number>();
 		history.record(1, 'x');
