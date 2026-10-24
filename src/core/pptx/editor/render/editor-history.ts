@@ -217,4 +217,35 @@ export class EditorHistory<T> {
 		this._past.length = 0;
 		this._future.length = 0;
 	}
+
+	/**
+	 * Drop every step that would bring back a state `reaches` matches, keeping
+	 * both stacks linear: on the undo stack the newest matching entry and every
+	 * older one go, on the redo stack the nearest matching entry and every one
+	 * beyond it. Use it after a change the stack cannot reverse (a command that
+	 * removed a part from the package), so that no undo or redo returns to a
+	 * state that needs what is gone.
+	 */
+	forget(reaches: (snapshot: T) => boolean): void {
+		dropThroughLastMatch(this._past, reaches);
+		dropThroughLastMatch(this._future, reaches);
+	}
+}
+
+/**
+ * Remove `entries[0..k]`, where `k` is the highest index whose snapshot
+ * `reaches` matches. Both stacks pop from the end, so that is the match the
+ * next undo (or redo) would reach first, and everything behind it.
+ */
+function dropThroughLastMatch<T>(
+	entries: HistoryEntry<T>[],
+	reaches: (snapshot: T) => boolean,
+): void {
+	for (let index = entries.length - 1; index >= 0; index--) {
+		const entry = entries[index];
+		if (entry !== undefined && reaches(entry.snapshot)) {
+			entries.splice(0, index + 1);
+			return;
+		}
+	}
 }
