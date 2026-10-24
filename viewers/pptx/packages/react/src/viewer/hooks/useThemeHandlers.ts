@@ -22,21 +22,21 @@ import type {
  */
 import type { RefObject } from 'react';
 
+import { applyThemePartInPlace } from './theme-by-path-apply';
 import { applyThemeEditorEdit } from './theme-editor-apply';
 import { restoreHistoryTheme } from './theme-history-restore';
 import type { EditorHistoryResult } from './useEditorHistory';
 
 export interface UseThemeHandlersInput {
 	handlerRef: RefObject<PptxHandler | null>;
-	serializeSlides: () => Promise<Uint8Array | null>;
-	setContent: React.Dispatch<React.SetStateAction<ArrayBuffer | Uint8Array | null>>;
-	onContentChange: ((data: Uint8Array) => void) | undefined;
 	setTheme: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
 	setSlideMasters: React.Dispatch<React.SetStateAction<Array<Record<string, unknown>>>>;
 	slideMasters: Array<Record<string, unknown>>;
 	/** The deck's theme parts as loaded; an undo back to the loaded theme restores its name. */
 	themeOptions?: PptxThemeOption[];
 	history: EditorHistoryResult;
+	/** The live slides, which a theme applied by path re-themes in place. */
+	slides: PptxSlide[];
 	/** Current live slides, re-coloured in place on a scheme-colour change. */
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 	/**
@@ -75,8 +75,8 @@ export interface ThemeHandlersResult {
 	/** Return theme parts discovered in the loaded PPTX archive. */
 	handleGetAvailableThemes: () => Promise<PptxThemeOption[]>;
 	/**
-	 * Switch the presentation to an existing theme by its archive path,
-	 * update all slide masters, and refresh the serialised content.
+	 * Switch every slide master to an existing theme part by its archive path, in place, as one
+	 * undo step.
 	 */
 	handleSwitchTheme: (themePath: string) => Promise<void>;
 }
@@ -84,9 +84,6 @@ export interface ThemeHandlersResult {
 export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersResult {
 	const {
 		handlerRef,
-		serializeSlides,
-		setContent,
-		onContentChange,
 		setTheme,
 		setSlideMasters,
 		slideMasters,
@@ -98,31 +95,9 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		bumpHistory,
 	} = input;
 
-	const refreshContentAfterThemeChange = async () => {
-		const updated = await serializeSlides();
-		if (!updated) {
-			return;
-		}
-		setContent(updated);
-		if (onContentChange) {
-			onContentChange(updated);
-		}
-		history.markDirty();
-	};
-
-	const handleApplyTheme = async (themePath: string, applyToAllMasters: boolean) => {
-		const handler = handlerRef.current;
-		if (!handler) {
-			return;
-		}
-		await handler.setPresentationTheme(themePath, applyToAllMasters);
-		setSlideMasters((prev) =>
-			prev.map((master, index) =>
-				applyToAllMasters || index === 0 ? { ...master, themePath } : master,
-			),
-		);
-		await refreshContentAfterThemeChange();
-	};
+	// Presentation properties > Theme: in place, as one undo step (never by reloading the deck).
+	const handleApplyTheme = (themePath: string, applyToAllMasters: boolean) =>
+		applyThemePartInPlace(input, themePath, applyToAllMasters);
 
 	const handleUpdateThemeColorScheme = async (colorScheme: PptxThemeColorScheme) => {
 		const handler = handlerRef.current;
@@ -189,16 +164,12 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		history.markDirty();
 	};
 
+	// Every master on the first master's theme part.
 	const handleApplyThemeToPresentation = async () => {
-		const handler = handlerRef.current;
-		if (!handler) {
-			return;
-		}
 		const primaryThemePath = (slideMasters[0] as { themePath?: string } | undefined)?.themePath;
 		if (primaryThemePath) {
-			await handler.setPresentationTheme(primaryThemePath, true);
+			await applyThemePartInPlace(input, primaryThemePath, true);
 		}
-		await refreshContentAfterThemeChange();
 	};
 
 	// Design > Themes and the theme gallery: re-themed in place (one undo step,
@@ -238,16 +209,8 @@ export function useThemeHandlers(input: UseThemeHandlersInput): ThemeHandlersRes
 		return handler.getAvailableThemes();
 	};
 
-	const handleSwitchTheme = async (themePath: string): Promise<void> => {
-		const handler = handlerRef.current;
-		if (!handler) {
-			return;
-		}
-		// Update all slide master relationships to point to the new theme
-		await handler.setPresentationTheme(themePath, true);
-		setSlideMasters((prev) => prev.map((master) => ({ ...master, themePath })));
-		await refreshContentAfterThemeChange();
-	};
+	const handleSwitchTheme = (themePath: string): Promise<void> =>
+		applyThemePartInPlace(input, themePath, true);
 
 	const handleApplyThemeEdit = (edit: ThemeEditorEdit) => applyThemeEditorEdit(input, edit);
 	const handleRestoreHistoryTheme = (target: HistoryTheme) => restoreHistoryTheme(input, target);

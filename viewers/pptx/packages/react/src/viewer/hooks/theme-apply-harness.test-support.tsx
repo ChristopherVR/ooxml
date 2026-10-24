@@ -61,6 +61,8 @@ export interface Probe {
 	isDirty: boolean;
 	loading: boolean;
 	theme: PptxTheme | undefined;
+	slideMasters: PptxSlideMaster[];
+	templateElementsBySlideId: Record<string, PptxElement[]>;
 	history: EditorHistoryResult;
 	gallery: RibbonGalleryCommands;
 	/** The theme handlers Browse Themes, the theme editor and the assistant commit through. */
@@ -82,7 +84,8 @@ export function live(): Probe {
 }
 
 function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
-	const [content, setContent] = useState<ArrayBuffer | Uint8Array | null>(initial);
+	// No theme handler sets content any more (none reloads the deck), so it stays the mounted deck.
+	const content: ArrayBuffer | Uint8Array | null = initial;
 	const [slides, setSlides] = useState<PptxSlide[]>([]);
 	const [templates, setTemplates] = useState<Record<string, PptxElement[]>>({});
 	const [theme, setTheme] = useState<PptxTheme | undefined>(undefined);
@@ -115,6 +118,7 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 		pointerCommitNonce,
 		onDirty: markDocumentDirty,
 		theme,
+		slideMasters,
 		onRestoreTheme: (target) => restoreTheme.current?.(target),
 		setSlides,
 		setCanvasSize,
@@ -172,12 +176,10 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 	});
 	const themeHandlers = useThemeHandlers({
 		handlerRef,
-		serializeSlides,
-		setContent,
-		onContentChange: undefined,
 		setTheme: setTheme as unknown as UseThemeHandlersInput['setTheme'],
-		setSlideMasters: noop,
+		setSlideMasters: setSlideMasters as unknown as UseThemeHandlersInput['setSlideMasters'],
 		slideMasters: slideMasters as unknown as UseThemeHandlersInput['slideMasters'],
+		slides,
 		themeOptions,
 		history,
 		setSlides,
@@ -224,6 +226,8 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 		isDirty,
 		loading,
 		theme,
+		slideMasters,
+		templateElementsBySlideId: templates,
 		history,
 		gallery,
 		themeHandlers,

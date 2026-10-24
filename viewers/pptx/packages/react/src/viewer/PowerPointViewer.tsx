@@ -719,6 +719,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			pointerCommitNonce: state.pointerCommitNonce,
 			onDirty: markDocumentDirty,
 			theme: state.theme,
+			slideMasters: state.slideMasters,
 			onRestoreTheme: (recorded) => restoreHistoryThemeRef.current?.(recorded),
 			setSlides: state.setSlides,
 			setCanvasSize: state.setCanvasSize,

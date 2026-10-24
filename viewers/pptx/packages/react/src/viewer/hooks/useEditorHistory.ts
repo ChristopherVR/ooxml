@@ -1,6 +1,12 @@
 import { createEditorHistoryController, crossedHistoryTheme, historyTheme } from 'ooxml-ui/pptx';
 import type { HistoryTheme } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxHeaderFooter, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import type {
+	PptxElement,
+	PptxHeaderFooter,
+	PptxSlide,
+	PptxSlideMaster,
+	PptxTheme,
+} from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 import type { CanvasSize, EditorHistorySnapshot } from '../types';
@@ -52,6 +58,11 @@ export interface EditorHistoryInput {
 	 * so a theme pick is an undo step like any other edit.
 	 */
 	theme?: PptxTheme | undefined;
+	/**
+	 * The slide masters. The theme part each one uses is recorded with the theme, so a theme
+	 * applied by path is an undo step too, and its Undo points the masters back.
+	 */
+	slideMasters?: readonly PptxSlideMaster[] | undefined;
 	/**
 	 * Put a recorded theme back (an undo or redo crossing a theme change). The slides come back
 	 * with the snapshot; the theme has to be written to the handler's theme part too, which this
@@ -105,6 +116,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		pointerCommitNonce,
 		onDirty,
 		theme,
+		slideMasters,
 		onRestoreTheme,
 		setSlides,
 		setCanvasSize,
@@ -173,7 +185,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	const buildHistorySnapshot = useCallback(
 		(actionLabel?: string): EditorHistorySnapshot => {
-			const recordedTheme = historyTheme(theme);
+			const recordedTheme = historyTheme(theme, slideMasters);
 			return {
 				width: canvasSize.width,
 				height: canvasSize.height,
@@ -184,7 +196,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 				...(actionLabel ? { actionLabel } : {}),
 			};
 		},
-		[activeSlideIndex, canvasSize, slides, templateElementsBySlideId, theme],
+		[activeSlideIndex, canvasSize, slideMasters, slides, templateElementsBySlideId, theme],
 	);
 
 	const applyHistorySnapshot = useCallback(

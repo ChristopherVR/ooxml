@@ -53,15 +53,13 @@ describe('useThemeHandlersInput contract', () => {
 	it('should accept all required input fields', () => {
 		const input: UseThemeHandlersInput = {
 			handlerRef: { current: null },
-			serializeSlides: vi.fn<() => void>().mockResolvedValue(null),
-			setContent: vi.fn<() => void>(),
-			onContentChange: undefined,
 			setTheme: vi.fn<() => void>(),
 			setSlideMasters: vi.fn<() => void>(),
 			slideMasters: [],
 			history: {
 				markDirty: vi.fn<() => void>(),
 			} as unknown as UseThemeHandlersInput['history'],
+			slides: [],
 			setSlides: vi.fn<() => void>(),
 			templateElementsBySlideId: {},
 			setTemplateElementsBySlideId: vi.fn<() => void>(),
@@ -103,13 +101,11 @@ describe('handleUpdateThemeColorScheme', () => {
 					updateThemeColorScheme: vi.fn().mockResolvedValue(undefined),
 				} as unknown as PptxHandler,
 			},
-			serializeSlides: vi.fn<() => void>().mockResolvedValue(null),
-			setContent: vi.fn<() => void>(),
-			onContentChange: undefined,
 			setTheme: vi.fn<() => void>(),
 			setSlideMasters: vi.fn<() => void>(),
 			slideMasters: [],
 			history: { markDirty: vi.fn<() => void>() } as unknown as UseThemeHandlersInput['history'],
+			slides: [],
 			setSlides: vi.fn<() => void>(),
 			templateElementsBySlideId: capturedTemplateElements,
 			setTemplateElementsBySlideId: vi.fn((updater) => {
@@ -166,15 +162,11 @@ describe('theme picks apply in place', () => {
 		] as unknown as Parameters<UseThemeHandlersInput['setSlides']>[0];
 		const input = {
 			handlerRef: { current: handler as PptxHandler },
-			serializeSlides: vi
-				.fn<() => Promise<Uint8Array | null>>()
-				.mockResolvedValue(new Uint8Array()),
-			setContent: vi.fn<() => void>(),
-			onContentChange: undefined,
 			setTheme: vi.fn<() => void>(),
 			setSlideMasters: vi.fn<() => void>(),
 			slideMasters: [],
 			history: { markDirty: vi.fn<() => void>() } as unknown as UseThemeHandlersInput['history'],
+			slides: [],
 			setSlides: vi.fn((updater: unknown) =>
 				typeof updater === 'function' ? updater(slides) : updater,
 			),
@@ -194,8 +186,6 @@ describe('theme picks apply in place', () => {
 		await handleApplyThemeData({ accent1: '#90C226' } as never, FONTS!, 'Facet');
 
 		expect(applyTheme).toHaveBeenCalledWith({ accent1: '#90C226' }, FONTS, 'Facet');
-		expect(input.serializeSlides).not.toHaveBeenCalled();
-		expect(input.setContent).not.toHaveBeenCalled();
 		expect(input.setSlides).toHaveBeenCalledWith(expect.any(Function));
 		expect(input.bumpHistory).toHaveBeenCalledOnce();
 		expect(input.history.markDirty).toHaveBeenCalledWith();
@@ -213,8 +203,6 @@ describe('theme picks apply in place', () => {
 		await handleUpdateThemeFontScheme(next!);
 
 		expect(updateThemeFontScheme).toHaveBeenCalledWith(next);
-		expect(input.serializeSlides).not.toHaveBeenCalled();
-		expect(input.setContent).not.toHaveBeenCalled();
 		expect(input.setSlides).toHaveBeenCalledWith(expect.any(Function));
 		expect(input.setTemplateElementsBySlideId).toHaveBeenCalledWith(expect.any(Function));
 		expect(input.bumpHistory).toHaveBeenCalledOnce();
@@ -280,7 +268,5 @@ describe('theme picks apply in place', () => {
 			colorScheme: PRESET_THEMES[0].colorScheme,
 			fontScheme,
 		});
-		expect(input.serializeSlides).not.toHaveBeenCalled();
-		expect(input.setContent).not.toHaveBeenCalled();
 	});
 });

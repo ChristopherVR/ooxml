@@ -278,32 +278,30 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 	// ── Content lifecycle (load, font, serialize, autosave) ───────
 	const [isEncryptedDialogOpen, setIsEncryptedDialogOpen] = useState(false);
 	const [loadVersion, setLoadVersion] = useState(0);
-	const { handlerRef, serializeSlides, serializeForRecovery, autosaveStatus } = useContentLifecycle(
-		{
-			content,
-			filePath,
-			storage,
-			autosaveEnabled,
-			autosaveIntervalMs,
-			onAutosave,
-			// The File > Fonts toggle, finally reaching a save call.
-			embedFonts: dialogs.embedFontsEnabled,
-			slides,
-			state,
-			history,
-			ops: editorOps.ops,
-			transformCommittedText: input.transformCommittedText,
-			actionSoundHandlerRef,
-			setIsEncryptedDialogOpen,
-			password: dialogs.presentationPassword ?? undefined,
-			onContentApplied: () => setLoadVersion((v) => v + 1),
-			allowExternalImages,
-			initialSlide,
-			setReadOnlyRecommendation,
-			setModifyVerifier,
-			setCompatToasts,
-		},
-	);
+	const { handlerRef, serializeSlides, autosaveStatus } = useContentLifecycle({
+		content,
+		filePath,
+		storage,
+		autosaveEnabled,
+		autosaveIntervalMs,
+		onAutosave,
+		// The File > Fonts toggle, finally reaching a save call.
+		embedFonts: dialogs.embedFontsEnabled,
+		slides,
+		state,
+		history,
+		ops: editorOps.ops,
+		transformCommittedText: input.transformCommittedText,
+		actionSoundHandlerRef,
+		setIsEncryptedDialogOpen,
+		password: dialogs.presentationPassword ?? undefined,
+		onContentApplied: () => setLoadVersion((v) => v + 1),
+		allowExternalImages,
+		initialSlide,
+		setReadOnlyRecommendation,
+		setModifyVerifier,
+		setCompatToasts,
+	});
 
 	// ── I/O handlers (export, print, theme, properties) ───────────
 	const { exportHandlers, printHandlers, themeHandlers, propertyHandlers } = useIOHandlers({
@@ -319,9 +317,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		zoom,
 		handlerRef,
 		serializeSlides,
-		serializeForRecovery,
 		setContent,
-		onContentChange,
 		onPropertiesChange,
 		onNotesUpdate,
 		imageExportScale,

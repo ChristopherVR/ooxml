@@ -45,14 +45,7 @@ export interface UseIOHandlersInput {
 	 * output format, so the downloaded file carries every save option Save does.
 	 */
 	serializeSlides: SerializeSlides;
-	/**
-	 * Plaintext serialisation for bytes the viewer feeds straight back into its
-	 * own loader. "Apply theme" does exactly that, and the loader has no password
-	 * to offer, so it must never receive an encrypted package.
-	 */
-	serializeForRecovery: () => Promise<Uint8Array | null>;
 	setContent: React.Dispatch<React.SetStateAction<ArrayBuffer | Uint8Array | null>>;
-	onContentChange: ((content: Uint8Array) => void) | undefined;
 	/** The host's `onPropertiesChange` (document-properties edits). */
 	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
 	/** The host's `onNotesUpdate` (speaker-notes edits). */
@@ -96,9 +89,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		zoom,
 		handlerRef,
 		serializeSlides,
-		serializeForRecovery,
 		setContent,
-		onContentChange,
 		onPropertiesChange,
 		onNotesUpdate,
 		imageExportScale,
@@ -142,11 +133,6 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 
 	const themeHandlers = useThemeHandlers({
 		handlerRef,
-		// Theme apply re-serialises and re-parses through `setContent`, so these
-		// bytes go back into our own loader: plaintext, never the protected save.
-		serializeSlides: serializeForRecovery,
-		setContent,
-		onContentChange,
 		setTheme: state.setTheme as unknown as React.Dispatch<
 			React.SetStateAction<Record<string, unknown> | null>
 		>,
@@ -156,6 +142,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		slideMasters: state.slideMasters as unknown as Array<Record<string, unknown>>,
 		themeOptions: state.themeOptions,
 		history,
+		slides,
 		setSlides: state.setSlides,
 		templateElementsBySlideId: state.templateElementsBySlideId,
 		setTemplateElementsBySlideId: state.setTemplateElementsBySlideId,
