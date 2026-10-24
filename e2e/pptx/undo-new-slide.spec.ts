@@ -14,6 +14,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { loadDeck, openRibbonTab, SAMPLE_DECK, slideElements, thumbnail } from './support/deck';
+import { pressShortcut, slidePosition } from './support/keyboard';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -45,4 +46,38 @@ test.describe('undo of New Slide', () => {
 			'the stage must show the (restored) last slide, not an index past the end of the deck',
 		).toHaveCount(lastSlideElements);
 	});
+});
+
+test.describe('New Slide', () => {
+	// PowerPoint inserts the new slide after the one on screen and shows it. Angular inserted it
+	// and stayed on the slide it was on; Svelte's Ctrl+M added it at the end of the deck.
+	for (const via of ['the ribbon', 'Ctrl+M'] as const) {
+		test(`from ${via} inserts after the slide on screen and shows the new one`, async ({
+			page,
+		}) => {
+			await loadDeck(page, SAMPLE_DECK);
+			const before = await slideCount(page);
+			await thumbnail(page, 2).click();
+			await expect.poll(() => slidePosition(page)).toBe(`Slide 2 of ${before}`);
+			const agenda = slideElements(page).filter({ hasText: 'Agenda' });
+			await expect(agenda).toHaveCount(1);
+
+			if (via === 'the ribbon') {
+				await openRibbonTab(page, 'Home');
+				await page
+					.getByRole('button', { name: /^new slide$/iu })
+					.first()
+					.click();
+			} else {
+				await pressShortcut(page, 'ControlOrMeta+m', 700);
+			}
+
+			await expect.poll(() => slideCount(page)).toBe(before + 1);
+			await expect.poll(() => slidePosition(page)).toBe(`Slide 3 of ${before + 1}`);
+			await expect(agenda, 'the stage shows the new slide, not slide 2').toHaveCount(0);
+			// The slide that was third is fourth now: the new one went in after slide 2.
+			await thumbnail(page, 2).click();
+			await expect(agenda).toHaveCount(1);
+		});
+	}
 });
