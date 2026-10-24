@@ -1,13 +1,15 @@
 import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
-import { scaleSlidesForSizeChange } from 'ooxml-ui/pptx';
+import { applyThemeByPath as applyThemePart, scaleSlidesForSizeChange } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
+	PptxElement,
 	PptxHandler,
 	PptxSlide,
 	PptxSlideMaster,
 	PptxTagCollection,
+	PptxTheme,
 } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
@@ -34,6 +36,11 @@ export interface UseInspectorDeckActionsInput {
 	slideSize: Ref<SlideSizeEmu | undefined>;
 	/** The editable deck, so a confirmed rescale can restate every slide's elements. */
 	slides: Ref<PptxSlide[]>;
+	/** The master/layout element layer, re-themed with the slides by a theme applied by path. */
+	templateElementsBySlideId: Ref<Record<string, PptxElement[]>>;
+	/** The deck theme and its colour map, which a theme applied to the first master replaces. */
+	pptxTheme: Ref<PptxTheme | undefined>;
+	themeColorMap: Ref<Record<string, string> | undefined>;
 	coreProperties: ShallowRef<PptxCoreProperties | undefined>;
 	appProperties: ShallowRef<PptxAppProperties | undefined>;
 	customProperties: ShallowRef<PptxCustomProperty[]>;
@@ -41,20 +48,16 @@ export interface UseInspectorDeckActionsInput {
 	markDirty: () => void;
 	/** The host's `properties-change` event: the core fields an inspector edit changed. */
 	onCorePropertiesChanged?: (updates: Partial<PptxCoreProperties>) => void;
-	/** Snapshot `slides` onto the undo stack before a rescale mutates it. */
+	/** Snapshot the deck onto the undo stack before a rescale or a theme switch changes it. */
 	pushHistory: () => void;
-	/**
-	 * Re-serialise the deck and swap it back in as the active content so slide
-	 * colours re-resolve against the newly-applied theme (mirrors React's
-	 * `refreshContentAfterThemeChange`). Optional; theme switching still updates
-	 * the master `themePath`s and marks the deck dirty without it.
-	 */
-	refreshContent?: () => Promise<void>;
 }
 
 export interface UseInspectorDeckActionsResult {
-	/** Apply a packaged theme part by archive path (React's `handleApplyTheme`). */
-	applyThemeByPath: (themePath: string, applyToAllMasters: boolean) => void;
+	/**
+	 * Point the first master, or every one, at a packaged theme part by archive path (React's
+	 * `handleApplyTheme`), in place, as one undo step. Resolves once applied.
+	 */
+	applyThemeByPath: (themePath: string, applyToAllMasters: boolean) => Promise<void>;
 	/** Resize the slide canvas (inspector SLIDE SIZE card's raw W/H inputs). */
 	updateCanvasSize: (size: CanvasSize) => void;
 	/**
@@ -107,30 +110,42 @@ export function useInspectorDeckActions(
 		canvasSize,
 		slideSize,
 		slides,
+		templateElementsBySlideId,
+		pptxTheme,
+		themeColorMap,
 		coreProperties,
 		appProperties,
 		customProperties,
 		tagCollections,
 		markDirty,
 		pushHistory,
-		refreshContent,
 	} = input;
 
 	const pendingSlideSizeRescale = ref<PendingSlideSizeRescale | null>(null);
 
-	function applyThemeByPath(themePath: string, applyToAllMasters: boolean): void {
-		void (async () => {
-			const current = handler.value;
-			if (!current) {
-				return;
-			}
-			await current.setPresentationTheme(themePath, applyToAllMasters);
-			slideMasters.value = slideMasters.value.map((master, index) =>
-				applyToAllMasters || index === 0 ? { ...master, themePath } : master,
-			);
-			markDirty();
-			await refreshContent?.();
-		})();
+	// The shared step re-points the masters and re-themes the slides on them; no reload, so the
+	// slide on screen, the selection and Undo stay. The history records the masters' theme parts.
+	async function applyThemeByPath(themePath: string, applyToAllMasters: boolean): Promise<void> {
+		const change = await applyThemePart(handler.value, {
+			themePath,
+			applyToAllMasters,
+			slides: slides.value,
+			slideMasters: slideMasters.value,
+			theme: pptxTheme.value,
+			templateElementsBySlideId: templateElementsBySlideId.value,
+		});
+		if (!change) {
+			return;
+		}
+		pushHistory();
+		slides.value = change.slides;
+		templateElementsBySlideId.value = change.templateElementsBySlideId;
+		slideMasters.value = change.slideMasters;
+		if (change.deckTheme) {
+			pptxTheme.value = change.deckTheme.theme;
+			themeColorMap.value = change.deckTheme.themeColorMap;
+		}
+		markDirty();
 	}
 
 	function updateCanvasSize(size: CanvasSize): void {

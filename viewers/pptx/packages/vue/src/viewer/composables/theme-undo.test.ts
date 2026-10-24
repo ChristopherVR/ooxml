@@ -10,15 +10,25 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import JSZip from 'jszip';
-import { applyRibbonGalleryItem, loadedThemeName, saveDeckWithPassword } from 'ooxml-ui/pptx';
+import {
+	applyRibbonGalleryItem,
+	loadedThemeName,
+	partitionTemplateElements,
+	saveDeckWithPassword,
+} from 'ooxml-ui/pptx';
 import type { RibbonGalleryId } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
-import type { PptxElement, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide, PptxSlideMaster, PptxTheme } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 import { effectScope, ref, shallowRef } from 'vue';
 
+import {
+	buildTwoThemesDeck,
+	TWO_THEMES,
+} from '../../../../../../../src/core/pptx/__tests__/helpers/two-themes-deck';
 import { useDeckStyleHost } from './useDeckStyleHost';
 import { useEditorHistory } from './useEditorHistory';
+import { useInspectorDeckActions } from './useInspectorDeckActions';
 import { dispatchRibbonGalleryResult } from './useRibbonGalleryHost';
 import { useThemeEditing } from './useThemeEditing';
 
@@ -171,6 +181,158 @@ describe('vue theme undo', () => {
 		deck.history.undo();
 		expect(deck.pptxTheme.value).toStrictEqual(deck.loaded);
 		await expect(deck.saved()).resolves.toStrictEqual(OFFICE);
+		deck.scope.stop();
+	});
+});
+
+/**
+ * Presentation properties > Theme: the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
+ * 1 blue; slide 3 on master 2, "Ember", accent 1 red), wired the way `PowerPointViewer.vue` wires
+ * the inspector's deck actions and the history.
+ */
+async function openTwoThemes() {
+	const bytes = await buildTwoThemesDeck();
+	const handler = new PptxHandler();
+	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
+	const partition = partitionTemplateElements(data.slides);
+	const slides = shallowRef<PptxSlide[]>(partition.slides);
+	const templateElementsBySlideId = shallowRef<Record<string, PptxElement[]>>(
+		partition.templateElementsBySlideId,
+	);
+	const slideMasters = shallowRef<PptxSlideMaster[]>(data.slideMasters ?? []);
+	const pptxTheme = shallowRef<PptxTheme | undefined>(data.theme);
+	const themeColorMap = shallowRef<Record<string, string> | undefined>(data.themeColorMap);
+	const handlerRef = shallowRef<PptxHandler | null>(handler);
+	const activeSlideIndex = ref(1);
+	const dirty = ref(false);
+	const scope = effectScope();
+	const parts = scope.run(() => {
+		const history = useEditorHistory(slides, templateElementsBySlideId, {
+			activeSlideIndex,
+			theme: { theme: pptxTheme, themeColorMap, handler: handlerRef, slideMasters },
+		});
+		const actions = useInspectorDeckActions({
+			handler: handlerRef,
+			slideMasters,
+			canvasSize: ref({ width: 1280, height: 720 }),
+			slideSize: ref(undefined),
+			slides,
+			templateElementsBySlideId,
+			pptxTheme,
+			themeColorMap,
+			coreProperties: shallowRef(undefined),
+			appProperties: shallowRef(undefined),
+			customProperties: shallowRef([]),
+			tagCollections: shallowRef([]),
+			markDirty: () => {
+				dirty.value = true;
+			},
+			pushHistory: history.pushHistory,
+		});
+		return { history, actions };
+	})!;
+	const accents = () =>
+		slides.value.map((slide) =>
+			slide.elements
+				.find((element) => element.name === TWO_THEMES.shapeName)
+				?.shapeStyle?.fillColor?.replace('#', '')
+				.toUpperCase(),
+		);
+	/** The masters' theme relationships and each part's accent 1, as a save writes them now. */
+	const saved = async () => {
+		const zip = await JSZip.loadAsync(await saveDeckWithPassword(handler, slides.value, {}, null));
+		const text = async (path: string) => (await zip.file(path)?.async('string')) ?? '';
+		const master = async (n: number) =>
+			/Target="\.\.\/theme\/(theme\d\.xml)"/u.exec(
+				await text(`ppt/slideMasters/_rels/slideMaster${n}.xml.rels`),
+			)?.[1];
+		const accent = async (path: string) =>
+			/<a:accent1>\s*<a:srgbClr val="([0-9A-F]{6})"/iu.exec(await text(path))?.[1]?.toUpperCase();
+		return {
+			masters: [await master(1), await master(2)],
+			accents: [await accent(TWO_THEMES.theme1.path), await accent(TWO_THEMES.theme2.path)],
+		};
+	};
+	return {
+		...parts,
+		slides,
+		slideMasters,
+		pptxTheme,
+		themeColorMap,
+		activeSlideIndex,
+		dirty,
+		scope,
+		accents,
+		saved,
+	};
+}
+
+describe('vue theme by path', () => {
+	const { theme1, theme2 } = TWO_THEMES;
+	const LOADED = {
+		masters: ['theme1.xml', 'theme2.xml'],
+		accents: [theme1.colors.accent1, theme2.colors.accent1],
+	};
+
+	it('every master on theme 2: in place, one undo step, and Undo puts master 1 back', async () => {
+		const deck = await openTwoThemes();
+		const third = deck.slides.value[2];
+		await deck.actions.applyThemeByPath(theme2.path, true);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		// Slide 3's master was on theme 2 already: the slide is untouched, not reloaded.
+		expect(deck.slides.value[2]).toBe(third);
+		expect(deck.activeSlideIndex.value).toBe(1);
+		expect(deck.dirty.value).toBeTruthy();
+		expect(deck.slideMasters.value.map((master) => master.themePath)).toStrictEqual([
+			theme2.path,
+			theme2.path,
+		]);
+		expect(deck.pptxTheme.value?.name).toBe('Ember');
+		expect(deck.themeColorMap.value?.accent1?.replace('#', '')).toBe(theme2.colors.accent1);
+		expect(deck.history.canUndo.value).toBeTruthy();
+		await expect(deck.saved()).resolves.toStrictEqual({
+			...LOADED,
+			masters: ['theme2.xml', 'theme2.xml'],
+		});
+
+		deck.history.undo();
+		expect(deck.accents()).toStrictEqual([
+			theme1.colors.accent1,
+			theme1.colors.accent1,
+			theme2.colors.accent1,
+		]);
+		expect(deck.slideMasters.value.map((master) => master.themePath)).toStrictEqual([
+			theme1.path,
+			theme2.path,
+		]);
+		expect(deck.pptxTheme.value?.colorScheme?.accent1?.replace('#', '')).toBe(
+			theme1.colors.accent1,
+		);
+		expect(deck.history.canUndo.value).toBeFalsy();
+		// Undo went back to the old part: neither part was rewritten.
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
+
+		deck.history.redo();
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		await expect(deck.saved()).resolves.toStrictEqual({
+			...LOADED,
+			masters: ['theme2.xml', 'theme2.xml'],
+		});
+		deck.scope.stop();
+	});
+
+	it('the first master alone on theme 2: only its slides change', async () => {
+		const deck = await openTwoThemes();
+		const third = deck.slides.value[2];
+		await deck.actions.applyThemeByPath(theme2.path, false);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.slides.value[2]).toBe(third);
+		expect(deck.slideMasters.value.map((master) => master.themePath)).toStrictEqual([
+			theme2.path,
+			theme2.path,
+		]);
+		deck.history.undo();
+		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 		deck.scope.stop();
 	});
 });

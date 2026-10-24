@@ -542,7 +542,7 @@ const history = useEditorHistory(slides, templateElementsBySlideId, {
 	activeSlideIndex,
 	onChange: () => emit('change'),
 	// Undo and Redo of a theme pick put the theme back in the viewer and in the theme part.
-	theme: { theme: pptxTheme, themeColorMap, handler, loadedThemeName: deckThemeName },
+	theme: { theme: pptxTheme, themeColorMap, handler, loadedThemeName: deckThemeName, slideMasters },
 });
 // File > Options > Advanced > "Maximum number of undos", re-applied whenever
 // it changes mid-session (not just at construction).
@@ -1108,6 +1108,9 @@ const deckActions = useInspectorDeckActions({
 	canvasSize,
 	slideSize: deck.slideSize,
 	slides,
+	templateElementsBySlideId,
+	pptxTheme,
+	themeColorMap,
 	coreProperties,
 	appProperties,
 	customProperties,
@@ -1117,13 +1120,6 @@ const deckActions = useInspectorDeckActions({
 	},
 	onCorePropertiesChanged: (updates) => emit('properties-change', updates),
 	pushHistory: history.pushHistory,
-	// Mirror React's refreshContentAfterThemeChange: re-serialise and reload so
-	// slide colours re-resolve against the newly-applied theme. These bytes go
-	// straight back into our own loader, which has no password, so they use the
-	// plaintext recovery serialisation rather than `getContent`.
-	refreshContent: async () => {
-		source.internalContent.value = await getRecoverySnapshot();
-	},
 });
 
 // -- Table style DEFINITION editor ("Edit style...") persistence: threads
@@ -1297,8 +1293,8 @@ const masterView = useMasterViewWiring({
 
 // Slide Master view sidebar CRUD (Insert/Duplicate/Delete/Rename Layout and
 // Slide Master). Real ZIP surgery (`pptx-viewer-core`) that hands back a new
-// `handler` + `data`, adopted the same way `refreshContent` above adopts a
-// re-serialised deck: the mutation is not an in-place edit.
+// `handler` + `data`, adopted as a whole new deck: the mutation is not an
+// in-place edit.
 const masterViewCrud = useMasterViewCrud({
 	handler,
 	slideMasters,

@@ -1,7 +1,12 @@
-import { createEditorHistoryController, historyTheme, restoreCrossedTheme } from 'ooxml-ui/pptx';
+import {
+	createEditorHistoryController,
+	historyTheme,
+	restoreCrossedTheme,
+	withHistoryMasterThemes,
+} from 'ooxml-ui/pptx';
 import type { HistoryTheme } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
-import type { PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import type { PptxHandler, PptxSlide, PptxSlideMaster, PptxTheme } from 'pptx-viewer-core';
 import { computed, nextTick } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
@@ -97,6 +102,11 @@ export interface EditorHistoryThemeSource {
 	handler: Ref<PptxHandler | null | undefined>;
 	/** The primary theme part's loaded name; the parsed theme carries none. */
 	loadedThemeName?: () => string | undefined;
+	/**
+	 * The slide masters. Each one's theme part is recorded with the theme, so Undo of a theme
+	 * applied by path points the masters back (in the viewer and in the handler).
+	 */
+	slideMasters?: Ref<PptxSlideMaster[]>;
 }
 
 /** Optional tuning knobs for the history stack. */
@@ -154,7 +164,7 @@ export function useEditorHistory(
 
 	const themeSource = options?.theme;
 	const snapshot = (): HistorySnapshot => {
-		const theme = historyTheme(themeSource?.theme.value);
+		const theme = historyTheme(themeSource?.theme.value, themeSource?.slideMasters?.value);
 		const themeColorMap = themeSource?.themeColorMap.value;
 		return {
 			slides: slides.value.map(cloneSlide),
@@ -179,6 +189,11 @@ export function useEditorHistory(
 		if (theme) {
 			themeSource.theme.value = theme;
 			themeSource.themeColorMap.value = snap.themeColorMap ? { ...snap.themeColorMap } : undefined;
+			const masters = themeSource.slideMasters;
+			const restored = masters && withHistoryMasterThemes(masters.value, snap.theme);
+			if (masters && restored !== masters.value) {
+				masters.value = [...restored!];
+			}
 		}
 	};
 
