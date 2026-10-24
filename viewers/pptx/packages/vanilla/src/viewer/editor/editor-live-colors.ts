@@ -2,7 +2,7 @@ import {
 	createLiveColorInput,
 	fillColorOf,
 	shapeFillChange,
-	shapeOutlineChange,
+	strokeColorChange,
 	strokeColorOf,
 	textColorOf,
 	textStylePatch,
@@ -78,12 +78,7 @@ export function createLiveColorActions(deps: {
 	// commit path that does not come from a theme swatch.
 	const inputs: Record<LiveColorTarget, LiveColorInput> = {
 		fill: liveInput(fillColorOf, (el, hex) => patchShapeStyle(el, shapeFillChange(hex, undefined))),
-		line: liveInput(strokeColorOf, (el, hex) =>
-			patchShapeStyle(
-				el,
-				shapeOutlineChange(hex, undefined, hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {}),
-			),
-		),
+		line: liveInput(strokeColorOf, (el, hex) => patchShapeStyle(el, strokeColorChange(el, hex))),
 		text: liveInput(textColorOf, (el, hex) =>
 			'textStyle' in el ? textStylePatch(el, { color: hex, colorRef: undefined }) : {},
 		),
