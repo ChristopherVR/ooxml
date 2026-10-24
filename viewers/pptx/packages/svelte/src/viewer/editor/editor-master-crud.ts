@@ -93,7 +93,9 @@ export class EditorMasterCrudController {
 		}
 
 		this.editor.pushHistory();
-		this.editor.adoptHandler(result.handler);
+		// Keep the previous handler alive: the slides on screen and the undo stack still show its
+		// pictures, and disposing it revokes their Blob URLs.
+		this.editor.adoptHandler(result.handler, true);
 		this.editor.slideMasters = result.data.slideMasters ?? [];
 		this.editor.masterViewTarget = {
 			tab: 'slides',

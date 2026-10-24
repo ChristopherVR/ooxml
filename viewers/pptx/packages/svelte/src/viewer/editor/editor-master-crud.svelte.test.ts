@@ -109,7 +109,9 @@ describe('svelte master-view CRUD wiring', () => {
 			{ tab: 'slides', masterIndex: 0, layoutIndex: null },
 			{ name: undefined },
 		);
-		expect(setHandler).toHaveBeenCalledExactlyOnceWith(newHandler, false, undefined);
+		// The previous handler is kept (`keepPrevious`): the slides and the undo stack still show its
+		// pictures, and disposing it revokes their Blob URLs.
+		expect(setHandler).toHaveBeenCalledExactlyOnceWith(newHandler, true, undefined);
 		expect(editor.masterViewTarget).toStrictEqual({
 			tab: 'slides',
 			masterIndex: 0,

@@ -111,7 +111,9 @@ export interface EditorStateDeps {
 	 * Adopt a fresh handler in place of the loaded one. Master-view CRUD
 	 * (`masterCrud`) rebuilds the package through core and comes back with a
 	 * new `PptxHandler`; the loader owns handler lifecycle, so it disposes the
-	 * previous one here. Optional for out-of-tree mounts and the unit tests.
+	 * previous one here unless `keepPrevious` (a master command and a slide
+	 * paste keep it, since the slides on screen still show its pictures).
+	 * Optional for out-of-tree mounts and the unit tests.
 	 */
 	setHandler?: (handler: PptxHandler, keepPrevious?: boolean, data?: PptxData) => void;
 	onChange?: () => void;
