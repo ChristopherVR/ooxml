@@ -5,7 +5,13 @@ import type {
 	MasterViewCrudApplySuccess,
 	MasterViewTarget,
 } from 'ooxml-ui/pptx';
-import type { PptxData, PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
+import type {
+	PptxData,
+	PptxHandler,
+	PptxLayoutOption,
+	PptxSlide,
+	PptxSlideMaster,
+} from 'pptx-viewer-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 
@@ -45,6 +51,7 @@ function setup(
 ): {
 	crud: UseMasterViewCrudResult;
 	masterRef: ReturnType<typeof shallowRef<PptxSlideMaster[]>>;
+	layoutOptionsRef: ReturnType<typeof shallowRef<PptxLayoutOption[]>>;
 	handler: ReturnType<typeof shallowRef<PptxHandler | null>>;
 	onSelectMaster: ReturnType<typeof vi.fn>;
 	onSelectLayout: ReturnType<typeof vi.fn>;
@@ -52,6 +59,7 @@ function setup(
 	pushHistory: ReturnType<typeof vi.fn>;
 } {
 	const masterRef = shallowRef<PptxSlideMaster[]>(masters);
+	const layoutOptionsRef = shallowRef<PptxLayoutOption[]>([]);
 	const handler = shallowRef<PptxHandler | null>(handlerValue);
 	const onSelectMaster = vi.fn();
 	const onSelectLayout = vi.fn();
@@ -64,6 +72,7 @@ function setup(
 				captured = useMasterViewCrud({
 					handler,
 					slideMasters: masterRef,
+					layoutOptions: layoutOptionsRef,
 					deckData: () => baseData(masterRef.value, slides),
 					target: () => target,
 					onSelectMaster,
@@ -79,6 +88,7 @@ function setup(
 	return {
 		crud: captured as unknown as UseMasterViewCrudResult,
 		masterRef,
+		layoutOptionsRef,
 		handler,
 		onSelectMaster,
 		onSelectLayout,
@@ -118,11 +128,13 @@ describe('useMasterViewCrud', () => {
 		expect(addLayout?.enabled).toBeTruthy();
 	});
 
-	it('adopts the returned handler, slideMasters and selection when addLayout succeeds', async () => {
-		const { crud, handler, masterRef, onSelectLayout, markDirty, pushHistory } = setup(
-			[master('ppt/slideMasters/slideMaster1.xml')],
-			{ tab: 'slides', masterIndex: 0, layoutIndex: null },
-		);
+	it('adopts the returned handler, slideMasters, layout list and selection when addLayout succeeds', async () => {
+		const { crud, handler, masterRef, layoutOptionsRef, onSelectLayout, markDirty, pushHistory } =
+			setup([master('ppt/slideMasters/slideMaster1.xml')], {
+				tab: 'slides',
+				masterIndex: 0,
+				layoutIndex: null,
+			});
 
 		const newHandler = {} as PptxHandler;
 		const newMasters: PptxSlideMaster[] = [
@@ -130,10 +142,15 @@ describe('useMasterViewCrud', () => {
 				layouts: [{ path: 'ppt/slideLayouts/slideLayout9.xml', name: 'Title and Content' }],
 			}),
 		];
+		// Home > Layout reads this list, kept apart from the masters it is built from: a command
+		// that left it as loaded would keep offering a deleted layout and miss an inserted one.
+		const newLayoutOptions: PptxLayoutOption[] = [
+			{ path: 'ppt/slideLayouts/slideLayout9.xml', name: 'Title and Content' },
+		];
 		const success: MasterViewCrudApplySuccess = {
 			ok: true,
 			handler: newHandler,
-			data: baseData(newMasters),
+			data: { ...baseData(newMasters), layoutOptions: newLayoutOptions },
 			target: { tab: 'slides', masterIndex: 0, layoutIndex: 0 },
 		};
 		applyMasterViewCrudActionMock.mockResolvedValue(success);
@@ -143,6 +160,7 @@ describe('useMasterViewCrud', () => {
 		expect(pushHistory).toHaveBeenCalledOnce();
 		expect(handler.value).toBe(newHandler);
 		expect(masterRef.value).toBe(newMasters);
+		expect(layoutOptionsRef.value).toBe(newLayoutOptions);
 		expect(onSelectLayout).toHaveBeenCalledWith(0, 0);
 		expect(markDirty).toHaveBeenCalledOnce();
 		expect(crud.error.value).toBeNull();
@@ -209,6 +227,7 @@ describe('useMasterViewCrud', () => {
 					crud = useMasterViewCrud({
 						handler: shallowRef<PptxHandler | null>({} as PptxHandler),
 						slideMasters: masterRef,
+						layoutOptions: shallowRef<PptxLayoutOption[]>([]),
 						deckData: () => baseData(masterRef.value, slides.value),
 						target: () => ({ tab: 'slides', masterIndex: 0, layoutIndex: 1 }),
 						onSelectMaster: vi.fn(),
