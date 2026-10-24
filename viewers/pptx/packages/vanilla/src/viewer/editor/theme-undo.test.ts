@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import JSZip from 'jszip';
-import { applyRibbonGalleryItem } from 'ooxml-ui/pptx';
+import { applyRibbonGalleryItem, partitionTemplateElements } from 'ooxml-ui/pptx';
 import type { RibbonGalleryId } from 'ooxml-ui/pptx';
 import { buildThemeColorMap, PptxHandler } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
@@ -147,5 +147,131 @@ describe('vanilla theme undo', () => {
 		deck.ops.undo();
 		expect(deck.theme()).toStrictEqual(deck.loaded);
 		await expect(deck.saved()).resolves.toStrictEqual(OFFICE);
+	});
+});
+
+/** What the tests read of the two-themes deck (`TWO_THEMES` in its definition). */
+interface TwoThemesDeck {
+	theme1: { path: string; colors: { accent1: string } };
+	theme2: { path: string; colors: { accent1: string } };
+	shapeName: string;
+}
+
+/**
+ * The two-themes deck from its one definition, next to the core tests. Loaded at run time rather
+ * than imported, because this package's type check (`rootDir: src`) cannot follow an import out of
+ * the package.
+ */
+const TWO_THEMES_HELPER = resolve(
+	process.cwd(),
+	'../../../../src/core/pptx/__tests__/helpers/two-themes-deck.ts',
+);
+
+/**
+ * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
+ * 1 blue; slide 3 on master 2, "Ember", accent 1 red), through the inspector's deck action.
+ */
+async function openTwoThemes() {
+	const helper = (await import(/* @vite-ignore */ TWO_THEMES_HELPER)) as {
+		buildTwoThemesDeck(): Promise<Uint8Array>;
+		TWO_THEMES: TwoThemesDeck;
+	};
+	const bytes = await helper.buildTwoThemesDeck();
+	const handler = new PptxHandler();
+	const data = await handler.load(bytes.buffer.slice(0) as ArrayBuffer);
+	const partition = partitionTemplateElements(data.slides);
+	const store = createStore({
+		...createInitialViewerState(),
+		editable: true,
+		slides: partition.slides,
+		templateElementsBySlideId: partition.templateElementsBySlideId,
+		currentSlide: 1,
+		slideMasters: data.slideMasters ?? [],
+		themeOptions: data.themeOptions ?? [],
+		colorScheme: data.theme?.colorScheme,
+		fontScheme: data.theme?.fontScheme,
+		formatScheme: data.theme?.formatScheme,
+		themeName: data.theme?.name,
+	});
+	const ops = createEditorOps({ store, getHandler: () => handler, onHistoryChange: () => {} });
+	const deck = createDeckActions({ store, ops, getHandler: () => handler });
+	const shapeName = helper.TWO_THEMES.shapeName;
+	const accents = () =>
+		store.get().slides.map((slide) => {
+			const shape = slide.elements.find((element) => element.name === shapeName) as
+				| { shapeStyle?: { fillColor?: string } }
+				| undefined;
+			return shape?.shapeStyle?.fillColor?.replace('#', '').toUpperCase();
+		});
+	const masterThemes = () => store.get().slideMasters.map((master) => master.themePath);
+	/** The masters' theme relationships and each part's accent 1, as File > Save writes them now. */
+	const saved = async () => {
+		const zip = await JSZip.loadAsync(await ops.save());
+		const text = async (path: string) => (await zip.file(path)?.async('string')) ?? '';
+		const master = async (n: number) =>
+			/Target="\.\.\/theme\/(theme\d\.xml)"/u.exec(
+				await text(`ppt/slideMasters/_rels/slideMaster${n}.xml.rels`),
+			)?.[1];
+		const accent = async (path: string) =>
+			/<a:accent1>\s*<a:srgbClr val="([0-9A-F]{6})"/iu.exec(await text(path))?.[1]?.toUpperCase();
+		const { theme1, theme2 } = helper.TWO_THEMES;
+		return {
+			masters: [await master(1), await master(2)],
+			accents: [await accent(theme1.path), await accent(theme2.path)],
+		};
+	};
+	return { store, ops, deck, accents, masterThemes, saved, ...helper.TWO_THEMES };
+}
+
+describe('vanilla theme by path', () => {
+	it('every master on theme 2 re-themes the slides, as one undo step that Undo takes back', async () => {
+		const deck = await openTwoThemes();
+		const { theme1, theme2 } = deck;
+		const loaded = {
+			masters: ['theme1.xml', 'theme2.xml'],
+			accents: [theme1.colors.accent1, theme2.colors.accent1],
+		};
+		const selected = deck.store.get().slides[1]!.elements[0]!.id;
+		deck.ops.select(selected);
+		const third = deck.store.get().slides[2];
+		await deck.deck.applyThemeByPath(theme2.path, true);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.store.get().slides[2]).toBe(third);
+		expect(deck.store.get().currentSlide).toBe(1);
+		expect(deck.store.get().selectedElementId).toBe(selected);
+		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
+		expect(deck.store.get().themeName).toBe('Ember');
+		expect(deck.store.get().colorScheme?.accent1?.replace('#', '')).toBe(theme2.colors.accent1);
+		expect(deck.ops.canUndo()).toBeTruthy();
+		await expect(deck.saved()).resolves.toStrictEqual({
+			...loaded,
+			masters: ['theme2.xml', 'theme2.xml'],
+		});
+
+		deck.ops.undo();
+		expect(deck.accents()).toStrictEqual([
+			theme1.colors.accent1,
+			theme1.colors.accent1,
+			theme2.colors.accent1,
+		]);
+		expect(deck.masterThemes()).toStrictEqual([theme1.path, theme2.path]);
+		expect(deck.store.get().colorScheme?.accent1?.replace('#', '')).toBe(theme1.colors.accent1);
+		expect(deck.ops.canUndo()).toBeFalsy();
+		// Undo went back to the old part: neither part was rewritten.
+		await expect(deck.saved()).resolves.toStrictEqual(loaded);
+
+		deck.ops.redo();
+		expect(deck.accents()).toStrictEqual(Array(3).fill(theme2.colors.accent1));
+		expect(deck.masterThemes()).toStrictEqual([theme2.path, theme2.path]);
+	});
+
+	it("every master on the first master's part re-themes only slide 3", async () => {
+		const deck = await openTwoThemes();
+		const [first, second] = deck.store.get().slides;
+		await deck.deck.applyThemeByPath(deck.theme1.path, true);
+		expect(deck.accents()).toStrictEqual(Array(3).fill(deck.theme1.colors.accent1));
+		expect(deck.store.get().slides[0]).toBe(first);
+		expect(deck.store.get().slides[1]).toBe(second);
+		expect(deck.masterThemes()).toStrictEqual([deck.theme1.path, deck.theme1.path]);
 	});
 });

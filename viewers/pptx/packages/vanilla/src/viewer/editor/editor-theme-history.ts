@@ -6,9 +6,11 @@ import type { Store, ViewerState } from '../state';
 
 /**
  * A theme change as an undo step over the viewer store (`render/theme-history`): every snapshot
- * records the store's colour scheme, font scheme and theme name, and an undo or redo that crosses
- * a theme change puts them back and writes the parts that differ into the handler's theme parts,
- * so a save after it writes the theme the slides show.
+ * records the store's colour scheme, font scheme and theme name, and each slide master's theme part,
+ * and an undo or redo that crosses a theme change puts them back and writes the parts that differ
+ * into the handler's theme parts, so a save after it writes the theme the slides show. A step
+ * across a theme applied by path points the masters back (the store's masters come back with the
+ * snapshot).
  */
 
 function storeTheme(state: ViewerState) {
@@ -17,7 +19,7 @@ function storeTheme(state: ViewerState) {
 
 /** What an undo step records of the store's theme. */
 export function storeHistoryTheme(state: ViewerState): HistoryTheme {
-	return historyTheme(storeTheme(state));
+	return historyTheme(storeTheme(state), state.slideMasters);
 }
 
 /** An undo or redo moved from `current` to `target`: put a crossed theme change back. */

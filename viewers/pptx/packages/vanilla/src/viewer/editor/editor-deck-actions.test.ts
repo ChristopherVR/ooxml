@@ -77,43 +77,76 @@ describe('editor deck actions (no-selection inspector)', () => {
 		expect(editable.store.get().dirty).toBeFalsy();
 	});
 
-	it('applies a theme by path to the first master only', async () => {
-		const setPresentationTheme = vi.fn().mockResolvedValue(undefined);
-		const handler = { setPresentationTheme } as unknown as PptxHandler;
-		const { store, actions } = setup({ handler });
+	// A theme part by path is applied in place now (`editor-theme-by-path.ts`): the shared step reads
+	// the part's schemes and re-points each target master through `setSlideMasterTheme`, and the
+	// store takes the result as one undo step. Re-theming the slides is covered with a real deck in
+	// `theme-undo.test.ts`.
+	function themePartHandler() {
+		const schemes = {
+			name: 'Facet',
+			colorScheme: {
+				dk1: '#000000',
+				lt1: '#FFFFFF',
+				dk2: '#2C3C43',
+				lt2: '#EBEBEB',
+				accent1: '#90C226',
+				accent2: '#54A021',
+				accent3: '#E6B91E',
+				accent4: '#E76618',
+				accent5: '#C42F1A',
+				accent6: '#918655',
+				hlink: '#99CA3C',
+				folHlink: '#B9D181',
+			},
+			fontScheme: { majorFont: { latin: 'Trebuchet MS' }, minorFont: { latin: 'Trebuchet MS' } },
+		};
+		const getThemePartSchemes = vi.fn().mockResolvedValue(schemes);
+		const setSlideMasterTheme = vi.fn().mockResolvedValue(undefined);
+		const handler = { getThemePartSchemes, setSlideMasterTheme } as unknown as PptxHandler;
+		return { handler, setSlideMasterTheme };
+	}
 
-		actions.applyThemeByPath('ppt/theme/theme2.xml', false);
-		await vi.waitFor(() => expect(store.get().dirty).toBeTruthy());
+	it('applies a theme by path to the first master only, as one undo step', async () => {
+		const { handler, setSlideMasterTheme } = themePartHandler();
+		const { store, ops, actions } = setup({ handler });
 
-		expect(setPresentationTheme).toHaveBeenCalledWith('ppt/theme/theme2.xml', false);
+		await actions.applyThemeByPath('ppt/theme/theme2.xml', false);
+
+		expect(setSlideMasterTheme.mock.calls).toStrictEqual([
+			['ppt/slideMasters/slideMaster1.xml', 'ppt/theme/theme2.xml'],
+		]);
 		const masters = store.get().slideMasters as unknown as Array<{ themePath?: string }>;
 		expect(masters[0].themePath).toBe('ppt/theme/theme2.xml');
 		expect(masters[1].themePath).toBeUndefined();
+		expect(ops.pushHistory).toHaveBeenCalledOnce();
+		expect(store.get().dirty).toBeTruthy();
 	});
 
-	it('applies a theme by path to all masters', async () => {
-		const setPresentationTheme = vi.fn().mockResolvedValue(undefined);
-		const handler = { setPresentationTheme } as unknown as PptxHandler;
-		const { store, actions } = setup({ handler });
+	it('applies a theme by path to all masters, as one undo step', async () => {
+		const { handler, setSlideMasterTheme } = themePartHandler();
+		const { store, ops, actions } = setup({ handler });
 
-		actions.applyThemeByPath('ppt/theme/theme1.xml', true);
-		await vi.waitFor(() => expect(store.get().dirty).toBeTruthy());
+		await actions.applyThemeByPath('ppt/theme/theme1.xml', true);
 
-		expect(setPresentationTheme).toHaveBeenCalledWith('ppt/theme/theme1.xml', true);
+		expect(setSlideMasterTheme.mock.calls).toStrictEqual([
+			['ppt/slideMasters/slideMaster1.xml', 'ppt/theme/theme1.xml'],
+			['ppt/slideMasters/slideMaster2.xml', 'ppt/theme/theme1.xml'],
+		]);
 		const masters = store.get().slideMasters as unknown as Array<{ themePath?: string }>;
 		expect(masters.every((m) => m.themePath === 'ppt/theme/theme1.xml')).toBeTruthy();
+		expect(ops.pushHistory).toHaveBeenCalledOnce();
 	});
 
-	it('does not apply a theme without a handler or when not editable', () => {
+	it('does not apply a theme without a handler or when not editable', async () => {
 		const { store, actions } = setup({ handler: null });
-		actions.applyThemeByPath('ppt/theme/theme1.xml', true);
+		await actions.applyThemeByPath('ppt/theme/theme1.xml', true);
 		expect(store.get().dirty).toBeFalsy();
 
-		const setPresentationTheme = vi.fn().mockResolvedValue(undefined);
-		const handler = { setPresentationTheme } as unknown as PptxHandler;
+		const { handler, setSlideMasterTheme } = themePartHandler();
 		const locked = setup({ handler, editable: false });
-		locked.actions.applyThemeByPath('ppt/theme/theme1.xml', true);
-		expect(setPresentationTheme).not.toHaveBeenCalled();
+		await locked.actions.applyThemeByPath('ppt/theme/theme1.xml', true);
+		expect(setSlideMasterTheme).not.toHaveBeenCalled();
+		expect(locked.ops.pushHistory).not.toHaveBeenCalled();
 	});
 
 	it('re-colours templateElementsBySlideId alongside slides when editing the theme', async () => {
